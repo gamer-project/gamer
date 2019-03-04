@@ -479,6 +479,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #  if ( MODEL != HYDRO )
    const double MIN_PRES = NULL_REAL;
    const double MIN_EINT = NULL_REAL;
+   const double MIN_TEMP = NULL_REAL;
 #  endif
 
 #  ifndef DUAL_ENERGY
@@ -665,14 +666,14 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
          CUAPI_Asyn_dtSolver( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID],
                               h_Mag_Array_T[ArrayID], NULL, NULL,
                               NPG, dh, (Step==0)?DT__FLUID_INIT:DT__FLUID,
-                              MicroPhy, MIN_PRES, NULL_BOOL,
+                              MicroPhy, MIN_PRES, MIN_TEMP, NULL_BOOL,
                               EXT_POT_NONE, EXT_ACC_NONE, NULL_REAL,
                               GPU_NSTREAM );
 #        else
          CPU_dtSolver       ( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID],
                               h_Mag_Array_T[ArrayID], NULL, NULL,
                               NPG, dh, (Step==0)?DT__FLUID_INIT:DT__FLUID,
-                              MicroPhy, MIN_PRES, NULL_BOOL,
+                              MicroPhy, MIN_PRES, MIN_TEMP, NULL_BOOL,
                               EXT_POT_NONE, EXT_ACC_NONE, NULL_REAL );
 #        endif
       break;
@@ -683,14 +684,14 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
          CUAPI_Asyn_dtSolver( TSolver, h_dt_Array_T[ArrayID], NULL,
                               NULL, h_Pot_Array_T[ArrayID], h_Corner_Array_PGT[ArrayID],
                               NPG, dh, DT__GRAVITY,
-                              MicroPhy, NULL_REAL, OPT__GRA_P5_GRADIENT,
+                              MicroPhy, NULL_REAL, NULL_REAL, OPT__GRA_P5_GRADIENT,
                               (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC, TimeNew,
                               GPU_NSTREAM );
 #        else
          CPU_dtSolver       ( TSolver, h_dt_Array_T[ArrayID], NULL,
                               NULL, h_Pot_Array_T[ArrayID], h_Corner_Array_PGT[ArrayID],
                               NPG, dh, DT__GRAVITY,
-                              MicroPhy, NULL_REAL, OPT__GRA_P5_GRADIENT,
+                              MicroPhy, NULL_REAL, NULL_REAL, OPT__GRA_P5_GRADIENT,
                               (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC, TimeNew );
 #        endif
       break;

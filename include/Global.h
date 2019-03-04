@@ -260,7 +260,6 @@ extern double                SF_CREATE_STAR_MIN_STAR_MASS;
 extern double                SF_CREATE_STAR_MAX_STAR_MFRAC;
 #endif
 
-
 // (2-9) equation of state
 // =======================================================================================================
 #if ( MODEL == HYDRO )
@@ -350,6 +349,19 @@ extern double DT__CR_DIFFUSION;
 extern double CR_DIFF_MIN_B;
 #endif
 
+
+// (2-15) viscosity
+// ============================================================================================================
+#ifdef VISCOSITY
+extern int                   VISCOSITY_TYPE;
+extern int                   VISCOSITY_DIRECTION;
+extern int                   VISCOSITY_COEFF_TYPE;
+extern int                   VISCOSITY_FLUX_TYPE;
+extern double                VISCOSITY_COEFF;
+extern double                VISCOSITY_COEFF_MIN;
+extern double                VISCOSITY_COEFF_MAX;
+extern double                VISCOSITY_SPITZER_FRACTION;
+#endif
 
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU

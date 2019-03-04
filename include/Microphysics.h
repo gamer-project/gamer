@@ -24,6 +24,10 @@
 struct MicroPhy_t
 {
 
+// somehow the structure itself cannot be empty, so we declare a useless bool variable to avoid the issue
+// --> error message from valgrind: Address 0x176aa160 is 0 bytes after a block of size 0 alloc'd
+   bool useless;
+
 #  ifdef CR_DIFFUSION
    real CR_safety;
    real CR_diff_coeff_para;
@@ -31,9 +35,39 @@ struct MicroPhy_t
    real CR_diff_min_b;
 #  endif
 
-// somehow the structure itself cannot be empty, so we declare a useless bool variable to avoid the issue
-// --> error message from valgrind: Address 0x176aa160 is 0 bytes after a block of size 0 alloc'd
-   bool useless;
+#  ifdef CONDUCTION
+#  define CONSTANT_CONDUCTION 1
+#  define SPITZER_CONDUCTION 2
+#  define ISOTROPIC_CONDUCTION 1
+#  define ANISOTROPIC_CONDUCTION 2
+   int  CondType;
+   int  CondFluxType;
+   real Cond_safety;
+   real CondConstCoeff;
+   real CondMaxDiffusivity;
+   real CondSpitzerFraction;
+   real CondPrefactor;
+   real CondCoulombLog;
+#  endif // #ifdef CONDUCTION
+
+#  ifdef VISCOSITY
+#  define CONSTANT_VISCOSITY 1
+#  define SPITZER_VISCOSITY 2
+#  define VISCOSITY_KINETIC_COEFF 1
+#  define VISCOSITY_DYNAMIC_COEFF 2
+#  define ISOTROPIC_VISCOSITY 1
+#  define ANISOTROPIC_VISCOSITY 2
+   int  ViscType;
+   int  ViscFluxType;
+   int  ViscCoeffType;
+   real Visc_safety;
+   real ViscKineticCoeff;
+   real ViscDynamicCoeff;
+   real ViscMaxDiffusivity;
+   real ViscSpitzerFraction;
+   real ViscPrefactor;
+   real ViscCoulombLog;
+#  endif // #ifdef VISCOSITY
 
 }; // struct MicroPhy_t
 

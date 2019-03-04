@@ -30,6 +30,12 @@
 
 #else // #ifdef __CUDACC__
 
+#ifdef MICROPHYSICS
+void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
+                    const bool NormPassive, const int NNorm, const int NormIdx[],
+                    const bool JeansMinPres, const real JeansMinPres_Coeff );
+#endif
+
 #if ( RSOLVER == EXACT  ||  RSOLVER_RESCUE == EXACT )
 void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                 const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
@@ -307,7 +313,6 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
 #        error : ERROR : unsupported Riemann solver (EXACT/ROE/HLLE/HLLC/HLLD) !!
 #        endif
 
-
 //       3. switch to a different Riemann solver if the default one fails
 #        if ( RSOLVER_RESCUE != NONE )
          for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
@@ -360,8 +365,22 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
          } // for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
 #        endif // #if ( RSOLVER_RESCUE != NONE )
 
+//       4. Optionally, compute conductive and/or viscous fluxes
 
-//       4. store the fluxes of all cells in g_FC_Flux[]
+#ifdef MICROPHYSICS
+         const bool NormPassive_No  = false; // do NOT convert any passive variable to mass fraction for the Riemann solvers
+         const bool JeansMinPres_No = false;
+         Hydro_Con2Pri( ConVar_L, PriVar_L, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, 
+                        JeansMinPres_No, NULL_REAL );
+#ifdef VISCOSITY
+         Hydro_ComputeViscousFluxes(d, Flux_1Face, Gamma_m1, MinPres);
+#endif
+#ifdef CONDUCTIVITY
+         Hydro_ComputeConductiveFluxes(d, Flux_1Face, Gamma_m1, MinPres);
+#endif
+#endif 
+
+//       5. store the fluxes of all cells in g_FC_Flux[]
 //       --> including the magnetic components since they are required for CT
          for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   g_FC_Flux[d][v][idx_flux] = Flux_1Face[v];
       } // i,j,k

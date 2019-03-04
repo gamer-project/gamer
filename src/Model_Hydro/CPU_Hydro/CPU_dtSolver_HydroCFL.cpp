@@ -46,6 +46,7 @@
 //                dh          : Cell size
 //                Safety      : dt safety factor
 //                MinPres     : Minimum allowed pressure
+//                MinTemp     : Minimum allowed temperature
 //                EoS         : EoS object
 //                MicroPhy    : Microphysics object
 //
@@ -55,19 +56,27 @@
 __global__
 void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                               const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ],
-                              const real dh, const real Safety, const real MinPres, const EoS_t EoS,
-                              const MicroPhy_t MicroPhy )
+                              const real dh, const real Safety, const real MinPres, 
+                              const real MinTemp, const EoS_t EoS, const MicroPhy_t MicroPhy )
 #else
 void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                               const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const int NPG,
-                              const real dh, const real Safety, const real MinPres, const EoS_t EoS,
-                              const MicroPhy_t MicroPhy )
+                              const real dh, const real Safety, const real MinPres, 
+                              const real MinTemp, const EoS_t EoS, const MicroPhy_t MicroPhy )
 #endif
 {
 
+   const bool CheckMinPres_Yes = true;
+   const bool CheckMinTemp_Yes = true;
    const real dhSafety         = Safety*dh;
 #  ifdef CR_DIFFUSION
-   const real dh2Safety        = MicroPhy.CR_safety*0.5*dh*dh;
+   const real dh2CRSafety = MicroPhy.CR_safety*0.5*dh*dh;
+#  endif
+#  ifdef VISCOSITY
+   const real dh2ViscSafety = MicroPhy.Visc_safety*0.5*dh*dh;
+#  endif
+#  ifdef CONDUCTION
+   const real dh2CondSafety = MicroPhy.Cond_safety*0.5*dh*dh;
 #  endif
 #  ifndef SRHD
    const bool CheckMinPres_Yes = true;
@@ -83,7 +92,14 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
    for (int p=0; p<8*NPG; p++)
 #  endif
    {
-      real MaxCFL=(real)0.0;
+      real MaxCFL     = (real)0.0;
+#     ifdef VISCOSITY
+      real MaxViscCFL = (real)0.0;
+#     endif
+#     ifdef CONDUCTION
+      real MaxCondCFL = (real)0.0;
+#     endif
+
 
       CGPU_LOOP( t, CUBE(PS1) )
       {
@@ -186,7 +202,31 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
          MaxCFL = FMAX( CFLx+CFLy+CFLz, MaxCFL );
          */
 #        endif // FLU_SCHEME
+
+#        if defined VISCOSITY || defined CONDUCTION
+
+         real Temp;
+
+         Temp  = Hydro_Con2Temp( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
+                                 fluid+NCOMP_FLUID, CheckMinTemp_Yes, MinTemp, Emag,
+                                 EoS.DensEint2Temp_FuncPtr, EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table );
+         Temp *= (real)1.0e-7; // diffusion routines take temperature in units of 10^7 K
+
+#        ifdef VISCOSITY
+         real mu_visc, nu_visc;
+         Hydro_ComputeViscosity( mu_visc, nu_visc, &MicroPhy, fluid[DENS], Temp );
+         MaxViscCFL = FMAX( nu_visc, MaxViscCFL );
+#        endif
+
+#        ifdef CONDUCTION
+         real kappa_cond, chi_cond;
+         Hydro_ComputeConduction( kappa_cond, chi_cond, &MicroPhy, fluid[DENS], Temp );
+         MaxCondCFL = FMAX( chi_cond, MaxCondCFL );
+#        endif
+
+#        endif // #if defined VISCOSITY || defined CONDUCTION
 #        endif // #ifdef SRHD ... else ...
+
       } // CGPU_LOOP( t, CUBE(PS1) )
 
 //    perform parallel reduction to get the maximum CFL speed in each thread block
@@ -194,16 +234,37 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
 #     ifdef __CUDACC__
 #     ifdef DT_FLU_USE_SHUFFLE
       MaxCFL = BlockReduction_Shuffle ( MaxCFL );
+#     ifdef VISCOSITY
+      MaxViscCFL = BlockReduction_Shuffle ( MaxViscCFL );
+#     endif
+#     ifdef CONDUCTION
+      MaxCondCFL = BlockReduction_Shuffle ( MaxCondCFL );
+#     endif      
 #     else
       MaxCFL = BlockReduction_WarpSync( MaxCFL );
+#     ifdef VISCOSITY
+      MaxViscCFL = BlockReduction_WarpSync( MaxViscCFL );
 #     endif
-      if ( threadIdx.x == 0 )
+#     ifdef CONDUCTION
+      MaxCondCFL = BlockReduction_WarpSync ( MaxCondCFL );
+#     endif      
+#     endif
+      if ( threadIdx.x == 0 ) {
 #     endif // #ifdef __CUDACC__
 
 #     ifdef SRHD
       g_dt_Array[p] = dhSafety / ( MaxCFL / SQRT( (real)1.0 + MaxCFL*MaxCFL ) );
 #     else
       g_dt_Array[p] = dhSafety/MaxCFL;
+#     ifdef VISCOSITY
+      g_dt_Array[p] = ( dh2ViscSafety/MaxViscCFL < g_dt_Array[p]) ? dh2ViscSafety/MaxViscCFL : g_dt_Array[p];
+#     endif
+#     ifdef CONDUCTION
+      g_dt_Array[p] = ( dh2CondSafety/MaxCondCFL < g_dt_Array[p]) ? dh2CondSafety/MaxCondCFL : g_dt_Array[p];
+#     endif
+#     endif
+#     ifdef __CUDACC__
+      }
 #     endif
 
 //    The CFL condition determined by the cosmic ray diffusion
@@ -224,7 +285,7 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
 #     endif
       if ( threadIdx.x == 0 )
 #     endif // #ifdef __CUDACC__
-      g_dt_Array[p] = ( dh2Safety/MaxCFL < g_dt_Array[p]) ? dh2Safety/MaxCFL : g_dt_Array[p];
+      g_dt_Array[p] = ( dh2CRSafety/MaxCFL < g_dt_Array[p]) ? dh2CRSafety/MaxCFL : g_dt_Array[p];
 
 #     endif // #ifdef CR_DIFFUSION
 

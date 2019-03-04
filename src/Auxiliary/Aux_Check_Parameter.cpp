@@ -1661,6 +1661,44 @@ void Aux_Check_Parameter()
 
 #endif // #ifdef FEEDBACK
 
+// viscosity
+// =======================================================================================
+#ifdef VISCOSITY
+
+#  if ( !defined HYDRO || !defined MHD )
+#     error : HYDRO or MHD is required for VISCOSITY!!
+#  endif
+
+# ifndef MHD
+  if ( VISCOSITY_DIRECTION == ANISOTROPIC_VISCOSITY )
+     Aux_Error( ERROR_INFO, "ANISOTROPIC_VISCOSITY requires MHD !!\n" );
+# endif
+
+  if ( VISCOSITY_TYPE == CONSTANT_VISCOSITY && VISCOSITY_COEFF <= 0.0 ) 
+     Aux_Error( ERROR_INFO, "VISCOSITY_COEFF <= 0 !!\n" );
+
+  if ( VISCOSITY_COEFF_MAX <= VISCOSITY_COEFF_MIN )
+     Aux_Error( ERROR_INFO, "VISCOSITY_COEFF_MAX <= VISCOSITY_COEFF_MIN !!\n" );
+ 
+  if ( VISCOSITY_TYPE == SPITZER_VISCOSITY && VISCOSITY_SPITZER_FRACTION <= 0.0)
+     Aux_Error( ERROR_INFO, "VISCOSITY_SPITZER_FRACTION <= 0 !!\n" );
+
+// warning
+// ------------------------------
+   if ( MPI_Rank == 0 ) {
+
+   if ( VISCOSITY_TYPE == CONSTANT_VISCOSITY && 
+        VISCOSITY_COEFF_TYPE == VISCOSITY_KINETIC_COEFF && 
+        ( VISCOSITY_COEFF < VISCOSITY_COEFF_MIN ) || 
+        ( VISCOSITY_COEFF > VISCOSITY_COEFF_MAX ) )
+   {
+      Aux_Message( stderr, "WARNING : VISCOSITY_COEFF is constant and is outside bounds \n" );
+      Aux_Message( stderr, "          of VISCOSITY_COEFF_MAX and VISCOSITY_COEFF_MAX !! \n" );
+   }
+
+   } // if ( MPI_Rank == 0 )
+
+#endif // ifdef VISCOSITY
 
 // cosmic-ray diffusion
 // =======================================================================================

@@ -410,6 +410,11 @@
 #  define _FLUX_TOTAL         (  ( 1L << NFLUX_TOTAL ) - 1L                )
 
 
+// microphysics
+
+#if ( defined CONDUCTION || defined VISCOSITY )
+# define MICROPHYSICS
+#endif 
 
 // symbolic constants for particles
 #ifdef PARTICLE
