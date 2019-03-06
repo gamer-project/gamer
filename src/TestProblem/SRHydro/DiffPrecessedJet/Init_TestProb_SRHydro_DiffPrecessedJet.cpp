@@ -368,7 +368,7 @@ bool Flu_ResetByUser_DiffPrecessedJet( real fluid[], const double x, const doubl
 //     velocity components along different directions
        for (int d=0; d<3; d++)
        {
-         Jet_SrcVel_xyz[d] = Jet_SrcVel * Jet_Vec[d] / Dis_c2v;
+         Jet_SrcVel_xyz[d]   = Jet_SrcVel    * Jet_Vec[d] / Dis_c2v;
          Jet_BurstVel_xyz[d] = Jet_Burst4Vel * Jet_Vec[d] / Dis_c2v;
        }
 

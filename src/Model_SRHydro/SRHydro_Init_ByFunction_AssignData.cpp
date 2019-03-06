@@ -120,7 +120,6 @@ void SRHydro_Init_ByFunction_AssignData( const int lv )
    const double dh_sub   = dh / NSub;
    const double _NSub3   = 1.0/(NSub*NSub*NSub);
    const real   Gamma_m1 = GAMMA - (real)1.0;
-   const real  _Gamma_m1 = (real)1.0 / Gamma_m1;
 
    real   fluid[NCOMP_TOTAL], fluid_sub[NCOMP_TOTAL];
    double x, y, z, x0, y0, z0;
@@ -158,21 +157,6 @@ void SRHydro_Init_ByFunction_AssignData( const int lv )
 #        endif
 
 
-//       calculate the dual-energy variable (entropy or internal energy)
-#        if   ( DUAL_ENERGY == DE_ENPY )
-         fluid[ENPY] = CPU_Fluid2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Gamma_m1 );
-#        elif ( DUAL_ENERGY == DE_EINT )
-#        error : DE_EINT is NOT supported yet !!
-#        endif
-
-//       floor and normalize passive scalars
-#        if ( NCOMP_PASSIVE > 0 )
-         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = FMAX( fluid[v], TINY_NUMBER );
-
-         if ( OPT__NORMALIZE_PASSIVE )
-            CPU_NormalizePassive( fluid[DENS], fluid+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
-#        endif
-
          for (int v=0; v<NCOMP_TOTAL; v++)   amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i] = fluid[v];
 
       }}}
@@ -195,22 +179,6 @@ void SRHydro_Init_ByFunction_AssignData( const int lv )
 //       check minimum density and pressure
 #        ifdef CHECK_NEGATIVE_IN_FLUID
 	 SRHydro_CheckUnphysical(fluid, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true);
-#        endif
-
-
-//       calculate the dual-energy variable (entropy or internal energy)
-#        if   ( DUAL_ENERGY == DE_ENPY )
-         fluid[ENPY] = CPU_Fluid2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Gamma_m1 );
-#        elif ( DUAL_ENERGY == DE_EINT )
-#        error : DE_EINT is NOT supported yet !!
-#        endif
-
-//       floor and normalize passive scalars
-#        if ( NCOMP_PASSIVE > 0 )
-         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = FMAX( fluid[v], TINY_NUMBER );
-
-         if ( OPT__NORMALIZE_PASSIVE )
-            CPU_NormalizePassive( fluid[DENS], fluid+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
 #        endif
 
          for (int v=0; v<NCOMP_TOTAL; v++)   amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i] = fluid[v];

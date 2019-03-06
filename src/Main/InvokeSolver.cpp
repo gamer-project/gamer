@@ -117,7 +117,7 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 
    int *PID0_List    = NULL;  // list recording the patch indicies with LocalID==0 to be udpated
    bool AllocateList = false; // whether to allocate PID0_List or not
-   int  ArrayID      = 0;     // array index to load and store data ( 0 or 1 )
+   int  ArrayID      = 0;     // 0 and 1 represent repectively load and store data
    int  NPG[2];               // number of patch groups to be updated at a time
    int  NTotal;               // total number of patch groups to be updated
    int  Disp;                 // index displacement in PID0_List
