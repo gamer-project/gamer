@@ -209,16 +209,17 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
 #  endif
    GammaP_Rho = Gamma*_Rho*Hydro_CheckMinPres( GammaP_Rho*Rho/Gamma, MinPres );  // apply pressure floor
 
-   a2          = GammaP_Rho;
+   a2  = GammaP_Rho;
 #  ifdef MHD
-   a2         -= X;
+   a2 -= X;
 #  endif
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( Hydro_CheckNegative(a2) )
       printf( "ERROR : invalid a2 (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               a2, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
-   a           = SQRT( a2 );
+   a  = SQRT( a2 );
+
 #  ifdef MHD
    Cax2        = SQR(Bx)*_Rho;
    Cax         = SQRT( Cax2 );
@@ -654,7 +655,7 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
 
 // longitudinal magnetic flux is always zero
 #  ifdef MHD
-   Flux_Out[ MAG_OFFSET + 0 ] = ZERO;
+   Flux_Out[MAG_OFFSET] = ZERO;
 #  endif
 
 
