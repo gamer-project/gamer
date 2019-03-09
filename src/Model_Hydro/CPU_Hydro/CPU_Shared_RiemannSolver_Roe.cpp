@@ -584,9 +584,9 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    const bool CheckMinPres_No = false;
    real I_Pres, I_States[ NCOMP_FLUID + NCOMP_MAG ];
 
-   for (int v=0; v<NCOMP_FLUID; v++)      I_States[v] = L[v];
+   for (int v=0; v<NCOMP_FLUID; v++)   I_States[ v               ] = L[ v              ];
 #  ifdef MHD
-   for (int v=0; v<NCOMP_MAG; v++)  I_States[ NCOMP_FLUID + v ] = L[ MAG_OFFSET + v ];
+   for (int v=0; v<NCOMP_MAG;   v++)   I_States[ v + NCOMP_FLUID ] = L[ v + MAG_OFFSET ];
 #  endif
 
    for (int t=0; t<NWAVE-1; t++)
@@ -615,7 +615,7 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
 #           if   ( CHECK_INTERMEDIATE == EXACT  &&  !defined MHD )   // recalculate fluxes by exact solver
             const bool NormPassive_No  = false; // do NOT convert any passive variable to mass fraction for the Riemann solvers
             const bool JeansMinPres_No = false;
-            real PriVar_L[NCOMP_TOTAL], PriVar_R[NCOMP_TOTAL];
+            real PriVar_L[NCOMP_TOTAL], PriVar_R[NCOMP_TOTAL]; // not NCOMP_TOTAL_PLUS_MAG since exact solver doesn't support MHD
 
             Hydro_Con2Pri( L, PriVar_L, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
             Hydro_Con2Pri( R, PriVar_R, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
