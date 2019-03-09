@@ -20,6 +20,8 @@
 # include "CUFLU_Shared_RiemannSolver_HLLE.cu"
 #elif ( RSOLVER == HLLC )
 # include "CUFLU_Shared_RiemannSolver_HLLC.cu"
+#elif ( RSOLVER == HLLD )
+# include "CUFLU_Shared_RiemannSolver_HLLD.cu"
 #endif
 
 #ifdef UNSPLIT_GRAVITY
@@ -42,6 +44,9 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
 #elif ( RSOLVER == HLLC )
 void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                const real Gamma, const real MinPres );
+#elif ( RSOLVER == HLLD )
+void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+                               const real Gamma, const real MinPres );
 #endif
 #ifdef UNSPLIT_GRAVITY
 void ExternalAcc( real Acc[], const double x, const double y, const double z, const double Time, const double UserArray[] );
@@ -56,7 +61,7 @@ void ExternalAcc( real Acc[], const double x, const double y, const double z, co
 // Function    :  Hydro_ComputeFlux
 // Description :  Compute the face-centered fluxes by Riemann solver
 //
-// Note        :  1. Currently support the exact, HLLC, HLLE, and Roe solvers
+// Note        :  1. Currently support the exact, HLLC, HLLE, HLLD, and Roe solvers
 //                2. g_FC_Var[] has the size of N_FC_VAR^3
 //                   --> (N_FC_VAR-1-2*NSkip_N)*(N_FC_VAR-2*NSkip_T)^2 fluxes will be computed
 //                   --> See below for the definitions of NSkip_N and NSkip_T

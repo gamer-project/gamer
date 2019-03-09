@@ -453,7 +453,8 @@ endif
 ifeq "$(filter -DMHD, $(SIMU_OPTION))" "-DMHD"
 #CUDA_FILE   +=
 
-CC_FILE     += MHD_GetCellCenteredB.cpp  MHD_InterpolateBField.cpp  CPU_Shared_ConstrainedTransport.cpp
+CC_FILE     += MHD_GetCellCenteredB.cpp  MHD_InterpolateBField.cpp  CPU_Shared_ConstrainedTransport.cpp \
+               CPU_Shared_RiemannSolver_HLLD.cpp
 endif
 
 
