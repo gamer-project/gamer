@@ -20,6 +20,8 @@
 # include "CUFLU_Shared_RiemannSolver_HLLE.cu"
 #elif ( CHECK_INTERMEDIATE == HLLC )
 # include "CUFLU_Shared_RiemannSolver_HLLC.cu"
+#elif ( CHECK_INTERMEDIATE == HLLD )
+# include "CUFLU_Shared_RiemannSolver_HLLD.cu"
 #endif
 
 #else // #ifdef __CUDACC__
@@ -36,6 +38,9 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
                                const real Gamma, const real MinPres );
 #elif ( CHECK_INTERMEDIATE == HLLC )
 void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+                               const real Gamma, const real MinPres );
+#elif ( CHECK_INTERMEDIATE == HLLD )
+void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                const real Gamma, const real MinPres );
 #endif
 real Hydro_CheckMinPres( const real InPres, const real MinPres );

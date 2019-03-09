@@ -554,9 +554,15 @@ void Aux_Check_Parameter()
 #     error : ERROR : unsupported data reconstruction scheme (PLM/PPM) !!
 #  endif
 
+#  ifdef MHD
+#  if ( defined RSOLVER  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLD )
+#     error : ERROR : unsupported Riemann solver for MHD (ROE/HLLE/HLLD) !!
+#  endif
+#  else
 #  if ( defined RSOLVER  &&  RSOLVER != EXACT  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLC )
 #     error : ERROR : unsupported Riemann solver (EXACT/ROE/HLLE/HLLC) !!
 #  endif
+#  endif // MHD
 
 #  ifdef DUAL_ENERGY
 #  if ( FLU_SCHEME == RTVD )
@@ -575,9 +581,15 @@ void Aux_Check_Parameter()
 
    if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
    {
+#     ifdef MHD
+      if ( OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_ROE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_HLLD  &&
+           OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_HLLE )
+         Aux_Error( ERROR_INFO, "unsupported parameter \"%s = %d\" !!\n", "OPT__1ST_FLUX_CORR_SCHEME", OPT__1ST_FLUX_CORR_SCHEME );
+#     else
       if ( OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_ROE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_HLLC  &&
            OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_HLLE )
          Aux_Error( ERROR_INFO, "unsupported parameter \"%s = %d\" !!\n", "OPT__1ST_FLUX_CORR_SCHEME", OPT__1ST_FLUX_CORR_SCHEME );
+#     endif
 
 #     if ( FLU_SCHEME == RTVD )
          Aux_Error( ERROR_INFO, "RTVD does not support \"OPT__1ST_FLUX_CORR\" !!\n" );
@@ -753,10 +765,6 @@ void Aux_Check_Parameter()
 
 #  if ( FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
 #     error : ERROR : unsupported hydro scheme in the makefile (MHM_RP/CTU) !!
-#  endif
-
-#  if ( defined RSOLVER  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLD )
-#     error : ERROR : unsupported Riemann solver for MHD (ROE/HLLE/HLLD) !!
 #  endif
 
    if ( OPT__MAG_INT_SCHEME != INT_MINMOD1D  &&  OPT__MAG_INT_SCHEME != INT_VANLEER  &&
