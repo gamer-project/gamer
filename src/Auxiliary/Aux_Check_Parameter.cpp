@@ -555,29 +555,35 @@ void Aux_Check_Parameter()
 #  endif
 
 #  ifdef MHD
-#  if ( defined RSOLVER  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLD )
+#   if ( defined RSOLVER  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLD )
 #     error : ERROR : unsupported Riemann solver for MHD (ROE/HLLE/HLLD) !!
-#  endif
+#   endif
 #  else
-#  if ( defined RSOLVER  &&  RSOLVER != EXACT  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLC )
+#   if ( defined RSOLVER  &&  RSOLVER != EXACT  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLC )
 #     error : ERROR : unsupported Riemann solver (EXACT/ROE/HLLE/HLLC) !!
-#  endif
+#   endif
 #  endif // MHD
 
 #  ifdef DUAL_ENERGY
-#  if ( FLU_SCHEME == RTVD )
+#   if ( FLU_SCHEME == RTVD )
 #     error : RTVD does NOT support DUAL_ENERGY !!
-#  endif
+#   endif
 
-#  if ( DUAL_ENERGY != DE_ENPY )
+#   if ( DUAL_ENERGY != DE_ENPY )
 #     error : ERROR : unsupported dual-energy formalism (DE_ENPY only, DE_EINT is not supported yet) !!
-#  endif
+#   endif
 #  endif // #ifdef DUAL_ENERGY
 
-#  if ( defined CHECK_INTERMEDIATE  &&  CHECK_INTERMEDIATE != EXACT  &&  CHECK_INTERMEDIATE != HLLE  &&  \
+#  ifdef MHD
+#   if ( defined CHECK_INTERMEDIATE  &&  CHECK_INTERMEDIATE != HLLE  &&  CHECK_INTERMEDIATE != HLLD )
+#     error : ERROR : unsupported option in CHECK_INTERMEDIATE (HLLE/HLLD) !!
+#   endif
+#  else
+#   if ( defined CHECK_INTERMEDIATE  &&  CHECK_INTERMEDIATE != EXACT  &&  CHECK_INTERMEDIATE != HLLE  &&  \
         CHECK_INTERMEDIATE != HLLC )
 #     error : ERROR : unsupported option in CHECK_INTERMEDIATE (EXACT/HLLE/HLLC) !!
-#  endif
+#   endif
+#  endif // MHD
 
    if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
    {
