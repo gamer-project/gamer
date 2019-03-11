@@ -639,10 +639,12 @@ NewtonRaphsonSolver(void *ptr, real *root, const real guess, const real epsabs, 
      iter++;
      Fun_DFun(*root, ptr, &f, &df, Gamma);
 
+#    ifdef CHECK_NEGATIVE_IN_FLUID
      if ( df == 0.0 )                                            printf("derivative is zero\n");
      if (  f != f  || -HUGE_NUMBER >= f  || f  >= HUGE_NUMBER )  printf("function value is not finite\n");
      if ( df != df || -HUGE_NUMBER >= df || df >= HUGE_NUMBER )  printf("derivative value is not finite\n");
-     
+#    endif     
+
       root_old = *root;
       *root = *root - ( f / df );
       //printf("df = %20.17e\n", df);
@@ -668,23 +670,23 @@ Fun_DFun (real Temp, void *ptr, real * f, real * df, real Gamma)
   real E_D    = (params->E_D);
   real Tsqr = Temp * Temp;
 
-#if ( EOS == RELATIVISTIC_IDEAL_GAS )
+# if ( EOS == RELATIVISTIC_IDEAL_GAS )
   real abc = SQRT(9 * Tsqr + 4);
   real h = 2.5 * Temp + SQRT(2.25 * Tsqr + 1.0); // approximate enthalpy
   real dh = 2.5 + 9.0 * Temp / SQRT(36 * Tsqr + 16);
   real hsqr = SQR(h);
-#if   (CONSERVED_ENERGY == 1)
+# if   (CONSERVED_ENERGY == 1)
   real Constant = SQR(E_D) - M_Dsqr;
   *f = 3.5 * Tsqr + 1.5 * Temp * abc + hsqr * Tsqr / (hsqr + M_Dsqr) + 1.0 - Constant;
-#elif (CONSERVED_ENERGY == 2)
+# elif (CONSERVED_ENERGY == 2)
   real Constant = SQR(E_D) + 2*(E_D) - M_Dsqr;
   *f = 3.5 * Tsqr + 1.5 * Temp * abc + hsqr * Tsqr / (hsqr + M_Dsqr) - Constant;
 # else
 # error: CONSERVED_ENERGY must be 1 or 2!
-#endif
+# endif
   *df = 7*Temp + 1.5 * abc + 13.5 * Tsqr / abc + 2*h*Temp*((h*hsqr + M_Dsqr*h + Temp*dh*M_Dsqr) / SQR( hsqr + M_Dsqr) );
 
-#elif ( EOS == IDEAL_GAS )
+# elif ( EOS == IDEAL_GAS )
   real zeta = 1.0 / ( Gamma - 1.0 );
   real alpha = Gamma * zeta;
   real h = 1 + alpha * Temp;
@@ -692,17 +694,17 @@ Fun_DFun (real Temp, void *ptr, real * f, real * df, real Gamma)
   real beta = (2 - Gamma) * zeta * alpha;
   real theta = 2 * zeta;
 
-#if   (CONSERVED_ENERGY == 1)
+# if   (CONSERVED_ENERGY == 1)
   real Constant = SQR(E_D) - M_Dsqr;
   *f = 1.0 + beta * Tsqr + theta * Temp + hsqr * Tsqr / (hsqr + M_Dsqr) - Constant; 
-#elif (CONSERVED_ENERGY == 2)
+# elif (CONSERVED_ENERGY == 2)
   real Constant = SQR(E_D) + 2*(E_D) - M_Dsqr;
   *f = beta * Tsqr + theta * Temp + hsqr * Tsqr / (hsqr + M_Dsqr) - Constant; 
-#endif
+# endif
   real dh = alpha;
   *df = 2 * beta * Temp + theta + 2*h*Temp*((h*hsqr + M_Dsqr*h + Temp*dh*M_Dsqr) / SQR( hsqr + M_Dsqr) );
-#else
-#error: unsupported EoS!
-#endif // #if ( EOS == RELATIVISTIC_IDEAL_GAS )
+# else
+# error: unsupported EoS!
+# endif // #if ( EOS == RELATIVISTIC_IDEAL_GAS )
 }
 #endif

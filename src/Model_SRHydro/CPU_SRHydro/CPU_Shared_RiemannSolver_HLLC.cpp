@@ -244,7 +244,7 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
     /* Mignone 2006 Eq 48 */
     ps = -Fhll[4]*lmdas + Fhll[1];
 
-    /* now calcCLate Usl with Mignone Eq 16 */
+    /* now calculate Usl with Mignone Eq 16 */
     den = 1.0 / (lmdal - lmdas);
 
     real factor0 = lmdal - lV1;
@@ -264,7 +264,7 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
     SRHydro_CheckUnphysical(Usl, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true);
 #   endif
 
-    /* now calcCLate Fsr using Mignone Eq 14 */
+    /* now calculate Fsr using Mignone Eq 14 */
     Flux_Out[0] = lmdal*(Usl[0] - CL[0]) + Fl[0];
     Flux_Out[1] = lmdal*(Usl[1] - CL[1]) + Fl[1];
     Flux_Out[2] = lmdal*(Usl[2] - CL[2]) + Fl[2];
@@ -280,7 +280,7 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
   else{ /* Frs */
     /* Mignone 2006 Eq 48 */
     ps = -Fhll[4]*lmdas + Fhll[1];
-    /* now calcCLate Usr with Mignone Eq 16 */
+    /* now calculate Usr with Mignone Eq 16 */
     den = 1.0 / (lmdar - lmdas);
 
     real factor0 = lmdar - rV1;
@@ -299,7 +299,7 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
     SRHydro_CheckUnphysical(Usr, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true);
 #   endif
 
-    /* now calcCLate Fsr using Mignone Eq 14 */
+    /* now calculate Fsr using Mignone Eq 14 */
     Flux_Out[0] = lmdar*(Usr[0] - CR[0]) + Fr[0];
     Flux_Out[1] = lmdar*(Usr[1] - CR[1]) + Fr[1];
     Flux_Out[2] = lmdar*(Usr[2] - CR[2]) + Fr[2];
