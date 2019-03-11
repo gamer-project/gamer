@@ -177,7 +177,7 @@ SIMU_OPTION += -DNLEVEL=10
 
 # maximum number of patches on each AMR level
 # --> must be set in any cases
-SIMU_OPTION += -DMAX_PATCH=100000000
+SIMU_OPTION += -DMAX_PATCH=1000000
 
 # GPU acceleration
 # --> must set GPU_ARCH as well

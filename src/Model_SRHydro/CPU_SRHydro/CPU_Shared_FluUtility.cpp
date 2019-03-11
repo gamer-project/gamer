@@ -600,10 +600,11 @@ real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, 
    struct Fun_params params = { M_Dsqr, E_D };
 
 #ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( guess <= 0.0 || guess != guess ){ 
-    printf ("guess root = %14.7e < 0\n", guess);
-    printf ("D=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n", In[0], In[1], In[2], In[3], In[4]);
-   }
+   if ( guess != guess || guess >= HUGE_NUMBER || guess <= TINY_NUMBER )
+    { 
+      printf ("guess root = %14.7e\n", guess);
+      printf ("D=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n", In[0], In[1], In[2], In[3], In[4]);
+    }
 #endif 
 
 
