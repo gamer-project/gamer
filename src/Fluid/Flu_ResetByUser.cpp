@@ -146,7 +146,7 @@ void Flu_ResetByUser_API( const int lv, const int FluSg, const double TTime )
 #           if ( MODEL == SR_HYDRO )
 
 #           else
-            fluid[DENS] = Hydro_CheckMinDens( fluid[DENS], (real)MIN_DENS );
+            fluid[DENS] = FMAX ( fluid[DENS], (real)MIN_DENS );
             fluid[ENGY] = Hydro_CheckMinPresInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
                                                   Gamma_m1, _Gamma_m1, MIN_PRES );
 #           endif

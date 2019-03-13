@@ -1854,7 +1854,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 		      if (   CPU_CheckNegative(ArrayDens[t]) || !Aux_IsFinite(ArrayDens[t]))
 			  Aux_Error (ERROR_INFO, "ArrayDens[%d] = %+e", t, ArrayDens[t]);
 #                     endif
-                       ArrayDens[t] = SRHydro_CheckMinDens ( ArrayDens[t], MinDens );
+                       ArrayDens[t] = FMAX ( ArrayDens[t], MinDens );
                    }
             }
          } // if ( MinDens >= (real)0.0 )

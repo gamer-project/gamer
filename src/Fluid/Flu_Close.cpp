@@ -675,7 +675,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //          --> do NOT check the minimum pressure here since we want to apply the dual-energy correction first
             if ( !AUTO_REDUCE_DT ) {
                for (int v=0; v<NCOMP_TOTAL; v++)   Update1[v] = Update[v];
-               Update1[DENS] = SRHydro_CheckMinDens( Update[DENS], (real)MIN_DENS );
+               Update1[DENS] = FMAX ( Update[DENS], (real)MIN_DENS );
             }
 
 

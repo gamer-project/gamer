@@ -1,6 +1,7 @@
 #include "GAMER.h"
 #include "TestProb.h"
 
+#if ( MODEL == SR_HYDRO )
 
 // problem-specific global variables
 // =======================================================================================
@@ -459,3 +460,5 @@ void Init_TestProb_SRHydro_Jets()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_TestProb_SRHydro_Jets
+
+#endif

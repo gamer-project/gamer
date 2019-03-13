@@ -33,8 +33,8 @@ COMPILE_VERBOSE := 0
 # physical model: HYDRO/MHD/ELBDM/PAR_ONLY (ELBDM: wave dark matter; PAR_ONLY: particle-only)
 # --> must be set in any cases; PAR_ONLY is not supported yet;
 #     MHD and ELBDM are not publicly available yet but will be released soon
-SIMU_OPTION += -DMODEL=SR_HYDRO
-#SIMU_OPTION += -DMODEL=HYDRO
+#SIMU_OPTION += -DMODEL=SR_HYDRO
+SIMU_OPTION += -DMODEL=HYDRO
 
 # enable gravity
 #SIMU_OPTION += -DGRAVITY
@@ -53,25 +53,25 @@ SIMU_OPTION += -DMODEL=SR_HYDRO
 # (b-1) hydro options
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DMODEL=HYDRO, $(SIMU_OPTION))" "-DMODEL=HYDRO"
-# hydrodynamic scheme: RTVD/WAF/MHM/MHM_RP/CTU
-# --> must be set when MODEL=HYDRO; WAF is deprecated
+# hydrodynamic scheme: RTVD/MHM/MHM_RP/CTU
+# --> must be set when MODEL=HYDRO;
 SIMU_OPTION += -DFLU_SCHEME=CTU
 
 # scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic)
-# --> useless for RTVD/WAF
+# --> useless for RTVD
 SIMU_OPTION += -DLR_SCHEME=PPM
 
 # Riemann solver: EXACT/ROE/HLLE/HLLC
-# --> all are useless for RTVD; HLLE/HLLC are useless for WAF
+# --> all are useless for RTVD;
 SIMU_OPTION += -DRSOLVER=ROE
 
 # dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy)
-# --> DE_EINT is not supported yet; useless for RTVD/WAF
+# --> DE_EINT is not supported yet; useless for RTVD
 #SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
 
 # number of user-defined passively advected scalars
 # --> set it to 0 or comment it out if none is required
-# --> useless for RTVD/WAF
+# --> useless for RTVD
 SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 
 
@@ -102,8 +102,8 @@ SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 # (b-4) sr-hydro options
 # ------------------------------------------------------------------------------------
 else ifeq "$(filter -DMODEL=SR_HYDRO, $(SIMU_OPTION))" "-DMODEL=SR_HYDRO"
-# hydrodynamic scheme: RTVD/WAF/MHM/MHM_RP/CTU
-# --> must be set when MODEL=HYDRO; WAF is deprecated
+# hydrodynamic scheme: RTVD/MHM/MHM_RP/CTU
+# --> must be set when MODEL=HYDRO;
 SIMU_OPTION += -DFLU_SCHEME=MHM
 
 SIMU_OPTION += -DEOS=RELATIVISTIC_IDEAL_GAS
@@ -117,15 +117,15 @@ SIMU_OPTION += -DCONSERVED_ENERGY=2
 #SIMU_OPTION += -DCHECK_MIN_TEMP
 #SIMU_OPTION += -DCHECK_NEGATIVE_IN_FLUID
 # scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic)
-# --> useless for RTVD/WAF
+# --> useless for RTVD
 SIMU_OPTION += -DLR_SCHEME=PLM
 
 # Riemann solver: EXACT/ROE/HLLE/HLLC
-# --> all are useless for RTVD; HLLE/HLLC are useless for WAF
+# --> all are useless for RTVD;
 SIMU_OPTION += -DRSOLVER=HLLC
 
 # dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy)
-# --> DE_EINT is not supported yet; useless for RTVD/WAF
+# --> DE_EINT is not supported yet; useless for RTVD
 #SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
 
 endif # MODEL
@@ -449,10 +449,10 @@ vpath %.cpp    Main  Init  Refine  Fluid  Interpolation  Tables  Output  Miscell
 # hydrodynamic source files (included only if "MODEL=HYDRO")
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DMODEL=HYDRO, $(SIMU_OPTION))" "-DMODEL=HYDRO"
-CUDA_FILE   += CUFLU_dtSolver_HydroCFL.cu  CUFLU_FluidSolver_RTVD.cu  CUFLU_FluidSolver_WAF.cu  CUFLU_FluidSolver_MHM.cu \
+CUDA_FILE   += CUFLU_dtSolver_HydroCFL.cu  CUFLU_FluidSolver_RTVD.cu  CUFLU_FluidSolver_MHM.cu \
                CUFLU_FluidSolver_CTU.cu
 
-CC_FILE     += CPU_FluidSolver_RTVD.cpp  CPU_FluidSolver_WAF.cpp  CPU_FluidSolver_MHM.cpp  CPU_FluidSolver_CTU.cpp \
+CC_FILE     += CPU_FluidSolver_RTVD.cpp  CPU_FluidSolver_MHM.cpp  CPU_FluidSolver_CTU.cpp \
                CPU_Shared_DataReconstruction.cpp  CPU_Shared_FluUtility.cpp  CPU_Shared_ComputeFlux.cpp \
                CPU_Shared_FullStepUpdate.cpp  CPU_Shared_RiemannSolver_Exact.cpp  CPU_Shared_RiemannSolver_Roe.cpp \
                CPU_Shared_RiemannSolver_HLLE.cpp  CPU_Shared_RiemannSolver_HLLC.cpp  CPU_Shared_DualEnergy.cpp \

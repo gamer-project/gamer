@@ -91,7 +91,6 @@ double Hydro_Temperature2Pressure( const double Dens, const double Temp, const d
                                    const bool CheckMinPres, const double MinPres );
 
 real Hydro_CheckMinPres( const real InPres, const real MinPres );
-real Hydro_CheckMinDens( const real InDens, const real MinDens );
 void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
 
 #ifdef DUAL_ENERGY
@@ -105,6 +104,10 @@ real Hydro_DensEntropy2Pres( const real Dens, const real Enpy, const real Gamma_
                              const bool CheckMinPres, const real MinPres );
 #endif
 #endif
+
+real Hydro_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                               const real Gamma_m1, const real _Gamma_m1, const real MinPres );
+
 #elif ( MODEL == SR_HYDRO )
 void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       real h_Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
