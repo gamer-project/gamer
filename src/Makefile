@@ -33,8 +33,8 @@ COMPILE_VERBOSE := 0
 # physical model: HYDRO/MHD/ELBDM/PAR_ONLY (ELBDM: wave dark matter; PAR_ONLY: particle-only)
 # --> must be set in any cases; PAR_ONLY is not supported yet;
 #     MHD and ELBDM are not publicly available yet but will be released soon
-#SIMU_OPTION += -DMODEL=SR_HYDRO
-SIMU_OPTION += -DMODEL=HYDRO
+SIMU_OPTION += -DMODEL=SR_HYDRO
+#SIMU_OPTION += -DMODEL=HYDRO
 
 # enable gravity
 #SIMU_OPTION += -DGRAVITY
