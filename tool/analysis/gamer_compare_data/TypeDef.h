@@ -14,6 +14,7 @@ typedef float  real;
 #define HYDRO              1
 #define MHD                2
 #define ELBDM              3
+#define SR_HYDRO           5
 
 
 #ifndef NULL
@@ -31,7 +32,7 @@ typedef float  real;
 
 
 // number of components in each cell and the variable indices in the array "fluid"
-#if   ( MODEL == HYDRO )
+#if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
 #  define NCOMP_FLUID      5
 #  define DENS             0
 #  define MOMX             1

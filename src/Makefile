@@ -181,7 +181,7 @@ SIMU_OPTION += -DMAX_PATCH=1000000
 
 # GPU acceleration
 # --> must set GPU_ARCH as well
-SIMU_OPTION += -DGPU
+#SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA
 SIMU_OPTION += -DGPU_ARCH=FERMI
@@ -204,11 +204,11 @@ SIMU_OPTION += -DTIMING
 
 # serial mode (in which no MPI libraries are required)
 # --> must disable LOAD_BALANCE
-#SIMU_OPTION += -DSERIAL
+SIMU_OPTION += -DSERIAL
 
 # load-balance parallelization: HILBERT
 # --> must disable SERIAL
-SIMU_OPTION += -DLOAD_BALANCE=HILBERT
+#SIMU_OPTION += -DLOAD_BALANCE=HILBERT
 
 # overlap MPI communication with computation
 # --> NOT supported yet; must enable LOAD_BALANCE
@@ -221,7 +221,7 @@ SIMU_OPTION += -DOPENMP
 #SIMU_OPTION += -DLAOHU
 
 # support HDF5 format
-SIMU_OPTION += -DSUPPORT_HDF5
+#SIMU_OPTION += -DSUPPORT_HDF5
 
 # support GNU scientific library
 #SIMU_OPTION += -DSUPPORT_GSL
@@ -268,7 +268,7 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 # gnu
 # -------------------------------------------------------------------------------
  CXX         = g++                                       # serial compiler
- CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
+# CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
 #CXX         = CC                                        # cray wrapper script
  CXXFLAG     = -g -O3                                    # general flags
 #CXXFLAG     = -g -O3 -std=c++11
@@ -346,13 +346,13 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 #LIBYT_PATH   := /home/hyschive/project/libyt/libyt.dev/libyt
 
 # NTU-hulk (openmpi-gcc-qlc)
-FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
-MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
-HDF5_PATH    := /opt/hdf5/default
-GRACKLE_PATH := 
-GSL_PATH     := /opt/math/gsl/default
-LIBYT_PATH   := 
-CUDA_PATH    := /opt/gpu/cuda/default
+#FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
+#MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
+#HDF5_PATH    := /opt/hdf5/default
+#GRACKLE_PATH := 
+#GSL_PATH     := /opt/math/gsl/default
+#LIBYT_PATH   := 
+#CUDA_PATH    := /opt/gpu/cuda/default
 
 # NTU-hulk (openmpi-intel-qlc)
 #FFTW_PATH    := 

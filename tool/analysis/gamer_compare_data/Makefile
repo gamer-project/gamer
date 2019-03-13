@@ -11,7 +11,7 @@ EXECUTABLE = GAMER_CompareData
 # siimulation options
 #######################################################################################################
 # model: HYDRO/MHD/ELBDM
-SIMU_OPTION += -DMODEL=HYDRO
+SIMU_OPTION += -DMODEL=SR_HYDRO
 
 # double precision
 #SIMU_OPTION += -DFLOAT8
@@ -21,7 +21,7 @@ SIMU_OPTION += -DMODEL=HYDRO
 # siimulation parameters
 #######################################################################################################
 NLEVEL        = 10        # level : 0 ~ NLEVEL-1
-NCOMP_PASSIVE = 2         # number of passive scalars
+NCOMP_PASSIVE = 0         # number of passive scalars
 MAX_PATCH     = 1000000   # maximum number of patches in each level
 
 NLEVEL        := $(strip $(NLEVEL))

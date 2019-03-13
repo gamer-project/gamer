@@ -313,7 +313,7 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
          || ConsVar[MOMX] != ConsVar[MOMX]
          || ConsVar[MOMY] != ConsVar[MOMY]
          || ConsVar[MOMZ] != ConsVar[MOMZ]
-         || ConsVar[ENGY] != ConsVar[ENGY]  )                                 goto FAIL;
+         || ConsVar[ENGY] != ConsVar[ENGY]  )                                             goto FAIL;
 
 // check +inf and -inf
       if (    TINY_NUMBER >= ConsVar[DENS] || ConsVar[DENS]  >= HUGE_NUMBER
@@ -327,10 +327,10 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
       Msqr = SQR(ConsVar[MOMX]) + SQR(ConsVar[MOMY]) + SQR(ConsVar[MOMZ]);
 #     if ( CONSERVED_ENERGY == 1 )
       discriminant = SQR(ConsVar[ENGY]) - Msqr - SQR(ConsVar[DENS]);
-      if ( discriminant <= TINY_NUMBER )                                                 goto FAIL;
+      if ( discriminant <= TINY_NUMBER )                                                   goto FAIL;
 #     elif ( CONSERVED_ENERGY == 2 )
       discriminant = SQR(ConsVar[ENGY]) + 2*ConsVar[ENGY]*ConsVar[DENS] - Msqr;
-      if ( discriminant <= TINY_NUMBER )                                                 goto FAIL;
+      if ( discriminant <= TINY_NUMBER )                                                   goto FAIL;
 #     else
 #     error: CONSERVED_ENERGY must be 1 or 2!
 #     endif
@@ -342,19 +342,19 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
          || Pri4Vel[MOMX] != Pri4Vel[MOMX]
          || Pri4Vel[MOMY] != Pri4Vel[MOMY]
          || Pri4Vel[MOMZ] != Pri4Vel[MOMZ]
-         || Pri4Vel[ENGY] != Pri4Vel[ENGY]  )                                     goto FAIL;
+         || Pri4Vel[ENGY] != Pri4Vel[ENGY]  )                                              goto FAIL;
 
 // check +inf and -inf
       if (    TINY_NUMBER >= Pri4Vel[DENS] || Pri4Vel[DENS]  >= HUGE_NUMBER
          ||  -HUGE_NUMBER >= Pri4Vel[MOMX] || Pri4Vel[MOMX]  >= HUGE_NUMBER
          ||  -HUGE_NUMBER >= Pri4Vel[MOMY] || Pri4Vel[MOMY]  >= HUGE_NUMBER
          ||  -HUGE_NUMBER >= Pri4Vel[MOMZ] || Pri4Vel[MOMZ]  >= HUGE_NUMBER
-         ||   TINY_NUMBER >= Pri4Vel[ENGY] || Pri4Vel[ENGY]  >= HUGE_NUMBER )             goto FAIL;
+         ||   TINY_NUMBER >= Pri4Vel[ENGY] || Pri4Vel[ENGY]  >= HUGE_NUMBER )              goto FAIL;
 
 // check whether 3-velocity is greater or equal to speed of light
       SRHydro_4Velto3Vel(Pri4Vel,Pri3Vel);
 
-      if (SQR(Pri3Vel[1]) + SQR(Pri3Vel[2]) + SQR(Pri3Vel[3]) >= 1.0)         goto FAIL;
+      if (SQR(Pri3Vel[1]) + SQR(Pri3Vel[2]) + SQR(Pri3Vel[3]) >= 1.0)                      goto FAIL;
 
 // pass all checks 
       return false;
@@ -374,7 +374,7 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
          || Pri4Vel[MOMX] != Pri4Vel[MOMX]
          || Pri4Vel[MOMY] != Pri4Vel[MOMY]
          || Pri4Vel[MOMZ] != Pri4Vel[MOMZ]
-         || Pri4Vel[ENGY] != Pri4Vel[ENGY]  )                                goto FAIL;
+         || Pri4Vel[ENGY] != Pri4Vel[ENGY]  )                                       goto FAIL;
 
 // check +inf and -inf
       if (    TINY_NUMBER >= Pri4Vel[DENS] || Pri4Vel[DENS]  >= HUGE_NUMBER
@@ -388,31 +388,31 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
       SRHydro_Pri2Con(Pri4Vel, ConsVar, (real) Gamma);
 
 // check whether 3-velocity is greater or equal to speed of light
-      if (SQR(Pri3Vel[1]) + SQR(Pri3Vel[2]) + SQR(Pri3Vel[3]) >= 1.0)              goto FAIL;
+      if (SQR(Pri3Vel[1]) + SQR(Pri3Vel[2]) + SQR(Pri3Vel[3]) >= 1.0)               goto FAIL;
    
 // check NaN
       if (  ConsVar[DENS] != ConsVar[DENS]
          || ConsVar[MOMX] != ConsVar[MOMX]
          || ConsVar[MOMY] != ConsVar[MOMY]
          || ConsVar[MOMZ] != ConsVar[MOMZ]
-         || ConsVar[ENGY] != ConsVar[ENGY]  )                                           goto FAIL;
+         || ConsVar[ENGY] != ConsVar[ENGY]  )                                       goto FAIL;
 
 // check +inf and -inf
       if (    TINY_NUMBER >= ConsVar[DENS] || ConsVar[DENS]  >= HUGE_NUMBER
          ||  -HUGE_NUMBER >= ConsVar[MOMX] || ConsVar[MOMX]  >= HUGE_NUMBER
          ||  -HUGE_NUMBER >= ConsVar[MOMY] || ConsVar[MOMY]  >= HUGE_NUMBER
          ||  -HUGE_NUMBER >= ConsVar[MOMZ] || ConsVar[MOMZ]  >= HUGE_NUMBER
-         ||   TINY_NUMBER >= ConsVar[ENGY] || ConsVar[ENGY]  >= HUGE_NUMBER )                       goto FAIL;
+         ||   TINY_NUMBER >= ConsVar[ENGY] || ConsVar[ENGY]  >= HUGE_NUMBER )        goto FAIL;
 
 
 // check energy
       Msqr = SQR(ConsVar[MOMX]) + SQR(ConsVar[MOMY]) + SQR(ConsVar[MOMZ]);
 #     if ( CONSERVED_ENERGY == 1 )
       discriminant = SQR(ConsVar[ENGY]) - Msqr - SQR(ConsVar[DENS]);
-      if ( discriminant <= TINY_NUMBER )                                                         goto FAIL;
+      if ( discriminant <= TINY_NUMBER )                                              goto FAIL;
 #     elif ( CONSERVED_ENERGY == 2 )
       discriminant = SQR(ConsVar[ENGY]) + 2*ConsVar[ENGY]*ConsVar[DENS] - Msqr;
-      if ( discriminant <= TINY_NUMBER )                                                         goto FAIL;
+      if ( discriminant <= TINY_NUMBER )                                              goto FAIL;
 #     else
 #     error: CONSERVED_ENERGY must be 1 or 2!
 #     endif      

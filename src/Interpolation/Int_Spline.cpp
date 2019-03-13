@@ -4,7 +4,7 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Int_MinMod1D
+// Function    :  Int_Spline
 // Description :  Perform spatial interpolation based on the MinMod limiter
 //
 // Note        :  a. The slope at each grid is determined by the minimum slope between the right slope
@@ -24,7 +24,7 @@
 //                FStart   : (x,y,z) starting indcies to store the interpolation results
 //                NComp    : Number of components in the CData and FData array
 //-------------------------------------------------------------------------------------------------------
-void Int_MinMod1D( const real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
+void Int_Spline( const real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
                    real FData[], const int FSize[3], const int FStart[3], const int NComp )
 {
 // CSize_Tot = NCOMP_TOTAL*CSize_Flu*CSize_Flu*CSize_Flu
@@ -91,4 +91,4 @@ void Int_MinMod1D( const real CData[], const int CSize[3], const int CStart[3], 
       }
    } // for (int v=0; v<NComp; v++)
 
-} // FUNCTION : Int_MinMod1D
+} // FUNCTION : Int_Spline
