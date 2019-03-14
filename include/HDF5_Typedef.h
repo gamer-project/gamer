@@ -554,6 +554,8 @@ struct InputPara_t
    int    Opt__TimingBarrier;
    int    Opt__TimingBalance;
    int    Opt__TimingMPI;
+   int    Opt__RecordNote;
+   int    Opt__RecordUnphy;
    int    Opt__RecordMemory;
    int    Opt__RecordPerformance;
    int    Opt__ManualControl;
