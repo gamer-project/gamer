@@ -707,4 +707,59 @@ Fun_DFun (real Temp, void *ptr, real * f, real * df, real Gamma)
 # error: unsupported EoS!
 # endif // #if ( EOS == RELATIVISTIC_IDEAL_GAS )
 }
+
+void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus)
+{
+  real delta = B*B-4*A*C;
+
+  if (A != 0.0)
+  {
+       if ( delta > 0.0 )
+       {
+           real factor = -0.5*( B + SIGN(B) *  SQRT(delta) );
+     
+           if       ( B > 0.0 )
+           {
+             *x_plus   = C/factor;
+     	     *x_minus  = factor/A;      return;
+           }
+           else if  ( B < 0.0 )
+           {
+     	     *x_plus   = factor/A;
+     	     *x_minus  = C/factor;      return;
+           }
+           else if ( B == 0.0 )
+           {
+             *x_plus = SQRT(-C/A);
+             *x_minus = -*x_plus;       return;
+           }
+       }
+       else if ( delta == 0.0 )
+       {
+             *x_plus  = -0.5*B/A;
+             *x_minus = *x_plus;        return;
+       }
+       else                             goto NO_REAL_SOLUTIONS;
+  }
+//  else                                  goto NO_REAL_SOLUTIONS;
+  else
+  { // if ( A == 0.0 )
+      if ( B != 0.0 )
+      {
+        *x_plus  = -C/B;
+        *x_minus = -C/B;                return;
+      }
+      else                              goto NO_REAL_SOLUTIONS;
+  }
+
+
+     NO_REAL_SOLUTIONS:
+     {
+#    ifdef CHECK_NEGATIVE_IN_FLUID
+        printf( "No real solution in Quadratic Solver!\n");
+        printf( "A=%14.7e, B=%14.7e, C=%14.7e\n", A, B, C);
+        printf( "B*B-4*A*C=%14.7e\n", B*B-4*A*C);
+#    endif
+     }
+}
 #endif
