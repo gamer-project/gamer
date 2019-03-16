@@ -309,20 +309,20 @@ void MHD_UpdateMagnetic( real *g_FC_Bx_Out, real *g_FC_By_Out, real *g_FC_Bz_Out
       const int TDir1 = (d+1)%3;    // transverse direction 1
       const int TDir2 = (d+2)%3;    // transverse direction 2
 
-      int idx_out_e_i, idx_out_e_j, idx_out_e_k, stride_in_i, stride_in_j;
+      int idx_out_e_i, idx_out_e_j, idx_out_e_k, size_in_i, size_in_j;
 
       switch ( d )
       {
          case 0 : idx_out_e_i = NOutP1;      idx_out_e_j = NOut;        idx_out_e_k = NOut;
-                  stride_in_i = FLU_NXT_P1;  stride_in_j = FLU_NXT;
+                  size_in_i   = FLU_NXT_P1;  size_in_j   = FLU_NXT;
                   break;
 
          case 1 : idx_out_e_i = NOut;        idx_out_e_j = NOutP1;      idx_out_e_k = NOut;
-                  stride_in_i = FLU_NXT;     stride_in_j = FLU_NXT_P1;
+                  size_in_i   = FLU_NXT;     size_in_j   = FLU_NXT_P1;
                   break;
 
          case 2 : idx_out_e_i = NOut;        idx_out_e_j = NOut;        idx_out_e_k = NOutP1;
-                  stride_in_i = FLU_NXT;     stride_in_j = FLU_NXT;
+                  size_in_i   = FLU_NXT;     size_in_j   = FLU_NXT;
                   break;
       }
 
@@ -338,7 +338,7 @@ void MHD_UpdateMagnetic( real *g_FC_Bx_Out, real *g_FC_By_Out, real *g_FC_Bz_Out
          const int i_in    = i_out + Offset_B_In;
          const int j_in    = j_out + Offset_B_In;
          const int k_in    = k_out + Offset_B_In;
-         const int idx_in  = IDX321( i_in, j_in, k_in, stride_in_i, stride_in_j );
+         const int idx_in  = IDX321( i_in, j_in, k_in, size_in_i, size_in_j );
 
           dE1 = g_EC_Ele[TDir1][ idx_ele + didx_ele[TDir2] ] - g_EC_Ele[TDir1][idx_ele];
           dE2 = g_EC_Ele[TDir2][ idx_ele + didx_ele[TDir1] ] - g_EC_Ele[TDir2][idx_ele];
