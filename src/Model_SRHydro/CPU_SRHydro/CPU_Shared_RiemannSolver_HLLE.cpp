@@ -85,8 +85,12 @@ void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In
    real nhl =  2.5*PL[4] + SQRT(2.25*SQR(PL[4]) + SQR(PL[0]));
    real nhr =  2.5*PR[4] + SQRT(2.25*SQR(PR[4]) + SQR(PR[0]));
 
-   cslsq = ( PL[4]*( 5*nhl - 8*PL[4] ) ) / ((3*nhl)*( nhl - PL[4] ));
-   csrsq = ( PR[4]*( 5*nhr - 8*PR[4] ) ) / ((3*nhr)*( nhr - PR[4] ));
+   cslsq = PL[4] * ( 4.5*PL[4] + 5*SQRT(2.25*SQR(PL[4]) + SQR(PL[0])) ) 
+         / (3*nhl* ( 1.5*PL[4] +   SQRT(2.25*SQR(PL[4]) + SQR(PL[0])) ));
+
+   csrsq = PR[4] * ( 4.5*PR[4] + 5*SQRT(2.25*SQR(PR[4]) + SQR(PR[0])) ) 
+         / (3*nhr* ( 1.5*PR[4] +   SQRT(2.25*SQR(PR[4]) + SQR(PR[0])) ));
+
 #  elif ( EOS ==  IDEAL_GAS)
    rhl = PL[0] + PL[4] * Gamma / Gamma_m1; /* Mignone Eq 3.5 */
    rhr = PR[0] + PR[4] * Gamma / Gamma_m1;
@@ -189,60 +193,6 @@ void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In
 
 } // FUNCTION : SRHydro_RiemannSolver_HLLE
 
-//void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus)
-//{
-//  real delta = B*B-4*A*C;
-//
-//  if (A != 0.0)
-//  {
-//       if ( delta > 0.0 )
-//       {
-//           real factor = -0.5*( B + SIGN(B) *  SQRT(delta) );
-//     
-//           if       ( B > 0.0 )
-//           {
-//             *x_plus   = C/factor;
-//     	     *x_minus  = factor/A;      return;
-//           }
-//           else if  ( B < 0.0 )
-//           {
-//     	     *x_plus   = factor/A;
-//     	     *x_minus  = C/factor;      return;
-//           }
-//           else if ( B == 0.0 )
-//           {
-//             *x_plus = SQRT(-C/A);
-//             *x_minus = -*x_plus;       return;
-//           }
-//       }
-//       else if ( delta == 0.0 )
-//       {
-//             *x_plus  = -0.5*B/A;
-//             *x_minus = *x_plus;        return;
-//       }
-//       else                             goto NO_REAL_SOLUTIONS;
-//  }
-////  else                                  goto NO_REAL_SOLUTIONS;
-//  else
-//  { // if ( A == 0.0 )
-//      if ( B != 0.0 )
-//      {
-//        *x_plus  = -C/B;
-//        *x_minus = -C/B;                return;
-//      }
-//      else                              goto NO_REAL_SOLUTIONS;
-//  }
-//
-//
-//     NO_REAL_SOLUTIONS:
-//     {
-//#    ifdef CHECK_NEGATIVE_IN_FLUID
-//        printf( "No real solution in Quadratic Solver!\n");
-//        printf( "A=%14.7e, B=%14.7e, C=%14.7e\n", A, B, C);
-//        printf( "B*B-4*A*C=%14.7e\n", B*B-4*A*C);
-//#    endif
-//     }
-//}
 
 #endif // #if ( MODEL == SR_HYDRO )
 #endif

@@ -609,11 +609,11 @@ real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, 
 
 
 #  ifdef FLOAT8
-   real epsabs = 0.0;
-   real epsrel = 1.0e-15;
+   real epsabs = __DBL_MIN__;
+   real epsrel = __DBL_EPSILON__;
 #  else
-   real epsabs = 0.0;
-   real epsrel = 1.0e-6;
+   real epsabs = __FLT_MIN__;
+   real epsrel = __FLT_EPSILON__;
 #  endif
 
    NewtonRaphsonSolver(&params ,&root, guess, epsabs, epsrel, Gamma);
@@ -652,7 +652,6 @@ NewtonRaphsonSolver(void *ptr, real *root, const real guess, const real epsabs, 
       tolerance = epsabs + epsrel * FABS(*root);
    }while ( fabs(root_old - *root) >= tolerance && iter < max_iter );
 
-//if (iter >= 10) printf("iter=%d\n", iter);
 }
 
 
@@ -710,43 +709,58 @@ Fun_DFun (real Temp, void *ptr, real * f, real * df, real Gamma)
 
 void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus)
 {
+#  ifdef FLOAT8
+   real epsabs = __DBL_MIN__;
+   real epsrel = __DBL_EPSILON__;
+#  else
+   real epsabs = __FLT_MIN__;
+   real epsrel = __FLT_EPSILON__;
+#  endif
+
+//   real tol1 = epsabs + epsrel * FABS(A);
+//   real tol2 = epsabs + epsrel * FABS(B);
+//   real tol3 = epsabs + epsrel * FABS(C);
+
+  real tolerance = epsrel;
+
   real delta = B*B-4*A*C;
 
-  if (A != 0.0)
+
+  if ( FABS(A) > tolerance  )
   {
-       if ( delta > 0.0 )
+       if ( delta > tolerance )
        {
-           real factor = -0.5*( B + SIGN(B) *  SQRT(delta) );
+             real factor = -0.5*( B + SIGN(B) *  SQRT(delta) );
      
-           if       ( B > 0.0 )
+           if      ( B > +tolerance )
            {
-             *x_plus   = C/factor;
+     	     *x_plus   = C/factor;
      	     *x_minus  = factor/A;      return;
            }
-           else if  ( B < 0.0 )
+           else if ( B < -tolerance )
            {
      	     *x_plus   = factor/A;
      	     *x_minus  = C/factor;      return;
            }
-           else if ( B == 0.0 )
+           else if ( FABS(B) <= tolerance && C/A <= - tolerance)
            {
              *x_plus = SQRT(-C/A);
              *x_minus = -*x_plus;       return;
            }
+           else                        goto NO_REAL_SOLUTIONS;
        }
-       else if ( delta == 0.0 )
+       else if ( ( 0.0 <= delta ) && ( delta <= tolerance ) )
        {
              *x_plus  = -0.5*B/A;
              *x_minus = *x_plus;        return;
        }
        else                             goto NO_REAL_SOLUTIONS;
   }
-//  else                                  goto NO_REAL_SOLUTIONS;
   else
-  { // if ( A == 0.0 )
-      if ( B != 0.0 )
+  {
+      if ( FABS(B) >= tolerance )
       {
-        *x_plus  = -C/B;
+        *x_plus  = NAN;
         *x_minus = -C/B;                return;
       }
       else                              goto NO_REAL_SOLUTIONS;
