@@ -539,6 +539,10 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 //          --> actually no data reconstruction is required for that
 //###OPTIMIZARION: do not perform data reconstruction for the longitudinal B field
 #        ifdef MHD
+#        if ( FLU_SCHEME != CTU )
+         const real B_nL = g_FC_B[d][ idx_B[d]              ];
+         const real B_nR = g_FC_B[d][ idx_B[d] + didx_cc[d] ];
+#        endif
          fc[faceL][ MAG_OFFSET + d ] = B_nL;
          fc[faceR][ MAG_OFFSET + d ] = B_nR;
 #        endif
@@ -1077,9 +1081,13 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 //          --> actually no data reconstruction is required for that
 //###OPTIMIZARION: do not perform data reconstruction for the longitudinal B field
 #        ifdef MHD
+#        if ( FLU_SCHEME != CTU )
+         const real B_nL = g_FC_B[d][ idx_B[d]              ];
+         const real B_nR = g_FC_B[d][ idx_B[d] + didx_cc[d] ];
+#        endif
          fc[faceL][ MAG_OFFSET + d ] = B_nL;
          fc[faceR][ MAG_OFFSET + d ] = B_nR;
-#        endif
+#        endif // #ifdef MHD
 
 
 //       6. primitive variables --> conserved variables
