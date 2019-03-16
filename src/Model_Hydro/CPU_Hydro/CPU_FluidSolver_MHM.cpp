@@ -20,6 +20,8 @@
 # include "CUFLU_Shared_RiemannSolver_HLLE.cu"
 #elif ( RSOLVER == HLLC )
 # include "CUFLU_Shared_RiemannSolver_HLLC.cu"
+#elif ( RSOLVER == HLLD )
+# include "CUFLU_Shared_RiemannSolver_HLLD.cu"
 #endif
 
 #include "CUFLU_SetConstMem_FluidSolver.cu"
@@ -57,6 +59,9 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
                                const real Gamma, const real MinPres );
 #elif ( RSOLVER == HLLC )
 void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+                               const real Gamma, const real MinPres );
+#elif ( RSOLVER == HLLD )
+void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                const real Gamma, const real MinPres );
 #endif
 #if ( FLU_SCHEME == MHM_RP )
