@@ -171,7 +171,12 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
    if ( Hydro_CheckNegative(GammaP_Rho) )
       printf( "ERROR : invalid GammaP_Rho (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               GammaP_Rho, __FILE__, __LINE__, __FUNCTION__ );
+#  ifdef MHD
+   if ( Hydro_CheckNegative(Gamma_m1-Y) )
+      printf( "ERROR : invalid Gamma_m1-Y (%14.7e, Gamma_m1 %14.7e, Y %14.7e) at file <%s>, line <%d>, function <%s>\n",
+              Gamma_m1-Y, Gamma_m1, Y, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
+#  endif // #ifdef CHECK_NEGATIVE_IN_FLUID
 
 #  ifdef MHD
    a2          = GammaP_Rho - X;
