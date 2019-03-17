@@ -698,12 +698,15 @@
 
 
 // extreme value used for various purpose (e.g., floor value for passive scalars)
+// -->  __DBL_EPSILON__ is the relative roundoff error between two adjacent double presision floating-point number
 #ifdef FLOAT8
 #  define TINY_NUMBER      __DBL_MIN__
 #  define HUGE_NUMBER      __DBL_MAX__
+#  define     EPSILON      __DBL_EPSILON__
 #else
 #  define TINY_NUMBER      __FLT_MIN__
 #  define HUGE_NUMBER      __FLT_MAX__
+#  define     EPSILON      __FLT_EPSILON__
 #endif
 
 

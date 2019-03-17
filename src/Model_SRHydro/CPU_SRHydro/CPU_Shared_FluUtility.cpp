@@ -607,16 +607,7 @@ real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, 
     }
 #endif 
 
-
-#  ifdef FLOAT8
-   real epsabs = __DBL_MIN__;
-   real epsrel = __DBL_EPSILON__;
-#  else
-   real epsabs = __FLT_MIN__;
-   real epsrel = __FLT_EPSILON__;
-#  endif
-
-   NewtonRaphsonSolver(&params ,&root, guess, epsabs, epsrel, Gamma);
+   NewtonRaphsonSolver(&params ,&root, guess, TINY_NUMBER, EPSILON, Gamma);
 
    return root;
 }				// FUNCTION : SRHydro_GetTemperature
@@ -709,19 +700,7 @@ Fun_DFun (real Temp, void *ptr, real * f, real * df, real Gamma)
 
 void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus)
 {
-#  ifdef FLOAT8
-   real epsabs = __DBL_MIN__;
-   real epsrel = __DBL_EPSILON__;
-#  else
-   real epsabs = __FLT_MIN__;
-   real epsrel = __FLT_EPSILON__;
-#  endif
-
-//   real tol1 = epsabs + epsrel * FABS(A);
-//   real tol2 = epsabs + epsrel * FABS(B);
-//   real tol3 = epsabs + epsrel * FABS(C);
-
-  real tolerance = epsrel;
+  real tolerance = EPSILON;
 
   real delta = B*B-4*A*C;
 

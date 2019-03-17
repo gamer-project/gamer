@@ -111,9 +111,9 @@ SIMU_OPTION += -DEOS=RELATIVISTIC_IDEAL_GAS
 #SIMU_OPTION += -DEOS=IDEAL_GAS
 
 # conserved energy = (total energy)
-#SIMU_OPTION += -DCONSERVED_ENERGY=1
+SIMU_OPTION += -DCONSERVED_ENERGY=1
 # conserved energy = (total energy) - (rest mass energy)
-SIMU_OPTION += -DCONSERVED_ENERGY=2
+#SIMU_OPTION += -DCONSERVED_ENERGY=2
 #SIMU_OPTION += -DCHECK_MIN_TEMP
 #SIMU_OPTION += -DCHECK_NEGATIVE_IN_FLUID
 # scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic)
