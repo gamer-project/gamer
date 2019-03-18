@@ -10,10 +10,12 @@
 // Note        :  1. Maximum radius adopted when actually computing the profile may be larger than the
 //                   input "r_max"
 //                   --> Because "r_max" in general does not coincide with the right edge of the maximum bin
+//                2. Several arrays will be allocated for the input structure "Prof" (e.g., Prof->Radius[])
+//                   --> They will be free'd when deleting "Prof"
 //
 // Parameter   :
 //
-// Return      :  None
+// Return      :  Prof
 //-------------------------------------------------------------------------------------------------------
 void Aux_ComputeProfile( Profile_t *Prof, const double Center[], const double r_max_input, const double dr_min,
                          const bool LogBin, const double LogBinRatio, const bool RemoveEmpty )
@@ -54,7 +56,7 @@ void Aux_ComputeProfile( Profile_t *Prof, const double Center[], const double r_
    if ( LogBin )  Prof->LogBinRatio = LogBinRatio;
 
 
-// allocate and initialize memory
+// allocate all member arrays of Prof
    Prof->AllocateMemory();
 
 
@@ -65,49 +67,105 @@ void Aux_ComputeProfile( Profile_t *Prof, const double Center[], const double r_
       for (int b=0; b<Prof->NBin; b++)    Prof->Radius[b] = (b+0.5)*dr_min;
 
 
+// allocate memory for per-thread arrays
+#  ifdef OPENMP
+   const int NT = OMP_NTHREAD;   // number of OpenMP threads
+#  else
+   const int NT = 1;
+#  endif
+
+   double **OMP_Data=NULL, **OMP_Weight=NULL;
+   long   **OMP_NCell=NULL;
+
+   Aux_AllocateArray2D( OMP_Data,   NT, Prof->NBin );
+   Aux_AllocateArray2D( OMP_Weight, NT, Prof->NBin );
+   Aux_AllocateArray2D( OMP_NCell,  NT, Prof->NBin );
+
+
 // collect profile dat in this rank
    const double r_max2 = SQR( Prof->MaxRadius );
 
-   for (int lv=0; lv<NLEVEL; lv++)
+#  pragma omp parallel
    {
-      const double dh = amr->dh[lv];
-      const double dv = CUBE( dh );
+#     ifdef OPENMP
+      const int TID = omp_get_thread_num();
+#     else
+      const int TID = 0;
+#     endif
 
-      for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+//    initialize arrays
+      for (int b=0; b<Prof->NBin; b++)
       {
-         if ( amr->patch[0][lv][PID]->son != -1 )  continue;
+         OMP_Data  [TID][b] = 0.0;
+         OMP_Weight[TID][b] = 0.0;
+         OMP_NCell [TID][b] = 0;
+      }
 
-         const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh - Center[0];
-         const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh - Center[1];
-         const double z0 = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh - Center[2];
+      for (int lv=0; lv<NLEVEL; lv++)
+      {
+         const double dh = amr->dh[lv];
+         const double dv = CUBE( dh );
 
-         for (int k=0; k<PS1; k++)  {  const double dz = z0 + k*dh;
-         for (int j=0; j<PS1; j++)  {  const double dy = y0 + j*dh;
-         for (int i=0; i<PS1; i++)  {  const double dx = x0 + i*dh;
+#        pragma omp for schedule( runtime )
+         for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+         {
+            if ( amr->patch[0][lv][PID]->son != -1 )  continue;
 
-            const double r2 = SQR(dx) + SQR(dy) + SQR(dz);
+            const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh - Center[0];
+            const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh - Center[1];
+            const double z0 = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh - Center[2];
 
-            if ( r2 < r_max2 )
-            {
-               const double r   = sqrt( r2 );
-               const int    bin = ( LogBin ) ? (  (r<dr_min) ? 0 : int( log(r/dr_min)/log(LogBinRatio) ) + 1  )
-                                             : int( r/dr_min );
-//             prevent from round-off errors
-               if ( bin >= Prof->NBin )   continue;
+            for (int k=0; k<PS1; k++)  {  const double dz = z0 + k*dh;
+            for (int j=0; j<PS1; j++)  {  const double dy = y0 + j*dh;
+            for (int i=0; i<PS1; i++)  {  const double dx = x0 + i*dh;
 
-//             check
-#              ifdef GAMER_DEBUG
-               if ( bin < 0 )    Aux_Error( ERROR_INFO, "bin (%d) < 0 !!\n", bin );
-#              endif
+               const double r2 = SQR(dx) + SQR(dy) + SQR(dz);
+
+               if ( r2 < r_max2 )
+               {
+                  const double r   = sqrt( r2 );
+                  const int    bin = ( LogBin ) ? (  (r<dr_min) ? 0 : int( log(r/dr_min)/log(LogBinRatio) ) + 1  )
+                                                : int( r/dr_min );
+//                prevent from round-off errors
+                  if ( bin >= Prof->NBin )   continue;
+
+//                check
+#                 ifdef GAMER_DEBUG
+                  if ( bin < 0 )    Aux_Error( ERROR_INFO, "bin (%d) < 0 !!\n", bin );
+#                 endif
 
 //###WORK      replace it with a user-specified function
-               Prof->Data  [bin] += amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i]*dv;
-               Prof->Weight[bin] += dv;
-               Prof->NCell [bin] ++;
-            } // if ( r2 < r_max2 )
-         }}} // i,j,k
-      } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-   } // for (int lv=0; lv<NLEVEL; lv++)
+                  OMP_Data  [TID][bin] += amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i]*dv;
+                  OMP_Weight[TID][bin] += dv;
+                  OMP_NCell [TID][bin] ++;
+               } // if ( r2 < r_max2 )
+            }}} // i,j,k
+         } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+      } // for (int lv=0; lv<NLEVEL; lv++)
+   } // OpenMP parallel region
+
+
+// sum over all OpenMP threads
+   for (int b=0; b<Prof->NBin; b++)
+   {
+      Prof->Data  [b]  = OMP_Data  [0][b];
+      Prof->Weight[b]  = OMP_Weight[0][b];
+      Prof->NCell [b]  = OMP_NCell [0][b];
+   }
+
+   for (int t=1; t<NT; t++)
+   for (int b=0; b<Prof->NBin; b++)
+   {
+      Prof->Data  [b] += OMP_Data  [t][b];
+      Prof->Weight[b] += OMP_Weight[t][b];
+      Prof->NCell [b] += OMP_NCell [t][b];
+   }
+
+
+// free per-thread arrays
+   Aux_DeallocateArray2D( OMP_Data );
+   Aux_DeallocateArray2D( OMP_Weight );
+   Aux_DeallocateArray2D( OMP_NCell );
 
 
 // collect data from all ranks (in-place reduction)
