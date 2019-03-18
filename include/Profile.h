@@ -14,7 +14,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //
 // Data Member :  NBin        : Total number of radial bins
 //                LogBin      : true/false --> log/linear bins
-//                LogBinRatio : Ratio of any two adjacent log bin size
+//                LogBinRatio : Ratio of adjacent log bins
 //                MaxRadius   : Maximum radius
 //                Center      : Target center coordinates
 //                Allocated   : Whether or not member arrays such as Radius[] have been allocated

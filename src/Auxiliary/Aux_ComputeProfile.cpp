@@ -7,13 +7,30 @@
 // Function    :  Aux_ComputeProfile
 // Description :  Compute the average radial profile of a target field
 //
-// Note        :  1. Maximum radius adopted when actually computing the profile may be larger than the
-//                   input "r_max"
+// Note        :  1. Results will be stored in the input "Prof" object
+//                   --> Prof->Radius[]: Radial coordinate at each bin
+//                       Prof->Data  []: Profile data at each bin
+//                       Prof->Weight[]: Total weighting at each bin
+//                       Prof->NCell []: Number of cells at each bin
+//                       Prof->NBin    : Total number of bins
+//                   --> See the "Profile_t" structure defined in "include/Profile.h" for details
+//                   --> These arrays will be free'd when deleting "Prof"
+//                2. Maximum radius adopted when actually computing the profile may be larger than the input "r_max"
 //                   --> Because "r_max" in general does not coincide with the right edge of the maximum bin
-//                2. Several arrays will be allocated for the input structure "Prof" (e.g., Prof->Radius[])
-//                   --> They will be free'd when deleting "Prof"
 //
-// Parameter   :
+// Parameter   :  Prof        : Profile_t object to store the results
+//                Center      : Target center coordinates
+//                r_max_input : Maximum radius for computing the profile
+//                              --> See also "Note-2" above
+//                dr_min      : Minimum bin size
+//                              --> For linear bin, this is the size of all bins
+//                                  For log    bin, this is the size of the 0th bin
+//                LogBin      : true/false --> log/linear bins
+//                LogBinRatio : Ratio of adjacent log bins
+//                              --> Right edge of log bin n = dr_min*LogBinRatio^n
+//                RemoveEmpty : true  --> remove empty bins from the data
+//                              false --> these empty bins will still be in the profile arrays with
+//                                        Data[empty_bin]=Weight[empty_bin]=NCell[empty_bin]=0
 //
 // Return      :  Prof
 //-------------------------------------------------------------------------------------------------------
@@ -134,7 +151,7 @@ void Aux_ComputeProfile( Profile_t *Prof, const double Center[], const double r_
                   if ( bin < 0 )    Aux_Error( ERROR_INFO, "bin (%d) < 0 !!\n", bin );
 #                 endif
 
-//###WORK      replace it with a user-specified function
+//###REVISE       replace by a user-specified function
                   OMP_Data  [TID][bin] += amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i]*dv;
                   OMP_Weight[TID][bin] += dv;
                   OMP_NCell [TID][bin] ++;
