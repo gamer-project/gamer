@@ -17,6 +17,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                LogBinRatio : Ratio of any two adjacent log bin size
 //                MaxRadius   : Maximum radius
 //                Center      : Target center coordinates
+//                Allocated   : Whether or not member arrays such as Radius[] have been allocated
 //                Radius      : Radial coordinate at each bin
 //                Data        : Profile data at each bin
 //                Weight      : Total weighting at each bin
@@ -37,6 +38,7 @@ struct Profile_t
    double LogBinRatio;
    double MaxRadius;
    double Center[3];
+   bool   Allocated;
 
    double *Radius;
    double *Data;
@@ -55,11 +57,12 @@ struct Profile_t
    Profile_t()
    {
 
-      NBin   = -1;
-      Radius = NULL;
-      Data   = NULL;
-      Weight = NULL;
-      NCell  = NULL;
+      NBin      = -1;
+      Allocated = false;
+      Radius    = NULL;
+      Data      = NULL;
+      Weight    = NULL;
+      NCell     = NULL;
 
    } // METHOD : Profile_t
 
@@ -84,7 +87,8 @@ struct Profile_t
    // Method      :  AllocateMemory
    // Description :  Allocate and initialize arrays
    //
-   // Note        :  Invoked by Aux_ComputeProfile()
+   // Note        :  1. Invoked by Aux_ComputeProfile()
+   //                2. No data initialization is done here
    //
    // Parameter   :  None
    //
@@ -95,17 +99,16 @@ struct Profile_t
 
       if ( NBin < 0 )   Aux_Error( ERROR_INFO, "NBin (%d) < 0 !!\n", NBin );
 
+//    free the previously allocated memory in case NBin has changed
+//    --> allows the same Profile_t object to be reused without the need to manually free memory first
+      if ( Allocated )  FreeMemory();
+
       Radius = new double [NBin];
       Data   = new double [NBin];
       Weight = new double [NBin];
       NCell  = new long   [NBin];
 
-      for (int b=0; b<NBin; b++)
-      {
-         Data  [b] = 0.0;
-         Weight[b] = 0.0;
-         NCell [b] = 0;
-      }
+      Allocated = true;
 
    } // METHOD : AllocateMemory
 
@@ -128,6 +131,8 @@ struct Profile_t
       delete [] Data;      Data   = NULL;
       delete [] Weight;    Weight = NULL;
       delete [] NCell;     NCell  = NULL;
+
+      Allocated = false;
 
    } // METHOD : FreeMemory
 
