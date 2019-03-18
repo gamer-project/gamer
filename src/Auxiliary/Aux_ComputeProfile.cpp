@@ -17,6 +17,8 @@
 //                   --> These arrays will be free'd when deleting "Prof"
 //                2. Maximum radius adopted when actually computing the profile may be larger than the input "r_max"
 //                   --> Because "r_max" in general does not coincide with the right edge of the maximum bin
+//                3. Support hybrid OpenMP/MPI parallelization
+//                   --> All ranks will share the same profile data after invoking this function
 //
 // Parameter   :  Prof        : Profile_t object to store the results
 //                Center      : Target center coordinates
@@ -31,6 +33,27 @@
 //                RemoveEmpty : true  --> remove empty bins from the data
 //                              false --> these empty bins will still be in the profile arrays with
 //                                        Data[empty_bin]=Weight[empty_bin]=NCell[empty_bin]=0
+//
+// Example     :  Profile_t Prof;
+//
+//                const double Center[3]      = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
+//                const double MaxRadius      = 0.5*amr->BoxSize[0];
+//                const double MinBinSize     = amr->dh[MAX_LEVEL];
+//                const bool   LogBin         = true;
+//                const double LogBinRatio    = 1.25;
+//                const bool   RemoveEmptyBin = true;
+//
+//                Aux_ComputeProfile( &Prof, Center, MaxRadius, MinBinSize, LogBin, LogBinRatio, RemoveEmptyBin );
+//
+//                if ( MPI_Rank == 0 )
+//                {
+//                   FILE *File = fopen( "Profile.txt", "w" );
+//                   fprintf( File, "#%19s  %21s  %21s  %10s\n", "Radius", "Data", "Weight", "Cells" );
+//                   for (int b=0; b<Prof.NBin; b++)
+//                      fprintf( File, "%20.14e  %21.14e  %21.14e  %10ld\n",
+//                               Prof.Radius[b], Prof.Data[b], Prof.Weight[b], Prof.NCell[b] );
+//                   fclose( File );
+//                }
 //
 // Return      :  Prof
 //-------------------------------------------------------------------------------------------------------
