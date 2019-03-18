@@ -110,58 +110,70 @@ void Aux_ComputeProfile( Profile_t *Prof, const double Center[], const double r_
    } // for (int lv=0; lv<NLEVEL; lv++)
 
 
-//###WORK
-// in-place MPI reduce for the profile and weight
+// collect data from all ranks (in-place reduction)
+#  ifndef SERIAL
+   if ( MPI_Rank == 0 )
+   {
+      MPI_Reduce( MPI_IN_PLACE, Prof->Data,   Prof->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+      MPI_Reduce( MPI_IN_PLACE, Prof->Weight, Prof->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+      MPI_Reduce( MPI_IN_PLACE, Prof->NCell , Prof->NBin, MPI_LONG,   MPI_SUM, 0, MPI_COMM_WORLD );
+   }
+
+   else
+   {
+      MPI_Reduce( Prof->Data,   NULL,         Prof->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+      MPI_Reduce( Prof->Weight, NULL,         Prof->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+      MPI_Reduce( Prof->NCell,  NULL,         Prof->NBin, MPI_LONG,   MPI_SUM, 0, MPI_COMM_WORLD );
+   }
+#  endif
 
 
 // compute profile by the root rank
    if ( MPI_Rank == 0 )
+   for (int b=0; b<Prof->NBin; b++)
    {
-      for (int b=0; b<Prof->NBin; b++)
-         Prof->Data[b] /= Prof->Weight[b];
+//    skip empty bins since both their data and weight are zero
+      if ( Prof->NCell[b] > 0L )    Prof->Data[b] /= Prof->Weight[b];
+   }
 
-//    reset or remove the empty bins
-      for (int b=0; b<Prof->NBin; b++)
+
+// broadcast data to all ranks
+   MPI_Bcast( Prof->Data,   Prof->NBin, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+   MPI_Bcast( Prof->Weight, Prof->NBin, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+   MPI_Bcast( Prof->NCell,  Prof->NBin, MPI_LONG,   0, MPI_COMM_WORLD );
+
+
+// remove the empty bins
+// --> all ranks do the same work so that no data broadcast is required
+   if ( RemoveEmpty )
+   for (int b=0; b<Prof->NBin; b++)
+   {
+      if ( Prof->NCell[b] != 0L )   continue;
+
+      for (int b_up=b+1; b_up<Prof->NBin; b_up++)
       {
-         if ( Prof->NCell[b] != 0L )   continue;
+         const int b_up_m1 = b_up - 1;
 
-         if ( RemoveEmpty )
-         {
-            for (int b_up=b+1; b_up<Prof->NBin; b_up++)
-            {
-               const int b_up_m1 = b_up - 1;
+         Prof->Radius[b_up_m1] = Prof->Radius[b_up];
+         Prof->Data  [b_up_m1] = Prof->Data  [b_up];
+         Prof->Weight[b_up_m1] = Prof->Weight[b_up];
+         Prof->NCell [b_up_m1] = Prof->NCell [b_up];
+      }
 
-               Prof->Radius[b_up_m1] = Prof->Radius[b_up];
-               Prof->Data  [b_up_m1] = Prof->Data  [b_up];
-               Prof->Weight[b_up_m1] = Prof->Weight[b_up];
-               Prof->NCell [b_up_m1] = Prof->NCell [b_up];
-            }
+//    reset the total number of bins
+      Prof->NBin --;
 
-//          reset the total number of bins
-            Prof->NBin --;
-
-//          reset the maximum radius if we are removing the last bin
-            if ( b == Prof->NBin )
-            {
-               if ( LogBin )
-                  Prof->MaxRadius = dr_min*pow( LogBinRatio, Prof->NBin-1 );
-               else
-                  Prof->MaxRadius = dr_min*Prof->NBin;
-            }
-
-//          reduce counter since all bins above b have been shifted downed
-            b --;
-         } // if ( RemoveEmpty )
-
+//    reset the maximum radius if we are removing the last bin
+      if ( b == Prof->NBin )
+      {
+         if ( LogBin )
+            Prof->MaxRadius = dr_min*pow( LogBinRatio, Prof->NBin-1 );
          else
-         {
-            Prof->Data[b] = 0.0;
-         } // if ( RemoveEmpty ) ... else ...
-      } // for (int b=0; b<Prof->NBin; b++)
-   } // if ( MPI_Rank == 0 )
+            Prof->MaxRadius = dr_min*Prof->NBin;
+      }
 
-
-//###WORK
-// broadcast Data and Weight
+//    reduce counter since all bins above b have been shifted downward
+      b --;
+   } // for (int b=0; b<Prof->NBin; b++)
 
 } // FUNCTION : Aux_ComputeProfile
