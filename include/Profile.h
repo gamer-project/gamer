@@ -85,14 +85,14 @@ struct Profile_t
 
    //===================================================================================
    // Method      :  AllocateMemory
-   // Description :  Allocate and initialize arrays
+   // Description :  Allocate member arrays
    //
    // Note        :  1. Invoked by Aux_ComputeProfile()
    //                2. No data initialization is done here
    //
    // Parameter   :  None
    //
-   // Return      :  Radius[], Data[], Weight[], NCell[]
+   // Return      :  Radius[], Data[], Weight[], NCell[], Allocated
    //===================================================================================
    void AllocateMemory()
    {
