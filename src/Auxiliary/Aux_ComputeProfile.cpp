@@ -7,8 +7,8 @@
 // Function    :  Aux_ComputeProfile
 // Description :  Compute the average radial profile of a target field
 //
-// Note        :  1. Maximum radius actually adopted for computing the profile data may be larger than
-//                   the input "r_max"
+// Note        :  1. Maximum radius adopted when actually computing the profile may be larger than the
+//                   input "r_max"
 //                   --> Because "r_max" in general does not coincide with the right edge of the maximum bin
 //
 // Parameter   :
@@ -16,7 +16,7 @@
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
 void Aux_ComputeProfile( Profile_t *Prof, const double Center[], const double r_max_input, const double dr_min,
-                         const bool LogBin, const double LogBinRatio )
+                         const bool LogBin, const double LogBinRatio, const bool RemoveEmpty )
 {
 
 // check
@@ -90,10 +90,15 @@ void Aux_ComputeProfile( Profile_t *Prof, const double Center[], const double r_
             if ( r2 < r_max2 )
             {
                const double r   = sqrt( r2 );
-               const int    bin = ( LogBin ) ? int(  ceil( log(r/dr_min)/log(LogBinRatio) )  ) :
-                                               int( r/dr_min );
+               const int    bin = ( LogBin ) ? (  (r<dr_min) ? 0 : int( log(r/dr_min)/log(LogBinRatio) ) + 1  )
+                                             : int( r/dr_min );
 //             prevent from round-off errors
                if ( bin >= Prof->NBin )   continue;
+
+//             check
+#              ifdef GAMER_DEBUG
+               if ( bin < 0 )    Aux_Error( ERROR_INFO, "bin (%d) < 0 !!\n", bin );
+#              endif
 
 //###WORK      replace it with a user-specified function
                Prof->Data  [bin] += amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i]*dv;
@@ -114,7 +119,46 @@ void Aux_ComputeProfile( Profile_t *Prof, const double Center[], const double r_
    {
       for (int b=0; b<Prof->NBin; b++)
          Prof->Data[b] /= Prof->Weight[b];
-   }
+
+//    reset or remove the empty bins
+      for (int b=0; b<Prof->NBin; b++)
+      {
+         if ( Prof->NCell[b] != 0L )   continue;
+
+         if ( RemoveEmpty )
+         {
+            for (int b_up=b+1; b_up<Prof->NBin; b_up++)
+            {
+               const int b_up_m1 = b_up - 1;
+
+               Prof->Radius[b_up_m1] = Prof->Radius[b_up];
+               Prof->Data  [b_up_m1] = Prof->Data  [b_up];
+               Prof->Weight[b_up_m1] = Prof->Weight[b_up];
+               Prof->NCell [b_up_m1] = Prof->NCell [b_up];
+            }
+
+//          reset the total number of bins
+            Prof->NBin --;
+
+//          reset the maximum radius if we are removing the last bin
+            if ( b == Prof->NBin )
+            {
+               if ( LogBin )
+                  Prof->MaxRadius = dr_min*pow( LogBinRatio, Prof->NBin-1 );
+               else
+                  Prof->MaxRadius = dr_min*Prof->NBin;
+            }
+
+//          reduce counter since all bins above b have been shifted downed
+            b --;
+         } // if ( RemoveEmpty )
+
+         else
+         {
+            Prof->Data[b] = 0.0;
+         } // if ( RemoveEmpty ) ... else ...
+      } // for (int b=0; b<Prof->NBin; b++)
+   } // if ( MPI_Rank == 0 )
 
 
 //###WORK
