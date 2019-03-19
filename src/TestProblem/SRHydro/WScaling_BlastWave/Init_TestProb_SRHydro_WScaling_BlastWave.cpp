@@ -110,7 +110,9 @@ void SetParameter()
 
    int Total_BlastWave = Number_BlastWave_X * Number_BlastWave_Y * Number_BlastWave_Z;
 
-   Blast_Center = new double [Total_BlastWave][3];
+   Blast_Center      = new double [Total_BlastWave][3];
+   int (*Blast_Center_Temp)[3];  // explosion center
+   Blast_Center_Temp = new    int [Total_BlastWave][3];
 
    double dX[3];
 
@@ -118,12 +120,17 @@ void SetParameter()
    dX[1] = 0.5 * amr->BoxSize[1] / (double) Number_BlastWave_Y;
    dX[2] = 0.5 * amr->BoxSize[2] / (double) Number_BlastWave_Z;
 
-// set the default explosion center
-   for (int i=0; i<Total_BlastWave; i++)
-     for (int d=0; d<3; d++)
-        if ( Blast_Center[i][d] < 0.0 )  Blast_Center[i][d] = ( i + 0.5 )*dX[d];
+// set the explosion centers
+   for (int i=0;i<Total_BlastWave;i++)
+    {
+       Blast_Center_Temp[i][2] = i % Number_BlastWave_X;
+       Blast_Center_Temp[i][1] = ( ( i-Blast_Center_Temp[i][2] ) / Number_BlastWave_X ) % Number_BlastWave_X;
+       Blast_Center_Temp[i][0] = ( i - Blast_Center_Temp[i][2] - Blast_Center_Temp[i][1] ) / (Number_BlastWave_X*Number_BlastWave_X);
 
-
+       Blast_Center[i][2] = ( 2 * Blast_Center_Temp[i][2] + 1 ) * dX[2];
+       Blast_Center[i][1] = ( 2 * Blast_Center_Temp[i][1] + 1 ) * dX[1];
+       Blast_Center[i][0] = ( 2 * Blast_Center_Temp[i][0] + 1 ) * dX[0];
+    }
 // (2) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
    const double End_T_Default    = 5.0e-3;
@@ -153,6 +160,9 @@ void SetParameter()
       Aux_Message( stdout, "  number of blast wave in y-direction     = %13d\n"  , Number_BlastWave_Y );
       Aux_Message( stdout, "  number of blast wave in z-direction     = %13d\n"  , Number_BlastWave_Z );
       Aux_Message( stdout, "  explosion radius                        = %13.7e\n", Blast_Radius );
+      for (int i=0; i<Total_BlastWave; i++)
+        for (int d=0; d<3; d++)
+            Aux_Message( stdout, "  blast wave center[%d][%d]                 = %13.7e\n", i, d,Blast_Center[i][d] );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -204,8 +214,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    SRHydro_Pri2Con_Double (Prim_EXP2, Cons_EXP, GAMMA);
 
    for (int i=0; i<Total; i++)
-   {
-       r[i] = SQRT( SQR(x-Blast_Center[i][0]) + SQR(y-Blast_Center[i][1]) + SQR(z-Blast_Center[i][2]) );
+    {
+      r[i] = SQRT( SQR(x-Blast_Center[i][0]) + SQR(y-Blast_Center[i][1]) + SQR(z-Blast_Center[i][2]) );
     
        if ( r[i] <= Blast_Radius )
        {
@@ -214,6 +224,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
          fluid[MOMY] = (real) Cons_EXP[2];
          fluid[MOMZ] = (real) Cons_EXP[3];
          fluid[ENGY] = (real) Cons_EXP[4];
+         i = Total; // break loop immediately
        }
        else
        { 
@@ -223,13 +234,13 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
          fluid[MOMZ] = (real) Cons_BG[3];
          fluid[ENGY] = (real) Cons_BG[4];
        }
-   }
+    }
 } // FUNCTION : SetGridIC
 #endif // #if ( MODEL == SR_HYDRO )
 
 void End_WSBlastWave()
 {
-   delete Blast_Center[]; 
+   delete [] Blast_Center;
 }
 
 //-------------------------------------------------------------------------------------------------------
