@@ -244,7 +244,7 @@ void CompareGridData()
                   Data1  = patch1.ptr[lv][PID1]->fluid[v][k][j][i];
                   Data2  = patch2.ptr[lv][PID2]->fluid[v][k][j][i];
                   AbsErr = Data1 - Data2;
-                  RelErr = AbsErr / Data2;
+                  RelErr = AbsErr / ( 0.5*(Data1+Data2) );
 
                   if ( Data1 == 0.0  &&  Data2 == 0.0 )  continue;
 
@@ -259,7 +259,7 @@ void CompareGridData()
                   Data1  = patch1.ptr[lv][PID1]->pot[k][j][i];
                   Data2  = patch2.ptr[lv][PID2]->pot[k][j][i];
                   AbsErr = Data1 - Data2;
-                  RelErr = AbsErr / Data2;
+                  RelErr = AbsErr / ( 0.5*(Data1+Data2) );
 
                   if ( Data1 == 0.0  &&  Data2 == 0.0 )  continue;
 
@@ -274,7 +274,7 @@ void CompareGridData()
                   Data1  = patch1.ptr[lv][PID1]->par_dens[k][j][i];
                   Data2  = patch2.ptr[lv][PID2]->par_dens[k][j][i];
                   AbsErr = Data1 - Data2;
-                  RelErr = AbsErr / Data2;
+                  RelErr = AbsErr / ( 0.5*(Data1+Data2) );
 
                   if ( Data1 == 0.0  &&  Data2 == 0.0 )  continue;
 
@@ -389,7 +389,7 @@ void CompareParticleData()
       Data2  = ParData2[v][ParID2];
 
       AbsErr = Data1 - Data2;
-      RelErr = AbsErr / Data2;
+      RelErr = AbsErr / ( 0.5*(Data1+Data2) );
 
       if ( Data1 == 0.0  &&  Data2 == 0.0 )  continue;
 

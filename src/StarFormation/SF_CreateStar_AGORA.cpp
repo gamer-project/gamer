@@ -240,19 +240,19 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 //       external potential (currently useful only for ELBDM; always work with OPT__GRAVITY_TYPE == GRAVITY_SELF)
          if ( OPT__EXTERNAL_POT )
          {
-            pot_xm += CPU_ExternalPot( x-dh, y,    z,    TimeNew, ExtPot_AuxArray );
-            pot_xp += CPU_ExternalPot( x+dh, y,    z,    TimeNew, ExtPot_AuxArray );
-            pot_ym += CPU_ExternalPot( x,    y-dh, z,    TimeNew, ExtPot_AuxArray );
-            pot_yp += CPU_ExternalPot( x,    y+dh, z,    TimeNew, ExtPot_AuxArray );
-            pot_zm += CPU_ExternalPot( x,    y,    z-dh, TimeNew, ExtPot_AuxArray );
-            pot_zp += CPU_ExternalPot( x,    y,    z+dh, TimeNew, ExtPot_AuxArray );
+            pot_xm += ExternalPot( x-dh, y,    z,    TimeNew, ExtPot_AuxArray );
+            pot_xp += ExternalPot( x+dh, y,    z,    TimeNew, ExtPot_AuxArray );
+            pot_ym += ExternalPot( x,    y-dh, z,    TimeNew, ExtPot_AuxArray );
+            pot_yp += ExternalPot( x,    y+dh, z,    TimeNew, ExtPot_AuxArray );
+            pot_zm += ExternalPot( x,    y,    z-dh, TimeNew, ExtPot_AuxArray );
+            pot_zp += ExternalPot( x,    y,    z+dh, TimeNew, ExtPot_AuxArray );
          }
 
 //       external acceleration (currently useful only for HYDRO)
          real GasAcc[3] = { (real)0.0, (real)0.0, (real)0.0 };
 
          if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
-            CPU_ExternalAcc( GasAcc, x, y, z, TimeNew, ExtAcc_AuxArray );
+            ExternalAcc( GasAcc, x, y, z, TimeNew, ExtAcc_AuxArray );
 
 //       self-gravity
          if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )

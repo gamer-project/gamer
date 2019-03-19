@@ -53,7 +53,7 @@
 #endif
 
 // variables reside in constant memory
-#include "CUPOT_PoissonSolver_SetConstMem.cu"
+#include "CUPOT_SetConstMem_PoissonSolver.cu"
 
 // prototype
 static __device__ void LoadRho( const real *g_Rho, real *s_Rho, const real Poi_Coeff, const uint g_Idx0 );
@@ -341,14 +341,14 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
                for (int dj=-1; dj<=1; dj++)  {  Idy = dj+1;    jj = __mul24( dj, Cdy );
                for (int di=-1; di<=1; di++)  {  Idx = di+1;    ii = __mul24( di, Cdx );
          
-                  TempFPot1 += s_CPot[CID+kk+jj+ii] * Mm[Idz] * Mm[Idy] * Mm[Idx];
-                  TempFPot2 += s_CPot[CID+kk+jj+ii] * Mm[Idz] * Mm[Idy] * Mp[Idx];
-                  TempFPot3 += s_CPot[CID+kk+jj+ii] * Mm[Idz] * Mp[Idy] * Mm[Idx];
-                  TempFPot4 += s_CPot[CID+kk+jj+ii] * Mm[Idz] * Mp[Idy] * Mp[Idx];
-                  TempFPot5 += s_CPot[CID+kk+jj+ii] * Mp[Idz] * Mm[Idy] * Mm[Idx];
-                  TempFPot6 += s_CPot[CID+kk+jj+ii] * Mp[Idz] * Mm[Idy] * Mp[Idx];
-                  TempFPot7 += s_CPot[CID+kk+jj+ii] * Mp[Idz] * Mp[Idy] * Mm[Idx];
-                  TempFPot8 += s_CPot[CID+kk+jj+ii] * Mp[Idz] * Mp[Idy] * Mp[Idx];
+                  TempFPot1 += s_CPot[CID+kk+jj+ii] * c_Mm[Idz] * c_Mm[Idy] * c_Mm[Idx];
+                  TempFPot2 += s_CPot[CID+kk+jj+ii] * c_Mm[Idz] * c_Mm[Idy] * c_Mp[Idx];
+                  TempFPot3 += s_CPot[CID+kk+jj+ii] * c_Mm[Idz] * c_Mp[Idy] * c_Mm[Idx];
+                  TempFPot4 += s_CPot[CID+kk+jj+ii] * c_Mm[Idz] * c_Mp[Idy] * c_Mp[Idx];
+                  TempFPot5 += s_CPot[CID+kk+jj+ii] * c_Mp[Idz] * c_Mm[Idy] * c_Mm[Idx];
+                  TempFPot6 += s_CPot[CID+kk+jj+ii] * c_Mp[Idz] * c_Mm[Idy] * c_Mp[Idx];
+                  TempFPot7 += s_CPot[CID+kk+jj+ii] * c_Mp[Idz] * c_Mp[Idy] * c_Mm[Idx];
+                  TempFPot8 += s_CPot[CID+kk+jj+ii] * c_Mp[Idz] * c_Mp[Idy] * c_Mp[Idx];
 
                }}}
             }

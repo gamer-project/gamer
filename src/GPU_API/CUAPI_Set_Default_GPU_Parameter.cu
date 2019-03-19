@@ -11,78 +11,57 @@
 // fluid solver prototypes in different models
 #if   ( MODEL == HYDRO )
 #if   ( FLU_SCHEME == RTVD )
-__global__ void CUFLU_FluidSolver_RTVD( real g_Fluid_In []   [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                        real g_Fluid_Out[]   [NCOMP_TOTAL][ PS2*PS2*PS2 ],
-                                        real g_Flux     [][9][NCOMP_TOTAL][ PS2*PS2 ],
-                                        const double g_Corner[][3],
-                                        const real g_Pot_USG[][ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
-                                        const real dt, const real _dh, const real Gamma, const bool StoreFlux,
-                                        const bool XYZ, const real MinDens, const real MinPres );
-#elif ( FLU_SCHEME == WAF )
-__global__ void CUFLU_FluidSolver_WAF( real g_Fluid_In []   [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                       real g_Fluid_Out[]   [NCOMP_TOTAL][ PS2*PS2*PS2 ],
-                                       real g_Flux     [][9][NCOMP_TOTAL][ PS2*PS2 ],
-                                       const double g_Corner[][3],
-                                       const real g_Pot_USG[][ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
-                                       const real dt, const real _dh, const real Gamma, const bool StoreFlux,
-                                       const bool XYZ, const WAF_Limiter_t WAF_Limiter, const real MinDens, const real MinPres );
+__global__ void CUFLU_FluidSolver_RTVD(
+   real g_Fluid_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+   real g_Fluid_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
+   real g_Flux     [][9][NCOMP_TOTAL][ SQR(PS2) ],
+   const double g_Corner[][3],
+   const real g_Pot_USG[][ CUBE(USG_NXT_F) ],
+   const real dt, const real _dh, const real Gamma, const bool StoreFlux,
+   const bool XYZ, const real MinDens, const real MinPres );
 #elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
-__global__ void CUFLU_FluidSolver_MHM( const real g_Fluid_In[]   [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                       real g_Fluid_Out     []   [NCOMP_TOTAL][ PS2*PS2*PS2 ],
-                                       char g_DE_Out        []                [ PS2*PS2*PS2 ],
-                                       real g_Flux          [][9][NCOMP_TOTAL][ PS2*PS2 ],
-                                       const double g_Corner[][3],
-                                       const real g_Pot_USG[] [ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
-                                       real g_PriVar     [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                       real g_Slope_PPM_x[][NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM],
-                                       real g_Slope_PPM_y[][NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM],
-                                       real g_Slope_PPM_z[][NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM],
-                                       real g_FC_Var_xL  [][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                       real g_FC_Var_xR  [][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                       real g_FC_Var_yL  [][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                       real g_FC_Var_yR  [][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                       real g_FC_Var_zL  [][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                       real g_FC_Var_zR  [][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                       real g_FC_Flux_x  [][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                       real g_FC_Flux_y  [][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                       real g_FC_Flux_z  [][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                       const real dt, const real _dh, const real Gamma, const bool StoreFlux,
-                                       const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-                                       const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
-                                       const real MinDens, const real MinPres, const real DualEnergySwitch,
-                                       const bool NormPassive, const int NNorm,
-                                       const bool JeansMinPres, const real JeansMinPres_Coeff );
+__global__
+void CUFLU_FluidSolver_MHM(
+   const real   Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+         real   Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
+         char   DE_Array_Out [][ CUBE(PS2) ],
+         real   Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
+   const double Corner_Array [][3],
+   const real   Pot_Array_USG[][ CUBE(USG_NXT_F) ],
+         real   PriVar       [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+         real   Slope_PPM    [][3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
+         real   FC_Var       [][6][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
+         real   FC_Flux      [][3][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
+   const real dt, const real dh, const real Gamma, const bool StoreFlux,
+   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+   const double Time, const OptGravityType_t GravityType,
+   const real MinDens, const real MinPres, const real DualEnergySwitch,
+   const bool NormPassive, const int NNorm,
+   const bool JeansMinPres, const real JeansMinPres_Coeff );
 #if ( NCOMP_PASSIVE > 0 )
-int CUFLU_FluidSolver_SetConstMem_NormIdx( int NormIdx_h[] );
+int CUFLU_SetConstMem_FluidSolver_NormIdx( int NormIdx_h[] );
 #endif
 #elif ( FLU_SCHEME == CTU )
-__global__ void CUFLU_FluidSolver_CTU( const real g_Fluid_In[]   [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                       real g_Fluid_Out     []   [NCOMP_TOTAL][ PS2*PS2*PS2 ],
-                                       char g_DE_Out        []                [ PS2*PS2*PS2 ],
-                                       real g_Flux          [][9][NCOMP_TOTAL][ PS2*PS2 ],
-                                       const double g_Corner[][3],
-                                       const real g_Pot_USG[] [ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
-                                       real g_PriVar     [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                       real g_Slope_PPM_x[][NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM],
-                                       real g_Slope_PPM_y[][NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM],
-                                       real g_Slope_PPM_z[][NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM],
-                                       real g_FC_Var_xL  [][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                       real g_FC_Var_xR  [][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                       real g_FC_Var_yL  [][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                       real g_FC_Var_yR  [][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                       real g_FC_Var_zL  [][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                       real g_FC_Var_zR  [][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                       real g_FC_Flux_x  [][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                       real g_FC_Flux_y  [][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                       real g_FC_Flux_z  [][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                       const real dt, const real _dh, const real Gamma, const bool StoreFlux,
-                                       const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-                                       const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
-                                       const real MinDens, const real MinPres, const real DualEnergySwitch,
-                                       const bool NormPassive, const int NNorm,
-                                       const bool JeansMinPres, const real JeansMinPres_Coeff );
+__global__
+void CUFLU_FluidSolver_CTU(
+   const real   Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+         real   Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
+         char   DE_Array_Out [][ CUBE(PS2) ],
+         real   Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
+   const double Corner_Array [][3],
+   const real   Pot_Array_USG[][ CUBE(USG_NXT_F) ],
+         real   PriVar       [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+         real   Slope_PPM    [][3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
+         real   FC_Var       [][6][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
+         real   FC_Flux      [][3][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
+   const real dt, const real dh, const real Gamma, const bool StoreFlux,
+   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+   const double Time, const OptGravityType_t GravityType,
+   const real MinDens, const real MinPres, const real DualEnergySwitch,
+   const bool NormPassive, const int NNorm,
+   const bool JeansMinPres, const real JeansMinPres_Coeff );
 #if ( NCOMP_PASSIVE > 0 )
-int CUFLU_FluidSolver_SetConstMem_NormIdx( int NormIdx_h[] );
+int CUFLU_SetConstMem_FluidSolver_NormIdx( int NormIdx_h[] );
 #endif
 #endif // FLU_SCHEME
 __global__ void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
@@ -138,14 +117,17 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
 
 // Gravity solver prototypes in different models
 #if   ( MODEL == HYDRO )
-__global__ void CUPOT_HydroGravitySolver(       real g_Flu_Array_New[][GRA_NIN][ PS1*PS1*PS1 ],
-                                          const real g_Pot_Array_New[][ GRA_NXT*GRA_NXT*GRA_NXT ],
-                                          const double g_Corner_Array[][3],
-                                          const real g_Pot_Array_USG[][ USG_NXT_G*USG_NXT_G*USG_NXT_G ],
-                                          const real g_Flu_Array_USG[][GRA_NIN-1][ PS1*PS1*PS1 ],
-                                                char g_DE_Array[][ PS1*PS1*PS1 ],
-                                          const real Gra_Const, const bool P5_Gradient, const OptGravityType_t GravityType,
-                                          const double TimeNew, const double TimeOld, const real dt, const real dh, const real MinEint );
+__global__
+void CUPOT_HydroGravitySolver(
+         real   Flu_Array_New[][GRA_NIN][ CUBE(PS1) ],
+   const real   Pot_Array_New[][ CUBE(GRA_NXT) ],
+   const double Corner_Array [][3],
+   const real   Pot_Array_USG[][ CUBE(USG_NXT_G) ],
+   const real   Flu_Array_USG[][GRA_NIN-1][ CUBE(PS1) ],
+         char   DE_Array     [][ CUBE(PS1) ],
+   const real dt, const real dh, const bool P5_Gradient,
+   const OptGravityType_t GravityType,
+   const double TimeNew, const double TimeOld, const real MinEint );
 
 #elif ( MODEL == MHD )
 #warning :: WAIT MHD !!!
@@ -161,7 +143,7 @@ __global__ void CUPOT_ELBDMGravitySolver(       real g_Flu_Array[][GRA_NIN][ PS1
 #error : ERROR : unsupported MODEL !!
 #endif // MODEL
 
-int CUPOT_PoissonSolver_SetConstMem();
+int CUPOT_SetConstMem_PoissonSolver();
 
 #endif // GRAVITY
 
@@ -344,8 +326,6 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #  if   ( MODEL == HYDRO )
 #  if   ( FLU_SCHEME == RTVD )
    CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_RTVD,      cudaFuncCachePreferShared )  );
-#  elif ( FLU_SCHEME == WAF )
-   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_WAF,       cudaFuncCachePreferShared )  );
 #  elif ( FLU_SCHEME == MHM )
    CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_MHM,       cudaFuncCachePreferL1     )  );
 #  elif ( FLU_SCHEME == MHM_RP )
@@ -406,8 +386,8 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
    if  ( OPT__NORMALIZE_PASSIVE )
    {
 #     if ( MODEL == HYDRO  &&  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  )
-      if ( CUFLU_FluidSolver_SetConstMem_NormIdx(PassiveNorm_VarIdx) != 0  )
-         Aux_Error( ERROR_INFO, "CUFLU_FluidSolver_SetConstMem_NormIdx failed ...\n" );
+      if ( CUFLU_SetConstMem_FluidSolver_NormIdx(PassiveNorm_VarIdx) != 0  )
+         Aux_Error( ERROR_INFO, "CUFLU_SetConstMem_FluidSolver_NormIdx failed ...\n" );
 
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
@@ -417,8 +397,8 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #  endif // #if ( NCOMP_PASSIVE > 0 )
 
 #  ifdef GRAVITY
-   if ( CUPOT_PoissonSolver_SetConstMem() != 0 )
-      Aux_Error( ERROR_INFO, "CUPOT_PoissonSolver_SetConstMem failed ...\n" );
+   if ( CUPOT_SetConstMem_PoissonSolver() != 0 )
+      Aux_Error( ERROR_INFO, "CUPOT_SetConstMem_PoissonSolver failed ...\n" );
 #  endif // #ifdef GRAVITY
 
 

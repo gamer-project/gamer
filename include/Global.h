@@ -67,6 +67,7 @@ extern bool       OPT__CK_RESTRICT, OPT__CK_PATCH_ALLOCATE, OPT__FIXUP_FLUX, OPT
 extern bool       OPT__UM_IC_DOWNGRADE, OPT__UM_IC_REFINE, OPT__TIMING_MPI;
 extern bool       OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
 extern bool       OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
+extern bool       OPT__RECORD_NOTE, OPT__RECORD_UNPHY;
 
 extern UM_IC_Format_t     OPT__UM_IC_FORMAT;
 extern TestProbID_t       TESTPROB_ID;
@@ -87,9 +88,8 @@ extern OptTimeStepLevel_t OPT__DT_LEVEL;
 // (2-1) fluid solver in different models
 #if   ( MODEL == HYDRO )
 extern double           FlagTable_PresGradient[NLEVEL-1], FlagTable_Vorticity[NLEVEL-1], FlagTable_Jeans[NLEVEL-1];
-extern double           GAMMA, MINMOD_COEFF, EP_COEFF, MOLECULAR_WEIGHT;
+extern double           GAMMA, MINMOD_COEFF, MOLECULAR_WEIGHT;
 extern LR_Limiter_t     OPT__LR_LIMITER;
-extern WAF_Limiter_t    OPT__WAF_LIMITER;
 extern Opt1stFluxCorr_t OPT__1ST_FLUX_CORR;
 extern OptRSolver1st_t  OPT__1ST_FLUX_CORR_SCHEME;
 extern bool             OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP;
@@ -217,12 +217,12 @@ extern double                SF_CREATE_STAR_MAX_STAR_MFRAC;
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
 // ============================================================================================================
-extern real       (*h_Flu_Array_F_In [2])[FLU_NIN ][  FLU_NXT   *FLU_NXT   *FLU_NXT   ];
-extern real       (*h_Flu_Array_F_Out[2])[FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE];
-extern real       (*h_Flux_Array[2])[9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE];
+extern real       (*h_Flu_Array_F_In [2])[FLU_NIN ][ CUBE(FLU_NXT) ];
+extern real       (*h_Flu_Array_F_Out[2])[FLU_NOUT][ CUBE(PS2) ];
+extern real       (*h_Flux_Array[2])[9][NFLUX_TOTAL][ SQR(PS2) ];
 extern double     (*h_Corner_Array_F [2])[3];
 #ifdef DUAL_ENERGY
-extern char       (*h_DE_Array_F_Out [2])[8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE];
+extern char       (*h_DE_Array_F_Out [2])[ CUBE(PS2) ];
 #endif
 
 #ifdef GRAVITY
@@ -236,7 +236,7 @@ extern char       (*h_DE_Array_G     [2])[PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
 #endif
 
 #ifdef UNSPLIT_GRAVITY
-extern real       (*h_Pot_Array_USG_F[2])[USG_NXT_F ][USG_NXT_F ][USG_NXT_F ];
+extern real       (*h_Pot_Array_USG_F[2])[ CUBE(USG_NXT_F) ];
 extern real       (*h_Pot_Array_USG_G[2])[USG_NXT_G ][USG_NXT_G ][USG_NXT_G ];
 extern real       (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1];
 #endif

@@ -277,7 +277,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                for (int j=0; j<PotSize; j++)    {  y = PhyCorner_ExtPot[1] + (double)j*dh;
                for (int i=0; i<PotSize; i++)    {  x = PhyCorner_ExtPot[0] + (double)i*dh;
 
-                  Pot3D[P][k][j][i] += CPU_ExternalPot( x, y, z, PrepPotTime, ExtPot_AuxArray );
+                  Pot3D[P][k][j][i] += ExternalPot( x, y, z, PrepPotTime, ExtPot_AuxArray );
 
                }}}
             }
@@ -294,7 +294,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 
 //             3.1 external gravity (currently useful only for HYDRO)
                if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
-                  CPU_ExternalAcc( Acc_Temp, x, y, z, PrepPotTime, ExtAcc_AuxArray );
+                  ExternalAcc( Acc_Temp, x, y, z, PrepPotTime, ExtAcc_AuxArray );
 
 
 //             3.2 self-gravity
