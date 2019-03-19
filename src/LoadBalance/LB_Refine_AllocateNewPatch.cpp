@@ -879,16 +879,16 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       const real UseEnpy2FixEngy  = HUGE_NUMBER;
       char dummy;    // we do not record the dual-energy status here
 
-      CPU_DualEnergyFix( FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i],
-                         FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i], FData_Flu[ENPY][k][j][i],
-                         dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy );
+      Hydro_DualEnergyFix( FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i],
+                           FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i], FData_Flu[ENPY][k][j][i],
+                           dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy );
 
 #     else
 //    check minimum pressure
       FData_Flu[ENGY][k][j][i]
-         = CPU_CheckMinPresInEngy( FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i],
-                                   FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i],
-                                   Gamma_m1, _Gamma_m1, MIN_PRES );
+         = Hydro_CheckMinPresInEngy( FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i],
+                                     FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i],
+                                     Gamma_m1, _Gamma_m1, MIN_PRES );
 #     endif // #ifdef DUAL_ENERGY ... else ...
 #     endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
 
@@ -901,7 +901,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
          for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = FData_Flu[ NCOMP_FLUID + v ][k][j][i];
 
-         CPU_NormalizePassive( FData_Flu[DENS][k][j][i], Passive, PassiveNorm_NVar, PassiveNorm_VarIdx );
+         Hydro_NormalizePassive( FData_Flu[DENS][k][j][i], Passive, PassiveNorm_NVar, PassiveNorm_VarIdx );
 
          for (int v=0; v<NCOMP_PASSIVE; v++)    FData_Flu[ NCOMP_FLUID + v ][k][j][i] = Passive[v];
       }
@@ -973,9 +973,9 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
 // 4. pass particles from father to son if they are in the same rank
 //    --> otherwise these particles will be transferred to the real son patches by calling
-//        Par_LB_Refine_SendParticle2Son() in LB_Refine()
+//        Par_PassParticle2Son_MultiPatch() in LB_Refine()
 #  ifdef PARTICLE
-   if ( FaPID >= 0  &&  FaPID < amr->NPatchComma[FaLv][1] )    Par_PassParticle2Son( FaLv, FaPID );
+   if ( FaPID >= 0  &&  FaPID < amr->NPatchComma[FaLv][1] )    Par_PassParticle2Son_SinglePatch( FaLv, FaPID );
 #  endif
 
 

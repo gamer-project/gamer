@@ -121,8 +121,6 @@ void Aux_TakeNote()
       fprintf( Note, "FLU_SCHEME                      MHM with Riemann prediction\n" );
 #     elif ( FLU_SCHEME == CTU )
       fprintf( Note, "FLU_SCHEME                      CTU\n" );
-#     elif ( FLU_SCHEME == WAF )
-      fprintf( Note, "FLU_SCHEME                      WAF\n" );
 #     elif ( FLU_SCHEME == NONE )
       fprintf( Note, "FLU_SCHEME                      NONE\n" );
 #     else
@@ -366,12 +364,6 @@ void Aux_TakeNote()
       fprintf( Note, "HLL_INCLUDE_ALL_WAVES           OFF\n" );
 #     endif
 
-#     ifdef WAF_DISSIPATE
-      fprintf( Note, "WAF_DISSIPATE                   ON\n" );
-#     else
-      fprintf( Note, "WAF_DISSIPATE                   OFF\n" );
-#     endif
-
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
 
@@ -492,11 +484,11 @@ void Aux_TakeNote()
 #     elif ( POT_SCHEME == MG )
       fprintf( Note, "#define POT_BLOCK_SIZE_X        %d\n",      POT_BLOCK_SIZE_X    );
 #     endif
-      fprintf( Note, "#define GRA_BLOCK_SIZE_Z        %d\n",      GRA_BLOCK_SIZE_Z    );
+      fprintf( Note, "#define GRA_BLOCK_SIZE          %d\n",      GRA_BLOCK_SIZE      );
 #     endif // #ifdef GRAVITY
       fprintf( Note, "#define DT_FLU_BLOCK_SIZE       %d\n",      DT_FLU_BLOCK_SIZE   );
 #     ifdef GRAVITY
-      fprintf( Note, "#define DT_GRA_BLOCK_SIZE_ Z    %d\n",      DT_GRA_BLOCK_SIZE_Z );
+      fprintf( Note, "#define DT_GRA_BLOCK_SIZE       %d\n",      DT_GRA_BLOCK_SIZE   );
 #     endif
 #     endif // #ifdef GPU
 #     ifdef PARTICLE
@@ -788,19 +780,12 @@ void Aux_TakeNote()
       fprintf( Note, "GAMMA                           %13.7e\n",  GAMMA                   );
       fprintf( Note, "MOLECULAR_WEIGHT                %13.7e\n",  MOLECULAR_WEIGHT        );
       fprintf( Note, "MINMOD_COEFF                    %13.7e\n",  MINMOD_COEFF            );
-      fprintf( Note, "EP_COEFF                        %13.7e\n",  EP_COEFF                );
       fprintf( Note, "OPT__LR_LIMITER                 %s\n",      ( OPT__LR_LIMITER == VANLEER           ) ? "VANLEER"    :
                                                                   ( OPT__LR_LIMITER == GMINMOD           ) ? "GMINMOD"    :
                                                                   ( OPT__LR_LIMITER == ALBADA            ) ? "ALBADA"     :
                                                                   ( OPT__LR_LIMITER == VL_GMINMOD        ) ? "VL_GMINMOD" :
                                                                   ( OPT__LR_LIMITER == EXTPRE            ) ? "EXTPRE"     :
                                                                   ( OPT__LR_LIMITER == LR_LIMITER_NONE   ) ? "NONE"       :
-                                                                                                             "UNKNOWN" );
-      fprintf( Note, "OPT__WAF_LIMITER                %s\n",      ( OPT__WAF_LIMITER == WAF_SUPERBEE     ) ? "WAF_SUPERBEE":
-                                                                  ( OPT__WAF_LIMITER == WAF_VANLEER      ) ? "WAF_VANLEER" :
-                                                                  ( OPT__WAF_LIMITER == WAF_ALBADA       ) ? "WAF_ALBADA"  :
-                                                                  ( OPT__WAF_LIMITER == WAF_MINBEE       ) ? "WAF_MINBEE"  :
-                                                                  ( OPT__WAF_LIMITER == WAF_LIMITER_NONE ) ? "NONE"        :
                                                                                                              "UNKNOWN" );
       fprintf( Note, "OPT__1ST_FLUX_CORR              %s\n",      ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D   ) ? "3D"   :
                                                                   ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D1D ) ? "3D1D" :
@@ -1057,6 +1042,8 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__TIMING_BARRIER             %d\n",      OPT__TIMING_BARRIER      );
       fprintf( Note, "OPT__TIMING_BALANCE             %d\n",      OPT__TIMING_BALANCE      );
       fprintf( Note, "OPT__TIMING_MPI                 %d\n",      OPT__TIMING_MPI          );
+      fprintf( Note, "OPT__RECORD_NOTE                %d\n",      OPT__RECORD_NOTE         );
+      fprintf( Note, "OPT__RECORD_UNPHY               %d\n",      OPT__RECORD_UNPHY        );
       fprintf( Note, "OPT__RECORD_MEMORY              %d\n",      OPT__RECORD_MEMORY       );
       fprintf( Note, "OPT__RECORD_PERFORMANCE         %d\n",      OPT__RECORD_PERFORMANCE  );
       fprintf( Note, "OPT__MANUAL_CONTROL             %d\n",      OPT__MANUAL_CONTROL      );

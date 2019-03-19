@@ -1,32 +1,52 @@
-#include "GAMER.h"
+#ifndef __CUFLU_RIEMANNSOLVER_ROE__
+#define __CUFLU_RIEMANNSOLVER_ROE__
+
+
+
 #include "CUFLU.h"
 
 #if ( MODEL == HYDRO )
 
 
 
-extern void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward );
-extern void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres );
+// external functions
+#ifdef __CUDACC__
+
+#include "CUFLU_Shared_FluUtility.cu"
+
 #if   ( CHECK_INTERMEDIATE == EXACT )
-extern void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
-                         const bool NormPassive, const int NNorm, const int NormIdx[],
-                         const bool JeansMinPres, const real JeansMinPres_Coeff );
-extern void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[], real R_star_out[],
-                                     real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
+# include "CUFLU_Shared_RiemannSolver_Exact.cu"
 #elif ( CHECK_INTERMEDIATE == HLLE )
-extern void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                                    const real Gamma, const real MinPres );
+# include "CUFLU_Shared_RiemannSolver_HLLE.cu"
 #elif ( CHECK_INTERMEDIATE == HLLC )
-extern void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                                    const real Gamma, const real MinPres );
+# include "CUFLU_Shared_RiemannSolver_HLLC.cu"
 #endif
-extern real CPU_CheckMinPres( const real InPres, const real MinPres );
+
+#else // #ifdef __CUDACC__
+
+void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward );
+void Hydro_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres );
+#if   ( CHECK_INTERMEDIATE == EXACT )
+void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
+                    const bool NormPassive, const int NNorm, const int NormIdx[],
+                    const bool JeansMinPres, const real JeansMinPres_Coeff );
+void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
+#elif ( CHECK_INTERMEDIATE == HLLE )
+void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+                               const real Gamma, const real MinPres );
+#elif ( CHECK_INTERMEDIATE == HLLC )
+void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+                               const real Gamma, const real MinPres );
+#endif
+real Hydro_CheckMinPres( const real InPres, const real MinPres );
+
+#endif // #ifdef __CUDACC__ ... else ...
 
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_RiemannSolver_Roe
+// Function    :  Hydro_RiemannSolver_Roe
 // Description :  Approximate Riemann solver of Roe
 //
 // Note        :  1. The input data should be conserved variables
@@ -41,8 +61,9 @@ extern real CPU_CheckMinPres( const real InPres, const real MinPres );
 //                Gamma       : Ratio of specific heats
 //                MinPres     : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
-void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                            const real Gamma, const real MinPres )
+GPU_DEVICE
+void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+                              const real Gamma, const real MinPres )
 {
 
 // 1. reorder the input variables for different spatial directions
@@ -54,8 +75,8 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
       R[v] = R_In[v];
    }
 
-   CPU_Rotate3D( L, XYZ, true );
-   CPU_Rotate3D( R, XYZ, true );
+   Hydro_Rotate3D( L, XYZ, true );
+   Hydro_Rotate3D( R, XYZ, true );
 
 
 // 2. evaluate the average values
@@ -71,13 +92,13 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
    HR    = (  R[4] + Gamma_m1*( R[4] - (real)0.5*( R[1]*R[1] + R[2]*R[2] + R[3]*R[3] )*_RhoR )  )*_RhoR;
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( CPU_CheckNegative(L[0]) )
-      Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   L[0], __FILE__, __LINE__, __FUNCTION__ );
+   if ( Hydro_CheckNegative(L[0]) )
+      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              L[0], __FILE__, __LINE__, __FUNCTION__ );
 
-   if ( CPU_CheckNegative(R[0]) )
-      Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   R[0], __FILE__, __LINE__, __FUNCTION__ );
+   if ( Hydro_CheckNegative(R[0]) )
+      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              R[0], __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
    RhoL_sqrt       = SQRT( L[0] );
@@ -94,13 +115,13 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
 
    GammaP_Rho = Gamma_m1*( H - (real)0.5*V2 );
    TempPres   = GammaP_Rho*TempRho/Gamma;
-   TempPres   = CPU_CheckMinPres( TempPres, MinPres );
+   TempPres   = Hydro_CheckMinPres( TempPres, MinPres );
    GammaP_Rho = Gamma*TempPres*_TempRho;
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( CPU_CheckNegative(GammaP_Rho) )
-      Aux_Message( stderr, "ERROR : negative GammaP_Rho (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   GammaP_Rho, __FILE__, __LINE__, __FUNCTION__ );
+   if ( Hydro_CheckNegative(GammaP_Rho) )
+      printf( "ERROR : negative GammaP_Rho (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              GammaP_Rho, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
    Cs = SQRT( GammaP_Rho );
@@ -113,8 +134,8 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
 // 4. evaluate the left and right fluxes
    real Flux_L[NCOMP_TOTAL], Flux_R[NCOMP_TOTAL];
 
-   CPU_Con2Flux( 0, Flux_L, L, Gamma_m1, MinPres );
-   CPU_Con2Flux( 0, Flux_R, R, Gamma_m1, MinPres );
+   Hydro_Con2Flux( 0, Flux_L, L, Gamma_m1, MinPres );
+   Hydro_Con2Flux( 0, Flux_R, R, Gamma_m1, MinPres );
 
 
 // 5. return the upwind fluxes if flow is supersonic
@@ -122,7 +143,7 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
    {
       for (int v=0; v<NCOMP_TOTAL; v++)   Flux_Out[v] = Flux_L[v];
 
-      CPU_Rotate3D( Flux_Out, XYZ, false );
+      Hydro_Rotate3D( Flux_Out, XYZ, false );
 
       return;
    }
@@ -131,7 +152,7 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
    {
       for (int v=0; v<NCOMP_TOTAL; v++)   Flux_Out[v] = Flux_R[v];
 
-      CPU_Rotate3D( Flux_Out, XYZ, false );
+      Hydro_Rotate3D( Flux_Out, XYZ, false );
 
       return;
    }
@@ -180,7 +201,7 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
          if ( I_States[0] <= (real)0.0  ||  I_Pres <= (real)0.0 )
          {
 #           ifdef GAMER_DEBUG
-            Aux_Message( stderr, "WARNING : intermediate states check failed !!\n" );
+            printf( "WARNING : intermediate states check failed !!\n" );
 #           endif
 
 #           if   ( CHECK_INTERMEDIATE == EXACT )   // recalculate fluxes by exact solver
@@ -188,18 +209,18 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
             const bool NormPassive_No  = false; // do NOT convert any passive variable to mass fraction for the Riemann solvers
             const bool JeansMinPres_No = false;
 
-            CPU_Con2Pri( L, PriVar_L, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
-            CPU_Con2Pri( R, PriVar_R, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
+            Hydro_Con2Pri( L, PriVar_L, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
+            Hydro_Con2Pri( R, PriVar_R, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
 
-            CPU_RiemannSolver_Exact( 0, NULL, NULL, NULL, Flux_Out, PriVar_L, PriVar_R, Gamma );
+            Hydro_RiemannSolver_Exact( 0, Flux_Out, PriVar_L, PriVar_R, Gamma );
 
 #           elif ( CHECK_INTERMEDIATE == HLLE )    // recalculate fluxes by HLLE solver
 
-            CPU_RiemannSolver_HLLE( 0, Flux_Out, L, R, Gamma, MinPres );
+            Hydro_RiemannSolver_HLLE ( 0, Flux_Out, L, R, Gamma, MinPres );
 
 #           elif ( CHECK_INTERMEDIATE == HLLC )    // recalculate fluxes by HLLC solver
 
-            CPU_RiemannSolver_HLLC( 0, Flux_Out, L, R, Gamma, MinPres );
+            Hydro_RiemannSolver_HLLC ( 0, Flux_Out, L, R, Gamma, MinPres );
 
 #           else
 
@@ -207,7 +228,7 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
 
 #           endif
 
-            CPU_Rotate3D( Flux_Out, XYZ, false );
+            Hydro_Rotate3D( Flux_Out, XYZ, false );
             return;
 
          } // if ( I_States[0] <= (real)0.0  ||  I_Pres <= (real)0.0 )
@@ -245,10 +266,14 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
 
 
 // 11. restore the correct order
-   CPU_Rotate3D( Flux_Out, XYZ, false );
+   Hydro_Rotate3D( Flux_Out, XYZ, false );
 
-} // FUNCTION : CPU_RiemannSolver_Roe
+} // FUNCTION : Hydro_RiemannSolver_Roe
 
 
 
 #endif // #if ( MODEL == HYDRO )
+
+
+
+#endif // #ifndef __CUFLU_RIEMANNSOLVER_ROE__

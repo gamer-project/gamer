@@ -903,10 +903,10 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
 
 // b. load the symbolic constants defined in "Macro.h, CUPOT.h, and CUFLU.h"
 // =================================================================================================
-   bool enforce_positive, char_reconstruction, hll_no_ref_state, hll_include_all_waves, waf_dissipate;
+   bool enforce_positive, char_reconstruction, hll_no_ref_state, hll_include_all_waves, waf_dissipate_useless;
    bool use_psolver_10to14;
    int  ncomp_fluid, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate;
-   int  flu_block_size_x, flu_block_size_y, pot_block_size_x, pot_block_size_z, gra_block_size_z;
+   int  flu_block_size_x, flu_block_size_y, pot_block_size_x, pot_block_size_z, gra_block_size;
    real min_pres, max_error;
 
    fread( &ncomp_fluid,                sizeof(int),                     1,             File );
@@ -920,14 +920,14 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
    fread( &check_intermediate,         sizeof(int),                     1,             File );
    fread( &hll_no_ref_state,           sizeof(bool),                    1,             File );
    fread( &hll_include_all_waves,      sizeof(bool),                    1,             File );
-   fread( &waf_dissipate,              sizeof(bool),                    1,             File );
+   fread( &waf_dissipate_useless,      sizeof(bool),                    1,             File );
    fread( &max_error,                  sizeof(real),                    1,             File );
    fread( &flu_block_size_x,           sizeof(int),                     1,             File );
    fread( &flu_block_size_y,           sizeof(int),                     1,             File );
    fread( &use_psolver_10to14,         sizeof(bool),                    1,             File );
    fread( &pot_block_size_x,           sizeof(int),                     1,             File );
    fread( &pot_block_size_z,           sizeof(int),                     1,             File );
-   fread( &gra_block_size_z,           sizeof(int),                     1,             File );
+   fread( &gra_block_size,             sizeof(int),                     1,             File );
 
 // skip the buffer space
    fseek( File, NBuf_Constant, SEEK_CUR );
@@ -940,7 +940,7 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
    bool   opt__gra_p5_gradient, opt__int_time, opt__output_user, opt__output_base, opt__output_pot;
    bool   opt__output_baseps, opt__timing_balance, opt__int_phase;
    int    nx0_tot[3], mpi_nrank, mpi_nrank_x[3], omp_nthread, ooc_nrank, ooc_nrank_x[3], regrid_count;
-   int    flag_buffer_size, max_level, opt__lr_limiter, opt__waf_limiter, flu_gpu_npgroup, gpu_nstream;
+   int    flag_buffer_size, max_level, opt__lr_limiter, opt__waf_limiter_useless, flu_gpu_npgroup, gpu_nstream;
    int    sor_max_iter, sor_min_iter, mg_max_iter, mg_npre_smooth, mg_npost_smooth, pot_gpu_npgroup;
    int    opt__flu_int_scheme, opt__pot_int_scheme, opt__rho_int_scheme;
    int    opt__gra_int_scheme, opt__ref_flu_int_scheme, opt__ref_pot_int_scheme;
@@ -979,7 +979,7 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
    fread( &minmod_coeff,               sizeof(real),                    1,             File );
    fread( &ep_coeff,                   sizeof(real),                    1,             File );
    fread( &opt__lr_limiter,            sizeof(int),                     1,             File );
-   fread( &opt__waf_limiter,           sizeof(int),                     1,             File );
+   fread( &opt__waf_limiter_useless,   sizeof(int),                     1,             File );
    fread( &elbdm_mass,                 sizeof(real),                    1,             File );
    fread( &elbdm_planck_const,         sizeof(real),                    1,             File );
    fread( &flu_gpu_npgroup,            sizeof(int),                     1,             File );
@@ -1223,8 +1223,8 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "POT_BLOCK_SIZE_Z",        pot_block_size_z,       POT_BLOCK_SIZE_Z,          NonFatal );
 #     endif
 
-#     ifdef GRA_BLOCK_SIZE_Z
-      CompareVar( "GRA_BLOCK_SIZE_Z",        gra_block_size_z,       GRA_BLOCK_SIZE_Z,          NonFatal );
+#     ifdef GRA_BLOCK_SIZE
+      CompareVar( "GRA_BLOCK_SIZE",          gra_block_size,         GRA_BLOCK_SIZE,            NonFatal );
 #     endif
 
 #     if ( POT_SCHEME == SOR )
@@ -1296,16 +1296,6 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
       if (  hll_include_all_waves )
          Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
                       "HLL_INCLUDE_ALL_WAVES", "ON", "OFF" );
-#     endif
-
-#     ifdef WAF_DISSIPATE
-      if ( !waf_dissipate )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
-                      "WAF_DISSIPATE", "OFF", "ON" );
-#     else
-      if (  waf_dissipate )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
-                      "WAF_DISSIPATE", "ON", "OFF" );
 #     endif
 
 
@@ -1418,9 +1408,7 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "OPT__FLAG_PRES_GRADIENT", opt__flag_pres_gradient,      OPT__FLAG_PRES_GRADIENT,   NonFatal );
       CompareVar( "GAMMA",                   gamma,                  (real)GAMMA,                     NonFatal );
       CompareVar( "MINMOD_COEFF",            minmod_coeff,           (real)MINMOD_COEFF,              NonFatal );
-      CompareVar( "EP_COEFF",                ep_coeff,               (real)EP_COEFF,                  NonFatal );
       CompareVar( "OPT__LR_LIMITER",         opt__lr_limiter,         (int)OPT__LR_LIMITER,           NonFatal );
-      CompareVar( "OPT__WAF_LIMITER",        opt__waf_limiter,        (int)OPT__WAF_LIMITER,          NonFatal );
 
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
