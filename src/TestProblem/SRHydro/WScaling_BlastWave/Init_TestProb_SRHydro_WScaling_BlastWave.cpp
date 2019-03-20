@@ -125,7 +125,7 @@ void SetParameter()
     {
        Blast_Center_Temp[i][2] = i % Number_BlastWave_X;
        Blast_Center_Temp[i][1] = ( ( i-Blast_Center_Temp[i][2] ) / Number_BlastWave_X ) % Number_BlastWave_X;
-       Blast_Center_Temp[i][0] = ( i - Blast_Center_Temp[i][2] - Blast_Center_Temp[i][1] ) / (Number_BlastWave_X*Number_BlastWave_X);
+       Blast_Center_Temp[i][0] = ( i-Blast_Center_Temp[i][2]-Blast_Center_Temp[i][1] ) / (Number_BlastWave_X*Number_BlastWave_X);
 
        Blast_Center[i][2] = ( 2 * Blast_Center_Temp[i][2] + 1 ) * dX[2];
        Blast_Center[i][1] = ( 2 * Blast_Center_Temp[i][1] + 1 ) * dX[1];
