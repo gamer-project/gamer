@@ -298,12 +298,12 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
 #        endif
 
 
-//       3. store results
-//       store the fluxes of all cells in g_FC_Flux[]
+//       3. store the fluxes of all cells in g_FC_Flux[]
 //       --> including the magnetic components since they are required for CT
          for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   g_FC_Flux[d][v][idx_flux] = Flux_1Face[v];
 
-//       store the inter-patch fluxes in g_IntFlux[]
+
+//       4. store the inter-patch fluxes in g_IntFlux[]
 //       --> no need to store the magnetic components since this array is only for the flux fix-up operation
          if ( DumpIntFlux )
          {
