@@ -309,26 +309,55 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
          {
             int int_face, int_idx;
 
-//          we have assumed N_FC_VAR=PS2+2
-            if      (  d == 0  &&  ( i_flux == 0 || i_flux == PS1 || i_flux == PS2 )  )
+//          we have assumed N_FC_VAR=PS2+2 for pure hydro
+//          --> for MHD, one additional flux is evaluated along each transverse direction for computing the CT electric field
+//          --> must exclude it when storing the inter-patch fluxes
+            if (  d == 0  &&  ( i_flux == 0 || i_flux == PS1 || i_flux == PS2 )  )
             {
-               int_face = i_flux/PS1;
-               int_idx  = k_flux*PS2 + j_flux;
-               for (int v=0; v<NCOMP_TOTAL; v++)   g_IntFlux[int_face][v][int_idx] = Flux_1Face[v];
+#              ifdef MHD
+               if ( j_flux > 0  &&  j_flux < PS2+1  &&  k_flux > 0  &&  k_flux < PS2+1 )
+#              endif
+               {
+                  int_face = i_flux/PS1;
+#                 ifdef MHD
+                  int_idx  = (k_flux-1)*PS2 + j_flux-1;
+#                 else
+                  int_idx  = (k_flux  )*PS2 + j_flux;
+#                 endif
+                  for (int v=0; v<NCOMP_TOTAL; v++)   g_IntFlux[int_face][v][int_idx] = Flux_1Face[v];
+               }
             }
 
             else if (  d == 1  &&  ( j_flux == 0 || j_flux == PS1 || j_flux == PS2 )  )
             {
-               int_face = j_flux/PS1 + 3;
-               int_idx  = k_flux*PS2 + i_flux;
-               for (int v=0; v<NCOMP_TOTAL; v++)   g_IntFlux[int_face][v][int_idx] = Flux_1Face[v];
+#              ifdef MHD
+               if ( i_flux > 0  &&  i_flux < PS2+1  &&  k_flux > 0  &&  k_flux < PS2+1 )
+#              endif
+               {
+                  int_face = j_flux/PS1 + 3;
+#                 ifdef MHD
+                  int_idx  = (k_flux-1)*PS2 + i_flux-1;
+#                 else
+                  int_idx  = (k_flux  )*PS2 + i_flux;
+#                 endif
+                  for (int v=0; v<NCOMP_TOTAL; v++)   g_IntFlux[int_face][v][int_idx] = Flux_1Face[v];
+               }
             }
 
             else if (  d == 2  &&  ( k_flux == 0 || k_flux == PS1 || k_flux == PS2 )  )
             {
-               int_face = k_flux/PS1 + 6;
-               int_idx  = j_flux*PS2 + i_flux;
-               for (int v=0; v<NCOMP_TOTAL; v++)   g_IntFlux[int_face][v][int_idx] = Flux_1Face[v];
+#              ifdef MHD
+               if ( i_flux > 0  &&  i_flux < PS2+1  &&  j_flux > 0  &&  j_flux < PS2+1 )
+#              endif
+               {
+                  int_face = k_flux/PS1 + 6;
+#                 ifdef MHD
+                  int_idx  = (j_flux-1)*PS2 + i_flux-1;
+#                 else
+                  int_idx  = (j_flux  )*PS2 + i_flux;
+#                 endif
+                  for (int v=0; v<NCOMP_TOTAL; v++)   g_IntFlux[int_face][v][int_idx] = Flux_1Face[v];
+               }
             }
          } // if ( DumpIntFlux )
       } // i,j,k
