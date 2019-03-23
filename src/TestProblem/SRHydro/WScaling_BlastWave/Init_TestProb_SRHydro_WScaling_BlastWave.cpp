@@ -11,6 +11,7 @@ static double Blast_Dens_Ratio;    // density ratio of center to background
 static double Blast_Pres_Ratio;    // pressure ratio of center to background
 static double Blast_Radius;        // initial explosion radius
 static double (*Blast_Center)[3];  // explosion center
+static int (*Blast_Center_Temp)[3];  // explosion center
 static int    Number_BlastWave_X;  // number of blast wave in x-direction
 static int    Number_BlastWave_Y;  // number of blast wave in y-direction
 static int    Number_BlastWave_Z;  // number of blast wave in z-direction
@@ -111,7 +112,6 @@ void SetParameter()
    int Total_BlastWave = Number_BlastWave_X * Number_BlastWave_Y * Number_BlastWave_Z;
 
    Blast_Center      = new double [Total_BlastWave][3];
-   int (*Blast_Center_Temp)[3];  // explosion center
    Blast_Center_Temp = new    int [Total_BlastWave][3];
 
    double dX[3];
@@ -123,9 +123,9 @@ void SetParameter()
 // set the explosion centers
    for (int i=0;i<Total_BlastWave;i++)
     {
-       Blast_Center_Temp[i][2] = i % Number_BlastWave_X;
-       Blast_Center_Temp[i][1] = ( ( i-Blast_Center_Temp[i][2] ) / Number_BlastWave_X ) % Number_BlastWave_X;
-       Blast_Center_Temp[i][0] = ( i-Blast_Center_Temp[i][2]-Blast_Center_Temp[i][1] ) / (Number_BlastWave_X*Number_BlastWave_X);
+       Blast_Center_Temp[i][2] = i % Number_BlastWave_Z;
+       Blast_Center_Temp[i][1] = ( ( i-Blast_Center_Temp[i][2] ) / Number_BlastWave_Z ) % Number_BlastWave_Y;
+       Blast_Center_Temp[i][0] = ( i-Blast_Center_Temp[i][2]-Blast_Center_Temp[i][1] ) / (Number_BlastWave_Y*Number_BlastWave_Z);
 
        Blast_Center[i][2] = ( 2 * Blast_Center_Temp[i][2] + 1 ) * dX[2];
        Blast_Center[i][1] = ( 2 * Blast_Center_Temp[i][1] + 1 ) * dX[1];
@@ -241,6 +241,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 void End_WSBlastWave()
 {
    delete [] Blast_Center;
+   delete [] Blast_Center_Temp;
 }
 
 //-------------------------------------------------------------------------------------------------------

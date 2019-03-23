@@ -361,8 +361,8 @@ bool Unphysical( const real Fluid[] )
 // =================================================
 #  elif ( MODEL == SR_HYDRO )
 
-       if(SRHydro_CheckUnphysical(Fluid, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, false)) return true;
-       else
+//       if(SRHydro_CheckUnphysical(Fluid, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, false)) return true;
+//       else
 
 #  endif
 // if all checks above pass, return false
