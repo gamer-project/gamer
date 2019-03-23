@@ -14,7 +14,6 @@ static int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, co
 static void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_Real0, int NewSonPID0_Real[],
                                 int SwitchIdx, int &RefineS2F_Send_NPatchTotal, int *&RefineS2F_Send_PIDList );
 
-bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], const int line, bool show);
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LB_Refine_AllocateNewPatch
