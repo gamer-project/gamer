@@ -7,7 +7,7 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_Flag_Vorticity
+// Function    :  SRHydro_Flag_Vorticity
 // Description :  Check if the vorticity of the input data at the cell (i,j,k) exceeds the given threshold
 //
 // Note        :  1. Flag if |curl(v)|*dh/|v| > threshold
@@ -23,7 +23,7 @@
 // Return      :  "true"  if the vorticity is greater          than the given threshold
 //                "false" if the vorticity is equal or smaller than the given threshold
 //-------------------------------------------------------------------------------------------------------
-bool Hydro_Flag_Vorticity( const int i, const int j, const int k, const int lv, const int PID, const double Threshold )
+bool SRHydro_Flag_Vorticity( const int i, const int j, const int k, const int lv, const int PID, const double Threshold )
 {
  printf("please modify %s!\n",__FUNCTION__);
  abort();
@@ -82,7 +82,7 @@ bool Hydro_Flag_Vorticity( const int i, const int j, const int k, const int lv, 
 
    return Flag;
 
-} // FUNCTION : Hydro_Flag_Vorticity
+} // FUNCTION : SRHydro_Flag_Vorticity
 
 
 

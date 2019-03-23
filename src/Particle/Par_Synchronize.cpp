@@ -25,7 +25,7 @@ static real (*Backup_ParAtt)[7] = NULL;
 //                   outputting data and calculating total energy at the same step)
 //                4. Must work with STORE_PAR_ACC
 //                5. Particles may cross patch boundaries after synchronization
-//                   --> One may need to call Par_PassParticle2Sibling() and Par_PassParticle2Son_AllPatch() to
+//                   --> One may need to call Par_PassParticle2Sibling() and Par_PassParticle2Son_MultiPatch() to
 //                       properly transfer particles between patches, especially for SyncOption = PAR_SYNC_FORCE
 //                6. Currently it's only invoked by Flu_CorrAfterAllSync()
 //

@@ -1,6 +1,8 @@
 #include <math.h>
 #include "../../../include/Macro.h"
 
+#if ( MODEL == SR_HYDRO )
+
 void 
 SRHydro_4Velto3Vel_Double (const double In[], double Out[])
 {
@@ -53,3 +55,5 @@ SRHydro_Pri2Con_Double (const double In[], double Out[], const double Gamma)
 # error: CONSERVED_ENERGY must be 1 or 2!
 # endif
 }				// FUNCTION : SRHydro_Pri2Con_Double
+
+#endif

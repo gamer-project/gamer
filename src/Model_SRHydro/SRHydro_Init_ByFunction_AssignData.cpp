@@ -1,6 +1,5 @@
 #include "GAMER.h"
 #include "CUFLU.h"
-#include "../../include/CPU_prototypes.h"
 
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
@@ -14,20 +13,17 @@ void (*Init_Function_User_Ptr)( real fluid[], const double x, const double y, co
 extern bool (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
                                          const int lv, double AuxArray[] );
 
-void CPU_Pri2Con( const real In[], real Out[], const real Gamma);
-void CPU_3Velto4Vel( const real In[], real Out[] );
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_Function_User
 // Description :  Function to initialize the fluid field
 //
-// Note        :  1. Invoked by "Hydro_Init_ByFunction_AssignData" using the function pointer "Init_Function_User_Ptr"
+// Note        :  1. Invoked by "SRHydro_Init_ByFunction_AssignData" using the function pointer "Init_Function_User_Ptr"
 //                   --> The function pointer may be reset by various test problem initializers, in which case
 //                       this funtion will become useless
 //                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
 //                   --> Please ensure that everything here is thread-safe
 //                3. Even when DUAL_ENERGY is adopted, one does NOT need to set the dual-energy variable here
-//                   --> It will be set automatically in "Hydro_Init_ByFunction_AssignData()"
+//                   --> It will be set automatically in "SRHydro_Init_ByFunction_AssignData()"
 //
 // Parameter   :  [1] fluid    : Fluid field to be initialized
 //                [2] x/y/z    : Target physical coordinates
@@ -74,8 +70,8 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
       Prim1[3] = 0.0;
       Prim1[4] = pres_down;
 
-      CPU_3Velto4Vel (Prim1, Prim2);
-      CPU_Pri2Con (Prim2, fluid, GAMMA);
+      SRHydro_3Velto4Vel (Prim1, Prim2);
+      SRHydro_Pri2Con (Prim2, fluid, GAMMA);
    }else{ // up-stream
       Prim1[0] = dens_up;
       Prim1[1] = Vup*SIN(theta);
@@ -83,8 +79,8 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
       Prim1[3] = 0.0;
       Prim1[4] = pres_up;
 
-      CPU_3Velto4Vel (Prim1, Prim2);
-      CPU_Pri2Con (Prim2, fluid, GAMMA);
+      SRHydro_3Velto4Vel (Prim1, Prim2);
+      SRHydro_Pri2Con (Prim2, fluid, GAMMA);
    }
 
 
@@ -93,7 +89,7 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_Init_ByFunction_AssignData
+// Function    :  SRHydro_Init_ByFunction_AssignData
 // Description :  Construct the initial condition in SR_HYDRO
 //
 // Note        :  1. Work for the option "OPT__INIT == INIT_BY_FUNCTION"
@@ -124,7 +120,6 @@ void SRHydro_Init_ByFunction_AssignData( const int lv )
    const double dh_sub   = dh / NSub;
    const double _NSub3   = 1.0/(NSub*NSub*NSub);
    const real   Gamma_m1 = GAMMA - (real)1.0;
-   const real  _Gamma_m1 = (real)1.0 / Gamma_m1;
 
    real   fluid[NCOMP_TOTAL], fluid_sub[NCOMP_TOTAL];
    double x, y, z, x0, y0, z0;
@@ -158,24 +153,9 @@ void SRHydro_Init_ByFunction_AssignData( const int lv )
 
 //       check minimum density and pressure
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-	 if(CPU_CheckUnphysical(fluid, NULL, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
+	 SRHydro_CheckUnphysical(fluid, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true);
 #        endif
 
-
-//       calculate the dual-energy variable (entropy or internal energy)
-#        if   ( DUAL_ENERGY == DE_ENPY )
-         fluid[ENPY] = CPU_Fluid2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Gamma_m1 );
-#        elif ( DUAL_ENERGY == DE_EINT )
-#        error : DE_EINT is NOT supported yet !!
-#        endif
-
-//       floor and normalize passive scalars
-#        if ( NCOMP_PASSIVE > 0 )
-         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = FMAX( fluid[v], TINY_NUMBER );
-
-         if ( OPT__NORMALIZE_PASSIVE )
-            CPU_NormalizePassive( fluid[DENS], fluid+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
-#        endif
 
          for (int v=0; v<NCOMP_TOTAL; v++)   amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i] = fluid[v];
 
@@ -198,23 +178,7 @@ void SRHydro_Init_ByFunction_AssignData( const int lv )
 
 //       check minimum density and pressure
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-	 if(CPU_CheckUnphysical(fluid, NULL, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
-#        endif
-
-
-//       calculate the dual-energy variable (entropy or internal energy)
-#        if   ( DUAL_ENERGY == DE_ENPY )
-         fluid[ENPY] = CPU_Fluid2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Gamma_m1 );
-#        elif ( DUAL_ENERGY == DE_EINT )
-#        error : DE_EINT is NOT supported yet !!
-#        endif
-
-//       floor and normalize passive scalars
-#        if ( NCOMP_PASSIVE > 0 )
-         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = FMAX( fluid[v], TINY_NUMBER );
-
-         if ( OPT__NORMALIZE_PASSIVE )
-            CPU_NormalizePassive( fluid[DENS], fluid+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
+	 SRHydro_CheckUnphysical(fluid, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true);
 #        endif
 
          for (int v=0; v<NCOMP_TOTAL; v++)   amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i] = fluid[v];
@@ -222,4 +186,4 @@ void SRHydro_Init_ByFunction_AssignData( const int lv )
       }}}
    } // if ( NSub > 1 ) ... else ...
 
-} // FUNCTION : Hydro_Init_ByFunction_AssignData
+} // FUNCTION : SRHydro_Init_ByFunction_AssignData

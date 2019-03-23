@@ -1,10 +1,6 @@
 #include "GAMER.h"
 #include "CUFLU.h"
 
-#if ( MODEL == SR_HYDRO )
-bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], const int line, bool show);
-#endif
-
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flu_FixUp
@@ -181,20 +177,20 @@ void Flu_FixUp( const int lv )
 */
 
 #                 if   ( DUAL_ENERGY == DE_ENPY )
-//                must determine to use CPU_GetPressure() or CPU_DensEntropy2Pres() since the fluid variables stored
-//                in CorrVal[] may not be fully consistent (as it's not corrected by CPU_DualEnergyFix())
-//                --> note that currently we adopt CPU_DensEntropy2Pres() for DE_UPDATED_BY_MIN_PRES
+//                must determine to use Hydro_GetPressure() or Hydro_DensEntropy2Pres() since the fluid variables stored
+//                in CorrVal[] may not be fully consistent (as it's not corrected by Hydro_DualEnergyFix())
+//                --> note that currently we adopt Hydro_DensEntropy2Pres() for DE_UPDATED_BY_MIN_PRES
                   Pres = ( *DE_StatusPtr1D == DE_UPDATED_BY_ETOT  ||  *DE_StatusPtr1D == DE_UPDATED_BY_ETOT_GRA ) ?
-                         CPU_GetPressure( ForPres[DENS], ForPres[MOMX], ForPres[MOMY], ForPres[MOMZ], ForPres[ENGY],
-                                          Gamma_m1, CheckMinPres_No, NULL_REAL )
-                       : CPU_DensEntropy2Pres( ForPres[DENS], ForPres[ENPY], Gamma_m1, CheckMinPres_No, NULL_REAL );
+                         Hydro_GetPressure( ForPres[DENS], ForPres[MOMX], ForPres[MOMY], ForPres[MOMZ], ForPres[ENGY],
+                                            Gamma_m1, CheckMinPres_No, NULL_REAL )
+                       : Hydro_DensEntropy2Pres( ForPres[DENS], ForPres[ENPY], Gamma_m1, CheckMinPres_No, NULL_REAL );
 
 #                 elif ( DUAL_ENERGY == DE_EINT )
 #                 error : DE_EINT is NOT supported yet !!
 
 #                 else
-                  Pres = CPU_GetPressure( ForPres[DENS], ForPres[MOMX], ForPres[MOMY], ForPres[MOMZ], ForPres[ENGY],
-                                          Gamma_m1, CheckMinPres_No, NULL_REAL );
+                  Pres = Hydro_GetPressure( ForPres[DENS], ForPres[MOMX], ForPres[MOMY], ForPres[MOMZ], ForPres[ENGY],
+                                            Gamma_m1, CheckMinPres_No, NULL_REAL );
 #                 endif // DUAL_ENERGY
 #                 elif ( MODEL == SR_HYDRO )
 //                 ........ 
@@ -224,7 +220,7 @@ void Flu_FixUp( const int lv )
                   if ( CorrVal[DENS] <= MIN_DENS )
 
 #                 elif ( MODEL == SR_HYDRO )
-		  if (CPU_CheckUnphysical(CorrVal, NULL, __FUNCTION__, __LINE__, true))
+		  if (SRHydro_CheckUnphysical(CorrVal, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true))
 #                 endif
                      continue;
 
@@ -234,7 +230,7 @@ void Flu_FixUp( const int lv )
                   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
 
                   if ( OPT__NORMALIZE_PASSIVE )
-                     CPU_NormalizePassive( CorrVal[DENS], CorrVal+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
+                     Hydro_NormalizePassive( CorrVal[DENS], CorrVal+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
 #                 endif
 
 
@@ -248,7 +244,7 @@ void Flu_FixUp( const int lv )
 
 #                 ifdef DUAL_ENERGY
 #                 if   ( DUAL_ENERGY == DE_ENPY )
-                  CorrVal[ENPY] = CPU_DensPres2Entropy( CorrVal[DENS], Pres, Gamma_m1 );
+                  CorrVal[ENPY] = Hydro_DensPres2Entropy( CorrVal[DENS], Pres, Gamma_m1 );
 
 #                 elif ( DUAL_ENERGY == DE_EINT )
 #                 error : DE_EINT is NOT supported yet !!

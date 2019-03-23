@@ -1,6 +1,5 @@
 #include "GAMER.h"
 #include "CUFLU.h"
-#include "../../include/CPU_prototypes.h"
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -206,28 +205,31 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
          const real UseEnpy2FixEngy  = HUGE_NUMBER;
          char dummy;    // we do not record the dual-energy status here
 
-         CPU_DualEnergyFix( amr->patch[FaFluSg][FaLv][FaPID]->fluid[DENS][k][j][i],
-                            amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMX][k][j][i],
-                            amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMY][k][j][i],
-                            amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMZ][k][j][i],
-                            amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i],
-                            amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENPY][k][j][i],
-                            dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy );
+         Hydro_DualEnergyFix( amr->patch[FaFluSg][FaLv][FaPID]->fluid[DENS][k][j][i],
+                              amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMX][k][j][i],
+                              amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMY][k][j][i],
+                              amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMZ][k][j][i],
+                              amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i],
+                              amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENPY][k][j][i],
+                              dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy );
 
 #        elif ( MODEL != SR_HYDRO )
 
 //       actually it might not be necessary to check the minimum pressure here
          amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i]
-            = CPU_CheckMinPresInEngy( amr->patch[FaFluSg][FaLv][FaPID]->fluid[DENS][k][j][i],
+            = Hydro_CheckMinPresInEngy( amr->patch[FaFluSg][FaLv][FaPID]->fluid[DENS][k][j][i],
                                       amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMX][k][j][i],
                                       amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMY][k][j][i],
                                       amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMZ][k][j][i],
                                       amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i],
                                       Gamma_m1, _Gamma_m1, MIN_PRES );
+
 #        elif ( MODEL == SR_HYDRO && defined(CHECK_NEGATIVE_IN_FLUID) )
 	 real Con[NCOMP_FLUID];
 	 for(int v=0;v<NCOMP_FLUID;v++) Con[v]=amr->patch[FaFluSg][FaLv][FaPID]->fluid[v][k][j][i];
-	 if(CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
+
+	 if(SRHydro_CheckUnphysical(Con, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
+
 #        endif // #ifdef DUAL_ENERGY ... else ...
       } // i,j,k
 #     endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )

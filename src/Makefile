@@ -53,25 +53,25 @@ SIMU_OPTION += -DMODEL=SR_HYDRO
 # (b-1) hydro options
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DMODEL=HYDRO, $(SIMU_OPTION))" "-DMODEL=HYDRO"
-# hydrodynamic scheme: RTVD/WAF/MHM/MHM_RP/CTU
-# --> must be set when MODEL=HYDRO; WAF is deprecated
+# hydrodynamic scheme: RTVD/MHM/MHM_RP/CTU
+# --> must be set when MODEL=HYDRO;
 SIMU_OPTION += -DFLU_SCHEME=CTU
 
 # scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic)
-# --> useless for RTVD/WAF
+# --> useless for RTVD
 SIMU_OPTION += -DLR_SCHEME=PPM
 
 # Riemann solver: EXACT/ROE/HLLE/HLLC
-# --> all are useless for RTVD; HLLE/HLLC are useless for WAF
+# --> all are useless for RTVD;
 SIMU_OPTION += -DRSOLVER=ROE
 
 # dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy)
-# --> DE_EINT is not supported yet; useless for RTVD/WAF
+# --> DE_EINT is not supported yet; useless for RTVD
 #SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
 
 # number of user-defined passively advected scalars
 # --> set it to 0 or comment it out if none is required
-# --> useless for RTVD/WAF
+# --> useless for RTVD
 SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 
 
@@ -102,36 +102,31 @@ SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 # (b-4) sr-hydro options
 # ------------------------------------------------------------------------------------
 else ifeq "$(filter -DMODEL=SR_HYDRO, $(SIMU_OPTION))" "-DMODEL=SR_HYDRO"
-# hydrodynamic scheme: RTVD/WAF/MHM/MHM_RP/CTU
-# --> must be set when MODEL=HYDRO; WAF is deprecated
-SIMU_OPTION += -DFLU_SCHEME=MHM_RP
+# hydrodynamic scheme: RTVD/MHM/MHM_RP/CTU
+# --> must be set when MODEL=HYDRO;
+SIMU_OPTION += -DFLU_SCHEME=MHM
 
-#SIMU_OPTION += -DEOS=RELATIVISTIC_IDEAL_GAS
-SIMU_OPTION += -DEOS=IDEAL_GAS
+SIMU_OPTION += -DEOS=RELATIVISTIC_IDEAL_GAS
+
+#SIMU_OPTION += -DEOS=IDEAL_GAS
 
 # conserved energy = (total energy)
-#SIMU_OPTION += -DCONSERVED_ENERGY=1
-
-SIMU_OPTION += -DCHECK_MIN_TEMP
-
+SIMU_OPTION += -DCONSERVED_ENERGY=1
 # conserved energy = (total energy) - (rest mass energy)
-SIMU_OPTION += -DCONSERVED_ENERGY=2
-
+#SIMU_OPTION += -DCONSERVED_ENERGY=2
+#SIMU_OPTION += -DCHECK_MIN_TEMP
+#SIMU_OPTION += -DCHECK_NEGATIVE_IN_FLUID
 # scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic)
-# --> useless for RTVD/WAF
+# --> useless for RTVD
 SIMU_OPTION += -DLR_SCHEME=PLM
 
 # Riemann solver: EXACT/ROE/HLLE/HLLC
-# --> all are useless for RTVD; HLLE/HLLC are useless for WAF
-SIMU_OPTION += -DRSOLVER=HLLE
+# --> all are useless for RTVD;
+SIMU_OPTION += -DRSOLVER=HLLC
 
 # dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy)
-# --> DE_EINT is not supported yet; useless for RTVD/WAF
+# --> DE_EINT is not supported yet; useless for RTVD
 #SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
-
-# number of passively advected scalars
-# --> not supported yet and must be set to 0 (or comment it out)
-SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 
 endif # MODEL
 
@@ -189,7 +184,7 @@ SIMU_OPTION += -DMAX_PATCH=1000000
 #SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA
-#SIMU_OPTION += -DGPU_ARCH=KEPLER
+SIMU_OPTION += -DGPU_ARCH=FERMI
 
 # debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
@@ -205,7 +200,7 @@ SIMU_OPTION += -DTIMING
 #SIMU_OPTION += -DTIMING_SOLVER
 
 # double precision
-SIMU_OPTION += -DFLOAT8
+#SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
 # --> must disable LOAD_BALANCE
@@ -229,7 +224,7 @@ SIMU_OPTION += -DOPENMP
 #SIMU_OPTION += -DSUPPORT_HDF5
 
 # support GNU scientific library
-SIMU_OPTION += -DSUPPORT_GSL
+#SIMU_OPTION += -DSUPPORT_GSL
 
 # support yt inline analysis
 #SIMU_OPTION += -DSUPPORT_LIBYT
@@ -249,18 +244,18 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 # intel
 # -------------------------------------------------------------------------------
 # CXX         = icpc                                      # serial compiler
-##CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
+# CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
 ##CXX         = CC                                        # cray wrapper script
 # CXXFLAG     = -g -O3                                    # general flags
 ##CXXFLAG     = -g -O3 -std=c++11 #-gxx-name=YOUR_G++
-##CXXFLAG     = -g -fast
+#CXXFLAG     = -g -fast
 # CXXFLAG    += -w1                                       # warning flags
 # OPENMPFLAG  = -fopenmp                                  # openmp flag
 # LIB         = -limf                                     # libraries and linker flags
 #
 ## for debug only
 #ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
-##CXXFLAG    += -fstack-protector-all
+#CXXFLAG    += -fstack-protector-all
 ##LIB        += -lssp
 #endif
 #
@@ -273,32 +268,32 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 # gnu
 # -------------------------------------------------------------------------------
  CXX         = g++                                       # serial compiler
-#CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
+# CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
 #CXX         = CC                                        # cray wrapper script
  CXXFLAG     = -g -O3                                    # general flags
 #CXXFLAG     = -g -O3 -std=c++11
 #CXXFLAG     = -g -Ofast
- CXXFLAG    += -Wall -Wextra                             # warning flags
- CXXFLAG    += -Wno-unused-variable -Wno-unused-parameter \
+# CXXFLAG    += -Wall -Wextra                             # warning flags
+# CXXFLAG    += -Wno-unused-variable -Wno-unused-parameter \
                -Wno-maybe-uninitialized -Wno-unused-but-set-variable \
                -Wno-unused-result -Wno-unused-function
  OPENMPFLAG  = -fopenmp                                  # openmp flag
- LIB         =                                           # libraries and linker flags
+# LIB         =                                           # libraries and linker flags
 
 # for debug only
-ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
+#ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
 #CXXFLAG    += -fstack-protector-all
-endif
+#endif
 
 # suppress warning when OpenMP is disabled
-ifeq "$(filter -DOPENMP, $(SIMU_OPTION))" ""
- CXXFLAG    += -Wno-unknown-pragmas
-endif
+#ifeq "$(filter -DOPENMP, $(SIMU_OPTION))" ""
+# CXXFLAG    += -Wno-unknown-pragmas
+#endif
 
 
 # CUDA
 # -------------------------------------------------------------------------------
-# NVCC = $(CUDA_PATH)/bin/nvcc                            # CUDA compiler
+ NVCC = $(CUDA_PATH)/bin/nvcc                            # CUDA compiler
 #NVCC = $(CUDA_PATH)/bin/nvcc -ccbin YOUR_G++            # with a specified host compiler
 #NVCC = nvcc -ccbin CC                                   # for the Cray environment
 
@@ -308,15 +303,6 @@ endif
 
 # library paths
 #######################################################################################################
-
-# template
-CUDA_PATH    :=
-FFTW_PATH    :=
-MPI_PATH     :=
-HDF5_PATH    := /usr/local/myprog/hdf5-1.10.2
-GRACKLE_PATH :=
-GSL_PATH     := /usr/local/myprog/gsl-2.4
-LIBYT_PATH   :=
 
 # NCSA-bluewaters (only need to specify the path of user-installed packages)
 #GRACKLE_PATH :=
@@ -332,8 +318,8 @@ LIBYT_PATH   :=
 # UIUC-campus (gcc-4.9.2 + openmpi-1.8.4)
 #CUDA_PATH    := /usr/local/cuda/7.0
 #FFTW_PATH    := /projects/ncsa/grav/softwares/fftw/2.1.5-openmpi-1.8.4-gcc-4.9.2
-#MPI_PATH     := /usr/local/mpi/openmpi-1.8.4-gcc-4.9.2
-#HDF5_PATH    := /projects/ncsa/grav/softwares/miniconda2
+#MPI_PATH     := /usr/mpi/gcc/openmpi-1.4.3-qlc
+#HDF5_PATH    := /opt/hdf5/default
 #GRACKLE_PATH := /home/hyschive/local
 #GSL_PATH     := /usr/local/gsl/gsl-1.16
 
@@ -359,29 +345,23 @@ LIBYT_PATH   :=
 #GSL_PATH     := /usr/lib
 #LIBYT_PATH   := /home/hyschive/project/libyt/libyt.dev/libyt
 
-# NTU-hulk (openmpi-intel-qlc)
-#CUDA_PATH    := /opt/gpu/cuda/4.2
+# NTU-hulk (openmpi-gcc-qlc)
 #FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
 #MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
-#HDF5_PATH    := /opt/hdf5/1.8.20
-#GRACKLE_PATH := /work1/fish/Software/grackle
-#GSL_PATH     := /opt/math/gsl/2.5
-#LIBYT_PATH   := /project/fish/libyt/libyt
-#FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.6.0-qlc
-#MPI_PATH     := /opt/mpi/openmpi/1.6.0-intel-qlc
-#FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-2.1.5-qlc
-#MPI_PATH     := /opt/mpi/openmpi/2.1.5-intel-qlc
-#CUDA_PATH    := /usr/local/cuda-7.5
+#HDF5_PATH    := /opt/hdf5/default
+#GRACKLE_PATH := 
+#GSL_PATH     := /opt/math/gsl/default
+#LIBYT_PATH   := 
+#CUDA_PATH    := /opt/gpu/cuda/default
 
-# NTU-hulk (openmpi-gcc-qlc)
-#CUDA_PATH    := /opt/gpu/cuda/4.2
-#FFTW_PATH    := /opt/math/fftw/2.1.5-gcc-qlc
-#MPI_PATH     := /usr/mpi/gcc/openmpi-1.4.3-qlc
-#HDF5_PATH    := /opt/hdf5/1.8.9
-#GRACKLE_PATH := /work1/fish/Software/grackle
-#GSL_PATH     := /opt/math/gsl
-#LIBYT_PATH   := /project/fish/libyt/libyt
-#MPI_PATH     := /opt/mpi/openmpi/1.8.1-gcc-qlc
+# NTU-hulk (openmpi-intel-qlc)
+#FFTW_PATH    := 
+#MPI_PATH     := 
+#HDF5_PATH    := 
+#GRACKLE_PATH := 
+#GSL_PATH     := 
+#LIBYT_PATH   := 
+#CUDA_PATH    := 
 
 # NAOC-laohu (OpenMPI-1.3.2-intel)
 #CUDA_PATH    := $(CUDA_INSTALL_PATH)
@@ -389,17 +369,23 @@ LIBYT_PATH   :=
 #MPI_PATH     := /usr/mpi/intel/openmpi-1.3.2-qlc
 #GPUID_PATH   := /ifs/data/hsiyu/Software/gpudevmgr
 
-# A "typical" macOS installation without GPU
-#CUDA_PATH    :=
-#FFTW_PATH    := /usr/local/fftw-2.1.5
-#MPI_PATH     := /usr/local/mpich-3.2
-#HDF5_PATH    := ${HOME}/miniconda3
-#GRACKLE_PATH :=
-#GSL_PATH     := /usr/local/gsl-1.16
-
-
-
-
+# Calab AMD1
+#FFTW_PATH    := 
+#MPI_PATH     := 
+#HDF5_PATH    := /usr/src/hdf5-1.10.4/hdf5
+#GRACKLE_PATH := 
+#GSL_PATH     := 
+#LIBYT_PATH   := 
+#CUDA_PATH    := /usr/local/cuda-10.0
+#
+## Calab AMD2
+#FFTW_PATH    := 
+#MPI_PATH     := 
+#HDF5_PATH    := /usr/local/src/hdf5-1.10.4/hdf5
+#GRACKLE_PATH := 
+#GSL_PATH     := 
+#LIBYT_PATH   := 
+#CUDA_PATH    := /usr/local/cuda-10.0
 
 
 # source files
@@ -435,7 +421,7 @@ CC_FILE     += End_GAMER.cpp  End_MemFree.cpp  End_MemFree_Fluid.cpp  End_StopMa
                Init_MemAllocate_Fluid.cpp  Init_Parallelization.cpp  Init_RecordBasePatch.cpp  Init_Refine.cpp \
                Init_ByRestart_v1.cpp  Init_ByFunction.cpp  Init_TestProb.cpp  Init_ByFile.cpp  Init_OpenMP.cpp \
                Init_ByRestart_HDF5.cpp  Init_ResetParameter.cpp  Init_ByRestart_v2.cpp  Init_MemoryPool.cpp \
-               Init_Unit.cpp  Init_UniformGrid.cpp  Init_Field.cpp
+               Init_Unit.cpp  Init_UniformGrid.cpp  Init_Field.cpp Init_User.cpp
 
 CC_FILE     += Interpolate.cpp  Int_CQuadratic.cpp  Int_MinMod1D.cpp  Int_MinMod3D.cpp  Int_vanLeer.cpp \
                Int_Quadratic.cpp  Int_Table.cpp  Int_CQuartic.cpp  Int_Quartic.cpp
@@ -463,10 +449,10 @@ vpath %.cpp    Main  Init  Refine  Fluid  Interpolation  Tables  Output  Miscell
 # hydrodynamic source files (included only if "MODEL=HYDRO")
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DMODEL=HYDRO, $(SIMU_OPTION))" "-DMODEL=HYDRO"
-CUDA_FILE   += CUFLU_dtSolver_HydroCFL.cu  CUFLU_FluidSolver_RTVD.cu  CUFLU_FluidSolver_WAF.cu  CUFLU_FluidSolver_MHM.cu \
+CUDA_FILE   += CUFLU_dtSolver_HydroCFL.cu  CUFLU_FluidSolver_RTVD.cu  CUFLU_FluidSolver_MHM.cu \
                CUFLU_FluidSolver_CTU.cu
 
-CC_FILE     += CPU_FluidSolver_RTVD.cpp  CPU_FluidSolver_WAF.cpp  CPU_FluidSolver_MHM.cpp  CPU_FluidSolver_CTU.cpp \
+CC_FILE     += CPU_FluidSolver_RTVD.cpp  CPU_FluidSolver_MHM.cpp  CPU_FluidSolver_CTU.cpp \
                CPU_Shared_DataReconstruction.cpp  CPU_Shared_FluUtility.cpp  CPU_Shared_ComputeFlux.cpp \
                CPU_Shared_FullStepUpdate.cpp  CPU_Shared_RiemannSolver_Exact.cpp  CPU_Shared_RiemannSolver_Roe.cpp \
                CPU_Shared_RiemannSolver_HLLE.cpp  CPU_Shared_RiemannSolver_HLLC.cpp  CPU_Shared_DualEnergy.cpp \
@@ -503,18 +489,20 @@ vpath %.cu     Model_MHD/GPU_MHDGravity
 vpath %.cpp    Model_MHD/CPU_MHDGravity
 endif
 
-# sr-hydrodynamic source files (included only if "MODEL=SR_HYDRO")
+# sr-hydrodynamic source files (included only if "MODEL=HYDRO")
 # ------------------------------------------------------------------------------------
 else ifeq "$(filter -DMODEL=SR_HYDRO, $(SIMU_OPTION))" "-DMODEL=SR_HYDRO"
+CUDA_FILE   += CUFLU_dtSolver_SRHydroCFL.cu    CUFLU_FluidSolver_MHM.cu
 
 CC_FILE     += CPU_Shared_DataReconstruction.cpp  CPU_Shared_FluUtility.cpp  CPU_Shared_ComputeFlux.cpp \
                CPU_Shared_FullStepUpdate.cpp CPU_FluidSolver_MHM.cpp \
-               CPU_Shared_RiemannSolver_HLLC.cpp  CPU_Shared_RiemannSolver_HLLE.cpp  \
-               CPU_dtSolver_HydroCFL.cpp
+               CPU_Shared_RiemannSolver_HLLC.cpp CPU_Shared_RiemannSolver_HLLE.cpp  \
+               CPU_dtSolver_SRHydroCFL.cpp SRHydro_Utility.cpp
 
 CC_FILE     += SRHydro_Init_ByFunction_AssignData.cpp  SRHydro_Aux_Check_Negative.cpp \
-               SRHydro_BoundaryCondition_Reflecting.cpp Hydro_Flag_Vorticity.cpp
+               SRHydro_BoundaryCondition_Reflecting.cpp SRHydro_Flag_Vorticity.cpp
 
+vpath %.cu     Model_SRHydro/GPU_SRHydro
 vpath %.cpp    Model_SRHydro/CPU_SRHydro Model_SRHydro
 
 # ELBDM source files (included only inf "MODEL=ELBDM")
@@ -724,6 +712,7 @@ LIB += -L$(GRACKLE_PATH)/lib -lgrackle
 endif
 
 ifeq "$(filter -DSUPPORT_HDF5, $(SIMU_OPTION))" "-DSUPPORT_HDF5"
+#LIB += -L$(HDF5_PATH)/lib -lhdf5
 LIB += -L$(HDF5_PATH)/lib -lhdf5
 endif
 
@@ -907,7 +896,7 @@ else
 		printf "\nCompiling GAMER --> Failed!\n\n"; \
 	fi)
 endif
-	@rm -f ./*.linkinfo
+	@rm ./*.linkinfo -f
 
 
 # clean
@@ -916,7 +905,7 @@ endif
 clean :
 	@rm -f $(OBJ_PATH)/*
 	@rm -f $(EXECUTABLE)
-	@rm -f ./*.linkinfo
+	@rm ./*.linkinfo -f
 
 
 

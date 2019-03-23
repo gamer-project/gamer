@@ -9,17 +9,24 @@
 
 
 #if   ( MODEL == HYDRO )
-__global__ void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
-                                         const real dh, const real Safety, const real Gamma, const real MinPres );
+__global__
+void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
+                              const real dh, const real Safety, const real Gamma, const real MinPres );
 #ifdef GRAVITY
-__global__ void CUPOT_dtSolver_HydroGravity( real g_dt_Array[],
-                                             const real g_Pot_Array[][ CUBE(GRA_NXT) ],
-                                             const double g_Corner_Array[][3],
-                                             const real dh, const real Safety, const bool P5_Gradient,
-                                             const OptGravityType_t GravityType, const double ExtAcc_Time );
+__global__
+void CUPOT_dtSolver_HydroGravity( real g_dt_Array[], const real g_Pot_Array[][ CUBE(GRA_NXT) ],
+                                  const double g_Corner_Array[][3],
+                                  const real dh, const real Safety, const bool P5_Gradient,
+                                  const OptGravityType_t GravityType,
+                                  const double ExtAcc_Time );
 #endif
 #elif ( MODEL == MHD )
 #warning : WAIT MHD !!!
+
+#elif ( MODEL == SR_HYDRO )
+__global__
+void CUFLU_dtSolver_SRHydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
+                                const real dh, const real Safety, const real Gamma, const real MinPres );
 
 #elif ( MODEL == ELBDM )
 
@@ -124,9 +131,7 @@ void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real 
 
 #     ifdef GRAVITY
       case DT_GRA_SOLVER:
-         BlockDim_dtSolver.x = PS1;
-         BlockDim_dtSolver.y = PS1;
-         BlockDim_dtSolver.z = DT_GRA_BLOCK_SIZE_Z;
+         BlockDim_dtSolver.x = DT_GRA_BLOCK_SIZE;
       break;
 #     endif
 
@@ -245,6 +250,21 @@ void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real 
 
 #     elif ( MODEL == MHD )
 #     warning :: WAIT MHD !!!
+
+#     elif ( MODEL == SR_HYDRO )
+      switch ( TSolver )
+      {
+         case DT_FLU_SOLVER:
+            CUFLU_dtSolver_SRHydroCFL <<< NPatch_per_Stream[s], BlockDim_dtSolver, 0, Stream[s] >>>
+                                      ( d_dt_Array_T  + UsedPatch[s],
+                                        d_Flu_Array_T + UsedPatch[s],
+                                        dh, Safety, Gamma, MinPres );
+         break;
+
+
+         default :
+            Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TSolver", TSolver );
+      }
 
 #     elif ( MODEL == ELBDM )
 

@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "../../include/CPU_prototypes.h"
 
 // declare as static so that other functions cannot invoke them directly and must use the function pointers
 static bool Flu_ResetByUser_Func( real fluid[], const double x, const double y, const double z, const double Time,
@@ -147,14 +146,14 @@ void Flu_ResetByUser_API( const int lv, const int FluSg, const double TTime )
 #           if ( MODEL == SR_HYDRO )
 
 #           else
-            fluid[DENS] = CPU_CheckMinDens( fluid[DENS], (real)MIN_DENS );
-            fluid[ENGY] = CPU_CheckMinPresInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
+            fluid[DENS] = FMAX ( fluid[DENS], (real)MIN_DENS );
+            fluid[ENGY] = Hydro_CheckMinPresInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
                                                   Gamma_m1, _Gamma_m1, MIN_PRES );
 #           endif
 
 //          calculate the dual-energy variable (entropy or internal energy)
 #           if   ( DUAL_ENERGY == DE_ENPY )
-            fluid[ENPY] = CPU_Fluid2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Gamma_m1 );
+            fluid[ENPY] = Hydro_Fluid2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Gamma_m1 );
 #           elif ( DUAL_ENERGY == DE_EINT )
 #           error : DE_EINT is NOT supported yet !!
 #           endif
@@ -164,7 +163,7 @@ void Flu_ResetByUser_API( const int lv, const int FluSg, const double TTime )
             for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = FMAX( fluid[v], TINY_NUMBER );
 
             if ( OPT__NORMALIZE_PASSIVE )
-               CPU_NormalizePassive( fluid[DENS], fluid+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
+               Hydro_NormalizePassive( fluid[DENS], fluid+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
 #           endif
 #           endif // if ( MODEL == HYDRO  ||  MODEL == MHD )
 

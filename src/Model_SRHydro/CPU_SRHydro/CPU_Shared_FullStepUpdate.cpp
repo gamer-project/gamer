@@ -1,120 +1,98 @@
-#include "GAMER.h"
+#ifndef __CUFLU_FULLSTEPUPDATE__
+#define __CUFLU_FULLSTEPUPDATE__
+
+
+
 #include "CUFLU.h"
 
-#if (  !defined GPU  &&  MODEL == SR_HYDRO  && ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP )  )
+#if (  MODEL == SR_HYDRO  &&  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP )  )
 
-bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], const int line, bool show);
-real CPU_CheckMinTempInEngy (const real Con[]);
+
+
+// external functions
+#ifdef __CUDACC__
+
+# include "CUFLU_Shared_FluUtility.cu"
+
+#endif // #ifdef __CUDACC__
+
+
+
+
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_FullStepUpdate
+// Function    :  SRHydro_FullStepUpdate
 // Description :  Evaluate the full-step solution
 //
-// Parameter   :  [ 1] Input            : Array storing the input initial data
-//                [ 2] Output           : Array to store the ouptut updated data
-//                [ 3] DE_Status        : Array to store the dual-energy status
-//                [ 4] Flux             : Array storing the input face-centered flux
-//                                        --> Size is assumed to be N_FL_FLUX^3
-//                [ 5] dt               : Time interval to advance solution
-//                [ 6] dh               : Grid size
-//                [ 7] Gamma            : Ratio of specific heats
-//                [ 8] MinDens          : Minimum allowed density
-//                [ 9] MinPres          : Minimum allowed pressure
-//                [10] DualEnergySwitch : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
-//                [11] NormPassive      : true --> normalize passive scalars so that the sum of their mass density
-//                                                 is equal to the gas mass density
-//                [12] NNorm            : Number of passive scalars to be normalized
-//                                        --> Should be set to the global variable "PassiveNorm_NVar"
-//                [13] NormIdx          : Target variable indices to be normalized
-//                                        --> Should be set to the global variable "PassiveNorm_VarIdx"
-//-------------------------------------------------------------------------------------------------------
-bool CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ], char DE_Status[],
-                         const real Flux[][3][NCOMP_TOTAL], const real dt, const real dh,
-                         const real Gamma, const real MinDens, const real MinPres, const real DualEnergySwitch,
-                         const bool NormPassive, const int NNorm, const int NormIdx[] )
-{
-   const int  dID1[3]   = { 1, N_FL_FLUX, N_FL_FLUX*N_FL_FLUX };
-   const real dt_dh     = dt/dh;
-   real Cons[NCOMP_FLUID];
-
-   int  ID1, ID2, ID3;
-   real dF[3][NCOMP_TOTAL];
-
-   for (int k1=0, k2=FLU_GHOST_SIZE;  k1<PS2;  k1++, k2++)
-   for (int j1=0, j2=FLU_GHOST_SIZE;  j1<PS2;  j1++, j2++)
-   for (int i1=0, i2=FLU_GHOST_SIZE;  i1<PS2;  i1++, i2++)
-   {
-
-      ID1 = (k1*N_FL_FLUX + j1)*N_FL_FLUX + i1;
-      ID2 = (k1*PS2       + j1)*PS2       + i1;
-      ID3 = (k2*FLU_NXT   + j2)*FLU_NXT   + i2;
-
-#     ifdef CHECK_NEGATIVE_IN_FLUID
-      for (int v = 0;v<NCOMP_FLUID;v++) Cons[v] = Input[v][ID3];
-      CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, true);
-#     endif
-
-      for (int d=0; d<3; d++)
-      for (int v=0; v<NCOMP_TOTAL; v++)   
-         dF[d][v] = Flux[ ID1+dID1[d] ][d][v] - Flux[ID1][d][v];
-
-      for (int v=0; v<NCOMP_TOTAL; v++)
-         Output[v][ID2] = Input[v][ID3] - dt_dh*( dF[0][v] + dF[1][v] + dF[2][v] );
-
-      for (int v = 0;v<NCOMP_FLUID;v++) Cons[v] = Output[v][ID2];
-
-#     ifdef CHECK_MIN_TEMP
-      Output[ENGY][ID2] = CPU_CheckMinTempInEngy( Cons );
-      Cons[ENGY] = Output[ENGY][ID2];
-#     endif
-
-      if(CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, false)) return true;
-   } // i,j,k
-
-   // pass 
-   return false;
-} // FUNCTION : CPU_FullStepUpdate
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_StoreFlux
-// Description :  Store the inter-patch fluxes for the AMR fix-up operation
+// Note        :  1. This function is shared by MHM, MHM_RP, and CTU schemes
+//                2. Invoke dual-energy check if DualEnergySwitch is on
 //
-// Parameter   :  Output   : Array to store the inter-patch fluxes
-//                FC_Flux  : Array storing the face-centered fluxes
-//                           --> Size is assumed to be N_FL_FLUX^3
+// Parameter   :  g_Input          : Array storing the input fluid data
+//                g_Output         : Array to store the updated fluid data
+//                g_DE_Status      : Array to store the dual-energy status
+//                g_Flux           : Array storing the input face-centered fluxes
+//                                   --> Accessed with the array stride N_FL_FLUX even thought its actually
+//                                       allocated size is N_FC_FLUX^3
+//                dt               : Time interval to advance solution
+//                dh               : Cell size
+//                Gamma            : Ratio of specific heats
+//                MinDens          : Minimum allowed density
+//                MinTemp          : Minimum allowed temperature
 //-------------------------------------------------------------------------------------------------------
-void CPU_StoreFlux( real Flux_Array[][NCOMP_TOTAL][ PS2*PS2 ], const real FC_Flux[][3][NCOMP_TOTAL]  )
+GPU_DEVICE
+bool SRHydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
+                             const real g_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ], const real dt, const real dh,
+                             const real Gamma, const real MinDens, const real MinTemp )
 {
 
-   int Face, ID1, ID2[9];
+   const int  didx_flux[3] = { 1, N_FL_FLUX, N_FL_FLUX*N_FL_FLUX };
+   const real dt_dh        = dt/dh;
 
-   for (int m=0; m<PS2; m++)
-   for (int n=0; n<PS2; n++)
+   real dFlux[3][NCOMP_TOTAL], Output_1Cell[NCOMP_TOTAL];
+
+
+   const int size_ij = SQR(PS2);
+   CGPU_LOOP( idx_out, CUBE(PS2) )
    {
-      ID1    = m*PS2 + n;
+      const int i_out    = idx_out % PS2;
+      const int j_out    = idx_out % size_ij / PS2;
+      const int k_out    = idx_out / size_ij;
+      const int idx_flux = IDX321( i_out, j_out, k_out, N_FL_FLUX, N_FL_FLUX );
 
-      ID2[0] = (  m*N_FL_FLUX +   n)*N_FL_FLUX + 0;
-      ID2[1] = (  m*N_FL_FLUX +   n)*N_FL_FLUX + PS1;
-      ID2[2] = (  m*N_FL_FLUX +   n)*N_FL_FLUX + PS2;
-      ID2[3] = (  m*N_FL_FLUX +   0)*N_FL_FLUX + n;
-      ID2[4] = (  m*N_FL_FLUX + PS1)*N_FL_FLUX + n;
-      ID2[5] = (  m*N_FL_FLUX + PS2)*N_FL_FLUX + n;
-      ID2[6] = (  0*N_FL_FLUX +   m)*N_FL_FLUX + n;
-      ID2[7] = (PS1*N_FL_FLUX +   m)*N_FL_FLUX + n;
-      ID2[8] = (PS2*N_FL_FLUX +   m)*N_FL_FLUX + n;
+      const int i_in     = i_out + FLU_GHOST_SIZE;
+      const int j_in     = j_out + FLU_GHOST_SIZE;
+      const int k_in     = k_out + FLU_GHOST_SIZE;
+      const int idx_in   = IDX321( i_in, j_in, k_in, FLU_NXT, FLU_NXT );
 
-      for (int t=0; t<9; t++)
-      {
-         Face = t/3;
 
-         for (int v=0; v<NCOMP_TOTAL; v++)   Flux_Array[t][v][ID1] = FC_Flux[ ID2[t] ][Face][v];
-      }
-   }
+//    1. calculate flux difference to update the fluid data
+      for (int d=0; d<3; d++)
+      for (int v=0; v<NCOMP_TOTAL; v++)
+         dFlux[d][v] = g_Flux[d][v][ idx_flux+didx_flux[d] ] - g_Flux[d][v][idx_flux];
 
-} // FUNCTION : CPU_StoreFlux
+//    2. full update
+      for (int v=0; v<NCOMP_TOTAL; v++)
+         Output_1Cell[v] = g_Input[v][idx_in] - dt_dh*( dFlux[0][v] + dFlux[1][v] + dFlux[2][v] );
+
+//    3. check unphysical cell
+#     ifdef CHECK_MIN_TEMP
+      Output_1Cell[ENGY] = SRHydro_CheckMinTempInEngy( Output_1Cell, MinTemp, Gamma );
+#     endif
+
+      if( SRHydro_CheckUnphysical(Output_1Cell, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, false) ) return true;
+
+
+//    4. store results to the output array
+      for (int v=0; v<NCOMP_TOTAL; v++)   g_Output[v][idx_out] = Output_1Cell[v];
+
+   } // CGPU_LOOP
+  
+   return false;
+} // FUNCTION : SRHydro_FullStepUpdate
 
 
 
 #endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 
+
+
+#endif // #ifndef __CUFLU_FULLSTEPUPDATE__

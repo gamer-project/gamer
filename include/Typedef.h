@@ -54,6 +54,7 @@ const TestProbID_t
    TESTPROB_SRHYDRO_JETS                          =  604,
    TESTPROB_SRHYDRO_PRECESSED_JET                 =  605,
    TESTPROB_SRHYDRO_DIFFERENTIAL_PRECESSED_JET    =  606,
+   TESTPROB_SRHYDRO_WEAK_SCALING_BLAST_WAVE       =  607,
 
    TESTPROB_ELBDM_EXTPOT                          = 1000;
 
@@ -115,16 +116,6 @@ const LR_Limiter_t
    MINBEE          = 6,
    SUPERBEE        = 7,
    CONSTANT        = 8;
-
-
-// TVD limiters for the WAF scheme
-typedef int WAF_Limiter_t;
-const WAF_Limiter_t
-   WAF_LIMITER_NONE = 0,
-   WAF_SUPERBEE     = 1,
-   WAF_VANLEER      = 2,
-   WAF_ALBADA       = 3,
-   WAF_MINBEE       = 4;
 
 
 // data output formats
@@ -287,6 +278,11 @@ const ParOutputDens_t
    PAR_OUTPUT_DENS_NONE     = 0,
    PAR_OUTPUT_DENS_PAR_ONLY = 1,
    PAR_OUTPUT_DENS_TOTAL    = 2;
+
+typedef int ParPass2Son_t;
+const ParPass2Son_t
+   PAR_PASS2SON_GENERAL = 1,
+   PAR_PASS2SON_EVOLVE  = 2;
 #endif // #ifdef PARTICLE
 
 

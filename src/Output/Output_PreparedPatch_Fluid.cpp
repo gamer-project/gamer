@@ -134,18 +134,14 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
 //       output pressure in HYDRO
 #        if   ( MODEL == HYDRO )
          const bool CheckMinPres_No = false;
-         fprintf( File, "  %14.7e", CPU_GetPressure(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],GAMMA-1.0,CheckMinPres_No,NULL_REAL) );
+         fprintf( File, "  %14.7e", Hydro_GetPressure(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],GAMMA-1.0,CheckMinPres_No,NULL_REAL) );
 
 #        elif ( MODEL == MHD )
 #        warning : WAIT MHD !!!
 
 #        elif   ( MODEL == SR_HYDRO )
          const bool CheckMinPres_No = false;
-         fprintf( File, "  %14.7e", CPU_GetPressure(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],GAMMA-1.0,CheckMinPres_No,NULL_REAL) );
-
-         if (M >= u[ENGY]){
-           fprintf( File, "%+14.7e", M-u[ENGY]);
-         }
+         fprintf( File, "  %14.7e", SRHydro_GetPressure(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],GAMMA, MIN_TEMP  ) );
 #        endif // MODEL
 
          fprintf( File, "\n" );

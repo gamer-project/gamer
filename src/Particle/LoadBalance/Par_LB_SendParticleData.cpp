@@ -18,7 +18,7 @@
 //                4. Called by Par_LB_CollectParticleFromRealPatch(), Par_LB_CollectParticle2OneLevel(), and
 //                   Par_LB_ExchangeParticleBetweenPatch()
 //                   --> Par_LB_ExchangeParticleBetweenPatch() is called by
-//                       Par_PassParticle2Sibling() and Par_PassParticle2Son_AllPatch()
+//                       Par_PassParticle2Sibling() and Par_PassParticle2Son_MultiPatch()
 //
 // Parameter   :  NParAtt                  : Number of particle attributes to be sent
 //                SendBuf_NPatchEachRank   : MPI send buffer --> number of patches sent to each rank

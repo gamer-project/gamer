@@ -41,16 +41,10 @@ void Init_Load_FlagCriteria()
    double *FlagTable_ParMassCell      = NULL;
 #  endif
 
-#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if   ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
    const bool OPT__FLAG_LOHNER = ( OPT__FLAG_LOHNER_DENS 
                                 || OPT__FLAG_LOHNER_ENGY 
                                 || OPT__FLAG_LOHNER_PRES 
-                                || OPT__FLAG_LOHNER_TEMP );
-#  elif   ( MODEL == SR_HYDRO )
-   const bool OPT__FLAG_LOHNER = ( OPT__FLAG_LOHNER_DENS 
-                                || OPT__FLAG_LOHNER_ENGY 
-                                || OPT__FLAG_LOHNER_PRES 
-                                || OPT__FLAG_LOHNER_PRON
                                 || OPT__FLAG_LOHNER_TEMP );
 #  elif ( MODEL == ELBDM )
    const bool OPT__FLAG_LOHNER = OPT__FLAG_LOHNER_DENS;

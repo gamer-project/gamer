@@ -44,7 +44,6 @@
 
 // hydrodynamic schemes
 #define RTVD         1
-#define WAF          2
 #define MHM          3
 #define MHM_RP       4
 #define CTU          5
@@ -365,8 +364,7 @@
 #  define _VELZ               ( 1 << (NCOMP_TOTAL+2) ) // 4-velocity in z-direction          000010000000
 #  define _PRES               ( 1 << (NCOMP_TOTAL+3) ) // pressure                           000100000000
 #  define _TEMP               ( 1 << (NCOMP_TOTAL+4) ) // temperature                        001000000000
-#  define _PRON               ( 1 << (NCOMP_TOTAL+5) ) // proper number density              010000000000
-#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP | _PRON ) //111111100000
+#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP ) //111111100000
 #  define NDERIVE             6
 
 
@@ -478,8 +476,6 @@
 #if   ( MODEL == HYDRO )   // hydro
 #  if   ( FLU_SCHEME == RTVD )
 #        define FLU_GHOST_SIZE      3
-#  elif ( FLU_SCHEME == WAF )
-#        define FLU_GHOST_SIZE      2
 #  elif ( FLU_SCHEME == MHM )
 #     if ( LR_SCHEME == PLM )
 #        define FLU_GHOST_SIZE      2
@@ -514,8 +510,6 @@
 #elif   ( MODEL == SR_HYDRO )   // hydro
 #  if   ( FLU_SCHEME == RTVD )
 #        define FLU_GHOST_SIZE      3
-#  elif ( FLU_SCHEME == WAF )
-#        define FLU_GHOST_SIZE      2
 #  elif ( FLU_SCHEME == MHM )
 #     if ( LR_SCHEME == PLM )
 #        define FLU_GHOST_SIZE      2
@@ -704,12 +698,15 @@
 
 
 // extreme value used for various purpose (e.g., floor value for passive scalars)
+// -->  __DBL_EPSILON__ is the relative roundoff error between two adjacent double presision floating-point number
 #ifdef FLOAT8
 #  define TINY_NUMBER      __DBL_MIN__
 #  define HUGE_NUMBER      __DBL_MAX__
+#  define     EPSILON      __DBL_EPSILON__
 #else
 #  define TINY_NUMBER      __FLT_MIN__
 #  define HUGE_NUMBER      __FLT_MAX__
+#  define     EPSILON      __FLT_EPSILON__
 #endif
 
 
@@ -883,7 +880,7 @@
 #  undef LR_SCHEME
 #  endif
 
-#  if ( FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU  &&  FLU_SCHEME != WAF )
+#  if ( FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
 #  undef RSOLVER
 #  endif
 

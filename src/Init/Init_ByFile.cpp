@@ -259,6 +259,32 @@ void Init_ByFile()
    } // for (int lv=OPT__UM_IC_LEVEL; lv<MAX_LEVEL; lv++)
 
 
+
+// 8. restrict data
+//    --> for bitwise reproducibility only
+//    --> strictly speaking, it is only necessary for C-binary output (i.e., OPT__OUTPUT_TOTAL=2)
+//        since that output format does not store non-leaf patch data
+#  ifdef BITWISE_REPRODUCIBILITY
+   for (int lv=MAX_LEVEL-1; lv>=0; lv--)
+   {
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Restricting level %d ... ", lv );
+
+      if ( NPatchTotal[lv+1] == 0 )    continue;
+
+//    no need to restrict potential since it will be recalculated later
+      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _TOTAL );
+
+#     ifdef LOAD_BALANCE
+      LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, NULL_INT );
+
+      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_AFTER_FIXUP, _TOTAL, Flu_ParaBuf, USELB_YES );
+#     endif
+
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+   }
+#  endif // # ifdef BITWISE_REPRODUCIBILITY
+
+
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_ByFile
@@ -466,7 +492,7 @@ void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nva
 // calculate the dual-energy field for HYDRO/MHD
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )
 #  if   ( DUAL_ENERGY == DE_ENPY )
-   fluid_out[ENPY] = CPU_Fluid2Entropy( fluid_in[DENS], fluid_in[MOMX], fluid_in[MOMY], fluid_in[MOMZ], fluid_in[ENGY], GAMMA-1.0 );
+   fluid_out[ENPY] = Hydro_Fluid2Entropy( fluid_in[DENS], fluid_in[MOMX], fluid_in[MOMY], fluid_in[MOMZ], fluid_in[ENGY], GAMMA-1.0 );
 #  elif ( DUAL_ENERGY == DE_EINT )
 #  error : DE_EINT is NOT supported yet !!
 #  endif

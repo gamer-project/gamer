@@ -10,20 +10,24 @@ extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 #endif
 
 
-#if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
-void CPU_dtSolver_HydroCFL( real dt_Array[], const real Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
+#if   ( MODEL == HYDRO )
+void CPU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
                             const int NPG, const real dh, const real Safety, const real Gamma, const real MinPres );
 #ifdef GRAVITY
-void CPU_dtSolver_HydroGravity( real dt_Array[],
-                                const real Pot_Array[][ CUBE(GRA_NXT) ],
-                                const double Corner_Array[][3],
+void CPU_dtSolver_HydroGravity( real g_dt_Array[],
+                                const real g_Pot_Array[][ CUBE(GRA_NXT) ],
+                                const double g_Corner_Array[][3],
                                 const int NPatchGroup, const real dh, const real Safety, const bool P5_Gradient,
-                                const OptGravityType_t GravityType, const double ExtAcc_AuxArray[],
+                                const OptGravityType_t GravityType, const double c_ExtAcc_AuxArray[],
                                 const double ExtAcc_Time );
 #endif
 
 #elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
+
+#elif ( MODEL == SR_HYDRO )
+void CPU_dtSolver_SRHydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
+                              const int NPG, const real dh, const real Safety, const real Gamma, const real MinPres );
 
 #elif ( MODEL == ELBDM )
 
@@ -49,7 +53,7 @@ void CPU_dtSolver_HydroGravity( real dt_Array[],
 //                Pot_Array    : Array storing the prepared potential data of each target patch
 //                Corner_Array : Array storing the physical corner coordinates of each patch
 //                NPatchGroup  : Number of patch groups evaluated simultaneously by GPU
-//                dh           : Grid size
+//                dh           : Cell size
 //                Safety       : dt safety factor
 //                Gamma        : Ratio of specific heats
 //                MinPres      : Minimum allowed pressure
@@ -86,7 +90,7 @@ void CPU_dtSolver( const Solver_t TSolver, real dt_Array[], const real Flu_Array
 
 #     elif   ( MODEL == SR_HYDRO )
       case DT_FLU_SOLVER:
-         CPU_dtSolver_HydroCFL( dt_Array, Flu_Array, NPatchGroup, dh, Safety, Gamma, MinPres );
+         CPU_dtSolver_SRHydroCFL( dt_Array, Flu_Array, NPatchGroup, dh, Safety, Gamma, MinPres );
       break;
 
 #     ifdef GRAVITY

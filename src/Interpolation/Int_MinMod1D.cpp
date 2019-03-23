@@ -20,16 +20,27 @@
 //                CStart   : (x,y,z) starting indices to perform interpolation on the CData array
 //                CRange   : Number of grids in each direction to perform interpolation
 //                FData    : Output fine-grid array
+//                FSize    : Size of the FData array
 //                FStart   : (x,y,z) starting indcies to store the interpolation results
 //                NComp    : Number of components in the CData and FData array
 //-------------------------------------------------------------------------------------------------------
 void Int_MinMod1D( const real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
                    real FData[], const int FSize[3], const int FStart[3], const int NComp )
 {
+// CSize_Tot = NCOMP_TOTAL*CSize_Flu*CSize_Flu*CSize_Flu
+// CData     = new real [CSize_Tot]
+//
+// CSize_Flu = PATCH_SIZE + 2*CGhost_Flu;
+// CSize[3]  = { CSize_Flu, CSize_Flu, CSize_Flu };
 
    const int Cdx = 1;
    const int Cdy = CSize[0];
    const int Cdz = CSize[0]*CSize[1];
+
+// PS2      = PATCH_SIZE*2
+// PS1      = PATCH_SIZE*1
+// FSize[3] = { PS2, PS2, PS2 };
+// real (*FData_Flu)[FSize][FSize][FSize] = new real [NCOMP_TOTAL][FSize][FSize][FSize]
 
    const int Fdx = 1;
    const int Fdy = FSize[0];
@@ -38,7 +49,9 @@ void Int_MinMod1D( const real CData[], const int CSize[3], const int CStart[3], 
    real Slope_x, Slope_y, Slope_z, LSlope, RSlope;
    int Cx, Cy, Cz, Fx, Fy, Fz, CID, FID, CID0, FID0;
 
-
+// CStart[3] = { CGhost_Flu, CGhost_Flu, CGhost_Flu }
+// FStart[3] = { 0, 0, 0 }
+// CRange[3] = { PS1, PS1, PS1 }
    for (int v=0; v<NComp; v++)
    {
       CID0 = v*CSize[0]*CSize[1]*CSize[2];

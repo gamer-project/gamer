@@ -14,12 +14,6 @@ static void GetCompound_Makefile ( hid_t &H5_TypeID );
 static void GetCompound_SymConst ( hid_t &H5_TypeID );
 static void GetCompound_InputPara( hid_t &H5_TypeID );
 
-#if ( MODEL == SR_HYDRO )
-real CPU_GetTemperature( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                         const real Gamma_m1, const bool CheckMinPres, const real MinPres );
-bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], const int line, bool show);
-#endif
-
 /*======================================================================================================
 Data structure:
 / -> |
@@ -73,7 +67,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2303)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2307)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -164,6 +158,10 @@ Procedure for outputting new variables:
 //                2301 : 2018/07/24 --> add OPT__UM_IC_FORMAT, PAR_IC_FORMAT, and PAR_IC_MASS
 //                2302 : 2018/07/24 --> Replace GRACKLE_MODE by GRACKLE_ACTIVATE
 //                2303 : 2018/10/04 --> Set "CodeVersion" to VERSION defined in Macro.h
+//                2304 : 2018/12/10 --> Remove EP_Coeff that no longer exists
+//                2305 : 2018/12/15 --> Remove variables related to the WAF scheme
+//                2306 : 2018/12/25 --> Replace DT_GRA_BLOCK_SIZE_Z by DT_GRA_BLOCK_SIZE
+//                2307 : 2018/12/27 --> Replace GRA_BLOCK_SIZE_Z by GRA_BLOCK_SIZE
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -955,9 +953,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 		    Cons[3] = MomZ[PID][i][j][k];
 		    Cons[4] = Engy[PID][i][j][k];
 #                   ifdef CHECK_NEGATIVE_IN_FLUID
-		    if(CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
+		    if(SRHydro_CheckUnphysical(Cons, NULL, (real) GAMMA, (real) MIN_TEMP, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
 #                   endif
-                    Temp[PID][i][j][k] =  CPU_GetTemperature( Cons[0], Cons[1], Cons[2], Cons[3], Cons[4], NAN , false, NAN );
+                    Temp[PID][i][j][k] =  SRHydro_GetTemperature( Cons[0], Cons[1], Cons[2], Cons[3], Cons[4], GAMMA, MIN_TEMP  );
                  }
 
 //  copy conserved data and temperature into FieldData
@@ -1345,7 +1343,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime   = time( NULL );    // calendar time
 
-   KeyInfo.FormatVersion  = 2303;
+   KeyInfo.FormatVersion  = 2307;
    KeyInfo.Model          = MODEL;
    KeyInfo.NLevel         = NLEVEL;
    KeyInfo.NCompFluid     = NCOMP_FLUID;
@@ -1662,7 +1660,7 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.USG_NxtG             = USG_NXT_G;
 #  endif
 
-   SymConst.Gra_BlockSize_z      = GRA_BLOCK_SIZE_Z;
+   SymConst.Gra_BlockSize        = GRA_BLOCK_SIZE;
    SymConst.ExtPotNAuxMax        = EXT_POT_NAUX_MAX;
    SymConst.ExtAccNAuxMax        = EXT_ACC_NAUX_MAX;
 
@@ -1744,11 +1742,6 @@ void FillIn_SymConst( SymConst_t &SymConst )
 #  else
    SymConst.HLL_IncludeAllWaves  = 0;
 #  endif
-#  ifdef WAF_DISSIPATE
-   SymConst.WAF_Dissipate        = 1;
-#  else
-   SymConst.WAF_Dissipate        = 0;
-#  endif
 
 #  ifdef N_FC_VAR
    SymConst.N_FC_Var             = N_FC_VAR;
@@ -1784,7 +1777,7 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.dt_Flu_UseShuffle    = 0;
 #  endif
 #  ifdef GRAVITY
-   SymConst.dt_Gra_BlockSize_z   = DT_GRA_BLOCK_SIZE_Z;
+   SymConst.dt_Gra_BlockSize     = DT_GRA_BLOCK_SIZE;
 #  ifdef DT_GRA_USE_SHUFFLE
    SymConst.dt_Gra_UseShuffle    = 1;
 #  else
@@ -1905,15 +1898,10 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__Flag_EngyDensity   = OPT__FLAG_ENGY_DENSITY;
 #  endif
    InputPara.Opt__Flag_LohnerDens    = OPT__FLAG_LOHNER_DENS;
-#  if ( MODEL == HYDRO )
+#  if ( MODEL == HYDRO || MODEL == SR_HYDRO )
    InputPara.Opt__Flag_LohnerEngy    = OPT__FLAG_LOHNER_ENGY;
    InputPara.Opt__Flag_LohnerPres    = OPT__FLAG_LOHNER_PRES;
    InputPara.Opt__Flag_LohnerTemp    = OPT__FLAG_LOHNER_TEMP;
-#  elif ( MODEL == SR_HYDRO )
-   InputPara.Opt__Flag_LohnerEngy    = OPT__FLAG_LOHNER_ENGY;
-   InputPara.Opt__Flag_LohnerPres    = OPT__FLAG_LOHNER_PRES;
-   InputPara.Opt__Flag_LohnerTemp    = OPT__FLAG_LOHNER_TEMP;
-   InputPara.Opt__Flag_LohnerPron    = OPT__FLAG_LOHNER_PRON;
 #  endif
    InputPara.Opt__Flag_LohnerForm    = OPT__FLAG_LOHNER_FORM;
    InputPara.Opt__Flag_User          = OPT__FLAG_USER;
@@ -1946,9 +1934,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Gamma                   = GAMMA;
    InputPara.MolecularWeight         = MOLECULAR_WEIGHT;
    InputPara.MinMod_Coeff            = MINMOD_COEFF;
-   InputPara.EP_Coeff                = EP_COEFF;
    InputPara.Opt__LR_Limiter         = OPT__LR_LIMITER;
-   InputPara.Opt__WAF_Limiter        = OPT__WAF_LIMITER;
    InputPara.Opt__1stFluxCorr        = OPT__1ST_FLUX_CORR;
    InputPara.Opt__1stFluxCorrScheme  = OPT__1ST_FLUX_CORR_SCHEME;
 #  endif
@@ -2130,19 +2116,13 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  endif
 
 // flag tables
-#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if   ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
    const bool Opt__FlagLohner = ( OPT__FLAG_LOHNER_DENS 
                                || OPT__FLAG_LOHNER_ENGY 
                                || OPT__FLAG_LOHNER_PRES 
                                || OPT__FLAG_LOHNER_TEMP );
 #  elif ( MODEL == ELBDM )
    const bool Opt__FlagLohner = OPT__FLAG_LOHNER_DENS;
-#  elif ( MODEL == SR_HYDRO )
-   const bool Opt__FlagLohner = ( OPT__FLAG_LOHNER_DENS 
-                               || OPT__FLAG_LOHNER_ENGY 
-                               || OPT__FLAG_LOHNER_PRES 
-                               || OPT__FLAG_LOHNER_TEMP
-                               || OPT__FLAG_LOHNER_PRON );
 #  endif
 
    for (int lv=0; lv<NLEVEL-1; lv++)
@@ -2385,7 +2365,7 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "USG_NxtF",             HOFFSET(SymConst_t,USG_NxtF            ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "USG_NxtG",             HOFFSET(SymConst_t,USG_NxtG            ), H5T_NATIVE_INT    );
 #  endif
-   H5Tinsert( H5_TypeID, "Gra_BlockSize_z",      HOFFSET(SymConst_t,Gra_BlockSize_z     ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "Gra_BlockSize",        HOFFSET(SymConst_t,Gra_BlockSize       ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "ExtPotNAuxMax",        HOFFSET(SymConst_t,ExtPotNAuxMax       ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "ExtAccNAuxMax",        HOFFSET(SymConst_t,ExtAccNAuxMax       ), H5T_NATIVE_INT    );
 #  if   ( POT_SCHEME == SOR )
@@ -2417,7 +2397,6 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "CheckIntermediate",    HOFFSET(SymConst_t,CheckIntermediate   ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "HLL_NoRefState",       HOFFSET(SymConst_t,HLL_NoRefState      ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "HLL_IncludeAllWaves",  HOFFSET(SymConst_t,HLL_IncludeAllWaves ), H5T_NATIVE_INT    );
-   H5Tinsert( H5_TypeID, "WAF_Dissipate",        HOFFSET(SymConst_t,WAF_Dissipate       ), H5T_NATIVE_INT    );
 #  ifdef N_FC_VAR
    H5Tinsert( H5_TypeID, "N_FC_Var",             HOFFSET(SymConst_t,N_FC_Var            ), H5T_NATIVE_INT    );
 #  endif
@@ -2444,7 +2423,7 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "dt_Flu_BlockSize",     HOFFSET(SymConst_t,dt_Flu_BlockSize    ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "dt_Flu_UseShuffle",    HOFFSET(SymConst_t,dt_Flu_UseShuffle   ), H5T_NATIVE_INT    );
 #  ifdef GRAVITY
-   H5Tinsert( H5_TypeID, "dt_Gra_BlockSize_z",   HOFFSET(SymConst_t,dt_Gra_BlockSize_z  ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "dt_Gra_BlockSize",     HOFFSET(SymConst_t,dt_Gra_BlockSize    ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "dt_Gra_UseShuffle",    HOFFSET(SymConst_t,dt_Gra_UseShuffle   ), H5T_NATIVE_INT    );
 #  endif
 
@@ -2651,9 +2630,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Gamma",                   HOFFSET(InputPara_t,Gamma                  ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "MolecularWeight",         HOFFSET(InputPara_t,MolecularWeight        ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "MinMod_Coeff",            HOFFSET(InputPara_t,MinMod_Coeff           ), H5T_NATIVE_DOUBLE  );
-   H5Tinsert( H5_TypeID, "EP_Coeff",                HOFFSET(InputPara_t,EP_Coeff               ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "Opt__LR_Limiter",         HOFFSET(InputPara_t,Opt__LR_Limiter        ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "Opt__WAF_Limiter",        HOFFSET(InputPara_t,Opt__WAF_Limiter       ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__1stFluxCorr",        HOFFSET(InputPara_t,Opt__1stFluxCorr       ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__1stFluxCorrScheme",  HOFFSET(InputPara_t,Opt__1stFluxCorrScheme ), H5T_NATIVE_INT     );
 #  endif

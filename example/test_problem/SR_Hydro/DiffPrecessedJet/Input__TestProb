@@ -20,3 +20,14 @@ Jet_Angular_Velocity                +30.0                   # precession angular
 Jet_Angle                             30                    # precession angle in degree
 Jet_NumShell                          4
 BH_Radius                             1.0
+
+Flag_BurstDens                        0
+Flag_Burst4Vel                        0
+Flag_BurstPres                        0
+
+Jet_BurstDens                         0
+Jet_Burst4Vel                         0
+Jet_BurstPres                         0
+
+Jet_BurstStartTime                    0
+Jet_BurstEndTime                      0

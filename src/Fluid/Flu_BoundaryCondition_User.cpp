@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "../../include/CPU_prototypes.h"
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
 static void BC_User( real fluid[], const double x, const double y, const double z, const double Time,
@@ -115,14 +114,11 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
 #  warning : WAIT MHD !!
 
 #  elif   ( MODEL == SR_HYDRO )
-   const bool CheckMinPres_Yes = true;
-   const real Gamma_m1         = GAMMA - (real)1.0;
-   const bool PrepVx           = ( TVar & _VELX    ) ? true : false;
+   const bool PrepVx           = ( TVar & _VELX ) ? true : false;
    const bool PrepVy           = ( TVar & _VELY    ) ? true : false;
    const bool PrepVz           = ( TVar & _VELZ    ) ? true : false;
    const bool PrepPres         = ( TVar & _PRES    ) ? true : false;
    const bool PrepTemp         = ( TVar & _TEMP    ) ? true : false;
-   const bool PrepDens         = ( TVar & _PRON    ) ? true : false; // proper number density
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
@@ -157,10 +153,10 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
       if ( PrepVx   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMX] / BVal[DENS];
       if ( PrepVy   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMY] / BVal[DENS];
       if ( PrepVz   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMZ] / BVal[DENS];
-      if ( PrepPres )   Array3D[ v2 ++ ][k][j][i] = CPU_GetPressure( BVal[DENS], BVal[MOMX], BVal[MOMY], BVal[MOMZ], BVal[ENGY],
-                                                                     Gamma_m1, CheckMinPres_Yes, MIN_PRES );
-      if ( PrepTemp )   Array3D[ v2 ++ ][k][j][i] = CPU_GetTemperature( BVal[DENS], BVal[MOMX], BVal[MOMY], BVal[MOMZ], BVal[ENGY],
-                                                                        Gamma_m1, CheckMinPres_Yes, MIN_PRES );
+      if ( PrepPres )   Array3D[ v2 ++ ][k][j][i] = Hydro_GetPressure( BVal[DENS], BVal[MOMX], BVal[MOMY], BVal[MOMZ], BVal[ENGY],
+                                                                       Gamma_m1, CheckMinPres_Yes, MIN_PRES );
+      if ( PrepTemp )   Array3D[ v2 ++ ][k][j][i] = Hydro_GetTemperature( BVal[DENS], BVal[MOMX], BVal[MOMY], BVal[MOMZ], BVal[ENGY],
+                                                                          Gamma_m1, CheckMinPres_Yes, MIN_PRES );
 
 #     elif ( MODEL == MHD   )
 #     warning : WAIT MHD !!
@@ -169,16 +165,14 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
       printf("please modify %s\n", __FUNCTION__);
       abort();
       real Prim4[5], Prim3[5];
-      CPU_Con2Pri(BVal,Prim4,(real)GAMMA);
-      CPU_4Velto3Vel(Prim4,Prim3);
+      SRHydro_Con2Pri(BVal,Prim4,(real)GAMMA, (real) MIN_TEMP );
+      SRHydro_4Velto3Vel(Prim4,Prim3);
 
-      if ( PrepDens )   Array3D[ v2 ++ ][k][j][i] = Prim3[0];
       if ( PrepVx   )   Array3D[ v2 ++ ][k][j][i] = Prim3[1];
       if ( PrepVy   )   Array3D[ v2 ++ ][k][j][i] = Prim3[2];
       if ( PrepVz   )   Array3D[ v2 ++ ][k][j][i] = Prim3[3];
       if ( PrepPres )   Array3D[ v2 ++ ][k][j][i] = Prim3[4];
-      if ( PrepTemp )   Array3D[ v2 ++ ][k][j][i] = CPU_GetTemperature( BVal[DENS], BVal[MOMX], BVal[MOMY], BVal[MOMZ], BVal[ENGY],
-                                                                        Gamma_m1, CheckMinPres_Yes, MIN_PRES );
+      if ( PrepTemp )   Array3D[ v2 ++ ][k][j][i] = SRHydro_GetTemperature( BVal[DENS], BVal[MOMX], BVal[MOMY], BVal[MOMZ], BVal[ENGY], GAMMA, MIN_TEMP  );
 
 #     elif ( MODEL == ELBDM )
 //    no derived variables yet

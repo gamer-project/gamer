@@ -117,7 +117,7 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 
    int *PID0_List    = NULL;  // list recording the patch indicies with LocalID==0 to be udpated
    bool AllocateList = false; // whether to allocate PID0_List or not
-   int  ArrayID      = 0;     // array index to load and store data ( 0 or 1 )
+   int  ArrayID      = 0;     // 0 and 1 represent repectively load and store data
    int  NPG[2];               // number of patch groups to be updated at a time
    int  NTotal;               // total number of patch groups to be updated
    int  Disp;                 // index displacement in PID0_List
@@ -265,7 +265,7 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
                        const int *PID0_List, const int ArrayID )
 {
 #  ifndef UNSPLIT_GRAVITY
-   real (*h_Pot_Array_USG_F[2])[USG_NXT_F][USG_NXT_F][USG_NXT_F] = { NULL, NULL };
+   real (*h_Pot_Array_USG_F[2])[ USG_NXT_F*USG_NXT_F*USG_NXT_F ] = { NULL, NULL };
 #  endif
 #  if ( defined GRAVITY  &&  !defined DUAL_ENERGY )
    char (*h_DE_Array_G     [2])[PS1][PS1][PS1]                   = { NULL, NULL };
@@ -275,7 +275,7 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
    switch ( TSolver )
    {
       case FLUID_SOLVER :
-         Flu_Prepare( lv, TimeOld, h_Flu_Array_F_In[ArrayID][0][0], h_Pot_Array_USG_F[ArrayID][0][0][0],
+         Flu_Prepare( lv, TimeOld, h_Flu_Array_F_In[ArrayID][0][0], h_Pot_Array_USG_F[ArrayID][0],
                       h_Corner_Array_F[ArrayID], NPG, PID0_List );
       break;
 
@@ -406,11 +406,9 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 
 #  if ( MODEL != HYDRO && MODEL != SR_HYDRO )
    const LR_Limiter_t  OPT__LR_LIMITER  = LR_LIMITER_NONE;
-   const WAF_Limiter_t OPT__WAF_LIMITER = WAF_LIMITER_NONE;
    const bool   Flu_XYZ                 = true;
    const double GAMMA                   = NULL_REAL;
    const double MINMOD_COEFF            = NULL_REAL;
-   const double EP_COEFF                = NULL_REAL;
 #  else
    const bool   Flu_XYZ                 = 1 - ( AdvanceCounter[lv]%2 );    // forward/backward sweep
 #  endif
@@ -431,7 +429,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #  endif
 
 #  ifndef UNSPLIT_GRAVITY
-   real (*h_Pot_Array_USG_F[2])[USG_NXT_F ][USG_NXT_F ][USG_NXT_F ] = { NULL, NULL };
+   real (*h_Pot_Array_USG_F[2])[ CUBE(USG_NXT_F) ]                  = { NULL, NULL };
 #  ifdef GRAVITY
    real (*h_Pot_Array_USG_G[2])[USG_NXT_G ][USG_NXT_G ][USG_NXT_G ] = { NULL, NULL };
    real (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1]           = { NULL, NULL };
@@ -439,9 +437,9 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #  endif
 
 #  ifndef DUAL_ENERGY
-   char (*h_DE_Array_F_Out[2])[8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE] = { NULL, NULL };
+   char (*h_DE_Array_F_Out[2])[ CUBE(PS2) ]                         = { NULL, NULL };
 #  ifdef GRAVITY
-   char (*h_DE_Array_G    [2])[PS1][PS1][PS1]                      = { NULL, NULL };
+   char (*h_DE_Array_G    [2])[PS1][PS1][PS1]                       = { NULL, NULL };
 #  endif
 #  endif
 
@@ -470,20 +468,16 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #        ifdef GPU
          CUAPI_Asyn_FluidSolver( h_Flu_Array_F_In[ArrayID], h_Flu_Array_F_Out[ArrayID], h_DE_Array_F_Out[ArrayID],
                                  h_Flux_Array[ArrayID], h_Corner_Array_F[ArrayID], h_Pot_Array_USG_F[ArrayID],
-                                 NPG, dt, dh, GAMMA, OPT__FIXUP_FLUX, Flu_XYZ, OPT__LR_LIMITER, MINMOD_COEFF, EP_COEFF,
-                                 OPT__WAF_LIMITER, ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
+                                 NPG, dt, dh, GAMMA, OPT__FIXUP_FLUX, Flu_XYZ, OPT__LR_LIMITER, MINMOD_COEFF,
+                                 ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
                                  TimeOld, OPT__GRAVITY_TYPE, GPU_NSTREAM, MIN_DENS, MIN_PRES, DUAL_ENERGY_SWITCH,
                                  OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar, JEANS_MIN_PRES, JeansMinPres_Coeff );
 #        else
          CPU_FluidSolver       ( h_Flu_Array_F_In[ArrayID], h_Flu_Array_F_Out[ArrayID], h_DE_Array_F_Out[ArrayID],
                                  h_Flux_Array[ArrayID], h_Corner_Array_F[ArrayID], h_Pot_Array_USG_F[ArrayID],
-                                 NPG, dt, dh, GAMMA, OPT__FIXUP_FLUX, Flu_XYZ, OPT__LR_LIMITER, MINMOD_COEFF, EP_COEFF,
-                                 OPT__WAF_LIMITER, ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
-#        if ( MODEL != SR_HYDRO )
+                                 NPG, dt, dh, GAMMA, OPT__FIXUP_FLUX, Flu_XYZ, OPT__LR_LIMITER, MINMOD_COEFF,
+                                 ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
                                  TimeOld, OPT__GRAVITY_TYPE, MIN_DENS, MIN_PRES, DUAL_ENERGY_SWITCH,
-#        elif ( MODEL == SR_HYDRO )
-                                 TimeOld, OPT__GRAVITY_TYPE, MIN_DENS, MIN_TEMP, DUAL_ENERGY_SWITCH,
-#        endif
                                  OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar, PassiveNorm_VarIdx, JEANS_MIN_PRES, JeansMinPres_Coeff );
 #        endif
       break;
@@ -605,7 +599,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
       case DT_FLU_SOLVER:
 #        ifdef GPU
          CUAPI_Asyn_dtSolver( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID], NULL, NULL,
-                              NPG, dh, (Step==0)?DT__FLUID_INIT:DT__FLUID, GAMMA, MIN_PRES,
+                              NPG, dh, (Step==0)?DT__FLUID_INIT:DT__FLUID, GAMMA, MIN_TEMP,
                               NULL_BOOL, GRAVITY_NONE, NULL_BOOL, NULL_REAL, GPU_NSTREAM );
 #        else
          CPU_dtSolver       ( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID], NULL, NULL,
