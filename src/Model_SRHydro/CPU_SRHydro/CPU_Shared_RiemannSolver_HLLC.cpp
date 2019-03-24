@@ -149,7 +149,7 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
 #  endif
 
    QuadraticSolver(1.0 + ssr, -2*rV1, FMA( rV1, rV1, - ssr ), &lmdapr, &lmdamr);
-   QuadraticSolver(1.0 + ssr, -2*rV1, FMA( lV1, lV1, - ssl ), &lmdapl, &lmdaml);
+   QuadraticSolver(1.0 + ssl, -2*lV1, FMA( lV1, lV1, - ssl ), &lmdapl, &lmdaml);
 
    lmdal = MIN(lmdaml, lmdamr); /* Mignone Eq 21 */
    lmdar = MAX(lmdapl, lmdapr);
