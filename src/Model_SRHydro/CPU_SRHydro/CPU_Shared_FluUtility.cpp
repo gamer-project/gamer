@@ -700,7 +700,8 @@ Fun_DFun (real Temp, void *ptr, real * f, real * df, real Gamma)
 
 void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus)
 {
-  real tolerance = EPSILON;
+  //real tolerance = EPSILON;
+  real tolerance = 0.0;
 
   real delta = B*B-4*A*C;
 
