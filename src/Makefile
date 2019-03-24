@@ -380,7 +380,7 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 #
 ## Calab AMD2
 #FFTW_PATH    := 
-#MPI_PATH     := 
+#MPI_PATH     := /home/gamer02/mpi/openmpi 
 #HDF5_PATH    := /usr/local/src/hdf5-1.10.4/hdf5
 #GRACKLE_PATH := 
 #GSL_PATH     := 
