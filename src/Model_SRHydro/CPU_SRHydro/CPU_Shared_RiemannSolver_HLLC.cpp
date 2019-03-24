@@ -288,19 +288,19 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
   }
   else{ /* Frs */
     /* Mignone 2006 Eq 48 */
-    ps = -Fhll[4]*lmdas + Fhll[1];
+    ps = FMA( -Fhll[4], lmdas, Fhll[1] );
     /* now calculate Usr with Mignone Eq 16 */
     den = 1.0 / (lmdar - lmdas);
 
     real factor0 = lmdar - rV1;
-    real factor1 = factor0 * den;
+    real factor1 = FMA( lmdar, den, -rV1*den );
 
-    Usr[0] =  CR[0] * factor1;
-    Usr[1] = (CR[1] * factor0 + ps - PR[4]) * den;
-    Usr[2] =  CR[2] * factor1;
-    Usr[3] =  CR[3] * factor1;
+    Usr[0] = CR[0] * factor1;
+    Usr[1] = FMA( CR[1], factor0, ps - PR[4] ) * den;
+    Usr[2] = CR[2] * factor1;
+    Usr[3] = CR[3] * factor1;
 #   if ( CONSERVED_ENERGY == 1 )
-    Usr[4] = (CR[4] * factor0 + ps * lmdas - PR[4] * rV1) * den;
+    Usr[4] = FMA( - PR[4], rV1, FMA( CR[4], factor0, ps * lmdas ) ) * den;
 #   elif ( CONSERVED_ENERGY == 2 )
     Usr[4] = (( CR[4] + CR[0] ) * factor0 + ps * lmdas - PR[4] * rV1) * den;
 #   endif
@@ -309,12 +309,13 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
 #   endif
 
     /* now calculate Fsr using Mignone Eq 14 */
-    Flux_Out[0] = lmdar*(Usr[0] - CR[0]) + Fr[0];
-    Flux_Out[1] = lmdar*(Usr[1] - CR[1]) + Fr[1];
-    Flux_Out[2] = lmdar*(Usr[2] - CR[2]) + Fr[2];
-    Flux_Out[3] = lmdar*(Usr[3] - CR[3]) + Fr[3];
+    Flux_Out[0] = FMA( lmdar, Usr[0] - CR[0], + Fr[0] );
+    Flux_Out[1] = FMA( lmdar, Usr[1] - CR[1], + Fr[1] );
+    Flux_Out[2] = FMA( lmdar, Usr[2] - CR[2], + Fr[2] );
+    Flux_Out[3] = FMA( lmdar, Usr[3] - CR[3], + Fr[3] );
+    Flux_Out[4] = FMA( lmdar, Usr[4] - CR[4], + Fr[4] );
 #   if ( CONSERVED_ENERGY == 1 )
-    Flux_Out[4] = lmdar*(Usr[4] - CR[4]) + Fr[4];
+    Flux_Out[4] = FMA( lmdar, Usr[4] - CR[4], + Fr[4] );
 #   elif ( CONSERVED_ENERGY == 2 )
     Flux_Out[4] = lmdar*(Usr[4] - CR[4] - CR[0]) + Fr[4] - Flux_Out[0];
 #   endif
