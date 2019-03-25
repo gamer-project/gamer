@@ -71,7 +71,7 @@ bool SRHydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Outpu
 
 //    2. full update
       for (int v=0; v<NCOMP_TOTAL; v++)
-         Output_1Cell[v] = g_Input[v][idx_in] - dt_dh*( dFlux[0][v] + dFlux[1][v] + dFlux[2][v] );
+         Output_1Cell[v] = FMA( dFlux[0][v] + dFlux[1][v] + dFlux[2][v], - dt_dh, g_Input[v][idx_in] );
 
 //    3. check unphysical cell
 #     ifdef CHECK_MIN_TEMP

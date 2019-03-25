@@ -8,12 +8,12 @@
 
 #include "CUFLU_Shared_FluUtility.cu"
 GPU_DEVICE
-void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus);
+void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus, const int line);
 
 #else
 
 #include "../../../include/SRHydroPrototypes.h"
-void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus);
+void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus, const int line);
 
 #endif
 
@@ -106,8 +106,8 @@ void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In
    ssl = cslsq / ( gammasql * (1.0 - cslsq) ); /* Mignone Eq 22.5 */
    ssr = csrsq / ( gammasqr * (1.0 - csrsq) );
 
-   QuadraticSolver(1.0 + ssl, -2*lV1, lV1*lV1 - ssl, &lmdapl, &lmdaml);
-   QuadraticSolver(1.0 + ssr, -2*rV1, rV1*rV1 - ssr, &lmdapr, &lmdamr);
+   QuadraticSolver(1.0 + ssl, -2*lV1, lV1*lV1 - ssl, &lmdapl, &lmdaml, __LINE__);
+   QuadraticSolver(1.0 + ssr, -2*rV1, rV1*rV1 - ssr, &lmdapr, &lmdamr, __LINE__);
 
    lmdal = MIN(lmdaml, lmdamr); /* Mignone Eq 21 */
    lmdar = MAX(lmdapl, lmdapr);

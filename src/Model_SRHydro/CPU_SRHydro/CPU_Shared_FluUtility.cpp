@@ -25,6 +25,8 @@ GPU_DEVICE
 void SRHydro_4Velto3Vel (const real In[], real Out[]);
 GPU_DEVICE 
 static void NewtonRaphsonSolver(void *ptr, real *root, const real guess, const real epsabs, const real epsrel, const real Gamma);
+GPU_DEVICE 
+real VectorDotProduct( const real *V1, const real *V2, int Ini_i, int Final_i );
 #else 
 #include "../../../include/SRHydroPrototypes.h"
 static real Fun (real Q, void *ptr);   // function to be solved
@@ -96,7 +98,7 @@ void SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real 
 {
       real Temp = SRHydro_GetTemperature (In[0], In[1], In[2], In[3], In[4], Gamma, MinTemp );
 #if ( EOS == RELATIVISTIC_IDEAL_GAS )
-      real h = 2.5*Temp + SQRT(2.25*Temp*Temp + 1.0);
+      real h = FMA( 2.5, Temp, SQRT( FMA( 2.25, Temp*Temp, 1.0 ) ) );
 #elif ( EOS == IDEAL_GAS ) 
       real h = 1 + Temp * Gamma / (Gamma-1.0);
 #else
@@ -107,7 +109,7 @@ void SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real 
       Out[2] = In[2]/factor;
       Out[3] = In[3]/factor;
 
-      real factor1 = SQRT(1 + SQR (Out[1]) + SQR (Out[2]) + SQR (Out[3]));
+      real factor1 = SQRT(1 + VectorDotProduct(Out, Out, 1, 3));
 
       Out[0] = In[0]/factor1;
       Out[4] = Out[0] * Temp; // P = nkT
@@ -118,7 +120,7 @@ GPU_DEVICE
 void SRHydro_Pri2Con (const real In[], real Out[], const real Gamma)
 {
 # if ( EOS == RELATIVISTIC_IDEAL_GAS )
-  real nh = 2.5*In[4] + SQRT(2.25*SQR(In[4]) + SQR(In[0])); // approximate enthalpy * proper number density
+  real nh = FMA( 2.5, In[4], SQRT( FMA( 2.25, SQR(In[4]), SQR(In[0]) ) )); // approximate enthalpy * proper number density
 # elif ( EOS == IDEAL_GAS )
   real Gamma_m1 = (real) Gamma - 1.0;
   real nh = In[0] + ( Gamma / Gamma_m1) * In[4]; // enthalpy * proper number density
@@ -126,7 +128,7 @@ void SRHydro_Pri2Con (const real In[], real Out[], const real Gamma)
 # error: unsupported EoS!
 # endif
 
-  real Factor0 = 1.0 + SQR (In[1]) + SQR (In[2]) + SQR (In[3]);
+  real Factor0 = 1.0 + VectorDotProduct(In, In, 1, 3);
   real Factor1 = SQRT(Factor0); // Lorentz factor
   real Factor2 = nh * Factor1;
   
@@ -135,7 +137,7 @@ void SRHydro_Pri2Con (const real In[], real Out[], const real Gamma)
   Out[2] = Factor2 * In[2]; // MomX
   Out[3] = Factor2 * In[3]; // MomX
 # if   ( CONSERVED_ENERGY == 1 )
-  Out[4] = nh * Factor0 - In[4]; // total_energy
+  Out[4] = FMA( nh, Factor0, - In[4] ); // total_energy
 # elif ( CONSERVED_ENERGY == 2 )
   Out[4] = nh * Factor0 - In[4] - Out[0]; // ( total_energy ) - ( rest_mass_energy )
 # else
@@ -148,9 +150,9 @@ void SRHydro_Pri2Con (const real In[], real Out[], const real Gamma)
 // Description :  Convert 4-velocity to 3-velocity
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void SRHydro_4Velto3Vel (const real In[], real Out[])
+void SRHydro_4Velto3Vel ( const real In[], real Out[])
 {
-  real Factor = 1 / SQRT (1 + SQR (In[1]) + SQR (In[2]) + SQR (In[3]));
+  real Factor = 1 / SQRT (1 + VectorDotProduct(In, In, 1, 3));
 
   Out[0] = In[0];
   Out[1] = In[1] * Factor;
@@ -166,7 +168,7 @@ void SRHydro_4Velto3Vel (const real In[], real Out[])
 GPU_DEVICE
 void SRHydro_3Velto4Vel (const real In[], real Out[])
 {
-  real Factor = 1 / SQRT (1 - SQR (In[1]) - SQR (In[2]) - SQR (In[3]));
+  real Factor = 1 / SQRT (1 - VectorDotProduct(In, In, 1, 3));
 
   Out[0] = In[0];
   Out[1] = In[1] * Factor;
@@ -204,7 +206,7 @@ void SRHydro_Con2Flux (const int XYZ, real Flux[], const real Input[], const rea
   Pres = PriVar3[4];
 
   Flux[0] = ConVar[0] * Vx;
-  Flux[1] = ConVar[1] * Vx + Pres;
+  Flux[1] = FMA( ConVar[1], Vx, Pres );
   Flux[2] = ConVar[2] * Vx;
   Flux[3] = ConVar[3] * Vx;
 # if ( CONSERVED_ENERGY == 1 )
@@ -324,9 +326,9 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
 
 
 // check energy
-      Msqr = SQR(ConsVar[MOMX]) + SQR(ConsVar[MOMY]) + SQR(ConsVar[MOMZ]);
+      Msqr = VectorDotProduct( ConsVar, ConsVar, MOMX, MOMZ );
 #     if ( CONSERVED_ENERGY == 1 )
-      discriminant = SQR(ConsVar[ENGY]) - Msqr - SQR(ConsVar[DENS]);
+      discriminant = FMA(ConsVar[ENGY], ConsVar[ENGY], - Msqr - SQR(ConsVar[DENS]));
       if ( discriminant <= TINY_NUMBER )                                                   goto FAIL;
 #     elif ( CONSERVED_ENERGY == 2 )
       discriminant = SQR(ConsVar[ENGY]) + 2*ConsVar[ENGY]*ConsVar[DENS] - Msqr;
@@ -354,7 +356,7 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
 // check whether 3-velocity is greater or equal to speed of light
       SRHydro_4Velto3Vel(Pri4Vel,Pri3Vel);
 
-      if (SQR(Pri3Vel[1]) + SQR(Pri3Vel[2]) + SQR(Pri3Vel[3]) >= 1.0)                      goto FAIL;
+      if (VectorDotProduct( Pri3Vel, Pri3Vel, 1, 3 ) >= 1.0)                      goto FAIL;
 
 // pass all checks 
       return false;
@@ -388,7 +390,7 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
       SRHydro_Pri2Con(Pri4Vel, ConsVar, (real) Gamma);
 
 // check whether 3-velocity is greater or equal to speed of light
-      if (SQR(Pri3Vel[1]) + SQR(Pri3Vel[2]) + SQR(Pri3Vel[3]) >= 1.0)               goto FAIL;
+      if (VectorDotProduct( Pri3Vel, Pri3Vel, 1, 3 ) >= 1.0)                      goto FAIL;
    
 // check NaN
       if (  ConsVar[DENS] != ConsVar[DENS]
@@ -406,9 +408,9 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
 
 
 // check energy
-      Msqr = SQR(ConsVar[MOMX]) + SQR(ConsVar[MOMY]) + SQR(ConsVar[MOMZ]);
+      Msqr = VectorDotProduct( ConsVar, ConsVar, MOMX, MOMZ );
 #     if ( CONSERVED_ENERGY == 1 )
-      discriminant = SQR(ConsVar[ENGY]) - Msqr - SQR(ConsVar[DENS]);
+      discriminant = FMA(ConsVar[ENGY], ConsVar[ENGY], - Msqr - SQR(ConsVar[DENS]));
       if ( discriminant <= TINY_NUMBER )                                              goto FAIL;
 #     elif ( CONSERVED_ENERGY == 2 )
       discriminant = SQR(ConsVar[ENGY]) + 2*ConsVar[ENGY]*ConsVar[DENS] - Msqr;
@@ -438,7 +440,8 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
             printf( "n=%14.7e, Ux=%14.7e, Uy=%14.7e, Uz=%14.7e, P=%14.7e\n", 
                                  Pri4Vel[0], Pri4Vel[1], Pri4Vel[2], Pri4Vel[3], Pri4Vel[4]);
             printf( "Vx=%14.7e, Vy=%14.7e, Vz=%14.7e, |V|=%14.7e\n",
-                                 Pri3Vel[1], Pri3Vel[2], Pri3Vel[3], SQRT(SQR(Pri3Vel[1])+SQR(Pri3Vel[2])+SQR(Pri3Vel[3])));
+                                 Pri3Vel[1], Pri3Vel[2], Pri3Vel[3], SQRT( VectorDotProduct( Pri3Vel, Pri3Vel, 1, 3 )));
+ 
           }
         return true;
       }
@@ -503,7 +506,7 @@ real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, 
   real In[5] = {Dens, MomX, MomY, MomZ, Engy};
 
   real guess, root;
-  real Msqr = SQR (In[1]) + SQR (In[2]) + SQR (In[3]);
+  real Msqr = VectorDotProduct(In, In, 1, 3);
   real M = SQRT (Msqr); // magnitude of momentum
   real Dsqr = SQR(In[0]);
   real abc = 1.0 / Dsqr;
@@ -521,15 +524,15 @@ real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, 
 	  {
 	    if ( Constant > 2.5 ) 
 	      {
-		 guess = SQRT( 0.1111111 * E_Dsqr - 0.1041667 * M_Dsqr - 0.2222222 );
+		 guess = SQRT(FMA( 0.1111111, E_Dsqr, - FMA ( 0.1041667, M_Dsqr, 0.2222222 ) ));
 	      }
 	    else guess = (Constant - 1.0) * 0.3333333;
 	  }
 	else // 1 - (M/D)**2 < 0
 	  {
-	    if ( Constant >  1.5 + SQRT( 0.0625 * M_Dsqr - 0.75 )) 
+	    if ( Constant >  1.5 + SQRT( FMA (0.0625, M_Dsqr, - 0.75 ))) 
 	      {
-		 guess = SQRT( 0.1111111 * E_Dsqr - 0.1041667 * M_Dsqr - 0.2222222 );
+		 guess = SQRT(FMA( 0.1111111, E_Dsqr, - FMA ( 0.1041667, M_Dsqr, 0.2222222 ) ));
 	      }
 	    else guess = (Constant - 1.0) * 0.3333333;
 	  }
@@ -637,10 +640,10 @@ NewtonRaphsonSolver(void *ptr, real *root, const real guess, const real epsabs, 
 #    endif     
 
       root_old = *root;
-      *root = *root - ( f / df );
+      *root = FMA( -f, 1.0/df, *root );
       //printf("df = %20.17e\n", df);
       //printf("f  = %20.17e\n", f);
-      tolerance = epsabs + epsrel * FABS(*root);
+      tolerance =  FMA( epsrel, FABS(*root), epsabs );
    }while ( fabs(root_old - *root) >= tolerance && iter < max_iter );
 
 }
@@ -661,20 +664,20 @@ Fun_DFun (real Temp, void *ptr, real * f, real * df, real Gamma)
   real Tsqr = Temp * Temp;
 
 # if ( EOS == RELATIVISTIC_IDEAL_GAS )
-  real abc = SQRT(9 * Tsqr + 4);
-  real h = 2.5 * Temp + SQRT(2.25 * Tsqr + 1.0); // approximate enthalpy
-  real dh = 2.5 + 9.0 * Temp / SQRT(36 * Tsqr + 16);
+  real abc = SQRT(FMA( 9, Tsqr, 4 ));
+  real h = FMA( 2.5, Temp, SQRT(FMA( 2.25, Tsqr, 1.0 ))); // approximate enthalpy
+  real dh = FMA( 9.0, Temp / SQRT(FMA( 36, Tsqr, 16 )), 2.5 );
   real hsqr = SQR(h);
 # if   (CONSERVED_ENERGY == 1)
-  real Constant = SQR(E_D) - M_Dsqr;
-  *f = 3.5 * Tsqr + 1.5 * Temp * abc + hsqr * Tsqr / (hsqr + M_Dsqr) + 1.0 - Constant;
+  real Constant = FMA( E_D, E_D, - M_Dsqr );
+  *f = FMA( 3.5, Tsqr, FMA( 1.5, FMA( Temp, abc, hsqr * Tsqr / (hsqr + M_Dsqr) ),  1.0 - Constant ));
 # elif (CONSERVED_ENERGY == 2)
   real Constant = SQR(E_D) + 2*(E_D) - M_Dsqr;
   *f = 3.5 * Tsqr + 1.5 * Temp * abc + hsqr * Tsqr / (hsqr + M_Dsqr) - Constant;
 # else
 # error: CONSERVED_ENERGY must be 1 or 2!
 # endif
-  *df = 7*Temp + 1.5 * abc + 13.5 * Tsqr / abc + 2*h*Temp*((h*hsqr + M_Dsqr*h + Temp*dh*M_Dsqr) / SQR( hsqr + M_Dsqr) );
+  *df = FMA( 7, Temp, FMA( 1.5, abc, 13.5 * Tsqr / abc )) + 2*h*Temp*((h*hsqr + M_Dsqr*h + Temp*dh*M_Dsqr) / SQR( hsqr + M_Dsqr) );
 
 # elif ( EOS == IDEAL_GAS )
   real zeta = 1.0 / ( Gamma - 1.0 );
@@ -698,19 +701,18 @@ Fun_DFun (real Temp, void *ptr, real * f, real * df, real Gamma)
 # endif // #if ( EOS == RELATIVISTIC_IDEAL_GAS )
 }
 
-void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus)
+void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus, const int line)
 {
   //real tolerance = EPSILON;
   real tolerance = 0.0;
 
-  real delta = B*B-4*A*C;
-
+  real delta = FMA( B, B, -4*A*C );
 
   if ( FABS(A) > tolerance  )
   {
        if ( delta > tolerance )
        {
-             real factor = -0.5*( B + SIGN(B) *  SQRT(delta) );
+             real factor = FMA( -0.5, B, SIGN(B) * -0.5 * SQRT(delta) );
      
            if      ( B > +tolerance )
            {
@@ -727,14 +729,14 @@ void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus)
              *x_plus = SQRT(-C/A);
              *x_minus = -*x_plus;       return;
            }
-           else                        goto NO_REAL_SOLUTIONS;
+           else                        goto NO_REAL_SOLUTIONS_CASE1;
        }
        else if ( ( 0.0 <= delta ) && ( delta <= tolerance ) )
        {
              *x_plus  = -0.5*B/A;
              *x_minus = *x_plus;        return;
        }
-       else                             goto NO_REAL_SOLUTIONS;
+       else                             goto NO_REAL_SOLUTIONS_CASE2;
   }
   else
   {
@@ -743,17 +745,50 @@ void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus)
         *x_plus  = NAN;
         *x_minus = -C/B;                return;
       }
-      else                              goto NO_REAL_SOLUTIONS;
+      else                              goto NO_REAL_SOLUTIONS_CASE3;
   }
 
 
-     NO_REAL_SOLUTIONS:
+     NO_REAL_SOLUTIONS_CASE1:
      {
 #    ifdef CHECK_NEGATIVE_IN_FLUID
-        printf( "No real solution in Quadratic Solver!\n");
+        printf( "Case1: line: %d No real solution in Quadratic Solver!\n", line);
+        printf( "A=%14.7e, B=%14.7e, C=%14.7e\n", A, B, C);
+        printf( "B*B-4*A*C=%14.7e\n", B*B-4*A*C);
+#    endif
+     }
+
+     NO_REAL_SOLUTIONS_CASE2:
+     {
+#    ifdef CHECK_NEGATIVE_IN_FLUID
+        printf( "Case2: line: %d No real solution in Quadratic Solver!\n", line);
+        printf( "A=%14.7e, B=%14.7e, C=%14.7e\n", A, B, C);
+        printf( "B*B-4*A*C=%14.7e\n", B*B-4*A*C);
+#    endif
+     }
+
+     NO_REAL_SOLUTIONS_CASE3:
+     {
+#    ifdef CHECK_NEGATIVE_IN_FLUID
+        printf( "Case3: line: %d No real solution in Quadratic Solver!\n", line);
         printf( "A=%14.7e, B=%14.7e, C=%14.7e\n", A, B, C);
         printf( "B*B-4*A*C=%14.7e\n", B*B-4*A*C);
 #    endif
      }
 }
+
+
+real VectorDotProduct( const real *V1, const real *V2, int Ini_i, int Final_i )
+{
+
+real Product = 0.0;
+
+for (int i=Ini_i; i<=Final_i; i++)
+ {
+    Product = FMA( V1[i], V2[i] , Product );
+ }
+
+return Product;
+} 
+
 #endif

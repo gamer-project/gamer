@@ -151,8 +151,8 @@ void SRHydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 //       3. get the face-centered primitive variables
          for (int v=0; v<NCOMP_TOTAL; v++)
          {
-            fc[faceL][v] = cc_C[v] - (real)0.5*Slope_Limiter[v];
-            fc[faceR][v] = cc_C[v] + (real)0.5*Slope_Limiter[v];
+            fc[faceL][v] = FMA( -(real)0.5, Slope_Limiter[v], cc_C[v] );
+            fc[faceR][v] = FMA(  (real)0.5, Slope_Limiter[v], cc_C[v] );
          }
 
 //       ensure the face-centered variables lie between neighboring cell-centered values
@@ -164,13 +164,13 @@ void SRHydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
             Max = ( cc_C[v] > cc_L[v] ) ? cc_C[v] : cc_L[v];
             fc[faceL][v] = ( fc[faceL][v] > Min ) ? fc[faceL][v] : Min;
             fc[faceL][v] = ( fc[faceL][v] < Max ) ? fc[faceL][v] : Max;
-            fc[faceR][v] = (real)2.0*cc_C[v] - fc[faceL][v];
+            fc[faceR][v] = FMA( (real)2.0, cc_C[v], - fc[faceL][v] );
 
             Min = ( cc_C[v] < cc_R[v] ) ? cc_C[v] : cc_R[v];
             Max = ( cc_C[v] > cc_R[v] ) ? cc_C[v] : cc_R[v];
             fc[faceR][v] = ( fc[faceR][v] > Min ) ? fc[faceR][v] : Min;
             fc[faceR][v] = ( fc[faceR][v] < Max ) ? fc[faceR][v] : Max;
-            fc[faceL][v] = (real)2.0*cc_C[v] - fc[faceR][v];
+            fc[faceL][v] = FMA( (real)2.0, cc_C[v], - fc[faceR][v] );
          }
 
 //       5. primitive variables --> conserved variables
@@ -442,7 +442,7 @@ void SRHydro_LimitSlope( const real L1[], const real C0[], const real R1[], cons
    {
       Slope_L[v] = C0[v] - L1[v];
       Slope_R[v] = R1[v] - C0[v];
-      Slope_C[v] = (real)0.5*( Slope_L[v] + Slope_R[v] );
+      Slope_C[v] = FMA( (real)0.5, Slope_L[v], 0.5 * Slope_R[v] );
    }
 
    if ( LR_Limiter == VL_GMINMOD )
