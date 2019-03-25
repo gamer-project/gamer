@@ -701,7 +701,7 @@ Fun_DFun (real Temp, void *ptr, real * f, real * df, real Gamma)
 # endif // #if ( EOS == RELATIVISTIC_IDEAL_GAS )
 }
 
-void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus)
+void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus, const int line)
 {
   //real tolerance = EPSILON;
   real tolerance = 0.0;
@@ -729,14 +729,14 @@ void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus)
              *x_plus = SQRT(-C/A);
              *x_minus = -*x_plus;       return;
            }
-           else                        goto NO_REAL_SOLUTIONS;
+           else                        goto NO_REAL_SOLUTIONS_CASE1;
        }
        else if ( ( 0.0 <= delta ) && ( delta <= tolerance ) )
        {
              *x_plus  = -0.5*B/A;
              *x_minus = *x_plus;        return;
        }
-       else                             goto NO_REAL_SOLUTIONS;
+       else                             goto NO_REAL_SOLUTIONS_CASE2;
   }
   else
   {
@@ -745,14 +745,32 @@ void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus)
         *x_plus  = NAN;
         *x_minus = -C/B;                return;
       }
-      else                              goto NO_REAL_SOLUTIONS;
+      else                              goto NO_REAL_SOLUTIONS_CASE3;
   }
 
 
-     NO_REAL_SOLUTIONS:
+     NO_REAL_SOLUTIONS_CASE1:
      {
 #    ifdef CHECK_NEGATIVE_IN_FLUID
-        printf( "No real solution in Quadratic Solver!\n");
+        printf( "Case1: line: %d No real solution in Quadratic Solver!\n", line);
+        printf( "A=%14.7e, B=%14.7e, C=%14.7e\n", A, B, C);
+        printf( "B*B-4*A*C=%14.7e\n", B*B-4*A*C);
+#    endif
+     }
+
+     NO_REAL_SOLUTIONS_CASE2:
+     {
+#    ifdef CHECK_NEGATIVE_IN_FLUID
+        printf( "Case2: line: %d No real solution in Quadratic Solver!\n", line);
+        printf( "A=%14.7e, B=%14.7e, C=%14.7e\n", A, B, C);
+        printf( "B*B-4*A*C=%14.7e\n", B*B-4*A*C);
+#    endif
+     }
+
+     NO_REAL_SOLUTIONS_CASE3:
+     {
+#    ifdef CHECK_NEGATIVE_IN_FLUID
+        printf( "Case3: line: %d No real solution in Quadratic Solver!\n", line);
         printf( "A=%14.7e, B=%14.7e, C=%14.7e\n", A, B, C);
         printf( "B*B-4*A*C=%14.7e\n", B*B-4*A*C);
 #    endif

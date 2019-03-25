@@ -8,12 +8,12 @@
 
 #include "CUFLU_Shared_FluUtility.cu"
 GPU_DEVICE
-void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus);
+void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus, const int line);
 
 #else // #ifdef __CUDACC__
 
 #include "../../../include/SRHydroPrototypes.h"
-void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus);
+void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus, const int line);
 
 #endif // #ifdef __CUDACC__ ... else ...
 
@@ -148,8 +148,8 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
    if ( ( ssl == -1.0 ) || ( ssr == -1.0 ) ) printf("ssl = %14.7e, ssr = %14.7e\n", ssl, ssr);
 #  endif
 
-   QuadraticSolver(1.0 + ssr, -2*rV1, FMA( rV1, rV1, - ssr ), &lmdapr, &lmdamr);
-   QuadraticSolver(1.0 + ssl, -2*lV1, FMA( lV1, lV1, - ssl ), &lmdapl, &lmdaml);
+   QuadraticSolver(1.0 + ssr, -2*rV1, FMA( rV1, rV1, - ssr ), &lmdapr, &lmdamr, __LINE__);
+   QuadraticSolver(1.0 + ssl, -2*lV1, FMA( lV1, lV1, - ssl ), &lmdapl, &lmdaml, __LINE__);
 
    lmdal = MIN(lmdaml, lmdamr); /* Mignone Eq 21 */
    lmdar = MAX(lmdapl, lmdapr);
@@ -243,7 +243,7 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
 
   real temp;
 
-  QuadraticSolver(a, b ,c, &temp, &lmdas);
+  QuadraticSolver(a, b ,c, &temp, &lmdas, __LINE__);
 
 
  /* 7. Determine intercell flux according to Mignone 13
