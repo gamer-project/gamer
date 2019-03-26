@@ -703,40 +703,34 @@ Fun_DFun (real Temp, void *ptr, real * f, real * df, real Gamma)
 
 void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus, const int line)
 {
-  //real tolerance = EPSILON;
-  real tolerance = 1e-6;
+  real tolerance = EPSILON;
+  //real tolerance = 1e-6;
 
   real delta = FMA( B, B, -4*A*C );
 
-  if ( FABS(A) > tolerance  )
+  if ( FABS(A) > tolerance )
   {
-       if ( delta > tolerance )
+       if ( delta >= 0.0 )
        {
              real factor = FMA( -0.5, B, SIGN(B) * -0.5 * SQRT(delta) );
      
-           if      ( B > +tolerance )
+           if ( B >= 0.0 )
            {
      	     *x_plus   = C/factor;
      	     *x_minus  = factor/A;      return;
            }
-           else if ( B < -tolerance )
+           else
            {
      	     *x_plus   = factor/A;
      	     *x_minus  = C/factor;      return;
            }
-           else if ( FABS(B) <= tolerance && C/A <= - tolerance)
-           {
-             *x_plus = SQRT(-C/A);
-             *x_minus = -*x_plus;       return;
-           }
-           else                        goto NO_REAL_SOLUTIONS_CASE1;
        }
-       else if ( FABS(delta) <= tolerance )
+       else if ( -tolerance < delta )
        {
-             *x_plus  = -0.5*B/A;
-             *x_minus = *x_plus;        return;
+         *x_plus = -0.5*B/A;
+         *x_minus = *x_plus;
        }
-       else                             goto NO_REAL_SOLUTIONS_CASE2;
+       else                             goto NO_REAL_SOLUTIONS_CASE1;
   }
   else
   {
@@ -745,37 +739,27 @@ void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus, const
         *x_plus  = NAN;
         *x_minus = -C/B;                return;
       }
-      else                              goto NO_REAL_SOLUTIONS_CASE3;
+      else                              goto NO_REAL_SOLUTIONS_CASE2;
   }
 
 
      NO_REAL_SOLUTIONS_CASE1:
      {
-#    ifdef CHECK_NEGATIVE_IN_FLUID
-        printf( "Case1: line: %d No real solution in Quadratic Solver!\n", line);
+#       ifdef CHECK_NEGATIVE_IN_FLUID
+        printf( "case1 line: %d No real solution in Quadratic Solver!\n", line);
         printf( "A=%14.7e, B=%14.7e, C=%14.7e\n", A, B, C);
         printf( "B*B-4*A*C=%14.7e\n", B*B-4*A*C);
-#    endif
+#       endif
         return;
      }
 
      NO_REAL_SOLUTIONS_CASE2:
      {
-#    ifdef CHECK_NEGATIVE_IN_FLUID
-        printf( "Case2: line: %d No real solution in Quadratic Solver!\n", line);
+#       ifdef CHECK_NEGATIVE_IN_FLUID
+        printf( "case2 line: %d No real solution in Quadratic Solver!\n", line);
         printf( "A=%14.7e, B=%14.7e, C=%14.7e\n", A, B, C);
         printf( "B*B-4*A*C=%14.7e\n", B*B-4*A*C);
-#    endif
-        return;
-     }
-
-     NO_REAL_SOLUTIONS_CASE3:
-     {
-#    ifdef CHECK_NEGATIVE_IN_FLUID
-        printf( "Case3: line: %d No real solution in Quadratic Solver!\n", line);
-        printf( "A=%14.7e, B=%14.7e, C=%14.7e\n", A, B, C);
-        printf( "B*B-4*A*C=%14.7e\n", B*B-4*A*C);
-#    endif
+#       endif
         return;
      }
 }
