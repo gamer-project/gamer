@@ -52,7 +52,7 @@ void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In
   real ssl, ssr, radl, radr, lmdapl, lmdapr, lmdaml, lmdamr, lmdatlmda;
   real lmdal,lmdar; /* Left and Right wave speeds */
   real ovlrmll;
-  real lV1, lV2, lV3, rV1, rV2, rV3;
+  real lV1, rV1;
   real lFactor,rFactor; /* Lorentz factor */
 
 /* 0. reorder the input conserved variables for different spatial directions */
@@ -69,27 +69,23 @@ void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In
    SRHydro_Con2Pri (CR, PR, Gamma, MinTemp);
 
 /* 2. Transform 4-velocity to 3-velocity */
-   lFactor=1/SQRT(1+SQR(PL[1])+SQR(PL[2])+SQR(PL[3]));
-   rFactor=1/SQRT(1+SQR(PR[1])+SQR(PR[2])+SQR(PR[3]));
+   lFactor=1/SQRT(1+VectorDotProduct(PL, PL, 1, 3));
+   rFactor=1/SQRT(1+VectorDotProduct(PR, PR, 1, 3));
+
 
    lV1=PL[1]*lFactor;
-   lV2=PL[2]*lFactor;
-   lV3=PL[3]*lFactor;
-
    rV1=PR[1]*rFactor;
-   rV2=PR[2]*rFactor;
-   rV3=PR[3]*rFactor;
 
 /* 3. Compute the max and min wave speeds used in Mignone */
 #  if ( EOS == RELATIVISTIC_IDEAL_GAS )
-   real nhl =  2.5*PL[4] + SQRT(2.25*SQR(PL[4]) + SQR(PL[0]));
-   real nhr =  2.5*PR[4] + SQRT(2.25*SQR(PR[4]) + SQR(PR[0]));
+   real nhl =  FMA( 2.5, PL[4], SQRT( FMA( 2.25, SQR(PL[4]), SQR(PL[0]) ) ) );
+   real nhr =  FMA( 2.5, PR[4], SQRT( FMA( 2.25, SQR(PR[4]), SQR(PR[0]) ) ) );
 
-   cslsq = PL[4] * ( 4.5*PL[4] + 5*SQRT(2.25*SQR(PL[4]) + SQR(PL[0])) ) 
-         / (3*nhl* ( 1.5*PL[4] +   SQRT(2.25*SQR(PL[4]) + SQR(PL[0])) ));
+   cslsq = PL[4] * FMA( 4.5, PL[4], 5*SQRT( FMA( 2.25, SQR(PL[4]), SQR(PL[0]) ) ) )
+        / ( 3*nhl* FMA( 1.5, PL[4],   SQRT( FMA( 2.25, SQR(PL[4]), SQR(PL[0]) ) ) ) );
 
-   csrsq = PR[4] * ( 4.5*PR[4] + 5*SQRT(2.25*SQR(PR[4]) + SQR(PR[0])) ) 
-         / (3*nhr* ( 1.5*PR[4] +   SQRT(2.25*SQR(PR[4]) + SQR(PR[0])) ));
+   csrsq = PR[4] * FMA( 4.5, PR[4], 5*SQRT( FMA( 2.25, SQR(PR[4]), SQR(PR[0]) ) ) )
+        / ( 3*nhr* FMA( 1.5, PR[4],   SQRT( FMA( 2.25, SQR(PR[4]), SQR(PR[0]) ) ) ) );
 
 #  elif ( EOS ==  IDEAL_GAS)
    rhl = PL[0] + PL[4] * Gamma / Gamma_m1; /* Mignone Eq 3.5 */
@@ -100,11 +96,12 @@ void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In
 #  endif
 
 // square of Lorentz factor
-   gammasql = 1.0 + SQR(PL[1]) + SQR(PL[2]) + SQR(PL[3]);
-   gammasqr = 1.0 + SQR(PR[1]) + SQR(PR[2]) + SQR(PR[3]);
+   gammasql = 1.0 + VectorDotProduct(PL, PL, 1, 3);
+   gammasqr = 1.0 + VectorDotProduct(PR, PR, 1, 3);
 
-   ssl = cslsq / ( gammasql * (1.0 - cslsq) ); /* Mignone Eq 22.5 */
-   ssr = csrsq / ( gammasqr * (1.0 - csrsq) );
+   ssl = cslsq / FMA( - gammasql, cslsq, gammasql ); /* Mignone Eq 22.5 */
+   ssr = csrsq / FMA( - gammasqr, csrsq, gammasqr ); /* Mignone Eq 22.5 */
+
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( ( ssl < 0.0 ) || ( ssr < 0.0 ) ) printf("ssl = %14.7e, ssr = %14.7e\n", ssl, ssr);
@@ -126,13 +123,13 @@ void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In
  *    compute HLL conserved quantities using Mignone eq 9
  * */
      Fl[0] = CL[0] * lV1;
-     Fl[1] = CL[1] * lV1 + PL[4];
+     Fl[1] = FMA(CL[1], lV1, PL[4]);
      Fl[2] = CL[2] * lV1;
      Fl[3] = CL[3] * lV1;
      Fl[4] = CL[1];
 
      Fr[0] = CR[0] * rV1;
-     Fr[1] = CR[1] * rV1 + PR[4];
+     Fr[1] = FMA(CR[1], rV1, PR[4]);
      Fr[2] = CR[2] * rV1;
      Fr[3] = CR[3] * rV1;
      Fr[4] = CR[1];
@@ -160,12 +157,13 @@ void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In
     ovlrmll = 1.0 / ( lmdar - lmdal );
     lmdatlmda = lmdal*lmdar;
 
-    Fhll[0] = (lmdar*Fl[0] - lmdal*Fr[0] + lmdatlmda * (CR[0] - CL[0])) * ovlrmll;
-    Fhll[1] = (lmdar*Fl[1] - lmdal*Fr[1] + lmdatlmda * (CR[1] - CL[1])) * ovlrmll;
-    Fhll[2] = (lmdar*Fl[2] - lmdal*Fr[2] + lmdatlmda * (CR[2] - CL[2])) * ovlrmll;
-    Fhll[3] = (lmdar*Fl[3] - lmdal*Fr[3] + lmdatlmda * (CR[3] - CL[3])) * ovlrmll;
+    Fhll[0] = FMA( lmdatlmda, (CR[0] - CL[0]), FMA( lmdar, Fl[0], - lmdal*Fr[0] ) ) * ovlrmll;
+    Fhll[1] = FMA( lmdatlmda, (CR[1] - CL[1]), FMA( lmdar, Fl[1], - lmdal*Fr[1] ) ) * ovlrmll;
+    Fhll[2] = FMA( lmdatlmda, (CR[2] - CL[2]), FMA( lmdar, Fl[2], - lmdal*Fr[2] ) ) * ovlrmll;
+    Fhll[3] = FMA( lmdatlmda, (CR[3] - CL[3]), FMA( lmdar, Fl[3], - lmdal*Fr[3] ) ) * ovlrmll;
+
 #   if ( CONSERVED_ENERGY == 1 )
-    Fhll[4] = (lmdar*Fl[4] - lmdal*Fr[4] + lmdatlmda * (CR[4] - CL[4])) * ovlrmll;
+    Fhll[4] = FMA( lmdatlmda, (CR[4] - CL[4]), FMA( lmdar, Fl[4], - lmdal*Fr[4] ) ) * ovlrmll;
 #   elif ( CONSERVED_ENERGY == 2 )
     Fhll[4] = (lmdar*Fl[4] - lmdal*Fr[4] + lmdatlmda * (CR[4] + CR[0] - CL[4] - CL[0])) * ovlrmll;
 #   endif
