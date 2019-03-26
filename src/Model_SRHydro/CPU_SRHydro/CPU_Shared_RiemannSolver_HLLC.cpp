@@ -48,9 +48,6 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
   real rhl, rhr;
 # endif
 
-# ifdef CHECK_NEGATIVE_IN_FLUID
-  real lV2, lV3, rV2, rV3;
-# endif
   real CL[NCOMP_TOTAL], CR[NCOMP_TOTAL]; /* conserved vars. */
   real PL[NCOMP_TOTAL], PR[NCOMP_TOTAL]; /* primitive vars. */
   real Fl[NCOMP_TOTAL], Fr[NCOMP_TOTAL];
@@ -79,6 +76,11 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
    SRHydro_Con2Pri (CL, PL, Gamma, MinTemp);
    SRHydro_Con2Pri (CR, PR, Gamma, MinTemp);
 
+#  ifdef CHECK_NEGATIVE_IN_FLUID
+   SRHydro_CheckUnphysical(NULL, PL, Gamma, MinTemp, __FUNCTION__, __LINE__, true);
+   SRHydro_CheckUnphysical(NULL, PR, Gamma, MinTemp, __FUNCTION__, __LINE__, true);
+#  endif
+
 /* 2. Transform 4-velocity to 3-velocity */
    lFactor=1/SQRT(1+VectorDotProduct(PL, PL, 1, 3));
    rFactor=1/SQRT(1+VectorDotProduct(PR, PR, 1, 3));
@@ -87,24 +89,6 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
 
    rV1=PR[1]*rFactor;
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-   lV2=PL[2]*lFactor;
-   lV3=PL[3]*lFactor;
-
-   rV2=PR[2]*rFactor;
-   rV3=PR[3]*rFactor;
-
-   real lV, rV;
-   lV = SQRT(lV1*lV1 + lV2*lV2 + lV3*lV3);
-   rV = SQRT(rV1*rV1 + rV2*rV2 + rV3*rV3);
-  
-   if ( lV >= 1.0 || rV >= 1.0 ) {
-     printf( "function: %s: %d\n", __FUNCTION__, __LINE__);
-     printf( "lV = %20.17e, rV = %20.17e\n", lV, rV);
-     printf( "lUx = %20.17e, lUy = %20.17e, lUz = %20.17e\n", PL[1], PL[2], PL[3]);
-     printf( "rUx = %20.17e, rUy = %20.17e, rUz = %20.17e\n", PR[1], PR[2], PR[3]);
-   }
-#  endif
 
 
 /* 3. Compute the max and min wave speeds used in Mignone */
