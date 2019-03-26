@@ -704,7 +704,7 @@ Fun_DFun (real Temp, void *ptr, real * f, real * df, real Gamma)
 void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus, const int line)
 {
   //real tolerance = EPSILON;
-  real tolerance = 0.0;
+  real tolerance = 1e-6;
 
   real delta = FMA( B, B, -4*A*C );
 
@@ -731,7 +731,7 @@ void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus, const
            }
            else                        goto NO_REAL_SOLUTIONS_CASE1;
        }
-       else if ( ( 0.0 <= delta ) && ( delta <= tolerance ) )
+       else if ( FABS(delta) <= tolerance )
        {
              *x_plus  = -0.5*B/A;
              *x_minus = *x_plus;        return;
@@ -756,6 +756,7 @@ void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus, const
         printf( "A=%14.7e, B=%14.7e, C=%14.7e\n", A, B, C);
         printf( "B*B-4*A*C=%14.7e\n", B*B-4*A*C);
 #    endif
+        return;
      }
 
      NO_REAL_SOLUTIONS_CASE2:
@@ -765,6 +766,7 @@ void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus, const
         printf( "A=%14.7e, B=%14.7e, C=%14.7e\n", A, B, C);
         printf( "B*B-4*A*C=%14.7e\n", B*B-4*A*C);
 #    endif
+        return;
      }
 
      NO_REAL_SOLUTIONS_CASE3:
@@ -774,6 +776,7 @@ void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus, const
         printf( "A=%14.7e, B=%14.7e, C=%14.7e\n", A, B, C);
         printf( "B*B-4*A*C=%14.7e\n", B*B-4*A*C);
 #    endif
+        return;
      }
 }
 
