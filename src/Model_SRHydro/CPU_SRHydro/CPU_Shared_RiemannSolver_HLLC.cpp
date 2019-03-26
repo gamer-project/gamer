@@ -226,7 +226,8 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
   b = -(Uhll[4] + Fhll[1]);
   c = Uhll[1];
 
-  real delta = b*b-4*a*c;
+  real delta = FMA( b, b, -4*a*c );
+
   real null;
 
   QuadraticSolver(a, b ,c, delta, &null, &lmdas, __LINE__);
