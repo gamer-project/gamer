@@ -248,8 +248,9 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
   c = Uhll[1];
 
   real delta = b*b-4*a*c;
+  real null;
 
-  QuadraticSolver(a, b ,c, delta, NULL, &lmdas, __LINE__);
+  QuadraticSolver(a, b ,c, delta, &null, &lmdas, __LINE__);
 
 
  /* 7. Determine intercell flux according to Mignone 13
