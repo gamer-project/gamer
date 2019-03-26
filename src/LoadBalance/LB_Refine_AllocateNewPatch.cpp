@@ -865,7 +865,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 	   {
 	     for (int v = 0 ; v < NCOMP_FLUID;v++) Con[v] = FData_Flu[v][k][j][i];
 
-	     if(SRHydro_CheckUnphysical(Con, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, false))
+	     if(SRHydro_CheckUnphysical(Con, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true))
               {
                i = j = k = FSize; // break nested loop
                state = true;
