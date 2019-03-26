@@ -701,12 +701,9 @@ Fun_DFun (real Temp, void *ptr, real * f, real * df, real Gamma)
 # endif // #if ( EOS == RELATIVISTIC_IDEAL_GAS )
 }
 
-void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus, const int line)
+void QuadraticSolver (real A, real B, real C, real delta, real *x_plus, real *x_minus, const int line)
 {
   real tolerance = EPSILON;
-  //real tolerance = 1e-6;
-
-  real delta = FMA( B, B, -4*A*C );
 
   if ( FABS(A) > tolerance )
   {
@@ -736,7 +733,6 @@ void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus, const
   {
       if ( FABS(B) >= tolerance )
       {
-        *x_plus  = NAN;
         *x_minus = -C/B;                return;
       }
       else                              goto NO_REAL_SOLUTIONS_CASE2;
