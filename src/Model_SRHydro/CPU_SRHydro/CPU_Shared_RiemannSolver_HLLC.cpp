@@ -93,13 +93,8 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
 
 /* 3. Compute the max and min wave speeds used in Mignone */
 #  if ( EOS == RELATIVISTIC_IDEAL_GAS )
-   //real nhl =  2.5*PL[4] + SQRT(2.25*SQR(PL[4]) + SQR(PL[0]));
-   //real nhr =  2.5*PR[4] + SQRT(2.25*SQR(PR[4]) + SQR(PR[0]));
    real nhl =  FMA( 2.5, PL[4], SQRT( FMA( 2.25, SQR(PL[4]), SQR(PL[0]) ) ) );
    real nhr =  FMA( 2.5, PR[4], SQRT( FMA( 2.25, SQR(PR[4]), SQR(PR[0]) ) ) );
-
-//   cslsq = ( PL[4]*( 5*nhl - 8*PL[4] ) ) / ((3*nhl)*( nhl - PL[4] ));
-//   csrsq = ( PR[4]*( 5*nhr - 8*PR[4] ) ) / ((3*nhr)*( nhr - PR[4] ));
 
    cslsq = PL[4] * FMA( 4.5, PL[4], 5*SQRT( FMA( 2.25, SQR(PL[4]), SQR(PL[0]) ) ) ) 
         / ( 3*nhl* FMA( 1.5, PL[4],   SQRT( FMA( 2.25, SQR(PL[4]), SQR(PL[0]) ) ) ) );
