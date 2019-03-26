@@ -728,7 +728,7 @@ void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus, const
        else if ( -tolerance < delta )
        {
          *x_plus = -0.5*B/A;
-         *x_minus = *x_plus;
+         *x_minus = *x_plus;            return;
        }
        else                             goto NO_REAL_SOLUTIONS_CASE1;
   }
