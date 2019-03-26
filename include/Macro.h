@@ -807,8 +807,12 @@
 #  define   POW( a, b )      pow( a, b )
 #  define  FMOD( a, b )     fmod( a, b )
 #  define ATAN2( a, b )    atan2( a, b )
+#  ifdef FUSED_MULTIPLY_ADD
 #  define FMA( a, b, c )   fma( a, b, c )
 #  define FP_FAST_FMA
+#  else
+#  define FMA( a, b, c )   ((( a ) * ( b )) + ( c ))
+#  endif
 #else
 #  define  FABS( a )        fabsf( a )
 #  define  SQRT( a )        sqrtf( a )
@@ -823,8 +827,12 @@
 #  define   POW( a, b )      powf( a, b )
 #  define  FMOD( a, b )     fmodf( a, b )
 #  define ATAN2( a, b )    atan2f( a, b )
+#  ifdef FUSED_MULTIPLY_ADD
 #  define FMA( a, b, c )   fmaf( a, b, c )
 #  define FP_FAST_FMAF
+#  else
+#  define FMA( a, b, c )   ((( a ) * ( b )) + ( c ))
+#  endif
 #endif
 
 

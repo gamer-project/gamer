@@ -176,6 +176,13 @@ void Aux_TakeNote()
       fprintf( Note, "EOS                             RELATIVISTIC_IDEAL_GAS\n" );
 #     endif
 
+#     ifdef FUSED_MULTIPLY_ADD
+      fprintf( Note, "FUSED_MULTIPLY_ADD              ON\n" );
+#     else
+      fprintf( Note, "FUSED_MULTIPLY_ADD              OFF\n" );
+#     endif
+
+
 #     ifdef CHECK_MIN_TEMP
       fprintf( Note, "CHECK_MIN_TEMP                  ON\n" );
 #     else
