@@ -217,6 +217,12 @@ void Init_ResetParameter()
 #  endif // MODEL
 
 
+// whether of not to allocate electric field arrays at the coarse-fine boundaries
+#  ifdef MHD
+   if ( OPT__FIXUP_ELECTRIC )    amr->WithElectric = true;
+#  endif
+
+
 // ELBDM parameters
 #  if ( MODEL == ELBDM )
    ELBDM_ETA = ELBDM_MASS / ELBDM_PLANCK_CONST;
