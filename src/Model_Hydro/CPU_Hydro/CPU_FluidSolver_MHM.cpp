@@ -131,6 +131,7 @@ static void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 //                g_Mag_Array_Out    : Array to store the output B field (for MHD only)
 //                g_DE_Array_Out     : Array to store the dual-energy status
 //                g_Flux_Array       : Array to store the output fluxes
+//                g_Ele_Array        : Array to store the output electric field (for MHD only)
 //                g_Corner_Array     : Array storing the physical corner coordinates of each patch group (for UNSPLIT_GRAVITY)
 //                g_Pot_Array_USG    : Array storing the input potential for UNSPLIT_GRAVITY
 //                g_PriVar           : Array to store the primitive variables
@@ -144,6 +145,7 @@ static void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 //                dh                 : Cell size
 //                Gamma              : Ratio of specific heats
 //                StoreFlux          : true --> store the coarse-fine fluxes
+//                StoreElectric      : true --> store the coarse-fine electric field
 //                LR_Limiter         : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
 //                                     (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
 //                                                    vanLeer + generalized MinMod/extrema-preserving) limiter
@@ -179,6 +181,7 @@ void CUFLU_FluidSolver_MHM(
          real   g_Mag_Array_Out[][NCOMP_MAG][ PS2_P1*SQR(PS2) ],
          char   g_DE_Array_Out [][ CUBE(PS2) ],
          real   g_Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
+         real   g_Ele_Array    [][9][NCOMP_ELE][ PS2_P1*PS2 ],
    const double g_Corner_Array [][3],
    const real   g_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
          real   g_PriVar       []   [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT) ],
@@ -187,7 +190,8 @@ void CUFLU_FluidSolver_MHM(
          real   g_FC_Flux      [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
          real   g_FC_Mag_Half  [][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
          real   g_EC_Ele       [][NCOMP_MAG][ CUBE(N_EC_ELE) ],
-   const real dt, const real dh, const real Gamma, const bool StoreFlux,
+   const real dt, const real dh, const real Gamma,
+   const bool StoreFlux, const bool StoreElectric,
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
    const double Time, const OptGravityType_t GravityType,
    const real MinDens, const real MinPres, const real DualEnergySwitch,
@@ -201,6 +205,7 @@ void CPU_FluidSolver_MHM(
          real   g_Mag_Array_Out[][NCOMP_MAG][ PS2_P1*SQR(PS2) ],
          char   g_DE_Array_Out [][ CUBE(PS2) ],
          real   g_Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
+         real   g_Ele_Array    [][9][NCOMP_ELE][ PS2_P1*PS2 ],
    const double g_Corner_Array [][3],
    const real   g_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
          real   g_PriVar       []   [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT) ],
@@ -210,7 +215,8 @@ void CPU_FluidSolver_MHM(
          real   g_FC_Mag_Half  [][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
          real   g_EC_Ele       [][NCOMP_MAG][ CUBE(N_EC_ELE) ],
    const int NPatchGroup, const real dt, const real dh, const real Gamma,
-   const bool StoreFlux, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+   const bool StoreFlux, const bool StoreElectric,
+   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
    const double Time, const OptGravityType_t GravityType,
    const double c_ExtAcc_AuxArray[], const real MinDens, const real MinPres,
    const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int c_NormIdx[],

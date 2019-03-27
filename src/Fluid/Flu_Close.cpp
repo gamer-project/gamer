@@ -40,8 +40,9 @@ extern void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real
 //
 // Parameter   :  lv                : Target refinement level
 //                SaveSg_Flu        : Sandglass to store the updated fluid data
-//                SaveSg_Mag        : Sandglass to store the updated B field
+//                SaveSg_Mag        : Sandglass to store the updated B field (for MHD only)
 //                h_Flux_Array      : Host array storing the updated flux data
+//                h_Ele_Array       : Host array storing the updated electric field (for MHD only)
 //                h_Flu_Array_F_Out : Host array storing the updated fluid data
 //                h_Mag_Array_F_Out : Host array storing the updated B field (for MHD only)
 //                h_DE_Array_F_Out  : Host array storing the dual-energy status (for DUAL_ENERGY only)
@@ -51,6 +52,7 @@ extern void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real
 //-------------------------------------------------------------------------------------------------------
 void Flu_Close( const int lv, const int SaveSg_Flu, const int SaveSg_Mag,
                 real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
+                real h_Ele_Array[][9][NCOMP_ELE][ PS2_P1*PS2 ],
                 real h_Flu_Array_F_Out[][FLU_NOUT][ CUBE(PS2) ],
                 real h_Mag_Array_F_Out[][NCOMP_MAG][ PS2_P1*SQR(PS2) ],
                 char h_DE_Array_F_Out[][ CUBE(PS2) ],
