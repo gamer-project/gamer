@@ -13,7 +13,7 @@
 #include "CUFLU_Shared_FullStepUpdate.cu"
 #include "CUFLU_SetConstMem_FluidSolver.cu"
 #ifdef MHD
-#include "CPU_Shared_ConstrainedTransport.cu"
+#include "CUFLU_Shared_ConstrainedTransport.cu"
 #endif
 
 #else // #ifdef __CUDACC__

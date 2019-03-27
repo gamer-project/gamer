@@ -11,6 +11,10 @@
 #include "CUFLU_Shared_DataReconstruction.cu"
 #include "CUFLU_Shared_ComputeFlux.cu"
 #include "CUFLU_Shared_FullStepUpdate.cu"
+#include "CUFLU_SetConstMem_FluidSolver.cu"
+#ifdef MHD
+#include "CUFLU_Shared_ConstrainedTransport.cu"
+#endif
 
 #if   ( RSOLVER == EXACT )
 # include "CUFLU_Shared_RiemannSolver_Exact.cu"
@@ -23,8 +27,6 @@
 #elif ( RSOLVER == HLLD )
 # include "CUFLU_Shared_RiemannSolver_HLLD.cu"
 #endif
-
-#include "CUFLU_SetConstMem_FluidSolver.cu"
 
 #else // #ifdef __CUDACC__
 
