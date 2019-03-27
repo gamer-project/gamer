@@ -7,10 +7,6 @@
 
 #if ( MODEL == HYDRO )
 
-#ifdef MHD
-#warning : WAIT MHD !!!
-#endif
-
 
 
 // internal function prototypes
