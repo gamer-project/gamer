@@ -100,6 +100,7 @@ extern double           DUAL_ENERGY_SWITCH;
 #endif
 #ifdef MHD
 extern IntScheme_t      OPT__MAG_INT_SCHEME, OPT__REF_MAG_INT_SCHEME;
+extern bool             OPT__FIXUP_ELECTRIC;
 #endif
 
 #elif ( MODEL == ELBDM )
@@ -222,6 +223,7 @@ extern char       (*h_DE_Array_F_Out [2])[ CUBE(PS2) ];
 #ifdef MHD
 extern real       (*h_Mag_Array_F_In [2])[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
 extern real       (*h_Mag_Array_F_Out[2])[NCOMP_MAG][ PS2_P1*SQR(PS2)         ];
+extern real       (*h_Ele_Array      [2])[9][NCOMP_ELE][ PS2_P1*PS2 ];
 #endif
 
 #ifdef GRAVITY

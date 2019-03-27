@@ -24,6 +24,7 @@ void CUFLU_FluidSolver_MHM(
          real   g_Mag_Array_Out[][NCOMP_MAG][ PS2_P1*SQR(PS2) ],
          char   g_DE_Array_Out [][ CUBE(PS2) ],
          real   g_Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
+         real   g_Ele_Array    [][9][NCOMP_ELE][ PS2_P1*PS2 ],
    const double g_Corner_Array [][3],
    const real   g_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
          real   g_PriVar       []   [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT) ],
@@ -32,7 +33,8 @@ void CUFLU_FluidSolver_MHM(
          real   g_FC_Flux      [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
          real   g_FC_Mag_Half  [][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
          real   g_EC_Ele       [][NCOMP_MAG][ CUBE(N_EC_ELE) ],
-   const real dt, const real dh, const real Gamma, const bool StoreFlux,
+   const real dt, const real dh, const real Gamma,
+   const bool StoreFlux, const bool StoreElectric,
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
    const double Time, const OptGravityType_t GravityType,
    const real MinDens, const real MinPres, const real DualEnergySwitch,
@@ -47,6 +49,7 @@ void CUFLU_FluidSolver_CTU(
          real   g_Mag_Array_Out[][NCOMP_MAG][ PS2_P1*SQR(PS2) ],
          char   g_DE_Array_Out [][ CUBE(PS2) ],
          real   g_Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
+         real   g_Ele_Array    [][9][NCOMP_ELE][ PS2_P1*PS2 ],
    const double g_Corner_Array [][3],
    const real   g_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
          real   g_PriVar       []   [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT) ],
@@ -55,7 +58,8 @@ void CUFLU_FluidSolver_CTU(
          real   g_FC_Flux      [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
          real   g_FC_Mag_Half  [][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
          real   g_EC_Ele       [][NCOMP_MAG][ CUBE(N_EC_ELE) ],
-   const real dt, const real dh, const real Gamma, const bool StoreFlux,
+   const real dt, const real dh, const real Gamma,
+   const bool StoreFlux, const bool StoreElectric,
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
    const double Time, const OptGravityType_t GravityType,
    const real MinDens, const real MinPres, const real DualEnergySwitch,
@@ -89,9 +93,11 @@ static char (*d_DE_Array_F_Out)[ CUBE(PS2) ] = NULL;
 #ifdef MHD
 extern real (*d_Mag_Array_F_In )[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
 extern real (*d_Mag_Array_F_Out)[NCOMP_MAG][ PS2_P1*SQR(PS2)         ];
+extern real (*d_Ele_Array      )[9][NCOMP_ELE][ PS2_P1*PS2 ];
 #else
-static real (*d_Mag_Array_F_In )[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ]   = NULL;
-static real (*d_Mag_Array_F_Out)[NCOMP_MAG][ PS2_P1*SQR(PS2)         ]   = NULL;
+static real (*d_Mag_Array_F_In )[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ] = NULL;
+static real (*d_Mag_Array_F_Out)[NCOMP_MAG][ PS2_P1*SQR(PS2)         ] = NULL;
+static real (*d_Ele_Array      )[9][NCOMP_ELE][ PS2_P1*PS2 ]           = NULL;
 #endif
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 extern real (*d_PriVar)      [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT)     ];
@@ -149,6 +155,7 @@ extern cudaStream_t *Stream;
 //                h_Mag_Array_Out      : Host array to store the output B field (for MHD only)
 //                h_DE_Array_Out       : Host array to store the dual-energy status
 //                h_Flux_Array         : Host array to store the output fluxes
+//                h_Ele_Array          : Host array to store the output electric field (for MHD only)
 //                h_Corner_Array       : Host array storing the physical corner coordinates of each patch group
 //                h_Pot_Array_USG      : Host array storing the input potential for UNSPLIT_GRAVITY
 //                NPatchGroup          : Number of patch groups evaluated simultaneously by GPU
@@ -156,6 +163,7 @@ extern cudaStream_t *Stream;
 //                dh                   : Cell size
 //                Gamma                : Ratio of specific heats
 //                StoreFlux            : true --> store the coarse-fine fluxes
+//                StoreElectric        : true --> store the coarse-fine electric field
 //                XYZ                  : true  : x->y->z ( forward sweep)
 //                                       false : z->y->x (backward sweep)
 //                                       ~ useless in directionally unsplit schemes
@@ -180,7 +188,7 @@ extern cudaStream_t *Stream;
 //                JeansMinPres_Coeff   : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //
 // Useless parameters in HYDRO : ELBDM_Eta
-// Useless parameters in ELBDM : h_Flux_Array, Gamma, LR_Limiter, MinMod_Coeff, MinPres
+// Useless parameters in ELBDM : h_Flux_Array, h_Ele_Array, Gamma, LR_Limiter, MinMod_Coeff, MinPres
 //-------------------------------------------------------------------------------------------------------
 void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              real h_Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
@@ -188,9 +196,11 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              real h_Mag_Array_Out[][NCOMP_MAG][ PS2_P1*SQR(PS2) ],
                              char h_DE_Array_Out[][ CUBE(PS2) ],
                              real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
+                             real h_Ele_Array[][9][NCOMP_ELE][ PS2_P1*PS2 ],
                              const double h_Corner_Array[][3],
                              real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
-                             const int NPatchGroup, const real dt, const real dh, const real Gamma, const bool StoreFlux,
+                             const int NPatchGroup, const real dt, const real dh, const real Gamma,
+                             const bool StoreFlux, const bool StoreElectric,
                              const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                              const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
                              const double Time, const OptGravityType_t GravityType,
@@ -231,6 +241,14 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
       if ( d_Flux_Array == NULL )   Aux_Error( ERROR_INFO, "device Flux_Array is not allocated !!\n" );
       if ( h_Flux_Array == NULL )   Aux_Error( ERROR_INFO, "host Flux_Array is not allocated !!\n" );
    }
+
+#  ifdef MHD
+   if ( StoreElectric )
+   {
+      if ( d_Ele_Array == NULL )   Aux_Error( ERROR_INFO, "device Ele_Array is not allocated !!\n" );
+      if ( h_Ele_Array == NULL )   Aux_Error( ERROR_INFO, "host Ele_Array is not allocated !!\n" );
+   }
+#  endif
 #  endif // #ifdef GAMER_DEBUG
 
 
@@ -252,6 +270,9 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
    int *Flu_MemSize_In     = new int [GPU_NStream];
    int *Flu_MemSize_Out    = new int [GPU_NStream];
    int *Flux_MemSize       = new int [GPU_NStream];
+#  ifdef MHD
+   int *Ele_MemSize        = new int [GPU_NStream];
+#  endif
 #  ifdef UNSPLIT_GRAVITY
    int *USG_MemSize        = new int [GPU_NStream];
    int *Corner_MemSize     = new int [GPU_NStream];
@@ -283,6 +304,9 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
       Flu_MemSize_In [s] = sizeof(real  )*NPatch_per_Stream[s]*FLU_NIN *CUBE(FLU_NXT);
       Flu_MemSize_Out[s] = sizeof(real  )*NPatch_per_Stream[s]*FLU_NOUT*CUBE(PS2);
       Flux_MemSize   [s] = sizeof(real  )*NPatch_per_Stream[s]*NFLUX_TOTAL*9*PS2*PS2;
+#     ifdef MHD
+      Ele_MemSize    [s] = sizeof(real  )*NPatch_per_Stream[s]*NCOMP_ELE*9*PS2_P1*PS2;
+#     endif
 #     ifdef UNSPLIT_GRAVITY
       USG_MemSize    [s] = sizeof(real  )*NPatch_per_Stream[s]*CUBE(USG_NXT_F);
       Corner_MemSize [s] = sizeof(double)*NPatch_per_Stream[s]*3;
@@ -340,6 +364,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               d_Mag_Array_F_Out + UsedPatch[s],
               d_DE_Array_F_Out  + UsedPatch[s],
               d_Flux_Array      + UsedPatch[s],
+              d_Ele_Array       + UsedPatch[s],
               d_Corner_Array_F  + UsedPatch[s],
               d_Pot_Array_USG_F + UsedPatch[s],
               d_PriVar          + UsedPatch[s],
@@ -348,7 +373,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               d_FC_Flux         + UsedPatch[s],
               d_FC_Mag_Half     + UsedPatch[s],
               d_EC_Ele          + UsedPatch[s],
-              dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff,
+              dt, dh, Gamma, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff,
               Time, GravityType, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm,
               JeansMinPres, JeansMinPres_Coeff );
 
@@ -361,6 +386,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               d_Mag_Array_F_Out + UsedPatch[s],
               d_DE_Array_F_Out  + UsedPatch[s],
               d_Flux_Array      + UsedPatch[s],
+              d_Ele_Array       + UsedPatch[s],
               d_Corner_Array_F  + UsedPatch[s],
               d_Pot_Array_USG_F + UsedPatch[s],
               d_PriVar          + UsedPatch[s],
@@ -369,7 +395,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               d_FC_Flux         + UsedPatch[s],
               d_FC_Mag_Half     + UsedPatch[s],
               d_EC_Ele          + UsedPatch[s],
-              dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff,
+              dt, dh, Gamma, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff,
               Time, GravityType, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm,
               JeansMinPres, JeansMinPres_Coeff );
 
@@ -411,6 +437,12 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
       CUDA_CHECK_ERROR(  cudaMemcpyAsync( h_Flux_Array    + UsedPatch[s], d_Flux_Array      + UsedPatch[s],
                          Flux_MemSize[s],    cudaMemcpyDeviceToHost, Stream[s] )  );
 
+#     ifdef MHD
+      if ( StoreElectric )
+      CUDA_CHECK_ERROR(  cudaMemcpyAsync( h_Ele_Array     + UsedPatch[s], d_Ele_Array       + UsedPatch[s],
+                         Ele_MemSize[s],    cudaMemcpyDeviceToHost, Stream[s] )  );
+#     endif
+
 #     ifdef DUAL_ENERGY
       CUDA_CHECK_ERROR(  cudaMemcpyAsync( h_DE_Array_Out  + UsedPatch[s], d_DE_Array_F_Out  + UsedPatch[s],
                          DE_MemSize_Out[s],  cudaMemcpyDeviceToHost, Stream[s] )  );
@@ -423,6 +455,9 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
    delete [] Flu_MemSize_In;
    delete [] Flu_MemSize_Out;
    delete [] Flux_MemSize;
+#  ifdef MHD
+   delete [] Ele_MemSize;
+#  endif
 #  ifdef UNSPLIT_GRAVITY
    delete [] USG_MemSize;
    delete [] Corner_MemSize;

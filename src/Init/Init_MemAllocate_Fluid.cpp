@@ -60,6 +60,9 @@ void Init_MemAllocate_Fluid( const int Flu_NPatchGroup, const int Pot_NPatchGrou
 #     ifdef MHD
       h_Mag_Array_F_In [t] = new real [Flu_NPatchGroup][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
       h_Mag_Array_F_Out[t] = new real [Flu_NPatchGroup][NCOMP_MAG][ PS2_P1*SQR(PS2) ];
+
+      if ( amr->WithElectric )
+      h_Ele_Array      [t] = new real [Flu_NPatchGroup][9][NCOMP_ELE][ PS2_P1*PS2 ];
 #     endif
    } // for (int t=0; t<2; t++)
 
