@@ -703,9 +703,11 @@ Fun_DFun (real Temp, void *ptr, real * f, real * df, real Gamma)
 
 void QuadraticSolver (real A, real B, real C, real delta, real *x_plus, real *x_minus, const int line)
 {
-  real tolerance = EPSILON;
+  real tolerance1 = TINY_NUMBER;
+  real tolerance2 = EPSILON;
+  real tolerance3 = TINY_NUMBER;
 
-  if ( FABS(A) > tolerance )
+  if ( FABS(A) > tolerance1 )
   {
        if ( delta >= 0.0 )
        {
@@ -722,7 +724,7 @@ void QuadraticSolver (real A, real B, real C, real delta, real *x_plus, real *x_
      	     *x_minus  = C/factor;      return;
            }
        }
-       else if ( -tolerance < delta )
+       else if ( -tolerance2 < delta )
        {
          *x_plus = -0.5*B/A;
          *x_minus = *x_plus;            return;
@@ -731,8 +733,9 @@ void QuadraticSolver (real A, real B, real C, real delta, real *x_plus, real *x_
   }
   else
   {
-      if ( FABS(B) >= tolerance )
+      if ( FABS(B) >= tolerance3 )
       {
+        *x_plus = NAN;
         *x_minus = -C/B;                return;
       }
       else                              goto NO_REAL_SOLUTIONS_CASE2;
