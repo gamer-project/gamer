@@ -783,6 +783,12 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "unsupported interpolation scheme \"%s = %d\" (2,3,4,6 only) !!\n",
                  "OPT__REF_MAG_INT_SCHEME", OPT__REF_MAG_INT_SCHEME );
 
+   if ( OPT__FIXUP_ELECTRIC  &&  !amr->WithElectric )
+      Aux_Error( ERROR_INFO, "%s is enabled but amr->Electric is off !!\n", "OPT__FIXUP_ELECTRIC" );
+
+   if ( !OPT__FIXUP_ELECTRIC )
+      Aux_Message( stderr, "WARNING : \"%s\" is disabled for MHD !!\n", "OPT__FIXUP_ELECTRIC" );
+
 #  endif // #ifdef MHD
 
 

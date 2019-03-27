@@ -837,6 +837,9 @@ void Aux_TakeNote()
       fprintf( Note, "FLU_GPU_NPGROUP                 %d\n",      FLU_GPU_NPGROUP          );
       fprintf( Note, "GPU_NSTREAM                     %d\n",      GPU_NSTREAM              );
       fprintf( Note, "OPT__FIXUP_FLUX                 %d\n",      OPT__FIXUP_FLUX          );
+#     ifdef MHD
+      fprintf( Note, "OPT__FIXUP_ELECTRIC             %d\n",      OPT__FIXUP_ELECTRIC      );
+#     endif
       fprintf( Note, "OPT__FIXUP_RESTRICT             %d\n",      OPT__FIXUP_RESTRICT      );
       fprintf( Note, "OPT__CORR_AFTER_ALL_SYNC        %d\n",      OPT__CORR_AFTER_ALL_SYNC );
       fprintf( Note, "OPT__NORMALIZE_PASSIVE          %d\n",      OPT__NORMALIZE_PASSIVE   );

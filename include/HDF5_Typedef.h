@@ -421,6 +421,9 @@ struct InputPara_t
    int    Flu_GPU_NPGroup;
    int    GPU_NStream;
    int    Opt__FixUp_Flux;
+#  ifdef MHD
+   int    Opt__FixUp_Electric;
+#  endif
    int    Opt__FixUp_Restrict;
    int    Opt__CorrAfterAllSync;
    int    Opt__NormalizePassive;

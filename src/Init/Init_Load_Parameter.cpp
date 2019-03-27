@@ -233,6 +233,9 @@ void Init_Load_Parameter()
    ReadPara->Add( "FLU_GPU_NPGROUP",            &FLU_GPU_NPGROUP,                -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "GPU_NSTREAM",                &GPU_NSTREAM,                    -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "OPT__FIXUP_FLUX",            &OPT__FIXUP_FLUX,                 true,            Useless_bool,  Useless_bool   );
+#  ifdef MHD
+   ReadPara->Add( "OPT__FIXUP_ELECTRIC",        &OPT__FIXUP_ELECTRIC,             true,            Useless_bool,  Useless_bool   );
+#  endif
    ReadPara->Add( "OPT__FIXUP_RESTRICT",        &OPT__FIXUP_RESTRICT,             true,            Useless_bool,  Useless_bool   );
 // do not check OPT__CORR_AFTER_ALL_SYNC since it may be reset by Init_ResetDefaultParameter()
    ReadPara->Add( "OPT__CORR_AFTER_ALL_SYNC",   &OPT__CORR_AFTER_ALL_SYNC,       -1,               NoMin_int,     NoMax_int      );
