@@ -46,25 +46,41 @@ static real dE_Upwind( const real FC_Ele_L, const real FC_Ele_R, const real FC_M
 //                   g_PriVar [] has the size of FLU_NXT^3   but is accessed with a stride "NPri"
 //                4. EMF-x/y/z( i, j, k ) are defined at the lower-left edge center of
 //                   g_PriVar( i+OffsetPri+1, j+OffsetPri+1, k+OffsetPri+1 )
+//                5. Store the electric field at the patch boundaries for correcting the coarse-grid B field
+//                   --> Option "DumpIntEle"
+//                   --> Structure of g_IntEle[] = [face index][E field index][cell index]
+//                          Face index: [0/1/2] = left/middle/right x faces
+//                                      [3/4/5] = left/middle/right y faces
+//                                      [6/7/8] = left/middle/right z faces
+//                          E field index on x faces: [0/1] = Ey/Ez
+//                                           y faces: [0/1] = Ez/Ex
+//                                           z faces: [0/1] = Ex/Ey
+//                          Cell index on x faces: [Nz][Ny] (= [PS2+1][PS2] for Ey and [PS2][PS2+1] for Ez)
+//                                     on y faces: [Nx][Nz] (= [PS2+1][PS2] for Ez and [PS2][PS2+1] for Ex)
+//                                     on z faces: [Ny][Nx] (= [PS2+1][PS2] for Ex and [PS2][PS2+1] for Ey)
 //
-// Parameter   :  g_EC_Ele  : Array to store the output electric field
-//                g_FC_Flux : Array storing the input face-centered fluxes
-//                g_PriVar  : Array storing the input cell-centered primitive variables
-//                NEle      : Stride for accessing g_EC_Ele[]
-//                NFlux     : Stride for accessing g_FC_Flux[]
-//                NPri      : Stride for accessing g_PriVar[]
-//                OffsetPri : Offset for accessing g_PriVar[]
-//                dt        : Time interval to advance solution
-//                dh        : Cell size
+// Parameter   :  g_EC_Ele   : Array to store the output electric field
+//                g_FC_Flux  : Array storing the input face-centered fluxes
+//                g_PriVar   : Array storing the input cell-centered primitive variables
+//                NEle       : Stride for accessing g_EC_Ele[]
+//                NFlux      : Stride for accessing g_FC_Flux[]
+//                NPri       : Stride for accessing g_PriVar[]
+//                OffsetPri  : Offset for accessing g_PriVar[]
+//                dt         : Time interval to advance solution
+//                dh         : Cell size
+//                DumpIntEle : Store the inter-patch electric field (i.e., E field at the patch boundaries)
+//                             in g_IntEle[]
+//                g_IntEle   : Array for DumpIntEle
 //
-// Return      :  g_EC_Ele[]
+// Return      :  g_EC_Ele[], g_IntEle[]
 //------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                           const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                           const real g_PriVar[][ CUBE(FLU_NXT) ],
                           const int NEle, const int NFlux, const int NPri, const int OffsetPri,
-                          const real dt, const real dh )
+                          const real dt, const real dh,
+                          const bool DumpIntEle, real g_IntEle[][NCOMP_ELE][ PS2_P1*PS2 ] )
 {
 
    const int  NEleM1       = NEle - 1;
@@ -118,11 +134,13 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
 
          real D_L, D_R, V_L1, V_L2, V_R1, V_R2, B_L1, B_L2, B_R1, B_R2;
          int  idx_L, idx_R;
+         real Ele_Out;
 
-         g_EC_Ele[d][idx_ele] = ( - g_FC_Flux[TDir1][TB2][ idx_flux + didx_flux[TDir2] ]
-                                  - g_FC_Flux[TDir1][TB2][ idx_flux                    ]
-                                  + g_FC_Flux[TDir2][TB1][ idx_flux + didx_flux[TDir1] ]
-                                  + g_FC_Flux[TDir2][TB1][ idx_flux                    ] );
+//       compute the edge-centered electric field
+         Ele_Out = ( - g_FC_Flux[TDir1][TB2][ idx_flux + didx_flux[TDir2] ]
+                     - g_FC_Flux[TDir1][TB2][ idx_flux                    ]
+                     + g_FC_Flux[TDir2][TB1][ idx_flux + didx_flux[TDir1] ]
+                     + g_FC_Flux[TDir2][TB1][ idx_flux                    ] );
 
          idx_L = idx_pri;
          idx_R = idx_L + didx_pri[TDir2];
@@ -137,11 +155,10 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
          B_R1  = g_PriVar[TB1][ idx_R ];
          B_R2  = g_PriVar[TB2][ idx_R ];
 
-         g_EC_Ele[d][idx_ele] += dE_Upwind( -g_FC_Flux[TDir1][TB2][ idx_flux                    ],
-                                            -g_FC_Flux[TDir1][TB2][ idx_flux + didx_flux[TDir2] ],
-                                             g_FC_Flux[TDir2][  0][ idx_flux                    ],
-                                             D_L, D_R, V_L1, V_L2, V_R1, V_R2, B_L1, B_L2, B_R1, B_R2,
-                                             dt_dh );
+         Ele_Out += dE_Upwind( -g_FC_Flux[TDir1][TB2][ idx_flux                    ],
+                               -g_FC_Flux[TDir1][TB2][ idx_flux + didx_flux[TDir2] ],
+                                g_FC_Flux[TDir2][  0][ idx_flux                    ],
+                               D_L, D_R, V_L1, V_L2, V_R1, V_R2, B_L1, B_L2, B_R1, B_R2, dt_dh );
 
          idx_L = idx_pri + didx_pri[TDir1];
          idx_R = idx_L   + didx_pri[TDir2];
@@ -156,11 +173,10 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
          B_R1  = g_PriVar[TB1][ idx_R ];
          B_R2  = g_PriVar[TB2][ idx_R ];
 
-         g_EC_Ele[d][idx_ele] += dE_Upwind( -g_FC_Flux[TDir1][TB2][ idx_flux                    ],
-                                            -g_FC_Flux[TDir1][TB2][ idx_flux + didx_flux[TDir2] ],
-                                             g_FC_Flux[TDir2][  0][ idx_flux + didx_flux[TDir1] ],
-                                             D_L, D_R, V_L1, V_L2, V_R1, V_R2, B_L1, B_L2, B_R1, B_R2,
-                                             dt_dh );
+         Ele_Out += dE_Upwind( -g_FC_Flux[TDir1][TB2][ idx_flux                    ],
+                               -g_FC_Flux[TDir1][TB2][ idx_flux + didx_flux[TDir2] ],
+                                g_FC_Flux[TDir2][  0][ idx_flux + didx_flux[TDir1] ],
+                               D_L, D_R, V_L1, V_L2, V_R1, V_R2, B_L1, B_L2, B_R1, B_R2, dt_dh );
 
          idx_L = idx_pri;
          idx_R = idx_L + didx_pri[TDir1];
@@ -175,11 +191,10 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
          B_R1  = g_PriVar[TB1][ idx_R ];
          B_R2  = g_PriVar[TB2][ idx_R ];
 
-         g_EC_Ele[d][idx_ele] += dE_Upwind( +g_FC_Flux[TDir2][TB1][ idx_flux                    ],
-                                            +g_FC_Flux[TDir2][TB1][ idx_flux + didx_flux[TDir1] ],
-                                             g_FC_Flux[TDir1][  0][ idx_flux                    ],
-                                             D_L, D_R, V_L1, V_L2, V_R1, V_R2, B_L1, B_L2, B_R1, B_R2,
-                                             dt_dh );
+         Ele_Out += dE_Upwind( +g_FC_Flux[TDir2][TB1][ idx_flux                    ],
+                               +g_FC_Flux[TDir2][TB1][ idx_flux + didx_flux[TDir1] ],
+                                g_FC_Flux[TDir1][  0][ idx_flux                    ],
+                               D_L, D_R, V_L1, V_L2, V_R1, V_R2, B_L1, B_L2, B_R1, B_R2, dt_dh );
 
          idx_L = idx_pri + didx_pri[TDir2];
          idx_R = idx_L   + didx_pri[TDir1];
@@ -194,14 +209,39 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
          B_R1  = g_PriVar[TB1][ idx_R ];
          B_R2  = g_PriVar[TB2][ idx_R ];
 
-         g_EC_Ele[d][idx_ele] += dE_Upwind( +g_FC_Flux[TDir2][TB1][ idx_flux                    ],
-                                            +g_FC_Flux[TDir2][TB1][ idx_flux + didx_flux[TDir1] ],
-                                             g_FC_Flux[TDir1][  0][ idx_flux + didx_flux[TDir2] ],
-                                             D_L, D_R, V_L1, V_L2, V_R1, V_R2, B_L1, B_L2, B_R1, B_R2,
-                                             dt_dh );
+         Ele_Out += dE_Upwind( +g_FC_Flux[TDir2][TB1][ idx_flux                    ],
+                               +g_FC_Flux[TDir2][TB1][ idx_flux + didx_flux[TDir1] ],
+                                g_FC_Flux[TDir1][  0][ idx_flux + didx_flux[TDir2] ],
+                               D_L, D_R, V_L1, V_L2, V_R1, V_R2, B_L1, B_L2, B_R1, B_R2, dt_dh );
 
-         g_EC_Ele[d][idx_ele] *= (real)0.25;
+         Ele_Out *= (real)0.25;
 
+//       store the electric field of all cells in g_EC_Ele[]
+         g_EC_Ele[d][idx_ele] = Ele_Out;
+
+//       store the inter-patch electric field in g_IntEle[]
+         if ( DumpIntEle )
+         {
+//          sanity check: this function assumes N_FL_ELE == PS2+1
+#           if ( N_FL_ELE != PS2+1 )
+#              error : ERROR : N_FL_ELE != PS2+1 !!
+#           endif
+
+            if      ( d == 0 ) {
+               if ( j_ele == 0 || j_ele == PS1 || j_ele == PS2 )  g_IntEle[ 3 + j_ele/PS1 ][1][ i_ele*PS2_P1 + k_ele ] = Ele_Out;
+               if ( k_ele == 0 || k_ele == PS1 || k_ele == PS2 )  g_IntEle[ 6 + k_ele/PS1 ][0][ j_ele*PS2    + i_ele ] = Ele_Out;
+            } // d == 0
+
+            else if ( d == 1 ) {
+               if ( k_ele == 0 || k_ele == PS1 || k_ele == PS2 )  g_IntEle[ 6 + k_ele/PS1 ][1][ j_ele*PS2_P1 + i_ele ] = Ele_Out;
+               if ( i_ele == 0 || i_ele == PS1 || i_ele == PS2 )  g_IntEle[ 0 + i_ele/PS1 ][0][ k_ele*PS2    + j_ele ] = Ele_Out;
+            } // d == 1
+
+            else {
+               if ( i_ele == 0 || i_ele == PS1 || i_ele == PS2 )  g_IntEle[ 0 + i_ele/PS1 ][1][ k_ele*PS2_P1 + j_ele ] = Ele_Out;
+               if ( j_ele == 0 || j_ele == PS1 || j_ele == PS2 )  g_IntEle[ 3 + j_ele/PS1 ][0][ i_ele*PS2    + k_ele ] = Ele_Out;
+            } // d == 2
+         } // if ( DumpIntEle )
       } // CGPU_LOOP( idx_ele, idx_ele_e[0]*idx_ele_e[1]*idx_ele_e[2] )
    } // for ( int d=0; d<3; d++)
 

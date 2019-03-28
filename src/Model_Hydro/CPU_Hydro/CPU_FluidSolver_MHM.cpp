@@ -77,7 +77,8 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                           const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                           const real g_PriVar[][ CUBE(FLU_NXT) ],
                           const int NEle, const int NFlux, const int NPri, const int OffsetPri,
-                          const real dt, const real dh );
+                          const real dt, const real dh,
+                          const bool DumpIntEle, real g_IntEle[][NCOMP_ELE][ PS2_P1*PS2 ] );
 void MHD_UpdateMagnetic( real *g_FC_Bx_Out, real *g_FC_By_Out, real *g_FC_Bz_Out,
                          const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                          const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
@@ -227,14 +228,17 @@ void CPU_FluidSolver_MHM(
 {
 
 #  ifdef UNSPLIT_GRAVITY
-   const bool CorrHalfVel_Yes = true;
+   const bool CorrHalfVel_Yes  = true;
 #  else
-   const bool CorrHalfVel_No  = false;
+   const bool CorrHalfVel_No   = false;
 #  endif
 #  if   ( FLU_SCHEME == MHM )
-   const bool Con2Pri_Yes     = true;
+   const bool Con2Pri_Yes      = true;
 #  elif ( FLU_SCHEME == MHM_RP )
-   const bool Con2Pri_No      = false;
+   const bool Con2Pri_No       = false;
+#  endif
+#  ifdef MHD
+   const bool StoreElectric_No = false;
 #  endif
 
 
@@ -328,10 +332,11 @@ void CPU_FluidSolver_MHM(
 
 //       1-a-3. evaluate electric field and update B field at the half time-step
 #        ifdef MHD
-         MHD_ComputeElectric( g_EC_Ele_1PG, g_Flux_Half_1PG, g_PriVar_1PG, N_HF_ELE, N_HF_FLUX, FLU_NXT, 0, dt, dh );
+         MHD_ComputeElectric( g_EC_Ele_1PG, g_Flux_Half_1PG, g_PriVar_1PG, N_HF_ELE, N_HF_FLUX,
+                              FLU_NXT, 0, dt, dh, StoreElectric_No, NULL );
 
-         MHD_UpdateMagnetic( g_FC_Mag_Half_1PG[0], g_FC_Mag_Half_1PG[1], g_FC_Mag_Half_1PG[2], g_Mag_Array_In[P], g_EC_Ele_1PG,
-                             (real)0.5*dt, dh, N_HF_VAR, N_HF_ELE, 1 );
+         MHD_UpdateMagnetic( g_FC_Mag_Half_1PG[0], g_FC_Mag_Half_1PG[1], g_FC_Mag_Half_1PG[2],
+                             g_Mag_Array_In[P], g_EC_Ele_1PG, (real)0.5*dt, dh, N_HF_VAR, N_HF_ELE, 1 );
 #        endif
 
 
@@ -387,10 +392,11 @@ void CPU_FluidSolver_MHM(
 
 //       4. evaluate electric field and update B field at the full time-step
 #        ifdef MHD
-         MHD_ComputeElectric( g_EC_Ele_1PG, g_FC_Flux_1PG, g_PriVar_Half_1PG, N_FL_ELE, N_FL_FLUX, N_HF_VAR, LR_GHOST_SIZE, dt, dh );
+         MHD_ComputeElectric( g_EC_Ele_1PG, g_FC_Flux_1PG, g_PriVar_Half_1PG, N_FL_ELE, N_FL_FLUX,
+                              N_HF_VAR, LR_GHOST_SIZE, dt, dh, StoreElectric, g_Ele_Array[P] );
 
-         MHD_UpdateMagnetic( g_Mag_Array_Out[P][0], g_Mag_Array_Out[P][1], g_Mag_Array_Out[P][2], g_Mag_Array_In[P], g_EC_Ele_1PG,
-                             dt, dh, PS2, N_FL_ELE, FLU_GHOST_SIZE );
+         MHD_UpdateMagnetic( g_Mag_Array_Out[P][0], g_Mag_Array_Out[P][1], g_Mag_Array_Out[P][2],
+                             g_Mag_Array_In[P], g_EC_Ele_1PG, dt, dh, PS2, N_FL_ELE, FLU_GHOST_SIZE );
 #        endif
 
       } // loop over all patch groups
