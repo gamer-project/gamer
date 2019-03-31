@@ -169,45 +169,45 @@ void StoreFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_
       Aux_Message( stderr, "WARNING : why invoking %s when amr->WithFlux is off ??\n", __FUNCTION__ );
 
 
-   int Table1, Table2, Mapping, mm, nn, PID0;
-   real (*FluxPtr)[PATCH_SIZE][PATCH_SIZE] = NULL;
-
-#  pragma omp parallel for private( Table1, Table2, Mapping, mm, nn, PID0, FluxPtr ) schedule( runtime )
+#  pragma omp parallel for schedule( runtime )
    for (int TID=0; TID<NPG; TID++)
    {
-      PID0 = PID0_List[TID];
+      const int PID0 = PID0_List[TID];
 
       for (int PID=PID0; PID<PID0+8; PID++)
       for (int s=0; s<6; s++)
       {
-//       for bitwise reproducibility, store the fluxes to be corrected in the "flux_bitrep" array
+//       for bitwise reproducibility, store the fluxes to be corrected in flux_bitrep[]
 #        ifdef BITWISE_REPRODUCIBILITY
-         FluxPtr = amr->patch[0][lv][PID]->flux_bitrep[s];
+         real (*FluxPtr)[PS1][PS1] = amr->patch[0][lv][PID]->flux_bitrep[s];
 #        else
-         FluxPtr = amr->patch[0][lv][PID]->flux[s];
+         real (*FluxPtr)[PS1][PS1] = amr->patch[0][lv][PID]->flux[s];
 #        endif
 
          if ( FluxPtr != NULL )
          {
+            const int LocalID = PID % 8;
+            int face_idx, disp_m, disp_n;
+
             switch ( s )
             {
                case 0:  case 1:
-                  Mapping = TABLE_02( PID%8, 'x', 0, 1 ) + s;
-                  Table1  = TABLE_02( PID%8, 'z', 0, PATCH_SIZE );
-                  Table2  = TABLE_02( PID%8, 'y', 0, PATCH_SIZE );
-               break;
+                  face_idx = TABLE_02( LocalID, 'x', 0, 1 ) + s;
+                  disp_m   = TABLE_02( LocalID, 'z', 0, PS1 );
+                  disp_n   = TABLE_02( LocalID, 'y', 0, PS1 );
+                  break;
 
                case 2:  case 3:
-                  Mapping = TABLE_02( PID%8, 'y', 1, 2 ) + s;
-                  Table1  = TABLE_02( PID%8, 'z', 0, PATCH_SIZE );
-                  Table2  = TABLE_02( PID%8, 'x', 0, PATCH_SIZE );
-               break;
+                  face_idx = TABLE_02( LocalID, 'y', 1, 2 ) + s;
+                  disp_m   = TABLE_02( LocalID, 'z', 0, PS1 );
+                  disp_n   = TABLE_02( LocalID, 'x', 0, PS1 );
+                  break;
 
                case 4:  case 5:
-                  Mapping = TABLE_02( PID%8, 'z', 2, 3 ) + s;
-                  Table1  = TABLE_02( PID%8, 'y', 0, PATCH_SIZE );
-                  Table2  = TABLE_02( PID%8, 'x', 0, PATCH_SIZE );
-               break;
+                  face_idx = TABLE_02( LocalID, 'z', 2, 3 ) + s;
+                  disp_m   = TABLE_02( LocalID, 'y', 0, PS1 );
+                  disp_n   = TABLE_02( LocalID, 'x', 0, PS1 );
+                  break;
 
                default:
                   Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "s", s );
@@ -215,10 +215,10 @@ void StoreFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_
 
 
             for (int v=0; v<NFLUX_TOTAL; v++)   {
-            for (int m=0; m<PATCH_SIZE; m++)    {  mm = m + Table1;
-            for (int n=0; n<PATCH_SIZE; n++)    {  nn = n + Table2;
+            for (int m=0; m<PS1; m++)           {  const int mm = m + disp_m;
+            for (int n=0; n<PS1; n++)           {  const int nn = n + disp_n;
 
-               FluxPtr[v][m][n] = dt*h_Flux_Array[TID][Mapping][v][ mm*2*PATCH_SIZE+nn ];
+               FluxPtr[v][m][n] = dt*h_Flux_Array[TID][face_idx][v][ mm*PS2 + nn ];
 
             }}}
 
@@ -241,7 +241,7 @@ void StoreFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_
 //                PID0_List    : List recording the patch indicies with LocalID==0 to be udpated
 //                dt           : Evolution time-step
 //-------------------------------------------------------------------------------------------------------
-void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
+void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                   const int NPG, const int *PID0_List, const real dt )
 {
 
