@@ -6,19 +6,23 @@
 extern int FluStatus_ThisRank;
 
 
-static void StoreFlux( const int lv, const real Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
+static void StoreFlux( const int lv, const real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                        const int NPG, const int *PID0_List, const real dt );
-static void CorrectFlux( const int lv, const real Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
+static void CorrectFlux( const int lv, const real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                          const int NPG, const int *PID0_List, const real dt );
 #if ( MODEL == HYDRO )
 static bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngyOrPres );
 static void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
-                               const real h_Flu_Array_F_In[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT],
-                               real h_Flu_Array_F_Out[][FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
-                               char h_DE_Array_F_Out[][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
-                               real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
+                               const real h_Flu_Array_F_In[][FLU_NIN][ CUBE(FLU_NXT) ],
+                               real h_Flu_Array_F_Out[][FLU_NOUT][ CUBE(PS2) ],
+                               char h_DE_Array_F_Out[][ CUBE(PS2) ],
+                               real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                                const real dt );
+#ifdef MHD
+void StoreElectric( const int lv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2_P1*PS2 ],
+                    const int NPG, const int *PID0_List, const real dt );
 #endif
+#endif // #if ( MODEL == HYDRO )
 static int  Table_01( const int lv, const int PID, const int SibID );
 
 extern void Hydro_RiemannSolver_Roe ( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
@@ -68,12 +72,25 @@ void Flu_Close( const int lv, const int SaveSg_Flu, const int SaveSg_Mag,
 #  endif
 
 
-// save the flux in the coarse-fine boundary at level "lv"
-   if ( OPT__FIXUP_FLUX  &&  lv != TOP_LEVEL )  StoreFlux( lv, h_Flux_Array, NPG, PID0_List, dt );
+// operations related to flux fix-up
+   if ( OPT__FIXUP_FLUX )
+   {
+//    save the fluxes on the coarse-fine boundaries at level "lv"
+      if ( lv != TOP_LEVEL )  StoreFlux( lv, h_Flux_Array, NPG, PID0_List, dt );
+
+//    correct the fluxes on the coarse-fine boundaries at level "lv-1"
+      if ( lv != 0 )          CorrectFlux( lv, h_Flux_Array, NPG, PID0_List, dt );
+   }
 
 
-// correct the flux in the coarse-fine boundary at level "lv-1"
-   if ( OPT__FIXUP_FLUX  &&  lv != 0 )    CorrectFlux( lv, h_Flux_Array, NPG, PID0_List, dt );
+// operations related to electric field fix-up
+#  ifdef MHD
+   if ( OPT__FIXUP_ELECTRIC )
+   {
+//    save the electric field on the coarse-fine boundaries at level "lv"
+      if ( lv != TOP_LEVEL )  StoreElectric( lv, h_Ele_Array, NPG, PID0_List, dt );
+   }
+#  endif
 
 
 // copy the updated data from output arrays to the corresponding patch pointers
@@ -151,8 +168,8 @@ void Flu_Close( const int lv, const int SaveSg_Flu, const int SaveSg_Mag,
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  StoreFlux
-// Description :  Save the fluxes across the coarse-fine boundaries for patches at level "lv"
-//                (to be fixed later by the function "CorrectFlux")
+// Description :  Save the coarse-grid fluxes across the coarse-fine boundaries for patches at level "lv"
+//                --> to be fixed later by CorrectFlux()
 //
 // Parameter   :  lv           : Target refinement level
 //                h_Flux_Array : Host array storing the updated flux data
@@ -160,13 +177,12 @@ void Flu_Close( const int lv, const int SaveSg_Flu, const int SaveSg_Mag,
 //                PID0_List    : List recording the patch indicies with LocalID==0 to be udpated
 //                dt           : Evolution time-step
 //-------------------------------------------------------------------------------------------------------
-void StoreFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
+void StoreFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                 const int NPG, const int *PID0_List, const real dt )
 {
 
 // check
-   if ( !amr->WithFlux )
-      Aux_Message( stderr, "WARNING : why invoking %s when amr->WithFlux is off ??\n", __FUNCTION__ );
+   if ( !amr->WithFlux )   Aux_Error( ERROR_INFO, "amr->WithFlux is off !!\n" );
 
 
 #  pragma omp parallel for schedule( runtime )
@@ -174,56 +190,59 @@ void StoreFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_
    {
       const int PID0 = PID0_List[TID];
 
-      for (int PID=PID0; PID<PID0+8; PID++)
-      for (int s=0; s<6; s++)
+      for (int LocalID=0; LocalID<8; LocalID++)
       {
-//       for bitwise reproducibility, store the fluxes to be corrected in flux_bitrep[]
-#        ifdef BITWISE_REPRODUCIBILITY
-         real (*FluxPtr)[PS1][PS1] = amr->patch[0][lv][PID]->flux_bitrep[s];
-#        else
-         real (*FluxPtr)[PS1][PS1] = amr->patch[0][lv][PID]->flux[s];
-#        endif
+         const int PID = PID0 + LocalID;
 
-         if ( FluxPtr != NULL )
+         for (int s=0; s<6; s++)
          {
-            const int LocalID = PID % 8;
-            int face_idx, disp_m, disp_n;
+//          for bitwise reproducibility, store the fluxes to be corrected in flux_bitrep[]
+#           ifdef BITWISE_REPRODUCIBILITY
+            real (*FluxPtr)[PS1][PS1] = amr->patch[0][lv][PID]->flux_bitrep[s];
+#           else
+            real (*FluxPtr)[PS1][PS1] = amr->patch[0][lv][PID]->flux[s];
+#           endif
 
-            switch ( s )
+            if ( FluxPtr != NULL )
             {
-               case 0:  case 1:
-                  face_idx = TABLE_02( LocalID, 'x', 0, 1 ) + s;
-                  disp_m   = TABLE_02( LocalID, 'z', 0, PS1 );
-                  disp_n   = TABLE_02( LocalID, 'y', 0, PS1 );
-                  break;
+               int face_idx, disp_m, disp_n;
 
-               case 2:  case 3:
-                  face_idx = TABLE_02( LocalID, 'y', 1, 2 ) + s;
-                  disp_m   = TABLE_02( LocalID, 'z', 0, PS1 );
-                  disp_n   = TABLE_02( LocalID, 'x', 0, PS1 );
-                  break;
+               switch ( s )
+               {
+                  case 0:  case 1:
+                     face_idx = TABLE_02( LocalID, 'x', 0, 1 ) + s;
+                     disp_m   = TABLE_02( LocalID, 'z', 0, PS1 );
+                     disp_n   = TABLE_02( LocalID, 'y', 0, PS1 );
+                     break;
 
-               case 4:  case 5:
-                  face_idx = TABLE_02( LocalID, 'z', 2, 3 ) + s;
-                  disp_m   = TABLE_02( LocalID, 'y', 0, PS1 );
-                  disp_n   = TABLE_02( LocalID, 'x', 0, PS1 );
-                  break;
+                  case 2:  case 3:
+                     face_idx = TABLE_02( LocalID, 'y', 1, 2 ) + s;
+                     disp_m   = TABLE_02( LocalID, 'z', 0, PS1 );
+                     disp_n   = TABLE_02( LocalID, 'x', 0, PS1 );
+                     break;
 
-               default:
-                  Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "s", s );
-            }
+                  case 4:  case 5:
+                     face_idx = TABLE_02( LocalID, 'z', 2, 3 ) + s;
+                     disp_m   = TABLE_02( LocalID, 'y', 0, PS1 );
+                     disp_n   = TABLE_02( LocalID, 'x', 0, PS1 );
+                     break;
+
+                  default:
+                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "s", s );
+               }
 
 
-            for (int v=0; v<NFLUX_TOTAL; v++)   {
-            for (int m=0; m<PS1; m++)           {  const int mm = m + disp_m;
-            for (int n=0; n<PS1; n++)           {  const int nn = n + disp_n;
+               for (int v=0; v<NFLUX_TOTAL; v++)   {
+               for (int m=0; m<PS1; m++)           {  const int mm = m + disp_m;
+               for (int n=0; n<PS1; n++)           {  const int nn = n + disp_n;
 
-               FluxPtr[v][m][n] = dt*h_Flux_Array[TID][face_idx][v][ mm*PS2 + nn ];
+                  FluxPtr[v][m][n] = dt*h_Flux_Array[TID][face_idx][v][ mm*PS2 + nn ];
 
-            }}}
+               }}}
 
-         } // if ( FluxPtr != NULL )
-      } // for (int PID=PID0; PID<PID0+8; PID++) for (int s=0; s<6; s++)
+            } // if ( FluxPtr != NULL )
+         } // for (int s=0; s<6; s++)
+      } // for (int LocalID=0; LocalID<8; LocalID++)
    } // for (int TID=0; TID<NPG; TID++)
 
 } // FUNCTION : StoreFlux
@@ -246,8 +265,7 @@ void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(P
 {
 
 // check
-   if ( !amr->WithFlux )
-      Aux_Message( stderr, "WARNING : why invoking %s when amr->WithFlux is off ??\n", __FUNCTION__ );
+   if ( !amr->WithFlux )   Aux_Error( ERROR_INFO, "amr->WithFlux is off !!\n" );
 
 
 #  pragma omp parallel
@@ -311,7 +329,7 @@ void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(P
 // Description :  Check whether the input variables are unphysical
 //
 // Note        :  1. One can put arbitrary criteria here. Cells violating the conditions will be recalculated
-//                   in "CorrectUnphysical"
+//                   in CorrectUnphysical()
 //                2. Currently it is used for MODEL==HYDRO to check whether the input density and pressure
 //                   (or energy density) is smaller than the given thresholds
 //                   --> It also checks if any variable is -inf, +inf, or nan
@@ -418,10 +436,10 @@ bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngy
 //                dt                : Evolution time-step
 //-------------------------------------------------------------------------------------------------------
 void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
-                        const real h_Flu_Array_F_In[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT],
-                        real h_Flu_Array_F_Out[][FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
-                        char h_DE_Array_F_Out[][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
-                        real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
+                        const real h_Flu_Array_F_In[][FLU_NIN][ CUBE(FLU_NXT) ],
+                        real h_Flu_Array_F_Out[][FLU_NOUT][ CUBE(PS2) ],
+                        char h_DE_Array_F_Out[][ CUBE(PS2) ],
+                        real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                         const real dt )
 {
 
@@ -938,6 +956,174 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
    }
 
 } // FUNCTION : CorrectUnphysical
+
+
+
+#ifdef MHD
+//-------------------------------------------------------------------------------------------------------
+// Function    :  StoreElectric
+// Description :  Save the coarse-grid electric field on the coarse-fine boundaries for patches at level "lv"
+//                --> to be fixed later by CorrectElectric()
+//
+// Parameter   :  lv          : Target refinement level
+//                h_Ele_Array : Host array storing the updated electric field
+//                NPG         : Number of patch groups to be evaluated
+//                PID0_List   : List recording the patch indicies with LocalID==0 to be udpated
+//                dt          : Evolution time-step
+//-------------------------------------------------------------------------------------------------------
+void StoreElectric( const int lv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2_P1*PS2 ],
+                    const int NPG, const int *PID0_List, const real dt )
+{
+
+// check
+   if ( !amr->WithElectric )  Aux_Error( ERROR_INFO, "amr->WithElectric is off !!\n" );
+
+
+#  pragma omp parallel for schedule( runtime )
+   for (int TID=0; TID<NPG; TID++)
+   {
+      const int PID0 = PID0_List[TID];
+
+      for (int LocalID=0; LocalID<8; LocalID++)
+      {
+         const int PID = PID0 + LocalID;
+
+//       (1) store the electric field on faces 0 ~ 5
+         for (int s=0; s<6; s++)
+         {
+//          for bitwise reproducibility, store the electric field to be corrected in electric_bitrep[]
+            const int EleSize = PS1_M1*PS1;
+#           ifdef BITWISE_REPRODUCIBILITY
+            real (*ElePtr)[EleSize] = ( real (*)[EleSize] )amr->patch[0][lv][PID]->electric_bitrep[s];
+#           else
+            real (*ElePtr)[EleSize] = ( real (*)[EleSize] )amr->patch[0][lv][PID]->electric[s];
+#           endif
+
+            if ( ElePtr != NULL )
+            {
+               int face_idx, disp_m, disp_n;
+
+               switch ( s )
+               {
+                  case 0:  case 1:
+                     face_idx = TABLE_02( LocalID, 'x', 0, 1 ) + s;
+                     disp_m   = TABLE_02( LocalID, 'z', 0, PS1 );
+                     disp_n   = TABLE_02( LocalID, 'y', 0, PS1 );
+                     break;
+
+                  case 2:  case 3:
+                     face_idx = TABLE_02( LocalID, 'y', 1, 2 ) + s;
+                     disp_m   = TABLE_02( LocalID, 'x', 0, PS1 ); // (x,z) instead of (z,x)
+                     disp_n   = TABLE_02( LocalID, 'z', 0, PS1 );
+                     break;
+
+                  case 4:  case 5:
+                     face_idx = TABLE_02( LocalID, 'z', 2, 3 ) + s;
+                     disp_m   = TABLE_02( LocalID, 'y', 0, PS1 );
+                     disp_n   = TABLE_02( LocalID, 'x', 0, PS1 );
+                     break;
+
+                  default:
+                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "s", s );
+               }
+
+               const int disp_m_p1 = disp_m + 1;
+               const int disp_n_p1 = disp_n + 1;
+
+               for (int m=0; m<PS1_M1; m++)  {  const int mm = m + disp_m_p1;
+               for (int n=0; n<PS1;    n++)  {  const int nn = n + disp_n;
+
+                  ElePtr[0][ m*PS1    + n ] = dt*h_Ele_Array[TID][face_idx][0][ mm*PS2    + nn ];
+               }}
+
+               for (int m=0; m<PS1;    m++)  {  const int mm = m + disp_m;
+               for (int n=0; n<PS1_M1; n++)  {  const int nn = n + disp_n_p1;
+
+                  ElePtr[1][ m*PS1_M1 + n ] = dt*h_Ele_Array[TID][face_idx][1][ mm*PS2_P1 + nn ];
+               }}
+            } // if ( ElePtr != NULL )
+         } // for (int s=0; s<6; s++)
+
+
+//       (2) store the electric field on edges 6 ~ 17
+         real *ElePtr[12];
+
+         for (int s=6; s<18; s++)
+         {
+//          for bitwise reproducibility, store the electric field to be corrected in electric_bitrep[]
+#           ifdef BITWISE_REPRODUCIBILITY
+            ElePtr[s-6] = amr->patch[0][lv][PID]->electric_bitrep[s];
+#           else
+            ElePtr[s-6] = amr->patch[0][lv][PID]->electric[s];
+#           endif
+         }
+
+         if ( ElePtr[0] != NULL ) {
+            const int disp     = TABLE_02( LocalID, 'x',   0, PS1 )*PS2 + TABLE_02( LocalID, 'z', 0, PS1 );
+            const int face_idx = TABLE_02( LocalID, 'y', 3, 4 );
+            for (int n=0; n<PS1; n++)  ElePtr[ 0][n] = dt*h_Ele_Array[TID][face_idx][0][ n + disp ];
+         }
+         if ( ElePtr[1] != NULL ) {
+            const int disp     = TABLE_02( LocalID, 'x', PS1, PS2 )*PS2 + TABLE_02( LocalID, 'z', 0, PS1 );
+            const int face_idx = TABLE_02( LocalID, 'y', 3, 4 );
+            for (int n=0; n<PS1; n++)  ElePtr[ 1][n] = dt*h_Ele_Array[TID][face_idx][0][ n + disp ];
+         }
+         if ( ElePtr[2] != NULL ) {
+            const int disp     = TABLE_02( LocalID, 'x',   0, PS1 )*PS2 + TABLE_02( LocalID, 'z', 0, PS1 );
+            const int face_idx = TABLE_02( LocalID, 'y', 4, 5 );
+            for (int n=0; n<PS1; n++)  ElePtr[ 2][n] = dt*h_Ele_Array[TID][face_idx][0][ n + disp ];
+         }
+         if ( ElePtr[3] != NULL ) {
+            const int disp     = TABLE_02( LocalID, 'x', PS1, PS2 )*PS2 + TABLE_02( LocalID, 'z', 0, PS1 );
+            const int face_idx = TABLE_02( LocalID, 'y', 4, 5 );
+            for (int n=0; n<PS1; n++)  ElePtr[ 3][n] = dt*h_Ele_Array[TID][face_idx][0][ n + disp ];
+         }
+         if ( ElePtr[4] != NULL ) {
+            const int disp     = TABLE_02( LocalID, 'y',   0, PS1 )*PS2 + TABLE_02( LocalID, 'x', 0, PS1 );
+            const int face_idx = TABLE_02( LocalID, 'z', 6, 7 );
+            for (int n=0; n<PS1; n++)  ElePtr[ 4][n] = dt*h_Ele_Array[TID][face_idx][0][ n + disp ];
+         }
+         if ( ElePtr[5] != NULL ) {
+            const int disp     = TABLE_02( LocalID, 'y', PS1, PS2 )*PS2 + TABLE_02( LocalID, 'x', 0, PS1 );
+            const int face_idx = TABLE_02( LocalID, 'z', 6, 7 );
+            for (int n=0; n<PS1; n++)  ElePtr[ 5][n] = dt*h_Ele_Array[TID][face_idx][0][ n + disp ];
+         }
+         if ( ElePtr[6] != NULL ) {
+            const int disp     = TABLE_02( LocalID, 'y',   0, PS1 )*PS2 + TABLE_02( LocalID, 'x', 0, PS1 );
+            const int face_idx = TABLE_02( LocalID, 'z', 7, 8 );
+            for (int n=0; n<PS1; n++)  ElePtr[ 6][n] = dt*h_Ele_Array[TID][face_idx][0][ n + disp ];
+         }
+         if ( ElePtr[7] != NULL ) {
+            const int disp     = TABLE_02( LocalID, 'y', PS1, PS2 )*PS2 + TABLE_02( LocalID, 'x', 0, PS1 );
+            const int face_idx = TABLE_02( LocalID, 'z', 7, 8 );
+            for (int n=0; n<PS1; n++)  ElePtr[ 7][n] = dt*h_Ele_Array[TID][face_idx][0][ n + disp ];
+         }
+         if ( ElePtr[8] != NULL ) {
+            const int disp     = TABLE_02( LocalID, 'z',   0, PS1 )*PS2 + TABLE_02( LocalID, 'y', 0, PS1 );
+            const int face_idx = TABLE_02( LocalID, 'x', 0, 1 );
+            for (int n=0; n<PS1; n++)  ElePtr[ 8][n] = dt*h_Ele_Array[TID][face_idx][0][ n + disp ];
+         }
+         if ( ElePtr[9] != NULL ) {
+            const int disp     = TABLE_02( LocalID, 'z', PS1, PS2 )*PS2 + TABLE_02( LocalID, 'y', 0, PS1 );
+            const int face_idx = TABLE_02( LocalID, 'x', 0, 1 );
+            for (int n=0; n<PS1; n++)  ElePtr[ 9][n] = dt*h_Ele_Array[TID][face_idx][0][ n + disp ];
+         }
+         if ( ElePtr[10] != NULL ) {
+            const int disp     = TABLE_02( LocalID, 'z',   0, PS1 )*PS2 + TABLE_02( LocalID, 'y', 0, PS1 );
+            const int face_idx = TABLE_02( LocalID, 'x', 1, 2 );
+            for (int n=0; n<PS1; n++)  ElePtr[10][n] = dt*h_Ele_Array[TID][face_idx][0][ n + disp ];
+         }
+         if ( ElePtr[11] != NULL ) {
+            const int disp     = TABLE_02( LocalID, 'z', PS1, PS2 )*PS2 + TABLE_02( LocalID, 'y', 0, PS1 );
+            const int face_idx = TABLE_02( LocalID, 'x', 1, 2 );
+            for (int n=0; n<PS1; n++)  ElePtr[11][n] = dt*h_Ele_Array[TID][face_idx][0][ n + disp ];
+         }
+
+      } // for (int LocalID=0; LocalID<8; LocalID++)
+   } // for (int TID=0; TID<NPG; TID++)
+
+} // FUNCTION : StoreElectric
+#endif // #ifdef MHD
 #endif // #if ( MODEL == HYDRO )
 
 
