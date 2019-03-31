@@ -11,9 +11,9 @@
 //                   to replace "Flag_User()"
 //                2. Please turn on the runtime option "OPT__FLAG_USER"
 //
-// Parameter   :  i,j,k       : Indices of the targeted element in the patch ptr[ amr->FluSg[lv] ][lv][PID]
-//                lv          : Refinement level of the targeted patch
-//                PID         : ID of the targeted patch
+// Parameter   :  i,j,k       : Indices of the target element in the patch ptr[ amr->FluSg[lv] ][lv][PID]
+//                lv          : Refinement level of the target patch
+//                PID         : ID of the target patch
 //                Threshold   : Useless here
 //
 // Return      :  "true"  if the flag criteria are satisfied
