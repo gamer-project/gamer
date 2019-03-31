@@ -728,8 +728,13 @@ void Init_ByRestart()
 //    get the IDs of patches for sending and receiving data between neighbor ranks
       Buf_RecordExchangeDataPatchID( lv );
 
-//    allocate the flux arrays at the level "lv-1"
+//    allocate flux arrays on level "lv-1"
       if ( lv > 0  &&  amr->WithFlux )    Flu_AllocateFluxArray( lv-1 );
+
+//    allocate electric arrays on level "lv-1"
+#     ifdef MHD
+      if ( lv > 0  &&  amr->WithElectric )   MHD_AllocateElectricArray( lv-1 );
+#     endif
    } // for (int lv=0; lv<NLEVEL; lv++)
 
 
