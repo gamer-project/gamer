@@ -89,8 +89,14 @@ void Init_Refine( const int lv )
 // get the patch IDs for sending and receiving data between neighboring ranks
    Buf_RecordExchangeDataPatchID( lv+1 );
 
-// allocate flux arrays at the level "lv"
+// allocate flux arrays on level "lv"
    if ( amr->WithFlux )
    Flu_AllocateFluxArray( lv );
+
+// allocate electric arrays on level "lv"
+#  ifdef MHD
+   if ( amr->WithElectric )
+   MHD_AllocateElectricArray( lv );
+#  endif
 
 } // FUNCTION : Init_Refine

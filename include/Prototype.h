@@ -418,6 +418,7 @@ real MHD_GetCellCenteredBEnergy( const int lv, const int PID, const int i, const
 void MHD_InterpolateBField( const real **CData, const int CSize[3][3], const int CStart[3][3], const int CRange[3],
                                   real **FData, const int FSize[3][3], const int FStart[3][3],
                             const real *FInterface[6], const IntScheme_t IntScheme, const bool Monotonic );
+void MHD_AllocateElectricArray( const int lv );
 #endif
 
 

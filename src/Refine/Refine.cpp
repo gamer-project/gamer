@@ -713,12 +713,26 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    SiblingSearch( lv+1 );
 
 
-// allocate flux arrays for level "lv"
-   if ( amr->WithFlux )    Flu_AllocateFluxArray( lv );
+// allocate flux arrays on levels "lv" and "lv+1"
+   if ( amr->WithFlux )
+   {
+      Flu_AllocateFluxArray( lv );
+
+      if ( lv < TOP_LEVEL-1 )
+      Flu_AllocateFluxArray( lv+1 );
+   }
 
 
-// allocate flux arrays for level "lv+1"
-   if ( lv < NLEVEL-2  &&  amr->WithFlux )   Flu_AllocateFluxArray( lv+1 );
+// allocate electric arrays on levels "lv" and "lv+1"
+#  ifdef MHD
+   if ( amr->WithElectric )
+   {
+      MHD_AllocateElectricArray( lv );
+
+      if ( lv < TOP_LEVEL-1 )
+      MHD_AllocateElectricArray( lv+1 );
+   }
+#  endif
 
 
 // get the IDs of patches for sending and receiving data between neighbor ranks
