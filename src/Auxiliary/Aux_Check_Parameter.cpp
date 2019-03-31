@@ -769,6 +769,10 @@ void Aux_Check_Parameter()
 // ------------------------------
 #  ifdef MHD
 
+#  if ( !defined SERIAL  &&  !defined LOAD_BALANCE )
+#     error : ERROR : MHD must work with either SERIAL or LOAD_BALANCE !!
+#  endif
+
 #  if ( FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
 #     error : ERROR : unsupported hydro scheme in the makefile (MHM_RP/CTU) !!
 #  endif

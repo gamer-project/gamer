@@ -570,7 +570,7 @@ struct patch_t
    //
    // Note        :  electric[] will be initialized as zero
    //
-   // Parameter   :  SibID    : Targeted sibling direction (0-17)
+   // Parameter   :  SibID    : Target sibling direction (0-17)
    //                AllocTmp : Allocate the temporary electric array electric_tmp[]
    //===================================================================================
    void enew( const int SibID, const bool AllocTmp )
