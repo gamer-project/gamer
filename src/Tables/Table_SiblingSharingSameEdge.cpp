@@ -4,7 +4,7 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  TABLE_PatchSharingSameEdge
+// Function    :  TABLE_SiblingSharingSameEdge
 // Description :  Return the three sibling direction indices sharing the same patch edge as the input one
 //
 // Note        :  1. Results are stored in SibID[]
@@ -103,4 +103,4 @@ void TABLE_SiblingSharingSameEdge( const int EdgeID, int SibID[] )
 
    } // switch ( EdgeID )
 
-} // FUNCTION : TABLE_PatchSharingSameEdge
+} // FUNCTION : TABLE_SiblingSharingSameEdge
