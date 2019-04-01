@@ -23,8 +23,6 @@ void StoreElectric( const int lv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2_P1
                     const int NPG, const int *PID0_List, const real dt );
 #endif
 #endif // #if ( MODEL == HYDRO )
-static int  Table_01( const int lv, const int PID, const int SibID );
-
 extern void Hydro_RiemannSolver_Roe ( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                       const real Gamma, const real MinPres );
 extern void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
@@ -293,35 +291,40 @@ void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(P
 
          for (int s=0; s<6; s++)
          {
-//          skip patches adjacent to the non-periodic boundaries (which will have Table_01() < -1)
-            if ( Table_01( lv, PID0, s ) == -1 )
-            {
-               FaPID    = amr->patch[0][lv  ][ PID0]->father;
-               FaSibPID = amr->patch[0][lv-1][FaPID]->sibling[s];
+            FaPID = amr->patch[0][lv][PID0]->father;
 
-#              ifdef GAMER_DEBUG
-               if ( FaSibPID < 0 )
-                  Aux_Error( ERROR_INFO, "FaSibPID = %d < 0 (lv %d, FaPID %d, s %d, PID0 %d) !!\n", FaSibPID, lv-1, FaPID, s, PID0 );
-#              endif
+#           ifdef GAMER_DEBUG
+            if ( FaPID < 0 )
+               Aux_Error( ERROR_INFO, "FaPID = %d < 0 (lv %d, PID0 %d) !!\n", FaPID, lv, PID0 );
+#           endif
 
-//             for AUTO_REDUCE_DT, store the updated fluxes in the temporary array flux_tmp[] since
-//             we may need to abandon these updated results if the fluid solver fails
-               FluxPtr = ( AUTO_REDUCE_DT ) ? amr->patch[0][lv-1][FaSibPID]->flux_tmp[ MirrorSib[s] ] :
-                                              amr->patch[0][lv-1][FaSibPID]->flux    [ MirrorSib[s] ];
+            FaSibPID = amr->patch[0][lv-1][FaPID]->sibling[s];
 
-#              ifdef GAMER_DEBUG
-               if ( FluxPtr == NULL )  Aux_Error( ERROR_INFO, "FluxPtr == NULL (PID0 %d, s %d) !!\n", PID0, s );
-#              endif
+#           ifdef GAMER_DEBUG
+            if ( FaSibPID == -1 )
+               Aux_Error( ERROR_INFO, "FaSibPID == -1 (lv %d, FaPID %d, s %d, PID0 %d) !!\n", lv-1, FaPID, s, PID0 );
+#           endif
 
-               for (int v=0; v<NFLUX_TOTAL; v++)
-               for (int m=0; m<PS2; m++)  { mm = m/2;
-               for (int n=0; n<PS2; n++)  { nn = n/2;
+//          skip patches adjacent to non-periodic boundaries
+            if ( FaSibPID < -1 )    continue;
 
-                  ID = m*PS2 + n;
-                  FluxPtr[v][mm][nn] -= dt_4*h_Flux_Array[TID][ Mapping[s] ][v][ID];
+//          for AUTO_REDUCE_DT, store the updated fluxes in the temporary array flux_tmp[] since
+//          we may need to abandon them if the fluid solver fails
+            FluxPtr = ( AUTO_REDUCE_DT ) ? amr->patch[0][lv-1][FaSibPID]->flux_tmp[ MirrorSib[s] ] :
+                                           amr->patch[0][lv-1][FaSibPID]->flux    [ MirrorSib[s] ];
 
-               }}
-            } // if ( Table_01( lv, n, s ) == -1 )
+//          skip patches not adjacent to coarse-fine boundaries
+            if ( FluxPtr == NULL )  continue;
+
+//          store fluxes
+            for (int v=0; v<NFLUX_TOTAL; v++)
+            for (int m=0; m<PS2; m++)  { mm = m/2;
+            for (int n=0; n<PS2; n++)  { nn = n/2;
+
+               ID = m*PS2 + n;
+               FluxPtr[v][mm][nn] -= dt_4*h_Flux_Array[TID][ Mapping[s] ][v][ID];
+
+            }}
          } // for (int s=0; s<6; s++)
       } // for (int TID=0; TID<NPG; TID++)
 
@@ -1133,31 +1136,3 @@ void StoreElectric( const int lv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2_P1
 } // FUNCTION : StoreElectric
 #endif // #ifdef MHD
 #endif // #if ( MODEL == HYDRO )
-
-
-
-// ============
-// |  Tables  |
-// ============
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Table_01
-// Description :  Return the sibling patch ID for CorrectFlux()
-//
-// Parameter   :  lv    : Target refinement level
-//                PID   : Target patch index
-//                SibID : Target sibling index (0~5)
-//-------------------------------------------------------------------------------------------------------
-int Table_01( const int lv, const int PID, const int SibID )
-{
-
-   switch ( SibID )
-   {
-      case 0: case 2: case 4:    return amr->patch[0][lv][PID  ]->sibling[SibID];
-      case 1: case 3: case 5:    return amr->patch[0][lv][PID+7]->sibling[SibID];
-      default:
-         Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "SibID", SibID );
-         return EXIT_FAILURE;
-   }
-
-} // FUNCTION : Table_01
