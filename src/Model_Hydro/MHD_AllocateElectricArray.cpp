@@ -55,7 +55,7 @@ void MHD_AllocateElectricArray( const int lv )
          for (int EdgeID=6; EdgeID<18; EdgeID++)
          {
             int SibID[3];
-            TABLE_SiblingSharingSameEdge( EdgeID, SibID );
+            TABLE_SiblingSharingSameEdge( EdgeID, SibID, NULL );
 
             for (int s=0; s<3; s++)
             {

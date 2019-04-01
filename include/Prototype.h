@@ -359,7 +359,7 @@ int TABLE_04( const int SibID );
 int TABLE_05( const int SibID );
 int TABLE_06( const int SibID, const int FlagLayer );
 int TABLE_07( const int SibID, const int Count );
-void TABLE_SiblingSharingSameEdge( const int EdgeID, int SibID[] );
+void TABLE_SiblingSharingSameEdge( const int EdgeID, int SibID[], int SibSibID[] );
 
 
 // LoadBalance
