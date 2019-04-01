@@ -76,10 +76,10 @@ void Flu_Close( const int lv, const int SaveSg_Flu, const int SaveSg_Mag,
    if ( OPT__FIXUP_FLUX )
    {
 //    save the fluxes on the coarse-fine boundaries at level "lv"
-      if ( lv != TOP_LEVEL )  StoreFlux( lv, h_Flux_Array, NPG, PID0_List, dt );
+      StoreFlux( lv, h_Flux_Array, NPG, PID0_List, dt );
 
 //    correct the fluxes on the coarse-fine boundaries at level "lv-1"
-      if ( lv != 0 )          CorrectFlux( lv, h_Flux_Array, NPG, PID0_List, dt );
+      CorrectFlux( lv, h_Flux_Array, NPG, PID0_List, dt );
    }
 
 
@@ -185,6 +185,10 @@ void StoreFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2
    if ( !amr->WithFlux )   Aux_Error( ERROR_INFO, "amr->WithFlux is off !!\n" );
 
 
+// nothing to do on the highest level
+   if ( lv == TOP_LEVEL )  return;
+
+
 #  pragma omp parallel for schedule( runtime )
    for (int TID=0; TID<NPG; TID++)
    {
@@ -268,6 +272,10 @@ void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(P
    if ( !amr->WithFlux )   Aux_Error( ERROR_INFO, "amr->WithFlux is off !!\n" );
 
 
+// nothing to do on the root level
+   if ( lv == 0 )    return;
+
+
 #  pragma omp parallel
    {
       const int  Mapping  [6] = { 0, 2, 3, 5, 6, 8 };
@@ -296,7 +304,7 @@ void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(P
                   Aux_Error( ERROR_INFO, "FaSibPID = %d < 0 (lv %d, FaPID %d, s %d, PID0 %d) !!\n", FaSibPID, lv-1, FaPID, s, PID0 );
 #              endif
 
-//             for AUTO_REDUCE_DT, store the updated fluxes in the temporary array "flux_tmp" since
+//             for AUTO_REDUCE_DT, store the updated fluxes in the temporary array flux_tmp[] since
 //             we may need to abandon these updated results if the fluid solver fails
                FluxPtr = ( AUTO_REDUCE_DT ) ? amr->patch[0][lv-1][FaSibPID]->flux_tmp[ MirrorSib[s] ] :
                                               amr->patch[0][lv-1][FaSibPID]->flux    [ MirrorSib[s] ];
