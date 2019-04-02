@@ -8,7 +8,7 @@ extern int FluStatus_ThisRank;
 
 static void StoreFlux( const int lv, const real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                        const int NPG, const int *PID0_List, const real dt );
-static void CorrectFlux( const int lv, const real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
+static void CorrectFlux( const int SonLv, const real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                          const int NPG, const int *PID0_List, const real dt );
 #if ( MODEL == HYDRO )
 static bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngyOrPres );
@@ -21,6 +21,8 @@ static void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List
 #ifdef MHD
 void StoreElectric( const int lv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2_P1*PS2 ],
                     const int NPG, const int *PID0_List, const real dt );
+void CorrectElectric( const int SonLv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2_P1*PS2 ],
+                      const int NPG, const int *PID0_List, const real dt );
 #endif
 #endif // #if ( MODEL == HYDRO )
 extern void Hydro_RiemannSolver_Roe ( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
@@ -44,12 +46,12 @@ extern void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real
 //                SaveSg_Flu        : Sandglass to store the updated fluid data
 //                SaveSg_Mag        : Sandglass to store the updated B field (for MHD only)
 //                h_Flux_Array      : Host array storing the updated flux data
-//                h_Ele_Array       : Host array storing the updated electric field (for MHD only)
+//                h_Ele_Array       : Host array storing the updated E field (for MHD only)
 //                h_Flu_Array_F_Out : Host array storing the updated fluid data
 //                h_Mag_Array_F_Out : Host array storing the updated B field (for MHD only)
 //                h_DE_Array_F_Out  : Host array storing the dual-energy status (for DUAL_ENERGY only)
 //                NPG               : Number of patch groups to be evaluated
-//                PID0_List         : List recording the patch indicies with LocalID==0 to be udpated
+//                PID0_List         : List recording the patch indices with LocalID==0 to be udpated
 //                dt                : Evolution time-step
 //-------------------------------------------------------------------------------------------------------
 void Flu_Close( const int lv, const int SaveSg_Flu, const int SaveSg_Mag,
@@ -85,8 +87,11 @@ void Flu_Close( const int lv, const int SaveSg_Flu, const int SaveSg_Mag,
 #  ifdef MHD
    if ( OPT__FIXUP_ELECTRIC )
    {
-//    save the electric field on the coarse-fine boundaries at level "lv"
+//    save the E field on the coarse-fine boundaries at level "lv"
       if ( lv != TOP_LEVEL )  StoreElectric( lv, h_Ele_Array, NPG, PID0_List, dt );
+
+//    correct the E field on the coarse-fine boundaries at level "lv-1"
+      CorrectElectric( lv, h_Ele_Array, NPG, PID0_List, dt );
    }
 #  endif
 
@@ -172,7 +177,7 @@ void Flu_Close( const int lv, const int SaveSg_Flu, const int SaveSg_Mag,
 // Parameter   :  lv           : Target refinement level
 //                h_Flux_Array : Host array storing the updated flux data
 //                NPG          : Number of patch groups to be evaluated
-//                PID0_List    : List recording the patch indicies with LocalID==0 to be udpated
+//                PID0_List    : List recording the patch indices with LocalID==0 to be udpated
 //                dt           : Evolution time-step
 //-------------------------------------------------------------------------------------------------------
 void StoreFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
@@ -253,16 +258,16 @@ void StoreFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CorrectFlux
-// Description :  Use the fluxes across the coarse-fine boundaries at level "lv" to correct the fluxes
-//                at level "lv-1"
+// Description :  Use the fluxes across the coarse-fine boundaries at level SonLv to correct the fluxes
+//                at level FaLv
 //
-// Parameter   :  lv           : Target refinement level
+// Parameter   :  SonLv        : Target refinement level
 //                h_Flux_Array : Array storing the updated flux data
 //                NPG          : Number of patch groups to be evaluated
-//                PID0_List    : List recording the patch indicies with LocalID==0 to be udpated
+//                PID0_List    : List recording the patch indices with LocalID==0 to be udpated
 //                dt           : Evolution time-step
 //-------------------------------------------------------------------------------------------------------
-void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
+void CorrectFlux( const int SonLv, const real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                   const int NPG, const int *PID0_List, const real dt )
 {
 
@@ -271,38 +276,35 @@ void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(P
 
 
 // nothing to do on the root level
-   if ( lv == 0 )    return;
+   if ( SonLv == 0 )    return;
 
+
+   const int  FaLv         = SonLv - 1;
+   const int  Mapping  [6] = { 0, 2, 3, 5, 6, 8 };
+   const int  MirrorSib[6] = { 1, 0, 3, 2, 5, 4 };
+   const real dt_4         = (real)0.25*dt;
 
 #  pragma omp parallel
    {
-      const int  Mapping  [6] = { 0, 2, 3, 5, 6, 8 };
-      const int  MirrorSib[6] = { 1, 0, 3, 2, 5, 4 };
-      const real dt_4         = (real)0.25*dt;
-
-      int ID, FaPID, FaSibPID, PID0, mm, nn;
-      real (*FluxPtr)[PATCH_SIZE][PATCH_SIZE] = NULL;
-
-
 #     pragma omp for schedule( runtime )
       for (int TID=0; TID<NPG; TID++)
       {
-         PID0 = PID0_List[TID];
+         const int PID0 = PID0_List[TID];
 
          for (int s=0; s<6; s++)
          {
-            FaPID = amr->patch[0][lv][PID0]->father;
+            const int FaPID = amr->patch[0][SonLv][PID0]->father;
 
 #           ifdef GAMER_DEBUG
             if ( FaPID < 0 )
-               Aux_Error( ERROR_INFO, "FaPID = %d < 0 (lv %d, PID0 %d) !!\n", FaPID, lv, PID0 );
+               Aux_Error( ERROR_INFO, "FaPID = %d < 0 (SonLv %d, PID0 %d) !!\n", FaPID, SonLv, PID0 );
 #           endif
 
-            FaSibPID = amr->patch[0][lv-1][FaPID]->sibling[s];
+            const int FaSibPID = amr->patch[0][FaLv][FaPID]->sibling[s];
 
 #           ifdef GAMER_DEBUG
             if ( FaSibPID == -1 )
-               Aux_Error( ERROR_INFO, "FaSibPID == -1 (lv %d, FaPID %d, s %d, PID0 %d) !!\n", lv-1, FaPID, s, PID0 );
+               Aux_Error( ERROR_INFO, "FaSibPID == -1 (FaLv %d, FaPID %d, s %d, PID0 %d) !!\n", FaLv, FaPID, s, PID0 );
 #           endif
 
 //          skip patches adjacent to non-periodic boundaries
@@ -310,19 +312,18 @@ void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(P
 
 //          for AUTO_REDUCE_DT, store the updated fluxes in the temporary array flux_tmp[] since
 //          we may need to abandon them if the fluid solver fails
-            FluxPtr = ( AUTO_REDUCE_DT ) ? amr->patch[0][lv-1][FaSibPID]->flux_tmp[ MirrorSib[s] ] :
-                                           amr->patch[0][lv-1][FaSibPID]->flux    [ MirrorSib[s] ];
+            real (*FluxPtr)[PS1][PS1] = ( AUTO_REDUCE_DT ) ? amr->patch[0][FaLv][FaSibPID]->flux_tmp[ MirrorSib[s] ] :
+                                                             amr->patch[0][FaLv][FaSibPID]->flux    [ MirrorSib[s] ];
 
 //          skip patches not adjacent to coarse-fine boundaries
             if ( FluxPtr == NULL )  continue;
 
 //          store fluxes
             for (int v=0; v<NFLUX_TOTAL; v++)
-            for (int m=0; m<PS2; m++)  { mm = m/2;
-            for (int n=0; n<PS2; n++)  { nn = n/2;
+            for (int m=0; m<PS2; m++)  { const int mm = m/2;
+            for (int n=0; n<PS2; n++)  { const int nn = n/2;
 
-               ID = m*PS2 + n;
-               FluxPtr[v][mm][nn] -= dt_4*h_Flux_Array[TID][ Mapping[s] ][v][ID];
+               FluxPtr[v][mm][nn] -= dt_4*h_Flux_Array[TID][ Mapping[s] ][v][ m*PS2 + n ];
 
             }}
          } // for (int s=0; s<6; s++)
@@ -439,7 +440,7 @@ bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngy
 //
 // Parameter   :  lv                : Target refinement level
 //                NPG               : Number of patch groups to be evaluated
-//                PID0_List         : List recording the patch indicies with LocalID==0 to be udpated (for debug only)
+//                PID0_List         : List recording the patch indices with LocalID==0 to be udpated (for debug only)
 //                h_Flu_Array_F_In  : Input fluid array
 //                h_Flu_Array_F_Out : Output fluid array
 //                h_DE_Array_F_Out  : Output dual-energy status array
@@ -977,9 +978,9 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //                --> to be fixed later by CorrectElectric()
 //
 // Parameter   :  lv          : Target refinement level
-//                h_Ele_Array : Host array storing the updated electric field
+//                h_Ele_Array : Host array storing the updated E field
 //                NPG         : Number of patch groups to be evaluated
-//                PID0_List   : List recording the patch indicies with LocalID==0 to be udpated
+//                PID0_List   : List recording the patch indices with LocalID==0 to be udpated
 //                dt          : Evolution time-step
 //-------------------------------------------------------------------------------------------------------
 void StoreElectric( const int lv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2_P1*PS2 ],
@@ -999,10 +1000,10 @@ void StoreElectric( const int lv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2_P1
       {
          const int PID = PID0 + LocalID;
 
-//       (1) store the electric field on faces 0 ~ 5
+//       1. store the E field on faces 0 ~ 5
          for (int s=0; s<6; s++)
          {
-//          for bitwise reproducibility, store the electric field to be corrected in electric_bitrep[]
+//          for bitwise reproducibility, store the E field to be corrected in electric_bitrep[]
             const int EleSize = PS1_M1*PS1;
 #           ifdef BITWISE_REPRODUCIBILITY
             real (*ElePtr)[EleSize] = ( real (*)[EleSize] )amr->patch[0][lv][PID]->electric_bitrep[s];
@@ -1056,12 +1057,12 @@ void StoreElectric( const int lv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2_P1
          } // for (int s=0; s<6; s++)
 
 
-//       (2) store the electric field on edges 6 ~ 17
+//       2. store the E field on edges 6 ~ 17
          real *ElePtr[12];
 
          for (int s=6; s<18; s++)
          {
-//          for bitwise reproducibility, store the electric field to be corrected in electric_bitrep[]
+//          for bitwise reproducibility, store the E field to be corrected in electric_bitrep[]
 #           ifdef BITWISE_REPRODUCIBILITY
             ElePtr[s-6] = amr->patch[0][lv][PID]->electric_bitrep[s];
 #           else
@@ -1134,5 +1135,194 @@ void StoreElectric( const int lv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2_P1
    } // for (int TID=0; TID<NPG; TID++)
 
 } // FUNCTION : StoreElectric
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  CorrectElectric
+// Description :  Use the electric field on the coarse-fine boundaries at level SonLv to correct the field
+//                at level FaLv
+//
+// Parameter   :  SonLv       : Target refinement level
+//                h_Ele_Array : Array storing the updated E field
+//                NPG         : Number of patch groups to be evaluated
+//                PID0_List   : List recording the patch indices with LocalID==0 to be udpated
+//                dt          : Evolution time-step
+//-------------------------------------------------------------------------------------------------------
+void CorrectElectric( const int SonLv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2_P1*PS2 ],
+                      const int NPG, const int *PID0_List, const real dt )
+{
+
+// check
+   if ( !amr->WithElectric )  Aux_Error( ERROR_INFO, "amr->WithElectric is off !!\n" );
+
+
+// nothing to do on the root level
+   if ( SonLv == 0 )    return;
+
+
+// 1. correct the E field on faces 0 ~ 5
+   const int  FaLv         = SonLv - 1;
+   const int  face_idx[6]  = { 0, 2, 3, 5, 6, 8 };
+   const int  MirrorSib[6] = { 1, 0, 3, 2, 5, 4 };
+   const int  didx[2]      = { 1, PS2_P1 };
+   const int  EleSize      = PS1_M1*PS1;
+   const real dt_2         = (real)0.5*dt;
+
+#  pragma omp parallel
+   {
+#     pragma omp for schedule( runtime )
+      for (int TID=0; TID<NPG; TID++)
+      {
+         const int PID0 = PID0_List[TID];
+
+         for (int s=0; s<6; s++)
+         {
+            const int FaPID = amr->patch[0][SonLv][PID0]->father;
+
+#           ifdef GAMER_DEBUG
+            if ( FaPID < 0 )
+               Aux_Error( ERROR_INFO, "FaPID = %d < 0 (SonLv %d, PID0 %d) !!\n", FaPID, SonLv, PID0 );
+#           endif
+
+            const int FaSibPID = amr->patch[0][FaLv][FaPID]->sibling[s];
+
+#           ifdef GAMER_DEBUG
+            if ( FaSibPID == -1 )
+               Aux_Error( ERROR_INFO, "FaSibPID == -1 (FaLv %d, FaPID %d, s %d, PID0 %d) !!\n", FaLv, FaPID, s, PID0 );
+#           endif
+
+//          skip patches adjacent to non-periodic boundaries
+            if ( FaSibPID < -1 )    continue;
+
+//          for AUTO_REDUCE_DT, store the updated electrid field in the temporary array electric_tmp[] since
+//          we may need to abandon them if the fluid solver fails
+            real (*CoarseElePtr)[EleSize] = ( real (*)[EleSize] )
+                                            (  ( AUTO_REDUCE_DT ) ? amr->patch[0][FaLv][FaSibPID]->electric_tmp[ MirrorSib[s] ] :
+                                                                    amr->patch[0][FaLv][FaSibPID]->electric    [ MirrorSib[s] ]  );
+
+//          skip patches not adjacent to coarse-fine boundaries
+            if ( CoarseElePtr == NULL )   continue;
+
+//          correct the coarse-grid E field
+            for (int t=0; t<EleSize; t++)
+            {
+                const int n      = t % PS1;
+                const int m      = t / PS1 + 1;
+                const int idx    = 2*( m*PS2 + n );
+                const int idx_p1 = idx + didx[0];
+
+                CoarseElePtr[0][t] -= dt_2*( h_Ele_Array[TID][ face_idx[s] ][0][idx   ] +
+                                             h_Ele_Array[TID][ face_idx[s] ][0][idx_p1] );
+            }
+
+            for (int t=0; t<EleSize; t++)
+            {
+                const int n      = t % PS1_M1 + 1;
+                const int m      = t / PS1_M1;
+                const int idx    = 2*( m*PS2_P1 + n );
+                const int idx_p1 = idx + didx[1];
+
+                CoarseElePtr[1][t] -= dt_2*( h_Ele_Array[TID][ face_idx[s] ][1][idx   ] +
+                                             h_Ele_Array[TID][ face_idx[s] ][1][idx_p1] );
+            }
+         } // for (int s=0; s<6; s++)
+      } // for (int TID=0; TID<NPG; TID++)
+
+   } // OpenMP parallel region
+
+
+// 2. correct the E field on edges 6 ~ 17
+
+// group sibling directions into four independent groups to avoid multiple OpenMP threads updating
+// the E field at the same patch edge
+   const int IndSib[4][3] = { {6, 10, 14}, {7, 11, 15}, {8, 12, 16}, {9, 13, 17} };
+
+   for (int g=0; g<4; g++)
+   {
+#     pragma omp parallel
+      {
+         for (int w=0; w<3; w++)
+         {
+            const int s           = IndSib[g][w];  // 6 ~ 17
+            const int e           = s - 6;         // 0 ~ 11 (edge index)
+            const int xyz         = e / 4;         // (0,0,0,0,1,1,1,1,2,2,2,2)
+            const int face_offset = e % 4 / 2;     // (0,0,1,1,0,0,1,1,0,0,1,1)
+            const int m_offset    = e % 2;         // (0,1,0,1,0,1,0,1,0,1,0,1)
+            const int face_idx    = ( 3 + xyz*3 )%9 + 2*face_offset;
+
+            int  SibID[3], SibSibID[3];
+            real AveFineEle[PS1];
+
+            TABLE_SiblingSharingSameEdge( s, SibID, SibSibID );
+
+#           pragma omp for schedule( runtime )
+            for (int TID=0; TID<NPG; TID++)
+            {
+               const int PID0  = PID0_List[TID];
+               const int FaPID = amr->patch[0][SonLv][PID0]->father;
+
+               bool AveFineEleReady = false;
+
+#              ifdef GAMER_DEBUG
+               if ( FaPID < 0 )
+                  Aux_Error( ERROR_INFO, "FaPID = %d < 0 (SonLv %d, PID0 %d) !!\n", FaPID, SonLv, PID0 );
+#              endif
+
+               for (int u=0; u<3; u++)
+               {
+                  const int FaSibPID = amr->patch[0][FaLv][FaPID]->sibling[ SibID[u] ];
+
+#                 ifdef GAMER_DEBUG
+                  if ( FaSibPID == -1 )
+                     Aux_Error( ERROR_INFO, "FaSibPID == -1 (FaLv %d, FaPID %d, u %d, PID0 %d) !!\n", FaLv, FaPID, u, PID0 );
+#                 endif
+
+//                skip patches adjacent to non-periodic boundaries
+                  if ( FaSibPID < -1 )    continue;
+
+//                for AUTO_REDUCE_DT, store the updated electrid field in the temporary array electric_tmp[] since
+//                we may need to abandon them if the fluid solver fails
+                  real *CoarseElePtr= ( AUTO_REDUCE_DT ) ? amr->patch[0][FaLv][FaSibPID]->electric_tmp[ SibSibID[u] ] :
+                                                           amr->patch[0][FaLv][FaSibPID]->electric    [ SibSibID[u] ];
+
+//                skip patches not adjacent to coarse-fine boundaries
+                  if ( CoarseElePtr == NULL )   continue;
+
+//                skip the E field arrays that have been corrected already
+                  if ( amr->patch[0][FaLv][FaSibPID]->ele_corrected[ SibSibID[u]-6 ] )    continue;
+
+//                prepare the fine-grid E field data if not done yet
+                  if ( ! AveFineEleReady )
+                  {
+                      const int m = m_offset*PS2;
+
+                      for (int t=0; t<PS1; t++)
+                      {
+                         const int n      = t*2;
+                         const int idx    = m*PS2 + n;
+                         const int idx_p1 = idx + 1;
+
+                         AveFineEle[t] = dt_2*( h_Ele_Array[TID][face_idx][0][idx   ] +
+                                                h_Ele_Array[TID][face_idx][0][idx_p1] );
+                      }
+
+                      AveFineEleReady = true;
+                  } // if ( ! AveFineEleReady )
+
+//                correct the coarse-grid E field
+                  for (int t=0; t<PS1; t++)  CoarseElePtr[t] -= AveFineEle[t];
+
+//                mark that this E field array has been corrected to avoid duplicate correction
+//                --> necessary because each coarse patch edge can be overlapped with up to three fine patch edges
+                  amr->patch[0][FaLv][FaSibPID]->ele_corrected[ SibSibID[u]-6 ] = true;
+               } // for (int u=0; u<3; u++)
+            }//for (int TID=0; TID<NPG; TID++)
+         } // for (int w=0; w<3; w++)
+      } // OpenMP parallel region
+   } // for (int g=0; g<4; g++)
+
+} // FUNCTION : CorrectElectric
+
 #endif // #ifdef MHD
 #endif // #if ( MODEL == HYDRO )
