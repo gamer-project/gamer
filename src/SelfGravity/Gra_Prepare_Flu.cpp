@@ -16,7 +16,7 @@
 //                h_Flu_Array_G  : Host array to store the prepared data
 //                h_DE_Array_G   : Host array to store the dual-energy status
 //                NPG            : Number of patch groups prepared at a time
-//                PID0_List      : List recording the patch indicies with LocalID==0 to be udpated
+//                PID0_List      : List recording the patch indices with LocalID==0 to be udpated
 //-------------------------------------------------------------------------------------------------------
 void Gra_Prepare_Flu( const int lv, real h_Flu_Array_G[][GRA_NIN][PS1][PS1][PS1], char h_DE_Array_G[][PS1][PS1][PS1],
                       const int NPG, const int *PID0_List )

@@ -22,7 +22,7 @@
 //                h_Pot_Array_USG_G : Host array to store the prepared potential (size = USG_NXT_G^3)
 //                h_Flu_Array_USG_G : Host array to store the prepared density   (size =       PS1^3)
 //                NPG               : Number of patch groups prepared at a time
-//                PID0_List         : List recording the patch indicies with LocalID==0 to be udpated
+//                PID0_List         : List recording the patch indices with LocalID==0 to be udpated
 //-------------------------------------------------------------------------------------------------------
 void Gra_Prepare_USG( const int lv, const double PrepTime,
                       real h_Pot_Array_USG_G[][USG_NXT_G][USG_NXT_G][USG_NXT_G],

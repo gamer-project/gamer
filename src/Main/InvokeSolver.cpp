@@ -125,7 +125,7 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
    }
 
 
-   int *PID0_List    = NULL;  // list recording the patch indicies with LocalID==0 to be udpated
+   int *PID0_List    = NULL;  // list recording the patch indices with LocalID==0 to be udpated
    bool AllocateList = false; // whether to allocate PID0_List or not
    int  ArrayID      = 0;     // array index to load and store data ( 0 or 1 )
    int  NPG[2];               // number of patch groups to be updated at a time
@@ -277,7 +277,7 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 //                            --> For Grackle solver, it prepares data at TimeNew
 //                                --> Specifically, it always prepares data at the current FluSg[lv]
 //                NPG       : Number of patch groups to be prepared at a time
-//                PID0_List : List recording the patch indicies with LocalID==0 to be udpated
+//                PID0_List : List recording the patch indices with LocalID==0 to be udpated
 //                ArrayID   : Array index to load and store data ( 0 or 1 )
 //-------------------------------------------------------------------------------------------------------
 void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld, const int NPG,
@@ -662,7 +662,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 //                SaveSg_Mag : Sandglass to store the updated B field (for the fluid solver)
 //                SaveSg_Pot : Sandglass to store the updated potential data (for the Poisson solver)
 //                NPG        : Number of patch groups to be evaluated at a time
-//                PID0_List  : List recording the patch indicies with LocalID==0 to be udpated
+//                PID0_List  : List recording the patch indices with LocalID==0 to be udpated
 //                ArrayID    : Array index to load and store data ( 0 or 1 )
 //                dt         : Time interval to advance solution (for OPT__1ST_FLUX_CORR in Flu_Close())
 //-------------------------------------------------------------------------------------------------------

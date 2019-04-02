@@ -19,7 +19,7 @@
 //                h_Flu_Array_G  : Host array storing the updated fluid variables
 //                h_DE_Array_G   : Host array storing the dual-energy status
 //                NPG            : Number of patch groups to store the updated data
-//                PID0_List      : List recording the patch indicies with LocalID==0 to be udpated
+//                PID0_List      : List recording the patch indices with LocalID==0 to be udpated
 //-------------------------------------------------------------------------------------------------------
 void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_NIN][PS1][PS1][PS1],
                 const char h_DE_Array_G[][PS1][PS1][PS1], const int NPG, const int *PID0_List )

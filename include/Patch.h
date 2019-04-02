@@ -57,6 +57,7 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                electric_tmp    : Temporary electric field for the option "AUTO_REDUCE_DT"
 //                electric_bitrep : Electric field for achieving bitwise reproducibility in MHD (i.e., ensuring that the
 //                                  round-off errors are exactly the same in different parallelization parameters/strategies)
+//                ele_corrected   : Array recording whether each component in electric[] has been corrected by the fix-up operation
 //                corner[3]       : Grid indices of the cell at patch corner
 //                                  --> Note that for an external patch its recorded "corner" will lie outside
 //                                      the simulation domain. In other words, periodicity is NOT used to
@@ -202,6 +203,7 @@ struct patch_t
 #  ifdef BITWISE_REPRODUCIBILITY
    real (*electric_bitrep[18]);
 #  endif
+   bool ele_corrected[12];
 #  endif
 
    int    corner[3];

@@ -41,7 +41,7 @@ extern int CheIdx_Metal;
 //                SaveSg      : Sandglass to store the updated data
 //                h_Che_Array : Host array storing the updated data
 //                NPG         : Number of patch groups to store the updated data
-//                PID0_List   : List recording the patch indicies with LocalID==0 to be udpated
+//                PID0_List   : List recording the patch indices with LocalID==0 to be udpated
 //-------------------------------------------------------------------------------------------------------
 void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[], const int NPG, const int *PID0_List )
 {
