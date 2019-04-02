@@ -1143,6 +1143,8 @@ void StoreElectric( const int lv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2_P1
 // Description :  Use the electric field on the coarse-fine boundaries at level SonLv to correct the field
 //                at level FaLv
 //
+// Note        :  1. patch->ele_corrected[] is initialized as false in Flu_AdvanceDt()
+//
 // Parameter   :  SonLv       : Target refinement level
 //                h_Ele_Array : Array storing the updated E field
 //                NPG         : Number of patch groups to be evaluated
