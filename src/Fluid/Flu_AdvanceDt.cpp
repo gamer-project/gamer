@@ -42,8 +42,21 @@ int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
                    const int SaveSg_Flu, const int SaveSg_Mag, const bool OverlapMPI, const bool Overlap_Sync )
 {
 
-// initialize the flux_tmp arrays for AUTO_REDUCE_DT
+// initialize flux_tmp[] for AUTO_REDUCE_DT
    if ( OPT__FIXUP_FLUX  &&  AUTO_REDUCE_DT  &&  lv != 0 )  Flu_InitTempFlux( lv-1 );
+
+
+// initialize patch->ele_corrected[] for correcting the coarse-grid electric field
+#  ifdef MHD
+   if ( OPT__FIXUP_ELECTRIC  &&  lv != 0 )
+   {
+      const int FaLv = lv - 1;
+
+      for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][19]; FaPID++)
+      for (int e=0; e<12; e++)
+         amr->patch[0][FaLv][FaPID]->ele_corrected[e] = false;
+   }
+#  endif
 
 
 // invoke the fluid solver
