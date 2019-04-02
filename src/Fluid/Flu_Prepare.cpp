@@ -16,7 +16,7 @@
 //                h_Pot_Array_USG_F    : Host array to store the prepared potential data (for UNSPLIT_GRAVITY only)
 //                h_Corner_Array_USG_F : Host array to store the prepared corner data (for UNSPLIT_GRAVITY only)
 //                NPG                  : Number of patch groups to be prepared at a time
-//                PID0_List            : List recording the patch indicies with LocalID==0 to be udpated
+//                PID0_List            : List recording the patch indices with LocalID==0 to be udpated
 //-------------------------------------------------------------------------------------------------------
 void Flu_Prepare( const int lv, const double PrepTime,
                   real h_Flu_Array_F_In[][FLU_NIN][ CUBE(FLU_NXT) ],

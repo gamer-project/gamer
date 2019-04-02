@@ -95,7 +95,7 @@ static void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const re
 //                OutputFC       : Returned array to store the prepared face-centered data
 //                GhostSize      : Number of ghost zones to be prepared
 //                NPG            : Number of patch groups prepared at a time
-//                PID0_List      : List recording the patch indicies with LocalID==0 to be prepared
+//                PID0_List      : List recording the patch indices with LocalID==0 to be prepared
 //                TVarCC         : Target cell-centered variables to be prepared
 //                                 --> Supported variables in different models:
 //                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _PRES, _TEMP

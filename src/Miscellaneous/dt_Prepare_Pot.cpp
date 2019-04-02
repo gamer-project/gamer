@@ -17,7 +17,7 @@
 // Parameter   :  lv            : Target refinement level
 //                h_Pot_Array_T : Host array to store the prepared gravitational potential
 //                NPG           : Number of patch groups prepared at a time
-//                PID0_List     : List recording the target patch indicies with LocalID==0
+//                PID0_List     : List recording the target patch indices with LocalID==0
 //                PrepTime      : Target physical time
 //-------------------------------------------------------------------------------------------------------
 void dt_Prepare_Pot( const int lv, real h_Pot_Array_T[][ CUBE(GRA_NXT) ], const int NPG, const int *PID0_List,

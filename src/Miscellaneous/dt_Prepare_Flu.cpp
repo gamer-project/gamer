@@ -16,7 +16,7 @@
 // Parameter   :  lv            : Target refinement level
 //                h_Flu_Array_T : Host array to store the prepared fluid data
 //                NPG           : Number of patch groups prepared at a time
-//                PID0_List     : List recording the target patch indicies with LocalID==0
+//                PID0_List     : List recording the target patch indices with LocalID==0
 //-------------------------------------------------------------------------------------------------------
 void dt_Prepare_Flu( const int lv, real h_Flu_Array_T[][NCOMP_FLUID][ CUBE(PS1) ], const int NPG, const int *PID0_List )
 {

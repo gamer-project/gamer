@@ -23,7 +23,7 @@
 //                TPID        : Target patch ID
 //                h_Flu_Array : Input fluid array for the fluid solver
 //                NPG         : Number of patch groups to be prepared at a time
-//                PID0_List   : List recording the patch indicies with LocalID==0 to be udpated
+//                PID0_List   : List recording the patch indices with LocalID==0 to be udpated
 //                CLv         : Level of data currently stored in h_Flu_Array
 //                comment     : String to attach to the end of the file name
 //-------------------------------------------------------------------------------------------------------

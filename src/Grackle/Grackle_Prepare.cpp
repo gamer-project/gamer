@@ -38,7 +38,7 @@ extern int CheIdx_Metal;
 // Parameter   :  lv          : Target refinement level
 //                h_Che_Array : Host array to store the prepared data
 //                NPG         : Number of patch groups prepared at a time
-//                PID0_List   : List recording the patch indicies with LocalID==0 to be udpated
+//                PID0_List   : List recording the patch indices with LocalID==0 to be udpated
 //-------------------------------------------------------------------------------------------------------
 void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int *PID0_List )
 {
