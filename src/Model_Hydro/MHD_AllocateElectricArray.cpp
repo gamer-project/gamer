@@ -61,7 +61,10 @@ void MHD_AllocateElectricArray( const int lv )
             {
                const int SibPID = amr->patch[0][lv][PID]->sibling[ SibID[s] ];
                if ( SibPID >= 0  &&  amr->patch[0][lv][SibPID]->son != -1 )
+               {
                   amr->patch[0][lv][PID]->enew( EdgeID, AUTO_REDUCE_DT );
+                  break;
+               }
             }
          }
       }
