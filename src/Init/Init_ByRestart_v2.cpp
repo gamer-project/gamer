@@ -695,7 +695,15 @@ void Init_ByRestart()
 // --> only necessary when restarting from a C-binary snapshot since it does not store non-leaf data
    for (int lv=NLEVEL-2; lv>=0; lv--)
    {
-      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _TOTAL );
+#     ifdef MHD
+      const int SonMagSg = amr->MagSg[lv+1];
+      const int  FaMagSg = amr->MagSg[lv  ];
+#     else
+      const int SonMagSg = NULL_INT;
+      const int  FaMagSg = NULL_INT;
+#     endif
+
+      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, SonMagSg, FaMagSg, _TOTAL, _MAG );
 
       LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, NULL_INT );
 
@@ -746,7 +754,15 @@ void Init_ByRestart()
    for (int lv=NLEVEL-2; lv>=0; lv--)
    {
 //    data restriction: lv+1 --> lv
-      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _TOTAL );
+#     ifdef MHD
+      const int SonMagSg = amr->MagSg[lv+1];
+      const int  FaMagSg = amr->MagSg[lv  ];
+#     else
+      const int SonMagSg = NULL_INT;
+      const int  FaMagSg = NULL_INT;
+#     endif
+
+      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, SonMagSg, FaMagSg, _TOTAL, _MAG );
 
 //    fill up the data in the buffer patches
       Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );

@@ -40,17 +40,19 @@ void Flu_Prepare( const int lv, const double PrepTime,
 
 
 #  if ( MODEL != HYDRO )
-   const double MIN_DENS           = -1.0;    // set to an arbitrarily negative value to disable it
-   const double MIN_PRES           = -1.0;    // ...
+   const double MIN_DENS            = -1.0;  // set to an arbitrarily negative value to disable it
+   const double MIN_PRES            = -1.0;  // ...
 #  endif
-
-   const bool   IntPhase_No        = false;
-   const real   MinDens_No         = -1.0;
-   const real   MinPres_No         = -1.0;
-   const bool   DE_Consistency_Yes = true;
-   const bool   DE_Consistency_No  = false;
-   const bool   DE_Consistency     = ( OPT__OPTIMIZE_AGGRESSIVE ) ? DE_Consistency_No : DE_Consistency_Yes;
-   const real   MinDens            = ( OPT__OPTIMIZE_AGGRESSIVE ) ? MinDens_No : MIN_DENS;
+#  ifndef MHD
+   const int    OPT__MAG_INT_SCHEME = INT_NONE;
+#  endif
+   const bool   IntPhase_No         = false;
+   const real   MinDens_No          = -1.0;
+   const real   MinPres_No          = -1.0;
+   const bool   DE_Consistency_Yes  = true;
+   const bool   DE_Consistency_No   = false;
+   const bool   DE_Consistency      = ( OPT__OPTIMIZE_AGGRESSIVE ) ? DE_Consistency_No : DE_Consistency_Yes;
+   const real   MinDens             = ( OPT__OPTIMIZE_AGGRESSIVE ) ? MinDens_No : MIN_DENS;
 
 
 // prepare the fluid array

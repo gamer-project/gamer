@@ -74,8 +74,16 @@ void Flu_CorrAfterAllSync()
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
          Aux_Message( stdout, "      restrict data at Lv %2d                ... ", lv );
 
+#     ifdef MHD
+      const int SonMagSg = amr->MagSg[lv+1];
+      const int  FaMagSg = amr->MagSg[lv  ];
+#     else
+      const int SonMagSg = NULL_INT;
+      const int  FaMagSg = NULL_INT;
+#     endif
+
 //    we do not restrict potential since it will be recalculated anyway
-      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _TOTAL );
+      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, SonMagSg, FaMagSg, _TOTAL, _MAG );
 
 #     ifdef LOAD_BALANCE
       LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, NULL_INT );
