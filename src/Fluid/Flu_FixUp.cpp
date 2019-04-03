@@ -338,6 +338,16 @@ void Flu_FixUp( const int lv )
 
 
 // b. average over the data at level "lv+1" to correct the data at level "lv"
-   if ( OPT__FIXUP_RESTRICT )    Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _TOTAL );
+//    --> we do not correct the potential data
+#  ifdef MHD
+   const int SonMagSg = amr->MagSg[lv+1];
+   const int  FaMagSg = amr->MagSg[lv  ];
+#  else
+   const int SonMagSg = NULL_INT;
+   const int  FaMagSg = NULL_INT;
+#  endif
+
+   if ( OPT__FIXUP_RESTRICT )
+      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, SonMagSg, FaMagSg, _TOTAL, _MAG );
 
 } // FUNCTION : Flu_FixUp

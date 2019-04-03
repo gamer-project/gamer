@@ -485,7 +485,8 @@ void Init_ByRestart_v1( const char FileName[] )
 // --> only necessary when restarting from a C-binary snapshot since it does not store non-leaf data
    for (int lv=NLEVEL-2; lv>=0; lv--)
    {
-      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _TOTAL );
+//    does not support MHD
+      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, NULL_INT, NULL_INT, _TOTAL, 0 );
 
       LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, NULL_INT );
 
@@ -530,7 +531,8 @@ void Init_ByRestart_v1( const char FileName[] )
    for (int lv=NLEVEL-2; lv>=0; lv--)
    {
 //    data restriction: lv+1 --> lv
-      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _TOTAL );
+//    --> does not support MHD
+      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, NULL_INT, NULL_INT, _TOTAL, 0 );
 
 //    fill up the data in the buffer patches
       Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );

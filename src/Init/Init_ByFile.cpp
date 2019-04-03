@@ -187,7 +187,15 @@ void Init_ByFile()
    {
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Restricting level %d ... ", lv );
 
-      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _TOTAL );
+#     ifdef MHD
+      const int SonMagSg = amr->MagSg[lv+1];
+      const int  FaMagSg = amr->MagSg[lv  ];
+#     else
+      const int SonMagSg = NULL_INT;
+      const int  FaMagSg = NULL_INT;
+#     endif
+
+      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, SonMagSg, FaMagSg, _TOTAL, _MAG );
 
 #     ifdef LOAD_BALANCE
       LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, NULL_INT );
@@ -278,8 +286,16 @@ void Init_ByFile()
 
       if ( NPatchTotal[lv+1] == 0 )    continue;
 
+#     ifdef MHD
+      const int SonMagSg = amr->MagSg[lv+1];
+      const int  FaMagSg = amr->MagSg[lv  ];
+#     else
+      const int SonMagSg = NULL_INT;
+      const int  FaMagSg = NULL_INT;
+#     endif
+
 //    no need to restrict potential since it will be recalculated later
-      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _TOTAL );
+      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, SonMagSg, FaMagSg, _TOTAL, _MAG );
 
 #     ifdef LOAD_BALANCE
       LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, NULL_INT );
