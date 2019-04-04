@@ -300,7 +300,6 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
     Flux_Out[1] = FMA( lmdar, Usr[1] - CR[1], + Fr[1] );
     Flux_Out[2] = FMA( lmdar, Usr[2] - CR[2], + Fr[2] );
     Flux_Out[3] = FMA( lmdar, Usr[3] - CR[3], + Fr[3] );
-    Flux_Out[4] = FMA( lmdar, Usr[4] - CR[4], + Fr[4] );
 #   if ( CONSERVED_ENERGY == 1 )
     Flux_Out[4] = FMA( lmdar, Usr[4] - CR[4], + Fr[4] );
 #   elif ( CONSERVED_ENERGY == 2 )
