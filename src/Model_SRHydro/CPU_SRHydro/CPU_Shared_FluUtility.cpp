@@ -766,15 +766,14 @@ void QuadraticSolver (real A, real B, real C, real delta, real *x_plus, real *x_
 
 real VectorDotProduct( const real *V1, const real *V2, int Ini_i, int Final_i )
 {
-
-real Product = 0.0;
-
-for (int i=Ini_i; i<=Final_i; i++)
- {
-    Product = FMA( V1[i], V2[i] , Product );
- }
-
-return Product;
+  real Product = 0.0;
+  
+  for (int i=Ini_i; i<=Final_i; i++)
+   {
+      Product = FMA( V1[i], V2[i] , Product );
+   }
+  
+  return Product;
 } 
 
 #endif
