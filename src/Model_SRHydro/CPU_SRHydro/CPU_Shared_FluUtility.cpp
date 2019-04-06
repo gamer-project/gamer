@@ -664,9 +664,9 @@ Fun_DFun (real Temp, void *ptr, real * f, real * df, real Gamma)
   real Tsqr = Temp * Temp;
 
 # if ( EOS == RELATIVISTIC_IDEAL_GAS )
-  real abc = SQRT(FMA( 9, Tsqr, 4 ));
+  real abc = SQRT(FMA( 9.0, Tsqr, 4.0 ));
   real h = FMA( 2.5, Temp, SQRT(FMA( 2.25, Tsqr, 1.0 ))); // approximate enthalpy
-  real dh = FMA( 9.0, Temp / SQRT(FMA( 36, Tsqr, 16 )), 2.5 );
+  real dh = FMA( 9.0, Temp / SQRT(FMA( 36.0, Tsqr, 16.0 )), 2.5 );
   real hsqr = SQR(h);
 # if   (CONSERVED_ENERGY == 1)
   real Constant = FMA( E_D, E_D, - M_Dsqr );
@@ -677,7 +677,7 @@ Fun_DFun (real Temp, void *ptr, real * f, real * df, real Gamma)
 # else
 # error: CONSERVED_ENERGY must be 1 or 2!
 # endif
-  *df = FMA( 7, Temp, FMA( 1.5, abc, 13.5 * Tsqr / abc )) + 2*h*Temp*((h*hsqr + M_Dsqr*h + Temp*dh*M_Dsqr) / SQR( hsqr + M_Dsqr) );
+  *df = FMA( 7.0, Temp, FMA( 1.5, abc, 13.5 * Tsqr / abc )) + 2*h*Temp*((h*hsqr + M_Dsqr*h + Temp*dh*M_Dsqr) / SQR( hsqr + M_Dsqr) );
 
 # elif ( EOS == IDEAL_GAS )
   real zeta = 1.0 / ( Gamma - 1.0 );
