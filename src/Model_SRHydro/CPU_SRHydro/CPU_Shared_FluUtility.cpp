@@ -618,6 +618,7 @@ real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, 
 
 
 
+GPU_DEVICE
 static void 
 NewtonRaphsonSolver(void *ptr, real *root, const real guess, const real epsabs, const real epsrel, const real Gamma)
 {
@@ -654,6 +655,7 @@ NewtonRaphsonSolver(void *ptr, real *root, const real guess, const real epsabs, 
 // Description :  
 //-------------------------------------------------------------------------------------------------------
 
+GPU_DEVICE
 static void
 Fun_DFun (real Temp, void *ptr, real * f, real * df, real Gamma)
 {
@@ -701,6 +703,7 @@ Fun_DFun (real Temp, void *ptr, real * f, real * df, real Gamma)
 # endif // #if ( EOS == RELATIVISTIC_IDEAL_GAS )
 }
 
+GPU_DEVICE
 void QuadraticSolver (real A, real B, real C, real delta, real *x_plus, real *x_minus, const int line)
 {
   real tolerance1 = TINY_NUMBER;
@@ -764,6 +767,7 @@ void QuadraticSolver (real A, real B, real C, real delta, real *x_plus, real *x_
 }
 
 
+GPU_DEVICE
 real VectorDotProduct( const real *V1, const real *V2, int Ini_i, int Final_i )
 {
   real Product = 0.0;
