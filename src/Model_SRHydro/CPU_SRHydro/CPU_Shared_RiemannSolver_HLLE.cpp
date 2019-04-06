@@ -116,8 +116,8 @@ void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In
    QuadraticSolver(1.0 + ssl, -2*lV1, lV1s - ssl, deltal, &lmdapl, &lmdaml, __LINE__);
    QuadraticSolver(1.0 + ssr, -2*rV1, rV1s - ssr, deltar, &lmdapr, &lmdamr, __LINE__);
 
-   lmdal = MIN(lmdaml, lmdamr); /* Mignone Eq 21 */
-   lmdar = MAX(lmdapl, lmdapr);
+   lmdal = FMIN(lmdaml, lmdamr); /* Mignone Eq 21 */
+   lmdar = FMAX(lmdapl, lmdapr);
     
 /* 4. compute HLL flux using Mignone Eq 11 (necessary for computing lmdas (Eq 18) 
  *    compute HLL conserved quantities using Mignone eq 9
@@ -135,7 +135,7 @@ void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In
      Fr[4] = CR[1];
  /* 7. Determine intercell flux according to Mignone 13
  */
-  if( lmdal >= 0.0){ /* Fl */
+  if( lmdal >= 0.0 ){ /* Fl */
     /* intercell flux is left flux */
     Flux_Out[0] = Fl[0];
     Flux_Out[1] = Fl[1];
@@ -150,7 +150,7 @@ void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In
    SRHydro_Rotate3D( Flux_Out, XYZ, false );
    return;
   }
-  else if( lmdal <= 0.0 && lmdar >= 0.0 ){ /* Fs */
+  else if( lmdal < 0.0 && lmdar > 0.0 ){ /* Fs */
 /* 5. Compute HLL flux using Mignone Eq 11 (necessary for computing lmdas (Eq 18)
  *    Compute HLL conserved quantities using Mignone eq 9
  */
@@ -168,7 +168,7 @@ void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In
     Fhll[4] = (lmdar*Fl[4] - lmdal*Fr[4] + lmdatlmda * (CR[4] + CR[0] - CL[4] - CL[0])) * ovlrmll;
 #   endif
 
-    /* calcULate Fs  */
+    /* calculate Fs */
     Flux_Out[0] = Fhll[0];
     Flux_Out[1] = Fhll[1];
     Flux_Out[2] = Fhll[2];

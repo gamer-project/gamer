@@ -136,8 +136,8 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
    QuadraticSolver(1.0 + ssl, -2*lV1, lV1s - ssl, deltal, &lmdapl, &lmdaml, __LINE__);
    QuadraticSolver(1.0 + ssr, -2*rV1, rV1s - ssr, deltar, &lmdapr, &lmdamr, __LINE__);
 
-   lmdal = MIN(lmdaml, lmdamr); /* Mignone Eq 21 */
-   lmdar = MAX(lmdapl, lmdapr);
+   lmdal = FMIN(lmdaml, lmdamr); /* Mignone Eq 21 */
+   lmdar = FMAX(lmdapl, lmdapr);
 
     
 /* 4. compute HLL flux using Mignone Eq 11 (necessary for computing lmdas (Eq 18) 
