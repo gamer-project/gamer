@@ -96,11 +96,11 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
    real nhl =  FMA( (real)2.5, PL[4], SQRT( FMA( (real)2.25, SQR(PL[4]), SQR(PL[0]) ) ) );
    real nhr =  FMA( (real)2.5, PR[4], SQRT( FMA( (real)2.25, SQR(PR[4]), SQR(PR[0]) ) ) );
 
-   cslsq = PL[4] * FMA( (real)4.5, PL[4], 5*SQRT( FMA( (real)2.25, SQR(PL[4]), SQR(PL[0]) ) ) ) 
-        / ( 3*nhl* FMA( (real)1.5, PL[4],   SQRT( FMA( (real)2.25, SQR(PL[4]), SQR(PL[0]) ) ) ) );
+   cslsq = PL[4] * FMA( (real)4.5, PL[4], (real)5.0*SQRT( FMA( (real)2.25, SQR(PL[4]), SQR(PL[0]) ) ) ) 
+        / ( 3*nhl* FMA( (real)1.5, PL[4],           SQRT( FMA( (real)2.25, SQR(PL[4]), SQR(PL[0]) ) ) ) );
 
-   csrsq = PR[4] * FMA( (real)4.5, PR[4], 5*SQRT( FMA( (real)2.25, SQR(PR[4]), SQR(PR[0]) ) ) ) 
-        / ( 3*nhr* FMA( (real)1.5, PR[4],   SQRT( FMA( (real)2.25, SQR(PR[4]), SQR(PR[0]) ) ) ) );
+   csrsq = PR[4] * FMA( (real)4.5, PR[4], (real)5.0*SQRT( FMA( (real)2.25, SQR(PR[4]), SQR(PR[0]) ) ) ) 
+        / ( 3*nhr* FMA( (real)1.5, PR[4],           SQRT( FMA( (real)2.25, SQR(PR[4]), SQR(PR[0]) ) ) ) );
 
 #  elif ( EOS ==  IDEAL_GAS)
    rhl = PL[0] + PL[4] * Gamma / Gamma_m1; /* Mignone Eq 3.5 */
@@ -133,8 +133,8 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
    real deltal = ((real)1.0 - lV1s) + ssl;
    real deltar = ((real)1.0 - rV1s) + ssr;
 
-   QuadraticSolver((real)1.0 + ssl, -2*lV1, lV1s - ssl, deltal, &lmdapl, &lmdaml, __LINE__);
-   QuadraticSolver((real)1.0 + ssr, -2*rV1, rV1s - ssr, deltar, &lmdapr, &lmdamr, __LINE__);
+   QuadraticSolver((real)1.0 + ssl, (real)-2.0*lV1, lV1s - ssl, deltal, &lmdapl, &lmdaml, __LINE__);
+   QuadraticSolver((real)1.0 + ssr, (real)-2.0*rV1, rV1s - ssr, deltar, &lmdapr, &lmdamr, __LINE__);
 
    lmdal = FMIN(lmdaml, lmdamr); /* Mignone Eq 21 */
    lmdar = FMAX(lmdapl, lmdapr);
@@ -226,7 +226,7 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
   b = -(Uhll[4] + Fhll[1]);
   c = Uhll[1];
 
-  real delta = FMA( b, b, -4*a*c );
+  real delta = FMA( b, b, (real)-4*a*c );
 
   real null;
 

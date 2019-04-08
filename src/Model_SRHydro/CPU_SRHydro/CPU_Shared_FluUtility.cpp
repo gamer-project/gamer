@@ -318,18 +318,18 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
          || ConsVar[ENGY] != ConsVar[ENGY]  )                                             goto FAIL;
 
 // check +inf and -inf
-      if (    TINY_NUMBER >= ConsVar[DENS] || ConsVar[DENS]  >= HUGE_NUMBER
-         ||  -HUGE_NUMBER >= ConsVar[MOMX] || ConsVar[MOMX]  >= HUGE_NUMBER
-         ||  -HUGE_NUMBER >= ConsVar[MOMY] || ConsVar[MOMY]  >= HUGE_NUMBER
-         ||  -HUGE_NUMBER >= ConsVar[MOMZ] || ConsVar[MOMZ]  >= HUGE_NUMBER
-         ||   TINY_NUMBER >= ConsVar[ENGY] || ConsVar[ENGY]  >= HUGE_NUMBER )             goto FAIL;
+      if (  (real)  TINY_NUMBER >= ConsVar[DENS] || ConsVar[DENS]  >= (real)HUGE_NUMBER
+         || (real) -HUGE_NUMBER >= ConsVar[MOMX] || ConsVar[MOMX]  >= (real)HUGE_NUMBER
+         || (real) -HUGE_NUMBER >= ConsVar[MOMY] || ConsVar[MOMY]  >= (real)HUGE_NUMBER
+         || (real) -HUGE_NUMBER >= ConsVar[MOMZ] || ConsVar[MOMZ]  >= (real)HUGE_NUMBER
+         || (real)  TINY_NUMBER >= ConsVar[ENGY] || ConsVar[ENGY]  >= (real)HUGE_NUMBER )             goto FAIL;
 
 
 // check energy
       Msqr = VectorDotProduct( ConsVar, ConsVar, MOMX, MOMZ );
 #     if ( CONSERVED_ENERGY == 1 )
       discriminant = FMA(ConsVar[ENGY], ConsVar[ENGY], - Msqr - SQR(ConsVar[DENS]));
-      if ( discriminant <= TINY_NUMBER )                                                   goto FAIL;
+      if ( discriminant <= (real) TINY_NUMBER )                                                   goto FAIL;
 #     elif ( CONSERVED_ENERGY == 2 )
       discriminant = SQR(ConsVar[ENGY]) + 2*ConsVar[ENGY]*ConsVar[DENS] - Msqr;
       if ( discriminant <= TINY_NUMBER )                                                   goto FAIL;
@@ -347,16 +347,16 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
          || Pri4Vel[ENGY] != Pri4Vel[ENGY]  )                                              goto FAIL;
 
 // check +inf and -inf
-      if (    TINY_NUMBER >= Pri4Vel[DENS] || Pri4Vel[DENS]  >= HUGE_NUMBER
-         ||  -HUGE_NUMBER >= Pri4Vel[MOMX] || Pri4Vel[MOMX]  >= HUGE_NUMBER
-         ||  -HUGE_NUMBER >= Pri4Vel[MOMY] || Pri4Vel[MOMY]  >= HUGE_NUMBER
-         ||  -HUGE_NUMBER >= Pri4Vel[MOMZ] || Pri4Vel[MOMZ]  >= HUGE_NUMBER
-         ||   TINY_NUMBER >= Pri4Vel[ENGY] || Pri4Vel[ENGY]  >= HUGE_NUMBER )              goto FAIL;
+      if (  (real)  TINY_NUMBER >= Pri4Vel[DENS] || Pri4Vel[DENS]  >= (real)HUGE_NUMBER
+         || (real) -HUGE_NUMBER >= Pri4Vel[MOMX] || Pri4Vel[MOMX]  >= (real)HUGE_NUMBER
+         || (real) -HUGE_NUMBER >= Pri4Vel[MOMY] || Pri4Vel[MOMY]  >= (real)HUGE_NUMBER
+         || (real) -HUGE_NUMBER >= Pri4Vel[MOMZ] || Pri4Vel[MOMZ]  >= (real)HUGE_NUMBER
+         || (real)  TINY_NUMBER >= Pri4Vel[ENGY] || Pri4Vel[ENGY]  >= (real)HUGE_NUMBER )              goto FAIL;
 
 // check whether 3-velocity is greater or equal to speed of light
       SRHydro_4Velto3Vel(Pri4Vel,Pri3Vel);
 
-      if (VectorDotProduct( Pri3Vel, Pri3Vel, 1, 3 ) >= 1.0)                      goto FAIL;
+      if (VectorDotProduct( Pri3Vel, Pri3Vel, 1, 3 ) >=(real) 1.0)                      goto FAIL;
 
 // pass all checks 
       return false;
@@ -379,18 +379,18 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
          || Pri4Vel[ENGY] != Pri4Vel[ENGY]  )                                       goto FAIL;
 
 // check +inf and -inf
-      if (    TINY_NUMBER >= Pri4Vel[DENS] || Pri4Vel[DENS]  >= HUGE_NUMBER
-         ||  -HUGE_NUMBER >= Pri4Vel[MOMX] || Pri4Vel[MOMX]  >= HUGE_NUMBER
-         ||  -HUGE_NUMBER >= Pri4Vel[MOMY] || Pri4Vel[MOMY]  >= HUGE_NUMBER
-         ||  -HUGE_NUMBER >= Pri4Vel[MOMZ] || Pri4Vel[MOMZ]  >= HUGE_NUMBER
-         ||   TINY_NUMBER >= Pri4Vel[ENGY] || Pri4Vel[ENGY]  >= HUGE_NUMBER )       goto FAIL;
+      if (  (real)  TINY_NUMBER >= Pri4Vel[DENS] || Pri4Vel[DENS]  >= (real)HUGE_NUMBER
+         || (real) -HUGE_NUMBER >= Pri4Vel[MOMX] || Pri4Vel[MOMX]  >= (real)HUGE_NUMBER
+         || (real) -HUGE_NUMBER >= Pri4Vel[MOMY] || Pri4Vel[MOMY]  >= (real)HUGE_NUMBER
+         || (real) -HUGE_NUMBER >= Pri4Vel[MOMZ] || Pri4Vel[MOMZ]  >= (real)HUGE_NUMBER
+         || (real)  TINY_NUMBER >= Pri4Vel[ENGY] || Pri4Vel[ENGY]  >= (real)HUGE_NUMBER )       goto FAIL;
 
 
       SRHydro_4Velto3Vel(Pri4Vel,Pri3Vel);
       SRHydro_Pri2Con(Pri4Vel, ConsVar, (real) Gamma);
 
 // check whether 3-velocity is greater or equal to speed of light
-      if (VectorDotProduct( Pri3Vel, Pri3Vel, 1, 3 ) >= 1.0)                      goto FAIL;
+      if (VectorDotProduct( Pri3Vel, Pri3Vel, 1, 3 ) >=(real) 1.0)                      goto FAIL;
    
 // check NaN
       if (  ConsVar[DENS] != ConsVar[DENS]
@@ -400,18 +400,18 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
          || ConsVar[ENGY] != ConsVar[ENGY]  )                                       goto FAIL;
 
 // check +inf and -inf
-      if (    TINY_NUMBER >= ConsVar[DENS] || ConsVar[DENS]  >= HUGE_NUMBER
-         ||  -HUGE_NUMBER >= ConsVar[MOMX] || ConsVar[MOMX]  >= HUGE_NUMBER
-         ||  -HUGE_NUMBER >= ConsVar[MOMY] || ConsVar[MOMY]  >= HUGE_NUMBER
-         ||  -HUGE_NUMBER >= ConsVar[MOMZ] || ConsVar[MOMZ]  >= HUGE_NUMBER
-         ||   TINY_NUMBER >= ConsVar[ENGY] || ConsVar[ENGY]  >= HUGE_NUMBER )        goto FAIL;
+      if (  (real)  TINY_NUMBER >= ConsVar[DENS] || ConsVar[DENS]  >= (real)HUGE_NUMBER
+         || (real) -HUGE_NUMBER >= ConsVar[MOMX] || ConsVar[MOMX]  >= (real)HUGE_NUMBER
+         || (real) -HUGE_NUMBER >= ConsVar[MOMY] || ConsVar[MOMY]  >= (real)HUGE_NUMBER
+         || (real) -HUGE_NUMBER >= ConsVar[MOMZ] || ConsVar[MOMZ]  >= (real)HUGE_NUMBER
+         || (real)  TINY_NUMBER >= ConsVar[ENGY] || ConsVar[ENGY]  >= (real)HUGE_NUMBER )        goto FAIL;
 
 
 // check energy
       Msqr = VectorDotProduct( ConsVar, ConsVar, MOMX, MOMZ );
 #     if ( CONSERVED_ENERGY == 1 )
       discriminant = FMA(ConsVar[ENGY], ConsVar[ENGY], - Msqr - SQR(ConsVar[DENS]));
-      if ( discriminant <= TINY_NUMBER )                                              goto FAIL;
+      if ( discriminant <= (real) TINY_NUMBER )                                              goto FAIL;
 #     elif ( CONSERVED_ENERGY == 2 )
       discriminant = SQR(ConsVar[ENGY]) + 2*ConsVar[ENGY]*ConsVar[DENS] - Msqr;
       if ( discriminant <= TINY_NUMBER )                                              goto FAIL;
@@ -610,7 +610,7 @@ real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, 
     }
 #endif 
 
-   NewtonRaphsonSolver(&params ,&root, guess, TINY_NUMBER, EPSILON, Gamma);
+   NewtonRaphsonSolver(&params ,&root, guess, (real) TINY_NUMBER, (real) EPSILON, Gamma);
 
    return root;
 }				// FUNCTION : SRHydro_GetTemperature
@@ -636,8 +636,8 @@ NewtonRaphsonSolver(void *ptr, real *root, const real guess, const real epsabs, 
 
 #    ifdef CHECK_NEGATIVE_IN_FLUID
      if ( df == 0.0 )                                            printf("derivative is zero\n");
-     if (  f != f  || -HUGE_NUMBER >= f  || f  >= HUGE_NUMBER )  printf("function value is not finite\n");
-     if ( df != df || -HUGE_NUMBER >= df || df >= HUGE_NUMBER )  printf("derivative value is not finite\n");
+     if (  f != f  ||(real) -HUGE_NUMBER >= f  || f  >= (real)HUGE_NUMBER )  printf("function value is not finite\n");
+     if ( df != df ||(real) -HUGE_NUMBER >= df || df >= (real)HUGE_NUMBER )  printf("derivative value is not finite\n");
 #    endif     
 
       root_old = *root;
@@ -679,7 +679,7 @@ Fun_DFun (real Temp, void *ptr, real * f, real * df, real Gamma)
 # else
 # error: CONSERVED_ENERGY must be 1 or 2!
 # endif
-  *df = FMA( (real)7.0, Temp, FMA( (real)1.5, abc, (real)13.5 * Tsqr / abc )) + 2*h*Temp*((h*hsqr + M_Dsqr*h + Temp*dh*M_Dsqr) / SQR( hsqr + M_Dsqr) );
+  *df = FMA( (real)7.0, Temp, FMA( (real)1.5, abc, (real)13.5 * Tsqr / abc )) + (real)2*h*Temp*((h*hsqr + M_Dsqr*h + Temp*dh*M_Dsqr) / SQR( hsqr + M_Dsqr) );
 
 # elif ( EOS == IDEAL_GAS )
   real zeta = 1.0 / ( Gamma - 1.0 );
@@ -706,9 +706,9 @@ Fun_DFun (real Temp, void *ptr, real * f, real * df, real Gamma)
 GPU_DEVICE
 void QuadraticSolver (real A, real B, real C, real delta, real *x_plus, real *x_minus, const int line)
 {
-  real tolerance1 = TINY_NUMBER;
-  real tolerance2 = EPSILON;
-  real tolerance3 = TINY_NUMBER;
+  real tolerance1 = (real)TINY_NUMBER;
+  real tolerance2 = (real)EPSILON;
+  real tolerance3 = (real)TINY_NUMBER;
 
   if ( FABS(A) > tolerance1 )
   {
@@ -729,7 +729,7 @@ void QuadraticSolver (real A, real B, real C, real delta, real *x_plus, real *x_
        }
        else if ( -tolerance2 < delta )
        {
-         *x_plus = -0.5*B/A;
+         *x_plus = (real)-0.5*B/A;
          *x_minus = *x_plus;            return;
        }
        else                             goto NO_REAL_SOLUTIONS_CASE1;
