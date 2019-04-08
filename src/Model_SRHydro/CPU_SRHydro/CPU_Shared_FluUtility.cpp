@@ -98,7 +98,7 @@ void SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real 
 {
       real Temp = SRHydro_GetTemperature (In[0], In[1], In[2], In[3], In[4], Gamma, MinTemp );
 #if ( EOS == RELATIVISTIC_IDEAL_GAS )
-      real h = FMA( 2.5, Temp, SQRT( FMA( 2.25, Temp*Temp, 1.0 ) ) );
+      real h = FMA( (real)2.5, Temp, SQRT( FMA( (real)2.25, Temp*Temp, (real)1.0 ) ) );
 #elif ( EOS == IDEAL_GAS ) 
       real h = 1 + Temp * Gamma / (Gamma-1.0);
 #else
@@ -109,7 +109,7 @@ void SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real 
       Out[2] = In[2]/factor;
       Out[3] = In[3]/factor;
 
-      real factor1 = SQRT(1 + VectorDotProduct(Out, Out, 1, 3));
+      real factor1 = SQRT((real)1.0 + VectorDotProduct(Out, Out, 1, 3));
 
       Out[0] = In[0]/factor1;
       Out[4] = Out[0] * Temp; // P = nkT
@@ -120,7 +120,7 @@ GPU_DEVICE
 void SRHydro_Pri2Con (const real In[], real Out[], const real Gamma)
 {
 # if ( EOS == RELATIVISTIC_IDEAL_GAS )
-  real nh = FMA( 2.5, In[4], SQRT( FMA( 2.25, SQR(In[4]), SQR(In[0]) ) )); // approximate enthalpy * proper number density
+  real nh = FMA( (real)2.5, In[4], SQRT( FMA( (real)2.25, SQR(In[4]), SQR(In[0]) ) )); // approximate enthalpy * proper number density
 # elif ( EOS == IDEAL_GAS )
   real Gamma_m1 = (real) Gamma - 1.0;
   real nh = In[0] + ( Gamma / Gamma_m1) * In[4]; // enthalpy * proper number density
@@ -128,7 +128,7 @@ void SRHydro_Pri2Con (const real In[], real Out[], const real Gamma)
 # error: unsupported EoS!
 # endif
 
-  real Factor0 = 1.0 + VectorDotProduct(In, In, 1, 3);
+  real Factor0 = (real)1.0 + VectorDotProduct(In, In, 1, 3);
   real Factor1 = SQRT(Factor0); // Lorentz factor
   real Factor2 = nh * Factor1;
   
@@ -152,7 +152,7 @@ void SRHydro_Pri2Con (const real In[], real Out[], const real Gamma)
 GPU_DEVICE
 void SRHydro_4Velto3Vel ( const real In[], real Out[])
 {
-  real Factor = 1 / SQRT (1 + VectorDotProduct(In, In, 1, 3));
+  real Factor = (real)1.0 / SQRT ((real)1.0 + VectorDotProduct(In, In, 1, 3));
 
   Out[0] = In[0];
   Out[1] = In[1] * Factor;
@@ -168,7 +168,7 @@ void SRHydro_4Velto3Vel ( const real In[], real Out[])
 GPU_DEVICE
 void SRHydro_3Velto4Vel (const real In[], real Out[])
 {
-  real Factor = 1 / SQRT (1 - VectorDotProduct(In, In, 1, 3));
+  real Factor = (real)1.0 / SQRT ((real)1.0 - VectorDotProduct(In, In, 1, 3));
 
   Out[0] = In[0];
   Out[1] = In[1] * Factor;
@@ -263,7 +263,7 @@ real SRHydro_CheckMinTempInEngy (const real Cons[], const real MinTemp, const re
 # if ( EOS == IDEAL_GAS ) 
   real h_min = 1.0 + Gamma * MinTemp / (Gamma - 1.0);
 # elif ( EOS == RELATIVISTIC_IDEAL_GAS )
-  real h_min = 2.5*MinTemp + SQRT(2.25*MinTemp*MinTemp + 1);
+  real h_min = (real)2.5*MinTemp + SQRT((real)2.25*MinTemp*MinTemp + (real)1.0);
 # endif
 
   real D  = Cons[0];
@@ -509,7 +509,7 @@ real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, 
   real Msqr = VectorDotProduct(In, In, 1, 3);
   real M = SQRT (Msqr); // magnitude of momentum
   real Dsqr = SQR(In[0]);
-  real abc = 1.0 / Dsqr;
+  real abc = (real)1.0 / Dsqr;
   real E_D = In[4] / In[0];
   real E_Dsqr = abc * SQR(In[4]);
   real M_Dsqr = abc * Msqr;
@@ -518,23 +518,23 @@ real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, 
 # if   ( CONSERVED_ENERGY == 1 )
 /* initial guess  */
   real Constant = E_Dsqr - M_Dsqr;
-  if ( Constant > 1.0 )
+  if ( Constant > (real)1.0 )
    {
-	if ( Dsqr - 0.0625 * Msqr >= 0 )
+	if ( Dsqr - (real)0.0625 * Msqr >= (real)0 )
 	  {
-	    if ( Constant > 2.5 ) 
+	    if ( Constant > (real)2.5 ) 
 	      {
-		 guess = SQRT(FMA( 0.1111111, E_Dsqr, - FMA ( 0.1041667, M_Dsqr, 0.2222222 ) ));
+		 guess = SQRT(FMA( (real)0.1111111, E_Dsqr, - FMA ( (real)0.1041667, M_Dsqr, (real)0.2222222 ) ));
 	      }
-	    else guess = (Constant - 1.0) * 0.3333333;
+	    else guess = (Constant - (real)1.0) * (real)0.3333333;
 	  }
 	else // 1 - (M/D)**2 < 0
 	  {
-	    if ( Constant >  1.5 + SQRT( FMA (0.0625, M_Dsqr, - 0.75 ))) 
+	    if ( Constant >  (real)1.5 + SQRT( FMA ((real)0.0625, M_Dsqr, (real) -0.75 ))) 
 	      {
-		 guess = SQRT(FMA( 0.1111111, E_Dsqr, - FMA ( 0.1041667, M_Dsqr, 0.2222222 ) ));
+		 guess = SQRT(FMA( (real)0.1111111, E_Dsqr, - FMA ( (real)0.1041667, M_Dsqr, (real)0.2222222 ) ));
 	      }
-	    else guess = (Constant - 1.0) * 0.3333333;
+	    else guess = (Constant - (real)1.0) * (real)0.3333333;
 	  }
     } else return MinTemp;
 # elif ( CONSERVED_ENERGY == 2 )
@@ -641,7 +641,7 @@ NewtonRaphsonSolver(void *ptr, real *root, const real guess, const real epsabs, 
 #    endif     
 
       root_old = *root;
-      *root = FMA( -f, 1.0/df, *root );
+      *root = FMA( -f, (real)1.0/df, *root );
       //printf("df = %20.17e\n", df);
       //printf("f  = %20.17e\n", f);
       tolerance =  FMA( epsrel, FABS(*root), epsabs );
@@ -666,20 +666,20 @@ Fun_DFun (real Temp, void *ptr, real * f, real * df, real Gamma)
   real Tsqr = Temp * Temp;
 
 # if ( EOS == RELATIVISTIC_IDEAL_GAS )
-  real abc = SQRT(FMA( 9.0, Tsqr, 4.0 ));
-  real h = FMA( 2.5, Temp, SQRT(FMA( 2.25, Tsqr, 1.0 ))); // approximate enthalpy
-  real dh = FMA( 9.0, Temp / SQRT(FMA( 36.0, Tsqr, 16.0 )), 2.5 );
+  real abc = SQRT(FMA( (real)9.0, Tsqr, (real)4.0 ));
+  real h = FMA( (real)2.5, Temp, SQRT(FMA( (real)2.25, Tsqr, (real)1.0 ))); // approximate enthalpy
+  real dh = FMA( (real)9.0, Temp / SQRT(FMA( (real)36.0, Tsqr, (real)16.0 )), (real)2.5 );
   real hsqr = SQR(h);
 # if   (CONSERVED_ENERGY == 1)
   real Constant = FMA( E_D, E_D, - M_Dsqr );
-  *f = FMA( 3.5, Tsqr, FMA( 1.5, FMA( Temp, abc, hsqr * Tsqr / (hsqr + M_Dsqr) ),  1.0 - Constant ));
+  *f = FMA( (real)3.5, Tsqr, FMA( (real)1.5, FMA( Temp, abc, hsqr * Tsqr / (hsqr + M_Dsqr) ),  (real)1.0 - Constant ));
 # elif (CONSERVED_ENERGY == 2)
   real Constant = SQR(E_D) + 2*(E_D) - M_Dsqr;
   *f = 3.5 * Tsqr + 1.5 * Temp * abc + hsqr * Tsqr / (hsqr + M_Dsqr) - Constant;
 # else
 # error: CONSERVED_ENERGY must be 1 or 2!
 # endif
-  *df = FMA( 7.0, Temp, FMA( 1.5, abc, 13.5 * Tsqr / abc )) + 2*h*Temp*((h*hsqr + M_Dsqr*h + Temp*dh*M_Dsqr) / SQR( hsqr + M_Dsqr) );
+  *df = FMA( (real)7.0, Temp, FMA( (real)1.5, abc, (real)13.5 * Tsqr / abc )) + 2*h*Temp*((h*hsqr + M_Dsqr*h + Temp*dh*M_Dsqr) / SQR( hsqr + M_Dsqr) );
 
 # elif ( EOS == IDEAL_GAS )
   real zeta = 1.0 / ( Gamma - 1.0 );
@@ -712,11 +712,11 @@ void QuadraticSolver (real A, real B, real C, real delta, real *x_plus, real *x_
 
   if ( FABS(A) > tolerance1 )
   {
-       if ( delta >= 0.0 )
+       if ( delta >= (real)0.0 )
        {
-             real factor = FMA( -0.5, B, SIGN(B) * -0.5 * SQRT(delta) );
+             real factor = FMA( (real)-0.5, B, SIGN(B) * (real)-0.5 * SQRT(delta) );
      
-           if ( B >= 0.0 )
+           if ( B >= (real)0.0 )
            {
      	     *x_plus   = C/factor;
      	     *x_minus  = factor/A;      return;
@@ -770,7 +770,7 @@ void QuadraticSolver (real A, real B, real C, real delta, real *x_plus, real *x_
 GPU_DEVICE
 real VectorDotProduct( const real *V1, const real *V2, int Ini_i, int Final_i )
 {
-  real Product = 0.0;
+  real Product = (real)0.0;
   
   for (int i=Ini_i; i<=Final_i; i++)
    {
