@@ -60,7 +60,7 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
   real ovlrmll;
   real a,b,c;
   real den,ps; /* Pressure in inner region */
-  real lV1, rV1;
+  real lV1, rV1, lV2, rV2, lV3, rV3;
   real lFactor,rFactor; /* Lorentz factor */
 
 /* 0. reorder the input conserved variables for different spatial directions */
@@ -127,14 +127,27 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
    if ( ( ssl < 0.0 ) || ( ssr < 0.0 ) ) printf("ssl = %14.7e, ssr = %14.7e\n", ssl, ssr);
 #  endif
 
-   real lV1s = lV1*lV1;
-   real rV1s = rV1*rV1;
- 
-   real deltal = ((real)1.0 - lV1s) + ssl;
-   real deltar = ((real)1.0 - rV1s) + ssr;
+   real lV2s = lV2*lV2;
+   real rV2s = rV2*rV2;
 
-   QuadraticSolver((real)1.0 + ssl, (real)-2.0*lV1, lV1s - ssl, deltal, &lmdapl, &lmdaml, __LINE__);
-   QuadraticSolver((real)1.0 + ssr, (real)-2.0*rV1, rV1s - ssr, deltar, &lmdapr, &lmdamr, __LINE__);
+   real lV3s = lV3*lV3;
+   real rV3s = rV3*rV3;
+ 
+   real __gammasql = (real)1.0 / gammasql;
+   real __gammasqr = (real)1.0 / gammasqr;
+
+   real deltal = ssl*ssl + ssl*( __gammasql + lV2s + lV3s );
+   real deltar = ssr*ssr + ssr*( __gammasqr + rV2s + rV3s );
+
+   real ssl__ = (real)1.0 + ssl;
+   real ssr__ = (real)1.0 + ssr;
+
+
+   lmdapl = ( lV1 + SQRT(deltal) ) / ssl__ ;
+   lmdaml = ( lV1 - SQRT(deltal) ) / ssl__ ;
+
+   lmdapr = ( rV1 + SQRT(deltar) ) / ssr__ ;
+   lmdamr = ( rV1 - SQRT(deltar) ) / ssr__ ;
 
    lmdal = FMIN(lmdaml, lmdamr); /* Mignone Eq 21 */
    lmdar = FMAX(lmdapl, lmdapr);
