@@ -82,8 +82,8 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
 #  endif
 
 /* 2. Transform 4-velocity to 3-velocity */
-   lFactor=(real)1.0/SQRT((real)1.0+VectorDotProduct(PL, PL, 1, 3));
-   rFactor=(real)1.0/SQRT((real)1.0+VectorDotProduct(PR, PR, 1, 3));
+   lFactor=(real)1.0/SQRT((real)1.0+VectorDotProduct(PL[1], PL[2], PL[3]));
+   rFactor=(real)1.0/SQRT((real)1.0+VectorDotProduct(PR[1], PR[2], PR[3]));
 
    lV1=PL[1]*lFactor;
 
@@ -117,8 +117,8 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
 
 
 // square of Lorentz factor
-   gammasql = (real)1.0 + VectorDotProduct(PL, PL, 1, 3);
-   gammasqr = (real)1.0 + VectorDotProduct(PR, PR, 1, 3);
+   gammasql = (real)1.0 + VectorDotProduct(PL[1], PL[2], PL[3]);
+   gammasqr = (real)1.0 + VectorDotProduct(PR[1], PR[2], PR[3]);
 
    ssl = cslsq / FMA( - gammasql, cslsq, gammasql ); /* Mignone Eq 22.5 */
    ssr = csrsq / FMA( - gammasqr, csrsq, gammasqr ); /* Mignone Eq 22.5 */

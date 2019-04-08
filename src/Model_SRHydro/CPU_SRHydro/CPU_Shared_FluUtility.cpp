@@ -26,7 +26,7 @@ void SRHydro_4Velto3Vel (const real In[], real Out[]);
 GPU_DEVICE 
 static void NewtonRaphsonSolver(void *ptr, real *root, const real guess, const real epsabs, const real epsrel, const real Gamma);
 GPU_DEVICE 
-real VectorDotProduct( const real *V1, const real *V2, int Ini_i, int Final_i );
+real VectorDotProduct( real V1, real V2, real V3 );
 #else 
 #include "../../../include/SRHydroPrototypes.h"
 static real Fun (real Q, void *ptr);   // function to be solved
@@ -109,7 +109,7 @@ void SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real 
       Out[2] = In[2]/factor;
       Out[3] = In[3]/factor;
 
-      real factor1 = SQRT((real)1.0 + VectorDotProduct(Out, Out, 1, 3));
+      real factor1 = SQRT((real)1.0 + VectorDotProduct(Out[1], Out[2], Out[3]));
 
       Out[0] = In[0]/factor1;
       Out[4] = Out[0] * Temp; // P = nkT
@@ -128,7 +128,7 @@ void SRHydro_Pri2Con (const real In[], real Out[], const real Gamma)
 # error: unsupported EoS!
 # endif
 
-  real Factor0 = (real)1.0 + VectorDotProduct(In, In, 1, 3);
+  real Factor0 = (real)1.0 + VectorDotProduct(In[1], In[2], In[3]);
   real Factor1 = SQRT(Factor0); // Lorentz factor
   real Factor2 = nh * Factor1;
   
@@ -152,7 +152,7 @@ void SRHydro_Pri2Con (const real In[], real Out[], const real Gamma)
 GPU_DEVICE
 void SRHydro_4Velto3Vel ( const real In[], real Out[])
 {
-  real Factor = (real)1.0 / SQRT ((real)1.0 + VectorDotProduct(In, In, 1, 3));
+  real Factor = (real)1.0 / SQRT ((real)1.0 + VectorDotProduct(In[1], In[2], In[3]));
 
   Out[0] = In[0];
   Out[1] = In[1] * Factor;
@@ -168,7 +168,7 @@ void SRHydro_4Velto3Vel ( const real In[], real Out[])
 GPU_DEVICE
 void SRHydro_3Velto4Vel (const real In[], real Out[])
 {
-  real Factor = (real)1.0 / SQRT ((real)1.0 - VectorDotProduct(In, In, 1, 3));
+  real Factor = (real)1.0 / SQRT ((real)1.0 - VectorDotProduct(In[1], In[2], In[3]));
 
   Out[0] = In[0];
   Out[1] = In[1] * Factor;
@@ -326,7 +326,7 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
 
 
 // check energy
-      Msqr = VectorDotProduct( ConsVar, ConsVar, MOMX, MOMZ );
+      Msqr = VectorDotProduct( ConsVar[MOMX], ConsVar[MOMY], ConsVar[MOMZ] );
 #     if ( CONSERVED_ENERGY == 1 )
       discriminant = FMA(ConsVar[ENGY], ConsVar[ENGY], - Msqr - SQR(ConsVar[DENS]));
       if ( discriminant <= (real) TINY_NUMBER )                                                   goto FAIL;
@@ -356,7 +356,7 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
 // check whether 3-velocity is greater or equal to speed of light
       SRHydro_4Velto3Vel(Pri4Vel,Pri3Vel);
 
-      if (VectorDotProduct( Pri3Vel, Pri3Vel, 1, 3 ) >=(real) 1.0)                      goto FAIL;
+      if (VectorDotProduct( Pri3Vel[1], Pri3Vel[2], Pri3Vel[3] ) >= (real) 1.0)                      goto FAIL;
 
 // pass all checks 
       return false;
@@ -390,7 +390,7 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
       SRHydro_Pri2Con(Pri4Vel, ConsVar, (real) Gamma);
 
 // check whether 3-velocity is greater or equal to speed of light
-      if (VectorDotProduct( Pri3Vel, Pri3Vel, 1, 3 ) >=(real) 1.0)                      goto FAIL;
+      if (VectorDotProduct( Pri3Vel[1], Pri3Vel[2], Pri3Vel[3] ) >= (real) 1.0)                      goto FAIL;
    
 // check NaN
       if (  ConsVar[DENS] != ConsVar[DENS]
@@ -408,7 +408,7 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
 
 
 // check energy
-      Msqr = VectorDotProduct( ConsVar, ConsVar, MOMX, MOMZ );
+      Msqr = VectorDotProduct( ConsVar[MOMX], ConsVar[MOMY], ConsVar[MOMZ] );
 #     if ( CONSERVED_ENERGY == 1 )
       discriminant = FMA(ConsVar[ENGY], ConsVar[ENGY], - Msqr - SQR(ConsVar[DENS]));
       if ( discriminant <= (real) TINY_NUMBER )                                              goto FAIL;
@@ -440,7 +440,7 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
             printf( "n=%14.7e, Ux=%14.7e, Uy=%14.7e, Uz=%14.7e, P=%14.7e\n", 
                                  Pri4Vel[0], Pri4Vel[1], Pri4Vel[2], Pri4Vel[3], Pri4Vel[4]);
             printf( "Vx=%14.7e, Vy=%14.7e, Vz=%14.7e, |V|=%14.7e\n",
-                                 Pri3Vel[1], Pri3Vel[2], Pri3Vel[3], SQRT( VectorDotProduct( Pri3Vel, Pri3Vel, 1, 3 )));
+                                 Pri3Vel[1], Pri3Vel[2], Pri3Vel[3], SQRT( VectorDotProduct( Pri3Vel[1], Pri3Vel[2], Pri3Vel[3] )));
  
           }
         return true;
@@ -506,7 +506,7 @@ real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, 
   real In[5] = {Dens, MomX, MomY, MomZ, Engy};
 
   real guess, root;
-  real Msqr = VectorDotProduct(In, In, 1, 3);
+  real Msqr = VectorDotProduct(In[1], In[2], In[3]);
   real M = SQRT (Msqr); // magnitude of momentum
   real Dsqr = SQR(In[0]);
   real abc = (real)1.0 / Dsqr;
@@ -768,14 +768,13 @@ void QuadraticSolver (real A, real B, real C, real delta, real *x_plus, real *x_
 
 
 GPU_DEVICE
-real VectorDotProduct( const real *V1, const real *V2, int Ini_i, int Final_i )
+real VectorDotProduct( real V1, real V2, real V3 )
 {
   real Product = (real)0.0;
   
-  for (int i=Ini_i; i<=Final_i; i++)
-   {
-      Product = FMA( V1[i], V2[i] , Product );
-   }
+  Product = FMA( V1, V1 , Product );
+  Product = FMA( V2, V2 , Product );
+  Product = FMA( V3, V3 , Product );
   
   return Product;
 } 
