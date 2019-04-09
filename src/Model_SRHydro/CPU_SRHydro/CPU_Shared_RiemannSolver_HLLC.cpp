@@ -86,8 +86,12 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
    rFactor=(real)1.0/SQRT((real)1.0+VectorDotProduct(PR[1], PR[2], PR[3]));
 
    lV1=PL[1]*lFactor;
+   lV2=PL[2]*lFactor;
+   lV3=PL[3]*lFactor;
 
    rV1=PR[1]*rFactor;
+   rV2=PR[2]*rFactor;
+   rV3=PR[3]*rFactor;
 
 
 
