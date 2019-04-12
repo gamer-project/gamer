@@ -28,6 +28,7 @@
 #define MAXWELL      3
 #define PASCAL       4
 #define VOLTA        5
+#define TURING       6
 
 
 // models
