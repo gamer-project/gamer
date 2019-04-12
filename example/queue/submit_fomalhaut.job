@@ -13,4 +13,4 @@
 
 cd $PBS_O_WORKDIR
 
-mpirun -np 2 -map-by socket:pe=18 --report-bindings ./gamer 1>>log 2>&1
+mpirun -np 4 -map-by socket:pe=9 --report-bindings ./gamer 1>>log 2>&1
