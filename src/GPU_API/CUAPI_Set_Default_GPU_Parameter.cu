@@ -192,6 +192,8 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
             GPU_NStream = 32;
 #           elif ( GPU_ARCH == VOLTA )
             GPU_NStream = 32;
+#           elif ( GPU_ARCH == TURING )
+            GPU_NStream = 32;
 #           else
 #           error : UNKNOWN GPU_ARCH !!
 #           endif
@@ -209,6 +211,8 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #           elif ( GPU_ARCH == PASCAL )
             GPU_NStream = 32;
 #           elif ( GPU_ARCH == VOLTA )
+            GPU_NStream = 32;
+#           elif ( GPU_ARCH == TURING )
             GPU_NStream = 32;
 #           else
 #           error : ERROR : UNKNOWN GPU_ARCH !!
@@ -242,6 +246,8 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
          Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #        elif ( GPU_ARCH == VOLTA )
          Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#        elif ( GPU_ARCH == TURING )
+         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #        else
 #        error : UNKNOWN GPU_ARCH !!
 #        endif
@@ -259,6 +265,8 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #        elif ( GPU_ARCH == PASCAL )
          Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #        elif ( GPU_ARCH == VOLTA )
+         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#        elif ( GPU_ARCH == TURING )
          Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #        else
 #        error : UNKNOWN GPU_ARCH !!
@@ -286,6 +294,8 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
       Pot_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #     elif ( GPU_ARCH == VOLTA )
       Pot_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#     elif ( GPU_ARCH == TURING )
+      Pot_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #     else
 #     error : UNKNOWN GPU_ARCH !!
 #     endif
@@ -309,6 +319,8 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #     elif ( GPU_ARCH == PASCAL )
       Che_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #     elif ( GPU_ARCH == VOLTA )
+      Che_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#     elif ( GPU_ARCH == TURING )
       Che_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #     else
 #     error : UNKNOWN GPU_ARCH !!
