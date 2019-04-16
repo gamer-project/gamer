@@ -212,6 +212,7 @@ void CompareGridData()
    {
       cout << "  Comparing level " << lv << " ... " << flush;
 
+#     pragma omp parallel for private(PID1,PID2)
       for (PID1=0; PID1<patch1.num[lv]; PID1++)
       {
 //       only compare patches without son
@@ -233,7 +234,6 @@ void CompareGridData()
 
             else
                PID2 = PID1;
-
             for (int k=0; k<PATCH_SIZE; k++)
             for (int j=0; j<PATCH_SIZE; j++)
             for (int i=0; i<PATCH_SIZE; i++)
