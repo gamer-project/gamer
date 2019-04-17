@@ -7,13 +7,10 @@
 #ifdef __CUDACC__
 
 #include "CUFLU_Shared_FluUtility.cu"
-GPU_DEVICE
-void QuadraticSolver (real A, real B, real C, real delta, real *x_plus, real *x_minus, const int line);
 
 #else // #ifdef __CUDACC__
 
 #include "../../../include/SRHydroPrototypes.h"
-void QuadraticSolver (real A, real B, real C, real delta, real *x_plus, real *x_minus, const int line);
 
 #endif // #ifdef __CUDACC__ ... else ...
 
@@ -245,9 +242,11 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
 
   real delta = FMA( b, b, (real)-4*a*c );
 
-  real null;
+# ifdef CHECK_NEGATIVE_IN_FLUID
+  if (delta < (real) 0.0) printf("delta=%f\n", delta);
+# endif
 
-  QuadraticSolver(a, b ,c, delta, &null, &lmdas, __LINE__);
+    lmdas = ((real)2.0 * c) / ( -b + SQRT( delta ) );
 
 
  /* 7. Determine intercell flux according to Mignone 13

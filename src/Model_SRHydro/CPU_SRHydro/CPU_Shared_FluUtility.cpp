@@ -703,69 +703,6 @@ Fun_DFun (real Temp, void *ptr, real * f, real * df, real Gamma)
 # endif // #if ( EOS == RELATIVISTIC_IDEAL_GAS )
 }
 
-GPU_DEVICE
-void QuadraticSolver (real A, real B, real C, real delta, real *x_plus, real *x_minus, const int line)
-{
-  real tolerance1 = (real)TINY_NUMBER;
-  real tolerance2 = (real)EPSILON;
-  real tolerance3 = (real)TINY_NUMBER;
-
-  if ( FABS(A) > tolerance1 )
-  {
-       if ( delta >= (real)0.0 )
-       {
-             real factor = FMA( (real)-0.5, B, SIGN(B) * (real)-0.5 * SQRT(delta) );
-     
-           if ( B >= (real)0.0 )
-           {
-     	     *x_plus   = C/factor;
-     	     *x_minus  = factor/A;      return;
-           }
-           else
-           {
-     	     *x_plus   = factor/A;
-     	     *x_minus  = C/factor;      return;
-           }
-       }
-       else if ( -tolerance2 < delta )
-       {
-         *x_plus = (real)-0.5*B/A;
-         *x_minus = *x_plus;            return;
-       }
-       else                             goto NO_REAL_SOLUTIONS_CASE1;
-  }
-  else
-  {
-      if ( FABS(B) >= tolerance3 )
-      {
-        *x_plus = NAN;
-        *x_minus = -C/B;                return;
-      }
-      else                              goto NO_REAL_SOLUTIONS_CASE2;
-  }
-
-
-     NO_REAL_SOLUTIONS_CASE1:
-     {
-#       ifdef CHECK_NEGATIVE_IN_FLUID
-        printf( "case1 line: %d No real solution in Quadratic Solver!\n", line);
-        printf( "A=%14.7e, B=%14.7e, C=%14.7e\n", A, B, C);
-        printf( "B*B-4*A*C=%14.7e\n", B*B-4*A*C);
-#       endif
-        return;
-     }
-
-     NO_REAL_SOLUTIONS_CASE2:
-     {
-#       ifdef CHECK_NEGATIVE_IN_FLUID
-        printf( "case2 line: %d No real solution in Quadratic Solver!\n", line);
-        printf( "A=%14.7e, B=%14.7e, C=%14.7e\n", A, B, C);
-        printf( "B*B-4*A*C=%14.7e\n", B*B-4*A*C);
-#       endif
-        return;
-     }
-}
-
 
 GPU_DEVICE
 real VectorDotProduct( real V1, real V2, real V3 )
