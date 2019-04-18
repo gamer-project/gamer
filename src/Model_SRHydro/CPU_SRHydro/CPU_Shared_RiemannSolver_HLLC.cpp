@@ -246,7 +246,7 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
   if (delta < (real) 0.0) printf("delta=%f\n", delta);
 # endif
 
-    lmdas = ((real)2.0 * c) / ( -b + SQRT( delta ) );
+    lmdas = - ((real)2.0 * c) / ( b + SIGN(b) * SQRT( delta ) );
 
 
  /* 7. Determine intercell flux according to Mignone 13
