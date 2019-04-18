@@ -97,9 +97,9 @@ GPU_DEVICE
 void SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real MinTemp)
 {
       real Temp = SRHydro_GetTemperature (In[0], In[1], In[2], In[3], In[4], Gamma, MinTemp );
-#if ( EOS == RELATIVISTIC_IDEAL_GAS )
+#if ( EOS == APPROXIMATED_GENERAL )
       real h = FMA( (real)2.5, Temp, SQRT( FMA( (real)2.25, Temp*Temp, (real)1.0 ) ) );
-#elif ( EOS == IDEAL_GAS ) 
+#elif ( EOS == CONSTANT_GAMMA ) 
       real h = 1 + Temp * Gamma / (Gamma-1.0);
 #else
 #error: unsupported EoS!
@@ -119,9 +119,9 @@ void SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real 
 GPU_DEVICE
 void SRHydro_Pri2Con (const real In[], real Out[], const real Gamma)
 {
-# if ( EOS == RELATIVISTIC_IDEAL_GAS )
+# if ( EOS == APPROXIMATED_GENERAL )
   real nh = FMA( (real)2.5, In[4], SQRT( FMA( (real)2.25, SQR(In[4]), SQR(In[0]) ) )); // approximate enthalpy * proper number density
-# elif ( EOS == IDEAL_GAS )
+# elif ( EOS == CONSTANT_GAMMA )
   real Gamma_m1 = (real) Gamma - 1.0;
   real nh = In[0] + ( Gamma / Gamma_m1) * In[4]; // enthalpy * proper number density
 # else
@@ -260,9 +260,9 @@ real SRHydro_CheckMinTemp (const real InTemp, const real MinTemp)
 GPU_DEVICE
 real SRHydro_CheckMinTempInEngy (const real Cons[], const real MinTemp, const real Gamma )
 {
-# if ( EOS == IDEAL_GAS ) 
+# if ( EOS == CONSTANT_GAMMA ) 
   real h_min = 1.0 + Gamma * MinTemp / (Gamma - 1.0);
-# elif ( EOS == RELATIVISTIC_IDEAL_GAS )
+# elif ( EOS == APPROXIMATED_GENERAL )
   real h_min = (real)2.5*MinTemp + SQRT((real)2.25*MinTemp*MinTemp + (real)1.0);
 # endif
 
@@ -514,7 +514,7 @@ real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, 
   real E_Dsqr = abc * SQR(In[4]);
   real M_Dsqr = abc * Msqr;
 
-# if ( EOS == RELATIVISTIC_IDEAL_GAS )
+# if ( EOS == APPROXIMATED_GENERAL )
 # if   ( CONSERVED_ENERGY == 1 )
 /* initial guess  */
   real Constant = E_Dsqr - M_Dsqr;
@@ -562,7 +562,7 @@ real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, 
 # else
 # error: CONSERVED_ENERGY must be 1 or 2!
 # endif
-# elif ( EOS == IDEAL_GAS )
+# elif ( EOS == CONSTANT_GAMMA )
   real Gamma_m1 = Gamma - (real) 1.0;
 /* initial guess */
 # if   ( CONSERVED_ENERGY == 1 )
@@ -665,7 +665,7 @@ Fun_DFun (real Temp, void *ptr, real * f, real * df, real Gamma)
   real E_D    = (params->E_D);
   real Tsqr = Temp * Temp;
 
-# if ( EOS == RELATIVISTIC_IDEAL_GAS )
+# if ( EOS == APPROXIMATED_GENERAL )
   real abc = SQRT(FMA( (real)9.0, Tsqr, (real)4.0 ));
   real h = FMA( (real)2.5, Temp, SQRT(FMA( (real)2.25, Tsqr, (real)1.0 ))); // approximate enthalpy
   real dh = FMA( (real)9.0, Temp / SQRT(FMA( (real)36.0, Tsqr, (real)16.0 )), (real)2.5 );
@@ -681,7 +681,7 @@ Fun_DFun (real Temp, void *ptr, real * f, real * df, real Gamma)
 # endif
   *df = FMA( (real)7.0, Temp, FMA( (real)1.5, abc, (real)13.5 * Tsqr / abc )) + (real)2*h*Temp*((h*hsqr + M_Dsqr*h + Temp*dh*M_Dsqr) / SQR( hsqr + M_Dsqr) );
 
-# elif ( EOS == IDEAL_GAS )
+# elif ( EOS == CONSTANT_GAMMA )
   real zeta = 1.0 / ( Gamma - 1.0 );
   real alpha = Gamma * zeta;
   real h = 1 + alpha * Temp;
@@ -700,7 +700,7 @@ Fun_DFun (real Temp, void *ptr, real * f, real * df, real Gamma)
   *df = 2 * beta * Temp + theta + 2*h*Temp*((h*hsqr + M_Dsqr*h + Temp*dh*M_Dsqr) / SQR( hsqr + M_Dsqr) );
 # else
 # error: unsupported EoS!
-# endif // #if ( EOS == RELATIVISTIC_IDEAL_GAS )
+# endif // #if ( EOS == APPROXIMATED_GENERAL )
 }
 
 

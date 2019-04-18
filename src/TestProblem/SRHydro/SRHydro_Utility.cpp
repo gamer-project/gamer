@@ -30,9 +30,9 @@ SRHydro_3Velto4Vel_Double (const double In[], double Out[])
 void
 SRHydro_Pri2Con_Double (const double In[], double Out[], const double Gamma)
 {
-# if ( EOS == RELATIVISTIC_IDEAL_GAS )
+# if ( EOS == APPROXIMATED_GENERAL )
   double nh = 2.5*In[4] + SQRT(2.25*SQR(In[4]) + SQR(In[0])); // approximate enthalpy * proper number density
-# elif ( EOS == IDEAL_GAS )
+# elif ( EOS == CONSTANT_GAMMA )
   double Gamma_m1 = Gamma - 1.0;
   double nh = In[0] + ( Gamma / Gamma_m1) * In[4]; // enthalpy * proper number density
 # else

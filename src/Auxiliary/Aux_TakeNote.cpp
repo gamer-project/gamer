@@ -170,10 +170,10 @@ void Aux_TakeNote()
 //    d. options in SR-HYDRO
 #     elif   ( MODEL == SR_HYDRO )
 
-#     if ( EOS == IDEAL_GAS )
-      fprintf( Note, "EOS                             IDEAL_GAS\n" );
-#     elif ( EOS == RELATIVISTIC_IDEAL_GAS )
-      fprintf( Note, "EOS                             RELATIVISTIC_IDEAL_GAS\n" );
+#     if ( EOS == CONSTANT_GAMMA )
+      fprintf( Note, "EOS                             CONSTANT_GAMMA\n" );
+#     elif ( EOS == APPROXIMATED_GENERAL )
+      fprintf( Note, "EOS                             APPROXIMATED_GENERAL\n" );
 #     endif
 
 #     ifdef FUSED_MULTIPLY_ADD

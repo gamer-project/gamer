@@ -38,8 +38,8 @@
 #define SR_HYDRO     5
 
 // equation of states
-#define RELATIVISTIC_IDEAL_GAS 1
-#define              IDEAL_GAS 2
+#define APPROXIMATED_GENERAL 1
+#define              CONSTANT_GAMMA 2
 
 
 // hydrodynamic schemes
