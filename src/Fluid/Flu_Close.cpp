@@ -289,17 +289,16 @@ void CorrectFlux( const int SonLv, const real h_Flux_Array[][9][NFLUX_TOTAL][ SQ
 #     pragma omp for schedule( runtime )
       for (int TID=0; TID<NPG; TID++)
       {
-         const int PID0 = PID0_List[TID];
+         const int PID0  = PID0_List[TID];
+         const int FaPID = amr->patch[0][SonLv][PID0]->father;
+
+#        ifdef GAMER_DEBUG
+         if ( FaPID < 0 )
+            Aux_Error( ERROR_INFO, "FaPID = %d < 0 (SonLv %d, PID0 %d) !!\n", FaPID, SonLv, PID0 );
+#        endif
 
          for (int s=0; s<6; s++)
          {
-            const int FaPID = amr->patch[0][SonLv][PID0]->father;
-
-#           ifdef GAMER_DEBUG
-            if ( FaPID < 0 )
-               Aux_Error( ERROR_INFO, "FaPID = %d < 0 (SonLv %d, PID0 %d) !!\n", FaPID, SonLv, PID0 );
-#           endif
-
             const int FaSibPID = amr->patch[0][FaLv][FaPID]->sibling[s];
 
 #           ifdef GAMER_DEBUG
@@ -1176,17 +1175,16 @@ void CorrectElectric( const int SonLv, const real h_Ele_Array[][9][NCOMP_ELE][ P
 #     pragma omp for schedule( runtime )
       for (int TID=0; TID<NPG; TID++)
       {
-         const int PID0 = PID0_List[TID];
+         const int PID0  = PID0_List[TID];
+         const int FaPID = amr->patch[0][SonLv][PID0]->father;
+
+#        ifdef GAMER_DEBUG
+         if ( FaPID < 0 )
+            Aux_Error( ERROR_INFO, "FaPID = %d < 0 (SonLv %d, PID0 %d) !!\n", FaPID, SonLv, PID0 );
+#        endif
 
          for (int s=0; s<6; s++)
          {
-            const int FaPID = amr->patch[0][SonLv][PID0]->father;
-
-#           ifdef GAMER_DEBUG
-            if ( FaPID < 0 )
-               Aux_Error( ERROR_INFO, "FaPID = %d < 0 (SonLv %d, PID0 %d) !!\n", FaPID, SonLv, PID0 );
-#           endif
-
             const int FaSibPID = amr->patch[0][FaLv][FaPID]->sibling[s];
 
 #           ifdef GAMER_DEBUG
