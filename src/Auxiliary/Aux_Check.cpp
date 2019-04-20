@@ -44,6 +44,10 @@ void Aux_Check( )
    if ( OPT__CK_PARTICLE )                Par_Aux_Check_Particle( "DIAGNOSIS" );
 #  endif
 
+#  ifdef MHD
+   if ( OPT__CK_INTERFACE_B )             MHD_Aux_Check_InterfaceB( "DIAGNOSIS" );
+#  endif
+
    if ( OPT__CK_MEMFREE != 0.0 )          Aux_Check_MemFree( OPT__CK_MEMFREE, "DIAGNOSIS" );
 
 } // FUNCTION : Aux_Check

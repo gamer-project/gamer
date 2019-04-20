@@ -101,6 +101,7 @@ extern double           DUAL_ENERGY_SWITCH;
 #ifdef MHD
 extern IntScheme_t      OPT__MAG_INT_SCHEME, OPT__REF_MAG_INT_SCHEME;
 extern bool             OPT__FIXUP_ELECTRIC;
+extern bool             OPT__CK_INTERFACE_B;
 #endif
 
 #elif ( MODEL == ELBDM )

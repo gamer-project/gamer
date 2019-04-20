@@ -575,6 +575,9 @@ struct InputPara_t
 #  ifdef PARTICLE
    int    Opt__Ck_Particle;
 #  endif
+#  ifdef MHD
+   int    Opt__Ck_InterfaceB;
+#  endif
 
 // flag tables
    double FlagTable_Rho         [NLEVEL-1];
