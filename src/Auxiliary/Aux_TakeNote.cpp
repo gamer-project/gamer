@@ -1088,6 +1088,9 @@ void Aux_TakeNote()
 #     ifdef PARTICLE
       fprintf( Note, "OPT__CK_PARTICLE                %d\n",      OPT__CK_PARTICLE          );
 #     endif
+#     ifdef MHD
+      fprintf( Note, "OPT__CK_INTERFACE_B             %d\n",      OPT__CK_INTERFACE_B       );
+#     endif
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 

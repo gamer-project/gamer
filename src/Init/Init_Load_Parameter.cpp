@@ -379,6 +379,9 @@ void Init_Load_Parameter()
 #  ifdef PARTICLE
    ReadPara->Add( "OPT__CK_PARTICLE",           &OPT__CK_PARTICLE,                false,           Useless_bool,  Useless_bool   );
 #  endif
+#  ifdef MHD
+   ReadPara->Add( "OPT__CK_INTERFACE_B",        &OPT__CK_INTERFACE_B,             false,           Useless_bool,  Useless_bool   );
+#  endif
 
 
 

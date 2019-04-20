@@ -1854,6 +1854,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  ifdef PARTICLE
    LoadField( "Opt__Ck_Particle",        &RS.Opt__Ck_Particle,        SID, TID, NonFatal, &RT.Opt__Ck_Particle,         1, NonFatal );
 #  endif
+#  ifdef MHD
+   LoadField( "Opt__Ck_InterfaceB",      &RS.Opt__Ck_InterfaceB,      SID, TID, NonFatal, &RT.Opt__Ck_InterfaceB,       1, NonFatal );
+#  endif
 
 
 // flag tables

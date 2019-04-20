@@ -92,6 +92,7 @@ double               DUAL_ENERGY_SWITCH;
 #ifdef MHD
 IntScheme_t          OPT__MAG_INT_SCHEME, OPT__REF_MAG_INT_SCHEME;
 bool                 OPT__FIXUP_ELECTRIC;
+bool                 OPT__CK_INTERFACE_B;
 #endif
 
 #elif ( MODEL == ELBDM )

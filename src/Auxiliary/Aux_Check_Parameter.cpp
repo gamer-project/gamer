@@ -790,6 +790,9 @@ void Aux_Check_Parameter()
    if ( OPT__FIXUP_ELECTRIC  &&  !amr->WithElectric )
       Aux_Error( ERROR_INFO, "%s is enabled but amr->Electric is off !!\n", "OPT__FIXUP_ELECTRIC" );
 
+   if (  ( OPT__FIXUP_ELECTRIC && !OPT__FIXUP_RESTRICT )  ||  ( !OPT__FIXUP_ELECTRIC && OPT__FIXUP_RESTRICT )  )
+      Aux_Error( ERROR_INFO, "\"%s\" and \"%s\" must work together !!\n", "OPT__FIXUP_ELECTRIC", "OPT__FIXUP_RESTRICT" );
+
    if ( !OPT__FIXUP_ELECTRIC )
       Aux_Message( stderr, "WARNING : \"%s\" is disabled for MHD !!\n", "OPT__FIXUP_ELECTRIC" );
 

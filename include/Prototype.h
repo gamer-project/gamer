@@ -419,6 +419,7 @@ void MHD_InterpolateBField( const real **CData, const int CSize[3][3], const int
                                   real **FData, const int FSize[3][3], const int FStart[3][3],
                             const real *FInterface[6], const IntScheme_t IntScheme, const bool Monotonic );
 void MHD_AllocateElectricArray( const int lv );
+void MHD_Aux_Check_InterfaceB( const char *comment );
 #endif
 
 

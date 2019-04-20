@@ -91,6 +91,12 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
 #  endif
    const int PS1_half   = PS1 / 2;
 
+#  ifdef MHD
+   const int MirrorSib[6]      = { 1, 0, 3, 2, 5, 4 };
+   const int Bidx_offset[6]    = { 0, PS1, 0, SQR(PS1), 0, CUBE(PS1) };          // array offsets of the longitudinal B field on 6 faces
+   const int Bidx_stride[3][2] = { PS1_P1, PS1_P1*PS1, 1, PS1_P1*PS1, 1, PS1 };  // array strides along the transverse directions for Bx/y/z
+#  endif
+
 
 // determine the components to be restricted (TFluVarIdx : target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
    int NFluVar=0, TFluVarIdxList[NCOMP_TOTAL];
@@ -271,6 +277,50 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
          } // if ( ResMag )
 #        endif // ifdef MHD
       } // for (int LocalID=0; LocalID<8; LocalID++)
+
+
+//    apply the same B field restriction to the data of father-sibling patches on the coarse-fine boundaries
+#     ifdef MHD
+
+//    OPT__FIXUP_RESTRICT in MHD must work with OPT__FIXUP_ELECTRIC, which will enable amr->WithElectric
+//    --> to be more cautious, turn on this check even when GAMER_DEBUG is off
+//        (e.g., data restriction is applied in Flu_CorrAfterAllSync() even when both OPT__INIT_RESTRICT
+//        and OPT_FIXUP_RESTRICT are off)
+      if ( !amr->WithElectric )  Aux_Error( ERROR_INFO, "amr->Electric is off !!\n" );
+
+      for (int s=0; s<6; s++)
+      {
+         const int FaSibPID = amr->patch[0][FaLv][FaPID]->sibling[s];
+
+#        ifdef GAMER_DEBUG
+         if ( FaSibPID == -1 )
+            Aux_Error( ERROR_INFO, "FaSibPID == -1 (FaLv %d, FaPID %d, s %d, SonPID0 %d) !!\n", FaLv, FaPID, s, SonPID0 );
+#        endif
+
+//       skip father patches adjacent to non-periodic boundaries
+         if ( FaSibPID < -1 )    continue;
+
+//       use electric[] to check the coarse-fine boundaries
+         if ( amr->patch[0][FaLv][FaSibPID]->electric[ MirrorSib[s] ] != NULL )
+         {
+            const int Bdir    = s/2;    // Bx/y/z = 0/1/2
+            const int Bdidx_m = Bidx_stride[Bdir][1];
+            const int Bdidx_n = Bidx_stride[Bdir][0];
+
+            const real    *FaMagPtr0 = amr->patch[FaMagSg][FaLv][   FaPID]->magnetic[Bdir] + Bidx_offset[           s  ];
+                  real *FaSibMagPtr0 = amr->patch[FaMagSg][FaLv][FaSibPID]->magnetic[Bdir] + Bidx_offset[ MirrorSib[s] ];
+
+            for (int m=0; m<PS1; m++)
+            {
+               const real    *FaMagPtr =    FaMagPtr0 + m*Bdidx_m;
+                     real *FaSibMagPtr = FaSibMagPtr0 + m*Bdidx_m;
+
+//             directly copy the restricted data
+               for (int n=0; n<PS1; n++)  FaSibMagPtr[ n*Bdidx_n ] = FaMagPtr[ n*Bdidx_n ];
+            }
+         } // if ( amr->patch[0][FaLv][FaSibPID]->electric[ MirrorSib[s] ] != NULL )
+      } // for (int s=0; s<6; s++)
+#     endif // #ifdef MHD
 
 
 //    check the minimum pressure and, when the dual-energy formalism is adopted, ensure the consistency between
