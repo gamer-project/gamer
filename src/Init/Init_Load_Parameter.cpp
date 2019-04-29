@@ -353,6 +353,8 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__TIMING_BARRIER",        &OPT__TIMING_BARRIER,            -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "OPT__TIMING_BALANCE",        &OPT__TIMING_BALANCE,             false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__TIMING_MPI",            &OPT__TIMING_MPI,                 false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__RECORD_NOTE",           &OPT__RECORD_NOTE,                true,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__RECORD_UNPHY",          &OPT__RECORD_UNPHY,               true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__RECORD_MEMORY",         &OPT__RECORD_MEMORY,              true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__RECORD_PERFORMANCE",    &OPT__RECORD_PERFORMANCE,         true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__MANUAL_CONTROL",        &OPT__MANUAL_CONTROL,             true,            Useless_bool,  Useless_bool   );

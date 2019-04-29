@@ -165,6 +165,7 @@ Procedure for outputting new variables:
 //                2306 : 2018/12/25 --> Replace DT_GRA_BLOCK_SIZE_Z by DT_GRA_BLOCK_SIZE
 //                2307 : 2018/12/27 --> Replace GRA_BLOCK_SIZE_Z by GRA_BLOCK_SIZE
 //                2308 : 2019/01/24 --> Add ELBDM_REMOVE_MOTION_CM
+//                2309 : 2019/03/14 --> add OPT__RECORD_NOTE and OPT__RECORD_UNPHY
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1969,6 +1970,8 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__TimingBarrier      = OPT__TIMING_BARRIER;
    InputPara.Opt__TimingBalance      = OPT__TIMING_BALANCE;
    InputPara.Opt__TimingMPI          = OPT__TIMING_MPI;
+   InputPara.Opt__RecordNote         = OPT__RECORD_NOTE;
+   InputPara.Opt__RecordUnphy        = OPT__RECORD_UNPHY;
    InputPara.Opt__RecordMemory       = OPT__RECORD_MEMORY;
    InputPara.Opt__RecordPerformance  = OPT__RECORD_PERFORMANCE;
    InputPara.Opt__ManualControl      = OPT__MANUAL_CONTROL;
@@ -2654,6 +2657,8 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__TimingBarrier",      HOFFSET(InputPara_t,Opt__TimingBarrier     ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__TimingBalance",      HOFFSET(InputPara_t,Opt__TimingBalance     ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__TimingMPI",          HOFFSET(InputPara_t,Opt__TimingMPI         ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__RecordNote",         HOFFSET(InputPara_t,Opt__RecordNote        ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__RecordUnphy",        HOFFSET(InputPara_t,Opt__RecordUnphy       ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__RecordMemory",       HOFFSET(InputPara_t,Opt__RecordMemory      ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__RecordPerformance",  HOFFSET(InputPara_t,Opt__RecordPerformance ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__ManualControl",      HOFFSET(InputPara_t,Opt__ManualControl     ), H5T_NATIVE_INT     );

@@ -7,16 +7,13 @@
 void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID_Home, int &NNew_Away,
                                     ulong *&NewCr1D_Away, real *&NewCData_Away, int &NDel_Home, int *&DelPID_Home,
                                     int &NDel_Away, ulong *&DelCr1D_Away,
-                                    int &RefineF2S_Send_NPatchTotal, int *&RefineF2S_Send_PIDList,
-                                    long *&RefineF2S_Send_LBIdxList );
+                                    int &RefineF2S_Send_NPatchTotal, int *&RefineF2S_Send_PIDList );
 void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home, int NNew_Away,
                                  ulong *NewCr1D_Away, real *NewCData_Away, int NDel_Home, int *DelPID_Home,
                                  int NDel_Away, ulong *DelCr1D_Away,
                                  int &RefineS2F_Send_NPatchTotal, int *&RefineS2F_Send_PIDList );
 #ifdef PARTICLE
 void Par_LB_Refine_SendParticle2Father( const int FaLv, const int RefineS2F_Send_NPatchTotal, int *RefineS2F_Send_PIDList );
-void Par_LB_Refine_SendParticle2Son( const int FaLv, const int RefineF2S_Send_NPatchTotal, int *RefineF2S_Send_PIDList,
-                                     long *RefineF2S_Send_LBIdxList );
 #endif
 
 
@@ -55,12 +52,10 @@ void LB_Refine( const int FaLv )
    int  *RefineS2F_Send_PIDList     = NULL;
    int   RefineF2S_Send_NPatchTotal = 0;
    int  *RefineF2S_Send_PIDList     = NULL;
-   long *RefineF2S_Send_LBIdxList   = NULL;
 
 #  ifdef PARTICLE
    RefineS2F_Send_PIDList   = new int  [ amr->NPatchComma[FaLv][3] - amr->NPatchComma[FaLv][1] ];
    RefineF2S_Send_PIDList   = new int  [ amr->NPatchComma[FaLv][1] ];
-   RefineF2S_Send_LBIdxList = new long [ amr->NPatchComma[FaLv][1] ];
 #  endif
 
 
@@ -81,7 +76,7 @@ void LB_Refine( const int FaLv )
 
    LB_Refine_GetNewRealPatchList( FaLv, NNew_Home, NewPID_Home, NNew_Away, NewCr1D_Away, NewCData_Away,
                                   NDel_Home, DelPID_Home, NDel_Away, DelCr1D_Away,
-                                  RefineF2S_Send_NPatchTotal, RefineF2S_Send_PIDList, RefineF2S_Send_LBIdxList );
+                                  RefineF2S_Send_NPatchTotal, RefineF2S_Send_PIDList );
 
 
 // 3. allocate/deallocate son patches at FaLv+1
@@ -144,7 +139,9 @@ void LB_Refine( const int FaLv )
    Par_LB_Refine_SendParticle2Father( FaLv, RefineS2F_Send_NPatchTotal, RefineS2F_Send_PIDList );
 
 // 5.2 send particles from real patches at FaLv to their real son patches living abroad
-   Par_LB_Refine_SendParticle2Son( FaLv, RefineF2S_Send_NPatchTotal, RefineF2S_Send_PIDList, RefineF2S_Send_LBIdxList );
+   const bool TimingSendPar_No = false;
+   Par_PassParticle2Son_MultiPatch( FaLv, PAR_PASS2SON_GENERAL, TimingSendPar_No,
+                                    RefineF2S_Send_NPatchTotal, RefineF2S_Send_PIDList );
 #  endif
 
 
@@ -179,7 +176,6 @@ void LB_Refine( const int FaLv )
 #  ifdef PARTICLE
    delete [] RefineS2F_Send_PIDList;
    delete [] RefineF2S_Send_PIDList;
-   delete [] RefineF2S_Send_LBIdxList;
 #  endif
 
 } // FUNCTION : LB_Refine

@@ -272,6 +272,11 @@ const ParOutputDens_t
    PAR_OUTPUT_DENS_NONE     = 0,
    PAR_OUTPUT_DENS_PAR_ONLY = 1,
    PAR_OUTPUT_DENS_TOTAL    = 2;
+
+typedef int ParPass2Son_t;
+const ParPass2Son_t
+   PAR_PASS2SON_GENERAL = 1,
+   PAR_PASS2SON_EVOLVE  = 2;
 #endif // #ifdef PARTICLE
 
 

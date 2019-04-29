@@ -476,9 +476,11 @@ void CUAPI_MemFree_PoissonGravity();
 #ifdef PARTICLE
 void Par_Init_ByFile();
 void Par_Output_TextFile( const char *comment );
-void Par_FindHomePatch_UniformGrid( const int lv );
-void Par_PassParticle2Son( const int FaLv, const int FaPID );
-void Par_PassParticle2Son_AllPatch( const int FaLv, const bool TimingSendPar );
+void Par_FindHomePatch_UniformGrid( const int lv, const bool OldParOnly,
+                                    const long NNewPar, real *NewParAtt[PAR_NATT_TOTAL] );
+void Par_PassParticle2Son_SinglePatch( const int FaLv, const int FaPID );
+void Par_PassParticle2Son_MultiPatch( const int FaLv, const ParPass2Son_t Mode, const bool TimingSendPar,
+                                      const int NFaPatch, const int *FaPIDList );
 void Par_PassParticle2Father( const int FaLv, const int FaPID );
 void Par_Aux_Check_Particle( const char *comment );
 void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t IntScheme, real *Rho,
@@ -505,6 +507,7 @@ void Prepare_PatchData_FreeParticleDensityArray( const int lv );
 void Par_PredictPos( const long NPar, const long *ParList, real *ParPosX, real *ParPosY, real *ParPosZ,
                      const double TargetTime );
 void Par_Init_Attribute();
+void Par_AddParticleAfterInit( const long NNewPar, real *NewParAtt[PAR_NATT_TOTAL] );
 FieldIdx_t AddParticleAttribute( char *InputLabel );
 FieldIdx_t GetParticleAttributeIndex( char *InputLabel, const Check_t Check );
 #ifdef LOAD_BALANCE

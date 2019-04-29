@@ -281,6 +281,8 @@ OPT__VERBOSE                  0           # output the simulation progress in de
 OPT__TIMING_BARRIER          -1           # synchronize before timing -> more accurate, but may slow down the run (<0=auto) [-1]
 OPT__TIMING_BALANCE           0           # record the max/min elapsed time in various code sections for checking load balance [0]
 OPT__TIMING_MPI               0           # record the MPI bandwidth achieved in various code sections [0] ##LOAD_BALANCE ONLY##
+OPT__RECORD_NOTE              1           # take notes for the general simulation info [1]
+OPT__RECORD_UNPHY             1           # record the number of cells with unphysical results being corrected [1]
 OPT__RECORD_MEMORY            1           # record the memory consumption [1]
 OPT__RECORD_PERFORMANCE       1           # record the code performance [1]
 OPT__MANUAL_CONTROL           1           # support manually dump data or stop run during the runtime
