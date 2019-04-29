@@ -1,0 +1,29 @@
+Compilation flags:
+========================================
+Enable : MODEL=ELBDM, GRAVITY
+Disable: COMOVING
+
+
+Default setup:
+========================================
+1. Code units
+   (1) UNIT_L = Mpc/h, where h=0.6955 is the present dimensionless Hubble parameter
+   (2) UNIT_V = 100 km/s
+   (3) UNIT_D = rho_bg (background matter density at z=0)
+       --> Mass density and wavefunction are normalized to rho_bg
+
+2. ELBDM_MASS              8.0e-23
+   ELBDM_REMOVE_MOTION_CM  1
+   ELBDM_TAYLOR3_AUTO      0
+
+3. OPT__BC_FLU_*           1  (periodic)
+   OPT__BC_POT             2  (isolated)
+
+4. MAX_LEVEL               0
+
+
+Note:
+========================================
+1. Download the IC file: sh download_ic.sh
+
+2. Some examples of yt visualization scripts are put in "yt_script"
