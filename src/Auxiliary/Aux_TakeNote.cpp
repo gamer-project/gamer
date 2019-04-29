@@ -1043,6 +1043,8 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__TIMING_BARRIER             %d\n",      OPT__TIMING_BARRIER      );
       fprintf( Note, "OPT__TIMING_BALANCE             %d\n",      OPT__TIMING_BALANCE      );
       fprintf( Note, "OPT__TIMING_MPI                 %d\n",      OPT__TIMING_MPI          );
+      fprintf( Note, "OPT__RECORD_NOTE                %d\n",      OPT__RECORD_NOTE         );
+      fprintf( Note, "OPT__RECORD_UNPHY               %d\n",      OPT__RECORD_UNPHY        );
       fprintf( Note, "OPT__RECORD_MEMORY              %d\n",      OPT__RECORD_MEMORY       );
       fprintf( Note, "OPT__RECORD_PERFORMANCE         %d\n",      OPT__RECORD_PERFORMANCE  );
       fprintf( Note, "OPT__MANUAL_CONTROL             %d\n",      OPT__MANUAL_CONTROL      );

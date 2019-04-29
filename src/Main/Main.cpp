@@ -61,6 +61,7 @@ bool                 OPT__CK_RESTRICT, OPT__CK_PATCH_ALLOCATE, OPT__FIXUP_FLUX, 
 bool                 OPT__UM_IC_DOWNGRADE, OPT__UM_IC_REFINE, OPT__TIMING_MPI;
 bool                 OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
 bool                 OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
+bool                 OPT__RECORD_NOTE, OPT__RECORD_UNPHY;
 UM_IC_Format_t       OPT__UM_IC_FORMAT;
 TestProbID_t         TESTPROB_ID;
 OptInit_t            OPT__INIT;
@@ -352,11 +353,14 @@ int main( int argc, char *argv[] )
 
    Init_GAMER( &argc, &argv );
 
-   Aux_TakeNote();
+   if ( OPT__RECORD_NOTE )
+   {
+      Aux_TakeNote();
 
-#  ifdef GPU
-   CUAPI_DiagnoseDevice();
-#  endif
+#     ifdef GPU
+      CUAPI_DiagnoseDevice();
+#     endif
+   }
 
    Output_DumpData( 0 );
 
@@ -431,6 +435,7 @@ int main( int argc, char *argv[] )
       if ( OPT__RECORD_USER  &&  Aux_Record_User_Ptr != NULL )
       TIMING_FUNC(   Aux_Record_User_Ptr(),           Timer_Main[4]   );
 
+      if ( OPT__RECORD_UNPHY )
       TIMING_FUNC(   Aux_Record_CorrUnphy(),          Timer_Main[4]   );
 
 #     ifdef PARTICLE
@@ -549,7 +554,7 @@ int main( int argc, char *argv[] )
    Aux_AccumulatedTiming( Timer_Total.GetValue(), Timer_Init.GetValue(), Timer_Other.GetValue() );
 #  endif
 
-   if ( MPI_Rank == 0 )
+   if ( MPI_Rank == 0  &&  OPT__RECORD_NOTE )
    {
       FILE *Note = fopen( "Record__Note", "a" );
       fprintf( Note, "\n" );

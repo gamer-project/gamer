@@ -259,6 +259,32 @@ void Init_ByFile()
    } // for (int lv=OPT__UM_IC_LEVEL; lv<MAX_LEVEL; lv++)
 
 
+
+// 8. restrict data
+//    --> for bitwise reproducibility only
+//    --> strictly speaking, it is only necessary for C-binary output (i.e., OPT__OUTPUT_TOTAL=2)
+//        since that output format does not store non-leaf patch data
+#  ifdef BITWISE_REPRODUCIBILITY
+   for (int lv=MAX_LEVEL-1; lv>=0; lv--)
+   {
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Restricting level %d ... ", lv );
+
+      if ( NPatchTotal[lv+1] == 0 )    continue;
+
+//    no need to restrict potential since it will be recalculated later
+      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _TOTAL );
+
+#     ifdef LOAD_BALANCE
+      LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, NULL_INT );
+
+      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_AFTER_FIXUP, _TOTAL, Flu_ParaBuf, USELB_YES );
+#     endif
+
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+   }
+#  endif // # ifdef BITWISE_REPRODUCIBILITY
+
+
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_ByFile

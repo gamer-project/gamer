@@ -6,7 +6,7 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Par_PassParticle2Son
+// Function    :  Par_PassParticle2Son_SinglePatch
 // Description :  Pass particles from father to sons
 //
 // Note        :  1. After calling this function, father patch will have no particles (NPar == 0)
@@ -18,11 +18,13 @@
 //                   --> Invoked by Par_PassParticle2Sibling_AllPatch(), which is invoked
 //                       by EvolveLevel() after the velocity correction in KDK
 //                4. Target father patch can be either real or buffer
+//                5. Does NOT work with sons living abroad
+//                   --> Use Par_PassParticle2Son_MultiPatch() for that
 //
 // Parameter   :  FaLv  : Father refinement level
 //                FaPID : Father patch ID
 //-------------------------------------------------------------------------------------------------------
-void Par_PassParticle2Son( const int FaLv, const int FaPID )
+void Par_PassParticle2Son_SinglePatch( const int FaLv, const int FaPID )
 {
 
    const int NPar    = amr->patch[0][FaLv][FaPID]->NPar;
@@ -94,7 +96,7 @@ void Par_PassParticle2Son( const int FaLv, const int FaPID )
 // free memory
    for (int LocalID=0; LocalID<8; LocalID++)    delete [] NewListForSon[LocalID];
 
-} // FUNCTION : Par_PassParticle2Son
+} // FUNCTION : Par_PassParticle2Son_SinglePatch
 
 
 
