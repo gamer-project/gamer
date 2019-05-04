@@ -98,10 +98,10 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
    real nhr =  FMA( (real)2.5, PR[4], SQRT( FMA( (real)2.25, SQR(PR[4]), SQR(PR[0]) ) ) );
 
    cslsq = PL[4] * FMA( (real)4.5, PL[4], (real)5.0*SQRT( FMA( (real)2.25, SQR(PL[4]), SQR(PL[0]) ) ) ) 
-        / ( 3*nhl* FMA( (real)1.5, PL[4],           SQRT( FMA( (real)2.25, SQR(PL[4]), SQR(PL[0]) ) ) ) );
+/ ( (real)3.0*nhl* FMA( (real)1.5, PL[4],           SQRT( FMA( (real)2.25, SQR(PL[4]), SQR(PL[0]) ) ) ) );
 
    csrsq = PR[4] * FMA( (real)4.5, PR[4], (real)5.0*SQRT( FMA( (real)2.25, SQR(PR[4]), SQR(PR[0]) ) ) ) 
-        / ( 3*nhr* FMA( (real)1.5, PR[4],           SQRT( FMA( (real)2.25, SQR(PR[4]), SQR(PR[0]) ) ) ) );
+/ ( (real)3.0*nhr* FMA( (real)1.5, PR[4],           SQRT( FMA( (real)2.25, SQR(PR[4]), SQR(PR[0]) ) ) ) );
 
 #  elif ( EOS ==  CONSTANT_GAMMA)
    rhl = PL[0] + PL[4] * Gamma / Gamma_m1; /* Mignone Eq 3.5 */
@@ -125,7 +125,7 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
    ssr = csrsq / FMA( - gammasqr, csrsq, gammasqr ); /* Mignone Eq 22.5 */
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( ( ssl < 0.0 ) || ( ssr < 0.0 ) ) printf("ssl = %14.7e, ssr = %14.7e\n", ssl, ssr);
+   if ( ( ssl < (real)0.0 ) || ( ssr < (real)0.0 ) ) printf("ssl = %14.7e, ssr = %14.7e\n", ssl, ssr);
 #  endif
 
    real lV2s = lV2*lV2;
@@ -240,7 +240,7 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
   b = -(Uhll[4] + Fhll[1]);
   c = Uhll[1];
 
-  real delta = FMA( b, b, (real)-4*a*c );
+  real delta = FMA( b, b, -(real)4*a*c );
 
 # ifdef CHECK_NEGATIVE_IN_FLUID
   if (delta < (real) 0.0) printf("delta=%f\n", delta);
