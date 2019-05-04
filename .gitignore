@@ -9,4 +9,4 @@ a.out
 *.dat
 *.png
 log
-src/test/**
+tool/analysis/gamer_compare_data/*
