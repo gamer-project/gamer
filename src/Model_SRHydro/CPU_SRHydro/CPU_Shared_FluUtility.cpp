@@ -672,7 +672,7 @@ Fun_DFun (real Temp, void *ptr, real * f, real * df, real Gamma)
   real hsqr = SQR(h);
 # if   (CONSERVED_ENERGY == 1)
   real Constant = FMA( E_D, E_D, - M_Dsqr );
-  *f = FMA( (real)3.5, Tsqr, FMA( (real)1.5, FMA( Temp, abc, hsqr * Tsqr / (hsqr + M_Dsqr) ),  (real)1.0 - Constant ));
+  *f = (real)3.5 * Tsqr + (real)1.5 * Temp * abc + hsqr * Tsqr / (hsqr + M_Dsqr) + (real)1.0 - Constant;
 # elif (CONSERVED_ENERGY == 2)
   real Constant = SQR(E_D) + 2*(E_D) - M_Dsqr;
   *f = 3.5 * Tsqr + 1.5 * Temp * abc + hsqr * Tsqr / (hsqr + M_Dsqr) - Constant;
