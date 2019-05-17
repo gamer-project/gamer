@@ -63,8 +63,8 @@ void Aux_Check_Conservation( const char *comment )
 #  warning : WAIT MHD !!!
 
 #  elif ( MODEL == SR_HYDRO )
-   const int NVar_NoPassive       = 7;    // 8: mass, momentum (x/y/z), mass/potential/potential + mass  energies
-                                          // --> note that **total energy** is put in the last element ==> [7] instead of [ENGY==4]
+   const int NVar_NoPassive       = 5;    // 8: mass, momentum (x/y/z), total energies
+
 #  elif ( MODEL == ELBDM )
    const int NVar_NoPassive       = 5;    // 5: mass, kinematic/gravitational/self-interaction/total energies
    const IntScheme_t IntScheme    = INT_CQUAR;
@@ -171,25 +171,11 @@ void Aux_Check_Conservation( const char *comment )
                for (int j=0; j<PATCH_SIZE; j++)
                for (int i=0; i<PATCH_SIZE; i++)
                {
-#                 ifdef GRAVITY
-                  double Epot; // potential energy
-#                 endif
-
                   Fluid_lv[0] += amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
                   Fluid_lv[1] += amr->patch[FluSg][lv][PID]->fluid[MOMX][k][j][i];
                   Fluid_lv[2] += amr->patch[FluSg][lv][PID]->fluid[MOMY][k][j][i];
                   Fluid_lv[3] += amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i];
                   Fluid_lv[4] += amr->patch[FluSg][lv][PID]->fluid[ENGY][k][j][i];
-
-#                 ifdef GRAVITY
-		  printf("please modify %s!\n",__FUNCTION__);
-		  printf("line: %d\n", __LINE__)
-		  abort();
-
-                  Epot         = 0.5*amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i]
-                                    *amr->patch[PotSg][lv][PID]->pot        [k][j][i];
-                  Fluid_lv[6] += Epot;
-#                 endif
                } // i,j,k
 
 #              elif ( MODEL == ELBDM )
@@ -257,8 +243,7 @@ void Aux_Check_Conservation( const char *comment )
       Fluid_lv[7] = Fluid_lv[4] + Fluid_lv[5] + Fluid_lv[6];
 #     elif ( MODEL == ELBDM )
       Fluid_lv[4] = Fluid_lv[1] + Fluid_lv[2] + Fluid_lv[3];
-#     elif   ( MODEL == SR_HYDRO )
-      Fluid_lv[6] = Fluid_lv[4] + Fluid_lv[5];
+#     elif ( MODEL == SR_HYDRO )
 #     else
 #     error : ERROR : unsupported MODEL !!
 #     endif
@@ -328,11 +313,9 @@ void Aux_Check_Conservation( const char *comment )
          Aux_Message( File, "# Etot_Gas     : total HYDRO/MHD energy\n" );
 
 #        elif   ( MODEL == SR_HYDRO )
-         Aux_Message( File, "# Mass_Gas     : total SR-HYDRO mass\n" );
-         Aux_Message( File, "# MomX/Y/Z_Gas : total SR-HYDRO momentum\n" );
-         Aux_Message( File, "# Ethe_Gas     : total SR-HYDRO mass energy\n" );
-         Aux_Message( File, "# Epot_Gas     : total SR-HYDRO potential energy\n" );
-         Aux_Message( File, "# Etot_Gas     : total SR-HYDRO total energy\n" );
+         Aux_Message( File, "# Mass_Gas     : total SR_HYDRO mass\n" );
+         Aux_Message( File, "# MomX/Y/Z_Gas : total SR_HYDRO momentum\n" );
+         Aux_Message( File, "# Etot_Gas     : total SR_HYDRO total energy\n" );
 
 #        elif ( MODEL == ELBDM )
          Aux_Message( File, "# Mass_Psi     : total ELBDM mass\n" );
@@ -392,8 +375,6 @@ void Aux_Check_Conservation( const char *comment )
          Aux_Message( File, "  %14s  %14s  %14s", "MomX_Gas", "MomX_Gas_AErr", "MomX_Gas_RErr" );
          Aux_Message( File, "  %14s  %14s  %14s", "MomY_Gas", "MomY_Gas_AErr", "MomY_Gas_RErr" );
          Aux_Message( File, "  %14s  %14s  %14s", "MomZ_Gas", "MomZ_Gas_AErr", "MomZ_Gas_RErr" );
-         Aux_Message( File, "  %14s  %14s  %14s", "Emas_Gas", "Emas_Gas_AErr", "Emas_Gas_RErr" );
-         Aux_Message( File, "  %14s  %14s  %14s", "Epot_Gas", "Epot_Gas_AErr", "Epot_Gas_RErr" );
          Aux_Message( File, "  %14s  %14s  %14s", "Etot_Gas", "Etot_Gas_AErr", "Etot_Gas_RErr" );
 
 #        elif ( MODEL == ELBDM )
