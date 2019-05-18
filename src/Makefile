@@ -184,10 +184,10 @@ SIMU_OPTION += -DMAX_PATCH=1000000
 
 # GPU acceleration
 # --> must set GPU_ARCH as well
-SIMU_OPTION += -DGPU
+#SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA
-SIMU_OPTION += -DGPU_ARCH=FERMI
+SIMU_OPTION += -DGPU_ARCH=PASCAL
 
 # debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
@@ -358,13 +358,13 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 #CUDA_PATH    := /opt/gpu/cuda/default
 
 # NTU-hulk (openmpi-intel-qlc)
-FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
-MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
-HDF5_PATH    := /opt/hdf5/default
-GRACKLE_PATH := 
-GSL_PATH     := /opt/math/gsl/default
-LIBYT_PATH   := 
-CUDA_PATH    := /opt/gpu/cuda/default
+#FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
+#MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
+#HDF5_PATH    := /opt/hdf5/default
+#GRACKLE_PATH := 
+#GSL_PATH     := /opt/math/gsl/default
+#LIBYT_PATH   := 
+#CUDA_PATH    := /opt/gpu/cuda/default
 
 # NAOC-laohu (OpenMPI-1.3.2-intel)
 #CUDA_PATH    := $(CUDA_INSTALL_PATH)
@@ -382,13 +382,13 @@ CUDA_PATH    := /opt/gpu/cuda/default
 #CUDA_PATH    := /usr/local/cuda-10.0
 #
 ## Calab AMD2
-#FFTW_PATH    := 
-#MPI_PATH     := /home/gamer02/mpi/openmpi
-#HDF5_PATH    := /usr/local/src/hdf5-1.10.4/hdf5
-#GRACKLE_PATH := 
-#GSL_PATH     := 
-#LIBYT_PATH   := 
-#CUDA_PATH    := /usr/local/cuda-10.0
+FFTW_PATH    := 
+MPI_PATH     := /home/gamer02/mpi/openmpi
+HDF5_PATH    := /usr/local/src/hdf5-1.10.4/hdf5
+GRACKLE_PATH := 
+GSL_PATH     := 
+LIBYT_PATH   := 
+CUDA_PATH    := /usr/local/cuda-10.0
 
 
 # source files

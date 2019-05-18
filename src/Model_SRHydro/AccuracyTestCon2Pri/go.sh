@@ -1,6 +1,6 @@
 #!/bin/bash
 gcc main.cpp  CPU_Shared_FluUtility.cpp \
--DCONSERVED_ENERGY=1 \
+-DCONSERVED_ENERGY=2 \
 -DSERIAL \
 -DFLOAT8 \
 -DMODEL=SR_HYDRO \
