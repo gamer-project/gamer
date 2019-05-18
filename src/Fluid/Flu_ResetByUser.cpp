@@ -112,7 +112,7 @@ void Flu_ResetByUser_API( const int lv, const int FluSg, const double TTime )
 
    const double dh       = amr->dh[lv];
 #  if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
-   const real   Gamma_m1 = GAMMA - (real)1.0;
+   const real   Gamma_m1 = (real)GAMMA - (real)1.0;
    const real  _Gamma_m1 = (real)1.0 / Gamma_m1;
 #  endif
 
@@ -148,7 +148,7 @@ void Flu_ResetByUser_API( const int lv, const int FluSg, const double TTime )
 #           else
             fluid[DENS] = FMAX ( fluid[DENS], (real)MIN_DENS );
             fluid[ENGY] = Hydro_CheckMinPresInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                                  Gamma_m1, _Gamma_m1, MIN_PRES );
+                                                    Gamma_m1, _Gamma_m1, MIN_PRES );
 #           endif
 
 //          calculate the dual-energy variable (entropy or internal energy)
