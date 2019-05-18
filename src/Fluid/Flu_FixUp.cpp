@@ -42,7 +42,7 @@ void Flu_FixUp( const int lv )
    real *FluidPtr1D0[NCOMP_TOTAL], *FluidPtr1D[NCOMP_TOTAL];
    int  didx_m, didx_n;
 
-#  if   ( MODEL == HYDRO  ||  MODEL == MHD ||  MODEL == SR_HYDRO )
+#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
    const real  Gamma_m1       = GAMMA - (real)1.0;
    const real _Gamma_m1       = (real)1.0 / Gamma_m1;
    const bool CheckMinPres_No = false;
@@ -192,8 +192,6 @@ void Flu_FixUp( const int lv )
                   Pres = Hydro_GetPressure( ForPres[DENS], ForPres[MOMX], ForPres[MOMY], ForPres[MOMZ], ForPres[ENGY],
                                             Gamma_m1, CheckMinPres_No, NULL_REAL );
 #                 endif // DUAL_ENERGY
-#                 elif ( MODEL == SR_HYDRO )
-//                 ........ 
 #                 endif // MODEL
 
 
@@ -220,7 +218,7 @@ void Flu_FixUp( const int lv )
                   if ( CorrVal[DENS] <= MIN_DENS )
 
 #                 elif ( MODEL == SR_HYDRO )
-		  if (SRHydro_CheckUnphysical(CorrVal, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true))
+                  if (SRHydro_CheckUnphysical(CorrVal, NULL, (real)GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true))
 #                 endif
                      continue;
 
@@ -251,9 +249,7 @@ void Flu_FixUp( const int lv )
 #                 endif
 #                 endif // #ifdef DUAL_ENERGY
 
-#                 elif ( MODEL == SR_HYDRO )
-
-#                 endif // HYDRO/MHD/SR_HYDRO
+#                 endif // HYDRO/MHD
 
 
 //                store the corrected results
