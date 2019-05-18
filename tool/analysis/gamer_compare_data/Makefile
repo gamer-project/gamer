@@ -36,7 +36,7 @@ SIMU_PARA = -DNLEVEL=$(NLEVEL) -DMAX_PATCH=$(MAX_PATCH) -DNCOMP_PASSIVE=$(NCOMP_
 #######################################################################################################
 CC    := icpc
 CFLAG := -O3 -mp1 -w1
-CFLAG += -g
+CFLAG += -g -fopenmp
 
 
 $(EXECUTABLE): $(PROGRAM).o

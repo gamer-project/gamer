@@ -44,5 +44,6 @@ void SRHydro_3Velto4Vel( const real In[], real Out[] );
 real SRHydro_CheckMinTempInEngy (const real Con[], const real MinTemp, const real Gamma);
 
 bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gamma, const real MinTemp, const char s[], const int line, bool show);
+real VectorDotProduct( real V1, real V2, real V3);
 
 #endif

@@ -106,9 +106,9 @@ else ifeq "$(filter -DMODEL=SR_HYDRO, $(SIMU_OPTION))" "-DMODEL=SR_HYDRO"
 # --> must be set when MODEL=HYDRO;
 SIMU_OPTION += -DFLU_SCHEME=MHM
 
-SIMU_OPTION += -DEOS=RELATIVISTIC_IDEAL_GAS
+SIMU_OPTION += -DEOS=APPROXIMATED_GENERAL
 
-#SIMU_OPTION += -DEOS=IDEAL_GAS
+#SIMU_OPTION += -DEOS=CONSTANT_GAMMA
 
 # conserved energy = (total energy)
 SIMU_OPTION += -DCONSERVED_ENERGY=1
@@ -175,13 +175,16 @@ endif # PARTICLE
 # --> must be set in any cases
 SIMU_OPTION += -DNLEVEL=10
 
+# fused multiply-add
+SIMU_OPTION += -DFUSED_MULTIPLY_ADD
+
 # maximum number of patches on each AMR level
 # --> must be set in any cases
 SIMU_OPTION += -DMAX_PATCH=1000000
 
 # GPU acceleration
 # --> must set GPU_ARCH as well
-#SIMU_OPTION += -DGPU
+SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA
 SIMU_OPTION += -DGPU_ARCH=FERMI
@@ -200,15 +203,15 @@ SIMU_OPTION += -DTIMING
 #SIMU_OPTION += -DTIMING_SOLVER
 
 # double precision
-#SIMU_OPTION += -DFLOAT8
+SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
 # --> must disable LOAD_BALANCE
-SIMU_OPTION += -DSERIAL
+#SIMU_OPTION += -DSERIAL
 
 # load-balance parallelization: HILBERT
 # --> must disable SERIAL
-#SIMU_OPTION += -DLOAD_BALANCE=HILBERT
+SIMU_OPTION += -DLOAD_BALANCE=HILBERT
 
 # overlap MPI communication with computation
 # --> NOT supported yet; must enable LOAD_BALANCE
@@ -243,14 +246,14 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 
 # intel
 # -------------------------------------------------------------------------------
-# CXX         = icpc                                      # serial compiler
-# CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
+ CXX         = icpc                                      # serial compiler
+ CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
 ##CXX         = CC                                        # cray wrapper script
-# CXXFLAG     = -g -O3                                    # general flags
+ CXXFLAG     = -g -O3                                    # general flags
 ##CXXFLAG     = -g -O3 -std=c++11 #-gxx-name=YOUR_G++
 #CXXFLAG     = -g -fast
 # CXXFLAG    += -w1                                       # warning flags
-# OPENMPFLAG  = -fopenmp                                  # openmp flag
+ OPENMPFLAG  = -fopenmp                                  # openmp flag
 # LIB         = -limf                                     # libraries and linker flags
 #
 ## for debug only
@@ -267,18 +270,18 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 
 # gnu
 # -------------------------------------------------------------------------------
- CXX         = g++                                       # serial compiler
-# CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
-#CXX         = CC                                        # cray wrapper script
- CXXFLAG     = -g -O3                                    # general flags
-#CXXFLAG     = -g -O3 -std=c++11
-#CXXFLAG     = -g -Ofast
-# CXXFLAG    += -Wall -Wextra                             # warning flags
-# CXXFLAG    += -Wno-unused-variable -Wno-unused-parameter \
-               -Wno-maybe-uninitialized -Wno-unused-but-set-variable \
-               -Wno-unused-result -Wno-unused-function
- OPENMPFLAG  = -fopenmp                                  # openmp flag
-# LIB         =                                           # libraries and linker flags
+# CXX         = g++                                       # serial compiler
+## CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
+##CXX         = CC                                        # cray wrapper script
+# CXXFLAG     = -g -O3                                    # general flags
+##CXXFLAG     = -g -O3 -std=c++11
+##CXXFLAG     = -g -Ofast
+## CXXFLAG    += -Wall -Wextra                             # warning flags
+## CXXFLAG    += -Wno-unused-variable -Wno-unused-parameter \
+#               -Wno-maybe-uninitialized -Wno-unused-but-set-variable \
+#               -Wno-unused-result -Wno-unused-function
+# OPENMPFLAG  = -fopenmp                                  # openmp flag
+### LIB         =                                           # libraries and linker flags
 
 # for debug only
 #ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
@@ -347,7 +350,7 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 
 # NTU-hulk (openmpi-gcc-qlc)
 #FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
-#MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
+#MPI_PATH     := /usr/mpi/gcc/openmpi-1.4.3-qlc
 #HDF5_PATH    := /opt/hdf5/default
 #GRACKLE_PATH := 
 #GSL_PATH     := /opt/math/gsl/default
@@ -355,13 +358,13 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 #CUDA_PATH    := /opt/gpu/cuda/default
 
 # NTU-hulk (openmpi-intel-qlc)
-#FFTW_PATH    := 
-#MPI_PATH     := 
-#HDF5_PATH    := 
-#GRACKLE_PATH := 
-#GSL_PATH     := 
-#LIBYT_PATH   := 
-#CUDA_PATH    := 
+FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
+MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
+HDF5_PATH    := /opt/hdf5/default
+GRACKLE_PATH := 
+GSL_PATH     := /opt/math/gsl/default
+LIBYT_PATH   := 
+CUDA_PATH    := /opt/gpu/cuda/default
 
 # NAOC-laohu (OpenMPI-1.3.2-intel)
 #CUDA_PATH    := $(CUDA_INSTALL_PATH)
@@ -380,7 +383,7 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 #
 ## Calab AMD2
 #FFTW_PATH    := 
-#MPI_PATH     := 
+#MPI_PATH     := /home/gamer02/mpi/openmpi
 #HDF5_PATH    := /usr/local/src/hdf5-1.10.4/hdf5
 #GRACKLE_PATH := 
 #GSL_PATH     := 

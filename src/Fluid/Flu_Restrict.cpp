@@ -218,17 +218,19 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
 //       actually it might not be necessary to check the minimum pressure here
          amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i]
             = Hydro_CheckMinPresInEngy( amr->patch[FaFluSg][FaLv][FaPID]->fluid[DENS][k][j][i],
-                                      amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMX][k][j][i],
-                                      amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMY][k][j][i],
-                                      amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMZ][k][j][i],
-                                      amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i],
-                                      Gamma_m1, _Gamma_m1, MIN_PRES );
+                                        amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMX][k][j][i],
+                                        amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMY][k][j][i],
+                                        amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMZ][k][j][i],
+                                        amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i],
+                                        Gamma_m1, _Gamma_m1, MIN_PRES );
 
 #        elif ( MODEL == SR_HYDRO && defined(CHECK_NEGATIVE_IN_FLUID) )
-	 real Con[NCOMP_FLUID];
-	 for(int v=0;v<NCOMP_FLUID;v++) Con[v]=amr->patch[FaFluSg][FaLv][FaPID]->fluid[v][k][j][i];
 
-	 if(SRHydro_CheckUnphysical(Con, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
+	     real Con[NCOMP_FLUID];
+	     for(int v=0;v<NCOMP_FLUID;v++) Con[v]=amr->patch[FaFluSg][FaLv][FaPID]->fluid[v][k][j][i];
+
+	     if(SRHydro_CheckUnphysical(Con, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true))
+         exit(EXIT_FAILURE);
 
 #        endif // #ifdef DUAL_ENERGY ... else ...
       } // i,j,k

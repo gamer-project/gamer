@@ -1215,7 +1215,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
          {
            for (int v = 0 ; v < NCOMP_FLUID ;v++) Cons[v] = *(IntData+FSize3D*v+i);
 
-           if (SRHydro_CheckUnphysical(Cons, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, false))
+           if (SRHydro_CheckUnphysical(Cons, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true))
             {
                state = true;
                break; 
