@@ -641,7 +641,7 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 //               [ 5] CData         : Coarse-grid data for assigning data to son patches by spatial interpolation
 //                                   (initialize as NULL if father patch is home --> prepare CData here)
 //               [ 6] CGhost_Flu    :
-//               [ 7] NSide_Flu     :
+//               [ 7] NSide_Flu     : Number of sibling directions to prepare the ghost-zone data (6/26) for the fluid solver
 //               [ 8] CGhost_Pot    :
 //               [ 9] NSide_Pot     :
 //               [10] BC_Face       : Corresponding boundary faces (0~5) along 26 sibling directions -> for non-periodic B.C. only
