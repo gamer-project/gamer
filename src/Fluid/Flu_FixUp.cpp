@@ -348,6 +348,6 @@ void Flu_FixUp( const int lv )
 #  endif
 
    if ( OPT__FIXUP_RESTRICT )
-      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, SonMagSg, FaMagSg, _TOTAL, _MAG );
+      Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, SonMagSg, FaMagSg, _TOTAL, _MAG );
 
 } // FUNCTION : Flu_FixUp
