@@ -938,9 +938,6 @@ void Aux_TakeNote()
                                                                   ( OPT__LR_LIMITER == ALBADA            ) ? "ALBADA"     :
                                                                   ( OPT__LR_LIMITER == VL_GMINMOD        ) ? "VL_GMINMOD" :
                                                                   ( OPT__LR_LIMITER == EXTPRE            ) ? "EXTPRE"     :
-                                                                  ( OPT__LR_LIMITER == MINBEE            ) ? "MINBEE"     :
-                                                                  ( OPT__LR_LIMITER == SUPERBEE          ) ? "SUPERBEE"   :
-                                                                  ( OPT__LR_LIMITER == CONSTANT          ) ? "CONSTANT"   :
                                                                   ( OPT__LR_LIMITER == LR_LIMITER_NONE   ) ? "NONE"       :
                                                                                                              "UNKNOWN" );
       fprintf( Note, "OPT__1ST_FLUX_CORR              %s\n",      ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D   ) ? "3D"   :

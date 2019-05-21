@@ -113,9 +113,6 @@ const LR_Limiter_t
    ALBADA          = 3,
    VL_GMINMOD      = 4,
    EXTPRE          = 5,
-   MINBEE          = 6,
-   SUPERBEE        = 7,
-   CONSTANT        = 8;
 
 
 // data output formats
