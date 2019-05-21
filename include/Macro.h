@@ -204,7 +204,7 @@
 // bitwise field indices
 // --> must have "_VAR_NAME = 1<<VAR_NAME" (e.g., _DENS == 1<<DENS)
 // --> convenient for determining subsets of fields (e.g., _DENS|_ENGY)
-// --> used as function parameters (e.g., Prepare_PatchData(), Flu_FixUp(), Flu_Restrict(), Buf_GetBufferData())
+// --> used as function parameters (e.g., Prepare_PatchData(), Flu_FixUp(), Flu_FixUp_Restrict(), Buf_GetBufferData())
 #  define _DENS               ( 1 << DENS )
 #  define _MOMX               ( 1 << MOMX )
 #  define _MOMY               ( 1 << MOMY )

@@ -129,7 +129,7 @@ void Init_ByFile()
 #  ifdef LOAD_BALANCE
 // no need to redistribute patches since Init_UniformGrid() already takes into account load balancing
 // --> but particle weighting is not considered yet
-// --> we will invoke LB_Init_LoadBalance() again after Flu_Restrict() for that
+// --> we will invoke LB_Init_LoadBalance() again after Flu_FixUp_Restrict() for that
 
 // must not reset load-balance variables (i.e., must adopt ResetLB_No) to avoid overwritting IdxList_Real[]
 // and IdxList_Real_IdxList[] already set above
@@ -195,7 +195,7 @@ void Init_ByFile()
       const int  FaMagSg = NULL_INT;
 #     endif
 
-      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, SonMagSg, FaMagSg, _TOTAL, _MAG );
+      Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, SonMagSg, FaMagSg, _TOTAL, _MAG );
 
 #     ifdef LOAD_BALANCE
       LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, NULL_INT );
@@ -295,7 +295,7 @@ void Init_ByFile()
 #     endif
 
 //    no need to restrict potential since it will be recalculated later
-      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, SonMagSg, FaMagSg, _TOTAL, _MAG );
+      Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, SonMagSg, FaMagSg, _TOTAL, _MAG );
 
 #     ifdef LOAD_BALANCE
       LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, NULL_INT );

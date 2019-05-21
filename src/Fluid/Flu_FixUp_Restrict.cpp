@@ -4,7 +4,7 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Flu_Restrict
+// Function    :  Flu_FixUp_Restrict
 // Description :  Replace the data at level "FaLv" by the average data at level "FaLv+1"
 //
 // Note        :  1. Use the input parameters "TVarCC" and "TVarFC" to determine the target cell- and
@@ -28,7 +28,7 @@
 //                                ELBDM          : none
 //                            --> But it currently does not distinguish _MAGX, _MAGY, _MAGZ, and _MAG
 //-------------------------------------------------------------------------------------------------------
-void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const int SonPotSg, const int FaPotSg,
+void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const int SonPotSg, const int FaPotSg,
                    const int SonMagSg, const int FaMagSg, const int TVarCC, const int TVarFC )
 {
 
@@ -398,4 +398,4 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
 
    } // for (int SonPID0=0; SonPID0<amr->NPatchComma[SonLv][1]; SonPID0+=8)
 
-} // FUNCTION : Flu_Restrict
+} // FUNCTION : Flu_FixUp_Restrict

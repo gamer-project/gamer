@@ -23,7 +23,7 @@ static void CheckError( int &Pass, const real B, const real BSib, const int lv, 
 //
 // Note        :  1. Tolerated error is set by the symbolic constant ERROR_TOLERANCE
 //                   --> Should be close to the round-off errors
-//                2. After data restriction, Flu_Restrict() will also copy B field between nearby coarse patches
+//                2. After data restriction, Flu_FixUp_Restrict() will also copy B field between nearby coarse patches
 //                   to ensure this B field consistency
 //
 // Parameter   :  comment : You can put the location where this function is invoked in this string
