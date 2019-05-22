@@ -1090,6 +1090,7 @@ void Aux_TakeNote()
 #     endif
 #     ifdef MHD
       fprintf( Note, "OPT__CK_INTERFACE_B             %d\n",      OPT__CK_INTERFACE_B       );
+      fprintf( Note, "OPT__CK_DIVERGENCE_B            %d\n",      OPT__CK_DIVERGENCE_B      );
 #     endif
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");

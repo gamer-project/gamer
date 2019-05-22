@@ -421,6 +421,7 @@ void MHD_InterpolateBField( const real **CData, const int CSize[3][3], const int
                             const real *FInterface[6], const IntScheme_t IntScheme, const bool Monotonic );
 void MHD_AllocateElectricArray( const int lv );
 void MHD_Aux_Check_InterfaceB( const char *comment );
+void MHD_Aux_Check_DivergenceB( const bool Verbose, const char *comment );
 void MHD_FixUp_Electric( const int lv );
 #endif
 

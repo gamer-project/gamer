@@ -143,7 +143,7 @@ void MHD_Aux_Check_DivergenceB( const bool Verbose, const char *comment )
             FILE *File = fopen( FileName, "w" );
             Aux_Message( File, "\n# Tolerated Error: %13.7e\n\n", ERROR_TOLERANCE );
             Aux_Message( File, "#-------------------------------------------------------------------------\n" );
-            Aux_Message( File, "#%12s  %10s  %13s  %13s  %13s", "Time", "Step", "AveError", "MaxError", "FailedCells" );
+            Aux_Message( File, "#%12s   %10s   %13s   %13s   %13s\n", "Time", "Step", "AveError", "MaxError", "FailedCells" );
             fclose( File );
          }
 
@@ -151,7 +151,7 @@ void MHD_Aux_Check_DivergenceB( const bool Verbose, const char *comment )
       }
 
       FILE *File = fopen( FileName, "a" );
-      Aux_Message( File, "%13.7e  %10ld  %13.7e  %13.7e  %13ld", Time[0], Step, DivB_Ave_AllRank, DivB_Max_AllRank, NFailed_AllRank );
+      Aux_Message( File, "%13.7e   %10ld   %13.7e   %13.7e   %13ld\n", Time[0], Step, DivB_Ave_AllRank, DivB_Max_AllRank, NFailed_AllRank );
       fclose( File );
    } // if ( MPI_Rank == 0 )
 

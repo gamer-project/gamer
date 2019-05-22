@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2309)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2310)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -166,6 +166,7 @@ Procedure for outputting new variables:
 //                2307 : 2018/12/27 --> Replace GRA_BLOCK_SIZE_Z by GRA_BLOCK_SIZE
 //                2308 : 2019/03/27 --> Add OPT__FIXUP_ELECTRIC
 //                2309 : 2019/04/20 --> Add OPT__CK_INTERFACE_B
+//                2310 : 2019/05/22 --> Add OPT__CK_DIVERGENCE_B
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1230,7 +1231,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime   = time( NULL );    // calendar time
 
-   KeyInfo.FormatVersion  = 2309;
+   KeyInfo.FormatVersion  = 2310;
    KeyInfo.Model          = MODEL;
    KeyInfo.NLevel         = NLEVEL;
    KeyInfo.NCompFluid     = NCOMP_FLUID;
@@ -1999,6 +2000,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  endif
 #  ifdef MHD
    InputPara.Opt__Ck_InterfaceB      = OPT__CK_INTERFACE_B;
+   InputPara.Opt__Ck_DivergenceB     = OPT__CK_DIVERGENCE_B;
 #  endif
 
 // flag tables
@@ -2689,6 +2691,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  endif
 #  ifdef MHD
    H5Tinsert( H5_TypeID, "Opt__Ck_InterfaceB",      HOFFSET(InputPara_t,Opt__Ck_InterfaceB     ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__Ck_DivergenceB",     HOFFSET(InputPara_t,Opt__Ck_DivergenceB    ), H5T_NATIVE_INT     );
 #  endif
 
 // flag tables

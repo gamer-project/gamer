@@ -1856,6 +1856,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  endif
 #  ifdef MHD
    LoadField( "Opt__Ck_InterfaceB",      &RS.Opt__Ck_InterfaceB,      SID, TID, NonFatal, &RT.Opt__Ck_InterfaceB,       1, NonFatal );
+   LoadField( "Opt__Ck_DivergenceB",     &RS.Opt__Ck_DivergenceB,     SID, TID, NonFatal, &RT.Opt__Ck_DivergenceB,      1, NonFatal );
 #  endif
 
 
