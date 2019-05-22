@@ -101,7 +101,8 @@ const IntScheme_t
    INT_CQUAD    = 4,
    INT_QUAD     = 5,
    INT_CQUAR    = 6,
-   INT_QUAR     = 7;
+   INT_QUAR     = 7,
+   INT_WENO_O3  = 8;
 
 
 // data reconstruction TVD limiters
@@ -112,7 +113,7 @@ const LR_Limiter_t
    GMINMOD         = 2,
    ALBADA          = 3,
    VL_GMINMOD      = 4,
-   EXTPRE          = 5,
+   EXTPRE          = 5;
 
 
 // data output formats

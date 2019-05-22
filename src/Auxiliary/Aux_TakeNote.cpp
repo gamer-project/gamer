@@ -1099,6 +1099,7 @@ void Aux_TakeNote()
                                                                   ( OPT__FLU_INT_SCHEME == INT_QUAD     ) ? "QUAD"     :
                                                                   ( OPT__FLU_INT_SCHEME == INT_CQUAR    ) ? "CQUAR"    :
                                                                   ( OPT__FLU_INT_SCHEME == INT_QUAR     ) ? "QUAR"     :
+                                                                  ( OPT__FLU_INT_SCHEME == INT_WENO_O3  ) ? "WENO_O3"     :
                                                                                                             "UNKNOWN" );
 #     ifdef GRAVITY
       fprintf( Note, "OPT__POT_INT_SCHEME             %s\n",      ( OPT__POT_INT_SCHEME == INT_MINMOD3D ) ? "MINMOD3D" :

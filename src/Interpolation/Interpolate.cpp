@@ -21,6 +21,9 @@ void Int_CQuartic  (       real CData[], const int CSize[3], const int CStart[3]
 void Int_Quartic   (       real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
 	                   real FData[], const int FSize[3], const int FStart[3], const int NComp,
                      const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff );
+void Int_WENO_O3   (       real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
+	                   real FData[], const int FSize[3], const int FStart[3], const int NComp,
+                     const bool UnwrapPhase );
 
 
 
@@ -129,6 +132,10 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
       case INT_QUAR :
          Int_Quartic   ( CData, CSize, CStart, CRange, FData, FSize, FStart, NComp, UnwrapPhase, Monotonic, IntMonoCoeff );
+         break;
+
+      case INT_WENO_O3 :
+         Int_WENO_O3  ( CData, CSize, CStart, CRange, FData, FSize, FStart, NComp, UnwrapPhase );
          break;
 #     else
       case INT_VANLEER :
