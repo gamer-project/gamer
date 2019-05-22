@@ -577,6 +577,7 @@ struct InputPara_t
 #  endif
 #  ifdef MHD
    int    Opt__Ck_InterfaceB;
+   int    Opt__Ck_DivergenceB;
 #  endif
 
 // flag tables

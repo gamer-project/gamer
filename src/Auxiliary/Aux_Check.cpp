@@ -46,6 +46,8 @@ void Aux_Check( )
 
 #  ifdef MHD
    if ( OPT__CK_INTERFACE_B )             MHD_Aux_Check_InterfaceB( "DIAGNOSIS" );
+
+   if ( OPT__CK_DIVERGENCE_B )            MHD_Aux_Check_DivergenceB( OPT__CK_DIVERGENCE_B==2, "DIAGNOSIS" );
 #  endif
 
    if ( OPT__CK_MEMFREE != 0.0 )          Aux_Check_MemFree( OPT__CK_MEMFREE, "DIAGNOSIS" );
