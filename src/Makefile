@@ -104,7 +104,7 @@ SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 else ifeq "$(filter -DMODEL=SR_HYDRO, $(SIMU_OPTION))" "-DMODEL=SR_HYDRO"
 # hydrodynamic scheme: RTVD/MHM/MHM_RP/CTU
 # --> must be set when MODEL=HYDRO;
-SIMU_OPTION += -DFLU_SCHEME=MHM
+SIMU_OPTION += -DFLU_SCHEME=MHM_RP
 
 SIMU_OPTION += -DEOS=APPROXIMATED_GENERAL
 
@@ -176,7 +176,7 @@ endif # PARTICLE
 SIMU_OPTION += -DNLEVEL=10
 
 # fused multiply-add
-SIMU_OPTION += -DFUSED_MULTIPLY_ADD
+#SIMU_OPTION += -DFUSED_MULTIPLY_ADD
 
 # maximum number of patches on each AMR level
 # --> must be set in any cases
@@ -427,7 +427,7 @@ CC_FILE     += End_GAMER.cpp  End_MemFree.cpp  End_MemFree_Fluid.cpp  End_StopMa
                Init_Unit.cpp  Init_UniformGrid.cpp  Init_Field.cpp Init_User.cpp
 
 CC_FILE     += Interpolate.cpp  Int_CQuadratic.cpp  Int_MinMod1D.cpp  Int_MinMod3D.cpp  Int_vanLeer.cpp \
-               Int_Quadratic.cpp  Int_Table.cpp  Int_CQuartic.cpp  Int_Quartic.cpp
+               Int_Quadratic.cpp  Int_Table.cpp  Int_CQuartic.cpp  Int_Quartic.cpp Int_WENO.cpp
 
 CC_FILE     += Mis_CompareRealValue.cpp  Mis_GetTotalPatchNumber.cpp  Mis_GetTimeStep.cpp  Mis_Heapsort.cpp \
                Mis_BinarySearch.cpp  Mis_1D3DIdx.cpp  Mis_Matching.cpp  Mis_GetTimeStep_User.cpp \
