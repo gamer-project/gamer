@@ -25,6 +25,7 @@ static void CheckError( int &Pass, const real B, const real BSib, const int lv, 
 //                   --> Should be close to the round-off errors
 //                2. After data restriction, Flu_FixUp_Restrict() will also copy B field between nearby coarse patches
 //                   to ensure this B field consistency
+//                3. Invoked by Aux_Check()
 //
 // Parameter   :  comment : You can put the location where this function is invoked in this string
 //
@@ -153,6 +154,7 @@ void CheckError( int &Pass, const real B, const real BSib, const int lv, const i
    }
 
 } // FUNCTION : CheckError
+
 
 
 #endif // #ifdef MHD

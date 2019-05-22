@@ -454,7 +454,7 @@ ifeq "$(filter -DMHD, $(SIMU_OPTION))" "-DMHD"
 #CUDA_FILE   +=
 
 CC_FILE     += MHD_GetCellCenteredB.cpp  MHD_InterpolateBField.cpp  MHD_AllocateElectricArray.cpp \
-               MHD_Aux_Check_InterfaceB.cpp  MHD_FixUp_Electric.cpp
+               MHD_Aux_Check_InterfaceB.cpp  MHD_FixUp_Electric.cpp  MHD_Aux_Check_DivergenceB.cpp
 CC_FILE     += CPU_Shared_ConstrainedTransport.cpp  CPU_Shared_RiemannSolver_HLLD.cpp
 endif
 
