@@ -1003,7 +1003,7 @@ void StoreElectric( const int lv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2P1*
          for (int s=0; s<6; s++)
          {
 //          for bitwise reproducibility, store the E field to be corrected in electric_bitrep[]
-            const int EleSize = PS1_M1*PS1;
+            const int EleSize = PS1M1*PS1;
 #           ifdef BITWISE_REPRODUCIBILITY
             real (*ElePtr)[EleSize] = ( real (*)[EleSize] )amr->patch[0][lv][PID]->electric_bitrep[s];
 #           else
@@ -1041,16 +1041,16 @@ void StoreElectric( const int lv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2P1*
                const int disp_m_p1 = disp_m + 1;
                const int disp_n_p1 = disp_n + 1;
 
-               for (int m=0; m<PS1_M1; m++)  {  const int mm = m + disp_m_p1;
-               for (int n=0; n<PS1;    n++)  {  const int nn = n + disp_n;
+               for (int m=0; m<PS1M1; m++)   {  const int mm = m + disp_m_p1;
+               for (int n=0; n<PS1;   n++)   {  const int nn = n + disp_n;
 
-                  ElePtr[0][ m*PS1    + n ] = dt*h_Ele_Array[TID][face_idx][0][ mm*PS2    + nn ];
+                  ElePtr[0][ m*PS1   + n ] = dt*h_Ele_Array[TID][face_idx][0][ mm*PS2    + nn ];
                }}
 
-               for (int m=0; m<PS1;    m++)  {  const int mm = m + disp_m;
-               for (int n=0; n<PS1_M1; n++)  {  const int nn = n + disp_n_p1;
+               for (int m=0; m<PS1;   m++)   {  const int mm = m + disp_m;
+               for (int n=0; n<PS1M1; n++)   {  const int nn = n + disp_n_p1;
 
-                  ElePtr[1][ m*PS1_M1 + n ] = dt*h_Ele_Array[TID][face_idx][1][ mm*PS2P1 + nn ];
+                  ElePtr[1][ m*PS1M1 + n ] = dt*h_Ele_Array[TID][face_idx][1][ mm*PS2P1 + nn ];
                }}
             } // if ( ElePtr != NULL )
          } // for (int s=0; s<6; s++)
@@ -1167,7 +1167,7 @@ void CorrectElectric( const int SonLv, const real h_Ele_Array[][9][NCOMP_ELE][ P
    const int  face_idx[6]  = { 0, 2, 3, 5, 6, 8 };
    const int  MirrorSib[6] = { 1, 0, 3, 2, 5, 4 };
    const int  didx[2]      = { 1, PS2P1 };
-   const int  EleSize      = PS1_M1*PS1;
+   const int  EleSize      = PS1M1*PS1;
    const real dt_2         = (real)0.5*dt;
 
 #  pragma omp parallel
@@ -1218,8 +1218,8 @@ void CorrectElectric( const int SonLv, const real h_Ele_Array[][9][NCOMP_ELE][ P
 
             for (int t=0; t<EleSize; t++)
             {
-                const int n      = t % PS1_M1 + 1;
-                const int m      = t / PS1_M1;
+                const int n      = t % PS1M1 + 1;
+                const int m      = t / PS1M1;
                 const int idx    = 2*( m*PS2P1 + n );
                 const int idx_p1 = idx + didx[1];
 

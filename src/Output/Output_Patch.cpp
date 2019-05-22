@@ -50,13 +50,13 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
    }
 
 
-   patch_t *Relation                   = amr->patch[    0][lv][PID];
-   real    (*fluid)[PS1][PS1][PS1]     = amr->patch[FluSg][lv][PID]->fluid;
+   patch_t *Relation                  = amr->patch[    0][lv][PID];
+   real    (*fluid)[PS1][PS1][PS1]    = amr->patch[FluSg][lv][PID]->fluid;
 #  ifdef MHD
-   real    (*magnetic)[PS1_P1*PS1*PS1] = amr->patch[MagSg][lv][PID]->magnetic;
+   real    (*magnetic)[PS1P1*PS1*PS1] = amr->patch[MagSg][lv][PID]->magnetic;
 #  endif
 #  ifdef GRAVITY
-   real    (*pot)[PS1][PS1]            = amr->patch[PotSg][lv][PID]->pot;
+   real    (*pot)[PS1][PS1]           = amr->patch[PotSg][lv][PID]->pot;
 #  endif
 
    char FileName[100];
@@ -154,9 +154,9 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
 // output data
    real u[NCOMP_TOTAL];
 
-   for (int k=0; k<PATCH_SIZE; k++)
-   for (int j=0; j<PATCH_SIZE; j++)
-   for (int i=0; i<PATCH_SIZE; i++)
+   for (int k=0; k<PS1; k++)
+   for (int j=0; j<PS1; j++)
+   for (int i=0; i<PS1; i++)
    {
 //    cell indices
       fprintf( File, "(%2d,%2d,%2d)", i, j, k );
@@ -255,9 +255,9 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
 //    header
       fprintf( File, "(%2s,%2s,%2s)%14s%14s%14s\n", "i", "j", "k", "B_X", "B_Y", "B_Z" );
 
-      for (int k=0; k<PS1_P1; k++)
-      for (int j=0; j<PS1_P1; j++)
-      for (int i=0; i<PS1_P1; i++)
+      for (int k=0; k<PS1P1; k++)
+      for (int j=0; j<PS1P1; j++)
+      for (int i=0; i<PS1P1; i++)
       {
 //       cell indices
          fprintf( File, "(%2d,%2d,%2d)", i, j, k );
