@@ -516,9 +516,9 @@
 #define PATCH_SIZE                   8
 #define PS1             ( 1*PATCH_SIZE )
 #define PS2             ( 2*PATCH_SIZE )
-#define PS2_P1          ( PS2 + 1 )
-#define PS1_M1          ( PS1 - 1 )
-#define PS1_P1          ( PS1 + 1 )
+#define PS2P1           ( PS2 + 1 )
+#define PS1M1           ( PS1 - 1 )
+#define PS1P1           ( PS1 + 1 )
 
 
 // the size of arrays (in one dimension) sending into GPU

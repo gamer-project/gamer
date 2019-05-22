@@ -21,10 +21,10 @@ void CUFLU_FluidSolver_MHM(
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
          real   g_Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
    const real   g_Mag_Array_In [][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
-         real   g_Mag_Array_Out[][NCOMP_MAG][ PS2_P1*SQR(PS2) ],
+         real   g_Mag_Array_Out[][NCOMP_MAG][ PS2P1*SQR(PS2) ],
          char   g_DE_Array_Out [][ CUBE(PS2) ],
          real   g_Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
-         real   g_Ele_Array    [][9][NCOMP_ELE][ PS2_P1*PS2 ],
+         real   g_Ele_Array    [][9][NCOMP_ELE][ PS2P1*PS2 ],
    const double g_Corner_Array [][3],
    const real   g_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
          real   g_PriVar       []   [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT) ],
@@ -46,10 +46,10 @@ void CUFLU_FluidSolver_CTU(
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
          real   g_Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
    const real   g_Mag_Array_In [][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
-         real   g_Mag_Array_Out[][NCOMP_MAG][ PS2_P1*SQR(PS2) ],
+         real   g_Mag_Array_Out[][NCOMP_MAG][ PS2P1*SQR(PS2) ],
          char   g_DE_Array_Out [][ CUBE(PS2) ],
          real   g_Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
-         real   g_Ele_Array    [][9][NCOMP_ELE][ PS2_P1*PS2 ],
+         real   g_Ele_Array    [][9][NCOMP_ELE][ PS2P1*PS2 ],
    const double g_Corner_Array [][3],
    const real   g_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
          real   g_PriVar       []   [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT) ],
@@ -92,12 +92,12 @@ static char (*d_DE_Array_F_Out)[ CUBE(PS2) ] = NULL;
 #endif
 #ifdef MHD
 extern real (*d_Mag_Array_F_In )[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
-extern real (*d_Mag_Array_F_Out)[NCOMP_MAG][ PS2_P1*SQR(PS2)         ];
-extern real (*d_Ele_Array      )[9][NCOMP_ELE][ PS2_P1*PS2 ];
+extern real (*d_Mag_Array_F_Out)[NCOMP_MAG][ PS2P1*SQR(PS2)         ];
+extern real (*d_Ele_Array      )[9][NCOMP_ELE][ PS2P1*PS2 ];
 #else
 static real (*d_Mag_Array_F_In )[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ] = NULL;
-static real (*d_Mag_Array_F_Out)[NCOMP_MAG][ PS2_P1*SQR(PS2)         ] = NULL;
-static real (*d_Ele_Array      )[9][NCOMP_ELE][ PS2_P1*PS2 ]           = NULL;
+static real (*d_Mag_Array_F_Out)[NCOMP_MAG][ PS2P1*SQR(PS2)          ] = NULL;
+static real (*d_Ele_Array      )[9][NCOMP_ELE][ PS2P1*PS2 ]            = NULL;
 #endif
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 extern real (*d_PriVar)      [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT)     ];
@@ -193,10 +193,10 @@ extern cudaStream_t *Stream;
 void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              real h_Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
                              real h_Mag_Array_In[][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
-                             real h_Mag_Array_Out[][NCOMP_MAG][ PS2_P1*SQR(PS2) ],
+                             real h_Mag_Array_Out[][NCOMP_MAG][ PS2P1*SQR(PS2) ],
                              char h_DE_Array_Out[][ CUBE(PS2) ],
                              real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
-                             real h_Ele_Array[][9][NCOMP_ELE][ PS2_P1*PS2 ],
+                             real h_Ele_Array[][9][NCOMP_ELE][ PS2P1*PS2 ],
                              const double h_Corner_Array[][3],
                              real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
                              const int NPatchGroup, const real dt, const real dh, const real Gamma,
@@ -305,7 +305,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
       Flu_MemSize_Out[s] = sizeof(real  )*NPatch_per_Stream[s]*FLU_NOUT*CUBE(PS2);
       Flux_MemSize   [s] = sizeof(real  )*NPatch_per_Stream[s]*NFLUX_TOTAL*9*PS2*PS2;
 #     ifdef MHD
-      Ele_MemSize    [s] = sizeof(real  )*NPatch_per_Stream[s]*NCOMP_ELE*9*PS2_P1*PS2;
+      Ele_MemSize    [s] = sizeof(real  )*NPatch_per_Stream[s]*NCOMP_ELE*9*PS2P1*PS2;
 #     endif
 #     ifdef UNSPLIT_GRAVITY
       USG_MemSize    [s] = sizeof(real  )*NPatch_per_Stream[s]*CUBE(USG_NXT_F);

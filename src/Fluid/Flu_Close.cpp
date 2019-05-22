@@ -19,9 +19,9 @@ static void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List
                                real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                                const real dt );
 #ifdef MHD
-void StoreElectric( const int lv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2_P1*PS2 ],
+void StoreElectric( const int lv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2P1*PS2 ],
                     const int NPG, const int *PID0_List, const real dt );
-void CorrectElectric( const int SonLv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2_P1*PS2 ],
+void CorrectElectric( const int SonLv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2P1*PS2 ],
                       const int NPG, const int *PID0_List, const real dt );
 #endif
 #endif // #if ( MODEL == HYDRO )
@@ -56,9 +56,9 @@ extern void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real
 //-------------------------------------------------------------------------------------------------------
 void Flu_Close( const int lv, const int SaveSg_Flu, const int SaveSg_Mag,
                 real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
-                real h_Ele_Array[][9][NCOMP_ELE][ PS2_P1*PS2 ],
+                real h_Ele_Array[][9][NCOMP_ELE][ PS2P1*PS2 ],
                 real h_Flu_Array_F_Out[][FLU_NOUT][ CUBE(PS2) ],
-                real h_Mag_Array_F_Out[][NCOMP_MAG][ PS2_P1*SQR(PS2) ],
+                real h_Mag_Array_F_Out[][NCOMP_MAG][ PS2P1*SQR(PS2) ],
                 char h_DE_Array_F_Out[][ CUBE(PS2) ],
                 const int NPG, const int *PID0_List,
                 const real h_Flu_Array_F_In[][FLU_NIN][ CUBE(FLU_NXT) ],
@@ -982,7 +982,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //                PID0_List   : List recording the patch indices with LocalID==0 to be udpated
 //                dt          : Evolution time-step
 //-------------------------------------------------------------------------------------------------------
-void StoreElectric( const int lv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2_P1*PS2 ],
+void StoreElectric( const int lv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2P1*PS2 ],
                     const int NPG, const int *PID0_List, const real dt )
 {
 
@@ -1050,7 +1050,7 @@ void StoreElectric( const int lv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2_P1
                for (int m=0; m<PS1;    m++)  {  const int mm = m + disp_m;
                for (int n=0; n<PS1_M1; n++)  {  const int nn = n + disp_n_p1;
 
-                  ElePtr[1][ m*PS1_M1 + n ] = dt*h_Ele_Array[TID][face_idx][1][ mm*PS2_P1 + nn ];
+                  ElePtr[1][ m*PS1_M1 + n ] = dt*h_Ele_Array[TID][face_idx][1][ mm*PS2P1 + nn ];
                }}
             } // if ( ElePtr != NULL )
          } // for (int s=0; s<6; s++)
@@ -1150,7 +1150,7 @@ void StoreElectric( const int lv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2_P1
 //                PID0_List   : List recording the patch indices with LocalID==0 to be udpated
 //                dt          : Evolution time-step
 //-------------------------------------------------------------------------------------------------------
-void CorrectElectric( const int SonLv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2_P1*PS2 ],
+void CorrectElectric( const int SonLv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2P1*PS2 ],
                       const int NPG, const int *PID0_List, const real dt )
 {
 
@@ -1166,7 +1166,7 @@ void CorrectElectric( const int SonLv, const real h_Ele_Array[][9][NCOMP_ELE][ P
    const int  FaLv         = SonLv - 1;
    const int  face_idx[6]  = { 0, 2, 3, 5, 6, 8 };
    const int  MirrorSib[6] = { 1, 0, 3, 2, 5, 4 };
-   const int  didx[2]      = { 1, PS2_P1 };
+   const int  didx[2]      = { 1, PS2P1 };
    const int  EleSize      = PS1_M1*PS1;
    const real dt_2         = (real)0.5*dt;
 
@@ -1220,7 +1220,7 @@ void CorrectElectric( const int SonLv, const real h_Ele_Array[][9][NCOMP_ELE][ P
             {
                 const int n      = t % PS1_M1 + 1;
                 const int m      = t / PS1_M1;
-                const int idx    = 2*( m*PS2_P1 + n );
+                const int idx    = 2*( m*PS2P1 + n );
                 const int idx_p1 = idx + didx[1];
 
                 CoarseElePtr[1][t] -= dt_2*( h_Ele_Array[TID][ face_idx[s] ][1][idx   ] +

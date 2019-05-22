@@ -199,8 +199,8 @@ char (*h_DE_Array_F_Out[2])[ CUBE(PS2) ]                           = { NULL, NUL
 #endif
 #ifdef MHD
 real (*h_Mag_Array_F_In [2])[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ] = { NULL, NULL };
-real (*h_Mag_Array_F_Out[2])[NCOMP_MAG][ PS2_P1*SQR(PS2)         ] = { NULL, NULL };
-real (*h_Ele_Array      [2])[9][NCOMP_ELE][ PS2_P1*PS2 ]           = { NULL, NULL };
+real (*h_Mag_Array_F_Out[2])[NCOMP_MAG][ PS2P1*SQR(PS2)          ] = { NULL, NULL };
+real (*h_Ele_Array      [2])[9][NCOMP_ELE][ PS2P1*PS2 ]            = { NULL, NULL };
 #endif
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 real (*h_PriVar)      [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT)     ]  = NULL;
@@ -260,8 +260,8 @@ char (*d_DE_Array_F_Out)[ PS2*PS2*PS2 ]                           = NULL;
 #endif
 #ifdef MHD
 real (*d_Mag_Array_F_In )[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ]   = NULL;
-real (*d_Mag_Array_F_Out)[NCOMP_MAG][ PS2_P1*SQR(PS2)         ]   = NULL;
-real (*d_Ele_Array      )[9][NCOMP_ELE][ PS2_P1*PS2 ]             = NULL;
+real (*d_Mag_Array_F_Out)[NCOMP_MAG][ PS2P1*SQR(PS2)          ]   = NULL;
+real (*d_Ele_Array      )[9][NCOMP_ELE][ PS2P1*PS2 ]              = NULL;
 #endif
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 real (*d_PriVar)      [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT)     ] = NULL;
