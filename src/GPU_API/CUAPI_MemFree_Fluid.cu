@@ -16,8 +16,8 @@ extern char (*d_DE_Array_F_Out)[ CUBE(PS2) ];
 #endif
 #ifdef MHD
 extern real (*d_Mag_Array_F_In )[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
-extern real (*d_Mag_Array_F_Out)[NCOMP_MAG][ PS2_P1*SQR(PS2)         ];
-extern real (*d_Ele_Array      )[9][NCOMP_ELE][ PS2_P1*PS2 ];
+extern real (*d_Mag_Array_F_Out)[NCOMP_MAG][ PS2P1*SQR(PS2)          ];
+extern real (*d_Ele_Array      )[9][NCOMP_ELE][ PS2P1*PS2 ];
 #endif
 extern real *d_dt_Array_T;
 extern real (*d_Flu_Array_T)[NCOMP_FLUID][ CUBE(PS1) ];

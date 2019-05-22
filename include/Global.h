@@ -223,8 +223,8 @@ extern char       (*h_DE_Array_F_Out [2])[ CUBE(PS2) ];
 #endif
 #ifdef MHD
 extern real       (*h_Mag_Array_F_In [2])[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
-extern real       (*h_Mag_Array_F_Out[2])[NCOMP_MAG][ PS2_P1*SQR(PS2)         ];
-extern real       (*h_Ele_Array      [2])[9][NCOMP_ELE][ PS2_P1*PS2 ];
+extern real       (*h_Mag_Array_F_Out[2])[NCOMP_MAG][ PS2P1*SQR(PS2)          ];
+extern real       (*h_Ele_Array      [2])[9][NCOMP_ELE][ PS2P1*PS2 ];
 #endif
 
 #ifdef GRAVITY

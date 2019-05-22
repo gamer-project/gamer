@@ -80,7 +80,7 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                           const real g_PriVar[][ CUBE(FLU_NXT) ],
                           const int NEle, const int NFlux, const int NPri, const int OffsetPri,
                           const real dt, const real dh,
-                          const bool DumpIntEle, real g_IntEle[][NCOMP_ELE][ PS2_P1*PS2 ] )
+                          const bool DumpIntEle, real g_IntEle[][NCOMP_ELE][ PS2P1*PS2 ] )
 {
 
    const int  NEleM1       = NEle - 1;
@@ -228,18 +228,18 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
 #           endif
 
             if      ( d == 0 ) {
-               if ( j_ele == 0 || j_ele == PS1 || j_ele == PS2 )  g_IntEle[ 3 + j_ele/PS1 ][1][ i_ele*PS2_P1 + k_ele ] = Ele_Out;
-               if ( k_ele == 0 || k_ele == PS1 || k_ele == PS2 )  g_IntEle[ 6 + k_ele/PS1 ][0][ j_ele*PS2    + i_ele ] = Ele_Out;
+               if ( j_ele == 0 || j_ele == PS1 || j_ele == PS2 )  g_IntEle[ 3 + j_ele/PS1 ][1][ i_ele*PS2P1 + k_ele ] = Ele_Out;
+               if ( k_ele == 0 || k_ele == PS1 || k_ele == PS2 )  g_IntEle[ 6 + k_ele/PS1 ][0][ j_ele*PS2   + i_ele ] = Ele_Out;
             } // d == 0
 
             else if ( d == 1 ) {
-               if ( k_ele == 0 || k_ele == PS1 || k_ele == PS2 )  g_IntEle[ 6 + k_ele/PS1 ][1][ j_ele*PS2_P1 + i_ele ] = Ele_Out;
-               if ( i_ele == 0 || i_ele == PS1 || i_ele == PS2 )  g_IntEle[ 0 + i_ele/PS1 ][0][ k_ele*PS2    + j_ele ] = Ele_Out;
+               if ( k_ele == 0 || k_ele == PS1 || k_ele == PS2 )  g_IntEle[ 6 + k_ele/PS1 ][1][ j_ele*PS2P1 + i_ele ] = Ele_Out;
+               if ( i_ele == 0 || i_ele == PS1 || i_ele == PS2 )  g_IntEle[ 0 + i_ele/PS1 ][0][ k_ele*PS2   + j_ele ] = Ele_Out;
             } // d == 1
 
             else {
-               if ( i_ele == 0 || i_ele == PS1 || i_ele == PS2 )  g_IntEle[ 0 + i_ele/PS1 ][1][ k_ele*PS2_P1 + j_ele ] = Ele_Out;
-               if ( j_ele == 0 || j_ele == PS1 || j_ele == PS2 )  g_IntEle[ 3 + j_ele/PS1 ][0][ i_ele*PS2    + k_ele ] = Ele_Out;
+               if ( i_ele == 0 || i_ele == PS1 || i_ele == PS2 )  g_IntEle[ 0 + i_ele/PS1 ][1][ k_ele*PS2P1 + j_ele ] = Ele_Out;
+               if ( j_ele == 0 || j_ele == PS1 || j_ele == PS2 )  g_IntEle[ 3 + j_ele/PS1 ][0][ i_ele*PS2   + k_ele ] = Ele_Out;
             } // d == 2
          } // if ( DumpIntEle )
       } // CGPU_LOOP( idx_ele, idx_ele_e[0]*idx_ele_e[1]*idx_ele_e[2] )

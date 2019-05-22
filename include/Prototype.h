@@ -69,10 +69,10 @@ void Buf_SortBoundaryPatch( const int NPatch, int *IDList, int *PosList );
 void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       real h_Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
                       real h_Mag_Array_In[][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
-                      real h_Mag_Array_Out[][NCOMP_MAG][ PS2_P1*SQR(PS2) ],
+                      real h_Mag_Array_Out[][NCOMP_MAG][ PS2P1*SQR(PS2) ],
                       char h_DE_Array_Out[][ CUBE(PS2) ],
                       real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
-                      real h_Ele_Array[][9][NCOMP_ELE][ PS2_P1*PS2 ],
+                      real h_Ele_Array[][9][NCOMP_ELE][ PS2P1*PS2 ],
                       const double h_Corner_Array[][3],
                       const real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
                       const int NPatchGroup, const real dt, const real dh, const real Gamma,
@@ -109,9 +109,9 @@ int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 void Flu_AllocateFluxArray( const int lv );
 void Flu_Close( const int lv, const int SaveSg_Flu, const int SaveSg_Mag,
                 real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
-                real h_Ele_Array[][9][NCOMP_ELE][ PS2_P1*PS2 ],
+                real h_Ele_Array[][9][NCOMP_ELE][ PS2P1*PS2 ],
                 real h_Flu_Array_F_Out[][FLU_NOUT][ CUBE(PS2) ],
-                real h_Mag_Array_F_Out[][NCOMP_MAG][ PS2_P1*SQR(PS2) ],
+                real h_Mag_Array_F_Out[][NCOMP_MAG][ PS2P1*SQR(PS2) ],
                 char h_DE_Array_F_Out[][ CUBE(PS2) ],
                 const int NPG, const int *PID0_List,
                 const real h_Flu_Array_F_In[][FLU_NIN][ CUBE(FLU_NXT) ],
@@ -421,6 +421,7 @@ void MHD_InterpolateBField( const real **CData, const int CSize[3][3], const int
                             const real *FInterface[6], const IntScheme_t IntScheme, const bool Monotonic );
 void MHD_AllocateElectricArray( const int lv );
 void MHD_Aux_Check_InterfaceB( const char *comment );
+void MHD_FixUp_Electric( const int lv );
 #endif
 
 
@@ -447,10 +448,10 @@ real   ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
 void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              real h_Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
                              real h_Mag_Array_In[][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
-                             real h_Mag_Array_Out[][NCOMP_MAG][ PS2_P1*SQR(PS2) ],
+                             real h_Mag_Array_Out[][NCOMP_MAG][ PS2P1*SQR(PS2) ],
                              char h_DE_Array_Out[][ CUBE(PS2) ],
                              real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
-                             real h_Ele_Array[][9][NCOMP_ELE][ PS2_P1*PS2 ],
+                             real h_Ele_Array[][9][NCOMP_ELE][ PS2P1*PS2 ],
                              const double h_Corner_Array[][3],
                              real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
                              const int NPatchGroup, const real dt, const real dh, const real Gamma,

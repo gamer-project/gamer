@@ -23,8 +23,8 @@ extern char (*d_DE_Array_F_Out)[ CUBE(PS2) ];
 #endif
 #ifdef MHD
 extern real (*d_Mag_Array_F_In )[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
-extern real (*d_Mag_Array_F_Out)[NCOMP_MAG][ PS2_P1*SQR(PS2)         ];
-extern real (*d_Ele_Array      )[9][NCOMP_ELE][ PS2_P1*PS2 ];
+extern real (*d_Mag_Array_F_Out)[NCOMP_MAG][ PS2P1*SQR(PS2)          ];
+extern real (*d_Ele_Array      )[9][NCOMP_ELE][ PS2P1*PS2 ];
 #endif
 extern real *d_dt_Array_T;
 extern real (*d_Flu_Array_T)[NCOMP_FLUID][ CUBE(PS1) ];
@@ -75,8 +75,8 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
 #  endif
 #  ifdef MHD
    const long Mag_MemSize_F_In    = sizeof(real  )*Flu_NPG*NCOMP_MAG*FLU_NXT_P1*SQR(FLU_NXT);
-   const long Mag_MemSize_F_Out   = sizeof(real  )*Flu_NPG*NCOMP_MAG*PS2_P1*SQR(PS2);
-   const long Ele_MemSize         = sizeof(real  )*Flu_NPG*9*NCOMP_ELE*PS2_P1*PS2;
+   const long Mag_MemSize_F_Out   = sizeof(real  )*Flu_NPG*NCOMP_MAG*PS2P1*SQR(PS2);
+   const long Ele_MemSize         = sizeof(real  )*Flu_NPG*9*NCOMP_ELE*PS2P1*PS2;
 #  endif
 #  ifdef GRAVITY
    const long dt_MemSize_T        = sizeof(real  )*MAX( Flu_NP, Pot_NP ); // dt_Array_T is used for both DT_FLU_SOLVER and DT_GRA_SOLVER

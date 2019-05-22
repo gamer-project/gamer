@@ -38,4 +38,10 @@ void Flu_FixUp( const int lv )
       Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, SonMagSg, FaMagSg, _TOTAL, _MAG );
    }
 
+// 3. use the fine-grid electric field on the edges of coarse-fine boundaries to correct the
+//    coarse-grid magnetic field
+#  ifdef MHD
+   if ( OPT__FIXUP_ELECTRIC )    MHD_FixUp_Electric( lv );
+#  endif
+
 } // FUNCTION : Flu_FixUp
