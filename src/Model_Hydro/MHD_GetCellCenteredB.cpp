@@ -49,9 +49,9 @@ void MHD_GetCellCenteredBField( real B_CC[], const int lv, const int PID, const 
    const int idx_By = IDX321_BY( i, j, k, PS1 );
    const int idx_Bz = IDX321_BZ( i, j, k, PS1 );
 
-   B_CC[0] = (real)0.5*( B_FC[0][idx_Bx] + B_FC[0][ idx_Bx + 1        ] );
-   B_CC[1] = (real)0.5*( B_FC[1][idx_By] + B_FC[1][ idx_By + PS1      ] );
-   B_CC[2] = (real)0.5*( B_FC[2][idx_Bz] + B_FC[2][ idx_Bz + SQR(PS1) ] );
+   B_CC[MAGX] = (real)0.5*( B_FC[MAGX][idx_Bx] + B_FC[MAGX][ idx_Bx + 1        ] );
+   B_CC[MAGY] = (real)0.5*( B_FC[MAGY][idx_By] + B_FC[MAGY][ idx_By + PS1      ] );
+   B_CC[MAGZ] = (real)0.5*( B_FC[MAGZ][idx_Bz] + B_FC[MAGZ][ idx_Bz + SQR(PS1) ] );
 
 } // FUNCTION : MHD_GetCellCenteredBField
 
@@ -95,7 +95,7 @@ real MHD_GetCellCenteredBEnergy( const int lv, const int PID, const int i, const
 
    MHD_GetCellCenteredBField( B_CC, lv, PID, i, j, k, MagSg );
 
-   BEngy = (real)0.5*( SQR(B_CC[0]) + SQR(B_CC[1]) + SQR(B_CC[2]) );
+   BEngy = (real)0.5*( SQR(B_CC[MAGX]) + SQR(B_CC[MAGY]) + SQR(B_CC[MAGZ]) );
 
    return BEngy;
 
