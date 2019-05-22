@@ -170,31 +170,31 @@ struct patch_t
 
 // data members
 // ===================================================================================
-   real (*fluid)[PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+   real (*fluid)[PS1][PS1][PS1];
 
 #  ifdef MHD
-   real (*magnetic)[PS1_P1*PATCH_SIZE*PATCH_SIZE];
+   real (*magnetic)[PS1P1*PS1*PS1];
 #  endif
 
 #  ifdef GRAVITY
-   real (*pot)[PATCH_SIZE][PATCH_SIZE];
+   real (*pot)[PS1][PS1];
 #  ifdef STORE_POT_GHOST
    real (*pot_ext)[GRA_NXT][GRA_NXT];
 #  endif
 #  endif // GRAVITY
 
 #  ifdef DUAL_ENERGY
-   char (*de_status)[PATCH_SIZE][PATCH_SIZE];
+   char (*de_status)[PS1][PS1];
 #  endif
 
 #  ifdef PARTICLE
    real (*rho_ext)[RHOEXT_NXT][RHOEXT_NXT];
 #  endif
 
-   real (*flux       [6])[PATCH_SIZE][PATCH_SIZE];
-   real (*flux_tmp   [6])[PATCH_SIZE][PATCH_SIZE];
+   real (*flux       [6])[PS1][PS1];
+   real (*flux_tmp   [6])[PS1][PS1];
 #  ifdef BITWISE_REPRODUCIBILITY
-   real (*flux_bitrep[6])[PATCH_SIZE][PATCH_SIZE];
+   real (*flux_bitrep[6])[PS1][PS1];
 #  endif
 
 #  ifdef MHD
@@ -320,11 +320,11 @@ struct patch_t
       for (int s=0; s<26; s++ )  sibling[s] = -1;     // -1 <--> NO sibling
 
       const int Padded              = 1<<NLEVEL;
-      const int BoxNScale_Padded[3] = { BoxScale[0]/PATCH_SIZE + 2*Padded,
-                                        BoxScale[1]/PATCH_SIZE + 2*Padded,
-                                        BoxScale[2]/PATCH_SIZE + 2*Padded }; // normalized and padded box scale
+      const int BoxNScale_Padded[3] = { BoxScale[0]/PS1 + 2*Padded,
+                                        BoxScale[1]/PS1 + 2*Padded,
+                                        BoxScale[2]/PS1 + 2*Padded }; // normalized and padded box scale
       int Cr_Padded[3];
-      for (int d=0; d<3; d++)    Cr_Padded[d] = corner[d]/PATCH_SIZE + Padded;
+      for (int d=0; d<3; d++)    Cr_Padded[d] = corner[d]/PS1 + Padded;
 
 #     ifdef GAMER_DEBUG
       for (int d=0; d<3; d++)
@@ -514,16 +514,16 @@ struct patch_t
 #     endif
 #     endif
 
-      flux      [SibID]  = new real [NFLUX_TOTAL][PATCH_SIZE][PATCH_SIZE];
+      flux      [SibID]  = new real [NFLUX_TOTAL][PS1][PS1];
       if ( AllocTmp )
-      flux_tmp  [SibID]  = new real [NFLUX_TOTAL][PATCH_SIZE][PATCH_SIZE];
+      flux_tmp  [SibID]  = new real [NFLUX_TOTAL][PS1][PS1];
 #     ifdef BITWISE_REPRODUCIBILITY
-      flux_bitrep[SibID] = new real [NFLUX_TOTAL][PATCH_SIZE][PATCH_SIZE];
+      flux_bitrep[SibID] = new real [NFLUX_TOTAL][PS1][PS1];
 #     endif
 
       for(int v=0; v<NFLUX_TOTAL; v++)
-      for(int m=0; m<PATCH_SIZE; m++)
-      for(int n=0; n<PATCH_SIZE; n++)
+      for(int m=0; m<PS1; m++)
+      for(int n=0; n<PS1; n++)
       {
          flux       [SibID][v][m][n] = 0.0;
          /*
@@ -594,7 +594,7 @@ struct patch_t
 #     endif
 #     endif
 
-      const int Size = ( SibID < 6 ) ? NCOMP_ELE*PS1_M1*PS1 : PS1;
+      const int Size = ( SibID < 6 ) ? NCOMP_ELE*PS1M1*PS1 : PS1;
 
       electric      [SibID]  = new real [Size];
       if ( AllocTmp )
@@ -657,7 +657,7 @@ struct patch_t
 
       if ( fluid == NULL )
       {
-         fluid = new real [NCOMP_TOTAL][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+         fluid = new real [NCOMP_TOTAL][PS1][PS1][PS1];
          fluid[0][0][0][0] = (real)-1.0;  // arbitrarily initialized
       }
 
@@ -696,7 +696,7 @@ struct patch_t
 
       if ( magnetic == NULL )
       {
-         magnetic = new real [NCOMP_MAG][PS1_P1*PS1*PS1];
+         magnetic = new real [NCOMP_MAG][PS1P1*PS1*PS1];
          magnetic[0][0] = (real)-1.0;  // arbitrarily initialized
       }
 
@@ -729,7 +729,7 @@ struct patch_t
    void gnew()
    {
 
-      if ( pot == NULL )      pot     = new real [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+      if ( pot == NULL )      pot     = new real [PS1][PS1][PS1];
 
 #     ifdef STORE_POT_GHOST
       if ( pot_ext == NULL )  pot_ext = new real [GRA_NXT][GRA_NXT][GRA_NXT];
@@ -775,7 +775,7 @@ struct patch_t
 
       if ( de_status == NULL )
       {
-         de_status = new char [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+         de_status = new char [PS1][PS1][PS1];
       }
 
    } // METHOD : snew

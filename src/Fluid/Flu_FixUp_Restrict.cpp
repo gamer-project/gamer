@@ -93,8 +93,8 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 
 #  ifdef MHD
    const int MirrorSib[6]      = { 1, 0, 3, 2, 5, 4 };
-   const int Bidx_offset[6]    = { 0, PS1, 0, SQR(PS1), 0, CUBE(PS1) };          // array offsets of the longitudinal B field on 6 faces
-   const int Bidx_stride[3][2] = { PS1_P1, PS1_P1*PS1, 1, PS1_P1*PS1, 1, PS1 };  // array strides along the transverse directions for Bx/y/z
+   const int Bidx_offset[6]    = { 0, PS1, 0, SQR(PS1), 0, CUBE(PS1) };       // array offsets of the longitudinal B field on 6 faces
+   const int Bidx_stride[3][2] = { PS1P1, PS1P1*PS1, 1, PS1P1*PS1, 1, PS1 };  // array strides along the transverse directions for Bx/y/z
 #  endif
 
 
@@ -232,13 +232,13 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
             for (int j=0; j<PS1_half;   j++)  {  J = j*2;
             for (int i=0; i<PS1_half+1; i++)  {  I = i*2;
 
-               const int idx_fa   = IDX321( i+Disp_i, j+Disp_j, k+Disp_k, PS1_P1, PS1 );
-               const int idx_son0 = IDX321( I,        J,        K,        PS1_P1, PS1 );
+               const int idx_fa   = IDX321( i+Disp_i, j+Disp_j, k+Disp_k, PS1P1, PS1 );
+               const int idx_son0 = IDX321( I,        J,        K,        PS1P1, PS1 );
 
-               FaBx[idx_fa] = 0.25*( SonBx[ idx_son0                       ] +
-                                     SonBx[ idx_son0 + PS1_P1              ] +
-                                     SonBx[ idx_son0 + PS1_P1*PS1          ] +
-                                     SonBx[ idx_son0 + PS1_P1*PS1 + PS1_P1 ] );
+               FaBx[idx_fa] = 0.25*( SonBx[ idx_son0                     ] +
+                                     SonBx[ idx_son0 + PS1P1             ] +
+                                     SonBx[ idx_son0 + PS1P1*PS1         ] +
+                                     SonBx[ idx_son0 + PS1P1*PS1 + PS1P1 ] );
             }}}
 
 //          By
@@ -249,13 +249,13 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
             for (int j=0; j<PS1_half+1; j++)  {  J = j*2;
             for (int i=0; i<PS1_half;   i++)  {  I = i*2;
 
-               const int idx_fa   = IDX321( i+Disp_i, j+Disp_j, k+Disp_k, PS1, PS1_P1 );
-               const int idx_son0 = IDX321( I,        J,        K,        PS1, PS1_P1 );
+               const int idx_fa   = IDX321( i+Disp_i, j+Disp_j, k+Disp_k, PS1, PS1P1 );
+               const int idx_son0 = IDX321( I,        J,        K,        PS1, PS1P1 );
 
-               FaBy[idx_fa] = 0.25*( SonBy[ idx_son0                  ] +
-                                     SonBy[ idx_son0 + 1              ] +
-                                     SonBy[ idx_son0 + PS1_P1*PS1     ] +
-                                     SonBy[ idx_son0 + PS1_P1*PS1 + 1 ] );
+               FaBy[idx_fa] = 0.25*( SonBy[ idx_son0                 ] +
+                                     SonBy[ idx_son0 + 1             ] +
+                                     SonBy[ idx_son0 + PS1P1*PS1     ] +
+                                     SonBy[ idx_son0 + PS1P1*PS1 + 1 ] );
             }}}
 
 //          Bz
