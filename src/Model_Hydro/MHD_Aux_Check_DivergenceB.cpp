@@ -67,7 +67,7 @@ void MHD_Aux_Check_DivergenceB( const bool Verbose, const char *comment )
                   BzR = B[MAGZ][ idx_BzL + SQR(PS1) ];
 
                   DivB = ( BxR - BxL ) + ( ByR - ByL ) + ( BzR - BzL );
-                  AmpB = ( FABS(BxR) + FABS(BxL) + FABS(ByR) + FABS(ByL) + FABS(BzR) + FABS(BzL) ) / (real)6.0;
+                  AmpB = FABS(BxR) + FABS(BxL) + FABS(ByR) + FABS(ByL) + FABS(BzR) + FABS(BzL);
 
 //                do not normalize DivB if B is already zero on all 6 faces
                   if ( AmpB != (real)0.0 )   DivB = FABS( DivB/AmpB );
