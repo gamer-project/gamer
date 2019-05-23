@@ -213,6 +213,8 @@ void Aux_TakeNote()
       fprintf( Note, "LR_SCHEME                       PLM\n" );
 #     elif ( LR_SCHEME == PPM )
       fprintf( Note, "LR_SCHEME                       PPM\n" );
+#     elif ( LR_SCHEME == WENO )
+      fprintf( Note, "LR_SCHEME                       WENO\n" );
 #     elif ( LR_SCHEME == NONE )
       fprintf( Note, "LR_SCHEME                       NONE\n" );
 #     else

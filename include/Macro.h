@@ -56,6 +56,7 @@
 // data reconstruction schemes
 #define PLM          1
 #define PPM          2
+#define WENO         3
 
 
 // Riemann solvers
@@ -511,15 +512,19 @@
 #  if   ( FLU_SCHEME == RTVD )
 #        define FLU_GHOST_SIZE      3
 #  elif ( FLU_SCHEME == MHM )
-#     if ( LR_SCHEME == PLM )
+#     if   ( LR_SCHEME == PLM )
 #        define FLU_GHOST_SIZE      2
-#     else // PPM
+#     elif ( LR_SCHEME == PPM )
+#        define FLU_GHOST_SIZE      3
+#     elif ( LR_SCHEME == WENO )
 #        define FLU_GHOST_SIZE      3
 #     endif
 #  elif ( FLU_SCHEME == MHM_RP )
-#     if ( LR_SCHEME == PLM )
+#     if   ( LR_SCHEME == PLM )
 #        define FLU_GHOST_SIZE      3
-#     else // PPM
+#     elif ( LR_SCHEME == PPM )
+#        define FLU_GHOST_SIZE      4
+#     elif ( LR_SCHEME == WENO )
 #        define FLU_GHOST_SIZE      4
 #     endif
 #  elif ( FLU_SCHEME == CTU )

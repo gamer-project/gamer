@@ -130,7 +130,9 @@ real dL[3] = { 0.22414772727272728, 0.6001311188811189, 0.17572115384615383 };
            SumAlphaL += AlphaL[i];
            SumAlphaR += AlphaR[i];
          }
-        
+       
+         TDataX[ Idx_Out ] = TDataX[ Idx_Out + Tdx ] = (real)0.0;
+ 
          for (int i=0;i<3;i++)
          {
            OmegaL[i] = AlphaL[i] / SumAlphaL;
@@ -183,6 +185,8 @@ real dL[3] = { 0.22414772727272728, 0.6001311188811189, 0.17572115384615383 };
            SumAlphaL += AlphaL[i];
            SumAlphaR += AlphaR[i];
          }
+
+         TDataY[ Idx_Out ] = TDataY[ Idx_Out + Tdy ] = (real)0.0;
         
          for (int i=0;i<3;i++)
          {
@@ -236,6 +240,8 @@ real dL[3] = { 0.22414772727272728, 0.6001311188811189, 0.17572115384615383 };
            SumAlphaL += AlphaL[i];
            SumAlphaR += AlphaR[i];
          }
+
+         FPtr[ Idx_Out ] = FPtr[ Idx_Out + Fdz ] = (real)0.0;
         
          for (int i=0;i<3;i++)
          {

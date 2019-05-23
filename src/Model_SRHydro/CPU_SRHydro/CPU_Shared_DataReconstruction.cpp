@@ -207,6 +207,182 @@ void SRHydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #endif // #if ( LR_SCHEME == PLM )
 
 
+#if ( LR_SCHEME == WENO )
+GPU_DEVICE
+void SRHydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
+                                       real g_PriVar   [][ CUBE(FLU_NXT) ],
+                                       real g_FC_Var   [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
+                                       real g_Slope_PPM[][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
+                                 const int NIn, const int NGhost, const real Gamma,
+                                 const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+                                 const real dt, const real dh, const real MinDens, const real MinTemp )
+{
+real cR[3][3] = 
+{
+ { (real)+3.333333e-01, (real)+8.333333e-01, (real)-1.666667e-01 },
+ { (real)-1.666667e-01, (real)+8.333333e-01, (real)+3.333333e-01 },
+ { (real)+3.333333e-01, (real)-1.166667e+00, (real)+1.833333e+00 },
+};
+
+real dR[3] = { 0.3, 0.6, 0.1};
+
+// i-0.25
+real cL[3][3] =
+{
+ { (real)+1.833333e+00, (real)-1.166667e+00, (real)+3.333333e-01 },
+ { (real)+3.333333e-01, (real)+8.333333e-01, (real)-1.666667e-01 },
+ { (real)-1.666667e-01, (real)+8.333333e-01, (real)+3.333333e-01 },
+};
+
+real dL[3] = { 0.1, 0.6, 0.3};
+
+real RStencil[3], LStencil[3];
+real Smoothness[3], AlphaL[3], OmegaL[3], AlphaR[3], OmegaR[3], SumAlphaL, SumAlphaR;
+real Epsilon = (real)1e-5;
+real A = (real)1.0833333333333333;
+real B = (real)0.25;
+
+
+// ==========================================================================
+
+
+   const int  didx_cc[3] = { 1, NIn, SQR(NIn) };
+   const int  NOut       = NIn - 2*NGhost;      // number of output cells
+
+// 0. conserved --> primitive variables
+#     if ( FLU_SCHEME == MHM )
+      real ConVar_1Cell[NCOMP_TOTAL], PriVar_1Cell[NCOMP_TOTAL];
+
+      CGPU_LOOP( idx, CUBE(NIn) )
+      {
+         for (int v=0; v<NCOMP_TOTAL; v++)   ConVar_1Cell[v] = g_ConVar[v][idx];
+
+#        ifdef CHECK_NEGATIVE_IN_FLUID
+         SRHydro_CheckUnphysical( ConVar_1Cell, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true );
+#        endif
+
+         SRHydro_Con2Pri( ConVar_1Cell, PriVar_1Cell, Gamma, MinTemp );
+
+         for (int v=0; v<NCOMP_TOTAL; v++)   g_PriVar[v][idx] = PriVar_1Cell[v];
+      }
+
+#     ifdef __CUDACC__
+      __syncthreads();
+#     endif
+#     endif
+
+// data reconstruction
+   const int NOut2 = SQR(NOut);
+   CGPU_LOOP( idx_fc, CUBE(NOut) )
+   {
+      const int i_cc   = NGhost + idx_fc%NOut;
+      const int j_cc   = NGhost + idx_fc%NOut2/NOut;
+      const int k_cc   = NGhost + idx_fc/NOut2;
+      const int idx_cc = IDX321( i_cc, j_cc, k_cc, NIn, NIn );
+
+      real cc_C[NCOMP_TOTAL], cc_L1[NCOMP_TOTAL], cc_R1[NCOMP_TOTAL], cc_L2[NCOMP_TOTAL], cc_R2[NCOMP_TOTAL];
+      real fc[6][NCOMP_TOTAL];                                       // face-centered variables of the central cell
+      real Slope_Limiter[NCOMP_TOTAL];
+
+      for (int v=0; v<NCOMP_TOTAL; v++)   cc_C[v] = g_PriVar[v][idx_cc];
+
+
+//    loop over different spatial directions
+      for (int d=0; d<3; d++)
+      {
+//       2. evaluate the monotonic slope
+         const int faceL   = 2*d;      // left and right face indices
+         const int faceR   = faceL+1;
+         const int idx_ccL1 = idx_cc   - didx_cc[d];
+         const int idx_ccL2 = idx_ccL1 - didx_cc[d];
+         const int idx_ccR1 = idx_cc   + didx_cc[d];
+         const int idx_ccR2 = idx_ccR1 + didx_cc[d];
+
+         for (int v=0; v<NCOMP_TOTAL; v++)
+         {
+            cc_L1[v] = g_PriVar[v][idx_ccL1];
+            cc_L2[v] = g_PriVar[v][idx_ccL2];
+            cc_R1[v] = g_PriVar[v][idx_ccR1];
+            cc_R2[v] = g_PriVar[v][idx_ccR2];
+
+//          WENO reconstruction
+
+            RStencil[0] = cR[0][0]*cc_C [v] + cR[0][1]*cc_R1[v] + cR[0][2]*cc_R2[v];
+            RStencil[1] = cR[1][0]*cc_L1[v] + cR[1][1]*cc_C [v] + cR[1][2]*cc_R1[v];
+            RStencil[2] = cR[2][0]*cc_R2[v] + cR[2][1]*cc_R1[v] + cR[2][2]*cc_C [v];
+
+            LStencil[0] = cL[0][0]*cc_C [v] + cL[0][1]*cc_R1[v] + cL[0][2]*cc_R2[v];
+            LStencil[1] = cL[1][0]*cc_L1[v] + cL[1][1]*cc_C [v] + cL[1][2]*cc_R1[v];
+            LStencil[2] = cL[2][0]*cc_R2[v] + cL[2][1]*cc_R1[v] + cL[2][2]*cc_C [v];
+
+            Smoothness[0] = A*SQR(           cc_C [v] - (real)2.0*cc_R1[v] +           cc_R2[v] )
+                           +B*SQR( (real)3.0*cc_C [v] - (real)4.0*cc_R1[v] +           cc_R2[v] );            
+
+            Smoothness[1] = A*SQR(           cc_L1[v] - (real)2.0*cc_C [v] +           cc_R1[v] )
+                           +B*SQR(           cc_L1[v]                      -           cc_R1[v] );            
+
+            Smoothness[2] = A*SQR(           cc_L2[v] - (real)2.0*cc_L1[v] +           cc_C [v] )
+                           +B*SQR(           cc_L2[v] - (real)4.0*cc_L1[v] + (real)3.0*cc_C [v] );
+
+            SumAlphaL = SumAlphaR = (real)0.0;
+
+            for (int i=0;i<3;i++)
+            {
+              AlphaL[i] = dL[i]/SQR( Epsilon + Smoothness[i] );
+              AlphaR[i] = dR[i]/SQR( Epsilon + Smoothness[i] );
+
+              SumAlphaL += AlphaL[i];
+              SumAlphaR += AlphaR[i];
+            }
+
+            fc[faceL][v] = fc[faceR][v] = (real)0.0;
+                                                                                                                                            
+            for (int i=0;i<3;i++)
+            {
+              OmegaL[i] = AlphaL[i] / SumAlphaL;
+              OmegaR[i] = AlphaR[i] / SumAlphaR;
+
+              fc[faceL][v] += OmegaL[i]*LStencil[i];
+              fc[faceR][v] += OmegaR[i]*RStencil[i];
+            }
+         }
+
+
+//       5. primitive variables --> conserved variables
+         real tmp[NCOMP_TOTAL];  // input and output arrays must not overlap for Pri2Con()
+
+         for (int v=0; v<NCOMP_TOTAL; v++)   tmp[v] = fc[faceL][v];
+         SRHydro_Pri2Con( tmp, fc[faceL], Gamma );
+
+         for (int v=0; v<NCOMP_TOTAL; v++)   tmp[v] = fc[faceR][v];
+         SRHydro_Pri2Con( tmp, fc[faceR], Gamma );
+
+      } // for (int d=0; d<3; d++)
+
+
+#     if ( FLU_SCHEME == MHM )
+//    6. advance the face-centered variables by half time-step for the MHM integrator
+      SRHydro_HancockPredict( fc, dt, dh, g_ConVar, idx_cc, MinDens, MinTemp, Gamma );
+#     endif
+
+
+//    7. store the face-centered values to the output array
+      for (int f=0; f<6; f++)
+      for (int v=0; v<NCOMP_TOTAL; v++)
+         g_FC_Var[f][v][idx_fc] = fc[f][v];
+
+   } // CGPU_LOOP( idx_fc, CUBE(NOut) )
+
+
+#  ifdef __CUDACC__
+   __syncthreads();
+#  endif
+
+} // FUNCTION : SRHydro_DataReconstruction (PLM)
+
+#endif
+
+
 
 #if ( LR_SCHEME == PPM )
 //-------------------------------------------------------------------------------------------------------

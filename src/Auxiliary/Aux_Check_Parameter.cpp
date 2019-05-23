@@ -923,8 +923,8 @@ void Aux_Check_Parameter()
 #     error : ERROR : RTVD do not support UNSPLIT_GRAVITY !!
 #  endif
 
-#  if ( defined LR_SCHEME  &&  LR_SCHEME != PLM  &&  LR_SCHEME != PPM )
-#     error : ERROR : unsupported data reconstruction scheme (PLM/PPM) !!
+#  if ( defined LR_SCHEME  &&  LR_SCHEME != PLM  &&  LR_SCHEME != PPM  &&  LR_SCHEME != WENO )
+#     error : ERROR : unsupported data reconstruction scheme (PLM/PPM/WENO) !!
 #  endif
 
 #  if ( defined RSOLVER  &&  RSOLVER != EXACT  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLC )
