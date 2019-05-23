@@ -155,7 +155,7 @@ void SRHydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
             fc[faceR][v] =  (real)0.5 * Slope_Limiter[v] + cc_C[v];
          }
 
-//       ensure the face-centered variables lie between neighboring cell-centered values
+       ensure the face-centered variables lie between neighboring cell-centered values
          for (int v=0; v<NCOMP_TOTAL; v++)
          {
             real Min, Max;
@@ -398,7 +398,7 @@ void SRHydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                        real g_PriVar   [][ CUBE(FLU_NXT) ],
                                        real g_FC_Var   [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
                                        real g_Slope_PPM[][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
-                                 const bool Con2Pri, const int NIn, const int NGhost, const real Gamma,
+                                 const int NIn, const int NGhost, const real Gamma,
                                  const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                  const real dt, const real dh, const real MinDens, const real MinTemp )
 {
@@ -410,13 +410,16 @@ void SRHydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 
 // 0. conserved --> primitive variables
-   if ( Con2Pri )
-   {
+#     if ( FLU_SCHEME == MHM )
       real ConVar_1Cell[NCOMP_TOTAL], PriVar_1Cell[NCOMP_TOTAL];
 
       CGPU_LOOP( idx, CUBE(NIn) )
       {
          for (int v=0; v<NCOMP_TOTAL; v++)   ConVar_1Cell[v] = g_ConVar[v][idx];
+
+#        ifdef CHECK_NEGATIVE_IN_FLUID
+         SRHydro_CheckUnphysical( ConVar_1Cell, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true );
+#        endif
 
          SRHydro_Con2Pri( ConVar_1Cell, PriVar_1Cell, Gamma, MinTemp );
 
@@ -426,7 +429,7 @@ void SRHydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #     ifdef __CUDACC__
       __syncthreads();
 #     endif
-   } // if ( Con2Pri )
+#     endif
 
 
 // 1. evaluate the monotonic slope of all cells
@@ -567,7 +570,7 @@ void SRHydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 #     if ( FLU_SCHEME == MHM )
 //    6. advance the face-centered variables by half time-step for the MHM integrator
-      SRHydro_HancockPredict( fc, dt, dh, g_ConVar, idx_cc, MinDens, MinTemp );
+      SRHydro_HancockPredict( fc, dt, dh, g_ConVar, idx_cc, MinDens, MinTemp, Gamma );
 #     endif
 
 
