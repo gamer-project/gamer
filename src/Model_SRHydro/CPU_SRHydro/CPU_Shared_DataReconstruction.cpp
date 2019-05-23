@@ -309,11 +309,11 @@ real B = (real)0.25;
 
             RStencil[0] = cR[0][0]*cc_C [v] + cR[0][1]*cc_R1[v] + cR[0][2]*cc_R2[v];
             RStencil[1] = cR[1][0]*cc_L1[v] + cR[1][1]*cc_C [v] + cR[1][2]*cc_R1[v];
-            RStencil[2] = cR[2][0]*cc_R2[v] + cR[2][1]*cc_R1[v] + cR[2][2]*cc_C [v];
+            RStencil[2] = cR[2][0]*cc_L2[v] + cR[2][1]*cc_L1[v] + cR[2][2]*cc_C [v];
 
             LStencil[0] = cL[0][0]*cc_C [v] + cL[0][1]*cc_R1[v] + cL[0][2]*cc_R2[v];
             LStencil[1] = cL[1][0]*cc_L1[v] + cL[1][1]*cc_C [v] + cL[1][2]*cc_R1[v];
-            LStencil[2] = cL[2][0]*cc_R2[v] + cL[2][1]*cc_R1[v] + cL[2][2]*cc_C [v];
+            LStencil[2] = cL[2][0]*cc_L2[v] + cL[2][1]*cc_L1[v] + cL[2][2]*cc_C [v];
 
             Smoothness[0] = A*SQR(           cc_C [v] - (real)2.0*cc_R1[v] +           cc_R2[v] )
                            +B*SQR( (real)3.0*cc_C [v] - (real)4.0*cc_R1[v] +           cc_R2[v] );            
@@ -342,8 +342,8 @@ real B = (real)0.25;
               OmegaL[i] = AlphaL[i] / SumAlphaL;
               OmegaR[i] = AlphaR[i] / SumAlphaR;
 
-              fc[faceL][v] += OmegaL[i]*LStencil[i];
               fc[faceR][v] += OmegaR[i]*RStencil[i];
+              fc[faceL][v] += OmegaL[i]*LStencil[i];
             }
          }
 
