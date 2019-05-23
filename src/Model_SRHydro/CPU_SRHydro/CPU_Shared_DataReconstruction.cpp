@@ -155,7 +155,7 @@ void SRHydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
             fc[faceR][v] =  (real)0.5 * Slope_Limiter[v] + cc_C[v];
          }
 
-       ensure the face-centered variables lie between neighboring cell-centered values
+//       ensure the face-centered variables lie between neighboring cell-centered values
          for (int v=0; v<NCOMP_TOTAL; v++)
          {
             real Min, Max;
