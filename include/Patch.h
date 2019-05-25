@@ -54,6 +54,19 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                flux_bitrep[6]  : Fluid flux for achieving bitwise reproducibility (i.e., ensuring that the round-off errors are
 //                                  exactly the same in different parallelization parameters/strategies)
 //                electric        : Electric field for the MHD fix-up operation
+///                                 --> Array structure = [sibling index][E field index][cell index]
+//                                  --> For sibling indices 0-5, there are two E fields on each face
+//                                      --> E field index on x faces: [0/1] = Ey/Ez
+//                                                           y faces: [0/1] = Ez/Ex
+//                                                           z faces: [0/1] = Ex/Ey
+//                                          Cell index dimension on x faces: [Nz][Ny] (= [PS1-1][PS1] for Ey and [PS1][PS1-1] for Ez)
+//                                                     dimension on y faces: [Nx][Nz] (= [PS1-1][PS1] for Ez and [PS1][PS1-1] for Ex)
+//                                                     dimension on z faces: [Ny][Nx] (= [PS1-1][PS1] for Ex and [PS1][PS1-1] for Ey)
+//                                  --> For sibling indices 6-17, there is only one E field on each edge
+//                                      --> E field index is always 0 (6-9->Ez, 10-13->Ex, 14-17->Ey)
+//                                          Cell index dimension is always [PS1]
+//                                  --> To unify the array structure of sibling indices 0-5 and 6-17, we actually convert the
+//                                      2D array [E field index][cell index] into a 1D array
 //                electric_tmp    : Temporary electric field for the option "AUTO_REDUCE_DT"
 //                electric_bitrep : Electric field for achieving bitwise reproducibility in MHD (i.e., ensuring that the
 //                                  round-off errors are exactly the same in different parallelization parameters/strategies)
