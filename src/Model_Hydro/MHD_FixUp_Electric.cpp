@@ -49,12 +49,28 @@ void MHD_FixUp_Electric( const int lv )
          if ( EPtr == NULL )  continue;
 
 //       set up array indices
-         const int e     = s - 6;         // 0 ~ 11 (edge index)
-         const int xyz   = (e/4+2)%3;     // (2,2,2,2,0,0,0,0,1,1,1,1): edge direction
-         const int LR1   = e%2;           // (0,1,0,1,0,1,0,1,0,1,0,1): left(0)/right(1) edge along the 1st transverse direction
-         const int LR2   = e%4/2;         // (0,0,1,1,0,0,1,1,0,0,1,1): left(0)/right(1) egee along the 2nd transverse direction
-         const int TDir1 = ( xyz + 1 )%3; // 1st transverse direction
-         const int TDir2 = ( xyz + 2 )%3; // 2nd transverse direction
+         const int  e       = s - 6;            // 0 ~ 11 (edge index)
+         const int  xyz     = (e/4+2)%3;        // (2,2,2,2,0,0,0,0,1,1,1,1): edge direction
+         const int  TDir1   = ( xyz + 1 )%3;    // 1st transverse direction
+         const int  TDir2   = ( xyz + 2 )%3;    // 2nd transverse direction
+         const int  LR1     = e%2;              // (0,1,0,1,0,1,0,1,0,1,0,1): left(0)/right(1) edge along TDir1
+         const int  LR2     = e%4/2;            // (0,0,1,1,0,0,1,1,0,0,1,1): left(0)/right(1) egee along TDir2
+
+         const int  SibPID1 = amr->patch[0][lv][PID]->sibling[ 2*TDir1 + LR1 ];  // sibling direction along TDir1/TDir2
+         const int  SibPID2 = amr->patch[0][lv][PID]->sibling[ 2*TDir2 + LR2 ];
+         const real Coeff1  = _dh*( (real)+2.0*(real)LR2 - (real)1.0 );          // correction coefficient along TDir1/TDir2
+         const real Coeff2  = _dh*( (real)-2.0*(real)LR1 + (real)1.0 );
+
+//       "SibPID == -1" will violate the proper-nesting constraint
+//       --> because "EPtr != NULL" only happens around coarse-fine boundaries
+#        ifdef GAMER_DEBUG
+         if ( SibPID1 == -1 )
+            Aux_Error( ERROR_INFO, "SibPID1 == -1 (lv %d, PID %d, sib %d) !!\n", lv, PID, 2*TDir1+LR1 );
+
+         if ( SibPID2 == -1 )
+            Aux_Error( ERROR_INFO, "SibPID2 == -1 (lv %d, PID %d, sib %d) !!\n", lv, PID, 2*TDir2+LR2 );
+#        endif
+
 
   //     array offsets and strides along the 1st/2nd transverse directions
          int offset1=-1, offset2=-1, stride1=-1, stride2=-1;
@@ -92,34 +108,15 @@ void MHD_FixUp_Electric( const int lv )
 
 
 //       correct B field
-         for (int t=0; t<PS1; t++)
-         {
-            const real CorrB   = EPtr[t]*_dh;
-            const real Sign1   = (real)+2.0*(real)LR2 - (real)1.0;
-            const real Sign2   = (real)-2.0*(real)LR1 + (real)1.0;
-            const int  idx1    = offset1 + t*stride1;
-            const int  idx2    = offset2 + t*stride2;
-            const int  SibPID1 = amr->patch[0][lv][PID]->sibling[ 2*TDir1 + LR1 ];
-            const int  SibPID2 = amr->patch[0][lv][PID]->sibling[ 2*TDir2 + LR2 ];
+//       --> only need to correct B field on the **coarse-coarse** interfaces
+//       --> still need to check if SibPID>=0 for the non-periodic BC
+         if ( SibPID1 >= 0  &&  amr->patch[0][lv][SibPID1]->son == -1 )
+            for (int t=0; t<PS1; t++)
+               amr->patch[MagSg][lv][PID]->magnetic[TDir1][ offset1 + t*stride1 ] += Coeff1*EPtr[t];
 
-//          "SibPID == -1" will violate the proper-nesting constraint
-//          --> because "EPtr != NULL" only happens around coarse-fine boundaries
-#           ifdef GAMER_DEBUG
-            if ( SibPID1 == -1 )
-               Aux_Error( ERROR_INFO, "SibPID1 == -1 (lv %d, PID %d, sib %d) !!\n", lv, PID, 2*TDir1+LR1 );
-
-            if ( SibPID2 == -1 )
-               Aux_Error( ERROR_INFO, "SibPID2 == -1 (lv %d, PID %d, sib %d) !!\n", lv, PID, 2*TDir2+LR2 );
-#           endif
-
-//          only need to correct B field on the **coarse-coarse** interfaces
-//          --> still need to check if SibPID>=0 for the non-periodic BC
-            if ( SibPID1 >= 0  &&  amr->patch[0][lv][SibPID1]->son == -1 )
-               amr->patch[MagSg][lv][PID]->magnetic[TDir1][idx1] += Sign1*CorrB;
-
-            if ( SibPID2 >= 0  &&  amr->patch[0][lv][SibPID2]->son == -1 )
-               amr->patch[MagSg][lv][PID]->magnetic[TDir2][idx2] += Sign2*CorrB;
-         } // for (int t=0; t<PS1; t++)
+         if ( SibPID2 >= 0  &&  amr->patch[0][lv][SibPID2]->son == -1 )
+            for (int t=0; t<PS1; t++)
+               amr->patch[MagSg][lv][PID]->magnetic[TDir2][ offset2 + t*stride2 ] += Coeff2*EPtr[t];
       } // for (int s=6; s<18; s++)
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
