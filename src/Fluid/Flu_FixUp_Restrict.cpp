@@ -281,13 +281,6 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 
 //    apply the same B field restriction to the data of father-sibling patches on the coarse-fine boundaries
 #     ifdef MHD
-
-//    OPT__FIXUP_RESTRICT in MHD must work with OPT__FIXUP_ELECTRIC, which will enable amr->WithElectric
-//    --> to be more cautious, turn on this check even when GAMER_DEBUG is off
-//        (e.g., data restriction is applied in Flu_CorrAfterAllSync() even when both OPT__INIT_RESTRICT
-//        and OPT_FIXUP_RESTRICT are off)
-      if ( !amr->WithElectric )  Aux_Error( ERROR_INFO, "amr->Electric is off !!\n" );
-
       for (int s=0; s<6; s++)
       {
          const int FaSibPID = amr->patch[0][FaLv][FaPID]->sibling[s];
@@ -300,8 +293,8 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 //       skip father patches adjacent to non-periodic boundaries
          if ( FaSibPID < -1 )    continue;
 
-//       use electric[] to check the coarse-fine boundaries
-         if ( amr->patch[0][FaLv][FaSibPID]->electric[ MirrorSib[s] ] != NULL )
+//       find the coarse-fine boundaries
+         if ( amr->patch[0][FaLv][FaSibPID]->son == -1 )
          {
             const int Bdir    = s/2;    // Bx/y/z = 0/1/2
             const int Bdidx_m = Bidx_stride[Bdir][1];
@@ -318,7 +311,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 //             directly copy the restricted data
                for (int n=0; n<PS1; n++)  FaSibMagPtr[ n*Bdidx_n ] = FaMagPtr[ n*Bdidx_n ];
             }
-         } // if ( amr->patch[0][FaLv][FaSibPID]->electric[ MirrorSib[s] ] != NULL )
+         } // if ( amr->patch[0][FaLv][FaSibPID]->son == -1 )
       } // for (int s=0; s<6; s++)
 #     endif // #ifdef MHD
 
