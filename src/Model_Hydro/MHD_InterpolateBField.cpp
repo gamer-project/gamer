@@ -65,7 +65,7 @@ static real (*GetCellB[3])( const real [], const real, const real ) = { GetCellB
 //                3. Use the input parameter "IntScheme" to determine the adopted interpolation scheme
 //                4. Must apply to all three magnetic components at once
 //                   --> To preserve the divergence-free condition
-//                5. Strickly speaking, the adopted scheme is divergence-preserving instead of divergence-free
+//                5. Strictly speaking, the adopted scheme is divergence-preserving instead of divergence-free
 //                   --> In other words, the output B field will be divergence-free only if the input B field
 //                       is divergence-free
 //                6. Assuming (0th/1th/2th) B field array index = (x/y/z) B component

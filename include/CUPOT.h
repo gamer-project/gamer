@@ -115,7 +115,7 @@
 #  if ( POT_GHOST_SIZE == 5 )
 // use shuffle reduction
 // --> only work for POT_GHOST_SIZE == 5 since # threads must be a multiple of warpSize
-// --> although strickly speaking the shuffle functions do NOT work for double precision, but experiments
+// --> although strictly speaking the shuffle functions do NOT work for double precision, but experiments
 //     show that residual_sum += (float)residual, where residual_sum is double, gives acceptable accuracy
 #  if ( GPU_ARCH == KEPLER  ||  GPU_ARCH == MAXWELL  ||  GPU_ARCH == PASCAL  ||  GPU_ARCH == VOLTA )
 #     define SOR_USE_SHUFFLE
