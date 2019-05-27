@@ -12,7 +12,7 @@ void SRHydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 void SRHydro_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma, const real MinTemp );
 
-void SRHydro_Con2Pri( const real In[], real Out[], const real Gamma, const real MinTemp );
+real SRHydro_Con2Pri( const real In[], real Out[], const real Gamma, const real MinTemp );
 
 void SRHydro_Pri2Con( const real In[], real Out[], const real Gamma);
 

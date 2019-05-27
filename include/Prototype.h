@@ -123,7 +123,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const bool NormPassive, const int NNorm, const int NormIdx[],
                       const bool JeansMinPres, const real JeansMinPres_Coeff );
 
-void SRHydro_Con2Pri( const real In[], real Out[], const real Gamma, const real MinTemp);
+real SRHydro_Con2Pri( const real In[], real Out[], const real Gamma, const real MinTemp);
 void SRHydro_Pri2Con( const real In[], real Out[], const real Gamma);
 
 void SRHydro_3Velto4Vel( const real In[], real Out[] );

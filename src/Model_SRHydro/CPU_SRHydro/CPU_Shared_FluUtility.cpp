@@ -209,7 +209,7 @@ real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, 
 //                Gamma              : Gamma
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real MinTemp)
+real SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real MinTemp)
 {
       real Temp = SRHydro_GetTemperature (In[0], In[1], In[2], In[3], In[4], Gamma, MinTemp );
 #if ( EOS == APPROXIMATED_GENERAL )
@@ -224,10 +224,12 @@ void SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real 
       Out[2] = In[2]/factor;
       Out[3] = In[3]/factor;
 
-      real factor1 = SQRT((real)1.0 + VectorDotProduct(Out[1], Out[2], Out[3]));
+      real Lorentz = SQRT((real)1.0 + VectorDotProduct(Out[1], Out[2], Out[3]));
 
-      Out[0] = In[0]/factor1;
+      Out[0] = In[0]/Lorentz;
       Out[4] = Out[0] * Temp; // P = nkT
+
+     return Lorentz;
 }// FUNCTION : SRHydro_Con2Pri
 
 
@@ -305,23 +307,19 @@ GPU_DEVICE
 void SRHydro_Con2Flux (const int XYZ, real Flux[], const real Input[], const real Gamma, const real MinTemp )
 {
   real ConVar[NCOMP_FLUID];	// don't need to include passive scalars since they don't have to be rotated1
-  real PriVar4[NCOMP_FLUID];	// D, Ux, Uy, Uz, P
-  real PriVar3[NCOMP_FLUID];	// D, Vx, Vy, Vz, P
-  real Pres, Vx;
+  real PriVar[NCOMP_FLUID];	// D, Ux, Uy, Uz, P
+  real Lorentz, Vx;
 
   for (int v = 0; v < NCOMP_FLUID; v++)   ConVar[v] = Input[v];
 
   SRHydro_Rotate3D (ConVar, XYZ, true);
 
-  SRHydro_Con2Pri (ConVar, PriVar4, Gamma, MinTemp);
+  Lorentz = SRHydro_Con2Pri (ConVar, PriVar, Gamma, MinTemp);
 
-  SRHydro_4Velto3Vel (PriVar4, PriVar3);
-
-  Vx = PriVar3[1];
-  Pres = PriVar3[4];
+  Vx = PriVar[1] / Lorentz;
 
   Flux[0] = ConVar[0] * Vx;
-  Flux[1] = FMA( ConVar[1], Vx, Pres );
+  Flux[1] = FMA( ConVar[1], Vx, PriVar[4] );
   Flux[2] = ConVar[2] * Vx;
   Flux[3] = ConVar[3] * Vx;
 # if ( CONSERVED_ENERGY == 1 )
