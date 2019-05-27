@@ -100,46 +100,38 @@ real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, 
 /* initial guess  */
   real Constant = E_Dsqr - M_Dsqr;
   if ( Constant > (real)1.0 )
+  {
+   if ( Dsqr - (real)0.0625 * Msqr >= (real)0 )
    {
-	if ( Dsqr - (real)0.0625 * Msqr >= (real)0 )
-	  {
-	    if ( Constant > (real)2.5 ) 
-	      {
-		 guess = SQRT(FMA( (real)0.1111111, E_Dsqr, - FMA ( (real)0.1041667, M_Dsqr, (real)0.2222222 ) ));
-	      }
-	    else guess = (Constant - (real)1.0) * (real)0.3333333;
-	  }
-	else // 1 - (M/D)**2 < 0
-	  {
-	    if ( Constant >  (real)1.5 + SQRT( FMA ((real)0.0625, M_Dsqr, (real) -0.75 ))) 
-	      {
-		 guess = SQRT(FMA( (real)0.1111111, E_Dsqr, - FMA ( (real)0.1041667, M_Dsqr, (real)0.2222222 ) ));
-	      }
-	    else guess = (Constant - (real)1.0) * (real)0.3333333;
-	  }
-    } else return MinTemp;
+     if ( Constant > (real)2.5 ) 
+          guess = SQRT(FMA( (real)0.1111111, E_Dsqr, - FMA ( (real)0.1041667, M_Dsqr, (real)0.2222222 ) ));
+     else guess = (Constant - (real)1.0) * (real)0.3333333;
+   }
+   else // 1 - (M/D)**2 < 0
+   {
+    if ( Constant >  (real)1.5 + SQRT( FMA ((real)0.0625, M_Dsqr, (real) -0.75 ))) 
+         guess = SQRT(FMA( (real)0.1111111, E_Dsqr, - FMA ( (real)0.1041667, M_Dsqr, (real)0.2222222 ) ));
+    else guess = (Constant - (real)1.0) * (real)0.3333333;
+   }
+  } else return MinTemp;
 # elif ( CONSERVED_ENERGY == 2 )
 /* initial guess  */
-   real Constant = E_Dsqr - M_Dsqr + 2 * E_D;
-   if ( Constant > (real)0.0 )
-    {
-	   if ( Dsqr - (real)0.0625 * Msqr >= (real)0 )
-	     {
-	       if ( Constant > (real)1.5 ) 
-		 {
-		    guess = SQRT( (real)0.1111111 * E_Dsqr + (real)0.2222222 * E_D - (real)0.1041667 * M_Dsqr - (real)0.1111111 );
-		 }
-	       else guess = Constant * (real)0.3333333;
-	     }
-	   else // 1 - (M/D)**2 < 0
-	     {
-	       if ( Constant >  (real)0.5 + SQRT( (real)0.0625 * M_Dsqr - (real)0.75 )) 
-		 {
-		    guess = SQRT( (real)0.1111111 * E_Dsqr + (real)0.2222222 * E_D - (real)0.1041667 * M_Dsqr - (real)0.1111111 );
-		 }
-	       else guess = Constant * (real)0.3333333;
-	     }
-    } else return MinTemp;
+  real Constant = E_Dsqr - M_Dsqr + 2 * E_D;
+  if ( Constant > (real)0.0 )
+  {
+      if ( Dsqr - (real)0.0625 * Msqr >= (real)0 )
+      {
+        if ( Constant > (real)1.5 ) 
+             guess = SQRT( (real)0.1111111 * E_Dsqr + (real)0.2222222 * E_D - (real)0.1041667 * M_Dsqr - (real)0.1111111 );
+        else guess = Constant * (real)0.3333333;
+      }
+      else // 1 - (M/D)**2 < 0
+      {
+        if ( Constant >  (real)0.5 + SQRT( (real)0.0625 * M_Dsqr - (real)0.75 )) 
+             guess = SQRT( (real)0.1111111 * E_Dsqr + (real)0.2222222 * E_D - (real)0.1041667 * M_Dsqr - (real)0.1111111 );
+        else guess = Constant * (real)0.3333333;
+      }
+  } else return MinTemp;
 # else
 # error: CONSERVED_ENERGY must be 1 or 2!
 # endif
@@ -147,53 +139,55 @@ real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, 
   real Gamma_m1 = Gamma - (real) 1.0;
 /* initial guess */
 # if   ( CONSERVED_ENERGY == 1 )
-   real Constant = E_Dsqr - M_Dsqr;
-   if ( Constant > (real)1.0 )
-    {
-	      if ( Constant > (real)1.0 + (real)2* (Gamma_m1 / Gamma ) * (M / In[0]) )
-		{
-		  real A = (real)1.0 / SQR(Gamma_m1);
-		  real B = (real)2.0 /Gamma_m1;
-		  real C = (((real)2*Gamma-(real)1.0)/(Gamma*Gamma)) * M_Dsqr - E_Dsqr;
-		  real delta = SQRT( B * B - (real)4 * A * C );
-		  guess = -(real)2.0 *  C / ( B + delta);
-		}
-	     else guess = (real)0.5*Gamma_m1 * ( Constant - (real)1.0);
-    } else return MinTemp;
-# elif ( CONSERVED_ENERGY == 2 )
-    real Constant = E_Dsqr - M_Dsqr + (real)2 * E_D;
-    if ( Constant > (real)0.0 )
+  real Constant = E_Dsqr - M_Dsqr;
+
+  if ( Constant > (real)1.0 )
+  {
+     if ( Constant > (real)1.0 + (real)2* (Gamma_m1 / Gamma ) * (M / In[0]) )
      {
-	  if ( Constant > (real)2* (Gamma_m1 / Gamma ) * (M / In[0]) )
-	    {
-	      real A = (real)1.0 / SQR(Gamma_m1);
-	      real B = (real)2.0 /Gamma_m1;
-	      real C = (((real)2*Gamma-(real)1.0)/(Gamma*Gamma)) * M_Dsqr - E_Dsqr - (real)2 * E_D;
-	      real delta = SQRT( B * B - (real)4 * A * C );
-	      guess = -(real)2.0 *  C / ( B + delta);
-	    }
-	  else guess = (real)0.5*Gamma_m1 * Constant;
-     } else return MinTemp;
+       real A = (real)1.0 / SQR(Gamma_m1);
+       real B = (real)2.0 /Gamma_m1;
+       real C = (((real)2*Gamma-(real)1.0)/(Gamma*Gamma)) * M_Dsqr - E_Dsqr;
+       real delta = SQRT( B * B - (real)4 * A * C );
+       guess = -(real)2.0 *  C / ( B + delta);
+     }
+     else guess = (real)0.5*Gamma_m1 * ( Constant - (real)1.0);
+  } else return MinTemp;
+# elif ( CONSERVED_ENERGY == 2 )
+  real Constant = E_Dsqr - M_Dsqr + (real)2 * E_D;
+
+  if ( Constant > (real)0.0 )
+  {
+    if ( Constant > (real)2* (Gamma_m1 / Gamma ) * (M / In[0]) )
+    {
+      real A = (real)1.0 / SQR(Gamma_m1);
+      real B = (real)2.0 /Gamma_m1;
+      real C = (((real)2*Gamma-(real)1.0)/(Gamma*Gamma)) * M_Dsqr - E_Dsqr - (real)2 * E_D;
+      real delta = SQRT( B * B - (real)4 * A * C );
+      guess = -(real)2.0 *  C / ( B + delta);
+    }
+    else guess = (real)0.5*Gamma_m1 * Constant;
+  } else return MinTemp;
 # else
 # error: CONSERVED_ENERGY must be 1 or 2!
 # endif
-#else
-#error: unsupported EoS!
-#endif
+# else
+# error: unsupported EoS!
+# endif
 
-   struct Fun_params params = { M_Dsqr, E_D };
+     struct Fun_params params = { M_Dsqr, E_D };
 
-#ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( guess != guess || guess >= HUGE_NUMBER || guess <= TINY_NUMBER )
-    { 
-      printf ("guess root = %14.7e\n", guess);
-      printf ("D=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n", In[0], In[1], In[2], In[3], In[4]);
-    }
-#endif 
+# ifdef CHECK_NEGATIVE_IN_FLUID
+  if ( guess != guess || guess >= HUGE_NUMBER || guess <= TINY_NUMBER )
+  { 
+    printf ("guess root = %14.7e\n", guess);
+    printf ("D=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n", In[0], In[1], In[2], In[3], In[4]);
+  }
+# endif 
 
-   NewtonRaphsonSolver(&params ,&root, guess, (real) TINY_NUMBER, (real) EPSILON, Gamma);
+  NewtonRaphsonSolver(&params ,&root, guess, (real) TINY_NUMBER, (real) EPSILON, Gamma);
 
-   return root;
+  return root;
 }				// FUNCTION : SRHydro_GetTemperature
 
 
@@ -211,25 +205,25 @@ real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, 
 GPU_DEVICE
 real SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real MinTemp)
 {
-      real Temp = SRHydro_GetTemperature (In[0], In[1], In[2], In[3], In[4], Gamma, MinTemp );
-#if ( EOS == APPROXIMATED_GENERAL )
-      real h = FMA( (real)2.5, Temp, SQRT( FMA( (real)2.25, Temp*Temp, (real)1.0 ) ) );
-#elif ( EOS == CONSTANT_GAMMA ) 
-      real h = (real)1.0 + Temp * Gamma / (Gamma-(real)1.0);
-#else
-#error: unsupported EoS!
-#endif
-      real factor = In[0]*h;
-      Out[1] = In[1]/factor;
-      Out[2] = In[2]/factor;
-      Out[3] = In[3]/factor;
+   real Temp = SRHydro_GetTemperature (In[0], In[1], In[2], In[3], In[4], Gamma, MinTemp );
+#  if ( EOS == APPROXIMATED_GENERAL )
+   real h = FMA( (real)2.5, Temp, SQRT( FMA( (real)2.25, Temp*Temp, (real)1.0 ) ) );
+#  elif ( EOS == CONSTANT_GAMMA ) 
+   real h = (real)1.0 + Temp * Gamma / (Gamma-(real)1.0);
+#  else
+#  error: unsupported EoS!
+#  endif
+   real factor = In[0]*h;
+   Out[1] = In[1]/factor;
+   Out[2] = In[2]/factor;
+   Out[3] = In[3]/factor;
 
-      real Lorentz = SQRT((real)1.0 + VectorDotProduct(Out[1], Out[2], Out[3]));
+   real Lorentz = SQRT((real)1.0 + VectorDotProduct(Out[1], Out[2], Out[3]));
 
-      Out[0] = In[0]/Lorentz;
-      Out[4] = Out[0] * Temp; // P = nkT
+   Out[0] = In[0]/Lorentz;
+   Out[4] = Out[0] * Temp; // P = nkT
 
-     return Lorentz;
+   return Lorentz;
 }// FUNCTION : SRHydro_Con2Pri
 
 
@@ -593,11 +587,6 @@ real SRHydro_GetPressure (const real Dens, const real MomX, const real MomY, con
 
   return Out[4];
 }				// FUNCTION : SRHydro_GetPressure
-
-
-
-
-
 
 
 GPU_DEVICE
