@@ -2740,7 +2740,7 @@ void Prepare_PatchData_FreeParticleDensityArray( const int lv )
 //
 // Note        :  1. Collected B field (i.e., the FInt_Ptr[] array) will be passed to
 //                   MHD_InterpolateBField() when invoking InterpolateGhostZone()
-//                2. Currently the temporal interpolation, altough supported, is not actually used
+//                2. Currently the temporal interpolation, although supported, is not actually used
 //                   --> MagIntTime is always false
 //                3. Since the interpolated ghost zones must be an even number (i.e., GhostSize_Padded),
 //                   when GhostSize is an odd number, one cannot use Data1PG_FC[] to get all the required
@@ -2752,7 +2752,7 @@ void Prepare_PatchData_FreeParticleDensityArray( const int lv )
 //                4. FInt_Data[] is preallocated to avoid frequent memory allocation/deallocation
 //
 // Parameter   :  FInt_Data         : Array to store the fine-grid magnetic field to be returned
-//                FInt_Ptr          : Poitner arrays pointing to FInt_Data[]
+//                FInt_Ptr          : Pointer arrays pointing to FInt_Data[]
 //                Data1PG_FC        : Array storing the already prepared fine-grid magnetic field
 //                lv                : Target refinement level
 //                PID0              : 0th PID of the central patch group on lv
