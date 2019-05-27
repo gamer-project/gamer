@@ -112,7 +112,7 @@ const LR_Limiter_t
    GMINMOD         = 2,
    ALBADA          = 3,
    VL_GMINMOD      = 4,
-   EXTPRE          = 5,
+   EXTPRE          = 5;
 
 
 // data output formats
