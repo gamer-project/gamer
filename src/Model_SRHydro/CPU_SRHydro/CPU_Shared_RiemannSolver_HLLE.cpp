@@ -62,20 +62,17 @@ void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In
    SRHydro_Rotate3D( CR, XYZ, true );
 
 /* 1. compute primitive vars. from conserved vars. */
-   SRHydro_Con2Pri (CL, PL, Gamma, MinTemp);
-   SRHydro_Con2Pri (CR, PR, Gamma, MinTemp);
+   lFactor = SRHydro_Con2Pri (CL, PL, Gamma, MinTemp);
+   rFactor = SRHydro_Con2Pri (CR, PR, Gamma, MinTemp);
 
 /* 2. Transform 4-velocity to 3-velocity */
-   lFactor=(real)1.0/SQRT((real)1.0+VectorDotProduct(PL[1], PL[2], PL[3]));
-   rFactor=(real)1.0/SQRT((real)1.0+VectorDotProduct(PR[1], PR[2], PR[3]));
+   lV1=PL[1]/lFactor;
+   lV2=PL[2]/lFactor;
+   lV3=PL[3]/lFactor;
 
-   lV1=PL[1]*lFactor;
-   lV2=PL[2]*lFactor;
-   lV3=PL[3]*lFactor;
-
-   rV1=PR[1]*rFactor;
-   rV2=PR[2]*rFactor;
-   rV3=PR[3]*rFactor;
+   rV1=PR[1]/rFactor;
+   rV2=PR[2]/rFactor;
+   rV3=PR[3]/rFactor;
 
 /* 3. Compute the max and min wave speeds used in Mignone */
 #  if ( EOS == APPROXIMATED_GENERAL )
@@ -97,8 +94,8 @@ void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In
 #  endif
 
 // square of Lorentz factor
-   gammasql = (real)1.0 + VectorDotProduct(PL[1], PL[2], PL[3]);
-   gammasqr = (real)1.0 + VectorDotProduct(PR[1], PR[2], PR[3]);
+   gammasql = SQR(lFactor);
+   gammasqr = SQR(rFactor);
 
    ssl = cslsq / FMA( - gammasql, cslsq, gammasql ); /* Mignone Eq 22.5 */
    ssr = csrsq / FMA( - gammasqr, csrsq, gammasqr ); /* Mignone Eq 22.5 */
@@ -108,9 +105,6 @@ void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In
    if ( ( ssl < 0.0 ) || ( ssr < 0.0 ) ) printf("ssl = %14.7e, ssr = %14.7e\n", ssl, ssr);
 #  endif
 
-   real lV1s = lV1*lV1;
-   real rV1s = rV1*rV1;
-  
    real lV2s = lV2*lV2;
    real rV2s = rV2*rV2;
 
