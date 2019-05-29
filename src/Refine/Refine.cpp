@@ -680,8 +680,11 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 //       (c1.3.4.2-3) magnetic field
 #        ifdef MHD
-         MHD_InterpolateBField( (const real**)Mag_CData, CSize_Mag, CStart_Mag, CRange_Mag,
-                                (real**)Mag_FData, FSize_Mag, FStart_Mag, (const real**)Mag_FInterface_Ptr,
+         const real *Mag_CData_Ptr[3] = { Mag_CData[0], Mag_CData[1], Mag_CData[2] };
+               real *Mag_FData_Ptr[3] = { Mag_FData[0], Mag_FData[1], Mag_FData[2] };
+
+         MHD_InterpolateBField( Mag_CData_Ptr, CSize_Mag, CStart_Mag, CRange_Mag,
+                                Mag_FData_Ptr, FSize_Mag, FStart_Mag, (const real**)Mag_FInterface_Ptr,
                                 OPT__REF_MAG_INT_SCHEME, Monotonicity_Yes );
 #        endif
 
