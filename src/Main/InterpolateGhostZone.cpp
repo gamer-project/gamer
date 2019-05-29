@@ -144,13 +144,13 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
 
 // set up parameters for the adopted interpolation scheme
-   int NSide_CC, CGhost_CC, CSize_CC[3], FSize_CC[3], CSize3D_CC, FSize3D_CC;
-   int NSide_FC, CGhost_FC, CSize_FC[3][3], FSize_FC[3][3], CSize3D_FC[3], FSize3D_FC[3];
+   int NSide_CC_Useless, CGhost_CC, CSize_CC[3], FSize_CC[3], CSize3D_CC, FSize3D_CC;
+   int NSide_FC_Useless, CGhost_FC, CSize_FC[3][3], FSize_FC[3][3], CSize3D_FC[3], FSize3D_FC[3];
 
-   if ( NVarCC_Tot > 0 )   Int_Table( IntScheme_CC, NSide_CC, CGhost_CC );
+   if ( NVarCC_Tot > 0 )   Int_Table( IntScheme_CC, NSide_CC_Useless, CGhost_CC );
    else                    CGhost_CC = 0;
 
-   if ( NVarFC_Tot > 0 )   Int_Table( IntScheme_FC, NSide_FC, CGhost_FC );
+   if ( NVarFC_Tot > 0 )   Int_Table( IntScheme_FC, NSide_FC_Useless, CGhost_FC );
    else                    CGhost_FC = 0;
 
    const double dh                 = amr->dh[lv];

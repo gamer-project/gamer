@@ -79,6 +79,7 @@ static real (*GetCellB[3])( const real [], const real, const real ) = { GetCellB
 //                FSize      : Size of FData[]
 //                FStart     : (x,y,z) starting indices to store the interpolation results
 //                FInterface : B field to be fixed on the coarse-fine interfaces
+//                             --> Set "FInterface[sib] == NULL" for coarse-coarse interfaces
 //                IntScheme  : Interpolation scheme
 //                Monotonic  : Ensure that all interpolation results are monotonic
 //
