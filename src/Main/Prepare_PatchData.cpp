@@ -2794,8 +2794,9 @@ void MHD_SetFInterface( real *FInt_Data, real *FInt_Ptr[6], const real *Data1PG_
 // iterate over the six faces of the target ghost-zone region
    for (int f=0; f<6; f++)
    {
-      norm_dir = f/2;   // [0,0,1,1,2,2]
-      sign     = f&1;   // [0,1,0,1,0,1]
+      norm_dir    = f/2;   // [0,0,1,1,2,2]
+      sign        = f&1;   // [0,1,0,1,0,1]
+      FInt_Ptr[f] = NULL;  // initialize as NULL --> coarse-coarse interface
 
 //    nothing to do on the left/right faces of left/right patches
       if (  TABLE_01( Side, 'x'+norm_dir, 0, NULL_INT, 1 ) == sign  )   continue;

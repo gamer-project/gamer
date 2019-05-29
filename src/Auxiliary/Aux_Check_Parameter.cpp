@@ -774,7 +774,7 @@ void Aux_Check_Parameter()
 #  endif
 
 #  if ( FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
-#     error : ERROR : unsupported hydro scheme in the makefile (MHM_RP/CTU) !!
+#     error : ERROR : unsupported MHD scheme in the makefile (MHM_RP/CTU) !!
 #  endif
 
    if ( OPT__MAG_INT_SCHEME != INT_MINMOD1D  &&  OPT__MAG_INT_SCHEME != INT_VANLEER  &&
