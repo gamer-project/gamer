@@ -46,13 +46,17 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    if ( NPatchTotal[lv+1] != 0 )    Mis_CompareRealValue( Time[lv], Time[lv+1], __FUNCTION__, true );
 
 
-   const int  Width       = PATCH_SIZE * amr->scale[lv+1];  // scale of a single patch      at level "lv+1"
-   const int CFluSg       = amr->FluSg[lv  ];               // sandglass of fluid variables at level "lv"
-   const int FFluSg       = amr->FluSg[lv+1];               // sandglass of fluid variables at level "lv+1"
+   const int  Width       = PS1*amr->scale[lv+1];  // scale of a single patch      at level "lv+1"
+   const int  CFluSg      = amr->FluSg[lv  ];      // sandglass of fluid variables at level "lv"
+   const int  FFluSg      = amr->FluSg[lv+1];      // sandglass of fluid variables at level "lv+1"
 #  ifdef GRAVITY
-   const int  CPotSg      = amr->PotSg[lv  ];               // sandglass of potential       at level "lv"
-   const int  FPotSg      = amr->PotSg[lv+1];               // sandglass of potential       at level "lv+1"
+   const int  CPotSg      = amr->PotSg[lv  ];      // sandglass of potential       at level "lv"
+   const int  FPotSg      = amr->PotSg[lv+1];      // sandglass of potential       at level "lv+1"
    const bool SelfGravity = ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH );
+#  endif
+#  ifdef MHD
+   const int  CMagSg      = amr->MagSg[lv  ];      // sandglass of magnetic field  at level "lv"
+   const int  FMagSg      = amr->MagSg[lv+1];      // sandglass of magnetic field  at level "lv+1"
 #  endif
 #  if ( MODEL == HYDRO )
    const real  Gamma_m1   = GAMMA - (real)1.0;
@@ -66,31 +70,61 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 // parameters for spatial interpolation
-   const int CRange[3]     = { PATCH_SIZE, PATCH_SIZE, PATCH_SIZE };
-   const int FSize         = 2*PATCH_SIZE;
-   const int FStart[3]     = { 0, 0, 0 };
-   const int FSize3[3]     = { FSize, FSize, FSize };
+   const int CRange_CC[3] = { PS1, PS1, PS1 };
+   const int FSize_CC     = PS2;
+   const int FStart_CC[3] = { 0, 0, 0 };
+   const int FSize_CC3[3] = { FSize_CC, FSize_CC, FSize_CC };
 
    int NSide_Flu, CGhost_Flu;
    Int_Table( OPT__REF_FLU_INT_SCHEME, NSide_Flu, CGhost_Flu );
 
-   const int CSize_Flu     = PATCH_SIZE + 2*CGhost_Flu;
+   const int CSize_Flu     = PS1 + 2*CGhost_Flu;
    const int CStart_Flu[3] = { CGhost_Flu, CGhost_Flu, CGhost_Flu };
    const int CSize_Flu3[3] = { CSize_Flu, CSize_Flu, CSize_Flu };
 
    real Flu_CData[NCOMP_TOTAL][CSize_Flu][CSize_Flu][CSize_Flu];  // coarse-grid fluid array for interpolation
-   real Flu_FData[NCOMP_TOTAL][FSize][FSize][FSize];              // fine-grid fluid array storing the interpolation result
+   real Flu_FData[NCOMP_TOTAL][FSize_CC ][FSize_CC ][FSize_CC ];  // fine-grid fluid array storing the interpolation result
 
 #  ifdef GRAVITY
    int NSide_Pot, CGhost_Pot;
    Int_Table( OPT__REF_POT_INT_SCHEME, NSide_Pot, CGhost_Pot );
 
-   const int CSize_Pot     = PATCH_SIZE + 2*CGhost_Pot;
+   const int CSize_Pot     = PS1 + 2*CGhost_Pot;
    const int CStart_Pot[3] = { CGhost_Pot, CGhost_Pot, CGhost_Pot };
 
    real Pot_CData[CSize_Pot][CSize_Pot][CSize_Pot];   // coarse-grid potential array for interpolation
-   real Pot_FData[FSize][FSize][FSize];               // fine-grid potential array storing the interpolation result
+   real Pot_FData[FSize_CC ][FSize_CC ][FSize_CC ];   // fine-grid potential array storing the interpolation result
 #  endif
+
+#  ifdef MHD
+   const int CRange_Mag[3]    = { PS1, PS1, PS1 };
+   const int FSize_Mag [3][3] = {  { PS2P1, PS2,   PS2   },
+                                   { PS2,   PS2P1, PS2   },
+                                   { PS2,   PS2,   PS2P1 }  };
+   const int FStart_Mag[3][3] = { {0, 0, 0}, {0, 0, 0}, {0, 0, 0} };
+
+   int NSide_Mag_Useless, CGhost_Mag;
+   Int_Table( OPT__REF_MAG_INT_SCHEME, NSide_Mag_Useless, CGhost_Mag );
+
+   const int CSize_Mag_T      = PS1 + 2*CGhost_Mag;   // coarse-grid size along the transverese (_T) / normal (_N) direction
+   const int CSize_Mag_N      = PS1P1;
+   const int CStart_Mag[3][3] = {  { 0,          CGhost_Mag, CGhost_Mag },
+                                   { CGhost_Mag, 0,          CGhost_Mag },
+                                   { CGhost_Mag, CGhost_Mag, 0          }  };
+   const int CSize_Mag [3][3] = {  { CSize_Mag_N, CSize_Mag_T, CSize_Mag_T },
+                                   { CSize_Mag_T, CSize_Mag_N, CSize_Mag_T },
+                                   { CSize_Mag_T, CSize_Mag_T, CSize_Mag_N }  };
+
+   real Mag_CData[NCOMP_MAG][ CSize_Mag_N*SQR(CSize_Mag_T) ];  // coarse-grid B field array for interpolation
+   real Mag_FData[NCOMP_MAG][ PS2P1*SQR(PS2) ];                // fine-grid B field array storing the interpolation result
+
+   real *Mag_FInterface_Ptr [6] = { NULL, NULL, NULL, NULL, NULL, NULL };
+   real *Mag_FInterface_Data[6] = { NULL, NULL, NULL, NULL, NULL, NULL };
+   for (int s=0; s<6; s++)    Mag_FInterface_Data[s] = new real [ SQR(PS2) ];
+
+   bool *JustRefined = new bool [ amr->num[lv] ];
+   for (int PID=0; PID<amr->num[lv]; PID++)  JustRefined[PID] = false;
+#  endif // #ifdef MHD
 
 
 // determine the priority of different boundary faces (z>y>x) to set the corner cells properly for the non-periodic B.C.
@@ -195,36 +229,70 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
          amr->pnew( lv+1, Cr[0]+Width, Cr[1],       Cr[2]+Width, PID, true, true, true );
          amr->pnew( lv+1, Cr[0]+Width, Cr[1]+Width, Cr[2]+Width, PID, true, true, true );
 
+//       record the newly refined father patches
+#        ifdef MHD
+         JustRefined[PID] = true;
+#        endif
+
 
 //       (c1.3) assign data to child patches by spatial interpolation
 //       (c1.3.1) fill up the central region of CData
-         int I, J, K;
+         int i_out, j_out, k_out;
 
 //       fluid data
          for (int v=0; v<NCOMP_TOTAL; v++)   {
-         for (int k=0; k<PATCH_SIZE; k++)    {  K = k + CGhost_Flu;
-         for (int j=0; j<PATCH_SIZE; j++)    {  J = j + CGhost_Flu;
-         for (int i=0; i<PATCH_SIZE; i++)    {  I = i + CGhost_Flu;
+         for (int k=0; k<PS1; k++)  {  k_out = k + CGhost_Flu;
+         for (int j=0; j<PS1; j++)  {  j_out = j + CGhost_Flu;
+         for (int i=0; i<PS1; i++)  {  i_out = i + CGhost_Flu;
 
-            Flu_CData[v][K][J][I] = amr->patch[CFluSg][lv][PID]->fluid[v][k][j][i];
+            Flu_CData[v][k_out][j_out][i_out] = amr->patch[CFluSg][lv][PID]->fluid[v][k][j][i];
 
          }}}}
 
 //       potential data
 #        ifdef GRAVITY
          if ( SelfGravity )
-         for (int k=0; k<PATCH_SIZE; k++)    {  K = k + CGhost_Pot;
-         for (int j=0; j<PATCH_SIZE; j++)    {  J = j + CGhost_Pot;
-         for (int i=0; i<PATCH_SIZE; i++)    {  I = i + CGhost_Pot;
+         for (int k=0; k<PS1; k++)  {  k_out = k + CGhost_Pot;
+         for (int j=0; j<PS1; j++)  {  j_out = j + CGhost_Pot;
+         for (int i=0; i<PS1; i++)  {  i_out = i + CGhost_Pot;
 
-            Pot_CData[K][J][I] = amr->patch[CPotSg][lv][PID]->pot[k][j][i];
+            Pot_CData[k_out][j_out][i_out] = amr->patch[CPotSg][lv][PID]->pot[k][j][i];
 
          }}}
 #        endif
 
+//       magnetic field
+#        ifdef MHD
+         int idx_B_in, idx_B_out;
+
+//       Bx
+         idx_B_in = 0;
+         for (int k=CGhost_Mag; k<CGhost_Mag+PS1; k++)  {
+         for (int j=CGhost_Mag; j<CGhost_Mag+PS1; j++)  {  idx_B_out = IDX321(          0, j, k, CSize_Mag_N, CSize_Mag_T );
+         for (int i=0;          i<CSize_Mag_N;    i++)  {
+            Mag_CData[MAGX][ idx_B_out ++ ] = amr->patch[CMagSg][lv][PID]->magnetic[MAGX][ idx_B_in ++ ];
+         }}}
+
+//       By
+         idx_B_in = 0;
+         for (int k=CGhost_Mag; k<CGhost_Mag+PS1; k++)  {
+         for (int j=0;          j<CSize_Mag_N;    j++)  {  idx_B_out = IDX321( CGhost_Mag, j, k, CSize_Mag_T, CSize_Mag_N );
+         for (int i=CGhost_Mag; i<CGhost_Mag+PS1; i++)  {
+            Mag_CData[MAGY][ idx_B_out ++ ] = amr->patch[CMagSg][lv][PID]->magnetic[MAGY][ idx_B_in ++ ];
+         }}}
+
+//       Bz
+         idx_B_in = 0;
+         for (int k=0;          k<CSize_Mag_N;    k++)  {
+         for (int j=CGhost_Mag; j<CGhost_Mag+PS1; j++)  {  idx_B_out = IDX321( CGhost_Mag, j, k, CSize_Mag_T, CSize_Mag_T );
+         for (int i=CGhost_Mag; i<CGhost_Mag+PS1; i++)  {
+            Mag_CData[MAGZ][ idx_B_out ++ ] = amr->patch[CMagSg][lv][PID]->magnetic[MAGZ][ idx_B_in ++ ];
+         }}}
+#        endif // #ifdef MHD
+
 
 //       (c1.3.2) fill up the ghost zone of CData (no interpolation is required)
-         int    SibPID, Loop[3], Disp1[3], Disp2[3], I2, J2, K2, BC_Sibling, BC_Idx_Start[3], BC_Idx_End[3];
+         int    loop[3], offset_out[3], offset_in[3], i_in, j_in, k_in, BC_Sibling, BC_Idx_Start[3], BC_Idx_End[3];
          double xyz[3];
 
 //       calculate the corner coordinates of the coarse-grid data for the user-specified B.C.
@@ -233,25 +301,25 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 //       (c1.3.2.1) prepare the fluid data
          for (int sib=0; sib<NSide_Flu; sib++)
          {
-            SibPID = Pedigree->sibling[sib];
+            const int SibPID = Pedigree->sibling[sib];
 
             for (int d=0; d<3; d++)
             {
-               Loop [d] = TABLE_01( sib, 'x'+d, CGhost_Flu, PATCH_SIZE, CGhost_Flu );
-               Disp1[d] = TABLE_01( sib, 'x'+d, 0, CGhost_Flu, CGhost_Flu+PATCH_SIZE );
+               loop      [d] = TABLE_01( sib, 'x'+d, CGhost_Flu, PS1, CGhost_Flu );
+               offset_out[d] = TABLE_01( sib, 'x'+d, 0, CGhost_Flu, CGhost_Flu+PS1 );
             }
 
-//          (c1.3.2.1-1) if the target sibling patch exists --> just copy data from the nearby patches at the same level
+//          (c1.3.2.1-1) if the target sibling patch exists --> just copy data from them directly
             if ( SibPID >= 0 )
             {
-               for (int d=0; d<3; d++)    Disp2[d] = TABLE_01( sib, 'x'+d, PATCH_SIZE-CGhost_Flu, 0, 0 );
+               for (int d=0; d<3; d++)    offset_in[d] = TABLE_01( sib, 'x'+d, PS1-CGhost_Flu, 0, 0 );
 
-               for (int v=0; v<NCOMP_TOTAL; v++) {
-               for (int k=0; k<Loop[2]; k++) {  K = k + Disp1[2];    K2 = k + Disp2[2];
-               for (int j=0; j<Loop[1]; j++) {  J = j + Disp1[1];    J2 = j + Disp2[1];
-               for (int i=0; i<Loop[0]; i++) {  I = i + Disp1[0];    I2 = i + Disp2[0];
+               for (int v=0; v<NCOMP_TOTAL; v++)  {
+               for (int k=0; k<loop[2]; k++)  {  k_out = k + offset_out[2];  k_in = k + offset_in[2];
+               for (int j=0; j<loop[1]; j++)  {  j_out = j + offset_out[1];  j_in = j + offset_in[1];
+               for (int i=0; i<loop[0]; i++)  {  i_out = i + offset_out[0];  i_in = i + offset_in[0];
 
-                  Flu_CData[v][K][J][I] = amr->patch[CFluSg][lv][SibPID]->fluid[v][K2][J2][I2];
+                  Flu_CData[v][k_out][j_out][i_out] = amr->patch[CFluSg][lv][SibPID]->fluid[v][k_in][j_in][i_in];
 
                }}}}
             } // if ( SibPID >= 0 )
@@ -262,8 +330,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             {
                for (int d=0; d<3; d++)
                {
-                  BC_Idx_Start[d] = Disp1[d];
-                  BC_Idx_End  [d] = Loop[d] + BC_Idx_Start[d] - 1;
+                  BC_Idx_Start[d] = offset_out[d];
+                  BC_Idx_End  [d] = loop[d] + BC_Idx_Start[d] - 1;
                }
 
                BC_Sibling = SIB_OFFSET_NONPERIODIC - SibPID;
@@ -317,24 +385,24 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
          if ( SelfGravity )
          for (int sib=0; sib<NSide_Pot; sib++)
          {
-            SibPID = Pedigree->sibling[sib];
+            const int SibPID = Pedigree->sibling[sib];
 
             for (int d=0; d<3; d++)
             {
-               Loop [d] = TABLE_01( sib, 'x'+d, CGhost_Pot, PATCH_SIZE, CGhost_Pot );
-               Disp1[d] = TABLE_01( sib, 'x'+d, 0, CGhost_Pot, CGhost_Pot+PATCH_SIZE );
+               loop      [d] = TABLE_01( sib, 'x'+d, CGhost_Pot, PS1, CGhost_Pot );
+               offset_out[d] = TABLE_01( sib, 'x'+d, 0, CGhost_Pot, CGhost_Pot+PS1 );
             }
 
-//          (c1.3.2.2-1) if the target sibling patch exists --> just copy data from the nearby patches at the same level
+//          (c1.3.2.2-1) if the target sibling patch exists --> just copy data from them directly
             if ( SibPID >= 0 )
             {
-               for (int d=0; d<3; d++)    Disp2[d] = TABLE_01( sib, 'x'+d, PATCH_SIZE-CGhost_Pot, 0, 0 );
+               for (int d=0; d<3; d++)    offset_in[d] = TABLE_01( sib, 'x'+d, PS1-CGhost_Pot, 0, 0 );
 
-               for (int k=0; k<Loop[2]; k++) {  K = k + Disp1[2];    K2 = k + Disp2[2];
-               for (int j=0; j<Loop[1]; j++) {  J = j + Disp1[1];    J2 = j + Disp2[1];
-               for (int i=0; i<Loop[0]; i++) {  I = i + Disp1[0];    I2 = i + Disp2[0];
+               for (int k=0; k<loop[2]; k++)  {  k_out = k + offset_out[2];  k_in = k + offset_in[2];
+               for (int j=0; j<loop[1]; j++)  {  j_out = j + offset_out[1];  j_in = j + offset_in[1];
+               for (int i=0; i<loop[0]; i++)  {  i_out = i + offset_out[0];  i_in = i + offset_in[0];
 
-                  Pot_CData[K][J][I] = amr->patch[CPotSg][lv][SibPID]->pot[K2][J2][I2];
+                  Pot_CData[k_out][j_out][i_out] = amr->patch[CPotSg][lv][SibPID]->pot[k_in][j_in][i_in];
 
                }}}
             } // if ( SibPID >= 0 )
@@ -345,8 +413,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             {
                for (int d=0; d<3; d++)
                {
-                  BC_Idx_Start[d] = Disp1[d];
-                  BC_Idx_End  [d] = Loop[d] + BC_Idx_Start[d] - 1;
+                  BC_Idx_Start[d] = offset_out[d];
+                  BC_Idx_End  [d] = loop[d] + BC_Idx_Start[d] - 1;
                }
 
                BC_Sibling = SIB_OFFSET_NONPERIODIC - SibPID;
@@ -374,13 +442,145 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #        endif // #ifdef GRAVITY
 
 
-//       (c1.3.3) perform spatial interpolation
-         const bool PhaseUnwrapping_Yes    = true;
-         const bool PhaseUnwrapping_No     = false;
-         const bool EnsureMonotonicity_Yes = true;
-         const bool EnsureMonotonicity_No  = false;
+//       (c1.3.2.3) prepare the magnetic field
+#        ifdef MHD
+//       interpolation on B field only requires ghost zones along the two transverse directions
+//       --> skip sib>=6 since ghost zones along the diagonal directions are not required
+         for (int sib=0; sib<6; sib++)
+         {
+            const int SibPID = Pedigree->sibling[sib];
 
-//       (c1.3.3.1) determine which variables require **monotonic** interpolation
+            for (int d=0; d<3; d++)
+            {
+               loop      [d] = TABLE_01( sib, 'x'+d, CGhost_Mag, PS1, CGhost_Mag );
+               offset_out[d] = TABLE_01( sib, 'x'+d, 0, CGhost_Mag, CGhost_Mag+PS1 );
+            }
+
+//          (c1.3.2.3-1) if the target sibling patch exists --> just copy data from them directly
+            if ( SibPID >= 0 )
+            {
+               for (int d=0; d<3; d++)    offset_in[d] = TABLE_01( sib, 'x'+d, PS1-CGhost_Mag, 0, 0 );
+
+//             Bx
+               if ( sib != 0  &&  sib != 1 ) // skip the normal direction
+                  for (int k=0; k<loop[2]; k++)  {  k_out = k + offset_out[2];  k_in = k + offset_in[2];
+                  for (int j=0; j<loop[1]; j++)  {  j_out = j + offset_out[1];  j_in = j + offset_in[1];
+                                                    idx_B_in  = IDX321( 0, j_in,  k_in,  PS1P1,       PS1         );
+                                                    idx_B_out = IDX321( 0, j_out, k_out, CSize_Mag_N, CSize_Mag_T );
+                  for (int i=0; i<PS1P1;   i++)  {
+
+                     Mag_CData[MAGX][ idx_B_out ++ ] = amr->patch[CMagSg][lv][SibPID]->magnetic[MAGX][ idx_B_in ++ ];
+
+                  }}}
+
+//             By
+               if ( sib != 2  &&  sib != 3 ) // skip the normal direction
+               {
+                  for (int k=0; k<loop[2]; k++)  {  k_out = k + offset_out[2];  k_in = k + offset_in[2];
+                  for (int j=0; j<PS1P1;   j++)  {  j_out = j;                  j_in = j;
+                                                    idx_B_in  = IDX321( offset_in[0],  j_in,  k_in,  PS1,         PS1P1       );
+                                                    idx_B_out = IDX321( offset_out[0], j_out, k_out, CSize_Mag_T, CSize_Mag_N );
+                  for (int i=0; i<loop[0]; i++)  {
+
+                     Mag_CData[MAGY][ idx_B_out ++ ] = amr->patch[CMagSg][lv][SibPID]->magnetic[MAGY][ idx_B_in ++ ];
+
+                  }}}
+               }
+
+//             Bz
+               if ( sib != 4  &&  sib != 5 ) // skip the normal direction
+               {
+                  for (int k=0; k<PS1P1;   k++)  {  k_out = k;                  k_in = k;
+                  for (int j=0; j<loop[1]; j++)  {  j_out = j + offset_out[1];  j_in = j + offset_in[1];
+                                                    idx_B_in  = IDX321( offset_in[0],  j_in,  k_in,  PS1,         PS1         );
+                                                    idx_B_out = IDX321( offset_out[0], j_out, k_out, CSize_Mag_T, CSize_Mag_T );
+                  for (int i=0; i<loop[0]; i++)  {
+
+                     Mag_CData[MAGZ][ idx_B_out ++ ] = amr->patch[CMagSg][lv][SibPID]->magnetic[MAGZ][ idx_B_in ++ ];
+
+                  }}}
+               }
+            } // if ( SibPID >= 0 )
+
+
+//          (c1.3.2.3-2) if the target sibling patch lies outside the simulation domain --> apply the specified B.C.
+            else if ( SibPID <= SIB_OFFSET_NONPERIODIC )
+            {
+#              warning : WAIT MHD !!!
+
+//             ** should we skip the normal direction here?
+//             ** --> because interpolation on B field only require ghost zones along the two transverse directions
+
+            } // else if ( SibPID <= SIB_OFFSET_NONPERIODIC )
+
+
+//          (c1.3.2.3-3) it will violate the proper-nesting condition if the flagged patch is NOT surrounded by siblings
+            else
+               Aux_Error( ERROR_INFO, "SibPID = %d (lv %d, PID %d, Sib %d) !!\n", SibPID, lv, PID, sib );
+         } // for (int sib=0; sib<6; sib++)
+#        endif // #ifdef MHD
+
+
+//       (c1.3.3) collect fine-grid magnetic field on the coarse-fine interfaces
+#        ifdef MHD
+         const int didx_in[6]     = { PS1, 0, SQR(PS1), 0, CUBE(PS1), 0 };    // x=PS1/0, y=PS1/0, z=PS1/0 faces
+         const int TDir[3][2]     = { {1, 2}, {0, 2}, {0, 1} };               // transverse directions
+         const int stride_in_n[3] = { PS1P1, 1, 1 };
+         const int stride_in_m[3] = { PS1P1*PS1, PS1P1*PS1, PS1 };
+
+         for (int sib=0; sib<6; sib++)
+         {
+//          initialize Mag_FInterface_Ptr[sib] as NULL since MHD_InterpolateBField() uses that to
+//          idenitfy the coarse-fine interfaces
+            Mag_FInterface_Ptr[sib] = NULL;
+
+            const int xyz    = sib/2;  // spatial direction: (0,0,1,1,2,2)
+            const int SibPID = Pedigree->sibling[sib];
+
+//          skip non-periodic boundaries
+            if      ( SibPID <= SIB_OFFSET_NONPERIODIC )    continue;
+            else if ( SibPID == -1 )   Aux_Error( ERROR_INFO, "SibPID == -1 (lv %d, PID %d, Sib %d) !!\n", lv, PID, sib );
+
+//          identify the coarse-fine boundaries
+//          -> skip the sibling patches that have **just** been refined
+//             -> treat the corresponding interfaces as coarse-coarse instead of coarse-fine interfaces
+//                so that the interpolation results do not depend on the order of patches being refined
+//             -> important for bitwise reproducibility
+            const int SibSonPID0 = amr->patch[0][lv][SibPID]->son;
+            if ( SibSonPID0 == -1  ||  JustRefined[SibPID] )   continue;
+
+//          link pointer to the preallocated memory for identifying coarse-fine boundaries and storing data
+            Mag_FInterface_Ptr[sib] = Mag_FInterface_Data[sib];
+
+//          loop over the 4 sibling fine patches to collect the fine-grid B field on the C-F interfaces
+            for (int t=0; t<4; t++)
+            {
+               const int LocalID    = TABLE_03( sib, t );
+               const int SibSonPID  = SibSonPID0 + LocalID;
+               const int didx_out_n = TABLE_02( LocalID, 'x'+TDir[xyz][0], 0, PS1 );
+               const int didx_out_m = TABLE_02( LocalID, 'x'+TDir[xyz][1], 0, PS1 );
+
+               for (int m=0; m<PS1; m++)  {  idx_B_in  = m*stride_in_m[xyz] + didx_in[sib];
+                                             idx_B_out = ( m + didx_out_m )*PS2 + didx_out_n;
+               for (int n=0; n<PS1; n++)  {
+
+                  Mag_FInterface_Ptr[sib][idx_B_out] = amr->patch[FMagSg][lv+1][SibSonPID]->magnetic[xyz][idx_B_in];
+
+                  idx_B_in  += stride_in_n[xyz];
+                  idx_B_out ++;
+               }}
+            } // for (int t=0; t<4; t++)
+         } // for (int sib=0; sib<6; sib++)
+#        endif // #ifdef MHD
+
+
+//       (c1.3.4) perform spatial interpolation
+         const bool PhaseUnwrapping_Yes = true;
+         const bool PhaseUnwrapping_No  = false;
+         const bool Monotonicity_Yes    = true;
+         const bool Monotonicity_No     = false;
+
+//       (c1.3.4.1) determine which variables require **monotonic** interpolation
          bool Monotonicity[NCOMP_TOTAL];
 
          for (int v=0; v<NCOMP_TOTAL; v++)
@@ -389,21 +589,22 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 //          we now apply monotonic interpolation to ALL fluid variables (which helps alleviate the issue of negative density/pressure)
             /*
             if ( v == DENS  ||  v == ENGY  ||  v >= NCOMP_FLUID )
-                                             Monotonicity[v] = EnsureMonotonicity_Yes;
-            else                             Monotonicity[v] = EnsureMonotonicity_No;
+                                             Monotonicity[v] = Monotonicity_Yes;
+            else                             Monotonicity[v] = Monotonicity_No;
             */
-                                             Monotonicity[v] = EnsureMonotonicity_Yes;
+                                             Monotonicity[v] = Monotonicity_Yes;
 
 #           elif ( MODEL == ELBDM )
-            if ( v != REAL  &&  v != IMAG )  Monotonicity[v] = EnsureMonotonicity_Yes;
-            else                             Monotonicity[v] = EnsureMonotonicity_No;
+            if ( v != REAL  &&  v != IMAG )  Monotonicity[v] = Monotonicity_Yes;
+            else                             Monotonicity[v] = Monotonicity_No;
 
 #           else
 #           error : DO YOU WANT TO ENSURE THE POSITIVITY OF INTERPOLATION IN THIS NEW MODEL ??
 #           endif // MODEL
          }
 
-//       (c1.3.3.2) interpolation
+//       (c1.3.4.2) interpolation
+//       (c1.3.4.2-1) fluid
 #        if ( MODEL == ELBDM )
          if ( OPT__INT_PHASE )
          {
@@ -418,22 +619,19 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #           endif
 
 //          interpolate density
-            Interpolate( &Flu_CData[DENS][0][0][0], CSize_Flu3, CStart_Flu, CRange, &Flu_FData[DENS][0][0][0],
-                         FSize3, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No,
-                         &EnsureMonotonicity_Yes );
+            Interpolate( &Flu_CData[DENS][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[DENS][0][0][0],
+                         FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_Yes );
 
 //          interpolate phase
-            Interpolate( &Flu_CData[REAL][0][0][0], CSize_Flu3, CStart_Flu, CRange, &Flu_FData[REAL][0][0][0],
-                         FSize3, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_Yes,
-                         &EnsureMonotonicity_No );
+            Interpolate( &Flu_CData[REAL][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[REAL][0][0][0],
+                         FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_Yes, &Monotonicity_No );
          }
 
          else // if ( OPT__INT_PHASE )
          {
             for (int v=0; v<NCOMP_TOTAL; v++)
-            Interpolate( &Flu_CData[v][0][0][0], CSize_Flu3, CStart_Flu, CRange, &Flu_FData[v][0][0][0],
-                         FSize3, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No,
-                         Monotonicity );
+            Interpolate( &Flu_CData[v][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[v][0][0][0],
+                         FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity );
          }
 
          if ( OPT__INT_PHASE )
@@ -441,9 +639,9 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 //          retrieve real and imaginary parts
             real Amp, Phase, Rho;
 
-            for (int k=0; k<FSize; k++)
-            for (int j=0; j<FSize; j++)
-            for (int i=0; i<FSize; i++)
+            for (int k=0; k<FSize_CC; k++)
+            for (int j=0; j<FSize_CC; j++)
+            for (int i=0; i<FSize_CC; i++)
             {
                Phase = Flu_FData[REAL][k][j][i];
                Rho   = Flu_FData[DENS][k][j][i];
@@ -464,29 +662,37 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #        else // #if ( MODEL == ELBDM )
 
          for (int v=0; v<NCOMP_TOTAL; v++)
-         Interpolate( &Flu_CData[v][0][0][0], CSize_Flu3, CStart_Flu, CRange, &Flu_FData[v][0][0][0],
-                      FSize3, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No,
-                      Monotonicity );
+         Interpolate( &Flu_CData[v][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[v][0][0][0],
+                      FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity );
 
 #        endif // #if ( MODEL == ELBDM ) ... else
 
 
+//       (c1.3.4.2-2) potential
 #        ifdef GRAVITY
          const int CSize_Pot_Temp[3] = { CSize_Pot, CSize_Pot, CSize_Pot };
 
          if ( SelfGravity )
-         Interpolate( &Pot_CData[0][0][0], CSize_Pot_Temp, CStart_Pot, CRange, &Pot_FData[0][0][0],
-                      FSize3, FStart, 1, OPT__REF_POT_INT_SCHEME, PhaseUnwrapping_No,
-                      &EnsureMonotonicity_No );
+         Interpolate( &Pot_CData[0][0][0], CSize_Pot_Temp, CStart_Pot, CRange_CC, &Pot_FData[0][0][0],
+                      FSize_CC3, FStart_CC, 1, OPT__REF_POT_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_No );
 #        endif
 
-//       (c1.3.3.3) check minimum density and pressure
+
+//       (c1.3.4.2-3) magnetic field
+#        ifdef MHD
+         MHD_InterpolateBField( (const real**)Mag_CData, CSize_Mag, CStart_Mag, CRange_Mag,
+                                (real**)Mag_FData, FSize_Mag, FStart_Mag, (const real**)Mag_FInterface_Ptr,
+                                OPT__REF_MAG_INT_SCHEME, Monotonicity_Yes );
+#        endif
+
+
+//       (c1.3.4.3) check minimum density and pressure
 //       --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
 //       --> but we do renormalize passive scalars here
 #        if ( MODEL == HYDRO  ||  MODEL == ELBDM  ||  (defined DENS && NCOMP_PASSIVE>0) )
-         for (int k=0; k<FSize; k++)
-         for (int j=0; j<FSize; j++)
-         for (int i=0; i<FSize; i++)
+         for (int k=0; k<FSize_CC; k++)
+         for (int j=0; j<FSize_CC; j++)
+         for (int i=0; i<FSize_CC; i++)
          {
 //          check minimum density
             const real DensOld = Flu_FData[DENS][k][j][i];
@@ -518,6 +724,9 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             const real UseEnpy2FixEngy  = HUGE_NUMBER;
             char dummy;    // we do not record the dual-energy status here
 
+#           ifdef MHD
+#           warning : WAIT MHD !!!
+#           endif
             Hydro_DualEnergyFix( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
                                  Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i], Flu_FData[ENPY][k][j][i],
                                  dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy );
@@ -526,10 +735,15 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 //          check minimum pressure
 #           ifdef MHD
-#           warning : WAIT MHD !!!
-            const real EngyB = NULL_REAL;
+            const int  idx_Bx  = IDX321_BX( i, j, k, PS2 );
+            const int  idx_By  = IDX321_BY( i, j, k, PS2 );
+            const int  idx_Bz  = IDX321_BZ( i, j, k, PS2 );
+            const real B_CC[3] = { (real)0.5*( Mag_FData[MAGX][idx_Bx] + Mag_FData[MAGX][ idx_Bx + 1        ] ),
+                                   (real)0.5*( Mag_FData[MAGY][idx_By] + Mag_FData[MAGY][ idx_By + PS2      ] ),
+                                   (real)0.5*( Mag_FData[MAGZ][idx_Bz] + Mag_FData[MAGZ][ idx_Bz + SQR(PS2) ] ) };
+            const real EngyB   = (real)0.5*( SQR(B_CC[MAGX]) + SQR(B_CC[MAGY]) + SQR(B_CC[MAGZ]) );
 #           else
-            const real EngyB = NULL_REAL;
+            const real EngyB   = NULL_REAL;
 #           endif
             Flu_FData[ENGY][k][j][i]
                = Hydro_CheckMinPresInEngy( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
@@ -556,36 +770,50 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #        endif // #if ( MODEL == HYDRO  ||  MODEL == ELBDM )
 
 
-//       (c1.3.4) copy data from IntData to patch pointers
-         int SonPID;
-
+//       (c1.3.5) copy data from IntData[] to patch pointers
          for (int LocalID=0; LocalID<8; LocalID++)
          {
-            SonPID = amr->num[lv+1] - 8 + LocalID;
-            Disp1[0] = TABLE_02( LocalID, 'x', 0, PATCH_SIZE );
-            Disp1[1] = TABLE_02( LocalID, 'y', 0, PATCH_SIZE );
-            Disp1[2] = TABLE_02( LocalID, 'z', 0, PATCH_SIZE );
+            const int SonPID = amr->num[lv+1] - 8 + LocalID;
+
+            offset_in[0] = TABLE_02( LocalID, 'x', 0, PS1 );
+            offset_in[1] = TABLE_02( LocalID, 'y', 0, PS1 );
+            offset_in[2] = TABLE_02( LocalID, 'z', 0, PS1 );
 
 //          fluid data
-            for (int v=0; v<NCOMP_TOTAL; v++)   {
-            for (int k=0; k<PATCH_SIZE; k++)    {  K = k + Disp1[2];
-            for (int j=0; j<PATCH_SIZE; j++)    {  J = j + Disp1[1];
-            for (int i=0; i<PATCH_SIZE; i++)    {  I = i + Disp1[0];
+            for (int v=0; v<NCOMP_TOTAL; v++)  {
+            for (int k=0; k<PS1; k++)  {  k_in = k + offset_in[2];
+            for (int j=0; j<PS1; j++)  {  j_in = j + offset_in[1];
+            for (int i=0; i<PS1; i++)  {  i_in = i + offset_in[0];
 
-               amr->patch[FFluSg][lv+1][SonPID]->fluid[v][k][j][i] = Flu_FData[v][K][J][I];
+               amr->patch[FFluSg][lv+1][SonPID]->fluid[v][k][j][i] = Flu_FData[v][k_in][j_in][i_in];
 
             }}}}
 
 //          potential data
 #           ifdef GRAVITY
             if ( SelfGravity )
-            for (int k=0; k<PATCH_SIZE; k++)    {  K = k + Disp1[2];
-            for (int j=0; j<PATCH_SIZE; j++)    {  J = j + Disp1[1];
-            for (int i=0; i<PATCH_SIZE; i++)    {  I = i + Disp1[0];
+            for (int k=0; k<PS1; k++)  {  k_in = k + offset_in[2];
+            for (int j=0; j<PS1; j++)  {  j_in = j + offset_in[1];
+            for (int i=0; i<PS1; i++)  {  i_in = i + offset_in[0];
 
-               amr->patch[FPotSg][lv+1][SonPID]->pot[k][j][i] = Pot_FData[K][J][I];
+               amr->patch[FPotSg][lv+1][SonPID]->pot[k][j][i] = Pot_FData[k_in][j_in][i_in];
 
             }}}
+#           endif
+
+//          magnetic field
+#           ifdef MHD
+            const int Bwidth[3][3] = { {PS1P1, PS1, PS1}, {PS1, PS1P1, PS1}, {PS1, PS1, PS1P1} };
+
+            for (int v=0; v<NCOMP_MAG; v++)     {  idx_B_out = 0;
+            for (int k=0; k<Bwidth[v][2]; k++)  {  k_in      = k + offset_in[2];
+            for (int j=0; j<Bwidth[v][1]; j++)  {  j_in      = j + offset_in[1];
+                                                   idx_B_in  = IDX321( offset_in[0], j_in, k_in, FSize_Mag[v][0], FSize_Mag[v][1] );
+            for (int i=0; i<Bwidth[v][0]; i++)  {
+
+               amr->patch[FMagSg][lv+1][SonPID]->magnetic[v][ idx_B_out ++ ] = Mag_FData[v][ idx_B_in ++ ];
+
+            }}}}
 #           endif
 
 //          rescale real and imaginary parts to get the correct density in ELBDM if OPT__INT_PHASE is off
@@ -593,9 +821,9 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             real Real, Imag, Rho_Wrong, Rho_Corr, Rescale;
 
             if ( !OPT__INT_PHASE )
-            for (int k=0; k<PATCH_SIZE; k++)
-            for (int j=0; j<PATCH_SIZE; j++)
-            for (int i=0; i<PATCH_SIZE; i++)
+            for (int k=0; k<PS1; k++)
+            for (int j=0; j<PS1; j++)
+            for (int i=0; i<PS1; i++)
             {
                Real      = amr->patch[FFluSg][lv+1][SonPID]->fluid[REAL][k][j][i];
                Imag      = amr->patch[FFluSg][lv+1][SonPID]->fluid[IMAG][k][j][i];
@@ -622,7 +850,6 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #        ifdef PARTICLE
          Par_PassParticle2Son_SinglePatch( lv, PID );
 #        endif
-
       } // if ( Pedigree->flag  &&  Pedigree->son == -1 )
 
 
@@ -683,6 +910,11 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
       } // else if ( !Pedigree->flag  &&  Pedigree->son != -1 )
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
+// free memory
+#  ifdef MHD
+   for (int s=0; s<6; s++)    delete [] Mag_FInterface_Data[s];
+   delete [] JustRefined;
+#  endif
 
 // initialize the amr->NPatchComma list for the buffer patches
    for (int m=1; m<28; m++)   amr->NPatchComma[lv+1][m] = amr->num[lv+1];
@@ -692,14 +924,12 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 // ------------------------------------------------------------------------------------------------
    Refine_Buffer( lv, BufSonTable, BufGrandTable );
 
-
 // deallocate tables
    if ( lv < NLEVEL-2 )
    {
       delete [] BufGrandTable;
       delete [] BufSonTable;
    }
-
 
 
 // e. re-construct tables and sibling relations
@@ -723,7 +953,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    }
 
 
-// allocate electric arrays on levels "lv" and "lv+1"
+// allocate electric field arrays on levels "lv" and "lv+1"
 #  ifdef MHD
    if ( amr->WithElectric )
    {
