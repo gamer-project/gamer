@@ -134,7 +134,7 @@ extern double     GFUNC_COEFF0;
 extern double     DT__GRAVITY;
 extern double     NEWTON_G;
 extern int        POT_GPU_NPGROUP;
-extern bool       OPT__OUTPUT_POT, OPT__GRA_P5_GRADIENT, OPT__EXTERNAL_POT;
+extern bool       OPT__OUTPUT_POT, OPT__GRA_P5_GRADIENT, OPT__EXTERNAL_POT, OPT__GRAVITY_EXTRA_MASS;
 extern double     SOR_OMEGA;
 extern int        SOR_MAX_ITER, SOR_MIN_ITER;
 extern double     MG_TOLERATED_ERROR;

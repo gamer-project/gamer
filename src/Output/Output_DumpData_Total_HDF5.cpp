@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2308)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2310)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -166,6 +166,7 @@ Procedure for outputting new variables:
 //                2307 : 2018/12/27 --> Replace GRA_BLOCK_SIZE_Z by GRA_BLOCK_SIZE
 //                2308 : 2019/01/24 --> Add ELBDM_REMOVE_MOTION_CM
 //                2309 : 2019/03/14 --> add OPT__RECORD_NOTE and OPT__RECORD_UNPHY
+//                2310 : 2019/05/31 --> add OPT__GRAVITY_EXTRA_MASS
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1230,7 +1231,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime   = time( NULL );    // calendar time
 
-   KeyInfo.FormatVersion  = 2308;
+   KeyInfo.FormatVersion  = 2310;
    KeyInfo.Model          = MODEL;
    KeyInfo.NLevel         = NLEVEL;
    KeyInfo.NCompFluid     = NCOMP_FLUID;
@@ -1881,6 +1882,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__GraP5Gradient      = OPT__GRA_P5_GRADIENT;
    InputPara.Opt__GravityType        = OPT__GRAVITY_TYPE;
    InputPara.Opt__ExternalPot        = OPT__EXTERNAL_POT;
+   InputPara.Opt__GravityExtraMass   = OPT__GRAVITY_EXTRA_MASS;
 #  endif
 
 // Grackle
@@ -2568,6 +2570,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__GraP5Gradient",      HOFFSET(InputPara_t,Opt__GraP5Gradient     ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__GravityType",        HOFFSET(InputPara_t,Opt__GravityType       ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__ExternalPot",        HOFFSET(InputPara_t,Opt__ExternalPot       ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__GravityExtraMass",   HOFFSET(InputPara_t,Opt__GravityExtraMass  ), H5T_NATIVE_INT     );
 #  endif
 
 // Grackle
