@@ -67,6 +67,7 @@ extern bool       OPT__CK_RESTRICT, OPT__CK_PATCH_ALLOCATE, OPT__FIXUP_FLUX, OPT
 extern bool       OPT__UM_IC_DOWNGRADE, OPT__UM_IC_REFINE, OPT__TIMING_MPI;
 extern bool       OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
 extern bool       OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
+extern bool       OPT__RECORD_NOTE, OPT__RECORD_UNPHY;
 
 extern UM_IC_Format_t     OPT__UM_IC_FORMAT;
 extern TestProbID_t       TESTPROB_ID;
@@ -130,7 +131,7 @@ extern double     GFUNC_COEFF0;
 extern double     DT__GRAVITY;
 extern double     NEWTON_G;
 extern int        POT_GPU_NPGROUP;
-extern bool       OPT__OUTPUT_POT, OPT__GRA_P5_GRADIENT, OPT__EXTERNAL_POT;
+extern bool       OPT__OUTPUT_POT, OPT__GRA_P5_GRADIENT, OPT__EXTERNAL_POT, OPT__GRAVITY_EXTRA_MASS;
 extern double     SOR_OMEGA;
 extern int        SOR_MAX_ITER, SOR_MIN_ITER;
 extern double     MG_TOLERATED_ERROR;

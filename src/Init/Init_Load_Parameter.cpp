@@ -271,6 +271,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__GRA_P5_GRADIENT",       &OPT__GRA_P5_GRADIENT,            false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__GRAVITY_TYPE",          &OPT__GRAVITY_TYPE,              -1,               1,             3              );
    ReadPara->Add( "OPT__EXTERNAL_POT",          &OPT__EXTERNAL_POT,               false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__GRAVITY_EXTRA_MASS",    &OPT__GRAVITY_EXTRA_MASS,         false,           Useless_bool,  Useless_bool   );
 #  endif // #ifdef GRAVITY
 
 
@@ -356,6 +357,8 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__TIMING_BARRIER",        &OPT__TIMING_BARRIER,            -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "OPT__TIMING_BALANCE",        &OPT__TIMING_BALANCE,             false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__TIMING_MPI",            &OPT__TIMING_MPI,                 false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__RECORD_NOTE",           &OPT__RECORD_NOTE,                true,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__RECORD_UNPHY",          &OPT__RECORD_UNPHY,               true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__RECORD_MEMORY",         &OPT__RECORD_MEMORY,              true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__RECORD_PERFORMANCE",    &OPT__RECORD_PERFORMANCE,         true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__MANUAL_CONTROL",        &OPT__MANUAL_CONTROL,             true,            Useless_bool,  Useless_bool   );
