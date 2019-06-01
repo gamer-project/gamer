@@ -123,7 +123,7 @@ double               GFUNC_COEFF0;
 double               DT__GRAVITY;
 double               NEWTON_G;
 int                  POT_GPU_NPGROUP;
-bool                 OPT__OUTPUT_POT, OPT__GRA_P5_GRADIENT, OPT__EXTERNAL_POT;
+bool                 OPT__OUTPUT_POT, OPT__GRA_P5_GRADIENT, OPT__EXTERNAL_POT, OPT__GRAVITY_EXTRA_MASS;
 double               SOR_OMEGA;
 int                  SOR_MAX_ITER, SOR_MIN_ITER;
 double               MG_TOLERATED_ERROR;

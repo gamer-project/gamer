@@ -14,6 +14,9 @@ extern rfftwnd_plan     FFTW_Plan, FFTW_Plan_Inv;
 extern rfftwnd_mpi_plan FFTW_Plan, FFTW_Plan_Inv;
 #endif
 
+extern real (*Poi_AddExtraMassForGravity_Ptr)( const double x, const double y, const double z, const double Time,
+                                               const int lv, double AuxArray[] );
+
 
 
 
@@ -104,6 +107,30 @@ void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf
                          IntScheme, UNIT_PATCH, NSide_None, IntPhase_No, OPT__BC_FLU, PotBC_None,
                          MinDens_No, MinPres_No, DE_Consistency_No );
 
+
+//    add extra mass source for gravity if required
+      if ( OPT__GRAVITY_EXTRA_MASS )
+      {
+         const double dh = amr->dh[0];
+
+         for (int PID=PID0, LocalID=0; PID<PID0+8; PID++, LocalID++)
+         {
+            const double x0 = amr->patch[0][0][PID]->EdgeL[0] + 0.5*dh;
+            const double y0 = amr->patch[0][0][PID]->EdgeL[1] + 0.5*dh;
+            const double z0 = amr->patch[0][0][PID]->EdgeL[2] + 0.5*dh;
+
+            double x, y, z;
+
+            for (int k=0; k<PS1; k++)  {  z = z0 + k*dh;
+            for (int j=0; j<PS1; j++)  {  y = y0 + j*dh;
+            for (int i=0; i<PS1; i++)  {  x = x0 + i*dh;
+               Dens[LocalID][k][j][i] += Poi_AddExtraMassForGravity_Ptr( x, y, z, Time[0], 0, NULL );
+            }}}
+         }
+      }
+
+
+//    copy data to the send buffer
       for (int PID=PID0, LocalID=0; PID<PID0+8; PID++, LocalID++)
       {
          for (int d=0; d<3; d++)    Cr[d] = amr->patch[0][0][PID]->corner[d] / Scale0;
@@ -143,7 +170,6 @@ void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf
             for (int j=0; j<PS1; j++)
             for (int i=0; i<PS1; i++)
                TempBuf_Rho_Ptr[ idx ++ ] = Dens[LocalID][k][j][i];
-//             TempBuf_Rho_Ptr[ idx ++ ] = amr->patch[Sg][0][PID]->fluid[DENS][k][j][i];
 
 //          subtract the background density (which is assumed to be UNITY) for the isolated BC in the comoving frame
 //          --> to be consistent with the comoving-frame Poisson eq.
@@ -270,9 +296,9 @@ void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf
 // Note        :  1. "List_z_start[r] <= IndexZ < List_z_start[r+1]" belongs to rank r
 //                2. List_z_start[MPI_NRank] can be set to any value >= FFT_Size[2]
 //
-// Parameter   :  IndexZ         : Input z coordinate
-//                List_z_start   : Starting z coordinate of each rank in the FFTW slab decomposition
-//                TRank_Guess    : First guess of the targeting MPI rank
+// Parameter   :  IndexZ       : Input z coordinate
+//                List_z_start : Starting z coordinate of each rank in the FFTW slab decomposition
+//                TRank_Guess  : First guess of the targeting MPI rank
 //
 // Return      :  MPI rank
 //-------------------------------------------------------------------------------------------------------
@@ -318,18 +344,18 @@ int ZIndex2Rank( const int IndexZ, const int *List_z_start, const int TRank_Gues
 // Function    :  Slab2Patch
 // Description :  Slab domain decomposition --> patch-based data (for potential)
 //
-// Parameter   :  RhoK        : In-place FFT array
-//                SendBuf     : Sending MPI buffer of potential
-//                RecvBuf     : Receiving MPI buffer of potential
-//                SaveSg      : Sandglass to store the updated data
-//                List_SIdx   : 1D coordinate in slab
-//                List_PID    : PID of each patch slice sent to each rank
-//                List_k      : Local z coordinate of each patch slice sent to each rank
-//                List_NSend  : Size of potential data sent to each rank
-//                List_NRecv  : Size of potential data received from each rank
-//                local_nz    : Slab thickness of this MPI rank
-//                FFT_Size    : Size of the FFT operation including the zero-padding regions
-//                NSendSlice  : Total number of z slices need to be sent to other ranks (could be zero in the isolated BC)
+// Parameter   :  RhoK       : In-place FFT array
+//                SendBuf    : Sending MPI buffer of potential
+//                RecvBuf    : Receiving MPI buffer of potential
+//                SaveSg     : Sandglass to store the updated data
+//                List_SIdx  : 1D coordinate in slab
+//                List_PID   : PID of each patch slice sent to each rank
+//                List_k     : Local z coordinate of each patch slice sent to each rank
+//                List_NSend : Size of potential data sent to each rank
+//                List_NRecv : Size of potential data received from each rank
+//                local_nz   : Slab thickness of this MPI rank
+//                FFT_Size   : Size of the FFT operation including the zero-padding regions
+//                NSendSlice : Total number of z slices need to be sent to other ranks (could be zero in the isolated BC)
 //-------------------------------------------------------------------------------------------------------
 void Slab2Patch( const real *RhoK, real *SendBuf, real *RecvBuf, const int SaveSg, const long *List_SIdx,
                  int **List_PID, int **List_k, int *List_NSend, int *List_NRecv, const int local_nz, const int FFT_Size[],
@@ -416,11 +442,11 @@ void Slab2Patch( const real *RhoK, real *SendBuf, real *RecvBuf, const int SaveS
 // Note        :  Effect from the homogenerous background density (DC) will be ignored by setting the k=0 mode
 //                equal to zero
 //
-// Parameter   :  RhoK        : Array storing the input density and output potential
-//                Poi_Coeff   : Coefficient in front of density in the Poisson equation (4*Pi*Newton_G*a)
-//                j_start     : Starting j index
-//                dj          : Size of array in the j (y) direction after the forward FFT
-//                RhoK_Size   : Size of the array "RhoK"
+// Parameter   :  RhoK      : Array storing the input density and output potential
+//                Poi_Coeff : Coefficient in front of density in the Poisson equation (4*Pi*Newton_G*a)
+//                j_start   : Starting j index
+//                dj        : Size of array in the j (y) direction after the forward FFT
+//                RhoK_Size : Size of the array "RhoK"
 //-------------------------------------------------------------------------------------------------------
 void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const int dj, const int RhoK_Size )
 {
@@ -526,13 +552,13 @@ void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const in
 // Function    :  FFT_Isolated
 // Description :  Evaluate the gravitational potential by FFT for the isolated BC
 //
-// Note        :  1. The Green's function in the k space has been initialized by the function "Init_GreenFuncK"
+// Note        :  1. Green's function in the k space has been set by Init_GreenFuncK()
 //                2. 4*PI*NEWTON_G and FFT normalization coefficient has been included in gFuncK
 //                   --> The only coefficient that hasn't been taken into account is the scale factor in the comoving frame
 //
-// Parameter   :  RhoK        : Array storing the input density and output potential
-//                Poi_Coeff   : Coefficient in front of density in the Poisson equation (4*Pi*Newton_G*a)
-//                RhoK_Size   : Size of the array "RhoK"
+// Parameter   :  RhoK      : Array storing the input density and output potential
+//                Poi_Coeff : Coefficient in front of density in the Poisson equation (4*Pi*Newton_G*a)
+//                RhoK_Size : Size of the array "RhoK"
 //-------------------------------------------------------------------------------------------------------
 void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const int RhoK_Size )
 {
@@ -588,9 +614,9 @@ void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const i
 //
 // Note        :  Work with both periodic and isolated BC's
 //
-// Parameter   :  Poi_Coeff   : Coefficient in front of the RHS in the Poisson eq.
-//                SaveSg      : Sandglass to store the updated data
-//                PrepTime    : Physical time for preparing the density field
+// Parameter   :  Poi_Coeff : Coefficient in front of the RHS in the Poisson eq.
+//                SaveSg    : Sandglass to store the updated data
+//                PrepTime  : Physical time for preparing the density field
 //-------------------------------------------------------------------------------------------------------
 void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double PrepTime )
 {

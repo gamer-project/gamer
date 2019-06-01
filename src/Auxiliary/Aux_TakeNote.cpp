@@ -892,22 +892,23 @@ void Aux_TakeNote()
 #     ifdef GRAVITY
       fprintf( Note, "Parameters of Poisson and Gravity Solvers\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "NEWTON_G                        %13.7e\n",  NEWTON_G             );
+      fprintf( Note, "NEWTON_G                        %13.7e\n",  NEWTON_G                );
 #     if   ( POT_SCHEME == SOR )
-      fprintf( Note, "SOR_OMEGA                       %13.7e\n",  SOR_OMEGA            );
-      fprintf( Note, "SOR_MAX_ITER                    %d\n",      SOR_MAX_ITER         );
-      fprintf( Note, "SOR_MIN_ITER                    %d\n",      SOR_MIN_ITER         );
+      fprintf( Note, "SOR_OMEGA                       %13.7e\n",  SOR_OMEGA               );
+      fprintf( Note, "SOR_MAX_ITER                    %d\n",      SOR_MAX_ITER            );
+      fprintf( Note, "SOR_MIN_ITER                    %d\n",      SOR_MIN_ITER            );
 #     elif ( POT_SCHEME == MG )
-      fprintf( Note, "MG_MAX_ITER                     %d\n",      MG_MAX_ITER          );
-      fprintf( Note, "MG_NPRE_SMOOTH                  %d\n",      MG_NPRE_SMOOTH       );
-      fprintf( Note, "MG_NPOST_SMOOTH                 %d\n",      MG_NPOST_SMOOTH      );
-      fprintf( Note, "MG_TOLERATED_ERROR              %13.7e\n",  MG_TOLERATED_ERROR   );
+      fprintf( Note, "MG_MAX_ITER                     %d\n",      MG_MAX_ITER             );
+      fprintf( Note, "MG_NPRE_SMOOTH                  %d\n",      MG_NPRE_SMOOTH          );
+      fprintf( Note, "MG_NPOST_SMOOTH                 %d\n",      MG_NPOST_SMOOTH         );
+      fprintf( Note, "MG_TOLERATED_ERROR              %13.7e\n",  MG_TOLERATED_ERROR      );
 #     endif
-      fprintf( Note, "POT_GPU_NPGROUP                 %d\n",      POT_GPU_NPGROUP      );
-      fprintf( Note, "OPT__GRA_P5_GRADIENT            %d\n",      OPT__GRA_P5_GRADIENT );
-      fprintf( Note, "OPT__GRAVITY_TYPE               %d\n",      OPT__GRAVITY_TYPE    );
-      fprintf( Note, "OPT__EXTERNAL_POT               %d\n",      OPT__EXTERNAL_POT    );
-      fprintf( Note, "AveDensity_Init                 %13.7e\n",  AveDensity_Init      );
+      fprintf( Note, "POT_GPU_NPGROUP                 %d\n",      POT_GPU_NPGROUP         );
+      fprintf( Note, "OPT__GRA_P5_GRADIENT            %d\n",      OPT__GRA_P5_GRADIENT    );
+      fprintf( Note, "OPT__GRAVITY_TYPE               %d\n",      OPT__GRAVITY_TYPE       );
+      fprintf( Note, "OPT__EXTERNAL_POT               %d\n",      OPT__EXTERNAL_POT       );
+      fprintf( Note, "OPT__GRAVITY_EXTRA_MASS         %d\n",      OPT__GRAVITY_EXTRA_MASS );
+      fprintf( Note, "AveDensity_Init                 %13.7e\n",  AveDensity_Init         );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 #     endif // #ifdef GRAVITY
