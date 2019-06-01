@@ -42,11 +42,7 @@ void Poi_GetAverageDensity()
    AveDensity_Init = 0.0;
 
 
-// 1. for OOC computing (no longer useful)
-// ==================================================================================================
-
-
-// 2. for bitwise reproducibility
+// 1. for bitwise reproducibility
 // ==================================================================================================
 #  ifdef BITWISE_REPRODUCIBILITY
 
@@ -176,7 +172,7 @@ void Poi_GetAverageDensity()
    }
 
 
-// 3. for general cases
+// 2. for general cases
 // ==================================================================================================
 #  else // #ifdef BITWISE_REPRODUCIBILITY
 
@@ -215,7 +211,7 @@ void Poi_GetAverageDensity()
 #  endif // #ifdef BITWISE_REPRODUCIBILITY ... else ...
 
 
-// 4. output results
+// 3. output results
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "NOTE : background density = %20.14e\n", AveDensity_Init );
