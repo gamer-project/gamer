@@ -1732,6 +1732,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__GraP5Gradient",      &RS.Opt__GraP5Gradient,      SID, TID, NonFatal, &RT.Opt__GraP5Gradient,       1, NonFatal );
    LoadField( "Opt__GravityType",        &RS.Opt__GravityType,        SID, TID, NonFatal, &RT.Opt__GravityType,         1, NonFatal );
    LoadField( "Opt__ExternalPot",        &RS.Opt__ExternalPot,        SID, TID, NonFatal, &RT.Opt__ExternalPot,         1, NonFatal );
+   LoadField( "Opt__GravityExtraMass",   &RS.Opt__GravityExtraMass,   SID, TID, NonFatal, &RT.Opt__GravityExtraMass,    1, NonFatal );
 #  endif
 
 // Grackle
@@ -1832,6 +1833,8 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__TimingBarrier",      &RS.Opt__TimingBarrier,      SID, TID, NonFatal, &RT.Opt__TimingBarrier,       1, NonFatal );
    LoadField( "Opt__TimingBalance",      &RS.Opt__TimingBalance,      SID, TID, NonFatal, &RT.Opt__TimingBalance,       1, NonFatal );
    LoadField( "Opt__TimingMPI",          &RS.Opt__TimingMPI,          SID, TID, NonFatal, &RT.Opt__TimingMPI,           1, NonFatal );
+   LoadField( "Opt__RecordNote",         &RS.Opt__RecordNote,         SID, TID, NonFatal, &RT.Opt__RecordNote,          1, NonFatal );
+   LoadField( "Opt__RecordUnphy",        &RS.Opt__RecordUnphy,        SID, TID, NonFatal, &RT.Opt__RecordUnphy,         1, NonFatal );
    LoadField( "Opt__RecordMemory",       &RS.Opt__RecordMemory,       SID, TID, NonFatal, &RT.Opt__RecordMemory,        1, NonFatal );
    LoadField( "Opt__RecordPerformance",  &RS.Opt__RecordPerformance,  SID, TID, NonFatal, &RT.Opt__RecordPerformance,   1, NonFatal );
    LoadField( "Opt__ManualControl",      &RS.Opt__ManualControl,      SID, TID, NonFatal, &RT.Opt__ManualControl,       1, NonFatal );
