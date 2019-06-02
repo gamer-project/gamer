@@ -46,6 +46,7 @@ TESTPROB_ID                   0           # test problem ID [0]
                                           # 1005: ELBDM rotating vortex pair
                                           # 1006: ELBDM vortex pair in linear motion
                                           # 1007: ELBDM halo extracted from a large-scale structure simulation (+GRAVITY)
+                                          # 1008: ELBDM 1D Gaussian wave packet
 
 
 # code units (in cgs)
