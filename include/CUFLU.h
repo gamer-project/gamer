@@ -455,6 +455,12 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 #     else
 #     define FLU_BLOCK_SIZE_X       512      // not optimized yet
 #     endif
+#  elif ( GPU_ARCH == TURING )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
+#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
+#     endif
 #  else
 #     define FLU_BLOCK_SIZE_X       NULL_INT
 #     ifdef GPU
