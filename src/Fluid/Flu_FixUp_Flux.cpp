@@ -166,7 +166,7 @@ void Flu_FixUp_Flux( const int lv )
                real Pres;
                real *ForPres = CorrVal;
 
-//#XPERIMENTAL: (does not work well and thus has been disabled for now)
+//###EXPERIMENTAL: (does not work well and thus has been disabled for now)
 /*
                real ForPres[NCOMP_TOTAL];
 //             when FixSEint is on, use FluidPtr1D to calculate the original pressure
@@ -207,7 +207,7 @@ void Flu_FixUp_Flux( const int lv )
 #              endif // MODEL
 
 
-//#XPERIMENTAL: (does not work well and thus has been disabled for now)
+//###EXPERIMENTAL: (does not work well and thus has been disabled for now)
 /*
 //             correct pressure to restore the original specific internal energy
                if ( FixSEint )   Pres *= CorrVal[DENS] / *FluidPtr1D[DENS];
