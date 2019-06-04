@@ -9,12 +9,11 @@ void SRHydro_Pri2Con_Double (const double In[], double Out[], const double Gamma
 // problem-specific global variables
 // =======================================================================================
 static double Acoustic_RhoAmp;      // amplitude of the proper number density perturbation (assuming background density = 1.0)
-static double Acoustic_Vx;          // ambient velocity in x-direction
-static double Acoustic_Vy;          // ambient velocity in y-direction
-static double Acoustic_Vz;          // ambient velocity in z-direction
+static double Acoustic_U;           // magnitude of 4-velocity
 static double Acoustic_Phase0;      // initial phase shift
 // =======================================================================================
 
+static double Acoustic_WaveLength;  // wavelength
 
 
 
@@ -100,15 +99,14 @@ void SetParameter()
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
    ReadPara->Add( "Acoustic_RhoAmp",   &Acoustic_RhoAmp,       -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Acoustic_Vx",       &Acoustic_Vx,            0.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Acoustic_Vy",       &Acoustic_Vy,            0.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Acoustic_Vz",       &Acoustic_Vz,            0.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Acoustic_U",        &Acoustic_U,             0.0,          NoMin_double,     NoMax_double      );
    ReadPara->Add( "Acoustic_Phase0",   &Acoustic_Phase0,        0.0,          NoMin_double,     NoMax_double      );
 
    ReadPara->Read( FileName );
 
    delete ReadPara;
 
+   Acoustic_WaveLength = amr->BoxSize[0] / sqrt(3.0);
 
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
@@ -132,9 +130,7 @@ void SetParameter()
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "  test problem ID     = %d\n",      TESTPROB_ID );
       Aux_Message( stdout, "  density amplitude   = % 14.7e\n", Acoustic_RhoAmp );
-      Aux_Message( stdout, "  ambient Vx          = % 14.7e\n", Acoustic_Vx );
-      Aux_Message( stdout, "  ambient Vy          = % 14.7e\n", Acoustic_Vy );
-      Aux_Message( stdout, "  ambient Vz          = % 14.7e\n", Acoustic_Vz );
+      Aux_Message( stdout, "  ambient U           = % 14.7e\n", Acoustic_U );
       Aux_Message( stdout, "  initial phase shift = % 14.7e\n", Acoustic_Phase0 );
       Aux_Message( stdout, "=============================================================================\n" );
    }
@@ -170,20 +166,21 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 {
   double Phase;
   double Pri[NCOMP_FLUID];
-  double Vx, Vy, Vz, Ux, Uy, Uz, Lorentz;
- 
-  Vx = Acoustic_Vx;
-  Vy = Acoustic_Vy;
-  Vz = Acoustic_Vz;
+  double K, V, Lorentz;
+  double SQRT_3 = sqrt(3.0);
 
-  Phase = (double)M_PI*2.0/sqrt((double)3.0) * ( x + y + z - ( Vx + Vy + Vz ) * Time );
+  Lorentz = sqrt( 1.0 + Acoustic_U * Acoustic_U );
 
-  Lorentz = 1.0 / sqrt( 1.0 - Vx*Vx - Vy*Vy - Vz*Vz );
+  V = Acoustic_U / Lorentz;
 
-  Pri[0] = 1.0 + Acoustic_RhoAmp * sin(Phase + Acoustic_Phase0);
-  Pri[1] = Vx * Lorentz;
-  Pri[2] = Vy * Lorentz;
-  Pri[3] = Vz * Lorentz;
+  K = 2.0 * M_PI / SQRT_3 / Acoustic_WaveLength;
+
+  Phase = K * ( x + y + z ) - M_PI * 2.0 * V * Time / Acoustic_WaveLength;
+
+  Pri[0] = 1.0 + Acoustic_RhoAmp * sin( Phase + Acoustic_Phase0 );
+  Pri[1] = Acoustic_U / SQRT_3;
+  Pri[2] = Acoustic_U / SQRT_3;
+  Pri[3] = Acoustic_U / SQRT_3;
   Pri[4] = 1.0;
 
   SRHydro_Pri2Con_Double ( Pri, fluid, (double)GAMMA );
