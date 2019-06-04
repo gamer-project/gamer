@@ -114,7 +114,7 @@
 
 
 // check non-physical negative values (e.g., negative density) for the fluid solver
-#if (  defined GAMER_DEBUG  &&  ( MODEL == HYDRO || MODEL == MHD )  )
+#if ( defined GAMER_DEBUG  &&  MODEL == HYDRO )
 #  define CHECK_NEGATIVE_IN_FLUID
 #endif
 

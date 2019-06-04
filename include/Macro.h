@@ -265,10 +265,6 @@
 # endif
 
 
-#elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
-
-
 #elif ( MODEL == ELBDM )
 // field indices of fluid[] --> element of [0 ... NCOMP_FLUID-1]
 #  define  DENS               0

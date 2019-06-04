@@ -688,7 +688,7 @@ void Init_ResetParameter()
 // OPT__UM_IC_NVAR
    if ( OPT__INIT == INIT_BY_FILE  &&  OPT__UM_IC_NVAR <= 0 )
    {
-#     if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined DUAL_ENERGY  )
+#     if ( MODEL == HYDRO  &&  defined DUAL_ENERGY )
       OPT__UM_IC_NVAR = NCOMP_TOTAL - 1;  // do not load the dual-energy field from the disk
 
 #     elif ( MODEL == ELBDM )
