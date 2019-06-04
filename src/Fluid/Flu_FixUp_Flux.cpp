@@ -21,6 +21,9 @@ void Flu_FixUp_Flux( const int lv )
                              real(-1.0/amr->dh[lv]), real(+1.0/amr->dh[lv]),
                              real(-1.0/amr->dh[lv]), real(+1.0/amr->dh[lv]) };
    const int  FluSg      = amr->FluSg[lv];
+#  ifdef MHD
+   const int  MagSg      = amr->MagSg[lv];
+#  endif
    const int  Offset[6]  = { 0, PS1-1, 0, (PS1-1)*PS1, 0, (PS1-1)*SQR(PS1) }; // x=0/PS1-1, y=0/PS1-1, z=0/PS1-1 faces
    const int  didx[3][2] = { PS1, SQR(PS1), 1, SQR(PS1), 1, PS1 };
 
@@ -176,16 +179,32 @@ void Flu_FixUp_Flux( const int lv )
                   for (int v=0; v<NCOMP_TOTAL; v++)   ForPres[v] = CorrVal    [v];
 */
 
+//             calculate the magnetic energy first
+#              ifdef MHD
+               int i, j, k;
+               switch ( s )
+               {
+                  case 0:  i = 0;      j = n;      k = m;      break;
+                  case 1:  i = PS1-1;  j = n;      k = m;      break;
+                  case 2:  i = n;      j = 0;      k = m;      break;
+                  case 3:  i = n;      j = PS1-1;  k = m;      break;
+                  case 4:  i = n;      j = m;      k = 0;      break;
+                  case 5:  i = n;      j = m;      k = PS1-1;  break;
+
+                  default:
+                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "s", s );
+                     break;
+               } // switch ( s )
+
+               const real EngyB = MHD_GetCellCenteredBEnergy( lv, PID, i, j, k, MagSg );
+#              else
+               const real EngyB = NULL_REAL;
+#              endif
+
 #              if   ( DUAL_ENERGY == DE_ENPY )
 //             must determine to use Hydro_GetPressure() or Hydro_DensEntropy2Pres() since the fluid variables stored
 //             in CorrVal[] may not be fully consistent (as it's not corrected by Hydro_DualEnergyFix())
 //             --> note that currently we adopt Hydro_DensEntropy2Pres() for DE_UPDATED_BY_MIN_PRES
-#              ifdef MHD
-#              warning : WAIT MHD !!!
-               const real EngyB = NULL_REAL;
-#              else
-               const real EngyB = NULL_REAL;
-#              endif
                Pres = ( *DE_StatusPtr1D == DE_UPDATED_BY_ETOT  ||  *DE_StatusPtr1D == DE_UPDATED_BY_ETOT_GRA ) ?
                       Hydro_GetPressure( ForPres[DENS], ForPres[MOMX], ForPres[MOMY], ForPres[MOMZ], ForPres[ENGY],
                                          Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB )
@@ -195,12 +214,6 @@ void Flu_FixUp_Flux( const int lv )
 #              error : DE_EINT is NOT supported yet !!
 
 #              else // DUAL_ENERGY
-#              ifdef MHD
-#              warning : WAIT MHD !!!
-               const real EngyB = NULL_REAL;
-#              else
-               const real EngyB = NULL_REAL;
-#              endif
                Pres = Hydro_GetPressure( ForPres[DENS], ForPres[MOMX], ForPres[MOMY], ForPres[MOMZ], ForPres[ENGY],
                                          Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB );
 #              endif // DUAL_ENERGY
@@ -248,9 +261,7 @@ void Flu_FixUp_Flux( const int lv )
                CorrVal[ENGY] = (real)0.5*( SQR(CorrVal[MOMX]) + SQR(CorrVal[MOMY]) + SQR(CorrVal[MOMZ]) ) / CorrVal[DENS]
                                + Pres*_Gamma_m1;
 #              ifdef MHD
-#              warning : WAIT MHD !!!
-//             const real EngyB = ...;
-//             CorrVal[ENGY] += EngyB;
+               CorrVal[ENGY] += EngyB;
 #              endif
 
 #              if   ( DUAL_ENERGY == DE_ENPY )
