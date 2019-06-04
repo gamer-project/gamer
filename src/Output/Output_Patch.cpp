@@ -131,7 +131,8 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
 
 #  if   ( MODEL == HYDRO )
 #  ifdef MHD
-#  warning : WAIT MHD !!!  // add MHD labels
+   for (int v=0; v<NCOMP_MAG; v++)     fprintf( File, "%14s", MagLabel[v] );
+   fprintf( File, "%14s", "MagEngy" );
 #  endif
    fprintf( File, "%14s", "Pressure" );
 #  ifdef DUAL_ENERGY
@@ -214,15 +215,12 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
 
 #        if ( MODEL == HYDRO )
 #        ifdef MHD
-         fprintf( File, " %13s", "" );
+         fprintf( File, " %13s %13s %13s %13s", "", "", "", "" );
 #        endif
          fprintf( File, " %13s", "" );
 #        ifdef DUAL_ENERGY
          fprintf( File, " %13s", "" );
 #        endif
-
-#        elif ( MODEL == MHD )
-#        warning : WAIT MHD !!!
 
 #        elif ( MODEL == ELBDM )
 
@@ -253,7 +251,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
    if ( magnetic != NULL )
    {
 //    header
-      fprintf( File, "(%2s,%2s,%2s)%14s%14s%14s\n", "i", "j", "k", "B_X", "B_Y", "B_Z" );
+      fprintf( File, "(%2s,%2s,%2s)%14s%14s%14s\n", "i", "j", "k", MagLabel[MAGX], MagLabel[MAGY], MagLabel[MAGZ] );
 
       for (int k=0; k<PS1P1; k++)
       for (int j=0; j<PS1P1; j++)

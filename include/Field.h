@@ -87,6 +87,9 @@ SET_GLOBAL( char *FieldLabel[NCOMP_TOTAL] );
 #ifdef GRAVITY
 SET_GLOBAL( char *PotLabel, "Pote" );  // potential label is currently fixed
 #endif
+#ifdef MHD
+SET_GLOBAL( char *MagLabel[NCOMP_MAG] );
+#endif
 #ifdef PARTICLE
 SET_GLOBAL( char *ParAttLabel[PAR_NATT_TOTAL] );
 #endif

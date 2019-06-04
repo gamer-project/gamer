@@ -116,7 +116,10 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
             fprintf( File, "%14s", FieldLabel[v] );
 
 #           ifdef MHD
-#           warning : WAIT MHD !!!
+            for (int v=0; v<NCOMP_MAG; v++)
+            fprintf( File, "%14s", MagLabel[v] );
+
+            fprintf( File, "%14s", "MagEngy" );
 #           endif
 
 #           ifdef GRAVITY
@@ -125,7 +128,7 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
 #           endif
 
 //          other derived fields
-#           if ( MODEL == HYDRO  ||  MODEL == MHD )
+#           if ( MODEL == HYDRO )
             fprintf( File, "%14s", "Pressure" );
 #           endif
 
