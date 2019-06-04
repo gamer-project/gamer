@@ -19,11 +19,7 @@
 void Flu_FixUp( const int lv )
 {
 
-// 1. use the fine-grid fluxes across the coarse-fine boundaries to correct the coarse-grid data
-   if ( OPT__FIXUP_FLUX )  Flu_FixUp_Flux( lv );
-
-
-// 2. use the average data at level "lv+1" to correct the data at level "lv"
+// 1. use the average data at level "lv+1" to correct the data at level "lv"
 //    --> we do not correct the potential data
    if ( OPT__FIXUP_RESTRICT )
    {
@@ -38,9 +34,15 @@ void Flu_FixUp( const int lv )
       Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, SonMagSg, FaMagSg, _TOTAL, _MAG );
    }
 
-// 3. use the fine-grid electric field on the coarse-fine boundaries to correct the coarse-grid magnetic field
+
+// 2. use the fine-grid electric field on the coarse-fine boundaries to correct the coarse-grid magnetic field
 #  ifdef MHD
    if ( OPT__FIXUP_ELECTRIC )    MHD_FixUp_Electric( lv );
 #  endif
+
+
+// 3. use the fine-grid fluxes across the coarse-fine boundaries to correct the coarse-grid data
+//    --> apply this correction AFTER all other checks since it will check negative pressure as well
+   if ( OPT__FIXUP_FLUX )  Flu_FixUp_Flux( lv );
 
 } // FUNCTION : Flu_FixUp

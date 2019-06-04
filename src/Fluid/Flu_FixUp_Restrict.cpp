@@ -333,6 +333,10 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
          const real UseEnpy2FixEngy  = HUGE_NUMBER;
          char dummy;    // we do not record the dual-energy status here
 
+#        ifdef MHD
+#        warning : WAIT MHD !!!
+#        endif
+
          Hydro_DualEnergyFix( amr->patch[FaFluSg][FaLv][FaPID]->fluid[DENS][k][j][i],
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMX][k][j][i],
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMY][k][j][i],
