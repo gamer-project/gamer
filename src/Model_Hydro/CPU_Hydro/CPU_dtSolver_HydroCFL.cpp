@@ -22,7 +22,7 @@
 #else // #ifdef __CUDACC__
 
 real Hydro_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                        const real Gamma_m1, const bool CheckMinPres, const real MinPres );
+                        const real Gamma_m1, const bool CheckMinPres, const real MinPres, const real EngyB );
 
 #endif // #ifdef __CUDACC__ ... else ...
 
@@ -44,7 +44,8 @@ real Hydro_GetPressure( const real Dens, const real MomX, const real MomY, const
 //                3. Arrays with a prefix "g_" are stored in the global memory of GPU
 //
 // Parameter   :  g_dt_Array  : Array to store the minimum dt in each target patch
-//                g_Flu_Array : Array storing the prepared fluid data of each target patch
+//                g_Flu_Array : Array storing the prepared fluid   data of each target patch
+//                g_Mag_Array : Array storing the prepared B field data of each target patch
 //                NPG         : Number of target patch groups (for CPU only)
 //                dh          : Cell size
 //                Safety      : dt safety factor
@@ -56,9 +57,11 @@ real Hydro_GetPressure( const real Dens, const real MomX, const real MomY, const
 #ifdef __CUDACC__
 __global__
 void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
+                              const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ],
                               const real dh, const real Safety, const real Gamma, const real MinPres )
 #else
-void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ], const int NPG,
+void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
+                              const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const int NPG,
                               const real dh, const real Safety, const real Gamma, const real MinPres )
 #endif
 {

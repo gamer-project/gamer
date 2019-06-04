@@ -246,6 +246,9 @@ real (*h_Flu_Array_T[2])[NCOMP_FLUID][ CUBE(PS1) ]                 = { NULL, NUL
 #ifdef GRAVITY
 real (*h_Pot_Array_T[2])[ CUBE(GRA_NXT) ]                          = { NULL, NULL };
 #endif
+#ifdef MHD
+real (*h_Mag_Array_T[2])[NCOMP_MAG][ PS1P1*SQR(PS1) ]              = { NULL, NULL };
+#endif
 
 
 // 4. GPU (device) global memory arrays
@@ -301,6 +304,9 @@ real *d_dt_Array_T                                               = NULL;
 real (*d_Flu_Array_T)[NCOMP_FLUID][ CUBE(PS1) ]                  = NULL;
 #ifdef GRAVITY
 real (*d_Pot_Array_T)[ CUBE(GRA_NXT) ]                           = NULL;
+#endif
+#ifdef MHD
+real (*d_Mag_Array_T)[NCOMP_MAG][ PS1P1*SQR(PS1) ]               = NULL;
 #endif
 #endif // #ifdef GPU
 

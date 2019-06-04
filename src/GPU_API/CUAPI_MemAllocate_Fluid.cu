@@ -25,6 +25,7 @@ extern char (*d_DE_Array_F_Out)[ CUBE(PS2) ];
 extern real (*d_Mag_Array_F_In )[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
 extern real (*d_Mag_Array_F_Out)[NCOMP_MAG][ PS2P1*SQR(PS2)          ];
 extern real (*d_Ele_Array      )[9][NCOMP_ELE][ PS2P1*PS2 ];
+extern real (*d_Mag_Array_T)[NCOMP_MAG][ PS1P1*SQR(PS1) ];
 #endif
 extern real *d_dt_Array_T;
 extern real (*d_Flu_Array_T)[NCOMP_FLUID][ CUBE(PS1) ];
@@ -77,6 +78,7 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
    const long Mag_MemSize_F_In    = sizeof(real  )*Flu_NPG*NCOMP_MAG*FLU_NXT_P1*SQR(FLU_NXT);
    const long Mag_MemSize_F_Out   = sizeof(real  )*Flu_NPG*NCOMP_MAG*PS2P1*SQR(PS2);
    const long Ele_MemSize         = sizeof(real  )*Flu_NPG*9*NCOMP_ELE*PS2P1*PS2;
+   const long Mag_MemSize_T       = sizeof(real  )*Flu_NP*NCOMP_MAG*PS1P1*SQR(PS1);
 #  endif
 #  ifdef GRAVITY
    const long dt_MemSize_T        = sizeof(real  )*MAX( Flu_NP, Pot_NP ); // dt_Array_T is used for both DT_FLU_SOLVER and DT_GRA_SOLVER
@@ -122,7 +124,7 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
 #  endif
 
 #  ifdef MHD
-   TotalSize += Mag_MemSize_F_In + Mag_MemSize_F_Out;
+   TotalSize += Mag_MemSize_F_In + Mag_MemSize_F_Out + Mag_MemSize_T;
 
    if ( amr->WithElectric )
    TotalSize += Ele_MemSize;
@@ -172,6 +174,8 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
 
    if ( amr->WithElectric )
    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Ele_Array,             Ele_MemSize             )  );
+
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Mag_Array_T,           Mag_MemSize_T           )  );
 #  endif
 
    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_dt_Array_T,            dt_MemSize_T            )  );
@@ -224,6 +228,8 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
 
       if ( amr->WithElectric )
       CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Ele_Array      [t], Ele_MemSize             )  );
+
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Mag_Array_T    [t], Mag_MemSize_T           )  );
 #     endif
 
       CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_dt_Array_T     [t], dt_MemSize_T            )  );

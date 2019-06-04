@@ -289,6 +289,7 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
 #  endif
 #  ifndef MHD
    real (*h_Mag_Array_F_In [2])[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ] = { NULL, NULL };
+   real (*h_Mag_Array_T    [2])[NCOMP_MAG][ PS1P1*SQR(PS1) ]          = { NULL, NULL };
 #  endif
 #  if ( defined GRAVITY  &&  !defined DUAL_ENERGY )
    char (*h_DE_Array_G     [2])[PS1][PS1][PS1]                        = { NULL, NULL };
@@ -363,7 +364,7 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
 #     endif
 
       case DT_FLU_SOLVER:
-         dt_Prepare_Flu( lv, h_Flu_Array_T[ArrayID], NPG, PID0_List );
+         dt_Prepare_Flu( lv, h_Flu_Array_T[ArrayID], h_Mag_Array_T[ArrayID], NPG, PID0_List );
       break;
 
 #     ifdef GRAVITY
@@ -471,6 +472,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
    real (*h_Mag_Array_F_In [2])[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ] = { NULL, NULL };
    real (*h_Mag_Array_F_Out[2])[NCOMP_MAG][ PS2P1*SQR(PS2) ]          = { NULL, NULL };
    real (*h_Ele_Array      [2])[9][NCOMP_ELE][ PS2P1*PS2 ]            = { NULL, NULL };
+   real (*h_Mag_Array_T    [2])[NCOMP_MAG][ PS1P1*SQR(PS1) ]          = { NULL, NULL };
 #  endif
 
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
@@ -599,11 +601,11 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #     if   ( MODEL == HYDRO )
       case DT_FLU_SOLVER:
 #        ifdef GPU
-         CUAPI_Asyn_dtSolver( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID], NULL, NULL,
+         CUAPI_Asyn_dtSolver( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID], h_Mag_Array_T[ArrayID], NULL, NULL,
                               NPG, dh, (Step==0)?DT__FLUID_INIT:DT__FLUID, GAMMA, MIN_PRES,
                               NULL_BOOL, GRAVITY_NONE, NULL_BOOL, NULL_REAL, GPU_NSTREAM );
 #        else
-         CPU_dtSolver       ( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID], NULL, NULL,
+         CPU_dtSolver       ( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID], h_Mag_Array_T[ArrayID], NULL, NULL,
                               NPG, dh, (Step==0)?DT__FLUID_INIT:DT__FLUID, GAMMA, MIN_PRES,
                               NULL_BOOL, GRAVITY_NONE, NULL_BOOL, NULL_REAL );
 #        endif
@@ -612,11 +614,11 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #     ifdef GRAVITY
       case DT_GRA_SOLVER:
 #        ifdef GPU
-         CUAPI_Asyn_dtSolver( TSolver, h_dt_Array_T[ArrayID], NULL, h_Pot_Array_T[ArrayID], h_Corner_Array_G[ArrayID],
+         CUAPI_Asyn_dtSolver( TSolver, h_dt_Array_T[ArrayID], NULL, NULL, h_Pot_Array_T[ArrayID], h_Corner_Array_G[ArrayID],
                               NPG, dh, DT__GRAVITY, NULL_REAL, NULL_REAL, OPT__GRA_P5_GRADIENT, OPT__GRAVITY_TYPE, NULL_BOOL,
                               TimeNew, GPU_NSTREAM );
 #        else
-         CPU_dtSolver       ( TSolver, h_dt_Array_T[ArrayID], NULL, h_Pot_Array_T[ArrayID], h_Corner_Array_G[ArrayID],
+         CPU_dtSolver       ( TSolver, h_dt_Array_T[ArrayID], NULL, NULL, h_Pot_Array_T[ArrayID], h_Corner_Array_G[ArrayID],
                               NPG, dh, DT__GRAVITY, NULL_REAL, NULL_REAL, OPT__GRA_P5_GRADIENT, OPT__GRAVITY_TYPE, NULL_BOOL,
                               TimeNew );
 #        endif

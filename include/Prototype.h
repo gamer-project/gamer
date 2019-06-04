@@ -211,16 +211,18 @@ double Mis_Cell2PhySize( const int NCell, const int lv );
 int    Mis_Scale2Cell( const int Scale, const int lv );
 int    Mis_Cell2Scale( const int NCell, const int lv );
 double dt_InvokeSolver( const Solver_t TSolver, const int lv );
-void   dt_Prepare_Flu( const int lv, real h_Flu_Array_T[][NCOMP_FLUID][ CUBE(PS1) ], const int NPG, const int *PID0_List );
+void   dt_Prepare_Flu( const int lv, real h_Flu_Array_T[][NCOMP_FLUID][ CUBE(PS1) ],
+                       real h_Mag_Array_T[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const int NPG, const int *PID0_List );
 #ifdef GRAVITY
 void   dt_Prepare_Pot( const int lv, real h_Pot_Array_T[][ CUBE(GRA_NXT) ], const int NPG, const int *PID0_List,
                        const double PrepTime );
 #endif
 void   dt_Close( const real h_dt_Array_T[], const int NPG );
 void   CPU_dtSolver( const Solver_t TSolver, real dt_Array[], const real Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
-                     const real Pot_Array[][ CUBE(GRA_NXT) ], const double Corner_Array[][3],
-                     const int NPatchGroup, const real dh, const real Safety, const real Gamma, const real MinPres,
-                     const bool P5_Gradient, const OptGravityType_t GravityType, const bool ExtPot, const double TargetTime );
+                     const real Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const real Pot_Array[][ CUBE(GRA_NXT) ],
+                     const double Corner_Array[][3], const int NPatchGroup, const real dh, const real Safety,
+                     const real Gamma, const real MinPres, const bool P5_Gradient, const OptGravityType_t GravityType,
+                     const bool ExtPot, const double TargetTime );
 
 
 // MPI
@@ -466,10 +468,10 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              const bool NormPassive, const int NNorm,
                              const bool JeansMinPres, const real JeansMinPres_Coeff );
 void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real h_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
-                          const real h_Pot_Array[][ CUBE(GRA_NXT) ], const double h_Corner_Array[][3],
-                          const int NPatchGroup, const real dh, const real Safety, const real Gamma, const real MinPres,
-                          const bool P5_Gradient, const OptGravityType_t GravityType, const bool ExtPot,
-                          const double TargetTime, const int GPU_NStream );
+                          const real h_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const real h_Pot_Array[][ CUBE(GRA_NXT) ],
+                          const double h_Corner_Array[][3], const int NPatchGroup, const real dh, const real Safety,
+                          const real Gamma, const real MinPres, const bool P5_Gradient, const OptGravityType_t GravityType,
+                          const bool ExtPot, const double TargetTime, const int GPU_NStream );
 void CUAPI_DiagnoseDevice();
 void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GPU_NStream );
 void CUAPI_MemFree_Fluid( const int GPU_NStream );
