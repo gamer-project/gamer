@@ -480,7 +480,7 @@ void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nva
 {
 
 #  ifdef GAMER_DEBUG
-#  if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined DUAL_ENERGY  )
+#  if ( MODEL == HYDRO  &&  defined DUAL_ENERGY )
    if ( nvar_in != NCOMP_TOTAL-1 )
       Aux_Error( ERROR_INFO, "nvar_in (%d) != NCOMP_TOTAL-1 (%d) when enabling DUAL_ENERGY !!\n", nvar_in, NCOMP_TOTAL-1 );
 
@@ -496,8 +496,8 @@ void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nva
 
    for (int v_in=0, v_out=0; v_in<nvar_in; v_in++, v_out++)
    {
-//    skip the dual-energy field for HYDRO/MHD
-#     if ( MODEL == HYDRO  ||  MODEL == MHD )
+//    skip the dual-energy field for HYDRO
+#     if   ( MODEL == HYDRO )
 #     if   ( DUAL_ENERGY == DE_ENPY )
       if ( v_out == ENPY )    v_out ++;
 #     elif ( DUAL_ENERGY == DE_EINT )
@@ -512,8 +512,8 @@ void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nva
       fluid_out[v_out] = fluid_in[v_in];
    }
 
-// calculate the dual-energy field for HYDRO/MHD
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+// calculate the dual-energy field for HYDRO
+#  if   ( MODEL == HYDRO )
 #  if   ( DUAL_ENERGY == DE_ENPY )
    fluid_out[ENPY] = Hydro_Fluid2Entropy( fluid_in[DENS], fluid_in[MOMX], fluid_in[MOMY], fluid_in[MOMZ], fluid_in[ENGY], GAMMA-1.0 );
 #  elif ( DUAL_ENERGY == DE_EINT )
