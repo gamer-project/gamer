@@ -165,7 +165,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
   double Phase;
-  double Pri[NCOMP_FLUID];
+  double Pri[NCOMP_FLUID], Con[NCOMP_FLUID];
   double K, V, Lorentz;
   double SQRT_3 = sqrt(3.0);
 
@@ -183,7 +183,13 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
   Pri[3] = Acoustic_U / SQRT_3;
   Pri[4] = 1.0;
 
-  SRHydro_Pri2Con_Double ( Pri, fluid, (double)GAMMA );
+  SRHydro_Pri2Con_Double ( Pri, Con, (double)GAMMA );
+
+  fluid[0] = (real)Con[0];
+  fluid[1] = (real)Con[1];
+  fluid[2] = (real)Con[2];
+  fluid[3] = (real)Con[3];
+  fluid[4] = (real)Con[4];
 
 } // FUNCTION : SetGridIC
 
