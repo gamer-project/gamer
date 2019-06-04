@@ -31,7 +31,7 @@ real Hydro_GetPressure( const real Dens, const real MomX, const real MomY, const
 
 //-----------------------------------------------------------------------------------------
 // Function    :  CPU/CUFLU_dtSolver_HydroCFL
-// Description :  Estimate the evolution time-step (dt) from the CFL condition of the hydro solver
+// Description :  Estimate the evolution time-step (dt) from the CFL condition of the hydro/MHD solver
 //
 // Note        :  1. This function should be applied to both physical and comoving coordinates and always
 //                   return the evolution time-step (dt) actually used in various solvers
@@ -39,7 +39,7 @@ real Hydro_GetPressure( const real Dens, const real MomX, const real MomY, const
 //                       Comoving coordinates : dt = delta(scale_factor) / ( Hubble_parameter*scale_factor^3 )
 //                   --> We convert dt back to the physical time interval, which equals "delta(scale_factor)"
 //                       in the comoving coordinates, in Mis_GetTimeStep()
-//                2. time-step is estimated by the stability criterion from the von Neumann stability analysis
+//                2. Time-step is estimated by the stability criterion from the von Neumann stability analysis
 //                   --> CFL condition
 //                3. Arrays with a prefix "g_" are stored in the global memory of GPU
 //
@@ -84,15 +84,31 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][NCOMP_
 
       CGPU_LOOP( t, CUBE(PS1) )
       {
-         real fluid[NCOMP_FLUID], _Rho, Vx, Vy, Vz, Pres, Cs, MaxV;
+         real fluid[NCOMP_FLUID], _Rho, Vx, Vy, Vz, Pres, EngyB, a2, CFLx, CFLy, CFLz;
+#        ifdef MHD
+         int  i, j, k, idx_Bx, idx_By, idx_Bz;
+         real Bx, By, Bz, Bx2, By2, Bz2, B2, Ca2_plus_a2, Ca2_min_a2, Ca2_min_a2_sqr, four_a2_over_Rho;
+#        endif
 
          for (int v=0; v<NCOMP_FLUID; v++)   fluid[v] = g_Flu_Array[p][v][t];
 
 #        ifdef MHD
-#        warning : WAIT MHD !!!
-         const real EngyB = NULL_REAL;
+         i       = t % PS1;
+         j       = t % SQR(PS1) / PS1;
+         k       = t / SQR(PS1);
+         idx_Bx  = IDX321_BX( i, j, k, PS1 );
+         idx_By  = IDX321_BY( i, j, k, PS1 );
+         idx_Bz  = IDX321_BZ( i, j, k, PS1 );
+         Bx      = (real)0.5*( g_Mag_Array[p][MAGX][idx_Bx] + g_Mag_Array[p][MAGX][ idx_Bx + 1        ] );
+         By      = (real)0.5*( g_Mag_Array[p][MAGY][idx_By] + g_Mag_Array[p][MAGY][ idx_By + PS1      ] );
+         Bz      = (real)0.5*( g_Mag_Array[p][MAGZ][idx_Bz] + g_Mag_Array[p][MAGZ][ idx_Bz + SQR(PS1) ] );
+         Bx2     = SQR( Bx );
+         By2     = SQR( By );
+         Bz2     = SQR( Bz );
+         B2      = Bx2 + By2 + Bz2;
+         EngyB   = (real)0.5*B2;
 #        else
-         const real EngyB = NULL_REAL;
+         EngyB   = NULL_REAL;
 #        endif
 
         _Rho  = (real)1.0 / fluid[DENS];
@@ -101,16 +117,38 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][NCOMP_
          Vz   = FABS( fluid[MOMZ] )*_Rho;
          Pres = Hydro_GetPressure( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
                                    Gamma_m1, CheckMinPres_Yes, MinPres, EngyB );
-         Cs   = SQRT( Gamma*Pres*_Rho );
+         a2   = Gamma*Pres*_Rho; // sound speed squared
+
+//       compute the maximum information propagating speed
+//       --> hydro: bulk velocity + sound wave
+//           MHD  : bulk velocity +  fast wave
+#        ifdef MHD
+         Ca2_plus_a2      = B2*_Rho + a2;
+         Ca2_min_a2       = B2*_Rho - a2;
+         Ca2_min_a2_sqr   = SQR( Ca2_min_a2 );
+         four_a2_over_Rho = (real)4.0*a2*_Rho;
+         CFLx             = (real)0.5*(  Ca2_plus_a2 + SQRT( Ca2_min_a2_sqr + four_a2_over_Rho*(By2+Bz2) )  );
+         CFLy             = (real)0.5*(  Ca2_plus_a2 + SQRT( Ca2_min_a2_sqr + four_a2_over_Rho*(Bx2+Bz2) )  );
+         CFLz             = (real)0.5*(  Ca2_plus_a2 + SQRT( Ca2_min_a2_sqr + four_a2_over_Rho*(Bx2+By2) )  );
+         CFLx             = SQRT( CFLx );
+         CFLy             = SQRT( CFLy );
+         CFLz             = SQRT( CFLz );
+#        else
+         CFLx             = SQRT( a2 );
+         CFLy             = CFLx;
+         CFLz             = CFLx;
+#        endif // #ifdef MHD ... else ...
+
+         CFLx += Vx;
+         CFLy += Vy;
+         CFLz += Vz;
 
 #        if   ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == CTU )
-         MaxV   = FMAX( Vx, Vy );
-         MaxV   = FMAX( Vz, MaxV );
-         MaxCFL = FMAX( MaxV+Cs, MaxCFL );
-
+         MaxCFL = FMAX( CFLx, MaxCFL );
+         MaxCFL = FMAX( CFLy, MaxCFL );
+         MaxCFL = FMAX( CFLz, MaxCFL );
 #        elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
-         MaxV   = Vx + Vy + Vz;
-         MaxCFL = FMAX( MaxV+(real)3.0*Cs, MaxCFL );
+         MaxCFL = FMAX( CFLx+CFLy+CFLz, MaxCFL );
 #        endif
       } // CGPU_LOOP( t, CUBE(PS1) )
 
