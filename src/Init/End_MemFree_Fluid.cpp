@@ -45,6 +45,7 @@ void End_MemFree_Fluid()
       delete [] h_Mag_Array_F_In [t];  h_Mag_Array_F_In [t] = NULL;
       delete [] h_Mag_Array_F_Out[t];  h_Mag_Array_F_Out[t] = NULL;
       delete [] h_Ele_Array      [t];  h_Ele_Array      [t] = NULL;
+      delete [] h_Mag_Array_T    [t];  h_Mag_Array_T    [t] = NULL;
 #     endif
    } // for (int t=0; t<2; t++)
 

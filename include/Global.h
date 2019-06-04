@@ -259,6 +259,9 @@ extern real       (*h_Flu_Array_T[2])[NCOMP_FLUID][ CUBE(PS1) ];
 #ifdef GRAVITY
 extern real       (*h_Pot_Array_T[2])[ CUBE(GRA_NXT) ];
 #endif
+#ifdef MHD
+extern real       (*h_Mag_Array_T[2])[NCOMP_MAG][ PS1P1*SQR(PS1) ];
+#endif
 
 
 
