@@ -560,6 +560,10 @@ void Init_ByRestart_HDF5( const char *FileName )
    hsize_t H5_SetDims_Field[4], H5_MemDims_Field[4];
    hid_t   H5_SetID_Field[NCOMP_TOTAL], H5_MemID_Field, H5_SpaceID_Field, H5_GroupID_GridData;
 
+#  ifdef MHD
+   char (*MagName)[MAX_STRING] = new char [NCOMP_MAG][MAX_STRING];
+#  endif
+
 #  ifdef PARTICLE
    char (*ParAttName)[MAX_STRING] = new char [PAR_NATT_STORED][MAX_STRING];
 
@@ -581,6 +585,10 @@ void Init_ByRestart_HDF5( const char *FileName )
 
 // 3-1. set the names of all grid fields and particle attributes
    for (int v=0; v<NCOMP_TOTAL; v++)      sprintf( FieldName[v], "%s", FieldLabel[v] );
+
+#  ifdef MHD
+   for (int v=0; v<NCOMP_MAG; v++)        sprintf( MagName[v], "%s", MagLabel[v] );
+#  endif
 
 #  ifdef PARTICLE
 // skip the last PAR_NATT_UNSTORED attributes since we do not store them on disk
@@ -802,20 +810,22 @@ void Init_ByRestart_HDF5( const char *FileName )
    free ( KeyInfo.CodeVersion );
    free ( KeyInfo.DumpWallTime );
 
-   if ( FieldName != NULL )   delete [] FieldName;
-   if ( CrList_AllLv != NULL )   delete [] CrList_AllLv;
+   delete [] FieldName;
+   delete [] CrList_AllLv;
 #  ifdef LOAD_BALANCE
-   if ( LBIdxList_AllLv != NULL )   delete [] LBIdxList_AllLv;
-   for (int lv=0; lv<NLEVEL; lv++)
-      if ( LBIdxList_EachLv_IdxTable[lv] != NULL )   delete [] LBIdxList_EachLv_IdxTable[lv];
+   delete [] LBIdxList_AllLv;
+   for (int lv=0; lv<NLEVEL; lv++)  delete [] LBIdxList_EachLv_IdxTable[lv];
 #  else
-   if ( SonList_AllLv != NULL )  delete [] SonList_AllLv;
+   delete [] SonList_AllLv;
+#  endif
+#  ifdef MHD
+   delete [] MagName;
 #  endif
 #  ifdef PARTICLE
-   if ( ParAttName     != NULL )    delete [] ParAttName;
-   if ( NParList_AllLv != NULL )    delete [] NParList_AllLv;
-   if ( GParID_Offset  != NULL )    delete [] GParID_Offset;
-   if ( NewParList     != NULL )    delete [] NewParList;
+   delete [] ParAttName;
+   delete [] NParList_AllLv;
+   delete [] GParID_Offset;
+   delete [] NewParList;
    Aux_DeallocateArray2D( ParBuf );
 #  endif
 

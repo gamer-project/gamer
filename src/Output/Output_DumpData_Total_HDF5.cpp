@@ -1855,6 +1855,11 @@ void FillIn_InputPara( InputPara_t &InputPara )
    for (int v=0; v<NCOMP_TOTAL; v++)
    InputPara.FieldLabel[v]           = FieldLabel[v];
 
+#  ifdef MHD
+   for (int v=0; v<NCOMP_MAG; v++)
+   InputPara.MagLabel[v]             = MagLabel[v];
+#  endif
+
    InputPara.Opt__OverlapMPI         = OPT__OVERLAP_MPI;
    InputPara.Opt__ResetFluid         = OPT__RESET_FLUID;
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
@@ -2361,7 +2366,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 
 
 // get the size of a single pointer, which is used for storing the array of variable-length strings
-// --> FieldLabel[], ParAttLabel[]
+// --> FieldLabel[], MagLabel[], ParAttLabel[]
    const int PtrSize = sizeof( char* );
    char Key[MAX_STRING];
 
@@ -2548,6 +2553,17 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 //    assuming the offset between successive FieldLabel pointers is "PtrSize", which is equal to "sizeof( char* )"
       H5Tinsert( H5_TypeID, Key, HOFFSET(InputPara_t,FieldLabel[0])+v*PtrSize, H5_TypeID_VarStr );
    }
+
+#  ifdef MHD
+   for (int v=0; v<NCOMP_MAG; v++)
+   {
+//    key for each field
+      sprintf( Key, "MagLabel%02d", v );
+
+//    assuming the offset between successive MagLabel pointers is "PtrSize", which is equal to "sizeof( char* )"
+      H5Tinsert( H5_TypeID, Key, HOFFSET(InputPara_t,MagLabel[0])+v*PtrSize, H5_TypeID_VarStr );
+   }
+#  endif
 
    H5Tinsert( H5_TypeID, "Opt__OverlapMPI",         HOFFSET(InputPara_t,Opt__OverlapMPI        ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__ResetFluid",         HOFFSET(InputPara_t,Opt__ResetFluid        ), H5T_NATIVE_INT     );

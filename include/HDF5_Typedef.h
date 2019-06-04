@@ -430,6 +430,9 @@ struct InputPara_t
    int    NormalizePassive_NVar;
    int    NormalizePassive_VarIdx[NCOMP_PASSIVE];
    char  *FieldLabel[NCOMP_TOTAL];
+#  ifdef MHD
+   char  *MagLabel[NCOMP_MAG];
+#  endif
    int    Opt__OverlapMPI;
    int    Opt__ResetFluid;
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
