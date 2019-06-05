@@ -101,7 +101,6 @@ void Flu_Close( const int lv, const int SaveSg_Flu, const int SaveSg_Mag,
 #     error : ERROR : FLU_NOUT != NCOMP_TOTAL (one must specify how to copy data from h_Flu_Array_F_Out to fluid) !!
 #  endif
 
-
 #  pragma omp parallel for schedule( static )
    for (int TID=0; TID<NPG; TID++)
    {
@@ -417,24 +416,31 @@ bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngy
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CorrectUnphysical
-// Description :  Check if any cell in the output array of Fluid solver contains unphysical retult
+// Description :  Check if any cell in the output array of Fluid solver contains unphysical results
 //                --> For example, negative density
 //
-// Note        :  1. Define unphysical values in the function "Unphysical"
+// Note        :  1. Define unphysical values in Unphysical()
 //                2. Currently it is only used for MODEL==HYDRO to check if density or pressure is smaller than
 //                   the minimum allowed values (i.e., MIN_DENS and MIN_PRES)
 //                   --> It also checks if any variable is -inf, +inf, and nan
-//                   --> But one can define arbitrary criteria in "Unphysical" to trigger the correction
+//                   --> But one can define arbitrary criteria in Unphysical() to trigger the correction
 //                3. Procedure:
 //                   if ( found_unphysical )
 //                   {
-//                      if ( OPT__1ST_FLUX_CORR ) try to correct unphysical variables using 1st-order fluxes
-//                      else                      do nothing
+//                      if ( OPT__1ST_FLUX_CORR )
+//                         Try to correct unphysical variables using 1st-order fluxes
+//                      else
+//                         Do nothing
 //
-//                      apply minimum density and pressure
+//                      Apply density and pressure floor
 //
-//                      if ( still_found_unphysical )    print debug messages and abort
-//                      else                             store corrected results to the output array
+//                      if ( still_found_unphysical )
+//                         if ( AUTO_REDUCE_DT )
+//                            Invoke the fluid solver again on the same level but with a smaller dt
+//                         else
+//                            Print debug messages and abort
+//                      else
+//                         Store the corrected results in the output array
 //                   }
 //
 // Parameter   :  lv                : Target refinement level

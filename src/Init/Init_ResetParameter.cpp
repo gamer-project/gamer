@@ -376,6 +376,20 @@ void Init_ResetParameter()
 
 // 1st-order flux correction
 #  if ( MODEL == HYDRO )
+   if ( OPT__1ST_FLUX_CORR < 0 )
+   {
+#     ifdef MHD
+      OPT__1ST_FLUX_CORR = FIRST_FLUX_CORR_NONE;
+
+      PRINT_WARNING( OPT__1ST_FLUX_CORR, FORMAT_INT, "for MHD" );
+
+#     else
+      OPT__1ST_FLUX_CORR = FIRST_FLUX_CORR_3D1D;
+
+      PRINT_WARNING( OPT__1ST_FLUX_CORR, FORMAT_INT, "for HYDRO" );
+#     endif
+   }
+
    if ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_NONE )
    {
       OPT__1ST_FLUX_CORR_SCHEME = RSOLVER_1ST_NONE;
