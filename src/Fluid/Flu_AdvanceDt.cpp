@@ -5,9 +5,9 @@
 int FluStatus_ThisRank;
 
 
-// defined in Flu_SwapFluxPointer.cpp
-void Flu_SwapFluxPointer( const int lv );
-void Flu_InitTempFlux( const int lv );
+// defined in Flu_ManageFixUpTempArray.cpp
+void Flu_SwapFixUpTempArray( const int lv );
+void Flu_InitFixUpTempArray( const int lv );
 
 
 extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TTime );
@@ -42,8 +42,8 @@ int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
                    const int SaveSg_Flu, const int SaveSg_Mag, const bool OverlapMPI, const bool Overlap_Sync )
 {
 
-// initialize flux_tmp[] for AUTO_REDUCE_DT
-   if ( OPT__FIXUP_FLUX  &&  AUTO_REDUCE_DT  &&  lv != 0 )  Flu_InitTempFlux( lv-1 );
+// initialize flux_tmp[] (and electric_tmp[] in MHD) on the parent level for AUTO_REDUCE_DT
+   if ( AUTO_REDUCE_DT  &&  lv != 0 )  Flu_InitFixUpTempArray( lv-1 );
 
 
 // initialize patch->ele_corrected[] for correcting the coarse-grid electric field
@@ -78,8 +78,7 @@ int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
    if ( FluStatus_AllRank == GAMER_SUCCESS )
    {
 //    reset the fluxes in the buffer patches at lv as zeros so that one can accumulate the coarse-fine fluxes later when evolving lv+1
-      if ( OPT__FIXUP_FLUX )
-         Buf_ResetBufferFlux( lv );
+      if ( OPT__FIXUP_FLUX )  Buf_ResetBufferFlux( lv );
 
 
 //    call Flu_ResetByUser_API_Ptr() here only if both GRAVITY and GRACKLE are disabled
@@ -89,13 +88,11 @@ int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 #     ifdef SUPPORT_GRACKLE
       if ( !GRACKLE_ACTIVATE )
 #     endif
-      if ( OPT__RESET_FLUID  &&  Flu_ResetByUser_API_Ptr != NULL )
-         Flu_ResetByUser_API_Ptr( lv, SaveSg_Flu, TimeNew );
+      if ( OPT__RESET_FLUID  &&  Flu_ResetByUser_API_Ptr != NULL )   Flu_ResetByUser_API_Ptr( lv, SaveSg_Flu, TimeNew );
 
 
-//    swap the flux pointers if the fluid solver works successfully
-      if ( OPT__FIXUP_FLUX  &&  AUTO_REDUCE_DT  &&  lv != 0 )
-         Flu_SwapFluxPointer( lv-1 );
+//    swap the flux (and electric in MHD) pointers on the parent level if the fluid solver works successfully
+      if ( AUTO_REDUCE_DT  &&  lv != 0 )  Flu_SwapFixUpTempArray( lv-1 );
    }
 
 
