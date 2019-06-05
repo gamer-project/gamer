@@ -673,14 +673,15 @@ void Closing_Step( const Solver_t TSolver, const int lv, const int SaveSg_Flu, c
 {
 
 #  ifndef DUAL_ENERGY
-   char (*h_DE_Array_F_Out [2])[ CUBE(PS2) ]                 = { NULL, NULL };
+   char (*h_DE_Array_F_Out [2])[ CUBE(PS2) ]                          = { NULL, NULL };
 #  endif
 #  ifndef MHD
-   real (*h_Mag_Array_F_Out[2])[NCOMP_MAG][ PS2P1*SQR(PS2) ] = { NULL, NULL };
-   real (*h_Ele_Array      [2])[9][NCOMP_ELE][ PS2P1*PS2 ]   = { NULL, NULL };
+   real (*h_Mag_Array_F_In [2])[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ] = { NULL, NULL };
+   real (*h_Mag_Array_F_Out[2])[NCOMP_MAG][ PS2P1*SQR(PS2) ]          = { NULL, NULL };
+   real (*h_Ele_Array      [2])[9][NCOMP_ELE][ PS2P1*PS2 ]            = { NULL, NULL };
 #  endif
 #  if ( defined GRAVITY  &&  !defined DUAL_ENERGY )
-   char (*h_DE_Array_G     [2])[PS1][PS1][PS1]               = { NULL, NULL };
+   char (*h_DE_Array_G     [2])[PS1][PS1][PS1]                        = { NULL, NULL };
 #  endif
 
    switch ( TSolver )
@@ -688,7 +689,7 @@ void Closing_Step( const Solver_t TSolver, const int lv, const int SaveSg_Flu, c
       case FLUID_SOLVER :
          Flu_Close( lv, SaveSg_Flu, SaveSg_Mag, h_Flux_Array[ArrayID], h_Ele_Array[ArrayID],
                     h_Flu_Array_F_Out[ArrayID], h_Mag_Array_F_Out[ArrayID], h_DE_Array_F_Out[ArrayID],
-                    NPG, PID0_List, h_Flu_Array_F_In[ArrayID], dt );
+                    NPG, PID0_List, h_Flu_Array_F_In[ArrayID], h_Mag_Array_F_In[ArrayID], dt );
       break;
 
 #     ifdef GRAVITY
