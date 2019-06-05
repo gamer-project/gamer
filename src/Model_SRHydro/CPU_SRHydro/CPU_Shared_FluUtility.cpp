@@ -213,6 +213,17 @@ real SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real 
 #  else
 #  error: unsupported EoS!
 #  endif
+
+
+// if temperature is too high to solve(overflow), we simply use analytical solution.
+   if ( h != h ) 
+   {   
+     real A = SQR( In[4] / In[0] );
+     real B = SQR( VectorDotProduct( In[1], In[2], In[3] ) / In[0] );
+     Temp = SQRT( A / (real)18.0 - B / (real)12.0 + SQRT(A) * SQRT( A / (real)40.5 - B / (real) 432.0 )  );  
+     h = (real)4.0 * Temp;
+   }   
+
    real factor = In[0]*h;
    Out[1] = In[1]/factor;
    Out[2] = In[2]/factor;
