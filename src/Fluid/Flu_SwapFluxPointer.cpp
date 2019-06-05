@@ -44,9 +44,9 @@ void Flu_SwapFluxPointer( const int lv )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flu_InitTempFlux
-// Description :  Initialize the flux_tmp array
+// Description :  Initialize the array flux_tmp[]
 //
-// Note        :  1. Copy flux to flux_tmp
+// Note        :  1. Copy flux to flux_tmp[]
 //                2. Work for the option "AUTO_REDUCE_DT", for which Flu_SwapFluxPointer() will swap the
 //                   flux and flux_tmp pointers
 //                3. Invoked by Flu_AdvanceDt()
@@ -62,7 +62,7 @@ void Flu_InitTempFlux( const int lv )
 #  endif
 
 
-// loop over the flux_tmp arrays in all patches
+// loop over flux_tmp[] in all patches
 #  pragma omp parallel for schedule( runtime )
    for (int PID=0; PID<amr->NPatchComma[lv][27]; PID++)
    {
