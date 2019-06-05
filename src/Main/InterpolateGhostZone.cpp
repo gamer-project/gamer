@@ -378,7 +378,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k1][j1][i1];
 
 #        ifdef MHD
-         const real EngyB = MHD_GetCellCenteredBEnergy( lv, PID, i1, j1, k1, MagSg );
+         const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i1, j1, k1, MagSg );
 #        else
          const real EngyB = NULL_REAL;
 #        endif
@@ -390,7 +390,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
             for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k1][j1][i1];
 
 #           ifdef MHD
-            const real EngyB = MHD_GetCellCenteredBEnergy( lv, PID, i1, j1, k1, MagSg_IntT );
+            const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i1, j1, k1, MagSg_IntT );
 #           else
             const real EngyB = NULL_REAL;
 #           endif
@@ -416,7 +416,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k1][j1][i1];
 
 #        ifdef MHD
-         const real EngyB = MHD_GetCellCenteredBEnergy( lv, PID, i1, j1, k1, MagSg );
+         const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i1, j1, k1, MagSg );
 #        else
          const real EngyB = NULL_REAL;
 #        endif
@@ -428,7 +428,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
             for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k1][j1][i1];
 
 #           ifdef MHD
-            const real EngyB = MHD_GetCellCenteredBEnergy( lv, PID, i1, j1, k1, MagSg_IntT );
+            const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i1, j1, k1, MagSg_IntT );
 #           else
             const real EngyB = NULL_REAL;
 #           endif
@@ -652,7 +652,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][k2][j2][i2];
 
 #              ifdef MHD
-               const real EngyB = MHD_GetCellCenteredBEnergy( lv, SibPID, i2, j2, k2, MagSg );
+               const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, i2, j2, k2, MagSg );
 #              else
                const real EngyB = NULL_REAL;
 #              endif
@@ -664,7 +664,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                   for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][k2][j2][i2];
 
 #                 ifdef MHD
-                  const real EngyB = MHD_GetCellCenteredBEnergy( lv, SibPID, i2, j2, k2, MagSg_IntT );
+                  const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, i2, j2, k2, MagSg_IntT );
 #                 else
                   const real EngyB = NULL_REAL;
 #                 endif
@@ -690,7 +690,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][k2][j2][i2];
 
 #              ifdef MHD
-               const real EngyB = MHD_GetCellCenteredBEnergy( lv, SibPID, i2, j2, k2, MagSg );
+               const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, i2, j2, k2, MagSg );
 #              else
                const real EngyB = NULL_REAL;
 #              endif
@@ -702,7 +702,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                   for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][k2][j2][i2];
 
 #                 ifdef MHD
-                  const real EngyB = MHD_GetCellCenteredBEnergy( lv, SibPID, i2, j2, k2, MagSg_IntT );
+                  const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, i2, j2, k2, MagSg_IntT );
 #                 else
                   const real EngyB = NULL_REAL;
 #                 endif

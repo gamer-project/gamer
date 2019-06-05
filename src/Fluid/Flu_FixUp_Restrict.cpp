@@ -349,7 +349,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 
 //       actually it might not be necessary to check the minimum pressure here
 #        ifdef MHD
-         const real EngyB = MHD_GetCellCenteredBEnergy( FaLv, FaPID, i, j, k, FaMagSg );
+         const real EngyB = MHD_GetCellCenteredBEnergyInPatch( FaLv, FaPID, i, j, k, FaMagSg );
 #        else
          const real EngyB = NULL_REAL;
 #        endif

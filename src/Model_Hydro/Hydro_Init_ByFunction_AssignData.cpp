@@ -250,7 +250,7 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 
 //       add the magnetic energy
 #        ifdef MHD
-         const real EngyB = MHD_GetCellCenteredBEnergy( lv, PID, i, j, k, amr->MagSg[lv] );
+         const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
          fluid[ENGY] += EngyB;
 #        else
          const real EngyB = NULL_REAL;

@@ -14,12 +14,7 @@
 
 #include "CUFLU_Shared_FluUtility.cu"
 
-#else
-
-void MHD_GetCellCenteredB( real B_CC[], const real Bx_FC[], const real By_FC[], const real Bz_FC[],
-                           const int Width_FC, const int i, const int j, const int k );
-
-#endif // #ifdef __CUDACC__ ... else ...
+#endif // #ifdef __CUDACC__
 
 
 // internal functions
@@ -415,7 +410,7 @@ void MHD_UpdateMagnetic( real *g_FC_Bx_Out, real *g_FC_By_Out, real *g_FC_Bz_Out
 //                                  --> g_FC_B_Half[] contains all the face-centered B field for g_PriVar_Out[],
 //                                      nothing more, nothing less
 //                                  --> Just like the relation between g_Flu_Array_In[] and g_Mag_Array_In[]
-//                                  --> One can invoke MHD_GetCellCenteredB() to compute the cell-centered
+//                                  --> One can invoke MHD_GetCellCenteredBField() to compute the cell-centered
 //                                      B field directly
 //                   g_Flux[]       has the size of N_FC_FLUX^3 but is accessed with a stride N_HF_FLUX
 //                                  --> Although currently we have N_FC_FLUX == N_HF_FLUX
@@ -487,8 +482,8 @@ void MHD_HalfStepPrimitive( const real g_Flu_In[][ CUBE(FLU_NXT) ],
 
 
 //    3. compute the cell-centered half-step B field
-      MHD_GetCellCenteredB( Output_1Cell+NFluVar, g_FC_B_Half[0], g_FC_B_Half[1], g_FC_B_Half[2],
-                            N_HF_VAR, i_out, j_out, k_out );
+      MHD_GetCellCenteredBField( Output_1Cell+NFluVar, g_FC_B_Half[0], g_FC_B_Half[1], g_FC_B_Half[2],
+                                 N_HF_VAR, N_HF_VAR, N_HF_VAR, i_out, j_out, k_out );
 
 
 //    4. store results to the output array

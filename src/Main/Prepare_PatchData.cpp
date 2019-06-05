@@ -864,7 +864,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                   for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
 #                 ifdef MHD
-                  const real EngyB = MHD_GetCellCenteredBEnergy( lv, PID, i, j, k, MagSg );
+                  const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
 #                 else
                   const real EngyB = NULL_REAL;
 #                 endif
@@ -876,7 +876,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                      for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k][j][i];
 
 #                    ifdef MHD
-                     const real EngyB = MHD_GetCellCenteredBEnergy( lv, PID, i, j, k, MagSg_IntT );
+                     const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg_IntT );
 #                    else
                      const real EngyB = NULL_REAL;
 #                    endif
@@ -902,7 +902,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                   for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
 #                 ifdef MHD
-                  const real EngyB = MHD_GetCellCenteredBEnergy( lv, PID, i, j, k, MagSg );
+                  const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
 #                 else
                   const real EngyB = NULL_REAL;
 #                 endif
@@ -914,7 +914,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                      for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k][j][i];
 
 #                    ifdef MHD
-                     const real EngyB = MHD_GetCellCenteredBEnergy( lv, PID, i, j, k, MagSg_IntT );
+                     const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg_IntT );
 #                    else
                      const real EngyB = NULL_REAL;
 #                    endif
@@ -1150,7 +1150,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
 
 #                       ifdef MHD
-                        const real EngyB = MHD_GetCellCenteredBEnergy( lv, SibPID, I2, J2, K2, MagSg );
+                        const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg );
 #                       else
                         const real EngyB = NULL_REAL;
 #                       endif
@@ -1162,7 +1162,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                            for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][K2][J2][I2];
 
 #                          ifdef MHD
-                           const real EngyB = MHD_GetCellCenteredBEnergy( lv, SibPID, I2, J2, K2, MagSg_IntT );
+                           const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg_IntT );
 #                          else
                            const real EngyB = NULL_REAL;
 #                          endif
@@ -1188,7 +1188,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
 
 #                       ifdef MHD
-                        const real EngyB = MHD_GetCellCenteredBEnergy( lv, SibPID, I2, J2, K2, MagSg );
+                        const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg );
 #                       else
                         const real EngyB = NULL_REAL;
 #                       endif
@@ -1200,7 +1200,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                            for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][K2][J2][I2];
 
 #                          ifdef MHD
-                           const real EngyB = MHD_GetCellCenteredBEnergy( lv, SibPID, I2, J2, K2, MagSg_IntT );
+                           const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg_IntT );
 #                          else
                            const real EngyB = NULL_REAL;
 #                          endif
