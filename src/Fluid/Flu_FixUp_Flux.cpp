@@ -196,7 +196,7 @@ void Flu_FixUp_Flux( const int lv )
                      break;
                } // switch ( s )
 
-               const real EngyB = MHD_GetCellCenteredBEnergy( lv, PID, i, j, k, MagSg );
+               const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
 #              else
                const real EngyB = NULL_REAL;
 #              endif

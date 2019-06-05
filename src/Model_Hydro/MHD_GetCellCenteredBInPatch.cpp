@@ -6,11 +6,11 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  MHD_GetCellCenteredBField
+// Function    :  MHD_GetCellCenteredBFieldInPatch
 // Description :  Calculate the cell-centered magnetic field from the face-centered values of a given cell
 //                in a given patch
 //
-// Note        :  1. Use the central average operator
+// Note        :  1. Invoke MHD_GetCellCenteredBField() defined in CPU/CUFLU_Shared_FluUtility.cpp
 //                2. Return all three components of the magnetic field
 //
 // Parameter   :  B_CC  : Cell-centered magnetic field to be returned
@@ -21,8 +21,8 @@
 //
 // Return      :  B_CC
 //-------------------------------------------------------------------------------------------------------
-void MHD_GetCellCenteredBField( real B_CC[], const int lv, const int PID, const int i, const int j, const int k,
-                                const int MagSg )
+void MHD_GetCellCenteredBFieldInPatch( real B_CC[], const int lv, const int PID, const int i, const int j, const int k,
+                                       const int MagSg )
 {
 
 // check
@@ -39,30 +39,27 @@ void MHD_GetCellCenteredBField( real B_CC[], const int lv, const int PID, const 
    if ( MagSg != 0  &&  MagSg != 1 )   Aux_Error( ERROR_INFO, "MagSg (%d) != 0/1 !!\n", MagSg );
 
    if ( amr->patch[MagSg][lv][PID]->magnetic == NULL )
-         Aux_Error( ERROR_INFO, "magnetic == NULL (lv %d, PID %d, MagSg %d) !!\n", lv, PID, MagSg );
+      Aux_Error( ERROR_INFO, "magnetic == NULL (lv %d, PID %d, MagSg %d) !!\n", lv, PID, MagSg );
 #  endif
 
 
 // FC = face-centered
-   const real (*B_FC)[PS1P1*PS1*PS1] = amr->patch[MagSg][lv][PID]->magnetic;
-   const int idx_Bx = IDX321_BX( i, j, k, PS1 );
-   const int idx_By = IDX321_BY( i, j, k, PS1 );
-   const int idx_Bz = IDX321_BZ( i, j, k, PS1 );
+   const real *Bx_FC = amr->patch[MagSg][lv][PID]->magnetic[MAGX];
+   const real *By_FC = amr->patch[MagSg][lv][PID]->magnetic[MAGY];
+   const real *Bz_FC = amr->patch[MagSg][lv][PID]->magnetic[MAGZ];
 
-   B_CC[MAGX] = (real)0.5*( B_FC[MAGX][idx_Bx] + B_FC[MAGX][ idx_Bx + 1        ] );
-   B_CC[MAGY] = (real)0.5*( B_FC[MAGY][idx_By] + B_FC[MAGY][ idx_By + PS1      ] );
-   B_CC[MAGZ] = (real)0.5*( B_FC[MAGZ][idx_Bz] + B_FC[MAGZ][ idx_Bz + SQR(PS1) ] );
+   MHD_GetCellCenteredBField( B_CC, Bx_FC, By_FC, Bz_FC, PS1, PS1, PS1, i, j, k );
 
-} // FUNCTION : MHD_GetCellCenteredBField
+} // FUNCTION : MHD_GetCellCenteredBFieldInPatch
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  MHD_GetCellCenteredBEnergy
+// Function    :  MHD_GetCellCenteredBEnergyInPatch
 // Description :  Calculate the cell-centered magnetic energy (i.e., 0.5*B^2) from the face-centered values
 //                of a given cell in a given patch
 //
-// Note        :  1. Invoke MHD_GetCellCenteredBField()
+// Note        :  1. Invoke MHD_GetCellCenteredBEnergy() defined in CPU/CUFLU_Shared_FluUtility.cpp
 //
 // Parameter   :  lv    : Target AMR level
 //                PID   : Target patch index
@@ -71,8 +68,8 @@ void MHD_GetCellCenteredBField( real B_CC[], const int lv, const int PID, const 
 //
 // Return      :  0.5*B^2 at the center of the target cell
 //-------------------------------------------------------------------------------------------------------
-real MHD_GetCellCenteredBEnergy( const int lv, const int PID, const int i, const int j, const int k,
-                                 const int MagSg )
+real MHD_GetCellCenteredBEnergyInPatch( const int lv, const int PID, const int i, const int j, const int k,
+                                        const int MagSg )
 {
 
 // check
@@ -87,19 +84,20 @@ real MHD_GetCellCenteredBEnergy( const int lv, const int PID, const int i, const
    if ( k < 0  ||  k >= PS1 )    Aux_Error( ERROR_INFO, "incorrect k = %d !!\n", k );
 
    if ( MagSg != 0  &&  MagSg != 1 )   Aux_Error( ERROR_INFO, "MagSg (%d) != 0/1 !!\n", MagSg );
+
+   if ( amr->patch[MagSg][lv][PID]->magnetic == NULL )
+      Aux_Error( ERROR_INFO, "magnetic == NULL (lv %d, PID %d, MagSg %d) !!\n", lv, PID, MagSg );
 #  endif
 
 
-// CC = cell-centered
-   real B_CC[3], BEngy;
+// FC = face-centered
+   const real *Bx_FC = amr->patch[MagSg][lv][PID]->magnetic[MAGX];
+   const real *By_FC = amr->patch[MagSg][lv][PID]->magnetic[MAGY];
+   const real *Bz_FC = amr->patch[MagSg][lv][PID]->magnetic[MAGZ];
 
-   MHD_GetCellCenteredBField( B_CC, lv, PID, i, j, k, MagSg );
+   return MHD_GetCellCenteredBEnergy( Bx_FC, By_FC, Bz_FC, PS1, PS1, PS1, i, j, k );
 
-   BEngy = (real)0.5*( SQR(B_CC[MAGX]) + SQR(B_CC[MAGY]) + SQR(B_CC[MAGZ]) );
-
-   return BEngy;
-
-} // FUNCTION : MHD_GetCellCenteredBEnergy
+} // FUNCTION : MHD_GetCellCenteredBEnergyInPatch
 
 
 

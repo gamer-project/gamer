@@ -62,8 +62,8 @@ void MHD_Aux_Check_InterfaceB( const char *comment )
                         for (int k=0; k<PS1; k++)
                         for (int j=0; j<PS1; j++)
                         {
-                           B     = amr->patch[MagSg][lv][   PID]->magnetic[MAGX][ IDX321_BX(Offset,    j, k, PS1) ];
-                           BSib  = amr->patch[MagSg][lv][SibPID]->magnetic[MAGX][ IDX321_BX(OffsetSib, j, k, PS1) ];
+                           B     = amr->patch[MagSg][lv][   PID]->magnetic[MAGX][ IDX321_BX(Offset,    j, k, PS1, PS1) ];
+                           BSib  = amr->patch[MagSg][lv][SibPID]->magnetic[MAGX][ IDX321_BX(OffsetSib, j, k, PS1, PS1) ];
 
                            CheckError( Pass, B, BSib, lv, PID, s, j, k, comment );
                         }
@@ -73,8 +73,8 @@ void MHD_Aux_Check_InterfaceB( const char *comment )
                         for (int k=0; k<PS1; k++)
                         for (int i=0; i<PS1; i++)
                         {
-                           B     = amr->patch[MagSg][lv][   PID]->magnetic[MAGY][ IDX321_BY(i, Offset,    k, PS1) ];
-                           BSib  = amr->patch[MagSg][lv][SibPID]->magnetic[MAGY][ IDX321_BY(i, OffsetSib, k, PS1) ];
+                           B     = amr->patch[MagSg][lv][   PID]->magnetic[MAGY][ IDX321_BY(i, Offset,    k, PS1, PS1) ];
+                           BSib  = amr->patch[MagSg][lv][SibPID]->magnetic[MAGY][ IDX321_BY(i, OffsetSib, k, PS1, PS1) ];
 
                            CheckError( Pass, B, BSib, lv, PID, s, i, k, comment );
                         }
@@ -84,8 +84,8 @@ void MHD_Aux_Check_InterfaceB( const char *comment )
                         for (int j=0; j<PS1; j++)
                         for (int i=0; i<PS1; i++)
                         {
-                           B     = amr->patch[MagSg][lv][   PID]->magnetic[MAGZ][ IDX321_BZ(i, j, Offset,    PS1) ];
-                           BSib  = amr->patch[MagSg][lv][SibPID]->magnetic[MAGZ][ IDX321_BZ(i, j, OffsetSib, PS1) ];
+                           B     = amr->patch[MagSg][lv][   PID]->magnetic[MAGZ][ IDX321_BZ(i, j, Offset,    PS1, PS1) ];
+                           BSib  = amr->patch[MagSg][lv][SibPID]->magnetic[MAGZ][ IDX321_BZ(i, j, OffsetSib, PS1, PS1) ];
 
                            CheckError( Pass, B, BSib, lv, PID, s, i, j, comment );
                         }

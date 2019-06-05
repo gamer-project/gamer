@@ -604,36 +604,72 @@ void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm
 
 #ifdef MHD
 //-------------------------------------------------------------------------------------------------------
-// Function    :  MHD_GetCellCenteredB
-// Description :  Calculate the cell-centered magnetic field from the input face-centered values
+// Function    :  MHD_GetCellCenteredBField
+// Description :  Calculate the cell-centered magnetic field from the input face-centered magnetic field array
 //
 // Note        :  1. Use the central average operator
-//                2. Return all three components of the magnetic field
-//                3. Input arrays Bx/y/z_FC[] should have the size of "Width_FC*Width_FC*(Width_FC+1)"
-//                4. This function is different from MHD_GetCellCenteredBField() defined in
-//                   MHD_GetCellCenteredB.cpp, which is used to access data in the AMR patch structure
+//                2. Return all three components of the B field
+//                3. Input arrays should have the following dimension:
+//                      Bx_FC[]: (Nx+1)*(Ny  )*(Nz  )
+//                      By_FC[]: (Nx  )*(Ny+1)*(Nz  )
+//                      Bz_FC[]: (Nx  )*(Ny  )*(Nz+1)
 //
-// Parameter   :  B_CC      : Cell-centered magnetic field to be returned
-//                Bx/y/z_FC : Input face-centered magnetic field
-//                Width_FC  : Width of the input arrays along the transverse direction
-//                i/j/k     : Target indices of the input arrays
+// Parameter   :  B_CC      : Cell-centered B field to be returned
+//                Bx/y/z_FC : Input face-centered B field array
+//                Nx/y/z    : Array dimension along different directions (see Note above)
+//                i/j/k     : Target cell indices
 //
 // Return      :  B_CC
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void MHD_GetCellCenteredB( real B_CC[], const real Bx_FC[], const real By_FC[], const real Bz_FC[],
-                           const int Width_FC, const int i, const int j, const int k )
+void MHD_GetCellCenteredBField( real B_CC[], const real Bx_FC[], const real By_FC[], const real Bz_FC[],
+                                const int Nx, const int Ny, const int Nz, const int i, const int j, const int k )
 {
 
-   const int idx_Bx = IDX321_BX( i, j, k, Width_FC );
-   const int idx_By = IDX321_BY( i, j, k, Width_FC );
-   const int idx_Bz = IDX321_BZ( i, j, k, Width_FC );
+   const int idx_Bx = IDX321_BX( i, j, k, Nx, Ny );
+   const int idx_By = IDX321_BY( i, j, k, Nx, Ny );
+   const int idx_Bz = IDX321_BZ( i, j, k, Nx, Ny );
 
-   B_CC[0] = (real)0.5*( Bx_FC[idx_Bx] + Bx_FC[ idx_Bx + 1             ] );
-   B_CC[1] = (real)0.5*( By_FC[idx_By] + By_FC[ idx_By + Width_FC      ] );
-   B_CC[2] = (real)0.5*( Bz_FC[idx_Bz] + Bz_FC[ idx_Bz + SQR(Width_FC) ] );
+   B_CC[0] = (real)0.5*( Bx_FC[idx_Bx] + Bx_FC[ idx_Bx + 1     ] );
+   B_CC[1] = (real)0.5*( By_FC[idx_By] + By_FC[ idx_By + Nx    ] );
+   B_CC[2] = (real)0.5*( Bz_FC[idx_Bz] + Bz_FC[ idx_Bz + Nx*Ny ] );
 
-} // FUNCTION : MHD_GetCellCenteredB
+} // FUNCTION : MHD_GetCellCenteredBField
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  MHD_GetCellCenteredBEnergy
+// Description :  Calculate the cell-centered magnetic energy (i.e., 0.5*B^2) from the input face-centered
+//                magnetic field array
+//
+// Note        :  1. Invoke MHD_GetCellCenteredBField()
+//                2. Input arrays should have the following dimension:
+//                      Bx_FC[]: (Nx+1)*(Ny  )*(Nz  )
+//                      By_FC[]: (Nx  )*(Ny+1)*(Nz  )
+//                      Bz_FC[]: (Nx  )*(Ny  )*(Nz+1)
+//
+// Parameter   :  Bx/y/z_FC : Input face-centered B field array
+//                Nx/y/z    : Array dimension along different directions (see Note above)
+//                i/j/k     : Target cell indices
+//
+// Return      :  0.5*B^2 at the center of the target cell
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+real MHD_GetCellCenteredBEnergy( const real Bx_FC[], const real By_FC[], const real Bz_FC[],
+                                 const int Nx, const int Ny, const int Nz, const int i, const int j, const int k )
+{
+
+// CC = cell-centered
+   real B_CC[3], BEngy;
+
+   MHD_GetCellCenteredBField( B_CC, Bx_FC, By_FC, Bz_FC, Nx, Ny, Nz, i, j, k );
+
+   BEngy = (real)0.5*( SQR(B_CC[MAGX]) + SQR(B_CC[MAGY]) + SQR(B_CC[MAGZ]) );
+
+   return BEngy;
+
+} // FUNCTION : MHD_GetCellCenteredBEnergy
 #endif // #ifdef MHD
 
 

@@ -738,15 +738,10 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 //          check minimum pressure
 #           ifdef MHD
-            const int  idx_Bx  = IDX321_BX( i, j, k, PS2 );
-            const int  idx_By  = IDX321_BY( i, j, k, PS2 );
-            const int  idx_Bz  = IDX321_BZ( i, j, k, PS2 );
-            const real B_CC[3] = { (real)0.5*( Mag_FData[MAGX][idx_Bx] + Mag_FData[MAGX][ idx_Bx + 1        ] ),
-                                   (real)0.5*( Mag_FData[MAGY][idx_By] + Mag_FData[MAGY][ idx_By + PS2      ] ),
-                                   (real)0.5*( Mag_FData[MAGZ][idx_Bz] + Mag_FData[MAGZ][ idx_Bz + SQR(PS2) ] ) };
-            const real EngyB   = (real)0.5*( SQR(B_CC[MAGX]) + SQR(B_CC[MAGY]) + SQR(B_CC[MAGZ]) );
+            const real EngyB = MHD_GetCellCenteredBEnergy( Mag_FData[MAGX], Mag_FData[MAGY], Mag_FData[MAGZ],
+                                                           PS2, PS2, PS2, i, j, k );
 #           else
-            const real EngyB   = NULL_REAL;
+            const real EngyB = NULL_REAL;
 #           endif
             Flu_FData[ENGY][k][j][i]
                = Hydro_CheckMinPresInEngy( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],

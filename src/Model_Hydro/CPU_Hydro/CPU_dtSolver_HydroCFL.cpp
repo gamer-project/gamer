@@ -86,38 +86,35 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][NCOMP_
       {
          real fluid[NCOMP_FLUID], _Rho, Vx, Vy, Vz, Pres, EngyB, a2, CFLx, CFLy, CFLz;
 #        ifdef MHD
-         int  i, j, k, idx_Bx, idx_By, idx_Bz;
-         real Bx, By, Bz, Bx2, By2, Bz2, B2, Ca2_plus_a2, Ca2_min_a2, Ca2_min_a2_sqr, four_a2_over_Rho;
+         int  i, j, k;
+         real B[3], Bx2, By2, Bz2, B2, Ca2_plus_a2, Ca2_min_a2, Ca2_min_a2_sqr, four_a2_over_Rho;
 #        endif
 
          for (int v=0; v<NCOMP_FLUID; v++)   fluid[v] = g_Flu_Array[p][v][t];
 
 #        ifdef MHD
-         i       = t % PS1;
-         j       = t % SQR(PS1) / PS1;
-         k       = t / SQR(PS1);
-         idx_Bx  = IDX321_BX( i, j, k, PS1 );
-         idx_By  = IDX321_BY( i, j, k, PS1 );
-         idx_Bz  = IDX321_BZ( i, j, k, PS1 );
-         Bx      = (real)0.5*( g_Mag_Array[p][MAGX][idx_Bx] + g_Mag_Array[p][MAGX][ idx_Bx + 1        ] );
-         By      = (real)0.5*( g_Mag_Array[p][MAGY][idx_By] + g_Mag_Array[p][MAGY][ idx_By + PS1      ] );
-         Bz      = (real)0.5*( g_Mag_Array[p][MAGZ][idx_Bz] + g_Mag_Array[p][MAGZ][ idx_Bz + SQR(PS1) ] );
-         Bx2     = SQR( Bx );
-         By2     = SQR( By );
-         Bz2     = SQR( Bz );
-         B2      = Bx2 + By2 + Bz2;
-         EngyB   = (real)0.5*B2;
+         i     = t % PS1;
+         j     = t % SQR(PS1) / PS1;
+         k     = t / SQR(PS1);
+
+         MHD_GetCellCenteredBField( B, g_Mag_Array[p][MAGX], g_Mag_Array[p][MAGY], g_Mag_Array[p][MAGZ], PS1, PS1, PS1, i, j, k );
+
+         Bx2   = SQR( B[MAGX] );
+         By2   = SQR( B[MAGY] );
+         Bz2   = SQR( B[MAGZ] );
+         B2    = Bx2 + By2 + Bz2;
+         EngyB = (real)0.5*B2;
 #        else
-         EngyB   = NULL_REAL;
+         EngyB = NULL_REAL;
 #        endif
 
-        _Rho  = (real)1.0 / fluid[DENS];
-         Vx   = FABS( fluid[MOMX] )*_Rho;
-         Vy   = FABS( fluid[MOMY] )*_Rho;
-         Vz   = FABS( fluid[MOMZ] )*_Rho;
-         Pres = Hydro_GetPressure( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                   Gamma_m1, CheckMinPres_Yes, MinPres, EngyB );
-         a2   = Gamma*Pres*_Rho; // sound speed squared
+        _Rho   = (real)1.0 / fluid[DENS];
+         Vx    = FABS( fluid[MOMX] )*_Rho;
+         Vy    = FABS( fluid[MOMY] )*_Rho;
+         Vz    = FABS( fluid[MOMZ] )*_Rho;
+         Pres  = Hydro_GetPressure( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
+                                    Gamma_m1, CheckMinPres_Yes, MinPres, EngyB );
+         a2    = Gamma*Pres*_Rho; // sound speed squared
 
 //       compute the maximum information propagating speed
 //       --> hydro: bulk velocity + sound wave

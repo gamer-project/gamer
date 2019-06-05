@@ -83,8 +83,6 @@ void MHD_UpdateMagnetic( real *g_FC_Bx_Out, real *g_FC_By_Out, real *g_FC_Bz_Out
                          const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                          const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                          const real dt, const real dh, const int NOut, const int NEle, const int Offset_B_In );
-void MHD_GetCellCenteredB( real B_CC[], const real Bx_FC[], const real By_FC[], const real Bz_FC[],
-                           const int Width_FC, const int i, const int j, const int k );
 #endif // #ifdef MHD
 #endif // #if ( FLU_SCHEME == MHM_RP )
 
@@ -314,7 +312,8 @@ void CPU_FluidSolver_MHM(
             g_PriVar_1PG[3][idx] = g_Flu_Array_In[P][3][idx]*_Dens;
 
 //          magnetic field
-            MHD_GetCellCenteredB( CC_B, g_Mag_Array_In[P][0], g_Mag_Array_In[P][1], g_Mag_Array_In[P][2], FLU_NXT, i, j, k );
+            MHD_GetCellCenteredBField( CC_B, g_Mag_Array_In[P][0], g_Mag_Array_In[P][1], g_Mag_Array_In[P][2],
+                                       FLU_NXT, FLU_NXT, FLU_NXT, i, j, k );
 
             for (int v=0; v<NCOMP_MAG; v++)  g_PriVar_1PG[ MAG_OFFSET + v ][idx] = CC_B[v];
          }
@@ -648,8 +647,8 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 
 //    compute the cell-centered half-step B field
 #     ifdef MHD
-      MHD_GetCellCenteredB( out_con+MAG_OFFSET, g_FC_B_Half[0], g_FC_B_Half[1], g_FC_B_Half[2],
-                            N_HF_VAR, i_out, j_out, k_out );
+      MHD_GetCellCenteredBField( out_con+MAG_OFFSET, g_FC_B_Half[0], g_FC_B_Half[1], g_FC_B_Half[2],
+                                 N_HF_VAR, N_HF_VAR, N_HF_VAR, i_out, j_out, k_out );
 #     endif
 
 //    ensure positive density and pressure

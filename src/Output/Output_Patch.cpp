@@ -176,9 +176,9 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
 #        ifdef MHD
          const real EngyB = ( magnetic == NULL ) ?
                             NULL_REAL :
-                            MHD_GetCellCenteredBEnergy( lv, PID, i, j, k, MagSg );
+                            MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
          real B[3] = { NULL_REAL, NULL_REAL, NULL_REAL };
-         if ( magnetic != NULL )    MHD_GetCellCenteredBField( B, lv, PID, i, j, k, MagSg );
+         if ( magnetic != NULL )    MHD_GetCellCenteredBFieldInPatch( B, lv, PID, i, j, k, MagSg );
          fprintf( File, " %13.6e %13.6e %13.6e %13.6e", B[MAGX], B[MAGY], B[MAGZ], EngyB );
 #        endif
 
@@ -261,15 +261,15 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
          fprintf( File, "(%2d,%2d,%2d)", i, j, k );
 
 //       B_X
-         if ( j < PS1  &&  k < PS1 )   fprintf( File, " %13.6e", magnetic[MAGX][ IDX321_BX(i,j,k,PS1) ] );
+         if ( j < PS1  &&  k < PS1 )   fprintf( File, " %13.6e", magnetic[MAGX][ IDX321_BX(i,j,k,PS1,PS1) ] );
          else                          fprintf( File, " %13s", "" );
 
 //       B_Y
-         if ( i < PS1  &&  k < PS1 )   fprintf( File, " %13.6e", magnetic[MAGY][ IDX321_BY(i,j,k,PS1) ] );
+         if ( i < PS1  &&  k < PS1 )   fprintf( File, " %13.6e", magnetic[MAGY][ IDX321_BY(i,j,k,PS1,PS1) ] );
          else                          fprintf( File, " %13s", "" );
 
 //       B_Z
-         if ( i < PS1  &&  j < PS1 )   fprintf( File, " %13.6e", magnetic[MAGZ][ IDX321_BZ(i,j,k,PS1) ] );
+         if ( i < PS1  &&  j < PS1 )   fprintf( File, " %13.6e", magnetic[MAGZ][ IDX321_BZ(i,j,k,PS1,PS1) ] );
          else                          fprintf( File, " %13s", "" );
 
          fprintf( File, "\n" );

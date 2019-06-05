@@ -417,10 +417,14 @@ void Hydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const i
                                          const int NVar_Der, const int TDerVarList[] );
 bool Hydro_Flag_Vorticity( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
 #ifdef MHD
-void MHD_GetCellCenteredBField( real B[], const int lv, const int PID, const int i, const int j, const int k,
-                                const int MagSg );
-real MHD_GetCellCenteredBEnergy( const int lv, const int PID, const int i, const int j, const int k,
-                                 const int MagSg );
+void MHD_GetCellCenteredBField( real B_CC[], const real Bx_FC[], const real By_FC[], const real Bz_FC[],
+                                const int Nx, const int Ny, const int Nz, const int i, const int j, const int k );
+real MHD_GetCellCenteredBEnergy( const real Bx_FC[], const real By_FC[], const real Bz_FC[],
+                                 const int Nx, const int Ny, const int Nz, const int i, const int j, const int k );
+void MHD_GetCellCenteredBFieldInPatch( real B[], const int lv, const int PID, const int i, const int j, const int k,
+                                       const int MagSg );
+real MHD_GetCellCenteredBEnergyInPatch( const int lv, const int PID, const int i, const int j, const int k,
+                                        const int MagSg );
 void MHD_InterpolateBField( const real **CData, const int CSize[3][3], const int CStart[3][3], const int CRange[3],
                                   real **FData, const int FSize[3][3], const int FStart[3][3],
                             const real *FInterface[6], const IntScheme_t IntScheme, const bool Monotonic );

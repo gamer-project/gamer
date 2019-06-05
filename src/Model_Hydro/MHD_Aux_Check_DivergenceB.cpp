@@ -55,9 +55,9 @@ void MHD_Aux_Check_DivergenceB( const bool Verbose, const char *comment )
                for (int i=0; i<PS1; i++)
                {
 //                compute errors
-                  const int idx_BxL = IDX321_BX( i, j, k, PS1 );
-                  const int idx_ByL = IDX321_BY( i, j, k, PS1 );
-                  const int idx_BzL = IDX321_BZ( i, j, k, PS1 );
+                  const int idx_BxL = IDX321_BX( i, j, k, PS1, PS1 );
+                  const int idx_ByL = IDX321_BY( i, j, k, PS1, PS1 );
+                  const int idx_BzL = IDX321_BZ( i, j, k, PS1, PS1 );
 
                   BxL = B[MAGX][ idx_BxL            ];
                   BxR = B[MAGX][ idx_BxL + 1        ];

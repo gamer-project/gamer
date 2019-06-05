@@ -719,9 +719,9 @@
 
 // 3D to 1D array indices transformation for patch->magnetic[]
 #ifdef MHD
-#define IDX321_BX( i, j, k, N )     (  ( (k)*(N  ) + (j) )*(N+1) + (i)  )
-#define IDX321_BY( i, j, k, N )     (  ( (k)*(N+1) + (j) )*(N  ) + (i)  )
-#define IDX321_BZ( i, j, k, N )     (  ( (k)*(N  ) + (j) )*(N  ) + (i)  )
+#define IDX321_BX( i, j, k, Ni, Nj )   (  ( (k)*((Nj)  ) + (j) )*((Ni)+1) + (i)  )
+#define IDX321_BY( i, j, k, Ni, Nj )   (  ( (k)*((Nj)+1) + (j) )*((Ni)  ) + (i)  )
+#define IDX321_BZ( i, j, k, Ni, Nj )   (  ( (k)*((Nj)  ) + (j) )*((Ni)  ) + (i)  )
 #endif
 
 

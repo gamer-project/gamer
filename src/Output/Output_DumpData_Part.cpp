@@ -237,9 +237,9 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 // magnetic field
 #  if ( MODEL == HYDRO )
 #  ifdef MHD
-   const real EngyB = MHD_GetCellCenteredBEnergy( lv, PID, i, j, k, amr->MagSg[lv] );
+   const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
    real B[3];
-   MHD_GetCellCenteredBField( B, lv, PID, i, j, k, amr->MagSg[lv] );
+   MHD_GetCellCenteredBFieldInPatch( B, lv, PID, i, j, k, amr->MagSg[lv] );
    fprintf( File, " %13.6e %13.6e %13.6e %13.6e", B[MAGX], B[MAGY], B[MAGZ], EngyB );
 #  else
    const real EngyB = NULL_REAL;
