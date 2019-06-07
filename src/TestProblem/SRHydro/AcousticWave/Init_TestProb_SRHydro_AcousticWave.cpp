@@ -14,6 +14,7 @@ static double Acoustic_Phase0;      // initial phase shift
 // =======================================================================================
 
 static double Acoustic_WaveLength;  // wavelength
+static double Size;
 
 
 
@@ -99,18 +100,19 @@ void SetParameter()
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
    ReadPara->Add( "Acoustic_RhoAmp",   &Acoustic_RhoAmp,       -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Acoustic_U",        &Acoustic_U,             0.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Acoustic_U",        &Acoustic_U,             5.0,          NoMin_double,     NoMax_double      );
    ReadPara->Add( "Acoustic_Phase0",   &Acoustic_Phase0,        0.0,          NoMin_double,     NoMax_double      );
 
    ReadPara->Read( FileName );
 
    delete ReadPara;
 
-   Acoustic_WaveLength = amr->BoxSize[0] / sqrt(3.0);
+   Size = amr->BoxSize[0];
+   Acoustic_WaveLength = Size / sqrt(3.0);
 
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
-   const double End_T_Default    = __DBL_MAX__;
+   const double End_T_Default    = Acoustic_WaveLength * sqrt(1.0 + Acoustic_U*Acoustic_U) / Acoustic_U;
    const long   End_Step_Default = __INT_MAX__;
 
    if ( END_STEP < 0 ) {
@@ -132,6 +134,7 @@ void SetParameter()
       Aux_Message( stdout, "  density amplitude   = % 14.7e\n", Acoustic_RhoAmp );
       Aux_Message( stdout, "  ambient U           = % 14.7e\n", Acoustic_U );
       Aux_Message( stdout, "  initial phase shift = % 14.7e\n", Acoustic_Phase0 );
+      Aux_Message( stdout, "  wave length         = % 14.7e\n", Acoustic_WaveLength );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -173,9 +176,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
   V = Acoustic_U / Lorentz;
 
-  K = 2.0 * M_PI / SQRT_3 / Acoustic_WaveLength;
+  K = 2.0 * M_PI  / Acoustic_WaveLength;
 
-  Phase = K * ( x + y + z ) - M_PI * 2.0 * V * Time / Acoustic_WaveLength;
+  Phase = K * ( x + y + z ) / SQRT_3 - K * V * Time ;
 
   Pri[0] = 1.0 + Acoustic_RhoAmp * sin( Phase + Acoustic_Phase0 );
   Pri[1] = Acoustic_U / SQRT_3;
