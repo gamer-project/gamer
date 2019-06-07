@@ -53,25 +53,18 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
                          const int lv, double AuxArray[] )
 {
 
-   const double Gamma2  = 1.0/GAMMA/(GAMMA-1.0);
-   const double C1[3] = { 0.5*amr->BoxSize[0]+100.0,
-                          0.5*amr->BoxSize[1]+200.0,
-                          0.5*amr->BoxSize[2]+300.0 };
-   const double C2[3] = { 20.0, 40.0, 10.0 };
+   const real P0   = 1.0;
+   const real Rho0 = 1.0;
+   const real Vx   = 1.25e-1;
+   const real Vy   = 2.30e-1;
+   const real Vz   = 3.70e-1;
 
-   const double Cs      =   1.0;
-   const double Height1 = 100.0;
-   const double Height2 = 400.0;
-   const double Width1  = 640.0;
-   const double Width2  = 512.0;
-
-// set active variables
-   fluid[DENS] = 1.0 + Height1*exp(  -( SQR(x-C1[0])+ SQR(y-C1[1]) + SQR(z-C1[2]) ) / SQR(Width1)  );
-   fluid[DENS] +=      Height2*exp(  -( SQR(x-C2[0])+ SQR(y-C2[1]) + SQR(z-C2[2]) ) / SQR(Width2)  );
-   fluid[MOMX] = 1.0;
-   fluid[MOMY] = 2.0;
-   fluid[MOMZ] = 3.0;
-   fluid[ENGY] = Cs*Cs*fluid[DENS]*Gamma2 + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+   fluid[DENS] = Rho0 + 0.2*exp( -( SQR(1.1*x-0.5*amr->BoxSize[0])+SQR(2.2*y-0.5*amr->BoxSize[1])+SQR(3.3*z-0.5*amr->BoxSize[2]) ) / SQR(1.8*amr->BoxSize[2]) );
+   fluid[MOMX] = fluid[DENS]*Vx + 0.1;
+   fluid[MOMY] = fluid[DENS]*Vy + 0.2;
+   fluid[MOMZ] = fluid[DENS]*Vz + 0.3;
+   fluid[ENGY] = (P0)/(GAMMA-1.0)*(2.0+sin(2.0*M_PI*(4.5*x+5.5*y*6.5*z)/amr->BoxSize[2]))
+                 + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
 
 // set passive scalars
 
