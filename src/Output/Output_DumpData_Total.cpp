@@ -16,7 +16,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total (FormatVersion = 2203)
+// Function    :  Output_DumpData_Total (FormatVersion = 2210)
 // Description :  Output all simulation data in the binary form, which can be used as a restart file
 //
 // Note        :  1. This output format is deprecated and is mainly used for debugging only
@@ -36,6 +36,7 @@ Procedure for outputting new variables:
 //                2201 : 2018/12/12 --> always set EP_COEFF=NULL_REAL since this variable no longer exists
 //                2202 : 2018/12/15 --> set WAF-related variables to arbitrary values since they no longer exist
 //                2203 : 2018/12/27 --> replace GRA_BLOCK_SIZE_Z by GRA_BLOCK_SIZE
+//                2210 : 2019/06/07 --> support MHD
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total( const char *FileName )
 {
@@ -154,6 +155,9 @@ void Output_DumpData_Total( const char *FileName )
 #     endif
 
       PatchDataSize  = CUBE(PS1)*NGridVar*sizeof(real);
+#     ifdef MHD
+      PatchDataSize += PS1P1*SQR(PS1)*NCOMP_MAG*sizeof(real);
+#     endif
       ExpectFileSize = HeaderSize_Total;
 
       for (int lv=0; lv<NLEVEL; lv++)
@@ -174,7 +178,7 @@ void Output_DumpData_Total( const char *FileName )
 
 //    a. output the information of data format
 //    =================================================================================================
-      const long FormatVersion = 2203;
+      const long FormatVersion = 2210;
       const long CheckCode     = 123456789;
 
       fseek( File, HeaderOffset_Format, SEEK_SET );
@@ -820,18 +824,23 @@ void Output_DumpData_Total( const char *FileName )
                if ( amr->patch[0][lv][PID]->son == -1 )
                {
 //                f2-1. output fluid variables
-                  fwrite( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid, sizeof(real), CUBE(PS1)*NCOMP_TOTAL, File );
+                  fwrite( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid,    sizeof(real), CUBE(PS1)*NCOMP_TOTAL,    File );
 
 //                f2-2. output gravitational potential
 #                 ifdef GRAVITY
                   if ( OPT__OUTPUT_POT )
-                  fwrite( amr->patch[ amr->PotSg[lv] ][lv][PID]->pot,   sizeof(real), CUBE(PS1),             File );
+                  fwrite( amr->patch[ amr->PotSg[lv] ][lv][PID]->pot,      sizeof(real), CUBE(PS1),                File );
 #                 endif
 
 //                f2-3. output particle density depostied onto grids
 #                 ifdef PARTICLE
                   if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )
-                  fwrite( ParDensArray[ PID%8 ],                        sizeof(real), CUBE(PS1),             File );
+                  fwrite( ParDensArray[ PID%8 ],                           sizeof(real), CUBE(PS1),                File );
+#                 endif
+
+//                f2-4. output face-centered magnetic field
+#                 ifdef MHD
+                  fwrite( amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic, sizeof(real), PS1P1*SQR(PS1)*NCOMP_MAG, File );
 #                 endif
                } // if ( amr->patch[0][lv][PID]->son == -1 )
             } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)

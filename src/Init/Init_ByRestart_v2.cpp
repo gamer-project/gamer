@@ -134,6 +134,11 @@ void Init_ByRestart()
       if ( FormatVersion < 2100 )
          Aux_Error( ERROR_INFO, "unsupported data format version for particles (only support version >= 2100) !!\n" );
 #     endif
+
+#     ifdef MHD
+      if ( FormatVersion < 2210 )
+         Aux_Error( ERROR_INFO, "unsupported data format version for MHD (only support version >= 2210) !!\n" );
+#     endif
    }
    MPI_Barrier( MPI_COMM_WORLD );
 
@@ -293,8 +298,11 @@ void Init_ByRestart()
    if ( LoadParDens )   NGridVar ++;
 #  endif
 
-   PatchDataSize = CUBE(PS1)*NGridVar*sizeof(real);
-   ExpectSize    = HeaderSize_Total;
+   PatchDataSize  = CUBE(PS1)*NGridVar*sizeof(real);
+#  ifdef MHD
+   PatchDataSize += PS1P1*SQR(PS1)*NCOMP_MAG*sizeof(real);
+#  endif
+   ExpectSize     = HeaderSize_Total;
 
    for (int lv=0; lv<NLv_Restart; lv++)
    {
@@ -495,6 +503,9 @@ void Init_ByRestart()
 #                    ifdef PARTICLE
                      if ( LoadParDens )   fseek( File, CUBE(PS1)*sizeof(real), SEEK_CUR );
 #                    endif
+
+//                   d3-3. load the magnetic field
+                     fread( amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic, sizeof(real), PS1P1*SQR(PS1)*NCOMP_MAG, File );
                   } // if ( *LoadSon == -1 )
                } // within the target range
 
