@@ -365,6 +365,12 @@ void Output_DumpData_Total( const char *FileName )
       const bool support_hdf5        = false;
 #     endif
 
+#     ifdef MHD
+      const bool mhd                 = true;
+#     else
+      const bool mhd                 = false;
+#     endif
+
       const int nlevel               = NLEVEL;
       const int max_patch            = MAX_PATCH;
 
@@ -399,6 +405,7 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( &self_interaction,          sizeof(bool),                    1,             File );
       fwrite( &laohu,                     sizeof(bool),                    1,             File );
       fwrite( &support_hdf5,              sizeof(bool),                    1,             File );
+      fwrite( &mhd,                       sizeof(bool),                    1,             File );
 
 
 //    c. output the symbolic constants defined in "Macro.h, CUPOT.h, and CUFLU.h"
