@@ -713,13 +713,22 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    NFieldOut = NCOMP_TOTAL;
 
 #  ifdef GRAVITY
-   int  PotDumpIdx = -1;
+   int PotDumpIdx = -1;
    if ( OPT__OUTPUT_POT )  PotDumpIdx = NFieldOut ++;
 #  endif
 
 #  ifdef PARTICLE
-   int  ParDensDumpIdx = -1;
+   int ParDensDumpIdx = -1;
    if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )   ParDensDumpIdx = NFieldOut ++;
+#  endif
+
+#  ifdef MHD
+   int CCMagDumpIdx = -1;
+   if ( OPT__OUTPUT_CC_MAG )
+   {
+      CCMagDumpIdx = NFieldOut;
+      NFieldOut   += NCOMP_MAG;
+   }
 #  endif
 
 
@@ -735,6 +744,15 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #  ifdef PARTICLE
    if      ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_PAR_ONLY )   sprintf( FieldName[ParDensDumpIdx], "ParDens" );
    else if ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_TOTAL )      sprintf( FieldName[ParDensDumpIdx], "TotalDens" );
+#  endif
+
+#  ifdef MHD
+   if ( OPT__OUTPUT_CC_MAG )
+   {
+      sprintf( FieldName[ CCMagDumpIdx + MAGX ], "CCMagX" );
+      sprintf( FieldName[ CCMagDumpIdx + MAGY ], "CCMagY" );
+      sprintf( FieldName[ CCMagDumpIdx + MAGZ ], "CCMagZ" );
+   }
 #  endif
 
 
@@ -883,7 +901,28 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                else
 #              endif
 
-//             c. fluid variables
+//             c. cell-centered magnetic field
+#              ifdef MHD
+               if ( v >= CCMagDumpIdx  &&  v < CCMagDumpIdx+NCOMP_MAG )
+               {
+                  const int Bv = v - CCMagDumpIdx;
+                  real CCMag_1Cell[NCOMP_MAG];
+
+                  for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                  for (int k=0; k<PS1; k++)
+                  for (int j=0; j<PS1; j++)
+                  for (int i=0; i<PS1; i++)
+                  {
+//                   actually we only need CCMag_1Cell[Bv] here
+//                   --> but the overhead of computing the other two B components is probably acceptable
+                     MHD_GetCellCenteredBFieldInPatch( CCMag_1Cell, lv, PID, i, j, k, amr->MagSg[lv] );
+                     FieldData[PID][k][j][i] = CCMag_1Cell[Bv];
+                  }
+               }
+               else
+#              endif
+
+//             d. fluid variables
                {
                   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
                      memcpy( FieldData[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
