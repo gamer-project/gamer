@@ -226,6 +226,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    hsize_t H5_SetDims_NPar, H5_SetDims_ParData[1], H5_MemDims_ParData[1],  H5_Count_ParData[1], H5_Offset_ParData[1];
    hid_t   H5_SetID_NPar, H5_SpaceID_NPar, H5_SpaceID_ParData, H5_GroupID_Particle, H5_SetID_ParData, H5_MemID_ParData;
 #  endif
+#  ifdef MHD
+   hsize_t H5_SetDims_FCMag[4], H5_MemDims_FCMag[4], H5_Count_FCMag[4], H5_Offset_FCMag[4];
+   hid_t   H5_MemID_FCMag, H5_SetID_FCMag, H5_SpaceID_FCMag[3];
+#  endif
 
 // 2-1. do NOT write fill values to any dataset for higher I/O performance
    H5_DataCreatePropList = H5Pcreate( H5P_DATASET_CREATE );
@@ -704,10 +708,15 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 // 5. output the simulation grid data (density, momentum, ... etc)
    const int FieldSizeOnePatch = sizeof(real)*CUBE(PS1);
-
    int  NFieldOut;
-   char (*FieldName)[MAX_STRING]    = NULL;
-   real (*FieldData)[PS1][PS1][PS1] = NULL;
+   char (*FieldName)[MAX_STRING]     = NULL;
+   real (*FieldData)[PS1][PS1][PS1]  = NULL;
+
+#  ifdef MHD
+   const int FCMagSizeOnePatch = sizeof(real)*PS1P1*SQR(PS1);
+   char FCMagName[3][MAX_STRING];
+   real (*FCMagData)[PS1P1*SQR(PS1)] = NULL;
+#  endif
 
 // 5-0. determine variable indices
    NFieldOut = NCOMP_TOTAL;
@@ -753,10 +762,12 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       sprintf( FieldName[ CCMagDumpIdx + MAGY ], "CCMagY" );
       sprintf( FieldName[ CCMagDumpIdx + MAGZ ], "CCMagZ" );
    }
+
+   for (int v=0; v<NCOMP_MAG; v++)  sprintf( FCMagName[v], MagLabel[v] );
 #  endif
 
 
-// 5-2. initialize the "GridData" group and the datasets of all fields
+// 5-2. initialize the "GridData" group and the datasets of all fields and magnetic field
    H5_SetDims_Field[0] = NPatchAllLv;
    H5_SetDims_Field[1] = PATCH_SIZE;
    H5_SetDims_Field[2] = PATCH_SIZE;
@@ -785,6 +796,25 @@ void Output_DumpData_Total_HDF5( const char *FileName )
          if ( H5_SetID_Field < 0 )  Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", FieldName[v] );
          H5_Status = H5Dclose( H5_SetID_Field );
       }
+
+//    create the datasets of all magnetic field components
+#     ifdef MHD
+      for (int v=0; v<NCOMP_MAG; v++)
+      {
+         H5_SetDims_FCMag[0] = NPatchAllLv;
+         for (int t=1; t<4; t++)
+         H5_SetDims_FCMag[t] = ( 3-t == v ) ? PS1P1 : PS1;
+
+         H5_SpaceID_FCMag[v] = H5Screate_simple( 4, H5_SetDims_FCMag, NULL );
+         if ( H5_SpaceID_FCMag[v] < 0 )
+            Aux_Error( ERROR_INFO, "failed to create the space \"%s[%d]\" !!\n", "H5_SpaceID_FCMag", v );
+
+         H5_SetID_FCMag = H5Dcreate( H5_GroupID_GridData, FCMagName[v], H5T_GAMER_REAL, H5_SpaceID_FCMag[v],
+                                     H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
+         if ( H5_SetID_FCMag < 0 )  Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", FCMagName[v] );
+         H5_Status = H5Dclose( H5_SetID_FCMag );
+      }
+#     endif // #ifdef MHD
 
 //    close the file and group
       H5_Status = H5Gclose( H5_GroupID_GridData );
@@ -841,7 +871,8 @@ void Output_DumpData_Total_HDF5( const char *FileName )
             if ( H5_GroupID_GridData < 0 )   Aux_Error( ERROR_INFO, "failed to open the group \"%s\" !!\n", "GridData" );
 
 
-//          5-3-1. determine the memory space
+//          5-3-1. dump cell-centered data
+//          5-3-1-1. determine the memory space
             H5_MemDims_Field[0] = amr->NPatchComma[lv][1];
             H5_MemDims_Field[1] = PATCH_SIZE;
             H5_MemDims_Field[2] = PATCH_SIZE;
@@ -851,7 +882,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
             if ( H5_MemID_Field < 0 )  Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_MemDims_Field" );
 
 
-//          5-3-2. determine the subset of the dataspace
+//          5-3-1-2. determine the subset of the dataspace
             H5_Offset_Field[0] = GID_Offset[lv];
             H5_Offset_Field[1] = 0;
             H5_Offset_Field[2] = 0;
@@ -871,7 +902,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
             for (int v=0; v<NFieldOut; v++)
             {
-//             5-3-3. collect the target field from all patches at the current target level
+//             5-3-1-3. collect the target field from all patches at the current target level
 //             a. gravitational potential
 #              ifdef GRAVITY
                if ( v == PotDumpIdx )
@@ -929,7 +960,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                }
 
 
-//             5-3-4. write data to disk
+//             5-3-1-4. write data to disk
                H5_SetID_Field = H5Dopen( H5_GroupID_GridData, FieldName[v], H5P_DEFAULT );
 
                H5_Status = H5Dwrite( H5_SetID_Field, H5T_GAMER_REAL, H5_MemID_Field, H5_SpaceID_Field, H5P_DEFAULT, FieldData );
@@ -938,12 +969,11 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                H5_Status = H5Dclose( H5_SetID_Field );
             } // for (int v=0; v<NFieldOut; v++)
 
-//          free resource
+
+//          5-3-1-5.free resource before dumping magnetic field to save memory
             delete [] FieldData;
 
             H5_Status = H5Sclose( H5_MemID_Field );
-            H5_Status = H5Gclose( H5_GroupID_GridData );
-            H5_Status = H5Fclose( H5_FileID );
 
 //          free memory used for outputting particle density
 #           ifdef PARTICLE
@@ -954,6 +984,61 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch, FaSibBufPatch );
             }
 #           endif
+
+
+//          5-3-2. dump magnetic field
+#           ifdef MHD
+//          5-3-2-0. allocate memory
+//                   --> output one B component at one level in one rank at a time
+            FCMagData = new real [ amr->NPatchComma[lv][1] ][ PS1P1*SQR(PS1) ];
+
+            for (int v=0; v<NCOMP_MAG; v++)
+            {
+//             5-3-2-1. determine the memory space
+               H5_MemDims_FCMag[0] = amr->NPatchComma[lv][1];
+               for (int t=1; t<4; t++)
+               H5_MemDims_FCMag[t] = ( 3-t == v ) ? PS1P1 : PS1;
+
+               H5_MemID_FCMag = H5Screate_simple( 4, H5_MemDims_FCMag, NULL );
+               if ( H5_MemID_FCMag < 0 )  Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_MemDims_FCMag" );
+
+
+//             5-3-2-2. determine the subset of the dataspace
+               H5_Offset_FCMag[0] = GID_Offset[lv];
+               H5_Offset_FCMag[1] = 0;
+               H5_Offset_FCMag[2] = 0;
+               H5_Offset_FCMag[3] = 0;
+
+               H5_Count_FCMag [0] = amr->NPatchComma[lv][1];
+               for (int t=1; t<4; t++)
+               H5_Count_FCMag [t] = ( 3-t == v ) ? PS1P1 : PS1;
+
+               H5_Status = H5Sselect_hyperslab( H5_SpaceID_FCMag[v], H5S_SELECT_SET, H5_Offset_FCMag, NULL, H5_Count_FCMag, NULL );
+               if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to create a hyperslab for the magnetic field !!\n" );
+
+
+//             5-3-2-3. collect the target B component from all patches at the current target level
+               for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                  memcpy( FCMagData[PID], amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[v], FCMagSizeOnePatch );
+
+
+//             5-3-2-4. write data to disk
+               H5_SetID_FCMag = H5Dopen( H5_GroupID_GridData, FCMagName[v], H5P_DEFAULT );
+
+               H5_Status = H5Dwrite( H5_SetID_FCMag, H5T_GAMER_REAL, H5_MemID_FCMag, H5_SpaceID_FCMag[v], H5P_DEFAULT, FCMagData );
+               if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to write magnetic field (lv %d, v %d) !!\n", lv, v );
+
+               H5_Status = H5Dclose( H5_SetID_FCMag );
+               H5_Status = H5Sclose( H5_MemID_FCMag );
+            } // for (int v=0; v<NCOMP_MAG; v++)
+
+
+//          5-3-2-5.free resource
+            delete [] FCMagData;
+#           endif // #ifdef MHD
+
+            H5_Status = H5Gclose( H5_GroupID_GridData );
+            H5_Status = H5Fclose( H5_FileID );
          } // if ( MPI_Rank == TRank )
 
          MPI_Barrier( MPI_COMM_WORLD );
@@ -962,6 +1047,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    } // for (int lv=0; lv<NLEVEL; lv++)
 
    H5_Status = H5Sclose( H5_SpaceID_Field );
+#  ifdef MHD
+   for (int v=0; v<NCOMP_MAG; v++)
+   H5_Status = H5Sclose( H5_SpaceID_FCMag[v] );
+#  endif
 
 
 
