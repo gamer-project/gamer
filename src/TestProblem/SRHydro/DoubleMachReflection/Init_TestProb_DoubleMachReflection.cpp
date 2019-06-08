@@ -3,7 +3,6 @@
 
 #if  ( MODEL == SR_HYDRO )
 
-# define PI 3.14159265
 
 // problem-specific global variables
 // =======================================================================================
@@ -174,11 +173,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    double Prim1[NCOMP_FLUID]; // store 3-velocity
    double Prim2[NCOMP_FLUID]; // store 4-velocity
 
-   double VelyUp_x = VelyUp*SIN(Theta*PI/180.0);
-   double VelyUp_y = VelyUp*COS(Theta*PI/180.0);
-   double VelyDown_x = VelyDown*SIN(Theta*PI/180.0);
-   double VelyDown_y = VelyDown*COS(Theta*PI/180.0);
-   double slope = tan(Theta*PI/180.0); // shock slope
+   double VelyUp_x = VelyUp*SIN(Theta*M_PI/180.0);
+   double VelyUp_y = VelyUp*COS(Theta*M_PI/180.0);
+   double VelyDown_x = VelyDown*SIN(Theta*M_PI/180.0);
+   double VelyDown_y = VelyDown*COS(Theta*M_PI/180.0);
+   double slope = tan(Theta*M_PI/180.0); // shock slope
 
    if ( y >= slope*x +  Height) // down-stream
    {

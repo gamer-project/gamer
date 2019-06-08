@@ -1,9 +1,6 @@
 #include "GAMER.h"
 #include "TestProb.h"
 
-#ifndef PI
-#define PI ( 3.14159265359 )
-#endif
 
 #if  ( MODEL == SR_HYDRO )
 
@@ -311,8 +308,8 @@ bool Flu_ResetByUser_PrecessedJet( real fluid[], const double x, const double y,
    Dis_Cone_Vec_2 = sqrt(SQR(Jet_Cone_Vec[0]) + SQR(Jet_Cone_Vec[1])); 
    Dis_Cone_Vec   = sqrt(SQR(Jet_Cone_Vec[0]) + SQR(Jet_Cone_Vec[1]) + SQR(Jet_Cone_Vec[2]));
 
-   Angle   = Jet_Angle * PI / 180.0;
-   Omega_t = Jet_Angular_Velocity * Time * PI / 180.0;
+   Angle   = Jet_Angle * M_PI / 180.0;
+   Omega_t = Jet_Angular_Velocity * Time * M_PI / 180.0;
 
    Sin_Angle = sin(Angle);
    Cos_Angle = cos(Angle);

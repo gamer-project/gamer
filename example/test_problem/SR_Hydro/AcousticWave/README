@@ -1,0 +1,19 @@
+Compilation flags:
+========================================
+Enable : MODEL=SR_HYDRO, FLOAT8
+Disable: COMOVING, PARTICLE, GRAVITY
+
+
+Default setup:
+========================================
+1. Resolution = 64^3
+2. Run for one period
+
+
+Note:
+========================================
+1. Only support the 3D case, where the wave propagates along the diagonal direction
+   --> Simulation box must be cubic
+2. A simple gnuplot script "plot.gpt" is attached
+3. "Record__L1Err" records the L1 errors
+4. AcousticWave_*_* record the numerical and analytical solutions along the diagonal
