@@ -1816,6 +1816,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__Output_BasePS",      &RS.Opt__Output_BasePS,      SID, TID, NonFatal, &RT.Opt__Output_BasePS,       1, NonFatal );
    if ( OPT__OUTPUT_PART )
    LoadField( "Opt__Output_Base",        &RS.Opt__Output_Base,        SID, TID, NonFatal, &RT.Opt__Output_Base,         1, NonFatal );
+#  ifdef MHD
+   LoadField( "Opt__Output_CC_Mag",      &RS.Opt__Output_CC_Mag,      SID, TID, NonFatal, &RT.Opt__Output_CC_Mag,       1, NonFatal );
+#  endif
 #  ifdef GRAVITY
    LoadField( "Opt__Output_Pot",         &RS.Opt__Output_Pot,         SID, TID, NonFatal, &RT.Opt__Output_Pot,          1, NonFatal );
 #  endif

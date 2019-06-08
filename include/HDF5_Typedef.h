@@ -538,6 +538,9 @@ struct InputPara_t
 #  endif
    int    Opt__Output_BasePS;
    int    Opt__Output_Base;
+#  ifdef MHD
+   int    Opt__Output_CC_Mag;
+#  endif
 #  ifdef GRAVITY
    int    Opt__Output_Pot;
 #  endif

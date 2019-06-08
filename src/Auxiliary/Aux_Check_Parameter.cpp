@@ -799,6 +799,9 @@ void Aux_Check_Parameter()
    if ( !OPT__FIXUP_ELECTRIC )
       Aux_Message( stderr, "WARNING : disabling \"OPT__FIXUP_ELECTRIC\" in MHD will break the divergence-free constraint !!\n" );
 
+   if ( !OPT__OUTPUT_CC_MAG )
+      Aux_Message( stderr, "WARNING : yt requires \"OPT__OUTPUT_CC_MAG\" for analyzing magnetic field !!\n" );
+
 #  endif // #ifdef MHD
 
 

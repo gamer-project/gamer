@@ -327,6 +327,9 @@ void Init_Load_Parameter()
 #  endif
    ReadPara->Add( "OPT__OUTPUT_BASEPS",         &OPT__OUTPUT_BASEPS,              false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_BASE",           &OPT__OUTPUT_BASE,                false,           Useless_bool,  Useless_bool   );
+#  ifdef MHD
+   ReadPara->Add( "OPT__OUTPUT_CC_MAG",         &OPT__OUTPUT_CC_MAG,              true,            Useless_bool,  Useless_bool   );
+#  endif
 #  ifdef GRAVITY
    ReadPara->Add( "OPT__OUTPUT_POT",            &OPT__OUTPUT_POT,                 false,           Useless_bool,  Useless_bool   );
 #  endif
