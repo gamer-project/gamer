@@ -153,6 +153,9 @@ void Output_DumpData_Total( const char *FileName )
 #     ifdef PARTICLE
       if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )   NGridVar ++;
 #     endif
+#     ifdef MHD
+      if ( OPT__OUTPUT_CC_MAG )                             NGridVar += 3;
+#     endif
 
       PatchDataSize  = CUBE(PS1)*NGridVar*sizeof(real);
 #     ifdef MHD
@@ -611,6 +614,12 @@ void Output_DumpData_Total( const char *FileName )
       const int    opt__output_par_dens      = 0;
 #     endif
 
+#     ifdef MHD
+      const bool   opt__output_cc_mag        = OPT__OUTPUT_CC_MAG;
+#     else
+      const bool   opt__output_cc_mag        = false;
+#     endif
+
       const bool   dummy_bool                = false;
 
       fwrite( &BOX_SIZE,                  sizeof(double),                  1,             File );
@@ -692,6 +701,7 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( &UNIT_E,                    sizeof(double),                  1,             File );
       fwrite( &UNIT_P,                    sizeof(double),                  1,             File );
       fwrite( &MOLECULAR_WEIGHT,          sizeof(double),                  1,             File );
+      fwrite( &opt__output_cc_mag,        sizeof(bool),                    1,             File );
 
 
 //    e. output the simulation information
@@ -739,10 +749,7 @@ void Output_DumpData_Total( const char *FileName )
 
 // f. output the simulation grid data
 // =================================================================================================
-   int  Cr_and_Son[4];
-#  ifdef PARTICLE
-   long NPar_and_GParID[2], GParID=GParID_Offset;
-#  endif
+   int Cr_and_Son[4];
 
 #  ifdef PARTICLE
    const bool IntPhase_No       = false;
@@ -760,7 +767,13 @@ void Output_DumpData_Total( const char *FileName )
    const bool FaSibBufPatch     = NULL_BOOL;
 #  endif
    real (*ParDensArray)[ CUBE(PS1) ] = ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_NONE ) ? NULL : new real [8][ CUBE(PS1) ];
+
+   long NPar_and_GParID[2], GParID=GParID_Offset;
 #  endif // #ifdef PARTICLE
+
+#  ifdef MHD
+   real (*CC_Mag)[ CUBE(PS1) ] = ( OPT__OUTPUT_CC_MAG ) ? new real [NCOMP_MAG][ CUBE(PS1) ] : NULL;
+#  endif
 
 
    for (int lv=0; lv<NLEVEL; lv++)
@@ -784,7 +797,7 @@ void Output_DumpData_Total( const char *FileName )
 
             for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
             {
-//             f0. prepare the particle density data on grids (only if there are leaf patches in this patch group)
+//             f1. prepare the particle density data on grids (only if there are leaf patches in this patch group)
 #              ifdef PARTICLE
                if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE  &&  PID%8 == 0 )
                {
@@ -804,7 +817,28 @@ void Output_DumpData_Total( const char *FileName )
 #              endif
 
 
-//             f1. output patch information
+//             f2. prepare the cell-centered magnetic field for leaf patches
+#              ifdef MHD
+               if ( OPT__OUTPUT_CC_MAG  &&  amr->patch[0][lv][PID]->son == -1 )
+               {
+                  real CC_Mag_1Cell[NCOMP_MAG];
+                  int  idx=0;
+
+                  for (int k=0; k<PS1; k++)
+                  for (int j=0; j<PS1; j++)
+                  for (int i=0; i<PS1; i++)
+                  {
+                     MHD_GetCellCenteredBFieldInPatch( CC_Mag_1Cell, lv, PID, i, j, k, amr->MagSg[lv] );
+
+                     for (int v=0; v<NCOMP_MAG; v++)  CC_Mag[v][idx] = CC_Mag_1Cell[v];
+
+                     idx ++;
+                  }
+               }
+#              endif
+
+
+//             f3. output patch information
 //             (father <-> son information will be re-constructed during the restart)
                Cr_and_Son[0] = amr->patch[0][lv][PID]->corner[0];
                Cr_and_Son[1] = amr->patch[0][lv][PID]->corner[1];
@@ -827,26 +861,31 @@ void Output_DumpData_Total( const char *FileName )
 #              endif
 
 
-//             f2. output patch data only if it has no son
+//             f4. output patch data only if it has no son
                if ( amr->patch[0][lv][PID]->son == -1 )
                {
-//                f2-1. output fluid variables
+//                f4-1. output fluid variables
                   fwrite( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid,    sizeof(real), CUBE(PS1)*NCOMP_TOTAL,    File );
 
-//                f2-2. output gravitational potential
+//                f4-2. output gravitational potential
 #                 ifdef GRAVITY
                   if ( OPT__OUTPUT_POT )
                   fwrite( amr->patch[ amr->PotSg[lv] ][lv][PID]->pot,      sizeof(real), CUBE(PS1),                File );
 #                 endif
 
-//                f2-3. output particle density depostied onto grids
+//                f4-3. output particle density depostied onto grids
 #                 ifdef PARTICLE
                   if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )
                   fwrite( ParDensArray[ PID%8 ],                           sizeof(real), CUBE(PS1),                File );
 #                 endif
 
-//                f2-4. output face-centered magnetic field
+//                f4-4. output magnetic field
 #                 ifdef MHD
+//                cell-centered
+                  if ( OPT__OUTPUT_CC_MAG )
+                  fwrite( CC_Mag,                                          sizeof(real), CUBE(PS1)*NCOMP_MAG,      File );
+
+//                face-centered
                   fwrite( amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic, sizeof(real), PS1P1*SQR(PS1)*NCOMP_MAG, File );
 #                 endif
                } // if ( amr->patch[0][lv][PID]->son == -1 )
@@ -855,7 +894,7 @@ void Output_DumpData_Total( const char *FileName )
             fclose( File );
 
 
-//          f3. free memory used for outputting particle density
+//          f5. free memory used for outputting particle density
 #           ifdef PARTICLE
             if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )
             {
@@ -871,8 +910,13 @@ void Output_DumpData_Total( const char *FileName )
       } // for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
    } // for (int lv=0; lv<NLEVEL; lv++)
 
+// free memory
 #  ifdef PARTICLE
-   if ( ParDensArray != NULL )   delete [] ParDensArray;
+   delete [] ParDensArray;
+#  endif
+
+#  ifdef MHD
+   delete [] CC_Mag;
 #  endif
 
 

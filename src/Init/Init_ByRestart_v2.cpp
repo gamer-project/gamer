@@ -8,7 +8,8 @@
 #endif
 
 void Init_ByRestart_v1( const char FileName[] );
-void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Restart, bool &LoadPot, bool &LoadParDens,
+void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Restart,
+                                bool &LoadPot, bool &LoadParDens, bool &LoadCCMag,
                                 const long HeaderOffset_Makefile, const long HeaderOffset_Constant,
                                 const long HeaderOffset_Parameter );
 void CompareVar( const char *VarName, const bool   RestartVar, const bool   RuntimeVar, const bool Fatal );
@@ -178,8 +179,9 @@ void Init_ByRestart()
    int  NLv_Restart = NLEVEL;
    bool LoadPot     = false;
    bool LoadParDens = false;
+   bool LoadCCMag   = false;
 
-   Load_Parameter_After_2000( File, FormatVersion, NLv_Restart, LoadPot, LoadParDens,
+   Load_Parameter_After_2000( File, FormatVersion, NLv_Restart, LoadPot, LoadParDens, LoadCCMag,
                               HeaderOffset_Makefile, HeaderOffset_Constant, HeaderOffset_Parameter );
 
 
@@ -296,6 +298,9 @@ void Init_ByRestart()
 #  endif
 #  ifdef PARTICLE
    if ( LoadParDens )   NGridVar ++;
+#  endif
+#  ifdef MHD
+   if ( LoadCCMag )     NGridVar += 3;
 #  endif
 
    PatchDataSize  = CUBE(PS1)*NGridVar*sizeof(real);
@@ -496,16 +501,22 @@ void Init_ByRestart()
 //                   d3-1. load the fluid variables
                      fread( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid, sizeof(real), CUBE(PS1)*NCOMP_TOTAL, File );
 
-//                   d3-2. abandon the gravitational potential and particle density data
+//                   d3-2. skip gravitational potential
 #                    ifdef GRAVITY
                      if ( LoadPot )       fseek( File, CUBE(PS1)*sizeof(real), SEEK_CUR );
 #                    endif
+
+//                   d3-3. skip particle density
 #                    ifdef PARTICLE
                      if ( LoadParDens )   fseek( File, CUBE(PS1)*sizeof(real), SEEK_CUR );
 #                    endif
 
-//                   d3-3. load the magnetic field
+//                   d3-4. load magnetic field
 #                    ifdef MHD
+//                   skip the cell-centered data
+                     if ( LoadCCMag )     fseek( File, CUBE(PS1)*NCOMP_MAG*sizeof(real), SEEK_CUR );
+
+//                   load the face-centered data
                      fread( amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic, sizeof(real), PS1P1*SQR(PS1)*NCOMP_MAG, File );
 #                    endif
                   } // if ( *LoadSon == -1 )
@@ -801,11 +812,13 @@ void Init_ByRestart()
 //                NLv_Restart    : NLEVEL recorded in the RESTART file
 //                LoadPot        : Whether or not the RESTART file stores the potential data
 //                LoadParDens    : Whether or not the RESTART file stores the particle (or total) density data
+//                LoadCCMag      : Whether or not the RESTART file stores the cell-centered magnetic field
 //                HeaderOffset_X : Offsets of different headers
 //
-// Return      :  NLv_Restart, LoadPot, LoadParDens (END_T and END_STEP may also be set to the original values)
+// Return      :  NLv_Restart, LoadPot, LoadParDens, LoadCCMag (END_T and END_STEP may also be set to the original values)
 //-------------------------------------------------------------------------------------------------------
-void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Restart, bool &LoadPot, bool &LoadParDens,
+void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Restart,
+                                bool &LoadPot, bool &LoadParDens, bool &LoadCCMag,
                                 const long HeaderOffset_Makefile, const long HeaderOffset_Constant,
                                 const long HeaderOffset_Parameter )
 {
@@ -896,6 +909,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    bool   opt__flag_engy_density, opt__flag_user, opt__fixup_flux, opt__fixup_restrict, opt__overlap_mpi;
    bool   opt__gra_p5_gradient, opt__int_time, opt__output_user, opt__output_base, opt__output_pot;
    bool   opt__output_baseps, opt__timing_balance, opt__int_phase, opt__1st_flux_corr, opt__unit;
+   bool   opt__output_cc_mag;
    int    nx0_tot[3], mpi_nrank, mpi_nrank_x[3], omp_nthread, regrid_count, opt__output_par_dens;
    int    flag_buffer_size, max_level, opt__lr_limiter, opt__waf_limiter_useless, flu_gpu_npgroup, gpu_nstream;
    int    sor_max_iter, sor_min_iter, mg_max_iter, mg_npre_smooth, mg_npost_smooth, pot_gpu_npgroup;
@@ -989,6 +1003,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    fread( &unit_e,                     sizeof(double),                  1,             File );
    fread( &unit_p,                     sizeof(double),                  1,             File );
    fread( &molecular_weight,           sizeof(double),                  1,             File );
+   fread( &opt__output_cc_mag,         sizeof(bool),                    1,             File );
 
 
 // set some default parameters
@@ -1003,6 +1018,8 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       END_STEP = end_step;
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "      NOTE : parameter %s is reset to %ld\n", "END_STEP", END_STEP );
    }
+
+   if ( FormatVersion < 2210 )   opt__output_cc_mag = false;
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading simulation parameters ... done\n" );
@@ -1498,6 +1515,10 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       else if ( MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : restart file does not have any information about the code units !!\n" );
 
+#     ifdef MHD
+      CompareVar( "OPT__OUTPUT_CC_MAG",      opt__output_cc_mag,           OPT__OUTPUT_CC_MAG,        NonFatal );
+#     endif
+
       Aux_Message( stdout, "   Checking loaded parameters ... done\n" );
 
    } // if ( MPI_Rank == 0 )
@@ -1513,6 +1534,11 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    LoadParDens = ( opt__output_par_dens != (int)PAR_OUTPUT_DENS_NONE );
 #  else
    LoadParDens = false;
+#  endif
+#  ifdef MHD
+   LoadCCMag   = opt__output_cc_mag;
+#  else
+   LoadCCMag   = false;
 #  endif
    NLv_Restart = nlevel;
 
