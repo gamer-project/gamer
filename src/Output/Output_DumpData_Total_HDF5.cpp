@@ -1965,6 +1965,9 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  endif
    InputPara.Opt__Output_BasePS      = OPT__OUTPUT_BASEPS;
    InputPara.Opt__Output_Base        = OPT__OUTPUT_BASE;
+#  ifdef MHD
+   InputPara.Opt__Output_CC_Mag      = OPT__OUTPUT_CC_MAG;
+#  endif
 #  ifdef GRAVITY
    InputPara.Opt__Output_Pot         = OPT__OUTPUT_POT;
 #  endif
@@ -2670,6 +2673,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  endif
    H5Tinsert( H5_TypeID, "Opt__Output_BasePS",      HOFFSET(InputPara_t,Opt__Output_BasePS     ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Output_Base",        HOFFSET(InputPara_t,Opt__Output_Base       ), H5T_NATIVE_INT     );
+#  ifdef MHD
+   H5Tinsert( H5_TypeID, "Opt__Output_CC_Mag",      HOFFSET(InputPara_t,Opt__Output_CC_Mag     ), H5T_NATIVE_INT     );
+#  endif
 #  ifdef GRAVITY
    H5Tinsert( H5_TypeID, "Opt__Output_Pot",         HOFFSET(InputPara_t,Opt__Output_Pot        ), H5T_NATIVE_INT     );
 #  endif
