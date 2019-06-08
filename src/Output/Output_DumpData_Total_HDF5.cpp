@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2312)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2400)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -169,6 +169,7 @@ Procedure for outputting new variables:
 //                2310 : 2019/04/20 --> Add OPT__CK_INTERFACE_B
 //                2311 : 2019/05/22 --> Add OPT__CK_DIVERGENCE_B
 //                2312 : 2019/05/31 --> add OPT__GRAVITY_EXTRA_MASS
+//                2400 : 2019/06/08 --> output magnetic field for MHD
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1233,7 +1234,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime   = time( NULL );    // calendar time
 
-   KeyInfo.FormatVersion  = 2312;
+   KeyInfo.FormatVersion  = 2400;
    KeyInfo.Model          = MODEL;
    KeyInfo.NLevel         = NLEVEL;
    KeyInfo.NCompFluid     = NCOMP_FLUID;
@@ -1965,14 +1966,14 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  endif
    InputPara.Opt__Output_BasePS      = OPT__OUTPUT_BASEPS;
    InputPara.Opt__Output_Base        = OPT__OUTPUT_BASE;
-#  ifdef MHD
-   InputPara.Opt__Output_CC_Mag      = OPT__OUTPUT_CC_MAG;
-#  endif
 #  ifdef GRAVITY
    InputPara.Opt__Output_Pot         = OPT__OUTPUT_POT;
 #  endif
 #  ifdef PARTICLE
    InputPara.Opt__Output_ParDens     = OPT__OUTPUT_PAR_DENS;
+#  endif
+#  ifdef MHD
+   InputPara.Opt__Output_CC_Mag      = OPT__OUTPUT_CC_MAG;
 #  endif
    InputPara.Opt__Output_Mode        = OPT__OUTPUT_MODE;
    InputPara.Opt__Output_Step        = OUTPUT_STEP;
@@ -2673,14 +2674,14 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  endif
    H5Tinsert( H5_TypeID, "Opt__Output_BasePS",      HOFFSET(InputPara_t,Opt__Output_BasePS     ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Output_Base",        HOFFSET(InputPara_t,Opt__Output_Base       ), H5T_NATIVE_INT     );
-#  ifdef MHD
-   H5Tinsert( H5_TypeID, "Opt__Output_CC_Mag",      HOFFSET(InputPara_t,Opt__Output_CC_Mag     ), H5T_NATIVE_INT     );
-#  endif
 #  ifdef GRAVITY
    H5Tinsert( H5_TypeID, "Opt__Output_Pot",         HOFFSET(InputPara_t,Opt__Output_Pot        ), H5T_NATIVE_INT     );
 #  endif
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Opt__Output_ParDens",     HOFFSET(InputPara_t,Opt__Output_ParDens    ), H5T_NATIVE_INT     );
+#  endif
+#  ifdef MHD
+   H5Tinsert( H5_TypeID, "Opt__Output_CC_Mag",      HOFFSET(InputPara_t,Opt__Output_CC_Mag     ), H5T_NATIVE_INT     );
 #  endif
    H5Tinsert( H5_TypeID, "Opt__Output_Mode",        HOFFSET(InputPara_t,Opt__Output_Mode       ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Output_Step",        HOFFSET(InputPara_t,Opt__Output_Step       ), H5T_NATIVE_INT     );
