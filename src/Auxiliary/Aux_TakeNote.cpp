@@ -368,6 +368,14 @@ void Aux_TakeNote()
       fprintf( Note, "HLL_INCLUDE_ALL_WAVES           OFF\n" );
 #     endif
 
+#     ifdef MHD
+#     ifdef EULERY
+      fprintf( Note, "EULERY                          ON\n" );
+#     else
+      fprintf( Note, "EULERY                          OFF\n" );
+#     endif
+#     endif // #ifdef MHD
+
 #     elif ( MODEL == ELBDM )
 
 #     else

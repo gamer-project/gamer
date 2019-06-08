@@ -1232,35 +1232,42 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 {
 
-   const time_t CalTime   = time( NULL );    // calendar time
+   const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion  = 2400;
-   KeyInfo.Model          = MODEL;
-   KeyInfo.NLevel         = NLEVEL;
-   KeyInfo.NCompFluid     = NCOMP_FLUID;
-   KeyInfo.NCompPassive   = NCOMP_PASSIVE;
-   KeyInfo.PatchSize      = PATCH_SIZE;
-   KeyInfo.DumpID         = DumpID;
-   KeyInfo.Step           = Step;
+   KeyInfo.FormatVersion        = 2400;
+   KeyInfo.Model                = MODEL;
+   KeyInfo.NLevel               = NLEVEL;
+   KeyInfo.NCompFluid           = NCOMP_FLUID;
+   KeyInfo.NCompPassive         = NCOMP_PASSIVE;
+   KeyInfo.PatchSize            = PATCH_SIZE;
+   KeyInfo.DumpID               = DumpID;
+   KeyInfo.Step                 = Step;
 #  ifdef GRAVITY
-   KeyInfo.AveDens_Init   = AveDensity_Init;
-   KeyInfo.Gravity        = 1;
+   KeyInfo.AveDens_Init         = AveDensity_Init;
+   KeyInfo.Gravity              = 1;
 #  else
-   KeyInfo.Gravity        = 0;
+   KeyInfo.Gravity              = 0;
 #  endif
 #  ifdef PARTICLE
-   KeyInfo.Particle       = 1;
+   KeyInfo.Particle             = 1;
 #  else
-   KeyInfo.Particle       = 0;
+   KeyInfo.Particle             = 0;
 #  endif
 #  ifdef FLOAT8
-   KeyInfo.Float8         = 1;
+   KeyInfo.Float8               = 1;
 #  else
-   KeyInfo.Float8         = 0;
+   KeyInfo.Float8               = 0;
 #  endif
 #  ifdef PARTICLE
-   KeyInfo.Par_NPar       = amr->Par->NPar_Active_AllRank;
-   KeyInfo.Par_NAttStored = PAR_NATT_STORED;
+   KeyInfo.Par_NPar             = amr->Par->NPar_Active_AllRank;
+   KeyInfo.Par_NAttStored       = PAR_NATT_STORED;
+#  endif
+#  if ( MODEL == HYDRO )
+#  ifdef MHD
+   KeyInfo.Magnetohydrodynamics = 1;
+#  else
+   KeyInfo.Magnetohydrodynamics = 0;
+#  endif
 #  endif
 
    for (int d=0; d<3; d++)
@@ -1454,7 +1461,9 @@ void FillIn_Makefile( Makefile_t &Makefile )
 #  endif
 
 #  ifdef MHD
-#  warning : WAIT MHD !!!
+   Makefile.Magnetohydrodynamics   = 1;
+#  else
+   Makefile.Magnetohydrodynamics   = 0;
 #  endif
 
 
@@ -1646,8 +1655,12 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.MaxError             = MAX_ERROR;
 #  endif
 #  ifdef MHD
-#  warning : WAIT MHD !!!
+#  ifdef EULERY
+   SymConst.EulerY               = 1;
+#  else
+   SymConst.EulerY               = 0;
 #  endif
+#  endif // MHD
 
 #  elif  ( MODEL == ELBDM )
    SymConst.Flu_BlockSize_x      = FLU_BLOCK_SIZE_X;
@@ -2090,38 +2103,41 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
 // get the compound type
    H5_TypeID = H5Tcreate( H5T_COMPOUND, sizeof(KeyInfo_t) );
 
-   H5Tinsert( H5_TypeID, "FormatVersion",      HOFFSET(KeyInfo_t,FormatVersion  ),    H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "Model",              HOFFSET(KeyInfo_t,Model          ),    H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "Float8",             HOFFSET(KeyInfo_t,Float8         ),    H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "Gravity",            HOFFSET(KeyInfo_t,Gravity        ),    H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "Particle",           HOFFSET(KeyInfo_t,Particle       ),    H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "NLevel",             HOFFSET(KeyInfo_t,NLevel         ),    H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "NCompFluid",         HOFFSET(KeyInfo_t,NCompFluid     ),    H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "NCompPassive",       HOFFSET(KeyInfo_t,NCompPassive   ),    H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "PatchSize",          HOFFSET(KeyInfo_t,PatchSize      ),    H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "DumpID",             HOFFSET(KeyInfo_t,DumpID         ),    H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "NX0",                HOFFSET(KeyInfo_t,NX0            ),    H5_TypeID_Arr_3Int      );
-   H5Tinsert( H5_TypeID, "BoxScale",           HOFFSET(KeyInfo_t,BoxScale       ),    H5_TypeID_Arr_3Int      );
-   H5Tinsert( H5_TypeID, "NPatch",             HOFFSET(KeyInfo_t,NPatch         ),    H5_TypeID_Arr_NLvInt    );
-   H5Tinsert( H5_TypeID, "CellScale",          HOFFSET(KeyInfo_t,CellScale      ),    H5_TypeID_Arr_NLvInt    );
+   H5Tinsert( H5_TypeID, "FormatVersion",        HOFFSET(KeyInfo_t,FormatVersion       ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "Model",                HOFFSET(KeyInfo_t,Model               ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "Float8",               HOFFSET(KeyInfo_t,Float8              ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "Gravity",              HOFFSET(KeyInfo_t,Gravity             ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "Particle",             HOFFSET(KeyInfo_t,Particle            ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "NLevel",               HOFFSET(KeyInfo_t,NLevel              ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "NCompFluid",           HOFFSET(KeyInfo_t,NCompFluid          ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "NCompPassive",         HOFFSET(KeyInfo_t,NCompPassive        ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "PatchSize",            HOFFSET(KeyInfo_t,PatchSize           ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "DumpID",               HOFFSET(KeyInfo_t,DumpID              ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "NX0",                  HOFFSET(KeyInfo_t,NX0                 ), H5_TypeID_Arr_3Int      );
+   H5Tinsert( H5_TypeID, "BoxScale",             HOFFSET(KeyInfo_t,BoxScale            ), H5_TypeID_Arr_3Int      );
+   H5Tinsert( H5_TypeID, "NPatch",               HOFFSET(KeyInfo_t,NPatch              ), H5_TypeID_Arr_NLvInt    );
+   H5Tinsert( H5_TypeID, "CellScale",            HOFFSET(KeyInfo_t,CellScale           ), H5_TypeID_Arr_NLvInt    );
+#  if ( MODEL == HYDRO )
+   H5Tinsert( H5_TypeID, "Magnetohydrodynamics", HOFFSET(KeyInfo_t,Magnetohydrodynamics), H5T_NATIVE_INT          );
+#  endif
 
-   H5Tinsert( H5_TypeID, "Step",               HOFFSET(KeyInfo_t,Step           ),    H5T_NATIVE_LONG         );
-   H5Tinsert( H5_TypeID, "AdvanceCounter",     HOFFSET(KeyInfo_t,AdvanceCounter ),    H5_TypeID_Arr_NLvLong   );
+   H5Tinsert( H5_TypeID, "Step",                 HOFFSET(KeyInfo_t,Step                ), H5T_NATIVE_LONG         );
+   H5Tinsert( H5_TypeID, "AdvanceCounter",       HOFFSET(KeyInfo_t,AdvanceCounter      ), H5_TypeID_Arr_NLvLong   );
 #  ifdef PARTICLE
-   H5Tinsert( H5_TypeID, "Par_NPar",           HOFFSET(KeyInfo_t,Par_NPar),           H5T_NATIVE_LONG         );
-   H5Tinsert( H5_TypeID, "Par_NAttStored",     HOFFSET(KeyInfo_t,Par_NAttStored ),    H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "Par_NPar",             HOFFSET(KeyInfo_t,Par_NPar),             H5T_NATIVE_LONG         );
+   H5Tinsert( H5_TypeID, "Par_NAttStored",       HOFFSET(KeyInfo_t,Par_NAttStored      ), H5T_NATIVE_INT          );
 #  endif
 
-   H5Tinsert( H5_TypeID, "BoxSize",            HOFFSET(KeyInfo_t,BoxSize        ),    H5_TypeID_Arr_3Double   );
-   H5Tinsert( H5_TypeID, "Time",               HOFFSET(KeyInfo_t,Time           ),    H5_TypeID_Arr_NLvDouble );
-   H5Tinsert( H5_TypeID, "CellSize",           HOFFSET(KeyInfo_t,CellSize       ),    H5_TypeID_Arr_NLvDouble );
-   H5Tinsert( H5_TypeID, "dTime_AllLv",        HOFFSET(KeyInfo_t,dTime_AllLv    ),    H5_TypeID_Arr_NLvDouble );
+   H5Tinsert( H5_TypeID, "BoxSize",              HOFFSET(KeyInfo_t,BoxSize             ), H5_TypeID_Arr_3Double   );
+   H5Tinsert( H5_TypeID, "Time",                 HOFFSET(KeyInfo_t,Time                ), H5_TypeID_Arr_NLvDouble );
+   H5Tinsert( H5_TypeID, "CellSize",             HOFFSET(KeyInfo_t,CellSize            ), H5_TypeID_Arr_NLvDouble );
+   H5Tinsert( H5_TypeID, "dTime_AllLv",          HOFFSET(KeyInfo_t,dTime_AllLv         ), H5_TypeID_Arr_NLvDouble );
 #  ifdef GRAVITY
-   H5Tinsert( H5_TypeID, "AveDens_Init",       HOFFSET(KeyInfo_t,AveDens_Init   ),    H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "AveDens_Init",         HOFFSET(KeyInfo_t,AveDens_Init        ), H5T_NATIVE_DOUBLE       );
 #  endif
 
-   H5Tinsert( H5_TypeID, "CodeVersion",        HOFFSET(KeyInfo_t,CodeVersion    ),    H5_TypeID_VarStr        );
-   H5Tinsert( H5_TypeID, "DumpWallTime",       HOFFSET(KeyInfo_t,DumpWallTime   ),    H5_TypeID_VarStr        );
+   H5Tinsert( H5_TypeID, "CodeVersion",          HOFFSET(KeyInfo_t,CodeVersion         ), H5_TypeID_VarStr        );
+   H5Tinsert( H5_TypeID, "DumpWallTime",         HOFFSET(KeyInfo_t,DumpWallTime        ), H5_TypeID_VarStr        );
 
 
 // free memory
@@ -2191,9 +2207,7 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "RSolver",                HOFFSET(Makefile_t,RSolver                ), H5T_NATIVE_INT );
 #  endif
    H5Tinsert( H5_TypeID, "DualEnergy",             HOFFSET(Makefile_t,DualEnergy             ), H5T_NATIVE_INT );
-#  ifdef MHD
-#  warning : WAIT MHD !!!
-#  endif
+   H5Tinsert( H5_TypeID, "Magnetohydrodynamics",   HOFFSET(Makefile_t,Magnetohydrodynamics   ), H5T_NATIVE_INT );
 
 #  elif ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "ConserveMass",           HOFFSET(Makefile_t,ConserveMass           ), H5T_NATIVE_INT );
@@ -2301,7 +2315,7 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "MaxError",             HOFFSET(SymConst_t,MaxError            ), H5T_NATIVE_DOUBLE );
 #  endif
 #  ifdef MHD
-#  warning : WAIT MHD !!!
+   H5Tinsert( H5_TypeID, "EulerY",               HOFFSET(SymConst_t,EulerY              ), H5T_NATIVE_INT    );
 #  endif
 
 #  elif  ( MODEL == ELBDM )

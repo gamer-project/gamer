@@ -54,6 +54,9 @@ struct KeyInfo_t
    int    BoxScale[3];
    int    NPatch   [NLEVEL];
    int    CellScale[NLEVEL];        // amr->scale[lv]
+#  if ( MODEL == HYDRO )
+   int    Magnetohydrodynamics;
+#  endif
 
    long   Step;
    long   AdvanceCounter[NLEVEL];
@@ -125,9 +128,7 @@ struct Makefile_t
    int RSolver;
 #  endif
    int DualEnergy;
-#  ifdef MHD
-#  warning : WAIT MHD !!!
-#  endif
+   int Magnetohydrodynamics;
 
 #  elif ( MODEL == ELBDM )
    int ConserveMass;
@@ -240,7 +241,7 @@ struct SymConst_t
    double MaxError;
 #  endif
 #  ifdef MHD
-#  warning : WAIT MHD !!!
+   int    EulerY;
 #  endif
 
 #  elif  ( MODEL == ELBDM )
