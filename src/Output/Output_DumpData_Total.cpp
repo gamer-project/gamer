@@ -772,7 +772,7 @@ void Output_DumpData_Total( const char *FileName )
 #  endif // #ifdef PARTICLE
 
 #  ifdef MHD
-   real (*CC_Mag)[ CUBE(PS1) ] = ( OPT__OUTPUT_CC_MAG ) ? new real [NCOMP_MAG][ CUBE(PS1) ] : NULL;
+   real (*CCMag)[ CUBE(PS1) ] = ( OPT__OUTPUT_CC_MAG ) ? new real [NCOMP_MAG][ CUBE(PS1) ] : NULL;
 #  endif
 
 
@@ -821,16 +821,16 @@ void Output_DumpData_Total( const char *FileName )
 #              ifdef MHD
                if ( OPT__OUTPUT_CC_MAG  &&  amr->patch[0][lv][PID]->son == -1 )
                {
-                  real CC_Mag_1Cell[NCOMP_MAG];
+                  real CCMag_1Cell[NCOMP_MAG];
                   int  idx=0;
 
                   for (int k=0; k<PS1; k++)
                   for (int j=0; j<PS1; j++)
                   for (int i=0; i<PS1; i++)
                   {
-                     MHD_GetCellCenteredBFieldInPatch( CC_Mag_1Cell, lv, PID, i, j, k, amr->MagSg[lv] );
+                     MHD_GetCellCenteredBFieldInPatch( CCMag_1Cell, lv, PID, i, j, k, amr->MagSg[lv] );
 
-                     for (int v=0; v<NCOMP_MAG; v++)  CC_Mag[v][idx] = CC_Mag_1Cell[v];
+                     for (int v=0; v<NCOMP_MAG; v++)  CCMag[v][idx] = CCMag_1Cell[v];
 
                      idx ++;
                   }
@@ -883,7 +883,7 @@ void Output_DumpData_Total( const char *FileName )
 #                 ifdef MHD
 //                cell-centered
                   if ( OPT__OUTPUT_CC_MAG )
-                  fwrite( CC_Mag,                                          sizeof(real), CUBE(PS1)*NCOMP_MAG,      File );
+                  fwrite( CCMag,                                           sizeof(real), CUBE(PS1)*NCOMP_MAG,      File );
 
 //                face-centered
                   fwrite( amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic, sizeof(real), PS1P1*SQR(PS1)*NCOMP_MAG, File );
@@ -916,7 +916,7 @@ void Output_DumpData_Total( const char *FileName )
 #  endif
 
 #  ifdef MHD
-   delete [] CC_Mag;
+   delete [] CCMag;
 #  endif
 
 
