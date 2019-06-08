@@ -60,22 +60,29 @@ void Init_ByRestart_HDF5( const char *FileName )
 // 1. load the simulation info
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading simulation information ...\n" );
 
-   const bool    Fatal       = true;
-   const bool NonFatal       = false;
-   const int  Model          = MODEL;
-   const int  NCompFluid     = NCOMP_FLUID;
-   const int  NCompPassive   = NCOMP_PASSIVE;
-   const int  PatchSize      = PATCH_SIZE;
+   const bool    Fatal             = true;
+   const bool NonFatal             = false;
+   const int  Model                = MODEL;
+   const int  NCompFluid           = NCOMP_FLUID;
+   const int  NCompPassive         = NCOMP_PASSIVE;
+   const int  PatchSize            = PATCH_SIZE;
 #  ifdef GRAVITY
-   const int  Gravity        = 1;
+   const int  Gravity              = 1;
 #  else
-   const int  Gravity        = 0;
+   const int  Gravity              = 0;
 #  endif
 #  ifdef PARTICLE
-   const int  Particle       = 1;
-   const int  Par_NAttStored = PAR_NATT_STORED;
+   const int  Particle             = 1;
+   const int  Par_NAttStored       = PAR_NATT_STORED;
 #  else
-   const int  Particle       = 0;
+   const int  Particle             = 0;
+#  endif
+#  if ( MODEL == HYDRO )
+#  ifdef MHD
+   const int  Magnetohydrodynamics = 1;
+#  else
+   const int  Magnetohydrodynamics = 0;
+#  endif
 #  endif
 
    KeyInfo_t KeyInfo;
@@ -125,6 +132,11 @@ void Init_ByRestart_HDF5( const char *FileName )
 
       if ( KeyInfo.FormatVersion < 2300 )
          Aux_Message( stderr, "WARNING : loading user-defined fields or particle attributes from version < 2300 will likely fail !!\n" );
+
+#     ifdef MHD
+      if ( KeyInfo.FormatVersion < 2400 )
+         Aux_Error( ERROR_INFO, "unsupported data format version for MHD (only support version >= 2400) !!\n" );
+#     endif
    }
 
    MPI_Barrier( MPI_COMM_WORLD );
@@ -151,32 +163,36 @@ void Init_ByRestart_HDF5( const char *FileName )
 
    MPI_Barrier( MPI_COMM_WORLD );
 
-   LoadField( "DumpID",         &KeyInfo.DumpID,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,      -1, NonFatal );
-   LoadField( "NX0",             KeyInfo.NX0,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NX0_TOT,       3,    Fatal );
-   LoadField( "BoxScale",        KeyInfo.BoxScale,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,      -1, NonFatal );
-   LoadField( "NPatch",          KeyInfo.NPatch,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,      -1, NonFatal );
-   LoadField( "CellScale",       KeyInfo.CellScale,      H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "DumpID",               &KeyInfo.DumpID,               H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "NX0",                   KeyInfo.NX0,                  H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NX0_TOT,               3,    Fatal );
+   LoadField( "BoxScale",              KeyInfo.BoxScale,             H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "NPatch",                KeyInfo.NPatch,               H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "CellScale",             KeyInfo.CellScale,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+#  if ( MODEL == HYDRO )
+   if ( KeyInfo.FormatVersion >= 2400 )
+   LoadField( "Magnetohydrodynamics", &KeyInfo.Magnetohydrodynamics, H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &Magnetohydrodynamics,  1,    Fatal );
+#  endif
 
-   LoadField( "Step",           &KeyInfo.Step,           H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,      -1, NonFatal );
-   LoadField( "AdvanceCounter",  KeyInfo.AdvanceCounter, H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "Step",                 &KeyInfo.Step,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "AdvanceCounter",        KeyInfo.AdvanceCounter,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
 #  ifdef PARTICLE
-   LoadField( "Par_NPar",       &KeyInfo.Par_NPar,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "Par_NPar",             &KeyInfo.Par_NPar,             H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
    if ( KeyInfo.FormatVersion >= 2300 )
-   LoadField( "Par_NAttStored", &KeyInfo.Par_NAttStored, H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttStored,1,    Fatal );
+   LoadField( "Par_NAttStored",       &KeyInfo.Par_NAttStored,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttStored,        1,    Fatal );
    else
-   LoadField( "Par_NAttStored", &KeyInfo.Par_NAttStored, H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttStored,1, NonFatal );
+   LoadField( "Par_NAttStored",       &KeyInfo.Par_NAttStored,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttStored,        1, NonFatal );
 #  endif
 
-   LoadField( "BoxSize",         KeyInfo.BoxSize,        H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  amr->BoxSize,  3,    Fatal );
-   LoadField( "Time",            KeyInfo.Time,           H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,      -1, NonFatal );
-   LoadField( "CellSize",        KeyInfo.CellSize,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,      -1, NonFatal );
-   LoadField( "dTime_AllLv",     KeyInfo.dTime_AllLv,    H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal,  NullPtr,      -1, NonFatal );
+   LoadField( "BoxSize",               KeyInfo.BoxSize,              H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  amr->BoxSize,          3,    Fatal );
+   LoadField( "Time",                  KeyInfo.Time,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "CellSize",              KeyInfo.CellSize,             H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "dTime_AllLv",           KeyInfo.dTime_AllLv,          H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal,  NullPtr,              -1, NonFatal );
 #  ifdef GRAVITY
-   LoadField( "AveDens_Init",   &KeyInfo.AveDens_Init,   H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "AveDens_Init",         &KeyInfo.AveDens_Init,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
 #  endif
 
-   LoadField( "CodeVersion",    &KeyInfo.CodeVersion,    H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,      -1, NonFatal );
-   LoadField( "DumpWallTime",   &KeyInfo.DumpWallTime,   H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "CodeVersion",          &KeyInfo.CodeVersion,          H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "DumpWallTime",         &KeyInfo.DumpWallTime,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
 
 
 // 1-4. close all objects
@@ -1334,6 +1350,7 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
    LoadField( "RSolver",                &RS.RSolver,                SID, TID, NonFatal, &RT.RSolver,                1, NonFatal );
 #  endif
    LoadField( "DualEnergy",             &RS.DualEnergy,             SID, TID, NonFatal, &RT.DualEnergy,             1, NonFatal );
+   LoadField( "Magnetohydrodynamics",   &RS.Magnetohydrodynamics,   SID, TID, NonFatal, &RT.Magnetohydrodynamics,   1,    Fatal );
 
 #  elif ( MODEL == ELBDM )
    LoadField( "ConserveMass",           &RS.ConserveMass,           SID, TID, NonFatal, &RT.ConserveMass,           1, NonFatal );
@@ -1480,6 +1497,9 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
 #  endif
 #  ifdef MAX_ERROR
    LoadField( "MaxError",             &RS.MaxError,             SID, TID, NonFatal, &RT.MaxError,              1, NonFatal );
+#  endif
+#  ifdef MHD
+   LoadField( "EulerY",               &RS.EulerY,               SID, TID, NonFatal, &RT.EulerY,                1, NonFatal );
 #  endif
 
 #  elif  ( MODEL == ELBDM )
