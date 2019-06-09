@@ -1852,6 +1852,9 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Unit_D                  = UNIT_D;
    InputPara.Unit_E                  = UNIT_E;
    InputPara.Unit_P                  = UNIT_P;
+#  ifdef MHD
+   InputPara.Unit_B                  = UNIT_B;
+#  endif
 
 // boundary condition
    for (int t=0; t<6; t++)
@@ -2541,6 +2544,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Unit_D",                  HOFFSET(InputPara_t,Unit_D                 ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "Unit_E",                  HOFFSET(InputPara_t,Unit_E                 ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "Unit_P",                  HOFFSET(InputPara_t,Unit_P                 ), H5T_NATIVE_DOUBLE  );
+#  ifdef MHD
+   H5Tinsert( H5_TypeID, "Unit_B",                  HOFFSET(InputPara_t,Unit_B                 ), H5T_NATIVE_DOUBLE  );
+#  endif
 
 // boundary condition
    H5Tinsert( H5_TypeID, "Opt__BC_Flu",             HOFFSET(InputPara_t,Opt__BC_Flu            ), H5_TypeID_Arr_6Int );
