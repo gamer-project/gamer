@@ -614,10 +614,9 @@ void Output_DumpData_Total( const char *FileName )
       const int    opt__output_par_dens      = 0;
 #     endif
 
-#     ifdef MHD
-      const bool   opt__output_cc_mag        = OPT__OUTPUT_CC_MAG;
-#     else
-      const bool   opt__output_cc_mag        = false;
+#     ifndef MHD
+      const bool   OPT__OUTPUT_CC_MAG        = false;
+      const double UNIT_B                    = NULL_REAL;
 #     endif
 
       const bool   dummy_bool                = false;
@@ -701,7 +700,8 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( &UNIT_E,                    sizeof(double),                  1,             File );
       fwrite( &UNIT_P,                    sizeof(double),                  1,             File );
       fwrite( &MOLECULAR_WEIGHT,          sizeof(double),                  1,             File );
-      fwrite( &opt__output_cc_mag,        sizeof(bool),                    1,             File );
+      fwrite( &OPT__OUTPUT_CC_MAG,        sizeof(bool),                    1,             File );
+      fwrite( &UNIT_B,                    sizeof(double),                  1,             File );
 
 
 //    e. output the simulation information

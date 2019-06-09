@@ -294,6 +294,9 @@ struct InputPara_t
    double Unit_D;
    double Unit_E;
    double Unit_P;
+#  ifdef MHD
+   double Unit_B;
+#  endif
 
 // boundary condition
    int    Opt__BC_Flu[6];

@@ -45,6 +45,9 @@ void Init_Unit()
    UNIT_M    = -1.0;
    UNIT_E    = -1.0;
    UNIT_P    = -1.0;
+#  ifdef MHD
+#  warning : WAIT MHD !!!
+#  endif
 
    if ( MPI_Rank == 0 )
    {
@@ -170,6 +173,15 @@ void Init_Unit()
             Aux_Error( ERROR_INFO, "cannot determine the energy density unit !!\n" );
       }
 
+//    (8) magnetic field unit (which cannot be set by users)
+#     ifdef MHD
+      if ( true )
+      {
+         UNIT_B = sqrt( UNIT_P*4.0*M_PI );
+         if ( MPI_Rank == 0 )    Aux_Message( stdout, "NOTE : UNIT_B is set to %13.7e\n", UNIT_B );
+      }
+#     endif
+
 
 //    convert physical constants to code units
 //    (1) gravitational constant
@@ -197,6 +209,9 @@ void Init_Unit()
    else
    {
       UNIT_L = UNIT_M = UNIT_T = UNIT_V = UNIT_D = UNIT_E = UNIT_P = 1.0;
+#     ifdef MHD
+      UNIT_B = 1.0;
+#     endif
 
 //    check if physical constants are properly set by users
 #     ifdef GRAVITY

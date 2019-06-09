@@ -1675,6 +1675,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Unit_D",                  &RS.Unit_D,                  SID, TID, NonFatal, &RT.Unit_D,                   1, NonFatal );
    LoadField( "Unit_E",                  &RS.Unit_E,                  SID, TID, NonFatal, &RT.Unit_E,                   1, NonFatal );
    LoadField( "Unit_P",                  &RS.Unit_P,                  SID, TID, NonFatal, &RT.Unit_P,                   1, NonFatal );
+#  ifdef MHD
+   LoadField( "Unit_B",                  &RS.Unit_B,                  SID, TID, NonFatal, &RT.Unit_B,                   1, NonFatal );
+#  endif
 
 // boundary condition
    LoadField( "Opt__BC_Flu",              RS.Opt__BC_Flu,             SID, TID, NonFatal,  RT.Opt__BC_Flu,              6, NonFatal );

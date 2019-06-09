@@ -920,7 +920,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    double lb_wli_max, gamma, minmod_coeff, ep_coeff, elbdm_mass, elbdm_planck_const, newton_g, sor_omega;
    double mg_tolerated_error, output_part_x, output_part_y, output_part_z, molecular_weight;
    double box_size, end_t, omega_m0, dt__fluid, dt__gravity, dt__phase, dt__max_delta_a, output_dt, hubble0;
-   double unit_l, unit_m, unit_t, unit_v, unit_d, unit_e, unit_p;
+   double unit_l, unit_m, unit_t, unit_v, unit_d, unit_e, unit_p, unit_b;
 
    fseek( File, HeaderOffset_Parameter, SEEK_SET );
 
@@ -1004,6 +1004,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    fread( &unit_p,                     sizeof(double),                  1,             File );
    fread( &molecular_weight,           sizeof(double),                  1,             File );
    fread( &opt__output_cc_mag,         sizeof(bool),                    1,             File );
+   fread( &unit_b,                     sizeof(double),                  1,             File );
 
 
 // set some default parameters
@@ -1517,6 +1518,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 
 #     ifdef MHD
       CompareVar( "OPT__OUTPUT_CC_MAG",      opt__output_cc_mag,           OPT__OUTPUT_CC_MAG,        NonFatal );
+      CompareVar( "UNIT_B",                  unit_b,                       UNIT_B,                    NonFatal );
 #     endif
 
       Aux_Message( stdout, "   Checking loaded parameters ... done\n" );

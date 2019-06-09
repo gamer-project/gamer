@@ -567,7 +567,10 @@ void Aux_TakeNote()
       fprintf( Note, "UNIT_D (mass density)           %20.14e rho_bg     (*)\n", UNIT_D/Current_Matter_Density );
       fprintf( Note, "                              = %20.14e g/cm^3     (*)\n", UNIT_D                        );
       fprintf( Note, "UNIT_E (energy)                 %20.14e g*cm^2/s^2 (*)\n", UNIT_E                        );
-      fprintf( Note, "UNIT_P (energy density)         %20.14e g/cm/s^2   (*)\n", UNIT_P                        ); }
+      fprintf( Note, "UNIT_P (energy density)         %20.14e g/cm/s^2   (*)\n", UNIT_P                        );
+#     ifdef MHD
+#     warning : WAIT MHD !!!
+#     endif
 
 #     else
 
@@ -577,8 +580,12 @@ void Aux_TakeNote()
       fprintf( Note, "UNIT_V                          %20.14e cm/s\n",           UNIT_V                        );
       fprintf( Note, "UNIT_D                          %20.14e g/cm^3\n",         UNIT_D                        );
       fprintf( Note, "UNIT_E (energy)                 %20.14e g*cm^2/s^2\n",     UNIT_E                        );
-      fprintf( Note, "UNIT_P (energy density)         %20.14e g/cm/s^2\n",       UNIT_P                        ); }
+      fprintf( Note, "UNIT_P (energy density)         %20.14e g/cm/s^2\n",       UNIT_P                        );
+#     ifdef MHD
+      fprintf( Note, "UNIT_B (magnetic field)         %20.14e gauss\n",          UNIT_B                        );
+#     endif
 #     endif // #ifdef COMOVING ... else ...
+      }
 
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
