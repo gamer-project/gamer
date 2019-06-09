@@ -12,8 +12,10 @@ template <typename T>
 static herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Target,
                          const hid_t H5_TypeID_Target, const bool Fatal_Nonexist,
                          const T *ComprPtr, const int NCompr, const bool Fatal_Compr );
-static void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const bool Recursive, const int *SonList,
-                          const int (*CrList)[3], const hid_t *H5_SetID_Field, const hid_t H5_SpaceID_Field, const hid_t H5_MemID_Field,
+static void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const bool Recursive,
+                          const int *SonList, const int (*CrList)[3],
+                          const hid_t *H5_SetID_Field, const hid_t H5_SpaceID_Field, const hid_t H5_MemID_Field,
+                          const hid_t *H5_SetID_FCMag, const hid_t *H5_SpaceID_FCMag, const hid_t *H5_MemID_FCMag,
                           const int *NParList, real **ParBuf, long *NewParList, const hid_t *H5_SetID_ParData,
                           const hid_t H5_SpaceID_ParData, const long *GParID_Offset, const long NParThisRank );
 static void Check_Makefile ( const char *FileName, const int FormatVersion );
@@ -65,7 +67,7 @@ void Init_ByRestart_HDF5( const char *FileName )
    const int  Model                = MODEL;
    const int  NCompFluid           = NCOMP_FLUID;
    const int  NCompPassive         = NCOMP_PASSIVE;
-   const int  PatchSize            = PATCH_SIZE;
+   const int  PatchSize            = PS1;
 #  ifdef GRAVITY
    const int  Gravity              = 1;
 #  else
@@ -241,15 +243,15 @@ void Init_ByRestart_HDF5( const char *FileName )
    }
 
 
-// 1-7. set Flu(Pot)SgTime
+// 1-7. set SgTime
    for (int lv=0; lv<NLEVEL; lv++)
    {
       amr->FluSgTime[lv][ amr->FluSg[lv] ] = Time[lv];
-#     ifdef MHD
-      amr->MagSgTime[lv][ amr->MagSg[lv] ] = Time[lv];
-#     endif
 #     ifdef GRAVITY
       amr->PotSgTime[lv][ amr->PotSg[lv] ] = Time[lv];
+#     endif
+#     ifdef MHD
+      amr->MagSgTime[lv][ amr->MagSg[lv] ] = Time[lv];
 #     endif
    }
 
@@ -572,22 +574,24 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  endif
 
    char (*FieldName)[MAX_STRING] = new char [NCOMP_TOTAL][MAX_STRING];
-
    hsize_t H5_SetDims_Field[4], H5_MemDims_Field[4];
    hid_t   H5_SetID_Field[NCOMP_TOTAL], H5_MemID_Field, H5_SpaceID_Field, H5_GroupID_GridData;
 
 #  ifdef MHD
-   char (*MagName)[MAX_STRING] = new char [NCOMP_MAG][MAX_STRING];
-#  endif
+   char (*FCMagName)[MAX_STRING] = new char [NCOMP_MAG][MAX_STRING];
+   hsize_t H5_SetDims_FCMag[4], H5_MemDims_FCMag[4];
+   hid_t   H5_SetID_FCMag[NCOMP_MAG], H5_MemID_FCMag[NCOMP_MAG], H5_SpaceID_FCMag[NCOMP_MAG];
+#  else
+   hid_t *H5_SetID_FCMag   = NULL;
+   hid_t *H5_MemID_FCMag   = NULL;
+   hid_t *H5_SpaceID_FCMag = NULL;
+#  endif // #ifdef MHD ... else ...
 
 #  ifdef PARTICLE
    char (*ParAttName)[MAX_STRING] = new char [PAR_NATT_STORED][MAX_STRING];
-
-   hsize_t  H5_SetDims_ParData[1];
-   hid_t    H5_SetID_ParData[PAR_NATT_STORED], H5_SpaceID_ParData, H5_GroupID_Particle;
-
+   hsize_t H5_SetDims_ParData[1];
+   hid_t   H5_SetID_ParData[PAR_NATT_STORED], H5_SpaceID_ParData, H5_GroupID_Particle;
 #  else
-
 // define useless variables when PARTICLE is off
    int   *NParList_AllLv     = NULL;
    real **ParBuf             = NULL;
@@ -603,7 +607,7 @@ void Init_ByRestart_HDF5( const char *FileName )
    for (int v=0; v<NCOMP_TOTAL; v++)      sprintf( FieldName[v], "%s", FieldLabel[v] );
 
 #  ifdef MHD
-   for (int v=0; v<NCOMP_MAG; v++)        sprintf( MagName[v], "%s", MagLabel[v] );
+   for (int v=0; v<NCOMP_MAG; v++)        sprintf( FCMagName[v], "%s", MagLabel[v] );
 #  endif
 
 #  ifdef PARTICLE
@@ -614,20 +618,41 @@ void Init_ByRestart_HDF5( const char *FileName )
 
 // 3-2. initialize relevant HDF5 objects
    H5_SetDims_Field[0] = NPatchAllLv;
-   H5_SetDims_Field[1] = PATCH_SIZE;
-   H5_SetDims_Field[2] = PATCH_SIZE;
-   H5_SetDims_Field[3] = PATCH_SIZE;
+   H5_SetDims_Field[1] = PS1;
+   H5_SetDims_Field[2] = PS1;
+   H5_SetDims_Field[3] = PS1;
 
    H5_SpaceID_Field = H5Screate_simple( 4, H5_SetDims_Field, NULL );
    if ( H5_SpaceID_Field < 0 )   Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_SpaceID_Field" );
 
    H5_MemDims_Field[0] = 1;
-   H5_MemDims_Field[1] = PATCH_SIZE;
-   H5_MemDims_Field[2] = PATCH_SIZE;
-   H5_MemDims_Field[3] = PATCH_SIZE;
+   H5_MemDims_Field[1] = PS1;
+   H5_MemDims_Field[2] = PS1;
+   H5_MemDims_Field[3] = PS1;
 
    H5_MemID_Field = H5Screate_simple( 4, H5_MemDims_Field, NULL );
-   if ( H5_MemID_Field < 0 )  Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_MemDims_Field" );
+   if ( H5_MemID_Field < 0 )  Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_MemID_Field" );
+
+#  ifdef MHD
+   for (int v=0; v<NCOMP_MAG; v++)
+   {
+      H5_SetDims_FCMag[0] = NPatchAllLv;
+      for (int t=1; t<4; t++)
+      H5_SetDims_FCMag[t] = ( 3-t == v ) ? PS1P1 : PS1;
+
+      H5_SpaceID_FCMag[v] = H5Screate_simple( 4, H5_SetDims_FCMag, NULL );
+      if ( H5_SpaceID_FCMag[v] < 0 )
+         Aux_Error( ERROR_INFO, "failed to create the space \"%s[%d]\" !!\n", "H5_SpaceID_FCMag", v );
+
+      H5_MemDims_FCMag[0] = 1;
+      for (int t=1; t<4; t++)
+      H5_MemDims_FCMag[t] = ( 3-t == v ) ? PS1P1 : PS1;
+
+      H5_MemID_FCMag[v] = H5Screate_simple( 4, H5_MemDims_FCMag, NULL );
+      if ( H5_MemID_FCMag[v] < 0 )
+         Aux_Error( ERROR_INFO, "failed to create the space \"%s[%d]\" !!\n", "H5_MemID_FCMag", v );
+   }
+#  endif // #ifdef MHD
 
 #  ifdef PARTICLE
    H5_SetDims_ParData[0] = amr->Par->NPar_Active_AllRank;
@@ -654,6 +679,14 @@ void Init_ByRestart_HDF5( const char *FileName )
             H5_SetID_Field[v] = H5Dopen( H5_GroupID_GridData, FieldName[v], H5P_DEFAULT );
             if ( H5_SetID_Field[v] < 0 )  Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", FieldName[v] );
          }
+
+#        ifdef MHD
+         for (int v=0; v<NCOMP_MAG; v++)
+         {
+            H5_SetID_FCMag[v] = H5Dopen( H5_GroupID_GridData, FCMagName[v], H5P_DEFAULT );
+            if ( H5_SetID_FCMag[v] < 0 )  Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", FCMagName[v] );
+         }
+#        endif
 
 #        ifdef PARTICLE
          H5_GroupID_Particle = H5Gopen( H5_FileID, "Particle", H5P_DEFAULT );
@@ -692,6 +725,7 @@ void Init_ByRestart_HDF5( const char *FileName )
                for (int GID=GID0; GID<GID0+8; GID++)
                   LoadOnePatch( H5_FileID, lv, GID, Recursive_No, NULL, CrList_AllLv,
                                 H5_SetID_Field, H5_SpaceID_Field, H5_MemID_Field,
+                                H5_SetID_FCMag, H5_SpaceID_FCMag, H5_MemID_FCMag,
                                 NParList_AllLv, ParBuf, NewParList, H5_SetID_ParData, H5_SpaceID_ParData,
                                 GParID_Offset, NParThisRank );
             }
@@ -746,6 +780,7 @@ void Init_ByRestart_HDF5( const char *FileName )
                   CrList_AllLv[GID][2] >= TRange_Min[2]  &&  CrList_AllLv[GID][2] < TRange_Max[2]     )
                LoadOnePatch( H5_FileID, 0, GID, Recursive_Yes, SonList_AllLv, CrList_AllLv,
                              H5_SetID_Field, H5_SpaceID_Field, H5_MemID_Field,
+                             H5_SetID_FCMag, H5_SpaceID_FCMag, H5_MemID_FCMag,
                              NParList_AllLv, ParBuf, NewParList, H5_SetID_ParData, H5_SpaceID_ParData,
                              GParID_Offset, NParThisRank );
          } // for (int GID=0; GID<NPatchTotal[0]; GID++)
@@ -754,6 +789,9 @@ void Init_ByRestart_HDF5( const char *FileName )
 
 //       free resource
          for (int v=0; v<NCOMP_TOTAL; v++)      H5_Status = H5Dclose( H5_SetID_Field[v] );
+#        ifdef MHD
+         for (int v=0; v<NCOMP_MAG;   v++)      H5_Status = H5Dclose( H5_SetID_FCMag[v] );
+#        endif
          H5_Status = H5Gclose( H5_GroupID_GridData );
 
 #        ifdef PARTICLE
@@ -770,6 +808,13 @@ void Init_ByRestart_HDF5( const char *FileName )
 // free HDF5 objects
    H5_Status = H5Sclose( H5_SpaceID_Field );
    H5_Status = H5Sclose( H5_MemID_Field );
+#  ifdef MHD
+   for (int v=0; v<NCOMP_MAG; v++)
+   {
+      H5_Status = H5Sclose( H5_SpaceID_FCMag[v] );
+      H5_Status = H5Sclose( H5_MemID_FCMag  [v] );
+   }
+#  endif
 #  ifdef PARTICLE
    H5_Status = H5Sclose( H5_SpaceID_ParData );
 #  endif
@@ -828,14 +873,14 @@ void Init_ByRestart_HDF5( const char *FileName )
 
    delete [] FieldName;
    delete [] CrList_AllLv;
+#  ifdef MHD
+   delete [] FCMagName;
+#  endif
 #  ifdef LOAD_BALANCE
    delete [] LBIdxList_AllLv;
    for (int lv=0; lv<NLEVEL; lv++)  delete [] LBIdxList_EachLv_IdxTable[lv];
 #  else
    delete [] SonList_AllLv;
-#  endif
-#  ifdef MHD
-   delete [] MagName;
 #  endif
 #  ifdef PARTICLE
    delete [] ParAttName;
@@ -1111,9 +1156,12 @@ herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Ta
 //                SonList            : List of son indices
 //                                     --> Set only when LOAD_BALANCE is not defined
 //                CrList             : List of patch corners
-//                H5_SetID_Field     : HDF5 dataset ID for grid data
-//                H5_SpaceID_Field   : HDF5 dataset dataspace ID for grid data
-//                H5_MemID_Field     : HDF5 memory dataspace ID for grid data
+//                H5_SetID_Field     : HDF5 dataset ID for cell-centered grid data
+//                H5_SpaceID_Field   : HDF5 dataset dataspace ID for cell-centered grid data
+//                H5_MemID_Field     : HDF5 memory dataspace ID for cell-centered grid data
+//                H5_SetID_FCMag     : HDF5 dataset ID for face-centered magnetic field
+//                H5_SpaceID_FCMag   : HDF5 dataset dataspace ID for face-centered magnetic field
+//                H5_MemID_FCMag     : HDF5 memory dataspace ID for face-centered magnetic field
 //                NParList           : List of particle counts
 //                ParBuf             : I/O buffer for loading particle data from the disk
 //                                     --> It must be preallocated with a size equal to the maximum number of
@@ -1131,8 +1179,10 @@ herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Ta
 //                GParID_Offset      : Starting global particle indices for all patches
 //                NParThisRank       : Total number of particles in this rank (for check only)
 //-------------------------------------------------------------------------------------------------------
-void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const bool Recursive, const int *SonList,
-                   const int (*CrList)[3], const hid_t *H5_SetID_Field, const hid_t H5_SpaceID_Field, const hid_t H5_MemID_Field,
+void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const bool Recursive,
+                   const int *SonList, const int (*CrList)[3],
+                   const hid_t *H5_SetID_Field, const hid_t H5_SpaceID_Field, const hid_t H5_MemID_Field,
+                   const hid_t *H5_SetID_FCMag, const hid_t *H5_SpaceID_FCMag, const hid_t *H5_MemID_FCMag,
                    const int *NParList, real **ParBuf, long *NewParList, const hid_t *H5_SetID_ParData,
                    const hid_t H5_SpaceID_ParData, const long *GParID_Offset, const long NParThisRank )
 {
@@ -1140,6 +1190,9 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
    const bool WithData_Yes = true;
 
    hsize_t H5_Count_Field[4], H5_Offset_Field[4];
+#  ifdef MHD
+   hsize_t H5_Count_FCMag[4], H5_Offset_FCMag[4];
+#  endif
    herr_t  H5_Status;
    int     SonGID0, PID;
 
@@ -1156,22 +1209,49 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
    H5_Offset_Field[3] = 0;
 
    H5_Count_Field [0] = 1;
-   H5_Count_Field [1] = PATCH_SIZE;
-   H5_Count_Field [2] = PATCH_SIZE;
-   H5_Count_Field [3] = PATCH_SIZE;
+   H5_Count_Field [1] = PS1;
+   H5_Count_Field [2] = PS1;
+   H5_Count_Field [3] = PS1;
 
    H5_Status = H5Sselect_hyperslab( H5_SpaceID_Field, H5S_SELECT_SET, H5_Offset_Field, NULL, H5_Count_Field, NULL );
    if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to create a hyperslab for the grid data !!\n" );
 
 
-// load field data from disk (potential data, if presented, are ignored and will be recalculated)
+// load cell-centered intrinsic variables from disk
+// --> excluding all derived variables such as gravitational potential and cell-centered B field
    for (int v=0; v<NCOMP_TOTAL; v++)
    {
       H5_Status = H5Dread( H5_SetID_Field[v], H5T_GAMER_REAL, H5_MemID_Field, H5_SpaceID_Field, H5P_DEFAULT,
-                           amr->patch[0][lv][PID]->fluid[v] );
+                           amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v] );
       if ( H5_Status < 0 )
          Aux_Error( ERROR_INFO, "failed to load a field variable (lv %d, GID %d, v %d) !!\n", lv, GID, v );
    }
+
+
+// load face-centered magnetic field from disk
+#  ifdef MHD
+   for (int v=0; v<NCOMP_MAG; v++)
+   {
+//    determine the subset of dataspace for grid data
+      H5_Offset_FCMag[0] = GID;
+      H5_Offset_FCMag[1] = 0;
+      H5_Offset_FCMag[2] = 0;
+      H5_Offset_FCMag[3] = 0;
+
+      H5_Count_FCMag [0] = 1;
+      for (int t=1; t<4; t++)
+      H5_Count_FCMag [t] = ( 3-t == v ) ? PS1P1 : PS1;
+
+      H5_Status = H5Sselect_hyperslab( H5_SpaceID_FCMag[v], H5S_SELECT_SET, H5_Offset_FCMag, NULL, H5_Count_FCMag, NULL );
+      if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to create a hyperslab for the magnetic field %d !!\n", v );
+
+//    load data
+      H5_Status = H5Dread( H5_SetID_FCMag[v], H5T_GAMER_REAL, H5_MemID_FCMag[v], H5_SpaceID_FCMag[v], H5P_DEFAULT,
+                           amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[v] );
+      if ( H5_Status < 0 )
+         Aux_Error( ERROR_INFO, "failed to load magnetic field (lv %d, GID %d, v %d) !!\n", lv, GID, v );
+   } // for (int v=0; v<NCOMP_MAG; v++)
+#  endif // #ifdef MHD
 
 
 // load particle data
@@ -1258,6 +1338,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
          for (int SonGID=SonGID0; SonGID<SonGID0+8; SonGID++)
             LoadOnePatch( H5_FileID, lv+1, SonGID, Recursive, SonList, CrList,
                           H5_SetID_Field, H5_SpaceID_Field, H5_MemID_Field,
+                          H5_SetID_FCMag, H5_SpaceID_FCMag, H5_MemID_FCMag,
                           NParList, ParBuf, NewParList, H5_SetID_ParData, H5_SpaceID_ParData,
                           GParID_Offset, NParThisRank );
       }

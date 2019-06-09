@@ -228,7 +228,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #  endif
 #  ifdef MHD
    hsize_t H5_SetDims_FCMag[4], H5_MemDims_FCMag[4], H5_Count_FCMag[4], H5_Offset_FCMag[4];
-   hid_t   H5_MemID_FCMag, H5_SetID_FCMag, H5_SpaceID_FCMag[3];
+   hid_t   H5_MemID_FCMag, H5_SetID_FCMag, H5_SpaceID_FCMag[NCOMP_MAG];
 #  endif
 
 // 2-1. do NOT write fill values to any dataset for higher I/O performance
@@ -714,7 +714,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 #  ifdef MHD
    const int FCMagSizeOnePatch = sizeof(real)*PS1P1*SQR(PS1);
-   char FCMagName[3][MAX_STRING];
+   char FCMagName[NCOMP_MAG][MAX_STRING];
    real (*FCMagData)[PS1P1*SQR(PS1)] = NULL;
 #  endif
 
@@ -769,9 +769,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 // 5-2. initialize the "GridData" group and the datasets of all fields and magnetic field
    H5_SetDims_Field[0] = NPatchAllLv;
-   H5_SetDims_Field[1] = PATCH_SIZE;
-   H5_SetDims_Field[2] = PATCH_SIZE;
-   H5_SetDims_Field[3] = PATCH_SIZE;
+   H5_SetDims_Field[1] = PS1;
+   H5_SetDims_Field[2] = PS1;
+   H5_SetDims_Field[3] = PS1;
 
    H5_SpaceID_Field = H5Screate_simple( 4, H5_SetDims_Field, NULL );
    if ( H5_SpaceID_Field < 0 )   Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_SpaceID_Field" );
@@ -874,9 +874,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //          5-3-1. dump cell-centered data
 //          5-3-1-1. determine the memory space
             H5_MemDims_Field[0] = amr->NPatchComma[lv][1];
-            H5_MemDims_Field[1] = PATCH_SIZE;
-            H5_MemDims_Field[2] = PATCH_SIZE;
-            H5_MemDims_Field[3] = PATCH_SIZE;
+            H5_MemDims_Field[1] = PS1;
+            H5_MemDims_Field[2] = PS1;
+            H5_MemDims_Field[3] = PS1;
 
             H5_MemID_Field = H5Screate_simple( 4, H5_MemDims_Field, NULL );
             if ( H5_MemID_Field < 0 )  Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_MemDims_Field" );
@@ -889,9 +889,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
             H5_Offset_Field[3] = 0;
 
             H5_Count_Field [0] = amr->NPatchComma[lv][1];
-            H5_Count_Field [1] = PATCH_SIZE;
-            H5_Count_Field [2] = PATCH_SIZE;
-            H5_Count_Field [3] = PATCH_SIZE;
+            H5_Count_Field [1] = PS1;
+            H5_Count_Field [2] = PS1;
+            H5_Count_Field [3] = PS1;
 
             H5_Status = H5Sselect_hyperslab( H5_SpaceID_Field, H5S_SELECT_SET, H5_Offset_Field, NULL, H5_Count_Field, NULL );
             if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to create a hyperslab for the grid data !!\n" );
@@ -1367,7 +1367,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
    KeyInfo.NCompPassive         = NCOMP_PASSIVE;
-   KeyInfo.PatchSize            = PATCH_SIZE;
+   KeyInfo.PatchSize            = PS1;
    KeyInfo.DumpID               = DumpID;
    KeyInfo.Step                 = Step;
 #  ifdef GRAVITY
@@ -1654,7 +1654,7 @@ void FillIn_SymConst( SymConst_t &SymConst )
 // model-independent variables
    SymConst.NCompFluid           = NCOMP_FLUID;
    SymConst.NCompPassive         = NCOMP_PASSIVE;
-   SymConst.PatchSize            = PATCH_SIZE;
+   SymConst.PatchSize            = PS1;
    SymConst.Flu_NIn              = FLU_NIN;
    SymConst.Flu_NOut             = FLU_NOUT;
    SymConst.NFluxFluid           = NFLUX_FLUID;

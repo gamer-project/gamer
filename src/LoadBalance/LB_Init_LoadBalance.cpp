@@ -219,6 +219,10 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const
       if ( amr->WithFlux )
       LB_AllocateFluxArray( lv );
 
+#     ifdef MHD
+#     warning : WAIT MHD !!!
+#     endif
+
 //    5.4 list for exchanging hydro data after the fix-up operation
 //        --> for simplicity and sustainability, we always invoke LB_RecordExchangeFixUpDataPatchID()
 //        --> see the comments 3.2 above
