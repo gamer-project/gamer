@@ -205,12 +205,15 @@ void Init_Unit()
 
 
 
-// set all code units to unity if OPT__UNIT == false (just in case any of UNIT_* is misused)
+// set all code units to unity (except for B field) if OPT__UNIT == false
+// --> just in case any of UNIT_* is misused
+// --> for MHD, we define b = B/(4*pi)^0.5 so that magnetic energy = B^2/(8*pi) = 0.5*b^2,
+//     where "b" is the variable actually used in the code
    else
    {
       UNIT_L = UNIT_M = UNIT_T = UNIT_V = UNIT_D = UNIT_E = UNIT_P = 1.0;
 #     ifdef MHD
-      UNIT_B = 1.0;
+      UNIT_B = sqrt( 4.0*M_PI );
 #     endif
 
 //    check if physical constants are properly set by users
