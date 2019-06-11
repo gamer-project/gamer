@@ -88,6 +88,14 @@ static void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const re
 //                9. For simplicity, currently the mode _TEMP returns **pressure/density**, which does NOT include normalization
 //                   --> For OPT__FLAG_LOHNER_TEMP only
 //                   --> Also note that MinPres is applied to _TEMP when calculating pressure
+//                10. Option "MHD_CHECK_DIV_B" on the top of this file can be used to check the divergence-free constraint
+//                    on the prepared B field
+//                    --> Note that when temporal interpolation is required in InterpolateGhostZone(), it will break div(B)=0 for
+//                        the interpolated fine-grid B field just outside the central patch group
+//                        --> It's because the temporal interpolated B field is in general not equal to the original fine-grid B
+//                            field on the coarse-fine interfaces of the central patch group
+//                        --> It's OK for the MHD solver since it will still guarantee that the updated B field within the patch group
+//                            is divergence free
 //
 // Parameter   :  lv             : Target refinement level
 //                PrepTime       : Target physical time to prepare data
