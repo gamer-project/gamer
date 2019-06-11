@@ -342,8 +342,8 @@ void Poi_StorePotWithGhostZone( const int lv, const int PotSg, const bool AllPat
 
 
 // Tables
-int TABLE_01( const int SibIndex, const char dim, const int w0, const int w1, const int w2 );
-int TABLE_02( const int LocalID, const char dim, const int w0, const int w1 );
+template <typename T> T TABLE_01( const int SibIndex, const char dim, const T w0, const T w1, const T w2 );
+template <typename T> T TABLE_02( const int LocalID, const char dim, const T w0, const T w1 );
 int TABLE_03( const int SibID, const int Count );
 int TABLE_04( const int SibID );
 int TABLE_05( const int SibID );
