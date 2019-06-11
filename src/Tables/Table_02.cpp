@@ -18,7 +18,8 @@
 //
 // Return      :  w0 || w1
 //-------------------------------------------------------------------------------------------------------
-int TABLE_02( const int LocalID, const char dim, const int w0, const int w1 )
+template <typename T>
+T TABLE_02( const int LocalID, const char dim, const T w0, const T w1 )
 {
 
    switch ( dim )
@@ -72,3 +73,11 @@ int TABLE_02( const int LocalID, const char dim, const int w0, const int w1 )
    } // switch ( dim )
 
 } // FUNCTION : TABLE_02
+
+
+// explicit template instantiation
+template float  TABLE_02 <float > ( const int, const char, const float,  const float  );
+template double TABLE_02 <double> ( const int, const char, const double, const double );
+template int    TABLE_02 <int   > ( const int, const char, const int,    const int    );
+template long   TABLE_02 <long  > ( const int, const char, const long,   const long   );
+template bool   TABLE_02 <bool  > ( const int, const char, const bool,   const bool   );
