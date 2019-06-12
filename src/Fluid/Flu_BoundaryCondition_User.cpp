@@ -69,7 +69,7 @@ void BC_User( real fluid[], const double x, const double y, const double z, cons
 // Function    :  Flu_BoundaryCondition_User
 // Description :  Fill up the ghost-zone values by the user-specified boundary condition
 //
-// Note        :  1. Work for Prepare_PatchData(), InterpolateGhostZone(), Refine(), LB_Refine_AllocateNewPatch()
+// Note        :  1. Work for Prepare_PatchData(), InterpolateGhostZone(), Refine(), and LB_Refine_GetNewRealPatchList()
 //                2. The function pointer "BC_User_Ptr" points to BC_User() by default but may be overwritten
 //                   by various test problem initializers
 //
