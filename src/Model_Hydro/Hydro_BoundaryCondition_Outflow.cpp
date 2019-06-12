@@ -93,12 +93,7 @@ void Hydro_BoundaryCondition_Outflow( real *Array, const int BC_Face, const int 
 //
 // Note        :  Work for Hydro_BoundaryCondition_Outflow()
 //
-// Parameter   :  Array          : Array to store the prepared data including ghost zones
-//                NVar           : Number of fluid and derived variables to be prepared
-//                GhostSize      : Number of ghost zones
-//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
-//                Idx_Start      : Minimum array indices
-//                Idx_End        : Maximum array indices
+// Parameter   :  See Hydro_BoundaryCondition_Outflow()
 //
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
@@ -128,12 +123,7 @@ void BC_Outflow_xm( real *Array, const int NVar, const int GhostSize, const int 
 //
 // Note        :  Work for Hydro_BoundaryCondition_Outflow()
 //
-// Parameter   :  Array          : Array to store the prepared data including ghost zones
-//                NVar           : Number of fluid and derived variables to be prepared
-//                GhostSize      : Number of ghost zones
-//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
-//                Idx_Start      : Minimum array indices
-//                Idx_End        : Maximum array indices
+// Parameter   :  See Hydro_BoundaryCondition_Outflow()
 //
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
@@ -163,12 +153,7 @@ void BC_Outflow_xp( real *Array, const int NVar, const int GhostSize, const int 
 //
 // Note        :  Work for Hydro_BoundaryCondition_Outflow()
 //
-// Parameter   :  Array          : Array to store the prepared data including ghost zones
-//                NVar           : Number of fluid and derived variables to be prepared
-//                GhostSize      : Number of ghost zones
-//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
-//                Idx_Start      : Minimum array indices
-//                Idx_End        : Maximum array indices
+// Parameter   :  See Hydro_BoundaryCondition_Outflow()
 //
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
@@ -198,12 +183,7 @@ void BC_Outflow_ym( real *Array, const int NVar, const int GhostSize, const int 
 //
 // Note        :  Work for Hydro_BoundaryCondition_Outflow()
 //
-// Parameter   :  Array          : Array to store the prepared data including ghost zones
-//                NVar           : Number of fluid and derived variables to be prepared
-//                GhostSize      : Number of ghost zones
-//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
-//                Idx_Start      : Minimum array indices
-//                Idx_End        : Maximum array indices
+// Parameter   :  See Hydro_BoundaryCondition_Outflow()
 //
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
@@ -233,12 +213,7 @@ void BC_Outflow_yp( real *Array, const int NVar, const int GhostSize, const int 
 //
 // Note        :  Work for Hydro_BoundaryCondition_Outflow()
 //
-// Parameter   :  Array          : Array to store the prepared data including ghost zones
-//                NVar           : Number of fluid and derived variables to be prepared
-//                GhostSize      : Number of ghost zones
-//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
-//                Idx_Start      : Minimum array indices
-//                Idx_End        : Maximum array indices
+// Parameter   :  See Hydro_BoundaryCondition_Outflow()
 //
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
@@ -268,12 +243,7 @@ void BC_Outflow_zm( real *Array, const int NVar, const int GhostSize, const int 
 //
 // Note        :  Work for Hydro_BoundaryCondition_Outflow()
 //
-// Parameter   :  Array          : Array to store the prepared data including ghost zones
-//                NVar           : Number of fluid and derived variables to be prepared
-//                GhostSize      : Number of ghost zones
-//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
-//                Idx_Start      : Minimum array indices
-//                Idx_End        : Maximum array indices
+// Parameter   :  See Hydro_BoundaryCondition_Outflow()
 //
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
