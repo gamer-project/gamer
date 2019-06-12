@@ -171,6 +171,10 @@ void Aux_Check_Parameter()
 
 #  if ( MODEL != HYDRO )
    for (int f=0; f<6; f++)
+      if ( OPT__BC_FLU[f] == BC_FLU_OUTFLOW )
+         Aux_Error( ERROR_INFO, "outflow boundary condition (OPT__BC_FLU=2) only works with HYDRO !!\n" );
+
+   for (int f=0; f<6; f++)
       if ( OPT__BC_FLU[f] == BC_FLU_REFLECTING )
          Aux_Error( ERROR_INFO, "reflecting boundary condition (OPT__BC_FLU=3) only works with HYDRO !!\n" );
 #  endif
