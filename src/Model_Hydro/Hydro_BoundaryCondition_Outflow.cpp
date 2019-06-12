@@ -23,7 +23,7 @@ static void BC_Outflow_zp( real *Array, const int NVar, const int GhostSize, con
 // Note        :  1. Work for Prepare_PatchData(), InterpolateGhostZone(), Refine(), and LB_Refine_AllocateNewPatch()
 //                2. Specifically, the so-called outflow B.C. is actually the **zero-gradient** B.C.
 //
-// Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
 //                BC_Face        : Boundary face (0~5) --> (-x,+x,-y,+y,-z,+z)
 //                NVar           : Number of fluid and derived variables to be prepared
 //                GhostSize      : Number of ghost zones
@@ -93,7 +93,7 @@ void Hydro_BoundaryCondition_Outflow( real *Array, const int BC_Face, const int 
 //
 // Note        :  Work for Hydro_BoundaryCondition_Outflow()
 //
-// Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
 //                NVar           : Number of fluid and derived variables to be prepared
 //                GhostSize      : Number of ghost zones
 //                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
@@ -128,7 +128,7 @@ void BC_Outflow_xm( real *Array, const int NVar, const int GhostSize, const int 
 //
 // Note        :  Work for Hydro_BoundaryCondition_Outflow()
 //
-// Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
 //                NVar           : Number of fluid and derived variables to be prepared
 //                GhostSize      : Number of ghost zones
 //                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
@@ -163,7 +163,7 @@ void BC_Outflow_xp( real *Array, const int NVar, const int GhostSize, const int 
 //
 // Note        :  Work for Hydro_BoundaryCondition_Outflow()
 //
-// Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
 //                NVar           : Number of fluid and derived variables to be prepared
 //                GhostSize      : Number of ghost zones
 //                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
@@ -198,7 +198,7 @@ void BC_Outflow_ym( real *Array, const int NVar, const int GhostSize, const int 
 //
 // Note        :  Work for Hydro_BoundaryCondition_Outflow()
 //
-// Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
 //                NVar           : Number of fluid and derived variables to be prepared
 //                GhostSize      : Number of ghost zones
 //                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
@@ -233,7 +233,7 @@ void BC_Outflow_yp( real *Array, const int NVar, const int GhostSize, const int 
 //
 // Note        :  Work for Hydro_BoundaryCondition_Outflow()
 //
-// Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
 //                NVar           : Number of fluid and derived variables to be prepared
 //                GhostSize      : Number of ghost zones
 //                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
@@ -268,7 +268,7 @@ void BC_Outflow_zm( real *Array, const int NVar, const int GhostSize, const int 
 //
 // Note        :  Work for Hydro_BoundaryCondition_Outflow()
 //
-// Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
 //                NVar           : Number of fluid and derived variables to be prepared
 //                GhostSize      : Number of ghost zones
 //                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
