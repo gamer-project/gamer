@@ -192,6 +192,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
          Aux_Error( ERROR_INFO, "unsupported parameter FluBC[%d] = %d !!\n", f, FluBC[f] );
 
 #     if ( MODEL != HYDRO )
+      if ( FluBC[f] == BC_FLU_OUTFLOW )
+         Aux_Error( ERROR_INFO, "outflow boundary condition (OPT__BC_FLU=2) only works with HYDRO !!\n" );
+
       if ( FluBC[f] == BC_FLU_REFLECTING )
          Aux_Error( ERROR_INFO, "reflecting boundary condition (OPT__BC_FLU=3) only works with HYDRO !!\n" );
 #     endif
