@@ -963,11 +963,6 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], real Int
 
                switch ( FluBC[ BC_Face[BC_Sibling] ] )
                {
-                  case BC_FLU_OUTFLOW:
-                     Flu_BoundaryCondition_Outflow( CData_Ptr, BC_Face[BC_Sibling], NVar_Flu_IntTime, CGhost,
-                                                    CSize[0], CSize[1], CSize[2], BC_Idx_Start, BC_Idx_End );
-                  break;
-
                   case BC_FLU_USER:
                      Flu_BoundaryCondition_User   ( CData_Ptr,                      NVar_Flu_IntTime,
                                                     CSize[0], CSize[1], CSize[2], BC_Idx_Start, BC_Idx_End,
