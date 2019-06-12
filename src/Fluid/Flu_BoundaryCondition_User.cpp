@@ -73,7 +73,7 @@ void BC_User( real fluid[], const double x, const double y, const double z, cons
 //                2. The function pointer "BC_User_Ptr" points to BC_User() by default but may be overwritten
 //                   by various test problem initializers
 //
-// Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
 //                NVar_Flu       : Number of fluid variables to be prepared (derived variables are NOT included)
 //                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
 //                Idx_Start      : Minimum array indices

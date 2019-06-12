@@ -31,7 +31,7 @@ static void BC_Reflecting_zp( real *Array, const int NVar_Flu, const int TFluVar
 // Note        :  1. Work for Prepare_PatchData(), InterpolateGhostZone(), Refine(), and LB_Refine_AllocateNewPatch()
 //                2. Similar to the outflow (i.e., zero-gradient) B.C. except that the normal vecotor components change sign
 //
-// Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
 //                BC_Face        : Boundary face (0~5) --> (-x,+x,-y,+y,-z,+z)
 //                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
 //                GhostSize      : Number of ghost zones
@@ -124,7 +124,7 @@ void Hydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const i
 // Note        :  1. Work for the function "Hydro_BoundaryCondition_Reflecting"
 //                2. Use the input parameter "NVar_Flu" and "TFluVarIdxList" to control the target fluid variables
 //
-// Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
 //                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
 //                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
 //                NVar_Der       : Number of derived variables to be prepared
@@ -214,7 +214,7 @@ void BC_Reflecting_xm( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // Note        :  1. Work for the function "Hydro_BoundaryCondition_Reflecting"
 //                2. Use the input parameter "NVar_Flu" and "TFluVarIdxList" to control the target fluid variables
 //
-// Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
 //                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
 //                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
 //                NVar_Der       : Number of derived variables to be prepared
@@ -304,7 +304,7 @@ void BC_Reflecting_xp( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // Note        :  1. Work for the function "Hydro_BoundaryCondition_Reflecting"
 //                2. Use the input parameter "NVar_Flu" and "TFluVarIdxList" to control the target fluid variables
 //
-// Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
 //                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
 //                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
 //                NVar_Der       : Number of derived variables to be prepared
@@ -394,7 +394,7 @@ void BC_Reflecting_ym( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // Note        :  1. Work for the function "Hydro_BoundaryCondition_Reflecting"
 //                2. Use the input parameter "NVar_Flu" and "TFluVarIdxList" to control the target fluid variables
 //
-// Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
 //                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
 //                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
 //                NVar_Der       : Number of derived variables to be prepared
@@ -484,7 +484,7 @@ void BC_Reflecting_yp( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // Note        :  1. Work for the function "Hydro_BoundaryCondition_Reflecting"
 //                2. Use the input parameter "NVar_Flu" and "TFluVarIdxList" to control the target fluid variables
 //
-// Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
 //                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
 //                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
 //                NVar_Der       : Number of derived variables to be prepared
@@ -574,7 +574,7 @@ void BC_Reflecting_zm( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // Note        :  1. Work for the function "Hydro_BoundaryCondition_Reflecting"
 //                2. Use the input parameter "NVar_Flu" and "TFluVarIdxList" to control the target fluid variables
 //
-// Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
 //                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
 //                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
 //                NVar_Der       : Number of derived variables to be prepared
