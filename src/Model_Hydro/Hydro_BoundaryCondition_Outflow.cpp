@@ -20,7 +20,7 @@ static void BC_Outflow_zp( real *Array, const int NVar, const int GhostSize, con
 // Function    :  Hydro_BoundaryCondition_Outflow
 // Description :  Fill up the ghost-zone values by the outflow B.C.
 //
-// Note        :  1. Work for Prepare_PatchData(), InterpolateGhostZone(), Refine(), and LB_Refine_AllocateNewPatch()
+// Note        :  1. Work for Prepare_PatchData(), InterpolateGhostZone(), Refine(), and LB_Refine_GetNewRealPatchList()
 //                2. Specifically, the so-called outflow B.C. is actually the **zero-gradient** B.C.
 //
 // Parameter   :  Array          : Array to store the prepared data including ghost zones
