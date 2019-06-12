@@ -849,12 +849,12 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          {
             switch ( FluBC[ BC_Face[BC_Sibling] ] )
             {
+#              if ( MODEL == HYDRO )
                case BC_FLU_OUTFLOW:
-                  Flu_BoundaryCondition_Outflow     ( CData_CC_Ptr, BC_Face[BC_Sibling], NVarCC_Flu+NVarCC_Der, CGhost_CC,
+                  Hydro_BoundaryCondition_Outflow   ( CData_CC_Ptr, BC_Face[BC_Sibling], NVarCC_Flu+NVarCC_Der, CGhost_CC,
                                                       CSize_CC[0], CSize_CC[1], CSize_CC[2], BC_Idx_Start, BC_Idx_End );
                break;
 
-#              if ( MODEL == HYDRO )
                case BC_FLU_REFLECTING:
                   Hydro_BoundaryCondition_Reflecting( CData_CC_Ptr, BC_Face[BC_Sibling], NVarCC_Flu,          CGhost_CC,
                                                       CSize_CC[0], CSize_CC[1], CSize_CC[2], BC_Idx_Start, BC_Idx_End,

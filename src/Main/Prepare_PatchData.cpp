@@ -241,6 +241,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
          Aux_Error( ERROR_INFO, "unsupported parameter FluBC[%d] = %d !!\n", f, FluBC[f] );
 
 #     if ( MODEL != HYDRO )
+      if ( FluBC[f] == BC_FLU_OUTFLOW )
+         Aux_Error( ERROR_INFO, "outflow boundary condition (OPT__BC_FLU=2) only works with HYDRO !!\n" );
+
       if ( FluBC[f] == BC_FLU_REFLECTING )
          Aux_Error( ERROR_INFO, "reflecting boundary condition (OPT__BC_FLU=3) only works with HYDRO !!\n" );
 #     endif
@@ -1499,12 +1502,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                {
                   switch ( FluBC[ BC_Face[BC_Sibling] ] )
                   {
+#                    if ( MODEL == HYDRO )
                      case BC_FLU_OUTFLOW:
-                        Flu_BoundaryCondition_Outflow     ( Data1PG_CC_Ptr, BC_Face[BC_Sibling], NVarCC_Flu+NVarCC_Der, GhostSize,
+                        Hydro_BoundaryCondition_Outflow   ( Data1PG_CC_Ptr, BC_Face[BC_Sibling], NVarCC_Flu+NVarCC_Der, GhostSize,
                                                             PGSize1D_CC, PGSize1D_CC, PGSize1D_CC, BC_Idx_Start, BC_Idx_End );
                      break;
 
-#                    if ( MODEL == HYDRO )
                      case BC_FLU_REFLECTING:
                         Hydro_BoundaryCondition_Reflecting( Data1PG_CC_Ptr, BC_Face[BC_Sibling], NVarCC_Flu,            GhostSize,
                                                             PGSize1D_CC, PGSize1D_CC, PGSize1D_CC, BC_Idx_Start, BC_Idx_End,
