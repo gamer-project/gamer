@@ -215,7 +215,7 @@ real SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real 
 #  endif
 
 
-// if encounter overfolw because temperature is too high, we simply set Gamma = 4/3.
+// if overfolw due to high temperature, we simply set Gamma = 4/3.
    if ( h != h ) 
    {   
         real Gamma_m1 = Gamma - (real)1.0;
@@ -456,10 +456,10 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
 // check energy
       Msqr = VectorDotProduct( ConsVar[MOMX], ConsVar[MOMY], ConsVar[MOMZ] );
 #     if ( CONSERVED_ENERGY == 1 )
-      discriminant = FMA(ConsVar[ENGY], ConsVar[ENGY], - Msqr - SQR(ConsVar[DENS]));
+      discriminant = ( SQR( ConsVar[ENGY] ) - SQR( Msqr ) ) / SQR ( ConsVar[DENS] );
       if ( discriminant <= (real) TINY_NUMBER )                                                   goto FAIL;
 #     elif ( CONSERVED_ENERGY == 2 )
-      discriminant = SQR(ConsVar[ENGY]) + 2*ConsVar[ENGY]*ConsVar[DENS] - Msqr;
+      discriminant = SQR(ConsVar[ENGY]/ConsVar[DENS]) + 2*(ConsVar[ENGY]/ConsVar[DENS]) - Msqr/SQR(ConsVar[DENS]);
       if ( discriminant <= TINY_NUMBER )                                                   goto FAIL;
 #     else
 #     error: CONSERVED_ENERGY must be 1 or 2!
@@ -556,19 +556,25 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
       {
         if ( show ) 
          {
-            printf( "\n\nfunction: %s: %d\n", s, line);
+           printf( "\n\nfunction: %s: %d\n", s, line);
  
-            printf( "D=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n",
-                                 ConsVar[DENS], ConsVar[MOMX], ConsVar[MOMY], ConsVar[MOMZ], ConsVar[ENGY]);
-#           if ( CONSERVED_ENERGY == 1 )
-            printf( "E^2-|M|^2-D^2=%14.7e\n", discriminant );
-#           elif ( CONSERVED_ENERGY == 2 )
-            printf( "E^2+2*E*D-|M|^2=%14.7e\n", discriminant );
-#           endif
-            printf( "n=%14.7e, Ux=%14.7e, Uy=%14.7e, Uz=%14.7e, P=%14.7e\n", 
-                                 Pri4Vel[0], Pri4Vel[1], Pri4Vel[2], Pri4Vel[3], Pri4Vel[4]);
-            printf( "Vx=%14.7e, Vy=%14.7e, Vz=%14.7e, |V|=%14.7e\n",
-                                 Pri3Vel[1], Pri3Vel[2], Pri3Vel[3], SQRT( VectorDotProduct( Pri3Vel[1], Pri3Vel[2], Pri3Vel[3] )));
+           if ( Con != NULL && Pri == NULL)
+           {
+              printf( "D=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n",
+                                   ConsVar[DENS], ConsVar[MOMX], ConsVar[MOMY], ConsVar[MOMZ], ConsVar[ENGY]);
+#             if ( CONSERVED_ENERGY == 1 )
+              printf( "(E^2-|M|^2)/D^2=%14.7e\n", discriminant );
+#             elif ( CONSERVED_ENERGY == 2 )
+              printf( "E^2+2*E*D-|M|^2=%14.7e\n", discriminant );
+#             endif
+           }
+           else
+           {
+              printf( "n=%14.7e, Ux=%14.7e, Uy=%14.7e, Uz=%14.7e, P=%14.7e\n", 
+                                   Pri4Vel[0], Pri4Vel[1], Pri4Vel[2], Pri4Vel[3], Pri4Vel[4]);
+              printf( "Vx=%14.7e, Vy=%14.7e, Vz=%14.7e, |V|=%14.7e\n",
+                                   Pri3Vel[1], Pri3Vel[2], Pri3Vel[3], SQRT( VectorDotProduct( Pri3Vel[1], Pri3Vel[2], Pri3Vel[3] )));
+           }
  
           }
         return true;
