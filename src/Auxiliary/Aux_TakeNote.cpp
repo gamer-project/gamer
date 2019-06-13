@@ -624,6 +624,7 @@ void Aux_TakeNote()
       fprintf( Note, "#define MAX_STRING              %d\n",      MAX_STRING          );
       fprintf( Note, "#define TINY_NUMBER             %20.14e\n", TINY_NUMBER         );
       fprintf( Note, "#define HUGE_NUMBER             %20.14e\n", HUGE_NUMBER         );
+      fprintf( Note, "#define EPSILON                 %20.14e\n", EPSILON             );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 
