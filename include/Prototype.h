@@ -432,6 +432,9 @@ void MHD_AllocateElectricArray( const int lv );
 void MHD_Aux_Check_InterfaceB( const char *comment );
 void MHD_Aux_Check_DivergenceB( const bool Verbose, const char *comment );
 void MHD_FixUp_Electric( const int lv );
+void MHD_BoundaryCondition_Outflow( real **Array, const int BC_Face, const int NVar, const int GhostSize,
+                                    const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
+                                    const int Idx_Start[], const int Idx_End[], const int TVarIdxList[] );
 #endif
 
 

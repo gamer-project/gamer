@@ -1479,6 +1479,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
             else if ( SibPID0 <= SIB_OFFSET_NONPERIODIC )
             {
                Data1PG_CC_Ptr = Data1PG_CC;
+               Data1PG_FC_Ptr = Data1PG_FC;
 
                for (int d=0; d<3; d++)
                {
@@ -1544,8 +1545,45 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 //             (b3-3) B.C. for face-centered variables (i.e., magnetic field)
 #              ifdef MHD
-#              warning : WAIT MHD !!!
-#              endif
+               if ( NVarFC_Tot > 0 )
+               {
+                  real *MagDataPtr[NCOMP_MAG] = { NULL, NULL, NULL };
+                  for (int v=0; v<NVarFC_Tot; v++)
+                  {
+                     MagDataPtr[ TVarFCIdxList[v] ] = Data1PG_FC_Ptr;
+                     Data1PG_FC_Ptr                += PGSize3D_FC;
+                  }
+
+                  switch ( FluBC[ BC_Face[BC_Sibling] ] )
+                  {
+//                   input PGSize1D_CC instead PGSize1D_FC for the MHD boundary condition routines
+                     case BC_FLU_OUTFLOW:
+                        MHD_BoundaryCondition_Outflow   ( MagDataPtr, BC_Face[BC_Sibling], NVarFC_Tot, GhostSize,
+                                                          PGSize1D_CC, PGSize1D_CC, PGSize1D_CC, BC_Idx_Start, BC_Idx_End,
+                                                          TVarFCIdxList );
+                     break;
+
+                     /*
+                     case BC_FLU_REFLECTING:
+                        MHD_BoundaryCondition_Reflecting( MagDataPtr, BC_Face[BC_Sibling], NVarFC_Tot, GhostSize,
+                                                          PGSize1D_CC, PGSize1D_CC, PGSize1D_CC, BC_Idx_Start, BC_Idx_End,
+                                                          TVarFCIdxList );
+                     break;
+                     */
+
+                     /*
+                     case BC_FLU_USER:
+                        MHD_BoundaryCondition_User      ( MagDataPtr,                      NVarFC_Tot,
+                                                          PGSize1D_CC, PGSize1D_CC, PGSize1D_CC, BC_Idx_Start, BC_Idx_End,
+                                                          TVarFCIdxList, PrepTime, dh, xyz0, lv );
+                     break;
+                     */
+
+                     default:
+                        Aux_Error( ERROR_INFO, "unsupported magnetic field B.C. (%d) !!\n", FluBC[ BC_Face[BC_Sibling] ] );
+                  } // switch ( FluBC[ BC_Face[BC_Sibling] ] )
+               } // if ( NVarFC_Tot > 0 )
+#              endif // #ifdef MHD
 
             } // else if ( SibPID0 <= SIB_OFFSET_NONPERIODIC )
 
