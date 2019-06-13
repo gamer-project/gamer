@@ -456,10 +456,10 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
 // check energy
       Msqr = VectorDotProduct( ConsVar[MOMX], ConsVar[MOMY], ConsVar[MOMZ] );
 #     if ( CONSERVED_ENERGY == 1 )
-      discriminant = ( SQR( ConsVar[ENGY] ) - SQR( Msqr ) ) / SQR ( ConsVar[DENS] );
-      if ( discriminant <= (real) TINY_NUMBER )                                                   goto FAIL;
+      discriminant = ( SQR( ConsVar[ENGY] ) -  Msqr ) / SQR ( ConsVar[DENS] );
+      if ( discriminant <= (real)1.0 )                                                        goto FAIL;
 #     elif ( CONSERVED_ENERGY == 2 )
-      discriminant = SQR(ConsVar[ENGY]/ConsVar[DENS]) + 2*(ConsVar[ENGY]/ConsVar[DENS]) - Msqr/SQR(ConsVar[DENS]);
+      discriminant = SQR(ConsVar[ENGY]/ConsVar[DENS]) + (real)2*(ConsVar[ENGY]/ConsVar[DENS]) - Msqr/SQR(ConsVar[DENS]);
       if ( discriminant <= TINY_NUMBER )                                                   goto FAIL;
 #     else
 #     error: CONSERVED_ENERGY must be 1 or 2!
@@ -538,11 +538,11 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
 // check energy
       Msqr = VectorDotProduct( ConsVar[MOMX], ConsVar[MOMY], ConsVar[MOMZ] );
 #     if ( CONSERVED_ENERGY == 1 )
-      discriminant = FMA(ConsVar[ENGY], ConsVar[ENGY], - Msqr - SQR(ConsVar[DENS]));
-      if ( discriminant <= (real) TINY_NUMBER )                                              goto FAIL;
+      discriminant = ( SQR( ConsVar[ENGY] ) - Msqr ) / SQR ( ConsVar[DENS] );
+      if ( discriminant <= (real)1.0 )                                                   goto FAIL;
 #     elif ( CONSERVED_ENERGY == 2 )
-      discriminant = SQR(ConsVar[ENGY]) + 2*ConsVar[ENGY]*ConsVar[DENS] - Msqr;
-      if ( discriminant <= TINY_NUMBER )                                              goto FAIL;
+      discriminant = SQR(ConsVar[ENGY]/ConsVar[DENS]) + (real)2*(ConsVar[ENGY]/ConsVar[DENS]) - Msqr/SQR(ConsVar[DENS]);
+      if ( discriminant <= TINY_NUMBER )                                                   goto FAIL;
 #     else
 #     error: CONSERVED_ENERGY must be 1 or 2!
 #     endif      
