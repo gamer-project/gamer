@@ -34,7 +34,7 @@ real (*Init_Function_BField_User_Ptr)( const int comp, const double x, const dou
 //                   --> The function pointer may be reset by various test problem initializers, in which case
 //                       this funtion will become useless
 //                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
-//                   (uless OPT__INIT_GRID_WITH_OMP is disabled)
+//                   (unless OPT__INIT_GRID_WITH_OMP is disabled)
 //                   --> Please ensure that everything here is thread-safe
 //                3. Even when DUAL_ENERGY is adopted, one does NOT need to set the dual-energy variable here
 //                   --> It will be set automatically in Hydro_Init_ByFunction_AssignData()
@@ -89,7 +89,7 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
 //                       --> Cartesian   coordinates: B_x, B_y, or B_z
 //                       --> Cylindrical coordinates: B_r, B_phi, or B_z
 //
-// Parameter   :  comp     : Target magnetic field component (0/1/2 -> B_X/B_Y/B_Z)
+// Parameter   :  comp     : Target magnetic field component (MAGX/Y/Z -> B_X/Y/Z)
 //                x/y/z    : Target physical coordinates
 //                Time     : Target physical time
 //                lv       : Target refinement level
@@ -106,17 +106,17 @@ real Init_Function_BField_User( const int comp, const double x, const double y, 
    switch ( comp )
    {
 //    B_X
-      case 0:
+      case MAGX:
          B_comp = (real)1.0;
          break;
 
 //    B_Y
-      case 1:
+      case MAGY:
          B_comp = (real)2.0;
          break;
 
 //    B_Z
-      case 2:
+      case MAGZ:
          B_comp = (real)3.0;
          break;
 
