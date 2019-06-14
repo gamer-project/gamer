@@ -162,6 +162,7 @@ void SetParameter()
 // Note        :  1. This function may also be used to estimate the numerical errors when OPT__OUTPUT_USER is enabled
 //                   --> In this case, it should provide the analytical solution at the given "Time"
 //                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
+//                   (unless OPT__INIT_GRID_WITH_OMP is disabled)
 //                   --> Please ensure that everything here is thread-safe
 //                3. Even when DUAL_ENERGY is adopted for HYDRO, one does NOT need to set the dual-energy variable here
 //                   --> It will be calculated automatically
@@ -188,6 +189,65 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    */
 
 } // FUNCTION : SetGridIC
+
+
+
+#ifdef MHD
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SetBFieldIC
+// Description :  Set the problem-specific initial condition of magnetic field
+//
+// Note        :  1. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
+//                   (unless OPT__INIT_GRID_WITH_OMP is disabled)
+//                   --> Please ensure that everything here is thread-safe
+//                2. Only return one magnetic field component at a time
+//                   --> Target component is specified by "comp"
+//                   --> Return either B_X, B_Y, or B_Z, where X/Y/Z depends on the adopted coordinate system
+//                       --> Cartesian   coordinates: B_x, B_y, or B_z
+//                       --> Cylindrical coordinates: B_r, B_phi, or B_z
+//
+// Parameter   :  comp     : Target magnetic field component (MAGX/Y/Z -> B_X/Y/Z)
+//                x/y/z    : Target physical coordinates
+//                Time     : Target physical time
+//                lv       : Target refinement level
+//                AuxArray : Auxiliary array
+//
+// Return      :  B_comp
+//-------------------------------------------------------------------------------------------------------
+real SetBFieldIC( const int comp, const double x, const double y, const double z, const double Time,
+                  const int lv, double AuxArray[] )
+{
+
+   real B_comp = NULL_REAL;
+
+   /*
+// example
+   switch ( comp )
+   {
+//    B_X
+      case MAGX:
+         B_comp = 1.0;
+         break;
+
+//    B_Y
+      case MAGY:
+         B_comp = 1.0;
+         break;
+
+//    B_Z
+      case MAGZ:
+         B_comp = 1.0;
+         break;
+
+      default :
+         Aux_Error( ERROR_INFO, "incorrect B field component (%d) !!\n", comp );
+   } // switch ( comp )
+   */
+
+   return B_comp;
+
+} // FUNCTION : SetBFieldIC
+#endif // #ifdef MHD
 #endif // #if ( MODEL == HYDRO )
 
 
@@ -225,6 +285,9 @@ void Init_TestProb_Template()
 // 4. enable the corresponding runtime option in "Input__Parameter"
 //    --> for instance, enable OPT__OUTPUT_USER for Output_User_Ptr
    Init_Function_User_Ptr         = SetGridIC;
+#  ifdef MHD
+   Init_Function_BField_User_Ptr  = SetBFieldIC;
+#  endif
    Init_Field_User_Ptr            = NULL; // set NCOMP_PASSIVE_USER;          example: TestProblem/Hydro/Plummer/Init_TestProb_Hydro_Plummer.cpp --> AddNewField()
    Flag_User_Ptr                  = NULL; // option: OPT__FLAG_USER;          example: Refine/Flag_User.cpp
    Mis_GetTimeStep_User_Ptr       = NULL; // option: OPT__DT_USER;            example: Miscellaneous/Mis_GetTimeStep_User.cpp
