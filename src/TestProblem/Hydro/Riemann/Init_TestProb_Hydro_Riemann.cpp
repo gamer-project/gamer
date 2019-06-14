@@ -17,12 +17,14 @@ const Riemann_t
 static Riemann_t Riemann_Prob;         // target Riemann problem
 static char      Riemann_Name[100];    // name of the target Riemann problem
 static real      Riemann_RhoL;         // left-state density
-static real      Riemann_VelL;         // left-state velocity
-static real      Riemann_VelL_T;       // left-state transverse velocity
+static real      Riemann_VelL;         // left-state longitidual velocity
+static real      Riemann_VelL_T1;      // left-state transverse velocity 1
+static real      Riemann_VelL_T2;      // left-state transverse velocity 2
 static real      Riemann_PreL;         // left-state pressure
 static real      Riemann_RhoR;         // right-state density
-static real      Riemann_VelR;         // right-state velocity
-static real      Riemann_VelR_T;       // right-state transverse velocity
+static real      Riemann_VelR;         // right-state longitidual velocity
+static real      Riemann_VelR_T1;      // right-state transverse velocity 1
+static real      Riemann_VelR_T2;      // right-state transverse velocity 2
 static real      Riemann_PreR;         // right-state pressure
 static double    Riemann_EndT;         // end physical time
 static int       Riemann_LR;           // wave propagation direction (>0/<0 --> positive/negative direction)
@@ -114,38 +116,38 @@ void SetParameter()
 // (1-2) set the default values
    switch ( Riemann_Prob )
    {
-      case SOD_SHOCK_TUBE : Riemann_RhoL = 1.0;    Riemann_VelL = 0.0;  Riemann_PreL = 1.0;  Riemann_VelL_T = 0.0;
-                            Riemann_RhoR = 0.125;  Riemann_VelR = 0.0;  Riemann_PreR = 0.1;  Riemann_VelR_T = 0.0;
+      case SOD_SHOCK_TUBE : Riemann_RhoL = 1.0;    Riemann_VelL = 0.0;  Riemann_PreL = 1.0;  Riemann_VelL_T1 = 0.0;  Riemann_VelL_T2 = 0.0;
+                            Riemann_RhoR = 0.125;  Riemann_VelR = 0.0;  Riemann_PreR = 0.1;  Riemann_VelR_T1 = 0.0;  Riemann_VelR_T2 = 0.0;
                             Riemann_EndT = 0.1;
                             sprintf( Riemann_Name, "Sod's shock tube" );
                             break;
 
-      case STRONG_SHOCK   : Riemann_RhoL = 1250.0;  Riemann_VelL = 0.0;  Riemann_PreL = 500.0;  Riemann_VelL_T = 0.0;
-                            Riemann_RhoR =  125.0;  Riemann_VelR = 0.0;  Riemann_PreR =   5.0;  Riemann_VelR_T = 0.0;
+      case STRONG_SHOCK   : Riemann_RhoL = 1250.0;  Riemann_VelL = 0.0;  Riemann_PreL = 500.0;  Riemann_VelL_T1 = 0.0;  Riemann_VelL_T2 = 0.0;
+                            Riemann_RhoR =  125.0;  Riemann_VelR = 0.0;  Riemann_PreR =   5.0;  Riemann_VelR_T1 = 0.0;  Riemann_VelR_T2 = 0.0;
                             Riemann_EndT = 0.4;
                             sprintf( Riemann_Name, "strong shock" );
                             break;
 
-      case TWO_SHOCKS     : Riemann_RhoL = 1.0;  Riemann_VelL = 3.0;  Riemann_PreL = 1.0;  Riemann_VelL_T = 0.0;
-                            Riemann_RhoR = 2.0;  Riemann_VelR = 1.0;  Riemann_PreR = 1.0;  Riemann_VelR_T = 0.0;
+      case TWO_SHOCKS     : Riemann_RhoL = 1.0;  Riemann_VelL = 3.0;  Riemann_PreL = 1.0;  Riemann_VelL_T1 = 0.0;  Riemann_VelL_T2 = 0.0;
+                            Riemann_RhoR = 2.0;  Riemann_VelR = 1.0;  Riemann_PreR = 1.0;  Riemann_VelR_T1 = 0.0;  Riemann_VelR_T2 = 0.0;
                             Riemann_EndT = 0.1;
                             sprintf( Riemann_Name, "two shocks" );
                             break;
 
-      case EINFELDT_1203  : Riemann_RhoL = 1.0;  Riemann_VelL = -2.0;  Riemann_PreL = GAMMA-1.0;  Riemann_VelL_T = 0.0;
-                            Riemann_RhoR = 1.0;  Riemann_VelR = +2.0;  Riemann_PreR = GAMMA-1.0;  Riemann_VelR_T = 0.0;
+      case EINFELDT_1203  : Riemann_RhoL = 1.0;  Riemann_VelL = -2.0;  Riemann_PreL = GAMMA-1.0;  Riemann_VelL_T1 = 0.0;  Riemann_VelL_T2 = 0.0;
+                            Riemann_RhoR = 1.0;  Riemann_VelR = +2.0;  Riemann_PreR = GAMMA-1.0;  Riemann_VelR_T1 = 0.0;  Riemann_VelR_T2 = 0.0;
                             Riemann_EndT = 0.1;
                             sprintf( Riemann_Name, "Einfeldt's 1-2-0-3" );
                             break;
 
-      case EINFELDT_1125  : Riemann_RhoL = 1.0;  Riemann_VelL = -1.0;  Riemann_PreL = 2.5*(GAMMA-1.0);  Riemann_VelL_T = -2.0;
-                            Riemann_RhoR = 1.0;  Riemann_VelR = +1.0;  Riemann_PreR = 2.5*(GAMMA-1.0);  Riemann_VelR_T = +2.0;
+      case EINFELDT_1125  : Riemann_RhoL = 1.0;  Riemann_VelL = -1.0;  Riemann_PreL = 2.5*(GAMMA-1.0);  Riemann_VelL_T1 = -2.0;  Riemann_VelL_T2 = 0.0;
+                            Riemann_RhoR = 1.0;  Riemann_VelR = +1.0;  Riemann_PreR = 2.5*(GAMMA-1.0);  Riemann_VelR_T1 = +2.0;  Riemann_VelR_T2 = 0.0;
                             Riemann_EndT = 0.1;
                             sprintf( Riemann_Name, "Einfeldt's 1-1-2-5" );
                             break;
 
-      case SONIC_RARE     : Riemann_RhoL = 1.0;    Riemann_VelL = 0.75;  Riemann_PreL = 1.0;  Riemann_VelL_T = 0.0;
-                            Riemann_RhoR = 0.125;  Riemann_VelR = 0.0;   Riemann_PreR = 0.1;  Riemann_VelR_T = 0.0;
+      case SONIC_RARE     : Riemann_RhoL = 1.0;    Riemann_VelL = 0.75;  Riemann_PreL = 1.0;  Riemann_VelL_T1 = 0.0;  Riemann_VelL_T2 = 0.0;
+                            Riemann_RhoR = 0.125;  Riemann_VelR = 0.0;   Riemann_PreR = 0.1;  Riemann_VelR_T1 = 0.0;  Riemann_VelR_T2 = 0.0;
                             Riemann_EndT = 0.1;
                             sprintf( Riemann_Name, "sonic rarefaction wave" );
                             break;
@@ -187,19 +189,21 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID                 = %d\n",     TESTPROB_ID );
-      Aux_Message( stdout, "  target Riemann problem          = %s\n",     Riemann_Name );
-      Aux_Message( stdout, "  left-state density              = %13.7e\n", Riemann_RhoL );
-      Aux_Message( stdout, "  left-state velocity             = %13.7e\n", Riemann_VelL );
-      Aux_Message( stdout, "  left-state transverse velocity  = %13.7e\n", Riemann_VelL_T );
-      Aux_Message( stdout, "  left-state pressure             = %13.7e\n", Riemann_PreL );
-      Aux_Message( stdout, "  right-state density             = %13.7e\n", Riemann_RhoR );
-      Aux_Message( stdout, "  right-state velocity            = %13.7e\n", Riemann_VelR );
-      Aux_Message( stdout, "  right-state transverse velocity = %13.7e\n", Riemann_VelR_T );
-      Aux_Message( stdout, "  right-state pressure            = %13.7e\n", Riemann_PreR );
-      Aux_Message( stdout, "  propagation direction           = %s%s\n",   ( Riemann_LR > 0 ) ? "+" : "-",
-                                                                           ( Riemann_XYZ == 0 ) ? "x" :
-                                                                           ( Riemann_XYZ == 1 ) ? "y" : "z" );
+      Aux_Message( stdout, "  test problem ID                   = %d\n",     TESTPROB_ID );
+      Aux_Message( stdout, "  target Riemann problem            = %s\n",     Riemann_Name );
+      Aux_Message( stdout, "  left-state density                = %13.7e\n", Riemann_RhoL );
+      Aux_Message( stdout, "  left-state longitudial velocity   = %13.7e\n", Riemann_VelL );
+      Aux_Message( stdout, "  left-state transverse velocity 1  = %13.7e\n", Riemann_VelL_T1 );
+      Aux_Message( stdout, "  left-state transverse velocity 2  = %13.7e\n", Riemann_VelL_T2 );
+      Aux_Message( stdout, "  left-state pressure               = %13.7e\n", Riemann_PreL );
+      Aux_Message( stdout, "  right-state density               = %13.7e\n", Riemann_RhoR );
+      Aux_Message( stdout, "  right-state longitudial velocity  = %13.7e\n", Riemann_VelR );
+      Aux_Message( stdout, "  right-state transverse velocity 1 = %13.7e\n", Riemann_VelR_T1 );
+      Aux_Message( stdout, "  right-state transverse velocity 2 = %13.7e\n", Riemann_VelR_T2 );
+      Aux_Message( stdout, "  right-state pressure              = %13.7e\n", Riemann_PreR );
+      Aux_Message( stdout, "  propagation direction             = %s%s\n",   ( Riemann_LR > 0 ) ? "+" : "-",
+                                                                             ( Riemann_XYZ == 0 ) ? "x" :
+                                                                             ( Riemann_XYZ == 1 ) ? "y" : "z" );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -250,8 +254,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    {
       fluid[ TVar[0] ] = Riemann_RhoL;
       fluid[ TVar[1] ] = Riemann_RhoL*Riemann_VelL;
-      fluid[ TVar[2] ] = Riemann_RhoL*Riemann_VelL_T;
-      fluid[ TVar[3] ] = 0.0;
+      fluid[ TVar[2] ] = Riemann_RhoL*Riemann_VelL_T1;
+      fluid[ TVar[3] ] = Riemann_RhoL*Riemann_VelL_T2;
       fluid[ TVar[4] ] = 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) )/fluid[DENS] + Riemann_PreL*_Gamma_m1;
    }
 
@@ -259,15 +263,16 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    {
       fluid[ TVar[0] ] = Riemann_RhoR;
       fluid[ TVar[1] ] = Riemann_RhoR*Riemann_VelR;
-      fluid[ TVar[2] ] = Riemann_RhoR*Riemann_VelR_T;
-      fluid[ TVar[3] ] = 0.0;
+      fluid[ TVar[2] ] = Riemann_RhoR*Riemann_VelR_T1;
+      fluid[ TVar[3] ] = Riemann_RhoR*Riemann_VelR_T2;
       fluid[ TVar[4] ] = 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) )/fluid[DENS] + Riemann_PreR*_Gamma_m1;
    }
 
    if ( Riemann_LR < 0 )
    {
-      fluid[ TVar[1] ] = -fluid[ TVar[1] ];
-      fluid[ TVar[2] ] = -fluid[ TVar[2] ];
+      fluid[ TVar[1] ] *= -1.0;
+      fluid[ TVar[2] ] *= -1.0;
+      fluid[ TVar[3] ] *= -1.0;
    }
 
 } // FUNCTION : SetGridIC
