@@ -206,7 +206,7 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
             for (int jj=0; jj<sub_end[1]; jj++)    {  y = y0 + jj*dh_sub;
             for (int ii=0; ii<sub_end[0]; ii++)    {  x = x0 + ii*dh_sub;
 
-               B_sub += Init_Function_BField_User( v, x, y, z, Time[lv], lv, NULL );
+               B_sub += Init_Function_BField_User_Ptr( v, x, y, z, Time[lv], lv, NULL );
 
             }}}
 
