@@ -15,6 +15,7 @@ const Riemann_t
   ,SONIC_RARE     = 5
 #ifdef MHD
   ,RJ2A           = 6
+  ,TORRILHON      = 7
 #endif
   ;
 
@@ -117,7 +118,7 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "Riemann_Prob",      &Riemann_Prob,          -1,            0,                6                 );
+   ReadPara->Add( "Riemann_Prob",      &Riemann_Prob,          -1,            0,                7                 );
    ReadPara->Add( "Riemann_LR",        &Riemann_LR,             1,            NoMin_int,        NoMax_int         );
    ReadPara->Add( "Riemann_XYZ",       &Riemann_XYZ,            0,            0,                2                 );
 
@@ -183,13 +184,22 @@ void SetParameter()
                             break;
 
 #     ifdef MHD
-      case RJ2A           : Riemann_RhoL = 1.08;   Riemann_VelL = 1.2;   Riemann_PreL = 0.95;  Riemann_VelL_T1 = 0.01;  Riemann_VelL_T2 = 0.5;
-                            Riemann_RhoR = 1.0;    Riemann_VelR = 0.0;   Riemann_PreR = 1.0;   Riemann_VelR_T1 = 0.0;   Riemann_VelR_T2 = 0.0;
+      case RJ2A           : Riemann_RhoL = 1.08;  Riemann_VelL = 1.2;  Riemann_PreL = 0.95;  Riemann_VelL_T1 = 0.01;  Riemann_VelL_T2 = 0.5;
+                            Riemann_RhoR = 1.0;   Riemann_VelR = 0.0;  Riemann_PreR = 1.0;   Riemann_VelR_T1 = 0.0;   Riemann_VelR_T2 = 0.0;
                             Riemann_EndT = 0.2;
                             Riemann_MagL_T1 = 3.6/sqrt(4.0*M_PI);  Riemann_MagL_T2 = 2.0/sqrt(4.0*M_PI);
                             Riemann_MagR_T1 = 4.0/sqrt(4.0*M_PI);  Riemann_MagR_T2 = 2.0/sqrt(4.0*M_PI);
                             Riemann_Mag     = 2.0/sqrt(4.0*M_PI);
                             sprintf( Riemann_Name, "RJ2a" );
+                            break;
+
+      case TORRILHON      : Riemann_RhoL = 1.0;  Riemann_VelL = 0.0;   Riemann_PreL = 1.0;  Riemann_VelL_T1 = 0.0;  Riemann_VelL_T2 = 0.0;
+                            Riemann_RhoR = 0.2;  Riemann_VelR = 0.0;   Riemann_PreR = 0.2;  Riemann_VelR_T1 = 0.0;  Riemann_VelR_T2 = 0.0;
+                            Riemann_EndT = 0.08;
+                            Riemann_MagL_T1 = 1.0;       Riemann_MagL_T2 = 0.0;
+                            Riemann_MagR_T1 = cos(3.0);  Riemann_MagR_T2 = sin(3.0);
+                            Riemann_Mag     = 1.0;
+                            sprintf( Riemann_Name, "Torrilhon" );
                             break;
 #     endif
 
