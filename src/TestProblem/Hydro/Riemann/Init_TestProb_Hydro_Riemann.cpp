@@ -7,14 +7,21 @@
 // =======================================================================================
 typedef int Riemann_t;
 const Riemann_t
-   SOD_SHOCK_TUBE = 0,
-   STRONG_SHOCK   = 1,
-   TWO_SHOCKS     = 2,
-   EINFELDT_1203  = 3,
-   EINFELDT_1125  = 4,
-   SONIC_RARE     = 5;
+   SOD_SHOCK_TUBE = 0
+  ,STRONG_SHOCK   = 1
+  ,TWO_SHOCKS     = 2
+  ,EINFELDT_1203  = 3
+  ,EINFELDT_1125  = 4
+  ,SONIC_RARE     = 5
+#ifdef MHD
+  ,RJ2A           = 6
+#endif
+  ;
 
 static Riemann_t Riemann_Prob;         // target Riemann problem
+static int       Riemann_LR;           // wave propagation direction (>0/<0 --> positive/negative direction)
+static int       Riemann_XYZ;          // wave propagation direction (0/1/2 --> x/y/z)
+
 static char      Riemann_Name[100];    // name of the target Riemann problem
 static real      Riemann_RhoL;         // left-state density
 static real      Riemann_VelL;         // left-state longitidual velocity
@@ -27,8 +34,13 @@ static real      Riemann_VelR_T1;      // right-state transverse velocity 1
 static real      Riemann_VelR_T2;      // right-state transverse velocity 2
 static real      Riemann_PreR;         // right-state pressure
 static double    Riemann_EndT;         // end physical time
-static int       Riemann_LR;           // wave propagation direction (>0/<0 --> positive/negative direction)
-static int       Riemann_XYZ;          // wave propagation direction (0/1/2 --> x/y/z)
+#ifdef MHD
+static real      Riemann_Mag;          // longitidual B field
+static real      Riemann_MagL_T1;      // left-state transverse B field 1
+static real      Riemann_MagL_T2;      // left-state transverse B field 2
+static real      Riemann_MagR_T1;      // right-state transverse B field 1
+static real      Riemann_MagR_T2;      // right-state transverse B field 2
+#endif
 // =======================================================================================
 
 
@@ -105,7 +117,7 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "Riemann_Prob",      &Riemann_Prob,          -1,            0,                5                 );
+   ReadPara->Add( "Riemann_Prob",      &Riemann_Prob,          -1,            0,                6                 );
    ReadPara->Add( "Riemann_LR",        &Riemann_LR,             1,            NoMin_int,        NoMax_int         );
    ReadPara->Add( "Riemann_XYZ",       &Riemann_XYZ,            0,            0,                2                 );
 
@@ -119,43 +131,79 @@ void SetParameter()
       case SOD_SHOCK_TUBE : Riemann_RhoL = 1.0;    Riemann_VelL = 0.0;  Riemann_PreL = 1.0;  Riemann_VelL_T1 = 0.0;  Riemann_VelL_T2 = 0.0;
                             Riemann_RhoR = 0.125;  Riemann_VelR = 0.0;  Riemann_PreR = 0.1;  Riemann_VelR_T1 = 0.0;  Riemann_VelR_T2 = 0.0;
                             Riemann_EndT = 0.1;
+#                           ifdef MHD
+                            Riemann_Mag = Riemann_MagL_T1 = Riemann_MagL_T2 = Riemann_MagR_T1 = Riemann_MagR_T2 = 0.0;
+#                           endif
                             sprintf( Riemann_Name, "Sod's shock tube" );
                             break;
 
       case STRONG_SHOCK   : Riemann_RhoL = 1250.0;  Riemann_VelL = 0.0;  Riemann_PreL = 500.0;  Riemann_VelL_T1 = 0.0;  Riemann_VelL_T2 = 0.0;
                             Riemann_RhoR =  125.0;  Riemann_VelR = 0.0;  Riemann_PreR =   5.0;  Riemann_VelR_T1 = 0.0;  Riemann_VelR_T2 = 0.0;
                             Riemann_EndT = 0.4;
+#                           ifdef MHD
+                            Riemann_Mag = Riemann_MagL_T1 = Riemann_MagL_T2 = Riemann_MagR_T1 = Riemann_MagR_T2 = 0.0;
+#                           endif
                             sprintf( Riemann_Name, "strong shock" );
                             break;
 
       case TWO_SHOCKS     : Riemann_RhoL = 1.0;  Riemann_VelL = 3.0;  Riemann_PreL = 1.0;  Riemann_VelL_T1 = 0.0;  Riemann_VelL_T2 = 0.0;
                             Riemann_RhoR = 2.0;  Riemann_VelR = 1.0;  Riemann_PreR = 1.0;  Riemann_VelR_T1 = 0.0;  Riemann_VelR_T2 = 0.0;
                             Riemann_EndT = 0.1;
+#                           ifdef MHD
+                            Riemann_Mag = Riemann_MagL_T1 = Riemann_MagL_T2 = Riemann_MagR_T1 = Riemann_MagR_T2 = 0.0;
+#                           endif
                             sprintf( Riemann_Name, "two shocks" );
                             break;
 
       case EINFELDT_1203  : Riemann_RhoL = 1.0;  Riemann_VelL = -2.0;  Riemann_PreL = GAMMA-1.0;  Riemann_VelL_T1 = 0.0;  Riemann_VelL_T2 = 0.0;
                             Riemann_RhoR = 1.0;  Riemann_VelR = +2.0;  Riemann_PreR = GAMMA-1.0;  Riemann_VelR_T1 = 0.0;  Riemann_VelR_T2 = 0.0;
                             Riemann_EndT = 0.1;
+#                           ifdef MHD
+                            Riemann_Mag = Riemann_MagL_T1 = Riemann_MagL_T2 = Riemann_MagR_T1 = Riemann_MagR_T2 = 0.0;
+#                           endif
                             sprintf( Riemann_Name, "Einfeldt's 1-2-0-3" );
                             break;
 
       case EINFELDT_1125  : Riemann_RhoL = 1.0;  Riemann_VelL = -1.0;  Riemann_PreL = 2.5*(GAMMA-1.0);  Riemann_VelL_T1 = -2.0;  Riemann_VelL_T2 = 0.0;
                             Riemann_RhoR = 1.0;  Riemann_VelR = +1.0;  Riemann_PreR = 2.5*(GAMMA-1.0);  Riemann_VelR_T1 = +2.0;  Riemann_VelR_T2 = 0.0;
                             Riemann_EndT = 0.1;
+#                           ifdef MHD
+                            Riemann_Mag = Riemann_MagL_T1 = Riemann_MagL_T2 = Riemann_MagR_T1 = Riemann_MagR_T2 = 0.0;
+#                           endif
                             sprintf( Riemann_Name, "Einfeldt's 1-1-2-5" );
                             break;
 
       case SONIC_RARE     : Riemann_RhoL = 1.0;    Riemann_VelL = 0.75;  Riemann_PreL = 1.0;  Riemann_VelL_T1 = 0.0;  Riemann_VelL_T2 = 0.0;
                             Riemann_RhoR = 0.125;  Riemann_VelR = 0.0;   Riemann_PreR = 0.1;  Riemann_VelR_T1 = 0.0;  Riemann_VelR_T2 = 0.0;
                             Riemann_EndT = 0.1;
+#                           ifdef MHD
+                            Riemann_Mag = Riemann_MagL_T1 = Riemann_MagL_T2 = Riemann_MagR_T1 = Riemann_MagR_T2 = 0.0;
+#                           endif
                             sprintf( Riemann_Name, "sonic rarefaction wave" );
                             break;
+
+#     ifdef MHD
+      case RJ2A           : Riemann_RhoL = 1.08;   Riemann_VelL = 1.2;   Riemann_PreL = 0.95;  Riemann_VelL_T1 = 0.01;  Riemann_VelL_T2 = 0.5;
+                            Riemann_RhoR = 1.0;    Riemann_VelR = 0.0;   Riemann_PreR = 1.0;   Riemann_VelR_T1 = 0.0;   Riemann_VelR_T2 = 0.0;
+                            Riemann_EndT = 0.2;
+                            Riemann_MagL_T1 = 3.6/sqrt(4.0*M_PI);  Riemann_MagL_T2 = 2.0/sqrt(4.0*M_PI);
+                            Riemann_MagR_T1 = 4.0/sqrt(4.0*M_PI);  Riemann_MagR_T2 = 2.0/sqrt(4.0*M_PI);
+                            Riemann_Mag     = 2.0/sqrt(4.0*M_PI);
+                            sprintf( Riemann_Name, "RJ2a" );
+                            break;
+#     endif
 
       default : Aux_Error( ERROR_INFO, "unsupported Riemann problem (%d) !!\n", Riemann_Prob );
    } // switch ( Riemann_Prob )
 
 // (1-3) check the runtime parameters
+   if ( Riemann_LR == 0 )  Aux_Error( ERROR_INFO, "Riemann_LR must not be zero !!\n" );
+
+#  ifdef MHD
+   if ( (int)Riemann_Prob <= SONIC_RARE )
+      Aux_Message( stderr, "WARNING : B field is zero in the %s Riemann problem (Riemann_Prob = %d) !!\n",
+                   Riemann_Name, Riemann_Prob );
+#  endif
 
 
 // (2) set the problem-specific derived parameters
@@ -191,16 +239,23 @@ void SetParameter()
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "  test problem ID                   = %d\n",     TESTPROB_ID );
       Aux_Message( stdout, "  target Riemann problem            = %s\n",     Riemann_Name );
-      Aux_Message( stdout, "  left-state density                = %13.7e\n", Riemann_RhoL );
-      Aux_Message( stdout, "  left-state longitudial velocity   = %13.7e\n", Riemann_VelL );
-      Aux_Message( stdout, "  left-state transverse velocity 1  = %13.7e\n", Riemann_VelL_T1 );
-      Aux_Message( stdout, "  left-state transverse velocity 2  = %13.7e\n", Riemann_VelL_T2 );
-      Aux_Message( stdout, "  left-state pressure               = %13.7e\n", Riemann_PreL );
-      Aux_Message( stdout, "  right-state density               = %13.7e\n", Riemann_RhoR );
-      Aux_Message( stdout, "  right-state longitudial velocity  = %13.7e\n", Riemann_VelR );
-      Aux_Message( stdout, "  right-state transverse velocity 1 = %13.7e\n", Riemann_VelR_T1 );
-      Aux_Message( stdout, "  right-state transverse velocity 2 = %13.7e\n", Riemann_VelR_T2 );
-      Aux_Message( stdout, "  right-state pressure              = %13.7e\n", Riemann_PreR );
+      Aux_Message( stdout, "  left-state density                = %14.7e\n", Riemann_RhoL );
+      Aux_Message( stdout, "  left-state longitudinal velocity  = %14.7e\n", Riemann_VelL );
+      Aux_Message( stdout, "  left-state transverse velocity 1  = %14.7e\n", Riemann_VelL_T1 );
+      Aux_Message( stdout, "  left-state transverse velocity 2  = %14.7e\n", Riemann_VelL_T2 );
+      Aux_Message( stdout, "  left-state pressure               = %14.7e\n", Riemann_PreL );
+      Aux_Message( stdout, "  right-state density               = %14.7e\n", Riemann_RhoR );
+      Aux_Message( stdout, "  right-state longitudinal velocity = %14.7e\n", Riemann_VelR );
+      Aux_Message( stdout, "  right-state transverse velocity 1 = %14.7e\n", Riemann_VelR_T1 );
+      Aux_Message( stdout, "  right-state transverse velocity 2 = %14.7e\n", Riemann_VelR_T2 );
+      Aux_Message( stdout, "  right-state pressure              = %14.7e\n", Riemann_PreR );
+#     ifdef MHD
+      Aux_Message( stdout, "  longitudinal B field              = %14.7e\n", Riemann_Mag );
+      Aux_Message( stdout, "  left-state transverse B field 1   = %14.7e\n", Riemann_MagL_T1 );
+      Aux_Message( stdout, "  left-state transverse B field 2   = %14.7e\n", Riemann_MagL_T2 );
+      Aux_Message( stdout, "  right-state transverse B field 1  = %14.7e\n", Riemann_MagR_T1 );
+      Aux_Message( stdout, "  right-state transverse B field 2  = %14.7e\n", Riemann_MagR_T2 );
+#     endif
       Aux_Message( stdout, "  propagation direction             = %s%s\n",   ( Riemann_LR > 0 ) ? "+" : "-",
                                                                              ( Riemann_XYZ == 0 ) ? "x" :
                                                                              ( Riemann_XYZ == 1 ) ? "y" : "z" );
@@ -244,9 +299,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    switch ( Riemann_XYZ )
    {
-      case 0 : r=x; TVar[0]=DENS; TVar[1]=MOMX; TVar[2]=MOMY; TVar[3]=MOMZ; TVar[4]=ENGY; BoxCen=0.5*amr->BoxSize[0]; break;
-      case 1 : r=y; TVar[0]=DENS; TVar[1]=MOMY; TVar[2]=MOMZ; TVar[3]=MOMX; TVar[4]=ENGY; BoxCen=0.5*amr->BoxSize[1]; break;
-      case 2 : r=z; TVar[0]=DENS; TVar[1]=MOMZ; TVar[2]=MOMX; TVar[3]=MOMY; TVar[4]=ENGY; BoxCen=0.5*amr->BoxSize[2]; break;
+      case 0 : r=x; TVar[0]=DENS; TVar[1]=MOMX; TVar[2]=MOMY; TVar[3]=MOMZ; TVar[4]=ENGY; BoxCen=amr->BoxCenter[0]; break;
+      case 1 : r=y; TVar[0]=DENS; TVar[1]=MOMY; TVar[2]=MOMZ; TVar[3]=MOMX; TVar[4]=ENGY; BoxCen=amr->BoxCenter[1]; break;
+      case 2 : r=z; TVar[0]=DENS; TVar[1]=MOMZ; TVar[2]=MOMX; TVar[3]=MOMY; TVar[4]=ENGY; BoxCen=amr->BoxCenter[2]; break;
       default : Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "Riemann_XYZ", Riemann_XYZ );
    }
 
@@ -276,6 +331,86 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    }
 
 } // FUNCTION : SetGridIC
+
+
+
+#ifdef MHD
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SetBFieldIC
+// Description :  Set the problem-specific initial condition of magnetic field
+//
+// Note        :  1. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
+//                   (unless OPT__INIT_GRID_WITH_OMP is disabled)
+//                   --> Please ensure that everything here is thread-safe
+//                2. Only return one magnetic field component at a time
+//                   --> Target component is specified by "comp"
+//                   --> Return either B_X, B_Y, or B_Z, where X/Y/Z depends on the adopted coordinate system
+//                       --> Cartesian   coordinates: B_x, B_y, or B_z
+//                       --> Cylindrical coordinates: B_r, B_phi, or B_z
+//
+// Parameter   :  comp     : Target magnetic field component (MAGX/Y/Z -> B_X/Y/Z)
+//                x/y/z    : Target physical coordinates
+//                Time     : Target physical time
+//                lv       : Target refinement level
+//                AuxArray : Auxiliary array
+//
+// Return      :  B_comp
+//-------------------------------------------------------------------------------------------------------
+real SetBFieldIC( const int comp, const double x, const double y, const double z, const double Time,
+                  const int lv, double AuxArray[] )
+{
+
+   real B_comp = NULL_REAL;
+
+   double r, BoxCen;
+   int    DirL, DirT1, DirT2;
+
+
+// determine the longitudinal and transverse directions
+   switch ( Riemann_XYZ )
+   {
+      case 0 : r=x;  DirL=MAGX;  DirT1=MAGY;  DirT2=MAGZ;  BoxCen=amr->BoxCenter[0];  break;
+      case 1 : r=y;  DirL=MAGY;  DirT1=MAGZ;  DirT2=MAGX;  BoxCen=amr->BoxCenter[1];  break;
+      case 2 : r=z;  DirL=MAGZ;  DirT1=MAGX;  DirT2=MAGY;  BoxCen=amr->BoxCenter[2];  break;
+      default : Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "Riemann_XYZ", Riemann_XYZ );
+   }
+
+
+// set B field
+// longitudinal component
+   if      ( comp == DirL ) {
+      B_comp = Riemann_Mag;
+   }
+
+// transverse component 1
+   else if ( comp == DirT1 ) {
+      if (  ( Riemann_LR > 0 && r < BoxCen )  ||  ( Riemann_LR < 0 && r > BoxCen )  )
+         B_comp = Riemann_MagL_T1;
+      else
+         B_comp = Riemann_MagR_T1;
+   }
+
+// transverse component 2
+   else if ( comp == DirT2 ) {
+      if (  ( Riemann_LR > 0 && r < BoxCen )  ||  ( Riemann_LR < 0 && r > BoxCen )  )
+         B_comp = Riemann_MagL_T2;
+      else
+         B_comp = Riemann_MagR_T2;
+   }
+
+   else {
+      Aux_Error( ERROR_INFO, "incorrect B field component (%d) !!\n", comp );
+   }
+
+
+// change the B field sign if wave propagates along the negative direction
+   if ( Riemann_LR < 0 )   B_comp *= -1.0;
+
+
+   return B_comp;
+
+} // FUNCTION : SetBFieldIC
+#endif // #ifdef MHD
 #endif // #if ( MODEL == HYDRO )
 
 
@@ -306,14 +441,17 @@ void Init_TestProb_Hydro_Riemann()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr   = SetGridIC;
-   Output_User_Ptr          = NULL;       // example: Hydro/AcousticWave/Init_TestProb_Hydro_AcousticWave.cpp --> OutputError()
-   Flag_User_Ptr            = NULL;       // example: AGORA_IsolatedGalaxy/Flag_AGORA.cpp
-   Mis_GetTimeStep_User_Ptr = NULL;
-   Aux_Record_User_Ptr      = NULL;
-   BC_User_Ptr              = NULL;       // example: ELBDM/ExtPot/Init_TestProb_ELBDM_ExtPot.cpp --> BC()
-   Flu_ResetByUser_Func_Ptr = NULL;
-   End_User_Ptr             = NULL;       // example: Hydro/ClusterMerger_vs_Flash/Init_TestProb_Hydro_ClusterMerger_vs_Flash.cpp --> End_ClusterMerger()
+   Init_Function_User_Ptr        = SetGridIC;
+#  ifdef MHD
+   Init_Function_BField_User_Ptr = SetBFieldIC;
+#  endif
+   Output_User_Ptr               = NULL;
+   Flag_User_Ptr                 = NULL;
+   Mis_GetTimeStep_User_Ptr      = NULL;
+   Aux_Record_User_Ptr           = NULL;
+   BC_User_Ptr                   = NULL;
+   Flu_ResetByUser_Func_Ptr      = NULL;
+   End_User_Ptr                  = NULL;
 #  endif // #if ( MODEL == HYDRO )
 
 

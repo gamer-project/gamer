@@ -166,6 +166,8 @@ void SetParameter()
 //                   --> Please ensure that everything here is thread-safe
 //                3. Even when DUAL_ENERGY is adopted for HYDRO, one does NOT need to set the dual-energy variable here
 //                   --> It will be calculated automatically
+//                4. For MHD, do NOT add magnetic energy (i.e., 0.5*B^2) to fluid[ENGY] here
+//                   --> It will be added automatically later
 //
 // Parameter   :  fluid    : Fluid field to be initialized
 //                x/y/z    : Physical coordinates
