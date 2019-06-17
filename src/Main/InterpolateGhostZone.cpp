@@ -764,7 +764,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 #           endif
 
 
-//          only need data along the two transverse directions
+//          only need ghost zones along the two transverse directions
             if ( CSide >= 6  ||  CSide == norm_dir*2  ||  CSide == norm_dir*2+1 )   continue;
 
 
@@ -873,7 +873,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
             } // switch ( FluBC[ BC_Face[BC_Sibling] ] )
 
             CData_CC_Ptr += NVarCC_Flu*CSize3D_CC;
-         } // if ( NVarCC_Flu > 0 )
+         } // if ( NVarCC_Flu + NVarCC_Der > 0 )
+
 
 //       b3-2. potential B.C.
 #        ifdef GRAVITY
@@ -886,6 +887,80 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
             CData_CC_Ptr += 1*CSize3D_CC;
          }
 #        endif // #ifdef GRAVITY
+
+
+//       b3-3. face-centered variables B.C. (e.g., magnetic field)
+//             --> work on one component at a time since the array sizes of different components are different
+         for (int v=0; v<NVarFC_Tot; v++)
+         {
+            const int TVarFCIdx = TVarFCIdxList[v];
+
+//          work for MHD only
+#           ifdef MHD
+//          get the normal direction
+            const int norm_dir = ( TVarFCIdx == MAGX ) ? 0 :
+                                 ( TVarFCIdx == MAGY ) ? 1 :
+                                 ( TVarFCIdx == MAGZ ) ? 2 : -1;
+#           ifdef GAMER_DEBUG
+            if ( norm_dir == -1 )   Aux_Error( ERROR_INFO, "Target face-centered variable != MAGX/Y/Z !!\n" );
+#           endif
+
+//          only need ghost zones along the two transverse directions
+            if ( CSide >= 6  ||  CSide == norm_dir*2  ||  CSide == norm_dir*2+1 )   continue;
+
+//          set array indices
+            int FC_BC_Idx_Start[3], FC_BC_Idx_End[3], FC_BC_Size[3]; // these indices correspond to the **cell-centered** array
+            for (int d=0; d<3; d++)
+            {
+               if ( d == norm_dir )
+               {
+                  FC_BC_Idx_Start[d] = 0;
+                  FC_BC_Idx_End  [d] = CSize_FC[v][d] - 2;
+                  FC_BC_Size     [d] = CSize_FC[v][d] - 1;
+               }
+
+               else
+               {
+                  FC_BC_Idx_Start[d] = Table_01( FSide, CSide, 'x'+d, 0, CGrid_FC_PID, 0, CGhost_FC, CGhost_FC+PS1, 0, CGhost_FC );
+                  FC_BC_Idx_End  [d] = Table_01( FSide, CSide, 'x'+d, CGrid_FC_PID, CGhost_FC, CGhost_FC, PS1, CGhost_FC,
+                                                 CGhost_FC, CGrid_FC_PID ) + FC_BC_Idx_Start[d] - 1;
+                  FC_BC_Size     [d] = CSize_FC[v][d];
+               }
+            }
+
+            real *MagDataPtr[NCOMP_MAG] = { NULL, NULL, NULL };
+            MagDataPtr[TVarFCIdx] = CData_FC[v];
+
+            switch ( FluBC[ BC_Face[BC_Sibling] ] )
+            {
+               case BC_FLU_OUTFLOW:
+                  MHD_BoundaryCondition_Outflow   ( MagDataPtr, BC_Face[BC_Sibling], 1, CGhost_FC,
+                                                    FC_BC_Size[0], FC_BC_Size[1], FC_BC_Size[2], FC_BC_Idx_Start, FC_BC_Idx_End,
+                                                    &TVarFCIdx );
+               break;
+
+               /*
+               case BC_FLU_REFLECTING:
+                  MHD_BoundaryCondition_Reflecting( MagDataPtr, BC_Face[BC_Sibling], 1, CGhost_FC,
+                                                    FC_BC_Size[0], FC_BC_Size[1], FC_BC_Size[2], FC_BC_Idx_Start, FC_BC_Idx_End,
+                                                    &TVarFCIdx );
+               break;
+
+               case BC_FLU_USER:
+                  MHD_BoundaryCondition_User      ( MagDataPtr,                      1,
+                                                    FC_BC_Size[0], FC_BC_Size[1], FC_BC_Size[2], FC_BC_Idx_Start, FC_BC_Idx_End,
+                                                    &TVarFCIdx, PrepTime, dh, xyz, lv );
+               break;
+               */
+
+               default:
+                  Aux_Error( ERROR_INFO, "unsupported fluid B.C. (%d) !!\n", FluBC[ BC_Face[BC_Sibling] ] );
+            } // switch ( FluBC[ BC_Face[BC_Sibling] ] )
+
+#           else
+            Aux_Error( ERROR_INFO, "currently only MHD supports face-centered variables !!" );
+#           endif // #ifdef MHD ... else ...
+         } // for (int v=0; v<NVarFC_Tot; v++)
 
       } // else if ( SibPID <= SIB_OFFSET_NONPERIODIC )
 
@@ -1197,7 +1272,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Table_01
-// Description :  return the loop size and displacement required by InterpolateGhostZone()
+// Description :  Return the loop size and displacement required by InterpolateGhostZone()
 //
 // Parameter   :  FSide       : Fine-patch sibling index (0~25)
 //                CSide       : Coarse-patch sibling index (0~25)
