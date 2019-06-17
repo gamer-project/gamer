@@ -1543,7 +1543,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #              endif // #ifdef GRAVITY
 
 
-//             (b3-3) B.C. for face-centered variables (i.e., magnetic field)
+//             (b3-3) face-centered variables B.C. (i.e., magnetic field)
 #              ifdef MHD
                if ( NVarFC_Tot > 0 )
                {
