@@ -1580,7 +1580,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                      */
 
                      default:
-                        Aux_Error( ERROR_INFO, "unsupported magnetic field B.C. (%d) !!\n", FluBC[ BC_Face[BC_Sibling] ] );
+                        Aux_Error( ERROR_INFO, "unsupported MHD B.C. (%d) !!\n", FluBC[ BC_Face[BC_Sibling] ] );
                   } // switch ( FluBC[ BC_Face[BC_Sibling] ] )
                } // if ( NVarFC_Tot > 0 )
 #              endif // #ifdef MHD
