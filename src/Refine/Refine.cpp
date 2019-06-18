@@ -463,6 +463,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 //             Bx
                if ( sib != 0  &&  sib != 1 ) // skip the normal direction
+               {
                   for (int k=0; k<loop[2]; k++)  {  k_out = k + offset_out[2];  k_in = k + offset_in[2];
                   for (int j=0; j<loop[1]; j++)  {  j_out = j + offset_out[1];  j_in = j + offset_in[1];
                                                     idx_B_in  = IDX321( 0, j_in,  k_in,  PS1P1,       PS1         );
@@ -472,6 +473,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                      Mag_CData[MAGX][ idx_B_out ++ ] = amr->patch[CMagSg][lv][SibPID]->magnetic[MAGX][ idx_B_in ++ ];
 
                   }}}
+               }
 
 //             By
                if ( sib != 2  &&  sib != 3 ) // skip the normal direction
@@ -506,11 +508,69 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 //          (c1.3.2.3-2) if the target sibling patch lies outside the simulation domain --> apply the specified B.C.
             else if ( SibPID <= SIB_OFFSET_NONPERIODIC )
             {
-#              warning : WAIT MHD !!!
+//             work on one component at a time since the array sizes of different components are different
+               for (int v=0; v<NCOMP_MAG; v++)
+               {
+//                get the normal direction
+                  const int norm_dir = ( v == MAGX ) ? 0 :
+                                       ( v == MAGY ) ? 1 :
+                                       ( v == MAGZ ) ? 2 : -1;
+#                 ifdef GAMER_DEBUG
+                  if ( norm_dir == -1 )   Aux_Error( ERROR_INFO, "Target face-centered variable != MAGX/Y/Z !!\n" );
+#                 endif
 
-//             ** should we skip the normal direction here?
-//             ** --> because interpolation on B field only require ghost zones along the two transverse directions
+//                only need ghost zones along the two transverse directions
+                  if ( sib == norm_dir*2  ||  sib == norm_dir*2+1 )  continue;
 
+//                set array indices --> correspond to the **cell-centered** array
+                  int FC_BC_Idx_Start[3], FC_BC_Idx_End[3], FC_BC_Size[3];
+                  for (int d=0; d<3; d++)
+                  {
+                     if ( d == norm_dir )
+                     {
+                        FC_BC_Idx_Start[d] = 0;
+                        FC_BC_Idx_End  [d] = CSize_Mag_N - 2;
+                        FC_BC_Size     [d] = CSize_Mag_N - 1;
+                     }
+
+                     else
+                     {
+                        FC_BC_Idx_Start[d] = offset_out[d];
+                        FC_BC_Idx_End  [d] = loop[d] + FC_BC_Idx_Start[d] - 1;
+                        FC_BC_Size     [d] = CSize_Mag_T;
+                     }
+                  }
+
+                  BC_Sibling = SIB_OFFSET_NONPERIODIC - SibPID;
+                  real *Mag_CDataPtr[NCOMP_MAG] = { Mag_CData[0], Mag_CData[1], Mag_CData[2] };
+
+                  switch ( OPT__BC_FLU[ BC_Face[BC_Sibling] ] )
+                  {
+                     case BC_FLU_OUTFLOW:
+                        MHD_BoundaryCondition_Outflow   ( Mag_CDataPtr, BC_Face[BC_Sibling], 1, CGhost_Mag,
+                                                          FC_BC_Size[0], FC_BC_Size[1], FC_BC_Size[2], FC_BC_Idx_Start, FC_BC_Idx_End,
+                                                          &v );
+                     break;
+
+                     /*
+                     case BC_FLU_REFLECTING:
+                        MHD_BoundaryCondition_Reflecting( Mag_CDataPtr, BC_Face[BC_Sibling], 1, CGhost_Mag,
+                                                          FC_BC_Size[0], FC_BC_Size[1], FC_BC_Size[2], FC_BC_Idx_Start, FC_BC_Idx_End,
+                                                          &v );
+                     break;
+
+                     case BC_FLU_USER:
+                        MHD_BoundaryCondition_User      ( Mag_CDataPtr,                      1,
+                                                          FC_BC_Size[0], FC_BC_Size[1], FC_BC_Size[2], FC_BC_Idx_Start, FC_BC_Idx_End,
+                                                          &v, Time[lv], amr->dh[lv], xyz, lv );
+                     break;
+                     */
+
+                     default:
+                        Aux_Error( ERROR_INFO, "unsupported MHD B.C. (%d) !!\n", OPT__BC_FLU[ BC_Face[BC_Sibling] ] );
+
+                  } // switch ( OPT__BC_FLU[ BC_Face[BC_Sibling] ] )
+               } // for (int v=0; v<NCOMP_MAG; v++)
             } // else if ( SibPID <= SIB_OFFSET_NONPERIODIC )
 
 
@@ -680,8 +740,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 //       (c1.3.4.2-3) magnetic field
 #        ifdef MHD
-         const real *Mag_CData_Ptr[3] = { Mag_CData[0], Mag_CData[1], Mag_CData[2] };
-               real *Mag_FData_Ptr[3] = { Mag_FData[0], Mag_FData[1], Mag_FData[2] };
+         const real *Mag_CData_Ptr[NCOMP_MAG] = { Mag_CData[0], Mag_CData[1], Mag_CData[2] };
+               real *Mag_FData_Ptr[NCOMP_MAG] = { Mag_FData[0], Mag_FData[1], Mag_FData[2] };
 
          MHD_InterpolateBField( Mag_CData_Ptr, CSize_Mag, CStart_Mag, CRange_Mag,
                                 Mag_FData_Ptr, FSize_Mag, FStart_Mag, (const real**)Mag_FInterface_Ptr,

@@ -908,8 +908,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 //          only need ghost zones along the two transverse directions
             if ( CSide >= 6  ||  CSide == norm_dir*2  ||  CSide == norm_dir*2+1 )   continue;
 
-//          set array indices
-            int FC_BC_Idx_Start[3], FC_BC_Idx_End[3], FC_BC_Size[3]; // these indices correspond to the **cell-centered** array
+//          set array indices --> correspond to the **cell-centered** array
+            int FC_BC_Idx_Start[3], FC_BC_Idx_End[3], FC_BC_Size[3];
             for (int d=0; d<3; d++)
             {
                if ( d == norm_dir )
@@ -954,7 +954,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                */
 
                default:
-                  Aux_Error( ERROR_INFO, "unsupported fluid B.C. (%d) !!\n", FluBC[ BC_Face[BC_Sibling] ] );
+                  Aux_Error( ERROR_INFO, "unsupported MHD B.C. (%d) !!\n", FluBC[ BC_Face[BC_Sibling] ] );
             } // switch ( FluBC[ BC_Face[BC_Sibling] ] )
 
 #           else
