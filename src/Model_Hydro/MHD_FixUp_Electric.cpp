@@ -184,8 +184,8 @@ void MHD_FixUp_Electric( const int lv )
 
 
 //       2-3. correct B field along B1/2
-//       --> only need to correct B field on the **coarse-coarse** interfaces
-//       --> still need to check if SibPID>=0 for the non-periodic BC
+//       --> only need to correct B field on the (i) coarse-coarse interfaces and (ii) simulation boundaries
+//       --> skip **coarse-fine** interfaces since B field on that has been corrected by Flu_Restrict()
          const int  SibPID1 = amr->patch[0][lv][PID]->sibling[ 2*B1 + LR1 ];  // sibling direction along B1/B2
          const int  SibPID2 = amr->patch[0][lv][PID]->sibling[ 2*B2 + LR2 ];
          const real Coeff1  = _dh*( (real)+2.0*(real)LR2 - (real)1.0 );       // correction coefficient for B1/B2
@@ -202,12 +202,12 @@ void MHD_FixUp_Electric( const int lv )
 #        endif
 
 //       B1
-         if ( SibPID1 >= 0  &&  amr->patch[0][lv][SibPID1]->son == -1 )
+         if (  ( SibPID1 >= 0 && amr->patch[0][lv][SibPID1]->son == -1 )  ||  SibPID1 <= SIB_OFFSET_NONPERIODIC  )
             for (int t=0; t<PS1; t++)
                amr->patch[MagSg][lv][PID]->magnetic[B1][ offset1 + t*stride1 ] += Coeff1*EPtr[t];
 
 //       B2
-         if ( SibPID2 >= 0  &&  amr->patch[0][lv][SibPID2]->son == -1 )
+         if (  ( SibPID2 >= 0 && amr->patch[0][lv][SibPID2]->son == -1 )  ||  SibPID2 <= SIB_OFFSET_NONPERIODIC  )
             for (int t=0; t<PS1; t++)
                amr->patch[MagSg][lv][PID]->magnetic[B2][ offset2 + t*stride2 ] += Coeff2*EPtr[t];
       } // for (int s=6; s<18; s++)
