@@ -6,8 +6,8 @@
 // problem-specific global variables
 // =======================================================================================
 static double Blast_Dens_Bg;       // background mass density
-static double Blast_Engy_Bg;       // background energy density
-static double Blast_Engy_Exp;      // total explosion energy
+static double Blast_Pres_Bg;       // background pressure
+static double Blast_Pres_Exp;      // explosion pressure
 static double Blast_Radius;        // explosion radius
 static double Blast_Center[3];     // explosion center
 #ifdef MHD
@@ -93,8 +93,8 @@ void SetParameter()
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE_ADDRESS,      DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
    ReadPara->Add( "Blast_Dens_Bg",     &Blast_Dens_Bg,         -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Blast_Engy_Bg",     &Blast_Engy_Bg,         -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Blast_Engy_Exp",    &Blast_Engy_Exp,        -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Blast_Pres_Bg",     &Blast_Pres_Bg,         -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Blast_Pres_Exp",    &Blast_Pres_Exp,        -1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "Blast_Radius",      &Blast_Radius,          -1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "Blast_Center_X",    &Blast_Center[0],       -1.0,          NoMin_double,     amr->BoxSize[0]   );
    ReadPara->Add( "Blast_Center_Y",    &Blast_Center[1],       -1.0,          NoMin_double,     amr->BoxSize[1]   );
@@ -137,9 +137,9 @@ void SetParameter()
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "  test problem ID           = %d\n",     TESTPROB_ID );
       Aux_Message( stdout, "  background mass density   = %13.7e\n", Blast_Dens_Bg );
-      Aux_Message( stdout, "  background energy density = %13.7e\n", Blast_Engy_Bg);
-      Aux_Message( stdout, "  total explosion energy    = %13.7e\n", Blast_Engy_Exp );
-      Aux_Message( stdout, "  explosion energy density  = %13.7e\n", Blast_Engy_Exp/(4.0*M_PI/3.0*CUBE(Blast_Radius) ) );
+      Aux_Message( stdout, "  background pressure       = %13.7e\n", Blast_Pres_Bg );
+      Aux_Message( stdout, "  explosion pressure        = %13.7e\n", Blast_Pres_Exp );
+      Aux_Message( stdout, "  total explosion energy    = %13.7e\n", Blast_Pres_Exp/(GAMMA-1.0)*4.0*M_PI/3.0*CUBE(Blast_Radius) );
       Aux_Message( stdout, "  explosion radius          = %13.7e\n", Blast_Radius );
       Aux_Message( stdout, "  explosion center          = (%13.7e, %13.7e, %13.7e)\n", Blast_Center[0], Blast_Center[1],
                                                                                        Blast_Center[2] );
@@ -179,7 +179,6 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
-   const double Blast_Engy_Exp_Density = Blast_Engy_Exp/(4.0*M_PI/3.0*Blast_Radius*Blast_Radius*Blast_Radius);
    const double r = SQRT( SQR(x-Blast_Center[0]) + SQR(y-Blast_Center[1]) + SQR(z-Blast_Center[2]) );
 
    fluid[DENS] = Blast_Dens_Bg;
@@ -187,8 +186,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[MOMY] = 0.0;
    fluid[MOMZ] = 0.0;
 
-   if ( r <= Blast_Radius )   fluid[ENGY] = Blast_Engy_Exp_Density;
-   else                       fluid[ENGY] = Blast_Engy_Bg;
+   if ( r <= Blast_Radius )   fluid[ENGY] = Blast_Pres_Exp/(GAMMA-1.0);
+   else                       fluid[ENGY] = Blast_Pres_Bg /(GAMMA-1.0);
 
 } // FUNCTION : SetGridIC
 
