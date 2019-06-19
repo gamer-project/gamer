@@ -1563,13 +1563,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                                                           TVarFCIdxList );
                      break;
 
-                     /*
                      case BC_FLU_REFLECTING:
                         MHD_BoundaryCondition_Reflecting( MagDataPtr, BC_Face[BC_Sibling], NVarFC_Tot, GhostSize,
                                                           PGSize1D_CC, PGSize1D_CC, PGSize1D_CC, BC_Idx_Start, BC_Idx_End,
                                                           TVarFCIdxList );
                      break;
-                     */
 
                      /*
                      case BC_FLU_USER:
