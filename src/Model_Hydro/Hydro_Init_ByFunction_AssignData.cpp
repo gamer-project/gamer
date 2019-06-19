@@ -107,17 +107,17 @@ real Init_Function_BField_User( const int comp, const double x, const double y, 
    {
 //    B_X
       case MAGX:
-         B_comp = (real)1.0;
+         B_comp = 1.0;
          break;
 
 //    B_Y
       case MAGY:
-         B_comp = (real)2.0;
+         B_comp = 2.0;
          break;
 
 //    B_Z
       case MAGZ:
-         B_comp = (real)3.0;
+         B_comp = 3.0;
          break;
 
       default :
