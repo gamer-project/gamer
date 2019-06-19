@@ -939,13 +939,13 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                                                     &TVarFCIdx );
                break;
 
-               /*
                case BC_FLU_REFLECTING:
                   MHD_BoundaryCondition_Reflecting( MagDataPtr, BC_Face[BC_Sibling], 1, CGhost_FC,
                                                     FC_BC_Size[0], FC_BC_Size[1], FC_BC_Size[2], FC_BC_Idx_Start, FC_BC_Idx_End,
                                                     &TVarFCIdx );
                break;
 
+               /*
                case BC_FLU_USER:
                   MHD_BoundaryCondition_User      ( MagDataPtr,                      1,
                                                     FC_BC_Size[0], FC_BC_Size[1], FC_BC_Size[2], FC_BC_Idx_Start, FC_BC_Idx_End,

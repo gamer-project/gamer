@@ -552,13 +552,13 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                                                           &v );
                      break;
 
-                     /*
                      case BC_FLU_REFLECTING:
                         MHD_BoundaryCondition_Reflecting( Mag_CDataPtr, BC_Face[BC_Sibling], 1, CGhost_Mag,
                                                           FC_BC_Size[0], FC_BC_Size[1], FC_BC_Size[2], FC_BC_Idx_Start, FC_BC_Idx_End,
                                                           &v );
                      break;
 
+                     /*
                      case BC_FLU_USER:
                         MHD_BoundaryCondition_User      ( Mag_CDataPtr,                      1,
                                                           FC_BC_Size[0], FC_BC_Size[1], FC_BC_Size[2], FC_BC_Idx_Start, FC_BC_Idx_End,
