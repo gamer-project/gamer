@@ -13,7 +13,7 @@ static void SetParameter();
 static void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                        const int lv, double AuxArray[] );
 #ifdef MHD
-static real SetBFieldIC( const int comp, const double x, const double y, const double z, const double Time,
+static void SetBFieldIC( real magnetic[], const double x, const double y, const double z, const double Time,
                          const int lv, double AuxArray[] );
 #endif
 
@@ -22,7 +22,7 @@ static real SetBFieldIC( const int comp, const double x, const double y, const d
 extern void (*Init_Function_User_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
                                        const int lv, double AuxArray[] );
 #ifdef MHD
-extern real (*Init_Function_BField_User_Ptr)( const int comp, const double x, const double y, const double z, const double Time,
+extern void (*Init_Function_BField_User_Ptr)( real magnetic[], const double x, const double y, const double z, const double Time,
                                               const int lv, double AuxArray[] );
 #endif
 extern void (*Init_ByFile_User_Ptr)( real fluid_out[], const real fluid_in[], const int nvar_in,
