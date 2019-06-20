@@ -15,11 +15,11 @@ extern bool (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double x, const dou
 
 #ifdef MHD
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
-static real Init_Function_BField_User( const int comp, const double x, const double y, const double z, const double Time,
+static void Init_Function_BField_User( real magnetic[], const double x, const double y, const double z, const double Time,
                                        const int lv, double AuxArray[] );
 
 // this function pointer may be overwritten by various test problem initializers
-real (*Init_Function_BField_User_Ptr)( const int comp, const double x, const double y, const double z, const double Time,
+void (*Init_Function_BField_User_Ptr)( real magnetic[], const double x, const double y, const double z, const double Time,
                                        const int lv, double AuxArray[] ) = Init_Function_BField_User;
 #endif
 
@@ -83,48 +83,22 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
 //                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
 //                   (uless OPT__INIT_GRID_WITH_OMP is disabled)
 //                   --> Please ensure that everything here is thread-safe
-//                3. Only return one component at a time
-//                   --> Target component is determined by "comp"
-//                   --> Return either B_X, B_Y, or B_Z, where X/Y/Z depends on the adopted coordinate system
-//                       --> Cartesian   coordinates: B_x, B_y, or B_z
-//                       --> Cylindrical coordinates: B_r, B_phi, or B_z
 //
-// Parameter   :  comp     : Target magnetic field component (MAGX/Y/Z -> B_X/Y/Z)
+// Parameter   :  magnetic : Array to store the output magnetic field
 //                x/y/z    : Target physical coordinates
 //                Time     : Target physical time
 //                lv       : Target refinement level
 //                AuxArray : Auxiliary array
 //
-// Return      :  B_comp
+// Return      :  magnetic
 //-------------------------------------------------------------------------------------------------------
-real Init_Function_BField_User( const int comp, const double x, const double y, const double z, const double Time,
+void Init_Function_BField_User( real magnetic[], const double x, const double y, const double z, const double Time,
                                 const int lv, double AuxArray[] )
 {
 
-   real B_comp;
-
-   switch ( comp )
-   {
-//    B_X
-      case MAGX:
-         B_comp = 1.0;
-         break;
-
-//    B_Y
-      case MAGY:
-         B_comp = 2.0;
-         break;
-
-//    B_Z
-      case MAGZ:
-         B_comp = 3.0;
-         break;
-
-      default :
-         Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "comp", comp );
-   } // switch ( comp )
-
-   return B_comp;
+   magnetic[MAGX] = 1.0;
+   magnetic[MAGY] = 2.0;
+   magnetic[MAGZ] = 3.0;
 
 } // FUNCTION : Init_Function_BField_User
 #endif // #ifdef MHD
@@ -163,7 +137,6 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
    const int OMP_NThread = ( OPT__INIT_GRID_WITH_OMP ) ? OMP_NTHREAD : 1;
 #  endif
 
-
    const int    NSub     = ( INIT_SUBSAMPLING_NCELL <= 0 ) ? 1 : INIT_SUBSAMPLING_NCELL;
    const double dh       = amr->dh[lv];
    const double dh_sub   = dh / NSub;
@@ -174,16 +147,16 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
    const double _NSub2   = 1.0/SQR(NSub);
 #  endif
 
-   real   fluid[NCOMP_TOTAL], fluid_sub[NCOMP_TOTAL];
-   double x, y, z, x0, y0, z0;
 
-
-#  pragma omp parallel for private( fluid, fluid_sub, x, y, z, x0, y0, z0 ) schedule( runtime ) num_threads( OMP_NThread )
+#  pragma omp parallel for schedule( runtime ) num_threads( OMP_NThread )
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
 //    1. set the magnetic field
 #     ifdef MHD
-//    loop over B_X/Y/Z
+      real magnetic_1v, magnetic_sub[NCOMP_MAG];
+
+//    loop over B_X/Y/Z to set one component at a time
+//    --> because different components are defined at different cell faces
       for (int v=0; v<NCOMP_MAG; v++)
       {
          int    ijk_end[3], sub_end[3], idx=0;
@@ -196,21 +169,23 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
             dxyz0  [d] = ( d == v ) ? 0.0   : 0.5*dh_sub;
          }
 
-         for (int k=0; k<ijk_end[2]; k++)    {  z0 = amr->patch[0][lv][PID]->EdgeL[2] + k*dh + dxyz0[2];
-         for (int j=0; j<ijk_end[1]; j++)    {  y0 = amr->patch[0][lv][PID]->EdgeL[1] + j*dh + dxyz0[1];
-         for (int i=0; i<ijk_end[0]; i++)    {  x0 = amr->patch[0][lv][PID]->EdgeL[0] + i*dh + dxyz0[0];
+         for (int k=0; k<ijk_end[2]; k++)    {  const double z0 = amr->patch[0][lv][PID]->EdgeL[2] + k*dh + dxyz0[2];
+         for (int j=0; j<ijk_end[1]; j++)    {  const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + j*dh + dxyz0[1];
+         for (int i=0; i<ijk_end[0]; i++)    {  const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + i*dh + dxyz0[0];
 
-            real B_sub = (real)0.0;
+            magnetic_1v = (real)0.0;
 
-            for (int kk=0; kk<sub_end[2]; kk++)    {  z = z0 + kk*dh_sub;
-            for (int jj=0; jj<sub_end[1]; jj++)    {  y = y0 + jj*dh_sub;
-            for (int ii=0; ii<sub_end[0]; ii++)    {  x = x0 + ii*dh_sub;
+            for (int kk=0; kk<sub_end[2]; kk++)    {  const double z = z0 + kk*dh_sub;
+            for (int jj=0; jj<sub_end[1]; jj++)    {  const double y = y0 + jj*dh_sub;
+            for (int ii=0; ii<sub_end[0]; ii++)    {  const double x = x0 + ii*dh_sub;
 
-               B_sub += Init_Function_BField_User_Ptr( v, x, y, z, Time[lv], lv, NULL );
+               Init_Function_BField_User_Ptr( magnetic_sub, x, y, z, Time[lv], lv, NULL );
+
+               magnetic_1v += magnetic_sub[v];
 
             }}}
 
-            amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[v][ idx ++ ] = B_sub*_NSub2;
+            amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[v][ idx ++ ] = magnetic_1v*_NSub2;
          }}} // i,j,k
       } // for (int v=0; v<NCOMP_MAG; v++)
 #     endif // #ifdef MHD
@@ -218,15 +193,17 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 
 
 //    2. set the fluid field
-      for (int k=0; k<PS1; k++)  {  z0 = amr->patch[0][lv][PID]->EdgeL[2] + k*dh + 0.5*dh_sub;
-      for (int j=0; j<PS1; j++)  {  y0 = amr->patch[0][lv][PID]->EdgeL[1] + j*dh + 0.5*dh_sub;
-      for (int i=0; i<PS1; i++)  {  x0 = amr->patch[0][lv][PID]->EdgeL[0] + i*dh + 0.5*dh_sub;
+      real fluid[NCOMP_TOTAL], fluid_sub[NCOMP_TOTAL];
+
+      for (int k=0; k<PS1; k++)  {  const double z0 = amr->patch[0][lv][PID]->EdgeL[2] + k*dh + 0.5*dh_sub;
+      for (int j=0; j<PS1; j++)  {  const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + j*dh + 0.5*dh_sub;
+      for (int i=0; i<PS1; i++)  {  const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + i*dh + 0.5*dh_sub;
 
          for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] = (real)0.0;
 
-         for (int kk=0; kk<NSub; kk++)    {  z = z0 + kk*dh_sub;
-         for (int jj=0; jj<NSub; jj++)    {  y = y0 + jj*dh_sub;
-         for (int ii=0; ii<NSub; ii++)    {  x = x0 + ii*dh_sub;
+         for (int kk=0; kk<NSub; kk++)    {  const double z = z0 + kk*dh_sub;
+         for (int jj=0; jj<NSub; jj++)    {  const double y = y0 + jj*dh_sub;
+         for (int ii=0; ii<NSub; ii++)    {  const double x = x0 + ii*dh_sub;
 
             Init_Function_User_Ptr( fluid_sub, x, y, z, Time[lv], lv, NULL );
 

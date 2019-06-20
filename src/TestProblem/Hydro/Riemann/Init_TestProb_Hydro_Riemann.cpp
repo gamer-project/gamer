@@ -352,29 +352,21 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // Note        :  1. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
 //                   (unless OPT__INIT_GRID_WITH_OMP is disabled)
 //                   --> Please ensure that everything here is thread-safe
-//                2. Only return one magnetic field component at a time
-//                   --> Target component is specified by "comp"
-//                   --> Return either B_X, B_Y, or B_Z, where X/Y/Z depends on the adopted coordinate system
-//                       --> Cartesian   coordinates: B_x, B_y, or B_z
-//                       --> Cylindrical coordinates: B_r, B_phi, or B_z
 //
-// Parameter   :  comp     : Target magnetic field component (MAGX/Y/Z -> B_X/Y/Z)
+// Parameter   :  magnetic : Array to store the output magnetic field
 //                x/y/z    : Target physical coordinates
 //                Time     : Target physical time
 //                lv       : Target refinement level
 //                AuxArray : Auxiliary array
 //
-// Return      :  B_comp
+// Return      :  magnetic
 //-------------------------------------------------------------------------------------------------------
-real SetBFieldIC( const int comp, const double x, const double y, const double z, const double Time,
+void SetBFieldIC( real magnetic[], const double x, const double y, const double z, const double Time,
                   const int lv, double AuxArray[] )
 {
 
-   real B_comp = NULL_REAL;
-
    double r, BoxCen;
    int    DirL, DirT1, DirT2;
-
 
 // determine the longitudinal and transverse directions
    switch ( Riemann_XYZ )
@@ -388,36 +380,24 @@ real SetBFieldIC( const int comp, const double x, const double y, const double z
 
 // set B field
 // longitudinal component
-   if      ( comp == DirL ) {
-      B_comp = Riemann_Mag;
-   }
+   magnetic[DirL] = Riemann_Mag;
 
 // transverse component 1
-   else if ( comp == DirT1 ) {
-      if (  ( Riemann_LR > 0 && r < BoxCen )  ||  ( Riemann_LR < 0 && r > BoxCen )  )
-         B_comp = Riemann_MagL_T1;
-      else
-         B_comp = Riemann_MagR_T1;
-   }
+   if (  ( Riemann_LR > 0 && r < BoxCen )  ||  ( Riemann_LR < 0 && r > BoxCen )  )
+      magnetic[DirT1] = Riemann_MagL_T1;
+   else
+      magnetic[DirT1] = Riemann_MagR_T1;
 
 // transverse component 2
-   else if ( comp == DirT2 ) {
-      if (  ( Riemann_LR > 0 && r < BoxCen )  ||  ( Riemann_LR < 0 && r > BoxCen )  )
-         B_comp = Riemann_MagL_T2;
-      else
-         B_comp = Riemann_MagR_T2;
-   }
-
-   else {
-      Aux_Error( ERROR_INFO, "incorrect B field component (%d) !!\n", comp );
-   }
+   if (  ( Riemann_LR > 0 && r < BoxCen )  ||  ( Riemann_LR < 0 && r > BoxCen )  )
+      magnetic[DirT2] = Riemann_MagL_T2;
+   else
+      magnetic[DirT2] = Riemann_MagR_T2;
 
 
 // change the B field sign if wave propagates along the negative direction
-   if ( Riemann_LR < 0 )   B_comp *= -1.0;
-
-
-   return B_comp;
+   if ( Riemann_LR < 0 )
+      for (int v=0; v<NCOMP_MAG; v++)  magnetic[v] *= -1.0;
 
 } // FUNCTION : SetBFieldIC
 #endif // #ifdef MHD

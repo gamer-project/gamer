@@ -201,48 +201,22 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // Note        :  1. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
 //                   (unless OPT__INIT_GRID_WITH_OMP is disabled)
 //                   --> Please ensure that everything here is thread-safe
-//                2. Only return one magnetic field component at a time
-//                   --> Target component is specified by "comp"
-//                   --> Return either B_X, B_Y, or B_Z, where X/Y/Z depends on the adopted coordinate system
-//                       --> Cartesian   coordinates: B_x, B_y, or B_z
-//                       --> Cylindrical coordinates: B_r, B_phi, or B_z
 //
-// Parameter   :  comp     : Target magnetic field component (MAGX/Y/Z -> B_X/Y/Z)
+// Parameter   :  magnetic : Array to store the output magnetic field
 //                x/y/z    : Target physical coordinates
 //                Time     : Target physical time
 //                lv       : Target refinement level
 //                AuxArray : Auxiliary array
 //
-// Return      :  B_comp
+// Return      :  magnetic
 //-------------------------------------------------------------------------------------------------------
-real SetBFieldIC( const int comp, const double x, const double y, const double z, const double Time,
+void SetBFieldIC( real magnetic[], const double x, const double y, const double z, const double Time,
                   const int lv, double AuxArray[] )
 {
 
-   real B_comp = NULL_REAL;
-
-   switch ( comp )
-   {
-//    B_X
-      case MAGX:
-         B_comp = Blast_BField / sqrt(3.0);
-         break;
-
-//    B_Y
-      case MAGY:
-         B_comp = Blast_BField / sqrt(3.0);
-         break;
-
-//    B_Z
-      case MAGZ:
-         B_comp = Blast_BField / sqrt(3.0);
-         break;
-
-      default :
-         Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "comp", comp );
-   } // switch ( comp )
-
-   return B_comp;
+   magnetic[MAGX] = Blast_BField / sqrt(3.0);
+   magnetic[MAGY] = Blast_BField / sqrt(3.0);
+   magnetic[MAGZ] = Blast_BField / sqrt(3.0);
 
 } // FUNCTION : SetBFieldIC
 #endif // #ifdef MHD
