@@ -268,16 +268,16 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 // a. fill up the central region of CData_CC[] and CData_FC[]
 // ------------------------------------------------------------------------------------------------------------
    int i1, i2, j1, j2, k1, k2, Idx, TVarCCIdx_Flu, Disp1[3], Disp2[3], Loop1[3];
-   double xyz[3];    // corner coordinates for the user-specified B.C.
+   double xyz_flu[3];   // corner coordinates for the user-specified fluid B.C.
 
    for (int d=0; d<3; d++)
    {
-      Loop1[d] = TABLE_01( FSide, 'x'+d, CGrid_CC_PID, PS1, CGrid_CC_PID );
-      Disp1[d] = TABLE_01( FSide, 'x'+d, PS1-CGrid_CC_PID, 0, 0 );
-      Disp2[d] = TABLE_01( FSide, 'x'+d, 0, CGhost_CC, CGhost_CC );
-      xyz  [d] = TABLE_01( FSide, 'x'+d, amr->patch[0][lv][PID]->EdgeL[d] + (0.5+PS1-CGrid_CC_PID)*dh,
-                                         amr->patch[0][lv][PID]->EdgeL[d] + (0.5-CGhost_CC)*dh,
-                                         amr->patch[0][lv][PID]->EdgeL[d] + (0.5-CGhost_CC)*dh );
+      Loop1  [d] = TABLE_01( FSide, 'x'+d, CGrid_CC_PID, PS1, CGrid_CC_PID );
+      Disp1  [d] = TABLE_01( FSide, 'x'+d, PS1-CGrid_CC_PID, 0, 0 );
+      Disp2  [d] = TABLE_01( FSide, 'x'+d, 0, CGhost_CC, CGhost_CC );
+      xyz_flu[d] = TABLE_01( FSide, 'x'+d, amr->patch[0][lv][PID]->EdgeL[d] + (0.5+PS1-CGrid_CC_PID)*dh,
+                                           amr->patch[0][lv][PID]->EdgeL[d] + (0.5-CGhost_CC)*dh,
+                                           amr->patch[0][lv][PID]->EdgeL[d] + (0.5-CGhost_CC)*dh );
    }
 
 
@@ -865,7 +865,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                case BC_FLU_USER:
                   Flu_BoundaryCondition_User        ( CData_CC_Ptr,                      NVarCC_Flu,
                                                       CSize_CC[0], CSize_CC[1], CSize_CC[2], BC_Idx_Start, BC_Idx_End,
-                                                      TVarCCIdxList_Flu, PrepTime, dh, xyz, TVarCC, lv );
+                                                      TVarCCIdxList_Flu, PrepTime, dh, xyz_flu, TVarCC, lv );
                break;
 
                default:
@@ -909,7 +909,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
             if ( CSide >= 6  ||  CSide == norm_dir*2  ||  CSide == norm_dir*2+1 )   continue;
 
 //          set array indices --> correspond to the **cell-centered** array
-            int FC_BC_Idx_Start[3], FC_BC_Idx_End[3], FC_BC_Size[3];
+            int    FC_BC_Idx_Start[3], FC_BC_Idx_End[3], FC_BC_Size[3];
+            double xyz_mag[3];   // cell-centered corner coordinates for the user-specified magnetic field B.C.
             for (int d=0; d<3; d++)
             {
                if ( d == norm_dir )
@@ -917,6 +918,9 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                   FC_BC_Idx_Start[d] = 0;
                   FC_BC_Idx_End  [d] = CSize_FC[v][d] - 2;
                   FC_BC_Size     [d] = CSize_FC[v][d] - 1;
+                  xyz_mag        [d] = TABLE_01( FSide, 'x'+d, amr->patch[0][lv][PID]->EdgeL[d] + (0.5+PS1-GhostSize_Padded_2)*dh,
+                                                               amr->patch[0][lv][PID]->EdgeL[d] + 0.5*dh,
+                                                               amr->patch[0][lv][PID]->EdgeL[d] + 0.5*dh );
                }
 
                else
@@ -925,6 +929,9 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                   FC_BC_Idx_End  [d] = Table_01( FSide, CSide, 'x'+d, CGrid_FC_PID, CGhost_FC, CGhost_FC, PS1, CGhost_FC,
                                                  CGhost_FC, CGrid_FC_PID ) + FC_BC_Idx_Start[d] - 1;
                   FC_BC_Size     [d] = CSize_FC[v][d];
+                  xyz_mag        [d] = TABLE_01( FSide, 'x'+d, amr->patch[0][lv][PID]->EdgeL[d] + (0.5+PS1-CGrid_FC_PID)*dh,
+                                                               amr->patch[0][lv][PID]->EdgeL[d] + (0.5-CGhost_FC)*dh,
+                                                               amr->patch[0][lv][PID]->EdgeL[d] + (0.5-CGhost_FC)*dh );
                }
             }
 
@@ -947,9 +954,9 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
                /*
                case BC_FLU_USER:
-                  MHD_BoundaryCondition_User      ( MagDataPtr,                      1,
+                  MHD_BoundaryCondition_User      ( MagDataPtr, BC_Face[BC_Sibling], 1,
                                                     FC_BC_Size[0], FC_BC_Size[1], FC_BC_Size[2], FC_BC_Idx_Start, FC_BC_Idx_End,
-                                                    &TVarFCIdx, PrepTime, dh, xyz, lv );
+                                                    &TVarFCIdx, PrepTime, dh, xyz_mag, lv );
                break;
                */
 
