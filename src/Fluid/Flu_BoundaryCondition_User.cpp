@@ -33,7 +33,7 @@ void BC_User( real fluid[], const double x, const double y, const double z, cons
               const int lv, double AuxArray[] )
 {
 
-// please put your B.C. here
+// put your B.C. here
 // ##########################################################################################################
 // Example 1 : set to time-independent values for HYDRO
    /*
@@ -72,6 +72,7 @@ void BC_User( real fluid[], const double x, const double y, const double z, cons
 // Note        :  1. Work for Prepare_PatchData(), InterpolateGhostZone(), Refine(), and LB_Refine_GetNewRealPatchList()
 //                2. The function pointer "BC_User_Ptr" points to BC_User() by default but may be overwritten
 //                   by various test problem initializers
+//                3. User-defined boundary conditions for the magnetic field are set in MHD_BoundaryCondition_User()
 //
 // Parameter   :  Array          : Array to store the prepared data including ghost zones
 //                NVar_Flu       : Number of fluid variables to be prepared (derived variables are NOT included)
@@ -80,7 +81,7 @@ void BC_User( real fluid[], const double x, const double y, const double z, cons
 //                Idx_End        : Maximum array indices
 //                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
 //                Time           : Current physical time
-//                dh             : Grid size
+//                dh             : Cell size
 //                Corner         : Physcial coordinates at the center of the cell (0,0,0) --> Array[0]
 //                TVar           : Target variables to be prepared --> only used for preparing the derived variables
 //                lv             : Refinement level

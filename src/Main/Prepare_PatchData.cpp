@@ -1569,13 +1569,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                                                           TVarFCIdxList );
                      break;
 
-                     /*
                      case BC_FLU_USER:
-                        MHD_BoundaryCondition_User      ( MagDataPtr,                      NVarFC_Tot,
+                        MHD_BoundaryCondition_User      ( MagDataPtr, BC_Face[BC_Sibling], NVarFC_Tot,
                                                           PGSize1D_CC, PGSize1D_CC, PGSize1D_CC, BC_Idx_Start, BC_Idx_End,
                                                           TVarFCIdxList, PrepTime, dh, xyz0, lv );
                      break;
-                     */
 
                      default:
                         Aux_Error( ERROR_INFO, "unsupported MHD B.C. (%d) !!\n", FluBC[ BC_Face[BC_Sibling] ] );
