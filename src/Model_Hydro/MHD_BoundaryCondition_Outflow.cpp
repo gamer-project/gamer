@@ -48,7 +48,7 @@ void MHD_BoundaryCondition_Outflow( real **Array, const int BC_Face, const int N
                                     const int Idx_Start[], const int Idx_End[], const int TVarIdxList[] )
 {
 
-// check the index range
+// check
 #  ifdef GAMER_DEBUG
    switch ( BC_Face )
    {
