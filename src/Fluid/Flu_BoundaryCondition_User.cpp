@@ -25,8 +25,9 @@ extern void (*BC_BField_User_Ptr)( real magnetic[], const double x, const double
 //                       this funtion will become useless
 //                2. Always return NCOMP_TOTAL variables
 //                3. Enabled by the runtime options "OPT__BC_FLU_* == 4"
-//                4. For MHD, one must add magnetic energy (i.e., 0.5*B^2) to fluid[ENGY]
-//                   --> Different from the initial condition routine
+//                4. For MHD, do NOT add magnetic energy (i.e., 0.5*B^2) to fluid[ENGY] here
+//                   --> It will be added automatically later
+//                   --> Just like the fluid initialization routine
 //
 // Parameter   :  fluid    : Fluid field to be set
 //                x/y/z    : Physical coordinates
@@ -110,13 +111,16 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
    const double z0 = Corner[2] + (double)Idx_Start[2]*dh;
 
 #  if   ( MODEL == HYDRO )
-   const bool CheckMinPres_Yes = true;
-   const real Gamma_m1         = GAMMA - (real)1.0;
-   const bool PrepVx           = ( TVar & _VELX ) ? true : false;
-   const bool PrepVy           = ( TVar & _VELY ) ? true : false;
-   const bool PrepVz           = ( TVar & _VELZ ) ? true : false;
-   const bool PrepPres         = ( TVar & _PRES ) ? true : false;
-   const bool PrepTemp         = ( TVar & _TEMP ) ? true : false;
+#  ifdef MHD
+   const double dh_2             = 0.5*dh;
+#  endif
+   const bool   CheckMinPres_Yes = true;
+   const real   Gamma_m1         = GAMMA - (real)1.0;
+   const bool   PrepVx           = ( TVar & _VELX ) ? true : false;
+   const bool   PrepVy           = ( TVar & _VELY ) ? true : false;
+   const bool   PrepVz           = ( TVar & _VELZ ) ? true : false;
+   const bool   PrepPres         = ( TVar & _PRES ) ? true : false;
+   const bool   PrepTemp         = ( TVar & _TEMP ) ? true : false;
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
@@ -134,32 +138,47 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
    int    i, j, k, v2;
    real   BVal[NCOMP_TOTAL];
    double x, y, z;
-#  if ( MODEL == HYDRO )
-   real   EngyB=NULL_REAL;
-#  endif
 
    for (k=Idx_Start[2], z=z0; k<=Idx_End[2]; k++, z+=dh)
    for (j=Idx_Start[1], y=y0; j<=Idx_End[1]; j++, y+=dh)
    for (i=Idx_Start[0], x=x0; i<=Idx_End[0]; i++, x+=dh)
    {
+//    1. primary variables
+//    get the boundary values of all NCOMP_TOTAL fields
       BC_User_Ptr( BVal, x, y, z, Time, lv, NULL );
 
+//    add the magnetic energy for MHD
+#     if ( MODEL == HYDRO )
+#     ifdef MHD
+      real EngyB, BxL, BxR, Bx, ByL, ByR, By, BzL, BzR, Bz, B3v[NCOMP_MAG];
+
+      BC_BField_User_Ptr( B3v, x-dh_2, y,      z,      Time, lv, NULL );   BxL = B3v[MAGX];
+      BC_BField_User_Ptr( B3v, x+dh_2, y,      z,      Time, lv, NULL );   BxR = B3v[MAGX];
+      BC_BField_User_Ptr( B3v, x,      y-dh_2, z,      Time, lv, NULL );   ByL = B3v[MAGY];
+      BC_BField_User_Ptr( B3v, x,      y+dh_2, z,      Time, lv, NULL );   ByR = B3v[MAGY];
+      BC_BField_User_Ptr( B3v, x,      y,      z-dh_2, Time, lv, NULL );   BzL = B3v[MAGZ];
+      BC_BField_User_Ptr( B3v, x,      y,      z+dh_2, Time, lv, NULL );   BzR = B3v[MAGZ];
+
+      Bx    = (real)0.5*( BxL + BxR );
+      By    = (real)0.5*( ByL + ByR );
+      Bz    = (real)0.5*( BzL + BzR );
+      EngyB = (real)0.5*( SQR(Bx) + SQR(By) + SQR(Bz) );
+
+      BVal[ENGY] += EngyB;
+
+#     else
+      const real EngyB = NULL_REAL;
+#     endif
+#     endif // #ifdef ( MODEL == HYDRO )
+
+//    store results to the output array
       for (int v=0; v<NVar_Flu; v++)   Array3D[v][k][j][i] = BVal[ TFluVarIdxList[v] ];
 
 
-//    derived variables
+//    2. derived variables
       v2 = NVar_Flu;
 
 #     if   ( MODEL == HYDRO )
-#     ifdef MHD
-      if ( PrepPres || PrepTemp )
-      {
-         real BMag[NCOMP_MAG];
-         BC_BField_User_Ptr( BMag, x, y, z, Time, lv, NULL );
-         EngyB = (real)0.5*( SQR(BMag[MAGX]) + SQR(BMag[MAGY]) + SQR(BMag[MAGZ]) );
-      }
-#     endif
-
       if ( PrepVx   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMX] / BVal[DENS];
       if ( PrepVy   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMY] / BVal[DENS];
       if ( PrepVz   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMZ] / BVal[DENS];
