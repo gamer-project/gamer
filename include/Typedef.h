@@ -47,6 +47,7 @@ const TestProbID_t
    TESTPROB_HYDRO_PLUMMER                      =   11,
    TESTPROB_HYDRO_GRAVITY                      =   12,
    TESTPROB_HYDRO_MHD_ABC                      =   13,
+   TESTPROB_HYDRO_MHD_ORSZAG_TANG_VORTEX       =   14,
 
    TESTPROB_ELBDM_EXTPOT                       = 1000;
 
