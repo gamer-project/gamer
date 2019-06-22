@@ -293,10 +293,10 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 //       (c1.3.2) fill up the ghost zone of CData (no interpolation is required)
          int    loop[3], offset_out[3], offset_in[3], i_in, j_in, k_in, BC_Sibling, BC_Idx_Start[3], BC_Idx_End[3];
-         double xyz[3];
+         double xyz_flu[3];
 
 //       calculate the corner coordinates of the coarse-grid data for the user-specified B.C.
-         for (int d=0; d<3; d++)    xyz[d] = Pedigree->EdgeL[d] + (0.5-CGhost_Flu)*amr->dh[lv];
+         for (int d=0; d<3; d++)    xyz_flu[d] = Pedigree->EdgeL[d] + (0.5-CGhost_Flu)*amr->dh[lv];
 
 //       (c1.3.2.1) prepare the fluid data
          for (int sib=0; sib<NSide_Flu; sib++)
@@ -363,7 +363,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                   case BC_FLU_USER:
                      Flu_BoundaryCondition_User        ( Flu_CData[0][0][0],                      NCOMP_TOTAL,
                                                          CSize_Flu, CSize_Flu, CSize_Flu, BC_Idx_Start, BC_Idx_End,
-                                                         FluVarIdxList, Time[lv], amr->dh[lv], xyz, _TOTAL, lv );
+                                                         FluVarIdxList, Time[lv], amr->dh[lv], xyz_flu, _TOTAL, lv );
                   break;
 
                   default:
@@ -524,6 +524,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 //                set array indices --> correspond to the **cell-centered** array
                   int FC_BC_Idx_Start[3], FC_BC_Idx_End[3], FC_BC_Size[3];
+                  double xyz_mag[3];   // cell-centered corner coordinates for the user-specified magnetic field B.C.
                   for (int d=0; d<3; d++)
                   {
                      if ( d == norm_dir )
@@ -531,6 +532,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                         FC_BC_Idx_Start[d] = 0;
                         FC_BC_Idx_End  [d] = CSize_Mag_N - 2;
                         FC_BC_Size     [d] = CSize_Mag_N - 1;
+                        xyz_mag        [d] = Pedigree->EdgeL[d] + 0.5*amr->dh[lv];
                      }
 
                      else
@@ -538,6 +540,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                         FC_BC_Idx_Start[d] = offset_out[d];
                         FC_BC_Idx_End  [d] = loop[d] + FC_BC_Idx_Start[d] - 1;
                         FC_BC_Size     [d] = CSize_Mag_T;
+                        xyz_mag        [d] = Pedigree->EdgeL[d] + (0.5-CGhost_Mag)*amr->dh[lv];
                      }
                   }
 
@@ -558,13 +561,11 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                                                           &v );
                      break;
 
-                     /*
                      case BC_FLU_USER:
-                        MHD_BoundaryCondition_User      ( Mag_CDataPtr,                      1,
+                        MHD_BoundaryCondition_User      ( Mag_CDataPtr, BC_Face[BC_Sibling], 1,
                                                           FC_BC_Size[0], FC_BC_Size[1], FC_BC_Size[2], FC_BC_Idx_Start, FC_BC_Idx_End,
-                                                          &v, Time[lv], amr->dh[lv], xyz, lv );
+                                                          &v, Time[lv], amr->dh[lv], xyz_mag, lv );
                      break;
-                     */
 
                      default:
                         Aux_Error( ERROR_INFO, "unsupported MHD B.C. (%d) !!\n", OPT__BC_FLU[ BC_Face[BC_Sibling] ] );
@@ -594,7 +595,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 //          idenitfy the coarse-fine interfaces
             Mag_FInterface_Ptr[sib] = NULL;
 
-            const int xyz    = sib/2;  // spatial direction: (0,0,1,1,2,2)
+            const int dir    = sib/2;  // spatial direction: (0,0,1,1,2,2)
             const int SibPID = Pedigree->sibling[sib];
 
 //          skip non-periodic boundaries
@@ -617,16 +618,16 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             {
                const int LocalID    = TABLE_03( sib, t );
                const int SibSonPID  = SibSonPID0 + LocalID;
-               const int didx_out_n = TABLE_02( LocalID, 'x'+TDir[xyz][0], 0, PS1 );
-               const int didx_out_m = TABLE_02( LocalID, 'x'+TDir[xyz][1], 0, PS1 );
+               const int didx_out_n = TABLE_02( LocalID, 'x'+TDir[dir][0], 0, PS1 );
+               const int didx_out_m = TABLE_02( LocalID, 'x'+TDir[dir][1], 0, PS1 );
 
-               for (int m=0; m<PS1; m++)  {  idx_B_in  = m*stride_in_m[xyz] + didx_in[sib];
+               for (int m=0; m<PS1; m++)  {  idx_B_in  = m*stride_in_m[dir] + didx_in[sib];
                                              idx_B_out = ( m + didx_out_m )*PS2 + didx_out_n;
                for (int n=0; n<PS1; n++)  {
 
-                  Mag_FInterface_Ptr[sib][idx_B_out] = amr->patch[FMagSg][lv+1][SibSonPID]->magnetic[xyz][idx_B_in];
+                  Mag_FInterface_Ptr[sib][idx_B_out] = amr->patch[FMagSg][lv+1][SibSonPID]->magnetic[dir][idx_B_in];
 
-                  idx_B_in  += stride_in_n[xyz];
+                  idx_B_in  += stride_in_n[dir];
                   idx_B_out ++;
                }}
             } // for (int t=0; t<4; t++)
