@@ -952,13 +952,11 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                                                     &TVarFCIdx );
                break;
 
-               /*
                case BC_FLU_USER:
                   MHD_BoundaryCondition_User      ( MagDataPtr, BC_Face[BC_Sibling], 1,
                                                     FC_BC_Size[0], FC_BC_Size[1], FC_BC_Size[2], FC_BC_Idx_Start, FC_BC_Idx_End,
                                                     &TVarFCIdx, PrepTime, dh, xyz_mag, lv );
                break;
-               */
 
                default:
                   Aux_Error( ERROR_INFO, "unsupported MHD B.C. (%d) !!\n", FluBC[ BC_Face[BC_Sibling] ] );
