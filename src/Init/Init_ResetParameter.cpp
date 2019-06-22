@@ -70,10 +70,6 @@ void Init_ResetParameter()
 #     error : unsupported CPU hydro scheme
 #     endif
 
-#     ifdef MHD
-#     warning : WAIT MHD !!!
-#     endif
-
 #     elif  ( MODEL == ELBDM )
 #     ifdef GRAVITY
       DT__FLUID = 0.20;                   // 1D k-max mode rotates 0.20*2*PI
