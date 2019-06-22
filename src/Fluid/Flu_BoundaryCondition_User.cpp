@@ -8,6 +8,11 @@ static void BC_User( real fluid[], const double x, const double y, const double 
 void (*BC_User_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
                      const int lv, double AuxArray[] ) = BC_User;
 
+#ifdef MHD
+extern void (*BC_BField_User_Ptr)( real magnetic[], const double x, const double y, const double z, const double Time,
+                                   const int lv, double AuxArray[] );
+#endif
+
 
 
 
@@ -20,6 +25,8 @@ void (*BC_User_Ptr)( real fluid[], const double x, const double y, const double 
 //                       this funtion will become useless
 //                2. Always return NCOMP_TOTAL variables
 //                3. Enabled by the runtime options "OPT__BC_FLU_* == 4"
+//                4. For MHD, one must add magnetic energy (i.e., 0.5*B^2) to fluid[ENGY]
+//                   --> Different from the initial condition routine
 //
 // Parameter   :  fluid    : Fluid field to be set
 //                x/y/z    : Physical coordinates
@@ -110,9 +117,6 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
    const bool PrepVz           = ( TVar & _VELZ ) ? true : false;
    const bool PrepPres         = ( TVar & _PRES ) ? true : false;
    const bool PrepTemp         = ( TVar & _TEMP ) ? true : false;
-#  ifdef MHD
-#  warning : WAIT MHD !!!
-#  endif
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
@@ -148,9 +152,12 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
 
 #     if   ( MODEL == HYDRO )
 #     ifdef MHD
-#     warning : WAIT MHD !!!
-//    if ( PrepPres || PresTemp )   EngyB = ...;
-//    add other MHD derived variables
+      if ( PrepPres || PrepTemp )
+      {
+         real BMag[NCOMP_MAG];
+         BC_BField_User_Ptr( BMag, x, y, z, Time, lv, NULL );
+         EngyB = (real)0.5*( SQR(BMag[MAGX]) + SQR(BMag[MAGY]) + SQR(BMag[MAGZ]) );
+      }
 #     endif
 
       if ( PrepVx   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMX] / BVal[DENS];
