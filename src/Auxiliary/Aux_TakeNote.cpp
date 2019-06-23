@@ -486,12 +486,6 @@ void Aux_TakeNote()
       fprintf( Note, "HLL_INCLUDE_ALL_WAVES           OFF\n" );
 #     endif
 
-#     ifdef WAF_DISSIPATE
-      fprintf( Note, "WAF_DISSIPATE                   ON\n" );
-#     else
-      fprintf( Note, "WAF_DISSIPATE                   OFF\n" );
-#     endif
-
 #     elif ( MODEL == ELBDM )
 
 #     else
