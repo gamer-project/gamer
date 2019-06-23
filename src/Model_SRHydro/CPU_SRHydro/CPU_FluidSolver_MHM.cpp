@@ -142,7 +142,7 @@ void CPU_FluidSolver_MHM(
 #     ifdef __CUDACC__
       const int P = blockIdx.x;
 #     else
-#     pragma omp for schedule( runtime )
+#     pragma omp for schedule( runtime ) private(iteration)
       for (int P=0; P<NPatchGroup; P++)
 #     endif
       {
