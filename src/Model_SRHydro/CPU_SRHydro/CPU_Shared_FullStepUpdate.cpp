@@ -2,7 +2,7 @@
 #define __CUFLU_FULLSTEPUPDATE__
 
 
-
+#include <assert.h>
 #include "CUFLU.h"
 
 #if (  MODEL == SR_HYDRO  &&  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP )  )
