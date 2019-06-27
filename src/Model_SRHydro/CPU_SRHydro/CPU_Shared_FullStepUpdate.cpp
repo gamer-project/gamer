@@ -39,9 +39,9 @@
 //                MinTemp          : Minimum allowed temperature
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-bool SRHydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
+void SRHydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
                              const real g_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ], const real dt, const real dh,
-                             const real Gamma, const real MinDens, const real MinTemp )
+                             const real Gamma, const real MinDens, const real MinTemp, int *state )
 {
 
    const int  didx_flux[3] = { 1, N_FL_FLUX, N_FL_FLUX*N_FL_FLUX };
@@ -78,7 +78,22 @@ bool SRHydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Outpu
       Output_1Cell[ENGY] = SRHydro_CheckMinTempInEngy( Output_1Cell, MinTemp, Gamma );
 #     endif
 
-      if( SRHydro_CheckUnphysical(Output_1Cell, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true) ) assert(0);
+      if( SRHydro_CheckUnphysical(Output_1Cell, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true) )
+      {
+#       ifdef __CUDACC__
+        atomicOr ( state, 1);
+#       else
+        *state = *state | 1;
+#       endif
+      }
+
+//    waiting all threads within a block
+#     ifdef __CUDACC__
+      __syncthreads();
+#     endif
+
+//    return threads block 
+      if ( *state != 0 ) return;
 
 
 //    4. store results to the output array
@@ -86,7 +101,6 @@ bool SRHydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Outpu
 
    } // CGPU_LOOP
   
-   return false;
 } // FUNCTION : SRHydro_FullStepUpdate
 
 

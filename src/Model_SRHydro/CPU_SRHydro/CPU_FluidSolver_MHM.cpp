@@ -104,10 +104,15 @@ void CPU_FluidSolver_MHM(
 #endif // #ifdef __CUDACC__ ... else ...
 {
 
-   const int Max = 2;
-   real Adaptive_MinMod_Coeff;
+   const int Max = 4;
+   real AdaptiveMinModCoeff;
    int iteration;
-   bool state;
+
+#  ifdef __CUDACC__
+   __shared__ int state;
+#  else
+   int state;
+#  endif
 
 // openmp pragma for the CPU solver
 #  ifndef __CUDACC__
@@ -142,11 +147,11 @@ void CPU_FluidSolver_MHM(
 #     ifdef __CUDACC__
       const int P = blockIdx.x;
 #     else
-#     pragma omp for schedule( runtime ) private(iteration, Adaptive_MinMod_Coeff, state)
+#     pragma omp for schedule( runtime ) private( iteration, AdaptiveMinModCoeff, state )
       for (int P=0; P<NPatchGroup; P++)
 #     endif
       {
-//         iteration = 0;
+         iteration = 0;
 
 //       1. half-step prediction
 //       1-a. MHM_RP: use Riemann solver to calculate the half-step fluxes
@@ -161,33 +166,36 @@ void CPU_FluidSolver_MHM(
 //              --> check unphysical cells in g_Half_Var_1PG[] after prediction
          SRHydro_RiemannPredict( g_Flu_Array_In[P], g_Half_Flux_1PG, g_Half_Var_1PG, dt, dh, Gamma, MinDens, MinTemp );
 
-//         do {
+         do {
+               state = 0;
+        
 //             adaptive minmod coefficient         
-//               Adaptive_MinMod_Coeff = ( Max - iteration ) * ( MinMod_Coeff / (real) Max );
-               Adaptive_MinMod_Coeff = MinMod_Coeff;
+               AdaptiveMinModCoeff = ( Max - iteration ) * ( MinMod_Coeff / (real) Max );
 
 //             1-a-3. evaluate the face-centered values by data reconstruction
 //                    --> note that g_Half_Var_1PG[] returned by SRHydro_RiemannPredict() stores the primitive variables
                SRHydro_DataReconstruction( NULL, g_Half_Var_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
                                            N_HF_VAR, FLU_GHOST_SIZE-2,
-                                           Gamma, LR_Limiter, Adaptive_MinMod_Coeff, dt, dh, MinDens, MinTemp );
+                                           Gamma, LR_Limiter, AdaptiveMinModCoeff, dt, dh, MinDens, MinTemp );
 
 
 //       1-b. MHM: use interpolated face-centered values to calculate the half-step fluxes
 #        elif ( FLU_SCHEME == MHM )
 
-//         do {
+         do {
+               state = 0;
+
 //             adaptive minmod coefficient         
-//               Adaptive_MinMod_Coeff = ( Max - iteration ) * ( MinMod_Coeff / (real) Max );
-               Adaptive_MinMod_Coeff = MinMod_Coeff;
+               AdaptiveMinModCoeff = ( Max - iteration ) * ( MinMod_Coeff / (real) Max );
 
 //             evaluate the face-centered values by data reconstruction
 //             --> check unphysical cells in g_Flu_Array_In[] before data reconstruction
                SRHydro_DataReconstruction( g_Flu_Array_In[P], g_PriVar_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
                                            FLU_NXT, FLU_GHOST_SIZE-1,
-                                           Gamma, LR_Limiter, Adaptive_MinMod_Coeff, dt, dh, MinDens, MinTemp );
+                                           Gamma, LR_Limiter, AdaptiveMinModCoeff, dt, dh, MinDens, MinTemp );
 #        endif // #if ( FLU_SCHEME == MHM_RP ) ... else ...
 
+               if ( state == 1 ) printf("iteration=%d, AdaptiveMinModCoeff=%13.10f\n", iteration, AdaptiveMinModCoeff );
 
 //             2. evaluate the full-step fluxes
 //                --> check unphysical cells in g_FC_Var_1PG[] before computing flux
@@ -197,12 +205,13 @@ void CPU_FluidSolver_MHM(
 
 //             3. full-step evolution
 //                --> check unphysical cells in g_Flu_Array_Out[] after full update
-               state = SRHydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], NULL,
-                                               g_FC_Flux_1PG, dt, dh, Gamma, MinDens, MinTemp );
+               SRHydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], NULL,
+                                       g_FC_Flux_1PG, dt, dh, Gamma, MinDens, MinTemp, &state );
 
-//               iteration++;
 
-//            } while( state && iteration <= Max );
+               iteration++;
+
+            } while( state && iteration <= Max );
 
       } // loop over all patch groups
    } // OpenMP parallel region
