@@ -104,14 +104,14 @@ void CPU_FluidSolver_MHM(
 #endif // #ifdef __CUDACC__ ... else ...
 {
 
-   const int Max = 4;
+   const char Max = 4;
+   char iteration;
    real AdaptiveMinModCoeff;
-   int iteration;
 
 #  ifdef __CUDACC__
-   __shared__ int state;
+   __shared__ char state;
 #  else
-   int state;
+   char state;
 #  endif
 
 // openmp pragma for the CPU solver
@@ -167,10 +167,10 @@ void CPU_FluidSolver_MHM(
          SRHydro_RiemannPredict( g_Flu_Array_In[P], g_Half_Flux_1PG, g_Half_Var_1PG, dt, dh, Gamma, MinDens, MinTemp );
 
          do {
+//             adaptive minmod coefficient
                state = 0;
-        
-//             adaptive minmod coefficient         
                AdaptiveMinModCoeff = ( Max - iteration ) * ( MinMod_Coeff / (real) Max );
+
 
 //             1-a-3. evaluate the face-centered values by data reconstruction
 //                    --> note that g_Half_Var_1PG[] returned by SRHydro_RiemannPredict() stores the primitive variables
@@ -183,10 +183,10 @@ void CPU_FluidSolver_MHM(
 #        elif ( FLU_SCHEME == MHM )
 
          do {
-               state = 0;
-
 //             adaptive minmod coefficient         
+               state = 0;
                AdaptiveMinModCoeff = ( Max - iteration ) * ( MinMod_Coeff / (real) Max );
+
 
 //             evaluate the face-centered values by data reconstruction
 //             --> check unphysical cells in g_Flu_Array_In[] before data reconstruction
@@ -195,7 +195,13 @@ void CPU_FluidSolver_MHM(
                                            Gamma, LR_Limiter, AdaptiveMinModCoeff, dt, dh, MinDens, MinTemp );
 #        endif // #if ( FLU_SCHEME == MHM_RP ) ... else ...
 
-               if ( state == 1 ) printf("iteration=%d, AdaptiveMinModCoeff=%13.10f\n", iteration, AdaptiveMinModCoeff );
+#              ifdef __CUDACC__
+               if ( threadIdx.x == 0 && state == 1 )
+#              else
+               if ( state == 1 ) 
+#              endif
+                 printf("iteration=%d, AdaptiveMinModCoeff=%13.10f\n", iteration, AdaptiveMinModCoeff );
+
 
 //             2. evaluate the full-step fluxes
 //                --> check unphysical cells in g_FC_Var_1PG[] before computing flux
@@ -210,6 +216,7 @@ void CPU_FluidSolver_MHM(
 
 
                iteration++;
+
 
             } while( state && iteration <= Max );
 

@@ -41,7 +41,7 @@
 GPU_DEVICE
 void SRHydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
                              const real g_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ], const real dt, const real dh,
-                             const real Gamma, const real MinDens, const real MinTemp, int *state )
+                             const real Gamma, const real MinDens, const real MinTemp, char *state )
 {
 
    const int  didx_flux[3] = { 1, N_FL_FLUX, N_FL_FLUX*N_FL_FLUX };
@@ -92,7 +92,7 @@ void SRHydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Outpu
       __syncthreads();
 #     endif
 
-//    return threads block 
+//    return all threads within a block 
       if ( *state != 0 ) return;
 
 
