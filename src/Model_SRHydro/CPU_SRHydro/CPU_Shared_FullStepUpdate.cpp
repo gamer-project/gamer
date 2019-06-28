@@ -81,7 +81,7 @@ void SRHydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Outpu
       if( SRHydro_CheckUnphysical(Output_1Cell, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true) )
       {
 #       ifdef __CUDACC__
-        atomicOr ( state, 1);
+        atomicOr ( (int*)state, 1);
 #       else
         *state = *state | 1;
 #       endif
