@@ -624,9 +624,9 @@ NewtonRaphsonSolver(void *ptr, real *root, const real guess, const real epsabs, 
  int max_iter = 20;
 
  real f, df;
- real delta;
- real tolerance;
+// real tolerance;
  *root = guess;
+ real last_root;
 
  do
    {
@@ -639,12 +639,13 @@ NewtonRaphsonSolver(void *ptr, real *root, const real guess, const real epsabs, 
      if ( df != df ||(real) -HUGE_NUMBER >= df || df >= (real)HUGE_NUMBER )  printf("derivative value is not finite\n");
 #    endif     
 
-      delta = f/df;
-      *root = *root - delta;
+      last_root = *root;
+      *root = *root - f/df;
 
-      tolerance =  FMA( epsrel, FABS(*root), epsabs );
+//      tolerance =  FMA( epsrel, FABS(*root), epsabs );
 
-   }while ( fabs(delta) >= tolerance && iter < max_iter );
+//   }while ( fabs(delta) >= tolerance && iter < max_iter );
+   }while ( *root != last_root );
 
 }
 
