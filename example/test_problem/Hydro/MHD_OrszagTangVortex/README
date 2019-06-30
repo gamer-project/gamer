@@ -7,6 +7,8 @@ Disable: GRAVITY, PARTICLE
 Default setup:
 ========================================
 1. Periodic BC
+2. Refinement criterion: current density (OPT__FLAG_CURRENT)
+3. MAX_LEVEL = 2
 
 
 Note:
