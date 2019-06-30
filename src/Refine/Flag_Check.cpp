@@ -118,6 +118,17 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 #  endif
 
 
+// check current density in MHD
+// ===========================================================================================
+#  ifdef MHD
+   if ( OPT__FLAG_CURRENT )
+   {
+      Flag |= Check_Curl( i, j, k, MagCC[0], MagCC[1], MagCC[2], FlagTable_Current[lv] );
+      if ( Flag )    return Flag;
+   }
+#  endif
+
+
 // check Jeans length
 // ===========================================================================================
 #  if ( MODEL == HYDRO  &&  defined GRAVITY )

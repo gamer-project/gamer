@@ -689,6 +689,9 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__FLAG_PRES_GRADIENT         %d\n",      OPT__FLAG_PRES_GRADIENT   );
       fprintf( Note, "OPT__FLAG_VORTICITY             %d\n",      OPT__FLAG_VORTICITY       );
       fprintf( Note, "OPT__FLAG_JEANS                 %d\n",      OPT__FLAG_JEANS           );
+#     ifdef MHD
+      fprintf( Note, "OPT__FLAG_CURRENT               %d\n",      OPT__FLAG_CURRENT         );
+#     endif
 #     endif
 #     if ( MODEL == ELBDM )
       fprintf( Note, "OPT__FLAG_ENGY_DENSITY          %d\n",      OPT__FLAG_ENGY_DENSITY    );
@@ -1168,6 +1171,18 @@ void Aux_TakeNote()
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n");
       }
+
+#     ifdef MHD
+      if ( OPT__FLAG_CURRENT )
+      {
+         fprintf( Note, "Flag Criterion (Current Density in MHD)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level             Current\n" );
+         for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_Current[lv] );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
+      }
+#     endif
 #     endif // #if ( MODEL == HYDRO )
 
 #     if ( MODEL == ELBDM )
