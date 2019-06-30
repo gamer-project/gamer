@@ -121,6 +121,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    {
       const real (*Fluid)[PS1][PS1][PS1] = NULL;
       real (*Pot )[PS1][PS1]             = NULL;
+      real (*MagCC)[PS1][PS1][PS1]       = NULL;
       real (*Vel)[PS1][PS1][PS1]         = NULL;
       real (*Pres)[PS1][PS1]             = NULL;
       real (*Lohner_Var)                 = NULL;   // array storing the variables for Lohner
@@ -133,8 +134,12 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       bool ProperNesting, NextPatch;
 
 #     if ( MODEL == HYDRO )
-      if ( OPT__FLAG_VORTICITY )       Vel  = new real [3][PS1][PS1][PS1];
-      if ( OPT__FLAG_PRES_GRADIENT )   Pres = new real    [PS1][PS1][PS1];
+#     ifdef MHD
+      if ( OPT__FLAG_CURRENT  ||
+           OPT__FLAG_PRES_GRADIENT )   MagCC = new real [3][PS1][PS1][PS1];
+#     endif
+      if ( OPT__FLAG_VORTICITY )       Vel   = new real [3][PS1][PS1][PS1];
+      if ( OPT__FLAG_PRES_GRADIENT )   Pres  = new real    [PS1][PS1][PS1];
 #     endif
 
 #     ifdef PARTICLE
@@ -210,6 +215,24 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 #              if ( MODEL == HYDRO )
+#              ifdef MHD
+//             evaluate cell-centered B field
+               if ( OPT__FLAG_CURRENT  ||  OPT__FLAG_PRES_GRADIENT )
+               {
+                  real MagCC_1Cell[NCOMP_MAG];
+
+                  for (int k=0; k<PS1; k++)
+                  for (int j=0; j<PS1; j++)
+                  for (int i=0; i<PS1; i++)
+                  {
+                     MHD_GetCellCenteredBFieldInPatch( MagCC_1Cell, lv, PID, i, j, k, amr->MagSg[lv] );
+
+                     for (int v=0; v<NCOMP_MAG; v++)  MagCC[v][k][j][i] = MagCC_1Cell[v];
+                  }
+               } // if ( OPT__FLAG_CURRENT  ||  OPT__FLAG_PRES_GRADIENT )
+#              endif // #ifdef MHD
+
+
 //             evaluate velocity
                if ( OPT__FLAG_VORTICITY )
                {
@@ -251,7 +274,9 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #                    else // #ifdef DUAL_ENERGY
 
 #                    ifdef MHD
-                     const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+                     const real EngyB = (real)0.5*(  SQR( MagCC[MAGX][k][j][i] )
+                                                   + SQR( MagCC[MAGY][k][j][i] )
+                                                   + SQR( MagCC[MAGZ][k][j][i] )  );
 #                    else
                      const real EngyB = NULL_REAL;
 #                    endif
@@ -369,7 +394,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                              i_end   = ( i + FlagBuf >= PS1 ) ? 2 : 1;
 
 //                check if the target cell satisfies the refinement criteria (useless pointers are always == NULL)
-                  if (  lv < MAX_LEVEL  &&  Flag_Check( lv, PID, i, j, k, dv, Fluid, Pot, Vel, Pres,
+                  if (  lv < MAX_LEVEL  &&  Flag_Check( lv, PID, i, j, k, dv, Fluid, Pot, MagCC, Vel, Pres,
                                                         Lohner_Var+LocalID*Lohner_Stride, Lohner_Ave, Lohner_Slope, Lohner_NVar,
                                                         ParCount, ParDens, JeansCoeff )  )
                   {
@@ -458,6 +483,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
 
 
+      delete [] MagCC;
       delete [] Vel;
       delete [] Pres;
       delete [] ParCount;
