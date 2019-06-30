@@ -92,7 +92,7 @@ double               DUAL_ENERGY_SWITCH;
 #endif
 #ifdef MHD
 IntScheme_t          OPT__MAG_INT_SCHEME, OPT__REF_MAG_INT_SCHEME;
-bool                 OPT__FIXUP_ELECTRIC, OPT__CK_INTERFACE_B, OPT__OUTPUT_CC_MAG;
+bool                 OPT__FIXUP_ELECTRIC, OPT__CK_INTERFACE_B, OPT__OUTPUT_CC_MAG, OPT__FLAG_CURRENT;
 int                  OPT__CK_DIVERGENCE_B;
 double               UNIT_B;
 #endif

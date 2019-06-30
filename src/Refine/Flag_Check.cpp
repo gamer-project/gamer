@@ -24,6 +24,7 @@ extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int l
 //                dv             : Cell volume at the target level
 //                Fluid          : Input fluid array (with NCOMP_TOTAL components)
 //                Pot            : Input potential array
+//                MagCC          : Input cell-centered B field array
 //                Vel            : Input velocity array
 //                Pres           : Input pressure array
 //                Lohner_Ave     : Input array storing the averages for the Lohner error estimator
@@ -39,10 +40,10 @@ extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int l
 //                "false" if none of the refinement criteria is satisfied
 //-------------------------------------------------------------------------------------------------------
 bool Flag_Check( const int lv, const int PID, const int i, const int j, const int k, const real dv,
-                 const real Fluid[][PS1][PS1][PS1], const real Pot[][PS1][PS1], const real Vel[][PS1][PS1][PS1],
-                 const real Pres[][PS1][PS1], const real *Lohner_Var, const real *Lohner_Ave,
-                 const real *Lohner_Slope, const int Lohner_NVar, const real ParCount[][PS1][PS1],
-                 const real ParDens[][PS1][PS1], const real JeansCoeff )
+                 const real Fluid[][PS1][PS1][PS1], const real Pot[][PS1][PS1], const real MagCC[][PS1][PS1][PS1],
+                 const real Vel[][PS1][PS1][PS1], const real Pres[][PS1][PS1],
+                 const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
+                 const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff )
 {
 
    bool Flag = false;
