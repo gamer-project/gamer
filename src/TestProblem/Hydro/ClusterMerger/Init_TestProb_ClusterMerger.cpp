@@ -533,6 +533,9 @@ void Init_InsertBubble_ClusterMerger()
 #  pragma omp parallel
    {
 
+   for (int lv=0; lv<NLEVEL; lv++)
+   {
+
    #  pragma omp for schedule( static )
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
@@ -568,6 +571,8 @@ void Init_InsertBubble_ClusterMerger()
             fluid[Merger_Idx_Bubble] = 0.0;
          }
       }
+
+   }
 
    }
 
