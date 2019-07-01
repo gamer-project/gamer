@@ -43,6 +43,7 @@ static int     Merger_NBin2;              // number of radial bins of cluster 2
        double  Merger_Coll_BubR;
        double  Merger_Coll_BubS;
 
+static FieldIdx_t Merger_Idx_Bubble = Idx_Undefined;
 
 // =======================================================================================
 
@@ -59,6 +60,7 @@ int Read_Num_Points_ClusterMerger(std::string filename);
 void Read_Profile_ClusterMerger(std::string filename, std::string fieldname, 
                                 double field[]);
 void Init_InsertBubble_ClusterMerger();
+void AddNewField_ClusterMerger();
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
@@ -395,6 +397,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 } // FUNCTION : SetGridIC
 
+#endif // #if ( MODEL == HYDRO  &&  defined PARTICLE )
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -417,9 +420,6 @@ void End_ClusterMerger()
    delete [] Table_P2;
 
 } // FUNCTION : End_ClusterMerger
-#endif // #if ( MODEL == HYDRO  &&  defined PARTICLE )
-
-
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_TestProb_Hydro_ClusterMerger
@@ -500,6 +500,14 @@ void Read_Profile_ClusterMerger(std::string filename, std::string fieldname,
 
 } // FUNCTION : Read_Profile_ClusterMerger
 
+void AddNewField_ClusterMerger()
+{
+
+   if ( Merger_Coll_Bubble )
+      Merger_Idx_Bubble = AddField( "Bubble", NORMALIZE_YES );
+
+
+} // FUNCTION : AddNewField_ClusterMerger
 
 void Init_InsertBubble_ClusterMerger()
 {
@@ -554,7 +562,10 @@ void Init_InsertBubble_ClusterMerger()
             Eint = fluid[ENGY] - 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
             Pres = ( GAMMA - 1.0 ) * Eint;
             fluid[DENS] = pow( Pres / Merger_Coll_BubS, 0.6 ) * Const_mp * mue_twofifths; 
+            fluid[Merger_Idx_Bubble] = Dens;
 
+         } else {
+            fluid[Merger_Idx_Bubble] = 0.0;
          }
       }
 
