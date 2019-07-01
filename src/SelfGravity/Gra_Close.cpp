@@ -14,12 +14,12 @@
 //                   --> Currently it's set to the same Sg as the fluid data when calling
 //                       Gra_AdvanceDt() in EvolveLevel()
 //
-// Parameter   :  lv             : Target refinement level
-//                SaveSg         : Sandglass to store the updated data
-//                h_Flu_Array_G  : Host array storing the updated fluid variables
-//                h_DE_Array_G   : Host array storing the dual-energy status
-//                NPG            : Number of patch groups to store the updated data
-//                PID0_List      : List recording the patch indices with LocalID==0 to be udpated
+// Parameter   :  lv            : Target refinement level
+//                SaveSg        : Sandglass to store the updated data
+//                h_Flu_Array_G : Host array storing the updated fluid variables
+//                h_DE_Array_G  : Host array storing the dual-energy status
+//                NPG           : Number of patch groups to store the updated data
+//                PID0_List     : List recording the patch indices with LocalID==0 to be udpated
 //-------------------------------------------------------------------------------------------------------
 void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_NIN][PS1][PS1][PS1],
                 const char h_DE_Array_G[][PS1][PS1][PS1], const int NPG, const int *PID0_List )
@@ -64,6 +64,11 @@ void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_N
 #           ifdef UNSPLIT_GRAVITY
             if ( h_DE_Array_G[N][k][j][i] == DE_UPDATED_BY_ETOT_GRA )
             {
+#              ifdef MHD
+               const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+#              else
+               const real EngyB = NULL_REAL;
+#              endif
 #              if   ( DUAL_ENERGY == DE_ENPY )
                amr->patch[SaveSg][lv][PID]->fluid[ENPY][k][j][i]
                   = Hydro_Fluid2Entropy( amr->patch[SaveSg][lv][PID]->fluid[DENS][k][j][i],
@@ -71,7 +76,7 @@ void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_N
                                          amr->patch[SaveSg][lv][PID]->fluid[MOMY][k][j][i],
                                          amr->patch[SaveSg][lv][PID]->fluid[MOMZ][k][j][i],
                                          amr->patch[SaveSg][lv][PID]->fluid[ENGY][k][j][i],
-                                         Gamma_m1 );
+                                         Gamma_m1, EngyB );
 #              elif ( DUAL_ENERGY == DE_EINT )
 #              error : DE_EINT is NOT supported yet !!
 #              endif

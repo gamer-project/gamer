@@ -778,38 +778,39 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                Flu_FData[DENS][k][j][i] = MIN_DENS;
             }
 
+
 #           if ( MODEL == HYDRO )
-#           ifdef DUAL_ENERGY
-//          ensure consistency between pressure, total energy density, and the dual-energy variable
-//          --> here we ALWAYS use the dual-energy variable to correct the total energy density
-//          --> we achieve that by setting the dual-energy switch to an extremely larger number and ignore
-//              the runtime parameter DUAL_ENERGY_SWITCH here
-            const bool CheckMinPres_Yes = true;
-            const real UseEnpy2FixEngy  = HUGE_NUMBER;
-            char dummy;    // we do not record the dual-energy status here
-
-#           ifdef MHD
-#           warning : WAIT MHD !!!
-#           endif
-            Hydro_DualEnergyFix( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
-                                 Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i], Flu_FData[ENPY][k][j][i],
-                                 dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy );
-
-#           else // #ifdef DUAL_ENERGY
-
-//          check minimum pressure
+//          compute magnetic energy
 #           ifdef MHD
             const real EngyB = MHD_GetCellCenteredBEnergy( Mag_FData[MAGX], Mag_FData[MAGY], Mag_FData[MAGZ],
                                                            PS2, PS2, PS2, i, j, k );
 #           else
             const real EngyB = NULL_REAL;
 #           endif
+
+//          ensure consistency between pressure, total energy density, and the dual-energy variable
+//          --> here we ALWAYS use the dual-energy variable to correct the total energy density
+//          --> we achieve that by setting the dual-energy switch to an extremely larger number and ignore
+//              the runtime parameter DUAL_ENERGY_SWITCH here
+#           ifdef DUAL_ENERGY
+            const bool CheckMinPres_Yes = true;
+            const real UseEnpy2FixEngy  = HUGE_NUMBER;
+            char dummy;    // we do not record the dual-energy status here
+
+            Hydro_DualEnergyFix( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
+                                 Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i], Flu_FData[ENPY][k][j][i],
+                                 dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy, EngyB );
+
+#           else // #ifdef DUAL_ENERGY
+
+//          check minimum pressure
             Flu_FData[ENGY][k][j][i]
                = Hydro_CheckMinPresInEngy( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
                                            Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i],
                                            Gamma_m1, _Gamma_m1, MIN_PRES, EngyB );
 #           endif // #ifdef DUAL_ENERGY ... else ...
 #           endif // #if ( MODEL == HYDRO )
+
 
 //          normalize passive scalars
 #           if ( NCOMP_PASSIVE > 0 )
@@ -826,7 +827,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #           endif
 
          } // i,j,k
-#        endif // #if ( MODEL == HYDRO  ||  MODEL == ELBDM )
+#        endif // #if ( MODEL == HYDRO  ||  MODEL == ELBDM  ||  (defined DENS && NCOMP_PASSIVE>0) )
 
 
 //       (c1.3.5) copy data from IntData[] to patch pointers
