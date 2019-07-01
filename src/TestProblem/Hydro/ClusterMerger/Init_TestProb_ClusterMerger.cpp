@@ -517,10 +517,8 @@ void Init_InsertBubble_ClusterMerger()
    
    real   (*fluid)[PS1][PS1][PS1]      = NULL;
 
-   const double dh             = amr->dh[lv];
-   const int    FluSg          = amr->FluSg[lv];
    double x0, y0, z0, x, y, z, r;
-   double Pres, Eint; 
+   double Pres, Ekin; 
 
    if (!Merger_Coll_Bubble) return;
 
@@ -533,48 +531,54 @@ void Init_InsertBubble_ClusterMerger()
 #  pragma omp parallel
    {
 
-   for (int lv=0; lv<NLEVEL; lv++)
-   {
+     for (int lv=0; lv<NLEVEL; lv++) { 
 
-   #  pragma omp for schedule( static )
-   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-   {
+       const double dh             = amr->dh[lv];
+       const int    FluSg          = amr->FluSg[lv];
+
+#  pragma omp for schedule( static )
+       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++) {
 //    skip non-leaf patches
-      if ( amr->patch[0][lv][PID]->son != -1 )  continue;
 
-      fluid = amr->patch[FluSg][lv][PID]->fluid;
+	 if ( amr->patch[0][lv][PID]->son != -1 )  continue;
 
-      x0    = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
-      y0    = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
-      z0    = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
+	 fluid = amr->patch[FluSg][lv][PID]->fluid;
 
-      for (int k=0; k<PS1; k++)
-      for (int j=0; j<PS1; j++)
-      for (int i=0; i<PS1; i++)
-      {
-         x = x0 + i*dh;
-         y = y0 + j*dh;
-         z = z0 + k*dh;
-         r = sqrt( SQR(x-Merger_Coll_BubX) + 
-                   SQR(y-Merger_Coll_BubY) + 
-                   SQR(z-Merger_Coll_BubZ) );  
+	 x0    = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
+	 y0    = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
+	 z0    = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
+      
+	 for (int k=0; k<PS1; k++)
+	 for (int j=0; j<PS1; j++)
+	 for (int i=0; i<PS1; i++) {
+         
+	   x = x0 + i*dh;
+	   y = y0 + j*dh;
+	   z = z0 + k*dh;
+	   r = sqrt( SQR(x-Merger_Coll_BubX) + 
+		     SQR(y-Merger_Coll_BubY) + 
+		     SQR(z-Merger_Coll_BubZ) );  
 
-         if ( r <= Merger_Coll_BubR )
-         {
+	   if ( r <= Merger_Coll_BubR ) {
 
-            Eint = fluid[ENGY] - 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
-            Pres = ( GAMMA - 1.0 ) * Eint;
-            fluid[DENS] = pow( Pres / Merger_Coll_BubS, 0.6 ) * Const_mp * mue_twofifths; 
-            fluid[Merger_Idx_Bubble] = Dens;
+	     Ekin = 0.5*( SQR(fluid[MOMX][k][j][i]) + 
+			  SQR(fluid[MOMY][k][j][i]) + 
+			  SQR(fluid[MOMZ][k][j][i]) ) / fluid[DENS][k][j][i];
+	     Pres = ( GAMMA - 1.0 ) * (fluid[ENGY][k][j][i] - Ekin);
+             fluid[DENS][k][j][i] = pow( Pres / Merger_Coll_BubS, 0.6 ) * Const_mp * mue_twofifths; 
+	     fluid[Merger_Idx_Bubble][k][j][i] = fluid[DENS][k][j][i];
 
-         } else {
-            fluid[Merger_Idx_Bubble] = 0.0;
-         }
-      }
+	   } else {
+        
+	     fluid[Merger_Idx_Bubble][k][j][i] = 0.0;
+         
+	   }
+  
+	 }
 
-   }
+       }
 
-   }
+     }
 
    }
 
