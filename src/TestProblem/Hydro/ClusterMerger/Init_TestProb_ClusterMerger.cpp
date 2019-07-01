@@ -35,6 +35,15 @@ static double *Table_P2 = NULL;           // pressure of cluster 1
 
 static int     Merger_NBin1;              // number of radial bins of cluster 1
 static int     Merger_NBin2;              // number of radial bins of cluster 2
+
+       bool    Merger_Coll_Bubble;               // (true/false) --> bubble / no bubble
+       double  Merger_Coll_BubX;
+       double  Merger_Coll_BubY;
+       double  Merger_Coll_BubZ;
+       double  Merger_Coll_BubR;
+       double  Merger_Coll_BubS;
+
+
 // =======================================================================================
 
 // problem-specific function prototypes
@@ -49,6 +58,7 @@ void Par_Init_ByFunction_ClusterMerger(const long NPar_ThisRank,
 int Read_Num_Points_ClusterMerger(std::string filename);
 void Read_Profile_ClusterMerger(std::string filename, std::string fieldname, 
                                 double field[]);
+void Init_InsertBubble_ClusterMerger();
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
@@ -142,9 +152,9 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",        &VARIABLE,               DEFAULT,          MIN,           MAX            );
 // ********************************************************************************************************************************
-   ReadPara->Add( "Merger_Coll",            &Merger_Coll,             true,            Useless_bool,  Useless_bool   );
-   ReadPara->Add( "Merger_Coll_IsGas1",      &Merger_Coll_IsGas1,      true,            Useless_bool,  Useless_bool   );
-   ReadPara->Add( "Merger_Coll_IsGas2",      &Merger_Coll_IsGas2,      true,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "Merger_Coll",             &Merger_Coll,            true,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "Merger_Coll_IsGas1",      &Merger_Coll_IsGas1,     true,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "Merger_Coll_IsGas2",      &Merger_Coll_IsGas2,     true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "Merger_File_Prof1",       Merger_File_Prof1,       Useless_str,     Useless_str,   Useless_str    );
    ReadPara->Add( "Merger_File_Par1",        Merger_File_Par1,        Useless_str,     Useless_str,   Useless_str    );
    ReadPara->Add( "Merger_File_Prof2",       Merger_File_Prof2,       Useless_str,     Useless_str,   Useless_str    );
@@ -157,6 +167,11 @@ void SetParameter()
    ReadPara->Add( "Merger_Coll_VelY1",      &Merger_Coll_VelY1,      -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "Merger_Coll_VelX2",      &Merger_Coll_VelX2,      -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "Merger_Coll_VelY2",      &Merger_Coll_VelY2,      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Merger_Coll_Bubble",     &Merger_Coll_Bubble,      false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "Merger_Coll_BubX",       &Merger_Coll_BubX,       -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Merger_Coll_BubY",       &Merger_Coll_BubY,       -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Merger_Coll_BubZ",       &Merger_Coll_BubZ,       -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Merger_Coll_BubR",       &Merger_Coll_BubR,       -1.0,             NoMin_double,  NoMax_double   );
 
    ReadPara->Read( FileName );
 
@@ -485,4 +500,71 @@ void Read_Profile_ClusterMerger(std::string filename, std::string fieldname,
 
 } // FUNCTION : Read_Profile_ClusterMerger
 
+
+void Init_InsertBubble_ClusterMerger()
+{
+
+   const real mue_twofifths = 1.052463228428472;
+   const real mh = 1.6737352238051868e-24;
+   
+   real   (*fluid)[PS1][PS1][PS1]      = NULL;
+
+   const double dh             = amr->dh[lv];
+   const int    FluSg          = amr->FluSg[lv];
+   double x0, y0, z0, x, y, z, r;
+   double Pres, Eint; 
+
+   if (!Merger_Coll_Bubble) return;
+
+   Merger_Coll_BubX *= Const_kpc;
+   Merger_Coll_BubY *= Const_kpc;
+   Merger_Coll_BubZ *= Const_kpc;
+   Merger_Coll_BubR *= Const_kpc;
+   Merger_Coll_BubS *= Const_keV;
+
+#  pragma omp parallel
+   {
+
+   #  pragma omp for schedule( static )
+   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+   {
+//    skip non-leaf patches
+      if ( amr->patch[0][lv][PID]->son != -1 )  continue;
+
+      fluid = amr->patch[FluSg][lv][PID]->fluid;
+
+      x0    = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
+      y0    = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
+      z0    = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
+
+      for (int k=0; k<PS1; k++)
+      for (int j=0; j<PS1; j++)
+      for (int i=0; i<PS1; i++)
+      {
+         x = x0 + i*dh;
+         y = y0 + j*dh;
+         z = z0 + k*dh;
+         r = sqrt( SQR(x-Merger_Coll_BubX) + 
+                   SQR(y-Merger_Coll_BubY) + 
+                   SQR(z-Merger_Coll_BubZ) );  
+
+         if ( r <= Merger_Coll_BubR )
+         {
+
+            Eint = fluid[ENGY] - 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+            Pres = ( GAMMA - 1.0 ) * Eint;
+            fluid[DENS] = pow( Pres / Merger_Coll_BubS, 0.6 ) * Const_mp * mue_twofifths; 
+
+         }
+      }
+
+   }
+
+   }
+
+   return; 
+
+} // FUNCTION : Init_InsertBubble_ClusterMerger
+
 #endif // #ifdef SUPPORT_HDF5
+
