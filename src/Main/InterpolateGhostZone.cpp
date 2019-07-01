@@ -111,7 +111,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
    {
 #     ifdef MHD
       if ( TVarFC != _MAG  ||  NVarFC_Tot != NCOMP_MAG )
-         Aux_Error( ERROR_INFO, "%s must work on all three magnetic components at once !!\n", __FUNCTION__ );
+         Aux_Error( ERROR_INFO, "must work on all three magnetic components at once !!\n" );
 #     else
       Aux_Error( ERROR_INFO, "currently only MHD supports face-centered variables !!" );
 #     endif
@@ -1199,7 +1199,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 //    c6-1. set the array indices
       real *FData_FC[3] = { IntData_FC,
                             IntData_FC + FSize3D_FC[0],
-                            IntData_FC + FSize3D_FC[0]+FSize3D_FC[1] };
+                            IntData_FC + FSize3D_FC[0] + FSize3D_FC[1] };
       int CStart_FC[3][3], CRange_FC[3], FStart_FC[3][3];
 
       for (int d=0; d<3; d++)
@@ -1237,12 +1237,19 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 //        --> it's checked in Prepare_PatchData()
 // ------------------------------------------------------------------------------------------------------------
 #  if ( MODEL == HYDRO  &&  defined DUAL_ENERGY )
+// apply this correction only when preparing all fluid variables (and magnetic field)
 #  ifdef MHD
-#  warning : WAIT MHD !!!
+   if (  DE_Consistency  &&  ( TVarCC & _TOTAL ) == _TOTAL  &&  TVarFC == _MAG )
+#  else
+   if (  DE_Consistency  &&  ( TVarCC & _TOTAL ) == _TOTAL )
 #  endif
-// apply this correction only when preparing all fluid variables
-   if (  ( TVarCC & _TOTAL ) == _TOTAL  &&  DE_Consistency )
    {
+#     ifdef MHD
+      const real *FData_FC[3]    = { IntData_FC,
+                                     IntData_FC + FSize3D_FC[0],
+                                     IntData_FC + FSize3D_FC[0] + FSize3D_FC[1] };
+      const int  size_ij         = FSize_CC[0]*FSize_CC[1];
+#     endif
       const real _Gamma_m1       = (real)1.0 / Gamma_m1;
       const real UseEnpy2FixEngy = HUGE_NUMBER;
 
@@ -1258,11 +1265,22 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
       for (int t=0; t<FSize3D_CC; t++)
       {
+//       compute the cell-centered magnetic energy
+#        ifdef MHD
+         const int  i     = t % FSize_CC[0];
+         const int  j     = t % size_ij / FSize_CC[0];
+         const int  k     = t / size_ij;
+         const real EngyB = MHD_GetCellCenteredBEnergy( FData_FC[MAGX], FData_FC[MAGY], FData_FC[MAGZ],
+                                                        FSize_CC[0], FSize_CC[1], FSize_CC[2], i, j, k );
+#        else
+         const real EngyB = NULL_REAL;
+#        endif
+
 //       here we ALWAYS use the dual-energy variable to correct the total energy density
 //       --> we achieve that by setting the dual-energy switch to an extremely larger number and ignore
 //           the runtime parameter DUAL_ENERGY_SWITCH here
          Hydro_DualEnergyFix( FData_Dens[t], FData_MomX[t], FData_MomY[t], FData_MomZ[t], FData_Engy[t], FData_Enpy[t],
-                            dummy, Gamma_m1, _Gamma_m1, (MinPres>=(real)0.0), MinPres, UseEnpy2FixEngy );
+                              dummy, Gamma_m1, _Gamma_m1, (MinPres>=(real)0.0), MinPres, UseEnpy2FixEngy, EngyB );
       }
    } // if (  ( TVarCC & _TOTAL ) == _TOTAL  &&  DE_Consistency  )
 #  endif // if ( MODEL == HYDRO  &&  defined DUAL_ENERGY )

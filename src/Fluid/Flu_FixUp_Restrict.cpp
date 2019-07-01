@@ -29,7 +29,7 @@
 //                            --> But it currently does not distinguish _MAGX, _MAGY, _MAGZ, and _MAG
 //-------------------------------------------------------------------------------------------------------
 void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const int SonPotSg, const int FaPotSg,
-                   const int SonMagSg, const int FaMagSg, const int TVarCC, const int TVarFC )
+                         const int SonMagSg, const int FaMagSg, const int TVarCC, const int TVarFC )
 {
 
    const int SonLv = FaLv + 1;
@@ -59,6 +59,9 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 #  endif
 
 #  ifdef MHD
+   if (  ( TVarFC & _MAG )  &&  TVarFC != _MAG  )
+      Aux_Error( ERROR_INFO, "must work on all three magnetic components at once !!\n" );
+
    if (  ( TVarFC & _MAG )  &&  ( SonMagSg != 0 && SonMagSg != 1 )  )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "SonMagSg", SonMagSg );
 
@@ -319,12 +322,23 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 //    check the minimum pressure and, when the dual-energy formalism is adopted, ensure the consistency between
 //    pressure, total energy density, and the dual-energy variable
 #     if ( MODEL == HYDRO )
-//    apply this correction only when preparing all fluid variables
+//    apply this correction only when preparing all fluid variables or magnetic field
+#     ifdef MHD
+      if (  ( TVarCC & _TOTAL ) == _TOTAL  ||  ResMag  )
+#     else
       if (  ( TVarCC & _TOTAL ) == _TOTAL  )
+#     endif
       for (int k=0; k<PS1; k++)
       for (int j=0; j<PS1; j++)
       for (int i=0; i<PS1; i++)
       {
+//       compute magnetic energy
+#        ifdef MHD
+         const real EngyB = MHD_GetCellCenteredBEnergyInPatch( FaLv, FaPID, i, j, k, FaMagSg );
+#        else
+         const real EngyB = NULL_REAL;
+#        endif
+
 #        ifdef DUAL_ENERGY
 //       here we ALWAYS use the dual-energy variable to correct the total energy density
 //       --> we achieve that by setting the dual-energy switch to an extremely larger number and ignore
@@ -333,26 +347,17 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
          const real UseEnpy2FixEngy  = HUGE_NUMBER;
          char dummy;    // we do not record the dual-energy status here
 
-#        ifdef MHD
-#        warning : WAIT MHD !!!
-#        endif
-
          Hydro_DualEnergyFix( amr->patch[FaFluSg][FaLv][FaPID]->fluid[DENS][k][j][i],
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMX][k][j][i],
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMY][k][j][i],
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMZ][k][j][i],
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i],
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENPY][k][j][i],
-                              dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy );
+                              dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy, EngyB );
 
 #        else // #ifdef DUAL_ENERGY
 
 //       actually it might not be necessary to check the minimum pressure here
-#        ifdef MHD
-         const real EngyB = MHD_GetCellCenteredBEnergyInPatch( FaLv, FaPID, i, j, k, FaMagSg );
-#        else
-         const real EngyB = NULL_REAL;
-#        endif
          amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i]
             = Hydro_CheckMinPresInEngy( amr->patch[FaFluSg][FaLv][FaPID]->fluid[DENS][k][j][i],
                                         amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMX][k][j][i],

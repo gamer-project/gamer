@@ -587,8 +587,8 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                      break;
 
 #                 ifdef MHD
-#                 warning : WAIT MHD !!!
                   case RSOLVER_1ST_HLLD:
+                     Aux_Error( ERROR_INFO, "RSOLVER_1ST_HLLD in MHD is NOT supported yet !!\n" );
                      /*
                      for (int d=0; d<3; d++)
                      {
@@ -627,7 +627,8 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //                 --> otherwise the floor value of pressure might disable the 1st-order-flux correction
 #              ifdef DUAL_ENERGY
                Hydro_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[ENPY],
-                                    h_DE_Array_F_Out[TID][idx_out], Gamma_m1, _Gamma_m1, CorrPres_No, NULL_REAL, DUAL_ENERGY_SWITCH );
+                                    h_DE_Array_F_Out[TID][idx_out], Gamma_m1, _Gamma_m1, CorrPres_No, NULL_REAL,
+                                    DUAL_ENERGY_SWITCH, EngyB_Out );
 #              endif
 
                if ( Unphysical(Update, Gamma_m1, CheckMinPres, EngyB_Out) )
@@ -677,8 +678,8 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                            break;
 
 #                          ifdef MHD
-#                          warning : WAIT MHD !!!
                            case RSOLVER_1ST_HLLD:
+                              Aux_Error( ERROR_INFO, "RSOLVER_1ST_HLLD in MHD is NOT supported yet !!\n" );
                               /*
                               CPU_RiemannSolver_HLLD( d, FluxL_1D, Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
                               CPU_RiemannSolver_HLLD( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
@@ -750,12 +751,9 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //          --> we apply the minimum pressure check in Hydro_DualEnergyFix() here only when AUTO_REDUCE_DT is disabled
 //              --> otherwise AUTO_REDUCE_DT may not be triggered due to this pressure floor
 #           ifdef DUAL_ENERGY
-#           ifdef MHD
-#           warning : WAIT MHD !!!
-#           endif
             Hydro_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[ENPY],
                                  h_DE_Array_F_Out[TID][idx_out], Gamma_m1, _Gamma_m1,
-                                 (AUTO_REDUCE_DT)?CorrPres_No:CorrPres_Yes, MIN_PRES, DUAL_ENERGY_SWITCH );
+                                 (AUTO_REDUCE_DT)?CorrPres_No:CorrPres_Yes, MIN_PRES, DUAL_ENERGY_SWITCH, EngyB_Out );
 
 //          ensure positive pressure if dual-energy formalism is not adopted
 //          --> apply it only when AUTO_REDUCE_DT is disabled

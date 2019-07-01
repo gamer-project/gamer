@@ -37,9 +37,9 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
                         const OptGravityType_t GravityType, const double ExtAcc_AuxArray[],
                         const real MinPres, const bool DumpIntFlux, real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ] );
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
-                           const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ], const real dt, const real dh,
-                           const real Gamma, const real MinDens, const real MinPres, const real DualEnergySwitch,
-                           const bool NormPassive, const int NNorm, const int NormIdx[] );
+                           const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                           const real dt, const real dh, const real Gamma, const real MinDens, const real MinPres,
+                           const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[] );
 real Hydro_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                                const real Gamma_m1, const real _Gamma_m1, const real MinPres );
 #ifdef MHD
@@ -310,7 +310,7 @@ void CPU_FluidSolver_CTU(
 
 
 //       8. full-step evolution of the fluid data
-         Hydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P],
+         Hydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P], g_Mag_Array_Out[P],
                                g_FC_Flux_1PG, dt, dh, Gamma, MinDens, MinPres, DualEnergySwitch,
                                NormPassive, NNorm, c_NormIdx );
 

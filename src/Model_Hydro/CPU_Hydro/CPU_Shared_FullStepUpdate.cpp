@@ -35,6 +35,8 @@
 // Parameter   :  g_Input          : Array storing the input fluid data
 //                g_Output         : Array to store the updated fluid data
 //                g_DE_Status      : Array to store the dual-energy status
+//                g_FC_B           : Array storing the updated face-centered B field
+//                                   --> For the dual-energy formalism only
 //                g_Flux           : Array storing the input face-centered fluxes
 //                                   --> Accessed with the array stride N_FL_FLUX even thought its actually
 //                                       allocated size is N_FC_FLUX^3
@@ -53,9 +55,9 @@
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
-                           const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ], const real dt, const real dh,
-                           const real Gamma, const real MinDens, const real MinPres, const real DualEnergySwitch,
-                           const bool NormPassive, const int NNorm, const int NormIdx[] )
+                           const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                           const real dt, const real dh, const real Gamma, const real MinDens, const real MinPres,
+                           const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
    const int  didx_flux[3] = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };
@@ -142,13 +144,20 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //        by the dual-energy formalism (i.e., for cells with their dual-energy status marked as DE_UPDATED_BY_DUAL)
 //    --> this feature might be modified in the future
 #     ifdef DUAL_ENERGY
+//    B field must be updated in advance
+#     ifdef MHD
+      const real EngyB = MHD_GetCellCenteredBEnergy( g_FC_B[MAGX], g_FC_B[MAGY], g_FC_B[MAGZ],
+                                                     PS2, PS2, PS2, i_out, j_out, k_out );
+#     else
+      const real EngyB = NULL_REAL;
+#     endif
 //    we no longer apply the minimum density and pressure checks here since we want to enable 1st-order-flux correction for that
       const bool CheckMinPres_No = false;
 //    Output_1Cell[DENS] = FMAX( Output_1Cell[DENS], MinDens );
 
       Hydro_DualEnergyFix( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
                            Output_1Cell[ENGY], Output_1Cell[ENPY], g_DE_Status[idx_out],
-                           Gamma_m1, _Gamma_m1, CheckMinPres_No, NULL_REAL, DualEnergySwitch );
+                           Gamma_m1, _Gamma_m1, CheckMinPres_No, NULL_REAL, DualEnergySwitch, EngyB );
 #     endif // #ifdef DUAL_ENERGY
 
 

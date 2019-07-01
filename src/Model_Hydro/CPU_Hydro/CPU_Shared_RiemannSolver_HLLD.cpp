@@ -409,14 +409,14 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
    {
       const real vx = Flux_Out[FLUX_DENS]*_RhoL;
 
-      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = L[v]*vx;
+      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = Con_L[v]*vx;
    }
 
    else
    {
       const real vx = Flux_Out[FLUX_DENS]*_RhoR;
 
-      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = R[v]*vx;
+      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = Con_R[v]*vx;
    }
 #  endif
 
