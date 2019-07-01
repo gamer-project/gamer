@@ -383,13 +383,9 @@ void CPU_FluidSolver_MHM(
 #        endif
 
 
-//       3. full-step evolution
-         Hydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P],
-                               g_FC_Flux_1PG, dt, dh, Gamma, MinDens, MinPres, DualEnergySwitch,
-                               NormPassive, NNorm, c_NormIdx );
-
-
-//       4. evaluate electric field and update B field at the full time-step
+//       3. evaluate electric field and update B field at the full time-step
+//          --> must update B field before Hydro_FullStepUpdate() since the latter requires
+//              the updated magnetic energy when adopting the dual-energy formalism
 #        ifdef MHD
          MHD_ComputeElectric( g_EC_Ele_1PG, g_FC_Flux_1PG, g_PriVar_Half_1PG, N_FL_ELE, N_FL_FLUX,
                               N_HF_VAR, LR_GHOST_SIZE, dt, dh, StoreElectric, g_Ele_Array[P] );
@@ -397,6 +393,12 @@ void CPU_FluidSolver_MHM(
          MHD_UpdateMagnetic( g_Mag_Array_Out[P][0], g_Mag_Array_Out[P][1], g_Mag_Array_Out[P][2],
                              g_Mag_Array_In[P], g_EC_Ele_1PG, dt, dh, PS2, N_FL_ELE, FLU_GHOST_SIZE );
 #        endif
+
+
+//       4. full-step evolution
+         Hydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P],
+                               g_FC_Flux_1PG, dt, dh, Gamma, MinDens, MinPres, DualEnergySwitch,
+                               NormPassive, NNorm, c_NormIdx );
 
       } // loop over all patch groups
    } // OpenMP parallel region
