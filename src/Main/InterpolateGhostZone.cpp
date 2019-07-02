@@ -1282,7 +1282,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          Hydro_DualEnergyFix( FData_Dens[t], FData_MomX[t], FData_MomY[t], FData_MomZ[t], FData_Engy[t], FData_Enpy[t],
                               dummy, Gamma_m1, _Gamma_m1, (MinPres>=(real)0.0), MinPres, UseEnpy2FixEngy, EngyB );
       }
-   } // if (  ( TVarCC & _TOTAL ) == _TOTAL  &&  DE_Consistency  )
+   } // if (  DE_Consistency  &&  ( TVarCC & _TOTAL ) == _TOTAL  &&  TVarFC == _MAG )
 #  endif // if ( MODEL == HYDRO  &&  defined DUAL_ENERGY )
 
 } // FUNCTION : InterpolateGhostZone

@@ -43,6 +43,7 @@ void Flu_FixUp( const int lv )
 
 // 3. use the fine-grid fluxes across the coarse-fine boundaries to correct the coarse-grid data
 //    --> apply this correction AFTER all other checks since it will check negative pressure as well
+//        (which requires the coarse-grid B field updated by Flu_FixUp_Restrict() and MHD_FixUp_Electric())
    if ( OPT__FIXUP_FLUX )  Flu_FixUp_Flux( lv );
 
 } // FUNCTION : Flu_FixUp

@@ -69,6 +69,7 @@ void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_N
 #              else
                const real EngyB = NULL_REAL;
 #              endif
+
 #              if   ( DUAL_ENERGY == DE_ENPY )
                amr->patch[SaveSg][lv][PID]->fluid[ENPY][k][j][i]
                   = Hydro_Fluid2Entropy( amr->patch[SaveSg][lv][PID]->fluid[DENS][k][j][i],
