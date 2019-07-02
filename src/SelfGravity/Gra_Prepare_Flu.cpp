@@ -8,15 +8,15 @@
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Gra_Prepare_Flu
 // Description :  Fill up the input array "h_Flu_Array_G" with fluid variables for the Gravity solver
-//                --> When DUAL_ENERGY is on, this function also prepares the dual-energy status array "h_DE_Array_G"
+//                --> When DUAL_ENERGY is on, this function also prepares the dual-energy status array h_DE_Array_G[]
 //
-// Note        :  1. This function always prepare the latest FluSg data
+// Note        :  1. Always prepare the latest FluSg data
 //
-// Parameter   :  lv             : Target refinement level
-//                h_Flu_Array_G  : Host array to store the prepared data
-//                h_DE_Array_G   : Host array to store the dual-energy status
-//                NPG            : Number of patch groups prepared at a time
-//                PID0_List      : List recording the patch indices with LocalID==0 to be udpated
+// Parameter   :  lv            : Target refinement level
+//                h_Flu_Array_G : Host array to store the prepared data
+//                h_DE_Array_G  : Host array to store the dual-energy status
+//                NPG           : Number of patch groups prepared at a time
+//                PID0_List     : List recording the patch indices with LocalID==0 to be udpated
 //-------------------------------------------------------------------------------------------------------
 void Gra_Prepare_Flu( const int lv, real h_Flu_Array_G[][GRA_NIN][PS1][PS1][PS1], char h_DE_Array_G[][PS1][PS1][PS1],
                       const int NPG, const int *PID0_List )

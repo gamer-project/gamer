@@ -122,7 +122,7 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
    {
 
 // thread-private variables
-   int  idx_pg, PID, PID0, offset;  // idx_pg: array indices within a patch group
+   int  idx_p, idx_pg, PID, PID0, offset;    // idx_p/idx_pg: array indices within a patch/patch group
    real Dens, Px, Py, Pz, Etot, _Dens, Ek, sEint;
    real (*fluid)[PS1][PS1][PS1]=NULL;
 
@@ -157,9 +157,12 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
       for (int LocalID=0; LocalID<8; LocalID++)
       {
          PID   = PID0 + LocalID;
+         idx_p = 0;
          fluid = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid;
 
-         for (int idx_p=0; idx_p<CUBE(PS1); idx_p++)
+         for (int k=0; k<PS1; k++)
+         for (int j=0; j<PS1; j++)
+         for (int i=0; i<PS1; i++)
          {
             Dens  = *( fluid[DENS][0][0] + idx_p );
             Px    = *( fluid[MOMX][0][0] + idx_p );
@@ -179,8 +182,13 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
 #           error : DE_EINT is NOT supported yet !!
 #           endif
 
-#           else
-            sEint = ( Etot - Ek )*_Dens;
+#           else // #ifdef DUAL_ENERGY
+
+            sEint  = Etot - Ek;
+#           ifdef MHD
+            sEint -= MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+#           endif
+            sEint *= _Dens;
 #           endif // #ifdef DUAL_ENERGY ... else
 
 //          mandatory fields
@@ -216,8 +224,9 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
             if ( GRACKLE_METAL )
             Ptr_Metal[idx_pg] = *( fluid[Idx_Metal][0][0] + idx_p );
 
+            idx_p  ++;
             idx_pg ++;
-         } // for (int idx_p=0; idx_p<CUBE(PS1); idx_p++)
+         } // i,j,k
 
       } // for (int LocalID=0; LocalID<8; LocalID++)
    } // for (int TID=0; TID<NPG; TID++)
