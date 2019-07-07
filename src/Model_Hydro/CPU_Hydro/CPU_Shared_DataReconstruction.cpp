@@ -1423,8 +1423,8 @@ void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
    }
    else {
       const real _Bn = (real)1.0 / Bn;
-      beta_y = PriVar[6] * _Bn;
-      beta_z = PriVar[7] * _Bn;
+      beta_y = By * _Bn;
+      beta_z = Bz * _Bn;
    }
 
    if ( Cf2_min_Cs2 == (real)0.0 ) {
