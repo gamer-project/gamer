@@ -2817,6 +2817,13 @@ void MHD_SetFInterface( real *FInt_Data, real *FInt_Ptr[6], const real *Data1PG_
                         const bool MagIntTime, const real MagWeighting, const real MagWeighting_IntT )
 {
 
+// check
+#  ifdef GAMER_DEBUG
+   if ( lv == 0 )
+      Aux_Error( ERROR_INFO, "%s should NOT be applied to the base level !!\n", __FUNCTION__ );
+#  endif
+
+
    const int FaPID            = amr->patch[0][lv][PID0]->father;
    const int FaSibPID         = amr->patch[0][lv-1][FaPID]->sibling[Side];
    const int GhostSize_Padded = GhostSize + (GhostSize&1);
@@ -2829,7 +2836,11 @@ void MHD_SetFInterface( real *FInt_Data, real *FInt_Ptr[6], const real *Data1PG_
    int LCR[3], loop[3], disp_i[3], disp_o[3], size_i[3], size_o[3], ijk_i[3], ijk_o[3], idx_i, idx_o;    // i/o=in/out
 
 
+// check
 #  ifdef GAMER_DEBUG
+   if ( FaSibPID < 0 )
+      Aux_Error( ERROR_INFO, "FaSibPID = %d < 0 (lv %d) !!\n", FaSibPID, lv );
+
    if ( amr->patch[0][lv-1][FaSibPID]->son != -1 )
       Aux_Error( ERROR_INFO, "son = %d != -1 (lv %d, FaSibPID %d) !!\n",
                  amr->patch[0][lv-1][FaSibPID]->son, lv, FaSibPID );
@@ -2865,15 +2876,29 @@ void MHD_SetFInterface( real *FInt_Data, real *FInt_Ptr[6], const real *Data1PG_
             {
                if ( amr->patch[0][lv-1][FaPID]->sibling[s] == FaSibSibPID )
                {
-                  FInt_Side = s;
-                  break;
+                  const int LR[3] = {  TABLE_01( s, 'x', -1, 123, +1 ),
+                                       TABLE_01( s, 'y', -1, 123, +1 ),
+                                       TABLE_01( s, 'z', -1, 123, +1 )  };
+
+//                this check is necessary when there are only two patches along any periodic direction
+                  if (  TABLE_01( Side, 'x', +1, 456, -1 ) == LR[0]  ||
+                        TABLE_01( Side, 'y', +1, 456, -1 ) == LR[1]  ||
+                        TABLE_01( Side, 'z', +1, 456, -1 ) == LR[2]  ||
+                        TABLE_01(    f, 'x', +1, 456, -1 ) == LR[0]  ||
+                        TABLE_01(    f, 'y', +1, 456, -1 ) == LR[1]  ||
+                        TABLE_01(    f, 'z', +1, 456, -1 ) == LR[2]    )
+                     continue;
+
+                  else
+                  {
+                     FInt_Side = s;
+                     break;
+                  }
                }
             }
          }
 
-#        ifdef GAMER_DEBUG
          if ( FInt_Side == -2 )  Aux_Error( ERROR_INFO, "cannot determine the sibling direction index !!\n" );
-#        endif
 
 
 //       2. copy data to FInt_Data[] --> similar to step (b1) in Prepare_PatchData()
