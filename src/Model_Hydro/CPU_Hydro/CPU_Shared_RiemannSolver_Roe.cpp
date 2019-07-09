@@ -591,7 +591,10 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
 
    for (int t=0; t<NWAVE-1; t++)
    {
-      for (int v=0; v<NWAVE; v++)   I_States[ idx_wave[v] ] += Amp[t]*REigenVec[v][t];
+      for (int v=0; v<NCOMP_FLUID; v++)       I_States[ v     ] += Amp[t]*REigenVec[v][t];
+#     ifdef MHD
+      for (int v=NCOMP_FLUID; v<NWAVE; v++)   I_States[ v + 1 ] += Amp[t]*REigenVec[v][t];
+#     endif
 
       if ( EigenVal[t+1] > EigenVal[t] )  // skip the degenerate states
       {
