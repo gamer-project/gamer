@@ -16,6 +16,7 @@ const Riemann_t
 #ifdef MHD
   ,RJ2A           = 6
   ,TORRILHON      = 7
+  ,BRIO_WU        = 8
 #endif
   ;
 
@@ -118,7 +119,7 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "Riemann_Prob",      &Riemann_Prob,          -1,            0,                7                 );
+   ReadPara->Add( "Riemann_Prob",      &Riemann_Prob,          -1,            0,                8                 );
    ReadPara->Add( "Riemann_LR",        &Riemann_LR,             1,            NoMin_int,        NoMax_int         );
    ReadPara->Add( "Riemann_XYZ",       &Riemann_XYZ,            0,            0,                2                 );
 
@@ -199,6 +200,15 @@ void SetParameter()
                             Riemann_MagL_T1 = 1.0;       Riemann_MagL_T2 = 0.0;
                             Riemann_MagR_T1 = cos(3.0);  Riemann_MagR_T2 = sin(3.0);
                             Riemann_Mag     = 1.0;
+                            sprintf( Riemann_Name, "Torrilhon" );
+                            break;
+
+      case BRIO_WU        : Riemann_RhoL = 1.0;    Riemann_VelL = 0.0;   Riemann_PreL = 1.0;  Riemann_VelL_T1 = 0.0;  Riemann_VelL_T2 = 0.0;
+                            Riemann_RhoR = 0.125;  Riemann_VelR = 0.0;   Riemann_PreR = 0.1;  Riemann_VelR_T1 = 0.0;  Riemann_VelR_T2 = 0.0;
+                            Riemann_EndT = 0.08;
+                            Riemann_MagL_T1 = +1.0;  Riemann_MagL_T2 = 0.0;
+                            Riemann_MagR_T1 = -1.0;  Riemann_MagR_T2 = 0.0;
+                            Riemann_Mag     = 0.75;
                             sprintf( Riemann_Name, "Torrilhon" );
                             break;
 #     endif
