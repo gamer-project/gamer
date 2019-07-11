@@ -257,8 +257,10 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
                                  const real h_Flu_Array[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT],
                                  const int NPG, const int *PID0_List, const int CLv, const char *comment );
 void Output_BasePowerSpectrum( const char *FileName );
-void Output_L1Error( void (*AnalFunc)( real fluid[], const double x, const double y, const double z, const double Time,
-                                       const int lv, double AuxArray[] ),
+void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const double y, const double z, const double Time,
+                                           const int lv, double AuxArray[] ),
+                     void (*AnalFunc_Mag)( real magnetic[], const double x, const double y, const double z, const double Time,
+                                           const int lv, double AuxArray[] ),
                      const char *Prefix, const OptOutputPart_t Part, const double x, const double y, const double z );
 #ifndef SERIAL
 void Output_ExchangePatchMap( const int lv, const int xyz, const char *comment );
