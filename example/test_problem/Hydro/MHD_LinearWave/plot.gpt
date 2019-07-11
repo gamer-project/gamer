@@ -8,9 +8,9 @@ reset
 
 # target files
 # -----------------------------------------------------------
-FILE_IN_PREFIX  = 'AcousticWave_Dens'
+FILE_IN_PREFIX  = 'MHDLinearWave_Dens'
 FILE_IN_SUFFIX  = ''
-FILE_OUT_PREFIX = 'Fig__AcousticWave_Dens'
+FILE_OUT_PREFIX = 'Fig__MHDLinearWave_Dens'
 START_ID        = 0
 END_ID          = 15
 DELTA_ID        = 1
@@ -29,8 +29,8 @@ PAUSE           = -1.0  # <= 0.0 --> mouse
 #set log xy
  set key reverse Left spacing 2 right
 #set key reverse Left spacing 1 at first 1.5e2, 1e8
-#set xlabel "r (kpc)"
-#set ylabel "Density"
+ set xlabel "r"
+ set ylabel "Density"
 #set format x "10^{%T}"
 #set format y "10^{%T}"
  set pointsize 1.0
