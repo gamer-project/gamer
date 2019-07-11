@@ -5,13 +5,17 @@
 
 // problem-specific global variables
 // =======================================================================================
-static double ABC_Rho0;       // background density
-static double ABC_P0;         // background pressure
-static double ABC_V0;         // background velocity along the diagonal direction
-static double ABC_CoeffA;     // coefficients A/B/C in the magnetic field IC (see Eq. [20] in Zhang et al., 2018, ApJS, 236, 50)
-static double ABC_CoeffB;
-static double ABC_CoeffC;
-static int    ABC_NPeriod;    // number of periods along each direction
+static int    MHDLinear_Mode;          // (1/2/3) --> (fast/slow/Alfven wave)
+static double MHDLinear_Rho0;          // background density
+static double MHDLinear_Rho1;          // amplitude of the density perturbation
+static double MHDLinear_P0;            // background pressure
+static double MHDLinear_v0;            // background velocity
+static double MHDLinear_B0;            // background magnetic field
+static double MHDLinear_Sign;          // (+1/-1) --> (right/left-moving wave)
+static double MHDLinear_Phase0;        // initial phase shift
+
+static double MHDLinear_WaveSpeed;     // propagation speed
+static double MHDLinear_WaveLength;    // wavelength
 // =======================================================================================
 
 
@@ -33,7 +37,6 @@ void Validate()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ...\n", TESTPROB_ID );
 
 
-// errors
 #  if ( MODEL != HYDRO )
    Aux_Error( ERROR_INFO, "MODEL != HYDRO !!\n" );
 #  endif
@@ -46,6 +49,10 @@ void Validate()
    Aux_Error( ERROR_INFO, "GRAVITY must be disabled !!\n" );
 #  endif
 
+#  ifndef FLOAT8
+   Aux_Error( ERROR_INFO, "FLOAT8 must be enabled !!\n" );
+#  endif
+
 #  ifdef PARTICLE
    Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
 #  endif
@@ -53,11 +60,9 @@ void Validate()
    if ( amr->BoxSize[0] != amr->BoxSize[1]  ||  amr->BoxSize[0] != amr->BoxSize[2] )
       Aux_Error( ERROR_INFO, "simulation domain must be cubic !!\n" );
 
-
-// warnings
-   for (int s=0; s<6; s++)
-      if ( OPT__BC_FLU[s] != BC_FLU_PERIODIC )
-         Aux_Message( stderr, "WARNING : OPT__BC_FLU[%d] != BC_FLU_PERIODIC !?\n", s );
+   for (int f=0; f<6; f++)
+   if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC )
+      Aux_Error( ERROR_INFO, "must adopt periodic BC (i.e., \"OPT__BC_FLU_* = 1\") !!\n" );
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
@@ -92,36 +97,43 @@ void SetParameter()
    const char FileName[] = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
 
-// (1-1) add parameters in the following format:
+// add parameters in the following format:
 // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
-// --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
+// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "ABC_Rho0",          &ABC_Rho0,              1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "ABC_P0",            &ABC_P0,                1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "ABC_V0",            &ABC_V0,                0.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "ABC_CoeffA",        &ABC_CoeffA,            1.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "ABC_CoeffB",        &ABC_CoeffB,            1.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "ABC_CoeffC",        &ABC_CoeffC,            1.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "ABC_NPeriod",       &ABC_NPeriod,           1,             1,                NoMax_int         );
+   ReadPara->Add( "MHDLinear_Mode",    &MHDLinear_Mode,        -1,            1,                1                 );
+   ReadPara->Add( "MHDLinear_Rho0",    &MHDLinear_Rho0,        -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "MHDLinear_Rho1",    &MHDLinear_Rho1,        -1.0,          0.0,              NoMax_double      );
+   ReadPara->Add( "MHDLinear_P0",      &MHDLinear_P0,          -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "MHDLinear_v0",      &MHDLinear_v0,           0.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "MHDLinear_B0",      &MHDLinear_B0,          -1.0,          0.0,              NoMax_double      );
+   ReadPara->Add( "MHDLinear_Sign",    &MHDLinear_Sign,         1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "MHDLinear_Phase0",  &MHDLinear_Phase0,       0.0,          NoMin_double,     NoMax_double      );
 
    ReadPara->Read( FileName );
 
    delete ReadPara;
 
-// (1-2) set the default values
-
-// (1-3) check the runtime parameters
-
 
 // (2) set the problem-specific derived parameters
+   MHDLinear_WaveLength = amr->BoxSize[0] / sqrt(3.0);   // 3 wavelengths along the diagonal
+
+   if ( MHDLinear_Mode == 1 )
+      MHDLinear_WaveSpeed = sqrt( GAMMA*MHDLinear_P0/MHDLinear_Rho0 + SQR(MHDLinear_B0)/MHDLinear_Rho0 );
+   else
+      Aux_Error( ERROR_INFO, "unsupported MHDLinear_Mode = %d !!\n", MHDLinear_Mode );
+
+// force MHDLinear_Sign to be +1.0/-1.0
+   if ( MHDLinear_Sign >= 0.0 )  MHDLinear_Sign = +1.0;
+   else                          MHDLinear_Sign = -1.0;
 
 
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
+   const double End_T_Default    = MHDLinear_WaveLength / MHDLinear_WaveSpeed;
    const long   End_Step_Default = __INT_MAX__;
-   const double End_T_Default    = 0.5;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
@@ -138,14 +150,17 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID     = %d\n",     TESTPROB_ID );
-      Aux_Message( stdout, "  background density  = %14.7e\n", ABC_Rho0    );
-      Aux_Message( stdout, "  background pressure = %14.7e\n", ABC_P0      );
-      Aux_Message( stdout, "  background velocity = %14.7e\n", ABC_V0      );
-      Aux_Message( stdout, "  coefficient A       = %14.7e\n", ABC_CoeffA  );
-      Aux_Message( stdout, "  coefficient B       = %14.7e\n", ABC_CoeffB  );
-      Aux_Message( stdout, "  coefficient C       = %14.7e\n", ABC_CoeffC  );
-      Aux_Message( stdout, "  number of periods   = %d\n",     ABC_NPeriod );
+      Aux_Message( stdout, "  test problem ID      = %d\n",     TESTPROB_ID          );
+      Aux_Message( stdout, "  mode                 = %d\n",     MHDLinear_Mode       );
+      Aux_Message( stdout, "  background density   = %14.7e\n", MHDLinear_Rho0       );
+      Aux_Message( stdout, "  density perturbation = %14.7e\n", MHDLinear_Rho1       );
+      Aux_Message( stdout, "  background pressure  = %14.7e\n", MHDLinear_P0         );
+      Aux_Message( stdout, "  background velocity  = %14.7e\n", MHDLinear_v0         );
+      Aux_Message( stdout, "  background B field   = %14.7e\n", MHDLinear_B0         );
+      Aux_Message( stdout, "  direction            = %14.7e\n", MHDLinear_Sign       );
+      Aux_Message( stdout, "  initial phase shift  = %14.7e\n", MHDLinear_Phase0     );
+      Aux_Message( stdout, "  wave speed           = %14.7e\n", MHDLinear_WaveSpeed  );
+      Aux_Message( stdout, "  wavelength           = %14.7e\n", MHDLinear_WaveLength );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -163,12 +178,9 @@ void SetParameter()
 // Note        :  1. This function may also be used to estimate the numerical errors when OPT__OUTPUT_USER is enabled
 //                   --> In this case, it should provide the analytical solution at the given "Time"
 //                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
-//                   (unless OPT__INIT_GRID_WITH_OMP is disabled)
 //                   --> Please ensure that everything here is thread-safe
 //                3. Even when DUAL_ENERGY is adopted for HYDRO, one does NOT need to set the dual-energy variable here
 //                   --> It will be calculated automatically
-//                4. For MHD, do NOT add magnetic energy (i.e., 0.5*B^2) to fluid[ENGY] here
-//                   --> It will be added automatically later
 //
 // Parameter   :  fluid    : Fluid field to be initialized
 //                x/y/z    : Physical coordinates
@@ -182,12 +194,39 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
-   fluid[DENS] = ABC_Rho0;
-   fluid[MOMX] = ABC_Rho0*ABC_V0/sqrt(3.0);
-   fluid[MOMY] = ABC_Rho0*ABC_V0/sqrt(3.0);
-   fluid[MOMZ] = ABC_Rho0*ABC_V0/sqrt(3.0);
-// no need to add the magnetic energy here
-   fluid[ENGY] = ABC_P0/(GAMMA-1.0) + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+// short names
+   const double Rho0       = MHDLinear_Rho0;
+   const double Rho1       = MHDLinear_Rho1;
+   const double P0         = MHDLinear_P0;
+   const double v0         = MHDLinear_v0;
+   const double B0         = MHDLinear_B0;
+   const double Sign       = MHDLinear_Sign;
+   const double Phase0     = MHDLinear_Phase0;
+   const double WaveSpeed  = MHDLinear_WaveSpeed;
+   const double WaveLength = MHDLinear_WaveLength;
+
+   const double r = 1.0/sqrt(3.0)*( x + y + z ) - v0*Time;
+   double v1, B1, P1, WaveK, WaveW, SinPhase;
+
+   if ( MHDLinear_Mode == 1 )
+   {
+      v1       = Sign*Rho1*WaveSpeed/Rho0;
+      B1       = Sign*v1*B0/WaveSpeed;
+      P1       = Sign*v1*P0*GAMMA/WaveSpeed;
+      WaveK    = 2.0*M_PI/WaveLength;
+      WaveW    = WaveK*WaveSpeed;
+      SinPhase = sin( WaveK*r - Sign*WaveW*Time + Phase0 );
+
+      fluid[DENS] = Rho0 + Rho1*SinPhase;
+      fluid[MOMX] = fluid[DENS]*( v1*SinPhase + v0 ) / sqrt(3.0);
+      fluid[MOMY] = fluid[MOMX];
+      fluid[MOMZ] = fluid[MOMX];
+      fluid[ENGY] = 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) )/fluid[DENS]
+                    + ( P0 + P1*SinPhase )/(GAMMA-1.0);
+   } // if ( MHDLinear_Mode == 1 )
+
+   else
+      Aux_Error( ERROR_INFO, "unsupported MHDLinear_Mode = %d !!\n", MHDLinear_Mode );
 
 } // FUNCTION : SetGridIC
 
@@ -214,20 +253,68 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
                   const int lv, double AuxArray[] )
 {
 
-   const double k = 2.0*M_PI/amr->BoxSize[0]*ABC_NPeriod;   // assuming cubic domain
+// short names
+   const double Rho0       = MHDLinear_Rho0;
+   const double Rho1       = MHDLinear_Rho1;
+   const double v0         = MHDLinear_v0;
+   const double B0         = MHDLinear_B0;
+   const double Sign       = MHDLinear_Sign;
+   const double Phase0     = MHDLinear_Phase0;
+   const double WaveSpeed  = MHDLinear_WaveSpeed;
+   const double WaveLength = MHDLinear_WaveLength;
 
-   magnetic[MAGX] = ABC_CoeffA*sin( k*z ) + ABC_CoeffC*cos( k*y );
-   magnetic[MAGY] = ABC_CoeffB*sin( k*x ) + ABC_CoeffA*cos( k*z );
-   magnetic[MAGZ] = ABC_CoeffC*sin( k*y ) + ABC_CoeffB*cos( k*x );
+   const double r = 1.0/sqrt(3.0)*( x + y + z ) - v0*Time;
+   double v1, B1, WaveK, WaveW, SinPhase;
+
+   if ( MHDLinear_Mode == 1 )
+   {
+      v1       = Sign*Rho1*WaveSpeed/Rho0;
+      B1       = Sign*v1*B0/WaveSpeed;
+      WaveK    = 2.0*M_PI/WaveLength;
+      WaveW    = WaveK*WaveSpeed;
+      SinPhase = sin( WaveK*r - Sign*WaveW*Time + Phase0 );
+
+      magnetic[MAGZ] = ( B0 + B1*SinPhase ) / sqrt(1.5);
+      magnetic[MAGY] = -0.5*magnetic[MAGZ];
+      magnetic[MAGX] = -0.5*magnetic[MAGZ];
+   } // if ( MHDLinear_Mode == 1 )
+
+   else
+      Aux_Error( ERROR_INFO, "unsupported MHDLinear_Mode = %d !!\n", MHDLinear_Mode );
 
 } // FUNCTION : SetBFieldIC
 #endif // #ifdef MHD
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  OutputError
+// Description :  Output the L1 error
+//
+// Note        :  1. Invoke Output_L1Error()
+//                2. Use SetGridIC() to provide the analytical solution at any given time
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void OutputError()
+{
+
+   /*
+   const char Prefix[100]     = "MHDLinearWave";
+   const OptOutputPart_t Part = OUTPUT_DIAG;
+
+   Output_L1Error( SetGridIC, Prefix, Part, NULL_REAL, NULL_REAL, NULL_REAL );
+   */
+
+} // FUNCTION : OutputError
 #endif // #if ( MODEL == HYDRO )
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_TestProb_Hydro_MHD_ABC
+// Function    :  Init_TestProb_Hydro_MHD_LinearWave
 // Description :  Test problem initializer
 //
 // Note        :  None
@@ -236,7 +323,7 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Init_TestProb_Hydro_MHD_ABC()
+void Init_TestProb_Hydro_MHD_LinearWave()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -251,25 +338,26 @@ void Init_TestProb_Hydro_MHD_ABC()
    SetParameter();
 
 
+// set the function pointers of various problem-specific routines
    Init_Function_User_Ptr        = SetGridIC;
 #  ifdef MHD
    Init_Function_BField_User_Ptr = SetBFieldIC;
 #  endif
+   Output_User_Ptr               = OutputError;
    Init_Field_User_Ptr           = NULL;
+   Init_User_Ptr                 = NULL;
    Flag_User_Ptr                 = NULL;
    Mis_GetTimeStep_User_Ptr      = NULL;
+   Aux_Record_User_Ptr           = NULL;
    BC_User_Ptr                   = NULL;
 #  ifdef MHD
    BC_BField_User_Ptr            = NULL;
 #  endif
    Flu_ResetByUser_Func_Ptr      = NULL;
-   Output_User_Ptr               = NULL;
-   Aux_Record_User_Ptr           = NULL;
-   Init_User_Ptr                 = NULL;
    End_User_Ptr                  = NULL;
 #  endif // #if ( MODEL == HYDRO )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Init_TestProb_Hydro_MHD_ABC
+} // FUNCTION : Init_TestProb_Hydro_MHD_LinearWave

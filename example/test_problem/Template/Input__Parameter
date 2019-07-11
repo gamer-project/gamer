@@ -38,8 +38,9 @@ TESTPROB_ID                   0           # test problem ID [0]
                                           #   10: HYDRO colliding jets
                                           #   11: HYDRO Plummer cloud(s) (+GRAVITY & PARTICLE)
                                           #   12: HYDRO gravity (+GRAVITY)
-                                          #   13: HYDRO Arnold-Beltrami-Childress (ABC) flow (+MHD)
-                                          #   14: HYDRO Orszag-Tang vortex (+MHD)
+                                          #   13: HYDRO MHD Arnold-Beltrami-Childress (ABC) flow (+MHD)
+                                          #   14: HYDRO MHD Orszag-Tang vortex (+MHD)
+                                          #   15: HYDRO MHD linear wave (+MHD)
                                           # 1000: ELBDM external potential (+GRAVITY)
 
 
