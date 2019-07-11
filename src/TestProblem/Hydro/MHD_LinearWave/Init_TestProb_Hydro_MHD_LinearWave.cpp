@@ -71,7 +71,7 @@ void Validate()
 
 
 
-#if ( MODEL == HYDRO )
+#if ( MODEL == HYDRO  &&  defined MHD )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
@@ -301,15 +301,13 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
 void OutputError()
 {
 
-   /*
    const char Prefix[100]     = "MHDLinearWave";
    const OptOutputPart_t Part = OUTPUT_DIAG;
 
-   Output_L1Error( SetGridIC, Prefix, Part, NULL_REAL, NULL_REAL, NULL_REAL );
-   */
+   Output_L1Error( SetGridIC, SetBFieldIC, Prefix, Part, NULL_REAL, NULL_REAL, NULL_REAL );
 
 } // FUNCTION : OutputError
-#endif // #if ( MODEL == HYDRO )
+#endif // #if ( MODEL == HYDRO  &&  defined MHD )
 
 
 
@@ -333,16 +331,14 @@ void Init_TestProb_Hydro_MHD_LinearWave()
    Validate();
 
 
-#  if ( MODEL == HYDRO )
+#  if ( MODEL == HYDRO  &&  defined MHD )
 // set the problem-specific runtime parameters
    SetParameter();
 
 
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr        = SetGridIC;
-#  ifdef MHD
    Init_Function_BField_User_Ptr = SetBFieldIC;
-#  endif
    Output_User_Ptr               = OutputError;
    Init_Field_User_Ptr           = NULL;
    Init_User_Ptr                 = NULL;
@@ -350,12 +346,10 @@ void Init_TestProb_Hydro_MHD_LinearWave()
    Mis_GetTimeStep_User_Ptr      = NULL;
    Aux_Record_User_Ptr           = NULL;
    BC_User_Ptr                   = NULL;
-#  ifdef MHD
    BC_BField_User_Ptr            = NULL;
-#  endif
    Flu_ResetByUser_Func_Ptr      = NULL;
    End_User_Ptr                  = NULL;
-#  endif // #if ( MODEL == HYDRO )
+#  endif // #if ( MODEL == HYDRO  &&  defined MHD )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

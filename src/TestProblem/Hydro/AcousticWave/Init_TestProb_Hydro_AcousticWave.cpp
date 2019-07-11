@@ -221,7 +221,7 @@ void OutputError()
    const char Prefix[100]     = "AcousticWave";
    const OptOutputPart_t Part = OUTPUT_DIAG;
 
-   Output_L1Error( SetGridIC, Prefix, Part, NULL_REAL, NULL_REAL, NULL_REAL );
+   Output_L1Error( SetGridIC, NULL, Prefix, Part, NULL_REAL, NULL_REAL, NULL_REAL );
 
 } // FUNCTION : OutputError
 #endif // #if ( MODEL == HYDRO )
