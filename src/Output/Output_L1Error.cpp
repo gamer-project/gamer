@@ -18,10 +18,12 @@ static void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const
 //                2. Similar to Output_DumpData_Part()
 //                3. L1 errors are recorded in "Record__L1Err"
 //                4. For MHD, this function uses the average **cell-centered** magnetic field to compute errors
+//                5. Errors of passive scalars are NOT computed
 //
 // Parameter   :  AnalFunc_Flu : Function pointer to return the analytical solution of the fluid variables
 //                               --> Usually set to the same function pointer for initializing grids
 //                                   (e.g., SetGridIC() in various test problems)
+//                               --> For MHD, the total energy set by this function must NOT include magnetic energy
 //                AnalFunc_Mag : Function pointer to return the analytical solution of the magnetic field (MHD only)
 //                               --> Usually set to the same function pointer for initializing B field
 //                                   (e.g., SetBFieldIC() in various test problems)
@@ -272,6 +274,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
 // Note        :  1. Invoked by Output_L1Error()
 //
 // Parameter   :  AnalFunc_Flu : Function pointer to return the analytical solution of the fluid variables
+//                               --> For MHD, the total energy set by this function must NOT include magnetic energy
 //                AnalFunc_Mag : Function pointer to return the analytical solution of the magnetic field (MHD only)
 //                File         : File pointer
 //                lv           : Target refinement level
@@ -294,7 +297,10 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
 {
 
    const int NErr = NCOMP_FLUID + NCOMP_MAG;
-   real Nume[NErr], Anal[NErr], Err[NErr];
+
+// Anal[] should have the size of NCOMP_TOTAL+NCOMP_MAG instead of NErr since AnalFunc_Flu()
+// may return passive scalars too
+   real Nume[NErr], Anal[NCOMP_TOTAL+NCOMP_MAG], Err[NErr];
 
 
 // get the numerical solution
@@ -337,15 +343,10 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
 
 // convert total energy to pressure
 #  if ( MODEL == HYDRO )
-#  ifdef MHD
-   const real *B_Anal    = Anal + NCOMP_FLUID;
-   const real EngyB_Anal = (real)0.5*( SQR(B_Anal[MAGX]) + SQR(B_Anal[MAGY]) + SQR(B_Anal[MAGZ]) );
-#  else
-   const real EngyB_Anal = NULL_REAL;
-#  endif
+   const real EngyB_Zero = 0.0;  // Anal[ENGY] set by AnalFunc_Flu() does NOT include magentic energy
 
    Anal[ENGY] = Hydro_GetPressure( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY],
-                                   Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB_Anal );
+                                   Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB_Zero );
 #  endif
 
 
