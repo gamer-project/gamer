@@ -693,6 +693,9 @@ void Closing_Step( const Solver_t TSolver, const int lv, const int SaveSg_Flu, c
 #  if ( defined GRAVITY  &&  !defined DUAL_ENERGY )
    char (*h_DE_Array_G     [2])[PS1][PS1][PS1]                        = { NULL, NULL };
 #  endif
+#  if ( defined GRAVITY  &&  !defined MHD )
+   real (*h_EngyB_Array_G  [2])[PS1][PS1][PS1]                        = { NULL, NULL };
+#  endif
 
    switch ( TSolver )
    {
@@ -708,14 +711,14 @@ void Closing_Step( const Solver_t TSolver, const int lv, const int SaveSg_Flu, c
       break;
 
       case GRAVITY_SOLVER :
-         Gra_Close( lv, SaveSg_Flu, h_Flu_Array_G    [ArrayID],
-                                    h_DE_Array_G     [ArrayID], NPG, PID0_List );
+         Gra_Close( lv, SaveSg_Flu, h_Flu_Array_G[ArrayID], h_DE_Array_G[ArrayID], h_EngyB_Array_G[ArrayID],
+                    NPG, PID0_List );
       break;
 
       case POISSON_AND_GRAVITY_SOLVER :
          Poi_Close( lv, SaveSg_Pot, h_Pot_Array_P_Out[ArrayID], NPG, PID0_List );
-         Gra_Close( lv, SaveSg_Flu, h_Flu_Array_G    [ArrayID],
-                                    h_DE_Array_G     [ArrayID], NPG, PID0_List );
+         Gra_Close( lv, SaveSg_Flu, h_Flu_Array_G[ArrayID], h_DE_Array_G[ArrayID], h_EngyB_Array_G[ArrayID],
+                    NPG, PID0_List );
       break;
 #     endif
 

@@ -14,15 +14,17 @@
 //                   --> Currently it's set to the same Sg as the fluid data when calling
 //                       Gra_AdvanceDt() in EvolveLevel()
 //
-// Parameter   :  lv            : Target refinement level
-//                SaveSg        : Sandglass to store the updated data
-//                h_Flu_Array_G : Host array storing the updated fluid variables
-//                h_DE_Array_G  : Host array storing the dual-energy status
-//                NPG           : Number of patch groups to store the updated data
-//                PID0_List     : List recording the patch indices with LocalID==0 to be udpated
+// Parameter   :  lv              : Target refinement level
+//                SaveSg          : Sandglass to store the updated data
+//                h_Flu_Array_G   : Host array storing the updated fluid variables
+//                h_DE_Array_G    : Host array storing the dual-energy status
+//                h_EngyB_Array_G : Host array storing the cell-centered magnetic energy (MHD with DUAL_ENERGY only)
+//                NPG             : Number of patch groups to store the updated data
+//                PID0_List       : List recording the patch indices with LocalID==0 to be udpated
 //-------------------------------------------------------------------------------------------------------
 void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_NIN][PS1][PS1][PS1],
-                const char h_DE_Array_G[][PS1][PS1][PS1], const int NPG, const int *PID0_List )
+                const char h_DE_Array_G[][PS1][PS1][PS1], const real h_EngyB_Array_G[][PS1][PS1][PS1],
+                const int NPG, const int *PID0_List )
 {
 
 #  if ( defined DUAL_ENERGY  &&  defined UNSPLIT_GRAVITY )
@@ -65,7 +67,7 @@ void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_N
             if ( h_DE_Array_G[N][k][j][i] == DE_UPDATED_BY_ETOT_GRA )
             {
 #              ifdef MHD
-               const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+               const real EngyB = h_EngyB_Array_G[N][k][j][i];
 #              else
                const real EngyB = NULL_REAL;
 #              endif
