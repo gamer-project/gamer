@@ -226,6 +226,9 @@ double (*h_Corner_Array_G[2])[3]                                   = { NULL, NUL
 #ifdef DUAL_ENERGY
 char (*h_DE_Array_G    [2])[PS1][PS1][PS1]                         = { NULL, NULL };
 #endif
+#ifdef MHD
+real (*h_EngyB_Array_G [2])[PS1][PS1][PS1]                         = { NULL, NULL };
+#endif
 
 // (3-3) unsplit gravity correction
 #ifdef UNSPLIT_GRAVITY
@@ -288,7 +291,10 @@ real (*d_Pot_Array_P_Out)[ CUBE(GRA_NXT) ]                       = NULL;
 real (*d_Flu_Array_G    )[GRA_NIN][ CUBE(PS1) ]                  = NULL;
 double (*d_Corner_Array_G )[3]                                   = NULL;
 #ifdef DUAL_ENERGY
-char (*d_DE_Array_G     )[ PS1*PS1*PS1 ]                         = NULL;
+char (*d_DE_Array_G     )[ CUBE(PS1) ]                           = NULL;
+#endif
+#ifdef MHD
+real (*d_EngyB_Array_G  )[ CUBE(PS1) ]                           = NULL;
 #endif
 
 // (4-3) unsplit gravity correction

@@ -36,6 +36,10 @@ void Init_MemAllocate_PoissonGravity( const int Pot_NPG )
       h_DE_Array_G     [t] = new char   [Pot_NP][PS1][PS1][PS1];
 #     endif
 
+#     ifdef MHD
+      h_EngyB_Array_G  [t] = new real   [Pot_NP][PS1][PS1][PS1];
+#     endif
+
       h_Pot_Array_T    [t] = new real   [Pot_NP][ CUBE(GRA_NXT) ];
    }
 
