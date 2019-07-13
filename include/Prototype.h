@@ -323,7 +323,8 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
                     const int SaveSg_Flu, const int SaveSg_Pot, const bool Poisson, const bool Gravity,
                     const bool OverlapMPI, const bool Overlap_Sync );
 void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_NIN][PS1][PS1][PS1],
-                const char h_DE_Array_G[][PS1][PS1][PS1], const int NPG, const int *PID0_List );
+                const char h_DE_Array_G[][PS1][PS1][PS1], const real h_EngyB_Array_G[][PS1][PS1][PS1],
+                const int NPG, const int *PID0_List );
 void Gra_Prepare_Flu( const int lv, real h_Flu_Array_G[][GRA_NIN][PS1][PS1][PS1], char h_DE_Array_G[][PS1][PS1][PS1],
                       real h_EngyB_Array_G[][PS1][PS1][PS1], const int NPG, const int *PID0_List );
 void Gra_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_Out[][GRA_NXT][GRA_NXT][GRA_NXT],
