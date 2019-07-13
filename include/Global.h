@@ -234,10 +234,13 @@ extern real       (*h_Ele_Array      [2])[9][NCOMP_ELE][ PS2P1*PS2 ];
 extern real       (*h_Rho_Array_P    [2])[RHO_NXT][RHO_NXT][RHO_NXT];
 extern real       (*h_Pot_Array_P_In [2])[POT_NXT][POT_NXT][POT_NXT];
 extern real       (*h_Pot_Array_P_Out[2])[GRA_NXT][GRA_NXT][GRA_NXT];
-extern real       (*h_Flu_Array_G    [2])[GRA_NIN][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+extern real       (*h_Flu_Array_G    [2])[GRA_NIN][PS1][PS1][PS1];
 extern double     (*h_Corner_Array_G [2])[3];
 #ifdef DUAL_ENERGY
-extern char       (*h_DE_Array_G     [2])[PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+extern char       (*h_DE_Array_G     [2])[PS1][PS1][PS1];
+#endif
+#ifdef MHD
+extern real       (*h_EngyB_Array_G  [2])[PS1][PS1][PS1];
 #endif
 
 #ifdef UNSPLIT_GRAVITY
