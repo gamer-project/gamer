@@ -5,17 +5,22 @@
 
 // problem-specific global variables
 // =======================================================================================
-static int    MHDLinear_Mode;          // (1/2/3) --> (fast/slow/Alfven wave)
-static double MHDLinear_Rho0;          // background density
-static double MHDLinear_Rho1;          // amplitude of the density perturbation
-static double MHDLinear_P0;            // background pressure
-static double MHDLinear_v0;            // background velocity
-static double MHDLinear_B0;            // background magnetic field
-static double MHDLinear_Sign;          // (+1/-1) --> (right/left-moving wave)
-static double MHDLinear_Phase0;        // initial phase shift
+static double Jeans_Rho0;           // background density
+static double Jeans_Rho1;           // amplitude of the density perturbation
+static double Jeans_P0;             // background pressure
+static double Jeans_v0;             // background velocity
+static double Jeans_Sign;           // (+1/-1) --> (stable: right/left-moving wave; unstable: growing/decaying mode)
+static double Jeans_Phase0;         // initial phase shift
+#ifdef MHD
+static double Jeans_B0;             // background magnetic field
+#endif
 
-static double MHDLinear_WaveSpeed;     // propagation speed
-static double MHDLinear_WaveLength;    // wavelength
+static double Jeans_WaveLength;     // wavelength
+static double Jeans_WaveK;          // wavenumber
+static double Jeans_WaveKj;         // critical wavenumber
+static double Jeans_WaveW;          // wave angular frequency
+static double Jeans_WaveSpeed;      // propagation speed (sound speed in hydro or fast wave speed in MHD)
+static bool   Jeans_Stable;         // true/false --> Jeans stable/unstable
 // =======================================================================================
 
 
@@ -42,16 +47,12 @@ void Validate()
    Aux_Error( ERROR_INFO, "MODEL != HYDRO !!\n" );
 #  endif
 
-#  ifndef MHD
-   Aux_Error( ERROR_INFO, "MHD must be enabled !!\n" );
+#  ifndef GRAVITY
+   Aux_Error( ERROR_INFO, "GRAVITY must be enabled !!\n" );
 #  endif
 
-#  ifdef GRAVITY
-   Aux_Error( ERROR_INFO, "GRAVITY must be disabled !!\n" );
-#  endif
-
-#  ifndef FLOAT8
-   Aux_Error( ERROR_INFO, "FLOAT8 must be enabled !!\n" );
+#  ifdef COMOVING
+   Aux_Error( ERROR_INFO, "COMOVING must be disabled !!\n" );
 #  endif
 
 #  ifdef PARTICLE
@@ -63,7 +64,12 @@ void Validate()
 
    for (int f=0; f<6; f++)
    if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC )
-      Aux_Error( ERROR_INFO, "must adopt periodic BC (i.e., \"OPT__BC_FLU_* = 1\") !!\n" );
+      Aux_Error( ERROR_INFO, "must adopt periodic BC for the fluid (i.e., \"OPT__BC_FLU_* = 1\") !!\n" );
+
+#  ifdef GRAVITY
+   if ( OPT__BC_POT != BC_POT_PERIODIC )
+      Aux_Error( ERROR_INFO, "must adopt periodic BC for the gravity (i.e., \"OPT__BC_POT = 1\") !!\n" );
+#  endif
 
 
 // warnings
@@ -79,7 +85,7 @@ void Validate()
 
 
 
-#if ( MODEL == HYDRO  &&  defined MHD )
+#if ( MODEL == HYDRO  &&  defined GRAVITY )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
@@ -111,14 +117,15 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "MHDLinear_Mode",    &MHDLinear_Mode,        -1,            1,                1                 );
-   ReadPara->Add( "MHDLinear_Rho0",    &MHDLinear_Rho0,        -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "MHDLinear_Rho1",    &MHDLinear_Rho1,        -1.0,          0.0,              NoMax_double      );
-   ReadPara->Add( "MHDLinear_P0",      &MHDLinear_P0,          -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "MHDLinear_v0",      &MHDLinear_v0,           0.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "MHDLinear_B0",      &MHDLinear_B0,          -1.0,          0.0,              NoMax_double      );
-   ReadPara->Add( "MHDLinear_Sign",    &MHDLinear_Sign,         1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "MHDLinear_Phase0",  &MHDLinear_Phase0,       0.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jeans_Rho0",        &Jeans_Rho0,           -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jeans_Rho1",        &Jeans_Rho1,           -1.0,           0.0,              NoMax_double      );
+   ReadPara->Add( "Jeans_P0",          &Jeans_P0,             -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jeans_v0",          &Jeans_v0,              0.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jeans_Sign",        &Jeans_Sign,            1.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jeans_Phase0",      &Jeans_Phase0,          0.0,           NoMin_double,     NoMax_double      );
+#  ifdef MHD
+   ReadPara->Add( "Jeans_B0",          &Jeans_B0,             -1.0,           0.0,              NoMax_double      );
+#  endif
 
    ReadPara->Read( FileName );
 
@@ -126,21 +133,25 @@ void SetParameter()
 
 
 // (2) set the problem-specific derived parameters
-   MHDLinear_WaveLength = amr->BoxSize[0] / sqrt(3.0);   // 3 wavelengths along the diagonal
+   Jeans_WaveLength = amr->BoxSize[0] / sqrt(3.0);   // 3 wavelengths along the diagonal
+#  ifdef MHD
+   Jeans_WaveSpeed  = sqrt( GAMMA*Jeans_P0/Jeans_Rho0 + SQR(Jeans_B0)/Jeans_Rho0 );
+#  else
+   Jeans_WaveSpeed  = sqrt( GAMMA*Jeans_P0/Jeans_Rho0 );
+#  endif
+   Jeans_WaveK      = 2.0*M_PI/Jeans_WaveLength;
+   Jeans_WaveKj     = sqrt( 4.0*M_PI*NEWTON_G*Jeans_Rho0/SQR(Jeans_WaveSpeed) );
+   Jeans_Stable     = ( Jeans_WaveK > Jeans_WaveKj );
+   Jeans_WaveW      = Jeans_WaveSpeed*sqrt(  fabs( SQR(Jeans_WaveK) - SQR(Jeans_WaveKj) )  );
 
-   if ( MHDLinear_Mode == 1 )
-      MHDLinear_WaveSpeed = sqrt( GAMMA*MHDLinear_P0/MHDLinear_Rho0 + SQR(MHDLinear_B0)/MHDLinear_Rho0 );
-   else
-      Aux_Error( ERROR_INFO, "unsupported MHDLinear_Mode = %d !!\n", MHDLinear_Mode );
-
-// force MHDLinear_Sign to be +1.0/-1.0
-   if ( MHDLinear_Sign >= 0.0 )  MHDLinear_Sign = +1.0;
-   else                          MHDLinear_Sign = -1.0;
+// force Jeans_Sign to be +1.0/-1.0
+   if ( Jeans_Sign >= 0.0 )  Jeans_Sign = +1.0;
+   else                      Jeans_Sign = -1.0;
 
 
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
-   const double End_T_Default    = MHDLinear_WaveLength / MHDLinear_WaveSpeed;
+   const double End_T_Default    = ( Jeans_Stable ) ? 2.0*M_PI/Jeans_WaveW : log(50.0)/Jeans_WaveW;
    const long   End_Step_Default = __INT_MAX__;
 
    if ( END_STEP < 0 ) {
@@ -158,17 +169,22 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID      = %d\n",     TESTPROB_ID          );
-      Aux_Message( stdout, "  mode                 = %d\n",     MHDLinear_Mode       );
-      Aux_Message( stdout, "  background density   = %14.7e\n", MHDLinear_Rho0       );
-      Aux_Message( stdout, "  density perturbation = %14.7e\n", MHDLinear_Rho1       );
-      Aux_Message( stdout, "  background pressure  = %14.7e\n", MHDLinear_P0         );
-      Aux_Message( stdout, "  background velocity  = %14.7e\n", MHDLinear_v0         );
-      Aux_Message( stdout, "  background B field   = %14.7e\n", MHDLinear_B0         );
-      Aux_Message( stdout, "  direction            = %14.7e\n", MHDLinear_Sign       );
-      Aux_Message( stdout, "  initial phase shift  = %14.7e\n", MHDLinear_Phase0     );
-      Aux_Message( stdout, "  wave speed           = %14.7e\n", MHDLinear_WaveSpeed  );
-      Aux_Message( stdout, "  wavelength           = %14.7e\n", MHDLinear_WaveLength );
+      Aux_Message( stdout, "  test problem ID        = %d\n",     TESTPROB_ID      );
+      Aux_Message( stdout, "  background density     = %14.7e\n", Jeans_Rho0       );
+      Aux_Message( stdout, "  density perturbation   = %14.7e\n", Jeans_Rho1       );
+      Aux_Message( stdout, "  background pressure    = %14.7e\n", Jeans_P0         );
+      Aux_Message( stdout, "  background velocity    = %14.7e\n", Jeans_v0         );
+#     ifdef MHD
+      Aux_Message( stdout, "  background B field     = %14.7e\n", Jeans_B0         );
+#     endif
+      Aux_Message( stdout, "  sign (grow/decay;R/L)  = %14.7e\n", Jeans_Sign       );
+      Aux_Message( stdout, "  initial phase shift    = %14.7e\n", Jeans_Phase0     );
+      Aux_Message( stdout, "  wave speed             = %14.7e\n", Jeans_WaveSpeed  );
+      Aux_Message( stdout, "  wavelength             = %14.7e\n", Jeans_WaveLength );
+      Aux_Message( stdout, "  wavenumber             = %14.7e\n", Jeans_WaveK      );
+      Aux_Message( stdout, "  critial wavenumber     = %14.7e\n", Jeans_WaveKj     );
+      Aux_Message( stdout, "  stable                 = %s\n",     (Jeans_Stable)?"YES":"NO" );
+      Aux_Message( stdout, "  wave angular frequency = %14.7e\n", Jeans_WaveW      );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -203,38 +219,46 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 {
 
 // short names
-   const double Rho0       = MHDLinear_Rho0;
-   const double Rho1       = MHDLinear_Rho1;
-   const double P0         = MHDLinear_P0;
-   const double v0         = MHDLinear_v0;
-   const double B0         = MHDLinear_B0;
-   const double Sign       = MHDLinear_Sign;
-   const double Phase0     = MHDLinear_Phase0;
-   const double WaveSpeed  = MHDLinear_WaveSpeed;
-   const double WaveLength = MHDLinear_WaveLength;
+   const double Rho0   = Jeans_Rho0;
+   const double Rho1   = Jeans_Rho1;
+   const double P0     = Jeans_P0;
+   const double v0     = Jeans_v0;
+   const double Sign   = Jeans_Sign;
+   const double Phase0 = Jeans_Phase0;
+   const double WaveK  = Jeans_WaveK;
+   const double WaveW  = Jeans_WaveW;
 
-   const double r = 1.0/sqrt(3.0)*( x + y + z ) - v0*Time;
-   double v1, B1, P1, WaveK, WaveW, SinPhase;
+   double r, v1, P1, CosPhase, SinPhase, ExpPhase;
 
-   if ( MHDLinear_Mode == 1 )
+   r  = 1.0/sqrt(3.0)*( x + y + z ) - v0*Time;
+   v1 = Sign*Rho1/Rho0*WaveW/WaveK;
+   P1 = GAMMA*P0/Rho0*Rho1;
+
+   if ( Jeans_Stable )
    {
-      v1       = Sign*Rho1*WaveSpeed/Rho0;
-      B1       = Sign*v1*B0/WaveSpeed;
-      P1       = Sign*v1*P0*GAMMA/WaveSpeed;
-      WaveK    = 2.0*M_PI/WaveLength;
-      WaveW    = WaveK*WaveSpeed;
-      SinPhase = sin( WaveK*r - Sign*WaveW*Time + Phase0 );
+      CosPhase = cos( WaveK*r - Sign*WaveW*Time + Phase0 );
 
-      fluid[DENS] = Rho0 + Rho1*SinPhase;
-      fluid[MOMX] = fluid[DENS]*( v1*SinPhase + v0 ) / sqrt(3.0);
+      fluid[DENS] = Rho0 + Rho1*CosPhase;
+      fluid[MOMX] = fluid[DENS]*( v0 + v1*CosPhase )/sqrt(3.0);
       fluid[MOMY] = fluid[MOMX];
       fluid[MOMZ] = fluid[MOMX];
       fluid[ENGY] = 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) )/fluid[DENS]
-                    + ( P0 + P1*SinPhase )/(GAMMA-1.0);
-   } // if ( MHDLinear_Mode == 1 )
+                    + ( P0 + P1*CosPhase )/(GAMMA-1.0);
+   }
 
    else
-      Aux_Error( ERROR_INFO, "unsupported MHDLinear_Mode = %d !!\n", MHDLinear_Mode );
+   {
+      CosPhase = cos( WaveK*r + Phase0 );
+      SinPhase = sin( WaveK*r + Phase0 );
+      ExpPhase = exp( Jeans_Sign*Jeans_WaveW*Time );
+
+      fluid[DENS] = Rho0 + Rho1*CosPhase*ExpPhase;
+      fluid[MOMX] = fluid[DENS]*( v0 - v1*SinPhase*ExpPhase )/sqrt(3.0);
+      fluid[MOMY] = fluid[MOMX];
+      fluid[MOMZ] = fluid[MOMX];
+      fluid[ENGY] = 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) )/fluid[DENS]
+                    + ( P0 + P1*CosPhase*ExpPhase )/(GAMMA-1.0);
+   }
 
 } // FUNCTION : SetGridIC
 
@@ -262,33 +286,38 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
 {
 
 // short names
-   const double Rho0       = MHDLinear_Rho0;
-   const double Rho1       = MHDLinear_Rho1;
-   const double v0         = MHDLinear_v0;
-   const double B0         = MHDLinear_B0;
-   const double Sign       = MHDLinear_Sign;
-   const double Phase0     = MHDLinear_Phase0;
-   const double WaveSpeed  = MHDLinear_WaveSpeed;
-   const double WaveLength = MHDLinear_WaveLength;
+   const double Rho0   = Jeans_Rho0;
+   const double Rho1   = Jeans_Rho1;
+   const double v0     = Jeans_v0;
+   const double B0     = Jeans_B0;
+   const double Sign   = Jeans_Sign;
+   const double Phase0 = Jeans_Phase0;
+   const double WaveK  = Jeans_WaveK;
+   const double WaveW  = Jeans_WaveW;
 
-   const double r = 1.0/sqrt(3.0)*( x + y + z ) - v0*Time;
-   double v1, B1, WaveK, WaveW, SinPhase;
+   double r, B1, CosPhase, ExpPhase;
 
-   if ( MHDLinear_Mode == 1 )
+   r  = 1.0/sqrt(3.0)*( x + y + z ) - v0*Time;
+   B1 = B0/Rho0*Rho1;
+
+// assuming transverse component only
+   if ( Jeans_Stable )
    {
-      v1       = Sign*Rho1*WaveSpeed/Rho0;
-      B1       = Sign*v1*B0/WaveSpeed;
-      WaveK    = 2.0*M_PI/WaveLength;
-      WaveW    = WaveK*WaveSpeed;
-      SinPhase = sin( WaveK*r - Sign*WaveW*Time + Phase0 );
+      CosPhase = cos( WaveK*r - Sign*WaveW*Time + Phase0 );
 
-      magnetic[MAGZ] = ( B0 + B1*SinPhase ) / sqrt(1.5);
-      magnetic[MAGY] = -0.5*magnetic[MAGZ];
-      magnetic[MAGX] = -0.5*magnetic[MAGZ];
-   } // if ( MHDLinear_Mode == 1 )
+      magnetic[MAGZ] = ( B0 + B1*CosPhase ) / sqrt(1.5);
+   }
 
    else
-      Aux_Error( ERROR_INFO, "unsupported MHDLinear_Mode = %d !!\n", MHDLinear_Mode );
+   {
+      CosPhase = cos( WaveK*r + Phase0 );
+      ExpPhase = exp( Jeans_Sign*Jeans_WaveW*Time );
+
+      magnetic[MAGZ] = ( B0 + B1*CosPhase*ExpPhase ) / sqrt(1.5);
+   }
+
+   magnetic[MAGX] = -0.5*magnetic[MAGZ];
+   magnetic[MAGY] = -0.5*magnetic[MAGZ];
 
 } // FUNCTION : SetBFieldIC
 #endif // #ifdef MHD
@@ -309,18 +338,22 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
 static void OutputError()
 {
 
-   const char Prefix[100]     = "MHDLinearWave";
+   const char Prefix[100]     = "Jeans";
    const OptOutputPart_t Part = OUTPUT_DIAG;
 
+#  ifdef MHD
    Output_L1Error( SetGridIC, SetBFieldIC, Prefix, Part, NULL_REAL, NULL_REAL, NULL_REAL );
+#  else
+   Output_L1Error( SetGridIC, NULL,        Prefix, Part, NULL_REAL, NULL_REAL, NULL_REAL );
+#  endif
 
 } // FUNCTION : OutputError
-#endif // #if ( MODEL == HYDRO  &&  defined MHD )
+#endif // #if ( MODEL == HYDRO  &&  defined GRAVITY )
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_TestProb_Hydro_MHD_LinearWave
+// Function    :  Init_TestProb_Hydro_JeansInstability
 // Description :  Test problem initializer
 //
 // Note        :  None
@@ -329,7 +362,7 @@ static void OutputError()
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Init_TestProb_Hydro_MHD_LinearWave()
+void Init_TestProb_Hydro_JeansInstability()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -339,14 +372,13 @@ void Init_TestProb_Hydro_MHD_LinearWave()
    Validate();
 
 
-#  if ( MODEL == HYDRO  &&  defined MHD )
+#  if ( MODEL == HYDRO  &&  defined GRAVITY )
 // set the problem-specific runtime parameters
    SetParameter();
 
 
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr        = SetGridIC;
-   Init_Function_BField_User_Ptr = SetBFieldIC;
    Output_User_Ptr               = OutputError;
    Init_Field_User_Ptr           = NULL;
    Init_User_Ptr                 = NULL;
@@ -354,12 +386,15 @@ void Init_TestProb_Hydro_MHD_LinearWave()
    Mis_GetTimeStep_User_Ptr      = NULL;
    Aux_Record_User_Ptr           = NULL;
    BC_User_Ptr                   = NULL;
-   BC_BField_User_Ptr            = NULL;
    Flu_ResetByUser_Func_Ptr      = NULL;
    End_User_Ptr                  = NULL;
-#  endif // #if ( MODEL == HYDRO  &&  defined MHD )
+#  ifdef MHD
+   Init_Function_BField_User_Ptr = SetBFieldIC;
+   BC_BField_User_Ptr            = NULL;
+#  endif
+#  endif // if ( MODEL == HYDRO  &&  defined GRAVITY )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Init_TestProb_Hydro_MHD_LinearWave
+} // FUNCTION : Init_TestProb_Hydro_JeansInstability
