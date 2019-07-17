@@ -481,15 +481,19 @@
 
 
 // number of potential ghost zones for correcting the half-step velocity if UNSPLIT_GRAVITY is on
+// _F/_G: fluid/gravity solvers
 #  ifdef UNSPLIT_GRAVITY
 #     if   ( MODEL == HYDRO )
 #       ifdef MHD
-#        define USG_GHOST_SIZE      2
+#        define USG_GHOST_SIZE_F    2
+#        define USG_GHOST_SIZE_G    1
 #       else
-#        define USG_GHOST_SIZE      1
+#        define USG_GHOST_SIZE_F    1
+#        define USG_GHOST_SIZE_G    1
 #       endif
 #     elif ( MODEL == ELBDM )
-#        define USG_GHOST_SIZE      0
+#        define USG_GHOST_SIZE_F    0
+#        define USG_GHOST_SIZE_G    0
 #     else
 #        error : ERROR : unsupported MODEL !!
 #     endif // MODEL
@@ -519,25 +523,25 @@
 
 // the size of arrays (in one dimension) sending into GPU
 //###REVISE: support interpolation schemes requiring 2 ghost cells on each side for POT_NXT
-#  define FLU_NXT       ( 2*(PATCH_SIZE+FLU_GHOST_SIZE)   )             // use patch group as the unit
-#  define FLU_NXT_P1    ( FLU_NXT + 1                     )
+#  define FLU_NXT       ( PS2 + 2*FLU_GHOST_SIZE )                // use patch group as the unit
+#  define FLU_NXT_P1    ( FLU_NXT + 1 )
 #ifdef GRAVITY
-#  define POT_NXT       ( PATCH_SIZE/2 + 2*( (POT_GHOST_SIZE+3)/2 ) )   // assuming interpolation ghost zone == 1
-#  define RHO_NXT       ( PATCH_SIZE   + 2*RHO_GHOST_SIZE )             // POT/RHO/GRA_NXT use patch as the unit
-#  define GRA_NXT       ( PATCH_SIZE   + 2*GRA_GHOST_SIZE )
+#  define POT_NXT       ( PS1/2 + 2*( (POT_GHOST_SIZE+3)/2 ) )    // assuming interpolation ghost zone == 1
+#  define RHO_NXT       ( PS1 + 2*RHO_GHOST_SIZE )                // POT/RHO/GRA_NXT use patch as the unit
+#  define GRA_NXT       ( PS1 + 2*GRA_GHOST_SIZE )
 #  ifdef UNSPLIT_GRAVITY
-#  define USG_NXT_F     ( 2*(PATCH_SIZE+USG_GHOST_SIZE)   )             // we use patch group as unit for the fluid   solver
-#  define USG_NXT_G     ( PATCH_SIZE   + 2*USG_GHOST_SIZE )             // we use patch       as unit for the gravity solver
+#  define USG_NXT_F     ( PS2 + 2*USG_GHOST_SIZE_F )              // we use patch group as unit for the fluid   solver
+#  define USG_NXT_G     ( PS1 + 2*USG_GHOST_SIZE_G )              // we use patch       as unit for the gravity solver
 #  else
-#  define USG_NXT_F     ( 1 )                                           // still define USG_NXT_F/G since many function prototypes
-#  define USG_NXT_G     ( 1 )                                           // require it
+#  define USG_NXT_F     ( 1 )                                     // still define USG_NXT_F/G since many function prototypes
+#  define USG_NXT_G     ( 1 )                                     // require it
 #  endif
 #else
-#  define GRA_NXT       ( 1 )                                           // still define GRA_NXT   ...
-#  define USG_NXT_F     ( 1 )                                           // still define USG_NXT_F ...
+#  define GRA_NXT       ( 1 )                                     // still define GRA_NXT   ...
+#  define USG_NXT_F     ( 1 )                                     // still define USG_NXT_F ...
 #endif
 #ifdef PARTICLE
-#  define RHOEXT_NXT    ( PATCH_SIZE   + 2*RHOEXT_GHOST_SIZE )          // array rho_ext of each patch
+#  define RHOEXT_NXT    ( PS1 + 2*RHOEXT_GHOST_SIZE )             // array rho_ext of each patch
 #endif
 
 

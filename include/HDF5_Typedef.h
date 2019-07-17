@@ -188,7 +188,8 @@ struct SymConst_t
    int    Rho_Nxt;
 
 #  ifdef UNSPLIT_GRAVITY
-   int    USG_GhostSize;
+   int    USG_GhostSizeF;
+   int    USG_GhostSizeG;
    int    USG_NxtF;
    int    USG_NxtG;
 #  endif

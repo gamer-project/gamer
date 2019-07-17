@@ -1531,7 +1531,8 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "Gra_Nxt",              &RS.Gra_Nxt,              SID, TID, NonFatal, &RT.Gra_Nxt,               1, NonFatal );
    LoadField( "Rho_Nxt",              &RS.Rho_Nxt,              SID, TID, NonFatal, &RT.Rho_Nxt,               1, NonFatal );
 #  ifdef UNSPLIT_GRAVITY
-   LoadField( "USG_GhostSize",        &RS.USG_GhostSize,        SID, TID, NonFatal, &RT.USG_GhostSize,         1, NonFatal );
+   LoadField( "USG_GhostSizeF",       &RS.USG_GhostSizeF,       SID, TID, NonFatal, &RT.USG_GhostSizeF,        1, NonFatal );
+   LoadField( "USG_GhostSizeG",       &RS.USG_GhostSizeG,       SID, TID, NonFatal, &RT.USG_GhostSizeG,        1, NonFatal );
    LoadField( "USG_NxtF",             &RS.USG_NxtF,             SID, TID, NonFatal, &RT.USG_NxtF,              1, NonFatal );
    LoadField( "USG_NxtG",             &RS.USG_NxtG,             SID, TID, NonFatal, &RT.USG_NxtG,              1, NonFatal );
 #  endif

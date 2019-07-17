@@ -72,7 +72,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
 // prepare the potential array
    if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
    Prepare_PatchData( lv, PrepTime, h_Pot_Array_USG_F[0], NULL,
-                      USG_GHOST_SIZE, NPG, PID0_List, _POTE, _NONE,
+                      USG_GHOST_SIZE_F, NPG, PID0_List, _POTE, _NONE,
                       OPT__GRA_INT_SCHEME, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
                       OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, DE_Consistency_No );
 

@@ -213,9 +213,9 @@ void CPU_HydroGravitySolver(
          const int idx_new = IDX321( i_new, j_new, k_new, GRA_NXT, GRA_NXT );
 
 #        ifdef UNSPLIT_GRAVITY
-         const int i_old   = i_g0 + USG_GHOST_SIZE;
-         const int j_old   = j_g0 + USG_GHOST_SIZE;
-         const int k_old   = k_g0 + USG_GHOST_SIZE;
+         const int i_old   = i_g0 + USG_GHOST_SIZE_G;
+         const int j_old   = j_g0 + USG_GHOST_SIZE_G;
+         const int k_old   = k_g0 + USG_GHOST_SIZE_G;
          const int idx_old = IDX321( i_old, j_old, k_old, USG_NXT_G, USG_NXT_G );
 #        endif
 

@@ -139,9 +139,9 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
 #  ifdef UNSPLIT_GRAVITY
    const real   GraConst    = -(real)0.5*dt/dh;
    const int    didx_usg[3] = { 1, USG_NXT_F, SQR(USG_NXT_F) };
-   const int    fc_ghost    = ( N_FC_VAR - PS2 )/2;      // number of ghost zones on each side for g_FC_Var[]
-   const int    idx_fc2usg  = USG_GHOST_SIZE - fc_ghost; // index difference between g_FC_Var[] and g_Pot_USG[]
-   const double dh_half     = 0.5*(double)dh;            // always use double precision to calculate the cell position
+   const int    fc_ghost    = ( N_FC_VAR - PS2 )/2;         // number of ghost zones on each side for g_FC_Var[]
+   const int    idx_fc2usg  = USG_GHOST_SIZE_F - fc_ghost;  // index difference between g_FC_Var[] and g_Pot_USG[]
+   const double dh_half     = 0.5*(double)dh;               // always use double precision to calculate the cell position
    const real   dt_half     = (real)0.5*dt;
 
    double CrShift[3];
@@ -155,13 +155,13 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
    if ( CorrHalfVel )
    {
       if ( idx_fc2usg + NSkip_N < 0 )
-         printf( "ERROR : idx_fc2usg (%d) + NSkip_N (%d) < 0 (USG_GHOST_SIZE %d, N_FC_VAR %d) !!\n",
-                 idx_fc2usg, NSkip_N, USG_GHOST_SIZE, N_FC_VAR );
+         printf( "ERROR : idx_fc2usg (%d) + NSkip_N (%d) < 0 (USG_GHOST_SIZE_F %d, N_FC_VAR %d) !!\n",
+                 idx_fc2usg, NSkip_N, USG_GHOST_SIZE_F, N_FC_VAR );
 
 //    one additional cell is required to calculate the derivative along the transverse direction
       if ( idx_fc2usg + NSkip_T < 1 )
-         printf( "ERROR : idx_fc2usg (%d) + NSkip_T (%d) < 1 (USG_GHOST_SIZE %d, N_FC_VAR %d) !!\n",
-                 idx_fc2usg, NSkip_T, USG_GHOST_SIZE, N_FC_VAR );
+         printf( "ERROR : idx_fc2usg (%d) + NSkip_T (%d) < 1 (USG_GHOST_SIZE_F %d, N_FC_VAR %d) !!\n",
+                 idx_fc2usg, NSkip_T, USG_GHOST_SIZE_F, N_FC_VAR );
    }
 #  endif
 #  endif // #ifdef UNSPLIT_GRAVITY

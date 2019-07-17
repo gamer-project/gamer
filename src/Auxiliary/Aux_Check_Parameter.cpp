@@ -1063,9 +1063,9 @@ void Aux_Check_Parameter()
                  "OPT__GRA_P5_GRADIENT", "GRA_GHOST_SIZE == 2" );
 
 #  ifdef UNSPLIT_GRAVITY
-   if ( OPT__GRA_P5_GRADIENT &&  USG_GHOST_SIZE == 1 )
+   if ( OPT__GRA_P5_GRADIENT &&  USG_GHOST_SIZE_G == 1 )
       Aux_Error( ERROR_INFO, "\"%s\" requires \"%s\" for UNSPLIT_GRAVITY !!\n",
-                 "OPT__GRA_P5_GRADIENT", "USG_GHOST_SIZE == 2" );
+                 "OPT__GRA_P5_GRADIENT", "USG_GHOST_SIZE_G == 2" );
 #  endif
 
    if ( OPT__EXTERNAL_POT )   Aux_Error( ERROR_INFO, "OPT__EXTERNAL_POT is NOT supported in HYDRO --> use external gravity !!\n" );
