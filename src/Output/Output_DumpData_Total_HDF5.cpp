@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2401)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2402)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -171,6 +171,7 @@ Procedure for outputting new variables:
 //                2312 : 2019/05/31 --> add OPT__GRAVITY_EXTRA_MASS
 //                2400 : 2019/06/08 --> output magnetic field for MHD
 //                2401 : 2019/06/30 --> output OPT__FLAG_CURRENT and FlagTable_Current
+//                2402 : 2019/07/17 --> replace USG_GhostSize by USG_GhostSizeF and USG_GhostSizeG
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1363,7 +1364,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2401;
+   KeyInfo.FormatVersion        = 2402;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -1687,7 +1688,8 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.Rho_Nxt              = RHO_NXT;
 
 #  ifdef UNSPLIT_GRAVITY
-   SymConst.USG_GhostSize        = USG_GHOST_SIZE;
+   SymConst.USG_GhostSizeF       = USG_GHOST_SIZE_F;
+   SymConst.USG_GhostSizeG       = USG_GHOST_SIZE_G;
    SymConst.USG_NxtF             = USG_NXT_F;
    SymConst.USG_NxtG             = USG_NXT_G;
 #  endif
@@ -2407,7 +2409,8 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Gra_Nxt",              HOFFSET(SymConst_t,Gra_Nxt             ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Rho_Nxt",              HOFFSET(SymConst_t,Rho_Nxt             ), H5T_NATIVE_INT    );
 #  ifdef UNSPLIT_GRAVITY
-   H5Tinsert( H5_TypeID, "USG_GhostSize",        HOFFSET(SymConst_t,USG_GhostSize       ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "USG_GhostSizeF",       HOFFSET(SymConst_t,USG_GhostSizeF      ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "USG_GhostSizeG",       HOFFSET(SymConst_t,USG_GhostSizeG      ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "USG_NxtF",             HOFFSET(SymConst_t,USG_NxtF            ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "USG_NxtG",             HOFFSET(SymConst_t,USG_NxtG            ), H5T_NATIVE_INT    );
 #  endif
