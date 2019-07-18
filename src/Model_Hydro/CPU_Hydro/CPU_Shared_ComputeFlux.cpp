@@ -75,6 +75,8 @@ void ExternalAcc( real Acc[], const double x, const double y, const double z, co
 //                5. For the performance consideration, this function will also be responsible for storing the
 //                   inter-patch fluxes
 //                   --> Option "DumpIntFlux"
+//                6. For the unsplitting scheme in gravity (i.e., UNSPLIT_GRAVITY), this function also corrects the half-step
+//                   velocity by gravity when CorrHalfVel==true
 //
 // Parameter   :  g_FC_Var        : Array storing the input face-centered conserved variables
 //                g_FC_Flux       : Array to store the output face-centered fluxes
