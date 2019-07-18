@@ -189,15 +189,18 @@ void CPU_FluidSolver_CTU(
 {
 
 #  ifdef UNSPLIT_GRAVITY
-   const bool CorrHalfVel      = true;
+   const bool CorrHalfVel          = true;
 #  else
-   const bool CorrHalfVel      = false;
+   const bool CorrHalfVel          = false;
 #  endif
-   const bool CorrHalfVel_No   = false;
-   const bool StoreFlux_No     = false;
-   const bool Con2Pri_Yes      = true;
+   const bool CorrHalfVel_No       = false;
+   const bool StoreFlux_No         = false;
+   const bool Con2Pri_Yes          = true;
 #  ifdef MHD
-   const bool StoreElectric_No = false;
+   const bool StoreElectric_No     = false;
+#  endif
+#  if ( defined __CUDACC__  &&  !defined GRAVITY )
+   const double *c_ExtAcc_AuxArray = NULL;
 #  endif
 
 

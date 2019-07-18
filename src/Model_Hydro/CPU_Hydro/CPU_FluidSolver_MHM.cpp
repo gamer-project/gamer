@@ -228,18 +228,21 @@ void CPU_FluidSolver_MHM(
 {
 
 #  ifdef UNSPLIT_GRAVITY
-   const bool CorrHalfVel      = true;
+   const bool CorrHalfVel          = true;
 #  else
-   const bool CorrHalfVel      = false;
+   const bool CorrHalfVel          = false;
 #  endif
-   const bool CorrHalfVel_No   = false;
+   const bool CorrHalfVel_No       = false;
 #  if   ( FLU_SCHEME == MHM )
-   const bool Con2Pri_Yes      = true;
+   const bool Con2Pri_Yes          = true;
 #  elif ( FLU_SCHEME == MHM_RP )
-   const bool Con2Pri_No       = false;
+   const bool Con2Pri_No           = false;
 #  endif
 #  ifdef MHD
-   const bool StoreElectric_No = false;
+   const bool StoreElectric_No     = false;
+#  endif
+#  if ( defined __CUDACC__  &&  !defined GRAVITY )
+   const double *c_ExtAcc_AuxArray = NULL;
 #  endif
 
 
