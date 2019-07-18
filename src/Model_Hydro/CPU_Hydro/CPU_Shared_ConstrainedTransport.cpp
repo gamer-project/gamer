@@ -13,8 +13,17 @@
 #ifdef __CUDACC__
 
 #include "CUFLU_Shared_FluUtility.cu"
+#ifdef UNSPLIT_GRAVITY
+#include "../../SelfGravity/GPU_Gravity/CUPOT_ExternalAcc.cu"
+#endif
 
-#endif // #ifdef __CUDACC__
+#else // #ifdef __CUDACC__
+
+#ifdef UNSPLIT_GRAVITY
+void ExternalAcc( real Acc[], const double x, const double y, const double z, const double Time, const double UserArray[] );
+#endif
+
+#endif // #ifdef __CUDACC__ ... else ...
 
 
 // internal functions
@@ -23,6 +32,14 @@ static real dE_Upwind( const real FC_Ele_L, const real FC_Ele_R, const real FC_M
                        const real V_L1, const real V_L2, const real V_R1, const real V_R2,
                        const real B_L1, const real B_L2, const real B_R1, const real B_R2,
                        const real dt_dh );
+#ifdef UNSPLIT_GRAVITY
+GPU_DEVICE
+void UpdateVelocityByGravity( real &v1, real &v2, const int TDir1, const int TDir2,
+                              const int i_usg, const int j_usg, const int k_usg,
+                              const real dt_half, const double dh_f8, const real GraConst,
+                              const real g_Pot_USG[], const double Corner_USG[], const double Time,
+                              const OptGravityType_t GravityType, const double ExtAcc_AuxArray[] );
+#endif
 
 
 
@@ -53,19 +70,27 @@ static real dE_Upwind( const real FC_Ele_L, const real FC_Ele_R, const real FC_M
 //                          Cell index on x faces: [Nz][Ny] (= [PS2+1][PS2] for Ey and [PS2][PS2+1] for Ez)
 //                                     on y faces: [Nx][Nz] (= [PS2+1][PS2] for Ez and [PS2][PS2+1] for Ex)
 //                                     on z faces: [Ny][Nx] (= [PS2+1][PS2] for Ex and [PS2][PS2+1] for Ey)
+//                6. For the unsplitting scheme in gravity (i.e., UNSPLIT_GRAVITY), this function also corrects the half-step
+//                   velocity by gravity when CorrHalfVel==true
 //
-// Parameter   :  g_EC_Ele   : Array to store the output electric field
-//                g_FC_Flux  : Array storing the input face-centered fluxes
-//                g_PriVar   : Array storing the input cell-centered primitive variables
-//                NEle       : Stride for accessing g_EC_Ele[]
-//                NFlux      : Stride for accessing g_FC_Flux[]
-//                NPri       : Stride for accessing g_PriVar[]
-//                OffsetPri  : Offset for accessing g_PriVar[]
-//                dt         : Time interval to advance solution
-//                dh         : Cell size
-//                DumpIntEle : Store the inter-patch electric field (i.e., E field at the patch boundaries)
-//                             in g_IntEle[]
-//                g_IntEle   : Array for DumpIntEle
+// Parameter   :  g_EC_Ele        : Array to store the output electric field
+//                g_FC_Flux       : Array storing the input face-centered fluxes
+//                g_PriVar        : Array storing the input cell-centered primitive variables
+//                NEle            : Stride for accessing g_EC_Ele[]
+//                NFlux           : Stride for accessing g_FC_Flux[]
+//                NPri            : Stride for accessing g_PriVar[]
+//                OffsetPri       : Offset for accessing g_PriVar[]
+//                dt              : Time interval to advance solution
+//                dh              : Cell size
+//                DumpIntEle      : Store the inter-patch electric field (i.e., E field at the patch boundaries)
+//                                  in g_IntEle[]
+//                g_IntEle        : Array for DumpIntEle
+//                CorrHalfVel     : true --> correct the half-step velocity by gravity        (for UNSPLIT_GRAVITY only)
+//                g_Pot_USG       : Array storing the input potential for CorrHalfVel         (for UNSPLIT_GRAVITY only)
+//                g_Corner        : Array storing the corner coordinates of each patch group  (for UNSPLIT_GRAVITY only)
+//                Time            : Current physical time                                     (for UNSPLIT_GRAVITY only)
+//                GravityType     : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
+//                ExtAcc_AuxArray : Auxiliary array for external acceleration                 (for UNSPLIT_GRAVITY only)
 //
 // Return      :  g_EC_Ele[], g_IntEle[]
 //------------------------------------------------------------------------------------------------------
@@ -75,13 +100,54 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                           const real g_PriVar[][ CUBE(FLU_NXT) ],
                           const int NEle, const int NFlux, const int NPri, const int OffsetPri,
                           const real dt, const real dh,
-                          const bool DumpIntEle, real g_IntEle[][NCOMP_ELE][ PS2P1*PS2 ] )
+                          const bool DumpIntEle, real g_IntEle[][NCOMP_ELE][ PS2P1*PS2 ],
+                          const bool CorrHalfVel, const real g_Pot_USG[], const double g_Corner[],
+                          const double Time, const OptGravityType_t GravityType, const double ExtAcc_AuxArray[] )
 {
+
+// check
+#  ifdef GAMER_DEBUG
+#  ifdef UNSPLIT_GRAVITY
+   if ( CorrHalfVel )
+   {
+      if (  ( GravityType == GRAVITY_SELF || GravityType == GRAVITY_BOTH )  &&  g_Pot_USG == NULL  )
+         printf( "ERROR : g_Pot_USG == NULL !!\n" );
+
+      if (  ( GravityType == GRAVITY_EXTERNAL || GravityType == GRAVITY_BOTH )  &&  g_Corner == NULL  )
+         printf( "ERROR : g_Corner == NULL !!\n" );
+   }
+#  else
+   if ( CorrHalfVel )
+      printf( "ERROR : CorrHalfVel is NOT supported when UNSPLIT_GRAVITY is off !!\n" );
+#  endif
+#  endif // #ifdef GAMER_DEBUG
+
 
    const int  NEleM1       = NEle - 1;
    const int  didx_flux[3] = { 1, NFlux, SQR(NFlux) };
    const int  didx_pri [3] = { 1, NPri,  SQR(NPri)  };
    const real dt_dh        = dt / dh;
+
+#  ifdef UNSPLIT_GRAVITY
+   const double dh_f8       = (double)dh;
+   const real   GraConst    = -(real)0.25*dt_dh;
+   const real   dt_half     = (real)0.5*dt;
+   const int    pri_ghost   = ( NPri - PS2 )/2;                // number of ghost zones on each side for g_PriVar[]
+   const int    idx_pri2usg = USG_GHOST_SIZE_F - pri_ghost;    // index difference between g_PriVar[] and g_Pot_USG[]
+
+   int    ijk_usg[3];
+   double Corner_USG[3];   // central coordinates of the 0th cell in g_Pot_USG[]
+   if (  CorrHalfVel  &&  ( GravityType == GRAVITY_EXTERNAL || GravityType == GRAVITY_BOTH )  )
+      for (int d=0; d<3; d++)    Corner_USG[d] = g_Corner[d] - dh_f8*USG_GHOST_SIZE_F;
+
+// check
+#  ifdef GAMER_DEBUG
+   if ( CorrHalfVel  &&  idx_pri2usg + OffsetPri < 1 )
+         printf( "ERROR : idx_pri2usg (%d) + OffsetPri (%d) < 1 (USG_GHOST_SIZE_F %d, NPri %d) !!\n",
+                 idx_pri2usg, OffsetPri, USG_GHOST_SIZE_F, NPri );
+#  endif
+#  endif // #ifdef UNSPLIT_GRAVITY
+
 
    for (int d=0; d<3; d++)
    {
@@ -137,6 +203,7 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                      + g_FC_Flux[TDir2][TB1][ idx_flux + didx_flux[TDir1] ]
                      + g_FC_Flux[TDir2][TB1][ idx_flux                    ] );
 
+
          idx_L = idx_pri;
          idx_R = idx_L + didx_pri[TDir2];
          D_L   = g_PriVar[  0][ idx_L ];
@@ -150,10 +217,27 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
          B_R1  = g_PriVar[TB1][ idx_R ];
          B_R2  = g_PriVar[TB2][ idx_R ];
 
+//       correct the half-step velocity by gravity for the unsplitting scheme
+#        ifdef UNSPLIT_GRAVITY
+         if ( CorrHalfVel )
+         {
+            ijk_usg[0] = i_pri + idx_pri2usg;
+            ijk_usg[1] = j_pri + idx_pri2usg;
+            ijk_usg[2] = k_pri + idx_pri2usg;
+            UpdateVelocityByGravity( V_L1, V_L2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
+                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_AuxArray );
+
+            ijk_usg[TDir2] ++;
+            UpdateVelocityByGravity( V_R1, V_R2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
+                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_AuxArray );
+         } // if ( CorrHalfVel )
+#        endif // #ifdef UNSPLIT_GRAVITY
+
          Ele_Out += dE_Upwind( -g_FC_Flux[TDir1][TB2][ idx_flux                    ],
                                -g_FC_Flux[TDir1][TB2][ idx_flux + didx_flux[TDir2] ],
                                 g_FC_Flux[TDir2][  0][ idx_flux                    ],
                                D_L, D_R, V_L1, V_L2, V_R1, V_R2, B_L1, B_L2, B_R1, B_R2, dt_dh );
+
 
          idx_L = idx_pri + didx_pri[TDir1];
          idx_R = idx_L   + didx_pri[TDir2];
@@ -168,10 +252,28 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
          B_R1  = g_PriVar[TB1][ idx_R ];
          B_R2  = g_PriVar[TB2][ idx_R ];
 
+//       correct the half-step velocity by gravity for the unsplitting scheme
+#        ifdef UNSPLIT_GRAVITY
+         if ( CorrHalfVel )
+         {
+            ijk_usg[0] = i_pri + idx_pri2usg;
+            ijk_usg[1] = j_pri + idx_pri2usg;
+            ijk_usg[2] = k_pri + idx_pri2usg;
+            ijk_usg[TDir1] ++;
+            UpdateVelocityByGravity( V_L1, V_L2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
+                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_AuxArray );
+
+            ijk_usg[TDir2] ++;
+            UpdateVelocityByGravity( V_R1, V_R2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
+                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_AuxArray );
+         } // if ( CorrHalfVel )
+#        endif // #ifdef UNSPLIT_GRAVITY
+
          Ele_Out += dE_Upwind( -g_FC_Flux[TDir1][TB2][ idx_flux                    ],
                                -g_FC_Flux[TDir1][TB2][ idx_flux + didx_flux[TDir2] ],
                                 g_FC_Flux[TDir2][  0][ idx_flux + didx_flux[TDir1] ],
                                D_L, D_R, V_L1, V_L2, V_R1, V_R2, B_L1, B_L2, B_R1, B_R2, dt_dh );
+
 
          idx_L = idx_pri;
          idx_R = idx_L + didx_pri[TDir1];
@@ -186,10 +288,27 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
          B_R1  = g_PriVar[TB1][ idx_R ];
          B_R2  = g_PriVar[TB2][ idx_R ];
 
+//       correct the half-step velocity by gravity for the unsplitting scheme
+#        ifdef UNSPLIT_GRAVITY
+         if ( CorrHalfVel )
+         {
+            ijk_usg[0] = i_pri + idx_pri2usg;
+            ijk_usg[1] = j_pri + idx_pri2usg;
+            ijk_usg[2] = k_pri + idx_pri2usg;
+            UpdateVelocityByGravity( V_L1, V_L2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
+                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_AuxArray );
+
+            ijk_usg[TDir1] ++;
+            UpdateVelocityByGravity( V_R1, V_R2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
+                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_AuxArray );
+         } // if ( CorrHalfVel )
+#        endif // #ifdef UNSPLIT_GRAVITY
+
          Ele_Out += dE_Upwind( +g_FC_Flux[TDir2][TB1][ idx_flux                    ],
                                +g_FC_Flux[TDir2][TB1][ idx_flux + didx_flux[TDir1] ],
                                 g_FC_Flux[TDir1][  0][ idx_flux                    ],
                                D_L, D_R, V_L1, V_L2, V_R1, V_R2, B_L1, B_L2, B_R1, B_R2, dt_dh );
+
 
          idx_L = idx_pri + didx_pri[TDir2];
          idx_R = idx_L   + didx_pri[TDir1];
@@ -204,10 +323,28 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
          B_R1  = g_PriVar[TB1][ idx_R ];
          B_R2  = g_PriVar[TB2][ idx_R ];
 
+//       correct the half-step velocity by gravity for the unsplitting scheme
+#        ifdef UNSPLIT_GRAVITY
+         if ( CorrHalfVel )
+         {
+            ijk_usg[0] = i_pri + idx_pri2usg;
+            ijk_usg[1] = j_pri + idx_pri2usg;
+            ijk_usg[2] = k_pri + idx_pri2usg;
+            ijk_usg[TDir2] ++;
+            UpdateVelocityByGravity( V_L1, V_L2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
+                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_AuxArray );
+
+            ijk_usg[TDir1] ++;
+            UpdateVelocityByGravity( V_R1, V_R2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
+                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_AuxArray );
+         } // if ( CorrHalfVel )
+#        endif // #ifdef UNSPLIT_GRAVITY
+
          Ele_Out += dE_Upwind( +g_FC_Flux[TDir2][TB1][ idx_flux                    ],
                                +g_FC_Flux[TDir2][TB1][ idx_flux + didx_flux[TDir1] ],
                                 g_FC_Flux[TDir1][  0][ idx_flux + didx_flux[TDir2] ],
                                D_L, D_R, V_L1, V_L2, V_R1, V_R2, B_L1, B_L2, B_R1, B_R2, dt_dh );
+
 
          Ele_Out *= (real)0.25;
 
@@ -300,6 +437,72 @@ real dE_Upwind( const real FC_Ele_L, const real FC_Ele_R, const real FC_Mom, con
    return dE;
 
 } // FUNCTION : dE_Upwind
+
+
+
+#ifdef UNSPLIT_GRAVITY
+//-------------------------------------------------------------------------------------------------------
+// Function    :  UpdateVelocityByGravity
+// Description :  Update the half-step velocity by gravity for the unsplitting scheme
+//
+// Note        :  1. Invoked by MHD_ComputeElectric()
+//                2. Only used when enabling UNSPLIT_GRAVITY
+//
+// Parameter   :  v1/2            : Velocity along the 1st/2nd transverse directions to be updated
+//                                  --> call-by-reference
+//                TDir1/2         : 1st/2nd transverse directions
+//                i/j/k_usg       : Array indices of g_Pot_USG[]
+//                dt_half         : 0.5*dt
+//                dh_f8           : Cell size in double precision
+//                GraConst        : -0.25*dt/dh
+//                g_Pot_USG       : Input potential array
+//                Corner_USG      : Cell-centered coordinates of the 0th cell in g_Pot_USG[]
+//                Time            : Current physical time
+//                GravityType     : Types of gravity --> self-gravity, external gravity, both
+//                ExtAcc_AuxArray : Auxiliary array for external acceleration
+//
+// Return      :  v1, v2
+//------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+void UpdateVelocityByGravity( real &v1, real &v2, const int TDir1, const int TDir2,
+                              const int i_usg, const int j_usg, const int k_usg,
+                              const real dt_half, const double dh_f8, const real GraConst,
+                              const real g_Pot_USG[], const double Corner_USG[], const double Time,
+                              const OptGravityType_t GravityType, const double ExtAcc_AuxArray[] )
+{
+
+   const int didx_usg[3] = { 1, USG_NXT_F, SQR(USG_NXT_F) };
+   real Acc[3] = { 0.0, 0.0, 0.0 };
+
+// external gravity
+   if ( GravityType == GRAVITY_EXTERNAL  ||  GravityType == GRAVITY_BOTH )
+   {
+      double xyz[3]; // cell-centered coordinates
+      xyz[0] = Corner_USG[0] + i_usg*dh_f8;  // always use double precision to calculate coordinates
+      xyz[1] = Corner_USG[1] + j_usg*dh_f8;
+      xyz[2] = Corner_USG[2] + k_usg*dh_f8;
+
+      ExternalAcc( Acc, xyz[0], xyz[1], xyz[2], Time, ExtAcc_AuxArray );
+
+      Acc[TDir1] *= dt_half;
+      Acc[TDir2] *= dt_half;
+   }
+
+// self-gravity
+   if ( GravityType == GRAVITY_SELF  ||  GravityType == GRAVITY_BOTH )
+   {
+      const int idx_usg = IDX321( i_usg, j_usg, k_usg, USG_NXT_F, USG_NXT_F );
+
+      Acc[TDir1] += GraConst*( g_Pot_USG[ idx_usg + didx_usg[TDir1] ] - g_Pot_USG[ idx_usg - didx_usg[TDir1] ] );
+      Acc[TDir2] += GraConst*( g_Pot_USG[ idx_usg + didx_usg[TDir2] ] - g_Pot_USG[ idx_usg - didx_usg[TDir2] ] );
+   }
+
+// advance velocity by gravity
+   v1 += Acc[TDir1];
+   v2 += Acc[TDir2];
+
+} // FUNCTION : UpdateVelocityByGravity
+#endif // #ifdef UNSPLIT_GRAVITY
 
 
 
