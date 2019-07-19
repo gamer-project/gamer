@@ -846,38 +846,82 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 #  endif
 
 #  if ( MODEL == SR_HYDRO )
-         const real Mono_Max = INT_MONO_COEFF;
-         const real Mono_Min = 0.0;
-         iteration = 0;
+   real Cons[NCOMP_TOTAL];
+   real Prim[NCOMP_TOTAL];
 
-         do {
-//         adaptive IntMonoCoeff
-           IntMonoCoeff = Mono_Max - iteration * ( Mono_Max - Mono_Min ) / (real) Max ;
+// interpolation
+   for (int v=0; v<NCOMP_TOTAL; v++)
+    Interpolate( CData_Flu+v*CSize_Flu1v, CSize_Flu_Temp, CStart_Flu, CRange, &FData_Flu[v][0][0][0],
+                 FSize_Temp, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity, IntMonoCoeff );
+
+   for (int k=0; k<FSize; k++)
+   for (int j=0; j<FSize; j++)
+   for (int i=0; i<FSize; i++)
+   {
+     for (int v = 0 ; v < NCOMP_FLUID;v++) Con[v] = FData_Flu[v][k][j][i];
+   
+     if(SRHydro_CheckUnphysical(Con, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, false))
+     {
+      i = j = k = FSize; // break nested loop
+      state = true;
+      break;
+     }else state = false;
+   }
+
+   if ( state == true )
+   {
+     const real Mono_Max = INT_MONO_COEFF;
+     const real Mono_Min = 0.0;
+     iteration = 0;
+
+     for (int i=0; i<CSize_Flu1v; i++) 
+     {    
+       for (int v = 0 ; v < NCOMP_FLUID ;v++) Cons[v] = *(CData_Flu+CSize_Flu1v*v+i);
+
+       SRHydro_Con2Pri(Cons, Prim, GAMMA, MIN_TEMP);
+
+       for (int v = 0 ; v < NCOMP_FLUID ;v++) *(CData_Flu+CSize_Flu1v*v+i) = Prim[v];
+     }    
+
+
+
+     do {
+//      adaptive IntMonoCoeff
+        IntMonoCoeff = Mono_Max - iteration * ( Mono_Max - Mono_Min ) / (real) Max ;
  
-//         interpolation
-           for (int v=0; v<NCOMP_TOTAL; v++)
-	   Interpolate( CData_Flu+v*CSize_Flu1v, CSize_Flu_Temp, CStart_Flu, CRange, &FData_Flu[v][0][0][0],
-			FSize_Temp, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity, IntMonoCoeff );
+//      interpolation
+        for (int v=0; v<NCOMP_TOTAL; v++)
+         Interpolate( CData_Flu+v*CSize_Flu1v, CSize_Flu_Temp, CStart_Flu, CRange, &FData_Flu[v][0][0][0],
+                      FSize_Temp, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity, IntMonoCoeff );
 
-	   for (int k=0; k<FSize; k++)
-	   for (int j=0; j<FSize; j++)
-	   for (int i=0; i<FSize; i++)
-	   {
-	     for (int v = 0 ; v < NCOMP_FLUID;v++) Con[v] = FData_Flu[v][k][j][i];
+        for (int k=0; k<FSize; k++)
+        for (int j=0; j<FSize; j++)
+        for (int i=0; i<FSize; i++)
+        {
+           for (int v = 0 ; v < NCOMP_FLUID;v++) Prim[v] = FData_Flu[v][k][j][i];
+      
+           if(SRHydro_CheckUnphysical(NULL, Prim, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true))
+           {
+            i = j = k = FSize; // break nested loop
+            state = true;
+            break;
+           }else state = false;
+         }
+      
+         iteration++;
 
-	     if(SRHydro_CheckUnphysical(Con, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true))
-              {
-               i = j = k = FSize; // break nested loop
-               state = true;
-               break;
-              }else state = false;
-           }
+     } while (state && iteration <= Max );
 
-           iteration++;
+     for (int k=0; k<FSize; k++)
+     for (int j=0; j<FSize; j++)
+     for (int i=0; i<FSize; i++)
+     {
+       for (int v = 0 ; v < NCOMP_FLUID;v++) Prim[v] = FData_Flu[v][k][j][i];
 
-         } while (state && iteration <= Max );
-
-
+       SRHydro_Pri2Con(Prim, Cons, GAMMA);
+     
+       for (int v = 0 ; v < NCOMP_FLUID;v++) FData_Flu[v][k][j][i] = Cons[v];
+     }
 
 
 // check minimum energy
@@ -886,11 +930,12 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       for (int j=0; j<FSize; j++)
       for (int i=0; i<FSize; i++)
       {
-	 for (int v = 0 ; v < NCOMP_FLUID;v++) Con[v] = FData_Flu[v][k][j][i];
-	 if( SRHydro_CheckUnphysical(Con, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
+	    for (int v = 0 ; v < NCOMP_FLUID;v++) Con[v] = FData_Flu[v][k][j][i];
+	    if( SRHydro_CheckUnphysical(Con, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
       }
 
 #     endif
+   }
 #     endif
 
 // 3.2.3 check minimum density and pressure
