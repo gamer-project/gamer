@@ -344,29 +344,33 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 //    for each cell, we sum up the density and pressure from each halo and then calculate the weighted velocity
       if ( Merger_Coll_IsGas1 ) {
-	r1    = sqrt( SQR(x-ClusterCenter1[0]) + SQR(y-ClusterCenter1[1]) + SQR(z-ClusterCenter1[2]) );
-	Dens1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_D1, r1 );
-	Pres1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_P1, r1 );
+         r1    = sqrt( SQR(x-ClusterCenter1[0]) + SQR(y-ClusterCenter1[1]) + SQR(z-ClusterCenter1[2]) );
+         Dens1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_D1, r1 );
+         Pres1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_P1, r1 );
       } else {	
-	Dens1 = 0.0;
-	Pres1 = 0.0;
+         Dens1 = 0.0;
+         Pres1 = 0.0;
       }
       if ( Merger_Coll_IsGas2 ) { 
-	r2    = sqrt( SQR(x-ClusterCenter2[0]) + SQR(y-ClusterCenter2[1]) + SQR(z-ClusterCenter2[2]) );
-	Dens2 = Mis_InterpolateFromTable( Merger_NBin2, Table_R2, Table_D2, r2 );
-	Pres2 = Mis_InterpolateFromTable( Merger_NBin2, Table_R2, Table_P2, r2 );
+         r2    = sqrt( SQR(x-ClusterCenter2[0]) + SQR(y-ClusterCenter2[1]) + SQR(z-ClusterCenter2[2]) );
+         Dens2 = Mis_InterpolateFromTable( Merger_NBin2, Table_R2, Table_D2, r2 );
+         Pres2 = Mis_InterpolateFromTable( Merger_NBin2, Table_R2, Table_P2, r2 );
       } else { 
-	Dens2 = 0.0;
-	Pres2 = 0.0;
+         Dens2 = 0.0;
+         Pres2 = 0.0;
       }
       VelX  = ( Merger_Coll_VelX1*Dens1 + Merger_Coll_VelX2*Dens2 ) / ( Dens1 + Dens2 );
       VelY  = ( Merger_Coll_VelY1*Dens1 + Merger_Coll_VelY2*Dens2 ) / ( Dens1 + Dens2 );
 
-      if ( Dens1 == NULL_REAL  ||  Pres1 == NULL_REAL )
-         Aux_Error( ERROR_INFO, "interpolation failed at radius %13.7e for cluster 1 (probably outside the input table) !!\n", r1 );
+      if ( Dens1 == NULL_REAL ) 
+         Dens1 = Table_D1[Merger_NBin1-1];
+      if ( Pres1 == NULL_REAL ) 
+         Pres1 = Table_P1[Merger_NBin1-1];
 
-      if ( Dens2 == NULL_REAL  ||  Pres2 == NULL_REAL )
-         Aux_Error( ERROR_INFO, "interpolation failed at radius %13.7e for cluster 2 (probably outside the input table) !!\n", r2 );
+      if ( Dens2 == NULL_REAL ) 
+         Dens2 = Table_D2[Merger_NBin2-1];
+      if ( Pres2 == NULL_REAL ) 
+         Pres2 = Table_P2[Merger_NBin2-1];
 
       fluid[DENS] = Dens1 + Dens2;
       fluid[MOMX] = fluid[DENS]*VelX;
@@ -385,8 +389,10 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Dens = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_D1, r );
       Pres = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_P1, r );
 
-      if ( Dens == NULL_REAL  ||  Pres == NULL_REAL )
-         Aux_Error( ERROR_INFO, "interpolation failed at radius %13.7e (probably outside the input table)!!\n", r );
+      if ( Dens == NULL_REAL ) 
+         Dens = Table_D1[Merger_NBin1-1];
+      if ( Pres == NULL_REAL ) 
+         Pres = Table_P1[Merger_NBin1-1];
 
       fluid[DENS] = Dens;
       fluid[MOMX] = 0.0;
