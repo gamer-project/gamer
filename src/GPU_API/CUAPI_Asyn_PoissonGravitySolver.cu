@@ -238,7 +238,8 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
 #     endif
 
 #     ifdef MHD
-      if ( h_EngyB_Array == NULL )           Aux_Error( ERROR_INFO, "h_EngyB_Array == NULL !!\n" );
+      if ( h_EngyB_Array   == NULL )         Aux_Error( ERROR_INFO, "h_EngyB_Array == NULL !!\n" );
+      if ( d_EngyB_Array_G == NULL )         Aux_Error( ERROR_INFO, "d_EngyB_Array_G == NULL !!\n" );
 #     endif
    }
 #  endif // #ifdef GAMER_DEBUG

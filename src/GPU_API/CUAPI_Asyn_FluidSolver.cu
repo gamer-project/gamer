@@ -149,43 +149,43 @@ extern cudaStream_t *Stream;
 //                   3. MUSCL-Hancock scheme with Riemann prediction   (MHM_RP) --> unsplit
 //                   4. Corner-Transport-Upwind scheme                 (CTU   ) --> unsplit
 //
-// Parameter   :  h_Flu_Array_In       : Host array to store the input fluid variables
-//                h_Flu_Array_Out      : Host array to store the output fluid variables
-//                h_Mag_Array_In       : Host array storing the input B field (for MHD only)
-//                h_Mag_Array_Out      : Host array to store the output B field (for MHD only)
-//                h_DE_Array_Out       : Host array to store the dual-energy status
-//                h_Flux_Array         : Host array to store the output fluxes
-//                h_Ele_Array          : Host array to store the output electric field (for MHD only)
-//                h_Corner_Array       : Host array storing the physical corner coordinates of each patch group
-//                h_Pot_Array_USG      : Host array storing the input potential for UNSPLIT_GRAVITY
-//                NPatchGroup          : Number of patch groups evaluated simultaneously by GPU
-//                dt                   : Time interval to advance solution
-//                dh                   : Cell size
-//                Gamma                : Ratio of specific heats
-//                StoreFlux            : true --> store the coarse-fine fluxes
-//                StoreElectric        : true --> store the coarse-fine electric field
-//                XYZ                  : true  : x->y->z ( forward sweep)
-//                                       false : z->y->x (backward sweep)
-//                                       ~ useless in directionally unsplit schemes
-//                LR_Limiter           : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
-//                                       (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
-//                                                      vanLeer + generalized MinMod/extrema-preserving) limiter
-//                MinMod_Coeff         : Coefficient of the generalized MinMod limiter
-//                ELBDM_Eta            : Particle mass / Planck constant
-//                ELBDM_Taylor3_Coeff  : Coefficient in front of the third term in the Taylor expansion for ELBDM
-//                ELBDM_Taylor3_Auto   : true --> Determine ELBDM_Taylor3_Coeff automatically by invoking the
-//                                                function "ELBDM_SetTaylor3Coeff"
-//                Time                 : Current physical time                                     (for UNSPLIT_GRAVITY only)
-//                GravityType          : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
-//                GPU_NStream          : Number of CUDA streams for the asynchronous memory copy
-//                MinDens/Pres         : Minimum allowed density and pressure
-//                DualEnergySwitch     : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
-//                NormPassive          : true --> normalize passive scalars so that the sum of their mass density
-//                                                is equal to the gas mass density
-//                NNorm                : Number of passive scalars to be normalized
-//                                       --> Should be set to the global variable "PassiveNorm_NVar"
-//                JeansMinPres         : Apply minimum pressure estimated from the Jeans length
-//                JeansMinPres_Coeff   : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
+// Parameter   :  h_Flu_Array_In      : Host array to store the input fluid variables
+//                h_Flu_Array_Out     : Host array to store the output fluid variables
+//                h_Mag_Array_In      : Host array storing the input B field (for MHD only)
+//                h_Mag_Array_Out     : Host array to store the output B field (for MHD only)
+//                h_DE_Array_Out      : Host array to store the dual-energy status
+//                h_Flux_Array        : Host array to store the output fluxes
+//                h_Ele_Array         : Host array to store the output electric field (for MHD only)
+//                h_Corner_Array      : Host array storing the physical corner coordinates of each patch group
+//                h_Pot_Array_USG     : Host array storing the input potential for UNSPLIT_GRAVITY
+//                NPatchGroup         : Number of patch groups evaluated simultaneously by GPU
+//                dt                  : Time interval to advance solution
+//                dh                  : Cell size
+//                Gamma               : Ratio of specific heats
+//                StoreFlux           : true --> store the coarse-fine fluxes
+//                StoreElectric       : true --> store the coarse-fine electric field
+//                XYZ                 : true  : x->y->z ( forward sweep)
+//                                      false : z->y->x (backward sweep)
+//                                      ~ useless in directionally unsplit schemes
+//                LR_Limiter          : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
+//                                      (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
+//                                                     vanLeer + generalized MinMod/extrema-preserving) limiter
+//                MinMod_Coeff        : Coefficient of the generalized MinMod limiter
+//                ELBDM_Eta           : Particle mass / Planck constant
+//                ELBDM_Taylor3_Coeff : Coefficient in front of the third term in the Taylor expansion for ELBDM
+//                ELBDM_Taylor3_Auto  : true --> Determine ELBDM_Taylor3_Coeff automatically by invoking the
+//                                               function "ELBDM_SetTaylor3Coeff"
+//                Time                : Current physical time                                     (for UNSPLIT_GRAVITY only)
+//                GravityType         : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
+//                GPU_NStream         : Number of CUDA streams for the asynchronous memory copy
+//                MinDens/Pres        : Minimum allowed density and pressure
+//                DualEnergySwitch    : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
+//                NormPassive         : true --> normalize passive scalars so that the sum of their mass density
+//                                               is equal to the gas mass density
+//                NNorm               : Number of passive scalars to be normalized
+//                                      --> Should be set to the global variable "PassiveNorm_NVar"
+//                JeansMinPres        : Apply minimum pressure estimated from the Jeans length
+//                JeansMinPres_Coeff  : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //
 // Useless parameters in HYDRO : ELBDM_Eta
 // Useless parameters in ELBDM : h_Flux_Array, h_Ele_Array, Gamma, LR_Limiter, MinMod_Coeff, MinPres
@@ -238,15 +238,24 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 
    if ( StoreFlux )
    {
-      if ( d_Flux_Array == NULL )   Aux_Error( ERROR_INFO, "device Flux_Array is not allocated !!\n" );
-      if ( h_Flux_Array == NULL )   Aux_Error( ERROR_INFO, "host Flux_Array is not allocated !!\n" );
+      if ( d_Flux_Array == NULL )   Aux_Error( ERROR_INFO, "d_Flux_Array == NULL !!\n" );
+      if ( h_Flux_Array == NULL )   Aux_Error( ERROR_INFO, "h_Flux_Array == NULL !!\n" );
    }
 
 #  ifdef MHD
+   if ( h_Mag_Array_In    == NULL ) Aux_Error( ERROR_INFO, "h_Mag_Array_In == NULL !!\n" );
+   if ( d_Mag_Array_F_In  == NULL ) Aux_Error( ERROR_INFO, "d_Mag_Array_F_In == NULL !!\n" );
+
+   if ( h_Mag_Array_Out   == NULL ) Aux_Error( ERROR_INFO, "h_Mag_Array_Out == NULL !!\n" );
+   if ( d_Mag_Array_F_Out == NULL ) Aux_Error( ERROR_INFO, "d_Mag_Array_F_Out == NULL !!\n" );
+
+   if ( d_FC_Mag_Half     == NULL ) Aux_Error( ERROR_INFO, "d_FC_Mag_Half == NULL !!\n" );
+   if ( d_EC_Ele          == NULL ) Aux_Error( ERROR_INFO, "d_EC_Ele == NULL !!\n" );
+
    if ( StoreElectric )
    {
-      if ( d_Ele_Array == NULL )   Aux_Error( ERROR_INFO, "device Ele_Array is not allocated !!\n" );
-      if ( h_Ele_Array == NULL )   Aux_Error( ERROR_INFO, "host Ele_Array is not allocated !!\n" );
+      if ( d_Ele_Array == NULL )   Aux_Error( ERROR_INFO, "d_Ele_Array == NULL !!\n" );
+      if ( h_Ele_Array == NULL )   Aux_Error( ERROR_INFO, "h_Ele_Array == NULL !!\n" );
    }
 #  endif
 #  endif // #ifdef GAMER_DEBUG
@@ -271,6 +280,8 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
    int *Flu_MemSize_Out    = new int [GPU_NStream];
    int *Flux_MemSize       = new int [GPU_NStream];
 #  ifdef MHD
+   int *Mag_MemSize_In     = new int [GPU_NStream];
+   int *Mag_MemSize_Out    = new int [GPU_NStream];
    int *Ele_MemSize        = new int [GPU_NStream];
 #  endif
 #  ifdef UNSPLIT_GRAVITY
@@ -305,6 +316,8 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
       Flu_MemSize_Out[s] = sizeof(real  )*NPatch_per_Stream[s]*FLU_NOUT*CUBE(PS2);
       Flux_MemSize   [s] = sizeof(real  )*NPatch_per_Stream[s]*NFLUX_TOTAL*9*PS2*PS2;
 #     ifdef MHD
+      Mag_MemSize_In [s] = sizeof(real  )*NPatch_per_Stream[s]*NCOMP_MAG*FLU_NXT_P1*SQR(FLU_NXT);
+      Mag_MemSize_Out[s] = sizeof(real  )*NPatch_per_Stream[s]*NCOMP_MAG*PS2P1*SQR(PS2);
       Ele_MemSize    [s] = sizeof(real  )*NPatch_per_Stream[s]*NCOMP_ELE*9*PS2P1*PS2;
 #     endif
 #     ifdef UNSPLIT_GRAVITY
@@ -325,6 +338,11 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 
       CUDA_CHECK_ERROR(  cudaMemcpyAsync( d_Flu_Array_F_In  + UsedPatch[s], h_Flu_Array_In  + UsedPatch[s],
                          Flu_MemSize_In[s], cudaMemcpyHostToDevice, Stream[s] )  );
+
+#     ifdef MHD
+      CUDA_CHECK_ERROR(  cudaMemcpyAsync( d_Mag_Array_F_In  + UsedPatch[s], h_Mag_Array_In  + UsedPatch[s],
+                         Mag_MemSize_In[s], cudaMemcpyHostToDevice, Stream[s] )  );
+#     endif
 
 #     ifdef UNSPLIT_GRAVITY
       CUDA_CHECK_ERROR(  cudaMemcpyAsync( d_Pot_Array_USG_F + UsedPatch[s], h_Pot_Array_USG + UsedPatch[s],
@@ -438,6 +456,9 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                          Flux_MemSize[s],    cudaMemcpyDeviceToHost, Stream[s] )  );
 
 #     ifdef MHD
+      CUDA_CHECK_ERROR(  cudaMemcpyAsync( h_Mag_Array_Out + UsedPatch[s], d_Mag_Array_F_Out + UsedPatch[s],
+                         Mag_MemSize_Out[s], cudaMemcpyDeviceToHost, Stream[s] )  );
+
       if ( StoreElectric )
       CUDA_CHECK_ERROR(  cudaMemcpyAsync( h_Ele_Array     + UsedPatch[s], d_Ele_Array       + UsedPatch[s],
                          Ele_MemSize[s],    cudaMemcpyDeviceToHost, Stream[s] )  );
@@ -456,6 +477,8 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
    delete [] Flu_MemSize_Out;
    delete [] Flux_MemSize;
 #  ifdef MHD
+   delete [] Mag_MemSize_In;
+   delete [] Mag_MemSize_Out;
    delete [] Ele_MemSize;
 #  endif
 #  ifdef UNSPLIT_GRAVITY
