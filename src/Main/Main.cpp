@@ -107,6 +107,7 @@ OptRSolver1st_t      OPT__1ST_FLUX_CORR_SCHEME;
 bool                 OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP;
 bool                 OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, JEANS_MIN_PRES;
 int                  OPT__CK_NEGATIVE, JEANS_MIN_PRES_LEVEL, JEANS_MIN_PRES_NCELL;
+int                  DT_SPEED_OF_LIGHT;
 double               MIN_DENS, MIN_TEMP, MIN_PRES;
 #elif ( MODEL == ELBDM )
 double               DT__PHASE, FlagTable_EngyDensity[NLEVEL-1][2];
