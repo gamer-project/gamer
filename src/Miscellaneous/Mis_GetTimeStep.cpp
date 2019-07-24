@@ -2,12 +2,6 @@
 
 extern double (*Mis_GetTimeStep_User_Ptr)( const int lv, const double dTime_dt );
 
-#if ( MODEL == SR_HYDRO )
- 
- extern int DT_SPEED_OF_LIGHT;
-
-#endif
-
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Mis_GetTimeStep

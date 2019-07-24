@@ -97,6 +97,9 @@ void Init_Load_Parameter()
 // do not check DT__FLUID/FLUID_INIT/GRAVITY/PARVEL_MAX since they may be reset by Init_ResetDefaultParameter()
    ReadPara->Add( "DT__FLUID",                  &DT__FLUID,                      -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "DT__FLUID_INIT",             &DT__FLUID_INIT,                 -1.0,             NoMin_double,  NoMax_double   );
+#  if ( MODEL == SR_HYDRO )
+   ReadPara->Add( "DT_SPEED_OF_LIGHT",          &DT_SPEED_OF_LIGHT,                 0,             0,             1              );
+#  endif
 #  ifdef GRAVITY
    ReadPara->Add( "DT__GRAVITY",                &DT__GRAVITY,                    -1.0,             NoMin_double,  NoMax_double   );
 #  endif
