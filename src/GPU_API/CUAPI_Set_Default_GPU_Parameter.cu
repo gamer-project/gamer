@@ -206,10 +206,6 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #           error : UNKNOWN GPU_ARCH !!
 #           endif
 
-#           ifdef MHD
-#           warning : WAIT MHD !!!
-#           endif
-
 #        elif ( MODEL == ELBDM )
 #           if   ( GPU_ARCH == FERMI )
             GPU_NStream = 8;
@@ -255,10 +251,6 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
          Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #        else
 #        error : UNKNOWN GPU_ARCH !!
-#        endif
-
-#        ifdef MHD
-#        warning : WAIT MHD !!!
 #        endif
 
 #     elif ( MODEL == ELBDM )
@@ -348,10 +340,6 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
    CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_dtSolver_HydroCFL,     cudaFuncCachePreferShared )  );
 #  ifdef GRAVITY
    CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUPOT_dtSolver_HydroGravity, cudaFuncCachePreferShared )  );
-#  endif
-
-#  ifdef MHD
-#  warning : WAIT MHD !!!
 #  endif
 
 #  elif ( MODEL == ELBDM )

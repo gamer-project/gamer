@@ -199,7 +199,7 @@ void CPU_FluidSolver_CTU(
 #  ifdef MHD
    const bool StoreElectric_No     = false;
 #  endif
-#  if ( defined __CUDACC__  &&  !defined GRAVITY )
+#  if ( defined __CUDACC__  &&  !defined UNSPLIT_GRAVITY )
    const double *c_ExtAcc_AuxArray = NULL;
 #  endif
 

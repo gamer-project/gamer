@@ -54,7 +54,6 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
    const real MaxErr2         = SQR(MAX_ERROR);
    const real ZERO            = (real)0.0;
    const real ONE             = (real)1.0;
-   const real TWO             = (real)2.0;
    const real _TWO            = (real)0.5;
    const real Gamma_m1        = Gamma - ONE;
    const bool NormPassive_No  = false;
