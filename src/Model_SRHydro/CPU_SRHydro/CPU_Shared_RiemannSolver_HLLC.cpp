@@ -40,9 +40,9 @@ GPU_DEVICE
 void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                  const real Gamma, const real MinTemp )
 {
+  real nhl, nhr;
 # if ( EOS ==  CONSTANT_GAMMA)
   const real Gamma_m1 = Gamma - (real)1.0;
-  real rhl, rhr;
 # endif
 
   real CL[NCOMP_TOTAL], CR[NCOMP_TOTAL]; /* conserved vars. */
@@ -91,8 +91,8 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
 
 /* 3. Compute the max and min wave speeds used in Mignone */
 #  if ( EOS == APPROXIMATED_GENERAL )
-   real nhl =  FMA( (real)2.5, PL[4], SQRT( FMA( (real)2.25, SQR(PL[4]), SQR(PL[0]) ) ) );
-   real nhr =  FMA( (real)2.5, PR[4], SQRT( FMA( (real)2.25, SQR(PR[4]), SQR(PR[0]) ) ) );
+   nhl =  FMA( (real)2.5, PL[4], SQRT( FMA( (real)2.25, SQR(PL[4]), SQR(PL[0]) ) ) );
+   nhr =  FMA( (real)2.5, PR[4], SQRT( FMA( (real)2.25, SQR(PR[4]), SQR(PR[0]) ) ) );
 
    cslsq = PL[4] * FMA( (real)4.5, PL[4], (real)5.0*SQRT( FMA( (real)2.25, SQR(PL[4]), SQR(PL[0]) ) ) ) 
 / ( (real)3.0*nhl* FMA( (real)1.5, PL[4],           SQRT( FMA( (real)2.25, SQR(PL[4]), SQR(PL[0]) ) ) ) );
@@ -101,11 +101,11 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
 / ( (real)3.0*nhr* FMA( (real)1.5, PR[4],           SQRT( FMA( (real)2.25, SQR(PR[4]), SQR(PR[0]) ) ) ) );
 
 #  elif ( EOS ==  CONSTANT_GAMMA)
-   rhl = PL[0] + PL[4] * Gamma / Gamma_m1; /* Mignone Eq 3.5 */
-   rhr = PR[0] + PR[4] * Gamma / Gamma_m1;
+   nhl = PL[0] + PL[4] * Gamma / Gamma_m1; /* Mignone Eq 3.5 */
+   nhr = PR[0] + PR[4] * Gamma / Gamma_m1;
 
-   cslsq = Gamma * PL[4] / rhl; /* Mignone Eq 4 */
-   csrsq = Gamma * PR[4] / rhr;
+   cslsq = Gamma * PL[4] / nhl; /* Mignone Eq 4 */
+   csrsq = Gamma * PR[4] / nhr;
 #  endif
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
