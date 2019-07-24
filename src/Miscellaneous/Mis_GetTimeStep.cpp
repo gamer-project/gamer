@@ -2,7 +2,11 @@
 
 extern double (*Mis_GetTimeStep_User_Ptr)( const int lv, const double dTime_dt );
 
+#if ( MODEL == SR_HYDRO )
+ 
+ extern int DT_SPEED_OF_LIGHT;
 
+#endif
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -67,7 +71,7 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 #  warning : WAIT MHD !!!
 
 #  elif   ( MODEL == SR_HYDRO )
-   if ( DT_SPEED_OF_LIGHT ) dTime[NdTime] = DT__FLUID * amr->dh[lv]; 
+   if ( DT_SPEED_OF_LIGHT ) dTime[NdTime] = ( (Step==0)?DT__FLUID_INIT:DT__FLUID ) * amr->dh[lv]; 
    else                     dTime[NdTime] = dt_InvokeSolver( DT_FLU_SOLVER, lv );
    sprintf( dTime_Name[NdTime++], "%s", "Hydro_CFL" );
 
