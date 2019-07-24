@@ -117,7 +117,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //        even when DUAL_ENERGY is on, we still want to try the 1st-order-flux correction before setting a floor value)
       /*
 #     ifdef MHD
-#     warning : WAIT MHD !!!
+#     error : ERROR : MHD is not supported here !!!
       const real EngyB = NULL_REAL;
 #     else
       const real EngyB = NULL_REAL;

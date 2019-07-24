@@ -1798,7 +1798,7 @@ void Hydro_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real dh,
    for (int f=0; f<6; f++)
    {
 #     ifdef MHD
-#     warning : WAIT MHD !!!
+#     error : ERROR : MHD is not supported here !!!
       const real EngyB = NULL_REAL;
 #     else
       const real EngyB = NULL_REAL;
