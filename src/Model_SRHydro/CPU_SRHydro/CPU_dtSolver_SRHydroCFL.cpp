@@ -102,8 +102,10 @@ void CPU_dtSolver_SRHydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][NCOM
          SRHydro_4Velto3Vel( Pri, Pri3Vel );
 
 #        if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
-         MaxV   = Pri3Vel[1] + Pri3Vel[2] + Pri3Vel[3];
-         MaxCFL = FMAX( MaxV+(real)3.0*Cs, MaxCFL );
+         MaxV   = FMAX(FABS(Pri3Vel[1]) , FABS(Pri3Vel[2]) );
+         MaxV   = FMAX(            MaxV , FABS(Pri3Vel[3]) );
+    
+         MaxCFL = ( MaxV + Cs ) / ( (real)1.0 + MaxV*Cs );
 #        endif
       } // CGPU_LOOP( t, CUBE(PS1) )
 
