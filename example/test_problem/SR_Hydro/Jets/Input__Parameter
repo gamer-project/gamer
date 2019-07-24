@@ -49,6 +49,7 @@ OPT__BC_FLU_ZP                2           # fluid boundary condition at the +z f
 # time-step
 DT__FLUID                     0.4         # dt criterion: fluid solver CFL factor (<0=auto) [-1.0]
 DT__FLUID_INIT                0.4         # dt criterion: DT__FLUID at the first step (<0=auto) [-1.0]
+DT_SPEED_OF_LIGHT             1           # compute time step based on speed of light
 DT__SYNC_PARENT_LV            0.1         # dt criterion: allow dt to adjust by (1.0+DT__SYNC_PARENT) in order to synchronize
                                           #               with the parent level (for OPT__DT_LEVEL==3 only) [0.1]
 DT__SYNC_CHILDREN_LV          0.1         # dt criterion: allow dt to adjust by (1.0-DT__SYNC_CHILDREN) in order to synchronize
