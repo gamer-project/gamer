@@ -65,7 +65,7 @@ SIMU_OPTION += -DLR_SCHEME=PPM
 # --> pure hydro: EXACT/ROE/HLLE/HLLC(*); MHD: ROE/HLLE/HLLD(*);
 #     		  (recommended solvers are highlighted by *)
 # --> useless for RTVD
-SIMU_OPTION += -DRSOLVER=HLLD
+SIMU_OPTION += -DRSOLVER=ROE
 
 # dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy)
 # --> DE_EINT is not supported yet; useless for RTVD
@@ -77,7 +77,7 @@ SIMU_OPTION += -DRSOLVER=HLLD
 SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 
 # magnetohydrodynamics
-SIMU_OPTION += -DMHD
+#SIMU_OPTION += -DMHD
 
 
 # (b-2) ELBDM options
