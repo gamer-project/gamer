@@ -455,11 +455,18 @@ void Aux_TakeNote()
 #     ifdef GRAVITY
       fprintf( Note, "#define GRA_NIN                 %d\n",      GRA_NIN             );
 #     endif
+#     ifdef MHD
+      fprintf( Note, "#define NCOMP_MAG               %d\n",      NCOMP_MAG           );
+      fprintf( Note, "#define NCOMP_ELE               %d\n",      NCOMP_ELE           );
+#     endif
       fprintf( Note, "#define PATCH_SIZE              %d\n",      PATCH_SIZE          );
       fprintf( Note, "#define MAX_PATCH               %d\n",      MAX_PATCH           );
       fprintf( Note, "#define NLEVEL                  %d\n",      NLEVEL              );
       fprintf( Note, "\n" );
       fprintf( Note, "#define FLU_GHOST_SIZE          %d\n",      FLU_GHOST_SIZE      );
+#     if ( MODEL == HYDRO )
+      fprintf( Note, "#define LR_GHOST_SIZE           %d\n",      LR_GHOST_SIZE       );
+#     endif
 #     ifdef GRAVITY
       fprintf( Note, "#define POT_GHOST_SIZE          %d\n",      POT_GHOST_SIZE      );
       fprintf( Note, "#define RHO_GHOST_SIZE          %d\n",      RHO_GHOST_SIZE      );
