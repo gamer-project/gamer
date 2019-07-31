@@ -15,12 +15,12 @@ static void SetReceiveSibling( int* RSib_List[] );
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LB_RecordExchangeDataPatchID
-// Description :  Construct the MPI sending and receiving data lists for exchanging both hydro
+// Description :  Construct the MPI sending and receiving data lists for exchanging fluid, magnetic field,
 //                and potential data
 //
 // Note        :  1. LB_RecvH_IDList[] is unsorted --> use LB_RecvH_IDList_Idxtable[] to obtain the correct order
 //                   <--> All other lists are sorted
-//                2. This function will NOT deallocate any fluid/pot arrays allocated previously
+//                2. This function will NOT deallocate any fluid/magnetic/pot arrays allocated previously
 //
 // Parameter   :  Lv          : Target refinement level for recording MPI lists
 //                AfterRefine : Record the difference between old and new MPI lists after grid refinement
@@ -164,6 +164,10 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 //             allocate memory for the buffer patches that will receive data
                for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][SibPID]->hnew();
 
+#              ifdef MHD
+               for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][SibPID]->mnew();
+#              endif
+
 #              ifdef GRAVITY // so that the XXX_H lists can also be applied to the potential data
                for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][SibPID]->gnew();
 #              endif
@@ -248,6 +252,10 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 
 //                allocate memory for the buffer patches that will receive data
                   for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][TPID]->hnew();
+
+#                 ifdef MHD
+                  for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][TPID]->mnew();
+#                 endif
 
 #                 ifdef GRAVITY // so that the XXX_H lists can also be applied to the potential data
                   for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][TPID]->gnew();

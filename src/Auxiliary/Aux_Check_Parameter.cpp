@@ -800,6 +800,9 @@ void Aux_Check_Parameter()
    if ( OPT__FIXUP_ELECTRIC  &&  !amr->WithElectric )
       Aux_Error( ERROR_INFO, "%s is enabled but amr->Electric is off !!\n", "OPT__FIXUP_ELECTRIC" );
 
+   if ( OPT__OVERLAP_MPI )
+      Aux_Error( ERROR_INFO, "\"OPT__OVERLAP_MPI\" is NOT supported for MHD !!\n" );
+
    if ( !OPT__FIXUP_RESTRICT )
       Aux_Message( stderr, "WARNING : disabling \"OPT__FIXUP_RESTRICT\" in MHD will break the divergence-free constraint !!\n" );
 
