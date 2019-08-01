@@ -258,27 +258,12 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #              elif   ( MODEL == SR_HYDRO )
                if ( OPT__FLAG_PRES_GRADIENT )
                {
-                  const bool CheckMinPres_Yes = true;
-                  const real Gamma_m1         = GAMMA - (real)1.0;
-
-                  real Ek;
-
                   for (int k=0; k<PS1; k++)
                   for (int j=0; j<PS1; j++)
                   for (int i=0; i<PS1; i++)
                   {
-#                    ifdef DUAL_ENERGY
-#                    if   ( DUAL_ENERGY == DE_ENPY )
-                     Pres[k][j][i] = CPU_DensEntropy2Pres( Fluid[DENS][k][j][i], Fluid[ENPY][k][j][i],
-                                                           Gamma_m1, CheckMinPres_Yes, MIN_PRES );
-#                    elif ( DUAL_ENERGY == DE_EINT )
-#                    error : DE_EINT is NOT supported yet !!
-#                    endif
-
-#                    else
                      Pres[k][j][i] = SRHydro_GetPressure( Fluid[DENS][k][j][i], Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i],
                                                           Fluid[MOMZ][k][j][i], Fluid[ENGY][k][j][i], GAMMA, MIN_TEMP  );
-#                    endif // #ifdef DUAL_ENERGY ... else ...
                   } // k,j,i
                } // if ( OPT__FLAG_PRES_GRADIENT )
 
