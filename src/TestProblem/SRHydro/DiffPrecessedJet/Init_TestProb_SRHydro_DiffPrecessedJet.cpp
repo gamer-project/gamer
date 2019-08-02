@@ -424,23 +424,23 @@ bool Flu_ResetByUser_DiffPrecessedJet( real fluid[], const double x, const doubl
 } // FUNCTION : Flu_ResetByUser_Jets
 
 
-bool Flag_User( const int i, const int j, const int k, const int lv, const int PID, const double Threshold )
-{
-
- const double dh     = amr->dh[lv];                                                  // grid size
- const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,              // x,y,z position
-                         amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
-                         amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };
-
- const double Center[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
-
-
- if ( fabs( Pos[0]-Center[0] ) <= 0.5*Threshold  &&
-      fabs( Pos[1]-Center[1] ) <= 0.5*Threshold  && 
-      fabs( Pos[2]-Center[2] ) <= 0.5*Threshold )  return true;
- else                                              return false;
-
-}
+//bool Flag_User( const int i, const int j, const int k, const int lv, const int PID, const double Threshold )
+//{
+//
+// const double dh     = amr->dh[lv];                                                  // grid size
+// const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,              // x,y,z position
+//                         amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
+//                         amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };
+//
+// const double Center[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
+//
+//
+// if ( fabs( Pos[0]-Center[0] ) <= 0.5*Threshold  &&
+//      fabs( Pos[1]-Center[1] ) <= 0.5*Threshold  && 
+//      fabs( Pos[2]-Center[2] ) <= 0.5*Threshold )  return true;
+// else                                              return false;
+//
+//}
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -465,7 +465,7 @@ void Init_TestProb_SRHydro_DiffPrecessedJet()
    SetParameter();
 
    Init_Function_User_Ptr   = SetGridIC;
-   Flag_User_Ptr            = Flag_User;
+   Flag_User_Ptr            = NULL;
    Mis_GetTimeStep_User_Ptr = NULL;
    BC_User_Ptr              = NULL;
    Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_DiffPrecessedJet;
