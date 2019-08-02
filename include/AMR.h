@@ -334,12 +334,17 @@ struct AMR_t
          patch[0][lv][PID]->Active = false;
          patch[1][lv][PID]->Active = false;
 
-//       always deallocate flux arrays because
-//       (1) we use them to determine which patches require the flux fix-up operation (see Flu_FixUp.cpp)
-//       (2) flux arrays do not consume much memory (at most 6/32, where 6 = 6 faces and 32 = patch group size*two sg)
-//       (3) different patches may require flux arrays along different directions, and thus allocating memory pool for flux arrays
-//           can be inefficient and less useful
+//       always deallocate flux and electric field arrays due to the following reasons
+//       (1) we use them to determine which patches require the flux and electric field fix-up operations
+//           --> see Flu_FixUp_Flux() and MHD_FixUp_Electric()
+//       (2) flux and electric field arrays do not consume much memory
+//           --> at most 6/32 for flux, where 6 = 6 faces and 32 = patch group size*two sg
+//       (3) different patches may require flux and electric field arrays along different directions, and thus
+//           allocating memory pool for them can be inefficient and less useful
          patch[0][lv][PID]->fdelete();
+#        ifdef MHD
+         patch[0][lv][PID]->edelete();
+#        endif
       }
 
       else
