@@ -11,49 +11,56 @@
 //
 // Note        :  The modes "POT_FOR_POISSON" and "POT_AFTER_REFINE" can be applied to the potential
 //                data only. For others modes, the number of variables to be exchanged depends on
-//                the input parameter "TVar".
+//                the input parameter "TVarCC".
 //
-// Parameter   :  lv          : Target refinement level to exchage data
-//                FluSg       : Sandglass of the requested fluid data (useless in POT_FOR_POISSON,
-//                              POT_AFTER_REFINEPOT, COARSE_FINE_FLUX )
-//                PotSg       : Sandglass of the requested potential data (useless in COARSE_FINE_FLUX)
-//                GetBufMode  : Target mode. Each mode has its own MPI lists, by which the amount of data
-//                              to be transferred can be minimized.
-//                              --> DATA_GENERAL      : data for general-purpose (sibling and coarse-grid data)
-//                                  DATA_AFTER_REFINE : subset of DATA_GENERAL after refine
-//                                  DATA_AFTER_FIXUP  : subset of DATA_GENERAL after fix-up
-//                                  DATA_RESTRICT     : restricted data of the father patches with sons not home
-//                                                      --> useful in LOAD_BALANCE only
-//                                  POT_FOR_POISSON   : potential for the Poisson solver
-//                                  POT_AFTER_REFINE  : potential after refine for the Poisson solver
-//                                  COARSE_FINE_FLUX  : fluxes across the coarse-fine boundaries (HYDRO ONLY)
-//                TVar        : Target variables to exchange
-//                              --> Supported variables in different models:
-//                                  HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY,[, _POTE]
-//                                  MHD   :
-//                                  ELBDM : _DENS, _REAL, _IMAG, [, _POTE]
-//                              --> _FLUID, _PASSIVE, and _TOTAL apply to all models
-//                              --> In addition, the flux variables (e.g., _FLUX_DENS) are also supported
-//                              Restrictions :
-//                              --> a. DATA_XXX works with all components in (_TOTAL | _POTE)
-//                                  b. COARSE_FINE_FLUX works with all components in (_FLUX_TOTAL)
-//                                  c. _POTE has no effect on the flux fix-up in DATA_AFTER_FIXUP
-//                                  d. POT_FOR_POISSON and POT_AFTER_REFINE only work with _POTE
-//                ParaBuf     : Number of ghost zones to exchange (useless in DATA_RESTRICT and COARSE_FINE_FLUX )
-//                UseLBFunc   : Use the load-balance alternative function "LB_GetBufferData"
-//                              (useless if LOAD_BALANCE is off)
-//                              --> USELB_YES : use the load-balance alternative function
-//                                  USELB_NO  : do not use the load-balance alternative function
+// Parameter   :  lv         : Target refinement level to exchage data
+//                FluSg      : Sandglass of the requested fluid data
+//                             --> Useless in POT_FOR_POISSON, POT_AFTER_REFINEPOT, COARSE_FINE_FLUX, COARSE_FINE_ELECTRIC)
+//                MagSg      : Sandglass of the requested B field data (for MHD only)
+//                PotSg      : Sandglass of the requested potential data
+//                             --> Useless in COARSE_FINE_FLUX and COARSE_FINE_ELECTRIC
+//                GetBufMode : Target mode. Each mode has its own MPI lists, by which the amount of data
+//                             to be transferred can be minimized.
+//                             --> DATA_GENERAL         : data for general-purpose (sibling and coarse-grid data)
+//                                 DATA_AFTER_REFINE    : subset of DATA_GENERAL after refine
+//                                 DATA_AFTER_FIXUP     : subset of DATA_GENERAL after fix-up
+//                                 DATA_RESTRICT        : restricted data of the father patches with sons not home
+//                                                        --> useful in LOAD_BALANCE only
+//                                 POT_FOR_POISSON      : potential for the Poisson solver
+//                                 POT_AFTER_REFINE     : potential after refine for the Poisson solver
+//                                 COARSE_FINE_FLUX     : fluxes across the coarse-fine boundaries (HYDRO ONLY)
+//                                 COARSE_FINE_ELECTRIC : electric field across the coarse-fine boundaries (MHD ONLY)
+//                TVarCC     : Target cell-centered variables to exchange
+//                             --> Supported variables in different models:
+//                                 HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY [, _POTE]
+//                                 ELBDM : _DENS, _REAL, _IMAG [, _POTE]
+//                             --> _FLUID, _PASSIVE, and _TOTAL apply to all models
+//                             --> In addition, the flux variables (e.g., _FLUX_DENS) are also supported
+//                             Restrictions :
+//                             --> a. DATA_XXX works with all components in (_TOTAL | _POTE)
+//                                 b. COARSE_FINE_FLUX works with all components in (_FLUX_TOTAL)
+//                                 c. _POTE has no effect on the flux fix-up in DATA_AFTER_FIXUP
+//                                 d. POT_FOR_POISSON and POT_AFTER_REFINE only work with _POTE
+//                TVarFC     : Target face-centered variables to exchange (for LOAD_BALANCE only)
+//                             --> Supported variables in different models:
+//                                 HYDRO+MHD : _MAGX, _MAGY, _MAGZ, _MAG
+//                                 ELBDM     : none
+//                ParaBuf    : Number of ghost zones to exchange
+//                             --> Useless in DATA_RESTRICT, COARSE_FINE_FLUX, and COARSE_FINE_ELECTRIC
+//                UseLBFunc  : Use the load-balance alternative function LB_GetBufferData()
+//                             (useless if LOAD_BALANCE is off)
+//                             --> USELB_YES : use the load-balance alternative function
+//                                 USELB_NO  : do not use the load-balance alternative function
 //-------------------------------------------------------------------------------------------------------
-void Buf_GetBufferData( const int lv, const int FluSg, const int PotSg, const GetBufMode_t GetBufMode,
-                        const int TVar, const int ParaBuf, const UseLBFunc_t UseLBFunc )
+void Buf_GetBufferData( const int lv, const int FluSg, const int MagSg, const int PotSg, const GetBufMode_t GetBufMode,
+                        const int TVarCC, const int TVarFC, const int ParaBuf, const UseLBFunc_t UseLBFunc )
 {
 
 // invoke the alternative load-balance function
 #  ifdef LOAD_BALANCE
    if ( UseLBFunc == USELB_YES )
    {
-      LB_GetBufferData( lv, FluSg, PotSg, GetBufMode, TVar, ParaBuf );
+      LB_GetBufferData( lv, FluSg, MagSg, PotSg, GetBufMode, TVarCC, TVarFC, ParaBuf );
       return;
    }
 #  endif
@@ -66,21 +73,21 @@ void Buf_GetBufferData( const int lv, const int FluSg, const int PotSg, const Ge
    if ( GetBufMode == DATA_RESTRICT )
       Aux_Error( ERROR_INFO, "mode DATA_RESTRICT is useful only in LOAD_BALANCE !!\n" );
 
-   if (  GetBufMode != COARSE_FINE_FLUX  &&  ( TVar & _TOTAL )  &&  ( FluSg != 0 && FluSg != 1 )  )
+   if (  GetBufMode != COARSE_FINE_FLUX  &&  ( TVarCC & _TOTAL )  &&  ( FluSg != 0 && FluSg != 1 )  )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "FluSg", FluSg );
 
 #  ifdef GRAVITY
-   if (  GetBufMode != COARSE_FINE_FLUX  &&  ( TVar & _POTE )  &&  ( PotSg != 0 && PotSg != 1 )  )
+   if (  GetBufMode != COARSE_FINE_FLUX  &&  ( TVarCC & _POTE )  &&  ( PotSg != 0 && PotSg != 1 )  )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "PotSg", PotSg );
 
    if (  ( GetBufMode == DATA_GENERAL || GetBufMode == DATA_AFTER_FIXUP || GetBufMode == DATA_AFTER_REFINE )  &&
-        !( TVar & (_TOTAL|_POTE) )  )
+        !( TVarCC & (_TOTAL|_POTE) )  )
       Aux_Error( ERROR_INFO, "no suitable target variable is found --> missing (_TOTAL|_POTE) !!\n" );
 
-   if (  ( GetBufMode == POT_FOR_POISSON || GetBufMode == POT_AFTER_REFINE )  &&  !( TVar & _POTE )  )
+   if (  ( GetBufMode == POT_FOR_POISSON || GetBufMode == POT_AFTER_REFINE )  &&  !( TVarCC & _POTE )  )
       Aux_Error( ERROR_INFO, "no suitable target variable is found --> missing _POTE !!\n" );
 
-   if (  ( GetBufMode == POT_FOR_POISSON || GetBufMode == POT_AFTER_REFINE )  &&  ( TVar & ~_POTE )  )
+   if (  ( GetBufMode == POT_FOR_POISSON || GetBufMode == POT_AFTER_REFINE )  &&  ( TVarCC & ~_POTE )  )
       Aux_Error( ERROR_INFO, "modes \"%s\" only accept \"%s\" as the target variable !!\n",
                  "POT_FOR_POISSON and POT_AFTER_REFINE", "_POTE" );
 
@@ -92,7 +99,7 @@ void Buf_GetBufferData( const int lv, const int FluSg, const int PotSg, const Ge
 
 #  else // #ifdef GRAVITY ... else ...
    if (  ( GetBufMode == DATA_GENERAL || GetBufMode == DATA_AFTER_FIXUP || GetBufMode == DATA_AFTER_REFINE )  &&
-        !( TVar & _TOTAL )  )
+        !( TVarCC & _TOTAL )  )
       Aux_Error( ERROR_INFO, "no suitable target variable is found --> missing _TOTAL !!\n" );
 
    if (  ( GetBufMode == DATA_GENERAL || GetBufMode == DATA_AFTER_FIXUP || GetBufMode == DATA_AFTER_REFINE )  &&
@@ -101,7 +108,7 @@ void Buf_GetBufferData( const int lv, const int FluSg, const int PotSg, const Ge
                  "ParaBuf", ParaBuf );
 #  endif // #ifdef GRAVITY ... else ...
 
-   if (  GetBufMode == COARSE_FINE_FLUX  &&  !( TVar & _FLUX_TOTAL )  )
+   if (  GetBufMode == COARSE_FINE_FLUX  &&  !( TVarCC & _FLUX_TOTAL )  )
       Aux_Error( ERROR_INFO, "no suitable target variable is found --> missing (_FLUX_TOTAL) !!\n" );
 
    if ( GetBufMode == COARSE_FINE_FLUX  &&  !amr->WithFlux )
@@ -113,9 +120,9 @@ void Buf_GetBufferData( const int lv, const int FluSg, const int PotSg, const Ge
 
 // determine the components to be prepared (TFluVarIdx : target fluid variable indices ( = [0 ... NCOMP_TOTAL-1/NFLUX_TOTAL-1] )
    bool ExchangeFlu = ( GetBufMode == COARSE_FINE_FLUX ) ?
-                      TVar & _FLUX_TOTAL : TVar & _TOTAL;                        // whether or not to exchage the fluid data
+                      TVarCC & _FLUX_TOTAL : TVarCC & _TOTAL;                       // whether or not to exchage the fluid data
 #  ifdef GRAVITY
-   bool ExchangePot = (  GetBufMode != COARSE_FINE_FLUX  &&  (TVar & _POTE)  );  // whether or not to exchange the potential data
+   bool ExchangePot = (  GetBufMode != COARSE_FINE_FLUX  &&  (TVarCC & _POTE)  );   // whether or not to exchange the potential data
 #  endif
 
    const int NFluid_Max = ( GetBufMode == COARSE_FINE_FLUX ) ? NFLUX_TOTAL : NCOMP_TOTAL;
@@ -123,7 +130,7 @@ void Buf_GetBufferData( const int lv, const int FluSg, const int PotSg, const Ge
    NVar_Flu = 0;
 
    for (int v=0; v<NFluid_Max; v++)
-      if ( TVar & (1<<v) )    TFluVarIdxList[ NVar_Flu++ ] = v;
+      if ( TVarCC & (1<<v) )  TFluVarIdxList[ NVar_Flu++ ] = v;
 
    NVar_Tot = NVar_Flu;
 #  ifdef GRAVITY

@@ -34,7 +34,7 @@ void Init_ByFunction()
 
       Init_ByFunction_AssignData( lv );
 
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );
+      Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, _MAG, Flu_ParaBuf, USELB_NO );
 
       if ( lv != TOP_LEVEL )
       {
@@ -57,17 +57,9 @@ void Init_ByFunction()
    {
       for (int lv=TOP_LEVEL-1; lv>=0; lv--)
       {
-#        ifdef MHD
-         const int SonMagSg = amr->MagSg[lv+1];
-         const int  FaMagSg = amr->MagSg[lv  ];
-#        else
-         const int SonMagSg = NULL_INT;
-         const int  FaMagSg = NULL_INT;
-#        endif
+         Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv], NULL_INT, NULL_INT, _TOTAL, _MAG );
 
-         Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, SonMagSg, FaMagSg, _TOTAL, _MAG );
-
-         Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );
+         Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, _MAG, Flu_ParaBuf, USELB_NO );
       } // for (int lv=NLEVEL-2; lv>=0; lv--)
    } // if ( OPT__INIT_RESTRICT )
 

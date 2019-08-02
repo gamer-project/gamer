@@ -15,6 +15,8 @@
 // Parameter   :  FaLv     : Target refinement level at which the data are going to be replaced
 //                SonFluSg : Fluid sandglass at level "FaLv+1"
 //                FaFluSg  : Fluid sandglass at level "FaLv"
+//                SonMagSg : B field sandglass at level "FaLv+1"
+//                FaMagSg  : B field sandglass at level "FaLv"
 //                SonPotSg : Potential sandglass at level "FaLv+1"
 //                FaPotSg  : Potential sandglass at level "FaLv"
 //                TVarCC   : Target cell-centered variables
@@ -28,8 +30,8 @@
 //                                ELBDM          : none
 //                            --> But it currently does not distinguish _MAGX, _MAGY, _MAGZ, and _MAG
 //-------------------------------------------------------------------------------------------------------
-void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const int SonPotSg, const int FaPotSg,
-                         const int SonMagSg, const int FaMagSg, const int TVarCC, const int TVarFC )
+void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const int SonMagSg, const int FaMagSg,
+                         const int SonPotSg, const int FaPotSg, const int TVarCC, const int TVarFC )
 {
 
    const int SonLv = FaLv + 1;

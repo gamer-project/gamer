@@ -957,7 +957,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 #     endif
 
 //    get data for all buffer patches
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );
+      Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, _MAG, Flu_ParaBuf, USELB_NO );
 
    } // for (int lv=0; lv<NLEVEL; lv++)
 

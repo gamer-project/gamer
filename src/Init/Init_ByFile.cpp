@@ -177,8 +177,8 @@ void Init_ByFile()
    Init_ByFile_AssignData( UM_Filename, OPT__UM_IC_LEVEL, OPT__UM_IC_NVAR, OPT__UM_IC_LOAD_NRANK, OPT__UM_IC_FORMAT );
 
 #  ifdef LOAD_BALANCE
-   Buf_GetBufferData( OPT__UM_IC_LEVEL, amr->FluSg[OPT__UM_IC_LEVEL], NULL_INT, DATA_GENERAL, _TOTAL,
-                      Flu_ParaBuf, USELB_YES );
+   Buf_GetBufferData( OPT__UM_IC_LEVEL, amr->FluSg[OPT__UM_IC_LEVEL], amr->MagSg[OPT__UM_IC_LEVEL], NULL_INT,
+                      DATA_GENERAL, _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
 #  endif
 
 
@@ -187,20 +187,12 @@ void Init_ByFile()
    {
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Restricting level %d ... ", lv );
 
-#     ifdef MHD
-      const int SonMagSg = amr->MagSg[lv+1];
-      const int  FaMagSg = amr->MagSg[lv  ];
-#     else
-      const int SonMagSg = NULL_INT;
-      const int  FaMagSg = NULL_INT;
-#     endif
-
-      Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, SonMagSg, FaMagSg, _TOTAL, _MAG );
+      Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv], NULL_INT, NULL_INT, _TOTAL, _MAG );
 
 #     ifdef LOAD_BALANCE
-      LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, NULL_INT );
+      LB_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, _MAG, NULL_INT );
 
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
 #     endif
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
@@ -239,9 +231,11 @@ void Init_ByFile()
 
 #     ifdef LOAD_BALANCE
 //    no need to exchange potential since we haven't calculated it yet
-      Buf_GetBufferData( lv,   amr->FluSg[lv  ], NULL_INT, DATA_AFTER_REFINE, _TOTAL, Flu_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv,   amr->FluSg[lv  ], amr->MagSg[lv  ], NULL_INT, DATA_AFTER_REFINE,
+                         _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
 
-      Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_AFTER_REFINE, _TOTAL, Flu_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv+1, amr->FluSg[lv+1], amr->MagSg[lv+1], NULL_INT, DATA_AFTER_REFINE,
+                         _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
 
       LB_Init_LoadBalance( Redistribute_Yes, Par_Weight, ResetLB_Yes, lv+1 );
 #     endif
@@ -263,9 +257,11 @@ void Init_ByFile()
 
 #     ifdef LOAD_BALANCE
 //    no need to exchange potential since we haven't calculated it yet
-      Buf_GetBufferData( lv,   amr->FluSg[lv  ], NULL_INT, DATA_AFTER_REFINE, _TOTAL, Flu_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv,   amr->FluSg[lv  ], amr->MagSg[lv  ], NULL_INT, DATA_AFTER_REFINE,
+                         _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
 
-      Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_AFTER_REFINE, _TOTAL, Flu_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv+1, amr->FluSg[lv+1], amr->MagSg[lv+1], NULL_INT, DATA_AFTER_REFINE,
+                         _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
 
       LB_Init_LoadBalance( Redistribute_Yes, Par_Weight, ResetLB_Yes, lv+1 );
 #     endif
@@ -286,21 +282,13 @@ void Init_ByFile()
 
       if ( NPatchTotal[lv+1] == 0 )    continue;
 
-#     ifdef MHD
-      const int SonMagSg = amr->MagSg[lv+1];
-      const int  FaMagSg = amr->MagSg[lv  ];
-#     else
-      const int SonMagSg = NULL_INT;
-      const int  FaMagSg = NULL_INT;
-#     endif
-
 //    no need to restrict potential since it will be recalculated later
-      Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, SonMagSg, FaMagSg, _TOTAL, _MAG );
+      Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv], NULL_INT, NULL_INT, _TOTAL, _MAG );
 
 #     ifdef LOAD_BALANCE
-      LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, NULL_INT );
+      LB_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, _MAG, NULL_INT );
 
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_AFTER_FIXUP, _TOTAL, Flu_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_AFTER_FIXUP, _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
 #     endif
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
