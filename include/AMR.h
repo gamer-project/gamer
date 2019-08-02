@@ -30,37 +30,38 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 // Structure   :  AMR_t
 // Description :  Data structure of the AMR implementation
 //
-// Data Member :  patch       : Pointers of all patches
-//                num         : Number of patches (real patch + buffer patch) at each level
-//                scale       : Grid scale at each level (grid size normalized to that at the finest level)
-//                FluSg       : Sandglass of the current fluid     data [0/1]
-//                PotSg       : Sandglass of the current potential data [0/1]
-//                FluSgTime   : Physical time of FluSg
-//                PotSgTime   : Physical time of PotSg
-//                NPatchComma : (1) SERIAL: [1] = [2] = ... = [26] = num[lv] = total number of patches
-//                              (2) Parallel, but no LOAD_BALANCE:
-//                                  [ 0, start of buffer patches [s=0], start of buffer patches [s=1]
-//                                   ... start of buffer patches [s=25], total # of patches (=num[lv]) ]
-//                              (3) Parallel, with LOAD_BALANCE:
-//                                  [ 0, start of sibling-buffer patches, start of father-buffer patches,
-//                                    total # of patches (=num[lv]), same as [3], ...]
-//                               --> In all cases, [ 1] gives the total number of "real" patches
-//                                                 [26] gives the total number of "real+buffer" patches
-//                dh          : Grid size at each level
-//                BoxEdgeL    : Simulation box left  edge in the adopted coordinate system
-//                BoxEdgeR    : Simulation box right edge in the adopted coordinate system
-//                BoxCenter   : Simulation box center     in the adopted coordinate system
-//                BoxSize     : Simulation box size       in the adopted coordinate system
-//                BoxScale    : Simulation box scale
-//                WithFlux    : Whether of not to allocate the flux arrays at all coarse-fine boundaries
-//                Par         : Particle data
-//                ParaVar     : Variables for parallelization
-//                LB          : Variables for load-balance
-//                ResPower2   : ceil(  log2( effective resolution at lv )  ) --> mainly used by LOAD_BALANCE
-//                NUpdateLv   : Number of updates at each level in one global time-step
-//                              --> Do not take into account the number of patches and particles at each level
-//                              --> Mainly used for estimating the weighted load-imbalance factor to determine
-//                                  when to redistribute all patches (when LOAD_BALANCE is on)
+// Data Member :  patch        : Pointers of all patches
+//                num          : Number of patches (real patch + buffer patch) at each level
+//                scale        : Grid scale at each level (grid size normalized to that at the finest level)
+//                FluSg        : Sandglass of the current fluid     data [0/1]
+//                PotSg        : Sandglass of the current potential data [0/1]
+//                FluSgTime    : Physical time of FluSg
+//                PotSgTime    : Physical time of PotSg
+//                NPatchComma  : (1) SERIAL: [1] = [2] = ... = [26] = num[lv] = total number of patches
+//                               (2) Parallel, but no LOAD_BALANCE:
+//                                   [ 0, start of buffer patches [s=0], start of buffer patches [s=1]
+//                                    ... start of buffer patches [s=25], total # of patches (=num[lv]) ]
+//                               (3) Parallel, with LOAD_BALANCE:
+//                                   [ 0, start of sibling-buffer patches, start of father-buffer patches,
+//                                     total # of patches (=num[lv]), same as [3], ...]
+//                                --> In all cases, [ 1] gives the total number of "real" patches
+//                                                  [26] gives the total number of "real+buffer" patches
+//                dh           : Grid size at each level
+//                BoxEdgeL     : Simulation box left  edge in the adopted coordinate system
+//                BoxEdgeR     : Simulation box right edge in the adopted coordinate system
+//                BoxCenter    : Simulation box center     in the adopted coordinate system
+//                BoxSize      : Simulation box size       in the adopted coordinate system
+//                BoxScale     : Simulation box scale
+//                WithFlux     : Whether of not to allocate the flux arrays at all coarse-fine boundaries
+//                WithElectric : Whether of not to allocate the electric field arrays at all coarse-fine boundaries
+//                Par          : Particle data
+//                ParaVar      : Variables for parallelization
+//                LB           : Variables for load-balance
+//                ResPower2    : ceil(  log2( effective resolution at lv )  ) --> mainly used by LOAD_BALANCE
+//                NUpdateLv    : Number of updates at each level in one global time-step
+//                               --> Do not take into account the number of patches and particles at each level
+//                               --> Mainly used for estimating the weighted load-imbalance factor to determine
+//                                   when to redistribute all patches (when LOAD_BALANCE is on)
 //
 // Method      :  AMR_t    : Constructor
 //               ~AMR_t    : Destructor
@@ -90,8 +91,8 @@ struct AMR_t
    int    scale       [NLEVEL];
    int    FluSg       [NLEVEL];
    double FluSgTime   [NLEVEL][2];
+   int    MagSg       [NLEVEL];     // for convenience, it is defined even when MHD is disabled
 #  ifdef MHD
-   int    MagSg       [NLEVEL];
    double MagSgTime   [NLEVEL][2];
 #  endif
 #  ifdef GRAVITY
@@ -130,6 +131,8 @@ struct AMR_t
          FluSg[lv] = 0;
 #        ifdef MHD
          MagSg[lv] = FluSg[lv];
+#        else
+         MagSg[lv] = NULL_INT;
 #        endif
 #        ifdef GRAVITY
          PotSg[lv] = FluSg[lv];

@@ -110,7 +110,7 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 
 //       note that the MPI bandwidth achieved in the following command may be much lower than normal
 //       because of switching back from the MPI buffer used by FFTW
-         TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, SaveSg_Pot, POT_FOR_POISSON, _POTE, Pot_ParaBuf, USELB_YES ),
+         TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, NULL_INT, SaveSg_Pot, POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES ),
                         Timer_GetBuf[lv][1]  );
 
 //       must call Poi_StorePotWithGhostZone AFTER collecting potential for buffer patches

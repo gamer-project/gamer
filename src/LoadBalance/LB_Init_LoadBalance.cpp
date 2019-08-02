@@ -252,10 +252,10 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const
    {
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 ) Aux_Message( stdout, "      Transferring buffer data at Lv %2d ... ", lv );
 
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL,    _TOTAL, Flu_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
 
 #     ifdef GRAVITY
-      Buf_GetBufferData( lv, NULL_INT, amr->PotSg[lv], POT_FOR_POISSON, _POTE,  Pot_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv, NULL_INT, NULL_INT, amr->PotSg[lv], POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES );
 #     endif
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );

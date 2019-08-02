@@ -152,7 +152,7 @@ const NSide_t
    NSIDE_26 = 26;
 
 
-// use the load-balance alternative function in "Buf_GetBufferData" and "Flag_Real"
+// use the load-balance alternative functions
 typedef int UseLBFunc_t;
 const UseLBFunc_t
    USELB_NO  = 0,
@@ -166,7 +166,7 @@ const Check_t
    CHECK_ON  = 1;
 
 
-// target solver in "InvokeSolvers"
+// target solver in InvokeSolver()
 // --> must start from 0 because of the current TIMING_SOLVER implementation
 // --> when adding new solvers, please modify the NSOLVER constant accordingly
 const int NSOLVER = 7;
@@ -189,7 +189,7 @@ const Solver_t
   ;
 
 
-// target mode in "Buf_GetBufferData and LB_GetBufferData"
+// target mode in Buf_GetBufferData() and LB_GetBufferData()
 typedef int GetBufMode_t;
 const GetBufMode_t
    DATA_GENERAL         = 1

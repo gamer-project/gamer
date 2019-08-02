@@ -20,141 +20,168 @@ extern Timer_t *Timer_MPI[3];
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LB_GetBufferData
-// Description :  Fill up the data(flux) of buffer(real) patches
+// Description :  Fill up the data of buffer patches (and fluxes and electric field of real patches as well)
 //
-// Note        :  1. This function is the alternative to "Buf_GetBufferData" in LOAD_BALANCE, and is
-//                   invoked by "Buf_GetBufferData" and "Flu_FixUp"
-//                2. The modes "POT_FOR_POISSON" and "POT_AFTER_REFINE" can be applied to the potential
-//                   data only. For others modes, the number of variables to be exchanged depends on
-//                   the input parameter "TVar".
+// Note        :  1. Alternative function to Buf_GetBufferData() for LOAD_BALANCE
+//                2. Invoked by Buf_GetBufferData(), EvolveLevel(), Flu_CorrAfterAllSyn(), LB_Init_ByFunction()
+//                   Init_ByFile(), Init_ByRestart_v1/2(), and End_MemFree()
+//                3. The modes "POT_FOR_POISSON" and "POT_AFTER_REFINE" will exchange the potential data only.
+//                   The mode "COARSE_FINE_ELECTRIC" will exchange all electric field components.
+//                   For others modes, the variables to be exchanged depend on the input parameters "TVarCC" and "TVarFC".
 //
-// Parameter   :  lv          : Target refinement level to exchage data
-//                FluSg       : Sandglass of the requested fluid data (useless in POT_FOR_POISSON,
-//                              POT_AFTER_REFINEPOT, COARSE_FINE_FLUX )
-//                PotSg       : Sandglass of the requested potential data (useless in COARSE_FINE_FLUX)
-//                GetBufMode  : Target mode. Each mode has its own MPI lists, by which the amount of data
-//                              to be transferred can be minimized.
-//                              --> DATA_GENERAL      : data for general-purpose (sibling and coarse-grid data)
-//                                  DATA_AFTER_REFINE : subset of DATA_GENERAL after refine
-//                                  DATA_AFTER_FIXUP  : subset of DATA_GENERAL after fix-up
-//                                  DATA_RESTRICT     : restricted data of the father patches with sons not home
-//                                  POT_FOR_POISSON   : potential for the Poisson solver
-//                                  POT_AFTER_REFINE  : potential after refine for the Poisson solver
-//                                  COARSE_FINE_FLUX  : fluxes across the coarse-fine boundaries (HYDRO ONLY)
-//                TVar        : Target variables to exchange
-//                              --> Supported variables in different models:
-//                                  HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY,[, _POTE]
-//                                  MHD   :
-//                                  ELBDM : _DENS, _REAL, _IMAG, [, _POTE]
-//                              --> _FLUID, _PASSIVE, and _TOTAL apply to all models
-//                              --> In addition, the flux variables (e.g., _FLUX_DENS) are also supported
-//                              Restrictions :
-//                              --> a. DATA_XXX works with all components in (_TOTAL | _POTE)
-//                                  b. COARSE_FINE_FLUX works with all components in (_FLUX_TOTAL)
-//                                  c. _POTE has no effect on the flux fix-up in DATA_AFTER_FIXUP
-//                                  d. POT_FOR_POISSON and POT_AFTER_REFINE only work with _POTE
-//                ParaBuf     : Number of ghost zones to exchange (useless in DATA_RESTRICT and COARSE_FINE_FLUX )
+// Parameter   :  lv         : Target refinement level to exchage data
+//                FluSg      : Sandglass of the requested fluid data
+//                             --> Useless in POT_FOR_POISSON, POT_AFTER_REFINEPOT, COARSE_FINE_FLUX, COARSE_FINE_ELECTRIC
+//                MagSg      : Sandglass of the requested B field data
+//                             --> Useless in POT_FOR_POISSON, POT_AFTER_REFINEPOT, COARSE_FINE_FLUX, COARSE_FINE_ELECTRIC
+//                PotSg      : Sandglass of the requested potential data
+//                             --> Useless in COARSE_FINE_FLUX and COARSE_FINE_ELECTRIC
+//                GetBufMode : Target mode. Each mode has its own MPI lists, by which the amount of data
+//                             to be transferred can be minimized.
+//                             --> DATA_GENERAL         : data for general-purpose (sibling and coarse-grid data)
+//                                 DATA_AFTER_REFINE    : subset of DATA_GENERAL after refine
+//                                 DATA_AFTER_FIXUP     : subset of DATA_GENERAL after fix-up
+//                                 DATA_RESTRICT        : restricted data of the father patches with sons not home
+//                                 POT_FOR_POISSON      : potential for the Poisson solver
+//                                 POT_AFTER_REFINE     : potential after refine for the Poisson solver
+//                                 COARSE_FINE_FLUX     : fluxes across the coarse-fine boundaries (HYDRO ONLY)
+//                                 COARSE_FINE_ELECTRIC : electric field across the coarse-fine boundaries (MHD ONLY)
+//                TVarCC     : Target cell-centered variables to exchange
+//                             --> Supported variables in different models:
+//                                 HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY [, _POTE]
+//                                 ELBDM : _DENS, _REAL, _IMAG [, _POTE]
+//                             --> _FLUID, _PASSIVE, and _TOTAL apply to all models
+//                             --> In addition, the flux variables (e.g., _FLUX_DENS) are also supported
+//                             Restrictions :
+//                             --> a. DATA_XXX works with all components in (_TOTAL | _POTE)
+//                                 b. COARSE_FINE_FLUX works with all components in (_FLUX_TOTAL)
+//                                 c. _POTE has no effect on the flux fix-up in DATA_AFTER_FIXUP
+//                                 d. POT_FOR_POISSON and POT_AFTER_REFINE only work with _POTE
+//                TVarFC     : Target face-centered variables to exchange
+//                             --> Supported variables in different models:
+//                                 HYDRO+MHD : _MAGX, _MAGY, _MAGZ, _MAG
+//                                 ELBDM     : none
+//                ParaBuf    : Number of ghost zones to exchange
+//                             --> Useless in DATA_RESTRICT, COARSE_FINE_FLUX, and COARSE_FINE_ELECTRIC
 //-------------------------------------------------------------------------------------------------------
-void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const GetBufMode_t GetBufMode,
-                       const int TVar, const int ParaBuf )
+void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int PotSg, const GetBufMode_t GetBufMode,
+                       const int TVarCC, const int TVarFC, const int ParaBuf )
 {
+
+   bool ExchangeFlu = ( GetBufMode == COARSE_FINE_FLUX ) ?
+                      TVarCC & _FLUX_TOTAL : TVarCC & _TOTAL;  // whether or not to exchage the fluid data
+#  ifdef GRAVITY
+   bool ExchangePot = TVarCC & _POTE;                          // whether or not to exchange the potential data
+#  endif
+#  ifdef MHD
+   bool ExchangeMag = TVarFC & _MAG;                           // whether or not to exchange the B field data
+#  endif
+
+// TFluVarIdxList: target fluid variable indices ( = [0 ... NCOMP_TOTAL-1/NFLUX_TOTAL-1] )
+   const int NFluid_Max = ( GetBufMode == COARSE_FINE_FLUX ) ? NFLUX_TOTAL : NCOMP_TOTAL;
+   int NVarCC_Flu, NVarCC_Tot, *TFluVarIdxList;
+   TFluVarIdxList = new int [NFluid_Max];
+   NVarCC_Flu = 0;
+
+   for (int v=0; v<NFluid_Max; v++)
+      if ( TVarCC & (1<<v) )  TFluVarIdxList[ NVarCC_Flu ++ ] = v;
+
+   NVarCC_Tot = NVarCC_Flu;
+#  ifdef GRAVITY
+   if ( ExchangePot )   NVarCC_Tot ++;
+#  endif
+
+#  ifdef MHD
+// TMagVarIdxList: target B field indices ( = [0 ... NCOMP_MAG-1] )
+   int NVarFC_Mag, *TMagVarIdxList;
+   TMagVarIdxList = new int [NCOMP_MAG];
+   NVarFC_Mag = 0;
+
+   for (int v=0; v<NCOMP_MAG; v++)
+      if ( TVarFC & (1<<v) )  TMagVarIdxList[ NVarFC_Mag ++ ] = v;
+#  else
+   const int NVarFC_Mag = 0;
+#  endif
+
+// overwrite parameters in the special modes POT_FOR_POISSON and POT_AFTER_REFINE
+#  ifdef GRAVITY
+   if ( GetBufMode == POT_FOR_POISSON  ||  GetBufMode == POT_AFTER_REFINE )
+   {
+      ExchangeFlu = false;
+      ExchangePot = true;
+#     ifdef MHD
+      ExchangeMag = false;
+#     endif
+
+      NVarCC_Flu  = 0;
+      NVarCC_Tot  = 1;
+#     ifdef MHD
+      NVarFC_Mag  = 0;
+#     endif
+   }
+#  endif
+
 
 // check
    if ( lv < 0  ||  lv >= NLEVEL )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "lv", lv );
 
-   if (  GetBufMode != COARSE_FINE_FLUX  &&  ( TVar & _TOTAL )  &&  ( FluSg != 0 && FluSg != 1 )  )
+   if (  ( GetBufMode == DATA_GENERAL || GetBufMode == DATA_AFTER_FIXUP || GetBufMode == DATA_AFTER_REFINE ||
+           GetBufMode == DATA_RESTRICT )  &&  NVarCC_Tot + NVarFC_Mag == 0  )
+      Aux_Error( ERROR_INFO, "no target variable is found !!\n" );
+
+   if ( GetBufMode == COARSE_FINE_FLUX  &&  NVarCC_Flu == 0 )
+      Aux_Error( ERROR_INFO, "no target flux is found !!\n" );
+
+   if ( ExchangeFlu  &&  ( FluSg != 0 && FluSg != 1 )  &&  GetBufMode != COARSE_FINE_FLUX )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "FluSg", FluSg );
 
+#  ifdef MHD
+   if ( ExchangeMag  &&  ( MagSg != 0 && MagSg != 1 )  )
+      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "MagSg", MagSg );
+#  endif
+
 #  ifdef GRAVITY
-   if (  GetBufMode != COARSE_FINE_FLUX  &&  ( TVar & _POTE )  &&  ( PotSg != 0 && PotSg != 1 )  )
+   if ( ExchangePot  &&  ( PotSg != 0 && PotSg != 1 )  )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "PotSg", PotSg );
 
-   if (  ( GetBufMode == DATA_GENERAL || GetBufMode == DATA_AFTER_FIXUP || GetBufMode == DATA_AFTER_REFINE ||
-           GetBufMode == DATA_RESTRICT )  &&  !( TVar & (_TOTAL|_POTE) )  )
-      Aux_Error( ERROR_INFO, "no suitable target variable is found --> missing (_TOTAL|_POTE) !!\n" );
-
-   if (  ( GetBufMode == POT_FOR_POISSON || GetBufMode == POT_AFTER_REFINE )  &&  !( TVar & _POTE )  )
+   if (  ( GetBufMode == POT_FOR_POISSON || GetBufMode == POT_AFTER_REFINE )  &&  !( TVarCC & _POTE )  )
       Aux_Error( ERROR_INFO, "no suitable target variable is found --> missing _POTE !!\n" );
 
-   if (  ( GetBufMode == POT_FOR_POISSON || GetBufMode == POT_AFTER_REFINE )  &&  ( TVar & ~_POTE )  )
+   if (  ( GetBufMode == POT_FOR_POISSON || GetBufMode == POT_AFTER_REFINE )  &&  ( TVarCC & ~_POTE )  )
       Aux_Error( ERROR_INFO, "modes \"%s\" only accept \"%s\" as the target variable !!\n",
                  "POT_FOR_POISSON and POT_AFTER_REFINE", "_POTE" );
+#  endif
 
-   if (  ( GetBufMode == DATA_GENERAL || GetBufMode == DATA_AFTER_FIXUP || GetBufMode == DATA_AFTER_REFINE ||
-           GetBufMode == POT_FOR_POISSON || GetBufMode == POT_AFTER_REFINE )  &&
-         ( ParaBuf < 0 || ParaBuf > PATCH_SIZE )  )
+   if (  ( GetBufMode == DATA_GENERAL || GetBufMode == DATA_AFTER_FIXUP || GetBufMode == DATA_AFTER_REFINE
+#          ifdef GRAVITY
+           || GetBufMode == POT_FOR_POISSON || GetBufMode == POT_AFTER_REFINE
+#          endif
+          )  &&  ( ParaBuf < 0 || ParaBuf > PATCH_SIZE )  )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d --> accepted range = [0 ... PATCH_SIZE] !!\n",
                  "ParaBuf", ParaBuf );
 
-#  else // #ifdef GRAVITY ... else ...
-   if (  ( GetBufMode == DATA_GENERAL || GetBufMode == DATA_AFTER_FIXUP || GetBufMode == DATA_AFTER_REFINE ||
-           GetBufMode == DATA_RESTRICT )  &&  !( TVar & _TOTAL )  )
-      Aux_Error( ERROR_INFO, "no suitable target variable is found --> missing _TOTAL !!\n" );
-
-   if (  ( GetBufMode == DATA_GENERAL || GetBufMode == DATA_AFTER_FIXUP || GetBufMode == DATA_AFTER_REFINE )  &&
-         ( ParaBuf < 0 || ParaBuf > PATCH_SIZE )  )
-      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d --> range=[0 ... PATCH_SIZE] !!\n",
-                 "ParaBuf", ParaBuf );
-#  endif // #ifdef GRAVITY ... else ...
-
-   if (  GetBufMode == COARSE_FINE_FLUX  &&  !( TVar & _FLUX_TOTAL )  )
-      Aux_Error( ERROR_INFO, "no suitable target variable is found --> missing _FLUX_TOTAL !!\n" );
-
    if ( GetBufMode == COARSE_FINE_FLUX  &&  !amr->WithFlux )
-   {
-      Aux_Message( stderr, "WARNING : mode COARSE_FINE_FLUX is useless since no flux is required !!\n" );
-      return;
-   }
+      Aux_Error( ERROR_INFO, "COARSE_FINE_FLUX failed since flux arrays are not allocated !!\n" );
 
-
-// determine the components to be prepared (TFluVarIdx : target fluid variable indices ( = [0 ... NCOMP_TOTAL-1/NFLUX_TOTAL-1] )
-   bool ExchangeFlu = ( GetBufMode == COARSE_FINE_FLUX ) ?
-                      TVar & _FLUX_TOTAL : TVar & _TOTAL;                        // whether or not to exchage the fluid data
-#  ifdef GRAVITY
-   bool ExchangePot = (  GetBufMode != COARSE_FINE_FLUX  &&  (TVar & _POTE)  );  // whether or not to exchange the potential data
+#  ifdef MHD
+   if ( GetBufMode == COARSE_FINE_ELECTRIC  &&  !amr->WithElectric )
+      Aux_Error( ERROR_INFO, "WARNING : COARSE_FINE_ELECTRIC failed since electric field arrays are not allocated !!\n" );
 #  endif
 
-   const int NFluid_Max = ( GetBufMode == COARSE_FINE_FLUX ) ? NFLUX_TOTAL : NCOMP_TOTAL;
-   int NVar_Flu, NVar_Tot, TFluVarIdx, *TFluVarIdxList;
-   TFluVarIdxList = new int [NFluid_Max];
-   NVar_Flu = 0;
 
-   for (int v=0; v<NFluid_Max; v++)
-      if ( TVar & (1<<v) )    TFluVarIdxList[ NVar_Flu++ ] = v;
-
-   NVar_Tot = NVar_Flu;
-#  ifdef GRAVITY
-   if ( ExchangePot )   NVar_Tot ++;
-
-   if ( GetBufMode == POT_FOR_POISSON  ||  GetBufMode == POT_AFTER_REFINE )
-   {
-      ExchangeFlu = false;
-      ExchangePot = true;
-      NVar_Flu    = 0;
-      NVar_Tot    = 1;
-   }
+// _X : for exchanging data after the flux fix-up, which has ParaBuf=1
+   const int DataUnit_Flux = SQR( PS1 )*NVarCC_Flu;
+#  ifdef MHD
+   const int ParaBufP1     = ParaBuf + 1;
 #  endif
 
-// check again
-   if ( NVar_Tot == 0  ||  ( GetBufMode == COARSE_FINE_FLUX && NVar_Flu == 0 )  )
-   {
-      Aux_Message( stderr, "WARNING : no target variable is found !!\n" );
-      return;
-   }
-
-
-// _X : for exchanging data after the FLUX fix-up, which has ParaBuf=1
-   const int DataUnit_Flux = PS1*PS1*NVar_Flu;
-
-   int   NSend_Total, NRecv_Total, SPID, RPID, SSib, RSib, Counter;
+   int   NSend_Total, NRecv_Total;
    int   DataUnit_Buf[27], LoopStart[27][3], LoopEnd[27][3];
    int   LoopStart_X[6][3], LoopEnd_X[6][3];
-   real *SendPtr=NULL, *RecvPtr=NULL;
    int  *Send_NList=NULL, *Recv_NList=NULL, *Send_NResList=NULL, *Recv_NResList=NULL;
    int **Send_IDList=NULL, **Recv_IDList=NULL, **Send_IDList_IdxTable=NULL, **Recv_IDList_IdxTable=NULL;
    int **Send_SibList=NULL, **Recv_SibList=NULL;
-   real (*FluxPtr)[PS1][PS1]=NULL;
 
    int *Send_NCount = new int [MPI_NRank];
    int *Recv_NCount = new int [MPI_NRank];
@@ -166,7 +193,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 // ============================================================================================================
    switch ( GetBufMode )
    {
-      case DATA_GENERAL :        // general-purpose
+      case DATA_GENERAL :           // general-purpose
          Send_NList           = amr->LB->SendH_NList          [lv];
          Send_IDList          = amr->LB->SendH_IDList         [lv];
          Send_SibList         = amr->LB->SendH_SibList        [lv];
@@ -176,7 +203,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
          Recv_SibList         = amr->LB->RecvH_SibList        [lv];
          break;
 
-      case DATA_AFTER_REFINE :   // data after refine
+      case DATA_AFTER_REFINE :      // data after refine
          Send_NList           = amr->LB->SendH_NList          [lv];
          Send_IDList          = amr->LB->SendH_IDList         [lv];
          Send_SibList         = amr->LB->SendH_SibDiffList    [lv];
@@ -186,7 +213,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
          Recv_SibList         = amr->LB->RecvH_SibDiffList    [lv];
          break;
 
-      case DATA_AFTER_FIXUP :    // data after fix-up
+      case DATA_AFTER_FIXUP :       // data after fix-up
          Send_NList           = amr->LB->SendX_NList          [lv];
          Send_NResList        = amr->LB->SendX_NResList       [lv];
          Send_IDList          = amr->LB->SendX_IDList         [lv];
@@ -197,7 +224,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
          Recv_SibList         = amr->LB->RecvX_SibList        [lv];
          break;
 
-      case DATA_RESTRICT :       // restricted data
+      case DATA_RESTRICT :          // restricted data
          Send_NList           = amr->LB->SendR_NList          [lv];
          Send_IDList          = amr->LB->SendR_IDList         [lv];
          Send_IDList_IdxTable = amr->LB->SendR_IDList_IdxTable[lv];
@@ -206,7 +233,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
          break;
 
 #     ifdef GRAVITY
-      case POT_FOR_POISSON :     // potential for the Poisson solver
+      case POT_FOR_POISSON :        // potential for the Poisson solver
          Send_NList           = amr->LB->SendG_NList          [lv];
          Send_IDList          = amr->LB->SendG_IDList         [lv];
          Send_SibList         = amr->LB->SendG_SibList        [lv];
@@ -216,7 +243,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
          Recv_SibList         = amr->LB->RecvG_SibList        [lv];
          break;
 
-      case POT_AFTER_REFINE :    // potential after refine for the Poisson solver
+      case POT_AFTER_REFINE :       // potential after refine for the Poisson solver
          Send_NList           = amr->LB->SendG_NList          [lv];
          Send_IDList          = amr->LB->SendG_IDList         [lv];
          Send_SibList         = amr->LB->SendG_SibDiffList    [lv];
@@ -227,7 +254,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
          break;
 #     endif // #ifdef GRAVITY
 
-      case COARSE_FINE_FLUX :    // hydro fluxes
+      case COARSE_FINE_FLUX :       // hydro fluxes
          Send_NList           = amr->LB->SendF_NList          [lv];
          Send_IDList          = amr->LB->SendF_IDList         [lv];
          Send_SibList         = amr->LB->SendF_SibList        [lv];
@@ -236,6 +263,12 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
          Recv_IDList_IdxTable = amr->LB->RecvF_IDList_IdxTable[lv];
          Recv_SibList         = amr->LB->RecvF_SibList        [lv];
          break;
+
+#     ifdef MHD
+      case COARSE_FINE_ELECTRIC :   // MHD electric field
+         Aux_Error( ERROR_INFO, "NOT SUPPORTED YET !!\n" );
+         break;
+#     endif
 
       default:
          Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "GetBufMode", GetBufMode );
@@ -247,9 +280,9 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 // ============================================================================================================
    switch ( GetBufMode )
    {
-      case DATA_GENERAL: case DATA_AFTER_REFINE:
+      case DATA_GENERAL : case DATA_AFTER_REFINE :
 #     ifdef GRAVITY
-      case POT_FOR_POISSON : case POT_AFTER_REFINE:
+      case POT_FOR_POISSON : case POT_AFTER_REFINE :
 #     endif
 //    ----------------------------------------------
 //       loop range
@@ -264,10 +297,50 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
          LoopEnd  [26][0] = LoopEnd  [26][1] = LoopEnd  [26][2] = PS1;
 
 //       MPI count array
-         for (int s= 0; s< 6; s++)  DataUnit_Buf[ s] = NVar_Tot*PS1    *PS1    *ParaBuf;  // sibling 0 ~ 5
-         for (int s= 6; s<18; s++)  DataUnit_Buf[ s] = NVar_Tot*PS1    *ParaBuf*ParaBuf;  // sibling 6 ~ 17
-         for (int s=18; s<26; s++)  DataUnit_Buf[ s] = NVar_Tot*ParaBuf*ParaBuf*ParaBuf;  // sibling 18 ~ 25
-                                    DataUnit_Buf[26] = NVar_Tot*PS1    *PS1    *PS1;      // entire patch
+         for (int s= 0; s< 6; s++)  DataUnit_Buf[ s] = NVarCC_Tot * PS1     * PS1     * ParaBuf;   // sibling 0 ~ 5
+         for (int s= 6; s<18; s++)  DataUnit_Buf[ s] = NVarCC_Tot * PS1     * ParaBuf * ParaBuf;   // sibling 6 ~ 17
+         for (int s=18; s<26; s++)  DataUnit_Buf[ s] = NVarCC_Tot * ParaBuf * ParaBuf * ParaBuf;   // sibling 18 ~ 25
+                                    DataUnit_Buf[26] = NVarCC_Tot * PS1     * PS1     * PS1;       // entire patch
+
+#        ifdef MHD
+         for (int v=0; v<NVarFC_Mag; v++)
+         {
+            const int TMagVarIdx = TMagVarIdxList[v];
+
+            switch ( TMagVarIdx )
+            {
+               case MAGX :
+                  for (int s= 0; s< 2; s++)  DataUnit_Buf[s] += PS1   * PS1     * ParaBufP1;
+                  for (int s= 2; s< 6; s++)  DataUnit_Buf[s] += PS1P1 * PS1     * ParaBuf;
+                  for (int s= 6; s<10; s++)  DataUnit_Buf[s] += PS1   * ParaBuf * ParaBufP1;
+                  for (int s=10; s<14; s++)  DataUnit_Buf[s] += PS1P1 * ParaBuf * ParaBuf;
+                  for (int s=14; s<18; s++)  DataUnit_Buf[s] += PS1   * ParaBuf * ParaBufP1;
+                  break;
+
+               case MAGY :
+                  for (int s= 0; s< 2; s++)  DataUnit_Buf[s] += PS1P1 * PS1     * ParaBuf;
+                  for (int s= 2; s< 4; s++)  DataUnit_Buf[s] += PS1   * PS1     * ParaBufP1;
+                  for (int s= 4; s< 6; s++)  DataUnit_Buf[s] += PS1P1 * PS1     * ParaBuf;
+                  for (int s= 6; s<14; s++)  DataUnit_Buf[s] += PS1   * ParaBuf * ParaBufP1;
+                  for (int s=14; s<18; s++)  DataUnit_Buf[s] += PS1P1 * ParaBuf * ParaBuf;
+                  break;
+
+               case MAGZ :
+                  for (int s= 0; s< 4; s++)  DataUnit_Buf[s] += PS1P1 * PS1     * ParaBuf;
+                  for (int s= 4; s< 6; s++)  DataUnit_Buf[s] += PS1   * PS1     * ParaBufP1;
+                  for (int s= 6; s<10; s++)  DataUnit_Buf[s] += PS1P1 * ParaBuf * ParaBuf;
+                  for (int s=10; s<18; s++)  DataUnit_Buf[s] += PS1   * ParaBuf * ParaBufP1;
+                  break;
+
+               default:
+                  Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TMagVarIdx", TMagVarIdx );
+                  break;
+            } // switch ( TMagVarIdx )
+         } // for (int v=0; v<NVarFC_Mag; v++)
+
+         for (int s=18; s<26; s++)  DataUnit_Buf[ s] += NVarFC_Mag*ParaBufP1*SQR( ParaBuf );
+                                    DataUnit_Buf[26] += NVarFC_Mag*PS1P1*SQR( PS1 );
+#        endif // #ifdef MHD
 
          for (int r=0; r<MPI_NRank; r++)
          {
@@ -288,7 +361,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
                   if ( Recv_SibList[r][t] & (1<<s) )  Recv_NCount[r] += DataUnit_Buf[s];
             }
          }
-         break; // case DATA_GENERAL: case DATA_AFTER_REFINE: case POT_FOR_POISSON : case POT_AFTER_REFINE:
+         break; // cases DATA_GENERAL, DATA_AFTER_REFINE, POT_FOR_POISSON, POT_AFTER_REFINE
 
 
       case DATA_AFTER_FIXUP :
@@ -313,10 +386,50 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
          }
 
 //       MPI count array
-         for (int s= 0; s< 6; s++)  DataUnit_Buf[ s] = NVar_Tot*PS1    *PS1    *ParaBuf;  // sibling 0 ~ 5
-         for (int s= 6; s<18; s++)  DataUnit_Buf[ s] = NVar_Tot*PS1    *ParaBuf*ParaBuf;  // sibling 6 ~ 17
-         for (int s=18; s<26; s++)  DataUnit_Buf[ s] = NVar_Tot*ParaBuf*ParaBuf*ParaBuf;  // sibling 18 ~ 25
-                                    DataUnit_Buf[26] = NVar_Tot*PS1    *PS1    *PS1;      // entire patch
+         for (int s= 0; s< 6; s++)  DataUnit_Buf[ s] = NVarCC_Tot * PS1     * PS1     * ParaBuf;   // sibling 0 ~ 5
+         for (int s= 6; s<18; s++)  DataUnit_Buf[ s] = NVarCC_Tot * PS1     * ParaBuf * ParaBuf;   // sibling 6 ~ 17
+         for (int s=18; s<26; s++)  DataUnit_Buf[ s] = NVarCC_Tot * ParaBuf * ParaBuf * ParaBuf;   // sibling 18 ~ 25
+                                    DataUnit_Buf[26] = NVarCC_Tot * PS1     * PS1     * PS1;       // entire patch
+
+#        ifdef MHD
+         for (int v=0; v<NVarFC_Mag; v++)
+         {
+            const int TMagVarIdx = TMagVarIdxList[v];
+
+            switch ( TMagVarIdx )
+            {
+               case MAGX :
+                  for (int s= 0; s< 2; s++)  DataUnit_Buf[s] += PS1   * PS1     * ParaBufP1;
+                  for (int s= 2; s< 6; s++)  DataUnit_Buf[s] += PS1P1 * PS1     * ParaBuf;
+                  for (int s= 6; s<10; s++)  DataUnit_Buf[s] += PS1   * ParaBuf * ParaBufP1;
+                  for (int s=10; s<14; s++)  DataUnit_Buf[s] += PS1P1 * ParaBuf * ParaBuf;
+                  for (int s=14; s<18; s++)  DataUnit_Buf[s] += PS1   * ParaBuf * ParaBufP1;
+                  break;
+
+               case MAGY :
+                  for (int s= 0; s< 2; s++)  DataUnit_Buf[s] += PS1P1 * PS1     * ParaBuf;
+                  for (int s= 2; s< 4; s++)  DataUnit_Buf[s] += PS1   * PS1     * ParaBufP1;
+                  for (int s= 4; s< 6; s++)  DataUnit_Buf[s] += PS1P1 * PS1     * ParaBuf;
+                  for (int s= 6; s<14; s++)  DataUnit_Buf[s] += PS1   * ParaBuf * ParaBufP1;
+                  for (int s=14; s<18; s++)  DataUnit_Buf[s] += PS1P1 * ParaBuf * ParaBuf;
+                  break;
+
+               case MAGZ :
+                  for (int s= 0; s< 4; s++)  DataUnit_Buf[s] += PS1P1 * PS1     * ParaBuf;
+                  for (int s= 4; s< 6; s++)  DataUnit_Buf[s] += PS1   * PS1     * ParaBufP1;
+                  for (int s= 6; s<10; s++)  DataUnit_Buf[s] += PS1P1 * ParaBuf * ParaBuf;
+                  for (int s=10; s<18; s++)  DataUnit_Buf[s] += PS1   * ParaBuf * ParaBufP1;
+                  break;
+
+               default:
+                  Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TMagVarIdx", TMagVarIdx );
+                  break;
+            } // switch ( TMagVarIdx )
+         } // for (int v=0; v<NVarFC_Mag; v++)
+
+         for (int s=18; s<26; s++)  DataUnit_Buf[ s] += NVarFC_Mag*ParaBufP1*SQR( ParaBuf );
+                                    DataUnit_Buf[26] += NVarFC_Mag*PS1P1*SQR( PS1 );
+#        endif // #ifdef MHD
 
          for (int r=0; r<MPI_NRank; r++)
          {
@@ -341,17 +454,17 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
             for (int s=0; s<6; s++)
                if ( Recv_SibList[r][t] & (1<<s) )  Recv_NCount[r] += DataUnit_Flux;
          }
-         break; // case DATA_AFTER_FIXUP :
+         break; // case DATA_AFTER_FIXUP
 
 
       case DATA_RESTRICT :
 //    ----------------------------------------------
          for (int r=0; r<MPI_NRank; r++)
          {
-            Send_NCount[r] = Send_NList[r]*PS1*PS1*PS1*NVar_Tot;
-            Recv_NCount[r] = Recv_NList[r]*PS1*PS1*PS1*NVar_Tot;
+            Send_NCount[r] = Send_NList[r]*CUBE( PS1 )*NVarCC_Tot;
+            Recv_NCount[r] = Recv_NList[r]*CUBE( PS1 )*NVarCC_Tot;
          }
-         break; // case DATA_RESTRICT :
+         break; // case DATA_RESTRICT
 
 
       case COARSE_FINE_FLUX :
@@ -361,7 +474,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
             Send_NCount[r] = Send_NList[r]*DataUnit_Flux;
             Recv_NCount[r] = Recv_NList[r]*DataUnit_Flux;
          }
-         break; // COARSE_FINE_FLUX
+         break; // case COARSE_FINE_FLUX
    } // switch ( GetBufMode )
 
 
@@ -393,27 +506,27 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 
    switch ( GetBufMode )
    {
-      case DATA_GENERAL: case DATA_AFTER_REFINE:
+      case DATA_GENERAL : case DATA_AFTER_REFINE :
 #     ifdef GRAVITY
-      case POT_FOR_POISSON : case POT_AFTER_REFINE:
+      case POT_FOR_POISSON : case POT_AFTER_REFINE :
 #     endif
 //    ----------------------------------------------
-#        pragma omp parallel for private( SendPtr, Counter, SPID, SSib, TFluVarIdx ) schedule( runtime )
+#        pragma omp parallel for schedule( runtime )
          for (int r=0; r<MPI_NRank; r++)
          {
-            SendPtr = SendBuf + Send_NDisp[r];
-            Counter = 0;
+            real *SendPtr = SendBuf + Send_NDisp[r];
+            int   Counter = 0;
 
             for (int t=0; t<Send_NList[r]; t++)
             {
-               SPID = Send_IDList [r][t];    // both SPID and SSib are sorted
-               SSib = Send_SibList[r][t];
+               const int SPID = Send_IDList [r][t];   // both SPID and SSib are sorted
+               const int SSib = Send_SibList[r][t];
 
 #              ifdef GAMER_DEBUG
                if ( ExchangeFlu )
                {
                   if ( amr->patch[FluSg][lv][SPID]->fluid == NULL )
-                     Aux_Error( ERROR_INFO, "Send mode %d, ptr[%d][%d][%d]->fluid has not been allocated !!\n",
+                     Aux_Error( ERROR_INFO, "Send mode %d, patch[%d][%d][%d]->fluid has not been allocated !!\n",
                                 GetBufMode, FluSg, lv, SPID );
 
                   if ( SSib == 0  &&  GetBufMode != DATA_AFTER_REFINE )
@@ -425,7 +538,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
                if ( ExchangePot )
                {
                   if ( amr->patch[PotSg][lv][SPID]->pot == NULL )
-                     Aux_Error( ERROR_INFO, "Send mode %d, ptr[%d][%d][%d]->pot has not been allocated !!\n",
+                     Aux_Error( ERROR_INFO, "Send mode %d, patch[%d][%d][%d]->pot has not been allocated !!\n",
                                 GetBufMode, PotSg, lv, SPID );
 
                   if ( SSib == 0  &&  GetBufMode != POT_AFTER_REFINE )
@@ -433,6 +546,19 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
                                 GetBufMode, t, r, SPID );
                }
 #              endif // #ifdef GRAVITY
+
+#              ifdef MHD
+               if ( ExchangeMag )
+               {
+                  if ( amr->patch[MagSg][lv][SPID]->magnetic == NULL )
+                     Aux_Error( ERROR_INFO, "Send mode %d, patch[%d][%d][%d]->magnetic has not been allocated !!\n",
+                                GetBufMode, MagSg, lv, SPID );
+
+                  if ( SSib == 0  &&  GetBufMode != DATA_AFTER_REFINE )
+                     Aux_Error( ERROR_INFO, "Send mode %d, t %d, TRank %d, SPID %d, SSib == 0 !!\n",
+                                GetBufMode, t, r, SPID );
+               }
+#              endif // #ifdef MHD
 #              endif // #ifdef GAMER_DEBUG
 
                if ( SSib )
@@ -442,9 +568,9 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
                   {
 //                   fluid data
                      if ( ExchangeFlu )
-                     for (int v=0; v<NVar_Flu; v++)
+                     for (int v=0; v<NVarCC_Flu; v++)
                      {
-                        TFluVarIdx = TFluVarIdxList[v];
+                        const int TFluVarIdx = TFluVarIdxList[v];
 
                         for (int k=LoopStart[s][2]; k<LoopEnd[s][2]; k++)
                         for (int j=LoopStart[s][1]; j<LoopEnd[s][1]; j++)
@@ -452,8 +578,8 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
                            SendPtr[ Counter ++ ] = amr->patch[FluSg][lv][SPID]->fluid[TFluVarIdx][k][j][i];
                      }
 
-#                    ifdef GRAVITY
 //                   potential data
+#                    ifdef GRAVITY
                      if ( ExchangePot )
                      {
                         for (int k=LoopStart[s][2]; k<LoopEnd[s][2]; k++)
@@ -462,35 +588,82 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
                            SendPtr[ Counter ++ ] = amr->patch[PotSg][lv][SPID]->pot[k][j][i];
                      }
 #                    endif
+
+//                   magnetic field data
+#                    ifdef MHD
+                     if ( ExchangeMag )
+                     for (int v=0; v<NVarFC_Mag; v++)
+                     {
+                        const int TMagVarIdx = TMagVarIdxList[v];
+
+                        switch ( TMagVarIdx )
+                        {
+                           case MAGX :
+                              for (int k=LoopStart[s][2]; k< LoopEnd[s][2]; k++)
+                              for (int j=LoopStart[s][1]; j< LoopEnd[s][1]; j++)
+                              for (int i=LoopStart[s][0]; i<=LoopEnd[s][0]; i++)
+                              {
+                                 const int idxB = IDX321_BX( i, j, k, PS1, PS1 );
+                                 SendPtr[ Counter ++ ] = amr->patch[MagSg][lv][SPID]->magnetic[TMagVarIdx][idxB];
+                              }
+                              break;
+
+                           case MAGY :
+                              for (int k=LoopStart[s][2]; k< LoopEnd[s][2]; k++)
+                              for (int j=LoopStart[s][1]; j<=LoopEnd[s][1]; j++)
+                              for (int i=LoopStart[s][0]; i< LoopEnd[s][0]; i++)
+                              {
+                                 const int idxB = IDX321_BY( i, j, k, PS1, PS1 );
+                                 SendPtr[ Counter ++ ] = amr->patch[MagSg][lv][SPID]->magnetic[TMagVarIdx][idxB];
+                              }
+                              break;
+
+                            case MAGZ :
+                              for (int k=LoopStart[s][2]; k<=LoopEnd[s][2]; k++)
+                              for (int j=LoopStart[s][1]; j< LoopEnd[s][1]; j++)
+                              for (int i=LoopStart[s][0]; i< LoopEnd[s][0]; i++)
+                              {
+                                 const int idxB = IDX321_BZ( i, j, k, PS1, PS1 );
+                                 SendPtr[ Counter ++ ] = amr->patch[MagSg][lv][SPID]->magnetic[TMagVarIdx][idxB];
+                              }
+                              break;
+
+                            default:
+                              Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TMagVarIdx", TMagVarIdx );
+                              break;
+                        } // switch ( TMagVarIdx )
+                     } // for (int v=0; v<NVarFC_Mag; v++)
+#                    endif // #ifdef MHD
+
                   } // if ( SSib & (1<<s) )
                } // for (int s=0; s<27; s++)
             } // for (int t=0; t<Send_NList[r]; t++)
          } // for (int r=0; r<MPI_NRank; r++)
-         break; // case DATA_GENERAL: case DATA_AFTER_REFINE: case POT_FOR_POISSON : case POT_AFTER_REFINE:
+         break; // cases DATA_GENERAL, DATA_AFTER_REFINE, POT_FOR_POISSON, POT_AFTER_REFINE
 
 
       case DATA_AFTER_FIXUP :
 //    ----------------------------------------------
-#        pragma omp parallel for private( SendPtr, Counter, SPID, SSib, TFluVarIdx ) schedule( runtime )
+#        pragma omp parallel for schedule( runtime )
          for (int r=0; r<MPI_NRank; r++)
          {
-            SendPtr = SendBuf + Send_NDisp[r];
-            Counter = 0;
+            real *SendPtr = SendBuf + Send_NDisp[r];
+            int   Counter = 0;
 
 //          for restriction fix-up
             for (int t=0; t<Send_NResList[r]; t++)
             {
-               SPID = Send_IDList [r][t];
-               SSib = Send_SibList[r][t];
+               const int SPID = Send_IDList [r][t];
+               const int SSib = Send_SibList[r][t];
 
 #              ifdef GAMER_DEBUG
                if ( ExchangeFlu  &&  amr->patch[FluSg][lv][SPID]->fluid == NULL )
-                  Aux_Error( ERROR_INFO, "Send mode %d, ptr[%d][%d][%d]->fluid has not been allocated !!\n",
+                  Aux_Error( ERROR_INFO, "Send mode %d, patch[%d][%d][%d]->fluid has not been allocated !!\n",
                              GetBufMode, FluSg, lv, SPID );
 
 #              ifdef GRAVITY
                if ( ExchangePot  &&  amr->patch[PotSg][lv][SPID]->pot == NULL )
-                  Aux_Error( ERROR_INFO, "Send mode %d, ptr[%d][%d][%d]->pot has not been allocated !!\n",
+                  Aux_Error( ERROR_INFO, "Send mode %d, patch[%d][%d][%d]->pot has not been allocated !!\n",
                              GetBufMode, PotSg, lv, SPID );
 #              endif
 
@@ -505,9 +678,9 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
                   {
 //                   fluid data
                      if ( ExchangeFlu )
-                     for (int v=0; v<NVar_Flu; v++)
+                     for (int v=0; v<NVarCC_Flu; v++)
                      {
-                        TFluVarIdx = TFluVarIdxList[v];
+                        const int TFluVarIdx = TFluVarIdxList[v];
 
                         for (int k=LoopStart[s][2]; k<LoopEnd[s][2]; k++)
                         for (int j=LoopStart[s][1]; j<LoopEnd[s][1]; j++)
@@ -515,8 +688,8 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
                            SendPtr[ Counter ++ ] = amr->patch[FluSg][lv][SPID]->fluid[TFluVarIdx][k][j][i];
                      }
 
-#                    ifdef GRAVITY
 //                   potential data
+#                    ifdef GRAVITY
                      if ( ExchangePot )
                      {
                         for (int k=LoopStart[s][2]; k<LoopEnd[s][2]; k++)
@@ -533,12 +706,12 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 //          for flux fix-up
             for (int t=Send_NResList[r]; t<Send_NList[r]; t++)
             {
-               SPID = Send_IDList [r][t];    // both SPID and SSib are sorted
-               SSib = Send_SibList[r][t];
+               const int SPID = Send_IDList [r][t];   // both SPID and SSib are sorted
+               const int SSib = Send_SibList[r][t];
 
 #              ifdef GAMER_DEBUG
                if ( ExchangeFlu  &&  amr->patch[FluSg][lv][SPID]->fluid == NULL )
-                  Aux_Error( ERROR_INFO, "Send mode %d, ptr[%d][%d][%d]->fluid has not been allocated !!\n",
+                  Aux_Error( ERROR_INFO, "Send mode %d, patch[%d][%d][%d]->fluid has not been allocated !!\n",
                              GetBufMode, FluSg, lv, SPID );
 
                if ( SSib == 0 )
@@ -552,9 +725,9 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
                   {
 //                   fluid data
                      if ( ExchangeFlu )
-                     for (int v=0; v<NVar_Flu; v++)
+                     for (int v=0; v<NVarCC_Flu; v++)
                      {
-                        TFluVarIdx = TFluVarIdxList[v];
+                        const int TFluVarIdx = TFluVarIdxList[v];
 
                         for (int k=LoopStart_X[s][2]; k<LoopEnd_X[s][2]; k++)
                         for (int j=LoopStart_X[s][1]; j<LoopEnd_X[s][1]; j++)
@@ -565,90 +738,90 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
                } // for (int s=0; s<6; s++)
             } //for (int t=Send_NResList[r]; t<Send_NList[r]; t++)
          } // for (int r=0; r<MPI_NRank; r++)
-         break; // case DATA_AFTER_FIXUP :
+         break; // case DATA_AFTER_FIXUP
 
 
       case DATA_RESTRICT :
 //    ----------------------------------------------
-#        pragma omp parallel for private( SendPtr, SPID, TFluVarIdx ) schedule( runtime )
+#        pragma omp parallel for schedule( runtime )
          for (int r=0; r<MPI_NRank; r++)
          {
-            SendPtr = SendBuf + Send_NDisp[r];
+            real *SendPtr = SendBuf + Send_NDisp[r];
 
             for (int t=0; t<Send_NList[r]; t++)
             {
-               SPID = Send_IDList[r][ Send_IDList_IdxTable[r][t] ];
+               const int SPID = Send_IDList[r][ Send_IDList_IdxTable[r][t] ];
 
 #              ifdef GAMER_DEBUG
                if ( ExchangeFlu  &&  amr->patch[FluSg][lv][SPID]->fluid == NULL )
-                  Aux_Error( ERROR_INFO, "Send mode %d, ptr[%d][%d][%d]->fluid has not been allocated !!\n",
+                  Aux_Error( ERROR_INFO, "Send mode %d, patch[%d][%d][%d]->fluid has not been allocated !!\n",
                              GetBufMode, FluSg, lv, SPID );
 
 #              ifdef GRAVITY
                if ( ExchangePot  &&  amr->patch[PotSg][lv][SPID]->pot == NULL )
-                  Aux_Error( ERROR_INFO, "Send mode %d, ptr[%d][%d][%d]->pot has not been allocated !!\n",
+                  Aux_Error( ERROR_INFO, "Send mode %d, patch[%d][%d][%d]->pot has not been allocated !!\n",
                              GetBufMode, PotSg, lv, SPID );
 #              endif
 #              endif // #ifdef GAMER_DEBUG
 
 //             fluid data
                if ( ExchangeFlu )
-               for (int v=0; v<NVar_Flu; v++)
+               for (int v=0; v<NVarCC_Flu; v++)
                {
-                  TFluVarIdx = TFluVarIdxList[v];
+                  const int TFluVarIdx = TFluVarIdxList[v];
 
                   memcpy( SendPtr, &amr->patch[FluSg][lv][SPID]->fluid[TFluVarIdx][0][0][0],
                           PS1*PS1*PS1*sizeof(real) );
 
-                  SendPtr += PS1*PS1*PS1;
+                  SendPtr += CUBE( PS1 );
                }
 
-#              ifdef GRAVITY
 //             potential data
+#              ifdef GRAVITY
                if ( ExchangePot )
                {
                   memcpy( SendPtr, &amr->patch[PotSg][lv][SPID]->pot[0][0][0],
                           PS1*PS1*PS1*sizeof(real) );
 
-                  SendPtr += PS1*PS1*PS1;
+                  SendPtr += CUBE( PS1 );
                }
 #              endif
             } // for (int t=0; t<Send_NList[r]; t++)
          } // for (int r=0; r<MPI_NRank; r++)
-         break; // case DATA_RESTRICT :
+         break; // case DATA_RESTRICT
 
 
       case COARSE_FINE_FLUX :
 //    ----------------------------------------------
-#        pragma omp parallel for private( SendPtr, Counter, SPID, SSib, FluxPtr, TFluVarIdx ) schedule( runtime )
+#        pragma omp parallel for schedule( runtime )
          for (int r=0; r<MPI_NRank; r++)
          {
-            SendPtr = SendBuf + Send_NDisp[r];
-            Counter = 0;
+            real *SendPtr = SendBuf + Send_NDisp[r];
+            int   Counter = 0;
 
             for (int t=0; t<Send_NList[r]; t++)
             {
-               SPID    = Send_IDList [r][t];
-               SSib    = Send_SibList[r][t];
-               FluxPtr = amr->patch[0][lv][SPID]->flux[SSib];
+               const int SPID = Send_IDList [r][t];
+               const int SSib = Send_SibList[r][t];
+               const real (*FluxPtr)[PS1][PS1] = amr->patch[0][lv][SPID]->flux[SSib];
 
 #              ifdef GAMER_DEBUG
                if ( FluxPtr == NULL )
-                  Aux_Error( ERROR_INFO, "Send mode %d, ptr[0][%d][%d]->flux[%d] has not been allocated !!\n",
+                  Aux_Error( ERROR_INFO, "Send mode %d, patch[0][%d][%d]->flux[%d] has not been allocated !!\n",
                              GetBufMode, lv, SPID, SSib );
 #              endif
 
-               for (int v=0; v<NVar_Flu; v++)
+               for (int v=0; v<NVarCC_Flu; v++)
                {
-                  TFluVarIdx = TFluVarIdxList[v];
+                  const int TFluVarIdx = TFluVarIdxList[v];
 
                   memcpy( SendPtr, FluxPtr[TFluVarIdx], PS1*PS1*sizeof(real) );
 
-                  SendPtr += PS1*PS1;
+                  SendPtr += SQR( PS1 );
                }
             } // for (int t=0; t<Send_NList[r]; t++)
          } // for (int r=0; r<MPI_NRank; r++)
-         break; // case COARSE_FINE_FLUX :
+         break; // case COARSE_FINE_FLUX
 
 
       default:
@@ -695,27 +868,27 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 
    switch ( GetBufMode )
    {
-      case DATA_GENERAL: case DATA_AFTER_REFINE:
+      case DATA_GENERAL : case DATA_AFTER_REFINE :
 #     ifdef GRAVITY
-      case POT_FOR_POISSON : case POT_AFTER_REFINE:
+      case POT_FOR_POISSON : case POT_AFTER_REFINE :
 #     endif
 //    ----------------------------------------------
-#        pragma omp parallel for private( RecvPtr, Counter, RPID, RSib, TFluVarIdx ) schedule( runtime )
+#        pragma omp parallel for schedule( runtime )
          for (int r=0; r<MPI_NRank; r++)
          {
-            RecvPtr = RecvBuf + Recv_NDisp[r];
-            Counter = 0;
+            real *RecvPtr = RecvBuf + Recv_NDisp[r];
+            int   Counter = 0;
 
             for (int t=0; t<Recv_NList[r]; t++)
             {
-               RPID = Recv_IDList [r][ Recv_IDList_IdxTable[r][t] ]; // Recv_IDList is unsorted
-               RSib = Recv_SibList[r][t];                            // Recv_SibList is sorted
+               const int RPID = Recv_IDList [r][ Recv_IDList_IdxTable[r][t] ];   // Recv_IDList is unsorted
+               const int RSib = Recv_SibList[r][t];                              // Recv_SibList is sorted
 
 #              ifdef GAMER_DEBUG
                if ( ExchangeFlu )
                {
                   if ( amr->patch[FluSg][lv][RPID]->fluid == NULL )
-                     Aux_Error( ERROR_INFO, "Recv mode %d, ptr[%d][%d][%d]->fluid has not been allocated !!\n",
+                     Aux_Error( ERROR_INFO, "Recv mode %d, patch[%d][%d][%d]->fluid has not been allocated !!\n",
                                 GetBufMode, FluSg, lv, RPID );
 
                   if ( RSib == 0  &&  GetBufMode != DATA_AFTER_REFINE )
@@ -727,7 +900,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
                if ( ExchangePot )
                {
                   if ( amr->patch[PotSg][lv][RPID]->pot == NULL )
-                     Aux_Error( ERROR_INFO, "Recv mode %d, ptr[%d][%d][%d]->pot has not been allocated !!\n",
+                     Aux_Error( ERROR_INFO, "Recv mode %d, patch[%d][%d][%d]->pot has not been allocated !!\n",
                                 GetBufMode, PotSg, lv, RPID );
 
                   if ( RSib == 0  &&  GetBufMode != POT_AFTER_REFINE )
@@ -735,6 +908,19 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
                                 GetBufMode, t, r, RPID );
                }
 #              endif // #ifdef GRAVITY
+
+#              ifdef MHD
+               if ( ExchangeMag )
+               {
+                  if ( amr->patch[MagSg][lv][RPID]->magnetic == NULL )
+                     Aux_Error( ERROR_INFO, "Recv mode %d, patch[%d][%d][%d]->magnetic has not been allocated !!\n",
+                                GetBufMode, MagSg, lv, RPID );
+
+                  if ( RSib == 0  &&  GetBufMode != DATA_AFTER_REFINE )
+                     Aux_Error( ERROR_INFO, "Recv mode %d, t %d, TRank %d, RPID %d, RSib == 0 !!\n",
+                                GetBufMode, t, r, RPID );
+               }
+#              endif // #ifdef MHD
 #              endif // #ifdef GAMER_DEBUG
 
                if ( RSib )
@@ -744,9 +930,9 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
                   {
 //                   fluid data
                      if ( ExchangeFlu )
-                     for (int v=0; v<NVar_Flu; v++)
+                     for (int v=0; v<NVarCC_Flu; v++)
                      {
-                        TFluVarIdx = TFluVarIdxList[v];
+                        const int TFluVarIdx = TFluVarIdxList[v];
 
                         for (int k=LoopStart[s][2]; k<LoopEnd[s][2]; k++)
                         for (int j=LoopStart[s][1]; j<LoopEnd[s][1]; j++)
@@ -754,8 +940,8 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
                            amr->patch[FluSg][lv][RPID]->fluid[TFluVarIdx][k][j][i] = RecvPtr[ Counter ++ ];
                      }
 
-#                    ifdef GRAVITY
 //                   potential data
+#                    ifdef GRAVITY
                      if ( ExchangePot )
                      {
                         for (int k=LoopStart[s][2]; k<LoopEnd[s][2]; k++)
@@ -764,35 +950,82 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
                            amr->patch[PotSg][lv][RPID]->pot[k][j][i] = RecvPtr[ Counter ++ ];
                      }
 #                    endif
+
+//                   magnetic field data
+#                    ifdef MHD
+                     if ( ExchangeMag )
+                     for (int v=0; v<NVarFC_Mag; v++)
+                     {
+                        const int TMagVarIdx = TMagVarIdxList[v];
+
+                        switch ( TMagVarIdx )
+                        {
+                           case MAGX :
+                              for (int k=LoopStart[s][2]; k< LoopEnd[s][2]; k++)
+                              for (int j=LoopStart[s][1]; j< LoopEnd[s][1]; j++)
+                              for (int i=LoopStart[s][0]; i<=LoopEnd[s][0]; i++)
+                              {
+                                 const int idxB = IDX321_BX( i, j, k, PS1, PS1 );
+                                 amr->patch[MagSg][lv][RPID]->magnetic[TMagVarIdx][idxB] = RecvPtr[ Counter ++ ];
+                              }
+                              break;
+
+                           case MAGY :
+                              for (int k=LoopStart[s][2]; k< LoopEnd[s][2]; k++)
+                              for (int j=LoopStart[s][1]; j<=LoopEnd[s][1]; j++)
+                              for (int i=LoopStart[s][0]; i< LoopEnd[s][0]; i++)
+                              {
+                                 const int idxB = IDX321_BY( i, j, k, PS1, PS1 );
+                                 amr->patch[MagSg][lv][RPID]->magnetic[TMagVarIdx][idxB] = RecvPtr[ Counter ++ ];
+                              }
+                              break;
+
+                           case MAGZ :
+                              for (int k=LoopStart[s][2]; k<=LoopEnd[s][2]; k++)
+                              for (int j=LoopStart[s][1]; j< LoopEnd[s][1]; j++)
+                              for (int i=LoopStart[s][0]; i< LoopEnd[s][0]; i++)
+                              {
+                                 const int idxB = IDX321_BZ( i, j, k, PS1, PS1 );
+                                 amr->patch[MagSg][lv][RPID]->magnetic[TMagVarIdx][idxB] = RecvPtr[ Counter ++ ];
+                              }
+                              break;
+
+                           default:
+                              Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TMagVarIdx", TMagVarIdx );
+                              break;
+                         } // switch ( TMagVarIdx )
+                     } //for (int v=0; v<NVarFC_Mag; v++)
+#                    endif // #ifdef MHD
+
                   } // if ( RSib & (1<<s) )
                } // for (int s=0; s<27; s++)
             } // for (int t=0; t<Recv_NList[r]; t++)
          } // for (int r=0; r<MPI_NRank; r++)
-         break; // case DATA_GENERAL: case DATA_AFTER_REFINE: case POT_FOR_POISSON : case POT_AFTER_REFINE:
+         break; // cases DATA_GENERAL, DATA_AFTER_REFINE, POT_FOR_POISSON, POT_AFTER_REFINE
 
 
       case DATA_AFTER_FIXUP :
 //    ----------------------------------------------
-#        pragma omp parallel for private( RecvPtr, Counter, RPID, RSib, TFluVarIdx ) schedule( runtime )
+#        pragma omp parallel for schedule( runtime )
          for (int r=0; r<MPI_NRank; r++)
          {
-            RecvPtr = RecvBuf + Recv_NDisp[r];
-            Counter = 0;
+            real *RecvPtr = RecvBuf + Recv_NDisp[r];
+            int   Counter = 0;
 
 //          for restriction fix-up
             for (int t=0; t<Recv_NResList[r]; t++)
             {
-               RPID = Recv_IDList [r][t];
-               RSib = Recv_SibList[r][t];
+               const int RPID = Recv_IDList [r][t];
+               const int RSib = Recv_SibList[r][t];
 
 #              ifdef GAMER_DEBUG
                if ( ExchangeFlu  &&  amr->patch[FluSg][lv][RPID]->fluid == NULL )
-                  Aux_Error( ERROR_INFO, "Recv mode %d, ptr[%d][%d][%d]->fluid has not been allocated !!\n",
+                  Aux_Error( ERROR_INFO, "Recv mode %d, patch[%d][%d][%d]->fluid has not been allocated !!\n",
                              GetBufMode, FluSg, lv, RPID );
 
 #              ifdef GRAVITY
                if ( ExchangePot  &&  amr->patch[PotSg][lv][RPID]->pot == NULL )
-                  Aux_Error( ERROR_INFO, "Recv mode %d, ptr[%d][%d][%d]->pot has not been allocated !!\n",
+                  Aux_Error( ERROR_INFO, "Recv mode %d, patch[%d][%d][%d]->pot has not been allocated !!\n",
                              GetBufMode, PotSg, lv, RPID );
 #              endif
 
@@ -807,9 +1040,9 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
                   {
 //                   fluid data
                      if ( ExchangeFlu )
-                     for (int v=0; v<NVar_Flu; v++)
+                     for (int v=0; v<NVarCC_Flu; v++)
                      {
-                        TFluVarIdx = TFluVarIdxList[v];
+                        const int TFluVarIdx = TFluVarIdxList[v];
 
                         for (int k=LoopStart[s][2]; k<LoopEnd[s][2]; k++)
                         for (int j=LoopStart[s][1]; j<LoopEnd[s][1]; j++)
@@ -817,8 +1050,8 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
                            amr->patch[FluSg][lv][RPID]->fluid[TFluVarIdx][k][j][i] = RecvPtr[ Counter ++ ];
                      }
 
-#                    ifdef GRAVITY
 //                   potential data
+#                    ifdef GRAVITY
                      if ( ExchangePot )
                      {
                         for (int k=LoopStart[s][2]; k<LoopEnd[s][2]; k++)
@@ -835,12 +1068,12 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 //          for flux fix-up
             for (int t=Recv_NResList[r]; t<Recv_NList[r]; t++)
             {
-               RPID = Recv_IDList [r][t];
-               RSib = Recv_SibList[r][t];
+               const int RPID = Recv_IDList [r][t];
+               const int RSib = Recv_SibList[r][t];
 
 #              ifdef GAMER_DEBUG
                if ( ExchangeFlu  &&  amr->patch[FluSg][lv][RPID]->fluid == NULL )
-                  Aux_Error( ERROR_INFO, "Recv mode %d, ptr[%d][%d][%d]->fluid has not been allocated !!\n",
+                  Aux_Error( ERROR_INFO, "Recv mode %d, patch[%d][%d][%d]->fluid has not been allocated !!\n",
                              GetBufMode, FluSg, lv, RPID );
 
                if ( RSib == 0 )
@@ -854,9 +1087,9 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
                   {
 //                   fluid data
                      if ( ExchangeFlu )
-                     for (int v=0; v<NVar_Flu; v++)
+                     for (int v=0; v<NVarCC_Flu; v++)
                      {
-                        TFluVarIdx = TFluVarIdxList[v];
+                        const int TFluVarIdx = TFluVarIdxList[v];
 
                         for (int k=LoopStart_X[s][2]; k<LoopEnd_X[s][2]; k++)
                         for (int j=LoopStart_X[s][1]; j<LoopEnd_X[s][1]; j++)
@@ -867,83 +1100,78 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
                } // for (int s=0; s<6; s++)
             } // for (int t=Recv_NResList[r]; t<Recv_NList[r]; t++)
          } // for (int r=0; r<MPI_NRank; r++)
-         break; // case DATA_AFTER_FIXUP :
+         break; // case DATA_AFTER_FIXUP
 
 
       case DATA_RESTRICT :
 //    ----------------------------------------------
-#        pragma omp parallel for private( RecvPtr, RPID, TFluVarIdx ) schedule( runtime )
+#        pragma omp parallel for schedule( runtime )
          for (int r=0; r<MPI_NRank; r++)
          {
-            RecvPtr = RecvBuf + Recv_NDisp[r];
+            real *RecvPtr = RecvBuf + Recv_NDisp[r];
 
             for (int t=0; t<Recv_NList[r]; t++)
             {
-               RPID = Recv_IDList[r][t];
+               const int RPID = Recv_IDList[r][t];
 
 #              ifdef GAMER_DEBUG
                if ( ExchangeFlu  &&  amr->patch[FluSg][lv][RPID]->fluid == NULL )
-                  Aux_Error( ERROR_INFO, "Recv mode %d, ptr[%d][%d][%d]->fluid has not been allocated !!\n",
+                  Aux_Error( ERROR_INFO, "Recv mode %d, patch[%d][%d][%d]->fluid has not been allocated !!\n",
                              GetBufMode, FluSg, lv, RPID );
 
 #              ifdef GRAVITY
                if ( ExchangePot  &&  amr->patch[PotSg][lv][RPID]->pot == NULL )
-                  Aux_Error( ERROR_INFO, "Recv mode %d, ptr[%d][%d][%d]->pot has not been allocated !!\n",
+                  Aux_Error( ERROR_INFO, "Recv mode %d, patch[%d][%d][%d]->pot has not been allocated !!\n",
                              GetBufMode, PotSg, lv, RPID );
 #              endif
 #              endif // #ifdef GAMER_DEBUG
 
 //             fluid data
                if ( ExchangeFlu )
-               for (int v=0; v<NVar_Flu; v++)
+               for (int v=0; v<NVarCC_Flu; v++)
                {
-                  TFluVarIdx = TFluVarIdxList[v];
-
-                  memcpy( &amr->patch[FluSg][lv][RPID]->fluid[TFluVarIdx][0][0][0], RecvPtr,
-                          PS1*PS1*PS1*sizeof(real) );
-
-                  RecvPtr += PS1*PS1*PS1;
+                  const int TFluVarIdx = TFluVarIdxList[v];
+                  memcpy( &amr->patch[FluSg][lv][RPID]->fluid[TFluVarIdx][0][0][0], RecvPtr, CUBE(PS1)*sizeof(real) );
+                  RecvPtr += CUBE( PS1 );
                }
 
-#              ifdef GRAVITY
 //             potential data
+#              ifdef GRAVITY
                if ( ExchangePot )
                {
-                  memcpy( &amr->patch[PotSg][lv][RPID]->pot[0][0][0], RecvPtr,
-                          PS1*PS1*PS1*sizeof(real) );
-
-                  RecvPtr += PS1*PS1*PS1;
+                  memcpy( &amr->patch[PotSg][lv][RPID]->pot[0][0][0], RecvPtr, CUBE(PS1)*sizeof(real) );
+                  RecvPtr += CUBE( PS1 );
                }
 #              endif
             } // for (int t=0; t<Recv_NList[r]; t++)
          } // for (int r=0; r<MPI_NRank; r++)
-         break; // case DATA_RESTRICT :
+         break; // case DATA_RESTRICT
 
 
       case COARSE_FINE_FLUX :
 //    ----------------------------------------------
-#        pragma omp parallel for private( RecvPtr, Counter, RPID, RSib, FluxPtr, TFluVarIdx ) schedule( runtime )
+#        pragma omp parallel for schedule( runtime )
          for (int r=0; r<MPI_NRank; r++)
          {
-            RecvPtr = RecvBuf + Recv_NDisp[r];
-            Counter = 0;
+            real *RecvPtr = RecvBuf + Recv_NDisp[r];
+            int   Counter = 0;
 
             for (int t=0; t<Recv_NList[r]; t++)
             {
-               RPID    = Recv_IDList [r][ Recv_IDList_IdxTable[r][t] ];
-               RSib    = Recv_SibList[r][t];
-               FluxPtr = amr->patch[0][lv][RPID]->flux[RSib];
+               const int RPID = Recv_IDList [r][ Recv_IDList_IdxTable[r][t] ];
+               const int RSib = Recv_SibList[r][t];
+               real (*FluxPtr)[PS1][PS1] = amr->patch[0][lv][RPID]->flux[RSib];
 
 #              ifdef GAMER_DEBUG
                if ( FluxPtr == NULL )
-                  Aux_Error( ERROR_INFO, "Recv mode %d, ptr[0][%d][%d]->flux[%d] has not been allocated !!\n",
+                  Aux_Error( ERROR_INFO, "Recv mode %d, patch[0][%d][%d]->flux[%d] has not been allocated !!\n",
                              GetBufMode, lv, RPID, RSib );
 #              endif
 
 //             add (not replace) flux array with the received flux
-               for (int v=0; v<NVar_Flu; v++)
+               for (int v=0; v<NVarCC_Flu; v++)
                {
-                  TFluVarIdx = TFluVarIdxList[v];
+                  const int TFluVarIdx = TFluVarIdxList[v];
 
                   for (int m=0; m<PS1; m++)
                   for (int n=0; n<PS1; n++)
@@ -951,7 +1179,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
                }
             } // for (int t=0; t<Recv_NList[r]; t++)
          } // for (int r=0; r<MPI_NRank; r++)
-         break; // case COARSE_FINE_FLUX :
+         break; // case COARSE_FINE_FLUX
 
 
       default:
@@ -975,7 +1203,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
       char ModeName[100];
       switch ( GetBufMode )
       {
-         case DATA_GENERAL :        sprintf( ModeName, "%s", (NVar_Tot==1)?"Dens":"Flu" );   break;
+         case DATA_GENERAL :        sprintf( ModeName, "%s", (NVarCC_Tot==1)?"Dens":"Flu" );   break;
          case DATA_AFTER_REFINE :   sprintf( ModeName, "%s", "FluAfRef"                 );   break;
          case DATA_AFTER_FIXUP :    sprintf( ModeName, "%s", "FluAfFix"                 );   break;
          case DATA_RESTRICT :       sprintf( ModeName, "%s", "FluRes"                   );   break;
@@ -999,7 +1227,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
       const double RecvMB = NRecv_Total*sizeof(real)*1.0e-6;
 
       fprintf( File, "%3d %15s %4d %4d %10.5f %10.5f %10.5f %8.3f %8.3f %10.3f %10.3f\n",
-               lv, ModeName, NVar_Tot, (GetBufMode==DATA_RESTRICT || GetBufMode==COARSE_FINE_FLUX)?-1:ParaBuf,
+               lv, ModeName, NVarCC_Tot, (GetBufMode==DATA_RESTRICT || GetBufMode==COARSE_FINE_FLUX)?-1:ParaBuf,
                Timer_MPI[0]->GetValue(), Timer_MPI[2]->GetValue(), Timer_MPI[1]->GetValue(),
                SendMB, RecvMB, SendMB/Timer_MPI[1]->GetValue(), RecvMB/Timer_MPI[1]->GetValue() );
 
@@ -1017,6 +1245,9 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
    delete [] Send_NDisp;
    delete [] Recv_NDisp;
    delete [] TFluVarIdxList;
+#  ifdef MHD
+   delete [] TMagVarIdxList;
+#  endif
 
 } // FUNCTION : LB_GetBufferData
 
@@ -1031,7 +1262,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 //                3. We reallocate send/recv buffers only when the current buffer size is not large enough
 //                   --> It greatly improves MPI performance
 //
-// Parameter   :  NSend : Number of elements (with the type "real) to be sent
+// Parameter   :  NSend : Number of elements (with the type "real") to be sent
 //
 // Return      :  Pointer to the MPI send buffer
 //-------------------------------------------------------------------------------------------------------
@@ -1062,7 +1293,7 @@ real *LB_GetBufferData_MemAllocate_Send( const int NSend )
 //                3. We reallocate send/recv buffers only when the current buffer size is not large enough
 //                   --> It greatly improves MPI performance
 //
-// Parameter   :  NRecv : Number of elements (with the type "real) to be sent
+// Parameter   :  NRecv : Number of elements (with the type "real") to be sent
 //
 // Return      :  Pointer to the MPI recv buffer
 //-------------------------------------------------------------------------------------------------------

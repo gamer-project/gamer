@@ -719,19 +719,11 @@ void Init_ByRestart()
 // --> only necessary when restarting from a C-binary snapshot since it does not store non-leaf data
    for (int lv=NLEVEL-2; lv>=0; lv--)
    {
-#     ifdef MHD
-      const int SonMagSg = amr->MagSg[lv+1];
-      const int  FaMagSg = amr->MagSg[lv  ];
-#     else
-      const int SonMagSg = NULL_INT;
-      const int  FaMagSg = NULL_INT;
-#     endif
+      Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv], NULL_INT, NULL_INT, _TOTAL, _MAG );
 
-      Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, SonMagSg, FaMagSg, _TOTAL, _MAG );
+      LB_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, _MAG, NULL_INT );
 
-      LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, NULL_INT );
-
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
    }
 
 
@@ -771,25 +763,17 @@ void Init_ByRestart()
 
 
 // fill up the data for top-level buffer patches
-   Buf_GetBufferData( NLEVEL-1, amr->FluSg[NLEVEL-1], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );
+   Buf_GetBufferData( NLEVEL-1, amr->FluSg[NLEVEL-1], amr->MagSg[NLEVEL-1], NULL_INT, DATA_GENERAL, _TOTAL, _MAG, Flu_ParaBuf, USELB_NO );
 
 
 // fill up the data for patches that are not leaf patches
    for (int lv=NLEVEL-2; lv>=0; lv--)
    {
 //    data restriction: lv+1 --> lv
-#     ifdef MHD
-      const int SonMagSg = amr->MagSg[lv+1];
-      const int  FaMagSg = amr->MagSg[lv  ];
-#     else
-      const int SonMagSg = NULL_INT;
-      const int  FaMagSg = NULL_INT;
-#     endif
-
-      Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, SonMagSg, FaMagSg, _TOTAL, _MAG );
+      Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv], NULL_INT, NULL_INT, _TOTAL, _MAG );
 
 //    fill up the data in the buffer patches
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );
+      Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, _MAG, Flu_ParaBuf, USELB_NO );
    } // for (int lv=NLEVEL-2; lv>=0; lv--)
 
 #  endif // #ifdef LOAD_BALANCE ... else ...

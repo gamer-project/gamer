@@ -53,8 +53,8 @@ int Aux_IsFinite( const double x );
 #ifndef SERIAL
 void Buf_AllocateBufferPatch_Base( AMR_t *Tamr );
 void Buf_AllocateBufferPatch( AMR_t *Tamr, const int lv );
-void Buf_GetBufferData( const int lv, const int FluSg, const int PotSg, const GetBufMode_t GetBufMode,
-                        const int TVar, const int ParaBuffer, const UseLBFunc_t UseLBFunc );
+void Buf_GetBufferData( const int lv, const int FluSg, const int MagSg, const int PotSg, const GetBufMode_t GetBufMode,
+                        const int TVarCC, const int TVarFC, const int ParaBuf, const UseLBFunc_t UseLBFunc );
 void Buf_RecordBoundaryFlag( const int lv );
 void Buf_RecordBoundaryPatch_Base();
 void Buf_RecordBoundaryPatch( const int lv );
@@ -126,8 +126,8 @@ void Flu_Prepare( const int lv, const double PrepTime,
                   double h_Corner_Array_F[][3], const int NPG, const int *PID0_List );
 void Flu_FixUp( const int lv );
 void Flu_FixUp_Flux( const int lv );
-void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const int SonPotSg, const int FaPotSg,
-                         const int SonMagSg, const int FaMagSg, const int TVarCC, const int TVarFC );
+void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const int SonMagSg, const int FaMagSg,
+                         const int SonPotSg, const int FaPotSg, const int TVarCC, const int TVarFC );
 void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int ArraySizeX, const int ArraySizeY,
                                  const int ArraySizeZ, const int Idx_Start[], const int Idx_End[],
                                  const int TFluVarIdxList[], const double Time, const double dh, const double *Corner,
@@ -384,8 +384,8 @@ void LB_AllocateFluxArray( const int FaLv );
 void LB_ExchangeFlaggedBuffer( const int lv );
 void LB_FindFather( const int SonLv, const bool SearchAllSon, const int NInput, int* TargetSonPID0, const bool ResetSonID );
 void LB_FindSonNotHome( const int FaLv, const bool SearchAllFa, const int NInput, int* TargetFaPID );
-void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const GetBufMode_t GetBufMode,
-                       const int TVar, const int ParaBuf );
+void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int PotSg, const GetBufMode_t GetBufMode,
+                       const int TVarCC, const int TVarFC, const int ParaBuf );
 real*LB_GetBufferData_MemAllocate_Send( const int NSend );
 real*LB_GetBufferData_MemAllocate_Recv( const int NRecv );
 void LB_GrandsonCheck( const int lv );

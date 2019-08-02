@@ -458,6 +458,10 @@ void Init_ByRestart_v1( const char FileName[] )
 
 // e-1. improve load balance
 // ===================================================================================================================
+#  ifdef MHD
+   Aux_Error( ERROR_INFO, "MHD is not supported here !!\n" );
+#  endif
+
 #  ifdef LOAD_BALANCE
 
 // no need to redistribute all patches again since we already did that when loading data from disks
@@ -485,12 +489,11 @@ void Init_ByRestart_v1( const char FileName[] )
 // --> only necessary when restarting from a C-binary snapshot since it does not store non-leaf data
    for (int lv=NLEVEL-2; lv>=0; lv--)
    {
-//    does not support MHD
-      Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, NULL_INT, NULL_INT, _TOTAL, 0 );
+      Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, NULL_INT, NULL_INT, _TOTAL, _NONE );
 
-      LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, NULL_INT );
+      LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, NULL_INT, DATA_RESTRICT, _TOTAL, _NONE, NULL_INT );
 
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, NULL_INT, DATA_GENERAL, _TOTAL, _NONE, Flu_ParaBuf, USELB_YES );
    }
 
 
@@ -524,7 +527,7 @@ void Init_ByRestart_v1( const char FileName[] )
 
 
 // fill up the data for top-level buffer patches
-   Buf_GetBufferData( NLEVEL-1, amr->FluSg[NLEVEL-1], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );
+   Buf_GetBufferData( NLEVEL-1, amr->FluSg[NLEVEL-1], NULL_INT, NULL_INT, DATA_GENERAL, _TOTAL, _NONE, Flu_ParaBuf, USELB_NO );
 
 
 // fill up the data for patches that are not leaf patches
@@ -532,10 +535,10 @@ void Init_ByRestart_v1( const char FileName[] )
    {
 //    data restriction: lv+1 --> lv
 //    --> does not support MHD
-      Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, NULL_INT, NULL_INT, _TOTAL, 0 );
+      Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, NULL_INT, NULL_INT, _TOTAL, _NONE );
 
 //    fill up the data in the buffer patches
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );
+      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, NULL_INT, DATA_GENERAL, _TOTAL, _NONE, Flu_ParaBuf, USELB_NO );
    } // for (int lv=NLEVEL-2; lv>=0; lv--)
 
 #  endif // #ifdef LOAD_BALANCE ... else ...
