@@ -2218,9 +2218,9 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
 //
 // Note        :  Work for Prepare_PatchData()
 //
-// Parameter   :  lv    : Target refinement level
-//                PID   : Target patch ID to find its sibling patches
-//                Side  : Sibling index (0~25)
+// Parameter   :  lv   : Target refinement level
+//                PID  : Target patch ID to find its sibling patches
+//                Side : Sibling index (0~25)
 //-------------------------------------------------------------------------------------------------------
 int Table_02( const int lv, const int PID, const int Side )
 {
@@ -2788,12 +2788,12 @@ void Prepare_PatchData_FreeParticleDensityArray( const int lv )
 //                2. Currently the temporal interpolation, although supported, is not actually used
 //                   --> MagIntTime is always false
 //                3. Since the interpolated ghost zones must be an even number (i.e., GhostSize_Padded),
-//                   when GhostSize is an odd number, one cannot use Data1PG_FC[] to get all the required
-//                   fine-grid magnetic field
+//                   one cannot use Data1PG_FC[] to get all the required fine-grid magnetic field when
+//                   GhostSize is an odd number
 //                   --> We only copy data from Data1PG_FC[] on the interfaces between the central
 //                       patch group and it's sibling patches
 //                   --> For the B field on the interfaces outside the central patch group, we recollect
-//                       data from each patch
+//                       data from nearby fine patches
 //                4. FInt_Data[] is preallocated to avoid frequent memory allocation/deallocation
 //
 // Parameter   :  FInt_Data         : Array to store the fine-grid magnetic field to be returned
@@ -2808,7 +2808,6 @@ void Prepare_PatchData_FreeParticleDensityArray( const int lv )
 //                MagIntTime        : Whether or not to perform temporal interpolation on the magnetic field
 //                MagWeighting      : Weighting of data stored in MagSg      when MagIntTime is on
 //                MagWeighting_IntT : Weighting of data stored in MagSg_IntT when MagIntTime is on
-//
 //
 // Return      :  FInt_Data, FInt_Ptr
 //-------------------------------------------------------------------------------------------------------
@@ -2832,7 +2831,7 @@ void MHD_SetFInterface( real *FInt_Data, real *FInt_Ptr[6], const real *Data1PG_
    const int PGSize3D_FC      = PGSize1D_FC*SQR(PGSize1D_CC);
 
    const real *Data1PG_FC_Ptr = NULL;
-   int FaSibSibPID, SibPID0, norm_dir, sign, FInt_Side, Offset=0;
+   int FaSibSibPID, norm_dir, sign, FInt_Side, Offset=0;
    int LCR[3], loop[3], disp_i[3], disp_o[3], size_i[3], size_o[3], ijk_i[3], ijk_o[3], idx_i, idx_o;    // i/o=in/out
 
 
@@ -2858,9 +2857,17 @@ void MHD_SetFInterface( real *FInt_Data, real *FInt_Ptr[6], const real *Data1PG_
       if (  TABLE_01( Side, 'x'+norm_dir, 0, NULL_INT, 1 ) == sign  )   continue;
 
 
+      FaSibSibPID = amr->patch[0][lv-1][FaSibPID]->sibling[f];
+
+#     ifdef GAMER_DEBUG
+//    FaSibSibPID < -1 is possible due to non-periodic boundary conditions, but it
+//    cannot be -1 due to the proper-nesting constraint
+      if ( FaSibSibPID == -1 )   Aux_Error( ERROR_INFO, "FaSibSibPID == -1 !!\n" );
+#     endif
+
 //    check if the target face is a coarse-fine interface
-      if (  ( FaSibSibPID = amr->patch[0][lv-1][FaSibPID]->sibling[f] ) >= 0  &&
-            ( SibPID0 = amr->patch[0][lv-1][FaSibSibPID]->son ) != -1  )
+//    --> note that [FaSibSibPID]->son can be < -1 since the son may live abroad
+      if ( FaSibSibPID >= 0  &&  amr->patch[0][lv-1][FaSibSibPID]->son != -1 )
       {
 //       1. get the sibling direction index relative to the central patch group
 //          --> i.e., between FaPID and FaSibSibPID
@@ -2945,7 +2952,7 @@ void MHD_SetFInterface( real *FInt_Data, real *FInt_Ptr[6], const real *Data1PG_
 
 
 //       2-2. copy data from the sibling patches
-         else
+         else // FInt_Side = 0~25
          {
 //          set array indices
             for (int d=0; d<3; d++)
@@ -2993,8 +3000,14 @@ void MHD_SetFInterface( real *FInt_Data, real *FInt_Ptr[6], const real *Data1PG_
 
             for (int Count=0; Count<TABLE_04(FInt_Side); Count++)
             {
+//             note that we should not get SibPID0 by amr->patch[0][lv-1][FaSibSibPID]->son
+//             since the latter can be < -1 for sons living abroad
                const int LocalID = TABLE_03( FInt_Side, Count );
+               const int SibPID0 = Table_02( lv, PID0, FInt_Side );
                const int SibPID  = SibPID0 + LocalID;
+#              ifdef GAMER_DEBUG
+               if ( SibPID0 <= -1 )    Aux_Error( ERROR_INFO, "SibPID0 = %d <= -1 !!\n", SibPID0 );
+#              endif
 
 //             skip patches not adjacent to the target coarse-fine interface
                if (  TABLE_02( LocalID, 'x'+norm_dir, 0, 1 ) == sign  )    continue;
