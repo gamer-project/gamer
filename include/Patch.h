@@ -119,7 +119,7 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                  --> Each PaddedCr1D defines a unique 3D position
 //                                  --> Patches at different levels with the same PaddedCr1D have the same
 //                                      3D corner coordinates
-//                                  --> this number is independent of periodicity (because of the padded patches)
+//                                  --> This number is independent of periodicity (because of the padded patches)
 //                LB_Idx          : Space-filling-curve index for load balance
 //                NPar            : Number of particles belonging to this leaf patch
 //                ParListSize     : Size of the array ParList (ParListSize can be >= NPar)
