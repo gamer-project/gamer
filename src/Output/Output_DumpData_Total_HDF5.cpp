@@ -778,6 +778,19 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    H5_SpaceID_Field = H5Screate_simple( 4, H5_SetDims_Field, NULL );
    if ( H5_SpaceID_Field < 0 )   Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_SpaceID_Field" );
 
+#  ifdef MHD
+   for (int v=0; v<NCOMP_MAG; v++)
+   {
+      H5_SetDims_FCMag[0] = NPatchAllLv;
+      for (int t=1; t<4; t++)
+      H5_SetDims_FCMag[t] = ( 3-t == v ) ? PS1P1 : PS1;
+
+      H5_SpaceID_FCMag[v] = H5Screate_simple( 4, H5_SetDims_FCMag, NULL );
+      if ( H5_SpaceID_FCMag[v] < 0 )   Aux_Error( ERROR_INFO, "failed to create the space \"%s[%d]\" !!\n",
+                                                  "H5_SpaceID_FCMag", v );
+   }
+#  endif
+
    if ( MPI_Rank == 0 )
    {
 //    HDF5 file must be synchronized before being written by the next rank
@@ -803,20 +816,12 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #     ifdef MHD
       for (int v=0; v<NCOMP_MAG; v++)
       {
-         H5_SetDims_FCMag[0] = NPatchAllLv;
-         for (int t=1; t<4; t++)
-         H5_SetDims_FCMag[t] = ( 3-t == v ) ? PS1P1 : PS1;
-
-         H5_SpaceID_FCMag[v] = H5Screate_simple( 4, H5_SetDims_FCMag, NULL );
-         if ( H5_SpaceID_FCMag[v] < 0 )
-            Aux_Error( ERROR_INFO, "failed to create the space \"%s[%d]\" !!\n", "H5_SpaceID_FCMag", v );
-
          H5_SetID_FCMag = H5Dcreate( H5_GroupID_GridData, FCMagName[v], H5T_GAMER_REAL, H5_SpaceID_FCMag[v],
                                      H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
          if ( H5_SetID_FCMag < 0 )  Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", FCMagName[v] );
          H5_Status = H5Dclose( H5_SetID_FCMag );
       }
-#     endif // #ifdef MHD
+#     endif
 
 //    close the file and group
       H5_Status = H5Gclose( H5_GroupID_GridData );
