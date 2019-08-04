@@ -310,7 +310,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 
             for (int m=0; m<PS1; m++)
             {
-               const real    *FaMagPtr =    FaMagPtr0 + m*Bdidx_m;
+               const real *FaMagPtr    = FaMagPtr0    + m*Bdidx_m;
                      real *FaSibMagPtr = FaSibMagPtr0 + m*Bdidx_m;
 
 //             directly copy the restricted data

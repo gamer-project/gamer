@@ -461,8 +461,12 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
 //    ----------------------------------------------
          for (int r=0; r<MPI_NRank; r++)
          {
-            Send_NCount[r] = Send_NList[r]*CUBE( PS1 )*NVarCC_Tot;
-            Recv_NCount[r] = Recv_NList[r]*CUBE( PS1 )*NVarCC_Tot;
+            Send_NCount[r]  = Send_NList[r]*CUBE( PS1 )*NVarCC_Tot;
+            Recv_NCount[r]  = Recv_NList[r]*CUBE( PS1 )*NVarCC_Tot;
+#           ifdef MHD
+            Send_NCount[r] += Send_NList[r]*SQR( PS1 )*PS1P1*NVarFC_Mag;
+            Recv_NCount[r] += Recv_NList[r]*SQR( PS1 )*PS1P1*NVarFC_Mag;
+#           endif
          }
          break; // case DATA_RESTRICT
 
@@ -762,6 +766,11 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
                   Aux_Error( ERROR_INFO, "Send mode %d, patch[%d][%d][%d]->pot has not been allocated !!\n",
                              GetBufMode, PotSg, lv, SPID );
 #              endif
+#              ifdef MHD
+               if ( ExchangeMag  &&  amr->patch[MagSg][lv][SPID]->magnetic == NULL )
+                  Aux_Error( ERROR_INFO, "Send mode %d, patch[%d][%d][%d]->magnetic has not been allocated !!\n",
+                             GetBufMode, MagSg, lv, SPID );
+#              endif
 #              endif // #ifdef GAMER_DEBUG
 
 //             fluid data
@@ -784,6 +793,20 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
                           PS1*PS1*PS1*sizeof(real) );
 
                   SendPtr += CUBE( PS1 );
+               }
+#              endif
+
+//             magnetic field data
+#              ifdef MHD
+               if ( ExchangeMag )
+               for (int v=0; v<NVarFC_Mag; v++)
+               {
+                  const int TMagVarIdx = TMagVarIdxList[v];
+
+                  memcpy( SendPtr, &amr->patch[MagSg][lv][SPID]->magnetic[TMagVarIdx][0],
+                          SQR(PS1)*PS1P1*sizeof(real) );
+
+                  SendPtr += SQR( PS1 )*PS1P1;
                }
 #              endif
             } // for (int t=0; t<Send_NList[r]; t++)
@@ -1124,6 +1147,12 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
                   Aux_Error( ERROR_INFO, "Recv mode %d, patch[%d][%d][%d]->pot has not been allocated !!\n",
                              GetBufMode, PotSg, lv, RPID );
 #              endif
+
+#              ifdef MHD
+               if ( ExchangeMag  &&  amr->patch[MagSg][lv][RPID]->magnetic == NULL )
+                  Aux_Error( ERROR_INFO, "Recv mode %d, patch[%d][%d][%d]->magnetic has not been allocated !!\n",
+                             GetBufMode, MagSg, lv, RPID );
+#              endif
 #              endif // #ifdef GAMER_DEBUG
 
 //             fluid data
@@ -1141,6 +1170,17 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
                {
                   memcpy( &amr->patch[PotSg][lv][RPID]->pot[0][0][0], RecvPtr, CUBE(PS1)*sizeof(real) );
                   RecvPtr += CUBE( PS1 );
+               }
+#              endif
+
+//             magnetic field data
+#              ifdef MHD
+               if ( ExchangeMag )
+               for (int v=0; v<NVarFC_Mag; v++)
+               {
+                  const int TMagVarIdx = TMagVarIdxList[v];
+                  memcpy( &amr->patch[MagSg][lv][RPID]->magnetic[TMagVarIdx][0], RecvPtr, SQR(PS1)*PS1P1*sizeof(real) );
+                  RecvPtr += SQR( PS1 )*PS1P1;
                }
 #              endif
             } // for (int t=0; t<Recv_NList[r]; t++)
