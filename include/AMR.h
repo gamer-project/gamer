@@ -37,7 +37,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                PotSg        : Sandglass of the current potential data [0/1]
 //                FluSgTime    : Physical time of FluSg
 //                PotSgTime    : Physical time of PotSg
-//                NPatchComma  : (1) SERIAL: [1] = [2] = ... = [26] = num[lv] = total number of patches
+//                NPatchComma  : (1) SERIAL: [1] = [2] = ... = [27] = num[lv] = total number of patches
 //                               (2) Parallel, but no LOAD_BALANCE:
 //                                   [ 0, start of buffer patches [s=0], start of buffer patches [s=1]
 //                                    ... start of buffer patches [s=25], total # of patches (=num[lv]) ]
@@ -45,7 +45,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                                   [ 0, start of sibling-buffer patches, start of father-buffer patches,
 //                                     total # of patches (=num[lv]), same as [3], ...]
 //                                --> In all cases, [ 1] gives the total number of "real" patches
-//                                                  [26] gives the total number of "real+buffer" patches
+//                                                  [27] gives the total number of "real+buffer" patches
 //                dh           : Grid size at each level
 //                BoxEdgeL     : Simulation box left  edge in the adopted coordinate system
 //                BoxEdgeR     : Simulation box right edge in the adopted coordinate system

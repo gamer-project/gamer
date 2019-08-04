@@ -460,7 +460,11 @@ CC_FILE     += MHD_GetCellCenteredBInPatch.cpp  MHD_InterpolateBField.cpp  MHD_A
                MHD_CopyPatchInterfaceBField.cpp
 
 CC_FILE     += CPU_Shared_ConstrainedTransport.cpp  CPU_Shared_RiemannSolver_HLLD.cpp
-endif
+
+ifeq "$(findstring -DLOAD_BALANCE, $(SIMU_OPTION))" "-DLOAD_BALANCE"
+CC_FILE     += MHD_LB_EnsureBFieldConsistencyAfterRestrict.cpp
+endif # LOAD_BALANCE
+endif # MHD
 
 
 # ELBDM source files (included only inf "MODEL=ELBDM")
