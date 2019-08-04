@@ -1279,7 +1279,9 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
 #  endif // #ifdef TIMING
 
 
-// free memory
+
+// 7. free memory
+// ============================================================================================================
    delete [] Send_NCount;
    delete [] Recv_NCount;
    delete [] Send_NDisp;
@@ -1288,6 +1290,45 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
 #  ifdef MHD
    delete [] TMagVarIdxList;
 #  endif
+
+
+
+// 8. ensure consistency of B field on the common interfaces between nearby real patches
+//    --> do this after recording MPI bandwidth to avoid overwriting Timer_MPI[]
+//    --> this operation is necessary because nearby real patches may reside on different ranks
+//        --> for nearby real patches in the same rank, it is done directly in Flu_FixUp_Restrcit()
+//        --> only necessary on coarse-fine interfaces
+//    --> procedure: real son -> buffer father in the same rank -> real father in another rank
+//                   -> buffer father in all ranks -> real sibling father
+// ============================================================================================================
+#  ifdef MHD
+   if ( GetBufMode == DATA_RESTRICT )
+   {
+      const int MirrorSib[6] = { 1, 0, 3, 2, 5, 4 };
+
+//    trnasfer the restricted B field from real to buffer patches
+//    --> set the number of ghost zones to zero to only transfer B field on the patch boundaries
+//###OPTIMIZATION: (a) only need to transfer data in between **non-leaf** patches
+//                 (b) only buffer patches with **leaf** sibling real patches need to receive data
+      const int ParaBufZero = 0;
+      LB_GetBufferData( lv, NULL_INT, MagSg, NULL_INT, DATA_GENERAL, _NONE, TVarFC, ParaBufZero );
+
+//    copy data from non-leaf buffer patches to leaf real patches
+      for (int RealPID=0; RealPID<amr->NPatchComma[lv][1]; RealPID++)
+      {
+         if ( amr->patch[0][lv][RealPID]->son == -1 )
+         {
+            for (int s=0; s<6; s++)
+            {
+               const int SibBufPID = amr->patch[0][lv][RealPID]->sibling[s];
+
+               if ( SibBufPID >= amr->NPatchComma[lv][1]  &&  amr->patch[0][lv][SibBufPID]->son != -1 )
+                  MHD_CopyPatchInterfaceBField( lv, SibBufPID, MirrorSib[s], MagSg );
+            }
+         }
+      }
+   } // if ( GetBufMode == DATA_RESTRICT )
+#  endif // #ifdef MHD
 
 } // FUNCTION : LB_GetBufferData
 
