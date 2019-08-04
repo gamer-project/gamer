@@ -447,7 +447,10 @@ void MHD_BoundaryCondition_User( real **Array, const int BC_Face, const int NVar
                                  const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
                                  const int Idx_Start[], const int Idx_End[], const int TVarIdxList[],
                                  const double Time, const double dh, const double *Corner, const int lv );
+#ifdef LOAD_BALANCE
+void MHD_LB_EnsureBFieldConsistencyAfterRestrict( const int lv );
 #endif
+#endif // #ifdef MHD
 
 
 // ELBDM model

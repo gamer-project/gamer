@@ -671,6 +671,12 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
                              GetBufMode, PotSg, lv, SPID );
 #              endif
 
+#              ifdef MHD
+               if ( ExchangeMag  &&  amr->patch[MagSg][lv][SPID]->magnetic == NULL )
+                  Aux_Error( ERROR_INFO, "Send mode %d, patch[%d][%d][%d]->magnetic has not been allocated !!\n",
+                             GetBufMode, MagSg, lv, SPID );
+#              endif
+
                if ( SSib == 0 )
                   Aux_Error( ERROR_INFO, "Send mode %d, t %d, TRank %d, SPID %d, SSib == 0 !!\n",
                              GetBufMode, t, r, SPID );
@@ -702,6 +708,53 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
                            SendPtr[ Counter ++ ] = amr->patch[PotSg][lv][SPID]->pot[k][j][i];
                      }
 #                    endif
+
+//                   magnetic field data
+#                    ifdef MHD
+                     if ( ExchangeMag )
+                     for (int v=0; v<NVarFC_Mag; v++)
+                     {
+                        const int TMagVarIdx = TMagVarIdxList[v];
+
+                        switch ( TMagVarIdx )
+                        {
+                           case MAGX :
+                              for (int k=LoopStart[s][2]; k< LoopEnd[s][2]; k++)
+                              for (int j=LoopStart[s][1]; j< LoopEnd[s][1]; j++)
+                              for (int i=LoopStart[s][0]; i<=LoopEnd[s][0]; i++)
+                              {
+                                 const int idxB = IDX321_BX( i, j, k, PS1, PS1 );
+                                 SendPtr[ Counter ++ ] = amr->patch[MagSg][lv][SPID]->magnetic[TMagVarIdx][idxB];
+                              }
+                              break;
+
+                           case MAGY :
+                              for (int k=LoopStart[s][2]; k< LoopEnd[s][2]; k++)
+                              for (int j=LoopStart[s][1]; j<=LoopEnd[s][1]; j++)
+                              for (int i=LoopStart[s][0]; i< LoopEnd[s][0]; i++)
+                              {
+                                 const int idxB = IDX321_BY( i, j, k, PS1, PS1 );
+                                 SendPtr[ Counter ++ ] = amr->patch[MagSg][lv][SPID]->magnetic[TMagVarIdx][idxB];
+                              }
+                              break;
+
+                            case MAGZ :
+                              for (int k=LoopStart[s][2]; k<=LoopEnd[s][2]; k++)
+                              for (int j=LoopStart[s][1]; j< LoopEnd[s][1]; j++)
+                              for (int i=LoopStart[s][0]; i< LoopEnd[s][0]; i++)
+                              {
+                                 const int idxB = IDX321_BZ( i, j, k, PS1, PS1 );
+                                 SendPtr[ Counter ++ ] = amr->patch[MagSg][lv][SPID]->magnetic[TMagVarIdx][idxB];
+                              }
+                              break;
+
+                            default:
+                              Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TMagVarIdx", TMagVarIdx );
+                              break;
+                        } // switch ( TMagVarIdx )
+                     } // for (int v=0; v<NVarFC_Mag; v++)
+#                    endif // #ifdef MHD
+
                   } // if ( SSib & (1<<s) )
                } // for (int s=0; s<27; s++)
             } // for (int t=0; t<Send_NResList[r]; t++)
@@ -1052,6 +1105,12 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
                              GetBufMode, PotSg, lv, RPID );
 #              endif
 
+#              ifdef MHD
+               if ( ExchangeMag  &&  amr->patch[MagSg][lv][RPID]->magnetic == NULL )
+                  Aux_Error( ERROR_INFO, "Recv mode %d, patch[%d][%d][%d]->magnetic has not been allocated !!\n",
+                             GetBufMode, MagSg, lv, RPID );
+#              endif
+
                if ( RSib == 0 )
                   Aux_Error( ERROR_INFO, "Recv mode %d, t %d, TRank %d, RPID %d, RSib == 0 !!\n",
                              GetBufMode, t, r, RPID );
@@ -1083,6 +1142,53 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
                            amr->patch[PotSg][lv][RPID]->pot[k][j][i] = RecvPtr[ Counter ++ ];
                      }
 #                    endif
+
+//                   magnetic field data
+#                    ifdef MHD
+                     if ( ExchangeMag )
+                     for (int v=0; v<NVarFC_Mag; v++)
+                     {
+                        const int TMagVarIdx = TMagVarIdxList[v];
+
+                        switch ( TMagVarIdx )
+                        {
+                           case MAGX :
+                              for (int k=LoopStart[s][2]; k< LoopEnd[s][2]; k++)
+                              for (int j=LoopStart[s][1]; j< LoopEnd[s][1]; j++)
+                              for (int i=LoopStart[s][0]; i<=LoopEnd[s][0]; i++)
+                              {
+                                 const int idxB = IDX321_BX( i, j, k, PS1, PS1 );
+                                 amr->patch[MagSg][lv][RPID]->magnetic[TMagVarIdx][idxB] = RecvPtr[ Counter ++ ];
+                              }
+                              break;
+
+                           case MAGY :
+                              for (int k=LoopStart[s][2]; k< LoopEnd[s][2]; k++)
+                              for (int j=LoopStart[s][1]; j<=LoopEnd[s][1]; j++)
+                              for (int i=LoopStart[s][0]; i< LoopEnd[s][0]; i++)
+                              {
+                                 const int idxB = IDX321_BY( i, j, k, PS1, PS1 );
+                                 amr->patch[MagSg][lv][RPID]->magnetic[TMagVarIdx][idxB] = RecvPtr[ Counter ++ ];
+                              }
+                              break;
+
+                           case MAGZ :
+                              for (int k=LoopStart[s][2]; k<=LoopEnd[s][2]; k++)
+                              for (int j=LoopStart[s][1]; j< LoopEnd[s][1]; j++)
+                              for (int i=LoopStart[s][0]; i< LoopEnd[s][0]; i++)
+                              {
+                                 const int idxB = IDX321_BZ( i, j, k, PS1, PS1 );
+                                 amr->patch[MagSg][lv][RPID]->magnetic[TMagVarIdx][idxB] = RecvPtr[ Counter ++ ];
+                              }
+                              break;
+
+                           default:
+                              Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TMagVarIdx", TMagVarIdx );
+                              break;
+                         } // switch ( TMagVarIdx )
+                     } //for (int v=0; v<NVarFC_Mag; v++)
+#                    endif // #ifdef MHD
+
                   } // if ( RSib & (1<<s) )
                } // for (int s=0; s<27; s++)
             } // for (int t=0; t<Recv_NResList[r]; t++)
@@ -1293,13 +1399,15 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
 
 
 
-// 8. ensure consistency of B field on the common interfaces between nearby real patches
+// 8. ensure consistency of B field on the common interfaces between nearby **real** patches
 //    --> do this after recording MPI bandwidth to avoid overwriting Timer_MPI[]
 //    --> this operation is necessary because nearby real patches may reside on different ranks
 //        --> for nearby real patches in the same rank, it is done directly in Flu_FixUp_Restrcit()
 //        --> only necessary on coarse-fine interfaces
 //    --> procedure: real son -> buffer father in the same rank -> real father in another rank
 //                   -> buffer father in all ranks -> real sibling father
+//    --> we will further invoke MHD_LB_EnsureBFieldConsistencyAfterRestrict() in EvolveLevel()
+//        to ensure consistency of B field on the common interfaces between nearby **buffer** patches
 // ============================================================================================================
 #  ifdef MHD
    if ( GetBufMode == DATA_RESTRICT )

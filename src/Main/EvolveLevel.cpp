@@ -551,6 +551,11 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                                            _TOTAL, _MAG, Flu_ParaBuf, USELB_YES  ),
                         Timer_GetBuf[lv][3]   );
 
+#        if ( defined MHD  &&  defined LOAD_BALANCE )
+         if ( OPT__FIXUP_RESTRICT )
+         TIMING_FUNC(   MHD_LB_EnsureBFieldConsistencyAfterRestrict( lv ),   Timer_FixUp[lv]   );
+#        endif
+
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 // ===============================================================================================
 
