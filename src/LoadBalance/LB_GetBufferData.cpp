@@ -1422,6 +1422,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
       LB_GetBufferData( lv, NULL_INT, MagSg, NULL_INT, DATA_GENERAL, _NONE, TVarFC, ParaBufZero );
 
 //    copy data from non-leaf buffer patches to leaf real patches
+//    --> for simplicity, it always works on all three components regardless of TVarFC
       for (int RealPID=0; RealPID<amr->NPatchComma[lv][1]; RealPID++)
       {
          if ( amr->patch[0][lv][RealPID]->son == -1 )
@@ -1445,6 +1446,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
 //    --> note that even when OPT__FIXUP_RESTRICT is off we still need to do data restriction in several places
 //        (e.g., restart and OPT__CORR_AFTER_ALL_SYNC)
 //    --> for simplicity and sustainability, we always perform the following operation even when OPT__FIXUP_RESTRICT is off)
+//    --> for simplicity, it always works on all three components regardless of TVarFC
 // ============================================================================================================
    if ( GetBufMode == DATA_AFTER_FIXUP )
       MHD_LB_EnsureBFieldConsistencyAfterRestrict( lv );
