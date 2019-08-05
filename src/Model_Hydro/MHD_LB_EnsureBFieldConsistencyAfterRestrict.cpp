@@ -7,24 +7,28 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  MHD_LB_EnsureBFieldConsistencyAfterRestrict
-// Description :  Ensure consistency of B field between leaf buffer patches and their sibling real/buffer
-//                non-leaf patches after applying the restrict operation
+// Description :  Update the B field on the coarse-fine interfaces of **leaf buffer** patches after applying
+//                the restrict operation
+//                --> To ensure consistency of B field between leaf buffer patches and their sibling real/buffer
+//                    non-leaf patches
 //
-// Note        :  1. Only necessary on the coarse-fine boundaries
+// Note        :  1. Invoked by LB_GetBufferData(DATA_AFTER_FIXUP)
+//                   --> Necessary because the mode DATA_AFTER_FIXUP will only re-transfer data for
+//                       **non-leaf** buffer patches
+//                2. Only necessary on the coarse-fine boundaries
 //                   --> Use non-leaf sibling real/buffer patches to correct leaf buffer patches
-//                       --> Non-leaf sibling **buffer** patches should have received the restricted data
-//                           in advance when invoking LB_GetBufferData(DATA_AFTER_FIXUP) in EvolveLevel()
+//                       --> Non-leaf sibling **buffer** patches must receive the restricted data
+//                           in advance by invoking LB_GetBufferData(DATA_AFTER_FIXUP)
 //                       --> Non-leaf sibling **real** patches should have received the restricted data
 //                           in advance when invoking either Flu_FixUp_Restrict() (if father patches are
 //                           also real patches) or LB_GetBufferData(DATA_RESTRICT) (if father patches are
-//                           buffer patches) in EvolveLevel()
+//                           buffer patches)
 //                   --> Note that we must still correct leaf buffer patches even if the fathers of their
 //                       sibling non-leaf patches are **real** patches
 //                       --> Although the consistency in this case had been ensured in Flu_FixUp_Restrict() when
 //                           copying data from father patches to father-sibling patches, it is broken again when
 //                           we invoke another LB_GetBufferData(DATA_GENERAL) within LB_GetBufferData(DATA_RESTRICT)
 //                           with zero ghost zone
-//                2. Invoked by EvolveLevel()
 //
 // Parameter   :  lv : AMR level
 //

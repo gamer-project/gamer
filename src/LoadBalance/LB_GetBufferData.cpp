@@ -1399,6 +1399,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
 
 
 
+#  ifdef MHD
 // 8. ensure consistency of B field on the common interfaces between nearby **real** patches
 //    --> do this after recording MPI bandwidth to avoid overwriting Timer_MPI[]
 //    --> this operation is necessary because nearby real patches may reside on different ranks
@@ -1409,7 +1410,6 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
 //    --> we will further invoke MHD_LB_EnsureBFieldConsistencyAfterRestrict() in EvolveLevel()
 //        to ensure consistency of B field on the common interfaces between nearby **buffer** patches
 // ============================================================================================================
-#  ifdef MHD
    if ( GetBufMode == DATA_RESTRICT )
    {
       const int MirrorSib[6] = { 1, 0, 3, 2, 5, 4 };
@@ -1436,6 +1436,18 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
          }
       }
    } // if ( GetBufMode == DATA_RESTRICT )
+
+
+
+// 9. update the B field on the coarse-fine interfaces of **leaf buffer** patches after applying the restrict operation
+//    --> to ensure consistency of B field between leaf buffer patches and their sibling real/buffer non-leaf patches
+//    --> necessary because the mode DATA_AFTER_FIXUP will only re-transfer data for **non-leaf** buffer patches
+//    --> note that even when OPT__FIXUP_RESTRICT is off we still need to do data restriction in several places
+//        (e.g., restart and OPT__CORR_AFTER_ALL_SYNC)
+//    --> for simplicity and sustainability, we always perform the following operation even when OPT__FIXUP_RESTRICT is off)
+// ============================================================================================================
+   if ( GetBufMode == DATA_AFTER_FIXUP )
+      MHD_LB_EnsureBFieldConsistencyAfterRestrict( lv );
 #  endif // #ifdef MHD
 
 } // FUNCTION : LB_GetBufferData
