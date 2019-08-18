@@ -328,8 +328,8 @@ void MHD_LB_AllocateElectricArray( const int FaLv )
 
 
 //    5.3 match the corresponding PID
-      Mis_Matching( amr->NPatchComma[SonLv][1], amr->LB->IdxList_Real[SonLv], LB_SendE_NList[r],
-                    RecvBuf_LBIdx+Recv_Disp_E[r], Match_E );
+      Mis_Matching_int( amr->NPatchComma[SonLv][1], amr->LB->IdxList_Real[SonLv], LB_SendE_NList[r],
+                        RecvBuf_LBIdx+Recv_Disp_E[r], Match_E );
 
 //    check : all target patches must be found
 #     ifdef GAMER_DEBUG
