@@ -222,11 +222,7 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const
 //    5.4 list for exchanging MHD electric field (and also allocate electric field arrays)
 #     ifdef MHD
       if ( amr->WithElectric )
-      {
-//       LB_MHD_AllocateElectricArray( lv );
-#        warning : WAIT MHD !!!
-         Aux_Error( ERROR_INFO, "MHD is not supported yet !!\n" );
-      }
+      MHD_LB_AllocateElectricArray( lv );
 #     endif
 
 //    5.5 list for exchanging hydro data after the fix-up operation
