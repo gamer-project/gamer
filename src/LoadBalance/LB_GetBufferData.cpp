@@ -266,7 +266,13 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
 
 #     ifdef MHD
       case COARSE_FINE_ELECTRIC :   // MHD electric field
-         Aux_Error( ERROR_INFO, "NOT SUPPORTED YET !!\n" );
+         Send_NList           = amr->LB->SendE_NList          [lv];
+         Send_IDList          = amr->LB->SendE_IDList         [lv];
+         Send_SibList         = amr->LB->SendE_SibList        [lv];
+         Recv_NList           = amr->LB->RecvE_NList          [lv];
+         Recv_IDList          = amr->LB->RecvE_IDList         [lv];
+         Recv_IDList_IdxTable = amr->LB->RecvE_IDList_IdxTable[lv];
+         Recv_SibList         = amr->LB->RecvE_SibList        [lv];
          break;
 #     endif
 
@@ -479,6 +485,21 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
             Recv_NCount[r] = Recv_NList[r]*DataUnit_Flux;
          }
          break; // case COARSE_FINE_FLUX
+
+
+#     ifdef MHD
+      case COARSE_FINE_ELECTRIC :
+//    ----------------------------------------------
+         for (int r=0; r<MPI_NRank; r++)
+         {
+            Send_NCount[r] = 0;
+            Recv_NCount[r] = 0;
+
+            for(int t=0; t<Send_NList[r]; t++)  Send_NCount[r] += ( Send_SibList[r][t] < 6 ) ? NCOMP_ELE*PS1M1*PS1 : PS1;
+            for(int t=0; t<Recv_NList[r]; t++)  Recv_NCount[r] += ( Recv_SibList[r][t] < 6 ) ? NCOMP_ELE*PS1M1*PS1 : PS1;
+         }
+         break; // case COARSE_FINE_ELECTRIC
+#     endif
    } // switch ( GetBufMode )
 
 
@@ -898,6 +919,37 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
             } // for (int t=0; t<Send_NList[r]; t++)
          } // for (int r=0; r<MPI_NRank; r++)
          break; // case COARSE_FINE_FLUX
+
+
+#     ifdef MHD
+      case COARSE_FINE_ELECTRIC :
+//    ----------------------------------------------
+#        pragma omp parallel for schedule( runtime )
+         for (int r=0; r<MPI_NRank; r++)
+         {
+            real *SendPtr = SendBuf + Send_NDisp[r];
+
+            for (int t=0; t<Send_NList[r]; t++)
+            {
+               const int SPID  = Send_IDList [r][t];
+               const int SSib  = Send_SibList[r][t];
+               const int SSize = ( SSib < 6 ) ? NCOMP_ELE*PS1M1*PS1 : PS1;
+
+               const real *ElePtr = amr->patch[0][lv][SPID]->electric[SSib];
+
+#              ifdef GAMER_DEBUG
+               if ( ElePtr == NULL )
+                  Aux_Error( ERROR_INFO, "Send mode %d, patch[0][%d][%d]->electric[%d] has not been allocated !!\n",
+                             GetBufMode, lv, SPID, SSib );
+#              endif
+
+               memcpy( SendPtr, ElePtr, SSize*sizeof(real) );
+
+               SendPtr += SSize;
+            } // for (int t=0; t<Send_NList[r]; t++)
+         } // for (int r=0; r<MPI_NRank; r++)
+         break; // case COARSE_FINE_ELECTRIC
+#     endif // #ifdef MHD
 
 
       default:
@@ -1326,6 +1378,46 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
             } // for (int t=0; t<Recv_NList[r]; t++)
          } // for (int r=0; r<MPI_NRank; r++)
          break; // case COARSE_FINE_FLUX
+
+
+#     ifdef MHD
+      case COARSE_FINE_ELECTRIC :
+//    ----------------------------------------------
+#        pragma omp parallel for schedule( runtime )
+         for (int r=0; r<MPI_NRank; r++)
+         {
+            real *RecvPtr = RecvBuf + Recv_NDisp[r];
+
+            for (int t=0; t<Recv_NList[r]; t++)
+            {
+               const int RPID  = Recv_IDList [r][ Recv_IDList_IdxTable[r][t] ];  // Recv_IDList is unsorted
+               const int RSib  = Recv_SibList[r][t];                             // Recv_SibList is sorted
+               const int RSize = ( RSib < 6 ) ? NCOMP_ELE*PS1M1*PS1 : PS1;
+
+               real *ElePtr = amr->patch[0][lv][RPID]->electric[RSib];
+
+#              ifdef GAMER_DEBUG
+               if ( ElePtr == NULL )
+                  Aux_Error( ERROR_INFO, "Recv mode %d, patch[0][%d][%d]->electric[%d] has not been allocated !!\n",
+                             GetBufMode, lv, RPID, RSib );
+
+               if ( RSib >= 6  &&  amr->patch[0][lv][RPID]->ele_corrected[RSib-6] )
+                  Aux_Error( ERROR_INFO, "Recv mode %d, electric field has been corrected already (lv %d, RPID %d, RSib %d) !!\n",
+                             GetBufMode, lv, RPID, RSib );
+#              endif
+
+//             add (not replace) electric field array with the received data
+               for (int i=0; i<RSize; i++)   ElePtr[i] += RecvPtr[i];
+
+               RecvPtr += RSize;
+
+#              ifdef GAMER_DEBUG
+               if ( RSib >= 6 )  amr->patch[0][lv][RPID]->ele_corrected[RSib-6] = true;
+#              endif
+            } // for (int t=0; t<Recv_NList[r]; t++)
+         } // for (int r=0; r<MPI_NRank; r++)
+         break; // case COARSE_FINE_ELECTRIC
+#     endif // #ifdef MHD
 
 
       default:

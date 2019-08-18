@@ -537,6 +537,13 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                                            _FLUX_TOTAL, _NONE, NULL_INT, USELB_YES ),
                         Timer_GetBuf[lv][6]   );
 
+#        ifdef MHD
+         if ( OPT__FIXUP_ELECTRIC )
+         TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, NULL_INT, NULL_INT, COARSE_FINE_ELECTRIC,
+                                           _NONE, _NONE, NULL_INT, USELB_YES ),
+                        Timer_GetBuf[lv][6]   );
+#        endif
+
          TIMING_FUNC(   Flu_FixUp( lv ),   Timer_FixUp[lv]   );
 
 #        ifdef LOAD_BALANCE
