@@ -45,11 +45,11 @@ void MHD_AllocateElectricArray( const int lv )
    {
       if ( amr->patch[0][lv][PID]->son == -1 )
       {
-         for (int EdgeID=0; EdgeID<6; EdgeID++)
+         for (int FaceID=0; FaceID<6; FaceID++)
          {
-            const int SibPID = amr->patch[0][lv][PID]->sibling[EdgeID];
+            const int SibPID = amr->patch[0][lv][PID]->sibling[FaceID];
             if ( SibPID >= 0  &&  amr->patch[0][lv][SibPID]->son != -1 )
-               amr->patch[0][lv][PID]->enew( EdgeID, AUTO_REDUCE_DT );
+               amr->patch[0][lv][PID]->enew( FaceID, AUTO_REDUCE_DT );
          }
 
          for (int EdgeID=6; EdgeID<18; EdgeID++)
@@ -63,7 +63,7 @@ void MHD_AllocateElectricArray( const int lv )
                if ( SibPID >= 0  &&  amr->patch[0][lv][SibPID]->son != -1 )
                {
                   amr->patch[0][lv][PID]->enew( EdgeID, AUTO_REDUCE_DT );
-                  break;
+                  break;   // allocate it just once
                }
             }
          }
