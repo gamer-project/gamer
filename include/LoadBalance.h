@@ -73,8 +73,16 @@
 //                SendF_SibList           : Sibling directions for sending fluxes
 //                RecvF_NList             : Number of flux arrays for receiving
 //                RecvF_IDList            : Patch indices for receiving fluxes
-//                RecvF_IDList_IdxTable   : Index table for LB_RecvF_IDList_IdxTable
+//                RecvF_IDList_IdxTable   : Index table for LB_RecvF_IDList
 //                RecvF_SibList           : Sibling directions for receiving fluxes
+//
+//                SendE_NList             : Number of electfic field arrays for sending
+//                SendE_IDList            : Patch indices for sending electric field
+//                SendE_SibList           : Sibling directions for sending electric field
+//                RecvE_NList             : Number of electric field arrays for receiving
+//                RecvE_IDList            : Patch indices for receiving electric field
+//                RecvE_IDList_IdxTable   : Index table for LB_RecvE_IDList
+//                RecvE_SibList           : Sibling directions for receiving electric field
 //
 //                SendG_NList             : Number of patches for sending potential data
 //                SendG_IDList            : Patch indices for sending potential data
@@ -157,6 +165,16 @@ struct LB_t
    int **RecvF_IDList            [NLEVEL];
    int **RecvF_IDList_IdxTable   [NLEVEL];
    int **RecvF_SibList           [NLEVEL];
+
+#  ifdef MHD
+   int  *SendE_NList             [NLEVEL];
+   int **SendE_IDList            [NLEVEL];
+   int **SendE_SibList           [NLEVEL];
+   int  *RecvE_NList             [NLEVEL];
+   int **RecvE_IDList            [NLEVEL];
+   int **RecvE_IDList_IdxTable   [NLEVEL];
+   int **RecvE_SibList           [NLEVEL];
+#  endif
 
 #  ifdef GRAVITY
    int   *SendG_NList            [NLEVEL];
@@ -255,6 +273,16 @@ struct LB_t
          RecvF_IDList_IdxTable  [lv] = new int*  [MPI_NRank];
          RecvF_SibList          [lv] = new int*  [MPI_NRank];
 
+#        ifdef MHD
+         SendE_NList            [lv] = new int   [MPI_NRank];
+         SendE_IDList           [lv] = new int*  [MPI_NRank];
+         SendE_SibList          [lv] = new int*  [MPI_NRank];
+         RecvE_NList            [lv] = new int   [MPI_NRank];
+         RecvE_IDList           [lv] = new int*  [MPI_NRank];
+         RecvE_IDList_IdxTable  [lv] = new int*  [MPI_NRank];
+         RecvE_SibList          [lv] = new int*  [MPI_NRank];
+#        endif
+
 #        ifdef GRAVITY
          SendG_NList            [lv] = new int   [MPI_NRank];
          SendG_IDList           [lv] = new int*  [MPI_NRank];
@@ -312,6 +340,16 @@ struct LB_t
             RecvF_IDList_IdxTable[lv][r] = NULL;
             RecvF_SibList        [lv][r] = NULL;
 
+#           ifdef MHD
+            SendE_NList          [lv][r] = 0;
+            SendE_IDList         [lv][r] = NULL;
+            SendE_SibList        [lv][r] = NULL;
+            RecvE_NList          [lv][r] = 0;
+            RecvE_IDList         [lv][r] = NULL;
+            RecvE_IDList_IdxTable[lv][r] = NULL;
+            RecvE_SibList        [lv][r] = NULL;
+#           endif
+
 #           ifdef GRAVITY
             SendG_NList          [lv][r] = 0;
             SendG_IDList         [lv][r] = NULL;
@@ -365,6 +403,10 @@ struct LB_t
          if ( RecvR_NList   [lv] != NULL )   delete [] RecvR_NList   [lv];
          if ( SendF_NList   [lv] != NULL )   delete [] SendF_NList   [lv];
          if ( RecvF_NList   [lv] != NULL )   delete [] RecvF_NList   [lv];
+#        ifdef MHD
+         if ( SendE_NList   [lv] != NULL )   delete [] SendE_NList   [lv];
+         if ( RecvE_NList   [lv] != NULL )   delete [] RecvE_NList   [lv];
+#        endif
 #        ifdef GRAVITY
          if ( SendG_NList   [lv] != NULL )   delete [] SendG_NList   [lv];
          if ( RecvG_NList   [lv] != NULL )   delete [] RecvG_NList   [lv];
@@ -380,6 +422,10 @@ struct LB_t
          RecvR_NList   [lv] = NULL;
          SendF_NList   [lv] = NULL;
          RecvF_NList   [lv] = NULL;
+#        ifdef MHD
+         SendE_NList   [lv] = NULL;
+         RecvE_NList   [lv] = NULL;
+#        endif
 #        ifdef GRAVITY
          SendG_NList   [lv] = NULL;
          RecvG_NList   [lv] = NULL;
@@ -409,6 +455,13 @@ struct LB_t
          if ( RecvF_IDList         [lv] != NULL )  delete [] RecvF_IDList         [lv];
          if ( RecvF_IDList_IdxTable[lv] != NULL )  delete [] RecvF_IDList_IdxTable[lv];
          if ( RecvF_SibList        [lv] != NULL )  delete [] RecvF_SibList        [lv];
+#        ifdef MHD
+         if ( SendE_IDList         [lv] != NULL )  delete [] SendE_IDList         [lv];
+         if ( SendE_SibList        [lv] != NULL )  delete [] SendE_SibList        [lv];
+         if ( RecvE_IDList         [lv] != NULL )  delete [] RecvE_IDList         [lv];
+         if ( RecvE_IDList_IdxTable[lv] != NULL )  delete [] RecvE_IDList_IdxTable[lv];
+         if ( RecvE_SibList        [lv] != NULL )  delete [] RecvE_SibList        [lv];
+#        endif
 #        ifdef GRAVITY
          if ( SendG_IDList         [lv] != NULL )  delete [] SendG_IDList         [lv];
          if ( SendG_SibList        [lv] != NULL )  delete [] SendG_SibList        [lv];
@@ -446,6 +499,13 @@ struct LB_t
          RecvF_IDList         [lv] = NULL;
          RecvF_IDList_IdxTable[lv] = NULL;
          RecvF_SibList        [lv] = NULL;
+#        ifdef MHD
+         SendE_IDList         [lv] = NULL;
+         SendE_SibList        [lv] = NULL;
+         RecvE_IDList         [lv] = NULL;
+         RecvE_IDList_IdxTable[lv] = NULL;
+         RecvE_SibList        [lv] = NULL;
+#        endif
 #        ifdef GRAVITY
          SendG_IDList         [lv] = NULL;
          SendG_SibList        [lv] = NULL;
@@ -517,6 +577,10 @@ struct LB_t
          RecvR_NList   [lv][r] = 0;
          SendF_NList   [lv][r] = 0;
          RecvF_NList   [lv][r] = 0;
+#        ifdef MHD
+         SendE_NList   [lv][r] = 0;
+         RecvE_NList   [lv][r] = 0;
+#        endif
 #        ifdef GRAVITY
          SendG_NList   [lv][r] = 0;
          RecvG_NList   [lv][r] = 0;
@@ -549,6 +613,13 @@ struct LB_t
          if ( RecvF_IDList         [lv][r] != NULL )  free(     RecvF_IDList         [lv][r] );
          if ( RecvF_IDList_IdxTable[lv][r] != NULL )  delete [] RecvF_IDList_IdxTable[lv][r];
          if ( RecvF_SibList        [lv][r] != NULL )  delete [] RecvF_SibList        [lv][r];
+#        ifdef MHD
+         if ( SendE_IDList         [lv][r] != NULL )  delete [] SendE_IDList         [lv][r];
+         if ( SendE_SibList        [lv][r] != NULL )  delete [] SendE_SibList        [lv][r];
+         if ( RecvE_IDList         [lv][r] != NULL )  free(     RecvE_IDList         [lv][r] );
+         if ( RecvE_IDList_IdxTable[lv][r] != NULL )  delete [] RecvE_IDList_IdxTable[lv][r];
+         if ( RecvE_SibList        [lv][r] != NULL )  delete [] RecvE_SibList        [lv][r];
+#        endif
 #        ifdef GRAVITY
          if ( r == 0 )
          {
@@ -589,6 +660,13 @@ struct LB_t
          RecvF_IDList         [lv][r] = NULL;
          RecvF_IDList_IdxTable[lv][r] = NULL;
          RecvF_SibList        [lv][r] = NULL;
+#        ifdef MHD
+         SendE_IDList         [lv][r] = NULL;
+         SendE_SibList        [lv][r] = NULL;
+         RecvE_IDList         [lv][r] = NULL;
+         RecvE_IDList_IdxTable[lv][r] = NULL;
+         RecvE_SibList        [lv][r] = NULL;
+#        endif
 #        ifdef GRAVITY
          SendG_IDList         [lv][r] = NULL;
          SendG_SibList        [lv][r] = NULL;

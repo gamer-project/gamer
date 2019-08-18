@@ -462,7 +462,7 @@ CC_FILE     += MHD_GetCellCenteredBInPatch.cpp  MHD_InterpolateBField.cpp  MHD_A
 CC_FILE     += CPU_Shared_ConstrainedTransport.cpp  CPU_Shared_RiemannSolver_HLLD.cpp
 
 ifeq "$(findstring -DLOAD_BALANCE, $(SIMU_OPTION))" "-DLOAD_BALANCE"
-CC_FILE     += MHD_LB_EnsureBFieldConsistencyAfterRestrict.cpp
+CC_FILE     += MHD_LB_EnsureBFieldConsistencyAfterRestrict.cpp  MHD_LB_AllocateElectricArray.cpp
 endif # LOAD_BALANCE
 endif # MHD
 

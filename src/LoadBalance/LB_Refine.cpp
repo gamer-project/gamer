@@ -99,27 +99,36 @@ void LB_Refine( const int FaLv )
    LB_RecordExchangeRestrictDataPatchID(  FaLv );
    LB_RecordExchangeRestrictDataPatchID( SonLv );
 
-// 4.3 list for exchanging hydro fluxes (also allocate flux arrays)
+// 4.3 list for exchanging hydro fluxes (and also allocate flux arrays)
    if ( amr->WithFlux )
    {
       LB_AllocateFluxArray(  FaLv );
       LB_AllocateFluxArray( SonLv );
    }
 
-// 4.4 list for exchanging hydro data after the fix-up operation
+// 4.4 list for exchanging MHD electric field (and also allocate electric field arrays)
+#  ifdef MHD
+   if ( amr->WithElectric )
+   {
+      MHD_LB_AllocateElectricArray(  FaLv );
+      MHD_LB_AllocateElectricArray( SonLv );
+   }
+#  endif
+
+// 4.5 list for exchanging hydro data after the fix-up operation
 //     --> for simplicity and sustainability, we always invoke LB_RecordExchangeFixUpDataPatchID()
 //     --> see the comments 4.2 above
    LB_RecordExchangeFixUpDataPatchID(  FaLv );
    LB_RecordExchangeFixUpDataPatchID( SonLv );
 
-// 4.5 list for overlapping MPI time with CPU/GPU computation
+// 4.6 list for overlapping MPI time with CPU/GPU computation
    if ( OPT__OVERLAP_MPI )
    {
       LB_RecordOverlapMPIPatchID(  FaLv );
       LB_RecordOverlapMPIPatchID( SonLv );
    }
 
-// 4.6 list for exchanging particles
+// 4.7 list for exchanging particles
 #  ifdef PARTICLE
    Par_LB_RecordExchangeParticlePatchID( SonLv );
 

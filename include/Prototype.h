@@ -449,6 +449,7 @@ void MHD_BoundaryCondition_User( real **Array, const int BC_Face, const int NVar
                                  const double Time, const double dh, const double *Corner, const int lv );
 #ifdef LOAD_BALANCE
 void MHD_LB_EnsureBFieldConsistencyAfterRestrict( const int lv );
+void MHD_LB_AllocateElectricArray( const int FaLv );
 #endif
 #endif // #ifdef MHD
 
