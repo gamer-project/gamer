@@ -1492,29 +1492,67 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
 
 
 #  ifdef MHD
-// 8. ensure consistency of B field on the common interfaces between nearby **real** patches
+// 8. ensure consistency of B field on the common interfaces between nearby **leaf and non-leaf real** patches
+//    on level lv for the mode DATA_RESTRICT
 //    --> do this after recording MPI bandwidth to avoid overwriting Timer_MPI[]
-//    --> this operation is necessary because nearby real patches may reside on different ranks
-//        --> for nearby real patches in the same rank, it is done directly in Flu_FixUp_Restrcit()
-//        --> only necessary on coarse-fine interfaces
-//    --> procedure: real son -> buffer father in the same rank -> real father in another rank
-//                   -> buffer father in all ranks -> real sibling father
-//    --> we will further invoke MHD_LB_EnsureBFieldConsistencyAfterRestrict() in EvolveLevel()
-//        to ensure consistency of B field on the common interfaces between nearby **buffer** patches
+//    --> this operation is necessary because the MPI communication of DATA_RESTRICT only fills up the data of
+//        **non-leaf real** patches whose sons are not home
+//        --> still need to copy data from these non-leaf real patches to their common interfaces of nearby
+//            leaf real patches
+//    --> there are three cases for a given **leaf** real patch near coarse-fine boundaries to be corrected:
+//        (1) sibling is real and the sibling-son is also real:
+//            --> nothing to do here because the B field consistency has been ensured in Flu_FixUp_Restrcit()
+//        (2) sibling is real but the sibling-son is buffer:
+//            --> procedure: real son in rank R1 -> buffer father in rank R1 -> real father in rank R2
+//                           -> real father-sibling patches in rank R2
+//        (3) sibling is buffer:
+//            --> procedure: real son in rank R1 -> buffer father in rank R1 -> real father in rank R2
+//                           -> buffer father in rank R3 -> real father-sibling in rank R3
+//    --> we will further invoke MHD_LB_EnsureBFieldConsistencyAfterRestrict() at the end of LB_GetBufferData()
+//        for the mode DATA_AFTER_FIXUP to ensure consistency of B field on the common interfaces between
+//        nearby **buffer** patches
 // ============================================================================================================
    if ( GetBufMode == DATA_RESTRICT )
    {
-      const int MirrorSib[6] = { 1, 0, 3, 2, 5, 4 };
+//    8.1. case (2) above
+      for (int r=0; r<MPI_NRank; r++)
+      for (int t=0; t<Recv_NList[r]; t++)
+      {
+         const int RPID = Recv_IDList[r][t];
 
-//    trnasfer the restricted B field from real to buffer patches
+#        ifdef GAMER_DEBUG
+         if ( RPID >= amr->NPatchComma[lv][1] )
+            Aux_Error( ERROR_INFO, "RPID %d is not a real patch (lv %d, NReal %d) !!\n",
+                       RPID, lv, amr->NPatchComma[lv][1] );
+#        endif
+
+//       copy data from a non-leaf real patch to its sibling leaf real patches
+         for (int s=0; s<6; s++)
+         {
+            const int RSibPID = amr->patch[0][lv][RPID]->sibling[s];
+
+#           ifdef GAMER_DEBUG
+            if ( RSibPID == -1 )
+               Aux_Error( ERROR_INFO, "RSibPID == -1 (lv %d, RPID %d, s %d) !!\n", lv, RPID, s );
+#           endif
+
+            if ( RSibPID >= 0  &&  RSibPID < amr->NPatchComma[lv][1]  &&  amr->patch[0][lv][RSibPID]->son == -1 )
+               MHD_CopyPatchInterfaceBField( lv, RPID, s, MagSg );
+         }
+      } // r,t
+
+
+//    8.2. case (3) above
+//    8.2.1. transfer the restricted B field from real to buffer patches
 //    --> set the number of ghost zones to zero to only transfer B field on the patch boundaries
 //###OPTIMIZATION: (a) only need to transfer data in between **non-leaf** patches
 //                 (b) only buffer patches with **leaf** sibling real patches need to receive data
       const int ParaBufZero = 0;
       LB_GetBufferData( lv, NULL_INT, MagSg, NULL_INT, DATA_GENERAL, _NONE, TVarFC, ParaBufZero );
 
-//    copy data from non-leaf buffer patches to leaf real patches
+//    8.2.2. copy data from non-leaf buffer patches to leaf real patches
 //    --> for simplicity, it always works on all three components regardless of TVarFC
+      const int MirrorSib[6] = { 1, 0, 3, 2, 5, 4 };
       for (int RealPID=0; RealPID<amr->NPatchComma[lv][1]; RealPID++)
       {
          if ( amr->patch[0][lv][RealPID]->son == -1 )
@@ -1537,7 +1575,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
 //    --> necessary because the mode DATA_AFTER_FIXUP will only re-transfer data for **non-leaf** buffer patches
 //    --> note that even when OPT__FIXUP_RESTRICT is off we still need to do data restriction in several places
 //        (e.g., restart and OPT__CORR_AFTER_ALL_SYNC)
-//    --> for simplicity and sustainability, we always perform the following operation even when OPT__FIXUP_RESTRICT is off)
+//    --> for simplicity and sustainability, we always perform the following operation even when OPT__FIXUP_RESTRICT is off
 //    --> for simplicity, it always works on all three components regardless of TVarFC
 // ============================================================================================================
    if ( GetBufMode == DATA_AFTER_FIXUP )
