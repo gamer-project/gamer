@@ -450,6 +450,7 @@ void MHD_BoundaryCondition_User( real **Array, const int BC_Face, const int NVar
 #ifdef LOAD_BALANCE
 void MHD_LB_EnsureBFieldConsistencyAfterRestrict( const int lv );
 void MHD_LB_AllocateElectricArray( const int FaLv );
+void MHD_LB_ResetBufferElectric( const int lv );
 #endif
 #endif // #ifdef MHD
 

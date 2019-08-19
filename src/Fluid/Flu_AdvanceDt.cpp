@@ -77,8 +77,13 @@ int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 // note that we always have FluStatus == GAMER_SUCCESS if AUTO_REDUCE_DT is disabled
    if ( FluStatus_AllRank == GAMER_SUCCESS )
    {
-//    reset the fluxes in the buffer patches at lv as zeros so that one can accumulate the coarse-fine fluxes later when evolving lv+1
+//    reset the fluxes and electric field in the buffer patches at lv as zeros
+//    --> for accumulating the coarse-fine fluxes and electric field later when evolving lv+1
       if ( OPT__FIXUP_FLUX )  Buf_ResetBufferFlux( lv );
+
+#     if ( defined MHD  &&  defined LOAD_BALANCE )
+      if ( OPT__FIXUP_ELECTRIC )    MHD_LB_ResetBufferElectric( lv );
+#     endif
 
 
 //    call Flu_ResetByUser_API_Ptr() here only if both GRAVITY and GRACKLE are disabled
