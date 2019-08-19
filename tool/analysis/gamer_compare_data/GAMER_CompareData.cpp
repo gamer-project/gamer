@@ -311,7 +311,7 @@ void CompareGridData()
 
                      if ( fabs( RelErr ) >= TolErr  ||  !isfinite( RelErr )  )
                         fprintf( File, "%5d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
-                                 lv, PID1, PID2, i, j, k, 1002, Data1, Data2, AbsErr, RelErr );
+                                 lv, PID1, PID2, i, j, k, 2000+v, Data1, Data2, AbsErr, RelErr );
                   }
                }
             } // i,j,k
@@ -331,7 +331,7 @@ void CompareGridData()
 
                if ( fabs( RelErr ) >= TolErr  ||  !isfinite( RelErr )  )
                   fprintf( File, "%5d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
-                           lv, PID1, PID2, i, j, k, 2000, Data1, Data2, AbsErr, RelErr );
+                           lv, PID1, PID2, i, j, k, 2003, Data1, Data2, AbsErr, RelErr );
             }
 
 //          By
@@ -348,7 +348,7 @@ void CompareGridData()
 
                if ( fabs( RelErr ) >= TolErr  ||  !isfinite( RelErr )  )
                   fprintf( File, "%5d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
-                           lv, PID1, PID2, i, j, k, 2001, Data1, Data2, AbsErr, RelErr );
+                           lv, PID1, PID2, i, j, k, 2004, Data1, Data2, AbsErr, RelErr );
             }
 
 //          Bz
@@ -365,7 +365,7 @@ void CompareGridData()
 
                if ( fabs( RelErr ) >= TolErr  ||  !isfinite( RelErr )  )
                   fprintf( File, "%5d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
-                           lv, PID1, PID2, i, j, k, 2002, Data1, Data2, AbsErr, RelErr );
+                           lv, PID1, PID2, i, j, k, 2005, Data1, Data2, AbsErr, RelErr );
             }
 
 
