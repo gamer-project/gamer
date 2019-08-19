@@ -300,7 +300,7 @@ void Init_ByRestart()
    if ( LoadParDens )   NGridVar ++;
 #  endif
 #  ifdef MHD
-   if ( LoadCCMag )     NGridVar += 3;
+   if ( LoadCCMag )     NGridVar += NCOMP_MAG;
 #  endif
 
    PatchDataSize  = CUBE(PS1)*NGridVar*sizeof(real);
