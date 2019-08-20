@@ -53,7 +53,7 @@ bool SRHydro_Flag_Lorentz( const int i, const int j, const int k, const int lv, 
    LorentzFactor = SRHydro_Con2Pri( Cons, Prim, GAMMA, MIN_TEMP );
 
 // flag if the Lorentz factor > threshold
-   Flag = ( LorentzFactor > Threshold );
+   Flag = ( LorentzFactor >= Threshold );
 
    return Flag;
 

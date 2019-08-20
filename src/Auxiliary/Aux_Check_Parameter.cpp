@@ -136,6 +136,7 @@ void Aux_Check_Parameter()
    if (  ( OPT__FLAG_LOHNER_DENS 
         || OPT__FLAG_LOHNER_ENGY 
         || OPT__FLAG_LOHNER_PRES 
+        || OPT__FLAG_LOHNER_LRTZ 
         || OPT__FLAG_LOHNER_TEMP )
          &&  Flu_ParaBuf < 2  )
       Aux_Error( ERROR_INFO, "Lohner error estimator does NOT work when Flu_ParaBuf (%d) < 2 !!\n", Flu_ParaBuf );
@@ -305,9 +306,11 @@ void Aux_Check_Parameter()
 #  elif ( MODEL == SR_HYDRO )
    Flag |= OPT__FLAG_PRES_GRADIENT;
    Flag |= OPT__FLAG_VORTICITY;
+   Flag |= OPT__FLAG_LORENTZ;
    Flag |= OPT__FLAG_LOHNER_ENGY;
    Flag |= OPT__FLAG_LOHNER_PRES;
    Flag |= OPT__FLAG_LOHNER_TEMP;
+   Flag |= OPT__FLAG_LOHNER_LRTZ;
 #  elif ( MODEL == ELBDM )
    Flag |= OPT__FLAG_ENGY_DENSITY;
 #  endif

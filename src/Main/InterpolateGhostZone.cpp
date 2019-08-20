@@ -103,6 +103,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    const bool PrepVz          = ( TVar & _VELZ    ) ? true : false; // 4-velocity in z-direction
    const bool PrepPres        = ( TVar & _PRES    ) ? true : false; // pressure
    const bool PrepTemp        = ( TVar & _TEMP    ) ? true : false; // temperature
+   const bool PrepLrtz        = ( TVar & _LRTZ    ) ? true : false; // Lorentz factor
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
@@ -462,22 +463,22 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                                           Idx = IDX321( Disp2[0], j2, k2, CSize[0], CSize[1] );
       for (i1=Disp1[0]; i1<Disp1[0]+Loop1[0]; i1++)   {
 
-	 for(int q =0;q<NCOMP_FLUID;q++)  Cons[q]=amr->patch[FluSg][lv][PID]->fluid[q][k1][j1][i1];
+	  for(int q =0;q<NCOMP_FLUID;q++)  Cons[q]=amr->patch[FluSg][lv][PID]->fluid[q][k1][j1][i1];
 
-	    SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
+	  SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
 
-	    CData_Ptr[Idx] = Prim[1];
+	  CData_Ptr[Idx] = Prim[1];
 
-         if ( FluIntTime ) // temporal interpolation
-	   {
-            for(int q =0;q<NCOMP_FLUID;q++){
+      if ( FluIntTime ) // temporal interpolation
+	  {
+          for(int q =0;q<NCOMP_FLUID;q++){
 	      Cons[q]=amr->patch[FluSg_IntT][lv][PID]->fluid[q][k1][j1][i1];}
 
 	      SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
 
 	      CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
 			       + FluWeighting_IntT*Prim[1];
-	   }
+	  }
          Idx ++;
       }}}
 
@@ -491,21 +492,21 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                                           Idx = IDX321( Disp2[0], j2, k2, CSize[0], CSize[1] );
       for (i1=Disp1[0]; i1<Disp1[0]+Loop1[0]; i1++)   {
 
-	 for(int q =0;q<NCOMP_FLUID;q++)  Cons[q]=amr->patch[FluSg][lv][PID]->fluid[q][k1][j1][i1];
+	  for(int q =0;q<NCOMP_FLUID;q++)  Cons[q]=amr->patch[FluSg][lv][PID]->fluid[q][k1][j1][i1];
 
-	 SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
+	  SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
 
-         CData_Ptr[Idx] = Prim[2];
+      CData_Ptr[Idx] = Prim[2];
 
-         if ( FluIntTime ) // temporal interpolation
-	   {
-            for(int q =0;q<NCOMP_FLUID;q++)  Cons[q]=amr->patch[FluSg_IntT][lv][PID]->fluid[q][k1][j1][i1];
+      if ( FluIntTime ) // temporal interpolation
+	  {
+         for(int q =0;q<NCOMP_FLUID;q++)  Cons[q]=amr->patch[FluSg_IntT][lv][PID]->fluid[q][k1][j1][i1];
 
-	      SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
+	     SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
 
-	      CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
+	     CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
 			       + FluWeighting_IntT*Prim[2];
-	   }
+	  }
          Idx ++;
       }}}
 
@@ -519,20 +520,48 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                                           Idx = IDX321( Disp2[0], j2, k2, CSize[0], CSize[1] );
       for (i1=Disp1[0]; i1<Disp1[0]+Loop1[0]; i1++)   {
 
-	 for(int q =0;q<NCOMP_FLUID;q++) Cons[q]=amr->patch[FluSg][lv][PID]->fluid[q][k1][j1][i1];
+      for(int q =0;q<NCOMP_FLUID;q++) Cons[q]=amr->patch[FluSg][lv][PID]->fluid[q][k1][j1][i1];
 
-	 SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
+	  SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
 
-         CData_Ptr[Idx] = Prim[3];
+      CData_Ptr[Idx] = Prim[3];
 
-         if ( FluIntTime ) // temporal interpolation
+      if ( FluIntTime ) // temporal interpolation
+	  {
+         for(int q =0;q<NCOMP_FLUID;q++) Cons[q]=amr->patch[FluSg_IntT][lv][PID]->fluid[q][k1][j1][i1];
+
+	     SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
+
+	     CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
+	   	       + FluWeighting_IntT*Prim[3];
+	  }
+         Idx ++;
+      }}}
+
+      CData_Ptr += CSize3D;
+   }
+
+   if ( PrepLrtz )
+   {
+       for (int k=0; k<Loop1[2]; k++)   {  k1 = k + Disp1[2];   k2 = k + Disp2[2];
+       for (int j=0; j<Loop1[1]; j++)   {  j1 = j + Disp1[1];   j2 = j + Disp2[1];
+                                           Idx = IDX321( Disp2[0], j2, k2, CSize[0], CSize[1] );
+       for (i1=Disp1[0]; i1<Disp1[0]+Loop1[0]; i1++)   {
+
+       for(int q =0;q<NCOMP_FLUID;q++) Cons[q]=amr->patch[FluSg][lv][PID]->fluid[q][k1][j1][i1];
+    
+       real LorentzFactor = SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
+
+       CData_Ptr[Idx] = LorentzFactor;
+
+       if ( FluIntTime ) // temporal interpolation
 	   {
-            for(int q =0;q<NCOMP_FLUID;q++) Cons[q]=amr->patch[FluSg_IntT][lv][PID]->fluid[q][k1][j1][i1];
+          for(int q =0;q<NCOMP_FLUID;q++) Cons[q]=amr->patch[FluSg_IntT][lv][PID]->fluid[q][k1][j1][i1];
 
-	      SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
+	      LorentzFactor = SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
 
 	      CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
-			       + FluWeighting_IntT*Prim[3];
+			       + FluWeighting_IntT*LorentzFactor;
 	   }
          Idx ++;
       }}}
@@ -797,21 +826,21 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                                                 Idx = IDX321( Disp3[0], j1, k1, CSize[0], CSize[1] );
             for (i2=Disp4[0]; i2<Disp4[0]+Loop2[0]; i2++)   {
 
-	       for(int q =0;q<NCOMP_FLUID;q++) Cons[q]=amr->patch[FluSg][lv][SibPID]->fluid[q][k2][j2][i2];
+	        for(int q =0;q<NCOMP_FLUID;q++) Cons[q]=amr->patch[FluSg][lv][SibPID]->fluid[q][k2][j2][i2];
 
-		SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
+		    SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
 
-		CData_Ptr[Idx] = Prim[1];
+		    CData_Ptr[Idx] = Prim[1];
 
-               if ( FluIntTime ) // temporal interpolation
-		   {
-                    for(int q =0;q<NCOMP_FLUID;q++) Cons[q]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[q][k2][j2][i2];
+            if ( FluIntTime ) // temporal interpolation
+		    {
+               for(int q =0;q<NCOMP_FLUID;q++) Cons[q]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[q][k2][j2][i2];
 
-		      SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
+		       SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
 
-		      CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
-				       + FluWeighting_IntT*Prim[1];
-		   }
+		       CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
+		     	       + FluWeighting_IntT*Prim[1];
+		    }
                Idx ++;
             }}}
 
@@ -825,22 +854,22 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                                                 Idx = IDX321( Disp3[0], j1, k1, CSize[0], CSize[1] );
             for (i2=Disp4[0]; i2<Disp4[0]+Loop2[0]; i2++)   {
 
-	       for(int q =0;q<NCOMP_FLUID;q++) Cons[q]=amr->patch[FluSg][lv][SibPID]->fluid[q][k2][j2][i2];
+	        for(int q =0;q<NCOMP_FLUID;q++) Cons[q]=amr->patch[FluSg][lv][SibPID]->fluid[q][k2][j2][i2];
 
-		SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
+		    SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
 
-		CData_Ptr[Idx] = Prim[2];
+		    CData_Ptr[Idx] = Prim[2];
 
-               if ( FluIntTime ) // temporal interpolation
-		   {
-                    for(int q =0;q<NCOMP_FLUID;q++){
+            if ( FluIntTime ) // temporal interpolation
+		    {
+              for(int q =0;q<NCOMP_FLUID;q++){
 		      Cons[q]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[q][k2][j2][i2];}
 
 		      SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
 
 		      CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
 				       + FluWeighting_IntT*Prim[2];
-		   }
+		    }
                Idx ++;
             }}}
 
@@ -854,14 +883,14 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                                                 Idx = IDX321( Disp3[0], j1, k1, CSize[0], CSize[1] );
             for (i2=Disp4[0]; i2<Disp4[0]+Loop2[0]; i2++)   {
 
-	       for(int q =0;q<NCOMP_FLUID;q++)	Cons[q]=amr->patch[FluSg][lv][SibPID]->fluid[q][k2][j2][i2];
+	        for(int q =0;q<NCOMP_FLUID;q++)	Cons[q]=amr->patch[FluSg][lv][SibPID]->fluid[q][k2][j2][i2];
 
-		SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
+            SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
 
-		CData_Ptr[Idx] = Prim[3];
+            CData_Ptr[Idx] = Prim[3];
 
-               if ( FluIntTime ) // temporal interpolation
-		   {
+            if ( FluIntTime ) // temporal interpolation
+		    {
                     for(int q =0;q<NCOMP_FLUID;q++){
 		      Cons[q]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[q][k2][j2][i2];}
 
@@ -869,7 +898,36 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
 		      CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
 				       + FluWeighting_IntT*Prim[3];
-		   }
+		    }
+               Idx ++;
+            }}}
+
+            CData_Ptr += CSize3D;
+         }
+
+         if ( PrepLrtz )
+         {
+            for (int k=0; k<Loop2[2]; k++)   {  k1 = k + Disp3[2];   k2 = k + Disp4[2];
+            for (int j=0; j<Loop2[1]; j++)   {  j1 = j + Disp3[1];   j2 = j + Disp4[1];
+                                                Idx = IDX321( Disp3[0], j1, k1, CSize[0], CSize[1] );
+            for (i2=Disp4[0]; i2<Disp4[0]+Loop2[0]; i2++)   {
+
+	        for(int q =0;q<NCOMP_FLUID;q++)	Cons[q]=amr->patch[FluSg][lv][SibPID]->fluid[q][k2][j2][i2];
+
+            real LorentzFactor = SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
+
+		    CData_Ptr[Idx] = LorentzFactor;
+
+            if ( FluIntTime ) // temporal interpolation
+		    {
+               for(int q =0;q<NCOMP_FLUID;q++){
+		       Cons[q]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[q][k2][j2][i2];}
+
+		       LorentzFactor = SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
+
+		       CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
+		     	       + FluWeighting_IntT*LorentzFactor;
+		    }
                Idx ++;
             }}}
 

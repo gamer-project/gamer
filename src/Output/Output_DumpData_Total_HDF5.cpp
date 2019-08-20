@@ -1904,6 +1904,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__Flag_LohnerEngy    = OPT__FLAG_LOHNER_ENGY;
    InputPara.Opt__Flag_LohnerPres    = OPT__FLAG_LOHNER_PRES;
    InputPara.Opt__Flag_LohnerTemp    = OPT__FLAG_LOHNER_TEMP;
+   InputPara.Opt__Flag_LohnerLrtz    = OPT__FLAG_LOHNER_LRTZ;
 #  endif
    InputPara.Opt__Flag_LohnerForm    = OPT__FLAG_LOHNER_FORM;
    InputPara.Opt__Flag_User          = OPT__FLAG_USER;
@@ -2123,6 +2124,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  if   ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
    const bool Opt__FlagLohner = ( OPT__FLAG_LOHNER_DENS 
                                || OPT__FLAG_LOHNER_ENGY 
+                               || OPT__FLAG_LOHNER_LRTZ
                                || OPT__FLAG_LOHNER_PRES 
                                || OPT__FLAG_LOHNER_TEMP );
 #  elif ( MODEL == ELBDM )
@@ -2601,7 +2603,6 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__Flag_LohnerEngy",    HOFFSET(InputPara_t,Opt__Flag_LohnerEngy   ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_LohnerPres",    HOFFSET(InputPara_t,Opt__Flag_LohnerPres   ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_LohnerTemp",    HOFFSET(InputPara_t,Opt__Flag_LohnerTemp   ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "Opt__Flag_LohnerPron",    HOFFSET(InputPara_t,Opt__Flag_LohnerPron   ), H5T_NATIVE_INT     );
 #  endif
    H5Tinsert( H5_TypeID, "Opt__Flag_LohnerForm",    HOFFSET(InputPara_t,Opt__Flag_LohnerForm   ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_User",          HOFFSET(InputPara_t,Opt__Flag_User         ), H5T_NATIVE_INT     );

@@ -44,11 +44,18 @@ void Init_Load_FlagCriteria()
    double *FlagTable_ParMassCell      = NULL;
 #  endif
 
-#  if   ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
+#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
    const bool OPT__FLAG_LOHNER = ( OPT__FLAG_LOHNER_DENS 
                                 || OPT__FLAG_LOHNER_ENGY 
                                 || OPT__FLAG_LOHNER_PRES 
                                 || OPT__FLAG_LOHNER_TEMP );
+#  elif ( MODEL == SR_HYDRO )
+   const bool OPT__FLAG_LOHNER = ( OPT__FLAG_LOHNER_DENS 
+                                || OPT__FLAG_LOHNER_ENGY 
+                                || OPT__FLAG_LOHNER_PRES 
+                                || OPT__FLAG_LOHNER_LRTZ
+                                || OPT__FLAG_LOHNER_TEMP );
+#  elif ( MODEL == SR_HYDRO )
 #  elif ( MODEL == ELBDM )
    const bool OPT__FLAG_LOHNER = OPT__FLAG_LOHNER_DENS;
 #  else
@@ -59,15 +66,15 @@ void Init_Load_FlagCriteria()
    const bool Flag[NFlagMode]   = { OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_PRES_GRADIENT,
                                     OPT__FLAG_ENGY_DENSITY, OPT__FLAG_LOHNER, OPT__FLAG_USER,
                                     (bool)OPT__FLAG_NPAR_PATCH, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL,
-                                    OPT__FLAG_VORTICITY, OPT__FLAG_JEANS };
-   const char ModeName[][100]   = { "OPT__FLAG_RHO", "OPT__FLAG_RHO_GRADIENT", "OPT__FLAG_PRES_GRADIENT",
-                                    "OPT__FLAG_ENGY_DENSITY", "OPT__FLAG_LOHNER", "OPT__FLAG_USER",
-                                    "OPT__FLAG_NPAR_PATCH", "OPT__FLAG_NPAR_CELL", "OPT__FLAG_PAR_MASS_CELL",
-                                    "OPT__FLAG_VORTICITY", "OPT__FLAG_JEANS", "OPT__FLAG_LORENTZ" };
-   const char FileName[][100]   = { "Input__Flag_Rho", "Input__Flag_RhoGradient", "Input__Flag_PresGradient",
-                                    "Input__Flag_EngyDensity", "Input__Flag_Lohner", "Input__Flag_User",
-                                    "Input__Flag_NParPatch", "Input__Flag_NParCell", "Input__Flag_ParMassCell",
-                                    "Input__Flag_Vorticity", "Input__Flag_Jeans", "Input__Flag_Lorentz" };
+                                    OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, OPT__FLAG_LORENTZ };
+   const char ModeName[][100]   = { "OPT__FLAG_RHO"         , "OPT__FLAG_RHO_GRADIENT", "OPT__FLAG_PRES_GRADIENT",
+                                    "OPT__FLAG_ENGY_DENSITY", "OPT__FLAG_LOHNER"      , "OPT__FLAG_USER"         ,
+                                    "OPT__FLAG_NPAR_PATCH"  , "OPT__FLAG_NPAR_CELL"   , "OPT__FLAG_PAR_MASS_CELL",
+                                    "OPT__FLAG_VORTICITY"   , "OPT__FLAG_JEANS"       , "OPT__FLAG_LORENTZ"       };
+   const char FileName[][100]   = { "Input__Flag_Rho"        , "Input__Flag_RhoGradient", "Input__Flag_PresGradient",
+                                    "Input__Flag_EngyDensity", "Input__Flag_Lohner"     , "Input__Flag_User"        ,
+                                    "Input__Flag_NParPatch"  , "Input__Flag_NParCell"   , "Input__Flag_ParMassCell" ,
+                                    "Input__Flag_Vorticity"  , "Input__Flag_Jeans"      , "Input__Flag_Lorentz"      };
    double *FlagTable[NFlagMode] = { FlagTable_Rho, FlagTable_RhoGradient, FlagTable_PresGradient,
                                     NULL, NULL, FlagTable_User, NULL, NULL, FlagTable_ParMassCell,
                                     FlagTable_Vorticity, FlagTable_Jeans, FlagTable_Lorentz };
