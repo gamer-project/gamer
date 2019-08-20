@@ -397,6 +397,7 @@ struct InputPara_t
    int    Opt__Flag_PresGradient;
    int    Opt__Flag_Vorticity;
    int    Opt__Flag_Jeans;
+   int    Opt__Flag_Lorentz;
 #  endif
 #  if ( MODEL == ELBDM )
    int    Opt__Flag_EngyDensity;
@@ -633,6 +634,7 @@ struct InputPara_t
    double FlagTable_PresGradient[NLEVEL-1];
    double FlagTable_Vorticity   [NLEVEL-1];
    double FlagTable_Jeans       [NLEVEL-1];
+   double FlagTable_Lorentz     [NLEVEL-1];
 #  elif ( MODEL == ELBDM )
    double FlagTable_EngyDensity [NLEVEL-1][2];
 #  endif

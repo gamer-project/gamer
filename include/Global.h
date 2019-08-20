@@ -117,18 +117,16 @@ extern double           ELBDM_LAMBDA;
 #endif
 
 #elif   ( MODEL == SR_HYDRO )
-extern double           FlagTable_PresGradient[NLEVEL-1], FlagTable_Vorticity[NLEVEL-1], FlagTable_Jeans[NLEVEL-1];
+extern double           FlagTable_PresGradient[NLEVEL-1], FlagTable_Vorticity[NLEVEL-1],
+	                    FlagTable_Jeans[NLEVEL-1], FlagTable_Lorentz[NLEVEL-1];
 extern double           GAMMA, MINMOD_COEFF, EP_COEFF, MOLECULAR_WEIGHT;
 extern LR_Limiter_t     OPT__LR_LIMITER;
 extern Opt1stFluxCorr_t OPT__1ST_FLUX_CORR;
 extern OptRSolver1st_t  OPT__1ST_FLUX_CORR_SCHEME;
 extern bool             OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP;
-extern bool             OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, JEANS_MIN_PRES;
+extern bool             OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, OPT__FLAG_LORENTZ, JEANS_MIN_PRES;
 extern int              OPT__CK_NEGATIVE, JEANS_MIN_PRES_LEVEL, JEANS_MIN_PRES_NCELL;
 extern double           MIN_DENS, MIN_TEMP, MIN_PRES;
-#ifdef DUAL_ENERGY
-extern double           DUAL_ENERGY_SWITCH;
-#endif
 
 #else
 #  error : ERROR : unsupported MODEL !!
