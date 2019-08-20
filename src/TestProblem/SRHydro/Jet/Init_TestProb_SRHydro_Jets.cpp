@@ -422,6 +422,7 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
 bool Flag_User( const int i, const int j, const int k, const int lv, const int PID, const double Threshold )
 {
 
+
    const double dh     = amr->dh[lv];                                                  // grid size
    const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,              // x,y,z position
                            amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
@@ -449,32 +450,87 @@ bool Flag_User( const int i, const int j, const int k, const int lv, const int P
    Flag = Vel > Threshold;
    */
 
-
-   /*
 // Example 2 : flag if the grid is within a sphere with the radius eqaul to the input "Threshold" and the origin
 //             in the center of the simulation box
-   const double Center[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
-   const double dr[3]     = { Pos[0]-Center[0], Pos[1]-Center[1], Pos[2]-Center[2] };
-   const double Radius    = sqrt( dr[0]*dr[0] + dr[1]*dr[1] + dr[2]*dr[2] );
+//   const double Center[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
+//   const double dr[3]     = { Pos[0]-Center[0], Pos[1]-Center[1], Pos[2]-Center[2] };
+//   const double Radius    = sqrt( dr[0]*dr[0] + dr[1]*dr[1] + dr[2]*dr[2] );
 
-   Flag = Radius < Threshold;
-   */
+
+//    Flag |= ( Radius <= amr->dh[lv] * 0.5  * 1.733);
 // ##########################################################################################################
 
-   real Cons[NCOMP_FLUID], Prim[NCOMP_FLUID], LorentzFactor;
+//   real Cons[NCOMP_FLUID], Prim[NCOMP_FLUID];
+//
+//  
+//   Cons[DENS] = Dens[k][j][i];
+//   Cons[MOMX] = MomX[k][j][i];
+//   Cons[MOMY] = MomY[k][j][i];
+//   Cons[MOMZ] = MomZ[k][j][i];
+//   Cons[ENGY] = Engy[k][j][i];
+//
+//
+//   double Temperature =
+//   SRHydro_GetTemperature( Dens[k][j][i], MomX[k][j][i], MomY[k][j][i], MomZ[k][j][i], Engy[k][j][i], GAMMA, MIN_TEMP );
+//   Flag |= Temperature >= Threshold;
+//   double LorentzFactor;
+//   SRHydro_Con2Pri(Cons, Prim);
 
-  
-   Cons[DENS] = Dens[k][j][i];
-   Cons[MOMX] = MomX[k][j][i];
-   Cons[MOMY] = MomY[k][j][i];
-   Cons[MOMZ] = MomZ[k][j][i];
-   Cons[ENGY] = Engy[k][j][i];
+// ##########################################################################################################
 
-   LorentzFactor = SRHydro_Con2Pri( Cons, Prim, GAMMA, MIN_TEMP );
+//  double EndPtVel  = 0.1465;
+//  double IniX      = 25.0;
+//  double StartTime = 280.0;
+//  double EndPtVel  = 0.1465;  // the velocity of jet head
+//  double IniX      = 41.01; // the distance between source and jet head
+//  double StartTime = 580.0;
+//
+//  double Shift = +EndPtVel*(Time[lv]-StartTime)+IniX;
+//
+//  const double Center[3]    = { 0.5*amr->BoxSize[0]      , 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
+//  const double EndPointR[3] = { 0.5*amr->BoxSize[0]+Shift, 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
+//  const double EndPointL[3] = { 0.5*amr->BoxSize[0]-Shift, 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
+//
+//  const double dr0[3]     = { Pos[0]-   Center[0], Pos[1]-   Center[1], Pos[2]-   Center[2] };
+//  const double dr1[3]     = { Pos[0]-EndPointR[0], Pos[1]-EndPointR[1], Pos[2]-EndPointR[2] };
+//  const double dr2[3]     = { Pos[0]-EndPointL[0], Pos[1]-EndPointL[1], Pos[2]-EndPointL[2] };
+//
+//  Flag |= sqrt( dr0[1]*dr0[1] + dr0[2]*dr0[2] ) < 1.5;
+//  Flag &=  abs( dr0[0] ) < Shift;
+//
+//  double Radius1 = sqrt( dr1[0]*dr1[0] + dr1[1]*dr1[1] + dr1[2]*dr1[2] );
+//  double Radius2 = sqrt( dr2[0]*dr2[0] + dr2[1]*dr2[1] + dr2[2]*dr2[2] );
+//
+//
+//  Flag |= ( Radius1 < amr->dh[lv] * 0.5  * 1.733 );
+//  Flag |= ( Radius2 < amr->dh[lv] * 0.5  * 1.733 );
+//  Flag |= ( Radius1 < amr->dh[lv] * 0.5  *   1.1 );
+//  Flag |= ( Radius2 < amr->dh[lv] * 0.5  *   1.1 );
 
-   Flag = LorentzFactor >= Threshold;
+// ##########################################################################################################
+//   const double Center[3]    = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
+//   const double dr0[3]     = { Pos[0]-   Center[0], Pos[1]-   Center[1], Pos[2]-   Center[2] };
+//   double BOX_SIZE_X = 750.0;
+//   double BOX_SIZE_Y = 187.50;
+//   double BOX_SIZE_Z = 187.50;
+//
+//   if ( lv==0 )
+//   {
+//     Flag |=  ( dr0[0] < 100.0 );
+//     Flag |=  ( dr0[0] > 700.0 );
+//   }
+//   else if ( lv == 2 )
+//   {
+//     Flag |=  ( dr0[0] > BOX_SIZE_X *3.0 / 8.0 + amr->dh[lv] ) & ( dr0[0] < BOX_SIZE_X *3.0 / 8.0               );
+//     Flag &=  ( dr0[1] > BOX_SIZE_Y      / 2.0 - amr->dh[lv] ) & ( dr0[1] < BOX_SIZE_Y      / 2.0 + amr->dh[lv] );
+//     Flag &=  ( dr0[2] > BOX_SIZE_Z      / 2.0 - amr->dh[lv] ) & ( dr0[2] < BOX_SIZE_Z      / 2.0 + amr->dh[lv] );
+//
+//     Flag |=  ( dr0[0] > BOX_SIZE_X *5.0 / 8.0               ) & ( dr0[0] < BOX_SIZE_X *5.0 / 8.0 - amr->dh[lv] );
+//     Flag &=  ( dr0[1] > BOX_SIZE_Y      / 2.0 - amr->dh[lv] ) & ( dr0[1] < BOX_SIZE_Y      / 2.0 + amr->dh[lv] );
+//     Flag &=  ( dr0[2] > BOX_SIZE_Z      / 2.0 - amr->dh[lv] ) & ( dr0[2] < BOX_SIZE_Z      / 2.0 + amr->dh[lv] );
+//   }
 
- 
+
    return Flag;
 
 } // FUNCTION : Flag_User

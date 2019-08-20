@@ -116,6 +116,15 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
    }
 #  endif
 
+// check Lorentz factor
+// ===========================================================================================
+#  if ( MODEL == SR_HYDRO )
+   if ( OPT__FLAG_LORENTZ )
+   {
+      Flag |= SRHydro_Flag_Lorentz( i, j, k, lv, PID, FlagTable_Lorentz[lv] );
+      if ( Flag )    return Flag;
+   }
+#  endif
 
 // check Jeans length
 // ===========================================================================================

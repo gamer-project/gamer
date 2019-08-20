@@ -1,7 +1,7 @@
 #include "GAMER.h"
 
 
-#if ( MODEL == HYDRO || MODEL == SR_HYDRO )
+#if ( MODEL == SR_HYDRO )
 
 
 
@@ -86,4 +86,4 @@ bool SRHydro_Flag_Vorticity( const int i, const int j, const int k, const int lv
 
 
 
-#endif // #if ( MODEL == HYDRO )
+#endif // #if ( MODEL == SR_HYDRO )

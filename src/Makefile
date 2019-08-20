@@ -104,7 +104,7 @@ SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 else ifeq "$(filter -DMODEL=SR_HYDRO, $(SIMU_OPTION))" "-DMODEL=SR_HYDRO"
 # hydrodynamic scheme: RTVD/MHM/MHM_RP/CTU
 # --> must be set when MODEL=HYDRO;
-SIMU_OPTION += -DFLU_SCHEME=MHM_RP
+SIMU_OPTION += -DFLU_SCHEME=MHM
 
 SIMU_OPTION += -DEOS=APPROXIMATED_GENERAL
 
@@ -184,10 +184,10 @@ SIMU_OPTION += -DMAX_PATCH=2000000
 
 # GPU acceleration
 # --> must set GPU_ARCH as well
-#SIMU_OPTION += -DGPU
+SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA/TURING
-SIMU_OPTION += -DGPU_ARCH=KEPLER
+SIMU_OPTION += -DGPU_ARCH=FERMI
 
 # debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
@@ -224,7 +224,7 @@ SIMU_OPTION += -DOPENMP
 #SIMU_OPTION += -DLAOHU
 
 # support HDF5 format
-#SIMU_OPTION += -DSUPPORT_HDF5
+SIMU_OPTION += -DSUPPORT_HDF5
 
 # support GNU scientific library
 #SIMU_OPTION += -DSUPPORT_GSL
@@ -358,13 +358,13 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 #CUDA_PATH    := /opt/gpu/cuda/default
 
 # NTU-hulk (openmpi-intel-qlc)
-#FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
-#MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
-#HDF5_PATH    := /opt/hdf5/default
-#GRACKLE_PATH := 
-#GSL_PATH     := /opt/math/gsl/default
-#LIBYT_PATH   := 
-#CUDA_PATH    := /opt/gpu/cuda/default
+FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
+MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
+HDF5_PATH    := /opt/hdf5/default
+GRACKLE_PATH := 
+GSL_PATH     := /opt/math/gsl/default
+LIBYT_PATH   := 
+CUDA_PATH    := /opt/gpu/cuda/default
 
 # NTHU-fomalhaut (openmpi-gnu)
 #CUDA_PATH    := /usr/local/cuda-10.0
@@ -380,23 +380,23 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 #MPI_PATH     := /usr/mpi/intel/openmpi-1.3.2-qlc
 #GPUID_PATH   := /ifs/data/hsiyu/Software/gpudevmgr
 
-# Calab AMD1
+# gamer04
 #FFTW_PATH    := 
-#MPI_PATH     := 
-#HDF5_PATH    := /usr/src/hdf5-1.10.4/hdf5
+#MPI_PATH     := /opt/openmpi/3.1.4-intel
+#HDF5_PATH    := /opt/hdf5
+#GRACKLE_PATH := 
+#GSL_PATH     := 
+#LIBYT_PATH   := 
+#CUDA_PATH    := /usr/local/cuda
+#
+## Calab AMD2
+#FFTW_PATH    := 
+#MPI_PATH     := /home/gamer02/mpi/openmpi
+#HDF5_PATH    := /opt/hdf5
 #GRACKLE_PATH := 
 #GSL_PATH     := 
 #LIBYT_PATH   := 
 #CUDA_PATH    := /usr/local/cuda-10.0
-#
-## Calab AMD2
-FFTW_PATH    := 
-MPI_PATH     := /home/gamer02/mpi/openmpi
-HDF5_PATH    := /usr/local/src/hdf5-1.10.4/hdf5
-GRACKLE_PATH := 
-GSL_PATH     := 
-LIBYT_PATH   := 
-CUDA_PATH    := /usr/local/cuda-10.0
 
 
 # source files
@@ -511,7 +511,7 @@ CC_FILE     += CPU_Shared_DataReconstruction.cpp  CPU_Shared_FluUtility.cpp  CPU
                CPU_dtSolver_SRHydroCFL.cpp SRHydro_Utility.cpp
 
 CC_FILE     += SRHydro_Init_ByFunction_AssignData.cpp  SRHydro_Aux_Check_Negative.cpp \
-               SRHydro_BoundaryCondition_Reflecting.cpp SRHydro_Flag_Vorticity.cpp
+               SRHydro_BoundaryCondition_Reflecting.cpp SRHydro_Flag_Vorticity.cpp SRHydro_Flag_Lorentz.cpp
 
 vpath %.cu     Model_SRHydro/GPU_SRHydro
 vpath %.cpp    Model_SRHydro/CPU_SRHydro Model_SRHydro

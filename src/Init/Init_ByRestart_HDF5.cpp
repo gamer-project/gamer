@@ -1929,10 +1929,13 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "FlagTable_PresGradient",   RS.FlagTable_PresGradient,  SID, TID, NonFatal,  RT.FlagTable_PresGradient,  N1, NonFatal );
 
    if ( OPT__FLAG_VORTICITY )
-   LoadField( "FlagTable_Vorticity",      RS.FlagTable_Vorticity,     SID, TID, NonFatal,  RT.FlagTable_Vorticity,     N1, NonFatal );
+   LoadField( "FlagTable_Lorentz",        RS.FlagTable_Vorticity,     SID, TID, NonFatal,  RT.FlagTable_Vorticity,     N1, NonFatal );
 
    if ( OPT__FLAG_JEANS )
    LoadField( "FlagTable_Jeans",          RS.FlagTable_Jeans,         SID, TID, NonFatal,  RT.FlagTable_Jeans,         N1, NonFatal );
+
+   if ( OPT__FLAG_LORENTZ )
+   LoadField( "FlagTable_Lorentz",        RS.FlagTable_Lorentz,       SID, TID, NonFatal,  RT.FlagTable_Lorentz,       N1, NonFatal );
 
 #  elif ( MODEL == ELBDM )
    if ( OPT__FLAG_ENGY_DENSITY ) {

@@ -1894,6 +1894,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__Flag_PresGradient  = OPT__FLAG_PRES_GRADIENT;
    InputPara.Opt__Flag_Vorticity     = OPT__FLAG_VORTICITY;
    InputPara.Opt__Flag_Jeans         = OPT__FLAG_JEANS;
+   InputPara.Opt__Flag_Lorentz       = OPT__FLAG_LORENTZ;
 #  endif
 #  if ( MODEL == ELBDM )
    InputPara.Opt__Flag_EngyDensity   = OPT__FLAG_ENGY_DENSITY;

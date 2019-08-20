@@ -23,6 +23,9 @@ void Init_Load_FlagCriteria()
 
    const bool OPT__FLAG_JEANS         = false;
    double *FlagTable_Jeans            = NULL;
+
+   const bool OPT__FLAG_LORENTZ       = false;
+   double *FlagTable_Lorentz          = NULL;
 #  endif
 
 #  if ( MODEL != ELBDM )
@@ -52,7 +55,7 @@ void Init_Load_FlagCriteria()
 #  error : unsupported MODEL !!
 #  endif
 
-   const int  NFlagMode         = 11;
+   const int  NFlagMode         = 12;
    const bool Flag[NFlagMode]   = { OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_PRES_GRADIENT,
                                     OPT__FLAG_ENGY_DENSITY, OPT__FLAG_LOHNER, OPT__FLAG_USER,
                                     (bool)OPT__FLAG_NPAR_PATCH, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL,
@@ -60,14 +63,14 @@ void Init_Load_FlagCriteria()
    const char ModeName[][100]   = { "OPT__FLAG_RHO", "OPT__FLAG_RHO_GRADIENT", "OPT__FLAG_PRES_GRADIENT",
                                     "OPT__FLAG_ENGY_DENSITY", "OPT__FLAG_LOHNER", "OPT__FLAG_USER",
                                     "OPT__FLAG_NPAR_PATCH", "OPT__FLAG_NPAR_CELL", "OPT__FLAG_PAR_MASS_CELL",
-                                    "OPT__FLAG_VORTICITY", "OPT__FLAG_JEANS" };
+                                    "OPT__FLAG_VORTICITY", "OPT__FLAG_JEANS", "OPT__FLAG_LORENTZ" };
    const char FileName[][100]   = { "Input__Flag_Rho", "Input__Flag_RhoGradient", "Input__Flag_PresGradient",
                                     "Input__Flag_EngyDensity", "Input__Flag_Lohner", "Input__Flag_User",
                                     "Input__Flag_NParPatch", "Input__Flag_NParCell", "Input__Flag_ParMassCell",
-                                    "Input__Flag_Vorticity", "Input__Flag_Jeans" };
+                                    "Input__Flag_Vorticity", "Input__Flag_Jeans", "Input__Flag_Lorentz" };
    double *FlagTable[NFlagMode] = { FlagTable_Rho, FlagTable_RhoGradient, FlagTable_PresGradient,
                                     NULL, NULL, FlagTable_User, NULL, NULL, FlagTable_ParMassCell,
-                                    FlagTable_Vorticity, FlagTable_Jeans };
+                                    FlagTable_Vorticity, FlagTable_Jeans, FlagTable_Lorentz };
 
    FILE *File;
    char *input_line = NULL, TargetName[100];
@@ -95,6 +98,7 @@ void Init_Load_FlagCriteria()
       FlagTable_PresGradient[lv]    = -1.0;
       FlagTable_Vorticity   [lv]    = -1.0;
       FlagTable_Jeans       [lv]    = -1.0;
+      FlagTable_Lorentz     [lv]    = -1.0;
 
 #     elif ( MODEL == ELBDM )
       for (int t=0; t<2; t++)
