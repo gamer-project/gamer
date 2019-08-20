@@ -532,27 +532,54 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 // ===============================================================================================
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "   Lv %2d: Flu_FixUp %24s... ", lv, "" );
 
-         if ( OPT__FIXUP_FLUX )
-         TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, NULL_INT, NULL_INT, COARSE_FINE_FLUX,
-                                           _FLUX_TOTAL, _NONE, NULL_INT, USELB_YES ),
-                        Timer_GetBuf[lv][6]   );
+//       8-1. use the average data on fine grids to correct the coarse-grid data
+         if ( OPT__FIXUP_RESTRICT )
+         {
+            TIMING_FUNC(   Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv],
+                                               NULL_INT, NULL_INT, _TOTAL, _MAG ),
+                           Timer_FixUp[lv]   );
 
+#           ifdef LOAD_BALANCE
+            TIMING_FUNC(   LB_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_RESTRICT,
+                                             _TOTAL, _MAG, NULL_INT ),
+                           Timer_GetBuf[lv][7]   );
+#           endif
+         }
+
+//       8-2. use the fine-grid electric field on the coarse-fine boundaries to correct the coarse-grid magnetic field
 #        ifdef MHD
          if ( OPT__FIXUP_ELECTRIC )
-         TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, NULL_INT, NULL_INT, COARSE_FINE_ELECTRIC,
-                                           _NONE, _NONE, NULL_INT, USELB_YES ),
-                        Timer_GetBuf[lv][6]   );
+         {
+#           ifdef LOAD_BALANCE
+            TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, NULL_INT, NULL_INT, COARSE_FINE_ELECTRIC,
+                                              _NONE, _NONE, NULL_INT, USELB_YES ),
+                           Timer_GetBuf[lv][6]   );
+#           endif
+
+            TIMING_FUNC(   MHD_FixUp_Electric( lv ),
+                           Timer_FixUp[lv]   );
+         }
 #        endif
 
-         TIMING_FUNC(   Flu_FixUp( lv ),   Timer_FixUp[lv]   );
+//       8-3. use the fine-grid fluxes across the coarse-fine boundaries to correct the coarse-grid data
+//            --> apply AFTER other fix-up operations since it will check negative pressure as well
+//                (which requires the coarse-grid B field updated by Flu_FixUp_Restrict() and MHD_FixUp_Electric())
+         if ( OPT__FIXUP_FLUX )
+         {
+#           ifdef LOAD_BALANCE
+            TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, NULL_INT, NULL_INT, COARSE_FINE_FLUX,
+                                              _FLUX_TOTAL, _NONE, NULL_INT, USELB_YES ),
+                           Timer_GetBuf[lv][6]   );
+#           endif
 
-#        ifdef LOAD_BALANCE
-         if ( OPT__FIXUP_RESTRICT )
-         TIMING_FUNC(   LB_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_RESTRICT,
-                                          _TOTAL, _MAG, NULL_INT ),
-                        Timer_GetBuf[lv][7]   );
+            TIMING_FUNC(   Flu_FixUp_Flux( lv ),
+                           Timer_FixUp[lv]   );
+         }
+
+//       8-4. exchange the updated data
+#        ifdef MHD
+#        warning : WAIT MHD !!!
 #        endif
-
          if ( OPT__FIXUP_FLUX  ||  OPT__FIXUP_RESTRICT )
          TIMING_FUNC(   Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_AFTER_FIXUP,
                                            _TOTAL, _MAG, Flu_ParaBuf, USELB_YES  ),
