@@ -38,10 +38,12 @@ static void Hydro_LimitSlope( const real L[], const real C[], const real R[], co
                               real Slope_Limiter[] );
 #if (  FLU_SCHEME == CTU  ||  ( defined MHD && defined CHAR_RECONSTRUCTION )  )
 #ifdef MHD
+GPU_DEVICE
 static void   MHD_GetEigenSystem( const real CC_Var[], real EigenVal[],
                                   real LEigenVec[][NWAVE], real REigenVec[][NWAVE],
                                   const real Gamma, const int XYZ );
 #else
+GPU_DEVICE
 static void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
                                   real LEigenVec[][NWAVE], real REigenVec[][NWAVE],
                                   const real Gamma );
