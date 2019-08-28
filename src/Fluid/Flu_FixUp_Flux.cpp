@@ -42,18 +42,10 @@ void Flu_FixUp_Flux( const int lv )
 #  endif
 */
 
-   real CorrVal[NFLUX_TOTAL];    // values after applying the flux correction
-   real (*FluxPtr)[PATCH_SIZE][PATCH_SIZE] = NULL;
-   real *FluidPtr1D0[NCOMP_TOTAL], *FluidPtr1D[NCOMP_TOTAL];
-   int  didx_m, didx_n;
-
 #  if   ( MODEL == HYDRO )
    const real  Gamma_m1       = GAMMA - (real)1.0;
    const real _Gamma_m1       = (real)1.0 / Gamma_m1;
    const bool CheckMinPres_No = false;
-#  ifdef DUAL_ENERGY
-   char *DE_StatusPtr1D0, *DE_StatusPtr1D;
-#  endif
 #  endif // MODEL
 
 
@@ -93,19 +85,14 @@ void Flu_FixUp_Flux( const int lv )
 #  endif // #ifdef GAMER_DEBUG
 
 
-#  if ( MODEL == HYDRO  &&  defined DUAL_ENERGY )
-#  pragma omp parallel for private( CorrVal, FluxPtr, FluidPtr1D0, FluidPtr1D, didx_m, didx_n, \
-                                    DE_StatusPtr1D0, DE_StatusPtr1D ) schedule( runtime )
-#  else
-#  pragma omp parallel for private( CorrVal, FluxPtr, FluidPtr1D0, FluidPtr1D, didx_m, didx_n ) schedule( runtime )
-#  endif
+#  pragma omp parallel for schedule( runtime )
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
 //    1. sum up the coarse-grid and fine-grid fluxes for bitwise reproducibility
 #     ifdef BITWISE_REPRODUCIBILITY
       for (int s=0; s<6; s++)
       {
-         FluxPtr = amr->patch[0][lv][PID]->flux[s];
+         real (*FluxPtr)[PS1][PS1] = amr->patch[0][lv][PID]->flux[s];
 
          if ( FluxPtr != NULL )
          {
@@ -123,29 +110,29 @@ void Flu_FixUp_Flux( const int lv )
       for (int s=0; s<6; s++)
       {
 //       skip the faces not adjacent to the coarse-fine boundaries
-         if ( NULL == (FluxPtr = amr->patch[0][lv][PID]->flux[s]) )  continue;
+         const real (*FluxPtr)[PS1][PS1] = amr->patch[0][lv][PID]->flux[s];
+         if ( FluxPtr == NULL  )  continue;
 
 
 //       set the pointers to the target face
-         for (int v=0; v<NCOMP_TOTAL; v++)
-         FluidPtr1D0[v]  = amr->patch[FluSg][lv][PID]->fluid [v][0][0] + Offset[s];
+         real *FluidPtr1D0[NCOMP_TOTAL], *FluidPtr1D[NCOMP_TOTAL];
+         for (int v=0; v<NCOMP_TOTAL; v++)   FluidPtr1D0[v] = amr->patch[FluSg][lv][PID]->fluid[v][0][0] + Offset[s];
 #        ifdef DUAL_ENERGY
-         DE_StatusPtr1D0 = amr->patch[    0][lv][PID]->de_status[0][0] + Offset[s];
+         const char *DE_StatusPtr1D0 = amr->patch[0][lv][PID]->de_status[0][0] + Offset[s];
 #        endif
 
 
 //       set the array index strides
-         didx_m = didx[s/2][1];
-         didx_n = didx[s/2][0];
+         const int didx_m = didx[s/2][1];
+         const int didx_n = didx[s/2][0];
 
 
 //       loop over all cells on a given face
          for (int m=0; m<PS1; m++)
          {
-            for (int v=0; v<NCOMP_TOTAL; v++)
-            FluidPtr1D[v]  = FluidPtr1D0[v]  + m*didx_m;
+            for (int v=0; v<NCOMP_TOTAL; v++)   FluidPtr1D[v] = FluidPtr1D0[v] + m*didx_m;
 #           ifdef DUAL_ENERGY
-            DE_StatusPtr1D = DE_StatusPtr1D0 + m*didx_m;
+            const char *DE_StatusPtr1D = DE_StatusPtr1D0 + m*didx_m;
 #           endif
 
             for (int n=0; n<PS1; n++)
@@ -161,6 +148,7 @@ void Flu_FixUp_Flux( const int lv )
 
 //             calculate the corrected results
 //             --> do NOT **store** these results yet since we want to skip the cells with unphysical results
+               real CorrVal[NFLUX_TOTAL];    // values after applying the flux correction
                for (int v=0; v<NFLUX_TOTAL; v++)   CorrVal[v] = *FluidPtr1D[v] + FluxPtr[v][m][n]*Const[s];
 
 
@@ -314,14 +302,16 @@ void Flu_FixUp_Flux( const int lv )
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
 
-// 3. reset all flux arrays (in both real and buffer patches) to zero for bitwise reproducibility
+// 3. reset all flux and electric field arrays (in both real and buffer patches) to zero for the bitwise reproducibility
 #  ifdef BITWISE_REPRODUCIBILITY
-#  pragma omp parallel for private( FluxPtr ) schedule( runtime )
+#  pragma omp parallel for schedule( runtime )
    for (int PID=0; PID<amr->NPatchComma[lv][27]; PID++)
    {
       for (int s=0; s<6; s++)
       {
-         FluxPtr = amr->patch[0][lv][PID]->flux[s];
+         real (*FluxPtr)[PS1][PS1] = NULL;
+
+         Flux_Ptr = amr->patch[0][lv][PID]->flux[s];
          if ( FluxPtr != NULL )
          {
             for (int v=0; v<NFLUX_TOTAL; v++)
