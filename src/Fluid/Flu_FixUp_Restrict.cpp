@@ -11,6 +11,7 @@
 //                   face-centered variables, respectively
 //                2. For MHD, this routine currently always restrict all three B field components
 //                   --> Do not distinguish _MAGX, _MAGY, _MAGZ, and _MAG in TVarFC
+//                3. Invoked by EvolveLevel()
 //
 // Parameter   :  FaLv     : Target refinement level at which the data are going to be replaced
 //                SonFluSg : Fluid sandglass at level "FaLv+1"

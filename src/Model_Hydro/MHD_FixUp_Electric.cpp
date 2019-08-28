@@ -10,7 +10,7 @@
 // Description :  Use the fine-grid electric field on the coarse-fine boundaries to correct the
 //                coarse-grid magnetic field
 //
-// Note        :  1. Invoked by Flu_FixUp()
+// Note        :  1. Invoked by EvolveLevel()
 //                2  Because the longitudinal (normal) B component on the coarse-fine interfaces has been
 //                   corrected by Flu_FixUp_Restrict(), this function only corrects the two **transverse**
 //                   B components on such interfaces (i.e., the two B components perpendicular to the normal
@@ -39,10 +39,26 @@ void MHD_FixUp_Electric( const int lv )
 #  endif
 
 
-#  pragma omp parallel for
+#  pragma omp parallel for schedule( runtime )
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
-//    1. E field on the patch 6 faces
+//    1. sum up the coarse-grid and fine-grid electric field for bitwise reproducibility
+#     ifdef BITWISE_REPRODUCIBILITY
+      for (int s=0; s<18; s++)
+      {
+         real *ElePtr = amr->patch[0][lv][PID]->electric[s];
+
+         if ( ElePtr != NULL )
+         {
+            const int size = ( s < 6 ) ? NCOMP_ELE*PS1M1*PS1 : PS1;
+            for (int t=0; t<size; t++)
+               ElePtr[t] += amr->patch[0][lv][PID]->electric_bitrep[s][t];
+         }
+      }
+#     endif
+
+
+//    2. E field on the patch 6 faces
       for (int s=0; s<6; s++)
       {
          const real (*EPtr)[PS1M1_PS1] = ( real (*)[PS1M1_PS1] )amr->patch[0][lv][PID]->electric[s];
@@ -51,14 +67,14 @@ void MHD_FixUp_Electric( const int lv )
          if ( EPtr == NULL )  continue;
 
 
-//       1-1. set array indices
+//       2-1. set array indices
          const int xyz = s / 2;           // (0,0,1,1,2,2): face direction
          const int LR  = s % 2;           // (0,1,0,1,0,1): left/right face along xyz
          const int B1  = ( xyz + 2 )%3;   // B component to be fixed by E_((xyz+1)%3)
          const int B2  = ( xyz + 1 )%3;   // B component to be fixed by E_((xyz+2)%3)
 
 
-//       1-2. set array offsets and strides for B1/B2
+//       2-2. set array offsets and strides for B1/B2
          int offset1=-1, offset2=-1, stride1n=-1, stride1m=-1, stride2n=-1, stride2m=-1;
 
          switch ( xyz )
@@ -102,7 +118,7 @@ void MHD_FixUp_Electric( const int lv )
          } // switch ( xyz )
 
 
-//       1-3. correct B field
+//       2-3. correct B field
          const real Coeff = _dh*( (real)2.0*(real)LR - (real)1.0 );  // correction coefficient
          int idx_E, idx_B;
 
@@ -130,7 +146,7 @@ void MHD_FixUp_Electric( const int lv )
       } // for (int s=0; s<6; s++)
 
 
-//    2. E field on the patch 12 edges
+//    3. E field on the patch 12 edges
       for (int s=6; s<18; s++)
       {
          const real *EPtr = amr->patch[0][lv][PID]->electric[s];
@@ -139,7 +155,7 @@ void MHD_FixUp_Electric( const int lv )
          if ( EPtr == NULL )  continue;
 
 
-//       2-1. set array indices
+//       3-1. set array indices
          const int e   = s - 6;           // 0 ~ 11 (edge index)
          const int xyz = (e/4+2)%3;       // (2,2,2,2,0,0,0,0,1,1,1,1): edge direction
          const int B1  = ( xyz + 1 )%3;   // 1st B component to be fixed
@@ -148,7 +164,7 @@ void MHD_FixUp_Electric( const int lv )
          const int LR2 = e%4/2;           // (0,0,1,1,0,0,1,1,0,0,1,1): left(0)/right(1) egee along B2
 
 
-//       2-2. set array offsets and strides for B1/B2
+//       3-2. set array offsets and strides for B1/B2
          int offset1=-1, offset2=-1, stride1=-1, stride2=-1;
 
          switch ( xyz )
@@ -183,7 +199,7 @@ void MHD_FixUp_Electric( const int lv )
          } // switch ( xyz )
 
 
-//       2-3. correct B field along B1/2
+//       3-3. correct B field along B1/2
 //       --> only need to correct B field on the (i) coarse-coarse interfaces and (ii) simulation boundaries
 //       --> skip **coarse-fine** interfaces since B field on that has been corrected by Flu_Restrict()
          const int  SibPID1 = amr->patch[0][lv][PID]->sibling[ 2*B1 + LR1 ];  // sibling direction along B1/B2
@@ -212,6 +228,28 @@ void MHD_FixUp_Electric( const int lv )
                amr->patch[MagSg][lv][PID]->magnetic[B2][ offset2 + t*stride2 ] += Coeff2*EPtr[t];
       } // for (int s=6; s<18; s++)
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+
+
+// 4. reset all electric field arrays (in both real and buffer patches) to zero for bitwise reproducibility
+#  ifdef BITWISE_REPRODUCIBILITY
+#  pragma omp parallel for schedule( runtime )
+   for (int PID=0; PID<amr->NPatchComma[lv][27]; PID++)
+   {
+      for (int s=0; s<18; s++)
+      {
+         const int size = ( s < 6 ) ? NCOMP_ELE*PS1M1*PS1 : PS1;
+         real *ElePtr = NULL;
+
+         ElePtr = amr->patch[0][lv][PID]->electric[s];
+         if ( ElePtr != NULL )
+            for (int t=0; t<size; t++)    ElePtr[t] = (real)0.0;
+
+         ElePtr = amr->patch[0][lv][PID]->electric_bitrep[s];
+         if ( ElePtr != NULL )
+            for (int t=0; t<size; t++)    ElePtr[t] = (real)0.0;
+      }
+   }
+#  endif // #ifdef BITWISE_REPRODUCIBILITY
 
 } // FUNCTION : MHD_FixUp_Electric
 
