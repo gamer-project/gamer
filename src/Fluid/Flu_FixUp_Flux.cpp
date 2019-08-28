@@ -10,7 +10,7 @@
 //
 // Note        :  1. Boundary fluxes from the neighboring ranks must be received in advance by invoking
 //                   Buf_GetBufferData()
-//                2. Invoked by Flu_FixUp()
+//                2. Invoked by EvolveLevel()
 //
 // Parameter   :  lv : Target coarse level
 //-------------------------------------------------------------------------------------------------------
@@ -302,7 +302,7 @@ void Flu_FixUp_Flux( const int lv )
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
 
-// 3. reset all flux and electric field arrays (in both real and buffer patches) to zero for the bitwise reproducibility
+// 3. reset all flux arrays (in both real and buffer patches) to zero for bitwise reproducibility
 #  ifdef BITWISE_REPRODUCIBILITY
 #  pragma omp parallel for schedule( runtime )
    for (int PID=0; PID<amr->NPatchComma[lv][27]; PID++)
@@ -311,13 +311,13 @@ void Flu_FixUp_Flux( const int lv )
       {
          real (*FluxPtr)[PS1][PS1] = NULL;
 
-         Flux_Ptr = amr->patch[0][lv][PID]->flux[s];
+         FluxPtr = amr->patch[0][lv][PID]->flux[s];
          if ( FluxPtr != NULL )
          {
             for (int v=0; v<NFLUX_TOTAL; v++)
             for (int m=0; m<PS1; m++)
             for (int n=0; n<PS1; n++)
-               FluxPtr[v][m][n] = 0.0;
+               FluxPtr[v][m][n] = (real)0.0;
          }
 
          FluxPtr = amr->patch[0][lv][PID]->flux_bitrep[s];
@@ -326,10 +326,10 @@ void Flu_FixUp_Flux( const int lv )
             for (int v=0; v<NFLUX_TOTAL; v++)
             for (int m=0; m<PS1; m++)
             for (int n=0; n<PS1; n++)
-               FluxPtr[v][m][n] = 0.0;
+               FluxPtr[v][m][n] = (real)0.0;
          }
       }
    }
-#  endif
+#  endif // #ifdef BITWISE_REPRODUCIBILITY
 
 } // FUNCTION : Flu_FixUp_Flux
