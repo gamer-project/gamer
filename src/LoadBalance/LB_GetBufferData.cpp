@@ -183,6 +183,11 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
    int **Send_IDList=NULL, **Recv_IDList=NULL, **Send_IDList_IdxTable=NULL, **Recv_IDList_IdxTable=NULL;
    int **Send_SibList=NULL, **Recv_SibList=NULL;
 
+#  ifdef MHD
+   int  *SendY_NList=NULL, **SendY_IDList=NULL, **SendY_SibList=NULL;
+   int  *RecvY_NList=NULL, **RecvY_IDList=NULL, **RecvY_SibList=NULL;
+#  endif
+
    int *Send_NCount = new int [MPI_NRank];
    int *Recv_NCount = new int [MPI_NRank];
    int *Send_NDisp  = new int [MPI_NRank];
@@ -222,6 +227,14 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
          Recv_NResList        = amr->LB->RecvX_NResList       [lv];
          Recv_IDList          = amr->LB->RecvX_IDList         [lv];
          Recv_SibList         = amr->LB->RecvX_SibList        [lv];
+#        ifdef MHD
+         SendY_NList          = amr->LB->SendY_NList          [lv];
+         SendY_IDList         = amr->LB->SendY_IDList         [lv];
+         SendY_SibList        = amr->LB->SendY_SibList        [lv];
+         RecvY_NList          = amr->LB->RecvY_NList          [lv];
+         RecvY_IDList         = amr->LB->RecvY_IDList         [lv];
+         RecvY_SibList        = amr->LB->RecvY_SibList        [lv];
+#        endif
          break;
 
       case DATA_RESTRICT :          // restricted data
@@ -460,6 +473,60 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
             for (int s=0; s<6; s++)
                if ( Recv_SibList[r][t] & (1<<s) )  Recv_NCount[r] += DataUnit_Flux;
          }
+
+//       for electric field fix-up
+#        ifdef MHD
+         for (int s=0; s<18; s++)   DataUnit_Buf[s] = 0;
+
+         for (int v=0; v<NVarFC_Mag; v++)
+         {
+            const int TMagVarIdx = TMagVarIdxList[v];
+
+            switch ( TMagVarIdx )
+            {
+               case MAGX :
+                  for (int s= 0; s< 2; s++)  DataUnit_Buf[s] += PS1   * PS1     * ParaBufP1;
+                  for (int s= 2; s< 6; s++)  DataUnit_Buf[s] += PS1P1 * PS1     * ParaBuf;
+                  for (int s= 6; s<10; s++)  DataUnit_Buf[s] += PS1   * ParaBuf * ParaBufP1;
+                  for (int s=10; s<14; s++)  DataUnit_Buf[s] += PS1P1 * ParaBuf * ParaBuf;
+                  for (int s=14; s<18; s++)  DataUnit_Buf[s] += PS1   * ParaBuf * ParaBufP1;
+                  break;
+
+               case MAGY :
+                  for (int s= 0; s< 2; s++)  DataUnit_Buf[s] += PS1P1 * PS1     * ParaBuf;
+                  for (int s= 2; s< 4; s++)  DataUnit_Buf[s] += PS1   * PS1     * ParaBufP1;
+                  for (int s= 4; s< 6; s++)  DataUnit_Buf[s] += PS1P1 * PS1     * ParaBuf;
+                  for (int s= 6; s<14; s++)  DataUnit_Buf[s] += PS1   * ParaBuf * ParaBufP1;
+                  for (int s=14; s<18; s++)  DataUnit_Buf[s] += PS1P1 * ParaBuf * ParaBuf;
+                  break;
+
+               case MAGZ :
+                  for (int s= 0; s< 4; s++)  DataUnit_Buf[s] += PS1P1 * PS1     * ParaBuf;
+                  for (int s= 4; s< 6; s++)  DataUnit_Buf[s] += PS1   * PS1     * ParaBufP1;
+                  for (int s= 6; s<10; s++)  DataUnit_Buf[s] += PS1P1 * ParaBuf * ParaBuf;
+                  for (int s=10; s<18; s++)  DataUnit_Buf[s] += PS1   * ParaBuf * ParaBufP1;
+                  break;
+
+               default:
+                  Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TMagVarIdx", TMagVarIdx );
+                  break;
+            } // switch ( TMagVarIdx )
+         } // for (int v=0; v<NVarFC_Mag; v++)
+
+         for (int s=18; s<26; s++)  DataUnit_Buf[ s] = NVarFC_Mag*ParaBufP1*SQR( ParaBuf );
+                                    DataUnit_Buf[26] = NVarFC_Mag*PS1P1*SQR( PS1 );
+
+         for (int r=0; r<MPI_NRank; r++)
+         {
+            for (int t=0; t<SendY_NList[r]; t++)
+            for (int s=0; s<27; s++)
+               if ( SendY_SibList[r][t] & (1<<s) )    Send_NCount[r] += DataUnit_Buf[s];
+
+            for (int t=0; t<RecvY_NList[r]; t++)
+            for (int s=0; s<27; s++)
+               if ( RecvY_SibList[r][t] & (1<<s) )    Recv_NCount[r] += DataUnit_Buf[s];
+         }
+#        endif // #ifdef MHD
          break; // case DATA_AFTER_FIXUP
 
 
@@ -782,27 +849,27 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
 
 
 //          for flux fix-up
+            if ( ExchangeFlu )
             for (int t=Send_NResList[r]; t<Send_NList[r]; t++)
             {
                const int SPID = Send_IDList [r][t];   // both SPID and SSib are sorted
                const int SSib = Send_SibList[r][t];
 
 #              ifdef GAMER_DEBUG
-               if ( ExchangeFlu  &&  amr->patch[FluSg][lv][SPID]->fluid == NULL )
+               if ( amr->patch[FluSg][lv][SPID]->fluid == NULL )
                   Aux_Error( ERROR_INFO, "Send mode %d, patch[%d][%d][%d]->fluid has not been allocated !!\n",
                              GetBufMode, FluSg, lv, SPID );
 
                if ( SSib == 0 )
                   Aux_Error( ERROR_INFO, "Send mode %d, t %d, TRank %d, SPID %d, SSib == 0 !!\n",
                              GetBufMode, t, r, SPID );
-#              endif // #ifdef GAMER_DEBUG
+#              endif
 
                for (int s=0; s<6; s++)
                {
                   if ( SSib & (1<<s) )
                   {
-//                   fluid data
-                     if ( ExchangeFlu )
+//                   fluid data only
                      for (int v=0; v<NVarCC_Flu; v++)
                      {
                         const int TFluVarIdx = TFluVarIdxList[v];
@@ -815,6 +882,77 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
                   } // if ( SSib & (1<<s) )
                } // for (int s=0; s<6; s++)
             } //for (int t=Send_NResList[r]; t<Send_NList[r]; t++)
+
+
+//          for electric field fix-up
+#           ifdef MHD
+            if ( ExchangeMag )
+            for (int t=0; t<SendY_NList[r]; t++)
+            {
+               const int SPID = SendY_IDList [r][t];
+               const int SSib = SendY_SibList[r][t];
+
+#              ifdef GAMER_DEBUG
+               if ( amr->patch[MagSg][lv][SPID]->magnetic == NULL )
+                  Aux_Error( ERROR_INFO, "Send mode %d, patch[%d][%d][%d]->magnetic has not been allocated !!\n",
+                             GetBufMode, MagSg, lv, SPID );
+
+               if ( SSib == 0 )
+                  Aux_Error( ERROR_INFO, "Send mode %d, t %d, TRank %d, SPID %d, SSib == 0 !!\n",
+                             GetBufMode, t, r, SPID );
+#              endif
+
+               for (int s=0; s<27; s++)
+               {
+                  if ( SSib & (1<<s) )
+                  {
+//                   magnetic field data only
+                     for (int v=0; v<NVarFC_Mag; v++)
+                     {
+                        const int TMagVarIdx = TMagVarIdxList[v];
+
+                        switch ( TMagVarIdx )
+                        {
+                           case MAGX :
+                              for (int k=LoopStart[s][2]; k< LoopEnd[s][2]; k++)
+                              for (int j=LoopStart[s][1]; j< LoopEnd[s][1]; j++)
+                              for (int i=LoopStart[s][0]; i<=LoopEnd[s][0]; i++)
+                              {
+                                 const int idxB = IDX321_BX( i, j, k, PS1, PS1 );
+                                 SendPtr[ Counter ++ ] = amr->patch[MagSg][lv][SPID]->magnetic[TMagVarIdx][idxB];
+                              }
+                              break;
+
+                           case MAGY :
+                              for (int k=LoopStart[s][2]; k< LoopEnd[s][2]; k++)
+                              for (int j=LoopStart[s][1]; j<=LoopEnd[s][1]; j++)
+                              for (int i=LoopStart[s][0]; i< LoopEnd[s][0]; i++)
+                              {
+                                 const int idxB = IDX321_BY( i, j, k, PS1, PS1 );
+                                 SendPtr[ Counter ++ ] = amr->patch[MagSg][lv][SPID]->magnetic[TMagVarIdx][idxB];
+                              }
+                              break;
+
+                            case MAGZ :
+                              for (int k=LoopStart[s][2]; k<=LoopEnd[s][2]; k++)
+                              for (int j=LoopStart[s][1]; j< LoopEnd[s][1]; j++)
+                              for (int i=LoopStart[s][0]; i< LoopEnd[s][0]; i++)
+                              {
+                                 const int idxB = IDX321_BZ( i, j, k, PS1, PS1 );
+                                 SendPtr[ Counter ++ ] = amr->patch[MagSg][lv][SPID]->magnetic[TMagVarIdx][idxB];
+                              }
+                              break;
+
+                            default:
+                              Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TMagVarIdx", TMagVarIdx );
+                              break;
+                        } // switch ( TMagVarIdx )
+                     } // for (int v=0; v<NVarFC_Mag; v++)
+                  } // if ( SSib & (1<<s) )
+               } // for (int s=0; s<27; s++)
+            } // for (int t=0; t<SendY_NList[r]; t++)
+#           endif // #ifdef MHD
+
          } // for (int r=0; r<MPI_NRank; r++)
          break; // case DATA_AFTER_FIXUP
 
@@ -1247,27 +1385,27 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
 
 
 //          for flux fix-up
+            if ( ExchangeFlu )
             for (int t=Recv_NResList[r]; t<Recv_NList[r]; t++)
             {
                const int RPID = Recv_IDList [r][t];
                const int RSib = Recv_SibList[r][t];
 
 #              ifdef GAMER_DEBUG
-               if ( ExchangeFlu  &&  amr->patch[FluSg][lv][RPID]->fluid == NULL )
+               if ( amr->patch[FluSg][lv][RPID]->fluid == NULL )
                   Aux_Error( ERROR_INFO, "Recv mode %d, patch[%d][%d][%d]->fluid has not been allocated !!\n",
                              GetBufMode, FluSg, lv, RPID );
 
                if ( RSib == 0 )
                   Aux_Error( ERROR_INFO, "Recv mode %d, t %d, TRank %d, RPID %d, RSib == 0 !!\n",
                              GetBufMode, t, r, RPID );
-#              endif // #ifdef GAMER_DEBUG
+#              endif
 
                for (int s=0; s<6; s++)
                {
                   if ( RSib & (1<<s) )
                   {
-//                   fluid data
-                     if ( ExchangeFlu )
+//                   fluid data only
                      for (int v=0; v<NVarCC_Flu; v++)
                      {
                         const int TFluVarIdx = TFluVarIdxList[v];
@@ -1280,6 +1418,77 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
                   } // if ( RSib & (1<<s) )
                } // for (int s=0; s<6; s++)
             } // for (int t=Recv_NResList[r]; t<Recv_NList[r]; t++)
+
+
+#           ifdef MHD
+//          for electric field fix-up
+            if ( ExchangeMag )
+            for (int t=0; t<RecvY_NList[r]; t++)
+            {
+               const int RPID = RecvY_IDList [r][t];
+               const int RSib = RecvY_SibList[r][t];
+
+#              ifdef GAMER_DEBUG
+               if ( amr->patch[MagSg][lv][RPID]->magnetic == NULL )
+                  Aux_Error( ERROR_INFO, "Recv mode %d, patch[%d][%d][%d]->magnetic has not been allocated !!\n",
+                             GetBufMode, MagSg, lv, RPID );
+
+               if ( RSib == 0 )
+                  Aux_Error( ERROR_INFO, "Recv mode %d, t %d, TRank %d, RPID %d, RSib == 0 !!\n",
+                             GetBufMode, t, r, RPID );
+#              endif
+
+               for (int s=0; s<27; s++)
+               {
+                  if ( RSib & (1<<s) )
+                  {
+//                   magnetic field data only
+                     for (int v=0; v<NVarFC_Mag; v++)
+                     {
+                        const int TMagVarIdx = TMagVarIdxList[v];
+
+                        switch ( TMagVarIdx )
+                        {
+                           case MAGX :
+                              for (int k=LoopStart[s][2]; k< LoopEnd[s][2]; k++)
+                              for (int j=LoopStart[s][1]; j< LoopEnd[s][1]; j++)
+                              for (int i=LoopStart[s][0]; i<=LoopEnd[s][0]; i++)
+                              {
+                                 const int idxB = IDX321_BX( i, j, k, PS1, PS1 );
+                                 amr->patch[MagSg][lv][RPID]->magnetic[TMagVarIdx][idxB] = RecvPtr[ Counter ++ ];
+                              }
+                              break;
+
+                           case MAGY :
+                              for (int k=LoopStart[s][2]; k< LoopEnd[s][2]; k++)
+                              for (int j=LoopStart[s][1]; j<=LoopEnd[s][1]; j++)
+                              for (int i=LoopStart[s][0]; i< LoopEnd[s][0]; i++)
+                              {
+                                 const int idxB = IDX321_BY( i, j, k, PS1, PS1 );
+                                 amr->patch[MagSg][lv][RPID]->magnetic[TMagVarIdx][idxB] = RecvPtr[ Counter ++ ];
+                              }
+                              break;
+
+                           case MAGZ :
+                              for (int k=LoopStart[s][2]; k<=LoopEnd[s][2]; k++)
+                              for (int j=LoopStart[s][1]; j< LoopEnd[s][1]; j++)
+                              for (int i=LoopStart[s][0]; i< LoopEnd[s][0]; i++)
+                              {
+                                 const int idxB = IDX321_BZ( i, j, k, PS1, PS1 );
+                                 amr->patch[MagSg][lv][RPID]->magnetic[TMagVarIdx][idxB] = RecvPtr[ Counter ++ ];
+                              }
+                              break;
+
+                           default:
+                              Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TMagVarIdx", TMagVarIdx );
+                              break;
+                         } // switch ( TMagVarIdx )
+                     } //for (int v=0; v<NVarFC_Mag; v++)
+                  } // if ( RSib & (1<<s) )
+               } // for (int s=0; s<27; s++)
+            } // for (int t=0; t<RecvY_NList[r]; t++)
+#           endif // #ifdef MHD
+
          } // for (int r=0; r<MPI_NRank; r++)
          break; // case DATA_AFTER_FIXUP
 

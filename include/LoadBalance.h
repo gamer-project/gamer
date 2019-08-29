@@ -39,64 +39,73 @@
 //                PaddedCr1DList          : Sorted PaddedCr1D list of all patches (real + buffer)
 //                PaddedCr1DList_IdxTable : Index table for LB_PaddedC1DrList
 //
-//                SendH_NList             : Number of patches for sending hydrodynamic data
-//                SendH_IDList            : Patch indices for sending hydrodynamic data
-//                SendH_SibList           : Sibling indices for sending hydrodynamic data
-//                SendH_SibDiffList       : Sibling indices for sending hydrodynamic data after grid refinement
-//                SendH_LBIdxList         : Load-balance indices for sending hydrodynamic data
-//                RecvH_NList             : Number of patches for receiving hydrodynamic data
-//                RecvH_IDList            : Patch indices for receiving hydrodynamic data
-//                RecvH_IDList_IdxTable   : Index table for LB_RecvH_IDList
-//                RecvH_SibList           : Sibling indices for receiving hydrodynamic data
-//                RecvH_SibDiffList       : Sibling indices for receiving hydrodynamic data after grid refinement
+//                SendH_NList             : Number of patches    for sending   hydrodynamic data
+//                SendH_IDList            : Patch indices        for sending   hydrodynamic data
+//                SendH_SibList           : Sibling indices      for sending   hydrodynamic data
+//                SendH_SibDiffList       : Sibling indices      for sending   hydrodynamic data after grid refinement
+//                SendH_LBIdxList         : Load-balance indices for sending   hydrodynamic data
+//                RecvH_NList             : Number of patches    for receiving hydrodynamic data
+//                RecvH_IDList            : Patch indices        for receiving hydrodynamic data
+//                RecvH_IDList_IdxTable   : Index table          for LB_RecvH_IDList
+//                RecvH_SibList           : Sibling indices      for receiving hydrodynamic data
+//                RecvH_SibDiffList       : Sibling indices      for receiving hydrodynamic data after grid refinement
 //                RecvH_LBIdxList         : Load-balance indices for receiving hydrodynamic data
-//                RecvH_PCr1D             : Padded 1D corner for receiving hydrodynamic data
-//                RecvH_PCr1D_IdxTable    : Index table for RecvH_PCr1D
+//                RecvH_PCr1D             : Padded 1D corner     for receiving hydrodynamic data
+//                RecvH_PCr1D_IdxTable    : Index table          for RecvH_PCr1D
 //
-//                SendX_NList             : Number of patches for sending hydrodynamic data after fix-up
-//                SendX_NResList          : Number of patches for sending hydrodynamic data after restriction
-//                SendX_IDList            : Patch indices for sending hydrodynamic data after fix-up
-//                SendX_SibList           : Sibling indices for sending hydrodynamic data after fix-up
+//                                          ** The following *X lists do NOT consider electric field fix-up **
+//                                          --> It's taken care of by the *Y lists below
+//                SendX_NList             : Number of patches for sending   hydrodynamic data after fix-up
+//                SendX_NResList          : Number of patches for sending   hydrodynamic data after restriction
+//                SendX_IDList            : Patch indices     for sending   hydrodynamic data after fix-up
+//                SendX_SibList           : Sibling indices   for sending   hydrodynamic data after fix-up
 //                RecvX_NList             : Number of patches for receiving hydrodynamic data after fix-up
 //                RecvX_NResList          : Number of patches for receiving hydrodynamic data after restriction
-//                RecvX_IDList            : Patch indices for receiving hydrodynamic data after fix-up
-//                RecvX_SibList           : Sibling indices for receiving hydrodynamic data after fix-up
+//                RecvX_IDList            : Patch indices     for receiving hydrodynamic data after fix-up
+//                RecvX_SibList           : Sibling indices   for receiving hydrodynamic data after fix-up
 //
-//                SendR_NList             : Number of patches for sending restricted hydro data
-//                SendR_IDList            : Patch indices for sending restricted hydro data
-//                SendR_IDList_IdxTable   : Index table for LB_SendR_IDList
+//                SendY_NList             : Number of patches for sending   B field data after electric field fix-up
+//                SendY_IDList            : Patch indices     for sending   B field data after electric field fix-up
+//                SendY_SibList           : Sibling indices   for sending   B field data after electric field fix-up
+//                RecvY_NList             : Number of patches for receiving B field data after electric field fix-up
+//                RecvY_IDList            : Patch indices     for receiving B field data after electric field fix-up
+//                RecvY_SibList           : Sibling indices   for receiving B field data after electric field fix-up
+//
+//                SendR_NList             : Number of patches for sending   restricted hydro data
+//                SendR_IDList            : Patch indices     for sending   restricted hydro data
+//                SendR_IDList_IdxTable   : Index table       for LB_SendR_IDList
 //                RecvR_NList             : Number of patches for receiving restricted hydro data
-//                RecvR_IDList            : Patch indices for receiving restricted hydro data
+//                RecvR_IDList            : Patch indices     for receiving restricted hydro data
 //
-//                SendF_NList             : Number of flux arrays for sending
-//                SendF_IDList            : Patch indices for sending fluxes
-//                SendF_SibList           : Sibling directions for sending fluxes
-//                RecvF_NList             : Number of flux arrays for receiving
-//                RecvF_IDList            : Patch indices for receiving fluxes
-//                RecvF_IDList_IdxTable   : Index table for LB_RecvF_IDList
-//                RecvF_SibList           : Sibling directions for receiving fluxes
+//                SendF_NList             : Number of flux arrays for sending   fluxes
+//                SendF_IDList            : Patch indices         for sending   fluxes
+//                SendF_SibList           : Sibling directions    for sending   fluxes
+//                RecvF_NList             : Number of flux arrays for receiving fluxes
+//                RecvF_IDList            : Patch indices         for receiving fluxes
+//                RecvF_IDList_IdxTable   : Index table           for LB_RecvF_IDList
+//                RecvF_SibList           : Sibling directions    for receiving fluxes
 //
-//                SendE_NList             : Number of electfic field arrays for sending
-//                SendE_IDList            : Patch indices for sending electric field
-//                SendE_SibList           : Sibling directions for sending electric field
-//                RecvE_NList             : Number of electric field arrays for receiving
-//                RecvE_IDList            : Patch indices for receiving electric field
-//                RecvE_IDList_IdxTable   : Index table for LB_RecvE_IDList
-//                RecvE_SibList           : Sibling directions for receiving electric field
+//                SendE_NList             : Number of electfic field arrays for sending   electric field
+//                SendE_IDList            : Patch indices                   for sending   electric field
+//                SendE_SibList           : Sibling directions              for sending   electric field
+//                RecvE_NList             : Number of electric field arrays for receiving electric field
+//                RecvE_IDList            : Patch indices                   for receiving electric field
+//                RecvE_IDList_IdxTable   : Index table                     for LB_RecvE_IDList
+//                RecvE_SibList           : Sibling directions              for receiving electric field
 //
-//                SendG_NList             : Number of patches for sending potential data
-//                SendG_IDList            : Patch indices for sending potential data
-//                SendG_SibList           : Sibling indices for sending potential data
-//                SendG_SibDiffList       : Sibling indices for sending potential data after grid refinement
-//                SendG_LBIdxList         : Load-balance indices for sending potential data
-//                RecvG_NList             : Number of patches for receiving potential data
-//                RecvG_IDList            : Patch indices for receiving potential data
-//                RecvG_IDList_IdxTable   : Index table for LB_RecvH_IDList
-//                RecvG_SibList           : Sibling indices for receiving potential data
-//                RecvG_SibDiffList       : Sibling indices for receiving potential data after grid refinement
+//                SendG_NList             : Number of patches    for sending   potential data
+//                SendG_IDList            : Patch indices        for sending   potential data
+//                SendG_SibList           : Sibling indices      for sending   potential data
+//                SendG_SibDiffList       : Sibling indices      for sending   potential data after grid refinement
+//                SendG_LBIdxList         : Load-balance indices for sending   potential data
+//                RecvG_NList             : Number of patches    for receiving potential data
+//                RecvG_IDList            : Patch indices        for receiving potential data
+//                RecvG_IDList_IdxTable   : Index table          for LB_RecvH_IDList
+//                RecvG_SibList           : Sibling indices      for receiving potential data
+//                RecvG_SibDiffList       : Sibling indices      for receiving potential data after grid refinement
 //                RecvG_LBIdxList         : Load-balance indices for receiving potential data
-//                RecvG_PCr1D             : Padded 1D corner for receiving potential data
-//                RecvG_PCr1D_IdxTable    : Index table for RecvG_PCr1D
+//                RecvG_PCr1D             : Padded 1D corner     for receiving potential data
+//                RecvG_PCr1D_IdxTable    : Index table          for RecvG_PCr1D
 //
 // Method      :  LB_t  : Constructor
 //               ~LB_t  : Destructor
@@ -151,6 +160,15 @@ struct LB_t
    int  *RecvX_NResList          [NLEVEL];
    int **RecvX_IDList            [NLEVEL];
    int **RecvX_SibList           [NLEVEL];
+
+#  ifdef MHD
+   int  *SendY_NList             [NLEVEL];
+   int **SendY_IDList            [NLEVEL];
+   int **SendY_SibList           [NLEVEL];
+   int  *RecvY_NList             [NLEVEL];
+   int **RecvY_IDList            [NLEVEL];
+   int **RecvY_SibList           [NLEVEL];
+#  endif
 
    int  *SendR_NList             [NLEVEL];
    int **SendR_IDList            [NLEVEL];
@@ -259,6 +277,15 @@ struct LB_t
          RecvX_IDList           [lv] = new int*  [MPI_NRank];
          RecvX_SibList          [lv] = new int*  [MPI_NRank];
 
+#        ifdef MHD
+         SendY_NList            [lv] = new int   [MPI_NRank];
+         SendY_IDList           [lv] = new int*  [MPI_NRank];
+         SendY_SibList          [lv] = new int*  [MPI_NRank];
+         RecvY_NList            [lv] = new int   [MPI_NRank];
+         RecvY_IDList           [lv] = new int*  [MPI_NRank];
+         RecvY_SibList          [lv] = new int*  [MPI_NRank];
+#        endif
+
          SendR_NList            [lv] = new int   [MPI_NRank];
          SendR_IDList           [lv] = new int*  [MPI_NRank];
          SendR_IDList_IdxTable  [lv] = new int*  [MPI_NRank];
@@ -325,6 +352,15 @@ struct LB_t
             RecvX_NResList       [lv][r] = 0;
             RecvX_IDList         [lv][r] = NULL;
             RecvX_SibList        [lv][r] = NULL;
+
+#           ifdef MHD
+            SendY_NList          [lv][r] = 0;
+            SendY_IDList         [lv][r] = NULL;
+            SendY_SibList        [lv][r] = NULL;
+            RecvY_NList          [lv][r] = 0;
+            RecvY_IDList         [lv][r] = NULL;
+            RecvY_SibList        [lv][r] = NULL;
+#           endif
 
             SendR_NList          [lv][r] = 0;
             SendR_IDList         [lv][r] = NULL;
@@ -399,6 +435,10 @@ struct LB_t
          if ( SendX_NResList[lv] != NULL )   delete [] SendX_NResList[lv];
          if ( RecvX_NList   [lv] != NULL )   delete [] RecvX_NList   [lv];
          if ( RecvX_NResList[lv] != NULL )   delete [] RecvX_NResList[lv];
+#        ifdef MHD
+         if ( SendY_NList   [lv] != NULL )   delete [] SendY_NList   [lv];
+         if ( RecvY_NList   [lv] != NULL )   delete [] RecvY_NList   [lv];
+#        endif
          if ( SendR_NList   [lv] != NULL )   delete [] SendR_NList   [lv];
          if ( RecvR_NList   [lv] != NULL )   delete [] RecvR_NList   [lv];
          if ( SendF_NList   [lv] != NULL )   delete [] SendF_NList   [lv];
@@ -418,6 +458,10 @@ struct LB_t
          SendX_NResList[lv] = NULL;
          RecvX_NList   [lv] = NULL;
          RecvX_NResList[lv] = NULL;
+#        ifdef MHD
+         SendY_NList   [lv] = NULL;
+         RecvY_NList   [lv] = NULL;
+#        endif
          SendR_NList   [lv] = NULL;
          RecvR_NList   [lv] = NULL;
          SendF_NList   [lv] = NULL;
@@ -447,6 +491,12 @@ struct LB_t
          if ( SendX_SibList        [lv] != NULL )  delete [] SendX_SibList        [lv];
          if ( RecvX_IDList         [lv] != NULL )  delete [] RecvX_IDList         [lv];
          if ( RecvX_SibList        [lv] != NULL )  delete [] RecvX_SibList        [lv];
+#        ifdef MHD
+         if ( SendY_IDList         [lv] != NULL )  delete [] SendY_IDList         [lv];
+         if ( SendY_SibList        [lv] != NULL )  delete [] SendY_SibList        [lv];
+         if ( RecvY_IDList         [lv] != NULL )  delete [] RecvY_IDList         [lv];
+         if ( RecvY_SibList        [lv] != NULL )  delete [] RecvY_SibList        [lv];
+#        endif
          if ( SendR_IDList         [lv] != NULL )  delete [] SendR_IDList         [lv];
          if ( SendR_IDList_IdxTable[lv] != NULL )  delete [] SendR_IDList_IdxTable[lv];
          if ( RecvR_IDList         [lv] != NULL )  delete [] RecvR_IDList         [lv];
@@ -491,6 +541,12 @@ struct LB_t
          SendX_SibList        [lv] = NULL;
          RecvX_IDList         [lv] = NULL;
          RecvX_SibList        [lv] = NULL;
+#        ifdef MHD
+         SendY_IDList         [lv] = NULL;
+         SendY_SibList        [lv] = NULL;
+         RecvY_IDList         [lv] = NULL;
+         RecvY_SibList        [lv] = NULL;
+#        endif
          SendR_IDList         [lv] = NULL;
          SendR_IDList_IdxTable[lv] = NULL;
          RecvR_IDList         [lv] = NULL;
@@ -573,6 +629,10 @@ struct LB_t
          SendX_NResList[lv][r] = 0;
          RecvX_NList   [lv][r] = 0;
          RecvX_NResList[lv][r] = 0;
+#        ifdef MHD
+         SendY_NList   [lv][r] = 0;
+         RecvY_NList   [lv][r] = 0;
+#        endif
          SendR_NList   [lv][r] = 0;
          RecvR_NList   [lv][r] = 0;
          SendF_NList   [lv][r] = 0;
@@ -605,6 +665,12 @@ struct LB_t
          if ( SendX_SibList        [lv][r] != NULL )  delete [] SendX_SibList        [lv][r];
          if ( RecvX_IDList         [lv][r] != NULL )  delete [] RecvX_IDList         [lv][r];
          if ( RecvX_SibList        [lv][r] != NULL )  delete [] RecvX_SibList        [lv][r];
+#        ifdef MHD
+         if ( SendY_IDList         [lv][r] != NULL )  delete [] SendY_IDList         [lv][r];
+         if ( SendY_SibList        [lv][r] != NULL )  delete [] SendY_SibList        [lv][r];
+         if ( RecvY_IDList         [lv][r] != NULL )  delete [] RecvY_IDList         [lv][r];
+         if ( RecvY_SibList        [lv][r] != NULL )  delete [] RecvY_SibList        [lv][r];
+#        endif
          if ( SendR_IDList         [lv][r] != NULL )  free(     SendR_IDList         [lv][r] );
          if ( SendR_IDList_IdxTable[lv][r] != NULL )  delete [] SendR_IDList_IdxTable[lv][r];
          if ( RecvR_IDList         [lv][r] != NULL )  delete [] RecvR_IDList         [lv][r];
@@ -652,6 +718,12 @@ struct LB_t
          SendX_SibList        [lv][r] = NULL;
          RecvX_IDList         [lv][r] = NULL;
          RecvX_SibList        [lv][r] = NULL;
+#        ifdef MHD
+         SendY_IDList         [lv][r] = NULL;
+         SendY_SibList        [lv][r] = NULL;
+         RecvY_IDList         [lv][r] = NULL;
+         RecvY_SibList        [lv][r] = NULL;
+#        endif
          SendR_IDList         [lv][r] = NULL;
          SendR_IDList_IdxTable[lv][r] = NULL;
          RecvR_IDList         [lv][r] = NULL;

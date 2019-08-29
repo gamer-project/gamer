@@ -578,9 +578,10 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
 //       8-4. exchange the updated data
 #        ifdef MHD
-#        warning : WAIT MHD !!!
-#        endif
+         if ( OPT__FIXUP_FLUX  ||  OPT__FIXUP_RESTRICT  ||  OPT__FIXUP_ELECTRIC )
+#        else
          if ( OPT__FIXUP_FLUX  ||  OPT__FIXUP_RESTRICT )
+#        endif
          TIMING_FUNC(   Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_AFTER_FIXUP,
                                            _TOTAL, _MAG, Flu_ParaBuf, USELB_YES  ),
                         Timer_GetBuf[lv][3]   );
