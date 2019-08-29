@@ -98,6 +98,10 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
    const int MirSib[26] = { 1,0,3,2,5,4,9,8,7,6,13,12,11,10,17,16,15,14,25,24,23,22,21,20,19,18 };
    const int FSg_Flu    = amr->FluSg[SonLv];
    const int FSg_Flu2   = 1 - FSg_Flu;
+#  ifdef MHD
+   const int FSg_Mag    = amr->MagSg[SonLv];
+   const int FSg_Mag2   = 1 - FSg_Mag;
+#  endif
 #  ifdef GRAVITY
    const int FSg_Pot    = amr->PotSg[SonLv];
    const int FSg_Pot2   = 1 - FSg_Pot;
@@ -564,6 +568,9 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
             if ( OldBufPID < amr->NPatchComma[SonLv][1] )
             {
                amr->patch[FSg_Flu2][SonLv][OldBufPID]->hnew();
+#              ifdef MHD
+               amr->patch[FSg_Mag2][SonLv][OldBufPID]->mnew();
+#              endif
 #              ifdef GRAVITY
                amr->patch[FSg_Pot2][SonLv][OldBufPID]->gnew();
 #              endif
