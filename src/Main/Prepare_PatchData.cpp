@@ -263,7 +263,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    const bool PrepPres         = ( TVar & _PRES    ) ? true : false; // pressure
    const bool PrepTemp         = ( TVar & _TEMP    ) ? true : false; // temperature
    const bool PrepLrtz         = ( TVar & _LRTZ    ) ? true : false; // Lorentz factor
-   const bool Prep3Vel         = ( TVar & _3VEL    ) ? true : false; // magnitude of 3-velocity
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
@@ -324,7 +323,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 #  elif ( MODEL == SR_HYDRO )
    if ( PrepLrtz )   TDerVarList[ NVar_Der ++ ] = _LRTZ;
-   if ( Prep3Vel )   TDerVarList[ NVar_Der ++ ] = _3VEL;
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
@@ -1016,46 +1014,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                Array_Ptr += PGSize3D;
             }
 
-            if ( Prep3Vel )
-            {
-               for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
-               for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
-               for (int i=0; i<PATCH_SIZE; i++)    {
-
-                  Cons[0]=amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
-                  Cons[1]=amr->patch[FluSg][lv][PID]->fluid[MOMX][k][j][i];
-                  Cons[2]=amr->patch[FluSg][lv][PID]->fluid[MOMY][k][j][i];
-                  Cons[3]=amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i];
-                  Cons[4]=amr->patch[FluSg][lv][PID]->fluid[ENGY][k][j][i];
-
-                  SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
-                  SRHydro_4Velto3Vel( Prim, Prim );
-                  real Mag_3Velocity = SQRT( SQR(Prim[1]) + SQR(Prim[2]) + SQR(Prim[3]) );
-                  
-
-                  Array_Ptr[Idx1] = Mag_3Velocity;
-
-                  if ( FluIntTime ) // temporal interpolation
-                  {
-        			  Cons[0]=amr->patch[FluSg_IntT][lv][PID]->fluid[DENS][k][j][i];
-        			  Cons[1]=amr->patch[FluSg_IntT][lv][PID]->fluid[MOMX][k][j][i];
-        			  Cons[2]=amr->patch[FluSg_IntT][lv][PID]->fluid[MOMY][k][j][i];
-        			  Cons[3]=amr->patch[FluSg_IntT][lv][PID]->fluid[MOMZ][k][j][i];
-        			  Cons[4]=amr->patch[FluSg_IntT][lv][PID]->fluid[ENGY][k][j][i];
-        
-                      SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
-                      SRHydro_4Velto3Vel( Prim, Prim );
-                      Mag_3Velocity = SQRT( SQR(Prim[1]) + SQR(Prim[2]) + SQR(Prim[3]) );
-        
-        			  Array_Ptr[Idx1] =   FluWeighting *Array_Ptr[Idx1] + FluWeighting_IntT*Mag_3Velocity;
-                  }
-                  Idx1 ++;
-               }}}
-
-               Array_Ptr += PGSize3D;
-            }
-
             if ( PrepLrtz )
             {
                for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
@@ -1485,46 +1443,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
              			  LorentzFactor = SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
              			  Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
              					+ FluWeighting_IntT*LorentzFactor;
-                  		}
-                        Idx1 ++;
-                     }}}
-
-                     Array_Ptr += PGSize3D;
-                  }
-
-                  if ( Prep3Vel )
-                  {
-                     for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
-                     for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j;   J2 = j + Disp_j2;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
-                     for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
-
-                        Cons[0]=amr->patch[FluSg][lv][SibPID]->fluid[DENS][K2][J2][I2];
-                        Cons[1]=amr->patch[FluSg][lv][SibPID]->fluid[MOMX][K2][J2][I2];
-                        Cons[2]=amr->patch[FluSg][lv][SibPID]->fluid[MOMY][K2][J2][I2];
-                        Cons[3]=amr->patch[FluSg][lv][SibPID]->fluid[MOMZ][K2][J2][I2];
-                        Cons[4]=amr->patch[FluSg][lv][SibPID]->fluid[ENGY][K2][J2][I2];
-
-                        SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
-                        SRHydro_4Velto3Vel( Prim, Prim );
-                        real Mag_3Velocity = SQRT( SQR(Prim[1]) + SQR(Prim[2]) + SQR(Prim[3]) );
-
-                        Array_Ptr[Idx1] = Mag_3Velocity;
-
-                        if ( FluIntTime ) // temporal interpolation
-                        {
-            			  Cons[0]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[DENS][K2][J2][I2];
-            			  Cons[1]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMX][K2][J2][I2];
-             			  Cons[2]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMY][K2][J2][I2];
-             			  Cons[3]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMZ][K2][J2][I2];
-             			  Cons[4]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[ENGY][K2][J2][I2];
-             
-                          SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
-                          SRHydro_4Velto3Vel( Prim, Prim );
-                          Mag_3Velocity = SQRT( SQR(Prim[1]) + SQR(Prim[2]) + SQR(Prim[3]) );
-
-             			  Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
-             					+ FluWeighting_IntT*Mag_3Velocity;
                   		}
                         Idx1 ++;
                      }}}

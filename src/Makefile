@@ -511,7 +511,7 @@ CC_FILE     += CPU_Shared_DataReconstruction.cpp  CPU_Shared_FluUtility.cpp  CPU
                CPU_dtSolver_SRHydroCFL.cpp SRHydro_Utility.cpp
 
 CC_FILE     += SRHydro_Init_ByFunction_AssignData.cpp  SRHydro_Aux_Check_Negative.cpp \
-               SRHydro_BoundaryCondition_Reflecting.cpp SRHydro_Flag_Vorticity.cpp SRHydro_Flag_Lorentz.cpp
+               SRHydro_BoundaryCondition_Reflecting.cpp SRHydro_Flag_Vorticity.cpp
 
 vpath %.cu     Model_SRHydro/GPU_SRHydro
 vpath %.cpp    Model_SRHydro/CPU_SRHydro Model_SRHydro

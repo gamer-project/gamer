@@ -121,7 +121,19 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 #  if ( MODEL == SR_HYDRO )
    if ( OPT__FLAG_LORENTZ )
    {
-      Flag |= SRHydro_Flag_Lorentz( i, j, k, lv, PID, FlagTable_Lorentz[lv] );
+      real Dens, MomX, MomY, MomZ, Engy, LorentzFactor;
+      real Cons[NCOMP_FLUID], Prim[NCOMP_FLUID];
+
+      Dens=Fluid[DENS][k][j][i];
+      MomX=Fluid[MOMX][k][j][i];
+      MomY=Fluid[MOMY][k][j][i];
+      MomZ=Fluid[MOMZ][k][j][i];
+      Engy=Fluid[ENGY][k][j][i];
+
+      LorentzFactor = SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
+
+      Flag |= ( LorentzFactor > FlagTable_Lorentz[lv] );
+
       if ( Flag )    return Flag;
    }
 
@@ -129,7 +141,21 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 // ===========================================================================================
    if ( OPT__FLAG_3VELOCITY )
    {
-      Flag |= SRHydro_Flag_Lorentz( i, j, k, lv, PID, FlagTable_3Velocity[lv] );
+      real Dens, MomX, MomY, MomZ, Engy, Mag_3Velocity;
+      real Cons[NCOMP_FLUID], Prim[NCOMP_FLUID];
+
+      Dens=Fluid[DENS][k][j][i];
+      MomX=Fluid[MOMX][k][j][i];
+      MomY=Fluid[MOMY][k][j][i];
+      MomZ=Fluid[MOMZ][k][j][i];
+      Engy=Fluid[ENGY][k][j][i];
+
+      SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
+      SRHydro_4Velto3Vel( Prim, Prim );
+      Mag_3Velocity = SQRT( SQR(Prim[1]) + SQR(Prim[2]) + SQR(Prim[3]) );
+
+      Flag |= ( Mag_3Velocity > FlagTable_3Velocity[lv] );
+
       if ( Flag )    return Flag;
    }
 #  endif

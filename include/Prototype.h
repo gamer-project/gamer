@@ -473,7 +473,6 @@ void SRHydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const
                                            const int NVar_Der, const int TDerVarList[] );
 
 bool SRHydro_Flag_Vorticity( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
-bool SRHydro_Flag_Lorentz  ( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
 
 
 #else
