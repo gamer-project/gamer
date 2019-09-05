@@ -124,11 +124,11 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
       real Dens, MomX, MomY, MomZ, Engy, LorentzFactor;
       real Cons[NCOMP_FLUID], Prim[NCOMP_FLUID];
 
-      Dens=Fluid[DENS][k][j][i];
-      MomX=Fluid[MOMX][k][j][i];
-      MomY=Fluid[MOMY][k][j][i];
-      MomZ=Fluid[MOMZ][k][j][i];
-      Engy=Fluid[ENGY][k][j][i];
+      Cons[DENS]=Fluid[DENS][k][j][i];
+      Cons[MOMX]=Fluid[MOMX][k][j][i];
+      Cons[MOMY]=Fluid[MOMY][k][j][i];
+      Cons[MOMZ]=Fluid[MOMZ][k][j][i];
+      Cons[ENGY]=Fluid[ENGY][k][j][i];
 
       LorentzFactor = SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
 
@@ -144,11 +144,11 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
       real Dens, MomX, MomY, MomZ, Engy, Mag_3Velocity;
       real Cons[NCOMP_FLUID], Prim[NCOMP_FLUID];
 
-      Dens=Fluid[DENS][k][j][i];
-      MomX=Fluid[MOMX][k][j][i];
-      MomY=Fluid[MOMY][k][j][i];
-      MomZ=Fluid[MOMZ][k][j][i];
-      Engy=Fluid[ENGY][k][j][i];
+      Cons[DENS]=Fluid[DENS][k][j][i];
+      Cons[MOMX]=Fluid[MOMX][k][j][i];
+      Cons[MOMY]=Fluid[MOMY][k][j][i];
+      Cons[MOMZ]=Fluid[MOMZ][k][j][i];
+      Cons[ENGY]=Fluid[ENGY][k][j][i];
 
       SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
       SRHydro_4Velto3Vel( Prim, Prim );
