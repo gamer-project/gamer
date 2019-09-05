@@ -367,7 +367,8 @@
 #  define _PRES               ( 1 << (NCOMP_TOTAL+3) ) // pressure                           000100000000
 #  define _TEMP               ( 1 << (NCOMP_TOTAL+4) ) // temperature                        001000000000
 #  define _LRTZ               ( 1 << (NCOMP_TOTAL+5) ) // Lorentz factor                     010000000000
-#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP | _LRTZ ) //1111111100000
+#  define _3VEL               ( 1 << (NCOMP_TOTAL+6) ) // magnitude of 3-velocity            010000000000
+#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP | _LRTZ | _3VEL ) //1111111100000
 #  define NDERIVE             6
 
 
