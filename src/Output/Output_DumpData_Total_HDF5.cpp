@@ -1890,11 +1890,14 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.MaxLevel                = MAX_LEVEL;
    InputPara.Opt__Flag_Rho           = OPT__FLAG_RHO;
    InputPara.Opt__Flag_RhoGradient   = OPT__FLAG_RHO_GRADIENT;
-#  if ( MODEL == HYDRO || MODEL == SR_HYDRO )
+#  if ( MODEL == HYDRO )
    InputPara.Opt__Flag_PresGradient  = OPT__FLAG_PRES_GRADIENT;
    InputPara.Opt__Flag_Vorticity     = OPT__FLAG_VORTICITY;
    InputPara.Opt__Flag_Jeans         = OPT__FLAG_JEANS;
+#  endif
+#  if ( MODEL == SR_HYDRO )
    InputPara.Opt__Flag_Lorentz       = OPT__FLAG_LORENTZ;
+   InputPara.Opt__Flag_3Velocity     = OPT__FLAG_3VELOCITY;
 #  endif
 #  if ( MODEL == ELBDM )
    InputPara.Opt__Flag_EngyDensity   = OPT__FLAG_ENGY_DENSITY;

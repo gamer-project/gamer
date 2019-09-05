@@ -124,6 +124,14 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
       Flag |= SRHydro_Flag_Lorentz( i, j, k, lv, PID, FlagTable_Lorentz[lv] );
       if ( Flag )    return Flag;
    }
+
+// check 3-velocity
+// ===========================================================================================
+   if ( OPT__FLAG_3VELOCITY )
+   {
+      Flag |= SRHydro_Flag_Lorentz( i, j, k, lv, PID, FlagTable_3Velocity[lv] );
+      if ( Flag )    return Flag;
+   }
 #  endif
 
 // check Jeans length

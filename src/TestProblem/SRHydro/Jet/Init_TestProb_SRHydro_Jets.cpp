@@ -478,34 +478,31 @@ bool Flag_User( const int i, const int j, const int k, const int lv, const int P
 
 // ##########################################################################################################
 
-//  double EndPtVel  = 0.1465;
-//  double IniX      = 25.0;
-//  double StartTime = 280.0;
-//  double EndPtVel  = 0.1465;  // the velocity of jet head
-//  double IniX      = 41.01; // the distance between source and jet head
-//  double StartTime = 580.0;
-//
-//  double Shift = +EndPtVel*(Time[lv]-StartTime)+IniX;
-//
-//  const double Center[3]    = { 0.5*amr->BoxSize[0]      , 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
-//  const double EndPointR[3] = { 0.5*amr->BoxSize[0]+Shift, 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
-//  const double EndPointL[3] = { 0.5*amr->BoxSize[0]-Shift, 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
-//
-//  const double dr0[3]     = { Pos[0]-   Center[0], Pos[1]-   Center[1], Pos[2]-   Center[2] };
-//  const double dr1[3]     = { Pos[0]-EndPointR[0], Pos[1]-EndPointR[1], Pos[2]-EndPointR[2] };
-//  const double dr2[3]     = { Pos[0]-EndPointL[0], Pos[1]-EndPointL[1], Pos[2]-EndPointL[2] };
-//
-//  Flag |= sqrt( dr0[1]*dr0[1] + dr0[2]*dr0[2] ) < 1.5;
-//  Flag &=  abs( dr0[0] ) < Shift;
-//
-//  double Radius1 = sqrt( dr1[0]*dr1[0] + dr1[1]*dr1[1] + dr1[2]*dr1[2] );
-//  double Radius2 = sqrt( dr2[0]*dr2[0] + dr2[1]*dr2[1] + dr2[2]*dr2[2] );
-//
-//
-//  Flag |= ( Radius1 < amr->dh[lv] * 0.5  * 1.733 );
-//  Flag |= ( Radius2 < amr->dh[lv] * 0.5  * 1.733 );
-//  Flag |= ( Radius1 < amr->dh[lv] * 0.5  *   1.1 );
-//  Flag |= ( Radius2 < amr->dh[lv] * 0.5  *   1.1 );
+  double StartTime = 600;
+  double EndPtVel  = 0.196;  // the velocity of jet head
+  double IniX      = 375.0-202.0; // the distance between source and jet head
+
+  double Shift = +EndPtVel*(Time[lv]-StartTime)+IniX;
+
+  const double Center[3]    = { 0.5*amr->BoxSize[0]      , 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
+  const double EndPointR[3] = { 0.5*amr->BoxSize[0]+Shift, 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
+  const double EndPointL[3] = { 0.5*amr->BoxSize[0]-Shift, 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
+
+  const double dr0[3]     = { Pos[0]-   Center[0], Pos[1]-   Center[1], Pos[2]-   Center[2] };
+  const double dr1[3]     = { Pos[0]-EndPointR[0], Pos[1]-EndPointR[1], Pos[2]-EndPointR[2] };
+  const double dr2[3]     = { Pos[0]-EndPointL[0], Pos[1]-EndPointL[1], Pos[2]-EndPointL[2] };
+
+  Flag |= sqrt( dr0[1]*dr0[1] + dr0[2]*dr0[2] ) < 1.5;
+  Flag &=  abs( dr0[0] ) < Shift;
+
+  double Radius1 = sqrt( dr1[0]*dr1[0] + dr1[1]*dr1[1] + dr1[2]*dr1[2] );
+  double Radius2 = sqrt( dr2[0]*dr2[0] + dr2[1]*dr2[1] + dr2[2]*dr2[2] );
+
+
+  Flag |= ( Radius1 < amr->dh[lv] * 0.5  * 1.733 );
+  Flag |= ( Radius2 < amr->dh[lv] * 0.5  * 1.733 );
+  Flag |= ( Radius1 < amr->dh[lv] * 0.5  *   1.1 );
+  Flag |= ( Radius2 < amr->dh[lv] * 0.5  *   1.1 );
 
 // ##########################################################################################################
 //   const double Center[3]    = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };

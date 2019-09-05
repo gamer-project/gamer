@@ -104,6 +104,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    const bool PrepPres        = ( TVar & _PRES    ) ? true : false; // pressure
    const bool PrepTemp        = ( TVar & _TEMP    ) ? true : false; // temperature
    const bool PrepLrtz        = ( TVar & _LRTZ    ) ? true : false; // Lorentz factor
+   const bool Prep3Vel        = ( TVar & _3VEL    ) ? true : false; // magnitide of 3-velocity
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
@@ -569,6 +570,34 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
       CData_Ptr += CSize3D;
    }
 
+   if ( Prep3Vel )
+   {
+       for (int k=0; k<Loop1[2]; k++)   {  k1 = k + Disp1[2];   k2 = k + Disp2[2];
+       for (int j=0; j<Loop1[1]; j++)   {  j1 = j + Disp1[1];   j2 = j + Disp2[1];
+                                           Idx = IDX321( Disp2[0], j2, k2, CSize[0], CSize[1] );
+       for (i1=Disp1[0]; i1<Disp1[0]+Loop1[0]; i1++)   {
+
+       for(int q =0;q<NCOMP_FLUID;q++) Cons[q]=amr->patch[FluSg][lv][PID]->fluid[q][k1][j1][i1];
+    
+       real LorentzFactor = SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
+
+       CData_Ptr[Idx] = LorentzFactor;
+
+       if ( FluIntTime ) // temporal interpolation
+	   {
+          for(int q =0;q<NCOMP_FLUID;q++) Cons[q]=amr->patch[FluSg_IntT][lv][PID]->fluid[q][k1][j1][i1];
+
+	      LorentzFactor = SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
+
+	      CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
+			       + FluWeighting_IntT*LorentzFactor;
+	   }
+         Idx ++;
+      }}}
+
+      CData_Ptr += CSize3D;
+   }
+
    if ( PrepPres )
    {
       for (int k=0; k<Loop1[2]; k++)   {  k1 = k + Disp1[2];   k2 = k + Disp2[2];
@@ -927,6 +956,39 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
 		       CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
 		     	       + FluWeighting_IntT*LorentzFactor;
+		    }
+               Idx ++;
+            }}}
+
+            CData_Ptr += CSize3D;
+         }
+
+         if ( Prep3Vel )
+         {
+            for (int k=0; k<Loop2[2]; k++)   {  k1 = k + Disp3[2];   k2 = k + Disp4[2];
+            for (int j=0; j<Loop2[1]; j++)   {  j1 = j + Disp3[1];   j2 = j + Disp4[1];
+                                                Idx = IDX321( Disp3[0], j1, k1, CSize[0], CSize[1] );
+            for (i2=Disp4[0]; i2<Disp4[0]+Loop2[0]; i2++)   {
+
+	        for(int q =0;q<NCOMP_FLUID;q++)	Cons[q]=amr->patch[FluSg][lv][SibPID]->fluid[q][k2][j2][i2];
+
+            SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
+            SRHydro_4Velto3Vel( Prim, Prim );
+            real Mag_3Velocity = SQRT( SQR(Prim[1]) + SQR(Prim[2]) + SQR(Prim[3]) );
+
+		    CData_Ptr[Idx] = Mag_3Velocity;
+
+            if ( FluIntTime ) // temporal interpolation
+		    {
+               for(int q =0;q<NCOMP_FLUID;q++){
+		       Cons[q]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[q][k2][j2][i2];}
+
+               SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
+               SRHydro_4Velto3Vel( Prim, Prim );
+               Mag_3Velocity = SQRT( SQR(Prim[1]) + SQR(Prim[2]) + SQR(Prim[3]) );
+
+		       CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
+		     	       + FluWeighting_IntT*Mag_3Velocity;
 		    }
                Idx ++;
             }}}
