@@ -215,10 +215,12 @@ real SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real 
 #  endif
 
 
+#  if ( EOS == APPROXIMATED_GENERAL )
 // if overfolw due to high temperature, we simply set Gamma = 4/3.
    if ( h != h ) 
-   {   
-        real Gamma_m1 = Gamma - (real)1.0;
+   {    
+		Gamma = (real)1.3333333;
+        real Gamma_m1 = (real)0.3333333;
 
         real E_Dsqr = SQR( In[4] / In[0] );
         real M_Dsqr = VectorDotProduct(In[1], In[2], In[3]) / SQR(In[0]);
@@ -233,6 +235,7 @@ real SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real 
 
         h = (real)4.0 * Temp;
    }   
+#  endif
 
    real factor = In[0]*h;
    Out[1] = In[1]/factor;
