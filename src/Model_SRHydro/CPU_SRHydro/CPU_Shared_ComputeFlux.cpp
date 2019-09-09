@@ -78,8 +78,8 @@ void SRHydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
 
 // check
 #  ifdef GAMER_DEBUG
-   if ( CorrHalfVel )
-      printf( "ERROR : CorrHalfVel is NOT supported when UNSPLIT_GRAVITY is off !!\n" );
+//   if ( CorrHalfVel )
+//      printf( "ERROR : CorrHalfVel is NOT supported when UNSPLIT_GRAVITY is off !!\n" );
 #  endif // #ifdef GAMER_DEBUG
 
    const int didx_fc[3] = { 1, N_FC_VAR, N_FC_VAR*N_FC_VAR };

@@ -219,7 +219,7 @@ real SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real 
 // if there is an overfolw due to high temperature, we simply set Gamma = 4/3.
    if ( h != h ) 
    {    
-		Gamma = (real)1.3333333;
+//		Gamma = (real)1.3333333;
         real Gamma_m1 = (real)0.3333333;
 
         real E_Dsqr = SQR( In[4] / In[0] );

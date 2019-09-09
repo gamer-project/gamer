@@ -1951,6 +1951,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #        if ( MODEL == SR_HYDRO && defined CHECK_NEGATIVE_IN_FLUID )
          if ( (TVar & _FLUID) == _FLUID )
          {
+            real Cons[NCOMP_TOTAL];
 //          assuming that the order of variables stored in h_Input_Array is the same as patch->fluid[]
             const int DensIdx = DENS;
             const int MomXIdx = MOMX;

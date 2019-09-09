@@ -153,13 +153,6 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
 // coarse-grid array to store all the data required for interpolation (including the ghost zones in each side)
    real *CData_Ptr = NULL;
-
-#  if ( MODEL == SR_HYDRO )
-#  ifdef GAMER_DEBUG
-   if ( (NVar_Flu != NCOMP_FLUID) && ( NVar_Flu != 0 ) ) 
-    Aux_Error (ERROR_INFO, "%s: %d\n NVar_Flu = %d\n", __FUNCTION__, __LINE__, NVar_Flu);
-#  endif
-#  endif
    real *CData     = new real [ NVar_Tot   *CSize3D ];
 
 
