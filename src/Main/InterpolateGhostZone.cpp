@@ -1245,69 +1245,69 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    {
 //   c3. interpolation on original variables for models != ELBDM
      for (int v=0; v<NVar_Flu; v++)
-     Interpolate( CData+CSize3D*v, CSize, CStart, CRange, IntData+FSize3D*v, FSize, FStart, 1,
-                  IntScheme, PhaseUnwrapping_No, Monotonicity, IntMonoCoeff);
+     AdaptiveInterpolate( CData, CSize, CStart, CRange, IntData, FSize, FStart, NVar_Flu,
+                          IntScheme, PhaseUnwrapping_No, Monotonicity );
 
-//   check
-     for ( int i = 0 ;i < FSize3D; i++ )
-     {
-       for (int v = 0 ; v < NCOMP_FLUID ;v++) Cons[v] = *(IntData+FSize3D*v+i);
-
-       if (SRHydro_CheckUnphysical(Cons, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, false))
-        {
-           state = true;
-           break; 
-        } else state = false;
-     }
-
-     if ( state == true )
-     {
-       const real Mono_Max = INT_MONO_COEFF;
-       const real Mono_Min = 0.0;
-       iteration = 0;
-
-       for (int i=0; i<CSize3D; i++)
-       {
-          for (int v = 0 ; v < NCOMP_FLUID ;v++) Cons[v] = *(CData+CSize3D*v+i);
-
-          SRHydro_Con2Pri(Cons, Prim, GAMMA, MIN_TEMP);
-
-          for (int v = 0 ; v < NCOMP_FLUID ;v++) *(CData+CSize3D*v+i) = Prim[v];
-       }
-
-
-       do {
-//         adaptive IntMonoCoeff
-           IntMonoCoeff = Mono_Max - iteration * ( Mono_Max - Mono_Min ) / (real) Max ;
-
-//         interpolation
-           for (int v=0; v<NVar_Flu; v++)
-           Interpolate( CData+CSize3D*v, CSize, CStart, CRange, IntData+FSize3D*v, FSize, FStart, 1,
-                        IntScheme, PhaseUnwrapping_No, Monotonicity, IntMonoCoeff);
-//         check
-           for ( int i = 0 ;i < FSize3D; i++ )
-           {
-             for (int v = 0 ; v < NCOMP_FLUID ;v++) Prim[v] = *(IntData+FSize3D*v+i);
-
-             if (SRHydro_CheckUnphysical(NULL, Prim, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true))
-              {
-                 state = true;
-                 break; 
-              } else state = false;
-           }
-
-           iteration++;
-
-       } while ( state && iteration <= Max );
-
-       for (int i=0; i<FSize3D; i++)
-       {
-          for (int v = 0 ; v < NCOMP_FLUID ;v++) Prim[v] = *(IntData+FSize3D*v+i);
-
-          SRHydro_Pri2Con(Prim, Cons, GAMMA);
-
-          for (int v = 0 ; v < NCOMP_FLUID ;v++) *(IntData+FSize3D*v+i) = Cons[v];
-       }
+////   check
+//     for ( int i = 0 ;i < FSize3D; i++ )
+//     {
+//       for (int v = 0 ; v < NCOMP_FLUID ;v++) Cons[v] = *(IntData+FSize3D*v+i);
+//
+//       if (SRHydro_CheckUnphysical(Cons, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, false))
+//        {
+//           state = true;
+//           break; 
+//        } else state = false;
+//     }
+//
+//     if ( state == true )
+//     {
+//       const real Mono_Max = INT_MONO_COEFF;
+//       const real Mono_Min = 0.0;
+//       iteration = 0;
+//
+//       for (int i=0; i<CSize3D; i++)
+//       {
+//          for (int v = 0 ; v < NCOMP_FLUID ;v++) Cons[v] = *(CData+CSize3D*v+i);
+//
+//          SRHydro_Con2Pri(Cons, Prim, GAMMA, MIN_TEMP);
+//
+//          for (int v = 0 ; v < NCOMP_FLUID ;v++) *(CData+CSize3D*v+i) = Prim[v];
+//       }
+//
+//
+//       do {
+////         adaptive IntMonoCoeff
+//           IntMonoCoeff = Mono_Max - iteration * ( Mono_Max - Mono_Min ) / (real) Max ;
+//
+////         interpolation
+//           for (int v=0; v<NVar_Flu; v++)
+//           Interpolate( CData+CSize3D*v, CSize, CStart, CRange, IntData+FSize3D*v, FSize, FStart, 1,
+//                        IntScheme, PhaseUnwrapping_No, Monotonicity, IntMonoCoeff);
+////         check
+//           for ( int i = 0 ;i < FSize3D; i++ )
+//           {
+//             for (int v = 0 ; v < NCOMP_FLUID ;v++) Prim[v] = *(IntData+FSize3D*v+i);
+//
+//             if (SRHydro_CheckUnphysical(NULL, Prim, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true))
+//              {
+//                 state = true;
+//                 break; 
+//              } else state = false;
+//           }
+//
+//           iteration++;
+//
+//       } while ( state && iteration <= Max );
+//
+//       for (int i=0; i<FSize3D; i++)
+//       {
+//          for (int v = 0 ; v < NCOMP_FLUID ;v++) Prim[v] = *(IntData+FSize3D*v+i);
+//
+//          SRHydro_Pri2Con(Prim, Cons, GAMMA);
+//
+//          for (int v = 0 ; v < NCOMP_FLUID ;v++) *(IntData+FSize3D*v+i) = Cons[v];
+//       }
 
 #      ifdef CHECK_NEGATIVE_IN_FLUID
 //     check coarse data after interpolation
@@ -1324,13 +1324,12 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
          if(SRHydro_CheckUnphysical(Cons, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
        }
 #      endif
-     }
+//     }
    }
    else
    {
-     for (int v=0; v<NVar_Flu; v++)
-        Interpolate( CData+CSize3D*v, CSize, CStart, CRange, IntData+FSize3D*v, FSize, FStart, 1,
-                     IntScheme, PhaseUnwrapping_No, Monotonicity, INT_MONO_COEFF);
+        AdaptiveInterpolate( CData, CSize, CStart, CRange, IntData, FSize, FStart, NVar_Flu,
+                             IntScheme, PhaseUnwrapping_No, Monotonicity );
    }
 #  endif
 

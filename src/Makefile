@@ -187,7 +187,7 @@ SIMU_OPTION += -DMAX_PATCH=2000000
 SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA/TURING
-SIMU_OPTION += -DGPU_ARCH=TURING
+SIMU_OPTION += -DGPU_ARCH=FERMI
 
 # debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
@@ -358,13 +358,13 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 #CUDA_PATH    := /opt/gpu/cuda/default
 
 # NTU-hulk (openmpi-intel-qlc)
-#FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
-#MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
-#HDF5_PATH    := /opt/hdf5/default
-#GRACKLE_PATH := 
-#GSL_PATH     := /opt/math/gsl/default
-#LIBYT_PATH   := 
-#CUDA_PATH    := /opt/gpu/cuda/default
+FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
+MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
+HDF5_PATH    := /opt/hdf5/default
+GRACKLE_PATH := 
+GSL_PATH     := /opt/math/gsl/default
+LIBYT_PATH   := 
+CUDA_PATH    := /opt/gpu/cuda/default
 
 # NTHU-fomalhaut (openmpi-gnu)
 #CUDA_PATH    := /usr/local/cuda-10.0
@@ -381,13 +381,13 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 #GPUID_PATH   := /ifs/data/hsiyu/Software/gpudevmgr
 
 # gamer04
-FFTW_PATH    := 
-MPI_PATH     := /opt/openmpi/3.1.4-intel-tm
-HDF5_PATH    := /opt/hdf5
-GRACKLE_PATH := 
-GSL_PATH     := 
-LIBYT_PATH   := 
-CUDA_PATH    := /opt/cuda/default
+#FFTW_PATH    := 
+#MPI_PATH     := /opt/openmpi/3.1.4-intel-tm
+#HDF5_PATH    := /opt/hdf5
+#GRACKLE_PATH := 
+#GSL_PATH     := 
+#LIBYT_PATH   := 
+#CUDA_PATH    := /opt/cuda/default
 #
 ## Calab AMD2
 #FFTW_PATH    := 
@@ -435,7 +435,7 @@ CC_FILE     += End_GAMER.cpp  End_MemFree.cpp  End_MemFree_Fluid.cpp  End_StopMa
                Init_Unit.cpp  Init_UniformGrid.cpp  Init_Field.cpp Init_User.cpp
 
 CC_FILE     += Interpolate.cpp  Int_CQuadratic.cpp  Int_MinMod1D.cpp  Int_MinMod3D.cpp  Int_vanLeer.cpp \
-               Int_Quadratic.cpp  Int_Table.cpp  Int_CQuartic.cpp  Int_Quartic.cpp Int_WENO.cpp
+               Int_Quadratic.cpp  Int_Table.cpp  Int_CQuartic.cpp  Int_Quartic.cpp Int_WENO.cpp AdaptiveInterpolate.cpp
 
 CC_FILE     += Mis_CompareRealValue.cpp  Mis_GetTotalPatchNumber.cpp  Mis_GetTimeStep.cpp  Mis_Heapsort.cpp \
                Mis_BinarySearch.cpp  Mis_1D3DIdx.cpp  Mis_Matching.cpp  Mis_GetTimeStep_User.cpp \

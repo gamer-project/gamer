@@ -14,7 +14,7 @@ EXECUTABLE = GAMER_CompareData
 SIMU_OPTION += -DMODEL=SR_HYDRO
 
 # double precision
-#SIMU_OPTION += -DFLOAT8
+SIMU_OPTION += -DFLOAT8
 
 
 
