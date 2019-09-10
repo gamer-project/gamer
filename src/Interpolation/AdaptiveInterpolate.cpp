@@ -12,13 +12,13 @@ void AdaptiveInterpolate( real CData [], const int CSize[3], const int CStart[3]
 {
      int itr = -1;
      real IntMonoCoeff;
-     bool state;
+     bool state = false;
      const int Max = 3;
      const int CSize3D = CSize[0]*CSize[1]*CSize[2];
      const int FSize3D = FSize[0]*FSize[1]*FSize[2];
      real Cons[NCOMP_FLUID], Prim[NCOMP_FLUID];
 
-//     do {
+     do {
            switch ( itr )
            {
               case -1:
@@ -52,7 +52,7 @@ void AdaptiveInterpolate( real CData [], const int CSize[3], const int CStart[3]
                         FSize, FStart, 1, IntScheme, UnwrapPhase, Monotonic, IntMonoCoeff );
  
    
-//         check
+//           check
 //           for (int k=0; k<FSize[2]; k++)
 //           for (int j=0; j<FSize[1]; j++)
 //           for (int i=0; i<FSize[0]; i++)
@@ -67,31 +67,31 @@ void AdaptiveInterpolate( real CData [], const int CSize[3], const int CStart[3]
 //               break;
 //              }else state = false;
 //           }
-//        
-//           if ( ( IntScheme == INT_MINMOD3D || IntScheme == INT_MINMOD1D ) && itr == 0 ) break;
+        
+           if ( ( IntScheme == INT_MINMOD3D || IntScheme == INT_MINMOD1D ) && itr == 0 ) break;
 
-           itr++;
+//           itr++;
   
-//     } while (state && itr <= Max );
+     } while (state && itr <= Max );
 
      switch ( itr )
      {
         case -1:
         break;
-//        case 0:
-//          for (int k=0; k<FSize[2]; k++)
-//          for (int j=0; j<FSize[1]; j++)
-//          for (int i=0; i<FSize[0]; i++)
-//          {                 
-//            for (int v = 0 ; v < NCOMP_FLUID;v++) 
-//             Prim[v] = *(FData + i*NCOMP_FLUID*FSize[2]*FSize[1]+j*FSize[2]*NCOMP_TOTAL+k*NCOMP_TOTAL+v);
-//
-//            SRHydro_Pri2Con(Prim, Cons, GAMMA);
-//                            
-//            for (int v = 0 ; v < NCOMP_FLUID;v++) 
-//             *(FData + i*NCOMP_FLUID*FSize[2]*FSize[1]+j*FSize[2]*NCOMP_TOTAL+k*NCOMP_TOTAL+v) = Cons[v];
-//          }               
-//          break;
+        case 0:
+          for (int k=0; k<FSize[2]; k++)
+          for (int j=0; j<FSize[1]; j++)
+          for (int i=0; i<FSize[0]; i++)
+          {                 
+            for (int v = 0 ; v < NCOMP_FLUID;v++) 
+             Prim[v] = *(FData + i*NCOMP_FLUID*FSize[2]*FSize[1]+j*FSize[2]*NCOMP_TOTAL+k*NCOMP_TOTAL+v);
+
+            SRHydro_Pri2Con(Prim, Cons, GAMMA);
+                            
+            for (int v = 0 ; v < NCOMP_FLUID;v++) 
+             *(FData + i*NCOMP_FLUID*FSize[2]*FSize[1]+j*FSize[2]*NCOMP_TOTAL+k*NCOMP_TOTAL+v) = Cons[v];
+          }               
+          break;
      }
 
 

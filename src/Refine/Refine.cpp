@@ -476,12 +476,11 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                Flu_FData[IMAG][k][j][i] = Amp*SIN( Phase );
             }
          }
-#        elif ( MODEL != ELBDM && MODEL != SR_HYDRO ) // #if ( MODEL == ELBDM )
+#        else // #if ( MODEL == ELBDM )
 
-         for (int v=0; v<NCOMP_TOTAL; v++)
-         Interpolate( &Flu_CData[v][0][0][0], CSize_Flu3, CStart_Flu, CRange, &Flu_FData[v][0][0][0],
-                      FSize3, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No,
-                      Monotonicity );
+         AdaptiveInterpolate( &Flu_CData[v][0][0][0], CSize_Flu3, CStart_Flu, CRange, &Flu_FData[v][0][0][0],
+                              FSize3, FStart, NCOMP_TOTAL, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No,
+                              Monotonicity );
 
 #        endif // #if ( MODEL == ELBDM ) ... else
 
@@ -495,49 +494,6 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                       &EnsureMonotonicity_No );
 #        endif
 
-#        if ( MODEL == SR_HYDRO )
-
-         const real Mono_Max = INT_MONO_COEFF;
-         const real Mono_Min = 0.0;
-         iteration = 0;
-
-         do {
-//         adaptive IntMonoCoeff
-           IntMonoCoeff = Mono_Max - iteration * ( Mono_Max - Mono_Min ) / (real) Max ;
- 
-//         interpolation
-           for (int v=0; v<NCOMP_TOTAL; v++)
-           Interpolate( &Flu_CData[v][0][0][0], CSize_Flu3, CStart_Flu, CRange, &Flu_FData[v][0][0][0],
-                        FSize3, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No,
-                        Monotonicity, IntMonoCoeff );
-
-	   for (int k=0; k<FSize; k++)
-	   for (int j=0; j<FSize; j++)
-	   for (int i=0; i<FSize; i++)
-	   {
-	     for (int v = 0 ; v < NCOMP_FLUID;v++) Con[v] = Flu_FData[v][k][j][i];
-	     if(SRHydro_CheckUnphysical(Con, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true))
-              {
-               i = j = k = FSize; // break nested loop
-               state = true;
-               break;
-              }else state = false;
-           }
-
-           iteration++;
-
-         } while (state && iteration <= Max );
-
-#        ifdef CHECK_NEGATIVE_IN_FLUID
-         for (int k=0; k<FSize; k++)
-         for (int j=0; j<FSize; j++)
-         for (int i=0; i<FSize; i++)
-         {
-           for (int v=0;v<NCOMP_TOTAL;v++)Con[v] = Flu_FData[v][k][j][i];
-           if(SRHydro_CheckUnphysical(Con, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
-         }
-#        endif
-#        endif
 
 
 //       (c1.3.3.3) check minimum density and pressure

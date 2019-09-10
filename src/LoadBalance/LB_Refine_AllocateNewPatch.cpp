@@ -829,11 +829,9 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
          FData_Flu[IMAG][k][j][i] = Amp*SIN( Phase );
       }
    }
-#  elif ( MODEL != ELBDM && MODEL != SR_HYDRO ) // #if ( MODEL == ELBDM )
-
-   for (int v=0; v<NCOMP_TOTAL; v++)
-   Interpolate( CData_Flu+v*CSize_Flu1v, CSize_Flu_Temp, CStart_Flu, CRange, &FData_Flu[v][0][0][0],
-                FSize_Temp, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity );
+#  else // #if ( MODEL == ELBDM )
+   AdaptiveInterpolate( CData_Flu, CSize_Flu_Temp, CStart_Flu, CRange, &FData_Flu[0][0][0][0],
+                        FSize_Temp, FStart, NCOMP_TOTAL, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity );
 
 #  endif // #if ( MODEL == ELBDM ) ... else
 
@@ -845,97 +843,6 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
                 FSize_Temp, FStart,     1, OPT__REF_POT_INT_SCHEME, PhaseUnwrapping_No, &EnsureMonotonicity_No );
 #  endif
 
-#  if ( MODEL == SR_HYDRO )
-   real Cons[NCOMP_TOTAL];
-   real Prim[NCOMP_TOTAL];
-
-// interpolation
-    AdaptiveInterpolate( CData_Flu, CSize_Flu_Temp, CStart_Flu, CRange, &FData_Flu[0][0][0][0],
-                 FSize_Temp, FStart, NCOMP_TOTAL, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity );
-
-//   for (int k=0; k<FSize; k++)
-//   for (int j=0; j<FSize; j++)
-//   for (int i=0; i<FSize; i++)
-//   {
-//     for (int v = 0 ; v < NCOMP_FLUID;v++) Con[v] = FData_Flu[v][k][j][i];
-//   
-//     if(SRHydro_CheckUnphysical(Con, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, false))
-//     {
-//      i = j = k = FSize; // break nested loop
-//      state = true;
-//      break;
-//     }else state = false;
-//   }
-//
-//   if ( state == true )
-//   {
-//     const real Mono_Max = INT_MONO_COEFF;
-//     const real Mono_Min = 0.0;
-//     iteration = 0;
-//
-//     for (int i=0; i<CSize_Flu1v; i++) 
-//     {    
-//       for (int v = 0 ; v < NCOMP_FLUID ;v++) Cons[v] = *(CData_Flu+CSize_Flu1v*v+i);
-//
-//       SRHydro_Con2Pri(Cons, Prim, GAMMA, MIN_TEMP);
-//
-//       for (int v = 0 ; v < NCOMP_FLUID ;v++) *(CData_Flu+CSize_Flu1v*v+i) = Prim[v];
-//     }    
-//
-//
-//
-//     do {
-////      adaptive IntMonoCoeff
-//        IntMonoCoeff = Mono_Max - iteration * ( Mono_Max - Mono_Min ) / (real) Max ;
-// 
-////      interpolation
-//        for (int v=0; v<NCOMP_TOTAL; v++)
-//         Interpolate( CData_Flu+v*CSize_Flu1v, CSize_Flu_Temp, CStart_Flu, CRange, &FData_Flu[v][0][0][0],
-//                      FSize_Temp, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity, IntMonoCoeff );
-//
-//        for (int k=0; k<FSize; k++)
-//        for (int j=0; j<FSize; j++)
-//        for (int i=0; i<FSize; i++)
-//        {
-//           for (int v = 0 ; v < NCOMP_FLUID;v++) Prim[v] = FData_Flu[v][k][j][i];
-//      
-//           if(SRHydro_CheckUnphysical(NULL, Prim, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true))
-//           {
-//            i = j = k = FSize; // break nested loop
-//            state = true;
-//            break;
-//           }else state = false;
-//         }
-//      
-//         iteration++;
-//
-//     } while (state && iteration <= Max );
-//
-//     for (int k=0; k<FSize; k++)
-//     for (int j=0; j<FSize; j++)
-//     for (int i=0; i<FSize; i++)
-//     {
-//       for (int v = 0 ; v < NCOMP_FLUID;v++) Prim[v] = FData_Flu[v][k][j][i];
-//
-//       SRHydro_Pri2Con(Prim, Cons, GAMMA);
-//     
-//       for (int v = 0 ; v < NCOMP_FLUID;v++) FData_Flu[v][k][j][i] = Cons[v];
-//     }
-
-
-// check minimum energy
-#     ifdef CHECK_NEGATIVE_IN_FLUID
-      for (int k=0; k<FSize; k++)
-      for (int j=0; j<FSize; j++)
-      for (int i=0; i<FSize; i++)
-      {
-	    for (int v = 0 ; v < NCOMP_FLUID;v++) Con[v] = FData_Flu[v][k][j][i];
-	    if( SRHydro_CheckUnphysical(Con, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
-      }
-
-#     endif
-//   }
-#     endif
 
 // 3.2.3 check minimum density and pressure
 // --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
