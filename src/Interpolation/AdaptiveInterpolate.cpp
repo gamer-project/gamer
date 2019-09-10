@@ -55,32 +55,31 @@ void AdaptiveInterpolate( real CData [], const int CSize[3], const int CStart[3]
  
    
 //            check
-              if ( itr > -1 )
+              if ( itr == -1 )
               {
-//                 for (int k=0; k<FSize[2]; k++)
-//                 for (int j=0; j<FSize[1]; j++)
-//                 for (int i=0; i<FSize[0]; i++)
-//                 {
-//                    for (int v = 0 ; v < NCOMP_FLUID;v++) 
-//                     Prim[v] = *(FData + i*NCOMP_FLUID*FSize[2]*FSize[1]+j*FSize[2]*NCOMP_TOTAL+k*NCOMP_TOTAL+v);
-//           
-//                    if(SRHydro_CheckUnphysical(NULL, Prim, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true))
-//                    {
-//                      i = j = k = FSize[0]; // break nested loop
-//                      state = true;
-//                      break;
-//                    }else state = false;
-//                 }
                    for ( int i = 0 ;i < FSize3D; i++ )
                    {
-                      for (int v = 0 ; v < NCOMP_FLUID ;v++) Prim[v] = FData[FSize3D*v+i];
+                      for (int v = 0 ; v < NCOMP_FLUID ;v++) Cons[v] = FData[FSize3D*v+i];
 
-                      if (SRHydro_CheckUnphysical(NULL, Prim, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true))
+                      if (SRHydro_CheckUnphysical(Cons, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, false))
                        {
                           state = true;
                           break; 
                        } else state = false;
                    }
+              }
+              else if ( itr == 0 )
+              {
+                  for ( int i = 0 ;i < FSize3D; i++ )
+                  {
+                     for (int v = 0 ; v < NCOMP_FLUID ;v++) Prim[v] = FData[FSize3D*v+i];
+
+                     if (SRHydro_CheckUnphysical(NULL, Prim, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, false))
+                      {
+                         state = true;
+                         break; 
+                      } else state = false;
+                  }
               }
            
               if ( ( IntScheme == INT_MINMOD3D || IntScheme == INT_MINMOD1D ) && itr == 0 ) break;
@@ -98,24 +97,12 @@ void AdaptiveInterpolate( real CData [], const int CSize[3], const int CStart[3]
 
      if ( itr > 0 )
      {
-//        for (int k=0; k<FSize[2]; k++)
-//        for (int j=0; j<FSize[1]; j++)
-//        for (int i=0; i<FSize[0]; i++)
-//        {                 
-//          for (int v = 0 ; v < NCOMP_FLUID;v++) 
-//           Prim[v] = *(FData + i*NCOMP_FLUID*FSize[2]*FSize[1]+j*FSize[2]*NCOMP_TOTAL+k*NCOMP_TOTAL+v);
-//
-//          SRHydro_Pri2Con(Prim, Cons, GAMMA);
-//                          
-//          for (int v = 0 ; v < NCOMP_FLUID;v++) 
-//           *(FData + i*NCOMP_FLUID*FSize[2]*FSize[1]+j*FSize[2]*NCOMP_TOTAL+k*NCOMP_TOTAL+v) = Cons[v];
-//        }               
-          for (int i=0; i<FSize3D; i++)
-          {
-             for (int v = 0 ; v < NCOMP_FLUID ;v++) Prim[v] = FData[FSize3D*v+i];
-             SRHydro_Pri2Con(Prim, Cons, GAMMA);
-             for (int v = 0 ; v < NCOMP_FLUID ;v++) FData[FSize3D*v+i] = Cons[v];
-          }
+         for (int i=0; i<FSize3D; i++)
+         {
+            for (int v = 0 ; v < NCOMP_FLUID ;v++) Prim[v] = FData[FSize3D*v+i];
+            SRHydro_Pri2Con(Prim, Cons, GAMMA);
+            for (int v = 0 ; v < NCOMP_FLUID ;v++) FData[FSize3D*v+i] = Cons[v];
+         }
      }
 
 //   check minimum energy
