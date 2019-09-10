@@ -946,18 +946,18 @@ void Output_DumpData_Total_HDF5( const char *FileName )
               for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
 		 for ( int i=0;i<PS1;i++  )
 		 for ( int j=0;j<PS1;j++  )
-		 for ( int k=0;k<PS1;k++  ){
-
+		 for ( int k=0;k<PS1;k++  )
+         {
 		    Cons[0] = Dens[PID][i][j][k];
 		    Cons[1] = MomX[PID][i][j][k];
 		    Cons[2] = MomY[PID][i][j][k];
 		    Cons[3] = MomZ[PID][i][j][k];
 		    Cons[4] = Engy[PID][i][j][k];
-#                   ifdef CHECK_NEGATIVE_IN_FLUID
+#           ifdef CHECK_NEGATIVE_IN_FLUID
 		    if(SRHydro_CheckUnphysical(Cons, NULL, (real) GAMMA, (real) MIN_TEMP, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
-#                   endif
-                    Temp[PID][i][j][k] =  SRHydro_GetTemperature( Cons[0], Cons[1], Cons[2], Cons[3], Cons[4], GAMMA, MIN_TEMP  );
-                 }
+#           endif
+            Temp[PID][i][j][k] =  SRHydro_GetTemperature( Cons[0], Cons[1], Cons[2], Cons[3], Cons[4], GAMMA, MIN_TEMP  );
+         }
 
 //  copy conserved data and temperature into FieldData
             for (int v=0; v<NFieldOut; v++) {
