@@ -477,9 +477,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             }
          }
 #        else // #if ( MODEL == ELBDM )
-
-         AdaptiveInterpolate( &Flu_CData[v][0][0][0], CSize_Flu3, CStart_Flu, CRange, &Flu_FData[v][0][0][0],
-                              FSize3, FStart, NCOMP_TOTAL, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No,
+         AdaptiveInterpolate( &Flu_CData[0][0][0][0], CSize_Flu3, CStart_Flu, CRange, &Flu_FData[0][0][0][0],
+                              FSize3, FStart, NCOMP_TOTAL, _TOTAL, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No,
                               Monotonicity );
 
 #        endif // #if ( MODEL == ELBDM ) ... else

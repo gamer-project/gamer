@@ -831,7 +831,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    }
 #  else // #if ( MODEL == ELBDM )
    AdaptiveInterpolate( CData_Flu, CSize_Flu_Temp, CStart_Flu, CRange, &FData_Flu[0][0][0][0],
-                        FSize_Temp, FStart, NCOMP_TOTAL, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity );
+                        FSize_Temp, FStart, NCOMP_TOTAL, _TOTAL, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity );
 
 #  endif // #if ( MODEL == ELBDM ) ... else
 
