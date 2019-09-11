@@ -107,13 +107,18 @@ void AdaptiveInterpolate( real CData [], const int CSize[3], const int CStart[3]
 
 //   check minimum energy
 #    ifdef CHECK_NEGATIVE_IN_FLUID
-     for (int k=0; k<FSize[2]; k++)
-     for (int j=0; j<FSize[1]; j++)
-     for (int i=0; i<FSize[0]; i++)
+     if ( TVar == _TOTAL )
      {
-     for (int v = 0 ; v < NCOMP_FLUID;v++) Con[v] = *(FData + v*NCOMP_FLUID*FSize[2]*FSize[1]+k*FSize[2]*FSize[1]+j*FSize[1]+i);
-     if( SRHydro_CheckUnphysical(Con, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
-     }
+        for ( int i = 0 ;i < FSize3D; i++ )
+        {
+           for (int v = 0 ; v < NCOMP_FLUID ;v++) Cons[v] = FData[FSize3D*v+i];
 
+           if (SRHydro_CheckUnphysical(Cons, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, false))
+            {
+               state = true;
+               break; 
+            } else state = false;
+        }
+     }
 #    endif
 }
