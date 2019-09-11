@@ -579,7 +579,7 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
                                    Pri3Vel[1], Pri3Vel[2], Pri3Vel[3], SQRT( VectorDotProduct( Pri3Vel[1], Pri3Vel[2], Pri3Vel[3] )));
            }
  
-          }
+         }
         return true;
       }
 }
