@@ -449,7 +449,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #  if ( MODEL != SR_HYDRO )
    const real MinEint = MIN_PRES / ( GAMMA - (real)1.0 );
 #  else
-//   const real MinEint = MIN_PRES / ( GAMMA - (real)1.0 ); 
+   const real MinEint = NAN;
 #  endif
 
 #  if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined GRAVITY  )
