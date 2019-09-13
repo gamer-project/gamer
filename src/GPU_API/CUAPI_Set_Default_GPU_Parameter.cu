@@ -134,7 +134,7 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
 
 
 // Gravity solver prototypes in different models
-#if   ( MODEL == HYDRO )
+#if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
 __global__
 void CUPOT_HydroGravitySolver(
          real   Flu_Array_New[][GRA_NIN][ CUBE(PS1) ],
@@ -436,7 +436,7 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 
 
 // (3-3) gravity solver
-#  if   ( MODEL == HYDRO )
+#  if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
    CUDA_CHECK_ERROR( cudaFuncSetCacheConfig( CUPOT_HydroGravitySolver,           cudaFuncCachePreferShared ) );
 
 #  elif ( MODEL == MHD )
