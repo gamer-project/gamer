@@ -66,7 +66,6 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    int *Cr            = NULL;    // corner coordinates
    int *BufGrandTable = NULL;    // table recording the patch IDs of grandson buffer patches
    int *BufSonTable   = NULL;    // table recording the linking index of each buffer father patch to BufGrandTable
-   patch_t *Pedigree  = NULL;    // pointer storing the relation of the target patch at level "lv"
 
 
 // parameters for spatial interpolation
@@ -203,16 +202,18 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 // c. check the refinement flags for all real patches at level "lv"
 // ------------------------------------------------------------------------------------------------
+
+// (c1) construct new child patches (allocate one patch group at a time)
+//      --> note that we must do this BEFORE deallocating any child patch to retain high-resolution
+//          B field on the boundaries of newly allocated patches
+// ================================================================================================
 //#  pragma omp parallel for private( ??? )
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
-      Pedigree = amr->patch[0][lv][PID];
+      patch_t *Pedigree = amr->patch[0][lv][PID];  // fixed to Sg=0 for the patch relation
 
-//    (c1) construct new child patches if they are newly born (one patch group is allocated at a time)
-// ================================================================================================
       if ( Pedigree->flag  &&  Pedigree->son == -1 )
       {
-
 //       (c1.1) construct relation : father -> child
          Pedigree->son = amr->num[lv+1];
 
@@ -911,13 +912,19 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
          Par_PassParticle2Son_SinglePatch( lv, PID );
 #        endif
       } // if ( Pedigree->flag  &&  Pedigree->son == -1 )
+   } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
 
-//    (c2) remove unflagged child patches if they originally existed (one patch group is removed at a time)
+// (c2) remove unflagged child patches (deallocate one patch group at a time)
+//      --> note that we must do this AFTER allocating all new patches to retain high-resolution
+//          B field on the boundaries of newly allocated patches
 // ================================================================================================
-      else if ( !Pedigree->flag  &&  Pedigree->son != -1 )
-      {
+   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+   {
+      patch_t *Pedigree = amr->patch[0][lv][PID];  // fixed to Sg=0 for the patch relation
 
+      if ( !Pedigree->flag  &&  Pedigree->son != -1 )
+      {
 //       (c2.0) pass particles from sons to father
 #        ifdef PARTICLE
          Par_PassParticle2Father( lv, PID );
@@ -964,11 +971,10 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 //          re-construct relation : father -> son
             FaPID = amr->patch[0][lv+1][NewPID0]->father;
             amr->patch[0][lv][FaPID]->son = NewPID0;
-
          } // if ( NewPID0 != OldPID0 )
-
-      } // else if ( !Pedigree->flag  &&  Pedigree->son != -1 )
+      } // if ( !Pedigree->flag  &&  Pedigree->son != -1 )
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+
 
 // free memory
 #  ifdef MHD
