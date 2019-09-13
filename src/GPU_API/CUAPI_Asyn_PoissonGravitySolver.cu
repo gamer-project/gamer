@@ -32,7 +32,7 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
 
 
 // Gravity solver prototypes
-#if   ( MODEL == HYDRO )
+#if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
 __global__
 void CUPOT_HydroGravitySolver(
          real   g_Flu_Array_New[][GRA_NIN][ CUBE(PS1) ],
@@ -65,7 +65,7 @@ extern real (*d_Pot_Array_P_In )[ CUBE(POT_NXT) ];
 extern real (*d_Pot_Array_P_Out)[ CUBE(GRA_NXT) ];
 extern real (*d_Flu_Array_G    )[GRA_NIN][ CUBE(PS1)];
 extern double (*d_Corner_Array_G)[3];
-#if ( MODEL == HYDRO  ||  MODEL == MHD )
+#if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
 #ifdef UNSPLIT_GRAVITY
 extern real (*d_Pot_Array_USG_G)[ CUBE(USG_NXT_G) ];
 extern real (*d_Flu_Array_USG_G)[GRA_NIN-1][ CUBE(PS1) ];
@@ -176,6 +176,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
 
+#  elif ( MODEL == SR_HYDRO )
 #  elif ( MODEL == ELBDM )
    const real ELBDM_EtaDt = ELBDM_Eta*dt;
 
@@ -379,7 +380,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
 //    b2. Gravity solver
       if ( GraAcc )
       {
-#        if   ( MODEL == HYDRO )
+#        if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
          CUPOT_HydroGravitySolver <<< NPatch_per_Stream[s], Gra_Block_Dim, 0, Stream[s] >>>
                                   ( d_Flu_Array_G     + UsedPatch[s],
                                     d_Pot_Array_P_Out + UsedPatch[s],
