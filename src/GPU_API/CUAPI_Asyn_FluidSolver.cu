@@ -91,7 +91,7 @@ extern real (*d_Flu_Array_F_In )[FLU_NIN ][ CUBE(FLU_NXT) ];
 extern real (*d_Flu_Array_F_Out)[FLU_NOUT][ CUBE(PS2) ];
 extern real (*d_Flux_Array)[9][NFLUX_TOTAL][ SQR(PS2) ];
 extern double (*d_Corner_Array_F)[3];
-#if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
+#if ( MODEL == HYDRO  ||  MODEL == MHD )
 #ifdef DUAL_ENERGY
 extern char (*d_DE_Array_F_Out)[ CUBE(PS2) ];
 #else
