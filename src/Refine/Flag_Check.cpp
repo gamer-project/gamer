@@ -162,7 +162,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
 // check Jeans length
 // ===========================================================================================
-#  if (  ( MODEL == HYDRO || MODEL == MHD || MODEL == SR_HYDRO )  &&  defined GRAVITY  )
+#  if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined GRAVITY  )
    if ( OPT__FLAG_JEANS )
    {
       const bool CheckMinPres_Yes = true;
