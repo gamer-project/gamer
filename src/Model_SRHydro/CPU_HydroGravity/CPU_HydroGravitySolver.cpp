@@ -328,7 +328,12 @@ void CPU_HydroGravitySolver(
 //       check the minimum internal energy
 //       --> restore the original internal energy if the updated value becomes smaller than the threshold
          if ( Etot_out - Ek_out < MinEint )
-            Etot_out = Eint_in + Ek_out;
+	     {
+		    printf("modify here!\n functiob:%s, line:%d\n", __FUNCTION__, __LINE__);
+			exit(0);
+	     }
+		   
+//            Etot_out = Eint_in + Ek_out;
 
 
 
