@@ -28,7 +28,7 @@ void CPU_PoissonSolver_MG( const real Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT]
 
 
 // Gravity solver prototypes
-#if   ( MODEL == HYDRO )
+#if   ( MODEL == HYDRO || MODEL ==SR_HYDRO )
 void CPU_HydroGravitySolver(
          real   g_Flu_Array_New[][GRA_NIN][ CUBE(PS1) ],
    const real   g_Pot_Array_New[][ CUBE(GRA_NXT) ],
@@ -171,7 +171,7 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
 // Gravity solver
    if ( GraAcc )
    {
-#     if   ( MODEL == HYDRO )
+#     if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
       CPU_HydroGravitySolver( (real(*)[GRA_NIN][ CUBE(PS1) ])   h_Flu_Array,
                               (real(*)[ CUBE(GRA_NXT) ])        h_Pot_Array_Out,
                                                                 h_Corner_Array,

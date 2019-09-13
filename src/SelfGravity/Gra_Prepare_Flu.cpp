@@ -34,7 +34,7 @@ void Gra_Prepare_Flu( const int lv, real h_Flu_Array_G[][GRA_NIN][PS1][PS1][PS1]
          PID = PID0 + LocalID;
          N   = 8*TID + LocalID;
 
-#        if ( MODEL == HYDRO  ||  MODEL == MHD )
+#        if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
 //       all active fields (including density) are sent into the hydro/MHD gravity solver
          for (int v=0; v<GRA_NIN; v++)
          for (int k=0; k<PS1; k++)
