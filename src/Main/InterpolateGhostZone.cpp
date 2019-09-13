@@ -1335,8 +1335,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 // c5. interpolation on potential
    if ( PrepPot )
    {
-      Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_No );
+      AdaptiveInterpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
+                           TVar, IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_No );
       NVar_SoFar ++;
    }
 #  endif

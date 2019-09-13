@@ -488,9 +488,9 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
          const int CSize_Pot_Temp[3] = { CSize_Pot, CSize_Pot, CSize_Pot };
 
          if ( SelfGravity )
-         Interpolate( &Pot_CData[0][0][0], CSize_Pot_Temp, CStart_Pot, CRange, &Pot_FData[0][0][0],
-                      FSize3, FStart, 1, OPT__REF_POT_INT_SCHEME, PhaseUnwrapping_No,
-                      &EnsureMonotonicity_No );
+         AdaptiveInterpolate( &Pot_CData[0][0][0], CSize_Pot_Temp, CStart_Pot, CRange, &Pot_FData[0][0][0],
+                              FSize3, FStart, 1, _POTE, OPT__REF_POT_INT_SCHEME, PhaseUnwrapping_No,
+                              &EnsureMonotonicity_No );
 #        endif
 
 

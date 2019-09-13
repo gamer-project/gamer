@@ -839,8 +839,8 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    const int CSize_Pot_Temp[3] = { CSize_Pot, CSize_Pot, CSize_Pot };
    real *const CData_Pot = CData + NCOMP_TOTAL*CSize_Flu*CSize_Flu*CSize_Flu;
 
-   Interpolate( CData_Pot, CSize_Pot_Temp, CStart_Pot, CRange, &FData_Pot[0][0][0],
-                FSize_Temp, FStart,     1, OPT__REF_POT_INT_SCHEME, PhaseUnwrapping_No, &EnsureMonotonicity_No );
+   AdaptiveInterpolate( CData_Pot, CSize_Pot_Temp, CStart_Pot, CRange, &FData_Pot[0][0][0],
+                        FSize_Temp, FStart,     1, _POTE, OPT__REF_POT_INT_SCHEME, PhaseUnwrapping_No, &EnsureMonotonicity_No );
 #  endif
 
 
