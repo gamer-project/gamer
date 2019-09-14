@@ -48,9 +48,6 @@ void Validate()
    Aux_Error( ERROR_INFO, "MODEL != SR_HYDRO !!\n" );
 #  endif
 
-#  ifdef GRAVITY
-   Aux_Error( ERROR_INFO, "GRAVITY must be disabled !!\n" );
-#  endif
 
 #  ifdef PARTICLE
    Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
