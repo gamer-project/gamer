@@ -37,7 +37,7 @@ SIMU_OPTION += -DMODEL=SR_HYDRO
 #SIMU_OPTION += -DMODEL=HYDRO
 
 # enable gravity
-#SIMU_OPTION += -DGRAVITY
+SIMU_OPTION += -DGRAVITY
 
 # enable particles
 # --> must enable GRAVITY
@@ -145,7 +145,7 @@ SIMU_OPTION += -DSTORE_POT_GHOST
 
 # use unsplitting method to couple gravity to the target model (recommended)
 # --> for HYDRO and MHD only; ELBDM is not supported yet
-SIMU_OPTION += -DUNSPLIT_GRAVITY
+#SIMU_OPTION += -DUNSPLIT_GRAVITY
 
 # comoving frame for cosmological simulations
 # --> not supported for PARTICLE
@@ -187,7 +187,7 @@ SIMU_OPTION += -DMAX_PATCH=2000000
 SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA/TURING
-SIMU_OPTION += -DGPU_ARCH=TURING
+SIMU_OPTION += -DGPU_ARCH=FERMI
 
 # debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
@@ -358,13 +358,13 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 #CUDA_PATH    := /opt/gpu/cuda/default
 
 # NTU-hulk (openmpi-intel-qlc)
-#FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
-#MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
-#HDF5_PATH    := /opt/hdf5/default
-#GRACKLE_PATH := 
-#GSL_PATH     := /opt/math/gsl/default
-#LIBYT_PATH   := 
-#CUDA_PATH    := /opt/gpu/cuda/default
+FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
+MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
+HDF5_PATH    := /opt/hdf5/default
+GRACKLE_PATH := 
+GSL_PATH     := /opt/math/gsl/default
+LIBYT_PATH   := 
+CUDA_PATH    := /opt/gpu/cuda/default
 
 # NTHU-fomalhaut (openmpi-gnu)
 #CUDA_PATH    := /usr/local/cuda-10.0
@@ -381,13 +381,13 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 #GPUID_PATH   := /ifs/data/hsiyu/Software/gpudevmgr
 
 # gamer04
-FFTW_PATH    := 
-MPI_PATH     := /opt/openmpi/3.1.4-intel-tm
-HDF5_PATH    := /opt/hdf5
-GRACKLE_PATH := 
-GSL_PATH     := 
-LIBYT_PATH   := 
-CUDA_PATH    := /opt/cuda/default
+#FFTW_PATH    := 
+#MPI_PATH     := /opt/openmpi/3.1.4-intel-tm
+#HDF5_PATH    := /opt/hdf5
+#GRACKLE_PATH := 
+#GSL_PATH     := 
+#LIBYT_PATH   := 
+#CUDA_PATH    := /opt/cuda/default
 #
 ## Calab AMD2
 #FFTW_PATH    := 
@@ -515,6 +515,16 @@ CC_FILE     += SRHydro_Init_ByFunction_AssignData.cpp  SRHydro_Aux_Check_Negativ
 
 vpath %.cu     Model_SRHydro/GPU_SRHydro
 vpath %.cpp    Model_SRHydro/CPU_SRHydro Model_SRHydro
+
+
+ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
+CUDA_FILE   += CUPOT_HydroGravitySolver.cu  CUPOT_dtSolver_HydroGravity.cu
+
+CC_FILE     += CPU_HydroGravitySolver.cpp  CPU_dtSolver_HydroGravity.cpp
+
+vpath %.cu     Model_SRHydro/GPU_HydroGravity
+vpath %.cpp    Model_SRHydro/CPU_HydroGravity
+endif
 
 # ELBDM source files (included only inf "MODEL=ELBDM")
 # -------------------------------------------------------------------------------
