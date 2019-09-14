@@ -167,8 +167,9 @@ void CPU_FluidSolver_MHM(
          SRHydro_RiemannPredict( g_Flu_Array_In[P], g_Half_Flux_1PG, g_Half_Var_1PG, dt, dh, Gamma, MinDens, MinTemp );
 
          do {
-//             adaptive minmod coefficient
                state = 0;
+
+//             adaptive minmod coefficient
                AdaptiveMinModCoeff = ( Max - iteration ) * ( MinMod_Coeff / (real) Max );
 
 
@@ -183,8 +184,9 @@ void CPU_FluidSolver_MHM(
 #        elif ( FLU_SCHEME == MHM )
 
          do {
-//             adaptive minmod coefficient         
                state = 0;
+
+//             adaptive minmod coefficient         
                AdaptiveMinModCoeff = ( Max - iteration ) * ( MinMod_Coeff / (real) Max );
 
 
@@ -195,12 +197,6 @@ void CPU_FluidSolver_MHM(
                                            Gamma, LR_Limiter, AdaptiveMinModCoeff, dt, dh, MinDens, MinTemp );
 #        endif // #if ( FLU_SCHEME == MHM_RP ) ... else ...
 
-#              ifdef __CUDACC__
-               if ( threadIdx.x == 0 && state == 1 )
-#              else
-               if ( state == 1 ) 
-#              endif
-                 printf("iteration=%d, AdaptiveMinModCoeff=%13.10f\n", iteration, AdaptiveMinModCoeff );
 
 
 //             2. evaluate the full-step fluxes
@@ -214,6 +210,12 @@ void CPU_FluidSolver_MHM(
                SRHydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], NULL,
                                        g_FC_Flux_1PG, dt, dh, Gamma, MinDens, MinTemp, &state );
 
+#              ifdef __CUDACC__
+               if ( threadIdx.x == 0 && state == 1 )
+#              else
+               if ( state == 1 ) 
+#              endif
+                 printf("iteration=%d, AdaptiveMinModCoeff=%13.10f\n", iteration, AdaptiveMinModCoeff );
 
                iteration++;
 
@@ -383,6 +385,7 @@ void SRHydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 
 //    conserved --> primitive variables
       SRHydro_Con2Pri( out_con, out_pri, Gamma, MinTemp );
+	  SRHydro_3Velto4Vel( out_pri, out_pri );
 
 //    store the results to g_Half_Var[]
       for (int v=0; v<NCOMP_TOTAL; v++)   g_Half_Var[v][idx_out] = out_pri[v];
