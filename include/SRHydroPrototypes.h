@@ -23,7 +23,7 @@ void SRHydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
 
 void SRHydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
                              const real g_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ], const real dt, const real dh,
-                             const real Gamma, const real MinDens, const real MinTemp, char *state );
+                             const real Gamma, const real MinDens, const real MinTemp, int *state );
 
 #if ( RSOLVER == HLLE )
 void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],

@@ -105,13 +105,15 @@ void CPU_FluidSolver_MHM(
 {
 
    const char Max = 4;
-   char iteration;
-   real AdaptiveMinModCoeff;
 
 #  ifdef __CUDACC__
-   __shared__ char state;
+   __shared__ int state;
+   __shared__ char iteration;
+   __shared__ real AdaptiveMinModCoeff;
 #  else
-   char state;
+   int state;
+   char iteration;
+   real AdaptiveMinModCoeff;
 #  endif
 
 // openmp pragma for the CPU solver
@@ -151,6 +153,9 @@ void CPU_FluidSolver_MHM(
       for (int P=0; P<NPatchGroup; P++)
 #     endif
       {
+#        ifdef __CUDACC__
+         if ( threadIdx.x == 0 )
+#        endif
          iteration = 0;
 
 //       1. half-step prediction
@@ -167,10 +172,18 @@ void CPU_FluidSolver_MHM(
          SRHydro_RiemannPredict( g_Flu_Array_In[P], g_Half_Flux_1PG, g_Half_Var_1PG, dt, dh, Gamma, MinDens, MinTemp );
 
          do {
-               state = 0;
+#              ifdef __CUDACC__
+               if ( threadIdx.x == 0 )
+#              endif
+               {
+                 state = 0;
+//               adaptive minmod coefficient
+                 AdaptiveMinModCoeff = ( Max - iteration ) * ( MinMod_Coeff / (real) Max );
+               }
 
-//             adaptive minmod coefficient
-               AdaptiveMinModCoeff = ( Max - iteration ) * ( MinMod_Coeff / (real) Max );
+#              ifdef __CUDACC__
+               __syncthreads();
+#              endif
 
 
 //             1-a-3. evaluate the face-centered values by data reconstruction
@@ -183,11 +196,23 @@ void CPU_FluidSolver_MHM(
 //       1-b. MHM: use interpolated face-centered values to calculate the half-step fluxes
 #        elif ( FLU_SCHEME == MHM )
 
-         do {
-               state = 0;
+#        ifdef __CUDACC__
+         __syncthreads();
+#        endif
 
-//             adaptive minmod coefficient         
-               AdaptiveMinModCoeff = ( Max - iteration ) * ( MinMod_Coeff / (real) Max );
+         do {
+#              ifdef __CUDACC__
+               if ( threadIdx.x == 0 )
+#              endif
+               {
+                 state = 0;
+//               adaptive minmod coefficient
+                 AdaptiveMinModCoeff = ( Max - iteration ) * ( MinMod_Coeff / (real) Max );
+               }
+
+#              ifdef __CUDACC__
+               __syncthreads();
+#              endif
 
 
 //             evaluate the face-centered values by data reconstruction
@@ -210,15 +235,21 @@ void CPU_FluidSolver_MHM(
                SRHydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], NULL,
                                        g_FC_Flux_1PG, dt, dh, Gamma, MinDens, MinTemp, &state );
 
-#              ifdef __CUDACC__
-               if ( threadIdx.x == 0 && state == 1 )
-#              else
-               if ( state == 1 ) 
-#              endif
-                 printf("iteration=%d, AdaptiveMinModCoeff=%13.10f\n", iteration, AdaptiveMinModCoeff );
+//#              ifdef __CUDACC__
+//               if ( threadIdx.x == 0 && state == 1 )
+//#              else
+//               if ( state == 1 ) 
+//#              endif
+//                 printf("iteration=%d, AdaptiveMinModCoeff=%13.10f\n", iteration, AdaptiveMinModCoeff );
 
+#              ifdef __CUDACC__
+               if ( threadIdx.x == 0 )
+#              endif
                iteration++;
 
+#              ifdef __CUDACC__
+               __syncthreads();
+#              endif
 
             } while( state && iteration <= Max );
 
