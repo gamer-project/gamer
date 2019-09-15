@@ -529,7 +529,7 @@ bool Flag_User( const int i, const int j, const int k, const int lv, const int P
 
 } // FUNCTION : Flag_User
 
-
+#ifdef GRAVITY
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_ExternalAcc
 // Description :  Set ExtAcc_AuxArray[] used by the external acceration routine ExternalAcc()
@@ -564,7 +564,7 @@ void Init_ExternalAcc()
    ExtAcc_AuxArray[4] = Eps;
 
 } // FUNCTION : Init_ExternalAcc
-
+#endif
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -600,7 +600,9 @@ void Init_TestProb_SRHydro_Jets()
    Output_User_Ptr          = NULL;
    Aux_Record_User_Ptr      = NULL;
    End_User_Ptr             = End_Jets;
+#  ifdef GRAVITY
    Init_ExternalAcc_Ptr     = Init_ExternalAcc;
+#  endif
 #  endif // #if ( MODEL == SR_HYDRO )
 
 
