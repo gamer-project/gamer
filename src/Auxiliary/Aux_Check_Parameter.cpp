@@ -1308,7 +1308,8 @@ void Aux_Check_Parameter()
 // gravity solver in SR-HYDRO
 // =======================================================================================
 #  elif   ( MODEL == SR_HYDRO )
-
+   if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
+      Aux_Error( ERROR_INFO, "SR_HYDRO does NOT support self-gravity (OPT__GRAVITY_TYPE == 1/3) --> use external acceleration !!\n" );
 // errors
 // ------------------------------
 #  if ( GRA_GHOST_SIZE < 1 )
