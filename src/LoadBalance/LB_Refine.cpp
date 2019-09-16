@@ -73,6 +73,10 @@ void LB_Refine( const int FaLv )
    int   *NewPID_Home=NULL, *DelPID_Home=NULL;
    ulong *NewCr1D_Away=NULL, *DelCr1D_Away=NULL;
    real  *NewCData_Away=NULL;
+#  ifdef MHD
+   int   *NewSibID_Home=NULL, (*NewSibLBIdx_Home)[6]=NULL;
+   int   *NewSibID_Away=NULL, (*NewSibLBIdx_Away)[6]=NULL;
+#  endif
 
    LB_Refine_GetNewRealPatchList( FaLv, NNew_Home, NewPID_Home, NNew_Away, NewCr1D_Away, NewCData_Away,
                                   NDel_Home, DelPID_Home, NDel_Away, DelCr1D_Away,
@@ -88,11 +92,11 @@ void LB_Refine( const int FaLv )
 
 // 4. construct the MPI send and recv data list
 // ==========================================================================================
-// 4.1 list for exchanging hydro and potential data in buffer patches (also construct the "SibDiff" lists)
+// 4.1 list for exchanging hydro, potential, and magnetic field data in buffer patches (also construct the "SibDiff" lists)
    LB_RecordExchangeDataPatchID(  FaLv, true );
    LB_RecordExchangeDataPatchID( SonLv, true );
 
-// 4.2 list for exchanging restricted hydro data
+// 4.2 list for exchanging restricted hydro and magnetic field data
 //     --> note that even when OPT__FIXUP_RESTRICT is off we still need to do data restriction in several places
 //         (e.g., restart, and OPT__CORR_AFTER_ALL_SYNC)
 //     --> for simplicity and sustainability, we always invoke LB_RecordExchangeRestrictDataPatchID()
@@ -115,7 +119,7 @@ void LB_Refine( const int FaLv )
    }
 #  endif
 
-// 4.5 list for exchanging hydro data after the fix-up operation
+// 4.5 list for exchanging hydro and magnetic field data after the fix-up operation
 //     --> for simplicity and sustainability, we always invoke LB_RecordExchangeFixUpDataPatchID()
 //     --> see the comments 4.2 above
    LB_RecordExchangeFixUpDataPatchID(  FaLv );
@@ -176,11 +180,38 @@ void LB_Refine( const int FaLv )
    if ( DelCr1D_Away == NULL )
       Aux_Error( ERROR_INFO, "%s has not been allocated !!\n", "DelCr1D_Away" );
 
+#  ifdef MHD
+#  warning : WAIT MHD !!!
+   /*
+   if ( NNew_Home != 0 )
+   {
+      if ( NewSibID_Home  == NULL )
+         Aux_Error( ERROR_INFO, "%s has not been allocated !!\n", "NewSibID_Home"   );
+
+      if ( NewSibLBIdx_Home  == NULL )
+         Aux_Error( ERROR_INFO, "%s has not been allocated !!\n", "NewSibLBIdx_Home"   );
+
+      if ( NewSibID_Away  == NULL )
+         Aux_Error( ERROR_INFO, "%s has not been allocated !!\n", "NewSibID_Away"   );
+
+      if ( NewSibLBIdx_Away  == NULL )
+         Aux_Error( ERROR_INFO, "%s has not been allocated !!\n", "NewSibLBIdx_Away"   );
+   }
+   */
+#  endif
+
    free( NewPID_Home );
    free( DelPID_Home );
    delete [] NewCr1D_Away;
    delete [] NewCData_Away;
    delete [] DelCr1D_Away;
+#  ifdef MHD
+   free( NewSibID_Home );
+   free( NewSibLBIdx_Home );
+#  warning : WAIT MHD !!!
+   free( NewSibID_Away );
+   free( NewSibLBIdx_Away );
+#  endif
 
 #  ifdef PARTICLE
    delete [] RefineS2F_Send_PIDList;

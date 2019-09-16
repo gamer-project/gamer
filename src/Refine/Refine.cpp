@@ -105,7 +105,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    int NSide_Mag_Useless, CGhost_Mag;
    Int_Table( OPT__REF_MAG_INT_SCHEME, NSide_Mag_Useless, CGhost_Mag );
 
-   const int CSize_Mag_T      = PS1 + 2*CGhost_Mag;   // coarse-grid size along the transverese (_T) / normal (_N) direction
+   const int CSize_Mag_T      = PS1 + 2*CGhost_Mag;   // coarse-grid size along the transverse (_T) / normal (_N) direction
    const int CSize_Mag_N      = PS1P1;
    const int CStart_Mag[3][3] = {  { 0,          CGhost_Mag, CGhost_Mag },
                                    { CGhost_Mag, 0,          CGhost_Mag },
@@ -310,7 +310,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                offset_out[d] = TABLE_01( sib, 'x'+d, 0, CGhost_Flu, CGhost_Flu+PS1 );
             }
 
-//          (c1.3.2.1-1) if the target sibling patch exists --> just copy data from them directly
+//          (c1.3.2.1-1) if the target sibling patch exists --> just copy data from it directly
             if ( SibPID >= 0 )
             {
                for (int d=0; d<3; d++)    offset_in[d] = TABLE_01( sib, 'x'+d, PS1-CGhost_Flu, 0, 0 );
@@ -394,7 +394,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                offset_out[d] = TABLE_01( sib, 'x'+d, 0, CGhost_Pot, CGhost_Pot+PS1 );
             }
 
-//          (c1.3.2.2-1) if the target sibling patch exists --> just copy data from them directly
+//          (c1.3.2.2-1) if the target sibling patch exists --> just copy data from it directly
             if ( SibPID >= 0 )
             {
                for (int d=0; d<3; d++)    offset_in[d] = TABLE_01( sib, 'x'+d, PS1-CGhost_Pot, 0, 0 );
@@ -457,7 +457,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                offset_out[d] = TABLE_01( sib, 'x'+d, 0, CGhost_Mag, CGhost_Mag+PS1 );
             }
 
-//          (c1.3.2.3-1) if the target sibling patch exists --> just copy data from them directly
+//          (c1.3.2.3-1) if the target sibling patch exists --> just copy data from it directly
             if ( SibPID >= 0 )
             {
                for (int d=0; d<3; d++)    offset_in[d] = TABLE_01( sib, 'x'+d, PS1-CGhost_Mag, 0, 0 );
@@ -742,8 +742,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 //       (c1.3.4.2-3) magnetic field
 #        ifdef MHD
-         const real *Mag_CData_Ptr[NCOMP_MAG] = { Mag_CData[0], Mag_CData[1], Mag_CData[2] };
-               real *Mag_FData_Ptr[NCOMP_MAG] = { Mag_FData[0], Mag_FData[1], Mag_FData[2] };
+         const real *Mag_CData_Ptr[NCOMP_MAG] = { Mag_CData[MAGX], Mag_CData[MAGY], Mag_CData[MAGZ] };
+               real *Mag_FData_Ptr[NCOMP_MAG] = { Mag_FData[MAGX], Mag_FData[MAGY], Mag_FData[MAGZ] };
 
          MHD_InterpolateBField( Mag_CData_Ptr, CSize_Mag, CStart_Mag, CRange_Mag,
                                 Mag_FData_Ptr, FSize_Mag, FStart_Mag, (const real**)Mag_FInterface_Ptr,
@@ -754,7 +754,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 //       (c1.3.4.3) check minimum density and pressure
 //       --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
 //       --> but we do renormalize passive scalars here
-#        if ( MODEL == HYDRO  ||  MODEL == ELBDM  ||  (defined DENS && NCOMP_PASSIVE>0) )
+#        if ( MODEL == HYDRO  ||  MODEL == ELBDM )
          for (int k=0; k<FSize_CC; k++)
          for (int j=0; j<FSize_CC; j++)
          for (int i=0; i<FSize_CC; i++)
@@ -828,10 +828,10 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #           endif
 
          } // i,j,k
-#        endif // #if ( MODEL == HYDRO  ||  MODEL == ELBDM  ||  (defined DENS && NCOMP_PASSIVE>0) )
+#        endif // #if ( MODEL == HYDRO  ||  MODEL == ELBDM )
 
 
-//       (c1.3.5) copy data from IntData[] to patch pointers
+//       (c1.3.5) copy data from XXX_FData[] to patch pointers
          for (int LocalID=0; LocalID<8; LocalID++)
          {
             const int SonPID = amr->num[lv+1] - 8 + LocalID;
