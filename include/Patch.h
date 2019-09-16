@@ -186,7 +186,7 @@ struct patch_t
    real (*fluid)[PS1][PS1][PS1];
 
 #  ifdef MHD
-   real (*magnetic)[PS1P1*PS1*PS1];
+   real (*magnetic)[ PS1P1*SQR(PS1) ];
 #  endif
 
 #  ifdef GRAVITY
