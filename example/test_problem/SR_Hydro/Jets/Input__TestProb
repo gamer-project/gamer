@@ -9,7 +9,7 @@ Jet_BgVel_z         +0.0          # ambient velocity z (in cgs units) [0.0]
 
 Jet0_Radius          0.5          # jet 0: radius of the cylinder-shape jet source (in kpc)
 Jet0_HalfHeight      0.5          # jet 0: half height of the cylinder-shape jet source (in kpc)
-Jet0_SrcVel          20           # jet 0: jet velocity (in cgs units)
+Jet0_SrcVel          10           # jet 0: jet velocity (in cgs units)
 Jet0_SrcDens         0.1          # jet 0: jet density (in cgs units)
 Jet0_SrcPres         1.0          # jet 0: jet temperature (in keV)
 Jet0_Vec_x          +1.0          # jet 0: jet orientation vector x (x,y,z don't have to be a unit vector)
