@@ -12,7 +12,8 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
 void LB_Refine_AllocateBufferPatch_Sibling( const int SonLv );
 static int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int FaPID, real *CData,
                              const int CGhost_Flu, const int NSide_Flu, const int CGhost_Pot, const int NSide_Pot, const int CGhost_Mag,
-                             const int BC_Face[], const int FluVarIdxList[] );
+                             const int BC_Face[], const int FluVarIdxList[],
+                             const real *CFB_BFieldEachRank[], const int CFB_SibRank[], long CFB_OffsetEachRank[] );
 static void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_Real0, int NewSonPID0_Real[],
                                 int SwitchIdx, int &RefineS2F_Send_NPatchTotal, int *&RefineS2F_Send_PIDList );
 
@@ -51,11 +52,19 @@ static void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_
 //                PARTICLE-only parameters (call-by-reference)
 //                RefineS2F_Send_NPatchTotal : Total number of patches for exchanging particles from sons to fathers
 //                RefineS2F_Send_PIDList     : Patch indices for exchanging particles from sons to fathers
+//
+//                MHD-only parameters
+//                CFB_SibRank_Home : MPI ranks of the siblings of home patches
+//                CFB_SibRank_Away : MPI ranks of the siblings of away patches
+//                CFB_BField       : Coarse-fine interface B field array
+//                CFB_NSibEachRank : Number of siblings receiving data from each rank (including its own rank)
 //-------------------------------------------------------------------------------------------------------
 void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home, int NNew_Away,
                                  ulong *NewCr1D_Away, real *NewCData_Away, int NDel_Home, int *DelPID_Home,
                                  int NDel_Away, ulong *DelCr1D_Away,
-                                 int &RefineS2F_Send_NPatchTotal, int *&RefineS2F_Send_PIDList )
+                                 int &RefineS2F_Send_NPatchTotal, int *&RefineS2F_Send_PIDList,
+                                 const int (*CFB_SibRank_Home)[6], const int (*CFB_SibRank_Away)[6],
+                                 const real *CFB_BField, const int *CFB_NSibEachRank )
 {
 
    const int SonLv    = FaLv + 1;
@@ -261,6 +270,7 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 
 // 3. allocate new real patches at SonLv
 // ==========================================================================================
+// 3.0 preparation
    const int Padded              = 1<<NLEVEL;
    const int BoxNScale_Padded[3] = { amr->BoxScale[0]/PS1 + 2*Padded,
                                      amr->BoxScale[1]/PS1 + 2*Padded,
@@ -327,6 +337,23 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
    for (int v=0; v<NCOMP_TOTAL; v++)   FluVarIdxList[v] = v;
 
 
+// set parameters related to the coarse-fine interface B field
+#  ifdef MHD
+   const real *CFB_BFieldEachRank[MPI_NRank];
+         long  CFB_OffsetEachRank[MPI_NRank];
+
+   CFB_BFieldEachRank[0] = CFB_BField;
+   for (int r=1; r<MPI_NRank; r++)
+   CFB_BFieldEachRank[r] = CFB_BFieldEachRank[r-1] + CFB_NSibEachRank[r-1]*SQR( PS2 );
+
+   for (int r=0; r<MPI_NRank; r++)  CFB_OffsetEachRank[r] = 0;
+
+#  else
+   const real **CFB_BFieldEachRank = NULL;
+         long  *CFB_OffsetEachRank = NULL;
+#  endif
+
+
 // 3.1 home patches
    for (int t=0; t<NNew_Home; t++)
    {
@@ -336,7 +363,8 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
       NewSonPID0_All[t] = AllocateSonPatch( FaLv, Cr3D_Ptr, PScale, FaPID,
                                             NULL,
                                             CGhost_Flu, NSide_Flu, CGhost_Pot, NSide_Pot, CGhost_Mag,
-                                            BC_Face, FluVarIdxList );
+                                            BC_Face, FluVarIdxList,
+                                            CFB_BFieldEachRank, CFB_SibRank_Home[t], CFB_OffsetEachRank );
    }
 
 
@@ -350,10 +378,17 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
          Mis_Idx1D2Idx3D( BoxNScale_Padded, NewCr1D_Away[t], Cr3D );
          for (int d=0; d<3; d++)    Cr3D[d] = ( Cr3D[d] - Padded )*PS1;
 
+#        ifdef MHD
+         const int *CFB_SibRank = CFB_SibRank_Away[ NewCr1D_Away_IdxTable[t] ];
+#        else
+         const int *CFB_SibRank = NULL;
+#        endif
+
          NewSonPID0_Away[t] = AllocateSonPatch( FaLv, Cr3D, PScale, FaPID,
                                                 NewCData_Away+NewCr1D_Away_IdxTable[t]*CSize_Tot,
                                                 CGhost_Flu, NSide_Flu, CGhost_Pot, NSide_Pot, CGhost_Mag,
-                                                NULL, NULL );
+                                                NULL, NULL,
+                                                CFB_BFieldEachRank, CFB_SibRank, CFB_OffsetEachRank );
 
 //       record the SonPID (with LocalID == 0 ) with no father at home
 #        ifdef GAMER_DEBUG
@@ -363,18 +398,26 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 #        endif
 
          NewSonPID0_NoFa[ NNoFa ++ ] = NewSonPID0_Away[t];
-      }
+      } // if ( Match_New[t] == -1 )
 
-//    3.2.1 away patches with father patch
+
+//    3.2.2 away patches with father patch
       else
       {
          FaPID    = amr->LB->PaddedCr1DList_IdxTable[FaLv][ Match_New[t] ];
          Cr3D_Ptr = amr->patch[0][FaLv][FaPID]->corner;
 
+#        ifdef MHD
+         const int *CFB_SibRank = CFB_SibRank_Away[ NewCr1D_Away_IdxTable[t] ];
+#        else
+         const int *CFB_SibRank = NULL;
+#        endif
+
          NewSonPID0_Away[t] = AllocateSonPatch( FaLv, Cr3D_Ptr, PScale, FaPID,
                                                 NewCData_Away+NewCr1D_Away_IdxTable[t]*CSize_Tot,
                                                 CGhost_Flu, NSide_Flu, CGhost_Pot, NSide_Pot, CGhost_Mag,
-                                                NULL, NULL );
+                                                NULL, NULL,
+                                                CFB_BFieldEachRank, CFB_SibRank, CFB_OffsetEachRank );
       } // if ( Match_New[t] == -1 ) ... else ...
    } // for (int t=0; t<NNew_Away; t++)
 
@@ -676,11 +719,17 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 //                BC_Face       : Corresponding boundary faces (0~5) along 26 sibling directions -> for non-periodic B.C. only
 //                FluVarIdxList : List of target fluid variable indices                          -> for non-periodic B.C. only
 //
-// Return      :  SonPID with LocalID == 0
+//                MHD-only parameters
+//                CFB_BFieldEachRank : Coarse-fine interface B field array
+//                CFB_SibRank        : MPI ranks of the target sibling patches
+//                CFB_OffsetEachRank : Array offset of CFB_BFieldEachRank[] for each rank
+//
+// Return      :  SonPID with LocalID == 0, CFB_OffsetEachRank
 //-------------------------------------------------------------------------------------------------------
 int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int FaPID, real *CData,
                       const int CGhost_Flu, const int NSide_Flu, const int CGhost_Pot, const int NSide_Pot, const int CGhost_Mag,
-                      const int BC_Face[], const int FluVarIdxList[] )
+                      const int BC_Face[], const int FluVarIdxList[],
+                      const real *CFB_BFieldEachRank[], const int CFB_SibRank[], long CFB_OffsetEachRank[] )
 {
 
    const int SonLv   = FaLv + 1;
@@ -739,12 +788,6 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    const int CSize_Mag_T = PS1 + 2*CGhost_Mag;  // coarse-grid size along the transverse (_T) / normal (_N) direction
    const int CSize_Mag_N = PS1P1;
    CSize_Tot += NCOMP_MAG*CSize_Mag_N*SQR( CSize_Mag_T );
-
-#  warning : WAIT MHD !!!
-   /*
-   bool *JustRefined = new bool [ amr->num[lv] ];
-   for (int PID=0; PID<amr->num[lv]; PID++)  JustRefined[PID] = false;
-   */
 #  else
    const int CSg_Mag     = NULL_INT;
 #  endif
@@ -912,11 +955,25 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    const real *CData_Mag3v[NCOMP_MAG] = { CData_MagX, CData_MagY, CData_MagZ };
          real *FData_Mag3v[NCOMP_MAG] = { FData_Mag[MAGX], FData_Mag[MAGY], FData_Mag[MAGZ] };
 
-#  warning : WAIT MHD !!!
-   real *Mag_FInterface_Ptr[6] = { NULL, NULL, NULL, NULL, NULL, NULL };
+// set the B field on the coarse-fine interfaces
+   const real *Mag_FInterface_Ptr[6] = { NULL, NULL, NULL, NULL, NULL, NULL };
 
+   for (int s=0; s<6; s++)
+   {
+      const int TRank = CFB_SibRank[s];
+
+//    we set TRank>=0 on the coarse-fine interfaces
+      if ( TRank >= 0 )
+      {
+         Mag_FInterface_Ptr[s] = CFB_BFieldEachRank[TRank] + CFB_OffsetEachRank[TRank];
+
+         CFB_OffsetEachRank[TRank] += SQR( PS2 );
+      }
+   }
+
+// perform divergence-free interpolation
    MHD_InterpolateBField( CData_Mag3v, CSize_Mag, CStart_Mag, CRange_Mag,
-                          FData_Mag3v, FSize_Mag, FStart_Mag, (const real**)Mag_FInterface_Ptr,
+                          FData_Mag3v, FSize_Mag, FStart_Mag, Mag_FInterface_Ptr,
                           OPT__REF_MAG_INT_SCHEME, Monotonicity_Yes );
 #  endif // #ifdef MHD
 
