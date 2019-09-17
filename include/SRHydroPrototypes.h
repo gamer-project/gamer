@@ -36,9 +36,9 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
 void SRHydro_Rotate3D( real InOut[], const int XYZ, const bool Forward );
 
 real SpecificEnthalpy( const real Con[], real Temp, real Gamma );
-real SRHydro_KineticEngy( real Con[], real PriVar[], real Gamma, real MinTemp);
-real SRHydro_ThermalEngy( real Con[], real PriVar[], real Gamma, real MinTemp);
-real SRHydro_InternalEngy( real Con[], real PriVar[], real Gamma, real MinTemp);
+real SRHydro_InternalEngy( real Con[], real Pri[], real Lorentz, real Gamma, bool frame);
+real SRHydro_ThermalEngy( real Con[], real Pri[], real Lorentz, real Gamma, bool frame );
+real SRHydro_KineticEngy( real Con[], real Pri[], real Lorentz, real Gamma );
 
 real SRHydro_CheckMinTemp (const real InTemp, const real MinTemp);
 

@@ -627,53 +627,54 @@ real SRHydro_GetPressure (const real Dens, const real MomX, const real MomY, con
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  
-// Description :  
+// Description :  Evaluate internal energy density (including rest mass energy)
+//                true : lab frame
+//                false: fluid frame
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-real SRHydro_InternalEngy( real Con[], real PriVar[], real Gamma, real MinTemp )
+real SRHydro_InternalEngy( real Con[], real Pri[], real Lorentz, real Gamma, bool frame)
 {
-  real Pri[NCOMP_FLUID], h;
-
-  SRHydro_Con2Pri( Con, Pri, Gamma, MinTemp  );
+  real h, Eint;
 
   h = SpecificEnthalpy( Con, Pri[4]/Pri[0], Gamma );
-  
 
-  return Pri[0]*h - Pri[4];
+  frame ? ( Eint = Con[0] * h - Lorentz * Pri[4] )
+         :( Eint = Pri[0] * h -           Pri[4] );
+
+  return Eint;
 }
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  
-// Description :  
+// Description :  Evaluate thermal energy density
+//                true : lab frame
+//                false: fluid frame
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-real SRHydro_ThermalEngy( real Con[], real PriVar[], real Gamma, real MinTemp )
+real SRHydro_ThermalEngy( real Con[], real Pri[], real Lorentz, real Gamma, bool frame )
 {
-  real Pri[NCOMP_FLUID], h;
-
-  SRHydro_Con2Pri( Con, Pri, Gamma, MinTemp  );
+  real h, E_thermal;
 
   h = SpecificEnthalpy( Con, Pri[4]/Pri[0], Gamma );
-  
 
-  return Pri[0] * ( h - (real)1.0 ) - Pri[4];
+  
+  frame ? ( E_thermal = Con[0] * (h-(real)1.0) - Lorentz * Pri[4] )
+         :( E_thermal = Pri[0] * (h-(real)1.0) -           Pri[4] );
+
+  return E_thermal;
 }
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :
-// Description :  
+// Description : Evaluate kinetic energy density in lab frame 
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-real SRHydro_KineticEngy( real Con[], real PriVar[], real Gamma, real MinTemp )
+real SRHydro_KineticEngy( real Con[], real Pri[], real Lorentz, real Gamma )
 {
-  real Pri[NCOMP_FLUID], h, Lorentz;
-
-  SRHydro_Con2Pri( Con, Pri, Gamma, MinTemp );
+  real h;
 
   h = SpecificEnthalpy( Con, Pri[4]/Pri[0], Gamma );
   
-  Lorentz = SQRT((real)1.0 + VectorDotProduct(Pri[1], Pri[2], Pri[3]));
-
   return ( Con[DENS] * h + Pri[4] ) * ( Lorentz - (real)1.0 );
 }
 
