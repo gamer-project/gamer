@@ -175,13 +175,8 @@ void SRHydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
          }
 
 //       5. primitive variables --> conserved variables
-         real tmp[NCOMP_TOTAL];  // input and output arrays must not overlap for Pri2Con()
-
-         for (int v=0; v<NCOMP_TOTAL; v++)   tmp[v] = fc_Pri[faceL][v];
-         SRHydro_Pri2Con( tmp, fc_Con[faceL], Gamma );
-
-         for (int v=0; v<NCOMP_TOTAL; v++)   tmp[v] = fc_Pri[faceR][v];
-         SRHydro_Pri2Con( tmp, fc_Con[faceR], Gamma );
+         SRHydro_Pri2Con( fc_Pri[faceL], fc_Con[faceL], Gamma );
+         SRHydro_Pri2Con( fc_Pri[faceR], fc_Con[faceR], Gamma );
 
       } // for (int d=0; d<3; d++)
 
@@ -351,13 +346,8 @@ real B = (real)0.25;
 
 
 //       5. primitive variables --> conserved variables
-         real tmp[NCOMP_TOTAL];  // input and output arrays must not overlap for Pri2Con()
-
-         for (int v=0; v<NCOMP_TOTAL; v++)   tmp[v] = fc_Pri[faceL][v];
-         SRHydro_Pri2Con( tmp, fc_Con[faceL], Gamma );
-
-         for (int v=0; v<NCOMP_TOTAL; v++)   tmp[v] = fc_Pri[faceR][v];
-         SRHydro_Pri2Con( tmp, fc_Con[faceR], Gamma );
+         SRHydro_Pri2Con( fc_Pri[faceL], fc_Con[faceL], Gamma );
+         SRHydro_Pri2Con( fc_Pri[faceR], fc_Con[faceR], Gamma );
 
       } // for (int d=0; d<3; d++)
 
@@ -559,13 +549,8 @@ void SRHydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 
 //       5. primitive variables --> conserved variables
-         real tmp[NCOMP_TOTAL];  // input and output arrays must not overlap for Pri2Con()
-
-         for (int v=0; v<NCOMP_TOTAL; v++)   tmp[v] = fc_Pri[faceL][v];
-         SRHydro_Pri2Con( tmp, fc_Con[faceL], Gamma );
-
-         for (int v=0; v<NCOMP_TOTAL; v++)   tmp[v] = fc_Pri[faceR][v];
-         SRHydro_Pri2Con( tmp, fc_Con[faceR], Gamma );
+         SRHydro_Pri2Con( fc_Pri[faceL], fc_Con[faceL], Gamma );
+         SRHydro_Pri2Con( fc_Pri[faceR], fc_Con[faceR], Gamma );
 
       } // for (int d=0; d<3; d++)
 
