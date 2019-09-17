@@ -205,37 +205,9 @@ real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, 
 GPU_DEVICE
 real SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real MinTemp)
 {
-   real Temp = SRHydro_GetTemperature (In[0], In[1], In[2], In[3], In[4], Gamma, MinTemp );
-#  if ( EOS == APPROXIMATED_GENERAL )
-   real h = FMA( (real)2.5, Temp, SQRT( FMA( (real)2.25, Temp*Temp, (real)1.0 ) ) );
-#  elif ( EOS == CONSTANT_GAMMA ) 
-   real h = (real)1.0 + Temp * Gamma / (Gamma-(real)1.0);
-#  else
-#  error: unsupported EoS!
-#  endif
+   real Temp = SRHydro_GetTemperature (In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY], Gamma, MinTemp );
 
-
-#  if ( EOS == APPROXIMATED_GENERAL )
-// if there is an overfolw due to high temperature, we simply set Gamma = 4/3.
-   if ( h != h ) 
-   {    
-//		Gamma = (real)1.3333333;
-        real Gamma_m1 = (real)0.3333333;
-
-        real E_Dsqr = SQR( In[4] / In[0] );
-        real M_Dsqr = VectorDotProduct(In[1], In[2], In[3]) / SQR(In[0]);
-
-        real A = (real)1.0 / SQR(Gamma_m1);
-        real B = (real)2.0 /Gamma_m1;
-        real C = (((real)2.0*Gamma-(real)1.0)/(Gamma*Gamma)) * M_Dsqr - E_Dsqr;
-
-        real delta = SQRT( B * B - (real)4.0 * A * C );
-
-        Temp = -(real)2.0 *  C / ( B + delta);
-
-        h = (real)4.0 * Temp;
-   }   
-#  endif
+   real h = SpecificEnthalpy(In, Temp, Gamma);
 
    real factor = In[0]*h;
    Out[1] = In[1]/factor;
@@ -254,14 +226,8 @@ real SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real 
 GPU_DEVICE
 void SRHydro_Pri2Con (const real In[], real Out[], const real Gamma)
 {
-# if ( EOS == APPROXIMATED_GENERAL )
-  real nh = FMA( (real)2.5, In[4], SQRT( FMA( (real)2.25, SQR(In[4]), SQR(In[0]) ) )); // approximate enthalpy * proper number density
-# elif ( EOS == CONSTANT_GAMMA )
-  real Gamma_m1 = (real) Gamma - (real)1.0;
-  real nh = In[0] + ( Gamma / Gamma_m1) * In[4]; // enthalpy * proper number density
-# else
-# error: unsupported EoS!
-# endif
+
+  real nh = In[0] * SpecificEnthalpy( NULL, In[4]/In[0], Gamma );
 
   real Factor0 = (real)1.0 + VectorDotProduct(In[1], In[2], In[3]);
   real Factor1 = SQRT(Factor0); // Lorentz factor
@@ -391,11 +357,10 @@ real SRHydro_CheckMinTemp (const real InTemp, const real MinTemp)
 GPU_DEVICE
 real SRHydro_CheckMinTempInEngy (const real Cons[], const real MinTemp, const real Gamma )
 {
-# if ( EOS == CONSTANT_GAMMA ) 
-  real h_min = (real)1.0 + Gamma * MinTemp / (Gamma - (real)1.0);
-# elif ( EOS == APPROXIMATED_GENERAL )
-  real h_min = (real)2.5*MinTemp + SQRT((real)2.25*MinTemp*MinTemp + (real)1.0);
-# endif
+
+// conservative variables should NOT be put into SpecificEnthalpy() now,
+// --> In case h is overflow, Gamma will be automatically set as 4/3.
+  real h_min = SpecificEnthalpy( NULL, MinTemp, Gamma );
 
   real D  = Cons[0];
   real Mx = Cons[1];
@@ -705,6 +670,48 @@ Fun_DFun (real Temp, void *ptr, real * f, real * df, real Gamma)
 # endif // #if ( EOS == APPROXIMATED_GENERAL )
 }
 
+
+GPU_DEVICE
+real SpecificEnthalpy( real Con[], real Temp, real Gamma )
+{
+   real h;
+
+#  if ( EOS == APPROXIMATED_GENERAL )
+   h = FMA( (real)2.5, Temp, SQRT( FMA( (real)2.25, Temp*Temp, (real)1.0 ) ) );
+
+// if there is an overfolw due to ultra-high temperature, we simply set Gamma = 4/3.
+   if ( h != h && Con != NULL) 
+   {    
+		Gamma = (real)1.3333333;
+        real Gamma_m1 = Gamma - (real)1.0;
+
+        real E_Dsqr = SQR( Con[ENGY] / Con[DENS] );
+        real M_Dsqr = VectorDotProduct(Con[MOMX], Con[MOMY], Con[MOMZ]) / SQR(Con[DENS]);
+
+        real A = (real)1.0 / SQR(Gamma_m1);
+        real B = (real)2.0 /Gamma_m1;
+        real C = (((real)2.0*Gamma-(real)1.0)/(Gamma*Gamma)) * M_Dsqr - E_Dsqr;
+
+        real delta = SQRT( B * B - (real)4.0 * A * C );
+
+        Temp = -(real)2.0 *  C / ( B + delta);
+
+        h = (real)4.0 * Temp;
+   }
+   else if ( h!= h && Con == NULL )
+   {
+        printf("Conservative variables should be provided! function: %s: %d\n", __FUNCTION__, __LINE__);
+        assert(0);
+   }
+
+#  elif ( EOS == CONSTANT_GAMMA ) 
+   h = (real)1.0 + Temp * Gamma / (Gamma-(real)1.0);
+#  else
+#  error: unsupported EoS!
+#  endif
+
+   return h;
+}
 
 GPU_DEVICE
 real VectorDotProduct( real V1, real V2, real V3 )
