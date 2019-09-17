@@ -463,7 +463,7 @@ CC_FILE     += CPU_Shared_ConstrainedTransport.cpp  CPU_Shared_RiemannSolver_HLL
 
 ifeq "$(findstring -DLOAD_BALANCE, $(SIMU_OPTION))" "-DLOAD_BALANCE"
 CC_FILE     += MHD_LB_EnsureBFieldConsistencyAfterRestrict.cpp  MHD_LB_AllocateElectricArray.cpp \
-               MHD_LB_ResetBufferElectric.cpp
+               MHD_LB_ResetBufferElectric.cpp  MHD_LB_Refine_GetCoarseFineInterfaceBField.cpp
 endif # LOAD_BALANCE
 endif # MHD
 

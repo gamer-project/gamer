@@ -40,13 +40,19 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
 //                RefineF2S_Send_NPatchTotal : Total number of patches for exchanging particles from fathers to sons
 //                RefineF2S_Send_PIDList     : Patch indices for exchanging particles from fathers to sons
 //
+//                MHD-only parameters (call-by-reference)
+//                CFB_SibLBIdx_Home : Load-balance indices of the siblings of home patches
+//                CFB_SibLBIdx_Away : Load-balance indices of the siblings of away patches
+//
 // Return      :  NNew_Home, NewPID_Home, NNew_Away, NewCr1D_Away, NewCData_Away, NDel_Home, DelPID_Home,
-//                NDel_Away, DelCr1D_Away
+//                NDel_Away, DelCr1D_Away, RefineF2S_Send_NPatchTotal, RefineF2S_Send_PIDList,
+//                CFB_SibLBIdx_Home, CFB_SibLBIdx_Away
 //-------------------------------------------------------------------------------------------------------
 void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID_Home, int &NNew_Away,
                                     ulong *&NewCr1D_Away, real *&NewCData_Away, int &NDel_Home, int *&DelPID_Home,
                                     int &NDel_Away, ulong *&DelCr1D_Away,
-                                    int &RefineF2S_Send_NPatchTotal, int *&RefineF2S_Send_PIDList )
+                                    int &RefineF2S_Send_NPatchTotal, int *&RefineF2S_Send_PIDList,
+                                    long (*&CFB_SibLBIdx_Home)[6], long (*&CFB_SibLBIdx_Away)[6] )
 {
 
 // 1. construct the unsorted new/delete lists for real patches
@@ -62,35 +68,33 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
    int    DelMemSize[MPI_NRank], NDel_Send[MPI_NRank];
    int   *NewPID_Send[MPI_NRank];
    ulong *NewCr1D_Send[MPI_NRank], *DelCr1D_Send[MPI_NRank];
-#  ifdef MHD_WAIT
-   int  *NewSibID_Send[MPI_NRank];
-   long (*NewSibLBIdx_Send[MPI_NRank])[6];
+#  ifdef MHD
+   long (*CFB_SibLBIdx_Send[MPI_NRank])[6];
 #  endif
 
 
 // initialize variables
    for (int r=0; r<MPI_NRank; r++)
    {
-      NewMemSize      [r] = MemUnit;
-      DelMemSize      [r] = MemUnit;
-      NewCr1D_Send    [r] = ( ulong*     )malloc( NewMemSize[r]*sizeof(ulong)   );
-      DelCr1D_Send    [r] = ( ulong*     )malloc( DelMemSize[r]*sizeof(ulong)   );
-      NewPID_Send     [r] = ( int*       )malloc( NewMemSize[r]*sizeof(int  )   );
-#     ifdef MHD_WAIT
-      NewSibID_Send   [r] = ( int*       )malloc( NewMemSize[r]*sizeof(int  )   );
-      NewSibLBIdx_Send[r] = ( long(*)[6] )malloc( NewMemSize[r]*sizeof(long )*6 );
+      NewMemSize       [r] = MemUnit;
+      DelMemSize       [r] = MemUnit;
+      NewCr1D_Send     [r] = ( ulong*     )malloc( NewMemSize[r]*sizeof(ulong)   );
+      DelCr1D_Send     [r] = ( ulong*     )malloc( DelMemSize[r]*sizeof(ulong)   );
+      NewPID_Send      [r] = ( int*       )malloc( NewMemSize[r]*sizeof(int  )   );
+#     ifdef MHD
+      CFB_SibLBIdx_Send[r] = ( long(*)[6] )malloc( NewMemSize[r]*sizeof(long )*6 );
 #     endif
-      NNew_Send       [r] = 0;
-      NDel_Send       [r] = 0;
+      NNew_Send        [r] = 0;
+      NDel_Send        [r] = 0;
    }
-   NewPID_Home      = ( int*       )malloc( NewMemSize[MPI_Rank]*sizeof(int )   );
-   DelPID_Home      = ( int*       )malloc( DelMemSize[MPI_Rank]*sizeof(int )   );
-#  ifdef MHD_WAIT
-   NewSibID_Home    = ( int*       )malloc( NewMemSize[MPI_Rank]*sizeof(int )   );
-   NewSibLBIdx_Home = ( long(*)[6] )malloc( NewMemSize[MPI_Rank]*sizeof(long)*6 );
+
+   NewPID_Home       = ( int*       )malloc( NewMemSize[MPI_Rank]*sizeof(int )   );
+   DelPID_Home       = ( int*       )malloc( DelMemSize[MPI_Rank]*sizeof(int )   );
+#  ifdef MHD
+   CFB_SibLBIdx_Home = ( long(*)[6] )malloc( NewMemSize[MPI_Rank]*sizeof(long)*6 );
 #  endif
-   NNew_Home   = 0;
-   NDel_Home   = 0;
+   NNew_Home         = 0;
+   NDel_Home         = 0;
 
 
 // loop over all real patches at FaLv
@@ -134,9 +138,8 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
 
 
 //       get the sibling information required for the B field interpolation in MHD
-#        ifdef MHD_WAIT
-         int  NewSibID = 0;
-         long NewSibLBIdx[6];
+#        ifdef MHD
+         long CFB_SibLBIdx[6] = { -1, -1, -1, -1, -1, -1 };
 
          for (int s=0; s<6; s++)
          {
@@ -145,17 +148,12 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
 
             if ( SibSonPID != -1 )
             {
-               NewSibID |= ( 1 << s );
-
 #              if ( LOAD_BALANCE == HILBERT )
-               NewSibLBIdx[s] = 8*amr->patch[0][FaLv][SibPID]->LB_Idx;   // faster
+               CFB_SibLBIdx[s] = 8*amr->patch[0][FaLv][SibPID]->LB_Idx; // faster
 #              else
-               NewSibLBIdx[s] = LB_Corner2Index( SonLv, amr->patch[0][FaLv][SibPID]->corner, CHECK_ON );
+               CFB_SibLBIdx[s] = LB_Corner2Index( SonLv, amr->patch[0][FaLv][SibPID]->corner, CHECK_ON );
 #              endif
             }
-
-            else
-               NewSibLBIdx[s] = -1;
          }
 #        endif // #ifdef MHD
 
@@ -167,18 +165,16 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
             if ( NNew_Home >= NewMemSize[TRank] )
             {
                NewMemSize[TRank] += MemUnit;
-               NewPID_Home        = ( int*       )realloc( NewPID_Home,      NewMemSize[TRank]*sizeof(int )   );
-#              ifdef MHD_WAIT
-               NewSibID_Home      = ( int*       )realloc( NewSibID_Home,    NewMemSize[TRank]*sizeof(int )   );
-               NewSibLBIdx_Home   = ( long(*)[6] )realloc( NewSibLBIdx_Home, NewMemSize[TRank]*sizeof(long)*6 );
+               NewPID_Home        = ( int*       )realloc( NewPID_Home,       NewMemSize[TRank]*sizeof(int )   );
+#              ifdef MHD
+               CFB_SibLBIdx_Home  = ( long(*)[6] )realloc( CFB_SibLBIdx_Home, NewMemSize[TRank]*sizeof(long)*6 );
 #              endif
             }
 
-            NewPID_Home     [NNew_Home]    = FaPID;
-#           ifdef MHD_WAIT
-            NewSibID_Home   [NNew_Home]    = NewSibID;
+            NewPID_Home      [NNew_Home]    = FaPID;
+#           ifdef MHD
             for (int s=0; s<6; s++)
-            NewSibLBIdx_Home[NNew_Home][s] = NewSibLBId[s];
+            CFB_SibLBIdx_Home[NNew_Home][s] = CFB_SibLBIdx[s];
 #           endif
 
             NNew_Home ++;
@@ -189,21 +185,19 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
 //          allocate enough memory
             if ( NNew_Send[TRank] >= NewMemSize[TRank] )
             {
-               NewMemSize      [TRank] += MemUnit;
-               NewCr1D_Send    [TRank]  = ( ulong*     )realloc( NewCr1D_Send    [TRank], NewMemSize[TRank]*sizeof(ulong)   );
-               NewPID_Send     [TRank]  = ( int*       )realloc( NewPID_Send     [TRank], NewMemSize[TRank]*sizeof(int  )   );
-#              ifdef MHD_WAIT
-               NewSibID_Send   [TRank]  = ( int*       )realloc( NewSib_Send     [TRank], NewMemSize[TRank]*sizeof(int  )   );
-               NewSibLBIdx_Send[TRank]  = ( long(*)[6] )realloc( NewSibLBIdx_Send[TRank], NewMemSize[TRank]*sizeof(long )*6 );
+               NewMemSize       [TRank] += MemUnit;
+               NewCr1D_Send     [TRank]  = ( ulong*     )realloc( NewCr1D_Send     [TRank], NewMemSize[TRank]*sizeof(ulong)   );
+               NewPID_Send      [TRank]  = ( int*       )realloc( NewPID_Send      [TRank], NewMemSize[TRank]*sizeof(int  )   );
+#              ifdef MHD
+               CFB_SibLBIdx_Send[TRank]  = ( long(*)[6] )realloc( CFB_SibLBIdx_Send[TRank], NewMemSize[TRank]*sizeof(long )*6 );
 #              endif
             }
 
-            NewCr1D_Send    [TRank][ NNew_Send[TRank] ]    = TP->PaddedCr1D;
-            NewPID_Send     [TRank][ NNew_Send[TRank] ]    = FaPID;
-#           ifdef MHD_WAIT
-            NewSibID_Send   [TRank][ NNew_Send[TRank] ]    = NewSibID;
+            NewCr1D_Send     [TRank][ NNew_Send[TRank] ]    = TP->PaddedCr1D;
+            NewPID_Send      [TRank][ NNew_Send[TRank] ]    = FaPID;
+#           ifdef MHD
             for (int s=0; s<6; s++)
-            NewSibLBIdx_Send[TRank][ NNew_Send[TRank] ][s] = NewSibLBId;
+            CFB_SibLBIdx_Send[TRank][ NNew_Send[TRank] ][s] = CFB_SibLBIdx[s];
 #           endif
 
             NNew_Send[TRank] ++;
@@ -320,13 +314,19 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
 #  endif
 
 
-   int New_Send_Disp[MPI_NRank], New_Recv_Disp[MPI_NRank], NNew_Recv[MPI_NRank], NNew_Send_Total, NNew_Recv_Total;
-   int Del_Send_Disp[MPI_NRank], Del_Recv_Disp[MPI_NRank], NDel_Recv[MPI_NRank], NDel_Send_Total, NDel_Recv_Total;
-   int New_Send_Disp_CData[MPI_NRank], New_Recv_Disp_CData[MPI_NRank];
-   int NNew_Send_CData[MPI_NRank], NNew_Recv_CData[MPI_NRank];
-   int Counter;
+   int    New_Send_Disp[MPI_NRank], New_Recv_Disp[MPI_NRank], NNew_Recv[MPI_NRank], NNew_Send_Total, NNew_Recv_Total;
+   int    Del_Send_Disp[MPI_NRank], Del_Recv_Disp[MPI_NRank], NDel_Recv[MPI_NRank], NDel_Send_Total, NDel_Recv_Total;
+   int    New_Send_Disp_CData[MPI_NRank], New_Recv_Disp_CData[MPI_NRank];
+   int    NNew_Send_CData[MPI_NRank], NNew_Recv_CData[MPI_NRank];
+   int    Counter;
    ulong *New_SendBuf_Cr1D=NULL, *New_RecvBuf_Cr1D=NULL, *Del_SendBuf_Cr1D=NULL, *Del_RecvBuf_Cr1D=NULL;
    real  *New_SendBuf_CData=NULL, *New_RecvBuf_CData=NULL;
+
+#  ifdef MHD
+   int    CFB_Send_Disp_SibLBIdx[MPI_NRank], CFB_Recv_Disp_SibLBIdx[MPI_NRank];
+   int    CFB_Send_NList_SibLBIdx[MPI_NRank], CFB_Recv_NList_SibLBIdx[MPI_NRank];
+   long  (*CFB_SendBuf_SibLBIdx)[6]=NULL, (*CFB_RecvBuf_SibLBIdx)[6]=NULL;
+#  endif
 
 // 2.1 broadcast the number of elements sent to different ranks
    MPI_Alltoall( NNew_Send, 1, MPI_INT, NNew_Recv, 1, MPI_INT, MPI_COMM_WORLD );
@@ -353,29 +353,42 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
 
    for (int r=0; r<MPI_NRank; r++)
    {
-      NNew_Send_CData    [r] = PSize*NNew_Send    [r];
-      NNew_Recv_CData    [r] = PSize*NNew_Recv    [r];
-      New_Send_Disp_CData[r] = PSize*New_Send_Disp[r];
-      New_Recv_Disp_CData[r] = PSize*New_Recv_Disp[r];
+      NNew_Send_CData        [r] = PSize*NNew_Send    [r];
+      NNew_Recv_CData        [r] = PSize*NNew_Recv    [r];
+      New_Send_Disp_CData    [r] = PSize*New_Send_Disp[r];
+      New_Recv_Disp_CData    [r] = PSize*New_Recv_Disp[r];
+#     ifdef MHD
+      CFB_Send_NList_SibLBIdx[r] =     6*NNew_Send    [r];
+      CFB_Recv_NList_SibLBIdx[r] =     6*NNew_Recv    [r];
+      CFB_Send_Disp_SibLBIdx [r] =     6*New_Send_Disp[r];
+      CFB_Recv_Disp_SibLBIdx [r] =     6*New_Recv_Disp[r];
+#     endif
    }
 
 // variables to be returned by this function
-   NNew_Away         = NNew_Recv_Total;
-   NDel_Away         = NDel_Recv_Total;
-   NewCr1D_Away      = new ulong [NNew_Recv_Total      ];
-   NewCData_Away     = new  real [NNew_Recv_Total*PSize];
-   DelCr1D_Away      = new ulong [NDel_Recv_Total      ];
+   NNew_Away            = NNew_Recv_Total;
+   NDel_Away            = NDel_Recv_Total;
+   NewCr1D_Away         = new ulong [NNew_Recv_Total      ];
+   NewCData_Away        = new real  [NNew_Recv_Total*PSize];
+   DelCr1D_Away         = new ulong [NDel_Recv_Total      ];
+#  ifdef MHD
+   CFB_SibLBIdx_Away    = new long  [NNew_Recv_Total      ][6];
+#  endif
 
-   New_SendBuf_Cr1D  = new ulong [NNew_Send_Total      ];
-   New_RecvBuf_Cr1D  = NewCr1D_Away;
-   New_SendBuf_CData = new real  [NNew_Send_Total*PSize];
-   New_RecvBuf_CData = NewCData_Away;
-   Del_SendBuf_Cr1D  = new ulong [NDel_Send_Total      ];
-   Del_RecvBuf_Cr1D  = DelCr1D_Away;
+   New_SendBuf_Cr1D     = new ulong [NNew_Send_Total      ];
+   New_RecvBuf_Cr1D     = NewCr1D_Away;
+   New_SendBuf_CData    = new real  [NNew_Send_Total*PSize];
+   New_RecvBuf_CData    = NewCData_Away;
+   Del_SendBuf_Cr1D     = new ulong [NDel_Send_Total      ];
+   Del_RecvBuf_Cr1D     = DelCr1D_Away;
+#  ifdef MHD
+   CFB_SendBuf_SibLBIdx = new long  [NNew_Send_Total      ][6];
+   CFB_RecvBuf_SibLBIdx = CFB_SibLBIdx_Away;
+#  endif
 
 
 // 2.3 prepare the MPI send buffers
-// 2.3.1&2 new Cr1D/CData
+// 2.3.1&2 new Cr1D/CData (and SibLBIdx for MHD)
 
 // determine the priority of different boundary faces (z>y>x) to set the corner cells properly for the non-periodic B.C.
    int BC_Face[26], BC_Face_tmp[3], FluVarIdxList[NCOMP_TOTAL];
@@ -400,7 +413,11 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
    for (int r=0; r<MPI_NRank; r++)
    for (int t=0; t<NNew_Send[r]; t++)
    {
-      New_SendBuf_Cr1D[Counter] = NewCr1D_Send[r][t];
+      New_SendBuf_Cr1D    [Counter]    = NewCr1D_Send    [r][t];
+#     ifdef MHD
+      for (int s=0; s<6; s++)
+      CFB_SendBuf_SibLBIdx[Counter][s] = CFB_SibLBIdx_Send[r][t][s];
+#     endif
 
       PrepareCData( FaLv, NewPID_Send[r][t], New_SendBuf_CData+Counter*PSize,
                     FaSg_Flu, FaGhost_Flu, NSide_Flu, FaSg_Pot, FaGhost_Pot, NSide_Pot, FaSg_Mag, FaGhost_Mag,
@@ -422,7 +439,13 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
    MPI_Alltoallv( New_SendBuf_Cr1D, NNew_Send, New_Send_Disp, MPI_UNSIGNED_LONG,
                   New_RecvBuf_Cr1D, NNew_Recv, New_Recv_Disp, MPI_UNSIGNED_LONG, MPI_COMM_WORLD );
 
-// 2.4.2 new CData
+// 2.4.2 SibLBIdx for MHD
+#  ifdef MHD
+   MPI_Alltoallv( CFB_SendBuf_SibLBIdx, CFB_Send_NList_SibLBIdx, CFB_Send_Disp_SibLBIdx, MPI_LONG,
+                  CFB_RecvBuf_SibLBIdx, CFB_Recv_NList_SibLBIdx, CFB_Recv_Disp_SibLBIdx, MPI_LONG, MPI_COMM_WORLD );
+#  endif
+
+// 2.4.3 new CData
 #  ifdef FLOAT8
    MPI_Alltoallv( New_SendBuf_CData, NNew_Send_CData, New_Send_Disp_CData, MPI_DOUBLE,
                   New_RecvBuf_CData, NNew_Recv_CData, New_Recv_Disp_CData, MPI_DOUBLE, MPI_COMM_WORLD );
@@ -431,7 +454,7 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
                   New_RecvBuf_CData, NNew_Recv_CData, New_Recv_Disp_CData, MPI_FLOAT,  MPI_COMM_WORLD );
 #  endif
 
-// 2.4.3 delete Cr1D
+// 2.4.4 delete Cr1D
    MPI_Alltoallv( Del_SendBuf_Cr1D, NDel_Send, Del_Send_Disp, MPI_UNSIGNED_LONG,
                   Del_RecvBuf_Cr1D, NDel_Recv, Del_Recv_Disp, MPI_UNSIGNED_LONG, MPI_COMM_WORLD );
 
@@ -443,14 +466,16 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
       free( NewCr1D_Send    [r] );
       free( DelCr1D_Send    [r] );
       free( NewPID_Send     [r] );
-#     ifdef MHD_WAIT
-      free( NewSibID_Send   [r] );
-      free( NewSibLBIdx_Send[r] );
+#     ifdef MHD
+      free( CFB_SibLBIdx_Send[r] );
 #     endif
    }
    delete [] New_SendBuf_Cr1D;
    delete [] New_SendBuf_CData;
    delete [] Del_SendBuf_Cr1D;
+#  ifdef MHD
+   delete [] CFB_SendBuf_SibLBIdx;
+#  endif
 
 } // FUNCTION : LB_Refine_GetNewRealPatchList
 
