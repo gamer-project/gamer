@@ -328,9 +328,13 @@ void SRHydro_3Velto4Vel (const real In[], real Out[])
 //                Gamma    : adiabatic index
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void SRHydro_Con2Flux (const int XYZ, real Flux[], real ConVar[], real PriVar[], const real Gamma, const real MinTemp )
+void SRHydro_Con2Flux (const int XYZ, real Flux[], const real Con[], const real Pri[], const real Gamma, const real MinTemp )
 {
-//*** don't need to include passive scalars since they don't have to be rotated ***
+//*** we don't need to include passive scalars since they don't have to be rotated ***
+  real ConVar[NCOMP_FLUID], PriVar[NCOMP_FLUID];
+
+  for (int v=0;v<NCOMP_FLUID;v++) ConVar[v] = Con[v];
+  for (int v=0;v<NCOMP_FLUID;v++) PriVar[v] = Pri[v];
 
   SRHydro_Rotate3D (ConVar, XYZ, true);
   SRHydro_Rotate3D (PriVar, XYZ, true);
