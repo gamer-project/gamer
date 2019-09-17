@@ -625,6 +625,58 @@ real SRHydro_GetPressure (const real Dens, const real MomX, const real MomY, con
 }				// FUNCTION : SRHydro_GetPressure
 
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  
+// Description :  
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+real SRHydro_InternalEngy( real Con[], real PriVar[], real Gamma, real MinTemp )
+{
+  real Pri[NCOMP_FLUID], h;
+
+  SRHydro_Con2Pri( Con, Pri, Gamma, MinTemp  );
+
+  h = SpecificEnthalpy( Con, Pri[4]/Pri[0], Gamma );
+  
+
+  return Pri[0]*h - Pri[4];
+}
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  
+// Description :  
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+real SRHydro_ThermalEngy( real Con[], real PriVar[], real Gamma, real MinTemp )
+{
+  real Pri[NCOMP_FLUID], h;
+
+  SRHydro_Con2Pri( Con, Pri, Gamma, MinTemp  );
+
+  h = SpecificEnthalpy( Con, Pri[4]/Pri[0], Gamma );
+  
+
+  return Pri[0] * ( h - (real)1.0 ) - Pri[4];
+}
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :
+// Description :  
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+real SRHydro_KineticEngy( real Con[], real PriVar[], real Gamma, real MinTemp )
+{
+  real Pri[NCOMP_FLUID], h, Lorentz;
+
+  SRHydro_Con2Pri( Con, Pri, Gamma, MinTemp );
+
+  h = SpecificEnthalpy( Con, Pri[4]/Pri[0], Gamma );
+  
+  Lorentz = SQRT((real)1.0 + VectorDotProduct(Pri[1], Pri[2], Pri[3]));
+
+  return ( Con[DENS] * h + Pri[4] ) * ( Lorentz - (real)1.0 );
+}
+
 GPU_DEVICE
 static void 
 NewtonRaphsonSolver(void *ptr, real *root, const real guess, const real epsabs, const real epsrel, const real Gamma)
