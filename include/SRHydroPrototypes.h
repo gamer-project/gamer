@@ -10,7 +10,7 @@ void SRHydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                  const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                  const real dt, const real dh, const real MinDens, const real MinTemp );
 
-void SRHydro_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma, const real MinTemp );
+void SRHydro_Con2Flux( const int XYZ, real Flux[], real ConVar[], real PriVar[], const real Gamma, const real MinTemp );
 
 real SRHydro_Con2Pri( const real In[], real Out[], const real Gamma, const real MinTemp );
 
@@ -35,6 +35,7 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
 
 void SRHydro_Rotate3D( real InOut[], const int XYZ, const bool Forward );
 
+real SpecificEnthalpy( const real Con[], real Temp, real Gamma );
 
 real SRHydro_CheckMinTemp (const real InTemp, const real MinTemp);
 

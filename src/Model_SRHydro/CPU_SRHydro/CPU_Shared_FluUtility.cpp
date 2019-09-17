@@ -190,6 +190,46 @@ real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, 
   return root;
 }				// FUNCTION : SRHydro_GetTemperature
 
+GPU_DEVICE
+real SpecificEnthalpy( const real Con[], real Temp, real Gamma )
+{
+   real h;
+
+#  if ( EOS == APPROXIMATED_GENERAL )
+   h = FMA( (real)2.5, Temp, SQRT( FMA( (real)2.25, Temp*Temp, (real)1.0 ) ) );
+
+// if there is an overfolw due to ultra-high temperature, we simply set Gamma = 4/3.
+   if ( h != h && Con != NULL) 
+   {    
+		Gamma = (real)1.3333333;
+        real Gamma_m1 = Gamma - (real)1.0;
+
+        real E_Dsqr = SQR( Con[ENGY] / Con[DENS] );
+        real M_Dsqr = VectorDotProduct(Con[MOMX], Con[MOMY], Con[MOMZ]) / SQR(Con[DENS]);
+
+        real A = (real)1.0 / SQR(Gamma_m1);
+        real B = (real)2.0 /Gamma_m1;
+        real C = (((real)2.0*Gamma-(real)1.0)/(Gamma*Gamma)) * M_Dsqr - E_Dsqr;
+
+        real delta = SQRT( B * B - (real)4.0 * A * C );
+
+        Temp = -(real)2.0 *  C / ( B + delta);
+
+        h = (real)4.0 * Temp;
+   }
+   else if ( h!= h && Con == NULL )
+   {
+        printf("Conservative variables should be provided! function: %s: %d\n", __FUNCTION__, __LINE__);
+   }
+
+#  elif ( EOS == CONSTANT_GAMMA ) 
+   h = (real)1.0 + Temp * Gamma / (Gamma-(real)1.0);
+#  else
+#  error: unsupported EoS!
+#  endif
+
+   return h;
+}
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SRHydro_Con2Pri
@@ -288,19 +328,16 @@ void SRHydro_3Velto4Vel (const real In[], real Out[])
 //                Gamma    : adiabatic index
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void SRHydro_Con2Flux (const int XYZ, real Flux[], const real Input[], const real Gamma, const real MinTemp )
+void SRHydro_Con2Flux (const int XYZ, real Flux[], real ConVar[], real PriVar[], const real Gamma, const real MinTemp )
 {
-  real ConVar[NCOMP_FLUID];	// don't need to include passive scalars since they don't have to be rotated1
-  real PriVar[NCOMP_FLUID];	// D, Ux, Uy, Uz, P
-  real Lorentz, Vx;
-
-  for (int v = 0; v < NCOMP_FLUID; v++)   ConVar[v] = Input[v];
+//*** don't need to include passive scalars since they don't have to be rotated ***
 
   SRHydro_Rotate3D (ConVar, XYZ, true);
+  SRHydro_Rotate3D (PriVar, XYZ, true);
 
-  Lorentz = SRHydro_Con2Pri (ConVar, PriVar, Gamma, MinTemp);
+  real Lorentz = SQRT((real)1.0 + VectorDotProduct(PriVar[1], PriVar[2], PriVar[3]));
 
-  Vx = PriVar[1] / Lorentz;
+  real Vx = PriVar[1] / Lorentz;
 
   Flux[0] = ConVar[0] * Vx;
   Flux[1] = FMA( ConVar[1], Vx, PriVar[4] );
@@ -671,47 +708,6 @@ Fun_DFun (real Temp, void *ptr, real * f, real * df, real Gamma)
 }
 
 
-GPU_DEVICE
-real SpecificEnthalpy( real Con[], real Temp, real Gamma )
-{
-   real h;
-
-#  if ( EOS == APPROXIMATED_GENERAL )
-   h = FMA( (real)2.5, Temp, SQRT( FMA( (real)2.25, Temp*Temp, (real)1.0 ) ) );
-
-// if there is an overfolw due to ultra-high temperature, we simply set Gamma = 4/3.
-   if ( h != h && Con != NULL) 
-   {    
-		Gamma = (real)1.3333333;
-        real Gamma_m1 = Gamma - (real)1.0;
-
-        real E_Dsqr = SQR( Con[ENGY] / Con[DENS] );
-        real M_Dsqr = VectorDotProduct(Con[MOMX], Con[MOMY], Con[MOMZ]) / SQR(Con[DENS]);
-
-        real A = (real)1.0 / SQR(Gamma_m1);
-        real B = (real)2.0 /Gamma_m1;
-        real C = (((real)2.0*Gamma-(real)1.0)/(Gamma*Gamma)) * M_Dsqr - E_Dsqr;
-
-        real delta = SQRT( B * B - (real)4.0 * A * C );
-
-        Temp = -(real)2.0 *  C / ( B + delta);
-
-        h = (real)4.0 * Temp;
-   }
-   else if ( h!= h && Con == NULL )
-   {
-        printf("Conservative variables should be provided! function: %s: %d\n", __FUNCTION__, __LINE__);
-        assert(0);
-   }
-
-#  elif ( EOS == CONSTANT_GAMMA ) 
-   h = (real)1.0 + Temp * Gamma / (Gamma-(real)1.0);
-#  else
-#  error: unsupported EoS!
-#  endif
-
-   return h;
-}
 
 GPU_DEVICE
 real VectorDotProduct( real V1, real V2, real V3 )
