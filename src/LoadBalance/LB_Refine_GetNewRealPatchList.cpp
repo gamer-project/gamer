@@ -561,7 +561,7 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
 
 #  ifdef GRAVITY
    const int FaSize_Pot    = PS1 + 2*FaGhost_Pot;
-   real *const FaData_Pot  = FaData_Next
+   real *const FaData_Pot  = FaData_Next;
    FaData_Next            += CUBE( FaSize_Pot );
 #  endif
 
