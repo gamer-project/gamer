@@ -26,7 +26,7 @@ static void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_
 //
 // Note        :  1. This function is invoked by LB_Refine()
 //                2. Home/Away : target patches at home/not at home
-//                3. Input Cr1D and CData lists are unsorted
+//                3. Input New/DelCr1D_Away[] are sorted but NewCData_Away[] is unsorted
 //                4. After invoking this function, some father-buffer patches at FaLv may become useless
 //                   --> Currently we do not remove these patches for the consideration of better performance
 //                5. This function will also allocate new father-buffer patches at FaLv and new sibling-buffer
@@ -38,16 +38,17 @@ static void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_
 //                7. Several alternative functions are invoked here for better performance
 //                   (e.g., LB_AllocateBufferPatch_Sibling() --> LB_Refine_AllocateBufferPatch_Sibling())
 //
-// Parameter   :  FaLv          : Target refinement level to be refined
-//                NNew_Home     : Number of home patches at FaLv to allocate son patches
-//                NewPID_Home   : Patch indices of home patches at FaLv to allocate son patches
-//                NNew_Away     : Number of away patches at FaLv to allocate son patches
-//                NewCr1D_Away  : Padded 1D corner of away patches at FaLv to allocate son patches
-//                NewCData_Away : Coarse-grid data of away patches at FaLv to allocate son patches
-//                NDel_Home     : Number of home patches at FaLv to deallocate son patches
-//                DelPID_Home   : Patch indices of home patches at FaLv to deallocate son patches
-//                NDel_Away     : Number of away patches at FaLv to deallocate son patches
-//                DelCr1D_Away  : Padded 1D corner of away patches at FaLv to deallocate son patches
+// Parameter   :  FaLv                  : Target refinement level to be refined
+//                NNew_Home             : Number of home patches at FaLv to allocate son patches
+//                NewPID_Home           : Patch indices of home patches at FaLv to allocate son patches
+//                NNew_Away             : Number of away patches at FaLv to allocate son patches
+//                NewCr1D_Away          : Padded 1D corner of away patches at FaLv to allocate son patches
+//                NewCr1D_Away_IdxTable : Index table of NewCr1D_Away[]
+//                NewCData_Away         : Coarse-grid data of away patches at FaLv to allocate son patches
+//                NDel_Home             : Number of home patches at FaLv to deallocate son patches
+//                DelPID_Home           : Patch indices of home patches at FaLv to deallocate son patches
+//                NDel_Away             : Number of away patches at FaLv to deallocate son patches
+//                DelCr1D_Away          : Padded 1D corner of away patches at FaLv to deallocate son patches
 //
 //                PARTICLE-only parameters (call-by-reference)
 //                RefineS2F_Send_NPatchTotal : Total number of patches for exchanging particles from sons to fathers
@@ -60,8 +61,8 @@ static void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_
 //                CFB_NSibEachRank : Number of siblings receiving data from each rank (including its own rank)
 //-------------------------------------------------------------------------------------------------------
 void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home, int NNew_Away,
-                                 ulong *NewCr1D_Away, real *NewCData_Away, int NDel_Home, int *DelPID_Home,
-                                 int NDel_Away, ulong *DelCr1D_Away,
+                                 const ulong *NewCr1D_Away, const int *NewCr1D_Away_IdxTable, real *NewCData_Away,
+                                 int NDel_Home, int *DelPID_Home, int NDel_Away, ulong *DelCr1D_Away,
                                  int &RefineS2F_Send_NPatchTotal, int *&RefineS2F_Send_PIDList,
                                  const int (*CFB_SibRank_Home)[6], const int (*CFB_SibRank_Away)[6],
                                  const real *CFB_BField, const int *CFB_NSibEachRank )
@@ -74,15 +75,11 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
    const int FaNPatch = amr->num[FaLv];
 
 
-// 1. sort the away patches and get the matching lists
+// 1. get the matching lists for the away patches
 // ==========================================================================================
-   int *NewCr1D_Away_IdxTable = new int [NNew_Away];
-   int *Match_New             = new int [NNew_Away];
-   int *Match_Del             = new int [NDel_Away];
-   int *DelPID_Away           = new int [NDel_Away];
-
-   Mis_Heapsort( NNew_Away, NewCr1D_Away, NewCr1D_Away_IdxTable );
-   Mis_Heapsort( NDel_Away, DelCr1D_Away, NULL                   );
+   int *Match_New   = new int [NNew_Away];
+   int *Match_Del   = new int [NDel_Away];
+   int *DelPID_Away = new int [NDel_Away];
 
    Mis_Matching_int( FaNPatch, amr->LB->PaddedCr1DList[FaLv], NNew_Away, NewCr1D_Away, Match_New );
    Mis_Matching_int( FaNPatch, amr->LB->PaddedCr1DList[FaLv], NDel_Away, DelCr1D_Away, Match_Del );
@@ -378,17 +375,11 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
          Mis_Idx1D2Idx3D( BoxNScale_Padded, NewCr1D_Away[t], Cr3D );
          for (int d=0; d<3; d++)    Cr3D[d] = ( Cr3D[d] - Padded )*PS1;
 
-#        ifdef MHD
-         const int *CFB_SibRank = CFB_SibRank_Away[ NewCr1D_Away_IdxTable[t] ];
-#        else
-         const int *CFB_SibRank = NULL;
-#        endif
-
          NewSonPID0_Away[t] = AllocateSonPatch( FaLv, Cr3D, PScale, FaPID,
                                                 NewCData_Away+NewCr1D_Away_IdxTable[t]*CSize_Tot,
                                                 CGhost_Flu, NSide_Flu, CGhost_Pot, NSide_Pot, CGhost_Mag,
                                                 NULL, NULL,
-                                                CFB_BFieldEachRank, CFB_SibRank, CFB_OffsetEachRank );
+                                                CFB_BFieldEachRank, CFB_SibRank_Away[t], CFB_OffsetEachRank );
 
 //       record the SonPID (with LocalID == 0 ) with no father at home
 #        ifdef GAMER_DEBUG
@@ -407,17 +398,11 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
          FaPID    = amr->LB->PaddedCr1DList_IdxTable[FaLv][ Match_New[t] ];
          Cr3D_Ptr = amr->patch[0][FaLv][FaPID]->corner;
 
-#        ifdef MHD
-         const int *CFB_SibRank = CFB_SibRank_Away[ NewCr1D_Away_IdxTable[t] ];
-#        else
-         const int *CFB_SibRank = NULL;
-#        endif
-
          NewSonPID0_Away[t] = AllocateSonPatch( FaLv, Cr3D_Ptr, PScale, FaPID,
                                                 NewCData_Away+NewCr1D_Away_IdxTable[t]*CSize_Tot,
                                                 CGhost_Flu, NSide_Flu, CGhost_Pot, NSide_Pot, CGhost_Mag,
                                                 NULL, NULL,
-                                                CFB_BFieldEachRank, CFB_SibRank, CFB_OffsetEachRank );
+                                                CFB_BFieldEachRank, CFB_SibRank_Away[t], CFB_OffsetEachRank );
       } // if ( Match_New[t] == -1 ) ... else ...
    } // for (int t=0; t<NNew_Away; t++)
 
@@ -676,7 +661,6 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 
 // free memory
    free( NewSonPID0_All );
-   delete [] NewCr1D_Away_IdxTable;
    delete [] Match_New;
    delete [] Match_Del;
    delete [] Match_BufBk;

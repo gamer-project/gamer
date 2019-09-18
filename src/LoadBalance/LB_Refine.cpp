@@ -5,13 +5,13 @@
 
 
 void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID_Home, int &NNew_Away,
-                                    ulong *&NewCr1D_Away, real *&NewCData_Away, int &NDel_Home, int *&DelPID_Home,
-                                    int &NDel_Away, ulong *&DelCr1D_Away,
+                                    ulong *&NewCr1D_Away, int *&NewCr1D_Away_IdxTable, real *&NewCData_Away,
+                                    int &NDel_Home, int *&DelPID_Home, int &NDel_Away, ulong *&DelCr1D_Away,
                                     int &RefineF2S_Send_NPatchTotal, int *&RefineF2S_Send_PIDList,
                                     long (*&CFB_SibLBIdx_Home)[6], long (*&CFB_SibLBIdx_Away)[6] );
 void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home, int NNew_Away,
-                                 ulong *NewCr1D_Away, real *NewCData_Away, int NDel_Home, int *DelPID_Home,
-                                 int NDel_Away, ulong *DelCr1D_Away,
+                                 const ulong *NewCr1D_Away, const int *NewCr1D_Away_IdxTable, real *NewCData_Away,
+                                 int NDel_Home, int *DelPID_Home, int NDel_Away, ulong *DelCr1D_Away,
                                  int &RefineS2F_Send_NPatchTotal, int *&RefineS2F_Send_PIDList,
                                  const int (*CFB_SibRank_Home)[6], const int (*CFB_SibRank_Away)[6],
                                  const real *CFB_BField, const int *CFB_NSibEachRank );
@@ -82,6 +82,7 @@ void LB_Refine( const int FaLv )
    int    NNew_Home, NDel_Home, NNew_Away, NDel_Away;  // Home/Away : for target patches at home/not at home
    int   *NewPID_Home=NULL, *DelPID_Home=NULL;
    ulong *NewCr1D_Away=NULL, *DelCr1D_Away=NULL;
+   int   *NewCr1D_Away_IdxTable=NULL;
    real  *NewCData_Away=NULL;
 
 #  ifdef MHD
@@ -96,7 +97,7 @@ void LB_Refine( const int FaLv )
    const real *CFB_BField=NULL;
 #  endif
 
-   LB_Refine_GetNewRealPatchList( FaLv, NNew_Home, NewPID_Home, NNew_Away, NewCr1D_Away, NewCData_Away,
+   LB_Refine_GetNewRealPatchList( FaLv, NNew_Home, NewPID_Home, NNew_Away, NewCr1D_Away, NewCr1D_Away_IdxTable, NewCData_Away,
                                   NDel_Home, DelPID_Home, NDel_Away, DelCr1D_Away,
                                   RefineF2S_Send_NPatchTotal, RefineF2S_Send_PIDList,
                                   CFB_SibLBIdx_Home, CFB_SibLBIdx_Away );
@@ -112,7 +113,7 @@ void LB_Refine( const int FaLv )
 
 // 4. allocate/deallocate son patches at FaLv+1
 // ==========================================================================================
-   LB_Refine_AllocateNewPatch( FaLv, NNew_Home, NewPID_Home, NNew_Away, NewCr1D_Away, NewCData_Away,
+   LB_Refine_AllocateNewPatch( FaLv, NNew_Home, NewPID_Home, NNew_Away, NewCr1D_Away, NewCr1D_Away_IdxTable, NewCData_Away,
                                NDel_Home, DelPID_Home, NDel_Away, DelCr1D_Away,
                                RefineS2F_Send_NPatchTotal, RefineS2F_Send_PIDList,
                                CFB_SibRank_Home, CFB_SibRank_Away, CFB_BField, CFB_NSibEachRank );
@@ -202,6 +203,9 @@ void LB_Refine( const int FaLv )
    if ( NewCr1D_Away == NULL )
       Aux_Error( ERROR_INFO, "%s has not been allocated !!\n", "NewCr1D_Away" );
 
+   if ( NewCr1D_Away_IdxTable == NULL )
+      Aux_Error( ERROR_INFO, "%s has not been allocated !!\n", "NewCr1D_Away_IdxTable" );
+
    if ( NewCData_Away == NULL )
       Aux_Error( ERROR_INFO, "%s has not been allocated !!\n", "NewCData_Away" );
 
@@ -231,6 +235,7 @@ void LB_Refine( const int FaLv )
    free( NewPID_Home );
    free( DelPID_Home );
    delete [] NewCr1D_Away;
+   delete [] NewCr1D_Away_IdxTable;
    delete [] NewCData_Away;
    delete [] DelCr1D_Away;
 #  ifdef MHD

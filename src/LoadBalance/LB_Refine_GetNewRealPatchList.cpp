@@ -22,19 +22,20 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
 //                   --> Data of all sibling-buffer patches at FaLv must be prepared in advance in order to
 //                       prepare the coarse-grid data for spatial interpolation
 //                3. Home/Away : target patches at home/not at home
-//                4. Cr1D and CData lists are unsorted
+//                4. Output New/DelCr1D_Away[] are sorted but NewCData_Away[] is unsorted
 //                5. Use "call-by-reference" for the input parameters
 //
-// Parameter   :  FaLv          : Target refinement level to be refined
-//                NNew_Home     : Number of home patches at FaLv to allocate son patches
-//                NewPID_Home   : Patch indices of home patches at FaLv to allocate son patches
-//                NNew_Away     : Number of away patches at FaLv to allocate son patches
-//                NewCr1D_Away  : Padded 1D corner of away patches at FaLv to allocate son patches
-//                NewCData_Away : Coarse-grid data of away patches at FaLv to allocate son patches
-//                NDel_Home     : Number of home patches at FaLv to deallocate son patches
-//                DelPID_Home   : Patch indices of home patches at FaLv to deallocate son patches
-//                NDel_Away     : Number of away patches at FaLv to deallocate son patches
-//                DelCr1D_Away  : Padded 1D corner of away patches at FaLv to deallocate son patches
+// Parameter   :  FaLv                  : Target refinement level to be refined
+//                NNew_Home             : Number of home patches at FaLv to allocate son patches
+//                NewPID_Home           : Patch indices of home patches at FaLv to allocate son patches
+//                NNew_Away             : Number of away patches at FaLv to allocate son patches
+//                NewCr1D_Away          : Padded 1D corner of away patches at FaLv to allocate son patches
+//                NewCr1D_Away_IdxTable : Index table of NewCr1D_Away[]
+//                NewCData_Away         : Coarse-grid data of away patches at FaLv to allocate son patches
+//                NDel_Home             : Number of home patches at FaLv to deallocate son patches
+//                DelPID_Home           : Patch indices of home patches at FaLv to deallocate son patches
+//                NDel_Away             : Number of away patches at FaLv to deallocate son patches
+//                DelCr1D_Away          : Padded 1D corner of away patches at FaLv to deallocate son patches
 //
 //                PARTICLE-only parameters (call-by-reference)
 //                RefineF2S_Send_NPatchTotal : Total number of patches for exchanging particles from fathers to sons
@@ -44,13 +45,13 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
 //                CFB_SibLBIdx_Home : Load-balance indices of the siblings of home patches
 //                CFB_SibLBIdx_Away : Load-balance indices of the siblings of away patches
 //
-// Return      :  NNew_Home, NewPID_Home, NNew_Away, NewCr1D_Away, NewCData_Away, NDel_Home, DelPID_Home,
-//                NDel_Away, DelCr1D_Away, RefineF2S_Send_NPatchTotal, RefineF2S_Send_PIDList,
+// Return      :  NNew_Home, NewPID_Home, NNew_Away, NewCr1D_Away, NewCr1D_Away_IdxTable, NewCData_Away,
+//                NDel_Home, DelPID_Home, NDel_Away, DelCr1D_Away, RefineF2S_Send_NPatchTotal, RefineF2S_Send_PIDList,
 //                CFB_SibLBIdx_Home, CFB_SibLBIdx_Away
 //-------------------------------------------------------------------------------------------------------
 void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID_Home, int &NNew_Away,
-                                    ulong *&NewCr1D_Away, real *&NewCData_Away, int &NDel_Home, int *&DelPID_Home,
-                                    int &NDel_Away, ulong *&DelCr1D_Away,
+                                    ulong *&NewCr1D_Away, int *&NewCr1D_Away_IdxTable, real *&NewCData_Away,
+                                    int &NDel_Home, int *&DelPID_Home, int &NDel_Away, ulong *&DelCr1D_Away,
                                     int &RefineF2S_Send_NPatchTotal, int *&RefineF2S_Send_PIDList,
                                     long (*&CFB_SibLBIdx_Home)[6], long (*&CFB_SibLBIdx_Away)[6] )
 {
@@ -325,7 +326,7 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
 #  ifdef MHD
    int    CFB_Send_Disp_SibLBIdx[MPI_NRank], CFB_Recv_Disp_SibLBIdx[MPI_NRank];
    int    CFB_Send_NList_SibLBIdx[MPI_NRank], CFB_Recv_NList_SibLBIdx[MPI_NRank];
-   long  (*CFB_SendBuf_SibLBIdx)[6]=NULL, (*CFB_RecvBuf_SibLBIdx)[6]=NULL;
+   long (*CFB_SendBuf_SibLBIdx)[6]=NULL, (*CFB_RecvBuf_SibLBIdx)[6]=NULL;
 #  endif
 
 // 2.1 broadcast the number of elements sent to different ranks
@@ -366,24 +367,21 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
    }
 
 // variables to be returned by this function
-   NNew_Away            = NNew_Recv_Total;
-   NDel_Away            = NDel_Recv_Total;
-   NewCr1D_Away         = new ulong [NNew_Recv_Total      ];
-   NewCData_Away        = new real  [NNew_Recv_Total*PSize];
-   DelCr1D_Away         = new ulong [NDel_Recv_Total      ];
+   NNew_Away             = NNew_Recv_Total;
+   NDel_Away             = NDel_Recv_Total;
+   NewCr1D_Away          = new ulong [NNew_Recv_Total      ];
+   NewCr1D_Away_IdxTable = new int   [NNew_Recv_Total      ];
+   NewCData_Away         = new real  [NNew_Recv_Total*PSize];
+   DelCr1D_Away          = new ulong [NDel_Recv_Total      ];
+   New_SendBuf_Cr1D      = new ulong [NNew_Send_Total      ];
+   New_RecvBuf_Cr1D      = NewCr1D_Away;
+   New_SendBuf_CData     = new real  [NNew_Send_Total*PSize];
+   New_RecvBuf_CData     = NewCData_Away;
+   Del_SendBuf_Cr1D      = new ulong [NDel_Send_Total      ];
+   Del_RecvBuf_Cr1D      = DelCr1D_Away;
 #  ifdef MHD
-   CFB_SibLBIdx_Away    = new long  [NNew_Recv_Total      ][6];
-#  endif
-
-   New_SendBuf_Cr1D     = new ulong [NNew_Send_Total      ];
-   New_RecvBuf_Cr1D     = NewCr1D_Away;
-   New_SendBuf_CData    = new real  [NNew_Send_Total*PSize];
-   New_RecvBuf_CData    = NewCData_Away;
-   Del_SendBuf_Cr1D     = new ulong [NDel_Send_Total      ];
-   Del_RecvBuf_Cr1D     = DelCr1D_Away;
-#  ifdef MHD
-   CFB_SendBuf_SibLBIdx = new long  [NNew_Send_Total      ][6];
-   CFB_RecvBuf_SibLBIdx = CFB_SibLBIdx_Away;
+   CFB_SendBuf_SibLBIdx  = new long  [NNew_Send_Total      ][6];
+   CFB_RecvBuf_SibLBIdx  = new long  [NNew_Recv_Total      ][6];
 #  endif
 
 
@@ -460,6 +458,29 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
 
 
 
+// 3. sort *Cr1D_Away[] and CFB_SibLBIdx_Away[]
+// ============================================================================================================
+   Mis_Heapsort( NNew_Away, NewCr1D_Away, NewCr1D_Away_IdxTable );
+   Mis_Heapsort( NDel_Away, DelCr1D_Away, NULL                  );
+
+// must ensure that CFB_SibLBIdx_Away[] and Cr1D_Away[] are sorted consistently
+// --> so that the coarse-fine interface B field data received in MHD_LB_Refine_GetCoarseFineInterfaceBField()
+//     are in the correct order
+#  ifdef MHD
+   const long (*CFB_SibLBIdx_Away_Unsorted)[6] = CFB_RecvBuf_SibLBIdx;
+   CFB_SibLBIdx_Away = new long [NNew_Away][6];
+
+   for (int idx_sorted=0; idx_sorted<NNew_Away; idx_sorted++)
+   {
+      const int idx_unsorted = NewCr1D_Away_IdxTable[idx_sorted];
+
+      for (int s=0; s<6; s++)
+         CFB_SibLBIdx_Away[idx_sorted][s] = CFB_SibLBIdx_Away_Unsorted[idx_unsorted][s];
+   }
+#  endif
+
+
+
 // free memory
    for (int r=0; r<MPI_NRank; r++)
    {
@@ -475,6 +496,7 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
    delete [] Del_SendBuf_Cr1D;
 #  ifdef MHD
    delete [] CFB_SendBuf_SibLBIdx;
+   delete [] CFB_RecvBuf_SibLBIdx;
 #  endif
 
 } // FUNCTION : LB_Refine_GetNewRealPatchList
