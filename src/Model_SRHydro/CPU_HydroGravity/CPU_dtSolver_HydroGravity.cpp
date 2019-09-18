@@ -168,7 +168,7 @@ void CPU_dtSolver_HydroGravity  ( real g_dt_Array[], const real g_Pot_Array[][ C
             x = g_Corner_Array[P][0] + double(i_ext*dh);
             y = g_Corner_Array[P][1] + double(j_ext*dh);
             z = g_Corner_Array[P][2] + double(k_ext*dh);
-
+            // ExternalAcc() is defined in src/SelfGravity/CPU_Gravity/CPU_ExternalAcc.cpp
             ExternalAcc( Acc, x, y, z, ExtAcc_Time, c_ExtAcc_AuxArray );
          }
 

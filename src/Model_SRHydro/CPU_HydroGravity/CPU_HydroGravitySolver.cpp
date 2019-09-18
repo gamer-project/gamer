@@ -1,7 +1,16 @@
 #include "CUPOT.h"
+#include "CUFLU.h"
 
 #if ( MODEL == SR_HYDRO  &&  defined GRAVITY )
 
+// external functions
+#ifdef __CUDACC__
+
+#include "../GPU_SRHydro/CUFLU_Shared_FluUtility.cu"
+
+#else
+# include "../../../include/SRHydroPrototypes.h"
+#endif // #ifdef __CUDACC__ ... else ...
 
 
 // external functions and GPU-related set-up
@@ -182,6 +191,7 @@ void CPU_HydroGravitySolver(
       CGPU_LOOP( idx_g0, CUBE(PS1) )
       {
          real acc_new[3]={0.0, 0.0, 0.0}, px_new, py_new, pz_new, rho_new, Eint_in, Ek_out, Etot_in, Etot_out, _rho2;
+         real Con_new[NCOMP_FLUID], Pri_new[NCOMP_FLUID], Con_old[NCOMP_FLUID], Pri_old[NCOMP_FLUID];
 #        ifdef UNSPLIT_GRAVITY
          real acc_old[3]={0.0, 0.0, 0.0}, px_old, py_old, pz_old, rho_old;
 #        endif
@@ -339,28 +349,31 @@ void CPU_HydroGravitySolver(
 
 #        else  // #ifdef UNSPLIT_GRAVITY
 
-         rho_new = g_Flu_Array_New[P][DENS][idx_g0];
-         px_new  = g_Flu_Array_New[P][MOMX][idx_g0];
-         py_new  = g_Flu_Array_New[P][MOMY][idx_g0];
-         pz_new  = g_Flu_Array_New[P][MOMZ][idx_g0];
+         Con_new[DENS]  = g_Flu_Array_New[P][DENS][idx_g0];
+         Con_new[MOMX]  = g_Flu_Array_New[P][MOMX][idx_g0];
+         Con_new[MOMY]  = g_Flu_Array_New[P][MOMY][idx_g0];
+         Con_new[MOMZ]  = g_Flu_Array_New[P][MOMZ][idx_g0];
+         Con_new[ENGY]  = g_Flu_Array_New[P][ENGY][idx_g0];
 
-//       backup the original internal energy so that we can restore it later if necessary
-         _rho2   = (real)0.5/rho_new;
-         Etot_in = g_Flu_Array_New[P][ENGY][idx_g0];
-         Eint_in = Etot_in - _rho2*( SQR(px_new) + SQR(py_new) + SQR(pz_new) );
+//       conserved vars --> primitive vars
+         real LorentzFactor = SRHydro_Con2Pri( Con_new, Pri_new, (real)1.3333333, (real)0.0);
+
+//       backup the original internal energy(measured in fluid frame) so that we can restore it later if necessary
+         Eint_in = SRHydro_InternalEngy ( Con_new, Pri_new, LorentzFactor, (real)1.3333333, false);
 
 //       update the momentum density
-         px_new += rho_new*acc_new[0];
-         py_new += rho_new*acc_new[1];
-         pz_new += rho_new*acc_new[2];
+         Con_new[MOMX] += (Etot_in + Pri_new[4])*acc_new[0];
+         Con_new[MOMY] += (Etot_in + Pri_new[4])*acc_new[1];
+         Con_new[MOMZ] += (Etot_in + Pri_new[4])*acc_new[2];
 
-         g_Flu_Array_New[P][MOMX][idx_g0] = px_new;
-         g_Flu_Array_New[P][MOMY][idx_g0] = py_new;
-         g_Flu_Array_New[P][MOMZ][idx_g0] = pz_new;
+         g_Flu_Array_New[P][MOMX][idx_g0] = Con_new[MOMX];
+         g_Flu_Array_New[P][MOMY][idx_g0] = Con_new[MOMY];
+         g_Flu_Array_New[P][MOMZ][idx_g0] = Con_new[MOMZ];
 
-//       for the splitting method, we ensure that the internal energy is unchanged
-         Ek_out   = _rho2*( SQR(px_new) + SQR(py_new) + SQR(pz_new) );
-         Etot_out = Eint_in + Ek_out;
+//       for the splitting method, we ensure that the internal energy is unchanged 
+//       --> why do not directly advance total energy?
+         Ek_out = SRHydro_KineticEngy( Con_new, Pri_new, LorentzFactor, (real)1.3333333 );
+         Etot_out = Eint_in * LorentzFactor + Ek_out;
 
 #        endif // #ifdef UNSPLIT_GRAVITY ... else ...
 
