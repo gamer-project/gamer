@@ -1042,6 +1042,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
          for (int v=0; v<NCOMP_PASSIVE; v++)    FData_Flu[ NCOMP_FLUID + v ][k][j][i] = Passive[v];
       }
 #     endif
+
    } // i,j,k
 #  endif // #if ( MODEL == HYDRO  ||  MODEL == ELBDM )
 
