@@ -120,12 +120,12 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
 
 #  if   ( MODEL == HYDRO )
-   const real Gamma_m1        = GAMMA - (real)1.0;
-   const bool PrepVx          = ( TVarCC & _VELX ) ? true : false;
-   const bool PrepVy          = ( TVarCC & _VELY ) ? true : false;
-   const bool PrepVz          = ( TVarCC & _VELZ ) ? true : false;
-   const bool PrepPres        = ( TVarCC & _PRES ) ? true : false;
-   const bool PrepTemp        = ( TVarCC & _TEMP ) ? true : false;
+   const real Gamma_m1 = GAMMA - (real)1.0;
+   const bool PrepVx   = ( TVarCC & _VELX ) ? true : false;
+   const bool PrepVy   = ( TVarCC & _VELY ) ? true : false;
+   const bool PrepVz   = ( TVarCC & _VELZ ) ? true : false;
+   const bool PrepPres = ( TVarCC & _PRES ) ? true : false;
+   const bool PrepTemp = ( TVarCC & _TEMP ) ? true : false;
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
@@ -135,7 +135,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 #  endif // MODEL
 
 #  ifdef GRAVITY
-   const bool PrepPot         = ( TVarCC & _POTE ) ? true : false;
+   const bool PrepPot  = ( TVarCC & _POTE ) ? true : false;
 #  endif
 
 #  if ( MODEL == HYDRO )

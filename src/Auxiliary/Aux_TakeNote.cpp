@@ -894,6 +894,9 @@ void Aux_TakeNote()
       fprintf( Note, "DUAL_ENERGY_SWITCH              %13.7e\n",  DUAL_ENERGY_SWITCH       );
 #     endif
       fprintf( Note, "WITH_COARSE_FINE_FLUX           %d\n",      amr->WithFlux            );
+#     ifdef MHD
+      fprintf( Note, "WITH_COARSE_FINE_ELECTRIC       %d\n",      amr->WithElectric        );
+#     endif
 #     ifndef SERIAL
       int MPI_Thread_Status;
       MPI_Query_thread( &MPI_Thread_Status );

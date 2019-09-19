@@ -157,17 +157,15 @@ void Init_ByFile()
 //    construct sibling relation
       SiblingSearch( lv );
 
-//    allocate flux arrays on "lv-1"
+//    allocate flux and electric field arrays on "lv-1"
 //    --> must do this after constructing the patch relation on lv-1 and lv
-      if ( lv > 0  &&  amr->WithFlux )
-      Flu_AllocateFluxArray( lv-1 );
-
-//    allocate electric arrays on "lv-1"
-//    --> must do this after constructing the patch relation on lv-1 and lv
-#     ifdef MHD
-      if ( lv > 0  &&  amr->WithElectric )
-      MHD_AllocateElectricArray( lv-1 );
-#     endif
+      if ( lv > 0 )
+      {
+         if ( amr->WithFlux )       Flu_AllocateFluxArray( lv-1 );
+#        ifdef MHD
+         if ( amr->WithElectric )   MHD_AllocateElectricArray( lv-1 );
+#        endif
+      }
    }
 #  endif // #ifdef LOAD_BALANCE ... else ...
 
