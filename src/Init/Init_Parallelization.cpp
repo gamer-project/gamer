@@ -54,6 +54,23 @@ void Init_Parallelization()
    IntGhostSize_Rho = ( (RHO_GHOST_SIZE == 0) ? 0 : (RHO_GHOST_SIZE+1)/2 + NGhost_Rho );
 #  endif
 
+#  ifdef MHD
+   int NGhost_Mag, NGhost_RefMag;
+   Int_Table( OPT__MAG_INT_SCHEME,     NSide_Useless, NGhost_Mag );
+   Int_Table( OPT__REF_MAG_INT_SCHEME, NSide_Useless, NGhost_RefMag );
+
+   int IntGhostSize_Mag;
+// for the coarse-grid B field used in the div(B)-free interpolation in InterpolateGhostZone()
+   IntGhostSize_Mag = ( (FLU_GHOST_SIZE == 0) ? 0 : (FLU_GHOST_SIZE+1)/2 + NGhost_Mag );
+
+// for the coarse-grid B field used in the div(B)-free interpolation in Refine() and LB_Refine_AllocateNewPatch()
+   IntGhostSize_Mag = MAX( IntGhostSize_Mag, NGhost_RefMag );
+
+// for the **fine-grid** B field used in the div(B)-free interpolation in InterpolateGhostZone()
+// --> these additional fine-grid buffer zones are NOT required in pure-hydro simulations
+   IntGhostSize_Mag = MAX( IntGhostSize_Mag, ((FLU_GHOST_SIZE+1)/2)*2 );
+#  endif
+
 // 1.2 set the sizes of parallel buffers
    Flu_ParaBuf = MAX( FLU_GHOST_SIZE, IntGhostSize_Flu );
 #  ifdef GRAVITY
@@ -62,6 +79,9 @@ void Init_Parallelization()
 
    if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
    Flu_ParaBuf = MAX( Flu_ParaBuf,    IntGhostSize_Rho );   // ensure that the fluid ghost zone is large enough for Poisson
+#  endif
+#  ifdef MHD
+   Flu_ParaBuf = MAX( Flu_ParaBuf,    IntGhostSize_Mag );   // ensure that the fluid ghost zone is large enough for MHD
 #  endif
 
 
