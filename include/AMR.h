@@ -33,9 +33,11 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 // Data Member :  patch        : Pointers of all patches
 //                num          : Number of patches (real patch + buffer patch) at each level
 //                scale        : Grid scale at each level (grid size normalized to that at the finest level)
-//                FluSg        : Sandglass of the current fluid     data [0/1]
-//                PotSg        : Sandglass of the current potential data [0/1]
+//                FluSg        : Sandglass of the current fluid          data [0/1]
+//                MagSg        : Sandglass of the current magnetic field data [0/1]
+//                PotSg        : Sandglass of the current potential      data [0/1]
 //                FluSgTime    : Physical time of FluSg
+//                MagSgTime    : Physical time of MagSg
 //                PotSgTime    : Physical time of PotSg
 //                NPatchComma  : (1) SERIAL: [1] = [2] = ... = [27] = num[lv] = total number of patches
 //                               (2) Parallel, but no LOAD_BALANCE:
