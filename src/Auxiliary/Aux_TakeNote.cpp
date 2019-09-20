@@ -329,6 +329,20 @@ void Aux_TakeNote()
       fprintf( Note, "Other Options (in CUFLU.h and CUPOT.h)\n" );
       fprintf( Note, "***********************************************************************************\n" );
 
+#     ifdef BIT_REP_FLUX
+      fprintf( Note, "BIT_REP_FLUX                    ON\n" );
+#     else
+      fprintf( Note, "BIT_REP_FLUX                    OFF\n" );
+#     endif
+
+#     ifdef MHD
+#     ifdef BIT_REP_ELECTRIC
+      fprintf( Note, "BIT_REP_ELECTRIC                ON\n" );
+#     else
+      fprintf( Note, "BIT_REP_ELECTRIC                OFF\n" );
+#     endif
+#     endif
+
 #     if   ( MODEL == HYDRO )
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       fprintf( Note, "CHECK_NEGATIVE_IN_FLUID         ON\n" );

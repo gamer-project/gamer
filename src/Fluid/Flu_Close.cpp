@@ -209,7 +209,7 @@ void StoreFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2
          for (int s=0; s<6; s++)
          {
 //          for bitwise reproducibility, store the fluxes to be corrected in flux_bitrep[]
-#           ifdef BITWISE_REPRODUCIBILITY
+#           ifdef BIT_REP_FLUX
             real (*FluxPtr)[PS1][PS1] = amr->patch[0][lv][PID]->flux_bitrep[s];
 #           else
             real (*FluxPtr)[PS1][PS1] = amr->patch[0][lv][PID]->flux[s];
@@ -1020,7 +1020,7 @@ void StoreElectric( const int lv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2P1*
          {
 //          for bitwise reproducibility, store the E field to be corrected in electric_bitrep[]
             const int EleSize = PS1M1*PS1;
-#           ifdef BITWISE_REPRODUCIBILITY
+#           ifdef BIT_REP_ELECTRIC
             real (*ElePtr)[EleSize] = ( real (*)[EleSize] )amr->patch[0][lv][PID]->electric_bitrep[s];
 #           else
             real (*ElePtr)[EleSize] = ( real (*)[EleSize] )amr->patch[0][lv][PID]->electric[s];
@@ -1078,7 +1078,7 @@ void StoreElectric( const int lv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2P1*
          for (int s=6; s<18; s++)
          {
 //          for bitwise reproducibility, store the E field to be corrected in electric_bitrep[]
-#           ifdef BITWISE_REPRODUCIBILITY
+#           ifdef BIT_REP_ELECTRIC
             ElePtr[s-6] = amr->patch[0][lv][PID]->electric_bitrep[s];
 #           else
             ElePtr[s-6] = amr->patch[0][lv][PID]->electric[s];
