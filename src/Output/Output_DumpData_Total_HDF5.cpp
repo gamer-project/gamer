@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2402)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2403)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -158,20 +158,21 @@ Procedure for outputting new variables:
 //                                      --> imcompatible with version 2266 for the data with user-defined grid fields
 //                                          and particle attributes as their labels may have changed
 //                2301 : 2018/07/24 --> add OPT__UM_IC_FORMAT, PAR_IC_FORMAT, and PAR_IC_MASS
-//                2302 : 2018/07/24 --> Replace GRACKLE_MODE by GRACKLE_ACTIVATE
-//                2303 : 2018/10/04 --> Set "CodeVersion" to VERSION defined in Macro.h
-//                2304 : 2018/12/10 --> Remove EP_Coeff that no longer exists
-//                2305 : 2018/12/15 --> Remove variables related to the WAF scheme
-//                2306 : 2018/12/25 --> Replace DT_GRA_BLOCK_SIZE_Z by DT_GRA_BLOCK_SIZE
-//                2307 : 2018/12/27 --> Replace GRA_BLOCK_SIZE_Z by GRA_BLOCK_SIZE
+//                2302 : 2018/07/24 --> replace GRACKLE_MODE by GRACKLE_ACTIVATE
+//                2303 : 2018/10/04 --> set "CodeVersion" to VERSION defined in Macro.h
+//                2304 : 2018/12/10 --> remove EP_Coeff that no longer exists
+//                2305 : 2018/12/15 --> remove variables related to the WAF scheme
+//                2306 : 2018/12/25 --> replace DT_GRA_BLOCK_SIZE_Z by DT_GRA_BLOCK_SIZE
+//                2307 : 2018/12/27 --> replace GRA_BLOCK_SIZE_Z by GRA_BLOCK_SIZE
 //                2308 : 2019/03/14 --> add OPT__RECORD_NOTE and OPT__RECORD_UNPHY
-//                2309 : 2019/03/27 --> Add OPT__FIXUP_ELECTRIC
-//                2310 : 2019/04/20 --> Add OPT__CK_INTERFACE_B
-//                2311 : 2019/05/22 --> Add OPT__CK_DIVERGENCE_B
+//                2309 : 2019/03/27 --> add OPT__FIXUP_ELECTRIC
+//                2310 : 2019/04/20 --> add OPT__CK_INTERFACE_B
+//                2311 : 2019/05/22 --> add OPT__CK_DIVERGENCE_B
 //                2312 : 2019/05/31 --> add OPT__GRAVITY_EXTRA_MASS
 //                2400 : 2019/06/08 --> output magnetic field for MHD
 //                2401 : 2019/06/30 --> output OPT__FLAG_CURRENT and FlagTable_Current
 //                2402 : 2019/07/17 --> replace USG_GhostSize by USG_GhostSizeF and USG_GhostSizeG
+//                2403 : 2019/09/20 --> add BIT_REP_FLUX and BIT_REP_ELECTRIC defined in CUFLU.h
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1369,7 +1370,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2402;
+   KeyInfo.FormatVersion        = 2403;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -1751,6 +1752,21 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.ParList_GrowthFactor = PARLIST_GROWTH_FACTOR;
    SymConst.ParList_ReduceFactor = PARLIST_REDUCE_FACTOR;
 #  endif
+
+
+#  ifdef BIT_REP_FLUX
+   SymConst.BitRep_Flux          = 1;
+#  else
+   SymConst.BitRep_Flux          = 0;
+#  endif
+
+#  ifdef MHD
+#  ifdef BIT_REP_ELECTRIC
+   SymConst.BitRep_Electric      = 1;
+#  else
+   SymConst.BitRep_Electric      = 0;
+#  endif
+#  endif // #ifdef MHD
 
 
 #  if   ( MODEL == HYDRO )
@@ -2441,6 +2457,11 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Debug_Particle",       HOFFSET(SymConst_t,Debug_Particle      ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "ParList_GrowthFactor", HOFFSET(SymConst_t,ParList_GrowthFactor), H5T_NATIVE_DOUBLE );
    H5Tinsert( H5_TypeID, "ParList_ReduceFactor", HOFFSET(SymConst_t,ParList_ReduceFactor), H5T_NATIVE_DOUBLE );
+#  endif
+
+   H5Tinsert( H5_TypeID, "BitRep_Flux",          HOFFSET(SymConst_t,BitRep_Flux         ), H5T_NATIVE_INT    );
+#  ifdef MHD
+   H5Tinsert( H5_TypeID, "BitRep_Electric",      HOFFSET(SymConst_t,BitRep_Electric     ), H5T_NATIVE_INT    );
 #  endif
 
 #  if   ( MODEL == HYDRO )

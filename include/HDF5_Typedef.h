@@ -224,6 +224,12 @@ struct SymConst_t
 #  endif
 
 
+   int    BitRep_Flux;
+#  ifdef MHD
+   int    BitRep_Electric;
+#  endif
+
+
 #  if   ( MODEL == HYDRO )
    int    Flu_BlockSize_x;
    int    Flu_BlockSize_y;
