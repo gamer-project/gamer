@@ -85,17 +85,11 @@ void LB_Refine( const int FaLv )
    int   *NewCr1D_Away_IdxTable=NULL;
    real  *NewCData_Away=NULL;
 
-#  ifdef MHD
-// CFB = Coarse-Fine interface B field
+// CFB = Coarse-Fine interface B field (for MHD only)
    int  (*CFB_SibRank_Home)[6]=NULL, (*CFB_SibRank_Away)[6]=NULL;
    long (*CFB_SibLBIdx_Home)[6]=NULL, (*CFB_SibLBIdx_Away)[6]=NULL;
    int    CFB_NSibEachRank[MPI_NRank];
    real  *CFB_BField=NULL;
-#  else
-   const int (*CFB_SibRank_Home)[6]=NULL, (*CFB_SibRank_Away)[6]=NULL;
-   const int  *CFB_NSibEachRank=NULL;
-   const real *CFB_BField=NULL;
-#  endif
 
    LB_Refine_GetNewRealPatchList( FaLv, NNew_Home, NewPID_Home, NNew_Away, NewCr1D_Away, NewCr1D_Away_IdxTable, NewCData_Away,
                                   NDel_Home, DelPID_Home, NDel_Away, DelCr1D_Away,
