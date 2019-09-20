@@ -4,6 +4,7 @@
 
 
 #include "Macro.h"
+#include "CUFLU.h"
 
 #ifdef PARTICLE
 #  include <math.h>
@@ -206,14 +207,14 @@ struct patch_t
 
    real (*flux       [6])[PS1][PS1];
    real (*flux_tmp   [6])[PS1][PS1];
-#  ifdef BITWISE_REPRODUCIBILITY
+#  ifdef BIT_REP_FLUX
    real (*flux_bitrep[6])[PS1][PS1];
 #  endif
 
 #  ifdef MHD
    real (*electric       [18]);
    real (*electric_tmp   [18]);
-#  ifdef BITWISE_REPRODUCIBILITY
+#  ifdef BIT_REP_ELECTRIC
    real (*electric_bitrep[18]);
 #  endif
    bool ele_corrected[12];
@@ -400,7 +401,7 @@ struct patch_t
       {
          flux       [s] = NULL;
          flux_tmp   [s] = NULL;
-#        ifdef BITWISE_REPRODUCIBILITY
+#        ifdef BIT_REP_FLUX
          flux_bitrep[s] = NULL;
 #        endif
       }
@@ -410,7 +411,7 @@ struct patch_t
       {
          electric       [s] = NULL;
          electric_tmp   [s] = NULL;
-#        ifdef BITWISE_REPRODUCIBILITY
+#        ifdef BIT_REP_ELECTRIC
          electric_bitrep[s] = NULL;
 #        endif
       }
@@ -521,7 +522,7 @@ struct patch_t
       if ( AllocTmp  &&  flux_tmp[SibID] != NULL )
          Aux_Error( ERROR_INFO, "flux_tmp[%d] already exists !!\n", SibID );
 
-#     ifdef BITWISE_REPRODUCIBILITY
+#     ifdef BIT_REP_FLUX
       if ( flux_bitrep[SibID] != NULL )
          Aux_Error( ERROR_INFO, "flux_bitrep[%d] already exists !!\n", SibID );
 #     endif
@@ -530,7 +531,7 @@ struct patch_t
       flux      [SibID]  = new real [NFLUX_TOTAL][PS1][PS1];
       if ( AllocTmp )
       flux_tmp  [SibID]  = new real [NFLUX_TOTAL][PS1][PS1];
-#     ifdef BITWISE_REPRODUCIBILITY
+#     ifdef BIT_REP_FLUX
       flux_bitrep[SibID] = new real [NFLUX_TOTAL][PS1][PS1];
 #     endif
 
@@ -544,7 +545,7 @@ struct patch_t
          if ( AllocTmp )
          flux_tmp   [SibID][v][m][n] = 0.0;
          */
-#        ifdef BITWISE_REPRODUCIBILITY
+#        ifdef BIT_REP_FLUX
          flux_bitrep[SibID][v][m][n] = 0.0;
 #        endif
       }
@@ -568,7 +569,7 @@ struct patch_t
          delete [] flux_tmp[s];
          flux_tmp[s] = NULL;
 
-#        ifdef BITWISE_REPRODUCIBILITY
+#        ifdef BIT_REP_FLUX
          delete [] flux_bitrep[s];
          flux_bitrep[s] = NULL;
 #        endif
@@ -601,7 +602,7 @@ struct patch_t
       if ( AllocTmp  &&  electric_tmp[SibID] != NULL )
          Aux_Error( ERROR_INFO, "electric_tmp[%d] already exists !!\n", SibID );
 
-#     ifdef BITWISE_REPRODUCIBILITY
+#     ifdef BIT_REP_ELECTRIC
       if ( electric_bitrep[SibID] != NULL )
          Aux_Error( ERROR_INFO, "electric_bitrep[%d] already exists !!\n", SibID );
 #     endif
@@ -612,7 +613,7 @@ struct patch_t
       electric      [SibID]  = new real [Size];
       if ( AllocTmp )
       electric_tmp  [SibID]  = new real [Size];
-#     ifdef BITWISE_REPRODUCIBILITY
+#     ifdef BIT_REP_ELECTRIC
       electric_bitrep[SibID] = new real [Size];
 #     endif
 
@@ -624,7 +625,7 @@ struct patch_t
          if ( AllocTmp )
          electric_tmp   [SibID][t] = 0.0;
          */
-#        ifdef BITWISE_REPRODUCIBILITY
+#        ifdef BIT_REP_ELECTRIC
          electric_bitrep[SibID][t] = 0.0;
 #        endif
       }
@@ -648,7 +649,7 @@ struct patch_t
          delete [] electric_tmp[s];
          electric_tmp[s] = NULL;
 
-#        ifdef BITWISE_REPRODUCIBILITY
+#        ifdef BIT_REP_ELECTRIC
          delete [] electric_bitrep[s];
          electric_bitrep[s] = NULL;
 #        endif

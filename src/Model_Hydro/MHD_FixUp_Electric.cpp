@@ -43,7 +43,7 @@ void MHD_FixUp_Electric( const int lv )
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
 //    1. sum up the coarse-grid and fine-grid electric field for bitwise reproducibility
-#     ifdef BITWISE_REPRODUCIBILITY
+#     ifdef BIT_REP_ELECTRIC
       for (int s=0; s<18; s++)
       {
          real *ElePtr = amr->patch[0][lv][PID]->electric[s];
@@ -231,7 +231,7 @@ void MHD_FixUp_Electric( const int lv )
 
 
 // 4. reset all electric field arrays (in both real and buffer patches) to zero for bitwise reproducibility
-#  ifdef BITWISE_REPRODUCIBILITY
+#  ifdef BIT_REP_ELECTRIC
 #  pragma omp parallel for schedule( runtime )
    for (int PID=0; PID<amr->NPatchComma[lv][27]; PID++)
    {
@@ -249,7 +249,7 @@ void MHD_FixUp_Electric( const int lv )
             for (int t=0; t<size; t++)    ElePtr[t] = (real)0.0;
       }
    }
-#  endif // #ifdef BITWISE_REPRODUCIBILITY
+#  endif // #ifdef BIT_REP_ELECTRIC
 
 } // FUNCTION : MHD_FixUp_Electric
 

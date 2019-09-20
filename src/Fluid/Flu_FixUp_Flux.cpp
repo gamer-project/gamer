@@ -89,7 +89,7 @@ void Flu_FixUp_Flux( const int lv )
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
 //    1. sum up the coarse-grid and fine-grid fluxes for bitwise reproducibility
-#     ifdef BITWISE_REPRODUCIBILITY
+#     ifdef BIT_REP_FLUX
       for (int s=0; s<6; s++)
       {
          real (*FluxPtr)[PS1][PS1] = amr->patch[0][lv][PID]->flux[s];
@@ -303,7 +303,7 @@ void Flu_FixUp_Flux( const int lv )
 
 
 // 3. reset all flux arrays (in both real and buffer patches) to zero for bitwise reproducibility
-#  ifdef BITWISE_REPRODUCIBILITY
+#  ifdef BIT_REP_FLUX
 #  pragma omp parallel for schedule( runtime )
    for (int PID=0; PID<amr->NPatchComma[lv][27]; PID++)
    {
@@ -330,6 +330,6 @@ void Flu_FixUp_Flux( const int lv )
          }
       }
    }
-#  endif // #ifdef BITWISE_REPRODUCIBILITY
+#  endif // #ifdef BIT_REP_FLUX
 
 } // FUNCTION : Flu_FixUp_Flux
