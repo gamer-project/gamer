@@ -477,9 +477,6 @@ void Aux_Check_Parameter()
    if ( fabs(GAMMA-5.0/3.0) > 1.0e-4 )
       Aux_Error( ERROR_INFO, "GAMMA must be equal to 5.0/3.0 in cosmological simuluations !!\n" );
 #  elif ( MODEL == MHD )
-#  elif   ( MODEL == SR_HYDRO )
-   if ( fabs(GAMMA-5.0/3.0) > 1.0e-4 )
-      Aux_Error( ERROR_INFO, "GAMMA must be equal to 5.0/3.0 in cosmological simuluations !!\n" );
 #  warning : WAIT MHD !!!
 #  endif
 

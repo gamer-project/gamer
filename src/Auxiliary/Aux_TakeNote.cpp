@@ -55,7 +55,7 @@ void Aux_TakeNote()
 #     elif ( MODEL == MHD )
       fprintf( Note, "MODEL                           MHD\n" );
 #     elif ( MODEL == SR_HYDRO )
-      fprintf( Note, "MODEL                           SR-HYDRO\n" );
+      fprintf( Note, "MODEL                           SR_HYDRO\n" );
 #     elif ( MODEL == ELBDM )
       fprintf( Note, "MODEL                           ELBDM\n" );
 #     elif ( MODEL == PAR_ONLY )
