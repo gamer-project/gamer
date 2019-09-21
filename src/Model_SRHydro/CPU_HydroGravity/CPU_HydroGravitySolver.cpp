@@ -356,10 +356,10 @@ void CPU_HydroGravitySolver(
          Con_new[ENGY]  = g_Flu_Array_New[P][ENGY][idx_g0];
 
 //       conserved vars --> primitive vars
-         real LorentzFactor = SRHydro_Con2Pri( Con_new, Pri_new, (real)1.3333333, (real)0.0);
+         real LorentzFactor = SRHydro_Con2Pri( Con_new, Pri_new, (real)1.333333333, (real)0.0);
 
 //       backup the original internal energy(measured in fluid frame) so that we can restore it later if necessary
-         Eint_in = SRHydro_InternalEngy ( Con_new, Pri_new, LorentzFactor, (real)1.3333333, false);
+         Eint_in = SRHydro_InternalEngy ( Con_new, Pri_new, LorentzFactor, (real)1.333333333, false);
 
 //       update the momentum density
          Con_new[MOMX] += (Etot_in + Pri_new[4])*acc_new[0];
@@ -372,7 +372,7 @@ void CPU_HydroGravitySolver(
 
 //       for the splitting method, we ensure that the internal energy is unchanged 
 //       --> why do not directly advance total energy?
-         Ek_out = SRHydro_KineticEngy( Con_new, Pri_new, LorentzFactor, (real)1.3333333 );
+         Ek_out = SRHydro_KineticEngy( Con_new, Pri_new, LorentzFactor, (real)1.333333333 );
          Etot_out = Eint_in * LorentzFactor + Ek_out;
 
 #        endif // #ifdef UNSPLIT_GRAVITY ... else ...
