@@ -715,7 +715,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    NFieldOut = NCOMP_TOTAL;
 
 #  if ( MODEL == SR_HYDRO )
-   int TempDumpIdx = -1;
+   int TempDumpIdx = -1; // dump index for temperature
    TempDumpIdx = NFieldOut ++;
 #  endif
 
@@ -876,7 +876,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
             {
 //             5-3-3. collect the target field from all patches at the current target level
 //             a. gravitational potential
-#              ifdef GRAVITY
+#              if ( defined GRAVITY && !defined SR_HYDRO )
                if ( v == PotDumpIdx )
                {
                   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
@@ -910,32 +910,31 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
                       memcpy( FieldData[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
 #                 elif ( MODEL == SR_HYDRO )
+                  switch (v)
                   {
-                    switch (v)
-                     {
-                      case DENS:
-                        for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-                          memcpy( Dens[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
-                        break;
-                      case MOMX:
-                        for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-                          memcpy( MomX[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
-                        break;
-                      case MOMY:
-                        for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-                          memcpy( MomY[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
-                        break;
-                      case MOMZ:
-                        for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-                          memcpy( MomZ[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
-                        break;
-                      case ENGY:
-                        for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-                          memcpy( Engy[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
-                        break;
-                      default:
-                        break;
-                     }
+                     case DENS:
+                       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                         memcpy( Dens[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
+                       break;
+                     case MOMX:
+                       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                         memcpy( MomX[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
+                       break;
+                     case MOMY:
+                       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                         memcpy( MomY[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
+                       break;
+                     case MOMZ:
+                       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                         memcpy( MomZ[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
+                       break;
+                     case ENGY:
+                       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                         memcpy( Engy[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
+                       break;
+//                     default:
+//			     	   Aux_Error(ERROR_INFO, "Out of the range! NFieldOut=%d\n", NFieldOut);
+//                       break;
                   }
 #                 endif
                }
@@ -965,32 +964,39 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 		    {
 		       switch (v)
 		        {
-		         case DENS:
-		            for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
-		                  memcpy( FieldData[PID], Dens[PID], FieldSizeOnePatch );
-		           break;
-		         case MOMX:
-		            for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
-		                  memcpy( FieldData[PID], MomX[PID], FieldSizeOnePatch );
-		           break;
-		         case MOMY:
-		            for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
-		                  memcpy( FieldData[PID], MomY[PID], FieldSizeOnePatch );
-		           break;
-		         case MOMZ:
-		            for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
-		                  memcpy( FieldData[PID], MomZ[PID], FieldSizeOnePatch );
-		           break;
-		         case ENGY:
-		            for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
-		                  memcpy( FieldData[PID], Engy[PID], FieldSizeOnePatch );
-		           break;
-		         case 5:
-		            for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
-		                  memcpy( FieldData[PID], Temp[PID], FieldSizeOnePatch );
-		           break;
-		         default:
-		           break;
+		           case DENS:
+		              for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
+		                    memcpy( FieldData[PID], Dens[PID], FieldSizeOnePatch );
+		             break;
+		           case MOMX:
+		              for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
+		                    memcpy( FieldData[PID], MomX[PID], FieldSizeOnePatch );
+		             break;
+		           case MOMY:
+		              for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
+		                    memcpy( FieldData[PID], MomY[PID], FieldSizeOnePatch );
+		             break;
+		           case MOMZ:
+		              for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
+		                    memcpy( FieldData[PID], MomZ[PID], FieldSizeOnePatch );
+		             break;
+		           case ENGY:
+		              for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
+		                    memcpy( FieldData[PID], Engy[PID], FieldSizeOnePatch );
+		             break;
+		           case 5:
+		              for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
+		                    memcpy( FieldData[PID], Temp[PID], FieldSizeOnePatch );
+		             break;
+#                  ifdef GRAVITY
+				   case 6:
+                      for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                         memcpy( FieldData[PID], amr->patch[ amr->PotSg[lv] ][lv][PID]->pot, FieldSizeOnePatch );
+                     break;
+#                  endif
+		           default:
+					  Aux_Error(ERROR_INFO, "Out of the range! NFieldOut=%d, v=%d\n", NFieldOut, v);
+		             break;
                 }
 #           endif
 
