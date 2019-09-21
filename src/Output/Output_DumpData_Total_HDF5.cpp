@@ -714,6 +714,11 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 // 5-0. determine variable indices
    NFieldOut = NCOMP_TOTAL;
 
+#  if ( MODEL == SR_HYDRO )
+   int TempDumpIdx = -1;
+   TempDumpIdx = NFieldOut ++;
+#  endif
+
 #  ifdef GRAVITY
    int  PotDumpIdx = -1;
    if ( OPT__OUTPUT_POT )  PotDumpIdx = NFieldOut ++;
@@ -724,10 +729,6 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )   ParDensDumpIdx = NFieldOut ++;
 #  endif
 
-#  if ( MODEL == SR_HYDRO )
-   int QDumpIdx = -1;
-   QDumpIdx = NFieldOut ++;
-#  endif
 
 // 5-1. set the output field names
    FieldName = new char [NFieldOut][MAX_STRING];
@@ -745,8 +746,8 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 
 #  if ( MODEL == SR_HYDRO )
-// Temparature is root that needed to transform conserved quantities to primitive quantities
-   sprintf( FieldName[QDumpIdx], "Temp" );
+// temparature is the root that needed to transform conserved quantities to primitive quantities
+   sprintf( FieldName[TempDumpIdx], "Temp" );
 #  endif
 
 
@@ -905,91 +906,92 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 //             c. fluid variables
                {
-#                    if ( MODEL == HYDRO )
-                        for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-                            memcpy( FieldData[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
-#                    elif ( MODEL == SR_HYDRO )
+#                 if ( MODEL == HYDRO )
+                  for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                      memcpy( FieldData[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
+#                 elif ( MODEL == SR_HYDRO )
+                  {
+                    switch (v)
                      {
-                       switch (v)
-                        {
-                         case 0:
-                           for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-                             memcpy( Dens[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
-                           break;
-                         case 1:
-                           for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-                             memcpy( MomX[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
-                           break;
-                         case 2:
-                           for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-                             memcpy( MomY[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
-                           break;
-                         case 3:
-                           for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-                             memcpy( MomZ[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
-                           break;
-                         case 4:
-                           for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-                             memcpy( Engy[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
-                           break;
-                         default:
-                           break;
-                        }
+                      case DENS:
+                        for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                          memcpy( Dens[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
+                        break;
+                      case MOMX:
+                        for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                          memcpy( MomX[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
+                        break;
+                      case MOMY:
+                        for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                          memcpy( MomY[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
+                        break;
+                      case MOMZ:
+                        for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                          memcpy( MomZ[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
+                        break;
+                      case ENGY:
+                        for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                          memcpy( Engy[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
+                        break;
+                      default:
+                        break;
                      }
-#                    endif
+                  }
+#                 endif
                }
 
 #           if ( MODEL == SR_HYDRO )
             } // for (int v=0; v<NFieldOut; v++)
 
-//  convert conserved quantities to temperature
-              for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
-		 for ( int i=0;i<PS1;i++  )
-		 for ( int j=0;j<PS1;j++  )
-		 for ( int k=0;k<PS1;k++  )
-         {
-		    Cons[0] = Dens[PID][i][j][k];
-		    Cons[1] = MomX[PID][i][j][k];
-		    Cons[2] = MomY[PID][i][j][k];
-		    Cons[3] = MomZ[PID][i][j][k];
-		    Cons[4] = Engy[PID][i][j][k];
-#           ifdef CHECK_NEGATIVE_IN_FLUID
-		    if(SRHydro_CheckUnphysical(Cons, NULL, (real) GAMMA, (real) MIN_TEMP, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
-#           endif
-            Temp[PID][i][j][k] =  SRHydro_GetTemperature( Cons[0], Cons[1], Cons[2], Cons[3], Cons[4], GAMMA, MIN_TEMP  );
-         }
+//          convert conserved quantities to temperature
+            for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
+		    for ( int i=0;i<PS1;i++  )
+		    for ( int j=0;j<PS1;j++  )
+		    for ( int k=0;k<PS1;k++  )
+            {
+		       Cons[0] = Dens[PID][i][j][k];
+		       Cons[1] = MomX[PID][i][j][k];
+		       Cons[2] = MomY[PID][i][j][k];
+		       Cons[3] = MomZ[PID][i][j][k];
+		       Cons[4] = Engy[PID][i][j][k];
+#              ifdef CHECK_NEGATIVE_IN_FLUID
+		       if(SRHydro_CheckUnphysical(Cons, NULL, (real) GAMMA, (real) MIN_TEMP, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
+#              endif
+               Temp[PID][i][j][k] =  SRHydro_GetTemperature( Cons[0], Cons[1], Cons[2], Cons[3], Cons[4], GAMMA, MIN_TEMP  );
+            }
 
-//  copy conserved data and temperature into FieldData
-            for (int v=0; v<NFieldOut; v++) {
-		  switch (v)
-		   {
-		    case 0:
-		       for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
-		             memcpy( FieldData[PID], Dens[PID], FieldSizeOnePatch );
-		      break;
-		    case 1:
-		       for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
-		             memcpy( FieldData[PID], MomX[PID], FieldSizeOnePatch );
-		      break;
-		    case 2:
-		       for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
-		              memcpy( FieldData[PID], MomY[PID], FieldSizeOnePatch );
-		      break;
-		    case 3:
-		       for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
-		              memcpy( FieldData[PID], MomZ[PID], FieldSizeOnePatch );
-		      break;
-		    case 4:
-		       for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
-		             memcpy( FieldData[PID], Engy[PID], FieldSizeOnePatch );
-		      break;
-		    case 5:
-		       for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
-		             memcpy( FieldData[PID], Temp[PID], FieldSizeOnePatch );
-		      break;
-		    default:
-		      break;
-                   }
+//          copy conserved data and temperature into FieldData
+            for (int v=0; v<NFieldOut; v++) 
+		    {
+		       switch (v)
+		        {
+		         case DENS:
+		            for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
+		                  memcpy( FieldData[PID], Dens[PID], FieldSizeOnePatch );
+		           break;
+		         case MOMX:
+		            for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
+		                  memcpy( FieldData[PID], MomX[PID], FieldSizeOnePatch );
+		           break;
+		         case MOMY:
+		            for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
+		                  memcpy( FieldData[PID], MomY[PID], FieldSizeOnePatch );
+		           break;
+		         case MOMZ:
+		            for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
+		                  memcpy( FieldData[PID], MomZ[PID], FieldSizeOnePatch );
+		           break;
+		         case ENGY:
+		            for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
+		                  memcpy( FieldData[PID], Engy[PID], FieldSizeOnePatch );
+		           break;
+		         case 5:
+		            for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
+		                  memcpy( FieldData[PID], Temp[PID], FieldSizeOnePatch );
+		           break;
+		         default:
+		           break;
+                }
 #           endif
 
 //             5-3-4. write data to disk
