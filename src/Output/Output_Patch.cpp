@@ -275,7 +275,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
          fprintf( File, "\n" );
       } // i,j,k
    } // if ( magnetic != NULL )
-#  endif // #ifdef MHd
+#  endif // #ifdef MHD
 
 
 
