@@ -493,6 +493,11 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "FLU_GPU_NPGROUP (%d) %%GPU_NSTREAM (%d) != 0 !!\n",
                  FLU_GPU_NPGROUP, GPU_NSTREAM );
 
+#  ifdef OPENMP
+   if ( FLU_GPU_NPGROUP < OMP_NTHREAD )
+      Aux_Error( ERROR_INFO, "FLU_GPU_NPGROUP (%d) < OMP_NTHREAD (%d) !!\n", FLU_GPU_NPGROUP, OMP_NTHREAD );
+#  endif
+
    if ( OPT__FIXUP_FLUX  &&  !amr->WithFlux )
       Aux_Error( ERROR_INFO, "%s is enabled but amr->WithFlux is off !!\n", "OPT__FIXUP_FLUX" );
 
@@ -1000,6 +1005,11 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "POT_GPU_NPGROUP (%d) %% GPU_NSTREAM (%d) != 0 !!\n",
                  POT_GPU_NPGROUP, GPU_NSTREAM );
 
+#  ifdef OPENMP
+   if ( POT_GPU_NPGROUP < OMP_NTHREAD )
+      Aux_Error( ERROR_INFO, "POT_GPU_NPGROUP (%d) < OMP_NTHREAD (%d) !!\n", POT_GPU_NPGROUP, OMP_NTHREAD );
+#  endif
+
 #  if ( NLEVEL > 1 )
    int Trash_RefPot, NGhost_RefPot;
    Int_Table( OPT__REF_POT_INT_SCHEME, Trash_RefPot, NGhost_RefPot );
@@ -1223,6 +1233,11 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "CHE_GPU_NPGROUP (%d) %% GPU_NSTREAM (%d) != 0 !!\n",
                  CHE_GPU_NPGROUP, GPU_NSTREAM );
                  */
+
+#  ifdef OPENMP
+   if ( CHE_GPU_NPGROUP < OMP_NTHREAD )
+      Aux_Error( ERROR_INFO, "CHE_GPU_NPGROUP (%d) < OMP_NTHREAD (%d) !!\n", CHE_GPU_NPGROUP, OMP_NTHREAD );
+#  endif
 
 // warning
 // ------------------------------
