@@ -121,10 +121,6 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 #  elif ( MODEL == SR_HYDRO )
    real Cons[NCOMP_FLUID], Prim[NCOMP_FLUID];
    real Fluid[NCOMP_FLUID];
-   int iteration;
-   real IntMonoCoeff;
-   const int Max = 3;
-   bool state;
 #  endif
 
 // set up parameters for the adopted interpolation scheme
@@ -1249,36 +1245,35 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    if ( PrepVx )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-
-                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
+                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, INT_MONO_COEFF );
       NVar_SoFar ++;
    }
 
    if ( PrepVy )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
+                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, INT_MONO_COEFF );
       NVar_SoFar ++;
    }
 
    if ( PrepVz )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
+                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, INT_MONO_COEFF );
       NVar_SoFar ++;
    }
 
    if ( PrepPres )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
+                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, INT_MONO_COEFF );
       NVar_SoFar ++;
    }
 
    if ( PrepTemp )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
+                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, INT_MONO_COEFF );
       NVar_SoFar ++;
    }
 
@@ -1291,35 +1286,35 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    if ( PrepVx )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, IntMonoCoeff  );
+                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, INT_MONO_COEFF  );
       NVar_SoFar ++;
    }
 
    if ( PrepVy )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, IntMonoCoeff  );
+                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, INT_MONO_COEFF  );
       NVar_SoFar ++;
    }
 
    if ( PrepVz )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, IntMonoCoeff  );
+                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, INT_MONO_COEFF  );
       NVar_SoFar ++;
    }
 
    if ( PrepPres )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, IntMonoCoeff  );
+                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, INT_MONO_COEFF  );
       NVar_SoFar ++;
    }
 
    if ( PrepTemp )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, IntMonoCoeff  );
+                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, INT_MONO_COEFF  );
       NVar_SoFar ++;
    }
 
