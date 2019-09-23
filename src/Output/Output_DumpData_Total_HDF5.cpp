@@ -1915,7 +1915,9 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__Flag_LohnerEngy    = OPT__FLAG_LOHNER_ENGY;
    InputPara.Opt__Flag_LohnerPres    = OPT__FLAG_LOHNER_PRES;
    InputPara.Opt__Flag_LohnerTemp    = OPT__FLAG_LOHNER_TEMP;
+#  if ( MODEL == SR_HYDRO )
    InputPara.Opt__Flag_LohnerLrtz    = OPT__FLAG_LOHNER_LRTZ;
+#  endif
 #  endif
    InputPara.Opt__Flag_LohnerForm    = OPT__FLAG_LOHNER_FORM;
    InputPara.Opt__Flag_User          = OPT__FLAG_USER;
@@ -2135,9 +2137,12 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  if   ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
    const bool Opt__FlagLohner = ( OPT__FLAG_LOHNER_DENS 
                                || OPT__FLAG_LOHNER_ENGY 
-                               || OPT__FLAG_LOHNER_LRTZ
                                || OPT__FLAG_LOHNER_PRES 
-                               || OPT__FLAG_LOHNER_TEMP );
+                               || OPT__FLAG_LOHNER_TEMP
+#                              if ( MODEL == SR_HYDRO )
+                               || OPT__FLAG_LOHNER_LRTZ
+#                              endif
+				                                         );
 #  elif ( MODEL == ELBDM )
    const bool Opt__FlagLohner = OPT__FLAG_LOHNER_DENS;
 #  endif
