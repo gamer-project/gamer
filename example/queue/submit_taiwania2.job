@@ -1,0 +1,21 @@
+#!/bin/bash
+#SBATCH --account=ACD108024
+#SBATCH --job-name=gamer
+#SBATCH -o log-%j
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=hyschive@phys.ntu.edu.tw
+#SBATCH --partition=gp4d
+#SBATCH --time=2:00:00
+#SBATCH --nodes=16 --ntasks-per-node=16
+#SBATCH --gres=gpu:8 --cpus-per-task=2
+#SBATCH --ntasks-per-core=1
+
+module purge
+module load nvidia/cuda/10.1 compiler/intel/2018 openmpi3/3.1.4
+
+export OMP_PROC_BIND="spread"	## make cores in order inside a task
+
+srun --cpu-bind=v,cores -m block:block ./gamer
+
+##srun --hint=nomultithread ./gamer
+##srun ./gamer
