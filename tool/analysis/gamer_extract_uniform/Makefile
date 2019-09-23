@@ -69,11 +69,9 @@ vpath %.cpp ./ GAMER_Functions GAMER_Functions/Interpolation
 
 # rules and targets
 #######################################################################################################
-#HDF5_PATH := /opt/hdf5/1.8.9
+HDF5_PATH := /opt/hdf5/1.8.20
+MPI_PATH  := /opt/mpi/openmpi/1.6.0-intel-qlc
 #MPI_PATH  := /usr/mpi/intel/openmpi-1.4.3-qlc
-#MPI_PATH  := /opt/mpi/openmpi/1.6.0-intel
-MPI_PATH  := /usr/local/mpi/openmpi-1.8.4-intel-15.0
-HDF5_PATH := /projects/ncsa/grav/softwares/miniconda2
 
 
 ifeq "$(findstring SERIAL, $(SIMU_OPTION))" ""
@@ -82,7 +80,7 @@ else
 CXX   := icpc
 endif
 
-CFLAG := -O3 -w1 -xSSE4.2 -fp-model precise
+CFLAG := -O3 -w1 #-xSSE4.2 -fp-model precise
 #CFLAG := -O3 -Wall
 
 ifeq "$(findstring GAMER_DEBUG, $(SIMU_OPTION))" "GAMER_DEBUG"
