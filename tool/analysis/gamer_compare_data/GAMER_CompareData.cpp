@@ -318,6 +318,7 @@ void CompareGridData()
 
 //          face-centered B field
 //          Bx
+            if ( WithMagFC1 && WithMagFC2 )
             for (int k=0; k<PS1;   k++)
             for (int j=0; j<PS1;   j++)
             for (int i=0; i<PS1P1; i++)
@@ -335,6 +336,7 @@ void CompareGridData()
             }
 
 //          By
+            if ( WithMagFC1 && WithMagFC2 )
             for (int k=0; k<PS1;   k++)
             for (int j=0; j<PS1P1; j++)
             for (int i=0; i<PS1;   i++)
@@ -352,6 +354,7 @@ void CompareGridData()
             }
 
 //          Bz
+            if ( WithMagFC1 && WithMagFC2 )
             for (int k=0; k<PS1P1; k++)
             for (int j=0; j<PS1;   j++)
             for (int i=0; i<PS1;   i++)
