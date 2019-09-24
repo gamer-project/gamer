@@ -28,6 +28,14 @@ __global__
 void CUFLU_dtSolver_SRHydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
                                 const real dh, const real Safety, const real Gamma, const real MinPres );
 
+#ifdef GRAVITY
+__global__
+void CUPOT_dtSolver_HydroGravity( real g_dt_Array[], const real g_Pot_Array[][ CUBE(GRA_NXT) ],
+                                  const double g_Corner_Array[][3],
+                                  const real dh, const real Safety, const bool P5_Gradient,
+                                  const OptGravityType_t GravityType,
+                                  const double ExtAcc_Time );
+#endif
 #elif ( MODEL == ELBDM )
 
 #else
@@ -261,6 +269,15 @@ void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real 
                                         dh, Safety, Gamma, MinPres );
          break;
 
+#        ifdef GRAVITY
+         case DT_GRA_SOLVER:
+            CUPOT_dtSolver_HydroGravity <<< NPatch_per_Stream[s], BlockDim_dtSolver, 0, Stream[s] >>>
+                                        ( d_dt_Array_T     + UsedPatch[s],
+                                          d_Pot_Array_T    + UsedPatch[s],
+                                          d_Corner_Array_G + UsedPatch[s],
+                                          dh, Safety, P5_Gradient, GravityType, TargetTime );
+         break;
+#        endif
 
          default :
             Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TSolver", TSolver );
