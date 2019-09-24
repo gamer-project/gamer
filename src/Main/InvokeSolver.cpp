@@ -281,7 +281,7 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
 
 #     ifdef GRAVITY
       case POISSON_SOLVER :
-         TIMING_SYNC(   Poi_Prepare_Rho( lv, TimeNew, h_Rho_Array_P   [ArrayID], NPG, PID0_List ),
+         TIMING_SYNC(   Poi_Prepare_Source( lv, TimeNew, h_Rho_Array_P   [ArrayID], NPG, PID0_List ),
                         Timer_Poi_PreRho[lv]   );
 
          TIMING_SYNC(   Poi_Prepare_Pot( lv, TimeNew, h_Pot_Array_P_In[ArrayID], NPG, PID0_List ),
@@ -310,7 +310,7 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
       break;
 
       case POISSON_AND_GRAVITY_SOLVER :
-         TIMING_SYNC(   Poi_Prepare_Rho( lv, TimeNew, h_Rho_Array_P   [ArrayID], NPG, PID0_List ),
+         TIMING_SYNC(   Poi_Prepare_Source( lv, TimeNew, h_Rho_Array_P   [ArrayID], NPG, PID0_List ),
                         Timer_Poi_PreRho[lv]   );
 
          TIMING_SYNC(   Poi_Prepare_Pot( lv, TimeNew, h_Pot_Array_P_In[ArrayID], NPG, PID0_List ),

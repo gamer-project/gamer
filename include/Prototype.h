@@ -375,8 +375,8 @@ void Poi_BoundaryCondition_Extrapolation( real *Array, const int BC_Face, const 
 void Poi_GetAverageDensity();
 void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In[][POT_NXT][POT_NXT][POT_NXT],
                       const int NPG, const int *PID0_List );
-void Poi_Prepare_Rho( const int lv, const double PrepTime, real h_Rho_Array_P[][RHO_NXT][RHO_NXT][RHO_NXT],
-                      const int NPG, const int *PID0_List );
+void Poi_Prepare_Source( const int lv, const double PrepTime, real h_Rho_Array_P[][RHO_NXT][RHO_NXT][RHO_NXT],
+                         const int NPG, const int *PID0_List );
 #ifdef STORE_POT_GHOST
 void Poi_StorePotWithGhostZone( const int lv, const int PotSg, const bool AllPatch );
 #endif

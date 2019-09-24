@@ -102,7 +102,7 @@ bool ParDensArray_Initialized = false;
 //                                           --> We can have real^2+imag^2 != density in the prepared data!!
 //                                           --> But currently it's not an issue since we never prepare density and wave functions
 //                                           at the same time
-//                                       --> Currently MinDens is applied in Flu_Prepare(), Flag_Real(), and Poi_Prepare_Rho()
+//                                       --> Currently MinDens is applied in Flu_Prepare(), Flag_Real(), and Poi_Prepare_Source()
 //                                           --> The Guideline is to apply MinDens check only when ghost zones are required
 //                                               (because density field is already stored in each patch and we don't want
 //                                               Prepare_PatchData() to MODIFY the existing data)
@@ -230,6 +230,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #  endif
 #  endif // #ifdef PARTICLE
 
+
+#  if ( MODEL != SR_HYDRO && !defined GRAVITY)
+   if ( TVar & _SR_GRAVITY_SOURCE )
+	  Aux_Error( ERROR_INFO, " _SR_GRAVITY_SOURCE only works with SR_HYDRO and GRAVITY !!\n");
+#  endif
+
 // target patches must be real patches
    for (int TID=0; TID<NPG; TID++)
       if ( PID0_List[TID] < 0  ||  PID0_List[TID] >= amr->NPatchComma[lv][1] )
@@ -257,12 +263,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #  warning : WAIT MHD !!
 
 #  elif ( MODEL == SR_HYDRO )
-   const bool PrepVx           = ( TVar & _VELX    ) ? true : false; // 4-velocity in x-direction
-   const bool PrepVy           = ( TVar & _VELY    ) ? true : false; // 4-velocity in y-direction
-   const bool PrepVz           = ( TVar & _VELZ    ) ? true : false; // 4-velocity in z-direction
-   const bool PrepPres         = ( TVar & _PRES    ) ? true : false; // pressure
-   const bool PrepTemp         = ( TVar & _TEMP    ) ? true : false; // temperature
-   const bool PrepLrtz         = ( TVar & _LRTZ    ) ? true : false; // Lorentz factor
+   const bool PrepVx           = ( TVar & _VELX              ) ? true : false; // 4-velocity in x-direction
+   const bool PrepVy           = ( TVar & _VELY              ) ? true : false; // 4-velocity in y-direction
+   const bool PrepVz           = ( TVar & _VELZ              ) ? true : false; // 4-velocity in z-direction
+   const bool PrepPres         = ( TVar & _PRES              ) ? true : false; // pressure
+   const bool PrepTemp         = ( TVar & _TEMP              ) ? true : false; // temperature
+   const bool PrepLrtz         = ( TVar & _LRTZ              ) ? true : false; // Lorentz factor
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
@@ -273,6 +279,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 #  ifdef GRAVITY
    const bool PrepPot = ( TVar & _POTE ) ? true : false;
+#  if ( MODEL == SR_HYDRO )
+   const bool PrepGraSource    = ( TVar & _SR_GRAVITY_SOURCE ) ? true : false; // source term in Poisson equation
+#  endif
 #  endif
 
 #  ifdef PARTICLE
@@ -309,14 +318,14 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    NVar_Der = 0;
 
 #  if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
-   const int NVar_Der_Max = 5;
+   const int NVar_Der_Max = 6;
    int TDerVarList[NVar_Der_Max];
 
-   if ( PrepVx   )   TDerVarList[ NVar_Der ++ ] = _VELX;
-   if ( PrepVy   )   TDerVarList[ NVar_Der ++ ] = _VELY;
-   if ( PrepVz   )   TDerVarList[ NVar_Der ++ ] = _VELZ;
-   if ( PrepPres )   TDerVarList[ NVar_Der ++ ] = _PRES;
-   if ( PrepTemp )   TDerVarList[ NVar_Der ++ ] = _TEMP;
+   if ( PrepVx        )   TDerVarList[ NVar_Der ++ ] = _VELX;
+   if ( PrepVy        )   TDerVarList[ NVar_Der ++ ] = _VELY;
+   if ( PrepVz        )   TDerVarList[ NVar_Der ++ ] = _VELZ;
+   if ( PrepPres      )   TDerVarList[ NVar_Der ++ ] = _PRES;
+   if ( PrepTemp      )   TDerVarList[ NVar_Der ++ ] = _TEMP;
 
 #  elif ( MODEL == MHD   )
 #  warning : WAIT MHD !!
@@ -337,6 +346,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 #  ifdef GRAVITY
    if ( PrepPot )          NVar_Tot ++;
+#  if ( MODEL == SR_HYDRO )
+   if ( PrepGraSource )    NVar_Tot++;
+#  endif
 #  endif
 
 // do not increase NVar_Tot for PrepTotalDens since _DENS is already turned on automatically for that
@@ -1100,6 +1112,41 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                Array_Ptr += PGSize3D;
             }
+
+#           ifdef GRAVITY
+            if ( PrepGraSource )
+            {
+               for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
+               for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
+                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
+               for (int i=0; i<PATCH_SIZE; i++)    {
+
+                  for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
+
+                  real Pres = SRHydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA, MIN_TEMP  );
+
+				  real Msqr = VectorDotProduct( Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ] );
+
+                  real Source = Fluid[ENGY] + (real)3.0 * Pres + Msqr / ( Fluid[ENGY] + Pres );
+
+				  Array_Ptr[Idx1] = Source;
+
+
+                  if ( FluIntTime ) // temporal interpolation
+                  {
+                     for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k][j][i];
+
+
+                     Array_Ptr[Idx1] = FluWeighting * Array_Ptr[Idx1] + FluWeighting_IntT * Source;
+                  }
+
+                  Idx1 ++;
+               }}}
+
+               Array_Ptr += PGSize3D;
+            }
+#           endif
+
 
 #           elif ( MODEL == ELBDM )
 //          no derived variables yet
