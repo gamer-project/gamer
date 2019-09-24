@@ -4,6 +4,11 @@
 #include "hdf5.h"
 #endif
 
+static int nAx, nAy, nAz;
+static double Axmin, Aymin, Azmin;
+static double Adx, Ady, Adz;
+static double *Axcoord, *Aycoord, *Azcoord;
+
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
 static void Init_MagByFile_Default( real fluid_out[], const real fluid_in[], const int nvar_in,
                                     const double x, const double y, const double z, const double Time,
@@ -44,6 +49,8 @@ void Init_BField_ByFile( const char B_Filename[], const int B_lv )
 
    const double dh       = amr->dh[B_lv];
 
+   double *Axf, *Ayf, *Azf;
+
    herr_t status;
    hid_t dataset, dataspace;
    hsize_t dims[3], maxdims[3];
@@ -59,9 +66,13 @@ void Init_BField_ByFile( const char B_Filename[], const int B_lv )
    H5Sclose(dataspace);
    H5Dclose(dataset);
 
-   double *Axcoord = new double [ dims[0] ];
-   double *Aycoord = new double [ dims[1] ];
-   double *Azcoord = new double [ dims[2] ];
+   nAx = dims[0];
+   nAy = dims[1];
+   nAz = dims[2];
+
+   Axcoord = new double [ nAx ];
+   Aycoord = new double [ nAy ];
+   Azcoord = new double [ nAz ];
 
    double *Ax = new double [ CUBE(PS1+1) ];
    double *Ay = new double [ CUBE(PS1+1) ];
@@ -70,9 +81,36 @@ void Init_BField_ByFile( const char B_Filename[], const int B_lv )
    double sample_res = 2**(sim_lrefineMax-B_lv);
    double sample_fact = 1.0/((double)sample_res);
 
+   Adx = Axcoord[1]-Axcoord[0];
+   Ady = Aycoord[1]-Aycoord[0];
+   Adz = Azcoord[1]-Azcoord[0];
+
+   Axmin = Axcoord[0]-0.5*Adx;
+   Aymin = Aycoord[0]-0.5*Ady;
+   Azmin = Azcoord[0]-0.5*Adz;
+
 #  pragma omp parallel for schedule( runtime ) num_threads( OMP_NThread )
    for (int PID=0; PID<amr->NPatchComma[VP_lv][1]; PID++)
    {
+
+      int ibegin = max(int((amr->patch[0][lv][PID]->EdgeL[0]-Axmin)/Adx), 0)
+      int jbegin = max(int((amr->patch[0][lv][PID]->EdgeL[1]-Aymin)/Ady), 0)
+      int kbegin = max(int((amr->patch[0][lv][PID]->EdgeL[2]-Azmin)/Adz), 0)
+      
+      int iend = min((int)((amr->patch[0][lv][PID]->EdgeR[0]-Axmin)/Adx)+2, nAx-1);
+      int jend = min((int)((amr->patch[0][lv][PID]->EdgeR[1]-Aymin)/Ady)+2, nAy-1);
+      int kend = min((int)((amr->patch[0][lv][PID]->EdgeR[2]-Azmin)/Adz)+2, nAz-1);
+      
+      int nlocx = iend-ibegin+1;
+      int nlocy = jend-jbegin+1;
+      int nlocz = kend-kbegin+1;
+
+      int fdims[3] = { nlocx, nlocy, nlocz };
+      int nloc = nlocx*nlocy*nlocz;
+      
+      Axf = new double [nloc];
+      Ayf = new double [nloc];
+      Azf = new double [nloc];
 
       VecPot_ReadField( ibegin, jbegin, kbegin, iend, jend, kend, 
                         Axf, Ayf, Azf );
@@ -85,17 +123,17 @@ void Init_BField_ByFile( const char B_Filename[], const int B_lv )
 
          for (int ii=0; ii<sample_res; ii++) {  
             const double x = x0 + (ii+0.5)*dh*sample_fact;  
-            Ax[idx] += VecPot_Interp( Axf, x, y0, z0 );
+            Ax[idx] += VecPot_Interp( Axf, x, y0, z0, fdims );
          }
 
          for (int jj=0; jj<sample_res; jj++) {  
             const double y = y0 + (jj+0.5)*dh*sample_fact;  
-            Ay[idx] += VecPot_Interp( Ayf, x0, y, z0 );
+            Ay[idx] += VecPot_Interp( Ayf, x0, y, z0, fdims );
          }
 
          for (int kk=0; kk<sample_res; kk++) {
             const double z = z0 + (kk+0.5)*dh*sample_fact;  
-            Az[idx] += VecPot_Interp( Azf, x0, y0, z );
+            Az[idx] += VecPot_Interp( Azf, x0, y0, z, fdims );
          }
 
          Ax[idx] *= sample_fact;
@@ -140,6 +178,10 @@ void Init_BField_ByFile( const char B_Filename[], const int B_lv )
          amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[2][idxB] = Bz;
       }}}
    
+      delete [] Axf;
+      delete [] Ayf;
+      delete [] Azf;
+
    } // for (int PID=0; PID<amr->NPatchComma[VP_lv][1]; PID++)
 
 // Close the magnetic field file
@@ -159,18 +201,13 @@ void Init_BField_ByFile( const char B_Filename[], const int B_lv )
 
 } // FUNCTION : Init_BField_ByFile
 
-double VecPot_Interp( const double field[], const double xx, const double yy, const double zz )
+double VecPot_Interp( const double field[], const double xx, const double yy, const double zz 
+                      const int fdims[])
 {
 
-   if (xx < Axcoords[0]-0.5*Adx || xx > Axcoords[NAx-1]+0.5*Adx ||
-         yy < Aycoords[0]-0.5*Ady || yy > Aycoords[NAy-1]+0.5*Ady ||
-         zz < Azcoords[0]-0.5*Adz || zz > Azcoords[NAz-1]+0.5*Adz) {
-      return 0.0;
-   }
-
-   const int ii = (int)((xx-(Axcoord[0]-0.5*Adx))/Adx);
-   const int jj = (int)((yy-(Aycoord[0]-0.5*Ady))/Ady);
-   const int kk = (int)((zz-(Azcoord[0]-0.5*Adz))/Adz);
+   const int ii = (int)((xx-Axmin)/Adx);
+   const int jj = (int)((yy-Aymin)/Ady);
+   const int kk = (int)((zz-Azmin)/Adz);
 
    const int ib = ii - ibegin;
    const int jb = jj - jbegin;
@@ -178,12 +215,18 @@ double VecPot_Interp( const double field[], const double xx, const double yy, co
 
    double pot = 0.0;
 
-   for (int i = -1; i <= 1; i++) { double dx = (xx-Axcoord[ii+i])/Adx;
-   for (int j = -1; j <= 1; j++) { double dy = (yy-Aycoord[jj+j])/Ady;
-   for (int k = -1; k <= 1; k++) { double dz = (zz-Azcoord[kk+k])/Adz;
-         int idx = IDX321( ii+i, jj+1, kk+k, NAx, NAy ); 
+   if ( ib > 0 && ib < fdims[0]-1 && 
+        jb > 0 && jb < fdims[1]-1 && 
+        kb > 0 && kb < fdims[2]-1 ) {
+
+      for (int i = -1; i <= 1; i++) { double dx = (xx-Axcoord[ii+i])/Adx;
+      for (int j = -1; j <= 1; j++) { double dy = (yy-Aycoord[jj+j])/Ady;
+      for (int k = -1; k <= 1; k++) { double dz = (zz-Azcoord[kk+k])/Adz;
+         int idx = IDX321( ib+i, jb+j, kb+k, fdims[0], fdims[1] ); 
          pot += field[idx]*TSC_Weight(dx)*TSC_Weight(dy)*TSC_Weight(dz);
-   }}}
+      }}}
+
+   }
 
    return pot;
 
@@ -214,7 +257,7 @@ double TSC_Weight( const double x )
 
    return weight;
 
-} // FUNCTION : VecPot_TSCWeight
+} // FUNCTION : TSC_Weight
 
 void VecPot_ReadField( const int ibegin, const int jbegin, const int kbegin,
                        const int iend, const int jend, const int kend, 
@@ -238,9 +281,9 @@ void VecPot_ReadField( const int ibegin, const int jbegin, const int kbegin,
    stride[1] = 1;
    stride[2] = 1;
 
-   count[0] = iend-ibegin;
-   count[1] = jend-jbegin;
-   count[2] = kend-kbegin;
+   count[0] = iend-ibegin+1;
+   count[1] = jend-jbegin+1;
+   count[2] = kend-kbegin+1;
 
    dims[0] = count[0];
    dims[1] = count[1];
