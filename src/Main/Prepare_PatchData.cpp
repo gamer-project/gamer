@@ -18,7 +18,9 @@ bool Particle_Collected       = false;
 bool ParDensArray_Initialized = false;
 #endif
 
-
+#if ( MODEL == SR_HYDRO )
+real VectorDotProduct( real V1, real V2, real V3 );
+#endif
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Prepare_PatchData
