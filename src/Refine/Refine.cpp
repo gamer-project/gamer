@@ -476,10 +476,14 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                Flu_FData[IMAG][k][j][i] = Amp*SIN( Phase );
             }
          }
-#        else // #if ( MODEL == ELBDM )
+#        elif ( MODEL == HYDRO )
          AdaptiveInterpolate( &Flu_CData[0][0][0][0], CSize_Flu3, CStart_Flu, CRange, &Flu_FData[0][0][0][0],
                               FSize3, FStart, NCOMP_TOTAL, _TOTAL, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No,
-                              Monotonicity );
+                              Monotonicity, 2 );
+#        elif ( MODEL == SR_HYDRO )
+         AdaptiveInterpolate( &Flu_CData[0][0][0][0], CSize_Flu3, CStart_Flu, CRange, &Flu_FData[0][0][0][0],
+                              FSize3, FStart, NCOMP_TOTAL, _TOTAL, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No,
+                              Monotonicity, 1 );
 
 #        endif // #if ( MODEL == ELBDM ) ... else
 
@@ -490,7 +494,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
          if ( SelfGravity )
          AdaptiveInterpolate( &Pot_CData[0][0][0], CSize_Pot_Temp, CStart_Pot, CRange, &Pot_FData[0][0][0],
                               FSize3, FStart, 1, _POTE, OPT__REF_POT_INT_SCHEME, PhaseUnwrapping_No,
-                              &EnsureMonotonicity_No );
+                              &EnsureMonotonicity_No, NULL_INT );
 #        endif
 
 

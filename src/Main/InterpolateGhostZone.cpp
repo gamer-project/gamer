@@ -1232,7 +1232,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 #  else
 // c3. interpolation on original variables for models != ELBDM
    AdaptiveInterpolate( CData, CSize, CStart, CRange, IntData, FSize, FStart, NVar_Flu, TVar, 
-                        IntScheme, PhaseUnwrapping_No, Monotonicity );
+                        IntScheme, PhaseUnwrapping_No, Monotonicity, 1 );
 #  endif
 
 
@@ -1331,7 +1331,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    if ( PrepPot )
    {
       AdaptiveInterpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-                           TVar, IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_No );
+                           TVar, IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_No, NULL_INT );
       NVar_SoFar ++;
    }
 #  endif
