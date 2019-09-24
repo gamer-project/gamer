@@ -9,14 +9,11 @@ static double Axmin, Aymin, Azmin;
 static double Adx, Ady, Adz;
 static double *Axcoord, *Aycoord, *Azcoord;
 
-// declare as static so that other functions cannot invoke it directly and must use the function pointer
-static void Init_MagByFile_Default( real fluid_out[], const real fluid_in[], const int nvar_in,
-                                    const double x, const double y, const double z, const double Time,
-                                    const int lv, double AuxArray[] );
 
-static void Init_MagByFile_AssignData( const char UM_Filename[], const int UM_lv, const int UM_NVar, const int UM_LoadNRank,
-                                       const UM_IC_Format_t UM_Format );
-
+double TSC_Weight( const double x );
+void VecPot_ReadField( const int ibegin, const int jbegin, const int kbegin,
+                       const int iend, const int jend, const int kend, 
+                       double Ax[], double Ay[], double Az[] );
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_VecPot_BField
@@ -74,6 +71,21 @@ void Init_BField_ByFile( const char B_Filename[], const int B_lv )
    Aycoord = new double [ nAy ];
    Azcoord = new double [ nAz ];
 
+   dataset = H5Dopen(mag_file_id, "/x");
+   status  = H5Dread(dataset, H5T_NATIVE_DOUBLE, H5S_ALL,
+            H5S_ALL, H5P_DEFAULT, Axcoord);
+   H5Dclose(dataset);
+
+   dataset = H5Dopen(mag_file_id, "/y");
+   status  = H5Dread(dataset, H5T_NATIVE_DOUBLE, H5S_ALL,
+                     H5S_ALL, H5P_DEFAULT, ycoord);
+   H5Dclose(dataset);
+
+   dataset = H5Dopen(mag_file_id, "/z");
+   status  = H5Dread(dataset, H5T_NATIVE_DOUBLE, H5S_ALL,
+                     H5S_ALL, H5P_DEFAULT, zcoord);
+   H5Dclose(dataset);
+   
    double *Ax = new double [ CUBE(PS1+1) ];
    double *Ay = new double [ CUBE(PS1+1) ];
    double *Az = new double [ CUBE(PS1+1) ];
@@ -106,6 +118,7 @@ void Init_BField_ByFile( const char B_Filename[], const int B_lv )
       int nlocz = kend-kbegin+1;
 
       int fdims[3] = { nlocx, nlocy, nlocz };
+      int fbegin[3] = { ibegin, jbegin, kbegin };
       int nloc = nlocx*nlocy*nlocz;
       
       Axf = new double [nloc];
@@ -123,17 +136,17 @@ void Init_BField_ByFile( const char B_Filename[], const int B_lv )
 
          for (int ii=0; ii<sample_res; ii++) {  
             const double x = x0 + (ii+0.5)*dh*sample_fact;  
-            Ax[idx] += VecPot_Interp( Axf, x, y0, z0, fdims );
+            Ax[idx] += VecPot_Interp( Axf, x, y0, z0, fdims, fbegin );
          }
 
          for (int jj=0; jj<sample_res; jj++) {  
             const double y = y0 + (jj+0.5)*dh*sample_fact;  
-            Ay[idx] += VecPot_Interp( Ayf, x0, y, z0, fdims );
+            Ay[idx] += VecPot_Interp( Ayf, x0, y, z0, fdims, fbegin );
          }
 
          for (int kk=0; kk<sample_res; kk++) {
             const double z = z0 + (kk+0.5)*dh*sample_fact;  
-            Az[idx] += VecPot_Interp( Azf, x0, y0, z, fdims );
+            Az[idx] += VecPot_Interp( Azf, x0, y0, z, fdims, fbegin );
          }
 
          Ax[idx] *= sample_fact;
@@ -202,16 +215,16 @@ void Init_BField_ByFile( const char B_Filename[], const int B_lv )
 } // FUNCTION : Init_BField_ByFile
 
 double VecPot_Interp( const double field[], const double xx, const double yy, const double zz 
-                      const int fdims[])
+                      const int fdims[], const int fbegin[] )
 {
 
    const int ii = (int)((xx-Axmin)/Adx);
    const int jj = (int)((yy-Aymin)/Ady);
    const int kk = (int)((zz-Azmin)/Adz);
 
-   const int ib = ii - ibegin;
-   const int jb = jj - jbegin;
-   const int kb = kk - kbegin;
+   const int ib = ii - fbegin[0];
+   const int jb = jj - fbegin[1];
+   const int kb = kk - fbegin[2];
 
    double pot = 0.0;
 
