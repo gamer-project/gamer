@@ -11,6 +11,8 @@ static double *Axcoord, *Aycoord, *Azcoord;
 
 
 double TSC_Weight( const double x );
+double VecPot_Interp( const double field[], const double xx, const double yy, const double zz 
+                      const int fdims[], const int fbegin[] );
 void VecPot_ReadField( const int ibegin, const int jbegin, const int kbegin,
                        const int iend, const int jend, const int kend, 
                        double Ax[], double Ay[], double Az[] );
@@ -44,6 +46,11 @@ void Init_BField_ByFile( const char B_Filename[], const int B_lv )
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading the magnetic field from the input file ...\n" );
 
+// set the number of OpenMP threads
+#  ifdef OPENMP
+   const int OMP_NThread = ( OPT__INIT_GRID_WITH_OMP ) ? OMP_NTHREAD : 1;
+#  endif
+
    const double dh       = amr->dh[B_lv];
 
    double *Axf, *Ayf, *Azf;
@@ -52,6 +59,8 @@ void Init_BField_ByFile( const char B_Filename[], const int B_lv )
    hid_t dataset, dataspace;
    hsize_t dims[3], maxdims[3];
 
+// Open the magnetic field file and determine the dimensionality of the vector
+// potential grid
    hid_t mag_file_id = H5Fopen(B_Filename, H5F_ACC_RDONLY, H5P_DEFAULT);
 
    dataset = H5Dopen(file_id, "magnetic_vector_potential_z");
@@ -67,6 +76,7 @@ void Init_BField_ByFile( const char B_Filename[], const int B_lv )
    nAy = dims[1];
    nAz = dims[2];
 
+// Read the coordinate information from the vector potential grid
    Axcoord = new double [ nAx ];
    Aycoord = new double [ nAy ];
    Azcoord = new double [ nAz ];
@@ -90,8 +100,10 @@ void Init_BField_ByFile( const char B_Filename[], const int B_lv )
    double *Ay = new double [ CUBE(PS1+1) ];
    double *Az = new double [ CUBE(PS1+1) ];
 
-   double sample_res = 2**(sim_lrefineMax-B_lv);
+   double sample_res = POW(2, sim_lrefineMax-B_lv);
    double sample_fact = 1.0/((double)sample_res);
+
+// Cell spacing and left edge of vector potential grid
 
    Adx = Axcoord[1]-Axcoord[0];
    Ady = Aycoord[1]-Aycoord[0];
@@ -105,6 +117,7 @@ void Init_BField_ByFile( const char B_Filename[], const int B_lv )
    for (int PID=0; PID<amr->NPatchComma[VP_lv][1]; PID++)
    {
 
+//    Compute the beginning and ending indices on the vector potential grid
       int ibegin = max(int((amr->patch[0][lv][PID]->EdgeL[0]-Axmin)/Adx), 0)
       int jbegin = max(int((amr->patch[0][lv][PID]->EdgeL[1]-Aymin)/Ady), 0)
       int kbegin = max(int((amr->patch[0][lv][PID]->EdgeL[2]-Azmin)/Adz), 0)
@@ -121,6 +134,8 @@ void Init_BField_ByFile( const char B_Filename[], const int B_lv )
       int fbegin[3] = { ibegin, jbegin, kbegin };
       int nloc = nlocx*nlocy*nlocz;
       
+//    Allocate for the data on the vector potential grid local to this patch and
+//    read it from the file
       Axf = new double [nloc];
       Ayf = new double [nloc];
       Azf = new double [nloc];
@@ -128,11 +143,17 @@ void Init_BField_ByFile( const char B_Filename[], const int B_lv )
       VecPot_ReadField( ibegin, jbegin, kbegin, iend, jend, kend, 
                         Axf, Ayf, Azf );
 
+//    Loop over the indices in this patch and interpolate the vector potential 
+//    to the current refinement level's resolution
       for (int k=0; k<PS1+1; k++)    {  const double z0 = amr->patch[0][lv][PID]->EdgeL[2] + k*dh;
       for (int j=0; j<PS1+1; j++)    {  const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + j*dh;
       for (int i=0; i<PS1+1; i++)    {  const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + i*dh;
 
          int idx = IDX321( i, j, k, PS1+1, PS1+1 );
+
+         Ax[idx] = 0.0;
+         Ay[idx] = 0.0;
+         Az[idx] = 0.0;
 
          for (int ii=0; ii<sample_res; ii++) {  
             const double x = x0 + (ii+0.5)*dh*sample_fact;  
@@ -208,7 +229,7 @@ void Init_BField_ByFile( const char B_Filename[], const int B_lv )
 
 #  else
 
-   Aux_Error( ERROR_INFO, "SUPPORT_HDF5 must be set !!\n" );
+   Aux_Error( ERROR_INFO, "SUPPORT_HDF5 must be set to load a vector potential from a file !!\n" );
    
 #  endif
 
