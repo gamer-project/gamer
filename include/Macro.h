@@ -299,6 +299,9 @@
 // --> sum of geometric sequence
 # ifdef GRAVITY
 #  define _POTE               ( 1 << (NCOMP_TOTAL+NDERIVE) )
+#  if ( MODEL == SR_HYDRO )
+#  define _SR_GRAVITY_SOURCE  ( 1 << (NCOMP_TOTAL+NDERIVE+3) )
+#  endif
 # endif
 #  define _FLUID              (  ( 1 << NCOMP_FLUID ) - 1           )
 #  define _PASSIVE            (  ( 1 << NCOMP_TOTAL ) - 1 - _FLUID  ) 
