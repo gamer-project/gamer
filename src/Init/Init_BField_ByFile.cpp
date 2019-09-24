@@ -18,24 +18,18 @@ void VecPot_ReadField( const int ibegin, const int jbegin, const int kbegin,
                        double Ax[], double Ay[], double Az[] );
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_VecPot_BField
-// Description :  Use the input uniform-mesh array stored in the file "UM_Filename" to assign data to all
-//                real patches on level "UM_lv"
+// Function    :  Hydro_Init_BField_ByFile
+// Description :  Use the input uniform-mesh array stored in the file "B_Filename"
+//                to assign a magnetic vector potential to all real patches on level
+//                "B_lv" and take the curl of this potential to compute the magnetic field
 //
-// Note        :  1. The function pointer Init_ByFile_User_Ptr() points to Init_ByFile_Default() by default
-//                   but may be overwritten by various test problem initializers
+// Note        :  
 //
-// Parameter   :  UM_Filename  : Target file name
-//                UM_lv        : Target AMR level
-//                UM_NVar      : Number of variables
-//                UM_LoadNRank : Number of parallel I/O
-//                UM_Format    : Data format of the file "UM_Filename"
-//                               --> UM_IC_FORMAT_VZYX: [field][z][y][x] in a row-major order
-//                                   UM_IC_FORMAT_ZYXV: [z][y][x][field] in a row-major order
+// Parameter   :  B_lv         : Target AMR level
 //
 // Return      :  amr->patch->fluid
 //-------------------------------------------------------------------------------------------------------
-void Init_BField_ByFile( const char B_Filename[], const int B_lv )
+void Hydro_Init_BField_ByFile( const int B_lv )
 {
 
 #  ifndef MHD
@@ -51,6 +45,8 @@ void Init_BField_ByFile( const char B_Filename[], const int B_lv )
    const int OMP_NThread = ( OPT__INIT_GRID_WITH_OMP ) ? OMP_NTHREAD : 1;
 #  endif
 
+   const char B_Filename[] = "B_IC";
+
    const double dh       = amr->dh[B_lv];
 
    double *Axf, *Ayf, *Azf;
@@ -58,6 +54,9 @@ void Init_BField_ByFile( const char B_Filename[], const int B_lv )
    herr_t status;
    hid_t dataset, dataspace;
    hsize_t dims[3], maxdims[3];
+
+   if ( !Aux_CheckFileExist(B_Filename) )
+      Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", B_Filename );
 
 // Open the magnetic field file and determine the dimensionality of the vector
 // potential grid
@@ -233,7 +232,7 @@ void Init_BField_ByFile( const char B_Filename[], const int B_lv )
    
 #  endif
 
-} // FUNCTION : Init_BField_ByFile
+} // FUNCTION : Hydro_Init_BField_ByFile
 
 double VecPot_Interp( const double field[], const double xx, const double yy, const double zz 
                       const int fdims[], const int fbegin[] )
