@@ -441,7 +441,6 @@ void Init_TestProb_Hydro_Riemann()
 
 
 // set the function pointers of various problem-specific routines
-<<<<<<< HEAD
    Init_Function_User_Ptr        = SetGridIC;
 #  ifdef MHD
    Init_Function_BField_User_Ptr = SetBFieldIC;
@@ -453,16 +452,6 @@ void Init_TestProb_Hydro_Riemann()
    BC_User_Ptr                   = NULL;
    Flu_ResetByUser_Func_Ptr      = NULL;
    End_User_Ptr                  = NULL;
-=======
-   Init_Function_User_Ptr   = SetGridIC;
-   Output_User_Ptr          = NULL;       // example: Hydro/AcousticWave/Init_TestProb_Hydro_AcousticWave.cpp --> OutputError()
-   Flag_User_Ptr            = NULL;       // example: AGORA_IsolatedGalaxy/Flag_AGORA.cpp
-   Mis_GetTimeStep_User_Ptr = NULL;
-   Aux_Record_User_Ptr      = NULL;
-   BC_User_Ptr              = NULL;       // example: ELBDM/ExtPot/Init_TestProb_ELBDM_ExtPot.cpp --> BC()
-   Flu_ResetByUser_Func_Ptr = NULL;
-   End_User_Ptr             = NULL;       // example: Hydro/ClusterMerger/Init_TestProb_Hydro_ClusterMerger.cpp --> End_ClusterMerger()
->>>>>>> Some more renaming
 #  endif // #if ( MODEL == HYDRO )
 
 
