@@ -174,6 +174,7 @@ void SetParameter()
    ReadPara->Add( "Merger_Coll_BubY",       &Merger_Coll_BubY,       -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "Merger_Coll_BubZ",       &Merger_Coll_BubZ,       -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "Merger_Coll_BubR",       &Merger_Coll_BubR,       -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Merger_Coll_BubS",       &Merger_Coll_BubS,       -1.0,             NoMin_double,  NoMax_double   );
 
    ReadPara->Read( FileName );
 
@@ -523,65 +524,65 @@ void Init_InsertBubble_ClusterMerger()
    
    real   (*fluid)[PS1][PS1][PS1]      = NULL;
 
-   double x0, y0, z0, x, y, z, r;
+   double x0, y0, z0, x, y, z, r, dh;
    double Pres, Ekin; 
+
+   int FluSg;
 
    if (!Merger_Coll_Bubble) return;
 
-   Merger_Coll_BubX *= Const_kpc;
-   Merger_Coll_BubY *= Const_kpc;
-   Merger_Coll_BubZ *= Const_kpc;
-   Merger_Coll_BubR *= Const_kpc;
+   Merger_Coll_BubX *= Const_kpc / UNIT_L;
+   Merger_Coll_BubY *= Const_kpc / UNIT_L;
+   Merger_Coll_BubZ *= Const_kpc / UNIT_L;
+   Merger_Coll_BubR *= Const_kpc / UNIT_L;
    Merger_Coll_BubS *= Const_keV;
 
-#  pragma omp parallel
-   {
+#  pragma omp parallel for private ( fluid, FluSg, dh, x, y, z, x0, y0, z0, r, Ekin, Pres ) schedule( runtime )
 
-     for (int lv=0; lv<NLEVEL; lv++) { 
+   for (int lv=0; lv<NLEVEL; lv++) { 
 
-       const double dh             = amr->dh[lv];
-       const int    FluSg          = amr->FluSg[lv];
+     dh             = amr->dh[lv];
+     FluSg          = amr->FluSg[lv];
 
-#  pragma omp for schedule( static )
-       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++) {
-//    skip non-leaf patches
+     for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++) {
 
-	 if ( amr->patch[0][lv][PID]->son != -1 )  continue;
+       // skip non-leaf patches
 
-	 fluid = amr->patch[FluSg][lv][PID]->fluid;
-
-	 x0    = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
-	 y0    = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
-	 z0    = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
+       if ( amr->patch[0][lv][PID]->son != -1 )  continue;
+       
+       fluid = amr->patch[FluSg][lv][PID]->fluid;
+       
+       x0    = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
+       y0    = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
+       z0    = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
       
-	 for (int k=0; k<PS1; k++)
-	 for (int j=0; j<PS1; j++)
-	 for (int i=0; i<PS1; i++) {
+       for (int k=0; k<PS1; k++)
+       for (int j=0; j<PS1; j++)
+       for (int i=0; i<PS1; i++) {
          
-	   x = x0 + i*dh;
-	   y = y0 + j*dh;
-	   z = z0 + k*dh;
-	   r = sqrt( SQR(x-Merger_Coll_BubX) + 
-		     SQR(y-Merger_Coll_BubY) + 
-		     SQR(z-Merger_Coll_BubZ) );  
+	 x = x0 + i*dh;
+	 y = y0 + j*dh;
+	 z = z0 + k*dh;
+	 r = sqrt( SQR(x-Merger_Coll_BubX) + 
+		   SQR(y-Merger_Coll_BubY) + 
+		   SQR(z-Merger_Coll_BubZ) );  
+	 
+	 if ( r <= Merger_Coll_BubR ) {
 
-	   if ( r <= Merger_Coll_BubR ) {
+	   Ekin = 0.5*( SQR(fluid[MOMX][k][j][i]) + 
+			SQR(fluid[MOMY][k][j][i]) + 
+			SQR(fluid[MOMZ][k][j][i]) ) / fluid[DENS][k][j][i];
+	   Pres = UNIT_P * ( GAMMA - 1.0 ) * (fluid[ENGY][k][j][i] - Ekin);
+	   fluid[DENS][k][j][i] = pow( Pres / Merger_Coll_BubS, 0.6 ) * Const_mp * mue_twofifths / UNIT_D;   
+	   
+	   fluid[Merger_Idx_Bubble][k][j][i] = 1.0;
 
-	     Ekin = 0.5*( SQR(fluid[MOMX][k][j][i]) + 
-			  SQR(fluid[MOMY][k][j][i]) + 
-			  SQR(fluid[MOMZ][k][j][i]) ) / fluid[DENS][k][j][i];
-	     Pres = ( GAMMA - 1.0 ) * (fluid[ENGY][k][j][i] - Ekin);
-             fluid[DENS][k][j][i] = pow( Pres / Merger_Coll_BubS, 0.6 ) * Const_mp * mue_twofifths; 
-	     fluid[Merger_Idx_Bubble][k][j][i] = fluid[DENS][k][j][i];
-
-	   } else {
+	 } else {
         
-	     fluid[Merger_Idx_Bubble][k][j][i] = 0.0;
+	   fluid[Merger_Idx_Bubble][k][j][i] = 0.0;
          
-	   }
-  
 	 }
-
+	 
        }
 
      }
