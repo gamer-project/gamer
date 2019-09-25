@@ -18,7 +18,7 @@ void VecPot_ReadField( const int ibegin, const int jbegin, const int kbegin,
                        double Ax[], double Ay[], double Az[] );
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_Init_BField_ByFile
+// Function    :  MHD_Init_BField_ByFile
 // Description :  Use the input uniform-mesh array stored in the file "B_Filename"
 //                to assign a magnetic vector potential to all real patches on level
 //                "B_lv" and take the curl of this potential to compute the magnetic field
@@ -29,7 +29,7 @@ void VecPot_ReadField( const int ibegin, const int jbegin, const int kbegin,
 //
 // Return      :  amr->patch->fluid
 //-------------------------------------------------------------------------------------------------------
-void Hydro_Init_BField_ByFile( const int B_lv )
+void MHD_Init_BField_ByFile( const int B_lv )
 {
 
 #  ifndef MHD

@@ -261,7 +261,7 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 #  ifdef MHD
 
    if ( OPT__INIT_BFIELD_BY_FILE )
-      Hydro_Init_BField_ByFile(lv);
+      MHD_Init_BField_ByFile(lv);
 
 #  endif
 
