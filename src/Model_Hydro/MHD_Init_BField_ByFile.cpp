@@ -64,8 +64,6 @@ void MHD_Init_BField_ByFile( const int B_lv )
 
    if ( B_lv == 0 ) {
 
-     if ( MPI_Rank == 0 )    Aux_Message( stdout, "   getting dims\n" );
-
      dataset = H5Dopen(mag_file_id, "magnetic_vector_potential_z", H5P_DEFAULT);
      
      dataspace = H5Dget_space(dataset);
@@ -75,13 +73,9 @@ void MHD_Init_BField_ByFile( const int B_lv )
      H5Sclose(dataspace);
      H5Dclose(dataset);
 
-     if ( MPI_Rank == 0 )    Aux_Message( stdout, "   got dims\n" );
-
      nAx = dims[0];
      nAy = dims[1];
      nAz = dims[2];
-     
-     if ( MPI_Rank == 0 )    Aux_Message( stdout, "   got dims\n" );
 
      // Read the coordinate information from the vector potential grid
      Axcoord = new double [ nAx ];
@@ -102,8 +96,6 @@ void MHD_Init_BField_ByFile( const int B_lv )
      status  = H5Dread(dataset, H5T_NATIVE_DOUBLE, H5S_ALL,
 		       H5S_ALL, H5P_DEFAULT, Azcoord);
      H5Dclose(dataset);
-
-     if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loaded coordinates\n" );
 
      // Cell spacing and left edge of vector potential grid
 
@@ -128,9 +120,9 @@ void MHD_Init_BField_ByFile( const int B_lv )
    for (int PID=0; PID<amr->NPatchComma[B_lv][1]; PID++) {
 
 //    Compute the beginning and ending indices on the vector potential grid
-     int ibegin = MAX(int((amr->patch[0][B_lv][PID]->EdgeL[0]-Axmin)/Adx), 0);
-     int jbegin = MAX(int((amr->patch[0][B_lv][PID]->EdgeL[1]-Aymin)/Ady), 0);
-     int kbegin = MAX(int((amr->patch[0][B_lv][PID]->EdgeL[2]-Azmin)/Adz), 0);
+     int ibegin = MAX((int)((amr->patch[0][B_lv][PID]->EdgeL[0]-Axmin)/Adx), 0);
+     int jbegin = MAX((int)((amr->patch[0][B_lv][PID]->EdgeL[1]-Aymin)/Ady), 0);
+     int kbegin = MAX((int)((amr->patch[0][B_lv][PID]->EdgeL[2]-Azmin)/Adz), 0);
       
      int iend = MIN((int)((amr->patch[0][B_lv][PID]->EdgeR[0]-Axmin)/Adx)+2, nAx-1);
      int jend = MIN((int)((amr->patch[0][B_lv][PID]->EdgeR[1]-Aymin)/Ady)+2, nAy-1);
@@ -194,7 +186,7 @@ void MHD_Init_BField_ByFile( const int B_lv )
          int idxj = IDX321( i, j+1, k, PS1+1, PS1+1 );
          int idxk = IDX321( i, j, k+1, PS1+1, PS1+1 );
          int idxB = IDX321_BX( i, j, k, PS1, PS1 );
-         double Bx = ( Az[idxj] - Az[idx] - Ay[idxk] + Ay[idx] ) / dh;
+         real Bx = ( Az[idxj] - Az[idx] - Ay[idxk] + Ay[idx] ) / dh;
          amr->patch[ amr->MagSg[B_lv] ][B_lv][PID]->magnetic[0][idxB] = Bx;
       }}}
 
@@ -206,7 +198,7 @@ void MHD_Init_BField_ByFile( const int B_lv )
          int idxi = IDX321( i+1, j, k, PS1+1, PS1+1 );
          int idxk = IDX321( i, j, k+1, PS1+1, PS1+1 );
          int idxB = IDX321_BY( i, j, k, PS1, PS1 );
-         double By = ( Ax[idxk] - Ax[idx] - Az[idxi] + Az[idx] ) / dh;
+         real By = ( Ax[idxk] - Ax[idx] - Az[idxi] + Az[idx] ) / dh;
          amr->patch[ amr->MagSg[B_lv] ][B_lv][PID]->magnetic[1][idxB] = By;
       }}}
 
@@ -217,8 +209,8 @@ void MHD_Init_BField_ByFile( const int B_lv )
          int idx = IDX321( i, j, k, PS1+1, PS1+1 );
          int idxi = IDX321( i+1, j, k, PS1+1, PS1+1 );
          int idxj = IDX321( i, j+1, k, PS1+1, PS1+1 );
-         int idxB = IDX321_BY( i, j, k, PS1, PS1 );
-         double Bz = ( Ay[idxi] - Ay[idx] - Ax[idxj] + Ax[idx] ) / dh;
+         int idxB = IDX321_BZ( i, j, k, PS1, PS1 );
+         real Bz = ( Ay[idxi] - Ay[idx] - Ax[idxj] + Ax[idx] ) / dh;
          amr->patch[ amr->MagSg[B_lv] ][B_lv][PID]->magnetic[2][idxB] = Bz;
       }}}
    
@@ -253,9 +245,9 @@ double VecPot_Interp( const double field[], const double xx, const double yy,
    const int jj = (int)((yy-Aymin)/Ady);
    const int kk = (int)((zz-Azmin)/Adz);
 
-   const int ib = ii - fbegin[0];
-   const int jb = jj - fbegin[1];
-   const int kb = kk - fbegin[2];
+   const int ib = ii - fbegin[0] + 1;
+   const int jb = jj - fbegin[1] + 1;
+   const int kb = kk - fbegin[2] + 1;
 
    double pot = 0.0;
 
@@ -266,7 +258,7 @@ double VecPot_Interp( const double field[], const double xx, const double yy,
       for (int i = -1; i <= 1; i++) { double dx = (xx-Axcoord[ii+i])/Adx;
       for (int j = -1; j <= 1; j++) { double dy = (yy-Aycoord[jj+j])/Ady;
       for (int k = -1; k <= 1; k++) { double dz = (zz-Azcoord[kk+k])/Adz;
-         int idx = IDX321( ib+i, jb+j, kb+k, fdims[0], fdims[1] ); 
+	int idx = (ib+i)*fdims[2]*fdims[1] + (jb+j)*fdims[2] + (kb+k);
          pot += field[idx]*TSC_Weight(dx)*TSC_Weight(dy)*TSC_Weight(dz);
       }}}
 

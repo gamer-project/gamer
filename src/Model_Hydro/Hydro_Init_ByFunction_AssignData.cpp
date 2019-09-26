@@ -149,6 +149,13 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 #  endif
 
 
+#  ifdef MHD
+
+   if ( OPT__INIT_BFIELD_BYFILE )
+     MHD_Init_BField_ByFile(lv);
+
+#  endif
+
 #  pragma omp parallel for schedule( runtime ) num_threads( OMP_NThread )
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
@@ -257,13 +264,6 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 
       }}} // i,j,k
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-
-#  ifdef MHD
-
-   if ( OPT__INIT_BFIELD_BYFILE )
-      MHD_Init_BField_ByFile(lv);
-
-#  endif
 
 } // FUNCTION : Hydro_Init_ByFunction_AssignData
 
