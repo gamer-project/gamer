@@ -36,11 +36,11 @@ COMPILE_VERBOSE := 0
 SIMU_OPTION += -DMODEL=HYDRO
 
 # enable gravity
-#SIMU_OPTION += -DGRAVITY
+SIMU_OPTION += -DGRAVITY
 
 # enable particles
 # --> must enable GRAVITY
-#SIMU_OPTION += -DPARTICLE
+SIMU_OPTION += -DPARTICLE
 
 # support Grackle, a chemistry and radiative cooling library
 # --> must set NCOMP_PASSIVE_USER according to the primordial chemistry network set by GRACKLE_PRIMORDIAL
@@ -65,7 +65,7 @@ SIMU_OPTION += -DLR_SCHEME=PPM
 # --> pure hydro: EXACT/ROE/HLLE/HLLC(*); MHD: ROE/HLLE/HLLD(*);
 #                 (recommended solvers are highlighted by *)
 # --> useless for RTVD
-SIMU_OPTION += -DRSOLVER=ROE
+SIMU_OPTION += -DRSOLVER=HLLD
 
 # dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy)
 # --> DE_EINT is not supported yet; useless for RTVD
@@ -77,7 +77,11 @@ SIMU_OPTION += -DRSOLVER=ROE
 SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 
 # magnetohydrodynamics
-#SIMU_OPTION += -DMHD
+SIMU_OPTION += -DMHD
+
+# (b-2) MHD options
+# ------------------------------------------------------------------------------------
+else ifeq "$(filter -DMODEL=MHD, $(SIMU_OPTION))" "-DMODEL=MHD"
 
 
 # (b-2) ELBDM options
@@ -150,7 +154,7 @@ SIMU_OPTION += -DMAX_PATCH=1000000
 
 # GPU acceleration
 # --> must set GPU_ARCH as well
-#SIMU_OPTION += -DGPU
+SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA/TURING
 SIMU_OPTION += -DGPU_ARCH=KEPLER
@@ -173,11 +177,11 @@ SIMU_OPTION += -DTIMING
 
 # serial mode (in which no MPI libraries are required)
 # --> must disable LOAD_BALANCE
-SIMU_OPTION += -DSERIAL
+#SIMU_OPTION += -DSERIAL
 
 # load-balance parallelization: HILBERT
 # --> must disable SERIAL
-#SIMU_OPTION += -DLOAD_BALANCE=HILBERT
+SIMU_OPTION += -DLOAD_BALANCE=HILBERT
 
 # overlap MPI communication with computation
 # --> NOT supported yet; must enable LOAD_BALANCE
@@ -190,7 +194,7 @@ SIMU_OPTION += -DOPENMP
 #SIMU_OPTION += -DLAOHU
 
 # support HDF5 format
-#SIMU_OPTION += -DSUPPORT_HDF5
+SIMU_OPTION += -DSUPPORT_HDF5
 
 # support GNU scientific library
 #SIMU_OPTION += -DSUPPORT_GSL
@@ -212,15 +216,15 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 
 # intel
 # -------------------------------------------------------------------------------
-# CXX         = icpc                                      # serial compiler
-##CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
+#CXX         = icpc                                      # serial compiler
+#CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
 ##CXX         = CC                                        # cray wrapper script
-# CXXFLAG     = -g -O3                                    # general flags
+#CXXFLAG     = -g -O3                                   # general flags
 ##CXXFLAG     = -g -O3 -std=c++11 #-gxx-name=YOUR_G++
 ##CXXFLAG     = -g -fast
 # CXXFLAG    += -w1                                       # warning flags
-# OPENMPFLAG  = -fopenmp                                  # openmp flag
-# LIB         = -limf                                     # libraries and linker flags
+#OPENMPFLAG  = -fopenmp                                  # openmp flag
+#LIB         = -limf                                      # libraries and linker flags
 #
 ## for debug only
 #ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
@@ -230,34 +234,34 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 #
 ## suppress warning when OpenMP is disabled
 #ifeq "$(filter -DOPENMP, $(SIMU_OPTION))" ""
-# CXXFLAG    += -Wno-unknown-pragmas -diag-disable 3180
+#CXXFLAG    += -Wno-unknown-pragmas -diag-disable 3180
 #endif
 
 
 # gnu
 # -------------------------------------------------------------------------------
- CXX         = g++                                       # serial compiler
-#CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
+#CXX         = g++                                       # serial compiler
+CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
 #CXX         = CC                                        # cray wrapper script
- CXXFLAG     = -g -O3                                    # general flags
-#CXXFLAG     = -g -O3 -std=c++11
+#CXXFLAG     = -g -O3                                    # general flags
+CXXFLAG     = -g -O0 -std=c++11
 #CXXFLAG     = -g -Ofast
- CXXFLAG    += -Wall -Wextra                             # warning flags
- CXXFLAG    += -Wno-unused-variable -Wno-unused-parameter \
+CXXFLAG    += -Wall -Wextra                             # warning flags
+CXXFLAG    += -Wno-unused-variable -Wno-unused-parameter \
                -Wno-maybe-uninitialized -Wno-unused-but-set-variable \
                -Wno-unused-result -Wno-unused-function
- OPENMPFLAG  = -fopenmp                                  # openmp flag
- LIB         =                                           # libraries and linker flags
+OPENMPFLAG  = -fopenmp                                  # openmp flag
+#LIB         =                                           # libraries and linker flags
 
 # for debug only
-ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
+#ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
 #CXXFLAG    += -fstack-protector-all
-endif
+#endif
 
 # suppress warning when OpenMP is disabled
-ifeq "$(filter -DOPENMP, $(SIMU_OPTION))" ""
- CXXFLAG    += -Wno-unknown-pragmas
-endif
+#ifeq "$(filter -DOPENMP, $(SIMU_OPTION))" ""
+CXXFLAG    += -Wno-unknown-pragmas
+#endif
 
 
 # CUDA
@@ -380,10 +384,11 @@ LIBYT_PATH   :=
 #GSL_PATH     := /usr/local/gsl-1.16
 
 # NASA Pleiades (intel compilers and SGI MPI)
-CUDA_PATH    := /nasa/cuda/sles12/8.0
+CUDA_PATH    := /nasa/cuda/9.0/
 FFTW_PATH    := /u/jzuhone/opt/fftw-2.1.5
 MPI_PATH     := /nasa/sgi/mpt/2.14r19
-HDF5_PATH    := /nasa/hdf5/1.8.17/serial
+HDF5_PATH    := /nasa/hdf5/1.8.18_serial
+
 
 # source files
 #######################################################################################################
