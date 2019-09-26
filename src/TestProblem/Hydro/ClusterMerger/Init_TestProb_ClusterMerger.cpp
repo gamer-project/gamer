@@ -428,6 +428,19 @@ void End_ClusterMerger()
 
 } // FUNCTION : End_ClusterMerger
 
+#ifdef MHD
+
+void SetBFieldIC( real magnetic[], const double x, const double y, const double z, const double Time,
+                  const int lv, double AuxArray[] )
+{
+
+  return;
+
+} // FUNCTION : SetBFieldIC
+
+#endif // #ifdef MHD
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_TestProb_Hydro_ClusterMerger
 // Description :  Test problem initializer
@@ -457,6 +470,9 @@ void Init_TestProb_Hydro_ClusterMerger()
    Init_Function_User_Ptr  = SetGridIC;
    End_User_Ptr            = End_ClusterMerger;
    Par_Init_ByFunction_Ptr = Par_Init_ByFunction_ClusterMerger;
+#  ifdef MHD
+   Init_Function_BField_User_Ptr  = SetBFieldIC;
+#  endif
 #  endif // if ( MODEL == HYDRO  &&  defined PARTICLE )
 
 
