@@ -510,8 +510,8 @@ void Read_Profile_ClusterMerger(std::string filename, std::string fieldname,
 void AddNewField_ClusterMerger()
 {
 
-   if ( Merger_Coll_Bubble )
-      Merger_Idx_Bubble = AddField( "Bubble", NORMALIZE_YES );
+  //if ( Merger_Coll_Bubble )
+  //    Merger_Idx_Bubble = AddField( "Bubble", NORMALIZE_YES );
 
 
 } // FUNCTION : AddNewField_ClusterMerger
