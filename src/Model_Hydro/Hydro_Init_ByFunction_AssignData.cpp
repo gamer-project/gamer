@@ -1,6 +1,6 @@
 #include "GAMER.h"
-
 #if ( MODEL == HYDRO )
+
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
 static void Init_Function_User( real fluid[], const double x, const double y, const double z, const double Time,
@@ -128,7 +128,7 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
    if ( Init_Function_User_Ptr == NULL )  Aux_Error( ERROR_INFO, "Init_Function_User_Ptr == NULL !!\n" );
 
 #  ifdef MHD
-   if ( Init_Function_BField_User_Ptr == NULL && !OPT__INIT_BFIELD_BY_FILE )  
+   if ( Init_Function_BField_User_Ptr == NULL && !OPT__INIT_BFIELD_BYFILE )  
       Aux_Error( ERROR_INFO, "Init_Function_BField_User_Ptr == NULL !!\n" );
 #  endif
 
@@ -155,7 +155,7 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 //    1. set the magnetic field
 #     ifdef MHD
 
-      if ( !OPT__INIT_BFIELD_BY_FILE ) {
+      if ( !OPT__INIT_BFIELD_BYFILE ) {
 
          real magnetic_1v, magnetic_sub[NCOMP_MAG];
 
@@ -260,7 +260,7 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 
 #  ifdef MHD
 
-   if ( OPT__INIT_BFIELD_BY_FILE )
+   if ( OPT__INIT_BFIELD_BYFILE )
       MHD_Init_BField_ByFile(lv);
 
 #  endif
