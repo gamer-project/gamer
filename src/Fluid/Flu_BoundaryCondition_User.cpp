@@ -163,7 +163,7 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
 
 #     elif ( MODEL == SR_HYDRO )
       printf("please modify here: %s\n", __FUNCTION__);
-      exit(0);
+      exit(EXIT_FAILURE);
 #     elif ( MODEL == ELBDM )
 //    no derived variables yet
 

@@ -248,9 +248,9 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 # -------------------------------------------------------------------------------
  CXX         = icpc                                      # serial compiler
  CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
-##CXX         = CC                                        # cray wrapper script
+#CXX         = CC                                        # cray wrapper script
  CXXFLAG     = -g -O3                                    # general flags
-##CXXFLAG     = -g -O3 -std=c++11 #-gxx-name=YOUR_G++
+#CXXFLAG     = -g -O3 -std=c++11 #-gxx-name=YOUR_G++
 #CXXFLAG     = -g -fast
 # CXXFLAG    += -w1                                       # warning flags
  OPENMPFLAG  = -fopenmp                                  # openmp flag
@@ -564,7 +564,7 @@ CC_FILE     += CPU_PoissonGravitySolver.cpp  CPU_PoissonSolver_SOR.cpp  CPU_Pois
                CPU_PoissonSolver_MG.cpp
 
 CC_FILE     += Init_FFTW.cpp  Gra_Close.cpp  Gra_Prepare_Flu.cpp  Gra_Prepare_Pot.cpp  Gra_Prepare_Corner.cpp \
-               Gra_AdvanceDt.cpp  Poi_Close.cpp  Poi_Prepare_Pot.cpp  Poi_Prepare_Rho.cpp \
+               Gra_AdvanceDt.cpp  Poi_Close.cpp  Poi_Prepare_Pot.cpp  Poi_Prepare_Source.cpp \
                Output_PreparedPatch_Poisson.cpp  Init_MemAllocate_PoissonGravity.cpp  CPU_ExternalPot.cpp \
                End_MemFree_PoissonGravity.cpp  Init_Set_Default_SOR_Parameter.cpp \
                Init_Set_Default_MG_Parameter.cpp  Poi_GetAverageDensity.cpp  Init_GreenFuncK.cpp \

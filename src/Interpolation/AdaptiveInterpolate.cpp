@@ -260,7 +260,7 @@ void AdaptiveInterpolate( real CData [], const int CSize[3], const int CStart[3]
 #           error: ERROR!
 #           endif
             {
-                exit(0);
+                exit(EXIT_FAILURE);
             } //  if (Unphysical(Cons, Gamma_m1, CheckMinPres))
         }
      } // if ( TVar == _TOTAL )

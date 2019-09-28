@@ -553,7 +553,7 @@ void Init_ExternalAcc()
 //     ExtAcc_AuxArray[4] = soften_length (<=0.0 --> disable)
 // --> to change the this default behavior, please edit "GPU_Gravity/CUPOT_ExternalAcc.cu"
 
-   const double M   = 1.0;
+   const double M   = 1e-3;
    const double GM  = NEWTON_G*M;
    const double Eps = 0.0;
 

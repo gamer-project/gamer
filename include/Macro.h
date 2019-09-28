@@ -252,8 +252,9 @@
 #  elif ( MODEL == SR_HYDRO )
 #  define _LRTZ               ( 1 << (NCOMP_TOTAL+5) ) // Lorentz factor               
 #  define _3VEL               ( 1 << (NCOMP_TOTAL+6) ) // magnitude of 3-velocity      
-#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP | _LRTZ | _3VEL )
-#  define NDERIVE             7
+#  define _SR_GRAVITY_SOURCE  ( 1 << (NCOMP_TOTAL+7) )
+#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP | _LRTZ | _3VEL | _SR_GRAVITY_SOURCE )
+#  define NDERIVE             8
 #  endif
 
 
@@ -300,7 +301,6 @@
 # ifdef GRAVITY
 #  define _POTE               ( 1 << (NCOMP_TOTAL+NDERIVE) )
 #  if ( MODEL == SR_HYDRO )
-#  define _SR_GRAVITY_SOURCE  ( 1 << (NCOMP_TOTAL+NDERIVE+3) )
 #  endif
 # endif
 #  define _FLUID              (  ( 1 << NCOMP_FLUID ) - 1           )

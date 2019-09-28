@@ -135,9 +135,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    int AllVar = ( _TOTAL | _DERIVED );
 #  ifdef GRAVITY
    AllVar |= _POTE;
-#  if ( MODEL == SR_HYDRO )
-   AllVar |= _SR_GRAVITY_SOURCE; 
-#  endif
 #  endif
 #  ifdef PARTICLE
    AllVar |= _PAR_DENS;
@@ -322,7 +319,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
    NVar_Der = 0;
 
-#  if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
+#  if   ( MODEL == HYDRO )
    const int NVar_Der_Max = 6;
    int TDerVarList[NVar_Der_Max];
 
@@ -336,8 +333,16 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #  warning : WAIT MHD !!
 
 #  elif ( MODEL == SR_HYDRO )
-   if ( PrepLrtz )   TDerVarList[ NVar_Der ++ ] = _LRTZ;
+   const int NVar_Der_Max = 7;
+   int TDerVarList[NVar_Der_Max];
 
+   if ( PrepVx        )   TDerVarList[ NVar_Der ++ ] = _VELX;
+   if ( PrepVy        )   TDerVarList[ NVar_Der ++ ] = _VELY;
+   if ( PrepVz        )   TDerVarList[ NVar_Der ++ ] = _VELZ;
+   if ( PrepPres      )   TDerVarList[ NVar_Der ++ ] = _PRES;
+   if ( PrepTemp      )   TDerVarList[ NVar_Der ++ ] = _TEMP;
+   if ( PrepLrtz )        TDerVarList[ NVar_Der ++ ] = _LRTZ;
+   if ( PrepGraSource )   TDerVarList[ NVar_Der ++ ] = _SR_GRAVITY_SOURCE;
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
    const int NVar_Der_Max = 0;
@@ -351,9 +356,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 #  ifdef GRAVITY
    if ( PrepPot )          NVar_Tot ++;
-#  if ( MODEL == SR_HYDRO )
-   if ( PrepGraSource )    NVar_Tot++;
-#  endif
 #  endif
 
 // do not increase NVar_Tot for PrepTotalDens since _DENS is already turned on automatically for that
@@ -363,7 +365,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
    if ( NVar_Tot == 0  &&  MPI_Rank == 0 )
    {
-      Aux_Message( stderr, "WARNING : no target variable is found !!\n" );
+      Aux_Message( stderr, "WARNING : no target variable is found !!\n");
       return;
    }
 
@@ -1121,6 +1123,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #           ifdef GRAVITY
             if ( PrepGraSource )
             {
+			   real Pres, Msqr, Source;
+
                for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
                for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
                                                       Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
@@ -1128,11 +1132,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                   for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
-                  real Pres = SRHydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA, MIN_TEMP  );
+                  Pres = SRHydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA, MIN_TEMP  );
 
-				  real Msqr = VectorDotProduct( Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ] );
+				  Msqr = VectorDotProduct( Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ] );
 
-                  real Source = Fluid[ENGY] + (real)3.0 * Pres + Msqr / ( Fluid[ENGY] + Pres );
+                  Source = Fluid[ENGY] + (real)3.0 * Pres + Msqr / ( Fluid[ENGY] + Pres );
 
 				  Array_Ptr[Idx1] = Source;
 
@@ -1141,6 +1145,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   {
                      for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k][j][i];
 
+                     Pres = SRHydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA, MIN_TEMP  );
+
+                     Msqr = VectorDotProduct( Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ] );
+
+                     Source = Fluid[ENGY] + (real)3.0 * Pres + Msqr / ( Fluid[ENGY] + Pres );
 
                      Array_Ptr[Idx1] = FluWeighting * Array_Ptr[Idx1] + FluWeighting_IntT * Source;
                   }
@@ -1553,6 +1562,48 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                      Array_Ptr += PGSize3D;
                   }
+
+#                 ifdef GRAVITY
+                  if ( PrepGraSource )
+                  {
+			         real Pres, Msqr, Source;
+
+                     for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
+                     for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j;   J2 = j + Disp_j2;
+                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
+                     for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
+
+                        for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
+
+                        Pres = SRHydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA, MIN_TEMP  );
+
+				        Msqr = VectorDotProduct( Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ] );
+
+                        Source = Fluid[ENGY] + (real)3.0 * Pres + Msqr / ( Fluid[ENGY] + Pres );
+
+                        Array_Ptr[Idx1] = Source;
+
+                        if ( FluIntTime ) // temporal interpolation
+                        {
+                           for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][K2][J2][I2];
+
+                           Pres = SRHydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA, MIN_TEMP  );
+
+				           Msqr = VectorDotProduct( Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ] );
+
+                           Source = Fluid[ENGY] + (real)3.0 * Pres + Msqr / ( Fluid[ENGY] + Pres );
+
+                           Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
+                                             + FluWeighting_IntT*Source;
+                        }
+
+                        Idx1 ++;
+                     }}}
+
+                     Array_Ptr += PGSize3D;
+                  }
+
+#                 endif
 
 #                 elif ( MODEL == ELBDM )
 //                no derived variables yet
