@@ -223,7 +223,11 @@ void CPU_HydroGravitySolver(
             z = g_Corner_Array[P][2] + (double)(k_g0*dh);
 
             ExternalAcc( acc_new, x, y, z, TimeNew, c_ExtAcc_AuxArray );
+         if (acc_new[1] != acc_new[1]) 
+				 printf("%e, %d\n", acc_new[1], __LINE__);
             for (int d=0; d<3; d++)    acc_new[d] *= dt;
+         if (acc_new[1] != acc_new[1]) 
+				 printf("%e, %d\n", acc_new[1], __LINE__);
 
 #           ifdef UNSPLIT_GRAVITY
             ExternalAcc( acc_old, x, y, z, TimeOld, c_ExtAcc_AuxArray );
@@ -287,6 +291,9 @@ void CPU_HydroGravitySolver(
                acc_new[0] += Gra_Const*( pot_new[ip1_new] - pot_new[im1_new] );
                acc_new[1] += Gra_Const*( pot_new[jp1_new] - pot_new[jm1_new] );
                acc_new[2] += Gra_Const*( pot_new[kp1_new] - pot_new[km1_new] );
+               
+               if ( (pot_new[jp1_new] != pot_new[jp1_new]) || (pot_new[jm1_new] != pot_new[jm1_new] ) )
+					   printf("nan is found! %d\n", __LINE__);
 
 #              ifdef UNSPLIT_GRAVITY
                acc_old[0] += Gra_Const*( pot_old[ip1_old] - pot_old[im1_old] );
@@ -296,6 +303,8 @@ void CPU_HydroGravitySolver(
             } // if ( P5_Gradient ) ... else ...
          } // if ( GravityType == GRAVITY_SELF  ||  GravityType == GRAVITY_BOTH )
 
+         if (acc_new[1] != acc_new[1]) 
+				 printf("%e, %d\n", acc_new[1], __LINE__);
 
 //       advance fluid
 #        ifdef UNSPLIT_GRAVITY
@@ -356,26 +365,47 @@ void CPU_HydroGravitySolver(
          Con_new[ENGY]  = g_Flu_Array_New[P][ENGY][idx_g0];
 
 //       conserved vars --> primitive vars
-         real LorentzFactor = SRHydro_Con2Pri( Con_new, Pri_new, (real)1.333333333, (real)0.0);
+         SRHydro_Con2Pri( Con_new, Pri_new, (real)1.333333333, (real)0.0);
+
+//       backup the original temperature
+         real Temp = Pri_new[4]/Pri_new[0];
+
+//       backup the original enthalpy
+         real Enthalpy = SpecificEnthalpy(Con_new, Temp, (real)1.333333333);
 
 //       backup the original internal energy(measured in fluid frame) so that we can restore it later if necessary
-         Eint_in = SRHydro_InternalEngy ( Con_new, Pri_new, LorentzFactor, (real)1.333333333, false);
+//         Eint_in = SRHydro_InternalEngy ( Con_new, Pri_new, LorentzFactor, (real)1.333333333, false);
 
 //       update the momentum density
          Con_new[MOMX] += (Con_new[ENGY] + Pri_new[4])*acc_new[0];
          Con_new[MOMY] += (Con_new[ENGY] + Pri_new[4])*acc_new[1];
          Con_new[MOMZ] += (Con_new[ENGY] + Pri_new[4])*acc_new[2];
 
-         if(SRHydro_CheckUnphysical(Con_new, NULL, (real)1.333333333, (real)0.0, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
+         if (acc_new[1] != acc_new[1]) 
+				 printf("%e, %d\n", acc_new[1], __LINE__);
+
+//       calculate the updated Lorrentz factor using original temperature
+         real Ux, Uy, Uz;
+		 Ux = Con_new[MOMX] / (Con_new[DENS] * Enthalpy);
+		 Uy = Con_new[MOMY] / (Con_new[DENS] * Enthalpy);
+		 Uz = Con_new[MOMZ] / (Con_new[DENS] * Enthalpy);
+
+         real LorentzFactor = SQRT((real)1.0 + VectorDotProduct(Ux, Uy, Uz));
+
+
 
          g_Flu_Array_New[P][MOMX][idx_g0] = Con_new[MOMX];
          g_Flu_Array_New[P][MOMY][idx_g0] = Con_new[MOMY];
          g_Flu_Array_New[P][MOMZ][idx_g0] = Con_new[MOMZ];
 
+
 //       for the splitting method, we ensure that the internal energy is unchanged 
-//       --> why do not directly advance total energy?
-         Ek_out = SRHydro_KineticEngy( Con_new, Pri_new, LorentzFactor, (real)1.333333333 );
-         Etot_out = Eint_in * LorentzFactor + Ek_out;
+//         Ek_out = SRHydro_KineticEngy( Con_new, Pri_new, LorentzFactor, (real)1.333333333 );
+//         Etot_out = Eint_in * LorentzFactor + Ek_out;
+         Etot_out = Con_new[DENS]*Enthalpy*LorentzFactor - Pri_new[4];
+		 Con_new[ENGY] = Etot_out;
+
+         SRHydro_CheckUnphysical(Con_new, NULL, (real)1.333333333, (real)0.0, __FUNCTION__, __LINE__, true);
 
 #        endif // #ifdef UNSPLIT_GRAVITY ... else ...
 
