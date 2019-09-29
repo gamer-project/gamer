@@ -360,13 +360,14 @@ void CPU_HydroGravitySolver(
 
 //       backup the original internal energy(measured in fluid frame) so that we can restore it later if necessary
          Eint_in = SRHydro_InternalEngy ( Con_new, Pri_new, LorentzFactor, (real)1.333333333, false);
-         SRHydro_CheckUnphysical(Con_new, NULL, (real)1.333333333, (real)0.0, __FUNCTION__, __LINE__, true);
+
 //       update the momentum density
          Con_new[MOMX] += (Con_new[ENGY] + Pri_new[4])*acc_new[0];
          Con_new[MOMY] += (Con_new[ENGY] + Pri_new[4])*acc_new[1];
          Con_new[MOMZ] += (Con_new[ENGY] + Pri_new[4])*acc_new[2];
 
-         SRHydro_CheckUnphysical(Con_new, NULL, (real)1.333333333, (real)0.0, __FUNCTION__, __LINE__, true);
+         if(SRHydro_CheckUnphysical(Con_new, NULL, (real)1.333333333, (real)0.0, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
+
          g_Flu_Array_New[P][MOMX][idx_g0] = Con_new[MOMX];
          g_Flu_Array_New[P][MOMY][idx_g0] = Con_new[MOMY];
          g_Flu_Array_New[P][MOMZ][idx_g0] = Con_new[MOMZ];
