@@ -474,26 +474,26 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
 #     error: CONSERVED_ENERGY must be 1 or 2!
 #     endif
 
-      SRHydro_Con2Pri(ConsVar, Pri4Vel, Gamma, MinTemp);
-
-// check NaN
-      if (  Pri4Vel[DENS] != Pri4Vel[DENS]
-         || Pri4Vel[MOMX] != Pri4Vel[MOMX]
-         || Pri4Vel[MOMY] != Pri4Vel[MOMY]
-         || Pri4Vel[MOMZ] != Pri4Vel[MOMZ]
-         || Pri4Vel[ENGY] != Pri4Vel[ENGY]  )                                              goto FAIL;
-
-// check +inf and -inf
-      if (  (real)  TINY_NUMBER >= Pri4Vel[DENS] || Pri4Vel[DENS]  >= (real)HUGE_NUMBER
-         || (real) -HUGE_NUMBER >= Pri4Vel[MOMX] || Pri4Vel[MOMX]  >= (real)HUGE_NUMBER
-         || (real) -HUGE_NUMBER >= Pri4Vel[MOMY] || Pri4Vel[MOMY]  >= (real)HUGE_NUMBER
-         || (real) -HUGE_NUMBER >= Pri4Vel[MOMZ] || Pri4Vel[MOMZ]  >= (real)HUGE_NUMBER
-         || (real)  TINY_NUMBER >= Pri4Vel[ENGY] || Pri4Vel[ENGY]  >= (real)HUGE_NUMBER )              goto FAIL;
-
-// check whether 3-velocity is greater or equal to speed of light
-      SRHydro_4Velto3Vel(Pri4Vel,Pri3Vel);
-
-      if (VectorDotProduct( Pri3Vel[1], Pri3Vel[2], Pri3Vel[3] ) >= (real) 1.0)                      goto FAIL;
+//      SRHydro_Con2Pri(ConsVar, Pri4Vel, Gamma, MinTemp);
+//
+//// check NaN
+//      if (  Pri4Vel[DENS] != Pri4Vel[DENS]
+//         || Pri4Vel[MOMX] != Pri4Vel[MOMX]
+//         || Pri4Vel[MOMY] != Pri4Vel[MOMY]
+//         || Pri4Vel[MOMZ] != Pri4Vel[MOMZ]
+//         || Pri4Vel[ENGY] != Pri4Vel[ENGY]  )                                              goto FAIL;
+//
+//// check +inf and -inf
+//      if (  (real)  TINY_NUMBER >= Pri4Vel[DENS] || Pri4Vel[DENS]  >= (real)HUGE_NUMBER
+//         || (real) -HUGE_NUMBER >= Pri4Vel[MOMX] || Pri4Vel[MOMX]  >= (real)HUGE_NUMBER
+//         || (real) -HUGE_NUMBER >= Pri4Vel[MOMY] || Pri4Vel[MOMY]  >= (real)HUGE_NUMBER
+//         || (real) -HUGE_NUMBER >= Pri4Vel[MOMZ] || Pri4Vel[MOMZ]  >= (real)HUGE_NUMBER
+//         || (real)  TINY_NUMBER >= Pri4Vel[ENGY] || Pri4Vel[ENGY]  >= (real)HUGE_NUMBER )              goto FAIL;
+//
+//// check whether 3-velocity is greater or equal to speed of light
+//      SRHydro_4Velto3Vel(Pri4Vel,Pri3Vel);
+//
+//      if (VectorDotProduct( Pri3Vel[1], Pri3Vel[2], Pri3Vel[3] ) >= (real) 1.0)                      goto FAIL;
 
 // pass all checks 
       return false;
