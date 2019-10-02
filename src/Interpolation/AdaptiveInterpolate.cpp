@@ -28,7 +28,8 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 //               [ 6] FSize       : Size of the FData array
 //               [ 7] FStart      : (x,y,z) starting indcies to store the interpolation results
 //               [ 8] TVar        : target variables to be interpolated
-//               [ 9] NComp       : Number of components in the CData and FData array
+//               [ 9] NVar_Tot    : Total number of variables to be prepared
+//                                  --> NVar_Tot = NVar_Flu + NVar_Der;
 //               [10] IntScheme   : Interpolation scheme
 //                                  --> currently supported schemes include
 //                                      INT_MINMOD3D : MinMod-3D
@@ -53,7 +54,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
 void AdaptiveInterpolate( real CData [], const int CSize[3], const int CStart[3], const int CRange[3],
                           real FData [], const int FSize[3], const int FStart[3],
-                          const int NComp, const int TVar, const IntScheme_t IntScheme, const bool UnwrapPhase, 
+                          const int NVar_Tot, const int TVar, const IntScheme_t IntScheme, const bool UnwrapPhase, 
 						  const bool Monotonic[] , int Strategy )
 {
 #    if ( MODEL == HYDRO )
@@ -79,14 +80,14 @@ void AdaptiveInterpolate( real CData [], const int CSize[3], const int CStart[3]
 
      real Cons[NCOMP_FLUID], Prim[NCOMP_FLUID];
 
-     if ( TVar == _TOTAL )
+     if ( TVar ==_FLUID )
      {
         if ( Strategy == 1 )
 		{
             IntMonoCoeff = INT_MONO_COEFF;
 
 
-            for (int v=0; v<NComp; v++)
+            for (int v=0; v<NCOMP_FLUID; v++)
             Interpolate( CData+v*CSize3D, CSize, CStart, CRange, FData+v*FSize3D,
                          FSize, FStart, 1, IntScheme, UnwrapPhase, Monotonic, IntMonoCoeff );
 	
@@ -129,7 +130,7 @@ void AdaptiveInterpolate( real CData [], const int CSize[3], const int CStart[3]
                }
                
 			   	
-               for (int v=0; v<NComp; v++)
+               for (int v=0; v<NCOMP_FLUID; v++)
                Interpolate( CData+v*CSize3D, CSize, CStart, CRange, FData+v*FSize3D,
                             FSize, FStart, 1, IntScheme, UnwrapPhase, Monotonic, IntMonoCoeff );
 
@@ -160,7 +161,7 @@ void AdaptiveInterpolate( real CData [], const int CSize[3], const int CStart[3]
                  if ( ( IntScheme == INT_MINMOD3D || IntScheme == INT_MINMOD1D ) && itr == 1 ) break;
 
                  // interpolation
-                 for (int v=0; v<NComp; v++)
+                 for (int v=0; v<NCOMP_FLUID; v++)
                  Interpolate( CData+v*CSize3D, CSize, CStart, CRange, FData+v*FSize3D,
                               FSize, FStart, 1, IntScheme, UnwrapPhase, Monotonic, IntMonoCoeff );
 
@@ -233,10 +234,10 @@ void AdaptiveInterpolate( real CData [], const int CSize[3], const int CStart[3]
 
         } // else Strategy == 2
 
-	 } // if ( TVar == _TOTAL )
+	 } // if ( TVar == _FLUID )
 	 else
 	 {
-        for (int v=0; v<NComp; v++)
+        for (int v=0; v<NVar_Tot; v++)
         Interpolate( CData+v*CSize3D, CSize, CStart, CRange, FData+v*FSize3D,
                      FSize, FStart, 1, IntScheme, UnwrapPhase, Monotonic, INT_MONO_COEFF );
 	 }
@@ -246,7 +247,7 @@ void AdaptiveInterpolate( real CData [], const int CSize[3], const int CStart[3]
 
 //   check minimum energy
 #    ifdef CHECK_NEGATIVE_IN_FLUID
-     if ( TVar == _TOTAL )
+     if ( TVar == _FLUID )
      {
         for ( int i = 0 ;i < FSize3D; i++ )
         {
