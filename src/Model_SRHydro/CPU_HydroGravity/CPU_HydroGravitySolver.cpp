@@ -223,11 +223,7 @@ void CPU_HydroGravitySolver(
             z = g_Corner_Array[P][2] + (double)(k_g0*dh);
 
             ExternalAcc( acc_new, x, y, z, TimeNew, c_ExtAcc_AuxArray );
-         if (acc_new[1] != acc_new[1]) 
-				 printf("%e, %d\n", acc_new[1], __LINE__);
             for (int d=0; d<3; d++)    acc_new[d] *= dt;
-         if (acc_new[1] != acc_new[1]) 
-				 printf("%e, %d\n", acc_new[1], __LINE__);
 
 #           ifdef UNSPLIT_GRAVITY
             ExternalAcc( acc_old, x, y, z, TimeOld, c_ExtAcc_AuxArray );
@@ -292,9 +288,6 @@ void CPU_HydroGravitySolver(
                acc_new[1] += Gra_Const*( pot_new[jp1_new] - pot_new[jm1_new] );
                acc_new[2] += Gra_Const*( pot_new[kp1_new] - pot_new[km1_new] );
                
-               if ( (pot_new[jp1_new] != pot_new[jp1_new]) || (pot_new[jm1_new] != pot_new[jm1_new] ) )
-					   printf("nan is found! %d\n", __LINE__);
-
 #              ifdef UNSPLIT_GRAVITY
                acc_old[0] += Gra_Const*( pot_old[ip1_old] - pot_old[im1_old] );
                acc_old[1] += Gra_Const*( pot_old[jp1_old] - pot_old[jm1_old] );
@@ -302,9 +295,6 @@ void CPU_HydroGravitySolver(
 #              endif
             } // if ( P5_Gradient ) ... else ...
          } // if ( GravityType == GRAVITY_SELF  ||  GravityType == GRAVITY_BOTH )
-
-         if (acc_new[1] != acc_new[1]) 
-				 printf("%e, %d\n", acc_new[1], __LINE__);
 
 //       advance fluid
 #        ifdef UNSPLIT_GRAVITY
@@ -381,16 +371,6 @@ void CPU_HydroGravitySolver(
          Con_new[MOMY] += (Con_new[ENGY] + Pri_new[4])*acc_new[1];
          Con_new[MOMZ] += (Con_new[ENGY] + Pri_new[4])*acc_new[2];
 
-         if (acc_new[1] != acc_new[1]) 
-				 printf("%e, %d\n", acc_new[1], __LINE__);
-
-//       calculate the updated Lorrentz factor using original temperature
-         real Ux, Uy, Uz;
-		 Ux = Con_new[MOMX] / (Con_new[DENS] * Enthalpy);
-		 Uy = Con_new[MOMY] / (Con_new[DENS] * Enthalpy);
-		 Uz = Con_new[MOMZ] / (Con_new[DENS] * Enthalpy);
-
-         real LorentzFactor = SQRT((real)1.0 + VectorDotProduct(Ux, Uy, Uz));
 
 
 
@@ -402,8 +382,15 @@ void CPU_HydroGravitySolver(
 //       for the splitting method, we ensure that the internal energy is unchanged 
 //         Ek_out = SRHydro_KineticEngy( Con_new, Pri_new, LorentzFactor, (real)1.333333333 );
 //         Etot_out = Eint_in * LorentzFactor + Ek_out;
-         Etot_out = Con_new[DENS]*Enthalpy*LorentzFactor - Pri_new[4];
-		 Con_new[ENGY] = Etot_out;
+//         Etot_out = Con_new[DENS]*Enthalpy*LorentzFactor - Pri_new[4];
+//	       Con_new[ENGY] = Etot_out;
+
+         real Msqr = SQR(Con_new[MOMX])+SQR(Con_new[MOMY])+SQR(Con_new[MOMZ]);
+		 real Dh = Con_new[DENS]*Enthalpy;
+		 real factor = SQRT(Dh*Dh + Msqr);
+		 Etot_out = factor - Con_new[DENS]*Dh*Temp / factor;
+
+         Con_new[ENGY] = Etot_out;
 
          SRHydro_CheckUnphysical(Con_new, NULL, (real)1.333333333, (real)0.0, __FUNCTION__, __LINE__, true);
 
