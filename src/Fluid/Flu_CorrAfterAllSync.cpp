@@ -137,7 +137,11 @@ void Flu_CorrAfterAllSync()
 
       else
       {
+#        if ( MODEL == HYDRO )
          Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _DENS, Rho_ParaBuf, USELB_YES );
+#        elif ( MODEL == SR_HYDRO )
+         Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Rho_ParaBuf, USELB_YES );
+#        endif
 
          InvokeSolver( POISSON_SOLVER, lv, Time[lv], NULL_REAL, NULL_REAL, Poi_Coeff, NULL_INT, amr->PotSg[lv], false, false );
 
