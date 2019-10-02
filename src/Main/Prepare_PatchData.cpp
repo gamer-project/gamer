@@ -341,8 +341,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    if ( PrepVz        )   TDerVarList[ NVar_Der ++ ] = _VELZ;
    if ( PrepPres      )   TDerVarList[ NVar_Der ++ ] = _PRES;
    if ( PrepTemp      )   TDerVarList[ NVar_Der ++ ] = _TEMP;
-   if ( PrepLrtz )        TDerVarList[ NVar_Der ++ ] = _LRTZ;
+   if ( PrepLrtz      )   TDerVarList[ NVar_Der ++ ] = _LRTZ;
+#  ifdef GRAVITY
    if ( PrepGraSource )   TDerVarList[ NVar_Der ++ ] = _SR_GRAVITY_SOURCE;
+#  endif
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
    const int NVar_Der_Max = 0;
@@ -1132,6 +1134,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                   for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
+				  SRHydro_CheckUnphysical(Fluid, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true );
+
                   Pres = SRHydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA, MIN_TEMP  );
 
 				  Msqr = VectorDotProduct( Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ] );
@@ -1574,6 +1578,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                      for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
 
                         for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
+
+                        if(SRHydro_CheckUnphysical(Fluid, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true ))
+								printf("lv=%d\n",lv);
 
                         Pres = SRHydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA, MIN_TEMP  );
 
