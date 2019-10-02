@@ -678,6 +678,23 @@ real SRHydro_KineticEngy( real Con[], real Pri[], real Lorentz, real Gamma )
   return ( Con[DENS] * h + Pri[4] ) * ( Lorentz - (real)1.0 );
 }
 
+#ifdef GRAVITY
+GPU_DEVICE
+real SRHydro_PoissonSource( real Con[], real Gamma, real MinTemp )
+{
+  real Source, Pres, Msqr;
+ 
+  Pres = SRHydro_GetPressure( Con[DENS], Con[MOMX], Con[MOMY], Con[MOMZ], Con[ENGY], Gamma, MinTemp  );
+
+  Msqr = VectorDotProduct( Con[MOMX], Con[MOMY], Con[MOMZ] );
+
+  Source = Con[ENGY] + (real)3.0 * Pres + Msqr / ( Con[ENGY] + Pres );
+  
+  return Source;
+}
+#endif
+
+
 GPU_DEVICE
 static void 
 NewtonRaphsonSolver(void *ptr, real *root, const real guess, const real epsabs, const real epsrel, const real Gamma)
