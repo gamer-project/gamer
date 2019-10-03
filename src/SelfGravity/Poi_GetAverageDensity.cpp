@@ -202,7 +202,9 @@ void Poi_GetAverageDensity()
 	  Cons[MOMZ] = amr->patch[ amr->FluSg[0] ][0][PID]->fluid[MOMZ][k][j][i];
 	  Cons[ENGY] = amr->patch[ amr->FluSg[0] ][0][PID]->fluid[ENGY][k][j][i];
 
+#     ifdef CHECK_NEGATIVE_IN_FLUID
       SRHydro_CheckUnphysical(Cons, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true);
+#     endif
 
 	  AveDensity_Init_local += SRHydro_PoissonSource( Cons, GAMMA, MIN_TEMP );
 #     endif
