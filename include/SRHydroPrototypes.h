@@ -50,9 +50,5 @@ real SRHydro_CheckMinTempInEngy (const real Con[], const real MinTemp, const rea
 bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gamma, const real MinTemp, const char s[], const int line, bool show);
 real VectorDotProduct( real V1, real V2, real V3);
 
-#ifdef GRAVITY
-real SRHydro_PoissonSource( real Con[], real Gamma, real MinTemp );
-#endif
-
 
 #endif
