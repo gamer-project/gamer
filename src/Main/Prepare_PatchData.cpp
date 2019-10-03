@@ -2029,7 +2029,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
          } // if ( MinPres >= (real)0.0 )
 #        endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
 
-#        if ( MODEL == SR_HYDRO && defined CHECK_NEGATIVE_IN_FLUID )
+#        if ( MODEL == SR_HYDRO && defined CHECK_FAILED_CELL_IN_FLUID )
          if ( (TVar & _FLUID) == _FLUID )
          {
             real Cons[NCOMP_TOTAL];

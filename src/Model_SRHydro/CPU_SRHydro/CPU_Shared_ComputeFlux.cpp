@@ -125,7 +125,7 @@ void SRHydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
             ConVar_R[v] = g_FC_Var[faceL][v][ idx_fc+didx_fc[d] ];
          }
 
-#        ifdef CHECK_NEGATIVE_IN_FLUID
+#        ifdef CHECK_FAILED_CELL_IN_FLUID
          SRHydro_CheckUnphysical( ConVar_L, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true );
          SRHydro_CheckUnphysical( ConVar_R, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true );
 #        endif

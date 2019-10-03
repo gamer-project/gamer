@@ -953,7 +953,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 		       Cons[2] = MomY[PID][i][j][k];
 		       Cons[3] = MomZ[PID][i][j][k];
 		       Cons[4] = Engy[PID][i][j][k];
-#              ifdef CHECK_NEGATIVE_IN_FLUID
+#              ifdef CHECK_FAILED_CELL_IN_FLUID
 		       if(SRHydro_CheckUnphysical(Cons, NULL, (real) GAMMA, (real) MIN_TEMP, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
 #              endif
                Temp[PID][i][j][k] =  SRHydro_GetTemperature( Cons[0], Cons[1], Cons[2], Cons[3], Cons[4], GAMMA, MIN_TEMP  );
@@ -1726,7 +1726,7 @@ void FillIn_SymConst( SymConst_t &SymConst )
 #  if   ( MODEL == HYDRO || SR_HYDRO)
    SymConst.Flu_BlockSize_x      = FLU_BLOCK_SIZE_X;
    SymConst.Flu_BlockSize_y      = FLU_BLOCK_SIZE_Y;
-#  ifdef CHECK_NEGATIVE_IN_FLUID
+#  ifdef CHECK_FAILED_CELL_IN_FLUID
    SymConst.CheckNegativeInFluid = 1;
 #  else
    SymConst.CheckNegativeInFluid = 0;

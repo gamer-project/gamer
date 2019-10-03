@@ -177,7 +177,7 @@ real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, 
 
      struct Fun_params params = { M_Dsqr, E_D };
 
-# ifdef CHECK_NEGATIVE_IN_FLUID
+# ifdef CHECK_FAILED_CELL_IN_FLUID
   if ( guess != guess || guess >= HUGE_NUMBER || guess <= TINY_NUMBER )
   { 
     printf ("guess root = %14.7e\n", guess);
@@ -712,7 +712,7 @@ NewtonRaphsonSolver(void *ptr, real *root, const real guess, const real epsabs, 
      iter++;
      Fun_DFun(*root, ptr, &f, &df, Gamma);
 
-#    ifdef CHECK_NEGATIVE_IN_FLUID
+#    ifdef CHECK_FAILED_CELL_IN_FLUID
      if ( df == (real)0.0 )                                                  printf("derivative is zero\n");
      if (  f != f  ||(real) -HUGE_NUMBER >= f  || f  >= (real)HUGE_NUMBER )  printf("function value is not finite\n");
      if ( df != df ||(real) -HUGE_NUMBER >= df || df >= (real)HUGE_NUMBER )  printf("derivative value is not finite\n");

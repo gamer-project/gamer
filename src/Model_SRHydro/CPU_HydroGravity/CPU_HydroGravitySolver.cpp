@@ -392,7 +392,7 @@ void CPU_HydroGravitySolver(
 
          Con_new[ENGY] = Etot_out;
 
-#        ifdef CHECK_NEGATIVE_IN_FLUID
+#        ifdef CHECK_FAILED_CELL_IN_FLUID
          SRHydro_CheckUnphysical(Con_new, NULL, (real)1.333333333, (real)0.0, __FUNCTION__, __LINE__, true);
 #        endif
 

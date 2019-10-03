@@ -213,7 +213,7 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENPY][k][j][i],
                               dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy );
 
-#        elif ( MODEL == SR_HYDRO && defined(CHECK_NEGATIVE_IN_FLUID) )
+#        elif ( MODEL == SR_HYDRO && defined(CHECK_FAILED_CELL_IN_FLUID) )
 
 	     real Con[NCOMP_FLUID];
 	     for(int v=0;v<NCOMP_FLUID;v++) Con[v]=amr->patch[FaFluSg][FaLv][FaPID]->fluid[v][k][j][i];

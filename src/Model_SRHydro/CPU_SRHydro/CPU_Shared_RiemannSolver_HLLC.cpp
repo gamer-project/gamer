@@ -73,7 +73,7 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
    lFactor = SRHydro_Con2Pri (CL, PL, Gamma, MinTemp);
    rFactor = SRHydro_Con2Pri (CR, PR, Gamma, MinTemp);
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
+#  ifdef CHECK_FAILED_CELL_IN_FLUID
    SRHydro_CheckUnphysical(NULL, PL, Gamma, MinTemp, __FUNCTION__, __LINE__, true);
    SRHydro_CheckUnphysical(NULL, PR, Gamma, MinTemp, __FUNCTION__, __LINE__, true);
 #  endif
@@ -108,7 +108,7 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
    csrsq = Gamma * PR[4] / nhr;
 #  endif
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
+#  ifdef CHECK_FAILED_CELL_IN_FLUID
    if ( cslsq >= 1.0 || csrsq >= 1.0 || cslsq < 0.0 || csrsq < 0.0 )
      printf( "cslsq=%10.7e, cslrq=%10.7e\n", cslsq, csrsq);
 #  endif
@@ -121,7 +121,7 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
    ssl = cslsq / FMA( - gammasql, cslsq, gammasql ); /* Mignone Eq 22.5 */
    ssr = csrsq / FMA( - gammasqr, csrsq, gammasqr ); /* Mignone Eq 22.5 */
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
+#  ifdef CHECK_FAILED_CELL_IN_FLUID
    if ( ( ssl < (real)0.0 ) || ( ssr < (real)0.0 ) ) printf("ssl = %14.7e, ssr = %14.7e\n", ssl, ssr);
 #  endif
 
@@ -225,7 +225,7 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
   Uhll[4] = (lmdar * ( CR[4] + CR[0] ) - lmdal * ( CL[4] + CL[0]) + Fl[4] - Fr[4]) * ovlrmll;
 # endif
 
-# ifdef CHECK_NEGATIVE_IN_FLUID
+# ifdef CHECK_FAILED_CELL_IN_FLUID
   SRHydro_CheckUnphysical(Uhll, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true);
 # endif
 
@@ -239,7 +239,7 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
 
   real delta = FMA( b, b, -(real)4*a*c );
 
-# ifdef CHECK_NEGATIVE_IN_FLUID
+# ifdef CHECK_FAILED_CELL_IN_FLUID
   if (delta < (real) 0.0) printf("delta=%f\n", delta);
 # endif
 
@@ -269,7 +269,7 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
     Usl[4] = (( CL[4] + CL[0] ) * factor0 + ps * lmdas - PL[4] * lV1) * den;
 #   endif
 
-#   ifdef CHECK_NEGATIVE_IN_FLUID
+#   ifdef CHECK_FAILED_CELL_IN_FLUID
     SRHydro_CheckUnphysical(Usl, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true);
 #   endif
 
@@ -304,7 +304,7 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
 #   elif ( CONSERVED_ENERGY == 2 )
     Usr[4] = (( CR[4] + CR[0] ) * factor0 + ps * lmdas - PR[4] * rV1) * den;
 #   endif
-#   ifdef CHECK_NEGATIVE_IN_FLUID
+#   ifdef CHECK_FAILED_CELL_IN_FLUID
     SRHydro_CheckUnphysical(Usr, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true);
 #   endif
 

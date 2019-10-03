@@ -246,7 +246,7 @@ void AdaptiveInterpolate( real CData [], const int CSize[3], const int CStart[3]
 
 
 //   check minimum energy
-#    ifdef CHECK_NEGATIVE_IN_FLUID
+#    ifdef CHECK_FAILED_CELL_IN_FLUID
      if ( TVar == _FLUID )
      {
         for ( int i = 0 ;i < FSize3D; i++ )

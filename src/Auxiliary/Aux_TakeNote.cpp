@@ -410,10 +410,10 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
 
 #     if   ( MODEL == HYDRO )
-#     ifdef CHECK_NEGATIVE_IN_FLUID
-      fprintf( Note, "CHECK_NEGATIVE_IN_FLUID         ON\n" );
+#     ifdef CHECK_FAILED_CELL_IN_FLUID
+      fprintf( Note, "CHECK_FAILED_CELL_IN_FLUID         ON\n" );
 #     else
-      fprintf( Note, "CHECK_NEGATIVE_IN_FLUID         OFF\n" );
+      fprintf( Note, "CHECK_FAILED_CELL_IN_FLUID         OFF\n" );
 #     endif
 
 #     ifdef CHAR_RECONSTRUCTION
@@ -450,10 +450,10 @@ void Aux_TakeNote()
 #     warning : WAIT MHD !!!
 
 #     elif   ( MODEL == SR_HYDRO )
-#     ifdef CHECK_NEGATIVE_IN_FLUID
-      fprintf( Note, "CHECK_NEGATIVE_IN_FLUID         ON\n" );
+#     ifdef CHECK_FAILED_CELL_IN_FLUID
+      fprintf( Note, "CHECK_FAILED_CELL_IN_FLUID         ON\n" );
 #     else
-      fprintf( Note, "CHECK_NEGATIVE_IN_FLUID         OFF\n" );
+      fprintf( Note, "CHECK_FAILED_CELL_IN_FLUID         OFF\n" );
 #     endif
 
 #     ifdef CHAR_RECONSTRUCTION
