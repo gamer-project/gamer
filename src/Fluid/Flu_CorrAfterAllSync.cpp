@@ -97,6 +97,12 @@ void Flu_CorrAfterAllSync()
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
          Aux_Message( stdout, "      recalculate potential at Lv %2d        ... ", lv );
 
+#     if ( MODEL == HYDRO )
+	  const int Gra_Source = _DENS;
+#     elif ( MODEL == SR_HYDRO )
+	  const int Gra_Source = _TOTAL;
+#     endif
+
 #     ifdef COMOVING
       const double Poi_Coeff = 4.0*M_PI*NEWTON_G*Time[lv];
 #     else
@@ -116,6 +122,7 @@ void Flu_CorrAfterAllSync()
       const bool SibBufPatch      = NULL_BOOL;
       const bool FaSibBufPatch    = NULL_BOOL;
 #     endif
+
 
       Prepare_PatchData_InitParticleDensityArray( lv );
 
@@ -137,11 +144,7 @@ void Flu_CorrAfterAllSync()
 
       else
       {
-#        if ( MODEL == HYDRO )
-         Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _DENS, Rho_ParaBuf, USELB_YES );
-#        elif ( MODEL == SR_HYDRO )
-         Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Rho_ParaBuf, USELB_YES );
-#        endif
+         Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, Gra_Source, Rho_ParaBuf, USELB_YES );
 
          InvokeSolver( POISSON_SOLVER, lv, Time[lv], NULL_REAL, NULL_REAL, Poi_Coeff, NULL_INT, amr->PotSg[lv], false, false );
 

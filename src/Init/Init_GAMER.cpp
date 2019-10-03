@@ -196,6 +196,13 @@ void Init_GAMER( int *argc, char ***argv )
 
 
 #  ifdef GRAVITY
+
+#  if ( MODEL == HYDRO )
+   const int Gra_Source = _DENS;
+#  elif ( MODEL == SR_HYDRO )
+   const int Gra_Source = _TOTAL;
+#  endif
+
    if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
    {
 //    initialize the k-space Green's function for the isolated BC.
@@ -213,11 +220,7 @@ void Init_GAMER( int *argc, char ***argv )
       {
          if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Lv %2d ... ", lv );
 
-#        if ( MODEL == HYDRO )
-         Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _DENS, Rho_ParaBuf, USELB_YES );
-#        elif ( MODEL == SR_HYDRO )
-         Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Rho_ParaBuf, USELB_YES );
-#        endif
+         Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, Gra_Source, Rho_ParaBuf, USELB_YES );
 
          Gra_AdvanceDt( lv, Time[lv], NULL_REAL, NULL_REAL, NULL_INT, amr->PotSg[lv], true, false, false, false );
 
