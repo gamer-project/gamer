@@ -472,6 +472,10 @@ void SRHydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const
 bool SRHydro_Flag_Vorticity( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
 
 
+#ifdef GRAVITY
+real SRHydro_PoissonSource( real Con[], real Gamma, real MinTemp );
+#endif
+
 #else
 #error : ERROR : unsupported MODEL !!
 #endif
