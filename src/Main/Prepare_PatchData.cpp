@@ -1134,28 +1134,14 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                   for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
-				  SRHydro_CheckUnphysical(Fluid, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true );
-
-                  Pres = SRHydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA, MIN_TEMP  );
-
-				  Msqr = VectorDotProduct( Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ] );
-
-                  Source = Fluid[ENGY] + (real)3.0 * Pres + Msqr / ( Fluid[ENGY] + Pres );
-
-				  Array_Ptr[Idx1] = Source;
-
+				  Array_Ptr[Idx1] = SRHydro_PoissonSource( Fluid, GAMMA, MIN_TEMP );
 
                   if ( FluIntTime ) // temporal interpolation
                   {
                      for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k][j][i];
 
-                     Pres = SRHydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA, MIN_TEMP  );
-
-                     Msqr = VectorDotProduct( Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ] );
-
-                     Source = Fluid[ENGY] + (real)3.0 * Pres + Msqr / ( Fluid[ENGY] + Pres );
-
-                     Array_Ptr[Idx1] = FluWeighting * Array_Ptr[Idx1] + FluWeighting_IntT * Source;
+                     Array_Ptr[Idx1] = FluWeighting * Array_Ptr[Idx1] 
+							         + FluWeighting_IntT * SRHydro_PoissonSource( Fluid, GAMMA, MIN_TEMP );
                   }
 
                   Idx1 ++;
@@ -1579,29 +1565,14 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                         for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
 
-                        if(SRHydro_CheckUnphysical(Fluid, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true ))
-								printf("lv=%d\n",lv);
-
-                        Pres = SRHydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA, MIN_TEMP  );
-
-				        Msqr = VectorDotProduct( Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ] );
-
-                        Source = Fluid[ENGY] + (real)3.0 * Pres + Msqr / ( Fluid[ENGY] + Pres );
-
-                        Array_Ptr[Idx1] = Source;
+                        Array_Ptr[Idx1] = SRHydro_PoissonSource( Fluid, GAMMA, MIN_TEMP );
 
                         if ( FluIntTime ) // temporal interpolation
                         {
                            for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][K2][J2][I2];
 
-                           Pres = SRHydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA, MIN_TEMP  );
-
-				           Msqr = VectorDotProduct( Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ] );
-
-                           Source = Fluid[ENGY] + (real)3.0 * Pres + Msqr / ( Fluid[ENGY] + Pres );
-
                            Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
-                                             + FluWeighting_IntT*Source;
+                                             + FluWeighting_IntT*SRHydro_PoissonSource( Fluid, GAMMA, MIN_TEMP );
                         }
 
                         Idx1 ++;
