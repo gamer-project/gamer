@@ -1267,7 +1267,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
 
-//    check in SR-HYDRO
+//    check in SR_HYDRO
 //    ----------------
 #     elif ( MODEL == SR_HYDRO )
 

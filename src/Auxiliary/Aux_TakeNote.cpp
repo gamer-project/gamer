@@ -167,7 +167,7 @@ void Aux_TakeNote()
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
 
-//    d. options in SR-HYDRO
+//    d. options in SR_HYDRO
 #     elif   ( MODEL == SR_HYDRO )
 
 #     if ( EOS == CONSTANT_GAMMA )

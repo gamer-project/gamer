@@ -550,20 +550,20 @@ void Init_ResetParameter()
 #  endif
 
 
-// flux operations are useful in HYDRO/MHD/ELBDM/SR-HYDRO only
+// flux operations are useful in HYDRO/MHD/ELBDM/SR_HYDRO only
 #  if ( MODEL != HYDRO  &&  MODEL != MHD  &&  MODEL != ELBDM && MODEL != SR_HYDRO )
    if ( OPT__FIXUP_FLUX )
    {
       OPT__FIXUP_FLUX = false;
 
-      PRINT_WARNING( OPT__FIXUP_FLUX, FORMAT_INT, "since it's only supported in HYDRO/MHD/ELBDM/SR-HYDRO" );
+      PRINT_WARNING( OPT__FIXUP_FLUX, FORMAT_INT, "since it's only supported in HYDRO/MHD/ELBDM/SR_HYDRO" );
    }
 
    if ( OPT__CK_FLUX_ALLOCATE )
    {
       OPT__CK_FLUX_ALLOCATE = false;
 
-      PRINT_WARNING( OPT__CK_FLUX_ALLOCATE, FORMAT_INT, "since it's only supported in HYDRO/MHD/ELBDM/SR-HYDRO" );
+      PRINT_WARNING( OPT__CK_FLUX_ALLOCATE, FORMAT_INT, "since it's only supported in HYDRO/MHD/ELBDM/SR_HYDRO" );
    }
 #  endif
 
@@ -599,7 +599,7 @@ void Init_ResetParameter()
    {
       OPT__CK_CONSERVATION = false;
 
-      PRINT_WARNING( OPT__CK_CONSERVATION, FORMAT_INT, "since it's only supported in HYDRO/MHD/ELBDM/SR-HYDRO" );
+      PRINT_WARNING( OPT__CK_CONSERVATION, FORMAT_INT, "since it's only supported in HYDRO/MHD/ELBDM/SR_HYDRO" );
    }
 #  endif
 

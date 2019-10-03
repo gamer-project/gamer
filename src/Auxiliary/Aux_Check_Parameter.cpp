@@ -184,7 +184,7 @@ void Aux_Check_Parameter()
 #  if ( ( MODEL != HYDRO ) && ( MODEL != SR_HYDRO )  )
    for (int f=0; f<6; f++)
       if ( OPT__BC_FLU[f] == BC_FLU_REFLECTING )
-         Aux_Error( ERROR_INFO, "reflecting boundary condition (OPT__BC_FLU=3) only works with HYDRO and SR-HYDRO !!\n" );
+         Aux_Error( ERROR_INFO, "reflecting boundary condition (OPT__BC_FLU=3) only works with HYDRO and SR_HYDRO !!\n" );
 #  endif
 
    for (int f=0; f<6; f+=2)
@@ -904,7 +904,7 @@ void Aux_Check_Parameter()
 // errors
 // ------------------------------
 #  if ( NCOMP_FLUID != 5 )
-#     error : ERROR : NCOMP_FLUID != 5 in SR-HYDRO !!
+#     error : ERROR : NCOMP_FLUID != 5 in SR_HYDRO !!
 #  endif
 
 #  if ( NCOMP_TOTAL != NFLUX_TOTAL )
@@ -998,10 +998,10 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : \"%s\" is disabled in HYDRO !!\n", "OPT__FIXUP_RESTRICT" );
 #elif ( MODEL == SR_HYDRO )
    if ( !OPT__FIXUP_FLUX )
-      Aux_Message( stderr, "WARNING : \"%s\" is disabled in SR-HYDRO !!\n", "OPT__FIXUP_FLUX" );
+      Aux_Message( stderr, "WARNING : \"%s\" is disabled in SR_HYDRO !!\n", "OPT__FIXUP_FLUX" );
 
    if ( !OPT__FIXUP_RESTRICT )
-      Aux_Message( stderr, "WARNING : \"%s\" is disabled in SR-HYDRO !!\n", "OPT__FIXUP_RESTRICT" );
+      Aux_Message( stderr, "WARNING : \"%s\" is disabled in SR_HYDRO !!\n", "OPT__FIXUP_RESTRICT" );
 #endif
 
    if ( OPT__CK_FLUX_ALLOCATE  &&  !OPT__FIXUP_FLUX )
@@ -1316,7 +1316,7 @@ void Aux_Check_Parameter()
                  "OPT__GRA_P5_GRADIENT", "USG_GHOST_SIZE == 2" );
 #  endif
 
-   if ( OPT__EXTERNAL_POT )   Aux_Error( ERROR_INFO, "OPT__EXTERNAL_POT is NOT supported in SR-HYDRO --> use external gravity !!\n" );
+   if ( OPT__EXTERNAL_POT )   Aux_Error( ERROR_INFO, "OPT__EXTERNAL_POT is NOT supported in SR_HYDRO --> use external gravity !!\n" );
 
 
 // warnings
