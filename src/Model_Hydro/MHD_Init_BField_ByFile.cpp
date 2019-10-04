@@ -1,21 +1,22 @@
 #include "GAMER.h"
 
-#ifdef MHD
 #ifdef SUPPORT_HDF5
 #include "hdf5.h"
+#endif
 
 static int nAx, nAy, nAz;
 static double Axmin, Aymin, Azmin;
 static double Adx, Ady, Adz;
 static double *Axcoord, *Aycoord, *Azcoord;
 
-
 double TSC_Weight( const double x );
 double VecPot_Interp( const double field[], const double xx, const double yy, 
-		      const double zz, const int fdims[], const int fbegin[] );
+		                const double zz, const int fdims[], const int fbegin[] );
+#ifdef SUPPORT_HDF5
 void VecPot_ReadField( hid_t mag_file_id, const int ibegin, const int jbegin,
                        const int kbegin, const int iend, const int jend,
                        const int kend, double Ax[], double Ay[], double Az[] );
+#endif
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  MHD_Init_BField_ByFile
@@ -27,7 +28,7 @@ void VecPot_ReadField( hid_t mag_file_id, const int ibegin, const int jbegin,
 //
 // Parameter   :  B_lv         : Target AMR level
 //
-// Return      :  amr->patch->fluid
+// Return      :  amr->patch->magnetic
 //-------------------------------------------------------------------------------------------------------
 void MHD_Init_BField_ByFile( const int B_lv )
 {
@@ -36,14 +37,11 @@ void MHD_Init_BField_ByFile( const int B_lv )
    Aux_Error( ERROR_INFO, "MHD must be enabled !!\n" );
 #  endif
 
-#  if SUPPORT_HDF5
+#  ifndef SUPPORT_HDF5
+   Aux_Error( ERROR_INFO, "SUPPORT_HDF5 must be set to load a vector potential from a file !!\n" );
+#  endif
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading the magnetic field from the input file ...\n" );
-
-// set the number of OpenMP threads
-//#  ifdef OPENMP
-//   const int OMP_NThread = ( OPT__INIT_GRID_WITH_OMP ) ? OMP_NTHREAD : 1;
-//#  endif
 
    const char B_Filename[] = "B_IC";
 
@@ -60,6 +58,9 @@ void MHD_Init_BField_ByFile( const int B_lv )
 
 // Open the magnetic field file and determine the dimensionality of the vector
 // potential grid
+
+#  ifdef SUPPORT_HDF5
+
    hid_t mag_file_id = H5Fopen(B_Filename, H5F_ACC_RDONLY, H5P_DEFAULT);
 
    if ( B_lv == 0 ) {
@@ -77,37 +78,43 @@ void MHD_Init_BField_ByFile( const int B_lv )
      nAy = dims[1];
      nAz = dims[2];
 
-     // Read the coordinate information from the vector potential grid
-     Axcoord = new double [ nAx ];
-     Aycoord = new double [ nAy ];
-     Azcoord = new double [ nAz ];
-   
-     dataset = H5Dopen(mag_file_id, "x", H5P_DEFAULT);
-     status  = H5Dread(dataset, H5T_NATIVE_DOUBLE, H5S_ALL,
-		       H5S_ALL, H5P_DEFAULT, Axcoord);
-     H5Dclose(dataset);
-
-     dataset = H5Dopen(mag_file_id, "y", H5P_DEFAULT);
-     status  = H5Dread(dataset, H5T_NATIVE_DOUBLE, H5S_ALL,
-		       H5S_ALL, H5P_DEFAULT, Aycoord);
-     H5Dclose(dataset);
-
-     dataset = H5Dopen(mag_file_id, "z", H5P_DEFAULT);
-     status  = H5Dread(dataset, H5T_NATIVE_DOUBLE, H5S_ALL,
-		       H5S_ALL, H5P_DEFAULT, Azcoord);
-     H5Dclose(dataset);
-
-     // Cell spacing and left edge of vector potential grid
-
-     Adx = Axcoord[1]-Axcoord[0];
-     Ady = Aycoord[1]-Aycoord[0];
-     Adz = Azcoord[1]-Azcoord[0];
-
-     Axmin = Axcoord[0]-0.5*Adx;
-     Aymin = Aycoord[0]-0.5*Ady;
-     Azmin = Azcoord[0]-0.5*Adz;
-   
    }
+
+#  endif
+
+   // Read the coordinate information from the vector potential grid
+   Axcoord = new double [ nAx ];
+   Aycoord = new double [ nAy ];
+   Azcoord = new double [ nAz ];
+
+#  ifdef SUPPORT_HDF5
+
+   dataset = H5Dopen(mag_file_id, "x", H5P_DEFAULT);
+   status  = H5Dread(dataset, H5T_NATIVE_DOUBLE, H5S_ALL,
+            H5S_ALL, H5P_DEFAULT, Axcoord);
+   H5Dclose(dataset);
+
+   dataset = H5Dopen(mag_file_id, "y", H5P_DEFAULT);
+   status  = H5Dread(dataset, H5T_NATIVE_DOUBLE, H5S_ALL,
+            H5S_ALL, H5P_DEFAULT, Aycoord);
+   H5Dclose(dataset);
+
+   dataset = H5Dopen(mag_file_id, "z", H5P_DEFAULT);
+   status  = H5Dread(dataset, H5T_NATIVE_DOUBLE, H5S_ALL,
+            H5S_ALL, H5P_DEFAULT, Azcoord);
+   H5Dclose(dataset);
+
+#  endif
+
+   // Cell spacing and left edge of vector potential grid
+
+   Adx = Axcoord[1]-Axcoord[0];
+   Ady = Aycoord[1]-Aycoord[0];
+   Adz = Azcoord[1]-Azcoord[0];
+
+   Axmin = Axcoord[0]-0.5*Adx;
+   Aymin = Aycoord[0]-0.5*Ady;
+   Azmin = Azcoord[0]-0.5*Adz;
 
    double *Ax = new double [ CUBE(PS1+1) ];
    double *Ay = new double [ CUBE(PS1+1) ];
@@ -221,19 +228,20 @@ void MHD_Init_BField_ByFile( const int B_lv )
    } // for (int PID=0; PID<amr->NPatchComma[B_lv][1]; PID++)
 
 // Close the magnetic field file
+
+#  ifdef SUPPORT_HDF5
    H5Fclose(mag_file_id);
+#  endif
 
    delete [] Ax;
    delete [] Ay;
    delete [] Az;
 
+   delete [] Axcoord;
+   delete [] Aycoord;
+   delete [] Azcoord;
+
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading the magnetic field from the input file ... done\n" );
-
-#  else
-
-   Aux_Error( ERROR_INFO, "SUPPORT_HDF5 must be set to load a vector potential from a file !!\n" );
-   
-#  endif
 
 } // FUNCTION : Hydro_Init_BField_ByFile
 
@@ -258,7 +266,7 @@ double VecPot_Interp( const double field[], const double xx, const double yy,
       for (int i = -1; i <= 1; i++) { double dx = (xx-Axcoord[ii+i])/Adx;
       for (int j = -1; j <= 1; j++) { double dy = (yy-Aycoord[jj+j])/Ady;
       for (int k = -1; k <= 1; k++) { double dz = (zz-Azcoord[kk+k])/Adz;
-	int idx = (ib+i)*fdims[2]*fdims[1] + (jb+j)*fdims[2] + (kb+k);
+	      int idx = (ib+i)*fdims[2]*fdims[1] + (jb+j)*fdims[2] + (kb+k);
          pot += field[idx]*TSC_Weight(dx)*TSC_Weight(dy)*TSC_Weight(dz);
       }}}
 
@@ -294,6 +302,8 @@ double TSC_Weight( const double x )
    return weight;
 
 } // FUNCTION : TSC_Weight
+
+#ifdef SUPPORT_HDF5
 
 void VecPot_ReadField( hid_t mag_file_id, const int ibegin, const int jbegin, 
 		       const int kbegin, const int iend, const int jend, 
@@ -366,4 +376,3 @@ void VecPot_ReadField( hid_t mag_file_id, const int ibegin, const int jbegin,
 } // FUNCTION : VecPot_ReadField
 
 #endif // #ifdef SUPPORT_HDF5
-#endif // #ifdef MHD
