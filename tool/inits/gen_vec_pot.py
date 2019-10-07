@@ -9,9 +9,9 @@ OPT__INIT_BFIELD_BYFILE parameter. It does the following:
 The units of the vector potential and the coordinate arrays should be the same
 as those used in GAMER. So:
 
-* coordinates are in L_UNIT
-* vector potential components are in B_UNIT*L_UNIT = sqrt(4*pi*P_UNIT)*L_UNIT
-  where P_UNIT = M_UNIT*L_UNIT/T_UNIT**2
+* coordinates are in UNIT_L
+* vector potential components are in UNIT_B*UNIT_L = sqrt(4*pi*UNIT_P)*UNIT_L
+  where UNIT_P = UNIT_M*UNIT_L/UNIT_T**2
 
 The file should also be named "B_IC" for GAMER to recognize it. 
 
@@ -21,14 +21,22 @@ It requires NumPy, h5py, and HDF5 to be installed.
 import h5py
 import numpy as np
 
-# Number of cells along each dimension of domain
+# Number of cells along each dimension of the input grid
 
 nx, ny, nz = (128,)*3
 
-# Left edge and right edge coordinates of domain
+# Left edge and right edge coordinates of simulation domain
 
 le = np.zeros(3)
 re = np.ones(3)
+
+# Since we need to take derivatives on coordinates in the 
+# domain, the input grid must be extended a bit beyond this 
+# boundary
+
+buffer = 0.1
+le -= buffer
+re -= buffer
 
 # Construct the grid cell edge coordinates
 
@@ -42,7 +50,8 @@ x = 0.5*(x[1:]+x[:-1])
 y = 0.5*(y[1:]+y[:-1])
 z = 0.5*(z[1:]+z[:-1])
 
-# Use the 
+# Use the 1-D coordinate arrays to consruct 3D coordinate arrays
+# that we will use to compute an analytic vector potential
 
 xx, yy, zz = np.meshgrid(x, y, z, sparse=False, indexing='ij')
 
