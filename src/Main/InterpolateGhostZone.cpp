@@ -645,7 +645,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 #  if ( MODEL == SR_HYDRO )
    if ( PrepGraSource )
    {
-      real Pres, Msqr, Source;
+      real Pres, Msqr;
 
       for (int k=0; k<Loop1[2]; k++)   {  k1 = k + Disp1[2];   k2 = k + Disp2[2];
       for (int j=0; j<Loop1[1]; j++)   {  j1 = j + Disp1[1];   j2 = j + Disp2[1];
@@ -1011,7 +1011,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 #        ifdef GRAVITY
          if ( PrepGraSource )
          {
-            real Pres, Msqr, Source;
+            real Pres, Msqr;
 
             for (int k=0; k<Loop2[2]; k++)   {  k1 = k + Disp3[2];   k2 = k + Disp4[2];
             for (int j=0; j<Loop2[1]; j++)   {  j1 = j + Disp3[1];   j2 = j + Disp4[1];

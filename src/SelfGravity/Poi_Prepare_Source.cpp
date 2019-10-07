@@ -28,19 +28,19 @@ void Poi_Prepare_Source( const int lv, const double PrepTime, real h_Rho_Array_P
    real MinDens;
 
 // the source term in Poisson equation
-   int SourceTerm;
+   int Gra_Source;
 
 #  if ( MODEL == HYDRO )
-   SourceTerm = _TOTAL_DENS;
+   Gra_Source = _TOTAL_DENS;
    MinDens = MIN_DENS;
 #  elif ( MODEL == SR_HYDRO )
-   SourceTerm = _SR_GRAVITY_SOURCE; 
+   Gra_Source = _SR_GRAVITY_SOURCE; 
    MinDens = -1.0;
 #  elif ( MODEL == SR_HYDRO )
 #  endif
 
 
-   Prepare_PatchData( lv, PrepTime, &h_Rho_Array_P[0][0][0][0], RHO_GHOST_SIZE, NPG, PID0_List, SourceTerm,
+   Prepare_PatchData( lv, PrepTime, &h_Rho_Array_P[0][0][0][0], RHO_GHOST_SIZE, NPG, PID0_List, Gra_Source,
                       OPT__RHO_INT_SCHEME, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
                       MinDens, MinPres_No, DE_Consistency_No );
 

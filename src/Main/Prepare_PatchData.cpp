@@ -1125,7 +1125,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #           ifdef GRAVITY
             if ( PrepGraSource )
             {
-			   real Pres, Msqr, Source;
+			   real Pres, Msqr;
 
                for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
                for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
@@ -1556,7 +1556,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #                 ifdef GRAVITY
                   if ( PrepGraSource )
                   {
-			         real Pres, Msqr, Source;
+			         real Pres, Msqr;
 
                      for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
                      for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j;   J2 = j + Disp_j2;
