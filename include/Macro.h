@@ -251,9 +251,11 @@
 #  define NDERIVE             5
 #  elif ( MODEL == SR_HYDRO )
 #  define _LRTZ               ( 1 << (NCOMP_TOTAL+5) ) // Lorentz factor               
-#  define _3VEL               ( 1 << (NCOMP_TOTAL+6) ) // magnitude of 3-velocity      
+#  define _3VEL               ( 1 << (NCOMP_TOTAL+6) ) // magnitude of 3-velocity
+#  ifndef GRAVITY
 #  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP | _LRTZ | _3VEL )
 #  define NDERIVE             7
+#  endif
 #  endif
 
 
@@ -438,11 +440,11 @@
 #  define GRAVITY_SOURCE         _DENS
 
 #  elif ( MODEL == SR_HYDRO )
-#  define PRE__GRAVITY_SOURCE  ( 1 << (NCOMP_TOTAL+NDERIVE+1) )
+#  define PRE_GRAVITY_SOURCE  ( 1 << (NCOMP_TOTAL+NDERIVE+1) )
 #  define GRAVITY_SOURCE         _TOTAL
 
-#  define NDERIVE                NDERIVE+1
-#  define _DERIVED             ( _DERIVED | PRE_GRA_SOURCE )
+#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP | _LRTZ | _3VEL | PRE_GRAVITY_SOURCE )
+#  define NDERIVE             8
 #  endif
 
 

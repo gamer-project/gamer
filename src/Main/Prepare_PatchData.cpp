@@ -135,6 +135,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    int AllVar = ( _TOTAL | _DERIVED );
 #  ifdef GRAVITY
    AllVar |= _POTE;
+   AllVar |= PRE_GRAVITY_SOURCE;
 #  endif
 #  ifdef PARTICLE
    AllVar |= _PAR_DENS;
@@ -234,8 +235,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 
 #  if ( MODEL != SR_HYDRO && !defined GRAVITY)
-   if ( TVar & _SR_GRAVITY_SOURCE )
-	  Aux_Error( ERROR_INFO, " _SR_GRAVITY_SOURCE only works with SR_HYDRO and GRAVITY !!\n");
+   if ( TVar & PRE_GRAVITY_SOURCE )
+	  Aux_Error( ERROR_INFO, " PRE_GRAVITY_SOURCE only works with SR_HYDRO and GRAVITY !!\n");
 #  endif
 
 // target patches must be real patches
@@ -282,7 +283,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #  ifdef GRAVITY
    const bool PrepPot = ( TVar & _POTE ) ? true : false;
 #  if ( MODEL == SR_HYDRO )
-   const bool PrepGraSource    = ( TVar & _SR_GRAVITY_SOURCE ) ? true : false; // source term in Poisson equation
+   const bool PrepGraSource    = ( TVar & PRE_GRAVITY_SOURCE ) ? true : false; // source term in Poisson equation
 #  endif
 #  endif
 
@@ -343,7 +344,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    if ( PrepTemp      )   TDerVarList[ NVar_Der ++ ] = _TEMP;
    if ( PrepLrtz      )   TDerVarList[ NVar_Der ++ ] = _LRTZ;
 #  ifdef GRAVITY
-   if ( PrepGraSource )   TDerVarList[ NVar_Der ++ ] = _SR_GRAVITY_SOURCE;
+   if ( PrepGraSource )   TDerVarList[ NVar_Der ++ ] = PRE_GRAVITY_SOURCE;
 #  endif
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
