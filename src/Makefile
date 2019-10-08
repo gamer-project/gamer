@@ -33,8 +33,8 @@ COMPILE_VERBOSE := 0
 # physical model: HYDRO/MHD/ELBDM/PAR_ONLY (ELBDM: wave dark matter; PAR_ONLY: particle-only)
 # --> must be set in any cases; PAR_ONLY is not supported yet;
 #     MHD and ELBDM are not publicly available yet but will be released soon
-SIMU_OPTION += -DMODEL=SR_HYDRO
-#SIMU_OPTION += -DMODEL=HYDRO
+#SIMU_OPTION += -DMODEL=SR_HYDRO
+SIMU_OPTION += -DMODEL=HYDRO
 
 # enable gravity
 SIMU_OPTION += -DGRAVITY
@@ -149,7 +149,7 @@ SIMU_OPTION += -DSTORE_POT_GHOST
 
 # comoving frame for cosmological simulations
 # --> not supported for PARTICLE
-#SIMU_OPTION += -DCOMOVING
+SIMU_OPTION += -DCOMOVING
 endif # GRAVITY
 
 
@@ -581,11 +581,11 @@ endif # GRAVITY
 ifeq "$(filter -DPARTICLE, $(SIMU_OPTION))" "-DPARTICLE"
 CUDA_FILE   +=
 
-CC_FILE     += Par_Init_ByFunction.cpp  Par_Output_TextFile.cpp  Par_FindHomePatch_UniformGrid.cpp  Par_PassParticle2Son.cpp \
-               Par_Aux_Check_Particle.cpp  Par_PassParticle2Father.cpp  Par_CollectParticle2OneLevel.cpp \
+CC_FILE     += Par_Init_ByFunction.cpp  Par_Output_TextFile.cpp  Par_FindHomePatch_UniformGrid.cpp  Par_PassParticle2Son_SinglePatch.cpp \
+               Par_Aux_Check_Particle.cpp  Par_PassParticle2Father.cpp  Par_CollectParticle2OneLevel.cpp Par_PassParticle2Son_MultiPatch.cpp \
                Par_MassAssignment.cpp  Par_UpdateParticle.cpp  Par_GetTimeStep_VelAcc.cpp \
                Par_PassParticle2Sibling.cpp  Par_CountParticleInDescendant.cpp  Par_Aux_GetConservedQuantity.cpp \
-               Par_Aux_InitCheck.cpp  Par_Aux_Record_ParticleCount.cpp  Par_PassParticle2Son_AllPatch.cpp \
+               Par_Aux_InitCheck.cpp  Par_Aux_Record_ParticleCount.cpp  \
                Par_Synchronize.cpp  Par_PredictPos.cpp  Par_Init_ByFile.cpp  Par_Init_Attribute.cpp
 
 vpath %.cu     Particle/GPU
@@ -595,7 +595,7 @@ ifeq "$(findstring -DLOAD_BALANCE, $(SIMU_OPTION))" "-DLOAD_BALANCE"
 CC_FILE     += Par_LB_SendParticleData.cpp  Par_LB_CollectParticle2OneLevel.cpp \
                Par_LB_CollectParticleFromRealPatch.cpp  Par_LB_RecordExchangeParticlePatchID.cpp \
                Par_LB_MapBuffer2RealPatch.cpp  Par_LB_ExchangeParticleBetweenPatch.cpp \
-               Par_LB_Refine_SendParticle2Father.cpp  Par_LB_Refine_SendParticle2Son.cpp
+               Par_LB_Refine_SendParticle2Father.cpp
 
 vpath %.cpp    Particle/LoadBalance
 endif # LOAD_BALANCE
