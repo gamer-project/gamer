@@ -273,11 +273,6 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 // ===============================================================================================
 #     ifdef GRAVITY
       const int SaveSg_Pot = 1 - amr->PotSg[lv];
-#     if ( MODEL == HYDRO )
-	  const int Gra_Source = _DENS;
-#     elif ( MODEL == SR_HYDRO )
-	  const int Gra_Source = _TOTAL;
-#     endif
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
          Aux_Message( stdout, "   Lv %2d: Gra_AdvanceDt, counter = %8ld ... ", lv, AdvanceCounter[lv] );
@@ -336,7 +331,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          {
 //          exchange the updated density field in the buffer patches for the Poisson solver
             if ( SelfGravity )
-            TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL, Gra_Source, Rho_ParaBuf, USELB_YES ),
+            TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL, GRAVITY_SOURCE, Rho_ParaBuf, USELB_YES ),
                            Timer_GetBuf[lv][0]   );
 
             TIMING_FUNC(   Gra_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, SaveSg_Pot,

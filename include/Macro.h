@@ -252,9 +252,8 @@
 #  elif ( MODEL == SR_HYDRO )
 #  define _LRTZ               ( 1 << (NCOMP_TOTAL+5) ) // Lorentz factor               
 #  define _3VEL               ( 1 << (NCOMP_TOTAL+6) ) // magnitude of 3-velocity      
-#  define _SR_GRAVITY_SOURCE  ( 1 << (NCOMP_TOTAL+7) )
-#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP | _LRTZ | _3VEL | _SR_GRAVITY_SOURCE )
-#  define NDERIVE             8
+#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP | _LRTZ | _3VEL )
+#  define NDERIVE             7
 #  endif
 
 
@@ -432,6 +431,20 @@
 
 // self-gravity constants
 #ifdef GRAVITY
+
+// self-gravity source
+#  if ( MODEL == HYDRO )
+#  define PRE_GRAVITY_SOURCE     _TOTAL_DENS
+#  define GRAVITY_SOURCE         _DENS
+
+#  elif ( MODEL == SR_HYDRO )
+#  define PRE__GRAVITY_SOURCE  ( 1 << (NCOMP_TOTAL+NDERIVE+1) )
+#  define GRAVITY_SOURCE         _TOTAL
+
+#  define NDERIVE                NDERIVE+1
+#  define _DERIVED             ( _DERIVED | PRE_GRA_SOURCE )
+#  endif
+
 
 // number of input and output variables in the gravity solver
 #  if   ( MODEL == HYDRO || MODEL == SR_HYDRO )

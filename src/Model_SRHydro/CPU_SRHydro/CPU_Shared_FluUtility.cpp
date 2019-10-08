@@ -682,13 +682,11 @@ real SRHydro_KineticEngy( real Con[], real Pri[], real Lorentz, real Gamma )
 GPU_DEVICE
 real SRHydro_PoissonSource( real Con[], real Gamma, real MinTemp )
 {
-  real Source, Pres, Msqr;
+  real Source, Pri[NCOMP_FLUID];
  
-  Pres = SRHydro_GetPressure( Con[DENS], Con[MOMX], Con[MOMY], Con[MOMZ], Con[ENGY], Gamma, MinTemp  );
+  SRHydro_Con2Pri( Con, Pri, Gamma, MinTemp );
 
-  Msqr = VectorDotProduct( Con[MOMX], Con[MOMY], Con[MOMZ] );
-
-  Source = Con[ENGY] + (real)3.0 * Pres + Msqr / ( Con[ENGY] + Pres );
+  Source = Pri[0];
   
   return Source;
 }
