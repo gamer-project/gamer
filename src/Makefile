@@ -33,8 +33,8 @@ COMPILE_VERBOSE := 0
 # physical model: HYDRO/MHD/ELBDM/PAR_ONLY (ELBDM: wave dark matter; PAR_ONLY: particle-only)
 # --> must be set in any cases; PAR_ONLY is not supported yet;
 #     MHD and ELBDM are not publicly available yet but will be released soon
-#SIMU_OPTION += -DMODEL=SR_HYDRO
-SIMU_OPTION += -DMODEL=HYDRO
+SIMU_OPTION += -DMODEL=SR_HYDRO
+#SIMU_OPTION += -DMODEL=HYDRO
 
 # enable gravity
 SIMU_OPTION += -DGRAVITY
@@ -115,7 +115,7 @@ SIMU_OPTION += -DCONSERVED_ENERGY=1
 # conserved energy = (total energy) - (rest mass energy)
 #SIMU_OPTION += -DCONSERVED_ENERGY=2
 #SIMU_OPTION += -DCHECK_MIN_TEMP
-SIMU_OPTION += -DCHECK_FAILED_CELL_IN_FLUID
+#SIMU_OPTION += -DCHECK_FAILED_CELL_IN_FLUID
 # scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic)
 # --> useless for RTVD
 SIMU_OPTION += -DLR_SCHEME=PLM
@@ -149,7 +149,7 @@ SIMU_OPTION += -DSTORE_POT_GHOST
 
 # comoving frame for cosmological simulations
 # --> not supported for PARTICLE
-SIMU_OPTION += -DCOMOVING
+#SIMU_OPTION += -DCOMOVING
 endif # GRAVITY
 
 
