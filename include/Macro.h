@@ -246,16 +246,10 @@
 #  define _VELZ               ( 1 << (NCOMP_TOTAL+2) )
 #  define _PRES               ( 1 << (NCOMP_TOTAL+3) )
 #  define _TEMP               ( 1 << (NCOMP_TOTAL+4) )
-#  if ( MODEL == HYDRO )
-#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP ) 
-#  define NDERIVE             5
-#  elif ( MODEL == SR_HYDRO )
+
+#  if ( MODEL == SR_HYDRO )
 #  define _LRTZ               ( 1 << (NCOMP_TOTAL+5) ) // Lorentz factor               
 #  define _3VEL               ( 1 << (NCOMP_TOTAL+6) ) // magnitude of 3-velocity
-#  ifndef GRAVITY
-#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP | _LRTZ | _3VEL )
-#  define NDERIVE             7
-#  endif
 #  endif
 
 
@@ -295,6 +289,35 @@
 #else
 #  error : ERROR : unsupported MODEL !!
 #endif // MODEL
+
+
+
+// self-gravity source
+#  if ( MODEL == HYDRO && defined GRAVITY )
+#  define PRE_GRAVITY_SOURCE     _TOTAL_DENS
+#  define GRAVITY_SOURCE         _DENS
+
+#  elif ( MODEL == SR_HYDRO && defined GRAVITY )
+#  define PRE_GRAVITY_SOURCE  ( 1 << (NCOMP_TOTAL+7) )
+#  define GRAVITY_SOURCE         _TOTAL
+#  endif
+
+
+
+// derived variables
+#  if ( MODEL == HYDRO )
+#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP ) 
+#  define NDERIVE             5
+#  elif ( MODEL == SR_HYDRO )
+#  ifdef GRAVITY
+#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP | _LRTZ | _3VEL | PRE_GRAVITY_SOURCE )
+#  define NDERIVE             8
+#  else
+#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP | _LRTZ | _3VEL )
+#  define NDERIVE             7
+#  endif
+#  endif
+
 
 
 // bitwise field indices used by all models
@@ -434,18 +457,6 @@
 // self-gravity constants
 #ifdef GRAVITY
 
-// self-gravity source
-#  if ( MODEL == HYDRO )
-#  define PRE_GRAVITY_SOURCE     _TOTAL_DENS
-#  define GRAVITY_SOURCE         _DENS
-
-#  elif ( MODEL == SR_HYDRO )
-#  define PRE_GRAVITY_SOURCE  ( 1 << (NCOMP_TOTAL+NDERIVE+1) )
-#  define GRAVITY_SOURCE         _TOTAL
-
-#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP | _LRTZ | _3VEL | PRE_GRAVITY_SOURCE )
-#  define NDERIVE             8
-#  endif
 
 
 // number of input and output variables in the gravity solver

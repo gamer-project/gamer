@@ -221,7 +221,7 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
 	     if(SRHydro_CheckUnphysical(Con, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true))
          exit(EXIT_FAILURE);
 
-#        else
+#        elif ( MODEL != SR_HYDRO )
 
 //       actually it might not be necessary to check the minimum pressure here
          amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i]

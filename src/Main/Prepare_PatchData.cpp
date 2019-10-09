@@ -135,7 +135,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    int AllVar = ( _TOTAL | _DERIVED );
 #  ifdef GRAVITY
    AllVar |= _POTE;
-   AllVar |= PRE_GRAVITY_SOURCE;
 #  endif
 #  ifdef PARTICLE
    AllVar |= _PAR_DENS;
