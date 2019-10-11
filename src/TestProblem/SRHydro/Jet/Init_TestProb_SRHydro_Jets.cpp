@@ -129,9 +129,9 @@ void SetParameter()
 
 // load the input parameters of the hydrostatic equilibrium setup
    ReadPara->Add( "Jet_HSE",             &Jet_HSE,               false,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "Jet_HSE_Dx",          &Jet_HSE_Dx,            NoDef_double,  Eps_double,       NoMax_double      );
-   ReadPara->Add( "Jet_HSE_Dy",          &Jet_HSE_Dy,            NoDef_double,  Eps_double,       NoMax_double      );
-   ReadPara->Add( "Jet_HSE_Dz",          &Jet_HSE_Dz,            NoDef_double,  Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jet_HSE_Dx",          &Jet_HSE_Dx,            0.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet_HSE_Dy",          &Jet_HSE_Dy,            0.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet_HSE_Dz",          &Jet_HSE_Dz,            0.0,           NoMin_double,     NoMax_double      );
    ReadPara->Add( "Jet_HSE_BgTable_File", Jet_HSE_BgTable_File,  Useless_str,   Useless_str,      Useless_str       );
 
 // load the input parameters independent of the number of jets
@@ -144,7 +144,7 @@ void SetParameter()
 // load the input parameters of each jet
    ReadPara->Add( "Jet0_Radius",       &Jet_Radius    [0],    -1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "Jet0_HalfHeight",   &Jet_HalfHeight[0],    -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Jet0_SrcVel",       &Jet_SrcVel    [0],    -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jet0_SrcVel",       &Jet_SrcVel    [0],    -1.0,           NoMin_double,     NoMax_double      );
    ReadPara->Add( "Jet0_SrcDens",      &Jet_SrcDens   [0],    -1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "Jet0_SrcTemp",      &Jet_SrcTemp   [0],    -1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "Jet0_Vec_x",        &Jet_Vec       [0][0],  NoDef_double,  NoMin_double,     NoMax_double      );
@@ -340,6 +340,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double *Table_R=NULL, *Table_n=NULL, *Table_T=NULL;
    double dx, dy, dz, dr;
 
+
 // variables for jet
    double Pri4Vel[NCOMP_FLUID];
 
@@ -353,9 +354,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Table_n = Jet_HSE_BgTable_Data + 1*Jet_HSE_BgTable_NBin;
       Table_T = Jet_HSE_BgTable_Data + 2*Jet_HSE_BgTable_NBin;
 
-      dx = abs(x - amr->BoxCenter[0] + Jet_HSE_Dx);
-      dy = abs(y - amr->BoxCenter[1] + Jet_HSE_Dy);
-      dz = abs(z - amr->BoxCenter[2] + Jet_HSE_Dz);
+      dx = fabs(x - amr->BoxCenter[0] + Jet_HSE_Dx);
+      dy = fabs(y - amr->BoxCenter[1] + Jet_HSE_Dy);
+      dz = fabs(z - amr->BoxCenter[2] + Jet_HSE_Dz);
 
       dr = sqrt( dx*dx + dy*dy + dz*dz );
 
@@ -442,7 +443,7 @@ void End_Jets()
 bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const double z, const double Time,
                                     const int lv, double AuxArray[] )
 {
-
+   return false;
    const double r[3] = { x, y, z };
 
    double Jet_dr, Jet_dh, S, Area;

@@ -355,7 +355,7 @@ void CPU_HydroGravitySolver(
          Con_new[ENGY]  = g_Flu_Array_New[P][ENGY][idx_g0];
 
 //       conserved vars --> primitive vars
-         SRHydro_Con2Pri( Con_new, Pri_new, (real)1.333333333, (real)0.0);
+         real LorentzFactor = SRHydro_Con2Pri( Con_new, Pri_new, (real)1.333333333, (real)0.0);
 
 //       backup the original temperature
          real Temp = Pri_new[4]/Pri_new[0];
@@ -363,28 +363,36 @@ void CPU_HydroGravitySolver(
 //       backup the original enthalpy
          real Enthalpy = SpecificEnthalpy(Con_new, Temp, (real)1.333333333);
 
-//       backup the original internal energy(measured in fluid frame) so that we can restore it later if necessary
-//         Eint_in = SRHydro_InternalEngy ( Con_new, Pri_new, LorentzFactor, (real)1.333333333, false);
+//       4-velocity
+         real n    = Pri_new[0];
+         real Ux   = Pri_new[1];
+         real Uy   = Pri_new[2];
+         real Uz   = Pri_new[3];
+         real Pres = Pri_new[4];
+
+         real Const1 = n*( (real)2.0 * SQR(LorentzFactor)-(real)1.0 );
+         real Const2 = ( SQR(Ux) + SQR(Uy) + SQR(Uz) ) * Pres;
+         
+         real Uxx = Ux*Ux;
+         real Uyy = Uy*Uy;
+         real Uzz = Uz*Uz;
+         real Uxy = Ux*Uy;
+         real Uxz = Ux*Uz;
+         real Uyz = Uy*Uz;
 
 //       update the momentum density
-         Con_new[MOMX] += (Con_new[ENGY] + Pri_new[4])*acc_new[0];
-         Con_new[MOMY] += (Con_new[ENGY] + Pri_new[4])*acc_new[1];
-         Con_new[MOMZ] += (Con_new[ENGY] + Pri_new[4])*acc_new[2];
+         Con_new[MOMX] += - Uxx * acc_new[0] - Uxy * acc_new[1] - Uxz * acc_new[2] + Const1 * acc_new[0] + Const2 * acc_new[0];
+         Con_new[MOMY] += - Uxy * acc_new[0] - Uyy * acc_new[1] - Uyz * acc_new[2] + Const1 * acc_new[1] + Const2 * acc_new[1];
+         Con_new[MOMZ] += - Uxz * acc_new[0] - Uyz * acc_new[1] - Uzz * acc_new[2] + Const1 * acc_new[2] + Const2 * acc_new[2];
 
 
-
-
+//       store the updated momentum density		 
          g_Flu_Array_New[P][MOMX][idx_g0] = Con_new[MOMX];
          g_Flu_Array_New[P][MOMY][idx_g0] = Con_new[MOMY];
          g_Flu_Array_New[P][MOMZ][idx_g0] = Con_new[MOMZ];
 
 
 //       for the splitting method, we ensure that the internal energy is unchanged 
-//         Ek_out = SRHydro_KineticEngy( Con_new, Pri_new, LorentzFactor, (real)1.333333333 );
-//         Etot_out = Eint_in * LorentzFactor + Ek_out;
-//         Etot_out = Con_new[DENS]*Enthalpy*LorentzFactor - Pri_new[4];
-//	       Con_new[ENGY] = Etot_out;
-
          real Msqr = SQR(Con_new[MOMX])+SQR(Con_new[MOMY])+SQR(Con_new[MOMZ]);
 		 real Dh = Con_new[DENS]*Enthalpy;
 		 real factor = SQRT(Dh*Dh + Msqr);

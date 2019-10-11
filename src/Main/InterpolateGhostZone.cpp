@@ -108,7 +108,9 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    const bool PrepPres      = ( TVar & _PRES              ) ? true : false; // pressure
    const bool PrepTemp      = ( TVar & _TEMP              ) ? true : false; // temperature
    const bool PrepLrtz      = ( TVar & _LRTZ              ) ? true : false; // Lorentz factor
+#  ifdef GRAVITY
    const bool PrepGraSource = ( TVar & PRE_GRAVITY_SOURCE ) ? true : false; // source term in Poisson equation
+#  endif
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
