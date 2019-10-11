@@ -350,9 +350,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    if ( Jet_HSE )
    {
-      Table_R = Jet_HSE_BgTable_Data + 0*Jet_HSE_BgTable_NBin;
-      Table_n = Jet_HSE_BgTable_Data + 1*Jet_HSE_BgTable_NBin;
-      Table_T = Jet_HSE_BgTable_Data + 2*Jet_HSE_BgTable_NBin;
+      Table_R = Jet_HSE_BgTable_Data + (Col[0]-1)*Jet_HSE_BgTable_NBin;
+      Table_n = Jet_HSE_BgTable_Data + (Col[1]-1)*Jet_HSE_BgTable_NBin;
+      Table_T = Jet_HSE_BgTable_Data + (Col[2]-1)*Jet_HSE_BgTable_NBin;
 
       dx = x - amr->BoxCenter[0] + Jet_HSE_Dx;
       dy = y - amr->BoxCenter[1] + Jet_HSE_Dy;
