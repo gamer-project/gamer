@@ -354,9 +354,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Table_n = Jet_HSE_BgTable_Data + 1*Jet_HSE_BgTable_NBin;
       Table_T = Jet_HSE_BgTable_Data + 2*Jet_HSE_BgTable_NBin;
 
-      dx = fabs(x - amr->BoxCenter[0] + Jet_HSE_Dx);
-      dy = fabs(y - amr->BoxCenter[1] + Jet_HSE_Dy);
-      dz = fabs(z - amr->BoxCenter[2] + Jet_HSE_Dz);
+      dx = x - amr->BoxCenter[0] + Jet_HSE_Dx;
+      dy = y - amr->BoxCenter[1] + Jet_HSE_Dy;
+      dz = z - amr->BoxCenter[2] + Jet_HSE_Dz;
 
       dr = sqrt( dx*dx + dy*dy + dz*dz );
 
