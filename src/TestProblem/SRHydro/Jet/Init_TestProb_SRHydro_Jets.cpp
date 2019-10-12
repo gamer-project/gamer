@@ -339,6 +339,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // variables for Jet_HSE
    const double *Table_R=NULL, *Table_n=NULL, *Table_T=NULL;
    double dx, dy, dz, dr;
+   const int  NCol         = 3;           // total number of columns to load
+   const int  Col[NCol]    = {1, 2, 3};   // target columns: (radius, density, temperature)
 
 
 // variables for jet
