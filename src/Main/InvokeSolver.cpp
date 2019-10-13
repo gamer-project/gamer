@@ -432,7 +432,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
    real (*h_Pot_Array_USG_F[2])[ CUBE(USG_NXT_F) ]                  = { NULL, NULL };
 #  ifdef GRAVITY
    real (*h_Pot_Array_USG_G[2])[USG_NXT_G ][USG_NXT_G ][USG_NXT_G ] = { NULL, NULL };
-   real (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1]           = { NULL, NULL };
+   real (*h_Flu_Array_USG_G[2])[GRA_NIN_USG][PS1][PS1][PS1]           = { NULL, NULL };
 #  endif
 #  endif
 

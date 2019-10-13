@@ -141,7 +141,7 @@ void CUPOT_HydroGravitySolver(
    const real   Pot_Array_New[][ CUBE(GRA_NXT) ],
    const double Corner_Array [][3],
    const real   Pot_Array_USG[][ CUBE(USG_NXT_G) ],
-   const real   Flu_Array_USG[][GRA_NIN-1][ CUBE(PS1) ],
+   const real   Flu_Array_USG[][GRA_NIN_USG][ CUBE(PS1) ],
          char   DE_Array     [][ CUBE(PS1) ],
    const real dt, const real dh, const bool P5_Gradient,
    const OptGravityType_t GravityType,

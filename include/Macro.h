@@ -460,12 +460,18 @@
 
 
 // number of input and output variables in the gravity solver
-#  if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
+#  if   ( MODEL == HYDRO )
 #     define GRA_NIN             NCOMP_FLUID
+#     define GRA_NIN_USG       ( NCOMP_FLUID-1 )
 
 #  elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
 #     define GRA_NIN             NCOMP_FLUID
+
+#  elif ( MODEL == SR_HYDRO )
+#     define GRA_NIN             NCOMP_FLUID
+#     define GRA_NIN_USG         NCOMP_FLUID
+
 
 // for ELBDM, we do not need to transfer the density component
 #  elif ( MODEL == ELBDM )

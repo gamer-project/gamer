@@ -25,7 +25,7 @@ void Init_MemAllocate_PoissonGravity( const int Pot_NPG )
       h_Pot_Array_P_Out[t] = new real   [Pot_NP][GRA_NXT][GRA_NXT][GRA_NXT];
 #     ifdef UNSPLIT_GRAVITY
       h_Pot_Array_USG_G[t] = new real   [Pot_NP][USG_NXT_G][USG_NXT_G][USG_NXT_G];
-      h_Flu_Array_USG_G[t] = new real   [Pot_NP][GRA_NIN-1][PS1][PS1][PS1];
+      h_Flu_Array_USG_G[t] = new real   [Pot_NP][GRA_NIN_USG][PS1][PS1][PS1];
 #     endif
       h_Flu_Array_G    [t] = new real   [Pot_NP][GRA_NIN  ][PS1][PS1][PS1];
 

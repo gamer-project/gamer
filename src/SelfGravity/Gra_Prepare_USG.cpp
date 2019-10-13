@@ -26,7 +26,7 @@
 //-------------------------------------------------------------------------------------------------------
 void Gra_Prepare_USG( const int lv, const double PrepTime,
                       real h_Pot_Array_USG_G[][USG_NXT_G][USG_NXT_G][USG_NXT_G],
-                      real h_Flu_Array_USG_G[][GRA_NIN-1][PS1][PS1][PS1], const int NPG, const int *PID0_List )
+                      real h_Flu_Array_USG_G[][GRA_NIN_USG][PS1][PS1][PS1], const int NPG, const int *PID0_List )
 {
 
    const bool IntPhase_No       = false;

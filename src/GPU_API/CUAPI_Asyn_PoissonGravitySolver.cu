@@ -39,7 +39,7 @@ void CUPOT_HydroGravitySolver(
    const real   g_Pot_Array_New[][ CUBE(GRA_NXT) ],
    const double g_Corner_Array [][3],
    const real   g_Pot_Array_USG[][ CUBE(USG_NXT_G) ],
-   const real   g_Flu_Array_USG[][GRA_NIN-1][ CUBE(PS1) ],
+   const real   g_Flu_Array_USG[][GRA_NIN_USG][ CUBE(PS1) ],
          char   g_DE_Array     [][ CUBE(PS1) ],
    const real dt, const real dh, const bool P5_Gradient,
    const OptGravityType_t GravityType,
@@ -68,10 +68,10 @@ extern double (*d_Corner_Array_G)[3];
 #if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
 #ifdef UNSPLIT_GRAVITY
 extern real (*d_Pot_Array_USG_G)[ CUBE(USG_NXT_G) ];
-extern real (*d_Flu_Array_USG_G)[GRA_NIN-1][ CUBE(PS1) ];
+extern real (*d_Flu_Array_USG_G)[GRA_NIN_USG][ CUBE(PS1) ];
 #else
 static real (*d_Pot_Array_USG_G)[ CUBE(USG_NXT_G) ] = NULL;
-static real (*d_Flu_Array_USG_G)[GRA_NIN-1][ CUBE(PS1) ] = NULL;
+static real (*d_Flu_Array_USG_G)[GRA_NIN_USG][ CUBE(PS1) ] = NULL;
 #endif
 #ifdef DUAL_ENERGY
 extern char (*d_DE_Array_G)[ CUBE(PS1) ];
@@ -145,7 +145,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
                                             real h_Flu_Array    [][GRA_NIN][PS1][PS1][PS1],
                                       const double h_Corner_Array[][3],
                                       const real h_Pot_Array_USG[][USG_NXT_G][USG_NXT_G][USG_NXT_G],
-                                      const real h_Flu_Array_USG[][GRA_NIN-1][PS1][PS1][PS1],
+                                      const real h_Flu_Array_USG[][GRA_NIN_USG][PS1][PS1][PS1],
                                             char h_DE_Array     [][PS1][PS1][PS1],
                                       const int NPatchGroup, const real dt, const real dh, const int SOR_Min_Iter,
                                       const int SOR_Max_Iter, const real SOR_Omega, const int MG_Max_Iter,
@@ -283,7 +283,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
       Corner_MemSize [s] = NPatch_per_Stream[s]*3              *sizeof(double);
 #     ifdef UNSPLIT_GRAVITY
       Pot_USG_MemSize[s] = NPatch_per_Stream[s]*CUBE(USG_NXT_G)*sizeof(real);
-      Flu_USG_MemSize[s] = NPatch_per_Stream[s]*CUBE(PS1      )*sizeof(real)*(GRA_NIN-1);
+      Flu_USG_MemSize[s] = NPatch_per_Stream[s]*CUBE(PS1      )*sizeof(real)*(GRA_NIN_USG);
 #     endif
 #     ifdef DUAL_ENERGY
       DE_MemSize     [s] = NPatch_per_Stream[s]*CUBE(PS1      )*sizeof(char);

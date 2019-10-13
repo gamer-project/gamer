@@ -236,7 +236,7 @@ char (*h_DE_Array_G    [2])[PS1][PS1][PS1]                        = { NULL, NULL
 #ifdef UNSPLIT_GRAVITY
 real (*h_Pot_Array_USG_F[2])[ CUBE(USG_NXT_F) ]                   = { NULL, NULL };
 real (*h_Pot_Array_USG_G[2])[USG_NXT_G][USG_NXT_G][USG_NXT_G]     = { NULL, NULL };
-real (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1]            = { NULL, NULL };
+real (*h_Flu_Array_USG_G[2])[GRA_NIN_USG][PS1][PS1][PS1]          = { NULL, NULL };
 #endif
 #endif
 
@@ -315,7 +315,7 @@ char (*d_DE_Array_G     )[ PS1*PS1*PS1 ]                         = NULL;
 #ifdef UNSPLIT_GRAVITY
 real (*d_Pot_Array_USG_F)[ CUBE(USG_NXT_F) ]                     = NULL;
 real (*d_Pot_Array_USG_G)[ CUBE(USG_NXT_G) ]                     = NULL;
-real (*d_Flu_Array_USG_G)[GRA_NIN-1][ CUBE(PS1) ]                = NULL;
+real (*d_Flu_Array_USG_G)[GRA_NIN_USG][ CUBE(PS1) ]              = NULL;
 #endif
 #endif
 
