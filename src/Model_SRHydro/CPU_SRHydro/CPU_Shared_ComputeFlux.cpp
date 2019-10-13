@@ -163,10 +163,12 @@ void SRHydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
       const int size_ij = idx_flux_e[0]*idx_flux_e[1];
       CGPU_LOOP( idx, idx_flux_e[0]*idx_flux_e[1]*idx_flux_e[2] )
       {
+#        ifdef UNSPLIT_GRAVITY
          real n_R, Ux_R, Uy_R, Uz_R, P_L, Uxx_R, Uyy_R, Uzz_R, Uxy_R, Uxz_R, Uyz_R, LorentzFactor_R;
          real n_L, Ux_L, Uy_L, Uz_L, P_R, Uxx_L, Uyy_L, Uzz_L, Uxy_L, Uxz_L, Uyz_L, LorentzFactor_L;
 
          real Const1, Const2, Const3;
+#        endif
 
          const int i_flux   = idx % idx_flux_e[0];
          const int j_flux   = idx % size_ij / idx_flux_e[0];

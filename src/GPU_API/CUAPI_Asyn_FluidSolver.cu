@@ -123,7 +123,7 @@ extern real (*d_FC_Flux)  [3][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ];
 #ifdef UNSPLIT_GRAVITY
 extern real (*d_Pot_Array_USG_F)[ CUBE(USG_NXT_F) ];
 #else
-#if ( MODEL == HYDRO  ||  MODEL == MHD )
+#if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
 static real (*d_Pot_Array_USG_F)[ CUBE(USG_NXT_F) ] = NULL;
 #endif
 #endif // #ifdef UNSPLIT_GRAVITY ... else ...
