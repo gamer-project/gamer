@@ -18,7 +18,9 @@ void SRHydro_Pri2Con( const real In[], real Out[], const real Gamma);
 
 void SRHydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
                                 real g_FC_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
-                          const int Gap, const real Gamma, const real MinTemp, 
+                          const int Gap, const real Gamma, const bool CorrHalfVel, const real g_Pot_USG[],
+                          const double g_Corner[], const real dt, const real dh, const double Time,
+                          const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinTemp,
                           const bool DumpIntFlux, real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ] );
 
 void SRHydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],

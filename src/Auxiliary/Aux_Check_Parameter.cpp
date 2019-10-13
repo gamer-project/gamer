@@ -39,12 +39,8 @@ void Aux_Check_Parameter()
 #     error : ERROR : UNSPLIT_GRAVITY must work with GRAVITY !!
 #  endif
 
-#  if ( defined UNSPLIT_GRAVITY  &&  MODEL != HYDRO )
-#     error : ERROR : currently UNSPLIT_GRAVITY is only supported in HYDRO !!
-#  endif
-
-#  if ( defined UNSPLIT_GRAVITY  &&  MODEL == SR_HYDRO )
-#     error : ERROR : currently UNSPLIT_GRAVITY is NOT supported in SR_HYDRO !!
+#  if ( defined UNSPLIT_GRAVITY  &&  MODEL != HYDRO  &&  MODEL != SR_HYDRO )
+#     error : ERROR : currently UNSPLIT_GRAVITY is only supported in HYDRO and SR_HYDRO!!
 #  endif
 
 #  if ( NCOMP_PASSIVE < 0 )

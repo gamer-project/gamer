@@ -564,6 +564,7 @@ void Aux_TakeNote()
       fprintf( Note, "#define NFLUX_PASSIVE           %d\n",      NFLUX_PASSIVE       );
 #     ifdef GRAVITY
       fprintf( Note, "#define GRA_NIN                 %d\n",      GRA_NIN             );
+      fprintf( Note, "#define GRA_NIN_USG             %d\n",      GRA_NIN_USG         );
 #     endif
       fprintf( Note, "#define PATCH_SIZE              %d\n",      PATCH_SIZE          );
       fprintf( Note, "#define MAX_PATCH               %d\n",      MAX_PATCH           );

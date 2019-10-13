@@ -190,10 +190,18 @@ void CPU_HydroGravitySolver(
 //    _g0: indices for the arrays without any ghost zone
       CGPU_LOOP( idx_g0, CUBE(PS1) )
       {
-         real acc_new[3]={0.0, 0.0, 0.0}, px_new, py_new, pz_new, rho_new, Eint_in, Ek_out, Etot_in, Etot_out, _rho2;
-         real Con_new[NCOMP_FLUID], Pri_new[NCOMP_FLUID], Con_old[NCOMP_FLUID], Pri_old[NCOMP_FLUID];
+         real acc_new[3]={0.0, 0.0, 0.0};
+         real Con_new[NCOMP_FLUID], Pri_new[NCOMP_FLUID];
+
+		 real LorentzFactor_new, n_new , Ux_new, Uy_new, Uz_new, P_new;
+		 real Uxx_new, Uyy_new, Uzz_new, Uxy_new, Uxz_new, Uyz_new;
+		 real Const1_new, Const2_new, Const3_new;
+
 #        ifdef UNSPLIT_GRAVITY
-         real acc_old[3]={0.0, 0.0, 0.0}, px_old, py_old, pz_old, rho_old;
+         real acc_old[3]={0.0, 0.0, 0.0}, Con_old[NCOMP_FLUID], Pri_old[NCOMP_FLUID];
+		 real LorentzFactor_old, n_old , Ux_old, Uy_old, Uz_old, P_old;
+		 real Uxx_old, Uyy_old, Uzz_old, Uxy_old, Uxz_old, Uyz_old;
+		 real Const1_old, Const2_old, Const3_old;
 #        endif
 
          const int i_g0    = idx_g0 % PS1;
@@ -296,119 +304,106 @@ void CPU_HydroGravitySolver(
             } // if ( P5_Gradient ) ... else ...
          } // if ( GravityType == GRAVITY_SELF  ||  GravityType == GRAVITY_BOTH )
 
+         Con_new[DENS] = g_Flu_Array_New[P][DENS][idx_g0];
+         Con_new[MOMX] = g_Flu_Array_New[P][MOMX][idx_g0];
+         Con_new[MOMY] = g_Flu_Array_New[P][MOMY][idx_g0];
+         Con_new[MOMZ] = g_Flu_Array_New[P][MOMZ][idx_g0];
+         Con_new[ENGY] = g_Flu_Array_New[P][ENGY][idx_g0];
+
+//       conserved vars --> primitive vars
+         LorentzFactor_new = SRHydro_Con2Pri( Con_new, Pri_new, (real)1.333333333, (real)0.0);
+
+         n_new    = Pri_new[0];
+         Ux_new   = Pri_new[1];
+         Uy_new   = Pri_new[2];
+         Uz_new   = Pri_new[3];
+         P_new    = Pri_new[4];
+
+         Const1_new = n_new*( (real)2.0 * SQR(LorentzFactor_new)-(real)1.0 );
+         Const2_new = ( SQR(Ux_new) + SQR(Uy_new) + SQR(Uz_new) ) * P_new;
+         
+         Uxx_new = Ux_new*Ux_new;
+         Uyy_new = Uy_new*Uy_new;
+         Uzz_new = Uz_new*Uz_new;
+         Uxy_new = Ux_new*Uy_new;
+         Uxz_new = Ux_new*Uz_new;
+         Uyz_new = Uy_new*Uz_new;
+
 //       advance fluid
 #        ifdef UNSPLIT_GRAVITY
+         Con_old[DENS] = g_Flu_Array_USG[P][DENS][idx_g0];
+         Con_old[MOMX] = g_Flu_Array_USG[P][MOMX][idx_g0];
+         Con_old[MOMY] = g_Flu_Array_USG[P][MOMY][idx_g0];
+         Con_old[MOMZ] = g_Flu_Array_USG[P][MOMZ][idx_g0];
+         Con_old[ENGY] = g_Flu_Array_USG[P][ENGY][idx_g0];
 
-         rho_new = g_Flu_Array_New[P][DENS][idx_g0];
-         rho_old = g_Flu_Array_USG[P][DENS][idx_g0];
-         px_new  = g_Flu_Array_New[P][MOMX][idx_g0];
-         px_old  = g_Flu_Array_USG[P][MOMX][idx_g0];
-         py_new  = g_Flu_Array_New[P][MOMY][idx_g0];
-         py_old  = g_Flu_Array_USG[P][MOMY][idx_g0];
-         pz_new  = g_Flu_Array_New[P][MOMZ][idx_g0];
-         pz_old  = g_Flu_Array_USG[P][MOMZ][idx_g0];
+//       conserved vars --> primitive vars
+         LorentzFactor_old = SRHydro_Con2Pri( Con_old, Pri_old, (real)1.333333333, (real)0.0);
 
-//       backup the original internal energy so that we can restore it later if necessary
-         _rho2   = (real)0.5/rho_new;
-         Etot_in = g_Flu_Array_New[P][ENGY][idx_g0];
-         Eint_in = Etot_in - _rho2*( SQR(px_new) + SQR(py_new) + SQR(pz_new) );
+         n_old    = Pri_old[0];
+         Ux_old   = Pri_old[1];
+         Uy_old   = Pri_old[2];
+         Uz_old   = Pri_old[3];
+         P_old    = Pri_old[4];
+
+         Const1_old = n_old*( (real)2.0 * SQR(LorentzFactor_old)-(real)1.0 );
+         Const2_old = ( SQR(Ux_old) + SQR(Uy_old) + SQR(Uz_old) ) * P_old;
+         
+         Uxx_old = Ux_old*Ux_old;
+         Uyy_old = Uy_old*Uy_old;
+         Uzz_old = Uz_old*Uz_old;
+         Uxy_old = Ux_old*Uy_old;
+         Uxz_old = Ux_old*Uz_old;
+         Uyz_old = Uy_old*Uz_old;
+
 
 //       update the momentum density
-         px_new += (real)0.5*( rho_old*acc_old[0] + rho_new*acc_new[0] );
-         py_new += (real)0.5*( rho_old*acc_old[1] + rho_new*acc_new[1] );
-         pz_new += (real)0.5*( rho_old*acc_old[2] + rho_new*acc_new[2] );
+         Con_new[MOMX] += - Uxx_old * acc_old[0] - Uxy_old * acc_old[1] - Uxz_old * acc_old[2] + Const1_old * acc_old[0] + Const2_old * acc_old[0];
+         Con_new[MOMY] += - Uxy_old * acc_old[0] - Uyy_old * acc_old[1] - Uyz_old * acc_old[2] + Const1_old * acc_old[1] + Const2_old * acc_old[1];
+         Con_new[MOMZ] += - Uxz_old * acc_old[0] - Uyz_old * acc_old[1] - Uzz_old * acc_old[2] + Const1_old * acc_old[2] + Const2_old * acc_old[2];
 
-         g_Flu_Array_New[P][MOMX][idx_g0] = px_new;
-         g_Flu_Array_New[P][MOMY][idx_g0] = py_new;
-         g_Flu_Array_New[P][MOMZ][idx_g0] = pz_new;
+         Con_new[MOMX] += - Uxx_new * acc_new[0] - Uxy_new * acc_new[1] - Uxz_new * acc_new[2] + Const1_new * acc_new[0] + Const2_new * acc_new[0];
+         Con_new[MOMY] += - Uxy_new * acc_new[0] - Uyy_new * acc_new[1] - Uyz_new * acc_new[2] + Const1_new * acc_new[1] + Const2_new * acc_new[1];
+         Con_new[MOMZ] += - Uxz_new * acc_new[0] - Uyz_new * acc_new[1] - Uzz_new * acc_new[2] + Const1_new * acc_new[2] + Const2_new * acc_new[2];
 
-//       record the updated kinematic energy density
-         Ek_out = _rho2*( SQR(px_new) + SQR(py_new) + SQR(pz_new) );
+         Con_new[MOMX] *= (real)0.5;
+         Con_new[MOMY] *= (real)0.5;
+         Con_new[MOMZ] *= (real)0.5;
+
 
 //       update the total energy density
+         Const3_old = LorentzFactor_old * ( n_old + P_old );
+         Const3_new = LorentzFactor_new * ( n_new + P_new );
 
-//       for the unsplitting method without the dual-energy formalism, we always correct the total energy density
-//       instead of the kinematic energy density
-//       --> internal energy may change
-//       --> we must check the minimum internal energy after this update
-         Etot_out = Etot_in + (real)0.5*( px_old*acc_old[0] + py_old*acc_old[1] + pz_old*acc_old[2] +
-                                          px_new*acc_new[0] + py_new*acc_new[1] + pz_new*acc_new[2] );
+         Con_new[ENGY] += Const3_old * ( Ux_old * acc_old[0] + Uy_old * acc_old[1] + Uz_old * acc_old[2] );
+         Con_new[ENGY] += Const3_new * ( Ux_new * acc_new[0] + Uy_new * acc_new[1] + Uz_new * acc_new[2] );
 
-//       check the minimum internal energy
-//       --> restore the original internal energy if the updated value becomes smaller than the threshold
-         if ( Etot_out - Ek_out < MinEint )
-	     {
-		    printf("modify here!\n functiob:%s, line:%d\n", __FUNCTION__, __LINE__);
-			exit(0);
-	     }
-		   
-//            Etot_out = Eint_in + Ek_out;
-
-
+         Con_new[ENGY] *= (real)0.5;
 
 #        else  // #ifdef UNSPLIT_GRAVITY
 
-         Con_new[DENS]  = g_Flu_Array_New[P][DENS][idx_g0];
-         Con_new[MOMX]  = g_Flu_Array_New[P][MOMX][idx_g0];
-         Con_new[MOMY]  = g_Flu_Array_New[P][MOMY][idx_g0];
-         Con_new[MOMZ]  = g_Flu_Array_New[P][MOMZ][idx_g0];
-         Con_new[ENGY]  = g_Flu_Array_New[P][ENGY][idx_g0];
-
-//       conserved vars --> primitive vars
-         real LorentzFactor = SRHydro_Con2Pri( Con_new, Pri_new, (real)1.333333333, (real)0.0);
-
-//       backup the original temperature
-         real Temp = Pri_new[4]/Pri_new[0];
-
-//       backup the original enthalpy
-         real Enthalpy = SpecificEnthalpy(Con_new, Temp, (real)1.333333333);
-
-//       4-velocity
-         real n    = Pri_new[0];
-         real Ux   = Pri_new[1];
-         real Uy   = Pri_new[2];
-         real Uz   = Pri_new[3];
-         real Pres = Pri_new[4];
-
-         real Const1 = n*( (real)2.0 * SQR(LorentzFactor)-(real)1.0 );
-         real Const2 = ( SQR(Ux) + SQR(Uy) + SQR(Uz) ) * Pres;
-         
-         real Uxx = Ux*Ux;
-         real Uyy = Uy*Uy;
-         real Uzz = Uz*Uz;
-         real Uxy = Ux*Uy;
-         real Uxz = Ux*Uz;
-         real Uyz = Uy*Uz;
-
 //       update the momentum density
-         Con_new[MOMX] += - Uxx * acc_new[0] - Uxy * acc_new[1] - Uxz * acc_new[2] + Const1 * acc_new[0] + Const2 * acc_new[0];
-         Con_new[MOMY] += - Uxy * acc_new[0] - Uyy * acc_new[1] - Uyz * acc_new[2] + Const1 * acc_new[1] + Const2 * acc_new[1];
-         Con_new[MOMZ] += - Uxz * acc_new[0] - Uyz * acc_new[1] - Uzz * acc_new[2] + Const1 * acc_new[2] + Const2 * acc_new[2];
+         Con_new[MOMX] += - Uxx_new * acc_new[0] - Uxy_new * acc_new[1] - Uxz_new * acc_new[2] + Const1_new * acc_new[0] + Const2_new * acc_new[0];
+         Con_new[MOMY] += - Uxy_new * acc_new[0] - Uyy_new * acc_new[1] - Uyz_new * acc_new[2] + Const1_new * acc_new[1] + Const2_new * acc_new[1];
+         Con_new[MOMZ] += - Uxz_new * acc_new[0] - Uyz_new * acc_new[1] - Uzz_new * acc_new[2] + Const1_new * acc_new[2] + Const2_new * acc_new[2];
 
 
-//       store the updated momentum density		 
+//       update the total energy density
+         Const3_new = LorentzFactor_new * ( n_new + P_new );
+         Con_new[ENGY] += Const3_new * ( Ux_new * acc_new[0] + Uy_new * acc_new[1] + Uz_new * acc_new[2] );
+
+#        endif // #ifdef UNSPLIT_GRAVITY ... else ...
+
+//       store the updated fluid variables
          g_Flu_Array_New[P][MOMX][idx_g0] = Con_new[MOMX];
          g_Flu_Array_New[P][MOMY][idx_g0] = Con_new[MOMY];
          g_Flu_Array_New[P][MOMZ][idx_g0] = Con_new[MOMZ];
-
-
-//       for the splitting method, we ensure that the internal energy is unchanged 
-         real Msqr = SQR(Con_new[MOMX])+SQR(Con_new[MOMY])+SQR(Con_new[MOMZ]);
-		 real Dh = Con_new[DENS]*Enthalpy;
-		 real factor = SQRT(Dh*Dh + Msqr);
-		 Etot_out = factor - Con_new[DENS]*Dh*Temp / factor;
-
-         Con_new[ENGY] = Etot_out;
+		 g_Flu_Array_New[P][ENGY][idx_g0] = Con_new[ENGY];
 
 #        ifdef CHECK_FAILED_CELL_IN_FLUID
          SRHydro_CheckUnphysical(Con_new, NULL, (real)1.333333333, (real)0.0, __FUNCTION__, __LINE__, true);
 #        endif
 
-#        endif // #ifdef UNSPLIT_GRAVITY ... else ...
-
-
-//       store the updated total energy density to the output array
-         g_Flu_Array_New[P][ENGY][idx_g0] = Etot_out;
 
       } // CGPU_LOOP( idx_g0, CUBE(PS1) )
    } // for (int P=0; P<NPatchGroup*8; P++)

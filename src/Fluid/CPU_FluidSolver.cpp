@@ -68,13 +68,16 @@ void CPU_FluidSolver_MHM(
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
          real   g_Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
          real   g_Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
+   const double g_Corner_Array [][3],
+   const real   g_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
          real   g_PriVar       [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
          real   g_Slope_PPM    [][3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
          real   g_FC_Var       [][6][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
          real   g_FC_Flux      [][3][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
    const int NPatchGroup, const real dt, const real dh, const real Gamma,
    const bool StoreFlux, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-   const real MinDens, const real MinTemp );
+   const double Time, const OptGravityType_t GravityType,
+   const double c_ExtAcc_AuxArray[], const real MinDens, const real MinTemp );
 #endif // FLU_SCHEME
 
 #elif ( MODEL == ELBDM )
@@ -221,9 +224,11 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
 #     if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
       const real MinTemp = MinPres;
 
-      CPU_FluidSolver_MHM ( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array,
+      CPU_FluidSolver_MHM ( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, 
+					        h_Corner_Array, h_Pot_Array_USG,
                             h_PriVar, h_Slope_PPM, h_FC_Var, h_FC_Flux,
-                            NPatchGroup, dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff, MinDens, MinTemp );
+                            NPatchGroup, dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff, 
+							Time, GravityType, ExtAcc_AuxArray, MinDens, MinTemp );
 
 #     else
 

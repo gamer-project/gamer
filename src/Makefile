@@ -145,7 +145,7 @@ SIMU_OPTION += -DSTORE_POT_GHOST
 
 # use unsplitting method to couple gravity to the target model (recommended)
 # --> for HYDRO and MHD only; ELBDM is not supported yet
-#SIMU_OPTION += -DUNSPLIT_GRAVITY
+SIMU_OPTION += -DUNSPLIT_GRAVITY
 
 # comoving frame for cosmological simulations
 # --> not supported for PARTICLE

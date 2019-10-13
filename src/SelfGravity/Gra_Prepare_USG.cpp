@@ -42,12 +42,10 @@ void Gra_Prepare_USG( const int lv, const double PrepTime,
 
 // prepare density + momentum
 // --> we do not check minimum density here since no ghost zones are required
-   const int TVar;
-
 #  if ( MODEL == HYDRO )
-   TVar = _DENS|_MOMX|_MOMY|_MOMZ;
+   const int TVar = _DENS|_MOMX|_MOMY|_MOMZ;
 #  elif ( MODEL == SR_HYDRO )
-   Tvar = _TOTAL;
+   const int TVar = _TOTAL;
 #  endif
 
 

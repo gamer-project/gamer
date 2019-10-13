@@ -172,12 +172,12 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
    if ( GraAcc )
    {
 #     if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
-      CPU_HydroGravitySolver( (real(*)[GRA_NIN][ CUBE(PS1) ])   h_Flu_Array,
-                              (real(*)[ CUBE(GRA_NXT) ])        h_Pot_Array_Out,
-                                                                h_Corner_Array,
-                              (real(*)[ CUBE(USG_NXT_G) ])      h_Pot_Array_USG,
+      CPU_HydroGravitySolver( (real(*)[GRA_NIN][ CUBE(PS1) ])     h_Flu_Array,
+                              (real(*)[ CUBE(GRA_NXT) ])          h_Pot_Array_Out,
+                                                                  h_Corner_Array,
+                              (real(*)[ CUBE(USG_NXT_G) ])        h_Pot_Array_USG,
                               (real(*)[GRA_NIN_USG][ CUBE(PS1) ]) h_Flu_Array_USG,
-                              (char(*)[ CUBE(PS1) ])            h_DE_Array,
+                              (char(*)[ CUBE(PS1) ])              h_DE_Array,
                               NPatchGroup, dt, dh, P5_Gradient, GravityType,
                               ExtAcc_AuxArray, TimeNew, TimeOld, MinEint );
 

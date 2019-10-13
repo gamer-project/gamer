@@ -1,7 +1,7 @@
 #include "Macro.h"
 #include "CUFLU.h"
 
-#if ( (  MODEL == HYDRO || MODEL == SR_HYDRO )  &&  defined GPU )
+#if ( (  MODEL == SR_HYDRO )  &&  defined GPU )
 
 
 
