@@ -49,17 +49,17 @@ void MHD_Init_BField_ByFile( const int B_lv )
 
    double *Axf, *Ayf, *Azf;
 
-   herr_t status;
-   hid_t dataset, dataspace;
-   hsize_t dims[3], maxdims[3];
-
    if ( !Aux_CheckFileExist(B_Filename) )
       Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", B_Filename );
 
-// Open the magnetic field file and determine the dimensionality of the vector
-// potential grid
+   // Open the magnetic field file and determine the dimensionality of the vector
+   // potential grid
 
 #  ifdef SUPPORT_HDF5
+
+   herr_t status;
+   hid_t dataset, dataspace;
+   hsize_t dims[3], maxdims[3];
 
    hid_t mag_file_id = H5Fopen(B_Filename, H5F_ACC_RDONLY, H5P_DEFAULT);
 
@@ -74,6 +74,9 @@ void MHD_Init_BField_ByFile( const int B_lv )
      H5Sclose(dataspace);
      H5Dclose(dataset);
 
+     // NOTE: Magnetic vector potential arrays are stored in column-major order,
+     // i.e., Ax[nAx][nAy][nAz]
+          
      nAx = dims[0];
      nAy = dims[1];
      nAz = dims[2];
@@ -91,17 +94,17 @@ void MHD_Init_BField_ByFile( const int B_lv )
 
    dataset = H5Dopen(mag_file_id, "x", H5P_DEFAULT);
    status  = H5Dread(dataset, H5T_NATIVE_DOUBLE, H5S_ALL,
-            H5S_ALL, H5P_DEFAULT, Axcoord);
+      H5S_ALL, H5P_DEFAULT, Axcoord);
    H5Dclose(dataset);
 
    dataset = H5Dopen(mag_file_id, "y", H5P_DEFAULT);
    status  = H5Dread(dataset, H5T_NATIVE_DOUBLE, H5S_ALL,
-            H5S_ALL, H5P_DEFAULT, Aycoord);
+      H5S_ALL, H5P_DEFAULT, Aycoord);
    H5Dclose(dataset);
 
    dataset = H5Dopen(mag_file_id, "z", H5P_DEFAULT);
    status  = H5Dread(dataset, H5T_NATIVE_DOUBLE, H5S_ALL,
-            H5S_ALL, H5P_DEFAULT, Azcoord);
+      H5S_ALL, H5P_DEFAULT, Azcoord);
    H5Dclose(dataset);
 
 #  endif
@@ -116,6 +119,15 @@ void MHD_Init_BField_ByFile( const int B_lv )
    Aymin = Aycoord[0]-0.5*Ady;
    Azmin = Azcoord[0]-0.5*Adz;
 
+   double Axmax = Axcoord[nAx-1]+0.5*Adx;
+   double Aymax = Aycoord[nAy-1]+0.5*Ady;
+   double Azmax = Azcoord[nAz-1]+0.5*Adz;
+
+   if ( amr->BoxEdgeL[0] < Axmin || amr->BoxEdgeR[0] > Axmax ||
+        amr->BoxEdgeL[1] < Aymin || amr->BoxEdgeR[1] > Aymax ||
+        amr->BoxEdgeL[2] < Azmin || amr->BoxEdgeR[2] > Azmax ) 
+      Aux_Error( ERROR_INFO, "Input grid is smaller than the simulation domain !!\n" ); 
+
    double *Ax = new double [ CUBE(PS1+1) ];
    double *Ay = new double [ CUBE(PS1+1) ];
    double *Az = new double [ CUBE(PS1+1) ];
@@ -123,10 +135,9 @@ void MHD_Init_BField_ByFile( const int B_lv )
    double sample_res = POW(2, MAX_LEVEL-B_lv);
    double sample_fact = 1.0/((double)sample_res);
 
-   //#  pragma omp parallel for schedule( runtime ) num_threads( OMP_NThread )
    for (int PID=0; PID<amr->NPatchComma[B_lv][1]; PID++) {
 
-//    Compute the beginning and ending indices on the vector potential grid
+     // Compute the beginning and ending indices on the vector potential grid
      int ibegin = MAX((int)((amr->patch[0][B_lv][PID]->EdgeL[0]-Axmin)/Adx), 0);
      int jbegin = MAX((int)((amr->patch[0][B_lv][PID]->EdgeL[1]-Aymin)/Ady), 0);
      int kbegin = MAX((int)((amr->patch[0][B_lv][PID]->EdgeL[2]-Azmin)/Adz), 0);
@@ -149,8 +160,10 @@ void MHD_Init_BField_ByFile( const int B_lv )
       Ayf = new double [nloc];
       Azf = new double [nloc];
 
+#     ifdef SUPPORT_HDF5
       VecPot_ReadField( mag_file_id, ibegin, jbegin, kbegin, 
 			iend, jend, kend, Axf, Ayf, Azf );
+#     endif
 
 //    Loop over the indices in this patch and interpolate the vector potential 
 //    to the current refinement level's resolution

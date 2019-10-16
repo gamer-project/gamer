@@ -36,7 +36,7 @@ re = np.ones(3)
 
 buffer = 0.1
 le -= buffer
-re -= buffer
+re += buffer
 
 # Construct the grid cell edge coordinates
 
