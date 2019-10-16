@@ -971,7 +971,9 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__INIT_GRID_WITH_OMP         %d\n",      OPT__INIT_GRID_WITH_OMP );
       fprintf( Note, "OPT__GPUID_SELECT               %d\n",      OPT__GPUID_SELECT       );
       fprintf( Note, "INIT_SUBSAMPLING_NCELL          %d\n",      INIT_SUBSAMPLING_NCELL  );
+#     ifdef MHD
       fprintf( Note, "OPT__INIT_BFIELD_BYFILE         %d\n",      OPT__INIT_BFIELD_BYFILE );
+#     endif
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 
