@@ -329,6 +329,7 @@ struct InputPara_t
 #  endif
 
 // time-step determination
+   double Dt__Max;
    double Dt__Fluid;
    double Dt__FluidInit;
 #  ifdef GRAVITY
