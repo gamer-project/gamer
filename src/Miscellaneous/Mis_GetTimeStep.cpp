@@ -237,7 +237,11 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
    }
 
 
-// 2.5 reduce dt for AUTO_REDUCE_DT
+// 2.5 apply a maximum allowed dt
+   if ( DT__MAX >= 0.0 )    dTime_min = MIN( dTime_min, DT__MAX );
+
+
+// 2.6 reduce dt for AUTO_REDUCE_DT
 // --> must do this AFTER checking all other dt criteria
    if ( AUTO_REDUCE_DT )   dTime_min *= AutoReduceDtCoeff;
 
