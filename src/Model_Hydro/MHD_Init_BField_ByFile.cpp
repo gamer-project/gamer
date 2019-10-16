@@ -52,8 +52,8 @@ void MHD_Init_BField_ByFile( const int B_lv )
    if ( !Aux_CheckFileExist(B_Filename) )
       Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", B_Filename );
 
-   // Open the magnetic field file and determine the dimensionality of the vector
-   // potential grid
+// Open the magnetic field file and determine the dimensionality of the vector
+// potential grid
 
 #  ifdef SUPPORT_HDF5
 
@@ -74,9 +74,9 @@ void MHD_Init_BField_ByFile( const int B_lv )
      H5Sclose(dataspace);
      H5Dclose(dataset);
 
-     // NOTE: Magnetic vector potential arrays are stored in column-major order,
-     // i.e., Ax[nAx][nAy][nAz]
-          
+//   NOTE: Magnetic vector potential arrays are stored in column-major order,
+//   i.e., Ax[nAx][nAy][nAz]
+
      nAx = dims[0];
      nAy = dims[1];
      nAz = dims[2];
@@ -85,7 +85,7 @@ void MHD_Init_BField_ByFile( const int B_lv )
 
 #  endif
 
-   // Read the coordinate information from the vector potential grid
+// Read the coordinate information from the vector potential grid
    Axcoord = new double [ nAx ];
    Aycoord = new double [ nAy ];
    Azcoord = new double [ nAz ];
@@ -109,7 +109,7 @@ void MHD_Init_BField_ByFile( const int B_lv )
 
 #  endif
 
-   // Cell spacing and left edge of vector potential grid
+// Cell spacing and left edge of vector potential grid
 
    Adx = Axcoord[1]-Axcoord[0];
    Ady = Aycoord[1]-Aycoord[0];
@@ -137,22 +137,22 @@ void MHD_Init_BField_ByFile( const int B_lv )
 
    for (int PID=0; PID<amr->NPatchComma[B_lv][1]; PID++) {
 
-     // Compute the beginning and ending indices on the vector potential grid
-     int ibegin = MAX((int)((amr->patch[0][B_lv][PID]->EdgeL[0]-Axmin)/Adx), 0);
-     int jbegin = MAX((int)((amr->patch[0][B_lv][PID]->EdgeL[1]-Aymin)/Ady), 0);
-     int kbegin = MAX((int)((amr->patch[0][B_lv][PID]->EdgeL[2]-Azmin)/Adz), 0);
+//    Compute the beginning and ending indices on the vector potential grid
+      int ibegin = MAX((int)((amr->patch[0][B_lv][PID]->EdgeL[0]-Axmin)/Adx), 0);
+      int jbegin = MAX((int)((amr->patch[0][B_lv][PID]->EdgeL[1]-Aymin)/Ady), 0);
+      int kbegin = MAX((int)((amr->patch[0][B_lv][PID]->EdgeL[2]-Azmin)/Adz), 0);
       
-     int iend = MIN((int)((amr->patch[0][B_lv][PID]->EdgeR[0]-Axmin)/Adx)+2, nAx-1);
-     int jend = MIN((int)((amr->patch[0][B_lv][PID]->EdgeR[1]-Aymin)/Ady)+2, nAy-1);
-     int kend = MIN((int)((amr->patch[0][B_lv][PID]->EdgeR[2]-Azmin)/Adz)+2, nAz-1);
+      int iend = MIN((int)((amr->patch[0][B_lv][PID]->EdgeR[0]-Axmin)/Adx)+2, nAx-1);
+      int jend = MIN((int)((amr->patch[0][B_lv][PID]->EdgeR[1]-Aymin)/Ady)+2, nAy-1);
+      int kend = MIN((int)((amr->patch[0][B_lv][PID]->EdgeR[2]-Azmin)/Adz)+2, nAz-1);
      
-     int nlocx = iend-ibegin+1;
-     int nlocy = jend-jbegin+1;
-     int nlocz = kend-kbegin+1;
+      int nlocx = iend-ibegin+1;
+      int nlocy = jend-jbegin+1;
+      int nlocz = kend-kbegin+1;
      
-     int fdims[3] = { nlocx, nlocy, nlocz };
-     int fbegin[3] = { ibegin, jbegin, kbegin };
-     int nloc = nlocx*nlocy*nlocz;
+      int fdims[3] = { nlocx, nlocy, nlocz };
+      int fbegin[3] = { ibegin, jbegin, kbegin };
+      int nloc = nlocx*nlocy*nlocz;
       
 //    Allocate for the data on the vector potential grid local to this patch and
 //    read it from the file
@@ -177,17 +177,17 @@ void MHD_Init_BField_ByFile( const int B_lv )
          Ay[idx] = 0.0;
          Az[idx] = 0.0;
 
-         for (int ii=0; ii<sample_res; ii++) {  
+         for ( int ii=0; ii<sample_res; ii++ ) {  
             const double x = x0 + (ii+0.5)*dh*sample_fact;  
             Ax[idx] += VecPot_Interp( Axf, x, y0, z0, fdims, fbegin );
          }
 
-         for (int jj=0; jj<sample_res; jj++) {  
+         for ( int jj=0; jj<sample_res; jj++ ) {  
             const double y = y0 + (jj+0.5)*dh*sample_fact;  
             Ay[idx] += VecPot_Interp( Ayf, x0, y, z0, fdims, fbegin );
          }
 
-         for (int kk=0; kk<sample_res; kk++) {
+         for ( int kk=0; kk<sample_res; kk++ ) {
             const double z = z0 + (kk+0.5)*dh*sample_fact;  
             Az[idx] += VecPot_Interp( Azf, x0, y0, z, fdims, fbegin );
          }
@@ -199,10 +199,10 @@ void MHD_Init_BField_ByFile( const int B_lv )
       }}}
 
 //    Calculate Bx from vector potential
-      for (int k=0; k<PS1; k++)    { 
-      for (int j=0; j<PS1; j++)    {  
-      for (int i=0; i<PS1+1; i++)  { 
-         int idx = IDX321( i, j, k, PS1+1, PS1+1 );
+      for (int k=0; k<PS1;   k++) { 
+      for (int j=0; j<PS1;   j++) {  
+      for (int i=0; i<PS1+1; i++) { 
+         int idx  = IDX321( i, j,   k, PS1+1, PS1+1 );
          int idxj = IDX321( i, j+1, k, PS1+1, PS1+1 );
          int idxk = IDX321( i, j, k+1, PS1+1, PS1+1 );
          int idxB = IDX321_BX( i, j, k, PS1, PS1 );
@@ -211,10 +211,10 @@ void MHD_Init_BField_ByFile( const int B_lv )
       }}}
 
 //    Calculate By from vector potential
-      for (int k=0; k<PS1; k++)    { 
-      for (int j=0; j<PS1+1; j++)  {  
-      for (int i=0; i<PS1; i++)    {
-         int idx = IDX321( i, j, k, PS1+1, PS1+1 );
+      for (int k=0; k<PS1;   k++) { 
+      for (int j=0; j<PS1+1; j++) {  
+      for (int i=0; i<PS1;   i++) {
+         int idx  = IDX321( i,   j, k, PS1+1, PS1+1 );
          int idxi = IDX321( i+1, j, k, PS1+1, PS1+1 );
          int idxk = IDX321( i, j, k+1, PS1+1, PS1+1 );
          int idxB = IDX321_BY( i, j, k, PS1, PS1 );
@@ -223,10 +223,10 @@ void MHD_Init_BField_ByFile( const int B_lv )
       }}}
 
 //    Calculate Bz from vector potential
-      for (int k=0; k<PS1+1; k++)    { 
-      for (int j=0; j<PS1; j++)    {  
-      for (int i=0; i<PS1; i++)    { 
-         int idx = IDX321( i, j, k, PS1+1, PS1+1 );
+      for (int k=0; k<PS1+1; k++) { 
+      for (int j=0; j<PS1;   j++) {  
+      for (int i=0; i<PS1;   i++) { 
+         int idx  = IDX321( i,   j, k, PS1+1, PS1+1 );
          int idxi = IDX321( i+1, j, k, PS1+1, PS1+1 );
          int idxj = IDX321( i, j+1, k, PS1+1, PS1+1 );
          int idxB = IDX321_BZ( i, j, k, PS1, PS1 );
@@ -254,12 +254,12 @@ void MHD_Init_BField_ByFile( const int B_lv )
    delete [] Aycoord;
    delete [] Azcoord;
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading the magnetic field from the input file ... done\n" );
+   if ( MPI_Rank == 0 ) Aux_Message( stdout, "   Loading the magnetic field from the input file ... done\n" );
 
 } // FUNCTION : Hydro_Init_BField_ByFile
 
 double VecPot_Interp( const double field[], const double xx, const double yy, 
-		      const double zz, const int fdims[], const int fbegin[] )
+		                const double zz, const int fdims[], const int fbegin[] )
 {
 
    const int ii = (int)((xx-Axmin)/Adx);
