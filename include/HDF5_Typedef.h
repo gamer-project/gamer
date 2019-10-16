@@ -523,6 +523,9 @@ struct InputPara_t
    int    Opt__InitGridWithOMP;
    int    Opt__GPUID_Select;
    int    Init_Subsampling_NCell;
+#  ifdef MHD
+   int    Opt__InitBFieldByFile;
+#  endif
 
 // interpolation schemes
    int    Opt__Int_Time;

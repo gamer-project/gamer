@@ -132,7 +132,7 @@ void MHD_Init_BField_ByFile( const int B_lv )
    double *Ay = new double [ CUBE(PS1+1) ];
    double *Az = new double [ CUBE(PS1+1) ];
 
-   double sample_res = POW(2, MAX_LEVEL-B_lv);
+   double sample_res = pow(2, MAX_LEVEL-B_lv);
    double sample_fact = 1.0/((double)sample_res);
 
    for (int PID=0; PID<amr->NPatchComma[B_lv][1]; PID++) {
