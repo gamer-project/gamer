@@ -2108,6 +2108,9 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__InitGridWithOMP    = OPT__INIT_GRID_WITH_OMP;
    InputPara.Opt__GPUID_Select       = OPT__GPUID_SELECT;
    InputPara.Init_Subsampling_NCell  = INIT_SUBSAMPLING_NCELL;
+#  ifdef MHD
+   InputPara.Opt__InitBFieldByFile   = OPT__INIT_BFIELD_BYFILE;
+#  endif
 
 // interpolation schemes
    InputPara.Opt__Int_Time           = OPT__INT_TIME;
@@ -2832,6 +2835,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__InitGridWithOMP",    HOFFSET(InputPara_t,Opt__InitGridWithOMP   ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__GPUID_Select",       HOFFSET(InputPara_t,Opt__GPUID_Select      ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Init_Subsampling_NCell",  HOFFSET(InputPara_t,Init_Subsampling_NCell ), H5T_NATIVE_INT     );
+#  ifdef MHD
+   H5Tinsert( H5_TypeID, "Opt__InitBFieldByFile",   HOFFSET(InputPara_t,Opt__InitBFieldByFile  ), H5T_NATIVE_INT     );
+#  endif
 
 // interpolation schemes
    H5Tinsert( H5_TypeID, "Opt__Int_Time",           HOFFSET(InputPara_t,Opt__Int_Time          ), H5T_NATIVE_INT     );
