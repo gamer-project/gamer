@@ -78,7 +78,7 @@ void Init_Unit()
 //    set all code units
 //    --> do NOT modify the following order of setting different units (otherwise some combinations may fail)
 #     if ( MODEL == SR_HYDRO )
-	  UNIT_V = Const_c;
+	  UNIT_V = 1.0;
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "NOTE : UNIT_V is set to %13.7e externally\n", UNIT_V );
 
@@ -160,9 +160,6 @@ void Init_Unit()
          else
             Aux_Error( ERROR_INFO, "cannot determine the time and mass density units !!\n" );
       }
-
-      else
-			  Aux_Error( ERROR_INFO, "cannot determine all units !!\n" );
 
 
 #     else

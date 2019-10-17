@@ -1,17 +1,17 @@
 # problem-specific runtime parameters
 Jet_NJet             1            # number of jets (1/2)
 
-Jet_BgDens           1.0         # ambient density (in cgs units)
-Jet_BgTemp           0.1          # ambient temperature (in keV)
+Jet_BgDens       5.0e-29          # ambient density (in cgs units)
+Jet_BgTemp           0.1          # ambient temperature (in GeV)
 Jet_BgVel_x         +0.0          # ambient velocity x (in cgs units) [0.0]
 Jet_BgVel_y         +0.0          # ambient velocity y (in cgs units) [0.0]
 Jet_BgVel_z         +0.0          # ambient velocity z (in cgs units) [0.0]
 
 Jet0_Radius          0.5          # jet 0: radius of the cylinder-shape jet source (in kpc)
 Jet0_HalfHeight      0.5          # jet 0: half height of the cylinder-shape jet source (in kpc)
-Jet0_SrcVel          10           # jet 0: jet velocity (in cgs units)
-Jet0_SrcDens         0.1          # jet 0: jet density (in cgs units)
-Jet0_SrcTemp         1.0          # jet 0: jet temperature (in keV)
+Jet0_SrcVel          10           # jet 0: jet 4-velocity ( in unit of speed of light )
+Jet0_SrcDens     5.0e-30          # jet 0: jet density (in cgs units)
+Jet0_SrcTemp         1.0          # jet 0: jet temperature (in GeV)
 Jet0_Vec_x          +1.0          # jet 0: jet orientation vector x (x,y,z don't have to be a unit vector)
 Jet0_Vec_y          +0.0          # jet 0: jet orientation vector y
 Jet0_Vec_z          +0.0          # jet 0: jet orientation vector z
@@ -30,3 +30,9 @@ Jet0_CenOffset_z    +0.0          # jet 0: jet central coordinates offset z (in 
 #Jet1_CenOffset_x    +0.0         # jet 1: jet central coordinates offset x (in kpc)
 #Jet1_CenOffset_y    -4.0         # jet 1: jet central coordinates offset y (in kpc)
 #Jet1_CenOffset_z    +0.21        # jet 1: jet central coordinates offset z (in kpc)
+#
+Jet_HSE              1           # hydrostatic equilibrium background
+Jet_HSE_Dx           0.0         # for Jet_HSE: distance between box and cluster centre (in kpc)
+Jet_HSE_Dy           0.0         # for Jet_HSE: distance between box and cluster centre (in kpc)
+Jet_HSE_Dz           0.0         # for Jet_HSE: distance between box and cluster centre (in kpc)
+Jet_HSE_BgTable_File Input__HydrostaticEquilibrium # for Jet_HSE: filename of the background gas table

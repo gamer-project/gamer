@@ -80,7 +80,6 @@ void Validate()
 
 
 
-#if ( MODEL == SR_HYDRO )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
@@ -174,36 +173,22 @@ void SetParameter()
 
 
 // (1-2) check runtime parameters
-//   if ( Jet_HSE )
-//   {
-////#     ifdef GRAVITY
-////      if ( OPT__GRAVITY_TYPE != GRAVITY_EXTERNAL )
-////         Aux_Error( ERROR_INFO, "please set OPT__GRAVITY_TYPE = GRAVITY_EXTERNAL for Jet_HSE !!\n" );
-////#     endif
-//
-//      if ( Jet_HSE_D == NoDef_double )
-//         Aux_Error( ERROR_INFO, "\"Jet_HSE_D\" is not set for Jet_HSE !!\n" );
-//
-//      if ( Jet_HSE_M200 == NoDef_double )
-//         Aux_Error( ERROR_INFO, "\"Jet_HSE_M200\" is not set for Jet_HSE !!\n" );
-//
-//      if ( Jet_HSE_R200 == NoDef_double )
-//         Aux_Error( ERROR_INFO, "\"Jet_HSE_R200\" is not set for Jet_HSE !!\n" );
-//
-//      if ( Jet_HSE_C200 == NoDef_double )
-//         Aux_Error( ERROR_INFO, "\"Jet_HSE_C200\" is not set for Jet_HSE !!\n" );
-//   } // if ( Jet_HSE )
-//
-//   else
-//   {
-//#     ifdef GRAVITY
-//         Aux_Error( ERROR_INFO, "GRAVITY must be disabled !!\n" );
-//#     endif
-//   } // if ( Jet_HSE ) ... else ...
+   if ( Jet_HSE )
+   {
+   } // if ( Jet_HSE )
+
+   else
+   {
+#     ifdef GRAVITY
+         Aux_Error( ERROR_INFO, "GRAVITY must be disabled !!\n" );
+#     endif
+   } // if ( Jet_HSE ) ... else ...
 
 // (1-2) convert to code unit
-/*s
+
    Jet_BgDens           *= 1.0       / UNIT_D;
+   Jet_BgTemp           *= Const_GeV / ( Const_mp * SQR(Const_c) );
+
    for (int d=0; d<3; d++)
    Jet_BgVel[d]         *= 1.0       / UNIT_V;
 
@@ -211,18 +196,12 @@ void SetParameter()
    Jet_Radius    [n]    *= Const_kpc / UNIT_L;
    Jet_HalfHeight[n]    *= Const_kpc / UNIT_L;
    Jet_SrcVel    [n]    *= 1.0       / UNIT_V;
+   Jet_SrcTemp   [n]    *= Const_GeV / ( Const_mp * SQR(Const_c) );
    Jet_SrcDens   [n]    *= 1.0       / UNIT_D;
 
    for (int d=0; d<3; d++)
    Jet_CenOffset [n][d] *= Const_kpc / UNIT_L;
    }
-
-   if ( Jet_HSE ) {
-   Jet_HSE_D            *= Const_kpc  / UNIT_L;
-   Jet_HSE_M200         *= Const_Msun / UNIT_M;
-   Jet_HSE_R200         *= Const_kpc  / UNIT_L;
-   }
-*/
 
 // (2) set the problem-specific derived parameters
 
@@ -241,21 +220,21 @@ void SetParameter()
       const bool AllocMem_Yes = true;        // allocate memory for Merger_Prof1/2
       const int  NCol         = 3;           // total number of columns to load
       const int  Col[NCol]    = {1, 2, 3};   // target columns: (radius, density, temperature)
-      double *Table_R, *Table_n, *Table_T;
+      double *Table_R, *Table_D, *Table_T;
 
       Jet_HSE_BgTable_NBin = Aux_LoadTable( Jet_HSE_BgTable_Data, Jet_HSE_BgTable_File, NCol, Col, RowMajor_No, AllocMem_Yes );
 
 //    convert to code units
-//      Table_R = Jet_HSE_BgTable_Data + 0*Jet_HSE_BgTable_NBin;
-//      Table_n = Jet_HSE_BgTable_Data + 1*Jet_HSE_BgTable_NBin;
-//      Table_T = Jet_HSE_BgTable_Data + 2*Jet_HSE_BgTable_NBin;
-//
-//      for (int b=0; b<Jet_HSE_BgTable_NBin; b++)
-//      {
-//         Table_R[b] *= Const_kpc / UNIT_L;
-//         Table_n[b] *= 1.0       / UNIT_D;
-//         Table_T[b] *= Const_keV / UNIT_E;
-//      }
+      Table_R = Jet_HSE_BgTable_Data + 0*Jet_HSE_BgTable_NBin;
+      Table_D = Jet_HSE_BgTable_Data + 1*Jet_HSE_BgTable_NBin;
+      Table_T = Jet_HSE_BgTable_Data + 2*Jet_HSE_BgTable_NBin;
+
+      for (int b=0; b<Jet_HSE_BgTable_NBin; b++)
+      {
+         Table_R[b] *= Const_kpc / UNIT_L;
+         Table_D[b] *= 1.0       / UNIT_D;
+         Table_T[b] *= Const_GeV / ( Const_mp * SQR(Const_c) );
+      }
    } // if ( Jet_HSE  &&  OPT__INIT != INIT_BY_RESTART )
 
 // (4) reset other general-purpose parameters
@@ -278,34 +257,37 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID      = %d\n",                 TESTPROB_ID                           );
-      Aux_Message( stdout, "  Jet_BgDens           = % 14.7e g/cm^3\n",     Jet_BgDens*UNIT_D                     );
-      Aux_Message( stdout, "  Jet_BgTemp           = % 14.7e g/(cm*s^2)\n", Jet_BgTemp*UNIT_D                     );
-      Aux_Message( stdout, "  Jet_BgVel[x]         = % 14.7e cm/s\n",       Jet_BgVel[0]*UNIT_V                   );
-      Aux_Message( stdout, "  Jet_BgVel[y]         = % 14.7e cm/s\n",       Jet_BgVel[1]*UNIT_V                   );
-      Aux_Message( stdout, "  Jet_BgVel[z]         = % 14.7e cm/s\n",       Jet_BgVel[2]*UNIT_V                   );
-      Aux_Message( stdout, "  Jet_HSE              = %d\n",                 Jet_HSE                               );
-      Aux_Message( stdout, "  Jet_HSE_Dx           = %e\n",                 Jet_HSE_Dx                            );
-      Aux_Message( stdout, "  Jet_HSE_Dy           = %e\n",                 Jet_HSE_Dy                            );
-      Aux_Message( stdout, "  Jet_HSE_Dz           = %e\n",                 Jet_HSE_Dz                            );
+      Aux_Message( stdout, "  test problem ID      = %d\n",              TESTPROB_ID                                        );
+      Aux_Message( stdout, "  Jet_BgDens           = % 14.7e g/cm^3\n",  Jet_BgDens*UNIT_D                                  );
+      Aux_Message( stdout, "  Jet_BgTemp           = % 14.7e GeV\n",     Jet_BgTemp*Const_mp*SQR(Const_c)/Const_GeV         );
+      Aux_Message( stdout, "  Jet_BgVel[x]         = % 14.7e c\n",       Jet_BgVel[0]*UNIT_V                                );
+      Aux_Message( stdout, "  Jet_BgVel[y]         = % 14.7e c\n",       Jet_BgVel[1]*UNIT_V                                );
+      Aux_Message( stdout, "  Jet_BgVel[z]         = % 14.7e c\n",       Jet_BgVel[2]*UNIT_V                                );
+      Aux_Message( stdout, "  Jet_NJet             = %d\n",              Jet_NJet                                           );
       if ( Jet_HSE ) {
-      Aux_Message( stdout, "  Jet_HSE_BgTable_File = %s\n",                 Jet_HSE_BgTable_File                  ); }
-      Aux_Message( stdout, "  Jet_NJet             = %d\n",                 Jet_NJet                              );
+      Aux_Message( stdout, "  Jet_HSE              = %d\n",              Jet_HSE                                            );
+      Aux_Message( stdout, "  Jet_HSE_Dx           = %e kpc\n",          Jet_HSE_Dx*Const_kpc                               );
+      Aux_Message( stdout, "  Jet_HSE_Dy           = %e kpc\n",          Jet_HSE_Dy*Const_kpc                               );
+      Aux_Message( stdout, "  Jet_HSE_Dz           = %e kpc\n",          Jet_HSE_Dz*Const_kpc                               );
+      Aux_Message( stdout, "  Jet_HSE_BgTable_File = %s\n",              Jet_HSE_BgTable_File                               ); }
       for (int n=0; n<Jet_NJet; n++) {
       Aux_Message( stdout, "\n" );
       Aux_Message( stdout, "  Jet # %d:\n", n );
-      Aux_Message( stdout, "  Jet_Radius           = % 14.7e kpc\n",        Jet_Radius    [n]*UNIT_L/Const_kpc    );
-      Aux_Message( stdout, "  Jet_HalfHeight       = % 14.7e kpc\n",        Jet_HalfHeight[n]*UNIT_L/Const_kpc    );
-      Aux_Message( stdout, "  Jet_SrcVel           = % 14.7e cm/s\n",       Jet_SrcVel    [n]*UNIT_V              );
-      Aux_Message( stdout, "  Jet_SrcDens          = % 14.7e g/cm^3\n",     Jet_SrcDens   [n]*UNIT_D              );
-      Aux_Message( stdout, "  Jet_SrcTemp          = % 14.7e g/(cm*s^2)\n", Jet_SrcTemp   [n]*UNIT_D              );
-      Aux_Message( stdout, "  Jet_Vec[x]           = % 14.7e\n",            Jet_Vec       [n][0]                  );
-      Aux_Message( stdout, "  Jet_Vec[y]           = % 14.7e\n",            Jet_Vec       [n][1]                  );
-      Aux_Message( stdout, "  Jet_Vec[z]           = % 14.7e\n",            Jet_Vec       [n][2]                  );
-      Aux_Message( stdout, "  Jet_CenOffset[x]     = % 14.7e kpc\n",        Jet_CenOffset [n][0]*UNIT_L/Const_kpc );
-      Aux_Message( stdout, "  Jet_CenOffset[y]     = % 14.7e kpc\n",        Jet_CenOffset [n][1]*UNIT_L/Const_kpc );
-      Aux_Message( stdout, "  Jet_CenOffset[z]     = % 14.7e kpc\n",        Jet_CenOffset [n][2]*UNIT_L/Const_kpc ); }
+      Aux_Message( stdout, "  Jet_Radius           = % 14.7e kpc\n",     Jet_Radius    [n]*UNIT_L/Const_kpc                 );
+      Aux_Message( stdout, "  Jet_HalfHeight       = % 14.7e kpc\n",     Jet_HalfHeight[n]*UNIT_L/Const_kpc                 );
+      Aux_Message( stdout, "  Jet_SrcVel           = % 14.7e c\n",       Jet_SrcVel    [n]*UNIT_V                           );
+      Aux_Message( stdout, "  Jet_SrcDens          = % 14.7e g/cm^3\n",  Jet_SrcDens   [n]*UNIT_D                           );
+      Aux_Message( stdout, "  Jet_SrcTemp          = % 14.7e GeV\n",     Jet_SrcTemp   [n]*Const_mp*SQR(Const_c)/Const_GeV  );
+      Aux_Message( stdout, "  Jet_Vec[x]           = % 14.7e\n",         Jet_Vec       [n][0]                               );
+      Aux_Message( stdout, "  Jet_Vec[y]           = % 14.7e\n",         Jet_Vec       [n][1]                               );
+      Aux_Message( stdout, "  Jet_Vec[z]           = % 14.7e\n",         Jet_Vec       [n][2]                               );
+      Aux_Message( stdout, "  Jet_CenOffset[x]     = % 14.7e kpc\n",     Jet_CenOffset [n][0]*UNIT_L/Const_kpc              );
+      Aux_Message( stdout, "  Jet_CenOffset[y]     = % 14.7e kpc\n",     Jet_CenOffset [n][1]*UNIT_L/Const_kpc              );
+      Aux_Message( stdout, "  Jet_CenOffset[z]     = % 14.7e kpc\n",     Jet_CenOffset [n][2]*UNIT_L/Const_kpc              ); }
       Aux_Message( stdout, "=============================================================================\n" );
+
+	  printf("Jet_BgDens=%e, Jet_BgTemp=%e, Jet_Radius=%e, Jet_HalfHeight=%e, Jet_SrcDens=%e, Jet_SrcTemp=%e", 
+					   Jet_BgDens, Jet_BgTemp, Jet_Radius[0], Jet_HalfHeight[0], Jet_SrcDens[0], Jet_SrcTemp[0]);
    }
 
 
@@ -337,7 +319,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 {
 
 // variables for Jet_HSE
-   const double *Table_R=NULL, *Table_n=NULL, *Table_T=NULL;
+   const double *Table_R=NULL, *Table_D=NULL, *Table_T=NULL;
    double dx, dy, dz, dr;
    const int  NCol         = 3;           // total number of columns to load
    const int  Col[NCol]    = {1, 2, 3};   // target columns: (radius, density, temperature)
@@ -353,7 +335,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    if ( Jet_HSE )
    {
       Table_R = Jet_HSE_BgTable_Data + (Col[0]-1)*Jet_HSE_BgTable_NBin;
-      Table_n = Jet_HSE_BgTable_Data + (Col[1]-1)*Jet_HSE_BgTable_NBin;
+      Table_D = Jet_HSE_BgTable_Data + (Col[1]-1)*Jet_HSE_BgTable_NBin;
       Table_T = Jet_HSE_BgTable_Data + (Col[2]-1)*Jet_HSE_BgTable_NBin;
 
       dx = x - amr->BoxCenter[0] + Jet_HSE_Dx;
@@ -362,8 +344,19 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
       dr = sqrt( dx*dx + dy*dy + dz*dz );
 
-      Pri4Vel[0] = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_n, dr );
+      Pri4Vel[0] = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_D, dr );
       Pri4Vel[4] = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_T, dr ) * Pri4Vel[0];
+
+//      if ( dr <= 0.0574 )
+//      {
+//        Pri4Vel[0] = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_D, dr );
+//        Pri4Vel[4] = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_T, dr ) * Pri4Vel[0];
+//      }
+//      else
+//      {
+//        Pri4Vel[0] = 1e-138;
+//        Pri4Vel[4] = 1e-138;
+//      }
    }
    else
    {
@@ -445,7 +438,7 @@ void End_Jets()
 bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const double z, const double Time,
                                     const int lv, double AuxArray[] )
 {
-   return false;
+//   return false;
    const double r[3] = { x, y, z };
 
    double Jet_dr, Jet_dh, S, Area;
@@ -530,7 +523,6 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
    return false;
 
 } // FUNCTION : Flu_ResetByUser_Jets
-#endif // #if ( MODEL == SR_HYDRO )
 
 bool Flag_User( const int i, const int j, const int k, const int lv, const int PID, const double Threshold )
 {
@@ -703,7 +695,6 @@ void Init_TestProb_SRHydro_Jets()
    Validate();
 
 
-#  if ( MODEL == SR_HYDRO )
 // set the problem-specific runtime parameters
    SetParameter();
 
@@ -719,7 +710,6 @@ void Init_TestProb_SRHydro_Jets()
 #  ifdef GRAVITY
    Init_ExternalAcc_Ptr     = Init_ExternalAcc;
 #  endif
-#  endif // #if ( MODEL == SR_HYDRO )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
