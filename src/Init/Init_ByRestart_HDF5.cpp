@@ -1593,6 +1593,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  endif
 
 // time-step determination
+   LoadField( "Dt__Max",                 &RS.Dt__Max,                 SID, TID, NonFatal, &RT.Dt__Max,                  1, NonFatal );
    LoadField( "Dt__Fluid",               &RS.Dt__Fluid,               SID, TID, NonFatal, &RT.Dt__Fluid,                1, NonFatal );
    LoadField( "Dt__FluidInit",           &RS.Dt__FluidInit,           SID, TID, NonFatal, &RT.Dt__FluidInit,            1, NonFatal );
 #  ifdef GRAVITY

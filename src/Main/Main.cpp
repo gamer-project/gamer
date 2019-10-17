@@ -41,7 +41,7 @@ int                  MPI_Rank, MPI_Rank_X[3], MPI_SibRank[26], NX0[3], NPatchTot
 int                 *BaseP = NULL;
 int                  Flu_ParaBuf;
 
-double               BOX_SIZE, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT, DT__SYNC_PARENT_LV, DT__SYNC_CHILDREN_LV;
+double               BOX_SIZE, DT__MAX, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT, DT__SYNC_PARENT_LV, DT__SYNC_CHILDREN_LV;
 long                 END_STEP;
 int                  NX0_TOT[3], OUTPUT_STEP, REGRID_COUNT, FLU_GPU_NPGROUP, OMP_NTHREAD;
 int                  MPI_NRank, MPI_NRank_X[3];
