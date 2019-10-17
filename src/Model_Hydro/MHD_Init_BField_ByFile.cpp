@@ -11,7 +11,7 @@ static double *Axcoord, *Aycoord, *Azcoord;
 
 double TSC_Weight( const double x );
 double VecPot_Interp( const double field[], const double xx, const double yy, 
-		                const double zz, const int fdims[], const int fbegin[] );
+		      const double zz, const int fdims[], const int fbegin[] );
 #ifdef SUPPORT_HDF5
 void VecPot_ReadField( hid_t mag_file_id, const int ibegin, const int jbegin,
                        const int kbegin, const int iend, const int jend,
@@ -137,10 +137,17 @@ void MHD_Init_BField_ByFile( const int B_lv )
 
    for (int PID=0; PID<amr->NPatchComma[B_lv][1]; PID++) {
 
-      double EdgeL[3] = amr->patch[0][B_lv][PID]->EdgeL;
-      double EdgeR[3] = amr->patch[0][B_lv][PID]->EdgeR;
+      double EdgeL[3];
+      double EdgeR[3];
+
+      for (int i=0; i<3; i++) { 
+         EdgeL[i] = amr->patch[0][B_lv][PID]->EdgeL[i];
+         EdgeR[i] = amr->patch[0][B_lv][PID]->EdgeR[i];
+      }
 
 //    Compute the beginning and ending indices on the vector potential grid
+//    +/- 1 are necessary because we will be computing derivatives
+
       int ibegin = (int)((EdgeL[0]-Axmin)/Adx)-1;
       int jbegin = (int)((EdgeL[1]-Aymin)/Ady)-1;
       int kbegin = (int)((EdgeL[2]-Azmin)/Adz)-1;
@@ -159,6 +166,7 @@ void MHD_Init_BField_ByFile( const int B_lv )
       
 //    Allocate for the data on the vector potential grid local to this patch and
 //    read it from the file
+
       Axf = new double [nloc];
       Ayf = new double [nloc];
       Azf = new double [nloc];
@@ -170,6 +178,7 @@ void MHD_Init_BField_ByFile( const int B_lv )
 
 //    Loop over the indices in this patch and interpolate the vector potential 
 //    to the current refinement level's resolution
+
       for (int k=0; k<PS1+1; k++) {  const double z0 = EdgeL[2] + k*dh;
       for (int j=0; j<PS1+1; j++) {  const double y0 = EdgeL[1] + j*dh;
       for (int i=0; i<PS1+1; i++) {  const double x0 = EdgeL[0] + i*dh;
@@ -261,14 +270,30 @@ void MHD_Init_BField_ByFile( const int B_lv )
 
 } // FUNCTION : Hydro_Init_BField_ByFile
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  VecPot_Interp
+// Description :  Use triangle-shaped cloud interpolation to interpolate
+//                a vector potential from the input grid to the AMR grid
+//
+// Parameter   :  field  : Local patch of input vector potential, one component 
+//                xx     : coordinate along the x-axis
+//                yy     : coordinate along the y-axis
+//                zz     : coordinate along the z-axis  
+//                fdims  : size of the input vector potential patch
+//                fbegin : index location of the input vector potential patch
+//
+// Return      :  vector potential component on AMR grid at (xx, yy, zz)
+//-------------------------------------------------------------------------------------------------------
 double VecPot_Interp( const double field[], const double xx, const double yy, 
 		                const double zz, const int fdims[], const int fbegin[] )
 {
 
+   // Indices into the coordinate vectors
    const int ii = (int)((xx-Axmin)/Adx);
    const int jj = (int)((yy-Aymin)/Ady);
    const int kk = (int)((zz-Azmin)/Adz);
 
+   // Indices into the local vector potential patch
    const int ib = ii - fbegin[0];
    const int jb = jj - fbegin[1];
    const int kb = kk - fbegin[2];
