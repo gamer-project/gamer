@@ -137,18 +137,21 @@ void MHD_Init_BField_ByFile( const int B_lv )
 
    for (int PID=0; PID<amr->NPatchComma[B_lv][1]; PID++) {
 
+      double EdgeL[3] = amr->patch[0][B_lv][PID]->EdgeL;
+      double EdgeR[3] = amr->patch[0][B_lv][PID]->EdgeR;
+
 //    Compute the beginning and ending indices on the vector potential grid
-      int ibegin = MAX((int)((amr->patch[0][B_lv][PID]->EdgeL[0]-Axmin)/Adx), 0);
-      int jbegin = MAX((int)((amr->patch[0][B_lv][PID]->EdgeL[1]-Aymin)/Ady), 0);
-      int kbegin = MAX((int)((amr->patch[0][B_lv][PID]->EdgeL[2]-Azmin)/Adz), 0);
+      int ibegin = (int)((EdgeL[0]-Axmin)/Adx)-1;
+      int jbegin = (int)((EdgeL[1]-Aymin)/Ady)-1;
+      int kbegin = (int)((EdgeL[2]-Azmin)/Adz)-1;
       
-      int iend = MIN((int)((amr->patch[0][B_lv][PID]->EdgeR[0]-Axmin)/Adx)+2, nAx-1);
-      int jend = MIN((int)((amr->patch[0][B_lv][PID]->EdgeR[1]-Aymin)/Ady)+2, nAy-1);
-      int kend = MIN((int)((amr->patch[0][B_lv][PID]->EdgeR[2]-Azmin)/Adz)+2, nAz-1);
+      int iend   = (int)((EdgeR[0]-Axmin)/Adx)+1;
+      int jend   = (int)((EdgeR[1]-Aymin)/Ady)+1;
+      int kend   = (int)((EdgeR[2]-Azmin)/Adz)+1;
      
-      int nlocx = iend-ibegin+1;
-      int nlocy = jend-jbegin+1;
-      int nlocz = kend-kbegin+1;
+      int nlocx  = iend-ibegin+1;
+      int nlocy  = jend-jbegin+1;
+      int nlocz  = kend-kbegin+1;
      
       int fdims[3] = { nlocx, nlocy, nlocz };
       int fbegin[3] = { ibegin, jbegin, kbegin };
@@ -167,9 +170,9 @@ void MHD_Init_BField_ByFile( const int B_lv )
 
 //    Loop over the indices in this patch and interpolate the vector potential 
 //    to the current refinement level's resolution
-      for (int k=0; k<PS1+1; k++)    {  const double z0 = amr->patch[0][B_lv][PID]->EdgeL[2] + k*dh;
-      for (int j=0; j<PS1+1; j++)    {  const double y0 = amr->patch[0][B_lv][PID]->EdgeL[1] + j*dh;
-      for (int i=0; i<PS1+1; i++)    {  const double x0 = amr->patch[0][B_lv][PID]->EdgeL[0] + i*dh;
+      for (int k=0; k<PS1+1; k++) {  const double z0 = EdgeL[2] + k*dh;
+      for (int j=0; j<PS1+1; j++) {  const double y0 = EdgeL[1] + j*dh;
+      for (int i=0; i<PS1+1; i++) {  const double x0 = EdgeL[0] + i*dh;
 
          int idx = IDX321( i, j, k, PS1+1, PS1+1 );
 
@@ -202,10 +205,10 @@ void MHD_Init_BField_ByFile( const int B_lv )
       for (int k=0; k<PS1;   k++) { 
       for (int j=0; j<PS1;   j++) {  
       for (int i=0; i<PS1+1; i++) { 
-         int idx  = IDX321( i, j,   k, PS1+1, PS1+1 );
-         int idxj = IDX321( i, j+1, k, PS1+1, PS1+1 );
-         int idxk = IDX321( i, j, k+1, PS1+1, PS1+1 );
-         int idxB = IDX321_BX( i, j, k, PS1, PS1 );
+         int idx  = IDX321   ( i, j,   k,   PS1+1, PS1+1 );
+         int idxj = IDX321   ( i, j+1, k,   PS1+1, PS1+1 );
+         int idxk = IDX321   ( i, j,   k+1, PS1+1, PS1+1 );
+         int idxB = IDX321_BX( i, j,   k,   PS1,   PS1   );
          real Bx = ( Az[idxj] - Az[idx] - Ay[idxk] + Ay[idx] ) / dh;
          amr->patch[ amr->MagSg[B_lv] ][B_lv][PID]->magnetic[0][idxB] = Bx;
       }}}
@@ -214,10 +217,10 @@ void MHD_Init_BField_ByFile( const int B_lv )
       for (int k=0; k<PS1;   k++) { 
       for (int j=0; j<PS1+1; j++) {  
       for (int i=0; i<PS1;   i++) {
-         int idx  = IDX321( i,   j, k, PS1+1, PS1+1 );
-         int idxi = IDX321( i+1, j, k, PS1+1, PS1+1 );
-         int idxk = IDX321( i, j, k+1, PS1+1, PS1+1 );
-         int idxB = IDX321_BY( i, j, k, PS1, PS1 );
+         int idx  = IDX321   ( i,   j, k,   PS1+1, PS1+1 );
+         int idxi = IDX321   ( i+1, j, k,   PS1+1, PS1+1 );
+         int idxk = IDX321   ( i,   j, k+1, PS1+1, PS1+1 );
+         int idxB = IDX321_BY( i,   j, k,   PS1,   PS1   );
          real By = ( Ax[idxk] - Ax[idx] - Az[idxi] + Az[idx] ) / dh;
          amr->patch[ amr->MagSg[B_lv] ][B_lv][PID]->magnetic[1][idxB] = By;
       }}}
@@ -226,10 +229,10 @@ void MHD_Init_BField_ByFile( const int B_lv )
       for (int k=0; k<PS1+1; k++) { 
       for (int j=0; j<PS1;   j++) {  
       for (int i=0; i<PS1;   i++) { 
-         int idx  = IDX321( i,   j, k, PS1+1, PS1+1 );
-         int idxi = IDX321( i+1, j, k, PS1+1, PS1+1 );
-         int idxj = IDX321( i, j+1, k, PS1+1, PS1+1 );
-         int idxB = IDX321_BZ( i, j, k, PS1, PS1 );
+         int idx  = IDX321   ( i,   j,   k, PS1+1, PS1+1 );
+         int idxi = IDX321   ( i+1, j,   k, PS1+1, PS1+1 );
+         int idxj = IDX321   ( i,   j+1, k, PS1+1, PS1+1 );
+         int idxB = IDX321_BZ( i,   j,   k, PS1,   PS1   );
          real Bz = ( Ay[idxi] - Ay[idx] - Ax[idxj] + Ax[idx] ) / dh;
          amr->patch[ amr->MagSg[B_lv] ][B_lv][PID]->magnetic[2][idxB] = Bz;
       }}}
@@ -266,24 +269,24 @@ double VecPot_Interp( const double field[], const double xx, const double yy,
    const int jj = (int)((yy-Aymin)/Ady);
    const int kk = (int)((zz-Azmin)/Adz);
 
-   const int ib = ii - fbegin[0] + 1;
-   const int jb = jj - fbegin[1] + 1;
-   const int kb = kk - fbegin[2] + 1;
+   const int ib = ii - fbegin[0];
+   const int jb = jj - fbegin[1];
+   const int kb = kk - fbegin[2];
 
    double pot = 0.0;
 
-   if ( ib > 0 && ib < fdims[0]-1 && 
-        jb > 0 && jb < fdims[1]-1 && 
-        kb > 0 && kb < fdims[2]-1 ) {
-
-      for (int i = -1; i <= 1; i++) { double dx = (xx-Axcoord[ii+i])/Adx;
-      for (int j = -1; j <= 1; j++) { double dy = (yy-Aycoord[jj+j])/Ady;
-      for (int k = -1; k <= 1; k++) { double dz = (zz-Azcoord[kk+k])/Adz;
-	      int idx = (ib+i)*fdims[2]*fdims[1] + (jb+j)*fdims[2] + (kb+k);
-         pot += field[idx]*TSC_Weight(dx)*TSC_Weight(dy)*TSC_Weight(dz);
-      }}}
-
+   if ( ib == 0 || ib == fdims[0]-1 || 
+        jb == 0 || jb == fdims[1]-1 || 
+        kb == 0 || kb == fdims[2]-1 ) {
+      Aux_Error( ERROR_INFO, "VecPot_Interp: An invalid index was entered!!\n" );
    }
+
+   for (int i = -1; i <= 1; i++) { double dx = (xx-Axcoord[ii+i])/Adx;
+   for (int j = -1; j <= 1; j++) { double dy = (yy-Aycoord[jj+j])/Ady;
+   for (int k = -1; k <= 1; k++) { double dz = (zz-Azcoord[kk+k])/Adz;
+      int idx = (ib+i)*fdims[2]*fdims[1] + (jb+j)*fdims[2] + (kb+k);
+      pot += field[idx]*TSC_Weight(dx)*TSC_Weight(dy)*TSC_Weight(dz);
+   }}}
 
    return pot;
 
