@@ -21,28 +21,33 @@ It requires NumPy, h5py, and HDF5 to be installed.
 import h5py
 import numpy as np
 
-# Number of cells along each dimension of the input grid
+# Number of cells along each dimension of the input grid.
+# This is somewhat arbitrary, but should be chosen in 
+# such a way as to adequately resolve the vector potential.
 
-nx, ny, nz = (128,)*3
+ddims = np.array([128]*3, dtype='int')
 
-# Left edge and right edge coordinates of simulation domain
+# Left edge and right edge coordinates of the desired 
+# simulation domain which will be used in GAMER.
 
 le = np.zeros(3)
 re = np.ones(3)
 
-# Since we need to take derivatives on coordinates in the 
-# domain, the input grid must be extended a bit beyond this 
-# boundary
+# Since we need to take derivatives of the vector potential 
+# to get the magnetic field on the simulation domain, the 
+# input grid must be extended a bit beyond this boundary. 
+# We therefore add a buffer of one cell on each side. 
 
-buffer = 0.1
-le -= buffer
-re += buffer
+delta = (re-le)/ddims
+ddims += 2
+le -= delta
+re += delta
 
 # Construct the grid cell edge coordinates
 
-x = np.linspace(le[0], re[0], nx+1)
-y = np.linspace(le[1], re[1], ny+1)
-z = np.linspace(le[2], re[2], nz+1)
+x = np.linspace(le[0], re[0], ddims[0]+1)
+y = np.linspace(le[1], re[1], ddims[1]+1)
+z = np.linspace(le[2], re[2], ddims[2]+1)
 
 # Find the grid cell midpoints
 
