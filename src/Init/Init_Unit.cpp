@@ -266,7 +266,11 @@ void Init_Unit()
 //    convert physical constants to code units
 //    (1) gravitational constant
 #     ifdef GRAVITY
+#     if ( MODEL == SR_HYDRO )
+      NEWTON_G = Const_NewtonG;
+#     else
       NEWTON_G = Const_NewtonG / ( 1.0/UNIT_D/SQR(UNIT_T) );
+#     endif
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "NOTE : NEWTON_G is set to %13.7e internally\n", NEWTON_G );
 #     endif
 
