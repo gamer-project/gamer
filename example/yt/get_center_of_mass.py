@@ -1,6 +1,6 @@
 import yt
 
-# parameters
+# target file
 file = 'Data_000000'
 
 # load data
