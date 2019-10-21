@@ -288,6 +288,8 @@ void Aux_TakeNote()
       fprintf( Note, "GPU_ARCH                        PASCAL\n" );
 #     elif ( GPU_ARCH == VOLTA )
       fprintf( Note, "GPU_ARCH                        VOLTA\n" );
+#     elif ( GPU_ARCH == TURING )
+      fprintf( Note, "GPU_ARCH                        TURING\n" );
 #     else
       fprintf( Note, "GPU_ARCH                        UNKNOWN\n" );
 #     endif

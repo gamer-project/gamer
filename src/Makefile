@@ -151,7 +151,7 @@ SIMU_OPTION += -DMAX_PATCH=1000000
 # --> must set GPU_ARCH as well
 #SIMU_OPTION += -DGPU
 
-# GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA
+# GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA/TURING
 SIMU_OPTION += -DGPU_ARCH=KEPLER
 
 # debug mode
@@ -346,6 +346,14 @@ LIBYT_PATH   :=
 #LIBYT_PATH   := /project/fish/libyt/libyt
 #MPI_PATH     := /opt/mpi/openmpi/1.8.1-gcc-qlc
 #CUDA_PATH    := /usr/local/cuda-7.5
+
+# NTHU-fomalhaut (openmpi-gnu)
+#CUDA_PATH    := /usr/local/cuda-10.0
+#FFTW_PATH    := /home/hyschive/software/fftw/2.1.5-openmpi-gnu
+#MPI_PATH     := /storage/app/gnu/openmpi-3.1.3-gcc8
+#HDF5_PATH    := /storage/app/gnu/hdf5-1.8.21-gcc8
+#GRACKLE_PATH :=
+#GSL_PATH     :=
 
 # NAOC-laohu (OpenMPI-1.3.2-intel)
 #CUDA_PATH    := $(CUDA_INSTALL_PATH)
@@ -749,6 +757,8 @@ else ifeq "$(filter -DGPU_ARCH=PASCAL,  $(SIMU_OPTION))" "-DGPU_ARCH=PASCAL"
    NVCCFLAG_COM += -gencode arch=compute_61,code=\"compute_61,sm_61\"
 else ifeq "$(filter -DGPU_ARCH=VOLTA,  $(SIMU_OPTION))" "-DGPU_ARCH=VOLTA"
    NVCCFLAG_COM += -gencode arch=compute_70,code=\"compute_70,sm_70\"
+else ifeq "$(filter -DGPU_ARCH=TURING,  $(SIMU_OPTION))" "-DGPU_ARCH=TURING"
+   NVCCFLAG_COM += -gencode arch=compute_75,code=\"compute_75,sm_75\"
 else ifeq "$(filter -DGPU, $(SIMU_OPTION))" "-DGPU"
    $(error unknown GPU_ARCH (please set it in the Makefile))
 endif
@@ -785,6 +795,12 @@ else ifeq "$(filter -DGPU_ARCH=PASCAL, $(SIMU_OPTION))" "-DGPU_ARCH=PASCAL"
      NVCCFLAG_FLU += --maxrregcount=128
    endif
 else ifeq "$(filter -DGPU_ARCH=VOLTA, $(SIMU_OPTION))" "-DGPU_ARCH=VOLTA"
+   ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
+     NVCCFLAG_FLU += --maxrregcount=192
+   else
+     NVCCFLAG_FLU += --maxrregcount=128
+   endif
+else ifeq "$(filter -DGPU_ARCH=TURING, $(SIMU_OPTION))" "-DGPU_ARCH=TURING"
    ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
      NVCCFLAG_FLU += --maxrregcount=192
    else
