@@ -68,21 +68,19 @@ void Init_Unit()
       if ( UNIT_V > 0.0 )    NBasicUnit ++;
       if ( UNIT_D > 0.0 )    NBasicUnit ++;
 
-#     if ( MODEL == SR_HYDRO )
-      if ( NBasicUnit != 2 )  Aux_Error( ERROR_INFO, "Number of basic units set in Input__Parameter = %d != 2 !!\n", NBasicUnit );
-#     else
-      if ( NBasicUnit != 3 )  Aux_Error( ERROR_INFO, "Number of basic units set in Input__Parameter = %d != 3 !!\n", NBasicUnit );
-#     endif
-
 
 //    set all code units
 //    --> do NOT modify the following order of setting different units (otherwise some combinations may fail)
 #     if ( MODEL == SR_HYDRO )
-	  UNIT_V = 1.0;
+
+      if ( NBasicUnit != 2 )  Aux_Error( ERROR_INFO, "Number of basic units set in Input__Parameter = %d != 2 !!\n", NBasicUnit );
+
+      // currently velocity in sr-hydro code is fixed in unit of speed of light
+	  UNIT_V = Const_c;
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "NOTE : UNIT_V is set to %13.7e externally\n", UNIT_V );
 
-//    (1) given time and mass density units
+//    (1) given time and mass density units, compute length and mass units
       if ( UNIT_L <= 0.0 && UNIT_M <= 0.0 )
       {
          if ( UNIT_T > 0.0 && UNIT_D > 0.0 )
@@ -98,7 +96,7 @@ void Init_Unit()
             Aux_Error( ERROR_INFO, "cannot determine the length and mass units !!\n" );
       }
 
-//    (2) given length and mass density units
+//    (2) given length and mass density units, compute mass and time units
       if ( UNIT_M <= 0.0 && UNIT_T <= 0.0 )
       {
          if ( UNIT_L > 0.0 && UNIT_D > 0.0 )
@@ -114,7 +112,7 @@ void Init_Unit()
             Aux_Error( ERROR_INFO, "cannot determine the mass and time units !!\n" );
       }
 
-//    (3) given mass and mass density units
+//    (3) given mass and mass density units, compute time and length units
       if ( UNIT_T <= 0.0 && UNIT_L <= 0.0 )
       {
          if ( UNIT_M > 0.0 && UNIT_D > 0.0 )
@@ -130,7 +128,7 @@ void Init_Unit()
             Aux_Error( ERROR_INFO, "cannot determine the length and time units !!\n" );
       }
 
-//    (4) given mass and time units
+//    (4) given mass and time units, compute mass density and lenght units
       if ( UNIT_D <= 0.0 && UNIT_L <= 0.0 )
       {
          if ( UNIT_M > 0.0  &&  UNIT_T > 0.0 )
@@ -146,7 +144,7 @@ void Init_Unit()
             Aux_Error( ERROR_INFO, "cannot determine the mass density and length units !!\n" );
       }
 
-//    (5) given mass and length units
+//    (5) given mass and length units, compute mass density and time units
       if ( UNIT_D <= 0.0 && UNIT_T <= 0.0 )
       {
          if ( UNIT_L > 0.0  &&  UNIT_M > 0.0 )
@@ -163,6 +161,9 @@ void Init_Unit()
 
 
 #     else
+
+      if ( NBasicUnit != 3 )  Aux_Error( ERROR_INFO, "Number of basic units set in Input__Parameter = %d != 3 !!\n", NBasicUnit );
+
 //    (1) length unit
       if ( UNIT_L <= 0.0 )
       {
@@ -266,11 +267,7 @@ void Init_Unit()
 //    convert physical constants to code units
 //    (1) gravitational constant
 #     ifdef GRAVITY
-#     if ( MODEL == SR_HYDRO )
-      NEWTON_G = Const_NewtonG;
-#     else
       NEWTON_G = Const_NewtonG / ( 1.0/UNIT_D/SQR(UNIT_T) );
-#     endif
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "NOTE : NEWTON_G is set to %13.7e internally\n", NEWTON_G );
 #     endif
 
