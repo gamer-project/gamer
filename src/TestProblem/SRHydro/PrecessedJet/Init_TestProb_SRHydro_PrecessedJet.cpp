@@ -134,11 +134,11 @@ void SetParameter()
    ReadPara->Add( "Jet_CenOffset_z",        &Jet_CenOffset [2],     NoDef_double,  NoMin_double,        NoMax_double    );
    ReadPara->Add( "Jet_Angular_Velocity",   &Jet_Angular_Velocity,  NoDef_double,  NoMin_double,        NoMax_double    );
    ReadPara->Add( "Jet_Angle",              &Jet_Angle,             NoDef_double,  NoMin_double,        NoMax_double    );
-   ReadPara->Add( "Jet_BurstStartTime",     &Jet_BurstStartTime,   -1.0,           Eps_double,          NoMax_double    );
-   ReadPara->Add( "Jet_BurstEndTime",       &Jet_BurstEndTime,     -1.0,           Eps_double,          NoMax_double    );
+   ReadPara->Add( "Jet_BurstStartTime",     &Jet_BurstStartTime,   -1.0,           NoMin_double,          NoMax_double    );
+   ReadPara->Add( "Jet_BurstEndTime",       &Jet_BurstEndTime,     -1.0,           NoMin_double,          NoMax_double    );
    ReadPara->Add( "Jet_Burst4Vel",          &Jet_Burst4Vel,        -1.0,           NoMin_double,        NoMax_double    );
-   ReadPara->Add( "Jet_BurstDens",          &Jet_BurstDens,        -1.0,           Eps_double,          NoMax_double    );
-   ReadPara->Add( "Jet_BurstPres",          &Jet_BurstPres,        -1.0,           Eps_double,          NoMax_double    );
+   ReadPara->Add( "Jet_BurstDens",          &Jet_BurstDens,        -1.0,           NoMin_double,          NoMax_double    );
+   ReadPara->Add( "Jet_BurstPres",          &Jet_BurstPres,        -1.0,           NoMin_double,          NoMax_double    );
    ReadPara->Add( "Flag_Burst4Vel",         &Flag_Burst4Vel,        false,         Useless_bool,        Useless_bool    );
    ReadPara->Add( "Flag_BurstDens"  ,       &Flag_BurstDens,        false,         Useless_bool,        Useless_bool    );
    ReadPara->Add( "Flag_BurstPres",         &Flag_BurstPres,        false,         Useless_bool,        Useless_bool    );
