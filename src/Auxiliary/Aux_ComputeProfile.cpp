@@ -1,6 +1,9 @@
 #include "GAMER.h"
 
 
+// indices of fields not defined in Macro.h
+static const int VRAD     = 98;
+static const int PRESSURE = 99;
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -33,6 +36,9 @@
 //                RemoveEmpty : true  --> remove empty bins from the data
 //                              false --> these empty bins will still be in the profile arrays with
 //                                        Data[empty_bin]=Weight[empty_bin]=NCell[empty_bin]=0
+//                Quantity    : Quantity to be averaged spherically
+//                              Support field indicies defined in Macro.h, and VRAD (98) and PRESSURE (99)
+//                              The weight function is the cell volume except for VRAD, which uses the cell mass
 //
 // Example     :  Profile_t Prof;
 //
@@ -42,8 +48,9 @@
 //                const bool   LogBin         = true;
 //                const double LogBinRatio    = 1.25;
 //                const bool   RemoveEmptyBin = true;
+//                const int    Quantity       = DENS;
 //
-//                Aux_ComputeProfile( &Prof, Center, MaxRadius, MinBinSize, LogBin, LogBinRatio, RemoveEmptyBin );
+//                Aux_ComputeProfile( &Prof, Center, MaxRadius, MinBinSize, LogBin, LogBinRatio, RemoveEmptyBin, Quantity );
 //
 //                if ( MPI_Rank == 0 )
 //                {
@@ -58,7 +65,7 @@
 // Return      :  Prof
 //-------------------------------------------------------------------------------------------------------
 void Aux_ComputeProfile( Profile_t *Prof, const double Center[], const double r_max_input, const double dr_min,
-                         const bool LogBin, const double LogBinRatio, const bool RemoveEmpty )
+                         const bool LogBin, const double LogBinRatio, const bool RemoveEmpty, const int Quantity )
 {
 
 // check
@@ -69,7 +76,7 @@ void Aux_ComputeProfile( Profile_t *Prof, const double Center[], const double r_
    if ( dr_min <= 0.0 )
       Aux_Error( ERROR_INFO, "dr_min (%14.7e) <= 0.0 !!\n", dr_min );
 
-   if ( LobBin  &&  LogBinRatio <= 1.0 )
+   if ( LogBin  &&  LogBinRatio <= 1.0 )
       Aux_Error( ERROR_INFO, "LogBinRatio (%14.7e) <= 1.0 !!\n", LogBinRatio );
 #  endif
 
@@ -163,7 +170,7 @@ void Aux_ComputeProfile( Profile_t *Prof, const double Center[], const double r_
 
                if ( r2 < r_max2 )
                {
-                  const double r   = sqrt( r2 );
+                  const double r   = SQRT( r2 );
                   const int    bin = ( LogBin ) ? (  (r<dr_min) ? 0 : int( log(r/dr_min)/log(LogBinRatio) ) + 1  )
                                                 : int( r/dr_min );
 //                prevent from round-off errors
@@ -174,9 +181,54 @@ void Aux_ComputeProfile( Profile_t *Prof, const double Center[], const double r_
                   if ( bin < 0 )    Aux_Error( ERROR_INFO, "bin (%d) < 0 !!\n", bin );
 #                 endif
 
-//###REVISE       replace by a user-specified function
-                  OMP_Data  [TID][bin] += amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i]*dv;
-                  OMP_Weight[TID][bin] += dv;
+//                user-specified quantity; for case of MODEL = HYDRO
+                  switch ( Quantity )
+                  {
+                     case DENS:
+                     case ENGY:
+                     case MOMX:
+                     case MOMY:
+                     case MOMZ:
+                     {
+                        OMP_Data  [TID][bin] += amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[Quantity][k][j][i]*dv;
+                        OMP_Weight[TID][bin] += dv;
+                     }
+                     break;
+
+                     case VRAD:
+                     {
+                        const double Phi      = ATAN2(dy, dx);
+                        const double cosPhi   = COS(Phi);
+                        const double sinPhi   = SIN(Phi);
+                        const double cosTheta = dz / r;
+                        const double sinTheta = SQRT(1. - SQR(cosTheta));
+
+                        const double MomRad = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMX][k][j][i]*sinTheta*cosPhi
+                                            + amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMY][k][j][i]*sinTheta*sinPhi
+                                            + amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMZ][k][j][i]*cosTheta;
+
+                        OMP_Data  [TID][bin] += MomRad*dv;
+                        OMP_Weight[TID][bin] += amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i]*dv;
+                     }
+                     break;
+
+                     case PRESSURE:
+                     {
+                        const double Pres = Hydro_GetPressure(amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i],
+                                                              amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMX][k][j][i],
+                                                              amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMY][k][j][i],
+                                                              amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMZ][k][j][i],
+                                                              amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ENGY][k][j][i],
+                                                              GAMMA - (real)1.0, false, NULL_REAL);
+                        OMP_Data  [TID][bin] += Pres*dv;
+                        OMP_Weight[TID][bin] += dv;
+                     }
+                     break;
+
+                     default:
+                        Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "Quantity", Quantity );
+                  } // switch ( Quantity )
+
                   OMP_NCell [TID][bin] ++;
                } // if ( r2 < r_max2 )
             }}} // i,j,k
@@ -231,7 +283,23 @@ void Aux_ComputeProfile( Profile_t *Prof, const double Center[], const double r_
    for (int b=0; b<Prof->NBin; b++)
    {
 //    skip empty bins since both their data and weight are zero
-      if ( Prof->NCell[b] > 0L )    Prof->Data[b] /= Prof->Weight[b];
+      if ( Prof->NCell[b] > 0L )
+         switch ( Quantity )
+         {
+            case DENS    :
+            case ENGY    :
+            case MOMX    :
+            case MOMY    :
+            case MOMZ    :
+            case PRESSURE:
+               Prof->Data[b] /= Prof->Weight[b];
+            break;
+
+            case VRAD:
+//             Avoid division by zero when denisty is zero
+               if ( Prof->Weight[b] > 0.0 )   Prof->Data[b] /= Prof->Weight[b];
+            break;
+         } // switch ( Quantity )
    }
 
 
