@@ -38,7 +38,7 @@ static const int PRESSURE = 99;
 //                                        Data[empty_bin]=Weight[empty_bin]=NCell[empty_bin]=0
 //                Quantity    : Quantity to be averaged spherically
 //                              Support field indicies defined in Macro.h, and VRAD (98) and PRESSURE (99)
-//                              The weight function is the cell volume except for VRAD, which uses the cell mass
+//                              The weight function is the cell volume.
 //
 // Example     :  Profile_t Prof;
 //
@@ -170,7 +170,7 @@ void Aux_ComputeProfile( Profile_t *Prof, const double Center[], const double r_
 
                if ( r2 < r_max2 )
                {
-                  const double r   = SQRT( r2 );
+                  const double r   = sqrt( r2 );
                   const int    bin = ( LogBin ) ? (  (r<dr_min) ? 0 : int( log(r/dr_min)/log(LogBinRatio) ) + 1  )
                                                 : int( r/dr_min );
 //                prevent from round-off errors
