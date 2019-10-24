@@ -32,6 +32,8 @@ static char     Jet_HSE_BgTable_File[MAX_STRING];  // for Jet_HSE: filename of t
 static double *Jet_HSE_BgTable_Data = NULL;        // for Jet_HSE: background gas table [radius/density/temperature]
 static int     Jet_HSE_BgTable_NBin;               // for Jet_HSE: number of bins in Jet_HSE_BgTable_Data[]
 
+static double Radius              = 71.0;
+static double Mass;
 // =======================================================================================
 
 void SRHydro_Pri2Con_Double (const double In[], double Out[], const double Gamma);
@@ -187,16 +189,16 @@ void SetParameter()
 // (1-2) convert to code unit
 
    Jet_BgDens           *= 1.0       / UNIT_D;
-   Jet_BgTemp           *= Const_GeV / ( Const_mp * SQR(Const_c) );
+   Jet_BgTemp           *= Const_keV / ( Const_mp * SQR(Const_c) );
 
    for (int d=0; d<3; d++)
-   Jet_BgVel[d]         *= 1.0       / UNIT_V;
+   Jet_BgVel[d]         *= Const_c   / UNIT_V;
 
    for (int n=0; n<Jet_NJet; n++) {
    Jet_Radius    [n]    *= Const_kpc / UNIT_L;
    Jet_HalfHeight[n]    *= Const_kpc / UNIT_L;
-   Jet_SrcVel    [n]    *= 1.0       / UNIT_V;
-   Jet_SrcTemp   [n]    *= Const_GeV / ( Const_mp * SQR(Const_c) );
+   Jet_SrcVel    [n]    *= Const_c   / UNIT_V;
+   Jet_SrcTemp   [n]    *= Const_keV / ( Const_mp * SQR(Const_c) );
    Jet_SrcDens   [n]    *= 1.0       / UNIT_D;
 
    for (int d=0; d<3; d++)
@@ -233,7 +235,7 @@ void SetParameter()
       {
          Table_R[b] *= Const_kpc / UNIT_L;
          Table_D[b] *= 1.0       / UNIT_D;
-         Table_T[b] *= Const_GeV / ( Const_mp * SQR(Const_c) );
+         Table_T[b] *= Const_keV / ( Const_mp * SQR(Const_c) );
       }
    } // if ( Jet_HSE  &&  OPT__INIT != INIT_BY_RESTART )
 
@@ -296,6 +298,42 @@ void SetParameter()
 } // FUNCTION : SetParameter
 
 
+void GetEnclosedMass( double *Mass )
+{
+  double *Table_D, *Table_R;
+  int N = 4096;
+  double dr = Radius/(double)N;
+  double r[N];
+  const bool RowMajor_No  = false;       // load data into the column-major order
+  const bool AllocMem_Yes = true;        // allocate memory for Merger_Prof1/2
+  const int  NCol         = 3;           // total number of columns to load
+  const int  Col[NCol]    = {1, 2, 3};   // target columns: (radius, density, temperature)
+
+
+  if ( Jet_HSE_BgTable_Data == NULL )
+  {
+     Jet_HSE_BgTable_NBin = Aux_LoadTable( Jet_HSE_BgTable_Data, Jet_HSE_BgTable_File, NCol, Col, RowMajor_No, AllocMem_Yes );
+     printf("NULL is found!: %d\n", __LINE__);
+  }
+ 
+  Table_D = Jet_HSE_BgTable_Data + 1*Jet_HSE_BgTable_NBin;
+
+  *Mass = 0.0;  
+
+  Table_R = Jet_HSE_BgTable_Data + 0*Jet_HSE_BgTable_NBin;
+
+
+// we should add mass from core in order to reduce truncation error
+  for (int i=0; i<N; i++)
+  {
+    r[i] = dr * (double)(i+1);
+    *Mass += dr*r[i]*r[i]*Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_D, r[i] );
+  }
+
+  *Mass *= 4.0*M_PI;
+  
+}
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetGridIC
@@ -320,10 +358,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 // variables for Jet_HSE
    const double *Table_R=NULL, *Table_D=NULL, *Table_T=NULL;
-   double dx, dy, dz, dr;
+   double dx, dy, dz, r;
    const int  NCol         = 3;           // total number of columns to load
    const int  Col[NCol]    = {1, 2, 3};   // target columns: (radius, density, temperature)
 
+   double DropRatio = 1e-2;
 
 // variables for jet
    double Pri4Vel[NCOMP_FLUID];
@@ -334,6 +373,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    if ( Jet_HSE )
    {
+      double Temp, RhoSurface;
+
       Table_R = Jet_HSE_BgTable_Data + (Col[0]-1)*Jet_HSE_BgTable_NBin;
       Table_D = Jet_HSE_BgTable_Data + (Col[1]-1)*Jet_HSE_BgTable_NBin;
       Table_T = Jet_HSE_BgTable_Data + (Col[2]-1)*Jet_HSE_BgTable_NBin;
@@ -342,21 +383,33 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       dy = y - amr->BoxCenter[1] + Jet_HSE_Dy;
       dz = z - amr->BoxCenter[2] + Jet_HSE_Dz;
 
-      dr = sqrt( dx*dx + dy*dy + dz*dz );
+      r = sqrt( dx*dx + dy*dy + dz*dz );
 
-      Pri4Vel[0] = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_D, dr );
-      Pri4Vel[4] = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_T, dr ) * Pri4Vel[0];
+      Pri4Vel[0] = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_D, r );
+      Pri4Vel[4] = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_T, r ) * Pri4Vel[0];
 
-//      if ( dr <= 0.0574 )
-//      {
-//        Pri4Vel[0] = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_D, dr );
-//        Pri4Vel[4] = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_T, dr ) * Pri4Vel[0];
-//      }
-//      else
-//      {
-//        Pri4Vel[0] = 1e-138;
-//        Pri4Vel[4] = 1e-138;
-//      }
+      if ( r <= Radius )
+      {
+        Pri4Vel[0] = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_D, r );
+        Temp = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_T, r );
+        Pri4Vel[4] = Temp * Pri4Vel[0];
+      }
+      else
+      {
+        Temp = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_T, Radius );
+
+        // ambientUNI
+        Pri4Vel[0] =              DropRatio * Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_D, Radius );
+        Pri4Vel[4] = Pri4Vel[0] / DropRatio * Temp;
+
+        // ambientEXP
+        //RhoSurface = DropRatio * Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_D, Radius );
+
+		//Temp /= DropRatio;
+
+        //Pri4Vel[0] = RhoSurface * exp( ( NEWTON_G * Mass / Temp ) * ( 1.0/r - 1.0/Radius ) );
+        //Pri4Vel[4] = Pri4Vel[0] * Temp;
+      }
    }
    else
    {
@@ -438,7 +491,7 @@ void End_Jets()
 bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const double z, const double Time,
                                     const int lv, double AuxArray[] )
 {
-//   return false;
+   return false;
    const double r[3] = { x, y, z };
 
    double Jet_dr, Jet_dh, S, Area;
@@ -698,6 +751,9 @@ void Init_TestProb_SRHydro_Jets()
 // set the problem-specific runtime parameters
    SetParameter();
 
+
+// get enclosed mass
+// GetEnclosedMass( &Mass );
 
    Init_Function_User_Ptr   = SetGridIC;
    Flag_User_Ptr            = Flag_User;
