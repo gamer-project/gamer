@@ -397,15 +397,15 @@ void CPU_HydroGravitySolver(
 
 
 ////       3. update the total energy density
-         Const3_new = LorentzFactor_new * ( n_new + P_new );
-         Con_new[ENGY] += Const3_new * ( Ux_new * acc_new[0] + Uy_new * acc_new[1] + Uz_new * acc_new[2] );
+//         Const3_new = LorentzFactor_new * ( n_new + P_new );
+//         Con_new[ENGY] += Const3_new * ( Ux_new * acc_new[0] + Uy_new * acc_new[1] + Uz_new * acc_new[2] );
 
 //       4. update the total energy density ( assuming temperature is unchanged under gravity )
-//         real h = SpecificEnthalpy( NULL, Temperature, (real)1.333333333 );
-//		 real Msqr = SQR(Con_new[MOMX]) + SQR(Con_new[MOMY]) + SQR(Con_new[MOMZ]);
-//		 real Dh = Con_new[DENS]*h;
-//         real factor = SQRT(Dh*Dh + Msqr);
-//		 Con_new[ENGY] = factor -  Con_new[DENS] * Dh * Temperature / factor;
+         real h = SpecificEnthalpy( NULL, Temperature, (real)1.333333333 );
+		 real Msqr = SQR(Con_new[MOMX]) + SQR(Con_new[MOMY]) + SQR(Con_new[MOMZ]);
+		 real Dh = Con_new[DENS]*h;
+         real factor = SQRT(Dh*Dh + Msqr);
+		 Con_new[ENGY] = factor -  Con_new[DENS] * Dh * Temperature / factor;
 
 
 #        endif // #ifdef UNSPLIT_GRAVITY ... else ...
