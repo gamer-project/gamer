@@ -329,6 +329,9 @@ void CPU_HydroGravitySolver(
          Uxz_new = Ux_new*Uz_new;
          Uyz_new = Uy_new*Uz_new;
 
+//       backup temerature
+         real Temperature = Pri_new[4]/Pri_new[0];
+
 //       advance fluid
 #        ifdef UNSPLIT_GRAVITY
          Con_old[DENS] = g_Flu_Array_USG[P][DENS][idx_g0];
@@ -382,15 +385,28 @@ void CPU_HydroGravitySolver(
 
 #        else  // #ifdef UNSPLIT_GRAVITY
 
-//       update the momentum density
-         Con_new[MOMX] += - Uxx_new * acc_new[0] - Uxy_new * acc_new[1] - Uxz_new * acc_new[2] + Const1_new * acc_new[0] + Const2_new * acc_new[0];
-         Con_new[MOMY] += - Uxy_new * acc_new[0] - Uyy_new * acc_new[1] - Uyz_new * acc_new[2] + Const1_new * acc_new[1] + Const2_new * acc_new[1];
-         Con_new[MOMZ] += - Uxz_new * acc_new[0] - Uyz_new * acc_new[1] - Uzz_new * acc_new[2] + Const1_new * acc_new[2] + Const2_new * acc_new[2];
+////      1. update the momentum density
+         Con_new[MOMX] += - n_new * Uxx_new * acc_new[0] - n_new * Uxy_new * acc_new[1] - n_new * Uxz_new * acc_new[2] + Const1_new * acc_new[0] + Const2_new * acc_new[0];
+         Con_new[MOMY] += - n_new * Uxy_new * acc_new[0] - n_new * Uyy_new * acc_new[1] - n_new * Uyz_new * acc_new[2] + Const1_new * acc_new[1] + Const2_new * acc_new[1];
+         Con_new[MOMZ] += - n_new * Uxz_new * acc_new[0] - n_new * Uyz_new * acc_new[1] - n_new * Uzz_new * acc_new[2] + Const1_new * acc_new[2] + Const2_new * acc_new[2];
+ 
+//       2. update the momentum density ( remove velocity terms )
+//         Con_new[MOMX] +=  n_new  * acc_new[0];
+//         Con_new[MOMY] +=  n_new  * acc_new[1];
+//         Con_new[MOMZ] +=  n_new  * acc_new[2];
 
 
-//       update the total energy density
+////       3. update the total energy density
          Const3_new = LorentzFactor_new * ( n_new + P_new );
          Con_new[ENGY] += Const3_new * ( Ux_new * acc_new[0] + Uy_new * acc_new[1] + Uz_new * acc_new[2] );
+
+//       4. update the total energy density ( assuming temperature is unchanged under gravity )
+//         real h = SpecificEnthalpy( NULL, Temperature, (real)1.333333333 );
+//		 real Msqr = SQR(Con_new[MOMX]) + SQR(Con_new[MOMY]) + SQR(Con_new[MOMZ]);
+//		 real Dh = Con_new[DENS]*h;
+//         real factor = SQRT(Dh*Dh + Msqr);
+//		 Con_new[ENGY] = factor -  Con_new[DENS] * Dh * Temperature / factor;
+
 
 #        endif // #ifdef UNSPLIT_GRAVITY ... else ...
 
