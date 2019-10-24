@@ -187,7 +187,7 @@ SIMU_OPTION += -DMAX_PATCH=2000000
 SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA/TURING
-SIMU_OPTION += -DGPU_ARCH=TURING
+SIMU_OPTION += -DGPU_ARCH=FERMI
 
 # debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
@@ -241,20 +241,23 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 
 
 
+
 # compiler and flags
 #######################################################################################################
 
 # intel
 # -------------------------------------------------------------------------------
- CXX         = icpc                                      # serial compiler
- CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
-#CXX         = CC                                        # cray wrapper script
- CXXFLAG     = -g -O3                                    # general flags
-#CXXFLAG     = -g -O3 -std=c++11 #-gxx-name=YOUR_G++
+ CXX         = icpc                                                # serial compiler
+ CXX         = $(MPI_PATH)/bin/mpicxx                              # MPI compiler
+#CXX         = CC                                                  # cray wrapper script
+ CXXFLAG     = -g -O3                                              # general flags
+#CXXFLAG     = -g -O3 -std=c++11                                   #-gxx-name=YOUR_G++
 #CXXFLAG     = -g -fast
-# CXXFLAG    += -w1                                       # warning flags
- OPENMPFLAG  = -fopenmp                                  # openmp flag
-# LIB         = -limf                                     # libraries and linker flags
+# CXXFLAG    += -w1                                                # warning flags
+ CXXFLAG     += -DGIT_SHA1="`git rev-parse HEAD`"                  # record SHA1 in git
+ CXXFLAG     += -DGIT_BRANCH="`git symbolic-ref --short -q HEAD`"  # record branch name in git
+ OPENMPFLAG  = -fopenmp                                            # openmp flag
+# LIB         = -limf                                              # libraries and linker flags
 #
 ## for debug only
 #ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
@@ -270,18 +273,20 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 
 # gnu
 # -------------------------------------------------------------------------------
-# CXX         = g++                                       # serial compiler
-## CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
-##CXX         = CC                                        # cray wrapper script
-# CXXFLAG     = -g -O3                                    # general flags
+# CXX         = g++                                                 # serial compiler
+## CXX         = $(MPI_PATH)/bin/mpicxx                             # MPI compiler
+##CXX         = CC                                                  # cray wrapper script
+# CXXFLAG     = -g -O3                                              # general flags
 ##CXXFLAG     = -g -O3 -std=c++11
 ##CXXFLAG     = -g -Ofast
-## CXXFLAG    += -Wall -Wextra                             # warning flags
+## CXXFLAG    += -Wall -Wextra                                      # warning flags
 ## CXXFLAG    += -Wno-unused-variable -Wno-unused-parameter \
 #               -Wno-maybe-uninitialized -Wno-unused-but-set-variable \
 #               -Wno-unused-result -Wno-unused-function
-# OPENMPFLAG  = -fopenmp                                  # openmp flag
-### LIB         =                                           # libraries and linker flags
+# CXXFLAG     += -DGIT_SHA1="`git rev-parse HEAD`"                  # record SHA1 in git
+# CXXFLAG     += -DGIT_BRANCH="`git symbolic-ref --short -q HEAD`"  # record branch name in git
+# OPENMPFLAG  = -fopenmp                                            # openmp flag
+### LIB         =                                                   # libraries and linker flags
 
 # for debug only
 #ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
@@ -358,13 +363,13 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 #CUDA_PATH    := /opt/gpu/cuda/default
 
 # NTU-hulk (openmpi-intel-qlc)
-#FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
-#MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
-#HDF5_PATH    := /opt/hdf5/default
-#GRACKLE_PATH := 
-#GSL_PATH     := /opt/math/gsl/default
-#LIBYT_PATH   := 
-#CUDA_PATH    := /opt/gpu/cuda/default
+FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
+MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
+HDF5_PATH    := /opt/hdf5/default
+GRACKLE_PATH := 
+GSL_PATH     := /opt/math/gsl/default
+LIBYT_PATH   := 
+CUDA_PATH    := /opt/gpu/cuda/default
 
 # NTHU-fomalhaut (openmpi-gnu)
 #CUDA_PATH    := /usr/local/cuda-10.0
@@ -381,13 +386,13 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 #GPUID_PATH   := /ifs/data/hsiyu/Software/gpudevmgr
 
 # gamer04
-FFTW_PATH    := /opt/fftw/3.1.4-intel-tm
-MPI_PATH     := /opt/openmpi/3.1.4-intel-tm
-HDF5_PATH    := /opt/hdf5
-GRACKLE_PATH := 
-GSL_PATH     := 
-LIBYT_PATH   := 
-CUDA_PATH    := /opt/cuda/default
+#FFTW_PATH    := /opt/fftw/3.1.4-intel-tm
+#MPI_PATH     := /opt/openmpi/3.1.4-intel-tm
+#HDF5_PATH    := /opt/hdf5
+#GRACKLE_PATH := 
+#GSL_PATH     := 
+#LIBYT_PATH   := 
+#CUDA_PATH    := /opt/cuda/default
 #
 ## Calab AMD2
 #FFTW_PATH    := 
