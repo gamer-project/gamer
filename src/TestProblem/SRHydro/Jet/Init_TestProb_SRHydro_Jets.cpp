@@ -261,7 +261,7 @@ void SetParameter()
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "  test problem ID      = %d\n",              TESTPROB_ID                                        );
       Aux_Message( stdout, "  Jet_BgDens           = % 14.7e g/cm^3\n",  Jet_BgDens*UNIT_D                                  );
-      Aux_Message( stdout, "  Jet_BgTemp           = % 14.7e GeV\n",     Jet_BgTemp*Const_mp*SQR(Const_c)/Const_GeV         );
+      Aux_Message( stdout, "  Jet_BgTemp           = % 14.7e keV\n",     Jet_BgTemp*Const_mp*SQR(Const_c)/Const_keV         );
       Aux_Message( stdout, "  Jet_BgVel[x]         = % 14.7e c\n",       Jet_BgVel[0]*UNIT_V                                );
       Aux_Message( stdout, "  Jet_BgVel[y]         = % 14.7e c\n",       Jet_BgVel[1]*UNIT_V                                );
       Aux_Message( stdout, "  Jet_BgVel[z]         = % 14.7e c\n",       Jet_BgVel[2]*UNIT_V                                );
@@ -279,7 +279,7 @@ void SetParameter()
       Aux_Message( stdout, "  Jet_HalfHeight       = % 14.7e kpc\n",     Jet_HalfHeight[n]*UNIT_L/Const_kpc                 );
       Aux_Message( stdout, "  Jet_SrcVel           = % 14.7e c\n",       Jet_SrcVel    [n]*UNIT_V                           );
       Aux_Message( stdout, "  Jet_SrcDens          = % 14.7e g/cm^3\n",  Jet_SrcDens   [n]*UNIT_D                           );
-      Aux_Message( stdout, "  Jet_SrcTemp          = % 14.7e GeV\n",     Jet_SrcTemp   [n]*Const_mp*SQR(Const_c)/Const_GeV  );
+      Aux_Message( stdout, "  Jet_SrcTemp          = % 14.7e keV\n",     Jet_SrcTemp   [n]*Const_mp*SQR(Const_c)/Const_keV  );
       Aux_Message( stdout, "  Jet_Vec[x]           = % 14.7e\n",         Jet_Vec       [n][0]                               );
       Aux_Message( stdout, "  Jet_Vec[y]           = % 14.7e\n",         Jet_Vec       [n][1]                               );
       Aux_Message( stdout, "  Jet_Vec[z]           = % 14.7e\n",         Jet_Vec       [n][2]                               );
@@ -491,7 +491,7 @@ void End_Jets()
 bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const double z, const double Time,
                                     const int lv, double AuxArray[] )
 {
-   return false;
+   //return false;
    const double r[3] = { x, y, z };
 
    double Jet_dr, Jet_dh, S, Area;
