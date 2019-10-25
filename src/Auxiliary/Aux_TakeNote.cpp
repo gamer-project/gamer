@@ -10,6 +10,10 @@
 
 static int get_cpuid();
 
+//Stringizing operator in C/C++
+#define STR( x )                #x
+#define SHOW_MACRO( x )         STR( x )
+
 
 
 
@@ -1220,6 +1224,22 @@ void Aux_TakeNote()
       fprintf( Note, "Compilation Time\n" );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "%s %s\n", __DATE__, __TIME__ );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "\n\n");
+
+
+//    record the SHA1 hash in git
+      fprintf( Note, "SHA1 in git\n" );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "%s\n", SHOW_MACRO( GIT_SHA1 ));
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "\n\n");
+
+
+//    record current branch name in git
+      fprintf( Note, "branch name in git\n" );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "%s\n", SHOW_MACRO( GIT_BRANCH ));
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 
