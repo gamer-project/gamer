@@ -211,56 +211,56 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 
 # intel
 # -------------------------------------------------------------------------------
- CXX         = icpc                                                # serial compiler
- CXX         = $(MPI_PATH)/bin/mpicxx                              # MPI compiler
-#CXX         = CC                                                  # cray wrapper script
- CXXFLAG     = -g -O3                                              # general flags
-#CXXFLAG     = -g -O3 -std=c++11 #-gxx-name=YOUR_G++
-#CXXFLAG     = -g -fast
- CXXFLAG    += -w1                                                 # warning flags
- OPENMPFLAG  = -fopenmp                                            # openmp flag
- LIB         = -limf                                               # libraries and linker flags
- CXXFLAG     += -DGIT_SHA1="`git rev-parse HEAD`"                  # record SHA1 in git
- CXXFLAG     += -DGIT_BRANCH="`git symbolic-ref --short -q HEAD`"  # record branch name in git
-
-# for debug only
-ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
-#CXXFLAG    += -fstack-protector-all
-#LIB        += -lssp
-endif
-
-# suppress warning when OpenMP is disabled
-ifeq "$(filter -DOPENMP, $(SIMU_OPTION))" ""
- CXXFLAG    += -Wno-unknown-pragmas -diag-disable 3180
-endif
-
-
-# gnu
-# -------------------------------------------------------------------------------
-# CXX         = g++                                                 # serial compiler
+# CXX         = icpc                                                # serial compiler
 ##CXX         = $(MPI_PATH)/bin/mpicxx                              # MPI compiler
 ##CXX         = CC                                                  # cray wrapper script
 # CXXFLAG     = -g -O3                                              # general flags
-##CXXFLAG     = -g -O3 -std=c++11
-##CXXFLAG     = -g -Ofast
-# CXXFLAG    += -Wall -Wextra                                       # warning flags
-# CXXFLAG    += -Wno-unused-variable -Wno-unused-parameter \
-#               -Wno-maybe-uninitialized -Wno-unused-but-set-variable \
-#               -Wno-unused-result -Wno-unused-function
+##CXXFLAG     = -g -O3 -std=c++11 #-gxx-name=YOUR_G++
+##CXXFLAG     = -g -fast
+# CXXFLAG    += -w1                                                 # warning flags
 # OPENMPFLAG  = -fopenmp                                            # openmp flag
+# LIB         = -limf                                               # libraries and linker flags
 # CXXFLAG     += -DGIT_SHA1="`git rev-parse HEAD`"                  # record SHA1 in git
 # CXXFLAG     += -DGIT_BRANCH="`git symbolic-ref --short -q HEAD`"  # record branch name in git
-# LIB         =                                                     # libraries and linker flags
 #
 ## for debug only
 #ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
 ##CXXFLAG    += -fstack-protector-all
+##LIB        += -lssp
 #endif
 #
 ## suppress warning when OpenMP is disabled
 #ifeq "$(filter -DOPENMP, $(SIMU_OPTION))" ""
-# CXXFLAG    += -Wno-unknown-pragmas
+# CXXFLAG    += -Wno-unknown-pragmas -diag-disable 3180
 #endif
+
+
+# gnu
+# -------------------------------------------------------------------------------
+ CXX         = g++                                                 # serial compiler
+#CXX         = $(MPI_PATH)/bin/mpicxx                              # MPI compiler
+#CXX         = CC                                                  # cray wrapper script
+ CXXFLAG     = -g -O3                                              # general flags
+#CXXFLAG     = -g -O3 -std=c++11
+#CXXFLAG     = -g -Ofast
+ CXXFLAG    += -Wall -Wextra                                       # warning flags
+ CXXFLAG    += -Wno-unused-variable -Wno-unused-parameter \
+               -Wno-maybe-uninitialized -Wno-unused-but-set-variable \
+               -Wno-unused-result -Wno-unused-function
+ OPENMPFLAG  = -fopenmp                                            # openmp flag
+ CXXFLAG     += -DGIT_SHA1="`git rev-parse HEAD`"                  # record SHA1 in git
+ CXXFLAG     += -DGIT_BRANCH="`git symbolic-ref --short -q HEAD`"  # record branch name in git
+ LIB         =                                                     # libraries and linker flags
+
+# for debug only
+ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
+#CXXFLAG    += -fstack-protector-all
+endif
+
+# suppress warning when OpenMP is disabled
+ifeq "$(filter -DOPENMP, $(SIMU_OPTION))" ""
+ CXXFLAG    += -Wno-unknown-pragmas
+endif
 
 
 # CUDA
