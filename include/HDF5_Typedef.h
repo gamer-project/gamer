@@ -41,7 +41,6 @@ struct KeyInfo_t
 {
 
    int    FormatVersion;
-   
    int    Model;
    int    Float8;
    int    Gravity;

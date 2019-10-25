@@ -13,7 +13,6 @@ static int get_cpuid();
 
 
 
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Aux_TakeNote
 // Description :  Record simulation parameters and the content in the file "Input__Note" to the
