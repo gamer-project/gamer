@@ -10,9 +10,6 @@
 
 static int get_cpuid();
 
-//Stringizing operator in C/C++
-#define STR( x )                #x
-#define SHOW_MACRO( x )         STR( x )
 
 
 

@@ -41,6 +41,7 @@ struct KeyInfo_t
 {
 
    int    FormatVersion;
+   
    int    Model;
    int    Float8;
    int    Gravity;
@@ -70,6 +71,8 @@ struct KeyInfo_t
    double AveDens_Init;             // AveDensity_Init
 #  endif
 
+   char  *GitSha1;
+   char  *GitBranch;
    char  *CodeVersion;
    char  *DumpWallTime;
 

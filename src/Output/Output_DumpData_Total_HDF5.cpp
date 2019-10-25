@@ -1277,6 +1277,8 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
       KeyInfo.dTime_AllLv   [lv] = dTime_AllLv   [lv];
    }
 
+   KeyInfo.GitSha1     = (char*)SHOW_MACRO(GIT_SHA1);
+   KeyInfo.GitBranch   = (char*)SHOW_MACRO(GIT_BRANCH);
    KeyInfo.CodeVersion  = (char*)VERSION;
    KeyInfo.DumpWallTime = ctime( &CalTime );
    KeyInfo.DumpWallTime[ strlen(KeyInfo.DumpWallTime)-1 ] = '\0';  // remove the last character '\n'
@@ -2100,6 +2102,8 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "AveDens_Init",       HOFFSET(KeyInfo_t,AveDens_Init   ),    H5T_NATIVE_DOUBLE       );
 #  endif
 
+   H5Tinsert( H5_TypeID, "GitSha1",            HOFFSET(KeyInfo_t,GitSha1        ),    H5_TypeID_VarStr        );
+   H5Tinsert( H5_TypeID, "GitBranch",          HOFFSET(KeyInfo_t,GitBranch      ),    H5_TypeID_VarStr        );
    H5Tinsert( H5_TypeID, "CodeVersion",        HOFFSET(KeyInfo_t,CodeVersion    ),    H5_TypeID_VarStr        );
    H5Tinsert( H5_TypeID, "DumpWallTime",       HOFFSET(KeyInfo_t,DumpWallTime   ),    H5_TypeID_VarStr        );
 
