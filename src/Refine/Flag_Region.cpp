@@ -1,5 +1,10 @@
 #include "GAMER.h"
 
+// declare as static so that other functions cannot invoke it directly and must use the function pointer
+static bool Flag_Region( const int i, const int j, const int k, const int lv, const int PID );
+
+// this function pointer may be overwritten by various test problem initializers
+bool (*Flag_Region_Ptr)( const int i, const int j, const int k, const int lv, const int PID ) = Flag_Region;
 
 
 
@@ -29,7 +34,7 @@ bool Flag_Region( const int i, const int j, const int k, const int lv, const int
 
 // put the target region below
 // ##########################################################################################################
-
+/*
 // Example : sphere
    const double Center[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
    const double dR[3]     = { Pos[0]-Center[0], Pos[1]-Center[1], Pos[2]-Center[2] };
@@ -37,7 +42,7 @@ bool Flag_Region( const int i, const int j, const int k, const int lv, const int
    const double MaxR      = 65.0;
 
    Within = R <= MaxR;
-
+*/
 // ##########################################################################################################
 
 

@@ -1,7 +1,8 @@
 #include "GAMER.h"
 
-static bool Check_Gradient( const int i, const int j, const int k, const real Input[], const double Threshold );
-extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
+static bool Check_Gradient    ( const int i, const int j, const int k, const real Input[], const double Threshold );
+extern bool (*Flag_User_Ptr)  ( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
+extern bool (*Flag_Region_Ptr)( const int i, const int j, const int k, const int lv, const int PID );
 
 
 
@@ -43,9 +44,9 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
 // check whether the input cell is within the regions allowed to be refined
 // ===========================================================================================
-   if ( OPT__FLAG_REGION )
+   if ( OPT__FLAG_REGION && Flag_Region_Ptr != NULL )
    {
-      if (  !Flag_Region( i, j, k, lv, PID )  )    return false;
+      if (  !Flag_Region_Ptr( i, j, k, lv, PID )  )    return false;
    }
 
 

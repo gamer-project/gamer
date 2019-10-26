@@ -6,34 +6,34 @@
 // problem-specific global variables
 // =======================================================================================
 
-static int      Jet_NJet;                    // number of jets (1/2)
-static double   Jet_BgDens;                  // ambient density
-static double   Jet_BgVel[3];                // ambient 4-velocity
-static double  *Jet_Radius        = NULL;    // radius of the cylinder-shape jet source
-static double  *Jet_HalfHeight    = NULL;    // half height of the cylinder-shape jet source
-static double  *Jet_SrcVel        = NULL;    // jet 4-velocity
-static double  *Jet_SrcDens       = NULL;    // jet density
-static double (*Jet_Vec)[3]       = NULL;    // jet orientation vector (x,y,z) (NOT necessary to be a unit vector)
-static double (*Jet_CenOffset)[3] = NULL;    // jet central coordinates offset
+static int      Jet_NJet;                                       // number of jets (1/2)
+static double   Jet_BgDens;                                     // ambient density
+static double   Jet_BgVel[3];                                   // ambient 4-velocity
+static double  *Jet_Radius                         = NULL;      // radius of the cylinder-shape jet source
+static double  *Jet_HalfHeight                     = NULL;      // half height of the cylinder-shape jet source
+static double  *Jet_SrcVel                         = NULL;      // jet 4-velocity
+static double  *Jet_SrcDens                        = NULL;      // jet density
+static double (*Jet_Vec)[3]                        = NULL;      // jet orientation vector (x,y,z) (NOT necessary to be a unit vector)
+static double (*Jet_CenOffset)[3]                  = NULL;      // jet central coordinates offset
 
-static double   Jet_BgTemp;                  // ambient temperature
-static double  *Jet_SrcTemp       = NULL;    // jet temperature
-static double (*Jet_Cen)[3]       = NULL;    // jet central coordinates
-static double  *Jet_WaveK         = NULL;    // jet wavenumber used in the sin() function to have smooth bidirectional jets
-static double  *Jet_MaxDis        = NULL;    // maximum distance between the cylinder-shape jet source and the jet center
-                                             // --> ( Jet_Radius^2 + Jet_HalfHeight^2 )^0.5
+static double   Jet_BgTemp;                                     // ambient temperature
+static double  *Jet_SrcTemp                        = NULL;      // jet temperature
+static double (*Jet_Cen)[3]                        = NULL;      // jet central coordinates
+static double  *Jet_WaveK                          = NULL;      // jet wavenumber used in the sin() function to have smooth bidirectional jets
+static double  *Jet_MaxDis                         = NULL;      // maximum distance between the cylinder-shape jet source and the jet center
+                                                                // --> ( Jet_Radius^2 + Jet_HalfHeight^2 )^0.5
 
 // background variables
-static bool     Jet_HSE           = false;         // hydrostatic equilibrium background
-static double   Jet_HSE_Dx        = NULL_REAL;     // for Jet_HSE: distance between box and cluster centre (along x)
-static double   Jet_HSE_Dy        = NULL_REAL;     // for Jet_HSE: distance between box and cluster centre (along y)
-static double   Jet_HSE_Dz        = NULL_REAL;     // for Jet_HSE: distance between box and cluster centre (along z)
-static char     Jet_HSE_BgTable_File[MAX_STRING];  // for Jet_HSE: filename of the background gas table
-static double *Jet_HSE_BgTable_Data = NULL;        // for Jet_HSE: background gas table [radius/density/temperature]
-static int     Jet_HSE_BgTable_NBin;               // for Jet_HSE: number of bins in Jet_HSE_BgTable_Data[]
+static bool     Jet_HSE                            = false;     // hydrostatic equilibrium background
+static double   Jet_HSE_Dx                         = NULL_REAL; // for Jet_HSE: distance between box and cluster centre (along x)
+static double   Jet_HSE_Dy                         = NULL_REAL; // for Jet_HSE: distance between box and cluster centre (along y)
+static double   Jet_HSE_Dz                         = NULL_REAL; // for Jet_HSE: distance between box and cluster centre (along z)
+static char     Jet_HSE_BgTable_File[MAX_STRING];               // for Jet_HSE: filename of the background gas table
+static double  *Jet_HSE_BgTable_Data               = NULL;      // for Jet_HSE: background gas table [radius/density/temperature]
+static int      Jet_HSE_BgTable_NBin;                           // for Jet_HSE: number of bins in Jet_HSE_BgTable_Data[]
 
-static double Radius              = 71.0;
-static double Mass;
+static double   Jet_HSE_Radius                     = NULL_REAL; // for Jet_HSE: radius of halo
+static double   Jet_HSE_Mass                       = NULL_REAL; // for Jet_HSE: enclosed mass of halo
 // =======================================================================================
 
 void SRHydro_Pri2Con_Double (const double In[], double Out[], const double Gamma);
@@ -114,7 +114,7 @@ void SetParameter()
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
 // load the number of jets first
-   ReadPara->Add( "Jet_NJet",          &Jet_NJet,             -1,             1,                2                 );
+   ReadPara->Add( "Jet_NJet",            &Jet_NJet,             -1,             1,                2                 );
 
 // allocate memory for the variables whose size depends on the number of jets
    Jet_Radius     = new double [Jet_NJet];
@@ -130,43 +130,44 @@ void SetParameter()
 
 // load the input parameters of the hydrostatic equilibrium setup
    ReadPara->Add( "Jet_HSE",             &Jet_HSE,               false,         Useless_bool,     Useless_bool      );
+   ReadPara->Add( "Jet_HSE_Radius",      &Jet_HSE_Radius,       -1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "Jet_HSE_Dx",          &Jet_HSE_Dx,            0.0,           NoMin_double,     NoMax_double      );
    ReadPara->Add( "Jet_HSE_Dy",          &Jet_HSE_Dy,            0.0,           NoMin_double,     NoMax_double      );
    ReadPara->Add( "Jet_HSE_Dz",          &Jet_HSE_Dz,            0.0,           NoMin_double,     NoMax_double      );
    ReadPara->Add( "Jet_HSE_BgTable_File", Jet_HSE_BgTable_File,  Useless_str,   Useless_str,      Useless_str       );
 
 // load the input parameters independent of the number of jets
-   ReadPara->Add( "Jet_BgDens",        &Jet_BgDens,           -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Jet_BgVel_x",       &Jet_BgVel[0],          0.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Jet_BgVel_y",       &Jet_BgVel[1],          0.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Jet_BgVel_z",       &Jet_BgVel[2],          0.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Jet_BgTemp",        &Jet_BgTemp,           -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jet_BgDens",          &Jet_BgDens,           -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jet_BgVel_x",         &Jet_BgVel[0],          0.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet_BgVel_y",         &Jet_BgVel[1],          0.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet_BgVel_z",         &Jet_BgVel[2],          0.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet_BgTemp",          &Jet_BgTemp,           -1.0,           Eps_double,       NoMax_double      );
 
 // load the input parameters of each jet
-   ReadPara->Add( "Jet0_Radius",       &Jet_Radius    [0],    -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Jet0_HalfHeight",   &Jet_HalfHeight[0],    -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Jet0_SrcVel",       &Jet_SrcVel    [0],    -1.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Jet0_SrcDens",      &Jet_SrcDens   [0],    -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Jet0_SrcTemp",      &Jet_SrcTemp   [0],    -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Jet0_Vec_x",        &Jet_Vec       [0][0],  NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Jet0_Vec_y",        &Jet_Vec       [0][1],  NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Jet0_Vec_z",        &Jet_Vec       [0][2],  NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Jet0_CenOffset_x",  &Jet_CenOffset [0][0],  NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Jet0_CenOffset_y",  &Jet_CenOffset [0][1],  NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Jet0_CenOffset_z",  &Jet_CenOffset [0][2],  NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet0_Radius",         &Jet_Radius    [0],    -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jet0_HalfHeight",     &Jet_HalfHeight[0],    -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jet0_SrcVel",         &Jet_SrcVel    [0],    -1.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet0_SrcDens",        &Jet_SrcDens   [0],    -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jet0_SrcTemp",        &Jet_SrcTemp   [0],    -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jet0_Vec_x",          &Jet_Vec       [0][0],  NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet0_Vec_y",          &Jet_Vec       [0][1],  NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet0_Vec_z",          &Jet_Vec       [0][2],  NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet0_CenOffset_x",    &Jet_CenOffset [0][0],  NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet0_CenOffset_y",    &Jet_CenOffset [0][1],  NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet0_CenOffset_z",    &Jet_CenOffset [0][2],  NoDef_double,  NoMin_double,     NoMax_double      );
 
    if ( Jet_NJet == 2 ) {
-   ReadPara->Add( "Jet1_Radius",       &Jet_Radius    [1],    -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Jet1_HalfHeight",   &Jet_HalfHeight[1],    -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Jet1_SrcVel",       &Jet_SrcVel    [1],    -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Jet1_SrcDens",      &Jet_SrcDens   [1],    -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Jet1_SrcTemp",      &Jet_SrcTemp   [1],    -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Jet1_Vec_x",        &Jet_Vec       [1][0],  NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Jet1_Vec_y",        &Jet_Vec       [1][1],  NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Jet1_Vec_z",        &Jet_Vec       [1][2],  NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Jet1_CenOffset_x",  &Jet_CenOffset [1][0],  NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Jet1_CenOffset_y",  &Jet_CenOffset [1][1],  NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Jet1_CenOffset_z",  &Jet_CenOffset [1][2],  NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet1_Radius",         &Jet_Radius    [1],    -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jet1_HalfHeight",     &Jet_HalfHeight[1],    -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jet1_SrcVel",         &Jet_SrcVel    [1],    -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jet1_SrcDens",        &Jet_SrcDens   [1],    -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jet1_SrcTemp",        &Jet_SrcTemp   [1],    -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jet1_Vec_x",          &Jet_Vec       [1][0],  NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet1_Vec_y",          &Jet_Vec       [1][1],  NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet1_Vec_z",          &Jet_Vec       [1][2],  NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet1_CenOffset_x",    &Jet_CenOffset [1][0],  NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet1_CenOffset_y",    &Jet_CenOffset [1][1],  NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet1_CenOffset_z",    &Jet_CenOffset [1][2],  NoDef_double,  NoMin_double,     NoMax_double      );
    }
 
    ReadPara->Read( FileName );
@@ -177,36 +178,49 @@ void SetParameter()
 // (1-2) check runtime parameters
    if ( Jet_HSE )
    {
-   } // if ( Jet_HSE )
+      if ( Jet_HSE_Radius == NULL_REAL ) Aux_Error( ERROR_INFO, "Jet_HSE_Radius = %e !!\n" );
 
+      if ( Jet_HSE_Radius >= 0.5*amr->BoxSize[0] || 
+           Jet_HSE_Radius >= 0.5*amr->BoxSize[1] || 
+           Jet_HSE_Radius >= 0.5*amr->BoxSize[2]   )
+           Aux_Error( ERROR_INFO, "halo size is greater or equal to box size !!\n" );
+
+#     ifndef GRAVITY
+      Aux_Error( ERROR_INFO, "GRAVITY must be enabled !!\n" );
+#     endif
+   } // if ( Jet_HSE )
    else
    {
 #     ifdef GRAVITY
-         Aux_Error( ERROR_INFO, "GRAVITY must be disabled !!\n" );
+      Aux_Error( ERROR_INFO, "GRAVITY must be disabled !!\n" );
 #     endif
    } // if ( Jet_HSE ) ... else ...
 
 // (1-2) convert to code unit
+   Jet_BgDens                  *= 1.0       / UNIT_D;
+   Jet_BgTemp                  *= Const_keV / ( Const_mp * SQR(Const_c) );
 
-   Jet_BgDens           *= 1.0       / UNIT_D;
-   Jet_BgTemp           *= Const_keV / ( Const_mp * SQR(Const_c) );
+   for (int d=0; d<3; d++)    
+      Jet_BgVel[d]             *= Const_c   / UNIT_V;
 
-   for (int d=0; d<3; d++)
-   Jet_BgVel[d]         *= Const_c   / UNIT_V;
+   for (int n=0; n<Jet_NJet; n++) 
+   {
+      Jet_Radius    [n]        *= Const_kpc / UNIT_L;
+      Jet_HalfHeight[n]        *= Const_kpc / UNIT_L;
+      Jet_SrcVel    [n]        *= Const_c   / UNIT_V;
+      Jet_SrcTemp   [n]        *= Const_keV / ( Const_mp * SQR(Const_c) );
+      Jet_SrcDens   [n]        *= 1.0       / UNIT_D;
 
-   for (int n=0; n<Jet_NJet; n++) {
-   Jet_Radius    [n]    *= Const_kpc / UNIT_L;
-   Jet_HalfHeight[n]    *= Const_kpc / UNIT_L;
-   Jet_SrcVel    [n]    *= Const_c   / UNIT_V;
-   Jet_SrcTemp   [n]    *= Const_keV / ( Const_mp * SQR(Const_c) );
-   Jet_SrcDens   [n]    *= 1.0       / UNIT_D;
+      for (int d=0; d<3; d++)
+      Jet_CenOffset [n][d]     *= Const_kpc / UNIT_L;
+   }
 
-   for (int d=0; d<3; d++)
-   Jet_CenOffset [n][d] *= Const_kpc / UNIT_L;
+   if ( Jet_HSE )
+   {
+      Jet_HSE_Radius           *= Const_kpc / UNIT_L; 
    }
 
 // (2) set the problem-specific derived parameters
-
    for (int n=0; n<Jet_NJet; n++)
    {
       Jet_WaveK  [n] = 0.5*M_PI/Jet_HalfHeight[n];
@@ -214,6 +228,7 @@ void SetParameter()
 
       for (int d=0; d<3; d++)    Jet_Cen[n][d] = 0.5*amr->BoxSize[d] + Jet_CenOffset[n][d];
    }
+
 
 // (3) load the hydrostatic equilibrium table
    if ( Jet_HSE  &&  OPT__INIT != INIT_BY_RESTART )
@@ -225,6 +240,7 @@ void SetParameter()
       double *Table_R, *Table_D, *Table_T;
 
       Jet_HSE_BgTable_NBin = Aux_LoadTable( Jet_HSE_BgTable_Data, Jet_HSE_BgTable_File, NCol, Col, RowMajor_No, AllocMem_Yes );
+
 
 //    convert to code units
       Table_R = Jet_HSE_BgTable_Data + 0*Jet_HSE_BgTable_NBin;
@@ -238,6 +254,7 @@ void SetParameter()
          Table_T[b] *= Const_keV / ( Const_mp * SQR(Const_c) );
       }
    } // if ( Jet_HSE  &&  OPT__INIT != INIT_BY_RESTART )
+
 
 // (4) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
@@ -268,9 +285,10 @@ void SetParameter()
       Aux_Message( stdout, "  Jet_NJet             = %d\n",              Jet_NJet                                           );
       if ( Jet_HSE ) {
       Aux_Message( stdout, "  Jet_HSE              = %d\n",              Jet_HSE                                            );
-      Aux_Message( stdout, "  Jet_HSE_Dx           = %e kpc\n",          Jet_HSE_Dx*Const_kpc                               );
-      Aux_Message( stdout, "  Jet_HSE_Dy           = %e kpc\n",          Jet_HSE_Dy*Const_kpc                               );
-      Aux_Message( stdout, "  Jet_HSE_Dz           = %e kpc\n",          Jet_HSE_Dz*Const_kpc                               );
+      Aux_Message( stdout, "  Jet_HSE_Radius       = %e kpc\n",          Jet_HSE_Radius*UNIT_L/Const_kpc                    );
+      Aux_Message( stdout, "  Jet_HSE_Dx           = %e kpc\n",          Jet_HSE_Dx*UNIT_L/Const_kpc                        );
+      Aux_Message( stdout, "  Jet_HSE_Dy           = %e kpc\n",          Jet_HSE_Dy*UNIT_L/Const_kpc                        );
+      Aux_Message( stdout, "  Jet_HSE_Dz           = %e kpc\n",          Jet_HSE_Dz*UNIT_L/Const_kpc                        );
       Aux_Message( stdout, "  Jet_HSE_BgTable_File = %s\n",              Jet_HSE_BgTable_File                               ); }
       for (int n=0; n<Jet_NJet; n++) {
       Aux_Message( stdout, "\n" );
@@ -287,9 +305,6 @@ void SetParameter()
       Aux_Message( stdout, "  Jet_CenOffset[y]     = % 14.7e kpc\n",     Jet_CenOffset [n][1]*UNIT_L/Const_kpc              );
       Aux_Message( stdout, "  Jet_CenOffset[z]     = % 14.7e kpc\n",     Jet_CenOffset [n][2]*UNIT_L/Const_kpc              ); }
       Aux_Message( stdout, "=============================================================================\n" );
-
-	  printf("Jet_BgDens=%e, Jet_BgTemp=%e, Jet_Radius=%e, Jet_HalfHeight=%e, Jet_SrcDens=%e, Jet_SrcTemp=%e", 
-					   Jet_BgDens, Jet_BgTemp, Jet_Radius[0], Jet_HalfHeight[0], Jet_SrcDens[0], Jet_SrcTemp[0]);
    }
 
 
@@ -298,11 +313,11 @@ void SetParameter()
 } // FUNCTION : SetParameter
 
 
-void GetEnclosedMass( double *Mass )
+void GetEnclosedMass( double *Jet_HSE_Mass )
 {
   double *Table_D, *Table_R;
   int N = 4096;
-  double dr = Radius/(double)N;
+  double dr = Jet_HSE_Radius/(double)N;
   double r[N];
   const bool RowMajor_No  = false;       // load data into the column-major order
   const bool AllocMem_Yes = true;        // allocate memory for Merger_Prof1/2
@@ -313,12 +328,12 @@ void GetEnclosedMass( double *Mass )
   if ( Jet_HSE_BgTable_Data == NULL )
   {
      Jet_HSE_BgTable_NBin = Aux_LoadTable( Jet_HSE_BgTable_Data, Jet_HSE_BgTable_File, NCol, Col, RowMajor_No, AllocMem_Yes );
-     printf("NULL is found!: %d\n", __LINE__);
+     Aux_Error( ERROR_INFO, "Jet_HSE_BgTable_Data == NULL !!\n" );
   }
  
   Table_D = Jet_HSE_BgTable_Data + 1*Jet_HSE_BgTable_NBin;
 
-  *Mass = 0.0;  
+  *Jet_HSE_Mass = 0.0;  
 
   Table_R = Jet_HSE_BgTable_Data + 0*Jet_HSE_BgTable_NBin;
 
@@ -327,10 +342,10 @@ void GetEnclosedMass( double *Mass )
   for (int i=0; i<N; i++)
   {
     r[i] = dr * (double)(i+1);
-    *Mass += dr*r[i]*r[i]*Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_D, r[i] );
+    *Jet_HSE_Mass += dr*r[i]*r[i]*Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_D, r[i] );
   }
 
-  *Mass *= 4.0*M_PI;
+  *Jet_HSE_Mass *= 4.0*M_PI;
   
 }
 
@@ -388,7 +403,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Pri4Vel[0] = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_D, r );
       Pri4Vel[4] = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_T, r ) * Pri4Vel[0];
 
-      if ( r <= Radius )
+      if ( r <= Jet_HSE_Radius )
       {
         Pri4Vel[0] = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_D, r );
         Temp = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_T, r );
@@ -396,18 +411,18 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       }
       else
       {
-        Temp = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_T, Radius );
+        Temp = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_T, Jet_HSE_Radius );
 
-        // ambientUNI
-        Pri4Vel[0] =              DropRatio * Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_D, Radius );
+        // uniform ambient
+        Pri4Vel[0] =              DropRatio * Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_D, Jet_HSE_Radius );
         Pri4Vel[4] = Pri4Vel[0] / DropRatio * Temp;
 
-        // ambientEXP
-        //RhoSurface = DropRatio * Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_D, Radius );
+        // exponential ambient
+        //RhoSurface = DropRatio * Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_D, Jet_HSE_Radius );
 
 		//Temp /= DropRatio;
 
-        //Pri4Vel[0] = RhoSurface * exp( ( NEWTON_G * Mass / Temp ) * ( 1.0/r - 1.0/Radius ) );
+        //Pri4Vel[0] = RhoSurface * exp( ( NEWTON_G * Jet_HSE_Mass / Temp ) * ( 1.0/r - 1.0/Jet_HSE_Radius ) );
         //Pri4Vel[4] = Pri4Vel[0] * Temp;
       }
    }
@@ -577,113 +592,61 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
 
 } // FUNCTION : Flu_ResetByUser_Jets
 
-bool Flag_User( const int i, const int j, const int k, const int lv, const int PID, const double Threshold )
+
+// (true/false): if the target cell (is/is not) within the region to be refined
+bool Flag_Region( const int i, const int j, const int k, const int lv, const int PID )
 {
-
-
    const double dh     = amr->dh[lv];                                                  // grid size
    const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,              // x,y,z position
                            amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
                            amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };
 
-   const real (*Dens)[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS];  // density
-   const real (*MomX)[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMX];  // momentum x
-   const real (*MomY)[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMY];  // momentum y
-   const real (*MomZ)[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMZ];  // momentum z
-   const real (*Engy)[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ENGY];  // total energy
-#  ifdef GRAVITY
-   const real (*Pot )[PS1][PS1] = amr->patch[ amr->PotSg[lv] ][lv][PID]->pot;          // potential
-#  endif
+   bool Flag = false;  
+
+   const double Center[3]      = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
+   const double dR[3]          = { Pos[0]-Center[0], Pos[1]-Center[1], Pos[2]-Center[2] };
+   const double R              = sqrt( SQR(dR[0]) + SQR(dR[1]) + SQR(dR[2]) );
+
+   const double ShellThickness = PATCH_SIZE*amr->dh[0];
+  
+
+
+   if ( R < Jet_HSE_Radius - ShellThickness )
+   {
+      Flag = true;
+   }
+   else if ( Jet_HSE_Radius - ShellThickness <= R && R <= Jet_HSE_Radius + ShellThickness && lv <= 0 )
+   {
+      Flag = true;
+   }
+
+   return Flag;
+
+} // FUNCTION : Flag_Region
+
+
+
+bool Flag_User( const int i, const int j, const int k, const int lv, const int PID, const double Threshold )
+{
+   const double dh     = amr->dh[lv];                                                  // grid size
+   const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,              // x,y,z position
+                           amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
+                           amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };
+
+//   const real (*Dens)[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS];  // density
+//   const real (*MomX)[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMX];  // momentum x
+//   const real (*MomY)[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMY];  // momentum y
+//   const real (*MomZ)[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMZ];  // momentum z
+//   const real (*Engy)[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ENGY];  // total energy
+//#  ifdef GRAVITY
+//   const real (*Pot )[PS1][PS1] = amr->patch[ amr->PotSg[lv] ][lv][PID]->pot;          // potential
+//#  endif
 
    bool Flag = false;
 
-
-// put your favorite flag criteria here
-// ##########################################################################################################
-
-   /*
-// Example 1 : flag if the velocity exceeds the given threshold
-   const real Vel = sqrt(  ( MomX[k][j][i]*MomX[k][j][i] + MomY[k][j][i]*MomY[k][j][i] +
-                             MomZ[k][j][i]*MomZ[k][j][i] )  ) / Dens[k][j][i];
-   Flag = Vel > Threshold;
-   */
-
-// Example 2 : flag if the grid is within a sphere with the radius eqaul to the input "Threshold" and the origin
-//             in the center of the simulation box
-//   const double Center[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
-//   const double dr[3]     = { Pos[0]-Center[0], Pos[1]-Center[1], Pos[2]-Center[2] };
-//   const double Radius    = sqrt( dr[0]*dr[0] + dr[1]*dr[1] + dr[2]*dr[2] );
-
-
-//    Flag |= ( Radius <= amr->dh[lv] * 0.5  * 1.733);
-// ##########################################################################################################
-
-//   real Cons[NCOMP_FLUID], Prim[NCOMP_FLUID];
-//
-//  
-//   Cons[DENS] = Dens[k][j][i];
-//   Cons[MOMX] = MomX[k][j][i];
-//   Cons[MOMY] = MomY[k][j][i];
-//   Cons[MOMZ] = MomZ[k][j][i];
-//   Cons[ENGY] = Engy[k][j][i];
-//
-//
-//   double Temperature =
-//   SRHydro_GetTemperature( Dens[k][j][i], MomX[k][j][i], MomY[k][j][i], MomZ[k][j][i], Engy[k][j][i], GAMMA, MIN_TEMP );
-//   Flag |= Temperature >= Threshold;
-//   double LorentzFactor;
-//   SRHydro_Con2Pri(Cons, Prim);
-
-// ##########################################################################################################
-
-  double StartTime = 600;
-  double EndPtVel  = 0.196;  // the velocity of jet head
-  double IniX      = 375.0-202.0; // the distance between source and jet head
-
-  double Shift = +EndPtVel*(Time[lv]-StartTime)+IniX;
-
-  const double Center[3]    = { 0.5*amr->BoxSize[0]      , 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
-  const double EndPointR[3] = { 0.5*amr->BoxSize[0]+Shift, 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
-  const double EndPointL[3] = { 0.5*amr->BoxSize[0]-Shift, 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
-
-  const double dr0[3]     = { Pos[0]-   Center[0], Pos[1]-   Center[1], Pos[2]-   Center[2] };
-  const double dr1[3]     = { Pos[0]-EndPointR[0], Pos[1]-EndPointR[1], Pos[2]-EndPointR[2] };
-  const double dr2[3]     = { Pos[0]-EndPointL[0], Pos[1]-EndPointL[1], Pos[2]-EndPointL[2] };
-
-  Flag |= sqrt( dr0[1]*dr0[1] + dr0[2]*dr0[2] ) < 1.5;
-  Flag &=  abs( dr0[0] ) < Shift;
-
-  double Radius1 = sqrt( dr1[0]*dr1[0] + dr1[1]*dr1[1] + dr1[2]*dr1[2] );
-  double Radius2 = sqrt( dr2[0]*dr2[0] + dr2[1]*dr2[1] + dr2[2]*dr2[2] );
-
-
-  Flag |= ( Radius1 < amr->dh[lv] * 0.5  * 1.733 );
-  Flag |= ( Radius2 < amr->dh[lv] * 0.5  * 1.733 );
-  Flag |= ( Radius1 < amr->dh[lv] * 0.5  *   1.1 );
-  Flag |= ( Radius2 < amr->dh[lv] * 0.5  *   1.1 );
-
-// ##########################################################################################################
-//   const double Center[3]    = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
-//   const double dr0[3]     = { Pos[0]-   Center[0], Pos[1]-   Center[1], Pos[2]-   Center[2] };
-//   double BOX_SIZE_X = 750.0;
-//   double BOX_SIZE_Y = 187.50;
-//   double BOX_SIZE_Z = 187.50;
-//
-//   if ( lv==0 )
-//   {
-//     Flag |=  ( dr0[0] < 100.0 );
-//     Flag |=  ( dr0[0] > 700.0 );
-//   }
-//   else if ( lv == 2 )
-//   {
-//     Flag |=  ( dr0[0] > BOX_SIZE_X *3.0 / 8.0 + amr->dh[lv] ) & ( dr0[0] < BOX_SIZE_X *3.0 / 8.0               );
-//     Flag &=  ( dr0[1] > BOX_SIZE_Y      / 2.0 - amr->dh[lv] ) & ( dr0[1] < BOX_SIZE_Y      / 2.0 + amr->dh[lv] );
-//     Flag &=  ( dr0[2] > BOX_SIZE_Z      / 2.0 - amr->dh[lv] ) & ( dr0[2] < BOX_SIZE_Z      / 2.0 + amr->dh[lv] );
-//
-//     Flag |=  ( dr0[0] > BOX_SIZE_X *5.0 / 8.0               ) & ( dr0[0] < BOX_SIZE_X *5.0 / 8.0 - amr->dh[lv] );
-//     Flag &=  ( dr0[1] > BOX_SIZE_Y      / 2.0 - amr->dh[lv] ) & ( dr0[1] < BOX_SIZE_Y      / 2.0 + amr->dh[lv] );
-//     Flag &=  ( dr0[2] > BOX_SIZE_Z      / 2.0 - amr->dh[lv] ) & ( dr0[2] < BOX_SIZE_Z      / 2.0 + amr->dh[lv] );
-//   }
+   const double Center[3]      = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
+   const double dR[3]          = { Pos[0]-Center[0], Pos[1]-Center[1], Pos[2]-Center[2] };
+   const double R              = sqrt( SQR(dR[0]) + SQR(dR[1]) + SQR(dR[2]) );
 
 
    return Flag;
@@ -753,10 +716,11 @@ void Init_TestProb_SRHydro_Jets()
 
 
 // get enclosed mass
-// GetEnclosedMass( &Mass );
+// GetEnclosedMass( &Jet_HSE_Mass );
 
    Init_Function_User_Ptr   = SetGridIC;
-   Flag_User_Ptr            = Flag_User;
+   Flag_User_Ptr            = NULL;
+   Flag_Region_Ptr          = Flag_Region;
    Mis_GetTimeStep_User_Ptr = NULL;
    BC_User_Ptr              = NULL;
    Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_Jets;
@@ -764,7 +728,7 @@ void Init_TestProb_SRHydro_Jets()
    Aux_Record_User_Ptr      = NULL;
    End_User_Ptr             = End_Jets;
 #  ifdef GRAVITY
-   Init_ExternalAcc_Ptr     = Init_ExternalAcc;
+   Init_ExternalAcc_Ptr     = NULL;
 #  endif
 
 
