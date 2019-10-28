@@ -362,7 +362,7 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 #LIBYT_PATH   := 
 #CUDA_PATH    := /opt/gpu/cuda/default
 
-# NTU-hulk (openmpi-intel-qlc)
+## NTU-hulk (openmpi-intel-qlc)
 FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
 MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
 HDF5_PATH    := /opt/hdf5/default
