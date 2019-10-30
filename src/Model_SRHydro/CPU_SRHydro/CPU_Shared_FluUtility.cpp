@@ -104,32 +104,32 @@ real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, 
    if ( Dsqr - (real)0.0625 * Msqr >= (real)0 )
    {
      if ( Constant > (real)2.5 ) 
-          guess = SQRT(FMA( (real)0.1111111, E_Dsqr, - FMA ( (real)0.1041667, M_Dsqr, (real)0.2222222 ) ));
-     else guess = (Constant - (real)1.0) * (real)0.3333333;
+          guess = SQRT( FMA( (real)1.0, E_Dsqr, - FMA ( (real)0.93750, M_Dsqr, (real)2.0 ) ) ) / (real)3.0;
+     else guess = (Constant - (real)1.0) / (real)3.0;
    }
    else // 1 - (M/D)**2 < 0
    {
-    if ( Constant >  (real)1.5 + SQRT( FMA ((real)0.0625, M_Dsqr, (real) -0.75 ))) 
-         guess = SQRT(FMA( (real)0.1111111, E_Dsqr, - FMA ( (real)0.1041667, M_Dsqr, (real)0.2222222 ) ));
-    else guess = (Constant - (real)1.0) * (real)0.3333333;
+     if ( Constant >  (real)1.5 + SQRT( FMA ((real)0.0625, M_Dsqr, (real) -0.75 ))) 
+          guess = SQRT( FMA( (real)1.0, E_Dsqr, - FMA ( (real)0.93750, M_Dsqr, (real)2.0 ) ) ) / (real)3.0;
+     else guess = (Constant - (real)1.0) / (real)3.0;
    }
   } else return MinTemp;
 # elif ( CONSERVED_ENERGY == 2 )
 /* initial guess  */
-  real Constant = E_Dsqr - M_Dsqr + 2 * E_D;
+  real Constant = E_Dsqr - M_Dsqr + (real)2.0 * E_D;
   if ( Constant > (real)0.0 )
   {
       if ( Dsqr - (real)0.0625 * Msqr >= (real)0 )
       {
         if ( Constant > (real)1.5 ) 
-             guess = SQRT( (real)0.1111111 * E_Dsqr + (real)0.2222222 * E_D - (real)0.1041667 * M_Dsqr - (real)0.1111111 );
-        else guess = Constant * (real)0.3333333;
+             guess = SQRT( E_Dsqr + (real)2.0 * E_D - (real)0.93750 * M_Dsqr - (real)1.0 ) / (real)3.0;
+        else guess = Constant / (real)3.0;
       }
       else // 1 - (M/D)**2 < 0
       {
         if ( Constant >  (real)0.5 + SQRT( (real)0.0625 * M_Dsqr - (real)0.75 )) 
-             guess = SQRT( (real)0.1111111 * E_Dsqr + (real)0.2222222 * E_D - (real)0.1041667 * M_Dsqr - (real)0.1111111 );
-        else guess = Constant * (real)0.3333333;
+             guess = SQRT( E_Dsqr + (real)2.0 * E_D - (real)0.93750 * M_Dsqr - (real)1.0 ) / (real)3.0;
+        else guess = Constant / (real)3.0;
       }
   } else return MinTemp;
 # else
