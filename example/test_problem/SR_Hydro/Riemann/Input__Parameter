@@ -14,21 +14,21 @@
 
 
 # simulation scale
-BOX_SIZE                      1.0         # box size along the longest side (in Mpc/h if COMOVING is adopted)
+BOX_SIZE                     1.0          # box size along the longest side (in Mpc/h if COMOVING is adopted)
 NX0_TOT_X                     64          # number of base-level cells along x
 NX0_TOT_Y                     16          # number of base-level cells along y
 NX0_TOT_Z                     16          # number of base-level cells along z
-OMP_NTHREAD                   3           # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
-END_T                         -1         # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
-END_STEP                      2           # end step (<0=auto -> must be set by test problems or restart) [-1]
+OMP_NTHREAD                    3          # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
+END_T                         -1          # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
+END_STEP                       2          # end step (<0=auto -> must be set by test problems or restart) [-1]
 
 
 # test problems
 TESTPROB_ID                   601         # test problem ID [0]
                                           # 0: none
-					  # 600: blast wave in pure sr-hydro
-					  # 601: Riemann problem in pure sr-hydro
-					  # 602: double mach reflection in pure sr-hydro
+                                          # 600: blast wave in pure sr-hydro
+                                          # 601: Riemann problem in pure sr-hydro
+                                          # 602: double mach reflection in pure sr-hydro
 
 
 # code units (in cgs)
@@ -49,9 +49,9 @@ DT__FLUID                     0.4         # dt criterion: fluid solver CFL facto
 DT__FLUID_INIT                0.4         # dt criterion: DT__FLUID at the first step (<0=auto) [-1.0]
 DT_SPEED_OF_LIGHT             1           # compute time step based on speed of light
 DT__SYNC_PARENT_LV            0.1         # dt criterion: allow dt to adjust by (1.0+DT__SYNC_PARENT) in order to synchronize
-					 #               with the parent level (for OPT__DT_LEVEL==3 only) [0.1]
+                                          #               with the parent level (for OPT__DT_LEVEL==3 only) [0.1]
 DT__SYNC_CHILDREN_LV          0.1         # dt criterion: allow dt to adjust by (1.0-DT__SYNC_CHILDREN) in order to synchronize
-					 #               with the children level (for OPT__DT_LEVEL==3 only; 0=off) [0.1]
+					                      #               with the children level (for OPT__DT_LEVEL==3 only; 0=off) [0.1]
 OPT__DT_USER                  0           # dt criterion: user-defined -> edit "Mis_GetTimeStep_UserCriteria.cpp" [0]
 OPT__DT_LEVEL                 1           # dt at different AMR levels (1=shared, 2=differ by two, 3=flexible) [3]
 OPT__RECORD_DT                1           # record info of the dt determination [1]
@@ -116,7 +116,7 @@ OPT__FIXUP_RESTRICT           1           # correct coarse grids by averaging th
 OPT__CORR_AFTER_ALL_SYNC     -1           # apply various corrections after all levels are synchronized (see "Flu_CorrAfterAllSync"):
                                           # (-1=auto, 0=off, 1=every step, 2=before dump) [-1]
 MIN_DENS                      0.0         # minimum number density (must >= 0.0) [0.0] ##SR_HYDRO ONLY##
-MIN_TEMP                      0.0       # SR_HYDRO only
+MIN_TEMP                      0.0         # SR_HYDRO only
 
 
 # initialization
@@ -141,7 +141,7 @@ OPT__OUTPUT_TOTAL             0           # output the simulation snapshot: (0=o
 OPT__OUTPUT_PART              4           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag) [0]
 OPT__OUTPUT_BASE              0           # only output the base-level data [0] ##OPT__OUTPUT_PART ONLY##
 OPT__OUTPUT_MODE              1           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
-OUTPUT_STEP                   1          # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
+OUTPUT_STEP                   1           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
 OUTPUT_DT                     1.0e-2      # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
 OUTPUT_PART_X                 0.0         # x coordinate for OPT__OUTPUT_PART [-1.0]
 OUTPUT_PART_Y                 0.0         # y coordinate for OPT__OUTPUT_PART [-1.0]
