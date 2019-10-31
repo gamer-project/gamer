@@ -204,7 +204,12 @@ real SpecificEnthalpy( const real Con[], real Temp, real Gamma )
 		Gamma = (real)1.3333333;
         real Gamma_m1 = Gamma - (real)1.0;
 
+#       if ( CONSERVED_ENERGY == 1  )
         real E_Dsqr = SQR( Con[ENGY] / Con[DENS] );
+#       else
+        real E_Dsqr = SQR( ( Con[ENGY] + Con[DENS] ) / Con[DENS] );
+#       endif
+
         real M_Dsqr = VectorDotProduct(Con[MOMX], Con[MOMY], Con[MOMZ]) / SQR(Con[DENS]);
 
         real A = (real)1.0 / SQR(Gamma_m1);

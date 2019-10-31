@@ -12,7 +12,8 @@ const Riemann_t
    TWO_SHOCKS     = 2,
    EINFELDT_1203  = 3,
    EINFELDT_1125  = 4,
-   SONIC_RARE     = 5;
+   SONIC_RARE     = 5,
+   USER_DEFINED   = 6;
 
 static Riemann_t Riemann_Prob;         // target Riemann problem
 static char      Riemann_Name[100];    // name of the target Riemann problem
@@ -51,18 +52,12 @@ void Validate()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ...\n", TESTPROB_ID );
 
-
-#  if ( MODEL != SR_HYDRO )
-   Aux_Error( ERROR_INFO, "MODEL != SR_HYDRO !!\n" );
-#  endif
-
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
 
 } // FUNCTION : Validate
 
 
 
-#if ( MODEL == SR_HYDRO )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
@@ -94,9 +89,18 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "Riemann_Prob",      &Riemann_Prob,          -1,            0,                5                 );
+   ReadPara->Add( "Riemann_Prob",      &Riemann_Prob,          -1,            0,                6                 );
    ReadPara->Add( "Riemann_LR",        &Riemann_LR,             1,            NoMin_int,        NoMax_int         );
    ReadPara->Add( "Riemann_XYZ",       &Riemann_XYZ,            0,            0,                2                 );
+   ReadPara->Add( "Riemann_RhoL",      &Riemann_RhoL,           HUGE_NUMBER,  TINY_NUMBER,      HUGE_NUMBER       );
+   ReadPara->Add( "Riemann_RhoR",      &Riemann_RhoR,           HUGE_NUMBER,  TINY_NUMBER,      HUGE_NUMBER       );
+   ReadPara->Add( "Riemann_VelL",      &Riemann_VelL,           HUGE_NUMBER, -HUGE_NUMBER,      HUGE_NUMBER       );
+   ReadPara->Add( "Riemann_VelR",      &Riemann_VelR,           HUGE_NUMBER, -HUGE_NUMBER,      HUGE_NUMBER       );
+   ReadPara->Add( "Riemann_PreL",      &Riemann_PreL,           HUGE_NUMBER,  TINY_NUMBER,      HUGE_NUMBER       );
+   ReadPara->Add( "Riemann_PreR",      &Riemann_PreR,           HUGE_NUMBER,  TINY_NUMBER,      HUGE_NUMBER       );
+   ReadPara->Add( "Riemann_VelL_T",    &Riemann_VelL_T,         HUGE_NUMBER, -HUGE_NUMBER,      HUGE_NUMBER       );
+   ReadPara->Add( "Riemann_VelR_T",    &Riemann_VelR_T,         HUGE_NUMBER, -HUGE_NUMBER,      HUGE_NUMBER       );
+   ReadPara->Add( "Riemann_EndT",      &Riemann_EndT,           TINY_NUMBER,  TINY_NUMBER,      HUGE_NUMBER       );
 
    ReadPara->Read( FileName );
 
@@ -138,6 +142,9 @@ void SetParameter()
                             Riemann_RhoR = 0.125;  Riemann_VelR = 0.0;   Riemann_PreR = 0.1;  Riemann_VelR_T = 0.0;
                             Riemann_EndT = 0.1;
                             sprintf( Riemann_Name, "sonic rarefaction wave" );
+                            break;
+
+      case USER_DEFINED   : sprintf( Riemann_Name, "user defined" );
                             break;
 
       default : Aux_Error( ERROR_INFO, "unsupported Riemann problem (%d) !!\n", Riemann_Prob );
@@ -286,7 +293,6 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 } // FUNCTION : SetGridIC
-#endif // #if ( MODEL == SR_HYDRO )
 
 
 
@@ -310,7 +316,6 @@ void Init_TestProb_SRHydro_Riemann()
    Validate();
 
 
-#  if ( MODEL == SR_HYDRO )
 // set the problem-specific runtime parameters
    SetParameter();
 
@@ -324,7 +329,6 @@ void Init_TestProb_SRHydro_Riemann()
    BC_User_Ptr              = NULL;       // example: ELBDM/ExtPot/Init_TestProb_ELBDM_ExtPot.cpp --> BC()
    Flu_ResetByUser_Func_Ptr = NULL;
    End_User_Ptr             = NULL;       // example: Hydro/ClusterMerger_vs_Flash/Init_TestProb_Hydro_ClusterMerger_vs_Flash.cpp --> End_ClusterMerger()
-#  endif // #if ( MODEL == SR_HYDRO )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
