@@ -2,8 +2,9 @@
 
 
 // indices of fields not defined in Macro.h
-static const int VRAD     = 98;
-static const int PRESSURE = 99;
+static const int INTERNAL_ENGY  = 97;
+static const int VRAD           = 98;
+static const int PRESSURE       = 99;
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -221,6 +222,19 @@ void Aux_ComputeProfile( Profile_t *Prof, const double Center[], const double r_
                                                               amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ENGY][k][j][i],
                                                               GAMMA - (real)1.0, false, NULL_REAL);
                         OMP_Data  [TID][bin] += Pres*dv;
+                        OMP_Weight[TID][bin] += dv;
+                     }
+                     break;
+
+                     case INTERNAL_ENGY:
+                     {
+                        const double intengy = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ENGY][k][j][i]
+                                             - 0.5 * ( SQR( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMX][k][j][i] )
+                                                     + SQR( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMY][k][j][i] )
+                                                     + SQR( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMZ][k][j][i] ) )
+                                             / amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i];
+
+                        OMP_Data  [TID][bin] += intengy*dv;
                         OMP_Weight[TID][bin] += dv;
                      }
                      break;
