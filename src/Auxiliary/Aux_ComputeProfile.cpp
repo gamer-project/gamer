@@ -2,9 +2,9 @@
 
 
 // indices of fields not defined in Macro.h
-static const int INTERNAL_ENGY  = 97;
-static const int VRAD           = 98;
-static const int PRESSURE       = 99;
+static const int INTERNAL_ENGY = 97;
+static const int VRAD          = 98;
+static const int PRESSURE      = 99;
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -228,11 +228,11 @@ void Aux_ComputeProfile( Profile_t *Prof, const double Center[], const double r_
 
                      case INTERNAL_ENGY:
                      {
-                        const double intengy = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ENGY][k][j][i]
+                        const double intengy =              amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ENGY][k][j][i]
                                              - 0.5 * ( SQR( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMX][k][j][i] )
                                                      + SQR( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMY][k][j][i] )
                                                      + SQR( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMZ][k][j][i] ) )
-                                             / amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i];
+                                             /              amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i];
 
                         OMP_Data  [TID][bin] += intengy*dv;
                         OMP_Weight[TID][bin] += dv;
@@ -300,12 +300,13 @@ void Aux_ComputeProfile( Profile_t *Prof, const double Center[], const double r_
       if ( Prof->NCell[b] > 0L )
          switch ( Quantity )
          {
-            case DENS    :
-            case ENGY    :
-            case MOMX    :
-            case MOMY    :
-            case MOMZ    :
-            case PRESSURE:
+            case DENS         :
+            case ENGY         :
+            case MOMX         :
+            case MOMY         :
+            case MOMZ         :
+            case PRESSURE     :
+            case INTERNAL_ENGY:
                Prof->Data[b] /= Prof->Weight[b];
             break;
 
