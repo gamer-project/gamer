@@ -348,9 +348,11 @@ void Aux_ComputeProfile( Profile_t *Prof, const double Center[], const double r_
       if ( b == Prof->NBin )
       {
          if ( LogBin )
-            Prof->MaxRadius = dr_min*pow( LogBinRatio, Prof->NBin-1 );
+//            Prof->MaxRadius = dr_min*pow( LogBinRatio, Prof->NBin-1 );
+            Prof->MaxRadius = SQR( Prof->Radius[b - 1] ) / Prof->Radius[b - 2];
          else
-            Prof->MaxRadius = dr_min*Prof->NBin;
+//            Prof->MaxRadius = dr_min*Prof->NBin;
+            Prof->MaxRadius = 2.0 * Prof->Radius[b - 1]  - Prof->Radius[b - 2];
       }
 
 //    reduce counter since all bins above b have been shifted downward
