@@ -90,23 +90,8 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
 
 
 /* 3. Compute the max and min wave speeds used in Mignone */
-#  if ( EOS == APPROXIMATED_GENERAL )
-   nhl =  FMA( (real)2.5, PL[4], SQRT( FMA( (real)2.25, SQR(PL[4]), SQR(PL[0]) ) ) );
-   nhr =  FMA( (real)2.5, PR[4], SQRT( FMA( (real)2.25, SQR(PR[4]), SQR(PR[0]) ) ) );
-
-   cslsq = PL[4] * FMA( (real)4.5, PL[4], (real)5.0*SQRT( FMA( (real)2.25, SQR(PL[4]), SQR(PL[0]) ) ) ) 
-/ ( (real)3.0*nhl* FMA( (real)1.5, PL[4],           SQRT( FMA( (real)2.25, SQR(PL[4]), SQR(PL[0]) ) ) ) );
-
-   csrsq = PR[4] * FMA( (real)4.5, PR[4], (real)5.0*SQRT( FMA( (real)2.25, SQR(PR[4]), SQR(PR[0]) ) ) ) 
-/ ( (real)3.0*nhr* FMA( (real)1.5, PR[4],           SQRT( FMA( (real)2.25, SQR(PR[4]), SQR(PR[0]) ) ) ) );
-
-#  elif ( EOS ==  CONSTANT_GAMMA)
-   nhl = PL[0] + PL[4] * Gamma / Gamma_m1; /* Mignone Eq 3.5 */
-   nhr = PR[0] + PR[4] * Gamma / Gamma_m1;
-
-   cslsq = Gamma * PL[4] / nhl; /* Mignone Eq 4 */
-   csrsq = Gamma * PR[4] / nhr;
-#  endif
+   cslsq = SoundSpeedSquare( PL[4]/PL[0], Gamma);
+   csrsq = SoundSpeedSquare( PR[4]/PR[0], Gamma);
 
 #  ifdef CHECK_FAILED_CELL_IN_FLUID
    if ( cslsq >= 1.0 || csrsq >= 1.0 || cslsq < 0.0 || csrsq < 0.0 )

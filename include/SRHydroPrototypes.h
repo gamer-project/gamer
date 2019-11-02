@@ -42,6 +42,8 @@ real SRHydro_InternalEngy( real Con[], real Pri[], real Lorentz, real Gamma, boo
 real SRHydro_ThermalEngy( real Con[], real Pri[], real Lorentz, real Gamma, bool frame );
 real SRHydro_KineticEngy( real Con[], real Pri[], real Lorentz, real Gamma );
 
+real SoundSpeedSquare( real Temp, real Gamma );
+
 real SRHydro_CheckMinTemp (const real InTemp, const real MinTemp);
 
 void SRHydro_4Velto3Vel( const real In[], real Out[] );

@@ -68,17 +68,16 @@ void SRHydro_Rotate3D (real InOut[], const int XYZ, const bool Forward)
 // Function    :  SRHydro_GetTemperature
 // Description :  Evaluate the fluid temperature
 //
-// Note        :  1. Currently only work with the adiabatic EOS
-//                2. For simplicity, currently this function only returns **pressure/density**, which does NOT include normalization
-//                   --> For OPT__FLAG_LOHNER_TEMP only
-//                   --> Also note that currently it only checks minimum pressure but not minimum density
+// Note        :  1. Currently work with the adiabatic EOS and general EOS
+//                2. For simplicity, currently this function only returns kB*T/mc**2, which does NOT include normalization
+//                   --> Also note that currently it only checks minimum temperature but not minimum density or pressure
 //
 // Parameter   :  Dens         : Mass density
 //                MomX/Y/Z     : Momentum density
 //                Engy         : Energy density
 //                Gamma        : the adiabatic index
 //
-// Return      :  Temperature
+// Return      :  kB*T/mc**2
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
@@ -186,10 +185,21 @@ real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, 
 # endif 
 
   NewtonRaphsonSolver(&params ,&root, guess, (real) TINY_NUMBER, (real) EPSILON, Gamma);
-
+  //root = Constant / (real)3.0;
   return root;
 }				// FUNCTION : SRHydro_GetTemperature
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SpecificEnthalpy
+// Description :  Evaluate the specific enthalpy
+//
+// Note        :  1. Currently work with the adiabatic EOS and general EOS
+//                2. For simplicity, currently this function only returns h/c**2, which does NOT include normalization
+//
+// Parameter   :  Con[]       : conservative variables
+//
+// Return      :  h/c**2
+//-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 real SpecificEnthalpy( const real Con[], real Temp, real Gamma )
 {
@@ -262,7 +272,7 @@ real SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real 
    real Lorentz = SQRT((real)1.0 + VectorDotProduct(Out[1], Out[2], Out[3]));
 
    Out[0] = In[0]/Lorentz;
-   Out[4] = Out[0] * Temp; // P = nkT
+   Out[4] = Out[0] * Temp; // P = rho*kB*T*c**2
 
    return Lorentz;
 }// FUNCTION : SRHydro_Con2Pri
@@ -271,17 +281,16 @@ real SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real 
 GPU_DEVICE
 void SRHydro_Pri2Con (const real In[], real Out[], const real Gamma)
 {
-
-  real nh = In[0] * SpecificEnthalpy( NULL, In[4]/In[0], Gamma );
+  real h = SpecificEnthalpy( NULL, In[4]/In[0], Gamma );
+  real nh   = In[0] * h;
 
   real Factor0 = (real)1.0 + VectorDotProduct(In[1], In[2], In[3]);
   real Factor1 = SQRT(Factor0); // Lorentz factor
-  real Factor2 = nh * Factor1;
   
-  Out[0] = In[0] * Factor1; // number density in inertial frame
-  Out[1] = Factor2 * In[1]; // MomX
-  Out[2] = Factor2 * In[2]; // MomX
-  Out[3] = Factor2 * In[3]; // MomX
+  Out[0] = In[0] * Factor1; // mass density in inertial frame
+  Out[1] = Out[0]*h*In[1]; // MomX
+  Out[2] = Out[0]*h*In[2]; // MomX
+  Out[3] = Out[0]*h*In[3]; // MomX
 # if   ( CONSERVED_ENERGY == 1 )
   Out[4] = FMA( nh, Factor0, - In[4] ); // total_energy
 # elif ( CONSERVED_ENERGY == 2 )
@@ -628,6 +637,29 @@ real SRHydro_GetPressure (const real Dens, const real MomX, const real MomY, con
 
   return Out[4];
 }				// FUNCTION : SRHydro_GetPressure
+
+
+GPU_DEVICE
+real SoundSpeedSquare( real Temp, real Gamma )
+{
+  real Cs_sq;
+
+# if ( EOS == APPROXIMATED_GENERAL )
+  real factor = SQRT( (real)2.25*Temp*Temp + (real)1.0 );
+
+  real A = (real) 4.5*SQR(Temp) + (real) 5.0 * Temp * factor;
+  real B = (real)18.0*SQR(Temp) + (real)12.0 * Temp * factor + (real)3.0;
+
+  Cs_sq = A/B;
+
+# elif ( EOS == CONSTANT_GAMMA )
+  Cs_sq = Gamma * Temp; /* Mignone Eq 4 */
+
+# endif
+  
+  return Cs_sq;
+}
+
 
 
 //-------------------------------------------------------------------------------------------------------
