@@ -60,6 +60,7 @@ void MHD_Init_BField_ByFile( const int B_lv )
    herr_t status;
    hid_t dataset, dataspace;
    hsize_t dims[3], maxdims[3];
+   int ndim; 
 
    hid_t mag_file_id = H5Fopen(B_Filename, H5F_ACC_RDONLY, H5P_DEFAULT);
 
@@ -69,8 +70,10 @@ void MHD_Init_BField_ByFile( const int B_lv )
      
      dataspace = H5Dget_space(dataset);
    
-     H5Sget_simple_extent_dims(dataspace, dims, maxdims);
+     ndim = H5Sget_simple_extent_dims(dataspace, dims, maxdims);
 
+     if ( ndim != 3 ) Aux_Error( ERROR_INFO, "Incorrect dimensionality of vector potential ndim=%d !!\n", ndim );
+     
      H5Sclose(dataspace);
      H5Dclose(dataset);
 
@@ -94,17 +97,21 @@ void MHD_Init_BField_ByFile( const int B_lv )
 
    dataset = H5Dopen(mag_file_id, "x", H5P_DEFAULT);
    status  = H5Dread(dataset, H5T_NATIVE_DOUBLE, H5S_ALL,
-      H5S_ALL, H5P_DEFAULT, Axcoord);
+                     H5S_ALL, H5P_DEFAULT, Axcoord);
+   if ( status < 0 ) Aux_Error( ERROR_INFO, "Failed to load x-coordinate !!\n" );
+
    H5Dclose(dataset);
 
    dataset = H5Dopen(mag_file_id, "y", H5P_DEFAULT);
    status  = H5Dread(dataset, H5T_NATIVE_DOUBLE, H5S_ALL,
-      H5S_ALL, H5P_DEFAULT, Aycoord);
+                     H5S_ALL, H5P_DEFAULT, Aycoord);
+   if ( status < 0 ) Aux_Error( ERROR_INFO, "Failed to load y-coordinate !!\n" );
    H5Dclose(dataset);
 
    dataset = H5Dopen(mag_file_id, "z", H5P_DEFAULT);
    status  = H5Dread(dataset, H5T_NATIVE_DOUBLE, H5S_ALL,
-      H5S_ALL, H5P_DEFAULT, Azcoord);
+                     H5S_ALL, H5P_DEFAULT, Azcoord);
+   if ( status < 0 ) Aux_Error( ERROR_INFO, "Failed to load z-coordinate !!\n" );
    H5Dclose(dataset);
 
 #  endif
@@ -123,10 +130,10 @@ void MHD_Init_BField_ByFile( const int B_lv )
    double Aymax = Aycoord[nAy-1]+0.5*Ady;
    double Azmax = Azcoord[nAz-1]+0.5*Adz;
 
-   if ( amr->BoxEdgeL[0] < Axmin || amr->BoxEdgeR[0] > Axmax ||
-        amr->BoxEdgeL[1] < Aymin || amr->BoxEdgeR[1] > Aymax ||
-        amr->BoxEdgeL[2] < Azmin || amr->BoxEdgeR[2] > Azmax ) 
-      Aux_Error( ERROR_INFO, "Input grid is smaller than the simulation domain !!\n" ); 
+   if ( amr->BoxEdgeL[0] < Axmin+2*Adx || amr->BoxEdgeR[0] > Axmax-2*Adx ||
+        amr->BoxEdgeL[1] < Aymin+2*Adx || amr->BoxEdgeR[1] > Aymax-2*Adx ||
+        amr->BoxEdgeL[2] < Azmin+2*Adx || amr->BoxEdgeR[2] > Azmax-2*Adx ) 
+      Aux_Error( ERROR_INFO, "Input grid is smaller than the simulation domain !!" ); 
 
    double *Ax = new double [ CUBE(PS1+1) ];
    double *Ay = new double [ CUBE(PS1+1) ];
@@ -148,13 +155,13 @@ void MHD_Init_BField_ByFile( const int B_lv )
 //    Compute the beginning and ending indices on the vector potential grid
 //    +/- 1 are necessary because we will be computing derivatives
 
-      int ibegin = (int)((EdgeL[0]-Axmin)/Adx)-1;
-      int jbegin = (int)((EdgeL[1]-Aymin)/Ady)-1;
-      int kbegin = (int)((EdgeL[2]-Azmin)/Adz)-1;
+      int ibegin = (int)((EdgeL[0]-Axmin)/Adx)-2;
+      int jbegin = (int)((EdgeL[1]-Aymin)/Ady)-2;
+      int kbegin = (int)((EdgeL[2]-Azmin)/Adz)-2;
       
-      int iend   = (int)((EdgeR[0]-Axmin)/Adx)+1;
-      int jend   = (int)((EdgeR[1]-Aymin)/Ady)+1;
-      int kend   = (int)((EdgeR[2]-Azmin)/Adz)+1;
+      int iend   = (int)((EdgeR[0]-Axmin)/Adx)+2;
+      int jend   = (int)((EdgeR[1]-Aymin)/Ady)+2;
+      int kend   = (int)((EdgeR[2]-Azmin)/Adz)+2;
      
       int nlocx  = iend-ibegin+1;
       int nlocy  = jend-jbegin+1;
@@ -173,7 +180,7 @@ void MHD_Init_BField_ByFile( const int B_lv )
 
 #     ifdef SUPPORT_HDF5
       VecPot_ReadField( mag_file_id, ibegin, jbegin, kbegin, 
-			iend, jend, kend, Axf, Ayf, Azf );
+			               iend, jend, kend, Axf, Ayf, Azf );
 #     endif
 
 //    Loop over the indices in this patch and interpolate the vector potential 
@@ -189,19 +196,31 @@ void MHD_Init_BField_ByFile( const int B_lv )
          Ay[idx] = 0.0;
          Az[idx] = 0.0;
 
-         for ( int ii=0; ii<sample_res; ii++ ) {  
-            const double x = x0 + (ii+0.5)*dh*sample_fact;  
-            Ax[idx] += VecPot_Interp( Axf, x, y0, z0, fdims, fbegin );
+         if ( i != PS1 ) {
+
+            for ( int ii=0; ii<sample_res; ii++ ) {  
+               const double x = x0 + (ii+0.5)*dh*sample_fact;  
+               Ax[idx] += VecPot_Interp( Axf, x, y0, z0, fdims, fbegin );
+            }
+         
          }
 
-         for ( int jj=0; jj<sample_res; jj++ ) {  
-            const double y = y0 + (jj+0.5)*dh*sample_fact;  
-            Ay[idx] += VecPot_Interp( Ayf, x0, y, z0, fdims, fbegin );
+         if ( j != PS1 ) {
+
+            for ( int jj=0; jj<sample_res; jj++ ) {  
+               const double y = y0 + (jj+0.5)*dh*sample_fact;  
+               Ay[idx] += VecPot_Interp( Ayf, x0, y, z0, fdims, fbegin );
+            }
+
          }
 
-         for ( int kk=0; kk<sample_res; kk++ ) {
-            const double z = z0 + (kk+0.5)*dh*sample_fact;  
-            Az[idx] += VecPot_Interp( Azf, x0, y0, z, fdims, fbegin );
+         if ( k != PS1 ) {
+
+            for ( int kk=0; kk<sample_res; kk++ ) {
+               const double z = z0 + (kk+0.5)*dh*sample_fact;  
+               Az[idx] += VecPot_Interp( Azf, x0, y0, z, fdims, fbegin );
+            }
+         
          }
 
          Ax[idx] *= sample_fact;
@@ -380,10 +399,11 @@ void VecPot_ReadField( hid_t mag_file_id, const int ibegin, const int jbegin,
    dataset = H5Dopen(mag_file_id, "magnetic_vector_potential_x", H5P_DEFAULT);
    dataspace = H5Dget_space(dataset);
    status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start,
-                                 stride, count, NULL);
+                                stride, count, NULL);
    memspace = H5Screate_simple(rank, dims, NULL);
    status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
                      H5P_DEFAULT, Ax);
+   if ( status < 0 ) Aux_Error( ERROR_INFO, "Failed to load magnetic_vector_potential_x !!\n" );
    H5Sclose(memspace);
    H5Sclose(dataspace);
    H5Dclose(dataset);
@@ -395,7 +415,8 @@ void VecPot_ReadField( hid_t mag_file_id, const int ibegin, const int jbegin,
                                  stride, count, NULL);
    memspace = H5Screate_simple(rank, dims, NULL);
    status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
-                     H5P_DEFAULT, Ay);
+                    H5P_DEFAULT, Ay);
+   if ( status < 0 ) Aux_Error( ERROR_INFO, "Failed to load magnetic_vector_potential_y !!\n" );
    H5Sclose(memspace);
    H5Sclose(dataspace);
    H5Dclose(dataset);
@@ -408,6 +429,7 @@ void VecPot_ReadField( hid_t mag_file_id, const int ibegin, const int jbegin,
    memspace = H5Screate_simple(rank, dims, NULL);
    status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
                      H5P_DEFAULT, Az);
+   if ( status < 0 ) Aux_Error( ERROR_INFO, "Failed to load magnetic_vector_potential_z !!\n" );
    H5Sclose(memspace);
    H5Sclose(dataspace);
    H5Dclose(dataset);

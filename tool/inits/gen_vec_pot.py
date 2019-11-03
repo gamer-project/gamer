@@ -39,9 +39,9 @@ re = np.ones(3)
 # We therefore add a buffer of one cell on each side. 
 
 delta = (re-le)/ddims
-ddims += 2
-le -= delta
-re += delta
+ddims += 6
+le -= 3.0*delta
+re += 3.0*delta
 
 # Construct the grid cell edge coordinates
 
