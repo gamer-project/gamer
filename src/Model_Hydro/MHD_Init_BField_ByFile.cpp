@@ -10,7 +10,7 @@ static double Adx, Ady, Adz;
 static double *Axcoord, *Aycoord, *Azcoord;
 
 double TSC_Weight( const double x );
-double VecPot_Interp( const double field[], const double xx, const double yy, 
+double VecPot_Interp( const double field[], const double xx, const double yy,
 		      const double zz, const int fdims[], const int fbegin[] );
 #ifdef SUPPORT_HDF5
 void VecPot_ReadField( hid_t mag_file_id, const int ibegin, const int jbegin,
@@ -24,7 +24,7 @@ void VecPot_ReadField( hid_t mag_file_id, const int ibegin, const int jbegin,
 //                to assign a magnetic vector potential to all real patches on level
 //                "B_lv" and take the curl of this potential to compute the magnetic field
 //
-// Note        :  
+// Note        :
 //
 // Parameter   :  B_lv         : Target AMR level
 //
@@ -60,20 +60,20 @@ void MHD_Init_BField_ByFile( const int B_lv )
    herr_t status;
    hid_t dataset, dataspace;
    hsize_t dims[3], maxdims[3];
-   int ndim; 
+   int ndim;
 
    hid_t mag_file_id = H5Fopen(B_Filename, H5F_ACC_RDONLY, H5P_DEFAULT);
 
    if ( B_lv == 0 ) {
 
      dataset = H5Dopen(mag_file_id, "magnetic_vector_potential_z", H5P_DEFAULT);
-     
+
      dataspace = H5Dget_space(dataset);
-   
+
      ndim = H5Sget_simple_extent_dims(dataspace, dims, maxdims);
 
      if ( ndim != 3 ) Aux_Error( ERROR_INFO, "Incorrect dimensionality of vector potential ndim=%d !!\n", ndim );
-     
+
      H5Sclose(dataspace);
      H5Dclose(dataset);
 
@@ -130,10 +130,10 @@ void MHD_Init_BField_ByFile( const int B_lv )
    double Aymax = Aycoord[nAy-1]+0.5*Ady;
    double Azmax = Azcoord[nAz-1]+0.5*Adz;
 
-   if ( amr->BoxEdgeL[0] < Axmin+2*Adx || amr->BoxEdgeR[0] > Axmax-2*Adx ||
-        amr->BoxEdgeL[1] < Aymin+2*Adx || amr->BoxEdgeR[1] > Aymax-2*Adx ||
-        amr->BoxEdgeL[2] < Azmin+2*Adx || amr->BoxEdgeR[2] > Azmax-2*Adx ) 
-      Aux_Error( ERROR_INFO, "Input grid is smaller than the simulation domain !!" ); 
+   if ( amr->BoxEdgeL[0] < Axmin+2*Adx || amr->BoxEdgeR[0] >= Axmax-2*Adx ||
+        amr->BoxEdgeL[1] < Aymin+2*Ady || amr->BoxEdgeR[1] >= Aymax-2*Ady ||
+        amr->BoxEdgeL[2] < Azmin+2*Adz || amr->BoxEdgeR[2] >= Azmax-2*Adz )
+      Aux_Error( ERROR_INFO, "Input grid is smaller than the simulation domain !!" );
 
    double *Ax = new double [ CUBE(PS1+1) ];
    double *Ay = new double [ CUBE(PS1+1) ];
@@ -147,7 +147,7 @@ void MHD_Init_BField_ByFile( const int B_lv )
       double EdgeL[3];
       double EdgeR[3];
 
-      for (int i=0; i<3; i++) { 
+      for (int i=0; i<3; i++) {
          EdgeL[i] = amr->patch[0][B_lv][PID]->EdgeL[i];
          EdgeR[i] = amr->patch[0][B_lv][PID]->EdgeR[i];
       }
@@ -158,19 +158,19 @@ void MHD_Init_BField_ByFile( const int B_lv )
       int ibegin = (int)((EdgeL[0]-Axmin)/Adx)-2;
       int jbegin = (int)((EdgeL[1]-Aymin)/Ady)-2;
       int kbegin = (int)((EdgeL[2]-Azmin)/Adz)-2;
-      
+
       int iend   = (int)((EdgeR[0]-Axmin)/Adx)+2;
       int jend   = (int)((EdgeR[1]-Aymin)/Ady)+2;
       int kend   = (int)((EdgeR[2]-Azmin)/Adz)+2;
-     
+
       int nlocx  = iend-ibegin+1;
       int nlocy  = jend-jbegin+1;
       int nlocz  = kend-kbegin+1;
-     
+
       int fdims[3] = { nlocx, nlocy, nlocz };
       int fbegin[3] = { ibegin, jbegin, kbegin };
       int nloc = nlocx*nlocy*nlocz;
-      
+
 //    Allocate for the data on the vector potential grid local to this patch and
 //    read it from the file
 
@@ -179,11 +179,11 @@ void MHD_Init_BField_ByFile( const int B_lv )
       Azf = new double [nloc];
 
 #     ifdef SUPPORT_HDF5
-      VecPot_ReadField( mag_file_id, ibegin, jbegin, kbegin, 
+      VecPot_ReadField( mag_file_id, ibegin, jbegin, kbegin,
 			               iend, jend, kend, Axf, Ayf, Azf );
 #     endif
 
-//    Loop over the indices in this patch and interpolate the vector potential 
+//    Loop over the indices in this patch and interpolate the vector potential
 //    to the current refinement level's resolution
 
       for (int k=0; k<PS1+1; k++) {  const double z0 = EdgeL[2] + k*dh;
@@ -198,17 +198,17 @@ void MHD_Init_BField_ByFile( const int B_lv )
 
          if ( i != PS1 ) {
 
-            for ( int ii=0; ii<sample_res; ii++ ) {  
-               const double x = x0 + (ii+0.5)*dh*sample_fact;  
+            for ( int ii=0; ii<sample_res; ii++ ) {
+               const double x = x0 + (ii+0.5)*dh*sample_fact;
                Ax[idx] += VecPot_Interp( Axf, x, y0, z0, fdims, fbegin );
             }
-         
+
          }
 
          if ( j != PS1 ) {
 
-            for ( int jj=0; jj<sample_res; jj++ ) {  
-               const double y = y0 + (jj+0.5)*dh*sample_fact;  
+            for ( int jj=0; jj<sample_res; jj++ ) {
+               const double y = y0 + (jj+0.5)*dh*sample_fact;
                Ay[idx] += VecPot_Interp( Ayf, x0, y, z0, fdims, fbegin );
             }
 
@@ -217,10 +217,10 @@ void MHD_Init_BField_ByFile( const int B_lv )
          if ( k != PS1 ) {
 
             for ( int kk=0; kk<sample_res; kk++ ) {
-               const double z = z0 + (kk+0.5)*dh*sample_fact;  
+               const double z = z0 + (kk+0.5)*dh*sample_fact;
                Az[idx] += VecPot_Interp( Azf, x0, y0, z, fdims, fbegin );
             }
-         
+
          }
 
          Ax[idx] *= sample_fact;
@@ -230,9 +230,9 @@ void MHD_Init_BField_ByFile( const int B_lv )
       }}}
 
 //    Calculate Bx from vector potential
-      for (int k=0; k<PS1;   k++) { 
-      for (int j=0; j<PS1;   j++) {  
-      for (int i=0; i<PS1+1; i++) { 
+      for (int k=0; k<PS1;   k++) {
+      for (int j=0; j<PS1;   j++) {
+      for (int i=0; i<PS1+1; i++) {
          int idx  = IDX321   ( i, j,   k,   PS1+1, PS1+1 );
          int idxj = IDX321   ( i, j+1, k,   PS1+1, PS1+1 );
          int idxk = IDX321   ( i, j,   k+1, PS1+1, PS1+1 );
@@ -242,8 +242,8 @@ void MHD_Init_BField_ByFile( const int B_lv )
       }}}
 
 //    Calculate By from vector potential
-      for (int k=0; k<PS1;   k++) { 
-      for (int j=0; j<PS1+1; j++) {  
+      for (int k=0; k<PS1;   k++) {
+      for (int j=0; j<PS1+1; j++) {
       for (int i=0; i<PS1;   i++) {
          int idx  = IDX321   ( i,   j, k,   PS1+1, PS1+1 );
          int idxi = IDX321   ( i+1, j, k,   PS1+1, PS1+1 );
@@ -254,9 +254,9 @@ void MHD_Init_BField_ByFile( const int B_lv )
       }}}
 
 //    Calculate Bz from vector potential
-      for (int k=0; k<PS1+1; k++) { 
-      for (int j=0; j<PS1;   j++) {  
-      for (int i=0; i<PS1;   i++) { 
+      for (int k=0; k<PS1+1; k++) {
+      for (int j=0; j<PS1;   j++) {
+      for (int i=0; i<PS1;   i++) {
          int idx  = IDX321   ( i,   j,   k, PS1+1, PS1+1 );
          int idxi = IDX321   ( i+1, j,   k, PS1+1, PS1+1 );
          int idxj = IDX321   ( i,   j+1, k, PS1+1, PS1+1 );
@@ -264,7 +264,7 @@ void MHD_Init_BField_ByFile( const int B_lv )
          real Bz = ( Ay[idxi] - Ay[idx] - Ax[idxj] + Ax[idx] ) / dh;
          amr->patch[ amr->MagSg[B_lv] ][B_lv][PID]->magnetic[2][idxB] = Bz;
       }}}
-   
+
       delete [] Axf;
       delete [] Ayf;
       delete [] Azf;
@@ -294,16 +294,16 @@ void MHD_Init_BField_ByFile( const int B_lv )
 // Description :  Use triangle-shaped cloud interpolation to interpolate
 //                a vector potential from the input grid to the AMR grid
 //
-// Parameter   :  field  : Local patch of input vector potential, one component 
+// Parameter   :  field  : Local patch of input vector potential, one component
 //                xx     : coordinate along the x-axis
 //                yy     : coordinate along the y-axis
-//                zz     : coordinate along the z-axis  
+//                zz     : coordinate along the z-axis
 //                fdims  : size of the input vector potential patch
 //                fbegin : index location of the input vector potential patch
 //
 // Return      :  vector potential component on AMR grid at (xx, yy, zz)
 //-------------------------------------------------------------------------------------------------------
-double VecPot_Interp( const double field[], const double xx, const double yy, 
+double VecPot_Interp( const double field[], const double xx, const double yy,
 		                const double zz, const int fdims[], const int fbegin[] )
 {
 
@@ -319,8 +319,8 @@ double VecPot_Interp( const double field[], const double xx, const double yy,
 
    double pot = 0.0;
 
-   if ( ib == 0 || ib == fdims[0]-1 || 
-        jb == 0 || jb == fdims[1]-1 || 
+   if ( ib == 0 || ib == fdims[0]-1 ||
+        jb == 0 || jb == fdims[1]-1 ||
         kb == 0 || kb == fdims[2]-1 ) {
       Aux_Error( ERROR_INFO, "VecPot_Interp: An invalid index was entered!!\n" );
    }
@@ -365,8 +365,8 @@ double TSC_Weight( const double x )
 
 #ifdef SUPPORT_HDF5
 
-void VecPot_ReadField( hid_t mag_file_id, const int ibegin, const int jbegin, 
-		       const int kbegin, const int iend, const int jend, 
+void VecPot_ReadField( hid_t mag_file_id, const int ibegin, const int jbegin,
+		       const int kbegin, const int iend, const int jend,
 		       const int kend, double Ax[], double Ay[], double Az[] )
 {
    hid_t dataset, dataspace, memspace, dxfer_template;
@@ -376,7 +376,7 @@ void VecPot_ReadField( hid_t mag_file_id, const int ibegin, const int jbegin,
    hsize_t start[3], stride[3], count[3], dims[3];
 
    int rank, ierr;
-   
+
    rank = 3;
 
    start[0] = ibegin;
@@ -407,7 +407,7 @@ void VecPot_ReadField( hid_t mag_file_id, const int ibegin, const int jbegin,
    H5Sclose(memspace);
    H5Sclose(dataspace);
    H5Dclose(dataset);
-  
+
 // Read Ay
    dataset = H5Dopen(mag_file_id, "magnetic_vector_potential_y", H5P_DEFAULT);
    dataspace = H5Dget_space(dataset);
