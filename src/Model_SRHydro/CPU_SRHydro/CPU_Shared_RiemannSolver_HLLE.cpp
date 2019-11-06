@@ -127,13 +127,21 @@ void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In
      Fl[1] = FMA(CL[1], lV1, PL[4]);
      Fl[2] = CL[2] * lV1;
      Fl[3] = CL[3] * lV1;
+#   if ( CONSERVED_ENERGY == 1 )
      Fl[4] = CL[1];
+#   elif ( CONSERVED_ENERGY == 2 )
+     Fl[4] = PL[1] * lFactor * ( CL[4] + PL[4] );
+#   endif
 
      Fr[0] = CR[0] * rV1;
      Fr[1] = FMA(CR[1], rV1, PR[4]);
      Fr[2] = CR[2] * rV1;
      Fr[3] = CR[3] * rV1;
+#   if ( CONSERVED_ENERGY == 1 )
      Fr[4] = CR[1];
+#   elif ( CONSERVED_ENERGY == 2 )
+     Fr[4] = PR[1] * rFactor * ( CR[4] + PR[4] );
+#   endif
  /* 7. Determine intercell flux according to Mignone 13
  */
   if( lmdal >= (real)0.0 ){ /* Fl */
@@ -142,11 +150,7 @@ void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In
     Flux_Out[1] = Fl[1];
     Flux_Out[2] = Fl[2];
     Flux_Out[3] = Fl[3];
-#   if ( CONSERVED_ENERGY == 1 )
     Flux_Out[4] = Fl[4];
-#   elif ( CONSERVED_ENERGY == 2 )
-    Flux_Out[4] = Fl[4] - Fl[0];
-#   endif
 
    SRHydro_Rotate3D( Flux_Out, XYZ, false );
    return;
@@ -162,23 +166,14 @@ void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In
     Fhll[1] = FMA( lmdatlmda, (CR[1] - CL[1]), FMA( lmdar, Fl[1], - lmdal*Fr[1] ) ) * ovlrmll;
     Fhll[2] = FMA( lmdatlmda, (CR[2] - CL[2]), FMA( lmdar, Fl[2], - lmdal*Fr[2] ) ) * ovlrmll;
     Fhll[3] = FMA( lmdatlmda, (CR[3] - CL[3]), FMA( lmdar, Fl[3], - lmdal*Fr[3] ) ) * ovlrmll;
-
-#   if ( CONSERVED_ENERGY == 1 )
     Fhll[4] = FMA( lmdatlmda, (CR[4] - CL[4]), FMA( lmdar, Fl[4], - lmdal*Fr[4] ) ) * ovlrmll;
-#   elif ( CONSERVED_ENERGY == 2 )
-    Fhll[4] = (lmdar*Fl[4] - lmdal*Fr[4] + lmdatlmda * (CR[4] + CR[0] - CL[4] - CL[0])) * ovlrmll;
-#   endif
 
     /* calculate Fs */
     Flux_Out[0] = Fhll[0];
     Flux_Out[1] = Fhll[1];
     Flux_Out[2] = Fhll[2];
     Flux_Out[3] = Fhll[3];
-#   if ( CONSERVED_ENERGY == 1 )
     Flux_Out[4] = Fhll[4];
-#   elif ( CONSERVED_ENERGY == 2 )
-    Flux_Out[4] = Fhll[4] - Fhll[0];
-#   endif
 
     SRHydro_Rotate3D( Flux_Out, XYZ, false );
     return;
@@ -190,11 +185,7 @@ void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In
     Flux_Out[1] = Fr[1];
     Flux_Out[2] = Fr[2];
     Flux_Out[3] = Fr[3];
-#   if ( CONSERVED_ENERGY == 1 )
     Flux_Out[4] = Fr[4];
-#   elif ( CONSERVED_ENERGY == 2 )
-    Flux_Out[4] = Fr[4] - Fr[0];
-#   endif
 
     SRHydro_Rotate3D( Flux_Out, XYZ, false );
     return;
