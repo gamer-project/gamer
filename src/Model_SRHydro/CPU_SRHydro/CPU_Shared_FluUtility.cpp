@@ -222,9 +222,13 @@ real SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real 
    return LorentzFactor;
 }// FUNCTION : SRHydro_Con2Pri
 
-
-GPU_DEVICE
+#ifdef __CUDACC__
+GPU_DEVICE 
 void SRHydro_Pri2Con (const real In[], real Out[], const real Gamma)
+#else
+template <class T> 
+void SRHydro_Pri2Con (const T In[], T Out[], const T Gamma)
+#endif
 {
   real LorentzFactor, Temperature, HTilde, H;
   real Factor0, A, B, C;
@@ -263,8 +267,13 @@ void SRHydro_Pri2Con (const real In[], real Out[], const real Gamma)
 // Function    :  SRHydro_4Velto3Vel
 // Description :  Convert 4-velocity to 3-velocity
 //-------------------------------------------------------------------------------------------------------
+#ifdef __CUDACC__
 GPU_DEVICE
 void SRHydro_4Velto3Vel ( const real In[], real Out[])
+#else
+template <class T> 
+void SRHydro_4Velto3Vel ( const T In[], T Out[])
+#endif
 {
   real Factor = (real)1.0 / SQRT ((real)1.0 + VectorDotProduct(In[1], In[2], In[3]));
 
@@ -279,8 +288,13 @@ void SRHydro_4Velto3Vel ( const real In[], real Out[])
 // Function    :  SRHydro_3Velto4Vel
 // Description :  Convert 3-velocity to 4-velocity
 //-------------------------------------------------------------------------------------------------------
+#ifdef __CUDACC__
 GPU_DEVICE
 void SRHydro_3Velto4Vel (const real In[], real Out[])
+#else
+template <class T> 
+void SRHydro_3Velto4Vel (const T In[], T Out[])
+#endif
 {
   real Factor = (real)1.0 / SQRT ((real)1.0 - VectorDotProduct(In[1], In[2], In[3]));
 
@@ -777,5 +791,14 @@ real VectorDotProduct( real V1, real V2, real V3 )
   
   return Product;
 } 
+
+#ifndef __CUDACC__
+template void SRHydro_Pri2Con(const double*, double*, const double);
+template void SRHydro_Pri2Con(const float* , float* , const float);
+template void SRHydro_4Velto3Vel ( const double* , double* );
+template void SRHydro_4Velto3Vel ( const float* , float* );
+template void SRHydro_3Velto4Vel ( const double* , double* );
+template void SRHydro_3Velto4Vel ( const float* , float* );
+#endif
 
 #endif

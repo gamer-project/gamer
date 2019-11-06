@@ -14,7 +14,18 @@ void SRHydro_Con2Flux( const int XYZ, real Flux[], const real ConVar[], const re
 
 real SRHydro_Con2Pri( const real In[], real Out[], const real Gamma, const real MinTemp );
 
+#ifdef __CUDACC__
 void SRHydro_Pri2Con( const real In[], real Out[], const real Gamma);
+void SRHydro_4Velto3Vel( const real In[], real Out[] );
+void SRHydro_3Velto4Vel( const real In[], real Out[] );
+#else
+template <typename T>
+void SRHydro_Pri2Con (const T In[], T Out[], const T Gamma);
+template <typename T>
+void SRHydro_4Velto3Vel( const T In[], T Out[] );
+template <typename T>
+void SRHydro_3Velto4Vel( const T In[], T Out[] );
+#endif
 
 void SRHydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
                                 real g_FC_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
@@ -46,8 +57,6 @@ real SoundSpeedSquare( real Temp, real Gamma );
 
 real SRHydro_CheckMinTemp (const real InTemp, const real MinTemp);
 
-void SRHydro_4Velto3Vel( const real In[], real Out[] );
-void SRHydro_3Velto4Vel( const real In[], real Out[] );
 
 real SRHydro_CheckMinTempInEngy (const real Con[], const real MinTemp, const real Gamma);
 

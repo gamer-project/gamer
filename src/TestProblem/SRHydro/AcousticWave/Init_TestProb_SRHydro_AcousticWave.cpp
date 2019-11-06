@@ -4,7 +4,6 @@
 
 
 static void OutputError();
-void SRHydro_Pri2Con_Double (const double In[], double Out[], const double Gamma);
 
 // problem-specific global variables
 // =======================================================================================
@@ -186,7 +185,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
   Pri[3] = Acoustic_U / SQRT_3;
   Pri[4] = 1.0;
 
-  SRHydro_Pri2Con_Double ( Pri, Con, (double)GAMMA );
+  SRHydro_Pri2Con ( Pri, Con, (double)GAMMA );
 
   fluid[0] = (real)Con[0];
   fluid[1] = (real)Con[1];

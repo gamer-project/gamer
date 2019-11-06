@@ -1,6 +1,7 @@
 #include "GAMER.h"
 #include "TestProb.h"
 
+
 #if  ( MODEL == SR_HYDRO )
 
 // problem-specific global variables
@@ -31,10 +32,6 @@ static int       Riemann_XYZ;          // wave propagation direction (0/1/2 --> 
 // =======================================================================================
 
 
-void 
-SRHydro_3Velto4Vel_Double (const double In[], double Out[]);
-void
-SRHydro_Pri2Con_Double (const double In[], double Out[], const double Gamma);
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -247,8 +244,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    PriVar3L[3]=0.0;
    PriVar3L[4]=Riemann_PreL;
    
-   SRHydro_3Velto4Vel_Double(PriVar3L, PriVar4L);
-   SRHydro_Pri2Con_Double(PriVar4L, ConVarL, GAMMA);
+
+   SRHydro_3Velto4Vel(PriVar3L, PriVar4L);
+   SRHydro_Pri2Con(PriVar4L, ConVarL, GAMMA);
 
 // right-state
    PriVar3R[0]=Riemann_RhoR;
@@ -257,8 +255,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    PriVar3R[3]=0.0;
    PriVar3R[4]=Riemann_PreR;
    
-   SRHydro_3Velto4Vel_Double(PriVar3R, PriVar4R);
-   SRHydro_Pri2Con_Double(PriVar4R, ConVarR, GAMMA);
+   SRHydro_3Velto4Vel(PriVar3R, PriVar4R);
+   SRHydro_Pri2Con(PriVar4R, ConVarR, GAMMA);
 
    double r, BoxCen;
    int    TVar[NCOMP_FLUID];
@@ -338,5 +336,6 @@ void Init_TestProb_SRHydro_Riemann()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_TestProb_Hydro_Riemann
+
 
 #endif

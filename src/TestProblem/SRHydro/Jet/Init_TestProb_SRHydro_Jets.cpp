@@ -36,7 +36,6 @@ static double   Jet_HSE_Radius                     = NULL_REAL; // for Jet_HSE: 
 static double   Jet_HSE_Mass                       = NULL_REAL; // for Jet_HSE: enclosed mass of halo
 // =======================================================================================
 
-void SRHydro_Pri2Con_Double (const double In[], double Out[], const double Gamma);
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -437,7 +436,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #  ifndef FLOAT8
    double Out[NCOMP_FLUID];
 
-   SRHydro_Pri2Con_Double(Pri4Vel, Out, GAMMA);
+   SRHydro_Pri2Con(Pri4Vel, Out, GAMMA);
 
    fluid [0] = (real) Out[0];
    fluid [1] = (real) Out[1];
@@ -445,7 +444,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid [3] = (real) Out[3];
    fluid [4] = (real) Out[4];
 #  else
-   SRHydro_Pri2Con_Double(Pri4Vel, fluid, GAMMA);
+   SRHydro_Pri2Con(Pri4Vel, fluid, GAMMA);
 #  endif
 
 } // FUNCTION : SetGridIC
@@ -570,7 +569,7 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
 #        ifndef FLOAT8
          double Out[NCOMP_FLUID];
 
-         SRHydro_Pri2Con_Double(Pri4Vel, Out, GAMMA);
+         SRHydro_Pri2Con(Pri4Vel, Out, GAMMA);
 
          fluid [0] = (real) Out[0];
          fluid [1] = (real) Out[1];
@@ -578,7 +577,7 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
          fluid [3] = (real) Out[3];
          fluid [4] = (real) Out[4];
 #        else
-         SRHydro_Pri2Con_Double(Pri4Vel, fluid, GAMMA);
+         SRHydro_Pri2Con(Pri4Vel, fluid, GAMMA);
 #        endif
 
 //       return immediately since we do NOT allow different jet source to overlap

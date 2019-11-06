@@ -34,8 +34,6 @@ static bool     Flag_BurstPres;
 // =======================================================================================
 
 
-void
-SRHydro_Pri2Con_Double (const double In[], double Out[], const double Gamma);
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
@@ -243,7 +241,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #  ifndef FLOAT8
    double Out[NCOMP_FLUID];
 
-   SRHydro_Pri2Con_Double (Pri4Vel, Out, GAMMA);
+   SRHydro_Pri2Con (Pri4Vel, Out, GAMMA);
 
    fluid [0] = (real) Out[0];
    fluid [1] = (real) Out[1];
@@ -251,7 +249,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid [3] = (real) Out[3];
    fluid [4] = (real) Out[4];
 #  else
-   SRHydro_Pri2Con_Double (Pri4Vel, fluid, GAMMA);
+   SRHydro_Pri2Con (Pri4Vel, fluid, GAMMA);
 #  endif
 
 } // FUNCTION : SetGridIC
@@ -386,7 +384,7 @@ bool Flu_ResetByUser_PrecessedJet( real fluid[], const double x, const double y,
 #      ifndef FLOAT8
        double Out[NCOMP_FLUID];
 
-       SRHydro_Pri2Con_Double(Pri4Vel, Out, GAMMA);
+       SRHydro_Pri2Con(Pri4Vel, Out, GAMMA);
 
        fluid [0] = (real) Out[0];
        fluid [1] = (real) Out[1];
@@ -394,7 +392,7 @@ bool Flu_ResetByUser_PrecessedJet( real fluid[], const double x, const double y,
        fluid [3] = (real) Out[3];
        fluid [4] = (real) Out[4];
 #      else
-       SRHydro_Pri2Con_Double(Pri4Vel, fluid, GAMMA);
+       SRHydro_Pri2Con(Pri4Vel, fluid, GAMMA);
 #      endif
 
 //     return immediately since we do NOT allow different jet source to overlap
