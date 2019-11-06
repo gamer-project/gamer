@@ -54,6 +54,10 @@ void Validate()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
 
+#  ifdef GRAVITY
+   Aux_Error( ERROR_INFO, "GRAVITY must be disabled!!\n" );
+#  endif
+
 } // FUNCTION : Validate
 
 
