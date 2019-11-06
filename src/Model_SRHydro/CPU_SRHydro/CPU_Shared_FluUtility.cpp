@@ -236,7 +236,7 @@ void SRHydro_Pri2Con (const real In[], real Out[], const real Gamma)
   HTilde = SRHydro_Temperature2HTilde( Temperature );
 
   Out[DENS] = In[0] * LorentzFactor;
-  Factor0 = Out[DENS]*H;
+  Factor0 = Out[DENS]*HTilde + Out[DENS];
 
 
   Out[MOMX] = Factor0*In[1];
