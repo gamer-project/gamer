@@ -1,6 +1,6 @@
 #include "GAMER.h"
-
 #if ( MODEL == HYDRO )
+
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
 static void Init_Function_User( real fluid[], const double x, const double y, const double z, const double Time,
@@ -128,7 +128,8 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
    if ( Init_Function_User_Ptr == NULL )  Aux_Error( ERROR_INFO, "Init_Function_User_Ptr == NULL !!\n" );
 
 #  ifdef MHD
-   if ( Init_Function_BField_User_Ptr == NULL )    Aux_Error( ERROR_INFO, "Init_Function_BField_User_Ptr == NULL !!\n" );
+   if ( Init_Function_BField_User_Ptr == NULL && !OPT__INIT_BFIELD_BYFILE )  
+      Aux_Error( ERROR_INFO, "Init_Function_BField_User_Ptr == NULL !!\n" );
 #  endif
 
 
@@ -148,46 +149,58 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 #  endif
 
 
+#  ifdef MHD
+
+   if ( OPT__INIT_BFIELD_BYFILE )
+     MHD_Init_BField_ByFile(lv);
+
+#  endif
+
 #  pragma omp parallel for schedule( runtime ) num_threads( OMP_NThread )
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
 //    1. set the magnetic field
 #     ifdef MHD
-      real magnetic_1v, magnetic_sub[NCOMP_MAG];
 
-//    loop over B_X/Y/Z to set one component at a time
-//    --> because different components are defined at different cell faces
-      for (int v=0; v<NCOMP_MAG; v++)
-      {
-         int    ijk_end[3], sub_end[3], idx=0;
-         double dxyz0[3];
+      if ( !OPT__INIT_BFIELD_BYFILE ) {
 
-         for (int d=0; d<3; d++)
+         real magnetic_1v, magnetic_sub[NCOMP_MAG];
+
+   //    loop over B_X/Y/Z to set one component at a time
+   //    --> because different components are defined at different cell faces
+         for (int v=0; v<NCOMP_MAG; v++)
          {
-            ijk_end[d] = ( d == v ) ? PS1+1 : PS1;
-            sub_end[d] = ( d == v ) ? 1     : NSub;
-            dxyz0  [d] = ( d == v ) ? 0.0   : 0.5*dh_sub;
-         }
+            int    ijk_end[3], sub_end[3], idx=0;
+            double dxyz0[3];
 
-         for (int k=0; k<ijk_end[2]; k++)    {  const double z0 = amr->patch[0][lv][PID]->EdgeL[2] + k*dh + dxyz0[2];
-         for (int j=0; j<ijk_end[1]; j++)    {  const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + j*dh + dxyz0[1];
-         for (int i=0; i<ijk_end[0]; i++)    {  const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + i*dh + dxyz0[0];
+            for (int d=0; d<3; d++)
+            {
+               ijk_end[d] = ( d == v ) ? PS1+1 : PS1;
+               sub_end[d] = ( d == v ) ? 1     : NSub;
+               dxyz0  [d] = ( d == v ) ? 0.0   : 0.5*dh_sub;
+            }
 
-            magnetic_1v = (real)0.0;
+            for (int k=0; k<ijk_end[2]; k++)    {  const double z0 = amr->patch[0][lv][PID]->EdgeL[2] + k*dh + dxyz0[2];
+            for (int j=0; j<ijk_end[1]; j++)    {  const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + j*dh + dxyz0[1];
+            for (int i=0; i<ijk_end[0]; i++)    {  const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + i*dh + dxyz0[0];
 
-            for (int kk=0; kk<sub_end[2]; kk++)    {  const double z = z0 + kk*dh_sub;
-            for (int jj=0; jj<sub_end[1]; jj++)    {  const double y = y0 + jj*dh_sub;
-            for (int ii=0; ii<sub_end[0]; ii++)    {  const double x = x0 + ii*dh_sub;
+               magnetic_1v = (real)0.0;
 
-               Init_Function_BField_User_Ptr( magnetic_sub, x, y, z, Time[lv], lv, NULL );
+               for (int kk=0; kk<sub_end[2]; kk++)    {  const double z = z0 + kk*dh_sub;
+               for (int jj=0; jj<sub_end[1]; jj++)    {  const double y = y0 + jj*dh_sub;
+               for (int ii=0; ii<sub_end[0]; ii++)    {  const double x = x0 + ii*dh_sub;
 
-               magnetic_1v += magnetic_sub[v];
+                  Init_Function_BField_User_Ptr( magnetic_sub, x, y, z, Time[lv], lv, NULL );
 
-            }}}
+                  magnetic_1v += magnetic_sub[v];
 
-            amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[v][ idx ++ ] = magnetic_1v*_NSub2;
-         }}} // i,j,k
-      } // for (int v=0; v<NCOMP_MAG; v++)
+               }}}
+
+               amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[v][ idx ++ ] = magnetic_1v*_NSub2;
+            }}} // i,j,k
+         } // for (int v=0; v<NCOMP_MAG; v++)
+      } // if ( !OPT__INIT_BFIELD_BY_FILE )
+
 #     endif // #ifdef MHD
 
 
