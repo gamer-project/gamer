@@ -1,5 +1,5 @@
 """
-This file generates a toy vector potential for import into GAMER using the 
+This file generates a toy vector potential for import into GAMER using the
 OPT__INIT_BFIELD_BYFILE parameter. It does the following:
 
 1. Generates a uniform coordinate grid
@@ -13,30 +13,32 @@ as those used in GAMER. So:
 * vector potential components are in UNIT_B*UNIT_L = sqrt(4*pi*UNIT_P)*UNIT_L
   where UNIT_P = UNIT_M*UNIT_L/UNIT_T**2
 
-The file should also be named "B_IC" for GAMER to recognize it. 
+The file should also be named "B_IC" for GAMER to recognize it.
 
-It requires NumPy, h5py, and HDF5 to be installed. 
+It requires NumPy, h5py, and HDF5 to be installed.
 """
 
 import h5py
 import numpy as np
 
 # Number of cells along each dimension of the input grid.
-# This is somewhat arbitrary, but should be chosen in 
+# This is somewhat arbitrary, but should be chosen in
 # such a way as to adequately resolve the vector potential.
 
 ddims = np.array([128]*3, dtype='int')
 
-# Left edge and right edge coordinates of the desired 
+# Left edge and right edge coordinates of the desired
 # simulation domain which will be used in GAMER.
 
 le = np.zeros(3)
 re = np.ones(3)
 
-# Since we need to take derivatives of the vector potential 
-# to get the magnetic field on the simulation domain, the 
-# input grid must be extended a bit beyond this boundary. 
-# We therefore add a buffer of one cell on each side. 
+# Since we need to take derivatives of the vector potential
+# to get the magnetic field on the simulation domain, the
+# input grid must be extended a bit beyond this boundary.
+# We therefore add a buffer of three cells on each side.
+# (Three cells are necessary to solve some corner cases
+# resulting from round-off errors.)
 
 delta = (re-le)/ddims
 ddims += 6
@@ -70,7 +72,7 @@ Az = yy*yy*xx
 
 f = h5py.File("B_IC", "w")
 
-# Write coordinate arrays 
+# Write coordinate arrays
 
 f.create_dataset("x", data=x)
 f.create_dataset("y", data=y)
