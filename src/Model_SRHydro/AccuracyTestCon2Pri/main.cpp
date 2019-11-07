@@ -11,11 +11,23 @@ main ()
 
   double Con[5] = { 0 };
 
-  Con[0] = 0.1;
-  Con[1] = -5.2;
-  Con[2] = 6.5;
-  Con[3] = 0.59;
-  Con[4] = SQRT( SQR(Con[0]) + SQR(Con[1]) + SQR(Con[2]) + SQR(Con[3]) )*(1.0+1e-10);      
+  Con[0] = 0.5;
+  Con[1] = 1e-15;
+  Con[2] = 1e-18;
+  Con[3] = -1e-16;
+  Con[4] = 1e-16;
+
+  real discriminant, Msqr;
+
+  Msqr = VectorDotProduct( Con[MOMX], Con[MOMY], Con[MOMZ] );
+
+  discriminant = SQR(Con[ENGY]/Con[DENS]) + (real)2*(Con[ENGY]/Con[DENS]) - Msqr/SQR(Con[DENS]);
+
+  if ( discriminant <= 0.0 )
+  {
+    printf("discriminant = %e < 0.0 !!\n", discriminant);
+    exit(0);
+  }
 
   double Pri[5] = { 0 };
 

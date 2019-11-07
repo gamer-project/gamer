@@ -4,12 +4,6 @@
 #include "CUFLU.h"
 #include <stdio.h>
 
-struct Arguments
-{
-  real M_D;
-  real E_D;
-};
-
 
 
 GPU_DEVICE 
@@ -200,11 +194,9 @@ real SpecificEnthalpy( const real Con[], real Temp, real Gamma )
 GPU_DEVICE
 real SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real MinTemp)
 {
-   real LorentzFactor, HTilde, Temperature, Factor0;
+   real LorentzFactor, HTilde, Factor0, Usqr;
 
    HTilde = SRHydro_GetHTilde( In, Gamma );
-
-   SRHydro_HTilde2Temperature( HTilde, &Temperature, NULL );
 
    Factor0 = In[DENS] * HTilde + In[DENS];
 
@@ -212,12 +204,13 @@ real SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real 
    Out[2] = In[MOMY] / Factor0;
    Out[3] = In[MOMZ] / Factor0;
 
+   Usqr = VectorDotProduct( Out[1], Out[2], Out[3] );
 
-   LorentzFactor = SQRT( (real)1.0 + SQR( Out[1] )+ SQR( Out[2] )+ SQR( Out[3] ) );
+   LorentzFactor = SQRT( (real)1.0 + Usqr );
 
    Out[0] = In[DENS] / LorentzFactor;
 
-   Out[4] = Temperature*In[DENS] / LorentzFactor;
+   Out[4] = In[DENS]*( HTilde*LorentzFactor + Usqr / ( (real)1.0 + LorentzFactor )  ) - In[ENGY];
 
    return LorentzFactor;
 }// FUNCTION : SRHydro_Con2Pri
@@ -230,35 +223,25 @@ template <class T>
 void SRHydro_Pri2Con (const T In[], T Out[], const T Gamma)
 #endif
 {
-  real LorentzFactor, Temperature, HTilde, H;
-  real Factor0, A, B, C;
+  real LorentzFactor, Temperature, HTilde, Factor0, Usqr;
 
-  LorentzFactor = SQRT( (real)1.0 + SQR(In[1]) + SQR(In[2]) + SQR(In[3]) );
+  Usqr = VectorDotProduct( In[1], In[2], In[3] );
+
+  LorentzFactor = SQRT( (real)1.0 + Usqr );
 
   Temperature = In[4]/In[0];
 
   HTilde = SRHydro_Temperature2HTilde( Temperature );
 
   Out[DENS] = In[0] * LorentzFactor;
-  Factor0 = Out[DENS]*HTilde + Out[DENS];
 
+  Factor0 = Out[DENS]*HTilde + Out[DENS];
 
   Out[MOMX] = Factor0*In[1];
   Out[MOMY] = Factor0*In[2];
   Out[MOMZ] = Factor0*In[3];
 
-
-  real Msqr = VectorDotProduct(Out[MOMX], Out[MOMY], Out[MOMZ]);
-  real M_Dsqr = Msqr / SQR( Out[DENS] );
-  real Constant = M_Dsqr;
-  real Fun;
-
-
-  SRHydro_HTilde_Function( HTilde, M_Dsqr, Constant, &Fun, NULL, Gamma );
-
-  Out[ENGY] = Fun / ( SQRT((real)1.0 + Fun ) + (real)1.0 );
-  Out[ENGY] *= Out[DENS];
-
+  Out[ENGY] = In[DENS]*( HTilde*LorentzFactor + Usqr / ( (real)1.0 + LorentzFactor )  ) - In[4];
 
 }				// FUNCTION : SRHydro_Pri2Con
 
@@ -337,7 +320,7 @@ void SRHydro_Con2Flux (const int XYZ, real Flux[], const real Con[], const real 
 # if ( CONSERVED_ENERGY == 1 )
   Flux[4] = ConVar[1];
 # elif ( CONSERVED_ENERGY == 2 )
-  Flux[4] = ConVar[1] - Flux[0];
+  Flux[4] = ConVar[4] + PriVar[4]*Vx;
 # else
 # error: CONSERVED_ENERGY must be 1 or 2!
 # endif
