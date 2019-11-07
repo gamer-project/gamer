@@ -320,7 +320,7 @@ void SRHydro_Con2Flux (const int XYZ, real Flux[], const real Con[], const real 
 # if ( CONSERVED_ENERGY == 1 )
   Flux[4] = ConVar[1];
 # elif ( CONSERVED_ENERGY == 2 )
-  Flux[4] = ConVar[4] + PriVar[4]*Vx;
+  Flux[4] = ( ConVar[4] + PriVar[4] )*Vx;
 # else
 # error: CONSERVED_ENERGY must be 1 or 2!
 # endif
