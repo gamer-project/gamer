@@ -156,7 +156,6 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
     Flux_Out[2] = Fl[2];
     Flux_Out[3] = Fl[3];
     Flux_Out[4] = Fl[4];
-    Flux_Out[4] = Fl[4] - Fl[0];
 
     SRHydro_Rotate3D( Flux_Out, XYZ, false );
     return;
