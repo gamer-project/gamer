@@ -241,7 +241,7 @@ void SRHydro_Pri2Con (const T In[], T Out[], const T Gamma)
   Out[MOMY] = Factor0*In[2];
   Out[MOMZ] = Factor0*In[3];
 
-  Out[ENGY] = In[DENS]*( HTilde*LorentzFactor + Usqr / ( (real)1.0 + LorentzFactor )  ) - In[4];
+  Out[ENGY] = Out[DENS]*( HTilde*LorentzFactor + Usqr / ( (real)1.0 + LorentzFactor )  ) - In[4];
 
 }				// FUNCTION : SRHydro_Pri2Con
 
