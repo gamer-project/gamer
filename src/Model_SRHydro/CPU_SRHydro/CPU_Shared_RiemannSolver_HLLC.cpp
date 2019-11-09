@@ -183,36 +183,22 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
     return;
   }
 
-/* 5. Compute HLL flux using Mignone Eq 11 (necessary for computing lmdas (Eq 18)
- *    Compute HLL conserved quantities using Mignone eq 9
- */
-  ovlrmll = (real)1.0 / ( lmdar - lmdal );
-  lmdatlmda = lmdal*lmdar;
-
-
-  Fhll[0] = FMA( lmdatlmda, (CR[0] - CL[0]), FMA( lmdar, Fl[0], - lmdal*Fr[0] ) ) * ovlrmll;
-  Fhll[1] = FMA( lmdatlmda, (CR[1] - CL[1]), FMA( lmdar, Fl[1], - lmdal*Fr[1] ) ) * ovlrmll;
-  Fhll[2] = FMA( lmdatlmda, (CR[2] - CL[2]), FMA( lmdar, Fl[2], - lmdal*Fr[2] ) ) * ovlrmll;
-  Fhll[3] = FMA( lmdatlmda, (CR[3] - CL[3]), FMA( lmdar, Fl[3], - lmdal*Fr[3] ) ) * ovlrmll;
-  Fhll[4] = FMA( lmdatlmda, (CR[4] - CL[4]), FMA( lmdar, Fl[4], - lmdal*Fr[4] ) ) * ovlrmll;
-
-  Uhll[0] = ( FMA( lmdar, CR[0], Fl[0] ) - FMA( lmdal, CL[0], Fr[0] ) ) * ovlrmll;
-  Uhll[1] = ( FMA( lmdar, CR[1], Fl[1] ) - FMA( lmdal, CL[1], Fr[1] ) ) * ovlrmll;
-  Uhll[2] = ( FMA( lmdar, CR[2], Fl[2] ) - FMA( lmdal, CL[2], Fr[2] ) ) * ovlrmll;
-  Uhll[3] = ( FMA( lmdar, CR[3], Fl[3] ) - FMA( lmdal, CL[3], Fr[3] ) ) * ovlrmll;
-  Uhll[4] = ( FMA( lmdar, CR[4], Fl[4] ) - FMA( lmdal, CL[4], Fr[4] ) ) * ovlrmll;
-
-# ifdef CHECK_FAILED_CELL_IN_FLUID
-  SRHydro_CheckUnphysical(Uhll, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true);
-# endif
 
 /* 6. Compute contact wave speed using larger root from Mignone Eq 18
  *    Physical root is the root with the minus sign
  */
   /* quadratic formuLa calcuLation */
-  a = Fhll[4];
-  b = -(Uhll[4] + Fhll[1]);
-  c = Uhll[1];
+  a = lmdar * ( CL[1] - CL[0]*lmdal )
+    - lmdal * ( CR[1] - CR[0]*lmdar )
+	+ lmdal*lmdar*( CR[4] - CL[4] );
+
+  b = lmdal * CL[4] - ( CL[1] - CL[0]*lmdal )
+    - lmdar * CR[4] + ( CR[1] - CR[0]*lmdar )
+    + lmdal * ( CR[1]*rV1 + PR[4] )
+    - lmdar * ( CL[1]*lV1 + PL[4] )
+    - lmdal*lmdar*( CR[1] - CL[1] );
+
+  c = lmdar*CR[1] - lmdal*CL[1] - ( CR[1]*rV1 + PR[4] ) + ( CL[1]*lV1 + PL[4] );
 
   real delta = FMA( b, b, -(real)4*a*c );
 
@@ -222,13 +208,19 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
 
     lmdas = - ((real)2.0 * c) / ( b + SIGN(b) * SQRT( delta ) );
 
+	real ps;
+
+	ps = lmdas*( ( CR[4] + CR[0] )*( rV1 - lmdar ) + PR[4]*rV1 ) - CR[1]*(rV1 - lmdar) - PR[4];
+    ps /= ( lmdas*lmdar - (real)1.0 );
+
+	//ps = lmdas*( ( CL[4] + CL[0] )*( lV1 - lmdal ) + PL[4]*lV1 ) - CL[1]*(lV1 - lmdal) - PL[4];
+    //ps /= ( lmdas*lmdal - (real)1.0 );
+
 
  /* 7. Determine intercell flux according to Mignone 13
  */
     if( lmdas >= (real)0.0 ){ /* Fls */
 
-    /* Mignone 2006 Eq 48 */
-    ps = FMA( -Fhll[4], lmdas, Fhll[1]);
 
     /* now calculate Usl with Mignone Eq 16 */
     den = (real)1.0 / (lmdal - lmdas);
@@ -257,8 +249,6 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
     return;
   }
   else{ /* Frs */
-    /* Mignone 2006 Eq 48 */
-    ps = FMA( -Fhll[4], lmdas, Fhll[1] );
     /* now calculate Usr with Mignone Eq 16 */
     den = (real)1.0 / (lmdar - lmdas);
 
