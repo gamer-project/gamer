@@ -130,7 +130,7 @@ void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In
 #   if ( CONSERVED_ENERGY == 1 )
      Fl[4] = CL[1];
 #   elif ( CONSERVED_ENERGY == 2 )
-     Fl[4] = PL[1] * lFactor * ( CL[4] + PL[4] );
+     Fl[4] = lV1 * ( CL[4] + PL[4] );
 #   endif
 
      Fr[0] = CR[0] * rV1;
@@ -140,7 +140,7 @@ void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In
 #   if ( CONSERVED_ENERGY == 1 )
      Fr[4] = CR[1];
 #   elif ( CONSERVED_ENERGY == 2 )
-     Fr[4] = PR[1] * rFactor * ( CR[4] + PR[4] );
+     Fr[4] = rV1 * ( CR[4] + PR[4] );
 #   endif
  /* 7. Determine intercell flux according to Mignone 13
  */
