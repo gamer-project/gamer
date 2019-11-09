@@ -208,8 +208,6 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
 
     lmdas = - ((real)2.0 * c) / ( b + SIGN(b) * SQRT( delta ) );
 
-	real ps;
-
 	ps = lmdas*( ( CR[4] + CR[0] )*( rV1 - lmdar ) + PR[4]*rV1 ) - CR[1]*(rV1 - lmdar) - PR[4];
     ps /= ( lmdas*lmdar - (real)1.0 );
 
