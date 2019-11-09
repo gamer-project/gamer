@@ -43,10 +43,13 @@ void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In
   real PL[NCOMP_TOTAL], PR[NCOMP_TOTAL]; /* primitive vars. */
   real Fl[NCOMP_TOTAL], Fr[NCOMP_TOTAL];
   real Fhll[NCOMP_TOTAL];
-  
+ 
+# if ( EOS == CONSTANT_GAMMA ) 
   const real Gamma_m1 = Gamma - (real)1.0;
-  real rhl, rhr, cslsq, csrsq, vsql, vsqr, gammasql, gammasqr;
-  real ssl, ssr, radl, radr, lmdapl, lmdapr, lmdaml, lmdamr, lmdatlmda;
+# endif
+
+  real cslsq, csrsq, gammasql, gammasqr;
+  real ssl, ssr, lmdapl, lmdapr, lmdaml, lmdamr, lmdatlmda;
   real lmdal,lmdar; /* Left and Right wave speeds */
   real ovlrmll;
   real lV1, rV1, lV2, rV2, lV3, rV3;

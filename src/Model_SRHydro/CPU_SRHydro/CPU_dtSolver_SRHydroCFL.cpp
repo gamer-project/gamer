@@ -79,7 +79,7 @@ void CPU_dtSolver_SRHydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][NCOM
       CGPU_LOOP( t, CUBE(PS1) )
       {
          real fluid[NCOMP_FLUID], Pri[NCOMP_FLUID], Pri3Vel[NCOMP_FLUID];
-         real nh, Cs, Cs_sq, MaxV;
+         real Cs, Cs_sq, MaxV;
 
          for (int v=0; v<NCOMP_FLUID; v++)   fluid[v] = g_Flu_Array[p][v][t];
 

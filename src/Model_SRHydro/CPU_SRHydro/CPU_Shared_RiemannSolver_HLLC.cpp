@@ -40,7 +40,6 @@ GPU_DEVICE
 void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                  const real Gamma, const real MinTemp )
 {
-  real nhl, nhr;
 # if ( EOS ==  CONSTANT_GAMMA)
   const real Gamma_m1 = Gamma - (real)1.0;
 # endif
@@ -48,13 +47,11 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
   real CL[NCOMP_TOTAL], CR[NCOMP_TOTAL]; /* conserved vars. */
   real PL[NCOMP_TOTAL], PR[NCOMP_TOTAL]; /* primitive vars. */
   real Fl[NCOMP_TOTAL], Fr[NCOMP_TOTAL];
-  real Fhll[NCOMP_TOTAL], Uhll[NCOMP_TOTAL];
   real Usl[NCOMP_TOTAL], Usr[NCOMP_TOTAL];
   real cslsq, csrsq, gammasql, gammasqr;
   real ssl, ssr, lmdapl, lmdapr, lmdaml, lmdamr, lmdatlmda;
   real lmdal,lmdar; /* Left and Right wave speeds */
   real lmdas; /* Contact wave speed */
-  real ovlrmll;
   real a,b,c;
   real den,ps; /* Pressure in inner region */
   real lV1, rV1, lV2, rV2, lV3, rV3;
@@ -135,7 +132,6 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
    lmdal = FMIN(lmdaml, lmdamr); /* Mignone Eq 21 */
    lmdar = FMAX(lmdapl, lmdapr);
 
-    
 /* 4. compute HLL flux using Mignone Eq 11 (necessary for computing lmdas (Eq 18) 
  *    compute HLL conserved quantities using Mignone eq 9
  * */
@@ -187,16 +183,18 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
 /* 6. Compute contact wave speed using larger root from Mignone Eq 18
  *    Physical root is the root with the minus sign
  */
+   lmdatlmda = lmdal*lmdar; 
+
   /* quadratic formuLa calcuLation */
   a = lmdar * ( CL[1] - CL[0]*lmdal )
     - lmdal * ( CR[1] - CR[0]*lmdar )
-	+ lmdal*lmdar*( CR[4] - CL[4] );
+	+ lmdatlmda*( CR[4] - CL[4] );
 
   b = lmdal * CL[4] - ( CL[1] - CL[0]*lmdal )
     - lmdar * CR[4] + ( CR[1] - CR[0]*lmdar )
     + lmdal * ( CR[1]*rV1 + PR[4] )
     - lmdar * ( CL[1]*lV1 + PL[4] )
-    - lmdal*lmdar*( CR[1] - CL[1] );
+    - lmdatlmda*( CR[1] - CL[1] );
 
   c = lmdar*CR[1] - lmdal*CL[1] - ( CR[1]*rV1 + PR[4] ) + ( CL[1]*lV1 + PL[4] );
 
