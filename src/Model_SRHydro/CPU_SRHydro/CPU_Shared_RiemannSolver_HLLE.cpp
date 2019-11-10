@@ -44,9 +44,6 @@ void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In
   real Fl[NCOMP_TOTAL], Fr[NCOMP_TOTAL];
   real Fhll[NCOMP_TOTAL];
  
-# if ( EOS == CONSTANT_GAMMA ) 
-  const real Gamma_m1 = Gamma - (real)1.0;
-# endif
 
   real cslsq, csrsq, gammasql, gammasqr;
   real ssl, ssr, lmdapl, lmdapr, lmdaml, lmdamr, lmdatlmda;
