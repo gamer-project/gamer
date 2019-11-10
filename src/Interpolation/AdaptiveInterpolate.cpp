@@ -141,7 +141,7 @@ void AdaptiveInterpolate( real CData [], const int CSize[3], const int CStart[3]
 #                 if ( MODEL == HYDRO )
                   Hydro_Pri2Con( Prim, Cons, _Gamma_m1, NormPassive_No, NULL_INT, NULL );
 #                 elif ( MODEL == SR_HYDRO )
-                  SRHydro_Pri2Con(Prim, Cons, GAMMA);
+                  SRHydro_Pri2Con(Prim, Cons, (real)GAMMA);
 #                 else
 #                 error: ERROR!
 #                 endif
@@ -223,7 +223,7 @@ void AdaptiveInterpolate( real CData [], const int CSize[3], const int CStart[3]
 #                if ( MODEL == HYDRO )
                  Hydro_Pri2Con( Prim, Cons, _Gamma_m1, NormPassive_No, NULL_INT, NULL );
 #                elif ( MODEL == SR_HYDRO )
-                 SRHydro_Pri2Con(Prim, Cons, GAMMA);
+                 SRHydro_Pri2Con(Prim, Cons, (real)GAMMA);
 #                else
 #                error: ERROR!
 #                endif

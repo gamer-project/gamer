@@ -26,7 +26,7 @@ static real      Riemann_RhoR;         // right-state density
 static real      Riemann_VelR;         // right-state velocity
 static real      Riemann_VelR_T;       // right-state transverse velocity
 static real      Riemann_PreR;         // right-state pressure
-static double    Riemann_EndT;         // end physical time
+static real      Riemann_EndT;         // end physical time
 static int       Riemann_LR;           // wave propagation direction (>0/<0 --> positive/negative direction)
 static int       Riemann_XYZ;          // wave propagation direction (0/1/2 --> x/y/z)
 // =======================================================================================
