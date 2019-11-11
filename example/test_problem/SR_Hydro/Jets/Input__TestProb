@@ -32,6 +32,7 @@ Jet0_CenOffset_z    +0.0          # jet 0: jet central coordinates offset z (in 
 #Jet1_CenOffset_z    +0.21        # jet 1: jet central coordinates offset z (in kpc)
 #
 Jet_HSE              1           # hydrostatic equilibrium background
+Jet_HSE_Radius      71           # for Jet_HSE: radius of hydrostatic equilibrium halo  (in kpc)
 Jet_HSE_Dx           0.0         # for Jet_HSE: distance between box and cluster centre (in kpc)
 Jet_HSE_Dy           0.0         # for Jet_HSE: distance between box and cluster centre (in kpc)
 Jet_HSE_Dz           0.0         # for Jet_HSE: distance between box and cluster centre (in kpc)
