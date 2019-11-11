@@ -105,6 +105,14 @@ real SRHydro_GetHTilde( const real Con[], real Gamma )
 # error: CONSERVED_ENERGY must be 1 or 2!
 # endif
 # elif ( EOS == CONSTANT_GAMMA )
+# if   ( CONSERVED_ENERGY == 1 )
+# elif ( CONSERVED_ENERGY == 2 )
+  real Constant = E_Dsqr - M_Dsqr + (real)2.0 * E_D;
+
+  guess = (real)5.0*Constant/(real)6.0;
+# else
+# error: CONSERVED_ENERGY must be 1 or 2!
+# endif
 # endif
  
   void (*FunPtr)( real HTilde, real M_Dsqr, real Constant, real *Fun, real *DiffFun, real Gamma ) = &SRHydro_HTilde_Function;
@@ -753,9 +761,27 @@ void SRHydro_HTilde_Function (real HTilde, real M_Dsqr, real Constant, real *Fun
 # endif
 
 # elif ( EOS == CONSTANT_GAMMA )
+  SRHydro_HTilde2Temperature ( HTilde, &Temp, &DiffTemp );
+
+
 # if   (CONSERVED_ENERGY == 1)
 # elif (CONSERVED_ENERGY == 2)
+  real H =  HTilde + (real)1.0;
+  real Factor0 = SQR( H ) + M_Dsqr;
+
+  if ( Fun != NULL )
+
+  *Fun = SQR( HTilde ) + (real)2.0*HTilde - (real)2.0*Temp - (real)2.0*Temp*HTilde
+		  + SQR( Temp * H ) / Factor0 + Constant;
+
+  if ( DiffFun != NULL )
+
+  *DiffFun = (real)2.0*H - (real)2.0*Temp - (real)2.0*H*DiffTemp +
+		  ( (real)2.0*Temp*DiffTemp*H*H - (real)2.0*Temp*Temp*H ) / SQR( Factor0 );
+# else
+# error: CONSERVED_ENERGY must be 1 or 2!
 # endif
+
 # else
 # error: unsupported EoS!
 # endif // #if ( EOS == APPROXIMATED_GENERAL )
