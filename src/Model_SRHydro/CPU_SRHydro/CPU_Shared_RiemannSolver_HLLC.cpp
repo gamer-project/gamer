@@ -40,9 +40,6 @@ GPU_DEVICE
 void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                  const real Gamma, const real MinTemp )
 {
-# if ( EOS ==  CONSTANT_GAMMA)
-  const real Gamma_m1 = Gamma - (real)1.0;
-# endif
 
   real CL[NCOMP_TOTAL], CR[NCOMP_TOTAL]; /* conserved vars. */
   real PL[NCOMP_TOTAL], PR[NCOMP_TOTAL]; /* primitive vars. */
