@@ -177,6 +177,8 @@ void SetParameter()
 // (1-2) check runtime parameters
    if ( Jet_HSE )
    {
+      if ( OPT__FLAG_REGION ) Aux_Error( ERROR_INFO, "OPT__FLAG_REGION must be enabled !!\n" );
+
       if ( Jet_HSE_Radius == NULL_REAL ) Aux_Error( ERROR_INFO, "Jet_HSE_Radius = %e !!\n" );
 
       if ( Jet_HSE_Radius >= 0.5*amr->BoxSize[0] || 
