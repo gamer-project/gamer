@@ -56,7 +56,7 @@ real SRHydro_KineticEngy( real Con[], real Pri[], real Lorentz, real Gamma );
 real SoundSpeedSquare( real Temp, real Gamma );
 
 real SRHydro_CheckMinTemp (const real InTemp, const real MinTemp);
-
+real SRHydro_Temperature2HTilde (const real Temperature );
 
 real SRHydro_CheckMinTempInEngy (const real Con[], const real MinTemp, const real Gamma);
 

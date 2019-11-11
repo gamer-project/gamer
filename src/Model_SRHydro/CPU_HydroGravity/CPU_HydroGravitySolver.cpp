@@ -375,6 +375,7 @@ void CPU_HydroGravitySolver(
 
 
 //       update the total energy density
+#        if (  CONSERVED_ENERGY == 1 )
          Const3_old = LorentzFactor_old * ( n_old + P_old );
          Const3_new = LorentzFactor_new * ( n_new + P_new );
 
@@ -382,6 +383,11 @@ void CPU_HydroGravitySolver(
          Con_new[ENGY] += Const3_new * ( Ux_new * acc_new[0] + Uy_new * acc_new[1] + Uz_new * acc_new[2] );
 
          Con_new[ENGY] *= (real)0.5;
+#        elif ( CONSERVED_ENERGY == 2 )
+#        error: MODIFY __FUNCTION__!
+#        else
+#        error: CONSERVED_ENERGY must be 1 or 2!
+#        endif
 
 #        else  // #ifdef UNSPLIT_GRAVITY
 
@@ -401,11 +407,22 @@ void CPU_HydroGravitySolver(
 //         Con_new[ENGY] += Const3_new * ( Ux_new * acc_new[0] + Uy_new * acc_new[1] + Uz_new * acc_new[2] );
 
 //       4. update the total energy density ( assuming temperature is unchanged under gravity )
-         real h = SpecificEnthalpy( NULL, Temperature, (real)1.333333333 );
 		 real Msqr = SQR(Con_new[MOMX]) + SQR(Con_new[MOMY]) + SQR(Con_new[MOMZ]);
+
+#        if (  CONSERVED_ENERGY == 1 )
+         real h = SpecificEnthalpy( NULL, Temperature, (real)1.333333333 );
 		 real Dh = Con_new[DENS]*h;
          real factor = SQRT(Dh*Dh + Msqr);
 		 Con_new[ENGY] = factor -  Con_new[DENS] * Dh * Temperature / factor;
+#        elif ( CONSERVED_ENERGY == 2 )
+		 real Dsqr = SQR(Con_new[DENS]);
+         real HTilde = SRHydro_Temperature2HTilde( Temperature );
+		 real h = HTilde + (real)1.0;
+		 real factor = SQRT( Dsqr*h*h + Msqr );
+		 Con_new[ENGY]  = Dsqr * SQR(HTilde) + (real)2.0*HTilde*Dsqr + Msqr;
+	     Con_new[ENGY] /= ( factor + Con_new[DENS] );
+		 Con_new[ENGY] -= Dsqr*h*Temperature / factor;
+#        endif
 
 
 #        endif // #ifdef UNSPLIT_GRAVITY ... else ...
