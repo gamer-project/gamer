@@ -280,9 +280,9 @@ void SetParameter()
       Aux_Message( stdout, "  test problem ID      = %d\n",              TESTPROB_ID                                        );
       Aux_Message( stdout, "  Jet_BgDens           = % 14.7e g/cm^3\n",  Jet_BgDens*UNIT_D                                  );
       Aux_Message( stdout, "  Jet_BgTemp           = % 14.7e keV\n",     Jet_BgTemp*Const_mp*SQR(Const_c)/Const_keV         );
-      Aux_Message( stdout, "  Jet_BgVel[x]         = % 14.7e c\n",       Jet_BgVel[0]*UNIT_V                                );
-      Aux_Message( stdout, "  Jet_BgVel[y]         = % 14.7e c\n",       Jet_BgVel[1]*UNIT_V                                );
-      Aux_Message( stdout, "  Jet_BgVel[z]         = % 14.7e c\n",       Jet_BgVel[2]*UNIT_V                                );
+      Aux_Message( stdout, "  Jet_BgVel[x]         = % 14.7e c\n",       Jet_BgVel[0]                                       );
+      Aux_Message( stdout, "  Jet_BgVel[y]         = % 14.7e c\n",       Jet_BgVel[1]                                       );
+      Aux_Message( stdout, "  Jet_BgVel[z]         = % 14.7e c\n",       Jet_BgVel[2]                                       );
       Aux_Message( stdout, "  Jet_NJet             = %d\n",              Jet_NJet                                           );
       if ( Jet_HSE ) {
       Aux_Message( stdout, "  Jet_HSE              = %d\n",              Jet_HSE                                            );
@@ -296,7 +296,7 @@ void SetParameter()
       Aux_Message( stdout, "  Jet # %d:\n", n );
       Aux_Message( stdout, "  Jet_Radius           = % 14.7e kpc\n",     Jet_Radius    [n]*UNIT_L/Const_kpc                 );
       Aux_Message( stdout, "  Jet_HalfHeight       = % 14.7e kpc\n",     Jet_HalfHeight[n]*UNIT_L/Const_kpc                 );
-      Aux_Message( stdout, "  Jet_SrcVel           = % 14.7e c\n",       Jet_SrcVel    [n]*UNIT_V                           );
+      Aux_Message( stdout, "  Jet_SrcVel           = % 14.7e c\n",       Jet_SrcVel    [n]                                  );
       Aux_Message( stdout, "  Jet_SrcDens          = % 14.7e g/cm^3\n",  Jet_SrcDens   [n]*UNIT_D                           );
       Aux_Message( stdout, "  Jet_SrcTemp          = % 14.7e keV\n",     Jet_SrcTemp   [n]*Const_mp*SQR(Const_c)/Const_keV  );
       Aux_Message( stdout, "  Jet_Vec[x]           = % 14.7e\n",         Jet_Vec       [n][0]                               );
