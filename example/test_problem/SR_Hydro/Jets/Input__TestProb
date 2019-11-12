@@ -2,7 +2,7 @@
 Jet_NJet             1            # number of jets (1/2)
 
 Jet_BgDens       5.0e-29          # ambient density (in cgs units)
-Jet_BgTemp           0.1          # ambient temperature (in GeV)
+Jet_BgTemp           1.0          # ambient temperature (in keV)
 Jet_BgVel_x         +0.0          # ambient velocity x (in cgs units) [0.0]
 Jet_BgVel_y         +0.0          # ambient velocity y (in cgs units) [0.0]
 Jet_BgVel_z         +0.0          # ambient velocity z (in cgs units) [0.0]
@@ -11,7 +11,7 @@ Jet0_Radius          0.5          # jet 0: radius of the cylinder-shape jet sour
 Jet0_HalfHeight      0.5          # jet 0: half height of the cylinder-shape jet source (in kpc)
 Jet0_SrcVel          10           # jet 0: jet 4-velocity ( in unit of speed of light )
 Jet0_SrcDens     5.0e-30          # jet 0: jet density (in cgs units)
-Jet0_SrcTemp         1.0          # jet 0: jet temperature (in GeV)
+Jet0_SrcTemp         1e6          # jet 0: jet temperature (in keV)
 Jet0_Vec_x          +1.0          # jet 0: jet orientation vector x (x,y,z don't have to be a unit vector)
 Jet0_Vec_y          +0.0          # jet 0: jet orientation vector y
 Jet0_Vec_z          +0.0          # jet 0: jet orientation vector z
