@@ -85,7 +85,7 @@ void SRHydro_HTilde2Temperature (const real HTilde, real *Temp, real *DiffTemp )
 GPU_DEVICE
 real SRHydro_GetHTilde( const real Con[], real Gamma )
 {
-  real HTilde, guess;
+  real HTilde, guess, Discrimination, Constant;
 
   real Msqr = VectorDotProduct(Con[1], Con[2], Con[3]);
   real Dsqr = SQR(Con[0]);
@@ -96,18 +96,40 @@ real SRHydro_GetHTilde( const real Con[], real Gamma )
   real M_D = SQRT( M_Dsqr );
   
 # if ( EOS == APPROXIMATED_GENERAL )
-# if   ( CONSERVED_ENERGY == 1 )
-# elif ( CONSERVED_ENERGY == 2 )
-  real Constant = E_Dsqr - M_Dsqr + (real)2.0 * E_D;
+  real A = (real)437.0 * M_Dsqr + (real)117.0;
+  real B = (real)1.0 + M_Dsqr;
+  real C = (real)43.0*M_Dsqr + (real)63.0;
 
-  guess = (real)5.0*Constant/(real)6.0;
+  Discrimination  = (real)3240000.0 * SQR( B );
+  Discrimination /= SQR( A );
+
+# if   ( CONSERVED_ENERGY == 1 )
+  
+
+
+# elif ( CONSERVED_ENERGY == 2 )
+  Constant = E_Dsqr - M_Dsqr + (real)2.0 * E_D;
+
+
+  if ( Constant >= Discrimination )
+  {
+     guess = (real)1.3333333 * SQRT( Constant );
+  }
+  else
+  {
+     guess  = (real)11.18 * SQRT( B*C*Constant + (real)45.0*B*B );
+	 guess -= (real)75.0 * B;
+	 guess /= C;
+  }
+
+
 # else
 # error: CONSERVED_ENERGY must be 1 or 2!
 # endif
 # elif ( EOS == CONSTANT_GAMMA )
 # if   ( CONSERVED_ENERGY == 1 )
 # elif ( CONSERVED_ENERGY == 2 )
-  real Constant = E_Dsqr - M_Dsqr + (real)2.0 * E_D;
+  Constant = E_Dsqr - M_Dsqr + (real)2.0 * E_D;
 
   guess = (real)5.0*Constant/(real)6.0;
 # else
@@ -218,7 +240,14 @@ real SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real 
 
    Out[0] = In[DENS] / LorentzFactor;
 
-   Out[4] = In[DENS]*( HTilde*LorentzFactor + Usqr / ( (real)1.0 + LorentzFactor )  ) - In[ENGY];
+// Method 1:
+   //Out[4] = In[DENS]*( HTilde*LorentzFactor + Usqr / ( (real)1.0 + LorentzFactor )  ) - In[ENGY];
+
+// Method 2:
+   real Temperature;
+   SRHydro_HTilde2Temperature ( HTilde, &Temperature, NULL );
+
+   Out[4] = Out[0] * Temperature;
 
    return LorentzFactor;
 }// FUNCTION : SRHydro_Con2Pri
@@ -249,7 +278,18 @@ void SRHydro_Pri2Con (const T In[], T Out[], const T Gamma)
   Out[MOMY] = Factor0*In[2];
   Out[MOMZ] = Factor0*In[3];
 
-  Out[ENGY] = Out[DENS]*( HTilde*LorentzFactor + Usqr / ( (real)1.0 + LorentzFactor )  ) - In[4];
+// Method 1:
+  //Out[ENGY] = Out[DENS]*( HTilde*LorentzFactor + Usqr / ( (real)1.0 + LorentzFactor )  ) - In[4];
+
+// Method 2:  
+  real M_Dsqr = VectorDotProduct( Out[MOMX], Out[MOMY], Out[MOMZ] ) / SQR( Out[DENS] );
+  real Fun;
+
+  SRHydro_HTilde_Function( HTilde, M_Dsqr, (real)0.0, &Fun, NULL, Gamma );
+
+  Out[ENGY] = ( M_Dsqr + Fun ) / ( (real)1.0 + SQRT( (real)1.0 + M_Dsqr + Fun ) );
+  Out[ENGY] *= Out[DENS];
+
 
 }				// FUNCTION : SRHydro_Pri2Con
 
