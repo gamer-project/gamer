@@ -390,10 +390,10 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
          {
             if ( LogBin )
 //             Prof->MaxRadius = dr_min*pow( LogBinRatio, Prof->NBin-1 );
-               Prof[i]->MaxRadius = SQR( Prof->Radius[b - 1] ) / Prof->Radius[b - 2];
+               Prof[i]->MaxRadius = SQR( Prof[i]->Radius[b - 1] ) / Prof[i]->Radius[b - 2];
             else
 //             Prof->MaxRadius = dr_min*Prof->NBin;
-               Prof[i]->MaxRadius = 2.0 * Prof->Radius[b - 1]  - Prof->Radius[b - 2];
+               Prof[i]->MaxRadius = 2.0 * Prof[i]->Radius[b - 1]  - Prof[i]->Radius[b - 2];
          }
       }
 
