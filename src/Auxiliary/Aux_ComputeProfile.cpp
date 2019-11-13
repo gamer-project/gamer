@@ -377,7 +377,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
 //    reset the total number of bins
       for (int i=0; i<NProf; i++)
-         Prof[i]->NBin --;
+         Prof[i]->NBin -= stride;
 
 //    reset the maximum radius if we are removing the last bin
       if ( b == Prof[0]->NBin )
