@@ -450,7 +450,7 @@ GPU_DEVICE
 bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gamma, const real MinTemp, const char s[], const int line, bool show )
 {
    real discriminant;
-   real Msqr;
+   real Msqr, M, E_D, M_D;
    real ConsVar[NCOMP_FLUID];
    real Pri4Vel[NCOMP_FLUID];
    real Pri3Vel[NCOMP_FLUID];
@@ -483,12 +483,16 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
 
 // check energy
       Msqr = VectorDotProduct( ConsVar[MOMX], ConsVar[MOMY], ConsVar[MOMZ] );
+      M = SQRT( Msqr );
+	  E_D = ConsVar[ENGY] / ConsVar[DENS];
+	  M_D = M / ConsVar[DENS];
 #     if ( CONSERVED_ENERGY == 1 )
-      discriminant = ( SQR( ConsVar[ENGY] ) -  Msqr ) / SQR ( ConsVar[DENS] );
+	  // (x+y)(x-y) is more accurate than x**2-y**2
+      discriminant = ( E_D + M_D ) * ( E_D - M_D );
       if ( discriminant <= (real)1.0 )                                                        goto FAIL;
 #     elif ( CONSERVED_ENERGY == 2 )
-      discriminant = SQR(ConsVar[ENGY]/ConsVar[DENS]) + (real)2*(ConsVar[ENGY]/ConsVar[DENS]) - Msqr/SQR(ConsVar[DENS]);
-      if ( discriminant <= TINY_NUMBER )                                                   goto FAIL;
+      discriminant = ( E_D + M_D ) * ( E_D - M_D ) + (real)2.0 * E_D;
+      if ( discriminant <= TINY_NUMBER )                                                      goto FAIL;
 #     else
 #     error: CONSERVED_ENERGY must be 1 or 2!
 #     endif
@@ -566,10 +570,11 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
 // check energy
       Msqr = VectorDotProduct( ConsVar[MOMX], ConsVar[MOMY], ConsVar[MOMZ] );
 #     if ( CONSERVED_ENERGY == 1 )
-      discriminant = ( SQR( ConsVar[ENGY] ) - Msqr ) / SQR ( ConsVar[DENS] );
+	  // (x+y)(x-y) is more accurate than x**2-y**2
+      discriminant = ( E_D + M_D ) * ( E_D - M_D );
       if ( discriminant <= (real)1.0 )                                                   goto FAIL;
 #     elif ( CONSERVED_ENERGY == 2 )
-      discriminant = SQR(ConsVar[ENGY]/ConsVar[DENS]) + (real)2*(ConsVar[ENGY]/ConsVar[DENS]) - Msqr/SQR(ConsVar[DENS]);
+      discriminant = ( E_D + M_D ) * ( E_D - M_D ) + (real)2.0 * E_D;
       if ( discriminant <= TINY_NUMBER )                                                   goto FAIL;
 #     else
 #     error: CONSERVED_ENERGY must be 1 or 2!
