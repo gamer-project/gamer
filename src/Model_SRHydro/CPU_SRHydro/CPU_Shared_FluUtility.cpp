@@ -108,6 +108,7 @@ real SRHydro_GetHTilde( const real Con[], real Gamma )
 
 
 # elif ( CONSERVED_ENERGY == 2 )
+  // (x+y)(x-y) is more accurate than x**2-y**2
   Constant = (E_D + M_D) * (E_D - M_D) + (real)2.0 * E_D;
 
 
