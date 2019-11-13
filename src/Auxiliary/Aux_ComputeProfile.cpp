@@ -66,7 +66,8 @@ static const int PRESSURE      = 99;
 // Return      :  Prof
 //-------------------------------------------------------------------------------------------------------
 void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double r_max_input, const double dr_min,
-                         const bool LogBin, const double LogBinRatio, const bool RemoveEmpty, const int Quantity[] )
+                         const bool LogBin, const double LogBinRatio, const bool RemoveEmpty, const int Quantity[],
+                         const int NProf );
 {
 
 // check
@@ -80,10 +81,6 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
    if ( LogBin  &&  LogBinRatio <= 1.0 )
       Aux_Error( ERROR_INFO, "LogBinRatio (%14.7e) <= 1.0 !!\n", LogBinRatio );
 #  endif
-
-
-// get the number of profile
-   const int NProf = sizeof(Quantity) / sizeof(int);
 
 
    for (int i=0; i<NProf; i++)
