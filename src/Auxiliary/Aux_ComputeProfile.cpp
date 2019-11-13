@@ -65,8 +65,8 @@ static const int PRESSURE      = 99;
 //
 // Return      :  Prof
 //-------------------------------------------------------------------------------------------------------
-void Aux_ComputeProfile( Profile_t *Prof, const double Center[], const double r_max_input, const double dr_min,
-                         const bool LogBin, const double LogBinRatio, const bool RemoveEmpty, const int Quantity )
+void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double r_max_input, const double dr_min,
+                         const bool LogBin, const double LogBinRatio, const bool RemoveEmpty, const int Quantity[] )
 {
 
 // check
@@ -82,37 +82,47 @@ void Aux_ComputeProfile( Profile_t *Prof, const double Center[], const double r_
 #  endif
 
 
-// get the total number of radial bins and the corresponding maximum radius
-   if ( LogBin )
+// get the number of profile
+   NProf = sizeof(Quantity) / sizeof(int);
+
+
+   for (int i=0; i<NProf; i++)
    {
-      Prof->NBin      = int( log(r_max_input/dr_min)/log(LogBinRatio) ) + 2;
-      Prof->MaxRadius = dr_min*pow( LogBinRatio, Prof->NBin-1 );
-   }
 
-   else // linear bin
-   {
-      Prof->NBin      = (int)ceil( r_max_input / dr_min );
-      Prof->MaxRadius = dr_min*Prof->NBin;
-   }
+//    get the total number of radial bins and the corresponding maximum radius
+      if ( LogBin )
+      {
+         Prof[i]->NBin      = int( log(r_max_input/dr_min)/log(LogBinRatio) ) + 2;
+         Prof[i]->MaxRadius = dr_min*pow( LogBinRatio, Prof->NBin-1 );
+      }
 
-
-// record profile parameters
-   for (int d=0; d<3; d++)    Prof->Center[d] = Center[d];
-
-   Prof->LogBin = LogBin;
-
-   if ( LogBin )  Prof->LogBinRatio = LogBinRatio;
+      else // linear bin
+      {
+         Prof[i]->NBin      = (int)ceil( r_max_input / dr_min );
+         Prof[i]->MaxRadius = dr_min*Prof->NBin;
+      }
 
 
-// allocate all member arrays of Prof
-   Prof->AllocateMemory();
+//    record profile parameters
+
+      for (int d=0; d<3; d++)    Prof[i]->Center[d] = Center[d];
+
+      Prof[i]->LogBin = LogBin;
+
+      if ( LogBin )  Prof[i]->LogBinRatio = LogBinRatio;
 
 
-// record radial coordinates
-   if ( LogBin )
-      for (int b=0; b<Prof->NBin; b++)    Prof->Radius[b] = dr_min*pow( LogBinRatio, b-0.5 );
-   else
-      for (int b=0; b<Prof->NBin; b++)    Prof->Radius[b] = (b+0.5)*dr_min;
+//    allocate all member arrays of Prof
+      Prof[i]->AllocateMemory();
+
+
+//    record radial coordinates
+      if ( LogBin )
+         for (int b=0; b<Prof->NBin; b++)    Prof[i]->Radius[b] = dr_min*pow( LogBinRatio, b-0.5 );
+      else
+         for (int b=0; b<Prof->NBin; b++)    Prof[i]->Radius[b] = (b+0.5)*dr_min;
+
+   } // for (int i=0; i<NProf; i++)
 
 
 // allocate memory for per-thread arrays
@@ -125,9 +135,9 @@ void Aux_ComputeProfile( Profile_t *Prof, const double Center[], const double r_
    double **OMP_Data=NULL, **OMP_Weight=NULL;
    long   **OMP_NCell=NULL;
 
-   Aux_AllocateArray2D( OMP_Data,   NT, Prof->NBin );
-   Aux_AllocateArray2D( OMP_Weight, NT, Prof->NBin );
-   Aux_AllocateArray2D( OMP_NCell,  NT, Prof->NBin );
+   Aux_AllocateArray3D( OMP_Data,   NProf, NT, Prof->NBin );
+   Aux_AllocateArray3D( OMP_Weight, NProf, NT, Prof->NBin );
+   Aux_AllocateArray3D( OMP_NCell,  NProf, NT, Prof->NBin );
 
 
 // collect profile dat in this rank
@@ -142,11 +152,12 @@ void Aux_ComputeProfile( Profile_t *Prof, const double Center[], const double r_
 #     endif
 
 //    initialize arrays
+      for (int i=0; i<NProf; i++)
       for (int b=0; b<Prof->NBin; b++)
       {
-         OMP_Data  [TID][b] = 0.0;
-         OMP_Weight[TID][b] = 0.0;
-         OMP_NCell [TID][b] = 0;
+         OMP_Data  [i][TID][b] = 0.0;
+         OMP_Weight[i][TID][b] = 0.0;
+         OMP_NCell [i][TID][b] = 0;
       }
 
       for (int lv=0; lv<NLEVEL; lv++)
@@ -182,68 +193,73 @@ void Aux_ComputeProfile( Profile_t *Prof, const double Center[], const double r_
                   if ( bin < 0 )    Aux_Error( ERROR_INFO, "bin (%d) < 0 !!\n", bin );
 #                 endif
 
-//                user-specified quantity; for case of MODEL = HYDRO
-                  switch ( Quantity )
+                  for (int i=0; i<NProf; i++)
                   {
-                     case DENS:
-                     case ENGY:
-                     case MOMX:
-                     case MOMY:
-                     case MOMZ:
+                     const int quant = Quantity[i];
+
+//                   user-specified quantity; for case of MODEL = HYDRO
+                     switch ( quant )
                      {
-                        OMP_Data  [TID][bin] += amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[Quantity][k][j][i]*dv;
-                        OMP_Weight[TID][bin] += dv;
-                     }
-                     break;
+                        case DENS:
+                        case ENGY:
+                        case MOMX:
+                        case MOMY:
+                        case MOMZ:
+                        {
+                           OMP_Data  [i][TID][bin] += amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[quant][k][j][i]*dv;
+                           OMP_Weight[i][TID][bin] += dv;
+                        }
+                        break;
 
-                     case VRAD:
-                     {
-                        const double Phi      = ATAN2(dy, dx);
-                        const double cosPhi   = COS(Phi);
-                        const double sinPhi   = SIN(Phi);
-                        const double cosTheta = dz / r;
-                        const double sinTheta = SQRT(1. - SQR(cosTheta));
+                        case VRAD:
+                        {
+                           const double Phi      = ATAN2(dy, dx);
+                           const double cosPhi   = COS(Phi);
+                           const double sinPhi   = SIN(Phi);
+                           const double cosTheta = dz / r;
+                           const double sinTheta = SQRT(1. - SQR(cosTheta));
 
-                        const double MomRad = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMX][k][j][i]*sinTheta*cosPhi
-                                            + amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMY][k][j][i]*sinTheta*sinPhi
-                                            + amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMZ][k][j][i]*cosTheta;
+                           const double MomRad = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMX][k][j][i]*sinTheta*cosPhi
+                                               + amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMY][k][j][i]*sinTheta*sinPhi
+                                               + amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMZ][k][j][i]*cosTheta;
 
-                        OMP_Data  [TID][bin] += MomRad*dv;
-                        OMP_Weight[TID][bin] += amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i]*dv;
-                     }
-                     break;
+                           OMP_Data  [i][TID][bin] += MomRad*dv;
+                           OMP_Weight[i][TID][bin] += amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i]*dv;
+                        }
+                        break;
 
-                     case PRESSURE:
-                     {
-                        const double Pres = Hydro_GetPressure(amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i],
-                                                              amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMX][k][j][i],
-                                                              amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMY][k][j][i],
-                                                              amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMZ][k][j][i],
-                                                              amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ENGY][k][j][i],
-                                                              GAMMA - (real)1.0, false, NULL_REAL);
-                        OMP_Data  [TID][bin] += Pres*dv;
-                        OMP_Weight[TID][bin] += dv;
-                     }
-                     break;
+                        case PRESSURE:
+                        {
+                           const double Pres = Hydro_GetPressure(amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i],
+                                                                 amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMX][k][j][i],
+                                                                 amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMY][k][j][i],
+                                                                 amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMZ][k][j][i],
+                                                                 amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ENGY][k][j][i],
+                                                                 GAMMA - (real)1.0, false, NULL_REAL);
+                           OMP_Data  [i][TID][bin] += Pres*dv;
+                           OMP_Weight[i][TID][bin] += dv;
+                        }
+                        break;
 
-                     case INTERNAL_ENGY:
-                     {
-                        const double intengy =              amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ENGY][k][j][i]
-                                             - 0.5 * ( SQR( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMX][k][j][i] )
-                                                     + SQR( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMY][k][j][i] )
-                                                     + SQR( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMZ][k][j][i] ) )
-                                             /              amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i];
+                        case INTERNAL_ENGY:
+                        {
+                           const double intengy =              amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ENGY][k][j][i]
+                                                - 0.5 * ( SQR( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMX][k][j][i] )
+                                                        + SQR( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMY][k][j][i] )
+                                                        + SQR( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMZ][k][j][i] ) )
+                                                /              amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i];
 
-                        OMP_Data  [TID][bin] += intengy*dv;
-                        OMP_Weight[TID][bin] += dv;
-                     }
-                     break;
+                           OMP_Data  [i][TID][bin] += intengy*dv;
+                           OMP_Weight[i][TID][bin] += dv;
+                        }
+                        break;
 
-                     default:
-                        Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "Quantity", Quantity );
-                  } // switch ( Quantity )
+                        default:
+                           Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "Quantity", quant );
+                     } // switch ( quant )
 
-                  OMP_NCell [TID][bin] ++;
+                     OMP_NCell[i][TID][bin] ++;
+                  } // for (int i=0; i<NProf; i++)
                } // if ( r2 < r_max2 )
             }}} // i,j,k
          } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
@@ -252,107 +268,133 @@ void Aux_ComputeProfile( Profile_t *Prof, const double Center[], const double r_
 
 
 // sum over all OpenMP threads
-   for (int b=0; b<Prof->NBin; b++)
+   for (int i=0; i<NProf; i++)
    {
-      Prof->Data  [b]  = OMP_Data  [0][b];
-      Prof->Weight[b]  = OMP_Weight[0][b];
-      Prof->NCell [b]  = OMP_NCell [0][b];
-   }
+      for (int b=0; b<Prof->NBin; b++)
+      {
+         Prof[i]->Data  [b]  = OMP_Data  [0][b];
+         Prof[i]->Weight[b]  = OMP_Weight[0][b];
+         Prof[i]->NCell [b]  = OMP_NCell [0][b];
+      }
 
-   for (int t=1; t<NT; t++)
-   for (int b=0; b<Prof->NBin; b++)
-   {
-      Prof->Data  [b] += OMP_Data  [t][b];
-      Prof->Weight[b] += OMP_Weight[t][b];
-      Prof->NCell [b] += OMP_NCell [t][b];
+      for (int t=1; t<NT; t++)
+      for (int b=0; b<Prof->NBin; b++)
+      {
+         Prof[i]->Data  [b] += OMP_Data  [t][b];
+         Prof[i]->Weight[b] += OMP_Weight[t][b];
+         Prof[i]->NCell [b] += OMP_NCell [t][b];
+      }
    }
-
 
 // free per-thread arrays
-   Aux_DeallocateArray2D( OMP_Data );
-   Aux_DeallocateArray2D( OMP_Weight );
-   Aux_DeallocateArray2D( OMP_NCell );
+   Aux_DeallocateArray3D( OMP_Data );
+   Aux_DeallocateArray3D( OMP_Weight );
+   Aux_DeallocateArray3D( OMP_NCell );
 
 
 // collect data from all ranks (in-place reduction)
 #  ifndef SERIAL
-   if ( MPI_Rank == 0 )
+   for (int i=0; i<NProf; i++)
    {
-      MPI_Reduce( MPI_IN_PLACE, Prof->Data,   Prof->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-      MPI_Reduce( MPI_IN_PLACE, Prof->Weight, Prof->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-      MPI_Reduce( MPI_IN_PLACE, Prof->NCell , Prof->NBin, MPI_LONG,   MPI_SUM, 0, MPI_COMM_WORLD );
-   }
+      if ( MPI_Rank == 0 )
+      {
+         MPI_Reduce( MPI_IN_PLACE, Prof[i]->Data,   Prof[i]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+         MPI_Reduce( MPI_IN_PLACE, Prof[i]->Weight, Prof[i]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+         MPI_Reduce( MPI_IN_PLACE, Prof[i]->NCell , Prof[i]->NBin, MPI_LONG,   MPI_SUM, 0, MPI_COMM_WORLD );
+      }
 
-   else
-   {
-      MPI_Reduce( Prof->Data,   NULL,         Prof->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-      MPI_Reduce( Prof->Weight, NULL,         Prof->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-      MPI_Reduce( Prof->NCell,  NULL,         Prof->NBin, MPI_LONG,   MPI_SUM, 0, MPI_COMM_WORLD );
+      else
+      {
+         MPI_Reduce( Prof->Data,   NULL,            Prof[i]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+         MPI_Reduce( Prof->Weight, NULL,            Prof[i]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+         MPI_Reduce( Prof->NCell,  NULL,            Prof[i]->NBin, MPI_LONG,   MPI_SUM, 0, MPI_COMM_WORLD );
+      }
    }
 #  endif
 
 
 // compute profile by the root rank
    if ( MPI_Rank == 0 )
-   for (int b=0; b<Prof->NBin; b++)
    {
-//    skip empty bins since both their data and weight are zero
-      if ( Prof->NCell[b] > 0L )
-         switch ( Quantity )
-         {
-            case DENS         :
-            case ENGY         :
-            case MOMX         :
-            case MOMY         :
-            case MOMZ         :
-            case PRESSURE     :
-            case INTERNAL_ENGY:
-               Prof->Data[b] /= Prof->Weight[b];
-            break;
+      for (int i=0; i<NProf; i++)
+      for (int b=0; b<Prof->NBin; b++)
+      {
+//       skip empty bins since both their data and weight are zero
+         if ( Prof[i]->NCell[b] > 0L )
+            switch ( Quantity[i] )
+            {
+               case DENS         :
+               case ENGY         :
+               case MOMX         :
+               case MOMY         :
+               case MOMZ         :
+               case PRESSURE     :
+               case INTERNAL_ENGY:
+                  Prof[i]->Data[b] /= Prof[i]->Weight[b];
+               break;
 
-            case VRAD:
-//             Avoid division by zero when denisty is zero
-               if ( Prof->Weight[b] > 0.0 )   Prof->Data[b] /= Prof->Weight[b];
-            break;
-         } // switch ( Quantity )
+               case VRAD:
+//                Avoid division by zero when denisty is zero
+                  if ( Prof[i]->Weight[b] > 0.0 )   Prof-[i]>Data[b] /= Prof[i]->Weight[b];
+               break;
+            } // switch ( Quantity )
+      }
    }
 
 
 // broadcast data to all ranks
-   MPI_Bcast( Prof->Data,   Prof->NBin, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-   MPI_Bcast( Prof->Weight, Prof->NBin, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-   MPI_Bcast( Prof->NCell,  Prof->NBin, MPI_LONG,   0, MPI_COMM_WORLD );
-
+   for (int i=0; i<NProf; i++)
+   {
+      MPI_Bcast( Prof[i]->Data,   Prof[i]->NBin, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+      MPI_Bcast( Prof[i]->Weight, Prof[i]->NBin, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+      MPI_Bcast( Prof[i]->NCell,  Prof[i]->NBin, MPI_LONG,   0, MPI_COMM_WORLD );
+   }
 
 // remove the empty bins
 // --> all ranks do the same work so that no data broadcast is required
+
+// The NCell in all profiles should be the same. Thus, we use Prof[0] for simplicity.
    if ( RemoveEmpty )
-   for (int b=0; b<Prof->NBin; b++)
+//   for (int b=0; b<Prof[0]->NBin; b++)
+   for (int b=0; b<Prof[0]->NBin; b++)
    {
-      if ( Prof->NCell[b] != 0L )   continue;
+      if ( Prof[0]->NCell[b] != 0L )   continue;
 
-      for (int b_up=b+1; b_up<Prof->NBin; b_up++)
+//    for cases of consecutive empty bins
+      for (int b_up=b+1; b_up<Prof[0]->NBin, b_up++)
+         if ( Prof[0]->NCell[b_up] != 0L )   break;
+
+      const int stride = b_up - b;
+
+      for (int b_up=b+stride; b_up<Prof->NBin; b_up++)
       {
-         const int b_up_m1 = b_up - 1;
+         const int b_up_ms = b_up - stride;
 
-         Prof->Radius[b_up_m1] = Prof->Radius[b_up];
-         Prof->Data  [b_up_m1] = Prof->Data  [b_up];
-         Prof->Weight[b_up_m1] = Prof->Weight[b_up];
-         Prof->NCell [b_up_m1] = Prof->NCell [b_up];
+         for (int i=0; i<NProf; i++)
+         {
+            Prof[i]->Radius[b_up_ms] = Prof[i]->Radius[b_up];
+            Prof[i]->Data  [b_up_ms] = Prof[i]->Data  [b_up];
+            Prof[i]->Weight[b_up_ms] = Prof[i]->Weight[b_up];
+            Prof[i]->NCell [b_up_ms] = Prof[i]->NCell [b_up];
+         }
       }
 
 //    reset the total number of bins
-      Prof->NBin --;
+      for (int i=0; i<NProf; i++)
+         Prof[i]->NBin --;
 
 //    reset the maximum radius if we are removing the last bin
-      if ( b == Prof->NBin )
+      if ( b == Prof[0]->NBin )
       {
-         if ( LogBin )
-//            Prof->MaxRadius = dr_min*pow( LogBinRatio, Prof->NBin-1 );
-            Prof->MaxRadius = SQR( Prof->Radius[b - 1] ) / Prof->Radius[b - 2];
-         else
-//            Prof->MaxRadius = dr_min*Prof->NBin;
-            Prof->MaxRadius = 2.0 * Prof->Radius[b - 1]  - Prof->Radius[b - 2];
+         for (int i=0; i<NProf; i++)
+         {
+            if ( LogBin )
+//             Prof->MaxRadius = dr_min*pow( LogBinRatio, Prof->NBin-1 );
+               Prof[i]->MaxRadius = SQR( Prof->Radius[b - 1] ) / Prof->Radius[b - 2];
+            else
+//             Prof->MaxRadius = dr_min*Prof->NBin;
+               Prof[i]->MaxRadius = 2.0 * Prof->Radius[b - 1]  - Prof->Radius[b - 2];
+         }
       }
 
 //    reduce counter since all bins above b have been shifted downward
