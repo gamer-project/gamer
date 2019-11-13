@@ -108,7 +108,7 @@ real SRHydro_GetHTilde( const real Con[], real Gamma )
 
 
 # elif ( CONSERVED_ENERGY == 2 )
-  Constant = E_Dsqr - M_Dsqr + (real)2.0 * E_D;
+  Constant = (E_D + M_D) * (E_D - M_D) + (real)2.0 * E_D;
 
 
   if ( Constant >= Discrimination )
