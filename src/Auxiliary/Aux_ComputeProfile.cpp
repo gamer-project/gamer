@@ -83,7 +83,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
 
 // get the number of profile
-   NProf = sizeof(Quantity) / sizeof(int);
+   const int NProf = sizeof(Quantity) / sizeof(int);
 
 
    for (int i=0; i<NProf; i++)
@@ -93,13 +93,13 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
       if ( LogBin )
       {
          Prof[i]->NBin      = int( log(r_max_input/dr_min)/log(LogBinRatio) ) + 2;
-         Prof[i]->MaxRadius = dr_min*pow( LogBinRatio, Prof->NBin-1 );
+         Prof[i]->MaxRadius = dr_min*pow( LogBinRatio, Prof[i]->NBin-1 );
       }
 
       else // linear bin
       {
          Prof[i]->NBin      = (int)ceil( r_max_input / dr_min );
-         Prof[i]->MaxRadius = dr_min*Prof->NBin;
+         Prof[i]->MaxRadius = dr_min*Prof[i]->NBin;
       }
 
 
@@ -118,9 +118,9 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
 //    record radial coordinates
       if ( LogBin )
-         for (int b=0; b<Prof->NBin; b++)    Prof[i]->Radius[b] = dr_min*pow( LogBinRatio, b-0.5 );
+         for (int b=0; b<Prof[0]->NBin; b++)    Prof[i]->Radius[b] = dr_min*pow( LogBinRatio, b-0.5 );
       else
-         for (int b=0; b<Prof->NBin; b++)    Prof[i]->Radius[b] = (b+0.5)*dr_min;
+         for (int b=0; b<Prof[0]->NBin; b++)    Prof[i]->Radius[b] = (b+0.5)*dr_min;
 
    } // for (int i=0; i<NProf; i++)
 
@@ -132,16 +132,16 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
    const int NT = 1;
 #  endif
 
-   double **OMP_Data=NULL, **OMP_Weight=NULL;
-   long   **OMP_NCell=NULL;
+   double ***OMP_Data=NULL, ***OMP_Weight=NULL;
+   long   ***OMP_NCell=NULL;
 
-   Aux_AllocateArray3D( OMP_Data,   NProf, NT, Prof->NBin );
-   Aux_AllocateArray3D( OMP_Weight, NProf, NT, Prof->NBin );
-   Aux_AllocateArray3D( OMP_NCell,  NProf, NT, Prof->NBin );
+   Aux_AllocateArray3D( OMP_Data,   NProf, NT, Prof[0]->NBin );
+   Aux_AllocateArray3D( OMP_Weight, NProf, NT, Prof[0]->NBin );
+   Aux_AllocateArray3D( OMP_NCell,  NProf, NT, Prof[0]->NBin );
 
 
 // collect profile dat in this rank
-   const double r_max2 = SQR( Prof->MaxRadius );
+   const double r_max2 = SQR( Prof[0]->MaxRadius );
 
 #  pragma omp parallel
    {
@@ -153,7 +153,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
 //    initialize arrays
       for (int i=0; i<NProf; i++)
-      for (int b=0; b<Prof->NBin; b++)
+      for (int b=0; b<Prof[0]->NBin; b++)
       {
          OMP_Data  [i][TID][b] = 0.0;
          OMP_Weight[i][TID][b] = 0.0;
@@ -186,7 +186,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                   const int    bin = ( LogBin ) ? (  (r<dr_min) ? 0 : int( log(r/dr_min)/log(LogBinRatio) ) + 1  )
                                                 : int( r/dr_min );
 //                prevent from round-off errors
-                  if ( bin >= Prof->NBin )   continue;
+                  if ( bin >= Prof[0]->NBin )   continue;
 
 //                check
 #                 ifdef GAMER_DEBUG
@@ -270,19 +270,19 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 // sum over all OpenMP threads
    for (int i=0; i<NProf; i++)
    {
-      for (int b=0; b<Prof->NBin; b++)
+      for (int b=0; b<Prof[0]->NBin; b++)
       {
-         Prof[i]->Data  [b]  = OMP_Data  [0][b];
-         Prof[i]->Weight[b]  = OMP_Weight[0][b];
-         Prof[i]->NCell [b]  = OMP_NCell [0][b];
+         Prof[i]->Data  [b]  = OMP_Data  [i][0][b];
+         Prof[i]->Weight[b]  = OMP_Weight[i][0][b];
+         Prof[i]->NCell [b]  = OMP_NCell [i][0][b];
       }
 
       for (int t=1; t<NT; t++)
-      for (int b=0; b<Prof->NBin; b++)
+      for (int b=0; b<Prof[0]->NBin; b++)
       {
-         Prof[i]->Data  [b] += OMP_Data  [t][b];
-         Prof[i]->Weight[b] += OMP_Weight[t][b];
-         Prof[i]->NCell [b] += OMP_NCell [t][b];
+         Prof[i]->Data  [b] += OMP_Data  [i][t][b];
+         Prof[i]->Weight[b] += OMP_Weight[i][t][b];
+         Prof[i]->NCell [b] += OMP_NCell [i][t][b];
       }
    }
 
@@ -298,16 +298,16 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
    {
       if ( MPI_Rank == 0 )
       {
-         MPI_Reduce( MPI_IN_PLACE, Prof[i]->Data,   Prof[i]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-         MPI_Reduce( MPI_IN_PLACE, Prof[i]->Weight, Prof[i]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-         MPI_Reduce( MPI_IN_PLACE, Prof[i]->NCell , Prof[i]->NBin, MPI_LONG,   MPI_SUM, 0, MPI_COMM_WORLD );
+         MPI_Reduce( MPI_IN_PLACE,    Prof[i]->Data,   Prof[i]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+         MPI_Reduce( MPI_IN_PLACE,    Prof[i]->Weight, Prof[i]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+         MPI_Reduce( MPI_IN_PLACE,    Prof[i]->NCell , Prof[i]->NBin, MPI_LONG,   MPI_SUM, 0, MPI_COMM_WORLD );
       }
 
       else
       {
-         MPI_Reduce( Prof->Data,   NULL,            Prof[i]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-         MPI_Reduce( Prof->Weight, NULL,            Prof[i]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-         MPI_Reduce( Prof->NCell,  NULL,            Prof[i]->NBin, MPI_LONG,   MPI_SUM, 0, MPI_COMM_WORLD );
+         MPI_Reduce( Prof[i]->Data,   NULL,            Prof[i]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+         MPI_Reduce( Prof[i]->Weight, NULL,            Prof[i]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+         MPI_Reduce( Prof[i]->NCell,  NULL,            Prof[i]->NBin, MPI_LONG,   MPI_SUM, 0, MPI_COMM_WORLD );
       }
    }
 #  endif
@@ -317,7 +317,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
    if ( MPI_Rank == 0 )
    {
       for (int i=0; i<NProf; i++)
-      for (int b=0; b<Prof->NBin; b++)
+      for (int b=0; b<Prof[0]->NBin; b++)
       {
 //       skip empty bins since both their data and weight are zero
          if ( Prof[i]->NCell[b] > 0L )
@@ -335,7 +335,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
                case VRAD:
 //                Avoid division by zero when denisty is zero
-                  if ( Prof[i]->Weight[b] > 0.0 )   Prof-[i]>Data[b] /= Prof[i]->Weight[b];
+                  if ( Prof[i]->Weight[b] > 0.0 )   Prof[i]->Data[b] /= Prof[i]->Weight[b];
                break;
             } // switch ( Quantity )
       }
@@ -353,20 +353,19 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 // remove the empty bins
 // --> all ranks do the same work so that no data broadcast is required
 
-// The NCell in all profiles should be the same. Thus, we use Prof[0] for simplicity.
    if ( RemoveEmpty )
-//   for (int b=0; b<Prof[0]->NBin; b++)
    for (int b=0; b<Prof[0]->NBin; b++)
    {
       if ( Prof[0]->NCell[b] != 0L )   continue;
 
 //    for cases of consecutive empty bins
-      for (int b_up=b+1; b_up<Prof[0]->NBin, b_up++)
+      int b_up;
+      for (b_up=b+1; b_up<Prof[0]->NBin; b_up++)
          if ( Prof[0]->NCell[b_up] != 0L )   break;
 
       const int stride = b_up - b;
 
-      for (int b_up=b+stride; b_up<Prof->NBin; b_up++)
+      for (int b_up=b+stride; b_up<Prof[0]->NBin; b_up++)
       {
          const int b_up_ms = b_up - stride;
 
