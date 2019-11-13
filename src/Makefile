@@ -111,7 +111,7 @@ SIMU_OPTION += -DEOS=APPROXIMATED_GENERAL
 #SIMU_OPTION += -DEOS=CONSTANT_GAMMA
 
 # conserved energy = (total energy)
-SIMU_OPTION += -DCONSERVED_ENERGY=1
+SIMU_OPTION += -DCONSERVED_ENERGY=2
 # conserved energy = (total energy) - (rest mass energy)
 #SIMU_OPTION += -DCONSERVED_ENERGY=2
 #SIMU_OPTION += -DCHECK_MIN_TEMP
@@ -187,7 +187,7 @@ SIMU_OPTION += -DMAX_PATCH=2000000
 SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA/TURING
-SIMU_OPTION += -DGPU_ARCH=TURING
+SIMU_OPTION += -DGPU_ARCH=FERMI
 
 # debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
@@ -203,7 +203,7 @@ SIMU_OPTION += -DTIMING
 #SIMU_OPTION += -DTIMING_SOLVER
 
 # double precision
-SIMU_OPTION += -DFLOAT8
+#SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
 # --> must disable LOAD_BALANCE
@@ -358,13 +358,13 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 #CUDA_PATH    := /opt/gpu/cuda/default
 
 # NTU-hulk (openmpi-intel-qlc)
-#FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
-#MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
-#HDF5_PATH    := /opt/hdf5/default
-#GRACKLE_PATH := 
-#GSL_PATH     := /opt/math/gsl/default
-#LIBYT_PATH   := 
-#CUDA_PATH    := /opt/gpu/cuda/default
+FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
+MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
+HDF5_PATH    := /opt/hdf5/default
+GRACKLE_PATH := 
+GSL_PATH     := /opt/math/gsl/default
+LIBYT_PATH   := 
+CUDA_PATH    := /opt/gpu/cuda/default
 
 # NTHU-fomalhaut (openmpi-gnu)
 #CUDA_PATH    := /usr/local/cuda-10.0
@@ -381,13 +381,13 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 #GPUID_PATH   := /ifs/data/hsiyu/Software/gpudevmgr
 
 # gamer04
-FFTW_PATH    := 
-MPI_PATH     := /opt/openmpi/3.1.4-intel-tm
-HDF5_PATH    := /opt/hdf5
-GRACKLE_PATH := 
-GSL_PATH     := 
-LIBYT_PATH   := 
-CUDA_PATH    := /opt/cuda/default
+#FFTW_PATH    := 
+#MPI_PATH     := /opt/openmpi/3.1.4-intel-tm
+#HDF5_PATH    := /opt/hdf5
+#GRACKLE_PATH := 
+#GSL_PATH     := 
+#LIBYT_PATH   := 
+#CUDA_PATH    := /opt/cuda/default
 #
 ## Calab AMD2
 #FFTW_PATH    := 
@@ -508,7 +508,7 @@ CUDA_FILE   += CUFLU_dtSolver_SRHydroCFL.cu    CUFLU_FluidSolver_MHM.cu
 CC_FILE     += CPU_Shared_DataReconstruction.cpp  CPU_Shared_FluUtility.cpp  CPU_Shared_ComputeFlux.cpp \
                CPU_Shared_FullStepUpdate.cpp CPU_FluidSolver_MHM.cpp \
                CPU_Shared_RiemannSolver_HLLC.cpp CPU_Shared_RiemannSolver_HLLE.cpp  \
-               CPU_dtSolver_SRHydroCFL.cpp SRHydro_Utility.cpp
+               CPU_dtSolver_SRHydroCFL.cpp
 
 CC_FILE     += SRHydro_Init_ByFunction_AssignData.cpp  SRHydro_Aux_Check_Negative.cpp \
                SRHydro_BoundaryCondition_Reflecting.cpp SRHydro_Flag_Vorticity.cpp

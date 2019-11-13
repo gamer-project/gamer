@@ -124,10 +124,19 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const bool JeansMinPres, const real JeansMinPres_Coeff );
 
 real SRHydro_Con2Pri( const real In[], real Out[], const real Gamma, const real MinTemp);
-void SRHydro_Pri2Con( const real In[], real Out[], const real Gamma);
 
+#ifdef __CUDACC__
+void SRHydro_Pri2Con( const real In[], real Out[], const real Gamma);
 void SRHydro_3Velto4Vel( const real In[], real Out[] );
 void SRHydro_4Velto3Vel( const real In[], real Out[] );
+#else
+template <typename T>
+void SRHydro_Pri2Con (const T In[], T Out[], const T Gamma);
+template <typename T>
+void SRHydro_3Velto4Vel( const T In[], T Out[] );
+template <typename T>
+void SRHydro_4Velto3Vel( const T In[], T Out[] );
+#endif
 
 real SRHydro_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy, const real Gamma, const real MinTemp );
 

@@ -17,10 +17,6 @@ static int    Number_BlastWave_Y;  // number of blast wave in y-direction
 static int    Number_BlastWave_Z;  // number of blast wave in z-direction
 // =======================================================================================
 
-void 
-SRHydro_3Velto4Vel_Double (const double In[], double Out[]);
-void
-SRHydro_Pri2Con_Double (const double In[], double Out[], const double Gamma);
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
@@ -207,11 +203,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    double r[Total];
 
-   SRHydro_3Velto4Vel_Double ( Prim_BG1,   Prim_BG2);
-   SRHydro_3Velto4Vel_Double ( Prim_EXP1, Prim_EXP2);
+   SRHydro_3Velto4Vel ( Prim_BG1,   Prim_BG2);
+   SRHydro_3Velto4Vel ( Prim_EXP1, Prim_EXP2);
 
-   SRHydro_Pri2Con_Double ( Prim_BG2,  Cons_BG, GAMMA);
-   SRHydro_Pri2Con_Double (Prim_EXP2, Cons_EXP, GAMMA);
+   SRHydro_Pri2Con ( Prim_BG2,  Cons_BG, GAMMA);
+   SRHydro_Pri2Con (Prim_EXP2, Cons_EXP, GAMMA);
 
    for (int i=0; i<Total; i++)
     {

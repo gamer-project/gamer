@@ -16,8 +16,6 @@ static double VelyDown;  // magnitude of 3-velocity in down-stream
 static double PresDown;  // pressure in down-stream
 // =======================================================================================
 
-void SRHydro_3Velto4Vel_Double (const double In[], double Out[]);
-void SRHydro_Pri2Con_Double (const double In[], double Out[], const double Gamma);
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
@@ -195,13 +193,13 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Prim1[4] = PresUp;
    }
 
-   SRHydro_3Velto4Vel_Double (Prim1, Prim2);
+   SRHydro_3Velto4Vel (Prim1, Prim2);
 
 // cast double to real
 #  ifndef FLOAT8
    double Out[NCOMP_FLUID];
 
-   SRHydro_Pri2Con_Double (Prim2, Out, GAMMA);
+   SRHydro_Pri2Con (Prim2, Out, GAMMA);
 
    fluid [0] = (real) Out[0];
    fluid [1] = (real) Out[1];
@@ -209,7 +207,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid [3] = (real) Out[3];
    fluid [4] = (real) Out[4];
 #  else
-   SRHydro_Pri2Con_Double (Prim2, fluid, GAMMA);
+   SRHydro_Pri2Con (Prim2, fluid, GAMMA);
 #  endif
 
 } // FUNCTION : SetGridIC

@@ -13,10 +13,6 @@ static double Blast_Radius;        // explosion radius
 static double Blast_Center[3];     // explosion center
 // =======================================================================================
 
-void 
-SRHydro_3Velto4Vel_Double (const double In[], double Out[]);
-void
-SRHydro_Pri2Con_Double (const double In[], double Out[], const double Gamma);
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
@@ -183,11 +179,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    double Prim_EXP2[5] = {0};                                                                         // store 4-velocity
    double Cons_EXP[5] = {0};
 
-   SRHydro_3Velto4Vel_Double ( Prim_BG1, Prim_BG2);
-   SRHydro_3Velto4Vel_Double ( Prim_EXP1, Prim_EXP2);
+   SRHydro_3Velto4Vel ( Prim_BG1, Prim_BG2);
+   SRHydro_3Velto4Vel ( Prim_EXP1, Prim_EXP2);
 
-   SRHydro_Pri2Con_Double (Prim_BG2, Cons_BG, GAMMA);
-   SRHydro_Pri2Con_Double (Prim_EXP2, Cons_EXP, GAMMA);
+   SRHydro_Pri2Con (Prim_BG2, Cons_BG, GAMMA);
+   SRHydro_Pri2Con (Prim_EXP2, Cons_EXP, GAMMA);
 
    if ( r <= Blast_Radius )
    {
