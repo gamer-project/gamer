@@ -1897,6 +1897,9 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Grackle_PE_Heating      = GRACKLE_PE_HEATING;
    InputPara.Grackle_PE_HeatingRate  = GRACKLE_PE_HEATING_RATE;
    InputPara.Grackle_CloudyTable     = GRACKLE_CLOUDY_TABLE;
+   InputPara.Grackle_ThreeBodyRate   = GRACKLE_THREE_BODY_RATE;
+   InputPara.Grackle_CIE_Cooling     = GRACKLE_CIE_COOLING;
+   InputPara.Grackle_H2_OpaApprox    = GRACKLE_H2_OPA_APPROX;
    InputPara.Che_GPU_NPGroup         = CHE_GPU_NPGROUP;
 #  endif
 
