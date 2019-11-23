@@ -61,9 +61,10 @@ void SRHydro_Rotate3D (real InOut[], const int XYZ, const bool Forward)
 }				// FUNCTION : SRHydro_Rotate3D
 
 GPU_DEVICE
-void SRHydro_HTilde2Temperature (const real HTilde, real *Temp, real *DiffTemp )
+void SRHydro_HTilde2Temperature (const real HTilde, real *Temp, real *DiffTemp, const real Gamma )
 {
 
+#  if ( EOS == APPROXIMATED_GENERAL )
    real Factor0 = (real)2.0*SQR(HTilde) + (real)4.0*HTilde;
    real Factor1 = SQRT( (real)9.0*SQR(HTilde) + (real)18.0*HTilde + (real)25.0 );
    real Factor2 = (real)5.0*HTilde + (real)5.0 + Factor1;
@@ -79,6 +80,17 @@ void SRHydro_HTilde2Temperature (const real HTilde, real *Temp, real *DiffTemp )
      *DiffTemp = ( (real)4.0*HTilde + (real)4.0 ) / Factor2
 			   -  Factor0 * ( ( (real)9.0*HTilde + (real)9.0 ) /  Factor1 + (real)5.0 ) / SQR(Factor2);
    }
+#  elif ( EOS == CONSTANT_GAMMA )
+   if ( Temp != NULL )
+   {
+     *Temp = ( Gamma - (real)1.0 ) * HTilde / Gamma;
+   }
+
+   if ( DiffTemp != NULL )
+   {
+     *DiffTemp = ( Gamma - (real)1.0 ) / Gamma;
+   }
+#  endif
 
 }// FUNCTION : SRHydro_GetTemperature
 
@@ -94,6 +106,11 @@ real SRHydro_GetHTilde( const real Con[], real Gamma )
   real E_Dsqr = abc * SQR(Con[4]);
   real M_Dsqr = abc * Msqr;
   real M_D = SQRT( M_Dsqr );
+
+
+  // (x+y)(x-y) is more accurate than x**2-y**2
+  Constant = (E_D + M_D) * (E_D - M_D) + (real)2.0 * E_D;
+
   
 # if ( EOS == APPROXIMATED_GENERAL )
   real A = (real)437.0 * M_Dsqr + (real)117.0;
@@ -102,14 +119,6 @@ real SRHydro_GetHTilde( const real Con[], real Gamma )
 
   Discrimination  = (real)3240000.0 * SQR( B );
   Discrimination /= SQR( A );
-
-# if   ( CONSERVED_ENERGY == 1 )
-  
-
-
-# elif ( CONSERVED_ENERGY == 2 )
-  // (x+y)(x-y) is more accurate than x**2-y**2
-  Constant = (E_D + M_D) * (E_D - M_D) + (real)2.0 * E_D;
 
 
   if ( Constant >= Discrimination )
@@ -124,18 +133,34 @@ real SRHydro_GetHTilde( const real Con[], real Gamma )
   }
 
 
-# else
-# error: CONSERVED_ENERGY must be 1 or 2!
-# endif
 # elif ( EOS == CONSTANT_GAMMA )
-# if   ( CONSERVED_ENERGY == 1 )
-# elif ( CONSERVED_ENERGY == 2 )
-  Constant = E_Dsqr - M_Dsqr + (real)2.0 * E_D;
+  real A = Gamma / ( Gamma - (real)1.0 );
+  real B = -A * ( A - (real)1.0 ) * ( M_Dsqr + (real)1.0 );
+  real Asqr = A*A;
+  real C = Asqr * M_Dsqr + Asqr - (real)2.0*A*M_Dsqr - (real)2.0*A + (real)1.0;
+  
 
-  guess = (real)5.0*Constant/(real)6.0;
-# else
-# error: CONSERVED_ENERGY must be 1 or 2!
-# endif
+  Discrimination = B / C;
+
+  if ( Constant >= Discrimination )
+  {
+     guess  = Constant * Gamma;
+  }
+  else
+  {
+     real Term1 = (real)1.0 - (real)2.0/A + (real)1.0 / ( Asqr * ( M_Dsqr + (real)1.0 ) );
+     real Term2 = (real)2.0 / Gamma;
+     real Term3 = -Constant;
+
+     real Del = SQRT( Term2*Term2 - (real)4.0*Term1*Term3 );
+
+     real guess1 = (real)2.0 * Term3 / ( -Term2 + Del );
+     real guess2 = (real)2.0 * Term3 / ( -Term2 - Del );
+
+     guess1 > (real)0.0 ?  guess = guess1 : guess = guess2 ;
+  }
+
+
 # endif
  
   void (*FunPtr)( real HTilde, real M_Dsqr, real Constant, real *Fun, real *DiffFun, real Gamma ) = &SRHydro_HTilde_Function;
@@ -176,7 +201,7 @@ real SRHydro_GetTemperature( const real Dens, const real MomX, const real MomY, 
 
    HTilde = SRHydro_GetHTilde( Cons, Gamma );
 
-   SRHydro_HTilde2Temperature( HTilde, &Temp, NULL ); 
+   SRHydro_HTilde2Temperature( HTilde, &Temp, NULL, Gamma ); 
 
    return Temp;
 }
@@ -184,11 +209,15 @@ real SRHydro_GetTemperature( const real Dens, const real MomX, const real MomY, 
 
 
 GPU_DEVICE
-real SRHydro_Temperature2HTilde (const real Temperature )
+real SRHydro_Temperature2HTilde (const real Temperature, const real Gamma )
 {
     real HTilde;
 
+#   if ( EOS == APPROXIMATED_GENERAL )
 	HTilde = (real)2.5*Temperature + 2.25*SQR(Temperature)/(SQRT( (real)2.25*SQR(Temperature) + (real)1.0 ) + (real)1.0);
+#   elif ( EOS == CONSTANT_GAMMA )
+    HTilde = Gamma * Temperature / (Gamma - (real)1.0);
+#   endif
 
 	return HTilde;
 }
@@ -246,7 +275,7 @@ real SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real 
 
 // Method 2:
    real Temperature;
-   SRHydro_HTilde2Temperature ( HTilde, &Temperature, NULL );
+   SRHydro_HTilde2Temperature ( HTilde, &Temperature, NULL, Gamma );
 
    Out[4] = Out[0] * Temperature;
 
@@ -269,7 +298,7 @@ void SRHydro_Pri2Con (const T In[], T Out[], const T Gamma)
 
   Temperature = In[4]/In[0];
 
-  HTilde = SRHydro_Temperature2HTilde( Temperature );
+  HTilde = SRHydro_Temperature2HTilde( Temperature, Gamma );
 
   Out[DENS] = In[0] * LorentzFactor;
 
@@ -366,13 +395,7 @@ void SRHydro_Con2Flux (const int XYZ, real Flux[], const real Con[], const real 
   Flux[1] = FMA( ConVar[1], Vx, PriVar[4] );
   Flux[2] = ConVar[2] * Vx;
   Flux[3] = ConVar[3] * Vx;
-# if ( CONSERVED_ENERGY == 1 )
-  Flux[4] = ConVar[1];
-# elif ( CONSERVED_ENERGY == 2 )
   Flux[4] = ( ConVar[4] + PriVar[4] )*Vx;
-# else
-# error: CONSERVED_ENERGY must be 1 or 2!
-# endif
 
   SRHydro_Rotate3D (Flux, XYZ, false);
 }				// FUNCTION : SRHydro_Con2Flux
@@ -431,11 +454,7 @@ real SRHydro_CheckMinTempInEngy (const real Cons[], const real MinTemp, const re
   real Dh = D*h_min;
   real factor = SQRT(Dh*Dh + Msqr);
 
-# if ( CONSERVED_ENERGY == 1 )
-  real E_min = factor - D*Dh*MinTemp / factor;
-# elif ( CONSERVED_ENERGY == 2 )
   real E_min = factor - D*Dh*MinTemp / factor - D;
-# endif
 
   if ( Cons[4] >= E_min) return Cons[4];
   else                   return E_min;
@@ -486,16 +505,8 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
       M = SQRT( Msqr );
 	  E_D = ConsVar[ENGY] / ConsVar[DENS];
 	  M_D = M / ConsVar[DENS];
-#     if ( CONSERVED_ENERGY == 1 )
-	  // (x+y)(x-y) is more accurate than x**2-y**2
-      discriminant = ( E_D + M_D ) * ( E_D - M_D );
-      if ( discriminant <= (real)1.0 )                                                        goto FAIL;
-#     elif ( CONSERVED_ENERGY == 2 )
       discriminant = ( E_D + M_D ) * ( E_D - M_D ) + (real)2.0 * E_D;
       if ( discriminant <= TINY_NUMBER )                                                      goto FAIL;
-#     else
-#     error: CONSERVED_ENERGY must be 1 or 2!
-#     endif
 
 //      SRHydro_Con2Pri(ConsVar, Pri4Vel, Gamma, MinTemp);
 //
@@ -569,16 +580,8 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
 
 // check energy
       Msqr = VectorDotProduct( ConsVar[MOMX], ConsVar[MOMY], ConsVar[MOMZ] );
-#     if ( CONSERVED_ENERGY == 1 )
-	  // (x+y)(x-y) is more accurate than x**2-y**2
-      discriminant = ( E_D + M_D ) * ( E_D - M_D );
-      if ( discriminant <= (real)1.0 )                                                   goto FAIL;
-#     elif ( CONSERVED_ENERGY == 2 )
       discriminant = ( E_D + M_D ) * ( E_D - M_D ) + (real)2.0 * E_D;
       if ( discriminant <= TINY_NUMBER )                                                   goto FAIL;
-#     else
-#     error: CONSERVED_ENERGY must be 1 or 2!
-#     endif      
 
 // pass all checks 
       return false;
@@ -595,11 +598,7 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
            {
               printf( "D=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n",
                                    ConsVar[DENS], ConsVar[MOMX], ConsVar[MOMY], ConsVar[MOMZ], ConsVar[ENGY]);
-#             if ( CONSERVED_ENERGY == 1 )
-              printf( "(E^2-|M|^2)/D^2=%14.7e\n", discriminant );
-#             elif ( CONSERVED_ENERGY == 2 )
               printf( "E^2+2*E*D-|M|^2=%14.7e\n", discriminant );
-#             endif
            }
            else
            {
@@ -785,11 +784,9 @@ void SRHydro_HTilde_Function (real HTilde, real M_Dsqr, real Constant, real *Fun
 
 
 # if ( EOS == APPROXIMATED_GENERAL )
-  SRHydro_HTilde2Temperature ( HTilde, &Temp, &DiffTemp );
+  SRHydro_HTilde2Temperature ( HTilde, &Temp, &DiffTemp, Gamma );
 
 
-# if   (CONSERVED_ENERGY == 1)
-# elif (CONSERVED_ENERGY == 2)
   real H =  HTilde + (real)1.0;
   real Factor0 = SQR( H ) + M_Dsqr;
 
@@ -802,16 +799,12 @@ void SRHydro_HTilde_Function (real HTilde, real M_Dsqr, real Constant, real *Fun
 
   *DiffFun = (real)2.0*H - (real)2.0*Temp - (real)2.0*H*DiffTemp +
 		  ( (real)2.0*Temp*DiffTemp*H*H - (real)2.0*Temp*Temp*H ) / SQR( Factor0 );
-# else
-# error: CONSERVED_ENERGY must be 1 or 2!
-# endif
+
 
 # elif ( EOS == CONSTANT_GAMMA )
-  SRHydro_HTilde2Temperature ( HTilde, &Temp, &DiffTemp );
+  SRHydro_HTilde2Temperature ( HTilde, &Temp, &DiffTemp, Gamma  );
 
 
-# if   (CONSERVED_ENERGY == 1)
-# elif (CONSERVED_ENERGY == 2)
   real H =  HTilde + (real)1.0;
   real Factor0 = SQR( H ) + M_Dsqr;
 
@@ -824,9 +817,6 @@ void SRHydro_HTilde_Function (real HTilde, real M_Dsqr, real Constant, real *Fun
 
   *DiffFun = (real)2.0*H - (real)2.0*Temp - (real)2.0*H*DiffTemp +
 		  ( (real)2.0*Temp*DiffTemp*H*H - (real)2.0*Temp*Temp*H ) / SQR( Factor0 );
-# else
-# error: CONSERVED_ENERGY must be 1 or 2!
-# endif
 
 # else
 # error: unsupported EoS!

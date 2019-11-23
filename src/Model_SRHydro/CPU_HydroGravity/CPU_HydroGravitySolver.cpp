@@ -416,7 +416,7 @@ void CPU_HydroGravitySolver(
 		 Con_new[ENGY] = factor -  Con_new[DENS] * Dh * Temperature / factor;
 #        elif ( CONSERVED_ENERGY == 2 )
 		 real Dsqr = SQR(Con_new[DENS]);
-         real HTilde = SRHydro_Temperature2HTilde( Temperature );
+         real HTilde = SRHydro_Temperature2HTilde( Temperature, (real)1.333333333 );
 		 real h = HTilde + (real)1.0;
 		 real factor = SQRT( Dsqr*h*h + Msqr );
 		 Con_new[ENGY]  = Dsqr * SQR(HTilde) + (real)2.0*HTilde*Dsqr + Msqr;
