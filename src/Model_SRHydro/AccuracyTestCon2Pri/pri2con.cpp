@@ -4,10 +4,11 @@
 #include "CUFLU.h"
 #include "SRHydroPrototypes.h"
 
+
 #ifdef FLOAT8
-#define real double
+typedef double real;
 #else
-#define real float
+typedef float real;
 #endif
 
 int
@@ -15,142 +16,131 @@ main ()
 {
   real Gamma = 1.333333;
 
+  real LorentzFactor_re,Temperature_re;
+  real LorentzFactor   ,Temperature;
+
   real Con[5] = { 0 };
   real Pri[5] = { 0 };
 
-  Pri[0] = 0.5;
-  Pri[1] = 1024;
-  Pri[2] = 0.0;
-  Pri[3] = 0.0;
-  Pri[4] = 2.0;
+  Pri[0] = 1.0003759765625000000000000e+02;
+  Pri[1] = 9.9962409973144531250000000e+01;
+  Pri[2] = 0.0000000000000000000000000e+00;
+  Pri[3] = 0.0000000000000000000000000e+00;
+  Pri[4] = 1.0156627893447875976562500e+00;
 
+  LorentzFactor = SQRT( (real)1.0 + SQR(Pri[1]) + SQR(Pri[2]) + SQR(Pri[3]) );
 
-  printf ("Initial prim:\n\n n=%e, Ux=%e, Uy=%e, Uz=%e, P=%e\n\n", Pri[0], Pri[1], Pri[2], Pri[3], Pri[4]);
+  printf ("\ninitial primitive vars:\n");
+  printf ("=========================================\n\n");
+
+  printf ("n     = %30.25e\n"  ,  Pri[0]);
+  printf ("Ux    = %30.25e\n"  ,  Pri[1]);
+  printf ("Uy    = %30.25e\n"  ,  Pri[2]);
+  printf ("Uz    = %30.25e\n"  ,  Pri[3]);
+  printf ("P     = %30.25e\n"  ,  Pri[4]);
+  printf ("T     = %30.25e\n"  ,  Pri[4]/Pri[0]);
+  printf ("gamma = %30.25e\n"  ,  LorentzFactor);
 
   SRHydro_Pri2Con (Pri, Con, Gamma);
 
-  printf ("Transform to cons:\n\n D=%e, Mx=%e, My=%e, Mz=%e, E=%e\n\n", Con[0], Con[1], Con[2], Con[3], Con[4]);
+  printf ("\nprimitive --> conservative\n");
+  printf ("=========================================\n\n");
+
+  printf ("D     = %30.25e\n"  ,  Con[0]);
+  printf ("Mx    = %30.25e\n"  ,  Con[1]);
+  printf ("My    = %30.25e\n"  ,  Con[2]);
+  printf ("Mz    = %30.25e\n"  ,  Con[3]);
+  printf ("E     = %30.25e\n"  ,  Con[4]);
+
 
   real M_Dsqr = VectorDotProduct( Con[1], Con[2], Con[3] ) / SQR(Con[0]);
+  real M_D    = SQRT( M_Dsqr );
   real E_D    = Con[4]/Con[0];
 
-  real Discriminant = SQR(E_D) + (real)2.0*E_D - M_Dsqr;
+  real Discriminant = ( E_D + M_D )*( E_D - M_D ) + (real)2.0*E_D;
 
   if ( Discriminant < (real)TINY_NUMBER )
   {
-		  printf("ERROR!! Discriminant=%e\n", Discriminant);
+		  printf("\nERROR!! Discriminant = %30.25e\n", Discriminant);
 		  exit(0);
+  }
+  else
+  {
+		  printf("\nDiscriminant = %30.25e\n", Discriminant);
   }
 
   real Pri_re[5] = { 0 };
-  real LorentzFactor;
 
-  LorentzFactor = SRHydro_Con2Pri (Con, Pri_re, Gamma, 0.0);
+  LorentzFactor_re = SRHydro_Con2Pri (Con, Pri_re, Gamma, 0.0);
+  Temperature      = Pri[4]   / Pri[0];
+  Temperature_re   = Pri_re[4]/ Pri_re[0];
 
-  printf ("Transform back to prim:\n\n n=%e, Ux=%e, Uy=%e, Uz=%e, P=%e, gamma=%e\n\n", Pri_re[0], Pri_re[1], Pri_re[2], Pri_re[3], Pri_re[4], LorentzFactor);
+  printf ("\nconservative --> primitive\n");
+  printf ("=========================================\n\n");
+  
+  printf ("n     = %30.25e\n"  ,  Pri_re[0]);
+  printf ("Ux    = %30.25e\n"  ,  Pri_re[1]);
+  printf ("Uy    = %30.25e\n"  ,  Pri_re[2]);
+  printf ("Uz    = %30.25e\n"  ,  Pri_re[3]);
+  printf ("P     = %30.25e\n"  ,  Pri_re[4]);
+  printf ("T     = %30.25e\n"  ,  Temperature_re);
+  printf ("gamma = %30.25e\n"  ,  LorentzFactor_re);
 
-  if ((fabs (Pri_re[1]) > TINY_NUMBER) 
-   && (fabs (Pri_re[2]) > TINY_NUMBER)
-   && (fabs (Pri_re[3]) > TINY_NUMBER))
-    {
-      real err_n  = (Pri_re[0] - Pri[0]) / Pri[0];
-      real err_U1 = (Pri_re[1] - Pri[1]) / Pri[1];
-      real err_U2 = (Pri_re[2] - Pri[2]) / Pri[2];
-      real err_U3 = (Pri_re[3] - Pri[3]) / Pri[3];
-      real err_P  = (Pri_re[4] - Pri[4]) / Pri[4];
+  real err_n  = (Pri_re[0] - Pri[0]) / Pri[0];
+  real err_U1 = (Pri_re[1] - Pri[1]) / Pri[1];
+  real err_U2 = (Pri_re[2] - Pri[2]) / Pri[2];
+  real err_U3 = (Pri_re[3] - Pri[3]) / Pri[3];
+  real err_P  = (Pri_re[4] - Pri[4]) / Pri[4];
+  real err_T  = ( Temperature_re - Temperature ) / Temperature;
+  real err_g  = ( LorentzFactor_re - LorentzFactor ) / LorentzFactor;
 
-      printf ("relative error:\n\n");
-      printf ("err_n=%E, err_U1=%E, err_U2=%E err_U3=%E, err_P=%E\n", err_n,  err_U1, err_U2, err_U3, err_P);
-      printf ("===========================================\n\n");
+  printf ("\nrelative error:\n");
+  printf ("=========================================\n\n");
 
-    }
-  else if ((fabs (Pri_re[1]) < TINY_NUMBER) 
-	&& (fabs (Pri_re[2]) < TINY_NUMBER)
-	&& (fabs (Pri_re[3]) > TINY_NUMBER))
-    {
-      real err_n = (Pri_re[0] - Pri[0]) / Pri[0];
-      real err_P = (Pri_re[4] - Pri[4]) / Pri[4];
-      real err_U3 = (Pri_re[3] - Pri[3]) / Pri[3];
+  printf ("err_n   = %+30.25e\n", err_n );
 
-      printf ("relative error:\n\n");
-      printf ("err_n=%E, err_U3=%E, err_P=%E\n", err_n, err_U3, err_P);
-      printf ("===========================================\n\n");
-    }
-  else if ((fabs (Pri_re[1]) < TINY_NUMBER) 
-	&& (fabs (Pri_re[2]) > TINY_NUMBER)
-	&& (fabs (Pri_re[3]) < TINY_NUMBER))
-    {
-      real err_n = (Pri_re[0] - Pri[0]) / Pri[0];
-      real err_P = (Pri_re[4] - Pri[4]) / Pri[4];
-      real err_U2 = (Pri_re[2] - Pri[2]) / Pri[2];
+  if ( fabs (Pri_re[1]) > TINY_NUMBER ) printf ("err_Ux  = %+30.25e\n", err_U1) ;
+  if ( fabs (Pri_re[2]) > TINY_NUMBER ) printf ("err_Uy  = %+30.25e\n", err_U2) ;
+  if ( fabs (Pri_re[3]) > TINY_NUMBER ) printf ("err_Uz  = %+30.25e\n", err_U3) ;
 
-      printf ("relative error:\n\n");
-      printf ("err_n=%E, err_U2=%E, err_P=%E\n", err_n, err_U2, err_P);
-      printf ("===========================================\n\n");
-    }
-  else if ((fabs (Pri_re[1]) > TINY_NUMBER) 
-	&& (fabs (Pri_re[2]) < TINY_NUMBER)
-	&& (fabs (Pri_re[3]) < TINY_NUMBER))
-    {
-      real err_n = (Pri_re[0] - Pri[0]) / Pri[0];
-      real err_P = (Pri_re[4] - Pri[4]) / Pri[4];
-      real err_U1 = (Pri_re[1] - Pri[1]) / Pri[1];
+  printf ("err_P   = %+30.25e\n", err_P );
+  printf ("err_T   = %+30.25e\n", err_T );
+  printf ("err_g   = %+30.25e\n", err_g );
 
-      printf ("relative error:\n\n");
-      printf ("err_n=%E, err_U1=%E, err_P=%E\n", err_n, err_U1, err_P);
-      printf ("===========================================\n\n");
-    }
-  else if ((fabs (Pri_re[1]) > TINY_NUMBER) 
-	&& (fabs (Pri_re[2]) > TINY_NUMBER)
-	&& (fabs (Pri_re[3]) < TINY_NUMBER))
-    {
-      real err_n = (Pri_re[0] - Pri[0]) / Pri[0];
-      real err_P = (Pri_re[4] - Pri[4]) / Pri[4];
-      real err_U1 = (Pri_re[1] - Pri[1]) / Pri[1];
-      real err_U2 = (Pri_re[2] - Pri[2]) / Pri[2];
+//===============================================================
+  printf ("\nprimitive --> conservative\n");
+  printf ("=========================================\n\n");
 
-      printf ("relative error:\n\n");
-      printf ("err_n=%E, err_U1=%E, err_U2=%E, err_P=%E\n", err_n, err_U1, err_U2, err_P);
-      printf ("===========================================\n\n");
-    }
-  else if ((fabs (Pri_re[1]) > TINY_NUMBER) 
-	&& (fabs (Pri_re[2]) < TINY_NUMBER)
-	&& (fabs (Pri_re[3]) > TINY_NUMBER))
-    {
-      real err_n = (Pri_re[0] - Pri[0]) / Pri[0];
-      real err_P = (Pri_re[4] - Pri[4]) / Pri[4];
-      real err_U1 = (Pri_re[1] - Pri[1]) / Pri[1];
-      real err_U3 = (Pri_re[3] - Pri[3]) / Pri[3];
+  real Con_re[5] = { 0.0 };
 
-      printf ("relative error:\n\n");
-      printf ("err_n=%E, err_U1=%E, err_U3=%E, err_P=%E\n", err_n, err_U1, err_U3, err_P);
-      printf ("===========================================\n\n");
-    }
-  else if ((fabs (Pri_re[1]) < TINY_NUMBER) 
-	&& (fabs (Pri_re[2]) > TINY_NUMBER)
-	&& (fabs (Pri_re[3]) > TINY_NUMBER))
-    {
-      real err_n = (Pri_re[0] - Pri[0]) / Pri[0];
-      real err_P = (Pri_re[4] - Pri[4]) / Pri[4];
-      real err_U2 = (Pri_re[2] - Pri[2]) / Pri[2];
-      real err_U3 = (Pri_re[3] - Pri[3]) / Pri[3];
+  SRHydro_Pri2Con( Pri_re, Con_re, Gamma );
 
-      printf ("relative error:\n\n");
-      printf ("err_n=%E, err_U2=%E, err_U3=%E, err_P=%E\n", err_n, err_U2, err_U3, err_P);
-      printf ("===========================================\n\n");
-    }
-  else if ((fabs (Pri_re[1]) < TINY_NUMBER) 
-	&& (fabs (Pri_re[2]) < TINY_NUMBER)
-	&& (fabs (Pri_re[3]) < TINY_NUMBER))
-    {
-      real err_n = (Pri_re[0] - Pri[0]) / Pri[0];
-      real err_P = (Pri_re[4] - Pri[4]) / Pri[4];
+  printf ("D     = %30.25e\n"  ,  Con_re[0]);
+  printf ("Mx    = %30.25e\n"  ,  Con_re[1]);
+  printf ("My    = %30.25e\n"  ,  Con_re[2]);
+  printf ("Mz    = %30.25e\n"  ,  Con_re[3]);
+  printf ("E     = %30.25e\n"  ,  Con_re[4]);
 
-      printf ("relative error:\n\n");
-      printf ("err_n=%E, err_P=%E\n", err_n, err_P);
-      printf ("===========================================\n\n");
-    }
 
+  real err_D  = (Con_re[0] - Con[0]) / Con[0];
+  real err_Mx = (Con_re[1] - Con[1]) / Con[1];
+  real err_My = (Con_re[2] - Con[2]) / Con[2];
+  real err_Mz = (Con_re[3] - Con[3]) / Con[3];
+  real err_E  = (Con_re[4] - Con[4]) / Con[4];
+
+  printf ("\nrelative error:\n");
+  printf ("=========================================\n\n");
+
+  printf ("err_D   = %+30.25e\n", err_D );
+
+  if ( fabs (Con_re[1]) > TINY_NUMBER ) printf ("err_Mx  = %+30.25e\n", err_Mx) ;
+  if ( fabs (Con_re[2]) > TINY_NUMBER ) printf ("err_My  = %+30.25e\n", err_My) ;
+  if ( fabs (Con_re[3]) > TINY_NUMBER ) printf ("err_Mz  = %+30.25e\n", err_Mz) ;
+
+  printf ("err_E   = %+30.25e\n", err_E );
+    
+
+//===============================================================
 
 
   return 0;

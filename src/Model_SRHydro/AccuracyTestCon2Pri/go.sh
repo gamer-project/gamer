@@ -9,6 +9,6 @@ g++ $1  CPU_Shared_FluUtility.cpp \
 -DRSOLVER=HLLC \
 -DNLEVEL=10 \
 -DMAX_PATCH=200000 \
+-DFLOAT8 \
 -DEOS=APPROXIMATED_GENERAL    -lm && ./a.out
 #-DEOS=CONSTANT_GAMMA         -lm && ./a.out
-#-DFLOAT8 \
