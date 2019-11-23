@@ -686,8 +686,21 @@ void Aux_TakeNote()
       fprintf( Note, "UNIT_E (energy)                 %20.14e g*cm^2/s^2 (*)\n", UNIT_E                        );
       fprintf( Note, "UNIT_P (energy density)         %20.14e g/cm/s^2   (*)\n", UNIT_P                        ); }
 
-#     else
+#     elif ( MODEL == SR_HYDRO )
+      fprintf( Note, "UNIT_L (length)                 %20.14e kpc\n",            UNIT_L/Const_kpc              );
+      fprintf( Note, "                              = %20.14e cm            \n", UNIT_L                        );
+      fprintf( Note, "UNIT_M (mass)                   %20.14e mp\n",             UNIT_M/Const_mp               );
+      fprintf( Note, "                              = %20.14e g             \n", UNIT_M                        );
+      fprintf( Note, "UNIT_T (time)                   %20.14e Myr           \n", UNIT_T/Const_Myr              );
+      fprintf( Note, "                              = %20.14e s             \n", UNIT_T                        );
+      fprintf( Note, "UNIT_V (velocity)               %20.14e c\n",              UNIT_V/Const_c                );
+      fprintf( Note, "                              = %20.14e cm/s\n",           UNIT_V                        );
+      fprintf( Note, "UNIT_D (mass density)           %20.14e g/cm^3        \n", UNIT_D                        );
+      fprintf( Note, "                              = %20.14e 1/cm^3        \n", UNIT_D/Const_mp               );
+      fprintf( Note, "UNIT_E (energy)                 %20.14e g*cm^2/s^2    \n", UNIT_E                        );
+      fprintf( Note, "UNIT_P (energy density)         %20.14e g/cm/s^2      \n", UNIT_P                        ); }
 
+#     else
       fprintf( Note, "UNIT_L                          %20.14e cm\n",             UNIT_L                        );
       fprintf( Note, "UNIT_M                          %20.14e g\n",              UNIT_M                        );
       fprintf( Note, "UNIT_T                          %20.14e s\n",              UNIT_T                        );
