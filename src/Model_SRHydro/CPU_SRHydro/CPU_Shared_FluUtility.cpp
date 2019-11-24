@@ -165,7 +165,7 @@ real SRHydro_GetHTilde( const real Con[], real Gamma )
  
   void (*FunPtr)( real HTilde, real M_Dsqr, real Constant, real *Fun, real *DiffFun, real Gamma ) = &SRHydro_HTilde_Function;
 
-  NewtonRaphsonSolver(FunPtr, M_Dsqr, -Constant, &HTilde, guess, (real) TINY_NUMBER, (real) EPSILON, Gamma);
+  NewtonRaphsonSolver(FunPtr, M_Dsqr, -E_D, &HTilde, guess, (real) TINY_NUMBER, (real) EPSILON, Gamma);
   
   return HTilde;
 }
@@ -270,14 +270,11 @@ real SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real 
 
    Out[0] = In[DENS] / LorentzFactor;
 
-// Method 1:
-   //Out[4] = In[DENS]*( HTilde*LorentzFactor + Usqr / ( (real)1.0 + LorentzFactor )  ) - In[ENGY];
-
-// Method 2:
    real Temperature;
    SRHydro_HTilde2Temperature ( HTilde, &Temperature, NULL, Gamma );
 
    Out[4] = Out[0] * Temperature;
+
 
    return LorentzFactor;
 }// FUNCTION : SRHydro_Con2Pri
@@ -308,17 +305,12 @@ void SRHydro_Pri2Con (const T In[], T Out[], const T Gamma)
   Out[MOMY] = Factor0*In[2];
   Out[MOMZ] = Factor0*In[3];
 
-// Method 1:
-  //Out[ENGY] = Out[DENS]*( HTilde*LorentzFactor + Usqr / ( (real)1.0 + LorentzFactor )  ) - In[4];
-
-// Method 2:  
   real M_Dsqr = VectorDotProduct( Out[MOMX], Out[MOMY], Out[MOMZ] ) / SQR( Out[DENS] );
   real Fun;
 
   SRHydro_HTilde_Function( HTilde, M_Dsqr, (real)0.0, &Fun, NULL, Gamma );
 
-  Out[ENGY] = ( M_Dsqr + Fun ) / ( (real)1.0 + SQRT( (real)1.0 + M_Dsqr + Fun ) );
-  Out[ENGY] *= Out[DENS];
+  Out[ENGY] = Out[DENS] * Fun;
 
 
 }				// FUNCTION : SRHydro_Pri2Con
@@ -786,19 +778,31 @@ void SRHydro_HTilde_Function (real HTilde, real M_Dsqr, real Constant, real *Fun
 # if ( EOS == APPROXIMATED_GENERAL )
   SRHydro_HTilde2Temperature ( HTilde, &Temp, &DiffTemp, Gamma );
 
-
   real H =  HTilde + (real)1.0;
-  real Factor0 = SQR( H ) + M_Dsqr;
+  real Hsqra  = SQR(H);
+
+  real AA = M_Dsqr/Hsqra;
+
+  real BB = SQRT( (real)1.0 + AA );
+
+  real CC = (real)1.0 + BB;
 
   if ( Fun != NULL )
-
-  *Fun = SQR( HTilde ) + (real)2.0*HTilde - (real)2.0*Temp - (real)2.0*Temp*HTilde
-		  + SQR( Temp * H ) / Factor0 + Constant;
-
+  
+  *Fun = HTilde * BB + AA / CC - Temp / BB + Constant;
+  
   if ( DiffFun != NULL )
-
-  *DiffFun = (real)2.0*H - (real)2.0*Temp - (real)2.0*H*DiffTemp +
-		  ( (real)2.0*Temp*DiffTemp*H*H - (real)2.0*Temp*Temp*H ) / SQR( Factor0 );
+  {
+    real Hcube  = Hsqra * H;
+    real H5     = Hcube * Hsqra;
+    
+    *DiffFun = SQR(M_Dsqr) / H5 / BB / SQR(CC) 
+             - M_Dsqr * HTilde / Hcube / BB
+             - (real)2.0 * M_Dsqr / Hcube / CC 
+             + BB 
+             - DiffTemp / BB 
+             - Temp * M_Dsqr / ( Hcube * CUBE(BB) );
+  }
 
 
 # elif ( EOS == CONSTANT_GAMMA )
