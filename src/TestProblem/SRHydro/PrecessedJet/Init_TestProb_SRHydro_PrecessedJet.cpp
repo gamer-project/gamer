@@ -152,9 +152,17 @@ void SetParameter()
    if (  Burst &&  Jet_BurstEndTime <= Jet_BurstStartTime)
      Aux_Error( ERROR_INFO, "Jet_BurstEndTime <= Jet_BurstStartTime !!\n" );
 
-
    if ( Burst && Jet_BurstEndTime >= END_T )
      Aux_Error( ERROR_INFO, "Jet_BurstEndTime >= END_T !!\n" );
+
+   if ( Flag_Burst4Vel && Jet_Burst4Vel <= Eps_double )
+     Aux_Error( ERROR_INFO, "Jet_Burst4Vel <= Eps_double !!\n" );
+
+   if ( Flag_BurstDens && Jet_BurstDens <= Eps_double )
+     Aux_Error( ERROR_INFO, "Jet_BurstDens <= Eps_double !!\n" );
+
+   if ( Flag_BurstTemp && Jet_BurstTemp <= Eps_double )
+     Aux_Error( ERROR_INFO, "Jet_BurstTemp <= Eps_double !!\n" );
 
 
 // (1-2) convert to code unit
