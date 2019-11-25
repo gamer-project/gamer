@@ -126,7 +126,7 @@ MIN_TEMP                      0.0         # SR_HYDRO only
 
 
 # initialization
-OPT__INIT                     2           # initialization option: (1=FUNCTION, 2=RESTART, 3=FILE->"UM_IC")
+OPT__INIT                     1           # initialization option: (1=FUNCTION, 2=RESTART, 3=FILE->"UM_IC")
 RESTART_LOAD_NRANK            1           # number of parallel I/O (i.e., number of MPI ranks) for restart [1]
 OPT__RESTART_RESET            0           # reset some simulation status parameters (e.g., current step and time) during restart [0]
 OPT__INIT_RESTRICT            1           # restrict all data during the initialization [1]
