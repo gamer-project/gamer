@@ -2,7 +2,6 @@
 #include "TestProb.h"
 
 
-
 #if  ( MODEL == SR_HYDRO )
 
 // problem-specific global variables
@@ -22,7 +21,7 @@ static double   Jet_SrcPres;                            // jet pressure
 static double   Jet_Cen[3];                             // jet central coordinates
 static double   Jet_WaveK;                              // jet wavenumber used in the sin() function to have smooth bidirectional jets
 static double   Jet_MaxDis;                             // maximum distance between the cylinder-shape jet source and the jet center
-static double   Jet_Angular_Velocity;                   // precession angular velocity at Schwarzschild radius (degree per code_time)
+static double   Jet_Angular_Velocity;                   // precession angular velocity (degree per code_time)
 static double   Jet_Angle;                              // precession angle in degree
 
 static    int   Jet_NumShell;                           // number of shells
@@ -30,11 +29,9 @@ static double   BH_Radius;                              // radius of black hole
 
 static double   Jet_BurstStartTime;                     // start burst time in jet
 static double   Jet_BurstEndTime;                       // end burst time in jet
-
 static double   Jet_Burst4Vel;                          // burt 4-velocity
 static double   Jet_BurstDens;                          // burst proper density
 static double   Jet_BurstPres;                          // burst pressure
-
 static bool     Flag_Burst4Vel;
 static bool     Flag_BurstDens;
 static bool     Flag_BurstPres;
@@ -315,7 +312,7 @@ bool Flu_ResetByUser_DiffPrecessedJet( real fluid[], const double x, const doubl
    Dis_Cone_Vec_2 = sqrt(SQR(Jet_Cone_Vec[0]) + SQR(Jet_Cone_Vec[1])); 
    Dis_Cone_Vec   = sqrt(SQR(Jet_Cone_Vec[0]) + SQR(Jet_Cone_Vec[1]) + SQR(Jet_Cone_Vec[2]));
 
-   Angle       = Jet_Angle * M_PI / 180.0;
+   Angle   = Jet_Angle * M_PI / 180.0;
    ShellThick = Jet_Radius / (double) Jet_NumShell;
 
    Sin_Angle = sin(Angle);
