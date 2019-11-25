@@ -737,7 +737,12 @@ static void
 NewtonRaphsonSolver(void (*FunPtr)(real, real, real, real*, real*, real), real M_D, real E_D, real *root, const real guess, const real epsabs, const real epsrel, const real Gamma)
 {
  int iter = 0;
+
+ #ifdef FLOAT8
  int max_iter = 20;
+ #else
+ int max_iter = 10;
+ #endif
 
  real Fun, DiffFun;
  real delta;
