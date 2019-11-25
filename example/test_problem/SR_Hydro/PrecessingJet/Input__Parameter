@@ -25,7 +25,7 @@ END_STEP                     -1               # end step (<0=auto -> must be set
 
 # test problems
 TESTPROB_ID                   605              # test problem ID [0]
-                                               # 605: precessed relativistic jet
+                                               # 605: precessing relativistic jet
 
 
 # code units (in cgs)
