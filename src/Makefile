@@ -122,7 +122,7 @@ SIMU_OPTION += -DLR_SCHEME=PLM
 
 # Riemann solver: EXACT/ROE/HLLE/HLLC
 # --> all are useless for RTVD;
-SIMU_OPTION += -DRSOLVER=HLLE
+SIMU_OPTION += -DRSOLVER=HLLC
 
 # dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy)
 # --> DE_EINT is not supported yet; useless for RTVD
@@ -203,7 +203,7 @@ SIMU_OPTION += -DTIMING
 #SIMU_OPTION += -DTIMING_SOLVER
 
 # double precision
-SIMU_OPTION += -DFLOAT8
+#SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
 # --> must disable LOAD_BALANCE
