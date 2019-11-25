@@ -103,7 +103,6 @@ real SRHydro_GetHTilde( const real Con[], real Gamma )
   real Dsqr = SQR(Con[0]);
   real abc = (real)1.0 / Dsqr;
   real E_D = Con[4] / Con[0];
-  real E_Dsqr = abc * SQR(Con[4]);
   real M_Dsqr = abc * Msqr;
   real M_D = SQRT( M_Dsqr );
 
