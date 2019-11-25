@@ -691,13 +691,13 @@ real SRHydro_InternalEngy( real Con[], real Pri[], real Lorentz, real Gamma, boo
 GPU_DEVICE
 real SRHydro_ThermalEngy( real Con[], real Pri[], real Lorentz, real Gamma, bool frame )
 {
-  real h, E_thermal;
+  real HTilde, E_thermal;
 
-  h = SpecificEnthalpy( Con, Pri[4]/Pri[0], Gamma );
+  HTilde = SRHydro_Temperature2HTilde ( Pri[4]/Pri[0], Gamma );
 
   
-  frame ? ( E_thermal = Con[0] * (h-(real)1.0) - Lorentz * Pri[4] )
-         :( E_thermal = Pri[0] * (h-(real)1.0) -           Pri[4] );
+  frame ? ( E_thermal = Con[0] * HTilde - Lorentz * Pri[4] )
+         :( E_thermal = Pri[0] * HTilde -           Pri[4] );
 
   return E_thermal;
 }
@@ -709,11 +709,13 @@ real SRHydro_ThermalEngy( real Con[], real Pri[], real Lorentz, real Gamma, bool
 GPU_DEVICE
 real SRHydro_KineticEngy( real Con[], real Pri[], real Lorentz, real Gamma )
 {
-  real h;
+  real h, Usqr;
 
   h = SpecificEnthalpy( Con, Pri[4]/Pri[0], Gamma );
+
+  Usqr = VectorDotProduct( Pri[1], Pri[2], Pri[3]  );
   
-  return ( Con[DENS] * h + Pri[4] ) * ( Lorentz - (real)1.0 );
+  return ( Con[DENS] * h + Pri[4] ) * Usqr / ( Lorentz + (real)1.0 );
 }
 
 #ifdef GRAVITY
