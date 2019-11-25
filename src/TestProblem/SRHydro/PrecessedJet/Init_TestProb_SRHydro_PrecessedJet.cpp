@@ -16,8 +16,8 @@ static double   Jet_SrcDens;                            // jet density
 static double   Jet_Cone_Vec[3];                        // cone orientation vector (x,y,z) (NOT necessary to be a unit vector)
 static double   Jet_CenOffset[3];                          // jet central coordinates offset
 
-static double   Jet_BgPres;                             // ambient pressure
-static double   Jet_SrcPres;                            // jet pressure
+static double   Jet_BgTemp;                             // ambient temperature
+static double   Jet_SrcTemp;                            // jet temperature
 static double   Jet_Cen[3];                             // jet central coordinates
 static double   Jet_WaveK;                              // jet wavenumber used in the sin() function to have smooth bidirectional jets
 static double   Jet_MaxDis;                             // maximum distance between the cylinder-shape jet source and the jet center
@@ -27,12 +27,11 @@ static double   Jet_BurstStartTime;                     // start burst time in j
 static double   Jet_BurstEndTime;                       // end burst time in jet
 static double   Jet_Burst4Vel;                          // burt 4-velocity
 static double   Jet_BurstDens;                          // burst proper density
-static double   Jet_BurstPres;                          // burst pressure
+static double   Jet_BurstTemp;                          // burst temperature
 static bool     Flag_Burst4Vel;
 static bool     Flag_BurstDens;
-static bool     Flag_BurstPres;
+static bool     Flag_BurstTemp;
 // =======================================================================================
-
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -53,7 +52,7 @@ void Validate()
 
 // errors
 #  if ( MODEL != SR_HYDRO )
-   Aux_Error( ERROR_INFO, "MODEL != SR_HYDRO !!\n" );
+   Aux_Error( ERROR_INFO, "MODEL must be SR_HYDRO !!\n" );
 #  endif
 
 #  ifdef GRAVITY
@@ -113,39 +112,73 @@ void SetParameter()
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
 
-   ReadPara->Add( "Jet_BgDens",             &Jet_BgDens,           -1.0,           Eps_double,          NoMax_double    );
-   ReadPara->Add( "Jet_BgVel_x",            &Jet_BgVel[0],          0.0,           NoMin_double,        NoMax_double    );
-   ReadPara->Add( "Jet_BgVel_y",            &Jet_BgVel[1],          0.0,           NoMin_double,        NoMax_double    );
-   ReadPara->Add( "Jet_BgVel_z",            &Jet_BgVel[2],          0.0,           NoMin_double,        NoMax_double    );
-   ReadPara->Add( "Jet_BgPres",             &Jet_BgPres,           -1.0,           Eps_double,          NoMax_double    );
+// declare the variables related to jet
+   ReadPara->Add( "Jet_BgDens",             &Jet_BgDens,           -1.0,           Eps_double,     NoMax_double    );
+   ReadPara->Add( "Jet_BgVel_x",            &Jet_BgVel[0],          0.0,           NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_BgVel_y",            &Jet_BgVel[1],          0.0,           NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_BgVel_z",            &Jet_BgVel[2],          0.0,           NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_BgTemp",             &Jet_BgTemp,           -1.0,           Eps_double,     NoMax_double    );
 
-   ReadPara->Add( "Jet_Radius",             &Jet_Radius    ,       -1.0,           Eps_double,          NoMax_double    );
-   ReadPara->Add( "Jet_HalfHeight",         &Jet_HalfHeight,       -1.0,           Eps_double,          NoMax_double    );
-   ReadPara->Add( "Jet_SrcVel",             &Jet_SrcVel    ,       -1.0,           Eps_double,          NoMax_double    );
-   ReadPara->Add( "Jet_SrcDens",            &Jet_SrcDens   ,       -1.0,           Eps_double,          NoMax_double    );
-   ReadPara->Add( "Jet_SrcPres",            &Jet_SrcPres   ,       -1.0,           Eps_double,          NoMax_double    );
-   ReadPara->Add( "Jet_Cone_Vec_x",         &Jet_Cone_Vec[0],       NoDef_double,  NoMin_double,        NoMax_double    );
-   ReadPara->Add( "Jet_Cone_Vec_y",         &Jet_Cone_Vec[1],       NoDef_double,  NoMin_double,        NoMax_double    );
-   ReadPara->Add( "Jet_Cone_Vec_z",         &Jet_Cone_Vec[2],       NoDef_double,  NoMin_double,        NoMax_double    );
-   ReadPara->Add( "Jet_CenOffset_x",        &Jet_CenOffset [0],     NoDef_double,  NoMin_double,        NoMax_double    );
-   ReadPara->Add( "Jet_CenOffset_y",        &Jet_CenOffset [1],     NoDef_double,  NoMin_double,        NoMax_double    );
-   ReadPara->Add( "Jet_CenOffset_z",        &Jet_CenOffset [2],     NoDef_double,  NoMin_double,        NoMax_double    );
-   ReadPara->Add( "Jet_Angular_Velocity",   &Jet_Angular_Velocity,  NoDef_double,  NoMin_double,        NoMax_double    );
-   ReadPara->Add( "Jet_Angle",              &Jet_Angle,             NoDef_double,  NoMin_double,        NoMax_double    );
-   ReadPara->Add( "Jet_BurstStartTime",     &Jet_BurstStartTime,   -1.0,           NoMin_double,          NoMax_double    );
-   ReadPara->Add( "Jet_BurstEndTime",       &Jet_BurstEndTime,     -1.0,           NoMin_double,          NoMax_double    );
-   ReadPara->Add( "Jet_Burst4Vel",          &Jet_Burst4Vel,        -1.0,           NoMin_double,        NoMax_double    );
-   ReadPara->Add( "Jet_BurstDens",          &Jet_BurstDens,        -1.0,           NoMin_double,          NoMax_double    );
-   ReadPara->Add( "Jet_BurstPres",          &Jet_BurstPres,        -1.0,           NoMin_double,          NoMax_double    );
-   ReadPara->Add( "Flag_Burst4Vel",         &Flag_Burst4Vel,        false,         Useless_bool,        Useless_bool    );
-   ReadPara->Add( "Flag_BurstDens"  ,       &Flag_BurstDens,        false,         Useless_bool,        Useless_bool    );
-   ReadPara->Add( "Flag_BurstPres",         &Flag_BurstPres,        false,         Useless_bool,        Useless_bool    );
+   ReadPara->Add( "Jet_Radius",             &Jet_Radius    ,       -1.0,           Eps_double,     NoMax_double    );
+   ReadPara->Add( "Jet_HalfHeight",         &Jet_HalfHeight,       -1.0,           Eps_double,     NoMax_double    );
+   ReadPara->Add( "Jet_SrcVel",             &Jet_SrcVel    ,       -1.0,           NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_SrcDens",            &Jet_SrcDens   ,       -1.0,           Eps_double,     NoMax_double    );
+   ReadPara->Add( "Jet_SrcTemp",            &Jet_SrcTemp   ,       -1.0,           Eps_double,     NoMax_double    );
+   ReadPara->Add( "Jet_Cone_Vec_x",         &Jet_Cone_Vec[0],       NoDef_double,  NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_Cone_Vec_y",         &Jet_Cone_Vec[1],       NoDef_double,  NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_Cone_Vec_z",         &Jet_Cone_Vec[2],       NoDef_double,  NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_CenOffset_x",        &Jet_CenOffset [0],     NoDef_double,  NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_CenOffset_y",        &Jet_CenOffset [1],     NoDef_double,  NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_CenOffset_z",        &Jet_CenOffset [2],     NoDef_double,  NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_Angular_Velocity",   &Jet_Angular_Velocity,  NoDef_double,  NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_Angle",              &Jet_Angle,             NoDef_double,  NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_BurstStartTime",     &Jet_BurstStartTime,   -1.0,           NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_BurstEndTime",       &Jet_BurstEndTime,     -1.0,           NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_Burst4Vel",          &Jet_Burst4Vel,        -1.0,           NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_BurstDens",          &Jet_BurstDens,        -1.0,           NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_BurstTemp",          &Jet_BurstTemp,        -1.0,           NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Flag_Burst4Vel",         &Flag_Burst4Vel,        false,         Useless_bool,   Useless_bool    );
+   ReadPara->Add( "Flag_BurstDens",         &Flag_BurstDens,        false,         Useless_bool,   Useless_bool    );
+   ReadPara->Add( "Flag_BurstTemp",         &Flag_BurstTemp,        false,         Useless_bool,   Useless_bool    );
    
-
 
    ReadPara->Read( FileName );
 
    delete ReadPara;
+
+// (1-1) validation
+   bool Burst = Flag_Burst4Vel | Flag_BurstDens | Flag_BurstTemp;
+
+   if (  Burst &&  Jet_BurstEndTime <= Jet_BurstStartTime)
+     Aux_Error( ERROR_INFO, "Jet_BurstEndTime <= Jet_BurstStartTime !!\n" );
+
+
+   if ( Burst && Jet_BurstEndTime >= END_T )
+     Aux_Error( ERROR_INFO, "Jet_BurstEndTime >= END_T !!\n" );
+
+
+// (1-2) convert to code unit
+   Jet_BgDens               *= 1.0       / UNIT_D;
+   Jet_BgTemp               *= Const_keV / ( Const_mp * SQR(Const_c) );
+
+   for (int d=0; d<3; d++)    
+   Jet_BgVel[d]             *= Const_c   / UNIT_V;
+
+   Jet_Radius               *= Const_kpc / UNIT_L;
+   Jet_HalfHeight           *= Const_kpc / UNIT_L;
+   Jet_SrcVel               *= Const_c   / UNIT_V;
+   Jet_SrcTemp              *= Const_keV / ( Const_mp * SQR(Const_c) );
+   Jet_SrcDens              *= 1.0       / UNIT_D;
+
+   for (int d=0; d<3; d++)
+   Jet_CenOffset[d]         *= Const_kpc / UNIT_L;
+
+   Jet_Angular_Velocity     *= UNIT_T / ( 1e3*Const_yr );
+   Jet_BurstStartTime       *= 1e3*Const_yr / UNIT_T;
+   Jet_BurstEndTime         *= 1e3*Const_yr / UNIT_T;
+   Jet_Burst4Vel            *= Const_c   / UNIT_V;
+   Jet_BurstDens            *= 1.0       / UNIT_D;
+   Jet_BurstTemp            *= Const_keV / ( Const_mp * SQR(Const_c) );
 
 
 // (2) set the problem-specific derived parameters
@@ -175,34 +208,33 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID         = %d\n",          TESTPROB_ID                      );
-      Aux_Message( stdout, "     Jet_BgDens           = % 14.7e\n",      Jet_BgDens                      );
-      Aux_Message( stdout, "     Jet_BgPres           = % 14.7e\n",      Jet_BgPres                      );
-      Aux_Message( stdout, "     Jet_BgVel[x]         = % 14.7e\n",      Jet_BgVel[0]                    );
-      Aux_Message( stdout, "     Jet_BgVel[y]         = % 14.7e\n",      Jet_BgVel[1]                    );
-      Aux_Message( stdout, "     Jet_BgVel[z]         = % 14.7e\n",      Jet_BgVel[2]                    );
-      Aux_Message( stdout, "\n" );
-      Aux_Message( stdout, "     Jet_Radius           = % 14.7e\n",      Jet_Radius                      );
-      Aux_Message( stdout, "     Jet_HalfHeight       = % 14.7e\n",      Jet_HalfHeight                  );
-      Aux_Message( stdout, "     Jet_SrcVel           = % 14.7e\n",      Jet_SrcVel                      );
-      Aux_Message( stdout, "     Jet_SrcDens          = % 14.7e\n",      Jet_SrcDens                     );
-      Aux_Message( stdout, "     Jet_SrcPres          = % 14.7e\n",      Jet_SrcPres                     );
-      Aux_Message( stdout, "     Jet_Cone_Vec[x]      = % 14.7e\n",      Jet_Cone_Vec[0]                 );
-      Aux_Message( stdout, "     Jet_Cone_Vec[y]      = % 14.7e\n",      Jet_Cone_Vec[1]                 );
-      Aux_Message( stdout, "     Jet_Cone_Vec[z]      = % 14.7e\n",      Jet_Cone_Vec[2]                 );
-      Aux_Message( stdout, "     Jet_CenOffset[x]     = % 14.7e\n",      Jet_CenOffset [0]               );
-      Aux_Message( stdout, "     Jet_CenOffset[y]     = % 14.7e\n",      Jet_CenOffset [1]               );
-      Aux_Message( stdout, "     Jet_CenOffset[z]     = % 14.7e\n",      Jet_CenOffset [2]               );
-      Aux_Message( stdout, "     Jet_Angular_Velocity = % 14.7e\n",      Jet_Angular_Velocity            );
-      Aux_Message( stdout, "     Jet_Angle            = % 14.7e\n",      Jet_Angle                       );
-      Aux_Message( stdout, "     Jet_BurstStartTime   = % 14.7e\n",      Jet_BurstStartTime              );
-      Aux_Message( stdout, "     Jet_BurstEndTime     = % 14.7e\n",      Jet_BurstEndTime                );
-      Aux_Message( stdout, "     Jet_Burst4Vel        = % 14.7e\n",      Jet_Burst4Vel                   );
-      Aux_Message( stdout, "     Jet_BurstDens        = % 14.7e\n",      Jet_BurstDens                   );
-      Aux_Message( stdout, "     Jet_BurstPres        = % 14.7e\n",      Jet_BurstPres                   );
-      Aux_Message( stdout, "     Flag_Burst4Vel       = % d\n",          Flag_Burst4Vel                  );
-      Aux_Message( stdout, "     Flag_BurstDens       = % d\n",          Flag_BurstDens                  );
-      Aux_Message( stdout, "     Flag_BurstPres       = % d\n",          Flag_BurstPres                  );
+      Aux_Message( stdout, "  test problem ID      = %d\n",                 TESTPROB_ID                                   );
+      Aux_Message( stdout, "  Jet_BgDens           = % 14.7e g/cm^3\n",     Jet_BgDens*UNIT_D                             );
+      Aux_Message( stdout, "  Jet_BgTemp           = % 14.7e keV\n",        Jet_BgTemp*Const_mp*SQR(Const_c)/Const_keV    );
+      Aux_Message( stdout, "  Jet_BgVel[x]         = % 14.7e c\n",          Jet_BgVel[0]                                  );
+      Aux_Message( stdout, "  Jet_BgVel[y]         = % 14.7e c\n",          Jet_BgVel[1]                                  );
+      Aux_Message( stdout, "  Jet_BgVel[z]         = % 14.7e c\n",          Jet_BgVel[2]                                  );
+      Aux_Message( stdout, "  Jet_Radius           = % 14.7e kpc\n",        Jet_Radius*UNIT_L/Const_kpc                   );
+      Aux_Message( stdout, "  Jet_HalfHeight       = % 14.7e kpc\n",        Jet_HalfHeight*UNIT_L/Const_kpc               );
+      Aux_Message( stdout, "  Jet_SrcVel           = % 14.7e c\n",          Jet_SrcVel                                    );
+      Aux_Message( stdout, "  Jet_SrcDens          = % 14.7e g/cm^3\n",     Jet_SrcDens*UNIT_D                            );
+      Aux_Message( stdout, "  Jet_SrcTemp          = % 14.7e keV\n",        Jet_SrcTemp*Const_mp*SQR(Const_c)/Const_keV   );
+      Aux_Message( stdout, "  Jet_Cone_Vec[x]      = % 14.7e\n",            Jet_Cone_Vec[0]                               );
+      Aux_Message( stdout, "  Jet_Cone_Vec[y]      = % 14.7e\n",            Jet_Cone_Vec[1]                               );
+      Aux_Message( stdout, "  Jet_Cone_Vec[z]      = % 14.7e\n",            Jet_Cone_Vec[2]                               );
+      Aux_Message( stdout, "  Jet_CenOffset[x]     = % 14.7e kpc\n",        Jet_CenOffset[0]*UNIT_L/Const_kpc             );
+      Aux_Message( stdout, "  Jet_CenOffset[y]     = % 14.7e kpc\n",        Jet_CenOffset[1]*UNIT_L/Const_kpc             );
+      Aux_Message( stdout, "  Jet_CenOffset[z]     = % 14.7e kpc\n",        Jet_CenOffset[2]*UNIT_L/Const_kpc             );
+      Aux_Message( stdout, "  Jet_Angular_Velocity = % 14.7e degree/kyr\n", Jet_Angular_Velocity*1e3*Const_yr / UNIT_T    );
+      Aux_Message( stdout, "  Jet_Angle            = % 14.7e\n",            Jet_Angle                                     );
+      Aux_Message( stdout, "  Jet_BurstStartTime   = % 14.7e kyr \n",       Jet_BurstStartTime*UNIT_T/(1e3*Const_yr)      );
+      Aux_Message( stdout, "  Jet_BurstEndTime     = % 14.7e kyr \n",       Jet_BurstEndTime*UNIT_T/(1e3*Const_yr)        );
+      Aux_Message( stdout, "  Jet_Burst4Vel        = % 14.7e c \n",         Jet_Burst4Vel                                 );
+      Aux_Message( stdout, "  Jet_BurstDens        = % 14.7e g/cm^3\n",     Jet_BurstDens*UNIT_D                          );
+      Aux_Message( stdout, "  Jet_BurstTemp        = % 14.7e keV\n",        Jet_BurstTemp*Const_mp*SQR(Const_c)/Const_keV );
+      Aux_Message( stdout, "  Flag_Burst4Vel       = % d\n",                Flag_Burst4Vel                                );
+      Aux_Message( stdout, "  Flag_BurstDens       = % d\n",                Flag_BurstDens                                );
+      Aux_Message( stdout, "  Flag_BurstTemp       = % d\n",                Flag_BurstTemp                                );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -234,14 +266,13 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 // 4-velocity
-   double Pri4Vel[NCOMP_FLUID] = { Jet_BgDens, Jet_BgVel[0], Jet_BgVel[1], Jet_BgVel[2], Jet_BgPres };
-
+   double Pri4Vel[NCOMP_FLUID] = { Jet_BgDens, Jet_BgVel[0], Jet_BgVel[1], Jet_BgVel[2], Jet_BgTemp*Jet_BgDens };
 
 // cast double to real
 #  ifndef FLOAT8
    double Out[NCOMP_FLUID];
 
-   SRHydro_Pri2Con (Pri4Vel, Out, GAMMA);
+   SRHydro_Pri2Con(Pri4Vel, Out, GAMMA);
 
    fluid [0] = (real) Out[0];
    fluid [1] = (real) Out[1];
@@ -249,7 +280,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid [3] = (real) Out[3];
    fluid [4] = (real) Out[4];
 #  else
-   SRHydro_Pri2Con (Pri4Vel, fluid, GAMMA);
+   SRHydro_Pri2Con(Pri4Vel, fluid, GAMMA);
 #  endif
 
 } // FUNCTION : SetGridIC
@@ -294,7 +325,7 @@ bool Flu_ResetByUser_PrecessedJet( real fluid[], const double x, const double y,
    double Angle, Omega_t;
    double Pri4Vel[NCOMP_FLUID];
    real   MomSin;
-   bool BurstDens_Yes, Burst4Vel_Yes, BurstPres_Yes;
+   bool BurstDens_Yes, Burst4Vel_Yes, BurstTemp_Yes;
 
 // distance: jet center to mesh
    for (int d=0; d<3; d++)    Vec_c2m[d] = r[d] - Jet_Cen[d];
@@ -372,13 +403,13 @@ bool Flu_ResetByUser_PrecessedJet( real fluid[], const double x, const double y,
 
        BurstDens_Yes = ( Flag_BurstDens && Jet_BurstStartTime < Time && Time < Jet_BurstEndTime ) ? true : false;
        Burst4Vel_Yes = ( Flag_Burst4Vel && Jet_BurstStartTime < Time && Time < Jet_BurstEndTime ) ? true : false;
-       BurstPres_Yes = ( Flag_BurstPres && Jet_BurstStartTime < Time && Time < Jet_BurstEndTime ) ? true : false;
+       BurstTemp_Yes = ( Flag_BurstTemp && Jet_BurstStartTime < Time && Time < Jet_BurstEndTime ) ? true : false;
 
-       Pri4Vel[0] = BurstDens_Yes ? Jet_BurstDens              : Jet_SrcDens;
-       Pri4Vel[1] = Burst4Vel_Yes ? Jet_BurstVel_xyz[0]*MomSin : Jet_SrcVel_xyz[0]*MomSin;
-       Pri4Vel[2] = Burst4Vel_Yes ? Jet_BurstVel_xyz[1]*MomSin : Jet_SrcVel_xyz[1]*MomSin;
-       Pri4Vel[3] = Burst4Vel_Yes ? Jet_BurstVel_xyz[2]*MomSin : Jet_SrcVel_xyz[2]*MomSin;
-       Pri4Vel[4] = BurstPres_Yes ? Jet_BurstPres              : Jet_SrcPres;
+       Pri4Vel[0] = BurstDens_Yes ? Jet_BurstDens               : Jet_SrcDens;
+       Pri4Vel[1] = Burst4Vel_Yes ? Jet_BurstVel_xyz[0]*MomSin  : Jet_SrcVel_xyz[0]*MomSin;
+       Pri4Vel[2] = Burst4Vel_Yes ? Jet_BurstVel_xyz[1]*MomSin  : Jet_SrcVel_xyz[1]*MomSin;
+       Pri4Vel[3] = Burst4Vel_Yes ? Jet_BurstVel_xyz[2]*MomSin  : Jet_SrcVel_xyz[2]*MomSin;
+       Pri4Vel[4] = BurstTemp_Yes ? Jet_BurstTemp*Jet_BurstDens : Jet_SrcTemp*Jet_SrcDens;
         
 //     cast double to real
 #      ifndef FLOAT8
