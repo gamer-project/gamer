@@ -22,8 +22,6 @@ void Init_TestProb_SRHydro_BlastWave();
 void Init_TestProb_SRHydro_Riemann();
 void Init_TestProb_SRHydro_DoubleMachReflection();
 void Init_TestProb_SRHydro_Jets();
-void Init_TestProb_SRHydro_PrecessedJet();
-void Init_TestProb_SRHydro_DiffPrecessedJet();
 void Init_TestProb_SRHydro_WScaling_BlastWave();
 
 void Init_TestProb_ELBDM_ExtPot();
@@ -71,8 +69,6 @@ void Init_TestProb()
       case TESTPROB_SRHYDRO_RIEMANN :                    Init_TestProb_SRHydro_Riemann();                   break;
       case TESTPROB_SRHYDRO_DOUBLE_MACH_REFLECTION :     Init_TestProb_SRHydro_DoubleMachReflection();      break;
       case TESTPROB_SRHYDRO_JETS:                        Init_TestProb_SRHydro_Jets();                      break;
-      case TESTPROB_SRHYDRO_PRECESSED_JET:               Init_TestProb_SRHydro_PrecessedJet();              break;
-      case TESTPROB_SRHYDRO_DIFFERENTIAL_PRECESSED_JET : Init_TestProb_SRHydro_DiffPrecessedJet();          break;
 #     elif ( MODEL == ELBDM )
       case TESTPROB_ELBDM_EXTPOT :                       Init_TestProb_ELBDM_ExtPot();                      break;
 #     endif
