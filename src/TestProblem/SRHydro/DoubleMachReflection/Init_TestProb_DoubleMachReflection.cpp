@@ -1,19 +1,21 @@
 #include "GAMER.h"
 #include "TestProb.h"
 
-#if  ( MODEL == SR_HYDRO )
 
 
 // problem-specific global variables
 // =======================================================================================
-static double Theta;     // incline angle of shock
-static double Height;    // vertical shift
-static double DensUp;    // primitive density in up-stream
-static double VelyUp;    // magnitude of 3-velocity in up-stream
-static double PresUp;    // pressure in up-stream
-static double DensDown;  // primitive density in down-stream
-static double VelyDown;  // magnitude of 3-velocity in down-stream
-static double PresDown;  // pressure in down-stream
+static double InclinedAngle;           // incline angle of shock
+static double DensUpStream;            // proper mass density in up-stream
+static double UxUpStream;              // x component of 4-velocity in up-stream
+static double UyUpStream;              // y component of 4-velocity in up-stream
+static double UzUpStream;              // z component of 4-velocity in up-stream
+static double UxDownStream;            // x component of 4-velocity in down-stream
+static double UyDownStream;            // y component of 4-velocity in down-stream
+static double UzDownStream;            // z component of 4-velocity in down-stream
+static double PresUpstream;            // pressure in up-stream
+static double DensDownStream;          // proper mass density in down-stream
+static double PresDownStream;          // pressure in down-stream
 // =======================================================================================
 
 
@@ -52,7 +54,6 @@ void Validate()
 
 
 
-#if ( MODEL == SR_HYDRO )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
@@ -82,24 +83,27 @@ void SetParameter()
 // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
 // --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
 // ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",  &VARIABLE,          DEFAULT,        MIN,              MAX               );
+// ReadPara->Add( "KEY_IN_THE_FILE",        &VARIABLE,             DEFAULT,                  MIN,                MAX      );
 // ********************************************************************************************************************************
-   ReadPara->Add( "Theta",            &Theta,             -1.0,           Eps_double,       +90.0             );
-//   ReadPara->Add( "Height",           &Height,            -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "DensUp",           &DensUp,            -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "VelyUp",           &VelyUp,            -1.0,           -1.0 ,            +1.0              );
-   ReadPara->Add( "PresUp",           &PresUp,            -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "DensDown",         &DensDown,          -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "VelyDown",         &VelyDown,          -1.0,           -1.0      ,       +1.0              );
-   ReadPara->Add( "PresDown",         &PresDown,          -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "InclinedAngle",          &InclinedAngle,           -1.0,         NoMin_double,                   +90.0 );
+   ReadPara->Add( "DensUpStream",           &DensUpStream,            -1.0,           Eps_double,            NoMax_double );
+   ReadPara->Add( "UxUpStream",             &UxUpStream,              -1.0,         NoMin_double,            NoMax_double );
+   ReadPara->Add( "UyUpStream",             &UyUpStream,              -1.0,         NoMin_double,            NoMax_double );
+   ReadPara->Add( "UzUpStream",             &UzUpStream,              -1.0,         NoMin_double,            NoMax_double );
+   ReadPara->Add( "PresUpstream",           &PresUpstream,            -1.0,           Eps_double,            NoMax_double );
+   ReadPara->Add( "DensDownStream",         &DensDownStream,          -1.0,           Eps_double,            NoMax_double );
+   ReadPara->Add( "UxDownStream",           &UxDownStream,            -1.0,         NoMin_double,            NoMax_double );
+   ReadPara->Add( "UyDownStream",           &UyDownStream,            -1.0,         NoMin_double,            NoMax_double );
+   ReadPara->Add( "UzDownStream",           &UzDownStream,            -1.0,         NoMin_double,            NoMax_double );
+   ReadPara->Add( "PresDownStream",         &PresDownStream,          -1.0,           Eps_double,            NoMax_double );
 
    ReadPara->Read( FileName );
 
    delete ReadPara;
 
 // (1-2) set the default values
-   Theta = 45;
-   Height = 0.05*amr->BoxSize[1];
+   if ( InclinedAngle == -1.0 )
+        InclinedAngle = 45.0;
 
 // (1-3) check the runtime parameters
 
@@ -127,15 +131,18 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID                        = %d\n",     TESTPROB_ID );
-      Aux_Message( stdout, "  incline angle of shock                 = %13.7e\n", Theta );
-      Aux_Message( stdout, "  vertical shift                         = %13.7e\n", Height );
-      Aux_Message( stdout, "  primitive density in up-stream         = %13.7e\n", DensUp );
-      Aux_Message( stdout, "  magnitude of 3-velocity in up-stream   = %13.7e\n", VelyUp );
-      Aux_Message( stdout, "  pressure in up-stream                  = %13.7e\n", PresUp );
-      Aux_Message( stdout, "  primitive density in down-stream       = %13.7e\n", DensDown );
-      Aux_Message( stdout, "  magnitude of 3-velocity in down-stream = %13.7e\n", VelyDown );
-      Aux_Message( stdout, "  pressure in down-stream                = %13.7e\n", PresDown );
+      Aux_Message( stdout, "  test problem ID                          = %d\n",       TESTPROB_ID       );
+      Aux_Message( stdout, "  inclined angle of shock                  = %13.7e\n",   InclinedAngle     );
+      Aux_Message( stdout, "  proper mass density in up-stream         = %13.7e\n",   DensUpStream      );
+      Aux_Message( stdout, "  x component of 4-velocity in up-stream   = %13.7e\n",   UxUpStream        );
+      Aux_Message( stdout, "  y component of 4-velocity in up-stream   = %13.7e\n",   UyUpStream        );
+      Aux_Message( stdout, "  z component of 4-velocity in up-stream   = %13.7e\n",   UzUpStream        );
+      Aux_Message( stdout, "  pressure in up-stream                    = %13.7e\n",   PresUpstream      );
+      Aux_Message( stdout, "  proper mass density in down-stream       = %13.7e\n",   DensDownStream    );
+      Aux_Message( stdout, "  x component of 4-velocity in down-stream = %13.7e\n",   UxDownStream      );
+      Aux_Message( stdout, "  y component of 4-velocity in down-stream = %13.7e\n",   UyDownStream      );
+      Aux_Message( stdout, "  z component of 4-velocity in down-stream = %13.7e\n",   UzDownStream      );
+      Aux_Message( stdout, "  pressure in down-stream                  = %13.7e\n",   PresDownStream    );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -168,38 +175,33 @@ void SetParameter()
 void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] )
 {
-   double Prim1[NCOMP_FLUID]; // store 3-velocity
-   double Prim2[NCOMP_FLUID]; // store 4-velocity
+   double Prim[NCOMP_FLUID];
+   double BoxSizeX = amr->BoxSize[0];
 
-   double VelyUp_x = VelyUp*SIN(Theta*M_PI/180.0);
-   double VelyUp_y = VelyUp*COS(Theta*M_PI/180.0);
-   double VelyDown_x = VelyDown*SIN(Theta*M_PI/180.0);
-   double VelyDown_y = VelyDown*COS(Theta*M_PI/180.0);
-   double slope = tan(Theta*M_PI/180.0); // shock slope
-
-   if ( y >= slope*x +  Height) // down-stream
+   //if ( y >= tan( InclinedAngle*M_PI/180.0 )*x - 1e-2*BoxSizeX ) // down-stream
+   if ( y >= tan( InclinedAngle*M_PI/180.0 )*x ) // down-stream
    {
-      Prim1[0] = DensDown;
-      Prim1[1] = VelyDown_x;
-      Prim1[2] = VelyDown_y;
-      Prim1[3] = 0.0;
-      Prim1[4] = PresDown;
-
-   }else{ // up-stream
-      Prim1[0] = DensUp;
-      Prim1[1] = VelyUp_x;
-      Prim1[2] = VelyUp_y;
-      Prim1[3] = 0.0;
-      Prim1[4] = PresUp;
+      Prim[0] = DensDownStream;
+      Prim[1] = UxDownStream;
+      Prim[2] = UyDownStream;
+      Prim[3] = UzDownStream;
+      Prim[4] = PresDownStream;
+   }
+   else                                                            // up-stream
+   {
+      Prim[0] = DensUpStream;
+      Prim[1] = UxUpStream;
+      Prim[2] = UyUpStream;
+      Prim[3] = UzUpStream;
+      Prim[4] = PresUpstream;
    }
 
-   SRHydro_3Velto4Vel (Prim1, Prim2);
 
 // cast double to real
 #  ifndef FLOAT8
    double Out[NCOMP_FLUID];
 
-   SRHydro_Pri2Con (Prim2, Out, GAMMA);
+   SRHydro_Pri2Con (Prim, Out, GAMMA);
 
    fluid [0] = (real) Out[0];
    fluid [1] = (real) Out[1];
@@ -207,13 +209,35 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid [3] = (real) Out[3];
    fluid [4] = (real) Out[4];
 #  else
-   SRHydro_Pri2Con (Prim2, fluid, GAMMA);
+   SRHydro_Pri2Con (Prim, fluid, GAMMA);
 #  endif
 
 } // FUNCTION : SetGridIC
-#endif // #if ( MODEL == SR_HYDRO )
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  BC_User
+// Description :  User-specified boundary condition
+//
+// Note        :  1. Invoked by "Flu_BoundaryCondition_User" using the function pointer "BC_User_Ptr"
+//                   --> The function pointer may be reset by various test problem initializers, in which case
+//                       this funtion will become useless
+//                2. Always return NCOMP_TOTAL variables
+//                3. Enabled by the runtime options "OPT__BC_FLU_* == 4"
+//
+// Parameter   :  fluid    : Fluid field to be set
+//                x/y/z    : Physical coordinates
+//                Time     : Physical time
+//                lv       : Refinement level
+//                AuxArray : Auxiliary array
+//
+// Return      :  fluid
+//-------------------------------------------------------------------------------------------------------
+void BC_User( real fluid[], const double x, const double y, const double z, const double Time,
+              const int lv, double AuxArray[] )
+{
 
 
+}
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_TestProb_SRHydro_DoubleMachReflection
@@ -262,4 +286,3 @@ void Init_TestProb_SRHydro_DoubleMachReflection()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_TestProb_SRHydro_DoubleMachReflection
-#endif

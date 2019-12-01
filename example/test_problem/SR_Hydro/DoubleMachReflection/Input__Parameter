@@ -14,20 +14,20 @@
 
 # simulation scale
 BOX_SIZE                      1.0         # box size along the longest side (in Mpc/h if COMOVING is adopted)
-NX0_TOT_X                     32          # number of base-level cells along x
-NX0_TOT_Y                     32          # number of base-level cells along y
-NX0_TOT_Z                     32          # number of base-level cells along z
-OMP_NTHREAD                   3           # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
-END_T                         0.5         # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
+NX0_TOT_X                     64          # number of base-level cells along x
+NX0_TOT_Y                     16          # number of base-level cells along y
+NX0_TOT_Z                     16          # number of base-level cells along z
+OMP_NTHREAD                   4           # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
+END_T                         3.0         # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
 END_STEP                     -1           # end step (<0=auto -> must be set by test problems or restart) [-1]
 
 
 # test problems
-TESTPROB_ID                   602          # test problem ID [0]
-                                           # 0:  none
-                                           # 600: blast wave in pure sr-hydro
-                                           # 601: Riemann problem in pure sr-hydro
-                                           # 602: double mach reflection in pure sr-hydro
+TESTPROB_ID                   602         # test problem ID [0]
+                                          # 0:  none
+                                          # 600: blast wave in pure sr-hydro
+                                          # 601: Riemann problem in pure sr-hydro
+                                          # 602: double mach reflection in pure sr-hydro
 
 # code units (in cgs)
 OPT__UNIT                     0           # specify code units -> must set exactly 3 basic units below [0] ##USELESS FOR COMOVING##
@@ -68,7 +68,7 @@ REGRID_COUNT                  4           # refine every REGRID_COUNT sub-step [
 FLAG_BUFFER_SIZE              8           # number of buffer cells for the flag operation (0~PATCH_SIZE) [PATCH_SIZE]
 FLAG_BUFFER_SIZE_MAXM1_LV     4           # FLAG_BUFFER_SIZE at the level MAX_LEVEL-1 (<0=auto -> FLAG_BUFFER_SIZE) [-1]
 FLAG_BUFFER_SIZE_MAXM2_LV    -1           # FLAG_BUFFER_SIZE at the level MAX_LEVEL-2 (<0=auto) [-1]
-MAX_LEVEL                     3           # maximum refinement level (0~NLEVEL-1) [NLEVEL-1]
+MAX_LEVEL                     6           # maximum refinement level (0~NLEVEL-1) [NLEVEL-1]
 OPT__FLAG_RHO                 0           # flag: density (Input__Flag_Rho) [0]
 OPT__FLAG_RHO_GRADIENT        0           # flag: density gradient (Input__Flag_RhoGradient) [0]
 OPT__FLAG_PRES_GRADIENT       0           # flag: pressure gradient (Input__Flag_PresGradient) [0] ##HYDRO ONLY##
@@ -76,9 +76,9 @@ OPT__FLAG_VORTICITY           0           # flag: vorticity (Input__Flag_Vortici
 OPT__FLAG_LORENTZ             0           # flag: Lorentz factor (Input__Flag_Lorentz) [0] ##SR_HYDRO ONLY##
 OPT__FLAG_3VELOCITY           0           # flag: magnitude of 3-velocity (Input__Flag_3Velocity) [0] ##SR_HYDRO ONLY##
 OPT__FLAG_JEANS               0           # flag: Jeans length (Input__Flag_Jeans) [0] ##HYDRO ONLY##
-OPT__FLAG_LOHNER_DENS         0           # flag: Lohner for number density    (Input__Flag_Lohner) [0] ##BOTH HYDRO,ELBDM AND SR_HYDRO ##
+OPT__FLAG_LOHNER_DENS         1           # flag: Lohner for number density    (Input__Flag_Lohner) [0] ##BOTH HYDRO,ELBDM AND SR_HYDRO ##
 OPT__FLAG_LOHNER_ENGY         0           # flag: Lohner for energy density    (Input__Flag_Lohner) [0] ##HYDRO AND SR_HYDRO##
-OPT__FLAG_LOHNER_PRES         1           # flag: Lohner for pressure          (Input__Flag_Lohner) [0] ##HYDRO AND SR_HYDRO##
+OPT__FLAG_LOHNER_PRES         0           # flag: Lohner for pressure          (Input__Flag_Lohner) [0] ##HYDRO AND SR_HYDRO##
 OPT__FLAG_LOHNER_TEMP         0           # flag: Lohner for temperature       (Input__Flag_Lohner) [0] ##HYDRO AND SR_HYDRO##
 OPT__FLAG_LOHNER_LRTZ         0           # flag: Lohner for Lorentz factor    (Input__Flag_Lohner) [0] ##SR_HYDRO ONLY##
 OPT__FLAG_LOHNER_FORM         2           # form of Lohner: (1=FLASH-1, 2=FLASH-2, 3=form-invariant-1, 4=form-invariant-2) [2]
@@ -112,7 +112,7 @@ DUAL_ENERGY_SWITCH            2.0e-2      # apply dual-energy if E_int/E_kin < D
 
 
 # fluid solvers in all models
-FLU_GPU_NPGROUP              -1           # number of patch groups sent into the GPU fluid solver (<=0=auto) [-1]
+FLU_GPU_NPGROUP             192           # number of patch groups sent into the GPU fluid solver (<=0=auto) [-1]
 GPU_NSTREAM                  -1           # number of CUDA streams for the asynchronous memory copy in GPU (<=0=auto) [-1]
 OPT__FIXUP_FLUX               1           # correct coarse grids by the fine-grid boundary fluxes [1] ##HYDRO and ELBDM ONLY##
 OPT__FIXUP_RESTRICT           1           # correct coarse grids by averaging the fine-grid data [1]
@@ -129,7 +129,7 @@ OPT__INIT                     1           # initialization option: (1=FUNCTION, 
 RESTART_LOAD_NRANK            1           # number of parallel I/O (i.e., number of MPI ranks) for restart [1]
 OPT__INIT_RESTRICT            1           # restrict all data during the initialization [1]
 OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2=CUDA, -1=MPI rank, >=0=input) [-1]
-INIT_SUBSAMPLING_NCELL       16           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
+INIT_SUBSAMPLING_NCELL        0           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
 
 
 # interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar)
@@ -140,13 +140,13 @@ INT_MONO_COEFF                2.0         # coefficient for ensuring the interpo
 
 # data dump
 OPT__OUTPUT_TOTAL             1           # output the simulation snapshot: (0=off, 1=HDF5, 2=C-binary) [1]
-OPT__OUTPUT_PART              7           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag) [0]
+OPT__OUTPUT_PART              0           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag) [0]
 OPT__OUTPUT_USER              0           # output the user-specified data -> edit "Output_User.cpp" [0]
 OPT__OUTPUT_BASEPS            0           # output the base-level power spectrum [0]
 OPT__OUTPUT_BASE              0           # only output the base-level data [0] ##OPT__OUTPUT_PART ONLY##
-OPT__OUTPUT_MODE              1           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
+OPT__OUTPUT_MODE              2           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
 OUTPUT_STEP                   1           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
-OUTPUT_DT                     5.0e-4      # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
+OUTPUT_DT                     0.1         # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
 OUTPUT_PART_X                 0.5         # x coordinate for OPT__OUTPUT_PART [-1.0]
 OUTPUT_PART_Y                 0.5         # y coordinate for OPT__OUTPUT_PART [-1.0]
 OUTPUT_PART_Z                 0.5         # z coordinate for OPT__OUTPUT_PART [-1.0]
