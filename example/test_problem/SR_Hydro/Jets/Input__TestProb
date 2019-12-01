@@ -1,39 +1,62 @@
+# proton mass   = 1.672621898e-24 [g]
+# electron mass = 9.109383560e-28 [g]
+
 # problem-specific runtime parameters
-Jet_NJet             1            # number of jets (1/2)
 
-Jet_BgDens       5.0e-29          # ambient density (in cgs units)
-Jet_BgTemp           1.0          # ambient temperature (in keV)
-Jet_BgVel_x         +0.0          # ambient velocity x (in cgs units) [0.0]
-Jet_BgVel_y         +0.0          # ambient velocity y (in cgs units) [0.0]
-Jet_BgVel_z         +0.0          # ambient velocity z (in cgs units) [0.0]
+Jet_Exist                                         1
+Jet_Ambient                                       0         # [0/1] : uniform / hydro-static equilbrium ambient
+Jet_DiffPrecession                                0
+Jet_Precession                                    0
+Jet_TimeDependentSrc                              0
+Jet_ParticleMassSrc                 1.672621898e-24
+Jet_ParticleMassAmbient             1.672621898e-24
 
-Jet0_Radius          0.5          # jet 0: radius of the cylinder-shape jet source (in kpc)
-Jet0_HalfHeight      0.5          # jet 0: half height of the cylinder-shape jet source (in kpc)
-Jet0_SrcVel          10           # jet 0: jet 4-velocity ( in unit of speed of light )
-Jet0_SrcDens     5.0e-30          # jet 0: jet density (in cgs units)
-Jet0_SrcTemp         1e6          # jet 0: jet temperature (in keV)
-Jet0_Vec_x          +1.0          # jet 0: jet orientation vector x (x,y,z don't have to be a unit vector)
-Jet0_Vec_y          +0.0          # jet 0: jet orientation vector y
-Jet0_Vec_z          +0.0          # jet 0: jet orientation vector z
-Jet0_CenOffset_x    +0.0          # jet 0: jet central coordinates offset x (in kpc)
-Jet0_CenOffset_y    +0.0          # jet 0: jet central coordinates offset y (in kpc)
-Jet0_CenOffset_z    +0.0          # jet 0: jet central coordinates offset z (in kpc)
 
-#Jet1_Radius          0.35        # jet 1: radius of the cylinder-shape jet source (in kpc)
-#Jet1_HalfHeight      0.70        # jet 1: half height of the cylinder-shape jet source (in kpc)
-#Jet1_SrcVel          4.0e9       # jet 1: jet velocity (in cgs units)
-#Jet1_SrcDens         1.0e-30     # jet 1: jet density (in cgs units)
-#Jet1_SrcTemp         2.0e1       # jet 1: jet temperature (in keV)
-#Jet1_Vec_x          +3.0         # jet 1: jet orientation vector x (x,y,z don't have to be a unit vector)
-#Jet1_Vec_y          +1.0         # jet 1: jet orientation vector y
-#Jet1_Vec_z          +0.0         # jet 1: jet orientation vector z
-#Jet1_CenOffset_x    +0.0         # jet 1: jet central coordinates offset x (in kpc)
-#Jet1_CenOffset_y    -4.0         # jet 1: jet central coordinates offset y (in kpc)
-#Jet1_CenOffset_z    +0.21        # jet 1: jet central coordinates offset z (in kpc)
+# jet parameters
+Jet_Radius                                      0.5         # jet: radius of the cylinder-shape jet source (in kpc)
+Jet_HalfHeight                                  0.5         # jet: half height of the cylinder-shape jet source (in kpc)
+Jet_SrcVel                                       10         # jet: jet 4-velocity ( in unit of speed of light )
+Jet_SrcDens                                 5.0e-30         # jet: jet density (in cgs units)
+Jet_SrcTemp                                     1e6         # jet: jet temperature (in keV)
+Jet_Vec_x                                      +1.0         # jet: jet orientation vector x (x,y,z don't have to be a unit vector)
+Jet_Vec_y                                      +0.0         # jet: jet orientation vector y
+Jet_Vec_z                                      +0.0         # jet: jet orientation vector z
+Jet_CenOffset_x                                +0.0         # jet: jet central coordinates offset x (in kpc)
+Jet_CenOffset_y                                +0.0         # jet: jet central coordinates offset y (in kpc)
+Jet_CenOffset_z                                +0.0         # jet: jet central coordinates offset z (in kpc)
+
+
+# Jet_Ambient == 0
+Jet_UniformDens                             5.0e-29         # ambient density (in cgs units)
+Jet_UniformTemp                                 1.0         # ambient temperature (in keV)
+Jet_UniformVel_x                               +0.0         # ambient velocity x (in cgs units) [0.0]
+Jet_UniformVel_y                               +0.0         # ambient velocity y (in cgs units) [0.0]
+Jet_UniformVel_z                               +0.0         # ambient velocity z (in cgs units) [0.0]
+
+
+# Jet_Ambient == 1
+Jet_HSE_Radius                                   71         # for Jet_HSE: radius of hydrostatic equilibrium halo  (in kpc)
+Jet_HSE_Dx                                      0.0         # for Jet_HSE: distance between box and cluster centre (in kpc)
+Jet_HSE_Dy                                      0.0         # for Jet_HSE: distance between box and cluster centre (in kpc)
+Jet_HSE_Dz                                      0.0         # for Jet_HSE: distance between box and cluster centre (in kpc)
+Jet_HSE_BgTable_File  Input__HydrostaticEquilibrium         # for Jet_HSE: filename of the background gas table
+
+# 
+Jet_Angular_Velocity                          +30.0         # precession angular velocity at Schwarzschild radius (degree per code_time)
+Jet_Angle                                        30         # precession angle in degree
+
+# 
+Jet_NumShell                                      4
+BH_Radius                                       1.0
+
 #
-Jet_HSE              1           # hydrostatic equilibrium background
-Jet_HSE_Radius      71           # for Jet_HSE: radius of hydrostatic equilibrium halo  (in kpc)
-Jet_HSE_Dx           0.0         # for Jet_HSE: distance between box and cluster centre (in kpc)
-Jet_HSE_Dy           0.0         # for Jet_HSE: distance between box and cluster centre (in kpc)
-Jet_HSE_Dz           0.0         # for Jet_HSE: distance between box and cluster centre (in kpc)
-Jet_HSE_BgTable_File Input__HydrostaticEquilibrium # for Jet_HSE: filename of the background gas table
+Flag_BurstDens                                    0
+Flag_Burst4Vel                                    0
+Flag_BurstTemp                                    0
+
+Jet_BurstDens                                     0
+Jet_Burst4Vel                                     0
+Jet_BurstTemp                                     0
+
+Jet_BurstStartTime                                0
+Jet_BurstEndTime                                  0

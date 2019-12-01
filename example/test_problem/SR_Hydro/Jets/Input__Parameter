@@ -124,7 +124,7 @@ OPT__OVERLAP_MPI              0           # overlap MPI communication with CPU/G
 OPT__RESET_FLUID              1           # reset fluid variables after each update -> edit "Flu_ResetByUser.cpp" [0]
 MIN_DENS                      0.0         # minimum number density (must >= 0.0) [0.0] ##SR_HYDRO ONLY##
 MIN_PRES                      0.0         # minimum pressure       (must >= 0.0) [0.0] ##HYDRO, MHD and SR_HYDRO##
-MIN_TEMP                      0.0       # SR_HYDRO only
+MIN_TEMP                      0.0         # SR_HYDRO only
 
 
 # gravity solvers in all models
