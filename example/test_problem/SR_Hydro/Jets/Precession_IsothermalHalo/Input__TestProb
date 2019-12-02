@@ -5,8 +5,8 @@
 
 Jet_Exist                                         1
 Jet_Ambient                                       1         # [0/1] : uniform / hydro-static equilbrium ambient
-Jet_DiffPrecession                                1
-Jet_Precession                                    0
+Jet_DiffPrecession                                0
+Jet_Precession                                    1
 Jet_TimeDependentSrc                              0
 Jet_ParticleMassSrc                 1.672621898e-24
 Jet_ParticleMassAmbient             1.672621898e-24
