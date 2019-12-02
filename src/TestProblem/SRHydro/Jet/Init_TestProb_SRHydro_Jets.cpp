@@ -376,6 +376,10 @@ void SetParameter()
 
       Jet_HSE_BgTable_NBin = Aux_LoadTable( Jet_HSE_BgTable_Data, Jet_HSE_BgTable_File, NCol, Col, RowMajor_No, AllocMem_Yes );
 
+      if ( Jet_HSE_BgTable_Data == NULL )
+      {
+         Aux_Error( ERROR_INFO, "Jet_HSE_BgTable_Data == NULL !!\n" );
+      }
 
 //    convert to code units
       Table_R = Jet_HSE_BgTable_Data + 0*Jet_HSE_BgTable_NBin;
@@ -562,13 +566,14 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // variables for jet
    double Pri4Vel[NCOMP_FLUID];
 
-   Pri4Vel[1] = Jet_UniformVel[0];
-   Pri4Vel[2] = Jet_UniformVel[1];
-   Pri4Vel[3] = Jet_UniformVel[2];
 
    if ( Jet_Ambient )
    {
       double Temp, RhoSurface;
+
+      Pri4Vel[1] = 0.0;
+      Pri4Vel[2] = 0.0;
+      Pri4Vel[3] = 0.0;
 
       Table_R = Jet_HSE_BgTable_Data + (Col[0]-1)*Jet_HSE_BgTable_NBin;
       Table_D = Jet_HSE_BgTable_Data + (Col[1]-1)*Jet_HSE_BgTable_NBin;
@@ -582,6 +587,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
       Pri4Vel[0] = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_D, r );
       Pri4Vel[4] = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_T, r ) * Pri4Vel[0];
+
 
       if ( r <= Jet_HSE_Radius )
       {
@@ -609,6 +615,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    else
    {
 	  Pri4Vel[0] = Jet_UniformDens;
+      Pri4Vel[1] = Jet_UniformVel[0];
+      Pri4Vel[2] = Jet_UniformVel[1];
+      Pri4Vel[3] = Jet_UniformVel[2];
 	  Pri4Vel[4] = Jet_UniformTemp * Jet_UniformDens;
    }
 
