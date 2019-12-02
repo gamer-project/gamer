@@ -777,7 +777,7 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
 
           SRHydro_Pri2Con(Pri4Vel, Out,  GAMMA);
 
-          fluid [0] = (real) Out[0]*pow(10,i);
+          fluid [0] = (real) Out[0];
           fluid [1] = (real) Out[1];
           fluid [2] = (real) Out[2];
           fluid [3] = (real) Out[3];
