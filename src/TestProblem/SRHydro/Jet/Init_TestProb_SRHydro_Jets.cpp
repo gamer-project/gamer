@@ -285,6 +285,7 @@ void SetParameter()
    }
    else if ( Jet_DiffPrecession )  // differential precession
    {
+     // do nothing
    }
    else if ( !Jet_Precession && !Jet_DiffPrecession ) // no precession
    {
@@ -354,7 +355,7 @@ void SetParameter()
      Jet_BurstEndTime       *= 1e3*Const_yr / UNIT_T;
      Jet_Burst4Vel          *= Const_c      / UNIT_V;
      Jet_BurstDens          *= 1.0          / UNIT_D;
-     Jet_BurstTemp          *= Const_keV    / ( Const_mp * SQR(Const_c) );
+     Jet_BurstTemp          *= Const_keV    / ( Jet_ParticleMassSrc * SQR(Const_c) );
    }
 
 // (2) set the problem-specific derived parameters
@@ -385,7 +386,7 @@ void SetParameter()
       {
          Table_R[b] *= Const_kpc / UNIT_L;
          Table_D[b] *= 1.0       / UNIT_D;
-         Table_T[b] *= Const_keV / ( Const_mp * SQR(Const_c) );
+         Table_T[b] *= Const_keV / ( Jet_ParticleMassAmbient * SQR(Const_c) );
       }
    } // if ( Jet_Ambient  &&  OPT__INIT != INIT_BY_RESTART )
 
@@ -422,7 +423,7 @@ void SetParameter()
      Aux_Message( stdout, "  Jet_HalfHeight          = %14.7e kpc\n",        Jet_HalfHeight*UNIT_L/Const_kpc                 );
      Aux_Message( stdout, "  Jet_SrcVel              = %14.7e c\n",          Jet_SrcVel                                      );
      Aux_Message( stdout, "  Jet_SrcDens             = %14.7e g/cm^3\n",     Jet_SrcDens*UNIT_D                              );
-     Aux_Message( stdout, "  Jet_SrcTemp             = %14.7e keV\n",        Jet_SrcTemp*Const_mp*SQR(Const_c)/Const_keV     );
+     Aux_Message( stdout, "  Jet_SrcTemp             = %14.7e keV\n",        Jet_SrcTemp*Jet_ParticleMassSrc*SQR(Const_c)/Const_keV     );
      Aux_Message( stdout, "  Jet_NumDensSrc          = %14.7e per cc\n",     Jet_SrcDens*UNIT_D/Jet_ParticleMassSrc          );
      Aux_Message( stdout, "  Jet_CenOffset[x]        = %14.7e kpc\n",        Jet_CenOffset [0]*UNIT_L/Const_kpc              );
      Aux_Message( stdout, "  Jet_CenOffset[y]        = %14.7e kpc\n",        Jet_CenOffset [1]*UNIT_L/Const_kpc              );
@@ -443,7 +444,7 @@ void SetParameter()
    else if ( !Jet_Ambient && MPI_Rank == 0 )
    {
      Aux_Message( stdout, "  Jet_UniformDens         = %14.7e g/cm^3\n",     Jet_UniformDens*UNIT_D                          );
-     Aux_Message( stdout, "  Jet_UniformTemp         = %14.7e keV\n",        Jet_UniformTemp*Const_mp*SQR(Const_c)/Const_keV );
+     Aux_Message( stdout, "  Jet_UniformTemp         = %14.7e keV\n",        Jet_UniformTemp*Jet_ParticleMassAmbient*SQR(Const_c)/Const_keV );
      Aux_Message( stdout, "  Jet_UniformVel[x]       = %14.7e c\n",          Jet_UniformVel[0]                               );
      Aux_Message( stdout, "  Jet_UniformVel[y]       = %14.7e c\n",          Jet_UniformVel[1]                               );
      Aux_Message( stdout, "  Jet_UniformVel[z]       = %14.7e c\n",          Jet_UniformVel[2]                               );
@@ -475,7 +476,7 @@ void SetParameter()
      Aux_Message( stdout, "  Jet_BurstEndTime        = %14.7e kyr \n",       Jet_BurstEndTime*UNIT_T/(1e3*Const_yr)          );
      Aux_Message( stdout, "  Jet_Burst4Vel           = %14.7e c \n",         Jet_Burst4Vel                                   );
      Aux_Message( stdout, "  Jet_BurstDens           = %14.7e g/cm^3\n",     Jet_BurstDens*UNIT_D                            );
-     Aux_Message( stdout, "  Jet_BurstTemp           = %14.7e keV\n",        Jet_BurstTemp*Const_mp*SQR(Const_c)/Const_keV   );
+     Aux_Message( stdout, "  Jet_BurstTemp           = %14.7e keV\n",        Jet_BurstTemp*Jet_ParticleMassSrc*SQR(Const_c)/Const_keV   );
      Aux_Message( stdout, "  Flag_Burst4Vel          = %d\n",                Flag_Burst4Vel                                  );
      Aux_Message( stdout, "  Flag_BurstDens          = %d\n",                Flag_BurstDens                                  );
      Aux_Message( stdout, "  Flag_BurstTemp          = %d\n",                Flag_BurstTemp                                  );
