@@ -439,10 +439,10 @@ void SetParameter()
 
    if ( Jet_Ambient && MPI_Rank == 0 ) 
    {
-     Aux_Message( stdout, "  Jet_HSE_Radius          = %e kpc\n",            Jet_HSE_Radius*UNIT_L/Const_kpc                 );
-     Aux_Message( stdout, "  Jet_HSE_Dx              = %e kpc\n",            Jet_HSE_Dx*UNIT_L/Const_kpc                     );
-     Aux_Message( stdout, "  Jet_HSE_Dy              = %e kpc\n",            Jet_HSE_Dy*UNIT_L/Const_kpc                     );
-     Aux_Message( stdout, "  Jet_HSE_Dz              = %e kpc\n",            Jet_HSE_Dz*UNIT_L/Const_kpc                     );
+     Aux_Message( stdout, "  Jet_HSE_Radius          = %14.7e kpc\n",        Jet_HSE_Radius*UNIT_L/Const_kpc                 );
+     Aux_Message( stdout, "  Jet_HSE_Dx              = %14.7e kpc\n",        Jet_HSE_Dx*UNIT_L/Const_kpc                     );
+     Aux_Message( stdout, "  Jet_HSE_Dy              = %14.7e kpc\n",        Jet_HSE_Dy*UNIT_L/Const_kpc                     );
+     Aux_Message( stdout, "  Jet_HSE_Dz              = %14.7e kpc\n",        Jet_HSE_Dz*UNIT_L/Const_kpc                     );
      Aux_Message( stdout, "  Jet_HSE_BgTable_File    = %s\n",                Jet_HSE_BgTable_File                            );
    }
    else if ( !Jet_Ambient && MPI_Rank == 0 )
