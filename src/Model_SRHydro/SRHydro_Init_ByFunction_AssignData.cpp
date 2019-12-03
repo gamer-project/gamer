@@ -70,7 +70,6 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
       Prim1[3] = 0.0;
       Prim1[4] = pres_down;
 
-      SRHydro_3Velto4Vel (Prim1, Prim2);
       SRHydro_Pri2Con (Prim2, fluid, (real)GAMMA);
    }else{ // up-stream
       Prim1[0] = dens_up;
@@ -79,7 +78,6 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
       Prim1[3] = 0.0;
       Prim1[4] = pres_up;
 
-      SRHydro_3Velto4Vel (Prim1, Prim2);
       SRHydro_Pri2Con (Prim2, fluid, (real)GAMMA);
    }
 

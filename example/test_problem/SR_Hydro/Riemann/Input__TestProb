@@ -12,11 +12,11 @@ Riemann_XYZ          0              # wave propagation axis (0/1/2 --> x/y/z) [0
 
 # user-defined run-time parameters
 Riemann_RhoL       0.5              # left-state density
-Riemann_VelL       0.0              # left-state velocity
+Riemann_VelL       0.0              # left-state 4-velocity
 Riemann_PreL       1.0              # left-state pressure
-Riemann_VelL_T     0.0              # left-state transverse velocity
+Riemann_VelL_T     0.0              # left-state transverse 4-velocity
 Riemann_RhoR       1.0              # right-state density
-Riemann_VelR       0.0              # right-state velocity
+Riemann_VelR       0.0              # right-state 4-velocity
 Riemann_PreR       0.2              # right-state pressure
-Riemann_VelR_T     0.0              # right-state transverse velocity
+Riemann_VelR_T     0.0              # right-state transverse 4-velocity
 Riemann_EndT       0.5              # end physical time

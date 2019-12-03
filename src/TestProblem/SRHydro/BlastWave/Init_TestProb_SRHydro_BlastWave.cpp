@@ -171,19 +171,14 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 {
    const double r = SQRT( SQR(x-Blast_Center[0]) + SQR(y-Blast_Center[1]) + SQR(z-Blast_Center[2]) );
 
-   double Prim_BG1[5] = { Blast_Dens_Bg, 0, 0, 0, Blast_Pres_Bg }; // store 3-velocity
-   double Prim_BG2[5] = {0};                                       // store 4-velocity
+   double Prim_BG[5] = { Blast_Dens_Bg, 0, 0, 0, Blast_Pres_Bg };
    double Cons_BG[5] = {0};
 
-   double Prim_EXP1[5] = { Blast_Dens_Bg*Blast_Dens_Ratio, 0, 0, 0, Blast_Pres_Bg*Blast_Pres_Ratio }; // store 3-velocity
-   double Prim_EXP2[5] = {0};                                                                         // store 4-velocity
+   double Prim_EXP[5] = { Blast_Dens_Bg*Blast_Dens_Ratio, 0, 0, 0, Blast_Pres_Bg*Blast_Pres_Ratio }; // store 3-velocity
    double Cons_EXP[5] = {0};
 
-   SRHydro_3Velto4Vel ( Prim_BG1, Prim_BG2);
-   SRHydro_3Velto4Vel ( Prim_EXP1, Prim_EXP2);
-
-   SRHydro_Pri2Con (Prim_BG2, Cons_BG, GAMMA);
-   SRHydro_Pri2Con (Prim_EXP2, Cons_EXP, GAMMA);
+   SRHydro_Pri2Con (Prim_BG,  Cons_BG,  GAMMA);
+   SRHydro_Pri2Con (Prim_EXP, Cons_EXP, GAMMA);
 
    if ( r <= Blast_Radius )
    {

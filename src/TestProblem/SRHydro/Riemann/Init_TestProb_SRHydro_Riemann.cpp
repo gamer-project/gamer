@@ -19,12 +19,12 @@ const Riemann_t
 static Riemann_t Riemann_Prob;         // target Riemann problem
 static char      Riemann_Name[100];    // name of the target Riemann problem
 static real      Riemann_RhoL;         // left-state density
-static real      Riemann_VelL;         // left-state velocity
-static real      Riemann_VelL_T;       // left-state transverse velocity
+static real      Riemann_VelL;         // left-state 4-velocity
+static real      Riemann_VelL_T;       // left-state transverse 4-velocity
 static real      Riemann_PreL;         // left-state pressure
 static real      Riemann_RhoR;         // right-state density
-static real      Riemann_VelR;         // right-state velocity
-static real      Riemann_VelR_T;       // right-state transverse velocity
+static real      Riemann_VelR;         // right-state 4-velocity
+static real      Riemann_VelR_T;       // right-state transverse 4-velocity
 static real      Riemann_PreR;         // right-state pressure
 static real      Riemann_EndT;         // end physical time
 static int       Riemann_LR;           // wave propagation direction (>0/<0 --> positive/negative direction)
@@ -185,19 +185,19 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID                 = %d\n",     TESTPROB_ID );
-      Aux_Message( stdout, "  target Riemann problem          = %s\n",     Riemann_Name );
-      Aux_Message( stdout, "  left-state density              = %13.7e\n", Riemann_RhoL );
-      Aux_Message( stdout, "  left-state velocity             = %13.7e\n", Riemann_VelL );
-      Aux_Message( stdout, "  left-state transverse velocity  = %13.7e\n", Riemann_VelL_T );
-      Aux_Message( stdout, "  left-state pressure             = %13.7e\n", Riemann_PreL );
-      Aux_Message( stdout, "  right-state density             = %13.7e\n", Riemann_RhoR );
-      Aux_Message( stdout, "  right-state velocity            = %13.7e\n", Riemann_VelR );
-      Aux_Message( stdout, "  right-state transverse velocity = %13.7e\n", Riemann_VelR_T );
-      Aux_Message( stdout, "  right-state pressure            = %13.7e\n", Riemann_PreR );
-      Aux_Message( stdout, "  propagation direction           = %s%s\n",   ( Riemann_LR > 0 ) ? "+" : "-",
-                                                                           ( Riemann_XYZ == 0 ) ? "x" :
-                                                                           ( Riemann_XYZ == 1 ) ? "y" : "z" );
+      Aux_Message( stdout, "  test problem ID                   = %d\n",     TESTPROB_ID );
+      Aux_Message( stdout, "  target Riemann problem            = %s\n",     Riemann_Name );
+      Aux_Message( stdout, "  left-state density                = %13.7e\n", Riemann_RhoL );
+      Aux_Message( stdout, "  left-state 4-velocity             = %13.7e\n", Riemann_VelL );
+      Aux_Message( stdout, "  left-state transverse 4-velocity  = %13.7e\n", Riemann_VelL_T );
+      Aux_Message( stdout, "  left-state pressure               = %13.7e\n", Riemann_PreL );
+      Aux_Message( stdout, "  right-state density               = %13.7e\n", Riemann_RhoR );
+      Aux_Message( stdout, "  right-state 4-velocity            = %13.7e\n", Riemann_VelR );
+      Aux_Message( stdout, "  right-state transverse 4-velocity = %13.7e\n", Riemann_VelR_T );
+      Aux_Message( stdout, "  right-state pressure              = %13.7e\n", Riemann_PreR );
+      Aux_Message( stdout, "  propagation direction             = %s%s\n",   ( Riemann_LR  >  0 ) ? "+" : "-",
+                                                                             ( Riemann_XYZ == 0 ) ? "x" :
+                                                                             ( Riemann_XYZ == 1 ) ? "y" : "z" );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -232,31 +232,14 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 {
    double ConVarL[NCOMP_FLUID];
    double ConVarR[NCOMP_FLUID];
-   double PriVar3L[NCOMP_FLUID]; // 3-velocity is stored
-   double PriVar3R[NCOMP_FLUID];
-   double PriVar4L[NCOMP_FLUID]; // 4-velocity is stored
-   double PriVar4R[NCOMP_FLUID];
+   double PriVarL[NCOMP_FLUID];
+   double PriVarR[NCOMP_FLUID];
 
 // left-state
-   PriVar3L[0]=Riemann_RhoL;
-   PriVar3L[1]=Riemann_VelL;
-   PriVar3L[2]=Riemann_VelL_T;
-   PriVar3L[3]=0.0;
-   PriVar3L[4]=Riemann_PreL;
-   
-
-   SRHydro_3Velto4Vel(PriVar3L, PriVar4L);
-   SRHydro_Pri2Con(PriVar4L, ConVarL, GAMMA);
+   SRHydro_Pri2Con(PriVarL, ConVarL, GAMMA);
 
 // right-state
-   PriVar3R[0]=Riemann_RhoR;
-   PriVar3R[1]=Riemann_VelR;
-   PriVar3R[2]=Riemann_VelR_T;
-   PriVar3R[3]=0.0;
-   PriVar3R[4]=Riemann_PreR;
-   
-   SRHydro_3Velto4Vel(PriVar3R, PriVar4R);
-   SRHydro_Pri2Con(PriVar4R, ConVarR, GAMMA);
+   SRHydro_Pri2Con(PriVarR, ConVarR, GAMMA);
 
    double r, BoxCen;
    int    TVar[NCOMP_FLUID];

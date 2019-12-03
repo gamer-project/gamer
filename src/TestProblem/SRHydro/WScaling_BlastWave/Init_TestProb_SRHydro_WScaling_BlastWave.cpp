@@ -191,23 +191,18 @@ void SetParameter()
 void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] )
 {
-   double Prim_BG1[5] = { Blast_Dens_Bg, 0, 0, 0, Blast_Pres_Bg }; // store 3-velocity
-   double Prim_BG2[5] = { 0 };                                     // store 4-velocity
-   double Cons_BG [5] = { 0 };
+   double Prim_BG[5] = { Blast_Dens_Bg, 0, 0, 0, Blast_Pres_Bg };
+   double Cons_BG[5] = { 0 };
 
-   double Prim_EXP1[5] = { Blast_Dens_Bg*Blast_Dens_Ratio, 0, 0, 0, Blast_Pres_Bg*Blast_Pres_Ratio }; // store 3-velocity
-   double Prim_EXP2[5] = { 0 };                                                                       // store 4-velocity
+   double Prim_EXP[5] = { Blast_Dens_Bg*Blast_Dens_Ratio, 0, 0, 0, Blast_Pres_Bg*Blast_Pres_Ratio };
    double Cons_EXP [5] = { 0 };
 
    int Total = Number_BlastWave_X * Number_BlastWave_Y * Number_BlastWave_Z;
 
    double r[Total];
 
-   SRHydro_3Velto4Vel ( Prim_BG1,   Prim_BG2);
-   SRHydro_3Velto4Vel ( Prim_EXP1, Prim_EXP2);
-
-   SRHydro_Pri2Con ( Prim_BG2,  Cons_BG, GAMMA);
-   SRHydro_Pri2Con (Prim_EXP2, Cons_EXP, GAMMA);
+   SRHydro_Pri2Con ( Prim_BG , Cons_BG,  GAMMA);
+   SRHydro_Pri2Con ( Prim_EXP, Cons_EXP, GAMMA);
 
    for (int i=0; i<Total; i++)
     {
