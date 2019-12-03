@@ -410,10 +410,7 @@ void CPU_HydroGravitySolver(
 		 real Msqr = SQR(Con_new[MOMX]) + SQR(Con_new[MOMY]) + SQR(Con_new[MOMZ]);
 
 #        if (  CONSERVED_ENERGY == 1 )
-         real h = SpecificEnthalpy( NULL, Temperature, (real)1.333333333 );
-		 real Dh = Con_new[DENS]*h;
-         real factor = SQRT(Dh*Dh + Msqr);
-		 Con_new[ENGY] = factor -  Con_new[DENS] * Dh * Temperature / factor;
+#        error : ERROR : CONSERVED_ENERGY == 1 does not support!!
 #        elif ( CONSERVED_ENERGY == 2 )
 		 real Dsqr = SQR(Con_new[DENS]);
          real HTilde = SRHydro_Temperature2HTilde( Temperature, (real)1.333333333 );

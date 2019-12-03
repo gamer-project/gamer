@@ -235,6 +235,18 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    double PriVarL[NCOMP_FLUID];
    double PriVarR[NCOMP_FLUID];
 
+   PriVarL[0] = Riemann_RhoL;
+   PriVarL[1] = Riemann_VelL;
+   PriVarL[2] = Riemann_VelL_T;
+   PriVarL[3] = 0.0;
+   PriVarL[4] = Riemann_PreL;
+   
+   PriVarR[0] = Riemann_RhoR;
+   PriVarR[1] = Riemann_VelR;
+   PriVarR[2] = Riemann_VelR_T;
+   PriVarR[3] = 0.0;
+   PriVarR[4] = Riemann_PreR;
+
 // left-state
    SRHydro_Pri2Con(PriVarL, ConVarL, GAMMA);
 
