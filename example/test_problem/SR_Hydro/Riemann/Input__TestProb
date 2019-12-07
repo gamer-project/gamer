@@ -1,5 +1,5 @@
 # problem-specific runtime parameters
-Riemann_Prob         1              # target Riemann problem (0 : Sod's shock tube
+Riemann_Prob         0              # target Riemann problem (0 : Sod's shock tube
                                     #                         1 : strong shock
                                     #                         2 : two shocks
                                     #                         3 : Einfeldt's 1-2-0-3
