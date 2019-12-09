@@ -2,6 +2,9 @@
 
 #ifdef GRAVITY
 
+extern real (*Poi_AddExtraMassForGravity_Ptr)( const double x, const double y, const double z, const double Time,
+                                               const int lv, double AuxArray[] );
+
 
 
 
@@ -42,11 +45,7 @@ void Poi_GetAverageDensity()
    AveDensity_Init = 0.0;
 
 
-// 1. for OOC computing (no longer useful)
-// ==================================================================================================
-
-
-// 2. for bitwise reproducibility
+// 1. for bitwise reproducibility
 // ==================================================================================================
 #  ifdef BITWISE_REPRODUCIBILITY
 
@@ -87,11 +86,28 @@ void Poi_GetAverageDensity()
       Cr1D_Local[PID] = ( (long)Cr3D[2]*NP[1] + (long)Cr3D[1] )*NP[0] + (long)Cr3D[0];
       Rho_Local [PID] = 0.0;
 
-      for (int k=0; k<PATCH_SIZE; k++)
-      for (int j=0; j<PATCH_SIZE; j++)
-      for (int i=0; i<PATCH_SIZE; i++)
+      for (int k=0; k<PS1; k++)
+      for (int j=0; j<PS1; j++)
+      for (int i=0; i<PS1; i++)
          Rho_Local[PID] += (double)amr->patch[ amr->FluSg[0] ][0][PID]->fluid[DENS][k][j][i];
-   }
+
+//    add extra mass source for gravity if required
+      if ( OPT__GRAVITY_EXTRA_MASS )
+      {
+         const double dh = amr->dh[0];
+         const double x0 = amr->patch[0][0][PID]->EdgeL[0] + 0.5*dh;
+         const double y0 = amr->patch[0][0][PID]->EdgeL[1] + 0.5*dh;
+         const double z0 = amr->patch[0][0][PID]->EdgeL[2] + 0.5*dh;
+
+         double x, y, z;
+
+         for (int k=0; k<PS1; k++)  {  z = z0 + k*dh;
+         for (int j=0; j<PS1; j++)  {  y = y0 + j*dh;
+         for (int i=0; i<PS1; i++)  {  x = x0 + i*dh;
+            Rho_Local[PID] += (double)Poi_AddExtraMassForGravity_Ptr( x, y, z, Time[0], 0, NULL );
+         }}}
+      }
+   } // for (int PID=0; PID<amr->NPatchComma[0][1]; PID++)
 
 // gather data
    MPI_Gatherv( Cr1D_Local, amr->NPatchComma[0][1], MPI_LONG,   Cr1D_All, NPatch_All, Disp, MPI_LONG,
@@ -176,7 +192,7 @@ void Poi_GetAverageDensity()
    }
 
 
-// 3. for general cases
+// 2. for general cases
 // ==================================================================================================
 #  else // #ifdef BITWISE_REPRODUCIBILITY
 
@@ -185,10 +201,29 @@ void Poi_GetAverageDensity()
    double AveDensity_Init_local = 0.0;
 
    for (int PID=0; PID<amr->NPatchComma[0][1]; PID++)
-   for (int k=0; k<PATCH_SIZE; k++)
-   for (int j=0; j<PATCH_SIZE; j++)
-   for (int i=0; i<PATCH_SIZE; i++)
-      AveDensity_Init_local += amr->patch[ amr->FluSg[0] ][0][PID]->fluid[DENS][k][j][i];
+   {
+      for (int k=0; k<PATCH_SIZE; k++)
+      for (int j=0; j<PATCH_SIZE; j++)
+      for (int i=0; i<PATCH_SIZE; i++)
+         AveDensity_Init_local += amr->patch[ amr->FluSg[0] ][0][PID]->fluid[DENS][k][j][i];
+
+//    add extra mass source for gravity if required
+      if ( OPT__GRAVITY_EXTRA_MASS )
+      {
+         const double dh = amr->dh[0];
+         const double x0 = amr->patch[0][0][PID]->EdgeL[0] + 0.5*dh;
+         const double y0 = amr->patch[0][0][PID]->EdgeL[1] + 0.5*dh;
+         const double z0 = amr->patch[0][0][PID]->EdgeL[2] + 0.5*dh;
+
+         double x, y, z;
+
+         for (int k=0; k<PS1; k++)  {  z = z0 + k*dh;
+         for (int j=0; j<PS1; j++)  {  y = y0 + j*dh;
+         for (int i=0; i<PS1; i++)  {  x = x0 + i*dh;
+            AveDensity_Init_local += (double)Poi_AddExtraMassForGravity_Ptr( x, y, z, Time[0], 0, NULL );
+         }}}
+      }
+   } // for (int PID=0; PID<amr->NPatchComma[0][1]; PID++)
 
 // sum over all MPI ranks
    MPI_Allreduce( &AveDensity_Init_local, &AveDensity_Init, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
@@ -215,7 +250,7 @@ void Poi_GetAverageDensity()
 #  endif // #ifdef BITWISE_REPRODUCIBILITY ... else ...
 
 
-// 4. output results
+// 3. output results
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "NOTE : background density = %20.14e\n", AveDensity_Init );

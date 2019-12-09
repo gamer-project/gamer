@@ -137,8 +137,12 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
    Aux_AllocateArray3D( OMP_NCell,  NProf, NT, Prof[0]->NBin );
 
 
-// collect profile dat in this rank
-   const double r_max2 = SQR( Prof[0]->MaxRadius );
+// collect profile data in this rank
+   const double r_max2      = SQR( Prof->MaxRadius );
+   const double HalfBox[3]  = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
+   const bool   Periodic[3] = { OPT__BC_FLU[0] == BC_FLU_PERIODIC,
+                                OPT__BC_FLU[2] == BC_FLU_PERIODIC,
+                                OPT__BC_FLU[4] == BC_FLU_PERIODIC };
 
 #  pragma omp parallel
    {
@@ -170,10 +174,23 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
             const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh - Center[0];
             const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh - Center[1];
             const double z0 = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh - Center[2];
+            double dx, dy, dz;
 
-            for (int k=0; k<PS1; k++)  {  const double dz = z0 + k*dh;
-            for (int j=0; j<PS1; j++)  {  const double dy = y0 + j*dh;
-            for (int i=0; i<PS1; i++)  {  const double dx = x0 + i*dh;
+            for (int k=0; k<PS1; k++)  {  dz = z0 + k*dh;
+                                          if ( Periodic[2] ) {
+                                             if      ( dz > +HalfBox[2] )  {  dz -= amr->BoxSize[2];  }
+                                             else if ( dz < -HalfBox[2] )  {  dz += amr->BoxSize[2];  }
+                                          }
+            for (int j=0; j<PS1; j++)  {  dy = y0 + j*dh;
+                                          if ( Periodic[1] ) {
+                                             if      ( dy > +HalfBox[1] )  {  dy -= amr->BoxSize[1];  }
+                                             else if ( dy < -HalfBox[1] )  {  dy += amr->BoxSize[1];  }
+                                          }
+            for (int i=0; i<PS1; i++)  {  dx = x0 + i*dh;
+                                          if ( Periodic[0] ) {
+                                             if      ( dx > +HalfBox[0] )  {  dx -= amr->BoxSize[0];  }
+                                             else if ( dx < -HalfBox[0] )  {  dx += amr->BoxSize[0];  }
+                                          }
 
                const double r2 = SQR(dx) + SQR(dy) + SQR(dz);
 

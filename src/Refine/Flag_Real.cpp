@@ -123,8 +123,9 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #  pragma omp parallel
    {
       const real (*Fluid)[PS1][PS1][PS1] = NULL;
-      real (*Pres)[PS1][PS1]             = NULL;
       real (*Pot )[PS1][PS1]             = NULL;
+      real (*Vel)[PS1][PS1][PS1]         = NULL;
+      real (*Pres)[PS1][PS1]             = NULL;
       real (*Lohner_Var)                 = NULL;   // array storing the variables for Lohner
       real (*Lohner_Ave)                 = NULL;   // array storing the averages of Lohner_Var for Lohner
       real (*Lohner_Slope)               = NULL;   // array storing the slopes of Lohner_Var for Lohner
@@ -135,7 +136,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       bool ProperNesting, NextPatch;
 
 #     if   ( MODEL == HYDRO )
-      if ( OPT__FLAG_PRES_GRADIENT )   Pres = new real [PS1][PS1][PS1];
+      if ( OPT__FLAG_VORTICITY )       Vel  = new real [3][PS1][PS1][PS1];
+      if ( OPT__FLAG_PRES_GRADIENT )   Pres = new real    [PS1][PS1][PS1];
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
 #     endif // MODEL
@@ -212,8 +214,24 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #              endif
 
 
-//             evaluate pressure
 #              if   ( MODEL == HYDRO )
+//             evaluate velocity
+               if ( OPT__FLAG_VORTICITY )
+               {
+                  for (int k=0; k<PS1; k++)
+                  for (int j=0; j<PS1; j++)
+                  for (int i=0; i<PS1; i++)
+                  {
+                     const real _Dens = (real)1.0 / Fluid[DENS][k][j][i];
+
+                     Vel[0][k][j][i] = Fluid[MOMX][k][j][i]*_Dens;
+                     Vel[1][k][j][i] = Fluid[MOMY][k][j][i]*_Dens;
+                     Vel[2][k][j][i] = Fluid[MOMZ][k][j][i]*_Dens;
+                  }
+               } // if ( OPT__FLAG_VORTICITY )
+
+
+//             evaluate pressure
                if ( OPT__FLAG_PRES_GRADIENT )
                {
                   const bool CheckMinPres_Yes = true;
@@ -351,8 +369,9 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                              i_end   = ( i + FlagBuf >= PS1 ) ? 2 : 1;
 
 //                check if the target cell satisfies the refinement criteria (useless pointers are always == NULL)
-                  if (  lv < MAX_LEVEL  &&  Flag_Check( lv, PID, i, j, k, dv, Fluid, Pot, Pres, Lohner_Var+LocalID*Lohner_Stride,
-                                                        Lohner_Ave, Lohner_Slope, Lohner_NVar, ParCount, ParDens, JeansCoeff )  )
+                  if (  lv < MAX_LEVEL  &&  Flag_Check( lv, PID, i, j, k, dv, Fluid, Pot, Vel, Pres,
+                                                        Lohner_Var+LocalID*Lohner_Stride, Lohner_Ave, Lohner_Slope, Lohner_NVar,
+                                                        ParCount, ParDens, JeansCoeff )  )
                   {
 //                   flag itself
                      amr->patch[0][lv][PID]->flag = true;
@@ -439,9 +458,10 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
 
 
-      if ( Pres     != NULL )    delete [] Pres;
-      if ( ParCount != NULL )    delete [] ParCount;
-      if ( ParDens  != NULL )    delete [] ParDens;
+      delete [] Vel;
+      delete [] Pres;
+      delete [] ParCount;
+      delete [] ParDens;
 
       if ( Lohner_NVar > 0 )
       {

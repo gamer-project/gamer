@@ -2,6 +2,9 @@
 
 #ifdef GRAVITY
 
+extern real (*Poi_AddExtraMassForGravity_Ptr)( const double x, const double y, const double z, const double Time,
+                                               const int lv, double AuxArray[] );
+
 
 
 
@@ -29,6 +32,42 @@ void Poi_Prepare_Rho( const int lv, const double PrepTime, real h_Rho_Array_P[][
    Prepare_PatchData( lv, PrepTime, &h_Rho_Array_P[0][0][0][0], RHO_GHOST_SIZE, NPG, PID0_List, _TOTAL_DENS,
                       OPT__RHO_INT_SCHEME, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
                       MIN_DENS, MinPres_No, DE_Consistency_No );
+
+
+// add extra mass source for gravity if required
+   if ( OPT__GRAVITY_EXTRA_MASS )
+   {
+      const double dh          = amr->dh[lv];
+      const double L[3]        = { amr->BoxSize[0], amr->BoxSize[1], amr->BoxSize[2] };
+      const bool   Periodic[3] = { OPT__BC_FLU[0] == BC_FLU_PERIODIC,
+                                   OPT__BC_FLU[2] == BC_FLU_PERIODIC,
+                                   OPT__BC_FLU[4] == BC_FLU_PERIODIC };
+
+      for (int TID=0; TID<NPG; TID++)
+      {
+         const int PID0 = PID0_List[TID];
+
+         for (int LocalID=0; LocalID<8; LocalID++)
+         {
+            const int    PID = PID0 + LocalID;
+            const int    N   = 8*TID + LocalID;
+            const double x0  = amr->patch[0][lv][PID]->EdgeL[0] + (0.5-RHO_GHOST_SIZE)*dh;
+            const double y0  = amr->patch[0][lv][PID]->EdgeL[1] + (0.5-RHO_GHOST_SIZE)*dh;
+            const double z0  = amr->patch[0][lv][PID]->EdgeL[2] + (0.5-RHO_GHOST_SIZE)*dh;
+
+            double x, y, z;
+
+            for (int k=0; k<RHO_NXT; k++)  {  z = z0 + k*dh;  if ( Periodic[2] )  z = fmod( z+L[2], L[2] );
+            for (int j=0; j<RHO_NXT; j++)  {  y = y0 + j*dh;  if ( Periodic[1] )  y = fmod( y+L[1], L[1] );
+            for (int i=0; i<RHO_NXT; i++)  {  x = x0 + i*dh;  if ( Periodic[0] )  x = fmod( x+L[0], L[0] );
+
+               h_Rho_Array_P[N][k][j][i] += Poi_AddExtraMassForGravity_Ptr( x, y, z, Time[lv], lv, NULL );
+
+            }}}
+         } // for (int LocalID=0; LocalID<8; LocalID++)
+      } // for (int TID=0; TID<NPG; TID++)
+   } // if ( OPT__GRAVITY_EXTRA_MASS )
+
 
 // subtract the background density to be consistent with the periodic (and/or comoving) base-level FFT solver
 #  ifdef GAMER_DEBUG
