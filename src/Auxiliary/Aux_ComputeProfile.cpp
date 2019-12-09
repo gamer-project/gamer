@@ -40,8 +40,11 @@ static const int PRESSURE      = 99;
 //                Quantity    : Quantity to be averaged spherically
 //                              Support field indicies defined in Macro.h, and VRAD (98) and PRESSURE (99)
 //                              The weight function is the cell volume.
+//                NProf       : Number of Profile_t object in Prof.
+//                level       : The level of Patches to be considered.
+//                              If level = -1, loop over all levels
 //
-// Example     :  Profile_t Prof;
+// Example     :  Profile_t *Prof[] = { &Prof_Dens, &Prof_Pres };
 //
 //                const double Center[3]      = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
 //                const double MaxRadius      = 0.5*amr->BoxSize[0];
@@ -49,9 +52,12 @@ static const int PRESSURE      = 99;
 //                const bool   LogBin         = true;
 //                const double LogBinRatio    = 1.25;
 //                const bool   RemoveEmptyBin = true;
-//                const int    Quantity       = DENS;
+//                const int    Quantity[]     = { DENS, PRESSURE };
+//                const int    NProf          = 2;
+//                const int    level          = -1;
 //
-//                Aux_ComputeProfile( &Prof, Center, MaxRadius, MinBinSize, LogBin, LogBinRatio, RemoveEmptyBin, Quantity );
+//                Aux_ComputeProfile( Prof, Center, MaxRadius, MinBinSize, LogBin, LogBinRatio, RemoveEmptyBin,
+//                                    Quantity, NProf, level );
 //
 //                if ( MPI_Rank == 0 )
 //                {
@@ -67,7 +73,7 @@ static const int PRESSURE      = 99;
 //-------------------------------------------------------------------------------------------------------
 void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double r_max_input, const double dr_min,
                          const bool LogBin, const double LogBinRatio, const bool RemoveEmpty, const int Quantity[],
-                         const int NProf )
+                         const int NProf, const int level )
 {
 
 // check
@@ -137,7 +143,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
    Aux_AllocateArray3D( OMP_NCell,  NProf, NT, Prof[0]->NBin );
 
 
-// collect profile dat in this rank
+// collect profile data in this rank
    const double r_max2 = SQR( Prof[0]->MaxRadius );
 
 #  pragma omp parallel
@@ -157,7 +163,12 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
          OMP_NCell [PROFID][TID][b] = 0;
       }
 
-      for (int lv=0; lv<NLEVEL; lv++)
+//    determine which levels to be considered
+      const int lv_max = ( level < 0 ) ? NLEVEL
+                                       : level + 1;
+
+//      for (int lv=0; lv<NLEVEL; lv++)
+      for (int lv=MAX(0, level); lv<lv_max; lv++)
       {
          const double dh = amr->dh[lv];
          const double dv = CUBE( dh );
@@ -227,12 +238,26 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
                         case PRESSURE:
                         {
+#                          ifdef MHD
+                           real B[3];
+
+                           MHD_GetCellCenteredBField( B,
+                                                      amr->patch[ amr->FluSg[lv] ][lv][PID]->magnetic[MAGX],
+                                                      amr->patch[ amr->FluSg[lv] ][lv][PID]->magnetic[MAGY],
+                                                      amr->patch[ amr->FluSg[lv] ][lv][PID]->magnetic[MAGZ],
+                                                      PS1, PS1, PS1, i, j, k );
+
+                           real EngyB = 0.5 * ( SQR( B[MAGX] ) + SQR( B[MAGY] ) + SQR( B[MAGZ] ) );
+#                          else
+                           real EngyB = NULL_REAL;
+#                          endif
+
                            const double Pres = Hydro_GetPressure(amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i],
                                                                  amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMX][k][j][i],
                                                                  amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMY][k][j][i],
                                                                  amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMZ][k][j][i],
                                                                  amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ENGY][k][j][i],
-                                                                 GAMMA - (real)1.0, false, NULL_REAL);
+                                                                 GAMMA - (real)1.0, false, NULL_REAL, EngyB);
                            OMP_Data  [PROFID][TID][bin] += Pres*dv;
                            OMP_Weight[PROFID][TID][bin] += dv;
                         }
@@ -240,11 +265,23 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
                         case INTERNAL_ENGY:
                         {
-                           const double intengy =              amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ENGY][k][j][i]
-                                                - 0.5 * ( SQR( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMX][k][j][i] )
-                                                        + SQR( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMY][k][j][i] )
-                                                        + SQR( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMZ][k][j][i] ) )
-                                                /              amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i];
+                           double intengy =              amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ENGY][k][j][i]
+                                          - 0.5 * ( SQR( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMX][k][j][i] )
+                                                  + SQR( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMY][k][j][i] )
+                                                  + SQR( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMZ][k][j][i] ) )
+                                          /              amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i];
+
+#                          ifdef MHD
+                           real B[3];
+
+                           MHD_GetCellCenteredBField( B,
+                                                      amr->patch[ amr->FluSg[lv] ][lv][PID]->magnetic[MAGX],
+                                                      amr->patch[ amr->FluSg[lv] ][lv][PID]->magnetic[MAGY],
+                                                      amr->patch[ amr->FluSg[lv] ][lv][PID]->magnetic[MAGZ],
+                                                      PS1, PS1, PS1, i, j, k );
+
+                           intengy -= 0.5 * ( SQR( B[MAGX] ) + SQR( B[MAGY] ) + SQR( B[MAGZ] ) );
+#                          endif
 
                            OMP_Data  [PROFID][TID][bin] += intengy*dv;
                            OMP_Weight[PROFID][TID][bin] += dv;
@@ -334,7 +371,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                   break;
 
                   case VRAD:
-   //                Avoid division by zero when denisty is zero
+//                   Avoid division by zero when denisty is zero
                      if ( Prof[PROFID]->Weight[b] > 0.0 )   Prof[PROFID]->Data[b] /= Prof[PROFID]->Weight[b];
                   break;
                } // switch ( Quantity )
@@ -387,17 +424,13 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
       b --;
    } // for (int b=0; b<Prof->NBin; b++)
 
-// reset the maximum radius if we are removing the last bin
+// update the maximum radius even the last bin is not removed
    for (int PROFID=0; PROFID<NProf; PROFID++)
    {
       const int b = Prof[PROFID]->NBin;
 
-      if ( LogBin )
-//             Prof->MaxRadius = dr_min*pow( LogBinRatio, Prof->NBin-1 );
-         Prof[PROFID]->MaxRadius = SQR( Prof[PROFID]->Radius[b - 1] ) / Prof[PROFID]->Radius[b - 2];
-      else
-//             Prof->MaxRadius = dr_min*Prof->NBin;
-         Prof[PROFID]->MaxRadius = 2.0 * Prof[PROFID]->Radius[b - 1]  - Prof[PROFID]->Radius[b - 2];
+      Prof[PROFID]->MaxRadius = ( LogBin ) ? SQR ( Prof[PROFID]->Radius[b - 1] ) / Prof[PROFID]->Radius[b - 2]
+                                           : 2.0 * Prof[PROFID]->Radius[b - 1]   - Prof[PROFID]->Radius[b - 2];
    }
 
 
