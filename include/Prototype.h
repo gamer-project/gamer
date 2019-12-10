@@ -54,7 +54,7 @@ int Aux_IsFinite( const double x );
 void Buf_AllocateBufferPatch_Base( AMR_t *Tamr );
 void Buf_AllocateBufferPatch( AMR_t *Tamr, const int lv );
 void Buf_GetBufferData( const int lv, const int FluSg, const int PotSg, const GetBufMode_t GetBufMode,
-                        const int TVar, const int ParaBuffer, const UseLBFunc_t UseLBFunc );
+                        const long TVar, const int ParaBuffer, const UseLBFunc_t UseLBFunc );
 void Buf_RecordBoundaryFlag( const int lv );
 void Buf_RecordBoundaryPatch_Base();
 void Buf_RecordBoundaryPatch( const int lv );
@@ -111,11 +111,11 @@ void Flu_FixUp( const int lv );
 void Flu_Prepare( const int lv, const double PrepTime, real h_Flu_Array_F_In[], real h_Pot_Array_USG_F[],
                   double h_Corner_Array_F[][3], const int NPG, const int *PID0_List );
 void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const int SonPotSg, const int FaPotSg,
-                   const int TVar );
+                   const long TVar );
 void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int ArraySizeX, const int ArraySizeY,
                                  const int ArraySizeZ, const int Idx_Start[], const int Idx_End[],
                                  const int TFluVarIdxList[], const double Time, const double dh, const double *Corner,
-                                 const int TVar, const int lv );
+                                 const long TVar, const int lv );
 void Hydro_BoundaryCondition_Outflow( real *Array, const int BC_Face, const int NVar, const int GhostSize,
                                       const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
                                       const int Idx_Start[], const int Idx_End[] );
@@ -131,7 +131,7 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
                    const double Poi_Coeff, const int SaveSg_Flu, const int SaveSg_Pot,
                    const bool OverlapMPI, const bool Overlap_Sync );
 void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array,
-                        const int GhostSize, const int NPG, const int *PID0_List, int TVar,
+                        const int GhostSize, const int NPG, const int *PID0_List, long TVar,
                         const IntScheme_t IntScheme, const PrepUnit_t PrepUnit, const NSide_t NSide,
                         const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
                         const real MinDens, const real MinPres, const bool DE_Consistency );
@@ -362,7 +362,7 @@ void LB_ExchangeFlaggedBuffer( const int lv );
 void LB_FindFather( const int SonLv, const bool SearchAllSon, const int NInput, int* TargetSonPID0, const bool ResetSonID );
 void LB_FindSonNotHome( const int FaLv, const bool SearchAllFa, const int NInput, int* TargetFaPID );
 void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const GetBufMode_t GetBufMode,
-                       const int TVar, const int ParaBuf );
+                       const long TVar, const int ParaBuf );
 real*LB_GetBufferData_MemAllocate_Send( const int NSend );
 real*LB_GetBufferData_MemAllocate_Recv( const int NRecv );
 void LB_GrandsonCheck( const int lv );

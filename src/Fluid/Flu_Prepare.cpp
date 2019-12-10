@@ -5,9 +5,9 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flu_Prepare
-// Description :  Prepare the input array "Flu_Array_F_In" for the fluid solver
+// Description :  Prepare the input array Flu_Array_F_In[] for the fluid solver
 //
-// Note        :  Invoke the function "Prepare_PatchData"
+// Note        :  Invoke Prepare_PatchData()
 //
 // Parameter   :  lv                   : Target refinement level
 //                PrepTime             : Target physical time to prepare the coarse-grid data
@@ -64,8 +64,8 @@ void Flu_Prepare( const int lv, const double PrepTime, real h_Flu_Array_F_In[], 
 #  ifdef UNSPLIT_GRAVITY
 // prepare the potential array
    if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
-   Prepare_PatchData( lv, PrepTime, h_Pot_Array_USG_F, USG_GHOST_SIZE, NPG, PID0_List,
-                      _POTE,         OPT__GRA_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
+   Prepare_PatchData( lv, PrepTime, h_Pot_Array_USG_F, USG_GHOST_SIZE, NPG, PID0_List, _POTE,
+                      OPT__GRA_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
                       OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, DE_Consistency_No );
 
 // prepare the corner array
