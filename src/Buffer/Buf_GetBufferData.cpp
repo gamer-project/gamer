@@ -46,7 +46,7 @@
 //                                  USELB_NO  : do not use the load-balance alternative function
 //-------------------------------------------------------------------------------------------------------
 void Buf_GetBufferData( const int lv, const int FluSg, const int PotSg, const GetBufMode_t GetBufMode,
-                        const int TVar, const int ParaBuf, const UseLBFunc_t UseLBFunc )
+                        const long TVar, const int ParaBuf, const UseLBFunc_t UseLBFunc )
 {
 
 // invoke the alternative load-balance function
@@ -123,7 +123,7 @@ void Buf_GetBufferData( const int lv, const int FluSg, const int PotSg, const Ge
    NVar_Flu = 0;
 
    for (int v=0; v<NFluid_Max; v++)
-      if ( TVar & (1<<v) )    TFluVarIdxList[ NVar_Flu++ ] = v;
+      if ( TVar & (1L<<v) )   TFluVarIdxList[ NVar_Flu++ ] = v;
 
    NVar_Tot = NVar_Flu;
 #  ifdef GRAVITY
