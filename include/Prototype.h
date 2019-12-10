@@ -396,7 +396,7 @@ void Hydro_Init_ByFunction_AssignData( const int lv );
 void Hydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const int NVar_Flu, const int GhostSize,
                                          const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
                                          const int Idx_Start[], const int Idx_End[], const int TFluVarIdxList[],
-                                         const int NVar_Der, const int TDerVarList[] );
+                                         const int NVar_Der, const long TDerVarList[] );
 bool Hydro_Flag_Vorticity( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
 
 

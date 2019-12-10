@@ -3,7 +3,7 @@
 void InterpolateGhostZone( const int lv, const int PID, real IntData[], const int SibID, const double PrepTime,
                            const int GhostSize, const IntScheme_t IntScheme, const int NTSib[], int *TSib[],
                            const long TVar, const int NVar_Tot, const int NVar_Flu, const int TFluVarIdxList[],
-                           const int NVar_Der, const int TDerVarList[], const bool IntPhase,
+                           const int NVar_Der, const long TDerVarList[], const bool IntPhase,
                            const OptFluBC_t FluBC[], const OptPotBC_t PotBC, const int BC_Face[], const real MinPres,
                            const bool DE_Consistency );
 static void SetTargetSibling( int NTSib[], int *TSib[] );
@@ -304,7 +304,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 #  if   ( MODEL == HYDRO )
    const int NVar_Der_Max = 5;
-   int TDerVarList[NVar_Der_Max];
+   long TDerVarList[NVar_Der_Max];
 
    if ( PrepVx   )   TDerVarList[ NVar_Der ++ ] = _VELX;
    if ( PrepVy   )   TDerVarList[ NVar_Der ++ ] = _VELY;
@@ -318,7 +318,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
    const int NVar_Der_Max = 0;
-   int *TDerVarList = NULL;
+   long *TDerVarList = NULL;
 
 #  else
 #  error : unsupported MODEL !!
