@@ -37,8 +37,8 @@ static const int PRESSURE      = 99;
 //                RemoveEmpty : true  --> remove empty bins from the data
 //                              false --> these empty bins will still be in the profile arrays with
 //                                        Data[empty_bin]=Weight[empty_bin]=NCell[empty_bin]=0
-//                Quantity    : Quantity to be averaged spherically
-//                              Support field indicies defined in Macro.h, and VRAD (98) and PRESSURE (99)
+//                Quantity    : Quantities to be averaged spherically
+//                              Support field indicies defined in Macro.h, INTERNAL_ENGY (97), VRAD (98) and PRESSURE (99)
 //                              The weight function is the cell volume.
 //                NProf       : Number of Profile_t object in Prof.
 //                level       : The level of Patches to be considered.
