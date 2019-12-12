@@ -144,7 +144,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
 
 // collect profile data in this rank
-   const double r_max2      = SQR( Prof->MaxRadius );
+   const double r_max2      = SQR( Prof[0]->MaxRadius );
    const double HalfBox[3]  = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
    const bool   Periodic[3] = { OPT__BC_FLU[0] == BC_FLU_PERIODIC,
                                 OPT__BC_FLU[2] == BC_FLU_PERIODIC,
