@@ -956,7 +956,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #              ifdef CHECK_FAILED_CELL_IN_FLUID
 		       if(SRHydro_CheckUnphysical(Cons, NULL, (real) GAMMA, (real) MIN_TEMP, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
 #              endif
-               Temp[PID][i][j][k] =  SRHydro_GetTemperature( Cons[0], Cons[1], Cons[2], Cons[3], Cons[4], GAMMA, MIN_TEMP  );
+               Temp[PID][i][j][k] =  SRHydro_GetTemperature( Cons[0], Cons[1], Cons[2], Cons[3], Cons[4], (real)GAMMA, (real)MIN_TEMP  );
             }
 
 //          copy conserved data and temperature into FieldData

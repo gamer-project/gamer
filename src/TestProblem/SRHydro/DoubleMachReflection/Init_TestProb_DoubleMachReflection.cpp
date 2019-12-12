@@ -232,12 +232,12 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
-void BC_User( real fluid[], const double x, const double y, const double z, const double Time,
-              const int lv, double AuxArray[] )
-{
-
-
-}
+//void BC_User( real fluid[], const double x, const double y, const double z, const double Time,
+//              const int lv, double AuxArray[] )
+//{
+//
+//
+//}
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_TestProb_SRHydro_DoubleMachReflection
