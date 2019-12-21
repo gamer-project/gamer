@@ -4,9 +4,9 @@ int         OutputXYZ         = WRONG;                     // output option (x,y
 char       *FileName_In       = NULL;                      // name of the input file
 char       *FileName_Tree     = NULL;                      // name of the tree file
 char       *Suffix            = NULL;                      // suffix attached to the output file name
-bool        OutputBinary      = false;                     // true --> output data in binary form
+int         OutputFormat      = 2;                         // output data format: 1=text, 2=HDF5, 3=C-binary
 bool        OutputPot         = false;                     // true --> output gravitational potential
-int         OutputParDens     = 0;                         // (0/1/2) --> off/output particle density/output total density
+int         OutputParDens     = 0;                         // 0=off, 1=output particle density, 2=output total density
 bool        OutputPres        = false;                     // true --> output pressure
 bool        OutputTemp        = false;                     // true --> output temperature
 bool        OutputDivVel      = false;                     // true --> output divergence( velocity )
@@ -74,7 +74,7 @@ void ReadOption( int argc, char **argv )
    double Temp_Size [3] = { WRONG, WRONG, WRONG };
    int c;
 
-   while ( (c = getopt(argc, argv, "hbPUdvVTscwki:o:l:n:x:y:z:X:Y:Z:p:q:r:I:m:t:e:B:u:")) != -1 )
+   while ( (c = getopt(argc, argv, "hPUdvVTscwki:o:l:n:x:y:z:X:Y:Z:p:q:r:I:m:t:e:B:u:f:")) != -1 )
    {
       switch ( c )
       {
@@ -116,7 +116,7 @@ void ReadOption( int argc, char **argv )
                    break;
          case 't': OMP_NThread     = atoi(optarg);
                    break;
-         case 'b': OutputBinary    = true;
+         case 'f': OutputFormat    = atoi(optarg);
                    break;
          case 'P': OutputPres      = true;
                    break;
@@ -171,7 +171,7 @@ void ReadOption( int argc, char **argv )
                         << endl << "                             "
                         << " [-k (convert peculiar velocity from comoving to physical coords in km/s) [false]]"
                         << endl << "                             "
-                        << " [-b (output binary file) [off]] [-l targeted level [0]]"
+                        << " [-f output data format (1=text, 2=HDF5, 3=C-binary) [2]] [-l targeted level [0]]"
                         << endl << "                             "
                         << " [-s [input cell scales instead of physical coordinates to specify the range] [off]]"
                         << endl << "                             "
@@ -374,10 +374,24 @@ void ReadOption( int argc, char **argv )
       cerr << "ERROR : incorrect OutputXYZ input (-n output option) !!" << endl;
       exit( 1 );
    }
-
-   if (  OutputBinary  &&  ( NGPU_X[0] != 1 || NGPU_X[1] != 1 )  )
+   
+   if ( OutputFormat < 1  ||  OutputFormat > 3 )
    {
-      cerr << "ERROR : only slab decomposition is allowed (-p 1 -q 1 -r NP) for binary output !!" << endl;
+      cerr << "ERROR : incorrect output format (-f 1/2/3) !!" << endl;
+      exit( 1 );
+   }
+
+#  ifndef SUPPORT_HDF5
+   if ( OutputFormat == 2 )
+   {
+      cerr << "ERROR : must enable SUPPORT_HDF5 in the Makefile for the HDF5 output format (i.e., -f 2) !!" << endl;
+      exit( 1 );
+   }
+#  endif
+
+   if (  ( OutputFormat == 2 || OutputFormat == 3 )  &&  ( NGPU_X[0] != 1 || NGPU_X[1] != 1 )  )
+   {
+      cerr << "ERROR : only slab decomposition is allowed (-p 1 -q 1 -r NP) for the HDF5 and C-binary output formats !!" << endl;
       exit( 1 );
    }
 
@@ -628,50 +642,51 @@ void Output()
 
    strcat( FileName_Out, Info );
 
-   if ( OutputBinary )
+   if ( OutputFormat == 2 || OutputFormat == 3 )
    {
+      const char *format = ( OutputFormat == 2 ) ? "HDF5" : "CBinary";
       int  NextIdx = NCOMP_TOTAL;
       char comp[NOut][20];
 
 #     if   ( MODEL == HYDRO )
-      sprintf( comp[0], "_Binary_Dens" );
-      sprintf( comp[1], "_Binary_MomX" );
-      sprintf( comp[2], "_Binary_MomY" );
-      sprintf( comp[3], "_Binary_MomZ" );
-      sprintf( comp[4], "_Binary_Engy" );
+      sprintf( comp[0], "_%s_Dens", format );
+      sprintf( comp[1], "_%s_MomX", format );
+      sprintf( comp[2], "_%s_MomY", format );
+      sprintf( comp[3], "_%s_MomZ", format );
+      sprintf( comp[4], "_%s_Engy", format );
 
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
 
 #     elif ( MODEL == ELBDM )
-      sprintf( comp[0], "_Binary_Dens" );
-      sprintf( comp[1], "_Binary_Real"  );
-      sprintf( comp[2], "_Binary_Imag"  );
+      sprintf( comp[0], "_%s_Dens", format );
+      sprintf( comp[1], "_%s_Real", format );
+      sprintf( comp[2], "_%s_Imag", format );
 
 #     else
 #     error : ERROR : unsupported MODEL !!
 #     endif // MODEL
 
-      for (int v=0; v<NCOMP_PASSIVE; v++)    sprintf( comp[NCOMP_FLUID+v], "_Passive%02d", v );
+      for (int v=0; v<NCOMP_PASSIVE; v++)    sprintf( comp[NCOMP_FLUID+v], "_%s_Passive%02d", format, v );
 
-      if ( OutputPot )           sprintf( comp[NextIdx++], "_Binary_Pot"     );
-      if ( OutputParDens == 1 )  sprintf( comp[NextIdx++], "_Binary_ParDens" );
+      if ( OutputPot )           sprintf( comp[NextIdx++], "_%s_Pot",     format );
+      if ( OutputParDens == 1 )  sprintf( comp[NextIdx++], "_%s_ParDens", format );
       else
-      if ( OutputParDens == 2 )  sprintf( comp[NextIdx++], "_Binary_TotDens" );
-      if ( OutputPres )          sprintf( comp[NextIdx++], "_Binary_Pres"    );
-      if ( OutputTemp )          sprintf( comp[NextIdx++], "_Binary_Temp"    );
-      if ( OutputDivVel )        sprintf( comp[NextIdx++], "_Binary_DivV"    );
+      if ( OutputParDens == 2 )  sprintf( comp[NextIdx++], "_%s_TotDens", format );
+      if ( OutputPres )          sprintf( comp[NextIdx++], "_%s_Pres",    format );
+      if ( OutputTemp )          sprintf( comp[NextIdx++], "_%s_Temp",    format );
+      if ( OutputDivVel )        sprintf( comp[NextIdx++], "_%s_DivV",    format );
       if ( OutputCurlVel )
       {
-         sprintf( comp[NextIdx++], "_Binary_CurlVx" );
-         sprintf( comp[NextIdx++], "_Binary_CurlVy" );
-         sprintf( comp[NextIdx++], "_Binary_CurlVz" );
+         sprintf( comp[NextIdx++], "_%s_CurlVx", format );
+         sprintf( comp[NextIdx++], "_%s_CurlVy", format );
+         sprintf( comp[NextIdx++], "_%s_CurlVz", format );
       }
       if ( OutputELBDM_Vel )
       {
-         sprintf( comp[NextIdx++], "_Binary_VelX" );
-         sprintf( comp[NextIdx++], "_Binary_VelY" );
-         sprintf( comp[NextIdx++], "_Binary_VelZ" );
+         sprintf( comp[NextIdx++], "_%s_VelX", format );
+         sprintf( comp[NextIdx++], "_%s_VelY", format );
+         sprintf( comp[NextIdx++], "_%s_VelZ", format );
       }
 
       for (int v=0; v<NOut; v++)
@@ -679,12 +694,15 @@ void Output()
          strcpy( FileName_Out_Binary[v], FileName_Out );
          strcat( FileName_Out_Binary[v], comp[v] );
       }
-   }
+   } // if ( OutputFormat == 2 || OutputFormat == 3 )
+
+   else
+      strcat( FileName_Out, "_Text" );
 
 
    if ( Suffix != NULL )
    {
-      if ( OutputBinary )
+      if ( OutputFormat == 2 || OutputFormat == 3 )
          for (int v=0; v<NOut; v++)   strcat( FileName_Out_Binary[v], Suffix );
       else
          strcat( FileName_Out, Suffix );
@@ -692,7 +710,7 @@ void Output()
 
 
 // clean the existing files
-   if ( OutputBinary ) // binary files
+   if ( OutputFormat == 2 || OutputFormat == 3 ) // HDF5 and C-binary files
    {
       if ( MyRank == 0  )
       {
@@ -740,8 +758,8 @@ void Output()
                                          || ( OutputXYZ == 5 && MyRank_X[1] == 0 )
                                          || ( OutputXYZ == 6 && MyRank_X[2] == 0 )  )   )
       {
-//       output the binary file (different components will be outputted to different files)
-         if ( OutputBinary )
+//       output the HDF5 or C-binary files --> different components will be outputted to different files
+         if ( OutputFormat == 2 || OutputFormat == 3 )
          {
             for (int v=0; v<NOut; v++)
             {
@@ -843,7 +861,7 @@ void Output()
 
             fclose( File );
 
-         } // if ( OutputBinary ) ... else ...
+         } // if ( OutputFormat == 2 || OutputFormat == 3 ) ... else ...
       } // ( MyRank == TargetRank  &&  ... )
 
       MPI_Barrier( MPI_COMM_WORLD );
