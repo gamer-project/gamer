@@ -29,6 +29,9 @@ void GetTemp( real FData[], const int FSize, const int Buffer, const int NextIdx
 void GetELBDM_Vel( real FData[], const int FSize, const int Buffer, const int NextIdx, const real dh,
                    const bool Com2Phy );
 #endif
+#ifdef SUPPORT_HDF5
+void SyncHDF5File( const char *FileName );
+#endif
 
 
 // GAMER functions

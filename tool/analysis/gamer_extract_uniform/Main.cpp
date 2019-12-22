@@ -511,6 +511,7 @@ void TakeNote( int argc, char *argv[] )
    cout << "BufSize           = " << BufSize                              << endl;
    cout << "NLoad             = " << NLoad                                << endl;
    cout << "NOut              = " << NOut                                 << endl;
+   cout << "OutputFormat      = " << OutputFormat                         << endl;
    cout << "OutputPot         = " << ( (OutputPot      ) ? "YES" : "NO" ) << endl;
    cout << "OutputParDens     = " << OutputParDens                        << endl;
    cout << "OutputPres        = " << ( (OutputPres     ) ? "YES" : "NO" ) << endl;
@@ -630,7 +631,7 @@ void Output()
    const long   Size1v  = (long)Idx_MySize[0]*Idx_MySize[1]*Idx_MySize[2];   // total array size of one component
 
 
-// set the output file name
+// 1. set the output file name(s)
    char FileName_Out[200], FileName_Out_Binary[NOut][200], DomainInfo[100], FieldName[NOut][20];
    int  NextIdx;
 
@@ -654,7 +655,8 @@ void Output()
 
    strcat( FileName_Out, DomainInfo );
 
-// determine the field name
+
+// determine the field names
    NextIdx = 0;
 
 #  if   ( MODEL == HYDRO )
@@ -677,7 +679,7 @@ void Output()
 #  endif // MODEL
 
    for (int v=0; v<NCOMP_PASSIVE; v++)    sprintf( FieldName[NextIdx++], "Passive%02d", v );
-   if ( OutputPot )                       sprintf( FieldName[NextIdx++], "Pot"  );
+   if ( OutputPot )                       sprintf( FieldName[NextIdx++], "Pote"  );
    if ( OutputParDens )                   sprintf( FieldName[NextIdx++], (OutputParDens==1)?"ParDens":"TotalDens" );
 #  if   ( MODEL == HYDRO )
    if ( OutputPres )                      sprintf( FieldName[NextIdx++], "Pres" );
@@ -692,14 +694,16 @@ void Output()
                                           sprintf( FieldName[NextIdx++], "VelZ" ); }
 #  endif
 
-// add field names to the output binary files
+
+// add field names
    if ( OutputFormat == 3 )
    {
       for (int v=0; v<NOut; v++)
          sprintf( FileName_Out_Binary[v], "%s_%s", FileName_Out, FieldName[v] );
    }
 
-// add the suffix
+
+// add suffix
    if ( Suffix != NULL )
    {
       if ( OutputFormat == 3 )
@@ -708,7 +712,8 @@ void Output()
          strcat( FileName_Out, Suffix );
    }
 
-// add the extension
+
+// add extension
    switch ( OutputFormat )
    {
       case 1:                                strcat( FileName_Out, ".txt" );              break;
@@ -718,7 +723,8 @@ void Output()
    }
 
 
-// remove the existing files
+
+// 2. remove existing files
    if ( MyRank == 0 )
    {
       if ( OutputFormat == 3 )
@@ -729,73 +735,72 @@ void Output()
    MPI_Barrier( MPI_COMM_WORLD );
 
 
-// output data
+
+// 3. initialize the HDF5 output
+#  ifdef SUPPORT_HDF5
+   hid_t   H5_FileID, H5_GroupID_Data, H5_SpaceID_Data;
+   herr_t  H5_Status;
+   int     Idx_AllRankSizeZ[NGPU];
+
+   if ( OutputFormat == 2 )
+   {
+      hid_t   H5_GroupID_Info, H5_DataCreatePropList;
+      hsize_t H5_SetDims_Data[3];
+
+//    create the data space
+      H5_SetDims_Data[0] = Idx_Size[2];
+      H5_SetDims_Data[1] = Idx_Size[1];
+      H5_SetDims_Data[2] = Idx_Size[0];
+
+      H5_SpaceID_Data = H5Screate_simple( 3, H5_SetDims_Data, NULL );
+      if ( H5_SpaceID_Data < 0 )   Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_SpaceID_Data" );
+
+      if ( MyRank == 0 )
+      {
+//       create file
+         H5_FileID = H5Fcreate( FileName_Out, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT );
+         if ( H5_FileID < 0 )    Aux_Error( ERROR_INFO, "failed to create the HDF5 file \"%s\" !!\n", FileName_Out );
+
+//       create the "Info" group
+         H5_GroupID_Info = H5Gcreate( H5_FileID, "Info", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
+         if ( H5_GroupID_Info < 0 )    Aux_Error( ERROR_INFO, "failed to create the group \"%s\" !!\n", "Info" );
+
+//       create the "Data" group
+         H5_GroupID_Data = H5Gcreate( H5_FileID, "Data", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
+         if ( H5_GroupID_Data < 0 )    Aux_Error( ERROR_INFO, "failed to create the group \"%s\" !!\n", "Data" );
+
+//       create the dataset of each field
+//       --> do NOT write fill values to any dataset for higher I/O performance
+         H5_DataCreatePropList = H5Pcreate( H5P_DATASET_CREATE );
+         H5_Status             = H5Pset_fill_time( H5_DataCreatePropList, H5D_FILL_TIME_NEVER );
+
+         for (int v=0; v<NOut; v++)
+         {
+            hid_t H5_SetID_Data = H5Dcreate( H5_GroupID_Data, FieldName[v], H5T_GAMER_REAL, H5_SpaceID_Data,
+                                             H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
+            if ( H5_SetID_Data < 0 )  Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", FieldName[v] );
+            H5_Status = H5Dclose( H5_SetID_Data );
+         }
+
+//       close the file and group
+         H5_Status = H5Pclose( H5_DataCreatePropList );
+         H5_Status = H5Gclose( H5_GroupID_Info );
+         H5_Status = H5Gclose( H5_GroupID_Data );
+         H5_Status = H5Fclose( H5_FileID );
+      } // if ( MyRank == 0 )
+
+//    get the array size of all ranks (assuming slab decomposition)
+      MPI_Allgather( &Idx_MySize[2], 1, MPI_INT, Idx_AllRankSizeZ, 1, MPI_INT, MPI_COMM_WORLD );
+   } // if ( OutputFormat == 2 )
+#  endif // #ifdef SUPPORT_HDF5
+
+
+
+// 3. output data
    int    ii, jj, kk;
    long   ID;
    double x, y, z;
    real   u[NOut];
-
-
-// initialize the HDF5 output
-   /*
-#  ifdef SUPPORT_HDF5
-   if ( OutputFormat == 2  &&  MyRank == 0 )
-   {
-      hid_t H5_FileID, H5_GroupID_Info, H5_GroupID_Data;
-
-//    create file
-      H5_FileID = H5Fcreate( FileName_Out_Binary[v], H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT );
-      if ( H5_FileID < 0 )    Aux_Error( ERROR_INFO, "failed to create the HDF5 file \"%s\" !!\n", FileName_Out_Binary[v] );
-
-//    create the "Info" group
-      H5_GroupID_Info = H5Gcreate( H5_FileID, "Info", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
-      if ( H5_GroupID_Info < 0 )    Aux_Error( ERROR_INFO, "failed to create the group \"%s\" !!\n", "Info" );
-
-//    create the "Data" group
-      H5_GroupID_Data = H5Gcreate( H5_FileID, "Data", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
-      if ( H5_GroupID_Data < 0 )    Aux_Error( ERROR_INFO, "failed to create the group \"%s\" !!\n", "Data" );
-
-//    create the datasets of all fields
-      for (int v=0; v<NOut; v++)
-      {
-
-         H5_SetDims_Field[0] = NPatchAllLv;
-         H5_SetDims_Field[1] = PATCH_SIZE;
-         H5_SetDims_Field[2] = PATCH_SIZE;
-         H5_SetDims_Field[3] = PATCH_SIZE;
-
-         H5_SpaceID_Field = H5Screate_simple( 4, H5_SetDims_Field, NULL );
-         if ( H5_SpaceID_Field < 0 )   Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_SpaceID_Field" );
-
-//       HDF5 file must be synchronized before being written by the next rank
-         SyncHDF5File( FileName );
-
-         H5_FileID = H5Fopen( FileName, H5F_ACC_RDWR, H5P_DEFAULT );
-         if ( H5_FileID < 0 )    Aux_Error( ERROR_INFO, "failed to open the HDF5 file \"%s\" !!\n", FileName );
-
-//       create the "GridData" group
-         H5_GroupID_GridData = H5Gcreate( H5_FileID, "GridData", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
-         if ( H5_GroupID_GridData < 0 )   Aux_Error( ERROR_INFO, "failed to create the group \"%s\" !!\n", "GridData" );
-
-//       create the datasets of all fields
-         for (int v=0; v<NFieldOut; v++)
-         {
-            H5_SetID_Field = H5Dcreate( H5_GroupID_GridData, FieldName[v], H5T_GAMER_REAL, H5_SpaceID_Field,
-                                        H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
-            if ( H5_SetID_Field < 0 )  Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", FieldName[v] );
-            H5_Status = H5Dclose( H5_SetID_Field );
-         }
-
-      }
-
-//    close the file and group
-      H5_Status = H5Gclose( H5_GroupID_Info );
-      H5_Status = H5Gclose( H5_GroupID_Data );
-      H5_Status = H5Fclose( H5_FileID );
-   } // if ( OutputFormat == 2  &&  MyRank == 0 )
-#  endif // #ifdef SUPPORT_HDF5
-   */
-
 
    for (int TargetRank=0; TargetRank<NGPU; TargetRank++)
    {
@@ -807,7 +812,7 @@ void Output()
                                          || ( OutputXYZ == 5 && MyRank_X[1] == 0 )
                                          || ( OutputXYZ == 6 && MyRank_X[2] == 0 )  )   )
       {
-//       text file --> all components will be outputted to the same file
+//       3-1. text file --> all components will be outputted to the same file
          if ( OutputFormat == 1 )
          {
             FILE *File = fopen( FileName_Out, "a" );
@@ -891,50 +896,62 @@ void Output()
          } // if ( OutputFormat == 1 )
 
 
-//       HDF5 file --> different components will be outputted to different datasets in the same HDF5 file
-         /*
+//       3-2. HDF5 file --> different components will be outputted to different datasets in the same file
 #        ifdef SUPPORT_HDF5
          else if ( OutputFormat == 2 )
          {
-            hid_t   H5_FileID, H5_GroupID_Info, H5_GroupID_Data;
-            hsize_t H5_Count_Field[4], H5_Offset_Field[4];
-            herr_t  H5_Status;
+            hid_t   H5_MemID_Data;
+            hsize_t H5_MemDims_Data[3], H5_Count_Data[3], H5_Offset_Data[3];
 
-            H5_SetID_Field = H5Dcreate( H5_GroupID_GridData, FieldName[v], H5T_GAMER_REAL, H5_SpaceID_Field,
-                                        H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
-            if ( H5_SetID_Field < 0 )  Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", FieldName[v] );
+//          HDF5 file must be synchronized before being written by the next rank
+            SyncHDF5File( FileName_Out );
 
+//          reopen the file and group
+            H5_FileID = H5Fopen( FileName_Out, H5F_ACC_RDWR, H5P_DEFAULT );
+            if ( H5_FileID < 0 )    Aux_Error( ERROR_INFO, "failed to open the HDF5 file \"%s\" !!\n", FileName_Out );
 
-//          get the array size of all ranks
-            int *Idx_AllRankSizeZ = new int [NGPU];
-            MPI_Allgather( &Idx_MySize[2], 1, MPI_INT, Idx_AllRankSizeZ, 1, MPI_INT, MPI_COMM_WORLD );
+            H5_GroupID_Data = H5Gopen( H5_FileID, "Data", H5P_DEFAULT );
+            if ( H5_GroupID_Data < 0 )   Aux_Error( ERROR_INFO, "failed to open the group \"%s\" !!\n", "Data" );
 
+//          set the memory space
+            H5_MemDims_Data[0] = Idx_MySize[2];
+            H5_MemDims_Data[1] = Idx_MySize[1];
+            H5_MemDims_Data[2] = Idx_MySize[0];
 
-//          set the output array indices of this rank (i.e., hyperslab region in HDF5)
-            H5_Offset_Field[0] = 0;
-            H5_Offset_Field[1] = 0;
-            H5_Offset_Field[2] = 0;
-            for (int r=0; r<MyRank; r++)  H5_Offset_Field[0] += Idx_AllRankSizeZ[r];
+            H5_MemID_Data = H5Screate_simple( 3, H5_MemDims_Data, NULL );
+            if ( H5_MemID_Data < 0 )  Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_MemID_Data" );
 
-            H5_Count_Field [0] = Idx_MySize[2];
-            H5_Count_Field [1] = Idx_MySize[1];
-            H5_Count_Field [2] = Idx_MySize[0];
+//          set the subset of the dataspace
+            H5_Offset_Data[0] = 0;
+            H5_Offset_Data[1] = 0;
+            H5_Offset_Data[2] = 0;
+            for (int r=0; r<MyRank; r++)  H5_Offset_Data[0] += Idx_AllRankSizeZ[r];
 
-            H5_Status = H5Sselect_hyperslab( H5_SpaceID_Field, H5S_SELECT_SET, H5_Offset_Field, NULL, H5_Count_Field, NULL );
-            if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to create a hyperslab for the grid data !!\n" );
+            H5_Count_Data [0] = Idx_MySize[2];
+            H5_Count_Data [1] = Idx_MySize[1];
+            H5_Count_Data [2] = Idx_MySize[0];
 
+            H5_Status = H5Sselect_hyperslab( H5_SpaceID_Data, H5S_SELECT_SET, H5_Offset_Data, NULL, H5_Count_Data, NULL );
+            if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to create a hyperslab !!\n" );
 
+//          write data to disk (one field at a time)
+            for (int v=0; v<NOut; v++)
+            {
+               hid_t H5_SetID_Data = H5Dopen( H5_GroupID_Data, FieldName[v], H5P_DEFAULT );
+               H5_Status           = H5Dwrite( H5_SetID_Data, H5T_GAMER_REAL, H5_MemID_Data, H5_SpaceID_Data, H5P_DEFAULT,
+                                               OutputArray+(long)v*Size1v );
+               if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to output the field \"%s\" !!\n", FieldName );
+               H5_Status = H5Dclose( H5_SetID_Data );
+            }
 
-
-            delete [] Idx_AllRankSizeZ;
-            H5_Status = H5Dclose( H5_SetID_Field );
-            H5_Status = H5Sclose( H5_SpaceID_Field );
+            H5_Status = H5Sclose( H5_MemID_Data );
+            H5_Status = H5Gclose( H5_GroupID_Data );
+            H5_Status = H5Fclose( H5_FileID );
          } // else if ( OutputFormat == 2 )
 #        endif // #ifdef SUPPORT_HDF5
-         */
 
 
-//       C-binary file --> different components will be outputted to different files
+//       3-3. C-binary file --> different components will be outputted to different files
          else if ( OutputFormat == 3 )
          {
             for (int v=0; v<NOut; v++)
@@ -955,12 +972,45 @@ void Output()
 
       MPI_Barrier( MPI_COMM_WORLD );
 
-   } // for (int TargetRank=0; TargetRank<NGPU; TargetRank++
+   } // for (int TargetRank=0; TargetRank<NGPU; TargetRank++)
+
+
+// close all HDF5 objects
+#  ifdef SUPPORT_HDF5
+   if ( OutputFormat == 2 )
+   {
+      H5_Status = H5Sclose( H5_SpaceID_Data );
+   }
+#  endif
 
 
    if ( MyRank == 0 )   cout << "Output ... done" << endl;
 
 } // FUNCTION : Output
+
+
+
+#ifdef SUPPORT_HDF5
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SyncHDF5File
+// Description :  Force the file system to synchronize (dump data to the disk before return)
+//
+// Note        :  1. Synchronization is accomplished by first opening the target file with the "appending" mode
+//                   and then close it immediately
+//
+// Parameter   :  FileName : Target file name
+//-------------------------------------------------------------------------------------------------------
+void SyncHDF5File( const char *FileName )
+{
+
+   FILE *File      = fopen( FileName, "ab" );
+   int CloseStatus = fclose( File );
+
+   if ( CloseStatus != 0 )
+      Aux_Message( stderr, "WARNING : failed to close the file \"%s\" for synchronization !!\n", FileName );
+
+} // FUNCTION : SyncHDF5File
+#endif // #ifdef SUPPORT_HDF5
 
 
 
