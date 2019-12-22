@@ -1,5 +1,14 @@
 #include "ExtractUniform.h"
 
+#ifdef SUPPORT_HDF5
+# include "hdf5.h"
+# ifdef FLOAT8
+#   define H5T_GAMER_REAL H5T_NATIVE_DOUBLE
+# else
+#   define H5T_GAMER_REAL H5T_NATIVE_FLOAT
+# endif
+#endif // #ifdef SUPPORT_HDF5
+
 int         OutputXYZ         = WRONG;                     // output option (x,y,z,x-proj,y-proj,z-proj,3D)
 char       *FileName_In       = NULL;                      // name of the input file
 char       *FileName_Tree     = NULL;                      // name of the tree file
@@ -374,7 +383,7 @@ void ReadOption( int argc, char **argv )
       cerr << "ERROR : incorrect OutputXYZ input (-n output option) !!" << endl;
       exit( 1 );
    }
-   
+
    if ( OutputFormat < 1  ||  OutputFormat > 3 )
    {
       cerr << "ERROR : incorrect output format (-f 1/2/3) !!" << endl;
@@ -620,10 +629,13 @@ void Output()
    const double dh_min  = amr.dh[NLEVEL-1];
    const long   Size1v  = (long)Idx_MySize[0]*Idx_MySize[1]*Idx_MySize[2];   // total array size of one component
 
-   char FileName_Out[200], FileName_Out_Binary[NOut][200];
-   char Info[100];
 
-   sprintf( Info, "_x%.3f-%.3f_y%.3f-%.3f_z%.3f-%.3f_lv%d",
+// set the output file name
+   char FileName_Out[200], FileName_Out_Binary[NOut][200], DomainInfo[100], FieldName[NOut][20];
+   int  NextIdx;
+
+
+   sprintf( DomainInfo, "_x%.3f-%.3f_y%.3f-%.3f_z%.3f-%.3f_lv%d",
             PhyCoord_Start[0], PhyCoord_Start[0]+PhyCoord_Size[0],
             PhyCoord_Start[1], PhyCoord_Start[1]+PhyCoord_Size[1],
             PhyCoord_Start[2], PhyCoord_Start[2]+PhyCoord_Size[2],
@@ -640,113 +652,150 @@ void Output()
       case 7:  sprintf( FileName_Out, "Cube"   );     break;
    }
 
-   strcat( FileName_Out, Info );
+   strcat( FileName_Out, DomainInfo );
 
-   if ( OutputFormat == 2 || OutputFormat == 3 )
+// determine the field name
+   NextIdx = 0;
+
+#  if   ( MODEL == HYDRO )
+   sprintf( FieldName[NextIdx++], "Dens" );
+   sprintf( FieldName[NextIdx++], "MomX" );
+   sprintf( FieldName[NextIdx++], "MomY" );
+   sprintf( FieldName[NextIdx++], "MomZ" );
+   sprintf( FieldName[NextIdx++], "Engy" );
+
+#  elif ( MODEL == MHD )
+#  warning : WAIT MHD !!!
+
+#  elif ( MODEL == ELBDM )
+   sprintf( FieldName[NextIdx++], "Dens" );
+   sprintf( FieldName[NextIdx++], "Real" );
+   sprintf( FieldName[NextIdx++], "Imag" );
+
+#  else
+#  error : ERROR : unsupported MODEL !!
+#  endif // MODEL
+
+   for (int v=0; v<NCOMP_PASSIVE; v++)    sprintf( FieldName[NextIdx++], "Passive%02d", v );
+   if ( OutputPot )                       sprintf( FieldName[NextIdx++], "Pot"  );
+   if ( OutputParDens )                   sprintf( FieldName[NextIdx++], (OutputParDens==1)?"ParDens":"TotalDens" );
+#  if   ( MODEL == HYDRO )
+   if ( OutputPres )                      sprintf( FieldName[NextIdx++], "Pres" );
+   if ( OutputTemp )                      sprintf( FieldName[NextIdx++], "Temp" );
+   if ( OutputDivVel )                    sprintf( FieldName[NextIdx++], "DivV" );
+   if ( OutputCurlVel ) {                 sprintf( FieldName[NextIdx++], "CurlVx" );
+                                          sprintf( FieldName[NextIdx++], "CurlVy" );
+                                          sprintf( FieldName[NextIdx++], "CurlVz" ); }
+#  elif ( MODEL == ELBDM )
+   if ( OutputELBDM_Vel ) {               sprintf( FieldName[NextIdx++], "VelX" );
+                                          sprintf( FieldName[NextIdx++], "VelY" );
+                                          sprintf( FieldName[NextIdx++], "VelZ" ); }
+#  endif
+
+// add field names to the output binary files
+   if ( OutputFormat == 3 )
    {
-      const char *format = ( OutputFormat == 2 ) ? "HDF5" : "CBinary";
-      int  NextIdx = NCOMP_TOTAL;
-      char comp[NOut][20];
-
-#     if   ( MODEL == HYDRO )
-      sprintf( comp[0], "_%s_Dens", format );
-      sprintf( comp[1], "_%s_MomX", format );
-      sprintf( comp[2], "_%s_MomY", format );
-      sprintf( comp[3], "_%s_MomZ", format );
-      sprintf( comp[4], "_%s_Engy", format );
-
-#     elif ( MODEL == MHD )
-#     warning : WAIT MHD !!!
-
-#     elif ( MODEL == ELBDM )
-      sprintf( comp[0], "_%s_Dens", format );
-      sprintf( comp[1], "_%s_Real", format );
-      sprintf( comp[2], "_%s_Imag", format );
-
-#     else
-#     error : ERROR : unsupported MODEL !!
-#     endif // MODEL
-
-      for (int v=0; v<NCOMP_PASSIVE; v++)    sprintf( comp[NCOMP_FLUID+v], "_%s_Passive%02d", format, v );
-
-      if ( OutputPot )           sprintf( comp[NextIdx++], "_%s_Pot",     format );
-      if ( OutputParDens == 1 )  sprintf( comp[NextIdx++], "_%s_ParDens", format );
-      else
-      if ( OutputParDens == 2 )  sprintf( comp[NextIdx++], "_%s_TotDens", format );
-      if ( OutputPres )          sprintf( comp[NextIdx++], "_%s_Pres",    format );
-      if ( OutputTemp )          sprintf( comp[NextIdx++], "_%s_Temp",    format );
-      if ( OutputDivVel )        sprintf( comp[NextIdx++], "_%s_DivV",    format );
-      if ( OutputCurlVel )
-      {
-         sprintf( comp[NextIdx++], "_%s_CurlVx", format );
-         sprintf( comp[NextIdx++], "_%s_CurlVy", format );
-         sprintf( comp[NextIdx++], "_%s_CurlVz", format );
-      }
-      if ( OutputELBDM_Vel )
-      {
-         sprintf( comp[NextIdx++], "_%s_VelX", format );
-         sprintf( comp[NextIdx++], "_%s_VelY", format );
-         sprintf( comp[NextIdx++], "_%s_VelZ", format );
-      }
-
       for (int v=0; v<NOut; v++)
-      {
-         strcpy( FileName_Out_Binary[v], FileName_Out );
-         strcat( FileName_Out_Binary[v], comp[v] );
-      }
-   } // if ( OutputFormat == 2 || OutputFormat == 3 )
+         sprintf( FileName_Out_Binary[v], "%s_%s", FileName_Out, FieldName[v] );
+   }
 
-   else
-      strcat( FileName_Out, "_Text" );
-
-
+// add the suffix
    if ( Suffix != NULL )
    {
-      if ( OutputFormat == 2 || OutputFormat == 3 )
+      if ( OutputFormat == 3 )
          for (int v=0; v<NOut; v++)   strcat( FileName_Out_Binary[v], Suffix );
       else
          strcat( FileName_Out, Suffix );
    }
 
-
-// clean the existing files
-   if ( OutputFormat == 2 || OutputFormat == 3 ) // HDF5 and C-binary files
+// add the extension
+   switch ( OutputFormat )
    {
-      if ( MyRank == 0  )
-      {
-         for (int v=0; v<NOut; v++)
-         {
-            if ( NULL != fopen(FileName_Out_Binary[v],"r") )
-            {
-               fprintf( stderr, "Warning : the file \"%s\" already exists and will be overwritten !!\n",
-                        FileName_Out_Binary[v] );
-
-               FILE *TempFile = fopen( FileName_Out_Binary[v], "w" );
-               fclose( TempFile );
-            }
-         }
-      }
+      case 1:                                strcat( FileName_Out, ".txt" );              break;
+      case 2:                                strcat( FileName_Out, ".hdf5" );             break;
+      case 3:  for (int v=0; v<NOut; v++)    strcat( FileName_Out_Binary[v], ".cbin" );   break;
+      default: Aux_Error( ERROR_INFO, "unsupported output format !!\n" );                 break;
    }
 
-   else // text files
+
+// remove the existing files
+   if ( MyRank == 0 )
    {
-      if ( MyRank == 0  &&  NULL != fopen(FileName_Out,"r") )
-      {
-         fprintf( stderr, "Warning : the file \"%s\" already exists and will be overwritten !!\n", FileName_Out );
-
-         FILE *TempFile = fopen( FileName_Out, "w" );
-         fclose( TempFile );
-      }
+      if ( OutputFormat == 3 )
+         for (int v=0; v<NOut; v++)    remove( FileName_Out_Binary[v] );
+      else
+         remove( FileName_Out );
    }
-
    MPI_Barrier( MPI_COMM_WORLD );
 
 
 // output data
-   int    ii, jj, kk, NextIdx;
+   int    ii, jj, kk;
    long   ID;
    double x, y, z;
    real   u[NOut];
+
+
+// initialize the HDF5 output
+   /*
+#  ifdef SUPPORT_HDF5
+   if ( OutputFormat == 2  &&  MyRank == 0 )
+   {
+      hid_t H5_FileID, H5_GroupID_Info, H5_GroupID_Data;
+
+//    create file
+      H5_FileID = H5Fcreate( FileName_Out_Binary[v], H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT );
+      if ( H5_FileID < 0 )    Aux_Error( ERROR_INFO, "failed to create the HDF5 file \"%s\" !!\n", FileName_Out_Binary[v] );
+
+//    create the "Info" group
+      H5_GroupID_Info = H5Gcreate( H5_FileID, "Info", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
+      if ( H5_GroupID_Info < 0 )    Aux_Error( ERROR_INFO, "failed to create the group \"%s\" !!\n", "Info" );
+
+//    create the "Data" group
+      H5_GroupID_Data = H5Gcreate( H5_FileID, "Data", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
+      if ( H5_GroupID_Data < 0 )    Aux_Error( ERROR_INFO, "failed to create the group \"%s\" !!\n", "Data" );
+
+//    create the datasets of all fields
+      for (int v=0; v<NOut; v++)
+      {
+
+         H5_SetDims_Field[0] = NPatchAllLv;
+         H5_SetDims_Field[1] = PATCH_SIZE;
+         H5_SetDims_Field[2] = PATCH_SIZE;
+         H5_SetDims_Field[3] = PATCH_SIZE;
+
+         H5_SpaceID_Field = H5Screate_simple( 4, H5_SetDims_Field, NULL );
+         if ( H5_SpaceID_Field < 0 )   Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_SpaceID_Field" );
+
+//       HDF5 file must be synchronized before being written by the next rank
+         SyncHDF5File( FileName );
+
+         H5_FileID = H5Fopen( FileName, H5F_ACC_RDWR, H5P_DEFAULT );
+         if ( H5_FileID < 0 )    Aux_Error( ERROR_INFO, "failed to open the HDF5 file \"%s\" !!\n", FileName );
+
+//       create the "GridData" group
+         H5_GroupID_GridData = H5Gcreate( H5_FileID, "GridData", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
+         if ( H5_GroupID_GridData < 0 )   Aux_Error( ERROR_INFO, "failed to create the group \"%s\" !!\n", "GridData" );
+
+//       create the datasets of all fields
+         for (int v=0; v<NFieldOut; v++)
+         {
+            H5_SetID_Field = H5Dcreate( H5_GroupID_GridData, FieldName[v], H5T_GAMER_REAL, H5_SpaceID_Field,
+                                        H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
+            if ( H5_SetID_Field < 0 )  Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", FieldName[v] );
+            H5_Status = H5Dclose( H5_SetID_Field );
+         }
+
+      }
+
+//    close the file and group
+      H5_Status = H5Gclose( H5_GroupID_Info );
+      H5_Status = H5Gclose( H5_GroupID_Data );
+      H5_Status = H5Fclose( H5_FileID );
+   } // if ( OutputFormat == 2  &&  MyRank == 0 )
+#  endif // #ifdef SUPPORT_HDF5
+   */
+
 
    for (int TargetRank=0; TargetRank<NGPU; TargetRank++)
    {
@@ -758,61 +807,44 @@ void Output()
                                          || ( OutputXYZ == 5 && MyRank_X[1] == 0 )
                                          || ( OutputXYZ == 6 && MyRank_X[2] == 0 )  )   )
       {
-//       output the HDF5 or C-binary files --> different components will be outputted to different files
-         if ( OutputFormat == 2 || OutputFormat == 3 )
-         {
-            for (int v=0; v<NOut; v++)
-            {
-               FILE *File = fopen( FileName_Out_Binary[v], "ab" );
-
-               fwrite( OutputArray+(long)v*Size1v, sizeof(real), Size1v, File );
-
-               fclose( File );
-            }
-         }
-
-//       output the text file (all components will be outputted to the same file)
-         else
+//       text file --> all components will be outputted to the same file
+         if ( OutputFormat == 1 )
          {
             FILE *File = fopen( FileName_Out, "a" );
 
             if ( TargetRank == 0 )
             {
+               NextIdx = 0;
+
+//             general fields
+               fprintf( File, "#%9s %10s %10s %20s %20s %20s", "i", "j", "k", "x", "y", "z" );
+               for (int v=0; v<NCOMP_FLUID; v++)      fprintf( File, " %13s", FieldName[NextIdx++] );
+               for (int v=0; v<NCOMP_PASSIVE; v++)    fprintf( File, " %13s", FieldName[NextIdx++] );
+               if ( OutputPot )                       fprintf( File, " %13s", FieldName[NextIdx++] );
+               if ( OutputParDens )                   fprintf( File, " %13s", FieldName[NextIdx++] );
+
+//             model-specific fields
 #              if   ( MODEL == HYDRO )
-               fprintf( File, "#%9s %10s %10s %20s %20s %20s %13s %13s %13s %13s %13s",
-                        "i", "j", "k", "x", "y", "z", "Density", "Momentum.x", "Momentum.y", "Momentum.z", "Energy" );
-
-               for (int v=0; v<NCOMP_PASSIVE; v++)    fprintf( File, " %11s%02d", "Passive", v );
-
-               if ( OutputPot )           fprintf( File, " %13s", "Potential" );
-               if ( OutputParDens == 1 )  fprintf( File, " %13s", "ParticleDens" );
-               else
-               if ( OutputParDens == 2 )  fprintf( File, " %13s", "TotalDens" );
-               if ( OutputPres )          fprintf( File, " %13s", "Pressure" );
-               if ( OutputTemp )          fprintf( File, " %13s", "Temperature" );
-               if ( OutputDivVel )        fprintf( File, " %13s", "Div(vel)" );
-               if ( OutputCurlVel )       fprintf( File, " %13s %13s %13s", "Curl(vel).x", "Curl(vel).y", "Curl(vel).z" );
+               if ( OutputPres )                      fprintf( File, " %13s", FieldName[NextIdx++] );
+               if ( OutputTemp )                      fprintf( File, " %13s", FieldName[NextIdx++] );
+               if ( OutputDivVel )                    fprintf( File, " %13s", FieldName[NextIdx++] );
+               if ( OutputCurlVel ) {                 fprintf( File, " %13s", FieldName[NextIdx++] );
+                                                      fprintf( File, " %13s", FieldName[NextIdx++] );
+                                                      fprintf( File, " %13s", FieldName[NextIdx++] ); }
 #              elif ( MODEL == MHD )
 #              warning : WAIT MHD !!!
 
 #              elif ( MODEL == ELBDM )
-               fprintf( File, "#%9s %10s %10s %20s %20s %20s %13s %13s %13s",
-                        "i", "j", "k", "x", "y", "z", "Density", "Real", "Imag" );
-
-               for (int v=0; v<NCOMP_PASSIVE; v++)    fprintf( File, " %11s%02d", "Passive", v );
-
-               if ( OutputPot )           fprintf( File, " %13s", "Potential" );
-               if ( OutputParDens == 1 )  fprintf( File, " %13s", "ParticleDens" );
-               else
-               if ( OutputParDens == 2 )  fprintf( File, " %13s", "TotalDens" );
-               if ( OutputELBDM_Vel )     fprintf( File, " %13s %13s %13s", "Vx", "Vy", "Vz" );
+               if ( OutputELBDM_Vel ) {               fprintf( File, " %13s", FieldName[NextIdx++] );
+                                                      fprintf( File, " %13s", FieldName[NextIdx++] );
+                                                      fprintf( File, " %13s", FieldName[NextIdx++] ); }
 
 #              else
 #              error : ERROR : unsupported MODEL !!
 #              endif // MODEL
 
                fprintf( File, "\n" );
-            }
+            } // if ( TargetRank == 0 )
 
 
             for (int k=0; k<Idx_MySize[2]; k++)  {  kk = ( k + Idx_MyStart[2] )*scale;    z = (kk+scale_2)*dh_min;
@@ -824,32 +856,28 @@ void Output()
 
                for (int v=0; v<NOut; v++)    u[v] = OutputArray[ ID + (long)v*Size1v ];
 
+               fprintf( File, "%10d %10d %10d %20.14e %20.14e %20.14e", ii, jj, kk, x, y, z );
+
+               for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, " %13.6e", u[v] );
+
+               if ( OutputPot )                    fprintf( File, " %13.6e", u[NextIdx++] );
+               if ( OutputParDens )                fprintf( File, " %13.6e", u[NextIdx++] );
+
 #              if   ( MODEL == HYDRO )
-               fprintf( File, "%10d %10d %10d %20.14e %20.14e %20.14e %13.6e %13.6e %13.6e %13.6e %13.6e",
-                        ii, jj, kk, x, y, z, u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY] );
-
-               for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fprintf( File, " %13.6e", u[v] );
-
-               if ( OutputPot )        fprintf( File, " %13.6e", u[NextIdx++] );
-               if ( OutputParDens )    fprintf( File, " %13.6e", u[NextIdx++] );
-               if ( OutputPres )       fprintf( File, " %13.6e", u[NextIdx++] );
-               if ( OutputTemp )       fprintf( File, " %13.6e", u[NextIdx++] );
-               if ( OutputDivVel )     fprintf( File, " %13.6e", u[NextIdx++] );
-               if ( OutputCurlVel )    fprintf( File, " %13.6e %13.6e %13.6e", u[NextIdx++], u[NextIdx++], u[NextIdx++] );
+               if ( OutputPres )                   fprintf( File, " %13.6e", u[NextIdx++] );
+               if ( OutputTemp )                   fprintf( File, " %13.6e", u[NextIdx++] );
+               if ( OutputDivVel )                 fprintf( File, " %13.6e", u[NextIdx++] );
+               if ( OutputCurlVel ) {              fprintf( File, " %13.6e", u[NextIdx++] );
+                                                   fprintf( File, " %13.6e", u[NextIdx++] );
+                                                   fprintf( File, " %13.6e", u[NextIdx++] ); }
 
 #              elif ( MODEL == MHD )
 #              warning : WAIT MHD !!!
 
 #              elif ( MODEL == ELBDM )
-               fprintf( File, "%10d %10d %10d %20.14e %20.14e %20.14e %13.6e %13.6e %13.6e",
-                        ii, jj, kk, x, y, z,
-                        u[DENS], u[REAL], u[IMAG] );
-
-               for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fprintf( File, " %13.6e", u[v] );
-
-               if ( OutputPot )        fprintf( File, " %13.6e", u[NextIdx++] );
-               if ( OutputParDens )    fprintf( File, " %13.6e", u[NextIdx++] );
-               if ( OutputELBDM_Vel )  fprintf( File, " %13.6e %13.6e %13.6e", u[NextIdx++], u[NextIdx++], u[NextIdx++] );
+               if ( OutputELBDM_Vel ) {            fprintf( File, " %13.6e", u[NextIdx++] );
+                                                   fprintf( File, " %13.6e", u[NextIdx++] );
+                                                   fprintf( File, " %13.6e", u[NextIdx++] ); }
 
 #              else
 #              error : ERROR : unsupported MODEL !!
@@ -860,8 +888,69 @@ void Output()
             }}} // i,j,k
 
             fclose( File );
+         } // if ( OutputFormat == 1 )
 
-         } // if ( OutputFormat == 2 || OutputFormat == 3 ) ... else ...
+
+//       HDF5 file --> different components will be outputted to different datasets in the same HDF5 file
+         /*
+#        ifdef SUPPORT_HDF5
+         else if ( OutputFormat == 2 )
+         {
+            hid_t   H5_FileID, H5_GroupID_Info, H5_GroupID_Data;
+            hsize_t H5_Count_Field[4], H5_Offset_Field[4];
+            herr_t  H5_Status;
+
+            H5_SetID_Field = H5Dcreate( H5_GroupID_GridData, FieldName[v], H5T_GAMER_REAL, H5_SpaceID_Field,
+                                        H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
+            if ( H5_SetID_Field < 0 )  Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", FieldName[v] );
+
+
+//          get the array size of all ranks
+            int *Idx_AllRankSizeZ = new int [NGPU];
+            MPI_Allgather( &Idx_MySize[2], 1, MPI_INT, Idx_AllRankSizeZ, 1, MPI_INT, MPI_COMM_WORLD );
+
+
+//          set the output array indices of this rank (i.e., hyperslab region in HDF5)
+            H5_Offset_Field[0] = 0;
+            H5_Offset_Field[1] = 0;
+            H5_Offset_Field[2] = 0;
+            for (int r=0; r<MyRank; r++)  H5_Offset_Field[0] += Idx_AllRankSizeZ[r];
+
+            H5_Count_Field [0] = Idx_MySize[2];
+            H5_Count_Field [1] = Idx_MySize[1];
+            H5_Count_Field [2] = Idx_MySize[0];
+
+            H5_Status = H5Sselect_hyperslab( H5_SpaceID_Field, H5S_SELECT_SET, H5_Offset_Field, NULL, H5_Count_Field, NULL );
+            if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to create a hyperslab for the grid data !!\n" );
+
+
+
+
+            delete [] Idx_AllRankSizeZ;
+            H5_Status = H5Dclose( H5_SetID_Field );
+            H5_Status = H5Sclose( H5_SpaceID_Field );
+         } // else if ( OutputFormat == 2 )
+#        endif // #ifdef SUPPORT_HDF5
+         */
+
+
+//       C-binary file --> different components will be outputted to different files
+         else if ( OutputFormat == 3 )
+         {
+            for (int v=0; v<NOut; v++)
+            {
+               FILE *File = fopen( FileName_Out_Binary[v], "ab" );
+
+               fwrite( OutputArray+(long)v*Size1v, sizeof(real), Size1v, File );
+
+               fclose( File );
+            }
+         } // else if ( OutputFormat == 3 )
+
+
+         else
+            Aux_Error( ERROR_INFO, "unsupported output format !!\n" );
+
       } // ( MyRank == TargetRank  &&  ... )
 
       MPI_Barrier( MPI_COMM_WORLD );
