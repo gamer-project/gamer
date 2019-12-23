@@ -1,13 +1,7 @@
 #include "ExtractUniform.h"
-
 #ifdef SUPPORT_HDF5
-# include "hdf5.h"
-# ifdef FLOAT8
-#   define H5T_GAMER_REAL H5T_NATIVE_DOUBLE
-# else
-#   define H5T_GAMER_REAL H5T_NATIVE_FLOAT
-# endif
-#endif // #ifdef SUPPORT_HDF5
+#include "HDF5_Typedef.h"
+#endif
 
 int         OutputXYZ         = WRONG;                     // output option (x,y,z,x-proj,y-proj,z-proj,3D)
 char       *FileName_In       = NULL;                      // name of the input file
@@ -744,7 +738,7 @@ void Output()
 
    if ( OutputFormat == 2 )
    {
-      hid_t   H5_GroupID_Info, H5_DataCreatePropList;
+      hid_t   H5_DataCreatePropList;
       hsize_t H5_SetDims_Data[3];
 
 //    create the data space
@@ -761,9 +755,8 @@ void Output()
          H5_FileID = H5Fcreate( FileName_Out, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT );
          if ( H5_FileID < 0 )    Aux_Error( ERROR_INFO, "failed to create the HDF5 file \"%s\" !!\n", FileName_Out );
 
-//       create the "Info" group
-         H5_GroupID_Info = H5Gcreate( H5_FileID, "Info", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
-         if ( H5_GroupID_Info < 0 )    Aux_Error( ERROR_INFO, "failed to create the group \"%s\" !!\n", "Info" );
+//       create and set the "Info" compound datatype
+         SetHDF5Info( H5_FileID );
 
 //       create the "Data" group
          H5_GroupID_Data = H5Gcreate( H5_FileID, "Data", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
@@ -784,7 +777,6 @@ void Output()
 
 //       close the file and group
          H5_Status = H5Pclose( H5_DataCreatePropList );
-         H5_Status = H5Gclose( H5_GroupID_Info );
          H5_Status = H5Gclose( H5_GroupID_Data );
          H5_Status = H5Fclose( H5_FileID );
       } // if ( MyRank == 0 )
@@ -992,24 +984,65 @@ void Output()
 
 #ifdef SUPPORT_HDF5
 //-------------------------------------------------------------------------------------------------------
-// Function    :  SyncHDF5File
-// Description :  Force the file system to synchronize (dump data to the disk before return)
+// Function    :  SetHDF5Info
+// Description :  Create and set the HDF5 compound datatype "Info"
 //
-// Note        :  1. Synchronization is accomplished by first opening the target file with the "appending" mode
-//                   and then close it immediately
+// Note        :  1. Data structure "Info_t" is defined in "HDF5_Typedef.h"
 //
-// Parameter   :  FileName : Target file name
+// Parameter   :  H5_FileID : HDF5 file ID (call-by-reference)
 //-------------------------------------------------------------------------------------------------------
-void SyncHDF5File( const char *FileName )
+void SetHDF5Info( hid_t &H5_FileID )
 {
 
-   FILE *File      = fopen( FileName, "ab" );
-   int CloseStatus = fclose( File );
+// 1. create the HDF5 compound datatype "Info"
+   hid_t  H5_ComID_Info;
+   herr_t H5_Status;
 
-   if ( CloseStatus != 0 )
-      Aux_Message( stderr, "WARNING : failed to close the file \"%s\" for synchronization !!\n", FileName );
+// create the array type
+   const hsize_t H5_ArrDims_3Var  = 3;  // array size of [3]
+// const hid_t   H5_ArrID_3Double = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_3Var );
+   const hid_t   H5_ArrID_3Int    = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_3Var );
 
-} // FUNCTION : SyncHDF5File
+// create the "variable-length string" datatype
+   /*
+   hid_t  H5_ArrID_VarStr;
+   herr_t H5_Status;
+   H5_ArrID_VarStr = H5Tcopy( H5T_C_S1 );
+   H5_Status       = H5Tset_size( H5_ArrID_VarStr, H5T_VARIABLE );
+   */
+
+// get the compound type
+   H5_ComID_Info = H5Tcreate( H5T_COMPOUND, sizeof(Info_t) );
+   H5Tinsert( H5_ComID_Info, "Time",               HOFFSET(Info_t,Time           ),    H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_ComID_Info, "Dimensionality",     HOFFSET(Info_t,Dimensionality ),    H5_ArrID_3Int      );
+
+// free memory
+   H5_Status = H5Tclose( H5_ArrID_3Int    );
+// H5_Status = H5Tclose( H5_ArrID_3Double );
+// H5_Status = H5Tclose( H5_ArrID_VarStr  );
+
+
+// 2. fill in the structure "Info"
+   Info_t Info;
+
+   Info.Time = Time[0];
+   for (int d=0; d<3; d++)    Info.Dimensionality[d] = Idx_Size[d];
+
+
+// 3. write to disk
+   hid_t H5_SpaceID_Scalar, H5_SetID_Info;
+
+   H5_SpaceID_Scalar = H5Screate( H5S_SCALAR );
+   H5_SetID_Info     = H5Dcreate( H5_FileID, "Info", H5_ComID_Info, H5_SpaceID_Scalar, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
+   if ( H5_SetID_Info < 0 )   Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", "Info" );
+
+   H5_Status = H5Dwrite( H5_SetID_Info, H5_ComID_Info, H5S_ALL, H5S_ALL, H5P_DEFAULT, &Info );
+
+   H5_Status = H5Dclose( H5_SetID_Info );
+   H5_Status = H5Sclose( H5_SpaceID_Scalar );
+   H5_Status = H5Tclose( H5_ComID_Info );
+
+} // FUNCTION : SetHDF5Info
 #endif // #ifdef SUPPORT_HDF5
 
 
