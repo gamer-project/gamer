@@ -1,18 +1,8 @@
 #ifdef SUPPORT_HDF5
 
 #include "ExtractUniform.h"
-#include "hdf5.h"
+#include "HDF5_Typedef.h"
 #include <typeinfo>
-
-#ifdef FLOAT8
-#  define H5T_GAMER_REAL H5T_NATIVE_DOUBLE
-#else
-#  define H5T_GAMER_REAL H5T_NATIVE_FLOAT
-#endif
-
-#ifdef GAMER_DEBUG
-#  define DEBUG_HDF5
-#endif
 
 template <typename T>
 static herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Target,
