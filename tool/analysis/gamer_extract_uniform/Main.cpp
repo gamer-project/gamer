@@ -1000,7 +1000,7 @@ void SetHDF5Info( hid_t &H5_FileID )
 
 // create the array type
    const hsize_t H5_ArrDims_3Var  = 3;  // array size of [3]
-// const hid_t   H5_ArrID_3Double = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_3Var );
+   const hid_t   H5_ArrID_3Double = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_3Var );
    const hid_t   H5_ArrID_3Int    = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_3Var );
 
 // create the "variable-length string" datatype
@@ -1013,20 +1013,48 @@ void SetHDF5Info( hid_t &H5_FileID )
 
 // get the compound type
    H5_ComID_Info = H5Tcreate( H5T_COMPOUND, sizeof(Info_t) );
-   H5Tinsert( H5_ComID_Info, "Time",               HOFFSET(Info_t,Time           ),    H5T_NATIVE_DOUBLE  );
-   H5Tinsert( H5_ComID_Info, "Dimensionality",     HOFFSET(Info_t,Dimensionality ),    H5_ArrID_3Int      );
+   H5Tinsert( H5_ComID_Info, "DumpID",             HOFFSET(Info_t,DumpID           ),  H5T_NATIVE_INT    );
+   H5Tinsert( H5_ComID_Info, "Dimensionality",     HOFFSET(Info_t,Dimensionality   ),  H5_ArrID_3Int     );
+   H5Tinsert( H5_ComID_Info, "WithUnit",           HOFFSET(Info_t,WithUnit         ),  H5T_NATIVE_INT    );
+   H5Tinsert( H5_ComID_Info, "Time",               HOFFSET(Info_t,Time             ),  H5T_NATIVE_DOUBLE );
+   H5Tinsert( H5_ComID_Info, "CellWidth",          HOFFSET(Info_t,CellWidth        ),  H5T_NATIVE_DOUBLE );
+   H5Tinsert( H5_ComID_Info, "SubdomainSize",      HOFFSET(Info_t,SubdomainSize    ),  H5_ArrID_3Double  );
+   H5Tinsert( H5_ComID_Info, "SubdomainLeftEdge",  HOFFSET(Info_t,SubdomainLeftEdge),  H5_ArrID_3Double  );
+   H5Tinsert( H5_ComID_Info, "Unit_L",             HOFFSET(Info_t,Unit_L           ),  H5T_NATIVE_DOUBLE );
+   H5Tinsert( H5_ComID_Info, "Unit_M",             HOFFSET(Info_t,Unit_M           ),  H5T_NATIVE_DOUBLE );
+   H5Tinsert( H5_ComID_Info, "Unit_T",             HOFFSET(Info_t,Unit_T           ),  H5T_NATIVE_DOUBLE );
+   H5Tinsert( H5_ComID_Info, "Unit_V",             HOFFSET(Info_t,Unit_V           ),  H5T_NATIVE_DOUBLE );
+   H5Tinsert( H5_ComID_Info, "Unit_D",             HOFFSET(Info_t,Unit_D           ),  H5T_NATIVE_DOUBLE );
+   H5Tinsert( H5_ComID_Info, "Unit_E",             HOFFSET(Info_t,Unit_E           ),  H5T_NATIVE_DOUBLE );
+   H5Tinsert( H5_ComID_Info, "Unit_P",             HOFFSET(Info_t,Unit_P           ),  H5T_NATIVE_DOUBLE );
 
 // free memory
    H5_Status = H5Tclose( H5_ArrID_3Int    );
-// H5_Status = H5Tclose( H5_ArrID_3Double );
+   H5_Status = H5Tclose( H5_ArrID_3Double );
 // H5_Status = H5Tclose( H5_ArrID_VarStr  );
 
 
 // 2. fill in the structure "Info"
    Info_t Info;
 
-   Info.Time = Time[0];
-   for (int d=0; d<3; d++)    Info.Dimensionality[d] = Idx_Size[d];
+   Info.DumpID    = DumpID;
+   Info.WithUnit  = WithUnit;
+   Info.Time      = Time[0];
+   Info.CellWidth = amr.dh[TargetLevel];
+   Info.Unit_L    = (WithUnit) ? Unit_L : 1.0;
+   Info.Unit_M    = (WithUnit) ? Unit_M : 1.0;
+   Info.Unit_T    = (WithUnit) ? Unit_T : 1.0;
+   Info.Unit_V    = (WithUnit) ? Unit_V : 1.0;
+   Info.Unit_D    = (WithUnit) ? Unit_D : 1.0;
+   Info.Unit_E    = (WithUnit) ? Unit_E : 1.0;
+   Info.Unit_P    = (WithUnit) ? Unit_P : 1.0;
+
+   for (int d=0; d<3; d++)
+   {
+      Info.Dimensionality   [d] = Idx_Size      [d];
+      Info.SubdomainSize    [d] = PhyCoord_Size [d];
+      Info.SubdomainLeftEdge[d] = PhyCoord_Start[d];
+   }
 
 
 // 3. write to disk

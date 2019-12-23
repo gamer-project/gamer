@@ -31,8 +31,21 @@ datatypes in the HDF5 format
 struct Info_t
 {
 
+   int    DumpID;
    int    Dimensionality[3];
+   int    WithUnit;
+
    double Time;
+   double CellWidth;
+   double SubdomainSize[3];
+   double SubdomainLeftEdge[3];
+   double Unit_L;
+   double Unit_M;
+   double Unit_T;
+   double Unit_V;
+   double Unit_D;
+   double Unit_E;
+   double Unit_P;
 
 }; // struct Info_t
 
