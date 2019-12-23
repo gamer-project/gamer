@@ -1014,7 +1014,7 @@ void SetHDF5Info( hid_t &H5_FileID )
 // get the compound type
    H5_ComID_Info = H5Tcreate( H5T_COMPOUND, sizeof(Info_t) );
    H5Tinsert( H5_ComID_Info, "DumpID",             HOFFSET(Info_t,DumpID           ),  H5T_NATIVE_INT    );
-   H5Tinsert( H5_ComID_Info, "Dimensionality",     HOFFSET(Info_t,Dimensionality   ),  H5_ArrID_3Int     );
+   H5Tinsert( H5_ComID_Info, "GridDimension",      HOFFSET(Info_t,GridDimension    ),  H5_ArrID_3Int     );
    H5Tinsert( H5_ComID_Info, "WithUnit",           HOFFSET(Info_t,WithUnit         ),  H5T_NATIVE_INT    );
    H5Tinsert( H5_ComID_Info, "Time",               HOFFSET(Info_t,Time             ),  H5T_NATIVE_DOUBLE );
    H5Tinsert( H5_ComID_Info, "CellWidth",          HOFFSET(Info_t,CellWidth        ),  H5T_NATIVE_DOUBLE );
@@ -1051,7 +1051,7 @@ void SetHDF5Info( hid_t &H5_FileID )
 
    for (int d=0; d<3; d++)
    {
-      Info.Dimensionality   [d] = Idx_Size      [d];
+      Info.GridDimension    [d] = Idx_Size      [d];
       Info.SubdomainSize    [d] = PhyCoord_Size [d];
       Info.SubdomainLeftEdge[d] = PhyCoord_Start[d];
    }

@@ -32,7 +32,7 @@ struct Info_t
 {
 
    int    DumpID;
-   int    Dimensionality[3];
+   int    GridDimension[3];
    int    WithUnit;
 
    double Time;
