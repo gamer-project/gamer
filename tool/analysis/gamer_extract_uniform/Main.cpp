@@ -3,46 +3,46 @@
 #include "HDF5_Typedef.h"
 #endif
 
-int         OutputXYZ         = WRONG;                     // output option (x,y,z,x-proj,y-proj,z-proj,3D)
-char       *FileName_In       = NULL;                      // name of the input file
-char       *FileName_Tree     = NULL;                      // name of the tree file
-char       *Suffix            = NULL;                      // suffix attached to the output file name
-int         OutputFormat      = 2;                         // output data format: 1=text, 2=HDF5, 3=C-binary
-bool        OutputPot         = false;                     // true --> output gravitational potential
-int         OutputParDens     = 0;                         // 0=off, 1=output particle density, 2=output total density
-bool        OutputPres        = false;                     // true --> output pressure
-bool        OutputTemp        = false;                     // true --> output temperature
-bool        OutputDivVel      = false;                     // true --> output divergence( velocity )
-bool        OutputCurlVel     = false;                     // true --> output curl( velocity ) = vorticity
-bool        OutputELBDM_Vel   = false;                     // true --> output velocity field in ELBDM
-bool        ConvertCom2PhyV   = false;                     // convert peculiar velocity from comoving to physical coords (in km/s)
-bool        InputScale        = false;                     // true --> input cell scales instead of coordinates
-bool        Shift2Center      = false;                     // true --> shift target region to the box center (assume periodic)
-int         ShiftScale[3]     = { 0, 0, 0 };               // scale shifted by Shift2Center
-int         ExtBC             = 0;                         // external boundary condition (0/1:periodic/outflow)
-int         OMP_NThread       = -1;                        // number of OpenMP threads
-int         TargetLevel       = 0;                         // targeted level
-int         Scale_Start   [3] = { WRONG, WRONG, WRONG };   // targeted x, y, z starting scale
-int         Scale_Size    [3] = { WRONG, WRONG, WRONG };   // targeted x, y, z scale size
-int         Idx_Start     [3] = { WRONG, WRONG, WRONG };   // targeted x, y, z array indices
-int         Idx_Size      [3] = { WRONG, WRONG, WRONG };   // targeted x, y, z array size
-int         Idx_MyStart   [3] = { WRONG, WRONG, WRONG };   // starting x, y, z array indices of this process
-int         Idx_MySize    [3] = { WRONG, WRONG, WRONG };   // array size of this process
-double      PhyCoord_Start[3] = { WRONG, WRONG, WRONG };   // starting physical coordinates
-double      PhyCoord_Size [3] = { WRONG, WRONG, WRONG };   // targeted size in physical coordinates
-int         NGPU_X[3]         = { 1, 1, 1 };               // number of MPI ranks in each direction
-int         CanBuf            = WRONG;                     // buffer size for the candidate box
-int         NLoad             = NCOMP_TOTAL;               // number of variables loaded from the input file
-int         NOut              = NCOMP_TOTAL;               // number of variables to be outputted
-real       *OutputArray       = NULL;                      // array storing the output data
-int         BufSize           = WRONG;                     // buffer size of the prepapred patch data
-double      Int_MonoCoeff     = 2.0;                       // coefficient for the interpolation monotonicity (1<=coeff<=4)
-double      Convert2Temp      = WRONG;                     // coefficient for converting pressure/density to temperature
-                                                           // --> velocity_code_unit^2*hydrogen_mass*mean_atomic_weight/Boltzmann_constant
-IntScheme_t IntScheme         = INT_DEFAULT;               // interpolation scheme
-bool        UseTree           = false;                     // true --> use the tree file to improve the I/O performance
-tree_t     *tree              = NULL;                      // tree structure when UseTree is on
-int         CanMin[3][3], CanMax[3][3];                    // range of the candidate box for loading patch data
+int         OutputXYZ         = WRONG;                      // output option (x,y,z,x-proj,y-proj,z-proj,3D)
+char       *FileName_In       = NULL;                       // name of the input file
+char       *FileName_Tree     = NULL;                       // name of the tree file
+char       *Suffix            = NULL;                       // suffix attached to the output file name
+int         OutputFormat      = 2;                          // output data format: 1=text, 2=HDF5, 3=C-binary
+bool        OutputPot         = false;                      // true --> output gravitational potential
+int         OutputParDens     = 0;                          // 0=off, 1=output particle density, 2=output total density
+bool        OutputPres        = false;                      // true --> output pressure
+bool        OutputTemp        = false;                      // true --> output temperature
+bool        OutputDivVel      = false;                      // true --> output divergence( velocity )
+bool        OutputCurlVel     = false;                      // true --> output curl( velocity ) = vorticity
+bool        OutputELBDM_Vel   = false;                      // true --> output velocity field in ELBDM
+bool        ConvertCom2PhyV   = false;                      // convert peculiar velocity from comoving to physical coords (in km/s)
+bool        InputScale        = false;                      // true --> input cell scales instead of coordinates
+bool        Shift2Center      = false;                      // true --> shift target region to the box center (assume periodic)
+int         ShiftScale[3]     = { 0, 0, 0 };                // scale shifted by Shift2Center
+int         ExtBC             = 0;                          // external boundary condition (0/1:periodic/outflow)
+int         OMP_NThread       = -1;                         // number of OpenMP threads
+int         TargetLevel       = 0;                          // targeted level
+int         Scale_Start   [3] = { WRONG, WRONG, WRONG };    // targeted x, y, z starting scale
+int         Scale_Size    [3] = { WRONG, WRONG, WRONG };    // targeted x, y, z scale size
+int         Idx_Start     [3] = { WRONG, WRONG, WRONG };    // targeted x, y, z array indices
+int         Idx_Size      [3] = { WRONG, WRONG, WRONG };    // targeted x, y, z array size
+int         Idx_MyStart   [3] = { WRONG, WRONG, WRONG };    // starting x, y, z array indices of this process
+int         Idx_MySize    [3] = { WRONG, WRONG, WRONG };    // array size of this process
+double      PhyCoord_Start[3] = { WRONG, WRONG, WRONG };    // starting physical coordinates
+double      PhyCoord_Size [3] = { WRONG, WRONG, WRONG };    // targeted size in physical coordinates
+int         NGPU_X[3]         = { 1, 1, 1 };                // number of MPI ranks in each direction
+int         CanBuf            = WRONG;                      // buffer size for the candidate box
+int         NLoad             = NCOMP_TOTAL;                // number of variables loaded from the input file
+int         NOut              = NCOMP_TOTAL;                // number of variables to be outputted
+real       *OutputArray       = NULL;                       // array storing the output data
+int         BufSize           = WRONG;                      // buffer size of the prepapred patch data
+double      Int_MonoCoeff     = 2.0;                        // coefficient for the interpolation monotonicity (1<=coeff<=4)
+double      Convert2Temp      = WRONG;                      // coefficient for converting pressure/density to temperature
+                                                            // --> velocity_code_unit^2*hydrogen_mass*mean_atomic_weight/Boltzmann_constant
+IntScheme_t IntScheme         = INT_DEFAULT;                // interpolation scheme
+bool        UseTree           = false;                      // true --> use the tree file to improve the I/O performance
+tree_t     *tree              = NULL;                       // tree structure when UseTree is on
+int         CanMin[3][3], CanMax[3][3];                     // range of the candidate box for loading patch data
 
 AMR_t     amr;
 ParaVar_t ParaVar;
