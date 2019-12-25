@@ -610,6 +610,31 @@ void TakeNote( int argc, char *argv[] )
 
 
 //-------------------------------------------------------------------------------------------------------
+// Function    :  Add1Field
+// Description :  Add the name and unit of a single field
+//
+// Parameter   :  Idx       : Current field index (call-by-reference)
+//                FieldName : Field name array
+//                FieldUnit : Field unit array
+//                Name      : Name of the target field
+//                Unit      : Unit of the target field
+//
+// Return      :  Next field index (Idx+1)
+//-------------------------------------------------------------------------------------------------------
+void Add1Field( int &Idx, char FieldName[][MAX_STRING], char FieldUnit[][MAX_STRING],
+                const char Name[], const char Unit[] )
+{
+
+   strcpy( FieldName[Idx], Name );
+   strcpy( FieldUnit[Idx], Unit );
+
+   Idx ++;
+
+} // FUNCTION : Add1Field
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  Output
 // Description :  Output data
 //-------------------------------------------------------------------------------------------------------
@@ -626,7 +651,9 @@ void Output()
 
 
 // 1. set the output file name(s)
-   char FileName_Out[200], FileName_Out_Binary[NOut][200], DomainInfo[100], FieldName[NOut][20];
+   char FileName_Out[MAX_STRING], FileName_Out_Binary[NOut][MAX_STRING], DomainInfo[MAX_STRING];
+   char FieldName[NOut][MAX_STRING], FieldUnit[NOut][MAX_STRING], PassiveName[MAX_STRING];
+   char *FieldUnitPtr[1]={NULL};
    int  NextIdx;
 
 
@@ -650,42 +677,63 @@ void Output()
    strcat( FileName_Out, DomainInfo );
 
 
-// determine the field names
+// determine the field names and units
    NextIdx = 0;
 
 #  if   ( MODEL == HYDRO )
-   sprintf( FieldName[NextIdx++], "Dens" );
-   sprintf( FieldName[NextIdx++], "MomX" );
-   sprintf( FieldName[NextIdx++], "MomY" );
-   sprintf( FieldName[NextIdx++], "MomZ" );
-   sprintf( FieldName[NextIdx++], "Engy" );
+   Add1Field( NextIdx, FieldName, FieldUnit, "Dens", "code_mass/code_length**3" );
+   Add1Field( NextIdx, FieldName, FieldUnit, "MomX", "code_mass/(code_length**2*code_time)" );
+   Add1Field( NextIdx, FieldName, FieldUnit, "MomY", "code_mass/(code_length**2*code_time)" );
+   Add1Field( NextIdx, FieldName, FieldUnit, "MomZ", "code_mass/(code_length**2*code_time)" );
+   Add1Field( NextIdx, FieldName, FieldUnit, "Engy", "code_mass/(code_length*code_time**2)" );
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
 
 #  elif ( MODEL == ELBDM )
-   sprintf( FieldName[NextIdx++], "Dens" );
-   sprintf( FieldName[NextIdx++], "Real" );
-   sprintf( FieldName[NextIdx++], "Imag" );
+   Add1Field( NextIdx, FieldName, FieldUnit, "Dens", "code_mass/code_length**3" );
+   Add1Field( NextIdx, FieldName, FieldUnit, "Real", "code_mass**0.5/code_length**1.5" );
+   Add1Field( NextIdx, FieldName, FieldUnit, "Imag", "code_mass**0.5/code_length**1.5" );
 
 #  else
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
 
-   for (int v=0; v<NCOMP_PASSIVE; v++)    sprintf( FieldName[NextIdx++], "Passive%02d", v );
-   if ( OutputPot )                       sprintf( FieldName[NextIdx++], "Pote"  );
-   if ( OutputParDens )                   sprintf( FieldName[NextIdx++], (OutputParDens==1)?"ParDens":"TotalDens" );
+// here we have temporarily assumed that all passive scalars have the unit of mass density
+// --> wrong for entropy
+   for (int v=0; v<NCOMP_PASSIVE; v++) {
+      sprintf( PassiveName, "Passive%02d", v );
+      Add1Field( NextIdx, FieldName, FieldUnit, PassiveName, "code_mass/code_length**3" );
+   }
+
+   if ( OutputPot )
+      Add1Field( NextIdx, FieldName, FieldUnit, "Pote", "code_length**2/code_time**2" );
+
+   if ( OutputParDens )
+      Add1Field( NextIdx, FieldName, FieldUnit, (OutputParDens==1)?"ParDens":"TotalDens", "code_mass/code_length**3" );
+
 #  if   ( MODEL == HYDRO )
-   if ( OutputPres )                      sprintf( FieldName[NextIdx++], "Pres" );
-   if ( OutputTemp )                      sprintf( FieldName[NextIdx++], "Temp" );
-   if ( OutputDivVel )                    sprintf( FieldName[NextIdx++], "DivV" );
-   if ( OutputCurlVel ) {                 sprintf( FieldName[NextIdx++], "CurlVx" );
-                                          sprintf( FieldName[NextIdx++], "CurlVy" );
-                                          sprintf( FieldName[NextIdx++], "CurlVz" ); }
+   if ( OutputPres )
+      Add1Field( NextIdx, FieldName, FieldUnit, "Pres", "code_mass/(code_length*code_time**2)" );
+
+   if ( OutputTemp )
+      Add1Field( NextIdx, FieldName, FieldUnit, "Temp", "K" );
+
+   if ( OutputDivVel )
+      Add1Field( NextIdx, FieldName, FieldUnit, "DivV", "1/code_time" );
+
+   if ( OutputCurlVel ) {
+      Add1Field( NextIdx, FieldName, FieldUnit, "CurlVx", "1/code_time" );
+      Add1Field( NextIdx, FieldName, FieldUnit, "CurlVy", "1/code_time" );
+      Add1Field( NextIdx, FieldName, FieldUnit, "CurlVz", "1/code_time" );
+   }
+
 #  elif ( MODEL == ELBDM )
-   if ( OutputELBDM_Vel ) {               sprintf( FieldName[NextIdx++], "VelX" );
-                                          sprintf( FieldName[NextIdx++], "VelY" );
-                                          sprintf( FieldName[NextIdx++], "VelZ" ); }
+   if ( OutputELBDM_Vel ) {
+      Add1Field( NextIdx, FieldName, FieldUnit, "VelX", "code_length/code_time" );
+      Add1Field( NextIdx, FieldName, FieldUnit, "VelY", "code_length/code_time" );
+      Add1Field( NextIdx, FieldName, FieldUnit, "VelZ", "code_length/code_time" );
+   }
 #  endif
 
 
@@ -738,7 +786,7 @@ void Output()
 
    if ( OutputFormat == 2 )
    {
-      hid_t   H5_DataCreatePropList;
+      hid_t   H5_DataCreatePropList, H5_AttID_Unit, H5_SpaceID_Scalar, H5_TypeID_VarStr;
       hsize_t H5_SetDims_Data[3];
 
 //    create the data space
@@ -766,17 +814,31 @@ void Output()
 //       --> do NOT write fill values to any dataset for higher I/O performance
          H5_DataCreatePropList = H5Pcreate( H5P_DATASET_CREATE );
          H5_Status             = H5Pset_fill_time( H5_DataCreatePropList, H5D_FILL_TIME_NEVER );
+         H5_SpaceID_Scalar     = H5Screate( H5S_SCALAR );
+         H5_TypeID_VarStr      = H5Tcopy( H5T_C_S1 );
+         H5_Status             = H5Tset_size( H5_TypeID_VarStr, H5T_VARIABLE );
 
          for (int v=0; v<NOut; v++)
          {
             hid_t H5_SetID_Data = H5Dcreate( H5_GroupID_Data, FieldName[v], H5T_GAMER_REAL, H5_SpaceID_Data,
                                              H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
             if ( H5_SetID_Data < 0 )  Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", FieldName[v] );
+
+//          add the field unit as an attribute
+            H5_AttID_Unit = H5Acreate( H5_SetID_Data, "Unit", H5_TypeID_VarStr, H5_SpaceID_Scalar,
+                                       H5P_DEFAULT, H5P_DEFAULT );
+            if ( H5_AttID_Unit < 0 )   Aux_Error( ERROR_INFO, "failed to create the attribute \"%s\" !!\n", "Unit" );
+            FieldUnitPtr[0] = FieldUnit[v];  // somehow using FieldUnit[v] below doesn't work ...
+            H5_Status = H5Awrite( H5_AttID_Unit, H5_TypeID_VarStr, FieldUnitPtr );
+
+            H5_Status = H5Aclose( H5_AttID_Unit );
             H5_Status = H5Dclose( H5_SetID_Data );
          }
 
 //       close the file and group
          H5_Status = H5Pclose( H5_DataCreatePropList );
+         H5_Status = H5Sclose( H5_SpaceID_Scalar );
+         H5_Status = H5Tclose( H5_TypeID_VarStr );
          H5_Status = H5Gclose( H5_GroupID_Data );
          H5_Status = H5Fclose( H5_FileID );
       } // if ( MyRank == 0 )
