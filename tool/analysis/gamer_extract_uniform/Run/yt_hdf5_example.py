@@ -7,9 +7,8 @@ import numpy as np
 
 
 # user-specified parameters
-file_in = 'Cube_x0.067-0.087_y0.067-0.097_z0.067-0.107_lv1_000001.hdf5'    # input filename
-fields  = [ 'Dens', ]                                                      # target fields
-units   = [ 'code_mass/code_length**3', ]                                  # units of all target fields
+file_in = 'Cube_x0.000-3.000_y0.000-3.000_z0.000-3.000_lv1.hdf5'  # input filename
+fields  = [ 'Dens', ]                                             # target field(s)
 
 
 # load data
@@ -22,10 +21,11 @@ unit_l    = ( f['Info']['Unit_L'], 'cm' )
 unit_m    = ( f['Info']['Unit_M'], 'g' )
 unit_t    = ( f['Info']['Unit_T'], 's' )
 
-bbox = np.array( [ [left_edge[0], left_edge[0]+box_size[0]],
-                   [left_edge[1], left_edge[1]+box_size[1]],
-                   [left_edge[2], left_edge[2]+box_size[2]] ] )
-data = { k:(f['Data'][k][()].transpose(),u) for k,u in zip(fields,units) }
+bbox  = np.array( [ [left_edge[0], left_edge[0]+box_size[0]],
+                    [left_edge[1], left_edge[1]+box_size[1]],
+                    [left_edge[2], left_edge[2]+box_size[2]] ] )
+units = [ f['Data'][k].attrs['Unit'] for k in fields ]
+data  = { k:(f['Data'][k][()].transpose(),u) for k,u in zip(fields,units) }
 
 ds = yt.load_uniform_grid( data=data, domain_dimensions=dimension,
                            length_unit=unit_l, mass_unit=unit_m, time_unit=unit_t,
