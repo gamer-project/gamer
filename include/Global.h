@@ -48,7 +48,7 @@ extern int        Flu_ParaBuf;                        // number of parallel buff
 extern int        PassiveNorm_NVar;
 extern int        PassiveNorm_VarIdx[NCOMP_PASSIVE];
 
-extern double     BOX_SIZE, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT, DT__SYNC_PARENT_LV, DT__SYNC_CHILDREN_LV;
+extern double     BOX_SIZE, DT__MAX, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT, DT__SYNC_PARENT_LV, DT__SYNC_CHILDREN_LV;
 extern long int   END_STEP;
 extern int        NX0_TOT[3], OUTPUT_STEP, REGRID_COUNT, FLU_GPU_NPGROUP, OMP_NTHREAD;
 extern int        MPI_NRank, MPI_NRank_X[3];

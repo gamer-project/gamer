@@ -158,15 +158,16 @@ Procedure for outputting new variables:
 //                                      --> imcompatible with version 2266 for the data with user-defined grid fields
 //                                          and particle attributes as their labels may have changed
 //                2301 : 2018/07/24 --> add OPT__UM_IC_FORMAT, PAR_IC_FORMAT, and PAR_IC_MASS
-//                2302 : 2018/07/24 --> Replace GRACKLE_MODE by GRACKLE_ACTIVATE
-//                2303 : 2018/10/04 --> Set "CodeVersion" to VERSION defined in Macro.h
-//                2304 : 2018/12/10 --> Remove EP_Coeff that no longer exists
-//                2305 : 2018/12/15 --> Remove variables related to the WAF scheme
-//                2306 : 2018/12/25 --> Replace DT_GRA_BLOCK_SIZE_Z by DT_GRA_BLOCK_SIZE
-//                2307 : 2018/12/27 --> Replace GRA_BLOCK_SIZE_Z by GRA_BLOCK_SIZE
-//                2308 : 2019/01/24 --> Add ELBDM_REMOVE_MOTION_CM
+//                2302 : 2018/07/24 --> replace GRACKLE_MODE by GRACKLE_ACTIVATE
+//                2303 : 2018/10/04 --> set "CodeVersion" to VERSION defined in Macro.h
+//                2304 : 2018/12/10 --> remove EP_Coeff that no longer exists
+//                2305 : 2018/12/15 --> remove variables related to the WAF scheme
+//                2306 : 2018/12/25 --> replace DT_GRA_BLOCK_SIZE_Z by DT_GRA_BLOCK_SIZE
+//                2307 : 2018/12/27 --> replace GRA_BLOCK_SIZE_Z by GRA_BLOCK_SIZE
+//                2308 : 2019/01/24 --> add ELBDM_REMOVE_MOTION_CM
 //                2309 : 2019/03/14 --> add OPT__RECORD_NOTE and OPT__RECORD_UNPHY
 //                2310 : 2019/05/31 --> add OPT__GRAVITY_EXTRA_MASS
+//                2311 : 2019/10/16 --> add DT__MAX
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1221,10 +1222,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 // Function    :  FillIn_KeyInfo
 // Description :  Fill in the KeyInfo_t structure
 //
-// Note        :  1. Data sturcture is defined in "HDF5_Typedef.h"
+// Note        :  1. Data structure is defined in "HDF5_Typedef.h"
 //                2. Call-by-reference
 //
-// Parameter   :  KeyInfo  : Pointer to be filled in
+// Parameter   :  KeyInfo : Pointer to be filled in
 //-------------------------------------------------------------------------------------------------------
 void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 {
@@ -1289,7 +1290,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 // Function    :  FillIn_Makefile
 // Description :  Fill in the Makefile_t structure
 //
-// Note        :  1. Data sturcture is defined in "HDF5_Typedef.h"
+// Note        :  1. Data structure is defined in "HDF5_Typedef.h"
 //                2. Call-by-reference
 //
 // Parameter   :  Makefile : Pointer to be filled in
@@ -1495,7 +1496,7 @@ void FillIn_Makefile( Makefile_t &Makefile )
 // Function    :  FillIn_SymConst
 // Description :  Fill in the SymConst_t structure
 //
-// Note        :  1. Data sturcture is defined in "HDF5_Typedef.h"
+// Note        :  1. Data structure is defined in "HDF5_Typedef.h"
 //                2. Call-by-reference
 //
 // Parameter   :  SymConst : Pointer to be filled in
@@ -1676,7 +1677,7 @@ void FillIn_SymConst( SymConst_t &SymConst )
 // Function    :  FillIn_InputPara
 // Description :  Fill in the InputPara_t structure
 //
-// Note        :  1. Data sturcture is defined in "HDF5_Typedef.h"
+// Note        :  1. Data structure is defined in "HDF5_Typedef.h"
 //                2. Call-by-reference
 //
 // Parameter   :  InputPara : Pointer to be filled in
@@ -1739,6 +1740,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  endif
 
 // time-step determination
+   InputPara.Dt__Max                 = DT__MAX;
    InputPara.Dt__Fluid               = DT__FLUID;
    InputPara.Dt__FluidInit           = DT__FLUID_INIT;
 #  ifdef GRAVITY
@@ -2039,11 +2041,11 @@ void FillIn_InputPara( InputPara_t &InputPara )
 // Function    :  GetCompound_KeyInfo
 // Description :  Create the HDF5 compound datatype for KeyInfo
 //
-// Note        :  1. Data sturcture is defined in "HDF5_Typedef.h"
+// Note        :  1. Data structure is defined in "HDF5_Typedef.h"
 //                2. The returned H5_TypeID must be closed manually
 //                3. Call-by-reference
 //
-// Parameter   :  H5_TypeID   : HDF5 type ID for storing the compound datatype
+// Parameter   :  H5_TypeID : HDF5 type ID for storing the compound datatype
 //-------------------------------------------------------------------------------------------------------
 void GetCompound_KeyInfo( hid_t &H5_TypeID )
 {
@@ -2120,11 +2122,11 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
 // Function    :  GetCompound_Makefile
 // Description :  Create the HDF5 compound datatype for Makefile
 //
-// Note        :  1. Data sturcture is defined in "HDF5_Typedef.h"
+// Note        :  1. Data structure is defined in "HDF5_Typedef.h"
 //                2. The returned H5_TypeID must be closed manually
 //                3. Call-by-reference
 //
-// Parameter   :  H5_TypeID   : HDF5 type ID for storing the compound datatype
+// Parameter   :  H5_TypeID : HDF5 type ID for storing the compound datatype
 //-------------------------------------------------------------------------------------------------------
 void GetCompound_Makefile( hid_t &H5_TypeID )
 {
@@ -2198,11 +2200,11 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
 // Function    :  GetCompound_SymConst
 // Description :  Create the HDF5 compound datatype for SymConst
 //
-// Note        :  1. Data sturcture is defined in "HDF5_Typedef.h"
+// Note        :  1. Data structure is defined in "HDF5_Typedef.h"
 //                2. The returned H5_TypeID must be closed manually
 //                3. Call-by-reference
 //
-// Parameter   :  H5_TypeID   : HDF5 type ID for storing the compound datatype
+// Parameter   :  H5_TypeID : HDF5 type ID for storing the compound datatype
 //-------------------------------------------------------------------------------------------------------
 void GetCompound_SymConst( hid_t &H5_TypeID )
 {
@@ -2309,11 +2311,11 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 // Function    :  GetCompound_InputPara
 // Description :  Create the HDF5 compound datatype for InputPara
 //
-// Note        :  1. Data sturcture is defined in "HDF5_Typedef.h"
+// Note        :  1. Data structure is defined in "HDF5_Typedef.h"
 //                2. The returned H5_TypeID must be closed manually
 //                3. Call-by-reference
 //
-// Parameter   :  H5_TypeID   : HDF5 type ID for storing the compound datatype
+// Parameter   :  H5_TypeID : HDF5 type ID for storing the compound datatype
 //-------------------------------------------------------------------------------------------------------
 void GetCompound_InputPara( hid_t &H5_TypeID )
 {
@@ -2420,6 +2422,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  endif
 
 // time-step determination
+   H5Tinsert( H5_TypeID, "Dt__Max",                 HOFFSET(InputPara_t,Dt__Max                ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "Dt__Fluid",               HOFFSET(InputPara_t,Dt__Fluid              ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "Dt__FluidInit",           HOFFSET(InputPara_t,Dt__FluidInit          ), H5T_NATIVE_DOUBLE  );
 #  ifdef GRAVITY

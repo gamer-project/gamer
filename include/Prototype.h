@@ -254,9 +254,10 @@ void Output_BoundaryFlagList( const int option, const int lv, const char *commen
 void FindFather( const int lv, const int Mode );
 void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc );
 bool Flag_Check( const int lv, const int PID, const int i, const int j, const int k, const real dv,
-                 const real Fluid[][PS1][PS1][PS1], const real Pot[][PS1][PS1], const real Pres[][PS1][PS1],
-                 const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
-                 const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff );
+                 const real Fluid[][PS1][PS1][PS1], const real Pot[][PS1][PS1], const real Vel[][PS1][PS1][PS1],
+                 const real Pres[][PS1][PS1], const real *Lohner_Var, const real *Lohner_Ave,
+                 const real *Lohner_Slope, const int Lohner_NVar, const real ParCount[][PS1][PS1],
+                 const real ParDens[][PS1][PS1], const real JeansCoeff );
 bool Flag_Region( const int i, const int j, const int k, const int lv, const int PID );
 bool Flag_Lohner( const int i, const int j, const int k, const OptLohnerForm_t Form, const real *Var1D, const real *Ave1D,
                   const real *Slope1D, const int NVar, const double Threshold, const double Filter, const double Soften );
@@ -333,8 +334,6 @@ void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In
                       const int NPG, const int *PID0_List );
 void Poi_Prepare_Rho( const int lv, const double PrepTime, real h_Rho_Array_P[][RHO_NXT][RHO_NXT][RHO_NXT],
                       const int NPG, const int *PID0_List );
-real Poi_AddExtraMassForGravity( const double x, const double y, const double z, const double Time,
-                                 const int lv, double AuxArray[] );
 #ifdef STORE_POT_GHOST
 void Poi_StorePotWithGhostZone( const int lv, const int PotSg, const bool AllPatch );
 #endif

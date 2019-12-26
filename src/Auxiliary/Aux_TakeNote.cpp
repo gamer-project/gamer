@@ -288,6 +288,8 @@ void Aux_TakeNote()
       fprintf( Note, "GPU_ARCH                        PASCAL\n" );
 #     elif ( GPU_ARCH == VOLTA )
       fprintf( Note, "GPU_ARCH                        VOLTA\n" );
+#     elif ( GPU_ARCH == TURING )
+      fprintf( Note, "GPU_ARCH                        TURING\n" );
 #     else
       fprintf( Note, "GPU_ARCH                        UNKNOWN\n" );
 #     endif
@@ -631,6 +633,7 @@ void Aux_TakeNote()
 //    record the parameters of time-step determination
       fprintf( Note, "Parameters of Time-step Determination\n" );
       fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "DT__MAX                        %14.7e\n",   DT__MAX                   );
       fprintf( Note, "DT__FLUID                       %13.7e\n",  DT__FLUID                 );
       fprintf( Note, "DT__FLUID_INIT                  %13.7e\n",  DT__FLUID_INIT            );
 #     ifdef GRAVITY
