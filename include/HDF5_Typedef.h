@@ -329,6 +329,7 @@ struct InputPara_t
 #  endif
 
 // time-step determination
+   double Dt__Max;
    double Dt__Fluid;
    double Dt__FluidInit;
 #  ifdef GRAVITY
@@ -609,7 +610,7 @@ struct InputPara_t
 //
 // Note        :  1. Synchronization is accomplished by first opening the target file with the "appending" mode
 //                   and then close it immediately
-//                3. It's an inline function
+//                2. It's an inline function
 //
 // Parameter   :  FileName : Target file name
 //-------------------------------------------------------------------------------------------------------
