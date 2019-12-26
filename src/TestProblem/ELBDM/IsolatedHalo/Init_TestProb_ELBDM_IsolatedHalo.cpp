@@ -146,7 +146,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_TestProb_ELBDM_LSSHalo
+// Function    :  Init_TestProb_ELBDM_IsolatedHalo
 // Description :  Test problem initializer
 //
 // Note        :  None
@@ -155,7 +155,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Init_TestProb_ELBDM_LSSHalo()
+void Init_TestProb_ELBDM_IsolatedHalo()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -188,4 +188,4 @@ void Init_TestProb_ELBDM_LSSHalo()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Init_TestProb_ELBDM_LSSHalo
+} // FUNCTION : Init_TestProb_ELBDM_IsolatedHalo
