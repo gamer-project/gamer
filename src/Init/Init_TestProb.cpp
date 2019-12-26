@@ -24,7 +24,7 @@ void Init_TestProb_ELBDM_Soliton();
 void Init_TestProb_ELBDM_SelfSimilarHalo();
 void Init_TestProb_ELBDM_VortexPairRotating();
 void Init_TestProb_ELBDM_VortexPairLinear();
-void Init_TestProb_ELBDM_LSSHalo();
+void Init_TestProb_ELBDM_IsolatedHalo();
 void Init_TestProb_ELBDM_GaussianWavePacket();
 
 
@@ -71,7 +71,7 @@ void Init_TestProb()
       case TESTPROB_ELBDM_SELF_SIMILAR_HALO :            Init_TestProb_ELBDM_SelfSimilarHalo();             break;
       case TESTPROB_ELBDM_VORTEX_PAIR_ROTATING :         Init_TestProb_ELBDM_VortexPairRotating();          break;
       case TESTPROB_ELBDM_VORTEX_PAIR_LINEAR :           Init_TestProb_ELBDM_VortexPairLinear();            break;
-      case TESTPROB_ELBDM_LSS_HALO :                     Init_TestProb_ELBDM_LSSHalo();                     break;
+      case TESTPROB_ELBDM_ISOLATED_HALO :                Init_TestProb_ELBDM_IsolatedHalo();                break;
       case TESTPROB_ELBDM_GAUSSIAN_WAVE_PACKET :         Init_TestProb_ELBDM_GaussianWavePacket();          break;
 
       default: Aux_Error( ERROR_INFO, "unsupported TESTPROB_ID (%d) !!\n", TESTPROB_ID );
