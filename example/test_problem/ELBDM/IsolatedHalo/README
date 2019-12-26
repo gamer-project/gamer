@@ -27,3 +27,5 @@ Note:
 1. Download the IC file: sh download_ic.sh
 
 2. Some examples of yt visualization scripts are put in "yt_script"
+
+3. Simulate a single isolated halo extracted from a cosmological simulation
