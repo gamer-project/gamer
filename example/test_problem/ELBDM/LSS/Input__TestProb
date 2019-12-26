@@ -1,0 +1,2 @@
+# problem-specific runtime parameters
+LSS_InitMode         1     # initialization mode: (1=density-only with constant phase) [1]
