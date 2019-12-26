@@ -55,7 +55,8 @@ const TestProbID_t
    TESTPROB_ELBDM_VORTEX_PAIR_ROTATING         = 1005,
    TESTPROB_ELBDM_VORTEX_PAIR_LINEAR           = 1006,
    TESTPROB_ELBDM_ISOLATED_HALO                = 1007,
-   TESTPROB_ELBDM_GAUSSIAN_WAVE_PACKET         = 1008;
+   TESTPROB_ELBDM_GAUSSIAN_WAVE_PACKET         = 1008,
+   TESTPROB_ELBDM_LSS                          = 1009;
 
 
 // program initialization options
