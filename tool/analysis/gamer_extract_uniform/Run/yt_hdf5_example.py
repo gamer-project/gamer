@@ -24,7 +24,7 @@ unit_t    = ( f['Info']['Unit_T'], 's' )
 bbox  = np.array( [ [left_edge[0], left_edge[0]+box_size[0]],
                     [left_edge[1], left_edge[1]+box_size[1]],
                     [left_edge[2], left_edge[2]+box_size[2]] ] )
-units = [ f['Data'][k].attrs['Unit'] for k in fields ]
+units = [ f['Data'][k].attrs['Unit'].decode('utf-8') for k in fields ]
 data  = { k:(f['Data'][k][()].transpose(),u) for k,u in zip(fields,units) }
 
 ds = yt.load_uniform_grid( data=data, domain_dimensions=dimension,
