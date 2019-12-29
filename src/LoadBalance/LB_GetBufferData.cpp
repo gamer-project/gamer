@@ -56,7 +56,7 @@ extern Timer_t *Timer_MPI[3];
 //                ParaBuf     : Number of ghost zones to exchange (useless in DATA_RESTRICT and COARSE_FINE_FLUX )
 //-------------------------------------------------------------------------------------------------------
 void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const GetBufMode_t GetBufMode,
-                       const int TVar, const int ParaBuf )
+                       const long TVar, const int ParaBuf )
 {
 
 // check
@@ -121,7 +121,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
    NVar_Flu = 0;
 
    for (int v=0; v<NFluid_Max; v++)
-      if ( TVar & (1<<v) )    TFluVarIdxList[ NVar_Flu++ ] = v;
+      if ( TVar & (1L<<v) )   TFluVarIdxList[ NVar_Flu++ ] = v;
 
    NVar_Tot = NVar_Flu;
 #  ifdef GRAVITY

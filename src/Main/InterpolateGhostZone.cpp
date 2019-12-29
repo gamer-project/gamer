@@ -64,8 +64,8 @@ static int Table_01( const int SibID, const int Side, const char dim, const int 
 //-------------------------------------------------------------------------------------------------------
 void InterpolateGhostZone( const int lv, const int PID, real IntData[], const int SibID, const double PrepTime,
                            const int GhostSize, const IntScheme_t IntScheme, const int NTSib[], int *TSib[],
-                           const int TVar, const int NVar_Tot, const int NVar_Flu, const int TFluVarIdxList[],
-                           const int NVar_Der, const int TDerVarList[], const bool IntPhase,
+                           const long TVar, const int NVar_Tot, const int NVar_Flu, const int TFluVarIdxList[],
+                           const int NVar_Der, const long TDerVarList[], const bool IntPhase,
                            const OptFluBC_t FluBC[], const OptPotBC_t PotBC, const int BC_Face[], const real MinPres,
                            const bool DE_Consistency )
 {
@@ -105,7 +105,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 #  endif // MODEL
 
 #  ifdef GRAVITY
-   const bool PrepPot      = ( TVar & _POTE     ) ? true : false;
+   const bool PrepPot         = ( TVar & _POTE ) ? true : false;
 #  endif
 
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )

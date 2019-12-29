@@ -196,46 +196,46 @@
 #endif
 
 // bitwise field indices
-// --> must have "_VAR_NAME = 1<<VAR_NAME" (e.g., _DENS == 1<<DENS)
+// --> must have "_VAR_NAME = 1L<<VAR_NAME" (e.g., _DENS == 1L<<DENS)
 // --> convenient for determining subsets of fields (e.g., _DENS|_ENGY)
 // --> used as function parameters (e.g., Prepare_PatchData(), Flu_FixUp(), Flu_Restrict(), Buf_GetBufferData())
-#  define _DENS               ( 1 << DENS )
-#  define _MOMX               ( 1 << MOMX )
-#  define _MOMY               ( 1 << MOMY )
-#  define _MOMZ               ( 1 << MOMZ )
-#  define _ENGY               ( 1 << ENGY )
+#  define _DENS               ( 1L << DENS )
+#  define _MOMX               ( 1L << MOMX )
+#  define _MOMY               ( 1L << MOMY )
+#  define _MOMZ               ( 1L << MOMZ )
+#  define _ENGY               ( 1L << ENGY )
 
 #if ( NCOMP_PASSIVE > 0 )
 # if   ( DUAL_ENERGY == DE_ENPY )
-#  define _ENPY               ( 1 << ENPY )
+#  define _ENPY               ( 1L << ENPY )
 # elif ( DUAL_ENERGY == DE_EINT )
-#  define _EINT               ( 1 << EINT )
+#  define _EINT               ( 1L << EINT )
 # endif
 #endif // #if ( NCOMP_PASSIVE > 0 )
 
 // bitwise flux indices
-#  define _FLUX_DENS          ( 1 << FLUX_DENS )
-#  define _FLUX_MOMX          ( 1 << FLUX_MOMX )
-#  define _FLUX_MOMY          ( 1 << FLUX_MOMY )
-#  define _FLUX_MOMZ          ( 1 << FLUX_MOMZ )
-#  define _FLUX_ENGY          ( 1 << FLUX_ENGY )
+#  define _FLUX_DENS          ( 1L << FLUX_DENS )
+#  define _FLUX_MOMX          ( 1L << FLUX_MOMX )
+#  define _FLUX_MOMY          ( 1L << FLUX_MOMY )
+#  define _FLUX_MOMZ          ( 1L << FLUX_MOMZ )
+#  define _FLUX_ENGY          ( 1L << FLUX_ENGY )
 
 #if ( NFLUX_PASSIVE > 0 )
 # if   ( DUAL_ENERGY == DE_ENPY )
-#  define _FLUX_ENPY          ( 1 << FLUX_ENPY )
+#  define _FLUX_ENPY          ( 1L << FLUX_ENPY )
 # elif ( DUAL_ENERGY == DE_EINT )
-#  define _FLUX_EINT          ( 1 << FLUX_EINT )
+#  define _FLUX_EINT          ( 1L << FLUX_EINT )
 # endif
 #endif // #if ( NFLUX_PASSIVE > 0 )
 
 // bitwise indices of derived fields
-// --> start from (1<<NCOMP_TOTAL) to distinguish from the intrinsic fields
+// --> start from (1L<<NCOMP_TOTAL) to distinguish from the intrinsic fields
 // --> remember to define NDERIVE = total number of derived fields
-#  define _VELX               ( 1 << (NCOMP_TOTAL+0) )
-#  define _VELY               ( 1 << (NCOMP_TOTAL+1) )
-#  define _VELZ               ( 1 << (NCOMP_TOTAL+2) )
-#  define _PRES               ( 1 << (NCOMP_TOTAL+3) )
-#  define _TEMP               ( 1 << (NCOMP_TOTAL+4) )
+#  define _VELX               ( 1L << (NCOMP_TOTAL+0) )
+#  define _VELY               ( 1L << (NCOMP_TOTAL+1) )
+#  define _VELZ               ( 1L << (NCOMP_TOTAL+2) )
+#  define _PRES               ( 1L << (NCOMP_TOTAL+3) )
+#  define _TEMP               ( 1L << (NCOMP_TOTAL+4) )
 #  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP )
 #  define NDERIVE             5
 
@@ -257,12 +257,12 @@
 #  define  FLUX_DENS          0
 
 // bitwise field indices
-#  define _DENS               ( 1 << DENS )
-#  define _REAL               ( 1 << REAL )
-#  define _IMAG               ( 1 << IMAG )
+#  define _DENS               ( 1L << DENS )
+#  define _REAL               ( 1L << REAL )
+#  define _IMAG               ( 1L << IMAG )
 
 // bitwise flux indices
-#  define _FLUX_DENS          ( 1 << FLUX_DENS )
+#  define _FLUX_DENS          ( 1L << FLUX_DENS )
 
 // bitwise indices of derived fields
 #  define _DERIVED            0
@@ -281,15 +281,15 @@
 
 // bitwise field indices used by all models
 # ifdef GRAVITY
-#  define _POTE               ( 1 << (NCOMP_TOTAL+NDERIVE) )
+#  define _POTE               ( 1L << (NCOMP_TOTAL+NDERIVE) )
 # endif
-#  define _FLUID              (  ( 1 << NCOMP_FLUID ) - 1           )
-#  define _PASSIVE            (  ( 1 << NCOMP_TOTAL ) - 1 - _FLUID  )
-#  define _TOTAL              (  ( 1 << NCOMP_TOTAL ) - 1           )
+#  define _FLUID              (  ( 1L << NCOMP_FLUID ) - 1L           )
+#  define _PASSIVE            (  ( 1L << NCOMP_TOTAL ) - 1L - _FLUID  )
+#  define _TOTAL              (  ( 1L << NCOMP_TOTAL ) - 1L           )
 
-#  define _FLUX_FLUID         (  ( 1 << NFLUX_FLUID ) - 1                )
-#  define _FLUX_PASSIVE       (  ( 1 << NFLUX_TOTAL ) - 1 - _FLUX_FLUID  )
-#  define _FLUX_TOTAL         (  ( 1 << NFLUX_TOTAL ) - 1                )
+#  define _FLUX_FLUID         (  ( 1L << NFLUX_FLUID ) - 1L                )
+#  define _FLUX_PASSIVE       (  ( 1L << NFLUX_TOTAL ) - 1L - _FLUX_FLUID  )
+#  define _FLUX_TOTAL         (  ( 1L << NFLUX_TOTAL ) - 1L                )
 
 
 
@@ -354,13 +354,13 @@
 
 
 // bitwise field indices related to particles
-// --> note that _POTE = ( 1 << (NCOMP_TOTAL+NDERIVE) )
-#  define _PAR_DENS           ( 1 << (NCOMP_TOTAL+NDERIVE+1) )
+// --> note that _POTE = ( 1L << (NCOMP_TOTAL+NDERIVE) )
+#  define _PAR_DENS           ( 1L << (NCOMP_TOTAL+NDERIVE+1) )
 
 # if ( MODEL == PAR_ONLY )
 #  define _TOTAL_DENS         ( _PAR_DENS )
 # else
-#  define _TOTAL_DENS         ( 1 << (NCOMP_TOTAL+NDERIVE+2) )
+#  define _TOTAL_DENS         ( 1L << (NCOMP_TOTAL+NDERIVE+2) )
 # endif
 
 #else // #ifdef PARTICLE
@@ -728,8 +728,8 @@
 #endif
 
 
-// macro converting an array index (e.g., DENS) to bitwise index (e.g., _DENS=(1<<DENS))
-#define BIDX( idx )     ( 1 << (idx) )
+// macro converting an array index (e.g., DENS) to bitwise index (e.g., _DENS=(1L<<DENS))
+#define BIDX( idx )     ( 1L << (idx) )
 
 
 

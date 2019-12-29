@@ -2,8 +2,8 @@
 
 void InterpolateGhostZone( const int lv, const int PID, real IntData[], const int SibID, const double PrepTime,
                            const int GhostSize, const IntScheme_t IntScheme, const int NTSib[], int *TSib[],
-                           const int TVar, const int NVar_Tot, const int NVar_Flu, const int TFluVarIdxList[],
-                           const int NVar_Der, const int TDerVarList[], const bool IntPhase,
+                           const long TVar, const int NVar_Tot, const int NVar_Flu, const int TFluVarIdxList[],
+                           const int NVar_Der, const long TDerVarList[], const bool IntPhase,
                            const OptFluBC_t FluBC[], const OptPotBC_t PotBC, const int BC_Face[], const real MinPres,
                            const bool DE_Consistency );
 static void SetTargetSibling( int NTSib[], int *TSib[] );
@@ -116,7 +116,7 @@ bool ParDensArray_Initialized = false;
 //                                     in all patches already satisfy this consistency check
 //-------------------------------------------------------------------------------------------------------
 void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array,
-                        const int GhostSize, const int NPG, const int *PID0_List, int TVar,
+                        const int GhostSize, const int NPG, const int *PID0_List, long TVar,
                         const IntScheme_t IntScheme, const PrepUnit_t PrepUnit, const NSide_t NSide,
                         const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
                         const real MinDens, const real MinPres, const bool DE_Consistency )
@@ -130,7 +130,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 // --> to be more cautious, we apply these checks even when GAMER_DEBUG is off
 //#  ifdef GAMER_DEBUG
 
-   int AllVar = ( _TOTAL | _DERIVED );
+   long AllVar = ( _TOTAL | _DERIVED );
 #  ifdef GRAVITY
    AllVar |= _POTE;
 #  endif
@@ -138,7 +138,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    AllVar |= _PAR_DENS;
    AllVar |= _TOTAL_DENS;
 #  endif
-   if ( TVar & ~AllVar )   Aux_Error( ERROR_INFO, "unsupported parameter %s = %d !!\n", "TVar", TVar );
+   if ( TVar & ~AllVar )   Aux_Error( ERROR_INFO, "unsupported parameter %s = %ld !!\n", "TVar", TVar );
 
    if ( MinDens >= (real)0.0 )
    {
@@ -294,17 +294,17 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    SetTargetSibling( NTSib, TSib );
 
 // determine the components to be prepared
-// --> assuming that _VAR_NAME = 1<<VAR_NAME (e.g., _DENS == 1<<DENS)
+// --> assuming that _VAR_NAME = 1L<<VAR_NAME (e.g., _DENS == 1L<<DENS)
 // --> it also determines the order of variables stored in h_Input_Array (which is the same as patch->fluid[])
    NVar_Flu = 0;
    for (int v=0; v<NCOMP_TOTAL; v++)
-      if ( TVar & (1<<v) )    TFluVarIdxList[ NVar_Flu++ ] = v;
+      if ( TVar & (1L<<v) )   TFluVarIdxList[ NVar_Flu++ ] = v;
 
    NVar_Der = 0;
 
 #  if   ( MODEL == HYDRO )
    const int NVar_Der_Max = 5;
-   int TDerVarList[NVar_Der_Max];
+   long TDerVarList[NVar_Der_Max];
 
    if ( PrepVx   )   TDerVarList[ NVar_Der ++ ] = _VELX;
    if ( PrepVy   )   TDerVarList[ NVar_Der ++ ] = _VELY;
@@ -318,7 +318,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
    const int NVar_Der_Max = 0;
-   int *TDerVarList = NULL;
+   long *TDerVarList = NULL;
 
 #  else
 #  error : unsupported MODEL !!
