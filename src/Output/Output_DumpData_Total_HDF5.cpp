@@ -1221,10 +1221,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 // Function    :  FillIn_KeyInfo
 // Description :  Fill in the KeyInfo_t structure
 //
-// Note        :  1. Data sturcture is defined in "HDF5_Typedef.h"
+// Note        :  1. Data structure is defined in "HDF5_Typedef.h"
 //                2. Call-by-reference
 //
-// Parameter   :  KeyInfo  : Pointer to be filled in
+// Parameter   :  KeyInfo : Pointer to be filled in
 //-------------------------------------------------------------------------------------------------------
 void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 {
@@ -1289,7 +1289,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 // Function    :  FillIn_Makefile
 // Description :  Fill in the Makefile_t structure
 //
-// Note        :  1. Data sturcture is defined in "HDF5_Typedef.h"
+// Note        :  1. Data structure is defined in "HDF5_Typedef.h"
 //                2. Call-by-reference
 //
 // Parameter   :  Makefile : Pointer to be filled in
@@ -1495,7 +1495,7 @@ void FillIn_Makefile( Makefile_t &Makefile )
 // Function    :  FillIn_SymConst
 // Description :  Fill in the SymConst_t structure
 //
-// Note        :  1. Data sturcture is defined in "HDF5_Typedef.h"
+// Note        :  1. Data structure is defined in "HDF5_Typedef.h"
 //                2. Call-by-reference
 //
 // Parameter   :  SymConst : Pointer to be filled in
@@ -1676,7 +1676,7 @@ void FillIn_SymConst( SymConst_t &SymConst )
 // Function    :  FillIn_InputPara
 // Description :  Fill in the InputPara_t structure
 //
-// Note        :  1. Data sturcture is defined in "HDF5_Typedef.h"
+// Note        :  1. Data structure is defined in "HDF5_Typedef.h"
 //                2. Call-by-reference
 //
 // Parameter   :  InputPara : Pointer to be filled in
@@ -2039,11 +2039,11 @@ void FillIn_InputPara( InputPara_t &InputPara )
 // Function    :  GetCompound_KeyInfo
 // Description :  Create the HDF5 compound datatype for KeyInfo
 //
-// Note        :  1. Data sturcture is defined in "HDF5_Typedef.h"
+// Note        :  1. Data structure is defined in "HDF5_Typedef.h"
 //                2. The returned H5_TypeID must be closed manually
 //                3. Call-by-reference
 //
-// Parameter   :  H5_TypeID   : HDF5 type ID for storing the compound datatype
+// Parameter   :  H5_TypeID : HDF5 type ID for storing the compound datatype
 //-------------------------------------------------------------------------------------------------------
 void GetCompound_KeyInfo( hid_t &H5_TypeID )
 {
@@ -2120,11 +2120,11 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
 // Function    :  GetCompound_Makefile
 // Description :  Create the HDF5 compound datatype for Makefile
 //
-// Note        :  1. Data sturcture is defined in "HDF5_Typedef.h"
+// Note        :  1. Data structure is defined in "HDF5_Typedef.h"
 //                2. The returned H5_TypeID must be closed manually
 //                3. Call-by-reference
 //
-// Parameter   :  H5_TypeID   : HDF5 type ID for storing the compound datatype
+// Parameter   :  H5_TypeID : HDF5 type ID for storing the compound datatype
 //-------------------------------------------------------------------------------------------------------
 void GetCompound_Makefile( hid_t &H5_TypeID )
 {
@@ -2198,11 +2198,11 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
 // Function    :  GetCompound_SymConst
 // Description :  Create the HDF5 compound datatype for SymConst
 //
-// Note        :  1. Data sturcture is defined in "HDF5_Typedef.h"
+// Note        :  1. Data structure is defined in "HDF5_Typedef.h"
 //                2. The returned H5_TypeID must be closed manually
 //                3. Call-by-reference
 //
-// Parameter   :  H5_TypeID   : HDF5 type ID for storing the compound datatype
+// Parameter   :  H5_TypeID : HDF5 type ID for storing the compound datatype
 //-------------------------------------------------------------------------------------------------------
 void GetCompound_SymConst( hid_t &H5_TypeID )
 {
@@ -2309,11 +2309,11 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 // Function    :  GetCompound_InputPara
 // Description :  Create the HDF5 compound datatype for InputPara
 //
-// Note        :  1. Data sturcture is defined in "HDF5_Typedef.h"
+// Note        :  1. Data structure is defined in "HDF5_Typedef.h"
 //                2. The returned H5_TypeID must be closed manually
 //                3. Call-by-reference
 //
-// Parameter   :  H5_TypeID   : HDF5 type ID for storing the compound datatype
+// Parameter   :  H5_TypeID : HDF5 type ID for storing the compound datatype
 //-------------------------------------------------------------------------------------------------------
 void GetCompound_InputPara( hid_t &H5_TypeID )
 {
