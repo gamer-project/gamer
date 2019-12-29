@@ -23,7 +23,7 @@
 //                           --> _FLUID, _PASSIVE, and _TOTAL apply to all models
 //-------------------------------------------------------------------------------------------------------
 void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const int SonPotSg, const int FaPotSg,
-                   const int TVar )
+                   const long TVar )
 {
 
    const int SonLv = FaLv + 1;
@@ -82,7 +82,7 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
    NVar_Flu = 0;
 
    for (int v=0; v<NCOMP_TOTAL; v++)
-      if ( TVar & (1<<v) )    TFluVarIdxList[ NVar_Flu++ ] = v;
+      if ( TVar & (1L<<v) )   TFluVarIdxList[ NVar_Flu++ ] = v;
 
 // check again
    NVar_Tot = NVar_Flu;
