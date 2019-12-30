@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2310)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2311)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -167,6 +167,7 @@ Procedure for outputting new variables:
 //                2308 : 2019/03/14 --> add OPT__RECORD_NOTE and OPT__RECORD_UNPHY
 //                2309 : 2019/05/31 --> add OPT__GRAVITY_EXTRA_MASS
 //                2310 : 2019/10/16 --> add DT__MAX
+//                2311 : 2019/12/29 --> output GRACKLE_THREE_BODY_RATE, GRACKLE_CIE_COOLING, GRACKLE_H2_OPA_APPROX
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1231,7 +1232,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime   = time( NULL );    // calendar time
 
-   KeyInfo.FormatVersion  = 2310;
+   KeyInfo.FormatVersion  = 2311;
    KeyInfo.Model          = MODEL;
    KeyInfo.NLevel         = NLEVEL;
    KeyInfo.NCompFluid     = NCOMP_FLUID;
