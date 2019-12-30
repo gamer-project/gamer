@@ -11,7 +11,7 @@ as those used in GAMER. So:
 
 * coordinates are in UNIT_L
 * vector potential components are in UNIT_B*UNIT_L = sqrt(4*pi*UNIT_P)*UNIT_L
-  where UNIT_P = UNIT_M*UNIT_L/UNIT_T**2
+  where UNIT_P = UNIT_M/UNIT_L/UNIT_T**2
 
 The file should also be named "B_IC" for GAMER to recognize it.
 
