@@ -3,7 +3,7 @@
 #include "HDF5_Typedef.h"
 #endif
 
-int         OutputXYZ         = WRONG;                      // output option (x,y,z,x-proj,y-proj,z-proj,3D)
+int         OutputXYZ         = WRONG;                      // output mode (x,y,z,x-proj,y-proj,z-proj,3D)
 char       *FileName_In       = NULL;                       // name of the input file
 char       *FileName_Tree     = NULL;                       // name of the tree file
 char       *Suffix            = NULL;                       // suffix attached to the output file name
@@ -149,7 +149,7 @@ void ReadOption( int argc, char **argv )
          case '?': cerr << endl << "usage: " << argv[0]
                         << " [-h (for help)] [-i input fileName] [-o suffix to the output file [none]]"
                         << endl << "                             "
-                        << " [-n output option (1~7 : X-slice, Y-slice, Z-slice, X-proj, Y-proj, Z-proj, 3D)"
+                        << " [-n output mode (1~7 : X-slice, Y-slice, Z-slice, X-proj, Y-proj, Z-proj, 3D)"
                         << endl << "                             "
                         << " [-x/y/z starting coordinate in x/y/z [0]] [-X/Y/Z target size in x/y/z [BoxSize]]"
 #                       ifndef SERIAL
@@ -362,7 +362,7 @@ void ReadOption( int argc, char **argv )
 
    if ( OutputXYZ == WRONG )
    {
-      cerr << "ERROR : please provide the targeted outupt data (-n output option) !!" << endl;
+      cerr << "ERROR : please provide the targeted outupt data (-n output mode) !!" << endl;
       exit( 1 );
    }
 
@@ -374,7 +374,7 @@ void ReadOption( int argc, char **argv )
 
    if ( OutputXYZ < 1  ||  OutputXYZ > 7 )
    {
-      cerr << "ERROR : incorrect OutputXYZ input (-n output option) !!" << endl;
+      cerr << "ERROR : incorrect OutputXYZ input (-n output mode) !!" << endl;
       exit( 1 );
    }
 
@@ -599,7 +599,9 @@ void TakeNote( int argc, char *argv[] )
    printf( " Output region: (x,y,z) = (%13.7e, %13.7e, %13.7e) --> (%13.7e, %13.7e, %13.7e)\n",
             Out_Start[0], Out_Start[1], Out_Start[2],
             Out_Start[0]+PhyCoord_Size[0], Out_Start[1]+PhyCoord_Size[1], Out_Start[2]+PhyCoord_Size[2] );
-   printf( " Array size   : %5d * %5d * %5d\n", Idx_Size[0], Idx_Size[1], Idx_Size[2] );
+   printf( " Array size   : %5d * %5d * %5d\n", (OutputXYZ==4)?1:Idx_Size[0],
+                                                (OutputXYZ==5)?1:Idx_Size[1],
+                                                (OutputXYZ==6)?1:Idx_Size[2] );
    cout << "------------------------------------------------------------------------------------------------------"   << endl;
    cout << endl;
 
@@ -790,9 +792,9 @@ void Output()
       hsize_t H5_SetDims_Data[3];
 
 //    create the data space
-      H5_SetDims_Data[0] = Idx_Size[2];
-      H5_SetDims_Data[1] = Idx_Size[1];
-      H5_SetDims_Data[2] = Idx_Size[0];
+      H5_SetDims_Data[0] = ( OutputXYZ == 6 ) ? 1 : Idx_Size[2];
+      H5_SetDims_Data[1] = ( OutputXYZ == 5 ) ? 1 : Idx_Size[1];
+      H5_SetDims_Data[2] = ( OutputXYZ == 4 ) ? 1 : Idx_Size[0];
 
       H5_SpaceID_Data = H5Screate_simple( 3, H5_SetDims_Data, NULL );
       if ( H5_SpaceID_Data < 0 )   Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_SpaceID_Data" );
@@ -1078,6 +1080,7 @@ void SetHDF5Info( hid_t &H5_FileID )
    H5Tinsert( H5_ComID_Info, "DumpID",             HOFFSET(Info_t,DumpID           ),  H5T_NATIVE_INT    );
    H5Tinsert( H5_ComID_Info, "GridDimension",      HOFFSET(Info_t,GridDimension    ),  H5_ArrID_3Int     );
    H5Tinsert( H5_ComID_Info, "WithUnit",           HOFFSET(Info_t,WithUnit         ),  H5T_NATIVE_INT    );
+   H5Tinsert( H5_ComID_Info, "OutputMode",         HOFFSET(Info_t,OutputMode       ),  H5T_NATIVE_INT    );
    H5Tinsert( H5_ComID_Info, "Time",               HOFFSET(Info_t,Time             ),  H5T_NATIVE_DOUBLE );
    H5Tinsert( H5_ComID_Info, "CellWidth",          HOFFSET(Info_t,CellWidth        ),  H5T_NATIVE_DOUBLE );
    H5Tinsert( H5_ComID_Info, "SubdomainSize",      HOFFSET(Info_t,SubdomainSize    ),  H5_ArrID_3Double  );
@@ -1099,21 +1102,23 @@ void SetHDF5Info( hid_t &H5_FileID )
 // 2. fill in the structure "Info"
    Info_t Info;
 
-   Info.DumpID    = DumpID;
-   Info.WithUnit  = WithUnit;
-   Info.Time      = Time[0];
-   Info.CellWidth = amr.dh[TargetLevel];
-   Info.Unit_L    = (WithUnit) ? Unit_L : 1.0;
-   Info.Unit_M    = (WithUnit) ? Unit_M : 1.0;
-   Info.Unit_T    = (WithUnit) ? Unit_T : 1.0;
-   Info.Unit_V    = (WithUnit) ? Unit_V : 1.0;
-   Info.Unit_D    = (WithUnit) ? Unit_D : 1.0;
-   Info.Unit_E    = (WithUnit) ? Unit_E : 1.0;
-   Info.Unit_P    = (WithUnit) ? Unit_P : 1.0;
+   Info.DumpID     = DumpID;
+   Info.WithUnit   = WithUnit;
+   Info.Time       = Time[0];
+   Info.OutputMode = OutputXYZ;
+   Info.CellWidth  = amr.dh[TargetLevel];
+   Info.Unit_L     = (WithUnit) ? Unit_L : 1.0;
+   Info.Unit_M     = (WithUnit) ? Unit_M : 1.0;
+   Info.Unit_T     = (WithUnit) ? Unit_T : 1.0;
+   Info.Unit_V     = (WithUnit) ? Unit_V : 1.0;
+   Info.Unit_D     = (WithUnit) ? Unit_D : 1.0;
+   Info.Unit_E     = (WithUnit) ? Unit_E : 1.0;
+   Info.Unit_P     = (WithUnit) ? Unit_P : 1.0;
 
    for (int d=0; d<3; d++)
    {
-      Info.GridDimension    [d] = Idx_Size      [d];
+//    for projection, we record the coordinates of the original 3D region to be projected
+      Info.GridDimension    [d] = ( OutputXYZ == 4+d ) ? 1 : Idx_Size[d];
       Info.SubdomainSize    [d] = PhyCoord_Size [d];
       Info.SubdomainLeftEdge[d] = PhyCoord_Start[d];
    }
