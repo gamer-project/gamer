@@ -34,6 +34,7 @@ struct Info_t
    int    DumpID;
    int    GridDimension[3];
    int    WithUnit;
+   int    OutputMode;
 
    double Time;
    double CellWidth;
