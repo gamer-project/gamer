@@ -247,6 +247,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    PriVarR[3] = 0.0;
    PriVarR[4] = Riemann_PreR;
 
+#  ifdef USE_3_VELOCITY
+   SRHydro_4Velto3Vel( PriVarL, PriVarL );
+   SRHydro_4Velto3Vel( PriVarR, PriVarR );
+#  endif
+
 // left-state
    SRHydro_Pri2Con(PriVarL, ConVarL, GAMMA);
 

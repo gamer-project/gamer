@@ -187,6 +187,12 @@ void Aux_TakeNote()
       fprintf( Note, "FUSED_MULTIPLY_ADD              OFF\n" );
 #     endif
 
+#     ifdef USE_3_VELOCITY
+      fprintf( Note, "USE_3_VELOCITY                  ON\n" );
+#     else
+      fprintf( Note, "USE_3_VELOCITY                  OFF\n" );
+#     endif
+
 
 #     ifdef CHECK_MIN_TEMP
       fprintf( Note, "CHECK_MIN_TEMP                  ON\n" );

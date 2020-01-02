@@ -224,9 +224,13 @@ void SRHydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
             }
 
 
-//          primitive --> conserved variables
+//          conserved --> primitive variables
             LorentzFactor_L = SRHydro_Con2Pri( ConVar_L, PriVar_L, Gamma, MinTemp);
             LorentzFactor_R = SRHydro_Con2Pri( ConVar_R, PriVar_R, Gamma, MinTemp);
+
+#           ifdef USE_3_VELOCITY
+#           error: UNSPLIT_GRAVITY do not support 3-velocities
+#           endif
 
 //          update the momentum density (ConVar_L)
             n_L    = PriVar_L[0];

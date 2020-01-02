@@ -78,21 +78,26 @@ void CPU_dtSolver_SRHydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][NCOM
 
       CGPU_LOOP( t, CUBE(PS1) )
       {
-         real fluid[NCOMP_FLUID], Pri[NCOMP_FLUID], Pri3Vel[NCOMP_FLUID];
+         real fluid[NCOMP_FLUID], Pri[NCOMP_FLUID], LorentzFactor;
          real Cs, Cs_sq, MaxV;
 
          for (int v=0; v<NCOMP_FLUID; v++)   fluid[v] = g_Flu_Array[p][v][t];
 
-         SRHydro_Con2Pri( fluid, Pri, Gamma, MinTemp );
+         LorentzFactor = SRHydro_Con2Pri( fluid, Pri, Gamma, MinTemp );
 
          Cs_sq = SoundSpeedSquare( Pri[4]/Pri[0], Gamma );
 		  
 		 Cs = SQRT(Cs_sq);
 
-         SRHydro_4Velto3Vel( Pri, Pri3Vel );
+#        ifndef USE_3_VELOCITY
+		 // 4-velocities -> 3-velocities
+		 Pri[1] /= LorentzFactor;
+		 Pri[2] /= LorentzFactor;
+		 Pri[3] /= LorentzFactor;
+#        endif
 
 #        if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
-		 MaxV = Pri3Vel[1] + Pri3Vel[2] + Pri3Vel[3];
+		 MaxV = Pri[1] + Pri[2] + Pri[3];
 
          MaxCFL = FMAX(( MaxV + (real)3.0*Cs ) / ( (real)1.0 + MaxV*Cs ), MaxCFL);
 

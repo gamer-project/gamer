@@ -269,6 +269,21 @@ real SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real 
 
    LorentzFactor = SQRT( (real)1.0 + Usqr );
 
+#  ifdef USE_3_VELOCITY
+// 4-velocities -> 3-velocities
+   Out[1] /= LorentzFactor;
+   Out[2] /= LorentzFactor;
+   Out[3] /= LorentzFactor;
+
+   real Vsqr = VectorDotProduct( Out[1], Out[2], Out[3] );
+
+   LorentzFactor = (real)1.0 / SQRT( (real)1.0 - Vsqr );
+
+   Out[1] = In[MOMX] / Factor0 / LorentzFactor;
+   Out[2] = In[MOMY] / Factor0 / LorentzFactor;
+   Out[3] = In[MOMZ] / Factor0 / LorentzFactor;
+#  endif
+
    Out[0] = In[DENS] / LorentzFactor;
 
    real Temperature;
@@ -292,7 +307,11 @@ void SRHydro_Pri2Con (const T In[], T Out[], const T Gamma)
 
   Usqr = VectorDotProduct( In[1], In[2], In[3] );
 
+# ifdef USE_3_VELOCITY
+  LorentzFactor = (real)1.0 / SQRT( (real)1.0 - Usqr );
+# else
   LorentzFactor = SQRT( (real)1.0 + Usqr );
+# endif
 
   Temperature = In[4]/In[0];
 
@@ -302,9 +321,15 @@ void SRHydro_Pri2Con (const T In[], T Out[], const T Gamma)
 
   Factor0 = Out[DENS]*HTilde + Out[DENS];
 
+# ifdef USE_3_VELOCITY
+  Out[MOMX] = Factor0*In[1]*LorentzFactor;
+  Out[MOMY] = Factor0*In[2]*LorentzFactor;
+  Out[MOMZ] = Factor0*In[3]*LorentzFactor;
+# else
   Out[MOMX] = Factor0*In[1];
   Out[MOMY] = Factor0*In[2];
   Out[MOMZ] = Factor0*In[3];
+# endif
 
   real M_Dsqr = VectorDotProduct( Out[MOMX], Out[MOMY], Out[MOMZ] ) / SQR( Out[DENS] );
   real Fun;
@@ -372,7 +397,7 @@ GPU_DEVICE
 void SRHydro_Con2Flux (const int XYZ, real Flux[], const real Con[], const real Pri[], const real Gamma, const real MinTemp )
 {
 //*** we don't need to include passive scalars since they don't have to be rotated ***
-  real ConVar[NCOMP_FLUID], PriVar[NCOMP_FLUID];
+  real ConVar[NCOMP_FLUID], PriVar[NCOMP_FLUID], Lorentz, Vx;
 
   for (int v=0;v<NCOMP_FLUID;v++) ConVar[v] = Con[v];
   for (int v=0;v<NCOMP_FLUID;v++) PriVar[v] = Pri[v];
@@ -380,9 +405,12 @@ void SRHydro_Con2Flux (const int XYZ, real Flux[], const real Con[], const real 
   SRHydro_Rotate3D (ConVar, XYZ, true);
   SRHydro_Rotate3D (PriVar, XYZ, true);
 
-  real Lorentz = SQRT((real)1.0 + VectorDotProduct(PriVar[1], PriVar[2], PriVar[3]));
-
-  real Vx = PriVar[1] / Lorentz;
+# ifdef USE_3_VELOCITY
+  Vx = PriVar[1];
+# else
+  Lorentz = SQRT((real)1.0 + VectorDotProduct(PriVar[1], PriVar[2], PriVar[3]));
+  Vx = PriVar[1] / Lorentz;
+# endif
 
   Flux[0] = ConVar[0] * Vx;
   Flux[1] = FMA( ConVar[1], Vx, PriVar[4] );
@@ -463,64 +491,37 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
 {
    real discriminant;
    real Msqr, M, E_D, M_D;
-   real ConsVar[NCOMP_FLUID];
-   real Pri4Vel[NCOMP_FLUID];
-   real Pri3Vel[NCOMP_FLUID];
 
-
-   for (int i = 0;i < NCOMP_FLUID; i++) { ConsVar[i]=NAN; Pri4Vel[i]=NAN; Pri3Vel[i]=NAN; }
 
 //--------------------------------------------------------------//
 //------------ only check conserved variables-------------------//
 //--------------------------------------------------------------//
-
-    if ( Con != NULL && Pri == NULL){
-      for(int i=0; i< NCOMP_FLUID; i++) ConsVar[i]=Con[i];
-
-
+   if ( Con != NULL && Pri == NULL)
+   {
 // check NaN
-      if (  ConsVar[DENS] != ConsVar[DENS]
-         || ConsVar[MOMX] != ConsVar[MOMX]
-         || ConsVar[MOMY] != ConsVar[MOMY]
-         || ConsVar[MOMZ] != ConsVar[MOMZ]
-         || ConsVar[ENGY] != ConsVar[ENGY]  )                                             goto FAIL;
+      if (  Con[DENS] != Con[DENS]
+         || Con[MOMX] != Con[MOMX]
+         || Con[MOMY] != Con[MOMY]
+         || Con[MOMZ] != Con[MOMZ]
+         || Con[ENGY] != Con[ENGY]  )                                                   goto FAIL;
 
 // check +inf and -inf
-      if (  (real)  TINY_NUMBER >= ConsVar[DENS] || ConsVar[DENS]  >= (real)HUGE_NUMBER
-         || (real) -HUGE_NUMBER >= ConsVar[MOMX] || ConsVar[MOMX]  >= (real)HUGE_NUMBER
-         || (real) -HUGE_NUMBER >= ConsVar[MOMY] || ConsVar[MOMY]  >= (real)HUGE_NUMBER
-         || (real) -HUGE_NUMBER >= ConsVar[MOMZ] || ConsVar[MOMZ]  >= (real)HUGE_NUMBER
-         || (real)  TINY_NUMBER >= ConsVar[ENGY] || ConsVar[ENGY]  >= (real)HUGE_NUMBER )             goto FAIL;
+      if (  (real)  TINY_NUMBER >= Con[DENS] || Con[DENS]  >= (real)HUGE_NUMBER
+         || (real) -HUGE_NUMBER >= Con[MOMX] || Con[MOMX]  >= (real)HUGE_NUMBER
+         || (real) -HUGE_NUMBER >= Con[MOMY] || Con[MOMY]  >= (real)HUGE_NUMBER
+         || (real) -HUGE_NUMBER >= Con[MOMZ] || Con[MOMZ]  >= (real)HUGE_NUMBER
+         || (real)  TINY_NUMBER >= Con[ENGY] || Con[ENGY]  >= (real)HUGE_NUMBER )       goto FAIL;
 
 
-// check energy
-      Msqr = VectorDotProduct( ConsVar[MOMX], ConsVar[MOMY], ConsVar[MOMZ] );
+// check minimum energy
+      Msqr = VectorDotProduct( Con[MOMX], Con[MOMY], Con[MOMZ] );
       M = SQRT( Msqr );
-	  E_D = ConsVar[ENGY] / ConsVar[DENS];
-	  M_D = M / ConsVar[DENS];
+	  E_D = Con[ENGY] / Con[DENS];
+	  M_D = M / Con[DENS];
       discriminant = ( E_D + M_D ) * ( E_D - M_D ) + (real)2.0 * E_D;
-      if ( discriminant <= TINY_NUMBER )                                                      goto FAIL;
 
-//      SRHydro_Con2Pri(ConsVar, Pri4Vel, Gamma, MinTemp);
-//
-//// check NaN
-//      if (  Pri4Vel[DENS] != Pri4Vel[DENS]
-//         || Pri4Vel[MOMX] != Pri4Vel[MOMX]
-//         || Pri4Vel[MOMY] != Pri4Vel[MOMY]
-//         || Pri4Vel[MOMZ] != Pri4Vel[MOMZ]
-//         || Pri4Vel[ENGY] != Pri4Vel[ENGY]  )                                              goto FAIL;
-//
-//// check +inf and -inf
-//      if (  (real)  TINY_NUMBER >= Pri4Vel[DENS] || Pri4Vel[DENS]  >= (real)HUGE_NUMBER
-//         || (real) -HUGE_NUMBER >= Pri4Vel[MOMX] || Pri4Vel[MOMX]  >= (real)HUGE_NUMBER
-//         || (real) -HUGE_NUMBER >= Pri4Vel[MOMY] || Pri4Vel[MOMY]  >= (real)HUGE_NUMBER
-//         || (real) -HUGE_NUMBER >= Pri4Vel[MOMZ] || Pri4Vel[MOMZ]  >= (real)HUGE_NUMBER
-//         || (real)  TINY_NUMBER >= Pri4Vel[ENGY] || Pri4Vel[ENGY]  >= (real)HUGE_NUMBER )              goto FAIL;
-//
-//// check whether 3-velocity is greater or equal to speed of light
-//      SRHydro_4Velto3Vel(Pri4Vel,Pri3Vel);
-//
-//      if (VectorDotProduct( Pri3Vel[1], Pri3Vel[2], Pri3Vel[3] ) >= (real) 1.0)                      goto FAIL;
+      if ( discriminant <= TINY_NUMBER )                                                goto FAIL;
+
 
 // pass all checks 
       return false;
@@ -530,51 +531,27 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
 //------------ only check primitive variables-------------------//
 //--------------------------------------------------------------//
 
-   else if ( Con == NULL && Pri != NULL){
-
-      for(int i=0; i< NCOMP_FLUID; i++) Pri4Vel[i]=Pri[i];
-
-
+   else if ( Con == NULL && Pri != NULL)
+   {
 // check NaN
-      if (  Pri4Vel[DENS] != Pri4Vel[DENS]
-         || Pri4Vel[MOMX] != Pri4Vel[MOMX]
-         || Pri4Vel[MOMY] != Pri4Vel[MOMY]
-         || Pri4Vel[MOMZ] != Pri4Vel[MOMZ]
-         || Pri4Vel[ENGY] != Pri4Vel[ENGY]  )                                       goto FAIL;
+      if (  Pri[DENS] != Pri[DENS]
+         || Pri[MOMX] != Pri[MOMX]
+         || Pri[MOMY] != Pri[MOMY]
+         || Pri[MOMZ] != Pri[MOMZ]
+         || Pri[ENGY] != Pri[ENGY]  )                                                   goto FAIL;
 
 // check +inf and -inf
-      if (  (real)  TINY_NUMBER >= Pri4Vel[DENS] || Pri4Vel[DENS]  >= (real)HUGE_NUMBER
-         || (real) -HUGE_NUMBER >= Pri4Vel[MOMX] || Pri4Vel[MOMX]  >= (real)HUGE_NUMBER
-         || (real) -HUGE_NUMBER >= Pri4Vel[MOMY] || Pri4Vel[MOMY]  >= (real)HUGE_NUMBER
-         || (real) -HUGE_NUMBER >= Pri4Vel[MOMZ] || Pri4Vel[MOMZ]  >= (real)HUGE_NUMBER
-         || (real)  TINY_NUMBER >= Pri4Vel[ENGY] || Pri4Vel[ENGY]  >= (real)HUGE_NUMBER )       goto FAIL;
+      if (  (real)  TINY_NUMBER >= Pri[DENS] || Pri[DENS]  >= (real)HUGE_NUMBER
+         || (real) -HUGE_NUMBER >= Pri[MOMX] || Pri[MOMX]  >= (real)HUGE_NUMBER
+         || (real) -HUGE_NUMBER >= Pri[MOMY] || Pri[MOMY]  >= (real)HUGE_NUMBER
+         || (real) -HUGE_NUMBER >= Pri[MOMZ] || Pri[MOMZ]  >= (real)HUGE_NUMBER
+         || (real)  TINY_NUMBER >= Pri[ENGY] || Pri[ENGY]  >= (real)HUGE_NUMBER )       goto FAIL;
 
 
-      SRHydro_4Velto3Vel(Pri4Vel,Pri3Vel);
-      SRHydro_Pri2Con(Pri4Vel, ConsVar, (real) Gamma);
-
-// check whether 3-velocity is greater or equal to speed of light
-      if (VectorDotProduct( Pri3Vel[1], Pri3Vel[2], Pri3Vel[3] ) >= (real) 1.0)                      goto FAIL;
-   
-// check NaN
-      if (  ConsVar[DENS] != ConsVar[DENS]
-         || ConsVar[MOMX] != ConsVar[MOMX]
-         || ConsVar[MOMY] != ConsVar[MOMY]
-         || ConsVar[MOMZ] != ConsVar[MOMZ]
-         || ConsVar[ENGY] != ConsVar[ENGY]  )                                       goto FAIL;
-
-// check +inf and -inf
-      if (  (real)  TINY_NUMBER >= ConsVar[DENS] || ConsVar[DENS]  >= (real)HUGE_NUMBER
-         || (real) -HUGE_NUMBER >= ConsVar[MOMX] || ConsVar[MOMX]  >= (real)HUGE_NUMBER
-         || (real) -HUGE_NUMBER >= ConsVar[MOMY] || ConsVar[MOMY]  >= (real)HUGE_NUMBER
-         || (real) -HUGE_NUMBER >= ConsVar[MOMZ] || ConsVar[MOMZ]  >= (real)HUGE_NUMBER
-         || (real)  TINY_NUMBER >= ConsVar[ENGY] || ConsVar[ENGY]  >= (real)HUGE_NUMBER )        goto FAIL;
-
-
-// check energy
-      Msqr = VectorDotProduct( ConsVar[MOMX], ConsVar[MOMY], ConsVar[MOMZ] );
-      discriminant = ( E_D + M_D ) * ( E_D - M_D ) + (real)2.0 * E_D;
-      if ( discriminant <= TINY_NUMBER )                                                   goto FAIL;
+#     ifdef USE_3_VELOCITY
+// check whether magnitude of 3-velocity is greater or equal to speed of light
+      if (VectorDotProduct( Pri[1], Pri[2], Pri[3] ) >= (real) 1.0)                     goto FAIL;
+#     endif
 
 // pass all checks 
       return false;
@@ -590,15 +567,18 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
            if ( Con != NULL && Pri == NULL)
            {
               printf( "D=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n",
-                                   ConsVar[DENS], ConsVar[MOMX], ConsVar[MOMY], ConsVar[MOMZ], ConsVar[ENGY]);
+                                   Con[DENS], Con[MOMX], Con[MOMY], Con[MOMZ], Con[ENGY]);
               printf( "E^2+2*E*D-|M|^2=%14.7e\n", discriminant );
            }
            else
            {
-              printf( "n=%14.7e, Ux=%14.7e, Uy=%14.7e, Uz=%14.7e, P=%14.7e\n", 
-                                   Pri4Vel[0], Pri4Vel[1], Pri4Vel[2], Pri4Vel[3], Pri4Vel[4]);
+#             ifdef USE_3_VELOCITY
               printf( "Vx=%14.7e, Vy=%14.7e, Vz=%14.7e, |V|=%14.7e\n",
-                                   Pri3Vel[1], Pri3Vel[2], Pri3Vel[3], SQRT( VectorDotProduct( Pri3Vel[1], Pri3Vel[2], Pri3Vel[3] )));
+                                   Pri[1], Pri[2], Pri[3], SQRT( VectorDotProduct( Pri[1], Pri[2], Pri[3] )));
+#             else
+              printf( "n=%14.7e, Ux=%14.7e, Uy=%14.7e, Uz=%14.7e, P=%14.7e\n", 
+                                   Pri[0], Pri[1], Pri[2], Pri[3], Pri[4]);
+#             endif
            }
  
          }
@@ -714,7 +694,15 @@ real SRHydro_KineticEngy( real Con[], real Pri[], real Lorentz, real Gamma )
 
   h = SpecificEnthalpy( Con, Pri[4]/Pri[0], Gamma );
 
+# ifdef USE_3_VELOCITY
+  real Vsqr = SQR(Pri[1]) + SQR(Pri[2]) + SQR(Pri[3]);
+
+  real LorentzFactor = (real)1.0 / SQRT( (real)1.0 - Vsqr );
+
+  Usqr = Vsqr * SQR(LorentzFactor);
+# else
   Usqr = VectorDotProduct( Pri[1], Pri[2], Pri[3]  );
+# endif
   
   return ( Con[DENS] * h + Pri[4] ) * Usqr / ( Lorentz + (real)1.0 );
 }

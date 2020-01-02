@@ -72,6 +72,15 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
    SRHydro_CheckUnphysical(NULL, PR, Gamma, MinTemp, __FUNCTION__, __LINE__, true);
 #  endif
 
+#  ifdef USE_3_VELOCITY
+   lV1=PL[1];
+   lV2=PL[2];
+   lV3=PL[3];
+
+   rV1=PR[1];
+   rV2=PR[2];
+   rV3=PR[3];
+#  else
 /* 2. Transform 4-velocity to 3-velocity */
    lV1=PL[1]/lFactor;
    lV2=PL[2]/lFactor;
@@ -80,6 +89,7 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
    rV1=PR[1]/rFactor;
    rV2=PR[2]/rFactor;
    rV3=PR[3]/rFactor;
+#  endif
 
 
 

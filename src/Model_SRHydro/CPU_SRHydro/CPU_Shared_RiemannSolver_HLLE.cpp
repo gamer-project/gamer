@@ -65,6 +65,15 @@ void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In
    lFactor = SRHydro_Con2Pri (CL, PL, Gamma, MinTemp);
    rFactor = SRHydro_Con2Pri (CR, PR, Gamma, MinTemp);
 
+#  ifdef USE_3_VELOCITY
+   lV1=PL[1];
+   lV2=PL[2];
+   lV3=PL[3];
+
+   rV1=PR[1];
+   rV2=PR[2];
+   rV3=PR[3];
+#  else
 /* 2. Transform 4-velocity to 3-velocity */
    lV1=PL[1]/lFactor;
    lV2=PL[2]/lFactor;
@@ -73,6 +82,7 @@ void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In
    rV1=PR[1]/rFactor;
    rV2=PR[2]/rFactor;
    rV3=PR[3]/rFactor;
+#  endif
 
 /* 3. Compute the max and min wave speeds used in Mignone */
    cslsq = SoundSpeedSquare( PL[4]/PL[0], Gamma);

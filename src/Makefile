@@ -37,7 +37,7 @@ SIMU_OPTION += -DMODEL=SR_HYDRO
 #SIMU_OPTION += -DMODEL=HYDRO
 
 # enable gravity
-SIMU_OPTION += -DGRAVITY
+#SIMU_OPTION += -DGRAVITY
 
 # enable particles
 # --> must enable GRAVITY
@@ -105,6 +105,8 @@ else ifeq "$(filter -DMODEL=SR_HYDRO, $(SIMU_OPTION))" "-DMODEL=SR_HYDRO"
 # hydrodynamic scheme: RTVD/MHM/MHM_RP/CTU
 # --> must be set when MODEL=HYDRO;
 SIMU_OPTION += -DFLU_SCHEME=MHM
+
+SIMU_OPTION += -DUSE_3_VELOCITY
 
 SIMU_OPTION += -DEOS=APPROXIMATED_GENERAL
 
@@ -187,13 +189,13 @@ SIMU_OPTION += -DMAX_PATCH=2000000
 SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA/TURING
-SIMU_OPTION += -DGPU_ARCH=TURING
+SIMU_OPTION += -DGPU_ARCH=FERMI
 
 # debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
 
 # bitwise reproducibility
-#SIMU_OPTION += -DBITWISE_REPRODUCIBILITY
+SIMU_OPTION += -DBITWISE_REPRODUCIBILITY
 
 # measure the wall-clock time of GAMER
 SIMU_OPTION += -DTIMING
@@ -203,7 +205,7 @@ SIMU_OPTION += -DTIMING
 #SIMU_OPTION += -DTIMING_SOLVER
 
 # double precision
-#SIMU_OPTION += -DFLOAT8
+SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
 # --> must disable LOAD_BALANCE
@@ -363,13 +365,13 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 #CUDA_PATH    := /opt/gpu/cuda/default
 
 ## NTU-hulk (openmpi-intel-qlc)
-#FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
-#MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
-#HDF5_PATH    := /opt/hdf5/default
-#GRACKLE_PATH := 
-#GSL_PATH     := /opt/math/gsl/default
-#LIBYT_PATH   := 
-#CUDA_PATH    := /opt/gpu/cuda/default
+FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
+MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
+HDF5_PATH    := /opt/hdf5/default
+GRACKLE_PATH := 
+GSL_PATH     := /opt/math/gsl/default
+LIBYT_PATH   := 
+CUDA_PATH    := /opt/gpu/cuda/default
 
 # NTHU-fomalhaut (openmpi-gnu)
 #CUDA_PATH    := /usr/local/cuda-10.0
@@ -386,13 +388,13 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 #GPUID_PATH   := /ifs/data/hsiyu/Software/gpudevmgr
 
 # gamer04
-FFTW_PATH    := /opt/fftw/3.1.4-intel-tm
-MPI_PATH     := /opt/openmpi/3.1.4-intel-tm
-HDF5_PATH    := /opt/hdf5
-GRACKLE_PATH := 
-GSL_PATH     := 
-LIBYT_PATH   := 
-CUDA_PATH    := /opt/cuda/default
+#FFTW_PATH    := /opt/fftw/3.1.4-intel-tm
+#MPI_PATH     := /opt/openmpi/3.1.4-intel-tm
+#HDF5_PATH    := /opt/hdf5
+#GRACKLE_PATH := 
+#GSL_PATH     := 
+#LIBYT_PATH   := 
+#CUDA_PATH    := /opt/cuda/default
 #
 ## Calab AMD2
 #FFTW_PATH    := 
