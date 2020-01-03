@@ -54,6 +54,7 @@ const TestProbID_t
    TESTPROB_SRHYDRO_JETS                          =  604,
    TESTPROB_SRHYDRO_WEAK_SCALING_BLAST_WAVE       =  607,
    TESTPROB_SRHYDRO_ACOUSTIC_WAVE                 =  608,
+   TESTPROB_SRHYDRO_PULSAR_WIND                   =  609,
 
    TESTPROB_ELBDM_EXTPOT                          = 1000;
 
