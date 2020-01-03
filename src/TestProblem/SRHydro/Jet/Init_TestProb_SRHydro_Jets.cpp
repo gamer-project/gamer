@@ -811,7 +811,7 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
 
 
 // (true/false): if the target cell (is/is not) within the region to be refined
-bool Flag_Region( const int i, const int j, const int k, const int lv, const int PID )
+static bool Flag_Region( const int i, const int j, const int k, const int lv, const int PID )
 {
    if ( !Jet_Ambient ) return true;
 

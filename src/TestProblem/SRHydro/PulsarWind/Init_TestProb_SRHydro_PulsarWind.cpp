@@ -5,8 +5,8 @@
 
 // problem-specific global variables
 // =======================================================================================
-static double Pulsar_Dens_Bg;           // background mass density
-static double Pulsar_Pres_Bg;           // background pressure
+static double Pulsar_DensBg;           // background mass density
+static double Pulsar_PresBg;           // background pressure
 
 static double Pulsar_WindDensRatio;     // density ratio of center to background
 static double Pulsar_WindVelocity;      //
@@ -18,7 +18,7 @@ static double Pulsar_JetPresRatio;      // pressure ratio of center to backgroun
 
 static double Pulsar_DiskRadius;        // explosion radius
 static double Pulsar_DiskHeight;        // explosion radius
-static double Pulsar_DiskCenter[3];     // explosion center
+static double Pulsar_Center[3];     // explosion center
 // =======================================================================================
 
 
@@ -96,13 +96,13 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",       &VARIABLE_ADDRESS,     DEFAULT,         MIN,                MAX    );
 // ********************************************************************************************************************************
-   ReadPara->Add( "Pulsar_Dens_Bg",        &Pulsar_Dens_Bg,          -1.0,  Eps_double,       NoMax_double    );
-   ReadPara->Add( "Pulsar_Pres_Bg",        &Pulsar_Pres_Bg,          -1.0,  Eps_double,       NoMax_double    );
+   ReadPara->Add( "Pulsar_DensBg",         &Pulsar_DensBg,           -1.0,  Eps_double,       NoMax_double    );
+   ReadPara->Add( "Pulsar_PresBg",         &Pulsar_PresBg,           -1.0,  Eps_double,       NoMax_double    );
    ReadPara->Add( "Pulsar_WindDensRatio",  &Pulsar_WindDensRatio,    -1.0,  Eps_double,       NoMax_double    );
-   ReadPara->Add( "Pulsar_WindVelocity",   &Pulsar_WindVelocity,     -1.0,  Eps_double,       NoMax_double    );
+   ReadPara->Add( "Pulsar_WindVelocity",   &Pulsar_WindVelocity,     -1.0,  NoMin_double,     NoMax_double    );
    ReadPara->Add( "Pulsar_WindPresRatio",  &Pulsar_WindPresRatio,    -1.0,  Eps_double,       NoMax_double    );
    ReadPara->Add( "Pulsar_JetDensRatio",   &Pulsar_JetDensRatio,     -1.0,  Eps_double,       NoMax_double    );
-   ReadPara->Add( "Pulsar_JetVelocity",    &Pulsar_JetVelocity,      -1.0,  Eps_double,       NoMax_double    );
+   ReadPara->Add( "Pulsar_JetVelocity",    &Pulsar_JetVelocity,      -1.0,  NoMin_double,     NoMax_double    );
    ReadPara->Add( "Pulsar_JetPresRatio",   &Pulsar_JetPresRatio,     -1.0,  Eps_double,       NoMax_double    );
    ReadPara->Add( "Pulsar_DiskRadius",     &Pulsar_DiskRadius,       -1.0,  Eps_double,       NoMax_double    );
    ReadPara->Add( "Pulsar_DiskHeight",     &Pulsar_DiskHeight,       -1.0,  Eps_double,       NoMax_double    );
@@ -143,8 +143,8 @@ void SetParameter()
    {
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "  test problem ID                 = %d\n",     TESTPROB_ID );
-      Aux_Message( stdout, "  ambient density                 = %13.7e\n", Pulsar_Dens_Bg );
-      Aux_Message( stdout, "  ambient pressure                = %13.7e\n", Pulsar_Pres_Bg );
+      Aux_Message( stdout, "  ambient density                 = %13.7e\n", Pulsar_DensBg );
+      Aux_Message( stdout, "  ambient pressure                = %13.7e\n", Pulsar_PresBg );
       Aux_Message( stdout, "  wind density/ambient density    = %13.7e\n", Pulsar_WindDensRatio );
       Aux_Message( stdout, "  wind velocity                   = %13.7e\n", Pulsar_WindVelocity );
       Aux_Message( stdout, "  wind pressure/ambient pressure  = %13.7e\n", Pulsar_WindPresRatio );
@@ -201,19 +201,19 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    if ( R < Pulsar_DiskRadius && FABS( Z - 0.5*Pulsar_DiskHeight ) )
    {
-      Prim[0] = Pulsar_WindDensRatio*Pulsar_Dens_Bg;
-      Prim[1] = Pulsar_WindVelocity*COS(Phi);
-      Prim[2] = Pulsar_WindVelocity*SIN(Phi); 
+      Prim[0] = Pulsar_WindDensRatio*Pulsar_DensBg;
+      Prim[1] = Pulsar_WindVelocity*SIN(Phi);
+      Prim[2] = Pulsar_WindVelocity*COS(Phi); 
       Prim[3] = 0.0;
-      Prim[4] = Pulsar_WindPresRatio*Pulsar_Pres_Bg;
+      Prim[4] = Pulsar_WindPresRatio*Pulsar_PresBg;
    }
    else
    {
-      Prim[0] = Pulsar_Dens_Bg;
+      Prim[0] = Pulsar_DensBg;
       Prim[1] = 0.0;
       Prim[2] = 0.0;
       Prim[3] = 0.0;
-      Prim[4] = Pulsar_Pres_Bg;
+      Prim[4] = Pulsar_PresBg;
    }
 
    SRHydro_Pri2Con( Prim, fluid, GAMMA );
@@ -221,6 +221,27 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 } // FUNCTION : SetGridIC
 #endif // #if ( MODEL == SR_HYDRO )
 
+
+// (true/false): if the target cell (is/is not) within the region to be refined
+static bool Flag_Region( const int i, const int j, const int k, const int lv, const int PID )
+{
+   const double dh     = amr->dh[lv];                                                  // grid size
+   const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,              // x,y,z position
+                           amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
+                           amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };
+
+   bool Flag = false;  
+
+   const double Center[3]      = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
+   const double dR[3]          = { Pos[0]-Center[0], Pos[1]-Center[1], Pos[2]-Center[2] };
+   const double R              = sqrt( SQR(dR[0]) + SQR(dR[1]) + SQR(dR[2]) );
+
+
+
+   if ( R < 1.1*Pulsar_DiskRadius )   return true;
+   else                               return false;
+
+} // FUNCTION : Flag_Region
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -251,7 +272,7 @@ void Init_TestProb_SRHydro_PulsarWind()
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr   = SetGridIC;
    Output_User_Ptr          = NULL;
-   Flag_User_Ptr            = NULL;
+   Flag_Region_Ptr          = Flag_Region;
    Mis_GetTimeStep_User_Ptr = NULL;
    Aux_Record_User_Ptr      = NULL;
    BC_User_Ptr              = NULL;
