@@ -232,8 +232,8 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
    for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, " %25.17e", u[v] );
 
 #  if (MODEL == SR_HYDRO)
-   real Pri[NCOMP_FLUID];
-   SRHydro_Con2Pri( u, Pri, GAMMA, MIN_TEMP );
+   real Pri[NCOMP_FLUID], LorentzFactor;
+   LorentzFactor = SRHydro_Con2Pri( u, Pri, GAMMA, MIN_TEMP );
 #  ifdef USE_3_VELOCITY
    SRHydro_3Velto4Vel( Pri, Pri );
 #  endif
@@ -255,7 +255,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 #  warning : WAIT MHD !!!
 #  elif ( MODEL == SR_HYDRO )
 // output Lorentz factor
-   fprintf( File, " %25.17e", SQRT((real)1.0 + SQR(Pri[1])+SQR(Pri[2])+SQR(Pri[3])) );
+   fprintf( File, " %25.17e", LorentzFactor );
 
 
    SRHydro_4Velto3Vel( Pri, Pri );
