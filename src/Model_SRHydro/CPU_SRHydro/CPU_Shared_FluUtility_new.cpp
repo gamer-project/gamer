@@ -166,7 +166,7 @@ real SRHydro_GetHTilde( const real Con[], real Gamma )
  
   void (*FunPtr)( real HTilde, real M_Dsqr, real Constant, real *Fun, real *DiffFun, real Gamma ) = &SRHydro_HTilde_Function;
 
-  NewtonRaphsonSolver(FunPtr, M_Dsqr, -E_D, &HTilde, guess, (real) TINY_NUMBER, (real) EPSILON, Gamma);
+  NewtonRaphsonSolver(FunPtr, M_Dsqr, -Constant, &HTilde, guess, (real) TINY_NUMBER, (real) EPSILON, Gamma);
   
   return HTilde;
 }
@@ -336,7 +336,8 @@ void SRHydro_Pri2Con (const T In[], T Out[], const T Gamma)
 
   SRHydro_HTilde_Function( HTilde, M_Dsqr, (real)0.0, &Fun, NULL, Gamma );
 
-  Out[ENGY] = Out[DENS] * Fun;
+  Out[ENGY]  = ( M_Dsqr + Fun ) / ((real)1.0 + SQRT( (real)1.0 + M_Dsqr + Fun ));
+  Out[ENGY] *= Out[DENS];
 
 
 }				// FUNCTION : SRHydro_Pri2Con
@@ -635,7 +636,8 @@ real SoundSpeedSquare( real Temp, real Gamma )
   Cs_sq = A/B;
 
 # elif ( EOS == CONSTANT_GAMMA )
-  Cs_sq = Gamma * Temp; /* Mignone Eq 4 */
+  real h = (real)1.0 + Gamma * Temp / (Gamma - (real)1.0);
+  Cs_sq = Gamma * Temp / h; /* Mignone Eq 4 */
 
 # endif
   
@@ -771,37 +773,35 @@ void SRHydro_HTilde_Function (real HTilde, real M_Dsqr, real Constant, real *Fun
   real Temp, DiffTemp;
 
 
-# if ( EOS == APPROXIMATED_GENERAL )
-  SRHydro_HTilde2Temperature ( HTilde, &Temp, &DiffTemp, Gamma );
-
-  real H =  HTilde + (real)1.0;
-  real Hsqra  = SQR(H);
-
-  real AA = M_Dsqr/Hsqra;
-
-  real BB = SQRT( (real)1.0 + AA );
-
-  real CC = (real)1.0 + BB;
-
-  if ( Fun != NULL )
-  
-  *Fun = HTilde * BB + AA / CC - Temp / BB + Constant;
-  
-  if ( DiffFun != NULL )
-  {
-    real Hcube  = Hsqra * H;
-    real H5     = Hcube * Hsqra;
-    
-    *DiffFun = SQR(M_Dsqr) / H5 / BB / SQR(CC) 
-             - M_Dsqr * HTilde / Hcube / BB
-             - (real)2.0 * M_Dsqr / Hcube / CC 
-             + BB 
-             - DiffTemp / BB 
-             - Temp * M_Dsqr / ( Hcube * CUBE(BB) );
-  }
-
-
-# elif ( EOS == CONSTANT_GAMMA )
+//  SRHydro_HTilde2Temperature ( HTilde, &Temp, &DiffTemp, Gamma );
+//
+//  real H =  HTilde + (real)1.0;
+//  real Hsqra  = SQR(H);
+//
+//  real AA = M_Dsqr/Hsqra;
+//
+//  real BB = SQRT( (real)1.0 + AA );
+//
+//  real CC = (real)1.0 + BB;
+//
+//  if ( Fun != NULL )
+//  
+//  *Fun = HTilde * BB + AA / CC - Temp / BB + Constant;
+//  
+//  if ( DiffFun != NULL )
+//  {
+//    real Hcube  = Hsqra * H;
+//    real H5     = Hcube * Hsqra;
+//    
+//    *DiffFun = SQR(M_Dsqr) / H5 / BB / SQR(CC) 
+//             - M_Dsqr * HTilde / Hcube / BB
+//             - (real)2.0 * M_Dsqr / Hcube / CC 
+//             + BB 
+//             - DiffTemp / BB 
+//             - Temp * M_Dsqr / ( Hcube * CUBE(BB) );
+//  }
+//
+//
   SRHydro_HTilde2Temperature ( HTilde, &Temp, &DiffTemp, Gamma  );
 
 
@@ -818,9 +818,6 @@ void SRHydro_HTilde_Function (real HTilde, real M_Dsqr, real Constant, real *Fun
   *DiffFun = (real)2.0*H - (real)2.0*Temp - (real)2.0*H*DiffTemp +
 		  ( (real)2.0*Temp*DiffTemp*H*H - (real)2.0*Temp*Temp*H ) / SQR( Factor0 );
 
-# else
-# error: unsupported EoS!
-# endif // #if ( EOS == APPROXIMATED_GENERAL )
 }
 
 
