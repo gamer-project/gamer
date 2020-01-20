@@ -8,24 +8,15 @@
 static double Pulsar_DensBg;           // background mass density
 static double Pulsar_PresBg;           // background pressure
 
-static double Pulsar_WindDens;     // density ratio of center to background
-static double Pulsar_WindVelocity;      //
-static double Pulsar_WindPres;     // density ratio of center to background
+static double Pulsar_WindDens;         // density ratio of center to background
+static double Pulsar_WindVelocity;     //
+static double Pulsar_WindPres;         // density ratio of center to background
 
 
-static double Pulsar_JetDens;      // pressure ratio of center to background
-static double Pulsar_JetVelocity;       //
-static double Pulsar_JetPres;      // pressure ratio of center to background
+static double Pulsar_DiskRadius;       // explosion radius
+static double Pulsar_DiskHeight;       // explosion radius
 
-static double Pulsar_StarRadius;        // explosion radius
-
-static double Pulsar_WindThetaMax;
-static double Pulsar_WindThetaMin;
-
-static double Pulsar_JetThetaMax;
-static double Pulsar_JetThetaMin;
-
-static double Pulsar_Center[3];     // explosion center
+static double Pulsar_Center[3];        // explosion center
 // =======================================================================================
 
 
@@ -111,14 +102,8 @@ void SetParameter()
    ReadPara->Add( "Pulsar_WindDens",       &Pulsar_WindDens,         -1.0,  Eps_double,       NoMax_double    );
    ReadPara->Add( "Pulsar_WindVelocity",   &Pulsar_WindVelocity,     -1.0,  NoMin_double,     NoMax_double    );
    ReadPara->Add( "Pulsar_WindPres",       &Pulsar_WindPres,         -1.0,  Eps_double,       NoMax_double    );
-   ReadPara->Add( "Pulsar_JetDens",        &Pulsar_JetDens,          -1.0,  Eps_double,       NoMax_double    );
-   ReadPara->Add( "Pulsar_JetVelocity",    &Pulsar_JetVelocity,      -1.0,  NoMin_double,     NoMax_double    );
-   ReadPara->Add( "Pulsar_JetPres",        &Pulsar_JetPres,          -1.0,  Eps_double,       NoMax_double    );
-   ReadPara->Add( "Pulsar_StarRadius",     &Pulsar_StarRadius,       -1.0,  Eps_double,       NoMax_double    );
-   ReadPara->Add( "Pulsar_WindThetaMax",   &Pulsar_WindThetaMax,     -1.0,  NoMin_double,     NoMax_double    );
-   ReadPara->Add( "Pulsar_WindThetaMin",   &Pulsar_WindThetaMin,     -1.0,  NoMin_double,     NoMax_double    );
-   ReadPara->Add( "Pulsar_JetThetaMax",    &Pulsar_JetThetaMax,      -1.0,  NoMin_double,     NoMax_double    );
-   ReadPara->Add( "Pulsar_JetThetaMin",    &Pulsar_JetThetaMin,      -1.0,  NoMin_double,     NoMax_double    );
+   ReadPara->Add( "Pulsar_DiskRadius",     &Pulsar_DiskRadius,       -1.0,  Eps_double,       NoMax_double    );
+   ReadPara->Add( "Pulsar_DiskHeight",     &Pulsar_DiskHeight,       -1.0,  Eps_double,       NoMax_double    );
    ReadPara->Add( "Pulsar_Center_X",       &Pulsar_Center[0],        -1.0,  NoMin_double,     amr->BoxSize[0] );
    ReadPara->Add( "Pulsar_Center_Y",       &Pulsar_Center[1],        -1.0,  NoMin_double,     amr->BoxSize[1] );
    ReadPara->Add( "Pulsar_Center_Z",       &Pulsar_Center[2],        -1.0,  NoMin_double,     amr->BoxSize[2] );
@@ -161,14 +146,8 @@ void SetParameter()
       Aux_Message( stdout, "  wind density                    = %13.7e\n", Pulsar_WindDens );
       Aux_Message( stdout, "  wind velocity                   = %13.7e\n", Pulsar_WindVelocity );
       Aux_Message( stdout, "  wind pressure                   = %13.7e\n", Pulsar_WindPres );
-      Aux_Message( stdout, "  jet density                     = %13.7e\n", Pulsar_JetDens );
-      Aux_Message( stdout, "  jet velocity                    = %13.7e\n", Pulsar_JetVelocity );
-      Aux_Message( stdout, "  jet pressure                    = %13.7e\n", Pulsar_JetPres );
-      Aux_Message( stdout, "  star radius                     = %13.7e\n", Pulsar_StarRadius );
-      Aux_Message( stdout, "  max theta for wind              = %13.7e\n", Pulsar_WindThetaMax );
-      Aux_Message( stdout, "  min theta for wind              = %13.7e\n", Pulsar_WindThetaMin );
-      Aux_Message( stdout, "  max theta for jet               = %13.7e\n", Pulsar_JetThetaMax );
-      Aux_Message( stdout, "  min theta for jet               = %13.7e\n", Pulsar_JetThetaMin );
+      Aux_Message( stdout, "  disk radius                     = %13.7e\n", Pulsar_DiskRadius );
+      Aux_Message( stdout, "  disk height                     = %13.7e\n", Pulsar_DiskHeight );
       Aux_Message( stdout, "                                  = (%13.7e, %13.7e, %13.7e)\n",
                                                                Pulsar_Center[0], Pulsar_Center[1], Pulsar_Center[2] );
       Aux_Message( stdout, "=============================================================================\n" );
@@ -242,66 +221,24 @@ bool Flu_ResetByUser_PulsarWind( real fluid[], const double x, const double y, c
    const double Y  = y - Pulsar_Center[1];
    const double Z  = z - Pulsar_Center[2];
 
-   // transform to spherical coordinate 
-   //const double r     = sqrt( X*X + Y*Y + Z*Z );
-   //const double theta = atan2( sqrt( X*X + Y*Y ), Z);
-   //const double phi   = atan2( Y, X );
 
    // transform to cylindrical coordinate 
-   const double R     = sqrt( X*X + Y*Y );
+   const double R   = sqrt( X*X + Y*Y );
    const double Phi = atan2( Y, X );
  
-   //double Smooth;
 
    int Flag = 0;
 
-
-   //Pulsar_WindThetaMax = 95.0*M_PI/180.0;
-   //Pulsar_WindThetaMin = 85.0*M_PI/180.0;
-
-   double PowerIdx = 1.0;
-
-   // altitude range (theta)
-   //bool WindAltitude =  ( Pulsar_WindThetaMin <= theta ) && ( theta <= Pulsar_WindThetaMax );
-   //bool JetAltitude  =  ( Pulsar_JetThetaMin  <= theta ) && ( theta <= Pulsar_JetThetaMax  );
-
-   //JetAltitude |= ( 0.5*M_PI - Pulsar_JetThetaMax  <= theta ) && ( theta <= 0.5*M_PI - Pulsar_JetThetaMin  );
+   double OpeningAngle = 3.0;
 
 
-   //if ( r <= Pulsar_StarRadius && WindAltitude )
-   if ( R <= Pulsar_StarRadius && fabs( Z ) <= 0.1  )
+   if ( R <= Pulsar_DiskRadius && fabs( Z ) <= 0.5*Pulsar_DiskHeight  && fabs(Phi - 45.0*M_PI/180.0) < 0.5*OpeningAngle*M_PI/180.0  )
    {
-	  //Smooth = sin(0.5*M_PI*r / Pulsar_StarRadius );
-
-//      int x_sign = SIGN( sin(theta)*cos(phi) );
-//      int y_sign = SIGN( sin(theta)*sin(phi) );
-//      int z_sign = SIGN( cos(theta)          );
-    
       Prim[0] = Pulsar_WindDens;
-//      Prim[1] = Pulsar_WindVelocity*sin(theta)*cos(phi);
-//      Prim[2] = Pulsar_WindVelocity*sin(theta)*sin(phi); 
-//      Prim[3] = Pulsar_WindVelocity*cos(theta);
-      Prim[4] = Pulsar_WindPres;
-
-
-//      Prim[1] = Pulsar_WindVelocity*cos(Phi);
-//      Prim[2] = Pulsar_WindVelocity*sin(Phi); 
-
-
-      double TimeStart = 20.0;
-
-	  if ( Time > TimeStart )
-	  {
-        Prim[1] = (10.0 + pow( Time-TimeStart, PowerIdx ))*cos(Phi);
-        Prim[2] = (10.0 + pow( Time-TimeStart, PowerIdx ))*sin(Phi); 
-	  }
-	  else
-	  {
-	    Prim[1] = 10.0*cos(Phi);
-        Prim[2] = 10.0*sin(Phi);
-	  }
-
+	  Prim[1] = Pulsar_WindVelocity*cos(Phi);
+      Prim[2] = Pulsar_WindVelocity*sin(Phi);
       Prim[3] = 0.0;
+      Prim[4] = Pulsar_WindPres;
 
       SRHydro_Pri2Con( Prim, Cons, GAMMA );
 
@@ -313,27 +250,6 @@ bool Flu_ResetByUser_PulsarWind( real fluid[], const double x, const double y, c
 
 	  Flag += 1;
    }
-   //else if ( R < Pulsar_JetRadius && fabs( Z ) < 0.5*Pulsar_JetHeight  )
-   //{
-   //   //Smooth = sin( M_PI*Z / Pulsar_JetHeight );
-   //   Z > 0.0 ? Smooth = 1.0 : Smooth = -1.0;
-
-   //   Prim[0] = Pulsar_JetDens;
-   //   Prim[1] = 0.0;
-   //   Prim[2] = 0.0;
-   //   Prim[3] = Pulsar_JetVelocity*Smooth;
-   //   Prim[4] = Pulsar_JetPres;
-
-   //   SRHydro_Pri2Con( Prim, Cons, GAMMA );
-
-   //   fluid[DENS] = (real)Cons[DENS];
-   //   fluid[MOMX] = (real)Cons[MOMX];
-   //   fluid[MOMY] = (real)Cons[MOMY];
-   //   fluid[MOMZ] = (real)Cons[MOMZ];
-   //   fluid[ENGY] = (real)Cons[ENGY];
-
-   //   Flag += 1;
-   //}
 
    if ( Flag > 0 ) return true;
    else            return false;
@@ -356,7 +272,7 @@ static bool Flag_Region( const int i, const int j, const int k, const int lv, co
    const double dR[3]          = { Pos[0]-Center[0], Pos[1]-Center[1], Pos[2]-Center[2] };
    const double R              = sqrt( SQR(dR[0]) + SQR(dR[1]) + SQR(dR[2]) );
 
-   if ( R > 1.1*Pulsar_StarRadius  )   return false;
+   if ( R > 1.1*Pulsar_DiskRadius  )   return false;
 
 
 
@@ -385,8 +301,7 @@ static bool Flag_User( const int i, const int j, const int k, const int lv, cons
    const double R              = sqrt( SQR(dR[0]) + SQR(dR[1]) + SQR(dR[2]) );
 
 
-   //if ( R < sqrt(3.0)*0.5*dh*1.1 ) return true;
-   if ( R < 1.1 ) return true;
+   if ( Pos[0] < 0.5 && Pos[1] < 0.5 && Pos[2] < 0.5 ) return true;
 
 } // FUNCTION : Flag_User
 

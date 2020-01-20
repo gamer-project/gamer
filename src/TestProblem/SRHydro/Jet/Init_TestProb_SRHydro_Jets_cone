@@ -41,8 +41,6 @@ static double   Jet_SrcVel;                                     // jet 4-velocit
 static double   Jet_SrcDens;                                    // jet density
 static double   Jet_SrcTemp;                                    // jet temperature
 
-static double   Jet_Vec[3];                                     // jet orientation vector (x,y,z) (NOT necessary to be a unit vector)
-static double   Jet_CenOffset[3];                               // jet central coordinates offset
 
 // =======================================================================================
 //        G       A       C
@@ -59,17 +57,16 @@ static double   Jet_CenOffset[3];                               // jet central c
 // =======================================================================================
 //
 // jet geometry parameters
-static double   Jet_BO;
-static double   Jet_OpeningAngle;
-static double   Jet_AO;
+static double   Jet_Radius;
+static double   Jet_HalfHeight;                                 // OA
+static double   Jet_OpeningAngle;                               // OB
+static double   Jet_CenOffset[3];                               // jet central coordinates offset
 static double   Jet_Cen[3];                                     // jet central coordinates
 static double   Jet_MaxDis;                                     // maximum distance between the cylinder-shape jet source and the jet center
 
 // precession parameters
 static double   Jet_Angular_Velocity;                           // precession angular velocity (degree per code_time)
 static double   Jet_PrecessionAngle;                            // precession angle in degree
-static    int   Jet_NumShell;                                   // number of shells
-static double   BH_Radius;                                      // radius of black hole
 static double   Jet_PrecessionAxis[3];                          // cone orientation vector (x,y,z) (NOT necessary to be a unit vector)
 
 // time-depent source
@@ -163,23 +160,33 @@ void SetParameter()
 // ********************************************************************************************************************************
 
 // load options
+   ReadPara->Add( "Jet_Exist",               &Jet_Exist,              false,          Useless_bool,   Useless_bool    );
    ReadPara->Add( "Jet_Ambient",             &Jet_Ambient,            false,          Useless_bool,   Useless_bool    );
    ReadPara->Add( "Jet_DiffPrecession",      &Jet_DiffPrecession,     false,          Useless_bool,   Useless_bool    );
    ReadPara->Add( "Jet_Precession",          &Jet_Precession,         false,          Useless_bool,   Useless_bool    );
    ReadPara->Add( "Jet_TimeDependentSrc",    &Jet_TimeDependentSrc,   false,          Useless_bool,   Useless_bool    );
-   ReadPara->Add( "Jet_Exist",               &Jet_Exist,              false,          Useless_bool,   Useless_bool    );
 
-// load general parameters
+// load jet fluid parameters
+   ReadPara->Add( "Jet_SrcVel",              &Jet_SrcVel    ,          -1.0,          NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_SrcDens",             &Jet_SrcDens   ,          -1.0,          Eps_double,     NoMax_double    );
+   ReadPara->Add( "Jet_SrcTemp",             &Jet_SrcTemp   ,          -1.0,          Eps_double,     NoMax_double    );
    ReadPara->Add( "Jet_ParticleMassSrc",     &Jet_ParticleMassSrc,     -1.0,          Eps_double,     NoMax_double    );
    ReadPara->Add( "Jet_ParticleMassAmbient", &Jet_ParticleMassAmbient, -1.0,          Eps_double,     NoMax_double    );
- 
 
-// load hydrostatic equilibrium parameters
-   ReadPara->Add( "Jet_HSE_Radius",          &Jet_HSE_Radius,          -1.0,          Eps_double,     NoMax_double    );
-   ReadPara->Add( "Jet_HSE_Dx",              &Jet_HSE_Dx,               0.0,          NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Jet_HSE_Dy",              &Jet_HSE_Dy,               0.0,          NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Jet_HSE_Dz",              &Jet_HSE_Dz,               0.0,          NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Jet_HSE_BgTable_File",     Jet_HSE_BgTable_File,     Useless_str,  Useless_str,    Useless_str     );
+// load source geometry parameters
+   ReadPara->Add( "Jet_Radius",              &Jet_Radius,              -1.0,          Eps_double,     NoMax_double    );
+   ReadPara->Add( "Jet_HalfHeight",          &Jet_HalfHeight,          -1.0,          Eps_double,     NoMax_double    );
+   ReadPara->Add( "Jet_OpeningAngle",        &Jet_OpeningAngle,        -1.0,                   0.0,           90.0    );
+   ReadPara->Add( "Jet_CenOffset_x",         &Jet_CenOffset [0],        NoDef_double, NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_CenOffset_y",         &Jet_CenOffset [1],        NoDef_double, NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_CenOffset_z",         &Jet_CenOffset [2],        NoDef_double, NoMin_double,   NoMax_double    );
+
+// load precission parameters
+   ReadPara->Add( "Jet_Angular_Velocity",    &Jet_Angular_Velocity,     NoDef_double,          0.0,   NoMax_double    );
+   ReadPara->Add( "Jet_PrecessionAngle",     &Jet_PrecessionAngle,      NoDef_double, NoMin_double,           90.0    );
+   ReadPara->Add( "Jet_PrecessionAxis_x",    &Jet_PrecessionAxis[0],    NoDef_double, NoMin_double,   NoMax_double    );               
+   ReadPara->Add( "Jet_PrecessionAxis_y",    &Jet_PrecessionAxis[1],    NoDef_double, NoMin_double,   NoMax_double    );  
+   ReadPara->Add( "Jet_PrecessionAxis_z",    &Jet_PrecessionAxis[2],    NoDef_double, NoMin_double,   NoMax_double    );  
 
 // load background parameters
    ReadPara->Add( "Jet_UniformDens",         &Jet_UniformDens,         -1.0,          Eps_double,     NoMax_double    );
@@ -188,31 +195,12 @@ void SetParameter()
    ReadPara->Add( "Jet_UniformVel_z",        &Jet_UniformVel[2],        0.0,          NoMin_double,   NoMax_double    );
    ReadPara->Add( "Jet_UniformTemp",         &Jet_UniformTemp,         -1.0,          Eps_double,     NoMax_double    );
 
-// load jet fluid parameters
-   ReadPara->Add( "Jet_SrcVel",              &Jet_SrcVel    ,          -1.0,          NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Jet_SrcDens",             &Jet_SrcDens   ,          -1.0,          Eps_double,     NoMax_double    );
-   ReadPara->Add( "Jet_SrcTemp",             &Jet_SrcTemp   ,          -1.0,          Eps_double,     NoMax_double    );
-
-// load source geometry parameters
-   ReadPara->Add( "Jet_BO",                  &Jet_BO,                   -1.0,           Eps_double,   NoMax_double    );
-   ReadPara->Add( "Jet_AO",                  &Jet_AO,                   -1.0,           Eps_double,   NoMax_double    );
-   ReadPara->Add( "Jet_OpeningAngle",        &Jet_OpeningAngle,         -1.0,         NoMin_double,           90.0    );
-   ReadPara->Add( "Jet_Vec_x",               &Jet_Vec       [0],        NoDef_double, NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Jet_Vec_y",               &Jet_Vec       [1],        NoDef_double, NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Jet_Vec_z",               &Jet_Vec       [2],        NoDef_double, NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Jet_CenOffset_x",         &Jet_CenOffset [0],        NoDef_double, NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Jet_CenOffset_y",         &Jet_CenOffset [1],        NoDef_double, NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Jet_CenOffset_z",         &Jet_CenOffset [2],        NoDef_double, NoMin_double,   NoMax_double    );
-
-// load precission parameters
-   ReadPara->Add( "Jet_Angular_Velocity",    &Jet_Angular_Velocity,     NoDef_double, NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Jet_PrecessionAngle",     &Jet_PrecessionAngle,      NoDef_double, NoMin_double,           90.0    );
-   ReadPara->Add( "Jet_NumShell",            &Jet_NumShell,             1           , NoMin_int,      NoMax_int       );
-   ReadPara->Add( "BH_Radius",               &BH_Radius,                NoDef_double, Eps_double,     NoMax_double    );
-   ReadPara->Add( "Jet_PrecessionAxis_x",    &Jet_PrecessionAxis[0],    NoDef_double, NoMin_double,   NoMax_double    );               
-   ReadPara->Add( "Jet_PrecessionAxis_y",    &Jet_PrecessionAxis[1],    NoDef_double, NoMin_double,   NoMax_double    );  
-   ReadPara->Add( "Jet_PrecessionAxis_z",    &Jet_PrecessionAxis[2],    NoDef_double, NoMin_double,   NoMax_double    );  
-
+// load hydrostatic equilibrium parameters
+   ReadPara->Add( "Jet_HSE_Radius",          &Jet_HSE_Radius,          -1.0,          Eps_double,     NoMax_double    );
+   ReadPara->Add( "Jet_HSE_Dx",              &Jet_HSE_Dx,               0.0,          NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_HSE_Dy",              &Jet_HSE_Dy,               0.0,          NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_HSE_Dz",              &Jet_HSE_Dz,               0.0,          NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_HSE_BgTable_File",     Jet_HSE_BgTable_File,     Useless_str,  Useless_str,    Useless_str     );
 
 // load time-dependent source varibles
    ReadPara->Add( "Jet_BurstStartTime",      &Jet_BurstStartTime,      -1.0,          NoMin_double,   NoMax_double    );
@@ -303,8 +291,6 @@ void SetParameter()
 
    if ( Jet_Precession )       // uniform precession
    {
-     Jet_NumShell = 1;
-     BH_Radius    = NAN;
    }
    else if ( Jet_DiffPrecession )  // differential precession
    {
@@ -312,8 +298,6 @@ void SetParameter()
    }
    else if ( !Jet_Precession && !Jet_DiffPrecession ) // no precession
    {
-    // Jet_NumShell = 1;
-    // BH_Radius    = NAN;
     // Jet_Angular_Velocity = 0.0;
     // Jet_PrecessionAngle   = 0.0;
     // Jet_PrecessionAxis[0];
@@ -332,11 +316,11 @@ void SetParameter()
 
 // (1-2) convert to code unit
    Jet_SrcVel               *= Const_c   / UNIT_V;
-   Jet_SrcTemp              *= Const_keV / ( Jet_ParticleMassSrc * SQR(Const_c) );
+   Jet_SrcTemp              *= Const_GeV / ( Jet_ParticleMassSrc * SQR(Const_c) );
    Jet_SrcDens              *= 1.0       / UNIT_D;
 
-   Jet_BO                   *= Const_kpc / UNIT_L;
-   Jet_AO                   *= Const_kpc / UNIT_L;
+   Jet_Radius               *= Const_kpc / UNIT_L;
+   Jet_HalfHeight           *= Const_kpc / UNIT_L;
    Jet_OpeningAngle         *= M_PI / 180.0;
    Jet_PrecessionAngle      *= M_PI / 180.0;
 
@@ -354,13 +338,13 @@ void SetParameter()
    else
    {
      Jet_UniformDens        *= 1.0       / UNIT_D;
-     Jet_UniformTemp        *= Const_keV / ( Jet_ParticleMassAmbient * SQR(Const_c) );
+     Jet_UniformTemp        *= Const_GeV / ( Jet_ParticleMassAmbient * SQR(Const_c) );
      Jet_UniformVel[0]      *= Const_c   / UNIT_V;
      Jet_UniformVel[1]      *= Const_c   / UNIT_V;
      Jet_UniformVel[2]      *= Const_c   / UNIT_V;
    }
 
-   Jet_Angular_Velocity   *= UNIT_T / UNIT_T;  // the unit of Jet_Angular_Velocity is UNIT_T
+   Jet_Angular_Velocity   *= 1.0;    // the unit of Jet_Angular_Velocity is UNIT_T
 
    if ( Jet_Precession ) // uniform precession
    {
@@ -368,7 +352,6 @@ void SetParameter()
 
    if ( Jet_DiffPrecession ) // differential precession
    {
-     BH_Radius              *= Const_kpc / UNIT_L;
    }
 
    if ( !Jet_Precession && !Jet_DiffPrecession ) // no precession
@@ -381,14 +364,14 @@ void SetParameter()
      Jet_BurstEndTime       *= 1e3*Const_yr / UNIT_T;
      Jet_Burst4Vel          *= Const_c      / UNIT_V;
      Jet_BurstDens          *= 1.0          / UNIT_D;
-     Jet_BurstTemp          *= Const_keV    / ( Jet_ParticleMassSrc * SQR(Const_c) );
+     Jet_BurstTemp          *= Const_GeV    / ( Jet_ParticleMassSrc * SQR(Const_c) );
    }
 
 // (2) set the problem-specific derived parameters
    double SecAngle = 1.0 / cos(0.5*Jet_OpeningAngle);
    double TanAngle = sin(0.5*Jet_OpeningAngle) * SecAngle;
 
-   Jet_MaxDis  = sqrt( SQR( Jet_BO ) + SQR( Jet_AO * SecAngle ) + 2.0 * Jet_BO * Jet_AO * TanAngle );
+   Jet_MaxDis  = sqrt( SQR( Jet_Radius ) + SQR( Jet_HalfHeight * SecAngle ) + 2.0 * Jet_Radius * Jet_HalfHeight * TanAngle );
 
    for (int d=0; d<3; d++)    Jet_Cen[d] = 0.5*amr->BoxSize[d] + Jet_CenOffset[d];
 
@@ -418,7 +401,8 @@ void SetParameter()
       {
          Table_R[b] *= Const_kpc / UNIT_L;
          Table_D[b] *= 1.0       / UNIT_D;
-         Table_T[b] *= Const_keV / ( Jet_ParticleMassAmbient * SQR(Const_c) );
+         Table_T[b] *= 1e-3; // keV -> GeV
+         Table_T[b] *= Const_GeV / ( Jet_ParticleMassAmbient * SQR(Const_c) );
       }
    } // if ( Jet_Ambient  &&  OPT__INIT != INIT_BY_RESTART )
 
@@ -453,14 +437,16 @@ void SetParameter()
      Aux_Message( stdout, "  Jet_ParticleMassAmbient = %14.7e g\n",          Jet_ParticleMassAmbient                         );
      Aux_Message( stdout, "  Jet_SrcVel              = %14.7e c\n",          Jet_SrcVel                                      );
      Aux_Message( stdout, "  Jet_SrcDens             = %14.7e g/cm^3\n",     Jet_SrcDens*UNIT_D                              );
-     Aux_Message( stdout, "  Jet_SrcTemp             = %14.7e keV\n",        Jet_SrcTemp*Jet_ParticleMassSrc*SQR(Const_c)/Const_keV     );
+     Aux_Message( stdout, "  Jet_SrcTemp             = %14.7e GeV\n",        Jet_SrcTemp*Jet_ParticleMassSrc*SQR(Const_c)/Const_GeV     );
      Aux_Message( stdout, "  Jet_NumDensSrc          = %14.7e per cc\n",     Jet_SrcDens*UNIT_D/Jet_ParticleMassSrc          );
      Aux_Message( stdout, "  Jet_CenOffset[x]        = %14.7e kpc\n",        Jet_CenOffset [0]*UNIT_L/Const_kpc              );
      Aux_Message( stdout, "  Jet_CenOffset[y]        = %14.7e kpc\n",        Jet_CenOffset [1]*UNIT_L/Const_kpc              );
      Aux_Message( stdout, "  Jet_CenOffset[z]        = %14.7e kpc\n",        Jet_CenOffset [2]*UNIT_L/Const_kpc              );
-     Aux_Message( stdout, "  Jet_Angular_Velocity    = %14.7e degree/kyr\n", Jet_Angular_Velocity* UNIT_T / UNIT_T           );
-     Aux_Message( stdout, "  Jet_PrecessionAngle               = %14.7e\n",  Jet_PrecessionAngle                             );
-     Aux_Message( stdout, "  Jet_NumShell            = %d\n",                Jet_NumShell                                    );
+     Aux_Message( stdout, "  Jet_Angular_Velocity    = %14.7e degree/kyr\n", Jet_Angular_Velocity                            );
+     Aux_Message( stdout, "  Jet_PrecessionAngle     = %14.7e degree\n",     Jet_PrecessionAngle*180.0/M_PI                  );
+     Aux_Message( stdout, "  Jet_OpeningAngle        = %14.7e degree\n",     Jet_OpeningAngle*180.0/M_PI                     );
+     Aux_Message( stdout, "  Jet_Radius              = %14.7e kpc\n",        Jet_Radius*UNIT_L/Const_kpc                     );
+     Aux_Message( stdout, "  Jet_HalfHeight          = %14.7e kpc\n",        Jet_HalfHeight*UNIT_L/Const_kpc                 );
    }
 
    if ( Jet_Ambient && MPI_Rank == 0 ) 
@@ -474,7 +460,7 @@ void SetParameter()
    else if ( !Jet_Ambient && MPI_Rank == 0 )
    {
      Aux_Message( stdout, "  Jet_UniformDens         = %14.7e g/cm^3\n",     Jet_UniformDens*UNIT_D                          );
-     Aux_Message( stdout, "  Jet_UniformTemp         = %14.7e keV\n",        Jet_UniformTemp*Jet_ParticleMassAmbient*SQR(Const_c)/Const_keV );
+     Aux_Message( stdout, "  Jet_UniformTemp         = %14.7e GeV\n",        Jet_UniformTemp*Jet_ParticleMassAmbient*SQR(Const_c)/Const_GeV );
      Aux_Message( stdout, "  Jet_UniformVel[x]       = %14.7e c\n",          Jet_UniformVel[0]                               );
      Aux_Message( stdout, "  Jet_UniformVel[y]       = %14.7e c\n",          Jet_UniformVel[1]                               );
      Aux_Message( stdout, "  Jet_UniformVel[z]       = %14.7e c\n",          Jet_UniformVel[2]                               );
@@ -490,15 +476,8 @@ void SetParameter()
 
    if ( Jet_DiffPrecession && MPI_Rank == 0 )
    {
-     Aux_Message( stdout, "  BH_Radius               = %14.7e kpc\n",        BH_Radius*UNIT_L/Const_kpc                      );
    }
 
-   if ( !Jet_Precession && !Jet_DiffPrecession && MPI_Rank == 0 )
-   {
-     Aux_Message( stdout, "  Jet_Vec[x]              = %14.7e\n",            Jet_Vec[0]                                      );
-     Aux_Message( stdout, "  Jet_Vec[y]              = %14.7e\n",            Jet_Vec[1]                                      );
-     Aux_Message( stdout, "  Jet_Vec[z]              = %14.7e\n",            Jet_Vec[2]                                      );
-   }
 
    if ( Jet_TimeDependentSrc && MPI_Rank == 0 )
    {
@@ -506,7 +485,7 @@ void SetParameter()
      Aux_Message( stdout, "  Jet_BurstEndTime        = %14.7e kyr \n",       Jet_BurstEndTime*UNIT_T/(1e3*Const_yr)          );
      Aux_Message( stdout, "  Jet_Burst4Vel           = %14.7e c \n",         Jet_Burst4Vel                                   );
      Aux_Message( stdout, "  Jet_BurstDens           = %14.7e g/cm^3\n",     Jet_BurstDens*UNIT_D                            );
-     Aux_Message( stdout, "  Jet_BurstTemp           = %14.7e keV\n",        Jet_BurstTemp*Jet_ParticleMassSrc*SQR(Const_c)/Const_keV   );
+     Aux_Message( stdout, "  Jet_BurstTemp           = %14.7e GeV\n",        Jet_BurstTemp*Jet_ParticleMassSrc*SQR(Const_c)/Const_GeV   );
      Aux_Message( stdout, "  Flag_Burst4Vel          = %d\n",                Flag_Burst4Vel                                  );
      Aux_Message( stdout, "  Flag_BurstDens          = %d\n",                Flag_BurstDens                                  );
      Aux_Message( stdout, "  Flag_BurstTemp          = %d\n",                Flag_BurstTemp                                  );
@@ -736,11 +715,11 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
   // rotate coordinate to align z-axis with rotating symmetric axis
   CartesianRotate(xp, Jet_PrecessionAngle, Omega_t, false);
 
-  InsideUpperCone  = SQR(xp[0]) + SQR(xp[1]) <= SQR( +tan(Jet_OpeningAngle)*xp[2] + Jet_BO );
-  InsideUpperCone &= 0.0 <= xp[2] && xp[2] <= Jet_AO;
+  InsideUpperCone  = SQR(xp[0]) + SQR(xp[1]) <= SQR( +tan(Jet_OpeningAngle)*xp[2] + Jet_Radius );
+  InsideUpperCone &= 0.0 <= xp[2] && xp[2] <= Jet_HalfHeight;
 
-  InsideLowerCone  = SQR(xp[0]) + SQR(xp[1]) <= SQR( -tan(Jet_OpeningAngle)*xp[2] + Jet_BO );
-  InsideLowerCone &= -Jet_AO <= xp[2] && xp[2] <= 0.0;
+  InsideLowerCone  = SQR(xp[0]) + SQR(xp[1]) <= SQR( -tan(Jet_OpeningAngle)*xp[2] + Jet_Radius );
+  InsideLowerCone &= -Jet_HalfHeight <= xp[2] && xp[2] <= 0.0;
 
 
   if ( InsideUpperCone || InsideLowerCone )
@@ -766,7 +745,7 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
 		}
 		else
 		{
-          xp[2] += Jet_BO*cot(Jet_OpeningAngle);
+          xp[2] += Jet_Radius*cot(Jet_OpeningAngle);
 
           CartesianRotate(xp, Jet_PrecessionAngle, Omega_t, true);
 
@@ -799,7 +778,7 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
 		}
 		else
 		{
-          xp[2] -= Jet_BO*cot(Jet_OpeningAngle);
+          xp[2] -= Jet_Radius*cot(Jet_OpeningAngle);
 
           CartesianRotate(xp, Jet_PrecessionAngle, Omega_t, true);
 
