@@ -57,9 +57,9 @@ static double   Jet_SrcTemp;                                    // jet temperatu
 // =======================================================================================
 //
 // jet geometry parameters
-static double   Jet_Radius;
+static double   Jet_Radius;                                     // OB
 static double   Jet_HalfHeight;                                 // OA
-static double   Jet_OpeningAngle;                               // OB
+static double   Jet_HalfOpeningAngle;                           // half-opening angle
 static double   Jet_CenOffset[3];                               // jet central coordinates offset
 static double   Jet_Cen[3];                                     // jet central coordinates
 static double   Jet_MaxDis;                                     // maximum distance between the cylinder-shape jet source and the jet center
@@ -176,7 +176,7 @@ void SetParameter()
 // load source geometry parameters
    ReadPara->Add( "Jet_Radius",              &Jet_Radius,              -1.0,          Eps_double,     NoMax_double    );
    ReadPara->Add( "Jet_HalfHeight",          &Jet_HalfHeight,          -1.0,          Eps_double,     NoMax_double    );
-   ReadPara->Add( "Jet_OpeningAngle",        &Jet_OpeningAngle,        -1.0,                   0.0,           90.0    );
+   ReadPara->Add( "Jet_HalfOpeningAngle",    &Jet_HalfOpeningAngle,    -1.0,                   0.0,           90.0    );
    ReadPara->Add( "Jet_CenOffset_x",         &Jet_CenOffset [0],        NoDef_double, NoMin_double,   NoMax_double    );
    ReadPara->Add( "Jet_CenOffset_y",         &Jet_CenOffset [1],        NoDef_double, NoMin_double,   NoMax_double    );
    ReadPara->Add( "Jet_CenOffset_z",         &Jet_CenOffset [2],        NoDef_double, NoMin_double,   NoMax_double    );
@@ -321,7 +321,7 @@ void SetParameter()
 
    Jet_Radius               *= Const_kpc / UNIT_L;
    Jet_HalfHeight           *= Const_kpc / UNIT_L;
-   Jet_OpeningAngle         *= M_PI / 180.0;
+   Jet_HalfOpeningAngle     *= M_PI / 180.0;
    Jet_PrecessionAngle      *= M_PI / 180.0;
 
    Jet_CenOffset[0]         *= Const_kpc / UNIT_L;
@@ -368,8 +368,8 @@ void SetParameter()
    }
 
 // (2) set the problem-specific derived parameters
-   double SecAngle = 1.0 / cos(0.5*Jet_OpeningAngle);
-   double TanAngle = sin(0.5*Jet_OpeningAngle) * SecAngle;
+   double SecAngle = 1.0 / cos(0.5*Jet_HalfOpeningAngle);
+   double TanAngle = sin(0.5*Jet_HalfOpeningAngle) * SecAngle;
 
    Jet_MaxDis  = sqrt( SQR( Jet_Radius ) + SQR( Jet_HalfHeight * SecAngle ) + 2.0 * Jet_Radius * Jet_HalfHeight * TanAngle );
 
@@ -444,7 +444,7 @@ void SetParameter()
      Aux_Message( stdout, "  Jet_CenOffset[z]        = %14.7e kpc\n",        Jet_CenOffset [2]*UNIT_L/Const_kpc              );
      Aux_Message( stdout, "  Jet_Angular_Velocity    = %14.7e degree/kyr\n", Jet_Angular_Velocity                            );
      Aux_Message( stdout, "  Jet_PrecessionAngle     = %14.7e degree\n",     Jet_PrecessionAngle*180.0/M_PI                  );
-     Aux_Message( stdout, "  Jet_OpeningAngle        = %14.7e degree\n",     Jet_OpeningAngle*180.0/M_PI                     );
+     Aux_Message( stdout, "  Jet_HalfOpeningAngle    = %14.7e degree\n",     Jet_HalfOpeningAngle*180.0/M_PI                     );
      Aux_Message( stdout, "  Jet_Radius              = %14.7e kpc\n",        Jet_Radius*UNIT_L/Const_kpc                     );
      Aux_Message( stdout, "  Jet_HalfHeight          = %14.7e kpc\n",        Jet_HalfHeight*UNIT_L/Const_kpc                 );
    }
@@ -692,6 +692,7 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
   double Prim[5], Cons[5], Vel[3];
   double PrecessionAxis_Spherical[3], Omega_t;
   bool InsideUpperCone, InsideLowerCone;
+  double Jet_SrcVelSmooth;
 
   Omega_t = Jet_Angular_Velocity * Time * M_PI / 180.0;
 
@@ -711,14 +712,13 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
 	CartesianRotate(xp, PrecessionAxis_Spherical[1], PrecessionAxis_Spherical[2], false);
   }
 
-
   // rotate coordinate to align z-axis with rotating symmetric axis
   CartesianRotate(xp, Jet_PrecessionAngle, Omega_t, false);
 
-  InsideUpperCone  = SQR(xp[0]) + SQR(xp[1]) <= SQR( +tan(Jet_OpeningAngle)*xp[2] + Jet_Radius );
+  InsideUpperCone  = SQR(xp[0]) + SQR(xp[1]) <= SQR( +tan(Jet_HalfOpeningAngle)*xp[2] + Jet_Radius );
   InsideUpperCone &= 0.0 <= xp[2] && xp[2] <= Jet_HalfHeight;
 
-  InsideLowerCone  = SQR(xp[0]) + SQR(xp[1]) <= SQR( -tan(Jet_OpeningAngle)*xp[2] + Jet_Radius );
+  InsideLowerCone  = SQR(xp[0]) + SQR(xp[1]) <= SQR( -tan(Jet_HalfOpeningAngle)*xp[2] + Jet_Radius );
   InsideLowerCone &= -Jet_HalfHeight <= xp[2] && xp[2] <= 0.0;
 
 
@@ -728,7 +728,7 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
 
 	if ( InsideUpperCone )
 	{
-	    if ( Jet_OpeningAngle == 0.0 )
+	    if ( Jet_HalfOpeningAngle == 0.0 )
 		{
 		  Vel[0] = 0.0;
 		  Vel[1] = 0.0;
@@ -745,7 +745,12 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
 		}
 		else
 		{
-          xp[2] += Jet_Radius*cot(Jet_OpeningAngle);
+          // shift origin to the point D
+          xp[2] += Jet_Radius*cot(Jet_HalfOpeningAngle);
+
+		  // smooth velocity on source boundary
+          Cartesian2Spherical(xp, rp);
+          Jet_SrcVelSmooth = Jet_SrcVel*SQR(cos( 0.5 * M_PI * rp[1] / Jet_HalfOpeningAngle ));
 
           CartesianRotate(xp, Jet_PrecessionAngle, Omega_t, true);
 
@@ -754,14 +759,14 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
 
           Cartesian2Spherical(xp, rp);
 
-          Prim[1] = Jet_SrcVel*sin(rp[1])*cos(rp[2]);
-          Prim[2] = Jet_SrcVel*sin(rp[1])*sin(rp[2]);
-          Prim[3] = Jet_SrcVel*cos(rp[1]);
+          Prim[1] = Jet_SrcVelSmooth*sin(rp[1])*cos(rp[2]);
+          Prim[2] = Jet_SrcVelSmooth*sin(rp[1])*sin(rp[2]);
+          Prim[3] = Jet_SrcVelSmooth*cos(rp[1]);
 		}
 	}
 	else
 	{
-	    if ( Jet_OpeningAngle == 0.0 )
+	    if ( Jet_HalfOpeningAngle == 0.0 )
 		{
 		  Vel[0] = 0.0;
 		  Vel[1] = 0.0;
@@ -778,7 +783,12 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
 		}
 		else
 		{
-          xp[2] -= Jet_Radius*cot(Jet_OpeningAngle);
+          // shift origin to the point E
+          xp[2] -= Jet_Radius*cot(Jet_HalfOpeningAngle);
+
+		  // smooth velocity on source boundary
+          Cartesian2Spherical(xp, rp);
+          Jet_SrcVelSmooth = Jet_SrcVel*SQR(cos( 0.5 * M_PI * rp[1] / Jet_HalfOpeningAngle ));
 
           CartesianRotate(xp, Jet_PrecessionAngle, Omega_t, true);
 
@@ -787,9 +797,9 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
 
           Cartesian2Spherical(xp, rp);
 
-          Prim[1] = Jet_SrcVel*sin(rp[1])*cos(rp[2]);
-          Prim[2] = Jet_SrcVel*sin(rp[1])*sin(rp[2]);
-          Prim[3] = Jet_SrcVel*cos(rp[1]);
+          Prim[1] = Jet_SrcVelSmooth*sin(rp[1])*cos(rp[2]);
+          Prim[2] = Jet_SrcVelSmooth*sin(rp[1])*sin(rp[2]);
+          Prim[3] = Jet_SrcVelSmooth*cos(rp[1]);
 		}
 	}
 
