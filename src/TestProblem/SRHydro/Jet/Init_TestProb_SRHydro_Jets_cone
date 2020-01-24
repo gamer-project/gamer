@@ -444,9 +444,10 @@ void SetParameter()
      Aux_Message( stdout, "  Jet_CenOffset[z]        = %14.7e kpc\n",        Jet_CenOffset [2]*UNIT_L/Const_kpc              );
      Aux_Message( stdout, "  Jet_Angular_Velocity    = %14.7e degree/kyr\n", Jet_Angular_Velocity                            );
      Aux_Message( stdout, "  Jet_PrecessionAngle     = %14.7e degree\n",     Jet_PrecessionAngle*180.0/M_PI                  );
-     Aux_Message( stdout, "  Jet_HalfOpeningAngle    = %14.7e degree\n",     Jet_HalfOpeningAngle*180.0/M_PI                     );
+     Aux_Message( stdout, "  Jet_HalfOpeningAngle    = %14.7e degree\n",     Jet_HalfOpeningAngle*180.0/M_PI                 );
      Aux_Message( stdout, "  Jet_Radius              = %14.7e kpc\n",        Jet_Radius*UNIT_L/Const_kpc                     );
      Aux_Message( stdout, "  Jet_HalfHeight          = %14.7e kpc\n",        Jet_HalfHeight*UNIT_L/Const_kpc                 );
+     Aux_Message( stdout, "  Jet_MaxDis              = %14.7e kpc\n",        Jet_MaxDis*UNIT_L/Const_kpc                     );
    }
 
    if ( Jet_Ambient && MPI_Rank == 0 ) 
@@ -691,12 +692,12 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
   double xp[3], rp[3];
   double Prim[5], Cons[5], Vel[3];
   double PrecessionAxis_Spherical[3], Omega_t;
-  bool InsideUpperCone, InsideLowerCone;
+  bool InsideUpperCone, InsideLowerCone, Smooth;
   double Jet_SrcVelSmooth;
 
   Omega_t = Jet_Angular_Velocity * Time * M_PI / 180.0;
 
-
+  Smooth = false;
 
   // shift origin to the point O
   xp[0] = x - Jet_Cen[0];
@@ -720,6 +721,27 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
 
   InsideLowerCone  = SQR(xp[0]) + SQR(xp[1]) <= SQR( -tan(Jet_HalfOpeningAngle)*xp[2] + Jet_Radius );
   InsideLowerCone &= -Jet_HalfHeight <= xp[2] && xp[2] <= 0.0;
+
+  if ( Jet_HalfOpeningAngle != 0.0 )
+  {
+   InsideUpperCone &= SQR(xp[0]) + SQR(xp[1]) + SQR(xp[2] + Jet_Radius/tan(Jet_HalfOpeningAngle)) 
+                   <= SQR(Jet_HalfHeight+Jet_Radius/tan(Jet_HalfOpeningAngle));
+
+   InsideUpperCone &= 0.0 <= xp[2]; 
+
+   InsideLowerCone &= SQR(xp[0]) + SQR(xp[1]) + SQR(xp[2] - Jet_Radius/tan(Jet_HalfOpeningAngle)) 
+                   <= SQR(Jet_HalfHeight+Jet_Radius/tan(Jet_HalfOpeningAngle));
+
+   InsideLowerCone &= xp[2] <= 0.0;
+  }
+  else
+  {
+    InsideUpperCone &= 0.0 <= xp[2] && xp[2] <= Jet_HalfHeight;
+    InsideLowerCone &= -Jet_HalfHeight <= xp[2] && xp[2] <= 0.0;
+  }
+
+  Cartesian2Spherical(xp, rp);
+
 
 
   if ( InsideUpperCone || InsideLowerCone )
@@ -746,11 +768,12 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
 		else
 		{
           // shift origin to the point D
-          xp[2] += Jet_Radius*cot(Jet_HalfOpeningAngle);
+          xp[2] += Jet_Radius/tan(Jet_HalfOpeningAngle);
 
 		  // smooth velocity on source boundary
           Cartesian2Spherical(xp, rp);
-          Jet_SrcVelSmooth = Jet_SrcVel*SQR(cos( 0.5 * M_PI * rp[1] / Jet_HalfOpeningAngle ));
+          if ( Smooth ) Jet_SrcVelSmooth = Jet_SrcVel*SQR(cos( 0.5 * M_PI * rp[1] / Jet_HalfOpeningAngle ));
+          else          Jet_SrcVelSmooth = Jet_SrcVel;
 
           CartesianRotate(xp, Jet_PrecessionAngle, Omega_t, true);
 
@@ -758,6 +781,7 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
              CartesianRotate(xp, PrecessionAxis_Spherical[1], PrecessionAxis_Spherical[2], true);
 
           Cartesian2Spherical(xp, rp);
+
 
           Prim[1] = Jet_SrcVelSmooth*sin(rp[1])*cos(rp[2]);
           Prim[2] = Jet_SrcVelSmooth*sin(rp[1])*sin(rp[2]);
@@ -784,18 +808,19 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
 		else
 		{
           // shift origin to the point E
-          xp[2] -= Jet_Radius*cot(Jet_HalfOpeningAngle);
+          xp[2] -= Jet_Radius/tan(Jet_HalfOpeningAngle);
 
 		  // smooth velocity on source boundary
           Cartesian2Spherical(xp, rp);
-          Jet_SrcVelSmooth = Jet_SrcVel*SQR(cos( 0.5 * M_PI * rp[1] / Jet_HalfOpeningAngle ));
+          if ( Smooth ) Jet_SrcVelSmooth = Jet_SrcVel*SQR(cos( 0.5 * M_PI * rp[1] / Jet_HalfOpeningAngle ));
+          else          Jet_SrcVelSmooth = Jet_SrcVel;
 
-          CartesianRotate(xp, Jet_PrecessionAngle, Omega_t, true);
 
           if ( Jet_PrecessionAxis[0] != 0.0 || Jet_PrecessionAxis[1] != 0.0 ||  Jet_PrecessionAxis[2] == 0.0 )
              CartesianRotate(xp, PrecessionAxis_Spherical[1], PrecessionAxis_Spherical[2], true);
 
           Cartesian2Spherical(xp, rp);
+
 
           Prim[1] = Jet_SrcVelSmooth*sin(rp[1])*cos(rp[2]);
           Prim[2] = Jet_SrcVelSmooth*sin(rp[1])*sin(rp[2]);
@@ -873,15 +898,73 @@ bool Flag_User( const int i, const int j, const int k, const int lv, const int P
 //#  ifdef GRAVITY
 //   const real (*Pot )[PS1][PS1] = amr->patch[ amr->PotSg[lv] ][lv][PID]->pot;          // potential
 //#  endif
+//
+//
+//   const double Center[3]      = { Jet_Cen[0], Jet_Cen[1], Jet_Cen[2] };
+//   const double dR[3]          = { Pos[0]-Center[0], Pos[1]-Center[1], Pos[2]-Center[2] };
+//   const double R              = sqrt( SQR(dR[0]) + SQR(dR[1]) + SQR(dR[2]) );
+//
+//   if ( R < dh*1.8 || R < Jet_MaxDis) return true;
+//   else                               return false;
 
 
-   const double Center[3]      = { Jet_Cen[0], Jet_Cen[1], Jet_Cen[2] };
-   const double dR[3]          = { Pos[0]-Center[0], Pos[1]-Center[1], Pos[2]-Center[2] };
-   const double R              = sqrt( SQR(dR[0]) + SQR(dR[1]) + SQR(dR[2]) );
+   //if ( R <= Jet_MaxDis*100.0 )   return true;
+   //else                           return false;
+
+  
+  double xp[3], rp[3];
+  double Prim[5], Cons[5], Vel[3];
+  double PrecessionAxis_Spherical[3];
+  bool InsideUpperCone, InsideLowerCone, Smooth;
+  double Jet_SrcVelSmooth;
 
 
-   if ( R <= Jet_MaxDis )   return true;
-   else                     return false;
+  Smooth = false;
+
+  // shift origin to the point O
+  xp[0] = Pos[0] - Jet_Cen[0];
+  xp[1] = Pos[1] - Jet_Cen[1];
+  xp[2] = Pos[2] - Jet_Cen[2];
+
+  if ( Jet_PrecessionAxis[0] != 0.0 || Jet_PrecessionAxis[1] != 0.0 ||  Jet_PrecessionAxis[2] == 0.0 )
+  {
+    // get theta, phi for the first rotation
+    Cartesian2Spherical( Jet_PrecessionAxis, PrecessionAxis_Spherical );
+
+    // rotate coordinate to align z-axis with fixed precession axis
+	CartesianRotate(xp, PrecessionAxis_Spherical[1], PrecessionAxis_Spherical[2], false);
+  }
+
+
+  InsideUpperCone  = SQR(xp[0]) + SQR(xp[1]) <= SQR( +tan(Jet_HalfOpeningAngle)*xp[2] + Jet_Radius );
+  InsideUpperCone &= 0.0 <= xp[2] && xp[2] <= Jet_HalfHeight;
+
+  InsideLowerCone  = SQR(xp[0]) + SQR(xp[1]) <= SQR( -tan(Jet_HalfOpeningAngle)*xp[2] + Jet_Radius );
+  InsideLowerCone &= -Jet_HalfHeight <= xp[2] && xp[2] <= 0.0;
+
+  if ( Jet_HalfOpeningAngle != 0.0 )
+  {
+   InsideUpperCone &= SQR(xp[0]) + SQR(xp[1]) + SQR(xp[2] + Jet_Radius/tan(Jet_HalfOpeningAngle)) 
+                   <= SQR(Jet_HalfHeight+Jet_Radius/tan(Jet_HalfOpeningAngle));
+
+   InsideUpperCone &= 0.0 <= xp[2]; 
+
+   InsideLowerCone &= SQR(xp[0]) + SQR(xp[1]) + SQR(xp[2] - Jet_Radius/tan(Jet_HalfOpeningAngle)) 
+                   <= SQR(Jet_HalfHeight+Jet_Radius/tan(Jet_HalfOpeningAngle));
+
+   InsideLowerCone &= xp[2] <= 0.0;
+  }
+  else
+  {
+    InsideUpperCone &= 0.0 <= xp[2] && xp[2] <= Jet_HalfHeight;
+    InsideLowerCone &= -Jet_HalfHeight <= xp[2] && xp[2] <= 0.0;
+  }
+
+
+
+
+  if ( InsideUpperCone || InsideLowerCone ) return true;
+  else return false;
 
 } // FUNCTION : Flag_User
 
