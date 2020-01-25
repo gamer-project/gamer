@@ -13,7 +13,7 @@ Jet_TimeDependentSrc                              0
 # jet fluid parameters
 Jet_SrcVel                                       10         # jet: jet 4-velocity ( in unit of speed of light )
 Jet_SrcDens                                 5.0e-31         # jet: jet density (in cgs units)
-Jet_SrcTemp                                     1e6         # jet: jet temperature (in GeV)
+Jet_SrcTemp                                     1.0         # jet: jet temperature (in GeV)
 Jet_ParticleMassSrc                 1.672621898e-24
 Jet_ParticleMassAmbient             1.672621898e-24
 
@@ -37,7 +37,7 @@ Jet_PrecessionAxis_z                            0.0
 
 # Jet_Ambient == 0
 Jet_UniformDens                             5.0e-29         # ambient density (in cgs units)
-Jet_UniformTemp                                 1.0         # ambient temperature (in GeV)
+Jet_UniformTemp                                1e-4         # ambient temperature (in GeV)
 Jet_UniformVel_x                               +0.0         # ambient velocity x (in cgs units) [0.0]
 Jet_UniformVel_y                               +0.0         # ambient velocity y (in cgs units) [0.0]
 Jet_UniformVel_z                               +0.0         # ambient velocity z (in cgs units) [0.0]
