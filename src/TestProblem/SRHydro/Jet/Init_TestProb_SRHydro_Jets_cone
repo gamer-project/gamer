@@ -587,8 +587,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
       r = sqrt( dx*dx + dy*dy + dz*dz );
 
-      Pri4Vel[0] = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_D, r );
-      Pri4Vel[4] = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_T, r ) * Pri4Vel[0];
+      //Pri4Vel[0] = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_D, r );
+      //Pri4Vel[4] = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_T, r ) * Pri4Vel[0];
 
 
       if ( r <= Jet_HSE_Radius )
