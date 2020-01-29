@@ -9,41 +9,44 @@
 
 // problem-specific global variables
 // =======================================================================================
-       bool    Merger_Coll;               // (true/false) --> test (cluster merger / single cluster)
+       int     Merger_Coll_NumHalos;      // number of clusters
 static char    Merger_File_Prof1[1000];   // profile table of cluster 1
 static char    Merger_File_Prof2[1000];   // profile table of cluster 2
+static char    Merger_File_Prof3[1000];   // profile table of cluster 3
        char    Merger_File_Par1 [1000];   // particle file of cluster 1
        char    Merger_File_Par2 [1000];   // particle file of cluster 2
+       char    Merger_File_Par3 [1000];   // particle file of cluster 3
        bool    Merger_Coll_IsGas1;        // (true/false) --> does cluster 1 have gas
-       bool    Merger_Coll_IsGas2;      // (true/false) --> does cluster 2 have gas 
+       bool    Merger_Coll_IsGas2;        // (true/false) --> does cluster 2 have gas 
+       bool    Merger_Coll_IsGas3;        // (true/false) --> does cluster 3 have gas
        double  Merger_Coll_PosX1;         // x-position of the first cluster
        double  Merger_Coll_PosY1;         // y-position of the first cluster
        double  Merger_Coll_PosX2;         // x-position of the second cluster
        double  Merger_Coll_PosY2;         // y-position of the second cluster
+       double  Merger_Coll_PosX3;         // x-position of the third cluster
+       double  Merger_Coll_PosY3;         // y-position of the third cluster
        double  Merger_Coll_VelX1;         // x-velocity of the first cluster
        double  Merger_Coll_VelY1;         // y-velocity of the first cluster
        double  Merger_Coll_VelX2;         // x-velocity of the second cluster
        double  Merger_Coll_VelY2;         // y-velocity of the second cluster
+       double  Merger_Coll_VelX3;         // x-velocity of the third cluster 
+       double  Merger_Coll_VelY3;         // y-velocity of the third cluster
 
 static double *Table_R1 = NULL;           // radius of cluster 1
 static double *Table_D1 = NULL;           // density of cluster 1
 static double *Table_P1 = NULL;           // pressure of cluster 1
 
-static double *Table_R2 = NULL;           // radius of cluster 1
-static double *Table_D2 = NULL;           // density of cluster 1
-static double *Table_P2 = NULL;           // pressure of cluster 1
+static double *Table_R2 = NULL;           // radius of cluster 2
+static double *Table_D2 = NULL;           // density of cluster 2
+static double *Table_P2 = NULL;           // pressure of cluster 2
+
+static double *Table_R3 = NULL;           // radius of cluster 3
+static double *Table_D3 = NULL;           // density of cluster 3
+static double *Table_P3 = NULL;           // pressure of cluster 3
 
 static int     Merger_NBin1;              // number of radial bins of cluster 1
 static int     Merger_NBin2;              // number of radial bins of cluster 2
-
-       bool    Merger_Coll_Bubble;               // (true/false) --> bubble / no bubble
-       double  Merger_Coll_BubX;
-       double  Merger_Coll_BubY;
-       double  Merger_Coll_BubZ;
-       double  Merger_Coll_BubR;
-       double  Merger_Coll_BubS;
-
-static FieldIdx_t Merger_Idx_Bubble = Idx_Undefined;
+static int     Merger_NBin3;              // number of radial bins of cluster 3
 
 // =======================================================================================
 
@@ -154,43 +157,48 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",        &VARIABLE,               DEFAULT,          MIN,           MAX            );
 // ********************************************************************************************************************************
-   ReadPara->Add( "Merger_Coll",             &Merger_Coll,            true,            Useless_bool,  Useless_bool   );
-   ReadPara->Add( "Merger_Coll_IsGas1",      &Merger_Coll_IsGas1,     true,            Useless_bool,  Useless_bool   );
-   ReadPara->Add( "Merger_Coll_IsGas2",      &Merger_Coll_IsGas2,     true,            Useless_bool,  Useless_bool   );
-   ReadPara->Add( "Merger_File_Prof1",       Merger_File_Prof1,       Useless_str,     Useless_str,   Useless_str    );
-   ReadPara->Add( "Merger_File_Par1",        Merger_File_Par1,        Useless_str,     Useless_str,   Useless_str    );
-   ReadPara->Add( "Merger_File_Prof2",       Merger_File_Prof2,       Useless_str,     Useless_str,   Useless_str    );
-   ReadPara->Add( "Merger_File_Par2",        Merger_File_Par2,        Useless_str,     Useless_str,   Useless_str    );
+   ReadPara->Add( "Merger_Coll_NumHalos",   &Merger_Coll_NumHalos,   2,                1,             3              );
+   ReadPara->Add( "Merger_Coll_IsGas1",     &Merger_Coll_IsGas1,     true,             Useless_bool,  Useless_bool   );
+   ReadPara->Add( "Merger_Coll_IsGas2",     &Merger_Coll_IsGas2,     true,             Useless_bool,  Useless_bool   );
+   ReadPara->Add( "Merger_Coll_IsGas3",     &Merger_Coll_IsGas3,     true,             Useless_bool,  Useless_bool   );
+   ReadPara->Add( "Merger_File_Prof1",       Merger_File_Prof1,      Useless_str,      Useless_str,   Useless_str    );
+   ReadPara->Add( "Merger_File_Par1",        Merger_File_Par1,       Useless_str,      Useless_str,   Useless_str    );
+   ReadPara->Add( "Merger_File_Prof2",       Merger_File_Prof2,      Useless_str,      Useless_str,   Useless_str    );
+   ReadPara->Add( "Merger_File_Par2",        Merger_File_Par2,       Useless_str,      Useless_str,   Useless_str    );
+   ReadPara->Add( "Merger_File_Prof3",       Merger_File_Prof3,      Useless_str,      Useless_str,   Useless_str    );
+   ReadPara->Add( "Merger_File_Par3",        Merger_File_Par3,       Useless_str,      Useless_str,   Useless_str    );
    ReadPara->Add( "Merger_Coll_PosX1",      &Merger_Coll_PosX1,      -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "Merger_Coll_PosY1",      &Merger_Coll_PosY1,      -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "Merger_Coll_PosX2",      &Merger_Coll_PosX2,      -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "Merger_Coll_PosY2",      &Merger_Coll_PosY2,      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Merger_Coll_PosX3",      &Merger_Coll_PosX3,      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Merger_Coll_PosY3",      &Merger_Coll_PosY3,      -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "Merger_Coll_VelX1",      &Merger_Coll_VelX1,      -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "Merger_Coll_VelY1",      &Merger_Coll_VelY1,      -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "Merger_Coll_VelX2",      &Merger_Coll_VelX2,      -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "Merger_Coll_VelY2",      &Merger_Coll_VelY2,      -1.0,             NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_Bubble",     &Merger_Coll_Bubble,      false,           Useless_bool,  Useless_bool   );
-   ReadPara->Add( "Merger_Coll_BubX",       &Merger_Coll_BubX,       -1.0,             NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_BubY",       &Merger_Coll_BubY,       -1.0,             NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_BubZ",       &Merger_Coll_BubZ,       -1.0,             NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_BubR",       &Merger_Coll_BubR,       -1.0,             NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_BubS",       &Merger_Coll_BubS,       -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Merger_Coll_VelX3",      &Merger_Coll_VelX3,      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Merger_Coll_VelY3",      &Merger_Coll_VelY3,      -1.0,             NoMin_double,  NoMax_double   );
 
    ReadPara->Read( FileName );
 
    delete ReadPara;
 
 // convert to code units
-   if ( Merger_Coll )
+   if ( Merger_Coll_NumHalos > 1 )
    {
       Merger_Coll_PosX1 *= Const_kpc / UNIT_L;
       Merger_Coll_PosY1 *= Const_kpc / UNIT_L;
       Merger_Coll_PosX2 *= Const_kpc / UNIT_L;
       Merger_Coll_PosY2 *= Const_kpc / UNIT_L;
+      Merger_Coll_PosX3 *= Const_kpc / UNIT_L;
+      Merger_Coll_PosY3 *= Const_kpc / UNIT_L;
       Merger_Coll_VelX1 *= (Const_km/Const_s) / UNIT_V;
       Merger_Coll_VelY1 *= (Const_km/Const_s) / UNIT_V;
       Merger_Coll_VelX2 *= (Const_km/Const_s) / UNIT_V;
       Merger_Coll_VelY2 *= (Const_km/Const_s) / UNIT_V;
+      Merger_Coll_VelX3 *= (Const_km/Const_s) / UNIT_V;
+      Merger_Coll_VelY3 *= (Const_km/Const_s) / UNIT_V;
    }
 
 
@@ -200,10 +208,11 @@ void SetParameter()
 
      const std::string filename1(Merger_File_Prof1);
      const std::string filename2(Merger_File_Prof2);
+     const std::string filename3(Merger_File_Prof3);
 
       // cluster 1
-      if (Merger_Coll_IsGas1) {   
-	if (MPI_Rank == 0) {
+      if ( Merger_Coll_IsGas1 ) {   
+	if ( MPI_Rank == 0 ) {
 	  Merger_NBin1 = Read_Num_Points_ClusterMerger(filename1);
 	  Aux_Message(stdout, "num_points1 = %d\n", Merger_NBin1);
 	}
@@ -235,7 +244,7 @@ void SetParameter()
       }
 
       // cluster 2
-      if ( Merger_Coll && Merger_Coll_IsGas2) {
+      if ( Merger_Coll_NumHalos > 1 && Merger_Coll_IsGas2) {
 
          if (MPI_Rank == 0) {
             Merger_NBin2 = Read_Num_Points_ClusterMerger(filename2);
@@ -266,7 +275,43 @@ void SetParameter()
             Table_D2[b] /= UNIT_D;
             Table_P2[b] /= UNIT_P;
          }
-      } // if ( Merger_Coll && Merger_Coll_IsGas2 )
+      } // if ( Merger_Coll_NumHalos > 1 && Merger_Coll_IsGas2 )
+
+
+      // cluster 3
+      if ( Merger_Coll_NumHalos > 2 && Merger_Coll_IsGas3) {
+
+	if (MPI_Rank == 0) {
+	  Merger_NBin3 = Read_Num_Points_ClusterMerger(filename3);
+	  Aux_Message(stdout, "num_points3 = %d\n", Merger_NBin3);
+	}
+
+#ifndef SERIAL
+	MPI_Bcast(&Merger_NBin3, 1, MPI_INT, 0, MPI_COMM_WORLD);
+#endif
+	Table_R3 = new double [Merger_NBin3];
+	Table_D3 = new double [Merger_NBin3];
+	Table_P3 = new double [Merger_NBin3];
+
+	Read_Profile_ClusterMerger(filename3, "/fields/radius", Table_R3);
+	Read_Profile_ClusterMerger(filename3, "/fields/density", Table_D3);
+	Read_Profile_ClusterMerger(filename3, "/fields/pressure", Table_P3);
+
+#ifndef SERIAL
+	MPI_Bcast(Table_R3, Merger_NBin3, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(Table_D3, Merger_NBin3, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(Table_P3, Merger_NBin3, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
+
+	// convert to code units (assuming the input units are cgs)
+	for (int b=0; b<Merger_NBin3; b++)
+	  {
+            Table_R3[b] /= UNIT_L;
+            Table_D3[b] /= UNIT_D;
+            Table_P3[b] /= UNIT_P;
+	  }
+      } // if ( Merger_Coll_NumHalos > 2 && Merger_Coll_IsGas2 )
+
    } // if ( OPT__INIT != INIT_BY_RESTART )
 
 
@@ -293,14 +338,20 @@ void SetParameter()
       Aux_Message( stdout, "  test problem ID   = %d\n",           TESTPROB_ID );
       if ( Merger_Coll_IsGas1 )
       Aux_Message( stdout, "   profile file 1   = %s\n",           Merger_File_Prof1 );
-      if ( Merger_Coll && Merger_Coll_IsGas2 )
+      if ( Merger_Coll_NumHalos > 1 && Merger_Coll_IsGas2 )
       Aux_Message( stdout, "   profile file 2   = %s\n",           Merger_File_Prof2 );
+      if ( Merger_Coll_NumHalos > 2 && Merger_Coll_IsGas3 )
+      Aux_Message( stdout, "   profile file 3   = %s\n",           Merger_File_Prof3 );
       Aux_Message( stdout, "   particle file 1  = %s\n",           Merger_File_Par1 );
-      if ( Merger_Coll )
+      if ( Merger_Coll_NumHalos > 1 )
       Aux_Message( stdout, "   particle file 2  = %s\n",           Merger_File_Par2 );
-      Aux_Message( stdout, "   test mode        = %s\n",          (Merger_Coll)? "merging cluster":"single cluster" );
+      if ( Merger_Coll_NumHalos > 2 )
+      Aux_Message( stdout, "   particle file 3  = %s\n",           Merger_File_Par3 );
       Aux_Message( stdout, "   cluster 1 w/ gas = %s\n",          (Merger_Coll_IsGas1)? "yes":"no" );
+      if ( Merger_Coll_NumHalos > 1 )
       Aux_Message( stdout, "   cluster 2 w/ gas = %s\n",          (Merger_Coll_IsGas2)? "yes":"no" );
+      if ( Merger_Coll_NumHalos > 2 )
+      Aux_Message( stdout, "   cluster 3 w/ gas = %s\n",          (Merger_Coll_IsGas3)? "yes":"no" );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -334,74 +385,81 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
-   const double  BoxCenter[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
+   if ( !( Merger_Coll_IsGas1 || Merger_Coll_IsGas1 || Merger_Coll_IsGas1 ))
+     return;
 
-   if ( Merger_Coll && (Merger_Coll_IsGas1 || Merger_Coll_IsGas2) )
-   {
-      const double ClusterCenter1[3] = { Merger_Coll_PosX1, Merger_Coll_PosY1, BoxCenter[2] };
-      const double ClusterCenter2[3] = { Merger_Coll_PosX2, Merger_Coll_PosY2, BoxCenter[2] };
+   const double BoxCenter[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
 
-      double r1, r2, Dens1, Dens2, Pres1, Pres2, VelX, VelY;
+   double ClusterCenter1[3]; 
 
-//    for each cell, we sum up the density and pressure from each halo and then calculate the weighted velocity
-      if ( Merger_Coll_IsGas1 ) {
-         r1    = sqrt( SQR(x-ClusterCenter1[0]) + SQR(y-ClusterCenter1[1]) + SQR(z-ClusterCenter1[2]) );
-         Dens1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_D1, r1 );
-         Pres1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_P1, r1 );
-      } else {	
-         Dens1 = 0.0;
-         Pres1 = 0.0;
-      }
-      if ( Merger_Coll_IsGas2 ) { 
-         r2    = sqrt( SQR(x-ClusterCenter2[0]) + SQR(y-ClusterCenter2[1]) + SQR(z-ClusterCenter2[2]) );
-         Dens2 = Mis_InterpolateFromTable( Merger_NBin2, Table_R2, Table_D2, r2 );
-         Pres2 = Mis_InterpolateFromTable( Merger_NBin2, Table_R2, Table_P2, r2 );
-      } else { 
-         Dens2 = 0.0;
-         Pres2 = 0.0;
-      }
-      VelX  = ( Merger_Coll_VelX1*Dens1 + Merger_Coll_VelX2*Dens2 ) / ( Dens1 + Dens2 );
-      VelY  = ( Merger_Coll_VelY1*Dens1 + Merger_Coll_VelY2*Dens2 ) / ( Dens1 + Dens2 );
-
-      if ( Dens1 == NULL_REAL ) 
-         Dens1 = Table_D1[Merger_NBin1-1];
-      if ( Pres1 == NULL_REAL ) 
-         Pres1 = Table_P1[Merger_NBin1-1];
-
-      if ( Dens2 == NULL_REAL ) 
-         Dens2 = Table_D2[Merger_NBin2-1];
-      if ( Pres2 == NULL_REAL ) 
-         Pres2 = Table_P2[Merger_NBin2-1];
-
-      fluid[DENS] = Dens1 + Dens2;
-      fluid[MOMX] = fluid[DENS]*VelX;
-      fluid[MOMY] = fluid[DENS]*VelY;
-      fluid[MOMZ] = 0.0;
-      fluid[ENGY] = ( Pres1 + Pres2 ) / ( GAMMA - 1.0 )
-                    + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+   if ( Merger_Coll_NumHalos == 1 ) {
+     ClusterCenter1[0] = BoxCenter[0];
+     ClusterCenter1[1] = BoxCenter[1];
+   } else {
+     ClusterCenter1[0] = Merger_Coll_PosX1;
+     ClusterCenter1[1] = Merger_Coll_PosY1;
    }
 
-   else if ( Merger_Coll_IsGas1 )
+   ClusterCenter1[2] = BoxCenter[2];
+   
+   const double ClusterCenter2[3] = { Merger_Coll_PosX2, Merger_Coll_PosY2, BoxCenter[2] };
+   const double ClusterCenter3[3] = { Merger_Coll_PosX3, Merger_Coll_PosY3, BoxCenter[2] };
+
+   double r1, r2, r3, Dens1, Dens2, Dens3, Pres1, Pres2, Pres3, VelX, VelY, Dens;
+
+//    for each cell, we sum up the density and pressure from each halo and then calculate the weighted velocity
+   if ( Merger_Coll_IsGas1 ) {
+     r1    = sqrt( SQR(x-ClusterCenter1[0]) + SQR(y-ClusterCenter1[1]) + SQR(z-ClusterCenter1[2]) );
+     Dens1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_D1, r1 );
+     Pres1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_P1, r1 );
+   } else {	
+     Dens1 = 0.0;
+     Pres1 = 0.0;
+   }
+   if ( Merger_Coll_IsGas2 ) { 
+     r2    = sqrt( SQR(x-ClusterCenter2[0]) + SQR(y-ClusterCenter2[1]) + SQR(z-ClusterCenter2[2]) );
+     Dens2 = Mis_InterpolateFromTable( Merger_NBin2, Table_R2, Table_D2, r2 );
+     Pres2 = Mis_InterpolateFromTable( Merger_NBin2, Table_R2, Table_P2, r2 );
+   } else { 
+     Dens2 = 0.0;
+     Pres2 = 0.0;
+   }
+   if ( Merger_Coll_IsGas3 ) {
+     r3    = sqrt( SQR(x-ClusterCenter3[0]) + SQR(y-ClusterCenter3[1]) + SQR(z-ClusterCenter3[2]) );
+     Dens3 = Mis_InterpolateFromTable( Merger_NBin3, Table_R3, Table_D3, r3 );
+     Pres3 = Mis_InterpolateFromTable( Merger_NBin3, Table_R3, Table_P3, r3 );
+   } else {
+     Dens3 = 0.0;
+     Pres3 = 0.0;
+   }
+
+   if ( Dens1 == NULL_REAL )
+     Dens1 = Table_D1[Merger_NBin1-1];
+   if ( Pres1 == NULL_REAL )
+     Pres1 = Table_P1[Merger_NBin1-1];
+
+   if ( Dens2 == NULL_REAL )
+     Dens2 = Table_D2[Merger_NBin2-1];
+   if ( Pres2 == NULL_REAL )
+     Pres2 = Table_P2[Merger_NBin2-1];
+
+   if ( Dens3 == NULL_REAL )
+     Dens3 = Table_D3[Merger_NBin3-1];
+   if ( Pres3 == NULL_REAL )
+     Pres3 = Table_P3[Merger_NBin3-1];
+
+   Dens = Dens1 + Dens2 + Dens3;
+
+   VelX  = ( Merger_Coll_VelX1*Dens1 + Merger_Coll_VelX2*Dens2 + Merger_Coll_VelX3*Dens3 ) / Dens;
+   VelY  = ( Merger_Coll_VelY1*Dens1 + Merger_Coll_VelY2*Dens2 + Merger_Coll_VelY3*Dens3 ) / Dens;
+
+   fluid[DENS] = Dens1 + Dens2 + Dens3;
+   fluid[MOMX] = fluid[DENS]*VelX;
+   fluid[MOMY] = fluid[DENS]*VelY;
+   fluid[MOMZ] = 0.0;
+   fluid[ENGY] = ( Pres1 + Pres2 + Pres3 ) / ( GAMMA - 1.0 )
+     + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
  
-   {
-      double r, Dens, Pres;
-
-      r    = sqrt( SQR(x-BoxCenter[0]) + SQR(y-BoxCenter[1]) + SQR(z-BoxCenter[2]) );
-      Dens = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_D1, r );
-      Pres = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_P1, r );
-
-      if ( Dens == NULL_REAL ) 
-         Dens = Table_D1[Merger_NBin1-1];
-      if ( Pres == NULL_REAL ) 
-         Pres = Table_P1[Merger_NBin1-1];
-
-      fluid[DENS] = Dens;
-      fluid[MOMX] = 0.0;
-      fluid[MOMY] = 0.0;
-      fluid[MOMZ] = 0.0;
-      fluid[ENGY] = Pres / ( GAMMA - 1.0 );
-   } // if ( Merger_Coll ) ... else ...
-
 } // FUNCTION : SetGridIC
 
 #endif // #if ( MODEL == HYDRO  &&  defined PARTICLE )
@@ -425,6 +483,10 @@ void End_ClusterMerger()
    delete [] Table_R2;
    delete [] Table_D2;
    delete [] Table_P2;
+
+   delete [] Table_R3;
+   delete [] Table_D3;
+   delete [] Table_P3;
 
 } // FUNCTION : End_ClusterMerger
 
@@ -522,92 +584,6 @@ void Read_Profile_ClusterMerger(std::string filename, std::string fieldname,
   return;
 
 } // FUNCTION : Read_Profile_ClusterMerger
-
-void AddNewField_ClusterMerger()
-{
-
-  //if ( Merger_Coll_Bubble )
-  //    Merger_Idx_Bubble = AddField( "Bubble", NORMALIZE_YES );
-
-
-} // FUNCTION : AddNewField_ClusterMerger
-
-void Init_InsertBubble_ClusterMerger()
-{
-
-   const real mue_twofifths = 1.052463228428472;
-   const real mh = 1.6737352238051868e-24;
-   
-   real   (*fluid)[PS1][PS1][PS1]      = NULL;
-
-   double x0, y0, z0, x, y, z, r, dh;
-   double Pres, Ekin; 
-
-   int FluSg;
-
-   if (!Merger_Coll_Bubble) return;
-
-   Merger_Coll_BubX *= Const_kpc / UNIT_L;
-   Merger_Coll_BubY *= Const_kpc / UNIT_L;
-   Merger_Coll_BubZ *= Const_kpc / UNIT_L;
-   Merger_Coll_BubR *= Const_kpc / UNIT_L;
-   Merger_Coll_BubS *= Const_keV;
-
-#  pragma omp parallel for private ( fluid, FluSg, dh, x, y, z, x0, y0, z0, r, Ekin, Pres ) schedule( runtime )
-
-   for (int lv=0; lv<NLEVEL; lv++) { 
-
-     dh             = amr->dh[lv];
-     FluSg          = amr->FluSg[lv];
-
-     for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++) {
-
-       // skip non-leaf patches
-
-       if ( amr->patch[0][lv][PID]->son != -1 )  continue;
-       
-       fluid = amr->patch[FluSg][lv][PID]->fluid;
-       
-       x0    = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
-       y0    = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
-       z0    = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
-      
-       for (int k=0; k<PS1; k++)
-       for (int j=0; j<PS1; j++)
-       for (int i=0; i<PS1; i++) {
-         
-	 x = x0 + i*dh;
-	 y = y0 + j*dh;
-	 z = z0 + k*dh;
-	 r = sqrt( SQR(x-Merger_Coll_BubX) + 
-		   SQR(y-Merger_Coll_BubY) + 
-		   SQR(z-Merger_Coll_BubZ) );  
-	 
-	 if ( r <= Merger_Coll_BubR ) {
-
-	   Ekin = 0.5*( SQR(fluid[MOMX][k][j][i]) + 
-			SQR(fluid[MOMY][k][j][i]) + 
-			SQR(fluid[MOMZ][k][j][i]) ) / fluid[DENS][k][j][i];
-	   Pres = UNIT_P * ( GAMMA - 1.0 ) * (fluid[ENGY][k][j][i] - Ekin);
-	   fluid[DENS][k][j][i] = pow( Pres / Merger_Coll_BubS, 0.6 ) * Const_mp * mue_twofifths / UNIT_D;   
-	   
-	   fluid[Merger_Idx_Bubble][k][j][i] = 1.0;
-
-	 } else {
-        
-	   fluid[Merger_Idx_Bubble][k][j][i] = 0.0;
-         
-	 }
-	 
-       }
-
-     }
-
-   }
-
-   return; 
-
-} // FUNCTION : Init_InsertBubble_ClusterMerger
 
 #endif // #ifdef SUPPORT_HDF5
 
