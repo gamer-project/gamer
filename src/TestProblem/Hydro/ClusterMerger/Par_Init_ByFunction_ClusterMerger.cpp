@@ -14,15 +14,20 @@ typedef double real_par_in;
 
 extern char    Merger_File_Par1[1000];
 extern char    Merger_File_Par2[1000];
-extern bool    Merger_Coll;
+extern char    Merger_File_Par3[1000];
+extern int     Merger_Coll_NumHalos;
 extern double  Merger_Coll_PosX1;
 extern double  Merger_Coll_PosY1;
 extern double  Merger_Coll_PosX2;
 extern double  Merger_Coll_PosY2;
+extern double  Merger_Coll_PosX3;
+extern double  Merger_Coll_PosY3;
 extern double  Merger_Coll_VelX1;
 extern double  Merger_Coll_VelY1;
 extern double  Merger_Coll_VelX2;
 extern double  Merger_Coll_VelY2;
+extern double  Merger_Coll_VelX3;
+extern double  Merger_Coll_VelY3;
 
 long Read_Particle_Number_ClusterMerger(std::string filename);
 void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
@@ -82,14 +87,18 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
    if ( !Aux_CheckFileExist(Merger_File_Par1) )
       Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", Merger_File_Par1 );
 
-   if ( Merger_Coll  &&  !Aux_CheckFileExist(Merger_File_Par2) )
+   if ( Merger_Coll_NumHalos > 1  &&  !Aux_CheckFileExist(Merger_File_Par2) )
       Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", Merger_File_Par2 );
+
+   if ( Merger_Coll_NumHalos > 2  &&  !Aux_CheckFileExist(Merger_File_Par3) )
+      Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", Merger_File_Par3 );
 
    const std::string filename1(Merger_File_Par1);
    const std::string filename2(Merger_File_Par2);
+   const std::string filename3(Merger_File_Par3);
 
 // check file size
-   long NPar_EachCluster[2] = {0,0};
+   long NPar_EachCluster[3] = {0,0,0};
    long NPar_AllCluster;
 
    if ( MPI_Rank == 0 ) {
@@ -99,18 +108,23 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       Aux_Message( stdout, "   Number of particles in cluster 1 = %ld\n", 
                   NPar_EachCluster[0] );
 
-      if ( Merger_Coll ) {
+      if ( Merger_Coll_NumHalos > 1 ) {
          NPar_EachCluster[1] = Read_Particle_Number_ClusterMerger(filename2);
          Aux_Message( stdout, "   Number of particles in cluster 2 = %ld\n", NPar_EachCluster[1] );
+      }
+
+      if ( Merger_Coll_NumHalos > 2 ) {
+	 NPar_EachCluster[2] = Read_Particle_Number_ClusterMerger(filename3);
+	 Aux_Message( stdout, "   Number of particles in cluster 3 = %ld\n", NPar_EachCluster[2] );
       }
 
    }
 
 #ifndef SERIAL
-   MPI_Bcast(NPar_EachCluster, 2, MPI_LONG, 0, MPI_COMM_WORLD);
+   MPI_Bcast(NPar_EachCluster, 3, MPI_LONG, 0, MPI_COMM_WORLD);
 #endif
 
-   NPar_AllCluster = NPar_EachCluster[0] + NPar_EachCluster[1];
+   NPar_AllCluster = NPar_EachCluster[0] + NPar_EachCluster[1] + NPar_EachCluster[2];
 
    if ( NPar_AllCluster != NPar_AllRank )
       Aux_Error( ERROR_INFO, "total number of particles found in cluster [%ld] != expect [%ld] !!\n",
@@ -119,20 +133,27 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 // prepare to load data
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Preparing to load data ... " );
 
-   const int NCluster = ( Merger_Coll ) ? 2 : 1;
-   long NPar_ThisRank_EachCluster[2]={0,0}, Offset[2];   // [0/1] --> cluster 1/2
+   const int NCluster = Merger_Coll_NumHalos;
+   long NPar_ThisRank_EachCluster[3]={0,0,0}, Offset[3];   // [0/1] --> cluster 1/2
 
    for (int c=0; c<NCluster; c++)
    {
 //    get the number of particles loaded by each rank for each cluster
       long NPar_ThisCluster_EachRank[MPI_NRank];
 
-      if ( c == 0 )  
-         NPar_ThisRank_EachCluster[0] = NPar_EachCluster[0] / MPI_NRank + ( (MPI_Rank<NPar_EachCluster[0]%MPI_NRank)?1:0 );
-      else           
-         NPar_ThisRank_EachCluster[1] = NPar_ThisRank - NPar_ThisRank_EachCluster[0];
+      switch (c) {
+      case 0:
+	NPar_ThisRank_EachCluster[0] = NPar_EachCluster[0] / MPI_NRank + ( (MPI_Rank != MPI_NRank-1)?NPar_EachCluster[0]%MPI_NRank:0 );
+	break;
+      case 1:
+	NPar_ThisRank_EachCluster[1] = NPar_EachCluster[1] / MPI_NRank + ( (MPI_Rank != MPI_NRank-1)?NPar_EachCluster[1]%MPI_NRank:0 );
+	break;
+      case 2:
+	NPar_ThisRank_EachCluster[2] = NPar_ThisRank - NPar_ThisRank_EachCluster[0] - NPar_ThisRank_EachCluster[1];
+	break;
+      }
 
-      MPI_Allgather( &NPar_ThisRank_EachCluster[c], 1, MPI_LONG, NPar_ThisCluster_EachRank, 1, MPI_LONG,                         MPI_COMM_WORLD );
+      MPI_Allgather( &NPar_ThisRank_EachCluster[c], 1, MPI_LONG, NPar_ThisCluster_EachRank, 1, MPI_LONG, MPI_COMM_WORLD );
 
 //    check if the total number of particles is correct
       long NPar_Check = 0;
@@ -153,6 +174,8 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
 // load data to the particle repository
 
+   const std::string filenames[3] = { Merger_File_Par1, Merger_File_Par2, Merger_File_Par3 };
+ 
    for (int c=0; c<NCluster; c++)
    {
 //    load data
@@ -166,9 +189,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       real_par_in *yvel = new real_par_in [NPar_ThisRank_EachCluster[c]];
       real_par_in *zvel = new real_par_in [NPar_ThisRank_EachCluster[c]];
 
-      const std::string filename((c==0)? Merger_File_Par1:Merger_File_Par2);
-
-      Read_Particles_ClusterMerger(filename, Offset[c], NPar_ThisRank_EachCluster[c],
+      Read_Particles_ClusterMerger(filenames[c], Offset[c], NPar_ThisRank_EachCluster[c],
                                    xpos, ypos, zpos, xvel, yvel, zvel, mass);
 
       if ( MPI_Rank == 0 ) Aux_Message( stdout, "done\n" );
@@ -180,7 +201,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       for (long p=0; p<NPar_ThisRank_EachCluster[c]; p++)
       {
 //       particle index offset
-         const long pp = p + c*NPar_ThisRank_EachCluster[0];
+	 const long pp = p + ((c==0)?0:NPar_ThisRank_EachCluster[c-1]);
 
 //       --> convert to code unit before storing to the particle repository to avoid floating-point overflow
 //       --> we have assumed that the loaded data are in cgs
@@ -216,42 +237,40 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
    const double BoxCenter[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
    real *ParPos[3] = { ParPosX, ParPosY, ParPosZ };
 
-   if ( Merger_Coll )
+   if ( Merger_Coll_NumHalos > 1 )
    {
       const double ClusterCenter1[3]
          = { Merger_Coll_PosX1, Merger_Coll_PosY1, BoxCenter[2] };
       const double ClusterCenter2[3]
          = { Merger_Coll_PosX2, Merger_Coll_PosY2, BoxCenter[2] };
+      const double ClusterCenter3[3]
+	 = { Merger_Coll_PosX3, Merger_Coll_PosY3, BoxCenter[2] };
 
-      for (long p=0; p<NPar_ThisRank_EachCluster[0]; p++)
-      for (int d=0; d<3; d++)
-         ParPos[d][p] += ClusterCenter1[d];
-
-      for (long p=NPar_ThisRank_EachCluster[0]; p<NPar_ThisRank; p++)
-      for (int d=0; d<3; d++)
-         ParPos[d][p] += ClusterCenter2[d];
+      for (long p=0; p<NPar_ThisRank_EachCluster[0]; p++) {
+	ParVelX[p] += Merger_Coll_VelX1;
+	ParVelY[p] += Merger_Coll_VelY1;
+	for (int d=0; d<3; d++)
+	  ParPos[d][p] += ClusterCenter1[d];
+      }
+      for (long p=NPar_ThisRank_EachCluster[0]; p<NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1]; p++) {
+	ParVelX[p] += Merger_Coll_VelX2;
+	ParVelY[p] += Merger_Coll_VelY2;
+	for (int d=0; d<3; d++)
+	  ParPos[d][p] += ClusterCenter2[d];
+      }
+      for (long p=NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1]; p<NPar_ThisRank; p++) {
+	ParVelX[p] += Merger_Coll_VelX3;
+	ParVelY[p] += Merger_Coll_VelY3;
+	for (int d=0; d<3; d++)
+	  ParPos[d][p] += ClusterCenter3[d];
+      }
    }
-
    else
    {
       for (long p=0; p<NPar_ThisRank; p++)
       for (int d=0; d<3; d++)
          ParPos[d][p] += BoxCenter[d];
-   }
-
-
-// add the bulk velocity
-   if ( Merger_Coll )
-   {
-      for (long p=0; p<NPar_ThisRank_EachCluster[0]; p++) {  
-         ParVelX[p] += Merger_Coll_VelX1;
-         ParVelY[p] += Merger_Coll_VelY1;
-      }
-      for (long p=NPar_ThisRank_EachCluster[0]; p<NPar_ThisRank; p++) {  
-         ParVelX[p] += Merger_Coll_VelX2;
-         ParVelY[p] += Merger_Coll_VelY2;
-      }
-   }
+   } // if ( Merger_Coll_NumHalos > 1 )
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
