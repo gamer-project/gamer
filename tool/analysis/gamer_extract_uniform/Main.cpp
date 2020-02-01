@@ -362,7 +362,7 @@ void ReadOption( int argc, char **argv )
 
    if ( OutputXYZ == WRONG )
    {
-      cerr << "ERROR : please provide the targeted outupt data (-n output mode) !!" << endl;
+      cerr << "ERROR : please provide the targeted output data (-n output mode) !!" << endl;
       exit( 1 );
    }
 
