@@ -130,8 +130,8 @@ void LoadData_HDF5( const char *FileName )
    LoadField( "Float8",              &Float8_RS,         H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal, &Float8_RT,       1,    Fatal );
    LoadField( "NLevel",              &NLevel_RS,         H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal, &NLevel_RT,       1,    Fatal );
    LoadField( "PatchSize",           &PatchSize_RS,      H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal, &PatchSize_RT,    1,    Fatal );
-   LoadField( "NCompFluid",          &NCompFluid_RS,     H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal, &NCompFluid_RT,   1,    Fatal );
-   LoadField( "NCompPassive",        &NCompPassive_RS,   H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal, &NCompPassive_RT, 1,    Fatal );
+   LoadField( "NCompFluid",          &NCompFluid_RS,     H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,   NonFatal, &NCompFluid_RT,   1,    Fatal );
+   LoadField( "NCompPassive",        &NCompPassive_RS,   H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,   NonFatal, &NCompPassive_RT, 1,    Fatal );
 
    LoadField( "Gravity",             &Gravity,           H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal,  NullPtr,        -1, NonFatal );
    LoadField( "Particle",            &Particle,          H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal,  NullPtr,        -1, NonFatal );
