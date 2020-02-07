@@ -18,7 +18,7 @@ using namespace std;
 #include<sstream>
 #include<fstream>
 
-#define size_Jaffe 3000/***difference***/
+#define size_Jaffe 1000/***difference***/
 
 
 

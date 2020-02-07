@@ -164,7 +164,7 @@ double integration_Jaffe(double eng){
     else result += 2* de_rho_over_de_psi_Jaffe(x0) * ( pow(eng-psi_l,0.5) - pow(eng-psi_r,0.5) );
     
   }
-  cout<<result<<endl;
+  //cout<<result<<endl;
   return result;
 }
 double integration_eng_base_Jaffe(double eng){
@@ -172,7 +172,7 @@ double integration_eng_base_Jaffe(double eng){
   return integration_Jaffe(eng);
 }
 void Jaffe_calculator::initialize_prob_dens(){
-  double min =-potential_Jaffe(20),max =-potential_Jaffe(0.1);/***difference***/
+  double min =-potential_Jaffe(100),max =-potential_Jaffe(0.001);/***difference***/
   delta =(max-min)/size_Jaffe;
   double eng=min;
 
