@@ -1,31 +1,31 @@
 #include "GAMER.h"
 #include "TestProb.h"
 
-#include "Plummer_calculator.h"
+#include "Jaffe_calculator.h"
 
 // problem-specific global variables
 // =======================================================================================
-       int    Plummer_RSeed;        // random seed for setting particle position and velocity
-       double Plummer_Rho0;         // peak density
-       double Plummer_R0;           // scale radius
-       double Plummer_MaxR;         // maximum radius for particles
-       bool   Plummer_Collision;    // true/false --> two colliding Plummer clouds/single Plummer cloud
-       double Plummer_Collision_D;  // distance between two colliding Plummer clouds
-       double Plummer_Center[3];    // central coordinates
-       double Plummer_BulkVel[3];   // bulk velocity
-       double Plummer_GasMFrac;     // gas mass fraction
-       int    Plummer_MassProfNBin; // number of radial bins in the mass profile table
-static bool   Plummer_AddColor;     // assign different colors to different clouds for Plummer_Collision
+       int    Jaffe_RSeed;        // random seed for setting particle position and velocity
+       double Jaffe_Rho0;         // peak density
+       double Jaffe_R0;           // scale radius
+       double Jaffe_MaxR;         // maximum radius for particles
+       bool   Jaffe_Collision;    // true/false --> two colliding Jaffe clouds/single Jaffe cloud
+       double Jaffe_Collision_D;  // distance between two colliding Jaffe clouds
+       double Jaffe_Center[3];    // central coordinates
+       double Jaffe_BulkVel[3];   // bulk velocity
+       double Jaffe_GasMFrac;     // gas mass fraction
+       int    Jaffe_MassProfNBin; // number of radial bins in the mass profile table
+static bool   Jaffe_AddColor;     // assign different colors to different clouds for Jaffe_Collision
 
-static double Plummer_FreeT;        // free-fall time at Plummer_R0
+static double Jaffe_FreeT;        // free-fall time at Jaffe_R0
 
-static FieldIdx_t Plummer_Idx_Cloud0 = Idx_Undefined;    // field indices for Plummer_AddColor
-static FieldIdx_t Plummer_Idx_Cloud1 = Idx_Undefined;
+static FieldIdx_t Jaffe_Idx_Cloud0 = Idx_Undefined;    // field indices for Jaffe_AddColor
+static FieldIdx_t Jaffe_Idx_Cloud1 = Idx_Undefined;
 // =======================================================================================
 
 // problem-specific function prototypes
 #ifdef PARTICLE
-void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllRank,
+void Par_Init_ByFunction_Jaffe( const long NPar_ThisRank, const long NPar_AllRank,
                                   real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                   real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                   real *AllAttribute[PAR_NATT_TOTAL] );
@@ -121,21 +121,21 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",      &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "Plummer_RSeed",        &Plummer_RSeed,         123,           0,                NoMax_int         );
-   ReadPara->Add( "Plummer_Rho0",         &Plummer_Rho0,          1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Plummer_R0",           &Plummer_R0,            0.1,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Plummer_MaxR",         &Plummer_MaxR,          0.375,         Eps_double,       NoMax_double      );
-   ReadPara->Add( "Plummer_Collision",    &Plummer_Collision,     false,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "Plummer_Collision_D",  &Plummer_Collision_D,   1.5,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Plummer_CenterX",      &Plummer_Center[0],     NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Plummer_CenterY",      &Plummer_Center[1],     NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Plummer_CenterZ",      &Plummer_Center[2],     NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Plummer_BulkVelX",     &Plummer_BulkVel[0],    0.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Plummer_BulkVelY",     &Plummer_BulkVel[1],    0.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Plummer_BulkVelZ",     &Plummer_BulkVel[2],    0.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Plummer_GasMFrac",     &Plummer_GasMFrac,      0.5,           Eps_double,       1.0               );
-   ReadPara->Add( "Plummer_MassProfNBin", &Plummer_MassProfNBin,  1000,          2,                NoMax_int         );
-   ReadPara->Add( "Plummer_AddColor",     &Plummer_AddColor,      false,         Useless_bool,     Useless_bool      );
+   ReadPara->Add( "Jaffe_RSeed",        &Jaffe_RSeed,         123,           0,                NoMax_int         );
+   ReadPara->Add( "Jaffe_Rho0",         &Jaffe_Rho0,          1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jaffe_R0",           &Jaffe_R0,            0.1,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jaffe_MaxR",         &Jaffe_MaxR,          0.375,         Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jaffe_Collision",    &Jaffe_Collision,     false,         Useless_bool,     Useless_bool      );
+   ReadPara->Add( "Jaffe_Collision_D",  &Jaffe_Collision_D,   1.5,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jaffe_CenterX",      &Jaffe_Center[0],     NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jaffe_CenterY",      &Jaffe_Center[1],     NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jaffe_CenterZ",      &Jaffe_Center[2],     NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jaffe_BulkVelX",     &Jaffe_BulkVel[0],    0.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jaffe_BulkVelY",     &Jaffe_BulkVel[1],    0.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jaffe_BulkVelZ",     &Jaffe_BulkVel[2],    0.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jaffe_GasMFrac",     &Jaffe_GasMFrac,      0.5,           Eps_double,       1.0               );
+   ReadPara->Add( "Jaffe_MassProfNBin", &Jaffe_MassProfNBin,  1000,          2,                NoMax_int         );
+   ReadPara->Add( "Jaffe_AddColor",     &Jaffe_AddColor,      false,         Useless_bool,     Useless_bool      );
 
    ReadPara->Read( FileName );
 
@@ -143,35 +143,35 @@ void SetParameter()
 
 // (1-2) set the default values
    for (int d=0; d<3; d++)
-      if ( Plummer_Center[d] == NoDef_double )  Plummer_Center[d] = 0.5*amr->BoxSize[d];
+      if ( Jaffe_Center[d] == NoDef_double )  Jaffe_Center[d] = 0.5*amr->BoxSize[d];
 
-   if ( !Plummer_Collision  &&  Plummer_AddColor )
-      Aux_Error( ERROR_INFO, "\"Plummer_AddColor\" must work with \"Plummer_Collision\" !!\n" );
+   if ( !Jaffe_Collision  &&  Jaffe_AddColor )
+      Aux_Error( ERROR_INFO, "\"Jaffe_AddColor\" must work with \"Jaffe_Collision\" !!\n" );
 
 // (1-3) check and reset the runtime parameters
-   if ( Plummer_AddColor  &&  NCOMP_PASSIVE_USER != 2 )
-      Aux_Error( ERROR_INFO, "please set NCOMP_PASSIVE_USER to 2 for \"Plummer_AddColor\" !!\n" );
+   if ( Jaffe_AddColor  &&  NCOMP_PASSIVE_USER != 2 )
+      Aux_Error( ERROR_INFO, "please set NCOMP_PASSIVE_USER to 2 for \"Jaffe_AddColor\" !!\n" );
 
 #  ifndef PARTICLE
-   if ( Plummer_GasMFrac != 1.0 )
+   if ( Jaffe_GasMFrac != 1.0 )
    {
-      Plummer_GasMFrac = 1.0;
+      Jaffe_GasMFrac = 1.0;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : \"Plummer_GasMFrac\" is reset to 1.0 since PARTICLE is disabled !!\n" );
+         Aux_Message( stderr, "WARNING : \"Jaffe_GasMFrac\" is reset to 1.0 since PARTICLE is disabled !!\n" );
    }
 #  endif
 
 // (2) set the problem-specific derived parameters
 #  ifdef GRAVITY
-   Plummer_FreeT = sqrt( (3.0*M_PI*pow(2.0,1.5)) / (32.0*NEWTON_G*Plummer_Rho0) );
+   Jaffe_FreeT = sqrt( (3.0*M_PI*pow(2.0,1.5)) / (32.0*NEWTON_G*Jaffe_Rho0) );
 #  endif
 
 
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
    const long   End_Step_Default = __INT_MAX__;
-   const double End_T_Default    = (Plummer_Collision) ? 50.0 : 20.0*Plummer_FreeT;
+   const double End_T_Default    = (Jaffe_Collision) ? 50.0 : 20.0*Jaffe_FreeT;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
@@ -189,24 +189,24 @@ void SetParameter()
    {
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "  test problem ID                           = %d\n",     TESTPROB_ID );
-      Aux_Message( stdout, "  random seed for setting particle position = %d\n",     Plummer_RSeed );
-      Aux_Message( stdout, "  peak density                              = %13.7e\n", Plummer_Rho0 );
-      Aux_Message( stdout, "  scale radius                              = %13.7e\n", Plummer_R0 );
-      Aux_Message( stdout, "  maximum radius of particles               = %13.7e\n", Plummer_MaxR );
-      Aux_Message( stdout, "  test mode                                 = %s\n",    (Plummer_Collision)?
+      Aux_Message( stdout, "  random seed for setting particle position = %d\n",     Jaffe_RSeed );
+      Aux_Message( stdout, "  peak density                              = %13.7e\n", Jaffe_Rho0 );
+      Aux_Message( stdout, "  scale radius                              = %13.7e\n", Jaffe_R0 );
+      Aux_Message( stdout, "  maximum radius of particles               = %13.7e\n", Jaffe_MaxR );
+      Aux_Message( stdout, "  test mode                                 = %s\n",    (Jaffe_Collision)?
                                                                                      "colliding clouds":"single cloud" );
       for (int d=0; d<3; d++)
-      Aux_Message( stdout, "  central coordinate [%d]                   = %14.7e\n", d, Plummer_Center[d] );
-      if ( Plummer_Collision ) {
-      Aux_Message( stdout, "  initial distance between two clouds       = %13.7e\n", Plummer_Collision_D );
-      Aux_Message( stdout, "  assign colors to different clouds         = %d\n",     Plummer_AddColor ); }
+      Aux_Message( stdout, "  central coordinate [%d]                   = %14.7e\n", d, Jaffe_Center[d] );
+      if ( Jaffe_Collision ) {
+      Aux_Message( stdout, "  initial distance between two clouds       = %13.7e\n", Jaffe_Collision_D );
+      Aux_Message( stdout, "  assign colors to different clouds         = %d\n",     Jaffe_AddColor ); }
       for (int d=0; d<3; d++)
-      Aux_Message( stdout, "  bulk velocity [%d]                        = %14.7e\n", d, Plummer_BulkVel[d] );
+      Aux_Message( stdout, "  bulk velocity [%d]                        = %14.7e\n", d, Jaffe_BulkVel[d] );
 #     if ( MODEL == HYDRO )
-      Aux_Message( stdout, "  gas mass fraction                         = %13.7e\n", Plummer_GasMFrac );
+      Aux_Message( stdout, "  gas mass fraction                         = %13.7e\n", Jaffe_GasMFrac );
 #     endif
-      Aux_Message( stdout, "  number of radial bins in the mass profile = %d\n",     Plummer_MassProfNBin );
-      Aux_Message( stdout, "  free-fall time at the scale radius        = %13.7e\n", Plummer_FreeT );
+      Aux_Message( stdout, "  number of radial bins in the mass profile = %d\n",     Jaffe_MassProfNBin );
+      Aux_Message( stdout, "  free-fall time at the scale radius        = %13.7e\n", Jaffe_FreeT );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -239,21 +239,20 @@ void SetParameter()
 void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] )
 {
-
+  
 // gas share the same density profile as particles (except for different total masses)
    /***Main Change***/
-   const double TotM    = 4.0/3.0*M_PI*CUBE(Plummer_R0)*Plummer_Rho0;
+   const double TotM    = 4.0*M_PI*CUBE(Jaffe_R0)*Jaffe_Rho0;
    /***Main Change***/
-   const double GasRho0 = Plummer_Rho0*Plummer_GasMFrac;
+   const double GasRho0 = Jaffe_Rho0*Jaffe_GasMFrac;
    const double PresBg  = 0.0;   // background pressure (set to 0.0 by default)
 
    double r2, a2, Dens;
    /***Calculator***/
-   Plummer_calculator a;
-
-   if ( Plummer_Collision )
+   Jaffe_calculator a;
+   if ( Jaffe_Collision )
    {
-      const double Coll_Offset = 0.5*Plummer_Collision_D/sqrt(3.0);
+      const double Coll_Offset = 0.5*Jaffe_Collision_D/sqrt(3.0);
       double Center[3];
 
       fluid[DENS] = 0.0;
@@ -262,13 +261,13 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
       for (int t=-1; t<=1; t+=2)
       {
-         for (int d=0; d<3; d++)    Center[d] = Plummer_Center[d] + Coll_Offset*(double)t;
+         for (int d=0; d<3; d++)    Center[d] = Jaffe_Center[d] + Coll_Offset*(double)t;
 
          r2   = SQR(x-Center[0]) + SQR(y-Center[1]) + SQR(z-Center[2]);
-         a2   = r2 / SQR(Plummer_R0);
-         /***Main Change***/
+         a2   = r2 / SQR(Jaffe_R0);
          double r=pow(a2,0.5);
-         Dens = GasRho0 * pow( 1.0 + a2, -2.5 );
+         /***Main Change***/
+         Dens = GasRho0/pow((r+1)*r,2);
          /***Main Change***/
          fluid[DENS] += Dens;
 #        ifdef GRAVITY
@@ -277,47 +276,46 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
          /***Main Change***/
 #        endif
 
-         if ( Plummer_AddColor )
-         fluid[ (t==-1)?Plummer_Idx_Cloud0:Plummer_Idx_Cloud1 ] = Dens;
+         if ( Jaffe_AddColor )
+         fluid[ (t==-1)?Jaffe_Idx_Cloud0:Jaffe_Idx_Cloud1 ] = Dens;
       }
 
-      fluid[MOMX]  = fluid[DENS]*Plummer_BulkVel[0];
-      fluid[MOMY]  = fluid[DENS]*Plummer_BulkVel[1];
-      fluid[MOMZ]  = fluid[DENS]*Plummer_BulkVel[2];
+      fluid[MOMX]  = fluid[DENS]*Jaffe_BulkVel[0];
+      fluid[MOMY]  = fluid[DENS]*Jaffe_BulkVel[1];
+      fluid[MOMZ]  = fluid[DENS]*Jaffe_BulkVel[2];
       fluid[ENGY] += 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
    }
 
    else
    {
-      r2   = SQR(x-Plummer_Center[0]) + SQR(y-Plummer_Center[1]) + SQR(z-Plummer_Center[2]);
-      a2   = r2 / SQR(Plummer_R0);
-      /***Main Change***/
+      r2   = SQR(x-Jaffe_Center[0]) + SQR(y-Jaffe_Center[1]) + SQR(z-Jaffe_Center[2]);
+      a2   = r2 / SQR(Jaffe_R0);
       double r=pow(a2,0.5);
-      Dens = GasRho0 * pow( 1.0 + a2, -2.5 );
+      /***Main Change***/
+      Dens = GasRho0/pow((r+1)*r,2);
       /***Main Change***/
 
       fluid[DENS] = Dens;
-      fluid[MOMX] = fluid[DENS]*Plummer_BulkVel[0];
-      fluid[MOMY] = fluid[DENS]*Plummer_BulkVel[1];
-      fluid[MOMZ] = fluid[DENS]*Plummer_BulkVel[2];
+      fluid[MOMX] = fluid[DENS]*Jaffe_BulkVel[0];
+      fluid[MOMY] = fluid[DENS]*Jaffe_BulkVel[1];
+      fluid[MOMZ] = fluid[DENS]*Jaffe_BulkVel[2];
 #     ifdef GRAVITY
       /***Main Change***/
-      fluid[ENGY] = (a.pressure(r)  + PresBg  ) / ( GAMMA - 1.0 )
+      fluid[ENGY] = (  a.pressure(r) + PresBg  ) / ( GAMMA - 1.0 )
                     + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
-                    
       /***Main Change***/
 #     endif
 
 //    just set all passive scalars as zero
       for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = 0.0;
-   } // if ( Plummer_Collision ) ... else ...
+   } // if ( Jaffe_Collision ) ... else ...
 
 } // FUNCTION : SetGridIC
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  AddNewField_Plummer
+// Function    :  AddNewField_Jaffe
 // Description :  Add the problem-specific fields
 //
 // Note        :  1. Ref: https://github.com/gamer-project/gamer/wiki/Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes
@@ -330,22 +328,22 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void AddNewField_Plummer()
+void AddNewField_Jaffe()
 {
 
-   if ( Plummer_AddColor )
+   if ( Jaffe_AddColor )
    {
-      Plummer_Idx_Cloud0 = AddField( "Cloud0", NORMALIZE_YES );
-      Plummer_Idx_Cloud1 = AddField( "Cloud1", NORMALIZE_YES );
+      Jaffe_Idx_Cloud0 = AddField( "Cloud0", NORMALIZE_YES );
+      Jaffe_Idx_Cloud1 = AddField( "Cloud1", NORMALIZE_YES );
    }
 
-} // FUNCTION : AddNewField_Plummer
+} // FUNCTION : AddNewField_Jaffe
 #endif // #if ( MODEL == HYDRO )
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_TestProb_Hydro_Plummer
+// Function    :  Init_TestProb_Hydro_Jaffe
 // Description :  Test problem initializer
 //
 // Note        :  None
@@ -354,7 +352,7 @@ void AddNewField_Plummer()
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Init_TestProb_Hydro_Plummer()
+void Init_TestProb_Hydro_Jaffe()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -370,7 +368,7 @@ void Init_TestProb_Hydro_Plummer()
 
 
    Init_Function_User_Ptr   = SetGridIC;
-   Init_Field_User_Ptr      = AddNewField_Plummer;
+   Init_Field_User_Ptr      = AddNewField_Jaffe;
    Flag_User_Ptr            = NULL;
    Mis_GetTimeStep_User_Ptr = NULL;
    BC_User_Ptr              = NULL;
@@ -383,11 +381,11 @@ void Init_TestProb_Hydro_Plummer()
    Init_ExternalPot_Ptr     = NULL;
 #  endif
 #  ifdef PARTICLE
-   Par_Init_ByFunction_Ptr  = Par_Init_ByFunction_Plummer;
+   Par_Init_ByFunction_Ptr  = Par_Init_ByFunction_Jaffe;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Init_TestProb_Hydro_Plummer
+} // FUNCTION : Init_TestProb_Hydro_Jaffe

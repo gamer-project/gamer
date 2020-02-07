@@ -1,33 +1,34 @@
+/***Total deep copy***/
 #include "GAMER.h"
+#include "NFW_calculator.h"
 #include "Plummer_calculator.h"
-<<<<<<< HEAD
-=======
+#include"Burkert_calculator.h"
+#include"Jaffe_calculator.h"
+#include"UNKNOWN_calculator.h"
 
->>>>>>> 59094c0a60c1e0583dd0b96ce0541562dc013a7c
+#define DEBUG
 #ifdef PARTICLE
 
-extern int    Plummer_RSeed;
-extern double Plummer_Rho0;
-extern double Plummer_R0;
-extern double Plummer_MaxR;
-extern bool   Plummer_Collision;
-extern double Plummer_Collision_D;
-extern double Plummer_Center[3];
-extern double Plummer_BulkVel[3];
-extern double Plummer_GasMFrac;
-extern int    Plummer_MassProfNBin;
+extern int    Models_RSeed;
+extern double Models_Rho0;
+extern double Models_R0;
+extern double Models_MaxR;
+extern bool   Models_Collision;
+extern double Models_Collision_D;
+extern double Models_Center[3];
+extern double Models_BulkVel[3];
+extern double Models_GasMFrac;
+extern int    Models_MassProfNBin;
 
 static RandomNumber_t *RNG = NULL;
 
 
-static double MassProf_Plummer( const double r );
+static double MassProf_Models( const double r ,string model_name);
 static void   RanVec_FixRadius( const double r, double RanVec[] );
 
 
-
-
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Par_Init_ByFunction_Plummer
+// Function    :  Par_Init_ByFunction_Models
 // Description :  User-specified function to initialize particle attributes
 //
 // Note        :  1. Invoked by Init_GAMER() using the function pointer "Par_Init_ByFunction_Ptr"
@@ -57,20 +58,36 @@ static void   RanVec_FixRadius( const double r, double RanVec[] );
 //
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, AllAttribute
 //-------------------------------------------------------------------------------------------------------
-Plummer_calculator a_Plummer;
-void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllRank,
+NFW_calculator cal_NFW;//main
+Plummer_calculator cal_Plummer;
+Burkert_calculator cal_Burkert;
+Jaffe_calculator cal_Jaffe;
+UNKNOWN_calculator cal_UNKNOWN;
+void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRank,
                                   real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                   real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                   real *AllAttribute[PAR_NATT_TOTAL] )
 {
-// Initialize Calculator
+// Input Model names
+   string model_name;
+   model_name="Jaffe";
+   //cout<<"Input model names:";
+   //cin>>model_name;
+
+// Initialize calculators
    static bool flag=0;
    if(flag==0){
-      a_Plummer.init(NEWTON_G,Plummer_Rho0,Plummer_R0);
+
+      if(model_name=="NFW")cal_NFW.init(NEWTON_G,Models_Rho0,Models_R0);
+      else if(model_name=="Plummer")cal_Plummer.init(NEWTON_G,Models_Rho0,Models_R0);
+      else if(model_name=="Burkert")cal_Burkert.init(NEWTON_G,Models_Rho0,Models_R0);
+      else if(model_name=="Jaffe")cal_Jaffe.init(NEWTON_G,Models_Rho0,Models_R0);
+      //else if(model_name=="UNKNOWN")cal_UNKNOWN.init(NEWTON_G,Models_R0,Models_MaxR,"profile.txt",7,1,0,5);
+      else if(model_name=="UNKNOWN")cal_UNKNOWN.init(NEWTON_G,Models_Rho0,Models_R0,Models_MassProfNBin,Models_MaxR);
+
       flag=1;
       cout<<"done"<<endl;
    }
-
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
@@ -80,10 +97,8 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 
 // only the master rank will construct the initial condition
    if ( MPI_Rank == 0 )
-   {
-      const double TotM_Inf    = 4.0/3.0*M_PI*CUBE(Plummer_R0)*Plummer_Rho0;
-      const double Vmax_Fac    = sqrt( 2.0*NEWTON_G*TotM_Inf );
-      const double Coll_Offset = 0.5*Plummer_Collision_D/sqrt(3.0);
+   {  
+      const double Coll_Offset = 0.5*Models_Collision_D/sqrt(3.0);
 
       double *Table_MassProf_r = NULL;
       double *Table_MassProf_M = NULL;
@@ -100,32 +115,32 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 
 //    initialize the random number generator
       RNG = new RandomNumber_t( 1 );
-      RNG->SetSeed( 0, Plummer_RSeed );
+      RNG->SetSeed( 0, Models_RSeed );
 
 
 //    determine the total enclosed mass within the maximum radius
-      TotM = MassProf_Plummer( Plummer_MaxR );
+      TotM = MassProf_Models( Models_MaxR ,model_name);
       ParM = TotM / NPar_AllRank;
 
-      if ( Plummer_Collision )   ParM *= 2.0;
+      if ( Models_Collision )   ParM *= 2.0;
 
 //    rescale particle mass to account for the gas contribution
-      ParM *= 1.0 - Plummer_GasMFrac;
+      ParM *= 1.0 - Models_GasMFrac;
 
 
 //    construct the mass profile table
-      Table_MassProf_r = new double [Plummer_MassProfNBin];
-      Table_MassProf_M = new double [Plummer_MassProfNBin];
+      Table_MassProf_r = new double [Models_MassProfNBin];
+      Table_MassProf_M = new double [Models_MassProfNBin];
 
-      dr = Plummer_MaxR / (Plummer_MassProfNBin-1);
+      dr = Models_MaxR / (Models_MassProfNBin-1);
 
-      for (int b=0; b<Plummer_MassProfNBin; b++)
+      for (int b=0; b<Models_MassProfNBin; b++)
       {
          Table_MassProf_r[b] = dr*b;
-         Table_MassProf_M[b] = MassProf_Plummer( Table_MassProf_r[b] );
+         Table_MassProf_M[b] = MassProf_Models( Table_MassProf_r[b] ,model_name);
       }
 
-
+      double max=0.0;
 //    set particle attributes
       for (long p=0; p<NPar_AllRank; p++)
       {
@@ -136,19 +151,19 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 //       position
 //       --> sample from the cumulative mass profile with linear interpolation
          RanM = RNG->GetValue( 0, 0.0, 1.0 )*TotM;
-         RanR = Mis_InterpolateFromTable( Plummer_MassProfNBin, Table_MassProf_M, Table_MassProf_r, RanM );
+         RanR = Mis_InterpolateFromTable( Models_MassProfNBin, Table_MassProf_M, Table_MassProf_r, RanM );
 
 //       record the maximum error
-         EstM     = MassProf_Plummer( RanR );
+         EstM     = MassProf_Models( RanR ,model_name);
          ErrM     = fabs( (EstM-RanM)/RanM );
          ErrM_Max = fmax( ErrM, ErrM_Max );
 
 //       randomly set the position vector with a given radius
          RanVec_FixRadius( RanR, RanVec );
-         for (int d=0; d<3; d++)    Pos_AllRank[d][p] = RanVec[d] + Plummer_Center[d];
+         for (int d=0; d<3; d++)    Pos_AllRank[d][p] = RanVec[d] + Models_Center[d];
 
-//       set position offset for the Plummer collision test
-         if ( Plummer_Collision )
+//       set position offset for the Models collision test
+         if ( Models_Collision )
          for (int d=0; d<3; d++)    Pos_AllRank[d][p] += Coll_Offset*( (p<NPar_AllRank/2)?-1.0:+1.0 );
 
 //       check periodicity
@@ -159,37 +174,25 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
          }
 
 
-//       velocity
-<<<<<<< HEAD
-         double a3=RanR/Plummer_R0;
-         RanV = a_Plummer.set_vel(a3);
-=======
-//       determine the maximum velocity (i.e., the escaping velocity)
-         Plummer_calculator cal;
-         double max=cal.max_prob(RanR/Plummer_R0);
-         Vmax = pow(2*cal.psi(RanR/Plummer_R0),0.5);
+//       velocity//main
 
-//       randomly determine the velocity amplitude (ref: Aarseth, S. et al. 1974, A&A, 37, 183: Eq. [A4,A5])
-         do
-         {  
-            double *r0=new double(RanR/Plummer_R0);
-            RanV    = RNG->GetValue( 0, 0.0, 1.0 );         // (0.0, 1.0)
-            RanProb = RNG->GetValue( 0, 0.0, max );         // (0.0, 0.1)
-            Prob    = cal.prob(RanV*Vmax,r0);  // < 0.1
-            delete r0;
-         }
-         while ( RanProb > Prob );
->>>>>>> 59094c0a60c1e0583dd0b96ce0541562dc013a7c
+         double a3=RanR/Models_R0;
+         if(model_name=="NFW")RanV = cal_NFW.set_vel(a3); 
+         else if(model_name=="Plummer")RanV = cal_Plummer.set_vel(a3);   
+         else if(model_name=="Burkert")RanV = cal_Burkert.set_vel(a3);
+         else if(model_name=="Jaffe")RanV = cal_Jaffe.set_vel(a3);         
+         else if(model_name=="UNKNOWN")RanV = cal_UNKNOWN.set_vel(a3);            
 
 //       randomly set the velocity vector with the given amplitude (RanV*Vmax)
          RanVec_FixRadius( RanV, RanVec );
-         for (int d=0; d<3; d++)    Vel_AllRank[d][p] = RanVec[d] + Plummer_BulkVel[d];
+         for (int d=0; d<3; d++)    Vel_AllRank[d][p] = RanVec[d] + Models_BulkVel[d];
 
       } // for (long p=0; p<NPar_AllRank; p++)
+      
 
       Aux_Message( stdout, "   Total enclosed mass within MaxR  = %13.7e\n",  TotM );
-      Aux_Message( stdout, "   Total enclosed mass to inifinity = %13.7e\n",  TotM_Inf );
-      Aux_Message( stdout, "   Enclosed mass ratio              = %6.2f%%\n", 100.0*TotM/TotM_Inf );
+      //Aux_Message( stdout, "   Total enclosed mass to inifinity = %13.7e\n",  TotM_Inf );
+      //Aux_Message( stdout, "   Enclosed mass ratio              = %6.2f%%\n", 100.0*TotM/TotM_Inf );
       Aux_Message( stdout, "   Particle mass                    = %13.7e\n",  ParM );
       Aux_Message( stdout, "   Maximum mass interpolation error = %13.7e\n",  ErrM_Max );
 
@@ -262,13 +265,13 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Par_Init_ByFunction_Plummer
+} // FUNCTION : Par_Init_ByFunction_Models
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  MassProf_Plummer
-// Description :  Mass profile of the Plummer model
+// Function    :  MassProf_Models
+// Description :  Mass profile of the Models model
 //
 // Note        :  Calculate the enclosed mass within the given radius
 //
@@ -276,14 +279,18 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 //
 // Return      :  Enclosed mass
 //-------------------------------------------------------------------------------------------------------
-double MassProf_Plummer( const double r )
+
+double MassProf_Models( const double r ,string model_name)
 {
-
-   const double x = r / Plummer_R0;
-
-   return 4.0/3.0*M_PI*Plummer_Rho0*CUBE(r)*pow( 1.0+x*x, -1.5 );
-
-} // FUNCTION : MassProf_Plummer
+   
+   const double x = r / Models_R0;
+   
+   if(model_name=="NFW")return 4* M_PI *Models_Rho0 *pow(Models_R0,3) *(log(1+x) - x/(1+x));
+   else if(model_name=="Plummer")return 4.0/3.0*M_PI*Models_Rho0*CUBE(r)*pow( 1.0+x*x, -1.5 );
+   else if(model_name=="Burkert")return M_PI *Models_Rho0 *pow(Models_R0,3) *(log(1+x*x) + 2 * log(1+x) -2 *atan(x));
+   else if(model_name=="Jaffe")return 4* M_PI *Models_Rho0 *pow(Models_R0,3) *(x/(1+x));
+   else if(model_name=="UNKNOWN")return 4* M_PI *Models_Rho0 *pow(Models_R0,3) *(log(1+x) - x/(1+x));
+} // FUNCTION : MassProf_Models
 
 
 

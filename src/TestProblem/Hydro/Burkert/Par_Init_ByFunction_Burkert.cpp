@@ -1,33 +1,81 @@
+/***Total deep copy***/
 #include "GAMER.h"
-#include "Plummer_calculator.h"
-<<<<<<< HEAD
-=======
-
->>>>>>> 59094c0a60c1e0583dd0b96ce0541562dc013a7c
+#include "Burkert_calculator.h"
+#include <gsl/gsl_integration.h>
+#include <gsl/gsl_errno.h>
+#include <gsl/gsl_math.h>
+#include <gsl/gsl_roots.h>
+#include <gsl/gsl_deriv.h>
+#define DEBUG
 #ifdef PARTICLE
 
-extern int    Plummer_RSeed;
-extern double Plummer_Rho0;
-extern double Plummer_R0;
-extern double Plummer_MaxR;
-extern bool   Plummer_Collision;
-extern double Plummer_Collision_D;
-extern double Plummer_Center[3];
-extern double Plummer_BulkVel[3];
-extern double Plummer_GasMFrac;
-extern int    Plummer_MassProfNBin;
+extern int    Burkert_RSeed;
+extern double Burkert_Rho0;
+extern double Burkert_R0;
+extern double Burkert_MaxR;
+extern bool   Burkert_Collision;
+extern double Burkert_Collision_D;
+extern double Burkert_Center[3];
+extern double Burkert_BulkVel[3];
+extern double Burkert_GasMFrac;
+extern int    Burkert_MassProfNBin;
 
 static RandomNumber_t *RNG = NULL;
 
 
-static double MassProf_Plummer( const double r );
+static double MassProf_Burkert( const double r );
 static void   RanVec_FixRadius( const double r, double RanVec[] );
 
+double f(double x,void *params);
+double function01(double x,void *params);
+double function02(double x,void *params);
 
-
+/***gsl function***/
+double Burkert_potential(double a3){
+   double s=(4*M_PI*NEWTON_G*Burkert_Rho0*Burkert_R0*Burkert_R0)*(atan(a3)/(2*a3)-log(a3*a3+1)/(4*a3)-log(a3+1)/(2*a3)+atan(a3)/2+log(a3*a3+1)/4-log(a3+1)/2-M_PI/4);
+   return s;
+}/*
+double f (double x, void * parameters) {
+   double a3=x;
+   double e= *(double *)parameters;
+   double fs= -potential(x)-e;
+   return fs;
+}
+double function01 (double x, void * parameters) {
+      double rho_dx=2*x*Burkert_Rho0/((x*x+1)*(x*x+1)*(x+1))+Burkert_Rho0/((x*x+1)*(x+1)*(x+1));
+      double psi_dx=4*M_PI*NEWTON_G*Burkert_R0*Burkert_Rho0*(-0.5*atan(x)+0.25*log(x*x+1)+0.5*log(x+1))/(x*x);
+      double fs = rho_dx/psi_dx;
+      return fs;
+      }
+double de_rho_over_de_psi(double x) {
+      gsl_function F;
+      double a3=x;
+      double result, abserr;
+      F.function = &function01;
+      gsl_deriv_central (&F, x, 1e-8, &result, &abserr);
+      return result;
+}
+double function02(double x, void * parameters) {
+      
+      double e= *(double *)parameters;
+            
+      double fs=de_rho_over_de_psi(x)*pow(e+potential(x),-0.5);
+      return fs;
+      
+} 
+double function02(double x, double e) {    
+      double fs=de_rho_over_de_psi(x)*pow(e+potential(x),-0.5);
+      Burkert_calculator a;
+      double *b;
+      double s=a.test2(3,b);
+      return fs;
+     
+} */ 
+       
+/***gsl function***/
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Par_Init_ByFunction_Plummer
+// Function    :  Par_Init_ByFunction_Burkert
 // Description :  User-specified function to initialize particle attributes
 //
 // Note        :  1. Invoked by Init_GAMER() using the function pointer "Par_Init_ByFunction_Ptr"
@@ -57,20 +105,18 @@ static void   RanVec_FixRadius( const double r, double RanVec[] );
 //
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, AllAttribute
 //-------------------------------------------------------------------------------------------------------
-Plummer_calculator a_Plummer;
-void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllRank,
+Burkert_calculator a;
+void Par_Init_ByFunction_Burkert( const long NPar_ThisRank, const long NPar_AllRank,
                                   real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                   real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                   real *AllAttribute[PAR_NATT_TOTAL] )
 {
-// Initialize Calculator
    static bool flag=0;
    if(flag==0){
-      a_Plummer.init(NEWTON_G,Plummer_Rho0,Plummer_R0);
+      a.init();
       flag=1;
       cout<<"done"<<endl;
    }
-
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
@@ -81,9 +127,9 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 // only the master rank will construct the initial condition
    if ( MPI_Rank == 0 )
    {
-      const double TotM_Inf    = 4.0/3.0*M_PI*CUBE(Plummer_R0)*Plummer_Rho0;
-      const double Vmax_Fac    = sqrt( 2.0*NEWTON_G*TotM_Inf );
-      const double Coll_Offset = 0.5*Plummer_Collision_D/sqrt(3.0);
+      //const double TotM_Inf    = 4.0/3.0*M_PI*CUBE(Burkert_R0)*Burkert_Rho0;
+      //const double Vmax_Fac    = sqrt( 2.0*NEWTON_G*TotM_Inf );
+      const double Coll_Offset = 0.5*Burkert_Collision_D/sqrt(3.0);
 
       double *Table_MassProf_r = NULL;
       double *Table_MassProf_M = NULL;
@@ -100,32 +146,32 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 
 //    initialize the random number generator
       RNG = new RandomNumber_t( 1 );
-      RNG->SetSeed( 0, Plummer_RSeed );
+      RNG->SetSeed( 0, Burkert_RSeed );
 
 
 //    determine the total enclosed mass within the maximum radius
-      TotM = MassProf_Plummer( Plummer_MaxR );
+      TotM = MassProf_Burkert( Burkert_MaxR );
       ParM = TotM / NPar_AllRank;
 
-      if ( Plummer_Collision )   ParM *= 2.0;
+      if ( Burkert_Collision )   ParM *= 2.0;
 
 //    rescale particle mass to account for the gas contribution
-      ParM *= 1.0 - Plummer_GasMFrac;
+      ParM *= 1.0 - Burkert_GasMFrac;
 
 
 //    construct the mass profile table
-      Table_MassProf_r = new double [Plummer_MassProfNBin];
-      Table_MassProf_M = new double [Plummer_MassProfNBin];
+      Table_MassProf_r = new double [Burkert_MassProfNBin];
+      Table_MassProf_M = new double [Burkert_MassProfNBin];
 
-      dr = Plummer_MaxR / (Plummer_MassProfNBin-1);
+      dr = Burkert_MaxR / (Burkert_MassProfNBin-1);
 
-      for (int b=0; b<Plummer_MassProfNBin; b++)
+      for (int b=0; b<Burkert_MassProfNBin; b++)
       {
          Table_MassProf_r[b] = dr*b;
-         Table_MassProf_M[b] = MassProf_Plummer( Table_MassProf_r[b] );
+         Table_MassProf_M[b] = MassProf_Burkert( Table_MassProf_r[b] );
       }
 
-
+      double max=0.0;
 //    set particle attributes
       for (long p=0; p<NPar_AllRank; p++)
       {
@@ -136,19 +182,19 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 //       position
 //       --> sample from the cumulative mass profile with linear interpolation
          RanM = RNG->GetValue( 0, 0.0, 1.0 )*TotM;
-         RanR = Mis_InterpolateFromTable( Plummer_MassProfNBin, Table_MassProf_M, Table_MassProf_r, RanM );
+         RanR = Mis_InterpolateFromTable( Burkert_MassProfNBin, Table_MassProf_M, Table_MassProf_r, RanM );
 
 //       record the maximum error
-         EstM     = MassProf_Plummer( RanR );
+         EstM     = MassProf_Burkert( RanR );
          ErrM     = fabs( (EstM-RanM)/RanM );
          ErrM_Max = fmax( ErrM, ErrM_Max );
 
 //       randomly set the position vector with a given radius
          RanVec_FixRadius( RanR, RanVec );
-         for (int d=0; d<3; d++)    Pos_AllRank[d][p] = RanVec[d] + Plummer_Center[d];
+         for (int d=0; d<3; d++)    Pos_AllRank[d][p] = RanVec[d] + Burkert_Center[d];
 
-//       set position offset for the Plummer collision test
-         if ( Plummer_Collision )
+//       set position offset for the Burkert collision test
+         if ( Burkert_Collision )
          for (int d=0; d<3; d++)    Pos_AllRank[d][p] += Coll_Offset*( (p<NPar_AllRank/2)?-1.0:+1.0 );
 
 //       check periodicity
@@ -160,36 +206,20 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 
 
 //       velocity
-<<<<<<< HEAD
-         double a3=RanR/Plummer_R0;
-         RanV = a_Plummer.set_vel(a3);
-=======
-//       determine the maximum velocity (i.e., the escaping velocity)
-         Plummer_calculator cal;
-         double max=cal.max_prob(RanR/Plummer_R0);
-         Vmax = pow(2*cal.psi(RanR/Plummer_R0),0.5);
 
-//       randomly determine the velocity amplitude (ref: Aarseth, S. et al. 1974, A&A, 37, 183: Eq. [A4,A5])
-         do
-         {  
-            double *r0=new double(RanR/Plummer_R0);
-            RanV    = RNG->GetValue( 0, 0.0, 1.0 );         // (0.0, 1.0)
-            RanProb = RNG->GetValue( 0, 0.0, max );         // (0.0, 0.1)
-            Prob    = cal.prob(RanV*Vmax,r0);  // < 0.1
-            delete r0;
-         }
-         while ( RanProb > Prob );
->>>>>>> 59094c0a60c1e0583dd0b96ce0541562dc013a7c
+         double a3=RanR/Burkert_R0;
+         RanV = a.set_vel(a3);      
 
 //       randomly set the velocity vector with the given amplitude (RanV*Vmax)
          RanVec_FixRadius( RanV, RanVec );
-         for (int d=0; d<3; d++)    Vel_AllRank[d][p] = RanVec[d] + Plummer_BulkVel[d];
+         for (int d=0; d<3; d++)    Vel_AllRank[d][p] = RanVec[d] + Burkert_BulkVel[d];
 
       } // for (long p=0; p<NPar_AllRank; p++)
+      
 
       Aux_Message( stdout, "   Total enclosed mass within MaxR  = %13.7e\n",  TotM );
-      Aux_Message( stdout, "   Total enclosed mass to inifinity = %13.7e\n",  TotM_Inf );
-      Aux_Message( stdout, "   Enclosed mass ratio              = %6.2f%%\n", 100.0*TotM/TotM_Inf );
+      //Aux_Message( stdout, "   Total enclosed mass to inifinity = %13.7e\n",  TotM_Inf );
+      //Aux_Message( stdout, "   Enclosed mass ratio              = %6.2f%%\n", 100.0*TotM/TotM_Inf );
       Aux_Message( stdout, "   Particle mass                    = %13.7e\n",  ParM );
       Aux_Message( stdout, "   Maximum mass interpolation error = %13.7e\n",  ErrM_Max );
 
@@ -262,13 +292,13 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Par_Init_ByFunction_Plummer
+} // FUNCTION : Par_Init_ByFunction_Burkert
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  MassProf_Plummer
-// Description :  Mass profile of the Plummer model
+// Function    :  MassProf_Burkert
+// Description :  Mass profile of the Burkert model
 //
 // Note        :  Calculate the enclosed mass within the given radius
 //
@@ -276,14 +306,19 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 //
 // Return      :  Enclosed mass
 //-------------------------------------------------------------------------------------------------------
-double MassProf_Plummer( const double r )
+
+double MassProf_Burkert( const double r )
 {
+   
+   const double x = r / Burkert_R0;
+   //const double m0=1.6*Burkert_Rho0*pow(Burkert_R0,3);
 
-   const double x = r / Plummer_R0;
+   //return 4.0*m0*(log(1+x)+0.5*log(1+x*x)-atan(x));
+   
+   return M_PI *Burkert_Rho0 *pow(Burkert_R0,3) *(log(1+x*x) + 2 * log(1+x) -2 *atan(x));
 
-   return 4.0/3.0*M_PI*Plummer_Rho0*CUBE(r)*pow( 1.0+x*x, -1.5 );
 
-} // FUNCTION : MassProf_Plummer
+} // FUNCTION : MassProf_Burkert
 
 
 

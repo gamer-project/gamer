@@ -1,33 +1,28 @@
 #include "GAMER.h"
-#include "Plummer_calculator.h"
-<<<<<<< HEAD
-=======
+#include"Jaffe_calculator.h"
 
->>>>>>> 59094c0a60c1e0583dd0b96ce0541562dc013a7c
 #ifdef PARTICLE
 
-extern int    Plummer_RSeed;
-extern double Plummer_Rho0;
-extern double Plummer_R0;
-extern double Plummer_MaxR;
-extern bool   Plummer_Collision;
-extern double Plummer_Collision_D;
-extern double Plummer_Center[3];
-extern double Plummer_BulkVel[3];
-extern double Plummer_GasMFrac;
-extern int    Plummer_MassProfNBin;
+extern int    Jaffe_RSeed;
+extern double Jaffe_Rho0;
+extern double Jaffe_R0;
+extern double Jaffe_MaxR;
+extern bool   Jaffe_Collision;
+extern double Jaffe_Collision_D;
+extern double Jaffe_Center[3];
+extern double Jaffe_BulkVel[3];
+extern double Jaffe_GasMFrac;
+extern int    Jaffe_MassProfNBin;
 
 static RandomNumber_t *RNG = NULL;
 
 
-static double MassProf_Plummer( const double r );
+static double MassProf_Jaffe( const double r );
 static void   RanVec_FixRadius( const double r, double RanVec[] );
 
 
-
-
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Par_Init_ByFunction_Plummer
+// Function    :  Par_Init_ByFunction_Jaffe
 // Description :  User-specified function to initialize particle attributes
 //
 // Note        :  1. Invoked by Init_GAMER() using the function pointer "Par_Init_ByFunction_Ptr"
@@ -57,19 +52,11 @@ static void   RanVec_FixRadius( const double r, double RanVec[] );
 //
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, AllAttribute
 //-------------------------------------------------------------------------------------------------------
-Plummer_calculator a_Plummer;
-void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllRank,
+void Par_Init_ByFunction_Jaffe( const long NPar_ThisRank, const long NPar_AllRank,
                                   real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                   real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                   real *AllAttribute[PAR_NATT_TOTAL] )
 {
-// Initialize Calculator
-   static bool flag=0;
-   if(flag==0){
-      a_Plummer.init(NEWTON_G,Plummer_Rho0,Plummer_R0);
-      flag=1;
-      cout<<"done"<<endl;
-   }
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
@@ -80,10 +67,12 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 
 // only the master rank will construct the initial condition
    if ( MPI_Rank == 0 )
-   {
-      const double TotM_Inf    = 4.0/3.0*M_PI*CUBE(Plummer_R0)*Plummer_Rho0;
+   {  
+      /***Main Change***/
+      const double TotM_Inf    = 4.0*M_PI*CUBE(Jaffe_R0)*Jaffe_Rho0;
+      /***Main Change***/
       const double Vmax_Fac    = sqrt( 2.0*NEWTON_G*TotM_Inf );
-      const double Coll_Offset = 0.5*Plummer_Collision_D/sqrt(3.0);
+      const double Coll_Offset = 0.5*Jaffe_Collision_D/sqrt(3.0);
 
       double *Table_MassProf_r = NULL;
       double *Table_MassProf_M = NULL;
@@ -100,29 +89,29 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 
 //    initialize the random number generator
       RNG = new RandomNumber_t( 1 );
-      RNG->SetSeed( 0, Plummer_RSeed );
+      RNG->SetSeed( 0, Jaffe_RSeed );
 
 
 //    determine the total enclosed mass within the maximum radius
-      TotM = MassProf_Plummer( Plummer_MaxR );
+      TotM = MassProf_Jaffe( Jaffe_MaxR );
       ParM = TotM / NPar_AllRank;
 
-      if ( Plummer_Collision )   ParM *= 2.0;
+      if ( Jaffe_Collision )   ParM *= 2.0;
 
 //    rescale particle mass to account for the gas contribution
-      ParM *= 1.0 - Plummer_GasMFrac;
+      ParM *= 1.0 - Jaffe_GasMFrac;
 
 
 //    construct the mass profile table
-      Table_MassProf_r = new double [Plummer_MassProfNBin];
-      Table_MassProf_M = new double [Plummer_MassProfNBin];
+      Table_MassProf_r = new double [Jaffe_MassProfNBin];
+      Table_MassProf_M = new double [Jaffe_MassProfNBin];
 
-      dr = Plummer_MaxR / (Plummer_MassProfNBin-1);
+      dr = Jaffe_MaxR / (Jaffe_MassProfNBin-1);
 
-      for (int b=0; b<Plummer_MassProfNBin; b++)
+      for (int b=0; b<Jaffe_MassProfNBin; b++)
       {
          Table_MassProf_r[b] = dr*b;
-         Table_MassProf_M[b] = MassProf_Plummer( Table_MassProf_r[b] );
+         Table_MassProf_M[b] = MassProf_Jaffe( Table_MassProf_r[b] );
       }
 
 
@@ -136,19 +125,19 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 //       position
 //       --> sample from the cumulative mass profile with linear interpolation
          RanM = RNG->GetValue( 0, 0.0, 1.0 )*TotM;
-         RanR = Mis_InterpolateFromTable( Plummer_MassProfNBin, Table_MassProf_M, Table_MassProf_r, RanM );
+         RanR = Mis_InterpolateFromTable( Jaffe_MassProfNBin, Table_MassProf_M, Table_MassProf_r, RanM );
 
 //       record the maximum error
-         EstM     = MassProf_Plummer( RanR );
+         EstM     = MassProf_Jaffe( RanR );
          ErrM     = fabs( (EstM-RanM)/RanM );
          ErrM_Max = fmax( ErrM, ErrM_Max );
 
 //       randomly set the position vector with a given radius
          RanVec_FixRadius( RanR, RanVec );
-         for (int d=0; d<3; d++)    Pos_AllRank[d][p] = RanVec[d] + Plummer_Center[d];
+         for (int d=0; d<3; d++)    Pos_AllRank[d][p] = RanVec[d] + Jaffe_Center[d];
 
-//       set position offset for the Plummer collision test
-         if ( Plummer_Collision )
+//       set position offset for the Jaffe collision test
+         if ( Jaffe_Collision )
          for (int d=0; d<3; d++)    Pos_AllRank[d][p] += Coll_Offset*( (p<NPar_AllRank/2)?-1.0:+1.0 );
 
 //       check periodicity
@@ -160,30 +149,30 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 
 
 //       velocity
-<<<<<<< HEAD
-         double a3=RanR/Plummer_R0;
-         RanV = a_Plummer.set_vel(a3);
-=======
 //       determine the maximum velocity (i.e., the escaping velocity)
-         Plummer_calculator cal;
-         double max=cal.max_prob(RanR/Plummer_R0);
-         Vmax = pow(2*cal.psi(RanR/Plummer_R0),0.5);
-
+         /***Main Change***/
+         Jaffe_calculator cal;
+         double max=cal.max_prob(RanR/Jaffe_R0);
+         Vmax = pow(2*cal.psi(RanR/Jaffe_R0),0.5);
+         
 //       randomly determine the velocity amplitude (ref: Aarseth, S. et al. 1974, A&A, 37, 183: Eq. [A4,A5])
+         
+         
          do
          {  
-            double *r0=new double(RanR/Plummer_R0);
+            double *r0=new double(RanR/Jaffe_R0);
             RanV    = RNG->GetValue( 0, 0.0, 1.0 );         // (0.0, 1.0)
-            RanProb = RNG->GetValue( 0, 0.0, max );         // (0.0, 0.1)
+            RanProb = RNG->GetValue( 0, 0.0, max );         
             Prob    = cal.prob(RanV*Vmax,r0);  // < 0.1
             delete r0;
          }
          while ( RanProb > Prob );
->>>>>>> 59094c0a60c1e0583dd0b96ce0541562dc013a7c
+         
+         /***Main Change***/
 
 //       randomly set the velocity vector with the given amplitude (RanV*Vmax)
-         RanVec_FixRadius( RanV, RanVec );
-         for (int d=0; d<3; d++)    Vel_AllRank[d][p] = RanVec[d] + Plummer_BulkVel[d];
+         RanVec_FixRadius( RanV*Vmax, RanVec );
+         for (int d=0; d<3; d++)    Vel_AllRank[d][p] = RanVec[d] + Jaffe_BulkVel[d];
 
       } // for (long p=0; p<NPar_AllRank; p++)
 
@@ -210,7 +199,7 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
                  NPar_AllRank, (long)__INT_MAX__ );
 
    int NSend[MPI_NRank], SendDisp[MPI_NRank];
-   int NPar_ThisRank_int = NPar_ThisRank;    // (i) convert to "int" and (ii) remove the "const" declaration
+   int NPar_ThisRank_int = NPar_ThisRank;    // (i) convert to "int" and (ii) remove the "const" declaration/***Main Change***/
                                              // --> (ii) is necessary for OpenMPI version < 1.7
 
    MPI_Gather( &NPar_ThisRank_int, 1, MPI_INT, NSend, 1, MPI_INT, 0, MPI_COMM_WORLD );
@@ -262,13 +251,13 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Par_Init_ByFunction_Plummer
+} // FUNCTION : Par_Init_ByFunction_Jaffe
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  MassProf_Plummer
-// Description :  Mass profile of the Plummer model
+// Function    :  MassProf_Jaffe
+// Description :  Mass profile of the Jaffe model
 //
 // Note        :  Calculate the enclosed mass within the given radius
 //
@@ -276,14 +265,14 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 //
 // Return      :  Enclosed mass
 //-------------------------------------------------------------------------------------------------------
-double MassProf_Plummer( const double r )
+double MassProf_Jaffe( const double r )
 {
 
-   const double x = r / Plummer_R0;
-
-   return 4.0/3.0*M_PI*Plummer_Rho0*CUBE(r)*pow( 1.0+x*x, -1.5 );
-
-} // FUNCTION : MassProf_Plummer
+   const double x = r / Jaffe_R0;
+   /***Main Change***/
+   return 4.0*M_PI*Jaffe_Rho0*CUBE(Jaffe_R0)*(x/(1+x));
+   /***Main Change***/
+} // FUNCTION : MassProf_Jaffe
 
 
 

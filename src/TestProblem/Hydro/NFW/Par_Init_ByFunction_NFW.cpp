@@ -1,33 +1,37 @@
+/***Total deep copy***/
 #include "GAMER.h"
-#include "Plummer_calculator.h"
-<<<<<<< HEAD
-=======
-
->>>>>>> 59094c0a60c1e0583dd0b96ce0541562dc013a7c
+#include "NFW_calculator.h"
+#include <gsl/gsl_integration.h>
+#include <gsl/gsl_errno.h>
+#include <gsl/gsl_math.h>
+#include <gsl/gsl_roots.h>
+#include <gsl/gsl_deriv.h>
+#define DEBUG
 #ifdef PARTICLE
 
-extern int    Plummer_RSeed;
-extern double Plummer_Rho0;
-extern double Plummer_R0;
-extern double Plummer_MaxR;
-extern bool   Plummer_Collision;
-extern double Plummer_Collision_D;
-extern double Plummer_Center[3];
-extern double Plummer_BulkVel[3];
-extern double Plummer_GasMFrac;
-extern int    Plummer_MassProfNBin;
+extern int    NFW_RSeed;
+extern double NFW_Rho0;
+extern double NFW_R0;
+extern double NFW_MaxR;
+extern bool   NFW_Collision;
+extern double NFW_Collision_D;
+extern double NFW_Center[3];
+extern double NFW_BulkVel[3];
+extern double NFW_GasMFrac;
+extern int    NFW_MassProfNBin;
 
 static RandomNumber_t *RNG = NULL;
 
 
-static double MassProf_Plummer( const double r );
+static double MassProf_NFW( const double r );
 static void   RanVec_FixRadius( const double r, double RanVec[] );
 
-
-
+double f(double x,void *params);
+double function01(double x,void *params);
+double function02(double x,void *params);
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Par_Init_ByFunction_Plummer
+// Function    :  Par_Init_ByFunction_NFW
 // Description :  User-specified function to initialize particle attributes
 //
 // Note        :  1. Invoked by Init_GAMER() using the function pointer "Par_Init_ByFunction_Ptr"
@@ -57,20 +61,18 @@ static void   RanVec_FixRadius( const double r, double RanVec[] );
 //
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, AllAttribute
 //-------------------------------------------------------------------------------------------------------
-Plummer_calculator a_Plummer;
-void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllRank,
+NFW_calculator a_NFW;
+void Par_Init_ByFunction_NFW( const long NPar_ThisRank, const long NPar_AllRank,
                                   real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                   real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                   real *AllAttribute[PAR_NATT_TOTAL] )
 {
-// Initialize Calculator
    static bool flag=0;
    if(flag==0){
-      a_Plummer.init(NEWTON_G,Plummer_Rho0,Plummer_R0);
+      a_NFW.init();
       flag=1;
       cout<<"done"<<endl;
    }
-
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
@@ -81,9 +83,9 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 // only the master rank will construct the initial condition
    if ( MPI_Rank == 0 )
    {
-      const double TotM_Inf    = 4.0/3.0*M_PI*CUBE(Plummer_R0)*Plummer_Rho0;
-      const double Vmax_Fac    = sqrt( 2.0*NEWTON_G*TotM_Inf );
-      const double Coll_Offset = 0.5*Plummer_Collision_D/sqrt(3.0);
+      //const double TotM_Inf    = 4.0/3.0*M_PI*CUBE(NFW_R0)*NFW_Rho0;
+      //const double Vmax_Fac    = sqrt( 2.0*NEWTON_G*TotM_Inf );
+      const double Coll_Offset = 0.5*NFW_Collision_D/sqrt(3.0);
 
       double *Table_MassProf_r = NULL;
       double *Table_MassProf_M = NULL;
@@ -100,32 +102,32 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 
 //    initialize the random number generator
       RNG = new RandomNumber_t( 1 );
-      RNG->SetSeed( 0, Plummer_RSeed );
+      RNG->SetSeed( 0, NFW_RSeed );
 
 
 //    determine the total enclosed mass within the maximum radius
-      TotM = MassProf_Plummer( Plummer_MaxR );
+      TotM = MassProf_NFW( NFW_MaxR );
       ParM = TotM / NPar_AllRank;
 
-      if ( Plummer_Collision )   ParM *= 2.0;
+      if ( NFW_Collision )   ParM *= 2.0;
 
 //    rescale particle mass to account for the gas contribution
-      ParM *= 1.0 - Plummer_GasMFrac;
+      ParM *= 1.0 - NFW_GasMFrac;
 
 
 //    construct the mass profile table
-      Table_MassProf_r = new double [Plummer_MassProfNBin];
-      Table_MassProf_M = new double [Plummer_MassProfNBin];
+      Table_MassProf_r = new double [NFW_MassProfNBin];
+      Table_MassProf_M = new double [NFW_MassProfNBin];
 
-      dr = Plummer_MaxR / (Plummer_MassProfNBin-1);
+      dr = NFW_MaxR / (NFW_MassProfNBin-1);
 
-      for (int b=0; b<Plummer_MassProfNBin; b++)
+      for (int b=0; b<NFW_MassProfNBin; b++)
       {
          Table_MassProf_r[b] = dr*b;
-         Table_MassProf_M[b] = MassProf_Plummer( Table_MassProf_r[b] );
+         Table_MassProf_M[b] = MassProf_NFW( Table_MassProf_r[b] );
       }
 
-
+      double max=0.0;
 //    set particle attributes
       for (long p=0; p<NPar_AllRank; p++)
       {
@@ -136,19 +138,19 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 //       position
 //       --> sample from the cumulative mass profile with linear interpolation
          RanM = RNG->GetValue( 0, 0.0, 1.0 )*TotM;
-         RanR = Mis_InterpolateFromTable( Plummer_MassProfNBin, Table_MassProf_M, Table_MassProf_r, RanM );
+         RanR = Mis_InterpolateFromTable( NFW_MassProfNBin, Table_MassProf_M, Table_MassProf_r, RanM );
 
 //       record the maximum error
-         EstM     = MassProf_Plummer( RanR );
+         EstM     = MassProf_NFW( RanR );
          ErrM     = fabs( (EstM-RanM)/RanM );
          ErrM_Max = fmax( ErrM, ErrM_Max );
 
 //       randomly set the position vector with a given radius
          RanVec_FixRadius( RanR, RanVec );
-         for (int d=0; d<3; d++)    Pos_AllRank[d][p] = RanVec[d] + Plummer_Center[d];
+         for (int d=0; d<3; d++)    Pos_AllRank[d][p] = RanVec[d] + NFW_Center[d];
 
-//       set position offset for the Plummer collision test
-         if ( Plummer_Collision )
+//       set position offset for the NFW collision test
+         if ( NFW_Collision )
          for (int d=0; d<3; d++)    Pos_AllRank[d][p] += Coll_Offset*( (p<NPar_AllRank/2)?-1.0:+1.0 );
 
 //       check periodicity
@@ -160,36 +162,22 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 
 
 //       velocity
-<<<<<<< HEAD
-         double a3=RanR/Plummer_R0;
-         RanV = a_Plummer.set_vel(a3);
-=======
-//       determine the maximum velocity (i.e., the escaping velocity)
-         Plummer_calculator cal;
-         double max=cal.max_prob(RanR/Plummer_R0);
-         Vmax = pow(2*cal.psi(RanR/Plummer_R0),0.5);
 
-//       randomly determine the velocity amplitude (ref: Aarseth, S. et al. 1974, A&A, 37, 183: Eq. [A4,A5])
-         do
-         {  
-            double *r0=new double(RanR/Plummer_R0);
-            RanV    = RNG->GetValue( 0, 0.0, 1.0 );         // (0.0, 1.0)
-            RanProb = RNG->GetValue( 0, 0.0, max );         // (0.0, 0.1)
-            Prob    = cal.prob(RanV*Vmax,r0);  // < 0.1
-            delete r0;
-         }
-         while ( RanProb > Prob );
->>>>>>> 59094c0a60c1e0583dd0b96ce0541562dc013a7c
+         double a3=RanR/NFW_R0;
+         const double k = pow((4*M_PI*NEWTON_G*NFW_Rho0*NFW_R0*NFW_R0),0.5);
+         RanV = k*a_NFW.set_vel(a3);;
+         
 
 //       randomly set the velocity vector with the given amplitude (RanV*Vmax)
          RanVec_FixRadius( RanV, RanVec );
-         for (int d=0; d<3; d++)    Vel_AllRank[d][p] = RanVec[d] + Plummer_BulkVel[d];
+         for (int d=0; d<3; d++)    Vel_AllRank[d][p] = RanVec[d] + NFW_BulkVel[d];
 
       } // for (long p=0; p<NPar_AllRank; p++)
+      
 
       Aux_Message( stdout, "   Total enclosed mass within MaxR  = %13.7e\n",  TotM );
-      Aux_Message( stdout, "   Total enclosed mass to inifinity = %13.7e\n",  TotM_Inf );
-      Aux_Message( stdout, "   Enclosed mass ratio              = %6.2f%%\n", 100.0*TotM/TotM_Inf );
+      //Aux_Message( stdout, "   Total enclosed mass to inifinity = %13.7e\n",  TotM_Inf );
+      //Aux_Message( stdout, "   Enclosed mass ratio              = %6.2f%%\n", 100.0*TotM/TotM_Inf );
       Aux_Message( stdout, "   Particle mass                    = %13.7e\n",  ParM );
       Aux_Message( stdout, "   Maximum mass interpolation error = %13.7e\n",  ErrM_Max );
 
@@ -262,13 +250,13 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Par_Init_ByFunction_Plummer
+} // FUNCTION : Par_Init_ByFunction_NFW
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  MassProf_Plummer
-// Description :  Mass profile of the Plummer model
+// Function    :  MassProf_NFW
+// Description :  Mass profile of the NFW model
 //
 // Note        :  Calculate the enclosed mass within the given radius
 //
@@ -276,14 +264,17 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 //
 // Return      :  Enclosed mass
 //-------------------------------------------------------------------------------------------------------
-double MassProf_Plummer( const double r )
+
+double MassProf_NFW( const double r )
 {
+   
+   const double x = r / NFW_R0;
+   
+   
+   return 4* M_PI *NFW_Rho0 *pow(NFW_R0,3) *(log(1+x) - x/(1+x));//change1
 
-   const double x = r / Plummer_R0;
 
-   return 4.0/3.0*M_PI*Plummer_Rho0*CUBE(r)*pow( 1.0+x*x, -1.5 );
-
-} // FUNCTION : MassProf_Plummer
+} // FUNCTION : MassProf_NFW
 
 
 
