@@ -70,7 +70,7 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
 {
 // Input Model names
    string model_name;
-   model_name="Jaffe";
+   model_name="UNKNOWN";
    //cout<<"Input model names:";
    //cin>>model_name;
 

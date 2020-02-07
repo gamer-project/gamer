@@ -8,6 +8,7 @@ double *Table_MassProf_r_UNKNOWN;
 double *Table_MassProf_M_UNKNOWN;
 double *Table_MassProf_rho_UNKNOWN;
 double *Table_MassProf_rhodx_UNKNOWN;
+double *Table_MassProf_derho_overdx_UNKNOWN;
 double *Table_MassProf_g_UNKNOWN;
 double *Table_MassProf_pot_UNKNOWN;
 
@@ -97,7 +98,7 @@ double UNKNOWN_calculator::slope(double* x,double* y,int start,int fin){
 double potential_UNKNOWN(double x){
 
   if(x>double(UNKNOWN_MaxR/UNKNOWN_R0)){
-    return 0;
+    return Table_MassProf_pot_UNKNOWN[UNKNOWN_MassProfNBin-1]*(UNKNOWN_MaxR)/(x*UNKNOWN_R0);
   }
 
   else{
@@ -108,6 +109,7 @@ double potential_UNKNOWN(double x){
     
     return Table_MassProf_pot_UNKNOWN[ind+1] + (Table_MassProf_pot_UNKNOWN[ind+1] - Table_MassProf_pot_UNKNOWN[ind])*par/dr;       
   }
+  
 }
 double rho_UNKNOWN(double x){
   
@@ -146,8 +148,8 @@ double rho_dx_UNKNOWN(double x){
 }
 double de_rho_over_de_psi_UNKNOWN(double x){
   
-  /*if(x>UNKNOWN_MaxR/UNKNOWN_R0){
-    return 0;
+  if(x>UNKNOWN_MaxR/UNKNOWN_R0){
+      return Table_MassProf_derho_overdx_UNKNOWN[UNKNOWN_MassProfNBin-1]*pow(UNKNOWN_MaxR,2)/pow(UNKNOWN_R0*x,2);
   }
 
   else{
@@ -156,12 +158,8 @@ double de_rho_over_de_psi_UNKNOWN(double x){
     int ind = r/dr;
     double par = r - ind * dr;
     
-    return Table_MassProf_rhodx_UNKNOWN[ind] /Table_MassProf_g_UNKNOWN[ind];       
-  }*/
-  double rho_dx_UNKNOWN = - UNKNOWN_Rho0 *(1/(x*x*(1+x)*(1+x)) + 2/(x*(1+x)*(1+x)*(1+x)));
-  double psi_dx_UNKNOWN = 4*M_PI*UNKNOWN_NEWTON_G*UNKNOWN_R0*UNKNOWN_R0*UNKNOWN_Rho0*( -log(1+x)/(x*x) + 1/(x*(1+x)) );
-      
-  return rho_dx_UNKNOWN/psi_dx_UNKNOWN;
+    return Table_MassProf_derho_overdx_UNKNOWN[ind+1] + (Table_MassProf_derho_overdx_UNKNOWN[ind+1] - Table_MassProf_derho_overdx_UNKNOWN[ind])*par/dr;         
+  }
 }
 
 
@@ -249,12 +247,8 @@ double integration_simpson(double eng){
     double x0 = inverse_psi_to_x_UNKNOWN(min+(i+0.5)*dx);
     if(i==num-1)result += 2* de_rho_over_de_psi_UNKNOWN(x0) * ( pow(eng-psi_l,0.5) );
     else result += 2* de_rho_over_de_psi_UNKNOWN(x0) * ( pow(eng-psi_l,0.5) - pow(eng-psi_r,0.5) );
-    /*result_right += basis_UNKNOWN(min+i*dx,&eng)*dx;
-    result_left += basis_UNKNOWN(min+(i+1)*dx,&eng)*dx;
-    result_simpson += (basis_UNKNOWN(min+(i+1)*dx,eng) + 4*basis_UNKNOWN(min+(i+0.5)*dx,eng) + basis_UNKNOWN(min+i*dx,eng))*dx/6;*/
+    
   }
-  //double error=fabs(result_simpson-(result_right+result_left)/2)*2/(result_right+result_left);
-  /*if((result_right+result_left)==0)*/
   cout<<result<<endl;
   return result;
 }
@@ -288,34 +282,39 @@ void UNKNOWN_calculator::initialize_mass(){
   }
 
   //Rho
-  Table_MassProf_rho_UNKNOWN[1]=(Table_MassProf_M_UNKNOWN[1]-Table_MassProf_M_UNKNOWN[0])/(4*dr*M_PI*pow(dr,2));
-  Table_MassProf_rho_UNKNOWN[0]=Table_MassProf_rho_UNKNOWN[1];
-  for (int b=2; b<UNKNOWN_MassProfNBin-1; b++)
+  for (int b=1; b<UNKNOWN_MassProfNBin; b++)
   {
-    Table_MassProf_rho_UNKNOWN[b] =((Table_MassProf_M_UNKNOWN[b]-Table_MassProf_M_UNKNOWN[b-1])/(4*dr*M_PI*pow(dr*(b-1),2))+(Table_MassProf_M_UNKNOWN[b+1]-Table_MassProf_M_UNKNOWN[b])/(4*dr*M_PI*pow(dr*b,2)))/2;//main
-  }Table_MassProf_rho_UNKNOWN[UNKNOWN_MassProfNBin-1]=0;
+    double x = dr*b/UNKNOWN_R0;
+    Table_MassProf_rho_UNKNOWN[b] = UNKNOWN_Rho0 / (x* (1+x)* (1+x));
+  }
+  Table_MassProf_rho_UNKNOWN[0] = Table_MassProf_rho_UNKNOWN[1];
+  //Table_MassProf_rho_UNKNOWN[UNKNOWN_MassProfNBin-1]=0;
 
   //Rhodx
+  
   Table_MassProf_rhodx_UNKNOWN[0]=(Table_MassProf_rho_UNKNOWN[1]-Table_MassProf_rho_UNKNOWN[0])*UNKNOWN_R0/(dr);
   for (int b=1; b<UNKNOWN_MassProfNBin-1; b++)
   {
-    Table_MassProf_rhodx_UNKNOWN[b] =(Table_MassProf_rho_UNKNOWN[b+1]-Table_MassProf_rho_UNKNOWN[b-1])*UNKNOWN_R0/(2*dr);
-    /*int num=2;
+    //Table_MassProf_rhodx_UNKNOWN[b] =(Table_MassProf_rho_UNKNOWN[b+1]-Table_MassProf_rho_UNKNOWN[b-1])*UNKNOWN_R0/(2*dr);
+    int num=3;
     if(b==0)Table_MassProf_rhodx_UNKNOWN[b] = slope(Table_MassProf_r_UNKNOWN,Table_MassProf_rho_UNKNOWN,0,num/2+1);
     else if(b==1)Table_MassProf_rhodx_UNKNOWN[b] = slope(Table_MassProf_r_UNKNOWN,Table_MassProf_rho_UNKNOWN,0,num/2+2);
     
-    else if(b==UNKNOWN_MassProfNBin-2)Table_MassProf_rhodx_UNKNOWN[b] = slope(Table_MassProf_r_UNKNOWN,Table_MassProf_rho_UNKNOWN,UNKNOWN_MassProfNBin-num/2,UNKNOWN_MassProfNBin);
-    else if(b==UNKNOWN_MassProfNBin-1)Table_MassProf_rhodx_UNKNOWN[b] = slope(Table_MassProf_r_UNKNOWN,Table_MassProf_rho_UNKNOWN,UNKNOWN_MassProfNBin-num/2-1,UNKNOWN_MassProfNBin);
+    else if(b==UNKNOWN_MassProfNBin-2)Table_MassProf_rhodx_UNKNOWN[b] = slope(Table_MassProf_r_UNKNOWN,Table_MassProf_rho_UNKNOWN,UNKNOWN_MassProfNBin-num/2-1,UNKNOWN_MassProfNBin);
+    //else if(b==UNKNOWN_MassProfNBin-1)Table_MassProf_rhodx_UNKNOWN[b] = slope(Table_MassProf_r_UNKNOWN,Table_MassProf_rho_UNKNOWN,UNKNOWN_MassProfNBin-num/2-1,UNKNOWN_MassProfNBin);
 
     else Table_MassProf_rhodx_UNKNOWN[b] = slope(Table_MassProf_r_UNKNOWN,Table_MassProf_rho_UNKNOWN,b-num/2,b+num/2+1);
-    Table_MassProf_rhodx_UNKNOWN[b] *= -UNKNOWN_R0;*/
-  }Table_MassProf_rhodx_UNKNOWN[UNKNOWN_MassProfNBin-1]=Table_MassProf_rhodx_UNKNOWN[UNKNOWN_MassProfNBin-2];
+    Table_MassProf_rhodx_UNKNOWN[b] *= -UNKNOWN_R0;
 
+    
+  }Table_MassProf_rhodx_UNKNOWN[UNKNOWN_MassProfNBin-1]=Table_MassProf_rhodx_UNKNOWN[UNKNOWN_MassProfNBin-2];
+  
 }
 
 void UNKNOWN_calculator::initialize_pot(){
   Table_MassProf_g_UNKNOWN = new double [UNKNOWN_MassProfNBin];
   Table_MassProf_pot_UNKNOWN = new double [UNKNOWN_MassProfNBin];
+  Table_MassProf_derho_overdx_UNKNOWN = new double [UNKNOWN_MassProfNBin];
   double dr = UNKNOWN_MaxR / (UNKNOWN_MassProfNBin-1);
 
   Table_MassProf_g_UNKNOWN[0] =0;
@@ -323,17 +322,22 @@ void UNKNOWN_calculator::initialize_pot(){
   {
     Table_MassProf_g_UNKNOWN[b] = -UNKNOWN_NEWTON_G*Table_MassProf_M_UNKNOWN[b]/pow(Table_MassProf_r_UNKNOWN[b],2);
   }
-  //main
+  //Pot
   Table_MassProf_pot_UNKNOWN[UNKNOWN_MassProfNBin-1] = -UNKNOWN_NEWTON_G*Table_MassProf_M_UNKNOWN[UNKNOWN_MassProfNBin-1]/Table_MassProf_r_UNKNOWN[UNKNOWN_MassProfNBin-1];
-  for (int b=UNKNOWN_MassProfNBin-2; b>=0; b--)
+  for (int b=UNKNOWN_MassProfNBin-2;b>0;b--)
   {
     Table_MassProf_pot_UNKNOWN[b] = Table_MassProf_pot_UNKNOWN[b+1] + Table_MassProf_g_UNKNOWN[b] * dr;
-  }
+  }Table_MassProf_pot_UNKNOWN[0]=Table_MassProf_pot_UNKNOWN[1];
     
+  //derho_overdx
+  for (int b=0; b<UNKNOWN_MassProfNBin; b++)
+  {
+    Table_MassProf_derho_overdx_UNKNOWN[b] = -Table_MassProf_rhodx_UNKNOWN[b]/(Table_MassProf_g_UNKNOWN[b]*UNKNOWN_R0);
+  }
   
 }
 void UNKNOWN_calculator::initialize_prob_dens(){
-  double min =-potential_UNKNOWN(20),max =-potential_UNKNOWN(0.001);/***difference***/
+  double min =-potential_UNKNOWN(100),max =-potential_UNKNOWN(0.001);/***difference***/
   delta =(max-min)/size_UNKNOWN;
   double eng=min;
 
@@ -371,7 +375,7 @@ void UNKNOWN_calculator::init(double newton_g,double rho,double r,int nbin,doubl
   UNKNOWN_NEWTON_G=newton_g;
   UNKNOWN_Rho0=rho;
   UNKNOWN_R0=r;
-  UNKNOWN_MassProfNBin=1000000;
+  UNKNOWN_MassProfNBin=1000;
   UNKNOWN_MaxR=rmax;
 
   initialize_mass();
