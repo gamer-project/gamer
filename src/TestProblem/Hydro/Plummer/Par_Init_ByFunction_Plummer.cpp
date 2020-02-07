@@ -1,9 +1,5 @@
 #include "GAMER.h"
 #include "Plummer_calculator.h"
-<<<<<<< HEAD
-=======
-
->>>>>>> 59094c0a60c1e0583dd0b96ce0541562dc013a7c
 #ifdef PARTICLE
 
 extern int    Plummer_RSeed;
@@ -160,26 +156,8 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 
 
 //       velocity
-<<<<<<< HEAD
          double a3=RanR/Plummer_R0;
          RanV = a_Plummer.set_vel(a3);
-=======
-//       determine the maximum velocity (i.e., the escaping velocity)
-         Plummer_calculator cal;
-         double max=cal.max_prob(RanR/Plummer_R0);
-         Vmax = pow(2*cal.psi(RanR/Plummer_R0),0.5);
-
-//       randomly determine the velocity amplitude (ref: Aarseth, S. et al. 1974, A&A, 37, 183: Eq. [A4,A5])
-         do
-         {  
-            double *r0=new double(RanR/Plummer_R0);
-            RanV    = RNG->GetValue( 0, 0.0, 1.0 );         // (0.0, 1.0)
-            RanProb = RNG->GetValue( 0, 0.0, max );         // (0.0, 0.1)
-            Prob    = cal.prob(RanV*Vmax,r0);  // < 0.1
-            delete r0;
-         }
-         while ( RanProb > Prob );
->>>>>>> 59094c0a60c1e0583dd0b96ce0541562dc013a7c
 
 //       randomly set the velocity vector with the given amplitude (RanV*Vmax)
          RanVec_FixRadius( RanV, RanVec );

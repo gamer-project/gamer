@@ -1,5 +1,4 @@
 #include "NFW_calculator.h"
-<<<<<<< HEAD
 double NFW_NEWTON_G;
 double NFW_Rho0;
 double NFW_R0;
@@ -7,19 +6,12 @@ NFW_calculator::NFW_calculator()
 {
   RNG = new RandomNumber_t( 1 );
   RNG->SetSeed( 0, 123 );
-=======
-
-NFW_calculator::NFW_calculator()
-{
-
->>>>>>> 59094c0a60c1e0583dd0b96ce0541562dc013a7c
 }
 
 NFW_calculator::~NFW_calculator()
 {
 
 }
-<<<<<<< HEAD
 
 //Statistics
 double NFW_calculator::ave(double* a,int start,int fin){
@@ -106,29 +98,11 @@ double de_rho_over_de_psi_NFW(double x) {
 }
 
 //GSL functions
-=======
-double potential_NFW(double x){
-  return - (4*M_PI*NEWTON_G*NFW_Rho0*NFW_R0*NFW_R0) * log(1+x) / x;
-}
-double rho_dx_NFW(double x){
-  return -NFW_Rho0 * (1/(x*x*(1+x)*(1+x)) + 2/(x*(1+x)*(1+x)*(1+x)));
-}
-double de_rho_over_de_psi_NFW(double x) {
-  double rho_dx_NFW = -NFW_Rho0 * (1/(x*x*(1+x)*(1+x)) + 2/(x*(1+x)*(1+x)*(1+x)));
-  double psi_dx_NFW = 4*M_PI*NEWTON_G*NFW_R0*NFW_R0*NFW_Rho0*( -log(1+x)/(x*x) + 1/(x*(1+x)) );
-      
-  return rho_dx_NFW/psi_dx_NFW;
-}
->>>>>>> 59094c0a60c1e0583dd0b96ce0541562dc013a7c
 double psi_potential_NFW(double r, void * parameters){
   double psi= *(double *)parameters;
   return psi+potential_NFW(r);
 }
-<<<<<<< HEAD
 double inverse_psi_to_x_NFW (double psi) {
-=======
-double inverse_psi_to_r_NFW (double psi) {
->>>>>>> 59094c0a60c1e0583dd0b96ce0541562dc013a7c
   double psi1=psi;
   int status;
   int iter = 0, max_iter = 100;
@@ -158,7 +132,6 @@ double inverse_psi_to_r_NFW (double psi) {
   gsl_root_fsolver_free (s);
   return r0;
 }
-<<<<<<< HEAD
 
 //Probability Density
 double integration_NFW(double eng){
@@ -229,92 +202,15 @@ double NFW_calculator::set_vel(double r){
   double index,sum=0;
   double psi_per =-potential_NFW(r);
   for(int k =0;k<size_NFW;k++){
-=======
-double basis_NFW (double r, void * energy_negative) {
-  double e= *(double *)energy_negative;
-  return abs(rho_dx_NFW(r))*pow(e+potential_NFW(r),-0.5);
-}
-double integration_NFW(double r0, void * energy_negative){
-  double epson=0.1;
-  double max=10000;
-  /***part I***/
-  gsl_integration_workspace * w 
-  = gsl_integration_workspace_alloc (1000);
-  double e= *(double *)energy_negative;
-
-  double  error;
-  double result;
-  gsl_function F;
-  F.function = &basis_NFW;
-  F.params = &e;
-  
-  if(e+potential_NFW(r0+epson)<0) return 0;
-  gsl_integration_qags (&F, r0+epson, max, 0, 1e-7, 1000,
-                        w, &result, &error); 
-  gsl_integration_workspace_free (w);
-
-
-  /***part II***/
-  double mean = (de_rho_over_de_psi_NFW(r0) + de_rho_over_de_psi_NFW(r0+epson))/2;
-  double much=2*mean*pow(e+potential_NFW(r0+epson),0.5);
-  
-  result=result+much;
-  return result;
-}
-double integration_eng_base_NFW(double eng,void *s){
-  double r0 =inverse_psi_to_r_NFW(eng);
-  return integration_NFW(r0,&eng);
-}
-double prob_dens_NFW(double eng){
-  gsl_function F;
-  double result, abserr;
-  F.function = &integration_eng_base_NFW;
-  gsl_deriv_central (&F, eng, 1e-8, &result, &abserr);
-
-  return result;
-}
-void NFW_calculator::init(){
-  string line;
-
-  double min =-potential_NFW(20),max =-potential_NFW(0.1);
-  delta =(max-min)/size;
-  double eng=min;
-  for(int k =0;k<size;k++){
-
-    psi[k] = eng;
-    
-    f[k] = prob_dens_NFW(eng);
-    if(f[k]<0)f[k]=0;
-    
-    int sec_num=8;
-    int s=k*sec_num/size;
-
-    double d=0.2;
-    eng +=delta*(1+d*(s+0.5-sec_num/2));
-  
-  }
-  
-}
-double NFW_calculator::set_vel(double r){
-    
-  double index,sum=0;
-  double psi_per =-potential_NFW(r);
-  for(int k =0;k<size;k++){
->>>>>>> 59094c0a60c1e0583dd0b96ce0541562dc013a7c
     if(psi[k]>psi_per){
       index =k-1;
       break;
     }
-<<<<<<< HEAD
     sum += prob_dens[k] *pow(psi_per-psi[k],0.5) *delta;
-=======
-    sum += f[k] *pow(psi_per-psi[k],0.5) *delta;
->>>>>>> 59094c0a60c1e0583dd0b96ce0541562dc013a7c
   }
   double sum_rad,sum_mes=0,par,psi_ass;
   int index_ass;
 
-<<<<<<< HEAD
   sum_rad = RNG->GetValue( 0, 0.0, 1.0 ); 
   sum_rad*=sum;
 
@@ -325,20 +221,6 @@ double NFW_calculator::set_vel(double r){
       break;
       }
     sum_mes += prob_dens[k] *pow(psi_per-psi[k],0.5) *delta;
-=======
-  random_device rd;  
-  mt19937 gen(rd()); 
-  uniform_real_distribution<> pro_dis(0.0, sum);
-  sum_rad = pro_dis(gen);
-
-  for(int k =0;k<size;k++){
-    if(sum_mes>sum_rad){
-      index_ass =k-1;
-      par = (sum_mes-sum_rad)/(f[index_ass] *pow(psi_per-psi[index_ass],0.5) *delta);
-      break;
-      }
-    sum_mes += f[k] *pow(psi_per-psi[k],0.5) *delta;
->>>>>>> 59094c0a60c1e0583dd0b96ce0541562dc013a7c
   }
   psi_ass = psi[index_ass] +delta *par;
   if(-2*(psi_ass+potential_NFW(r))<0){

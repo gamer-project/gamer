@@ -46,7 +46,7 @@ const TestProbID_t
    TESTPROB_HYDRO_COLLIDING_JETS               =   10,
    TESTPROB_HYDRO_PLUMMER                      =   11,
    TESTPROB_HYDRO_GRAVITY                      =   12,
-   TESTPROB_HYDRO_Models                      =   12,
+   TESTPROB_HYDRO_Models                      =   14,
 
    TESTPROB_ELBDM_EXTPOT                       = 1000;
 

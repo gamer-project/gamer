@@ -273,7 +273,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
          fluid[DENS] += Dens;
 #        ifdef GRAVITY
          /***Main Change***/
-         fluid[ENGY] += (  a.pressure(r) + PresBg  ) / ( GAMMA - 1.0 );
+         fluid[ENGY] += (  NEWTON_G*TotM*GasRho0 / ( 6.0*Plummer_R0*CUBE(1.0 + a2) ) + PresBg  ) / ( GAMMA - 1.0 );
          /***Main Change***/
 #        endif
 
@@ -302,7 +302,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       fluid[MOMZ] = fluid[DENS]*Plummer_BulkVel[2];
 #     ifdef GRAVITY
       /***Main Change***/
-      fluid[ENGY] = (a.pressure(r)  + PresBg  ) / ( GAMMA - 1.0 )
+      fluid[ENGY] = (NEWTON_G*TotM*GasRho0 / ( 6.0*Plummer_R0*CUBE(1.0 + a2) )  + PresBg  ) / ( GAMMA - 1.0 )
                     + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
                     
       /***Main Change***/
