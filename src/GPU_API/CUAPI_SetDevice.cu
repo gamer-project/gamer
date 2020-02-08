@@ -203,10 +203,6 @@ void CUAPI_SetDevice( const int Mode )
       if ( RuntimeVersion < 3020 )
          Aux_Error( ERROR_INFO, "CHECK_INTERMEDIATE == EXACT + FLOAT8 is not supported in CUDA < 3.2 !!" );
 #  endif
-
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
-
 #  endif // #if ( MODEL == HYDRO )
 
 // (6-2) SOR Poisson solver

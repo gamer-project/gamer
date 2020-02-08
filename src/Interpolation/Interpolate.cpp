@@ -32,11 +32,12 @@ void Int_Quartic   (       real CData[], const int CSize[3], const int CStart[3]
 // Note        :  Use the input parameter "IntScheme" to determine the adopted interpolation scheme
 //
 // Parameter   :  CData       : Input coarse-grid array
-//                CSize       : Size of the CData array
-//                CStart      : (x,y,z) starting indices to perform interpolation on the CData array
-//                CRange      : Number of grids in each direction to perform interpolation
+//                CSize       : Size of CData[]
+//                CStart      : (x,y,z) starting indices to perform interpolation on CData[]
+//                CRange      : Number of coarse cells along each direction to perform interpolation
 //                FData       : Output fine-grid array
-//                FStart      : (x,y,z) starting indcies to store the interpolation results
+//                FSize       : Size of FData[]
+//                FStart      : (x,y,z) starting indices to store the interpolation results
 //                NComp       : Number of components in the CData and FData array
 //                IntScheme   : Interpolation scheme
 //                              --> currently supported schemes include
@@ -51,8 +52,8 @@ void Int_Quartic   (       real CData[], const int CSize[3], const int CStart[3]
 //                Monotonic   : Ensure that all interpolation results are monotonic
 //                              --> Useful for interpolating positive-definite variables, such as density, energy, ...
 //-------------------------------------------------------------------------------------------------------
-void Interpolate( real CData [], const int CSize[3], const int CStart[3], const int CRange[3],
-                  real FData [], const int FSize[3], const int FStart[3],
+void Interpolate( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
+                  real FData[], const int FSize[3], const int FStart[3],
                   const int NComp, const IntScheme_t IntScheme, const bool UnwrapPhase, const bool Monotonic[] )
 {
 
@@ -85,11 +86,6 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
       Aux_Error( ERROR_INFO, "phase unwrapping is useful in ELBDM model only !!\n" );
 #     endif
    }
-
-   if ( INT_MONO_COEFF < 1.0  ||  INT_MONO_COEFF > 4.0 )
-      Aux_Error( ERROR_INFO, "INT_MONO_COEFF (%14.7e) is not within the correct range (1<=INT_MONO_COEFF<=4) !!\n",
-                 INT_MONO_COEFF );
-
 #  endif // #ifdef GAMER_DEBUG
 
 

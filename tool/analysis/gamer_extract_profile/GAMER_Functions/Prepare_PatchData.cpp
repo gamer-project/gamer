@@ -28,7 +28,7 @@ static int Table_02( const int lv, const int PID, const int Side );
 //                h_Input_Array  : Host array to store the prepared data
 //                GhostSize      : Number of ghost zones to be prepared
 //                NPG            : Number of patch groups prepared at a time
-//                PID0_List      : List recording the patch indicies with LocalID==0 to be prepared
+//                PID0_List      : List recording the patch indices with LocalID==0 to be prepared
 //                TVar           : Targeted variables to be prepared
 //                                 --> Supported variables in different models:
 //                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _FLUID, _VELX, _VELY, _VELZ, _PRES,

@@ -12,7 +12,6 @@ typedef float  real;
 
 // models
 #define HYDRO              1
-#define MHD                2
 #define ELBDM              3
 
 
@@ -28,20 +27,19 @@ typedef float  real;
 
 // patch size (number of cells of a single patch in the x/y/z directions)
 #define PATCH_SIZE         8
+#define PS1                PATCH_SIZE
+#define PS1P1              ( PS1 + 1 )
 
 
 // number of components in each cell and the variable indices in the array "fluid"
 #if   ( MODEL == HYDRO )
 #  define NCOMP_FLUID      5
+#  define NCOMP_MAG        3
 #  define DENS             0
 #  define MOMX             1
 #  define MOMY             2
 #  define MOMZ             3
 #  define ENGY             4
-
-#elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
-#  define NCOMP_FLUID      5
 
 #elif ( MODEL == ELBDM )
 #  define NCOMP_FLUID      3
@@ -55,6 +53,13 @@ typedef float  real;
 
 #  define NCOMP_TOTAL      ( NCOMP_FLUID + NCOMP_PASSIVE )
 
+#define SQR(  a )       ( (a)*(a)     )
+#define CUBE( a )       ( (a)*(a)*(a) )
+
+#define IDX321_BX( i, j, k )   (  ( (k)*PS1   + (j) )*PS1P1 + (i)  )
+#define IDX321_BY( i, j, k )   (  ( (k)*PS1P1 + (j) )*PS1   + (i)  )
+#define IDX321_BZ( i, j, k )   (  ( (k)*PS1   + (j) )*PS1   + (i)  )
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -64,6 +69,7 @@ typedef float  real;
 // Data Member :  fluid	      : fluid variables (mass density, momentum density x, y ,z, energy density)
 //		  pot	      : potential
 //		  par_dens    : particle density deposited onto grids
+//		  mag_cc/fc   : cell-/face-centered B field
 //		  corner[3]   : physical coordinates of the patch corner
 //		  father      : patch ID of the father patch
 //		  son	      : patch ID of the child patch
@@ -79,6 +85,8 @@ struct patch_t
    real (*fluid   )[PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
    real (*pot     )[PATCH_SIZE][PATCH_SIZE];
    real (*par_dens)[PATCH_SIZE][PATCH_SIZE];
+   real (*mag_cc  )[PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+   real (*mag_fc  )[PS1P1*PS1*PS1];
 
    int	corner[3];
    int 	father;
@@ -95,7 +103,7 @@ struct patch_t
    //
    // Parameter   :  x,y,z : physical coordinates of the patch corner
    //		     FaPID : patch ID of the father patch
-   //		     Data  : true --> allocate physical data (fluid + pot + par_dens)
+   //		     Data  : true --> allocate physical data (fluid + pot + par_dens + mag_cc/fc)
    //===================================================================================
    patch_t( const int x, const int y, const int z, const int FaPID, const bool Data )
    {
@@ -109,14 +117,16 @@ struct patch_t
       fluid    = NULL;
       pot      = NULL;
       par_dens = NULL;
+      mag_cc   = NULL;
+      mag_fc   = NULL;
 
       if ( Data )
       {
 	 fluid    = new real [NCOMP_TOTAL][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
 	 pot      = new real              [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
 	 par_dens = new real              [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
-
-	 fluid[0][0][0][0] = -1;
+	 mag_cc   = new real [NCOMP_MAG  ][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+	 mag_fc   = new real [NCOMP_MAG  ][ PS1P1*SQR(PS1) ];
       }
    }
 
@@ -185,7 +195,7 @@ struct GAMER_t
    // Parameter   :  lv	   : the targeted refinement level
    //		     x,y,z : physical coordinates of the patch corner
    //		     FaPID : the patch ID of the parent patch at level "lv-1"
-   //		     Data  : true --> allocate physical data (fluid + pot + par_dens)
+   //		     Data  : true --> allocate physical data (fluid + pot + par_dens + mag_cc/fc)
    //===================================================================================
    void pnew( const int lv, const int x, const int y, const int z, const int FaPID, const bool Data )
    {

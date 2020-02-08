@@ -30,6 +30,23 @@
 #endif
 
 
+// bitwise reproducibility in flux and electric field fix-up operations
+#ifdef BITWISE_REPRODUCIBILITY
+#  define BIT_REP_FLUX
+#endif
+
+// enable BIT_REP_ELECTRIC by default even when BITWISE_REPRODUCIBILITY is off
+// --> it ensures that the B field on the common interface between two nearby patches are fully
+//     consistent with each other (even the round-off errors are the same)
+//     --> reducing the div(B) errors significantly
+#ifdef MHD
+//#ifdef BITWISE_REPRODUCIBILITY
+#  define BIT_REP_ELECTRIC
+//#endif
+#endif
+
+
+
 // #################################
 // ## macros for different models ##
 // #################################
@@ -44,42 +61,77 @@
 // ** to reduce the GPU memory consumption, large arrays in the fluid solvers are reused as much as possible
 // ** --> the strides of arrays can change when accessed by different routines for different purposes
 
-// N_SLOPE_PPM : size of Slope_PPM[]
-// N_FC_VAR    : size of FC_Var[]
-// N_FC_FLUX   : size of FC_Flux[]
-// N_FL_FLUX   : for accessing FC_Flux[] in CPU_Shared_ComputeFlux() and CPU_Shared_FullStepUpdate()
-//               --> different from N_FC_FLUX in MHM_RP since for which FC_Flux[] is also linked
-//                   to Half_Flux[] used by Hydro_RiemannPredict_Flux() and Hydro_RiemannPredict()
-//               --> for the latter two routines, Half_Flux[] is accessed with N_FC_FLUX
-// N_HF_VAR    : for accessing Half_Var[], which is linked to PriVar[] with the size FLU_NXT^3
-//               --> used by MHM_RP only
+// N_SLOPE_PPM          : size of Slope_PPM[]
+// N_FC_VAR             : size of FC_Var[]
+// N_FC_FLUX            : size of FC_Flux[]
+// N_FL_FLUX/N_HF_FLUX  : for accessing FC_Flux[]
+//                        --> may be different from N_FC_FLUX
+//                            --> for example, in MHM_RP FC_Flux[] is also linked to Half_Flux[] used by
+//                                Hydro_RiemannPredict_Flux() and Hydro_RiemannPredict()
+//                            --> for the latter two routines, Half_Flux[] is accessed with N_HF_FLUX
+//                                that is smaller than N_FC_FLUX
+// N_HF_VAR             : for accessing PriVar_Half[], which is linked to PriVar[] with the size FLU_NXT^3
+//                        --> also for accessing FC_B_Half[] in MHD
 
-#  define N_FC_VAR        ( PS2 + 2      )
-#  define N_SLOPE_PPM     ( N_FC_VAR + 2 )
+// NWAVE                : number of characteristic waves
+// NCOMP_TOTAL_PLUS_MAG : total number of fluid variables plus magnetic field
+// MAG_OFFSET           : array offset of magnetic field for arrays with the size NCOMP_TOTAL_PLUS_MAG
 
 #  if   ( FLU_SCHEME == MHM )
 
-#     define N_FL_FLUX    ( PS2 + 1      )
-#     define N_FC_FLUX    ( N_FL_FLUX    )
+#     define N_FC_VAR            ( PS2 + 2 )
+#     define N_FL_FLUX           ( PS2 + 1 )
+#     define N_FC_FLUX           ( N_FL_FLUX )
 
 #  elif ( FLU_SCHEME == MHM_RP )
 
-#     define N_FL_FLUX    ( PS2 + 1      )
-#     define N_HF_VAR     ( FLU_NXT - 2  )
-#     define N_FC_FLUX    ( FLU_NXT - 1  )
+#    ifdef MHD
+#     define N_FC_VAR            ( PS2 + 2 )
+#     define N_FL_FLUX           ( PS2 + 2 )
+#     define N_HF_FLUX           ( FLU_NXT )
+#    else
+#     define N_FC_VAR            ( PS2 + 2 )
+#     define N_FL_FLUX           ( PS2 + 1 )
+#     define N_HF_FLUX           ( FLU_NXT - 1 )
+#    endif
+#     define N_FC_FLUX           ( N_HF_FLUX )
+#     define N_HF_VAR            ( FLU_NXT - 2 )
 
 #  elif ( FLU_SCHEME == CTU )
 
-#     define N_FL_FLUX    ( N_FC_VAR     )
-#     define N_FC_FLUX    ( N_FL_FLUX    )
+#    ifdef MHD
+#     define N_FC_VAR            ( PS2 + 4 )
+#     define N_FL_FLUX           ( N_FC_VAR - 2 )
+#     define N_HF_VAR            ( PS2 + 2 )
+#    else
+#     define N_FC_VAR            ( PS2 + 2 )
+#     define N_FL_FLUX           ( N_FC_VAR )
+#    endif
+#     define N_HF_FLUX           ( N_FC_VAR )
+#     define N_FC_FLUX           ( N_HF_FLUX )
 
+#  endif // FLU_SCHEME
+
+#  define N_SLOPE_PPM            ( N_FC_VAR + 2 )
+#  define NCOMP_TOTAL_PLUS_MAG   ( NCOMP_TOTAL + NCOMP_MAG )
+
+#  ifdef MHD
+#   define N_HF_ELE              ( N_FC_FLUX - 1 )
+#   define N_FL_ELE              ( N_FL_FLUX - 1 )
+#   define N_EC_ELE              ( N_FC_FLUX - 1 )
+#   define NWAVE                 ( NCOMP_FLUID + 2 )
+#   define MAG_OFFSET            ( NCOMP_TOTAL )
+#  else
+#   define N_EC_ELE              0
+#   define NWAVE                 ( NCOMP_FLUID )
+#   define MAG_OFFSET            ( NULL_INT )
 #  endif
 
 #endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 
 
 // check non-physical negative values (e.g., negative density) for the fluid solver
-#if (  defined GAMER_DEBUG  &&  ( MODEL == HYDRO || MODEL == MHD )  )
+#if ( defined GAMER_DEBUG  &&  MODEL == HYDRO )
 #  define CHECK_NEGATIVE_IN_FLUID
 #endif
 
@@ -98,15 +150,26 @@
 
 
 // verify that the density and pressure in the intermediate states of Roe's Riemann solver are positive.
-// --> if either is negative, we switch to other Riemann solvers (EXACT/HLLE/HLLC)
+// --> if either is negative, we switch to other Riemann solvers (EXACT/HLLE/HLLC/HLLD)
 #if (  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  &&  RSOLVER == ROE  )
-//#  define CHECK_INTERMEDIATE    HLLC
-#  define CHECK_INTERMEDIATE    HLLE
+#  ifdef MHD
+//#     define CHECK_INTERMEDIATE    HLLD
+#     define CHECK_INTERMEDIATE    HLLE
+#  else
+//#     define CHECK_INTERMEDIATE    HLLC
+#     define CHECK_INTERMEDIATE    HLLE
+#  endif
+#endif
+
+
+// use Eulerian with Y factor for Roe Solver in MHD
+#if (  defined MHD  &&  ( RSOLVER == ROE || RSOLVER == HLLE )  )
+#  define EULERY
 #endif
 
 
 // do not use the reference states for HLL solvers during the data reconstruction, as suggested in ATHENA
-#if (  FLU_SCHEME != RTVD  &&  ( RSOLVER == HLLE || RSOLVER == HLLC )  )
+#if (  defined RSOLVER  &&  ( RSOLVER == HLLE || RSOLVER == HLLC || RSOLVER == HLLD )  )
 
 #  define HLL_NO_REF_STATE
 
@@ -118,23 +181,17 @@
 #endif
 
 
-// maximum allowed error for the exact Riemann solver
-#if ( ( FLU_SCHEME != RTVD && RSOLVER == EXACT )  ||  CHECK_INTERMEDIATE == EXACT )
+// maximum allowed error for the exact Riemann solver and some MHD operations
+#if (  ( FLU_SCHEME != RTVD && RSOLVER == EXACT )  ||  CHECK_INTERMEDIATE == EXACT  ||  ( MODEL == HYDRO && defined MHD )  )
 #  ifdef FLOAT8
-#     define MAX_ERROR    1.e-15
+#     define MAX_ERROR    1.0e-14
 #  else
-#     define MAX_ERROR    1.e-06f
+#     define MAX_ERROR    1.0e-06f
 #  endif
 #endif
 
 
-// 2. MHD macro
-//=========================================================================================
-#elif ( MODEL == MHD )
-#warning : WAIT MHD !!!!
-
-
-// 3. ELBDM macro
+// 2. ELBDM macro
 //=========================================================================================
 #elif ( MODEL == ELBDM )
 
@@ -268,14 +325,7 @@
 #endif
 
 
-// 2. MHD solver
-//=========================================================================================
-#elif ( MODEL == MHD )
-#     define FLU_BLOCK_SIZE_X       0
-#     define FLU_BLOCK_SIZE_Y       0
-
-
-// 3. ELBDM kinematic solver
+// 2. ELBDM kinematic solver
 //=========================================================================================
 #elif ( MODEL == ELBDM )
 #     define FLU_BLOCK_SIZE_X       PS2
@@ -332,7 +382,7 @@
 #endif // MODEL
 
 
-// 4. dt solver for fluid
+// 3. dt solver for fluid
 //=========================================================================================
 #     define DT_FLU_BLOCK_SIZE      512
 

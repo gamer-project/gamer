@@ -37,12 +37,18 @@ void Init_Field()
 // 1. add main predefined fields
 //    --> must not change the following order of declaration since they must be consistent
 //        with the symbolic constants defined in Macro.h (e.g., DENS)
-#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if   ( MODEL == HYDRO )
    Idx_Dens    = AddField( "Dens",     NORMALIZE_NO );
    Idx_MomX    = AddField( "MomX",     NORMALIZE_NO );
    Idx_MomY    = AddField( "MomY",     NORMALIZE_NO );
    Idx_MomZ    = AddField( "MomZ",     NORMALIZE_NO );
    Idx_Engy    = AddField( "Engy",     NORMALIZE_NO );
+
+#  ifdef MHD
+   MagLabel[MAGX] = "MagX";
+   MagLabel[MAGY] = "MagY";
+   MagLabel[MAGZ] = "MagZ";
+#  endif
 
 #  elif ( MODEL == ELBDM )
 

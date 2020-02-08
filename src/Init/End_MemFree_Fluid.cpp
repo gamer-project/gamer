@@ -5,11 +5,15 @@
 
 
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-extern real (*h_PriVar)      [NCOMP_TOTAL][ CUBE(FLU_NXT)     ];
-extern real (*h_Slope_PPM)[3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ];
-extern real (*h_FC_Var)   [6][NCOMP_TOTAL][ CUBE(N_FC_VAR)    ];
-extern real (*h_FC_Flux)  [3][NCOMP_TOTAL][ CUBE(N_FC_FLUX)   ];
+extern real (*h_PriVar)      [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT)     ];
+extern real (*h_Slope_PPM)[3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ];
+extern real (*h_FC_Var)   [6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ];
+extern real (*h_FC_Flux)  [3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ];
+#ifdef MHD
+extern real (*h_FC_Mag_Half)[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
+extern real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 #endif
+#endif // FLU_SCHEME
 
 
 
@@ -37,14 +41,24 @@ void End_MemFree_Fluid()
 #     ifdef DUAL_ENERGY
       delete [] h_DE_Array_F_Out [t];  h_DE_Array_F_Out [t] = NULL;
 #     endif
+#     ifdef MHD
+      delete [] h_Mag_Array_F_In [t];  h_Mag_Array_F_In [t] = NULL;
+      delete [] h_Mag_Array_F_Out[t];  h_Mag_Array_F_Out[t] = NULL;
+      delete [] h_Ele_Array      [t];  h_Ele_Array      [t] = NULL;
+      delete [] h_Mag_Array_T    [t];  h_Mag_Array_T    [t] = NULL;
+#     endif
    } // for (int t=0; t<2; t++)
 
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-   delete [] h_FC_Var;     h_FC_Var    = NULL;
-   delete [] h_FC_Flux;    h_FC_Flux   = NULL;
-   delete [] h_PriVar;     h_PriVar    = NULL;
+   delete [] h_FC_Var;        h_FC_Var      = NULL;
+   delete [] h_FC_Flux;       h_FC_Flux     = NULL;
+   delete [] h_PriVar;        h_PriVar      = NULL;
 #  if ( LR_SCHEME == PPM )
-   delete [] h_Slope_PPM;  h_Slope_PPM = NULL;
+   delete [] h_Slope_PPM;     h_Slope_PPM   = NULL;
+#  endif
+#  ifdef MHD
+   delete [] h_FC_Mag_Half;   h_FC_Mag_Half = NULL;
+   delete [] h_EC_Ele;        h_EC_Ele      = NULL;
 #  endif
 #  endif // FLU_SCHEME
 

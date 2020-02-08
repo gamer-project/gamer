@@ -7,7 +7,8 @@
 # 3. Parameters set to "auto" (usually by setting to a negative value) do not have deterministic default values
 #    and will be set according to the adopted compilation options and/or other runtime parameters
 # 4. To add new parameters, please edit "Init/Init_Load_Parameter.cpp"
-# 5. All dimensional variables should be set consistently with the code units (set by UNIT_L/M/T/V/D)
+# 5. All dimensional variables should be set consistently with the code units (set by UNIT_L/M/T/V/D) unless
+#    otherwise specified (e.g., SF_CREATE_STAR_MIN_GAS_DENS & SF_CREATE_STAR_MIN_STAR_MASS)
 # 6. For boolean options: 0/1 -> off/on
 # =================================================================================================================
 
@@ -24,7 +25,6 @@ END_STEP                     -1           # end step (<0=auto -> must be set by 
 
 # test problems
 TESTPROB_ID                   1           # test problem ID [0]
-                                          # 0: none
                                           # 1: blast wave in pure hydro
 
 # code units (in cgs)
@@ -97,19 +97,21 @@ MOLECULAR_WEIGHT              0.6         # mean molecular weight -> currently o
 MINMOD_COEFF                  1.5         # coefficient of the generalized MinMod limiter (1.0~2.0) [1.5]
 OPT__LR_LIMITER               4           # slope limiter of data reconstruction in the MHM/MHM_RP/CTU schemes:
                                           # (0=none, 1=vanLeer, 2=generalized MinMod, 3=vanAlbada, 4=vanLeer+generalized MinMod) [4]
-OPT__1ST_FLUX_CORR            2           # correct unphysical results (defined by MIN_DENS/PRES) by the 1st-order fluxes:
-                                          # (0=off, 1=3D, 2=3D+1D) [2] ##MHM/MHM_RP/CTU ONLY##
-OPT__1ST_FLUX_CORR_SCHEME     1           # Riemann solver for OPT__1ST_FLUX_CORR (0=none, 1=Roe, 2=HLLC 3=HLLE) [1]
+OPT__1ST_FLUX_CORR           -1           # correct unphysical results (defined by MIN_DENS/PRES) by the 1st-order fluxes:
+                                          # (<0=auto, 0=off, 1=3D, 2=3D+1D) [-1] ##MHM/MHM_RP/CTU ONLY; NOT SUPPORTED IN MHD##
+OPT__1ST_FLUX_CORR_SCHEME     1           # Riemann solver for OPT__1ST_FLUX_CORR (0=none, 1=Roe, 2=HLLC, 3=HLLE, 4=HLLD) [1]
 DUAL_ENERGY_SWITCH            2.0e-2      # apply dual-energy if E_int/E_kin < DUAL_ENERGY_SWITCH [2.0e-2] ##DUAL_ENERGY ONLY##
 
 
 # fluid solvers in all models
-FLU_GPU_NPGROUP              -1           # number of patch groups sent into the GPU fluid solver (<=0=auto) [-1]
+FLU_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU fluid solver (<=0=auto) [-1]
 GPU_NSTREAM                  -1           # number of CUDA streams for the asynchronous memory copy in GPU (<=0=auto) [-1]
 OPT__FIXUP_FLUX               1           # correct coarse grids by the fine-grid boundary fluxes [1] ##HYDRO and ELBDM ONLY##
+OPT__FIXUP_ELECTRIC           1           # correct coarse grids by the fine-grid boundary electric field [1] ##MHD ONLY##
 OPT__FIXUP_RESTRICT           1           # correct coarse grids by averaging the fine-grid data [1]
 OPT__CORR_AFTER_ALL_SYNC     -1           # apply various corrections after all levels are synchronized (see "Flu_CorrAfterAllSync"):
                                           # (-1=auto, 0=off, 1=every step, 2=before dump) [-1]
+OPT__NORMALIZE_PASSIVE        1           # ensure "sum(passive_scalar_density) == gas_density" [1]
 OPT__OVERLAP_MPI              0           # overlap MPI communication with CPU/GPU computations [0] ##NOT SUPPORTED YET##
 OPT__RESET_FLUID              0           # reset fluid variables after each update -> edit "Flu_ResetByUser.cpp" [0]
 MIN_DENS                      0.0         # minimum mass density (must >= 0.0) [0.0] ##HYDRO, MHD, and ELBDM ONLY##
@@ -120,6 +122,7 @@ MIN_PRES                      0.0         # minimum pressure     (must >= 0.0) [
 OPT__INIT                     1           # initialization option: (1=FUNCTION, 2=RESTART, 3=FILE->"UM_IC")
 RESTART_LOAD_NRANK            1           # number of parallel I/O (i.e., number of MPI ranks) for restart [1]
 OPT__INIT_RESTRICT            1           # restrict all data during the initialization [1]
+OPT__INIT_GRID_WITH_OMP       1           # enable OpenMP when assigning the initial condition of each grid patch [1]
 OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2=CUDA, -1=MPI rank, >=0=input) [-1]
 INIT_SUBSAMPLING_NCELL        4           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
 
@@ -127,6 +130,8 @@ INIT_SUBSAMPLING_NCELL        4           # perform sub-sampling during initiali
 # interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar)
 OPT__FLU_INT_SCHEME          -1           # ghost-zone fluid variables for the fluid solver [-1]
 OPT__REF_FLU_INT_SCHEME      -1           # newly allocated fluid variables during grid refinement [-1]
+OPT__MAG_INT_SCHEME           4           # ghost-zone magnetic field for the MHD solver (2,3,4,6 only) [4]
+OPT__REF_MAG_INT_SCHEME       4           # newly allocated magnetic field during grid refinement (2,3,4,6 only) [4]
 INT_MONO_COEFF                2.0         # coefficient for ensuring the interpolation monotonicity (1.0~4.0) [2.0]
 
 
@@ -136,6 +141,7 @@ OPT__OUTPUT_PART              7           # output a single line or slice: (0=of
 OPT__OUTPUT_USER              0           # output the user-specified data -> edit "Output_User.cpp" [0]
 OPT__OUTPUT_BASEPS            0           # output the base-level power spectrum [0]
 OPT__OUTPUT_BASE              0           # only output the base-level data [0] ##OPT__OUTPUT_PART ONLY##
+OPT__OUTPUT_CC_MAG            1           # output **cell-centered** magnetic field (necessary for yt analysis) [1] ##MHD ONLY##
 OPT__OUTPUT_MODE              2           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
 OUTPUT_STEP                   5           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
 OUTPUT_DT                     5.0e-4      # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
@@ -150,11 +156,14 @@ OPT__VERBOSE                  0           # output the simulation progress in de
 OPT__TIMING_BARRIER          -1           # synchronize before timing -> more accurate, but may slow down the run (<0=auto) [-1]
 OPT__TIMING_BALANCE           0           # record the max/min elapsed time in various code sections for checking load balance [0]
 OPT__TIMING_MPI               0           # record the MPI bandwidth achieved in various code sections [0] ##LOAD_BALANCE ONLY##
+OPT__RECORD_NOTE              1           # take notes for the general simulation info [1]
+OPT__RECORD_UNPHY             1           # record the number of cells with unphysical results being corrected [1]
 OPT__RECORD_MEMORY            1           # record the memory consumption [1]
 OPT__RECORD_PERFORMANCE       1           # record the code performance [1]
 OPT__MANUAL_CONTROL           1           # support manually dump data or stop run during the runtime
                                           # (by generating the file DUMP_GAMER_DUMP or STOP_GAMER_STOP) [1]
 OPT__RECORD_USER              0           # record the user-specified info -> edit "Aux_RecordUser.cpp" [0]
+OPT__OPTIMIZE_AGGRESSIVE      0           # apply aggressive optimizations (experimental) [0]
 
 
 # checks
@@ -165,6 +174,8 @@ OPT__CK_NORMALIZE_PASSIVE     0           # check the normalization of passive s
 OPT__CK_RESTRICT              0           # check the data restriction [0]
 OPT__CK_FINITE                0           # check if all variables are finite [0]
 OPT__CK_PATCH_ALLOCATE        0           # check if all patches are properly allocated [0]
-OPT__CK_FLUX_ALLOCATE         0           # check if all flux arrays are properly allocated ##HYDRO and ELBDM ONLY## [0]
+OPT__CK_FLUX_ALLOCATE         0           # check if all flux arrays are properly allocated [0] ##HYDRO and ELBDM ONLY##
 OPT__CK_NEGATIVE              0           # check the negative values: (0=off, 1=density, 2=pressure and entropy, 3=both) [0] ##HYDRO ONLY##
 OPT__CK_MEMFREE               1.0         # check the free memory in GB (0=off, >0=threshold) [1.0]
+OPT__CK_INTERFACE_B           0           # check the consistency of patch interface B field [0] ##MHD ONLY##
+OPT__CK_DIVERGENCE_B          0           # check the divergence-free constraint on B field (0=off, 1=on, 2=on+verbose) [0] ##MHD ONLY##

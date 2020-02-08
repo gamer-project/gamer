@@ -5,10 +5,11 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flu_AllocateFluxArray
-// Description :  Allocate flux arrays for the coarse-grid patches (at level lv ) adjacent to the
+// Description :  Allocate flux arrays for the coarse-grid patches (on level lv) adjacent to the
 //                coarse-fine boundaries (including the buffer patches)
 //
 // Note        :  1. Do nothing on the top level
+//                2. Only used in the serial mode
 //
 // Parameter   :  lv : Coarse-grid level
 //-------------------------------------------------------------------------------------------------------
@@ -17,7 +18,7 @@ void Flu_AllocateFluxArray( const int lv )
 
 // check
    if ( !amr->WithFlux )
-      Aux_Message( stderr, "WARNING : why invoking %s when amr->WithFlux is off ??\n", __FUNCTION__ );
+      Aux_Error( ERROR_INFO, "amr->WithFlux is off !!\n" );
 
    if ( lv < 0  ||  lv > TOP_LEVEL )
       Aux_Error( ERROR_INFO, "incorrect parameter lv = %d (either < 0 or > %d) !!\n", lv, TOP_LEVEL );

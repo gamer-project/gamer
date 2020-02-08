@@ -7,14 +7,14 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LB_RecordExchangeFixUpDataPatchID
-// Description :  Construct the MPI sending and receiving data lists for exchanging hydro data after
-//                the fix-up operation
+// Description :  Construct the MPI sending and receiving data lists for exchanging hydro/MHD data after
+//                the fix-up operations
 //
-// Note        :  1. This function must be invoked AFTER LB_RecordExchangeDataPatchID()
+// Note        :  1. Must be invoked AFTER LB_RecordExchangeDataPatchID()
 //                2. All real and buffer patches must know whether or not they have sons
-//                3. The lists constructed by this function (SendX/RecvX) are subsets of the lists (SendH/RecvH)
-//                   --> To reduce the amount of data to be transferred after the fix-up operation
-//                4. This function assumes that Flu_ParaBuf < PATCH_SIZE
+//                3. Lists constructed here (SendX/RecvX/SendY/RecvY) are subsets of the lists (SendH/RecvH)
+//                   --> To reduce the amount of data to be transferred after the fix-up operations
+//                4. Aassuming Flu_ParaBuf < PATCH_SIZE
 //                   --> Because we only check if the interfaces between real and sibling-buffer patches
 //                       coincide with coarse-fine boundaaries
 //                       --> But for Flu_ParaBuf == PATCH_SIZE, we may need to exchange data even if
@@ -49,6 +49,17 @@ void LB_RecordExchangeFixUpDataPatchID( const int Lv )
    int **LB_RecvX_IDList          = amr->LB->RecvX_IDList         [Lv];
    int **LB_RecvX_SibList         = amr->LB->RecvX_SibList        [Lv];
 
+#  ifdef MHD
+   int  *LB_SendY_NList           = amr->LB->SendY_NList          [Lv];
+   int **LB_SendY_IDList          = amr->LB->SendY_IDList         [Lv];
+   int **LB_SendY_SibList         = amr->LB->SendY_SibList        [Lv];
+   int  *LB_RecvY_NList           = amr->LB->RecvY_NList          [Lv];
+   int **LB_RecvY_IDList          = amr->LB->RecvY_IDList         [Lv];
+   int **LB_RecvY_SibList         = amr->LB->RecvY_SibList        [Lv];
+
+   int **LB_SendY_SubID           = new int* [MPI_NRank];
+#  endif
+
    const int SibMask[6] =
    {   ~(  (1<<19) | (1<<16) | (1<<21) | (1<< 7) | (1<< 1) | (1<< 9) | (1<<23) | (1<<17) | (1<<25)  ),
        ~(  (1<<18) | (1<<14) | (1<<20) | (1<< 6) | (1<< 0) | (1<< 8) | (1<<22) | (1<<15) | (1<<24)  ),
@@ -57,11 +68,8 @@ void LB_RecordExchangeFixUpDataPatchID( const int Lv )
        ~(  (1<<22) | (1<<12) | (1<<23) | (1<<15) | (1<< 5) | (1<<17) | (1<<24) | (1<<13) | (1<<25)  ),
        ~(  (1<<18) | (1<<10) | (1<<19) | (1<<14) | (1<< 4) | (1<<16) | (1<<20) | (1<<11) | (1<<21)  )   };
 
-   int  TPID, SibPID;
-   bool GotYou;
 
-
-// 1 initialize arrays
+// 1. initialize arrays
 // ============================================================================================================
    for (int r=0; r<MPI_NRank; r++)
    {
@@ -69,6 +77,13 @@ void LB_RecordExchangeFixUpDataPatchID( const int Lv )
       if ( LB_SendX_SibList[r] != NULL )  delete [] LB_SendX_SibList[r];
       if ( LB_RecvX_IDList [r] != NULL )  delete [] LB_RecvX_IDList [r];
       if ( LB_RecvX_SibList[r] != NULL )  delete [] LB_RecvX_SibList[r];
+
+#     ifdef MHD
+      if ( LB_SendY_IDList [r] != NULL )  delete [] LB_SendY_IDList [r];
+      if ( LB_SendY_SibList[r] != NULL )  delete [] LB_SendY_SibList[r];
+      if ( LB_RecvY_IDList [r] != NULL )  delete [] LB_RecvY_IDList [r];
+      if ( LB_RecvY_SibList[r] != NULL )  delete [] LB_RecvY_SibList[r];
+#     endif
 
       LB_SendX_NList   [r] = 0;
       LB_SendX_NResList[r] = 0;
@@ -78,10 +93,22 @@ void LB_RecordExchangeFixUpDataPatchID( const int Lv )
       LB_RecvX_NResList[r] = 0;
       LB_RecvX_IDList  [r] = new int [ LB_RecvH_NList[r] ];
       LB_RecvX_SibList [r] = new int [ LB_RecvH_NList[r] ];
-   }
+
+#     ifdef MHD
+      LB_SendY_NList   [r] = 0;
+      LB_SendY_IDList  [r] = new int [ LB_SendH_NList[r] ];
+      LB_SendY_SibList [r] = new int [ LB_SendH_NList[r] ];
+      LB_RecvY_NList   [r] = 0;
+      LB_RecvY_IDList  [r] = new int [ LB_RecvH_NList[r] ];
+      LB_RecvY_SibList [r] = new int [ LB_RecvH_NList[r] ];
+
+      LB_SendY_SubID   [r] = new int [ LB_SendH_NList[r] ];
+#     endif
+   } // for (int r=0; r<MPI_NRank; r++)
 
 
-// 2 data to be sent and received after the restriction fix-up operation
+
+// 2. data to be sent and received after the restriction fix-up operation
 // ============================================================================================================
 // note that even when OPT__FIXUP_RESTRICT is off we still need to do data restriction in several places
 // (e.g., restart and OPT__CORR_AFTER_ALL_SYNC)
@@ -95,11 +122,11 @@ void LB_RecordExchangeFixUpDataPatchID( const int Lv )
       {
          for (int t=0; t<LB_SendH_NList[r]; t++)
          {
-            TPID = LB_SendH_IDList[r][t];
+            const int SPID = LB_SendH_IDList[r][t];
 
-            if ( amr->patch[0][Lv][TPID]->son != -1 ) // sons may not be home --> need LB_RecordExchangeRestrictDataPatchID()
+            if ( amr->patch[0][Lv][SPID]->son != -1 ) // sons may not be home --> need LB_RecordExchangeRestrictDataPatchID()
             {
-               LB_SendX_IDList [r][ LB_SendX_NList[r] ] = TPID;
+               LB_SendX_IDList [r][ LB_SendX_NList[r] ] = SPID;
                LB_SendX_SibList[r][ LB_SendX_NList[r] ] = LB_SendH_SibList[r][t];
                LB_SendX_NList  [r] ++;
             }
@@ -108,17 +135,18 @@ void LB_RecordExchangeFixUpDataPatchID( const int Lv )
          LB_SendX_NResList[r] = LB_SendX_NList[r];
       } // for (int r=0; r<MPI_NRank; r++)
 
+
 //    2.2 recv
       for (int r=0; r<MPI_NRank; r++)
       {
          for (int t=0; t<LB_RecvH_NList[r]; t++)
          {
-            TPID = LB_RecvH_IDList[r][ LB_RecvH_IDList_IdxTable[r][t] ];
+            const int RPID = LB_RecvH_IDList[r][ LB_RecvH_IDList_IdxTable[r][t] ];
 
-            if ( amr->patch[0][Lv][TPID]->son != -1 ) // assuming that all buffer patches know whether or not they have sons
+            if ( amr->patch[0][Lv][RPID]->son != -1 ) // assuming that all buffer patches know whether or not they have sons
                                                       // --> LB_FindSonNotHome() applies to both real and buffer patches
             {
-               LB_RecvX_IDList [r][ LB_RecvX_NList[r] ] = TPID;
+               LB_RecvX_IDList [r][ LB_RecvX_NList[r] ] = RPID;
                LB_RecvX_SibList[r][ LB_RecvX_NList[r] ] = LB_RecvH_SibList[r][t];
                LB_RecvX_NList  [r] ++;
             }
@@ -129,28 +157,31 @@ void LB_RecordExchangeFixUpDataPatchID( const int Lv )
    } // if ( true )
 
 
-// 3 data to be sent and received after the flux fix-up operation
+
+// 3. data to be sent and received after the flux fix-up operation
 // ============================================================================================================
    if ( OPT__FIXUP_FLUX )
    {
 //    check
-      if ( !amr->WithFlux )   Aux_Error( ERROR_INFO, "amr->WithFlux is off --> no flux array is required !\n" );
+      if ( !amr->WithFlux )
+         Aux_Error( ERROR_INFO, "amr->WithFlux is off --> no flux array is required !!\n" );
+
 
 //    3.1 send
       for (int r=0; r<MPI_NRank; r++)
       for (int t=0; t<LB_SendH_NList[r]; t++)
       {
-         TPID   = LB_SendH_IDList[r][t];
-         GotYou = false;
+         const int SPID = LB_SendH_IDList[r][t];
+         bool GotYou = false;
 
          for (int s=0; s<6; s++)
          {
-            if ( amr->patch[0][Lv][TPID]->flux[s] != NULL )
+            if ( amr->patch[0][Lv][SPID]->flux[s] != NULL )
             {
 #              ifdef GAMER_DEBUG
-               if ( amr->patch[0][Lv][TPID]->son != -1 )
-                  Aux_Error( ERROR_INFO, "Lv %d, TPID %d, SonPID = %d != -1 <-> flux[%d] != NULL !!\n",
-                             Lv, TPID, amr->patch[0][Lv][TPID]->son, s );
+               if ( amr->patch[0][Lv][SPID]->son != -1 )
+                  Aux_Error( ERROR_INFO, "Lv %d, SPID %d, SonPID = %d != -1 <-> flux[%d] != NULL !!\n",
+                             Lv, SPID, amr->patch[0][Lv][SPID]->son, s );
 #              endif
 
                if ( LB_SendH_SibList[r][t] & SibMask[s] )
@@ -161,27 +192,28 @@ void LB_RecordExchangeFixUpDataPatchID( const int Lv )
                   else
                   {
                      LB_SendX_SibList[r][ LB_SendX_NList[r] ]  = 1 << s;
-                     LB_SendX_IDList [r][ LB_SendX_NList[r] ]  = TPID;
+                     LB_SendX_IDList [r][ LB_SendX_NList[r] ]  = SPID;
                      GotYou = true;
                   }
                }
-            } // if ( amr->patch[0][Lv][TPID]->flux[s] != NULL )
+            } // if ( amr->patch[0][Lv][SPID]->flux[s] != NULL )
          } // for (int s=0; s<6; s++)
 
          if ( GotYou )  LB_SendX_NList[r] ++;
       } // for (int r=0; r<MPI_NRank; r++) for (int t=0; t<LB_SendH_NList[r]; t++)
 
+
 //    3.2 recv
       for (int r=0; r<MPI_NRank; r++)
       for (int t=0; t<LB_RecvH_NList[r]; t++)
       {
-         TPID   = LB_RecvH_IDList[r][ LB_RecvH_IDList_IdxTable[r][t] ];
-         GotYou = false;
+         const int RPID = LB_RecvH_IDList[r][ LB_RecvH_IDList_IdxTable[r][t] ];
+         bool GotYou = false;
 
-         if ( amr->patch[0][Lv][TPID]->son == -1 )
+         if ( amr->patch[0][Lv][RPID]->son == -1 )
          for (int s=0; s<6; s++)
          {
-            SibPID = amr->patch[0][Lv][TPID]->sibling[s];
+            const int SibPID = amr->patch[0][Lv][RPID]->sibling[s];
 
             if ( SibPID >= 0  &&  amr->patch[0][Lv][SibPID]->son != -1 )   // work for non-periodic B.C. as well
             {
@@ -193,7 +225,7 @@ void LB_RecordExchangeFixUpDataPatchID( const int Lv )
                   else
                   {
                      LB_RecvX_SibList[r][ LB_RecvX_NList[r] ]  = 1 << s;
-                     LB_RecvX_IDList [r][ LB_RecvX_NList[r] ]  = TPID;
+                     LB_RecvX_IDList [r][ LB_RecvX_NList[r] ]  = RPID;
                      GotYou = true;
                   }
                }
@@ -206,12 +238,99 @@ void LB_RecordExchangeFixUpDataPatchID( const int Lv )
    } // if ( OPT__FIXUP_FLUX )
 
 
+
+// 4. B field data to be sent and received after the electric field fix-up operation
+// ============================================================================================================
+#  ifdef MHD
+   if ( OPT__FIXUP_ELECTRIC )
+   {
+//    check
+      if ( !amr->WithElectric )
+         Aux_Error( ERROR_INFO, "amr->WithElectric is off --> no electric field array is required !!\n" );
+
+
+//    4.1 send
+      for (int r=0; r<MPI_NRank; r++)
+      for (int t=0; t<LB_SendH_NList[r]; t++)
+      {
+         const int SPID = LB_SendH_IDList[r][t];
+
+         for (int s=0; s<18; s++)
+         {
+//          for simplicity, just re-send the data of patches with electric field arrays being allocated
+            if ( amr->patch[0][Lv][SPID]->electric[s] != NULL )
+            {
+               LB_SendY_IDList [r][ LB_SendY_NList[r] ] = SPID;
+               LB_SendY_SibList[r][ LB_SendY_NList[r] ] = LB_SendH_SibList[r][t];
+               LB_SendY_SubID  [r][ LB_SendY_NList[r] ] = t;
+               LB_SendY_NList  [r] ++;
+               break;
+            }
+         }
+      }
+
+
+//    4.2 recv
+      int  SendY_Disp[MPI_NRank], RecvY_Disp[MPI_NRank], NSendY_Total, NRecvY_Total, CounterY;
+      int *SendY_Buf=NULL, *RecvY_Buf=NULL, *RecvY_Ptr=NULL;
+
+//    4.2.1. set the N list
+      MPI_Alltoall( LB_SendY_NList, 1, MPI_INT, LB_RecvY_NList, 1, MPI_INT, MPI_COMM_WORLD );
+
+//    4.2.2. exchange the subset ID list
+      SendY_Disp[0] = 0;
+      RecvY_Disp[0] = 0;
+      for (int r=1; r<MPI_NRank; r++)
+      {
+         SendY_Disp[r] = SendY_Disp[r-1] + LB_SendY_NList[r-1];
+         RecvY_Disp[r] = RecvY_Disp[r-1] + LB_RecvY_NList[r-1];
+      }
+      NSendY_Total = SendY_Disp[MPI_NRank-1] + LB_SendY_NList[MPI_NRank-1];
+      NRecvY_Total = RecvY_Disp[MPI_NRank-1] + LB_RecvY_NList[MPI_NRank-1];
+
+      SendY_Buf = new int [NSendY_Total];
+      RecvY_Buf = new int [NRecvY_Total];
+
+      CounterY = 0;
+      for (int r=0; r<MPI_NRank; r++)
+      for (int t=0; t<LB_SendY_NList[r]; t++)
+         SendY_Buf[ CounterY ++ ] = LB_SendY_SubID[r][t];
+
+      MPI_Alltoallv( SendY_Buf, LB_SendY_NList, SendY_Disp, MPI_INT,
+                     RecvY_Buf, LB_RecvY_NList, RecvY_Disp, MPI_INT,  MPI_COMM_WORLD );
+
+//    4.2.3. set the recv lists
+      for (int r=0; r<MPI_NRank; r++)
+      {
+         RecvY_Ptr = RecvY_Buf + RecvY_Disp[r];
+
+         for (int t=0; t<LB_RecvY_NList[r]; t++)
+         {
+            const int SubID = RecvY_Ptr[t];
+
+            LB_RecvY_IDList [r][t] = LB_RecvH_IDList [r][ LB_RecvH_IDList_IdxTable[r][SubID] ];
+            LB_RecvY_SibList[r][t] = LB_RecvH_SibList[r][SubID];
+         }
+      }
+
+      delete [] SendY_Buf;
+      delete [] RecvY_Buf;
+   } // if ( OPT__FIXUP_ELECTRIC )
+
+   for (int r=0; r<MPI_NRank; r++)  delete [] LB_SendY_SubID[r];
+   delete [] LB_SendY_SubID;
+#  endif // #ifdef MHD
+
+
+
+// 5. check
+// ============================================================================================================
 #  ifdef GAMER_DEBUG
    int  LB_RecvX_NList_Ck[MPI_NRank], LB_RecvX_NResList_Ck[MPI_NRank], Send_Disp[MPI_NRank], Recv_Disp[MPI_NRank];
    int  NSend_Total, NRecv_Total, Counter;
    int *SendBuf, *RecvBuf, *RecvPtr;
 
-// check the N lists
+// 5.1. check the N lists
    MPI_Alltoall( LB_SendX_NList,    1, MPI_INT, LB_RecvX_NList_Ck,    1, MPI_INT, MPI_COMM_WORLD );
    MPI_Alltoall( LB_SendX_NResList, 1, MPI_INT, LB_RecvX_NResList_Ck, 1, MPI_INT, MPI_COMM_WORLD );
 
@@ -226,7 +345,8 @@ void LB_RecordExchangeFixUpDataPatchID( const int Lv )
                     Lv, r, LB_RecvX_NResList[r], LB_RecvX_NResList_Ck[r] );
    }
 
-// check the recv sibling lists
+
+// 5.2. check the recv sibling lists
    Send_Disp[0] = 0;
    Recv_Disp[0] = 0;
    for (int r=1; r<MPI_NRank; r++)
