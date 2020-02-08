@@ -110,7 +110,11 @@ real SRHydro_GetHTilde( const real Con[], real Gamma )
 
 
   // (x+y)(x-y) is more accurate than x**2-y**2
-  Constant = (E_D + M_D) * (E_D - M_D) + (real)2.0 * E_D;
+  //Constant = (E_D + M_D) * (E_D - M_D) + (real)2.0 * E_D;
+  real X = SQRT( E_D*E_D + (real)2.0*E_D );
+  real Y = X + M_D;
+  real Z = X - M_D;
+  Constant = Y * Z;
 
   
 # if ( EOS == APPROXIMATED_GENERAL )
