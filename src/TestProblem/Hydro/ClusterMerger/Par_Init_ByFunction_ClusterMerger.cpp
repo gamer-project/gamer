@@ -179,7 +179,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
    for (int c=0; c<NCluster; c++)
    {
 //    load data
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading cluster %d ... ", c );
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading cluster %d ... \n", c+1 );
 
       real_par_in *mass = new real_par_in [NPar_ThisRank_EachCluster[c]];
       real_par_in *xpos = new real_par_in [NPar_ThisRank_EachCluster[c]];
@@ -196,12 +196,27 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
 //    store data to the particle repository
       if ( MPI_Rank == 0 )    
-         Aux_Message( stdout, "   Storing cluster %d to the particle repository ... ", c );
+         Aux_Message( stdout, "   Storing cluster %d to the particle repository ... \n", c+1 );
 
+//    Compute offsets for assigning particles
+
+      double coffset;
+      switch (c) {
+      case 0:
+        coffset = 0;
+        break;
+      case 1:
+        coffset = NPar_ThisRank_EachCluster[0];
+	break;
+      case 2:
+	coffset = NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1];
+        break;
+      }
+      
       for (long p=0; p<NPar_ThisRank_EachCluster[c]; p++)
       {
 //       particle index offset
-	 const long pp = p + ((c==0)?0:NPar_ThisRank_EachCluster[c-1]);
+         const long pp = p + coffset;
 
 //       --> convert to code unit before storing to the particle repository to avoid floating-point overflow
 //       --> we have assumed that the loaded data are in cgs
