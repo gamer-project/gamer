@@ -84,6 +84,7 @@ HUBBLE0                       0.70        # dimensionless Hubble parameter (curr
 
 
 # time-step
+DT__MAX                      -1.0         # dt criterion: maximum allowed dt (<0=off) [-1.0]
 DT__FLUID                    -1.0         # dt criterion: fluid solver CFL factor (<0=auto) [-1.0]
 DT__FLUID_INIT               -1.0         # dt criterion: DT__FLUID at the first step (<0=auto) [-1.0]
 DT__GRAVITY                  -1.0         # dt criterion: gravity solver safety factor (<0=auto) [-1.0]
@@ -154,6 +155,9 @@ GRACKLE_CMB_FLOOR             1           # ...    "cmb_temperature_floor" [1]
 GRACKLE_PE_HEATING            0           # ...    "photoelectric_heating" [0]
 GRACKLE_PE_HEATING_RATE       8.5e-26     # ...    "photoelectric_heating_rate (in erg/cm^3/s)" [8.5e-26]
 GRACKLE_CLOUDY_TABLE          CloudyData_noUVB.h5  # "grackle_data_file"
+GRACKLE_THREE_BODY_RATE       4           # used Glover+08 rate
+GRACKLE_CIE_COOLING           1           # 0: off; 1:on
+GRACKLE_H2_OPA_APPROX         1           # H2 opacity from Ripamonti+04; 0:off, 1:Ripomonti+04
 CHE_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU Grackle solver (<=0=auto) [-1]
 
 

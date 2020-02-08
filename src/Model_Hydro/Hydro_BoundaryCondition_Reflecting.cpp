@@ -3,22 +3,22 @@
 #if ( MODEL == HYDRO )
 
 static void BC_Reflecting_xm( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
-                              const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
+                              const long TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                               const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] );
 static void BC_Reflecting_xp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
-                              const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
+                              const long TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                               const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] );
 static void BC_Reflecting_ym( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
-                              const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
+                              const long TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                               const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] );
 static void BC_Reflecting_yp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
-                              const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
+                              const long TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                               const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] );
 static void BC_Reflecting_zm( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
-                              const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
+                              const long TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                               const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] );
 static void BC_Reflecting_zp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
-                              const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
+                              const long TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                               const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] );
 
 
@@ -47,7 +47,7 @@ static void BC_Reflecting_zp( real *Array, const int NVar_Flu, const int TFluVar
 void Hydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const int NVar_Flu, const int GhostSize,
                                          const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
                                          const int Idx_Start[], const int Idx_End[], const int TFluVarIdxList[],
-                                         const int NVar_Der, const int TDerVarList[] )
+                                         const int NVar_Der, const long TDerVarList[] )
 {
 
 // check the index range
@@ -129,7 +129,7 @@ void Hydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const i
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
 void BC_Reflecting_xm( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
-                       const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
+                       const long TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                        const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] )
 {
 
@@ -211,7 +211,7 @@ void BC_Reflecting_xm( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
 void BC_Reflecting_xp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
-                       const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
+                       const long TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                        const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] )
 {
 
@@ -293,7 +293,7 @@ void BC_Reflecting_xp( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
 void BC_Reflecting_ym( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
-                       const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
+                       const long TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                        const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] )
 {
 
@@ -375,7 +375,7 @@ void BC_Reflecting_ym( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
 void BC_Reflecting_yp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
-                       const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
+                       const long TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                        const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] )
 {
 
@@ -457,7 +457,7 @@ void BC_Reflecting_yp( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
 void BC_Reflecting_zm( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
-                       const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
+                       const long TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                        const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] )
 {
 
@@ -539,7 +539,7 @@ void BC_Reflecting_zm( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
 void BC_Reflecting_zp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
-                       const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
+                       const long TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                        const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] )
 {
 

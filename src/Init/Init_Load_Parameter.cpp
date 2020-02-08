@@ -95,6 +95,7 @@ void Init_Load_Parameter()
 
 
 // time-step
+   ReadPara->Add( "DT__MAX",                    &DT__MAX,                        -1.0,             NoMin_double,  NoMax_double   );
 // do not check DT__FLUID/FLUID_INIT/GRAVITY/PARVEL_MAX since they may be reset by Init_ResetDefaultParameter()
    ReadPara->Add( "DT__FLUID",                  &DT__FLUID,                      -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "DT__FLUID_INIT",             &DT__FLUID_INIT,                 -1.0,             NoMin_double,  NoMax_double   );
@@ -185,6 +186,9 @@ void Init_Load_Parameter()
    ReadPara->Add( "GRACKLE_PE_HEATING",         &GRACKLE_PE_HEATING,              false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "GRACKLE_PE_HEATING_RATE",    &GRACKLE_PE_HEATING_RATE,         8.5e-26,         0.0,           NoMax_double   );
    ReadPara->Add( "GRACKLE_CLOUDY_TABLE",        GRACKLE_CLOUDY_TABLE,            Useless_str,     Useless_str,   Useless_str    );
+   ReadPara->Add( "GRACKLE_THREE_BODY_RATE",    &GRACKLE_THREE_BODY_RATE,         0,               0,             5              );
+   ReadPara->Add( "GRACKLE_CIE_COOLING",        &GRACKLE_CIE_COOLING,             0,               Useless_bool,  Useless_bool   );
+   ReadPara->Add( "GRACKLE_H2_OPA_APPROX",      &GRACKLE_H2_OPA_APPROX,           0,               0,             1              );
 // do not check CHE_GPU_NPGROUP since it may be reset by either Init_ResetDefaultParameter() or CUAPI_Set_Default_GPU_Parameter()
    ReadPara->Add( "CHE_GPU_NPGROUP",            &CHE_GPU_NPGROUP,                -1,               NoMin_int,     NoMax_int      );
 #  endif

@@ -127,8 +127,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 // determine the priority of different boundary faces (z>y>x) to set the corner cells properly for the non-periodic B.C.
-   const int  NDer       = 0;
-   const int *DerVarList = NULL;
+   const int   NDer       = 0;
+   const long *DerVarList = NULL;
 
    int BC_Face[26], BC_Face_tmp[3], FluVarIdxList[NCOMP_TOTAL];
 

@@ -1,45 +1,48 @@
 #include "ExtractUniform.h"
+#ifdef SUPPORT_HDF5
+#include "HDF5_Typedef.h"
+#endif
 
-int         OutputXYZ         = WRONG;                     // output option (x,y,z,x-proj,y-proj,z-proj,3D)
-char       *FileName_In       = NULL;                      // name of the input file
-char       *FileName_Tree     = NULL;                      // name of the tree file
-char       *Suffix            = NULL;                      // suffix attached to the output file name
-bool        OutputBinary      = false;                     // true --> output data in binary form
-bool        OutputPot         = false;                     // true --> output gravitational potential
-int         OutputParDens     = 0;                         // (0/1/2) --> off/output particle density/output total density
-bool        OutputPres        = false;                     // true --> output pressure
-bool        OutputTemp        = false;                     // true --> output temperature
-bool        OutputDivVel      = false;                     // true --> output divergence( velocity )
-bool        OutputCurlVel     = false;                     // true --> output curl( velocity ) = vorticity
-bool        OutputELBDM_Vel   = false;                     // true --> output velocity field in ELBDM
-bool        ConvertCom2PhyV   = false;                     // convert peculiar velocity from comoving to physical coords (in km/s)
-bool        InputScale        = false;                     // true --> input cell scales instead of coordinates
-bool        Shift2Center      = false;                     // true --> shift target region to the box center (assume periodic)
-int         ShiftScale[3]     = { 0, 0, 0 };               // scale shifted by Shift2Center
-int         ExtBC             = 0;                         // external boundary condition (0/1:periodic/outflow)
-int         OMP_NThread       = -1;                        // number of OpenMP threads
-int         TargetLevel       = 0;                         // targeted level
-int         Scale_Start   [3] = { WRONG, WRONG, WRONG };   // targeted x, y, z starting scale
-int         Scale_Size    [3] = { WRONG, WRONG, WRONG };   // targeted x, y, z scale size
-int         Idx_Start     [3] = { WRONG, WRONG, WRONG };   // targeted x, y, z array indices
-int         Idx_Size      [3] = { WRONG, WRONG, WRONG };   // targeted x, y, z array size
-int         Idx_MyStart   [3] = { WRONG, WRONG, WRONG };   // starting x, y, z array indices of this process
-int         Idx_MySize    [3] = { WRONG, WRONG, WRONG };   // array size of this process
-double      PhyCoord_Start[3] = { WRONG, WRONG, WRONG };   // starting physical coordinates
-double      PhyCoord_Size [3] = { WRONG, WRONG, WRONG };   // targeted size in physical coordinates
-int         NGPU_X[3]         = { 1, 1, 1 };               // number of MPI ranks in each direction
-int         CanBuf            = WRONG;                     // buffer size for the candidate box
-int         NLoad             = NCOMP_TOTAL;               // number of variables loaded from the input file
-int         NOut              = NCOMP_TOTAL;               // number of variables to be outputted
-real       *OutputArray       = NULL;                      // array storing the output data
-int         BufSize           = WRONG;                     // buffer size of the prepapred patch data
-double      Int_MonoCoeff     = 2.0;                       // coefficient for the interpolation monotonicity (1<=coeff<=4)
-double      Convert2Temp      = WRONG;                     // coefficient for converting pressure/density to temperature
-                                                           // --> velocity_code_unit^2*hydrogen_mass*mean_atomic_weight/Boltzmann_constant
-IntScheme_t IntScheme         = INT_DEFAULT;               // interpolation scheme
-bool        UseTree           = false;                     // true --> use the tree file to improve the I/O performance
-tree_t     *tree              = NULL;                      // tree structure when UseTree is on
-int         CanMin[3][3], CanMax[3][3];                    // range of the candidate box for loading patch data
+int         OutputXYZ         = WRONG;                      // output mode (x,y,z,x-proj,y-proj,z-proj,3D)
+char       *FileName_In       = NULL;                       // name of the input file
+char       *FileName_Tree     = NULL;                       // name of the tree file
+char       *Suffix            = NULL;                       // suffix attached to the output file name
+int         OutputFormat      = 2;                          // output data format: 1=text, 2=HDF5, 3=C-binary
+bool        OutputPot         = false;                      // true --> output gravitational potential
+int         OutputParDens     = 0;                          // 0=off, 1=output particle density, 2=output total density
+bool        OutputPres        = false;                      // true --> output pressure
+bool        OutputTemp        = false;                      // true --> output temperature
+bool        OutputDivVel      = false;                      // true --> output divergence( velocity )
+bool        OutputCurlVel     = false;                      // true --> output curl( velocity ) = vorticity
+bool        OutputELBDM_Vel   = false;                      // true --> output velocity field in ELBDM
+bool        ConvertCom2PhyV   = false;                      // convert peculiar velocity from comoving to physical coords (in km/s)
+bool        InputScale        = false;                      // true --> input cell scales instead of coordinates
+bool        Shift2Center      = false;                      // true --> shift target region to the box center (assume periodic)
+int         ShiftScale[3]     = { 0, 0, 0 };                // scale shifted by Shift2Center
+int         ExtBC             = 0;                          // external boundary condition (0/1:periodic/outflow)
+int         OMP_NThread       = -1;                         // number of OpenMP threads
+int         TargetLevel       = 0;                          // targeted level
+int         Scale_Start   [3] = { WRONG, WRONG, WRONG };    // targeted x, y, z starting scale
+int         Scale_Size    [3] = { WRONG, WRONG, WRONG };    // targeted x, y, z scale size
+int         Idx_Start     [3] = { WRONG, WRONG, WRONG };    // targeted x, y, z array indices
+int         Idx_Size      [3] = { WRONG, WRONG, WRONG };    // targeted x, y, z array size
+int         Idx_MyStart   [3] = { WRONG, WRONG, WRONG };    // starting x, y, z array indices of this process
+int         Idx_MySize    [3] = { WRONG, WRONG, WRONG };    // array size of this process
+double      PhyCoord_Start[3] = { WRONG, WRONG, WRONG };    // starting physical coordinates
+double      PhyCoord_Size [3] = { WRONG, WRONG, WRONG };    // targeted size in physical coordinates
+int         NGPU_X[3]         = { 1, 1, 1 };                // number of MPI ranks in each direction
+int         CanBuf            = WRONG;                      // buffer size for the candidate box
+int         NLoad             = NCOMP_TOTAL;                // number of variables loaded from the input file
+int         NOut              = NCOMP_TOTAL;                // number of variables to be outputted
+real       *OutputArray       = NULL;                       // array storing the output data
+int         BufSize           = WRONG;                      // buffer size of the prepapred patch data
+double      Int_MonoCoeff     = 2.0;                        // coefficient for the interpolation monotonicity (1<=coeff<=4)
+double      Convert2Temp      = WRONG;                      // coefficient for converting pressure/density to temperature
+                                                            // --> velocity_code_unit^2*hydrogen_mass*mean_atomic_weight/Boltzmann_constant
+IntScheme_t IntScheme         = INT_DEFAULT;                // interpolation scheme
+bool        UseTree           = false;                      // true --> use the tree file to improve the I/O performance
+tree_t     *tree              = NULL;                       // tree structure when UseTree is on
+int         CanMin[3][3], CanMax[3][3];                     // range of the candidate box for loading patch data
 
 AMR_t     amr;
 ParaVar_t ParaVar;
@@ -74,7 +77,7 @@ void ReadOption( int argc, char **argv )
    double Temp_Size [3] = { WRONG, WRONG, WRONG };
    int c;
 
-   while ( (c = getopt(argc, argv, "hbPUdvVTscwki:o:l:n:x:y:z:X:Y:Z:p:q:r:I:m:t:e:B:u:")) != -1 )
+   while ( (c = getopt(argc, argv, "hPUdvVTscwki:o:l:n:x:y:z:X:Y:Z:p:q:r:I:m:t:e:B:u:f:")) != -1 )
    {
       switch ( c )
       {
@@ -116,7 +119,7 @@ void ReadOption( int argc, char **argv )
                    break;
          case 't': OMP_NThread     = atoi(optarg);
                    break;
-         case 'b': OutputBinary    = true;
+         case 'f': OutputFormat    = atoi(optarg);
                    break;
          case 'P': OutputPres      = true;
                    break;
@@ -146,7 +149,7 @@ void ReadOption( int argc, char **argv )
          case '?': cerr << endl << "usage: " << argv[0]
                         << " [-h (for help)] [-i input fileName] [-o suffix to the output file [none]]"
                         << endl << "                             "
-                        << " [-n output option (1~7 : X-slice, Y-slice, Z-slice, X-proj, Y-proj, Z-proj, 3D)"
+                        << " [-n output mode (1~7 : X-slice, Y-slice, Z-slice, X-proj, Y-proj, Z-proj, 3D)"
                         << endl << "                             "
                         << " [-x/y/z starting coordinate in x/y/z [0]] [-X/Y/Z target size in x/y/z [BoxSize]]"
 #                       ifndef SERIAL
@@ -171,7 +174,7 @@ void ReadOption( int argc, char **argv )
                         << endl << "                             "
                         << " [-k (convert peculiar velocity from comoving to physical coords in km/s) [false]]"
                         << endl << "                             "
-                        << " [-b (output binary file) [off]] [-l targeted level [0]]"
+                        << " [-f output data format (1=text, 2=HDF5, 3=C-binary) [2]] [-l targeted level [0]]"
                         << endl << "                             "
                         << " [-s [input cell scales instead of physical coordinates to specify the range] [off]]"
                         << endl << "                             "
@@ -359,7 +362,7 @@ void ReadOption( int argc, char **argv )
 
    if ( OutputXYZ == WRONG )
    {
-      cerr << "ERROR : please provide the targeted outupt data (-n output option) !!" << endl;
+      cerr << "ERROR : please provide the targeted output data (-n output mode) !!" << endl;
       exit( 1 );
    }
 
@@ -371,13 +374,27 @@ void ReadOption( int argc, char **argv )
 
    if ( OutputXYZ < 1  ||  OutputXYZ > 7 )
    {
-      cerr << "ERROR : incorrect OutputXYZ input (-n output option) !!" << endl;
+      cerr << "ERROR : incorrect OutputXYZ input (-n output mode) !!" << endl;
       exit( 1 );
    }
 
-   if (  OutputBinary  &&  ( NGPU_X[0] != 1 || NGPU_X[1] != 1 )  )
+   if ( OutputFormat < 1  ||  OutputFormat > 3 )
    {
-      cerr << "ERROR : only slab decomposition is allowed (-p 1 -q 1 -r NP) for binary output !!" << endl;
+      cerr << "ERROR : incorrect output format (-f 1/2/3) !!" << endl;
+      exit( 1 );
+   }
+
+#  ifndef SUPPORT_HDF5
+   if ( OutputFormat == 2 )
+   {
+      cerr << "ERROR : must enable SUPPORT_HDF5 in the Makefile for the HDF5 output format (i.e., -f 2) !!" << endl;
+      exit( 1 );
+   }
+#  endif
+
+   if (  ( OutputFormat == 2 || OutputFormat == 3 )  &&  ( NGPU_X[0] != 1 || NGPU_X[1] != 1 )  )
+   {
+      cerr << "ERROR : only slab decomposition is allowed (-p 1 -q 1 -r NP) for the HDF5 and C-binary output formats !!" << endl;
       exit( 1 );
    }
 
@@ -488,6 +505,7 @@ void TakeNote( int argc, char *argv[] )
    cout << "BufSize           = " << BufSize                              << endl;
    cout << "NLoad             = " << NLoad                                << endl;
    cout << "NOut              = " << NOut                                 << endl;
+   cout << "OutputFormat      = " << OutputFormat                         << endl;
    cout << "OutputPot         = " << ( (OutputPot      ) ? "YES" : "NO" ) << endl;
    cout << "OutputParDens     = " << OutputParDens                        << endl;
    cout << "OutputPres        = " << ( (OutputPres     ) ? "YES" : "NO" ) << endl;
@@ -581,13 +599,40 @@ void TakeNote( int argc, char *argv[] )
    printf( " Output region: (x,y,z) = (%13.7e, %13.7e, %13.7e) --> (%13.7e, %13.7e, %13.7e)\n",
             Out_Start[0], Out_Start[1], Out_Start[2],
             Out_Start[0]+PhyCoord_Size[0], Out_Start[1]+PhyCoord_Size[1], Out_Start[2]+PhyCoord_Size[2] );
-   printf( " Array size   : %5d * %5d * %5d\n", Idx_Size[0], Idx_Size[1], Idx_Size[2] );
+   printf( " Array size   : %5d * %5d * %5d\n", (OutputXYZ==4)?1:Idx_Size[0],
+                                                (OutputXYZ==5)?1:Idx_Size[1],
+                                                (OutputXYZ==6)?1:Idx_Size[2] );
    cout << "------------------------------------------------------------------------------------------------------"   << endl;
    cout << endl;
 
    cout << "=========================================================="   << endl;
 
 } // FUNCTION : TakeNote
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Add1Field
+// Description :  Add the name and unit of a single field
+//
+// Parameter   :  Idx       : Current field index (call-by-reference)
+//                FieldName : Field name array
+//                FieldUnit : Field unit array
+//                Name      : Name of the target field
+//                Unit      : Unit of the target field
+//
+// Return      :  Next field index (Idx+1)
+//-------------------------------------------------------------------------------------------------------
+void Add1Field( int &Idx, char FieldName[][MAX_STRING], char FieldUnit[][MAX_STRING],
+                const char Name[], const char Unit[] )
+{
+
+   strcpy( FieldName[Idx], Name );
+   strcpy( FieldUnit[Idx], Unit );
+
+   Idx ++;
+
+} // FUNCTION : Add1Field
 
 
 
@@ -606,10 +651,15 @@ void Output()
    const double dh_min  = amr.dh[NLEVEL-1];
    const long   Size1v  = (long)Idx_MySize[0]*Idx_MySize[1]*Idx_MySize[2];   // total array size of one component
 
-   char FileName_Out[200], FileName_Out_Binary[NOut][200];
-   char Info[100];
 
-   sprintf( Info, "_x%.3f-%.3f_y%.3f-%.3f_z%.3f-%.3f_lv%d",
+// 1. set the output file name(s)
+   char FileName_Out[MAX_STRING], FileName_Out_Binary[NOut][MAX_STRING], DomainInfo[MAX_STRING];
+   char FieldName[NOut][MAX_STRING], FieldUnit[NOut][MAX_STRING], PassiveName[MAX_STRING];
+   char *FieldUnitPtr[1]={NULL};
+   int  NextIdx;
+
+
+   sprintf( DomainInfo, "_x%.3f-%.3f_y%.3f-%.3f_z%.3f-%.3f_lv%d",
             PhyCoord_Start[0], PhyCoord_Start[0]+PhyCoord_Size[0],
             PhyCoord_Start[1], PhyCoord_Start[1]+PhyCoord_Size[1],
             PhyCoord_Start[2], PhyCoord_Start[2]+PhyCoord_Size[2],
@@ -626,106 +676,184 @@ void Output()
       case 7:  sprintf( FileName_Out, "Cube"   );     break;
    }
 
-   strcat( FileName_Out, Info );
+   strcat( FileName_Out, DomainInfo );
 
-   if ( OutputBinary )
+
+// determine the field names and units
+   NextIdx = 0;
+
+#  if   ( MODEL == HYDRO )
+   Add1Field( NextIdx, FieldName, FieldUnit, "Dens", "code_mass/code_length**3" );
+   Add1Field( NextIdx, FieldName, FieldUnit, "MomX", "code_mass/(code_length**2*code_time)" );
+   Add1Field( NextIdx, FieldName, FieldUnit, "MomY", "code_mass/(code_length**2*code_time)" );
+   Add1Field( NextIdx, FieldName, FieldUnit, "MomZ", "code_mass/(code_length**2*code_time)" );
+   Add1Field( NextIdx, FieldName, FieldUnit, "Engy", "code_mass/(code_length*code_time**2)" );
+
+#  elif ( MODEL == MHD )
+#  warning : WAIT MHD !!!
+
+#  elif ( MODEL == ELBDM )
+   Add1Field( NextIdx, FieldName, FieldUnit, "Dens", "code_mass/code_length**3" );
+   Add1Field( NextIdx, FieldName, FieldUnit, "Real", "code_mass**0.5/code_length**1.5" );
+   Add1Field( NextIdx, FieldName, FieldUnit, "Imag", "code_mass**0.5/code_length**1.5" );
+
+#  else
+#  error : ERROR : unsupported MODEL !!
+#  endif // MODEL
+
+// here we have temporarily assumed that all passive scalars have the unit of mass density
+// --> wrong for entropy
+   for (int v=0; v<NCOMP_PASSIVE; v++) {
+      sprintf( PassiveName, "Passive%02d", v );
+      Add1Field( NextIdx, FieldName, FieldUnit, PassiveName, "code_mass/code_length**3" );
+   }
+
+   if ( OutputPot )
+      Add1Field( NextIdx, FieldName, FieldUnit, "Pote", "code_length**2/code_time**2" );
+
+   if ( OutputParDens )
+      Add1Field( NextIdx, FieldName, FieldUnit, (OutputParDens==1)?"ParDens":"TotalDens", "code_mass/code_length**3" );
+
+#  if   ( MODEL == HYDRO )
+   if ( OutputPres )
+      Add1Field( NextIdx, FieldName, FieldUnit, "Pres", "code_mass/(code_length*code_time**2)" );
+
+   if ( OutputTemp )
+      Add1Field( NextIdx, FieldName, FieldUnit, "Temp", "K" );
+
+   if ( OutputDivVel )
+      Add1Field( NextIdx, FieldName, FieldUnit, "DivV", "1/code_time" );
+
+   if ( OutputCurlVel ) {
+      Add1Field( NextIdx, FieldName, FieldUnit, "CurlVx", "1/code_time" );
+      Add1Field( NextIdx, FieldName, FieldUnit, "CurlVy", "1/code_time" );
+      Add1Field( NextIdx, FieldName, FieldUnit, "CurlVz", "1/code_time" );
+   }
+
+#  elif ( MODEL == ELBDM )
+   if ( OutputELBDM_Vel ) {
+      Add1Field( NextIdx, FieldName, FieldUnit, "VelX", "code_length/code_time" );
+      Add1Field( NextIdx, FieldName, FieldUnit, "VelY", "code_length/code_time" );
+      Add1Field( NextIdx, FieldName, FieldUnit, "VelZ", "code_length/code_time" );
+   }
+#  endif
+
+
+// add field names
+   if ( OutputFormat == 3 )
    {
-      int  NextIdx = NCOMP_TOTAL;
-      char comp[NOut][20];
-
-#     if   ( MODEL == HYDRO )
-      sprintf( comp[0], "_Binary_Dens" );
-      sprintf( comp[1], "_Binary_MomX" );
-      sprintf( comp[2], "_Binary_MomY" );
-      sprintf( comp[3], "_Binary_MomZ" );
-      sprintf( comp[4], "_Binary_Engy" );
-
-#     elif ( MODEL == MHD )
-#     warning : WAIT MHD !!!
-
-#     elif ( MODEL == ELBDM )
-      sprintf( comp[0], "_Binary_Dens" );
-      sprintf( comp[1], "_Binary_Real"  );
-      sprintf( comp[2], "_Binary_Imag"  );
-
-#     else
-#     error : ERROR : unsupported MODEL !!
-#     endif // MODEL
-
-      for (int v=0; v<NCOMP_PASSIVE; v++)    sprintf( comp[NCOMP_FLUID+v], "_Passive%02d", v );
-
-      if ( OutputPot )           sprintf( comp[NextIdx++], "_Binary_Pot"     );
-      if ( OutputParDens == 1 )  sprintf( comp[NextIdx++], "_Binary_ParDens" );
-      else
-      if ( OutputParDens == 2 )  sprintf( comp[NextIdx++], "_Binary_TotDens" );
-      if ( OutputPres )          sprintf( comp[NextIdx++], "_Binary_Pres"    );
-      if ( OutputTemp )          sprintf( comp[NextIdx++], "_Binary_Temp"    );
-      if ( OutputDivVel )        sprintf( comp[NextIdx++], "_Binary_DivV"    );
-      if ( OutputCurlVel )
-      {
-         sprintf( comp[NextIdx++], "_Binary_CurlVx" );
-         sprintf( comp[NextIdx++], "_Binary_CurlVy" );
-         sprintf( comp[NextIdx++], "_Binary_CurlVz" );
-      }
-      if ( OutputELBDM_Vel )
-      {
-         sprintf( comp[NextIdx++], "_Binary_VelX" );
-         sprintf( comp[NextIdx++], "_Binary_VelY" );
-         sprintf( comp[NextIdx++], "_Binary_VelZ" );
-      }
-
       for (int v=0; v<NOut; v++)
-      {
-         strcpy( FileName_Out_Binary[v], FileName_Out );
-         strcat( FileName_Out_Binary[v], comp[v] );
-      }
+         sprintf( FileName_Out_Binary[v], "%s_%s", FileName_Out, FieldName[v] );
    }
 
 
+// add suffix
    if ( Suffix != NULL )
    {
-      if ( OutputBinary )
+      if ( OutputFormat == 3 )
          for (int v=0; v<NOut; v++)   strcat( FileName_Out_Binary[v], Suffix );
       else
          strcat( FileName_Out, Suffix );
    }
 
 
-// clean the existing files
-   if ( OutputBinary ) // binary files
+// add extension
+   switch ( OutputFormat )
    {
-      if ( MyRank == 0  )
-      {
-         for (int v=0; v<NOut; v++)
-         {
-            if ( NULL != fopen(FileName_Out_Binary[v],"r") )
-            {
-               fprintf( stderr, "Warning : the file \"%s\" already exists and will be overwritten !!\n",
-                        FileName_Out_Binary[v] );
-
-               FILE *TempFile = fopen( FileName_Out_Binary[v], "w" );
-               fclose( TempFile );
-            }
-         }
-      }
+      case 1:                                strcat( FileName_Out, ".txt" );              break;
+      case 2:                                strcat( FileName_Out, ".hdf5" );             break;
+      case 3:  for (int v=0; v<NOut; v++)    strcat( FileName_Out_Binary[v], ".cbin" );   break;
+      default: Aux_Error( ERROR_INFO, "unsupported output format !!\n" );                 break;
    }
 
-   else // text files
+
+
+// 2. remove existing files
+   if ( MyRank == 0 )
    {
-      if ( MyRank == 0  &&  NULL != fopen(FileName_Out,"r") )
-      {
-         fprintf( stderr, "Warning : the file \"%s\" already exists and will be overwritten !!\n", FileName_Out );
-
-         FILE *TempFile = fopen( FileName_Out, "w" );
-         fclose( TempFile );
-      }
+      if ( OutputFormat == 3 )
+         for (int v=0; v<NOut; v++)    remove( FileName_Out_Binary[v] );
+      else
+         remove( FileName_Out );
    }
-
    MPI_Barrier( MPI_COMM_WORLD );
 
 
-// output data
-   int    ii, jj, kk, NextIdx;
+
+// 3. initialize the HDF5 output
+#  ifdef SUPPORT_HDF5
+   hid_t   H5_FileID, H5_GroupID_Data, H5_SpaceID_Data;
+   herr_t  H5_Status;
+   int     Idx_AllRankSizeZ[NGPU];
+
+   if ( OutputFormat == 2 )
+   {
+      hid_t   H5_DataCreatePropList, H5_AttID_Unit, H5_SpaceID_Scalar, H5_TypeID_VarStr;
+      hsize_t H5_SetDims_Data[3];
+
+//    create the data space
+      H5_SetDims_Data[0] = ( OutputXYZ == 6 ) ? 1 : Idx_Size[2];
+      H5_SetDims_Data[1] = ( OutputXYZ == 5 ) ? 1 : Idx_Size[1];
+      H5_SetDims_Data[2] = ( OutputXYZ == 4 ) ? 1 : Idx_Size[0];
+
+      H5_SpaceID_Data = H5Screate_simple( 3, H5_SetDims_Data, NULL );
+      if ( H5_SpaceID_Data < 0 )   Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_SpaceID_Data" );
+
+      if ( MyRank == 0 )
+      {
+//       create file
+         H5_FileID = H5Fcreate( FileName_Out, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT );
+         if ( H5_FileID < 0 )    Aux_Error( ERROR_INFO, "failed to create the HDF5 file \"%s\" !!\n", FileName_Out );
+
+//       create and set the "Info" compound datatype
+         SetHDF5Info( H5_FileID );
+
+//       create the "Data" group
+         H5_GroupID_Data = H5Gcreate( H5_FileID, "Data", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
+         if ( H5_GroupID_Data < 0 )    Aux_Error( ERROR_INFO, "failed to create the group \"%s\" !!\n", "Data" );
+
+//       create the dataset of each field
+//       --> do NOT write fill values to any dataset for higher I/O performance
+         H5_DataCreatePropList = H5Pcreate( H5P_DATASET_CREATE );
+         H5_Status             = H5Pset_fill_time( H5_DataCreatePropList, H5D_FILL_TIME_NEVER );
+         H5_SpaceID_Scalar     = H5Screate( H5S_SCALAR );
+         H5_TypeID_VarStr      = H5Tcopy( H5T_C_S1 );
+         H5_Status             = H5Tset_size( H5_TypeID_VarStr, H5T_VARIABLE );
+
+         for (int v=0; v<NOut; v++)
+         {
+            hid_t H5_SetID_Data = H5Dcreate( H5_GroupID_Data, FieldName[v], H5T_GAMER_REAL, H5_SpaceID_Data,
+                                             H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
+            if ( H5_SetID_Data < 0 )  Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", FieldName[v] );
+
+//          add the field unit as an attribute
+            H5_AttID_Unit = H5Acreate( H5_SetID_Data, "Unit", H5_TypeID_VarStr, H5_SpaceID_Scalar,
+                                       H5P_DEFAULT, H5P_DEFAULT );
+            if ( H5_AttID_Unit < 0 )   Aux_Error( ERROR_INFO, "failed to create the attribute \"%s\" !!\n", "Unit" );
+            FieldUnitPtr[0] = FieldUnit[v];  // somehow using FieldUnit[v] below doesn't work ...
+            H5_Status = H5Awrite( H5_AttID_Unit, H5_TypeID_VarStr, FieldUnitPtr );
+
+            H5_Status = H5Aclose( H5_AttID_Unit );
+            H5_Status = H5Dclose( H5_SetID_Data );
+         }
+
+//       close the file and group
+         H5_Status = H5Pclose( H5_DataCreatePropList );
+         H5_Status = H5Sclose( H5_SpaceID_Scalar );
+         H5_Status = H5Tclose( H5_TypeID_VarStr );
+         H5_Status = H5Gclose( H5_GroupID_Data );
+         H5_Status = H5Fclose( H5_FileID );
+      } // if ( MyRank == 0 )
+
+//    get the array size of all ranks (assuming slab decomposition)
+      MPI_Allgather( &Idx_MySize[2], 1, MPI_INT, Idx_AllRankSizeZ, 1, MPI_INT, MPI_COMM_WORLD );
+   } // if ( OutputFormat == 2 )
+#  endif // #ifdef SUPPORT_HDF5
+
+
+
+// 3. output data
+   int    ii, jj, kk;
    long   ID;
    double x, y, z;
    real   u[NOut];
@@ -740,61 +868,44 @@ void Output()
                                          || ( OutputXYZ == 5 && MyRank_X[1] == 0 )
                                          || ( OutputXYZ == 6 && MyRank_X[2] == 0 )  )   )
       {
-//       output the binary file (different components will be outputted to different files)
-         if ( OutputBinary )
-         {
-            for (int v=0; v<NOut; v++)
-            {
-               FILE *File = fopen( FileName_Out_Binary[v], "ab" );
-
-               fwrite( OutputArray+(long)v*Size1v, sizeof(real), Size1v, File );
-
-               fclose( File );
-            }
-         }
-
-//       output the text file (all components will be outputted to the same file)
-         else
+//       3-1. text file --> all components will be outputted to the same file
+         if ( OutputFormat == 1 )
          {
             FILE *File = fopen( FileName_Out, "a" );
 
             if ( TargetRank == 0 )
             {
+               NextIdx = 0;
+
+//             general fields
+               fprintf( File, "#%9s %10s %10s %20s %20s %20s", "i", "j", "k", "x", "y", "z" );
+               for (int v=0; v<NCOMP_FLUID; v++)      fprintf( File, " %13s", FieldName[NextIdx++] );
+               for (int v=0; v<NCOMP_PASSIVE; v++)    fprintf( File, " %13s", FieldName[NextIdx++] );
+               if ( OutputPot )                       fprintf( File, " %13s", FieldName[NextIdx++] );
+               if ( OutputParDens )                   fprintf( File, " %13s", FieldName[NextIdx++] );
+
+//             model-specific fields
 #              if   ( MODEL == HYDRO )
-               fprintf( File, "#%9s %10s %10s %20s %20s %20s %13s %13s %13s %13s %13s",
-                        "i", "j", "k", "x", "y", "z", "Density", "Momentum.x", "Momentum.y", "Momentum.z", "Energy" );
-
-               for (int v=0; v<NCOMP_PASSIVE; v++)    fprintf( File, " %11s%02d", "Passive", v );
-
-               if ( OutputPot )           fprintf( File, " %13s", "Potential" );
-               if ( OutputParDens == 1 )  fprintf( File, " %13s", "ParticleDens" );
-               else
-               if ( OutputParDens == 2 )  fprintf( File, " %13s", "TotalDens" );
-               if ( OutputPres )          fprintf( File, " %13s", "Pressure" );
-               if ( OutputTemp )          fprintf( File, " %13s", "Temperature" );
-               if ( OutputDivVel )        fprintf( File, " %13s", "Div(vel)" );
-               if ( OutputCurlVel )       fprintf( File, " %13s %13s %13s", "Curl(vel).x", "Curl(vel).y", "Curl(vel).z" );
+               if ( OutputPres )                      fprintf( File, " %13s", FieldName[NextIdx++] );
+               if ( OutputTemp )                      fprintf( File, " %13s", FieldName[NextIdx++] );
+               if ( OutputDivVel )                    fprintf( File, " %13s", FieldName[NextIdx++] );
+               if ( OutputCurlVel ) {                 fprintf( File, " %13s", FieldName[NextIdx++] );
+                                                      fprintf( File, " %13s", FieldName[NextIdx++] );
+                                                      fprintf( File, " %13s", FieldName[NextIdx++] ); }
 #              elif ( MODEL == MHD )
 #              warning : WAIT MHD !!!
 
 #              elif ( MODEL == ELBDM )
-               fprintf( File, "#%9s %10s %10s %20s %20s %20s %13s %13s %13s",
-                        "i", "j", "k", "x", "y", "z", "Density", "Real", "Imag" );
-
-               for (int v=0; v<NCOMP_PASSIVE; v++)    fprintf( File, " %11s%02d", "Passive", v );
-
-               if ( OutputPot )           fprintf( File, " %13s", "Potential" );
-               if ( OutputParDens == 1 )  fprintf( File, " %13s", "ParticleDens" );
-               else
-               if ( OutputParDens == 2 )  fprintf( File, " %13s", "TotalDens" );
-               if ( OutputELBDM_Vel )     fprintf( File, " %13s %13s %13s", "Vx", "Vy", "Vz" );
+               if ( OutputELBDM_Vel ) {               fprintf( File, " %13s", FieldName[NextIdx++] );
+                                                      fprintf( File, " %13s", FieldName[NextIdx++] );
+                                                      fprintf( File, " %13s", FieldName[NextIdx++] ); }
 
 #              else
 #              error : ERROR : unsupported MODEL !!
 #              endif // MODEL
 
                fprintf( File, "\n" );
-            }
+            } // if ( TargetRank == 0 )
 
 
             for (int k=0; k<Idx_MySize[2]; k++)  {  kk = ( k + Idx_MyStart[2] )*scale;    z = (kk+scale_2)*dh_min;
@@ -806,32 +917,28 @@ void Output()
 
                for (int v=0; v<NOut; v++)    u[v] = OutputArray[ ID + (long)v*Size1v ];
 
+               fprintf( File, "%10d %10d %10d %20.14e %20.14e %20.14e", ii, jj, kk, x, y, z );
+
+               for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, " %13.6e", u[v] );
+
+               if ( OutputPot )                    fprintf( File, " %13.6e", u[NextIdx++] );
+               if ( OutputParDens )                fprintf( File, " %13.6e", u[NextIdx++] );
+
 #              if   ( MODEL == HYDRO )
-               fprintf( File, "%10d %10d %10d %20.14e %20.14e %20.14e %13.6e %13.6e %13.6e %13.6e %13.6e",
-                        ii, jj, kk, x, y, z, u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY] );
-
-               for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fprintf( File, " %13.6e", u[v] );
-
-               if ( OutputPot )        fprintf( File, " %13.6e", u[NextIdx++] );
-               if ( OutputParDens )    fprintf( File, " %13.6e", u[NextIdx++] );
-               if ( OutputPres )       fprintf( File, " %13.6e", u[NextIdx++] );
-               if ( OutputTemp )       fprintf( File, " %13.6e", u[NextIdx++] );
-               if ( OutputDivVel )     fprintf( File, " %13.6e", u[NextIdx++] );
-               if ( OutputCurlVel )    fprintf( File, " %13.6e %13.6e %13.6e", u[NextIdx++], u[NextIdx++], u[NextIdx++] );
+               if ( OutputPres )                   fprintf( File, " %13.6e", u[NextIdx++] );
+               if ( OutputTemp )                   fprintf( File, " %13.6e", u[NextIdx++] );
+               if ( OutputDivVel )                 fprintf( File, " %13.6e", u[NextIdx++] );
+               if ( OutputCurlVel ) {              fprintf( File, " %13.6e", u[NextIdx++] );
+                                                   fprintf( File, " %13.6e", u[NextIdx++] );
+                                                   fprintf( File, " %13.6e", u[NextIdx++] ); }
 
 #              elif ( MODEL == MHD )
 #              warning : WAIT MHD !!!
 
 #              elif ( MODEL == ELBDM )
-               fprintf( File, "%10d %10d %10d %20.14e %20.14e %20.14e %13.6e %13.6e %13.6e",
-                        ii, jj, kk, x, y, z,
-                        u[DENS], u[REAL], u[IMAG] );
-
-               for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fprintf( File, " %13.6e", u[v] );
-
-               if ( OutputPot )        fprintf( File, " %13.6e", u[NextIdx++] );
-               if ( OutputParDens )    fprintf( File, " %13.6e", u[NextIdx++] );
-               if ( OutputELBDM_Vel )  fprintf( File, " %13.6e %13.6e %13.6e", u[NextIdx++], u[NextIdx++], u[NextIdx++] );
+               if ( OutputELBDM_Vel ) {            fprintf( File, " %13.6e", u[NextIdx++] );
+                                                   fprintf( File, " %13.6e", u[NextIdx++] );
+                                                   fprintf( File, " %13.6e", u[NextIdx++] ); }
 
 #              else
 #              error : ERROR : unsupported MODEL !!
@@ -842,18 +949,196 @@ void Output()
             }}} // i,j,k
 
             fclose( File );
+         } // if ( OutputFormat == 1 )
 
-         } // if ( OutputBinary ) ... else ...
+
+//       3-2. HDF5 file --> different components will be outputted to different datasets in the same file
+#        ifdef SUPPORT_HDF5
+         else if ( OutputFormat == 2 )
+         {
+            hid_t   H5_MemID_Data;
+            hsize_t H5_MemDims_Data[3], H5_Count_Data[3], H5_Offset_Data[3];
+
+//          HDF5 file must be synchronized before being written by the next rank
+            SyncHDF5File( FileName_Out );
+
+//          reopen the file and group
+            H5_FileID = H5Fopen( FileName_Out, H5F_ACC_RDWR, H5P_DEFAULT );
+            if ( H5_FileID < 0 )    Aux_Error( ERROR_INFO, "failed to open the HDF5 file \"%s\" !!\n", FileName_Out );
+
+            H5_GroupID_Data = H5Gopen( H5_FileID, "Data", H5P_DEFAULT );
+            if ( H5_GroupID_Data < 0 )   Aux_Error( ERROR_INFO, "failed to open the group \"%s\" !!\n", "Data" );
+
+//          set the memory space
+            H5_MemDims_Data[0] = Idx_MySize[2];
+            H5_MemDims_Data[1] = Idx_MySize[1];
+            H5_MemDims_Data[2] = Idx_MySize[0];
+
+            H5_MemID_Data = H5Screate_simple( 3, H5_MemDims_Data, NULL );
+            if ( H5_MemID_Data < 0 )  Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_MemID_Data" );
+
+//          set the subset of the dataspace
+            H5_Offset_Data[0] = 0;
+            H5_Offset_Data[1] = 0;
+            H5_Offset_Data[2] = 0;
+            for (int r=0; r<MyRank; r++)  H5_Offset_Data[0] += Idx_AllRankSizeZ[r];
+
+            H5_Count_Data [0] = Idx_MySize[2];
+            H5_Count_Data [1] = Idx_MySize[1];
+            H5_Count_Data [2] = Idx_MySize[0];
+
+            H5_Status = H5Sselect_hyperslab( H5_SpaceID_Data, H5S_SELECT_SET, H5_Offset_Data, NULL, H5_Count_Data, NULL );
+            if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to create a hyperslab !!\n" );
+
+//          write data to disk (one field at a time)
+            for (int v=0; v<NOut; v++)
+            {
+               hid_t H5_SetID_Data = H5Dopen( H5_GroupID_Data, FieldName[v], H5P_DEFAULT );
+               H5_Status           = H5Dwrite( H5_SetID_Data, H5T_GAMER_REAL, H5_MemID_Data, H5_SpaceID_Data, H5P_DEFAULT,
+                                               OutputArray+(long)v*Size1v );
+               if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to output the field \"%s\" !!\n", FieldName );
+               H5_Status = H5Dclose( H5_SetID_Data );
+            }
+
+            H5_Status = H5Sclose( H5_MemID_Data );
+            H5_Status = H5Gclose( H5_GroupID_Data );
+            H5_Status = H5Fclose( H5_FileID );
+         } // else if ( OutputFormat == 2 )
+#        endif // #ifdef SUPPORT_HDF5
+
+
+//       3-3. C-binary file --> different components will be outputted to different files
+         else if ( OutputFormat == 3 )
+         {
+            for (int v=0; v<NOut; v++)
+            {
+               FILE *File = fopen( FileName_Out_Binary[v], "ab" );
+
+               fwrite( OutputArray+(long)v*Size1v, sizeof(real), Size1v, File );
+
+               fclose( File );
+            }
+         } // else if ( OutputFormat == 3 )
+
+
+         else
+            Aux_Error( ERROR_INFO, "unsupported output format !!\n" );
+
       } // ( MyRank == TargetRank  &&  ... )
 
       MPI_Barrier( MPI_COMM_WORLD );
 
-   } // for (int TargetRank=0; TargetRank<NGPU; TargetRank++
+   } // for (int TargetRank=0; TargetRank<NGPU; TargetRank++)
+
+
+// close all HDF5 objects
+#  ifdef SUPPORT_HDF5
+   if ( OutputFormat == 2 )
+   {
+      H5_Status = H5Sclose( H5_SpaceID_Data );
+   }
+#  endif
 
 
    if ( MyRank == 0 )   cout << "Output ... done" << endl;
 
 } // FUNCTION : Output
+
+
+
+#ifdef SUPPORT_HDF5
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SetHDF5Info
+// Description :  Create and set the HDF5 compound datatype "Info"
+//
+// Note        :  1. Data structure "Info_t" is defined in "HDF5_Typedef.h"
+//
+// Parameter   :  H5_FileID : HDF5 file ID (call-by-reference)
+//-------------------------------------------------------------------------------------------------------
+void SetHDF5Info( hid_t &H5_FileID )
+{
+
+// 1. create the HDF5 compound datatype "Info"
+   hid_t  H5_ComID_Info;
+   herr_t H5_Status;
+
+// create the array type
+   const hsize_t H5_ArrDims_3Var  = 3;  // array size of [3]
+   const hid_t   H5_ArrID_3Double = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_3Var );
+   const hid_t   H5_ArrID_3Int    = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_3Var );
+
+// create the "variable-length string" datatype
+   /*
+   hid_t  H5_ArrID_VarStr;
+   herr_t H5_Status;
+   H5_ArrID_VarStr = H5Tcopy( H5T_C_S1 );
+   H5_Status       = H5Tset_size( H5_ArrID_VarStr, H5T_VARIABLE );
+   */
+
+// get the compound type
+   H5_ComID_Info = H5Tcreate( H5T_COMPOUND, sizeof(Info_t) );
+   H5Tinsert( H5_ComID_Info, "DumpID",             HOFFSET(Info_t,DumpID           ),  H5T_NATIVE_INT    );
+   H5Tinsert( H5_ComID_Info, "GridDimension",      HOFFSET(Info_t,GridDimension    ),  H5_ArrID_3Int     );
+   H5Tinsert( H5_ComID_Info, "WithUnit",           HOFFSET(Info_t,WithUnit         ),  H5T_NATIVE_INT    );
+   H5Tinsert( H5_ComID_Info, "OutputMode",         HOFFSET(Info_t,OutputMode       ),  H5T_NATIVE_INT    );
+   H5Tinsert( H5_ComID_Info, "Time",               HOFFSET(Info_t,Time             ),  H5T_NATIVE_DOUBLE );
+   H5Tinsert( H5_ComID_Info, "CellWidth",          HOFFSET(Info_t,CellWidth        ),  H5T_NATIVE_DOUBLE );
+   H5Tinsert( H5_ComID_Info, "SubdomainSize",      HOFFSET(Info_t,SubdomainSize    ),  H5_ArrID_3Double  );
+   H5Tinsert( H5_ComID_Info, "SubdomainLeftEdge",  HOFFSET(Info_t,SubdomainLeftEdge),  H5_ArrID_3Double  );
+   H5Tinsert( H5_ComID_Info, "Unit_L",             HOFFSET(Info_t,Unit_L           ),  H5T_NATIVE_DOUBLE );
+   H5Tinsert( H5_ComID_Info, "Unit_M",             HOFFSET(Info_t,Unit_M           ),  H5T_NATIVE_DOUBLE );
+   H5Tinsert( H5_ComID_Info, "Unit_T",             HOFFSET(Info_t,Unit_T           ),  H5T_NATIVE_DOUBLE );
+   H5Tinsert( H5_ComID_Info, "Unit_V",             HOFFSET(Info_t,Unit_V           ),  H5T_NATIVE_DOUBLE );
+   H5Tinsert( H5_ComID_Info, "Unit_D",             HOFFSET(Info_t,Unit_D           ),  H5T_NATIVE_DOUBLE );
+   H5Tinsert( H5_ComID_Info, "Unit_E",             HOFFSET(Info_t,Unit_E           ),  H5T_NATIVE_DOUBLE );
+   H5Tinsert( H5_ComID_Info, "Unit_P",             HOFFSET(Info_t,Unit_P           ),  H5T_NATIVE_DOUBLE );
+
+// free memory
+   H5_Status = H5Tclose( H5_ArrID_3Int    );
+   H5_Status = H5Tclose( H5_ArrID_3Double );
+// H5_Status = H5Tclose( H5_ArrID_VarStr  );
+
+
+// 2. fill in the structure "Info"
+   Info_t Info;
+
+   Info.DumpID     = DumpID;
+   Info.WithUnit   = WithUnit;
+   Info.Time       = Time[0];
+   Info.OutputMode = OutputXYZ;
+   Info.CellWidth  = amr.dh[TargetLevel];
+   Info.Unit_L     = (WithUnit) ? Unit_L : 1.0;
+   Info.Unit_M     = (WithUnit) ? Unit_M : 1.0;
+   Info.Unit_T     = (WithUnit) ? Unit_T : 1.0;
+   Info.Unit_V     = (WithUnit) ? Unit_V : 1.0;
+   Info.Unit_D     = (WithUnit) ? Unit_D : 1.0;
+   Info.Unit_E     = (WithUnit) ? Unit_E : 1.0;
+   Info.Unit_P     = (WithUnit) ? Unit_P : 1.0;
+
+   for (int d=0; d<3; d++)
+   {
+//    for projection, we record the coordinates of the original 3D region to be projected
+      Info.GridDimension    [d] = ( OutputXYZ == 4+d ) ? 1 : Idx_Size[d];
+      Info.SubdomainSize    [d] = PhyCoord_Size [d];
+      Info.SubdomainLeftEdge[d] = PhyCoord_Start[d];
+   }
+
+
+// 3. write to disk
+   hid_t H5_SpaceID_Scalar, H5_SetID_Info;
+
+   H5_SpaceID_Scalar = H5Screate( H5S_SCALAR );
+   H5_SetID_Info     = H5Dcreate( H5_FileID, "Info", H5_ComID_Info, H5_SpaceID_Scalar, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
+   if ( H5_SetID_Info < 0 )   Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", "Info" );
+
+   H5_Status = H5Dwrite( H5_SetID_Info, H5_ComID_Info, H5S_ALL, H5S_ALL, H5P_DEFAULT, &Info );
+
+   H5_Status = H5Dclose( H5_SetID_Info );
+   H5_Status = H5Sclose( H5_SpaceID_Scalar );
+   H5_Status = H5Tclose( H5_ComID_Info );
+
+} // FUNCTION : SetHDF5Info
+#endif // #ifdef SUPPORT_HDF5
 
 
 
@@ -1822,7 +2107,7 @@ void PreparePatch( const int lv, const int PID, const int Buffer, real FData[], 
 void StoreData( const int lv, const int PID, real FData[], const int Buffer, real *Out )
 {
 
-   const long Size1v    = (long)Idx_MySize[0]*Idx_MySize[1]*Idx_MySize[2]; // total array size of one component
+   const long Size1v    = (long)Idx_MySize[0]*Idx_MySize[1]*Idx_MySize[2];    // total array size of one component
    const int  PatchSize = PATCH_SIZE*( 1<<(TargetLevel-lv) );
    const int  FSize     = PatchSize + 2*Buffer;
    const int  Corner[3] = { amr.patch[lv][PID]->corner[0]/amr.scale[TargetLevel],
@@ -1896,7 +2181,7 @@ void StoreData( const int lv, const int PID, real FData[], const int Buffer, rea
    for (int j=ijk_min[1]; j<=ijk_max[1]; j++)   {  jj  = j - Buffer + Corner[1] - Idx_MyStart[1];
    for (int i=ijk_min[0]; i<=ijk_max[0]; i++)   {  ii  = i - Buffer + Corner[0] - Idx_MyStart[0];
                                                    ID1 = (((long)v*FSize + k)*FSize + j)*FSize + i;
-                                                   ID2 = (long)v*Size1v + (long)kk*Stride[2] + jj*Stride[1] + ii*Stride[0];
+                                                   ID2 = (long)v*Size1v + (long)kk*Stride[2] + (long)jj*Stride[1] + (long)ii*Stride[0];
 
       Out[ID2] += FData[ID1];
 
@@ -2500,7 +2785,7 @@ void Refine2TargetLevel()
    {
       for (int t=0; t<OMP_NThread; t++)
       {
-         for (long i=0; i<OutSize; i++)    OutputArray[i] += OutputArray_OMP[t][i];
+         for (long i=0; i<OutSize; i++)   OutputArray[i] += OutputArray_OMP[t][i];
 
          delete [] OutputArray_OMP[t];
       }

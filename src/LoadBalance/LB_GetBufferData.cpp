@@ -65,7 +65,7 @@ extern Timer_t *Timer_MPI[3];
 //                             --> Useless in DATA_RESTRICT, COARSE_FINE_FLUX, and COARSE_FINE_ELECTRIC
 //-------------------------------------------------------------------------------------------------------
 void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int PotSg, const GetBufMode_t GetBufMode,
-                       const int TVarCC, const int TVarFC, const int ParaBuf )
+                       const long TVarCC, const long TVarFC, const int ParaBuf )
 {
 
    bool ExchangeFlu = ( GetBufMode == COARSE_FINE_FLUX ) ?
@@ -98,7 +98,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
    NVarFC_Mag = 0;
 
    for (int v=0; v<NCOMP_MAG; v++)
-      if ( TVarFC & (1<<v) )  TMagVarIdxList[ NVarFC_Mag ++ ] = v;
+      if ( TVarFC & (1L<<v) )    TMagVarIdxList[ NVarFC_Mag ++ ] = v;
 #  else
    const int NVarFC_Mag = 0;
 #  endif
@@ -168,7 +168,6 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
    if ( GetBufMode == COARSE_FINE_ELECTRIC  &&  !amr->WithElectric )
       Aux_Error( ERROR_INFO, "WARNING : COARSE_FINE_ELECTRIC failed since electric field arrays are not allocated !!\n" );
 #  endif
-
 
 // _X : for exchanging data after the flux fix-up, which has ParaBuf=1
    const int DataUnit_Flux = SQR( PS1 )*NVarCC_Flu;

@@ -179,8 +179,14 @@ void CUAPI_SetDevice( const int Mode )
                  DeviceProp.name, DeviceProp.major, DeviceProp.minor );
 
 #  elif ( GPU_ARCH == VOLTA )
-   if ( DeviceProp.major != 7 )
+   if ( DeviceProp.major != 7  &&  DeviceProp.minor != 0 )
       Aux_Error( ERROR_INFO, "GPU \"%s\" with the compute capability %d.%d is incompatible with the Volta architecture !!\n"
+                             "        --> Please reset GPU_ARCH in the Makefile properly\n",
+                 DeviceProp.name, DeviceProp.major, DeviceProp.minor );
+
+#  elif ( GPU_ARCH == TURING )
+   if ( DeviceProp.major != 7  &&  DeviceProp.minor != 5 )
+      Aux_Error( ERROR_INFO, "GPU \"%s\" with the compute capability %d.%d is incompatible with the Turing architecture !!\n"
                              "        --> Please reset GPU_ARCH in the Makefile properly\n",
                  DeviceProp.name, DeviceProp.major, DeviceProp.minor );
 

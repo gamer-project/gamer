@@ -153,6 +153,7 @@ struct Timer_t
       if ( OPT__TIMING_BARRIER ) MPI_Barrier( MPI_COMM_WORLD );   \
       timer->Start();                                             \
       call;                                                       \
+      if ( OPT__TIMING_BARRIER ) MPI_Barrier( MPI_COMM_WORLD );   \
       timer->Stop();                                              \
    }
 
@@ -172,12 +173,14 @@ struct Timer_t
 #     define GPU_SYNC()
 #  endif
 
-#  define TIMING_SYNC( call, timer )            \
-   {                                            \
-      timer->Start();                           \
-      call;                                     \
-      GPU_SYNC();                               \
-      timer->Stop();                            \
+#  define TIMING_SYNC( call, timer )                              \
+   {                                                              \
+      if ( OPT__TIMING_BARRIER ) MPI_Barrier( MPI_COMM_WORLD );   \
+      timer->Start();                                             \
+      call;                                                       \
+      GPU_SYNC();                                                 \
+      if ( OPT__TIMING_BARRIER ) MPI_Barrier( MPI_COMM_WORLD );   \
+      timer->Stop();                                              \
    }
 
 #else

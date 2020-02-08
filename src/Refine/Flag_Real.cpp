@@ -79,7 +79,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 // set the variables for the Lohner's error estimator
-   int  Lohner_NVar=0, Lohner_TVar=0, Lohner_Stride;
+   int  Lohner_NVar=0, Lohner_Stride;
+   long Lohner_TVar=0;
    real MinDens=-1.0, MinPres=-1.0;    // default is to turn off minimum density/pressure checks
 
 #  if   ( MODEL == HYDRO )

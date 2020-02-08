@@ -502,7 +502,6 @@ void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nva
 #  if   ( MODEL == HYDRO )
 
 #  ifdef MHD
-#  warning : WAIT MHD !!!
    Aux_Error( ERROR_INFO, "MHD is NOT supported yet !!\n" );
    const real EngyB = NULL_REAL;
 #  else
