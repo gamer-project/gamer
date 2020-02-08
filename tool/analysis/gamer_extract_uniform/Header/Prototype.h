@@ -1,6 +1,10 @@
 #ifndef __PROTOTYPE_H__
 #define __PROTOTYPE_H__
 
+#ifdef SUPPORT_HDF5
+#include "hdf5.h"
+#endif
+
 
 
 // GAMER_GetSlice functions
@@ -28,6 +32,9 @@ void GetTemp( real FData[], const int FSize, const int Buffer, const int NextIdx
 #if ( MODEL == ELBDM )
 void GetELBDM_Vel( real FData[], const int FSize, const int Buffer, const int NextIdx, const real dh,
                    const bool Com2Phy );
+#endif
+#ifdef SUPPORT_HDF5
+void SetHDF5Info( hid_t &H5_FileID );
 #endif
 
 

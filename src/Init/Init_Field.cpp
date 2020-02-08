@@ -153,6 +153,9 @@ FieldIdx_t AddField( char *InputLabel, const NormPassive_t Norm )
 
 
 // check
+   if ( InputLabel == NULL )
+      Aux_Error( ERROR_INFO, "InputLabel == NULL !!\n" );
+
    if ( NDefinedField > NCOMP_TOTAL )
       Aux_Error( ERROR_INFO, "total number of defined fields (%d) exceeds expectation (%d) after adding the field \"%s\" !!\n"
                  "        --> Modify NCOMP_PASSIVE_USER in the Makefile properly\n",
@@ -164,7 +167,7 @@ FieldIdx_t AddField( char *InputLabel, const NormPassive_t Norm )
 
 
 // set field label
-   FieldLabel[FieldIdx] = InputLabel;
+   strcpy( FieldLabel[FieldIdx], InputLabel );
 
 
 // set the normalization list

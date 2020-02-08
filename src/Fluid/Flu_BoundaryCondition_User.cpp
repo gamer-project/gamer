@@ -99,7 +99,7 @@ void BC_User( real fluid[], const double x, const double y, const double z, cons
 void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int ArraySizeX, const int ArraySizeY,
                                  const int ArraySizeZ, const int Idx_Start[], const int Idx_End[],
                                  const int TFluVarIdxList[], const double Time, const double dh, const double *Corner,
-                                 const int TVar, const int lv )
+                                 const long TVar, const int lv )
 {
 
 // check

@@ -32,7 +32,7 @@
 //                            --> But it currently does not distinguish _MAGX, _MAGY, _MAGZ, and _MAG
 //-------------------------------------------------------------------------------------------------------
 void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const int SonMagSg, const int FaMagSg,
-                         const int SonPotSg, const int FaPotSg, const int TVarCC, const int TVarFC )
+                         const int SonPotSg, const int FaPotSg, const long TVarCC, const long TVarFC )
 {
 
    const int SonLv = FaLv + 1;
@@ -102,7 +102,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
    int NFluVar=0, TFluVarIdxList[NCOMP_TOTAL];
 
    for (int v=0; v<NCOMP_TOTAL; v++)
-      if ( TVarCC & (1<<v) )  TFluVarIdxList[ NFluVar ++ ] = v;
+      if ( TVarCC & (1L<<v) )    TFluVarIdxList[ NFluVar ++ ] = v;
 
 
 // return immediately if no target variable is found

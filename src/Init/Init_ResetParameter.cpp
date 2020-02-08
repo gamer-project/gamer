@@ -405,6 +405,10 @@ void Init_ResetParameter()
 #     endif
          OPT__TIMING_BARRIER = 0;
 
+#     ifdef TIMING_SOLVER
+      OPT__TIMING_BARRIER = 1;
+#     endif
+
       PRINT_WARNING( OPT__TIMING_BARRIER, FORMAT_INT, "" );
    }
 

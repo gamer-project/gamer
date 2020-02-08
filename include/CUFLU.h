@@ -258,6 +258,12 @@
 #     else
 #     define FLU_BLOCK_SIZE_X       512      // not optimized yet
 #     endif
+#  elif ( GPU_ARCH == TURING )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
+#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
+#     endif
 #  else
 #     define FLU_BLOCK_SIZE_X       NULL_INT
 #     ifdef GPU
@@ -294,6 +300,12 @@
 #     define FLU_BLOCK_SIZE_X       512      // not optimized yet
 #     endif
 #  elif ( GPU_ARCH == VOLTA )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
+#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
+#     endif
+#  elif ( GPU_ARCH == TURING )
 #     ifdef FLOAT8
 #     define FLU_BLOCK_SIZE_X       256
 #     else
@@ -353,6 +365,13 @@
 #        define FLU_BLOCK_SIZE_Y    32    // not optimized yet
 #     endif
 
+#  elif ( GPU_ARCH == TURING )
+#     ifdef FLOAT8
+#        define FLU_BLOCK_SIZE_Y    16    // not optimized yet
+#     else
+#        define FLU_BLOCK_SIZE_Y    32    // not optimized yet
+#     endif
+
 #  else
 #        define FLU_BLOCK_SIZE_Y    NULL_INT
 #        ifdef GPU
@@ -368,7 +387,7 @@
 #     define DT_FLU_BLOCK_SIZE      512
 
 // use shuffle reduction in the KEPLER and later GPUs
-#  if ( GPU_ARCH == KEPLER  ||  GPU_ARCH == MAXWELL  ||  GPU_ARCH == PASCAL  ||  GPU_ARCH == VOLTA )
+#  if ( GPU_ARCH == KEPLER  ||  GPU_ARCH == MAXWELL  ||  GPU_ARCH == PASCAL  ||  GPU_ARCH == VOLTA  ||  GPU_ARCH == TURING )
 #     define DT_FLU_USE_SHUFFLE
 #  endif
 
@@ -378,7 +397,7 @@
 // --> please refer to https://en.wikipedia.org/wiki/CUDA#Version_features_and_specifications
 //     for information on warp size
 #ifdef __CUDACC__
-#if ( GPU_ARCH == FERMI  ||  GPU_ARCH == KEPLER  ||  GPU_ARCH == MAXWELL  ||  GPU_ARCH == PASCAL  ||  GPU_ARCH == VOLTA )
+#if ( GPU_ARCH == FERMI  ||  GPU_ARCH == KEPLER  ||  GPU_ARCH == MAXWELL  ||  GPU_ARCH == PASCAL  ||  GPU_ARCH == VOLTA  ||  GPU_ARCH == TURING )
 // CUPOT.h will define WARP_SIZE as well
 #  ifndef WARP_SIZE
 #  define WARP_SIZE 32

@@ -1,18 +1,8 @@
 #ifdef SUPPORT_HDF5
 
 #include "ExtractUniform.h"
-#include "hdf5.h"
+#include "HDF5_Typedef.h"
 #include <typeinfo>
-
-#ifdef FLOAT8
-#  define H5T_GAMER_REAL H5T_NATIVE_DOUBLE
-#else
-#  define H5T_GAMER_REAL H5T_NATIVE_FLOAT
-#endif
-
-#ifdef GAMER_DEBUG
-#  define DEBUG_HDF5
-#endif
 
 template <typename T>
 static herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Target,
@@ -66,7 +56,6 @@ void LoadData_HDF5( const char *FileName )
 #  else
    const int  Float8_RT       = 0;
 #  endif
-   const int MaxString        = 512;
 
    int    Model_RS, PatchSize_RS, NLevel_RS, NCompFluid_RS, NCompPassive_RS, Float8_RS;
    int    FormatVersion, Gravity, Particle, ExtBC_RS[6], NPatchTotal[NLEVEL], NPatchAllLv;
@@ -143,8 +132,8 @@ void LoadData_HDF5( const char *FileName )
    LoadField( "Float8",              &Float8_RS,         H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal, &Float8_RT,       1,    Fatal );
    LoadField( "NLevel",              &NLevel_RS,         H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal, &NLevel_RT,       1,    Fatal );
    LoadField( "PatchSize",           &PatchSize_RS,      H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal, &PatchSize_RT,    1,    Fatal );
-   LoadField( "NCompFluid",          &NCompFluid_RS,     H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal, &NCompFluid_RT,   1,    Fatal );
-   LoadField( "NCompPassive",        &NCompPassive_RS,   H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal, &NCompPassive_RT, 1,    Fatal );
+   LoadField( "NCompFluid",          &NCompFluid_RS,     H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,   NonFatal, &NCompFluid_RT,   1,    Fatal );
+   LoadField( "NCompPassive",        &NCompPassive_RS,   H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,   NonFatal, &NCompPassive_RT, 1,    Fatal );
 
    LoadField( "Gravity",             &Gravity,           H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal,  NullPtr,        -1, NonFatal );
    LoadField( "Particle",            &Particle,          H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal,  NullPtr,        -1, NonFatal );
@@ -209,7 +198,7 @@ void LoadData_HDF5( const char *FileName )
    {
       for (int v=0; v<NCOMP_TOTAL; v++)
       {
-         char Key[MaxString];
+         char Key[MAX_STRING];
          sprintf( Key, "FieldLabel%02d", v );
 
          LoadField( Key, &FieldName_In[v], H5_SetID_InputPara, H5_TypeID_InputPara, Fatal, NullPtr, -1, NonFatal );
@@ -220,7 +209,7 @@ void LoadData_HDF5( const char *FileName )
    {
       for (int v=0; v<NCOMP_PASSIVE; v++)
       {
-         char Key[MaxString];
+         char Key[MAX_STRING];
          sprintf( Key, "PassiveFieldName_Grid%02d", v );
 
          LoadField( Key, &PassiveFieldName_Grid[v], H5_SetID_InputPara, H5_TypeID_InputPara, Fatal, NullPtr, -1, NonFatal );
@@ -369,7 +358,7 @@ void LoadData_HDF5( const char *FileName )
    const int  NCOMP_ADD     = 2;    // maximum number of additional variables
                                     // --> currently 2: potential and particle/total density
 
-   char (*FieldName)[MaxString] = new char [ NCOMP_TOTAL + NCOMP_ADD ][MaxString];
+   char (*FieldName)[MAX_STRING] = new char [ NCOMP_TOTAL + NCOMP_ADD ][MAX_STRING];
 
    hsize_t H5_SetDims_Field[4], H5_MemDims_Field[4];
    hid_t   H5_SetID_Field[ NCOMP_TOTAL + NCOMP_ADD ], H5_MemID_Field, H5_SpaceID_Field, H5_GroupID_GridData;

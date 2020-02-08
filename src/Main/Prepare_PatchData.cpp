@@ -1,12 +1,12 @@
 #include "GAMER.h"
 
 void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real IntData_FC[],
-                           const int SibID, const double PrepTime, const int GhostSize,
+                           const int FSide, const double PrepTime, const int GhostSize,
                            const IntScheme_t IntScheme_CC, const IntScheme_t IntScheme_FC,
-                           const int NTSib[], int *TSib[], const int TVarCC, const int NVarCC_Tot,
+                           const int NTSib[], int *TSib[], const long TVarCC, const int NVarCC_Tot,
                            const int NVarCC_Flu, const int TVarCCIdxList_Flu[],
-                           const int NVarCC_Der, const int TVarCCList_Der[],
-                           const int TVarFC, const int NVarFC_Tot, const int TVarFCIdxList[],
+                           const int NVarCC_Der, const long TVarCCList_Der[],
+                           const long TVarFC, const int NVarFC_Tot, const int TVarFCIdxList[],
                            const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
                            const int BC_Face[], const real MinPres, const bool DE_Consistency,
                            const real *FInterface[6] );
@@ -163,7 +163,7 @@ static void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const re
 // Return      :  OutputCC, OutputFC
 //-------------------------------------------------------------------------------------------------------
 void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, real *OutputFC,
-                        const int GhostSize, const int NPG, const int *PID0_List, int TVarCC, int TVarFC,
+                        const int GhostSize, const int NPG, const int *PID0_List, long TVarCC, long TVarFC,
                         const IntScheme_t IntScheme_CC, const IntScheme_t IntScheme_FC, const PrepUnit_t PrepUnit,
                         const NSide_t NSide, const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
                         const real MinDens, const real MinPres, const bool DE_Consistency )
@@ -176,7 +176,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 // check
 #  ifdef GAMER_DEBUG
 
-   int AllVarCC = ( _TOTAL | _DERIVED );
+   long AllVarCC = ( _TOTAL | _DERIVED );
 #  ifdef GRAVITY
    AllVarCC |= _POTE;
 #  endif
@@ -186,7 +186,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #  endif
    if ( TVarCC & ~AllVarCC )   Aux_Error( ERROR_INFO, "unsupported parameter %s = %d !!\n", "TVarCC", TVarCC );
 
-   int AllVarFC = 0;
+   long AllVarFC = 0;
 #  ifdef MHD
    AllVarFC |= _MAG;
 #  endif
@@ -343,17 +343,17 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    SetTargetSibling( NTSib, TSib );
 
 // determine the cell-centered fluid components to be prepared
-// --> assuming that _VAR_NAME = 1<<VAR_NAME (e.g., _DENS == 1<<DENS)
+// --> assuming that _VAR_NAME = 1L<<VAR_NAME (e.g., _DENS == 1L<<DENS)
 // --> it also determines the order of variables stored in OutputCC (which is the same as patch->fluid[])
    NVarCC_Flu = 0;
    for (int v=0; v<NCOMP_TOTAL; v++)
-      if ( TVarCC & (1<<v) )    TVarCCIdxList_Flu[ NVarCC_Flu++ ] = v;
+      if ( TVarCC & (1L<<v) )    TVarCCIdxList_Flu[ NVarCC_Flu++ ] = v;
 
    NVarCC_Der = 0;
 
 #  if   ( MODEL == HYDRO )
    const int NVarCC_Der_Max = 5;
-   int TVarCCList_Der[NVarCC_Der_Max];
+   long TVarCCList_Der[NVarCC_Der_Max];
 
    if ( PrepVx   )   TVarCCList_Der[ NVarCC_Der ++ ] = _VELX;
    if ( PrepVy   )   TVarCCList_Der[ NVarCC_Der ++ ] = _VELY;
@@ -364,7 +364,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
    const int NVarCC_Der_Max = 0;
-   int *TVarCCList_Der = NULL;
+   long *TVarCCList_Der = NULL;
 
 #  else
 #  error : unsupported MODEL !!
@@ -384,7 +384,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 // determine the face-centered variables to be prepared
 // --> currently we do not consider any face-centered derived variable
-// --> assuming that _VAR_NAME = 1<<VAR_NAME (e.g., _MAGX == 1<<MAGX)
+// --> assuming that _VAR_NAME = 1L<<VAR_NAME (e.g., _MAGX == 1L<<MAGX)
 // --> it also determines the order of variables stored in OutputFC (which is the same as patch->magnetic[])
    int NVarFC_Tot = 0;
 
@@ -393,7 +393,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    int TVarFCIdxList[NCOMP_MAG];
 
    for (int v=0; v<NCOMP_MAG; v++)
-      if ( TVarFC & (1<<v) )  TVarFCIdxList[ NVarFC_Tot++ ] = v;
+      if ( TVarFC & (1L<<v) )    TVarFCIdxList[ NVarFC_Tot++ ] = v;
 
 #  else
 // currently no other models require any face-centered variable

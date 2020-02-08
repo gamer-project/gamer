@@ -636,8 +636,8 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
 
 
 // 2. fill up the ghost zones of FaData (no interpolation is required)
-   const int  NDer       = 0;
-   const int *DerVarList = NULL;
+   const int   NDer       = 0;
+   const long *DerVarList = NULL;
 
    int    loop[3], offset_out[3], offset_in[3], i_in, j_in, k_in;
    int    BC_Sibling, BC_Idx_Start[3], BC_Idx_End[3];

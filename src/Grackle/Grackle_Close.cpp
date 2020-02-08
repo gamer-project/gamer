@@ -50,6 +50,8 @@ void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[], co
    const int   Size1v     = NPG*Size1pg;
    const real  Gamma_m1   = GAMMA - (real)1.0;
    const real _Gamma_m1   = (real)1.0 / Gamma_m1;
+   
+   const real mass_ratio_ep   = Const_me/Const_mp;
 
    const real *Ptr_Dens0  = h_Che_Array + CheIdx_Dens *Size1v;
    const real *Ptr_sEint0 = h_Che_Array + CheIdx_sEint*Size1v;
@@ -136,7 +138,7 @@ void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[], co
 
 //          update all chemical species
             if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
-            *( fluid[Idx_e    ][0][0] + idx_p ) = Ptr_e    [idx_pg];
+            *( fluid[Idx_e    ][0][0] + idx_p ) = Ptr_e    [idx_pg] * mass_ratio_ep;
             *( fluid[Idx_HI   ][0][0] + idx_p ) = Ptr_HI   [idx_pg];
             *( fluid[Idx_HII  ][0][0] + idx_p ) = Ptr_HII  [idx_pg];
             *( fluid[Idx_HeI  ][0][0] + idx_p ) = Ptr_HeI  [idx_pg];
