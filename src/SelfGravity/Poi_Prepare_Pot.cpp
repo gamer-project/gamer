@@ -20,7 +20,7 @@
 //                PrepTime         : Target physical time to prepare the coarse-grid data
 //                h_Pot_Array_P_In : Host array to store the prepared coarse-grid potential
 //                NPG              : Number of patch groups prepared at a time
-//                PID0_List        : List recording the patch indicies with LocalID==0 to be udpated
+//                PID0_List        : List recording the patch indices with LocalID==0 to be udpated
 //-------------------------------------------------------------------------------------------------------
 void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In[][POT_NXT][POT_NXT][POT_NXT],
                       const int NPG, const int *PID0_List )

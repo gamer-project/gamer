@@ -199,7 +199,12 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
                             lv, PID, TSib, amr->patch[0][lv][PID]->sibling[TSib], ParID );
                Aux_Message( stderr, "        --> ParPos = (%21.14e, %21.14e, %21.14e)\n",
                             ParPos[0][ParID], ParPos[1][ParID], ParPos[2][ParID] );
-               Output_Patch( lv, PID, amr->FluSg[lv], amr->PotSg[lv], "debug" );
+#              ifdef MHD
+               const int MagSg = amr->MagSg[lv];
+#              else
+               const int MagSg = NULL_INT;
+#              endif
+               Output_Patch( lv, PID, amr->FluSg[lv], amr->PotSg[lv], MagSg, "debug" );
                MPI_Exit();
             }
 #           endif

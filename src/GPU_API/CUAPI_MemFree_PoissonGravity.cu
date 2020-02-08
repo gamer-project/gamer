@@ -17,6 +17,9 @@ extern double (*d_Corner_Array_G)[3];
 #ifdef DUAL_ENERGY
 extern char (*d_DE_Array_G     )[ CUBE(PS1) ];
 #endif
+#ifdef MHD
+extern real (*d_EngyB_Array_G  )[ CUBE(PS1) ];
+#endif
 extern real (*d_Pot_Array_T    )[ CUBE(GRA_NXT) ];
 
 
@@ -45,6 +48,9 @@ void CUAPI_MemFree_PoissonGravity()
 #  ifdef DUAL_ENERGY
    if ( d_DE_Array_G      != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_DE_Array_G      )  );  d_DE_Array_G      = NULL; }
 #  endif
+#  ifdef MHD
+   if ( d_EngyB_Array_G   != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_EngyB_Array_G   )  );  d_EngyB_Array_G   = NULL; }
+#  endif
    if ( d_Pot_Array_T     != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Pot_Array_T     )  );  d_Pot_Array_T     = NULL; }
 
 
@@ -63,6 +69,9 @@ void CUAPI_MemFree_PoissonGravity()
       if ( h_Corner_Array_G [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Corner_Array_G [t] )  );  h_Corner_Array_G [t] = NULL; }
 #     ifdef DUAL_ENERGY
       if ( h_DE_Array_G     [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_DE_Array_G     [t] )  );  h_DE_Array_G     [t] = NULL; }
+#     endif
+#     ifdef MHD
+      if ( h_EngyB_Array_G  [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_EngyB_Array_G  [t] )  );  h_EngyB_Array_G  [t] = NULL; }
 #     endif
       if ( h_Pot_Array_T    [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Pot_Array_T    [t] )  );  h_Pot_Array_T    [t] = NULL; }
    } // for (int t=0; t<2; t++)

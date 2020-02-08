@@ -17,9 +17,9 @@ extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const dou
 // Function    :  Gra_AdvanceDt
 // Description :  Solve the Poisson equation and advance the fluid variables by the gravitational acceleration
 //
-// Note        :  1. Poisson solver : lv = 0 : invoke the function "CPU_PoissonSolver_FFT"
-//                                    lv > 0 : invoke the function "InvokeSolver"
-//                2. Gravity solver : invoke the function "InvokeSolver"
+// Note        :  1. Poisson solver : lv = 0 : invoke CPU_PoissonSolver_FFT()
+//                                    lv > 0 : invoke InvokeSolver()
+//                2. Gravity solver : invoke InvokeSolver()
 //                3. The updated potential and fluid variables will be stored in the same sandglass
 //                4. PotSg at lv=0 will be updated here, but PotSg at at lv>0 and FluSg at lv>=0 will NOT be updated
 //                   (they will be updated in EvolveLevel instead)
@@ -110,7 +110,7 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 
 //       note that the MPI bandwidth achieved in the following command may be much lower than normal
 //       because of switching back from the MPI buffer used by FFTW
-         TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, SaveSg_Pot, POT_FOR_POISSON, _POTE, Pot_ParaBuf, USELB_YES ),
+         TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, NULL_INT, SaveSg_Pot, POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES ),
                         Timer_GetBuf[lv][1]  );
 
 //       must call Poi_StorePotWithGhostZone AFTER collecting potential for buffer patches
@@ -122,11 +122,12 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 
       if ( Gravity )
       {
-//       TIMING_FUNC(   InvokeSolver( GRAVITY_SOLVER, lv, TimeNew, TimeOld, dt, NULL_REAL, SaveSg_Flu, NULL_INT,
+//       TIMING_FUNC(   InvokeSolver( GRAVITY_SOLVER, lv, TimeNew, TimeOld, dt, NULL_REAL, SaveSg_Flu, NULL_INT, NULL_INT,
 //                                    OverlapMPI, Overlap_Sync ),
 //                      Timer_Gra_Advance[lv]  );
 
-         TIMING_FUNC(   InvokeSolver( GRAVITY_SOLVER, lv, TimeNew, TimeOld, dt, NULL_REAL, SaveSg_Flu, NULL_INT, false, false ),
+         TIMING_FUNC(   InvokeSolver( GRAVITY_SOLVER, lv, TimeNew, TimeOld, dt, NULL_REAL, SaveSg_Flu, NULL_INT, NULL_INT,
+                                      false, false ),
                         Timer_Gra_Advance[lv]   );
 
 //       call Flu_ResetByUser_API_Ptr() here only if GRACKLE is disabled
@@ -145,15 +146,15 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
    else // lv > 0
    {
       if      (  Poisson  &&  !Gravity )
-         InvokeSolver( POISSON_SOLVER,             lv, TimeNew, TimeOld, NULL_REAL, Poi_Coeff, NULL_INT,   SaveSg_Pot,
+         InvokeSolver( POISSON_SOLVER,             lv, TimeNew, TimeOld, NULL_REAL, Poi_Coeff, NULL_INT,   NULL_INT, SaveSg_Pot,
                        OverlapMPI, Overlap_Sync );
 
       else if ( !Poisson  &&   Gravity )
-         InvokeSolver( GRAVITY_SOLVER,             lv, TimeNew, TimeOld, dt,        NULL_REAL, SaveSg_Flu, NULL_INT,
+         InvokeSolver( GRAVITY_SOLVER,             lv, TimeNew, TimeOld, dt,        NULL_REAL, SaveSg_Flu, NULL_INT, NULL_INT,
                        OverlapMPI, Overlap_Sync );
 
       else if (  Poisson  &&   Gravity )
-         InvokeSolver( POISSON_AND_GRAVITY_SOLVER, lv, TimeNew, TimeOld, dt,        Poi_Coeff, SaveSg_Flu, SaveSg_Pot,
+         InvokeSolver( POISSON_AND_GRAVITY_SOLVER, lv, TimeNew, TimeOld, dt,        Poi_Coeff, SaveSg_Flu, NULL_INT, SaveSg_Pot,
                        OverlapMPI, Overlap_Sync );
 
 //    call Flu_ResetByUser_API_Ptr() here only if GRACKLE is disabled

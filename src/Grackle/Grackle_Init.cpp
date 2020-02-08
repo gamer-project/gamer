@@ -107,9 +107,6 @@ void Grackle_Init()
 
 #  if ( MODEL == HYDRO )
    grackle_data->Gamma                      = GAMMA;
-
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
 #  endif
 
 

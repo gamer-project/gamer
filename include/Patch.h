@@ -4,6 +4,7 @@
 
 
 #include "Macro.h"
+#include "CUFLU.h"
 
 #ifdef PARTICLE
 #  include <math.h>
@@ -25,6 +26,7 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //
 // Data Member :  fluid           : Fluid variables (mass density, momentum density x, y ,z, energy density)
 //                                  --> Including passively advected variables (e.g., metal density)
+//                magnetic        : Magnetic field (Bx, By, Bz)
 //                pot             : Potential
 //                pot_ext         : Potential with GRA_GHOST_SIZE ghost cells on each side
 //                                  --> Allocated only if STORE_POT_GHOST is on
@@ -52,6 +54,24 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                flux_tmp[6]     : Temporary fluid flux for the option "AUTO_REDUCE_DT"
 //                flux_bitrep[6]  : Fluid flux for achieving bitwise reproducibility (i.e., ensuring that the round-off errors are
 //                                  exactly the same in different parallelization parameters/strategies)
+//                electric        : Electric field for the MHD fix-up operation
+///                                 --> Array structure = [sibling index][E field index][cell index]
+//                                  --> For sibling indices 0-5, there are two E fields on each face
+//                                      --> E field index on x faces: [0/1] = Ey/Ez
+//                                                           y faces: [0/1] = Ez/Ex
+//                                                           z faces: [0/1] = Ex/Ey
+//                                          Cell index dimension on x faces: [Nz][Ny] (= [PS1-1][PS1] for Ey and [PS1][PS1-1] for Ez)
+//                                                     dimension on y faces: [Nx][Nz] (= [PS1-1][PS1] for Ez and [PS1][PS1-1] for Ex)
+//                                                     dimension on z faces: [Ny][Nx] (= [PS1-1][PS1] for Ex and [PS1][PS1-1] for Ey)
+//                                  --> For sibling indices 6-17, there is only one E field on each edge
+//                                      --> E field index is always 0 (6-9->Ez, 10-13->Ex, 14-17->Ey)
+//                                          Cell index dimension is always [PS1]
+//                                  --> To unify the array structure of sibling indices 0-5 and 6-17, we actually convert the
+//                                      2D array [E field index][cell index] into a 1D array
+//                electric_tmp    : Temporary electric field for the option "AUTO_REDUCE_DT"
+//                electric_bitrep : Electric field for achieving bitwise reproducibility in MHD (i.e., ensuring that the
+//                                  round-off errors are exactly the same in different parallelization parameters/strategies)
+//                ele_corrected   : Array recording whether each component in electric[] has been corrected by the fix-up operation
 //                corner[3]       : Grid indices of the cell at patch corner
 //                                  --> Note that for an external patch its recorded "corner" will lie outside
 //                                      the simulation domain. In other words, periodicity is NOT used to
@@ -92,15 +112,15 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                      recorded "EdgeL/R" will still lie inside the simulation domain and will be
 //                                      exactly the same as the EdgeL/R of the corresponding real patches.
 //                                  --> For example, the external patches just outside the simulation left edge will have
-//                                      EdgeL = BoxSize-PatchSize*dh[lv] and EdgeR = BoxSize, and for those just outside
-//                                      the simulation right edge will have EdgeL = 0 and EdgeR = PatchSize*dh[lv]
+//                                      EdgeL = BoxEdgeR-PatchSize*dh[lv] and EdgeR = BoxEdgeR, and for those just outside
+//                                      the simulation right edge will have EdgeL = BoxEdgeL and EdgeR = BoxEdgeL+PatchSize*dh[lv]
 //                                  --> Different from corner[3], which do NOT assume periodicity
 //                PaddedCr1D      : 1D corner coordiniate padded with two base-level patches on each side
 //                                  in each direction, normalized to the finest-level patch scale (PATCH_SIZE)
-//                                  --> each PaddedCr1D defines a unique 3D position
-//                                  --> patches at different levels with the same PaddedCr1D have the same
+//                                  --> Each PaddedCr1D defines a unique 3D position
+//                                  --> Patches at different levels with the same PaddedCr1D have the same
 //                                      3D corner coordinates
-//                                  --> this number is independent of periodicity (because of the padded patches)
+//                                  --> This number is independent of periodicity (because of the padded patches)
 //                LB_Idx          : Space-filling-curve index for load balance
 //                NPar            : Number of particles belonging to this leaf patch
 //                ParListSize     : Size of the array ParList (ParListSize can be >= NPar)
@@ -142,16 +162,20 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 // Method      :  patch_t         : Constructor
 //               ~patch_t         : Destructor
 //                Activate        : Activate patch
-//                fnew            : Allocate one flux array
-//                fdelete         : Deallocate one flux array
-//                hnew            : Allocate the hydrodynamic array
-//                hdelete         : Deallocate the hydrodynamic array
-//                gnew            : Allocate the potential array
-//                gdelete         : Deallocate the potential array
-//                snew            : Allocate the dual-energy status array
-//                sdelete         : Deallocate the dual-energy status array
-//                dnew            : Allocate the rho_ext array
-//                ddelete         : Deallocate the rho_ext array
+//                fnew            : Allocate flux[]
+//                fdelete         : Deallocate flux[]
+//                enew            : Allocate electric[]
+//                edelete         : Deallocate electric[]
+//                hnew            : Allocate fluid[]
+//                hdelete         : Deallocate fluid[]
+//                mnew            : Allocate magnetic[]
+//                mdelete         : Deallocate magnetic[]
+//                gnew            : Allocate pot[]
+//                gdelete         : Deallocate pot[]
+//                snew            : Allocate de_status[]
+//                sdelete         : Deallocate de_status[]
+//                dnew            : Allocate rho_ext[]
+//                ddelete         : Deallocate rho_ext[]
 //                AddParticle     : Add particles to the particle list
 //                RemoveParticle  : Remove particles from the particle list
 //-------------------------------------------------------------------------------------------------------
@@ -160,27 +184,40 @@ struct patch_t
 
 // data members
 // ===================================================================================
-   real (*fluid)[PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+   real (*fluid)[PS1][PS1][PS1];
+
+#  ifdef MHD
+   real (*magnetic)[ PS1P1*SQR(PS1) ];
+#  endif
 
 #  ifdef GRAVITY
-   real (*pot)[PATCH_SIZE][PATCH_SIZE];
+   real (*pot)[PS1][PS1];
 #  ifdef STORE_POT_GHOST
    real (*pot_ext)[GRA_NXT][GRA_NXT];
 #  endif
 #  endif // GRAVITY
 
 #  ifdef DUAL_ENERGY
-   char (*de_status)[PATCH_SIZE][PATCH_SIZE];
+   char (*de_status)[PS1][PS1];
 #  endif
 
 #  ifdef PARTICLE
    real (*rho_ext)[RHOEXT_NXT][RHOEXT_NXT];
 #  endif
 
-   real (*flux       [6])[PATCH_SIZE][PATCH_SIZE];
-   real (*flux_tmp   [6])[PATCH_SIZE][PATCH_SIZE];
-#  ifdef BITWISE_REPRODUCIBILITY
-   real (*flux_bitrep[6])[PATCH_SIZE][PATCH_SIZE];
+   real (*flux       [6])[PS1][PS1];
+   real (*flux_tmp   [6])[PS1][PS1];
+#  ifdef BIT_REP_FLUX
+   real (*flux_bitrep[6])[PS1][PS1];
+#  endif
+
+#  ifdef MHD
+   real (*electric       [18]);
+   real (*electric_tmp   [18]);
+#  ifdef BIT_REP_ELECTRIC
+   real (*electric_bitrep[18]);
+#  endif
+   bool ele_corrected[12];
 #  endif
 
    int    corner[3];
@@ -219,25 +256,30 @@ struct patch_t
    //
    // Note        :  Initialize data members
    //
-   // Parameter   :  x,y,z     : Scale indices of the patch corner
-   //                FaPID     : Patch ID of the father patch
-   //                FluData   : true --> Allocate the hydrodynamic array(s) "fluid"
-   //                                     "rho_ext" will NOT be allocated here even if PARTICLE is on
-   //                PotData   : true --> Allocate the potential array "pot" (has no effect if "GRAVITY" is turned off)
-   //                                     "pot_ext" will be allocated as well if STORE_POT_GHOST is on
-   //                DE_Status : true --> Allocate the dual-energy status array "de_status"
-   //                                 --> Useless if "DUAL_ENERGY" is turned off
-   //                lv        : Refinement level of the newly created patch
-   //                BoxScale  : Simulation box scale
-   //                dh_min    : Cell size at the maximum level
+   // Parameter   :  scale_x/y/z : Grid scale indices of the patch corner
+   //                FaPID       : Patch ID of the father patch
+   //                FluData     : true --> Allocate the hydrodynamic array fluid[]
+   //                                       --> rho_ext[] will NOT be allocated here even if PARTICLE is on
+   //                MagData     : true --> Allocate the MHD array magnetic[]
+   //                                       --> Useless if "MHD" is turned off
+   //                PotData     : true --> Allocate the potential array pot[] (has no effect if "GRAVITY" is turned off)
+   //                                       --> pot_ext[] will be allocated as well if STORE_POT_GHOST is on
+   //                DE_Status   : true --> Allocate the dual-energy status array de_status[]
+   //                                       --> Useless if "DUAL_ENERGY" is turned off
+   //                lv          : Refinement level of the newly created patch
+   //                BoxScale    : Simulation box scale
+   //                BoxEdgeL    : Simulation box left edge
+   //                dh_min      : Cell size at the maximum level
    //===================================================================================
-   patch_t( const int x, const int y, const int z, const int FaPID, const bool FluData, const bool PotData, const bool DE_Status,
-            const int lv, const int BoxScale[], const double dh_min )
+   patch_t( const int scale_x, const int scale_y, const int scale_z, const int FaPID, const bool FluData,
+            const bool MagData, const bool PotData, const bool DE_Status, const int lv, const int BoxScale[],
+            const double BoxEdgeL[], const double dh_min )
    {
 
 //    always initialize field pointers (e.g., fluid, pot, ...) as NULL if they are not allocated here
       const bool InitPtrAsNull_Yes = true;
-      Activate( x, y, z, FaPID, FluData, PotData, DE_Status, lv, BoxScale, dh_min, InitPtrAsNull_Yes );
+      Activate( scale_x, scale_y, scale_z, FaPID, FluData, MagData, PotData, DE_Status, lv, BoxScale,
+                BoxEdgeL, dh_min, InitPtrAsNull_Yes );
 
    } // METHOD : patch_t
 
@@ -249,35 +291,41 @@ struct patch_t
    //
    // Note        :  Called by the patch constructor "patch_t" and amr->pnew when OPT__REUSE_MEMORY is adopted
    //
-   // Parameter   :  x,y,z          : Scale indices of the patch corner
-   //                FaPID          : Patch ID of the father patch
-   //                FluData        : true --> Allocate the hydrodynamic array(s) "fluid"
-   //                                          "rho_ext" will NOT be allocated here even if PARTICLE is on
-   //                PotData        : true --> Allocate the potential array "pot" (has no effect if "GRAVITY" is turned off)
-   //                                          "pot_ext" will be allocated as well if STORE_POT_GHOST is on
-   //                DE_Status      : true --> Allocate the dual-energy status array "de_status"
-   //                                      --> Useless if "DUAL_ENERGY" is turned off
-   //                lv             : Refinement level of the newly created patch
-   //                BoxScale       : Simulation box scale
-   //                dh_min         : Cell size at the maximum level
-   //                InitPtrAsNull  : Whether or not to initialize the field arrays (i.e., fluid, pot, pot_ext, rho_ext, de_status) as NULL
-   //                                 --> It is used mainly for OPT__REUSE_MEMORY, where we don't want to set these pointers as
-   //                                     NULL if the patch has been allocated but marked as inactive
-   //                                     --> Since the field arrays may be allocated already and we want to reuse them
-   //                                 --> But note that we must initialize these pointers as NULL when allocating (not activating)
-   //                                     patches and before calling hnew and gnew
-   //                                     --> otherwise these pointers become ill-defined, which will make hdelete and gdelete crash
-   //                                 --> Does NOT apply to flux arrays (i.e., flux, flux_tmp, and flux_bitrep) which are always
-   //                                     initialized as NULL here
-   //                                 --> Does not apply to any particle variable (except rho_ext)
+   // Parameter   :  scale_x/y/z   : Grid scale indices of the patch corner
+   //                FaPID         : Patch ID of the father patch
+   //                FluData       : true --> Allocate the hydrodynamic array fluid[]
+   //                                         --> rho_ext[] will NOT be allocated here even if PARTICLE is on
+   //                MagData       : true --> Allocate the MHD array magnetic[]
+   //                                         --> Useless if "MHD" is turned off
+   //                PotData       : true --> Allocate the potential array pot[] (has no effect if "GRAVITY" is turned off)
+   //                                         --> pot_ext[] will be allocated as well if STORE_POT_GHOST is on
+   //                DE_Status     : true --> Allocate the dual-energy status array de_status[]
+   //                                         --> Useless if "DUAL_ENERGY" is turned off
+   //                lv            : Refinement level of the newly created patch
+   //                BoxScale      : Simulation box scale
+   //                BoxEdgeL      : Simulation box left edge
+   //                dh_min        : Cell size at the maximum level
+   //                InitPtrAsNull : Whether or not to initialize the field arrays
+   //                                (i.e., fluid, pot, pot_ext, rho_ext, de_status) as NULL
+   //                                --> It is used mainly for OPT__REUSE_MEMORY, where we don't want to set these
+   //                                    pointers as NULL if the patch has been allocated but marked as inactive
+   //                                    --> Since the field arrays may be allocated already and we want to reuse them
+   //                                --> But note that we must initialize these pointers as NULL when allocating
+   //                                    (not activating) patches and before calling hnew and gnew
+   //                                    --> otherwise these pointers become ill-defined, which will make hdelete and
+   //                                        gdelete crash
+   //                                --> Does NOT apply to flux arrays (i.e., flux, flux_tmp, and flux_bitrep) which
+   //                                    are always initialized as NULL here
+   //                                --> Does not apply to any particle variable (except rho_ext)
    //===================================================================================
-   void Activate( const int x, const int y, const int z, const int FaPID, const bool FluData, const bool PotData, const bool DE_Status,
-                  const int lv, const int BoxScale[], const double dh_min, const bool InitPtrAsNull )
+   void Activate( const int scale_x, const int scale_y, const int scale_z, const int FaPID, const bool FluData,
+                  const bool MagData, const bool PotData, const bool DE_Status, const int lv, const int BoxScale[],
+                  const double BoxEdgeL[], const double dh_min, const bool InitPtrAsNull )
    {
 
-      corner[0] = x;
-      corner[1] = y;
-      corner[2] = z;
+      corner[0] = scale_x;
+      corner[1] = scale_y;
+      corner[2] = scale_z;
       father    = FaPID;
       son       = -1;
       flag      = false;
@@ -286,11 +334,11 @@ struct patch_t
       for (int s=0; s<26; s++ )  sibling[s] = -1;     // -1 <--> NO sibling
 
       const int Padded              = 1<<NLEVEL;
-      const int BoxNScale_Padded[3] = { BoxScale[0]/PATCH_SIZE + 2*Padded,
-                                        BoxScale[1]/PATCH_SIZE + 2*Padded,
-                                        BoxScale[2]/PATCH_SIZE + 2*Padded }; // normalized and padded box scale
+      const int BoxNScale_Padded[3] = { BoxScale[0]/PS1 + 2*Padded,
+                                        BoxScale[1]/PS1 + 2*Padded,
+                                        BoxScale[2]/PS1 + 2*Padded }; // normalized and padded box scale
       int Cr_Padded[3];
-      for (int d=0; d<3; d++)    Cr_Padded[d] = corner[d]/PATCH_SIZE + Padded;
+      for (int d=0; d<3; d++)    Cr_Padded[d] = corner[d]/PS1 + Padded;
 
 #     ifdef GAMER_DEBUG
       for (int d=0; d<3; d++)
@@ -309,17 +357,17 @@ struct patch_t
       for (int d=0; d<3; d++)
       {
 //       to ensure that buffer patches and their corresponding real patches have the same EdgeL/R, do not write EdgeR[d] as
-//       EdgeR[d] = (double)(  ( corner[d] + BoxScale[d] + PScale ) % BoxScale[d] )*dh_min;
+//       EdgeR[d] = BoxEdgeL[d] + (double)(  ( corner[d] + BoxScale[d] + PScale ) % BoxScale[d] )*dh_min;
 //       --> otherwise the buffer patches just outside the simulation left edge (and the real patches just inside the simulation
-//           right edge) will have EdgeR==0 instead of EdgeR==BoxSize
+//           right edge) will have EdgeR=BoxEdgeL instead of EdgeR=BoxEdgeR
 //       --> assuming periodicity
-         EdgeL[d] = (double)(  ( corner[d] + BoxScale[d] ) % BoxScale[d]           )*dh_min;
-         EdgeR[d] = (double)(  ( corner[d] + BoxScale[d] ) % BoxScale[d] + PScale  )*dh_min;
+         EdgeL[d] = BoxEdgeL[d] + (double)(  ( corner[d] + BoxScale[d] ) % BoxScale[d]           )*dh_min;
+         EdgeR[d] = BoxEdgeL[d] + (double)(  ( corner[d] + BoxScale[d] ) % BoxScale[d] + PScale  )*dh_min;
 
 //       do no use the following non-periodic version anymore --> it does not work with the current particle implementation
          /*
-         EdgeL[d] = (double)corner[d]*dh_min;
-         EdgeR[d] = (double)( corner[d] + PScale )*dh_min;
+         EdgeL[d] = BoxEdgeL[d] + (double)corner[d]*dh_min;
+         EdgeR[d] = BoxEdgeL[d] + (double)( corner[d] + PScale )*dh_min;
          */
       }
 
@@ -328,6 +376,10 @@ struct patch_t
       if ( InitPtrAsNull )
       {
          fluid     = NULL;
+
+#        ifdef MHD
+         magnetic  = NULL;
+#        endif
 
 #        ifdef GRAVITY
          pot       = NULL;
@@ -349,12 +401,26 @@ struct patch_t
       {
          flux       [s] = NULL;
          flux_tmp   [s] = NULL;
-#        ifdef BITWISE_REPRODUCIBILITY
+#        ifdef BIT_REP_FLUX
          flux_bitrep[s] = NULL;
 #        endif
       }
 
+#     ifdef MHD
+      for (int s=0; s<18; s++)
+      {
+         electric       [s] = NULL;
+         electric_tmp   [s] = NULL;
+#        ifdef BIT_REP_ELECTRIC
+         electric_bitrep[s] = NULL;
+#        endif
+      }
+#     endif
+
       if ( FluData )    hnew();
+#     ifdef MHD
+      if ( MagData )    mnew();
+#     endif
 #     ifdef GRAVITY
       if ( PotData )    gnew();
 #     endif
@@ -397,6 +463,10 @@ struct patch_t
 
       fdelete();
       hdelete();
+#     ifdef MHD
+      edelete();
+      mdelete();
+#     endif
 #     ifdef GRAVITY
       gdelete();
 #     endif
@@ -432,50 +502,50 @@ struct patch_t
 
    //===================================================================================
    // Method      :  fnew
-   // Description :  Allocate flux array in the given direction
+   // Description :  Allocate flux[] in the given direction
    //
-   // Note        :  Flux array is initialized as zero
+   // Note        :  flux[] will be initialized as zero
    //
-   // Parameter   :  SibID    : Targeted ID of the flux array (0,1,2,3,4,5) <--> (-x,+x,-y,+y,-z,+z)
-   //                AllocTmp : Allocat the temporary flux array "flux_tmp"
+   // Parameter   :  SibID    : Targeted sibling direction (0,1,2,3,4,5) <--> (-x,+x,-y,+y,-z,+z)
+   //                AllocTmp : Allocate the temporary flux array flux_tmp[]
    //===================================================================================
    void fnew( const int SibID, const bool AllocTmp )
    {
 
 #     ifdef GAMER_DEBUG
       if ( SibID < 0  ||  SibID > 5 )
-         Aux_Error( ERROR_INFO, "incorrect input in the member function \"fnew\" !!\n" );
+         Aux_Error( ERROR_INFO, "incorrect SibID (%d) in fnew() !!\n", SibID );
 
       if ( flux[SibID] != NULL )
-         Aux_Error( ERROR_INFO, "allocate an existing flux array (sibling = %d) !!\n", SibID );
+         Aux_Error( ERROR_INFO, "flux[%d] already exists !!\n", SibID );
 
       if ( AllocTmp  &&  flux_tmp[SibID] != NULL )
-         Aux_Error( ERROR_INFO, "allocate an existing flux_tmp array (sibling = %d) !!\n", SibID );
+         Aux_Error( ERROR_INFO, "flux_tmp[%d] already exists !!\n", SibID );
 
-#     ifdef BITWISE_REPRODUCIBILITY
+#     ifdef BIT_REP_FLUX
       if ( flux_bitrep[SibID] != NULL )
-         Aux_Error( ERROR_INFO, "allocate an existing flux_bitrep array (sibling = %d) !!\n", SibID );
+         Aux_Error( ERROR_INFO, "flux_bitrep[%d] already exists !!\n", SibID );
 #     endif
 #     endif
 
-      flux      [SibID]  = new real [NFLUX_TOTAL][PATCH_SIZE][PATCH_SIZE];
+      flux      [SibID]  = new real [NFLUX_TOTAL][PS1][PS1];
       if ( AllocTmp )
-      flux_tmp  [SibID]  = new real [NFLUX_TOTAL][PATCH_SIZE][PATCH_SIZE];
-#     ifdef BITWISE_REPRODUCIBILITY
-      flux_bitrep[SibID] = new real [NFLUX_TOTAL][PATCH_SIZE][PATCH_SIZE];
+      flux_tmp  [SibID]  = new real [NFLUX_TOTAL][PS1][PS1];
+#     ifdef BIT_REP_FLUX
+      flux_bitrep[SibID] = new real [NFLUX_TOTAL][PS1][PS1];
 #     endif
 
       for(int v=0; v<NFLUX_TOTAL; v++)
-      for(int m=0; m<PATCH_SIZE; m++)
-      for(int n=0; n<PATCH_SIZE; n++)
+      for(int m=0; m<PS1; m++)
+      for(int n=0; n<PS1; n++)
       {
          flux       [SibID][v][m][n] = 0.0;
          /*
-//       no need to initialize flux_tmp
+//       no need to initialize flux_tmp[]
          if ( AllocTmp )
          flux_tmp   [SibID][v][m][n] = 0.0;
          */
-#        ifdef BITWISE_REPRODUCIBILITY
+#        ifdef BIT_REP_FLUX
          flux_bitrep[SibID][v][m][n] = 0.0;
 #        endif
       }
@@ -486,46 +556,123 @@ struct patch_t
 
    //===================================================================================
    // Method      :  fdelete
-   // Description :  Deallocate all flux arrays allocated previously
+   // Description :  Deallocate flux[] along all directions
    //===================================================================================
    void fdelete()
    {
 
       for (int s=0; s<6; s++)
       {
-         if ( flux[s] != NULL )
-         {
-            delete [] flux[s];
-            flux[s] = NULL;
+         delete [] flux[s];
+         flux[s] = NULL;
 
-            if ( flux_tmp[s] != NULL ) {
-            delete [] flux_tmp[s];
-            flux_tmp[s] = NULL; }
+         delete [] flux_tmp[s];
+         flux_tmp[s] = NULL;
 
-#           ifdef BITWISE_REPRODUCIBILITY
-            delete [] flux_bitrep[s];
-            flux_bitrep[s] = NULL;
-#           endif
-         }
+#        ifdef BIT_REP_FLUX
+         delete [] flux_bitrep[s];
+         flux_bitrep[s] = NULL;
+#        endif
       }
 
    } // METHOD : fdelete
 
 
 
+#  ifdef MHD
+   //===================================================================================
+   // Method      :  enew
+   // Description :  Allocate electric[] in the given direction
+   //
+   // Note        :  electric[] will be initialized as zero
+   //
+   // Parameter   :  SibID    : Target sibling direction (0-17)
+   //                AllocTmp : Allocate the temporary electric array electric_tmp[]
+   //===================================================================================
+   void enew( const int SibID, const bool AllocTmp )
+   {
+
+#     ifdef GAMER_DEBUG
+      if ( SibID < 0  ||  SibID > 17 )
+         Aux_Error( ERROR_INFO, "incorrect SibID (%d) in fnew() !!\n", SibID );
+
+      if ( electric[SibID] != NULL )
+         Aux_Error( ERROR_INFO, "electric[%d] already exists !!\n", SibID );
+
+      if ( AllocTmp  &&  electric_tmp[SibID] != NULL )
+         Aux_Error( ERROR_INFO, "electric_tmp[%d] already exists !!\n", SibID );
+
+#     ifdef BIT_REP_ELECTRIC
+      if ( electric_bitrep[SibID] != NULL )
+         Aux_Error( ERROR_INFO, "electric_bitrep[%d] already exists !!\n", SibID );
+#     endif
+#     endif
+
+      const int Size = ( SibID < 6 ) ? NCOMP_ELE*PS1M1*PS1 : PS1;
+
+      electric      [SibID]  = new real [Size];
+      if ( AllocTmp )
+      electric_tmp  [SibID]  = new real [Size];
+#     ifdef BIT_REP_ELECTRIC
+      electric_bitrep[SibID] = new real [Size];
+#     endif
+
+      for(int t=0; t<Size; t++)
+      {
+         electric       [SibID][t] = 0.0;
+         /*
+//       no need to initialize electric_tmp[]
+         if ( AllocTmp )
+         electric_tmp   [SibID][t] = 0.0;
+         */
+#        ifdef BIT_REP_ELECTRIC
+         electric_bitrep[SibID][t] = 0.0;
+#        endif
+      }
+
+   } // METHOD : enew
+
+
+
+   //===================================================================================
+   // Method      :  edelete
+   // Description :  Deallocate electric[] along all directions
+   //===================================================================================
+   void edelete()
+   {
+
+      for (int s=0; s<18; s++)
+      {
+         delete [] electric[s];
+         electric[s] = NULL;
+
+         delete [] electric_tmp[s];
+         electric_tmp[s] = NULL;
+
+#        ifdef BIT_REP_ELECTRIC
+         delete [] electric_bitrep[s];
+         electric_bitrep[s] = NULL;
+#        endif
+      }
+
+   } // METHOD : edelete
+#  endif // #ifdef MHD
+
+
+
    //===================================================================================
    // Method      :  hnew
-   // Description :  Allocate the fluid array
+   // Description :  Allocate fluid[]
    //
-   // Note        :  Do nothing if the fluid array has been allocated
+   // Note        :  Do nothing if fluid[] has been allocated
    //===================================================================================
    void hnew()
    {
 
       if ( fluid == NULL )
       {
-         fluid = new real [NCOMP_TOTAL][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
-         fluid[0][0][0][0] = -1;    // arbitrarily initialized
+         fluid = new real [NCOMP_TOTAL][PS1][PS1][PS1];
+         fluid[0][0][0][0] = (real)-1.0;  // arbitrarily initialized
       }
 
    } // METHOD : hnew
@@ -534,44 +681,74 @@ struct patch_t
 
    //===================================================================================
    // Method      :  hdelete
-   // Description :  Deallocate the fluid array
+   // Description :  Deallocate fluid[]
    //===================================================================================
    void hdelete()
    {
 
-      if ( fluid != NULL )
-      {
-         delete [] fluid;
-         fluid = NULL;
-      }
+      delete [] fluid;
+      fluid = NULL;
+
 #     ifdef PARTICLE
-      if ( rho_ext != NULL )
-      {
-         delete [] rho_ext;
-         rho_ext = NULL;
-      }
+      delete [] rho_ext;
+      rho_ext = NULL;
 #     endif
 
    } // METHOD : hdelete
 
 
 
+#  ifdef MHD
+   //===================================================================================
+   // Method      :  mnew
+   // Description :  Allocate magnetic[]
+   //
+   // Note        :  Do nothing if magnetic[] has been allocated
+   //===================================================================================
+   void mnew()
+   {
+
+      if ( magnetic == NULL )
+      {
+         magnetic = new real [NCOMP_MAG][ PS1P1*SQR(PS1) ];
+         magnetic[0][0] = (real)-1.0;  // arbitrarily initialized
+      }
+
+   } // METHOD : mnew
+
+
+
+   //===================================================================================
+   // Method      :  mdelete
+   // Description :  Deallocate magnetic[]
+   //===================================================================================
+   void mdelete()
+   {
+
+      delete [] magnetic;
+      magnetic = NULL;
+
+   } // METHOD : mdelete
+#  endif // #ifdef MHD
+
+
+
 #  ifdef GRAVITY
    //===================================================================================
    // Method      :  gnew
-   // Description :  Allocate the potential array
+   // Description :  Allocate pot[] (and pot_ext[] for STORE_POT_GHOST)
    //
-   // Note        :  Do nothing if the potential array has been allocated
+   // Note        :  Do nothing if pot[] (and pot_ext[] for STORE_POT_GHOST) has been allocated
    //===================================================================================
    void gnew()
    {
 
-      if ( pot == NULL )      pot     = new real [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+      if ( pot == NULL )      pot     = new real [PS1][PS1][PS1];
 
 #     ifdef STORE_POT_GHOST
       if ( pot_ext == NULL )  pot_ext = new real [GRA_NXT][GRA_NXT][GRA_NXT];
 
-//    always initialize pot_ext (even if pot_ext != NULL when calling this function) to indicate that this array
+//    always initialize pot_ext[] (even if pot_ext != NULL when calling this function) to indicate that this array
 //    has NOT been properly set --> used by Poi_StorePotWithGhostZone()
       pot_ext[0][0][0] = POT_EXT_NEED_INIT;
 #     endif
@@ -582,23 +759,17 @@ struct patch_t
 
    //===================================================================================
    // Method      :  gdelete
-   // Description :  Deallocate the potential array
+   // Description :  Deallocate pot[] (and pot_ext[] for STORE_POT_GHOST)
    //===================================================================================
    void gdelete()
    {
 
-      if ( pot != NULL )
-      {
-         delete [] pot;
-         pot = NULL;
-      }
+      delete [] pot;
+      pot = NULL;
 
 #     ifdef STORE_POT_GHOST
-      if ( pot_ext != NULL )
-      {
-         delete [] pot_ext;
-         pot_ext = NULL;
-      }
+      delete [] pot_ext;
+      pot_ext = NULL;
 #     endif
 
    } // METHOD : gdelete
@@ -609,16 +780,16 @@ struct patch_t
 #  ifdef DUAL_ENERGY
    //===================================================================================
    // Method      :  snew
-   // Description :  Allocate the dual-energy status array
+   // Description :  Allocate the dual-energy status array de_status[]
    //
-   // Note        :  Do nothing if the dual-energy status array has been allocated
+   // Note        :  Do nothing if de_status[] has been allocated
    //===================================================================================
    void snew()
    {
 
       if ( de_status == NULL )
       {
-         de_status = new char [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+         de_status = new char [PS1][PS1][PS1];
       }
 
    } // METHOD : snew
@@ -627,16 +798,13 @@ struct patch_t
 
    //===================================================================================
    // Method      :  sdelete
-   // Description :  Deallocate the dual-energy status array
+   // Description :  Deallocate the dual-energy status array de_status[]
    //===================================================================================
    void sdelete()
    {
 
-      if ( de_status != NULL )
-      {
-         delete [] de_status;
-         de_status = NULL;
-      }
+      delete [] de_status;
+      de_status = NULL;
 
    } // METHOD : sdelete
 #  endif // #ifdef DUAL_ENERGY
@@ -646,9 +814,9 @@ struct patch_t
 #  ifdef PARTICLE
    //===================================================================================
    // Method      :  dnew
-   // Description :  Allocate the rho_ext array
+   // Description :  Allocate rho_ext[]
    //
-   // Note        :  Do nothing if the rho_ext array has been allocated
+   // Note        :  Do nothing if rho_ext[] has been allocated
    //===================================================================================
    void dnew()
    {
@@ -656,7 +824,7 @@ struct patch_t
       if ( rho_ext == NULL )  rho_ext = new real [RHOEXT_NXT][RHOEXT_NXT][RHOEXT_NXT];
 
 //    always initialize rho_ext (even if rho_ext != NULL when calling this this function) to indicate that this array
-//    has NOT been properly set --> used by Prepare_PatchData
+//    has NOT been properly set --> used by Prepare_PatchData()
       rho_ext[0][0][0] = RHO_EXT_NEED_INIT;
 
    } // METHOD : dnew
@@ -665,16 +833,13 @@ struct patch_t
 
    //===================================================================================
    // Method      :  ddelete
-   // Description :  Deallocate the rho_ext array
+   // Description :  Deallocate rho_ext[]
    //===================================================================================
    void ddelete()
    {
 
-      if ( rho_ext != NULL )
-      {
-         delete [] rho_ext;
-         rho_ext = NULL;
-      }
+      delete [] rho_ext;
+      rho_ext = NULL;
 
    } // METHOD : ddelete
 
@@ -689,12 +854,12 @@ struct patch_t
    //                2. If ParList already exists, new particles will be attached to the existing particle list
    //                3. Also update the total number of particles at the target level
    //
-   // Parameter   :  NNew     : Number of new particles to be added
-   //                NewList  : List storing the indices of new particles
-   //                NPar_Lv  : Pointer to amr->Par->NPar_Lv[TargetLv]
-   //                ParPos   : Particle position list             (debug only)
-   //                NParTot  : Total number of existing particles (debug only)
-   //                Comment  : Message for the debug mode         (debug only)
+   // Parameter   :  NNew    : Number of new particles to be added
+   //                NewList : List storing the indices of new particles
+   //                NPar_Lv : Pointer to amr->Par->NPar_Lv[TargetLv]
+   //                ParPos  : Particle position list             (debug only)
+   //                NParTot : Total number of existing particles (debug only)
+   //                Comment : Message for the debug mode         (debug only)
    //===================================================================================
 #  ifdef DEBUG_PARTICLE
    void AddParticle( const int NNew, const long *NewList, long *NPar_Lv,
@@ -789,15 +954,15 @@ struct patch_t
    //                2. The numbers stored in RemoveList must be in ascending numerical order
    //                3. Also update the total number of particles at the target level
    //
-   // Parameter   :  NRemove     : Number of particles to be removed
-   //                RemoveList  : List storing the array indices of "ParList" to be removed
-   //                              **array indices, NOT particle indices**
-   //                NPar_Lv     : Pointer to amr->Par->NPar_Lv[TargetLv]
-   //                              --> NPar_Lv will NOT be updated if it's NULL
-   //                              --> This is useful for OpenMP, for which different threads
-   //                                  may tend to update NPar_Lv at the same time
-   //                              --> So for NPar_Lv == NULL, one must update NPar_Lv later manually
-   //                RemoveAll   : true --> remove all particle in this patch
+   // Parameter   :  NRemove    : Number of particles to be removed
+   //                RemoveList : List storing the array indices of "ParList" to be removed
+   //                             **array indices, NOT particle indices**
+   //                NPar_Lv    : Pointer to amr->Par->NPar_Lv[TargetLv]
+   //                             --> NPar_Lv will NOT be updated if it's NULL
+   //                             --> This is useful for OpenMP, for which different threads
+   //                                 may tend to update NPar_Lv at the same time
+   //                             --> So for NPar_Lv == NULL, one must update NPar_Lv later manually
+   //                RemoveAll  : true --> remove all particle in this patch
    //===================================================================================
    void RemoveParticle( const int NRemove, const int *RemoveList, long *NPar_Lv, const bool RemoveAll )
    {
