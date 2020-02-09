@@ -229,6 +229,8 @@ OPT__GRAVITY_EXTRA_MASS       0           # add extra mass source when computing
 
 # initialization
 OPT__INIT                     1           # initialization option: (1=FUNCTION, 2=RESTART, 3=FILE->"UM_IC")
+OPT__INIT_BFIELD_BYFILE       0           # initialize the magnetic field from a vector potential disk file named "B_IC"
+                                          # (example python script: tool/inits/gen_vec_pot.py) [0] ##MHD ONLY##
 RESTART_LOAD_NRANK            1           # number of parallel I/O (i.e., number of MPI ranks) for restart [1]
 OPT__RESTART_RESET            0           # reset some simulation status parameters (e.g., current step and time) during restart [0]
 OPT__UM_IC_LEVEL              0           # AMR level corresponding to UM_IC (must >= 0) [0]
@@ -241,7 +243,6 @@ OPT__INIT_RESTRICT            1           # restrict all data during the initial
 OPT__INIT_GRID_WITH_OMP       1           # enable OpenMP when assigning the initial condition of each grid patch [1]
 OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2=CUDA, -1=MPI rank, >=0=input) [-1]
 INIT_SUBSAMPLING_NCELL        0           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
-OPT__INIT_BFIELD_BYFILE       0           # Initialize a magnetic field from a vector potential stored in a disk file
 
 # interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar)
 OPT__INT_TIME                 1           # perform "temporal" interpolation for OPT__DT_LEVEL == 2/3 [1]
