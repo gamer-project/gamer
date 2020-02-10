@@ -249,7 +249,6 @@ double integration_simpson(double eng){
     else result += 2* de_rho_over_de_psi_UNKNOWN(x0) * ( pow(eng-psi_l,0.5) - pow(eng-psi_r,0.5) );
     
   }
-  cout<<result<<endl;
   return result;
 }
 
@@ -262,7 +261,7 @@ double UNKNOWN_calculator::MassProf_UNKNOWN( const double r )
 { 
   //main
   const double x = r / UNKNOWN_R0;
-  return 4* M_PI *UNKNOWN_Rho0 *pow(UNKNOWN_R0,3) *(log(1+x) - x/(1+x));
+  return 4.0/3.0*M_PI*UNKNOWN_Rho0*CUBE(r)*pow( 1.0+x*x, -1.5 );
 }
 void UNKNOWN_calculator::initialize_mass(){
   
@@ -375,7 +374,7 @@ void UNKNOWN_calculator::init(double newton_g,double rho,double r,int nbin,doubl
   UNKNOWN_NEWTON_G=newton_g;
   UNKNOWN_Rho0=rho;
   UNKNOWN_R0=r;
-  UNKNOWN_MassProfNBin=1000;
+  UNKNOWN_MassProfNBin=1000000;
   UNKNOWN_MaxR=rmax;
 
   initialize_mass();
@@ -386,11 +385,7 @@ void UNKNOWN_calculator::init(double newton_g,double rho,double r,int nbin,doubl
   initialize_prob_dens();
   
 }
-double UNKNOWN_calculator::set_vel(double r){
-  double d=fabs(potential_UNKNOWN(20)-potential_UNKNOWN(0.1));
-  double d_t=fabs(potential_UNKNOWN(r)-potential_UNKNOWN(0.1));
-  int j=(d_t*4.0)/d;
-  
+double UNKNOWN_calculator::set_vel(double r){  
   double index,sum=0;
   double psi_per =-potential_UNKNOWN(r);
   for(int k =0;k<size_UNKNOWN;k++){

@@ -274,11 +274,11 @@ endif
 
 # template
 CUDA_PATH    :=
-FFTW_PATH    :=
+FFTW_PATH    :=/home/return/fftw
 MPI_PATH     :=/usr
-HDF5_PATH    :=/home/albert/miniconda2/pkgs/hdf5-1.10.4-hb1b8bf9_0
+HDF5_PATH    :=/home/return/miniconda3/pkgs/hdf5-1.10.4-hb1b8bf9_0
 GRACKLE_PATH :=
-GSL_PATH     :=/home/albert/gsl/lib
+GSL_PATH     :=/home/return/gsl
 LIBYT_PATH   :=
 
 # NCSA-bluewaters (only need to specify the path of user-installed packages)

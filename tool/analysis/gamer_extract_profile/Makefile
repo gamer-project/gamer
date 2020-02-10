@@ -59,14 +59,14 @@ vpath %.cpp ./ GAMER_Functions GAMER_Functions/Interpolation
 
 # rules and targets
 #######################################################################################################
-HDF5_PATH := /opt/hdf5/1.8.9
+HDF5_PATH := /home/return/miniconda3/pkgs/hdf5-1.10.4-hb1b8bf9_0
 
-CC    := icpc
-CFLAG := -O3 -w1 -xSSE4.2 -fp-model precise
+#CC    := icpc
+#CFLAG := -O3 -w1 -xSSE4.2 -fp-model precise
 #CFLAG := -O3 -w1 -mp1
 
-#CC    := g++
-#CFLAG := -O3 -Wall
+CC    := g++
+CFLAG := -O3 -Wall
 
 #LIB   := -limf
 

@@ -70,7 +70,7 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
 {
 // Input Model names
    string model_name;
-   model_name="UNKNOWN";
+   model_name="Jaffe";
    //cout<<"Input model names:";
    //cin>>model_name;
 
@@ -289,7 +289,7 @@ double MassProf_Models( const double r ,string model_name)
    else if(model_name=="Plummer")return 4.0/3.0*M_PI*Models_Rho0*CUBE(r)*pow( 1.0+x*x, -1.5 );
    else if(model_name=="Burkert")return M_PI *Models_Rho0 *pow(Models_R0,3) *(log(1+x*x) + 2 * log(1+x) -2 *atan(x));
    else if(model_name=="Jaffe")return Models_Rho0 *pow(Models_R0,3) *(x/(1+x));
-   else if(model_name=="UNKNOWN")return 4* M_PI *Models_Rho0 *pow(Models_R0,3) *(log(1+x) - x/(1+x));
+   else if(model_name=="UNKNOWN")return 4.0/3.0*M_PI*Models_Rho0*CUBE(r)*pow( 1.0+x*x, -1.5 );
 } // FUNCTION : MassProf_Models
 
 
