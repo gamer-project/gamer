@@ -7,13 +7,13 @@
 // Function    :  Int_Quartic
 // Description :  Perform spatial interpolation based on the quartic interpolation
 //
-// Note	       :  a. The spatial disribution is approximated by a quartic polynomial in each direction
+// Note	       :  1. The spatial disribution is approximated by a quartic polynomial in each direction
 //                   --> A quartic polynomial, which passes through the CENTRAL values in five cells,
 //                       is used to approximate the spatial distribution
-//		  b. The interpolation result is neither conservative nor monotonic
-//		  c. 3D interpolation is achieved by performing interpolation along x, y, and z directions
+//		  2. The interpolation result is neither conservative nor monotonic
+//		  3. 3D interpolation is achieved by performing interpolation along x, y, and z directions
 //		     in order
-//		  d. The "Monotonic" option is used to ensure that the interpolation results are monotonic
+//		  4. The "Monotonic" option is used to ensure that the interpolation results are monotonic
 //		     --> A slope limiter is adopted to ensure the monotonicity
 //
 // Parameter   :  CData	      : Input coarse-grid array

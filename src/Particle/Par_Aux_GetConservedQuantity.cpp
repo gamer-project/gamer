@@ -146,7 +146,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
       for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
       {
 //       2-1. find the patch groups with particles
-//       --> use patch group as the calculation unit since "Prepare_PatchData" only work with patch group
+//       --> use patch group as the calculation unit since Prepare_PatchData() only work with patch group
 //       --> some patches may not have particles ...
          GotYou = false;
 
@@ -185,8 +185,8 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
 
             else
 #           endif
-               Prepare_PatchData( lv, PrepPotTime, Pot, PotGhost, 1, &PID0, _POTE,
-                                  OPT__GRA_INT_SCHEME, UNIT_PATCH, (PotGhost==0)?NSIDE_00:NSIDE_26, IntPhase_No,
+               Prepare_PatchData( lv, PrepPotTime, Pot, NULL, PotGhost, 1, &PID0, _POTE, _NONE,
+                                  OPT__GRA_INT_SCHEME, INT_NONE, UNIT_PATCH, (PotGhost==0)?NSIDE_00:NSIDE_26, IntPhase_No,
                                   OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, DE_Consistency_No );
          } // if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
 

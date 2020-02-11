@@ -41,7 +41,7 @@ extern int CheIdx_Metal;
 //                SaveSg      : Sandglass to store the updated data
 //                h_Che_Array : Host array storing the updated data
 //                NPG         : Number of patch groups to store the updated data
-//                PID0_List   : List recording the patch indicies with LocalID==0 to be udpated
+//                PID0_List   : List recording the patch indices with LocalID==0 to be udpated
 //-------------------------------------------------------------------------------------------------------
 void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[], const int NPG, const int *PID0_List )
 {
@@ -50,6 +50,8 @@ void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[], co
    const int   Size1v     = NPG*Size1pg;
    const real  Gamma_m1   = GAMMA - (real)1.0;
    const real _Gamma_m1   = (real)1.0 / Gamma_m1;
+   
+   const real mass_ratio_ep   = Const_me/Const_mp;
 
    const real *Ptr_Dens0  = h_Che_Array + CheIdx_Dens *Size1v;
    const real *Ptr_sEint0 = h_Che_Array + CheIdx_sEint*Size1v;
@@ -72,7 +74,7 @@ void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[], co
    {
 
 // thread-private variables
-   int  idx_pg, PID, PID0, offset;  // idx_pg: array indices within a patch group
+   int  idx_p, idx_pg, PID, PID0, offset;    // idx_p/idx_pg: array indices within a patch/patch group
    real Dens, Pres;
    real (*fluid)[PS1][PS1][PS1]=NULL;
 
@@ -106,9 +108,12 @@ void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[], co
       for (int LocalID=0; LocalID<8; LocalID++)
       {
          PID   = PID0 + LocalID;
+         idx_p = 0;
          fluid = amr->patch[SaveSg][lv][PID]->fluid;
 
-         for (int idx_p=0; idx_p<CUBE(PS1); idx_p++)
+         for (int k=0; k<PS1; k++)
+         for (int j=0; j<PS1; j++)
+         for (int i=0; i<PS1; i++)
          {
 //          apply the minimum pressure check
             Dens = Ptr_Dens [idx_pg];
@@ -117,6 +122,9 @@ void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[], co
 
 //          update the total energy density
             *( fluid[ENGY     ][0][0] + idx_p ) = Pres*_Gamma_m1 + Ptr_Ek[idx_pg];
+#           ifdef MHD
+            *( fluid[ENGY     ][0][0] + idx_p ) += MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+#           endif
 
 //          update the dual-energy variable to be consistent with the updated pressure
 #           ifdef DUAL_ENERGY
@@ -130,7 +138,7 @@ void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[], co
 
 //          update all chemical species
             if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
-            *( fluid[Idx_e    ][0][0] + idx_p ) = Ptr_e    [idx_pg];
+            *( fluid[Idx_e    ][0][0] + idx_p ) = Ptr_e    [idx_pg] * mass_ratio_ep;
             *( fluid[Idx_HI   ][0][0] + idx_p ) = Ptr_HI   [idx_pg];
             *( fluid[Idx_HII  ][0][0] + idx_p ) = Ptr_HII  [idx_pg];
             *( fluid[Idx_HeI  ][0][0] + idx_p ) = Ptr_HeI  [idx_pg];
@@ -152,8 +160,9 @@ void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[], co
             *( fluid[Idx_HDI  ][0][0] + idx_p ) = Ptr_HDI  [idx_pg];
             }
 
+            idx_p  ++;
             idx_pg ++;
-         } // for (int idx_p=0; idx_p<CUBE(PS1); idx_p++)
+         } // i,j,k
       } // for (int LocalID=0; LocalID<8; LocalID++)
    } // for (int TID=0; TID<NPG; TID++)
 

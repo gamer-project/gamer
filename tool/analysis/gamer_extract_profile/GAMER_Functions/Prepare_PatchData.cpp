@@ -1,7 +1,7 @@
 #include "ExtractProfile.h"
 
 void InterpolateGhostZone( const int lv, const int PID, real IntData[], const int SibID, const int GhostSize, 
-                           const IntScheme_t IntScheme, const int NTSib[], int *TSib[], const int TVar, const int NVar_Tot,
+                           const IntScheme_t IntScheme, const int NTSib[], int *TSib[], const long TVar, const int NVar_Tot,
                            const int NVar_Flu, const int TFluVarIdxList[], const bool IntPhase );
 static void SetTargetSibling( int NTSib[], int *TSib[] );
 static int Table_01( const int SibID, const char dim, const int Count, const int GhostSize );
@@ -28,7 +28,7 @@ static int Table_02( const int lv, const int PID, const int Side );
 //                h_Input_Array  : Host array to store the prepared data
 //                GhostSize      : Number of ghost zones to be prepared
 //                NPG            : Number of patch groups prepared at a time
-//                PID0_List      : List recording the patch indicies with LocalID==0 to be prepared
+//                PID0_List      : List recording the patch indices with LocalID==0 to be prepared
 //                TVar           : Targeted variables to be prepared
 //                                 --> Supported variables in different models:
 //                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _FLUID, _VELX, _VELY, _VELZ, _PRES,
@@ -51,7 +51,7 @@ static int Table_02( const int lv, const int PID, const int Side );
 //                                      --> TVar must contain _REAL and _IMAG
 //-------------------------------------------------------------------------------------------------------
 void Prepare_PatchData( const int lv, real *h_Input_Array, const int GhostSize, const int NPG, const int *PID0_List, 
-                        const int TVar, const IntScheme_t IntScheme, const NSide_t NSide, const bool IntPhase )
+                        const long TVar, const IntScheme_t IntScheme, const NSide_t NSide, const bool IntPhase )
 {
 
 // check
@@ -85,7 +85,7 @@ void Prepare_PatchData( const int lv, real *h_Input_Array, const int GhostSize, 
 // determine the components to be prepared
    NVar_Flu = 0;
    for (int v=0; v<NCOMP_TOTAL; v++)
-      if ( TVar & (1<<v) )    TFluVarIdxList[ NVar_Flu++ ] = v;
+      if ( TVar & (1L<<v) )   TFluVarIdxList[ NVar_Flu++ ] = v;
 
    NVar_Tot = NVar_Flu;
 

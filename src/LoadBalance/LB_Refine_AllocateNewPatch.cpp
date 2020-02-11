@@ -7,11 +7,13 @@
 void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
                    const int FaSg_Flu, const int FaGhost_Flu, const int NSide_Flu,
                    const int FaSg_Pot, const int FaGhost_Pot, const int NSide_Pot,
+                   const int FaSg_Mag, const int FaGhost_Mag,
                    const int BC_Face[], const int FluVarIdxList[] );
 void LB_Refine_AllocateBufferPatch_Sibling( const int SonLv );
 static int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int FaPID, real *CData,
-                             const int CGhost_Flu, const int NSide_Flu, const int CGhost_Pot, const int NSide_Pot,
-                             const int BC_Face[], const int FluVarIdxList[] );
+                             const int CGhost_Flu, const int NSide_Flu, const int CGhost_Pot, const int NSide_Pot, const int CGhost_Mag,
+                             const int BC_Face[], const int FluVarIdxList[],
+                             const real *CFB_BFieldEachRank[], const int CFB_SibRank[], long CFB_OffsetEachRank[] );
 static void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_Real0, int NewSonPID0_Real[],
                                 int SwitchIdx, int &RefineS2F_Send_NPatchTotal, int *&RefineS2F_Send_PIDList );
 
@@ -24,7 +26,7 @@ static void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_
 //
 // Note        :  1. This function is invoked by LB_Refine()
 //                2. Home/Away : target patches at home/not at home
-//                3. Input Cr1D and CData lists are unsorted
+//                3. Input New/DelCr1D_Away[] are sorted but NewCData_Away[] is unsorted
 //                4. After invoking this function, some father-buffer patches at FaLv may become useless
 //                   --> Currently we do not remove these patches for the consideration of better performance
 //                5. This function will also allocate new father-buffer patches at FaLv and new sibling-buffer
@@ -36,25 +38,34 @@ static void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_
 //                7. Several alternative functions are invoked here for better performance
 //                   (e.g., LB_AllocateBufferPatch_Sibling() --> LB_Refine_AllocateBufferPatch_Sibling())
 //
-// Parameter   :  FaLv          : Target refinement level to be refined
-//                NNew_Home     : Number of home patches at FaLv to allocate son patches
-//                NewPID_Home   : Patch indices of home patches at FaLv to allocate son patches
-//                NNew_Away     : Number of away patches at FaLv to allocate son patches
-//                NewCr1D_Away  : Padded 1D corner of away patches at FaLv to allocate son patches
-//                NewCData_Away : Coarse-grid data of away patches at FaLv to allocate son patches
-//                NDel_Home     : Number of home patches at FaLv to deallocate son patches
-//                DelPID_Home   : Patch indices of home patches at FaLv to deallocate son patches
-//                NDel_Away     : Number of away patches at FaLv to deallocate son patches
-//                DelCr1D_Away  : Padded 1D corner of away patches at FaLv to deallocate son patches
+// Parameter   :  FaLv                  : Target refinement level to be refined
+//                NNew_Home             : Number of home patches at FaLv to allocate son patches
+//                NewPID_Home           : Patch indices of home patches at FaLv to allocate son patches
+//                NNew_Away             : Number of away patches at FaLv to allocate son patches
+//                NewCr1D_Away          : Padded 1D corner of away patches at FaLv to allocate son patches
+//                NewCr1D_Away_IdxTable : Index table of NewCr1D_Away[]
+//                NewCData_Away         : Coarse-grid data of away patches at FaLv to allocate son patches
+//                NDel_Home             : Number of home patches at FaLv to deallocate son patches
+//                DelPID_Home           : Patch indices of home patches at FaLv to deallocate son patches
+//                NDel_Away             : Number of away patches at FaLv to deallocate son patches
+//                DelCr1D_Away          : Padded 1D corner of away patches at FaLv to deallocate son patches
 //
 //                PARTICLE-only parameters (call-by-reference)
 //                RefineS2F_Send_NPatchTotal : Total number of patches for exchanging particles from sons to fathers
 //                RefineS2F_Send_PIDList     : Patch indices for exchanging particles from sons to fathers
+//
+//                MHD-only parameters
+//                CFB_SibRank_Home : MPI ranks of the siblings of home patches
+//                CFB_SibRank_Away : MPI ranks of the siblings of away patches
+//                CFB_BField       : Coarse-fine interface B field array
+//                CFB_NSibEachRank : Number of siblings receiving data from each rank (including its own rank)
 //-------------------------------------------------------------------------------------------------------
 void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home, int NNew_Away,
-                                 ulong *NewCr1D_Away, real *NewCData_Away, int NDel_Home, int *DelPID_Home,
-                                 int NDel_Away, ulong *DelCr1D_Away,
-                                 int &RefineS2F_Send_NPatchTotal, int *&RefineS2F_Send_PIDList )
+                                 const ulong *NewCr1D_Away, const int *NewCr1D_Away_IdxTable, real *NewCData_Away,
+                                 int NDel_Home, int *DelPID_Home, int NDel_Away, ulong *DelCr1D_Away,
+                                 int &RefineS2F_Send_NPatchTotal, int *&RefineS2F_Send_PIDList,
+                                 const int (*CFB_SibRank_Home)[6], const int (*CFB_SibRank_Away)[6],
+                                 const real *CFB_BField, const int *CFB_NSibEachRank )
 {
 
    const int SonLv    = FaLv + 1;
@@ -64,15 +75,11 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
    const int FaNPatch = amr->num[FaLv];
 
 
-// 1. sort the away patches and get the matching lists
+// 1. get the matching lists for the away patches
 // ==========================================================================================
-   int *NewCr1D_Away_IdxTable = new int [NNew_Away];
-   int *Match_New             = new int [NNew_Away];
-   int *Match_Del             = new int [NDel_Away];
-   int *DelPID_Away           = new int [NDel_Away];
-
-   Mis_Heapsort( NNew_Away, NewCr1D_Away, NewCr1D_Away_IdxTable );
-   Mis_Heapsort( NDel_Away, DelCr1D_Away, NULL                   );
+   int *Match_New   = new int [NNew_Away];
+   int *Match_Del   = new int [NDel_Away];
+   int *DelPID_Away = new int [NDel_Away];
 
    Mis_Matching_int( FaNPatch, amr->LB->PaddedCr1DList[FaLv], NNew_Away, NewCr1D_Away, Match_New );
    Mis_Matching_int( FaNPatch, amr->LB->PaddedCr1DList[FaLv], NDel_Away, DelCr1D_Away, Match_Del );
@@ -90,10 +97,10 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 
 
 
-// 2. remove all buffer patches at SonLv and backup the fluid and pot arrays
+// 2. remove all buffer patches at SonLv and backup the fluid, potential, and magnetic field data
 //    --> backup these buffer data so as to minimize the MPI time after grid refinement
 //        --> only need to exchange the buffer data that do not exist in the old MPI lists
-//        --> used by DATA_AFTER_REFINE and POT_AFTER_REFINE in LB_GetBufferData
+//        --> used by DATA_AFTER_REFINE and POT_AFTER_REFINE in LB_GetBufferData()
 // ==========================================================================================
    const int MirSib[26] = { 1,0,3,2,5,4,9,8,7,6,13,12,11,10,17,16,15,14,25,24,23,22,21,20,19,18 };
    const int FSg_Flu    = amr->FluSg[SonLv];
@@ -102,12 +109,16 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
    const int FSg_Pot    = amr->PotSg[SonLv];
    const int FSg_Pot2   = 1 - FSg_Pot;
 #  endif
+#  ifdef MHD
+   const int FSg_Mag    = amr->MagSg[SonLv];
+   const int FSg_Mag2   = 1 - FSg_Mag;
+#  endif
 
    int NBufBk=0, NBufBk_Dup;  // BufBk : backup the data of buffer patches
                               // must set NBufBk=0 here --> otherwise it may not be initialized if SonNBuff == 0
-   ulong *PCr1D_BufBk                = new ulong [SonNBuff];
-   int   *PCr1D_BufBk_IdxTable       = new int   [SonNBuff];
-   int   *PID_BufBk                  = NULL;
+   ulong *PCr1D_BufBk          = new ulong [SonNBuff];
+   int   *PCr1D_BufBk_IdxTable = new int   [SonNBuff];
+   int   *PID_BufBk            = NULL;
 
 // to avoid GNU warnings "non-constant array new length must be specified without parentheses around the type-id [-Wvla]"
 // --> see http://stackoverflow.com/questions/4523497/typedef-fixed-length-array
@@ -118,10 +129,14 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 #  endif
    */
    typedef real flu_type[PS1][PS1][PS1];
-   real (**flu_BufBk)[PS1][PS1][PS1] = ( OPT__REUSE_MEMORY ) ? NULL : new flu_type *[SonNBuff];
+   real (**flu_BufBk)[PS1][PS1][PS1]    = ( OPT__REUSE_MEMORY ) ? NULL : new flu_type *[SonNBuff];
 #  ifdef GRAVITY
    typedef real pot_type[PS1][PS1];
-   real (**pot_BufBk)[PS1][PS1]      = ( OPT__REUSE_MEMORY ) ? NULL : new pot_type *[SonNBuff];
+   real (**pot_BufBk)[PS1][PS1]         = ( OPT__REUSE_MEMORY ) ? NULL : new pot_type *[SonNBuff];
+#  endif
+#  ifdef MHD
+   typedef real mag_type[ PS1P1*SQR(PS1) ];
+   real (**mag_BufBk)[ PS1P1*SQR(PS1) ] = ( OPT__REUSE_MEMORY ) ? NULL : new mag_type *[SonNBuff];
 #  endif
 
    if ( SonNBuff != 0 )
@@ -143,7 +158,7 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
       NBufBk_Dup = 0;
       for (int r=0; r<MPI_NRank; r++)
       {
-//       fluid
+//       fluid and magnetic field
          for (int t=0; t<amr->LB->RecvH_NList[SonLv][r]; t++)  PID_BufBk[ NBufBk_Dup ++ ] = amr->LB->RecvH_IDList[SonLv][r][t];
 
 //       potential
@@ -161,39 +176,50 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
          if ( PID_BufBk[t] != PID_BufBk[t-1] )  PID_BufBk[ NBufBk ++ ] = PID_BufBk[t];
 
 
-//    2-2. backup fluid and pot data
+//    2-2. backup fluid, potential and magnetic field data
       for (int t=0; t<NBufBk; t++)
       {
-//       note that this patch may have only fluid[], only pot[], or both
+//       note that this patch may have only fluid[]/magnetic[], only pot[], or both
          const int SonPID = PID_BufBk[t];
 
-//       2-2-1. if OPT__REUSE_MEMORY is used, backup fluid[] and pot[] by swapping the pointers of Sg=0/1 so that
-//              these temporarily stored buffer patch data won't be overwritten by newly allocated real patches
+//       2-2-1. if OPT__REUSE_MEMORY is used, backup fluid[], pot[], and magnetic[] by swapping the pointers of Sg=0/1
+//              so that these temporarily stored buffer patch data won't be overwritten by newly allocated real patches
 //              --> also note that we need to be careful about any routine that may swap patch pointers between
 //                  different PIDs (e.g., DeallocateSonPatch)
-//                  --> must swap fluid[] with FSg_Flu2 and pot[] with FSg_Pot2 back (otherwise the fluid
-//                      and pot pointers will point to wrong arrays after swapping patch pointers)
+//                  --> must swap back fluid[] with FSg_Flu2, pot[] with FSg_Pot2, and magnetic[] with FSg_Mag2
+//                      (otherwise these pointers will point to wrong arrays after swapping patch pointers)
 //              --> ugly trick ...
          if ( OPT__REUSE_MEMORY )
          {
             Aux_SwapPointer( (void**)&amr->patch[FSg_Flu ][SonLv][SonPID]->fluid,
                              (void**)&amr->patch[FSg_Flu2][SonLv][SonPID]->fluid );
+
 #           ifdef GRAVITY
             Aux_SwapPointer( (void**)&amr->patch[FSg_Pot ][SonLv][SonPID]->pot,
                              (void**)&amr->patch[FSg_Pot2][SonLv][SonPID]->pot );
 #           endif
+
+#           ifdef MHD
+            Aux_SwapPointer( (void**)&amr->patch[FSg_Mag ][SonLv][SonPID]->magnetic,
+                             (void**)&amr->patch[FSg_Mag2][SonLv][SonPID]->magnetic );
+#           endif
          }
 
-//       2-2-2. if OPT__REUSE_MEMORY is not used, backup fluid[] and pot[] in temporary pointers
+//       2-2-2. if OPT__REUSE_MEMORY is not used, backup fluid[], pot[], and magnetic[] in temporary pointers
 //              --> no need to backup pot_ext[] since it's actually useless for buffer patches
          else
          {
             flu_BufBk[t] = amr->patch[FSg_Flu][SonLv][SonPID]->fluid;
-            amr->patch[FSg_Flu][SonLv][SonPID]->fluid = NULL;
+            amr->patch[FSg_Flu][SonLv][SonPID]->fluid    = NULL;
 
 #           ifdef GRAVITY
             pot_BufBk[t] = amr->patch[FSg_Pot][SonLv][SonPID]->pot;
-            amr->patch[FSg_Pot][SonLv][SonPID]->pot   = NULL;
+            amr->patch[FSg_Pot][SonLv][SonPID]->pot      = NULL;
+#           endif
+
+#           ifdef MHD
+            mag_BufBk[t] = amr->patch[FSg_Mag][SonLv][SonPID]->magnetic;
+            amr->patch[FSg_Mag][SonLv][SonPID]->magnetic = NULL;
 #           endif
          }
 
@@ -241,11 +267,12 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 
 // 3. allocate new real patches at SonLv
 // ==========================================================================================
+// 3.0 preparation
    const int Padded              = 1<<NLEVEL;
-   const int BoxNScale_Padded[3] = { amr->BoxScale[0]/PATCH_SIZE + 2*Padded,
-                                     amr->BoxScale[1]/PATCH_SIZE + 2*Padded,
-                                     amr->BoxScale[2]/PATCH_SIZE + 2*Padded }; //normalized and padded BoxScale
-   const int PScale              = PATCH_SIZE*amr->scale[SonLv];  // scale of a single patch at SonLv
+   const int BoxNScale_Padded[3] = { amr->BoxScale[0]/PS1 + 2*Padded,
+                                     amr->BoxScale[1]/PS1 + 2*Padded,
+                                     amr->BoxScale[2]/PS1 + 2*Padded }; //normalized and padded BoxScale
+   const int PScale              = PS1*amr->scale[SonLv];  // scale of a single patch at SonLv
    const int NNew_Real0          = NNew_Home + NNew_Away;
 
    int FaPID, SonPID0, Cr3D[3], *Cr3D_Ptr=NULL, NNoFa=0;
@@ -254,22 +281,39 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
    int *NewSonPID0_Real = NewSonPID0_All;
    int *NewSonPID0_Away = NewSonPID0_All + NNew_Home;
 
+
 // parameters for spatial interpolation
-   int NSide_Flu, CGhost_Flu;
+   int CSize_Tot = 0;
+   int NSide_Flu, CGhost_Flu, CSize_Flu;
 
    Int_Table( OPT__REF_FLU_INT_SCHEME, NSide_Flu, CGhost_Flu );
 
-   const int CSize_Flu = PATCH_SIZE + 2*CGhost_Flu;
+   CSize_Flu  = PS1 + 2*CGhost_Flu;
+   CSize_Tot += NCOMP_TOTAL*CUBE( CSize_Flu );
+
 #  ifdef GRAVITY
-   int NSide_Pot, CGhost_Pot;
+   int NSide_Pot, CGhost_Pot, CSize_Pot;
 
    Int_Table( OPT__REF_POT_INT_SCHEME, NSide_Pot, CGhost_Pot );
 
-   const int CSize_Pot = PATCH_SIZE + 2*CGhost_Pot;
-   const int CSize_Tot = NCOMP_TOTAL*CSize_Flu*CSize_Flu*CSize_Flu + CSize_Pot*CSize_Pot*CSize_Pot;
+   CSize_Pot  = PS1 + 2*CGhost_Pot;
+   CSize_Tot += CUBE( CSize_Pot );
 #  else
-   const int CSize_Tot = NCOMP_TOTAL*CSize_Flu*CSize_Flu*CSize_Flu;
+   const int NSide_Pot=NULL_INT, CGhost_Pot=NULL_INT;
 #  endif
+
+#  ifdef MHD
+   int NSide_Mag_Useless, CGhost_Mag, CSize_Mag_T, CSize_Mag_N;
+
+   Int_Table( OPT__REF_MAG_INT_SCHEME, NSide_Mag_Useless, CGhost_Mag );
+
+   CSize_Mag_T = PS1 + 2*CGhost_Mag;   // coarse-grid size along the transverse (_T) / normal (_N) direction
+   CSize_Mag_N = PS1P1;
+   CSize_Tot   += NCOMP_MAG*CSize_Mag_N*SQR( CSize_Mag_T );
+#  else
+   const int CGhost_Mag=NULL_INT;
+#  endif
+
 
 // determine the priority of different boundary faces (z>y>x) to set the corner cells properly for the non-periodic B.C.
    int BC_Face[26], BC_Face_tmp[3], FluVarIdxList[NCOMP_TOTAL];
@@ -290,19 +334,34 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
    for (int v=0; v<NCOMP_TOTAL; v++)   FluVarIdxList[v] = v;
 
 
+// set parameters related to the coarse-fine interface B field
+#  ifdef MHD
+   const real *CFB_BFieldEachRank[MPI_NRank];
+         long  CFB_OffsetEachRank[MPI_NRank];
+
+   CFB_BFieldEachRank[0] = CFB_BField;
+   for (int r=1; r<MPI_NRank; r++)
+   CFB_BFieldEachRank[r] = CFB_BFieldEachRank[r-1] + CFB_NSibEachRank[r-1]*SQR( PS2 );
+
+   for (int r=0; r<MPI_NRank; r++)  CFB_OffsetEachRank[r] = 0;
+
+#  else
+   const real **CFB_BFieldEachRank = NULL;
+         long  *CFB_OffsetEachRank = NULL;
+#  endif
+
+
 // 3.1 home patches
    for (int t=0; t<NNew_Home; t++)
    {
       FaPID    = NewPID_Home[t];
       Cr3D_Ptr = amr->patch[0][FaLv][FaPID]->corner;
 
-#     ifdef GRAVITY
-      NewSonPID0_All[t] = AllocateSonPatch( FaLv, Cr3D_Ptr, PScale, FaPID, NULL, CGhost_Flu, NSide_Flu, CGhost_Pot, NSide_Pot,
-                                            BC_Face, FluVarIdxList );
-#     else
-      NewSonPID0_All[t] = AllocateSonPatch( FaLv, Cr3D_Ptr, PScale, FaPID, NULL, CGhost_Flu, NSide_Flu, NULL_INT, NULL_INT,
-                                            BC_Face, FluVarIdxList );
-#     endif
+      NewSonPID0_All[t] = AllocateSonPatch( FaLv, Cr3D_Ptr, PScale, FaPID,
+                                            NULL,
+                                            CGhost_Flu, NSide_Flu, CGhost_Pot, NSide_Pot, CGhost_Mag,
+                                            BC_Face, FluVarIdxList,
+                                            CFB_BFieldEachRank, CFB_SibRank_Home[t], CFB_OffsetEachRank );
    }
 
 
@@ -314,19 +373,13 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
       {
          FaPID = -1;
          Mis_Idx1D2Idx3D( BoxNScale_Padded, NewCr1D_Away[t], Cr3D );
-         for (int d=0; d<3; d++)    Cr3D[d] = ( Cr3D[d] - Padded )*PATCH_SIZE;
+         for (int d=0; d<3; d++)    Cr3D[d] = ( Cr3D[d] - Padded )*PS1;
 
-#        ifdef GRAVITY
          NewSonPID0_Away[t] = AllocateSonPatch( FaLv, Cr3D, PScale, FaPID,
                                                 NewCData_Away+NewCr1D_Away_IdxTable[t]*CSize_Tot,
-                                                CGhost_Flu, NSide_Flu, CGhost_Pot, NSide_Pot,
-                                                NULL, NULL );
-#        else
-         NewSonPID0_Away[t] = AllocateSonPatch( FaLv, Cr3D, PScale, FaPID,
-                                                NewCData_Away+NewCr1D_Away_IdxTable[t]*CSize_Tot,
-                                                CGhost_Flu, NSide_Flu, NULL_INT, NULL_INT,
-                                                NULL, NULL );
-#        endif
+                                                CGhost_Flu, NSide_Flu, CGhost_Pot, NSide_Pot, CGhost_Mag,
+                                                NULL, NULL,
+                                                CFB_BFieldEachRank, CFB_SibRank_Away[t], CFB_OffsetEachRank );
 
 //       record the SonPID (with LocalID == 0 ) with no father at home
 #        ifdef GAMER_DEBUG
@@ -336,25 +389,20 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 #        endif
 
          NewSonPID0_NoFa[ NNoFa ++ ] = NewSonPID0_Away[t];
-      }
+      } // if ( Match_New[t] == -1 )
 
-//    3.2.1 away patches with father patch
+
+//    3.2.2 away patches with father patch
       else
       {
          FaPID    = amr->LB->PaddedCr1DList_IdxTable[FaLv][ Match_New[t] ];
          Cr3D_Ptr = amr->patch[0][FaLv][FaPID]->corner;
 
-#        ifdef GRAVITY
          NewSonPID0_Away[t] = AllocateSonPatch( FaLv, Cr3D_Ptr, PScale, FaPID,
                                                 NewCData_Away+NewCr1D_Away_IdxTable[t]*CSize_Tot,
-                                                CGhost_Flu, NSide_Flu, CGhost_Pot, NSide_Pot,
-                                                NULL, NULL );
-#        else
-         NewSonPID0_Away[t] = AllocateSonPatch( FaLv, Cr3D_Ptr, PScale, FaPID,
-                                                NewCData_Away+NewCr1D_Away_IdxTable[t]*CSize_Tot,
-                                                CGhost_Flu, NSide_Flu, NULL_INT, NULL_INT,
-                                                NULL, NULL );
-#        endif
+                                                CGhost_Flu, NSide_Flu, CGhost_Pot, NSide_Pot, CGhost_Mag,
+                                                NULL, NULL,
+                                                CFB_BFieldEachRank, CFB_SibRank_Away[t], CFB_OffsetEachRank );
       } // if ( Match_New[t] == -1 ) ... else ...
    } // for (int t=0; t<NNew_Away; t++)
 
@@ -517,13 +565,8 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 
 
 
-// 10. restore fluid[] and pot[] in the buffer patches
+// 10. restore fluid[], pot[], and magnetic[] in the buffer patches
 // ==========================================================================================
-   real (*fluid_ptr)[PATCH_SIZE][PATCH_SIZE][PATCH_SIZE] = NULL;
-#  ifdef GRAVITY
-   real (*pot_ptr)[PATCH_SIZE][PATCH_SIZE]               = NULL;
-#  endif
-
    int *Match_BufBk = new int [NBufBk];
    int  MPID;
 
@@ -548,15 +591,20 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
             const int OldBufPID = PID_BufBk[ PCr1D_BufBk_IdxTable[t] ];
 
 //          note that (1) we must swap poniters even if MPID == OldBufPID (because they have different Sg)
-//                    (2) we store the previous buffer data in FSg_Flu2 and FSg_Pot2 instead of FSg_Flu and FSg_Pot
-//                    (3) it's OK to leave FSg_Flu2 and FSg_Pot2 of MPID unmodified after swapping pointers (which can thus be NULL)
-//                        since they will be allocated in LB_RecordExchangeDataPatchID if necessary
+//                    (2) we store the previous buffer data in FSg_Flu2, FSg_Pot2 and FSg_Mag2 instead of FSg_Flu, FSg_Pot, and FSg_Mag
+//                    (3) it's OK to leave FSg_Flu2, FSg_Pot2, and FSg_Mag2 of MPID unmodified after swapping pointers (which can thus be NULL)
+//                        since they will be allocated in LB_RecordExchangeDataPatchID() if necessary
             Aux_SwapPointer( (void**)&amr->patch[FSg_Flu ][SonLv][     MPID]->fluid,
                              (void**)&amr->patch[FSg_Flu2][SonLv][OldBufPID]->fluid );
 
 #           ifdef GRAVITY
             Aux_SwapPointer( (void**)&amr->patch[FSg_Pot ][SonLv][     MPID]->pot,
                              (void**)&amr->patch[FSg_Pot2][SonLv][OldBufPID]->pot );
+#           endif
+
+#           ifdef MHD
+            Aux_SwapPointer( (void**)&amr->patch[FSg_Mag ][SonLv][     MPID]->magnetic,
+                             (void**)&amr->patch[FSg_Mag2][SonLv][OldBufPID]->magnetic );
 #           endif
 
 //          we must reallocate memory for OldBufPID if it becomes a new real patch (which always have data array allocated)
@@ -567,35 +615,33 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 #              ifdef GRAVITY
                amr->patch[FSg_Pot2][SonLv][OldBufPID]->gnew();
 #              endif
+#              ifdef MHD
+               amr->patch[FSg_Mag2][SonLv][OldBufPID]->mnew();
+#              endif
             }
          } // if ( OPT__REUSE_MEMORY )
 
          else
          {
-            fluid_ptr = flu_BufBk[ PCr1D_BufBk_IdxTable[t] ];
+//          note that it's OK to leave FSg_Flu2, FSg_Pot2, FSg_Mag2 unmodified (which can thus be NULL) since
+//          it will be allocated in LB_RecordExchangeDataPatchID if necessary
+            real (*flu_ptr)[PS1][PS1][PS1] = flu_BufBk[ PCr1D_BufBk_IdxTable[t] ];
+            if ( flu_ptr != NULL )
+               amr->patch[FSg_Flu][SonLv][MPID]->fluid = flu_ptr;
+
 #           ifdef GRAVITY
-            pot_ptr   = pot_BufBk[ PCr1D_BufBk_IdxTable[t] ];
+//          don't worry about pot_ext since it's actually useless for buffer patches
+//          --> after the following operation, some buffer patches may have pot != NULL but pot_ext == NULL (for FSg_Pot)
+            real (*pot_ptr)[PS1][PS1] = pot_BufBk[ PCr1D_BufBk_IdxTable[t] ];
+            if ( pot_ptr != NULL )
+               amr->patch[FSg_Pot][SonLv][MPID]->pot = pot_ptr;
 #           endif
 
-            if ( fluid_ptr != NULL )
-            {
-               amr->patch[FSg_Flu][SonLv][MPID]->fluid = fluid_ptr;
-
-//             note that it's OK to leave FSg_Flu2 unmodified (which can thus be NULL) since it will be allocated in
-//             LB_RecordExchangeDataPatchID if necessary
-            }
-
-#           ifdef GRAVITY
-            if ( pot_ptr != NULL )
-            {
-//             don't worry about pot_ext since it's actually useless for buffer patches
-//             --> after the following operation, some buffer patches may have pot != NULL but pot_ext == NULL (for FSg_Pot)
-               amr->patch[FSg_Pot][SonLv][MPID]->pot = pot_ptr;
-
-//             note that it's OK to leave FSg_Pot2 unmodified (which can thus be NULL) since it will be allocated in
-//             LB_RecordExchangeDataPatchID if necessary
-            }
-#           endif // #ifdef GARVITY
+#           ifdef MHD
+            real (*mag_ptr)[ PS1P1*SQR(PS1) ] = mag_BufBk[ PCr1D_BufBk_IdxTable[t] ];
+            if ( mag_ptr != NULL )
+               amr->patch[FSg_Mag][SonLv][MPID]->magnetic = mag_ptr;
+#           endif
          } // if ( OPT__REUSE_MEMORY ) ... else ...
       } // if ( Match_BufBk[t] != -1 )
 
@@ -605,6 +651,9 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 #        ifdef GRAVITY
          delete [] pot_BufBk[ PCr1D_BufBk_IdxTable[t] ];
 #        endif
+#        ifdef MHD
+         delete [] mag_BufBk[ PCr1D_BufBk_IdxTable[t] ];
+#        endif
       } // if ( Match_BufBk[t] != -1 ) ... else if ...
    } // for (int t=0; t<NBufBk; t++)
 
@@ -612,7 +661,6 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 
 // free memory
    free( NewSonPID0_All );
-   delete [] NewCr1D_Away_IdxTable;
    delete [] Match_New;
    delete [] Match_Del;
    delete [] Match_BufBk;
@@ -626,6 +674,9 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
    delete [] flu_BufBk;
 #  ifdef GRAVITY
    delete [] pot_BufBk;
+#  endif
+#  ifdef MHD
+   delete [] mag_BufBk;
 #  endif
 
 } // FUNCTION : LB_Refine_AllocateNewPatch
@@ -644,14 +695,25 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 //                FaPID         : Father patch index (can be -1 for the away patches)
 //                CData         : Coarse-grid data for assigning data to son patches by spatial interpolation
 //                                (initialize as NULL if father patch is home --> prepare CData here)
+//                CGhost_Flu    : Ghost size of the fluid data
+//                NSide_Flu     : Number of sibling directions to prepare the ghost-zone data (6/26) for the fluid data
+//                CGhost_Pot    : Ghost size of the potential data
+//                NSide_Pot     : Number of sibling directions to prepare the ghost-zone data (6/26) for the potential data
+//                CGhost_Mag    : Ghost size of the magnetic field data
 //                BC_Face       : Corresponding boundary faces (0~5) along 26 sibling directions -> for non-periodic B.C. only
 //                FluVarIdxList : List of target fluid variable indices                          -> for non-periodic B.C. only
 //
-// Return      :  SonPID with LocalID == 0
+//                MHD-only parameters
+//                CFB_BFieldEachRank : Coarse-fine interface B field array
+//                CFB_SibRank        : MPI ranks of the target sibling patches
+//                CFB_OffsetEachRank : Array offset of CFB_BFieldEachRank[] for each rank
+//
+// Return      :  SonPID with LocalID == 0, CFB_OffsetEachRank
 //-------------------------------------------------------------------------------------------------------
 int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int FaPID, real *CData,
-                      const int CGhost_Flu, const int NSide_Flu, const int CGhost_Pot, const int NSide_Pot,
-                      const int BC_Face[], const int FluVarIdxList[] )
+                      const int CGhost_Flu, const int NSide_Flu, const int CGhost_Pot, const int NSide_Pot, const int CGhost_Mag,
+                      const int BC_Face[], const int FluVarIdxList[],
+                      const real *CFB_BFieldEachRank[], const int CFB_SibRank[], long CFB_OffsetEachRank[] )
 {
 
    const int SonLv   = FaLv + 1;
@@ -671,45 +733,50 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
 
 // 2. allocate child patches and construct relation : child -> father
-   amr->pnew( SonLv, Cr[0],        Cr[1],        Cr[2],        FaPID, true, true );
-   amr->pnew( SonLv, Cr[0]+PScale, Cr[1],        Cr[2],        FaPID, true, true );
-   amr->pnew( SonLv, Cr[0],        Cr[1]+PScale, Cr[2],        FaPID, true, true );
-   amr->pnew( SonLv, Cr[0],        Cr[1],        Cr[2]+PScale, FaPID, true, true );
-   amr->pnew( SonLv, Cr[0]+PScale, Cr[1]+PScale, Cr[2],        FaPID, true, true );
-   amr->pnew( SonLv, Cr[0],        Cr[1]+PScale, Cr[2]+PScale, FaPID, true, true );
-   amr->pnew( SonLv, Cr[0]+PScale, Cr[1],        Cr[2]+PScale, FaPID, true, true );
-   amr->pnew( SonLv, Cr[0]+PScale, Cr[1]+PScale, Cr[2]+PScale, FaPID, true, true );
+   amr->pnew( SonLv, Cr[0],        Cr[1],        Cr[2],        FaPID, true, true, true );
+   amr->pnew( SonLv, Cr[0]+PScale, Cr[1],        Cr[2],        FaPID, true, true, true );
+   amr->pnew( SonLv, Cr[0],        Cr[1]+PScale, Cr[2],        FaPID, true, true, true );
+   amr->pnew( SonLv, Cr[0],        Cr[1],        Cr[2]+PScale, FaPID, true, true, true );
+   amr->pnew( SonLv, Cr[0]+PScale, Cr[1]+PScale, Cr[2],        FaPID, true, true, true );
+   amr->pnew( SonLv, Cr[0],        Cr[1]+PScale, Cr[2]+PScale, FaPID, true, true, true );
+   amr->pnew( SonLv, Cr[0]+PScale, Cr[1],        Cr[2]+PScale, FaPID, true, true, true );
+   amr->pnew( SonLv, Cr[0]+PScale, Cr[1]+PScale, Cr[2]+PScale, FaPID, true, true, true );
 
    amr->NPatchComma[SonLv][1] += 8;
 
 
 // 3. assign data to child patches by spatial interpolation
-   const int CRange[3]     = { PS1, PS1, PS1 };
-   const int FSize         = PS2;
-   const int FStart[3]     = { 0, 0, 0 };
+// 3.1 prepare the coarse-grid data
+   int CSize_Tot = 0;
 
 // fluid
-   const int CSg_Flu       = amr->FluSg[ FaLv];
-   const int FSg_Flu       = amr->FluSg[SonLv];
-   const int CSize_Flu     = PS1 + 2*CGhost_Flu;
-   const int CStart_Flu[3] = { CGhost_Flu, CGhost_Flu, CGhost_Flu };
-   real (*FData_Flu)[FSize][FSize][FSize] = new real [NCOMP_TOTAL][FSize][FSize][FSize];
+   const int CSg_Flu   = amr->FluSg[ FaLv];
+   const int FSg_Flu   = amr->FluSg[SonLv];
+   const int CSize_Flu = PS1 + 2*CGhost_Flu;
+   CSize_Tot += NCOMP_TOTAL*CUBE( CSize_Flu );
 
 // potential
 #  ifdef GRAVITY
-   const int CSg_Pot       = amr->PotSg[ FaLv];
-   const int FSg_Pot       = amr->PotSg[SonLv];
-   const int CSize_Pot     = PS1 + 2*CGhost_Pot;
-   const int CStart_Pot[3] = { CGhost_Pot, CGhost_Pot, CGhost_Pot };
-   real (*FData_Pot)[FSize][FSize] = new real [FSize][FSize][FSize];
-
-   const int CSize_Tot = NCOMP_TOTAL*CSize_Flu*CSize_Flu*CSize_Flu + CSize_Pot*CSize_Pot*CSize_Pot;
+   const int CSg_Pot   = amr->PotSg[ FaLv];
+   const int FSg_Pot   = amr->PotSg[SonLv];
+   const int CSize_Pot = PS1 + 2*CGhost_Pot;
+   CSize_Tot += CUBE( CSize_Pot );
 #  else
-   const int CSize_Tot = NCOMP_TOTAL*CSize_Flu*CSize_Flu*CSize_Flu;
+   const int CSg_Pot   = NULL_INT;
 #  endif
 
+// magnetic field
+#  ifdef MHD
+   const int CSg_Mag     = amr->MagSg[ FaLv];
+   const int FSg_Mag     = amr->MagSg[SonLv];
+   const int CSize_Mag_T = PS1 + 2*CGhost_Mag;  // coarse-grid size along the transverse (_T) / normal (_N) direction
+   const int CSize_Mag_N = PS1P1;
+   CSize_Tot += NCOMP_MAG*CSize_Mag_N*SQR( CSize_Mag_T );
+#  else
+   const int CSg_Mag     = NULL_INT;
+#  endif
 
-// 3.1 prepare the coarse-grid data
+// "CData == NULL" if the real father patch is home
    if ( CData == NULL )
    {
 #     ifdef GAMER_DEBUG
@@ -721,32 +788,19 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       FaIsHome = true;
       CData    = new real [CSize_Tot];
 
-#     ifdef GRAVITY
-      PrepareCData( FaLv, FaPID, CData, CSg_Flu, CGhost_Flu, NSide_Flu, CSg_Pot, CGhost_Pot, NSide_Pot,
+      PrepareCData( FaLv, FaPID, CData,
+                    CSg_Flu, CGhost_Flu, NSide_Flu, CSg_Pot, CGhost_Pot, NSide_Pot, CSg_Mag, CGhost_Mag,
                     BC_Face, FluVarIdxList );
-#     else
-      PrepareCData( FaLv, FaPID, CData, CSg_Flu, CGhost_Flu, NSide_Flu, NULL_INT, NULL_INT, NULL_INT,
-                    BC_Face, FluVarIdxList );
-#     endif
    }
 
 
 // 3.2 perform spatial interpolation
-   const int   CSize_Flu_Temp[3]      = { CSize_Flu, CSize_Flu, CSize_Flu };
-   const int   FSize_Temp    [3]      = { PS2, PS2, PS2 };
-   const int   CSize_Flu1v            = CSize_Flu*CSize_Flu*CSize_Flu;
-   const bool  PhaseUnwrapping_Yes    = true;
-   const bool  PhaseUnwrapping_No     = false;
-   const bool  EnsureMonotonicity_Yes = true;
-   const bool  EnsureMonotonicity_No  = false;
-   real *const CData_Flu              = CData;
-#  if ( MODEL == ELBDM )
-   real *const CData_Dens             = CData_Flu + DENS*CSize_Flu1v;
-   real *const CData_Real             = CData_Flu + REAL*CSize_Flu1v;
-   real *const CData_Imag             = CData_Flu + IMAG*CSize_Flu1v;
-#  endif
-
 // 3.2.1 determine which variables require **monotonic** interpolation
+   const bool PhaseUnwrapping_Yes = true;
+   const bool PhaseUnwrapping_No  = false;
+   const bool Monotonicity_Yes    = true;
+   const bool Monotonicity_No     = false;
+
    bool Monotonicity[NCOMP_TOTAL];
 
    for (int v=0; v<NCOMP_TOTAL; v++)
@@ -755,17 +809,14 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 //    we now apply monotonic interpolation to ALL fluid variables (which helps alleviate the issue of negative density/pressure)
       /*
       if ( v == DENS  ||  v == ENGY  ||  v >= NCOMP_FLUID )
-                                       Monotonicity[v] = EnsureMonotonicity_Yes;
-      else                             Monotonicity[v] = EnsureMonotonicity_No;
+                                       Monotonicity[v] = Monotonicity_Yes;
+      else                             Monotonicity[v] = Monotonicity_No;
       */
-                                       Monotonicity[v] = EnsureMonotonicity_Yes;
-
-#     elif ( MODEL == MHD )
-#     warning : WAIT MHD !!!
+                                       Monotonicity[v] = Monotonicity_Yes;
 
 #     elif ( MODEL == ELBDM )
-      if ( v != REAL  &&  v != IMAG )  Monotonicity[v] = EnsureMonotonicity_Yes;
-      else                             Monotonicity[v] = EnsureMonotonicity_No;
+      if ( v != REAL  &&  v != IMAG )  Monotonicity[v] = Monotonicity_Yes;
+      else                             Monotonicity[v] = Monotonicity_No;
 
 #     else
 #     error : DO YOU WANT TO ENSURE THE POSITIVITY OF INTERPOLATION IN THIS NEW MODEL ??
@@ -773,6 +824,26 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    }
 
 // 3.2.2 interpolation
+// 3.2.2-1. fluid
+   const int FSize_CC      = PS2;
+   const int FSize_CC3 [3] = { FSize_CC, FSize_CC, FSize_CC };
+   const int FStart_CC [3] = { 0, 0, 0 };
+   const int CSize_Flu3[3] = { CSize_Flu, CSize_Flu, CSize_Flu };
+   const int CStart_Flu[3] = { CGhost_Flu, CGhost_Flu, CGhost_Flu };
+   const int CRange_CC [3] = { PS1, PS1, PS1 };
+   const int CSize_Flu1v   = CUBE( CSize_Flu );
+
+   real *CData_Next       = CData;
+   real *const CData_Flu  = CData_Next;
+#  if ( MODEL == ELBDM )
+   real *const CData_Dens = CData_Flu + DENS*CSize_Flu1v;
+   real *const CData_Real = CData_Flu + REAL*CSize_Flu1v;
+   real *const CData_Imag = CData_Flu + IMAG*CSize_Flu1v;
+#  endif
+   CData_Next += NCOMP_TOTAL*CSize_Flu1v;
+
+   real (*FData_Flu)[FSize_CC][FSize_CC][FSize_CC] = new real [NCOMP_TOTAL][FSize_CC][FSize_CC][FSize_CC];
+
 #  if ( MODEL == ELBDM )
    if ( OPT__INT_PHASE )
    {
@@ -780,19 +851,19 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       for (int t=0; t<CSize_Flu1v; t++)   CData_Real[t] = ATAN2( CData_Imag[t], CData_Real[t] );
 
 //    interpolate density
-      Interpolate( CData_Dens, CSize_Flu_Temp, CStart_Flu, CRange, &FData_Flu[DENS][0][0][0],
-                   FSize_Temp, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
+      Interpolate( CData_Dens, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[DENS][0][0][0],
+                   FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_Yes );
 
 //    interpolate phase
-      Interpolate( CData_Real, CSize_Flu_Temp, CStart_Flu, CRange, &FData_Flu[REAL][0][0][0],
-                   FSize_Temp, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_Yes, &EnsureMonotonicity_No );
+      Interpolate( CData_Real, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[REAL][0][0][0],
+                   FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_Yes, &Monotonicity_No );
    }
 
    else // if ( OPT__INT_PHASE )
    {
       for (int v=0; v<NCOMP_TOTAL; v++)
-      Interpolate( CData_Flu+v*CSize_Flu1v, CSize_Flu_Temp, CStart_Flu, CRange, &FData_Flu[v][0][0][0],
-                   FSize_Temp, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity );
+      Interpolate( CData_Flu+v*CSize_Flu1v, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[v][0][0][0],
+                   FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity );
    }
 
    if ( OPT__INT_PHASE )
@@ -800,9 +871,9 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 //    retrieve real and imaginary parts
       real Amp, Phase, Rho;
 
-      for (int k=0; k<FSize; k++)
-      for (int j=0; j<FSize; j++)
-      for (int i=0; i<FSize; i++)
+      for (int k=0; k<FSize_CC; k++)
+      for (int j=0; j<FSize_CC; j++)
+      for (int i=0; i<FSize_CC; i++)
       {
          Phase = FData_Flu[REAL][k][j][i];
          Rho   = FData_Flu[DENS][k][j][i];
@@ -823,31 +894,86 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 #  else // #if ( MODEL == ELBDM )
 
    for (int v=0; v<NCOMP_TOTAL; v++)
-   Interpolate( CData_Flu+v*CSize_Flu1v, CSize_Flu_Temp, CStart_Flu, CRange, &FData_Flu[v][0][0][0],
-                FSize_Temp, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity );
+   Interpolate( CData_Flu+v*CSize_Flu1v, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[v][0][0][0],
+                FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity );
 
 #  endif // #if ( MODEL == ELBDM ) ... else
 
-#  ifdef GRAVITY
-   const int CSize_Pot_Temp[3] = { CSize_Pot, CSize_Pot, CSize_Pot };
-   real *const CData_Pot = CData + NCOMP_TOTAL*CSize_Flu*CSize_Flu*CSize_Flu;
 
-   Interpolate( CData_Pot, CSize_Pot_Temp, CStart_Pot, CRange, &FData_Pot[0][0][0],
-                FSize_Temp, FStart,     1, OPT__REF_POT_INT_SCHEME, PhaseUnwrapping_No, &EnsureMonotonicity_No );
+// 3.2.2-2. potential
+#  ifdef GRAVITY
+   const int CSize_Pot3[3] = { CSize_Pot, CSize_Pot, CSize_Pot };
+   const int CStart_Pot[3] = { CGhost_Pot, CGhost_Pot, CGhost_Pot };
+
+   real *const CData_Pot = CData_Next;
+   CData_Next += CUBE( CSize_Pot );
+
+   real (*FData_Pot)[FSize_CC][FSize_CC] = new real [FSize_CC][FSize_CC][FSize_CC];
+
+   Interpolate( CData_Pot, CSize_Pot3, CStart_Pot, CRange_CC, &FData_Pot[0][0][0],
+                FSize_CC3, FStart_CC, 1, OPT__REF_POT_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_No );
 #  endif
+
+
+// 3.2.2-3. magnetic field
+#  ifdef MHD
+   const int FSize_Mag [3][3] = {  { PS2P1, PS2,   PS2   },
+                                   { PS2,   PS2P1, PS2   },
+                                   { PS2,   PS2,   PS2P1 }  };
+   const int FStart_Mag[3][3] = { {0, 0, 0}, {0, 0, 0}, {0, 0, 0} };
+   const int CSize_Mag [3][3] = {  { CSize_Mag_N, CSize_Mag_T, CSize_Mag_T },
+                                   { CSize_Mag_T, CSize_Mag_N, CSize_Mag_T },
+                                   { CSize_Mag_T, CSize_Mag_T, CSize_Mag_N }  };
+   const int CStart_Mag[3][3] = {  { 0,          CGhost_Mag, CGhost_Mag },
+                                   { CGhost_Mag, 0,          CGhost_Mag },
+                                   { CGhost_Mag, CGhost_Mag, 0          }  };
+   const int CRange_Mag[3]    = { PS1, PS1, PS1 };
+
+   real *const CData_MagX = CData_Next + MAGX*CSize_Mag_N*SQR( CSize_Mag_T );
+   real *const CData_MagY = CData_Next + MAGY*CSize_Mag_N*SQR( CSize_Mag_T );
+   real *const CData_MagZ = CData_Next + MAGZ*CSize_Mag_N*SQR( CSize_Mag_T );
+   CData_Next += NCOMP_MAG*CSize_Mag_N*SQR( CSize_Mag_T );
+
+   real (*FData_Mag)[ PS2P1*SQR(PS2) ] = new real [NCOMP_MAG][ PS2P1*SQR(PS2) ];
+
+   const real *CData_Mag3v[NCOMP_MAG] = { CData_MagX, CData_MagY, CData_MagZ };
+         real *FData_Mag3v[NCOMP_MAG] = { FData_Mag[MAGX], FData_Mag[MAGY], FData_Mag[MAGZ] };
+
+// set the B field on the coarse-fine interfaces
+   const real *Mag_FInterface_Ptr[6] = { NULL, NULL, NULL, NULL, NULL, NULL };
+
+   for (int s=0; s<6; s++)
+   {
+      const int TRank = CFB_SibRank[s];
+
+//    we set TRank>=0 on the coarse-fine interfaces
+      if ( TRank >= 0 )
+      {
+         Mag_FInterface_Ptr[s] = CFB_BFieldEachRank[TRank] + CFB_OffsetEachRank[TRank];
+
+         CFB_OffsetEachRank[TRank] += SQR( PS2 );
+      }
+   }
+
+// perform divergence-free interpolation
+   MHD_InterpolateBField( CData_Mag3v, CSize_Mag, CStart_Mag, CRange_Mag,
+                          FData_Mag3v, FSize_Mag, FStart_Mag, Mag_FInterface_Ptr,
+                          OPT__REF_MAG_INT_SCHEME, Monotonicity_Yes );
+#  endif // #ifdef MHD
+
 
 // 3.2.3 check minimum density and pressure
 // --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
 // --> but we do renormalize passive scalars here
-#  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM  ||  (defined DENS && NCOMP_PASSIVE>0) )
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( MODEL == HYDRO  ||  MODEL == ELBDM  ||  (defined DENS && NCOMP_PASSIVE>0) )
+#  if ( MODEL == HYDRO )
    const real  Gamma_m1 = GAMMA - (real)1.0;
    const real _Gamma_m1 = (real)1.0 / Gamma_m1;
 #  endif
 
-   for (int k=0; k<FSize; k++)
-   for (int j=0; j<FSize; j++)
-   for (int i=0; i<FSize; i++)
+   for (int k=0; k<FSize_CC; k++)
+   for (int j=0; j<FSize_CC; j++)
+   for (int i=0; i<FSize_CC; i++)
    {
 //    check minimum density
       const real DensOld = FData_Flu[DENS][k][j][i];
@@ -869,28 +995,38 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
          FData_Flu[DENS][k][j][i] = MIN_DENS;
       }
 
-#     if ( MODEL == HYDRO  ||  MODEL == MHD )
-#     ifdef DUAL_ENERGY
+
+#     if ( MODEL == HYDRO )
+//    compute magnetic energy
+#     ifdef MHD
+      const real EngyB = MHD_GetCellCenteredBEnergy( FData_Mag[MAGX], FData_Mag[MAGY], FData_Mag[MAGZ],
+                                                     PS2, PS2, PS2, i, j, k );
+#     else
+      const real EngyB = NULL_REAL;
+#     endif
+
 //    ensure consistency between pressure, total energy density, and the dual-energy variable
 //    --> here we ALWAYS use the dual-energy variable to correct the total energy density
 //    --> we achieve that by setting the dual-energy switch to an extremely larger number and ignore
 //        the runtime parameter DUAL_ENERGY_SWITCH here
+#     ifdef DUAL_ENERGY
       const bool CheckMinPres_Yes = true;
       const real UseEnpy2FixEngy  = HUGE_NUMBER;
       char dummy;    // we do not record the dual-energy status here
 
       Hydro_DualEnergyFix( FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i],
                            FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i], FData_Flu[ENPY][k][j][i],
-                           dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy );
+                           dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy, EngyB );
 
-#     else
+#     else // #ifdef DUAL_ENERGY
+
 //    check minimum pressure
       FData_Flu[ENGY][k][j][i]
          = Hydro_CheckMinPresInEngy( FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i],
                                      FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i],
-                                     Gamma_m1, _Gamma_m1, MIN_PRES );
+                                     Gamma_m1, _Gamma_m1, MIN_PRES, EngyB );
 #     endif // #ifdef DUAL_ENERGY ... else ...
-#     endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
+#     endif // #if ( MODEL == HYDRO )
 
 
 //    normalize passive scalars
@@ -906,39 +1042,57 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
          for (int v=0; v<NCOMP_PASSIVE; v++)    FData_Flu[ NCOMP_FLUID + v ][k][j][i] = Passive[v];
       }
 #     endif
+
    } // i,j,k
-#  endif // #if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+#  endif // #if ( MODEL == HYDRO  ||  MODEL == ELBDM )
 
 
 // 3.3 copy data from FData_XXX to patch pointers
-   int SonPID, Disp_i, Disp_j, Disp_k, I, J, K;
+   int offset_in[3], i_in, j_in, k_in;
 
    for (int LocalID=0; LocalID<8; LocalID++)
    {
-      SonPID = SonPID0 + LocalID;
-      Disp_i = TABLE_02( LocalID, 'x', 0, PATCH_SIZE );
-      Disp_j = TABLE_02( LocalID, 'y', 0, PATCH_SIZE );
-      Disp_k = TABLE_02( LocalID, 'z', 0, PATCH_SIZE );
+      const int SonPID = SonPID0 + LocalID;
+
+      offset_in[0] = TABLE_02( LocalID, 'x', 0, PS1 );
+      offset_in[1] = TABLE_02( LocalID, 'y', 0, PS1 );
+      offset_in[2] = TABLE_02( LocalID, 'z', 0, PS1 );
 
 //    fluid data
-      for (int v=0; v<NCOMP_TOTAL; v++)   {
-      for (int k=0; k<PATCH_SIZE; k++)    {  K = k + Disp_k;
-      for (int j=0; j<PATCH_SIZE; j++)    {  J = j + Disp_j;
-      for (int i=0; i<PATCH_SIZE; i++)    {  I = i + Disp_i;
+      for (int v=0; v<NCOMP_TOTAL; v++)  {
+      for (int k=0; k<PS1; k++)  {  k_in = k + offset_in[2];
+      for (int j=0; j<PS1; j++)  {  j_in = j + offset_in[1];
+      for (int i=0; i<PS1; i++)  {  i_in = i + offset_in[0];
 
-         amr->patch[FSg_Flu][SonLv][SonPID]->fluid[v][k][j][i] = FData_Flu[v][K][J][I];
+         amr->patch[FSg_Flu][SonLv][SonPID]->fluid[v][k][j][i] = FData_Flu[v][k_in][j_in][i_in];
 
       }}}}
 
 //    potential data
 #     ifdef GRAVITY
-      for (int k=0; k<PATCH_SIZE; k++)    {  K = k + Disp_k;
-      for (int j=0; j<PATCH_SIZE; j++)    {  J = j + Disp_j;
-      for (int i=0; i<PATCH_SIZE; i++)    {  I = i + Disp_i;
+      for (int k=0; k<PS1; k++)  {  k_in = k + offset_in[2];
+      for (int j=0; j<PS1; j++)  {  j_in = j + offset_in[1];
+      for (int i=0; i<PS1; i++)  {  i_in = i + offset_in[0];
 
-         amr->patch[FSg_Pot][SonLv][SonPID]->pot[k][j][i] = FData_Pot[K][J][I];
+         amr->patch[FSg_Pot][SonLv][SonPID]->pot[k][j][i] = FData_Pot[k_in][j_in][i_in];
 
       }}}
+#     endif
+
+//    magnetic field
+#     ifdef MHD
+      const int Bwidth[3][3] = { {PS1P1, PS1, PS1}, {PS1, PS1P1, PS1}, {PS1, PS1, PS1P1} };
+      int idx_B_in, idx_B_out;
+
+      for (int v=0; v<NCOMP_MAG; v++)     {  idx_B_out = 0;
+      for (int k=0; k<Bwidth[v][2]; k++)  {  k_in      = k + offset_in[2];
+      for (int j=0; j<Bwidth[v][1]; j++)  {  j_in      = j + offset_in[1];
+                                             idx_B_in  = IDX321( offset_in[0], j_in, k_in, FSize_Mag[v][0], FSize_Mag[v][1] );
+      for (int i=0; i<Bwidth[v][0]; i++)  {
+
+         amr->patch[FSg_Mag][SonLv][SonPID]->magnetic[v][ idx_B_out ++ ] = FData_Mag[v][ idx_B_in ++ ];
+
+      }}}}
 #     endif
 
 //    rescale real and imaginary parts to get the correct density in ELBDM if OPT__INT_PHASE is off
@@ -946,9 +1100,9 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       real Real, Imag, Rho_Corr, Rho_Wrong, Rescale;
 
       if ( !OPT__INT_PHASE )
-      for (int k=0; k<PATCH_SIZE; k++)
-      for (int j=0; j<PATCH_SIZE; j++)
-      for (int i=0; i<PATCH_SIZE; i++)
+      for (int k=0; k<PS1; k++)
+      for (int j=0; j<PS1; j++)
+      for (int i=0; i<PS1; i++)
       {
          Real      = amr->patch[FSg_Flu][SonLv][SonPID]->fluid[REAL][k][j][i];
          Imag      = amr->patch[FSg_Flu][SonLv][SonPID]->fluid[IMAG][k][j][i];
@@ -984,6 +1138,9 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    delete [] FData_Flu;
 #  ifdef GRAVITY
    delete [] FData_Pot;
+#  endif
+#  ifdef MHD
+   delete [] FData_Mag;
 #  endif
 
 
@@ -1085,8 +1242,8 @@ void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_Real0, 
          for (int Sg=0; Sg<2; Sg++)
             Aux_SwapPointer( (void**)&amr->patch[Sg][SonLv][OldPID], (void**)&amr->patch[Sg][SonLv][NewPID] );
 
-//       swap the fluid array with 1-FluSg and pot array with 1-PotSg back since we use them to temporarily store
-//       the buffer patch data if OPT__REUSE_MEMORY is used
+//       swap back fluid[] with 1-FluSg, pot[] with 1-PotSg, and magnetic[] with 1-MagSg since
+//       we use them to temporarily store the buffer patch data if OPT__REUSE_MEMORY is used
 //       --> see the description in LB_Refine_AllocateNewPatch
 //       --> ugly trick ...
          if ( OPT__REUSE_MEMORY )
@@ -1099,6 +1256,12 @@ void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_Real0, 
             const int FSg_Pot2 = 1 - amr->PotSg[SonLv];
             Aux_SwapPointer( (void**)&amr->patch[FSg_Pot2][SonLv][OldPID]->pot,
                              (void**)&amr->patch[FSg_Pot2][SonLv][NewPID]->pot );
+#           endif
+
+#           ifdef MHD
+            const int FSg_Mag2 = 1 - amr->MagSg[SonLv];
+            Aux_SwapPointer( (void**)&amr->patch[FSg_Mag2][SonLv][OldPID]->magnetic,
+                             (void**)&amr->patch[FSg_Mag2][SonLv][NewPID]->magnetic );
 #           endif
          }
 

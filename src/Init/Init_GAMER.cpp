@@ -213,12 +213,12 @@ void Init_GAMER( int *argc, char ***argv )
       {
          if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Lv %2d ... ", lv );
 
-         Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _DENS, Rho_ParaBuf, USELB_YES );
+         Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, NULL_INT, DATA_GENERAL, _DENS, _NONE, Rho_ParaBuf, USELB_YES );
 
          Gra_AdvanceDt( lv, Time[lv], NULL_REAL, NULL_REAL, NULL_INT, amr->PotSg[lv], true, false, false, false );
 
          if ( lv > 0 )
-         Buf_GetBufferData( lv, NULL_INT, amr->PotSg[lv], POT_FOR_POISSON, _POTE, Pot_ParaBuf, USELB_YES );
+         Buf_GetBufferData( lv, NULL_INT, NULL_INT, amr->PotSg[lv], POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES );
 
          if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
       } // for (int lv=0; lv<NLEVEL; lv++)

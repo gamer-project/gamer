@@ -30,9 +30,9 @@ COMPILE_VERBOSE := 0
 
 # (a) physical modules
 # -------------------------------------------------------------------------------
-# physical model: HYDRO/MHD/ELBDM/PAR_ONLY (ELBDM: wave dark matter; PAR_ONLY: particle-only)
+# physical model: HYDRO/ELBDM/PAR_ONLY (ELBDM: wave dark matter; PAR_ONLY: particle-only)
 # --> must be set in any cases; PAR_ONLY is not supported yet;
-#     MHD and ELBDM are not publicly available yet but will be released soon
+#     ELBDM is not publicly available yet but will be released soon
 SIMU_OPTION += -DMODEL=HYDRO
 
 # enable gravity
@@ -54,13 +54,16 @@ SIMU_OPTION += -DMODEL=HYDRO
 ifeq "$(filter -DMODEL=HYDRO, $(SIMU_OPTION))" "-DMODEL=HYDRO"
 # hydrodynamic scheme: RTVD/MHM/MHM_RP/CTU
 # --> must be set when MODEL=HYDRO
+# --> MHD only supports MHM_RP and CTU
 SIMU_OPTION += -DFLU_SCHEME=CTU
 
 # scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic)
 # --> useless for RTVD
 SIMU_OPTION += -DLR_SCHEME=PPM
 
-# Riemann solver: EXACT/ROE/HLLE/HLLC
+# Riemann solver: EXACT/ROE/HLLE/HLLC/HLLD
+# --> pure hydro: EXACT/ROE/HLLE/HLLC(*); MHD: ROE/HLLE/HLLD(*);
+#     		  (recommended solvers are highlighted by *)
 # --> useless for RTVD
 SIMU_OPTION += -DRSOLVER=ROE
 
@@ -73,13 +76,11 @@ SIMU_OPTION += -DRSOLVER=ROE
 # --> useless for RTVD
 SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 
-
-# (b-2) MHD options
-# ------------------------------------------------------------------------------------
-else ifeq "$(filter -DMODEL=MHD, $(SIMU_OPTION))" "-DMODEL=MHD"
+# magnetohydrodynamics
+#SIMU_OPTION += -DMHD
 
 
-# (b-3) ELBDM options
+# (b-2) ELBDM options
 # ------------------------------------------------------------------------------------
 else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
 # enforce the mass conservation
@@ -99,7 +100,7 @@ SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 endif # MODEL
 
 
-# (b-4) gravity options
+# (b-3) gravity options
 # -------------------------------------------------------------------------------
 ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
 # Poisson solver: SOR/MG (successive-overrelaxation (recommended)/multigrid)
@@ -112,7 +113,7 @@ SIMU_OPTION += -DPOT_SCHEME=SOR
 SIMU_OPTION += -DSTORE_POT_GHOST
 
 # use unsplitting method to couple gravity to the target model (recommended)
-# --> for HYDRO and MHD only; ELBDM is not supported yet
+# --> for HYDRO only; ELBDM is not supported yet
 SIMU_OPTION += -DUNSPLIT_GRAVITY
 
 # comoving frame for cosmological simulations
@@ -121,7 +122,7 @@ SIMU_OPTION += -DUNSPLIT_GRAVITY
 endif # GRAVITY
 
 
-# (b-5) particle options
+# (b-4) particle options
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DPARTICLE, $(SIMU_OPTION))" "-DPARTICLE"
 # store particle acceleration (recommended)
@@ -137,7 +138,7 @@ SIMU_OPTION += -DPAR_NATT_USER=0
 endif # PARTICLE
 
 
-# (d) miscellaneous options (AMR, GPU, parallelization, optimizations, ...)
+# (c) miscellaneous options (AMR, GPU, parallelization, optimizations, ...)
 # ------------------------------------------------------------------------------------
 # maximum number of AMR levels including the root level (level id = 0 ... NLEVEL-1)
 # --> must be set in any cases
@@ -151,7 +152,7 @@ SIMU_OPTION += -DMAX_PATCH=1000000
 # --> must set GPU_ARCH as well
 #SIMU_OPTION += -DGPU
 
-# GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA
+# GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA/TURING
 SIMU_OPTION += -DGPU_ARCH=KEPLER
 
 # debug mode
@@ -347,6 +348,14 @@ LIBYT_PATH   :=
 #MPI_PATH     := /opt/mpi/openmpi/1.8.1-gcc-qlc
 #CUDA_PATH    := /usr/local/cuda-7.5
 
+# NTHU-fomalhaut (openmpi-gnu)
+#CUDA_PATH    := /usr/local/cuda-10.0
+#FFTW_PATH    := /home/hyschive/software/fftw/2.1.5-openmpi-gnu
+#MPI_PATH     := /storage/app/gnu/openmpi-3.1.3-gcc8
+#HDF5_PATH    := /storage/app/gnu/hdf5-1.8.21-gcc8
+#GRACKLE_PATH :=
+#GSL_PATH     :=
+
 # NAOC-laohu (OpenMPI-1.3.2-intel)
 #CUDA_PATH    := $(CUDA_INSTALL_PATH)
 #FFTW_PATH    := /ifs/data/hsiyu/Software/fftw/2.1.5-openmpi-1.3.2-intel
@@ -389,9 +398,9 @@ CC_FILE     += Aux_Check_Parameter.cpp  Aux_Check_Conservation.cpp  Aux_Check.cp
                Aux_Record_User.cpp  Aux_Record_CorrUnphy.cpp  Aux_SwapPointer.cpp  Aux_Check_NormalizePassive.cpp \
                Aux_LoadTable.cpp  Aux_IsFinite.cpp  Aux_ComputeProfile.cpp
 
-CC_FILE     += CPU_FluidSolver.cpp  Flu_AdvanceDt.cpp  Flu_Prepare.cpp  Flu_Close.cpp  Flu_FixUp.cpp \
-               Flu_Restrict.cpp  Flu_AllocateFluxArray.cpp  Flu_BoundaryCondition_User.cpp  Flu_ResetByUser.cpp \
-               Flu_CorrAfterAllSync.cpp  Flu_SwapFluxPointer.cpp
+CC_FILE     += CPU_FluidSolver.cpp  Flu_AdvanceDt.cpp  Flu_Prepare.cpp  Flu_Close.cpp  Flu_FixUp_Flux.cpp \
+               Flu_FixUp_Restrict.cpp  Flu_AllocateFluxArray.cpp  Flu_BoundaryCondition_User.cpp  Flu_ResetByUser.cpp \
+               Flu_CorrAfterAllSync.cpp  Flu_ManageFixUpTempArray.cpp
 
 CC_FILE     += End_GAMER.cpp  End_MemFree.cpp  End_MemFree_Fluid.cpp  End_StopManually.cpp  End_User.cpp \
                Init_BaseLevel.cpp  Init_GAMER.cpp  Init_Load_DumpTable.cpp \
@@ -418,7 +427,7 @@ CC_FILE     += Flag_Real.cpp  Refine.cpp   SiblingSearch.cpp  SiblingSearch_Base
                Flag_User.cpp  Flag_Check.cpp  Flag_Lohner.cpp  Flag_Region.cpp
 
 CC_FILE     += Table_01.cpp  Table_02.cpp  Table_03.cpp  Table_04.cpp  Table_05.cpp  Table_06.cpp \
-               Table_07.cpp
+               Table_07.cpp  Table_SiblingSharingSameEdge.cpp
 
 vpath %.cu     GPU_API
 vpath %.cpp    Main  Init  Refine  Fluid  Interpolation  Tables  Output  Miscellaneous  Auxiliary
@@ -450,19 +459,21 @@ vpath %.cu     Model_Hydro/GPU_HydroGravity
 vpath %.cpp    Model_Hydro/CPU_HydroGravity
 endif
 
+ifeq "$(filter -DMHD, $(SIMU_OPTION))" "-DMHD"
+#CUDA_FILE   +=
 
-# MHD source files (included only if "MODEL=MHD")
-# -------------------------------------------------------------------------------
-else ifeq "$(filter -DMODEL=MHD, $(SIMU_OPTION))" "-DMODEL=MHD"
+CC_FILE     += MHD_GetCellCenteredBInPatch.cpp  MHD_InterpolateBField.cpp  MHD_AllocateElectricArray.cpp \
+               MHD_Aux_Check_InterfaceB.cpp  MHD_FixUp_Electric.cpp  MHD_Aux_Check_DivergenceB.cpp \
+               MHD_BoundaryCondition_Outflow.cpp  MHD_BoundaryCondition_Reflecting.cpp  MHD_BoundaryCondition_User.cpp \
+               MHD_CopyPatchInterfaceBField.cpp MHD_Init_BField_ByFile.cpp
 
-vpath %.cu     Model_MHD/GPU_MHD
-vpath %.cpp    Model_MHD/CPU_MHD  Model_MHD
+CC_FILE     += CPU_Shared_ConstrainedTransport.cpp  CPU_Shared_RiemannSolver_HLLD.cpp
 
-ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
-
-vpath %.cu     Model_MHD/GPU_MHDGravity
-vpath %.cpp    Model_MHD/CPU_MHDGravity
-endif
+ifeq "$(findstring -DLOAD_BALANCE, $(SIMU_OPTION))" "-DLOAD_BALANCE"
+CC_FILE     += MHD_LB_EnsureBFieldConsistencyAfterRestrict.cpp  MHD_LB_AllocateElectricArray.cpp \
+               MHD_LB_ResetBufferElectric.cpp  MHD_LB_Refine_GetCoarseFineInterfaceBField.cpp
+endif # LOAD_BALANCE
+endif # MHD
 
 
 # ELBDM source files (included only inf "MODEL=ELBDM")
@@ -749,6 +760,8 @@ else ifeq "$(filter -DGPU_ARCH=PASCAL,  $(SIMU_OPTION))" "-DGPU_ARCH=PASCAL"
    NVCCFLAG_COM += -gencode arch=compute_61,code=\"compute_61,sm_61\"
 else ifeq "$(filter -DGPU_ARCH=VOLTA,  $(SIMU_OPTION))" "-DGPU_ARCH=VOLTA"
    NVCCFLAG_COM += -gencode arch=compute_70,code=\"compute_70,sm_70\"
+else ifeq "$(filter -DGPU_ARCH=TURING,  $(SIMU_OPTION))" "-DGPU_ARCH=TURING"
+   NVCCFLAG_COM += -gencode arch=compute_75,code=\"compute_75,sm_75\"
 else ifeq "$(filter -DGPU, $(SIMU_OPTION))" "-DGPU"
    $(error unknown GPU_ARCH (please set it in the Makefile))
 endif
@@ -785,6 +798,12 @@ else ifeq "$(filter -DGPU_ARCH=PASCAL, $(SIMU_OPTION))" "-DGPU_ARCH=PASCAL"
      NVCCFLAG_FLU += --maxrregcount=128
    endif
 else ifeq "$(filter -DGPU_ARCH=VOLTA, $(SIMU_OPTION))" "-DGPU_ARCH=VOLTA"
+   ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
+     NVCCFLAG_FLU += --maxrregcount=192
+   else
+     NVCCFLAG_FLU += --maxrregcount=128
+   endif
+else ifeq "$(filter -DGPU_ARCH=TURING, $(SIMU_OPTION))" "-DGPU_ARCH=TURING"
    ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
      NVCCFLAG_FLU += --maxrregcount=192
    else
