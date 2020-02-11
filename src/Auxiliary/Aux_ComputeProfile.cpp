@@ -401,46 +401,47 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 // remove the empty bins
 // --> all ranks do the same work so that no data broadcast is required
    if ( RemoveEmpty )
-   for (int b=0; b<Prof[0]->NBin; b++)
    {
-      if ( Prof[0]->NCell[b] != 0L )   continue;
-
-//    remove consecutive empty bins at the same time for better performance
-      int b_up;
-      for (b_up=b+1; b_up<Prof[0]->NBin; b_up++)
-         if ( Prof[0]->NCell[b_up] != 0L )   break;
-
-      const int stride = b_up - b;
-
-      for (int b_up=b+stride; b_up<Prof[0]->NBin; b_up++)
+      for (int b=0; b<Prof[0]->NBin; b++)
       {
-         const int b_up_ms = b_up - stride;
+         if ( Prof[0]->NCell[b] != 0L )   continue;
 
-         for (int p=0; p<NProf; p++)
+//       remove consecutive empty bins at the same time for better performance
+         int b_up;
+         for (b_up=b+1; b_up<Prof[0]->NBin; b_up++)
+            if ( Prof[0]->NCell[b_up] != 0L )   break;
+
+         const int stride = b_up - b;
+
+         for (int b_up=b+stride; b_up<Prof[0]->NBin; b_up++)
          {
-            Prof[p]->Radius[b_up_ms] = Prof[p]->Radius[b_up];
-            Prof[p]->Data  [b_up_ms] = Prof[p]->Data  [b_up];
-            Prof[p]->Weight[b_up_ms] = Prof[p]->Weight[b_up];
-            Prof[p]->NCell [b_up_ms] = Prof[p]->NCell [b_up];
+            const int b_up_ms = b_up - stride;
+
+            for (int p=0; p<NProf; p++)
+            {
+               Prof[p]->Radius[b_up_ms] = Prof[p]->Radius[b_up];
+               Prof[p]->Data  [b_up_ms] = Prof[p]->Data  [b_up];
+               Prof[p]->Weight[b_up_ms] = Prof[p]->Weight[b_up];
+               Prof[p]->NCell [b_up_ms] = Prof[p]->NCell [b_up];
+            }
          }
-      }
 
-//    reset the total number of bins
+//       reset the total number of bins
+         for (int p=0; p<NProf; p++)
+            Prof[p]->NBin -= stride;
+
+//       reduce counter since all bins above b have been shifted downward
+         b --;
+      } // for (int b=0; b<Prof->NBin; b++)
+
+//    update the maximum radius since the last bin may have been removed
       for (int p=0; p<NProf; p++)
-         Prof[p]->NBin -= stride;
+      {
+         const int LastBin = Prof[p]->NBin-1;
 
-//    reduce counter since all bins above b have been shifted downward
-      b --;
-   } // for (int b=0; b<Prof->NBin; b++)
-
-
-// update the maximum radius since the last bin may have been removed
-   for (int p=0; p<NProf; p++)
-   {
-      const int b = Prof[p]->NBin;
-
-      Prof[p]->MaxRadius = ( LogBin ) ? SQR ( Prof[p]->Radius[b - 1] ) / Prof[p]->Radius[b - 2]
-                                      : 2.0 * Prof[p]->Radius[b - 1]   - Prof[p]->Radius[b - 2];
-   }
+         Prof[p]->MaxRadius = ( LogBin ) ? Prof[p]->Radius[LastBin]*sqrt( LogBinRatio )
+                                         : Prof[p]->Radius[LastBin] + 0.5*dr_min;
+      }
+   } // if ( RemoveEmpty )
 
 } // FUNCTION : Aux_ComputeProfile
