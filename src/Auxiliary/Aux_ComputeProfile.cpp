@@ -43,24 +43,25 @@ static const int PRESSURE      = 99;
 //                              --> Supported field indicies (defined in Macro.h):
 //                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELR, _PRES, _EINT [, _POTE]
 //                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE]
-//                NProf       : Number of Profile_t object in Prof.
-//                level       : The level of Patches to be considered.
-//                              If level = -1, loop over all levels
+//                NProf       : Number of Profile_t objects in Prof
+//                SingleLv    : Only consider patches on the specified level
+//                              --> If SingleLv<0, loop over all levels
 //
-// Example     :  Profile_t *Prof[] = { &Prof_Dens, &Prof_Pres };
-//
-//                const double Center[3]      = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
+// Example     :  const double Center[3]      = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
 //                const double MaxRadius      = 0.5*amr->BoxSize[0];
 //                const double MinBinSize     = amr->dh[MAX_LEVEL];
 //                const bool   LogBin         = true;
 //                const double LogBinRatio    = 1.25;
 //                const bool   RemoveEmptyBin = true;
-//                const int    TVar[]         = { DENS, PRESSURE };
+//                const int    TVar           = _DENS | _PRES;
 //                const int    NProf          = 2;
-//                const int    level          = -1;
+//                const int    SingleLv       = -1;
+//
+//                Profile_t Prof_Dens, Prof_Pres;
+//                Profile_t *Prof[] = { &Prof_Dens, &Prof_Pres };
 //
 //                Aux_ComputeProfile( Prof, Center, MaxRadius, MinBinSize, LogBin, LogBinRatio, RemoveEmptyBin,
-//                                    TVar, NProf, level );
+//                                    TVar, NProf, SingleLv );
 //
 //                if ( MPI_Rank == 0 )
 //                {
@@ -76,7 +77,7 @@ static const int PRESSURE      = 99;
 //-------------------------------------------------------------------------------------------------------
 void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double r_max_input, const double dr_min,
                          const bool LogBin, const double LogBinRatio, const bool RemoveEmpty, const int TVar[],
-                         const int NProf, const int level )
+                         const int NProf, const int SingleLv )
 {
 
 // check
@@ -171,11 +172,10 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
       }
 
 //    determine which levels to be considered
-      const int lv_max = ( level < 0 ) ? NLEVEL
-                                       : level + 1;
+      const int lv_min = ( SingleLv < 0 ) ? 0         : SingleLv;
+      const int lv_max = ( SingleLv < 0 ) ? TOP_LEVEL : SingleLv;
 
-//      for (int lv=0; lv<NLEVEL; lv++)
-      for (int lv=MAX(0, level); lv<lv_max; lv++)
+      for (int lv=lv_min; lv<=lv_max; lv++)
       {
          const double dh = amr->dh[lv];
          const double dv = CUBE( dh );
