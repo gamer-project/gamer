@@ -9,7 +9,7 @@ static const int PRESSURE      = 99;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Aux_ComputeProfile
-// Description :  Compute the average radial profile of a target field
+// Description :  Compute the average radial profile of target field(s)
 //
 // Note        :  1. Results will be stored in the input "Prof" object
 //                   --> Prof->Radius[]: Radial coordinate at each bin
@@ -23,8 +23,10 @@ static const int PRESSURE      = 99;
 //                   --> Because "r_max" in general does not coincide with the right edge of the maximum bin
 //                3. Support hybrid OpenMP/MPI parallelization
 //                   --> All ranks will share the same profile data after invoking this function
+//                4. Use cell volume as the weighting of each cell
+//                   --> Will support other weighting functions in the future
 //
-// Parameter   :  Prof        : Profile_t object to store the results
+// Parameter   :  Prof        : Profile_t object array to store the results
 //                Center      : Target center coordinates
 //                r_max_input : Maximum radius for computing the profile
 //                              --> See also "Note-2" above
@@ -37,9 +39,10 @@ static const int PRESSURE      = 99;
 //                RemoveEmpty : true  --> remove empty bins from the data
 //                              false --> these empty bins will still be in the profile arrays with
 //                                        Data[empty_bin]=Weight[empty_bin]=NCell[empty_bin]=0
-//                Quantity    : Quantities to be averaged spherically
-//                              Support field indicies defined in Macro.h, INTERNAL_ENGY (97), VRAD (98) and PRESSURE (99)
-//                              The weight function is the cell volume.
+//                TVar        : Target variables to be averaged spherically
+//                              --> Supported field indicies (defined in Macro.h):
+//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELR, _PRES, _EINT [, _POTE]
+//                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE]
 //                NProf       : Number of Profile_t object in Prof.
 //                level       : The level of Patches to be considered.
 //                              If level = -1, loop over all levels
@@ -52,12 +55,12 @@ static const int PRESSURE      = 99;
 //                const bool   LogBin         = true;
 //                const double LogBinRatio    = 1.25;
 //                const bool   RemoveEmptyBin = true;
-//                const int    Quantity[]     = { DENS, PRESSURE };
+//                const int    TVar[]         = { DENS, PRESSURE };
 //                const int    NProf          = 2;
 //                const int    level          = -1;
 //
 //                Aux_ComputeProfile( Prof, Center, MaxRadius, MinBinSize, LogBin, LogBinRatio, RemoveEmptyBin,
-//                                    Quantity, NProf, level );
+//                                    TVar, NProf, level );
 //
 //                if ( MPI_Rank == 0 )
 //                {
@@ -72,7 +75,7 @@ static const int PRESSURE      = 99;
 // Return      :  Prof
 //-------------------------------------------------------------------------------------------------------
 void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double r_max_input, const double dr_min,
-                         const bool LogBin, const double LogBinRatio, const bool RemoveEmpty, const int Quantity[],
+                         const bool LogBin, const double LogBinRatio, const bool RemoveEmpty, const int TVar[],
                          const int NProf, const int level )
 {
 
@@ -220,7 +223,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
                   for (int PROFID=0; PROFID<NProf; PROFID++)
                   {
-                     const int quant = Quantity[PROFID];
+                     const int quant = TVar[PROFID];
 
 //                   user-specified quantity; for case of MODEL = HYDRO
                      switch ( quant )
@@ -306,7 +309,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                         break;
 
                         default:
-                           Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "Quantity", quant );
+                           Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TVar", quant );
                      } // switch ( quant )
 
                      OMP_NCell[PROFID][TID][bin] ++;
@@ -369,7 +372,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
    {
       for (int PROFID=0; PROFID<NProf; PROFID++)
       {
-         const int quant = Quantity[PROFID];
+         const int quant = TVar[PROFID];
 
          for (int b=0; b<Prof[0]->NBin; b++)
          {
@@ -391,7 +394,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 //                   Avoid division by zero when denisty is zero
                      if ( Prof[PROFID]->Weight[b] > 0.0 )   Prof[PROFID]->Data[b] /= Prof[PROFID]->Weight[b];
                   break;
-               } // switch ( Quantity )
+               } // switch ( TVar )
          }
       }
    }
