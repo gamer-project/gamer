@@ -366,31 +366,10 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
    if ( MPI_Rank == 0 )
    {
       for (int p=0; p<NProf; p++)
+      for (int b=0; b<Prof[0]->NBin; b++)
       {
-         const int quant = TVar[p];
-
-         for (int b=0; b<Prof[0]->NBin; b++)
-         {
-//          skip empty bins since both their data and weight are zero
-            if ( Prof[p]->NCell[b] > 0L )
-               switch ( quant )
-               {
-                  case DENS         :
-                  case ENGY         :
-                  case MOMX         :
-                  case MOMY         :
-                  case MOMZ         :
-                  case PRESSURE     :
-                  case INTERNAL_ENGY:
-                     Prof[p]->Data[b] /= Prof[p]->Weight[b];
-                  break;
-
-                  case VRAD:
-//                   Avoid division by zero when denisty is zero
-                     if ( Prof[p]->Weight[b] > 0.0 )   Prof[p]->Data[b] /= Prof[p]->Weight[b];
-                  break;
-               } // switch ( TVar )
-         }
+//       skip empty bins since both their data and weight are zero
+         if ( Prof[p]->NCell[b] > 0L )    Prof[p]->Data[b] /= Prof[p]->Weight[b];
       }
    }
 
