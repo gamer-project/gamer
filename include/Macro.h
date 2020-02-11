@@ -248,21 +248,23 @@
 // bitwise indices of derived fields
 // --> start from (1L<<NCOMP_TOTAL) to distinguish from the intrinsic fields
 // --> remember to define NDERIVE = total number of derived fields
-#  define _VELX               ( 1L << (NCOMP_TOTAL+0) )
-#  define _VELY               ( 1L << (NCOMP_TOTAL+1) )
-#  define _VELZ               ( 1L << (NCOMP_TOTAL+2) )
-#  define _PRES               ( 1L << (NCOMP_TOTAL+3) )
-#  define _TEMP               ( 1L << (NCOMP_TOTAL+4) )
+#  define _VELX               ( 1L << (NCOMP_TOTAL+ 0) )
+#  define _VELY               ( 1L << (NCOMP_TOTAL+ 1) )
+#  define _VELZ               ( 1L << (NCOMP_TOTAL+ 2) )
+#  define _VELR               ( 1L << (NCOMP_TOTAL+ 3) )
+#  define _PRES               ( 1L << (NCOMP_TOTAL+ 4) )
+#  define _TEMP               ( 1L << (NCOMP_TOTAL+ 5) )
+#  define _EINT               ( 1L << (NCOMP_TOTAL+ 6) )
 # ifdef MHD
-#  define _MAGX_CC            ( 1L << (NCOMP_TOTAL+6) )
-#  define _MAGY_CC            ( 1L << (NCOMP_TOTAL+7) )
-#  define _MAGZ_CC            ( 1L << (NCOMP_TOTAL+8) )
-#  define _MAG_ENGY_CC        ( 1L << (NCOMP_TOTAL+9) )
-#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP | _MAGX_CC | _MAGY_CC | _MAGZ_CC | _MAG_ENGY_CC )
-#  define NDERIVE             9
+#  define _MAGX_CC            ( 1L << (NCOMP_TOTAL+ 7) )
+#  define _MAGY_CC            ( 1L << (NCOMP_TOTAL+ 8) )
+#  define _MAGZ_CC            ( 1L << (NCOMP_TOTAL+ 9) )
+#  define _MAG_ENGY_CC        ( 1L << (NCOMP_TOTAL+10) )
+#  define _DERIVED            ( _VELX | _VELY | _VELZ | _VELR | _PRES | _TEMP | _EINT | _MAGX_CC | _MAGY_CC | _MAGZ_CC | _MAG_ENGY_CC )
+#  define NDERIVE             11
 # else
-#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP )
-#  define NDERIVE             5
+#  define _DERIVED            ( _VELX | _VELY | _VELZ | _VELR | _PRES | _TEMP | _EINT )
+#  define NDERIVE             7
 # endif
 
 
