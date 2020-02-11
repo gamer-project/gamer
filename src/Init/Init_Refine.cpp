@@ -54,14 +54,14 @@ void Init_Refine( const int lv )
 //          allocate child patches and construct relation : child -> father
             Cr = amr->patch[0][lv][PID]->corner;
 
-            amr->pnew( lv+1, Cr[0],       Cr[1],       Cr[2],       PID, AllocData[0], AllocData[0] );
-            amr->pnew( lv+1, Cr[0]+Width, Cr[1],       Cr[2],       PID, AllocData[1], AllocData[1] );
-            amr->pnew( lv+1, Cr[0],       Cr[1]+Width, Cr[2],       PID, AllocData[2], AllocData[2] );
-            amr->pnew( lv+1, Cr[0],       Cr[1],       Cr[2]+Width, PID, AllocData[3], AllocData[3] );
-            amr->pnew( lv+1, Cr[0]+Width, Cr[1]+Width, Cr[2],       PID, AllocData[4], AllocData[4] );
-            amr->pnew( lv+1, Cr[0],       Cr[1]+Width, Cr[2]+Width, PID, AllocData[5], AllocData[5] );
-            amr->pnew( lv+1, Cr[0]+Width, Cr[1],       Cr[2]+Width, PID, AllocData[6], AllocData[6] );
-            amr->pnew( lv+1, Cr[0]+Width, Cr[1]+Width, Cr[2]+Width, PID, AllocData[7], AllocData[7] );
+            amr->pnew( lv+1, Cr[0],       Cr[1],       Cr[2],       PID, AllocData[0], AllocData[0], AllocData[0] );
+            amr->pnew( lv+1, Cr[0]+Width, Cr[1],       Cr[2],       PID, AllocData[1], AllocData[1], AllocData[1] );
+            amr->pnew( lv+1, Cr[0],       Cr[1]+Width, Cr[2],       PID, AllocData[2], AllocData[2], AllocData[2] );
+            amr->pnew( lv+1, Cr[0],       Cr[1],       Cr[2]+Width, PID, AllocData[3], AllocData[3], AllocData[3] );
+            amr->pnew( lv+1, Cr[0]+Width, Cr[1]+Width, Cr[2],       PID, AllocData[4], AllocData[4], AllocData[4] );
+            amr->pnew( lv+1, Cr[0],       Cr[1]+Width, Cr[2]+Width, PID, AllocData[5], AllocData[5], AllocData[5] );
+            amr->pnew( lv+1, Cr[0]+Width, Cr[1],       Cr[2]+Width, PID, AllocData[6], AllocData[6], AllocData[6] );
+            amr->pnew( lv+1, Cr[0]+Width, Cr[1]+Width, Cr[2]+Width, PID, AllocData[7], AllocData[7], AllocData[7] );
 
 
 //          record the number of real/buffer patches along each sibling direction
@@ -89,8 +89,14 @@ void Init_Refine( const int lv )
 // get the patch IDs for sending and receiving data between neighboring ranks
    Buf_RecordExchangeDataPatchID( lv+1 );
 
-// allocate flux arrays at the level "lv"
+// allocate flux arrays on level "lv"
    if ( amr->WithFlux )
    Flu_AllocateFluxArray( lv );
+
+// allocate electric arrays on level "lv"
+#  ifdef MHD
+   if ( amr->WithElectric )
+   MHD_AllocateElectricArray( lv );
+#  endif
 
 } // FUNCTION : Init_Refine

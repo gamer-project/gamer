@@ -1,17 +1,23 @@
 Compilation flags:
 ========================================
-Enable :
-Disable:
+Enable : MODEL=HYDRO [MHD]
+Disable: GRAVITY, PARTICLE
 
 
 Default setup:
 ========================================
 1. Resolution = 64x16x16, with MAX_LEVEL=2
 2. Lohner's refinement threshold = 0.50 (on density)
+   --> May not be suitable for all Riemann problems here
+3. Outflow boundary condition
 
 
 Note:
 ========================================
-1. Since GAMER does not support real 1D/2D simulations, please set the
-   root-level grid size to 16 (i.e., patch size*2) for the directions
-   perpendicular to the wave propagation direction.
+1. Since GAMER does not support real 1D/2D simulations, one should set the
+   root-level grid size to 16 (i.e., patch size*2) in the transverse directions
+2. Enable MHD in the Makefile for the Riemann problems involving magnetic field
+3. Plotting scripts: plot__hydro_dens.gpt, plot__mhd.gpt
+4. The analytical solution of ReferenceSolution/Gamma_1.67/BrioWu adopts a
+   regular solution (a rotational wave) at x~0.495 while numerical simulations
+   usually lead to a non-regular solution (a compound wave)

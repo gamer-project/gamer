@@ -1,0 +1,16 @@
+#!/bin/bash
+
+#PBS -N gamer
+#PBS -M YourEmailAddress
+#PBS -m abe
+#PBS -q batch
+#PBS -k n
+#PBS -l walltime=72:00:00
+#PBS -l nodes=1:ppn=36
+##PBS -o stdout
+##PBS -e stderr
+##PBS -W depend=afterok:JOB_ID
+
+cd $PBS_O_WORKDIR
+
+mpirun -np 4 -map-by socket:pe=9 --report-bindings ./gamer 1>>log 2>&1

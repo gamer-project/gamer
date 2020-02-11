@@ -17,7 +17,7 @@ real Hydro_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY
                                const real Gamma_m1, const real _Gamma_m1, const real MinPres );
 
 static void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real dt, const real dx, const real Gamma,
-                          const bool StoreFlux, const int j_gap, const int k_gap, const real MinDens, const real MinPres );
+                          const bool StoreFlux, const int j_skip, const int k_skip, const real MinDens, const real MinPres );
 static void TransposeXY( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] );
 static void TransposeXZ( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] );
 
@@ -173,12 +173,12 @@ void CPU_FluidSolver_RTVD(
 //                dx           : Grid size
 //                Gamma        : Ratio of specific heats
 //                StoreFlux    : true --> store the coarse-fine fluxes
-//                j_gap        : Number of cells that can be skipped on each side in the y direction
-//                k_gap        : Number of cells that can be skipped on each side in the z direction
+//                j_skip       : Number of cells that can be skipped on each side in the y direction
+//                k_skip       : Number of cells that can be skipped on each side in the z direction
 //                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
 void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx, const real Gamma,
-                   const bool StoreFlux, const int j_gap, const int k_gap, const real MinDens, const real MinPres )
+                   const bool StoreFlux, const int j_skip, const int k_skip, const real MinDens, const real MinPres )
 {
 
    const real  Gamma_m1 = Gamma - (real)1.0;    // for evaluating pressure
@@ -186,10 +186,10 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx, cons
    const real _dx       = (real)1.0/dx;         // one over dx
    const real dt_half   = (real)0.5*dt;         // for evaluating u_half
 
-   const int j_start    = j_gap;
-   const int k_start    = k_gap;
-   const int j_end      = FLU_NXT-j_gap;
-   const int k_end      = FLU_NXT-k_gap;
+   const int j_start    = j_skip;
+   const int k_start    = k_skip;
+   const int j_end      = FLU_NXT-j_skip;
+   const int k_end      = FLU_NXT-k_skip;
 
 // set local variables
    real ux     [5][FLU_NXT];              // one column of u in x direction
@@ -227,11 +227,11 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx, cons
 
 #        ifdef CHECK_NEGATIVE_IN_FLUID
          if ( Hydro_CheckNegative(p) )
-            Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+            Aux_Message( stderr, "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                          p, __FILE__, __LINE__, __FUNCTION__ );
 
          if ( Hydro_CheckNegative(ux[0][i]) )
-            Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+            Aux_Message( stderr, "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                          ux[0][i], __FILE__, __LINE__, __FUNCTION__ );
 #        endif
 
@@ -274,7 +274,7 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx, cons
       {
          u_half[0][i] = FMAX( u_half[0][i], MinDens );
          u_half[4][i] = Hydro_CheckMinPresInEngy( u_half[0][i], u_half[1][i], u_half[2][i], u_half[3][i], u_half[4][i],
-                                                  Gamma_m1, _Gamma_m1, MinPres );
+                                                  Gamma_m1, _Gamma_m1, MinPres, NULL_REAL );
       }
 
 
@@ -294,11 +294,11 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx, cons
 
 #        ifdef CHECK_NEGATIVE_IN_FLUID
          if ( Hydro_CheckNegative(p) )
-            Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+            Aux_Message( stderr, "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                          p, __FILE__, __LINE__, __FUNCTION__ );
 
          if ( Hydro_CheckNegative(u_half[0][i]) )
-            Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+            Aux_Message( stderr, "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                          u_half[0][i], __FILE__, __LINE__, __FUNCTION__ );
 #        endif
 
@@ -381,11 +381,11 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx, cons
       for (int i=3; i<FLU_NXT-3; i++)
       {
          if ( Hydro_CheckNegative(ux[0][i]) )
-            Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+            Aux_Message( stderr, "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                          ux[0][i], __FILE__, __LINE__, __FUNCTION__ );
 
          if ( Hydro_CheckNegative(ux[4][i]) )
-            Aux_Message( stderr, "ERROR : negative energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+            Aux_Message( stderr, "ERROR : invalid energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                          ux[4][i], __FILE__, __LINE__, __FUNCTION__ );
       }
 #     endif

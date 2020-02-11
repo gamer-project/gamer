@@ -37,12 +37,18 @@ void Init_Field()
 // 1. add main predefined fields
 //    --> must not change the following order of declaration since they must be consistent
 //        with the symbolic constants defined in Macro.h (e.g., DENS)
-#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if   ( MODEL == HYDRO )
    Idx_Dens    = AddField( "Dens",     NORMALIZE_NO );
    Idx_MomX    = AddField( "MomX",     NORMALIZE_NO );
    Idx_MomY    = AddField( "MomY",     NORMALIZE_NO );
    Idx_MomZ    = AddField( "MomZ",     NORMALIZE_NO );
    Idx_Engy    = AddField( "Engy",     NORMALIZE_NO );
+
+#  ifdef MHD
+   MagLabel[MAGX] = "MagX";
+   MagLabel[MAGY] = "MagY";
+   MagLabel[MAGZ] = "MagZ";
+#  endif
 
 #  elif ( MODEL == ELBDM )
 
@@ -147,6 +153,9 @@ FieldIdx_t AddField( char *InputLabel, const NormPassive_t Norm )
 
 
 // check
+   if ( InputLabel == NULL )
+      Aux_Error( ERROR_INFO, "InputLabel == NULL !!\n" );
+
    if ( NDefinedField > NCOMP_TOTAL )
       Aux_Error( ERROR_INFO, "total number of defined fields (%d) exceeds expectation (%d) after adding the field \"%s\" !!\n"
                  "        --> Modify NCOMP_PASSIVE_USER in the Makefile properly\n",
@@ -158,7 +167,7 @@ FieldIdx_t AddField( char *InputLabel, const NormPassive_t Norm )
 
 
 // set field label
-   FieldLabel[FieldIdx] = InputLabel;
+   strcpy( FieldLabel[FieldIdx], InputLabel );
 
 
 // set the normalization list

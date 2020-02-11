@@ -1,0 +1,8 @@
+# problem-specific runtime parameters
+Jeans_Rho0        2.0            # background density
+Jeans_Rho1        1.0e-6         # density perturbation amplitude
+Jeans_P0          1.0e-2         # background pressure
+Jeans_v0          0.0            # background velocity [0.0]
+Jeans_B0          1.0e-2         # background magnetic field amplitude
+Jeans_Sign       +1.0            # (>0/<0) --> (stable:right/left-moving wave; unstable:growing/decaying mode) [+1]
+Jeans_Phase0      0.2            # initial phase shift [0.0]

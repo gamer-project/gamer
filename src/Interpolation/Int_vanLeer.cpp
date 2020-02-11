@@ -7,12 +7,12 @@
 // Function    :  Int_vanLeer
 // Description :  Perform spatial interpolation based on the van Leer limiter
 //
-// Note        :  a. The slope at each grid is determined by taking the harmonic mean of the right slope
+// Note        :  1. The slope at each grid is determined by taking the harmonic mean of the right slope
 //                   (difference between the right grid and itself) and the left slope (difference between
 //                   itself and the left slope)
-//                b. The slope is chosen to be zero if the right and left slopes have different signs
-//                c. The interpolation result is BOTH conservative and monotonic
-//		  d. 3D interpolation is achieved by performing interpolation along x, y, and z directions
+//                2. The slope is chosen to be zero if the right and left slopes have different signs
+//                3. The interpolation result is BOTH conservative and monotonic
+//		  4. 3D interpolation is achieved by performing interpolation along x, y, and z directions
 //		     in order --> different from MINMOD1D
 //
 // Parameter   :  CData       : Input coarse-grid array

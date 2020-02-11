@@ -107,7 +107,7 @@ void Validate()
          Aux_Message( stderr, "WARNING : it's recommended to enable DUAL_ENERGY for this test !!\n" );
 #     endif
 
-#     if ( MODEL == HYDRO  ||  MODEL == MHD )
+#     if ( MODEL == HYDRO )
       if ( MINMOD_COEFF > 1.5 )
          Aux_Message( stderr, "WARNING : it's recommended to set MINMOD_COEFF <= 1.5 for this test !!\n" );
 
@@ -124,8 +124,8 @@ void Validate()
       if ( amr->BoxSize[0] != amr->BoxSize[1]  ||  amr->BoxSize[0] != amr->BoxSize[2] )
          Aux_Message( stderr, "WARNING : non-cubic box (currently the flag routine \"Flag_AGORA()\" assumes a cubic box) !!\n" );
 
-      if ( INIT_SUBSAMPLING_NCELL != 0 )
-         Aux_Message( stderr, "WARNING : INIT_SUBSAMPLING_NCELL (%d) != 0 will lead to non-uniform initial disk temperature !!\n",
+      if ( INIT_SUBSAMPLING_NCELL > 1 )
+         Aux_Message( stderr, "WARNING : INIT_SUBSAMPLING_NCELL (%d) > 1 will lead to non-uniform initial disk temperature !!\n",
                       INIT_SUBSAMPLING_NCELL );
    } // if ( MPI_Rank == 0 )
 

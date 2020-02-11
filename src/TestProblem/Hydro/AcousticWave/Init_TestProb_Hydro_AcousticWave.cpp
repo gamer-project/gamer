@@ -35,6 +35,8 @@ void Validate()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ...\n", TESTPROB_ID );
 
+
+// errors
 #  if ( MODEL != HYDRO )
    Aux_Error( ERROR_INFO, "MODEL != HYDRO !!\n" );
 #  endif
@@ -61,6 +63,13 @@ void Validate()
    for (int f=0; f<6; f++)
    if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC )
       Aux_Error( ERROR_INFO, "please set \"OPT__BC_FLU_* = 1\" (i.e., periodic BC) !!\n" );
+
+
+// warnings
+   if ( MPI_Rank == 0 )
+   {
+      if ( !OPT__OUTPUT_USER )   Aux_Message( stdout, "WARNING : OPT__OUTPUT_USER is off !!\n" );
+   }
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
@@ -221,7 +230,7 @@ void OutputError()
    const char Prefix[100]     = "AcousticWave";
    const OptOutputPart_t Part = OUTPUT_DIAG;
 
-   Output_L1Error( SetGridIC, Prefix, Part, NULL_REAL, NULL_REAL, NULL_REAL );
+   Output_L1Error( SetGridIC, NULL, Prefix, Part, NULL_REAL, NULL_REAL, NULL_REAL );
 
 } // FUNCTION : OutputError
 #endif // #if ( MODEL == HYDRO )
