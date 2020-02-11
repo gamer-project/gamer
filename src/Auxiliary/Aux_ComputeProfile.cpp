@@ -327,7 +327,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                } // if ( r2 < r_max2 )
             }}} // i,j,k
          } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-      } // for (int lv=0; lv<NLEVEL; lv++)
+      } // for (int lv=lv_min; lv<=lv_max; lv++)
    } // OpenMP parallel region
 
 
