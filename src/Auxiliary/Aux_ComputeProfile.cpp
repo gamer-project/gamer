@@ -106,6 +106,12 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
    NFound = NFlu;
 
+// gravitational potential
+#  ifdef GRAVITY
+   bool PrepPote=false;
+   if ( TVar & _POTE )  {  PrepPote=true;  NFound++; };
+#  endif
+
 // derived fields
 #  if ( MODEL == HYDRO )
    bool PrepVelR=false, PrepPres=false, PrepEint=false;
@@ -216,6 +222,9 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
             if ( amr->patch[0][lv][PID]->son != -1 )  continue;
 
             const real (*FluidPtr)[PS1][PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid;
+#           ifdef GRAVITY
+            const real (*PotPtr  )[PS1][PS1]      = amr->patch[ amr->PotSg[lv] ][lv][PID]->pot;
+#           endif
 
             const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh - Center[0];
             const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh - Center[1];
@@ -265,6 +274,19 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                      OMP_NCell [ProfIdx][TID][bin] ++;
                      ProfIdx                       ++;
                   }
+
+//                gravitational potential
+#                 ifdef GRAVITY
+                  if ( PrepPote )
+                  {
+                     const real Weight = FluidPtr[DENS][k][j][i]*dv;    // weighted by cell mass
+
+                     OMP_Data  [ProfIdx][TID][bin] += PotPtr[k][j][i]*Weight;
+                     OMP_Weight[ProfIdx][TID][bin] += Weight;
+                     OMP_NCell [ProfIdx][TID][bin] ++;
+                     ProfIdx                       ++;
+                  }
+#                 endif
 
 //                derived fields
 #                 if ( MODEL == HYDRO )
