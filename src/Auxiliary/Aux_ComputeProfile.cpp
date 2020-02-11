@@ -38,6 +38,8 @@
 //                              --> Supported field indicies (defined in Macro.h):
 //                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELR, _PRES, _EINT [, _POTE]
 //                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE]
+//                              --> For a passive scalar with an integer field index FieldIdx returned by AddField(),
+//                                  one can convert it to a bitwise field index by BIDX(FieldIdx)
 //                NProf       : Number of Profile_t objects in Prof
 //                SingleLv    : Only consider patches on the specified level
 //                              --> If SingleLv<0, loop over all levels
@@ -60,12 +62,17 @@
 //
 //                if ( MPI_Rank == 0 )
 //                {
-//                   FILE *File = fopen( "Profile.txt", "w" );
-//                   fprintf( File, "#%19s  %21s  %21s  %10s\n", "Radius", "Data", "Weight", "Cells" );
-//                   for (int b=0; b<Prof.NBin; b++)
-//                      fprintf( File, "%20.14e  %21.14e  %21.14e  %10ld\n",
-//                               Prof.Radius[b], Prof.Data[b], Prof.Weight[b], Prof.NCell[b] );
-//                   fclose( File );
+//                   for (int p=0; p<NProf; p++)
+//                   {
+//                      char Filename[MAX_STRING];
+//                      sprintf( Filename, "Profile%d.txt", p );
+//                      FILE *File = fopen( Filename, "w" );
+//                      fprintf( File, "#%19s  %21s  %21s  %10s\n", "Radius", "Data", "Weight", "Cells" );
+//                      for (int b=0; b<Prof[p]->NBin; b++)
+//                         fprintf( File, "%20.14e  %21.14e  %21.14e  %10ld\n",
+//                                  Prof[p]->Radius[b], Prof[p]->Data[b], Prof[p]->Weight[b], Prof[p]->NCell[b] );
+//                      fclose( File );
+//                   }
 //                }
 //
 // Return      :  Prof
@@ -88,9 +95,35 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 #  endif
 
 
+// extract the target field indices
+// --> treat intrinsic and derived fields separately
+   int NFlu, NFound, TVarIdxList_Flu[NCOMP_TOTAL];
+
+// intrinsic fields
+   NFlu = 0;
+   for (int v=0; v<NCOMP_TOTAL; v++)
+      if ( TVar & (1L<<v) )   TVarIdxList_Flu[ NFlu ++ ] = v;
+
+   NFound = NFlu;
+
+// derived fields
+#  if ( MODEL == HYDRO )
+   bool PrepVelR=false, PrepPres=false, PrepEint=false;
+   if ( TVar & _VELR )  {  PrepVelR=true;  NFound++; };
+   if ( TVar & _PRES )  {  PrepPres=true;  NFound++; };
+   if ( TVar & _EINT )  {  PrepEint=true;  NFound++; };
+
+#  else
+#  error : ERROR : unsupported MODEL !!
+#  endif
+
+   if ( NFound != NProf )
+      Aux_Error( ERROR_INFO, "inconsistent number of fields (found %d != expected %d) !!\n", NFound, NProf );
+
+
+// initialize the profile objects
    for (int p=0; p<NProf; p++)
    {
-
 //    get the total number of radial bins and the corresponding maximum radius
       if ( LogBin )
       {
@@ -106,7 +139,6 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
 
 //    record profile parameters
-
       for (int d=0; d<3; d++)    Prof[p]->Center[d] = Center[d];
 
       Prof[p]->LogBin = LogBin;
@@ -127,7 +159,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
    } // for (int p=0; p<NProf; p++)
 
 
-// allocate memory for per-thread arrays
+// allocate memory for the per-thread arrays
 #  ifdef OPENMP
    const int NT = OMP_NTHREAD;   // number of OpenMP threads
 #  else
@@ -143,6 +175,9 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
 
 // collect profile data in this rank
+#  if ( MODEL == HYDRO )
+   const real   Gamma_m1    = GAMMA - (real)1.0;
+#  endif
    const double r_max2      = SQR( Prof[0]->MaxRadius );
    const double HalfBox[3]  = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
    const bool   Periodic[3] = { OPT__BC_FLU[0] == BC_FLU_PERIODIC,
@@ -180,22 +215,23 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
          {
             if ( amr->patch[0][lv][PID]->son != -1 )  continue;
 
+            const real (*FluidPtr)[PS1][PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid;
+
             const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh - Center[0];
             const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh - Center[1];
             const double z0 = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh - Center[2];
-            double dx, dy, dz;
 
-            for (int k=0; k<PS1; k++)  {  dz = z0 + k*dh;
+            for (int k=0; k<PS1; k++)  {  double dz = z0 + k*dh;
                                           if ( Periodic[2] ) {
                                              if      ( dz > +HalfBox[2] )  {  dz -= amr->BoxSize[2];  }
                                              else if ( dz < -HalfBox[2] )  {  dz += amr->BoxSize[2];  }
                                           }
-            for (int j=0; j<PS1; j++)  {  dy = y0 + j*dh;
+            for (int j=0; j<PS1; j++)  {  double dy = y0 + j*dh;
                                           if ( Periodic[1] ) {
                                              if      ( dy > +HalfBox[1] )  {  dy -= amr->BoxSize[1];  }
                                              else if ( dy < -HalfBox[1] )  {  dy += amr->BoxSize[1];  }
                                           }
-            for (int i=0; i<PS1; i++)  {  dx = x0 + i*dh;
+            for (int i=0; i<PS1; i++)  {  double dx = x0 + i*dh;
                                           if ( Periodic[0] ) {
                                              if      ( dx > +HalfBox[0] )  {  dx -= amr->BoxSize[0];  }
                                              else if ( dx < -HalfBox[0] )  {  dx += amr->BoxSize[0];  }
@@ -216,99 +252,78 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                   if ( bin < 0 )    Aux_Error( ERROR_INFO, "bin (%d) < 0 !!\n", bin );
 #                 endif
 
-                  for (int p=0; p<NProf; p++)
+                  int ProfIdx = 0;
+
+//                intrinsic fields
+                  for (int v=0; v<NFlu; v++)
                   {
-                     const int quant = TVar[p];
+                     const real Weight = dv;
+                     const int  FluIdx = TVarIdxList_Flu[v];
 
-//                   user-specified quantity; for case of MODEL = HYDRO
-                     switch ( quant )
-                     {
-                        case DENS:
-                        case ENGY:
-                        case MOMX:
-                        case MOMY:
-                        case MOMZ:
-                        {
-                           OMP_Data  [p][TID][bin] += amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[quant][k][j][i]*dv;
-                           OMP_Weight[p][TID][bin] += dv;
-                        }
-                        break;
+                     OMP_Data  [ProfIdx][TID][bin] += FluidPtr[FluIdx][k][j][i]*Weight;
+                     OMP_Weight[ProfIdx][TID][bin] += Weight;
+                     OMP_NCell [ProfIdx][TID][bin] ++;
+                     ProfIdx                       ++;
+                  }
 
-                        case VRAD:
-                        {
-                           const double Phi      = ATAN2(dy, dx);
-                           const double cosPhi   = COS(Phi);
-                           const double sinPhi   = SIN(Phi);
-                           const double cosTheta = dz / r;
-                           const double sinTheta = SQRT(1. - SQR(cosTheta));
+//                derived fields
+#                 if ( MODEL == HYDRO )
+                  if ( PrepVelR )
+                  {
+                     const real   Weight   = FluidPtr[DENS][k][j][i]*dv;   // weighted by cell mass
+                     const double Phi      = ATAN2(dy, dx);
+                     const double cosPhi   = COS(Phi);
+                     const double sinPhi   = SIN(Phi);
+                     const double cosTheta = dz / r;
+                     const double sinTheta = SQRT(1. - SQR(cosTheta));
 
-                           const double MomRad = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMX][k][j][i]*sinTheta*cosPhi
-                                               + amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMY][k][j][i]*sinTheta*sinPhi
-                                               + amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMZ][k][j][i]*cosTheta;
+                     const double MomRad   = FluidPtr[MOMX][k][j][i]*sinTheta*cosPhi
+                                           + FluidPtr[MOMY][k][j][i]*sinTheta*sinPhi
+                                           + FluidPtr[MOMZ][k][j][i]*cosTheta;
 
-                           OMP_Data  [p][TID][bin] += MomRad*dv;
-                           OMP_Weight[p][TID][bin] += amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i]*dv;
-                        }
-                        break;
+                     OMP_Data  [ProfIdx][TID][bin] += MomRad*dv; // vr*(rho*dv)
+                     OMP_Weight[ProfIdx][TID][bin] += Weight;
+                     OMP_NCell [ProfIdx][TID][bin] ++;
+                     ProfIdx                       ++;
+                  }
 
-                        case PRESSURE:
-                        {
-#                          ifdef MHD
-                           real B[3];
+                  if ( PrepPres )
+                  {
+                     const real Weight = dv;
+#                    ifdef MHD
+                     const real EngyB  = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+#                    else
+                     const real EngyB  = NULL_REAL;
+#                    endif
+                     const real Pres   = Hydro_GetPressure( FluidPtr[DENS][k][j][i], FluidPtr[MOMX][k][j][i], FluidPtr[MOMY][k][j][i],
+                                                            FluidPtr[MOMZ][k][j][i], FluidPtr[ENGY][k][j][i],
+                                                            Gamma_m1, false, NULL_REAL, EngyB );
 
-                           MHD_GetCellCenteredBField( B,
-                                                      amr->patch[ amr->FluSg[lv] ][lv][PID]->magnetic[MAGX],
-                                                      amr->patch[ amr->FluSg[lv] ][lv][PID]->magnetic[MAGY],
-                                                      amr->patch[ amr->FluSg[lv] ][lv][PID]->magnetic[MAGZ],
-                                                      PS1, PS1, PS1, i, j, k );
+                     OMP_Data  [ProfIdx][TID][bin] += Pres*Weight;
+                     OMP_Weight[ProfIdx][TID][bin] += Weight;
+                     OMP_NCell [ProfIdx][TID][bin] ++;
+                     ProfIdx                       ++;
+                  }
 
-                           real EngyB = 0.5 * ( SQR( B[MAGX] ) + SQR( B[MAGY] ) + SQR( B[MAGZ] ) );
-#                          else
-                           real EngyB = NULL_REAL;
-#                          endif
+                  if ( PrepEint )
+                  {
+                     const real Weight = dv;
+#                    ifdef MHD
+                     const real EngyB  = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+#                    else
+                     const real EngyB  = NULL_REAL;
+#                    endif
+                     const real Pres   = Hydro_GetPressure( FluidPtr[DENS][k][j][i], FluidPtr[MOMX][k][j][i], FluidPtr[MOMY][k][j][i],
+                                                            FluidPtr[MOMZ][k][j][i], FluidPtr[ENGY][k][j][i],
+                                                            Gamma_m1, false, NULL_REAL, EngyB );
+                     const real Eint   = Pres/Gamma_m1;  // assuming gamma law for now; will be replaced by a general EoS
 
-                           const double Pres = Hydro_GetPressure(amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i],
-                                                                 amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMX][k][j][i],
-                                                                 amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMY][k][j][i],
-                                                                 amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMZ][k][j][i],
-                                                                 amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ENGY][k][j][i],
-                                                                 GAMMA - (real)1.0, false, NULL_REAL, EngyB);
-                           OMP_Data  [p][TID][bin] += Pres*dv;
-                           OMP_Weight[p][TID][bin] += dv;
-                        }
-                        break;
-
-                        case INTERNAL_ENGY:
-                        {
-                           double intengy =              amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ENGY][k][j][i]
-                                          - 0.5 * ( SQR( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMX][k][j][i] )
-                                                  + SQR( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMY][k][j][i] )
-                                                  + SQR( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMZ][k][j][i] ) )
-                                          /              amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i];
-
-#                          ifdef MHD
-                           real B[3];
-
-                           MHD_GetCellCenteredBField( B,
-                                                      amr->patch[ amr->FluSg[lv] ][lv][PID]->magnetic[MAGX],
-                                                      amr->patch[ amr->FluSg[lv] ][lv][PID]->magnetic[MAGY],
-                                                      amr->patch[ amr->FluSg[lv] ][lv][PID]->magnetic[MAGZ],
-                                                      PS1, PS1, PS1, i, j, k );
-
-                           intengy -= 0.5 * ( SQR( B[MAGX] ) + SQR( B[MAGY] ) + SQR( B[MAGZ] ) );
-#                          endif
-
-                           OMP_Data  [p][TID][bin] += intengy*dv;
-                           OMP_Weight[p][TID][bin] += dv;
-                        }
-                        break;
-
-                        default:
-                           Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TVar", quant );
-                     } // switch ( quant )
-
-                     OMP_NCell[p][TID][bin] ++;
-                  } // for (int p=0; p<NProf; p++)
+                     OMP_Data  [ProfIdx][TID][bin] += Eint*Weight;
+                     OMP_Weight[ProfIdx][TID][bin] += Weight;
+                     OMP_NCell [ProfIdx][TID][bin] ++;
+                     ProfIdx                       ++;
+                  }
+#                 endif // HYDRO
                } // if ( r2 < r_max2 )
             }}} // i,j,k
          } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
