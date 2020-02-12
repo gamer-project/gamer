@@ -6,10 +6,13 @@
 // problem-specific global variables
 // =======================================================================================
 static double Blast_Dens_Bg;       // background mass density
-static double Blast_Engy_Bg;       // background energy density
-static double Blast_Engy_Exp;      // total explosion energy
+static double Blast_Pres_Bg;       // background pressure
+static double Blast_Pres_Exp;      // explosion pressure
 static double Blast_Radius;        // explosion radius
 static double Blast_Center[3];     // explosion center
+#ifdef MHD
+static double Blast_BField;        // magnetic field strength along the diagonal direction
+#endif
 // =======================================================================================
 
 
@@ -90,12 +93,15 @@ void SetParameter()
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE_ADDRESS,      DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
    ReadPara->Add( "Blast_Dens_Bg",     &Blast_Dens_Bg,         -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Blast_Engy_Bg",     &Blast_Engy_Bg,         -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Blast_Engy_Exp",    &Blast_Engy_Exp,        -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Blast_Pres_Bg",     &Blast_Pres_Bg,         -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Blast_Pres_Exp",    &Blast_Pres_Exp,        -1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "Blast_Radius",      &Blast_Radius,          -1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "Blast_Center_X",    &Blast_Center[0],       -1.0,          NoMin_double,     amr->BoxSize[0]   );
    ReadPara->Add( "Blast_Center_Y",    &Blast_Center[1],       -1.0,          NoMin_double,     amr->BoxSize[1]   );
    ReadPara->Add( "Blast_Center_Z",    &Blast_Center[2],       -1.0,          NoMin_double,     amr->BoxSize[2]   );
+#  ifdef MHD
+   ReadPara->Add( "Blast_BField",      &Blast_BField,           5.0e-2,       NoMin_double,     NoMax_double      );
+#  endif
 
    ReadPara->Read( FileName );
 
@@ -131,12 +137,15 @@ void SetParameter()
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "  test problem ID           = %d\n",     TESTPROB_ID );
       Aux_Message( stdout, "  background mass density   = %13.7e\n", Blast_Dens_Bg );
-      Aux_Message( stdout, "  background energy density = %13.7e\n", Blast_Engy_Bg);
-      Aux_Message( stdout, "  total explosion energy    = %13.7e\n", Blast_Engy_Exp );
-      Aux_Message( stdout, "  explosion energy density  = %13.7e\n", Blast_Engy_Exp/(4.0*M_PI/3.0*CUBE(Blast_Radius) ) );
+      Aux_Message( stdout, "  background pressure       = %13.7e\n", Blast_Pres_Bg );
+      Aux_Message( stdout, "  explosion pressure        = %13.7e\n", Blast_Pres_Exp );
+      Aux_Message( stdout, "  total explosion energy    = %13.7e\n", Blast_Pres_Exp/(GAMMA-1.0)*4.0*M_PI/3.0*CUBE(Blast_Radius) );
       Aux_Message( stdout, "  explosion radius          = %13.7e\n", Blast_Radius );
       Aux_Message( stdout, "  explosion center          = (%13.7e, %13.7e, %13.7e)\n", Blast_Center[0], Blast_Center[1],
                                                                                        Blast_Center[2] );
+#     ifdef MHD
+      Aux_Message( stdout, "  magnetic field strength   = %13.7e\n", Blast_BField );
+#     endif
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -170,7 +179,6 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
-   const double Blast_Engy_Exp_Density = Blast_Engy_Exp/(4.0*M_PI/3.0*Blast_Radius*Blast_Radius*Blast_Radius);
    const double r = SQRT( SQR(x-Blast_Center[0]) + SQR(y-Blast_Center[1]) + SQR(z-Blast_Center[2]) );
 
    fluid[DENS] = Blast_Dens_Bg;
@@ -178,10 +186,40 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[MOMY] = 0.0;
    fluid[MOMZ] = 0.0;
 
-   if ( r <= Blast_Radius )   fluid[ENGY] = Blast_Engy_Exp_Density;
-   else                       fluid[ENGY] = Blast_Engy_Bg;
+   if ( r <= Blast_Radius )   fluid[ENGY] = Blast_Pres_Exp/(GAMMA-1.0);
+   else                       fluid[ENGY] = Blast_Pres_Bg /(GAMMA-1.0);
 
 } // FUNCTION : SetGridIC
+
+
+
+#ifdef MHD
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SetBFieldIC
+// Description :  Set the problem-specific initial condition of magnetic field
+//
+// Note        :  1. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
+//                   (unless OPT__INIT_GRID_WITH_OMP is disabled)
+//                   --> Please ensure that everything here is thread-safe
+//
+// Parameter   :  magnetic : Array to store the output magnetic field
+//                x/y/z    : Target physical coordinates
+//                Time     : Target physical time
+//                lv       : Target refinement level
+//                AuxArray : Auxiliary array
+//
+// Return      :  magnetic
+//-------------------------------------------------------------------------------------------------------
+void SetBFieldIC( real magnetic[], const double x, const double y, const double z, const double Time,
+                  const int lv, double AuxArray[] )
+{
+
+   magnetic[MAGX] = Blast_BField / sqrt(3.0);
+   magnetic[MAGY] = Blast_BField / sqrt(3.0);
+   magnetic[MAGZ] = Blast_BField / sqrt(3.0);
+
+} // FUNCTION : SetBFieldIC
+#endif // #ifdef MHD
 #endif // #if ( MODEL == HYDRO )
 
 
@@ -212,14 +250,17 @@ void Init_TestProb_Hydro_BlastWave()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr   = SetGridIC;
-   Output_User_Ptr          = NULL;
-   Flag_User_Ptr            = NULL;
-   Mis_GetTimeStep_User_Ptr = NULL;
-   Aux_Record_User_Ptr      = NULL;
-   BC_User_Ptr              = NULL;
-   Flu_ResetByUser_Func_Ptr = NULL;
-   End_User_Ptr             = NULL;
+   Init_Function_User_Ptr        = SetGridIC;
+#  ifdef MHD
+   Init_Function_BField_User_Ptr = SetBFieldIC;
+#  endif
+   Output_User_Ptr               = NULL;
+   Flag_User_Ptr                 = NULL;
+   Mis_GetTimeStep_User_Ptr      = NULL;
+   Aux_Record_User_Ptr           = NULL;
+   BC_User_Ptr                   = NULL;
+   Flu_ResetByUser_Func_Ptr      = NULL;
+   End_User_Ptr                  = NULL;
 #  endif // #if ( MODEL == HYDRO )
 
 

@@ -16,8 +16,8 @@
 
 #else // #ifdef __CUDACC__
 
-void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward );
-void Hydro_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres );
+void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
+void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Gamma_m1, const real MinPres );
 real Hydro_CheckMinPres( const real InPres, const real MinPres );
 
 #endif // #ifdef __CUDACC__ ... else ...
@@ -29,7 +29,7 @@ real Hydro_CheckMinPres( const real InPres, const real MinPres );
 // Description :  Approximate Riemann solver of Harten, Lax, and van Leer.
 //                The wave speed is estimated by the same formula in HLLE solver
 //
-// Note        :  1. The input data should be conserved variables
+// Note        :  1. Input data should be conserved variables
 //                2. Ref : a. Riemann Solvers and Numerical Methods for Fluid Dynamics - A Practical Introduction
 //                             ~ by Eleuterio F. Toro
 //                         b. Batten, P., Clarke, N., Lambert, C., & Causon, D. M. 1997, SIAM J. Sci. Comput.,
@@ -57,8 +57,8 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
       R[v] = R_In[v];
    }
 
-   Hydro_Rotate3D( L, XYZ, true );
-   Hydro_Rotate3D( R, XYZ, true );
+   Hydro_Rotate3D( L, XYZ, true, MAG_OFFSET );
+   Hydro_Rotate3D( R, XYZ, true, MAG_OFFSET );
 
 
 // 2. evaluate the Roe's average values
@@ -80,11 +80,11 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( Hydro_CheckNegative(L[0]) )
-      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+      printf( "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               L[0], __FILE__, __LINE__, __FUNCTION__ );
 
    if ( Hydro_CheckNegative(R[0]) )
-      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+      printf( "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               R[0], __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
@@ -107,7 +107,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( Hydro_CheckNegative(GammaP_Rho) )
-      printf( "ERROR : negative GammaP_Rho (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+      printf( "ERROR : invalid GammaP_Rho (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               GammaP_Rho, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
@@ -123,11 +123,11 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( Hydro_CheckNegative(P_L) )
-      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+      printf( "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               P_L, __FILE__, __LINE__, __FUNCTION__ );
 
    if ( Hydro_CheckNegative(P_R) )
-      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+      printf( "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               P_R, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
@@ -212,7 +212,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
 
 // 8. restore the correct order
-   Hydro_Rotate3D( Flux_Out, XYZ, false );
+   Hydro_Rotate3D( Flux_Out, XYZ, false, MAG_OFFSET );
 
 } // FUNCTION : Hydro_RiemannSolver_HLLC
 

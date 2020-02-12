@@ -62,11 +62,11 @@ typedef float  real;
 #  define MOMZ             3
 #  define ENGY             4
 
-#  define _DENS            ( 1 << (DENS) )
-#  define _MOMX            ( 1 << (MOMX) )
-#  define _MOMY            ( 1 << (MOMY) )
-#  define _MOMZ            ( 1 << (MOMZ) )
-#  define _ENGY            ( 1 << (ENGY) )
+#  define _DENS            ( 1L << (DENS) )
+#  define _MOMX            ( 1L << (MOMX) )
+#  define _MOMY            ( 1L << (MOMY) )
+#  define _MOMZ            ( 1L << (MOMZ) )
+#  define _ENGY            ( 1L << (ENGY) )
 
 #elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
@@ -78,9 +78,9 @@ typedef float  real;
 #  define REAL             1
 #  define IMAG             2
 
-#  define _DENS            ( 1 << (DENS) )
-#  define _REAL            ( 1 << (REAL) )
-#  define _IMAG            ( 1 << (IMAG) )
+#  define _DENS            ( 1L << (DENS) )
+#  define _REAL            ( 1L << (REAL) )
+#  define _IMAG            ( 1L << (IMAG) )
 
 #else
 #  error : ERROR : unsupported MODEL !!
@@ -90,11 +90,11 @@ typedef float  real;
 
 
 // symbolic constants used by all models
-#  define _FLUID           (  ( 1 << NCOMP_FLUID ) - 1           )
-#  define _PASSIVE         (  ( 1 << NCOMP_TOTAL ) - 1 - _FLUID  )
-#  define _TOTAL           (  ( 1 << NCOMP_TOTAL ) - 1           )
-#  define _POTE            ( 1 << NCOMP_TOTAL   )
-#  define _PAR_DENS        ( 1 << NCOMP_TOTAL+1 )
+#  define _FLUID           (  ( 1L << NCOMP_FLUID ) - 1L           )
+#  define _PASSIVE         (  ( 1L << NCOMP_TOTAL ) - 1L - _FLUID  )
+#  define _TOTAL           (  ( 1L << NCOMP_TOTAL ) - 1L           )
+#  define _POTE            ( 1L << (NCOMP_TOTAL  ) )
+#  define _PAR_DENS        ( 1L << (NCOMP_TOTAL+1) )
 
 
 // 3D to 1D array indices transformation

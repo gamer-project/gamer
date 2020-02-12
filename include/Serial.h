@@ -33,7 +33,7 @@
 
 
 #define Buf_AllocateBufferPatch( Tpatch, lv ) {}
-#define Buf_GetBufferData( lv, FluSg, PotSg, GetBufMode, TVar, ParaBuf, UseLBFunc ) {}
+#define Buf_GetBufferData( lv, FluSg, MagSg, PotSg, GetBufMode, TVarCC, TVarFC, ParaBuf, UseLBFunc ) {}
 #define Buf_RecordExchangeDataPatchID( lv ) {}
 #define Buf_RecordExchangeFluxPatchID( lv ) {}
 #define Buf_RecordBoundaryFlag( lv ) {}

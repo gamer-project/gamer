@@ -5,9 +5,9 @@
 int FluStatus_ThisRank;
 
 
-// defined in Flu_SwapFluxPointer.cpp
-void Flu_SwapFluxPointer( const int lv );
-void Flu_InitTempFlux( const int lv );
+// defined in Flu_ManageFixUpTempArray.cpp
+void Flu_SwapFixUpTempArray( const int lv );
+void Flu_InitFixUpTempArray( const int lv );
 
 
 extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TTime );
@@ -19,16 +19,17 @@ extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const dou
 // Function    :  Flu_AdvanceDt
 // Description :  Advance the fluid attributes by the flux gradients
 //
-// Note        :  a. Invoke the function "InvokeSolver"
-//                b. Currently the updated data can only be stored in the different sandglass from the
-//                   input fluid data
+// Note        :  1. Invoke InvokeSolver()
+//                2. Currently the updated data can only be stored in the different sandglass from the
+//                   input data
 //
 // Parameter   :  lv           : Target refinement level
 //                TimeNew      : Target physical time to reach
 //                TimeOld      : Physical time before update
 //                               --> This function updates physical time from TimeOld to TimeNew
 //                dt           : Time interval to advance solution (can be different from TimeNew-TimeOld in COMOVING)
-//                SaveSg       : Sandglass to store the updated data
+//                SaveSg_Flu   : Sandglass to store the updated fluid data
+//                SaveSg_Mag   : Sandglass to store the updated B field
 //                OverlapMPI   : true --> Overlap MPI time with CPU/GPU computation
 //                Overlap_Sync : true  --> Advance the patches which cannot be overlapped with MPI communication
 //                               false --> Advance the patches which can    be overlapped with MPI communication
@@ -37,18 +38,31 @@ extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const dou
 // Return      : GAMER_SUCCESS / GAMER_FAILED
 //               --> Mainly used for the option "AUTO_REDUCE_DT"
 //-------------------------------------------------------------------------------------------------------
-int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,
-                   const bool OverlapMPI, const bool Overlap_Sync )
+int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                   const int SaveSg_Flu, const int SaveSg_Mag, const bool OverlapMPI, const bool Overlap_Sync )
 {
 
-// initialize the flux_tmp arrays for AUTO_REDUCE_DT
-   if ( OPT__FIXUP_FLUX  &&  AUTO_REDUCE_DT  &&  lv != 0 )  Flu_InitTempFlux( lv-1 );
+// initialize flux_tmp[] (and electric_tmp[] in MHD) on the parent level for AUTO_REDUCE_DT
+   if ( AUTO_REDUCE_DT  &&  lv != 0 )  Flu_InitFixUpTempArray( lv-1 );
+
+
+// initialize patch->ele_corrected[] for correcting the coarse-grid electric field
+#  ifdef MHD
+   if ( OPT__FIXUP_ELECTRIC  &&  lv != 0 )
+   {
+      const int FaLv = lv - 1;
+
+      for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][19]; FaPID++)
+      for (int e=0; e<12; e++)
+         amr->patch[0][FaLv][FaPID]->ele_corrected[e] = false;
+   }
+#  endif
 
 
 // invoke the fluid solver
    FluStatus_ThisRank = GAMER_SUCCESS;
 
-   InvokeSolver( FLUID_SOLVER, lv, TimeNew, TimeOld, dt, NULL_REAL, SaveSg, NULL_INT, OverlapMPI, Overlap_Sync );
+   InvokeSolver( FLUID_SOLVER, lv, TimeNew, TimeOld, dt, NULL_REAL, SaveSg_Flu, SaveSg_Mag, NULL_INT, OverlapMPI, Overlap_Sync );
 
 
 // collect the fluid solver status from all ranks (only necessary for AUTO_REDUCE_DT)
@@ -63,8 +77,13 @@ int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 // note that we always have FluStatus == GAMER_SUCCESS if AUTO_REDUCE_DT is disabled
    if ( FluStatus_AllRank == GAMER_SUCCESS )
    {
-//    reset the fluxes in the buffer patches at lv as zeros so that one can accumulate the coarse-fine fluxes later when evolving lv+1
+//    reset the fluxes and electric field in the buffer patches at lv as zeros
+//    --> for accumulating the coarse-fine fluxes and electric field later when evolving lv+1
       if ( OPT__FIXUP_FLUX )  Buf_ResetBufferFlux( lv );
+
+#     if ( defined MHD  &&  defined LOAD_BALANCE )
+      if ( OPT__FIXUP_ELECTRIC )    MHD_LB_ResetBufferElectric( lv );
+#     endif
 
 
 //    call Flu_ResetByUser_API_Ptr() here only if both GRAVITY and GRACKLE are disabled
@@ -74,11 +93,11 @@ int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 #     ifdef SUPPORT_GRACKLE
       if ( !GRACKLE_ACTIVATE )
 #     endif
-      if ( OPT__RESET_FLUID  &&  Flu_ResetByUser_API_Ptr != NULL )   Flu_ResetByUser_API_Ptr( lv, SaveSg, TimeNew );
+      if ( OPT__RESET_FLUID  &&  Flu_ResetByUser_API_Ptr != NULL )   Flu_ResetByUser_API_Ptr( lv, SaveSg_Flu, TimeNew );
 
 
-//    swap the flux pointers if the fluid solver works successfully
-      if ( OPT__FIXUP_FLUX  &&  AUTO_REDUCE_DT  &&  lv != 0 )  Flu_SwapFluxPointer( lv-1 );
+//    swap the flux (and electric in MHD) pointers on the parent level if the fluid solver works successfully
+      if ( AUTO_REDUCE_DT  &&  lv != 0 )  Flu_SwapFixUpTempArray( lv-1 );
    }
 
 

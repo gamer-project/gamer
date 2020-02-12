@@ -109,6 +109,9 @@ FieldIdx_t AddParticleAttribute( char *InputLabel )
 
 
 // check
+   if ( InputLabel == NULL )
+      Aux_Error( ERROR_INFO, "InputLabel == NULL !!\n" );
+
    if ( NDefinedAtt > PAR_NATT_TOTAL )
       Aux_Error( ERROR_INFO, "total number of defined particle attributes (%d) exceeds expectation (%d) after adding \"%s\" !!\n"
                  "        --> Modify PAR_NATT_USER in the Makefile properly\n",
@@ -120,7 +123,7 @@ FieldIdx_t AddParticleAttribute( char *InputLabel )
 
 
 // set attribute label
-   ParAttLabel[AttIdx] = InputLabel;
+   strcpy( ParAttLabel[AttIdx], InputLabel );
 
 
 // return attribute index

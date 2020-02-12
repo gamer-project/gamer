@@ -44,7 +44,7 @@ static int Table_01( const int SibID, const int Side, const char dim, const int 
 //                IntPhase       : true --> Perform interpolation on rho/phase instead of real/imag parts in ELBDM
 //-------------------------------------------------------------------------------------------------------
 void InterpolateGhostZone( const int lv, const int PID, real IntData[], const int SibID, const int GhostSize, 
-                           const IntScheme_t IntScheme, const int NTSib[], int *TSib[], const int TVar, const int NVar_Tot,
+                           const IntScheme_t IntScheme, const int NTSib[], int *TSib[], const long TVar, const int NVar_Tot,
                            const int NVar_Flu, const int TFluVarIdxList[], const bool IntPhase )
 {
 
