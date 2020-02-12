@@ -215,7 +215,7 @@ void Einasto_calculator::initialize_mass(){
   for(int i=0;i<nbin_Einasto;i++){
     x_Einasto[i] = dx *i;
     masses_Einasto[i] = mass_Einasto(x_Einasto[i]);
-    g_Einasto[i] = masses_Einasto[i]*Einasto_NEWTON_G/(x_Einasto[i]*Einasto_R0);
+    g_Einasto[i] = masses_Einasto[i]*Einasto_NEWTON_G/pow(x_Einasto[i]*Einasto_R0,2);
     
   }
   g_Einasto[0]=0;

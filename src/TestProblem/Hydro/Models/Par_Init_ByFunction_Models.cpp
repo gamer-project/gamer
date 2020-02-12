@@ -87,7 +87,7 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
       else if(model_name=="Burkert")cal_Burkert.init(NEWTON_G,Models_Rho0,Models_R0);
       else if(model_name=="Jaffe")cal_Jaffe.init(NEWTON_G,Models_Rho0,Models_R0);
       else if(model_name=="Hernquist")cal_Hernquist.init(NEWTON_G,Models_Rho0,Models_R0);
-      else if(model_name=="Einasto")cal_Einasto.init(1.0,NEWTON_G,Models_Rho0,Models_R0,Models_MaxR);
+      else if(model_name=="Einasto")cal_Einasto.init(1,NEWTON_G,Models_Rho0,Models_R0,Models_MaxR);
       //else if(model_name=="UNKNOWN")cal_UNKNOWN.init(NEWTON_G,Models_R0,Models_MaxR,"profile.txt",7,1,0,5);
       else if(model_name=="UNKNOWN")cal_UNKNOWN.init(NEWTON_G,Models_Rho0,Models_R0,Models_MassProfNBin,Models_MaxR);
 
