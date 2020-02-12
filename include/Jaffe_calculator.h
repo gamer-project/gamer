@@ -19,7 +19,7 @@ using namespace std;
 #include<fstream>
 
 #define size_Jaffe 1000/***difference***/
-
+#define nbin_Jaffe 1000
 
 
 class Jaffe_calculator
@@ -30,8 +30,9 @@ class Jaffe_calculator
         virtual ~Jaffe_calculator();
         
         //Principal Functions
-        void init(double newton_g,double rho,double r);        
+        void init(double newton_g,double rho,double r0,double maxr);        
         double set_vel(double r);
+        double set_mass(double r);
         
         
     protected:
@@ -52,6 +53,8 @@ class Jaffe_calculator
         void smooth_all(double* x,int start,int fin);
 
         //Probability Density
+        void initialize_mass();
+        void initialize_pot();
         void initialize_prob_dens();
 
         RandomNumber_t *RNG ;

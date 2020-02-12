@@ -74,7 +74,7 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
 {
 // Input Model names
    string model_name;
-   model_name="Einasto";
+   model_name="Jaffe";
    //cout<<"Input model names:";
    //cin>>model_name;
 
@@ -85,7 +85,7 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
       if(model_name=="NFW")cal_NFW.init(NEWTON_G,Models_Rho0,Models_R0);
       else if(model_name=="Plummer")cal_Plummer.init(NEWTON_G,Models_Rho0,Models_R0);
       else if(model_name=="Burkert")cal_Burkert.init(NEWTON_G,Models_Rho0,Models_R0);
-      else if(model_name=="Jaffe")cal_Jaffe.init(NEWTON_G,Models_Rho0,Models_R0);
+      else if(model_name=="Jaffe")cal_Jaffe.init(NEWTON_G,Models_Rho0,Models_R0,Models_MaxR);
       else if(model_name=="Hernquist")cal_Hernquist.init(NEWTON_G,Models_Rho0,Models_R0);
       else if(model_name=="Einasto")cal_Einasto.init(2,NEWTON_G,Models_Rho0,Models_R0,Models_MaxR);
       //else if(model_name=="UNKNOWN")cal_UNKNOWN.init(NEWTON_G,Models_R0,Models_MaxR,"profile.txt",7,1,0,5);

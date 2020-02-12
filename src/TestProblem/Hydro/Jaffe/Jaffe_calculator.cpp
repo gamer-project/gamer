@@ -2,6 +2,14 @@
 double Jaffe_NEWTON_G;
 double Jaffe_Rho0;
 double Jaffe_R0;
+double Jaffe_MaxR;
+
+
+//Quantities
+double x_Jaffe[nbin_Jaffe];
+double masses_Jaffe[nbin_Jaffe];
+double pot_Jaffe[nbin_Jaffe];
+double g_Jaffe[nbin_Jaffe];
 Jaffe_calculator::Jaffe_calculator()
 {
   RNG = new RandomNumber_t( 1 );
@@ -67,7 +75,7 @@ void Jaffe_calculator::add_num(double* x,int start,int fin){
   }
 }
 void Jaffe_calculator::smooth_all(double* x,int start,int fin){
-  int num=3;
+  int num=10;
   for(int k=start;k<fin-num+1;k++){
     mask(x,k,k+num);
   }
@@ -84,6 +92,63 @@ double Jaffe_calculator::slope(double* x,double* y,int start,int fin){
 }
 
 //Physical Properties
+double rho_Jaffe(double x){
+  return Jaffe_Rho0 *pow(x*(1+x),-2)/(4*M_PI);
+}
+double mass_base_Jaffe(double x,void *nothing){
+  return Jaffe_Rho0 *pow((1+x),-2)*pow(Jaffe_R0,3);
+}
+double mass_Jaffe(double x){
+  gsl_integration_workspace * w 
+  = gsl_integration_workspace_alloc (1000);
+
+  double  error;
+  double result;
+
+  gsl_function F;
+  F.function = &mass_base_Jaffe;
+  gsl_integration_qag  (&F, 0, x, 0, 1e-7, 1000, 1, w, &result,  &error);
+  gsl_integration_workspace_free (w);
+  return result;
+}
+double potential_Jaffe(double x){
+  if(x>double(Jaffe_MaxR/Jaffe_R0)){
+    return pot_Jaffe[nbin_Jaffe-1]*(Jaffe_MaxR)/(x*Jaffe_R0);
+  }
+
+  else{
+    double dr = Jaffe_MaxR / (nbin_Jaffe-1);
+    double r = x*Jaffe_R0;
+    int ind = r/dr;
+    double par = r - ind * dr;
+    
+    return pot_Jaffe[ind+1] + (pot_Jaffe[ind+1] - pot_Jaffe[ind])*par/dr;       
+  }
+}
+double rho_dx_Jaffe(double x){
+  return - Jaffe_Rho0 * (1/(x*x)) * (1/((1+x)*(1+x))) * (1/x + 1/(1+x))/(2*M_PI);
+}
+double de_rho_over_de_psi_Jaffe(double x) {
+  double *s;
+  double rho_dx_Jaffe = Jaffe_Rho0 * (1/(x*x)) * (1/((1+x)*(1+x))) * (1/x + 1/(1+x))/(2*M_PI);
+  double psi_dx_Jaffe;
+  if(x>double(Jaffe_MaxR/Jaffe_R0)){
+    psi_dx_Jaffe=g_Jaffe[nbin_Jaffe-1]*pow(Jaffe_MaxR,2)/pow(x*Jaffe_R0,2);
+    psi_dx_Jaffe*=Jaffe_R0; 
+  }
+
+  else{
+    double dr = Jaffe_MaxR / (nbin_Jaffe-1);
+    double r = x*Jaffe_R0;
+    int ind = r/dr;
+    double par = r - ind * dr;
+    
+    psi_dx_Jaffe=g_Jaffe[ind+1] + (g_Jaffe[ind+1] - g_Jaffe[ind])*par/dr;   
+    psi_dx_Jaffe*=Jaffe_R0;    
+  }
+    
+  return rho_dx_Jaffe/psi_dx_Jaffe;
+}
 //NFW
 /*
 double potential_Jaffe(double x){
@@ -99,7 +164,7 @@ double de_rho_over_de_psi_Jaffe(double x) {
   return rho_dx_Jaffe/psi_dx_Jaffe;
 }*/
 //Jaffe
-
+/*
 double potential_Jaffe(double x){
    double s=(Jaffe_NEWTON_G*Jaffe_Rho0*pow(Jaffe_R0,2))*log(x/(1+x));
    return s;
@@ -112,7 +177,7 @@ double de_rho_over_de_psi_Jaffe(double x) {
   double psi_dx_Jaffe = Jaffe_NEWTON_G*Jaffe_R0*Jaffe_R0*Jaffe_Rho0*( 1/(x*(1+x)) );
       
   return rho_dx_Jaffe/psi_dx_Jaffe;
-}/**/
+}*/
 
 //GSL functions
 double psi_potential_Jaffe(double r, void * parameters){
@@ -126,7 +191,7 @@ double inverse_psi_to_x_Jaffe (double psi) {
   const gsl_root_fsolver_type *T;
   gsl_root_fsolver *s;
   double r0= 0;
-  double x_lo =1e-7, x_hi = 1e15;
+  double x_lo =0.0001, x_hi = 100000000000.0;
   gsl_function F;
   
   F.function = &psi_potential_Jaffe;
@@ -149,88 +214,72 @@ double inverse_psi_to_x_Jaffe (double psi) {
   gsl_root_fsolver_free (s);
   return r0;
 }
-double basis_Jaffe(double psi,void* eng){
-  double r=inverse_psi_to_x_Jaffe (psi);
-  double e= *(double *)eng;
-  return de_rho_over_de_psi_Jaffe(r) * pow(e-psi,-0.5);
-}
+
 //Probability Density
 double integration_Jaffe(double eng){
-  /*gsl_integration_workspace * w 
-  = gsl_integration_workspace_alloc (1000);
-
-  double  error;
-  double result;
-
-  gsl_function F;
-  F.function = &basis_Jaffe;
-  F.params = &eng;
-  
-  
-  //if(eng+potential_UNKNOWN(x0+epson)<0) return 0;
-  gsl_integration_qag  (&F, 0, eng, 0, 1e-4, 1000, 1, w, &result,  &error);
-  gsl_integration_workspace_free (w);
-  
-  */
-  double min = -potential_Jaffe(1e3);
+  //double epson=0.1;
+  double min = 0;
   double max = eng;
   int num=1000;
 
   double dx=(max-min)/num;
   
-  double result_dx = 0;
+  double result = 0;
   for(int i=0;i<num;i++){
     double psi_l = min+i*dx,psi_r = min+(i+1)*dx;
     double x0 = inverse_psi_to_x_Jaffe(min+(i+0.5)*dx);
-    if(i==num-1)result_dx += 2* de_rho_over_de_psi_Jaffe(x0) * ( pow(eng-psi_l,0.5) );
-    else result_dx += 2* de_rho_over_de_psi_Jaffe(x0) * ( pow(eng-psi_l,0.5) - pow(eng-psi_r,0.5) );
+    if(i==num-1)result += 2* de_rho_over_de_psi_Jaffe(x0) * ( pow(eng-psi_l,0.5) );
+    else result += 2* de_rho_over_de_psi_Jaffe(x0) * ( pow(eng-psi_l,0.5) - pow(eng-psi_r,0.5) );
     
   }
-  //cout<<(result_dx-result)/result<<endl;
-  return result_dx;
+  cout<<result<<endl;
+  return result;
 }
-double integration_eng_base_Jaffe(double eng,void *nothing){
+double integration_eng_base_Jaffe(double eng){
   //double x0 =inverse_psi_to_x_Jaffe(eng);
   return integration_Jaffe(eng);
 }
+void Jaffe_calculator::initialize_mass(){
+  double dx = Jaffe_MaxR/(Jaffe_R0*(nbin_Jaffe-1));
+  for(int i=0;i<nbin_Jaffe;i++){
+    x_Jaffe[i] = dx *i;
+    masses_Jaffe[i] = mass_Jaffe(x_Jaffe[i]);
+    g_Jaffe[i] = masses_Jaffe[i]*Jaffe_NEWTON_G/pow(x_Jaffe[i]*Jaffe_R0,2);
+    cout<<masses_Jaffe[i]<<endl;
+  }
+  g_Jaffe[0]=0;
+}
+void Jaffe_calculator::initialize_pot(){
+  double dx = Jaffe_MaxR/(Jaffe_R0*(nbin_Jaffe-1));
+  double pot_out = - masses_Jaffe[nbin_Jaffe-1]*Jaffe_NEWTON_G/Jaffe_MaxR;
+  for(int i=nbin_Jaffe-2;i>=0;i--){
+    pot_Jaffe[i]=pot_Jaffe[i+1] - (g_Jaffe[i]+g_Jaffe[i+1])*Jaffe_R0*dx/2;
+   
+  }
+}
 void Jaffe_calculator::initialize_prob_dens(){
-  double min =-potential_Jaffe(1e3),max =-potential_Jaffe(1e-4);/***difference***/
+  double min =-potential_Jaffe(100),max =-potential_Jaffe(0.001);/***difference***/
   delta =(max-min)/size_Jaffe;
   double eng=min;
 
-  double *s;
+  
   for(int k =0;k<size_Jaffe;k++){
-    
     psi[k] = eng;
-    int_prob_dens[k] = integration_eng_base_Jaffe(eng,s);
+    int_prob_dens[k] = integration_eng_base_Jaffe(eng);
     
-    if(k<size_Jaffe/4)eng += 0.1*delta;
-    else if(k>=size_Jaffe/4 and k<size_Jaffe*3/4)eng += delta;
-    if(k>=size_Jaffe*3/4)eng += 1.9*delta;
+    
+    eng +=delta;
+  
   }
-    //double*  error=new double();
-    //double* nothing;
-    //double* result=new double();
   for(int k =0;k<size_Jaffe;k++){
-    /*//continuous
-    
 
-    gsl_function F;
-    F.function = &integration_eng_base_Jaffe;
-    F.params = nothing;
-    
-    gsl_deriv_central(&F, psi[k], 1e-7, result, error);
-    prob_dens[k]=*result;*/
-    //cout<<*error<<endl;
-    //discrete
-    int num=2;
-    if(k==0)prob_dens[k]=slope(psi,int_prob_dens,k,k+num);
-    else if(k==1)prob_dens[k]=slope(psi,int_prob_dens,k-1,k+num-1);
+    if(k==0)prob_dens[k]=slope(psi,int_prob_dens,k,k+5);
+    else if(k==1)prob_dens[k]=slope(psi,int_prob_dens,k-1,k+4);
 
-    else if(k==size_Jaffe-2)prob_dens[k]=slope(psi,int_prob_dens,k+2-num,k+2);
-    else if(k==size_Jaffe-1)prob_dens[k]=slope(psi,int_prob_dens,k+1-num,k+1);
+    else if(k==size_Jaffe-2)prob_dens[k]=slope(psi,int_prob_dens,k-3,k+2);
+    else if(k==size_Jaffe-1)prob_dens[k]=slope(psi,int_prob_dens,k-4,k+1);
 
-    else prob_dens[k]=slope(psi,int_prob_dens,k-num/2+1,k+num/2+1);
+    else prob_dens[k]=slope(psi,int_prob_dens,k-2,k+3);
 
     if(prob_dens[k]<0)prob_dens[k]=0;
     
@@ -239,13 +288,16 @@ void Jaffe_calculator::initialize_prob_dens(){
 }
 
 //Principal functions
-void Jaffe_calculator::init(double newton_g,double rho,double r){
+void Jaffe_calculator::init(double newton_g,double rho,double r0,double maxr){
 
   Jaffe_NEWTON_G=newton_g;
   Jaffe_Rho0=rho;
-  Jaffe_R0=r;
-
+  Jaffe_R0=r0;
+  Jaffe_MaxR=maxr;
   
+
+  initialize_mass();
+  initialize_pot();
   initialize_prob_dens();
   
 }
@@ -273,13 +325,13 @@ double Jaffe_calculator::set_vel(double r){
       }
     sum_mes += prob_dens[k] *pow(psi_per-psi[k],0.5) *delta;
   }
-  //if(index_ass==size_Jaffe-2)cout<<"X:"<<r<<endl;
   psi_ass = psi[index_ass] +delta *par;
-  if(!(-2*(psi_ass+potential_Jaffe(r))>0)){
-    cout<<r<<endl;
+  if(-2*(psi_ass+potential_Jaffe(r))<0){
     return 0;
   }
-  
   double v =pow(-2*(psi_ass+potential_Jaffe(r)),0.5);
   return v;
 }  
+double Jaffe_calculator::set_mass(double x){
+  return mass_Jaffe(x);
+}
