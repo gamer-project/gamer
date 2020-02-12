@@ -50,7 +50,7 @@
 //                const bool   LogBin         = true;
 //                const double LogBinRatio    = 1.25;
 //                const bool   RemoveEmptyBin = true;
-//                const int    TVar           = _DENS | _PRES;
+//                const long   TVar           = _DENS | _PRES;
 //                const int    NProf          = 2;
 //                const int    SingleLv       = -1;
 //
@@ -78,7 +78,7 @@
 // Return      :  Prof
 //-------------------------------------------------------------------------------------------------------
 void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double r_max_input, const double dr_min,
-                         const bool LogBin, const double LogBinRatio, const bool RemoveEmpty, const int TVar,
+                         const bool LogBin, const double LogBinRatio, const bool RemoveEmpty, const long TVar,
                          const int NProf, const int SingleLv )
 {
 
