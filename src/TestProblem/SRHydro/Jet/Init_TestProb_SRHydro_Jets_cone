@@ -696,6 +696,8 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
   Omega_t = Jet_Angular_Velocity * Time * M_PI / 180.0;
 
   Smooth = false;
+  if ( Smooth ) Jet_SrcVelSmooth = Jet_SrcVel*SQR(cos( 0.5 * M_PI * rp[1] / Jet_HalfOpeningAngle ));
+  else          Jet_SrcVelSmooth = Jet_SrcVel;
 
   // shift origin to the point O
   xp[0] = x - Jet_Cen[0];
@@ -770,8 +772,6 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
 
 		  // smooth velocity on source boundary
           Cartesian2Spherical(xp, rp);
-          if ( Smooth ) Jet_SrcVelSmooth = Jet_SrcVel*SQR(cos( 0.5 * M_PI * rp[1] / Jet_HalfOpeningAngle ));
-          else          Jet_SrcVelSmooth = Jet_SrcVel;
 
           CartesianRotate(xp, Jet_PrecessionAngle, Omega_t, true);
 
@@ -810,8 +810,6 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
 
 		  // smooth velocity on source boundary
           Cartesian2Spherical(xp, rp);
-          if ( Smooth ) Jet_SrcVelSmooth = Jet_SrcVel*SQR(cos( 0.5 * M_PI * rp[1] / Jet_HalfOpeningAngle ));
-          else          Jet_SrcVelSmooth = Jet_SrcVel;
 
           CartesianRotate(xp, Jet_PrecessionAngle, Omega_t, true);
 
