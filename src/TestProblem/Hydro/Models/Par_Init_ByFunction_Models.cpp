@@ -4,6 +4,7 @@
 #include "Plummer_calculator.h"
 #include"Burkert_calculator.h"
 #include"Jaffe_calculator.h"
+#include "Hernquist_calculator.h"
 #include"UNKNOWN_calculator.h"
 
 #define DEBUG
@@ -62,6 +63,7 @@ NFW_calculator cal_NFW;//main
 Plummer_calculator cal_Plummer;
 Burkert_calculator cal_Burkert;
 Jaffe_calculator cal_Jaffe;
+Hernquist_calculator cal_Hernquist;
 UNKNOWN_calculator cal_UNKNOWN;
 void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRank,
                                   real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
@@ -70,7 +72,7 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
 {
 // Input Model names
    string model_name;
-   model_name="Jaffe";
+   model_name="Hernquist";
    //cout<<"Input model names:";
    //cin>>model_name;
 
@@ -82,6 +84,7 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
       else if(model_name=="Plummer")cal_Plummer.init(NEWTON_G,Models_Rho0,Models_R0);
       else if(model_name=="Burkert")cal_Burkert.init(NEWTON_G,Models_Rho0,Models_R0);
       else if(model_name=="Jaffe")cal_Jaffe.init(NEWTON_G,Models_Rho0,Models_R0);
+      else if(model_name=="Hernquist")cal_Hernquist.init(NEWTON_G,Models_Rho0,Models_R0);
       //else if(model_name=="UNKNOWN")cal_UNKNOWN.init(NEWTON_G,Models_R0,Models_MaxR,"profile.txt",7,1,0,5);
       else if(model_name=="UNKNOWN")cal_UNKNOWN.init(NEWTON_G,Models_Rho0,Models_R0,Models_MassProfNBin,Models_MaxR);
 
@@ -180,7 +183,8 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
          if(model_name=="NFW")RanV = cal_NFW.set_vel(a3); 
          else if(model_name=="Plummer")RanV = cal_Plummer.set_vel(a3);   
          else if(model_name=="Burkert")RanV = cal_Burkert.set_vel(a3);
-         else if(model_name=="Jaffe")RanV = cal_Jaffe.set_vel(a3);         
+         else if(model_name=="Jaffe")RanV = cal_Jaffe.set_vel(a3);    
+         else if(model_name=="Hernquist")RanV = cal_Hernquist.set_vel(a3);      
          else if(model_name=="UNKNOWN")RanV = cal_UNKNOWN.set_vel(a3);            
 
 //       randomly set the velocity vector with the given amplitude (RanV*Vmax)
@@ -289,6 +293,7 @@ double MassProf_Models( const double r ,string model_name)
    else if(model_name=="Plummer")return 4.0/3.0*M_PI*Models_Rho0*CUBE(r)*pow( 1.0+x*x, -1.5 );
    else if(model_name=="Burkert")return M_PI *Models_Rho0 *pow(Models_R0,3) *(log(1+x*x) + 2 * log(1+x) -2 *atan(x));
    else if(model_name=="Jaffe")return Models_Rho0 *pow(Models_R0,3) *(x/(1+x));
+   else if(model_name=="Hernquist")return Models_Rho0 *pow(Models_R0,3) *pow(x/(1+x),2);
    else if(model_name=="UNKNOWN")return 4.0/3.0*M_PI*Models_Rho0*CUBE(r)*pow( 1.0+x*x, -1.5 );
 } // FUNCTION : MassProf_Models
 
