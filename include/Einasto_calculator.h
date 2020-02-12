@@ -19,7 +19,7 @@ using namespace std;
 #include<fstream>
 
 #define size_Einasto 1000/***difference***/
-#define nbin_Einasto 1000000
+#define nbin_Einasto 1000
 
 
 class Einasto_calculator
