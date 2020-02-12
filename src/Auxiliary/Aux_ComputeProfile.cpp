@@ -292,18 +292,12 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 #                 if ( MODEL == HYDRO )
                   if ( PrepVelR )
                   {
-                     const real   Weight   = FluidPtr[DENS][k][j][i]*dv;   // weighted by cell mass
-                     const double Phi      = ATAN2(dy, dx);
-                     const double cosPhi   = COS(Phi);
-                     const double sinPhi   = SIN(Phi);
-                     const double cosTheta = dz / r;
-                     const double sinTheta = SQRT(1. - SQR(cosTheta));
+                     const real Weight = FluidPtr[DENS][k][j][i]*dv;   // weighted by cell mass
+                     const real MomR   = ( FluidPtr[MOMX][k][j][i]*dx +
+                                           FluidPtr[MOMY][k][j][i]*dy +
+                                           FluidPtr[MOMZ][k][j][i]*dz ) / r;
 
-                     const double MomRad   = FluidPtr[MOMX][k][j][i]*sinTheta*cosPhi
-                                           + FluidPtr[MOMY][k][j][i]*sinTheta*sinPhi
-                                           + FluidPtr[MOMZ][k][j][i]*cosTheta;
-
-                     OMP_Data  [ProfIdx][TID][bin] += MomRad*dv; // vr*(rho*dv)
+                     OMP_Data  [ProfIdx][TID][bin] += MomR*dv;    // vr*(rho*dv)
                      OMP_Weight[ProfIdx][TID][bin] += Weight;
                      OMP_NCell [ProfIdx][TID][bin] ++;
                      ProfIdx                       ++;
