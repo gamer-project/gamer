@@ -435,7 +435,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
          const int stride = b_up - b;
 
-         for (int b_up=b+stride; b_up<Prof[0]->NBin; b_up++)
+         for (b_up=b+stride; b_up<Prof[0]->NBin; b_up++)
          {
             const int b_up_ms = b_up - stride;
 
@@ -451,9 +451,6 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 //       reset the total number of bins
          for (int p=0; p<NProf; p++)
             Prof[p]->NBin -= stride;
-
-//       reduce counter since all bins above b have been shifted downward
-         b --;
       } // for (int b=0; b<Prof->NBin; b++)
 
 //    update the maximum radius since the last bin may have been removed
