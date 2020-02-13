@@ -20,6 +20,8 @@
 //                   --> All ranks will share the same profile data after invoking this function
 //                4. Use cell volume as the weighting of each cell
 //                   --> Will support other weighting functions in the future
+//                5. Support computing multiple fields
+//                   --> The order of fields to be returned follows TVarBitIdx[]
 //
 // Parameter   :  Prof        : Profile_t object array to store the results
 //                Center      : Target center coordinates
@@ -34,9 +36,10 @@
 //                RemoveEmpty : true  --> remove empty bins from the data
 //                              false --> these empty bins will still be in the profile arrays with
 //                                        Data[empty_bin]=Weight[empty_bin]=NCell[empty_bin]=0
-//                TVar        : Target variables for computing the profiles
-//                              --> Supported field indicies (defined in Macro.h):
-//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELR, _PRES, _EINT [, _POTE]
+//                TVarBitIdx  : Bitwise indices of target variables for computing the profiles
+//                              --> Supported indices (defined in Macro.h):
+//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELR, _PRES, _EINT_DER
+//                                             [, _ENPY, _EINT, _POTE]
 //                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE]
 //                              --> For a passive scalar with an integer field index FieldIdx returned by AddField(),
 //                                  one can convert it to a bitwise field index by BIDX(FieldIdx)
@@ -50,7 +53,7 @@
 //                const bool   LogBin         = true;
 //                const double LogBinRatio    = 1.25;
 //                const bool   RemoveEmptyBin = true;
-//                const long   TVar           = _DENS | _PRES;
+//                const long   TVar[]         = { _DENS, _PRES };
 //                const int    NProf          = 2;
 //                const int    SingleLv       = -1;
 //
@@ -78,7 +81,7 @@
 // Return      :  Prof
 //-------------------------------------------------------------------------------------------------------
 void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double r_max_input, const double dr_min,
-                         const bool LogBin, const double LogBinRatio, const bool RemoveEmpty, const long TVar,
+                         const bool LogBin, const double LogBinRatio, const bool RemoveEmpty, const long TVarBitIdx[],
                          const int NProf, const int SingleLv )
 {
 
@@ -95,36 +98,17 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 #  endif
 
 
-// extract the target field indices
-// --> treat intrinsic and derived fields separately
-   int NFlu, NFound, TVarIdxList_Flu[NCOMP_TOTAL];
+// precompute the integer indices of intrinsic fluid fields for better performance
+   const int IdxUndef = -1;
+   int TFluIntIdx[NProf];
 
-// intrinsic fields
-   NFlu = 0;
-   for (int v=0; v<NCOMP_TOTAL; v++)
-      if ( TVar & (1L<<v) )   TVarIdxList_Flu[ NFlu ++ ] = v;
+   for (int p=0; p<NProf; p++)
+   {
+      TFluIntIdx[p] = IdxUndef;
 
-   NFound = NFlu;
-
-// gravitational potential
-#  ifdef GRAVITY
-   bool PrepPote=false;
-   if ( TVar & _POTE )  {  PrepPote=true;  NFound++; };
-#  endif
-
-// derived fields
-#  if ( MODEL == HYDRO )
-   bool PrepVelR=false, PrepPres=false, PrepEint=false;
-   if ( TVar & _VELR )  {  PrepVelR=true;  NFound++; };
-   if ( TVar & _PRES )  {  PrepPres=true;  NFound++; };
-   if ( TVar & _EINT )  {  PrepEint=true;  NFound++; };
-
-#  else
-#  error : ERROR : unsupported MODEL !!
-#  endif
-
-   if ( NFound != NProf )
-      Aux_Error( ERROR_INFO, "inconsistent number of fields (found %d != expected %d) !!\n", NFound, NProf );
+      for (int v=0; v<NCOMP_TOTAL; v++)
+         if ( TVarBitIdx[p] & (1L<<v) )   TFluIntIdx[p] = v;
+   }
 
 
 // initialize the profile objects
@@ -261,85 +245,84 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                   if ( bin < 0 )    Aux_Error( ERROR_INFO, "bin (%d) < 0 !!\n", bin );
 #                 endif
 
-                  int ProfIdx = 0;
-
-//                intrinsic fields
-                  for (int v=0; v<NFlu; v++)
+                  for (int p=0; p<NProf; p++)
                   {
-                     const real Weight = dv;
-                     const int  FluIdx = TVarIdxList_Flu[v];
+//                   intrinsic fluid fields
+                     if ( TFluIntIdx[p] != IdxUndef )
+                     {
+                        const real Weight = dv;
 
-                     OMP_Data  [ProfIdx][TID][bin] += FluidPtr[FluIdx][k][j][i]*Weight;
-                     OMP_Weight[ProfIdx][TID][bin] += Weight;
-                     OMP_NCell [ProfIdx][TID][bin] ++;
-                     ProfIdx                       ++;
-                  }
+                        OMP_Data  [p][TID][bin] += FluidPtr[ TFluIntIdx[p] ][k][j][i]*Weight;
+                        OMP_Weight[p][TID][bin] += Weight;
+                        OMP_NCell [p][TID][bin] ++;
+                     }
 
-//                gravitational potential
-#                 ifdef GRAVITY
-                  if ( PrepPote )
-                  {
-                     const real Weight = FluidPtr[DENS][k][j][i]*dv;    // weighted by cell mass
+//                   gravitational potential
+#                    ifdef GRAVITY
+                     else if ( TVarBitIdx[p] & _POTE )
+                     {
+                        const real Weight = FluidPtr[DENS][k][j][i]*dv;    // weighted by cell mass
 
-                     OMP_Data  [ProfIdx][TID][bin] += PotPtr[k][j][i]*Weight;
-                     OMP_Weight[ProfIdx][TID][bin] += Weight;
-                     OMP_NCell [ProfIdx][TID][bin] ++;
-                     ProfIdx                       ++;
-                  }
-#                 endif
-
-//                derived fields
-#                 if ( MODEL == HYDRO )
-                  if ( PrepVelR )
-                  {
-                     const real Weight = FluidPtr[DENS][k][j][i]*dv;   // weighted by cell mass
-                     const real MomR   = ( FluidPtr[MOMX][k][j][i]*dx +
-                                           FluidPtr[MOMY][k][j][i]*dy +
-                                           FluidPtr[MOMZ][k][j][i]*dz ) / r;
-
-                     OMP_Data  [ProfIdx][TID][bin] += MomR*dv;    // vr*(rho*dv)
-                     OMP_Weight[ProfIdx][TID][bin] += Weight;
-                     OMP_NCell [ProfIdx][TID][bin] ++;
-                     ProfIdx                       ++;
-                  }
-
-                  if ( PrepPres )
-                  {
-                     const real Weight = dv;
-#                    ifdef MHD
-                     const real EngyB  = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
-#                    else
-                     const real EngyB  = NULL_REAL;
+                        OMP_Data  [p][TID][bin] += PotPtr[k][j][i]*Weight;
+                        OMP_Weight[p][TID][bin] += Weight;
+                        OMP_NCell [p][TID][bin] ++;
+                     }
 #                    endif
-                     const real Pres   = Hydro_GetPressure( FluidPtr[DENS][k][j][i], FluidPtr[MOMX][k][j][i], FluidPtr[MOMY][k][j][i],
-                                                            FluidPtr[MOMZ][k][j][i], FluidPtr[ENGY][k][j][i],
-                                                            Gamma_m1, false, NULL_REAL, EngyB );
 
-                     OMP_Data  [ProfIdx][TID][bin] += Pres*Weight;
-                     OMP_Weight[ProfIdx][TID][bin] += Weight;
-                     OMP_NCell [ProfIdx][TID][bin] ++;
-                     ProfIdx                       ++;
-                  }
+//                   derived fields
+#                    if ( MODEL == HYDRO )
+                     else if ( TVarBitIdx[p] & _VELR )
+                     {
+                        const real Weight = FluidPtr[DENS][k][j][i]*dv;    // weighted by cell mass
+                        const real MomR   = ( FluidPtr[MOMX][k][j][i]*dx +
+                                              FluidPtr[MOMY][k][j][i]*dy +
+                                              FluidPtr[MOMZ][k][j][i]*dz ) / r;
 
-                  if ( PrepEint )
-                  {
-                     const real Weight = dv;
-#                    ifdef MHD
-                     const real EngyB  = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
-#                    else
-                     const real EngyB  = NULL_REAL;
-#                    endif
-                     const real Pres   = Hydro_GetPressure( FluidPtr[DENS][k][j][i], FluidPtr[MOMX][k][j][i], FluidPtr[MOMY][k][j][i],
-                                                            FluidPtr[MOMZ][k][j][i], FluidPtr[ENGY][k][j][i],
-                                                            Gamma_m1, false, NULL_REAL, EngyB );
-                     const real Eint   = Pres/Gamma_m1;  // assuming gamma law for now; will be replaced by a general EoS
+                        OMP_Data  [p][TID][bin] += MomR*dv;    // vr*(rho*dv)
+                        OMP_Weight[p][TID][bin] += Weight;
+                        OMP_NCell [p][TID][bin] ++;
+                     }
 
-                     OMP_Data  [ProfIdx][TID][bin] += Eint*Weight;
-                     OMP_Weight[ProfIdx][TID][bin] += Weight;
-                     OMP_NCell [ProfIdx][TID][bin] ++;
-                     ProfIdx                       ++;
-                  }
-#                 endif // HYDRO
+                     else if ( TVarBitIdx[p] & _PRES )
+                     {
+                        const real Weight = dv;
+#                       ifdef MHD
+                        const real EngyB  = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+#                       else
+                        const real EngyB  = NULL_REAL;
+#                       endif
+                        const real Pres   = Hydro_GetPressure( FluidPtr[DENS][k][j][i], FluidPtr[MOMX][k][j][i], FluidPtr[MOMY][k][j][i],
+                                                               FluidPtr[MOMZ][k][j][i], FluidPtr[ENGY][k][j][i],
+                                                               Gamma_m1, false, NULL_REAL, EngyB );
+
+                        OMP_Data  [p][TID][bin] += Pres*Weight;
+                        OMP_Weight[p][TID][bin] += Weight;
+                        OMP_NCell [p][TID][bin] ++;
+                     }
+
+                     else if ( TVarBitIdx[p] & _EINT_DER )
+                     {
+                        const real Weight = dv;
+#                       ifdef MHD
+                        const real EngyB  = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+#                       else
+                        const real EngyB  = NULL_REAL;
+#                       endif
+                        const real Pres   = Hydro_GetPressure( FluidPtr[DENS][k][j][i], FluidPtr[MOMX][k][j][i], FluidPtr[MOMY][k][j][i],
+                                                               FluidPtr[MOMZ][k][j][i], FluidPtr[ENGY][k][j][i],
+                                                               Gamma_m1, false, NULL_REAL, EngyB );
+                        const real Eint   = Pres/Gamma_m1;  // assuming gamma law for now; will be replaced by a general EoS
+
+                        OMP_Data  [p][TID][bin] += Eint*Weight;
+                        OMP_Weight[p][TID][bin] += Weight;
+                        OMP_NCell [p][TID][bin] ++;
+                     }
+#                    endif // HYDRO
+
+                     else
+                        Aux_Error( ERROR_INFO, "unsupported field (%ld) !!\n", TVarBitIdx[p] );
+
+                  } // for (int p=0; p<NProf; p++)
                } // if ( r2 < r_max2 )
             }}} // i,j,k
          } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
