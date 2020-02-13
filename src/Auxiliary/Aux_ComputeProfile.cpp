@@ -36,7 +36,8 @@
 //                                        Data[empty_bin]=Weight[empty_bin]=NCell[empty_bin]=0
 //                TVar        : Target variables for computing the profiles
 //                              --> Supported field indicies (defined in Macro.h):
-//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELR, _PRES, _EINT [, _POTE]
+//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELR, _PRES, _EINT_DER
+//                                             [, _ENPY, _EINT, _POTE]
 //                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE]
 //                              --> For a passive scalar with an integer field index FieldIdx returned by AddField(),
 //                                  one can convert it to a bitwise field index by BIDX(FieldIdx)
@@ -115,9 +116,9 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 // derived fields
 #  if ( MODEL == HYDRO )
    bool PrepVelR=false, PrepPres=false, PrepEint=false;
-   if ( TVar & _VELR )  {  PrepVelR=true;  NFound++; };
-   if ( TVar & _PRES )  {  PrepPres=true;  NFound++; };
-   if ( TVar & _EINT )  {  PrepEint=true;  NFound++; };
+   if ( TVar & _VELR     )  {  PrepVelR=true;  NFound++; };
+   if ( TVar & _PRES     )  {  PrepPres=true;  NFound++; };
+   if ( TVar & _EINT_DER )  {  PrepEint=true;  NFound++; };
 
 #  else
 #  error : ERROR : unsupported MODEL !!
