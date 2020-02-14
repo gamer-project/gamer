@@ -257,71 +257,82 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                         OMP_NCell [p][TID][bin] ++;
                      }
 
-//                   gravitational potential
-#                    ifdef GRAVITY
-                     else if ( TVarBitIdx[p] & _POTE )
-                     {
-                        const real Weight = FluidPtr[DENS][k][j][i]*dv;    // weighted by cell mass
-
-                        OMP_Data  [p][TID][bin] += PotPtr[k][j][i]*Weight;
-                        OMP_Weight[p][TID][bin] += Weight;
-                        OMP_NCell [p][TID][bin] ++;
-                     }
-#                    endif
-
-//                   derived fields
-#                    if ( MODEL == HYDRO )
-                     else if ( TVarBitIdx[p] & _VELR )
-                     {
-                        const real Weight = FluidPtr[DENS][k][j][i]*dv;    // weighted by cell mass
-                        const real MomR   = ( FluidPtr[MOMX][k][j][i]*dx +
-                                              FluidPtr[MOMY][k][j][i]*dy +
-                                              FluidPtr[MOMZ][k][j][i]*dz ) / r;
-
-                        OMP_Data  [p][TID][bin] += MomR*dv;    // vr*(rho*dv)
-                        OMP_Weight[p][TID][bin] += Weight;
-                        OMP_NCell [p][TID][bin] ++;
-                     }
-
-                     else if ( TVarBitIdx[p] & _PRES )
-                     {
-                        const real Weight = dv;
-#                       ifdef MHD
-                        const real EngyB  = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
-#                       else
-                        const real EngyB  = NULL_REAL;
-#                       endif
-                        const real Pres   = Hydro_GetPressure( FluidPtr[DENS][k][j][i], FluidPtr[MOMX][k][j][i], FluidPtr[MOMY][k][j][i],
-                                                               FluidPtr[MOMZ][k][j][i], FluidPtr[ENGY][k][j][i],
-                                                               Gamma_m1, false, NULL_REAL, EngyB );
-
-                        OMP_Data  [p][TID][bin] += Pres*Weight;
-                        OMP_Weight[p][TID][bin] += Weight;
-                        OMP_NCell [p][TID][bin] ++;
-                     }
-
-                     else if ( TVarBitIdx[p] & _EINT_DER )
-                     {
-                        const real Weight = dv;
-#                       ifdef MHD
-                        const real EngyB  = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
-#                       else
-                        const real EngyB  = NULL_REAL;
-#                       endif
-                        const real Pres   = Hydro_GetPressure( FluidPtr[DENS][k][j][i], FluidPtr[MOMX][k][j][i], FluidPtr[MOMY][k][j][i],
-                                                               FluidPtr[MOMZ][k][j][i], FluidPtr[ENGY][k][j][i],
-                                                               Gamma_m1, false, NULL_REAL, EngyB );
-                        const real Eint   = Pres/Gamma_m1;  // assuming gamma law for now; will be replaced by a general EoS
-
-                        OMP_Data  [p][TID][bin] += Eint*Weight;
-                        OMP_Weight[p][TID][bin] += Weight;
-                        OMP_NCell [p][TID][bin] ++;
-                     }
-#                    endif // HYDRO
-
+//                   other fields
                      else
-                        Aux_Error( ERROR_INFO, "unsupported field (%ld) !!\n", TVarBitIdx[p] );
+                     {
+                        switch ( TVarBitIdx[p] )
+                        {
+//                         gravitational potential
+#                          ifdef GRAVITY
+                           case _POTE:
+                           {
+                              const real Weight = FluidPtr[DENS][k][j][i]*dv;    // weighted by cell mass
 
+                              OMP_Data  [p][TID][bin] += PotPtr[k][j][i]*Weight;
+                              OMP_Weight[p][TID][bin] += Weight;
+                              OMP_NCell [p][TID][bin] ++;
+                           }
+                           break;
+#                          endif
+
+//                         derived fields
+#                          if ( MODEL == HYDRO )
+                           case _VELR:
+                           {
+                              const real Weight = FluidPtr[DENS][k][j][i]*dv;    // weighted by cell mass
+                              const real MomR   = ( FluidPtr[MOMX][k][j][i]*dx +
+                                                    FluidPtr[MOMY][k][j][i]*dy +
+                                                    FluidPtr[MOMZ][k][j][i]*dz ) / r;
+
+                              OMP_Data  [p][TID][bin] += MomR*dv;    // vr*(rho*dv)
+                              OMP_Weight[p][TID][bin] += Weight;
+                              OMP_NCell [p][TID][bin] ++;
+                           }
+                           break;
+
+                           case _PRES:
+                           {
+                              const real Weight = dv;
+#                             ifdef MHD
+                              const real EngyB  = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+#                             else
+                              const real EngyB  = NULL_REAL;
+#                             endif
+                              const real Pres   = Hydro_GetPressure( FluidPtr[DENS][k][j][i], FluidPtr[MOMX][k][j][i], FluidPtr[MOMY][k][j][i],
+                                                                     FluidPtr[MOMZ][k][j][i], FluidPtr[ENGY][k][j][i],
+                                                                     Gamma_m1, false, NULL_REAL, EngyB );
+
+                              OMP_Data  [p][TID][bin] += Pres*Weight;
+                              OMP_Weight[p][TID][bin] += Weight;
+                              OMP_NCell [p][TID][bin] ++;
+                           }
+                           break;
+
+                           case _EINT_DER:
+                           {
+                              const real Weight = dv;
+#                             ifdef MHD
+                              const real EngyB  = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+#                             else
+                              const real EngyB  = NULL_REAL;
+#                             endif
+                              const real Pres   = Hydro_GetPressure( FluidPtr[DENS][k][j][i], FluidPtr[MOMX][k][j][i], FluidPtr[MOMY][k][j][i],
+                                                                     FluidPtr[MOMZ][k][j][i], FluidPtr[ENGY][k][j][i],
+                                                                     Gamma_m1, false, NULL_REAL, EngyB );
+                              const real Eint   = Pres/Gamma_m1;  // assuming gamma law for now; will be replaced by a general EoS
+
+                              OMP_Data  [p][TID][bin] += Eint*Weight;
+                              OMP_Weight[p][TID][bin] += Weight;
+                              OMP_NCell [p][TID][bin] ++;
+                           }
+                           break;
+#                          endif // HYDRO
+
+                           default:
+                              Aux_Error( ERROR_INFO, "unsupported field (%ld) !!\n", TVarBitIdx[p] );
+                              exit( 1 );
+                        } // switch ( TVarBitIdx[p] )
+                     } // if ( TFluIntIdx[p] != IdxUndef ) ... else ...
                   } // for (int p=0; p<NProf; p++)
                } // if ( r2 < r_max2 )
             }}} // i,j,k
