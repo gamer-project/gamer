@@ -8,9 +8,9 @@ using namespace std;
 /***gsl library***/
 
 #include <gsl/gsl_integration.h>
-#include <gsl/gsl_monte_plain.h>
-#include <gsl/gsl_monte_vegas.h>
 #include <gsl/gsl_errno.h>
+#include <gsl/gsl_sf_erf.h>
+#include <gsl/gsl_sf_dawson.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_roots.h>
 #include <gsl/gsl_deriv.h>
@@ -18,7 +18,7 @@ using namespace std;
 #include<sstream>
 #include<fstream>
 
-#define size_Jaffe 1000/***difference***/
+#define size_Jaffe 100000/***difference***/
 #define nbin_Jaffe 1000
 
 
@@ -38,9 +38,9 @@ class Jaffe_calculator
     protected:
         
     private:
-        double prob_dens[size_Jaffe];
-        double int_prob_dens[size_Jaffe];
-        double psi[size_Jaffe];
+        double **prob_dens;
+        double **int_prob_dens;
+        double **psi;
         double delta;
 
         //Statistics
@@ -56,6 +56,7 @@ class Jaffe_calculator
         void initialize_mass();
         void initialize_pot();
         void initialize_prob_dens();
+        
 
         RandomNumber_t *RNG ;
 };

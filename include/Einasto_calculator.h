@@ -19,7 +19,7 @@ using namespace std;
 #include<fstream>
 
 #define size_Einasto 1000/***difference***/
-#define nbin_Einasto 1000
+#define nbin_Einasto 100000
 
 
 class Einasto_calculator
@@ -38,19 +38,19 @@ class Einasto_calculator
     protected:
         
     private:
-        double prob_dens[size_Einasto];
-        double int_prob_dens[size_Einasto];
-        double psi[size_Einasto];
+        double **prob_dens;
+        double **int_prob_dens;
+        double **psi;
         double delta;
 
         //Statistics
-        double ave(double* a,int start,int fin);
-        double var_n(double* a,int start,int fin);
-        double cor(double* x,double* y,int start,int fin);
-        void mask(double* x,int start,int fin);
-        void add_num(double* x,int start,int fin);
-        double slope(double* a,double* b,int start,int fin);
-        void smooth_all(double* x,int start,int fin);
+        double ave(double** x,int start,int fin);
+        double var_n(double** x,int start,int fin);
+        double cor(double** x,double** y,int start,int fin);
+        void mask(double** x,int start,int fin);
+        void add_num(double** x,int start,int fin);
+        double slope(double** x,double** y,int start,int fin);
+        void smooth_all(double** x,int start,int fin);
 
         //Probability Density
         void initialize_mass();
