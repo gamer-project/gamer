@@ -480,7 +480,7 @@ void Aux_TakeNote()
       fprintf( Note, "#define NLEVEL                  %d\n",      NLEVEL              );
       fprintf( Note, "\n" );
       fprintf( Note, "#define FLU_GHOST_SIZE          %d\n",      FLU_GHOST_SIZE      );
-#     if ( MODEL == HYDRO )
+#     if ( MODEL == HYDRO  &&  defined LR_GHOST_SIZE )
       fprintf( Note, "#define LR_GHOST_SIZE           %d\n",      LR_GHOST_SIZE       );
 #     endif
 #     ifdef GRAVITY

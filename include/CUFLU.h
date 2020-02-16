@@ -56,8 +56,6 @@
 #if   ( MODEL == HYDRO )
 
 // size of different arrays
-#if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-
 // ** to reduce the GPU memory consumption, large arrays in the fluid solvers are reused as much as possible
 // ** --> the strides of arrays can change when accessed by different routines for different purposes
 
@@ -76,6 +74,18 @@
 // NWAVE                : number of characteristic waves
 // NCOMP_TOTAL_PLUS_MAG : total number of fluid variables plus magnetic field
 // MAG_OFFSET           : array offset of magnetic field for arrays with the size NCOMP_TOTAL_PLUS_MAG
+//
+#define NCOMP_TOTAL_PLUS_MAG     ( NCOMP_TOTAL + NCOMP_MAG )
+
+#ifdef MHD
+#  define NWAVE                  ( NCOMP_FLUID + 2 )
+#  define MAG_OFFSET             ( NCOMP_TOTAL )
+#else
+#  define NWAVE                  ( NCOMP_FLUID )
+#  define MAG_OFFSET             ( NULL_INT )
+#endif
+
+#if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 
 #  if   ( FLU_SCHEME == MHM )
 
@@ -113,18 +123,13 @@
 #  endif // FLU_SCHEME
 
 #  define N_SLOPE_PPM            ( N_FC_VAR + 2 )
-#  define NCOMP_TOTAL_PLUS_MAG   ( NCOMP_TOTAL + NCOMP_MAG )
 
 #  ifdef MHD
 #   define N_HF_ELE              ( N_FC_FLUX - 1 )
 #   define N_FL_ELE              ( N_FL_FLUX - 1 )
 #   define N_EC_ELE              ( N_FC_FLUX - 1 )
-#   define NWAVE                 ( NCOMP_FLUID + 2 )
-#   define MAG_OFFSET            ( NCOMP_TOTAL )
 #  else
 #   define N_EC_ELE              0
-#   define NWAVE                 ( NCOMP_FLUID )
-#   define MAG_OFFSET            ( NULL_INT )
 #  endif
 
 #endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
