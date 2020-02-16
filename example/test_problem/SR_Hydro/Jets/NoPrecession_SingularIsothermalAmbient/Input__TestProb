@@ -1,0 +1,69 @@
+# proton mass   = 1.672621898e-24 [g]
+# electron mass = 9.109383560e-28 [g]
+
+# problem-specific runtime parameters
+Jet_Exist                                         1
+Jet_Ambient                                       2         # [0/1/2] : uniform / isothermal / sigular isothermal
+Jet_DiffPrecession                                0
+Jet_Precession                                    0
+Jet_TimeDependentSrc                              0
+
+
+
+# jet fluid parameters
+Jet_SrcVel                                       10         # jet: jet 4-velocity ( in unit of speed of light )
+Jet_SrcDens                                 5.0e-31         # jet: jet density (in cgs units)
+Jet_SrcTemp                                     1.0         # jet: jet temperature (in GeV)
+Jet_ParticleMassSrc                 1.672621898e-24
+Jet_ParticleMassAmbient             1.672621898e-24
+
+
+# source geometry parameters
+Jet_Radius                                      0.5         # jet: radius of the cylinder-shape jet source (in kpc)
+Jet_HalfHeight                                  0.5         # jet: half height of the cylinder-shape jet source (in kpc)
+Jet_HalfOpeningAngle                            10.0        # jet: half-opening angle
+Jet_CenOffset_x                                +0.0         # jet: jet central coordinates offset x (in kpc)
+Jet_CenOffset_y                                +0.0         # jet: jet central coordinates offset y (in kpc)
+Jet_CenOffset_z                                +0.0         # jet: jet central coordinates offset z (in kpc)
+
+
+# precission parameters
+Jet_Angular_Velocity                          +30.0         # precession angular velocity at Schwarzschild radius (degree per code_time)
+Jet_PrecessionAngle                             0.0
+Jet_PrecessionAxis_x                            1.0
+Jet_PrecessionAxis_y                            0.0
+Jet_PrecessionAxis_z                            0.0
+
+
+# Jet_Ambient == 0
+Jet_UniformDens                             5.0e-29         # ambient density (in cgs units)
+Jet_UniformTemp                                1e-4         # ambient temperature (in GeV)
+Jet_UniformVel_x                               +0.0         # ambient velocity x (in cgs units) [0.0]
+Jet_UniformVel_y                               +0.0         # ambient velocity y (in cgs units) [0.0]
+Jet_UniformVel_z                               +0.0         # ambient velocity z (in cgs units) [0.0]
+
+
+# Jet_Ambient == 1
+Jet_HSE_BgTable_File  Input__HydrostaticEquilibrium         # for Jet_HSE: filename of the background gas table
+
+
+# Jet_Ambient == 1 || Jet_Ambient == 2
+Jet_HSE_Radius                                   80         # for Jet_HSE: radius of hydrostatic equilibrium halo  (in kpc)
+Jet_HSE_Dx                                      0.0         # for Jet_HSE: distance between box and cluster centre (in kpc)
+Jet_HSE_Dy                                      0.0         # for Jet_HSE: distance between box and cluster centre (in kpc)
+Jet_HSE_Dz                                      0.0         # for Jet_HSE: distance between box and cluster centre (in kpc)
+
+# Jet_Ambient == 2
+SIS_Temperature                                8e-7         # temperature for singular isothermal sphere
+
+# time-dependent source varibles
+Flag_BurstDens                                    0
+Flag_Burst4Vel                                    0
+Flag_BurstTemp                                    0
+
+Jet_BurstDens                                     0
+Jet_Burst4Vel                                     0
+Jet_BurstTemp                                     0
+
+Jet_BurstStartTime                                0
+Jet_BurstEndTime                                  0
