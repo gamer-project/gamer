@@ -169,7 +169,7 @@ void SetParameter()
 
 // load options
    ReadPara->Add( "Jet_Exist",               &Jet_Exist,                  3,                     0,              3    );
-   ReadPara->Add( "Jet_Ambient",             &Jet_Ambient,                1,                     1,              3    );
+   ReadPara->Add( "Jet_Ambient",             &Jet_Ambient,                0,                     0,              2    );
    ReadPara->Add( "Jet_DiffPrecession",      &Jet_DiffPrecession,     false,          Useless_bool,   Useless_bool    );
    ReadPara->Add( "Jet_Precession",          &Jet_Precession,         false,          Useless_bool,   Useless_bool    );
    ReadPara->Add( "Jet_TimeDependentSrc",    &Jet_TimeDependentSrc,   false,          Useless_bool,   Useless_bool    );
@@ -866,17 +866,23 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
       // shift origin to the point D/E
 	  if ( InsideUpperCone == true )   xp[2] += Jet_Radius/tan(Jet_HalfOpeningAngle);
 	  else                             xp[2] -= Jet_Radius/tan(Jet_HalfOpeningAngle);
-  
+
       CartesianRotate(xp, Jet_PrecessionAngle, Omega_t, true);
+
+      // smooth velocity  
+      Cartesian2Spherical(xp, rp);
+
+      if ( InsideLowerCone == true ) rp[1] -= M_PI;
+
+      if ( Jet_SmoothVel ) Jet_SrcVelSmooth = Jet_SrcVel*SQR(cos( 0.5 * M_PI * rp[1] / Jet_HalfOpeningAngle ));
+      else                 Jet_SrcVelSmooth = Jet_SrcVel;
+
   
       if ( Jet_PrecessionAxis[0] != 0.0 || Jet_PrecessionAxis[1] != 0.0 ||  Jet_PrecessionAxis[2] == 0.0 )
          CartesianRotate(xp, PrecessionAxis_Spherical[1], PrecessionAxis_Spherical[2], true);
   
       Cartesian2Spherical(xp, rp);
 
-      if ( Jet_SmoothVel ) Jet_SrcVelSmooth = Jet_SrcVel*SQR(cos( 0.5 * M_PI * rp[1] / Jet_HalfOpeningAngle ));
-      else                 Jet_SrcVelSmooth = Jet_SrcVel;
-    
       Prim[0] = Jet_SrcDens;
       Prim[1] = Jet_SrcVelSmooth*sin(rp[1])*cos(rp[2]);
       Prim[2] = Jet_SrcVelSmooth*sin(rp[1])*sin(rp[2]);
