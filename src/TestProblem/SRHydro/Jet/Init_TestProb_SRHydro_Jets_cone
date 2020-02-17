@@ -15,7 +15,7 @@ static int      Jet_Ambient;                                    // [0/1/2] : uni
 static bool     Jet_DiffPrecession;                             //
 static bool     Jet_Precession;                                 //
 static bool     Jet_TimeDependentSrc;                           //
-static bool     Jet_Exist;                                      //
+static int      Jet_Exist;                                      // [0/1/2/3]: no jet/jet1/jet2/full jet
 
 // general parameters
 static double   Jet_ParticleMassSrc;                            // particle mass in jet source [g]
@@ -43,6 +43,7 @@ static double   SIS_Temperature;
 static double   Jet_SrcVel;                                     // jet 4-velocity
 static double   Jet_SrcDens;                                    // jet density
 static double   Jet_SrcTemp;                                    // jet temperature
+static bool     Jet_SmoothVel;
 
 // sound speed
 static double Cs;
@@ -167,7 +168,7 @@ void SetParameter()
 // ********************************************************************************************************************************
 
 // load options
-   ReadPara->Add( "Jet_Exist",               &Jet_Exist,              false,          Useless_bool,   Useless_bool    );
+   ReadPara->Add( "Jet_Exist",               &Jet_Exist,                  3,                     0,              3    );
    ReadPara->Add( "Jet_Ambient",             &Jet_Ambient,                1,                     1,              3    );
    ReadPara->Add( "Jet_DiffPrecession",      &Jet_DiffPrecession,     false,          Useless_bool,   Useless_bool    );
    ReadPara->Add( "Jet_Precession",          &Jet_Precession,         false,          Useless_bool,   Useless_bool    );
@@ -175,6 +176,7 @@ void SetParameter()
 
 // load jet fluid parameters
    ReadPara->Add( "Jet_SrcVel",              &Jet_SrcVel    ,          -1.0,          NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_SmoothVel",           &Jet_SmoothVel ,          true,          Useless_bool,   Useless_bool    );
    ReadPara->Add( "Jet_SrcDens",             &Jet_SrcDens   ,          -1.0,          Eps_double,     NoMax_double    );
    ReadPara->Add( "Jet_SrcTemp",             &Jet_SrcTemp   ,          -1.0,          Eps_double,     NoMax_double    );
    ReadPara->Add( "Jet_ParticleMassSrc",     &Jet_ParticleMassSrc,     -1.0,          Eps_double,     NoMax_double    );
@@ -250,6 +252,12 @@ void SetParameter()
      if ( Flag_BurstTemp && Jet_BurstTemp <= Eps_double )
        Aux_Error( ERROR_INFO, "Jet_BurstTemp <= Eps_double !!\n" );
    }
+
+   if ( OPT__FLAG_USER == 1 && Jet_Exist == 0 )
+   {
+      Aux_Error( ERROR_INFO, "Turn off OPT__FLAG_USER !!\n" );
+   }
+
 
 // check isothermal sphere
    if ( Jet_Ambient == 1 )
@@ -476,6 +484,7 @@ void SetParameter()
      Aux_Message( stdout, "=============================================================================\n" );
      Aux_Message( stdout, "  test problem ID         = %d\n",                TESTPROB_ID                                     );
      Aux_Message( stdout, "  Jet_Exist               = %d\n",                Jet_Exist                                       );
+     Aux_Message( stdout, "  Jet_SmoothVel           = %d\n",                Jet_SmoothVel                                   );
      Aux_Message( stdout, "  Jet_Ambient             = %d\n",                Jet_Ambient                                     );
      Aux_Message( stdout, "  Jet_DiffPrecession      = %d\n",                Jet_DiffPrecession                              );
      Aux_Message( stdout, "  Jet_Precession          = %d\n",                Jet_Precession                                  );
@@ -772,19 +781,17 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const double z, const double Time,
                                          const int lv, double AuxArray[] )
 {
-  if ( !Jet_Exist ) return false;
+  if ( Jet_Exist == 0 ) return false;
 
   double xp[3], rp[3];
   double Prim[5], Cons[5], Vel[3];
   double PrecessionAxis_Spherical[3], Omega_t;
-  bool InsideUpperCone, InsideLowerCone, Smooth;
+  bool InsideUpperCone, InsideLowerCone;
   double Jet_SrcVelSmooth;
 
   Omega_t = Jet_Angular_Velocity * Time * M_PI / 180.0;
 
-  Smooth = false;
-  if ( Smooth ) Jet_SrcVelSmooth = Jet_SrcVel*SQR(cos( 0.5 * M_PI * rp[1] / Jet_HalfOpeningAngle ));
-  else          Jet_SrcVelSmooth = Jet_SrcVel;
+
 
   // shift origin to the point O
   xp[0] = x - Jet_Cen[0];
@@ -803,11 +810,13 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
   // rotate coordinate to align z-axis with rotating symmetric axis
   CartesianRotate(xp, Jet_PrecessionAngle, Omega_t, false);
 
+  // determine whether or not the point is inside of source
   InsideUpperCone  = SQR(xp[0]) + SQR(xp[1]) <= SQR( +tan(Jet_HalfOpeningAngle)*xp[2] + Jet_Radius );
   InsideUpperCone &= 0.0 <= xp[2] && xp[2] <= Jet_HalfHeight;
 
   InsideLowerCone  = SQR(xp[0]) + SQR(xp[1]) <= SQR( -tan(Jet_HalfOpeningAngle)*xp[2] + Jet_Radius );
   InsideLowerCone &= -Jet_HalfHeight <= xp[2] && xp[2] <= 0.0;
+
 
   if ( Jet_HalfOpeningAngle != 0.0 )
   {
@@ -827,92 +836,53 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
     InsideLowerCone &= -Jet_HalfHeight <= xp[2] && xp[2] <= 0.0;
   }
 
-  Cartesian2Spherical(xp, rp);
 
 
-
-  if ( InsideUpperCone || InsideLowerCone )
+  // set fluid variable inside source
+  if ( ( InsideUpperCone && ( Jet_Exist == 1 || Jet_Exist == 3 ) ) 
+	|| ( InsideLowerCone && ( Jet_Exist == 2 || Jet_Exist == 3 ) ) )
   {
-    Prim[0] = Jet_SrcDens;
+    if ( Jet_HalfOpeningAngle == 0.0 )
+  	{
+  	  Vel[0] = 0.0;
+  	  Vel[1] = 0.0;
+   
+  	  if ( InsideUpperCone == true ) Vel[2] = +Jet_SrcVel;
+      else                           Vel[2] = -Jet_SrcVel;
+  
+  	  CartesianRotate(Vel, Jet_PrecessionAngle, Omega_t, true);
+  
+      if ( Jet_PrecessionAxis[0] != 0.0 || Jet_PrecessionAxis[1] != 0.0 ||  Jet_PrecessionAxis[2] == 0.0 )
+           CartesianRotate(Vel, PrecessionAxis_Spherical[1], PrecessionAxis_Spherical[2], true);
+  
+      Prim[0] = Jet_SrcDens;
+  	  Prim[1] = Vel[0];
+  	  Prim[2] = Vel[1];
+  	  Prim[3] = Vel[2];
+      Prim[4] = Jet_SrcTemp*Jet_SrcDens;
+  	}
+  	else
+  	{
+      // shift origin to the point D/E
+	  if ( InsideUpperCone == true )   xp[2] += Jet_Radius/tan(Jet_HalfOpeningAngle);
+	  else                             xp[2] -= Jet_Radius/tan(Jet_HalfOpeningAngle);
+  
+      CartesianRotate(xp, Jet_PrecessionAngle, Omega_t, true);
+  
+      if ( Jet_PrecessionAxis[0] != 0.0 || Jet_PrecessionAxis[1] != 0.0 ||  Jet_PrecessionAxis[2] == 0.0 )
+         CartesianRotate(xp, PrecessionAxis_Spherical[1], PrecessionAxis_Spherical[2], true);
+  
+      Cartesian2Spherical(xp, rp);
 
-	if ( InsideUpperCone )
-	{
-	    if ( Jet_HalfOpeningAngle == 0.0 )
-		{
-		  Vel[0] = 0.0;
-		  Vel[1] = 0.0;
-		  Vel[2] = +Jet_SrcVel;
-
-		  CartesianRotate(Vel, Jet_PrecessionAngle, Omega_t, true);
-
-          if ( Jet_PrecessionAxis[0] != 0.0 || Jet_PrecessionAxis[1] != 0.0 ||  Jet_PrecessionAxis[2] == 0.0 )
-             CartesianRotate(Vel, PrecessionAxis_Spherical[1], PrecessionAxis_Spherical[2], true);
-
-		  Prim[1] = Vel[0];
-		  Prim[2] = Vel[1];
-		  Prim[3] = Vel[2];
-		}
-		else
-		{
-          // shift origin to the point D
-          xp[2] += Jet_Radius/tan(Jet_HalfOpeningAngle);
-
-		  // smooth velocity on source boundary
-          Cartesian2Spherical(xp, rp);
-
-          CartesianRotate(xp, Jet_PrecessionAngle, Omega_t, true);
-
-          if ( Jet_PrecessionAxis[0] != 0.0 || Jet_PrecessionAxis[1] != 0.0 ||  Jet_PrecessionAxis[2] == 0.0 )
-             CartesianRotate(xp, PrecessionAxis_Spherical[1], PrecessionAxis_Spherical[2], true);
-
-          Cartesian2Spherical(xp, rp);
-
-
-          Prim[1] = Jet_SrcVelSmooth*sin(rp[1])*cos(rp[2]);
-          Prim[2] = Jet_SrcVelSmooth*sin(rp[1])*sin(rp[2]);
-          Prim[3] = Jet_SrcVelSmooth*cos(rp[1]);
-		}
-	}
-	else
-	{
-	    if ( Jet_HalfOpeningAngle == 0.0 )
-		{
-		  Vel[0] = 0.0;
-		  Vel[1] = 0.0;
-		  Vel[2] = -Jet_SrcVel;
-
-		  CartesianRotate(Vel, Jet_PrecessionAngle, Omega_t, true);
-
-          if ( Jet_PrecessionAxis[0] != 0.0 || Jet_PrecessionAxis[1] != 0.0 ||  Jet_PrecessionAxis[2] == 0.0 )
-             CartesianRotate(Vel, PrecessionAxis_Spherical[1], PrecessionAxis_Spherical[2], true);
-
-		  Prim[1] = Vel[0];
-		  Prim[2] = Vel[1];
-		  Prim[3] = Vel[2];
-		}
-		else
-		{
-          // shift origin to the point E
-          xp[2] -= Jet_Radius/tan(Jet_HalfOpeningAngle);
-
-		  // smooth velocity on source boundary
-          Cartesian2Spherical(xp, rp);
-
-          CartesianRotate(xp, Jet_PrecessionAngle, Omega_t, true);
-
-          if ( Jet_PrecessionAxis[0] != 0.0 || Jet_PrecessionAxis[1] != 0.0 ||  Jet_PrecessionAxis[2] == 0.0 )
-             CartesianRotate(xp, PrecessionAxis_Spherical[1], PrecessionAxis_Spherical[2], true);
-
-          Cartesian2Spherical(xp, rp);
-
-
-          Prim[1] = Jet_SrcVelSmooth*sin(rp[1])*cos(rp[2]);
-          Prim[2] = Jet_SrcVelSmooth*sin(rp[1])*sin(rp[2]);
-          Prim[3] = Jet_SrcVelSmooth*cos(rp[1]);
-		}
-	}
-
-    Prim[4] = Jet_SrcTemp*Jet_SrcDens;
+      if ( Jet_SmoothVel ) Jet_SrcVelSmooth = Jet_SrcVel*SQR(cos( 0.5 * M_PI * rp[1] / Jet_HalfOpeningAngle ));
+      else                 Jet_SrcVelSmooth = Jet_SrcVel;
+    
+      Prim[0] = Jet_SrcDens;
+      Prim[1] = Jet_SrcVelSmooth*sin(rp[1])*cos(rp[2]);
+      Prim[2] = Jet_SrcVelSmooth*sin(rp[1])*sin(rp[2]);
+      Prim[3] = Jet_SrcVelSmooth*cos(rp[1]);
+      Prim[4] = Jet_SrcTemp*Jet_SrcDens;
+  	}
 
 #   ifdef FLOAT8
 	SRHydro_Pri2Con( Prim, fluid, GAMMA );
@@ -928,6 +898,8 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
 
 	return true;
   }
+
+
 
   return false;
 
