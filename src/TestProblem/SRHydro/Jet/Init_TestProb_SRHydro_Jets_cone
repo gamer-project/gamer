@@ -1028,6 +1028,16 @@ bool Flag_User( const int i, const int j, const int k, const int lv, const int P
 } // FUNCTION : Flag_User
 
 
+#  ifdef GRAVITY
+void Init_ExternalAcc()
+{
+  ExtAcc_AuxArray[0] = 0.5*amr->BoxSize[0];
+  ExtAcc_AuxArray[1] = 0.5*amr->BoxSize[1];
+  ExtAcc_AuxArray[2] = 0.5*amr->BoxSize[2];
+  ExtAcc_AuxArray[3] = 2.0 * SIS_Temperature;
+  ExtAcc_AuxArray[4] = 0.0;
+}
+#endif
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_TestProb_SRHydro_Jets
@@ -1067,7 +1077,7 @@ void Init_TestProb_SRHydro_Jets()
    Aux_Record_User_Ptr      = NULL;
    End_User_Ptr             = NULL;
 #  ifdef GRAVITY
-   Init_ExternalAcc_Ptr     = NULL;
+   Init_ExternalAcc_Ptr     = Init_ExternalAcc;
 #  endif
 
 
