@@ -79,7 +79,9 @@ void CPU_dtSolver_SRHydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][NCOM
       CGPU_LOOP( t, CUBE(PS1) )
       {
          real fluid[NCOMP_FLUID], Pri[NCOMP_FLUID], LorentzFactor;
-         real Cs, Cs_sq, MaxV;
+         real Cs, Cs_sq, Us, LorentzFactor_s;
+         real Us_Max, LorentzFactor_s_Max;
+         real U_Max, LorentzFactor_Max;
 
          for (int v=0; v<NCOMP_FLUID; v++)   fluid[v] = g_Flu_Array[p][v][t];
 
@@ -87,7 +89,11 @@ void CPU_dtSolver_SRHydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][NCOM
 
          Cs_sq = SoundSpeedSquare( Pri[4]/Pri[0], Gamma );
 		  
-		 Cs = SQRT(Cs_sq);
+         Cs = SQRT( Cs_sq );
+
+         LorentzFactor_s = (real)1.0 / SQRT( (real)1.0 - Cs_sq );
+
+         Us = Cs * LorentzFactor_s;
 
 #        ifndef USE_3_VELOCITY
 		 // 4-velocities -> 3-velocities
@@ -96,12 +102,23 @@ void CPU_dtSolver_SRHydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][NCOM
 		 Pri[3] /= LorentzFactor;
 #        endif
 
-#        if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
-		 MaxV = Pri[1] + Pri[2] + Pri[3];
+#        define TIME_TYPE1
 
-         MaxCFL = FMAX(( MaxV + (real)3.0*Cs ) / ( (real)1.0 + MaxV*Cs ), MaxCFL);
-
+//#        if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
+#        if ( defined TIME_TYPE1 )
+		 U_Max = FABS(Pri[1]) + FABS(Pri[2]) + FABS(Pri[3]);
+         Us_Max = (real)3.0 * Us;
+#        elif ( defined TIME_TYPE2 )
+		 U_Max = FMAX(FABS(Pri[1]), FABS(Pri[2]) );
+		 U_Max = FMAX(       U_Max, FABS(Pri[3]) );
+         Us_Max = Us;
 #        endif
+
+         LorentzFactor_Max   = SQRT( (real)1.0 +  U_Max *  U_Max ); 
+         LorentzFactor_s_Max = SQRT( (real)1.0 + Us_Max * Us_Max ); 
+
+         MaxCFL = FMAX( Us_Max * LorentzFactor_Max + LorentzFactor_s_Max * U_Max, MaxCFL );
+
       } // CGPU_LOOP( t, CUBE(PS1) )
 
 //    perform parallel reduction to get the maximum CFL speed in each thread block
@@ -114,7 +131,7 @@ void CPU_dtSolver_SRHydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][NCOM
 #     endif
       if ( threadIdx.x == 0 )
 #     endif // #ifdef __CUDACC__
-      g_dt_Array[p] = dhSafety/MaxCFL;
+      g_dt_Array[p] = dhSafety / ( MaxCFL / SQRT( (real)1.0 + MaxCFL*MaxCFL ) );
 
    } // for (int p=0; p<8*NPG; p++)
 

@@ -12,7 +12,6 @@
 // soften length implementation
 //#  define SOFTEN_PLUMMER
 //#  define SOFTEN_RUFFERT
-# define SINGULAR_ISOTHERMAL
 
 
 
@@ -69,10 +68,6 @@ void ExternalAcc( real Acc[], const double x, const double y, const double z, co
    Acc[0] = -GM*_r3*dx;
    Acc[1] = -GM*_r3*dy;
    Acc[2] = -GM*_r3*dz;
-#  elif ( defined SINGULAR_ISOTHERMAL )
-   Acc[0] = - (real)UserArray[3] * dx / r / r;
-   Acc[1] = - (real)UserArray[3] * dy / r / r;
-   Acc[2] = - (real)UserArray[3] * dz / r / r;
 #  else
    const real _r3 = (real)1.0/CUBE(r);
 
@@ -81,6 +76,22 @@ void ExternalAcc( real Acc[], const double x, const double y, const double z, co
    Acc[2] = -GM*_r3*dz;
 #  endif
 
+   if ( UserArray[5] == 2.0 )
+   {
+     Acc[0] = - (real)UserArray[3] * dx / r / r;
+     Acc[1] = - (real)UserArray[3] * dy / r / r;
+     Acc[2] = - (real)UserArray[3] * dz / r / r;
+   }
+
+
+   if ( UserArray[5] == 4.0 )
+   {
+     real Rc = (real)UserArray[4];
+
+     Acc[0] = - (real)UserArray[3] * dx / ( Rc*Rc + r*r );
+     Acc[1] = - (real)UserArray[3] * dy / ( Rc*Rc + r*r );
+     Acc[2] = - (real)UserArray[3] * dz / ( Rc*Rc + r*r );
+   }
 
 } // FUNCTION : ExternalAcc
 
