@@ -294,10 +294,10 @@ void SetParameter()
       if ( Jet_HSE_Radius == NULL_REAL ) 
         Aux_Error( ERROR_INFO, "Jet_HSE_Radius = %e !!\n" );
 
-      if ( Jet_HSE_Radius >= 0.5*amr->BoxSize[0] || 
-           Jet_HSE_Radius >= 0.5*amr->BoxSize[1] || 
-           Jet_HSE_Radius >= 0.5*amr->BoxSize[2]   )
-        Aux_Error( ERROR_INFO, "halo size is greater or equal to box size !!\n" );
+//      if ( Jet_HSE_Radius >= 0.5*amr->BoxSize[0] || 
+//           Jet_HSE_Radius >= 0.5*amr->BoxSize[1] || 
+//           Jet_HSE_Radius >= 0.5*amr->BoxSize[2]   )
+//        Aux_Error( ERROR_INFO, "halo size is greater or equal to box size !!\n" );
 
       if ( !OPT__FLAG_REGION ) 
         Aux_Error( ERROR_INFO, "OPT__FLAG_REGION must be enabled !!\n" );
@@ -366,7 +366,7 @@ void SetParameter()
    Jet_CenOffset[1]         *= Const_kpc / UNIT_L;
    Jet_CenOffset[2]         *= Const_kpc / UNIT_L;
 
-   if ( Jet_Ambient == 1 )
+   if ( Jet_Ambient == 1 || Jet_Ambient == 2 )
    {
      Jet_HSE_Radius         *= Const_kpc / UNIT_L; 
      Jet_HSE_Dx             *= Const_kpc / UNIT_L;  
@@ -384,9 +384,6 @@ void SetParameter()
    else if ( Jet_Ambient == 2 )
    {
      SIS_Temperature        *= Const_GeV / ( Jet_ParticleMassAmbient * SQR(Const_c) );
-     Jet_HSE_Dx             *= Const_kpc / UNIT_L;  
-     Jet_HSE_Dy             *= Const_kpc / UNIT_L;  
-     Jet_HSE_Dz             *= Const_kpc / UNIT_L;  
    }
 
    Jet_Angular_Velocity   *= 1.0;    // the unit of Jet_Angular_Velocity is UNIT_T
@@ -693,9 +690,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    else if ( Jet_Ambient == 2 )
    {
 #     ifdef GRAVITY
-      dx = x - amr->BoxCenter[0] + Jet_HSE_Dx;
-      dy = y - amr->BoxCenter[1] + Jet_HSE_Dy;
-      dz = z - amr->BoxCenter[2] + Jet_HSE_Dz;
+      dx = x - amr->BoxCenter[0] - Jet_HSE_Dx;
+      dy = y - amr->BoxCenter[1] - Jet_HSE_Dy;
+      dz = z - amr->BoxCenter[2] - Jet_HSE_Dz;
 
       r = sqrt( dx*dx + dy*dy + dz*dz );
 
@@ -919,15 +916,21 @@ static bool Flag_Region( const int i, const int j, const int k, const int lv, co
    if ( Jet_Ambient == 0 ) return true;
 
 
-   const double dh     = amr->dh[lv];                                                  // grid size
-   const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,              // x,y,z position
+   const double dh     = amr->dh[lv];                                                         // grid size
+   const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,  // x,y,z position
                            amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
                            amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };
 
    bool Flag = false;  
 
-   const double Center[3]      = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
-   const double dR[3]          = { Pos[0]-Center[0], Pos[1]-Center[1], Pos[2]-Center[2] };
+   const double Center[3]      = { 0.5*amr->BoxSize[0] + Jet_HSE_Dx, 
+                                   0.5*amr->BoxSize[1] + Jet_HSE_Dy, 
+                                   0.5*amr->BoxSize[2] + Jet_HSE_Dz };
+
+   const double dR[3]          = { Pos[0]-Center[0]-Jet_CenOffset[0], 
+                                   Pos[1]-Center[1]-Jet_CenOffset[1], 
+                                   Pos[2]-Center[2]-Jet_CenOffset[2] };
+
    const double R              = sqrt( SQR(dR[0]) + SQR(dR[1]) + SQR(dR[2]) );
 
    const double ShellThickness = 16*amr->dh[0];
@@ -935,10 +938,6 @@ static bool Flag_Region( const int i, const int j, const int k, const int lv, co
 
 
    if ( R < Jet_HSE_Radius - ShellThickness )   return true;
-//   else if ( Jet_HSE_Radius - ShellThickness <= R && R <= Jet_HSE_Radius + ShellThickness && lv <= 0 )
-//   {
-//      Flag = true;
-//   }
    else                                         return false;
 
 } // FUNCTION : Flag_Region
@@ -962,7 +961,10 @@ bool Flag_User( const int i, const int j, const int k, const int lv, const int P
 #  endif
 
 
-   const double Center[3]      = { Jet_Cen[0], Jet_Cen[1], Jet_Cen[2] };
+   const double Center[3]      = { Jet_Cen[0] + Jet_HSE_Dx, 
+                                   Jet_Cen[1] + Jet_HSE_Dy, 
+                                   Jet_Cen[2] + Jet_HSE_Dz };
+
    const double dR[3]          = { Pos[0]-Center[0], Pos[1]-Center[1], Pos[2]-Center[2] };
    const double R              = sqrt( SQR(dR[0]) + SQR(dR[1]) + SQR(dR[2]) );
 
@@ -1031,9 +1033,9 @@ bool Flag_User( const int i, const int j, const int k, const int lv, const int P
 #  ifdef GRAVITY
 void Init_ExternalAcc()
 {
-  ExtAcc_AuxArray[0] = 0.5*amr->BoxSize[0];
-  ExtAcc_AuxArray[1] = 0.5*amr->BoxSize[1];
-  ExtAcc_AuxArray[2] = 0.5*amr->BoxSize[2];
+  ExtAcc_AuxArray[0] = 0.5*amr->BoxSize[0] + Jet_HSE_Dx;
+  ExtAcc_AuxArray[1] = 0.5*amr->BoxSize[1] + Jet_HSE_Dy;
+  ExtAcc_AuxArray[2] = 0.5*amr->BoxSize[2] + Jet_HSE_Dz;
   ExtAcc_AuxArray[3] = 2.0 * SIS_Temperature;
   ExtAcc_AuxArray[4] = 0.0;
 }
