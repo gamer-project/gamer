@@ -11,7 +11,7 @@ void CartesianRotate( double x[], double theta, double phi, bool inverse );
 // =======================================================================================
 
 // options
-static int      Jet_Ambient;                                    // [0/1/2] : uniform/iothermal/singular isothermal
+static int      Jet_Ambient;                                    // [0/1/2/3] : uniform/iothermal/singular isothermal/beta model
 static bool     Jet_DiffPrecession;                             //
 static bool     Jet_Precession;                                 //
 static bool     Jet_TimeDependentSrc;                           //
@@ -36,8 +36,10 @@ static int      Jet_HSE_BgTable_NBin;                           // for Jet_Ambie
 static double   Jet_HSE_Radius                     = NULL_REAL; // for Jet_Ambient=1: radius of halo
 static double   Jet_HSE_Mass                       = NULL_REAL; // for Jet_Ambient=1: enclosed mass of halo
 
-// singular isothermal sphere
-static double   SIS_Temperature;
+// beta model
+static double   Jet_Beta_Beta;
+static double   Jet_Beta_Rcore;
+static double   Jet_Beta_PeakDens;
 
 // jet fluid parameters
 static double   Jet_SrcVel;                                     // jet 4-velocity
@@ -169,7 +171,7 @@ void SetParameter()
 
 // load options
    ReadPara->Add( "Jet_Exist",               &Jet_Exist,                  3,                     0,              3    );
-   ReadPara->Add( "Jet_Ambient",             &Jet_Ambient,                0,                     0,              2    );
+   ReadPara->Add( "Jet_Ambient",             &Jet_Ambient,                0,                     0,              3    );
    ReadPara->Add( "Jet_DiffPrecession",      &Jet_DiffPrecession,     false,          Useless_bool,   Useless_bool    );
    ReadPara->Add( "Jet_Precession",          &Jet_Precession,         false,          Useless_bool,   Useless_bool    );
    ReadPara->Add( "Jet_TimeDependentSrc",    &Jet_TimeDependentSrc,   false,          Useless_bool,   Useless_bool    );
@@ -197,7 +199,7 @@ void SetParameter()
    ReadPara->Add( "Jet_PrecessionAxis_y",    &Jet_PrecessionAxis[1],    NoDef_double, NoMin_double,   NoMax_double    );  
    ReadPara->Add( "Jet_PrecessionAxis_z",    &Jet_PrecessionAxis[2],    NoDef_double, NoMin_double,   NoMax_double    );  
 
-// load background parameters
+// load uniform background parameters
    ReadPara->Add( "Jet_UniformDens",         &Jet_UniformDens,         -1.0,          Eps_double,     NoMax_double    );
    ReadPara->Add( "Jet_UniformVel_x",        &Jet_UniformVel[0],        0.0,          NoMin_double,   NoMax_double    );
    ReadPara->Add( "Jet_UniformVel_y",        &Jet_UniformVel[1],        0.0,          NoMin_double,   NoMax_double    );
@@ -211,8 +213,10 @@ void SetParameter()
    ReadPara->Add( "Jet_HSE_Dz",              &Jet_HSE_Dz,               0.0,          NoMin_double,   NoMax_double    );
    ReadPara->Add( "Jet_HSE_BgTable_File",     Jet_HSE_BgTable_File,     Useless_str,  Useless_str,    Useless_str     );
 
-// load isothermal sphere parameters
-   ReadPara->Add( "SIS_Temperature",         &SIS_Temperature,          0.0,          NoMin_double,   NoMax_double    );
+// load beta model parameters
+   ReadPara->Add( "Jet_Beta_Beta",           &Jet_Beta_Beta,            0.0,          NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_Beta_Rcore",          &Jet_Beta_Rcore,           0.0,          NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_Beta_PeakDens",       &Jet_Beta_PeakDens,        0.0,          NoMin_double,   NoMax_double    );
 
 // load time-dependent source varibles
    ReadPara->Add( "Jet_BurstStartTime",      &Jet_BurstStartTime,      -1.0,          NoMin_double,   NoMax_double    );
@@ -228,6 +232,43 @@ void SetParameter()
 
    delete ReadPara;
 
+// replace useless parameters with NaN
+   if ( Jet_Ambient != 0 )
+   {
+     Jet_UniformDens      = NAN;
+     Jet_UniformVel[0]    = NAN;
+     Jet_UniformVel[1]    = NAN;
+     Jet_UniformVel[2]    = NAN;
+   }
+
+   if ( Jet_Ambient == 0 || OPT__GRAVITY_TYPE == 2 )
+   {
+     Jet_HSE_Radius       = NAN;
+   }
+
+   // uniform precession
+   if ( Jet_Precession )       
+   {
+   }
+
+   // differential precession
+   if ( Jet_DiffPrecession )  
+   {
+   }
+
+   // no precession
+   if ( !Jet_Precession && !Jet_DiffPrecession ) 
+   {
+   }
+   
+   if ( !Jet_TimeDependentSrc )
+   {
+     Jet_BurstDens       = NAN;
+     Jet_Burst4Vel       = NAN;
+     Jet_BurstTemp       = NAN; 
+     Jet_BurstStartTime  = NAN;
+     Jet_BurstEndTime    = NAN;
+   }
 
 // (1-2) check runtime parameters
 
@@ -253,14 +294,9 @@ void SetParameter()
        Aux_Error( ERROR_INFO, "Jet_BurstTemp <= Eps_double !!\n" );
    }
 
-   if ( OPT__FLAG_USER == 1 && Jet_Exist == 0 )
-   {
-      Aux_Error( ERROR_INFO, "Turn off OPT__FLAG_USER !!\n" );
-   }
-
 
 // check isothermal sphere
-   if ( Jet_Ambient == 1 )
+   if ( Jet_HSE_Radius == Jet_HSE_Radius )
    {
       if ( !OPT__FLAG_REGION ) 
         Aux_Error( ERROR_INFO, "OPT__FLAG_REGION must be enabled !!\n" );
@@ -273,10 +309,12 @@ void SetParameter()
            Jet_HSE_Radius >= 0.5*amr->BoxSize[2]   )
         Aux_Error( ERROR_INFO, "halo size is greater or equal to box size !!\n" );
 
-#     ifndef GRAVITY
-      Aux_Error( ERROR_INFO, "GRAVITY must be enabled !!\n" );
-#     endif
+#      ifndef GRAVITY
+       Aux_Error( ERROR_INFO, "GRAVITY must be enabled !!\n" );
+#      endif
    }
+
+
 // check uniform ambient
    else if ( Jet_Ambient == 0 )
    {
@@ -284,73 +322,23 @@ void SetParameter()
       Aux_Error( ERROR_INFO, "GRAVITY must be disabled !!\n" );
 #     endif
    }
-// check singular isothermal sphere
-   else if ( Jet_Ambient == 2 )
+
+// check beta model
+   else if ( Jet_Ambient == 3 )
    {
-#     ifndef GRAVITY
-      Aux_Error( ERROR_INFO, "GRAVITY must be enabled !!\n" );
-#     endif
+	  if ( Jet_Beta_Beta == 0.0 )
+      Aux_Error( ERROR_INFO, "Jet_Beta_Beta = 0.0 !!\n" );
 
-      if ( Jet_HSE_Radius == NULL_REAL ) 
-        Aux_Error( ERROR_INFO, "Jet_HSE_Radius = %e !!\n" );
+	  if ( Jet_Beta_Rcore == 0.0 )
+      Aux_Error( ERROR_INFO, "Jet_Beta_Rcore = 0.0 !!\n" );
 
-//      if ( Jet_HSE_Radius >= 0.5*amr->BoxSize[0] || 
-//           Jet_HSE_Radius >= 0.5*amr->BoxSize[1] || 
-//           Jet_HSE_Radius >= 0.5*amr->BoxSize[2]   )
-//        Aux_Error( ERROR_INFO, "halo size is greater or equal to box size !!\n" );
-
-      if ( !OPT__FLAG_REGION ) 
-        Aux_Error( ERROR_INFO, "OPT__FLAG_REGION must be enabled !!\n" );
-
-	  if ( SIS_Temperature == 0.0 )
-      Aux_Error( ERROR_INFO, "SIS_Temperature = 0.0 !!\n" );
+	  if ( Jet_Beta_PeakDens == 0.0 )
+      Aux_Error( ERROR_INFO, "Jet_Beta_PeakDens = 0.0 !!\n" );
    }
+
 // check precession parameters
    if ( Jet_Precession && Jet_DiffPrecession )
       Aux_Error( ERROR_INFO, "Jet_Precession and Jet_DiffPrecession are not allowed to enable simultaneously !!\n" );
-
-
-// replace useless parameters with NaN
-   if ( Jet_Ambient == 1 || Jet_Ambient == 2 )
-   {
-     Jet_UniformDens      = NAN;
-     Jet_UniformTemp      = NAN;
-     Jet_UniformVel[0]    = NAN;
-     Jet_UniformVel[1]    = NAN;
-     Jet_UniformVel[2]    = NAN;
-   }
-   else if ( Jet_Ambient == 0 )
-   {
-     Jet_HSE_Radius       = NAN;
-     Jet_HSE_Dx           = NAN;
-     Jet_HSE_Dy           = NAN;
-     Jet_HSE_Dz           = NAN;
-   }
-
-   if ( Jet_Precession )       // uniform precession
-   {
-   }
-   else if ( Jet_DiffPrecession )  // differential precession
-   {
-     // do nothing
-   }
-   else if ( !Jet_Precession && !Jet_DiffPrecession ) // no precession
-   {
-    // Jet_Angular_Velocity = 0.0;
-    // Jet_PrecessionAngle   = 0.0;
-    // Jet_PrecessionAxis[0];
-    // Jet_PrecessionAxis[1];
-    // Jet_PrecessionAxis[2];
-   }
-   
-   if ( !Jet_TimeDependentSrc )
-   {
-     Jet_BurstDens       = NAN;
-     Jet_Burst4Vel       = NAN;
-     Jet_BurstTemp       = NAN; 
-     Jet_BurstStartTime  = NAN;
-     Jet_BurstEndTime    = NAN;
-   }
 
 // (1-2) convert to code unit
    Jet_SrcVel               *= Const_c   / UNIT_V;
@@ -366,26 +354,28 @@ void SetParameter()
    Jet_CenOffset[1]         *= Const_kpc / UNIT_L;
    Jet_CenOffset[2]         *= Const_kpc / UNIT_L;
 
-   if ( Jet_Ambient == 1 || Jet_Ambient == 2 )
+   Jet_HSE_Dx               *= Const_kpc / UNIT_L;  
+   Jet_HSE_Dy               *= Const_kpc / UNIT_L;  
+   Jet_HSE_Dz               *= Const_kpc / UNIT_L;  
+
+   if ( Jet_HSE_Radius == Jet_HSE_Radius )
    {
      Jet_HSE_Radius         *= Const_kpc / UNIT_L; 
-     Jet_HSE_Dx             *= Const_kpc / UNIT_L;  
-     Jet_HSE_Dy             *= Const_kpc / UNIT_L;  
-     Jet_HSE_Dz             *= Const_kpc / UNIT_L;  
    }
    else if ( Jet_Ambient == 0 )
    {
      Jet_UniformDens        *= 1.0       / UNIT_D;
-     Jet_UniformTemp        *= Const_GeV / ( Jet_ParticleMassAmbient * SQR(Const_c) );
      Jet_UniformVel[0]      *= Const_c   / UNIT_V;
      Jet_UniformVel[1]      *= Const_c   / UNIT_V;
      Jet_UniformVel[2]      *= Const_c   / UNIT_V;
    }
-   else if ( Jet_Ambient == 2 )
+   else if ( Jet_Ambient == 3 )
    {
-     SIS_Temperature        *= Const_GeV / ( Jet_ParticleMassAmbient * SQR(Const_c) );
+     Jet_Beta_Rcore         *= Const_kpc / UNIT_L;
+     Jet_Beta_PeakDens      *= 1.0       / UNIT_D;
    }
 
+   Jet_UniformTemp        *= Const_GeV / ( Jet_ParticleMassAmbient * SQR(Const_c) );
    Jet_Angular_Velocity   *= 1.0;    // the unit of Jet_Angular_Velocity is UNIT_T
 
    if ( Jet_Precession ) // uniform precession
@@ -450,14 +440,16 @@ void SetParameter()
 
 
 // computing sound speed and half-crossing time
-   if ( Jet_Ambient != 0 )
-   {
-     double AmbientTemp;
-     ( Jet_Ambient == 2 ) ? (AmbientTemp = SIS_Temperature ) : ( AmbientTemp = Table_T[0] );
+   double AmbientTemp, Distance;
 
-     Cs           = sqrt( AmbientTemp * SQR(Const_c) );
-     CrossingTime = ( Jet_HSE_Radius * Const_kpc ) / Cs;
-   }
+   if      ( Jet_Ambient == 1 )                     AmbientTemp = Table_T[0];
+   else if ( Jet_Ambient == 2 ||Jet_Ambient == 3 )  AmbientTemp = Jet_UniformTemp;
+
+   Cs = sqrt( AmbientTemp * SQR(Const_c) );
+
+   ( Jet_HSE_Radius != Jet_HSE_Radius ) ? Distance = BOX_SIZE : Distance = Jet_HSE_Radius;
+
+   CrossingTime = ( Distance * Const_kpc ) / Cs;
 
 // (4) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
@@ -503,11 +495,6 @@ void SetParameter()
      Aux_Message( stdout, "  Jet_MaxDis              = %14.7e kpc\n",        Jet_MaxDis*UNIT_L/Const_kpc                     );
    }
 
-   if ( Jet_Ambient == 1 && MPI_Rank == 0 ) 
-   {
-     Aux_Message( stdout, "  Jet_HSE_BgTable_File    = %s\n",                Jet_HSE_BgTable_File                            );
-   }
-
    if ( Jet_Ambient == 0 && MPI_Rank == 0 )
    {
      Aux_Message( stdout, "  Jet_UniformDens         = %14.7e g/cm^3\n",     Jet_UniformDens*UNIT_D                          );
@@ -518,19 +505,26 @@ void SetParameter()
      Aux_Message( stdout, "  Jet_UniformNumDens      = %14.7e per cc\n",     Jet_UniformDens*UNIT_D/Jet_ParticleMassAmbient  );
    }
 
-   if ( Jet_Ambient == 2 && MPI_Rank == 0 )
+   if ( MPI_Rank == 0 )
    {
-     Aux_Message( stdout, "  SIS_Temperature         = %14.7e GeV\n",        SIS_Temperature*Jet_ParticleMassAmbient*SQR(Const_c)/Const_GeV );
+     Aux_Message( stdout, "  Cs                      = %14.7e c\n",          Cs / Const_c                                    );
+     Aux_Message( stdout, "  CrossingTime            = %14.7e kpc/c\n",      CrossingTime / UNIT_T                           );
    }
 
-   if ( ( Jet_Ambient == 1 || Jet_Ambient == 2 ) && MPI_Rank == 0 )
+   if ( Jet_HSE_Radius == Jet_HSE_Radius && MPI_Rank == 0 )
    {
+     Aux_Message( stdout, "  Jet_HSE_BgTable_File    = %s\n",                Jet_HSE_BgTable_File                            );
      Aux_Message( stdout, "  Jet_HSE_Radius          = %14.7e kpc\n",        Jet_HSE_Radius*UNIT_L/Const_kpc                 );
      Aux_Message( stdout, "  Jet_HSE_Dx              = %14.7e kpc\n",        Jet_HSE_Dx*UNIT_L/Const_kpc                     );
      Aux_Message( stdout, "  Jet_HSE_Dy              = %14.7e kpc\n",        Jet_HSE_Dy*UNIT_L/Const_kpc                     );
      Aux_Message( stdout, "  Jet_HSE_Dz              = %14.7e kpc\n",        Jet_HSE_Dz*UNIT_L/Const_kpc                     );
-     Aux_Message( stdout, "  Cs                      = %14.7e c\n",          Cs / Const_c                                    );
-     Aux_Message( stdout, "  CrossingTime            = %14.7e kpc/c\n",      CrossingTime / UNIT_T                           );
+   }
+
+   if ( Jet_Ambient == 3 && MPI_Rank == 0 )
+   {
+     Aux_Message( stdout, "  Jet_Beta_Rcore          = %14.7e kpc\n",        Jet_Beta_Rcore*UNIT_L/Const_kpc                 );
+     Aux_Message( stdout, "  Jet_Beta_PeakDens       = %14.7e g/cm^3\n",     Jet_Beta_PeakDens*UNIT_D                        );
+     Aux_Message( stdout, "  Jet_Beta_Beta           = %14.7e\n",            Jet_Beta_Beta                                   );
    }
 
    if ( ( Jet_Precession || Jet_DiffPrecession ) && MPI_Rank == 0 )
@@ -543,7 +537,6 @@ void SetParameter()
    if ( Jet_DiffPrecession && MPI_Rank == 0 )
    {
    }
-
 
    if ( Jet_TimeDependentSrc && MPI_Rank == 0 )
    {
@@ -637,7 +630,23 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // variables for jet
    double Pri4Vel[NCOMP_FLUID];
 
+   dx = x - amr->BoxCenter[0] - Jet_HSE_Dx;
+   dy = y - amr->BoxCenter[1] - Jet_HSE_Dy;
+   dz = z - amr->BoxCenter[2] - Jet_HSE_Dz;
 
+   r = sqrt( dx*dx + dy*dy + dz*dz );
+
+// uniform ambient
+   if ( Jet_Ambient == 0 )
+   {
+	  Pri4Vel[0] = Jet_UniformDens;
+      Pri4Vel[1] = Jet_UniformVel[0];
+      Pri4Vel[2] = Jet_UniformVel[1];
+      Pri4Vel[3] = Jet_UniformVel[2];
+	  Pri4Vel[4] = Jet_UniformTemp * Jet_UniformDens;
+   }
+
+// isotherml sphere
    if ( Jet_Ambient == 1 )
    {
       double Temp, RhoSurface;
@@ -646,72 +655,90 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Pri4Vel[2] = 0.0;
       Pri4Vel[3] = 0.0;
 
-      dx = x - amr->BoxCenter[0] + Jet_HSE_Dx;
-      dy = y - amr->BoxCenter[1] + Jet_HSE_Dy;
-      dz = z - amr->BoxCenter[2] + Jet_HSE_Dz;
 
-      r = sqrt( dx*dx + dy*dy + dz*dz );
-
-      //Pri4Vel[0] = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_D, r );
-      //Pri4Vel[4] = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_T, r ) * Pri4Vel[0];
-
-
-      if ( r <= Jet_HSE_Radius )
+      if ( Jet_HSE_Radius == Jet_HSE_Radius )
       {
-        Pri4Vel[0] = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_D, r );
-        Temp = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_T, r );
-        Pri4Vel[4] = Temp * Pri4Vel[0];
+         if ( r <= Jet_HSE_Radius )
+         {
+           Pri4Vel[0] = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_D, r );
+           Temp = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_T, r );
+           Pri4Vel[4] = Temp * Pri4Vel[0];
+         }
+         else
+         {
+           Temp = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_T, Jet_HSE_Radius );
+
+           // uniform ambient outside halo
+           Pri4Vel[0] =              DropRatio * Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_D, Jet_HSE_Radius );
+           Pri4Vel[4] = Pri4Vel[0] / DropRatio * Temp;
+         }
       }
       else
       {
-        Temp = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_T, Jet_HSE_Radius );
-
-        // uniform ambient outside halo
-        Pri4Vel[0] =              DropRatio * Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_D, Jet_HSE_Radius );
-        Pri4Vel[4] = Pri4Vel[0] / DropRatio * Temp;
-
-        // exponential ambient outside halo
-        //RhoSurface = DropRatio * Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_D, Jet_HSE_Radius );
-
-		//Temp /= DropRatio;
-
-        //Pri4Vel[0] = RhoSurface * exp( ( NEWTON_G * Jet_HSE_Mass / Temp ) * ( 1.0/r - 1.0/Jet_HSE_Radius ) );
-        //Pri4Vel[4] = Pri4Vel[0] * Temp;
+         Pri4Vel[0] = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_D, r );
+         Temp = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_T, r );
+         Pri4Vel[4] = Temp * Pri4Vel[0];
       }
    }
-   else if ( Jet_Ambient == 0 )
-   {
-	  Pri4Vel[0] = Jet_UniformDens;
-      Pri4Vel[1] = Jet_UniformVel[0];
-      Pri4Vel[2] = Jet_UniformVel[1];
-      Pri4Vel[3] = Jet_UniformVel[2];
-	  Pri4Vel[4] = Jet_UniformTemp * Jet_UniformDens;
-   }
-   else if ( Jet_Ambient == 2 )
+
+   // singular isothermal sphere or beta model
+   if ( Jet_Ambient == 2 ) 
    {
 #     ifdef GRAVITY
-      dx = x - amr->BoxCenter[0] - Jet_HSE_Dx;
-      dy = y - amr->BoxCenter[1] - Jet_HSE_Dy;
-      dz = z - amr->BoxCenter[2] - Jet_HSE_Dz;
-
-      r = sqrt( dx*dx + dy*dy + dz*dz );
-
       Pri4Vel[1] = 0.0;
       Pri4Vel[2] = 0.0;
       Pri4Vel[3] = 0.0;
 
-      if ( r <= Jet_HSE_Radius )
+      if ( Jet_HSE_Radius == Jet_HSE_Radius )
       {
-	    Pri4Vel[0]  = SIS_Temperature / (2.0*M_PI*NEWTON_G);
-	    Pri4Vel[0] /= SQR( r );
-	    Pri4Vel[4]  = SIS_Temperature * Pri4Vel[0];
+        if ( r <= Jet_HSE_Radius )
+        {
+	      Pri4Vel[0]  = Jet_UniformTemp / (2.0*M_PI*NEWTON_G);
+	      Pri4Vel[0] /= SQR( r );
+	      Pri4Vel[4]  = Jet_UniformTemp * Pri4Vel[0];
+        }
+        else
+        {
+	      Pri4Vel[0]  = Jet_UniformTemp / (2.0*M_PI*NEWTON_G);
+	      Pri4Vel[0] /= SQR( Jet_HSE_Radius );
+          Pri4Vel[0] *= DropRatio;
+          Pri4Vel[4]  = Pri4Vel[0] * Jet_UniformTemp / DropRatio;
+        }
       }
       else
       {
-	    Pri4Vel[0]  = SIS_Temperature / (2.0*M_PI*NEWTON_G);
-	    Pri4Vel[0] /= SQR( Jet_HSE_Radius );
-        Pri4Vel[0] *= DropRatio;
-        Pri4Vel[4]  = Pri4Vel[0] * SIS_Temperature / DropRatio;
+	      Pri4Vel[0]  = Jet_UniformTemp / (2.0*M_PI*NEWTON_G);
+	      Pri4Vel[0] /= SQR( r );
+	      Pri4Vel[4]  = Jet_UniformTemp * Pri4Vel[0];
+      }
+#     endif
+   }
+
+   if ( Jet_Ambient == 3 ) 
+   {
+#     ifdef GRAVITY
+      Pri4Vel[1] = 0.0;
+      Pri4Vel[2] = 0.0;
+      Pri4Vel[3] = 0.0;
+
+      if ( Jet_HSE_Radius == Jet_HSE_Radius )
+      {
+        if ( r <= Jet_HSE_Radius )
+        {
+	      Pri4Vel[0]  = Jet_Beta_PeakDens * pow( 1.0 + SQR(              r/Jet_Beta_Rcore ), -1.5*Jet_Beta_Beta );
+	      Pri4Vel[4]  = Jet_UniformTemp * Pri4Vel[0];
+        }
+        else
+        {
+	      Pri4Vel[0]  = Jet_Beta_PeakDens * pow( 1.0 + SQR( Jet_HSE_Radius/Jet_Beta_Rcore ), -1.5*Jet_Beta_Beta );
+          Pri4Vel[0] *= DropRatio;
+          Pri4Vel[4]  = Pri4Vel[0] * Jet_UniformTemp / DropRatio;
+        }
+      }
+      else
+      {
+	      Pri4Vel[0]  = Jet_Beta_PeakDens * pow( 1.0 + (r/Jet_Beta_Rcore)*(r/Jet_Beta_Rcore), -1.5*Jet_Beta_Beta );
+	      Pri4Vel[4]  = Jet_UniformTemp * Pri4Vel[0];
       }
 #     endif
    }
@@ -913,32 +940,35 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
 // (true/false): if the target cell (is/is not) within the region to be refined
 static bool Flag_Region( const int i, const int j, const int k, const int lv, const int PID )
 {
-   if ( Jet_Ambient == 0 ) return true;
 
+   if ( Jet_HSE_Radius == Jet_HSE_Radius )
+   {
+      const double dh     = amr->dh[lv];                                                         // grid size
+      const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,  // x,y,z position
+                              amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
+                              amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };
+   
+      bool Flag = false;  
+   
+      const double Center[3]      = { 0.5*amr->BoxSize[0] + Jet_HSE_Dx, 
+                                      0.5*amr->BoxSize[1] + Jet_HSE_Dy, 
+                                      0.5*amr->BoxSize[2] + Jet_HSE_Dz };
+   
+      const double dR[3]          = { Pos[0]-Center[0]-Jet_CenOffset[0], 
+                                      Pos[1]-Center[1]-Jet_CenOffset[1], 
+                                      Pos[2]-Center[2]-Jet_CenOffset[2] };
+   
+      const double R              = sqrt( SQR(dR[0]) + SQR(dR[1]) + SQR(dR[2]) );
+   
+      const double ShellThickness = 16*amr->dh[0];
+     
+   
+   
+      if ( R < Jet_HSE_Radius - ShellThickness )   return true;
+      else                                         return false;
+   }
 
-   const double dh     = amr->dh[lv];                                                         // grid size
-   const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,  // x,y,z position
-                           amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
-                           amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };
-
-   bool Flag = false;  
-
-   const double Center[3]      = { 0.5*amr->BoxSize[0] + Jet_HSE_Dx, 
-                                   0.5*amr->BoxSize[1] + Jet_HSE_Dy, 
-                                   0.5*amr->BoxSize[2] + Jet_HSE_Dz };
-
-   const double dR[3]          = { Pos[0]-Center[0]-Jet_CenOffset[0], 
-                                   Pos[1]-Center[1]-Jet_CenOffset[1], 
-                                   Pos[2]-Center[2]-Jet_CenOffset[2] };
-
-   const double R              = sqrt( SQR(dR[0]) + SQR(dR[1]) + SQR(dR[2]) );
-
-   const double ShellThickness = 16*amr->dh[0];
-  
-
-
-   if ( R < Jet_HSE_Radius - ShellThickness )   return true;
-   else                                         return false;
+   return true;
 
 } // FUNCTION : Flag_Region
 
@@ -971,62 +1001,6 @@ bool Flag_User( const int i, const int j, const int k, const int lv, const int P
    if ( R < dh*1.8 || R < Jet_MaxDis) return true;
    else                               return false;
 
-
-  
-//  double xp[3], rp[3];
-//  double Prim[5], Cons[5], Vel[3];
-//  double PrecessionAxis_Spherical[3];
-//  bool InsideUpperCone, InsideLowerCone, Smooth;
-//  double Jet_SrcVelSmooth;
-//
-//
-//  Smooth = false;
-//
-//  // shift origin to the point O
-//  xp[0] = Pos[0] - Jet_Cen[0];
-//  xp[1] = Pos[1] - Jet_Cen[1];
-//  xp[2] = Pos[2] - Jet_Cen[2];
-//
-//  if ( Jet_PrecessionAxis[0] != 0.0 || Jet_PrecessionAxis[1] != 0.0 ||  Jet_PrecessionAxis[2] == 0.0 )
-//  {
-//    // get theta, phi for the first rotation
-//    Cartesian2Spherical( Jet_PrecessionAxis, PrecessionAxis_Spherical );
-//
-//    // rotate coordinate to align z-axis with fixed precession axis
-//	CartesianRotate(xp, PrecessionAxis_Spherical[1], PrecessionAxis_Spherical[2], false);
-//  }
-//
-//
-//  InsideUpperCone  = SQR(xp[0]) + SQR(xp[1]) <= SQR( +tan(Jet_HalfOpeningAngle)*xp[2] + Jet_Radius );
-//  InsideUpperCone &= 0.0 <= xp[2] && xp[2] <= Jet_HalfHeight;
-//
-//  InsideLowerCone  = SQR(xp[0]) + SQR(xp[1]) <= SQR( -tan(Jet_HalfOpeningAngle)*xp[2] + Jet_Radius );
-//  InsideLowerCone &= -Jet_HalfHeight <= xp[2] && xp[2] <= 0.0;
-//
-//  if ( Jet_HalfOpeningAngle != 0.0 )
-//  {
-//   InsideUpperCone &= SQR(xp[0]) + SQR(xp[1]) + SQR(xp[2] + Jet_Radius/tan(Jet_HalfOpeningAngle)) 
-//                   <= SQR(Jet_HalfHeight+Jet_Radius/tan(Jet_HalfOpeningAngle));
-//
-//   InsideUpperCone &= 0.0 <= xp[2]; 
-//
-//   InsideLowerCone &= SQR(xp[0]) + SQR(xp[1]) + SQR(xp[2] - Jet_Radius/tan(Jet_HalfOpeningAngle)) 
-//                   <= SQR(Jet_HalfHeight+Jet_Radius/tan(Jet_HalfOpeningAngle));
-//
-//   InsideLowerCone &= xp[2] <= 0.0;
-//  }
-//  else
-//  {
-//    InsideUpperCone &= 0.0 <= xp[2] && xp[2] <= Jet_HalfHeight;
-//    InsideLowerCone &= -Jet_HalfHeight <= xp[2] && xp[2] <= 0.0;
-//  }
-//
-//
-//
-//
-//  if ( InsideUpperCone || InsideLowerCone ) return true;
-//  else return false;
-
 } // FUNCTION : Flag_User
 
 
@@ -1036,8 +1010,20 @@ void Init_ExternalAcc()
   ExtAcc_AuxArray[0] = 0.5*amr->BoxSize[0] + Jet_HSE_Dx;
   ExtAcc_AuxArray[1] = 0.5*amr->BoxSize[1] + Jet_HSE_Dy;
   ExtAcc_AuxArray[2] = 0.5*amr->BoxSize[2] + Jet_HSE_Dz;
-  ExtAcc_AuxArray[3] = 2.0 * SIS_Temperature;
-  ExtAcc_AuxArray[4] = 0.0;
+
+  if ( Jet_Ambient == 2 )
+  {
+    ExtAcc_AuxArray[3] = 2.0 * Jet_UniformTemp;
+    ExtAcc_AuxArray[4] = 0.0;
+    ExtAcc_AuxArray[5] = 2.0;
+  }
+  else if ( Jet_Ambient == 3 )
+  {
+    ExtAcc_AuxArray[3] = 3.0 * Jet_UniformTemp * Jet_Beta_Beta;
+    ExtAcc_AuxArray[4] = Jet_Beta_Rcore;
+    ExtAcc_AuxArray[5] = 4.0;
+  }
+  
 }
 #endif
 
