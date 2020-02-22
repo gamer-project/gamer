@@ -59,6 +59,14 @@ Jet_Beta_Beta                                   0.56
 Jet_Beta_Rcore                                  0.48
 Jet_Beta_PeakDens                              5e-29
 
+# pressure-balanced sphere
+Sphere_Radius                                   -1.0
+Sphere_DensRatio                                1e-2
+Sphere_Center_x                                  0.0
+Sphere_Center_y                                  0.0
+Sphere_Center_z                                  0.0
+
+
 # time-dependent source varibles
 Flag_BurstDens                                    0
 Flag_Burst4Vel                                    0

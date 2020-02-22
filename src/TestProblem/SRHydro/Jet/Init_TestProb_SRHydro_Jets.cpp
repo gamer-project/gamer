@@ -27,9 +27,9 @@ static double   Jet_UniformVel[3];                              // uniform ambie
 static double   Jet_UniformTemp;                                // uniform ambient temperature
 
 // isothermal sphere parameters
-static double   Jet_HSE_Dx                         = NULL_REAL; // for Jet_Ambient=1: distance between box and cluster centre (along x)
-static double   Jet_HSE_Dy                         = NULL_REAL; // for Jet_Ambient=1: distance between box and cluster centre (along y)
-static double   Jet_HSE_Dz                         = NULL_REAL; // for Jet_Ambient=1: distance between box and cluster centre (along z)
+static double   Jet_HSE_Dx                         = NULL_REAL; // for Jet_Ambient=1: distance between box center and jet source (along x)
+static double   Jet_HSE_Dy                         = NULL_REAL; // for Jet_Ambient=1: distance between box center and jet source (along y)
+static double   Jet_HSE_Dz                         = NULL_REAL; // for Jet_Ambient=1: distance between box center and jet source (along z)
 static char     Jet_HSE_BgTable_File[MAX_STRING];               // for Jet_Ambient=1: filename of the background gas table
 static double  *Jet_HSE_BgTable_Data               = NULL;      // for Jet_Ambient=1: background gas table [radius/density/temperature]
 static int      Jet_HSE_BgTable_NBin;                           // for Jet_Ambient=1: number of bins in Jet_HSE_BgTable_Data[]
@@ -46,6 +46,7 @@ static double   Jet_SrcVel;                                     // jet 4-velocit
 static double   Jet_SrcDens;                                    // jet density
 static double   Jet_SrcTemp;                                    // jet temperature
 static bool     Jet_SmoothVel;
+
 
 // sound speed
 static double Cs;
@@ -87,6 +88,13 @@ static double   Jet_BurstTemp;                                  // burst tempera
 static bool     Flag_Burst4Vel;
 static bool     Flag_BurstDens;
 static bool     Flag_BurstTemp;
+
+// pressure-balanced sphere
+static double   Sphere_Radius;
+static double   Sphere_DensRatio;
+static double   Sphere_Center_x;
+static double   Sphere_Center_y;
+static double   Sphere_Center_z;
 
 static double *Table_R, *Table_D, *Table_T;
 
@@ -218,6 +226,13 @@ void SetParameter()
    ReadPara->Add( "Jet_Beta_Rcore",          &Jet_Beta_Rcore,           0.0,          NoMin_double,   NoMax_double    );
    ReadPara->Add( "Jet_Beta_PeakDens",       &Jet_Beta_PeakDens,        0.0,          NoMin_double,   NoMax_double    );
 
+// load pressured-balanced sphere
+   ReadPara->Add( "Sphere_Radius",           &Sphere_Radius,           -1.0,          NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Sphere_DensRatio",        &Sphere_DensRatio,         0.0,          Eps_double,     NoMax_double    );
+   ReadPara->Add( "Sphere_Center_x",         &Sphere_Center_x,          0.0,          NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Sphere_Center_y",         &Sphere_Center_y,          0.0,          NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Sphere_Center_z",         &Sphere_Center_z,          0.0,          NoMin_double,   NoMax_double    );
+
 // load time-dependent source varibles
    ReadPara->Add( "Jet_BurstStartTime",      &Jet_BurstStartTime,      -1.0,          NoMin_double,   NoMax_double    );
    ReadPara->Add( "Jet_BurstEndTime",        &Jet_BurstEndTime,        -1.0,          NoMin_double,   NoMax_double    );
@@ -241,7 +256,7 @@ void SetParameter()
      Jet_UniformVel[2]    = NAN;
    }
 
-   if ( 1 )
+   if ( Jet_Ambient != 1 )
    {
      Jet_HSE_Radius       = NAN;
    }
@@ -249,6 +264,15 @@ void SetParameter()
    // uniform precession
    if ( Jet_Precession )       
    {
+   }
+
+   if ( Sphere_Radius < 0.0 )
+   {
+      Sphere_Radius    = NAN;
+      Sphere_DensRatio = NAN;
+      Sphere_Center_x  = NAN; 
+      Sphere_Center_y  = NAN;
+      Sphere_Center_z  = NAN;   
    }
 
    // differential precession
@@ -375,8 +399,17 @@ void SetParameter()
      Jet_Beta_PeakDens      *= 1.0       / UNIT_D;
    }
 
-   Jet_UniformTemp        *= Const_GeV / ( Jet_ParticleMassAmbient * SQR(Const_c) );
-   Jet_Angular_Velocity   *= 1.0;    // the unit of Jet_Angular_Velocity is UNIT_T
+   Jet_UniformTemp          *= Const_GeV / ( Jet_ParticleMassAmbient * SQR(Const_c) );
+   Jet_Angular_Velocity     *= 1.0;    // the unit of Jet_Angular_Velocity is UNIT_T
+
+   
+   if ( Sphere_Radius > 0.0 )
+   {
+      Sphere_Radius         *= Const_kpc / UNIT_L;
+      Sphere_Center_x       *= Const_kpc / UNIT_L; 
+      Sphere_Center_y       *= Const_kpc / UNIT_L;
+      Sphere_Center_z       *= Const_kpc / UNIT_L;   
+   }
 
    if ( Jet_Precession ) // uniform precession
    {
@@ -534,8 +567,14 @@ void SetParameter()
      Aux_Message( stdout, "  Jet_PrecessionAxis[z]   = %14.7e\n",            Jet_PrecessionAxis[2]                           );
    }
 
-   if ( Jet_DiffPrecession && MPI_Rank == 0 )
+   if ( Sphere_Radius > 0.0 && MPI_Rank == 0 )
    {
+     Aux_Message( stdout, "  Sphere_Radius         = %14.7e kpc\n",        Sphere_Radius*UNIT_L/Const_kpc                    );
+     Aux_Message( stdout, "  Sphere_DensRatio      = %14.7e    \n",        Sphere_DensRatio                                  );
+     Aux_Message( stdout, "  Sphere_Center_x       = %14.7e kpc\n",        Sphere_Center_x*UNIT_L/Const_kpc                  );
+     Aux_Message( stdout, "  Sphere_Center_y       = %14.7e kpc\n",        Sphere_Center_y*UNIT_L/Const_kpc                  );
+     Aux_Message( stdout, "  Sphere_Center_z       = %14.7e kpc\n",        Sphere_Center_z*UNIT_L/Const_kpc                  );
+
    }
 
    if ( Jet_TimeDependentSrc && MPI_Rank == 0 )
@@ -644,6 +683,17 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Pri4Vel[2] = Jet_UniformVel[1];
       Pri4Vel[3] = Jet_UniformVel[2];
 	  Pri4Vel[4] = Jet_UniformTemp * Jet_UniformDens;
+
+      dx = x - amr->BoxCenter[0] - Sphere_Center_x;
+      dy = y - amr->BoxCenter[1] - Sphere_Center_y;
+      dz = z - amr->BoxCenter[2] - Sphere_Center_z;
+
+      r = sqrt( dx*dx + dy*dy + dz*dz );
+
+      if ( r < Sphere_Radius )
+      {
+         Pri4Vel[0] *= Sphere_DensRatio;
+      }
    }
 
 // isotherml sphere
