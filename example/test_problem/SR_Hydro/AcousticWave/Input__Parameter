@@ -41,7 +41,7 @@ OPT__BC_FLU_ZP                1           # fluid boundary condition at the +z f
 # time-step
 DT__FLUID                   0.4           # dt criterion: fluid solver CFL factor (<0=auto) [-1.0]
 DT__FLUID_INIT              0.4           # dt criterion: DT__FLUID at the first step (<0=auto) [-1.0]
-DT_SPEED_OF_LIGHT             1           # compute time step based on speed of light
+DT_SPEED_OF_LIGHT             0           # compute time step based on speed of light
 OPT__DT_USER                  0           # dt criterion: user-defined -> edit "Mis_GetTimeStep_UserCriteria.cpp" [0]
 OPT__RECORD_DT                1           # record info of the dt determination [1]
 
