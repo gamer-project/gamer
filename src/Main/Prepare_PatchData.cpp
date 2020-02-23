@@ -233,7 +233,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #  endif // #ifdef PARTICLE
 
 
-#  if ( MODEL != SR_HYDRO && !defined GRAVITY)
+#  if ( MODEL != HYDRO && MODEL != SR_HYDRO && !defined GRAVITY )
    if ( TVar & PRE_GRAVITY_SOURCE )
 	  Aux_Error( ERROR_INFO, " PRE_GRAVITY_SOURCE only works with SR_HYDRO and GRAVITY !!\n");
 #  endif
