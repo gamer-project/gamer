@@ -215,7 +215,7 @@ void SetParameter()
    ReadPara->Add( "Jet_UniformTemp",         &Jet_UniformTemp,         -1.0,          Eps_double,     NoMax_double    );
 
 // load isothermal sphere parameters
-   ReadPara->Add( "Jet_HSE_Radius",          &Jet_HSE_Radius,          -1.0,          Eps_double,     NoMax_double    );
+   ReadPara->Add( "Jet_HSE_Radius",          &Jet_HSE_Radius,          -1.0,          NoMin_double,   NoMax_double    );
    ReadPara->Add( "Jet_HSE_Dx",              &Jet_HSE_Dx,               0.0,          NoMin_double,   NoMax_double    );
    ReadPara->Add( "Jet_HSE_Dy",              &Jet_HSE_Dy,               0.0,          NoMin_double,   NoMax_double    );
    ReadPara->Add( "Jet_HSE_Dz",              &Jet_HSE_Dz,               0.0,          NoMin_double,   NoMax_double    );
@@ -256,10 +256,6 @@ void SetParameter()
      Jet_UniformVel[2]    = NAN;
    }
 
-   if ( Jet_Ambient != 1 )
-   {
-     Jet_HSE_Radius       = NAN;
-   }
 
    // uniform precession
    if ( Jet_Precession )       
@@ -320,7 +316,7 @@ void SetParameter()
 
 
 // check isothermal sphere
-   if ( Jet_HSE_Radius == Jet_HSE_Radius )
+   if ( Jet_HSE_Radius > 0.0 )
    {
       if ( !OPT__FLAG_REGION ) 
         Aux_Error( ERROR_INFO, "OPT__FLAG_REGION must be enabled !!\n" );
@@ -382,7 +378,7 @@ void SetParameter()
    Jet_HSE_Dy               *= Const_kpc / UNIT_L;  
    Jet_HSE_Dz               *= Const_kpc / UNIT_L;  
 
-   if ( Jet_HSE_Radius == Jet_HSE_Radius )
+   if ( Jet_HSE_Radius > 0.0 )
    {
      Jet_HSE_Radius         *= Const_kpc / UNIT_L; 
    }
@@ -480,7 +476,7 @@ void SetParameter()
 
    Cs = sqrt( AmbientTemp * SQR(Const_c) );
 
-   ( Jet_HSE_Radius != Jet_HSE_Radius ) ? Distance = BOX_SIZE : Distance = Jet_HSE_Radius;
+   ( Jet_HSE_Radius <= 0.0 ) ? Distance = BOX_SIZE : Distance = Jet_HSE_Radius;
 
    CrossingTime = ( Distance * Const_kpc ) / Cs;
 
@@ -544,7 +540,7 @@ void SetParameter()
      Aux_Message( stdout, "  CrossingTime            = %14.7e kpc/c\n",      CrossingTime / UNIT_T                           );
    }
 
-   if ( Jet_HSE_Radius == Jet_HSE_Radius && MPI_Rank == 0 )
+   if ( Jet_HSE_Radius > 0.0 && MPI_Rank == 0 )
    {
      Aux_Message( stdout, "  Jet_HSE_BgTable_File    = %s\n",                Jet_HSE_BgTable_File                            );
      Aux_Message( stdout, "  Jet_HSE_Radius          = %14.7e kpc\n",        Jet_HSE_Radius*UNIT_L/Const_kpc                 );
@@ -706,7 +702,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Pri4Vel[3] = 0.0;
 
 
-      if ( Jet_HSE_Radius == Jet_HSE_Radius )
+      if ( Jet_HSE_Radius > 0.0 )
       {
          if ( r <= Jet_HSE_Radius )
          {
@@ -739,7 +735,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Pri4Vel[2] = 0.0;
       Pri4Vel[3] = 0.0;
 
-      if ( Jet_HSE_Radius == Jet_HSE_Radius )
+      if ( Jet_HSE_Radius > 0.0 )
       {
         if ( r <= Jet_HSE_Radius )
         {
@@ -771,7 +767,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Pri4Vel[2] = 0.0;
       Pri4Vel[3] = 0.0;
 
-      if ( Jet_HSE_Radius == Jet_HSE_Radius )
+      if ( Jet_HSE_Radius > 0.0 )
       {
         if ( r <= Jet_HSE_Radius )
         {
@@ -991,7 +987,7 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
 static bool Flag_Region( const int i, const int j, const int k, const int lv, const int PID )
 {
 
-   if ( Jet_HSE_Radius == Jet_HSE_Radius )
+   if ( Jet_HSE_Radius > 0.0 )
    {
       const double dh     = amr->dh[lv];                                                         // grid size
       const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,  // x,y,z position
@@ -1041,9 +1037,9 @@ bool Flag_User( const int i, const int j, const int k, const int lv, const int P
 #  endif
 
 
-   const double Center[3]      = { Jet_Cen[0] + Jet_HSE_Dx, 
-                                   Jet_Cen[1] + Jet_HSE_Dy, 
-                                   Jet_Cen[2] + Jet_HSE_Dz };
+   const double Center[3]      = { Jet_Cen[0], 
+                                   Jet_Cen[1], 
+                                   Jet_Cen[2] };
 
    const double dR[3]          = { Pos[0]-Center[0], Pos[1]-Center[1], Pos[2]-Center[2] };
    const double R              = sqrt( SQR(dR[0]) + SQR(dR[1]) + SQR(dR[2]) );
