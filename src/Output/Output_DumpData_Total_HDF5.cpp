@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2405)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2406)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -175,6 +175,7 @@ Procedure for outputting new variables:
 //                2403 : 2019/09/20 --> add BIT_REP_FLUX and BIT_REP_ELECTRIC defined in CUFLU.h
 //                2404 : 2019/10/16 --> add DT__MAX
 //                2405 : 2019/12/29 --> output GRACKLE_THREE_BODY_RATE, GRACKLE_CIE_COOLING, GRACKLE_H2_OPA_APPROX
+//                2406 : 2020/02/26 --> output EOS
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1372,7 +1373,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2405;
+   KeyInfo.FormatVersion        = 2406;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -1603,6 +1604,8 @@ void FillIn_Makefile( Makefile_t &Makefile )
 #  else
    Makefile.Magnetohydrodynamics   = 0;
 #  endif
+
+   Makefile.EoS                    = EOS;
 
 
 #  elif ( MODEL == ELBDM )
@@ -2378,6 +2381,7 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
 #  endif
    H5Tinsert( H5_TypeID, "DualEnergy",             HOFFSET(Makefile_t,DualEnergy             ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Magnetohydrodynamics",   HOFFSET(Makefile_t,Magnetohydrodynamics   ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "EoS",                    HOFFSET(Makefile_t,EoS                    ), H5T_NATIVE_INT );
 
 #  elif ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "ConserveMass",           HOFFSET(Makefile_t,ConserveMass           ), H5T_NATIVE_INT );

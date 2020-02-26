@@ -129,6 +129,7 @@ struct Makefile_t
 #  endif
    int DualEnergy;
    int Magnetohydrodynamics;
+   int EoS;
 
 #  elif ( MODEL == ELBDM )
    int ConserveMass;

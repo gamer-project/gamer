@@ -167,6 +167,14 @@ void Aux_TakeNote()
       fprintf( Note, "MHD                             OFF\n" );
 #     endif
 
+#     if   ( EOS == IDEAL_GAS )
+      fprintf( Note, "EOS                             IDEAL_GAS\n" );
+#     elif ( EOS == NUCLEAR )
+      fprintf( Note, "EOS                             NUCLEAR\n" );
+#     else
+      fprintf( Note, "EOS                             UNKNOWN\n" );
+#     endif
+
 //    c. options in ELBDM
 #     elif ( MODEL == ELBDM )
 

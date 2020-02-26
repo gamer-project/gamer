@@ -597,6 +597,14 @@ void Aux_Check_Parameter()
 #   endif
 #  endif // MHD
 
+#  if ( EOS != IDEAL_GAS  &&  EOS != NUCLEAR )
+#     error : ERROR : unsupported equation of state (IDEAL_GAS/NUCLEAR) !!
+#  endif
+
+#  if ( EOS == NUCLEAR )
+#     error : ERROR : nuclear EoS is not supported yet !!
+#  endif
+
    if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
    {
 #     ifdef MHD
