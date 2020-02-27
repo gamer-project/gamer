@@ -171,6 +171,8 @@ void Aux_TakeNote()
       fprintf( Note, "EOS                             IDEAL_GAS\n" );
 #     elif ( EOS == NUCLEAR )
       fprintf( Note, "EOS                             NUCLEAR\n" );
+#     elif ( EOS == TABULAR )
+      fprintf( Note, "EOS                             TABULAR\n" );
 #     else
       fprintf( Note, "EOS                             UNKNOWN\n" );
 #     endif

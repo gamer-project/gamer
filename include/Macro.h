@@ -73,6 +73,7 @@
 // equation of states
 #define IDEAL_GAS    1
 #define NUCLEAR      2
+#define TABULAR      3
 
 
 // Poisson solvers
