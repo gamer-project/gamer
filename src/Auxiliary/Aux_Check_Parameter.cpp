@@ -584,6 +584,10 @@ void Aux_Check_Parameter()
 #   if ( DUAL_ENERGY != DE_ENPY )
 #     error : ERROR : unsupported dual-energy formalism (DE_ENPY only, DE_EINT is not supported yet) !!
 #   endif
+
+#  if ( EOS != IDEAL_GAS )
+#     error : ERROR : DUAL_ENERGY currently only supports EOS=IDEAL_GAS !!
+#  endif
 #  endif // #ifdef DUAL_ENERGY
 
 #  ifdef MHD
@@ -602,11 +606,11 @@ void Aux_Check_Parameter()
 #  endif
 
 #  if ( EOS == NUCLEAR )
-#     error : ERROR : nuclear EoS is not supported yet !!
+#     error : ERROR : EOS=NUCLEAR is not supported yet !!
 #  endif
 
 #  if ( EOS == TABULAR )
-#     error : ERROR : tabular EoS is not supported yet !!
+#     error : ERROR : EOS=TABULAR is not supported yet !!
 #  endif
 
    if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
