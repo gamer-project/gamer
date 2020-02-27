@@ -30,9 +30,9 @@ class NFW_calculator
         virtual ~NFW_calculator();
         
         //Principal Functions
-        void init(double newton_g,double rho,double r);        
+        void init(double newton_g,double rho,double r0,double maxr);        
         double set_vel(double r);
-        
+        double set_mass(double x);
         
     protected:
         
@@ -41,6 +41,8 @@ class NFW_calculator
         double int_prob_dens[size_NFW];
         double psi[size_NFW];
         double delta;
+
+        
 
         //Statistics
         double ave(double* a,int start,int fin);

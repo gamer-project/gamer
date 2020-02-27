@@ -257,11 +257,36 @@ double integration_eng_base_UNKNOWN(double eng){
   return integration_simpson(eng);
 }
 
-double UNKNOWN_calculator::MassProf_UNKNOWN( const double r )
+/*double UNKNOWN_calculator::MassProf_UNKNOWN( const double r )
 { 
   //main
   const double x = r / UNKNOWN_R0;
   return 4.0/3.0*M_PI*UNKNOWN_Rho0*CUBE(r)*pow( 1.0+x*x, -1.5 );
+}*/
+double mass_base_UNKNOWN(double x,void* nothing){
+  double x0 = 0.7*UNKNOWN_MaxR/UNKNOWN_R0;
+  double xmax = UNKNOWN_MaxR/UNKNOWN_R0;
+  
+  if(x<x0) return 4*M_PI*pow(UNKNOWN_R0,3)*(UNKNOWN_Rho0*(x/((1+x)*(1+x))));
+  else {
+    double rho0 = UNKNOWN_Rho0*(1/(x0*(1+x0)*(1+x0)));
+    double rho = rho0 *( 1 - pow(1-pow((x-xmax)/(xmax-x0) ,2) ,0.5 ) ); //pow(x/x0,-10);
+    return 4*M_PI*pow(UNKNOWN_R0*x,2)* UNKNOWN_R0 *rho;
+  }
+  //return 4*M_PI*pow(UNKNOWN_R0,3)*(UNKNOWN_Rho0*(x/((1+x)*(1+x))));
+}
+double UNKNOWN_calculator::set_mass(double x){
+  gsl_integration_workspace * w 
+  = gsl_integration_workspace_alloc (1000);
+
+  double  error;
+  double result;
+
+  gsl_function F;
+  F.function = &mass_base_UNKNOWN;
+  gsl_integration_qag  (&F, 0, x, 0, 1e-7, 1000, 1, w, &result,  &error);
+  gsl_integration_workspace_free (w);
+  return result;
 }
 void UNKNOWN_calculator::initialize_mass(){
   
@@ -276,15 +301,23 @@ void UNKNOWN_calculator::initialize_mass(){
   for (int b=0; b<UNKNOWN_MassProfNBin; b++)
   {
     Table_MassProf_r_UNKNOWN[b] = dr*b;
-    Table_MassProf_M_UNKNOWN[b] = MassProf_UNKNOWN( Table_MassProf_r_UNKNOWN[b]);//main
-    
+    Table_MassProf_M_UNKNOWN[b] = set_mass( Table_MassProf_r_UNKNOWN[b]/UNKNOWN_R0);//main
+    if(Table_MassProf_M_UNKNOWN[b]<0)cout<<Table_MassProf_M_UNKNOWN[b]<<endl;
   }
 
   //Rho
   for (int b=1; b<UNKNOWN_MassProfNBin; b++)
   {
     double x = dr*b/UNKNOWN_R0;
-    Table_MassProf_rho_UNKNOWN[b] = UNKNOWN_Rho0 / (x* (1+x)* (1+x));
+    double x0 = 0.7*UNKNOWN_MaxR/UNKNOWN_R0;
+    double xmax = UNKNOWN_MaxR/UNKNOWN_R0;
+  
+    if(x<x0) Table_MassProf_rho_UNKNOWN[b] =UNKNOWN_Rho0*(1/(x*(1+x)*(1+x)));
+    else {
+      double rho0 = UNKNOWN_Rho0*(1/(x0*(1+x0)*(1+x0)));
+      double rho = rho0 *( 1 - pow(1-pow((x-xmax)/(xmax-x0) ,2) ,0.5 ) ); //pow(x/x0,-10);
+      Table_MassProf_rho_UNKNOWN[b] = rho;
+    }
   }
   Table_MassProf_rho_UNKNOWN[0] = Table_MassProf_rho_UNKNOWN[1];
   //Table_MassProf_rho_UNKNOWN[UNKNOWN_MassProfNBin-1]=0;
@@ -320,18 +353,21 @@ void UNKNOWN_calculator::initialize_pot(){
   for (int b=1; b<UNKNOWN_MassProfNBin; b++)
   {
     Table_MassProf_g_UNKNOWN[b] = -UNKNOWN_NEWTON_G*Table_MassProf_M_UNKNOWN[b]/pow(Table_MassProf_r_UNKNOWN[b],2);
+    
   }
   //Pot
   Table_MassProf_pot_UNKNOWN[UNKNOWN_MassProfNBin-1] = -UNKNOWN_NEWTON_G*Table_MassProf_M_UNKNOWN[UNKNOWN_MassProfNBin-1]/Table_MassProf_r_UNKNOWN[UNKNOWN_MassProfNBin-1];
   for (int b=UNKNOWN_MassProfNBin-2;b>0;b--)
   {
     Table_MassProf_pot_UNKNOWN[b] = Table_MassProf_pot_UNKNOWN[b+1] + Table_MassProf_g_UNKNOWN[b] * dr;
+    
   }Table_MassProf_pot_UNKNOWN[0]=Table_MassProf_pot_UNKNOWN[1];
     
   //derho_overdx
   for (int b=0; b<UNKNOWN_MassProfNBin; b++)
   {
     Table_MassProf_derho_overdx_UNKNOWN[b] = -Table_MassProf_rhodx_UNKNOWN[b]/(Table_MassProf_g_UNKNOWN[b]*UNKNOWN_R0);
+    
   }
   
 }
@@ -379,9 +415,6 @@ void UNKNOWN_calculator::init(double newton_g,double rho,double r,int nbin,doubl
 
   initialize_mass();
   initialize_pot();
-
-  
-  
   initialize_prob_dens();
   
 }

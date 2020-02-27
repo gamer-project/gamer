@@ -38,13 +38,14 @@ class UNKNOWN_calculator
         //statistics
         double slope(double* a,double* b,int start,int fin);
         void smooth_all(double* x,int start,int fin);
-        
+        double set_mass( double x );
         void test();
         
     protected:
         
     private:
         double MassProf_UNKNOWN( const double r );
+        
 
         double prob_dens[size_UNKNOWN];
         double int_prob_dens[size_UNKNOWN];

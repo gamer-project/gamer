@@ -2,6 +2,8 @@
 double NFW_NEWTON_G;
 double NFW_Rho0;
 double NFW_R0;
+double NFW_MaxR;
+double NFW_mass;
 NFW_calculator::NFW_calculator()
 {
   RNG = new RandomNumber_t( 1 );
@@ -85,7 +87,36 @@ double NFW_calculator::slope(double* x,double* y,int start,int fin){
 
 //Physical Properties
 double potential_NFW(double x){
-  return - (4*M_PI*NFW_NEWTON_G*NFW_Rho0*NFW_R0*NFW_R0) * log(1+x) / x;
+  /*double M = NFW_mass;//4*M_PI*NFW_Rho0*pow(NFW_R0,3)*(log(1+x)-x/(1+x));
+  double x0=NFW_MaxR/NFW_R0;
+  if(x>x0) return -NFW_NEWTON_G*M/(NFW_R0*x);
+  return - (4*M_PI*NFW_NEWTON_G*NFW_Rho0*NFW_R0*NFW_R0) * (log(1+x) / x- log(1+x0) / x0)-NFW_NEWTON_G*M/(NFW_R0*x0);*/
+  return- (4*M_PI*NFW_NEWTON_G*NFW_Rho0*NFW_R0*NFW_R0) * (log(1+x) / x);
+}
+double mass_base_NFW(double x,void* nothing){
+  double x0 = 0.7*NFW_MaxR/NFW_R0;
+  double xmax = NFW_MaxR/NFW_R0;
+  
+  if(x<x0) return 4*M_PI*pow(NFW_R0,3)*(NFW_Rho0*(x/((1+x)*(1+x))));
+  else {
+    double rho0 = NFW_Rho0*(1/(x0*(1+x0)*(1+x0)));
+    double rho = rho0 *pow(x/x0,-10); //( 1 - pow(1-pow((x-xmax)/(xmax-x0) ,2) ,0.5 ) );
+    return 4*M_PI*pow(NFW_R0*x,2)* NFW_R0 *rho;
+  }
+  //return 4*M_PI*pow(NFW_R0,3)*(NFW_Rho0*(x/((1+x)*(1+x))));
+}
+double NFW_calculator::set_mass(double x){
+  gsl_integration_workspace * w 
+  = gsl_integration_workspace_alloc (1000);
+
+  double  error;
+  double result;
+
+  gsl_function F;
+  F.function = &mass_base_NFW;
+  gsl_integration_qag  (&F, 0, x, 0, 1e-7, 1000, 1, w, &result,  &error);
+  gsl_integration_workspace_free (w);
+  return result;
 }
 double rho_dx_NFW(double x){
   return - NFW_Rho0*(1/(x*x*(1+x)*(1+x)) + 2/(x*(1+x)*(1+x)*(1+x)));
@@ -135,7 +166,6 @@ double inverse_psi_to_x_NFW (double psi) {
 
 //Probability Density
 double integration_NFW(double eng){
-  //double epson=0.1;
   double min = 0;
   double max = eng;
   int num=1000;
@@ -188,11 +218,13 @@ void NFW_calculator::initialize_prob_dens(){
 }
 
 //Principal functions
-void NFW_calculator::init(double newton_g,double rho,double r){
+void NFW_calculator::init(double newton_g,double rho,double r0,double maxr){
 
   NFW_NEWTON_G=newton_g;
   NFW_Rho0=rho;
-  NFW_R0=r;
+  NFW_R0=r0;
+  NFW_MaxR=maxr;
+  NFW_mass=set_mass(NFW_MaxR/NFW_R0);
 
   
   initialize_prob_dens();
@@ -200,7 +232,7 @@ void NFW_calculator::init(double newton_g,double rho,double r){
 }
 double NFW_calculator::set_vel(double r){  
   double index,sum=0;
-  double psi_per =-potential_NFW(r);
+  double psi_per =-potential_NFW(r);//+potential_NFW(NFW_MaxR/NFW_R0);
   for(int k =0;k<size_NFW;k++){
     if(psi[k]>psi_per){
       index =k-1;
@@ -227,5 +259,11 @@ double NFW_calculator::set_vel(double r){
     return 0;
   }
   double v =pow(-2*(psi_ass+potential_NFW(r)),0.5);
+
+  //Truncation
+  /*double eng = pow(v,2)/2 + potential_NFW(r);
+  double eng_trunc = potential_NFW(NFW_MaxR/NFW_R0);
+  if(eng>eng_trunc)cout<<"Trunc!"<<endl;*/
+
   return v;
 }  

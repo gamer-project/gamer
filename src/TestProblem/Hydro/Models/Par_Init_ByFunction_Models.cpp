@@ -74,7 +74,7 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
 {
 // Input Model names
    string model_name;
-   model_name="Einasto";
+   model_name="UNKNOWN";
    //cout<<"Input model names:";
    //cin>>model_name;
 
@@ -82,7 +82,7 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
    static bool flag=0;
    if(flag==0){
 
-      if(model_name=="NFW")cal_NFW.init(NEWTON_G,Models_Rho0,Models_R0);
+      if(model_name=="NFW")cal_NFW.init(NEWTON_G,Models_Rho0,Models_R0,Models_MaxR);
       else if(model_name=="Plummer")cal_Plummer.init(NEWTON_G,Models_Rho0,Models_R0);
       else if(model_name=="Burkert")cal_Burkert.init(NEWTON_G,Models_Rho0,Models_R0);
       else if(model_name=="Jaffe")cal_Jaffe.init(NEWTON_G,Models_Rho0,Models_R0,Models_MaxR);
@@ -293,13 +293,13 @@ double MassProf_Models( const double r ,string model_name)
    
    const double x = r / Models_R0;
    
-   if(model_name=="NFW")return 4* M_PI *Models_Rho0 *pow(Models_R0,3) *(log(1+x) - x/(1+x));
-   else if(model_name=="Plummer")return 4.0/3.0*M_PI*Models_Rho0*CUBE(r)*pow( 1.0+x*x, -1.5 );
-   else if(model_name=="Burkert")return M_PI *Models_Rho0 *pow(Models_R0,3) *(log(1+x*x) + 2 * log(1+x) -2 *atan(x));
-   else if(model_name=="Jaffe")return Models_Rho0 *pow(Models_R0,3) *(x/(1+x));
-   else if(model_name=="Hernquist")return Models_Rho0 *pow(Models_R0,3) *pow(x/(1+x),2);
-   else if(model_name=="Einasto")return cal_Einasto.set_mass(x);
-   else if(model_name=="UNKNOWN")return 4.0/3.0*M_PI*Models_Rho0*CUBE(r)*pow( 1.0+x*x, -1.5 );
+   if     (model_name=="NFW"      )       return cal_NFW.set_mass(x);
+   else if(model_name=="Plummer"  )       return 4.0/3.0*M_PI*Models_Rho0*CUBE(r)*pow( 1.0+x*x, -1.5 );
+   else if(model_name=="Burkert"  )       return M_PI *Models_Rho0 *pow(Models_R0,3) *(log(1+x*x) + 2 * log(1+x) -2 *atan(x));
+   else if(model_name=="Jaffe"    )       return Models_Rho0 *pow(Models_R0,3) *(x/(1+x));
+   else if(model_name=="Hernquist")       return Models_Rho0 *pow(Models_R0,3) *pow(x/(1+x),2);
+   else if(model_name=="Einasto"  )       return cal_Einasto.set_mass(x);
+   else if(model_name=="UNKNOWN"  )       return cal_UNKNOWN.set_mass(x);//4.0/3.0*M_PI*Models_Rho0*CUBE(r)*pow( 1.0+x*x, -1.5 );
 } // FUNCTION : MassProf_Models
 
 
