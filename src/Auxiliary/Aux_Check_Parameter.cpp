@@ -606,11 +606,11 @@ void Aux_Check_Parameter()
 #  endif
 
 #  if ( EOS == NUCLEAR )
-#     error : ERROR : EOS=NUCLEAR is not supported yet !!
+      Aux_Error( ERROR_INFO, "EOS=NUCLEAR is not supported yet !!\n" );
 #  endif
 
 #  if ( EOS == TABULAR )
-#     error : ERROR : EOS=TABULAR is not supported yet !!
+      Aux_Error( ERROR_INFO, "EOS=TABULAR is not supported yet !!\n" );
 #  endif
 
    if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
