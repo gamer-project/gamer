@@ -643,6 +643,11 @@ void Aux_Check_Parameter()
    else if ( MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : MIN_PRES (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_PRES );
 
+   if ( MIN_EINT == 0.0  &&  MPI_Rank == 0 )
+      Aux_Message( stderr, "WARNING : MIN_EINT == 0.0 could be dangerous and is mainly for debugging only !!\n" );
+   else if ( MPI_Rank == 0 )
+      Aux_Message( stderr, "WARNING : MIN_EINT (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_EINT );
+
 #  if ( FLU_SCHEME == RTVD )
    if ( JEANS_MIN_PRES )
       Aux_Error( ERROR_INFO, "RTVD does not support \"JEANS_MIN_PRES\" !!\n" );
