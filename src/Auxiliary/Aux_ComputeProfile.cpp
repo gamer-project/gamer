@@ -166,13 +166,17 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
 // collect profile data in this rank
 #  if ( MODEL == HYDRO )
-   const real   Gamma_m1    = GAMMA - (real)1.0;
+   const real  Gamma_m1       = GAMMA - (real)1.0;
+#  ifdef DUAL_ENERGY
+   const real _Gamma_m1       = (real)1.0 / Gamma_m1;
+   const bool CheckMinPres_No = false;
 #  endif
-   const double r_max2      = SQR( Prof[0]->MaxRadius );
-   const double HalfBox[3]  = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
-   const bool   Periodic[3] = { OPT__BC_FLU[0] == BC_FLU_PERIODIC,
-                                OPT__BC_FLU[2] == BC_FLU_PERIODIC,
-                                OPT__BC_FLU[4] == BC_FLU_PERIODIC };
+#  endif
+   const double r_max2        = SQR( Prof[0]->MaxRadius );
+   const double HalfBox[3]    = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
+   const bool   Periodic[3]   = { OPT__BC_FLU[0] == BC_FLU_PERIODIC,
+                                  OPT__BC_FLU[2] == BC_FLU_PERIODIC,
+                                  OPT__BC_FLU[4] == BC_FLU_PERIODIC };
 
 #  pragma omp parallel
    {
@@ -311,15 +315,33 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                            case _EINT_DER:
                            {
                               const real Weight = dv;
-#                             ifdef MHD
-                              const real EngyB  = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
-#                             else
-                              const real EngyB  = NULL_REAL;
+                              const real Dens   = FluidPtr[DENS][k][j][i];
+
+//                            use the dual-energy variable to calculate the internal energy directly, if applicable
+#                             ifdef DUAL_ENERGY
+
+#                             if   ( DUAL_ENERGY == DE_ENPY )
+                              const real Enpy   = FluidPtr[ENPY][k][j][i];
+                              const real Eint   = Hydro_DensEntropy2Pres( Dens, Enpy, Gamma_m1, CheckMinPres_No, NULL_REAL )*_Gamma_m1;
+#                             elif ( DUAL_ENERGY == DE_EINT )
+#                             error : DE_EINT is NOT supported yet !!
 #                             endif
-                              const real Pres   = Hydro_GetPressure( FluidPtr[DENS][k][j][i], FluidPtr[MOMX][k][j][i], FluidPtr[MOMY][k][j][i],
-                                                                     FluidPtr[MOMZ][k][j][i], FluidPtr[ENGY][k][j][i],
-                                                                     Gamma_m1, false, NULL_REAL, EngyB );
-                              const real Eint   = Pres/Gamma_m1;  // assuming gamma law for now; will be replaced by a general EoS
+
+#                             else // #ifdef DUAL_ENERGY
+
+                              const real Px     = FluidPtr[MOMX][k][j][i];
+                              const real Py     = FluidPtr[MOMY][k][j][i];
+                              const real Pz     = FluidPtr[MOMZ][k][j][i];
+                              const real Etot   = FluidPtr[ENGY][k][j][i];
+                              const real Ek     = (real)0.5*( SQR(Px) + SQR(Py) + SQR(Pz) )/Dens;
+#                             ifdef MHD
+                              const real Emag   = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+#                             else
+                              const real Emag   = (real)0.0;
+#                             endif
+                              const real Eint   = Etot - Ek - Emag;
+
+#                             endif // #ifdef DUAL_ENERGY ... else
 
                               OMP_Data  [p][TID][bin] += Eint*Weight;
                               OMP_Weight[p][TID][bin] += Weight;
