@@ -346,6 +346,28 @@ real Hydro_CheckMinPres( const real InPres, const real MinPres )
 
 
 //-------------------------------------------------------------------------------------------------------
+// Function    :  Hydro_CheckMinEint
+// Description :  Similar to Hydro_CheckMinPres() except that this function checks the internal energy
+//                density (Eint) instead of pressure
+//
+// Note        :  1. See Hydro_CheckMinPres()
+//
+// Parameter   :  InEint  : Input Eint to be corrected
+//                MinEint : Minimum allowed Eint
+//
+// Return      :  max( InEint, MinEint )
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+real Hydro_CheckMinEint( const real InEint, const real MinEint )
+{
+
+   return FMAX( InEint, MinEint );
+
+} // FUNCTION : Hydro_CheckMinEint
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_CheckMinPresInEngy
 // Description :  Ensure that the pressure in the input total energy is greater than the given threshold
 //
