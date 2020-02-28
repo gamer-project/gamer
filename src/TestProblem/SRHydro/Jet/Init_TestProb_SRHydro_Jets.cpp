@@ -91,7 +91,8 @@ static bool     Flag_BurstTemp;
 
 // pressure-balanced sphere
 static double   Sphere_Radius;
-static double   Sphere_DensRatio;
+static double   Sphere_CoreDens;
+static double   Sphere_CoreRadius;
 static double   Sphere_Center_x;
 static double   Sphere_Center_y;
 static double   Sphere_Center_z;
@@ -228,7 +229,8 @@ void SetParameter()
 
 // load pressured-balanced sphere
    ReadPara->Add( "Sphere_Radius",           &Sphere_Radius,           -1.0,          NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Sphere_DensRatio",        &Sphere_DensRatio,         0.0,          Eps_double,     NoMax_double    );
+   ReadPara->Add( "Sphere_CoreDens",         &Sphere_CoreDens,          0.0,          Eps_double,     NoMax_double    );
+   ReadPara->Add( "Sphere_CoreRadius",       &Sphere_CoreRadius,        0.0,          Eps_double,     NoMax_double    );
    ReadPara->Add( "Sphere_Center_x",         &Sphere_Center_x,          0.0,          NoMin_double,   NoMax_double    );
    ReadPara->Add( "Sphere_Center_y",         &Sphere_Center_y,          0.0,          NoMin_double,   NoMax_double    );
    ReadPara->Add( "Sphere_Center_z",         &Sphere_Center_z,          0.0,          NoMin_double,   NoMax_double    );
@@ -264,11 +266,12 @@ void SetParameter()
 
    if ( Sphere_Radius < 0.0 )
    {
-      Sphere_Radius    = NAN;
-      Sphere_DensRatio = NAN;
-      Sphere_Center_x  = NAN; 
-      Sphere_Center_y  = NAN;
-      Sphere_Center_z  = NAN;   
+      Sphere_Radius     = NAN;
+      Sphere_CoreDens   = NAN;
+      Sphere_CoreRadius = NAN;
+      Sphere_Center_x   = NAN; 
+      Sphere_Center_y   = NAN;
+      Sphere_Center_z   = NAN;   
    }
 
    // differential precession
@@ -402,6 +405,8 @@ void SetParameter()
    if ( Sphere_Radius > 0.0 )
    {
       Sphere_Radius         *= Const_kpc / UNIT_L;
+      Sphere_CoreRadius     *= Const_kpc / UNIT_L;
+      Sphere_CoreDens       *=       1.0 / UNIT_D;
       Sphere_Center_x       *= Const_kpc / UNIT_L; 
       Sphere_Center_y       *= Const_kpc / UNIT_L;
       Sphere_Center_z       *= Const_kpc / UNIT_L;   
@@ -472,7 +477,7 @@ void SetParameter()
    double AmbientTemp, Distance;
 
    if      ( Jet_Ambient == 1 )                     AmbientTemp = Table_T[0];
-   else if ( Jet_Ambient == 2 ||Jet_Ambient == 3 )  AmbientTemp = Jet_UniformTemp;
+   else if ( Jet_Ambient == 0 ||Jet_Ambient == 2 )  AmbientTemp = Jet_UniformTemp;
 
    Cs = sqrt( AmbientTemp * SQR(Const_c) );
 
@@ -565,11 +570,13 @@ void SetParameter()
 
    if ( Sphere_Radius > 0.0 && MPI_Rank == 0 )
    {
-     Aux_Message( stdout, "  Sphere_Radius         = %14.7e kpc\n",        Sphere_Radius*UNIT_L/Const_kpc                    );
-     Aux_Message( stdout, "  Sphere_DensRatio      = %14.7e    \n",        Sphere_DensRatio                                  );
-     Aux_Message( stdout, "  Sphere_Center_x       = %14.7e kpc\n",        Sphere_Center_x*UNIT_L/Const_kpc                  );
-     Aux_Message( stdout, "  Sphere_Center_y       = %14.7e kpc\n",        Sphere_Center_y*UNIT_L/Const_kpc                  );
-     Aux_Message( stdout, "  Sphere_Center_z       = %14.7e kpc\n",        Sphere_Center_z*UNIT_L/Const_kpc                  );
+     Aux_Message( stdout, "  Sphere_Radius           = %14.7e kpc\n",        Sphere_Radius*UNIT_L/Const_kpc                  );
+     Aux_Message( stdout, "  Sphere_CoreRadius       = %14.7e kpc\n",        Sphere_CoreRadius*UNIT_L/Const_kpc              );
+     Aux_Message( stdout, "  Sphere_CoreDens         = %14.7e g/cm^3\n",     Sphere_CoreDens*UNIT_D                          );
+     Aux_Message( stdout, "  Sphere_DensSurface      = %14.7e g/cm^3\n",     Sphere_CoreDens / ( 1.0 + SQR( Sphere_Radius / Sphere_CoreRadius) )*UNIT_D );
+     Aux_Message( stdout, "  Sphere_Center_x         = %14.7e kpc\n",        Sphere_Center_x*UNIT_L/Const_kpc                );
+     Aux_Message( stdout, "  Sphere_Center_y         = %14.7e kpc\n",        Sphere_Center_y*UNIT_L/Const_kpc                );
+     Aux_Message( stdout, "  Sphere_Center_z         = %14.7e kpc\n",        Sphere_Center_z*UNIT_L/Const_kpc                );
 
    }
 
@@ -680,16 +687,6 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Pri4Vel[3] = Jet_UniformVel[2];
 	  Pri4Vel[4] = Jet_UniformTemp * Jet_UniformDens;
 
-      dx = x - amr->BoxCenter[0] - Sphere_Center_x;
-      dy = y - amr->BoxCenter[1] - Sphere_Center_y;
-      dz = z - amr->BoxCenter[2] - Sphere_Center_z;
-
-      r = sqrt( dx*dx + dy*dy + dz*dz );
-
-      if ( r < Sphere_Radius )
-      {
-         Pri4Vel[0] *= Sphere_DensRatio;
-      }
    }
 
 // isotherml sphere
@@ -788,6 +785,18 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       }
 #     endif
    }
+
+   dx = x - amr->BoxCenter[0] - Sphere_Center_x;
+   dy = y - amr->BoxCenter[1] - Sphere_Center_y;
+   dz = z - amr->BoxCenter[2] - Sphere_Center_z;
+
+   r = sqrt( dx*dx + dy*dy + dz*dz );
+
+   if ( 0.0 < Sphere_Radius && Sphere_Radius > r )
+   {
+      Pri4Vel[0] = Sphere_CoreDens / ( 1.0 + SQR( r / Sphere_CoreRadius) );
+   }
+
 
 
 // cast double to real

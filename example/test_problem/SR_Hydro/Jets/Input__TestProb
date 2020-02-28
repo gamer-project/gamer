@@ -3,7 +3,7 @@
 
 # problem-specific runtime parameters
 Jet_Exist                                         1         # [0/1/2/3]: no jet/jet1/jet2/full jet
-Jet_Ambient                                       2         # [0/1/2] : uniform / isothermal / sigular isothermal
+Jet_Ambient                                       2         # [0/1/2/3] : uniform / isothermal / sigular isothermal / beta model
 Jet_DiffPrecession                                0
 Jet_Precession                                    0
 Jet_TimeDependentSrc                              0
@@ -61,7 +61,8 @@ Jet_Beta_PeakDens                              5e-29
 
 # pressure-balanced sphere
 Sphere_Radius                                   -1.0
-Sphere_DensRatio                                1e-2
+Sphere_CoreDens                                  1e-2
+Sphere_CoreRadius                               1e-2
 Sphere_Center_x                                  0.0
 Sphere_Center_y                                  0.0
 Sphere_Center_z                                  0.0

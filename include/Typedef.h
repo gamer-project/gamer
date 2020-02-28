@@ -46,6 +46,7 @@ const TestProbID_t
    TESTPROB_HYDRO_COLLIDING_JETS               =   10,
    TESTPROB_HYDRO_PLUMMER                      =   11,
    TESTPROB_HYDRO_GRAVITY                      =   12,
+   TESTPROB_HYDRO_JETS                         =   13,
 
    TESTPROB_SRHYDRO_BLAST_WAVE                    =  600,
    TESTPROB_SRHYDRO_RIEMANN                       =  601,

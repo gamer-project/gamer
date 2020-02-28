@@ -16,6 +16,7 @@ void Init_TestProb_Hydro_Riemann();
 void Init_TestProb_Hydro_CollidingJets();
 void Init_TestProb_Hydro_Plummer();
 void Init_TestProb_Hydro_Gravity();
+void Init_TestProb_Hydro_Jets();
 
 void Init_TestProb_SRHydro_AcousticWave();
 void Init_TestProb_SRHydro_BlastWave();
@@ -63,6 +64,7 @@ void Init_TestProb()
       case TESTPROB_HYDRO_COLLIDING_JETS :               Init_TestProb_Hydro_CollidingJets();               break;
       case TESTPROB_HYDRO_PLUMMER :                      Init_TestProb_Hydro_Plummer();                     break;
       case TESTPROB_HYDRO_GRAVITY :                      Init_TestProb_Hydro_Gravity();                     break;
+      case TESTPROB_HYDRO_JETS:                          Init_TestProb_Hydro_Jets();                        break;
 #     elif ( MODEL == SR_HYDRO )
       case TESTPROB_SRHYDRO_ACOUSTIC_WAVE :              Init_TestProb_SRHydro_AcousticWave();              break;
       case TESTPROB_SRHYDRO_BLAST_WAVE :                 Init_TestProb_SRHydro_BlastWave();                 break;
