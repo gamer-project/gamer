@@ -3,13 +3,25 @@
 
 #if  ( MODEL == SR_HYDRO )
 
+void Cartesian2Spherical( const double x[], double r[] );
+void Spherical2Cartesian( const double r[], double x[] );
+void CartesianRotate( double x[], double theta, double phi, bool inverse );
+
+
+//  X²    Y²    Z²
+// --- + --- + --- = 1
+//  a²    b²    c²
+//
 // problem-specific global variables
 // =======================================================================================
 static double Blast_Dens_Bg;       // background mass density
 static double Blast_Pres_Bg;       // background pressure
 static double Blast_Dens_Ratio;    // density ratio of center to background
 static double Blast_Pres_Ratio;    // pressure ratio of center to background
-static double Blast_Radius;        // explosion radius
+static double Blast_Radius_x;      // a
+static double Blast_Radius_y;      // b
+static double Blast_Radius_z;      // c
+static double Blast_Vector[3];     // 
 static double Blast_Center[3];     // explosion center
 // =======================================================================================
 
@@ -92,10 +104,15 @@ void SetParameter()
    ReadPara->Add( "Blast_Pres_Bg",     &Blast_Pres_Bg,         -1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "Blast_Dens_Ratio",  &Blast_Dens_Ratio,      -1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "Blast_Pres_Ratio",  &Blast_Pres_Ratio,      -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Blast_Radius",      &Blast_Radius,          -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Blast_Radius_x",    &Blast_Radius_x,        -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Blast_Radius_y",    &Blast_Radius_y,        -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Blast_Radius_z",    &Blast_Radius_z,        -1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "Blast_Center_X",    &Blast_Center[0],       -1.0,          NoMin_double,     amr->BoxSize[0]   );
    ReadPara->Add( "Blast_Center_Y",    &Blast_Center[1],       -1.0,          NoMin_double,     amr->BoxSize[1]   );
    ReadPara->Add( "Blast_Center_Z",    &Blast_Center[2],       -1.0,          NoMin_double,     amr->BoxSize[2]   );
+   ReadPara->Add( "Blast_Vector_X",    &Blast_Vector[0],       -1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Blast_Vector_Y",    &Blast_Vector[1],       -1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Blast_Vector_Z",    &Blast_Vector[2],       -1.0,          NoMin_double,     NoMax_double      );
 
    ReadPara->Read( FileName );
 
@@ -129,14 +146,18 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID                         = %d\n",     TESTPROB_ID );
-      Aux_Message( stdout, "  background mass density                 = %13.7e\n", Blast_Dens_Bg );
-      Aux_Message( stdout, "  background pressure                     = %13.7e\n", Blast_Pres_Bg);
+      Aux_Message( stdout, "  test problem ID                         = %d\n",     TESTPROB_ID      );
+      Aux_Message( stdout, "  background mass density                 = %13.7e\n", Blast_Dens_Bg    );
+      Aux_Message( stdout, "  background pressure                     = %13.7e\n", Blast_Pres_Bg    );
       Aux_Message( stdout, "  density ratio of center to background   = %13.7e\n", Blast_Dens_Ratio );
       Aux_Message( stdout, "  pressure ratio of center to background  = %13.7e\n", Blast_Pres_Ratio );
-      Aux_Message( stdout, "  explosion radius                        = %13.7e\n", Blast_Radius );
+      Aux_Message( stdout, "  explosion radius a                      = %13.7e\n", Blast_Radius_x   );
+      Aux_Message( stdout, "  explosion radius b                      = %13.7e\n", Blast_Radius_y   );
+      Aux_Message( stdout, "  explosion radius c                      = %13.7e\n", Blast_Radius_z   );
       Aux_Message( stdout, "  explosion center                        = (%13.7e, %13.7e, %13.7e)\n",
                                                           Blast_Center[0], Blast_Center[1], Blast_Center[2] );
+      Aux_Message( stdout, "  ellipsoid vector                        = (%13.7e, %13.7e, %13.7e)\n",
+                                                          Blast_Vector[0], Blast_Vector[1], Blast_Vector[2] );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -169,8 +190,6 @@ void SetParameter()
 void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] )
 {
-   const double r = SQRT( SQR(x-Blast_Center[0]) + SQR(y-Blast_Center[1]) + SQR(z-Blast_Center[2]) );
-
    double Prim_BG[5] = { Blast_Dens_Bg, 0, 0, 0, Blast_Pres_Bg };
    double Cons_BG[5] = {0};
 
@@ -180,7 +199,28 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    SRHydro_Pri2Con (Prim_BG,  Cons_BG,  GAMMA);
    SRHydro_Pri2Con (Prim_EXP, Cons_EXP, GAMMA);
 
-   if ( r <= Blast_Radius )
+   //1. rotate ellipsoid
+   double cartesian[3], shperical[3], RotatedCartesian[3];
+
+   cartesian[0] = Blast_Vector[0];
+   cartesian[1] = Blast_Vector[1];
+   cartesian[2] = Blast_Vector[2];
+
+   Cartesian2Spherical( cartesian, shperical );
+
+   RotatedCartesian[0] = x - Blast_Center[0];
+   RotatedCartesian[1] = y - Blast_Center[1];
+   RotatedCartesian[2] = z - Blast_Center[2];
+
+   CartesianRotate( RotatedCartesian, shperical[1], shperical[2], false );
+
+   bool InsideEllipsoid = true;
+
+   InsideEllipsoid &= SQR ( RotatedCartesian[0] / Blast_Radius_x ) 
+                    + SQR ( RotatedCartesian[1] / Blast_Radius_y ) 
+                    + SQR ( RotatedCartesian[2] / Blast_Radius_z ) < 1.0;
+
+   if ( InsideEllipsoid )
    {
      fluid[DENS] = (real) Cons_EXP[0];
      fluid[MOMX] = (real) Cons_EXP[1];
