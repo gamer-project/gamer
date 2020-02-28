@@ -1,9 +1,24 @@
 # problem-specific runtime parameters
 Blast_Dens_Bg        1.0            # background mass density
-Blast_Pres_Bg        1e-5            # background energy density
+Blast_Pres_Bg        1e-5           # background energy density
 Blast_Dens_Ratio     1.0            # density ratio of center to background
-Blast_Pres_Ratio     1e+5         # pressure ratio of center to background
+Blast_Pres_Ratio     1e+5           # pressure ratio of center to background
 Blast_Radius         0.3            # explosion radius
 Blast_Center_X      -1.0            # explosion center x (<0=default) [box center]
 Blast_Center_Y      -1.0            # explosion center y (<0=default) [box center]
 Blast_Center_Z      -1.0            # explosion center z (<0=default) [box center]
+
+
+#  X²    Y²    Z²
+# --- + --- + --- = 1
+#  a²    b²    c²
+
+Blast_Radius_x      0.02            # a
+Blast_Radius_y      0.02            # b
+Blast_Radius_z      0.01            # c
+
+
+# 
+Blast_Vector_X       1.0
+Blast_Vector_Y       1.0
+Blast_Vector_Z       0.0
