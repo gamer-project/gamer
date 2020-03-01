@@ -476,8 +476,8 @@ void SetParameter()
 // computing sound speed and half-crossing time
    double AmbientTemp, Distance;
 
-   if      ( Jet_Ambient == 1 )                     AmbientTemp = Table_T[0];
-   else if ( Jet_Ambient == 0 ||Jet_Ambient == 2 )  AmbientTemp = Jet_UniformTemp;
+   if      ( Jet_Ambient == 1 )       AmbientTemp = Table_T[0];
+   else                               AmbientTemp = Jet_UniformTemp;
 
    Cs = sqrt( AmbientTemp * SQR(Const_c) );
 
