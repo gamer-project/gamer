@@ -14,15 +14,21 @@ void CartesianRotate( double x[], double theta, double phi, bool inverse );
 //
 // problem-specific global variables
 // =======================================================================================
-static double Blast_Dens_Bg;       // background mass density
-static double Blast_Pres_Bg;       // background pressure
-static double Blast_Dens_Ratio;    // density ratio of center to background
-static double Blast_Pres_Ratio;    // pressure ratio of center to background
-static double Blast_Radius_x;      // a
-static double Blast_Radius_y;      // b
-static double Blast_Radius_z;      // c
-static double Blast_Vector[3];     // 
-static double Blast_Center[3];     // explosion center
+static double  Blast_Dens_Bg;                      // background mass density
+static double  Blast_Temp_Bg;                      // background pressure
+static double  Blast_Dens_Src;                     // density ratio of center to background
+static double  Blast_Temp_Src;                     // pressure ratio of center to background
+static double  Blast_Radius_x;                     // a
+static double  Blast_Radius_y;                     // b
+static double  Blast_Radius_z;                     // c
+static double  RotatedAngle[2];                    // 
+static double  Blast_Center[3];                    // explosion center
+
+static int     NumSource;
+static char    Random_File[MAX_STRING];
+static double *Random_Data               = NULL;
+static int     Random_Table_NBin;
+static double *Table_x, *Table_y, *Table_z, *Table_theta,  *Table_phi, *Table_Temp;
 // =======================================================================================
 
 
@@ -101,18 +107,19 @@ void SetParameter()
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE_ADDRESS,      DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
    ReadPara->Add( "Blast_Dens_Bg",     &Blast_Dens_Bg,         -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Blast_Pres_Bg",     &Blast_Pres_Bg,         -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Blast_Dens_Ratio",  &Blast_Dens_Ratio,      -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Blast_Pres_Ratio",  &Blast_Pres_Ratio,      -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Blast_Temp_Bg",     &Blast_Temp_Bg,         -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Blast_Dens_Src",    &Blast_Dens_Src,        -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Blast_Temp_Src",    &Blast_Temp_Src,        -1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "Blast_Radius_x",    &Blast_Radius_x,        -1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "Blast_Radius_y",    &Blast_Radius_y,        -1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "Blast_Radius_z",    &Blast_Radius_z,        -1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "Blast_Center_X",    &Blast_Center[0],       -1.0,          NoMin_double,     amr->BoxSize[0]   );
    ReadPara->Add( "Blast_Center_Y",    &Blast_Center[1],       -1.0,          NoMin_double,     amr->BoxSize[1]   );
    ReadPara->Add( "Blast_Center_Z",    &Blast_Center[2],       -1.0,          NoMin_double,     amr->BoxSize[2]   );
-   ReadPara->Add( "Blast_Vector_X",    &Blast_Vector[0],       -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Blast_Vector_Y",    &Blast_Vector[1],       -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Blast_Vector_Z",    &Blast_Vector[2],       -1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "NumSource",         &NumSource,              1,            1,                NoMax_int         );
+   ReadPara->Add( "Rotated_Theta",     &RotatedAngle[0],       -1.0,          0.0,              180.0             );
+   ReadPara->Add( "Rotated_Phi",       &RotatedAngle[1],       -1.0,          0.0,              360.0             );
+   ReadPara->Add( "Random_File",       Random_File,             Useless_str,  Useless_str,      Useless_str       );
 
    ReadPara->Read( FileName );
 
@@ -148,23 +155,41 @@ void SetParameter()
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "  test problem ID                         = %d\n",     TESTPROB_ID      );
       Aux_Message( stdout, "  background mass density                 = %13.7e\n", Blast_Dens_Bg    );
-      Aux_Message( stdout, "  background pressure                     = %13.7e\n", Blast_Pres_Bg    );
-      Aux_Message( stdout, "  density ratio of center to background   = %13.7e\n", Blast_Dens_Ratio );
-      Aux_Message( stdout, "  pressure ratio of center to background  = %13.7e\n", Blast_Pres_Ratio );
+      Aux_Message( stdout, "  background pressure                     = %13.7e\n", Blast_Temp_Bg    );
+      Aux_Message( stdout, "  density ratio of center to background   = %13.7e\n", Blast_Dens_Src   );
+      Aux_Message( stdout, "  pressure ratio of center to background  = %13.7e\n", Blast_Temp_Src   );
       Aux_Message( stdout, "  explosion radius a                      = %13.7e\n", Blast_Radius_x   );
       Aux_Message( stdout, "  explosion radius b                      = %13.7e\n", Blast_Radius_y   );
       Aux_Message( stdout, "  explosion radius c                      = %13.7e\n", Blast_Radius_z   );
       Aux_Message( stdout, "  explosion center                        = (%13.7e, %13.7e, %13.7e)\n",
                                                           Blast_Center[0], Blast_Center[1], Blast_Center[2] );
-      Aux_Message( stdout, "  ellipsoid vector                        = (%13.7e, %13.7e, %13.7e)\n",
-                                                          Blast_Vector[0], Blast_Vector[1], Blast_Vector[2] );
+      Aux_Message( stdout, "  rotated angle                           = (%13.7e, %13.7e)\n",
+                                                                    RotatedAngle[0], RotatedAngle[1] );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ... done\n" );
 
+
+   const bool RowMajor_No  = false;                // load data into the column-major order
+   const bool AllocMem_Yes = true;                 // allocate memory for Merger_Prof1/2
+   const int  NCol         = 6;                    // total number of columns to load
+   const int  Col[NCol]    = {1, 2, 3, 4, 5, 6};   // target columns: (radius, density, temperature)
+              
+   Random_Table_NBin = Aux_LoadTable( Random_Data, Random_File, NCol, Col, RowMajor_No, AllocMem_Yes );
+              
+   if ( Random_Data == NULL )
+   {          
+      Aux_Error( ERROR_INFO, "Random_Data == NULL !!\n" );
+   }          
+
+
+
 } // FUNCTION : SetParameter
+
+
+
 
 
 
@@ -190,52 +215,80 @@ void SetParameter()
 void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] )
 {
-   double Prim_BG[5] = { Blast_Dens_Bg, 0, 0, 0, Blast_Pres_Bg };
-   double Cons_BG[5] = {0};
+   double Prim_BG[5], Cons_BG[5];
+   double Prim_EXP[5], Cons_EXP[5];
+   double Theta = RotatedAngle[0]*M_PI/180.0;
+   double Phi   = RotatedAngle[1]*M_PI/180.0;
+   double RotatedCartesian[3];
 
-   double Prim_EXP[5] = { Blast_Dens_Bg*Blast_Dens_Ratio, 0, 0, 0, Blast_Pres_Bg*Blast_Pres_Ratio }; // store 3-velocity
-   double Cons_EXP[5] = {0};
+   Prim_BG[0]  = Blast_Dens_Bg;
+   Prim_BG[1]  = 0.0;
+   Prim_BG[2]  = 0.0;
+   Prim_BG[3]  = 0.0;
+   Prim_BG[4]  = Blast_Temp_Bg*Blast_Dens_Bg;
+
+   Prim_EXP[0] = Blast_Dens_Src;
+   Prim_EXP[1] = 0.0;
+   Prim_EXP[2] = 0.0; 
+   Prim_EXP[3] = 0.0; 
+   Prim_EXP[4] = Blast_Dens_Src*Blast_Temp_Src;
 
    SRHydro_Pri2Con (Prim_BG,  Cons_BG,  GAMMA);
-   SRHydro_Pri2Con (Prim_EXP, Cons_EXP, GAMMA);
 
-   //1. rotate ellipsoid
-   double cartesian[3], shperical[3], RotatedCartesian[3];
 
-   cartesian[0] = Blast_Vector[0];
-   cartesian[1] = Blast_Vector[1];
-   cartesian[2] = Blast_Vector[2];
+   bool InsideEllipsoid = false;
 
-   Cartesian2Spherical( cartesian, shperical );
-
-   RotatedCartesian[0] = x - Blast_Center[0];
-   RotatedCartesian[1] = y - Blast_Center[1];
-   RotatedCartesian[2] = z - Blast_Center[2];
-
-   CartesianRotate( RotatedCartesian, shperical[1], shperical[2], false );
-
-   bool InsideEllipsoid = true;
-
-   InsideEllipsoid &= SQR ( RotatedCartesian[0] / Blast_Radius_x ) 
-                    + SQR ( RotatedCartesian[1] / Blast_Radius_y ) 
-                    + SQR ( RotatedCartesian[2] / Blast_Radius_z ) < 1.0;
-
-   if ( InsideEllipsoid )
+   for ( int i = 0; i < NumSource;i++ )
    {
-     fluid[DENS] = (real) Cons_EXP[0];
-     fluid[MOMX] = (real) Cons_EXP[1];
-     fluid[MOMY] = (real) Cons_EXP[2];
-     fluid[MOMZ] = (real) Cons_EXP[3];
-     fluid[ENGY] = (real) Cons_EXP[4];
+	  if ( NumSource > 1 )
+	  {
+        Table_x     = Random_Data + 0*Random_Table_NBin;
+        Table_y     = Random_Data + 1*Random_Table_NBin;
+        Table_z     = Random_Data + 2*Random_Table_NBin;
+        Table_theta = Random_Data + 3*Random_Table_NBin;
+        Table_phi   = Random_Data + 4*Random_Table_NBin;
+        Table_Temp  = Random_Data + 5*Random_Table_NBin;
+
+		Blast_Center[0] = Table_x[i];
+		Blast_Center[1] = Table_y[i];
+		Blast_Center[2] = Table_z[i];
+		Theta           = Table_theta[i];
+	    Phi             = Table_phi[i];
+		Prim_EXP    [4] = Blast_Dens_Src*Table_Temp[i];
+	  }
+
+
+      //1. rotate ellipsoid
+      RotatedCartesian[0] = x - Blast_Center[0];
+      RotatedCartesian[1] = y - Blast_Center[1];
+      RotatedCartesian[2] = z - Blast_Center[2];
+
+      CartesianRotate( RotatedCartesian, Theta, Phi, false );
+
+
+      InsideEllipsoid  = SQR ( RotatedCartesian[0] / Blast_Radius_x ) 
+                       + SQR ( RotatedCartesian[1] / Blast_Radius_y ) 
+                       + SQR ( RotatedCartesian[2] / Blast_Radius_z ) < 1.0;
+
+      if ( InsideEllipsoid == true )
+      {
+         SRHydro_Pri2Con (Prim_EXP, Cons_EXP, GAMMA);
+
+         fluid[DENS] = (real) Cons_EXP[0];
+         fluid[MOMX] = (real) Cons_EXP[1];
+         fluid[MOMY] = (real) Cons_EXP[2];
+         fluid[MOMZ] = (real) Cons_EXP[3];
+         fluid[ENGY] = (real) Cons_EXP[4];
+
+         return;
+      }
    }
-   else
-   { 
-     fluid[DENS] = (real) Cons_BG[0];
-     fluid[MOMX] = (real) Cons_BG[1];
-     fluid[MOMY] = (real) Cons_BG[2];
-     fluid[MOMZ] = (real) Cons_BG[3];
-     fluid[ENGY] = (real) Cons_BG[4];
-   }
+
+   fluid[DENS] = (real) Cons_BG[0];
+   fluid[MOMX] = (real) Cons_BG[1];
+   fluid[MOMY] = (real) Cons_BG[2];
+   fluid[MOMZ] = (real) Cons_BG[3];
+   fluid[ENGY] = (real) Cons_BG[4];
 
 } // FUNCTION : SetGridIC
 #endif // #if ( MODEL == SR_HYDRO )
