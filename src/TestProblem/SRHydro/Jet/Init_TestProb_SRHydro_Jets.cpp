@@ -321,7 +321,7 @@ void SetParameter()
 // check isothermal sphere
    if ( Jet_HSE_Radius > 0.0 )
    {
-      if ( !OPT__FLAG_REGION ) 
+      if ( !OPT__FLAG_REGION && OPT__FLAG_LOHNER_DENS && OPT__FLAG_LOHNER_TEMP && OPT__FLAG_LOHNER_ENGY ) 
         Aux_Error( ERROR_INFO, "OPT__FLAG_REGION must be enabled !!\n" );
 
       if ( Jet_HSE_Radius == NULL_REAL ) 
@@ -385,14 +385,16 @@ void SetParameter()
    {
      Jet_HSE_Radius         *= Const_kpc / UNIT_L; 
    }
-   else if ( Jet_Ambient == 0 )
+
+   if ( Jet_Ambient == 0 )
    {
      Jet_UniformDens        *= 1.0       / UNIT_D;
      Jet_UniformVel[0]      *= Const_c   / UNIT_V;
      Jet_UniformVel[1]      *= Const_c   / UNIT_V;
      Jet_UniformVel[2]      *= Const_c   / UNIT_V;
    }
-   else if ( Jet_Ambient == 3 )
+   
+   if ( Jet_Ambient == 3 )
    {
      Jet_Beta_Rcore         *= Const_kpc / UNIT_L;
      Jet_Beta_PeakDens      *= 1.0       / UNIT_D;
@@ -545,9 +547,13 @@ void SetParameter()
      Aux_Message( stdout, "  CrossingTime            = %14.7e kpc/c\n",      CrossingTime / UNIT_T                           );
    }
 
-   if ( Jet_HSE_Radius > 0.0 && MPI_Rank == 0 )
+   if ( Jet_Ambient == 1 && MPI_Rank == 0 )
    {
      Aux_Message( stdout, "  Jet_HSE_BgTable_File    = %s\n",                Jet_HSE_BgTable_File                            );
+   }
+
+   if ( Jet_HSE_Radius > 0.0 && MPI_Rank == 0 )
+   {
      Aux_Message( stdout, "  Jet_HSE_Radius          = %14.7e kpc\n",        Jet_HSE_Radius*UNIT_L/Const_kpc                 );
      Aux_Message( stdout, "  Jet_HSE_Dx              = %14.7e kpc\n",        Jet_HSE_Dx*UNIT_L/Const_kpc                     );
      Aux_Message( stdout, "  Jet_HSE_Dy              = %14.7e kpc\n",        Jet_HSE_Dy*UNIT_L/Const_kpc                     );
@@ -768,7 +774,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       {
         if ( r <= Jet_HSE_Radius )
         {
-	      Pri4Vel[0]  = Jet_Beta_PeakDens * pow( 1.0 + SQR(              r/Jet_Beta_Rcore ), -1.5*Jet_Beta_Beta );
+	      Pri4Vel[0]  = Jet_Beta_PeakDens * pow( 1.0 + (r/Jet_Beta_Rcore)*(r/Jet_Beta_Rcore), -1.5*Jet_Beta_Beta );
 	      Pri4Vel[4]  = Jet_UniformTemp * Pri4Vel[0];
         }
         else
@@ -996,7 +1002,7 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
 static bool Flag_Region( const int i, const int j, const int k, const int lv, const int PID )
 {
 
-   if ( Jet_HSE_Radius > 0.0 )
+   if ( Jet_HSE_Radius > 0.0 && OPT__FLAG_LOHNER_DENS == 1 )
    {
       const double dh     = amr->dh[lv];                                                         // grid size
       const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,  // x,y,z position
