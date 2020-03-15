@@ -182,7 +182,7 @@ SIMU_OPTION += -DNLEVEL=11
 
 # maximum number of patches on each AMR level
 # --> must be set in any cases
-SIMU_OPTION += -DMAX_PATCH=2000000
+SIMU_OPTION += -DMAX_PATCH=4000000
 
 # GPU acceleration
 # --> must set GPU_ARCH as well
@@ -364,7 +364,7 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 #LIBYT_PATH   := 
 #CUDA_PATH    := /opt/gpu/cuda/default
 
-## NTU-hulk (openmpi-intel-qlc)
+# NTU-hulk (openmpi-intel-qlc)
 FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
 MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
 HDF5_PATH    := /opt/hdf5/default
@@ -387,14 +387,14 @@ CUDA_PATH    := /opt/gpu/cuda/default
 #MPI_PATH     := /usr/mpi/intel/openmpi-1.3.2-qlc
 #GPUID_PATH   := /ifs/data/hsiyu/Software/gpudevmgr
 
-# gamer04
-#FFTW_PATH    := /opt/fftw/3.1.4-intel-tm
-#MPI_PATH     := /opt/openmpi/3.1.4-intel-tm
-#HDF5_PATH    := /opt/hdf5
+## gamer04
+#FFTW_PATH    := /opt/fftw/default
+#MPI_PATH     := /opt/openmpi/default
+#HDF5_PATH    := /opt/hdf5/default
 #GRACKLE_PATH := 
 #GSL_PATH     := 
 #LIBYT_PATH   := 
-#CUDA_PATH    := /opt/cuda/default
+#CUDA_PATH    := /opt/cuda/10.0
 #
 ## Calab AMD2
 #FFTW_PATH    := 
