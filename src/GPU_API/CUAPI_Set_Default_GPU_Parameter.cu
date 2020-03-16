@@ -195,15 +195,15 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #           if   ( GPU_ARCH == FERMI )
             GPU_NStream = 8;
 #           elif ( GPU_ARCH == KEPLER )
-            GPU_NStream = 32;
+            GPU_NStream = 16;
 #           elif ( GPU_ARCH == MAXWELL )
-            GPU_NStream = 32;
+            GPU_NStream = 16;
 #           elif ( GPU_ARCH == PASCAL )
-            GPU_NStream = 32;
+            GPU_NStream = 16;
 #           elif ( GPU_ARCH == VOLTA )
-            GPU_NStream = 32;
+            GPU_NStream = 16;
 #           elif ( GPU_ARCH == TURING )
-            GPU_NStream = 32;
+            GPU_NStream = 16;
 #           else
 #           error : UNKNOWN GPU_ARCH !!
 #           endif
@@ -212,15 +212,15 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #           if   ( GPU_ARCH == FERMI )
             GPU_NStream = 8;
 #           elif ( GPU_ARCH == KEPLER )
-            GPU_NStream = 32;
+            GPU_NStream = 16;
 #           elif ( GPU_ARCH == MAXWELL )
-            GPU_NStream = 32;
+            GPU_NStream = 16;
 #           elif ( GPU_ARCH == PASCAL )
-            GPU_NStream = 32;
+            GPU_NStream = 16;
 #           elif ( GPU_ARCH == VOLTA )
-            GPU_NStream = 32;
+            GPU_NStream = 16;
 #           elif ( GPU_ARCH == TURING )
-            GPU_NStream = 32;
+            GPU_NStream = 16;
 #           else
 #           error : ERROR : UNKNOWN GPU_ARCH !!
 #           endif
