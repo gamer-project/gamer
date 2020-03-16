@@ -13,7 +13,7 @@
 
 cd $PBS_O_WORKDIR
 
-mpirun -map-by ppr:4:socket:pe=4 --report-bindings ./gamer 1>>log 2>&1
+mpirun -map-by ppr:2:socket:pe=8 --report-bindings ./gamer 1>>log 2>&1
 
 ## script to restart a simulation automatically if the run failed
 ## sh auto_restart.sh 1>>stdout 2>>stderr
