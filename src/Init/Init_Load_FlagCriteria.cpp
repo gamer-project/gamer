@@ -69,7 +69,7 @@ void Init_Load_FlagCriteria()
                                     "Input__Flag_NParPatch", "Input__Flag_NParCell", "Input__Flag_ParMassCell",
                                     "Input__Flag_Vorticity", "Input__Flag_Jeans", "Input__Flag_Current" };
    double *FlagTable[NFlagMode] = { FlagTable_Rho, FlagTable_RhoGradient, FlagTable_PresGradient,
-                                    NULL, NULL, FlagTable_User, NULL, NULL, FlagTable_ParMassCell,
+                                    NULL, NULL, *FlagTable_User, NULL, NULL, FlagTable_ParMassCell,
                                     FlagTable_Vorticity, FlagTable_Jeans, FlagTable_Current };
 
    FILE *File;
@@ -87,7 +87,9 @@ void Init_Load_FlagCriteria()
       for (int t=0; t<4; t++)
       FlagTable_Lohner      [lv][t] = -1.0;
 
-      FlagTable_User        [lv]    = -1.0;
+      FlagTable_User        [lv]    = (double *) malloc( OPT__FLAG_USER_NUM*sizeof(double) );
+      for (int t=0; t<OPT__FLAG_USER_NUM; t++)
+      FlagTable_User        [lv][t] = -1.0;
 
 #     if   ( MODEL == HYDRO )
       FlagTable_PresGradient[lv]    = -1.0;
@@ -151,6 +153,21 @@ void Init_Load_FlagCriteria()
                                                                                      &FlagTable_Lohner[lv][1],
                                                                                      &FlagTable_Lohner[lv][2],
                                                                                      &FlagTable_Lohner[lv][3] );
+//          OPT__FLAG_USER have OPT__FLAG_USER_NUM columns to be loaded
+            else if ( FlagMode == 5 )
+            {
+               int offset;
+
+               sscanf( input_line, "%d%n", &Trash, &offset );
+               input_line += offset;
+
+               for ( int t=0; t<OPT__FLAG_USER_NUM; t++ )
+               {
+                  sscanf( input_line, "%lf%n", &FlagTable_User[lv][t], &offset );
+                  input_line += offset;
+               }
+               input_line = NULL;  // reset input_line
+            }
 //          OPT__FLAG_NPAR_PATCH/CELL load integers
             else if ( FlagMode == 6 )  sscanf( input_line, "%d%d",  &Trash, &FlagTable_NParPatch[lv] );
             else if ( FlagMode == 7 )  sscanf( input_line, "%d%d",  &Trash, &FlagTable_NParCell [lv] );

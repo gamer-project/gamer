@@ -734,6 +734,7 @@ void Aux_TakeNote()
                                                                   (OPT__FLAG_LOHNER_FORM==LOHNER_FORM_INV2) ? "LOHNER_FORM_INV2" :
                                                                                                                "UNKNOWN" );
       fprintf( Note, "OPT__FLAG_USER                  %d\n",      OPT__FLAG_USER            );
+      fprintf( Note, "OPT__FLAG_USER_NUM              %d\n",      OPT__FLAG_USER_NUM        );
       fprintf( Note, "OPT__FLAG_REGION                %d\n",      OPT__FLAG_REGION          );
 #     ifdef PARTICLE
       fprintf( Note, "OPT__FLAG_NPAR_PATCH            %d\n",      OPT__FLAG_NPAR_PATCH      );
@@ -1254,7 +1255,12 @@ void Aux_TakeNote()
          fprintf( Note, "Flag Criterion (User-defined)\n" );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "  Level           Threshold\n" );
-         for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_User[lv] );
+         for (int lv=0; lv<MAX_LEVEL; lv++)
+         {
+                                                         fprintf( Note, "%7d", lv );
+            for ( int t=0; t<OPT__FLAG_USER_NUM; t++ )   fprintf( Note, "%20.7e", FlagTable_User[lv][t] );
+                                                         fprintf( Note, "\n", lv );
+         }
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n");
       }

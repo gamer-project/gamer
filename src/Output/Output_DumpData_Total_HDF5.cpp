@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2405)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2406)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -175,6 +175,7 @@ Procedure for outputting new variables:
 //                2403 : 2019/09/20 --> add BIT_REP_FLUX and BIT_REP_ELECTRIC defined in CUFLU.h
 //                2404 : 2019/10/16 --> add DT__MAX
 //                2405 : 2019/12/29 --> output GRACKLE_THREE_BODY_RATE, GRACKLE_CIE_COOLING, GRACKLE_H2_OPA_APPROX
+//                2406 : 2020/03/17 --> add OPT__FLAG_USER_NUM and use variable-length datatype for FlagTable_User
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -306,6 +307,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
       H5_Status = H5Gclose( H5_GroupID_Info );
       H5_Status = H5Fclose( H5_FileID );
+
+//    3-4. free memory
+     for (int lv=0; lv<NLEVEL-1; lv++)   free( InputPara.FlagTable_User[lv].p );
    } // if ( MPI_Rank == 0 )
 
 
@@ -1372,7 +1376,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2405;
+   KeyInfo.FormatVersion        = 2406;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -1964,6 +1968,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  endif
    InputPara.Opt__Flag_LohnerForm    = OPT__FLAG_LOHNER_FORM;
    InputPara.Opt__Flag_User          = OPT__FLAG_USER;
+   InputPara.Opt__Flag_User_Num      = OPT__FLAG_USER_NUM;
    InputPara.Opt__Flag_Region        = OPT__FLAG_REGION;
 #  ifdef PARTICLE
    InputPara.Opt__Flag_NParPatch     = OPT__FLAG_NPAR_PATCH;
@@ -2210,7 +2215,10 @@ void FillIn_InputPara( InputPara_t &InputPara )
       for (int t=0; t<4; t++)
       InputPara.FlagTable_Lohner      [lv][t] = FlagTable_Lohner      [lv][t];
 
-      InputPara.FlagTable_User        [lv]    = FlagTable_User        [lv];
+      InputPara.FlagTable_User        [lv].p   = malloc( OPT__FLAG_USER_NUM*sizeof(double) );
+      InputPara.FlagTable_User        [lv].len = OPT__FLAG_USER_NUM;
+      for (int t=0; t<OPT__FLAG_USER_NUM; t++)
+      ( (double *) InputPara.FlagTable_User[lv].p )[t] = FlagTable_User        [lv][t];
 
 #     if   ( MODEL == HYDRO )
       InputPara.FlagTable_PresGradient[lv]    = FlagTable_PresGradient[lv];
@@ -2523,27 +2531,28 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 {
 
 // create the array type
-   const hsize_t H5_ArrDims_3Var             = 3;                    // array size of [3]
-   const hsize_t H5_ArrDims_6Var             = 6;                    // array size of [6]
+   const hsize_t H5_ArrDims_3Var              = 3;                    // array size of [3]
+   const hsize_t H5_ArrDims_6Var              = 6;                    // array size of [6]
 #  if ( NCOMP_PASSIVE > 0 )
-   const hsize_t H5_ArrDims_NPassive         = NCOMP_PASSIVE;        // array size of [NCOMP_PASSIVE]
+   const hsize_t H5_ArrDims_NPassive          = NCOMP_PASSIVE;        // array size of [NCOMP_PASSIVE]
 #  endif
 #  if ( NLEVEL > 1 )
-   const hsize_t H5_ArrDims_NLvM1            = NLEVEL-1;             // array size of [NLEVEL-1]
-   const hsize_t H5_ArrDims_NLvM1_2[2]       = { NLEVEL-1, 2 };      // array size of [NLEVEL-1][2]
-   const hsize_t H5_ArrDims_NLvM1_4[2]       = { NLEVEL-1, 4 };      // array size of [NLEVEL-1][4]
+   const hsize_t H5_ArrDims_NLvM1             = NLEVEL-1;             // array size of [NLEVEL-1]
+   const hsize_t H5_ArrDims_NLvM1_2[2]        = { NLEVEL-1, 2 };      // array size of [NLEVEL-1][2]
+   const hsize_t H5_ArrDims_NLvM1_4[2]        = { NLEVEL-1, 4 };      // array size of [NLEVEL-1][4]
 #  endif
 
-   const hid_t   H5_TypeID_Arr_3Int          = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_3Var      );
-   const hid_t   H5_TypeID_Arr_6Int          = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_6Var      );
+   const hid_t   H5_TypeID_Arr_3Int           = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_3Var      );
+   const hid_t   H5_TypeID_Arr_6Int           = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_6Var      );
 #  if ( NCOMP_PASSIVE > 0 )
-   const hid_t   H5_TypeID_Arr_NPassive      = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_NPassive  );
+   const hid_t   H5_TypeID_Arr_NPassive       = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_NPassive  );
 #  endif
 #  if ( NLEVEL > 1 )
-   const hid_t   H5_TypeID_Arr_NLvM1Int      = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_NLvM1     );
-   const hid_t   H5_TypeID_Arr_NLvM1Double   = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_NLvM1     );
-   const hid_t   H5_TypeID_Arr_NLvM1_2Double = H5Tarray_create( H5T_NATIVE_DOUBLE, 2,  H5_ArrDims_NLvM1_2   );
-   const hid_t   H5_TypeID_Arr_NLvM1_4Double = H5Tarray_create( H5T_NATIVE_DOUBLE, 2,  H5_ArrDims_NLvM1_4   );
+   const hid_t   H5_TypeID_Arr_NLvM1Int       = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_NLvM1     );
+   const hid_t   H5_TypeID_Arr_NLvM1Double    = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_NLvM1     );
+   const hid_t   H5_TypeID_Arr_NLvM1_2Double  = H5Tarray_create( H5T_NATIVE_DOUBLE, 2,  H5_ArrDims_NLvM1_2   );
+   const hid_t   H5_TypeID_Arr_NLvM1_4Double  = H5Tarray_create( H5T_NATIVE_DOUBLE, 2,  H5_ArrDims_NLvM1_4   );
+   const hid_t   H5_TypeID_Arr_NLvM1_VLDouble = H5Tvlen_create ( H5T_NATIVE_DOUBLE );
 #  endif
 
 
@@ -2557,7 +2566,8 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 
 // get the size of a single pointer, which is used for storing the array of variable-length strings
 // --> FieldLabel[], MagLabel[], ParAttLabel[]
-   const int PtrSize = sizeof( char* );
+   const int PtrSize     = sizeof( char* );
+   const int PtrSize_hvl = sizeof( hvl_t );
    char Key[MAX_STRING];
 
 
@@ -2681,6 +2691,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  endif
    H5Tinsert( H5_TypeID, "Opt__Flag_LohnerForm",    HOFFSET(InputPara_t,Opt__Flag_LohnerForm   ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_User",          HOFFSET(InputPara_t,Opt__Flag_User         ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__Flag_User_Num",      HOFFSET(InputPara_t,Opt__Flag_User_Num     ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_Region",        HOFFSET(InputPara_t,Opt__Flag_Region       ), H5T_NATIVE_INT     );
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Opt__Flag_NParPatch",     HOFFSET(InputPara_t,Opt__Flag_NParPatch    ), H5T_NATIVE_INT     );
@@ -2926,10 +2937,21 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 
 // flag tables
 #  if ( NLEVEL > 1 )
-   H5Tinsert( H5_TypeID, "FlagTable_Rho",          HOFFSET(InputPara_t,FlagTable_Rho           ), H5_TypeID_Arr_NLvM1Double   );
-   H5Tinsert( H5_TypeID, "FlagTable_RhoGradient",  HOFFSET(InputPara_t,FlagTable_RhoGradient   ), H5_TypeID_Arr_NLvM1Double   );
-   H5Tinsert( H5_TypeID, "FlagTable_Lohner",       HOFFSET(InputPara_t,FlagTable_Lohner        ), H5_TypeID_Arr_NLvM1_4Double );
-   H5Tinsert( H5_TypeID, "FlagTable_User",         HOFFSET(InputPara_t,FlagTable_User          ), H5_TypeID_Arr_NLvM1Double   );
+   H5Tinsert( H5_TypeID, "FlagTable_Rho",          HOFFSET(InputPara_t,FlagTable_Rho           ), H5_TypeID_Arr_NLvM1Double    );
+   H5Tinsert( H5_TypeID, "FlagTable_RhoGradient",  HOFFSET(InputPara_t,FlagTable_RhoGradient   ), H5_TypeID_Arr_NLvM1Double    );
+   H5Tinsert( H5_TypeID, "FlagTable_Lohner",       HOFFSET(InputPara_t,FlagTable_Lohner        ), H5_TypeID_Arr_NLvM1_4Double  );
+//   H5Tinsert( H5_TypeID, "FlagTable_User",         HOFFSET(InputPara_t,FlagTable_User          ), H5_TypeID_Arr_NLvM1_VLDouble );
+
+// store the user-defined threshold at all levels
+   for (int lv=0; lv<MAX_LEVEL; lv++)
+   {
+//    key for each level
+      sprintf( Key, "FlagTable_User_Lv%02d", lv );
+
+//    assuming the offset between successive FlagTable_User pointers is "PtrSize_hvl", which is equal to "sizeof( hvl_t )"
+      H5Tinsert( H5_TypeID, Key, HOFFSET(InputPara_t,FlagTable_User)+lv*PtrSize_hvl, H5_TypeID_Arr_NLvM1_VLDouble );
+   }
+
 #  if   ( MODEL == HYDRO )
    H5Tinsert( H5_TypeID, "FlagTable_PresGradient", HOFFSET(InputPara_t,FlagTable_PresGradient  ), H5_TypeID_Arr_NLvM1Double   );
    H5Tinsert( H5_TypeID, "FlagTable_Vorticity",    HOFFSET(InputPara_t,FlagTable_Vorticity     ), H5_TypeID_Arr_NLvM1Double   );
@@ -2949,16 +2971,17 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 
 
 // free memory
-   H5_Status = H5Tclose( H5_TypeID_Arr_3Int          );
-   H5_Status = H5Tclose( H5_TypeID_Arr_6Int          );
+   H5_Status = H5Tclose( H5_TypeID_Arr_3Int           );
+   H5_Status = H5Tclose( H5_TypeID_Arr_6Int           );
 #  if ( NCOMP_PASSIVE > 0 )
-   H5_Status = H5Tclose( H5_TypeID_Arr_NPassive      );
+   H5_Status = H5Tclose( H5_TypeID_Arr_NPassive       );
 #  endif
 #  if ( NLEVEL > 1 )
-   H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1Int      );
-   H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1Double   );
-   H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1_2Double );
-   H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1_4Double );
+   H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1Int       );
+   H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1Double    );
+   H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1_2Double  );
+   H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1_4Double  );
+   H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1_VLDouble );
 #  endif
    H5_Status = H5Tclose( H5_TypeID_VarStr );
 

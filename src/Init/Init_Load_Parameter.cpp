@@ -148,6 +148,7 @@ void Init_Load_Parameter()
 #  endif
    ReadPara->Add( "OPT__FLAG_LOHNER_FORM",      &OPT__FLAG_LOHNER_FORM,           LOHNER_FLASH2,   1,             4              );
    ReadPara->Add( "OPT__FLAG_USER",             &OPT__FLAG_USER,                  false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__FLAG_USER_NUM",         &OPT__FLAG_USER_NUM,              0,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "OPT__FLAG_REGION",           &OPT__FLAG_REGION,                false,           Useless_bool,  Useless_bool   );
 #  ifdef PARTICLE
    ReadPara->Add( "OPT__FLAG_NPAR_PATCH",       &OPT__FLAG_NPAR_PATCH,            0,               0,             2              );
