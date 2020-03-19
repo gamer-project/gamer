@@ -12,7 +12,7 @@ double *Table_MassProf_pot_UNKNOWN;
 
 UNKNOWN_calculator::UNKNOWN_calculator()
 {
-  RNG = new RandomNumber_t( 1 );
+  if(RNG==NULL)RNG = new RandomNumber_t( 1 );
   RNG->SetSeed( 0, 123 );
 
 }
@@ -180,8 +180,7 @@ double UNKNOWN_calculator::set_mass(double x){
   
 }
 void UNKNOWN_calculator::initialize_mass(int row_UNKNOWN){
-  Table_MassProf_M_UNKNOWN = new double [row_UNKNOWN];
-  Table_MassProf_rhodx_UNKNOWN = new double [row_UNKNOWN];
+  
   //Mass
   Table_MassProf_M_UNKNOWN[0]=0;
   double rho,dr,r;
@@ -211,9 +210,7 @@ void UNKNOWN_calculator::initialize_mass(int row_UNKNOWN){
 }
 
 void UNKNOWN_calculator::initialize_pot(int row_UNKNOWN){
-  Table_MassProf_g_UNKNOWN = new double [row_UNKNOWN];
-  Table_MassProf_pot_UNKNOWN = new double [row_UNKNOWN];
-  Table_MassProf_derho_overdx_UNKNOWN = new double [row_UNKNOWN];
+  
   
 
   Table_MassProf_g_UNKNOWN[0] =0;
@@ -275,11 +272,22 @@ void UNKNOWN_calculator::init(double newton_g,int r_col,int rho_col,const char* 
 
   int Tcol_r[1]={0};
   int Tcol_rho[1]={0};
-  int r_row_UNKNOWN= Aux_LoadTable( Table_MassProf_r_UNKNOWN, "r.txt", 1, Tcol_r,true,true );
-  int density_row_UNKNOWN= Aux_LoadTable( Table_MassProf_rho_UNKNOWN, "rho.txt", 1, Tcol_rho,true,true );
+  int r_row_UNKNOWN;
+  if(sizeof(Table_MassProf_r_UNKNOWN)==0)r_row_UNKNOWN= Aux_LoadTable( Table_MassProf_r_UNKNOWN, "r.txt", 1, Tcol_r,true,true );
+  else r_row_UNKNOWN= Aux_LoadTable( Table_MassProf_r_UNKNOWN, "r.txt", 1, Tcol_r,true,false );
+  
+  int density_row_UNKNOWN;
+  if(sizeof(Table_MassProf_rho_UNKNOWN)==0)density_row_UNKNOWN= Aux_LoadTable( Table_MassProf_rho_UNKNOWN, "rho.txt", 1, Tcol_rho,true,true );
+  else density_row_UNKNOWN= Aux_LoadTable( Table_MassProf_rho_UNKNOWN, "rho.txt", 1, Tcol_rho,true,false );
   
   row_UNKNOWN=r_row_UNKNOWN;
-  
+
+  Table_MassProf_M_UNKNOWN = new double [row_UNKNOWN];
+  Table_MassProf_rhodx_UNKNOWN = new double [row_UNKNOWN];
+  Table_MassProf_g_UNKNOWN = new double [row_UNKNOWN];
+  Table_MassProf_pot_UNKNOWN = new double [row_UNKNOWN];
+  Table_MassProf_derho_overdx_UNKNOWN = new double [row_UNKNOWN];
+
   initialize_mass(row_UNKNOWN);
   initialize_pot(row_UNKNOWN);
   initialize_prob_dens();

@@ -12,7 +12,7 @@ double pot_Einasto[nbin_Einasto];
 double g_Einasto[nbin_Einasto];
 Einasto_calculator::Einasto_calculator()
 {
-  RNG = new RandomNumber_t( 1 );
+  if(RNG==NULL)RNG = new RandomNumber_t( 1 );
   RNG->SetSeed( 0, 123 );
 
   prob_dens=new double*[size_Einasto];
@@ -262,7 +262,6 @@ void Einasto_calculator::initialize_prob_dens(){
     else *prob_dens[k]=slope(psi,int_prob_dens,k-2,k+3);
 
     if(*prob_dens[k]<0)*prob_dens[k]=0;
-    cout<<*prob_dens[k]<<endl;
   }
   smooth_all(prob_dens,0,size_Einasto);
 }

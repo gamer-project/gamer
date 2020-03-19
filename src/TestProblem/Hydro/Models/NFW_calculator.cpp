@@ -216,12 +216,6 @@ double NFW_calculator::set_mass(double x){
 }
 void NFW_calculator::initialize_mass(){
   
-  
-  Table_MassProf_r_NFW = new double [NFW_MassProfNBin];
-  Table_MassProf_M_NFW = new double [NFW_MassProfNBin];
-  Table_MassProf_rho_NFW = new double [NFW_MassProfNBin];
-  Table_MassProf_rhodx_NFW = new double [NFW_MassProfNBin];
-
   double dr = NFW_MaxR / (NFW_MassProfNBin-1);
 
   for (int b=0; b<NFW_MassProfNBin; b++)
@@ -274,9 +268,7 @@ void NFW_calculator::initialize_mass(){
 }
 
 void NFW_calculator::initialize_pot(){
-  Table_MassProf_g_NFW = new double [NFW_MassProfNBin];
-  Table_MassProf_pot_NFW = new double [NFW_MassProfNBin];
-  Table_MassProf_derho_overdx_NFW = new double [NFW_MassProfNBin];
+  
   double dr = NFW_MaxR / (NFW_MassProfNBin-1);
 
   Table_MassProf_g_NFW[0] =0;
@@ -340,8 +332,16 @@ void NFW_calculator::init(double newton_g,double rho,double r,int nbin,double rm
   Trunc_Flag=trunc_flag;
   Trunc_Fac=trunc_fac;
 
-  RNG = new RandomNumber_t( 1 );
+  if(RNG==NULL)RNG = new RandomNumber_t( 1 );
   RNG->SetSeed( 0, rseed );
+
+  Table_MassProf_r_NFW = new double [NFW_MassProfNBin];
+  Table_MassProf_M_NFW = new double [NFW_MassProfNBin];
+  Table_MassProf_rho_NFW = new double [NFW_MassProfNBin];
+  Table_MassProf_rhodx_NFW = new double [NFW_MassProfNBin];
+  Table_MassProf_g_NFW = new double [NFW_MassProfNBin];
+  Table_MassProf_pot_NFW = new double [NFW_MassProfNBin];
+  Table_MassProf_derho_overdx_NFW = new double [NFW_MassProfNBin];
 
   initialize_mass();
   initialize_pot();

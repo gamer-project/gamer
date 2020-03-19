@@ -216,12 +216,6 @@ double Burkert_calculator::set_mass(double x){
 }
 void Burkert_calculator::initialize_mass(){
   
-  
-  Table_MassProf_r_Burkert = new double [Burkert_MassProfNBin];
-  Table_MassProf_M_Burkert = new double [Burkert_MassProfNBin];
-  Table_MassProf_rho_Burkert = new double [Burkert_MassProfNBin];
-  Table_MassProf_rhodx_Burkert = new double [Burkert_MassProfNBin];
-
   double dr = Burkert_MaxR / (Burkert_MassProfNBin-1);
 
   for (int b=0; b<Burkert_MassProfNBin; b++)
@@ -274,9 +268,7 @@ void Burkert_calculator::initialize_mass(){
 }
 
 void Burkert_calculator::initialize_pot(){
-  Table_MassProf_g_Burkert = new double [Burkert_MassProfNBin];
-  Table_MassProf_pot_Burkert = new double [Burkert_MassProfNBin];
-  Table_MassProf_derho_overdx_Burkert = new double [Burkert_MassProfNBin];
+  
   double dr = Burkert_MaxR / (Burkert_MassProfNBin-1);
 
   Table_MassProf_g_Burkert[0] =0;
@@ -340,8 +332,17 @@ void Burkert_calculator::init(double newton_g,double rho,double r,int nbin,doubl
   Trunc_Flag=trunc_flag;
   Trunc_Fac=trunc_fac;
 
-  RNG = new RandomNumber_t( 1 );
+  if(RNG==NULL)RNG = new RandomNumber_t( 1 );
   RNG->SetSeed( 0, rseed );
+
+  Table_MassProf_r_Burkert = new double [Burkert_MassProfNBin];
+  Table_MassProf_M_Burkert = new double [Burkert_MassProfNBin];
+  Table_MassProf_rho_Burkert = new double [Burkert_MassProfNBin];
+  Table_MassProf_rhodx_Burkert = new double [Burkert_MassProfNBin];
+  Table_MassProf_g_Burkert = new double [Burkert_MassProfNBin];
+  Table_MassProf_pot_Burkert = new double [Burkert_MassProfNBin];
+  Table_MassProf_derho_overdx_Burkert = new double [Burkert_MassProfNBin];
+  
 
   initialize_mass();
   initialize_pot();

@@ -11,21 +11,26 @@
 #define DEBUG
 #ifdef PARTICLE
 
-extern int    Models_RSeed;
-extern double Models_Rho0;
-extern double Models_R0;
-extern double Models_MaxR;
-extern bool   Models_Collision;
-extern double Models_Collision_D;
-extern double Models_Center[3];
-extern double Models_BulkVel[3];
-extern double Models_GasMFrac;
-extern int    Models_MassProfNBin;
+extern int*    Models_RSeed;
+extern double* Models_Rho0;
+extern double* Models_R0;
+extern double* Models_MaxR;
+extern bool*   Models_Collision;
+extern double* Models_Collision_D;
+extern double** Models_Center;
+extern double** Models_BulkVel;
+extern double* Models_GasMFrac;
+extern int*    Models_MassProfNBin;
+
+extern int Models_num;
+extern string* Models_Testprob;
+extern string* Models_Type;
+extern string* Models_Profile;
 
 static RandomNumber_t *RNG = NULL;
 
 
-static double MassProf_Models( const double r ,string model_name);
+static double MassProf_Models( const double r ,string model_name,int k);
 static void   RanVec_FixRadius( const double r, double RanVec[] );
 
 
@@ -73,153 +78,162 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
                                   real *AllAttribute[PAR_NATT_TOTAL] )
 {
 // Input Model names
-   string model_name;
-   model_name="UNKNOWN";
-
-// Initialize calculators
-   static bool flag=0;
-   if(flag==0){
-
-      if(model_name=="Plummer")cal_Plummer.init(NEWTON_G,Models_Rho0,Models_R0);
-      else if(model_name=="NFW")cal_NFW.init(NEWTON_G,Models_Rho0,Models_R0,Models_MassProfNBin,Models_MaxR,Models_RSeed,true,0.7);
-      else if(model_name=="Burkert")cal_Burkert.init(NEWTON_G,Models_Rho0,Models_R0,Models_MassProfNBin,Models_MaxR,Models_RSeed,true,0.7);
-      else if(model_name=="Jaffe")cal_Jaffe.init(NEWTON_G,Models_Rho0,Models_R0,Models_MassProfNBin,Models_MaxR,Models_RSeed,false,0.5);
-      else if(model_name=="Hernquist")cal_Hernquist.init(NEWTON_G,Models_Rho0,Models_R0,Models_MassProfNBin,Models_MaxR,Models_RSeed,true,0.7);
-      else if(model_name=="Einasto")cal_Einasto.init(2,NEWTON_G,Models_Rho0,Models_R0,Models_MaxR);
-      else if(model_name=="UNKNOWN")cal_UNKNOWN.init(NEWTON_G,7,0,"profile.txt");
-
-      flag=1;
-      cout<<"done"<<endl;
+   static bool good=1;
+   string *model_name;
+   static bool *flag;
+   if(good){
+      model_name=new string[Models_num];
+      flag =new bool[Models_num];
+      for(int k=0;k<Models_num;k++)flag[k]=0;
+      good=0;
    }
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
-
 
    real *Mass_AllRank   = NULL;
    real *Pos_AllRank[3] = { NULL, NULL, NULL };
    real *Vel_AllRank[3] = { NULL, NULL, NULL };
-
-// only the master rank will construct the initial condition
+   
    if ( MPI_Rank == 0 )
-   {  
-      const double Coll_Offset = 0.5*Models_Collision_D/sqrt(3.0);
-
-      double *Table_MassProf_r = NULL;
-      double *Table_MassProf_M = NULL;
-      double  TotM, ParM, dr, RanM, RanR, EstM, ErrM, ErrM_Max=-1.0, RanVec[3];
-      double  Vmax, RanV, RanProb, Prob;
-
-      Mass_AllRank = new real [NPar_AllRank];
-      for (int d=0; d<3; d++)
-      {
-         Pos_AllRank[d] = new real [NPar_AllRank];
-         Vel_AllRank[d] = new real [NPar_AllRank];
-      }
-
-
-//    initialize the random number generator
-      RNG = new RandomNumber_t( 1 );
-      RNG->SetSeed( 0, Models_RSeed );
-
-
-//    determine the total enclosed mass within the maximum radius
-      TotM = MassProf_Models( Models_MaxR ,model_name);
-      ParM = TotM / NPar_AllRank;
-
-      if ( Models_Collision )   ParM *= 2.0;
-
-//    rescale particle mass to account for the gas contribution
-      ParM *= 1.0 - Models_GasMFrac;
-
-
-//    construct the mass profile table
-      Table_MassProf_r = new double [Models_MassProfNBin];
-      Table_MassProf_M = new double [Models_MassProfNBin];
-
-      dr = Models_MaxR / (Models_MassProfNBin-1);
-
-      for (int b=0; b<Models_MassProfNBin; b++)
-      {
-         Table_MassProf_r[b] = dr*b;
-         Table_MassProf_M[b] = MassProf_Models( Table_MassProf_r[b] ,model_name);
-      }
-
-      double max=0.0;
-//    set particle attributes
-      for (long p=0; p<NPar_AllRank; p++)
-      {
-//       mass
-         Mass_AllRank[p] = ParM;
-
-
-//       position
-//       --> sample from the cumulative mass profile with linear interpolation
-         RanM = RNG->GetValue( 0, 0.0, 1.0 )*TotM;
-         RanR = Mis_InterpolateFromTable( Models_MassProfNBin, Table_MassProf_M, Table_MassProf_r, RanM );
-
-//       record the maximum error
-         EstM     = MassProf_Models( RanR ,model_name);
-         ErrM     = fabs( (EstM-RanM)/RanM );
-         ErrM_Max = fmax( ErrM, ErrM_Max );
-
-//       randomly set the position vector with a given radius
-         RanVec_FixRadius( RanR, RanVec );
-         for (int d=0; d<3; d++)    Pos_AllRank[d][p] = RanVec[d] + Models_Center[d];
-
-//       set position offset for the Models collision test
-         if ( Models_Collision )
-         for (int d=0; d<3; d++)    Pos_AllRank[d][p] += Coll_Offset*( (p<NPar_AllRank/2)?-1.0:+1.0 );
-
-//       check periodicity
+      {  
+         Mass_AllRank = new real [NPar_AllRank];
          for (int d=0; d<3; d++)
          {
-            if ( OPT__BC_FLU[d*2] == BC_FLU_PERIODIC )
-               Pos_AllRank[d][p] = FMOD( Pos_AllRank[d][p]+(real)amr->BoxSize[d], (real)amr->BoxSize[d] );
+            Pos_AllRank[d] = new real [NPar_AllRank];
+            Vel_AllRank[d] = new real [NPar_AllRank];
          }
+      }
 
-
-//       velocity//main
-
-         double a3=RanR/Models_R0;
-         if(model_name=="NFW")RanV = cal_NFW.set_vel(a3); 
-         else if(model_name=="Plummer")RanV = cal_Plummer.set_vel(a3);   
-         else if(model_name=="Burkert")RanV = cal_Burkert.set_vel(a3);
-         else if(model_name=="Jaffe")RanV = cal_Jaffe.set_vel(a3);    
-         else if(model_name=="Hernquist")RanV = cal_Hernquist.set_vel(a3);      
-         else if(model_name=="Einasto")RanV = cal_Einasto.set_vel(a3);     
-         else if(model_name=="UNKNOWN")RanV = cal_UNKNOWN.set_vel(RanR);            
-
-//       randomly set the velocity vector with the given amplitude (RanV*Vmax)
-         RanVec_FixRadius( RanV, RanVec );
-         for (int d=0; d<3; d++)    Vel_AllRank[d][p] = RanVec[d] + Models_BulkVel[d];
-
-      } // for (long p=0; p<NPar_AllRank; p++)
+   
+   for(int k=0;k<Models_num;k++){
+   // Initialize calculators
+      model_name[k]=Models_Type[k];
+      if(flag[k]==0){
+         const char* profile=Models_Profile[k].c_str();
+         if(model_name[k]=="Plummer")cal_Plummer.init(NEWTON_G,Models_Rho0[k],Models_R0[k]);
+         else if(model_name[k]=="NFW")cal_NFW.init(NEWTON_G,Models_Rho0[k],Models_R0[k],Models_MassProfNBin[k],Models_MaxR[k],Models_RSeed[k],true,0.7);
+         else if(model_name[k]=="Burkert")cal_Burkert.init(NEWTON_G,Models_Rho0[k],Models_R0[k],Models_MassProfNBin[k],Models_MaxR[k],Models_RSeed[k],true,0.7);
+         else if(model_name[k]=="Jaffe")cal_Jaffe.init(NEWTON_G,Models_Rho0[k],Models_R0[k],Models_MassProfNBin[k],Models_MaxR[k],Models_RSeed[k],false,0.5);
+         else if(model_name[k]=="Hernquist")cal_Hernquist.init(NEWTON_G,Models_Rho0[k],Models_R0[k],Models_MassProfNBin[k],Models_MaxR[k],Models_RSeed[k],true,0.7);
+         else if(model_name[k]=="Einasto")cal_Einasto.init(2,NEWTON_G,Models_Rho0[k],Models_R0[k],Models_MaxR[k]);
+         else if(model_name[k]=="UNKNOWN")cal_UNKNOWN.init(NEWTON_G,7,0,profile);
+         flag[k]=1;
+      }
       
 
-      Aux_Message( stdout, "   Total enclosed mass within MaxR  = %13.7e\n",  TotM );
-      //Aux_Message( stdout, "   Total enclosed mass to inifinity = %13.7e\n",  TotM_Inf );
-      //Aux_Message( stdout, "   Enclosed mass ratio              = %6.2f%%\n", 100.0*TotM/TotM_Inf );
-      Aux_Message( stdout, "   Particle mass                    = %13.7e\n",  ParM );
-      Aux_Message( stdout, "   Maximum mass interpolation error = %13.7e\n",  ErrM_Max );
+   // only the master rank will construct the initial condition
+      if ( MPI_Rank == 0 )
+      {  
+         const double Coll_Offset = 0.5*Models_Collision_D[k]/sqrt(3.0);
+
+         double *Table_MassProf_r = NULL;
+         double *Table_MassProf_M = NULL;
+         double  TotM, ParM, dr, RanM, RanR, EstM, ErrM, ErrM_Max=-1.0, RanVec[3];
+         double  Vmax, RanV, RanProb, Prob;
+
+   //    initialize the random number generator
+         RNG = new RandomNumber_t( 1 );
+         RNG->SetSeed( 0, Models_RSeed[k]);
 
 
-//    free memory
-      delete [] Table_MassProf_r;
-      delete [] Table_MassProf_M;
-   } // if ( MPI_Rank == 0 )
+   //    determine the total enclosed mass within the maximum radius
+         TotM = MassProf_Models( Models_MaxR[k] ,model_name[k],k);
+         ParM = TotM / NPar_AllRank;
+
+         if ( Models_Collision[k] )   ParM *= 2.0;
+
+   //    rescale particle mass to account for the gas contribution
+         ParM *= 1.0 - Models_GasMFrac[k];
 
 
-// synchronize all particles to the physical time on the base level
+   //    construct the mass profile table
+         Table_MassProf_r = new double [Models_MassProfNBin[k]];
+         Table_MassProf_M = new double [Models_MassProfNBin[k]];
+
+         dr = Models_MaxR[k] / (Models_MassProfNBin[k]-1);
+
+         for (int b=0; b<Models_MassProfNBin[k]; b++)
+         {
+            Table_MassProf_r[b] = dr*b;
+            Table_MassProf_M[b] = MassProf_Models( Table_MassProf_r[b] ,model_name[k],k);
+         }
+
+         double max=0.0;
+   //    set particle attributes
+         for (long p=int(NPar_AllRank*k/Models_num); p<int(NPar_AllRank*(k+1)/Models_num); p++)
+         {
+   //       mass
+            Mass_AllRank[p] = ParM;
+
+
+   //       position
+   //       --> sample from the cumulative mass profile with linear interpolation
+            RanM = RNG->GetValue( 0, 0.0, 1.0 )*TotM;
+            RanR = Mis_InterpolateFromTable( Models_MassProfNBin[k], Table_MassProf_M, Table_MassProf_r, RanM );
+
+   //       record the maximum error
+            EstM     = MassProf_Models( RanR ,model_name[k],k);
+            ErrM     = fabs( (EstM-RanM)/RanM );
+            ErrM_Max = fmax( ErrM, ErrM_Max );
+
+   //       randomly set the position vector with a given radius
+            RanVec_FixRadius( RanR, RanVec );
+            for (int d=0; d<3; d++)    Pos_AllRank[d][p] = RanVec[d] + Models_Center[k][d];
+
+   //       set position offset for the Models collision test
+            if ( Models_Collision[k] )
+            for (int d=0; d<3; d++)    Pos_AllRank[d][p] += Coll_Offset*( (p<NPar_AllRank/2)?-1.0:+1.0 );
+
+   //       check periodicity
+            for (int d=0; d<3; d++)
+            {
+               if ( OPT__BC_FLU[d*2] == BC_FLU_PERIODIC )
+                  Pos_AllRank[d][p] = FMOD( Pos_AllRank[d][p]+(real)amr->BoxSize[d], (real)amr->BoxSize[d] );
+            }
+
+
+   //       velocity//main
+
+            double a3=RanR/Models_R0[k];
+            if(model_name[k]=="NFW")RanV = cal_NFW.set_vel(a3); 
+            else if(model_name[k]=="Plummer")RanV = cal_Plummer.set_vel(a3);   
+            else if(model_name[k]=="Burkert")RanV = cal_Burkert.set_vel(a3);
+            else if(model_name[k]=="Jaffe")RanV = cal_Jaffe.set_vel(a3);    
+            else if(model_name[k]=="Hernquist")RanV = cal_Hernquist.set_vel(a3);      
+            else if(model_name[k]=="Einasto")RanV = cal_Einasto.set_vel(a3);     
+            else if(model_name[k]=="UNKNOWN")RanV = cal_UNKNOWN.set_vel(RanR);            
+
+   //       randomly set the velocity vector with the given amplitude (RanV*Vmax)
+            RanVec_FixRadius( RanV, RanVec );
+            for (int d=0; d<3; d++)    Vel_AllRank[d][p] = RanVec[d] + Models_BulkVel[k][d];
+
+         } // for (long p=0; p<NPar_AllRank; p++)
+         
+
+         Aux_Message( stdout, "   Total enclosed mass within MaxR  = %13.7e\n",  TotM );
+         //Aux_Message( stdout, "   Total enclosed mass to inifinity = %13.7e\n",  TotM_Inf );
+         //Aux_Message( stdout, "   Enclosed mass ratio              = %6.2f%%\n", 100.0*TotM/TotM_Inf );
+         Aux_Message( stdout, "   Particle mass                    = %13.7e\n",  ParM );
+         Aux_Message( stdout, "   Maximum mass interpolation error = %13.7e\n",  ErrM_Max );
+
+
+   //    free memory
+         delete [] Table_MassProf_r;
+         delete [] Table_MassProf_M;
+      } // if ( MPI_Rank == 0 )
+
+   }
+   // synchronize all particles to the physical time on the base level
    for (long p=0; p<NPar_ThisRank; p++)   ParTime[p] = Time[0];
-
-
-// get the number of particles in each rank and set the corresponding offsets
+   
+   
+   // get the number of particles in each rank and set the corresponding offsets
    if ( NPar_AllRank > (long)__INT_MAX__ )
       Aux_Error( ERROR_INFO, "NPar_Active_AllRank (%ld) exceeds the maximum integer (%ld) --> MPI will likely fail !!\n",
-                 NPar_AllRank, (long)__INT_MAX__ );
+               NPar_AllRank, (long)__INT_MAX__ );
 
    int NSend[MPI_NRank], SendDisp[MPI_NRank];
    int NPar_ThisRank_int = NPar_ThisRank;    // (i) convert to "int" and (ii) remove the "const" declaration
-                                             // --> (ii) is necessary for OpenMPI version < 1.7
+                                                // --> (ii) is necessary for OpenMPI version < 1.7
 
    MPI_Gather( &NPar_ThisRank_int, 1, MPI_INT, NSend, 1, MPI_INT, 0, MPI_COMM_WORLD );
 
@@ -230,7 +244,7 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
    }
 
 
-// send particle attributes from the master rank to all ranks
+   // send particle attributes from the master rank to all ranks
    real *Mass   =   ParMass;
    real *Pos[3] = { ParPosX, ParPosY, ParPosZ };
    real *Vel[3] = { ParVelX, ParVelY, ParVelZ };
@@ -251,11 +265,9 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
    {
       MPI_Scatterv( Pos_AllRank[d], NSend, SendDisp, MPI_FLOAT,  Pos[d], NPar_ThisRank, MPI_FLOAT,  0, MPI_COMM_WORLD );
       MPI_Scatterv( Vel_AllRank[d], NSend, SendDisp, MPI_FLOAT,  Vel[d], NPar_ThisRank, MPI_FLOAT,  0, MPI_COMM_WORLD );
-   }
+   } 
 #  endif
-
-
-   if ( MPI_Rank == 0 )
+if ( MPI_Rank == 0 )
    {
       delete RNG;
       delete [] Mass_AllRank;
@@ -269,7 +281,6 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
-
 } // FUNCTION : Par_Init_ByFunction_Models
 
 
@@ -285,16 +296,15 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
 // Return      :  Enclosed mass
 //-------------------------------------------------------------------------------------------------------
 
-double MassProf_Models( const double r ,string model_name)
+double MassProf_Models( const double r ,string model_name,int k)
 {
    
-   const double x = r / Models_R0;
-   //cout<<"r:"<<r<<'\t'<<cal_UNKNOWN.set_mass(r)<<endl;
+   const double x = r / Models_R0[k];
    if     (model_name=="NFW"      )       return cal_NFW.set_mass(x);
-   else if(model_name=="Plummer"  )       return 4.0/3.0*M_PI*Models_Rho0*CUBE(r)*pow( 1.0+x*x, -1.5 );
+   else if(model_name=="Plummer"  )       return 4.0/3.0*M_PI*Models_Rho0[k]*CUBE(r)*pow( 1.0+x*x, -1.5 );
    else if(model_name=="Burkert"  )       return cal_Burkert.set_mass(x);
    else if(model_name=="Jaffe"    )       return cal_Jaffe.set_mass(x);
-   else if(model_name=="Hernquist")       return Models_Rho0 *pow(Models_R0,3) *pow(x/(1+x),2);
+   else if(model_name=="Hernquist")       return Models_Rho0[k] *pow(Models_R0[k],3) *pow(x/(1+x),2);
    else if(model_name=="Einasto"  )       return cal_Einasto.set_mass(x);
    else if(model_name=="UNKNOWN"  )       return cal_UNKNOWN.set_mass(r);
    
