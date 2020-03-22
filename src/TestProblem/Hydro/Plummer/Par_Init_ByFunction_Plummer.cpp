@@ -49,6 +49,7 @@ static void   RanVec_FixRadius( const double r, double RanVec[] );
 //                ParPosX/Y/Z   : Particle position array with the size of NPar_ThisRank
 //                ParVelX/Y/Z   : Particle velocity array with the size of NPar_ThisRank
 //                ParTime       : Particle time     array with the size of NPar_ThisRank
+//                ParType       : Particle type     array with the size of NPar_ThisRank
 //                AllAttribute  : Pointer array for all particle attributes
 //                                --> Dimension = [PAR_NATT_TOTAL][NPar_ThisRank]
 //                                --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
@@ -59,7 +60,7 @@ static void   RanVec_FixRadius( const double r, double RanVec[] );
 void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllRank,
                                   real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                   real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                  real *AllAttribute[PAR_NATT_TOTAL] )
+                                  real *ParType, real *AllAttribute[PAR_NATT_TOTAL] )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -180,15 +181,16 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
       delete [] Table_MassProf_r;
       delete [] Table_MassProf_M;
    } // if ( MPI_Rank == 0 )
-
-
+   
 // send particle attributes from the master rank to all ranks
    Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL, ParData_AllRank, AllAttribute );
 
-
-// synchronize all particles to the physical time on the base level
-   for (long p=0; p<NPar_ThisRank; p++)   ParTime[p] = Time[0];
-
+// synchronize all particles to the physical time on the base level,
+// set generic particle type
+   for (long p=0; p<NPar_ThisRank; p++) {
+      ParTime[p] = Time[0];
+      ParType[p] = PTYPE_GENERIC_MASSIVE;
+   }
 
 // free resource
    if ( MPI_Rank == 0 )
