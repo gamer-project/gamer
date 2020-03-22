@@ -270,15 +270,15 @@ void UNKNOWN_calculator::init(double newton_g,int r_col,int rho_col,const char* 
 
   UNKNOWN_NEWTON_G=newton_g;
 
-  int Tcol_r[1]={0};
-  int Tcol_rho[1]={0};
+  int Tcol_r[1]={r_col};
+  int Tcol_rho[1]={rho_col};
   int r_row_UNKNOWN;
-  if(sizeof(Table_MassProf_r_UNKNOWN)==0)r_row_UNKNOWN= Aux_LoadTable( Table_MassProf_r_UNKNOWN, "r.txt", 1, Tcol_r,true,true );
-  else r_row_UNKNOWN= Aux_LoadTable( Table_MassProf_r_UNKNOWN, "r.txt", 1, Tcol_r,true,false );
+  if(sizeof(Table_MassProf_r_UNKNOWN)==0)r_row_UNKNOWN= Aux_LoadTable( Table_MassProf_r_UNKNOWN, Filename, 1, Tcol_r,true,true );
+  else r_row_UNKNOWN= Aux_LoadTable( Table_MassProf_r_UNKNOWN, Filename, 1, Tcol_r,true,false );
   
   int density_row_UNKNOWN;
-  if(sizeof(Table_MassProf_rho_UNKNOWN)==0)density_row_UNKNOWN= Aux_LoadTable( Table_MassProf_rho_UNKNOWN, "rho.txt", 1, Tcol_rho,true,true );
-  else density_row_UNKNOWN= Aux_LoadTable( Table_MassProf_rho_UNKNOWN, "rho.txt", 1, Tcol_rho,true,false );
+  if(sizeof(Table_MassProf_rho_UNKNOWN)==0)density_row_UNKNOWN= Aux_LoadTable( Table_MassProf_rho_UNKNOWN, Filename, 1, Tcol_rho,true,true );
+  else density_row_UNKNOWN= Aux_LoadTable( Table_MassProf_rho_UNKNOWN, Filename, 1, Tcol_rho,true,false );
   
   row_UNKNOWN=r_row_UNKNOWN;
 

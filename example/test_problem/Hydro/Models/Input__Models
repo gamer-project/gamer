@@ -1,0 +1,5 @@
+# Models attribute filename
+Models_num 2
+Models_Paras Models_Type Models_Profile
+Input_NFW NFW NONE
+Input_Einasto Einasto NONE

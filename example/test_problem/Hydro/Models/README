@@ -1,0 +1,37 @@
+Compilation flags:
+========================================
+Enable : MODEL=HYDRO, GRAVITY,  PARTICLE
+Disable: COMOVING
+
+
+Default setup:
+========================================
+
+
+Note:
+========================================
+Test the evolution of different kinds of models
+   --> NFW, Burkert, Hernquist, Einasto, Jaffe models are available
+   --> You can also choose "UNKNOWN" model, and assign a file of density profile
+
+
+User guide:
+========================================
+1. Edit Input__Models to tell gamer how many clouds you want to simulate,
+   and their parameter filenames, model type, and density profile name(only when model type=="UNKNOWN")
+   In detail,
+   (1) Models_num is the number of all clouds.
+   (2) Models_Paras is the filename of parameters of different clouds.
+   (3) Models_Type is the model type of the clouds, available options are:
+      NFW
+      Burkert
+      Hernquist
+      Einasto
+      Jaffe
+      UNKNOWN
+   (4) Models_Profile is the filename for density profile, which is set to be NONE unless Models_Type==UNKNOWN
+
+2. Edit all the files, whose names are metioned in Input__Models as Models_Paras.
+3. Give the density profile files for UNKNOWN model clouds.
+
+

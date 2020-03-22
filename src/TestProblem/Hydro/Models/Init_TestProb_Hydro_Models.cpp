@@ -28,9 +28,13 @@ static FieldIdx_t Models_Idx_Cloud1 = Idx_Undefined;
 
 //Models
       int Models_num;
-      string* Models_Testprob;
-      string* Models_Type;
-      string* Models_Profile;
+      string* Models_Paras;   //File names of parameters of different clouds
+      string* Models_Type;    //Model type of different clouds
+      string* Models_Profile;    //If Model_Type=="UNKNOWN", then this is the file name of density profile
+      double* Models_Alpha;
+      int*    Models_r_col;
+      int*    Models_rho_col;
+      bool* Models_truncation;
 // =======================================================================================
 
 // problem-specific function prototypes
@@ -129,12 +133,12 @@ void SetParameter()
    const char *intermid=line.c_str();
    Models_num=atoi(intermid);
    
-   Models_Testprob=new string[Models_num];
+   Models_Paras=new string[Models_num];
    Models_Type=new string[Models_num];
    Models_Profile=new string[Models_num];
    getline(file,line);
    for(int k=0;k<Models_num;k++){
-      getline(file,Models_Testprob[k],' ');
+      getline(file,Models_Paras[k],' ');
       
       getline(file,Models_Type[k],' ');
 
@@ -158,12 +162,16 @@ void SetParameter()
    Models_AddColor = new bool[Models_num];     // assign different colors to different clouds for Models_Collision
 
    Models_FreeT = new double[Models_num];        // free-fall time at Models_R0
-
+   
+   Models_Alpha = new double[Models_num];
+   Models_r_col = new int[Models_num];
+   Models_rho_col = new int[Models_num];
+   Models_truncation = new bool[Models_num];
 
 
 for(int k=0;k<Models_num;k++){
 // (1) load the problem-specific runtime parameters
-   const char* FileName=Models_Testprob[k].c_str();
+   const char* FileName=Models_Paras[k].c_str();
    ReadPara_t *ReadPara  = new ReadPara_t;
 
    // (1-1) add parameters in the following format:
@@ -187,6 +195,16 @@ for(int k=0;k<Models_num;k++){
       ReadPara->Add( "Models_GasMFrac",     &Models_GasMFrac[k],      0.5,           Eps_double,       1.0               );
       ReadPara->Add( "Models_MassProfNBin", &Models_MassProfNBin[k],  1000,          2,                NoMax_int         );
       ReadPara->Add( "Models_AddColor",     &Models_AddColor[k],      false,         Useless_bool,     Useless_bool      );
+      if(Models_Type[k]=="Einasto")
+         ReadPara->Add( "Models_Alpha",     &Models_Alpha[k],         1.0,           0.1,              10.0      );
+      if(Models_Type[k]=="UNKNOWN"){
+         ReadPara->Add( "Models_r_col",     &Models_r_col[k],         0,           0,                NoMax_int         );
+         ReadPara->Add( "Models_rho_col",     &Models_rho_col[k],         1,           0,                NoMax_int         );
+      }
+      if(Models_Type[k]=="NFW" or "Burkert" or "Jaffe" or "Hernquist"){
+         ReadPara->Add( "Models_truncation",     &Models_truncation[k],         false,            Useless_bool,     Useless_bool         );
+      }
+         
       
       ReadPara->Read( FileName );
 

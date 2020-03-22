@@ -23,9 +23,13 @@ extern double* Models_GasMFrac;
 extern int*    Models_MassProfNBin;
 
 extern int Models_num;
-extern string* Models_Testprob;
+extern string* Models_Paras;
 extern string* Models_Type;
 extern string* Models_Profile;
+extern double* Models_Alpha;
+extern int*    Models_r_col;
+extern int*    Models_rho_col;
+extern bool* Models_truncation;
 
 static RandomNumber_t *RNG = NULL;
 
@@ -110,12 +114,12 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
       if(flag[k]==0){
          const char* profile=Models_Profile[k].c_str();
          if(model_name[k]=="Plummer")cal_Plummer.init(NEWTON_G,Models_Rho0[k],Models_R0[k]);
-         else if(model_name[k]=="NFW")cal_NFW.init(NEWTON_G,Models_Rho0[k],Models_R0[k],Models_MassProfNBin[k],Models_MaxR[k],Models_RSeed[k],true,0.7);
-         else if(model_name[k]=="Burkert")cal_Burkert.init(NEWTON_G,Models_Rho0[k],Models_R0[k],Models_MassProfNBin[k],Models_MaxR[k],Models_RSeed[k],true,0.7);
-         else if(model_name[k]=="Jaffe")cal_Jaffe.init(NEWTON_G,Models_Rho0[k],Models_R0[k],Models_MassProfNBin[k],Models_MaxR[k],Models_RSeed[k],false,0.5);
-         else if(model_name[k]=="Hernquist")cal_Hernquist.init(NEWTON_G,Models_Rho0[k],Models_R0[k],Models_MassProfNBin[k],Models_MaxR[k],Models_RSeed[k],true,0.7);
-         else if(model_name[k]=="Einasto")cal_Einasto.init(2,NEWTON_G,Models_Rho0[k],Models_R0[k],Models_MaxR[k]);
-         else if(model_name[k]=="UNKNOWN")cal_UNKNOWN.init(NEWTON_G,7,0,profile);
+         else if(model_name[k]=="NFW")cal_NFW.init(NEWTON_G,Models_Rho0[k],Models_R0[k],Models_MassProfNBin[k],Models_MaxR[k],Models_RSeed[k],Models_truncation[k],0.7);
+         else if(model_name[k]=="Burkert")cal_Burkert.init(NEWTON_G,Models_Rho0[k],Models_R0[k],Models_MassProfNBin[k],Models_MaxR[k],Models_RSeed[k],Models_truncation[k],0.7);
+         else if(model_name[k]=="Jaffe")cal_Jaffe.init(NEWTON_G,Models_Rho0[k],Models_R0[k],Models_MassProfNBin[k],Models_MaxR[k],Models_RSeed[k],Models_truncation[k],0.5);
+         else if(model_name[k]=="Hernquist")cal_Hernquist.init(NEWTON_G,Models_Rho0[k],Models_R0[k],Models_MassProfNBin[k],Models_MaxR[k],Models_RSeed[k],Models_truncation[k],0.7);
+         else if(model_name[k]=="Einasto")cal_Einasto.init(Models_Alpha[k],NEWTON_G,Models_Rho0[k],Models_R0[k],Models_MaxR[k]);
+         else if(model_name[k]=="UNKNOWN")cal_UNKNOWN.init(NEWTON_G,Models_r_col[k],Models_rho_col[k],profile);
          flag[k]=1;
       }
       

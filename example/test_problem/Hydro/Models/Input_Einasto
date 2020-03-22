@@ -1,0 +1,18 @@
+# problem-specific runtime parameters
+Models_RSeed           123                  # random seed for setting particle position and velocity (>=0) [123]
+Models_Rho0            1                  # peak density [1.0]
+Models_R0              0.035                  # scale radius [0.1]
+Models_MaxR            0.3                # maximum radius for particles [0.375]
+Models_Collision       0                    # (0/1)--> single Models cloud/two colliding Models clouds
+Models_Collision_D     10.0                  # distance between two colliding Models clouds [10.0]
+Models_CenterX         10.0                  # central x coordinate [box center]
+Models_CenterY         10.0                  # central y coordinate [box center]
+Models_CenterZ         10.0                  # central z coordinate [box center]
+Models_BulkVelX        0.0                  # bulk velocity in x
+Models_BulkVelY        0.0                  # bulk velocity in y
+Models_BulkVelZ        0.0                  # bulk velocity in z
+Models_GasMFrac        0.001                  # gas mass fraction (0.0<input<=1.0; useless when PARTICLE is off) [0.5]
+Models_MassProfNBin    1000                 # number of radial bins in the mass profile table [1000]
+Models_AddColor        0                    # assign different colors to different clouds (must turn on Models_Collision
+                                             # and set NCOMP_PASSIVE_USER to 2 in the Makefile) [0]
+Models_Alpha        1.0
