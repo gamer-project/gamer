@@ -1,5 +1,5 @@
 #include "GAMER.h"
-#include "Plummer_calculator.h"
+
 #ifdef PARTICLE
 
 extern int    Plummer_RSeed;
@@ -53,19 +53,11 @@ static void   RanVec_FixRadius( const double r, double RanVec[] );
 //
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, AllAttribute
 //-------------------------------------------------------------------------------------------------------
-Plummer_calculator a_Plummer;
 void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllRank,
                                   real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                   real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                   real *AllAttribute[PAR_NATT_TOTAL] )
 {
-// Initialize Calculator
-   static bool flag=0;
-   if(flag==0){
-      a_Plummer.init(NEWTON_G,Plummer_Rho0,Plummer_R0);
-      flag=1;
-      cout<<"done"<<endl;
-   }
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
@@ -156,11 +148,20 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 
 
 //       velocity
-         double a3=RanR/Plummer_R0;
-         RanV = a_Plummer.set_vel(a3);
+//       determine the maximum velocity (i.e., the escaping velocity)
+         Vmax = Vmax_Fac*pow( SQR(Plummer_R0) + SQR(RanR), -0.25 );
+
+//       randomly determine the velocity amplitude (ref: Aarseth, S. et al. 1974, A&A, 37, 183: Eq. [A4,A5])
+         do
+         {
+            RanV    = RNG->GetValue( 0, 0.0, 1.0 );         // (0.0, 1.0)
+            RanProb = RNG->GetValue( 0, 0.0, 0.1 );         // (0.0, 0.1)
+            Prob    = SQR(RanV)*pow( 1.0-SQR(RanV), 3.5 );  // < 0.1
+         }
+         while ( RanProb > Prob );
 
 //       randomly set the velocity vector with the given amplitude (RanV*Vmax)
-         RanVec_FixRadius( RanV, RanVec );
+         RanVec_FixRadius( RanV*Vmax, RanVec );
          for (int d=0; d<3; d++)    Vel_AllRank[d][p] = RanVec[d] + Plummer_BulkVel[d];
 
       } // for (long p=0; p<NPar_AllRank; p++)

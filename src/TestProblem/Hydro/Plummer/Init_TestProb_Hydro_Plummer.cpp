@@ -1,7 +1,7 @@
 #include "GAMER.h"
 #include "TestProb.h"
 
-#include "Plummer_calculator.h"
+
 
 // problem-specific global variables
 // =======================================================================================
@@ -241,15 +241,12 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 {
 
 // gas share the same density profile as particles (except for different total masses)
-   /***Main Change***/
    const double TotM    = 4.0/3.0*M_PI*CUBE(Plummer_R0)*Plummer_Rho0;
-   /***Main Change***/
    const double GasRho0 = Plummer_Rho0*Plummer_GasMFrac;
    const double PresBg  = 0.0;   // background pressure (set to 0.0 by default)
 
    double r2, a2, Dens;
-   /***Calculator***/
-   Plummer_calculator a;
+
 
    if ( Plummer_Collision )
    {
@@ -266,15 +263,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
          r2   = SQR(x-Center[0]) + SQR(y-Center[1]) + SQR(z-Center[2]);
          a2   = r2 / SQR(Plummer_R0);
-         /***Main Change***/
-         double r=pow(a2,0.5);
          Dens = GasRho0 * pow( 1.0 + a2, -2.5 );
-         /***Main Change***/
+
          fluid[DENS] += Dens;
 #        ifdef GRAVITY
-         /***Main Change***/
          fluid[ENGY] += (  NEWTON_G*TotM*GasRho0 / ( 6.0*Plummer_R0*CUBE(1.0 + a2) ) + PresBg  ) / ( GAMMA - 1.0 );
-         /***Main Change***/
 #        endif
 
          if ( Plummer_AddColor )
@@ -291,21 +284,15 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    {
       r2   = SQR(x-Plummer_Center[0]) + SQR(y-Plummer_Center[1]) + SQR(z-Plummer_Center[2]);
       a2   = r2 / SQR(Plummer_R0);
-      /***Main Change***/
-      double r=pow(a2,0.5);
       Dens = GasRho0 * pow( 1.0 + a2, -2.5 );
-      /***Main Change***/
 
       fluid[DENS] = Dens;
       fluid[MOMX] = fluid[DENS]*Plummer_BulkVel[0];
       fluid[MOMY] = fluid[DENS]*Plummer_BulkVel[1];
       fluid[MOMZ] = fluid[DENS]*Plummer_BulkVel[2];
 #     ifdef GRAVITY
-      /***Main Change***/
-      fluid[ENGY] = (NEWTON_G*TotM*GasRho0 / ( 6.0*Plummer_R0*CUBE(1.0 + a2) )  + PresBg  ) / ( GAMMA - 1.0 )
+      fluid[ENGY] = (  NEWTON_G*TotM*GasRho0 / ( 6.0*Plummer_R0*CUBE(1.0 + a2) ) + PresBg  ) / ( GAMMA - 1.0 )
                     + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
-                    
-      /***Main Change***/
 #     endif
 
 //    just set all passive scalars as zero
