@@ -143,7 +143,7 @@ void Validate()
 
 
 
-#if ( MODEL == HYDRO  &&  defined PARTICLE )
+#if ( MODEL == HYDRO  &&  defined PARTICLE  &&  defined GRAVITY )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
@@ -495,7 +495,7 @@ void AddNewParticleAttribute_AGORA()
       Idx_ParMetalFrac = AddParticleAttribute( "ParMetalFrac" );
 
 } // FUNCTION : AddNewParticleAttribute_AGORA
-#endif // #if ( MODEL == HYDRO  &&  defined PARTICLE )
+#endif // #if ( MODEL == HYDRO  &&  defined PARTICLE  &&  defined GRAVITY )
 
 
 
@@ -519,7 +519,7 @@ void Init_TestProb_Hydro_AGORA_IsolatedGalaxy()
    Validate();
 
 
-#  if ( MODEL == HYDRO  &&  defined PARTICLE )
+#  if ( MODEL == HYDRO  &&  defined PARTICLE  &&  defined GRAVITY )
 // set the problem-specific runtime parameters
    SetParameter();
 
@@ -531,7 +531,7 @@ void Init_TestProb_Hydro_AGORA_IsolatedGalaxy()
    End_User_Ptr                = End_AGORA;
    Par_Init_ByFunction_Ptr     = Par_Init_ByFunction_AGORA;
    Par_Init_Attribute_User_Ptr = AddNewParticleAttribute_AGORA;
-#  endif // if ( MODEL == HYDRO  &&  defined PARTICLE )
+#  endif // if ( MODEL == HYDRO  &&  defined PARTICLE  &&  defined GRAVITY )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
