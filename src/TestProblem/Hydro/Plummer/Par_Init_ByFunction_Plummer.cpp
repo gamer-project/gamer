@@ -181,7 +181,7 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
       delete [] Table_MassProf_r;
       delete [] Table_MassProf_M;
    } // if ( MPI_Rank == 0 )
-   
+
 // send particle attributes from the master rank to all ranks
    Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL, ParData_AllRank, AllAttribute );
 
