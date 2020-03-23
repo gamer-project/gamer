@@ -324,12 +324,12 @@ LIBYT_PATH   :=
 #LIBYT_PATH   := /home/hyschive/project/libyt/libyt.dev/libyt
 
 # NTU-eureka (default: openmpi-intel)
-CUDA_PATH    := /software/cuda/default
-FFTW_PATH    := /software/fftw/default
-MPI_PATH     := /software/openmpi/default
-HDF5_PATH    := /software/hdf5/default
+#CUDA_PATH    := /software/cuda/default
+#FFTW_PATH    := /software/fftw/default
+#MPI_PATH     := /software/openmpi/default
+#HDF5_PATH    := /software/hdf5/default
 #GRACKLE_PATH :=
-GSL_PATH     := /software/gsl/default
+#GSL_PATH     := /software/gsl/default
 #LIBYT_PATH   :=
 
 # NTU-hulk (openmpi-intel-qlc)
