@@ -109,41 +109,15 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
       Flag |= Hydro_Flag_Vorticity( i, j, k, lv, PID, FlagTable_Vorticity[lv] );
       if ( Flag )    return Flag;
    }
-#  elif ( MODEL == SR_HYDRO )
-   if ( OPT__FLAG_VORTICITY )
-   {
-      Flag |= SRHydro_Flag_Vorticity( i, j, k, lv, PID, FlagTable_Vorticity[lv] );
-      if ( Flag )    return Flag;
-   }
 #  endif
 
-// check Lorentz factor
+// check magnitude of 4-velocity
 // ===========================================================================================
 #  if ( MODEL == SR_HYDRO )
-   if ( OPT__FLAG_LORENTZ )
+   if ( OPT__FLAG_4VELOCITY != 0 )
    {
-      real Dens, MomX, MomY, MomZ, Engy, LorentzFactor;
-      real Cons[NCOMP_FLUID], Prim[NCOMP_FLUID];
-
-      Cons[DENS]=Fluid[DENS][k][j][i];
-      Cons[MOMX]=Fluid[MOMX][k][j][i];
-      Cons[MOMY]=Fluid[MOMY][k][j][i];
-      Cons[MOMZ]=Fluid[MOMZ][k][j][i];
-      Cons[ENGY]=Fluid[ENGY][k][j][i];
-
-      LorentzFactor = SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
-
-      Flag |= ( LorentzFactor > FlagTable_Lorentz[lv] );
-
-      if ( Flag )    return Flag;
-   }
-
-// check 3-velocity
-// ===========================================================================================
-   if ( OPT__FLAG_3VELOCITY )
-   {
-      real Dens, MomX, MomY, MomZ, Engy, Mag_3Velocity;
-      real Cons[NCOMP_FLUID], Prim[NCOMP_FLUID];
+      real Dens, MomX, MomY, MomZ, Engy;
+      real Cons[NCOMP_FLUID], Prim[NCOMP_FLUID], U;
 
       Cons[DENS]=Fluid[DENS][k][j][i];
       Cons[MOMX]=Fluid[MOMX][k][j][i];
@@ -153,18 +127,14 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
       SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
 
-#     ifdef USE_3_VELOCITY
-      Mag_3Velocity = SQRT( SQR(Prim[1]) + SQR(Prim[2]) + SQR(Prim[3]) );
-#     else
-      SRHydro_4Velto3Vel( Prim, Prim );
-      Mag_3Velocity = SQRT( SQR(Prim[1]) + SQR(Prim[2]) + SQR(Prim[3]) );
-#     endif
+      U = SQRT( SQR(Prim[1]) + SQR(Prim[2]) + SQR(Prim[3]) );
 
-      Flag |= ( Mag_3Velocity > FlagTable_3Velocity[lv] );
+      Flag |= ( U > FlagTable_4Velocity[lv] );
 
-      if ( Flag )    return Flag;
+      if ( Flag || OPT__FLAG_4VELOCITY == 1 )    return Flag;
    }
 #  endif
+
 
 // check Jeans length
 // ===========================================================================================

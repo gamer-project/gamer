@@ -1904,8 +1904,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__Flag_Jeans         = OPT__FLAG_JEANS;
 #  endif
 #  if ( MODEL == SR_HYDRO )
-   InputPara.Opt__Flag_Lorentz       = OPT__FLAG_LORENTZ;
-   InputPara.Opt__Flag_3Velocity     = OPT__FLAG_3VELOCITY;
+   InputPara.Opt__Flag_Lorentz       = OPT__FLAG_4VELOCITY;
 #  endif
 #  if ( MODEL == ELBDM )
    InputPara.Opt__Flag_EngyDensity   = OPT__FLAG_ENGY_DENSITY;

@@ -100,14 +100,13 @@ double               DUAL_ENERGY_SWITCH;
 
 #elif   ( MODEL == SR_HYDRO )
 double               FlagTable_PresGradient[NLEVEL-1], FlagTable_Vorticity[NLEVEL-1], 
-					 FlagTable_Jeans[NLEVEL-1], FlagTable_Lorentz[NLEVEL-1], FlagTable_3Velocity[NLEVEL-1];
+					 FlagTable_Jeans[NLEVEL-1], FlagTable_4Velocity[NLEVEL-1];
 double               GAMMA, MINMOD_COEFF, EP_COEFF, MOLECULAR_WEIGHT;
 LR_Limiter_t         OPT__LR_LIMITER;
 Opt1stFluxCorr_t     OPT__1ST_FLUX_CORR;
 OptRSolver1st_t      OPT__1ST_FLUX_CORR_SCHEME;
 bool                 OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES,
-					 OPT__FLAG_LOHNER_TEMP, OPT__FLAG_LOHNER_LRTZ;
-bool                 OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, OPT__FLAG_LORENTZ, OPT__FLAG_3VELOCITY, JEANS_MIN_PRES;
+					 OPT__FLAG_LOHNER_TEMP, OPT__FLAG_LOHNER_LRTZ, OPT__FLAG_4VELOCITY;
 int                  OPT__CK_NEGATIVE, JEANS_MIN_PRES_LEVEL, JEANS_MIN_PRES_NCELL;
 int                  DT_SPEED_OF_LIGHT;
 double               MIN_DENS, MIN_TEMP, MIN_PRES;

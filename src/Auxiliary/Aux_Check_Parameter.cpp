@@ -302,8 +302,7 @@ void Aux_Check_Parameter()
 #  elif ( MODEL == SR_HYDRO )
    Flag |= OPT__FLAG_PRES_GRADIENT;
    Flag |= OPT__FLAG_VORTICITY;
-   Flag |= OPT__FLAG_LORENTZ;
-   Flag |= OPT__FLAG_3VELOCITY;
+   Flag |= OPT__FLAG_4VELOCITY;
    Flag |= OPT__FLAG_LOHNER_ENGY;
    Flag |= OPT__FLAG_LOHNER_PRES;
    Flag |= OPT__FLAG_LOHNER_TEMP;

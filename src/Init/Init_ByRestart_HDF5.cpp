@@ -1935,11 +1935,8 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "FlagTable_Jeans",          RS.FlagTable_Jeans,         SID, TID, NonFatal,  RT.FlagTable_Jeans,         N1, NonFatal );
 
 #  elif ( MODEL == SR_HYDRO )
-   if ( OPT__FLAG_LORENTZ )
-   LoadField( "FlagTable_Lorentz",        RS.FlagTable_Lorentz,       SID, TID, NonFatal,  RT.FlagTable_Lorentz,       N1, NonFatal );
-
-   if ( OPT__FLAG_3VELOCITY )
-   LoadField( "FlagTable_3Velocity",      RS.FlagTable_3Velocity,     SID, TID, NonFatal,  RT.FlagTable_3Velocity,     N1, NonFatal );
+   if ( OPT__FLAG_4VELOCITY )
+   LoadField( "FlagTable_4Velocity",      RS.FlagTable_4Velocity,     SID, TID, NonFatal,  RT.FlagTable_4Velocity,     N1, NonFatal );
 
 #  elif ( MODEL == ELBDM )
    if ( OPT__FLAG_ENGY_DENSITY ) {

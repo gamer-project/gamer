@@ -142,10 +142,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__FLAG_LOHNER_TEMP",      &OPT__FLAG_LOHNER_TEMP,           false,           Useless_bool,  Useless_bool   );
 #  elif ( MODEL == SR_HYDRO )
    ReadPara->Add( "OPT__FLAG_PRES_GRADIENT",    &OPT__FLAG_PRES_GRADIENT,         false,           Useless_bool,  Useless_bool   );
-   ReadPara->Add( "OPT__FLAG_VORTICITY",        &OPT__FLAG_VORTICITY,             false,           Useless_bool,  Useless_bool   );
-   ReadPara->Add( "OPT__FLAG_LORENTZ",          &OPT__FLAG_LORENTZ,               false,           Useless_bool,  Useless_bool   );
-   ReadPara->Add( "OPT__FLAG_3VELOCITY",        &OPT__FLAG_3VELOCITY,             false,           Useless_bool,  Useless_bool   );
-   ReadPara->Add( "OPT__FLAG_JEANS",            &OPT__FLAG_JEANS,                 false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__FLAG_4VELOCITY",        &OPT__FLAG_4VELOCITY,             false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_LOHNER_ENGY",      &OPT__FLAG_LOHNER_ENGY,           false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_LOHNER_PRES",      &OPT__FLAG_LOHNER_PRES,           false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_LOHNER_TEMP",      &OPT__FLAG_LOHNER_TEMP,           false,           Useless_bool,  Useless_bool   );

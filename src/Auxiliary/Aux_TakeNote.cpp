@@ -827,8 +827,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__FLAG_PRES_GRADIENT         %d\n",      OPT__FLAG_PRES_GRADIENT   );
       fprintf( Note, "OPT__FLAG_VORTICITY             %d\n",      OPT__FLAG_VORTICITY       );
       fprintf( Note, "OPT__FLAG_JEANS                 %d\n",      OPT__FLAG_JEANS           );
-      fprintf( Note, "OPT__FLAG_LORENTZ               %d\n",      OPT__FLAG_LORENTZ         );
-      fprintf( Note, "OPT__FLAG_3VELOCITY             %d\n",      OPT__FLAG_3VELOCITY       );
+      fprintf( Note, "OPT__FLAG_4VELOCITY             %d\n",      OPT__FLAG_4VELOCITY       );
 #     endif
 #     if ( MODEL == ELBDM )
       fprintf( Note, "OPT__FLAG_ENGY_DENSITY          %d\n",      OPT__FLAG_ENGY_DENSITY    );
