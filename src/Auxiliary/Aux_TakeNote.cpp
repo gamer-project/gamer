@@ -825,8 +825,7 @@ void Aux_TakeNote()
 #     warning : WAIT MHD !!!
 #     elif   ( MODEL == SR_HYDRO )
       fprintf( Note, "OPT__FLAG_PRES_GRADIENT         %d\n",      OPT__FLAG_PRES_GRADIENT   );
-      fprintf( Note, "OPT__FLAG_VORTICITY             %d\n",      OPT__FLAG_VORTICITY       );
-      fprintf( Note, "OPT__FLAG_JEANS                 %d\n",      OPT__FLAG_JEANS           );
+      fprintf( Note, "OPT__FLAG_ENGY_GRADIENT         %d\n",      OPT__FLAG_ENGY_GRADIENT   );
       fprintf( Note, "OPT__FLAG_4VELOCITY             %d\n",      OPT__FLAG_4VELOCITY       );
 #     endif
 #     if ( MODEL == ELBDM )
@@ -1325,26 +1324,16 @@ void Aux_TakeNote()
          fprintf( Note, "\n\n");
       }
 
-      if ( OPT__FLAG_VORTICITY )
+      if ( OPT__FLAG_ENGY_GRADIENT )
       {
-         fprintf( Note, "Flag Criterion (Vorticity in HYDRO)\n" );
+         fprintf( Note, "Flag Criterion (Total Energy Density Gradient in HYDRO)\n" );
          fprintf( Note, "***********************************************************************************\n" );
-         fprintf( Note, "  Level           Vorticity\n" );
-         for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_Vorticity[lv] );
+         fprintf( Note, "  Level   Total Energy Density Gradient\n" );
+         for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_EngyGradient[lv] );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n");
       }
-/*
-      if ( OPT__FLAG_JEANS )
-      {
-         fprintf( Note, "Flag Criterion (Jeans Length over Cell Size in HYDRO)\n" );
-         fprintf( Note, "***********************************************************************************\n" );
-         fprintf( Note, "  Level       lambda_J / dh\n" );
-         for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_Jeans[lv] );
-         fprintf( Note, "***********************************************************************************\n" );
-         fprintf( Note, "\n\n");
-      }
-*/
+
 #     endif
 
 #     if ( MODEL == ELBDM )

@@ -16,7 +16,9 @@ void Init_Load_FlagCriteria()
 
 #  if ( MODEL != HYDRO  &&  MODEL != MHD && MODEL != SR_HYDRO )
    const bool OPT__FLAG_PRES_GRADIENT = false;
+   const bool OPT__FLAG_ENGY_GRADIENT = false;
    double *FlagTable_PresGradient     = NULL;
+   double *FlagTable_EngyGradient     = NULL;
 
    const bool OPT__FLAG_VORTICITY     = false;
    double *FlagTable_Vorticity        = NULL;
@@ -80,16 +82,14 @@ void Init_Load_FlagCriteria()
                                     NULL, NULL, FlagTable_User, NULL, NULL, FlagTable_ParMassCell,
                                     FlagTable_Vorticity, FlagTable_Jeans };
 #  elif ( MODEL == SR_HYDRO )
-   const int  NFlagMode         = 7;
-   const bool Flag[NFlagMode]   = { OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_PRES_GRADIENT,
+   const int  NFlagMode         = 8;
+   const bool Flag[NFlagMode]   = { OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_PRES_GRADIENT, OPT__FLAG_ENGY_GRADIENT,
                                     OPT__FLAG_ENGY_DENSITY, OPT__FLAG_LOHNER, OPT__FLAG_USER, OPT__FLAG_4VELOCITY };
-   const char ModeName[][100]   = { "OPT__FLAG_RHO"         , "OPT__FLAG_RHO_GRADIENT", "OPT__FLAG_PRES_GRADIENT",
-                                    "OPT__FLAG_ENGY_DENSITY", "OPT__FLAG_LOHNER"      , "OPT__FLAG_USER"         ,
-                                    "OPT__FLAG_4VELOCITY"    };
-   const char FileName[][100]   = { "Input__Flag_Rho"        , "Input__Flag_RhoGradient", "Input__Flag_PresGradient",
-                                    "Input__Flag_EngyDensity", "Input__Flag_Lohner"     , "Input__Flag_User"        , 
-                                    "Input__Flag_Lorentz"     };
-   double *FlagTable[NFlagMode] = { FlagTable_Rho, FlagTable_RhoGradient, FlagTable_PresGradient,
+   const char ModeName[][100]   = { "OPT__FLAG_RHO"         , "OPT__FLAG_RHO_GRADIENT", "OPT__FLAG_PRES_GRADIENT"   , "OPT__FLAG_ENGY_GRADIENT",
+                                    "OPT__FLAG_ENGY_DENSITY", "OPT__FLAG_LOHNER"      , "OPT__FLAG_USER"            , "OPT__FLAG_4VELOCITY"       };
+   const char FileName[][100]   = { "Input__Flag_Rho"        , "Input__Flag_RhoGradient", "Input__Flag_PresGradient", "Input__Flag_EngyGradient",
+                                    "Input__Flag_EngyDensity", "Input__Flag_Lohner"     , "Input__Flag_User"        , "Input__Flag_4Velocity"     };
+   double *FlagTable[NFlagMode] = { FlagTable_Rho, FlagTable_RhoGradient, FlagTable_PresGradient, FlagTable_EngyGradient,
                                     NULL, NULL, FlagTable_User, FlagTable_4Velocity };
 #  endif
 
@@ -117,8 +117,7 @@ void Init_Load_FlagCriteria()
 
 #     elif   ( MODEL == SR_HYDRO )
       FlagTable_PresGradient[lv]    = -1.0;
-      FlagTable_Vorticity   [lv]    = -1.0;
-      FlagTable_Jeans       [lv]    = -1.0;
+      FlagTable_EngyGradient[lv]    = -1.0;
       FlagTable_4Velocity   [lv]    = -1.0;
 
 #     elif ( MODEL == ELBDM )
@@ -167,7 +166,7 @@ void Init_Load_FlagCriteria()
                Aux_Error( ERROR_INFO, "incorrect reading at level %d of the file <%s> !!\n",
                           lv, TargetName );
             }
-
+#           if ( MODEL == HYDRO )
 //          OPT__FLAG_ENGY_DENSITY and OPT__FLAG_LOHNER have two and three columns to be loaded, respectively
             if      ( FlagMode == 3 )  sscanf( input_line, "%d%lf%lf", &Trash, &FlagTable_EngyDensity[lv][0],
                                                                                &FlagTable_EngyDensity[lv][1] );
@@ -178,7 +177,15 @@ void Init_Load_FlagCriteria()
 //          OPT__FLAG_NPAR_PATCH/CELL load integers
             else if ( FlagMode == 6 )  sscanf( input_line, "%d%d",  &Trash, &FlagTable_NParPatch[lv] );
             else if ( FlagMode == 7 )  sscanf( input_line, "%d%d",  &Trash, &FlagTable_NParCell [lv] );
-
+#           elif ( MODEL == SR_HYDRO )
+            if      ( FlagMode == 4 )  sscanf( input_line, "%d%lf%lf", &Trash, &FlagTable_EngyDensity[lv][0],
+                                                                               &FlagTable_EngyDensity[lv][1] );
+            else if ( FlagMode == 5 )  sscanf( input_line, "%d%lf%lf%lf%lf", &Trash, &FlagTable_Lohner[lv][0],
+                                                                                     &FlagTable_Lohner[lv][1],
+                                                                                     &FlagTable_Lohner[lv][2],
+                                                                                     &FlagTable_Lohner[lv][3] );
+#           endif
+                 
 //          others use the default format: (integer, double)
             else                       sscanf( input_line, "%d%lf", &Trash, &FlagTable[FlagMode][lv] );
          }

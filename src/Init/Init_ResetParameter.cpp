@@ -618,7 +618,7 @@ void Init_ResetParameter()
 
 
 // disable the refinement flag of Jeans length if GRAVITY is disabled
-#  if (  (MODEL == HYDRO || MODEL == MHD || MODEL == SR_HYDRO )  &&  !defined GRAVITY  )
+#  if (  (MODEL == HYDRO || MODEL == MHD )  &&  !defined GRAVITY  )
    if ( OPT__FLAG_JEANS )
    {
       OPT__FLAG_JEANS = false;
@@ -762,7 +762,7 @@ void Init_ResetParameter()
 
 
 // JEANS_MIN_PRES must work with GRAVITY
-#  if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD )
 #  ifndef GRAVITY
    if ( JEANS_MIN_PRES )
    {

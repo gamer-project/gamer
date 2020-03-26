@@ -133,6 +133,14 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
       if ( Flag || OPT__FLAG_4VELOCITY == 1 )    return Flag;
    }
+
+// check total energy density
+// ===========================================================================================
+   if ( OPT__FLAG_ENGY_GRADIENT )
+   {
+      Flag |= Check_Gradient( i, j, k, &Fluid[ENGY][0][0][0], FlagTable_EngyGradient[lv] );
+      if ( Flag )    return Flag;
+   }
 #  endif
 
 

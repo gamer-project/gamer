@@ -189,7 +189,7 @@ SIMU_OPTION += -DMAX_PATCH=4000000
 SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA/TURING
-SIMU_OPTION += -DGPU_ARCH=FERMI
+SIMU_OPTION += -DGPU_ARCH=TURING
 
 # debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
@@ -355,23 +355,14 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 #GSL_PATH     := /usr/lib
 #LIBYT_PATH   := /home/hyschive/project/libyt/libyt.dev/libyt
 
-# NTU-hulk (openmpi-gcc-qlc)
-#FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
-#MPI_PATH     := /usr/mpi/gcc/openmpi-1.4.3-qlc
-#HDF5_PATH    := /opt/hdf5/default
-#GRACKLE_PATH := 
-#GSL_PATH     := /opt/math/gsl/default
-#LIBYT_PATH   := 
-#CUDA_PATH    := /opt/gpu/cuda/default
-
-# NTU-hulk (openmpi-intel-qlc)
-FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
-MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
-HDF5_PATH    := /opt/hdf5/default
+# NTU-eureka
+FFTW_PATH    := /software/fftw/default
+MPI_PATH     := /software/openmpi/default
+HDF5_PATH    := /software/hdf5/default
 GRACKLE_PATH := 
-GSL_PATH     := /opt/math/gsl/default
+GSL_PATH     := /software/gsl/default
 LIBYT_PATH   := 
-CUDA_PATH    := /opt/gpu/cuda/default
+CUDA_PATH    := /software/cuda/10.0
 
 # NTHU-fomalhaut (openmpi-gnu)
 #CUDA_PATH    := /usr/local/cuda-10.0
@@ -386,24 +377,6 @@ CUDA_PATH    := /opt/gpu/cuda/default
 #FFTW_PATH    := /ifs/data/hsiyu/Software/fftw/2.1.5-openmpi-1.3.2-intel
 #MPI_PATH     := /usr/mpi/intel/openmpi-1.3.2-qlc
 #GPUID_PATH   := /ifs/data/hsiyu/Software/gpudevmgr
-
-## gamer04
-#FFTW_PATH    := /opt/fftw/default
-#MPI_PATH     := /opt/openmpi/default
-#HDF5_PATH    := /opt/hdf5/default
-#GRACKLE_PATH := 
-#GSL_PATH     := 
-#LIBYT_PATH   := 
-#CUDA_PATH    := /opt/cuda/10.0
-#
-## Calab AMD2
-#FFTW_PATH    := 
-#MPI_PATH     := /home/gamer02/mpi/openmpi
-#HDF5_PATH    := /opt/hdf5
-#GRACKLE_PATH := 
-#GSL_PATH     := 
-#LIBYT_PATH   := 
-#CUDA_PATH    := /usr/local/cuda-10.0
 
 
 # source files
