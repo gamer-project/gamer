@@ -294,6 +294,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #endif // #if ( MODEL == SR_HYDRO )
 
 
+void End_Blast()
+{
+	  if ( NumSource > 1 )  delete [] Random_Data;
+}
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_TestProb_Hydro_BlastWave
@@ -328,7 +333,7 @@ void Init_TestProb_SRHydro_BlastWave()
    Aux_Record_User_Ptr      = NULL;
    BC_User_Ptr              = NULL;
    Flu_ResetByUser_Func_Ptr = NULL;
-   End_User_Ptr             = NULL;
+   End_User_Ptr             = End_Blast;
 #  endif // #if ( MODEL == SR_HYDRO )
 
 

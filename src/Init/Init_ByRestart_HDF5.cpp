@@ -1944,6 +1944,8 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    if ( OPT__FLAG_4VELOCITY )
    LoadField( "FlagTable_4Velocity",      RS.FlagTable_4Velocity,     SID, TID, NonFatal,  RT.FlagTable_4Velocity,     N1, NonFatal );
 
+   if ( OPT__FLAG_MOM_OVER_DENS )
+   LoadField( "FlagTable_Mom_Over_Dens",      RS.FlagTable_Mom_Over_Dens,     SID, TID, NonFatal,  RT.FlagTable_Mom_Over_Dens,     N1, NonFatal );
 #  elif ( MODEL == ELBDM )
    if ( OPT__FLAG_ENGY_DENSITY ) {
    LoadField( "FlagTable_EngyDensity",    RS.FlagTable_EngyDensity,   SID, TID, NonFatal,  NullPtr,                    -1, NonFatal );

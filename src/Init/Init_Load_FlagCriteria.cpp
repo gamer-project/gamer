@@ -28,6 +28,9 @@ void Init_Load_FlagCriteria()
 
    const bool OPT__FLAG_4VELOCITY     = false;
    double *FlagTable_4Velocity        = NULL;
+
+   const bool OPT__FLAG_MOM_OVER_DENS = false;
+   double *FlagTable_Mom_Over_Dens    = NULL;
 #  endif
 
 #  if ( MODEL != ELBDM )
@@ -82,15 +85,15 @@ void Init_Load_FlagCriteria()
                                     NULL, NULL, FlagTable_User, NULL, NULL, FlagTable_ParMassCell,
                                     FlagTable_Vorticity, FlagTable_Jeans };
 #  elif ( MODEL == SR_HYDRO )
-   const int  NFlagMode         = 8;
+   const int  NFlagMode         = 9;
    const bool Flag[NFlagMode]   = { OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_PRES_GRADIENT, OPT__FLAG_ENGY_GRADIENT,
-                                    OPT__FLAG_ENGY_DENSITY, OPT__FLAG_LOHNER, OPT__FLAG_USER, OPT__FLAG_4VELOCITY };
+                                    OPT__FLAG_ENGY_DENSITY, OPT__FLAG_LOHNER, OPT__FLAG_USER, OPT__FLAG_4VELOCITY, OPT__FLAG_MOM_OVER_DENS };
    const char ModeName[][100]   = { "OPT__FLAG_RHO"         , "OPT__FLAG_RHO_GRADIENT", "OPT__FLAG_PRES_GRADIENT"   , "OPT__FLAG_ENGY_GRADIENT",
-                                    "OPT__FLAG_ENGY_DENSITY", "OPT__FLAG_LOHNER"      , "OPT__FLAG_USER"            , "OPT__FLAG_4VELOCITY"       };
+                                    "OPT__FLAG_ENGY_DENSITY", "OPT__FLAG_LOHNER"      , "OPT__FLAG_USER"            , "OPT__FLAG_4VELOCITY"    , "OPT__FLAG_MOM_OVER_DENS"  };
    const char FileName[][100]   = { "Input__Flag_Rho"        , "Input__Flag_RhoGradient", "Input__Flag_PresGradient", "Input__Flag_EngyGradient",
-                                    "Input__Flag_EngyDensity", "Input__Flag_Lohner"     , "Input__Flag_User"        , "Input__Flag_4Velocity"     };
+                                    "Input__Flag_EngyDensity", "Input__Flag_Lohner"     , "Input__Flag_User"        , "Input__Flag_4Velocity"  , "Input__Flag_Mom_Over_Dens"   };
    double *FlagTable[NFlagMode] = { FlagTable_Rho, FlagTable_RhoGradient, FlagTable_PresGradient, FlagTable_EngyGradient,
-                                    NULL, NULL, FlagTable_User, FlagTable_4Velocity };
+                                    NULL, NULL, FlagTable_User, FlagTable_4Velocity, FlagTable_Mom_Over_Dens };
 #  endif
 
    FILE *File;

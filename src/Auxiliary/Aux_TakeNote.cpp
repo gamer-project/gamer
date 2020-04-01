@@ -1328,8 +1328,18 @@ void Aux_TakeNote()
       {
          fprintf( Note, "Flag Criterion (Total Energy Density Gradient in HYDRO)\n" );
          fprintf( Note, "***********************************************************************************\n" );
-         fprintf( Note, "  Level   Total Energy Density Gradient\n" );
+         fprintf( Note, "  Level   Reduced Energy Density Gradient\n" );
          for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_EngyGradient[lv] );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
+      }
+
+      if ( OPT__FLAG_MOM_OVER_DENS )
+      {
+         fprintf( Note, "Flag Criterion (Total Energy Density Gradient in HYDRO)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level   Momentum over density\n" );
+         for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_Mom_Over_Dens[lv] );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n");
       }

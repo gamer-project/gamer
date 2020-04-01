@@ -1906,6 +1906,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  if ( MODEL == SR_HYDRO )
    InputPara.Opt__Flag_EngyGradient  = OPT__FLAG_ENGY_GRADIENT;
    InputPara.Opt__Flag_4Velocity     = OPT__FLAG_4VELOCITY;
+   InputPara.Opt__Flag_Mom_Over_Dens = OPT__FLAG_MOM_OVER_DENS;
 #  endif
 #  if ( MODEL == ELBDM )
    InputPara.Opt__Flag_EngyDensity   = OPT__FLAG_ENGY_DENSITY;

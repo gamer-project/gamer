@@ -397,6 +397,7 @@ struct InputPara_t
    int    Opt__Flag_PresGradient;
    int    Opt__Flag_EngyGradient;
    int    Opt__Flag_4Velocity;
+   int    Opt__Flag_Mom_Over_Dens;
 #  endif
 #  if ( MODEL == ELBDM )
    int    Opt__Flag_EngyDensity;
@@ -633,6 +634,7 @@ struct InputPara_t
    double FlagTable_PresGradient[NLEVEL-1];
    double FlagTable_EngyGradient[NLEVEL-1];
    double FlagTable_4Velocity   [NLEVEL-1];
+   double FlagTable_Mom_Over_Dens   [NLEVEL-1];
 #  elif ( MODEL == ELBDM )
    double FlagTable_EngyDensity [NLEVEL-1][2];
 #  endif

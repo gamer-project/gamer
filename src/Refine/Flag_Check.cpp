@@ -89,6 +89,25 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
    }
 #  endif
 
+#  if ( MODEL == SR_HYDRO )
+// check M/D
+// ===========================================================================================
+   if ( OPT__FLAG_MOM_OVER_DENS )
+   {
+      real Cons[NCOMP_FLUID], M_D;
+      Cons[DENS]=Fluid[DENS][k][j][i];
+      Cons[MOMX]=Fluid[MOMX][k][j][i];
+      Cons[MOMY]=Fluid[MOMY][k][j][i];
+      Cons[MOMZ]=Fluid[MOMZ][k][j][i];
+
+      M_D = FABS( Cons[MOMX] ) + FABS( Cons[MOMY] ) + FABS( Cons[MOMZ] );
+
+      M_D /= Cons[DENS]; 
+
+      Flag |= ( M_D > FlagTable_Mom_Over_Dens[lv] );
+   }
+#  endif
+
 
 // check pressure gradient
 // ===========================================================================================
@@ -134,7 +153,9 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
       if ( Flag || OPT__FLAG_4VELOCITY == 1 )    return Flag;
    }
 
-// check total energy density
+
+
+// check reduced energy density
 // ===========================================================================================
    if ( OPT__FLAG_ENGY_GRADIENT )
    {

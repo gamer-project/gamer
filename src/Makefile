@@ -21,7 +21,7 @@ EXECUTABLE := gamer
 
 # output detailed compilation commands (0/1 = off/on)
 #######################################################################################################
-COMPILE_VERBOSE := 0
+COMPILE_VERBOSE := 1
 
 
 
@@ -186,7 +186,7 @@ SIMU_OPTION += -DMAX_PATCH=4000000
 
 # GPU acceleration
 # --> must set GPU_ARCH as well
-SIMU_OPTION += -DGPU
+#SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA/TURING
 SIMU_OPTION += -DGPU_ARCH=TURING
@@ -205,7 +205,7 @@ SIMU_OPTION += -DTIMING
 #SIMU_OPTION += -DTIMING_SOLVER
 
 # double precision
-SIMU_OPTION += -DFLOAT8
+#SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
 # --> must disable LOAD_BALANCE

@@ -148,6 +148,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__FLAG_LOHNER_PRES",      &OPT__FLAG_LOHNER_PRES,           false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_LOHNER_TEMP",      &OPT__FLAG_LOHNER_TEMP,           false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_LOHNER_LRTZ",      &OPT__FLAG_LOHNER_LRTZ,           false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__FLAG_MOM_OVER_DENS",    &OPT__FLAG_MOM_OVER_DENS,         false,           Useless_bool,  Useless_bool   );
 #  endif
 #  if ( MODEL == ELBDM )
    ReadPara->Add( "OPT__FLAG_ENGY_DENSITY",     &OPT__FLAG_ENGY_DENSITY,          false,           Useless_bool,  Useless_bool   );

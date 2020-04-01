@@ -72,10 +72,7 @@ MAX_LEVEL                     4           # maximum refinement level (0~NLEVEL-1
 OPT__FLAG_RHO                 0           # flag: density (Input__Flag_Rho) [0]
 OPT__FLAG_RHO_GRADIENT        0           # flag: density gradient (Input__Flag_RhoGradient) [0]
 OPT__FLAG_PRES_GRADIENT       0           # flag: pressure gradient (Input__Flag_PresGradient) [0] ##HYDRO ONLY##
-OPT__FLAG_VORTICITY           0           # flag: vorticity (Input__Flag_Vorticity) [0] ##HYDRO ONLY##
-OPT__FLAG_LORENTZ             0           # flag: Lorentz factor (Input__Flag_Lorentz) [0] ##SR_HYDRO ONLY##
-OPT__FLAG_3VELOCITY           0           # flag: magnitude of 3-velocity (Input__Flag_3Velocity) [0] ##SR_HYDRO ONLY##
-OPT__FLAG_JEANS               0           # flag: Jeans length (Input__Flag_Jeans) [0] ##HYDRO ONLY##
+OPT__FLAG_4VELOCITY           0           # flag: magnitude of 3-velocity (Input__Flag_3Velocity) [0] ##SR_HYDRO ONLY##
 OPT__FLAG_LOHNER_DENS         1           # flag: Lohner for number density    (Input__Flag_Lohner) [0] ##BOTH HYDRO,ELBDM AND SR_HYDRO ##
 OPT__FLAG_LOHNER_ENGY         0           # flag: Lohner for energy density    (Input__Flag_Lohner) [0] ##HYDRO AND SR_HYDRO##
 OPT__FLAG_LOHNER_PRES         0           # flag: Lohner for pressure          (Input__Flag_Lohner) [0] ##HYDRO AND SR_HYDRO##

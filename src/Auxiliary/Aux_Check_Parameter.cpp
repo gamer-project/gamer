@@ -303,6 +303,7 @@ void Aux_Check_Parameter()
    Flag |= OPT__FLAG_PRES_GRADIENT;
    Flag |= OPT__FLAG_ENGY_GRADIENT;
    Flag |= OPT__FLAG_4VELOCITY;
+   Flag |= OPT__FLAG_MOM_OVER_DENS;
    Flag |= OPT__FLAG_LOHNER_ENGY;
    Flag |= OPT__FLAG_LOHNER_PRES;
    Flag |= OPT__FLAG_LOHNER_TEMP;
