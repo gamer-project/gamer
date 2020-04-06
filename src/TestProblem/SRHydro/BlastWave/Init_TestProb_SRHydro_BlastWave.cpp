@@ -176,10 +176,11 @@ void SetParameter()
    const bool AllocMem_Yes = true;                 // allocate memory for Merger_Prof1/2
    const int  NCol         = 6;                    // total number of columns to load
    const int  Col[NCol]    = {1, 2, 3, 4, 5, 6};   // target columns: (radius, density, temperature)
+   
+   if ( NumSource > 1 )   
+     Random_Table_NBin = Aux_LoadTable( Random_Data, Random_File, NCol, Col, RowMajor_No, AllocMem_Yes );
               
-   Random_Table_NBin = Aux_LoadTable( Random_Data, Random_File, NCol, Col, RowMajor_No, AllocMem_Yes );
-              
-   if ( Random_Data == NULL )
+   if ( Random_Data == NULL && NumSource > 1 )
    {          
       Aux_Error( ERROR_INFO, "Random_Data == NULL !!\n" );
    }          
