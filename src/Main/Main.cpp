@@ -99,13 +99,16 @@ double               DUAL_ENERGY_SWITCH;
 #endif
 
 #elif   ( MODEL == SR_HYDRO )
-double               FlagTable_PresGradient[NLEVEL-1], FlagTable_EngyGradient[NLEVEL-1], FlagTable_4Velocity[NLEVEL-1], FlagTable_Mom_Over_Dens[NLEVEL-1];
+double               FlagTable_PresGradient[NLEVEL-1], FlagTable_EngyGradient[NLEVEL-1], 
+                     FlagTable_4Velocity[NLEVEL-1], FlagTable_Mom_Over_Dens[NLEVEL-1], 
+                     FlagTable_LorentzFactorGradient[NLEVEL-1];
 double               GAMMA, MINMOD_COEFF, EP_COEFF, MOLECULAR_WEIGHT;
 LR_Limiter_t         OPT__LR_LIMITER;
 Opt1stFluxCorr_t     OPT__1ST_FLUX_CORR;
 OptRSolver1st_t      OPT__1ST_FLUX_CORR_SCHEME;
 bool                 OPT__FLAG_PRES_GRADIENT, OPT__FLAG_ENGY_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES,
-					 OPT__FLAG_LOHNER_TEMP, OPT__FLAG_LOHNER_LRTZ, OPT__FLAG_4VELOCITY, OPT__FLAG_MOM_OVER_DENS;
+					 OPT__FLAG_LOHNER_TEMP, OPT__FLAG_LOHNER_LRTZ, OPT__FLAG_4VELOCITY, OPT__FLAG_MOM_OVER_DENS,
+                     OPT__FLAG_LORENTZ_GRADIENT;
 int                  OPT__CK_NEGATIVE;
 int                  DT_SPEED_OF_LIGHT;
 double               MIN_DENS, MIN_TEMP, MIN_PRES;

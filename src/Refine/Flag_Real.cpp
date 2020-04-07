@@ -133,6 +133,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    {
       const real (*Fluid)[PS1][PS1][PS1] = NULL;
       real (*Pres)[PS1][PS1]             = NULL;
+      real (*LorentzFactor)[PS1][PS1]    = NULL;
       real (*Pot )[PS1][PS1]             = NULL;
       real (*Lohner_Var)                 = NULL;   // array storing the variables for Lohner
       real (*Lohner_Ave)                 = NULL;   // array storing the averages of Lohner_Var for Lohner
@@ -150,7 +151,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #     warning : WAIT MHD !!!
 
 #     elif   ( MODEL == SR_HYDRO )
-      if ( OPT__FLAG_PRES_GRADIENT )   Pres = new real [PS1][PS1][PS1];
+      if ( OPT__FLAG_PRES_GRADIENT )      Pres          = new real [PS1][PS1][PS1];
+      if ( OPT__FLAG_LORENTZ_GRADIENT )   LorentzFactor = new real [PS1][PS1][PS1];
 #     endif // MODEL
 
 #     ifdef PARTICLE
@@ -269,6 +271,29 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                   } // k,j,i
                } // if ( OPT__FLAG_PRES_GRADIENT )
 
+               if ( OPT__FLAG_LORENTZ_GRADIENT )
+               {
+                  for (int k=0; k<PS1; k++)
+                  for (int j=0; j<PS1; j++)
+                  for (int i=0; i<PS1; i++)
+                  {
+                     real HTilde, Factor0, Usqr;
+                     real In[NCOMP_FLUID];
+
+                     for ( int idx=0; idx<NCOMP_FLUID; idx++ ) In[idx] = Fluid[idx][k][j][i];
+ 
+                     HTilde = SRHydro_GetHTilde( In, (real)GAMMA );
+                     
+                     Factor0 = In[DENS] * HTilde + In[DENS];
+                     
+                     Usqr  = SQR( In[MOMX] ) + SQR( In[MOMY] ) + SQR( In[MOMZ] );
+                     Usqr /= Factor0;
+                     Usqr /= Factor0;
+                     
+                     LorentzFactor[k][j][i] = SQRT( (real)1.0 + Usqr );
+                  } // k,j,i
+               }
+
 #              endif // MODEL
 
 
@@ -377,7 +402,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                              i_end   = ( i + FlagBuf >= PS1 ) ? 2 : 1;
 
 //                check if the target cell satisfies the refinement criteria (useless pointers are always == NULL)
-                  if (  lv < MAX_LEVEL  &&  Flag_Check( lv, PID, i, j, k, dv, Fluid, Pot, Pres, Lohner_Var+LocalID*Lohner_Stride,
+                  if (  lv < MAX_LEVEL  &&  Flag_Check( lv, PID, i, j, k, dv, Fluid, Pot, Pres, LorentzFactor, Lohner_Var+LocalID*Lohner_Stride,
                                                         Lohner_Ave, Lohner_Slope, Lohner_NVar, ParCount, ParDens, JeansCoeff )  )
                   {
 //                   flag itself

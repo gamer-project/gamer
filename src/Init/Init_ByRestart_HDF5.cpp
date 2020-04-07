@@ -1893,7 +1893,10 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 
 #     if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
       RS.FlagTable_PresGradient[lv]    = -1.0;
+
+#     elif ( MODEL == SR_HYDRO )
       RS.FlagTable_EngyGradient[lv]    = -1.0;
+      RS.FlagTable_LorentzFactorGradient[lv]    = -1.0;
 
 #     elif ( MODEL == ELBDM )
       for (int t=0; t<2; t++)
@@ -1945,7 +1948,10 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "FlagTable_4Velocity",      RS.FlagTable_4Velocity,     SID, TID, NonFatal,  RT.FlagTable_4Velocity,     N1, NonFatal );
 
    if ( OPT__FLAG_MOM_OVER_DENS )
-   LoadField( "FlagTable_Mom_Over_Dens",      RS.FlagTable_Mom_Over_Dens,     SID, TID, NonFatal,  RT.FlagTable_Mom_Over_Dens,     N1, NonFatal );
+   LoadField( "FlagTable_Mom_Over_Dens",  RS.FlagTable_Mom_Over_Dens, SID, TID, NonFatal,  RT.FlagTable_Mom_Over_Dens,     N1, NonFatal );
+
+   if ( OPT__FLAG_LORENTZ_GRADIENT )
+   LoadField( "FlagTable_LorentzFactorGradient",   RS.FlagTable_LorentzFactorGradient,  SID, TID, NonFatal,  RT.FlagTable_LorentzFactorGradient,  N1, NonFatal );
 #  elif ( MODEL == ELBDM )
    if ( OPT__FLAG_ENGY_DENSITY ) {
    LoadField( "FlagTable_EngyDensity",    RS.FlagTable_EngyDensity,   SID, TID, NonFatal,  NullPtr,                    -1, NonFatal );

@@ -827,6 +827,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__FLAG_PRES_GRADIENT         %d\n",      OPT__FLAG_PRES_GRADIENT   );
       fprintf( Note, "OPT__FLAG_ENGY_GRADIENT         %d\n",      OPT__FLAG_ENGY_GRADIENT   );
       fprintf( Note, "OPT__FLAG_4VELOCITY             %d\n",      OPT__FLAG_4VELOCITY       );
+      fprintf( Note, "OPT__FLAG_LORENTZ_GRADIENT      %d\n",      OPT__FLAG_LORENTZ_GRADIENT);
 #     endif
 #     if ( MODEL == ELBDM )
       fprintf( Note, "OPT__FLAG_ENGY_DENSITY          %d\n",      OPT__FLAG_ENGY_DENSITY    );
@@ -1316,7 +1317,7 @@ void Aux_TakeNote()
 #     elif ( MODEL == SR_HYDRO )
       if ( OPT__FLAG_PRES_GRADIENT )
       {
-         fprintf( Note, "Flag Criterion (Pressure Gradient in HYDRO)\n" );
+         fprintf( Note, "Flag Criterion (Pressure Gradient in SR_HYDRO)\n" );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "  Level   Pressure Gradient\n" );
          for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_PresGradient[lv] );
@@ -1326,7 +1327,7 @@ void Aux_TakeNote()
 
       if ( OPT__FLAG_ENGY_GRADIENT )
       {
-         fprintf( Note, "Flag Criterion (Total Energy Density Gradient in HYDRO)\n" );
+         fprintf( Note, "Flag Criterion (Total Energy Density Gradient in SR_HYDRO)\n" );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "  Level   Reduced Energy Density Gradient\n" );
          for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_EngyGradient[lv] );
@@ -1334,9 +1335,19 @@ void Aux_TakeNote()
          fprintf( Note, "\n\n");
       }
 
+      if ( OPT__FLAG_LORENTZ_GRADIENT )
+      {
+         fprintf( Note, "Flag Criterion (Lorentz factor Gradient in SR_HYDRO)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level   Lorentz factor Gradient\n" );
+         for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_LorentzFactorGradient[lv] );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
+      }
+
       if ( OPT__FLAG_MOM_OVER_DENS )
       {
-         fprintf( Note, "Flag Criterion (Total Energy Density Gradient in HYDRO)\n" );
+         fprintf( Note, "Flag Criterion (Total Energy Density Gradient in SR_HYDRO)\n" );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "  Level   Momentum over density\n" );
          for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_Mom_Over_Dens[lv] );

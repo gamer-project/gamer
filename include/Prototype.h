@@ -124,6 +124,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const bool JeansMinPres, const real JeansMinPres_Coeff );
 
 real SRHydro_Con2Pri( const real In[], real Out[], const real Gamma, const real MinTemp);
+real SRHydro_GetHTilde( const real Con[], real Gamma );
 
 #ifdef __CUDACC__
 void SRHydro_Pri2Con( const real In[], real Out[], const real Gamma);
@@ -309,8 +310,9 @@ void FindFather( const int lv, const int Mode );
 void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc );
 bool Flag_Check( const int lv, const int PID, const int i, const int j, const int k, const real dv,
                  const real Fluid[][PS1][PS1][PS1], const real Pot[][PS1][PS1], const real Pres[][PS1][PS1],
-                 const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
-                 const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff );
+                 const real LorentzFactor[][PS1][PS1], const real *Lohner_Var, const real *Lohner_Ave, 
+                 const real *Lohner_Slope, const int Lohner_NVar, const real ParCount[][PS1][PS1], 
+                 const real ParDens[][PS1][PS1], const real JeansCoeff );
 bool Flag_Lohner( const int i, const int j, const int k, const OptLohnerForm_t Form, const real *Var1D, const real *Ave1D,
                   const real *Slope1D, const int NVar, const double Threshold, const double Filter, const double Soften );
 void Refine( const int lv, const UseLBFunc_t UseLBFunc );

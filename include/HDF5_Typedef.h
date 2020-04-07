@@ -396,6 +396,7 @@ struct InputPara_t
 #  elif ( MODEL == SR_HYDRO )
    int    Opt__Flag_PresGradient;
    int    Opt__Flag_EngyGradient;
+   int    Opt__Flag_LorentzGradient;
    int    Opt__Flag_4Velocity;
    int    Opt__Flag_Mom_Over_Dens;
 #  endif
@@ -633,6 +634,7 @@ struct InputPara_t
 #  elif   ( MODEL == SR_HYDRO )
    double FlagTable_PresGradient[NLEVEL-1];
    double FlagTable_EngyGradient[NLEVEL-1];
+   double FlagTable_LorentzFactorGradient[NLEVEL-1];
    double FlagTable_4Velocity   [NLEVEL-1];
    double FlagTable_Mom_Over_Dens   [NLEVEL-1];
 #  elif ( MODEL == ELBDM )

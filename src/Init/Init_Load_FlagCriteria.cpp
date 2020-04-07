@@ -15,22 +15,23 @@ void Init_Load_FlagCriteria()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 #  if ( MODEL != HYDRO  &&  MODEL != MHD && MODEL != SR_HYDRO )
-   const bool OPT__FLAG_PRES_GRADIENT = false;
-   const bool OPT__FLAG_ENGY_GRADIENT = false;
-   double *FlagTable_PresGradient     = NULL;
-   double *FlagTable_EngyGradient     = NULL;
+   const bool OPT__FLAG_PRES_GRADIENT    = false;
+   const bool OPT__FLAG_ENGY_GRADIENT    = false;
+   const bool OPT__FLAG_LORENTZ_GRADIENT = false;
+   double *FlagTable_PresGradient        = NULL;
+   double *FlagTable_EngyGradient        = NULL;
 
-   const bool OPT__FLAG_VORTICITY     = false;
-   double *FlagTable_Vorticity        = NULL;
+   const bool OPT__FLAG_VORTICITY        = false;
+   double *FlagTable_Vorticity           = NULL;
 
-   const bool OPT__FLAG_JEANS         = false;
-   double *FlagTable_Jeans            = NULL;
+   const bool OPT__FLAG_JEANS            = false;
+   double *FlagTable_Jeans               = NULL;
 
-   const bool OPT__FLAG_4VELOCITY     = false;
-   double *FlagTable_4Velocity        = NULL;
+   const bool OPT__FLAG_4VELOCITY        = false;
+   double *FlagTable_4Velocity           = NULL;
 
-   const bool OPT__FLAG_MOM_OVER_DENS = false;
-   double *FlagTable_Mom_Over_Dens    = NULL;
+   const bool OPT__FLAG_MOM_OVER_DENS    = false;
+   double *FlagTable_Mom_Over_Dens       = NULL;
 #  endif
 
 #  if ( MODEL != ELBDM )
@@ -85,15 +86,21 @@ void Init_Load_FlagCriteria()
                                     NULL, NULL, FlagTable_User, NULL, NULL, FlagTable_ParMassCell,
                                     FlagTable_Vorticity, FlagTable_Jeans };
 #  elif ( MODEL == SR_HYDRO )
-   const int  NFlagMode         = 9;
-   const bool Flag[NFlagMode]   = { OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_PRES_GRADIENT, OPT__FLAG_ENGY_GRADIENT,
-                                    OPT__FLAG_ENGY_DENSITY, OPT__FLAG_LOHNER, OPT__FLAG_USER, OPT__FLAG_4VELOCITY, OPT__FLAG_MOM_OVER_DENS };
-   const char ModeName[][100]   = { "OPT__FLAG_RHO"         , "OPT__FLAG_RHO_GRADIENT", "OPT__FLAG_PRES_GRADIENT"   , "OPT__FLAG_ENGY_GRADIENT",
-                                    "OPT__FLAG_ENGY_DENSITY", "OPT__FLAG_LOHNER"      , "OPT__FLAG_USER"            , "OPT__FLAG_4VELOCITY"    , "OPT__FLAG_MOM_OVER_DENS"  };
-   const char FileName[][100]   = { "Input__Flag_Rho"        , "Input__Flag_RhoGradient", "Input__Flag_PresGradient", "Input__Flag_EngyGradient",
-                                    "Input__Flag_EngyDensity", "Input__Flag_Lohner"     , "Input__Flag_User"        , "Input__Flag_4Velocity"  , "Input__Flag_Mom_Over_Dens"   };
-   double *FlagTable[NFlagMode] = { FlagTable_Rho, FlagTable_RhoGradient, FlagTable_PresGradient, FlagTable_EngyGradient,
-                                    NULL, NULL, FlagTable_User, FlagTable_4Velocity, FlagTable_Mom_Over_Dens };
+   const int  NFlagMode         = 10;
+   const bool Flag[NFlagMode]   = { OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_PRES_GRADIENT, 
+                                    OPT__FLAG_ENGY_GRADIENT, OPT__FLAG_ENGY_DENSITY, OPT__FLAG_LOHNER, OPT__FLAG_USER, 
+                                    OPT__FLAG_4VELOCITY, OPT__FLAG_MOM_OVER_DENS, OPT__FLAG_LORENTZ_GRADIENT };
+   const char ModeName[][100]   = { "OPT__FLAG_RHO"          , "OPT__FLAG_RHO_GRADIENT", "OPT__FLAG_PRES_GRADIENT", 
+                                    "OPT__FLAG_ENGY_GRADIENT","OPT__FLAG_ENGY_DENSITY" , "OPT__FLAG_LOHNER"       , 
+                                    "OPT__FLAG_USER"         , "OPT__FLAG_4VELOCITY"   , "OPT__FLAG_MOM_OVER_DENS", 
+                                    "OPT__FLAG_LORENTZ_GRADIENT"  };
+   const char FileName[][100]   = { "Input__Flag_Rho"        , "Input__Flag_RhoGradient", "Input__Flag_PresGradient", 
+                                    "Input__Flag_EngyGradient","Input__Flag_EngyDensity", "Input__Flag_Lohner"      , 
+                                    "Input__Flag_User"        , "Input__Flag_4Velocity"  , "Input__Flag_Mom_Over_Dens",
+                                    "Input__Flag_LorentzGradient"   };
+   double *FlagTable[NFlagMode] = { FlagTable_Rho, FlagTable_RhoGradient, FlagTable_PresGradient, 
+                                    FlagTable_EngyGradient, NULL, NULL, FlagTable_User, FlagTable_4Velocity, 
+                                    FlagTable_Mom_Over_Dens, FlagTable_LorentzFactorGradient };
 #  endif
 
    FILE *File;

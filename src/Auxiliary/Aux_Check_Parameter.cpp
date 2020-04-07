@@ -308,6 +308,7 @@ void Aux_Check_Parameter()
    Flag |= OPT__FLAG_LOHNER_PRES;
    Flag |= OPT__FLAG_LOHNER_TEMP;
    Flag |= OPT__FLAG_LOHNER_LRTZ;
+   Flag |= OPT__FLAG_LORENTZ_GRADIENT;
 #  elif ( MODEL == ELBDM )
    Flag |= OPT__FLAG_ENGY_DENSITY;
 #  endif

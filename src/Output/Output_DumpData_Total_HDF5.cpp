@@ -1904,9 +1904,11 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__Flag_Jeans         = OPT__FLAG_JEANS;
 #  endif
 #  if ( MODEL == SR_HYDRO )
-   InputPara.Opt__Flag_EngyGradient  = OPT__FLAG_ENGY_GRADIENT;
-   InputPara.Opt__Flag_4Velocity     = OPT__FLAG_4VELOCITY;
-   InputPara.Opt__Flag_Mom_Over_Dens = OPT__FLAG_MOM_OVER_DENS;
+   InputPara.Opt__Flag_PresGradient  = OPT__FLAG_PRES_GRADIENT;
+   InputPara.Opt__Flag_EngyGradient    = OPT__FLAG_ENGY_GRADIENT;
+   InputPara.Opt__Flag_4Velocity       = OPT__FLAG_4VELOCITY;
+   InputPara.Opt__Flag_Mom_Over_Dens   = OPT__FLAG_MOM_OVER_DENS;
+   InputPara.Opt__Flag_LorentzGradient = OPT__FLAG_LORENTZ_GRADIENT;
 #  endif
 #  if ( MODEL == ELBDM )
    InputPara.Opt__Flag_EngyDensity   = OPT__FLAG_ENGY_DENSITY;
@@ -2163,6 +2165,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #     elif ( MODEL == SR_HYDRO )
       InputPara.FlagTable_PresGradient[lv]    = FlagTable_PresGradient[lv];
       InputPara.FlagTable_EngyGradient[lv]    = FlagTable_EngyGradient[lv];
+      InputPara.FlagTable_LorentzFactorGradient[lv]    = FlagTable_LorentzFactorGradient[lv];
 
 #     elif ( MODEL == ELBDM )
       for (int t=0; t<2; t++)
@@ -2618,7 +2621,10 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__Flag_LohnerPres",    HOFFSET(InputPara_t,Opt__Flag_LohnerPres   ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_LohnerTemp",    HOFFSET(InputPara_t,Opt__Flag_LohnerTemp   ), H5T_NATIVE_INT     );
 #  elif ( MODEL == SR_HYDRO )
-   H5Tinsert( H5_TypeID, "Opt__Flag_PresGradient",  HOFFSET(InputPara_t,Opt__Flag_PresGradient ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__Flag_PresGradient",    HOFFSET(InputPara_t,Opt__Flag_PresGradient   ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "Opt__Flag_4Velocity",       HOFFSET(InputPara_t,Opt__Flag_4Velocity      ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "Opt__Flag_Mom_Over_Dens",   HOFFSET(InputPara_t,Opt__Flag_Mom_Over_Dens  ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "Opt__Flag_LorentzGradient", HOFFSET(InputPara_t,Opt__Flag_LorentzGradient), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Opt__Flag_EngyGradient",  HOFFSET(InputPara_t,Opt__Flag_EngyGradient ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_LohnerEngy",    HOFFSET(InputPara_t,Opt__Flag_LohnerEngy   ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_LohnerPres",    HOFFSET(InputPara_t,Opt__Flag_LohnerPres   ), H5T_NATIVE_INT     );
@@ -2858,6 +2864,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  elif ( MODEL == SR_HYDRO )
    H5Tinsert( H5_TypeID, "FlagTable_PresGradient", HOFFSET(InputPara_t,FlagTable_PresGradient  ), H5_TypeID_Arr_NLvM1Double   );
    H5Tinsert( H5_TypeID, "FlagTable_EngyGradient", HOFFSET(InputPara_t,FlagTable_EngyGradient  ), H5_TypeID_Arr_NLvM1Double   );
+   H5Tinsert( H5_TypeID, "FlagTable_LorentzFactorGradient", HOFFSET(InputPara_t,FlagTable_LorentzFactorGradient  ), H5_TypeID_Arr_NLvM1Double   );
 #  elif ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "FlagTable_EngyDensity",  HOFFSET(InputPara_t,FlagTable_EngyDensity   ), H5_TypeID_Arr_NLvM1_2Double );
 #  endif

@@ -37,8 +37,9 @@ extern bool (*Flag_Region_Ptr)( const int i, const int j, const int k, const int
 //-------------------------------------------------------------------------------------------------------
 bool Flag_Check( const int lv, const int PID, const int i, const int j, const int k, const real dv,
                  const real Fluid[][PS1][PS1][PS1], const real Pot[][PS1][PS1], const real Pres[][PS1][PS1],
-                 const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
-                 const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff )
+                 const real LorentzFactor[][PS1][PS1], const real *Lohner_Var, const real *Lohner_Ave, 
+                 const real *Lohner_Slope, const int Lohner_NVar, const real ParCount[][PS1][PS1], 
+                 const real ParDens[][PS1][PS1], const real JeansCoeff )
 {
    bool Flag = false;
 
@@ -105,6 +106,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
       M_D /= Cons[DENS]; 
 
       Flag |= ( M_D > FlagTable_Mom_Over_Dens[lv] );
+      if ( Flag )    return Flag;
    }
 #  endif
 
@@ -133,7 +135,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 // check magnitude of 4-velocity
 // ===========================================================================================
 #  if ( MODEL == SR_HYDRO )
-   if ( OPT__FLAG_4VELOCITY != 0 )
+   if ( OPT__FLAG_4VELOCITY )
    {
       real Dens, MomX, MomY, MomZ, Engy;
       real Cons[NCOMP_FLUID], Prim[NCOMP_FLUID], U;
@@ -150,16 +152,25 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
       Flag |= ( U > FlagTable_4Velocity[lv] );
 
-      if ( Flag || OPT__FLAG_4VELOCITY == 1 )    return Flag;
+      if ( Flag )    return Flag;
    }
 
 
 
-// check reduced energy density
+// check gradient of reduced energy density
 // ===========================================================================================
    if ( OPT__FLAG_ENGY_GRADIENT )
    {
       Flag |= Check_Gradient( i, j, k, &Fluid[ENGY][0][0][0], FlagTable_EngyGradient[lv] );
+      if ( Flag )    return Flag;
+   }
+
+
+// check gradient of Lorentz factor
+// ===========================================================================================
+   if ( OPT__FLAG_LORENTZ_GRADIENT )
+   {
+      Flag |= Check_Gradient( i, j, k, &LorentzFactor[0][0][0], FlagTable_LorentzFactorGradient[lv] );
       if ( Flag )    return Flag;
    }
 #  endif
