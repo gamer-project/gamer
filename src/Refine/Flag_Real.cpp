@@ -51,7 +51,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    const int  Lohner_NAve             = Lohner_NCell - 2;      // size of the average array for Lohner
    const int  Lohner_NSlope           = Lohner_NAve;           // size of the slope array for Lohner
    const IntScheme_t Lohner_IntScheme = INT_MINMOD1D;          // interpolation scheme for Lohner
-#  if (  ( MODEL == HYDRO || MODEL == MHD || MODEL == SR_HYDRO )  &&  defined GRAVITY  )
+#  if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined GRAVITY  )
    const real JeansCoeff              = M_PI*GAMMA/( SQR(FlagTable_Jeans[lv])*NEWTON_G ); // flag if dh^2 > JeansCoeff*Pres/Dens^2
 #  else
    const real JeansCoeff              = NULL_REAL;

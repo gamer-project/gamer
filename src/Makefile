@@ -37,7 +37,7 @@ SIMU_OPTION += -DMODEL=SR_HYDRO
 #SIMU_OPTION += -DMODEL=HYDRO
 
 # enable gravity
-#SIMU_OPTION += -DGRAVITY
+SIMU_OPTION += -DGRAVITY
 
 # enable particles
 # --> must enable GRAVITY
@@ -175,7 +175,7 @@ endif # PARTICLE
 # ------------------------------------------------------------------------------------
 # maximum number of AMR levels including the root level (level id = 0 ... NLEVEL-1)
 # --> must be set in any cases
-SIMU_OPTION += -DNLEVEL=19
+SIMU_OPTION += -DNLEVEL=11
 
 # fused multiply-add
 #SIMU_OPTION += -DFUSED_MULTIPLY_ADD
@@ -356,7 +356,7 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 #LIBYT_PATH   := /home/hyschive/project/libyt/libyt.dev/libyt
 
 # NTU-eureka
-FFTW_PATH    := 
+FFTW_PATH    := /software/fftw/default
 MPI_PATH     := /software/openmpi/default
 HDF5_PATH    := /software/hdf5/default
 GRACKLE_PATH := 
