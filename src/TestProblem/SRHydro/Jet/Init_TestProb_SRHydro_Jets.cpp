@@ -1059,8 +1059,15 @@ bool Flag_User( const int i, const int j, const int k, const int lv, const int P
    const double dR[3]          = { Pos[0]-Center[0], Pos[1]-Center[1], Pos[2]-Center[2] };
    const double R              = sqrt( SQR(dR[0]) + SQR(dR[1]) + SQR(dR[2]) );
 
-   if ( R < dh*1.8 || R < Jet_MaxDis) return true;
-   else                               return false;
+   bool Flag = false;
+
+   Flag |= R < dh*1.8;
+   Flag |= R < Jet_MaxDis;
+
+   //Flag |= fabs(dR[0]) < 2.5 && fabs(dR[1]) < 0.3 && fabs(dR[2]) < 0.3;
+
+   if ( Flag ) return true;
+   else        return false;
 
 } // FUNCTION : Flag_User
 

@@ -21,7 +21,7 @@ EXECUTABLE := gamer
 
 # output detailed compilation commands (0/1 = off/on)
 #######################################################################################################
-COMPILE_VERBOSE := 1
+COMPILE_VERBOSE := 0
 
 
 
@@ -175,7 +175,7 @@ endif # PARTICLE
 # ------------------------------------------------------------------------------------
 # maximum number of AMR levels including the root level (level id = 0 ... NLEVEL-1)
 # --> must be set in any cases
-SIMU_OPTION += -DNLEVEL=11
+SIMU_OPTION += -DNLEVEL=19
 
 # fused multiply-add
 #SIMU_OPTION += -DFUSED_MULTIPLY_ADD
@@ -186,7 +186,7 @@ SIMU_OPTION += -DMAX_PATCH=4000000
 
 # GPU acceleration
 # --> must set GPU_ARCH as well
-#SIMU_OPTION += -DGPU
+SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA/TURING
 SIMU_OPTION += -DGPU_ARCH=TURING
@@ -205,7 +205,7 @@ SIMU_OPTION += -DTIMING
 #SIMU_OPTION += -DTIMING_SOLVER
 
 # double precision
-#SIMU_OPTION += -DFLOAT8
+SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
 # --> must disable LOAD_BALANCE
@@ -273,10 +273,10 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 #endif
 
 
-# gnu
-# -------------------------------------------------------------------------------
-# CXX         = g++                                                 # serial compiler
-## CXX         = $(MPI_PATH)/bin/mpicxx                             # MPI compiler
+## gnu
+## -------------------------------------------------------------------------------
+## CXX         = g++                                                 # serial compiler
+# CXX         = $(MPI_PATH)/bin/mpicxx                             # MPI compiler
 ##CXX         = CC                                                  # cray wrapper script
 # CXXFLAG     = -g -O3                                              # general flags
 ##CXXFLAG     = -g -O3 -std=c++11
@@ -289,13 +289,13 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 # CXXFLAG     += -DGIT_BRANCH="`git symbolic-ref --short -q HEAD`"  # record branch name in git
 # OPENMPFLAG  = -fopenmp                                            # openmp flag
 ### LIB         =                                                   # libraries and linker flags
-
-# for debug only
+#
+## for debug only
 #ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
 #CXXFLAG    += -fstack-protector-all
 #endif
-
-# suppress warning when OpenMP is disabled
+#
+## suppress warning when OpenMP is disabled
 #ifeq "$(filter -DOPENMP, $(SIMU_OPTION))" ""
 # CXXFLAG    += -Wno-unknown-pragmas
 #endif
@@ -356,7 +356,7 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 #LIBYT_PATH   := /home/hyschive/project/libyt/libyt.dev/libyt
 
 # NTU-eureka
-FFTW_PATH    := /software/fftw/default
+FFTW_PATH    := 
 MPI_PATH     := /software/openmpi/default
 HDF5_PATH    := /software/hdf5/default
 GRACKLE_PATH := 
