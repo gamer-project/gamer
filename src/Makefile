@@ -651,10 +651,12 @@ VPATH := $(dir $(wildcard TestProblem/*/*/))
 
 # object files
 # -------------------------------------------------------------------------------
-OBJ_PATH := Object
-OBJ := $(patsubst %.cpp, $(OBJ_PATH)/%.o, $(CC_FILE))
+OBJ_PATH  := Object
+OBJ       := $(patsubst %.cpp, $(OBJ_PATH)/%.o, $(CC_FILE))
 ifeq "$(filter -DGPU, $(SIMU_OPTION))" "-DGPU"
-OBJ += $(patsubst %.cu,  $(OBJ_PATH)/%.o, $(CUDA_FILE))
+OBJ_CUDA  := $(patsubst %.cu,  $(OBJ_PATH)/%.o, $(CUDA_FILE))
+OBJ       += $(OBJ_CUDA)
+CUDA_LINK := $(OBJ_PATH)/cuda_link.o
 endif
 
 
@@ -755,25 +757,27 @@ CXXFLAG    += $(COMMONFLAG) $(OPENMPFLAG)
 NVCCFLAG_COM := $(COMMONFLAG) -O3 # -Xcompiler #-Xopencc -OPT:Olimit=0
 
 ifeq      "$(filter -DGPU_ARCH=FERMI,   $(SIMU_OPTION))" "-DGPU_ARCH=FERMI"
-   NVCCFLAG_COM += -gencode arch=compute_20,code=\"compute_20,sm_20\"
-#  NVCCFLAG_COM += -gencode arch=compute_20,code=\"compute_20,sm_21\"
+   NVCCFLAG_ARCH += -gencode arch=compute_20,code=\"compute_20,sm_20\"
+#  NVCCFLAG_ARCH += -gencode arch=compute_20,code=\"compute_20,sm_21\"
 else ifeq "$(filter -DGPU_ARCH=KEPLER,  $(SIMU_OPTION))" "-DGPU_ARCH=KEPLER"
-   NVCCFLAG_COM += -gencode arch=compute_30,code=\"compute_30,sm_30\"
-   NVCCFLAG_COM += -gencode arch=compute_35,code=\"compute_35,sm_35\"
-   NVCCFLAG_COM += -gencode arch=compute_37,code=\"compute_37,sm_37\"
+   NVCCFLAG_ARCH += -gencode arch=compute_30,code=\"compute_30,sm_30\"
+   NVCCFLAG_ARCH += -gencode arch=compute_35,code=\"compute_35,sm_35\"
+   NVCCFLAG_ARCH += -gencode arch=compute_37,code=\"compute_37,sm_37\"
 else ifeq "$(filter -DGPU_ARCH=MAXWELL, $(SIMU_OPTION))" "-DGPU_ARCH=MAXWELL"
-   NVCCFLAG_COM += -gencode arch=compute_50,code=\"compute_50,sm_50\"
-   NVCCFLAG_COM += -gencode arch=compute_52,code=\"compute_52,sm_52\"
+   NVCCFLAG_ARCH += -gencode arch=compute_50,code=\"compute_50,sm_50\"
+   NVCCFLAG_ARCH += -gencode arch=compute_52,code=\"compute_52,sm_52\"
 else ifeq "$(filter -DGPU_ARCH=PASCAL,  $(SIMU_OPTION))" "-DGPU_ARCH=PASCAL"
-   NVCCFLAG_COM += -gencode arch=compute_60,code=\"compute_60,sm_60\"
-   NVCCFLAG_COM += -gencode arch=compute_61,code=\"compute_61,sm_61\"
+   NVCCFLAG_ARCH += -gencode arch=compute_60,code=\"compute_60,sm_60\"
+   NVCCFLAG_ARCH += -gencode arch=compute_61,code=\"compute_61,sm_61\"
 else ifeq "$(filter -DGPU_ARCH=VOLTA,  $(SIMU_OPTION))" "-DGPU_ARCH=VOLTA"
-   NVCCFLAG_COM += -gencode arch=compute_70,code=\"compute_70,sm_70\"
+   NVCCFLAG_ARCH += -gencode arch=compute_70,code=\"compute_70,sm_70\"
 else ifeq "$(filter -DGPU_ARCH=TURING,  $(SIMU_OPTION))" "-DGPU_ARCH=TURING"
-   NVCCFLAG_COM += -gencode arch=compute_75,code=\"compute_75,sm_75\"
+   NVCCFLAG_ARCH += -gencode arch=compute_75,code=\"compute_75,sm_75\"
 else ifeq "$(filter -DGPU, $(SIMU_OPTION))" "-DGPU"
    $(error unknown GPU_ARCH (please set it in the Makefile))
 endif
+
+NVCCFLAG_COM += $(NVCCFLAG_ARCH)
 
 ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
    NVCCFLAG_COM += -g -Xptxas -v   # "-G" may cause the GPU Poisson solver to fail
@@ -849,15 +853,15 @@ endif
 ifeq "$(filter -DGPU, $(SIMU_OPTION))" "-DGPU"
 $(OBJ_PATH)/CUAPI_%.o : CUAPI_%.cu
 	@echo "Compiling $<"
-	$(ECHO)$(NVCC) $(NVCCFLAG_COM) -o $@ -c $<
+	$(ECHO)$(NVCC) $(NVCCFLAG_COM) -o $@ -dc $<
 
 $(OBJ_PATH)/CUFLU_%.o : CUFLU_%.cu
 	@echo "Compiling $<"
-	$(ECHO)$(NVCC) $(NVCCFLAG_COM) $(NVCCFLAG_FLU) -o $@ -c $<
+	$(ECHO)$(NVCC) $(NVCCFLAG_COM) $(NVCCFLAG_FLU) -o $@ -dc $<
 
 $(OBJ_PATH)/CUPOT_%.o : CUPOT_%.cu
 	@echo "Compiling $<"
-	$(ECHO)$(NVCC) $(NVCCFLAG_COM) $(NVCCFLAG_POT) -o $@ -c $<
+	$(ECHO)$(NVCC) $(NVCCFLAG_COM) $(NVCCFLAG_POT) -o $@ -dc $<
 endif # GPU
 
 # CPU codes
@@ -869,13 +873,20 @@ $(OBJ_PATH)/%.o : %.cpp
 # linking
 # -------------------------------------------------------------------------------
 $(EXECUTABLE) : $(OBJ)
-	@echo "Linking"
+# GPU linker
+ifeq "$(filter -DGPU, $(SIMU_OPTION))" "-DGPU"
+	@echo "Linking GPU codes"
+	$(ECHO)$(NVCC) -o $(CUDA_LINK) $(OBJ_CUDA) $(NVCCFLAG_ARCH) -dlink
+endif
+
+# CPU linker
+	@echo "Linking CPU codes"
 ifeq "$(COMPILE_VERBOSE)" "1"
-	$(CXX) -o $@ $^ $(LIB) $(OPENMPFLAG)
+	$(CXX) -o $@ $^ $(CUDA_LINK) $(LIB) $(OPENMPFLAG)
 	@printf "\nCompiling GAMER --> Successful!\n\n"; \
 	cp $(EXECUTABLE) ../bin/
 else
-	@$(CXX) -o $@ $^ $(LIB) $(OPENMPFLAG); \
+	@$(CXX) -o $@ $^ $(CUDA_LINK) $(LIB) $(OPENMPFLAG); \
 	(if [ -e $@ ]; then \
 		printf "\nCompiling GAMER --> Successful!\n\n"; \
 		cp $(EXECUTABLE) ../bin/; \
