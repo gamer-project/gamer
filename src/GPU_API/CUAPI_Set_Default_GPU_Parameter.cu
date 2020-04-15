@@ -44,9 +44,6 @@ void CUFLU_FluidSolver_MHM(
    const real MinDens, const real MinPres, const real DualEnergySwitch,
    const bool NormPassive, const int NNorm,
    const bool JeansMinPres, const real JeansMinPres_Coeff );
-#if ( NCOMP_PASSIVE > 0 )
-int CUFLU_SetConstMem_FluidSolver_NormIdx( int NormIdx_h[] );
-#endif
 #elif ( FLU_SCHEME == CTU )
 __global__
 void CUFLU_FluidSolver_CTU(
@@ -72,9 +69,6 @@ void CUFLU_FluidSolver_CTU(
    const real MinDens, const real MinPres, const real DualEnergySwitch,
    const bool NormPassive, const int NNorm,
    const bool JeansMinPres, const real JeansMinPres_Coeff );
-#if ( NCOMP_PASSIVE > 0 )
-int CUFLU_SetConstMem_FluidSolver_NormIdx( int NormIdx_h[] );
-#endif
 #endif // FLU_SCHEME
 __global__ void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
                                          const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ],
@@ -152,8 +146,6 @@ __global__ void CUPOT_ELBDMGravitySolver(       real g_Flu_Array[][GRA_NIN][ PS1
 #else
 #error : ERROR : unsupported MODEL !!
 #endif // MODEL
-
-int CUPOT_SetConstMem_PoissonSolver();
 
 #endif // GRAVITY
 
@@ -388,24 +380,6 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #  endif // MODEL
 
 #  endif // GRAVITY
-
-
-// (4) set the constant variables
-// --> note that the auxiliary arrays for the external acceleration and potential are set by CUAPI_Init_ExternalAccPot()
-#  if ( NCOMP_PASSIVE > 0 )
-   if  ( OPT__NORMALIZE_PASSIVE )
-   {
-#     if ( MODEL == HYDRO  &&  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  )
-      if ( CUFLU_SetConstMem_FluidSolver_NormIdx(PassiveNorm_VarIdx) != 0  )
-         Aux_Error( ERROR_INFO, "CUFLU_SetConstMem_FluidSolver_NormIdx failed ...\n" );
-#     endif
-   }
-#  endif // #if ( NCOMP_PASSIVE > 0 )
-
-#  ifdef GRAVITY
-   if ( CUPOT_SetConstMem_PoissonSolver() != 0 )
-      Aux_Error( ERROR_INFO, "CUPOT_SetConstMem_PoissonSolver failed ...\n" );
-#  endif // #ifdef GRAVITY
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
