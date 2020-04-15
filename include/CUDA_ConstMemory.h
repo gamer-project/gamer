@@ -29,7 +29,7 @@ SET_GLOBAL( __constant__ double c_ExtPot_AuxArray[EXT_POT_NAUX_MAX] );
 #endif // MODEL
 
 
-#if ( defined GRAVITY  &&  POT_SCHEME == SOR  &&  defined USE_PSOLVER_10TO14 )
+#ifdef GRAVITY
 SET_GLOBAL( __constant__ real c_Mp[3] );
 SET_GLOBAL( __constant__ real c_Mm[3] );
 #endif

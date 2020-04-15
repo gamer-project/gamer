@@ -505,7 +505,6 @@ void CUAPI_DiagnoseDevice();
 void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GPU_NStream );
 void CUAPI_MemFree_Fluid( const int GPU_NStream );
 void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, int &Pot_GPU_NPGroup, int &Che_GPU_NPGroup );
-void CUAPI_Init_ExternalAccPot();
 void CUAPI_SetDevice( const int Mode );
 void CUAPI_SetConstMemory();
 void CUAPI_Synchronize();
