@@ -7,6 +7,7 @@
 // external functions and GPU-related set-up
 #ifdef __CUDACC__
 
+#include "CUDA_ConstMemory.h"
 #include "../../SelfGravity/GPU_Gravity/CUPOT_ExternalAcc.cu"
 
 
@@ -19,34 +20,6 @@
 #else
 #  include "../../GPU_Utility/CUUTI_BlockReduction_WarpSync.cu"
 #endif
-
-
-// variables reside in constant memory
-__constant__ double c_ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  CUPOT_SetConstMem_dtSolver_HydroGravity
-// Description :  Set the constant memory used by CUPOT_dtSolver_HydroGravity()
-//
-// Note        :  1. Adopt the suggested approach for CUDA version >= 5.0
-//                2. Invoked by CUAPI_Init_ExternalAccPot()
-//
-// Parameter   :  None
-//
-// Return      :  0/-1 : successful/failed
-//---------------------------------------------------------------------------------------------------
-__host__
-int CUPOT_SetConstMem_dtSolver_HydroGravity( double h_ExtAcc_AuxArray[] )
-{
-
-   if (  cudaSuccess != cudaMemcpyToSymbol( c_ExtAcc_AuxArray, h_ExtAcc_AuxArray, EXT_ACC_NAUX_MAX*sizeof(double),
-                                            0, cudaMemcpyHostToDevice)  )
-      return -1;
-
-   else
-      return 0;
-
-} // FUNCTION : CUPOT_SetConstMem_dtSolver_HydroGravity
 
 #endif // #ifdef __CUDACC__
 

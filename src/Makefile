@@ -513,7 +513,7 @@ endif # MODEL
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
 CUDA_FILE   += CUAPI_MemAllocate_PoissonGravity.cu  CUAPI_MemFree_PoissonGravity.cu \
-               CUAPI_Asyn_PoissonGravitySolver.cu  CUAPI_Init_ExternalAccPot.cu
+               CUAPI_Asyn_PoissonGravitySolver.cu
 
 CUDA_FILE   += CUPOT_PoissonSolver_SOR_10to14cube.cu  CUPOT_PoissonSolver_SOR_16to18cube.cu \
                CUPOT_PoissonSolver_MG.cu

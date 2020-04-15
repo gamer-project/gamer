@@ -56,7 +56,7 @@ void CUAPI_SetConstMemory()
 #endif // MODEL
 
 
-#  if ( defined GRAVITY  &&  POT_SCHEME == SOR  &&  defined USE_PSOLVER_10TO14 )
+#  ifdef GRAVITY
    const real h_Mp[3] = { -3.0/32.0, +30.0/32.0, +5.0/32.0 };
    const real h_Mm[3] = { +5.0/32.0, +30.0/32.0, -3.0/32.0 };
 

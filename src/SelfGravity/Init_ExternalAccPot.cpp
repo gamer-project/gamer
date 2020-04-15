@@ -40,12 +40,6 @@ void Init_ExternalAccPot()
       Init_ExternalPot_Ptr();
    }
 
-
-// initialize the auxiliary GPU arrays
-#  ifdef GPU
-   CUAPI_Init_ExternalAccPot();
-#  endif
-
 } // FUNCTION : Init_ExternalAccPot
 
 

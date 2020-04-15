@@ -11,10 +11,11 @@
 #include "CUFLU_Shared_DataReconstruction.cu"
 #include "CUFLU_Shared_ComputeFlux.cu"
 #include "CUFLU_Shared_FullStepUpdate.cu"
-#include "CUFLU_SetConstMem_FluidSolver.cu"
 #ifdef MHD
 #include "CUFLU_Shared_ConstrainedTransport.cu"
 #endif
+
+#include "CUDA_ConstMemory.h"
 
 #else // #ifdef __CUDACC__
 
@@ -117,7 +118,7 @@ void Hydro_TGradientCorrection(       real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ 
 //                c_ExtAcc_AuxArray  : Auxiliary array for adding external acceleration          (for UNSPLIT_GRAVITY only)
 //                                     --> When using GPU, this array is stored in the constant memory and does
 //                                         not need to be passed as a function argument
-//                                         --> Declared in CUFLU_SetConstMem_FluidSolver.cu with the prefix "c_" to
+//                                         --> Declared in CUDA_ConstMemory.h with the prefix "c_" to
 //                                             highlight that this is a constant variable on GPU
 //                MinDens/Pres       : Minimum allowed density and pressure
 //                DualEnergySwitch   : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
@@ -129,7 +130,7 @@ void Hydro_TGradientCorrection(       real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ 
 //                                     --> Should be set to the global variable "PassiveNorm_VarIdx"
 //                                     --> When using GPU, this array is stored in the constant memory and does
 //                                         not need to be passed as a function argument
-//                                         --> Declared in CUFLU_SetConstMem_FluidSolver.cu with the prefix "c_" to
+//                                         --> Declared in CUDA_ConstMemory.h with the prefix "c_" to
 //                                             highlight that this is a constant variable on GPU
 //                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
