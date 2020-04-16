@@ -367,8 +367,6 @@ void Init_TestProb_Hydro_ClusterMerger_vs_Flash()
    BC_User_Ptr              = NULL;
    Flu_ResetByUser_Func_Ptr = NULL;
    End_User_Ptr             = End_ClusterMerger;
-   Init_ExternalAcc_Ptr     = NULL;
-   Init_ExternalPot_Ptr     = NULL;
    Par_Init_ByFunction_Ptr  = Par_Init_ByFunction_Merger;
 #  endif // if ( MODEL == HYDRO  &&  defined PARTICLE )
 

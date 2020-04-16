@@ -363,5 +363,10 @@ const SF_CreateStarScheme_t
 #endif
 
 
+// function pointers
+typedef void (*ExtAcc_t)( real Acc[], const double x, const double y, const double z, const double Time, const double UserArray[] );
+typedef real (*ExtPot_t)( const double x, const double y, const double z, const double Time, const double UserArray[] );
+
+
 
 #endif  // #ifndef __TYPEDEF_H__

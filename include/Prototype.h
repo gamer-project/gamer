@@ -295,8 +295,6 @@ void Refine_Buffer( const int lv, const int *SonTable, const int *GrandTable );
 
 // SelfGravity
 #ifdef GRAVITY
-void ExternalAcc( real Acc[], const double x, const double y, const double z, const double Time, const double UserArray[] );
-real ExternalPot( const double x, const double y, const double z, const double Time, const double UserArray[] );
 void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT],
                                const real h_Pot_Array_In [][POT_NXT][POT_NXT][POT_NXT],
                                      real h_Pot_Array_Out[][GRA_NXT][GRA_NXT][GRA_NXT],
@@ -340,7 +338,7 @@ void Gra_Prepare_USG( const int lv, const double PrepTime,
 #endif
 void End_FFTW();
 void Init_FFTW();
-void Init_ExternalAccPot();
+void Init_ExtAccPot();
 void Init_GreenFuncK();
 void Init_MemAllocate_PoissonGravity( const int Pot_NPatchGroup );
 void Init_Set_Default_MG_Parameter( int &Max_Iter, int &NPre_Smooth, int &NPost_Smooth, double &Tolerated_Error );

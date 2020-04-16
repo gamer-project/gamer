@@ -365,10 +365,6 @@ void Init_TestProb_Hydro_Plummer()
    Output_User_Ptr          = NULL;
    Aux_Record_User_Ptr      = NULL;
    End_User_Ptr             = NULL;
-#  ifdef GRAVITY
-   Init_ExternalAcc_Ptr     = NULL;
-   Init_ExternalPot_Ptr     = NULL;
-#  endif
 #  ifdef PARTICLE
    Par_Init_ByFunction_Ptr  = Par_Init_ByFunction_Plummer;
 #  endif

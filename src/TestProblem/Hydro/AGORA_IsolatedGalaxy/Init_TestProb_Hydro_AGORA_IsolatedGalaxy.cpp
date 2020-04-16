@@ -511,8 +511,6 @@ void Init_TestProb_Hydro_AGORA_IsolatedGalaxy()
    BC_User_Ptr                 = NULL;
    Flu_ResetByUser_Func_Ptr    = NULL;
    End_User_Ptr                = End_AGORA;
-   Init_ExternalAcc_Ptr        = NULL;
-   Init_ExternalPot_Ptr        = NULL;
    Par_Init_ByFunction_Ptr     = Par_Init_ByFunction_AGORA;
    Par_Init_Attribute_User_Ptr = AddNewParticleAttribute_AGORA;
 #  endif // if ( MODEL == HYDRO  &&  defined PARTICLE )

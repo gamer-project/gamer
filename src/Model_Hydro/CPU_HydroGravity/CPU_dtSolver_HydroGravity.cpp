@@ -4,11 +4,11 @@
 
 
 
-// external functions and GPU-related set-up
+// GPU set-up
 #ifdef __CUDACC__
 
+// include c_ExtAcc_AuxArray[]
 #include "CUDA_ConstMemory.h"
-#include "../../SelfGravity/GPU_Gravity/CUPOT_ExternalAcc.cu"
 
 
 // parallel reduction routine
@@ -47,11 +47,10 @@
 //                Safety            : dt safety factor
 //                P5_Gradient       : Use 5-point stencil to evaluate the potential gradient
 //                GravityType       : Types of gravity --> self-gravity, external gravity, both
+//                ExtAcc_Func       : Function pointer to the external acceleration routine (for both CPU and GPU)
 //                c_ExtAcc_AuxArray : Auxiliary array for adding external acceleration (for CPU only)
-//                                    --> When using GPU, this array is stored in the constant memory and does
-//                                        not need to be passed as a function argument
-//                                        --> Declared on top of this file with the prefix "c_" to
-//                                            highlight that this is a constant variable on GPU
+//                                    --> When using GPU, this array is stored in the constant memory header
+//                                        CUDA_ConstMemory.h and does not need to be passed as a function argument
 //                ExtAcc_Time       : Physical time for adding the external acceleration
 //
 // Return      :  g_dt_Array
@@ -61,13 +60,14 @@ __global__
 void CUPOT_dtSolver_HydroGravity( real g_dt_Array[], const real g_Pot_Array[][ CUBE(GRA_NXT) ],
                                   const double g_Corner_Array[][3],
                                   const real dh, const real Safety, const bool P5_Gradient,
-                                  const OptGravityType_t GravityType,
+                                  const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
                                   const double ExtAcc_Time )
 #else
 void CPU_dtSolver_HydroGravity  ( real g_dt_Array[], const real g_Pot_Array[][ CUBE(GRA_NXT) ],
                                   const double g_Corner_Array[][3], const int NPatchGroup,
                                   const real dh, const real Safety, const bool P5_Gradient,
-                                  const OptGravityType_t GravityType, const double c_ExtAcc_AuxArray[],
+                                  const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
+                                  const double c_ExtAcc_AuxArray[],
                                   const double ExtAcc_Time )
 #endif
 {
@@ -142,7 +142,7 @@ void CPU_dtSolver_HydroGravity  ( real g_dt_Array[], const real g_Pot_Array[][ C
             y = g_Corner_Array[P][1] + double(j_ext*dh);
             z = g_Corner_Array[P][2] + double(k_ext*dh);
 
-            ExternalAcc( Acc, x, y, z, ExtAcc_Time, c_ExtAcc_AuxArray );
+            ExtAcc_Func( Acc, x, y, z, ExtAcc_Time, c_ExtAcc_AuxArray );
          }
 
 //       self-gravity

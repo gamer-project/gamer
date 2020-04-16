@@ -240,10 +240,6 @@ void Init_TestProb_Hydro_SphericalCollapse()
    BC_User_Ptr              = NULL;
    Flu_ResetByUser_Func_Ptr = NULL;
    End_User_Ptr             = NULL;
-#  ifdef GRAVITY
-   Init_ExternalAcc_Ptr     = NULL;
-   Init_ExternalPot_Ptr     = NULL;
-#  endif
 #  endif // #if ( MODEL == HYDRO )
 
 
