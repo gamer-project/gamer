@@ -277,10 +277,18 @@ void Init_TestProb_Template()
    Init_User_Ptr                  = NULL; // option: none;                    example: none
    End_User_Ptr                   = NULL; // option: none;                    example: TestProblem/Hydro/ClusterMerger_vs_Flash/Init_TestProb_ClusterMerger_vs_Flash.cpp --> End_ClusterMerger()
 #  ifdef GRAVITY
-   Init_ExternalAcc_Ptr           = NULL; // option: OPT__GRAVITY_TYPE=2/3;   example: SelfGravity/Init_ExternalAcc.cpp
-   Init_ExternalPot_Ptr           = NULL; // option: OPT__EXTERNAL_POT;       example: TestProblem/ELBDM/ExtPot/Init_TestProb_ELBDM_ExtPot.cpp --> Init_ExtPot()
-   Poi_AddExtraMassForGravity_Ptr = NULL; // option: OPT__GRAVITY_EXTRA_MASS; example: none
+   Init_ExtAccAuxArray_Ptr        = NULL; // option: OPT__GRAVITY_TYPE=2/3;   example: SelfGravity/Init_ExtAccAuxArray_PointMass.cpp
+   SetCPUExtAcc_Ptr               = NULL; //                                           SelfGravity/CPU_Gravity/CPU_ExtAcc_PointMass.cpp
+#  ifdef GPU
+   SetGPUExtAcc_Ptr               = NULL;
 #  endif
+   Init_ExtPotAuxArray_Ptr        = NULL; // option: OPT__EXTERNAL_POT;       example: SelfGravity/Init_ExtPotAuxArray_PointMass.cpp
+   SetCPUExtPot_Ptr               = NULL; //                                           SelfGravity/CPU_Gravity/CPU_ExtPot_PointMass.cpp
+#  ifdef GPU
+   SetGPUExtPot_Ptr               = NULL;
+#  endif
+   Poi_AddExtraMassForGravity_Ptr = NULL; // option: OPT__GRAVITY_EXTRA_MASS; example: none
+#  endif // #ifdef GRAVITY
 #  ifdef PARTICLE
    Par_Init_ByFunction_Ptr        = NULL; // option: PAR_INIT=1;              example: Particle/Par_Init_ByFunction.cpp
    Par_Init_Attribute_User_Ptr    = NULL; // set PAR_NATT_USER;               example: TestProblem/Hydro/AGORA_IsolatedGalaxy/Init_TestProb_Hydro_AGORA_IsolatedGalaxy.cpp --> AddNewParticleAttribute()

@@ -92,7 +92,7 @@ void Init_GAMER( int *argc, char ***argv )
 // initialize the external potential and acceleration parameters
 // --> must be called AFTER Init_TestProb()
 #  ifdef GRAVITY
-   Init_ExternalAccPot();
+   Init_ExtAccPot();
 #  endif
 
 
