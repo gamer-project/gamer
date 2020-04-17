@@ -85,9 +85,9 @@ static ExtAcc_t ExtAcc_Ptr = ExtAcc_PointMass;
 // Note        :  1. To enable this routine, link to the function pointers "SetCPU/GPUExtAcc_Ptr"
 //                   in a test problem initializer as follows:
 //
-//                      void SetCPUExtAcc_PointMass( ExtAcc_t &CPUExtAcc_Ptr )
+//                      void SetCPUExtAcc_PointMass( ExtAcc_t &CPUExtAcc_Ptr );
 //                      # ifdef GPU
-//                      void SetGPUExtAcc_PointMass( ExtAcc_t &GPUExtAcc_Ptr )
+//                      void SetGPUExtAcc_PointMass( ExtAcc_t &GPUExtAcc_Ptr );
 //                      # endif
 //
 //                      ...
