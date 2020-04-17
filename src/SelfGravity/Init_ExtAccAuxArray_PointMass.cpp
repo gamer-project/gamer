@@ -13,7 +13,7 @@
 //                2. To adopt this routine, link to the function pointer "Init_ExtAccAuxArray_Ptr"
 //                   in a test problem initializer as follows:
 //
-//                      void Init_ExtAccAuxArray_PointMass( double AuxArray[] )
+//                      void Init_ExtAccAuxArray_PointMass( double AuxArray[] );
 //
 //                      ...
 //

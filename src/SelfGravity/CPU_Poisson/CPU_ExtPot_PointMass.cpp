@@ -55,9 +55,9 @@ static ExtPot_t ExtPot_Ptr = ExtPot_PointMass;
 // Note        :  1. To enable this routine, link to the function pointers "SetCPU/GPUExtPot_Ptr"
 //                   in a test problem initializer as follows:
 //
-//                      void SetCPUExtPot_PointMass( ExtPot_t &CPUExtPot_Ptr )
+//                      void SetCPUExtPot_PointMass( ExtPot_t &CPUExtPot_Ptr );
 //                      # ifdef GPU
-//                      void SetGPUExtPot_PointMass( ExtPot_t &GPUExtPot_Ptr )
+//                      void SetGPUExtPot_PointMass( ExtPot_t &GPUExtPot_Ptr );
 //                      # endif
 //
 //                      ...
