@@ -7,7 +7,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_ExtAccAuxArray_PointMass
-// Description :  Set the auxiliary array ExtAcc_AuxArray[] used by the external acceration routine ExtAcc_PointMass()
+// Description :  Set the auxiliary array ExtAcc_AuxArray[] used by the external acceleration routine ExtAcc_PointMass()
 //
 // Note        :  1. External acceleration can be enabled by the runtime option "OPT__GRAVITY_TYPE == 2/3"
 //                2. To adopt this routine, link to the function pointer "Init_ExtAccAuxArray_Ptr"
