@@ -1,4 +1,5 @@
 # problem-specific runtime parameters
-Acoustic_RhoAmp      0.2            # density perturbation amplitude (assuming background density = 1.0)
-Acoustic_U           0.2            # magnitude of 4-velocity [0.0]
+Acoustic_RhoAmp     1e-6            # density perturbation amplitude (assuming background density = 1.0)
 Acoustic_Phase0      0.2            # initial phase shift [0.0]
+Acoustic_Temp0       1.0            # ambient temperature
+Acoustic_Rho0        1.0            # ambient density

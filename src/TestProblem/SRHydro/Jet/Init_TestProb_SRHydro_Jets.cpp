@@ -1021,7 +1021,7 @@ static bool Flag_Region( const int i, const int j, const int k, const int lv, co
    
       const double R              = sqrt( SQR(dR[0]) + SQR(dR[1]) + SQR(dR[2]) );
    
-      const double ShellThickness = 16*amr->dh[0];
+      const double ShellThickness = 16*amr->dh[3];
      
    
    
@@ -1042,22 +1042,31 @@ bool Flag_User( const int i, const int j, const int k, const int lv, const int P
                            amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
                            amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };
 
-   const real (*Dens)[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS];  // density
-   const real (*MomX)[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMX];  // momentum x
-   const real (*MomY)[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMY];  // momentum y
-   const real (*MomZ)[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMZ];  // momentum z
-   const real (*Engy)[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ENGY];  // total energy
-#  ifdef GRAVITY
-   const real (*Pot )[PS1][PS1] = amr->patch[ amr->PotSg[lv] ][lv][PID]->pot;          // potential
-#  endif
-
-
    const double Center[3]      = { Jet_Cen[0], 
                                    Jet_Cen[1], 
                                    Jet_Cen[2] };
 
    const double dR[3]          = { Pos[0]-Center[0], Pos[1]-Center[1], Pos[2]-Center[2] };
    const double R              = sqrt( SQR(dR[0]) + SQR(dR[1]) + SQR(dR[2]) );
+
+
+  
+   if ( Jet_HSE_Radius*0.9 < R && R < Jet_HSE_Radius && Jet_HSE_Radius > 0.0 && Step > 1 )
+   {
+      if ( lv == MAX_LEVEL-1 )
+      {
+        if ( MPI_Rank == 0 ) 
+        #pragma omp master
+        {
+          system("touch STOP_GAMER_STOP");
+        }
+      }
+     
+   }
+
+
+
+
 
    bool Flag = false;
 

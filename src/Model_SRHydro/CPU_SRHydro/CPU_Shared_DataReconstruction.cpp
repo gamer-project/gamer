@@ -359,13 +359,13 @@ real B = (real)0.25;
 
 
 //       5. primitive variables --> conserved variables
-#        ifdef
+#        ifdef USE_3_VELOCITY
 		 SRHydro_4Velto3Vel( fc_Pri[faceL], fc_Pri[faceL] );
 		 SRHydro_4Velto3Vel( fc_Pri[faceR], fc_Pri[faceR] );
-#        else
+#        endif
+
          SRHydro_Pri2Con( fc_Pri[faceL], fc_Con[faceL], Gamma );
          SRHydro_Pri2Con( fc_Pri[faceR], fc_Con[faceR], Gamma );
-#        endif
 
       } // for (int d=0; d<3; d++)
 
@@ -431,10 +431,10 @@ void SRHydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
          SRHydro_CheckUnphysical( ConVar_1Cell, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true );
 #        endif
 
+         SRHydro_Con2Pri( ConVar_1Cell, PriVar_1Cell, Gamma, MinTemp );
+
 #        ifdef USE_3_VELOCITY
 		 SRHydro_3Velto4Vel( PriVar_1Cell, PriVar_1Cell );
-#        else
-         SRHydro_Con2Pri( ConVar_1Cell, PriVar_1Cell, Gamma, MinTemp );
 #        endif
 
          for (int v=0; v<NCOMP_TOTAL; v++)   g_PriVar[v][idx] = PriVar_1Cell[v];
@@ -571,13 +571,13 @@ void SRHydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 
 //       5. primitive variables --> conserved variables
-#        ifdef
+#        ifdef USE_3_VELOCITY
 		 SRHydro_4Velto3Vel( fc_Pri[faceL], fc_Pri[faceL] );
 		 SRHydro_4Velto3Vel( fc_Pri[faceR], fc_Pri[faceR] );
-#        else
+#        endif
+
          SRHydro_Pri2Con( fc_Pri[faceL], fc_Con[faceL], Gamma );
          SRHydro_Pri2Con( fc_Pri[faceR], fc_Con[faceR], Gamma );
-#        endif
 
       } // for (int d=0; d<3; d++)
 

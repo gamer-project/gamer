@@ -125,6 +125,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
 
 real SRHydro_Con2Pri( const real In[], real Out[], const real Gamma, const real MinTemp);
 real SRHydro_GetHTilde( const real Con[], real Gamma );
+real SoundSpeedSquare( real Temp, real Gamma );
 
 #ifdef __CUDACC__
 void SRHydro_Pri2Con( const real In[], real Out[], const real Gamma);

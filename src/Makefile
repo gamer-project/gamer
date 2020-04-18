@@ -37,7 +37,7 @@ SIMU_OPTION += -DMODEL=SR_HYDRO
 #SIMU_OPTION += -DMODEL=HYDRO
 
 # enable gravity
-SIMU_OPTION += -DGRAVITY
+#SIMU_OPTION += -DGRAVITY
 
 # enable particles
 # --> must enable GRAVITY
@@ -120,7 +120,7 @@ SIMU_OPTION += -DCONSERVED_ENERGY=2
 #SIMU_OPTION += -DCHECK_FAILED_CELL_IN_FLUID
 # scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic)
 # --> useless for RTVD
-SIMU_OPTION += -DLR_SCHEME=PLM
+SIMU_OPTION += -DLR_SCHEME=PPM
 
 # Riemann solver: EXACT/ROE/HLLE/HLLC
 # --> all are useless for RTVD;
