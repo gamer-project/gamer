@@ -255,16 +255,9 @@ void Init_TestProb_ELBDM_ExtPot()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr   = SetGridIC;
-   Output_User_Ptr          = NULL;
-   Flag_User_Ptr            = NULL;
-   Mis_GetTimeStep_User_Ptr = NULL;
-   Aux_Record_User_Ptr      = NULL;
-   BC_User_Ptr              = BC;
-   Flu_ResetByUser_Func_Ptr = NULL;
-   End_User_Ptr             = NULL;
-   Init_ExtAccAuxArray_Ptr  = NULL;
-   Init_ExtPotAuxArray_Ptr  = Init_ExtPotAuxArray_ExtPotTest;
+   Init_Function_User_Ptr  = SetGridIC;
+   BC_User_Ptr             = BC;
+   Init_ExtPotAuxArray_Ptr = Init_ExtPotAuxArray_ExtPotTest;
 #  endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
 
 
