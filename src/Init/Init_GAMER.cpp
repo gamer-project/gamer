@@ -14,6 +14,10 @@ extern void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPa
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init
 // Description :  Initialize GAMER
+//
+// Note        :  1. Function pointer "Init_User_Ptr" may be set by a test problem initializer
+//
+// Parameter   :  argc, argv: Command line arguments
 //-------------------------------------------------------------------------------------------------------
 void Init_GAMER( int *argc, char ***argv )
 {
@@ -151,11 +155,13 @@ void Init_GAMER( int *argc, char ***argv )
    switch ( amr->Par->Init )
    {
       case PAR_INIT_BY_FUNCTION:
-         if ( Par_Init_ByFunction_Ptr == NULL )    Aux_Error( ERROR_INFO, "Par_Init_ByFunction_Ptr == NULL !!\n" );
-         Par_Init_ByFunction_Ptr( amr->Par->NPar_Active, amr->Par->NPar_Active_AllRank,
-                                  amr->Par->Mass, amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ,
-                                  amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ, amr->Par->Time,
-                                  amr->Par->Attribute );
+         if ( Par_Init_ByFunction_Ptr != NULL )
+            Par_Init_ByFunction_Ptr( amr->Par->NPar_Active, amr->Par->NPar_Active_AllRank,
+                                     amr->Par->Mass, amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ,
+                                     amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ, amr->Par->Time,
+                                     amr->Par->Attribute );
+         else
+            Aux_Error( ERROR_INFO, "Par_Init_ByFunction_Ptr == NULL for PAR_INIT = 1 !!\n" );
          break;
 
       case PAR_INIT_BY_RESTART:

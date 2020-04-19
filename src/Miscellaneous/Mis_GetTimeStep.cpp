@@ -16,8 +16,8 @@ extern double (*Mis_GetTimeStep_User_Ptr)( const int lv, const double dTime_dt )
 //                       Comoving coordinates : dt = delta(scale_factor) / ( Hubble_parameter*scale_factor^3 )
 //                   --> We convert dTime, the physical time interval == "delta(scale_factor)"
 //                       in the comoving coordinates, back to dt in EvolveLevel()
-//                2. The function pointer "Mis_GetTimeStep_User_Ptr" points to "Mis_GetTimeStep_User()" by default
-//                   but may be overwritten by various test problem initializers
+//                2. For OPT__DT_USER, the function pointer "Mis_GetTimeStep_User_Ptr" must be set by a
+//                   test problem initializer
 //
 // Parameter   :  lv                : Target refinement level
 //                dTime_SyncFaLv    : dt to synchronize lv and lv-1
@@ -148,10 +148,16 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 
 // 1.6 CRITERION SIX : user-defined criteria
 // =============================================================================================================
-   if ( OPT__DT_USER  &&  Mis_GetTimeStep_User_Ptr != NULL )
+   if ( OPT__DT_USER )
    {
-      dTime[NdTime] = dTime_dt * Mis_GetTimeStep_User_Ptr( lv, dTime_dt );
-      sprintf( dTime_Name[NdTime++], "%s", "User" );
+      if ( Mis_GetTimeStep_User_Ptr != NULL )
+      {
+         dTime[NdTime] = dTime_dt * Mis_GetTimeStep_User_Ptr( lv, dTime_dt );
+         sprintf( dTime_Name[NdTime++], "%s", "User" );
+      }
+
+      else
+         Aux_Error( ERROR_INFO, "Mis_GetTimeStep_User_Ptr == NULL for OPT__DT_USER !!\n" );
    }
 
 
