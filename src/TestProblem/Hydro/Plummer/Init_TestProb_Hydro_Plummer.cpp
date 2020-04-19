@@ -400,16 +400,16 @@ void Init_TestProb_Hydro_Plummer()
    SetParameter();
 
 
-   Init_Function_User_Ptr   = SetGridIC;
-   Init_Field_User_Ptr      = AddNewField_Plummer;
+   Init_Function_User_Ptr  = SetGridIC;
+   Init_Field_User_Ptr     = AddNewField_Plummer;
 #  ifdef PARTICLE
-   Par_Init_ByFunction_Ptr  = Par_Init_ByFunction_Plummer;
+   Par_Init_ByFunction_Ptr = Par_Init_ByFunction_Plummer;
 #  endif
 #  ifdef GRAVITY
-   Init_ExtAccAuxArray_Ptr  = Init_ExtAccAuxArray_Plummer;
-   SetCPUExtAcc_Ptr         = SetCPUExtAcc_Plummer;
+   Init_ExtAccAuxArray_Ptr = Init_ExtAccAuxArray_Plummer;
+   SetCPUExtAcc_Ptr        = SetCPUExtAcc_Plummer;
 #  ifdef GPU
-   SetGPUExtAcc_Ptr         = SetGPUExtAcc_Plummer;
+   SetGPUExtAcc_Ptr        = SetGPUExtAcc_Plummer;
 #  endif
 #  endif // #ifdef GRAVITY
 #  endif // #if ( MODEL == HYDRO )
