@@ -41,6 +41,10 @@ void Poi_GetAverageDensity()
       Aux_Message( stderr, "WARNING : option \"%s\" is NOT turned on when evaluating the average density !!\n",
                    "OPT__INIT_RESTRICT" );
 
+   if ( OPT__GRAVITY_EXTRA_MASS  &&  Poi_AddExtraMassForGravity_Ptr == NULL )
+      Aux_Error( ERROR_INFO, "Poi_AddExtraMassForGravity_Ptr == NULL for OPT__GRAVITY_EXTRA_MASS !!\n" );
+
+
 // initialize it to zero
    AveDensity_Init = 0.0;
 

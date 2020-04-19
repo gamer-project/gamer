@@ -395,8 +395,12 @@ int main( int argc, char *argv[] )
 
    if ( OPT__PATCH_COUNT > 0 )            Aux_Record_PatchCount();
    if ( OPT__RECORD_MEMORY )              Aux_GetMemInfo();
-   if ( OPT__RECORD_USER  &&
-        Aux_Record_User_Ptr != NULL )     Aux_Record_User_Ptr();
+   if ( OPT__RECORD_USER ) {
+      if ( Aux_Record_User_Ptr != NULL )  Aux_Record_User_Ptr();
+      else
+         Aux_Error( ERROR_INFO, "Aux_Record_User_Ptr == NULL for OPT__RECORD_USER !!\n" );
+   }
+
 #  ifdef PARTICLE
    if ( OPT__PARTICLE_COUNT > 0 )         Par_Aux_Record_ParticleCount();
 #  endif
@@ -455,7 +459,7 @@ int main( int argc, char *argv[] )
       if ( OPT__RECORD_MEMORY )
       TIMING_FUNC(   Aux_GetMemInfo(),                Timer_Main[4]   );
 
-      if ( OPT__RECORD_USER  &&  Aux_Record_User_Ptr != NULL )
+      if ( OPT__RECORD_USER )
       TIMING_FUNC(   Aux_Record_User_Ptr(),           Timer_Main[4]   );
 
       if ( OPT__RECORD_UNPHY )

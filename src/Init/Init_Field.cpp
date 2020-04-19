@@ -1,10 +1,10 @@
 #include "GAMER.h"
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
-static void Init_Field_User();
+static void Init_Field_User_Template();
 
-// this function pointer may be overwritten by various test problem initializers
-void (*Init_Field_User_Ptr)() = Init_Field_User;
+// this function pointer must be set by a test problem initializer
+void (*Init_Field_User_Ptr)() = NULL;
 
 
 static int NDefinedField;  // total number of defined fields --> for debug only
@@ -18,6 +18,8 @@ static int NDefinedField;  // total number of defined fields --> for debug only
 //
 // Note        :  1. Invoked by Init_GAMER()
 //                2. Total number of fields is determined by NCOMP_TOTAL = NCOMP_FLUID + NCOMP_PASSIVE
+//                3. To initialize user-defined fields, the function pointer "Flag_User_Ptr" must be
+//                   set by a test problem initializer
 //
 // Parameter   :  None
 //
@@ -236,21 +238,20 @@ FieldIdx_t GetFieldIndex( char *InputLabel, const Check_t Check )
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_Field_User
-// Description :  Add user-defined fields
+// Function    :  Init_Field_User_Template
+// Description :  Template of adding user-defined fields
 //
-// Note        :  1. Invoked by Init_Field() using the function pointer "Init_Field_User_Ptr"
-//                   --> The function pointer may be reset by various test problem initializers, in which case
-//                       this funtion will become useless
+// Note        :  1. Invoked by Init_Field() using the function pointer "Init_Field_User_Ptr",
+//                   which must be set by a test problem initializer
 //
 // Parameter   :  None
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Init_Field_User()
+void Init_Field_User_Template()
 {
 
 // example
 // Idx_NewField = AddField( "NewFieldLabel", NORMALIZE_YES );
 
-} // FUNCTION : Init_Field_User
+} // FUNCTION : Init_Field_User_Template

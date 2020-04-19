@@ -3,27 +3,26 @@
 #ifdef PARTICLE
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
-static void Par_Init_ByFunction( const long NPar_ThisRank, const long NPar_AllRank,
-                                 real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                 real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                 real *AllAttribute[PAR_NATT_TOTAL] );
+static void Par_Init_ByFunction_Template( const long NPar_ThisRank, const long NPar_AllRank,
+                                          real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
+                                          real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
+                                          real *AllAttribute[PAR_NATT_TOTAL] );
 
-// this function pointer may be overwritten by various test problem initializers
+// this function pointer must be set by a test problem initializer
 void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPar_AllRank,
                                  real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                  real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                 real *AllAttribute[PAR_NATT_TOTAL] ) = Par_Init_ByFunction;
+                                 real *AllAttribute[PAR_NATT_TOTAL] ) = NULL;
 
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Par_Init_ByFunction
-// Description :  User-specified function to initialize particle attributes
+// Function    :  Par_Init_ByFunction_Template
+// Description :  Template of user-specified particle initializer
 //
-// Note        :  1. Invoked by Init_GAMER() using the function pointer "Par_Init_ByFunction_Ptr"
-//                   --> This function pointer may be reset by various test problem initializers, in which case
-//                       this funtion will become useless
+// Note        :  1. Invoked by Init_GAMER() using the function pointer "Par_Init_ByFunction_Ptr",
+//                   which must be set by a test problem initializer
 //                2. Periodicity should be taken care of in this function
 //                   --> No particles should lie outside the simulation box when the periodic BC is adopted
 //                   --> However, if the non-periodic BC is adopted, particles are allowed to lie outside the box
@@ -48,7 +47,7 @@ void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPar_AllRa
 //
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, AllAttribute
 //-------------------------------------------------------------------------------------------------------
-void Par_Init_ByFunction( const long NPar_ThisRank, const long NPar_AllRank,
+void Par_Init_ByFunction_Template( const long NPar_ThisRank, const long NPar_AllRank,
                           real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                           real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                           real *AllAttribute[PAR_NATT_TOTAL] )
@@ -103,7 +102,7 @@ void Par_Init_ByFunction( const long NPar_ThisRank, const long NPar_AllRank,
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Par_Init_ByFunction
+} // FUNCTION : Par_Init_ByFunction_Template
 
 
 

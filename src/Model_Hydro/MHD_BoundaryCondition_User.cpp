@@ -4,12 +4,12 @@
 
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
-static void BC_BField_User( real magnetic[], const double x, const double y, const double z, const double Time,
-                            const int lv, double AuxArray[] );
+static void BC_BField_User_Template( real magnetic[], const double x, const double y, const double z, const double Time,
+                                     const int lv, double AuxArray[] );
 
-// this function pointer may be overwritten by various test problem initializers
+// this function pointer must be set by a test problem initializer
 void (*BC_BField_User_Ptr)( real magnetic[], const double x, const double y, const double z, const double Time,
-                            const int lv, double AuxArray[] ) = BC_BField_User;
+                            const int lv, double AuxArray[] ) = NULL;
 
 static void BC_User_xm( real **Array, const int NVar, const int TVarIdxList[], const int ArraySizeX, const int ArraySizeY,
                         const int ArraySizeZ, const int Idx_Start[], const int Idx_End[],
@@ -34,12 +34,11 @@ static void BC_User_zp( real **Array, const int NVar, const int TVarIdxList[], c
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  BC_BField_User
-// Description :  User-specified boundary condition for the magnetic field
+// Function    :  BC_BField_User_Template
+// Description :  User-specified boundary condition template for the magnetic field
 //
-// Note        :  1. Invoked by MHD_BoundaryCondition_User() using the function pointer "BC_BField_User_Ptr"
-//                   --> The function pointer may be reset by various test problem initializers, in which case
-//                       this funtion will become useless
+// Note        :  1. Invoked by MHD_BoundaryCondition_User() using the function pointer
+//                   "BC_BField_User_Ptr", which must be set by a test problem initializer
 //                2. Always return NCOMP_MAG magentic field components
 //                3. Enabled by the runtime options "OPT__BC_FLU_* == 4"
 //
@@ -51,8 +50,8 @@ static void BC_User_zp( real **Array, const int NVar, const int TVarIdxList[], c
 //
 // Return      :  magnetic
 //-------------------------------------------------------------------------------------------------------
-void BC_BField_User( real magnetic[], const double x, const double y, const double z, const double Time,
-                     const int lv, double AuxArray[] )
+void BC_BField_User_Template( real magnetic[], const double x, const double y, const double z, const double Time,
+                              const int lv, double AuxArray[] )
 {
 
 // put your B.C. here
@@ -64,7 +63,7 @@ void BC_BField_User( real magnetic[], const double x, const double y, const doub
    */
 // ##########################################################################################################
 
-} // FUNCTION : BC_BField_User
+} // FUNCTION : BC_BField_User_Template
 
 
 
@@ -101,6 +100,9 @@ void MHD_BoundaryCondition_User( real **Array, const int BC_Face, const int NVar
 {
 
 // check
+   if ( BC_BField_User_Ptr == NULL )
+      Aux_Error( ERROR_INFO, "BC_BField_User_Ptr == NULL for user-specified boundary conditions !!\n" );
+
 #  ifdef GAMER_DEBUG
    if ( NVar != 0  &&  TVarIdxList == NULL )
       Aux_Error( ERROR_INFO, "NVar = %d != 0, TVarIdxList == NULL !!\n", NVar );

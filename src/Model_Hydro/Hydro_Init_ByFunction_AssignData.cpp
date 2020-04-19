@@ -3,36 +3,35 @@
 
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
-static void Init_Function_User( real fluid[], const double x, const double y, const double z, const double Time,
-                                const int lv, double AuxArray[] );
+static void Init_Function_User_Template( real fluid[], const double x, const double y, const double z, const double Time,
+                                         const int lv, double AuxArray[] );
 
-// this function pointer may be overwritten by various test problem initializers
+// this function pointer must be set by a test problem initializer
 void (*Init_Function_User_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
-                                const int lv, double AuxArray[] ) = Init_Function_User;
+                                const int lv, double AuxArray[] ) = NULL;
 
 extern bool (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
                                          const int lv, double AuxArray[] );
 
 #ifdef MHD
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
-static void Init_Function_BField_User( real magnetic[], const double x, const double y, const double z, const double Time,
-                                       const int lv, double AuxArray[] );
+static void Init_Function_BField_User_Template( real magnetic[], const double x, const double y, const double z, const double Time,
+                                                const int lv, double AuxArray[] );
 
-// this function pointer may be overwritten by various test problem initializers
+// this function pointer must be set by a test problem initializer
 void (*Init_Function_BField_User_Ptr)( real magnetic[], const double x, const double y, const double z, const double Time,
-                                       const int lv, double AuxArray[] ) = Init_Function_BField_User;
+                                       const int lv, double AuxArray[] ) = NULL;
 #endif
 
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_Function_User
-// Description :  Function to initialize the fluid field
+// Function    :  Init_Function_User_Template
+// Description :  Function template to initialize the fluid field
 //
-// Note        :  1. Invoked by Hydro_Init_ByFunction_AssignData() using the function pointer "Init_Function_User_Ptr"
-//                   --> The function pointer may be reset by various test problem initializers, in which case
-//                       this funtion will become useless
+// Note        :  1. Invoked by Hydro_Init_ByFunction_AssignData() using the function pointer
+//                   "Init_Function_User_Ptr", which must be set by a test problem initializer
 //                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
 //                   (unless OPT__INIT_GRID_WITH_OMP is disabled)
 //                   --> Please ensure that everything here is thread-safe
@@ -49,8 +48,8 @@ void (*Init_Function_BField_User_Ptr)( real magnetic[], const double x, const do
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
-void Init_Function_User( real fluid[], const double x, const double y, const double z, const double Time,
-                         const int lv, double AuxArray[] )
+void Init_Function_User_Template( real fluid[], const double x, const double y, const double z, const double Time,
+                                  const int lv, double AuxArray[] )
 {
 
    const real P0   = 1.0;
@@ -68,18 +67,17 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
 
 // set passive scalars
 
-} // FUNCTION : Init_Function_User
+} // FUNCTION : Init_Function_User_Template
 
 
 
 #ifdef MHD
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_Function_BField_User
-// Description :  Function to initialize the magnetic field
+// Function    :  Init_Function_BField_User_Template
+// Description :  Function template to initialize the magnetic field
 //
-// Note        :  1. Invoked by Hydro_Init_ByFunction_AssignData() using the function pointer "Init_Function_BField_User_Ptr"
-//                   --> The function pointer may be reset by various test problem initializers, in which case
-//                       this funtion will become useless
+// Note        :  1. Invoked by Hydro_Init_ByFunction_AssignData() using the function pointer
+//                   "Init_Function_BField_User_Ptr", which must be set by a test problem initializer
 //                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
 //                   (uless OPT__INIT_GRID_WITH_OMP is disabled)
 //                   --> Please ensure that everything here is thread-safe
@@ -92,15 +90,15 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
 //
 // Return      :  magnetic
 //-------------------------------------------------------------------------------------------------------
-void Init_Function_BField_User( real magnetic[], const double x, const double y, const double z, const double Time,
-                                const int lv, double AuxArray[] )
+void Init_Function_BField_User_Template( real magnetic[], const double x, const double y, const double z, const double Time,
+                                         const int lv, double AuxArray[] )
 {
 
    magnetic[MAGX] = 1.0;
    magnetic[MAGY] = 2.0;
    magnetic[MAGZ] = 3.0;
 
-} // FUNCTION : Init_Function_BField_User
+} // FUNCTION : Init_Function_BField_User_Template
 #endif // #ifdef MHD
 
 
@@ -110,9 +108,8 @@ void Init_Function_BField_User( real magnetic[], const double x, const double y,
 // Description :  Construct the initial condition in HYDRO
 //
 // Note        :  1. Work for the option "OPT__INIT == INIT_BY_FUNCTION"
-//                2. The function pointers "Init_Function_User_Ptr/Flu_ResetByUser_Func_Ptr/Init_Function_BField_User_Ptr"
-//                   point to "Init_Function_User()/Flu_ResetByUser_Func()/Init_Function_BField_User()" by default
-//                   but may be overwritten by various test problem initializers
+//                2. Function pointers "Init_Function_User_Ptr/Flu_ResetByUser_Func_Ptr/Init_Function_BField_User_Ptr"
+//                   must be set by a test problem initializer
 //                3. One can disable OpenMP in this routine by setting OPT__INIT_GRID_WITH_OMP = 0
 //                   --> Useful if "Init_Function_User_Ptr/Flu_ResetByUser_Func_Ptr/Init_Function_BField_User_Ptr"
 //                       do not support OpenMP
@@ -128,9 +125,12 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
    if ( Init_Function_User_Ptr == NULL )  Aux_Error( ERROR_INFO, "Init_Function_User_Ptr == NULL !!\n" );
 
 #  ifdef MHD
-   if ( Init_Function_BField_User_Ptr == NULL && !OPT__INIT_BFIELD_BYFILE )  
+   if ( Init_Function_BField_User_Ptr == NULL  &&  !OPT__INIT_BFIELD_BYFILE )
       Aux_Error( ERROR_INFO, "Init_Function_BField_User_Ptr == NULL !!\n" );
 #  endif
+
+   if ( OPT__RESET_FLUID  &&  Flu_ResetByUser_Func_Ptr == NULL )
+      Aux_Error( ERROR_INFO, "Flu_ResetByUser_Func_Ptr == NULL for OPT__RESET_FLUID !!\n" );
 
 
 // set the number of OpenMP threads
@@ -221,7 +221,7 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
             Init_Function_User_Ptr( fluid_sub, x, y, z, Time[lv], lv, NULL );
 
 //          modify the initial condition if required
-            if ( OPT__RESET_FLUID  &&  Flu_ResetByUser_Func_Ptr != NULL)
+            if ( OPT__RESET_FLUID )
                Flu_ResetByUser_Func_Ptr( fluid_sub, x, y, z, Time[lv], lv, NULL );
 
             for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] += fluid_sub[v];
