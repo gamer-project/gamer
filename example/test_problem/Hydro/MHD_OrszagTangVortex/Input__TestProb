@@ -1,0 +1,6 @@
+# problem-specific runtime parameters
+OrszagTang_Rho0    0.22104853207    # background density [25/(36*pi)]
+OrszagTang_P0      0.13262911924    # background pressure [5/(12*pi)]
+OrszagTang_Vx0    -1.0              # velocity x [-1.0]
+OrszagTang_Vy0    +1.0              # velocity y [+1.0]
+OrszagTang_B0      0.28209479177    # magnetic field strength along both x and y [1/(4*pi)^0.5]

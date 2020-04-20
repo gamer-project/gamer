@@ -26,7 +26,7 @@ double dt_InvokeSolver( const Solver_t TSolver, const int lv )
 
 
 // invoke the target dt solver
-   InvokeSolver( TSolver, lv, Time[lv], NULL_REAL, NULL_REAL, NULL_REAL, NULL_INT, NULL_INT, false, false );
+   InvokeSolver( TSolver, lv, Time[lv], NULL_REAL, NULL_REAL, NULL_REAL, NULL_INT, NULL_INT, NULL_INT, false, false );
 
 
 // get the minimum dt among all ranks

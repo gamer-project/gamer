@@ -141,14 +141,14 @@ void LB_AllocateBufferPatch_Sibling_Base()
       for (int d=0; d<3; d++)    FaCr3D[d] = ( FaCr3D[d] - Padded )*PATCH_SIZE;
 
 //    data array is not allocated here
-      amr->pnew( 0, FaCr3D[0],        FaCr3D[1],        FaCr3D[2],        -1, false, false );
-      amr->pnew( 0, FaCr3D[0]+PScale, FaCr3D[1],        FaCr3D[2],        -1, false, false );
-      amr->pnew( 0, FaCr3D[0],        FaCr3D[1]+PScale, FaCr3D[2],        -1, false, false );
-      amr->pnew( 0, FaCr3D[0],        FaCr3D[1],        FaCr3D[2]+PScale, -1, false, false );
-      amr->pnew( 0, FaCr3D[0]+PScale, FaCr3D[1]+PScale, FaCr3D[2],        -1, false, false );
-      amr->pnew( 0, FaCr3D[0],        FaCr3D[1]+PScale, FaCr3D[2]+PScale, -1, false, false );
-      amr->pnew( 0, FaCr3D[0]+PScale, FaCr3D[1],        FaCr3D[2]+PScale, -1, false, false );
-      amr->pnew( 0, FaCr3D[0]+PScale, FaCr3D[1]+PScale, FaCr3D[2]+PScale, -1, false, false );
+      amr->pnew( 0, FaCr3D[0],        FaCr3D[1],        FaCr3D[2],        -1, false, false, false );
+      amr->pnew( 0, FaCr3D[0]+PScale, FaCr3D[1],        FaCr3D[2],        -1, false, false, false );
+      amr->pnew( 0, FaCr3D[0],        FaCr3D[1]+PScale, FaCr3D[2],        -1, false, false, false );
+      amr->pnew( 0, FaCr3D[0],        FaCr3D[1],        FaCr3D[2]+PScale, -1, false, false, false );
+      amr->pnew( 0, FaCr3D[0]+PScale, FaCr3D[1]+PScale, FaCr3D[2],        -1, false, false, false );
+      amr->pnew( 0, FaCr3D[0],        FaCr3D[1]+PScale, FaCr3D[2]+PScale, -1, false, false, false );
+      amr->pnew( 0, FaCr3D[0]+PScale, FaCr3D[1],        FaCr3D[2]+PScale, -1, false, false, false );
+      amr->pnew( 0, FaCr3D[0]+PScale, FaCr3D[1]+PScale, FaCr3D[2]+PScale, -1, false, false, false );
 
       amr->NPatchComma[0][2] += 8;
 

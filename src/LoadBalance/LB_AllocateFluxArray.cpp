@@ -7,9 +7,13 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LB_AllocateFluxArray
-// Description :  1. Allocate flux arrays for the real patches at FaLv adjacent to the coarse-fine boundaries
-//                2. Construct the MPI send and recv lists for exchanging fluxes at FaLv
-//                3. According to the send list, allocate flux arrays for the buffer patches at FaLv
+// Description :  Prepare for transferring fluxes on the coarse-fine boundaries
+//
+// Note        :  1. Procedure:
+//                   (1) Allocate flux arrays for the real patches at FaLv adjacent to the coarse-fine boundaries
+//                   (2) Construct the MPI send and recv lists for exchanging fluxes at FaLv
+//                   (3) According to the send list, allocate flux arrays for the buffer patches at FaLv
+//                2. Invoked by LB_Init_LoadBalance() and LB_Refine()
 //
 // Parameter   :  FaLv : Coarse-grid level
 //-------------------------------------------------------------------------------------------------------
@@ -22,7 +26,7 @@ void LB_AllocateFluxArray( const int FaLv )
 
 
    const int SonLv   = FaLv + 1;
-   const int FaNReal = amr->NPatchComma[FaLv ][1];
+   const int FaNReal = amr->NPatchComma[FaLv][1];
    const int MemUnit = 1 + FaNReal/MPI_NRank;         // set arbitrarily
 
    int   MemSize[MPI_NRank], TRank, SonPID, SibPID, SibSonPID;
@@ -184,8 +188,8 @@ void LB_AllocateFluxArray( const int FaLv )
    for (int r=0; r<MPI_NRank; r++)
    for (int t=0; t<LB_RecvF_NList[r]; t++)
    {
-      SendBuf_SibID[ Counter ] = LB_RecvF_SibList    [r][t];
-      SendBuf_LBIdx[ Counter ] = LB_RecvF_SibSonLBIdx[r][t];
+      SendBuf_SibID[Counter] = LB_RecvF_SibList    [r][t];
+      SendBuf_LBIdx[Counter] = LB_RecvF_SibSonLBIdx[r][t];
       Counter ++;
    }
 
@@ -204,7 +208,7 @@ void LB_AllocateFluxArray( const int FaLv )
 
    for (int r=0; r<MPI_NRank; r++)
    {
-//    5.1 allocate the send and matching array
+//    5.1 allocate the send and matching arrays
       if ( LB_SendF_IDList [r] != NULL )  delete [] LB_SendF_IDList [r];
       if ( LB_SendF_SibList[r] != NULL )  delete [] LB_SendF_SibList[r];
 
@@ -221,7 +225,7 @@ void LB_AllocateFluxArray( const int FaLv )
                         RecvBuf_LBIdx+Recv_Disp_F[r], Match_F );
 
 //    check : all target patches must be found
-      #ifdef GAMER_DEBUG
+#     ifdef GAMER_DEBUG
       for (int t=0; t<LB_SendF_NList[r]; t++)
          if ( Match_F[t] == -1 )
             Aux_Error( ERROR_INFO, "FaLv %d, TRank %d, LB_Idx %ld found no matching patches !!\n",

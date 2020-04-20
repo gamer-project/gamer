@@ -187,6 +187,9 @@ void Init_ByRestart_v1( const char FileName[] )
    for (int lv=0; lv<NLEVEL; lv++)
    {
       amr->FluSgTime[lv][ amr->FluSg[lv] ] = Time[lv];
+#     ifdef MHD
+      amr->MagSgTime[lv][ amr->MagSg[lv] ] = Time[lv];
+#     endif
 #     ifdef GRAVITY
       amr->PotSgTime[lv][ amr->PotSg[lv] ] = Time[lv];
 #     endif
@@ -379,7 +382,7 @@ void Init_ByRestart_v1( const char FileName[] )
 #              endif
                {
 
-                  amr->pnew( lv, LoadCorner[0], LoadCorner[1], LoadCorner[2], -1, true, true );
+                  amr->pnew( lv, LoadCorner[0], LoadCorner[1], LoadCorner[2], -1, true, true, true );
 
 //                d3. load the physical data if it is a leaf patch
                   if ( LoadSon == -1 )
@@ -455,6 +458,10 @@ void Init_ByRestart_v1( const char FileName[] )
 
 // e-1. improve load balance
 // ===================================================================================================================
+#  ifdef MHD
+   Aux_Error( ERROR_INFO, "MHD is not supported here !!\n" );
+#  endif
+
 #  ifdef LOAD_BALANCE
 
 // no need to redistribute all patches again since we already did that when loading data from disks
@@ -482,11 +489,11 @@ void Init_ByRestart_v1( const char FileName[] )
 // --> only necessary when restarting from a C-binary snapshot since it does not store non-leaf data
    for (int lv=NLEVEL-2; lv>=0; lv--)
    {
-      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _TOTAL );
+      Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, NULL_INT, NULL_INT, _TOTAL, _NONE );
 
-      LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, NULL_INT );
+      LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, NULL_INT, DATA_RESTRICT, _TOTAL, _NONE, NULL_INT );
 
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, NULL_INT, DATA_GENERAL, _TOTAL, _NONE, Flu_ParaBuf, USELB_YES );
    }
 
 
@@ -520,17 +527,18 @@ void Init_ByRestart_v1( const char FileName[] )
 
 
 // fill up the data for top-level buffer patches
-   Buf_GetBufferData( NLEVEL-1, amr->FluSg[NLEVEL-1], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );
+   Buf_GetBufferData( NLEVEL-1, amr->FluSg[NLEVEL-1], NULL_INT, NULL_INT, DATA_GENERAL, _TOTAL, _NONE, Flu_ParaBuf, USELB_NO );
 
 
 // fill up the data for patches that are not leaf patches
    for (int lv=NLEVEL-2; lv>=0; lv--)
    {
 //    data restriction: lv+1 --> lv
-      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _TOTAL );
+//    --> does not support MHD
+      Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, NULL_INT, NULL_INT, _TOTAL, _NONE );
 
 //    fill up the data in the buffer patches
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );
+      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, NULL_INT, DATA_GENERAL, _TOTAL, _NONE, Flu_ParaBuf, USELB_NO );
    } // for (int lv=NLEVEL-2; lv>=0; lv--)
 
 #  endif // #ifdef LOAD_BALANCE ... else ...
@@ -1202,7 +1210,7 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "FLU_GHOST_SIZE",          flu_ghost_size,         FLU_GHOST_SIZE,            NonFatal );
       CompareVar( "FLU_BLOCK_SIZE_X",        flu_block_size_x,       FLU_BLOCK_SIZE_X,          NonFatal );
       CompareVar( "FLU_BLOCK_SIZE_Y",        flu_block_size_y,       FLU_BLOCK_SIZE_Y,          NonFatal );
-#     if ( MODEL == HYDRO  ||  MODEL == MHD )
+#     if ( MODEL == HYDRO )
       CompareVar( "MIN_PRES",                min_pres,         (real)MIN_PRES,                  NonFatal );
 #     endif
 
@@ -1297,12 +1305,6 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
          Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
                       "HLL_INCLUDE_ALL_WAVES", "ON", "OFF" );
 #     endif
-
-
-//    check in MHD
-//    ----------------
-#     elif ( MODEL == MHD )
-#     warning : WAIT MHD !!!
 
 
 //    check in ELBDM
@@ -1409,9 +1411,6 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "GAMMA",                   gamma,                  (real)GAMMA,                     NonFatal );
       CompareVar( "MINMOD_COEFF",            minmod_coeff,           (real)MINMOD_COEFF,              NonFatal );
       CompareVar( "OPT__LR_LIMITER",         opt__lr_limiter,         (int)OPT__LR_LIMITER,           NonFatal );
-
-#     elif ( MODEL == MHD )
-#     warning : WAIT MHD !!!
 
 #     elif ( MODEL == ELBDM )
       CompareVar( "DT__PHASE",               dt__phase,                    DT__PHASE,                 NonFatal );

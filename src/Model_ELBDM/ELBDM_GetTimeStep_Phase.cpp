@@ -103,19 +103,19 @@ real GetMaxPhaseDerivative( const int lv )
       for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=NPG*8)
       {
 //       prepare real part with NGhost ghost zone on each side (any interpolation scheme can be used)
-         Prepare_PatchData( lv, Time[lv], &Flu_Array[0][REAL][0][0][0], NGhost, NPG, &PID0, _REAL,
-                            INT_MINMOD1D, UNIT_PATCHGROUP, NSIDE_06, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
+         Prepare_PatchData( lv, Time[lv], &Flu_Array[0][REAL][0][0][0], NULL, NGhost, NPG, &PID0, _REAL, _NONE,
+                            INT_MINMOD1D, INT_NONE, UNIT_PATCHGROUP, NSIDE_06, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
                             MinDens_No, MinPres_No, DE_Consistency_No );
 
 //       prepare imag part with NGhost ghost zone on each side (any interpolation scheme can be used)
-         Prepare_PatchData( lv, Time[lv], &Flu_Array[0][IMAG][0][0][0], NGhost, NPG, &PID0, _IMAG,
-                            INT_MINMOD1D, UNIT_PATCHGROUP, NSIDE_06, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
+         Prepare_PatchData( lv, Time[lv], &Flu_Array[0][IMAG][0][0][0], NULL, NGhost, NPG, &PID0, _IMAG, _NONE,
+                            INT_MINMOD1D, INT_NONE, UNIT_PATCHGROUP, NSIDE_06, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
                             MinDens_No, MinPres_No, DE_Consistency_No );
 
 //       prepare potential with no ghost zone
 #        ifdef GRAVITY
-         Prepare_PatchData( lv, Time[lv], &Pot_Array[0][0][0][0],            0, NPG, &PID0, _POTE,
-                            (IntScheme_t)NULL_INT, UNIT_PATCHGROUP, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
+         Prepare_PatchData( lv, Time[lv], &Pot_Array[0][0][0][0],       NULL,      0, NPG, &PID0, _POTE, _NONE,
+                            INT_NONE,     INT_NONE, UNIT_PATCHGROUP, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
                             MinDens_No, MinPres_No, DE_Consistency_No );
 #        endif
 

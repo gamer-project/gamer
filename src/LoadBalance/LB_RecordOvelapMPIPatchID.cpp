@@ -16,6 +16,12 @@
 void LB_RecordOverlapMPIPatchID( const int Lv )
 {
 
+// check
+#  ifdef MHD
+   Aux_Error( ERROR_INFO, "%s does NOT support MHD !!\n", __FUNCTION__ );
+#  endif
+
+
    const int NReal0 = amr->NPatchComma[Lv][1]/8;
 
    int  *LB_SendH_NList  = amr->LB->SendH_NList [Lv];

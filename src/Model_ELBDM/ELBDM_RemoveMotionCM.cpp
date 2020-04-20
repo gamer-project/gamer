@@ -68,7 +68,7 @@ void ELBDM_RemoveMotionCM()
       } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
 //    update the data on MPI buffer patches
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _REAL|_IMAG, Flu_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, NULL_INT, DATA_GENERAL, _REAL|_IMAG, _NONE, Flu_ParaBuf, USELB_YES );
    } // for (int lv=0; lv<NLEVEL; lv++)
 
 

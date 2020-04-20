@@ -16,7 +16,7 @@
 // Parameter   :  lv                : Target refinement level
 //                h_Corner_Array_G  : Host array to store the prepared data
 //                NPG               : Number of patch groups prepared at a time
-//                PID0_List         : List recording the patch indicies with LocalID==0 to be udpated
+//                PID0_List         : List recording the patch indices with LocalID==0 to be udpated
 //-------------------------------------------------------------------------------------------------------
 void Gra_Prepare_Corner( const int lv, double h_Corner_Array_G[][3], const int NPG, const int *PID0_List )
 {

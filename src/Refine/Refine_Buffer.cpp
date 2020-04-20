@@ -54,14 +54,14 @@ void Refine_Buffer( const int lv, const int *SonTable, const int *GrandTable )
 //          allocate child patches and construct relation : child -> father
             Cr = amr->patch[0][lv][PID]->corner;
 
-            amr->pnew( lv+1, Cr[0],       Cr[1],       Cr[2],       PID, AllocData[0], AllocData[0] );
-            amr->pnew( lv+1, Cr[0]+Width, Cr[1],       Cr[2],       PID, AllocData[1], AllocData[1] );
-            amr->pnew( lv+1, Cr[0],       Cr[1]+Width, Cr[2],       PID, AllocData[2], AllocData[2] );
-            amr->pnew( lv+1, Cr[0],       Cr[1],       Cr[2]+Width, PID, AllocData[3], AllocData[3] );
-            amr->pnew( lv+1, Cr[0]+Width, Cr[1]+Width, Cr[2],       PID, AllocData[4], AllocData[4] );
-            amr->pnew( lv+1, Cr[0],       Cr[1]+Width, Cr[2]+Width, PID, AllocData[5], AllocData[5] );
-            amr->pnew( lv+1, Cr[0]+Width, Cr[1],       Cr[2]+Width, PID, AllocData[6], AllocData[6] );
-            amr->pnew( lv+1, Cr[0]+Width, Cr[1]+Width, Cr[2]+Width, PID, AllocData[7], AllocData[7] );
+            amr->pnew( lv+1, Cr[0],       Cr[1],       Cr[2],       PID, AllocData[0], AllocData[0], AllocData[0] );
+            amr->pnew( lv+1, Cr[0]+Width, Cr[1],       Cr[2],       PID, AllocData[1], AllocData[1], AllocData[1] );
+            amr->pnew( lv+1, Cr[0],       Cr[1]+Width, Cr[2],       PID, AllocData[2], AllocData[2], AllocData[2] );
+            amr->pnew( lv+1, Cr[0],       Cr[1],       Cr[2]+Width, PID, AllocData[3], AllocData[3], AllocData[3] );
+            amr->pnew( lv+1, Cr[0]+Width, Cr[1]+Width, Cr[2],       PID, AllocData[4], AllocData[4], AllocData[4] );
+            amr->pnew( lv+1, Cr[0],       Cr[1]+Width, Cr[2]+Width, PID, AllocData[5], AllocData[5], AllocData[5] );
+            amr->pnew( lv+1, Cr[0]+Width, Cr[1],       Cr[2]+Width, PID, AllocData[6], AllocData[6], AllocData[6] );
+            amr->pnew( lv+1, Cr[0]+Width, Cr[1]+Width, Cr[2]+Width, PID, AllocData[7], AllocData[7], AllocData[7] );
 
 
 //          record the number of buffer patches in each sibling direction

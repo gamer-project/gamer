@@ -16,7 +16,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total (FormatVersion = 2203)
+// Function    :  Output_DumpData_Total (FormatVersion = 2210)
 // Description :  Output all simulation data in the binary form, which can be used as a restart file
 //
 // Note        :  1. This output format is deprecated and is mainly used for debugging only
@@ -36,6 +36,7 @@ Procedure for outputting new variables:
 //                2201 : 2018/12/12 --> always set EP_COEFF=NULL_REAL since this variable no longer exists
 //                2202 : 2018/12/15 --> set WAF-related variables to arbitrary values since they no longer exist
 //                2203 : 2018/12/27 --> replace GRA_BLOCK_SIZE_Z by GRA_BLOCK_SIZE
+//                2210 : 2019/06/07 --> support MHD
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total( const char *FileName )
 {
@@ -152,8 +153,14 @@ void Output_DumpData_Total( const char *FileName )
 #     ifdef PARTICLE
       if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )   NGridVar ++;
 #     endif
+#     ifdef MHD
+      if ( OPT__OUTPUT_CC_MAG )                             NGridVar += 3;
+#     endif
 
       PatchDataSize  = CUBE(PS1)*NGridVar*sizeof(real);
+#     ifdef MHD
+      PatchDataSize += PS1P1*SQR(PS1)*NCOMP_MAG*sizeof(real);
+#     endif
       ExpectFileSize = HeaderSize_Total;
 
       for (int lv=0; lv<NLEVEL; lv++)
@@ -174,7 +181,7 @@ void Output_DumpData_Total( const char *FileName )
 
 //    a. output the information of data format
 //    =================================================================================================
-      const long FormatVersion = 2203;
+      const long FormatVersion = 2210;
       const long CheckCode     = 123456789;
 
       fseek( File, HeaderOffset_Format, SEEK_SET );
@@ -361,6 +368,12 @@ void Output_DumpData_Total( const char *FileName )
       const bool support_hdf5        = false;
 #     endif
 
+#     ifdef MHD
+      const bool mhd                 = true;
+#     else
+      const bool mhd                 = false;
+#     endif
+
       const int nlevel               = NLEVEL;
       const int max_patch            = MAX_PATCH;
 
@@ -395,6 +408,7 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( &self_interaction,          sizeof(bool),                    1,             File );
       fwrite( &laohu,                     sizeof(bool),                    1,             File );
       fwrite( &support_hdf5,              sizeof(bool),                    1,             File );
+      fwrite( &mhd,                       sizeof(bool),                    1,             File );
 
 
 //    c. output the symbolic constants defined in "Macro.h, CUPOT.h, and CUFLU.h"
@@ -407,7 +421,7 @@ void Output_DumpData_Total( const char *FileName )
 
       const int    ncomp_fluid           = NCOMP_FLUID;
       const int    patch_size            = PATCH_SIZE;
-#     if ( MODEL == HYDRO  ||  MODEL == MHD )
+#     if ( MODEL == HYDRO )
       const double min_pres              = MIN_PRES;
 #     else
       const double min_pres              = NULL_REAL;
@@ -577,9 +591,6 @@ void Output_DumpData_Total( const char *FileName )
       const bool   opt__1st_flux_corr        = (bool)OPT__1ST_FLUX_CORR;
       const int    opt__1st_flux_corr_scheme = (int)OPT__1ST_FLUX_CORR_SCHEME;
 #     else
-#     if ( MODEL == MHD )
-#     warning : WAIT MHD !!!
-#     endif
       const bool   OPT__FLAG_PRES_GRADIENT   = NULL_BOOL;
       const double GAMMA                     = NULL_REAL;
       const double MOLECULAR_WEIGHT          = NULL_REAL;
@@ -601,6 +612,11 @@ void Output_DumpData_Total( const char *FileName )
       const int    opt__output_par_dens      = (int)OPT__OUTPUT_PAR_DENS;
 #     else
       const int    opt__output_par_dens      = 0;
+#     endif
+
+#     ifndef MHD
+      const bool   OPT__OUTPUT_CC_MAG        = false;
+      const double UNIT_B                    = NULL_REAL;
 #     endif
 
       const bool   dummy_bool                = false;
@@ -684,6 +700,8 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( &UNIT_E,                    sizeof(double),                  1,             File );
       fwrite( &UNIT_P,                    sizeof(double),                  1,             File );
       fwrite( &MOLECULAR_WEIGHT,          sizeof(double),                  1,             File );
+      fwrite( &OPT__OUTPUT_CC_MAG,        sizeof(bool),                    1,             File );
+      fwrite( &UNIT_B,                    sizeof(double),                  1,             File );
 
 
 //    e. output the simulation information
@@ -731,10 +749,7 @@ void Output_DumpData_Total( const char *FileName )
 
 // f. output the simulation grid data
 // =================================================================================================
-   int  Cr_and_Son[4];
-#  ifdef PARTICLE
-   long NPar_and_GParID[2], GParID=GParID_Offset;
-#  endif
+   int Cr_and_Son[4];
 
 #  ifdef PARTICLE
    const bool IntPhase_No       = false;
@@ -752,7 +767,13 @@ void Output_DumpData_Total( const char *FileName )
    const bool FaSibBufPatch     = NULL_BOOL;
 #  endif
    real (*ParDensArray)[ CUBE(PS1) ] = ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_NONE ) ? NULL : new real [8][ CUBE(PS1) ];
+
+   long NPar_and_GParID[2], GParID=GParID_Offset;
 #  endif // #ifdef PARTICLE
+
+#  ifdef MHD
+   real (*CCMag)[ CUBE(PS1) ] = ( OPT__OUTPUT_CC_MAG ) ? new real [NCOMP_MAG][ CUBE(PS1) ] : NULL;
+#  endif
 
 
    for (int lv=0; lv<NLEVEL; lv++)
@@ -776,7 +797,7 @@ void Output_DumpData_Total( const char *FileName )
 
             for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
             {
-//             f0. prepare the particle density data on grids (only if there are leaf patches in this patch group)
+//             f1. prepare the particle density data on grids (only if there are leaf patches in this patch group)
 #              ifdef PARTICLE
                if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE  &&  PID%8 == 0 )
                {
@@ -785,10 +806,10 @@ void Output_DumpData_Total( const char *FileName )
                      if ( amr->patch[0][lv][PID_CheckSon]->son == -1 )
                      {
 //                      we do not check minimum density here (just because it's unnecessary)
-                        Prepare_PatchData( lv, Time[lv], ParDensArray[0], 0, 1, &PID,
+                        Prepare_PatchData( lv, Time[lv], ParDensArray[0], NULL, 0, 1, &PID,
                                            ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_PAR_ONLY ) ? _PAR_DENS : _TOTAL_DENS,
-                                           OPT__RHO_INT_SCHEME, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
-                                           MinDens_No, MinPres_No, DE_Consistency_No );
+                                           _NONE, OPT__RHO_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No,
+                                           OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, DE_Consistency_No );
                         break;
                      }
                   }
@@ -796,7 +817,28 @@ void Output_DumpData_Total( const char *FileName )
 #              endif
 
 
-//             f1. output patch information
+//             f2. prepare the cell-centered magnetic field for leaf patches
+#              ifdef MHD
+               if ( OPT__OUTPUT_CC_MAG  &&  amr->patch[0][lv][PID]->son == -1 )
+               {
+                  real CCMag_1Cell[NCOMP_MAG];
+                  int  idx=0;
+
+                  for (int k=0; k<PS1; k++)
+                  for (int j=0; j<PS1; j++)
+                  for (int i=0; i<PS1; i++)
+                  {
+                     MHD_GetCellCenteredBFieldInPatch( CCMag_1Cell, lv, PID, i, j, k, amr->MagSg[lv] );
+
+                     for (int v=0; v<NCOMP_MAG; v++)  CCMag[v][idx] = CCMag_1Cell[v];
+
+                     idx ++;
+                  }
+               }
+#              endif
+
+
+//             f3. output patch information
 //             (father <-> son information will be re-constructed during the restart)
                Cr_and_Son[0] = amr->patch[0][lv][PID]->corner[0];
                Cr_and_Son[1] = amr->patch[0][lv][PID]->corner[1];
@@ -819,22 +861,32 @@ void Output_DumpData_Total( const char *FileName )
 #              endif
 
 
-//             f2. output patch data only if it has no son
+//             f4. output patch data only if it has no son
                if ( amr->patch[0][lv][PID]->son == -1 )
                {
-//                f2-1. output fluid variables
-                  fwrite( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid, sizeof(real), CUBE(PS1)*NCOMP_TOTAL, File );
+//                f4-1. output fluid variables
+                  fwrite( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid,    sizeof(real), CUBE(PS1)*NCOMP_TOTAL,    File );
 
-//                f2-2. output gravitational potential
+//                f4-2. output gravitational potential
 #                 ifdef GRAVITY
                   if ( OPT__OUTPUT_POT )
-                  fwrite( amr->patch[ amr->PotSg[lv] ][lv][PID]->pot,   sizeof(real), CUBE(PS1),             File );
+                  fwrite( amr->patch[ amr->PotSg[lv] ][lv][PID]->pot,      sizeof(real), CUBE(PS1),                File );
 #                 endif
 
-//                f2-3. output particle density depostied onto grids
+//                f4-3. output particle density depostied onto grids
 #                 ifdef PARTICLE
                   if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )
-                  fwrite( ParDensArray[ PID%8 ],                        sizeof(real), CUBE(PS1),             File );
+                  fwrite( ParDensArray[ PID%8 ],                           sizeof(real), CUBE(PS1),                File );
+#                 endif
+
+//                f4-4. output magnetic field
+#                 ifdef MHD
+//                cell-centered
+                  if ( OPT__OUTPUT_CC_MAG )
+                  fwrite( CCMag,                                           sizeof(real), CUBE(PS1)*NCOMP_MAG,      File );
+
+//                face-centered
+                  fwrite( amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic, sizeof(real), PS1P1*SQR(PS1)*NCOMP_MAG, File );
 #                 endif
                } // if ( amr->patch[0][lv][PID]->son == -1 )
             } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
@@ -842,7 +894,7 @@ void Output_DumpData_Total( const char *FileName )
             fclose( File );
 
 
-//          f3. free memory used for outputting particle density
+//          f5. free memory used for outputting particle density
 #           ifdef PARTICLE
             if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )
             {
@@ -858,8 +910,13 @@ void Output_DumpData_Total( const char *FileName )
       } // for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
    } // for (int lv=0; lv<NLEVEL; lv++)
 
+// free memory
 #  ifdef PARTICLE
-   if ( ParDensArray != NULL )   delete [] ParDensArray;
+   delete [] ParDensArray;
+#  endif
+
+#  ifdef MHD
+   delete [] CCMag;
 #  endif
 
 

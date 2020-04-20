@@ -101,8 +101,8 @@ MOLECULAR_WEIGHT              0.6         # mean molecular weight -> currently o
 MINMOD_COEFF                  1.5         # coefficient of the generalized MinMod limiter (1.0~2.0) [1.5]
 OPT__LR_LIMITER               4           # slope limiter of data reconstruction in the MHM/MHM_RP/CTU schemes:
                                           # (0=none, 1=vanLeer, 2=generalized MinMod, 3=vanAlbada, 4=vanLeer+generalized MinMod) [4]
-OPT__1ST_FLUX_CORR            2           # correct unphysical results (defined by MIN_DENS/PRES) by the 1st-order fluxes:
-                                          # (0=off, 1=3D, 2=3D+1D) [2] ##MHM/MHM_RP/CTU ONLY##
+OPT__1ST_FLUX_CORR           -1           # correct unphysical results (defined by MIN_DENS/PRES) by the 1st-order fluxes:
+                                          # (<0=auto, 0=off, 1=3D, 2=3D+1D) [-1] ##MHM/MHM_RP/CTU ONLY; NOT SUPPORTED IN MHD##
 OPT__1ST_FLUX_CORR_SCHEME     1           # Riemann solver for OPT__1ST_FLUX_CORR (0=none, 1=Roe, 2=HLLC 3=HLLE) [1]
 DUAL_ENERGY_SWITCH            2.0e-2      # apply dual-energy if E_int/E_kin < DUAL_ENERGY_SWITCH [2.0e-2] ##DUAL_ENERGY ONLY##
 
@@ -130,7 +130,7 @@ SOR_OMEGA                    -1.0         # over-relaxation parameter in SOR: (<
 SOR_MAX_ITER                 -1           # maximum number of iterations in SOR: (<0=auto) [-1]
 SOR_MIN_ITER                 -1           # minimum number of iterations in SOR: (<0=auto) [-1]
 POT_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU Poisson solver (<=0=auto) [-1]
-OPT__GRA_P5_GRADIENT          0           # 5-points gradient in the Gravity solver (must have GRA/USG_GHOST_SIZE>=2) [0]
+OPT__GRA_P5_GRADIENT          0           # 5-points gradient in the Gravity solver (must have GRA/USG_GHOST_SIZE_G>=2) [0]
 OPT__GRAVITY_TYPE             1           # gravity source: (1=self-gravity, 2=external gravity, 3=both) ##2/3 for HYDRO ONLY##
 
 

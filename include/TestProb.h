@@ -12,11 +12,19 @@ static void Validate();
 static void SetParameter();
 static void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                        const int lv, double AuxArray[] );
+#ifdef MHD
+static void SetBFieldIC( real magnetic[], const double x, const double y, const double z, const double Time,
+                         const int lv, double AuxArray[] );
+#endif
 
 
 // function pointers of various user-specified routines
 extern void (*Init_Function_User_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
                                        const int lv, double AuxArray[] );
+#ifdef MHD
+extern void (*Init_Function_BField_User_Ptr)( real magnetic[], const double x, const double y, const double z, const double Time,
+                                              const int lv, double AuxArray[] );
+#endif
 extern void (*Init_ByFile_User_Ptr)( real fluid_out[], const real fluid_in[], const int nvar_in,
                                      const double x, const double y, const double z, const double Time,
                                      const int lv, double AuxArray[] );
@@ -28,6 +36,10 @@ extern void (*Mis_GetTimeStep_User_Ptr)( const int lv, const double dTime_dt );
 extern void (*Aux_Record_User_Ptr)();
 extern void (*BC_User_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
                             const int lv, double AuxArray[] );
+#ifdef MHD
+extern void (*BC_BField_User_Ptr)( real magnetic[], const double x, const double y, const double z, const double Time,
+                                   const int lv, double AuxArray[] );
+#endif
 extern bool (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
                                          const int lv, double AuxArray[] );
 extern void (*End_User_Ptr)();

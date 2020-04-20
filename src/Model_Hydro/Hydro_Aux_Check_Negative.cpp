@@ -19,14 +19,14 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_Aux_Check_Negative
+// Function    :  HydroAux_Check_Negative
 // Description :  Check if there is any cell with negative density or pressure
 //
-// Parameter   :  lv       : Target refinement level
-//                Mode     : 1 : Check negative density
-//                           2 : Check negative pressure (and entropy when DUAL_ENERGY == DE_ENPY)
-//                           3 : Both
-//                comment  : You can put the location where this function is invoked in this string
+// Parameter   :  lv      : Target refinement level
+//                Mode    : 1 : Check negative density
+//                          2 : Check negative pressure (and entropy when DUAL_ENERGY == DE_ENPY)
+//                          3 : Both
+//                comment : You can put the location where this function is invoked in this string
 //-------------------------------------------------------------------------------------------------------
 void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment )
 {
@@ -65,9 +65,14 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
 #           if ( DUAL_ENERGY == DE_ENPY )
             Pres = Hydro_DensEntropy2Pres( Fluid[DENS], Fluid[ENPY], Gamma_m1, CheckMinPres_No, NULL_REAL );
 #           else
+#           ifdef MHD
+            const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+#           else
+            const real EngyB = NULL_REAL;
+#           endif // MHD
             Pres = Hydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                      Gamma_m1, CheckMinPres_No, NULL_REAL );
-#           endif
+                                      Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB );
+#           endif // DUAL_ENERGY
 
             if ( Mode == 1  ||  Mode == 3 )
             {

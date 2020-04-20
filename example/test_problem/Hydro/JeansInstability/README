@@ -1,0 +1,37 @@
+Compilation flags:
+========================================
+Enable : MODEL=HYDRO, GRAVITY [, MHD]
+Disable: PARTICLE, COMOVING
+
+
+Default setup:
+========================================
+1. Resolution = 64^3
+2. Simulation time: stable -> one period; unstable -> grow/decay by a factor of 50
+3. Gravitational constant = 1/(4*pi) = 0.07957747154
+
+
+Note:
+========================================
+1. Support both hydro and MHD. For the latter, a fast wave solution is adopted.
+2. Only support the 3D case, where the wave propagates along the diagonal direction
+   --> Simulation box must be cubic
+3. A simple gnuplot script "plot.gpt" is attached
+4. "Record__L1Err" records the L1 errors
+5. Jeans_* record the numerical and analytical solutions along the diagonal
+6. Example parameters
+   (1) Stable right-moving wave:
+      Jeans_Rho0        1.0            # background density
+      Jeans_Rho1        1.0e-6         # density perturbation amplitude
+      Jeans_P0          1.0e-2         # background pressure
+      Jeans_v0          0.0            # background velocity [0.0]
+      Jeans_B0          1.0e-2         # background magnetic field amplitude
+      Jeans_Sign       +1.0            # (>0/<0) --> (stable:right/left-moving wave; unstable:growing/decaying mode) [+1]
+
+   (2) Unstable growing mode:
+      Jeans_Rho0        2.0            # background density
+      Jeans_Rho1        1.0e-6         # density perturbation amplitude
+      Jeans_P0          1.0e-2         # background pressure
+      Jeans_v0          0.0            # background velocity [0.0]
+      Jeans_B0          1.0e-2         # background magnetic field amplitude
+      Jeans_Sign       +1.0            # (>0/<0) --> (stable:right/left-moving wave; unstable:growing/decaying mode) [+1]

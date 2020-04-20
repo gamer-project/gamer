@@ -5,6 +5,8 @@ Riemann_Prob         0              # target Riemann problem (0 : Sod's shock tu
                                     #                         3 : Einfeldt's 1-2-0-3
                                     #                         4 : Einfeldt's 1-1-2-5
                                     #                         5 : sonic rarefaction wave
+                                    #                         6 : RJ2a      (MHD only)
+                                    #                         7 : Torrilhon (MHD only)
+                                    #                         8 : Brio & Wu (MHD only)
 Riemann_LR          +1              # wave propagation direction (>0/<0 --> positive/negative direction) [1]
 Riemann_XYZ          0              # wave propagation axis (0/1/2 --> x/y/z) [0]
-

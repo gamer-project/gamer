@@ -64,7 +64,9 @@ void LoadData_HDF5( const char *FileName )
    char  *FieldName_In[NCOMP_TOTAL];            // for format version >= 2300
    int   *NullPtr = NULL;
 
-#  if ( MODEL == ELBDM )
+#  if   ( MODEL == HYDRO )
+   int    Magnetohydrodynamics;
+#  elif ( MODEL == ELBDM )
    double ELBDM_Mass;
    double ELBDM_PlanckConst;
 #  endif
@@ -130,8 +132,8 @@ void LoadData_HDF5( const char *FileName )
    LoadField( "Float8",              &Float8_RS,         H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal, &Float8_RT,       1,    Fatal );
    LoadField( "NLevel",              &NLevel_RS,         H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal, &NLevel_RT,       1,    Fatal );
    LoadField( "PatchSize",           &PatchSize_RS,      H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal, &PatchSize_RT,    1,    Fatal );
-   LoadField( "NCompFluid",          &NCompFluid_RS,     H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal, &NCompFluid_RT,   1,    Fatal );
-   LoadField( "NCompPassive",        &NCompPassive_RS,   H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal, &NCompPassive_RT, 1,    Fatal );
+   LoadField( "NCompFluid",          &NCompFluid_RS,     H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,   NonFatal, &NCompFluid_RT,   1,    Fatal );
+   LoadField( "NCompPassive",        &NCompPassive_RS,   H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,   NonFatal, &NCompPassive_RT, 1,    Fatal );
 
    LoadField( "Gravity",             &Gravity,           H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal,  NullPtr,        -1, NonFatal );
    LoadField( "Particle",            &Particle,          H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal,  NullPtr,        -1, NonFatal );
@@ -178,6 +180,17 @@ void LoadData_HDF5( const char *FileName )
    LoadField( "ELBDM_PlanckConst",   &ELBDM_PlanckConst, H5_SetID_InputPara, H5_TypeID_InputPara,    Fatal,  NullPtr,        -1, NonFatal );
 
    ELBDM_ETA = ELBDM_Mass / ELBDM_PlanckConst;
+#  endif
+
+// check if B field is included
+#  if ( MODEL == HYDRO )
+   if ( FormatVersion >= 2400 )
+      LoadField( "Magnetohydrodynamics", &Magnetohydrodynamics, H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal, NullPtr, -1, NonFatal );
+   else
+      Magnetohydrodynamics = 0;
+
+// MHD is actually not supported yet
+   if ( Magnetohydrodynamics )   Aux_Error( ERROR_INFO, "MHD is NOT supported yet !!\n" );
 #  endif
 
 // field labels

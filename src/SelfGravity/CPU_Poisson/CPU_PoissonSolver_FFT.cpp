@@ -103,8 +103,8 @@ void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf
 //    even with NSIDE_00 and GhostSize=0, we still need OPT__BC_FLU to determine whether periodic BC is adopted
 //    for depositing particle mass onto grids.
 //    also note that we do not check minimum density here since no ghost zones are required
-      Prepare_PatchData( 0, PrepTime, Dens[0][0][0], GhostSize, NPG, &PID0, _TOTAL_DENS,
-                         IntScheme, UNIT_PATCH, NSide_None, IntPhase_No, OPT__BC_FLU, PotBC_None,
+      Prepare_PatchData( 0, PrepTime, Dens[0][0][0], NULL, GhostSize, NPG, &PID0, _TOTAL_DENS, _NONE,
+                         IntScheme, INT_NONE, UNIT_PATCH, NSide_None, IntPhase_No, OPT__BC_FLU, PotBC_None,
                          MinDens_No, MinPres_No, DE_Consistency_No );
 
 
