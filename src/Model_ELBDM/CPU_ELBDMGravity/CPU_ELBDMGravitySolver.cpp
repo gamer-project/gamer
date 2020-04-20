@@ -4,47 +4,16 @@
 #include <mpi.h>
 #endif
 
-#include "Macro.h"
 #include "CUPOT.h"
 
 #if ( MODEL == ELBDM  &&  defined GRAVITY )
 
 
 
-// external functions and GPU-related set-up
+// include c_ExtPot_AuxArray[]
 #ifdef __CUDACC__
-
-#include "../../SelfGravity/GPU_Poisson/CUPOT_ExternalPot.cu"
-
-
-// variables reside in constant memory
-__constant__ double c_ExtPot_AuxArray[EXT_POT_NAUX_MAX];
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  CUPOT_SetConstMem_ELBDMGravitySolver
-// Description :  Set the constant memory used by CUPOT_ELBDMGravitySolver()
-//
-// Note        :  1. Adopt the suggested approach for CUDA version >= 5.0
-//                2. Invoked by CUAPI_Init_ExternalAccPot()
-//
-// Parameter   :  None
-//
-// Return      :  0/-1 : successful/failed
-//---------------------------------------------------------------------------------------------------
-__host__
-int CUPOT_SetConstMem_ELBDMGravitySolver( double h_ExtPot_AuxArray[] )
-{
-
-   if (  cudaSuccess != cudaMemcpyToSymbol( c_ExtPot_AuxArray, h_ExtPot_AuxArray, EXT_POT_NAUX_MAX*sizeof(double),
-                                            0, cudaMemcpyHostToDevice)  )
-      return -1;
-
-   else
-      return 0;
-
-} // FUNCTION : CUPOT_SetConstMem_ELBDMGravitySolver
-
-#endif // ifdef __CUDACC__
+#include "CUDA_ConstMemory.h"
+#endif
 
 
 
@@ -74,12 +43,11 @@ int CUPOT_SetConstMem_ELBDMGravitySolver( double h_ExtPot_AuxArray[] )
 //                dh                : Cell size
 //                Lambda            : Quartic self-interaction coefficient in ELBDM
 //                ExtPot            : Add the external potential
-//                Time              : Physical time (may be used by ExternalPot())
+//                ExtPot_Func       : Function pointer to the external potential routine (for both CPU and GPU)
+//                Time              : Physical time --> used by ExtPot_Func()
 //                c_ExtPot_AuxArray : Auxiliary array for adding external potential (for CPU only)
-//                                    --> When using GPU, this array is stored in the constant memory
-//                                        and does not need to be passed as a function argument
-//                                        --> Declared on top of this file with the prefix "c_" to
-//                                        highlight that this is a constant variable on GPU
+//                                    --> When using GPU, this array is stored in the constant memory header
+//                                        CUDA_ConstMemory.h and does not need to be passed as a function argument
 //
 //
 // Return      :  g_Flu_Array
@@ -90,14 +58,14 @@ void CUPOT_ELBDMGravitySolver(       real   g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
                                const real   g_Pot_Array[][ CUBE(GRA_NXT) ],
                                const double g_Corner_Array[][3],
                                const real EtaDt, const real dh, const real Lambda,
-                               const bool ExtPot, const double Time )
+                               const bool ExtPot, ExtPot_t ExtPot_Func, const double Time )
 #else
 void CPU_ELBDMGravitySolver  (       real   g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
                                const real   g_Pot_Array[][ CUBE(GRA_NXT) ],
                                const double g_Corner_Array[][3],
                                const int NPatchGroup,
                                const real EtaDt, const real dh, const real Lambda,
-                               const bool ExtPot, const double Time,
+                               const bool ExtPot, ExtPot_t ExtPot_Func, const double Time,
                                const double c_ExtPot_AuxArray[] )
 #endif
 {
@@ -150,7 +118,7 @@ void CPU_ELBDMGravitySolver  (       real   g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
             y = g_Corner_Array[P][1] + (double)(j_flu*dh);
             z = g_Corner_Array[P][2] + (double)(k_flu*dh);
 
-            Pot += ExternalPot( x, y, z, Time, c_ExtPot_AuxArray );
+            Pot += ExtPot_Func( x, y, z, Time, c_ExtPot_AuxArray );
          }
 
          Phase     = EtaDt * Pot;

@@ -263,19 +263,8 @@ void Init_TestProb_ELBDM_SelfSimilarHalo()
    SetParameter();
 
 
-   Init_Function_User_Ptr      = SetGridIC;
-   Init_Field_User_Ptr         = NULL;
-   Flag_User_Ptr               = NULL;
-   Mis_GetTimeStep_User_Ptr    = NULL;
-   BC_User_Ptr                 = NULL;
-   Flu_ResetByUser_Func_Ptr    = NULL;
-   Output_User_Ptr             = NULL;
-   Aux_Record_User_Ptr         = NULL;
-   End_User_Ptr                = End_SelfSimilarHalo;
-#  ifdef GRAVITY
-   Init_ExternalAcc_Ptr        = NULL;
-   Init_ExternalPot_Ptr        = NULL;
-#  endif
+   Init_Function_User_Ptr = SetGridIC;
+   End_User_Ptr           = End_SelfSimilarHalo;
 #  endif // if ( MODEL == ELBDM  &&  defined GRAVITY  &&  defined COMOVING )
 
 
