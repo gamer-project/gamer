@@ -14,6 +14,7 @@
        double Plummer_Center[3];    // central coordinates
        double Plummer_BulkVel[3];   // bulk velocity
        double Plummer_GasMFrac;     // gas mass fraction
+       double Plummer_ExtMFrac;     // external mass fraction
        int    Plummer_MassProfNBin; // number of radial bins in the mass profile table
 static bool   Plummer_AddColor;     // assign different colors to different clouds for Plummer_Collision
 
@@ -30,6 +31,10 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
                                   real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                   real *AllAttribute[PAR_NATT_TOTAL] );
 #endif
+void SetCPUExtAcc_Plummer( ExtAcc_t &CPUExtAcc_Ptr );
+# ifdef GPU
+void SetGPUExtAcc_Plummer( ExtAcc_t &GPUExtAcc_Ptr );
+# endif
 
 
 
@@ -134,6 +139,7 @@ void SetParameter()
    ReadPara->Add( "Plummer_BulkVelY",     &Plummer_BulkVel[1],    0.0,           NoMin_double,     NoMax_double      );
    ReadPara->Add( "Plummer_BulkVelZ",     &Plummer_BulkVel[2],    0.0,           NoMin_double,     NoMax_double      );
    ReadPara->Add( "Plummer_GasMFrac",     &Plummer_GasMFrac,      0.5,           Eps_double,       1.0               );
+   ReadPara->Add( "Plummer_ExtMFrac",     &Plummer_ExtMFrac,      0.25,          0.0,              1.0               );
    ReadPara->Add( "Plummer_MassProfNBin", &Plummer_MassProfNBin,  1000,          2,                NoMax_int         );
    ReadPara->Add( "Plummer_AddColor",     &Plummer_AddColor,      false,         Useless_bool,     Useless_bool      );
 
@@ -152,13 +158,23 @@ void SetParameter()
    if ( Plummer_AddColor  &&  NCOMP_PASSIVE_USER != 2 )
       Aux_Error( ERROR_INFO, "please set NCOMP_PASSIVE_USER to 2 for \"Plummer_AddColor\" !!\n" );
 
-#  ifndef PARTICLE
-   if ( Plummer_GasMFrac != 1.0 )
+#  ifdef GRAVITY
+   if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  &&  Plummer_ExtMFrac != 0.0 )
    {
-      Plummer_GasMFrac = 1.0;
+      Plummer_ExtMFrac = 0.0;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : \"Plummer_GasMFrac\" is reset to 1.0 since PARTICLE is disabled !!\n" );
+         Aux_Message( stderr, "WARNING : \"Plummer_ExtMFrac\" is reset to 0.0 since external acceleration (OPT__GRAVITY_TYPE) is disabled !!\n" );
+   }
+#  endif
+
+#  ifndef PARTICLE
+   if (  ! Mis_CompareRealValue( Plummer_GasMFrac+Plummer_ExtMFrac, 1.0, NULL, false )  )
+   {
+      Plummer_GasMFrac = 1.0 - Plummer_ExtMFrac;
+
+      if ( MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : \"Plummer_GasMFrac\" is reset to %13.7e since PARTICLE is disabled !!\n", Plummer_GasMFrac );
    }
 #  endif
 
@@ -202,9 +218,8 @@ void SetParameter()
       Aux_Message( stdout, "  assign colors to different clouds         = %d\n",     Plummer_AddColor ); }
       for (int d=0; d<3; d++)
       Aux_Message( stdout, "  bulk velocity [%d]                        = %14.7e\n", d, Plummer_BulkVel[d] );
-#     if ( MODEL == HYDRO )
       Aux_Message( stdout, "  gas mass fraction                         = %13.7e\n", Plummer_GasMFrac );
-#     endif
+      Aux_Message( stdout, "  external mass fraction                    = %13.7e\n", Plummer_ExtMFrac );
       Aux_Message( stdout, "  number of radial bins in the mass profile = %d\n",     Plummer_MassProfNBin );
       Aux_Message( stdout, "  free-fall time at the scale radius        = %13.7e\n", Plummer_FreeT );
       Aux_Message( stdout, "=============================================================================\n" );
@@ -327,6 +342,35 @@ void AddNewField_Plummer()
    }
 
 } // FUNCTION : AddNewField_Plummer
+
+
+
+#ifdef GRAVITY
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Init_ExtAccAuxArray_Plummer
+// Description :  Set the auxiliary array ExtAcc_AuxArray[] used by the external acceleration routine ExtAcc_Plummer()
+//
+// Note        :  1. External acceleration can be enabled by the runtime option "OPT__GRAVITY_TYPE = 2/3"
+//                2. AuxArray[] has the size of EXT_ACC_NAUX_MAX defined in CUPOT.h (default = 10)
+//
+// Parameter   :  AuxArray : Array to be filled up
+//
+// Return      :  AuxArray[]
+//-------------------------------------------------------------------------------------------------------
+void Init_ExtAccAuxArray_Plummer( double AuxArray[] )
+{
+
+// acceleration = -G*Mtot*r/(r^2+R0^2)^(3/2)
+   const double Mtot = (4.0/3.0)*M_PI*CUBE(Plummer_R0)*Plummer_Rho0*Plummer_ExtMFrac;
+
+   AuxArray[0] = Plummer_Center[0];    // x coordinate of the external acceleration center
+   AuxArray[1] = Plummer_Center[1];    // y ...
+   AuxArray[2] = Plummer_Center[2];    // z ...
+   AuxArray[3] = SQR( Plummer_R0 );    // scale_radius^2
+   AuxArray[4] = -NEWTON_G*Mtot;       // -G*total_mass
+
+} // FUNCTION : Init_ExtAccAuxArray_Plummer
+#endif // #ifdef GRAVITY
 #endif // #if ( MODEL == HYDRO )
 
 
@@ -356,22 +400,18 @@ void Init_TestProb_Hydro_Plummer()
    SetParameter();
 
 
-   Init_Function_User_Ptr   = SetGridIC;
-   Init_Field_User_Ptr      = AddNewField_Plummer;
-   Flag_User_Ptr            = NULL;
-   Mis_GetTimeStep_User_Ptr = NULL;
-   BC_User_Ptr              = NULL;
-   Flu_ResetByUser_Func_Ptr = NULL;
-   Output_User_Ptr          = NULL;
-   Aux_Record_User_Ptr      = NULL;
-   End_User_Ptr             = NULL;
-#  ifdef GRAVITY
-   Init_ExternalAcc_Ptr     = NULL;
-   Init_ExternalPot_Ptr     = NULL;
-#  endif
+   Init_Function_User_Ptr  = SetGridIC;
+   Init_Field_User_Ptr     = AddNewField_Plummer;
 #  ifdef PARTICLE
-   Par_Init_ByFunction_Ptr  = Par_Init_ByFunction_Plummer;
+   Par_Init_ByFunction_Ptr = Par_Init_ByFunction_Plummer;
 #  endif
+#  ifdef GRAVITY
+   Init_ExtAccAuxArray_Ptr = Init_ExtAccAuxArray_Plummer;
+   SetCPUExtAcc_Ptr        = SetCPUExtAcc_Plummer;
+#  ifdef GPU
+   SetGPUExtAcc_Ptr        = SetGPUExtAcc_Plummer;
+#  endif
+#  endif // #ifdef GRAVITY
 #  endif // #if ( MODEL == HYDRO )
 
 

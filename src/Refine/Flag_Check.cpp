@@ -15,8 +15,8 @@ extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int l
 //
 // Note        :  1. Useless input arrays are set to NULL
 //                   (e.g, Pot if GRAVITY is off, Pres if OPT__FLAG_PRES_GRADIENT is off, ...)
-//                2. The function pointer "Flag_User_Ptr" points to "Flag_User()" by default
-//                   but may be overwritten by various test problem initializers
+//                2. For OPT__FLAG_USER, the function pointer "Flag_User_Ptr" must be set by a
+//                   test problem initializer
 //
 // Parameter   :  lv             : Target refinement level
 //                PID            : Target patch ID
@@ -192,10 +192,16 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
 // check user-defined criteria
 // ===========================================================================================
-   if ( OPT__FLAG_USER  &&  Flag_User_Ptr != NULL )
+   if ( OPT__FLAG_USER )
    {
-      Flag |= Flag_User_Ptr( i, j, k, lv, PID, FlagTable_User[lv] );
-      if ( Flag )    return Flag;
+      if ( Flag_User_Ptr != NULL )
+      {
+         Flag |= Flag_User_Ptr( i, j, k, lv, PID, FlagTable_User[lv] );
+         if ( Flag )    return Flag;
+      }
+
+      else
+         Aux_Error( ERROR_INFO, "Flag_User_Ptr == NULL for OPT__FLAG_USER !!\n" );
    }
 
 

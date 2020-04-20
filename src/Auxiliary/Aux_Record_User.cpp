@@ -1,27 +1,26 @@
 #include "GAMER.h"
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
-static void Aux_Record_User( );
+static void Aux_Record_User_Template( );
 
-// this function pointer may be overwritten by various test problem initializers
-void (*Aux_Record_User_Ptr)() = Aux_Record_User;
+// this function pointer must be set by a test problem initializer
+void (*Aux_Record_User_Ptr)() = NULL;
 
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Aux_Record_User
-// Description :  Record any user-specified information
+// Function    :  Aux_Record_User_Template
+// Description :  Template of recording user-specified information
 //
-// Note        :  1. Invoked by "main" using the function pointer "Aux_Record_User_Ptr"
-//                   --> The function pointer may be reset by various test problem initializers, in which case
-//                       this funtion will become useless
+// Note        :  1. Invoked by main() using the function pointer "Aux_Record_User_Ptr",
+//                   which must be set by a test problem initializer
 //                2. Enabled by the runtime option "OPT__RECORD_USER"
 //                3. This function will be called both during the program initialization and after each full update
 //
 // Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
-void Aux_Record_User()
+void Aux_Record_User_Template()
 {
 
    const char FileName[] = "Record__User";
@@ -50,6 +49,6 @@ void Aux_Record_User()
       fclose( File_User );
    }
 
-} // FUNCTION : Aux_Record_User
+} // FUNCTION : Aux_Record_User_Template
 
 

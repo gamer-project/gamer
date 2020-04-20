@@ -24,10 +24,6 @@
 # include "CUFLU_Shared_RiemannSolver_HLLD.cu"
 #endif
 
-#ifdef UNSPLIT_GRAVITY
-# include "../../SelfGravity/GPU_Gravity/CUPOT_ExternalAcc.cu"
-#endif
-
 #else // #ifdef __CUDACC__
 
 #if   ( RSOLVER == EXACT )
@@ -47,9 +43,6 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 #elif ( RSOLVER == HLLD )
 void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                const real Gamma, const real MinPres );
-#endif
-#ifdef UNSPLIT_GRAVITY
-void ExternalAcc( real Acc[], const double x, const double y, const double z, const double Time, const double UserArray[] );
 #endif
 
 #endif // #ifdef __CUDACC__ ... else ...
@@ -93,6 +86,7 @@ void ExternalAcc( real Acc[], const double x, const double y, const double z, co
 //                dh              : Cell size                                                 (for UNSPLIT_GRAVITY only)
 //                Time            : Current physical time                                     (for UNSPLIT_GRAVITY only)
 //                GravityType     : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
+//                ExtAcc_Func     : Function pointer to the external acceleration routine     (for UNSPLIT_GRAVITY only)
 //                ExtAcc_AuxArray : Auxiliary array for external acceleration                 (for UNSPLIT_GRAVITY only)
 //                MinPres         : Minimum allowed pressure
 //                DumpIntFlux     : true --> store the inter-patch fluxes in g_IntFlux[]
@@ -104,7 +98,7 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
                         const int NFlux, const int NSkip_N, const int NSkip_T, const real Gamma,
                         const bool CorrHalfVel, const real g_Pot_USG[], const double g_Corner[],
                         const real dt, const real dh, const double Time,
-                        const OptGravityType_t GravityType, const double ExtAcc_AuxArray[],
+                        const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[],
                         const real MinPres, const bool DumpIntFlux, real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ] )
 {
 
@@ -243,7 +237,7 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
                xyz[2]  = CrShift[2] + (double)(k_fc*dh);
                xyz[d] += dh_half;
 
-               ExternalAcc( Acc, xyz[0], xyz[1], xyz[2], Time, ExtAcc_AuxArray );
+               ExtAcc_Func( Acc, xyz[0], xyz[1], xyz[2], Time, ExtAcc_AuxArray );
 
                for (int t=0; t<3; t++)    Acc[t] *= dt_half;
             }
