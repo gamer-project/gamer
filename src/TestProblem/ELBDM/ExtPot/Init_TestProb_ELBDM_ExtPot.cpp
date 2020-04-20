@@ -15,9 +15,9 @@ static double ExtPot_Cen[3];     // point source position
 // =======================================================================================
 
 // external potential routines
-void SetCPUExtAcc_PointMass( ExtAcc_t &CPUExtAcc_Ptr );
+void SetCPUExtPot_PointMass( ExtPot_t &CPUExtPot_Ptr );
 # ifdef GPU
-void SetGPUExtAcc_PointMass( ExtAcc_t &GPUExtAcc_Ptr );
+void SetGPUExtPot_PointMass( ExtPot_t &GPUExtPot_Ptr );
 # endif
 
 
@@ -264,9 +264,9 @@ void Init_TestProb_ELBDM_ExtPot()
    Init_Function_User_Ptr  = SetGridIC;
    BC_User_Ptr             = BC;
    Init_ExtPotAuxArray_Ptr = Init_ExtPotAuxArray_ExtPotTest;
-   SetCPUExtAcc_Ptr        = SetCPUExtAcc_PointMass;
+   SetCPUExtPot_Ptr        = SetCPUExtPot_PointMass;
 #  ifdef GPU
-   SetGPUExtAcc_Ptr        = SetGPUExtAcc_PointMass;
+   SetGPUExtPot_Ptr        = SetGPUExtPot_PointMass;
 #  endif
 #  endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
 
