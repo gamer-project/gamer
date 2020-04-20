@@ -46,16 +46,16 @@ void Aux_Check_ProperNesting( const int lv, const char *comment )
                {
                   Aux_Message( stderr, "\"%s\" : <%s> FAILED at level %2d, Time = %13.7e, Step = %ld !!\n",
                                comment, __FUNCTION__, lv, Time[lv], Step );
-                  Aux_Message( stderr, "%4s\t%7s\t%7s\t\t%19s\n", 
+                  Aux_Message( stderr, "%4s\t%7s\t%7s\t\t%19s\n",
                                "Rank", "PID", "FaPID", "Coordinate" );
 
                   Pass = false;
                }
 
                Aux_Message( stderr, "%4d\t%7d\t%7d\t\t(%10d,%10d,%10d)\n",
-                            MPI_Rank, PID, FaPID, amr->patch[0][lv][PID]->corner[0],  
-                                                  amr->patch[0][lv][PID]->corner[1],  
-                                                  amr->patch[0][lv][PID]->corner[2]  ); 
+                            MPI_Rank, PID, FaPID, amr->patch[0][lv][PID]->corner[0],
+                                                  amr->patch[0][lv][PID]->corner[1],
+                                                  amr->patch[0][lv][PID]->corner[2]  );
             } // if ( FaPID == -1 )
 
             for (int sib=0; sib<26; sib++)
@@ -69,16 +69,16 @@ void Aux_Check_ProperNesting( const int lv, const char *comment )
                   {
                      Aux_Message( stderr, "\"%s\" : <%s> FAILED at level %2d, Time = %13.7e, Step = %ld !!\n",
                                   comment, __FUNCTION__, lv, Time[lv], Step );
-                     Aux_Message( stderr, "%4s\t%7s\t%7s\t%7s\t\t%19s\n", 
+                     Aux_Message( stderr, "%4s\t%7s\t%7s\t%7s\t\t%19s\n",
                                   "Rank", "PID", "FaPID", "Sib", "Coordinate" );
 
                      Pass = false;
                   }
 
                   Aux_Message( stderr, "%4d\t%7d\t%7d\t%7d\t\t(%10d,%10d,%10d)\n",
-                               MPI_Rank, PID, FaPID, sib, amr->patch[0][lv][PID]->corner[0],  
-                                                          amr->patch[0][lv][PID]->corner[1],  
-                                                          amr->patch[0][lv][PID]->corner[2]  ); 
+                               MPI_Rank, PID, FaPID, sib, amr->patch[0][lv][PID]->corner[0],
+                                                          amr->patch[0][lv][PID]->corner[1],
+                                                          amr->patch[0][lv][PID]->corner[2]  );
                } // if ( FaSibPID == -1 )
             } // for (int sib=0; sib<26; sib++)
          } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
@@ -89,12 +89,12 @@ void Aux_Check_ProperNesting( const int lv, const char *comment )
       MPI_Barrier( MPI_COMM_WORLD );
 
    } // for (int TargetRank=0; TargetRank<MPI_NRank; TargetRank++)
-   
+
 
    if ( Pass )
    {
-      if ( MPI_Rank == 0 )   
-         Aux_Message( stdout, "\"%s\" : <%s> PASSED at level %2d, Time = %13.7e, Step = %ld\n", 
+      if ( MPI_Rank == 0 )
+         Aux_Message( stdout, "\"%s\" : <%s> PASSED at level %2d, Time = %13.7e, Step = %ld\n",
                       comment, __FUNCTION__, lv, Time[lv], Step );
    }
 

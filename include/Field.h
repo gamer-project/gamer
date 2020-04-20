@@ -16,7 +16,7 @@ const FieldIdx_t Idx_Undefined = -1;   // must be outside the range [0, NCOMP_TO
 // **                                                       **
 // ***********************************************************
 
-#if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#if   ( MODEL == HYDRO )
 // main fields
 SET_GLOBAL( FieldIdx_t Idx_Dens,          Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_MomX,          Idx_Undefined );
@@ -90,6 +90,9 @@ SET_GLOBAL( FieldIdx_t Idx_ParMetalFrac,  Idx_Undefined );
 SET_GLOBAL( char FieldLabel[NCOMP_TOTAL][MAX_STRING] );
 #ifdef GRAVITY
 SET_GLOBAL( char *PotLabel, "Pote" );  // potential label is currently fixed
+#endif
+#ifdef MHD
+SET_GLOBAL( char *MagLabel[NCOMP_MAG] );
 #endif
 #ifdef PARTICLE
 SET_GLOBAL( char ParAttLabel[PAR_NATT_TOTAL][MAX_STRING] );

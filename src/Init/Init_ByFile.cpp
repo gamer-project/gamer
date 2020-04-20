@@ -129,7 +129,7 @@ void Init_ByFile()
 #  ifdef LOAD_BALANCE
 // no need to redistribute patches since Init_UniformGrid() already takes into account load balancing
 // --> but particle weighting is not considered yet
-// --> we will invoke LB_Init_LoadBalance() again after Flu_Restrict() for that
+// --> we will invoke LB_Init_LoadBalance() again after Flu_FixUp_Restrict() for that
 
 // must not reset load-balance variables (i.e., must adopt ResetLB_No) to avoid overwritting IdxList_Real[]
 // and IdxList_Real_IdxList[] already set above
@@ -157,10 +157,15 @@ void Init_ByFile()
 //    construct sibling relation
       SiblingSearch( lv );
 
-//    allocate flux arrays on "lv-1"
+//    allocate flux and electric field arrays on "lv-1"
 //    --> must do this after constructing the patch relation on lv-1 and lv
-      if ( lv > 0  &&  amr->WithFlux )
-      Flu_AllocateFluxArray( lv-1 );
+      if ( lv > 0 )
+      {
+         if ( amr->WithFlux )       Flu_AllocateFluxArray( lv-1 );
+#        ifdef MHD
+         if ( amr->WithElectric )   MHD_AllocateElectricArray( lv-1 );
+#        endif
+      }
    }
 #  endif // #ifdef LOAD_BALANCE ... else ...
 
@@ -170,8 +175,8 @@ void Init_ByFile()
    Init_ByFile_AssignData( UM_Filename, OPT__UM_IC_LEVEL, OPT__UM_IC_NVAR, OPT__UM_IC_LOAD_NRANK, OPT__UM_IC_FORMAT );
 
 #  ifdef LOAD_BALANCE
-   Buf_GetBufferData( OPT__UM_IC_LEVEL, amr->FluSg[OPT__UM_IC_LEVEL], NULL_INT, DATA_GENERAL, _TOTAL,
-                      Flu_ParaBuf, USELB_YES );
+   Buf_GetBufferData( OPT__UM_IC_LEVEL, amr->FluSg[OPT__UM_IC_LEVEL], amr->MagSg[OPT__UM_IC_LEVEL], NULL_INT,
+                      DATA_GENERAL, _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
 #  endif
 
 
@@ -180,12 +185,12 @@ void Init_ByFile()
    {
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Restricting level %d ... ", lv );
 
-      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _TOTAL );
+      Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv], NULL_INT, NULL_INT, _TOTAL, _MAG );
 
 #     ifdef LOAD_BALANCE
-      LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, NULL_INT );
+      LB_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, _MAG, NULL_INT );
 
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
 #     endif
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
@@ -224,9 +229,11 @@ void Init_ByFile()
 
 #     ifdef LOAD_BALANCE
 //    no need to exchange potential since we haven't calculated it yet
-      Buf_GetBufferData( lv,   amr->FluSg[lv  ], NULL_INT, DATA_AFTER_REFINE, _TOTAL, Flu_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv,   amr->FluSg[lv  ], amr->MagSg[lv  ], NULL_INT, DATA_AFTER_REFINE,
+                         _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
 
-      Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_AFTER_REFINE, _TOTAL, Flu_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv+1, amr->FluSg[lv+1], amr->MagSg[lv+1], NULL_INT, DATA_AFTER_REFINE,
+                         _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
 
       LB_Init_LoadBalance( Redistribute_Yes, Par_Weight, ResetLB_Yes, lv+1 );
 #     endif
@@ -248,9 +255,11 @@ void Init_ByFile()
 
 #     ifdef LOAD_BALANCE
 //    no need to exchange potential since we haven't calculated it yet
-      Buf_GetBufferData( lv,   amr->FluSg[lv  ], NULL_INT, DATA_AFTER_REFINE, _TOTAL, Flu_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv,   amr->FluSg[lv  ], amr->MagSg[lv  ], NULL_INT, DATA_AFTER_REFINE,
+                         _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
 
-      Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_AFTER_REFINE, _TOTAL, Flu_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv+1, amr->FluSg[lv+1], amr->MagSg[lv+1], NULL_INT, DATA_AFTER_REFINE,
+                         _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
 
       LB_Init_LoadBalance( Redistribute_Yes, Par_Weight, ResetLB_Yes, lv+1 );
 #     endif
@@ -272,12 +281,12 @@ void Init_ByFile()
       if ( NPatchTotal[lv+1] == 0 )    continue;
 
 //    no need to restrict potential since it will be recalculated later
-      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _TOTAL );
+      Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv], NULL_INT, NULL_INT, _TOTAL, _MAG );
 
 #     ifdef LOAD_BALANCE
-      LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, NULL_INT );
+      LB_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, _MAG, NULL_INT );
 
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_AFTER_FIXUP, _TOTAL, Flu_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_AFTER_FIXUP, _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
 #     endif
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
@@ -457,7 +466,7 @@ void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nva
 {
 
 #  ifdef GAMER_DEBUG
-#  if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined DUAL_ENERGY  )
+#  if ( MODEL == HYDRO  &&  defined DUAL_ENERGY )
    if ( nvar_in != NCOMP_TOTAL-1 )
       Aux_Error( ERROR_INFO, "nvar_in (%d) != NCOMP_TOTAL-1 (%d) when enabling DUAL_ENERGY !!\n", nvar_in, NCOMP_TOTAL-1 );
 
@@ -473,8 +482,8 @@ void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nva
 
    for (int v_in=0, v_out=0; v_in<nvar_in; v_in++, v_out++)
    {
-//    skip the dual-energy field for HYDRO/MHD
-#     if ( MODEL == HYDRO  ||  MODEL == MHD )
+//    skip the dual-energy field for HYDRO
+#     if   ( MODEL == HYDRO )
 #     if   ( DUAL_ENERGY == DE_ENPY )
       if ( v_out == ENPY )    v_out ++;
 #     elif ( DUAL_ENERGY == DE_EINT )
@@ -489,10 +498,18 @@ void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nva
       fluid_out[v_out] = fluid_in[v_in];
    }
 
-// calculate the dual-energy field for HYDRO/MHD
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+// calculate the dual-energy field for HYDRO
+#  if   ( MODEL == HYDRO )
+
+#  ifdef MHD
+   Aux_Error( ERROR_INFO, "MHD is NOT supported yet !!\n" );
+   const real EngyB = NULL_REAL;
+#  else
+   const real EngyB = NULL_REAL;
+#  endif
+
 #  if   ( DUAL_ENERGY == DE_ENPY )
-   fluid_out[ENPY] = Hydro_Fluid2Entropy( fluid_in[DENS], fluid_in[MOMX], fluid_in[MOMY], fluid_in[MOMZ], fluid_in[ENGY], GAMMA-1.0 );
+   fluid_out[ENPY] = Hydro_Fluid2Entropy( fluid_in[DENS], fluid_in[MOMX], fluid_in[MOMY], fluid_in[MOMZ], fluid_in[ENGY], GAMMA-1.0, EngyB );
 #  elif ( DUAL_ENERGY == DE_EINT )
 #  error : DE_EINT is NOT supported yet !!
 #  endif

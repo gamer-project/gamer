@@ -111,7 +111,7 @@ void Flu_ResetByUser_API( const int lv, const int FluSg, const double TTime )
 
 
    const double dh       = amr->dh[lv];
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( MODEL == HYDRO )
    const real   Gamma_m1 = GAMMA - (real)1.0;
    const real  _Gamma_m1 = (real)1.0 / Gamma_m1;
 #  endif
@@ -140,15 +140,21 @@ void Flu_ResetByUser_API( const int lv, const int FluSg, const double TTime )
 //       operations necessary only when this cell has been reset
          if ( Reset )
          {
-#           if ( MODEL == HYDRO  ||  MODEL == MHD )
+#           if ( MODEL == HYDRO )
+#           ifdef MHD
+            const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+#           else
+            const real EngyB = NULL_REAL;
+#           endif
+
 //          check minimum density and pressure
             fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
             fluid[ENGY] = Hydro_CheckMinPresInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                                    Gamma_m1, _Gamma_m1, MIN_PRES );
+                                                    Gamma_m1, _Gamma_m1, MIN_PRES, EngyB );
 
 //          calculate the dual-energy variable (entropy or internal energy)
 #           if   ( DUAL_ENERGY == DE_ENPY )
-            fluid[ENPY] = Hydro_Fluid2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Gamma_m1 );
+            fluid[ENPY] = Hydro_Fluid2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Gamma_m1, EngyB );
 #           elif ( DUAL_ENERGY == DE_EINT )
 #           error : DE_EINT is NOT supported yet !!
 #           endif
@@ -160,7 +166,7 @@ void Flu_ResetByUser_API( const int lv, const int FluSg, const double TTime )
             if ( OPT__NORMALIZE_PASSIVE )
                Hydro_NormalizePassive( fluid[DENS], fluid+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
 #           endif
-#           endif // if ( MODEL == HYDRO  ||  MODEL == MHD )
+#           endif // if ( MODEL == HYDRO )
 
 //          store the reset values
             for (int v=0; v<NCOMP_TOTAL; v++)   amr->patch[FluSg][lv][PID]->fluid[v][k][j][i] = fluid[v];

@@ -35,6 +35,8 @@
 // Parameter   :  g_Input          : Array storing the input fluid data
 //                g_Output         : Array to store the updated fluid data
 //                g_DE_Status      : Array to store the dual-energy status
+//                g_FC_B           : Array storing the updated face-centered B field
+//                                   --> For the dual-energy formalism only
 //                g_Flux           : Array storing the input face-centered fluxes
 //                                   --> Accessed with the array stride N_FL_FLUX even thought its actually
 //                                       allocated size is N_FC_FLUX^3
@@ -53,12 +55,12 @@
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
-                           const real g_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ], const real dt, const real dh,
-                           const real Gamma, const real MinDens, const real MinPres, const real DualEnergySwitch,
-                           const bool NormPassive, const int NNorm, const int NormIdx[] )
+                           const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                           const real dt, const real dh, const real Gamma, const real MinDens, const real MinPres,
+                           const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
-   const int  didx_flux[3] = { 1, N_FL_FLUX, N_FL_FLUX*N_FL_FLUX };
+   const int  didx_flux[3] = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };
    const real dt_dh        = dt/dh;
 #  ifdef DUAL_ENERGY
    const real  Gamma_m1    = Gamma - (real)1.0;
@@ -74,7 +76,18 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
       const int i_out    = idx_out % PS2;
       const int j_out    = idx_out % size_ij / PS2;
       const int k_out    = idx_out / size_ij;
-      const int idx_flux = IDX321( i_out, j_out, k_out, N_FL_FLUX, N_FL_FLUX );
+
+//    for MHD, one additional flux is evaluated along each transverse direction for computing the CT electric field
+#     ifdef MHD
+      const int i_flux   = i_out + 1;
+      const int j_flux   = j_out + 1;
+      const int k_flux   = k_out + 1;
+#     else
+      const int i_flux   = i_out;
+      const int j_flux   = j_out;
+      const int k_flux   = k_out;
+#     endif
+      const int idx_flux = IDX321( i_flux, j_flux, k_flux, N_FL_FLUX, N_FL_FLUX );
 
       const int i_in     = i_out + FLU_GHOST_SIZE;
       const int j_in     = j_out + FLU_GHOST_SIZE;
@@ -85,7 +98,13 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //    1. calculate flux difference to update the fluid data
       for (int d=0; d<3; d++)
       for (int v=0; v<NCOMP_TOTAL; v++)
-         dFlux[d][v] = g_Flux[d][v][ idx_flux+didx_flux[d] ] - g_Flux[d][v][idx_flux];
+      {
+#        ifdef MHD
+         dFlux[d][v] = g_Flux[d][v][idx_flux] - g_Flux[d][v][ idx_flux - didx_flux[d] ];
+#        else
+         dFlux[d][v] = g_Flux[d][v][ idx_flux + didx_flux[d] ] - g_Flux[d][v][idx_flux];
+#        endif
+      }
 
       for (int v=0; v<NCOMP_TOTAL; v++)
          Output_1Cell[v] = g_Input[v][idx_in] - dt_dh*( dFlux[0][v] + dFlux[1][v] + dFlux[2][v] );
@@ -97,10 +116,16 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //    --> this consideration holds even when DUAL_ENERGY is adopted (e.g., when density is negative,
 //        even when DUAL_ENERGY is on, we still want to try the 1st-order-flux correction before setting a floor value)
       /*
+#     ifdef MHD
+#     error : ERROR : MHD is not supported here !!!
+      const real EngyB = NULL_REAL;
+#     else
+      const real EngyB = NULL_REAL;
+#     endif
       Output_1Cell[DENS] = FMAX( Output_1Cell[DENS], MinDens );
       Output_1Cell[ENGY] = Hydro_CheckMinPresInEngy( Output_1Cell[DENS], Output_1Cell[MOMX],
                                                      Output_1Cell[MOMY], Output_1Cell[MOMZ],
-                                                     Output_1Cell[ENGY], Gamma_m1, _Gamma_m1, MinPres );
+                                                     Output_1Cell[ENGY], Gamma_m1, _Gamma_m1, MinPres, EngyB );
       */
 
 
@@ -119,13 +144,20 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //        by the dual-energy formalism (i.e., for cells with their dual-energy status marked as DE_UPDATED_BY_DUAL)
 //    --> this feature might be modified in the future
 #     ifdef DUAL_ENERGY
+//    B field must be updated in advance
+#     ifdef MHD
+      const real EngyB = MHD_GetCellCenteredBEnergy( g_FC_B[MAGX], g_FC_B[MAGY], g_FC_B[MAGZ],
+                                                     PS2, PS2, PS2, i_out, j_out, k_out );
+#     else
+      const real EngyB = NULL_REAL;
+#     endif
 //    we no longer apply the minimum density and pressure checks here since we want to enable 1st-order-flux correction for that
       const bool CheckMinPres_No = false;
 //    Output_1Cell[DENS] = FMAX( Output_1Cell[DENS], MinDens );
 
       Hydro_DualEnergyFix( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
                            Output_1Cell[ENGY], Output_1Cell[ENPY], g_DE_Status[idx_out],
-                           Gamma_m1, _Gamma_m1, CheckMinPres_No, NULL_REAL, DualEnergySwitch );
+                           Gamma_m1, _Gamma_m1, CheckMinPres_No, NULL_REAL, DualEnergySwitch, EngyB );
 #     endif // #ifdef DUAL_ENERGY
 
 
@@ -136,15 +168,15 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //    5. check the negative density and energy
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( Hydro_CheckNegative(Output_1Cell[DENS]) )
-         printf( "WARNING : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+         printf( "WARNING : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  Output_1Cell[DENS], __FILE__, __LINE__, __FUNCTION__ );
 
       if ( Hydro_CheckNegative(Output_1Cell[ENGY]) )
-         printf( "WARNING : negative energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+         printf( "WARNING : invalid energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  Output_1Cell[ENGY], __FILE__, __LINE__, __FUNCTION__ );
 #     endif
 
-   } // i,j,k
+   } // CGPU_LOOP( idx_out, CUBE(PS2) )
 
 } // FUNCTION : Hydro_FullStepUpdate
 

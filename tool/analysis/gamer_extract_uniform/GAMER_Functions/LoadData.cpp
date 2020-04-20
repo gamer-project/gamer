@@ -856,7 +856,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
 // =================================================================================================
    bool gravity, individual_timestep, comoving, gpu, gamer_optimization, gamer_debug, timing, timing_solver;
    bool intel, float8, serial, overlap_mpi, openmp, store_pot_ghost, unsplit_gravity, particle;
-   bool conserve_mass, laplacian_4th, self_interaction, laohu, support_hdf5;
+   bool conserve_mass, laplacian_4th, self_interaction, laohu, support_hdf5, mhd;
    int  model, pot_scheme, flu_scheme, lr_scheme, rsolver, load_balance, nlevel, max_patch, ncomp_passive, gpu_arch;
 
    fseek( File, HeaderOffset_Makefile, SEEK_SET );
@@ -892,9 +892,11 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
    fread( &self_interaction,           sizeof(bool),                    1,             File );
    fread( &laohu,                      sizeof(bool),                    1,             File );
    fread( &support_hdf5,               sizeof(bool),                    1,             File );
+   fread( &mhd,                        sizeof(bool),                    1,             File );
 
 // reset parameters
    if ( FormatVersion < 2100 )   particle = false;
+   if ( FormatVersion < 2210 )   mhd      = false;
 
 
 // b. load the symbolic constants defined in "Macro.h, CUPOT.h, and CUFLU.h"
@@ -1071,6 +1073,13 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
       exit( 1 );
    }
 #  endif
+
+// MHD is not supported yet
+   if ( mhd )
+   {
+      fprintf( stderr, "ERROR : MHD is NOT supported yet !!\n" );
+      exit( 1 );
+   }
 
    CompareVar( "MODEL",                   model,                  MODEL,                        Fatal );
    CompareVar( "NLEVEL",                  nlevel,                 NLEVEL,                       Fatal );

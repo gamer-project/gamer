@@ -99,12 +99,13 @@ extern double           MIN_DENS, MIN_PRES;
 #ifdef DUAL_ENERGY
 extern double           DUAL_ENERGY_SWITCH;
 #endif
-
-#elif ( MODEL == MHD )
-#warning WAIT MHD !!!
-extern double           MIN_DENS, MIN_PRES;
-#ifdef DUAL_ENERGY
-extern double           DUAL_ENERGY_SWITCH;
+#ifdef MHD
+extern double           FlagTable_Current[NLEVEL-1];
+extern IntScheme_t      OPT__MAG_INT_SCHEME, OPT__REF_MAG_INT_SCHEME;
+extern bool             OPT__FIXUP_ELECTRIC, OPT__CK_INTERFACE_B, OPT__OUTPUT_CC_MAG, OPT__FLAG_CURRENT;
+extern int              OPT__CK_DIVERGENCE_B;
+extern double           UNIT_B;
+extern bool             OPT__INIT_BFIELD_BYFILE;
 #endif
 
 #elif ( MODEL == ELBDM )
@@ -197,6 +198,9 @@ extern bool            GRACKLE_CMB_FLOOR;
 extern bool            GRACKLE_PE_HEATING;
 extern double          GRACKLE_PE_HEATING_RATE;
 extern char            GRACKLE_CLOUDY_TABLE[MAX_STRING];
+extern int             GRACKLE_THREE_BODY_RATE;
+extern bool            GRACKLE_CIE_COOLING;
+extern int             GRACKLE_H2_OPA_APPROX;
 extern int             CHE_GPU_NPGROUP;
 #endif
 
@@ -225,15 +229,23 @@ extern double     (*h_Corner_Array_F [2])[3];
 #ifdef DUAL_ENERGY
 extern char       (*h_DE_Array_F_Out [2])[ CUBE(PS2) ];
 #endif
+#ifdef MHD
+extern real       (*h_Mag_Array_F_In [2])[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
+extern real       (*h_Mag_Array_F_Out[2])[NCOMP_MAG][ PS2P1*SQR(PS2)          ];
+extern real       (*h_Ele_Array      [2])[9][NCOMP_ELE][ PS2P1*PS2 ];
+#endif
 
 #ifdef GRAVITY
 extern real       (*h_Rho_Array_P    [2])[RHO_NXT][RHO_NXT][RHO_NXT];
 extern real       (*h_Pot_Array_P_In [2])[POT_NXT][POT_NXT][POT_NXT];
 extern real       (*h_Pot_Array_P_Out[2])[GRA_NXT][GRA_NXT][GRA_NXT];
-extern real       (*h_Flu_Array_G    [2])[GRA_NIN][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+extern real       (*h_Flu_Array_G    [2])[GRA_NIN][PS1][PS1][PS1];
 extern double     (*h_Corner_Array_G [2])[3];
 #ifdef DUAL_ENERGY
-extern char       (*h_DE_Array_G     [2])[PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+extern char       (*h_DE_Array_G     [2])[PS1][PS1][PS1];
+#endif
+#ifdef MHD
+extern real       (*h_EngyB_Array_G  [2])[PS1][PS1][PS1];
 #endif
 
 #ifdef UNSPLIT_GRAVITY
@@ -256,6 +268,9 @@ extern real        *h_dt_Array_T[2];
 extern real       (*h_Flu_Array_T[2])[NCOMP_FLUID][ CUBE(PS1) ];
 #ifdef GRAVITY
 extern real       (*h_Pot_Array_T[2])[ CUBE(GRA_NXT) ];
+#endif
+#ifdef MHD
+extern real       (*h_Mag_Array_T[2])[NCOMP_MAG][ PS1P1*SQR(PS1) ];
 #endif
 
 

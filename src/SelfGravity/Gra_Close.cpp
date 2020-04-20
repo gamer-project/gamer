@@ -14,15 +14,17 @@
 //                   --> Currently it's set to the same Sg as the fluid data when calling
 //                       Gra_AdvanceDt() in EvolveLevel()
 //
-// Parameter   :  lv             : Target refinement level
-//                SaveSg         : Sandglass to store the updated data
-//                h_Flu_Array_G  : Host array storing the updated fluid variables
-//                h_DE_Array_G   : Host array storing the dual-energy status
-//                NPG            : Number of patch groups to store the updated data
-//                PID0_List      : List recording the patch indicies with LocalID==0 to be udpated
+// Parameter   :  lv              : Target refinement level
+//                SaveSg          : Sandglass to store the updated data
+//                h_Flu_Array_G   : Host array storing the updated fluid variables
+//                h_DE_Array_G    : Host array storing the dual-energy status
+//                h_EngyB_Array_G : Host array storing the cell-centered magnetic energy (MHD with DUAL_ENERGY only)
+//                NPG             : Number of patch groups to store the updated data
+//                PID0_List       : List recording the patch indices with LocalID==0 to be udpated
 //-------------------------------------------------------------------------------------------------------
 void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_NIN][PS1][PS1][PS1],
-                const char h_DE_Array_G[][PS1][PS1][PS1], const int NPG, const int *PID0_List )
+                const char h_DE_Array_G[][PS1][PS1][PS1], const real h_EngyB_Array_G[][PS1][PS1][PS1],
+                const int NPG, const int *PID0_List )
 {
 
 #  if ( defined DUAL_ENERGY  &&  defined UNSPLIT_GRAVITY )
@@ -41,8 +43,8 @@ void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_N
          PID = PID0 + LocalID;
          N   = 8*TID + LocalID;
 
-#        if ( MODEL == HYDRO  ||  MODEL == MHD )
-//       density field is sent in and out but NOT updated in the hydro/MHD gravity solver
+#        if ( MODEL == HYDRO )
+//       density field is sent in and out but NOT updated in the hydro gravity solver
          for (int v=1; v<GRA_NIN; v++)
          for (int k=0; k<PATCH_SIZE; k++)
          for (int j=0; j<PATCH_SIZE; j++)
@@ -64,6 +66,12 @@ void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_N
 #           ifdef UNSPLIT_GRAVITY
             if ( h_DE_Array_G[N][k][j][i] == DE_UPDATED_BY_ETOT_GRA )
             {
+#              ifdef MHD
+               const real EngyB = h_EngyB_Array_G[N][k][j][i];
+#              else
+               const real EngyB = NULL_REAL;
+#              endif
+
 #              if   ( DUAL_ENERGY == DE_ENPY )
                amr->patch[SaveSg][lv][PID]->fluid[ENPY][k][j][i]
                   = Hydro_Fluid2Entropy( amr->patch[SaveSg][lv][PID]->fluid[DENS][k][j][i],
@@ -71,7 +79,7 @@ void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_N
                                          amr->patch[SaveSg][lv][PID]->fluid[MOMY][k][j][i],
                                          amr->patch[SaveSg][lv][PID]->fluid[MOMZ][k][j][i],
                                          amr->patch[SaveSg][lv][PID]->fluid[ENGY][k][j][i],
-                                         Gamma_m1 );
+                                         Gamma_m1, EngyB );
 #              elif ( DUAL_ENERGY == DE_EINT )
 #              error : DE_EINT is NOT supported yet !!
 #              endif

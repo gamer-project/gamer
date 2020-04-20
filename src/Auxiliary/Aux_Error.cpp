@@ -8,9 +8,9 @@
 // Function    :  Aux_Error
 // Description :  Output the error messages and force the program to be terminated
 //
-// Note        :  Use the variable argument lists provided in "cstdarg" 
-// 
-// Parameter   :  File     : Name of the file where error occurs 
+// Note        :  Use the variable argument lists provided in "cstdarg"
+//
+// Parameter   :  File     : Name of the file where error occurs
 //                Line     : Line number where error occurs
 //                Func     : Name of the function where error occurs
 //                Format   : Output format
@@ -31,14 +31,14 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
    Aux_Message ( stderr, "********************************************************************************\n" );
    Aux_Message ( stderr, "ERROR : " );
    vfprintf    ( stderr, Format, Arg );
-   Aux_Message ( stderr, "        Rank <%d>, file <%s>, line <%d>, function <%s>\n", 
+   Aux_Message ( stderr, "        Rank <%d>, file <%s>, line <%d>, function <%s>\n",
                  MPI_Rank, File, Line, Func );
    Aux_Message ( stderr, "********************************************************************************\n" );
 
    va_end( Arg );
 
 
-// terminate the program   
+// terminate the program
    MPI_Exit();
 
 } // FUNCTION : Aux_Error

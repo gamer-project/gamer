@@ -4,17 +4,20 @@
 
 
 
-extern real (*d_Rho_Array_P    )[ RHO_NXT*RHO_NXT*RHO_NXT ];
-extern real (*d_Pot_Array_P_In )[ POT_NXT*POT_NXT*POT_NXT ];
-extern real (*d_Pot_Array_P_Out)[ GRA_NXT*GRA_NXT*GRA_NXT ];
+extern real (*d_Rho_Array_P    )[ CUBE(RHO_NXT) ];
+extern real (*d_Pot_Array_P_In )[ CUBE(POT_NXT) ];
+extern real (*d_Pot_Array_P_Out)[ CUBE(GRA_NXT) ];
 #ifdef UNSPLIT_GRAVITY
-extern real (*d_Pot_Array_USG_G)[ USG_NXT_G*USG_NXT_G*USG_NXT_G ];
-extern real (*d_Flu_Array_USG_G)[GRA_NIN-1][ PS1*PS1*PS1 ];
+extern real (*d_Pot_Array_USG_G)[ CUBE(USG_NXT_G) ];
+extern real (*d_Flu_Array_USG_G)[GRA_NIN-1][ CUBE(PS1) ];
 #endif
-extern real (*d_Flu_Array_G    )[GRA_NIN  ][ PS1*PS1*PS1 ];
+extern real (*d_Flu_Array_G    )[GRA_NIN  ][ CUBE(PS1) ];
 extern double (*d_Corner_Array_G)[3];
 #ifdef DUAL_ENERGY
-extern char (*d_DE_Array_G     )[ PS1*PS1*PS1 ];
+extern char (*d_DE_Array_G     )[ CUBE(PS1) ];
+#endif
+#ifdef MHD
+extern real (*d_EngyB_Array_G  )[ CUBE(PS1) ];
 #endif
 extern real (*d_Pot_Array_T)    [ CUBE(GRA_NXT) ];
 
@@ -43,6 +46,9 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
 #  ifdef DUAL_ENERGY
    const long DE_MemSize_G      = sizeof(char  )*Pot_NP*CUBE(PS1);
 #  endif
+#  ifdef MHD
+   const long EngyB_MemSize_G   = sizeof(real  )*Pot_NP*CUBE(PS1);
+#  endif
    const long Pot_MemSize_T     = sizeof(real  )*Pot_NP*CUBE(GRA_NXT);
 
 
@@ -53,6 +59,9 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
 #  endif
 #  ifdef DUAL_ENERGY
    TotalSize += DE_MemSize_G;
+#  endif
+#  ifdef MHD
+   TotalSize += EngyB_MemSize_G;
 #  endif
 
    if ( MPI_Rank == 0 )
@@ -77,6 +86,10 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_DE_Array_G,      DE_MemSize_G      )  );
 #  endif
 
+#  ifdef MHD
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_EngyB_Array_G,   EngyB_MemSize_G   )  );
+#  endif
+
    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Pot_Array_T,     Pot_MemSize_T     )  );
 
 
@@ -97,6 +110,10 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
 
 #     ifdef DUAL_ENERGY
       CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_DE_Array_G     [t], DE_MemSize_G      )  );
+#     endif
+
+#     ifdef MHD
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_EngyB_Array_G  [t], EngyB_MemSize_G   )  );
 #     endif
 
       CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Pot_Array_T    [t], Pot_MemSize_T     )  );

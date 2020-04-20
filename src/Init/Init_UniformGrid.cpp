@@ -90,14 +90,14 @@ void Init_UniformGrid( const int lv, const bool FindHomePatchForPar )
       if (  LB_Index2Rank( lv, LBIdx0, CHECK_ON ) == MPI_Rank  )
 #     endif
       {
-         amr->pnew( lv, Cr[0],        Cr[1],        Cr[2],        -1, true, true );
-         amr->pnew( lv, Cr[0]+PScale, Cr[1],        Cr[2],        -1, true, true );
-         amr->pnew( lv, Cr[0],        Cr[1]+PScale, Cr[2],        -1, true, true );
-         amr->pnew( lv, Cr[0],        Cr[1],        Cr[2]+PScale, -1, true, true );
-         amr->pnew( lv, Cr[0]+PScale, Cr[1]+PScale, Cr[2],        -1, true, true );
-         amr->pnew( lv, Cr[0],        Cr[1]+PScale, Cr[2]+PScale, -1, true, true );
-         amr->pnew( lv, Cr[0]+PScale, Cr[1],        Cr[2]+PScale, -1, true, true );
-         amr->pnew( lv, Cr[0]+PScale, Cr[1]+PScale, Cr[2]+PScale, -1, true, true );
+         amr->pnew( lv, Cr[0],        Cr[1],        Cr[2],        -1, true, true, true );
+         amr->pnew( lv, Cr[0]+PScale, Cr[1],        Cr[2],        -1, true, true, true );
+         amr->pnew( lv, Cr[0],        Cr[1]+PScale, Cr[2],        -1, true, true, true );
+         amr->pnew( lv, Cr[0],        Cr[1],        Cr[2]+PScale, -1, true, true, true );
+         amr->pnew( lv, Cr[0]+PScale, Cr[1]+PScale, Cr[2],        -1, true, true, true );
+         amr->pnew( lv, Cr[0],        Cr[1]+PScale, Cr[2]+PScale, -1, true, true, true );
+         amr->pnew( lv, Cr[0]+PScale, Cr[1],        Cr[2]+PScale, -1, true, true, true );
+         amr->pnew( lv, Cr[0]+PScale, Cr[1]+PScale, Cr[2]+PScale, -1, true, true, true );
       }
 
    }}}

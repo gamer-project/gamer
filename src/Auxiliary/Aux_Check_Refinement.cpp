@@ -7,7 +7,7 @@
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Aux_Check_Refinement
 // Description :  Verify the refinement result at the input level
-//                --> Output grids at level lv that should be refined into level lv+1 but were not refined 
+//                --> Output grids at level lv that should be refined into level lv+1 but were not refined
 //
 // Note        :  1. This test will not pass if some patches are not refined due to the proper-nestiing constraint
 //                2. This test should always pass for the initial condition constructed by the UM_Init function
@@ -28,7 +28,7 @@ void Aux_Check_Refinement( const int lv, const char *comment )
 #  else
 
 // nothing to check at the maximum level
-   if ( lv == NLEVEL-1 ) 
+   if ( lv == NLEVEL-1 )
    {
       if ( MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : function \"%s\" should NOT be applied to the finest level !!\n",
@@ -50,7 +50,7 @@ void Aux_Check_Refinement( const int lv, const char *comment )
    bool  PatchTest   = true;
    int   CountPatch  = 0;
    int   CountGrid   = 0;
-   real  Rho;   
+   real  Rho;
 
    for (int TargetRank=0; TargetRank<MPI_NRank; TargetRank++)
    {
@@ -74,16 +74,16 @@ void Aux_Check_Refinement( const int lv, const char *comment )
                      {
                         Aux_Message( stderr, "\"%s\" : <%s> FAILED at level %2d, Time = %13.7e, Step = %ld !!\n",
                                      comment, __FUNCTION__, lv, Time[lv], Step );
-                        Aux_Message( stderr, "%4s\t%7s\t\t%19s\t\t%10s\t%14s\n", 
+                        Aux_Message( stderr, "%4s\t%7s\t\t%19s\t\t%10s\t%14s\n",
                                      "Rank", "PatchID", "Patch Corner", "Grid ID", "Density" );
 
                         Pass = false;
                      }
 
                      Aux_Message( stderr, "%4d\t%7d\t\t(%10d,%10d,%10d)\t\t(%2d,%2d,%2d)\t%14.7e\n",
-                                  MPI_Rank, PID, amr->patch[0][lv][PID]->corner[0],  
-                                                 amr->patch[0][lv][PID]->corner[1],  
-                                                 amr->patch[0][lv][PID]->corner[2], i, j, k, Rho ); 
+                                  MPI_Rank, PID, amr->patch[0][lv][PID]->corner[0],
+                                                 amr->patch[0][lv][PID]->corner[1],
+                                                 amr->patch[0][lv][PID]->corner[2], i, j, k, Rho );
 
                      PatchTest = false;
                      CountGrid ++;
@@ -105,8 +105,8 @@ void Aux_Check_Refinement( const int lv, const char *comment )
 
    if ( Pass )
    {
-      if ( MPI_Rank == 0 )   
-         Aux_Message( stdout, "\"%s\" : <%s> PASSED at level %2d, Time = %13.7e, Step = %ld\n", 
+      if ( MPI_Rank == 0 )
+         Aux_Message( stdout, "\"%s\" : <%s> PASSED at level %2d, Time = %13.7e, Step = %ld\n",
                       comment, __FUNCTION__, lv, Time[lv], Step );
    }
 

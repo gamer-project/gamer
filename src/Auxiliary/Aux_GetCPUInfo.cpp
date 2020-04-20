@@ -5,8 +5,8 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Aux_GetCPUInfo
-// Description :  Record the CPU information 
-// 
+// Description :  Record the CPU information
+//
 // Parameter   :  FileName : Name of the output file
 //-------------------------------------------------------------------------------------------------------
 void Aux_GetCPUInfo( const char *FileName )
@@ -29,29 +29,29 @@ void Aux_GetCPUInfo( const char *FileName )
 
    FILE *CPUInfo = fopen( CPUInfo_Path, "r" );
 
-   while ( getline(&line, &len, CPUInfo) != -1 ) 
+   while ( getline(&line, &len, CPUInfo) != -1 )
    {
       sscanf( line, "%s%s", String[0], String[1] );
 
-      if (  strcmp( String[0], "model" ) == 0  &&  strcmp( String[1], "name" ) == 0  )    
+      if (  strcmp( String[0], "model" ) == 0  &&  strcmp( String[1], "name" ) == 0  )
       {
          strncpy( line, "CPU Type  ", 10 );
          fprintf( Note, "%s", line );
       }
 
-      if (  strcmp( String[0], "cpu" ) == 0  &&  strcmp( String[1], "MHz" ) == 0  )    
+      if (  strcmp( String[0], "cpu" ) == 0  &&  strcmp( String[1], "MHz" ) == 0  )
       {
          strncpy( line, "CPU MHz", 7 );
          fprintf( Note, "%s", line );
       }
 
-      if (  strcmp( String[0], "cache" ) == 0  &&  strcmp( String[1], "size" ) == 0  )    
+      if (  strcmp( String[0], "cache" ) == 0  &&  strcmp( String[1], "size" ) == 0  )
       {
          strncpy( line, "Cache Size", 10 );
          fprintf( Note, "%s", line );
       }
 
-      if (  strcmp( String[0], "cpu" ) == 0  &&  strcmp( String[1], "cores" ) == 0  )    
+      if (  strcmp( String[0], "cpu" ) == 0  &&  strcmp( String[1], "cores" ) == 0  )
       {
          strncpy( line, "CPU Cores", 9 );
          fprintf( Note, "%s", line );
@@ -59,7 +59,7 @@ void Aux_GetCPUInfo( const char *FileName )
       }
    }
 
-   if ( line != NULL )  
+   if ( line != NULL )
    {
       free( line );
       line = NULL;
@@ -79,7 +79,7 @@ void Aux_GetCPUInfo( const char *FileName )
 
    FILE *MemInfo = fopen( MemInfo_Path, "r" );
 
-   while ( getline(&line, &len, MemInfo) != -1 ) 
+   while ( getline(&line, &len, MemInfo) != -1 )
    {
       sscanf( line, "%s%s", String[0], String[1] );
 
@@ -90,7 +90,7 @@ void Aux_GetCPUInfo( const char *FileName )
       }
    }
 
-   if ( line != NULL )  
+   if ( line != NULL )
    {
       free( line );
       line = NULL;
