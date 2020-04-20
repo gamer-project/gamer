@@ -209,26 +209,7 @@ void Init_TestProb_ELBDM_LSS()
    SetParameter();
 
 
-   Init_Function_User_Ptr         = NULL;
-   Init_ByFile_User_Ptr           = Init_ByFile_ELBDM_LSS;
-   Init_Field_User_Ptr            = NULL;
-   Flag_User_Ptr                  = NULL;
-   Mis_GetTimeStep_User_Ptr       = NULL;
-   BC_User_Ptr                    = NULL;
-   Flu_ResetByUser_Func_Ptr       = NULL;
-   Output_User_Ptr                = NULL;
-   Aux_Record_User_Ptr            = NULL;
-   Init_User_Ptr                  = NULL;
-   End_User_Ptr                   = NULL;
-#  ifdef GRAVITY
-   Init_ExternalAcc_Ptr           = NULL;
-   Init_ExternalPot_Ptr           = NULL;
-   Poi_AddExtraMassForGravity_Ptr = NULL;
-#  endif
-#  ifdef PARTICLE
-   Par_Init_ByFunction_Ptr        = NULL;
-   Par_Init_Attribute_User_Ptr    = NULL;
-#  endif
+   Init_ByFile_User_Ptr = Init_ByFile_ELBDM_LSS;
 #  endif // #if ( MODEL == ELBDM )
 
 

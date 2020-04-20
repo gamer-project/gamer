@@ -4,6 +4,7 @@
 
 #include "CUPOT.h"
 extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
+extern ExtPot_t CPUExtPot_Ptr;
 
 static real GetMaxPot( const int lv );
 
@@ -117,7 +118,7 @@ real GetMaxPot( const int lv )
 #        else
          PotS   = (real)0.0;
 #        endif
-         PotE   = ( OPT__EXTERNAL_POT ) ? ExternalPot( x, y, z, Time[lv], ExtPot_AuxArray ) : (real)0.0;
+         PotE   = ( OPT__EXTERNAL_POT ) ? CPUExtPot_Ptr( x, y, z, Time[lv], ExtPot_AuxArray ) : (real)0.0;
 
          Pot    = FABS( PotG + PotS + PotE );  // remember to take the absolute value
          MaxPot = MAX( MaxPot, Pot );

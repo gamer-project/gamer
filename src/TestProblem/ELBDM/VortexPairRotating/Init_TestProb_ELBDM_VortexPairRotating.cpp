@@ -195,15 +195,8 @@ void Init_TestProb_ELBDM_VortexPairRotating()
    SetParameter();
 
 
-   Init_Function_User_Ptr      = SetGridIC;
-   Init_Field_User_Ptr         = NULL;
-   Flag_User_Ptr               = NULL;
-   Mis_GetTimeStep_User_Ptr    = NULL;
-   BC_User_Ptr                 = SetGridIC;
-   Flu_ResetByUser_Func_Ptr    = NULL;
-   Output_User_Ptr             = NULL;
-   Aux_Record_User_Ptr         = NULL;
-   End_User_Ptr                = NULL;
+   Init_Function_User_Ptr = SetGridIC;
+   BC_User_Ptr            = SetGridIC;
 #  endif // #if ( MODEL == ELBDM )
 
 

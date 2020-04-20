@@ -413,16 +413,9 @@ void Init_TestProb_ELBDM_Soliton()
    SetParameter();
 
 
-   Init_Function_User_Ptr   = SetGridIC;
-   Flag_User_Ptr            = NULL;
-   Mis_GetTimeStep_User_Ptr = NULL;
-   BC_User_Ptr              = BC;
-   Flu_ResetByUser_Func_Ptr = NULL;
-   Output_User_Ptr          = NULL;
-   Aux_Record_User_Ptr      = NULL;
-   End_User_Ptr             = End_Soliton;
-   Init_ExternalAcc_Ptr     = NULL;
-   Init_ExternalPot_Ptr     = NULL;
+   Init_Function_User_Ptr = SetGridIC;
+   BC_User_Ptr            = BC;
+   End_User_Ptr           = End_Soliton;
 #  endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
 
 
