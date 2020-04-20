@@ -43,20 +43,23 @@ void CUPOT_HydroGravitySolver(
          char   g_DE_Array     [][ CUBE(PS1) ],
    const real   g_EngyB_Array  [][ CUBE(PS1) ],
    const real dt, const real dh, const bool P5_Gradient,
-   const OptGravityType_t GravityType,
+   const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
    const double TimeNew, const double TimeOld, const real MinEint );
 
 #elif ( MODEL == ELBDM )
 __global__
-void CUPOT_ELBDMGravitySolver(       real   g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
-                               const real   g_Pot_Array[][ CUBE(GRA_NXT) ],
+void CUPOT_ELBDMGravitySolver(       real g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
+                               const real g_Pot_Array[][ CUBE(GRA_NXT) ],
                                const double g_Corner_Array[][3],
                                const real EtaDt, const real dh, const real Lambda,
-                               const bool ExtPot, const double Time );
+                               const bool ExtPot, ExtPot_t ExtPot_Func, const double Time );
 
 #else
 #error : ERROR : unsupported MODEL !!
 #endif // MODEL
+
+extern ExtAcc_t GPUExtAcc_Ptr;
+extern ExtPot_t GPUExtPot_Ptr;
 
 
 // declare all device pointers
@@ -408,14 +411,14 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
                                     d_Flu_Array_USG_G + UsedPatch[s],
                                     d_DE_Array_G      + UsedPatch[s],
                                     d_EngyB_Array_G   + UsedPatch[s],
-                                    dt, dh, P5_Gradient, GravityType, TimeNew, TimeOld, MinEint );
+                                    dt, dh, P5_Gradient, GravityType, GPUExtAcc_Ptr, TimeNew, TimeOld, MinEint );
 
 #        elif ( MODEL == ELBDM )
          CUPOT_ELBDMGravitySolver <<< NPatch_per_Stream[s], Gra_Block_Dim, 0, Stream[s] >>>
                                   ( d_Flu_Array_G     + UsedPatch[s],
                                     d_Pot_Array_P_Out + UsedPatch[s],
                                     d_Corner_Array_G  + UsedPatch[s],
-                                    ELBDM_EtaDt, dh, ELBDM_Lambda, ExtPot, TimeNew );
+                                    ELBDM_EtaDt, dh, ELBDM_Lambda, ExtPot, GPUExtPot_Ptr, TimeNew );
 
 #        else
 #        error : ERROR : unsupported MODEL !!

@@ -14,7 +14,7 @@ void Aux_GetCPUInfo( const char *FileName );
 void CUAPI_DiagnoseDevice()
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "CUAPI_DiagnoseDevice ... " );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
 // get the hostname and PID of each process
@@ -124,7 +124,7 @@ void CUAPI_DiagnoseDevice()
       fprintf( Note, "***********************************************************************************\n" );
       fclose( Note );
 
-      Aux_Message( stdout, "done\n" );
+      Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
    }
 
 } // FUNCTION : CUAPI_DiagnoseDevice

@@ -254,13 +254,6 @@ void Init_TestProb_Hydro_BlastWave()
 #  ifdef MHD
    Init_Function_BField_User_Ptr = SetBFieldIC;
 #  endif
-   Output_User_Ptr               = NULL;
-   Flag_User_Ptr                 = NULL;
-   Mis_GetTimeStep_User_Ptr      = NULL;
-   Aux_Record_User_Ptr           = NULL;
-   BC_User_Ptr                   = NULL;
-   Flu_ResetByUser_Func_Ptr      = NULL;
-   End_User_Ptr                  = NULL;
 #  endif // #if ( MODEL == HYDRO )
 
 
