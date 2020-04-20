@@ -297,7 +297,7 @@ void WriteFile( void (*AnalFunc)( real fluid[], const double x, const double y, 
    fluid[ENGY] = Hydro_GetPressure( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
                                   Gamma_m1, CheckMinPres_No, NULL_REAL );
 #  elif ( MODEL == SR_HYDRO )
-   double PriNum[NCOMP_FLUID];   
+   real PriNum[NCOMP_FLUID];   
    SRHydro_Con2Pri( fluid, PriNum, (double)GAMMA, (double)MIN_TEMP );
 #  endif
 
@@ -316,7 +316,7 @@ void WriteFile( void (*AnalFunc)( real fluid[], const double x, const double y, 
    Anal[ENGY] = Hydro_GetPressure( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY],
                                  Gamma_m1, CheckMinPres_No, NULL_REAL );
 #  elif ( MODEL == SR_HYDRO )
-   double PriAnal[NCOMP_FLUID];   
+   real PriAnal[NCOMP_FLUID];   
    SRHydro_Con2Pri( Anal, PriAnal, (double)GAMMA, (double)MIN_TEMP );
 #  endif
 
