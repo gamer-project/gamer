@@ -14,6 +14,12 @@ static double ExtPot_M;          // point source mass
 static double ExtPot_Cen[3];     // point source position
 // =======================================================================================
 
+// external potential routines
+void SetCPUExtPot_PointMass( ExtPot_t &CPUExtPot_Ptr );
+# ifdef GPU
+void SetGPUExtPot_PointMass( ExtPot_t &GPUExtPot_Ptr );
+# endif
+
 
 
 
@@ -206,7 +212,7 @@ void BC( real fluid[], const double x, const double y, const double z, const dou
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_ExtPotAuxArray_ExtPotTest
-// Description :  Set the auxiliary array used by the external potential routine
+// Description :  Set the auxiliary array ExtPot_AuxArray[] used by the external potential routine
 //
 // Note        :  1. External potential can be enabled by the runtime option "OPT__EXTERNAL_POT"
 //                2. Link to the function pointer "Init_ExtPotAuxArray_Ptr"
@@ -258,6 +264,10 @@ void Init_TestProb_ELBDM_ExtPot()
    Init_Function_User_Ptr  = SetGridIC;
    BC_User_Ptr             = BC;
    Init_ExtPotAuxArray_Ptr = Init_ExtPotAuxArray_ExtPotTest;
+   SetCPUExtPot_Ptr        = SetCPUExtPot_PointMass;
+#  ifdef GPU
+   SetGPUExtPot_Ptr        = SetGPUExtPot_PointMass;
+#  endif
 #  endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
 
 
