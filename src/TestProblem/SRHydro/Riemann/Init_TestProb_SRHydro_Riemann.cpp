@@ -297,6 +297,20 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 } // FUNCTION : SetGridIC
 
 
+bool Flag_User_Riemann( const int i, const int j, const int k, const int lv, const int PID, const double Threshold )
+{
+   const double dh     = amr->dh[lv];                                                  // grid size
+   const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,              // x,y,z position
+                           amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
+                           amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };
+
+
+  
+   if ( Step == 0 && 0.49*amr->BoxSize[0] < Pos[0] && Pos[0] < 0.51*amr->BoxSize[0] )
+               return true;
+   else        return false;
+
+} // FUNCTION : Flag_User
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_TestProb_Hydro_Riemann
@@ -325,7 +339,7 @@ void Init_TestProb_SRHydro_Riemann()
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr   = SetGridIC;
    Output_User_Ptr          = NULL;       // example: Hydro/AcousticWave/Init_TestProb_Hydro_AcousticWave.cpp --> OutputError()
-   Flag_User_Ptr            = NULL;       // example: AGORA_IsolatedGalaxy/Flag_AGORA.cpp
+   Flag_User_Ptr            = Flag_User_Riemann;  // example: AGORA_IsolatedGalaxy/Flag_AGORA.cpp
    Mis_GetTimeStep_User_Ptr = NULL;
    Aux_Record_User_Ptr      = NULL;
    BC_User_Ptr              = NULL;       // example: ELBDM/ExtPot/Init_TestProb_ELBDM_ExtPot.cpp --> BC()
