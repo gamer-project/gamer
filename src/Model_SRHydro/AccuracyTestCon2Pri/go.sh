@@ -1,4 +1,8 @@
 #!/bin/bash
+
+NAME=$1
+OUT=${NAME%.cpp}
+
 g++ $1  CPU_Shared_FluUtility.cpp \
 -DCONSERVED_ENERGY=2 \
 -DSERIAL \
@@ -10,5 +14,7 @@ g++ $1  CPU_Shared_FluUtility.cpp \
 -DNLEVEL=10 \
 -DMAX_PATCH=200000 \
 -DFLOAT8 \
--DEOS=APPROXIMATED_GENERAL    -lm && ./a.out
-#-DEOS=CONSTANT_GAMMA         -lm && ./a.out
+-DEOS=APPROXIMATED_GENERAL \
+-lm -o $OUT && ./$OUT
+#-DEOS=APPROXIMATED_GENERAL
+#-DEOS=CONSTANT_GAMMA      
