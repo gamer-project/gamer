@@ -4,9 +4,6 @@
 #include "CUFLU.h"
 #include <stdio.h>
 
-#if ( CONSERVED_ENERGY == 1 )
-# error: CONSERVED_ENERGY == 1 does not support!!
-#endif
 
 GPU_DEVICE 
 real VectorDotProduct( real V1, real V2, real V3 );
@@ -104,7 +101,11 @@ real SRHydro_GetHTilde( const real Con[], real Gamma )
   real Msqr = VectorDotProduct(Con[1], Con[2], Con[3]);
   real Dsqr = SQR(Con[0]);
   real abc = (real)1.0 / Dsqr;
+# if ( CONSERVED_ENERGY == 1 )
+  real E_D = ( Con[4] - Con[0] ) / Con[0];
+# elif ( CONSERVED_ENERGY == 2 )
   real E_D = Con[4] / Con[0];
+# endif
   real M_Dsqr = abc * Msqr;
   real M_D = SQRT( M_Dsqr );
 
@@ -340,9 +341,12 @@ void SRHydro_Pri2Con (const T In[], T Out[], const T Gamma)
 
   SRHydro_HTilde_Function( HTilde, M_Dsqr, (real)0.0, &Fun, NULL, Gamma );
 
+# if ( CONSERVED_ENERGY == 1 )
+  Out[ENGY]  = Out[DENS] * ( HTilde + (real)1.0 ) * LorentzFactor - In[4];
+# elif ( CONSERVED_ENERGY == 2 )
   Out[ENGY]  = ( M_Dsqr + Fun ) / ((real)1.0 + SQRT( (real)1.0 + M_Dsqr + Fun ));
   Out[ENGY] *= Out[DENS];
-
+# endif
 
 }				// FUNCTION : SRHydro_Pri2Con
 
@@ -421,7 +425,11 @@ void SRHydro_Con2Flux (const int XYZ, real Flux[], const real Con[], const real 
   Flux[1] = FMA( ConVar[1], Vx, PriVar[4] );
   Flux[2] = ConVar[2] * Vx;
   Flux[3] = ConVar[3] * Vx;
+# if ( CONSERVED_ENERGY == 1 )
+  Flux[4] = ConVar[1];
+# elif ( CONSERVED_ENERGY == 2 )
   Flux[4] = ( ConVar[4] + PriVar[4] )*Vx;
+# endif
 
   SRHydro_Rotate3D (Flux, XYZ, false);
 }				// FUNCTION : SRHydro_Con2Flux
@@ -466,7 +474,7 @@ real SRHydro_CheckMinTemp (const real InTemp, const real MinTemp)
 GPU_DEVICE
 real SRHydro_CheckMinTempInEngy (const real Cons[], const real MinTemp, const real Gamma )
 {
-
+# if ( CONSERVED_ENERGY == 2 )
 // conservative variables should NOT be put into SpecificEnthalpy() now,
 // --> In case h is overflow, Gamma will be automatically set as 4/3.
   real h_min = SpecificEnthalpy( NULL, MinTemp, Gamma );
@@ -484,6 +492,7 @@ real SRHydro_CheckMinTempInEngy (const real Cons[], const real MinTemp, const re
 
   if ( Cons[4] >= E_min) return Cons[4];
   else                   return E_min;
+# endif
 }
 
 
@@ -523,9 +532,14 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
       M = SQRT( Msqr );
 	  E_D = Con[ENGY] / Con[DENS];
 	  M_D = M / Con[DENS];
+#     if ( CONSERVED_ENERGY == 1 )
+      discriminant = ( ( SQR( Con[ENGY] ) -  Msqr ) / SQR ( Con[DENS] ) );
+      if ( discriminant <= 1.0   )                                                goto FAIL;
+#     elif ( CONSERVED_ENERGY == 2 )
       discriminant = ( E_D + M_D ) * ( E_D - M_D ) + (real)2.0 * E_D;
-
       if ( discriminant <= TINY_NUMBER )                                                goto FAIL;
+#     endif
+
 
 
 // pass all checks 
