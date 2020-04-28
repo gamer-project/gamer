@@ -1,10 +1,24 @@
 #!/bin/bash
 
 NAME=$1
+
+
+if [ -z "$NAME" ];then
+   echo "error: Please provide source code"
+   exit
+fi
+
+
 OUT=${NAME%.cpp}
 
+EOS=APPROXIMATED_GENERAL
+#EOS=CONSTANT_GAMMA
+CONSERVED_ENERGY=2
+PRECISION=FLOAT8
+
+
 g++ $1  CPU_Shared_FluUtility.cpp \
--DCONSERVED_ENERGY=2 \
+-DCONSERVED_ENERGY=$CONSERVED_ENERGY \
 -DSERIAL \
 -DLR_SCHEME=PLM \
 -DMODEL=SR_HYDRO \
@@ -13,8 +27,5 @@ g++ $1  CPU_Shared_FluUtility.cpp \
 -DRSOLVER=HLLC \
 -DNLEVEL=10 \
 -DMAX_PATCH=200000 \
--DFLOAT8 \
--DEOS=APPROXIMATED_GENERAL \
--lm -o $OUT && ./$OUT
-#-DEOS=APPROXIMATED_GENERAL
-#-DEOS=CONSTANT_GAMMA      
+-D$PRECISION \
+-DEOS=$EOS -lm -o $OUT && ./$OUT

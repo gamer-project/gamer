@@ -17,14 +17,14 @@ int  main()
   real Pri[5]           ;
 
 
-  real rho  = 1e2;
-  real Ux   = 1e6;
-  real Uy   = 0.0;
-  real Uz   = 0.0;
+  real rho  = 1.0;
+  real Ux   = 1e6/sqrt(3.0);
+  real Uy   = 1e6/sqrt(3.0);
+  real Uz   = 1e6/sqrt(3.0);
   real LorentzFactor = SQRT((double)1.0 + SQR(Ux) + SQR(Uy) + SQR(Uz));
 
-  double Tmax      = 1e6  ;
-  double Tmin      = 1e-18;
+  double Tmax      = 1e4;
+  double Tmin      = 1e-4;  // CMB temperature ~ 2.3e-8
 
   int  Npoint    = 1000;
 

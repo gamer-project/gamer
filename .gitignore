@@ -15,3 +15,8 @@ con2pri_double
 pri2con_double
 con2pri_single
 pri2con_single
+ErrorMap
+pri2con
+con2pri
+*.pdf
+*.eps
