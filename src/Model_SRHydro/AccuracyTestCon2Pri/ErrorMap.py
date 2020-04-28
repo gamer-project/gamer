@@ -89,12 +89,12 @@ AnalyticalError2  = (LorentzFactor2*h2)**2 * ( 1 + beta2**2 ) + (T2/LorentzFacto
 AnalyticalError2 /= h2**2 + (T2/LorentzFactor2)**2 - 2*h2*T2 - 1
 AnalyticalError2 *= np.finfo(np.float64).eps
 
-ax[0][1].plot(T2, AnalyticalError2/1e-16, '--',color='k',lw=3, label='Analytical') 
-ax[1][1].plot(T2, AnalyticalError2/1e-16, '--',color='k',lw=3) 
-ax[2][1].plot(T2, AnalyticalError2/1e-16, '--',color='k',lw=3) 
-ax[3][1].plot(T2, AnalyticalError2/1e-16, '--',color='k',lw=3) 
-ax[4][1].plot(T2, AnalyticalError2/1e-16, '--',color='k',lw=3) 
-ax[5][1].plot(T2, AnalyticalError2/1e-16, '--',color='k',lw=3) 
+ax[0][1].plot(T2, AnalyticalError2/1e-16, '-.',color='k',lw=3, label='Analytical') 
+ax[1][1].plot(T2, AnalyticalError2/1e-16, '-.',color='k',lw=3) 
+ax[2][1].plot(T2, AnalyticalError2/1e-16, '-.',color='k',lw=3) 
+ax[3][1].plot(T2, AnalyticalError2/1e-16, '-.',color='k',lw=3) 
+ax[4][1].plot(T2, AnalyticalError2/1e-16, '-.',color='k',lw=3) 
+ax[5][1].plot(T2, AnalyticalError2/1e-16, '-.',color='k',lw=3) 
 
 
 ax[5][0].set_xlabel('$k_{B}T/mc^2$'    , size='15')
@@ -129,6 +129,12 @@ ax[3][0].set_yscale('log')
 ax[4][0].set_yscale('log')
 ax[5][0].set_yscale('log')
 
+ax[0][1].set_ylim(-1.5,8.0)
+ax[1][1].set_ylim(-1.5,8.0)
+ax[2][1].set_ylim(-1.5,8.0)
+ax[3][1].set_ylim(-1.5,8.0)
+ax[4][1].set_ylim(-1.5,8.0)
+ax[5][1].set_ylim(-1.5,8.0)
 
 #ax[0][0].hlines(+np.finfo(np.float64).eps,min(T1),max(T1),colors='r', linestyle='--')
 #ax[1][0].hlines(+np.finfo(np.float64).eps,min(T1),max(T1),colors='r', linestyle='--')
