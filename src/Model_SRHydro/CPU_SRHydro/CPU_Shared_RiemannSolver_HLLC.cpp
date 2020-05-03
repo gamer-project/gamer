@@ -198,9 +198,9 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
     - lmdal * ( CR[1] )
 	+ lmdatlmda*( CR[4] - CL[4] );
 #   elif ( CONSERVED_ENERGY == 2 )
-  a = lmdar * ( CL[1] - CL[0]*lmdal )
-    - lmdal * ( CR[1] - CR[0]*lmdar )
-	+ lmdatlmda*( CR[4] - CL[4] );
+  a = lmdar * CL[1] 
+    - lmdal * CR[1] 
+	+ lmdatlmda*( CR[4] + CR[0] - CL[4] - CL[0] );
 #   endif
 
 #   if ( CONSERVED_ENERGY == 1 )
@@ -210,8 +210,8 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
     - lmdar * ( CL[1]*lV1 + PL[4] )
     - lmdatlmda*( CR[1] - CL[1] );
 #   elif ( CONSERVED_ENERGY == 2 )
-  b = lmdal * CL[4] - ( CL[1] - CL[0]*lmdal )
-    - lmdar * CR[4] + ( CR[1] - CR[0]*lmdar )
+  b = lmdal * ( CL[4] + CL[0] ) - CL[1]
+    - lmdar * ( CR[4] + CR[0] ) + CR[1]
     + lmdal * ( CR[1]*rV1 + PR[4] )
     - lmdar * ( CL[1]*lV1 + PL[4] )
     - lmdatlmda*( CR[1] - CL[1] );
