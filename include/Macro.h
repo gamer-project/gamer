@@ -71,9 +71,10 @@
 
 
 // equation of states
-#define IDEAL_GAS    1
-#define NUCLEAR      2
-#define TABULAR      3
+#define EOS_IDEAL_GAS   1
+#define EOS_NUCLEAR     2
+#define EOS_TABULAR     3
+#define EOS_USER        4
 
 
 // Poisson solvers

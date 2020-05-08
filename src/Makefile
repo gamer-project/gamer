@@ -79,9 +79,9 @@ SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 # magnetohydrodynamics
 #SIMU_OPTION += -DMHD
 
-# equation of state: IDEAL_GAS/NUCLEAR/TABULAR
+# equation of state: EOS_IDEAL_GAS/NUCLEAR/TABULAR/USER
 # --> must be set when MODEL=HYDRO
-SIMU_OPTION += -DEOS=IDEAL_GAS
+SIMU_OPTION += -DEOS=EOS_IDEAL_GAS
 
 
 # (b-2) ELBDM options
