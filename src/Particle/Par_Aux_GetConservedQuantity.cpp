@@ -4,6 +4,7 @@
 
 #include "CUPOT.h"
 extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
+extern ExtPot_t CPUExtPot_Ptr;
 
 
 
@@ -205,7 +206,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                for (int j=0; j<PotSize; j++)    {  y = PhyCorner_ExtPot[1] + (double)j*dh;
                for (int i=0; i<PotSize; i++)    {  x = PhyCorner_ExtPot[0] + (double)i*dh;
 
-                  Pot3D[P][k][j][i] += ExternalPot( x, y, z, PrepPotTime, ExtPot_AuxArray );
+                  Pot3D[P][k][j][i] += CPUExtPot_Ptr( x, y, z, PrepPotTime, ExtPot_AuxArray );
 
                }}}
             }

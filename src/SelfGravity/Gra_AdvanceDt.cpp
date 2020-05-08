@@ -134,9 +134,17 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 #        ifdef SUPPORT_GRACKLE
          if ( !GRACKLE_ACTIVATE )
 #        endif
-         if ( OPT__RESET_FLUID  &&  Flu_ResetByUser_API_Ptr != NULL )
-         TIMING_FUNC(   Flu_ResetByUser_API_Ptr( lv, SaveSg_Flu, TimeNew ),
-                        Timer_Gra_Advance[lv]   );
+         if ( OPT__RESET_FLUID )
+         {
+            if ( Flu_ResetByUser_API_Ptr != NULL )
+            {
+               TIMING_FUNC(   Flu_ResetByUser_API_Ptr( lv, SaveSg_Flu, TimeNew ),
+                              Timer_Gra_Advance[lv]   );
+            }
+
+            else
+               Aux_Error( ERROR_INFO, "Flu_ResetByUser_API_Ptr == NULL for OPT__RESET_FLUID !!\n" );
+         }
 
          amr->FluSg[0] = SaveSg_Flu;
       } // if ( Gravity )
@@ -161,8 +169,14 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 #     ifdef SUPPORT_GRACKLE
       if ( !GRACKLE_ACTIVATE )
 #     endif
-      if ( Gravity  &&  OPT__RESET_FLUID  &&  Flu_ResetByUser_API_Ptr != NULL )
-         Flu_ResetByUser_API_Ptr( lv, SaveSg_Flu, TimeNew );
+      if ( Gravity  &&  OPT__RESET_FLUID )
+      {
+         if ( Flu_ResetByUser_API_Ptr != NULL )
+            Flu_ResetByUser_API_Ptr( lv, SaveSg_Flu, TimeNew );
+
+         else
+            Aux_Error( ERROR_INFO, "Flu_ResetByUser_API_Ptr == NULL for OPT__RESET_FLUID !!\n" );
+      }
    }
 
 

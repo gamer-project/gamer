@@ -46,6 +46,9 @@ void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf
 {
 
 // check
+   if ( OPT__GRAVITY_EXTRA_MASS  &&  Poi_AddExtraMassForGravity_Ptr == NULL )
+      Aux_Error( ERROR_INFO, "Poi_AddExtraMassForGravity_Ptr == NULL for OPT__GRAVITY_EXTRA_MASS !!\n" );
+
 #  ifdef GAMER_DEBUG
    if ( List_z_start[MPI_Rank+1] - List_z_start[MPI_Rank] != local_nz )
       Aux_Error( ERROR_INFO, "local_nz (%d) != expectation (%d) !!\n",
