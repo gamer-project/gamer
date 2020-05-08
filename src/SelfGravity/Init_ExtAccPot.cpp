@@ -43,7 +43,7 @@ void (*SetGPUExtPot_Ptr)( ExtPot_t &GPUExtPot_Ptr )  = NULL;
 //                   --> Corresponding GPU arrays are set by CUAPI_SetConstMemory()
 //                4. Set the CPU/GPU external acceleration and potential routines by invoking
 //
-//                      SetCPU/GPUExtAcc_PointMass() and SetCPU/GPUExtPot_PointMass()
+//                      SetCPU/GPUExtAcc_Ptr() and SetCPU/GPUExtPot_Ptr()
 //
 //                5. Function pointers used here must be set in advance by a test problem initializer
 //
