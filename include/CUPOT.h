@@ -168,6 +168,7 @@
 #endif // POT_SCHEME
 
 
+
 // blockDim.z for the GPU Gravity solver
 #define GRA_BLOCK_SIZE              256
 
@@ -181,7 +182,7 @@
 #endif
 
 
-// maximum size of the arrays ExtPot_AuxArray and ExtAcc_AuxArray
+// maximum size of ExtPot_AuxArray[] and ExtAcc_AuxArray[]
 #define EXT_POT_NAUX_MAX            10
 #define EXT_ACC_NAUX_MAX            10
 

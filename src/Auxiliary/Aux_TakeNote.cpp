@@ -404,6 +404,8 @@ void Aux_TakeNote()
 #     endif
 #     endif // #ifdef MHD
 
+      fprintf( Note, "EOS_NAUX_MAX                    %d\n",      EOS_NAUX_MAX );
+
 #     elif ( MODEL == ELBDM )
 
 #     else

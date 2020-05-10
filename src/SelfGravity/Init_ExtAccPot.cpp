@@ -5,6 +5,7 @@
 
 
 #include "CUPOT.h"
+
 // auxiliary arrays to be set by Init_ExtAcc/PotAuxArray_Ptr
 double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 double ExtPot_AuxArray[EXT_POT_NAUX_MAX];

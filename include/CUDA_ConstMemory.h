@@ -16,6 +16,8 @@ SET_GLOBAL( __constant__ int  c_NormIdx[NCOMP_PASSIVE] );
 SET_GLOBAL( __constant__ int *c_NormIdx, NULL );
 #  endif
 
+SET_GLOBAL( __constant__ double c_EoS_AuxArray[EOS_NAUX_MAX] );
+
 #  ifdef GRAVITY
 SET_GLOBAL( __constant__ double c_ExtAcc_AuxArray[EXT_ACC_NAUX_MAX] );
 #  endif

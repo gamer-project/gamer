@@ -71,6 +71,9 @@ extern void (*Par_Init_Attribute_User_Ptr)();
 
 
 // common global variables
+#if ( MODEL == HYDRO )
+extern double EoS_AuxArray[EOS_NAUX_MAX];
+#endif
 #ifdef GRAVITY
 #include "CUPOT.h"
 extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];

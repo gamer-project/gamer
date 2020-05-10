@@ -24,10 +24,10 @@
 // Return      :  Gas pressure
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_IdealGas_DensEint2Pres( const real Dens, const real Eint, const real UserArray[] )
+static real EoS_IdealGas_DensEint2Pres( const real Dens, const real Eint, const double UserArray[] )
 {
 
-   const real Gamma_m1 = UserArray[0];
+   const real Gamma_m1 = (real)UserArray[0];
    real Pres;
 
    Pres = Eint*Gamma_m1;

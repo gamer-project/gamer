@@ -1,5 +1,11 @@
 #include "GAMER.h"
 
+#if ( MODEL == HYDRO )
+
+
+// auxiliary array to be set by EoS_InitAuxArray_Ptr
+double EoS_AuxArray[EOS_NAUX_MAX];
+
 // function pointers
 //void (*EoS_InitAuxArray_Ptr)( double AuxArray[] ) = NULL;
 EoS_DE2P_t CPUEoS_DensEint2Pres_Ptr                 = NULL;
@@ -90,3 +96,7 @@ void EoS_Init()
 #  endif
 
 } // FUNCTION : EoS_Init
+
+
+
+#endif // #if ( MODEL == HYDRO )
