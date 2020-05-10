@@ -71,7 +71,7 @@
 
 
 // equation of states
-#define EOS_IDEAL_GAS   1
+#define EOS_IDEALGAS    1
 #define EOS_NUCLEAR     2
 #define EOS_TABULAR     3
 #define EOS_USER        4

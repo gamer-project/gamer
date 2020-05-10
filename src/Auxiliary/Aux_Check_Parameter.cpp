@@ -585,8 +585,8 @@ void Aux_Check_Parameter()
 #     error : ERROR : unsupported dual-energy formalism (DE_ENPY only, DE_EINT is not supported yet) !!
 #   endif
 
-#  if ( EOS != IDEAL_GAS )
-#     error : ERROR : DUAL_ENERGY currently only supports EOS=IDEAL_GAS !!
+#  if ( EOS != EOS_IDEALGAS )
+#     error : ERROR : DUAL_ENERGY currently only supports EOS_IDEALGAS !!
 #  endif
 #  endif // #ifdef DUAL_ENERGY
 
@@ -601,16 +601,20 @@ void Aux_Check_Parameter()
 #   endif
 #  endif // MHD
 
-#  if ( EOS != IDEAL_GAS  &&  EOS != NUCLEAR  &&  EOS != TABULAR )
-#     error : ERROR : unsupported equation of state (IDEAL_GAS/NUCLEAR/TABULAR) !!
+#  if ( EOS != EOS_IDEALGAS  &&  EOS != EOS_NUCLEAR  &&  EOS != EOS_TABULAR  &&  EOS != EOS_USER )
+#     error : ERROR : unsupported equation of state (EOS_IDEALGAS/EOS_NUCLEAR/EOS_TABULAR/EOS_USER) !!
 #  endif
 
-#  if ( EOS == NUCLEAR )
-      Aux_Error( ERROR_INFO, "EOS=NUCLEAR is not supported yet !!\n" );
+#  if ( EOS == EOS_NUCLEAR )
+      Aux_Error( ERROR_INFO, "EOS_NUCLEAR is not supported yet !!\n" );
 #  endif
 
-#  if ( EOS == TABULAR )
-      Aux_Error( ERROR_INFO, "EOS=TABULAR is not supported yet !!\n" );
+#  if ( EOS == EOS_TABULAR )
+      Aux_Error( ERROR_INFO, "EOS_TABULAR is not supported yet !!\n" );
+#  endif
+
+#  if ( EOS == EOS_USER )
+      Aux_Error( ERROR_INFO, "EOS_USER is not supported yet !!\n" );
 #  endif
 
    if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
