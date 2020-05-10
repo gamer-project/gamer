@@ -77,19 +77,15 @@ static ExtPot_t ExtPot_Ptr = ExtPot_PointMass;
 __host__
 void SetGPUExtPot_PointMass( ExtPot_t &GPUExtPot_Ptr )
 {
-
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &GPUExtPot_Ptr, ExtPot_Ptr, sizeof(ExtPot_t) )  );
-
-} // FUNCTION : GetGPUFuncPtr_ExtPot
+}
 
 #else // #ifdef __CUDACC__
 
 void SetCPUExtPot_PointMass( ExtPot_t &CPUExtPot_Ptr )
 {
-
    CPUExtPot_Ptr = ExtPot_Ptr;
-
-} // FUNCTION : GetCPUFuncPtr_ExtPot
+}
 
 #endif // #ifdef __CUDACC__ ... else ...
 
