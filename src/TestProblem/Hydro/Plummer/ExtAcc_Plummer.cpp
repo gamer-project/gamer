@@ -70,19 +70,15 @@ static ExtAcc_t ExtAcc_Ptr = ExtAcc_Plummer;
 __host__
 void SetGPUExtAcc_Plummer( ExtAcc_t &GPUExtAcc_Ptr )
 {
-
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &GPUExtAcc_Ptr, ExtAcc_Ptr, sizeof(ExtAcc_t) )  );
-
-} // FUNCTION : GetGPUFuncPtr_ExtAcc
+}
 
 #else // #ifdef __CUDACC__
 
 void SetCPUExtAcc_Plummer( ExtAcc_t &CPUExtAcc_Ptr )
 {
-
    CPUExtAcc_Ptr = ExtAcc_Ptr;
-
-} // FUNCTION : GetCPUFuncPtr_ExtAcc
+}
 
 #endif // #ifdef __CUDACC__ ... else ...
 
