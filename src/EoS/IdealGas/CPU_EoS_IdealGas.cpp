@@ -27,7 +27,12 @@ GPU_DEVICE_NOINLINE
 static real EoS_IdealGas_DensEint2Pres( const real Dens, const real Eint, const real UserArray[] )
 {
 
-   return Eint*UserArray[0];
+   const real Gamma_m1 = UserArray[0];
+   real Pres;
+
+   Pres = Eint*Gamma_m1;
+
+   return Pres;
 
 } // FUNCTION : EoS_IdealGas_DensEint2Pres
 

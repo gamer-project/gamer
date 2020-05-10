@@ -2,12 +2,24 @@
 
 // function pointers
 //void (*EoS_InitAuxArray_Ptr)( double AuxArray[] ) = NULL;
-EoS_t CPUEoS_Ptr                                  = NULL;
-void (*SetCPUEoS_Ptr)( EoS_t &CPUEoS_Ptr )        = NULL;
+EoS_DE2P_t CPUEoS_DensEint2Pres_Ptr                 = NULL;
+void (*SetCPUEoS_DensEint2Pres_Ptr)( EoS_DE2P_t & ) = NULL;
 #ifdef GPU
-EoS_t GPUEoS_Ptr                                  = NULL;
-void (*SetGPUEoS_Ptr)( EoS_t &GPUEoS_Ptr )        = NULL;
+EoS_DE2P_t GPUEoS_DensEint2Pres_Ptr                 = NULL;
+void (*SetGPUEoS_DensEint2Pres_Ptr)( EoS_DE2P_t & ) = NULL;
 #endif
+
+// prototypes of built-in EoS
+#if   ( EOS == EOS_IDEALGAS )
+void SetCPUEoS_DensEint2Pres_IdealGas( EoS_DE2P_t & );
+# ifdef GPU
+void SetGPUEoS_DensEint2Pres_IdealGas( EoS_DE2P_t & );
+# endif
+
+#elif ( EOS == EOS_NUCLEAR )
+# error : ERROR : EOS_NUCLEAR is NOT supported yet !!
+
+#endif // # EOS
 
 
 
@@ -17,11 +29,11 @@ void (*SetGPUEoS_Ptr)( EoS_t &GPUEoS_Ptr )        = NULL;
 // Description :  Initialize the equation of state (EoS) routines and auxiliary arrays
 //
 // Note        :  1. Invoked by Init_GAMER()
-//                2. Set the auxiliary CPU arrays by invoking EoS_InitAuxArray_Ptr()
+//                2. Set the auxiliary CPU arrays by invoking EoS_InitAuxArray_*_Ptr()
 //                   --> Corresponding GPU arrays are set by CUAPI_SetConstMemory()
-//                3. Set the CPU/GPU EoS routines by invoking SetCPU/GPUEoS_Ptr()
-//                4. For a user-specified EoS, all function pointers here must be set in advance by
-//                   a test problem initializer
+//                3. Set the CPU/GPU EoS routines by invoking SetCPU/GPUEoS_*_Ptr()
+//                4. For a tabular or user-specified EoS, all function pointers must be set in advance
+//                   by a test problem initializer
 //
 // Parameter   :  None
 //
@@ -30,36 +42,51 @@ void (*SetGPUEoS_Ptr)( EoS_t &GPUEoS_Ptr )        = NULL;
 void EoS_Init()
 {
 
-// initialize the auxiliary CPU array
+// set function pointers for the built-in EoS
+#  if   ( EOS == EOS_IDEALGAS )
+   SetCPUEoS_DensEint2Pres_Ptr = SetCPUEoS_DensEint2Pres_IdealGas;
+#  ifdef GPU
+   SetGPUEoS_DensEint2Pres_Ptr = SetGPUEoS_DensEint2Pres_IdealGas;
+#  endif
+
+#  elif ( EOS == EOS_NUCLEAR )
+#  error : ERROR : EOS_NUCLEAR is NOT supported yet !!
+
+#  endif // # EOS
+
+
+// initialize the auxiliary CPU arrays
    /*
    if ( EoS_InitAuxArray_Ptr != NULL )
       EoS_InitAuxArray_Ptr( EoS_AuxArray );
    else
-      Aux_Error( ERROR_INFO, "EoS_InitAuxArray_Ptr == NULL for external acceleration !!\n" );
+      Aux_Error( ERROR_INFO, "EoS_InitAuxArray_Ptr == NULL for EoS %d !!\n", EOS );
    */
 
-// set the CPU routine
-   if ( SetCPUEoS_Ptr != NULL )
-   {
-      SetCPUEoS_Ptr( CPUEoS_Ptr );
 
-      if ( CPUEoS_Ptr == NULL )
-         Aux_Error( ERROR_INFO, "CPUEoS_Ptr == NULL for external acceleration !!\n" );
+// set the CPU routines
+   if ( SetCPUEoS_DensEint2Pres_Ptr != NULL )
+   {
+      SetCPUEoS_DensEint2Pres_Ptr( CPUEoS_DensEint2Pres_Ptr );
+
+      if ( CPUEoS_DensEint2Pres_Ptr == NULL )
+         Aux_Error( ERROR_INFO, "CPUEoS_DensEint2Pres_Ptr == NULL for EoS %d !!\n", EOS );
    }
    else
-      Aux_Error( ERROR_INFO, "SetCPUEoS_Ptr == NULL for external acceleration !!\n" );
+      Aux_Error( ERROR_INFO, "SetCPUEoS_DensEint2Pres_Ptr == NULL for EoS %d !!\n", EOS );
 
-// set the GPU routine
+
+// set the GPU routines
 #  ifdef GPU
-   if ( SetGPUEoS_Ptr != NULL )
+   if ( SetGPUEoS_DensEint2Pres_Ptr != NULL )
    {
-      SetGPUEoS_Ptr( GPUEoS_Ptr );
+      SetGPUEoS_DensEint2Pres_Ptr( GPUEoS_DensEint2Pres_Ptr );
 
-      if ( GPUEoS_Ptr == NULL )
-         Aux_Error( ERROR_INFO, "GPUEoS_Ptr == NULL for external acceleration !!\n" );
+      if ( GPUEoS_DensEint2Pres_Ptr == NULL )
+         Aux_Error( ERROR_INFO, "GPUEoS_DensEint2Pres_Ptr == NULL for EoS %d !!\n", EOS );
    }
    else
-      Aux_Error( ERROR_INFO, "SetGPUEoS_Ptr == NULL !!\n" );
+      Aux_Error( ERROR_INFO, "SetGPUEoS_DensEint2Pres_Ptr == NULL for EoS %d !!\n", EOS );
 #  endif
 
-} // FUNCTION : EoS_nit
+} // FUNCTION : EoS_Init

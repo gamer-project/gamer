@@ -420,9 +420,11 @@
 
 // GPU device function specifier
 #ifdef __CUDACC__
-# define GPU_DEVICE __forceinline__ __device__
+# define GPU_DEVICE          __forceinline__ __device__
+# define GPU_DEVICE_NOINLINE    __noinline__ __device__
 #else
 # define GPU_DEVICE
+# define GPU_DEVICE_NOINLINE
 #endif
 
 // unified CPU/GPU loop
