@@ -7,7 +7,7 @@
 double EoS_AuxArray[EOS_NAUX_MAX];
 
 // function pointers
-//void (*EoS_InitAuxArray_Ptr)( double AuxArray[] ) = NULL;
+void (*EoS_InitAuxArray_Ptr)( double [] )           = NULL;
 EoS_DE2P_t CPUEoS_DensEint2Pres_Ptr                 = NULL;
 void (*SetCPUEoS_DensEint2Pres_Ptr)( EoS_DE2P_t & ) = NULL;
 #ifdef GPU
@@ -17,6 +17,7 @@ void (*SetGPUEoS_DensEint2Pres_Ptr)( EoS_DE2P_t & ) = NULL;
 
 // prototypes of built-in EoS
 #if   ( EOS == EOS_IDEALGAS )
+void EoS_InitAuxArray_IdealGas( double [] );
 void SetCPUEoS_DensEint2Pres_IdealGas( EoS_DE2P_t & );
 # ifdef GPU
 void SetGPUEoS_DensEint2Pres_IdealGas( EoS_DE2P_t & );
@@ -50,6 +51,7 @@ void EoS_Init()
 
 // set function pointers for the built-in EoS
 #  if   ( EOS == EOS_IDEALGAS )
+   EoS_InitAuxArray_Ptr        = EoS_InitAuxArray_IdealGas;
    SetCPUEoS_DensEint2Pres_Ptr = SetCPUEoS_DensEint2Pres_IdealGas;
 #  ifdef GPU
    SetGPUEoS_DensEint2Pres_Ptr = SetGPUEoS_DensEint2Pres_IdealGas;
@@ -61,13 +63,11 @@ void EoS_Init()
 #  endif // # EOS
 
 
-// initialize the auxiliary CPU arrays
-   /*
+// set the auxiliary CPU array
    if ( EoS_InitAuxArray_Ptr != NULL )
       EoS_InitAuxArray_Ptr( EoS_AuxArray );
    else
       Aux_Error( ERROR_INFO, "EoS_InitAuxArray_Ptr == NULL for EoS %d !!\n", EOS );
-   */
 
 
 // set the CPU routines
