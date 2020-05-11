@@ -5,7 +5,6 @@
 
 #include "Macro.h"
 #include "Typedef.h"
-#include "CUPOT.h"
 
 
 #if ( MODEL == HYDRO )

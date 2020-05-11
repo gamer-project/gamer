@@ -30,22 +30,6 @@
 #endif
 
 
-// bitwise reproducibility in flux and electric field fix-up operations
-#ifdef BITWISE_REPRODUCIBILITY
-#  define BIT_REP_FLUX
-#endif
-
-// enable BIT_REP_ELECTRIC by default even when BITWISE_REPRODUCIBILITY is off
-// --> it ensures that the B field on the common interface between two nearby patches are fully
-//     consistent with each other (even the round-off errors are the same)
-//     --> reducing the div(B) errors significantly
-#ifdef MHD
-//#ifdef BITWISE_REPRODUCIBILITY
-#  define BIT_REP_ELECTRIC
-//#endif
-#endif
-
-
 
 // #################################
 // ## macros for different models ##
@@ -194,10 +178,6 @@
 #     define MAX_ERROR     1.0e-06f
 #  endif
 #endif
-
-
-// maximum size of EoS_AuxArray[]
-#define EOS_NAUX_MAX       10
 
 
 // 2. ELBDM macro

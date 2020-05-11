@@ -3,17 +3,6 @@
 #if ( MODEL == HYDRO )
 
 
-// auxiliary array to be set by EoS_InitAuxArray_Ptr
-double EoS_AuxArray[EOS_NAUX_MAX];
-
-// function pointers
-void (*EoS_InitAuxArray_Ptr)( double [] )           = NULL;
-EoS_DE2P_t CPUEoS_DensEint2Pres_Ptr                 = NULL;
-void (*SetCPUEoS_DensEint2Pres_Ptr)( EoS_DE2P_t & ) = NULL;
-#ifdef GPU
-EoS_DE2P_t GPUEoS_DensEint2Pres_Ptr                 = NULL;
-void (*SetGPUEoS_DensEint2Pres_Ptr)( EoS_DE2P_t & ) = NULL;
-#endif
 
 // prototypes of built-in EoS
 #if   ( EOS == EOS_IDEALGAS )

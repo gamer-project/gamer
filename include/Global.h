@@ -218,6 +218,21 @@ extern double                SF_CREATE_STAR_MAX_STAR_MFRAC;
 #endif
 
 
+// (2-9) equation of state
+// =======================================================================================================
+#if ( MODEL == HYDRO )
+extern double EoS_AuxArray[EOS_NAUX_MAX];
+extern void (*EoS_InitAuxArray_Ptr)( double [] );
+extern EoS_DE2P_t CPUEoS_DensEint2Pres_Ptr;
+extern void (*SetCPUEoS_DensEint2Pres_Ptr)( EoS_DE2P_t & );
+#ifdef GPU
+extern EoS_DE2P_t GPUEoS_DensEint2Pres_Ptr;
+extern void (*SetGPUEoS_DensEint2Pres_Ptr)( EoS_DE2P_t & );
+#endif
+#endif // HYDRO
+
+
+
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
 // ============================================================================================================
@@ -274,14 +289,14 @@ extern real       (*h_Mag_Array_T[2])[NCOMP_MAG][ PS1P1*SQR(PS1) ];
 
 
 
-// 4. GPU (device) global memory arrays and timers
+// 4/5. GPU (device) global memory arrays and timers
 // ============================================================================================================
 /*** These global variables are NOT included here. Instead, they are included by individual files
      only if necessary. ***/
 
 
 
-// 5. global variables related to different fields
+// 6. global variables related to different fields
 // ============================================================================================================
 /*** Defined in Field.h ***/
 
