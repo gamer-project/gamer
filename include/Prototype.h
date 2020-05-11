@@ -86,8 +86,9 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const real MinDens, const real MinPres, const real DualEnergySwitch,
                       const bool NormPassive, const int NNorm, const int NormIdx[],
                       const bool JeansMinPres, const real JeansMinPres_Coeff );
-real Hydro_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                        const real Gamma_m1, const bool CheckMinPres, const real MinPres, const real EngyB );
+real Hydro_Fluid2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                       const bool CheckMinPres, const real MinPres, const real EngyB,
+                       EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
 real Hydro_GetTemperature( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                            const real Gamma_m1, const bool CheckMinPres, const real MinPres, const real EngyB );
 double Hydro_Temperature2Pressure( const double Dens, const double Temp, const double mu, const double m_H,
@@ -627,6 +628,12 @@ void SF_FreeRNG();
 void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, RandomNumber_t *RNG,
                           const real GasDensThres, const real Efficiency, const real MinStarMass, const real MaxStarMFrac,
                           const bool DetRandom, const bool UseMetal );
+#endif
+
+
+// EoS in hydrodynamics
+#if ( MODEL == HYDRO )
+void EoS_Init();
 #endif
 
 

@@ -452,46 +452,46 @@ bool Hydro_CheckNegative( const real Input )
 // Function    :  Hydro_GetPressure
 // Description :  Evaluate the fluid pressure
 //
-// Note        :  1. Currently only work with the adiabatic EOS
-//                2. Invoked by Hydro_GetTimeStep_Fluid(), Prepare_PatchData(), InterpolateGhostZone(),
-//                   Hydro_Aux_Check_Negative() ...
-//                3. One must input conserved variables instead of primitive variables
-//                4. For MHD, Engy is the total energy density including the magnetic energy EngyB=0.5*B^2,
+// Note        :  1. Invoke the EoS routine EoS_DensEint2Pres() to support different EoS
+//                2. Invoked by many routines (e.g., Hydro_GetTimeStep_Fluid(), Prepare_PatchData(), ...)
+//                3. For MHD, Engy is the total energy density including the magnetic energy EngyB=0.5*B^2,
 //                   and thus one must provide EngyB to calculate the gas pressure
 //
-// Parameter   :  Dens         : Mass density
-//                MomX/Y/Z     : Momentum density
-//                Engy         : Energy density (including the magnetic energy density for MHD)
-//                Gamma_m1     : Gamma - 1, where Gamma is the adiabatic index
-//                CheckMinPres : Return Hydro_CheckMinPres()
-//                               --> In some cases we actually want to check if pressure becomes unphysical,
-//                                   for which we don't want to enable this option
-//                                   --> For example: Flu_FixUp(), Flu_Close(), Hydro_Aux_Check_Negative()
-//                MinPres      : Minimum allowed pressure
-//                EngyB        : Magnetic energy density (0.5*B^2)
-//                               --> For MHD only
+// Parameter   :  Dens              : Mass density
+//                MomX/Y/Z          : Momentum density
+//                Engy              : Energy density (including the magnetic energy density for MHD)
+//                CheckMinPres      : Apply pressure floor by invoking Hydro_CheckMinPres()
+//                                    --> In some cases we actually want to check if pressure becomes unphysical,
+//                                        for which we don't want to enable this option
+//                                        --> For example: Flu_FixUp(), Flu_Close(), Hydro_Aux_Check_Negative()
+//                MinPres           : Minimum allowed pressure
+//                EngyB             : Magnetic energy density (0.5*B^2)
+//                                    --> For MHD only
+//                EoS_DensEint2Pres : EoS routine to compute the gas pressure
+//                EoS_AuxArray      : Auxiliary array for EoS_DensEint2Pres()
 //
 // Return      :  Gas pressure (Pres)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-real Hydro_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                        const real Gamma_m1, const bool CheckMinPres, const real MinPres, const real EngyB )
+real Hydro_Fluid2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                       const bool CheckMinPres, const real MinPres, const real EngyB,
+                       EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] )
 {
 
-   real _Dens, Pres;
+   real _Dens, Eint, Pres;
 
   _Dens  = (real)1.0 / Dens;
-   Pres  = Engy - (real)0.5*_Dens*( SQR(MomX) + SQR(MomY) + SQR(MomZ) );
+   Eint  = Engy - (real)0.5*_Dens*( SQR(MomX) + SQR(MomY) + SQR(MomZ) );
 #  ifdef MHD
-   Pres -= EngyB;
+   Eint -= EngyB;
 #  endif
-   Pres *= Gamma_m1;
+   Pres  = EoS_DensEint2Pres( Dens, Eint, EoS_AuxArray );
 
    if ( CheckMinPres )   Pres = Hydro_CheckMinPres( Pres, MinPres );
 
    return Pres;
 
-} // FUNCTION : Hydro_GetPressure
+} // FUNCTION : Hydro_Fluid2Pres
 
 
 

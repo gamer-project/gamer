@@ -302,9 +302,10 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 #                             else
                               const real EngyB  = NULL_REAL;
 #                             endif
-                              const real Pres   = Hydro_GetPressure( FluidPtr[DENS][k][j][i], FluidPtr[MOMX][k][j][i], FluidPtr[MOMY][k][j][i],
-                                                                     FluidPtr[MOMZ][k][j][i], FluidPtr[ENGY][k][j][i],
-                                                                     Gamma_m1, false, NULL_REAL, EngyB );
+                              const real Pres   = Hydro_Fluid2Pres( FluidPtr[DENS][k][j][i], FluidPtr[MOMX][k][j][i], FluidPtr[MOMY][k][j][i],
+                                                                    FluidPtr[MOMZ][k][j][i], FluidPtr[ENGY][k][j][i],
+                                                                    false, NULL_REAL, EngyB,
+                                                                    CPUEoS_DensEint2Pres_Ptr, EoS_AuxArray );
 
                               OMP_Data  [p][TID][bin] += Pres*Weight;
                               OMP_Weight[p][TID][bin] += Weight;
