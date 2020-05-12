@@ -113,14 +113,14 @@ SIMU_OPTION += -DEOS=APPROXIMATED_GENERAL
 #SIMU_OPTION += -DEOS=CONSTANT_GAMMA
 
 # conserved energy = (total energy)
-SIMU_OPTION += -DCONSERVED_ENERGY=2
+SIMU_OPTION += -DCONSERVED_ENERGY=1
 # conserved energy = (total energy) - (rest mass energy)
 #SIMU_OPTION += -DCONSERVED_ENERGY=2
 #SIMU_OPTION += -DCHECK_MIN_TEMP
 #SIMU_OPTION += -DCHECK_FAILED_CELL_IN_FLUID
 # scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic)
 # --> useless for RTVD
-SIMU_OPTION += -DLR_SCHEME=PPM
+SIMU_OPTION += -DLR_SCHEME=PLM
 
 # Riemann solver: EXACT/ROE/HLLE/HLLC
 # --> all are useless for RTVD;

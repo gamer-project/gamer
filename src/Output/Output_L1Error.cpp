@@ -343,7 +343,7 @@ void WriteFile( void (*AnalFunc)( real fluid[], const double x, const double y, 
 
       fprintf( File[v], " %20.13e %20.13e %20.13e %20.13e\n", r, fluid[v], Anal[v], Err[v] );
 #     else
-      Err   [v]  = FABS( PriAnal[v] - PriNum[v] );
+      Err   [v]  = FABS( (double)1.0 - PriNum[v] / PriAnal[v] );
       L1_Err[v] += Err[v]*dh;
 
       fprintf( File[v], " %20.13e %20.13e %20.13e %20.13e\n", r, PriNum[v],   PriAnal[v], Err[v] );
