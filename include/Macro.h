@@ -545,6 +545,13 @@
 #endif
 
 
+// size of auxiliary arrays
+#ifdef GRAVITY
+#  define EXT_POT_NAUX_MAX       10    // ExtPot_AuxArray[]
+#  define EXT_ACC_NAUX_MAX       10    // ExtAcc_AuxArray[]
+#endif
+
+
 // extreme values
 #ifndef __INT_MAX__
 #  define __INT_MAX__      2147483647

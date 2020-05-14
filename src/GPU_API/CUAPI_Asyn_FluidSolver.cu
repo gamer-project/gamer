@@ -78,9 +78,7 @@ __global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ FLU_NXT*FLU_NXT
 #error : ERROR : unsupported MODEL !!
 #endif // MODEL
 
-#ifdef GRAVITY
-extern ExtAcc_t GPUExtAcc_Ptr;
-#else
+#ifndef GRAVITY
 static ExtAcc_t GPUExtAcc_Ptr = NULL;
 #endif
 
