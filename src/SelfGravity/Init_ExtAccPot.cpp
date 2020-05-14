@@ -4,31 +4,6 @@
 
 
 
-#include "CUPOT.h"
-// auxiliary arrays to be set by Init_ExtAcc/PotAuxArray_Ptr
-double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
-double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
-
-
-// function pointers --> must be set by a test problem initializer
-void (*Init_ExtAccAuxArray_Ptr)( double AuxArray[] ) = NULL;
-ExtAcc_t CPUExtAcc_Ptr                               = NULL;
-void (*SetCPUExtAcc_Ptr)( ExtAcc_t &CPUExtAcc_Ptr )  = NULL;
-#ifdef GPU
-ExtAcc_t GPUExtAcc_Ptr                               = NULL;
-void (*SetGPUExtAcc_Ptr)( ExtAcc_t &GPUExtAcc_Ptr )  = NULL;
-#endif
-
-void (*Init_ExtPotAuxArray_Ptr)( double AuxArray[] ) = NULL;
-ExtPot_t CPUExtPot_Ptr                               = NULL;
-void (*SetCPUExtPot_Ptr)( ExtPot_t &CPUExtPot_Ptr )  = NULL;
-#ifdef GPU
-ExtPot_t GPUExtPot_Ptr                               = NULL;
-void (*SetGPUExtPot_Ptr)( ExtPot_t &GPUExtPot_Ptr )  = NULL;
-#endif
-
-
-
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_ExtAccPot
@@ -43,7 +18,7 @@ void (*SetGPUExtPot_Ptr)( ExtPot_t &GPUExtPot_Ptr )  = NULL;
 //                   --> Corresponding GPU arrays are set by CUAPI_SetConstMemory()
 //                4. Set the CPU/GPU external acceleration and potential routines by invoking
 //
-//                      SetCPU/GPUExtAcc_PointMass() and SetCPU/GPUExtPot_PointMass()
+//                      SetCPU/GPUExtAcc_Ptr() and SetCPU/GPUExtPot_Ptr()
 //
 //                5. Function pointers used here must be set in advance by a test problem initializer
 //

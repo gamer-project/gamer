@@ -181,11 +181,6 @@
 #endif
 
 
-// maximum size of the arrays ExtPot_AuxArray and ExtAcc_AuxArray
-#define EXT_POT_NAUX_MAX            10
-#define EXT_ACC_NAUX_MAX            10
-
-
 // warp size (which must be the same as the CUDA predefined constant "warpSize")
 // --> please refer to https://en.wikipedia.org/wiki/CUDA#Version_features_and_specifications
 //     for information on warp size

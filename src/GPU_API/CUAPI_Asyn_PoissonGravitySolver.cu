@@ -58,9 +58,6 @@ void CUPOT_ELBDMGravitySolver(       real g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
 #error : ERROR : unsupported MODEL !!
 #endif // MODEL
 
-extern ExtAcc_t GPUExtAcc_Ptr;
-extern ExtPot_t GPUExtPot_Ptr;
-
 
 // declare all device pointers
 extern real (*d_Rho_Array_P    )[ CUBE(RHO_NXT) ];

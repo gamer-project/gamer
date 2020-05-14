@@ -3,15 +3,6 @@
 #ifndef GPU
 
 
-#ifdef GRAVITY
-#include "CUPOT.h"
-extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
-extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
-extern ExtAcc_t CPUExtAcc_Ptr;
-extern ExtPot_t CPUExtPot_Ptr;
-#endif
-
-
 #if   ( MODEL == HYDRO )
 void CPU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
                             const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const int NPG,

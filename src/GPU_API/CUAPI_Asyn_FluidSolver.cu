@@ -73,15 +73,13 @@ __global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ]
                                    real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
                                    const real dt, const real _dh, const real Eta, const bool StoreFlux,
                                    const real Taylor3_Coeff, const bool XYZ, const real MinDens );
+real ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
 
 #else
 #error : ERROR : unsupported MODEL !!
 #endif // MODEL
 
-real ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
-#ifdef GRAVITY
-extern ExtAcc_t GPUExtAcc_Ptr;
-#else
+#ifndef GRAVITY
 static ExtAcc_t GPUExtAcc_Ptr = NULL;
 #endif
 
