@@ -68,6 +68,11 @@ static ExtPot_t ExtPot_Ptr = ExtPot_PointMass;
 //                      # endif
 //
 //                   --> Then it will be invoked by Init_ExtAccPot()
+//                2. Must obtain the CPU and GPU function pointers by separate routines
+//                   since CPU and GPU functions are compiled completely separately in GAMER
+//                   --> In other words, a unified routine like the following won't work
+//
+//                      SetExtPot_PointMass( ExtPot_t &CPUExtPot_Ptr, ExtPot_t &GPUExtPot_Ptr )
 //
 // Parameter   :  CPU/GPUExtPot_Ptr (call-by-reference)
 //
