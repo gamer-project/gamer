@@ -5,18 +5,12 @@
 #include "GAMER.h"
 #include "CUFLU.h"
 
-#ifdef GRAVITY
-#include "CUPOT.h"
-extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
-extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
-extern ExtAcc_t CPUExtAcc_Ptr;
-extern ExtPot_t CPUExtPot_Ptr;
-#else
+#ifndef GRAVITY
 static double *ExtAcc_AuxArray = NULL;
 static double *ExtPot_AuxArray = NULL;
 static ExtAcc_t CPUExtAcc_Ptr  = NULL;
 static ExtPot_t CPUExtPot_Ptr  = NULL;
-#endif // #ifdef GRAVITY ... else ...
+#endif
 
 #if   ( MODEL == HYDRO )
 #if   ( FLU_SCHEME == RTVD )

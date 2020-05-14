@@ -2,10 +2,6 @@
 
 #ifdef PARTICLE
 
-#include "CUPOT.h"
-extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
-extern ExtPot_t CPUExtPot_Ptr;
-
 
 
 

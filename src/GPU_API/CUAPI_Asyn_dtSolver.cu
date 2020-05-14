@@ -28,12 +28,6 @@ void CUPOT_dtSolver_HydroGravity( real g_dt_Array[], const real g_Pot_Array[][ C
 #error : ERROR : unsupported MODEL !!
 #endif // MODEL
 
-#ifdef GRAVITY
-extern ExtAcc_t GPUExtAcc_Ptr;
-extern ExtPot_t GPUExtPot_Ptr;
-#endif
-
-
 // device pointers
 extern real *d_dt_Array_T;
 extern real (*d_Flu_Array_T)[NCOMP_FLUID][ CUBE(PS1) ];
