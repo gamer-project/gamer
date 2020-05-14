@@ -31,6 +31,7 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
                                   real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                   real *AllAttribute[PAR_NATT_TOTAL] );
 #endif
+void Init_ExtAccAuxArray_Plummer( double AuxArray[] );
 void SetCPUExtAcc_Plummer( ExtAcc_t &CPUExtAcc_Ptr );
 # ifdef GPU
 void SetGPUExtAcc_Plummer( ExtAcc_t &GPUExtAcc_Ptr );
@@ -342,35 +343,6 @@ void AddNewField_Plummer()
    }
 
 } // FUNCTION : AddNewField_Plummer
-
-
-
-#ifdef GRAVITY
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Init_ExtAccAuxArray_Plummer
-// Description :  Set the auxiliary array ExtAcc_AuxArray[] used by the external acceleration routine ExtAcc_Plummer()
-//
-// Note        :  1. External acceleration can be enabled by the runtime option "OPT__GRAVITY_TYPE = 2/3"
-//                2. AuxArray[] has the size of EXT_ACC_NAUX_MAX defined in CUPOT.h (default = 10)
-//
-// Parameter   :  AuxArray : Array to be filled up
-//
-// Return      :  AuxArray[]
-//-------------------------------------------------------------------------------------------------------
-void Init_ExtAccAuxArray_Plummer( double AuxArray[] )
-{
-
-// acceleration = -G*Mtot*r/(r^2+R0^2)^(3/2)
-   const double Mtot = (4.0/3.0)*M_PI*CUBE(Plummer_R0)*Plummer_Rho0*Plummer_ExtMFrac;
-
-   AuxArray[0] = Plummer_Center[0];    // x coordinate of the external acceleration center
-   AuxArray[1] = Plummer_Center[1];    // y ...
-   AuxArray[2] = Plummer_Center[2];    // z ...
-   AuxArray[3] = SQR( Plummer_R0 );    // scale_radius^2
-   AuxArray[4] = -NEWTON_G*Mtot;       // -G*total_mass
-
-} // FUNCTION : Init_ExtAccAuxArray_Plummer
-#endif // #ifdef GRAVITY
 #endif // #if ( MODEL == HYDRO )
 
 

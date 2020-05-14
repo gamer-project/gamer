@@ -4,13 +4,6 @@
 
 
 
-#include "CUPOT.h"
-extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
-extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
-extern ExtAcc_t CPUExtAcc_Ptr;
-extern ExtPot_t CPUExtPot_Ptr;
-
-
 // Poisson solver prototypes
 #if   ( POT_SCHEME == SOR )
 void CPU_PoissonSolver_SOR( const real Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT],
