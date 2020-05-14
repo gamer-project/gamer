@@ -9,17 +9,6 @@
 
 
 
-#if ( MODEL == HYDRO )
-extern double EoS_AuxArray[EOS_NAUX_MAX];
-#endif
-
-#ifdef GRAVITY
-extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
-extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
-#endif
-
-
-
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CUAPI_SetConstMemory

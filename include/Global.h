@@ -143,7 +143,24 @@ extern int        MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH;
 extern IntScheme_t      OPT__POT_INT_SCHEME, OPT__RHO_INT_SCHEME, OPT__GRA_INT_SCHEME, OPT__REF_POT_INT_SCHEME;
 extern OptPotBC_t       OPT__BC_POT;
 extern OptGravityType_t OPT__GRAVITY_TYPE;
+
+extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
+extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
+extern void (*Init_ExtAccAuxArray_Ptr)( double [] );
+extern ExtAcc_t CPUExtAcc_Ptr;
+extern void (*SetCPUExtAcc_Ptr)( ExtAcc_t & );
+#ifdef GPU
+extern ExtAcc_t GPUExtAcc_Ptr;
+extern void (*SetGPUExtAcc_Ptr)( ExtAcc_t & );
 #endif
+extern void (*Init_ExtPotAuxArray_Ptr)( double [] );
+extern ExtPot_t CPUExtPot_Ptr;
+extern void (*SetCPUExtPot_Ptr)( ExtPot_t & );
+#ifdef GPU
+extern ExtPot_t GPUExtPot_Ptr;
+extern void (*SetGPUExtPot_Ptr)( ExtPot_t & );
+#endif
+#endif // #ifdef GRAVITY
 
 
 // (2-3) cosmology simulations

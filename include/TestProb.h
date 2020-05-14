@@ -44,20 +44,6 @@ extern bool (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double x, const dou
                                          const int lv, double AuxArray[] );
 extern void (*End_User_Ptr)();
 #ifdef GRAVITY
-extern void (*Init_ExtAccAuxArray_Ptr)( double AuxArray[] );
-extern ExtAcc_t CPUExtAcc_Ptr;
-extern ExtAcc_t GPUExtAcc_Ptr;
-extern void (*SetCPUExtAcc_Ptr)( ExtAcc_t &CPUExtAcc_Ptr );
-#ifdef GPU
-extern void (*SetGPUExtAcc_Ptr)( ExtAcc_t &GPUExtAcc_Ptr );
-#endif
-extern void (*Init_ExtPotAuxArray_Ptr)( double AuxArray[] );
-extern ExtPot_t CPUExtPot_Ptr;
-extern ExtPot_t GPUExtPot_Ptr;
-extern void (*SetCPUExtPot_Ptr)( ExtPot_t &CPUExtPot_Ptr );
-#ifdef GPU
-extern void (*SetGPUExtPot_Ptr)( ExtPot_t &GPUExtPot_Ptr );
-#endif
 extern real (*Poi_AddExtraMassForGravity_Ptr)( const double x, const double y, const double z, const double Time,
                                                const int lv, double AuxArray[] );
 #endif
@@ -67,13 +53,6 @@ extern void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPa
                                         real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                         real *AllAttribute[PAR_NATT_TOTAL] );
 extern void (*Par_Init_Attribute_User_Ptr)();
-#endif
-
-
-// common global variables
-#ifdef GRAVITY
-extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
-extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 #endif
 
 

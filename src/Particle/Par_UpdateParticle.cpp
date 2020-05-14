@@ -6,12 +6,6 @@
 #   error : ERROR : GRAVITY is not defined !!
 #endif
 
-#include "CUPOT.h"
-extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
-extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
-extern ExtAcc_t CPUExtAcc_Ptr;
-extern ExtPot_t CPUExtPot_Ptr;
-
 
 
 

@@ -68,6 +68,11 @@ static ExtPot_t ExtPot_Ptr = ExtPot_PointMass;
 //                      # endif
 //
 //                   --> Then it will be invoked by Init_ExtAccPot()
+//                2. Must obtain the CPU and GPU function pointers by separate routines
+//                   since CPU and GPU functions are compiled completely separately in GAMER
+//                   --> In other words, a unified routine like the following won't work
+//
+//                      SetExtPot_PointMass( ExtPot_t &CPUExtPot_Ptr, ExtPot_t &GPUExtPot_Ptr )
 //
 // Parameter   :  CPU/GPUExtPot_Ptr (call-by-reference)
 //
@@ -88,6 +93,44 @@ void SetCPUExtPot_PointMass( ExtPot_t &CPUExtPot_Ptr )
 }
 
 #endif // #ifdef __CUDACC__ ... else ...
+
+
+
+#ifndef __CUDACC__
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Init_ExtPotAuxArray_PointMass
+// Description :  Set the auxiliary array ExtPot_AuxArray[] used by ExtPot_PointMass()
+//
+// Note        :  1. To adopt this routine, link to the function pointer "Init_ExtPotAuxArray_Ptr"
+//                   in a test problem initializer as follows:
+//
+//                      void Init_ExtPotAuxArray_PointMass( double AuxArray[] );
+//
+//                      ...
+//
+//                      Init_ExtPotAuxArray_Ptr = Init_ExtPotAuxArray_PointMass;
+//
+//                   --> Then it will be invoked by Init_ExtAccPot()
+//                2. AuxArray[] has the size of EXT_POT_NAUX_MAX defined in Macro.h (default = 10)
+//
+// Parameter   :  AuxArray : Array to be filled up
+//
+// Return      :  AuxArray[]
+//-------------------------------------------------------------------------------------------------------
+void Init_ExtPotAuxArray_PointMass( double AuxArray[] )
+{
+
+// example parameters
+   const double M  = 1.0;
+   const double GM = NEWTON_G*M;
+
+   AuxArray[0] = 0.5*amr->BoxSize[0];  // x coordinate of the external potential center
+   AuxArray[1] = 0.5*amr->BoxSize[1];  // y ...
+   AuxArray[2] = 0.5*amr->BoxSize[2];  // z ...
+   AuxArray[3] = GM;                   // gravitational_constant*point_source_mass
+
+} // FUNCTION : Init_ExtPotAuxArray_PointMass
+#endif // #ifndef __CUDACC__
 
 
 

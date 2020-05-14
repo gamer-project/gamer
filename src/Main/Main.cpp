@@ -118,7 +118,7 @@ double               ELBDM_LAMBDA;
 double               AveDensity_Init = -1.0;    // initialize it as <= 0 to check if it is properly set later
 int                  Pot_ParaBuf, Rho_ParaBuf;
 
-real                *GreenFuncK      = NULL;
+real                *GreenFuncK = NULL;
 double               GFUNC_COEFF0;
 double               DT__GRAVITY;
 double               NEWTON_G;
@@ -131,7 +131,29 @@ int                  MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH;
 IntScheme_t          OPT__POT_INT_SCHEME, OPT__RHO_INT_SCHEME, OPT__GRA_INT_SCHEME, OPT__REF_POT_INT_SCHEME;
 OptPotBC_t           OPT__BC_POT;
 OptGravityType_t     OPT__GRAVITY_TYPE;
+
+// external gravity variables
+// a. auxiliary arrays
+double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
+double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
+
+// b. function pointers
+void (*Init_ExtAccAuxArray_Ptr)( double [] ) = NULL;
+ExtAcc_t CPUExtAcc_Ptr                       = NULL;
+void (*SetCPUExtAcc_Ptr)( ExtAcc_t & )       = NULL;
+#ifdef GPU
+ExtAcc_t GPUExtAcc_Ptr                       = NULL;
+void (*SetGPUExtAcc_Ptr)( ExtAcc_t & )       = NULL;
 #endif
+
+void (*Init_ExtPotAuxArray_Ptr)( double [] ) = NULL;
+ExtPot_t CPUExtPot_Ptr                       = NULL;
+void (*SetCPUExtPot_Ptr)( ExtPot_t & )       = NULL;
+#ifdef GPU
+ExtPot_t GPUExtPot_Ptr                       = NULL;
+void (*SetGPUExtPot_Ptr)( ExtPot_t & )       = NULL;
+#endif
+#endif // #ifdef GRAVITY
 
 // (2-3) cosmological simulations
 #ifdef COMOVING
