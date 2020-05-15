@@ -8,6 +8,7 @@
 #ifdef __CUDACC__
 
 #include "CUFLU_Shared_FluUtility.cu"
+#include "CUDA_ConstMemory.h"
 
 // parallel reduction routine
 #define RED_NTHREAD  DT_FLU_BLOCK_SIZE
@@ -19,12 +20,7 @@
 #  include "../../GPU_Utility/CUUTI_BlockReduction_WarpSync.cu"
 #endif
 
-#else // #ifdef __CUDACC__
-
-real Hydro_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                        const real Gamma_m1, const bool CheckMinPres, const real MinPres, const real EngyB );
-
-#endif // #ifdef __CUDACC__ ... else ...
+#endif // #ifdef __CUDACC__
 
 
 
@@ -43,14 +39,18 @@ real Hydro_GetPressure( const real Dens, const real MomX, const real MomY, const
 //                   --> CFL condition
 //                3. Arrays with a prefix "g_" are stored in the global memory of GPU
 //
-// Parameter   :  g_dt_Array  : Array to store the minimum dt in each target patch
-//                g_Flu_Array : Array storing the prepared fluid   data of each target patch
-//                g_Mag_Array : Array storing the prepared B field data of each target patch
-//                NPG         : Number of target patch groups (for CPU only)
-//                dh          : Cell size
-//                Safety      : dt safety factor
-//                Gamma       : Ratio of specific heats
-//                MinPres     : Minimum allowed pressure
+// Parameter   :  g_dt_Array             : Array to store the minimum dt in each target patch
+//                g_Flu_Array            : Array storing the prepared fluid   data of each target patch
+//                g_Mag_Array            : Array storing the prepared B field data of each target patch
+//                NPG                    : Number of target patch groups (for CPU only)
+//                dh                     : Cell size
+//                Safety                 : dt safety factor
+//                MinPres                : Minimum allowed pressure
+//                EoS_DensEint2Pres_Func : Function pointers to the EoS routines
+//                EoS_DensPres2CSqr_Func : ...
+//                c_EoS_AuxArray         : Auxiliary array for the EoS routines (for CPU only)
+//                                         --> When using GPU, this array is stored in the constant memory header
+//                                             CUDA_ConstMemory.h and does not need to be passed as a function argument
 //
 // Return      :  g_dt_Array
 //-----------------------------------------------------------------------------------------
@@ -58,16 +58,18 @@ real Hydro_GetPressure( const real Dens, const real MomX, const real MomY, const
 __global__
 void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
                               const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ],
-                              const real dh, const real Safety, const real Gamma, const real MinPres )
+                              const real dh, const real Safety, const real MinPres,
+                              EoS_DE2P_t EoS_DensEint2Pres_Func, EoS_DP2C_t EoS_DensPres2CSqr_Func )
 #else
 void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
                               const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const int NPG,
-                              const real dh, const real Safety, const real Gamma, const real MinPres )
+                              const real dh, const real Safety, const real MinPres,
+                              EoS_DE2P_t EoS_DensEint2Pres_Func, EoS_DP2C_t EoS_DensPres2CSqr_Func,
+                              const double c_EoS_AuxArray[] )
 #endif
 {
 
    const bool CheckMinPres_Yes = true;
-   const real Gamma_m1         = Gamma - (real)1.0;
    const real dhSafety         = Safety*dh;
 
 // loop over all patches
@@ -112,9 +114,10 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][NCOMP_
          Vx    = FABS( fluid[MOMX] )*_Rho;
          Vy    = FABS( fluid[MOMY] )*_Rho;
          Vz    = FABS( fluid[MOMZ] )*_Rho;
-         Pres  = Hydro_GetPressure( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                    Gamma_m1, CheckMinPres_Yes, MinPres, EngyB );
-         a2    = Gamma*Pres*_Rho; // sound speed squared
+         Pres  = Hydro_Fluid2Pres( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
+                                   CheckMinPres_Yes, MinPres, EngyB,
+                                   EoS_DensEint2Pres_Func, c_EoS_AuxArray );
+         a2    = EoS_DensPres2CSqr_Func( fluid[DENS], Pres, c_EoS_AuxArray ); // sound speed squared
 
 //       compute the maximum information propagating speed
 //       --> hydro: bulk velocity + sound wave

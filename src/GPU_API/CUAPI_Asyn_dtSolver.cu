@@ -12,7 +12,8 @@
 __global__
 void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
                               const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ],
-                              const real dh, const real Safety, const real Gamma, const real MinPres );
+                              const real dh, const real Safety, const real MinPres,
+                              EoS_DE2P_t EoS_DensEint2Pres_Func, EoS_DP2C_t EoS_DensPres2CSqr_Func );
 #ifdef GRAVITY
 __global__
 void CUPOT_dtSolver_HydroGravity( real g_dt_Array[], const real g_Pot_Array[][ CUBE(GRA_NXT) ],
@@ -71,7 +72,6 @@ extern cudaStream_t *Stream;
 //                NPatchGroup    : Number of patch groups evaluated simultaneously by GPU
 //                dh             : Grid size
 //                Safety         : dt safety factor
-//                Gamma          : Ratio of specific heats
 //                MinPres        : Minimum allowed pressure
 //                P5_Gradient    : Use 5-points stencil to evaluate the potential gradient
 //                GravityType    : Types of gravity --> self-gravity, external gravity, both
@@ -84,7 +84,7 @@ extern cudaStream_t *Stream;
 void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real h_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
                           const real h_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const real h_Pot_Array[][ CUBE(GRA_NXT) ],
                           const double h_Corner_Array[][3], const int NPatchGroup, const real dh, const real Safety,
-                          const real Gamma, const real MinPres, const bool P5_Gradient, const OptGravityType_t GravityType,
+                          const real MinPres, const bool P5_Gradient, const OptGravityType_t GravityType,
                           const bool ExtPot, const double TargetTime, const int GPU_NStream )
 {
 
@@ -249,7 +249,8 @@ void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real 
                                     ( d_dt_Array_T  + UsedPatch[s],
                                       d_Flu_Array_T + UsedPatch[s],
                                       d_Mag_Array_T + UsedPatch[s],
-                                      dh, Safety, Gamma, MinPres );
+                                      dh, Safety, MinPres,
+                                      EoS_DensEint2Pres_GPUPtr, EoS_DensPres2CSqr_GPUPtr );
          break;
 
 #        ifdef GRAVITY
