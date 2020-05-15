@@ -7,9 +7,9 @@
 // prototypes of built-in EoS
 #if   ( EOS == EOS_IDEALGAS )
 void EoS_InitAuxArray_IdealGas( double [] );
-void SetCPUEoS_DensEint2Pres_IdealGas( EoS_DE2P_t & );
+void EoS_InitCPUFunc_IdealGas( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t & );
 # ifdef GPU
-void SetGPUEoS_DensEint2Pres_IdealGas( EoS_DE2P_t & );
+void EoS_InitGPUFunc_IdealGas( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t & );
 # endif
 
 #elif ( EOS == EOS_NUCLEAR )
@@ -25,9 +25,9 @@ void SetGPUEoS_DensEint2Pres_IdealGas( EoS_DE2P_t & );
 // Description :  Initialize the equation of state (EoS) routines and auxiliary arrays
 //
 // Note        :  1. Invoked by Init_GAMER()
-//                2. Set the auxiliary CPU arrays by invoking EoS_InitAuxArray_*_Ptr()
+//                2. Set the auxiliary CPU arrays by invoking EoS_InitAuxArray_Ptr()
 //                   --> Corresponding GPU arrays are set by CUAPI_SetConstMemory()
-//                3. Set the CPU/GPU EoS routines by invoking SetCPU/GPUEoS_*_Ptr()
+//                3. Set the CPU/GPU EoS routines by invoking EoS_InitCPU/GPUFunc_Ptr()
 //                4. For a tabular or user-specified EoS, all function pointers must be set in advance
 //                   by a test problem initializer
 //
@@ -40,10 +40,10 @@ void EoS_Init()
 
 // set function pointers for the built-in EoS
 #  if   ( EOS == EOS_IDEALGAS )
-   EoS_InitAuxArray_Ptr        = EoS_InitAuxArray_IdealGas;
-   SetCPUEoS_DensEint2Pres_Ptr = SetCPUEoS_DensEint2Pres_IdealGas;
+   EoS_InitAuxArray_Ptr = EoS_InitAuxArray_IdealGas;
+   EoS_InitCPUFunc_Ptr  = EoS_InitCPUFunc_IdealGas;
 #  ifdef GPU
-   SetGPUEoS_DensEint2Pres_Ptr = SetGPUEoS_DensEint2Pres_IdealGas;
+   EoS_InitGPUFunc_Ptr  = EoS_InitGPUFunc_IdealGas;
 #  endif
 
 #  elif ( EOS == EOS_NUCLEAR )
@@ -60,29 +60,41 @@ void EoS_Init()
 
 
 // set the CPU routines
-   if ( SetCPUEoS_DensEint2Pres_Ptr != NULL )
+   if ( EoS_InitCPUFunc_Ptr != NULL )
    {
-      SetCPUEoS_DensEint2Pres_Ptr( CPUEoS_DensEint2Pres_Ptr );
+      EoS_InitCPUFunc_Ptr( EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr, EoS_DensPres2CSqr_CPUPtr );
 
-      if ( CPUEoS_DensEint2Pres_Ptr == NULL )
-         Aux_Error( ERROR_INFO, "CPUEoS_DensEint2Pres_Ptr == NULL for EoS %d !!\n", EOS );
+      if ( EoS_DensEint2Pres_CPUPtr == NULL )
+         Aux_Error( ERROR_INFO, "EoS_DensEint2Pres_CPUPtr == NULL for EoS %d !!\n", EOS );
+
+      if ( EoS_DensPres2Eint_CPUPtr == NULL )
+         Aux_Error( ERROR_INFO, "EoS_DensPres2Eint_CPUPtr == NULL for EoS %d !!\n", EOS );
+
+      if ( EoS_DensPres2CSqr_CPUPtr == NULL )
+         Aux_Error( ERROR_INFO, "EoS_DensPres2CSqr_CPUPtr == NULL for EoS %d !!\n", EOS );
    }
    else
-      Aux_Error( ERROR_INFO, "SetCPUEoS_DensEint2Pres_Ptr == NULL for EoS %d !!\n", EOS );
+      Aux_Error( ERROR_INFO, "EoS_InitCPUFunc_Ptr == NULL for EoS %d !!\n", EOS );
 
 
 // set the GPU routines
 #  ifdef GPU
-   if ( SetGPUEoS_DensEint2Pres_Ptr != NULL )
+   if ( EoS_InitGPUFunc_Ptr != NULL )
    {
-      SetGPUEoS_DensEint2Pres_Ptr( GPUEoS_DensEint2Pres_Ptr );
+      EoS_InitGPUFunc_Ptr( EoS_DensEint2Pres_GPUPtr, EoS_DensPres2Eint_GPUPtr, EoS_DensPres2CSqr_GPUPtr );
 
-      if ( GPUEoS_DensEint2Pres_Ptr == NULL )
-         Aux_Error( ERROR_INFO, "GPUEoS_DensEint2Pres_Ptr == NULL for EoS %d !!\n", EOS );
+      if ( EoS_DensEint2Pres_GPUPtr == NULL )
+         Aux_Error( ERROR_INFO, "EoS_DensEint2Pres_GPUPtr == NULL for EoS %d !!\n", EOS );
+
+      if ( EoS_DensPres2Eint_GPUPtr == NULL )
+         Aux_Error( ERROR_INFO, "EoS_DensPres2Eint_GPUPtr == NULL for EoS %d !!\n", EOS );
+
+      if ( EoS_DensPres2CSqr_GPUPtr == NULL )
+         Aux_Error( ERROR_INFO, "EoS_DensPres2CSqr_GPUPtr == NULL for EoS %d !!\n", EOS );
    }
    else
-      Aux_Error( ERROR_INFO, "SetGPUEoS_DensEint2Pres_Ptr == NULL for EoS %d !!\n", EOS );
-#  endif
+      Aux_Error( ERROR_INFO, "EoS_InitGPUFunc_Ptr == NULL for EoS %d !!\n", EOS );
+#  endif // #ifdef GPU
 
 } // FUNCTION : EoS_Init
 

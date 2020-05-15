@@ -240,11 +240,15 @@ extern double                SF_CREATE_STAR_MAX_STAR_MFRAC;
 #if ( MODEL == HYDRO )
 extern double EoS_AuxArray[EOS_NAUX_MAX];
 extern void (*EoS_InitAuxArray_Ptr)( double [] );
-extern EoS_DE2P_t CPUEoS_DensEint2Pres_Ptr;
-extern void (*SetCPUEoS_DensEint2Pres_Ptr)( EoS_DE2P_t & );
+extern void (*EoS_InitCPUFunc_Ptr)( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t & );
+extern EoS_DE2P_t EoS_DensEint2Pres_CPUPtr;
+extern EoS_DP2E_t EoS_DensPres2Eint_CPUPtr;
+extern EoS_DP2C_t EoS_DensPres2CSqr_CPUPtr;
 #ifdef GPU
-extern EoS_DE2P_t GPUEoS_DensEint2Pres_Ptr;
-extern void (*SetGPUEoS_DensEint2Pres_Ptr)( EoS_DE2P_t & );
+extern void (*EoS_InitGPUFunc_Ptr)( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t & );
+extern EoS_DE2P_t EoS_DensEint2Pres_GPUPtr;
+extern EoS_DP2E_t EoS_DensPres2Eint_GPUPtr;
+extern EoS_DP2C_t EoS_DensPres2CSqr_GPUPtr;
 #endif
 #endif // HYDRO
 
