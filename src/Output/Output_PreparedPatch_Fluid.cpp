@@ -141,8 +141,9 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
 #        else
          const real EngyB = NULL_REAL;
 #        endif
-         fprintf( File, "  %14.7e",
-                  Hydro_GetPressure(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],GAMMA-1.0,CheckMinPres_No,NULL_REAL,EngyB) );
+         fprintf( File, "  %14.7e", Hydro_Fluid2Pres(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],
+                                                     CheckMinPres_No,NULL_REAL,EngyB,
+                                                     EoS_DensEint2Pres_CPUPtr, EoS_AuxArray) );
 #        endif // #if ( MODEL == HYDRO )
 
          fprintf( File, "\n" );

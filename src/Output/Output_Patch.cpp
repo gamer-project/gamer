@@ -188,11 +188,13 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
 //       set pressure to NULL_REAL if somehow magnetic[] is not allocated (likely due to a bug)
          const real Pres = ( magnetic == NULL ) ?
                            NULL_REAL :
-                           Hydro_GetPressure( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY],
-                                              GAMMA-1.0, CheckMinPres_No, NULL_REAL, EngyB );
+                           Hydro_Fluid2Pres( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY],
+                                             CheckMinPres_No, NULL_REAL, EngyB,
+                                             EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
 #        else
-         const real Pres = Hydro_GetPressure( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY],
-                                              GAMMA-1.0, CheckMinPres_No, NULL_REAL, NULL_REAL );
+         const real Pres = Hydro_Fluid2Pres( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY],
+                                             CheckMinPres_No, NULL_REAL, NULL_REAL,
+                                             EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
 #        endif
          fprintf( File, " %13.6e", Pres );
 

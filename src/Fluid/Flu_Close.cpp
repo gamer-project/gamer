@@ -395,8 +395,9 @@ bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngy
 #           error : DE_EINT is NOT supported yet !!
 
 #           else // without DUAL_ENERGY
-            Hydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                               Gamma_m1, CorrPres_No, NULL_REAL, EngyB ) < (real)MIN_PRES
+            Hydro_Fluid2Pres( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                              CorrPres_No, NULL_REAL, EngyB,
+                              EoS_DensEint2Pres_CPUPtr, EoS_AuxArray ) < (real)MIN_PRES
 
 #           endif // DUAL_ENERGY
          )
@@ -830,8 +831,9 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
                   fprintf( File, "input        = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
                            In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
-                           Hydro_GetPressure(In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
-                                             Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB_In) );
+                           Hydro_Fluid2Pres(In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
+                                            CheckMinPres_No, NULL_REAL, EngyB_In,
+                                            EoS_DensEint2Pres_CPUPtr, EoS_AuxArray) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", In[ENPY] );
 #                 endif
@@ -839,8 +841,9 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
                   fprintf( File, "ouptut (old) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
                            Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
-                           Hydro_GetPressure(Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
-                                             Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB_Out) );
+                           Hydro_Fluid2Pres(Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
+                                            CheckMinPres_No, NULL_REAL, EngyB_Out,
+                                            EoS_DensEint2Pres_CPUPtr, EoS_AuxArray) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", Out[ENPY] );
 #                 endif
@@ -848,8 +851,9 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
                   fprintf( File, "output (new) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
                            Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
-                           Hydro_GetPressure(Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
-                                             Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB_Update) );
+                           Hydro_Fluid2Pres(Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
+                                            CheckMinPres_No, NULL_REAL, EngyB_Update,
+                                            EoS_DensEint2Pres_CPUPtr, EoS_AuxArray) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", Update[ENPY] );
 #                 endif
@@ -884,8 +888,9 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                      const real EngyB_tmp = NULL_REAL;
 #                    endif
 
-                     fprintf( File, " %14.7e\n", Hydro_GetPressure(tmp[0], tmp[1], tmp[2], tmp[3], tmp[4],
-                                                                   Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB_tmp) );
+                     fprintf( File, " %14.7e\n", Hydro_Fluid2Pres(tmp[0], tmp[1], tmp[2], tmp[3], tmp[4],
+                                                                  CheckMinPres_No, NULL_REAL, EngyB_tmp,
+                                                                  EoS_DensEint2Pres_CPUPtr, EoS_AuxArray) );
                   }
 
                   fclose( File );

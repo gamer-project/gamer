@@ -70,8 +70,9 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
 #           else
             const real EngyB = NULL_REAL;
 #           endif // MHD
-            Pres = Hydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                      Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB );
+            Pres = Hydro_Fluid2Pres( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                     CheckMinPres_No, NULL_REAL, EngyB,
+                                     EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
 #           endif // DUAL_ENERGY
 
             if ( Mode == 1  ||  Mode == 3 )

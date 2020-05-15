@@ -324,8 +324,9 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
    const real   EngyB_Nume      = NULL_REAL;
 #  endif
 
-   Nume[ENGY] = Hydro_GetPressure( Nume[DENS], Nume[MOMX], Nume[MOMY], Nume[MOMZ], Nume[ENGY],
-                                   Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB_Nume );
+   Nume[ENGY] = Hydro_Fluid2Pres( Nume[DENS], Nume[MOMX], Nume[MOMY], Nume[MOMZ], Nume[ENGY],
+                                  CheckMinPres_No, NULL_REAL, EngyB_Nume,
+                                  EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
 #  endif // #if ( MODEL == HYDRO )
 
 
@@ -345,8 +346,9 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
 #  if ( MODEL == HYDRO )
    const real EngyB_Zero = 0.0;  // Anal[ENGY] set by AnalFunc_Flu() does NOT include magentic energy
 
-   Anal[ENGY] = Hydro_GetPressure( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY],
-                                   Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB_Zero );
+   Anal[ENGY] = Hydro_Fluid2Pres( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY],
+                                  CheckMinPres_No, NULL_REAL, EngyB_Zero,
+                                  EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
 #  endif
 
 

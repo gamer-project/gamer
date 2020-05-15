@@ -190,20 +190,22 @@ void Flu_FixUp_Flux( const int lv )
 #              endif
 
 #              if   ( DUAL_ENERGY == DE_ENPY )
-//             must determine to use Hydro_GetPressure() or Hydro_DensEntropy2Pres() since the fluid variables stored
+//             must determine to use Hydro_Fluid2Pres() or Hydro_DensEntropy2Pres() since the fluid variables stored
 //             in CorrVal[] may not be fully consistent (as it's not corrected by Hydro_DualEnergyFix())
 //             --> note that currently we adopt Hydro_DensEntropy2Pres() for DE_UPDATED_BY_MIN_PRES
                Pres = ( *DE_StatusPtr1D == DE_UPDATED_BY_ETOT  ||  *DE_StatusPtr1D == DE_UPDATED_BY_ETOT_GRA ) ?
-                      Hydro_GetPressure( ForPres[DENS], ForPres[MOMX], ForPres[MOMY], ForPres[MOMZ], ForPres[ENGY],
-                                         Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB )
+                      Hydro_Fluid2Pres( ForPres[DENS], ForPres[MOMX], ForPres[MOMY], ForPres[MOMZ], ForPres[ENGY],
+                                        CheckMinPres_No, NULL_REAL, EngyB,
+                                        EoS_DensEint2Pres_CPUPtr, EoS_AuxArray )
                     : Hydro_DensEntropy2Pres( ForPres[DENS], ForPres[ENPY], Gamma_m1, CheckMinPres_No, NULL_REAL );
 
 #              elif ( DUAL_ENERGY == DE_EINT )
 #              error : DE_EINT is NOT supported yet !!
 
 #              else // DUAL_ENERGY
-               Pres = Hydro_GetPressure( ForPres[DENS], ForPres[MOMX], ForPres[MOMY], ForPres[MOMZ], ForPres[ENGY],
-                                         Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB );
+               Pres = Hydro_Fluid2Pres( ForPres[DENS], ForPres[MOMX], ForPres[MOMY], ForPres[MOMZ], ForPres[ENGY],
+                                        CheckMinPres_No, NULL_REAL, EngyB,
+                                        EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
 #              endif // DUAL_ENERGY
 #              endif // MODEL
 

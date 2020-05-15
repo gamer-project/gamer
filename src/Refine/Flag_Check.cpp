@@ -154,8 +154,9 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 #     else
       const real EngyB = NULL_REAL;
 #     endif
-      const real Pres = Hydro_GetPressure( Dens, Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i], Fluid[MOMZ][k][j][i],
-                                           Fluid[ENGY][k][j][i], Gamma_m1, CheckMinPres_Yes, MIN_PRES, EngyB );
+      const real Pres = Hydro_Fluid2Pres( Dens, Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i], Fluid[MOMZ][k][j][i],
+                                          Fluid[ENGY][k][j][i], CheckMinPres_Yes, MIN_PRES, EngyB,
+                                          EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
 #     endif // #ifdef DUAL_ENERGY ... else ...
 
       Flag |= ( SQR(amr->dh[lv]) > JeansCoeff*Pres/SQR(Dens) );
