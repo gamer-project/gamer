@@ -83,7 +83,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                       const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
                       const double Time, const OptGravityType_t GravityType,
-                      const real MinDens, const real MinPres, const real DualEnergySwitch,
+                      const real MinDens, const real MinPres, const real MinEint, const real DualEnergySwitch,
                       const bool NormPassive, const int NNorm, const int NormIdx[],
                       const bool JeansMinPres, const real JeansMinPres_Coeff );
 real Hydro_Fluid2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
@@ -109,8 +109,8 @@ real Hydro_DensEntropy2Pres( const real Dens, const real Enpy, const real Gamma_
                              const bool CheckMinPres, const real MinPres );
 #endif
 #endif
-real Hydro_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                               const real Gamma_m1, const real _Gamma_m1, const real MinPres, const real EngyB );
+real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                               const real MinEint, const real EngyB );
 int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt,
                    const int SaveSg_Flu, const int SaveSg_Mag, const bool OverlapMPI, const bool Overlap_Sync );
 void Flu_AllocateFluxArray( const int lv );
@@ -493,8 +493,8 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                              const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
                              const double Time, const OptGravityType_t GravityType,
-                             const int GPU_NStream, const real MinDens, const real MinPres, const real DualEnergySwitch,
-                             const bool NormPassive, const int NNorm,
+                             const int GPU_NStream, const real MinDens, const real MinPres, const real MinEint,
+                             const real DualEnergySwitch, const bool NormPassive, const int NNorm,
                              const bool JeansMinPres, const real JeansMinPres_Coeff );
 void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real h_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
                           const real h_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const real h_Pot_Array[][ CUBE(GRA_NXT) ],

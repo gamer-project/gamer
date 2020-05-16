@@ -445,6 +445,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #  endif
 #  if ( MODEL != HYDRO )
    const double MIN_PRES = NULL_REAL;
+   const double MIN_EINT = NULL_REAL;
 #  endif
 
    #ifndef DUAL_ENERGY
@@ -485,8 +486,6 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #  error : ERROR : ADD MODEL-DEPENDENT USELESS VARIABLES FOR THE NEW MODELS HERE !!
 #  endif
 
-   const real MinEint = MIN_PRES / ( GAMMA - (real)1.0 );
-
 #  if ( MODEL == HYDRO  &&  defined GRAVITY )
    const real JeansMinPres_Coeff = ( JEANS_MIN_PRES ) ?
                                    NEWTON_G*SQR(JEANS_MIN_PRES_NCELL*amr->dh[JEANS_MIN_PRES_LEVEL])/(GAMMA*M_PI) : NULL_REAL;
@@ -507,7 +506,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  h_Corner_Array_F[ArrayID], h_Pot_Array_USG_F[ArrayID],
                                  NPG, dt, dh, GAMMA, OPT__FIXUP_FLUX, OPT__FIXUP_ELECTRIC, Flu_XYZ, OPT__LR_LIMITER, MINMOD_COEFF,
                                  ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
-                                 TimeOld, OPT__GRAVITY_TYPE, GPU_NSTREAM, MIN_DENS, MIN_PRES, DUAL_ENERGY_SWITCH,
+                                 TimeOld, OPT__GRAVITY_TYPE, GPU_NSTREAM, MIN_DENS, MIN_PRES, MIN_EINT, DUAL_ENERGY_SWITCH,
                                  OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar, JEANS_MIN_PRES, JeansMinPres_Coeff );
 #        else
          CPU_FluidSolver       ( h_Flu_Array_F_In[ArrayID], h_Flu_Array_F_Out[ArrayID],
@@ -516,7 +515,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  h_Corner_Array_F[ArrayID], h_Pot_Array_USG_F[ArrayID],
                                  NPG, dt, dh, GAMMA, OPT__FIXUP_FLUX, OPT__FIXUP_ELECTRIC, Flu_XYZ, OPT__LR_LIMITER, MINMOD_COEFF,
                                  ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
-                                 TimeOld, OPT__GRAVITY_TYPE, MIN_DENS, MIN_PRES, DUAL_ENERGY_SWITCH,
+                                 TimeOld, OPT__GRAVITY_TYPE, MIN_DENS, MIN_PRES, MIN_EINT, DUAL_ENERGY_SWITCH,
                                  OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar, PassiveNorm_VarIdx, JEANS_MIN_PRES, JeansMinPres_Coeff );
 #        endif
       break;
@@ -558,7 +557,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                           NULL_REAL, NULL_INT, NULL_INT, NULL_INT,
                                           NULL_REAL, NULL_REAL, (IntScheme_t)NULL_INT,
                                           OPT__GRA_P5_GRADIENT, ELBDM_ETA, ELBDM_LAMBDA, POISSON_OFF, GRAVITY_ON, GPU_NSTREAM,
-                                          OPT__GRAVITY_TYPE, TimeNew, TimeOld, OPT__EXTERNAL_POT, MinEint );
+                                          OPT__GRAVITY_TYPE, TimeNew, TimeOld, OPT__EXTERNAL_POT, MIN_EINT );
 #        else
          CPU_PoissonGravitySolver       ( NULL, NULL,
                                           h_Pot_Array_P_Out[ArrayID], h_Flu_Array_G[ArrayID], h_Corner_Array_G[ArrayID],
@@ -568,7 +567,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                           NULL_REAL, NULL_INT, NULL_INT, NULL_INT,
                                           NULL_REAL, NULL_REAL, (IntScheme_t)NULL_INT,
                                           OPT__GRA_P5_GRADIENT, ELBDM_ETA, ELBDM_LAMBDA, POISSON_OFF, GRAVITY_ON,
-                                          OPT__GRAVITY_TYPE, TimeNew, TimeOld, OPT__EXTERNAL_POT, MinEint );
+                                          OPT__GRAVITY_TYPE, TimeNew, TimeOld, OPT__EXTERNAL_POT, MIN_EINT );
 #        endif
       break;
 
@@ -584,7 +583,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                           SOR_OMEGA, MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH,
                                           MG_TOLERATED_ERROR, Poi_Coeff, OPT__POT_INT_SCHEME,
                                           OPT__GRA_P5_GRADIENT, ELBDM_ETA, ELBDM_LAMBDA, POISSON_ON, GRAVITY_ON, GPU_NSTREAM,
-                                          OPT__GRAVITY_TYPE, TimeNew, TimeOld, OPT__EXTERNAL_POT, MinEint );
+                                          OPT__GRAVITY_TYPE, TimeNew, TimeOld, OPT__EXTERNAL_POT, MIN_EINT );
 #        else
          CPU_PoissonGravitySolver       ( h_Rho_Array_P[ArrayID], h_Pot_Array_P_In[ArrayID],
                                           h_Pot_Array_P_Out[ArrayID], h_Flu_Array_G[ArrayID], h_Corner_Array_G[ArrayID],
@@ -594,7 +593,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                           SOR_OMEGA, MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH,
                                           MG_TOLERATED_ERROR, Poi_Coeff, OPT__POT_INT_SCHEME,
                                           OPT__GRA_P5_GRADIENT, ELBDM_ETA, ELBDM_LAMBDA, POISSON_ON, GRAVITY_ON,
-                                          OPT__GRAVITY_TYPE, TimeNew, TimeOld, OPT__EXTERNAL_POT, MinEint );
+                                          OPT__GRAVITY_TYPE, TimeNew, TimeOld, OPT__EXTERNAL_POT, MIN_EINT );
 #        endif
       break;
 #     endif // #ifdef GRAVITY

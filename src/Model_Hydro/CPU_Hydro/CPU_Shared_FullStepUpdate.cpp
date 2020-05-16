@@ -43,8 +43,7 @@
 //                dt               : Time interval to advance solution
 //                dh               : Cell size
 //                Gamma            : Ratio of specific heats
-//                MinDens          : Minimum allowed density
-//                MinPres          : Minimum allowed pressure
+//                MinDens/Eint     : Density and internal energy floors
 //                DualEnergySwitch : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
 //                NormPassive      : true --> normalize passive scalars so that the sum of their mass density
 //                                            is equal to the gas mass density
@@ -56,7 +55,7 @@
 GPU_DEVICE
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                           const real dt, const real dh, const real Gamma, const real MinDens, const real MinPres,
+                           const real dt, const real dh, const real Gamma, const real MinDens, const real MinEint,
                            const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
@@ -123,9 +122,9 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
       const real EngyB = NULL_REAL;
 #     endif
       Output_1Cell[DENS] = FMAX( Output_1Cell[DENS], MinDens );
-      Output_1Cell[ENGY] = Hydro_CheckMinPresInEngy( Output_1Cell[DENS], Output_1Cell[MOMX],
+      Output_1Cell[ENGY] = Hydro_CheckMinEintInEngy( Output_1Cell[DENS], Output_1Cell[MOMX],
                                                      Output_1Cell[MOMY], Output_1Cell[MOMZ],
-                                                     Output_1Cell[ENGY], Gamma_m1, _Gamma_m1, MinPres, EngyB );
+                                                     Output_1Cell[ENGY],  MinEint, EngyB );
       */
 
 

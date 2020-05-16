@@ -38,7 +38,8 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                      real g_Slope_PPM[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ],
                                const bool Con2Pri, const int NIn, const int NGhost, const real Gamma,
                                const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-                               const real dt, const real dh, const real MinDens, const real MinPres,
+                               const real dt, const real dh,
+                               const real MinDens, const real MinPres, const real MinEint,
                                const bool NormPassive, const int NNorm, const int NormIdx[],
                                const bool JeansMinPres, const real JeansMinPres_Coeff );
 void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
@@ -50,7 +51,7 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
                         const real MinPres, const bool DumpIntFlux, real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ] );
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                           const real dt, const real dh, const real Gamma, const real MinDens, const real MinPres,
+                           const real dt, const real dh, const real Gamma, const real MinDens, const real MinEint,
                            const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[] );
 #if   ( RSOLVER == EXACT )
 void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
@@ -103,7 +104,7 @@ static void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
                                   const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                                   const real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                         real g_PriVar_Half[][ CUBE(FLU_NXT) ],
-                                  const real dt, const real dh, const real Gamma, const real MinDens, const real MinPres,
+                                  const real dt, const real dh, const real Gamma, const real MinDens, const real MinEint,
                                   const bool NormPassive, const int NNorm, const int NormIdx[],
                                   const bool JeansMinPres, const real JeansMinPres_Coeff );
 #endif
@@ -158,7 +159,7 @@ static void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 //                c_ExtAcc_AuxArray  : Auxiliary array for adding external acceleration          (for UNSPLIT_GRAVITY and CPU only)
 //                                     --> When using GPU, this array is stored in the constant memory header
 //                                         CUDA_ConstMemory.h and does not need to be passed as a function argument
-//                MinDens/Pres       : Minimum allowed density and pressure
+//                MinDens/Pres/Eint  : Density, pressure, and internal energy floors
 //                DualEnergySwitch   : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
 //                NormPassive        : true --> normalize passive scalars so that the sum of their mass density
 //                                              is equal to the gas mass density
@@ -195,8 +196,8 @@ void CUFLU_FluidSolver_MHM(
    const bool StoreFlux, const bool StoreElectric,
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
    const double Time, const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
-   const real MinDens, const real MinPres, const real DualEnergySwitch,
-   const bool NormPassive, const int NNorm,
+   const real MinDens, const real MinPres, const real MinEint,
+   const real DualEnergySwitch, const bool NormPassive, const int NNorm,
    const bool JeansMinPres, const real JeansMinPres_Coeff )
 #else
 void CPU_FluidSolver_MHM(
@@ -220,8 +221,8 @@ void CPU_FluidSolver_MHM(
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
    const double Time, const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
    const double c_ExtAcc_AuxArray[],
-   const real MinDens, const real MinPres, const real DualEnergySwitch,
-   const bool NormPassive, const int NNorm,
+   const real MinDens, const real MinPres, const real MinEint,
+   const real DualEnergySwitch, const bool NormPassive, const int NNorm,
    const int c_NormIdx[],
    const bool JeansMinPres, const real JeansMinPres_Coeff )
 #endif // #ifdef __CUDACC__ ... else ...
@@ -348,7 +349,7 @@ void CPU_FluidSolver_MHM(
 
 //       1-a-4. evaluate the half-step solutions
          Hydro_RiemannPredict( g_Flu_Array_In[P], g_FC_Mag_Half_1PG, g_Flux_Half_1PG, g_PriVar_Half_1PG,
-                               dt, dh, Gamma, MinDens, MinPres, NormPassive, NNorm, c_NormIdx,
+                               dt, dh, Gamma, MinDens, MinEint, NormPassive, NNorm, c_NormIdx,
                                JeansMinPres, JeansMinPres_Coeff );
 
 
@@ -356,7 +357,8 @@ void CPU_FluidSolver_MHM(
 //              --> note that g_PriVar_Half_1PG[] returned by Hydro_RiemannPredict() stores the primitive variables
          Hydro_DataReconstruction( NULL, g_FC_Mag_Half_1PG, g_PriVar_Half_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
                                    Con2Pri_No, N_HF_VAR, LR_GHOST_SIZE, Gamma, LR_Limiter, MinMod_Coeff, dt, dh,
-                                   MinDens, MinPres, NormPassive, NNorm, c_NormIdx, JeansMinPres, JeansMinPres_Coeff );
+                                   MinDens, MinPres, MinEint, NormPassive, NNorm, c_NormIdx,
+                                   JeansMinPres, JeansMinPres_Coeff );
 
 
 //       1-b. MHM: use interpolated face-centered values to calculate the half-step fluxes
@@ -365,7 +367,8 @@ void CPU_FluidSolver_MHM(
 //       evaluate the face-centered values by data reconstruction
          Hydro_DataReconstruction( g_Flu_Array_In[P], NULL, g_PriVar_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
                                    Con2Pri_Yes, FLU_NXT, LR_GHOST_SIZE, Gamma, LR_Limiter, MinMod_Coeff, dt, dh,
-                                   MinDens, MinPres, NormPassive, NNorm, c_NormIdx, JeansMinPres, JeansMinPres_Coeff );
+                                   MinDens, MinPres, MinEint, NormPassive, NNorm, c_NormIdx,
+                                   JeansMinPres, JeansMinPres_Coeff );
 
 #        endif // #if ( FLU_SCHEME == MHM_RP ) ... else ...
 
@@ -400,7 +403,7 @@ void CPU_FluidSolver_MHM(
 
 //       4. full-step evolution
          Hydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P], g_Mag_Array_Out[P],
-                               g_FC_Flux_1PG, dt, dh, Gamma, MinDens, MinPres, DualEnergySwitch,
+                               g_FC_Flux_1PG, dt, dh, Gamma, MinDens, MinEint, DualEnergySwitch,
                                NormPassive, NNorm, c_NormIdx );
 
       } // loop over all patch groups
@@ -585,7 +588,7 @@ void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 //                dt                 : Time interval to advance solution
 //                dh                 : Cell size
 //                Gamma              : Ratio of specific heats
-//                MinDens/Pres       : Minimum allowed density and pressure
+//                MinDens/Eint       : Density and internal energy floors
 //                NormPassive        : true --> convert passive scalars to mass fraction
 //                NNorm              : Number of passive scalars for the option "NormPassive"
 //                                     --> Should be set to the global variable "PassiveNorm_NVar"
@@ -599,7 +602,7 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
                            const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                            const real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                  real g_PriVar_Half[][ CUBE(FLU_NXT) ],
-                           const real dt, const real dh, const real Gamma, const real MinDens, const real MinPres,
+                           const real dt, const real dh, const real Gamma, const real MinDens, const real MinEint,
                            const bool NormPassive, const int NNorm, const int NormIdx[],
                            const bool JeansMinPres, const real JeansMinPres_Coeff )
 {
@@ -656,14 +659,14 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
                                  N_HF_VAR, N_HF_VAR, N_HF_VAR, i_out, j_out, k_out );
 #     endif
 
-//    ensure positive density and pressure
+//    apply density and internal energy floors
 #     ifdef MHD
       const real EngyB = (real)0.5*( SQR(out_con[MAG_OFFSET+0]) + SQR(out_con[MAG_OFFSET+1]) + SQR(out_con[MAG_OFFSET+2]) );
 #     else
       const real EngyB = NULL_REAL;
 #     endif
       out_con[0] = FMAX( out_con[0], MinDens );
-      out_con[4] = Hydro_CheckMinPresInEngy( out_con[0], out_con[1], out_con[2], out_con[3], out_con[4], Gamma_m1, _Gamma_m1, MinPres, EngyB );
+      out_con[4] = Hydro_CheckMinEintInEngy( out_con[0], out_con[1], out_con[2], out_con[3], out_con[4], MinEint, EngyB );
 #     if ( NCOMP_PASSIVE > 0 )
       for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
       out_con[v] = FMAX( out_con[v], TINY_NUMBER );

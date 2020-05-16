@@ -299,7 +299,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 #     endif // #ifdef MHD
 
 
-//    check the minimum pressure and, when the dual-energy formalism is adopted, ensure the consistency between
+//    check the minimum pressure/internal energy and, when the dual-energy formalism is adopted, ensure the consistency between
 //    pressure, total energy density, and the dual-energy variable
 #     if ( MODEL == HYDRO )
 //    apply this correction only when preparing all fluid variables or magnetic field
@@ -337,14 +337,14 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 
 #        else // #ifdef DUAL_ENERGY
 
-//       actually it might not be necessary to check the minimum pressure here
+//       actually it might not be necessary to check the minimum internal energy here
          amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i]
-            = Hydro_CheckMinPresInEngy( amr->patch[FaFluSg][FaLv][FaPID]->fluid[DENS][k][j][i],
+            = Hydro_CheckMinEintInEngy( amr->patch[FaFluSg][FaLv][FaPID]->fluid[DENS][k][j][i],
                                         amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMX][k][j][i],
                                         amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMY][k][j][i],
                                         amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMZ][k][j][i],
                                         amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i],
-                                        Gamma_m1, _Gamma_m1, MIN_PRES, EngyB );
+                                        MIN_EINT, EngyB );
 #        endif // #ifdef DUAL_ENERGY ... else ...
       } // i,j,k
 #     endif // #if ( MODEL == HYDRO )

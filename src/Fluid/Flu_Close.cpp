@@ -756,21 +756,21 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                                  h_DE_Array_F_Out[TID][idx_out], Gamma_m1, _Gamma_m1,
                                  (AUTO_REDUCE_DT)?CorrPres_No:CorrPres_Yes, MIN_PRES, DUAL_ENERGY_SWITCH, EngyB_Out );
 
-//          ensure positive pressure if dual-energy formalism is not adopted
+//          apply internal energy floor if dual-energy formalism is not adopted
 //          --> apply it only when AUTO_REDUCE_DT is disabled
-//              --> otherwise AUTO_REDUCE_DT may not be triggered due to this pressure floor
+//              --> otherwise AUTO_REDUCE_DT may not be triggered due to this internal energy floor
 #           else
             if ( !AUTO_REDUCE_DT )
-               Update[ENGY] = Hydro_CheckMinPresInEngy( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
-                                                        Gamma_m1, _Gamma_m1, MIN_PRES, EngyB_Out );
+               Update[ENGY] = Hydro_CheckMinEintInEngy( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
+                                                        MIN_EINT, EngyB_Out );
 #           endif
 
 
 //          check if the newly updated values are still unphysical
-//          --> note that, when AUTO_REDUCE_DT is disabled, we check **energy** instead of pressure since even after
-//              calling Hydro_CheckMinPresInEngy() we may still have pressure < MIN_PRES due to round-off errors
-//              (especially when pressure << kinematic energy)
-//              --> it will not crash the code since we always apply MIN_PRES when calculating pressure
+//          --> note that, when AUTO_REDUCE_DT is disabled, we check **total energy** instead of **internal energy Eint**
+//              since even after calling Hydro_CheckMinEintInEngy() we may still have Eint < MIN_EINT due to round-off errors
+//              (especially when Eint << kinematic energy)
+//              --> it will not crash the code since we always apply MIN_EINT/MIN_PRES when calculating Eint/pressure
 //          --> when AUTO_REDUCE_DT is enabled, we still check **pressure** instead of energy
             if ( Unphysical(Update, Gamma_m1, (AUTO_REDUCE_DT)?CheckMinPres:CheckMinEngy, EngyB_Out) )
             {

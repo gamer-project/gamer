@@ -751,7 +751,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #        endif
 
 
-//       (c1.3.4.3) check minimum density and pressure
+//       (c1.3.4.3) check minimum density and pressure/internal energy
 //       --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
 //       --> but we do renormalize passive scalars here
 #        if ( MODEL == HYDRO  ||  MODEL == ELBDM )
@@ -804,11 +804,11 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 #           else // #ifdef DUAL_ENERGY
 
-//          check minimum pressure
+//          apply internal energy floor
             Flu_FData[ENGY][k][j][i]
-               = Hydro_CheckMinPresInEngy( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
+               = Hydro_CheckMinEintInEngy( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
                                            Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i],
-                                           Gamma_m1, _Gamma_m1, MIN_PRES, EngyB );
+                                           MIN_EINT, EngyB );
 #           endif // #ifdef DUAL_ENERGY ... else ...
 #           endif // #if ( MODEL == HYDRO )
 

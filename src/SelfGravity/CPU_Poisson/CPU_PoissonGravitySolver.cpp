@@ -90,7 +90,7 @@ void CPU_ELBDMGravitySolver(       real Flu_Array[][GRA_NIN][PATCH_SIZE][PATCH_S
 //                TimeNew              : Physical time at the current  step (for the external gravity solver)
 //                TimeOld              : Physical time at the previous step (for the external gravity solver in UNSPLIT_GRAVITY)
 //                ExtPot               : Add the external potential
-//                MinEint              : Minimum allowed internal energy (== MIN_PRES / (GAMMA-1))
+//                MinEint              : Internal energy floor
 //
 // Useless parameters in HYDRO : ELBDM_Eta, ELBDM_Lambda
 // Useless parameters in ELBDM : P5_Gradient

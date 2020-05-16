@@ -54,7 +54,7 @@ GPU_DEVICE
 static void Hydro_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real dh,
                                   const real Gamma_m1, const real _Gamma_m1,
                                   const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
-                                  const real MinDens, const real MinPres );
+                                  const real MinDens, const real MinPres, const real MinEint );
 #endif
 #ifdef CHAR_RECONSTRUCTION
 GPU_DEVICE
@@ -128,7 +128,7 @@ static void Hydro_Char2Pri( real InOut[], const real Gamma, const real Rho, cons
 //                MinMod_Coeff       : Coefficient of the generalized MinMod limiter
 //                dt                 : Time interval to advance solution (for the CTU scheme)
 //                dh                 : Cell size
-//                MinDens/Pres       : Minimum allowed density and pressure
+//                MinDens/Pres/Eint  : Density, pressure, and internal energy floors
 //                NormPassive        : true --> convert passive scalars to mass fraction
 //                NNorm              : Number of passive scalars for the option "NormPassive"
 //                                     --> Should be set to the global variable "PassiveNorm_NVar"
@@ -145,7 +145,8 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                      real g_Slope_PPM[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ],
                                const bool Con2Pri, const int NIn, const int NGhost, const real Gamma,
                                const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-                               const real dt, const real dh, const real MinDens, const real MinPres,
+                               const real dt, const real dh,
+                               const real MinDens, const real MinPres, const real MinEint,
                                const bool NormPassive, const int NNorm, const int NormIdx[],
                                const bool JeansMinPres, const real JeansMinPres_Coeff )
 {
@@ -560,7 +561,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 #     if ( FLU_SCHEME == MHM )
 //    7. advance the face-centered variables by half time-step for the MHM integrator
-      Hydro_HancockPredict( fc, dt, dh, Gamma_m1, _Gamma_m1, g_ConVar, idx_cc, MinDens, MinPres );
+      Hydro_HancockPredict( fc, dt, dh, Gamma_m1, _Gamma_m1, g_ConVar, idx_cc, MinDens, MinPres, MinEint );
 #     endif
 
 
@@ -1102,7 +1103,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 #     if ( FLU_SCHEME == MHM )
 //    7. advance the face-centered variables by half time-step for the MHM integrator
-      Hydro_HancockPredict( fc, dt, dh, Gamma_m1, _Gamma_m1, g_ConVar, idx_cc, MinDens, MinPres );
+      Hydro_HancockPredict( fc, dt, dh, Gamma_m1, _Gamma_m1, g_ConVar, idx_cc, MinDens, MinPres, MinEint );
 #     endif
 
 
@@ -1748,22 +1749,22 @@ void Hydro_LimitSlope( const real L[], const real C[], const real R[], const LR_
 //                2. Do NOT require data in the neighboring cells
 //                3. Input variables must be conserved variables
 //
-// Parameter   :  fc           : Face-centered conserved variables to be updated
-//                dt           : Time interval to advance solution
-//                dh           : Cell size
-//                Gamma_m1     : Gamma - 1
-//                _Gamma_m1    : 1 / (Gamma - 1)
-//                g_cc_array   : Array storing the cell-centered conserved variables for checking
-//                               negative density and pressure
-//                               --> It is just the input array Flu_Array_In[]
-//                cc_idx       : Index for accessing g_cc_array[]
-//                MinDens/Pres : Minimum allowed density and pressure
+// Parameter   :  fc                : Face-centered conserved variables to be updated
+//                dt                : Time interval to advance solution
+//                dh                : Cell size
+//                Gamma_m1          : Gamma - 1
+//                _Gamma_m1         : 1 / (Gamma - 1)
+//                g_cc_array        : Array storing the cell-centered conserved variables for checking
+//                                    negative density and pressure
+//                                    --> It is just the input array Flu_Array_In[]
+//                cc_idx            : Index for accessing g_cc_array[]
+//                MinDens/Pres/Eint : Density, pressure, and internal energy floors
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real dh,
                            const real Gamma_m1, const real _Gamma_m1,
                            const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
-                           const real MinDens, const real MinPres )
+                           const real MinDens, const real MinPres, const real MinEint )
 {
 
    const real dt_dh2 = (real)0.5*dt/dh;
@@ -1796,7 +1797,7 @@ void Hydro_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real dh,
       }
    }
 
-// ensure positive density and pressure
+// apply density and internal energy floors
    for (int f=0; f<6; f++)
    {
 #     ifdef MHD
@@ -1806,8 +1807,8 @@ void Hydro_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real dh,
       const real EngyB = NULL_REAL;
 #     endif
       fc[f][0] = FMAX( fc[f][0], MinDens );
-      fc[f][4] = Hydro_CheckMinPresInEngy( fc[f][0], fc[f][1], fc[f][2], fc[f][3], fc[f][4],
-                                           Gamma_m1, _Gamma_m1, MinPres, EngyB );
+      fc[f][4] = Hydro_CheckMinEintInEngy( fc[f][0], fc[f][1], fc[f][2], fc[f][3], fc[f][4],
+                                           MinEint, EngyB );
 #     if ( NCOMP_PASSIVE > 0 )
       for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
       fc[f][v] = FMAX( fc[f][v], TINY_NUMBER );

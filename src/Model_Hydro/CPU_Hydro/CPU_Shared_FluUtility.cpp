@@ -326,7 +326,7 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Gam
 //                   numerical errors
 //                   --> Usually happen in regions with high mach numbers
 //                   --> Currently it simply sets a minimum allowed value for pressure
-//                       --> Please set MIN_PRES in the runtime parameter file "Input__Parameter"
+//                       --> Set MIN_PRES in the runtime parameter file "Input__Parameter"
 //                2. We should also support a minimum **temperature** instead of **pressure**
 //                   --> NOT supported yet
 //
@@ -368,59 +368,50 @@ real Hydro_CheckMinEint( const real InEint, const real MinEint )
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_CheckMinPresInEngy
-// Description :  Ensure that the pressure in the input total energy is greater than the given threshold
+// Function    :  Hydro_CheckMinEintInEngy
+// Description :  Ensure that the internal energy in the input total energy is greater than a given threshold
 //
-// Note        :  1. This function is used to correct unphysical (usually negative) pressure caused by
-//                   numerical errors
-//                   --> Usually happen in regions with high mach numbers
-//                   --> Currently it simply sets a minimum allowed value for pressure
-//                       --> Please set MIN_PRES in the runtime parameter file "Input__Parameter"
-//                3. One must input conserved variables instead of primitive variables
-//                4. For MHD, one must provide the magnetic energy density EngyB (i.e., 0.5*B^2)
+// Note        :  1. Invoke Hydro_CheckMinEint()
+//                2. Input conserved instead of primitive variables
+//                3. For MHD, one must provide the magnetic energy density EngyB (i.e., 0.5*B^2)
 //
 // Parameter   :  Dens     : Mass density
 //                MomX/Y/Z : Momentum density
 //                Engy     : Energy density
-//                Gamma_m1 : Gamma - 1
-//               _Gamma_m1 : 1/(Gamma - 1)
-//                MinPres  : Minimum allowed pressure
-//                EngyB    : Magnetic energy density (0.5*B^2)
-//                           --> For MHD only
+//                MinEint  : Minimum allowed internal energy density
+//                EngyB    : Magnetic energy density (0.5*B^2) --> For MHD only
 //
-// Return      :  Total energy with pressure greater than the given threshold
+// Return      :  Total energy with internal energy greater than a given threshold
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-real Hydro_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                               const real Gamma_m1, const real _Gamma_m1, const real MinPres, const real EngyB )
+real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                               const real MinEint, const real EngyB )
 {
 
-   real InPres, OutPres, Ek, _Dens;
+   real InEint, OutEint, OutEngy, Ek;
 
-// we didn't use Hydro_GetPressure() here to avoid calculating kinematic energy (Ek) twice
-   _Dens   = (real)1.0 / Dens;
-   Ek      = (real)0.5*( SQR(MomX) + SQR(MomY) + SQR(MomZ) ) * _Dens;
+   Ek      = (real)0.5*( SQR(MomX) + SQR(MomY) + SQR(MomZ) ) / Dens;
+   InEint  = Engy - Ek;
 #  ifdef MHD
-   InPres  = Gamma_m1*( Engy - Ek - EngyB );
-#  else
-   InPres  = Gamma_m1*( Engy - Ek );
+   InEint -= EngyB;
 #  endif
-   OutPres = Hydro_CheckMinPres( InPres, MinPres );
+   OutEint = Hydro_CheckMinEint( InEint, MinEint );
 
-// do not modify energy (even the round-off errors) if the input pressure passes the check of Hydro_CheckMinPres()
-   if ( InPres == OutPres )
-      return Engy;
+// do not modify energy (even the round-off errors) if the input data pass the check
+   if ( InEint == OutEint )
+      OutEngy  = Engy;
 
    else
    {
+      OutEngy  = Ek + OutEint;
 #     ifdef MHD
-      return Ek + _Gamma_m1*OutPres + EngyB;
-#     else
-      return Ek + _Gamma_m1*OutPres;
+      OutEngy += EngyB;
 #     endif
    }
 
-} // FUNCTION : Hydro_CheckMinPresInEngy
+   return OutEngy;
+
+} // FUNCTION : Hydro_CheckMinEintInEngy
 
 
 

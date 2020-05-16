@@ -962,7 +962,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 #  endif // #ifdef MHD
 
 
-// 3.2.3 check minimum density and pressure
+// 3.2.3 check minimum density and pressure/internal energy
 // --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
 // --> but we do renormalize passive scalars here
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM  ||  (defined DENS && NCOMP_PASSIVE>0) )
@@ -991,7 +991,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
          }
 #        endif
 
-//       apply minimum density
+//       apply density floor
          FData_Flu[DENS][k][j][i] = MIN_DENS;
       }
 
@@ -1020,11 +1020,10 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
 #     else // #ifdef DUAL_ENERGY
 
-//    check minimum pressure
+//    apply internal energy floor
       FData_Flu[ENGY][k][j][i]
-         = Hydro_CheckMinPresInEngy( FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i],
-                                     FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i],
-                                     Gamma_m1, _Gamma_m1, MIN_PRES, EngyB );
+         = Hydro_CheckMinEintInEngy( FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i],
+                                     FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i], MIN_EINT, EngyB );
 #     endif // #ifdef DUAL_ENERGY ... else ...
 #     endif // #if ( MODEL == HYDRO )
 

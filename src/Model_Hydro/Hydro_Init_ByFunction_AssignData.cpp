@@ -240,10 +240,10 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 #        endif
 
 
-//       check minimum density and pressure
+//       apply density and internal energy floors
          fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
-         fluid[ENGY] = Hydro_CheckMinPresInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                                 Gamma_m1, _Gamma_m1, MIN_PRES, EngyB );
+         fluid[ENGY] = Hydro_CheckMinEintInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
+                                                 MIN_EINT, EngyB );
 
 //       calculate the dual-energy variable (entropy or internal energy)
 #        if   ( DUAL_ENERGY == DE_ENPY )

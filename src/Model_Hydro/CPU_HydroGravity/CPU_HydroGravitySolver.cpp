@@ -44,7 +44,7 @@
 //                                        CUDA_ConstMemory.h and does not need to be passed as a function argument
 //                TimeNew           : Physical time at the current  step (for the external gravity solver)
 //                TimeOld           : Physical time at the previous step (for the external gravity solver in UNSPLIT_GRAVITY)
-//                MinEint           : Minimum allowed internal energy (== MIN_PRES / (GAMMA-1))
+//                MinEint           : Internal energy floor
 //
 // Return      :  g_Flu_Array_New, g_DE_Array
 //-----------------------------------------------------------------------------------------
