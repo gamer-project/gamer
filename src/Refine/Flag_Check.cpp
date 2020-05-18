@@ -275,8 +275,9 @@ bool Check_Gradient( const int i, const int j, const int k, const real Input[], 
    const int dIdx[3] = { 1, PS1, PS1*PS1 };
 
    int  Idx_p, Idx_m;
-   real _dh, Self, Gradient;
+   real _dh, Self;
    bool Flag = false;
+   real Gradient = (real)0.0;
 
    for (int d=0; d<3; d++)
    {
@@ -287,13 +288,15 @@ bool Check_Gradient( const int i, const int j, const int k, const real Input[], 
          default    : Idx_m = Idx-dIdx[d];   Idx_p = Idx+dIdx[d];    _dh = (real)0.5;  break;
       }
 
-      Self     = Input[Idx];
-      Gradient = _dh*( Input[Idx_p] - Input[Idx_m] );
-      Flag    |= (  FABS( Gradient/Self ) > Threshold  );
+      Gradient += FABS( _dh*( Input[Idx_p] - Input[Idx_m] ) );
 
-      if ( Flag )    return Flag;
    } // for (int d=0; d<3; d++)
 
-   return Flag;
+   Self = Input[Idx];
+
+   Flag = (  FABS( Gradient/Self ) > Threshold  );
+
+   if ( Flag )    return Flag;
+   else           return Flag;
 
 } // FUNCTION : Check_Gradient
