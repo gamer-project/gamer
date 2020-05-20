@@ -10,8 +10,11 @@
 ##PBS -o stdout
 ##PBS -e stderr
 ##PBS -W depend=afterok:JOB_ID
+##PBS -W depend=afterany:JOB_ID
 
-cd $PBS_O_WORKDIR
+if [ "$PBS_ENVIRONMENT" != "PBS_INTERACTIVE" ]; then
+   cd $PBS_O_WORKDIR
+fi
 
 mpirun -map-by ppr:2:socket:pe=8 --report-bindings ./gamer 1>>log 2>&1
 

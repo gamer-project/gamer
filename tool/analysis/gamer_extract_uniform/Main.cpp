@@ -28,8 +28,9 @@ int         Idx_Start     [3] = { WRONG, WRONG, WRONG };    // targeted x, y, z 
 int         Idx_Size      [3] = { WRONG, WRONG, WRONG };    // targeted x, y, z array size
 int         Idx_MyStart   [3] = { WRONG, WRONG, WRONG };    // starting x, y, z array indices of this process
 int         Idx_MySize    [3] = { WRONG, WRONG, WRONG };    // array size of this process
-double      PhyCoord_Start[3] = { WRONG, WRONG, WRONG };    // starting physical coordinates
+double      PhyCoord_Start[3] = { WRONG, WRONG, WRONG };    // starting physical coordinates (may be affected by Shift2Center)
 double      PhyCoord_Size [3] = { WRONG, WRONG, WRONG };    // targeted size in physical coordinates
+double      OutCoord_Start[3] = { WRONG, WRONG, WRONG };    // real starting physical coordinates independent of Shift2Center
 int         NGPU_X[3]         = { 1, 1, 1 };                // number of MPI ranks in each direction
 int         CanBuf            = WRONG;                      // buffer size for the candidate box
 int         NLoad             = NCOMP_TOTAL;                // number of variables loaded from the input file
@@ -582,23 +583,11 @@ void TakeNote( int argc, char *argv[] )
    printf( "Unit_E            = %13.7e g*cm^2/s^2\n", Unit_E          );
    printf( "Unit_P            = %13.7e g/cm/s^2\n",   Unit_P          ); }
 
-   double Out_Start[3];
-   for (int d=0; d<3; d++)
-   {
-      Out_Start[d] = PhyCoord_Start[d] - ShiftScale[d]*amr.dh[NLEVEL-1];
-
-      while ( Out_Start[d]+PhyCoord_Size[d] <= 0.0  ||  Out_Start[d]+PhyCoord_Size[d] > amr.BoxSize[d] )
-      {
-         if ( Out_Start[d]+PhyCoord_Size[d] <= 0.0            )   Out_Start[d] += amr.BoxSize[d];
-         if ( Out_Start[d]+PhyCoord_Size[d] >  amr.BoxSize[d] )   Out_Start[d] -= amr.BoxSize[d];
-      }
-   }
-
    cout << endl << "Summary :" << endl;
    cout << "------------------------------------------------------------------------------------------------------"   << endl;
    printf( " Output region: (x,y,z) = (%13.7e, %13.7e, %13.7e) --> (%13.7e, %13.7e, %13.7e)\n",
-            Out_Start[0], Out_Start[1], Out_Start[2],
-            Out_Start[0]+PhyCoord_Size[0], Out_Start[1]+PhyCoord_Size[1], Out_Start[2]+PhyCoord_Size[2] );
+            OutCoord_Start[0], OutCoord_Start[1], OutCoord_Start[2],
+            OutCoord_Start[0]+PhyCoord_Size[0], OutCoord_Start[1]+PhyCoord_Size[1], OutCoord_Start[2]+PhyCoord_Size[2] );
    printf( " Array size   : %5d * %5d * %5d\n", (OutputXYZ==4)?1:Idx_Size[0],
                                                 (OutputXYZ==5)?1:Idx_Size[1],
                                                 (OutputXYZ==6)?1:Idx_Size[2] );
@@ -659,10 +648,10 @@ void Output()
    int  NextIdx;
 
 
-   sprintf( DomainInfo, "_x%.3f-%.3f_y%.3f-%.3f_z%.3f-%.3f_lv%d",
-            PhyCoord_Start[0], PhyCoord_Start[0]+PhyCoord_Size[0],
-            PhyCoord_Start[1], PhyCoord_Start[1]+PhyCoord_Size[1],
-            PhyCoord_Start[2], PhyCoord_Start[2]+PhyCoord_Size[2],
+   sprintf( DomainInfo, "_x%+.3fto%+.3f_y%+.3fto%+.3f_z%+.3fto%+.3f_lv%d",
+            OutCoord_Start[0], OutCoord_Start[0]+PhyCoord_Size[0],
+            OutCoord_Start[1], OutCoord_Start[1]+PhyCoord_Size[1],
+            OutCoord_Start[2], OutCoord_Start[2]+PhyCoord_Size[2],
             TargetLevel );
 
    switch ( OutputXYZ )
@@ -1120,7 +1109,7 @@ void SetHDF5Info( hid_t &H5_FileID )
 //    for projection, we record the coordinates of the original 3D region to be projected
       Info.GridDimension    [d] = ( OutputXYZ == 4+d ) ? 1 : Idx_Size[d];
       Info.SubdomainSize    [d] = PhyCoord_Size [d];
-      Info.SubdomainLeftEdge[d] = PhyCoord_Start[d];
+      Info.SubdomainLeftEdge[d] = OutCoord_Start[d];
    }
 
 
@@ -1710,6 +1699,20 @@ void Init_TargetDomain()
          Idx_MySize [d] = ( OutputXYZ == d+4 ) ? 1 : 0;  // set Idx_MySize[X] = 1 for the function "SumOverRanks"
       }
    } // for (int d=0; d<3; d++)
+
+
+// record the target subdomain
+   const double PhyCoord_HalfSize[3] = { 0.5*PhyCoord_Size[0], 0.5*PhyCoord_Size[1], 0.5*PhyCoord_Size[2] };
+   for (int d=0; d<3; d++)
+   {
+      OutCoord_Start[d] = PhyCoord_Start[d] - ShiftScale[d]*amr.dh[NLEVEL-1];
+
+      while ( OutCoord_Start[d]+PhyCoord_HalfSize[d] < 0.0  ||  OutCoord_Start[d]+PhyCoord_HalfSize[d] >= amr.BoxSize[d] )
+      {
+         if ( OutCoord_Start[d]+PhyCoord_HalfSize[d] <  0.0            )   OutCoord_Start[d] += amr.BoxSize[d];
+         if ( OutCoord_Start[d]+PhyCoord_HalfSize[d] >= amr.BoxSize[d] )   OutCoord_Start[d] -= amr.BoxSize[d];
+      }
+   }
 
 
    if ( MyRank == 0 )   cout << "   Init_TargetDomain ... done" << endl;
