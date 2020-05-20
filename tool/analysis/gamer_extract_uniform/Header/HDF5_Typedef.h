@@ -48,6 +48,10 @@ struct Info_t
    double Unit_E;
    double Unit_P;
 
+#  if ( MODEL == ELBDM )
+   double ELBDM_Mass;
+#  endif
+
 }; // struct Info_t
 
 
