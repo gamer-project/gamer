@@ -4,11 +4,12 @@
 #endif
 
 static void Load_Parameter_Before_2000( FILE *File, const int FormatVersion, bool &DataOrder_xyzv,
-                                        bool &LoadPot, int *NX0_Tot, double &BoxSize, double &Gamma, double &ELBDM_Eta,
+                                        bool &LoadPot, int *NX0_Tot, double &BoxSize, double &Gamma,
+                                        double &ELBDM_Eta, double &ELBDM_Mass,
                                         const long HeaderOffset_Makefile, const long HeaderOffset_Constant,
                                         const long HeaderOffset_Parameter, bool &Comoving );
 static void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadPot, int *NX0_Tot,
-                                       double &BoxSize, double &Gamma, double &ELBDM_Eta,
+                                       double &BoxSize, double &Gamma, double &ELBDM_Eta, double &ELBDM_Mass,
                                        const long HeaderOffset_Makefile, const long HeaderOffset_Constant,
                                        const long HeaderOffset_Parameter, bool &LoadPar, int &LoadParDens, int &NParVarOut,
                                        double &H0, bool &WithUnit, double &Unit_L, double &Unit_M, double &Unit_T, double &Unit_V,
@@ -188,12 +189,12 @@ void LoadData()
    int    NParVarOut;
    double BoxSize;
 #  if ( MODEL != ELBDM )
-   double ELBDM_ETA;
+   double ELBDM_ETA, ELBDM_MASS;
 #  endif
 
    if ( FormatVersion < 2000 )
    {
-      Load_Parameter_Before_2000( File, FormatVersion, DataOrder_xyzv, OutputPot, NX0_TOT, BoxSize, GAMMA, ELBDM_ETA,
+      Load_Parameter_Before_2000( File, FormatVersion, DataOrder_xyzv, OutputPot, NX0_TOT, BoxSize, GAMMA, ELBDM_ETA, ELBDM_MASS,
                                   HeaderOffset_Makefile, HeaderOffset_Constant, HeaderOffset_Parameter, Comoving );
       OutputPar     = false;
       OutputParDens = 0;
@@ -205,7 +206,7 @@ void LoadData()
 
    else
    {
-      Load_Parameter_After_2000( File, FormatVersion, OutputPot, NX0_TOT, BoxSize, GAMMA, ELBDM_ETA,
+      Load_Parameter_After_2000( File, FormatVersion, OutputPot, NX0_TOT, BoxSize, GAMMA, ELBDM_ETA, ELBDM_MASS,
                                  HeaderOffset_Makefile, HeaderOffset_Constant, HeaderOffset_Parameter,
                                  OutputPar, OutputParDens, NParVarOut,
                                  H0, WithUnit, Unit_L, Unit_M, Unit_T, Unit_V, Unit_D, Unit_E, Unit_P, MU, Comoving );
@@ -599,15 +600,17 @@ void LoadData()
 //                LoadPot        : Whether or not the RESTART file stores the potential data
 //                NX0_Tot        : Total number of base-level cells along each direction
 //                BoxSize        : Physical size of the simulation box
-//                Gamma          : ratio of specific heat
+//                Gamma          : Ratio of specific heat
 //                ELBDM_Eta      : Particle mass / Planck constant in ELBDM
+//                ELBDM_Mass     : Particle mass in ELBDM
 //                HeaderOffset_X : Offsets of different headers
 //                Comoving       : true --> cosmological simulations in comoving coords.
 //
-// Return      :  DataOrder_xyzv, LoadPot, NX0_Tot, BoxSize, Gamma, ELBDM_Eta, Comoving
+// Return      :  DataOrder_xyzv, LoadPot, NX0_Tot, BoxSize, Gamma, ELBDM_Eta, ELBDM_Mass, Comoving
 //-------------------------------------------------------------------------------------------------------
 void Load_Parameter_Before_2000( FILE *File, const int FormatVersion, bool &DataOrder_xyzv,
-                                 bool &LoadPot, int *NX0_Tot, double &BoxSize, double &Gamma, double &ELBDM_Eta,
+                                 bool &LoadPot, int *NX0_Tot, double &BoxSize, double &Gamma,
+                                 double &ELBDM_Eta, double &ELBDM_Mass,
                                  const long HeaderOffset_Makefile, const long HeaderOffset_Constant,
                                  const long HeaderOffset_Parameter, bool &Comoving )
 {
@@ -809,6 +812,7 @@ void Load_Parameter_Before_2000( FILE *File, const int FormatVersion, bool &Data
    for (int d=0; d<3; d++)
    NX0_Tot[d]     = nx0_tot[d];
    ELBDM_Eta      = elbdm_mass / planck_const;
+   ELBDM_Mass     = elbdm_mass;
    Comoving       = comoving;
 
 } // FUNCTION : Load_Parameter_Before_2000
@@ -826,8 +830,9 @@ void Load_Parameter_Before_2000( FILE *File, const int FormatVersion, bool &Data
 //                LoadPot        : Whether or not the RESTART file stores the potential data
 //                NX0_Tot        : Total number of base-level cells along each direction
 //                BoxSize        : Physical size of the simulation box
-//                Gamma          : ratio of specific heat
-//                ELBDM_Eta      : mass/planck_const in ELBDM
+//                Gamma          : Ratio of specific heat
+//                ELBDM_Eta      : Particle mass / Planck constant in ELBDM
+//                ELBDM_Mass     : Particle mass in ELBDM
 //                HeaderOffset_X : Offsets of different headers
 //                LoadPar        : Whether or not the RESTART file stores the particle data
 //                LoadParDens    : Whether or not the RESTART file stores the particle density on grids
@@ -838,11 +843,11 @@ void Load_Parameter_Before_2000( FILE *File, const int FormatVersion, bool &Data
 //                Mu             : Mean molecular weight
 //                Comoving       : true --> cosmological simulations in comoving coords.
 //
-// Return      :  DataOrder_xyzv, LoadPot, NX0_Tot, BoxSize, Gamma, ELBDM_Eta, LoadPar, LoadParDens, NParVarOut,
+// Return      :  DataOrder_xyzv, LoadPot, NX0_Tot, BoxSize, Gamma, ELBDM_Eta, ELBDM_Mass, LoadPar, LoadParDens, NParVarOut,
 //                H0, WithUnit, Unit_*, Mu, Comoving
 //-------------------------------------------------------------------------------------------------------
 void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadPot, int *NX0_Tot,
-                                double &BoxSize, double &Gamma, double &ELBDM_Eta,
+                                double &BoxSize, double &Gamma, double &ELBDM_Eta, double &ELBDM_Mass,
                                 const long HeaderOffset_Makefile, const long HeaderOffset_Constant,
                                 const long HeaderOffset_Parameter, bool &LoadPar, int &LoadParDens, int &NParVarOut,
                                 double &H0, bool &WithUnit, double &Unit_L, double &Unit_M, double &Unit_T, double &Unit_V,
@@ -1097,6 +1102,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
    BoxSize     = box_size;
    Gamma       = gamma;
    ELBDM_Eta   = elbdm_mass / elbdm_planck_const;
+   ELBDM_Mass  = elbdm_mass;
    for (int d=0; d<3; d++)
    NX0_Tot[d]  = nx0_tot[d];
    H0          = hubble0;

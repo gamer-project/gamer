@@ -23,6 +23,7 @@ extern char      *FileName_In;
 
 #if ( MODEL == ELBDM )
 extern double     ELBDM_ETA;
+extern double     ELBDM_MASS;
 extern bool       ELBDM_IntPhase;
 #endif
 
