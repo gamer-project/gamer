@@ -648,10 +648,10 @@ void Output()
    int  NextIdx;
 
 
-   sprintf( DomainInfo, "_x%.3f-%.3f_y%.3f-%.3f_z%.3f-%.3f_lv%d",
-            PhyCoord_Start[0], PhyCoord_Start[0]+PhyCoord_Size[0],
-            PhyCoord_Start[1], PhyCoord_Start[1]+PhyCoord_Size[1],
-            PhyCoord_Start[2], PhyCoord_Start[2]+PhyCoord_Size[2],
+   sprintf( DomainInfo, "_x%+.3fto%+.3f_y%+.3fto%+.3f_z%+.3fto%+.3f_lv%d",
+            OutCoord_Start[0], OutCoord_Start[0]+PhyCoord_Size[0],
+            OutCoord_Start[1], OutCoord_Start[1]+PhyCoord_Size[1],
+            OutCoord_Start[2], OutCoord_Start[2]+PhyCoord_Size[2],
             TargetLevel );
 
    switch ( OutputXYZ )
