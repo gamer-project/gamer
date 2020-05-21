@@ -115,7 +115,7 @@ void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[], co
          for (int j=0; j<PS1; j++)
          for (int i=0; i<PS1; i++)
          {
-//          check the floor value
+//          apply internal energy floor
             Dens = Ptr_Dens [idx_pg];
             Eint = Ptr_sEint[idx_pg]*Dens;
             Eint = Hydro_CheckMinEint( Eint, MIN_EINT );

@@ -518,7 +518,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
          }
 
 
-//       4-6. ensure positive density and pressure
+//       4-6. apply density and pressure floors
          fc[faceL][0] = FMAX( fc[faceL][0], MinDens );
          fc[faceR][0] = FMAX( fc[faceR][0], MinDens );
 
@@ -1060,7 +1060,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
          }
 
 
-//       4-6. ensure positive density and pressure
+//       4-6. apply density and pressure floors
          fc[faceL][0] = FMAX( fc[faceL][0], MinDens );
          fc[faceR][0] = FMAX( fc[faceR][0], MinDens );
 

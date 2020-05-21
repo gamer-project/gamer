@@ -274,7 +274,7 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
       }
 
 
-//    (a4). enforce positive density and pressure
+//    (a4). apply density and internal energy floors
       for (int i=1; i<FLU_NXT-1; i++)
       {
          u_half[0][i] = FMAX( u_half[0][i], MinDens );
@@ -373,7 +373,7 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
       }
 
 
-//    (b5). enforce positive density and pressure
+//    (b5). apply density and internal energy floors
       for (int i=3; i<FLU_NXT-3; i++)
       {
          ux[0][i] = FMAX( ux[0][i], MinDens );
