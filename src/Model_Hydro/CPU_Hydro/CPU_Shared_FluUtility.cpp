@@ -440,22 +440,21 @@ bool Hydro_CheckNegative( const real Input )
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_GetPressure
+// Function    :  Hydro_Fluid2Pres
 // Description :  Evaluate the fluid pressure
 //
 // Note        :  1. Invoke the EoS routine EoS_DensEint2Pres() to support different EoS
-//                2. Invoked by many routines (e.g., Hydro_GetTimeStep_Fluid(), Prepare_PatchData(), ...)
-//                3. For MHD, Engy is the total energy density including the magnetic energy EngyB=0.5*B^2,
-//                   and thus one must provide EngyB to calculate the gas pressure
+//                2. For MHD, Engy is the total energy density including the magnetic energy EngyB=0.5*B^2
+//                   and thus one must provide EngyB to subtract it
 //
 // Parameter   :  Dens              : Mass density
 //                MomX/Y/Z          : Momentum density
 //                Engy              : Energy density (including the magnetic energy density for MHD)
 //                CheckMinPres      : Apply pressure floor by invoking Hydro_CheckMinPres()
 //                                    --> In some cases we actually want to check if pressure becomes unphysical,
-//                                        for which we don't want to enable this option
+//                                        for which this option should be disabled
 //                                        --> For example: Flu_FixUp(), Flu_Close(), Hydro_Aux_Check_Negative()
-//                MinPres           : Minimum allowed pressure
+//                MinPres           : Pressure floor
 //                EngyB             : Magnetic energy density (0.5*B^2)
 //                                    --> For MHD only
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
@@ -483,6 +482,46 @@ real Hydro_Fluid2Pres( const real Dens, const real MomX, const real MomY, const 
    return Pres;
 
 } // FUNCTION : Hydro_Fluid2Pres
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Hydro_Fluid2Eint
+// Description :  Evaluate the gas internal energy density
+//
+// Note        :  1. For MHD, Engy is the total energy density including the magnetic energy EngyB=0.5*B^2
+//                   and thus one must provide EngyB to subtract it
+//                2. Internal energy density is energy per volume instead of per mass
+//
+// Parameter   :  Dens         : Mass density
+//                MomX/Y/Z     : Momentum density
+//                Engy         : Energy density (including the magnetic energy density for MHD)
+//                CheckMinEint : Apply internal energy floor by invoking Hydro_CheckMinEint()
+//                               --> In some cases we actually want to check if internal energy becomes unphysical,
+//                                   for which this option should be disabled
+//                MinEint      : Internal energy floor
+//                EngyB        : Magnetic energy density (0.5*B^2)
+//                               --> For MHD only
+//
+// Return      :  Gas internal energy density (Eint)
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+real Hydro_Fluid2Eint( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                       const bool CheckMinEint, const real MinEint, const real EngyB )
+{
+
+   real Eint;
+
+   Eint  = Engy - (real)0.5*( SQR(MomX) + SQR(MomY) + SQR(MomZ) ) / Dens;
+#  ifdef MHD
+   Eint -= EngyB;
+#  endif
+
+   if ( CheckMinEint )   Eint = Hydro_CheckMinEint( Eint, MinEint );
+
+   return Eint;
+
+} // FUNCTION : Hydro_Fluid2Eint
 
 
 
