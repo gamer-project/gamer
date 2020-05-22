@@ -9,7 +9,7 @@
 int Che_NField   = NULL_INT;
 int CheIdx_Dens  = Idx_Undefined;
 int CheIdx_sEint = Idx_Undefined;
-int CheIdx_Ek    = Idx_Undefined;
+int CheIdx_Ent   = Idx_Undefined;
 int CheIdx_e     = Idx_Undefined;
 int CheIdx_HI    = Idx_Undefined;
 int CheIdx_HII   = Idx_Undefined;
@@ -50,7 +50,7 @@ void Init_MemAllocate_Grackle( const int Che_NPG )
 
    CheIdx_Dens  = Che_NField ++;
    CheIdx_sEint = Che_NField ++;
-   CheIdx_Ek    = Che_NField ++;
+   CheIdx_Ent   = Che_NField ++;
 
    if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
    CheIdx_e     = Che_NField ++;
