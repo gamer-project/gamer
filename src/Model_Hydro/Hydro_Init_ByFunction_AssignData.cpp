@@ -52,18 +52,38 @@ void Init_Function_User_Template( real fluid[], const double x, const double y, 
                                   const int lv, double AuxArray[] )
 {
 
-   const real P0   = 1.0;
-   const real Rho0 = 1.0;
-   const real Vx   = 1.25e-1;
-   const real Vy   = 2.30e-1;
-   const real Vz   = 3.70e-1;
+   const real Dens0 = 1.0;
+   const real Vx0   = 1.25e-1;
+   const real Vy0   = 2.30e-1;
+   const real Vz0   = 3.70e-1;
+   const real Pres0 = 1.0;
+   const real Emag0 = 0.0;    // must be zero here even for MHD
 
-   fluid[DENS] = Rho0 + 0.2*exp( -( SQR(1.1*x-0.5*amr->BoxSize[0])+SQR(2.2*y-0.5*amr->BoxSize[1])+SQR(3.3*z-0.5*amr->BoxSize[2]) ) / SQR(1.8*amr->BoxSize[2]) );
-   fluid[MOMX] = fluid[DENS]*Vx + 0.1;
-   fluid[MOMY] = fluid[DENS]*Vy + 0.2;
-   fluid[MOMZ] = fluid[DENS]*Vz + 0.3;
-   fluid[ENGY] = (P0)/(GAMMA-1.0)*(2.0+sin(2.0*M_PI*(4.5*x+5.5*y*6.5*z)/amr->BoxSize[2]))
-                 + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+   real Dens, Vx, Vy, Vz, Pres;
+   real MomX, MomY, MomZ, Eint, Etot;
+
+// set the primitive variables
+   Dens = Dens0 + 0.2*exp(  -(  SQR(1.1*x-0.5*amr->BoxSize[0])
+                               +SQR(2.2*y-0.5*amr->BoxSize[1])
+                               +SQR(3.3*z-0.5*amr->BoxSize[2]) ) / SQR( 1.8*amr->BoxSize[2] )  );
+   Vx   = Vx0*sin( 2.0*M_PI/amr->BoxSize[0] );
+   Vy   = Vy0*cos( 2.0*M_PI/amr->BoxSize[1] );
+   Vz   = Vz0*sin( 2.0*M_PI/amr->BoxSize[2] );
+   Pres = Pres0*(  2.0 + sin( 2.0*M_PI*(4.5*x+5.5*y*6.5*z)/amr->BoxSize[2] )  );
+
+// convert primitive variables to conservative variables
+   MomX = Dens*Vx;
+   MomY = Dens*Vy;
+   MomZ = Dens*Vz;
+   Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, EoS_AuxArray );
+   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, Emag0 );
+
+// store the results
+   fluid[DENS] = Dens;
+   fluid[MOMX] = MomX;
+   fluid[MOMY] = MomY;
+   fluid[MOMZ] = MomZ;
+   fluid[ENGY] = Etot;
 
 // set passive scalars
 

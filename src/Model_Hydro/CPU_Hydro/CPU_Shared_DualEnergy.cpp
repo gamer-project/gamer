@@ -62,6 +62,7 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
 {
 
    const bool CheckMinPres_No = false;
+   const bool CheckMinEint_No = false;
 
 // apply the minimum entropy check
    Enpy = FMAX( Enpy, TINY_NUMBER );
@@ -72,11 +73,8 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
 // --> Enth (i.e., non-thermal energy) includes both kinetic and magnetic energies
    real Enth, Eint, Pres;
 
-   Enth  = (real)0.5*( SQR(MomX) + SQR(MomY) + SQR(MomZ) )/Dens;
-#  ifdef MHD
-   Enth += Emag;
-#  endif
-   Eint  = Etot - Enth;
+   Eint = Hydro_Fluid2Eint( Dens, MomX, MomY, MomZ, Etot, CheckMinEint_No, NULL_REAL, Emag );
+   Enth = Etot - Eint;
 
 
 // determine whether or not to use the dual-energy variable (entropy or internal energy) to correct the total energy density

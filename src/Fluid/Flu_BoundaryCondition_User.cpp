@@ -44,22 +44,32 @@ void BC_User_Template( real fluid[], const double x, const double y, const doubl
 // ##########################################################################################################
 // Example 1 : set to time-independent values for HYDRO
    /*
-   const double C[3] = { 0.5*amr->BoxSize[0],
-                         0.5*amr->BoxSize[1],
-                         0.5*amr->BoxSize[2] };
-   const real Height = 100.0;
-   const real Width  =  64.0;
-   const real Gamma2 = real( 1.0/GAMMA/(GAMMA-1.0) );
-   const real Cs     = 1.0;
-   const real Rho0   = 1.0;
+   const real Dens0 = 1.0;
+   const real Vx    = 1.25e-1;
+   const real Vy    = 2.30e-1;
+   const real Vz    = 3.70e-1;
+   const real Pres0 = 1.0;
+   const real Emag0 = 0.0;    // must be zero here even for MHD
 
-   fluid[DENS] = Rho0 + Height*EXP(  -( SQR(x-C[0]) + SQR(y-C[1]) + SQR(z-C[2]) ) / SQR(Width)  );
-   fluid[MOMX] = 0.0;
-   fluid[MOMY] = 0.0;
-   fluid[MOMZ] = 0.0;
-   fluid[ENGY] = Cs*Cs*fluid[DENS]*Gamma2 + (real)0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+   real Dens, MomX, MomY, MomZ, Pres, Eint, Etot;
 
-// remember to set passive scalars as well
+   Dens = Dens0 + 0.2*exp(  -(  SQR(1.1*x-0.5*amr->BoxSize[0])
+                               +SQR(2.2*y-0.5*amr->BoxSize[1])
+                               +SQR(3.3*z-0.5*amr->BoxSize[2]) ) / SQR( 1.8*amr->BoxSize[2] )  );
+   MomX = Dens*Vx;
+   MomY = Dens*Vy;
+   MomZ = Dens*Vz;
+   Pres = Pres0*(  2.0 + sin( 2.0*M_PI*(4.5*x+5.5*y*6.5*z)/amr->BoxSize[2] )  );
+   Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, EoS_AuxArray );
+   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, Emag0 );
+
+   fluid[DENS] = Dens;
+   fluid[MOMX] = MomX;
+   fluid[MOMY] = MomY;
+   fluid[MOMZ] = MomZ;
+   fluid[ENGY] = Etot;
+
+// set passive scalars
    fluid[EINT] = XXX;
    */
 

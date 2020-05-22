@@ -495,6 +495,7 @@ real Hydro_Fluid2Eint( const real Dens, const real MomX, const real MomY, const 
                        const bool CheckMinEint, const real MinEint, const real EngyB )
 {
 
+//###NOTE: assuming Etot = Eint + Ekin + Emag
    real Eint;
 
    Eint  = Engy - (real)0.5*( SQR(MomX) + SQR(MomY) + SQR(MomZ) ) / Dens;
@@ -528,6 +529,7 @@ GPU_DEVICE
 real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, const real MomZ, const real Eint, const real EngyB )
 {
 
+//###NOTE: assuming Etot = Eint + Ekin + Emag
    real Etot;
 
    Etot  = (real)0.5*( SQR(MomX) + SQR(MomY) + SQR(MomZ) ) / Dens;

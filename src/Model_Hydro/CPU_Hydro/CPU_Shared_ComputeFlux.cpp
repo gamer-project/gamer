@@ -221,7 +221,7 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
 #        ifdef UNSPLIT_GRAVITY
          if ( CorrHalfVel )
          {
-            real   Acc[3], eL, eR;
+            real   Acc[3], Enki_L, Enki_R;
             double xyz[3];
 
             Acc[0] = (real)0.0;
@@ -254,9 +254,9 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
                                                -g_Pot_USG[ idx_usg-didx_usg[d3] ] - g_Pot_USG[ idx_usg-didx_usg[d3]+didx_usg[d1] ] );
             }
 
-//          store the internal energy density (plus the magnetic energy in MHD)
-            eL = ConVar_L[4] - (real)0.5*( SQR(ConVar_L[1]) + SQR(ConVar_L[2]) + SQR(ConVar_L[3]) )/ConVar_L[0];
-            eR = ConVar_R[4] - (real)0.5*( SQR(ConVar_R[1]) + SQR(ConVar_R[2]) + SQR(ConVar_R[3]) )/ConVar_R[0];
+//          store the "non"-kinetic energy (i.e. total energy - kinetic energy)
+            Enki_L = ConVar_L[4] - (real)0.5*( SQR(ConVar_L[1]) + SQR(ConVar_L[2]) + SQR(ConVar_L[3]) )/ConVar_L[0];
+            Enki_R = ConVar_R[4] - (real)0.5*( SQR(ConVar_R[1]) + SQR(ConVar_R[2]) + SQR(ConVar_R[3]) )/ConVar_R[0];
 
 //          advance velocity by gravity
             for (int t=0; t<3; t++)
@@ -265,9 +265,9 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
                ConVar_R[t+1] += ConVar_R[0]*Acc[t];
             }
 
-//          update total energy density with the internal energy density (plus the magnetic energy in MHD) fixed
-            ConVar_L[4] = eL + (real)0.5*( SQR(ConVar_L[1]) + SQR(ConVar_L[2]) + SQR(ConVar_L[3]) )/ConVar_L[0];
-            ConVar_R[4] = eR + (real)0.5*( SQR(ConVar_R[1]) + SQR(ConVar_R[2]) + SQR(ConVar_R[3]) )/ConVar_R[0];
+//          update total energy density with the non-kinetic energy fixed
+            ConVar_L[4] = Enki_L + (real)0.5*( SQR(ConVar_L[1]) + SQR(ConVar_L[2]) + SQR(ConVar_L[3]) )/ConVar_L[0];
+            ConVar_R[4] = Enki_R + (real)0.5*( SQR(ConVar_R[1]) + SQR(ConVar_R[2]) + SQR(ConVar_R[3]) )/ConVar_R[0];
          } // if ( CorrHalfVel )
 #        endif // #ifdef UNSPLIT_GRAVITY
 

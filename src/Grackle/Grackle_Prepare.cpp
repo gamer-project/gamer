@@ -129,10 +129,7 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
 #  ifdef DUAL_ENERGY
    real Pres;
 #  else
-   real Px, Py, Pz;
-#  ifdef MHD
-   real Emag;
-#  endif
+   real Px, Py, Pz, Emag=NULL_REAL;
 #  endif // #ifdef DUAL_ENERGY ... else ...
    real (*fluid)[PS1][PS1][PS1]=NULL;
 
