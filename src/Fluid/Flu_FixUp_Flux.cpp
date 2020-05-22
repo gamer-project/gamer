@@ -256,10 +256,7 @@ void Flu_FixUp_Flux( const int lv )
 //             --> assuming the variable "Eint" is correct
 //             --> no need to check the internal energy floor here since we have skipped failing cells
 #              if ( MODEL == HYDRO )
-               CorrVal[ENGY]  = (real)0.5*( SQR(CorrVal[MOMX]) + SQR(CorrVal[MOMY]) + SQR(CorrVal[MOMZ]) ) / CorrVal[DENS] + Eint;
-#              ifdef MHD
-               CorrVal[ENGY] += EngyB;
-#              endif
+               CorrVal[ENGY] = Hydro_ConEint2Etot( CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], Eint, EngyB );
 
 #              if   ( DUAL_ENERGY == DE_ENPY )
                CorrVal[ENPY] = Hydro_DensPres2Entropy( CorrVal[DENS],

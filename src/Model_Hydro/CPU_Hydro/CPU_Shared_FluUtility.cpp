@@ -445,8 +445,7 @@ bool Hydro_CheckNegative( const real Input )
 //                                        for which this option should be disabled
 //                                        --> For example: Flu_FixUp(), Flu_Close(), Hydro_Aux_Check_Negative()
 //                MinPres           : Pressure floor
-//                EngyB             : Magnetic energy density (0.5*B^2)
-//                                    --> For MHD only
+//                EngyB             : Magnetic energy density (0.5*B^2) --> For MHD only
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
 //                EoS_AuxArray      : Auxiliary array for EoS_DensEint2Pres()
 //
@@ -487,8 +486,7 @@ real Hydro_Fluid2Pres( const real Dens, const real MomX, const real MomY, const 
 //                               --> In some cases we actually want to check if internal energy becomes unphysical,
 //                                   for which this option should be disabled
 //                MinEint      : Internal energy floor
-//                EngyB        : Magnetic energy density (0.5*B^2)
-//                               --> For MHD only
+//                EngyB        : Magnetic energy density (0.5*B^2) --> For MHD only
 //
 // Return      :  Gas internal energy density (Eint)
 //-------------------------------------------------------------------------------------------------------
@@ -513,6 +511,38 @@ real Hydro_Fluid2Eint( const real Dens, const real MomX, const real MomY, const 
 
 
 //-------------------------------------------------------------------------------------------------------
+// Function    :  Hydro_ConEint2Etot
+// Description :  Evaluate total energy from the input conserved variables and internal energy
+//
+// Note        :  1. For MHD, total energy density includes the magnetic energy EngyB=0.5*B^2
+//                2. Internal energy density is energy per volume instead of per mass
+//
+// Parameter   :  Dens     : Mass density
+//                MomX/Y/Z : Momentum density
+//                Eint     : Internal energy density
+//                EngyB    : Magnetic energy density (0.5*B^2) --> For MHD only
+//
+// Return      :  Total energy density (including the magnetic energy density for MHD)
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, const real MomZ, const real Eint, const real EngyB )
+{
+
+   real Etot;
+
+   Etot  = (real)0.5*( SQR(MomX) + SQR(MomY) + SQR(MomZ) ) / Dens;
+   Etot += Eint;
+#  ifdef MHD
+   Etot += EngyB;
+#  endif
+
+   return Etot;
+
+} // FUNCTION : Hydro_ConEint2Etot
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_GetTemperature
 // Description :  Evaluate the fluid temperature
 //
@@ -531,8 +561,7 @@ real Hydro_Fluid2Eint( const real Dens, const real MomX, const real MomY, const 
 //                                   for which we don't want to enable this option
 //                                   --> For example: Flu_FixUp(), Flu_Close(), Hydro_Aux_Check_Negative()
 //                MinPres      : Minimum allowed pressure
-//                EngyB        : Magnetic energy density (0.5*B^2)
-//                               --> For MHD only
+//                EngyB        : Magnetic energy density (0.5*B^2) --> For MHD only
 //
 // Return      :  Temperature
 //-------------------------------------------------------------------------------------------------------
