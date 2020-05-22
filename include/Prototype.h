@@ -111,7 +111,7 @@ real Hydro_DensEntropy2Pres( const real Dens, const real Enpy, const real Gamma_
                              const bool CheckMinPres, const real MinPres );
 #endif
 #endif
-real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real InEngy,
                                const real MinEint, const real EngyB );
 int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt,
                    const int SaveSg_Flu, const int SaveSg_Mag, const bool OverlapMPI, const bool Overlap_Sync );

@@ -92,13 +92,14 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
 #  endif // #ifdef GAMER_DEBUG
 
 
-   const int  Size1pg         = CUBE(PS2);
-   const int  Size1v          = NPG*Size1pg;
-   const real mass_ratio_pe   = Const_mp/Const_me;
+   const int  Size1pg          = CUBE(PS2);
+   const int  Size1v           = NPG*Size1pg;
+   const real mass_ratio_pe    = Const_mp/Const_me;
 #  ifdef DUAL_ENERGY
-   const real  Gamma_m1       = GAMMA - (real)1.0;
-   const real _Gamma_m1       = (real)1.0 / Gamma_m1;
-   const bool CheckMinPres_No = false;
+   const real Gamma_m1         = GAMMA - (real)1.0;
+   const bool CheckMinPres_No  = false;
+#  else
+   const bool CheckMinEint_Yes = true;
 #  endif
 
    real *Ptr_Dens0  = h_Che_Array + CheIdx_Dens *Size1v;
@@ -125,6 +126,11 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
 // thread-private variables
    int  idx_p, idx_pg, PID, PID0, offset;    // idx_p/idx_pg: array indices within a patch/patch group
    real Dens, Px, Py, Pz, Etot, _Dens, Ek, sEint;
+#  if   ( defined DUAL_ENERGY )
+   real Pres;
+#  elif ( defined MHD )
+   real Emag;
+#  endif
    real (*fluid)[PS1][PS1][PS1]=NULL;
 
    real *Ptr_Dens=NULL, *Ptr_sEint=NULL, *Ptr_Ek=NULL, *Ptr_e=NULL, *Ptr_HI=NULL, *Ptr_HII=NULL;
@@ -177,19 +183,19 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
 #           ifdef DUAL_ENERGY
 
 #           if   ( DUAL_ENERGY == DE_ENPY )
-            sEint = Hydro_DensEntropy2Pres( Dens, *(fluid[ENPY][0][0]+idx_p), Gamma_m1, CheckMinPres_No, NULL_REAL )
-                    *_Dens*_Gamma_m1;
+            Pres  = Hydro_DensEntropy2Pres( Dens, *(fluid[ENPY][0][0]+idx_p), Gamma_m1, CheckMinPres_No, NULL_REAL );
+            sEint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, EoS_AuxArray )*_Dens;
 #           elif ( DUAL_ENERGY == DE_EINT )
 #           error : DE_EINT is NOT supported yet !!
 #           endif
 
 #           else // #ifdef DUAL_ENERGY
 
-            sEint  = Etot - Ek;
 #           ifdef MHD
-            sEint -= MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+            Emag  = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
 #           endif
-            sEint *= _Dens;
+            sEint = Hydro_Fluid2Eint( Dens, Px, Py, Pz, Etot, CheckMinEint_Yes, MIN_EINT, Emag )*_Dens;
+
 #           endif // #ifdef DUAL_ENERGY ... else
 
 //          mandatory fields

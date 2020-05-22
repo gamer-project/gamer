@@ -165,18 +165,11 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
 
 // collect profile data in this rank
-#  if ( MODEL == HYDRO )
-   const real  Gamma_m1       = GAMMA - (real)1.0;
-#  ifdef DUAL_ENERGY
-   const real _Gamma_m1       = (real)1.0 / Gamma_m1;
-   const bool CheckMinPres_No = false;
-#  endif
-#  endif
-   const double r_max2        = SQR( Prof[0]->MaxRadius );
-   const double HalfBox[3]    = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
-   const bool   Periodic[3]   = { OPT__BC_FLU[0] == BC_FLU_PERIODIC,
-                                  OPT__BC_FLU[2] == BC_FLU_PERIODIC,
-                                  OPT__BC_FLU[4] == BC_FLU_PERIODIC };
+   const double r_max2      = SQR( Prof[0]->MaxRadius );
+   const double HalfBox[3]  = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
+   const bool   Periodic[3] = { OPT__BC_FLU[0] == BC_FLU_PERIODIC,
+                                OPT__BC_FLU[2] == BC_FLU_PERIODIC,
+                                OPT__BC_FLU[4] == BC_FLU_PERIODIC };
 
 #  pragma omp parallel
    {
@@ -322,25 +315,27 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 #                             ifdef DUAL_ENERGY
 
 #                             if   ( DUAL_ENERGY == DE_ENPY )
-                              const real Enpy   = FluidPtr[ENPY][k][j][i];
-                              const real Eint   = Hydro_DensEntropy2Pres( Dens, Enpy, Gamma_m1, CheckMinPres_No, NULL_REAL )*_Gamma_m1;
+                              const bool CheckMinPres_No = false;
+                              const real Enpy = FluidPtr[ENPY][k][j][i];
+                              const real Pres = Hydro_DensEntropy2Pres( Dens, Enpy, GAMMA-1.0, CheckMinPres_No, NULL_REAL );
+                              const real Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, EoS_AuxArray );
 #                             elif ( DUAL_ENERGY == DE_EINT )
 #                             error : DE_EINT is NOT supported yet !!
 #                             endif
 
 #                             else // #ifdef DUAL_ENERGY
 
-                              const real Px     = FluidPtr[MOMX][k][j][i];
-                              const real Py     = FluidPtr[MOMY][k][j][i];
-                              const real Pz     = FluidPtr[MOMZ][k][j][i];
-                              const real Etot   = FluidPtr[ENGY][k][j][i];
-                              const real Ek     = (real)0.5*( SQR(Px) + SQR(Py) + SQR(Pz) )/Dens;
+                              const bool CheckMinEint_No = false;
+                              const real MomX = FluidPtr[MOMX][k][j][i];
+                              const real MomY = FluidPtr[MOMY][k][j][i];
+                              const real MomZ = FluidPtr[MOMZ][k][j][i];
+                              const real Etot = FluidPtr[ENGY][k][j][i];
 #                             ifdef MHD
-                              const real Emag   = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+                              const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
 #                             else
-                              const real Emag   = (real)0.0;
+                              const real Emag = (real)0.0;
 #                             endif
-                              const real Eint   = Etot - Ek - Emag;
+                              const real Eint = Hydro_Fluid2Eint( Dens, MomX, MomY, MomZ, Etot, CheckMinEint_No, NULL_REAL, Emag );
 
 #                             endif // #ifdef DUAL_ENERGY ... else
 

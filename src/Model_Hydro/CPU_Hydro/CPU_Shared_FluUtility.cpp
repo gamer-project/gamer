@@ -369,7 +369,8 @@ real Hydro_CheckMinEint( const real InEint, const real MinEint )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_CheckMinEintInEngy
-// Description :  Ensure that the internal energy in the input total energy is greater than a given threshold
+// Description :  Ensure that the internal energy density in the input total energy density is greater than
+//                a given threshold
 //
 // Note        :  1. Invoke Hydro_CheckMinEint()
 //                2. Input conserved instead of primitive variables
@@ -377,37 +378,26 @@ real Hydro_CheckMinEint( const real InEint, const real MinEint )
 //
 // Parameter   :  Dens     : Mass density
 //                MomX/Y/Z : Momentum density
-//                Engy     : Energy density
-//                MinEint  : Minimum allowed internal energy density
+//                InEngy   : Energy density
+//                MinEint  : Internal energy density floor
 //                EngyB    : Magnetic energy density (0.5*B^2) --> For MHD only
 //
-// Return      :  Total energy with internal energy greater than a given threshold
+// Return      :  Total energy density with internal energy density greater than a given threshold
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real InEngy,
                                const real MinEint, const real EngyB )
 {
 
-   real InEint, OutEint, OutEngy, Ek;
+   const bool CheckMinEint_No = false;
+   real InEint, OutEint, OutEngy;
 
-   Ek      = (real)0.5*( SQR(MomX) + SQR(MomY) + SQR(MomZ) ) / Dens;
-   InEint  = Engy - Ek;
-#  ifdef MHD
-   InEint -= EngyB;
-#  endif
+   InEint  = Hydro_Fluid2Eint( Dens, MomX, MomY, MomZ, InEngy, CheckMinEint_No, NULL_REAL, EngyB );
    OutEint = Hydro_CheckMinEint( InEint, MinEint );
 
 // do not modify energy (even the round-off errors) if the input data pass the check
-   if ( InEint == OutEint )
-      OutEngy  = Engy;
-
-   else
-   {
-      OutEngy  = Ek + OutEint;
-#     ifdef MHD
-      OutEngy += EngyB;
-#     endif
-   }
+   if ( InEint == OutEint )   OutEngy = InEngy;
+   else                       OutEngy = InEngy - InEint + OutEint;
 
    return OutEngy;
 
@@ -468,14 +458,11 @@ real Hydro_Fluid2Pres( const real Dens, const real MomX, const real MomY, const 
                        EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] )
 {
 
-   real _Dens, Eint, Pres;
+   const bool CheckMinEint_No = false;
+   real Eint, Pres;
 
-  _Dens  = (real)1.0 / Dens;
-   Eint  = Engy - (real)0.5*_Dens*( SQR(MomX) + SQR(MomY) + SQR(MomZ) );
-#  ifdef MHD
-   Eint -= EngyB;
-#  endif
-   Pres  = EoS_DensEint2Pres( Dens, Eint, EoS_AuxArray );
+   Eint = Hydro_Fluid2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, EngyB );
+   Pres = EoS_DensEint2Pres( Dens, Eint, EoS_AuxArray );
 
    if ( CheckMinPres )   Pres = Hydro_CheckMinPres( Pres, MinPres );
 
