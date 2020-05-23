@@ -199,8 +199,9 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
       if ( PrepPres )   Array3D[ v2 ++ ][k][j][i] = Hydro_Fluid2Pres( BVal[DENS], BVal[MOMX], BVal[MOMY], BVal[MOMZ], BVal[ENGY],
                                                                       CheckMinPres_Yes, MIN_PRES, EngyB,
                                                                       EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
-      if ( PrepTemp )   Array3D[ v2 ++ ][k][j][i] = Hydro_GetTemperature( BVal[DENS], BVal[MOMX], BVal[MOMY], BVal[MOMZ], BVal[ENGY],
-                                                                          Gamma_m1, CheckMinPres_Yes, MIN_PRES, EngyB );
+      if ( PrepTemp )   Array3D[ v2 ++ ][k][j][i] = Hydro_Fluid2Temp( BVal[DENS], BVal[MOMX], BVal[MOMY], BVal[MOMZ], BVal[ENGY],
+                                                                      CheckMinPres_Yes, MIN_PRES, EngyB,
+                                                                      EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
 
 #     elif ( MODEL == ELBDM )
 //    no derived variables yet

@@ -92,10 +92,11 @@ real Hydro_Fluid2Pres( const real Dens, const real MomX, const real MomY, const 
 real Hydro_Fluid2Eint( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                        const bool CheckMinEint, const real MinEint, const real EngyB );
 real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, const real MomZ, const real Eint, const real EngyB );
-real Hydro_GetTemperature( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                           const real Gamma_m1, const bool CheckMinPres, const real MinPres, const real EngyB );
-double Hydro_Temperature2Pressure( const double Dens, const double Temp, const double mu, const double m_H,
-                                   const bool CheckMinPres, const double MinPres );
+real Hydro_Fluid2Temp( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                       const bool CheckMinPres, const real MinPres, const real Emag,
+                       EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
+double Hydro_Temp2Pres( const double Dens, const double Temp, const double mu, const double m_H,
+                        const bool CheckMinPres, const double MinPres );
 real Hydro_CheckMinPres( const real InPres, const real MinPres );
 real Hydro_CheckMinEint( const real InEint, const real MinEint );
 void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );

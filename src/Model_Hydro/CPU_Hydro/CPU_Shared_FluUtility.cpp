@@ -13,8 +13,9 @@
 // --> only necessary for GPU since they are included in Prototype.h for the CPU codes
 #ifdef __CUDACC__
 GPU_DEVICE
-static real Hydro_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                               const real Gamma_m1, const bool CheckMinPres, const real MinPres, const real EngyB );
+static real Hydro_Fluid2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                              const bool CheckMinPres, const real MinPres, const real EngyB,
+                              EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
 GPU_DEVICE
 static real Hydro_CheckMinPres( const real InPres, const real MinPres );
 #endif
@@ -120,8 +121,7 @@ void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int 
 // Function    :  Hydro_Con2Pri
 // Description :  Conserved variables --> primitive variables
 //
-// Note        :  1. This function always check if the pressure to be returned is greater than the
-//                   given minimum threshold
+// Note        :  1. Always apply pressure floor
 //                2. For passive scalars, we store their mass fraction as the primitive variables
 //                   when NormPassive is on
 //                   --> See the input parameters "NormPassive, NNorm, NormIdx"
@@ -132,7 +132,6 @@ void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int 
 //
 // Parameter   :  In                 : Input conserved variables
 //                Out                : Output primitive variables
-//                Gamma_m1           : Gamma - 1
 //                MinPres            : Minimum allowed pressure
 //                NormPassive        : true --> convert passive scalars to mass fraction
 //                NNorm              : Number of passive scalars for the option "NormPassive"
@@ -141,11 +140,14 @@ void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int 
 //                                     --> Should be set to the global variable "PassiveNorm_VarIdx"
 //                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
+//                EoS_DensEint2Pres  : EoS routine to compute the gas pressure
+//                EoS_AuxArray       : Auxiliary array for EoS_DensEint2Pres()
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
+void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
                     const bool NormPassive, const int NNorm, const int NormIdx[],
-                    const bool JeansMinPres, const real JeansMinPres_Coeff )
+                    const bool JeansMinPres, const real JeansMinPres_Coeff,
+                    EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] )
 {
 
    const bool CheckMinPres_Yes = true;
@@ -163,7 +165,8 @@ void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real
    Out[1] = In[1]*_Rho;
    Out[2] = In[2]*_Rho;
    Out[3] = In[3]*_Rho;
-   Out[4] = Hydro_GetPressure( In[0], In[1], In[2], In[3], In[4], Gamma_m1, CheckMinPres_Yes, MinPres, EngyB );
+   Out[4] = Hydro_Fluid2Pres( In[0], In[1], In[2], In[3], In[4], CheckMinPres_Yes, MinPres, EngyB,
+                              EoS_DensEint2Pres, EoS_AuxArray );
 
 // pressure floor required to resolve the Jeans length
 // --> note that currently we do not modify the dual-energy variable (e.g., entropy) accordingly
@@ -200,32 +203,37 @@ void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real
 //                3. In[] and Out[] must NOT point to the same array
 //                4. In[] and Out[] should have the size of NCOMP_TOTAL_PLUS_MAG
 //
-// Parameter   :  In          : Array storing the input primitive variables
-//                Out         : Array to store the output conserved variables
-//               _Gamma_m1    : 1 / (Gamma - 1)
-//                NormPassive : true --> convert passive scalars to mass fraction
-//                NNorm       : Number of passive scalars for the option "NormPassive"
-//                              --> Should be set to the global variable "PassiveNorm_NVar"
-//                NormIdx     : Target variable indices for the option "NormPassive"
-//                              --> Should be set to the global variable "PassiveNorm_VarIdx"
+// Parameter   :  In                : Array storing the input primitive variables
+//                Out               : Array to store the output conserved variables
+//                NormPassive       : true --> convert passive scalars to mass fraction
+//                NNorm             : Number of passive scalars for the option "NormPassive"
+//                                    --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx           : Target variable indices for the option "NormPassive"
+//                                    --> Should be set to the global variable "PassiveNorm_VarIdx"
+//                EoS_DensPres2Eint : EoS routine to compute the gas internal energy
+//                EoS_AuxArray      : Auxiliary array for EoS_DensPres2Eint()
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
-                    const bool NormPassive, const int NNorm, const int NormIdx[] )
+void Hydro_Pri2Con( const real In[], real Out[], const bool NormPassive, const int NNorm, const int NormIdx[],
+                    EoS_DP2E_t EoS_DensPres2Eint, const double EoS_AuxArray[] )
 {
+
+   real Eint, Emag=NULL_REAL;
 
    Out[0] = In[0];
    Out[1] = In[0]*In[1];
    Out[2] = In[0]*In[2];
    Out[3] = In[0]*In[3];
-   Out[4] = In[4]*_Gamma_m1 + (real)0.5*In[0]*( In[1]*In[1] + In[2]*In[2] + In[3]*In[3] );
 
 #  ifdef MHD
    const real Bx = In[ MAG_OFFSET + 0 ];
    const real By = In[ MAG_OFFSET + 1 ];
    const real Bz = In[ MAG_OFFSET + 2 ];
-   Out[4] += (real)0.5*( SQR(Bx) + SQR(By) + SQR(Bz) );
+   Emag   = (real)0.5*( SQR(Bx) + SQR(By) + SQR(Bz) );
 #  endif
+   Eint   = EoS_DensPres2Eint( In[0], In[4], EoS_AuxArray );
+   Out[4] = Hydro_ConEint2Etot( Out[0], Out[1], Out[2], Out[3], Eint, Emag );
+
 
 // passive scalars
 #  if ( NCOMP_PASSIVE > 0 )
@@ -236,6 +244,7 @@ void Hydro_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
    if ( NormPassive )
       for (int v=0; v<NNorm; v++)   Out[ NCOMP_FLUID + NormIdx[v] ] *= In[0];
 #  endif
+
 
 // B field
 #  ifdef MHD
@@ -253,14 +262,16 @@ void Hydro_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
 // Note        :  1. Flux[] and In[] may point to the same array
 //                2. Flux[] and In[] should have the size of NCOMP_TOTAL_PLUS_MAG
 //
-// Parameter   :  XYZ      : Target spatial direction : (0/1/2) --> (x/y/z)
-//                Flux     : Array to store the output fluxes
-//                In       : Array storing the input conserved variables
-//                Gamma_m1 : Gamma - 1
-//                MinPres  : Minimum allowed pressure
+// Parameter   :  XYZ               : Target spatial direction : (0/1/2) --> (x/y/z)
+//                Flux              : Array to store the output fluxes
+//                In                : Array storing the input conserved variables
+//                MinPres           : Minimum allowed pressure
+//                EoS_DensEint2Pres : EoS routine to compute the gas pressure
+//                EoS_AuxArray      : Auxiliary array for EoS_DensEint2Pres()
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Gamma_m1, const real MinPres )
+void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres,
+                     EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] )
 {
 
    const bool CheckMinPres_Yes = true;
@@ -275,17 +286,17 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Gam
    Hydro_Rotate3D( InRot, XYZ, true, NCOMP_FLUID );
 
 #  ifdef MHD
-   const real Bx    = InRot[ NCOMP_FLUID + 0 ];
-   const real By    = InRot[ NCOMP_FLUID + 1 ];
-   const real Bz    = InRot[ NCOMP_FLUID + 2 ];
-   const real EngyB = (real)0.5*( SQR(Bx) + SQR(By) + SQR(Bz) );
+   const real Bx   = InRot[ NCOMP_FLUID + 0 ];
+   const real By   = InRot[ NCOMP_FLUID + 1 ];
+   const real Bz   = InRot[ NCOMP_FLUID + 2 ];
+   const real Emag = (real)0.5*( SQR(Bx) + SQR(By) + SQR(Bz) );
 #  else
-   const real EngyB = NULL_REAL;
+   const real Emag = NULL_REAL;
 #  endif
-   const real Pres  = Hydro_GetPressure( InRot[0], InRot[1], InRot[2], InRot[3], InRot[4],
-                                         Gamma_m1, CheckMinPres_Yes, MinPres, EngyB );
-   const real _Rho  = (real)1.0 / InRot[0];
-   const real Vx    = _Rho*InRot[1];
+   const real Pres = Hydro_Fluid2Pres( InRot[0], InRot[1], InRot[2], InRot[3], InRot[4],
+                                        CheckMinPres_Yes, MinPres, Emag, EoS_DensEint2Pres, EoS_AuxArray );
+   const real _Rho = (real)1.0 / InRot[0];
+   const real Vx   = _Rho*InRot[1];
 
    Flux[0] = InRot[1];
    Flux[1] = Vx*InRot[1] + Pres;
@@ -303,10 +314,10 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Gam
    const real Vy = _Rho*InRot[2];
    const real Vz = _Rho*InRot[3];
 
-   Flux[              1 ] += EngyB - SQR(Bx);
+   Flux[              1 ] += Emag - SQR(Bx);
    Flux[              2 ] -= Bx*By;
    Flux[              3 ] -= Bx*Bz;
-   Flux[              4 ] += Vx*EngyB - Bx*( Bx*Vx + By*Vy + Bz*Vz );
+   Flux[              4 ] += Vx*Emag - Bx*( Bx*Vx + By*Vy + Bz*Vz );
    Flux[ MAG_OFFSET + 0 ]  = (real)0.0;
    Flux[ MAG_OFFSET + 1 ]  = By*Vx - Bx*Vy;
    Flux[ MAG_OFFSET + 2 ]  = Bz*Vx - Bx*Vz;
@@ -545,50 +556,54 @@ real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, cons
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_GetTemperature
+// Function    :  Hydro_Fluid2Temp
 // Description :  Evaluate the fluid temperature
 //
-// Note        :  1. Currently only work with the adiabatic EOS
-//                2. For simplicity, currently this function only returns **pressure/density**, which does
+// Note        :  1. For simplicity, currently this function only returns **pressure/density**, which does
 //                   NOT include normalization
 //                   --> For OPT__FLAG_LOHNER_TEMP only
 //                   --> Also note that currently it only checks minimum pressure but not minimum density
 //
-// Parameter   :  Dens         : Mass density
-//                MomX/Y/Z     : Momentum density
-//                Engy         : Energy density
-//                Gamma_m1     : Gamma - 1, where Gamma is the adiabatic index
-//                CheckMinPres : Return Hydro_CheckMinPres()
-//                               --> In some cases we actually want to check if pressure becomes unphysical,
-//                                   for which we don't want to enable this option
-//                                   --> For example: Flu_FixUp(), Flu_Close(), Hydro_Aux_Check_Negative()
-//                MinPres      : Minimum allowed pressure
-//                EngyB        : Magnetic energy density (0.5*B^2) --> For MHD only
+// Parameter   :  Dens              : Mass density
+//                MomX/Y/Z          : Momentum density
+//                Engy              : Energy density
+//                CheckMinPres      : Apply pressure floor by calling Hydro_CheckMinPres()
+//                                    --> In some cases we actually want to check if pressure becomes unphysical,
+//                                        for which we don't want to enable this option
+//                                        --> For example: Flu_FixUp(), Flu_Close(), Hydro_Aux_Check_Negative()
+//                MinPres           : Pressure floor
+//                Bmag              : Magnetic energy density (0.5*B^2) --> For MHD only
+//                EoS_DensEint2Pres : EoS routine to compute the gas pressure
+//                EoS_AuxArray      : Auxiliary array for EoS_DensEint2Pres()
 //
-// Return      :  Temperature
+// Return      :  Gas temperature
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-real Hydro_GetTemperature( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                           const real Gamma_m1, const bool CheckMinPres, const real MinPres, const real EngyB )
+real Hydro_Fluid2Temp( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                       const bool CheckMinPres, const real MinPres, const real Emag,
+                       EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] )
 {
 
-   return Hydro_GetPressure( Dens, MomX, MomY, MomZ, Engy, Gamma_m1, CheckMinPres, MinPres, EngyB ) / Dens;
+   const real Pres = Hydro_Fluid2Pres( Dens, MomX, MomY, MomZ, CheckMinPres, MinPres, Emag,
+                                       EoS_DensEint2Pres, EoS_AuxArray );
 
-} // FUNCTION : Hydro_GetTemperature
+   return Pres / Dens;
+
+} // FUNCTION : Hydro_Fluid2Temp
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_Temperature2Pressure
+// Function    :  Hydro_Temp2Pres
 // Description :  Convert gas temperature to pressure
 //
-// Note        :  1. Assume the ideal gas law
+// Note        :  1. Assume the ideal-gas law
 //                   --> P = \rho*K*T / ( mu*m_H )
 //                2. Assume both input and output to be code units
 //                   --> Temperature should be converted to UNIT_E in advance
 //                       --> Example: T_code_unit = T_kelvin * Const_kB / UNIT_E
-//                3. Pressure floor (MinPres) is applied when CheckMinPres == true
-//                4. Currently this function always adopts double precision since
+//                3. Pressure floor (MinPres) is applied when enabling CheckMinPres
+//                4. Adopt double precision since
 //                   (1) both Temp and m_H may exhibit extreme values depending on the code units, and
 //                   (2) we don't really care about the performance here since this function is usually
 //                       only used for constructing the initial condition
@@ -600,16 +615,16 @@ real Hydro_GetTemperature( const real Dens, const real MomX, const real MomY, co
 //                               --> Sometimes we use the atomic mass unit (Const_amu defined in PhysicalConstant.h)
 //                                   and m_H (Const_mH defined in PhysicalConstant.h) interchangeably since the
 //                                   difference is small (m_H ~ 1.007825 amu)
-//                CheckMinPres : Return Hydro_CheckMinPres()
+//                CheckMinPres : Apply pressure floor by calling Hydro_CheckMinPres()
 //                               --> In some cases we actually want to check if pressure becomes unphysical,
 //                                   for which we don't want to enable this option
-//                MinPres      : Minimum allowed pressure
+//                MinPres      : Pressure floor
 //
 // Return      :  Gas pressure
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-double Hydro_Temperature2Pressure( const double Dens, const double Temp, const double mu, const double m_H,
-                                   const bool CheckMinPres, const double MinPres )
+double Hydro_Temp2Pres( const double Dens, const double Temp, const double mu, const double m_H,
+                        const bool CheckMinPres, const double MinPres )
 {
 
    double Pres;
@@ -620,7 +635,7 @@ double Hydro_Temperature2Pressure( const double Dens, const double Temp, const d
 
    return Pres;
 
-} // FUNCTION : Hydro_GetTemperature
+} // FUNCTION : Hydro_Temp2Pres
 
 
 

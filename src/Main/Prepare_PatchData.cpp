@@ -298,8 +298,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    const int    PGSize3D_FC      = PGSize1D_FC*SQR(PGSize1D_CC);
 
 #  if   ( MODEL == HYDRO )
-   const real Gamma_m1         = GAMMA - (real)1.0;
-   const real _Gamma_m1        = (real)1.0 / Gamma_m1;
    const bool PrepVx           = ( TVarCC & _VELX ) ? true : false;
    const bool PrepVy           = ( TVarCC & _VELY ) ? true : false;
    const bool PrepVz           = ( TVarCC & _VELZ ) ? true : false;
@@ -919,8 +917,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #                 else
                   const real EngyB = NULL_REAL;
 #                 endif
-                  Data1PG_CC_Ptr[Idx1] = Hydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                               Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
+                  Data1PG_CC_Ptr[Idx1] = Hydro_Fluid2Temp( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                           (MinPres>=(real)0.0), MinPres, EngyB,
+                                                           EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
 
                   if ( FluIntTime ) // temporal interpolation
                   {
@@ -933,8 +932,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #                    endif
                      Data1PG_CC_Ptr[Idx1] =
                         FluWeighting     *Data1PG_CC_Ptr[Idx1]
-                      + FluWeighting_IntT*Hydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                                Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
+                      + FluWeighting_IntT*Hydro_Fluid2Temp( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                            (MinPres>=(real)0.0), MinPres, EngyB,
+                                                            EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
                   }
 
                   Idx1 ++;
@@ -1207,8 +1207,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #                       else
                         const real EngyB = NULL_REAL;
 #                       endif
-                        Data1PG_CC_Ptr[Idx1] = Hydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                                     Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
+                        Data1PG_CC_Ptr[Idx1] = Hydro_Fluid2Temp( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                                 (MinPres>=(real)0.0), MinPres, EngyB,
+                                                                 EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
 
                         if ( FluIntTime ) // temporal interpolation
                         {
@@ -1221,8 +1222,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #                          endif
                            Data1PG_CC_Ptr[Idx1] =
                               FluWeighting     *Data1PG_CC_Ptr[Idx1]
-                            + FluWeighting_IntT*Hydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                                      Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
+                            + FluWeighting_IntT*Hydro_Fluid2Temp( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                                  (MinPres>=(real)0.0), MinPres, EngyB,
+                                                                  EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
                         }
 
                         Idx1 ++;
