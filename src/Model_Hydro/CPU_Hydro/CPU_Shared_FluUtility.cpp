@@ -294,7 +294,7 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
    const real Emag = NULL_REAL;
 #  endif
    const real Pres = Hydro_Fluid2Pres( InRot[0], InRot[1], InRot[2], InRot[3], InRot[4],
-                                        CheckMinPres_Yes, MinPres, Emag, EoS_DensEint2Pres, EoS_AuxArray );
+                                       CheckMinPres_Yes, MinPres, Emag, EoS_DensEint2Pres, EoS_AuxArray );
    const real _Rho = (real)1.0 / InRot[0];
    const real Vx   = _Rho*InRot[1];
 
