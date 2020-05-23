@@ -584,7 +584,7 @@ real Hydro_Fluid2Temp( const real Dens, const real MomX, const real MomY, const 
                        EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] )
 {
 
-   const real Pres = Hydro_Fluid2Pres( Dens, MomX, MomY, MomZ, CheckMinPres, MinPres, Emag,
+   const real Pres = Hydro_Fluid2Pres( Dens, MomX, MomY, MomZ, Engy, CheckMinPres, MinPres, Emag,
                                        EoS_DensEint2Pres, EoS_AuxArray );
 
    return Pres / Dens;
