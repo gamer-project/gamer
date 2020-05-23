@@ -25,12 +25,16 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                      real g_PriVar   [][ CUBE(FLU_NXT) ],
                                      real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
                                      real g_Slope_PPM[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ],
-                               const bool Con2Pri, const int NIn, const int NGhost, const real Gamma,
+                               const bool Con2Pri, const int NIn, const int NGhost,
                                const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh,
                                const real MinDens, const real MinPres, const real MinEint,
                                const bool NormPassive, const int NNorm, const int NormIdx[],
-                               const bool JeansMinPres, const real JeansMinPres_Coeff );
+                               const bool JeansMinPres, const real JeansMinPres_Coeff,
+                               const EoS_DE2P_t EoS_DensEint2Pres,
+                               const EoS_DP2E_t EoS_DensPres2Eint,
+                               const EoS_DP2C_t EoS_DensPres2CSqr,
+                               const double EoS_AuxArray[] );
 void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
                               real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                         const int NFlux, const int NSkip_N, const int NSkip_T, const real Gamma,
@@ -132,9 +136,9 @@ void Hydro_TGradientCorrection(       real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ 
 //                                                 highlight that this is a constant variable on GPU
 //                JeansMinPres           : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff     : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
-//                EoS_DensEint2Pres_Func : Function pointers to the EoS routines
-//                EoS_DensPres2Eint_Func : ...
-//                EoS_DensPres2CSqr_Func : ...
+//                EoS_DensEint2Pres_Func : Function pointer to the EoS routine of computing the gas pressure
+//                EoS_DensPres2Eint_Func :                    . . .                             gas internal energy
+//                EoS_DensPres2CSqr_Func :                    . . .                             sound speed square
 //                c_EoS_AuxArray         : Auxiliary array for the EoS routines (for CPU only)
 //                                         --> When using GPU, this array is stored in the constant memory header
 //                                             CUDA_ConstMemory.h and does not need to be passed as a function argument
@@ -263,9 +267,10 @@ void CPU_FluidSolver_CTU(
       {
 //       1. evaluate the face-centered values at the half time-step
          Hydro_DataReconstruction( g_Flu_Array_In[P], g_Mag_Array_In[P], g_PriVar_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
-                                   Con2Pri_Yes, FLU_NXT, LR_GHOST_SIZE, Gamma, LR_Limiter, MinMod_Coeff, dt, dh,
+                                   Con2Pri_Yes, FLU_NXT, LR_GHOST_SIZE, LR_Limiter, MinMod_Coeff, dt, dh,
                                    MinDens, MinPres, MinEint, NormPassive, NNorm, c_NormIdx,
-                                   JeansMinPres, JeansMinPres_Coeff );
+                                   JeansMinPres, JeansMinPres_Coeff,
+                                   EoS_DensEint2Pres_Func, EoS_DensPres2Eint_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray );
 
 
 //       2. evaluate the face-centered half-step fluxes by solving the Riemann problem
