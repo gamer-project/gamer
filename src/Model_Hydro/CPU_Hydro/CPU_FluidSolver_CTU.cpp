@@ -37,11 +37,13 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const double EoS_AuxArray[] );
 void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
                               real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                        const int NFlux, const int NSkip_N, const int NSkip_T, const real Gamma,
+                        const int NFlux, const int NSkip_N, const int NSkip_T,
                         const bool CorrHalfVel, const real g_Pot_USG[], const double g_Corner[],
                         const real dt, const real dh, const double Time,
                         const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[],
-                        const real MinPres, const bool DumpIntFlux, real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ] );
+                        const real MinPres, const bool DumpIntFlux, real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ],
+                        const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2C_t EoS_DensPres2CSqr,
+                        const double EoS_AuxArray[] );
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                            const real dt, const real dh, const real MinDens, const real MinEint,
@@ -275,10 +277,9 @@ void CPU_FluidSolver_CTU(
 
 
 //       2. evaluate the face-centered half-step fluxes by solving the Riemann problem
-         Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_HF_FLUX, 0, 0, Gamma,
-                            CorrHalfVel_No, NULL, NULL,
+         Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_HF_FLUX, 0, 0, CorrHalfVel_No, NULL, NULL,
                             NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, NULL, MinPres,
-                            StoreFlux_No, NULL );
+                            StoreFlux_No, NULL, EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray );
 
 
 //       3. evaluate electric field and update B field at the half time-step
@@ -312,10 +313,10 @@ void CPU_FluidSolver_CTU(
          const int NSkip_N = 0;
          const int NSkip_T = 1;
 #        endif
-         Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, NSkip_N, NSkip_T, Gamma,
-                            CorrHalfVel, g_Pot_Array_USG[P], g_Corner_Array[P],
-                            dt, dh, Time, GravityType, ExtAcc_Func, c_ExtAcc_AuxArray, MinPres,
-                            StoreFlux, g_Flux_Array[P] );
+         Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, NSkip_N, NSkip_T, CorrHalfVel,
+                            g_Pot_Array_USG[P], g_Corner_Array[P], dt, dh, Time, GravityType,
+                            ExtAcc_Func, c_ExtAcc_AuxArray, MinPres, StoreFlux, g_Flux_Array[P],
+                            EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray );
 
 
 //       7. evaluate electric field and update B field at the full time-step

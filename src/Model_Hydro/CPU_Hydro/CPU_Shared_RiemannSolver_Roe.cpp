@@ -58,18 +58,21 @@ real Hydro_CheckMinPres( const real InPres, const real MinPres );
 //                2. Ref : (a) "Riemann Solvers and Numerical Methods for Fluid Dynamics - A Practical Introduction
 //                             ~ by Eleuterio F. Toro"
 //                         (b) Stone et al., ApJS, 178, 137 (2008)
-//                3. This function is shared by MHM, MHM_RP, and CTU schemes
+//                3. Shared by MHM, MHM_RP, and CTU schemes
 //
-// Parameter   :  XYZ         : Target spatial direction : (0/1/2) --> (x/y/z)
-//                Flux_Out    : Array to store the output flux
-//                L_In        : Input left  state (conserved variables)
-//                R_In        : Input right state (conserved variables)
-//                Gamma       : Ratio of specific heats
-//                MinPres     : Minimum allowed pressure
+// Parameter   :  XYZ               : Target spatial direction : (0/1/2) --> (x/y/z)
+//                Flux_Out          : Array to store the output flux
+//                L_In              : Input left  state (conserved variables)
+//                R_In              : Input right state (conserved variables)
+//                EoS_DensEint2Pres : EoS routine to compute the gas pressure
+//                EoS_DensPres2CSqr : EoS routine to compute the sound speed square
+//                EoS_AuxArray      : Auxiliary array for the EoS routines
+//                MinPres           : Pressure floor
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                              const real Gamma, const real MinPres )
+                              const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2C_t EoS_DensPres2CSqr,
+                              const double EoS_AuxArray[], const real MinPres )
 {
 
 // 1. reorder the input variables for different spatial directions
@@ -90,6 +93,12 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    const real ONE      = (real)1.0;
    const real TWO      = (real)2.0;
    const real _TWO     = (real)0.5;
+
+
+//#### TO BE REMOVED
+   const real Gamma    = 123413241;
+
+
    const real Gamma_m1 = Gamma - ONE;
 #  ifdef MHD
    const real Gamma_m2 = Gamma - TWO;
