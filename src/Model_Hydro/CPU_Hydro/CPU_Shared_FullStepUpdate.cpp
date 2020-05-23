@@ -42,7 +42,6 @@
 //                                       allocated size is N_FC_FLUX^3
 //                dt               : Time interval to advance solution
 //                dh               : Cell size
-//                Gamma            : Ratio of specific heats
 //                MinDens/Eint     : Density and internal energy floors
 //                DualEnergySwitch : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
 //                NormPassive      : true --> normalize passive scalars so that the sum of their mass density
@@ -51,17 +50,21 @@
 //                                   --> Should be set to the global variable "PassiveNorm_NVar"
 //                NormIdx          : Target variable indices to be normalized
 //                                   --> Should be set to the global variable "PassiveNorm_VarIdx"
+//                EoS_AuxArray     : Auxiliary array for the EoS routines
+//                                   --> Only for obtaining Gamma used by the dual-energy formalism
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                           const real dt, const real dh, const real Gamma, const real MinDens, const real MinEint,
-                           const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[] )
+                           const real dt, const real dh, const real MinDens, const real MinEint,
+                           const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
+                           const double EoS_AuxArray[] )
 {
 
    const int  didx_flux[3] = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };
    const real dt_dh        = dt/dh;
 #  ifdef DUAL_ENERGY
+   const real  Gamma       = (real)EoS_AuxArray[0];
    const real  Gamma_m1    = Gamma - (real)1.0;
    const real _Gamma_m1    = (real)1.0 / Gamma_m1;
 #  endif

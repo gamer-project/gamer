@@ -185,6 +185,7 @@ void EoS_InitCPUFunc_IdealGas( EoS_DE2P_t &EoS_DensEint2Pres_CPUPtr,
 //                   --> By linking to the function pointers "EoS_InitAuxArray_Ptr"
 //                2. AuxArray[] has the size of EOS_NAUX_MAX defined in Macro.h (default = 10)
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
+//                4. Dual-energy routines assume AuxArray[0]=GAMMA
 //
 // Parameter   :  AuxArray : Array to be filled up
 //
