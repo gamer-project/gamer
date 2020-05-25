@@ -17,11 +17,13 @@
 #else // #ifdef __CUDACC__
 
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
-void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Gamma_m1, const real MinPres );
+void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres,
+                     EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
 real Hydro_CheckMinPres( const real InPres, const real MinPres );
-void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
+void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
                     const bool NormPassive, const int NNorm, const int NormIdx[],
-                    const bool JeansMinPres, const real JeansMinPres_Coeff );
+                    const bool JeansMinPres, const real JeansMinPres_Coeff,
+                    EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
 
 #endif // #ifdef __CUDACC__ ... else ...
 
@@ -39,17 +41,24 @@ void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real
 //                         (c) Batten et al., SIAM J. Sci. Comput., 18, 1553 (1997)
 //                3. This function is shared by MHM, MHM_RP, and CTU schemes
 //
-// Parameter   :  XYZ      : Target spatial direction : (0/1/2) --> (x/y/z)
-//                Flux_Out : Array to store the output flux
-//                L_In     : Input left  state (conserved variables)
-//                R_In     : Input right state (conserved variables)
-//                Gamma    : Ratio of specific heats
-//                MinPres  : Minimum allowed pressure
+// Parameter   :  XYZ               : Target spatial direction : (0/1/2) --> (x/y/z)
+//                Flux_Out          : Array to store the output flux
+//                L_In              : Input left  state (conserved variables)
+//                R_In              : Input right state (conserved variables)
+//                MinPres           : Pressure floor
+//                EoS_DensEint2Pres : EoS routine to compute the gas pressure
+//                EoS_DensPres2CSqr : EoS routine to compute the sound speed square
+//                EoS_AuxArray      : Auxiliary array for the EoS routines
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                               const real Gamma, const real MinPres )
+                               const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                               const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] )
 {
+
+//#### TO BE REMOVED
+const real Gamma = 123413241;
+
 
    const real MaxErr2         = SQR(MAX_ERROR);
    const real ZERO            = (real)0.0;
@@ -86,8 +95,10 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
               BxL, BxR, XYZ, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
-   Hydro_Con2Pri( Con_L, Pri_L, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
-   Hydro_Con2Pri( Con_R, Pri_R, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
+   Hydro_Con2Pri( Con_L, Pri_L, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
+                  EoS_DensEint2Pres, EoS_AuxArray );
+   Hydro_Con2Pri( Con_R, Pri_R, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
+                  EoS_DensEint2Pres, EoS_AuxArray );
 
    const real Vx_min = FMIN( Pri_L[1] , Pri_R[1] );
    const real Vx_max = FMAX( Pri_L[1] , Pri_R[1] );
@@ -169,9 +180,8 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
    Speed[0] = Vx_min - Cf_max;
    Speed[4] = Vx_max + Cf_max;
 
-   Hydro_Con2Flux( 0, Flux_L, Con_L, Gamma_m1, MinPres );
-   Hydro_Con2Flux( 0, Flux_R, Con_R, Gamma_m1, MinPres );
-
+   Hydro_Con2Flux( 0, Flux_L, Con_L, MinPres, EoS_DensEint2Pres, EoS_AuxArray );
+   Hydro_Con2Flux( 0, Flux_R, Con_R, MinPres, EoS_DensEint2Pres, EoS_AuxArray );
 
 // return the upwind fluxes if flow is supersonic
    if ( Speed[0] >= ZERO )

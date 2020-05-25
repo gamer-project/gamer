@@ -40,17 +40,27 @@ GPU_DEVICE static void Set_Flux( real flux[], const real val[], const real Gamma
 //                2. This function is shared by MHM, MHM_RP, and CTU schemes
 //                3. Currently it does NOT check the minimum density and pressure criteria
 //
-// Parameter   :  XYZ         : Target spatial direction : (0/1/2) --> (x/y/z)
-//                Flux_Out    : Output array to store the average flux along t axis
-//                L_In        : Input **primitive** variables in the left region
-//                              --> But note that the input passive scalars should be mass density instead of mass fraction
-//                R_In        : Input **primitive** variables in the right region
-//                              --> But note that the input passive scalars should be mass density instead of mass fraction
-//                Gamma       : Ratio of specific heats
+// Parameter   :  XYZ               : Target spatial direction : (0/1/2) --> (x/y/z)
+//                Flux_Out          : Output array to store the average flux along t axis
+//                L_In              : Input **primitive** variables in the left region
+//                                    --> But note that the input passive scalars should be mass density instead of mass fraction
+//                R_In              : Input **primitive** variables in the right region
+//                                    --> But note that the input passive scalars should be mass density instead of mass fraction
+//                MinPres           : Pressure floor
+//                EoS_DensEint2Pres : EoS routine to compute the gas pressure
+//                EoS_DensPres2CSqr : EoS routine to compute the sound speed square
+//                EoS_AuxArray      : Auxiliary array for the EoS routines
 //------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[], const real Gamma )
+void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+                                const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                                const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] )
 {
+
+
+//#### TO BE REMOVED
+const real Gamma = 123413241;
+
 
    const real Gamma_p1 = Gamma + (real)1.0;
    const real Gamma_m1 = Gamma - (real)1.0;

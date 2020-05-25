@@ -17,7 +17,8 @@
 #else // #ifdef __CUDACC__
 
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
-void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Gamma_m1, const real MinPres );
+void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres,
+                     EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
 real Hydro_CheckMinPres( const real InPres, const real MinPres );
 
 #endif // #ifdef __CUDACC__ ... else ...
@@ -36,17 +37,25 @@ real Hydro_CheckMinPres( const real InPres, const real MinPres );
 //                            18, 1553
 //                3. This function is shared by MHM, MHM_RP, and CTU schemes
 //
-// Parameter   :  XYZ      : Target spatial direction : (0/1/2) --> (x/y/z)
-//                Flux_Out : Array to store the output flux
-//                L_In     : Input left  state (conserved variables)
-//                R_In     : Input right state (conserved variables)
-//                Gamma    : Ratio of specific heats
-//                MinPres  : Minimum allowed pressure
+// Parameter   :  XYZ               : Target spatial direction : (0/1/2) --> (x/y/z)
+//                Flux_Out          : Array to store the output flux
+//                L_In              : Input left  state (conserved variables)
+//                R_In              : Input right state (conserved variables)
+//                MinPres           : Pressure floor
+//                EoS_DensEint2Pres : EoS routine to compute the gas pressure
+//                EoS_DensPres2CSqr : EoS routine to compute the sound speed square
+//                EoS_AuxArray      : Auxiliary array for the EoS routines
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                               const real Gamma, const real MinPres )
+                               const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                               const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] )
 {
+
+
+//#### TO BE REMOVED
+const real Gamma = 123413241;
+
 
 // 1. reorder the input variables for different spatial directions
    real L[NCOMP_TOTAL], R[NCOMP_TOTAL];
@@ -165,7 +174,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
    if ( V_S >= (real)0.0 )
    {
-      Hydro_Con2Flux( 0, Flux_LR, L, Gamma_m1, MinPres );
+      Hydro_Con2Flux( 0, Flux_LR, L, MinPres, EoS_DensEint2Pres, EoS_AuxArray );
 
       for (int v=0; v<NCOMP_FLUID; v++)   Flux_LR[v] -= MaxV_L*L[v];    // fluxes along the maximum wave speed
 
@@ -176,7 +185,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
    else // V_S < 0.0
    {
-      Hydro_Con2Flux( 0, Flux_LR, R, Gamma_m1, MinPres );
+      Hydro_Con2Flux( 0, Flux_LR, R, MinPres, EoS_DensEint2Pres, EoS_AuxArray );
 
       for (int v=0; v<NCOMP_FLUID; v++)    Flux_LR[v] -= MaxV_R*R[v];   // fluxes along the maximum wave speed
 

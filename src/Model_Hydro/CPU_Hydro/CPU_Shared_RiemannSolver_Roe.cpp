@@ -27,21 +27,28 @@
 #else // #ifdef __CUDACC__
 
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
-void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Gamma_m1, const real MinPres );
+void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres,
+                     EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
 #if   ( CHECK_INTERMEDIATE == EXACT )
-void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
+void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
                     const bool NormPassive, const int NNorm, const int NormIdx[],
-                    const bool JeansMinPres, const real JeansMinPres_Coeff );
-void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
+                    const bool JeansMinPres, const real JeansMinPres_Coeff,
+                    EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
+void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+                                const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                                const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] );
 #elif ( CHECK_INTERMEDIATE == HLLE )
 void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                               const real Gamma, const real MinPres );
+                               const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                               const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] );
 #elif ( CHECK_INTERMEDIATE == HLLC )
 void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                               const real Gamma, const real MinPres );
+                               const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                               const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] );
 #elif ( CHECK_INTERMEDIATE == HLLD )
 void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                               const real Gamma, const real MinPres );
+                               const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                               const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] );
 #endif
 real Hydro_CheckMinPres( const real InPres, const real MinPres );
 
@@ -64,16 +71,21 @@ real Hydro_CheckMinPres( const real InPres, const real MinPres );
 //                Flux_Out          : Array to store the output flux
 //                L_In              : Input left  state (conserved variables)
 //                R_In              : Input right state (conserved variables)
+//                MinPres           : Pressure floor
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
 //                EoS_DensPres2CSqr : EoS routine to compute the sound speed square
 //                EoS_AuxArray      : Auxiliary array for the EoS routines
-//                MinPres           : Pressure floor
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                              const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2C_t EoS_DensPres2CSqr,
-                              const double EoS_AuxArray[], const real MinPres )
+                              const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                              const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] )
 {
+
+
+//#### TO BE REMOVED
+const real Gamma = 123413241;
+
 
 // 1. reorder the input variables for different spatial directions
    real L[NCOMP_TOTAL_PLUS_MAG], R[NCOMP_TOTAL_PLUS_MAG];
@@ -93,12 +105,6 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    const real ONE      = (real)1.0;
    const real TWO      = (real)2.0;
    const real _TWO     = (real)0.5;
-
-
-//#### TO BE REMOVED
-   const real Gamma    = 123413241;
-
-
    const real Gamma_m1 = Gamma - ONE;
 #  ifdef MHD
    const real Gamma_m2 = Gamma - TWO;
@@ -319,9 +325,8 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
 // 4. evaluate the left and right fluxes
    real Flux_L[NCOMP_TOTAL_PLUS_MAG], Flux_R[NCOMP_TOTAL_PLUS_MAG];
 
-   Hydro_Con2Flux( 0, Flux_L, L, Gamma_m1, MinPres );
-   Hydro_Con2Flux( 0, Flux_R, R, Gamma_m1, MinPres );
-
+   Hydro_Con2Flux( 0, Flux_L, L, MinPres, EoS_DensEint2Pres, EoS_AuxArray );
+   Hydro_Con2Flux( 0, Flux_R, R, MinPres, EoS_DensEint2Pres, EoS_AuxArray );
 
 // 5. return the upwind fluxes if flow is supersonic
    if ( EigenVal[0] >= ZERO )
@@ -614,9 +619,10 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
 #        else
          const real EngyB = NULL_REAL;
 #        endif
-         I_Pres = Hydro_GetPressure( I_States[0], I_States[1], I_States[2], I_States[3], I_States[4],
-                                     Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB );
+         I_Pres = Hydro_Fluid2Pres( I_States[0], I_States[1], I_States[2], I_States[3], I_States[4],
+                                    CheckMinPres_No, NULL_REAL, EngyB, EoS_DensEint2Pres, EoS_AuxArray );
 
+//       if unphysical results occur, recalculate fluxes by a substitute Riemann solver
          if ( I_States[0] <= ZERO  ||  I_Pres <= ZERO )
          {
 #           ifdef GAMER_DEBUG
@@ -624,24 +630,26 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
                     I_States[0], I_Pres );
 #           endif
 
-#           if   ( CHECK_INTERMEDIATE == EXACT  &&  !defined MHD )   // recalculate fluxes by exact solver
+#           if   ( CHECK_INTERMEDIATE == EXACT  &&  !defined MHD )
             const bool NormPassive_No  = false; // do NOT convert any passive variable to mass fraction for the Riemann solvers
             const bool JeansMinPres_No = false;
             real PriVar_L[NCOMP_TOTAL], PriVar_R[NCOMP_TOTAL]; // not NCOMP_TOTAL_PLUS_MAG since exact solver doesn't support MHD
 
-            Hydro_Con2Pri( L, PriVar_L, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
-            Hydro_Con2Pri( R, PriVar_R, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
+            Hydro_Con2Pri( L, PriVar_L, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
+                           EoS_DensEint2Pres, EoS_AuxArray );
+            Hydro_Con2Pri( R, PriVar_R, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
+                           EoS_DensEint2Pres, EoS_AuxArray );
 
-            Hydro_RiemannSolver_Exact( 0, Flux_Out, PriVar_L, PriVar_R, Gamma );
+            Hydro_RiemannSolver_Exact( 0, Flux_Out, PriVar_L, PriVar_R, MinPres, EoS_DensEint2Pres, EoS_DensPres2CSqr, EoS_AuxArray);
 
-#           elif ( CHECK_INTERMEDIATE == HLLE )                      // recalculate fluxes by HLLE solver
-            Hydro_RiemannSolver_HLLE ( 0, Flux_Out, L, R, Gamma, MinPres );
+#           elif ( CHECK_INTERMEDIATE == HLLE )
+            Hydro_RiemannSolver_HLLE ( 0, Flux_Out, L, R, MinPres, EoS_DensEint2Pres, EoS_DensPres2CSqr, EoS_AuxArray );
 
-#           elif ( CHECK_INTERMEDIATE == HLLC  &&  !defined MHD )    // recalculate fluxes by HLLC solver
-            Hydro_RiemannSolver_HLLC ( 0, Flux_Out, L, R, Gamma, MinPres );
+#           elif ( CHECK_INTERMEDIATE == HLLC  &&  !defined MHD )
+            Hydro_RiemannSolver_HLLC ( 0, Flux_Out, L, R, MinPres, EoS_DensEint2Pres, EoS_DensPres2CSqr, EoS_AuxArray );
 
-#           elif ( CHECK_INTERMEDIATE == HLLD  &&  defined MHD )     // recalculate fluxes by HLLD solver
-            Hydro_RiemannSolver_HLLD ( 0, Flux_Out, L, R, Gamma, MinPres );
+#           elif ( CHECK_INTERMEDIATE == HLLD  &&  defined MHD )
+            Hydro_RiemannSolver_HLLD ( 0, Flux_Out, L, R, MinPres, EoS_DensEint2Pres, EoS_DensPres2CSqr, EoS_AuxArray );
 
 #           else
 #           error : ERROR : unsupported CHECK_INTERMEDIATE (EXACT/HLLE/HLLC/HLLD) !!

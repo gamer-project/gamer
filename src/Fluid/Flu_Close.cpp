@@ -28,11 +28,14 @@ void CorrectElectric( const int SonLv, const real h_Ele_Array[][9][NCOMP_ELE][ P
 #endif
 #endif // #if ( MODEL == HYDRO )
 extern void Hydro_RiemannSolver_Roe ( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                                      const real Gamma, const real MinPres );
+                                      const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                                      const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] );
 extern void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                                      const real Gamma, const real MinPres );
+                                      const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                                      const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] );
 extern void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                                      const real Gamma, const real MinPres );
+                                      const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                                      const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] );
 
 
 
@@ -569,8 +572,10 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   case RSOLVER_1ST_ROE:
                      for (int d=0; d<3; d++)
                      {
-                        Hydro_RiemannSolver_Roe( d, FluxL[d], VarL[d], VarC,    GAMMA, MIN_PRES );
-                        Hydro_RiemannSolver_Roe( d, FluxR[d], VarC,    VarR[d], GAMMA, MIN_PRES );
+                        Hydro_RiemannSolver_Roe ( d, FluxL[d], VarL[d], VarC,    MIN_PRES,
+                                                  EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr, EoS_AuxArray );
+                        Hydro_RiemannSolver_Roe ( d, FluxR[d], VarC,    VarR[d], MIN_PRES,
+                                                  EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr, EoS_AuxArray );
                      }
                      break;
 
@@ -578,8 +583,10 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   case RSOLVER_1ST_HLLC:
                      for (int d=0; d<3; d++)
                      {
-                        Hydro_RiemannSolver_HLLC( d, FluxL[d], VarL[d], VarC,    GAMMA, MIN_PRES );
-                        Hydro_RiemannSolver_HLLC( d, FluxR[d], VarC,    VarR[d], GAMMA, MIN_PRES );
+                        Hydro_RiemannSolver_HLLC( d, FluxL[d], VarL[d], VarC,    MIN_PRES,
+                                                  EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr, EoS_AuxArray );
+                        Hydro_RiemannSolver_HLLC( d, FluxR[d], VarC,    VarR[d], MIN_PRES,
+                                                  EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr, EoS_AuxArray );
                      }
                      break;
 #                 endif
@@ -587,8 +594,10 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   case RSOLVER_1ST_HLLE:
                      for (int d=0; d<3; d++)
                      {
-                        Hydro_RiemannSolver_HLLE( d, FluxL[d], VarL[d], VarC,    GAMMA, MIN_PRES );
-                        Hydro_RiemannSolver_HLLE( d, FluxR[d], VarC,    VarR[d], GAMMA, MIN_PRES );
+                        Hydro_RiemannSolver_HLLE( d, FluxL[d], VarL[d], VarC,    MIN_PRES,
+                                                  EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr, EoS_AuxArray );
+                        Hydro_RiemannSolver_HLLE( d, FluxR[d], VarC,    VarR[d], MIN_PRES,
+                                                  EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr, EoS_AuxArray );
                      }
                      break;
 
@@ -598,8 +607,10 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                      /*
                      for (int d=0; d<3; d++)
                      {
-                        CPU_RiemannSolver_HLLD( d, FluxL[d], VarL[d], VarC,    GAMMA, MIN_PRES );
-                        CPU_RiemannSolver_HLLD( d, FluxR[d], VarC,    VarR[d], GAMMA, MIN_PRES );
+                        Hydro_RiemannSolver_HLLD( d, FluxL[d], VarL[d], VarC,    MIN_PRES,
+                                                  EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr, EoS_AuxArray );
+                        Hydro_RiemannSolver_HLLD( d, FluxR[d], VarC,    VarR[d], MIN_PRES,
+                                                  EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr, EoS_AuxArray );
                      }
                      */
                      break;
@@ -667,28 +678,36 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                         switch ( OPT__1ST_FLUX_CORR_SCHEME )
                         {
                            case RSOLVER_1ST_ROE:
-                              Hydro_RiemannSolver_Roe ( d, FluxL_1D, Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
-                              Hydro_RiemannSolver_Roe ( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
+                              Hydro_RiemannSolver_Roe ( d, FluxL_1D, Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, MIN_PRES,
+                                                        EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr, EoS_AuxArray );
+                              Hydro_RiemannSolver_Roe ( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, MIN_PRES,
+                                                        EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr, EoS_AuxArray );
                            break;
 
 #                          ifndef MHD
                            case RSOLVER_1ST_HLLC:
-                              Hydro_RiemannSolver_HLLC( d, FluxL_1D, Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
-                              Hydro_RiemannSolver_HLLC( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
+                              Hydro_RiemannSolver_HLLC( d, FluxL_1D, Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, MIN_PRES,
+                                                        EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr, EoS_AuxArray );
+                              Hydro_RiemannSolver_HLLC( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, MIN_PRES,
+                                                        EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr, EoS_AuxArray );
                            break;
 #                          endif
 
                            case RSOLVER_1ST_HLLE:
-                              Hydro_RiemannSolver_HLLE( d, FluxL_1D, Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
-                              Hydro_RiemannSolver_HLLE( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
+                              Hydro_RiemannSolver_HLLE( d, FluxL_1D, Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, MIN_PRES,
+                                                        EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr, EoS_AuxArray );
+                              Hydro_RiemannSolver_HLLE( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, MIN_PRES,
+                                                        EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr, EoS_AuxArray );
                            break;
 
 #                          ifdef MHD
                            case RSOLVER_1ST_HLLD:
                               Aux_Error( ERROR_INFO, "RSOLVER_1ST_HLLD in MHD is NOT supported yet !!\n" );
                               /*
-                              CPU_RiemannSolver_HLLD( d, FluxL_1D, Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
-                              CPU_RiemannSolver_HLLD( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
+                              Hydro_RiemannSolver_HLLD( d, FluxL_1D, Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, MIN_PRES,
+                                                        EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr, EoS_AuxArray );
+                              Hydro_RiemannSolver_HLLD( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, MIN_PRES,
+                                                        EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr, EoS_AuxArray );
                               */
                            break;
 #                          endif
