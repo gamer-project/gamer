@@ -59,7 +59,7 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
 
 
 //#### TO BE REMOVED
-const real Gamma = 123413241;
+const real Gamma = EoS_AuxArray[0];
 
 
    const real Gamma_p1 = Gamma + (real)1.0;

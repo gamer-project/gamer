@@ -57,14 +57,13 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 {
 
 //#### TO BE REMOVED
-const real Gamma = 123413241;
+const real Gamma = EoS_AuxArray[0];
 
 
    const real MaxErr2         = SQR(MAX_ERROR);
    const real ZERO            = (real)0.0;
    const real ONE             = (real)1.0;
    const real _TWO            = (real)0.5;
-   const real Gamma_m1        = Gamma - ONE;
    const bool NormPassive_No  = false;
    const bool JeansMinPres_No = false;
    const int  IdxBx           = MAG_OFFSET + 0;
@@ -278,7 +277,8 @@ const real Gamma = 123413241;
    Con_Lst[    4] = (  Sd_L*Con_L[4] - PT_L*Pri_L[1] + PT_st*Speed[2] +
                        Bx*( Pri_L[1]*Pri_L[IdxBx] + Pri_L[2]*Pri_L[IdxBy] + Pri_L[3]*Pri_L[IdxBz] - VBdot_Lst )  ) / Sdm_L;
 
-   Hydro_Con2Pri( Con_Lst, Pri_Lst, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
+   Hydro_Con2Pri( Con_Lst, Pri_Lst, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
+                  EoS_DensEint2Pres, EoS_AuxArray );
 
    Con_Rst[    1] = Con_Rst[0]*Speed[2];
    Con_Rst[IdxBx] = Bx;
@@ -320,7 +320,8 @@ const real Gamma = 123413241;
    Con_Rst[4] = (  Sd_R*Con_R[4] - PT_R*Pri_R[1] + PT_st*Speed[2] +
                    Bx*( Pri_R[1]*Pri_R[IdxBx] + Pri_R[2]*Pri_R[IdxBy] + Pri_R[3]*Pri_R[IdxBz] - VBdot_Rst )  ) / Sdm_R;
 
-   Hydro_Con2Pri( Con_Rst, Pri_Rst, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
+   Hydro_Con2Pri( Con_Rst, Pri_Rst, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
+                  EoS_DensEint2Pres, EoS_AuxArray );
 
    if ( crit_Bx < MaxErr2 )
    {

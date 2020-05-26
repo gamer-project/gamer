@@ -54,7 +54,7 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
 
 
 //#### TO BE REMOVED
-const real Gamma = 123413241;
+const real Gamma = EoS_AuxArray[0];
 
 
 // 1. reorder the input variables for different spatial directions
