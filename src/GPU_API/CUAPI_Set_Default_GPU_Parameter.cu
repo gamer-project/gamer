@@ -17,8 +17,11 @@ __global__ void CUFLU_FluidSolver_RTVD(
    real g_Flux     [][9][NCOMP_TOTAL][ SQR(PS2) ],
    const double g_Corner[][3],
    const real g_Pot_USG[][ CUBE(USG_NXT_F) ],
-   const real dt, const real _dh, const real Gamma, const bool StoreFlux,
-   const bool XYZ, const real MinDens, const real MinPres, const real MinEint );
+   const real dt, const real _dh, const bool StoreFlux,
+   const bool XYZ, const real MinDens, const real MinPres, const real MinEint,
+   const EoS_DE2P_t EoS_DensEint2Pres_Func,
+   const EoS_DP2E_t EoS_DensPres2Eint_Func,
+   const EoS_DP2C_t EoS_DensPres2CSqr_Func );
 #elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 __global__
 void CUFLU_FluidSolver_MHM(

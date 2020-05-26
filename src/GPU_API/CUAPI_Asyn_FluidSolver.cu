@@ -13,8 +13,11 @@ __global__ void CUFLU_FluidSolver_RTVD(
    real g_Flux     [][9][NCOMP_TOTAL][ SQR(PS2) ],
    const double g_Corner[][3],
    const real g_Pot_USG[][ CUBE(USG_NXT_F) ],
-   const real dt, const real _dh, const real Gamma, const bool StoreFlux,
-   const bool XYZ, const real MinDens, const real MinPres, const real MinEint );
+   const real dt, const real _dh, const bool StoreFlux,
+   const bool XYZ, const real MinDens, const real MinPres, const real MinEint,
+   const EoS_DE2P_t EoS_DensEint2Pres_Func,
+   const EoS_DP2E_t EoS_DensPres2Eint_Func,
+   const EoS_DP2C_t EoS_DensPres2CSqr_Func );
 #elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 __global__
 void CUFLU_FluidSolver_MHM(
@@ -171,7 +174,6 @@ extern cudaStream_t *Stream;
 //                NPatchGroup         : Number of patch groups evaluated simultaneously by GPU
 //                dt                  : Time interval to advance solution
 //                dh                  : Cell size
-//                Gamma               : Ratio of specific heats
 //                StoreFlux           : true --> store the coarse-fine fluxes
 //                StoreElectric       : true --> store the coarse-fine electric field
 //                XYZ                 : true  : x->y->z ( forward sweep)
@@ -196,9 +198,6 @@ extern cudaStream_t *Stream;
 //                                      --> Should be set to the global variable "PassiveNorm_NVar"
 //                JeansMinPres        : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff  : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
-//
-// Useless parameters in HYDRO : ELBDM_Eta
-// Useless parameters in ELBDM : h_Flux_Array, h_Ele_Array, Gamma, LR_Limiter, MinMod_Coeff, MinPres, MinEint
 //-------------------------------------------------------------------------------------------------------
 void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              real h_Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
@@ -209,7 +208,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              real h_Ele_Array[][9][NCOMP_ELE][ PS2P1*PS2 ],
                              const double h_Corner_Array[][3],
                              real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
-                             const int NPatchGroup, const real dt, const real dh, const real Gamma,
+                             const int NPatchGroup, const real dt, const real dh,
                              const bool StoreFlux, const bool StoreElectric,
                              const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                              const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
@@ -381,7 +380,8 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               d_Flux_Array      + UsedPatch[s],
               d_Corner_Array_F  + UsedPatch[s],
               d_Pot_Array_USG_F + UsedPatch[s],
-              dt, 1.0/dh, Gamma, StoreFlux, XYZ, MinDens, MinPres, MinEint );
+              dt, 1.0/dh, StoreFlux, XYZ, MinDens, MinPres, MinEint,
+              EoS_DensEint2Pres_GPUPtr, EoS_DensPres2Eint_GPUPtr, EoS_DensPres2CSqr_GPUPtr );
 
 #        elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 

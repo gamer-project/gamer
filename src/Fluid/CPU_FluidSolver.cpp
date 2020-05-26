@@ -21,8 +21,12 @@ void CPU_FluidSolver_RTVD(
    const double Corner_Array[][3],
    const real Pot_Array_USG[][ CUBE(USG_NXT_F) ],
    const int NPatchGroup, const real dt, const real dh,
-   const real Gamma, const bool StoreFlux, const bool XYZ,
-   const real MinDens, const real MinPres, const real MinEint );
+   const bool StoreFlux, const bool XYZ,
+   const real MinDens, const real MinPres, const real MinEint,
+   const EoS_DE2P_t EoS_DensEint2Pres_Func,
+   const EoS_DP2E_t EoS_DensPres2Eint_Func,
+   const EoS_DP2C_t EoS_DensPres2CSqr_Func,
+   const double c_EoS_AuxArray[] );
 #elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 void CPU_FluidSolver_MHM(
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
@@ -139,7 +143,6 @@ static real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ] = NULL;
 //                NPatchGroup         : Number of patch groups to be evaluated
 //                dt                  : Time interval to advance solution
 //                dh                  : Grid size
-//                Gamma               : Ratio of specific heats
 //                StoreFlux           : true --> store the coarse-fine fluxes
 //                StoreElectric       : true --> store the coarse-fine electric field
 //                XYZ                 : true   : x->y->z ( forward sweep)
@@ -165,9 +168,6 @@ static real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ] = NULL;
 //                                      --> Should be set to the global variable "PassiveNorm_VarIdx"
 //                JeansMinPres        : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff  : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
-//
-// Useless parameters in HYDRO : ELBDM_Eta, ELBDM_Taylor3_Coeff, ELBDM_Taylor3_Auto
-// Useless parameters in ELBDM : Gamma, LR_Limiter, MinMod_Coeff, MinPres, MinEint
 //-------------------------------------------------------------------------------------------------------
 void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       real h_Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
@@ -178,7 +178,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       real h_Ele_Array[][9][NCOMP_ELE][ PS2P1*PS2 ],
                       const double h_Corner_Array[][3],
                       const real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
-                      const int NPatchGroup, const real dt, const real dh, const real Gamma,
+                      const int NPatchGroup, const real dt, const real dh,
                       const bool StoreFlux, const bool StoreElectric,
                       const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                       const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
@@ -211,7 +211,8 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
 #     if   ( FLU_SCHEME == RTVD )
 
       CPU_FluidSolver_RTVD( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, h_Corner_Array, h_Pot_Array_USG,
-                            NPatchGroup, dt, dh, Gamma, StoreFlux, XYZ, MinDens, MinPres, MinEint );
+                            NPatchGroup, dt, dh, StoreFlux, XYZ, MinDens, MinPres, MinEint,
+                            EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr, EoS_DensPres2CSqr_CPUPtr, EoS_AuxArray );
 
 #     elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 
