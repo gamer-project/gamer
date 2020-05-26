@@ -17,6 +17,12 @@ static real Hydro_Fluid2Pres( const real Dens, const real MomX, const real MomY,
                               const bool CheckMinPres, const real MinPres, const real EngyB,
                               EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
 GPU_DEVICE
+static real Hydro_Fluid2Eint( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                              const bool CheckMinEint, const real MinEint, const real EngyB );
+GPU_DEVICE
+static real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, const real MomZ, const real Eint,
+                                const real EngyB );
+GPU_DEVICE
 static real Hydro_CheckMinPres( const real InPres, const real MinPres );
 #endif
 
@@ -537,7 +543,8 @@ real Hydro_Fluid2Eint( const real Dens, const real MomX, const real MomY, const 
 // Return      :  Total energy density (including the magnetic energy density for MHD)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, const real MomZ, const real Eint, const real EngyB )
+real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, const real MomZ, const real Eint,
+                         const real EngyB )
 {
 
 //###NOTE: assuming Etot = Eint + Ekin + Emag

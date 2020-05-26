@@ -277,9 +277,10 @@ void CPU_FluidSolver_CTU(
 
 
 //       2. evaluate the face-centered half-step fluxes by solving the Riemann problem
-         Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_HF_FLUX, 0, 0, CorrHalfVel_No, NULL, NULL,
-                            NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, NULL, MinPres,
-                            StoreFlux_No, NULL, EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray );
+         Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_HF_FLUX, 0, 0, CorrHalfVel_No,
+                            NULL, NULL, NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE,
+                            NULL, NULL, MinPres, StoreFlux_No, NULL,
+                            EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray );
 
 
 //       3. evaluate electric field and update B field at the half time-step

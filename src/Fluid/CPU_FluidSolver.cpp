@@ -40,7 +40,8 @@ void CPU_FluidSolver_MHM(
          real   g_FC_Flux      [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
          real   g_FC_Mag_Half  [][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
          real   g_EC_Ele       [][NCOMP_MAG][ CUBE(N_EC_ELE) ],
-   const int NPatchGroup, const real dt, const real dh, const real Gamma,
+   const int NPatchGroup,
+   const real dt, const real dh,
    const bool StoreFlux, const bool StoreElectric,
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
    const double Time, const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
@@ -48,7 +49,11 @@ void CPU_FluidSolver_MHM(
    const real MinDens, const real MinPres, const real MinEint,
    const real DualEnergySwitch, const bool NormPassive, const int NNorm,
    const int c_NormIdx[],
-   const bool JeansMinPres, const real JeansMinPres_Coeff );
+   const bool JeansMinPres, const real JeansMinPres_Coeff,
+   const EoS_DE2P_t EoS_DensEint2Pres_Func,
+   const EoS_DP2E_t EoS_DensPres2Eint_Func,
+   const EoS_DP2C_t EoS_DensPres2CSqr_Func,
+   const double c_EoS_AuxArray[] );
 #elif ( FLU_SCHEME == CTU )
 void CPU_FluidSolver_CTU(
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
@@ -213,9 +218,10 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
       CPU_FluidSolver_MHM ( h_Flu_Array_In, h_Flu_Array_Out, h_Mag_Array_In, h_Mag_Array_Out,
                             h_DE_Array_Out, h_Flux_Array, h_Ele_Array, h_Corner_Array, h_Pot_Array_USG,
                             h_PriVar, h_Slope_PPM, h_FC_Var, h_FC_Flux, h_FC_Mag_Half, h_EC_Ele,
-                            NPatchGroup, dt, dh, Gamma, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff, Time,
-                            GravityType, CPUExtAcc_Ptr, ExtAcc_AuxArray, MinDens, MinPres, MinEint, DualEnergySwitch,
-                            NormPassive, NNorm, NormIdx, JeansMinPres, JeansMinPres_Coeff );
+                            NPatchGroup, dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff, Time,
+                            GravityType, CPUExtAcc_Ptr, ExtAcc_AuxArray, MinDens, MinPres, MinEint,
+                            DualEnergySwitch, NormPassive, NNorm, NormIdx, JeansMinPres, JeansMinPres_Coeff,
+                            EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr, EoS_DensPres2CSqr_CPUPtr, EoS_AuxArray );
 
 #     elif ( FLU_SCHEME == CTU )
 
