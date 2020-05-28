@@ -64,9 +64,8 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
    const int  didx_flux[3] = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };
    const real dt_dh        = dt/dh;
 #  ifdef DUAL_ENERGY
-   const real  Gamma       = (real)EoS_AuxArray[0];
-   const real  Gamma_m1    = Gamma - (real)1.0;
-   const real _Gamma_m1    = (real)1.0 / Gamma_m1;
+   const real  Gamma_m1    = (real)EoS_AuxArray[1];
+   const real _Gamma_m1    = (real)EoS_AuxArray[2];
 #  endif
 
    real dFlux[3][NCOMP_TOTAL], Output_1Cell[NCOMP_TOTAL];

@@ -58,8 +58,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    const int  CMagSg      = amr->MagSg[lv  ];      // sandglass of magnetic field  at level "lv"
    const int  FMagSg      = amr->MagSg[lv+1];      // sandglass of magnetic field  at level "lv+1"
 #  endif
-#  if ( MODEL == HYDRO )
-   const real  Gamma_m1   = GAMMA - (real)1.0;
+#  ifdef DUAL_ENERGY
+   const real  Gamma_m1   = GAMMA - 1.0;
    const real _Gamma_m1   = (real)1.0 / Gamma_m1;
 #  endif
 

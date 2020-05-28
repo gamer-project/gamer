@@ -135,8 +135,10 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
    if ( OPT__FLAG_JEANS )
    {
       const bool CheckMinPres_Yes = true;
-      const real Gamma_m1         = GAMMA - (real)1.0;
       const real Dens             = Fluid[DENS][k][j][i];
+#     ifdef DUAL_ENERGY
+      const real Gamma_m1         = GAMMA - 1.0;
+#     endif
 
 //    if applicable, compute pressure from the dual-energy variable to reduce the round-off errors
 #     ifdef DUAL_ENERGY

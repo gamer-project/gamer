@@ -254,7 +254,9 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                if ( OPT__FLAG_PRES_GRADIENT )
                {
                   const bool CheckMinPres_Yes = true;
-                  const real Gamma_m1         = GAMMA - (real)1.0;
+#                 ifdef DUAL_ENERGY
+                  const real Gamma_m1         = GAMMA - 1.0;
+#                 endif
 
                   real Ek;
 
