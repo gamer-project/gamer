@@ -34,7 +34,14 @@ void Grackle_AdvanceDt( const int lv, const double TimeNew, const double TimeOld
 // always call Flu_ResetByUser_API_Ptr() here
 // --> when Grackle is enabled, we do not invoke Flu_ResetByUser_API_Ptr() in either Flu_AdvanceDt() or Gra_AdvanceDt()
 // --> we want to invoke Flu_ResetByUser_API_Ptr() before calling Buf_GetBufferData() to reduce the MPI communication
-   if ( OPT__RESET_FLUID  &&  Flu_ResetByUser_API_Ptr != NULL )   Flu_ResetByUser_API_Ptr( lv, SaveSg, TimeNew );
+   if ( OPT__RESET_FLUID )
+   {
+      if ( Flu_ResetByUser_API_Ptr != NULL )
+         Flu_ResetByUser_API_Ptr( lv, SaveSg, TimeNew );
+
+      else
+         Aux_Error( ERROR_INFO, "Flu_ResetByUser_API_Ptr == NULL for OPT__RESET_FLUID !!\n" );
+   }
 
 } // FUNCTION : Grackle_AdvanceDt
 

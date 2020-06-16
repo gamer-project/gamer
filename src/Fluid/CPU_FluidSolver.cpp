@@ -5,10 +5,11 @@
 #include "GAMER.h"
 #include "CUFLU.h"
 
-#ifdef UNSPLIT_GRAVITY
-#include "CUPOT.h"
-extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
-extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
+#ifndef GRAVITY
+static double *ExtAcc_AuxArray = NULL;
+static double *ExtPot_AuxArray = NULL;
+static ExtAcc_t CPUExtAcc_Ptr  = NULL;
+static ExtPot_t CPUExtPot_Ptr  = NULL;
 #endif
 
 #if   ( MODEL == HYDRO )
@@ -41,9 +42,11 @@ void CPU_FluidSolver_MHM(
    const int NPatchGroup, const real dt, const real dh, const real Gamma,
    const bool StoreFlux, const bool StoreElectric,
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-   const double Time, const OptGravityType_t GravityType,
-   const double c_ExtAcc_AuxArray[], const real MinDens, const real MinPres,
-   const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int c_NormIdx[],
+   const double Time, const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
+   const double c_ExtAcc_AuxArray[],
+   const real MinDens, const real MinPres, const real DualEnergySwitch,
+   const bool NormPassive, const int NNorm,
+   const int c_NormIdx[],
    const bool JeansMinPres, const real JeansMinPres_Coeff );
 #elif ( FLU_SCHEME == CTU )
 void CPU_FluidSolver_CTU(
@@ -65,9 +68,11 @@ void CPU_FluidSolver_CTU(
    const int NPatchGroup, const real dt, const real dh, const real Gamma,
    const bool StoreFlux, const bool StoreElectric,
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-   const double Time, const OptGravityType_t GravityType,
-   const double c_ExtAcc_AuxArray[], const real MinDens, const real MinPres,
-   const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int c_NormIdx[],
+   const double Time, const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
+   const double c_ExtAcc_AuxArray[],
+   const real MinDens, const real MinPres, const real DualEnergySwitch,
+   const bool NormPassive, const int NNorm,
+   const int c_NormIdx[],
    const bool JeansMinPres, const real JeansMinPres_Coeff );
 #endif // FLU_SCHEME
 
@@ -190,11 +195,6 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
 #  endif
 #  endif
 
-#  ifndef UNSPLIT_GRAVITY
-   double ExtPot_AuxArray[1];
-   double ExtAcc_AuxArray[1];
-#  endif
-
 
 #  if   ( MODEL == HYDRO )
 
@@ -209,7 +209,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                             h_DE_Array_Out, h_Flux_Array, h_Ele_Array, h_Corner_Array, h_Pot_Array_USG,
                             h_PriVar, h_Slope_PPM, h_FC_Var, h_FC_Flux, h_FC_Mag_Half, h_EC_Ele,
                             NPatchGroup, dt, dh, Gamma, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff, Time,
-                            GravityType, ExtAcc_AuxArray, MinDens, MinPres, DualEnergySwitch,
+                            GravityType, CPUExtAcc_Ptr, ExtAcc_AuxArray, MinDens, MinPres, DualEnergySwitch,
                             NormPassive, NNorm, NormIdx, JeansMinPres, JeansMinPres_Coeff );
 
 #     elif ( FLU_SCHEME == CTU )
@@ -218,7 +218,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                             h_DE_Array_Out, h_Flux_Array, h_Ele_Array, h_Corner_Array, h_Pot_Array_USG,
                             h_PriVar, h_Slope_PPM, h_FC_Var, h_FC_Flux, h_FC_Mag_Half, h_EC_Ele,
                             NPatchGroup, dt, dh, Gamma, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff, Time,
-                            GravityType, ExtAcc_AuxArray, MinDens, MinPres, DualEnergySwitch,
+                            GravityType, CPUExtAcc_Ptr, ExtAcc_AuxArray, MinDens, MinPres, DualEnergySwitch,
                             NormPassive, NNorm, NormIdx, JeansMinPres, JeansMinPres_Coeff );
 
 #     else

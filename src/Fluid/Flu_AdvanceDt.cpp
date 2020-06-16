@@ -93,7 +93,14 @@ int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 #     ifdef SUPPORT_GRACKLE
       if ( !GRACKLE_ACTIVATE )
 #     endif
-      if ( OPT__RESET_FLUID  &&  Flu_ResetByUser_API_Ptr != NULL )   Flu_ResetByUser_API_Ptr( lv, SaveSg_Flu, TimeNew );
+      if ( OPT__RESET_FLUID )
+      {
+         if ( Flu_ResetByUser_API_Ptr != NULL )
+            Flu_ResetByUser_API_Ptr( lv, SaveSg_Flu, TimeNew );
+
+         else
+            Aux_Error( ERROR_INFO, "Flu_ResetByUser_API_Ptr == NULL for OPT__RESET_FLUID !!\n" );
+      }
 
 
 //    swap the flux (and electric in MHD) pointers on the parent level if the fluid solver works successfully

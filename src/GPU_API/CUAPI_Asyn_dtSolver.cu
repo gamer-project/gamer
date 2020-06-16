@@ -18,7 +18,7 @@ __global__
 void CUPOT_dtSolver_HydroGravity( real g_dt_Array[], const real g_Pot_Array[][ CUBE(GRA_NXT) ],
                                   const double g_Corner_Array[][3],
                                   const real dh, const real Safety, const bool P5_Gradient,
-                                  const OptGravityType_t GravityType,
+                                  const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
                                   const double ExtAcc_Time );
 #endif
 
@@ -27,7 +27,6 @@ void CUPOT_dtSolver_HydroGravity( real g_dt_Array[], const real g_Pot_Array[][ C
 #else
 #error : ERROR : unsupported MODEL !!
 #endif // MODEL
-
 
 // device pointers
 extern real *d_dt_Array_T;
@@ -259,7 +258,7 @@ void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real 
                                         ( d_dt_Array_T     + UsedPatch[s],
                                           d_Pot_Array_T    + UsedPatch[s],
                                           d_Corner_Array_G + UsedPatch[s],
-                                          dh, Safety, P5_Gradient, GravityType, TargetTime );
+                                          dh, Safety, P5_Gradient, GravityType, GPUExtAcc_Ptr, TargetTime );
          break;
 #        endif
 
