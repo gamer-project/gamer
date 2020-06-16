@@ -512,15 +512,8 @@ void Init_TestProb_Hydro_AGORA_IsolatedGalaxy()
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr      = SetGridIC;
    Init_Field_User_Ptr         = AddNewField_AGORA;
-   Output_User_Ptr             = NULL;
    Flag_User_Ptr               = Flag_AGORA;
-   Mis_GetTimeStep_User_Ptr    = NULL;
-   Aux_Record_User_Ptr         = NULL;
-   BC_User_Ptr                 = NULL;
-   Flu_ResetByUser_Func_Ptr    = NULL;
    End_User_Ptr                = End_AGORA;
-   Init_ExternalAcc_Ptr        = NULL;
-   Init_ExternalPot_Ptr        = NULL;
    Par_Init_ByFunction_Ptr     = Par_Init_ByFunction_AGORA;
    Par_Init_Attribute_User_Ptr = AddNewParticleAttribute_AGORA;
 #  endif // if ( MODEL == HYDRO  &&  defined PARTICLE )

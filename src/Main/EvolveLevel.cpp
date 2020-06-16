@@ -67,7 +67,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //    0. reset the external acceleration and potential since they may be a function of time
 // ===============================================================================================
 #     ifdef GRAVITY
-      Init_ExternalAccPot();
+      Init_ExtAccPot();
 #     endif
 
 

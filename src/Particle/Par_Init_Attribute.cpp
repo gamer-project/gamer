@@ -4,10 +4,10 @@
 
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
-void Par_Init_Attribute_User();
+void Par_Init_Attribute_User_Template();
 
-// this function pointer may be overwritten by various test problem initializers
-void (*Par_Init_Attribute_User_Ptr)() = Par_Init_Attribute_User;
+// this function pointer must be set by a test problem initializer
+void (*Par_Init_Attribute_User_Ptr)() = NULL;
 
 
 static int NDefinedAtt;    // total number of defined attributes --> for debug only
@@ -21,6 +21,8 @@ static int NDefinedAtt;    // total number of defined attributes --> for debug o
 //
 // Note        :  1. Invoked by Init_GAMER()
 //                2. Total number of attributes is determined by PAR_NATT_TOTAL = PAR_NATT_BUILTIN + PAR_NATT_USER
+//                3. To initialize user-defined particle attributes, the function pointer "Par_Init_Attribute_User_Ptr"
+//                   must be set by a test problem initializer
 //
 // Parameter   :  None
 //
@@ -171,24 +173,23 @@ FieldIdx_t GetParticleAttributeIndex( char *InputLabel, const Check_t Check )
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Par_Init_Attribute_User
-// Description :  Add user-defined particle attributes
+// Function    :  Par_Init_Attribute_User_Template
+// Description :  Template of adding user-defined particle attributes
 //
-// Note        :  1. Invoked by Par_Init_Attribute() using the function pointer "Par_Init_Attribute_User_Ptr"
-//                   --> The function pointer may be reset by various test problem initializers, in which case
-//                       this funtion will become useless
+// Note        :  1. Invoked by Par_Init_Attribute() using the function pointer "Par_Init_Attribute_User_Ptr",
+//                   which must be set by a test problem initializer
 //
 // Parameter   :  None
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Par_Init_Attribute_User()
+void Par_Init_Attribute_User_Template()
 {
 
 // example
 // Idx_NewAtt = AddParticleAttribute( "NewAttLabel" );
 
-} // FUNCTION : Par_Init_Attribute_User
+} // FUNCTION : Par_Init_Attribute_User_Template
 
 
 

@@ -40,13 +40,10 @@ void CUFLU_FluidSolver_MHM(
    const real dt, const real dh, const real Gamma,
    const bool StoreFlux, const bool StoreElectric,
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-   const double Time, const OptGravityType_t GravityType,
+   const double Time, const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
    const real MinDens, const real MinPres, const real DualEnergySwitch,
    const bool NormPassive, const int NNorm,
    const bool JeansMinPres, const real JeansMinPres_Coeff );
-#if ( NCOMP_PASSIVE > 0 )
-int CUFLU_SetConstMem_FluidSolver_NormIdx( int NormIdx_h[] );
-#endif
 #elif ( FLU_SCHEME == CTU )
 __global__
 void CUFLU_FluidSolver_CTU(
@@ -68,23 +65,21 @@ void CUFLU_FluidSolver_CTU(
    const real dt, const real dh, const real Gamma,
    const bool StoreFlux, const bool StoreElectric,
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-   const double Time, const OptGravityType_t GravityType,
+   const double Time, const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
    const real MinDens, const real MinPres, const real DualEnergySwitch,
    const bool NormPassive, const int NNorm,
    const bool JeansMinPres, const real JeansMinPres_Coeff );
-#if ( NCOMP_PASSIVE > 0 )
-int CUFLU_SetConstMem_FluidSolver_NormIdx( int NormIdx_h[] );
-#endif
 #endif // FLU_SCHEME
 __global__ void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
                                          const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ],
                                          const real dh, const real Safety, const real Gamma, const real MinPres );
 #ifdef GRAVITY
-__global__ void CUPOT_dtSolver_HydroGravity( real g_dt_Array[],
-                                             const real g_Pot_Array[][ CUBE(GRA_NXT) ],
-                                             const double g_Corner_Array[][3],
-                                             const real dh, const real Safety, const bool P5_Gradient,
-                                             const OptGravityType_t GravityType, const double ExtAcc_Time );
+__global__
+void CUPOT_dtSolver_HydroGravity( real g_dt_Array[], const real g_Pot_Array[][ CUBE(GRA_NXT) ],
+                                  const double g_Corner_Array[][3],
+                                  const real dh, const real Safety, const bool P5_Gradient,
+                                  const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
+                                  const double ExtAcc_Time );
 #endif
 
 #elif ( MODEL == ELBDM )
@@ -138,22 +133,20 @@ void CUPOT_HydroGravitySolver(
          char   g_DE_Array     [][ CUBE(PS1) ],
    const real   g_EngyB_Array  [][ CUBE(PS1) ],
    const real dt, const real dh, const bool P5_Gradient,
-   const OptGravityType_t GravityType,
+   const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
    const double TimeNew, const double TimeOld, const real MinEint );
 
-
 #elif ( MODEL == ELBDM )
-__global__ void CUPOT_ELBDMGravitySolver(       real g_Flu_Array[][GRA_NIN][ PS1*PS1*PS1 ],
-                                          const real g_Pot_Array[][ GRA_NXT*GRA_NXT*GRA_NXT ],
-                                          const double g_Corner_Array[][3],
-                                          const real EtaDt, const real dh, const real Lambda, const bool ExtPot,
-                                          const double Time );
+__global__
+void CUPOT_ELBDMGravitySolver(       real g_Flu_Array[][GRA_NIN][ PS1*PS1*PS1 ],
+                               const real g_Pot_Array[][ GRA_NXT*GRA_NXT*GRA_NXT ],
+                               const double g_Corner_Array[][3],
+                               const real EtaDt, const real dh, const real Lambda,
+                               const bool ExtPot, ExtPot_t ExtPot_Func, const double TimeNew );
 
 #else
 #error : ERROR : unsupported MODEL !!
 #endif // MODEL
-
-int CUPOT_SetConstMem_PoissonSolver();
 
 #endif // GRAVITY
 
@@ -388,24 +381,6 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #  endif // MODEL
 
 #  endif // GRAVITY
-
-
-// (4) set the constant variables
-// --> note that the auxiliary arrays for the external acceleration and potential are set by CUAPI_Init_ExternalAccPot()
-#  if ( NCOMP_PASSIVE > 0 )
-   if  ( OPT__NORMALIZE_PASSIVE )
-   {
-#     if ( MODEL == HYDRO  &&  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  )
-      if ( CUFLU_SetConstMem_FluidSolver_NormIdx(PassiveNorm_VarIdx) != 0  )
-         Aux_Error( ERROR_INFO, "CUFLU_SetConstMem_FluidSolver_NormIdx failed ...\n" );
-#     endif
-   }
-#  endif // #if ( NCOMP_PASSIVE > 0 )
-
-#  ifdef GRAVITY
-   if ( CUPOT_SetConstMem_PoissonSolver() != 0 )
-      Aux_Error( ERROR_INFO, "CUPOT_SetConstMem_PoissonSolver failed ...\n" );
-#  endif // #ifdef GRAVITY
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

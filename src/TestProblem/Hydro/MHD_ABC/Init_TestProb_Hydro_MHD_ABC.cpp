@@ -255,18 +255,6 @@ void Init_TestProb_Hydro_MHD_ABC()
 #  ifdef MHD
    Init_Function_BField_User_Ptr = SetBFieldIC;
 #  endif
-   Init_Field_User_Ptr           = NULL;
-   Flag_User_Ptr                 = NULL;
-   Mis_GetTimeStep_User_Ptr      = NULL;
-   BC_User_Ptr                   = NULL;
-#  ifdef MHD
-   BC_BField_User_Ptr            = NULL;
-#  endif
-   Flu_ResetByUser_Func_Ptr      = NULL;
-   Output_User_Ptr               = NULL;
-   Aux_Record_User_Ptr           = NULL;
-   Init_User_Ptr                 = NULL;
-   End_User_Ptr                  = NULL;
 #  endif // #if ( MODEL == HYDRO )
 
 

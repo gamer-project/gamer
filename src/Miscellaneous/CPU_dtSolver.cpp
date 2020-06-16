@@ -3,13 +3,6 @@
 #ifndef GPU
 
 
-#ifdef GRAVITY
-#include "CUPOT.h"
-extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
-extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
-#endif
-
-
 #if   ( MODEL == HYDRO )
 void CPU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
                             const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const int NPG,
@@ -19,7 +12,8 @@ void CPU_dtSolver_HydroGravity( real g_dt_Array[],
                                 const real g_Pot_Array[][ CUBE(GRA_NXT) ],
                                 const double g_Corner_Array[][3],
                                 const int NPatchGroup, const real dh, const real Safety, const bool P5_Gradient,
-                                const OptGravityType_t GravityType, const double c_ExtAcc_AuxArray[],
+                                const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
+                                const double c_ExtAcc_AuxArray[],
                                 const double ExtAcc_Time );
 #endif
 
@@ -54,7 +48,7 @@ void CPU_dtSolver_HydroGravity( real g_dt_Array[],
 //                MinPres      : Minimum allowed pressure
 //                P5_Gradient  : Use 5-points stencil to evaluate the potential gradient
 //                GravityType  : Types of gravity --> self-gravity, external gravity, both
-//                ExtPot       : Add the external potential for ELBDM
+//                ExtPot       : Add the external potential for ELBDM (currently not used)
 //                TargetTime   : Target physical time
 //
 // Return      :  dt_Array
@@ -76,7 +70,7 @@ void CPU_dtSolver( const Solver_t TSolver, real dt_Array[], const real Flu_Array
 #     ifdef GRAVITY
       case DT_GRA_SOLVER:
          CPU_dtSolver_HydroGravity( dt_Array, Pot_Array, Corner_Array, NPatchGroup, dh, Safety, P5_Gradient,
-                                    GravityType, ExtAcc_AuxArray, TargetTime );
+                                    GravityType, CPUExtAcc_Ptr, ExtAcc_AuxArray, TargetTime );
       break;
 #     endif
 
