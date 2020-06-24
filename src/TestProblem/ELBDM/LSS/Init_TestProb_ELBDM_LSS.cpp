@@ -163,14 +163,14 @@ void Init_ByFile_ELBDM_LSS( real fluid_out[], const real fluid_in[], const int n
    switch ( LSS_InitMode )
    {
       case 1:
-         if ( nvar_in != 1 )  Aux_Error( ERROR_INFO, "nvar_in (%d) != 1 for LSS_InitMode 1 !!\n", nvar_in );
+         {if ( nvar_in != 1 )  Aux_Error( ERROR_INFO, "nvar_in (%d) != 1 for LSS_InitMode 1 !!\n", nvar_in );
 
          const double AveDens     = 1.0;        // assuming background density = 1.0
          const double GrowingFrac = 3.0/5.0;    // growing-mode amplitude = total amplitude * 3/5
 
          fluid_out[REAL] = sqrt( (fluid_in[0]-AveDens )/GrowingFrac + AveDens );
          fluid_out[IMAG] = 0.0;  // constant phase
-         break;
+         break;}
 
       default:
          Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
