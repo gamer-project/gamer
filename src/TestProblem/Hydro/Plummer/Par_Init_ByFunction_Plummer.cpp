@@ -1,5 +1,5 @@
 #include "GAMER.h"
-;
+
 #ifdef PARTICLE
 
 extern int    Plummer_RSeed;
