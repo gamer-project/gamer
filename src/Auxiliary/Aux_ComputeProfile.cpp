@@ -54,6 +54,7 @@ extern void SetTempIntPara( const int lv, const int Sg_Current, const double Pre
 //                PatchType   : Only consider patches of the specified type
 //                              --> Supported PATCH_LEAF, PATCH_NONLEAF, PATCH_BOTH
 //                PrepTime    : Target physical time to prepare data
+//                              --> If PrepTime<0, turn off temporal interpolation
 //
 // Example     :  const double Center[3]      = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
 //                const double MaxRadius      = 0.5*amr->BoxSize[0];
@@ -66,7 +67,7 @@ extern void SetTempIntPara( const int lv, const int Sg_Current, const double Pre
 //                const int    SingleLv       = -1;
 //                const int    MaxLv          = -1;
 //                const int    PatchType      = PATCH_LEAF;
-//                const int    PrepTime       = 1.0;
+//                const int    PrepTime       = -1.0;
 //
 //                Profile_t Prof_Dens, Prof_Pres;
 //                Profile_t *Prof[] = { &Prof_Dens, &Prof_Pres };
@@ -120,6 +121,16 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
       for (int v=0; v<NCOMP_TOTAL; v++)
          if ( TVarBitIdx[p] & (1L<<v) )   TFluIntIdx[p] = v;
    }
+
+//REVISE: quick solution to avoid call SetTempIntPara() at the beginning of simulation
+//        to be updated...
+   bool InclPot = false;
+
+   for (int p=0; p<NProf; p++)
+      if ( TVarBitIdx[p] == _POTE )   InclPot = true;
+
+   if ( InclPot  &&  ( PrepTime == 0.0 ) )
+      Aux_Error( ERROR_INFO, "Temporal interpolation for potential at t = 0 is not allowed !!\n" );
 
 
 // initialize the profile objects
@@ -217,8 +228,17 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
          real FluWeighting, FluWeighting_IntT;
 
 //       fluid
-         SetTempIntPara( lv, amr->FluSg[lv], PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1],
-                         FluIntTime, FluSg, FluSg_IntT, FluWeighting, FluWeighting_IntT );
+         if ( PrepTime >= 0.0 )
+         {
+            SetTempIntPara( lv, amr->FluSg[lv], PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1],
+                            FluIntTime, FluSg, FluSg_IntT, FluWeighting, FluWeighting_IntT );
+         }
+
+         else
+         {
+            FluIntTime = false;
+            FluSg = amr->FluSg[lv];
+         }
 
          if ( FluIntTime  &&  MPI_Rank == 0 )
             Aux_Message( stderr, "WARNING : cannot determine FluSg "
@@ -231,8 +251,17 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
          int  MagSg, MagSg_IntT;
          real MagWeighting, MagWeighting_IntT;
 
-         SetTempIntPara( lv, amr->MagSg[lv], PrepTime, amr->MagSgTime[lv][0], amr->MagSgTime[lv][1],
-                         MagIntTime, MagSg, MagSg_IntT, MagWeighting, MagWeighting_IntT );
+         if ( PrepTime >= 0.0 )
+         {
+            SetTempIntPara( lv, amr->MagSg[lv], PrepTime, amr->MagSgTime[lv][0], amr->MagSgTime[lv][1],
+                            MagIntTime, MagSg, MagSg_IntT, MagWeighting, MagWeighting_IntT );
+         }
+
+         else
+         {
+            MagIntTime = false;
+            MagSg = amr->MagSg[lv];
+         }
 
          if ( MagIntTime  &&  MPI_Rank == 0 )
             Aux_Message( stderr, "WARNING : cannot determine MagSg "
@@ -246,8 +275,16 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
          int  PotSg, PotSg_IntT;
          real PotWeighting, PotWeighting_IntT;
 
-         SetTempIntPara( lv, amr->PotSg[lv], PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1],
-                         PotIntTime, PotSg, PotSg_IntT, PotWeighting, PotWeighting_IntT );
+//REVISE: quick solution to avoid call SetTempIntPara() at the beginning of simulation
+//        to be updated...
+         if ( InclPot  &&  ( PrepTime >= 0.0 ) )
+            SetTempIntPara( lv, amr->PotSg[lv], PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1],
+                            PotIntTime, PotSg, PotSg_IntT, PotWeighting, PotWeighting_IntT );
+         else
+         {
+            PotIntTime = false;
+            PotSg = amr->PotSg[lv];
+         }
 
          if ( PotIntTime  &&  MPI_Rank == 0 )
             Aux_Message( stderr, "WARNING : cannot determine PotSg "
