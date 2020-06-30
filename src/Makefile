@@ -33,14 +33,14 @@ COMPILE_VERBOSE := 0
 # physical model: HYDRO/ELBDM/PAR_ONLY (ELBDM: wave dark matter; PAR_ONLY: particle-only)
 # --> must be set in any cases; PAR_ONLY is not supported yet;
 #     ELBDM is not publicly available yet but will be released soon
-SIMU_OPTION += -DMODEL=HYDRO
+SIMU_OPTION += -DMODEL=ELBDM
 
 # enable gravity
-#SIMU_OPTION += -DGRAVITY
+SIMU_OPTION += -DGRAVITY
 
 # enable particles
 # --> must enable GRAVITY
-#SIMU_OPTION += -DPARTICLE
+SIMU_OPTION += -DPARTICLE
 
 # support Grackle, a chemistry and radiative cooling library
 # --> must set NCOMP_PASSIVE_USER according to the primordial chemistry network set by GRACKLE_PRIMORDIAL
@@ -84,10 +84,10 @@ SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 # ------------------------------------------------------------------------------------
 else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
 # enforce the mass conservation
-SIMU_OPTION += -DCONSERVE_MASS
+#SIMU_OPTION += -DCONSERVE_MASS
 
 # 4-th order Laplacian
-SIMU_OPTION += -DLAPLACIAN_4TH
+#SIMU_OPTION += -DLAPLACIAN_4TH
 
 # include the quartic self-interaction potential
 # --> must turn on GRAVITY; does not support COMOVING
@@ -114,7 +114,7 @@ SIMU_OPTION += -DSTORE_POT_GHOST
 
 # use unsplitting method to couple gravity to the target model (recommended)
 # --> for HYDRO only; ELBDM is not supported yet
-SIMU_OPTION += -DUNSPLIT_GRAVITY
+#SIMU_OPTION += -DUNSPLIT_GRAVITY
 
 # comoving frame for cosmological simulations
 # --> not supported for PARTICLE
@@ -190,7 +190,7 @@ SIMU_OPTION += -DOPENMP
 #SIMU_OPTION += -DLAOHU
 
 # support HDF5 format
-#SIMU_OPTION += -DSUPPORT_HDF5
+SIMU_OPTION += -DSUPPORT_HDF5
 
 # support GNU scientific library
 #SIMU_OPTION += -DSUPPORT_GSL
@@ -275,11 +275,11 @@ endif
 
 # template
 CUDA_PATH    :=
-FFTW_PATH    :=
-MPI_PATH     :=
-HDF5_PATH    :=
+FFTW_PATH    :=/home/return/fftw
+MPI_PATH     :=/usr
+HDF5_PATH    :=/home/return/miniconda3/pkgs/hdf5-1.10.4-hb1b8bf9_0
 GRACKLE_PATH :=
-GSL_PATH     :=
+GSL_PATH     :=/home/return/gsl
 LIBYT_PATH   :=
 
 # NCSA-bluewaters (only need to specify the path of user-installed packages)

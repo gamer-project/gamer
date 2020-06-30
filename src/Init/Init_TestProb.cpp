@@ -31,6 +31,7 @@ void Init_TestProb_ELBDM_VortexPairLinear();
 void Init_TestProb_ELBDM_IsolatedHalo();
 void Init_TestProb_ELBDM_GaussianWavePacket();
 void Init_TestProb_ELBDM_LSS();
+void Init_TestProb_ELBDM_MODELS();
 
 
 
@@ -83,6 +84,7 @@ void Init_TestProb()
       case TESTPROB_ELBDM_ISOLATED_HALO :                Init_TestProb_ELBDM_IsolatedHalo();                break;
       case TESTPROB_ELBDM_GAUSSIAN_WAVE_PACKET :         Init_TestProb_ELBDM_GaussianWavePacket();          break;
       case TESTPROB_ELBDM_LSS :                          Init_TestProb_ELBDM_LSS();                         break;
+      case TESTPROB_ELBDM_MODELS :                       Init_TestProb_ELBDM_MODELS();                         break;
 
       default: Aux_Error( ERROR_INFO, "unsupported TESTPROB_ID (%d) !!\n", TESTPROB_ID );
    } // switch( TESTPROB_ID )
