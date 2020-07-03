@@ -642,17 +642,10 @@ void Output()
 
 
 // 1. set the output file name(s)
-   char FileName_Out[MAX_STRING], FileName_Out_Binary[NOut][MAX_STRING], DomainInfo[MAX_STRING];
+   char FileName_Out[MAX_STRING], FileName_Out_Binary[NOut][MAX_STRING];
    char FieldName[NOut][MAX_STRING], FieldUnit[NOut][MAX_STRING], PassiveName[MAX_STRING];
    char *FieldUnitPtr[1]={NULL};
    int  NextIdx;
-
-
-   sprintf( DomainInfo, "_x%+.3fto%+.3f_y%+.3fto%+.3f_z%+.3fto%+.3f_lv%d",
-            OutCoord_Start[0], OutCoord_Start[0]+PhyCoord_Size[0],
-            OutCoord_Start[1], OutCoord_Start[1]+PhyCoord_Size[1],
-            OutCoord_Start[2], OutCoord_Start[2]+PhyCoord_Size[2],
-            TargetLevel );
 
    switch ( OutputXYZ )
    {
@@ -664,8 +657,6 @@ void Output()
       case 6:  sprintf( FileName_Out, "ProjZ"  );     break;
       case 7:  sprintf( FileName_Out, "Cube"   );     break;
    }
-
-   strcat( FileName_Out, DomainInfo );
 
 
 // determine the field names and units
