@@ -125,7 +125,7 @@ const real Gamma = EoS_AuxArray[0];
 
 // 3. estimate the maximum wave speeds
    const real EVal[NCOMP_FLUID] = { u-Cs, u, u, u, u+Cs };
-   real u_L, u_R, Cs_L, Cs_R, W_L, W_R, MaxV_L, MaxV_R;
+   real u_L, u_R, Cs_L, Cs_R, W_L, W_R;
 
    u_L    = _RhoL*L[1];
    u_R    = _RhoR*R[1];
@@ -144,8 +144,6 @@ const real Gamma = EoS_AuxArray[0];
    Cs_R   = SQRT( Gamma*P_R*_RhoR );
    W_L    = FMIN( EVal[            0], u_L-Cs_L );
    W_R    = FMAX( EVal[NCOMP_FLUID-1], u_R+Cs_R );
-   MaxV_L = FMIN( W_L, (real)0.0 );
-   MaxV_R = FMAX( W_R, (real)0.0 );
 
 
 // 4. evaluate the star-region velocity (V_S) and pressure (P_S)
@@ -169,11 +167,13 @@ const real Gamma = EoS_AuxArray[0];
    P_S = Hydro_CheckMinPres( P_S, MinPres );
 
 
-// 5. evaluate the weightings of the left(right) fluxes and contact wave
+// 5. evaluate the weightings of the left/right fluxes and contact wave
    real Flux_LR[NCOMP_TOTAL], temp4, Coeff_LR, Coeff_S;  // use NCOMP_TOTAL for Flux_LR since it will be passed to Hydro_Con2Flux()
 
    if ( V_S >= (real)0.0 )
    {
+      const real MaxV_L = FMIN( W_L, (real)0.0 );
+
       Hydro_Con2Flux( 0, Flux_LR, L, MinPres, EoS_DensEint2Pres, EoS_AuxArray );
 
       for (int v=0; v<NCOMP_FLUID; v++)   Flux_LR[v] -= MaxV_L*L[v];    // fluxes along the maximum wave speed
@@ -185,6 +185,8 @@ const real Gamma = EoS_AuxArray[0];
 
    else // V_S < 0.0
    {
+      const real MaxV_R = FMAX( W_R, (real)0.0 );
+
       Hydro_Con2Flux( 0, Flux_LR, R, MinPres, EoS_DensEint2Pres, EoS_AuxArray );
 
       for (int v=0; v<NCOMP_FLUID; v++)    Flux_LR[v] -= MaxV_R*R[v];   // fluxes along the maximum wave speed
