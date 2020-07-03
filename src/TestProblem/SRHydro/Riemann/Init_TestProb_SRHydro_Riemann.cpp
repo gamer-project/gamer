@@ -103,7 +103,7 @@ void SetParameter()
    ReadPara->Add( "Riemann_VelL_T",    &Riemann_VelL_T,         HUGE_NUMBER, -HUGE_NUMBER,      HUGE_NUMBER       );
    ReadPara->Add( "Riemann_VelR_T",    &Riemann_VelR_T,         HUGE_NUMBER, -HUGE_NUMBER,      HUGE_NUMBER       );
    ReadPara->Add( "Riemann_EndT",      &Riemann_EndT,           TINY_NUMBER,  TINY_NUMBER,      HUGE_NUMBER       );
-   ReadPara->Add( "Riemann_PosIniJump",&Riemann_PosIniJump,     0.5,          TINY_NUMBER,      1.0               );
+   ReadPara->Add( "Riemann_PosIniJump",&Riemann_PosIniJump,     (real)0.5,    TINY_NUMBER,      (real)1.0         );
 
    ReadPara->Read( FileName );
 
