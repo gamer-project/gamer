@@ -114,36 +114,36 @@ void SetParameter()
    {
       case SOD_SHOCK_TUBE : Riemann_RhoL =  5.0;  Riemann_VelL = 0.1;  Riemann_PreL = 10.0;  Riemann_VelL_T = 0.0;
                             Riemann_RhoR = 10.0;  Riemann_VelR = 0.1;  Riemann_PreR =  8.0;  Riemann_VelR_T = 0.0;
-                            Riemann_EndT = 0.1;
+                            Riemann_EndT = 0.1; Riemann_PosIniJump = 0.5;
                             sprintf( Riemann_Name, "Sod's shock tube" );
                             break;
       case STRONG_SHOCK   : Riemann_RhoL = 0.9   ;  Riemann_VelL = 0.1;  Riemann_PreL = 5.0e+10;  Riemann_VelL_T = 0.0;
                             Riemann_RhoR = 1.0;     Riemann_VelR = 0.1;  Riemann_PreR = 1.0e-5;  Riemann_VelR_T = 0.0;
-                            Riemann_EndT = 0.1;
+                            Riemann_EndT = 0.1; Riemann_PosIniJump = 0.5;
                             sprintf( Riemann_Name, "strong shock" );
                             break;
 
       case TWO_SHOCKS     : Riemann_RhoL = 1.0;  Riemann_VelL = 3.0;  Riemann_PreL = 1.0;  Riemann_VelL_T = 0.0;
                             Riemann_RhoR = 2.0;  Riemann_VelR = 1.0;  Riemann_PreR = 1.0;  Riemann_VelR_T = 0.0;
-                            Riemann_EndT = 0.1;
+                            Riemann_EndT = 0.1; Riemann_PosIniJump = 0.5;
                             sprintf( Riemann_Name, "two shocks" );
                             break;
 
       case EINFELDT_1203  : Riemann_RhoL = 1.0;  Riemann_VelL = -2.0;  Riemann_PreL = GAMMA-1.0;  Riemann_VelL_T = 0.0;
                             Riemann_RhoR = 1.0;  Riemann_VelR = +2.0;  Riemann_PreR = GAMMA-1.0;  Riemann_VelR_T = 0.0;
-                            Riemann_EndT = 0.1;
+                            Riemann_EndT = 0.1; Riemann_PosIniJump = 0.5;
                             sprintf( Riemann_Name, "Einfeldt's 1-2-0-3" );
                             break;
 
       case EINFELDT_1125  : Riemann_RhoL = 1.0;  Riemann_VelL = -1.0;  Riemann_PreL = 2.5*(GAMMA-1.0);  Riemann_VelL_T = -2.0;
                             Riemann_RhoR = 1.0;  Riemann_VelR = +1.0;  Riemann_PreR = 2.5*(GAMMA-1.0);  Riemann_VelR_T = +2.0;
-                            Riemann_EndT = 0.1;
+                            Riemann_EndT = 0.1; Riemann_PosIniJump = 0.5;
                             sprintf( Riemann_Name, "Einfeldt's 1-1-2-5" );
                             break;
 
       case SONIC_RARE     : Riemann_RhoL = 1.0;    Riemann_VelL = 0.75;  Riemann_PreL = 1.0;  Riemann_VelL_T = 0.0;
                             Riemann_RhoR = 0.125;  Riemann_VelR = 0.0;   Riemann_PreR = 0.1;  Riemann_VelR_T = 0.0;
-                            Riemann_EndT = 0.1;
+                            Riemann_EndT = 0.1; Riemann_PosIniJump = 0.5;
                             sprintf( Riemann_Name, "sonic rarefaction wave" );
                             break;
 
