@@ -27,6 +27,7 @@ static real      Riemann_VelR;         // right-state 4-velocity
 static real      Riemann_VelR_T;       // right-state transverse 4-velocity
 static real      Riemann_PreR;         // right-state pressure
 static real      Riemann_EndT;         // end physical time
+static real      Riemann_PosIniJump;   // position of initial jump
 static int       Riemann_LR;           // wave propagation direction (>0/<0 --> positive/negative direction)
 static int       Riemann_XYZ;          // wave propagation direction (0/1/2 --> x/y/z)
 // =======================================================================================
@@ -102,6 +103,7 @@ void SetParameter()
    ReadPara->Add( "Riemann_VelL_T",    &Riemann_VelL_T,         HUGE_NUMBER, -HUGE_NUMBER,      HUGE_NUMBER       );
    ReadPara->Add( "Riemann_VelR_T",    &Riemann_VelR_T,         HUGE_NUMBER, -HUGE_NUMBER,      HUGE_NUMBER       );
    ReadPara->Add( "Riemann_EndT",      &Riemann_EndT,           TINY_NUMBER,  TINY_NUMBER,      HUGE_NUMBER       );
+   ReadPara->Add( "Riemann_PosIniJump",&Riemann_PosIniJump,     0.5,          TINY_NUMBER,      1.0               );
 
    ReadPara->Read( FileName );
 
@@ -198,6 +200,7 @@ void SetParameter()
       Aux_Message( stdout, "  propagation direction             = %s%s\n",   ( Riemann_LR  >  0 ) ? "+" : "-",
                                                                              ( Riemann_XYZ == 0 ) ? "x" :
                                                                              ( Riemann_XYZ == 1 ) ? "y" : "z" );
+      Aux_Message( stdout, "  position of initial jump          = %13.7e\n", Riemann_PosIniJump );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -263,9 +266,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    switch ( Riemann_XYZ )
    {
-      case 0 : r=x; TVar[0]=DENS; TVar[1]=MOMX; TVar[2]=MOMY; TVar[3]=MOMZ; TVar[4]=ENGY; BoxCen=0.5*amr->BoxSize[0]; break;
-      case 1 : r=y; TVar[0]=DENS; TVar[1]=MOMY; TVar[2]=MOMZ; TVar[3]=MOMX; TVar[4]=ENGY; BoxCen=0.5*amr->BoxSize[1]; break;
-      case 2 : r=z; TVar[0]=DENS; TVar[1]=MOMZ; TVar[2]=MOMX; TVar[3]=MOMY; TVar[4]=ENGY; BoxCen=0.5*amr->BoxSize[2]; break;
+      case 0 : r=x; TVar[0]=DENS; TVar[1]=MOMX; TVar[2]=MOMY; TVar[3]=MOMZ; TVar[4]=ENGY; BoxCen=Riemann_PosIniJump*amr->BoxSize[0]; break;
+      case 1 : r=y; TVar[0]=DENS; TVar[1]=MOMY; TVar[2]=MOMZ; TVar[3]=MOMX; TVar[4]=ENGY; BoxCen=Riemann_PosIniJump*amr->BoxSize[1]; break;
+      case 2 : r=z; TVar[0]=DENS; TVar[1]=MOMZ; TVar[2]=MOMX; TVar[3]=MOMY; TVar[4]=ENGY; BoxCen=Riemann_PosIniJump*amr->BoxSize[2]; break;
       default : Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "Riemann_XYZ", Riemann_XYZ );
    }
 
@@ -299,14 +302,14 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 bool Flag_User_Riemann( const int i, const int j, const int k, const int lv, const int PID, const double Threshold )
 {
-   const double dh     = amr->dh[lv];                                                  // grid size
-   const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,              // x,y,z position
-                           amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
-                           amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };
+   const double dh     = amr->dh[lv];                                                                 // grid size
+   const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+Riemann_PosIniJump)*dh,              // x,y,z position
+                           amr->patch[0][lv][PID]->EdgeL[1] + (j+Riemann_PosIniJump)*dh,
+                           amr->patch[0][lv][PID]->EdgeL[2] + (k+Riemann_PosIniJump)*dh  };
 
 
-  
-   if ( Step == 0 && 0.49*amr->BoxSize[0] < Pos[0] && Pos[0] < 0.51*amr->BoxSize[0] )
+   // refine patches at t=0
+   if ( Step == 0 && 0.9*Riemann_PosIniJump*amr->BoxSize[0] < Pos[0] && Pos[0] < 1.1*Riemann_PosIniJump*amr->BoxSize[0] )
                return true;
    else        return false;
 

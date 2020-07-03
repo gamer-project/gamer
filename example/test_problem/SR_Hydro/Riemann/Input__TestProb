@@ -19,4 +19,5 @@ Riemann_RhoR       1.0              # right-state density
 Riemann_VelR       0.0              # right-state 4-velocity
 Riemann_PreR       0.2              # right-state pressure
 Riemann_VelR_T     0.0              # right-state transverse 4-velocity
+Riemann_PosIniJump 0.5              # position of initial jump
 Riemann_EndT       0.5              # end physical time
