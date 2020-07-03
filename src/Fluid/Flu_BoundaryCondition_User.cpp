@@ -129,7 +129,6 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
    const double dh_2             = 0.5*dh;
 #  endif
    const bool   CheckMinPres_Yes = true;
-   const real   Gamma_m1         = GAMMA - (real)1.0;
    const bool   PrepVx           = ( TVar & _VELX ) ? true : false;
    const bool   PrepVy           = ( TVar & _VELY ) ? true : false;
    const bool   PrepVz           = ( TVar & _VELZ ) ? true : false;

@@ -58,7 +58,7 @@ bool Flu_ResetByUser_Func_Template( real fluid[], const double x, const double y
       fluid[MOMX] = 0.0;
       fluid[MOMY] = 0.0;
       fluid[MOMZ] = 0.0;
-      fluid[ENGY] = MaxPres / ( GAMMA-(real)1.0 );
+      fluid[ENGY] = MaxPres / ( GAMMA-1.0 );
 
 //    set passive scalars
 
@@ -101,9 +101,8 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const double TT
 
 
    const double dh       = amr->dh[lv];
-#  if ( MODEL == HYDRO )
-   const real   Gamma_m1 = GAMMA - (real)1.0;
-   const real  _Gamma_m1 = (real)1.0 / Gamma_m1;
+#  ifdef DUAL_ENERGY
+   const real   Gamma_m1 = GAMMA - 1.0;
 #  endif
 
    bool   Reset;

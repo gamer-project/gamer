@@ -91,8 +91,8 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 #  else
    const bool ResMag    = false;
 #  endif
-#  if ( MODEL == HYDRO )
-   const real  Gamma_m1 = GAMMA - (real)1.0;
+#  ifdef DUAL_ENERGY
+   const real  Gamma_m1 = GAMMA - 1.0;
    const real _Gamma_m1 = (real)1.0 / Gamma_m1;
 #  endif
    const int PS1_half   = PS1 / 2;

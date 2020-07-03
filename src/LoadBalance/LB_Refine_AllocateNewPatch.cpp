@@ -966,8 +966,8 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 // --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
 // --> but we do renormalize passive scalars here
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM  ||  (defined DENS && NCOMP_PASSIVE>0) )
-#  if ( MODEL == HYDRO )
-   const real  Gamma_m1 = GAMMA - (real)1.0;
+#  ifdef DUAL_ENERGY
+   const real  Gamma_m1 = GAMMA - 1.0;
    const real _Gamma_m1 = (real)1.0 / Gamma_m1;
 #  endif
 

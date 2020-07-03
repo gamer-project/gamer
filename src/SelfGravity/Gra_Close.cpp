@@ -28,7 +28,7 @@ void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_N
 {
 
 #  if ( defined DUAL_ENERGY  &&  defined UNSPLIT_GRAVITY )
-   const real Gamma_m1 = GAMMA - (real)1.0;
+   const real Gamma_m1 = GAMMA - 1.0;
 #  endif
    int N, PID, PID0;
 

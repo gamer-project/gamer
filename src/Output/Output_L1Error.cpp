@@ -315,13 +315,12 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
 
 // convert total energy to pressure
 #  if ( MODEL == HYDRO )
-   const bool   CheckMinPres_No = false;
-   const double Gamma_m1        = GAMMA - 1.0;
+   const bool  CheckMinPres_No = false;
 #  ifdef MHD
-   const real  *B_Nume          = Nume + NCOMP_FLUID;
-   const real   EngyB_Nume      = (real)0.5*( SQR(B_Nume[MAGX]) + SQR(B_Nume[MAGY]) + SQR(B_Nume[MAGZ]) );
+   const real *B_Nume          = Nume + NCOMP_FLUID;
+   const real  EngyB_Nume      = (real)0.5*( SQR(B_Nume[MAGX]) + SQR(B_Nume[MAGY]) + SQR(B_Nume[MAGZ]) );
 #  else
-   const real   EngyB_Nume      = NULL_REAL;
+   const real  EngyB_Nume      = NULL_REAL;
 #  endif
 
    Nume[ENGY] = Hydro_Fluid2Pres( Nume[DENS], Nume[MOMX], Nume[MOMY], Nume[MOMZ], Nume[ENGY],

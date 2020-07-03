@@ -36,8 +36,10 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
    if ( Mode < 1  ||  Mode > 3 )    Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "Mode", Mode );
 
 
-   const real Gamma_m1        = GAMMA - (real)1.0;
    const bool CheckMinPres_No = false;
+#  ifdef DUAL_ENERGY
+   const real Gamma_m1        = GAMMA - 1.0;
+#  endif
 
    int  Pass = true;
    real Pres, Fluid[NCOMP_TOTAL];
