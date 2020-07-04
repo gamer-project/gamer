@@ -186,16 +186,6 @@
 #endif
 
 
-// maximum allowed error for the exact Riemann solver and some MHD operations
-#if (  ( FLU_SCHEME != RTVD && RSOLVER == EXACT )  ||  CHECK_INTERMEDIATE == EXACT  ||  ( MODEL == HYDRO && defined MHD )  )
-#  ifdef FLOAT8
-#     define MAX_ERROR    1.0e-14
-#  else
-#     define MAX_ERROR    1.0e-06f
-#  endif
-#endif
-
-
 // 2. ELBDM macro
 //=========================================================================================
 #elif ( MODEL == ELBDM )

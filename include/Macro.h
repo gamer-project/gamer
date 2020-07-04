@@ -586,13 +586,21 @@
 #endif
 
 
-// extreme value used for various purpose (e.g., floor value for passive scalars)
+// extreme value used for various purposes (e.g., floor value for passive scalars)
 #ifdef FLOAT8
 #  define TINY_NUMBER      __DBL_MIN__
 #  define HUGE_NUMBER      __DBL_MAX__
 #else
 #  define TINY_NUMBER      __FLT_MIN__
 #  define HUGE_NUMBER      __FLT_MAX__
+#endif
+
+
+// maximum allowed error for various purposes (e.g., exact Riemann solver, MHD routines, Mis_CompareRealValue())
+#ifdef FLOAT8
+#  define MAX_ERROR        1.0e-14
+#else
+#  define MAX_ERROR        1.0e-06f
 #endif
 
 
