@@ -20,13 +20,19 @@ class Models_calculator
     public:
         Models_calculator();
         virtual ~Models_calculator();
-        void init(double newton_g,int r_col,int rho_col,const char* Filename);        
+        void init(string type,double al,double newton_g,double rho,double r,int nbin,double rmax,int rseed,bool trunc_flag,double trunc_fac,int r_col,int rho_col,const char* Filename);        
         double set_vel(double r);
-        double set_vel_test(double r)
+        double set_vel_test(double r);
         RandomNumber_t *RNG ;
 
-        void initialize_mass(int row);
-        void initialize_pot(int row);
+        //Initialization through Table
+        void initialize_mass_UNKNOWN(int row);
+        void initialize_pot_UNKNOWN(int row);
+
+        //Other type of models
+        void initialize_mass_others();
+        void initialize_pot_others();
+
         void initialize_prob_dens();
         
         //statistics
@@ -37,6 +43,7 @@ class Models_calculator
     protected:
         
     private:
+        string model_type;
         double MassProf_Models( const double r );
         double integration_eng_base_Models(double eng);
 
@@ -52,6 +59,10 @@ class Models_calculator
         double cor(double* x,double* y,int start,int fin);
         void mask(double* x,int start,int fin);
         void add_num(double* x,int start,int fin);
+
+        //truncation
+        bool Trunc_Flag;
+        double Trunc_Fac;
 
 
 };

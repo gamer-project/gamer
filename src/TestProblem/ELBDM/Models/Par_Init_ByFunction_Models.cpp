@@ -7,7 +7,7 @@
 #include "Hernquist_calculator.h"
 #include "Einasto_calculator.h"
 #include"UNKNOWN_calculator.h"**/
-
+#include"Models_calculator.h"
 #define DEBUG
 #ifdef PARTICLE
 
@@ -114,14 +114,7 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
       model_name[k]=Models_Type[k];
       if(flag[k]==0){
          const char* profile=Models_Profile[k].c_str();
-         cal_Models.init(NEWTON_G,Models_r_col[k],Models_rho_col[k],profile);
-         /*if(model_name[k]=="Plummer")cal_Plummer.init(NEWTON_G,Models_Rho0[k],Models_R0[k]);
-         else if(model_name[k]=="NFW")cal_NFW.init(NEWTON_G,Models_Rho0[k],Models_R0[k],Models_MassProfNBin[k],Models_MaxR[k],Models_RSeed[k],Models_truncation[k],0.7);
-         else if(model_name[k]=="Burkert")cal_Burkert.init(NEWTON_G,Models_Rho0[k],Models_R0[k],Models_MassProfNBin[k],Models_MaxR[k],Models_RSeed[k],Models_truncation[k],0.7);
-         else if(model_name[k]=="Jaffe")cal_Jaffe.init(NEWTON_G,Models_Rho0[k],Models_R0[k],Models_MassProfNBin[k],Models_MaxR[k],Models_RSeed[k],Models_truncation[k],0.5);
-         else if(model_name[k]=="Hernquist")cal_Hernquist.init(NEWTON_G,Models_Rho0[k],Models_R0[k],Models_MassProfNBin[k],Models_MaxR[k],Models_RSeed[k],Models_truncation[k],0.7);
-         else if(model_name[k]=="Einasto")cal_Einasto.init(Models_Alpha[k],NEWTON_G,Models_Rho0[k],Models_R0[k],Models_MaxR[k]);
-         else if(model_name[k]=="UNKNOWN")cal_UNKNOWN.init(NEWTON_G,Models_r_col[k],Models_rho_col[k],profile);*/
+         cal_Models.init(model_name[k],Models_Alpha[k],NEWTON_G,Models_Rho0[k],Models_R0[k],Models_MassProfNBin[k],Models_MaxR[k],Models_RSeed[k],Models_truncation[k],0.7,Models_r_col[k],Models_rho_col[k],profile);
          flag[k]=1;
       }
       
@@ -307,7 +300,7 @@ double MassProf_Models( const double r ,string model_name,int k)
 {
    
    const double x = r / Models_R0[k];
-   return 4.0/3.0*M_PI*Plummer_Rho0*CUBE(r)*pow( 1.0+x*x, -1.5 );
+   return 4.0/3.0*M_PI*Models_Rho0[k]*CUBE(r)*pow( 1.0+x*x, -1.5 );
 
    /*if     (model_name=="NFW"      )       return cal_NFW.set_mass(x);
    else if(model_name=="Plummer"  )       return 4.0/3.0*M_PI*Models_Rho0[k]*CUBE(r)*pow( 1.0+x*x, -1.5 );
