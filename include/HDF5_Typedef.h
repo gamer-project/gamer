@@ -176,6 +176,7 @@ struct SymConst_t
 
    double TinyNumber;
    double HugeNumber;
+   double MaxError;
 
 
 #  ifdef GRAVITY
@@ -243,9 +244,6 @@ struct SymConst_t
 #  endif
 #  ifdef N_SLOPE_PPM
    int    N_Slope_PPM;
-#  endif
-#  ifdef MAX_ERROR
-   double MaxError;
 #  endif
 #  ifdef MHD
    int    EulerY;

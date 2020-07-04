@@ -1684,6 +1684,7 @@ void FillIn_SymConst( SymConst_t &SymConst )
 
    SymConst.TinyNumber           = TINY_NUMBER;
    SymConst.HugeNumber           = HUGE_NUMBER;
+   SymConst.MaxError             = MAX_ERROR;
 
 
 // model-dependent variables
@@ -1805,9 +1806,6 @@ void FillIn_SymConst( SymConst_t &SymConst )
 #  endif
 #  ifdef N_SLOPE_PPM
    SymConst.N_Slope_PPM          = N_SLOPE_PPM;
-#  endif
-#  ifdef MAX_ERROR
-   SymConst.MaxError             = MAX_ERROR;
 #  endif
 #  ifdef MHD
 #  ifdef EULERY
@@ -2431,6 +2429,7 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 #  endif
    H5Tinsert( H5_TypeID, "TinyNumber",           HOFFSET(SymConst_t,TinyNumber          ), H5T_NATIVE_DOUBLE );
    H5Tinsert( H5_TypeID, "HugeNumber",           HOFFSET(SymConst_t,HugeNumber          ), H5T_NATIVE_DOUBLE );
+   H5Tinsert( H5_TypeID, "MaxError",             HOFFSET(SymConst_t,MaxError            ), H5T_NATIVE_DOUBLE );
 
 #  ifdef GRAVITY
    H5Tinsert( H5_TypeID, "Gra_NIn",              HOFFSET(SymConst_t,Gra_NIn             ), H5T_NATIVE_INT    );
@@ -2488,9 +2487,6 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 #  endif
 #  ifdef N_SLOPE_PPM
    H5Tinsert( H5_TypeID, "N_Slope_PPM",          HOFFSET(SymConst_t,N_Slope_PPM         ), H5T_NATIVE_INT    );
-#  endif
-#  ifdef MAX_ERROR
-   H5Tinsert( H5_TypeID, "MaxError",             HOFFSET(SymConst_t,MaxError            ), H5T_NATIVE_DOUBLE );
 #  endif
 #  ifdef MHD
    H5Tinsert( H5_TypeID, "EulerY",               HOFFSET(SymConst_t,EulerY              ), H5T_NATIVE_INT    );
