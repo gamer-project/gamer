@@ -10,8 +10,8 @@
 /**********************************************
 This file is shared by both CPU and GPU
 
-    CPU_EoS_IdealGas.cpp
-    GPU_EoS_IdealGas.cu
+    CPU_EoS_Gamma.cpp
+    GPU_EoS_Gamma.cu
 
 Three steps are required to implement an EoS
 
@@ -27,11 +27,11 @@ Three steps are required to implement an EoS
 // =====================================
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  EoS_DensEint2Pres_IdealGas
+// Function    :  EoS_DensEint2Pres_Gamma
 // Description :  Convert gas mass density and internal energy density to gas pressure using an ideal-gas EoS
 //
 // Note        :  1. Internal energy density here is per unit volume instead of per unit mass
-//                2. Auxiliary array UserArray[] is set by EoS_InitAuxArray_IdealGas(), where
+//                2. Auxiliary array UserArray[] is set by EoS_InitAuxArray_Gamma(), where
 //                      UserArray[0] = gamma
 //                      UserArray[1] = gamma-1
 //                      UserArray[2] = 1/(gamma-1)
@@ -43,7 +43,7 @@ Three steps are required to implement an EoS
 // Return      :  Gas pressure
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_DensEint2Pres_IdealGas( const real Dens, const real Eint, const double UserArray[] )
+static real EoS_DensEint2Pres_Gamma( const real Dens, const real Eint, const double UserArray[] )
 {
 
    const real Gamma_m1 = (real)UserArray[1];
@@ -53,15 +53,15 @@ static real EoS_DensEint2Pres_IdealGas( const real Dens, const real Eint, const 
 
    return Pres;
 
-} // FUNCTION : EoS_DensEint2Pres_IdealGas
+} // FUNCTION : EoS_DensEint2Pres_Gamma
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  EoS_DensPres2Eint_IdealGas
+// Function    :  EoS_DensPres2Eint_Gamma
 // Description :  Convert gas mass density and pressure to gas internal energy density using an ideal-gas EoS
 //
-// Note        :  1. See EoS_DensEint2Pres_IdealGas()
+// Note        :  1. See EoS_DensEint2Pres_Gamma()
 //
 // Parameter   :  Dens      : Gas mass density
 //                Pres      : Gas pressure
@@ -70,7 +70,7 @@ static real EoS_DensEint2Pres_IdealGas( const real Dens, const real Eint, const 
 // Return      :  Gas internal energy density
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_DensPres2Eint_IdealGas( const real Dens, const real Pres, const double UserArray[] )
+static real EoS_DensPres2Eint_Gamma( const real Dens, const real Pres, const double UserArray[] )
 {
 
    const real _Gamma_m1 = (real)UserArray[2];
@@ -80,15 +80,15 @@ static real EoS_DensPres2Eint_IdealGas( const real Dens, const real Pres, const 
 
    return Eint;
 
-} // FUNCTION : EoS_DensPres2Eint_IdealGas
+} // FUNCTION : EoS_DensPres2Eint_Gamma
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  EoS_DensPres2CSqr_IdealGas
+// Function    :  EoS_DensPres2CSqr_Gamma
 // Description :  Convert gas mass density and pressure to sound speed squared using an ideal-gas EoS
 //
-// Note        :  1. See EoS_DensEint2Pres_IdealGas()
+// Note        :  1. See EoS_DensEint2Pres_Gamma()
 //
 // Parameter   :  Dens      : Gas mass density
 //                Pres      : Gas pressure
@@ -97,7 +97,7 @@ static real EoS_DensPres2Eint_IdealGas( const real Dens, const real Pres, const 
 // Return      :  Sound speed square
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_DensPres2CSqr_IdealGas( const real Dens, const real Pres, const double UserArray[] )
+static real EoS_DensPres2CSqr_Gamma( const real Dens, const real Pres, const double UserArray[] )
 {
 
    const real Gamma = (real)UserArray[0];
@@ -107,7 +107,7 @@ static real EoS_DensPres2CSqr_IdealGas( const real Dens, const real Pres, const 
 
    return Cs2;
 
-} // FUNCTION : EoS_DensPres2CSqr_IdealGas
+} // FUNCTION : EoS_DensPres2CSqr_Gamma
 
 
 
@@ -121,14 +121,14 @@ static real EoS_DensPres2CSqr_IdealGas( const real Dens, const real Pres, const 
 #  define FUNC_SPACE            static
 #endif
 
-FUNC_SPACE EoS_DE2P_t EoS_DensEint2Pres_Ptr = EoS_DensEint2Pres_IdealGas;
-FUNC_SPACE EoS_DP2E_t EoS_DensPres2Eint_Ptr = EoS_DensPres2Eint_IdealGas;
-FUNC_SPACE EoS_DP2C_t EoS_DensPres2CSqr_Ptr = EoS_DensPres2CSqr_IdealGas;
+FUNC_SPACE EoS_DE2P_t EoS_DensEint2Pres_Ptr = EoS_DensEint2Pres_Gamma;
+FUNC_SPACE EoS_DP2E_t EoS_DensPres2Eint_Ptr = EoS_DensPres2Eint_Gamma;
+FUNC_SPACE EoS_DP2C_t EoS_DensPres2CSqr_Ptr = EoS_DensPres2CSqr_Gamma;
 
 
 
 //-----------------------------------------------------------------------------------------
-// Function    :  EoS_InitCPU/GPUFunc_IdealGas
+// Function    :  EoS_InitCPU/GPUFunc_Gamma
 // Description :  Return the function pointers to the CPU/GPU EoS routines
 //
 // Note        :  1. Invoked by EoS_Init() when adopting EOS_GAMMA
@@ -137,7 +137,7 @@ FUNC_SPACE EoS_DP2C_t EoS_DensPres2CSqr_Ptr = EoS_DensPres2CSqr_IdealGas;
 //                   since CPU and GPU functions are compiled completely separately in GAMER
 //                   --> In other words, a unified routine like the following won't work
 //
-//                      EoS_InitFunc_IdealGas( CPU_FuncPtr, GPU_FuncPtr );
+//                      EoS_InitFunc_Gamma( CPU_FuncPtr, GPU_FuncPtr );
 //
 //                3. Call-by-reference
 //
@@ -149,7 +149,7 @@ FUNC_SPACE EoS_DP2C_t EoS_DensPres2CSqr_Ptr = EoS_DensPres2CSqr_IdealGas;
 //-----------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __host__
-void EoS_InitGPUFunc_IdealGas( EoS_DE2P_t &EoS_DensEint2Pres_GPUPtr,
+void EoS_InitGPUFunc_Gamma( EoS_DE2P_t &EoS_DensEint2Pres_GPUPtr,
                                EoS_DP2E_t &EoS_DensPres2Eint_GPUPtr,
                                EoS_DP2C_t &EoS_DensPres2CSqr_GPUPtr )
 {
@@ -160,7 +160,7 @@ void EoS_InitGPUFunc_IdealGas( EoS_DE2P_t &EoS_DensEint2Pres_GPUPtr,
 
 #else // #ifdef __CUDACC__
 
-void EoS_InitCPUFunc_IdealGas( EoS_DE2P_t &EoS_DensEint2Pres_CPUPtr,
+void EoS_InitCPUFunc_Gamma( EoS_DE2P_t &EoS_DensEint2Pres_CPUPtr,
                                EoS_DP2E_t &EoS_DensPres2Eint_CPUPtr,
                                EoS_DP2C_t &EoS_DensPres2CSqr_CPUPtr )
 {
@@ -178,7 +178,7 @@ void EoS_InitCPUFunc_IdealGas( EoS_DE2P_t &EoS_DensEint2Pres_CPUPtr,
 // =====================================
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  EoS_InitAuxArray_IdealGas
+// Function    :  EoS_InitAuxArray_Gamma
 // Description :  Set the auxiliary array EoS_AuxArray[] for an ideal-gas EoS
 //
 // Note        :  1. Invoked by EoS_Init() when adopting EOS_GAMMA
@@ -193,14 +193,14 @@ void EoS_InitCPUFunc_IdealGas( EoS_DE2P_t &EoS_DensEint2Pres_CPUPtr,
 // Return      :  AuxArray[]
 //-------------------------------------------------------------------------------------------------------
 #ifndef __CUDACC__
-void EoS_InitAuxArray_IdealGas( double AuxArray[] )
+void EoS_InitAuxArray_Gamma( double AuxArray[] )
 {
 
    AuxArray[0] = GAMMA;
    AuxArray[1] = GAMMA - 1.0;
    AuxArray[2] = 1.0 / ( GAMMA - 1.0 );
 
-} // FUNCTION : EoS_InitAuxArray_IdealGas
+} // FUNCTION : EoS_InitAuxArray_Gamma
 #endif // #ifndef __CUDACC__
 
 
