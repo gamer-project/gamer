@@ -585,8 +585,8 @@ void Aux_Check_Parameter()
 #     error : ERROR : unsupported dual-energy formalism (DE_ENPY only, DE_EINT is not supported yet) !!
 #   endif
 
-#  if ( EOS != EOS_IDEALGAS )
-#     error : ERROR : DUAL_ENERGY currently only supports EOS_IDEALGAS !!
+#  if ( EOS != EOS_GAMMA )
+#     error : ERROR : DUAL_ENERGY currently only supports EOS_GAMMA !!
 #  endif
 #  endif // #ifdef DUAL_ENERGY
 
@@ -601,8 +601,8 @@ void Aux_Check_Parameter()
 #   endif
 #  endif // MHD
 
-#  if ( EOS != EOS_IDEALGAS  &&  EOS != EOS_NUCLEAR  &&  EOS != EOS_TABULAR  &&  EOS != EOS_USER )
-#     error : ERROR : unsupported equation of state (EOS_IDEALGAS/EOS_NUCLEAR/EOS_TABULAR/EOS_USER) !!
+#  if ( EOS != EOS_GAMMA  &&  EOS != EOS_NUCLEAR  &&  EOS != EOS_TABULAR  &&  EOS != EOS_USER )
+#     error : ERROR : unsupported equation of state (EOS_GAMMA/EOS_NUCLEAR/EOS_TABULAR/EOS_USER) !!
 #  endif
 
 #  if ( EOS == EOS_NUCLEAR )

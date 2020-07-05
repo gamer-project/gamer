@@ -131,7 +131,7 @@ FUNC_SPACE EoS_DP2C_t EoS_DensPres2CSqr_Ptr = EoS_DensPres2CSqr_IdealGas;
 // Function    :  EoS_InitCPU/GPUFunc_IdealGas
 // Description :  Return the function pointers to the CPU/GPU EoS routines
 //
-// Note        :  1. Invoked by EoS_Init() when adopting EOS_IDEALGAS
+// Note        :  1. Invoked by EoS_Init() when adopting EOS_GAMMA
 //                   --> By linking to the function pointers "EoS_InitCPU/GPUFunc_Ptr"
 //                2. Must obtain the CPU and GPU function pointers by separate routines
 //                   since CPU and GPU functions are compiled completely separately in GAMER
@@ -181,7 +181,7 @@ void EoS_InitCPUFunc_IdealGas( EoS_DE2P_t &EoS_DensEint2Pres_CPUPtr,
 // Function    :  EoS_InitAuxArray_IdealGas
 // Description :  Set the auxiliary array EoS_AuxArray[] for an ideal-gas EoS
 //
-// Note        :  1. Invoked by EoS_Init() when adopting EOS_IDEALGAS
+// Note        :  1. Invoked by EoS_Init() when adopting EOS_GAMMA
 //                   --> By linking to the function pointers "EoS_InitAuxArray_Ptr"
 //                2. AuxArray[] has the size of EOS_NAUX_MAX defined in Macro.h (default = 10)
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU

@@ -210,7 +210,7 @@ void Init_Load_Parameter()
 
 // fluid solvers in HYDRO
 #  if ( MODEL == HYDRO )
-#  if ( EOS == EOS_IDEALGAS )
+#  if ( EOS == EOS_GAMMA )
    ReadPara->Add( "GAMMA",                      &GAMMA,                           5.0/3.0,         1.0,           NoMax_double   );
 #  else
    ReadPara->Add( "GAMMA",                      &GAMMA,                           __DBL_MAX__,     NoMin_double,  NoMax_double   );

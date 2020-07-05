@@ -5,7 +5,7 @@
 
 
 // prototypes of built-in EoS
-#if   ( EOS == EOS_IDEALGAS )
+#if   ( EOS == EOS_GAMMA )
 void EoS_InitAuxArray_IdealGas( double [] );
 void EoS_InitCPUFunc_IdealGas( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t & );
 # ifdef GPU
@@ -39,7 +39,7 @@ void EoS_Init()
 {
 
 // set function pointers for the built-in EoS
-#  if   ( EOS == EOS_IDEALGAS )
+#  if   ( EOS == EOS_GAMMA )
    EoS_InitAuxArray_Ptr = EoS_InitAuxArray_IdealGas;
    EoS_InitCPUFunc_Ptr  = EoS_InitCPUFunc_IdealGas;
 #  ifdef GPU

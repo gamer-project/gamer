@@ -167,8 +167,8 @@ void Aux_TakeNote()
       fprintf( Note, "MHD                             OFF\n" );
 #     endif
 
-#     if   ( EOS == EOS_IDEALGAS )
-      fprintf( Note, "EOS                             EOS_IDEALGAS\n" );
+#     if   ( EOS == EOS_GAMMA )
+      fprintf( Note, "EOS                             EOS_GAMMA\n" );
 #     elif ( EOS == EOS_NUCLEAR )
       fprintf( Note, "EOS                             EOS_NUCLEAR\n" );
 #     elif ( EOS == EOS_TABULAR )
