@@ -35,6 +35,7 @@ Three steps are required to implement an EoS
 //                      UserArray[0] = gamma
 //                      UserArray[1] = gamma-1
 //                      UserArray[2] = 1/(gamma-1)
+//                      UserArray[3] = 1/gamma
 //
 // Parameter   :  Dens      : Gas mass density
 //                Eint      : Gas internal energy density
@@ -199,6 +200,7 @@ void EoS_InitAuxArray_Gamma( double AuxArray[] )
    AuxArray[0] = GAMMA;
    AuxArray[1] = GAMMA - 1.0;
    AuxArray[2] = 1.0 / ( GAMMA - 1.0 );
+   AuxArray[3] = 1.0 / GAMMA;
 
 } // FUNCTION : EoS_InitAuxArray_Gamma
 #endif // #ifndef __CUDACC__
