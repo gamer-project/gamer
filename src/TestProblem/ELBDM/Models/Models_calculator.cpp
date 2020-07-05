@@ -4,13 +4,12 @@ double Models_rho;
 double Models_r;
 double Models_maxr;
 double alpha;
-int row_Models;
 int  Models_massprofnbin;
 
 double *Table_MassProf_r_Models;
 double *Table_MassProf_M_Models;
 double *Table_MassProf_rho_Models;
-double *Table_MassProf_rhodx_Models;
+double *Table_MassProf_rhodr_Models;
 double *Table_MassProf_derho_overdx_Models;
 double *Table_MassProf_g_Models;
 double *Table_MassProf_pot_Models;
@@ -95,14 +94,11 @@ double Models_calculator::slope(double* x,double* y,int start,int fin){
 
   return s;
 }
-
+//debug
 double potential_Models(double x){
-  
-  return Mis_InterpolateFromTable( row_Models, Table_MassProf_r_Models, Table_MassProf_pot_Models, x );  
-}
-double de_rho_over_de_psi_Models(double x){
-  
-  return Mis_InterpolateFromTable( row_Models, Table_MassProf_r_Models, Table_MassProf_derho_overdx_Models, x );;
+  if(x>double(Models_maxr/Models_r))return Table_MassProf_pot_Models[Models_massprofnbin-1]*(Models_maxr)/(x*Models_r);
+  //return -Models_NEWTON_G*(4./3.)*Models_rho*pow(Models_r,2)*pow(1+x*x,-0.5);
+  return Mis_InterpolateFromTable( Models_massprofnbin, Table_MassProf_r_Models, Table_MassProf_pot_Models, x*Models_r );  
 }
 
 
@@ -111,7 +107,7 @@ double psi_potential_Models(double x, void * parameters){
   return psi+potential_Models(x);
 }
 double inverse_psi_to_ind_Models (double psi) {
-  int max=row_Models-1;
+  int max=Models_massprofnbin-1;
   int min =0;
   int mid =(max+min)/2;
   double mid_psi;
@@ -183,14 +179,14 @@ double Models_calculator::integration_eng_base_Models(double eng){
 //Different Model Type
 //Plummer
 double mass_base_Plummer(double x,void* nothing){
-    return 4*M_PI*pow(Models_r,3)*(Models_rho*pow(x,2)*pow(1+x,-2.5));
+    return 4*M_PI*pow(Models_r,3)*(Models_rho*pow(x,2)*pow(1+x*x,-2.5));
 }
 double mass_base_Plummer_trunc(double x,void* trunc_fac){
   double fac = *(double *) trunc_fac;
   double x0 = fac*Models_maxr/Models_r;
   double xmax = Models_maxr/Models_r;
   
-  if(x<x0) return 4*M_PI*pow(Models_r,3)*(Models_rho*pow(x,2)*pow(1+x,-2.5));
+  if(x<x0) return 4*M_PI*pow(Models_r,3)*(Models_rho*pow(x,2)*pow(1+x*x,-2.5));
   else {
     double rho0 = Models_rho*pow(x0,2)*pow(1+x0,-2.5);
     double rho = rho0 *( 1 - pow(1-pow((x-xmax)/(xmax-x0) ,2) ,0.5 ) );
@@ -273,11 +269,43 @@ double mass_base_Einasto(double x,void *nothing){
 double mass_base_Einasto_trunc(double x,void *nothing){
   return 4*M_PI*Models_rho*pow(Models_r,3)*pow(x,2) *exp(-pow(x,alpha));
 }
+double test(double x,void *nothing){
+  return 4*M_PI*Models_rho*pow(Models_r,3)*pow(x,2) *exp(-pow(x,alpha));
+}
+double Models_calculator::set_rho(double x){
+  if (model_type == "UNKNOWN"){
+    if(x>=Table_MassProf_r_Models[Models_massprofnbin-1])return Table_MassProf_rho_Models[Models_massprofnbin-1];
+    return Mis_InterpolateFromTable( Models_massprofnbin, Table_MassProf_r_Models, Table_MassProf_rho_Models, x );
+  }
 
+  else{
+    double rho;
+    double* nothing;
+    if(Trunc_Flag){
+      if(model_type=="Plummer")rho=mass_base_Plummer_trunc(x,nothing);
+      else if(model_type=="NFW")rho=mass_base_NFW_trunc(x,nothing);
+      else if(model_type=="Burkert")rho=mass_base_Burkert_trunc(x,nothing);
+      else if(model_type=="Jaffe")rho=mass_base_Jaffe_trunc(x,nothing);
+      else if(model_type=="Hernquist")rho=mass_base_Hernquist_trunc(x,nothing);
+      else if(model_type=="Einasto")rho=mass_base_Einasto_trunc(x,nothing);
+
+    }
+    else {
+      if(model_type=="Plummer")rho=mass_base_Plummer(x,nothing);
+      else if(model_type=="NFW")rho=mass_base_NFW(x,nothing);
+      else if(model_type=="Burkert")rho=mass_base_Burkert(x,nothing);
+      else if(model_type=="Jaffe")rho=mass_base_Jaffe(x,nothing);
+      else if(model_type=="Hernquist")rho=mass_base_Hernquist(x,nothing);
+      else if(model_type=="Einasto")rho=mass_base_Einasto(x,nothing);
+    }
+    return rho/(4*M_PI*pow(x,2)*pow(Models_r,3));
+  }
+  
+}
 double Models_calculator::set_mass(double x){
   if (model_type == "UNKNOWN"){
-    if(x>=Table_MassProf_r_Models[row_Models-1])return Table_MassProf_M_Models[row_Models-1];
-    return Mis_InterpolateFromTable( row_Models, Table_MassProf_r_Models, Table_MassProf_M_Models, x );
+    if(x>=Table_MassProf_r_Models[Models_massprofnbin-1])return Table_MassProf_M_Models[Models_massprofnbin-1];
+    return Mis_InterpolateFromTable( Models_massprofnbin, Table_MassProf_r_Models, Table_MassProf_M_Models, x );
   }
 
   else{
@@ -287,7 +315,7 @@ double Models_calculator::set_mass(double x){
     double  error;
     double result;
     gsl_function F;
-
+    
     if(Trunc_Flag){
       if(model_type=="Plummer")F.function = &mass_base_Plummer_trunc;
       else if(model_type=="NFW")F.function = &mass_base_NFW_trunc;
@@ -299,6 +327,7 @@ double Models_calculator::set_mass(double x){
       F.params =&Trunc_Fac;
       gsl_integration_qag  (&F, 0, x, 0, 1e-7, 1000, 1, w, &result,  &error);
       gsl_integration_workspace_free (w);
+      
       return result;
     }
     else {
@@ -308,19 +337,21 @@ double Models_calculator::set_mass(double x){
       else if(model_type=="Jaffe")F.function = &mass_base_Jaffe;
       else if(model_type=="Hernquist")F.function = &mass_base_Hernquist;
       else if(model_type=="Einasto")F.function = &mass_base_Einasto;
+      
       gsl_integration_qag  (&F, 0, x, 0, 1e-7, 1000, 1, w, &result,  &error);
       gsl_integration_workspace_free (w);
+      
       return result;
     }
   }
   
 }
-void Models_calculator::initialize_mass_UNKNOWN(int row_Models){
+void Models_calculator::initialize_mass_UNKNOWN(int Models_massprofnbin){
   
   //Mass
   Table_MassProf_M_Models[0]=0;
   double rho,dr,r;
-  for (int b=1; b<row_Models; b++)
+  for (int b=1; b<Models_massprofnbin; b++)
   {
     rho = (Table_MassProf_rho_Models[b] + Table_MassProf_rho_Models[b-1])/2;
     dr = Table_MassProf_r_Models[b] - Table_MassProf_r_Models[b-1];
@@ -328,36 +359,36 @@ void Models_calculator::initialize_mass_UNKNOWN(int row_Models){
     Table_MassProf_M_Models[b] = Table_MassProf_M_Models[b-1] + 4*M_PI*pow(r,2) *rho * dr;
   }
 
-  //Rhodx
-  Table_MassProf_rhodx_Models[0]=(Table_MassProf_rho_Models[1]-Table_MassProf_rho_Models[0])/(Table_MassProf_r_Models[1]-Table_MassProf_r_Models[0]);
-  for (int b=1; b<row_Models-1; b++)
+  //Rhodr
+  Table_MassProf_rhodr_Models[0]=(Table_MassProf_rho_Models[1]-Table_MassProf_rho_Models[0])/(Table_MassProf_r_Models[1]-Table_MassProf_r_Models[0]);
+  for (int b=1; b<Models_massprofnbin-1; b++)
   {
     int num=3;
-    if(b==0)Table_MassProf_rhodx_Models[b] = slope(Table_MassProf_r_Models,Table_MassProf_rho_Models,0,num/2+1);
-    else if(b==1)Table_MassProf_rhodx_Models[b] = slope(Table_MassProf_r_Models,Table_MassProf_rho_Models,0,num/2+2);
+    if(b==0)Table_MassProf_rhodr_Models[b] = slope(Table_MassProf_r_Models,Table_MassProf_rho_Models,0,num/2+1);
+    else if(b==1)Table_MassProf_rhodr_Models[b] = slope(Table_MassProf_r_Models,Table_MassProf_rho_Models,0,num/2+2);
     
-    else if(b==row_Models-2)Table_MassProf_rhodx_Models[b] = slope(Table_MassProf_r_Models,Table_MassProf_rho_Models,row_Models-num/2-1,row_Models);
-    else Table_MassProf_rhodx_Models[b] = slope(Table_MassProf_r_Models,Table_MassProf_rho_Models,b-num/2,b+num/2+1);
+    else if(b==Models_massprofnbin-2)Table_MassProf_rhodr_Models[b] = slope(Table_MassProf_r_Models,Table_MassProf_rho_Models,Models_massprofnbin-num/2-1,Models_massprofnbin);
+    else Table_MassProf_rhodr_Models[b] = slope(Table_MassProf_r_Models,Table_MassProf_rho_Models,b-num/2,b+num/2+1);
     
 
     
-  }Table_MassProf_rhodx_Models[row_Models-1]=Table_MassProf_rhodx_Models[row_Models-2];
+  }Table_MassProf_rhodr_Models[Models_massprofnbin-1]=Table_MassProf_rhodr_Models[Models_massprofnbin-2];
   
 }
 
-void Models_calculator::initialize_pot_UNKNOWN(int row_Models){
+void Models_calculator::initialize_pot_UNKNOWN(int Models_massprofnbin){
   
   
 
   Table_MassProf_g_Models[0] =0;
-  for (int b=1; b<row_Models; b++)
+  for (int b=1; b<Models_massprofnbin; b++)
   {
     Table_MassProf_g_Models[b] = -Models_NEWTON_G*Table_MassProf_M_Models[b]/pow(Table_MassProf_r_Models[b],2); 
   }
   //Pot
-  Table_MassProf_pot_Models[row_Models-1] = -Models_NEWTON_G*Table_MassProf_M_Models[row_Models-1]/Table_MassProf_r_Models[row_Models-1];
-  eng_min_Models = -Table_MassProf_pot_Models[row_Models-1];
-  for (int b=row_Models-2;b>0;b--)
+  Table_MassProf_pot_Models[Models_massprofnbin-1] = -Models_NEWTON_G*Table_MassProf_M_Models[Models_massprofnbin-1]/Table_MassProf_r_Models[Models_massprofnbin-1];
+  eng_min_Models = -Table_MassProf_pot_Models[Models_massprofnbin-1];
+  for (int b=Models_massprofnbin-2;b>0;b--)
   {
     double dr = Table_MassProf_r_Models[b+1]-Table_MassProf_r_Models[b];
     
@@ -366,9 +397,9 @@ void Models_calculator::initialize_pot_UNKNOWN(int row_Models){
   }Table_MassProf_pot_Models[0]=Table_MassProf_pot_Models[1];
     
   //derho_overdx
-  for (int b=0; b<row_Models; b++)
+  for (int b=0; b<Models_massprofnbin; b++)
   {
-    Table_MassProf_derho_overdx_Models[b] = -Table_MassProf_rhodx_Models[b]/(Table_MassProf_g_Models[b]);
+    Table_MassProf_derho_overdx_Models[b] = -Table_MassProf_rhodr_Models[b]/(Table_MassProf_g_Models[b]);
   }
   
 }
@@ -376,53 +407,35 @@ void Models_calculator::initialize_pot_UNKNOWN(int row_Models){
 void Models_calculator::initialize_mass_others(){
   
   double dr = Models_maxr / (Models_massprofnbin-1);
-
+  //Radius & Mass
   for (int b=0; b<Models_massprofnbin; b++)
   {
+    
     Table_MassProf_r_Models[b] = dr*b;
     Table_MassProf_M_Models[b] = set_mass( Table_MassProf_r_Models[b]/Models_r);
+    
   }
   
   //Rho
-  if(Trunc_Flag){
-    for (int b=1; b<Models_massprofnbin; b++)
-    {
-      double x = dr*b/Models_r;
-      double x0 = Trunc_Fac*Models_maxr/Models_r;
-      double xmax = Models_maxr/Models_r;
-    
-      if(x<x0) Table_MassProf_rho_Models[b] =Models_rho*(1/(x*x*(1+x)));
-      else {
-        double rho0 = Models_rho*(1/(x0*x0*(1+x0)));
-        double rho = rho0 *( 1 - pow(1-pow((x-xmax)/(xmax-x0) ,2) ,0.5 ) ); 
-        Table_MassProf_rho_Models[b] = rho;
-      }
-    }
-    Table_MassProf_rho_Models[0] = Table_MassProf_rho_Models[1];
+  for (int b=1; b<Models_massprofnbin; b++)
+  {
+    double x = dr*b/Models_r;
+    Table_MassProf_rho_Models[b] =set_rho(x);
   }
-  else{
-    for (int b=1; b<Models_massprofnbin; b++)
-    {
-      double x = dr*b/Models_r;
-      Table_MassProf_rho_Models[b] =Models_rho*(1/(x*x*(1+x)));
-    }
-    Table_MassProf_rho_Models[0] = Table_MassProf_rho_Models[1];
-  }
+  Table_MassProf_rho_Models[0] = Table_MassProf_rho_Models[1];
 
-  //Rhodx
-  Table_MassProf_rhodx_Models[0]=(Table_MassProf_rho_Models[1]-Table_MassProf_rho_Models[0])*Models_r/(dr);
+  //Rhodr
+  Table_MassProf_rhodr_Models[0]=(Table_MassProf_rho_Models[1]-Table_MassProf_rho_Models[0])/(dr);
   for (int b=1; b<Models_massprofnbin-1; b++)
   {
     int num=3;
-    if(b==0)Table_MassProf_rhodx_Models[b] = slope(Table_MassProf_r_Models,Table_MassProf_rho_Models,0,num/2+1);
-    else if(b==1)Table_MassProf_rhodx_Models[b] = slope(Table_MassProf_r_Models,Table_MassProf_rho_Models,0,num/2+2);
+    if(b==0)Table_MassProf_rhodr_Models[b] = slope(Table_MassProf_r_Models,Table_MassProf_rho_Models,0,num/2+1);
+    else if(b==1)Table_MassProf_rhodr_Models[b] = slope(Table_MassProf_r_Models,Table_MassProf_rho_Models,0,num/2+2);
     
-    else if(b==Models_massprofnbin-2)Table_MassProf_rhodx_Models[b] = slope(Table_MassProf_r_Models,Table_MassProf_rho_Models,Models_massprofnbin-num/2-1,Models_massprofnbin);
-    else Table_MassProf_rhodx_Models[b] = slope(Table_MassProf_r_Models,Table_MassProf_rho_Models,b-num/2,b+num/2+1);
-    Table_MassProf_rhodx_Models[b] *= -Models_r;
-
+    else if(b==Models_massprofnbin-2)Table_MassProf_rhodr_Models[b] = slope(Table_MassProf_r_Models,Table_MassProf_rho_Models,Models_massprofnbin-num/2-1,Models_massprofnbin);
+    else Table_MassProf_rhodr_Models[b] = slope(Table_MassProf_r_Models,Table_MassProf_rho_Models,b-num/2,b+num/2+1);
     
-  }Table_MassProf_rhodx_Models[Models_massprofnbin-1]=Table_MassProf_rhodx_Models[Models_massprofnbin-2];
+  }Table_MassProf_rhodr_Models[Models_massprofnbin-1]=Table_MassProf_rhodr_Models[Models_massprofnbin-2];
   
 }
 
@@ -442,29 +455,26 @@ void Models_calculator::initialize_pot_others(){
   for (int b=Models_massprofnbin-2;b>0;b--)
   {
     Table_MassProf_pot_Models[b] = Table_MassProf_pot_Models[b+1] + Table_MassProf_g_Models[b] * dr;
+    
   }Table_MassProf_pot_Models[0]=Table_MassProf_pot_Models[1];
     
   //derho_overdx
   for (int b=0; b<Models_massprofnbin; b++)
   {
-    Table_MassProf_derho_overdx_Models[b] = -Table_MassProf_rhodx_Models[b]/(Table_MassProf_g_Models[b]*Models_r);
+    Table_MassProf_derho_overdx_Models[b] = -Table_MassProf_rhodr_Models[b]/(Table_MassProf_g_Models[b]);
   }
   
 }
 void Models_calculator::initialize_prob_dens(){
   double min,max;
-  if(model_type=="UNKNOWN")min=-Table_MassProf_pot_Models[row_Models-1];
-  else min = -Table_MassProf_pot_Models[Models_massprofnbin-1];
+  min=-Table_MassProf_pot_Models[Models_massprofnbin-1];
   max =-Table_MassProf_pot_Models[1];
   delta =(max-min)/size_Models;
   double eng=min;
 
-  
-
   for(int k =0;k<size_Models;k++){
     psi[k] = eng;
     int_prob_dens[k] = integration_eng_base_Models(eng);
-    
     eng +=delta;
   }
   for(int k =0;k<size_Models;k++){
@@ -484,10 +494,13 @@ void Models_calculator::initialize_prob_dens(){
 }
 
 void Models_calculator::init(string type,double al,double newton_g,double rho,double r,int nbin,double rmax,int rseed,bool trunc_flag,double trunc_fac,int r_col,int rho_col,const char* Filename){
-  Table_MassProf_r_Models = NULL;
-  Table_MassProf_M_Models= NULL;
-  Table_MassProf_g_Models = NULL;
-  Table_MassProf_pot_Models= NULL;
+  Table_MassProf_r_Models=NULL;
+  Table_MassProf_M_Models=NULL;
+  Table_MassProf_rho_Models=NULL;
+  Table_MassProf_rhodr_Models=NULL;
+  Table_MassProf_derho_overdx_Models=NULL;
+  Table_MassProf_g_Models=NULL;
+  Table_MassProf_pot_Models=NULL;
 
   model_type = type;
   alpha = al;
@@ -508,45 +521,47 @@ void Models_calculator::init(string type,double al,double newton_g,double rho,do
   if(model_type=="UNKNOWN"){
     int Tcol_r[1]={r_col};
     int Tcol_rho[1]={rho_col};
-    int r_row_Models;
-    if(sizeof(Table_MassProf_r_Models)==0)r_row_Models= Aux_LoadTable( Table_MassProf_r_Models, Filename, 1, Tcol_r,true,true );
-    else r_row_Models= Aux_LoadTable( Table_MassProf_r_Models, Filename, 1, Tcol_r,true,false );
+    int row_r_Models;
+    if(sizeof(Table_MassProf_r_Models)==0)row_r_Models= Aux_LoadTable( Table_MassProf_r_Models, Filename, 1, Tcol_r,true,true );
+    else row_r_Models= Aux_LoadTable( Table_MassProf_r_Models, Filename, 1, Tcol_r,true,false );
     
-    int density_row_Models;
-    if(sizeof(Table_MassProf_rho_Models)==0)density_row_Models= Aux_LoadTable( Table_MassProf_rho_Models, Filename, 1, Tcol_rho,true,true );
-    else density_row_Models= Aux_LoadTable( Table_MassProf_rho_Models, Filename, 1, Tcol_rho,true,false );
+    int row_density_Models;
+    if(sizeof(Table_MassProf_rho_Models)==0)row_density_Models= Aux_LoadTable( Table_MassProf_rho_Models, Filename, 1, Tcol_rho,true,true );
+    else row_density_Models= Aux_LoadTable( Table_MassProf_rho_Models, Filename, 1, Tcol_rho,true,false );
     
-    row_Models=r_row_Models;
+    Models_massprofnbin=row_r_Models;
 
-    Table_MassProf_M_Models = new double [row_Models];
-    Table_MassProf_rhodx_Models = new double [row_Models];
-    Table_MassProf_g_Models = new double [row_Models];
-    Table_MassProf_pot_Models = new double [row_Models];
-    Table_MassProf_derho_overdx_Models = new double [row_Models];
+    Table_MassProf_M_Models = new double [Models_massprofnbin];
+    Table_MassProf_rhodr_Models = new double [Models_massprofnbin];
+    Table_MassProf_g_Models = new double [Models_massprofnbin];
+    Table_MassProf_pot_Models = new double [Models_massprofnbin];
+    Table_MassProf_derho_overdx_Models = new double [Models_massprofnbin];
 
-    initialize_mass_UNKNOWN(row_Models);
-    initialize_pot_UNKNOWN(row_Models);
+    initialize_mass_UNKNOWN(Models_massprofnbin);
+    initialize_pot_UNKNOWN(Models_massprofnbin);
+    initialize_prob_dens();
   }
 
   else{
     Table_MassProf_r_Models = new double [Models_massprofnbin];
     Table_MassProf_M_Models = new double [Models_massprofnbin];
     Table_MassProf_rho_Models = new double [Models_massprofnbin];
-    Table_MassProf_rhodx_Models = new double [Models_massprofnbin];
+    Table_MassProf_rhodr_Models = new double [Models_massprofnbin];
     Table_MassProf_g_Models = new double [Models_massprofnbin];
     Table_MassProf_pot_Models = new double [Models_massprofnbin];
     Table_MassProf_derho_overdx_Models = new double [Models_massprofnbin];
-
+    
     initialize_mass_others();
     initialize_pot_others();
+    initialize_prob_dens();
   }
 
 
-  initialize_prob_dens();
+  
 }
-double Models_calculator::set_vel(double r){  
+double Models_calculator::set_vel(double x){  
   double index,sum=0;
-  double psi_per =-potential_Models(r);
+  double psi_per =-potential_Models(x);
   for(int k =0;k<size_Models;k++){
     if(psi[k]>psi_per){
       index =k-1;
@@ -554,6 +569,7 @@ double Models_calculator::set_vel(double r){
     }
     sum += prob_dens[k] *pow(psi_per-psi[k],0.5) *delta;
   }
+
   double sum_rad,sum_mes=0,par,psi_ass;
   int index_ass;
 
@@ -569,10 +585,11 @@ double Models_calculator::set_vel(double r){
     sum_mes += prob_dens[k] *pow(psi_per-psi[k],0.5) *delta;
   }
   psi_ass = psi[index_ass] +delta *par;
-  if(-2*(psi_ass+potential_Models(r))<0){
+  if(-2*(psi_ass+potential_Models(x))<0){
     return 0;
   }
-  double v =pow(-2*(psi_ass+potential_Models(r)),0.5);
+  double v =pow(-2*(psi_ass+potential_Models(x)),0.5);
+  
   return v;
 }  
 
@@ -592,7 +609,7 @@ double Models_calculator::set_vel_test(double r){
     Prob    = SQR(RanV)*pow( 1.0-SQR(RanV), 3.5 );  // < 0.1
   }
   while ( RanProb > Prob );
-
+  
   //       randomly set the velocity vector with the given amplitude (RanV*Vmax)
   return RanV*Vmax;
 }  

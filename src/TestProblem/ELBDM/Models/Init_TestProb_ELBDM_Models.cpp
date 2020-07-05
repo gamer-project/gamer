@@ -129,7 +129,7 @@ void SetParameter()
 
    //User Input
    string TestProb_FileName[Models_num] = {"Input__TestProb"};
-   string TypeNames[Models_num] = {"Plummer"};
+   string TypeNames[Models_num] = {"Einasto"};
    string Profile_FileName[Models_num] = {"NONE"};
    
    Models_Paras=new string[Models_num];

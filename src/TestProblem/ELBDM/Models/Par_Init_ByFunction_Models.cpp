@@ -1,12 +1,6 @@
 /***Total deep copy***/
 #include "GAMER.h"
-/**#include "NFW_calculator.h"
-#include "Plummer_calculator.h"
-#include"Burkert_calculator.h"
-#include"Jaffe_calculator.h"
-#include "Hernquist_calculator.h"
-#include "Einasto_calculator.h"
-#include"UNKNOWN_calculator.h"**/
+
 #include"Models_calculator.h"
 #define DEBUG
 #ifdef PARTICLE
@@ -70,13 +64,6 @@ static void   RanVec_FixRadius( const double r, double RanVec[] );
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, AllAttribute
 //-------------------------------------------------------------------------------------------------------
 Models_calculator cal_Models;
-/***NFW_calculator cal_NFW;//main
-Plummer_calculator cal_Plummer;
-Burkert_calculator cal_Burkert;
-Jaffe_calculator cal_Jaffe;
-Hernquist_calculator cal_Hernquist;
-Einasto_calculator cal_Einasto;
-UNKNOWN_calculator cal_UNKNOWN;***/
 void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRank,
                                   real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                   real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
@@ -193,14 +180,7 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
    //       velocity//main
 
             double a3=RanR/Models_R0[k];
-            if(model_name[k]=="Plummer")RanV = cal_Models.set_vel_test(a3);
-            /*if(model_name[k]=="NFW")RanV = cal_NFW.set_vel(a3); 
-            else if(model_name[k]=="Plummer")RanV = cal_Plummer.set_vel(a3);   
-            else if(model_name[k]=="Burkert")RanV = cal_Burkert.set_vel(a3);
-            else if(model_name[k]=="Jaffe")RanV = cal_Jaffe.set_vel(a3);    
-            else if(model_name[k]=="Hernquist")RanV = cal_Hernquist.set_vel(a3);      
-            else if(model_name[k]=="Einasto")RanV = cal_Einasto.set_vel(a3);     
-            else if(model_name[k]=="UNKNOWN")RanV = cal_UNKNOWN.set_vel(RanR);     */       
+            RanV = cal_Models.set_vel(a3);       
 
    //       randomly set the velocity vector with the given amplitude (RanV*Vmax)
             RanVec_FixRadius( RanV, RanVec );
@@ -300,16 +280,7 @@ double MassProf_Models( const double r ,string model_name,int k)
 {
    
    const double x = r / Models_R0[k];
-   return 4.0/3.0*M_PI*Models_Rho0[k]*CUBE(r)*pow( 1.0+x*x, -1.5 );
-
-   /*if     (model_name=="NFW"      )       return cal_NFW.set_mass(x);
-   else if(model_name=="Plummer"  )       return 4.0/3.0*M_PI*Models_Rho0[k]*CUBE(r)*pow( 1.0+x*x, -1.5 );
-   else if(model_name=="Burkert"  )       return cal_Burkert.set_mass(x);
-   else if(model_name=="Jaffe"    )       return cal_Jaffe.set_mass(x);
-   else if(model_name=="Hernquist")       return Models_Rho0[k] *pow(Models_R0[k],3) *pow(x/(1+x),2);
-   else if(model_name=="Einasto"  )       return cal_Einasto.set_mass(x);
-   else if(model_name=="UNKNOWN"  )       return cal_UNKNOWN.set_mass(r);*/
-   
+   return cal_Models.set_mass(x);
 } // FUNCTION : MassProf_Models
 
 

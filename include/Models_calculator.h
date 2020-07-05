@@ -39,6 +39,7 @@ class Models_calculator
         double slope(double* a,double* b,int start,int fin);
         void smooth_all(double* x,int start,int fin);
         double set_mass( double x );
+        double set_rho( double x );
         
     protected:
         
