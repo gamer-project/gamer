@@ -298,10 +298,24 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
          for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
          {
 //          determine which type of patches to be looped
-            if ( amr->patch[0][lv][PID]->son == -1 )
-               if ( PatchType == PATCH_NONLEAF )  continue;
-            else
-               if ( PatchType == PATCH_LEAF    )  continue;
+            switch ( PatchType )
+            {
+               case PATCH_LEAF:
+                  if ( amr->patch[0][lv][PID]->son != -1 )  continue;
+               break;
+
+               case PATCH_NONLEAF:
+                  if ( amr->patch[0][lv][PID]->son == -1 )  continue;
+               break;
+
+               case PATCH_BOTH:
+                  ;
+               break;
+
+               default:
+                  Aux_Error( ERROR_INFO, "unsupported patch type (%d) !!\n", PatchType );
+                  exit( 1 );
+            }
 
 
             const real (*FluidPtr)[PS1][PS1][PS1] = amr->patch[ FluSg ][lv][PID]->fluid;
