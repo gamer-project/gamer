@@ -19,16 +19,16 @@
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
 void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres,
                      EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
-real Hydro_CheckMinPres( const real InPres, const real MinPres );
 
 #endif // #ifdef __CUDACC__ ... else ...
 
 
 
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_RiemannSolver_HLLE
-// Description :  Approximate Riemann solver of Harten, Lax, and van Leer.
-//                Estimate the wave speed by Einfeldt et al. (1991).
+// Description :  Approximate Riemann solver of Harten, Lax, and van Leer using the
+//                wave-speed estimator of Einfeldt et al. (1991)
 //
 // Note        :  1. Input data should be conserved variables
 //                2. Ref : (a) Riemann Solvers and Numerical Methods for Fluid Dynamics - A Practical Introduction

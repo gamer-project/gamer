@@ -19,13 +19,13 @@
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
 void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres,
                      EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
-real Hydro_CheckMinPres( const real InPres, const real MinPres );
 void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
                     const bool NormPassive, const int NNorm, const int NormIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff,
                     EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
 
 #endif // #ifdef __CUDACC__ ... else ...
+
 
 
 

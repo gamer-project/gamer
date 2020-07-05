@@ -50,7 +50,6 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
                                const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
                                const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] );
 #endif
-real Hydro_CheckMinPres( const real InPres, const real MinPres );
 
 #endif // #ifdef __CUDACC__ ... else ...
 
