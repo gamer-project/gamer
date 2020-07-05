@@ -404,7 +404,7 @@ real dE_Upwind( const real FC_Ele_L, const real FC_Ele_R, const real FC_Mom, con
 
    real dE, CC_Ele_L, CC_Ele_R;  // CC_Ele_L/R: left/right cell-centered electric field
 
-// MAX_ERROR is defined in CUFLU.h
+// MAX_ERROR is defined in Macro.h
    if ( FABS(FC_Vel) <= MAX_ERROR )
    {
       CC_Ele_R = B_R1*V_R2 - B_R2*V_R1;

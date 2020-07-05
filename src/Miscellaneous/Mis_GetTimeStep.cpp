@@ -300,6 +300,12 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
    if ( dTime_min <= 0.0  ||  !Aux_IsFinite(dTime_min) )
       Aux_Error( ERROR_INFO, "incorrect time-step (dTime_min = %20.14e) !!\n", dTime_min );
 
+// time synchronization may fail if dt/t is close to the round-off error limit
+// --> e.g., temporal interpolation in Prepare_PatchData() may fail
+   if (  Mis_CompareRealValue( Time[lv]+dTime_min, Time[lv], NULL, false )  )
+      Aux_Error( ERROR_INFO, "time-step is too small (lv=%d, dt=%20.14e, t=%20.14e, dt/t=%20.14e, max_error=%20.14e) !!\n",
+                 lv, dTime_min, Time[lv], dTime_min/Time[lv], MAX_ERROR_DBL );
+
 
 
    delete [] dTime_Name;

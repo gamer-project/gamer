@@ -463,13 +463,7 @@ void Output_DumpData_Total( const char *FileName )
 #     endif
 
       const bool   waf_dissipate_uesless = NULL_BOOL;    // this variable no longer exists
-
-#     ifdef MAX_ERROR
       const double max_error             = MAX_ERROR;
-#     else
-      const double max_error             = NULL_REAL;
-#     endif
-
       const int    flu_block_size_x      = FLU_BLOCK_SIZE_X;
       const int    flu_block_size_y      = FLU_BLOCK_SIZE_Y;
 

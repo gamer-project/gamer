@@ -1268,9 +1268,7 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "CHECK_INTERMEDIATE",      check_intermediate,     CHECK_INTERMEDIATE,        NonFatal );
 #     endif
 
-#     ifdef MAX_ERROR
       CompareVar( "MAX_ERROR",               max_error,        (real)MAX_ERROR,                 NonFatal );
-#     endif
 
       if ( !enforce_positive )
          Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",

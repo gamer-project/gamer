@@ -107,6 +107,14 @@ void Validate()
          Aux_Message( stderr, "WARNING : it's recommended to enable DUAL_ENERGY for this test !!\n" );
 #     endif
 
+#     if ( !defined MHD  &&  RSOLVER != HLLC )
+         Aux_Message( stderr, "WARNING : it's recommended to adopt the HLLC Riemann solver for this test !!\n" );
+#     endif
+
+#     ifndef STAR_FORMATION
+         Aux_Message( stderr, "WARNING : STAR_FORMATION is disabled !!\n" );
+#     endif
+
 #     if ( MODEL == HYDRO )
       if ( MINMOD_COEFF > 1.5 )
          Aux_Message( stderr, "WARNING : it's recommended to set MINMOD_COEFF <= 1.5 for this test !!\n" );
