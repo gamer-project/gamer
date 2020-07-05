@@ -396,6 +396,8 @@ void Aux_TakeNote()
       fprintf( Note, "HLL_INCLUDE_ALL_WAVES           OFF\n" );
 #     endif
 
+      fprintf( Note, "HLLC_WAVESPEED                  %d\n",      HLLC_WAVESPEED );
+
 #     ifdef MHD
 #     ifdef EULERY
       fprintf( Note, "EULERY                          ON\n" );

@@ -240,6 +240,7 @@ struct SymConst_t
    int    CheckIntermediate;
    int    HLL_NoRefState;
    int    HLL_IncludeAllWaves;
+   int    HLLC_WaveSpeed;
 #  ifdef N_FC_VAR
    int    N_FC_Var;
 #  endif

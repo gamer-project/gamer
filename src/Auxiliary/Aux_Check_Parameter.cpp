@@ -605,6 +605,13 @@ void Aux_Check_Parameter()
 #     error : ERROR : unsupported equation of state (EOS_GAMMA/EOS_NUCLEAR/EOS_TABULAR/EOS_USER) !!
 #  endif
 
+#  if ( EOS != EOS_GAMMA )
+#   if ( HLLC_WAVESPEED == HLLC_WAVESPEED_ROE )
+#     error : ERROR : HLLC_WAVESPEED_ROE only works with EOS_GAMMA !!
+#   endif
+#  endif // if ( EOS != EOS_GAMMA )
+
+
 #  if ( EOS == EOS_NUCLEAR )
       Aux_Error( ERROR_INFO, "EOS_NUCLEAR is not supported yet !!\n" );
 #  endif

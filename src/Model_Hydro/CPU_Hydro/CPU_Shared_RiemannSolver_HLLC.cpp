@@ -32,7 +32,7 @@ real Hydro_CheckMinPres( const real InPres, const real MinPres );
 //
 // Note        :  1. Input data should be conserved variables
 //                2. Ref : a. Riemann Solvers and Numerical Methods for Fluid Dynamics - A Practical Introduction
-//                             ~ by Eleuterio F. Toro
+//                             ~ by Eleuterio F. Toro (1999)
 //                         b. Batten, P., Clarke, N., Lambert, C., & Causon, D. M. 1997, SIAM J. Sci. Comput.,
 //                            18, 1553
 //                3. This function is shared by MHM, MHM_RP, and CTU schemes
