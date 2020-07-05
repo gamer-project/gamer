@@ -67,7 +67,7 @@ extern void SetTempIntPara( const int lv, const int Sg_Current, const double Pre
 //                const int    SingleLv       = -1;
 //                const int    MaxLv          = -1;
 //                const int    PatchType      = PATCH_LEAF;
-//                const int    PrepTime       = -1.0;
+//                const double PrepTime       = -1.0;
 //
 //                Profile_t Prof_Dens, Prof_Pres;
 //                Profile_t *Prof[] = { &Prof_Dens, &Prof_Pres };
@@ -121,16 +121,6 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
       for (int v=0; v<NCOMP_TOTAL; v++)
          if ( TVarBitIdx[p] & (1L<<v) )   TFluIntIdx[p] = v;
    }
-
-//REVISE: quick solution to avoid call SetTempIntPara() at the beginning of simulation
-//        to be updated...
-   bool InclPot = false;
-
-   for (int p=0; p<NProf; p++)
-      if ( TVarBitIdx[p] == _POTE )   InclPot = true;
-
-   if ( InclPot  &&  ( PrepTime == 0.0 ) )
-      Aux_Error( ERROR_INFO, "Temporal interpolation for potential at t = 0 is not allowed !!\n" );
 
 
 // initialize the profile objects
@@ -222,74 +212,85 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
          const double dh = amr->dh[lv];
          const double dv = CUBE( dh );
 
-//       temporal interpolation parameters
-         bool FluIntTime;
-         int  FluSg, FluSg_IntT;
+//       determine temporal interpolation parameters
+//       fluid
+         bool FluIntTime = false;
+         int  FluSg      = amr->FluSg[lv];
+         int  FluSg_IntT;
          real FluWeighting, FluWeighting_IntT;
 
-//       fluid
          if ( PrepTime >= 0.0 )
          {
-            SetTempIntPara( lv, amr->FluSg[lv], PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1],
-                            FluIntTime, FluSg, FluSg_IntT, FluWeighting, FluWeighting_IntT );
+            if ( MIN( amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] ) >= 0.0 )
+            {
+               SetTempIntPara( lv, amr->FluSg[lv], PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1],
+                               FluIntTime, FluSg, FluSg_IntT, FluWeighting, FluWeighting_IntT );
+
+               if ( FluIntTime  &&  MPI_Rank == 0  &&  TID == 0 )
+                  Aux_Message( stderr, "WARNING : cannot determine FluSg "
+                                       "(lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e) !!\n",
+                               lv, PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
+            }
+
+            else
+               if ( MPI_Rank == 0  &&  TID == 0 )
+                  Aux_Message( stderr, "WARNING : Disable temporal interpolation since "
+                                       "one of the fluid arrays has not been initialized (lv %d)\n", lv );
          }
 
-         else
-         {
-            FluIntTime = false;
-            FluSg = amr->FluSg[lv];
-         }
-
-         if ( FluIntTime  &&  MPI_Rank == 0 )
-            Aux_Message( stderr, "WARNING : cannot determine FluSg "
-                                 "(lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e) !!\n",
-                         lv, PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
 
 //       magnetic field
 #        ifdef MHD
-         bool MagIntTime;
-         int  MagSg, MagSg_IntT;
+         bool MagIntTime = false;
+         int  MagSg      = amr->MagSg[lv];
+         int  MagSg_IntT;
          real MagWeighting, MagWeighting_IntT;
 
          if ( PrepTime >= 0.0 )
          {
-            SetTempIntPara( lv, amr->MagSg[lv], PrepTime, amr->MagSgTime[lv][0], amr->MagSgTime[lv][1],
-                            MagIntTime, MagSg, MagSg_IntT, MagWeighting, MagWeighting_IntT );
-         }
+            if ( MIN( amr->MagSgTime[lv][0], amr->MagSgTime[lv][1] ) >= 0.0 )
+            {
+               SetTempIntPara( lv, amr->MagSg[lv], PrepTime, amr->MagSgTime[lv][0], amr->MagSgTime[lv][1],
+                               MagIntTime, MagSg, MagSg_IntT, MagWeighting, MagWeighting_IntT );
 
-         else
-         {
-            MagIntTime = false;
-            MagSg = amr->MagSg[lv];
-         }
+               if ( MagIntTime  &&  MPI_Rank == 0  &&  TID == 0 )
+                  Aux_Message( stderr, "WARNING : cannot determine MagSg "
+                                       "(lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e) !!\n",
+                               lv, PrepTime, amr->MagSgTime[lv][0], amr->MagSgTime[lv][1] );
+            }
 
-         if ( MagIntTime  &&  MPI_Rank == 0 )
-            Aux_Message( stderr, "WARNING : cannot determine MagSg "
-                                 "(lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e) !!\n",
-                         lv, PrepTime, amr->MagSgTime[lv][0], amr->MagSgTime[lv][1] );
+            else
+               if ( MPI_Rank == 0  &&  TID == 0 )
+                  Aux_Message( stderr, "WARNING : Disable temporal interpolation since "
+                                       "one of the magnetic arrays has not been initialized (lv %d)\n", lv );
+         }
 #        endif // #ifdef MHD
 
 //       potential
 #        ifdef GRAVITY
-         bool PotIntTime;
-         int  PotSg, PotSg_IntT;
+         bool PotIntTime = false;
+         int  PotSg      = amr->PotSg[lv];
+         int  PotSg_IntT;
          real PotWeighting, PotWeighting_IntT;
 
-//REVISE: quick solution to avoid call SetTempIntPara() at the beginning of simulation
-//        to be updated...
-         if ( InclPot  &&  ( PrepTime >= 0.0 ) )
-            SetTempIntPara( lv, amr->PotSg[lv], PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1],
-                            PotIntTime, PotSg, PotSg_IntT, PotWeighting, PotWeighting_IntT );
-         else
+         if ( PrepTime >= 0.0 )
          {
-            PotIntTime = false;
-            PotSg = amr->PotSg[lv];
-         }
+            if ( MIN( amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] ) >= 0.0 )
+            {
+               SetTempIntPara( lv, amr->PotSg[lv], PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1],
+                               PotIntTime, PotSg, PotSg_IntT, PotWeighting, PotWeighting_IntT );
 
-         if ( PotIntTime  &&  MPI_Rank == 0 )
-            Aux_Message( stderr, "WARNING : cannot determine PotSg "
-                                 "(lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e) !!\n",
-                         lv, PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
+               if ( PotIntTime  &&  MPI_Rank == 0  &&  TID == 0 )
+                  Aux_Message( stderr, "WARNING : cannot determine PotSg "
+                                       "(lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e) !!\n",
+                               lv, PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
+            }
+
+            else
+               if ( MPI_Rank == 0  &&  TID == 0 )
+                  Aux_Message( stderr, "WARNING : Disable temporal interpolation since "
+                                       "one of the potential arrays has not been initialized (lv %d)\n", lv );
+         }
 #        endif // #ifdef GRAVITY
 
 
@@ -297,24 +298,11 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
          for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
          {
 //          determine which type of patches to be looped
-            switch ( PatchType )
-            {
-               case PATCH_LEAF:
-                  if ( amr->patch[0][lv][PID]->son != -1 )  continue;
-               break;
+            if ( amr->patch[0][lv][PID]->son == -1 )
+               if ( PatchType == PATCH_NONLEAF )  continue;
+            else
+               if ( PatchType == PATCH_LEAF    )  continue;
 
-               case PATCH_NONLEAF:
-                  if ( amr->patch[0][lv][PID]->son == -1 )  continue;
-               break;
-
-               case PATCH_BOTH:
-                  ;
-               break;
-
-               default:
-                  Aux_Error( ERROR_INFO, "unsupported patch type (%d) !!\n", PatchType );
-                  exit( 1 );
-            }
 
             const real (*FluidPtr)[PS1][PS1][PS1] = amr->patch[ FluSg ][lv][PID]->fluid;
 #           ifdef GRAVITY
@@ -440,8 +428,8 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                               const real EngyB      = NULL_REAL;
                               const real EngyB_IntT = NULL_REAL;
 #                             endif
-                              const real Pres   = ( FluIntTime )
-                                                ? FluWeighting     *Hydro_GetPressure( FluidPtr     [DENS][k][j][i],
+                              const real Pres = ( FluIntTime )
+                                              ?   FluWeighting     *Hydro_GetPressure( FluidPtr     [DENS][k][j][i],
                                                                                        FluidPtr     [MOMX][k][j][i],
                                                                                        FluidPtr     [MOMY][k][j][i],
                                                                                        FluidPtr     [MOMZ][k][j][i],
@@ -453,7 +441,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                                                                                        FluidPtr_IntT[MOMZ][k][j][i],
                                                                                        FluidPtr_IntT[ENGY][k][j][i],
                                                                                        Gamma_m1, false, NULL_REAL, EngyB_IntT )
-                                                :                   Hydro_GetPressure( FluidPtr     [DENS][k][j][i],
+                                              :                     Hydro_GetPressure( FluidPtr     [DENS][k][j][i],
                                                                                        FluidPtr     [MOMX][k][j][i],
                                                                                        FluidPtr     [MOMY][k][j][i],
                                                                                        FluidPtr     [MOMZ][k][j][i],
@@ -478,8 +466,8 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                               const real EngyB      = NULL_REAL;
                               const real EngyB_IntT = NULL_REAL;
 #                             endif
-                              const real Pres   = ( FluIntTime )
-                                                ? FluWeighting     *Hydro_GetPressure( FluidPtr     [DENS][k][j][i],
+                              const real Pres = ( FluIntTime )
+                                              ?   FluWeighting     *Hydro_GetPressure( FluidPtr     [DENS][k][j][i],
                                                                                        FluidPtr     [MOMX][k][j][i],
                                                                                        FluidPtr     [MOMY][k][j][i],
                                                                                        FluidPtr     [MOMZ][k][j][i],
@@ -491,13 +479,13 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                                                                                        FluidPtr_IntT[MOMZ][k][j][i],
                                                                                        FluidPtr_IntT[ENGY][k][j][i],
                                                                                        Gamma_m1, false, NULL_REAL, EngyB_IntT )
-                                                :                   Hydro_GetPressure( FluidPtr     [DENS][k][j][i],
+                                              :                     Hydro_GetPressure( FluidPtr     [DENS][k][j][i],
                                                                                        FluidPtr     [MOMX][k][j][i],
                                                                                        FluidPtr     [MOMY][k][j][i],
                                                                                        FluidPtr     [MOMZ][k][j][i],
                                                                                        FluidPtr     [ENGY][k][j][i],
                                                                                        Gamma_m1, false, NULL_REAL, EngyB );
-                              const real Eint   = Pres/Gamma_m1;  // assuming gamma law for now; will be replaced by a general EoS
+                              const real Eint = Pres/Gamma_m1;  // assuming gamma law for now; will be replaced by a general EoS
 
                               OMP_Data  [p][TID][bin] += Eint*Weight;
                               OMP_Weight[p][TID][bin] += Weight;
