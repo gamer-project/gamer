@@ -238,7 +238,6 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                                        "one of the fluid arrays has not been initialized (lv %d)\n", lv );
          }
 
-
 //       magnetic field
 #        ifdef MHD
          bool MagIntTime = false;
