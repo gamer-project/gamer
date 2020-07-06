@@ -435,7 +435,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                               const real Weight = dv;
 #                             ifdef MHD
                               const real EngyB      = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg      );
-                              const real EngyB_IntT = ( FluIntTime )
+                              const real EngyB_IntT = ( MagIntTime )
                                                     ? MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg_IntT )
                                                     : NULL_REAL;
 #                             else
@@ -473,7 +473,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                               const real Weight = dv;
 #                             ifdef MHD
                               const real EngyB      = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg      );
-                              const real EngyB_IntT = ( FluIntTime )
+                              const real EngyB_IntT = ( MagIntTime )
                                                     ? MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg_IntT )
                                                     : NULL_REAL;
 #                             else
