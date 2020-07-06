@@ -128,9 +128,10 @@ void SetParameter()
    Models_num = 1;//User Input
 
    //User Input
-   string TestProb_FileName[Models_num] = {"Input__TestProb"};
-   string TypeNames[Models_num] = {"Einasto"};
-   string Profile_FileName[Models_num] = {"NONE"};
+   string TestProb_FileName[Models_num] = {"Input__TestProb1","Input__TestProb2"};     //Test problem input parameter filenames
+   string TypeNames[Models_num] = {"Plummer","Plummer"};                               //Type of models 
+   string Profile_FileName[Models_num] = {"NONE","NONE"};                              //If your model type is "UNKNOWN", input the density profile filename in it; 
+                                                                                       //otherwise, it should be "NONE"
    
    Models_Paras=new string[Models_num];
    Models_Type=new string[Models_num];
@@ -189,14 +190,14 @@ for(int k=0;k<Models_num;k++){
       ReadPara->Add( "Models_BulkVelX",     &Models_BulkVel[k][0],    0.0,           NoMin_double,     NoMax_double      );
       ReadPara->Add( "Models_BulkVelY",     &Models_BulkVel[k][1],    0.0,           NoMin_double,     NoMax_double      );
       ReadPara->Add( "Models_BulkVelZ",     &Models_BulkVel[k][2],    0.0,           NoMin_double,     NoMax_double      );
-      ReadPara->Add( "Models_GasMFrac",     &Models_GasMFrac[k],      0.5,           Eps_double,       1.0               );
+      ReadPara->Add( "Models_GasMFrac",     &Models_GasMFrac[k],      0.001,           Eps_double,       1.0               );
       ReadPara->Add( "Models_MassProfNBin", &Models_MassProfNBin[k],  1000,          2,                NoMax_int         );
       ReadPara->Add( "Models_AddColor",     &Models_AddColor[k],      false,         Useless_bool,     Useless_bool      );
       if(Models_Type[k]=="Einasto")
          ReadPara->Add( "Models_Alpha",     &Models_Alpha[k],         1.0,           0.1,              10.0      );
       if(Models_Type[k]=="UNKNOWN"){
-         ReadPara->Add( "Models_r_col",     &Models_r_col[k],         0,           0,                NoMax_int         );
-         ReadPara->Add( "Models_rho_col",     &Models_rho_col[k],         1,           0,                NoMax_int         );
+         ReadPara->Add( "Models_r_col",     &Models_r_col[k],         0,            0,                   NoMax_int         );
+         ReadPara->Add( "Models_rho_col",   &Models_rho_col[k],       1,            0,                   NoMax_int         );
       }
       if(Models_Type[k]=="NFW" or "Burkert" or "Jaffe" or "Hernquist"){
          ReadPara->Add( "Models_truncation",     &Models_truncation[k],         false,            Useless_bool,     Useless_bool         );
