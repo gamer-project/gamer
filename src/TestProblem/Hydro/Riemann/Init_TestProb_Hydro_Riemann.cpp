@@ -18,6 +18,7 @@ const Riemann_t
   ,TORRILHON      = 7
   ,BRIO_WU        = 8
 #endif
+  ,NOH            = 9
   ;
 
 static Riemann_t Riemann_Prob;         // target Riemann problem
@@ -119,7 +120,7 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "Riemann_Prob",      &Riemann_Prob,          -1,            0,                8                 );
+   ReadPara->Add( "Riemann_Prob",      &Riemann_Prob,          -1,            0,                9                 );
    ReadPara->Add( "Riemann_LR",        &Riemann_LR,             1,            NoMin_int,        NoMax_int         );
    ReadPara->Add( "Riemann_XYZ",       &Riemann_XYZ,            0,            0,                2                 );
 
@@ -211,7 +212,16 @@ void SetParameter()
                             Riemann_Mag     = 0.75;
                             sprintf( Riemann_Name, "Torrilhon" );
                             break;
-#     endif
+#     endif // #ifdef MHD
+
+      case NOH            : Riemann_RhoL = 1.0;  Riemann_VelL = +1.0;  Riemann_PreL = 1.0e-6;  Riemann_VelL_T1 = 0.0;  Riemann_VelL_T2 = 0.0;
+                            Riemann_RhoR = 1.0;  Riemann_VelR = -1.0;  Riemann_PreR = 1.0e-6;  Riemann_VelR_T1 = 0.0;  Riemann_VelR_T2 = 0.0;
+                            Riemann_EndT = 0.5;
+#                           ifdef MHD
+                            Riemann_Mag = Riemann_MagL_T1 = Riemann_MagL_T2 = Riemann_MagR_T1 = Riemann_MagR_T2 = 0.0;
+#                           endif
+                            sprintf( Riemann_Name, "Noh's strong shock" );
+                            break;
 
       default : Aux_Error( ERROR_INFO, "unsupported Riemann problem (%d) !!\n", Riemann_Prob );
    } // switch ( Riemann_Prob )
@@ -220,7 +230,7 @@ void SetParameter()
    if ( Riemann_LR == 0 )  Aux_Error( ERROR_INFO, "Riemann_LR must not be zero !!\n" );
 
 #  ifdef MHD
-   if ( (int)Riemann_Prob <= SONIC_RARE )
+   if (  (int)Riemann_Prob != RJ2A  &&  (int)Riemann_Prob != TORRILHON  &&  (int)Riemann_Prob != BRIO_WU  )
       Aux_Message( stderr, "WARNING : B field is zero in the %s Riemann problem (Riemann_Prob = %d) !!\n",
                    Riemann_Name, Riemann_Prob );
 #  endif
