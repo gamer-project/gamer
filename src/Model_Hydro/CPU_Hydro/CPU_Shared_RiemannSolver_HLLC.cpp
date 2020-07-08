@@ -164,15 +164,11 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
 // 2b. use the primitive variable Riemann solver (PVRS)
 #  elif ( HLLC_WAVESPEED == HLLC_WAVESPEED_PVRS )
-   real Rho_PVRS, Cs_PVRS, RhoCs_PVRS, u_PVRS, P_PVRS, Gamma_SL, Gamma_SR, q_L, q_R;
-#  if ( EOS != EOS_GAMMA )
-   real Rho_Cs_PVRS, Rho_SL, Rho_SR, _P;
-#  endif
+   real Rho_PVRS, Cs_PVRS, RhoCs_PVRS, P_PVRS, Gamma_SL, Gamma_SR, q_L, q_R;
 
    Rho_PVRS    = _TWO*( L[0] + R[0] );
    Cs_PVRS     = _TWO*( Cs_L + Cs_R );
    RhoCs_PVRS  = Rho_PVRS * Cs_PVRS;
-   u_PVRS      = _TWO*(  ( u_L + u_R ) + ( P_L - P_R )/RhoCs_PVRS  );
    P_PVRS      = _TWO*(  ( P_L + P_R ) + ( u_L - u_R )*RhoCs_PVRS  );
    P_PVRS      = Hydro_CheckMinPres( P_PVRS, MinPres );
 
@@ -180,6 +176,9 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    Gamma_SL    = (real)EoS_AuxArray[0];
    Gamma_SR    = (real)EoS_AuxArray[0];
 #  else
+   real u_PVRS, Rho_Cs_PVRS, Rho_SL, Rho_SR, _P;
+
+   u_PVRS      = _TWO*(  ( u_L + u_R ) + ( P_L - P_R )/RhoCs_PVRS  );
    Rho_Cs_PVRS = Rho_PVRS / Cs_PVRS;
    Rho_SL      = L[0] + ( u_L - u_PVRS )*Rho_Cs_PVRS;
    Rho_SR      = R[0] + ( u_PVRS - u_R )*Rho_Cs_PVRS;
