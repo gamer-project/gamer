@@ -36,7 +36,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                      real g_PriVar   [][ CUBE(FLU_NXT) ],
                                      real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
                                      real g_Slope_PPM[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ],
-                               const bool Con2Pri, const int NIn, const int NGhost, const real Gamma,
+                               const bool Con2Pri, const real Gamma,
                                const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh, const real MinDens, const real MinPres,
                                const bool NormPassive, const int NNorm, const int NormIdx[],
@@ -355,7 +355,7 @@ void CPU_FluidSolver_MHM(
 //       1-a-5. evaluate the face-centered values by data reconstruction
 //              --> note that g_PriVar_Half_1PG[] returned by Hydro_RiemannPredict() stores the primitive variables
          Hydro_DataReconstruction( NULL, g_FC_Mag_Half_1PG, g_PriVar_Half_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
-                                   Con2Pri_No, N_HF_VAR, LR_GHOST_SIZE, Gamma, LR_Limiter, MinMod_Coeff, dt, dh,
+                                   Con2Pri_No, Gamma, LR_Limiter, MinMod_Coeff, dt, dh,
                                    MinDens, MinPres, NormPassive, NNorm, c_NormIdx, JeansMinPres, JeansMinPres_Coeff );
 
 
@@ -364,7 +364,7 @@ void CPU_FluidSolver_MHM(
 
 //       evaluate the face-centered values by data reconstruction
          Hydro_DataReconstruction( g_Flu_Array_In[P], NULL, g_PriVar_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
-                                   Con2Pri_Yes, FLU_NXT, LR_GHOST_SIZE, Gamma, LR_Limiter, MinMod_Coeff, dt, dh,
+                                   Con2Pri_Yes, Gamma, LR_Limiter, MinMod_Coeff, dt, dh,
                                    MinDens, MinPres, NormPassive, NNorm, c_NormIdx, JeansMinPres, JeansMinPres_Coeff );
 
 #        endif // #if ( FLU_SCHEME == MHM_RP ) ... else ...

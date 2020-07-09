@@ -143,12 +143,25 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                      real g_PriVar   [][ CUBE(FLU_NXT) ],
                                      real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
                                      real g_Slope_PPM[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ],
-                               const bool Con2Pri, const int NIn, const int NGhost, const real Gamma,
+                               const bool Con2Pri, const real Gamma,
                                const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh, const real MinDens, const real MinPres,
                                const bool NormPassive, const int NNorm, const int NormIdx[],
                                const bool JeansMinPres, const real JeansMinPres_Coeff )
 {
+
+//### NOTE: temporary solution to the bug in cuda 10.1 and 10.2 that incorrectly overwrites didx_cc[]
+#  if   ( FLU_SCHEME == MHM )
+   const int NIn    = FLU_NXT;
+#  elif ( FLU_SCHEME == MHM_RP )
+   const int NIn    = N_HF_VAR;
+#  elif ( FLU_SCHEME == CTU )
+   const int NIn    = FLU_NXT;
+#  else
+#  error : ERROR : unsupported FLU_SCHEME !!
+#  endif
+   const int NGhost = LR_GHOST_SIZE;
+
 
 // check
 #  ifdef GAMER_DEBUG
@@ -596,12 +609,25 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                      real g_PriVar   [][ CUBE(FLU_NXT) ],
                                      real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
                                      real g_Slope_PPM[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ],
-                               const bool Con2Pri, const int NIn, const int NGhost, const real Gamma,
+                               const bool Con2Pri, const real Gamma,
                                const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh, const real MinDens, const real MinPres,
                                const bool NormPassive, const int NNorm, const int NormIdx[],
                                const bool JeansMinPres, const real JeansMinPres_Coeff )
 {
+
+//### NOTE: temporary solution to the bug in cuda 10.1 and 10.2 that incorrectly overwrites didx_cc[]
+#  if   ( FLU_SCHEME == MHM )
+   const int NIn    = FLU_NXT;
+#  elif ( FLU_SCHEME == MHM_RP )
+   const int NIn    = N_HF_VAR;
+#  elif ( FLU_SCHEME == CTU )
+   const int NIn    = FLU_NXT;
+#  else
+#  error : ERROR : unsupported FLU_SCHEME !!
+#  endif
+   const int NGhost = LR_GHOST_SIZE;
+
 
 // check
 #  ifdef GAMER_DEBUG
