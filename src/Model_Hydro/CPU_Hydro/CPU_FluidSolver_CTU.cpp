@@ -25,8 +25,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                      real g_PriVar   [][ CUBE(FLU_NXT) ],
                                      real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
                                      real g_Slope_PPM[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ],
-                               const bool Con2Pri, const int NIn, const int NGhost,
-                               const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+                               const bool Con2Pri, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh,
                                const real MinDens, const real MinPres, const real MinEint,
                                const bool NormPassive, const int NNorm, const int NormIdx[],
@@ -270,7 +269,7 @@ void CPU_FluidSolver_CTU(
       {
 //       1. evaluate the face-centered values at the half time-step
          Hydro_DataReconstruction( g_Flu_Array_In[P], g_Mag_Array_In[P], g_PriVar_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
-                                   Con2Pri_Yes, FLU_NXT, LR_GHOST_SIZE, LR_Limiter, MinMod_Coeff, dt, dh,
+                                   Con2Pri_Yes, LR_Limiter, MinMod_Coeff, dt, dh,
                                    MinDens, MinPres, MinEint, NormPassive, NNorm, c_NormIdx,
                                    JeansMinPres, JeansMinPres_Coeff,
                                    EoS_DensEint2Pres_Func, EoS_DensPres2Eint_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray );
