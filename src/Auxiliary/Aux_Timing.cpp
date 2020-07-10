@@ -266,6 +266,7 @@ void Aux_Record_Timing()
          fprintf( File, "# -MPI_Real  : MPI for collecting particles from leaf patches in other ranks (included in Par_Coll)\n" );
          fprintf( File, "# -MPI_Sib   : MPI for collecting particles to sibling buffer patches (included in Par_Coll)\n" );
          fprintf( File, "# -MPI_FaSib : MPI for collecting particles to father-sibling buffer patches (included in Par_Coll)\n" );
+         fprintf( File, "# MPI_Grid   : Buf_Rho + Buf_Pot + Buf_Flu1 + Buf_Flu2 + Buf_Ref + Buf_Flux + Buf_Res + Buf_Che\n" );
          fprintf( File, "#--------------------------------------------------------------------------------------" );
          fprintf( File, "---------------------------------------\n\n" );
 
