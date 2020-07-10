@@ -151,8 +151,8 @@ FUNC_SPACE EoS_DP2C_t EoS_DensPres2CSqr_Ptr = EoS_DensPres2CSqr_Gamma;
 #ifdef __CUDACC__
 __host__
 void EoS_InitGPUFunc_Gamma( EoS_DE2P_t &EoS_DensEint2Pres_GPUPtr,
-                               EoS_DP2E_t &EoS_DensPres2Eint_GPUPtr,
-                               EoS_DP2C_t &EoS_DensPres2CSqr_GPUPtr )
+                            EoS_DP2E_t &EoS_DensPres2Eint_GPUPtr,
+                            EoS_DP2C_t &EoS_DensPres2CSqr_GPUPtr )
 {
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensEint2Pres_GPUPtr, EoS_DensEint2Pres_Ptr, sizeof(EoS_DE2P_t) )  );
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensPres2Eint_GPUPtr, EoS_DensPres2Eint_Ptr, sizeof(EoS_DP2E_t) )  );
@@ -162,8 +162,8 @@ void EoS_InitGPUFunc_Gamma( EoS_DE2P_t &EoS_DensEint2Pres_GPUPtr,
 #else // #ifdef __CUDACC__
 
 void EoS_InitCPUFunc_Gamma( EoS_DE2P_t &EoS_DensEint2Pres_CPUPtr,
-                               EoS_DP2E_t &EoS_DensPres2Eint_CPUPtr,
-                               EoS_DP2C_t &EoS_DensPres2CSqr_CPUPtr )
+                            EoS_DP2E_t &EoS_DensPres2Eint_CPUPtr,
+                            EoS_DP2C_t &EoS_DensPres2CSqr_CPUPtr )
 {
    EoS_DensEint2Pres_CPUPtr = EoS_DensEint2Pres_Ptr;
    EoS_DensPres2Eint_CPUPtr = EoS_DensPres2Eint_Ptr;
