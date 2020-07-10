@@ -7,47 +7,51 @@
 
 
 
-/**********************************************
-This file is shared by both CPU and GPU
+/********************************************************
+1. Ideal gas EoS with a constant adiabatic index (gamma)
 
-    CPU_EoS_Gamma.cpp
-    GPU_EoS_Gamma.cu
+2. This file is shared by both CPU and GPU
 
-Three steps are required to implement an EoS
+   GPU_EoS_Gamma.cu -> CPU_EoS_Gamma.cpp
 
-   I.   Specify EoS
-   II.  Set the CPU/GPU function pointers
-   III. Set the auxiliary array
-**********************************************/
+3. Three steps are required to implement an EoS
+
+   I.   Implement EoS conversion functions
+   II.  Set an EoS auxiliary array
+   III. Set EoS initialization functions
+********************************************************/
 
 
 
-// =====================================
-// I. Specify EoS
-// =====================================
+// =============================================
+// I. Implement EoS conversion functions
+//    (1) EoS_DensEint2Pres_*
+//    (2) EoS_DensPres2Eint_*
+//    (3) EoS_DensPres2CSqr_*
+// =============================================
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  EoS_DensEint2Pres_Gamma
-// Description :  Convert gas mass density and internal energy density to gas pressure using an ideal-gas EoS
+// Description :  Convert gas mass density and internal energy density to gas pressure
 //
 // Note        :  1. Internal energy density here is per unit volume instead of per unit mass
-//                2. Auxiliary array UserArray[] is set by EoS_InitAuxArray_Gamma(), where
-//                      UserArray[0] = gamma
-//                      UserArray[1] = gamma-1
-//                      UserArray[2] = 1/(gamma-1)
-//                      UserArray[3] = 1/gamma
+//                2. AuxArray[] is set by EoS_SetAuxArray_Gamma(), where
+//                      AuxArray[0] = gamma
+//                      AuxArray[1] = gamma-1
+//                      AuxArray[2] = 1/(gamma-1)
+//                      AuxArray[3] = 1/gamma
 //
-// Parameter   :  Dens      : Gas mass density
-//                Eint      : Gas internal energy density
-//                UserArray : User-provided auxiliary array (see the Note above)
+// Parameter   :  Dens     : Gas mass density
+//                Eint     : Gas internal energy density
+//                AuxArray : Auxiliary array (see the Note above)
 //
 // Return      :  Gas pressure
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_DensEint2Pres_Gamma( const real Dens, const real Eint, const double UserArray[] )
+static real EoS_DensEint2Pres_Gamma( const real Dens, const real Eint, const double AuxArray[] )
 {
 
-   const real Gamma_m1 = (real)UserArray[1];
+   const real Gamma_m1 = (real)AuxArray[1];
    real Pres;
 
    Pres = Eint * Gamma_m1;
@@ -60,21 +64,21 @@ static real EoS_DensEint2Pres_Gamma( const real Dens, const real Eint, const dou
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  EoS_DensPres2Eint_Gamma
-// Description :  Convert gas mass density and pressure to gas internal energy density using an ideal-gas EoS
+// Description :  Convert gas mass density and pressure to gas internal energy density
 //
 // Note        :  1. See EoS_DensEint2Pres_Gamma()
 //
-// Parameter   :  Dens      : Gas mass density
-//                Pres      : Gas pressure
-//                UserArray : User-provided auxiliary array (see the Note above)
+// Parameter   :  Dens     : Gas mass density
+//                Pres     : Gas pressure
+//                AuxArray : Auxiliary array (see the Note above)
 //
 // Return      :  Gas internal energy density
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_DensPres2Eint_Gamma( const real Dens, const real Pres, const double UserArray[] )
+static real EoS_DensPres2Eint_Gamma( const real Dens, const real Pres, const double AuxArray[] )
 {
 
-   const real _Gamma_m1 = (real)UserArray[2];
+   const real _Gamma_m1 = (real)AuxArray[2];
    real Eint;
 
    Eint = Pres * _Gamma_m1;
@@ -87,21 +91,21 @@ static real EoS_DensPres2Eint_Gamma( const real Dens, const real Pres, const dou
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  EoS_DensPres2CSqr_Gamma
-// Description :  Convert gas mass density and pressure to sound speed squared using an ideal-gas EoS
+// Description :  Convert gas mass density and pressure to sound speed squared
 //
 // Note        :  1. See EoS_DensEint2Pres_Gamma()
 //
-// Parameter   :  Dens      : Gas mass density
-//                Pres      : Gas pressure
-//                UserArray : User-provided auxiliary array (see the Note above)
+// Parameter   :  Dens     : Gas mass density
+//                Pres     : Gas pressure
+//                AuxArray : Auxiliary array (see the Note above)
 //
 // Return      :  Sound speed square
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_DensPres2CSqr_Gamma( const real Dens, const real Pres, const double UserArray[] )
+static real EoS_DensPres2CSqr_Gamma( const real Dens, const real Pres, const double AuxArray[] )
 {
 
-   const real Gamma = (real)UserArray[0];
+   const real Gamma = (real)AuxArray[0];
    real Cs2;
 
    Cs2 = Gamma * Pres / Dens;
@@ -112,9 +116,41 @@ static real EoS_DensPres2CSqr_Gamma( const real Dens, const real Pres, const dou
 
 
 
-// =====================================
-// II. Set the CPU/GPU function pointers
-// =====================================
+// =============================================
+// II. Set an EoS auxiliary array
+// =============================================
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  EoS_SetAuxArray_Gamma
+// Description :  Set the auxiliary array AuxArray[]
+//
+// Note        :  1. Invoked by EoS_Init_Gamma()
+//                2. AuxArray[] has the size of EOS_NAUX_MAX defined in Macro.h (default = 10)
+//                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
+//                4. Do not change the order of AuxArray[]
+//                   --> For example, the dual-energy routines assume AuxArray[0]=GAMMA
+//
+// Parameter   :  AuxArray : Array to be filled up
+//
+// Return      :  AuxArray[]
+//-------------------------------------------------------------------------------------------------------
+#ifndef __CUDACC__
+void EoS_SetAuxArray_Gamma( double AuxArray[] )
+{
+
+   AuxArray[0] = GAMMA;
+   AuxArray[1] = GAMMA - 1.0;
+   AuxArray[2] = 1.0 / ( GAMMA - 1.0 );
+   AuxArray[3] = 1.0 / GAMMA;
+
+} // FUNCTION : EoS_SetAuxArray_Gamma
+#endif // #ifndef __CUDACC__
+
+
+
+// =============================================
+// III. Set EoS initialization functions
+// =============================================
 
 #ifdef __CUDACC__
 #  define FUNC_SPACE __device__ static
@@ -126,15 +162,12 @@ FUNC_SPACE EoS_DE2P_t EoS_DensEint2Pres_Ptr = EoS_DensEint2Pres_Gamma;
 FUNC_SPACE EoS_DP2E_t EoS_DensPres2Eint_Ptr = EoS_DensPres2Eint_Gamma;
 FUNC_SPACE EoS_DP2C_t EoS_DensPres2CSqr_Ptr = EoS_DensPres2CSqr_Gamma;
 
-
-
 //-----------------------------------------------------------------------------------------
 // Function    :  EoS_InitCPU/GPUFunc_Gamma
-// Description :  Return the function pointers to the CPU/GPU EoS routines
+// Description :  Return the function pointers of the CPU/GPU EoS routines
 //
-// Note        :  1. Invoked by EoS_Init() when adopting EOS_GAMMA
-//                   --> By linking to the function pointers "EoS_InitCPU/GPUFunc_Ptr"
-//                2. Must obtain the CPU and GPU function pointers by separate routines
+// Note        :  1. Invoked by EoS_Init_Gamma()
+//                2. Must obtain the CPU and GPU function pointers by **separate** routines
 //                   since CPU and GPU functions are compiled completely separately in GAMER
 //                   --> In other words, a unified routine like the following won't work
 //
@@ -150,9 +183,9 @@ FUNC_SPACE EoS_DP2C_t EoS_DensPres2CSqr_Ptr = EoS_DensPres2CSqr_Gamma;
 //-----------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __host__
-void EoS_InitGPUFunc_Gamma( EoS_DE2P_t &EoS_DensEint2Pres_GPUPtr,
-                            EoS_DP2E_t &EoS_DensPres2Eint_GPUPtr,
-                            EoS_DP2C_t &EoS_DensPres2CSqr_GPUPtr )
+void EoS_SetGPUFunc_Gamma( EoS_DE2P_t &EoS_DensEint2Pres_GPUPtr,
+                           EoS_DP2E_t &EoS_DensPres2Eint_GPUPtr,
+                           EoS_DP2C_t &EoS_DensPres2CSqr_GPUPtr )
 {
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensEint2Pres_GPUPtr, EoS_DensEint2Pres_Ptr, sizeof(EoS_DE2P_t) )  );
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensPres2Eint_GPUPtr, EoS_DensPres2Eint_Ptr, sizeof(EoS_DP2E_t) )  );
@@ -161,9 +194,9 @@ void EoS_InitGPUFunc_Gamma( EoS_DE2P_t &EoS_DensEint2Pres_GPUPtr,
 
 #else // #ifdef __CUDACC__
 
-void EoS_InitCPUFunc_Gamma( EoS_DE2P_t &EoS_DensEint2Pres_CPUPtr,
-                            EoS_DP2E_t &EoS_DensPres2Eint_CPUPtr,
-                            EoS_DP2C_t &EoS_DensPres2CSqr_CPUPtr )
+void EoS_SetCPUFunc_Gamma( EoS_DE2P_t &EoS_DensEint2Pres_CPUPtr,
+                           EoS_DP2E_t &EoS_DensPres2Eint_CPUPtr,
+                           EoS_DP2C_t &EoS_DensPres2CSqr_CPUPtr )
 {
    EoS_DensEint2Pres_CPUPtr = EoS_DensEint2Pres_Ptr;
    EoS_DensPres2Eint_CPUPtr = EoS_DensPres2Eint_Ptr;
@@ -174,35 +207,41 @@ void EoS_InitCPUFunc_Gamma( EoS_DE2P_t &EoS_DensEint2Pres_CPUPtr,
 
 
 
-// =====================================
-// III. Set the auxiliary array
-// =====================================
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  EoS_InitAuxArray_Gamma
-// Description :  Set the auxiliary array EoS_AuxArray[] for an ideal-gas EoS
-//
-// Note        :  1. Invoked by EoS_Init() when adopting EOS_GAMMA
-//                   --> By linking to the function pointers "EoS_InitAuxArray_Ptr"
-//                2. AuxArray[] has the size of EOS_NAUX_MAX defined in Macro.h (default = 10)
-//                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
-//                4. Do not change the order of AuxArray[]
-//                   --> For example, the dual-energy routines assume AuxArray[0]=GAMMA
-//
-// Parameter   :  AuxArray : Array to be filled up
-//
-// Return      :  AuxArray[]
-//-------------------------------------------------------------------------------------------------------
 #ifndef __CUDACC__
-void EoS_InitAuxArray_Gamma( double AuxArray[] )
+
+// local function prototypes
+void EoS_SetAuxArray_Gamma( double [] );
+void EoS_SetCPUFunc_Gamma( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t & );
+#ifdef GPU
+void EoS_SetGPUFunc_Gamma( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t & );
+#endif
+
+//-----------------------------------------------------------------------------------------
+// Function    :  EoS_Init_Gamma
+// Description :  Initialize EoS
+//
+// Note        :  1. Set an auxiliary array by invoking EoS_SetAuxArray_*()
+//                   --> It will be copied to GPU automatically in CUAPI_SetConstMemory()
+//                2. Set the CPU/GPU EoS routines by invoking EoS_SetCPU/GPUFunc_*()
+//                3. Invoked by EoS_Init()
+//                   --> Enable it by linking to the function pointer "EoS_Init_Ptr"
+//                4. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-----------------------------------------------------------------------------------------
+void EoS_Init_Gamma()
 {
 
-   AuxArray[0] = GAMMA;
-   AuxArray[1] = GAMMA - 1.0;
-   AuxArray[2] = 1.0 / ( GAMMA - 1.0 );
-   AuxArray[3] = 1.0 / GAMMA;
+   EoS_SetAuxArray_Gamma( EoS_AuxArray );
+   EoS_SetCPUFunc_Gamma( EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr, EoS_DensPres2CSqr_CPUPtr );
+#  ifdef GPU
+   EoS_SetGPUFunc_Gamma( EoS_DensEint2Pres_GPUPtr, EoS_DensPres2Eint_GPUPtr, EoS_DensPres2CSqr_GPUPtr );
+#  endif
 
-} // FUNCTION : EoS_InitAuxArray_Gamma
+} // FUNCTION : EoS_Init_Gamma
+
 #endif // #ifndef __CUDACC__
 
 

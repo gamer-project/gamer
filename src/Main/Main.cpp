@@ -217,20 +217,18 @@ double                SF_CREATE_STAR_MAX_STAR_MFRAC;
 
 // (2-9) equation of state
 #if ( MODEL == HYDRO )
-// auxiliary array to be set by EoS_InitAuxArray_Ptr
+// auxiliary array
 double EoS_AuxArray[EOS_NAUX_MAX];
 
 // function pointers
-void (*EoS_InitAuxArray_Ptr)( double [] )                               = NULL;
-void (*EoS_InitCPUFunc_Ptr)( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t & ) = NULL;
-EoS_DE2P_t EoS_DensEint2Pres_CPUPtr                                     = NULL;
-EoS_DP2E_t EoS_DensPres2Eint_CPUPtr                                     = NULL;
-EoS_DP2C_t EoS_DensPres2CSqr_CPUPtr                                     = NULL;
+void (*EoS_Init_Ptr)();
+EoS_DE2P_t EoS_DensEint2Pres_CPUPtr = NULL;
+EoS_DP2E_t EoS_DensPres2Eint_CPUPtr = NULL;
+EoS_DP2C_t EoS_DensPres2CSqr_CPUPtr = NULL;
 #ifdef GPU
-void (*EoS_InitGPUFunc_Ptr)( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t & ) = NULL;
-EoS_DE2P_t EoS_DensEint2Pres_GPUPtr                                     = NULL;
-EoS_DP2E_t EoS_DensPres2Eint_GPUPtr                                     = NULL;
-EoS_DP2C_t EoS_DensPres2CSqr_GPUPtr                                     = NULL;
+EoS_DE2P_t EoS_DensEint2Pres_GPUPtr = NULL;
+EoS_DP2E_t EoS_DensPres2Eint_GPUPtr = NULL;
+EoS_DP2C_t EoS_DensPres2CSqr_GPUPtr = NULL;
 #endif
 #endif // HYDRO
 
