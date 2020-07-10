@@ -38,8 +38,8 @@ X1, Y1 = [], []
 X2, Y2 = [], []
 data = []
 
-data1 = np.loadtxt('ErrorMap1.dat')
-data2 = np.loadtxt('ErrorMap2.dat')
+data1 = np.loadtxt('ErrorMapURlimit.dat')
+data2 = np.loadtxt('ErrorMapNRlimit.dat')
 
 rho1_err       = data1[:,0]  
 Ux1_err        = data1[:,1]  
