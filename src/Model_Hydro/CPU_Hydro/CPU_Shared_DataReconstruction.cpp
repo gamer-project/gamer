@@ -1141,7 +1141,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #     if ( FLU_SCHEME == MHM )
 //    7. advance the face-centered variables by half time-step for the MHM integrator
       Hydro_HancockPredict( fc, dt, dh, g_ConVar, idx_cc, MinDens, MinPres, MinEint,
-                            EoS_DensEint2Pres, EoS_AuxArray[] );
+                            EoS_DensEint2Pres, EoS_AuxArray );
 #     endif
 
 

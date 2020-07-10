@@ -84,11 +84,11 @@ const real Gamma = EoS_AuxArray[0];
    const real BxL = Con_L[IdxBx];
    const real ByL = Con_L[IdxBy];
    const real BzL = Con_L[IdxBz];
-   const real BxR = Con_R[IdxBx];
    const real ByR = Con_R[IdxBy];
    const real BzR = Con_R[IdxBz];
 
 #  ifdef GAMER_DEBUG
+   const real BxR = Con_R[IdxBx];
    if ( BxL != BxR )
       printf( "ERROR : BxL (%24.17e) != BxR (%24.17e) for XYZ %d at file <%s>, line <%d>, function <%s>!!\n",
               BxL, BxR, XYZ, __FILE__, __LINE__, __FUNCTION__ );

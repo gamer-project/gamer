@@ -102,10 +102,10 @@ const real Gamma = EoS_AuxArray[0];
 // 2. evaluate the average values
    const real ZERO     = (real)0.0;
    const real ONE      = (real)1.0;
-   const real TWO      = (real)2.0;
    const real _TWO     = (real)0.5;
    const real Gamma_m1 = Gamma - ONE;
 #  ifdef MHD
+   const real TWO      = (real)2.0;
    const real Gamma_m2 = Gamma - TWO;
 #  endif
 

@@ -262,13 +262,13 @@ void CPU_FluidSolver_MHM(
 #  else
    const bool CorrHalfVel          = false;
 #  endif
-   const bool CorrHalfVel_No       = false;
 #  if   ( FLU_SCHEME == MHM )
    const bool Con2Pri_Yes          = true;
 #  elif ( FLU_SCHEME == MHM_RP )
    const bool Con2Pri_No           = false;
 #  endif
 #  ifdef MHD
+   const bool CorrHalfVel_No       = false;
    const bool StoreElectric_No     = false;
 #  endif
 #  if ( defined __CUDACC__  &&  !defined GRAVITY )
@@ -297,18 +297,17 @@ void CPU_FluidSolver_MHM(
       real (*const g_PriVar_1PG   )                      [ CUBE(FLU_NXT)     ] = g_PriVar   [array_idx];
       real (*const g_Slope_PPM_1PG)[NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ] = g_Slope_PPM[array_idx];
 
+#     if ( FLU_SCHEME == MHM_RP )
+      real (*const g_Flux_Half_1PG)[NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ] = g_FC_Flux_1PG;
+      real (*const g_PriVar_Half_1PG )                   [ CUBE(FLU_NXT)   ] = g_PriVar_1PG;
+
 #     ifdef MHD
       real (*const g_FC_Mag_Half_1PG)[ FLU_NXT_P1*SQR(FLU_NXT) ] = g_FC_Mag_Half[array_idx];
       real (*const g_EC_Ele_1PG     )[ CUBE(N_EC_ELE)          ] = g_EC_Ele     [array_idx];
 #     else
       real (*const g_FC_Mag_Half_1PG)[ FLU_NXT_P1*SQR(FLU_NXT) ] = NULL;
-      real (*const g_EC_Ele_1PG     )[ CUBE(N_EC_ELE)          ] = NULL;
 #     endif
-
-#     if ( FLU_SCHEME == MHM_RP )
-      real (*const g_Flux_Half_1PG)[NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ] = g_FC_Flux_1PG;
-      real (*const g_PriVar_Half_1PG )                   [ CUBE(FLU_NXT)   ] = g_PriVar_1PG;
-#     endif
+#     endif // if ( FLU_SCHEME == MHM_RP )
 
 
 //    loop over all patch groups

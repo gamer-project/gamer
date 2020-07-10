@@ -148,9 +148,9 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    Cs_Roe   = SQRT( Cs2_Roe );
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( Hydro_CheckNegative(GammaP_Rho) )
-      printf( "ERROR : invalid GammaP_Rho (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              GammaP_Rho, __FILE__, __LINE__, __FUNCTION__ );
+   if ( Hydro_CheckNegative(Cs2_Roe) )
+      printf( "ERROR : invalid Cs2_Roe (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              Cs2_Roe, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
 // maximum and minimum eigenvalues
@@ -191,6 +191,16 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    q_R = ( P_PVRS <= P_R ) ? ONE : SQRT(  ONE + _TWO*( Gamma_SR + ONE )/Gamma_SR*( P_PVRS/P_R - ONE )  );
    W_L = u_L - Cs_L*q_L;
    W_R = u_R + Cs_R*q_R;
+
+#  ifdef CHECK_NEGATIVE_IN_FLUID
+   if ( Hydro_CheckNegative(q_L) )
+      printf( "ERROR : invalid q_L (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              q_L, __FILE__, __LINE__, __FUNCTION__ );
+
+   if ( Hydro_CheckNegative(q_R) )
+      printf( "ERROR : invalid q_R (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              q_R, __FILE__, __LINE__, __FUNCTION__ );
+#  endif
 
 
 #  else
