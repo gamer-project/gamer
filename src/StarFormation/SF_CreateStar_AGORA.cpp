@@ -1,13 +1,9 @@
 #include "GAMER.h"
 
-#if (  defined PARTICLE  &&  defined STAR_FORMATION  &&  ( MODEL==HYDRO || MODEL==MHD )  )
+#if ( defined PARTICLE  &&  defined STAR_FORMATION  &&  MODEL == HYDRO )
 
 
 #ifdef GRAVITY
-#include "CUPOT.h"
-extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
-extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
-#endif
 
 
 
@@ -240,19 +236,19 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 //       external potential (currently useful only for ELBDM; always work with OPT__GRAVITY_TYPE == GRAVITY_SELF)
          if ( OPT__EXTERNAL_POT )
          {
-            pot_xm += ExternalPot( x-dh, y,    z,    TimeNew, ExtPot_AuxArray );
-            pot_xp += ExternalPot( x+dh, y,    z,    TimeNew, ExtPot_AuxArray );
-            pot_ym += ExternalPot( x,    y-dh, z,    TimeNew, ExtPot_AuxArray );
-            pot_yp += ExternalPot( x,    y+dh, z,    TimeNew, ExtPot_AuxArray );
-            pot_zm += ExternalPot( x,    y,    z-dh, TimeNew, ExtPot_AuxArray );
-            pot_zp += ExternalPot( x,    y,    z+dh, TimeNew, ExtPot_AuxArray );
+            pot_xm += CPUExtPot_Ptr( x-dh, y,    z,    TimeNew, ExtPot_AuxArray );
+            pot_xp += CPUExtPot_Ptr( x+dh, y,    z,    TimeNew, ExtPot_AuxArray );
+            pot_ym += CPUExtPot_Ptr( x,    y-dh, z,    TimeNew, ExtPot_AuxArray );
+            pot_yp += CPUExtPot_Ptr( x,    y+dh, z,    TimeNew, ExtPot_AuxArray );
+            pot_zm += CPUExtPot_Ptr( x,    y,    z-dh, TimeNew, ExtPot_AuxArray );
+            pot_zp += CPUExtPot_Ptr( x,    y,    z+dh, TimeNew, ExtPot_AuxArray );
          }
 
 //       external acceleration (currently useful only for HYDRO)
          real GasAcc[3] = { (real)0.0, (real)0.0, (real)0.0 };
 
          if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
-            ExternalAcc( GasAcc, x, y, z, TimeNew, ExtAcc_AuxArray );
+            CPUExtAcc_Ptr( GasAcc, x, y, z, TimeNew, ExtAcc_AuxArray );
 
 //       self-gravity
          if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
@@ -334,4 +330,4 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 
 
 
-#endif // #if (  defined PARTICLE  &&  defined STAR_FORMATION  &&  ( MODEL==HYDRO || MODEL==MHD )  )
+#endif // #if ( defined PARTICLE  &&  defined STAR_FORMATION  &&  MODEL == HYDRO )

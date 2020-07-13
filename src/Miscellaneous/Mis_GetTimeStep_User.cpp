@@ -1,17 +1,17 @@
 #include "GAMER.h"
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
-double Mis_GetTimeStep_User( const int lv, const double dTime_dt );
+double Mis_GetTimeStep_User_Template( const int lv, const double dTime_dt );
 
-// this function pointer may be overwritten by various test problem initializers
-double (*Mis_GetTimeStep_User_Ptr)( const int lv, const double dTime_dt ) = Mis_GetTimeStep_User;
+// this function pointer must be set by a test problem initializer
+double (*Mis_GetTimeStep_User_Ptr)( const int lv, const double dTime_dt ) = NULL;
 
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Mis_GetTimeStep_User
-// Description :  User-defined criteria to estimate the evolution time-step
+// Function    :  Mis_GetTimeStep_User_Template
+// Description :  Template of user-defined criteria to estimate the evolution time-step
 //
 // Note        :  1. This function should be applied to both physical and comoving coordinates and always
 //                   return the evolution time-step (dt) actually used in various solvers
@@ -19,9 +19,8 @@ double (*Mis_GetTimeStep_User_Ptr)( const int lv, const double dTime_dt ) = Mis_
 //                       Comoving coordinates : dt = delta(scale_factor) / ( Hubble_parameter*scale_factor^3 )
 //                   --> We convert dt back to the physical time interval, which equals "delta(scale_factor)"
 //                       in the comoving coordinates, in Mis_GetTimeStep()
-//                2. Invoked by "Mis_GetTimeStep_Check" using the function pointer "Mis_GetTimeStep_User_Ptr"
-//                   --> The function pointer may be reset by various test problem initializers, in which case
-//                       this funtion will become useless
+//                2. Invoked by Mis_GetTimeStep() using the function pointer "Mis_GetTimeStep_User_Ptr",
+//                   which must be set by a test problem initializer
 //                3. Enabled by the runtime option "OPT__DT_USER"
 //
 // Parameter   :  lv       : Target refinement level
@@ -29,7 +28,7 @@ double (*Mis_GetTimeStep_User_Ptr)( const int lv, const double dTime_dt ) = Mis_
 //
 // Return      :  dt
 //-------------------------------------------------------------------------------------------------------
-double Mis_GetTimeStep_User( const int lv, const double dTime_dt )
+double Mis_GetTimeStep_User_Template( const int lv, const double dTime_dt )
 {
 
 // put your favorite time-step criteria here
@@ -51,5 +50,5 @@ double Mis_GetTimeStep_User( const int lv, const double dTime_dt )
 
    return dt_user;
 
-} // FUNCTION : Mis_GetTimeStep_User
+} // FUNCTION : Mis_GetTimeStep_User_Template
 

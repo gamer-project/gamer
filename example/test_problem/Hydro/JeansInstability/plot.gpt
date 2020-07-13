@@ -1,0 +1,82 @@
+reset
+
+
+# target files
+# -----------------------------------------------------------
+FILE_IN_PREFIX  = 'Jeans_Dens'
+FILE_IN_SUFFIX  = ''
+FILE_OUT_PREFIX = 'Fig__Jeans_Dens'
+START_ID        = 0
+END_ID          = 10
+DELTA_ID        = 1
+PAUSE           = -1.0  # <= 0.0 --> mouse
+
+
+# terminal
+# -----------------------------------------------------------
+ set term x11 enhanced
+#set term png enhanced crop size 1280,800
+#set term postscript eps enhanced color 'Helvetica' 16
+
+
+# plot style
+# -----------------------------------------------------------
+#set log xy
+ set key reverse Left spacing 2 right
+#set key reverse Left spacing 1 at first 1.5e2, 1e8
+ set xlabel "r"
+ set ylabel "Density"
+#set format x "10^{%T}"
+#set format y "10^{%T}"
+#set pointsize 1.0
+#set size square
+#set xrange [3.0e-2:1e2]
+#set yrange [1-6e-5:1+6e-5]
+
+
+# set the output file extension automatically
+# -----------------------------------------------------------
+if      ( GPVAL_TERM eq 'pngcairo'   ) FILE_OUT_EXT='png'; \
+else if ( GPVAL_TERM eq 'postscript' ) FILE_OUT_EXT='eps'; \
+else if ( GPVAL_TERM ne 'x11'        ) print 'Unkown terminal for settting the output file extension !!'; quit
+
+
+
+# loop over all files
+# -----------------------------------------------------------
+print "Start plotting ..."
+
+do for [ID=START_ID:END_ID:DELTA_ID] {
+
+#  set the input and output filenames
+   FILE_IN = sprintf( '%s_%06d%s', FILE_IN_PREFIX, ID, FILE_IN_SUFFIX )
+
+   if ( GPVAL_TERM ne 'x11' ) { set output sprintf( '%s_%06d.%s', FILE_OUT_PREFIX, ID, FILE_OUT_EXT ) }
+
+
+#  load the physical time
+   DUMP_TABLE   = './Record__Dump'
+   NHEADER      = 1
+   LOAD_TIME    = sprintf( "awk '{if(NR==%d+%d) {print $2}}' %s", NHEADER, ID+1, DUMP_TABLE  )
+   TIME         = system( LOAD_TIME )*1.0    # *1.0 --> convert string to number
+
+
+#  set title
+   set title sprintf( 'DataID %06d (t = %5.2f)', ID, TIME )
+   print sprintf( '   Plotting DataID %06d (t = %5.2f) ...', ID, TIME )
+
+
+#  plot
+   plot FILE_IN u 1:2 w lp pt 6 lc 6 title 'Simulation' \
+       ,FILE_IN u 1:3 w lp pt 8 lc 7 title 'Analytical'
+
+
+   if ( GPVAL_TERM eq 'x11' ) { if ( PAUSE <= 0.0 ) { pause mouse }   else { pause PAUSE } };
+
+} #do for [ID=START_ID:END_ID:DELTA_ID]
+
+
+print "Done";
+if ( GPVAL_TERM eq 'x11' ) { pause -1 };
+
+

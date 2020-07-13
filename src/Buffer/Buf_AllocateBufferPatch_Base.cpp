@@ -56,14 +56,14 @@ void Buf_AllocateBufferPatch_Base( AMR_t *Tamr )
       for (int j=0; j<loop_size[1]; j++)     {  Cr[1] = Cr0[1] + j*2*Width;
       for (int i=0; i<loop_size[0]; i++)     {  Cr[0] = Cr0[0] + i*2*Width;
 
-         Tamr->pnew( 0, Cr[0],       Cr[1],       Cr[2],       -1, AllocData[0], AllocData[0] );
-         Tamr->pnew( 0, Cr[0]+Width, Cr[1],       Cr[2],       -1, AllocData[1], AllocData[1] );
-         Tamr->pnew( 0, Cr[0],       Cr[1]+Width, Cr[2],       -1, AllocData[2], AllocData[2] );
-         Tamr->pnew( 0, Cr[0],       Cr[1],       Cr[2]+Width, -1, AllocData[3], AllocData[3] );
-         Tamr->pnew( 0, Cr[0]+Width, Cr[1]+Width, Cr[2],       -1, AllocData[4], AllocData[4] );
-         Tamr->pnew( 0, Cr[0],       Cr[1]+Width, Cr[2]+Width, -1, AllocData[5], AllocData[5] );
-         Tamr->pnew( 0, Cr[0]+Width, Cr[1],       Cr[2]+Width, -1, AllocData[6], AllocData[6] );
-         Tamr->pnew( 0, Cr[0]+Width, Cr[1]+Width, Cr[2]+Width, -1, AllocData[7], AllocData[7] );
+         Tamr->pnew( 0, Cr[0],       Cr[1],       Cr[2],       -1, AllocData[0], AllocData[0], AllocData[0] );
+         Tamr->pnew( 0, Cr[0]+Width, Cr[1],       Cr[2],       -1, AllocData[1], AllocData[1], AllocData[1] );
+         Tamr->pnew( 0, Cr[0],       Cr[1]+Width, Cr[2],       -1, AllocData[2], AllocData[2], AllocData[2] );
+         Tamr->pnew( 0, Cr[0],       Cr[1],       Cr[2]+Width, -1, AllocData[3], AllocData[3], AllocData[3] );
+         Tamr->pnew( 0, Cr[0]+Width, Cr[1]+Width, Cr[2],       -1, AllocData[4], AllocData[4], AllocData[4] );
+         Tamr->pnew( 0, Cr[0],       Cr[1]+Width, Cr[2]+Width, -1, AllocData[5], AllocData[5], AllocData[5] );
+         Tamr->pnew( 0, Cr[0]+Width, Cr[1],       Cr[2]+Width, -1, AllocData[6], AllocData[6], AllocData[6] );
+         Tamr->pnew( 0, Cr[0]+Width, Cr[1]+Width, Cr[2]+Width, -1, AllocData[7], AllocData[7], AllocData[7] );
 
          Tamr->NPatchComma[0][s+2] += 8;
 

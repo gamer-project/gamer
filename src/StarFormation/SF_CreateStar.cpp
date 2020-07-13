@@ -67,7 +67,7 @@ void SF_CreateStar( const int lv, const real TimeNew, const real dt )
 // invoke the target star-formation method
    switch ( SF_CREATE_STAR_SCHEME )
    {
-#     if ( MODEL==HYDRO  ||  MODEL==MHD )
+#     if ( MODEL == HYDRO )
       case SF_CREATE_STAR_SCHEME_AGORA:   SF_CreateStar_AGORA( lv, TimeNew, dt, RNG, SF_CREATE_STAR_MIN_GAS_DENS,
                                                                SF_CREATE_STAR_MASS_EFF, SF_CREATE_STAR_MIN_STAR_MASS,
                                                                SF_CREATE_STAR_MAX_STAR_MFRAC, SF_CREATE_STAR_DET_RANDOM,

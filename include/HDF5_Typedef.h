@@ -54,6 +54,9 @@ struct KeyInfo_t
    int    BoxScale[3];
    int    NPatch   [NLEVEL];
    int    CellScale[NLEVEL];        // amr->scale[lv]
+#  if ( MODEL == HYDRO )
+   int    Magnetohydrodynamics;
+#  endif
 
    long   Step;
    long   AdvanceCounter[NLEVEL];
@@ -125,9 +128,7 @@ struct Makefile_t
    int RSolver;
 #  endif
    int DualEnergy;
-
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
+   int Magnetohydrodynamics;
 
 #  elif ( MODEL == ELBDM )
    int ConserveMass;
@@ -175,6 +176,7 @@ struct SymConst_t
 
    double TinyNumber;
    double HugeNumber;
+   double MaxError;
 
 
 #  ifdef GRAVITY
@@ -187,7 +189,8 @@ struct SymConst_t
    int    Rho_Nxt;
 
 #  ifdef UNSPLIT_GRAVITY
-   int    USG_GhostSize;
+   int    USG_GhostSizeF;
+   int    USG_GhostSizeG;
    int    USG_NxtF;
    int    USG_NxtG;
 #  endif
@@ -222,6 +225,12 @@ struct SymConst_t
 #  endif
 
 
+   int    BitRep_Flux;
+#  ifdef MHD
+   int    BitRep_Electric;
+#  endif
+
+
 #  if   ( MODEL == HYDRO )
    int    Flu_BlockSize_x;
    int    Flu_BlockSize_y;
@@ -230,24 +239,15 @@ struct SymConst_t
    int    CheckIntermediate;
    int    HLL_NoRefState;
    int    HLL_IncludeAllWaves;
-
 #  ifdef N_FC_VAR
    int    N_FC_Var;
 #  endif
-
 #  ifdef N_SLOPE_PPM
    int    N_Slope_PPM;
 #  endif
-
-#  ifdef MAX_ERROR
-   double MaxError;
+#  ifdef MHD
+   int    EulerY;
 #  endif
-
-#  elif ( MODEL == MHD )
-   int    Flu_BlockSize_x;
-   int    Flu_BlockSize_y;
-#  warning : WAIT MHD !!!
-
 
 #  elif  ( MODEL == ELBDM )
    int    Flu_BlockSize_x;
@@ -299,6 +299,9 @@ struct InputPara_t
    double Unit_D;
    double Unit_E;
    double Unit_P;
+#  ifdef MHD
+   double Unit_B;
+#  endif
 
 // boundary condition
    int    Opt__BC_Flu[6];
@@ -367,6 +370,9 @@ struct InputPara_t
    int    Opt__Flag_PresGradient;
    int    Opt__Flag_Vorticity;
    int    Opt__Flag_Jeans;
+#  ifdef MHD
+   int    Opt__Flag_Current;
+#  endif
 #  endif
 #  if ( MODEL == ELBDM )
    int    Opt__Flag_EngyDensity;
@@ -424,22 +430,28 @@ struct InputPara_t
    int    ELBDM_Taylor3_Auto;
 #  endif
 
-// fluid solvers in both HYDRO/MHD/ELBDM
+// fluid solvers in different models
    int    Flu_GPU_NPGroup;
    int    GPU_NStream;
    int    Opt__FixUp_Flux;
+#  ifdef MHD
+   int    Opt__FixUp_Electric;
+#  endif
    int    Opt__FixUp_Restrict;
    int    Opt__CorrAfterAllSync;
    int    Opt__NormalizePassive;
    int    NormalizePassive_NVar;
    int    NormalizePassive_VarIdx[NCOMP_PASSIVE];
    char  *FieldLabel[NCOMP_TOTAL];
+#  ifdef MHD
+   char  *MagLabel[NCOMP_MAG];
+#  endif
    int    Opt__OverlapMPI;
    int    Opt__ResetFluid;
-#  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+#  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    double MinDens;
 #  endif
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( MODEL == HYDRO )
    double MinPres;
    int    JeansMinPres;
    int    JeansMinPres_Level;
@@ -481,6 +493,9 @@ struct InputPara_t
    int    Grackle_PE_Heating;
    double Grackle_PE_HeatingRate;
    char  *Grackle_CloudyTable;
+   int    Grackle_ThreeBodyRate;
+   int    Grackle_CIE_Cooling;
+   int    Grackle_H2_OpaApprox;
    int    Che_GPU_NPGroup;
 #  endif
 
@@ -510,6 +525,9 @@ struct InputPara_t
    int    Opt__InitGridWithOMP;
    int    Opt__GPUID_Select;
    int    Init_Subsampling_NCell;
+#  ifdef MHD
+   int    Opt__InitBFieldByFile;
+#  endif
 
 // interpolation schemes
    int    Opt__Int_Time;
@@ -517,13 +535,15 @@ struct InputPara_t
    int    Opt__Int_Phase;
 #  endif
    int    Opt__Flu_IntScheme;
+   int    Opt__RefFlu_IntScheme;
+#  ifdef MHD
+   int    Opt__Mag_IntScheme;
+   int    Opt__RefMag_IntScheme;
+#  endif
 #  ifdef GRAVITY
    int    Opt__Pot_IntScheme;
    int    Opt__Rho_IntScheme;
    int    Opt__Gra_IntScheme;
-#  endif
-   int    Opt__RefFlu_IntScheme;
-#  ifdef GRAVITY
    int    Opt__RefPot_IntScheme;
 #  endif
    double IntMonoCoeff;
@@ -537,6 +557,9 @@ struct InputPara_t
 #  endif
    int    Opt__Output_BasePS;
    int    Opt__Output_Base;
+#  ifdef MHD
+   int    Opt__Output_CC_Mag;
+#  endif
 #  ifdef GRAVITY
    int    Opt__Output_Pot;
 #  endif
@@ -580,6 +603,10 @@ struct InputPara_t
 #  ifdef PARTICLE
    int    Opt__Ck_Particle;
 #  endif
+#  ifdef MHD
+   int    Opt__Ck_InterfaceB;
+   int    Opt__Ck_DivergenceB;
+#  endif
 
 // flag tables
    double FlagTable_Rho         [NLEVEL-1];
@@ -590,6 +617,9 @@ struct InputPara_t
    double FlagTable_PresGradient[NLEVEL-1];
    double FlagTable_Vorticity   [NLEVEL-1];
    double FlagTable_Jeans       [NLEVEL-1];
+#  ifdef MHD
+   double FlagTable_Current     [NLEVEL-1];
+#  endif
 #  elif ( MODEL == ELBDM )
    double FlagTable_EngyDensity [NLEVEL-1][2];
 #  endif
@@ -609,7 +639,7 @@ struct InputPara_t
 //
 // Note        :  1. Synchronization is accomplished by first opening the target file with the "appending" mode
 //                   and then close it immediately
-//                3. It's an inline function
+//                2. It's an inline function
 //
 // Parameter   :  FileName : Target file name
 //-------------------------------------------------------------------------------------------------------

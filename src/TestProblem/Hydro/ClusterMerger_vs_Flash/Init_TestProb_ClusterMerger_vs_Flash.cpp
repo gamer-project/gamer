@@ -359,17 +359,9 @@ void Init_TestProb_Hydro_ClusterMerger_vs_Flash()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr   = SetGridIC;
-   Output_User_Ptr          = NULL;
-   Flag_User_Ptr            = NULL;
-   Mis_GetTimeStep_User_Ptr = NULL;
-   Aux_Record_User_Ptr      = NULL;
-   BC_User_Ptr              = NULL;
-   Flu_ResetByUser_Func_Ptr = NULL;
-   End_User_Ptr             = End_ClusterMerger;
-   Init_ExternalAcc_Ptr     = NULL;
-   Init_ExternalPot_Ptr     = NULL;
-   Par_Init_ByFunction_Ptr  = Par_Init_ByFunction_Merger;
+   Init_Function_User_Ptr  = SetGridIC;
+   End_User_Ptr            = End_ClusterMerger;
+   Par_Init_ByFunction_Ptr = Par_Init_ByFunction_Merger;
 #  endif // if ( MODEL == HYDRO  &&  defined PARTICLE )
 
 

@@ -26,7 +26,7 @@ END_STEP                     -1           # end step (<0=auto -> must be set by 
 # test problems
 TESTPROB_ID                   0           # test problem ID [0]
                                           #    0: none
-                                          #    1: HYDRO blast wave
+                                          #    1: HYDRO blast wave [+MHD]
                                           #    2: HYDRO acoustic wave
                                           #    3: HYDRO Bondi accretion (+GRAVITY)
                                           #    4: HYDRO cluster merger vs. Flash (+GRAVITY & PARTICLE)
@@ -34,10 +34,14 @@ TESTPROB_ID                   0           # test problem ID [0]
                                           #    6: HYDRO caustic wave
                                           #    7: HYDRO spherical collapse (+GRAVITY & COMOVING)
                                           #    8: HYDRO Kelvin Helmholtz instability
-                                          #    9: HYDRO Riemann problems
+                                          #    9: HYDRO Riemann problems [+MHD]
                                           #   10: HYDRO colliding jets
                                           #   11: HYDRO Plummer cloud(s) (+GRAVITY & PARTICLE)
                                           #   12: HYDRO gravity (+GRAVITY)
+                                          #   13: HYDRO MHD Arnold-Beltrami-Childress (ABC) flow (+MHD)
+                                          #   14: HYDRO MHD Orszag-Tang vortex (+MHD)
+                                          #   15: HYDRO MHD linear wave (+MHD)
+                                          #   16: HYDRO Jeans instability (+GRAVITY) [+MHD]
                                           # 1000: ELBDM external potential (+GRAVITY)
 
 
@@ -112,6 +116,7 @@ OPT__FLAG_RHO_GRADIENT        0           # flag: density gradient (Input__Flag_
 OPT__FLAG_PRES_GRADIENT       0           # flag: pressure gradient (Input__Flag_PresGradient) [0] ##HYDRO ONLY##
 OPT__FLAG_VORTICITY           0           # flag: vorticity (Input__Flag_Vorticity) [0] ##HYDRO ONLY##
 OPT__FLAG_JEANS               0           # flag: Jeans length (Input__Flag_Jeans) [0] ##HYDRO ONLY##
+OPT__FLAG_CURRENT             0           # flag: current density in MHD (Input__Flag_Current) [0] ##MHD ONLY##
 OPT__FLAG_ENGY_DENSITY        0           # flag: energy density (Input_Flag_EngyDensity) [0] ##ELBDM ONLY##
 OPT__FLAG_LOHNER_DENS         0           # flag: Lohner for mass density   (Input__Flag_Lohner) [0] ##BOTH HYDRO AND ELBDM##
 OPT__FLAG_LOHNER_ENGY         0           # flag: Lohner for energy density (Input__Flag_Lohner) [0] ##HYDRO ONLY##
@@ -150,6 +155,9 @@ GRACKLE_CMB_FLOOR             1           # ...    "cmb_temperature_floor" [1]
 GRACKLE_PE_HEATING            0           # ...    "photoelectric_heating" [0]
 GRACKLE_PE_HEATING_RATE       8.5e-26     # ...    "photoelectric_heating_rate (in erg/cm^3/s)" [8.5e-26]
 GRACKLE_CLOUDY_TABLE          CloudyData_noUVB.h5  # "grackle_data_file"
+GRACKLE_THREE_BODY_RATE       4           # used Glover+08 rate
+GRACKLE_CIE_COOLING           1           # 0: off; 1:on
+GRACKLE_H2_OPA_APPROX         1           # H2 opacity from Ripamonti+04; 0:off, 1:Ripomonti+04
 CHE_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU Grackle solver (<=0=auto) [-1]
 
 
@@ -170,9 +178,9 @@ MOLECULAR_WEIGHT              0.6         # mean molecular weight -> currently o
 MINMOD_COEFF                  1.5         # coefficient of the generalized MinMod limiter (1.0~2.0) [1.5]
 OPT__LR_LIMITER               4           # slope limiter of data reconstruction in the MHM/MHM_RP/CTU schemes:
                                           # (0=none, 1=vanLeer, 2=generalized MinMod, 3=vanAlbada, 4=vanLeer+generalized MinMod) [4]
-OPT__1ST_FLUX_CORR            2           # correct unphysical results (defined by MIN_DENS/PRES) by the 1st-order fluxes:
-                                          # (0=off, 1=3D, 2=3D+1D) [2] ##MHM/MHM_RP/CTU ONLY##
-OPT__1ST_FLUX_CORR_SCHEME     1           # Riemann solver for OPT__1ST_FLUX_CORR (0=none, 1=Roe, 2=HLLC 3=HLLE) [1]
+OPT__1ST_FLUX_CORR           -1           # correct unphysical results (defined by MIN_DENS/PRES) by the 1st-order fluxes:
+                                          # (<0=auto, 0=off, 1=3D, 2=3D+1D) [-1] ##MHM/MHM_RP/CTU ONLY; NOT SUPPORTED IN MHD##
+OPT__1ST_FLUX_CORR_SCHEME     1           # Riemann solver for OPT__1ST_FLUX_CORR (0=none, 1=Roe, 2=HLLC, 3=HLLE, 4=HLLD) [1]
 DUAL_ENERGY_SWITCH            2.0e-2      # apply dual-energy if E_int/E_kin < DUAL_ENERGY_SWITCH [2.0e-2] ##DUAL_ENERGY ONLY##
 
 
@@ -188,6 +196,7 @@ ELBDM_TAYLOR3_AUTO            1           # Optimize ELBDM_TAYLOR3_COEFF automat
 FLU_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU fluid solver (<=0=auto) [-1]
 GPU_NSTREAM                  -1           # number of CUDA streams for the asynchronous memory copy in GPU (<=0=auto) [-1]
 OPT__FIXUP_FLUX               1           # correct coarse grids by the fine-grid boundary fluxes [1] ##HYDRO and ELBDM ONLY##
+OPT__FIXUP_ELECTRIC           1           # correct coarse grids by the fine-grid boundary electric field [1] ##MHD ONLY##
 OPT__FIXUP_RESTRICT           1           # correct coarse grids by averaging the fine-grid data [1]
 OPT__CORR_AFTER_ALL_SYNC     -1           # apply various corrections after all levels are synchronized (see "Flu_CorrAfterAllSync"):
                                           # (-1=auto, 0=off, 1=every step, 2=before dump) [-1]
@@ -212,7 +221,7 @@ MG_NPRE_SMOOTH               -1           # number of pre-smoothing steps in mul
 MG_NPOST_SMOOTH              -1           # number of post-smoothing steps in multigrid: (<0=auto) [-1]
 MG_TOLERATED_ERROR           -1.0         # maximum tolerated error in multigrid (<0=auto) [-1.0]
 POT_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU Poisson solver (<=0=auto) [-1]
-OPT__GRA_P5_GRADIENT          0           # 5-points gradient in the Gravity solver (must have GRA/USG_GHOST_SIZE>=2) [0]
+OPT__GRA_P5_GRADIENT          0           # 5-points gradient in the Gravity solver (must have GRA/USG_GHOST_SIZE_G>=2) [0]
 OPT__GRAVITY_TYPE             1           # gravity source: (1=self-gravity, 2=external gravity, 3=both) ##2/3 for HYDRO ONLY##
 OPT__EXTERNAL_POT             0           # add the external potential (incompatible with OPT__GRAVITY_TYPE==2) [0] ##ELBDM ONLY##
 OPT__GRAVITY_EXTRA_MASS       0           # add extra mass source when computing gravity [0]
@@ -220,6 +229,8 @@ OPT__GRAVITY_EXTRA_MASS       0           # add extra mass source when computing
 
 # initialization
 OPT__INIT                     1           # initialization option: (1=FUNCTION, 2=RESTART, 3=FILE->"UM_IC")
+OPT__INIT_BFIELD_BYFILE       0           # initialize the magnetic field from a vector potential disk file named "B_IC"
+                                          # (example python script: tool/inits/gen_vec_pot.py) [0] ##MHD ONLY##
 RESTART_LOAD_NRANK            1           # number of parallel I/O (i.e., number of MPI ranks) for restart [1]
 OPT__RESTART_RESET            0           # reset some simulation status parameters (e.g., current step and time) during restart [0]
 OPT__UM_IC_LEVEL              0           # AMR level corresponding to UM_IC (must >= 0) [0]
@@ -233,12 +244,13 @@ OPT__INIT_GRID_WITH_OMP       1           # enable OpenMP when assigning the ini
 OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2=CUDA, -1=MPI rank, >=0=input) [-1]
 INIT_SUBSAMPLING_NCELL        0           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
 
-
 # interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar)
 OPT__INT_TIME                 1           # perform "temporal" interpolation for OPT__DT_LEVEL == 2/3 [1]
 OPT__INT_PHASE                1           # interpolation on phase (does not support MinMod-1D) [1] ##ELBDM ONLY##
 OPT__FLU_INT_SCHEME          -1           # ghost-zone fluid variables for the fluid solver [-1]
 OPT__REF_FLU_INT_SCHEME      -1           # newly allocated fluid variables during grid refinement [-1]
+OPT__MAG_INT_SCHEME           4           # ghost-zone magnetic field for the MHD solver (2,3,4,6 only) [4]
+OPT__REF_MAG_INT_SCHEME       4           # newly allocated magnetic field during grid refinement (2,3,4,6 only) [4]
 OPT__POT_INT_SCHEME           5           # ghost-zone potential for the Poisson solver (only supports 4 & 5) [5]
 OPT__RHO_INT_SCHEME           4           # ghost-zone mass density for the Poisson solver [4]
 OPT__GRA_INT_SCHEME           5           # ghost-zone potential for the gravity solver (for UNSPLIT_GRAVITY as well) [5]
@@ -256,6 +268,7 @@ OPT__OUTPUT_BASE              0           # only output the base-level data [0] 
 OPT__OUTPUT_POT               0           # output gravitational potential [0] ##OPT__OUTPUT_TOTAL ONLY##
 OPT__OUTPUT_PAR_DENS          1           # output the particle or total mass density on grids:
                                           # (0=off, 1=particle mass density, 2=total mass density) [1] ##OPT__OUTPUT_TOTAL ONLY##
+OPT__OUTPUT_CC_MAG            1           # output **cell-centered** magnetic field (necessary for yt analysis) [1] ##MHD ONLY##
 OPT__OUTPUT_MODE              1           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
 OUTPUT_STEP                   5           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
 OUTPUT_DT                     1.0         # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
@@ -293,7 +306,9 @@ OPT__CK_NORMALIZE_PASSIVE     0           # check the normalization of passive s
 OPT__CK_RESTRICT              0           # check the data restriction [0]
 OPT__CK_FINITE                0           # check if all variables are finite [0]
 OPT__CK_PATCH_ALLOCATE        0           # check if all patches are properly allocated [0]
-OPT__CK_FLUX_ALLOCATE         0           # check if all flux arrays are properly allocated ##HYDRO and ELBDM ONLY## [0]
+OPT__CK_FLUX_ALLOCATE         0           # check if all flux arrays are properly allocated [0] ##HYDRO and ELBDM ONLY##
 OPT__CK_NEGATIVE              0           # check the negative values: (0=off, 1=density, 2=pressure and entropy, 3=both) [0] ##HYDRO ONLY##
 OPT__CK_MEMFREE               1.0         # check the free memory in GB (0=off, >0=threshold) [1.0]
 OPT__CK_PARTICLE              0           # check the particle allocation [0]
+OPT__CK_INTERFACE_B           0           # check the consistency of patch interface B field [0] ##MHD ONLY##
+OPT__CK_DIVERGENCE_B          0           # check the divergence-free constraint on B field (0=off, 1=on, 2=on+verbose) [0] ##MHD ONLY##

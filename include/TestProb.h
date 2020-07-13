@@ -12,11 +12,19 @@ static void Validate();
 static void SetParameter();
 static void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                        const int lv, double AuxArray[] );
+#ifdef MHD
+static void SetBFieldIC( real magnetic[], const double x, const double y, const double z, const double Time,
+                         const int lv, double AuxArray[] );
+#endif
 
 
 // function pointers of various user-specified routines
 extern void (*Init_Function_User_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
                                        const int lv, double AuxArray[] );
+#ifdef MHD
+extern void (*Init_Function_BField_User_Ptr)( real magnetic[], const double x, const double y, const double z, const double Time,
+                                              const int lv, double AuxArray[] );
+#endif
 extern void (*Init_ByFile_User_Ptr)( real fluid_out[], const real fluid_in[], const int nvar_in,
                                      const double x, const double y, const double z, const double Time,
                                      const int lv, double AuxArray[] );
@@ -28,12 +36,14 @@ extern void (*Mis_GetTimeStep_User_Ptr)( const int lv, const double dTime_dt );
 extern void (*Aux_Record_User_Ptr)();
 extern void (*BC_User_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
                             const int lv, double AuxArray[] );
+#ifdef MHD
+extern void (*BC_BField_User_Ptr)( real magnetic[], const double x, const double y, const double z, const double Time,
+                                   const int lv, double AuxArray[] );
+#endif
 extern bool (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
                                          const int lv, double AuxArray[] );
 extern void (*End_User_Ptr)();
 #ifdef GRAVITY
-extern void (*Init_ExternalAcc_Ptr)();
-extern void (*Init_ExternalPot_Ptr)();
 extern real (*Poi_AddExtraMassForGravity_Ptr)( const double x, const double y, const double z, const double Time,
                                                const int lv, double AuxArray[] );
 #endif
@@ -43,14 +53,6 @@ extern void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPa
                                         real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                         real *AllAttribute[PAR_NATT_TOTAL] );
 extern void (*Par_Init_Attribute_User_Ptr)();
-#endif
-
-
-// common global variables
-#ifdef GRAVITY
-#include "CUPOT.h"
-extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
-extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 #endif
 
 

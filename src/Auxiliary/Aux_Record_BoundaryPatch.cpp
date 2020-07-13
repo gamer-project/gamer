@@ -7,19 +7,19 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Aux_Record_BoundaryPatch
-// Description :  Record the IDs and positions of the patches near the sub-domain boundaries in the 
+// Description :  Record the IDs and positions of the patches near the sub-domain boundaries in the
 //                BounP_IDList and BounP_PosList, respectively
 //
 // Note        :  This function is only an auxiliary function, and it is kept only for verifying the results
-//                of the functions "RecordBoundaryPatch_Base" and "RecordBoundaryPatch" 
+//                of the functions "RecordBoundaryPatch_Base" and "RecordBoundaryPatch"
 //-------------------------------------------------------------------------------------------------------
 void Aux_Record_BoundaryPatch( const int lv, int *NList, int **IDList, int **PosList )
 {
 
-   const int NP0[3] = { NX0[0]/PATCH_SIZE, NX0[1]/PATCH_SIZE, NX0[2]/PATCH_SIZE }; 
+   const int NP0[3] = { NX0[0]/PATCH_SIZE, NX0[1]/PATCH_SIZE, NX0[2]/PATCH_SIZE };
    const int NP [3] = { NP0[0]*(1<<lv)+4, NP0[1]*(1<<lv)+4, NP0[2]*(1<<lv)+4 };
 
-   const int scale0 = amr->scale[ 0];      
+   const int scale0 = amr->scale[ 0];
    const int scale  = amr->scale[lv];        // Pos      : Patch position in (x,y,z) direction
    int Pos[3], Pos2, LCorner[3];             // Pos2     : 1-D Patch position
                                              // LCorner  : local coordinate of patch corner in (x,y,z) direction
@@ -30,7 +30,7 @@ void Aux_Record_BoundaryPatch( const int lv, int *NList, int **IDList, int **Pos
 
 
 // scan over all patches at level "lv" to record the IDS of boundary patches
-   for (int P=0; P<amr->num[lv]; P++) 
+   for (int P=0; P<amr->num[lv]; P++)
    {
       LCorner[0]  = amr->patch[0][lv][P]->corner[0] - MPI_Rank_X[0]*NX0[0]*scale0;
       LCorner[1]  = amr->patch[0][lv][P]->corner[1] - MPI_Rank_X[1]*NX0[1]*scale0;

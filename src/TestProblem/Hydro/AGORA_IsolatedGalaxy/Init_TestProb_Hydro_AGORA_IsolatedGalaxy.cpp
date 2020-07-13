@@ -107,7 +107,15 @@ void Validate()
          Aux_Message( stderr, "WARNING : it's recommended to enable DUAL_ENERGY for this test !!\n" );
 #     endif
 
-#     if ( MODEL == HYDRO  ||  MODEL == MHD )
+#     if ( !defined MHD  &&  RSOLVER != HLLC )
+         Aux_Message( stderr, "WARNING : it's recommended to adopt the HLLC Riemann solver for this test !!\n" );
+#     endif
+
+#     ifndef STAR_FORMATION
+         Aux_Message( stderr, "WARNING : STAR_FORMATION is disabled !!\n" );
+#     endif
+
+#     if ( MODEL == HYDRO )
       if ( MINMOD_COEFF > 1.5 )
          Aux_Message( stderr, "WARNING : it's recommended to set MINMOD_COEFF <= 1.5 for this test !!\n" );
 
@@ -124,8 +132,8 @@ void Validate()
       if ( amr->BoxSize[0] != amr->BoxSize[1]  ||  amr->BoxSize[0] != amr->BoxSize[2] )
          Aux_Message( stderr, "WARNING : non-cubic box (currently the flag routine \"Flag_AGORA()\" assumes a cubic box) !!\n" );
 
-      if ( INIT_SUBSAMPLING_NCELL != 0 )
-         Aux_Message( stderr, "WARNING : INIT_SUBSAMPLING_NCELL (%d) != 0 will lead to non-uniform initial disk temperature !!\n",
+      if ( INIT_SUBSAMPLING_NCELL > 1 )
+         Aux_Message( stderr, "WARNING : INIT_SUBSAMPLING_NCELL (%d) > 1 will lead to non-uniform initial disk temperature !!\n",
                       INIT_SUBSAMPLING_NCELL );
    } // if ( MPI_Rank == 0 )
 
@@ -504,15 +512,8 @@ void Init_TestProb_Hydro_AGORA_IsolatedGalaxy()
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr      = SetGridIC;
    Init_Field_User_Ptr         = AddNewField_AGORA;
-   Output_User_Ptr             = NULL;
    Flag_User_Ptr               = Flag_AGORA;
-   Mis_GetTimeStep_User_Ptr    = NULL;
-   Aux_Record_User_Ptr         = NULL;
-   BC_User_Ptr                 = NULL;
-   Flu_ResetByUser_Func_Ptr    = NULL;
    End_User_Ptr                = End_AGORA;
-   Init_ExternalAcc_Ptr        = NULL;
-   Init_ExternalPot_Ptr        = NULL;
    Par_Init_ByFunction_Ptr     = Par_Init_ByFunction_AGORA;
    Par_Init_Attribute_User_Ptr = AddNewParticleAttribute_AGORA;
 #  endif // if ( MODEL == HYDRO  &&  defined PARTICLE )

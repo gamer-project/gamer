@@ -36,7 +36,7 @@
 //                h_Rho_Array_P    : Input host density array for the Poisson solver
 //                h_Pot_Array_P_In : Input host coarse-grid potential array for the Poisson solver
 //                NPG              : Number of patch groups to be prepared at a time
-//                PID0_List        : List recording the patch indicies with LocalID==0 to be udpated
+//                PID0_List        : List recording the patch indices with LocalID==0 to be udpated
 //                CLv              : Level of data currently stored in the input arrays
 //                comment          : String to attach to the end of the file name
 //-------------------------------------------------------------------------------------------------------

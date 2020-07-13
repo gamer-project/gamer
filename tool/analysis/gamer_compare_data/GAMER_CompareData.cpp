@@ -10,12 +10,11 @@
 using namespace std;
 
 #define ERROR_INFO         __FILE__, __LINE__, __FUNCTION__
-#define CUBE( a )       ( (a)*(a)*(a) )
 
 void ReadOption( int argc, char **argv );
 void CheckParameter();
-void LoadData( GAMER_t &patch, const char *FileName_In, bool &WithPot, int &WithParDens, bool &WithPar, int &NParVarOut,
-               long &NPar, real **&ParData );
+void LoadData( GAMER_t &patch, const char *FileName_In, bool &WithPot, int &WithParDens, bool &WithPar,
+               int &NParVarOut, long &NPar, real **&ParData, bool &WithMagCC, bool &WithMagFC );
 void Aux_Error( const char *File, const int Line, const char *Func, const char *Format, ... );
 void Aux_AllocateArray2D( real** &Array, const int J, const int I );
 void Aux_DeallocateArray2D( real** &Array );
@@ -25,7 +24,7 @@ void Heapsort_SiftDown( const long L, const long R, real Array[], long IdxTable[
 void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &WithPot, int &WithParDens,
                                 const long HeaderOffset_Makefile, const long HeaderOffset_Constant,
                                 const long HeaderOffset_Parameter, int *NX0_Tot, int *NGPU_X,
-                                bool &WithPar, int &NParVarOut );
+                                bool &WithPar, int &NParVarOut, bool &WithMagCC, bool &WithMagFC );
 void CompareGridData();
 void CompareParticleData();
 void SortParticle( const long NPar, const real *PosX, const real *PosY, const real *PosZ, const real *VelX, long *IdxTable );
@@ -33,6 +32,7 @@ void SortParticle( const long NPar, const real *PosX, const real *PosY, const re
 GAMER_t  patch1, patch2;
 char    *FileName_In1=NULL, *FileName_In2=NULL, *FileName_Out=NULL;
 bool     WithPot1, WithPot2;
+bool     WithMagCC1, WithMagCC2, WithMagFC1, WithMagFC2;
 
 double   TolErr     = __FLT_MIN__;
 bool     UseCorner  = false;
@@ -181,7 +181,7 @@ void CompareGridData()
    }
 
 
-// check that whether both inputs store the potential data or not
+// check whether both inputs store the potential data or not
    if ( WithPot1 != WithPot2 )
    {
       fprintf( stderr, "WARNING : one of the input files does NOT store the potential data !!\n" );
@@ -189,11 +189,25 @@ void CompareGridData()
    }
 
 
-// check that whether both inputs store the particle (or total) density data or not
+// check whether both inputs store the particle (or total) density data or not
    if ( WithParDens1 != WithParDens2 )
    {
       fprintf( stderr, "WARNING : one of the input files does NOT store the particle (or total) density data !!\n" );
       fprintf( stderr, "          --> Particle density data will not be compared ...\n" );
+   }
+
+
+// check whether both inputs store the B field
+   if ( WithMagCC1 != WithMagCC2 )
+   {
+      fprintf( stderr, "WARNING : one of the input files does NOT store the cell-centered B field data !!\n" );
+      fprintf( stderr, "          --> Cell-centered B field data will not be compared ...\n" );
+   }
+
+   if ( WithMagFC1 != WithMagFC2 )
+   {
+      fprintf( stderr, "ERROR : one of the input files does NOT store the face-centered B field data !!\n" );
+      exit( -1 );
    }
 
 
@@ -265,7 +279,7 @@ void CompareGridData()
 
                   if ( fabs( RelErr ) >= TolErr  ||  !isfinite( RelErr )  )
                      fprintf( File, "%5d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
-                              lv, PID1, PID2, i, j, k, NCOMP_TOTAL, Data1, Data2, AbsErr, RelErr );
+                              lv, PID1, PID2, i, j, k, 1000, Data1, Data2, AbsErr, RelErr );
                }
 
 //             particle density
@@ -280,9 +294,83 @@ void CompareGridData()
 
                   if ( fabs( RelErr ) >= TolErr  ||  !isfinite( RelErr )  )
                      fprintf( File, "%5d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
-                              lv, PID1, PID2, i, j, k, NCOMP_TOTAL+1, Data1, Data2, AbsErr, RelErr );
+                              lv, PID1, PID2, i, j, k, 1001, Data1, Data2, AbsErr, RelErr );
                }
+
+//             cell-centered B field
+               if ( WithMagCC1 && WithMagCC2 )
+               {
+                  for (int v=0; v<NCOMP_MAG; v++)
+                  {
+                     Data1  = patch1.ptr[lv][PID1]->mag_cc[v][k][j][i];
+                     Data2  = patch2.ptr[lv][PID2]->mag_cc[v][k][j][i];
+                     AbsErr = Data1 - Data2;
+                     RelErr = AbsErr / ( 0.5*(Data1+Data2) );
+
+                     if ( Data1 == 0.0  &&  Data2 == 0.0 )  continue;
+
+                     if ( fabs( RelErr ) >= TolErr  ||  !isfinite( RelErr )  )
+                        fprintf( File, "%5d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
+                                 lv, PID1, PID2, i, j, k, 2000+v, Data1, Data2, AbsErr, RelErr );
+                  }
+               }
+            } // i,j,k
+
+//          face-centered B field
+//          Bx
+            if ( WithMagFC1 && WithMagFC2 )
+            for (int k=0; k<PS1;   k++)
+            for (int j=0; j<PS1;   j++)
+            for (int i=0; i<PS1P1; i++)
+            {
+               Data1  = patch1.ptr[lv][PID1]->mag_fc[0][ IDX321_BX(i,j,k) ];
+               Data2  = patch2.ptr[lv][PID2]->mag_fc[0][ IDX321_BX(i,j,k) ];
+               AbsErr = Data1 - Data2;
+               RelErr = AbsErr / ( 0.5*(Data1+Data2) );
+
+               if ( Data1 == 0.0  &&  Data2 == 0.0 )  continue;
+
+               if ( fabs( RelErr ) >= TolErr  ||  !isfinite( RelErr )  )
+                  fprintf( File, "%5d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
+                           lv, PID1, PID2, i, j, k, 2003, Data1, Data2, AbsErr, RelErr );
             }
+
+//          By
+            if ( WithMagFC1 && WithMagFC2 )
+            for (int k=0; k<PS1;   k++)
+            for (int j=0; j<PS1P1; j++)
+            for (int i=0; i<PS1;   i++)
+            {
+               Data1  = patch1.ptr[lv][PID1]->mag_fc[1][ IDX321_BY(i,j,k) ];
+               Data2  = patch2.ptr[lv][PID2]->mag_fc[1][ IDX321_BY(i,j,k) ];
+               AbsErr = Data1 - Data2;
+               RelErr = AbsErr / ( 0.5*(Data1+Data2) );
+
+               if ( Data1 == 0.0  &&  Data2 == 0.0 )  continue;
+
+               if ( fabs( RelErr ) >= TolErr  ||  !isfinite( RelErr )  )
+                  fprintf( File, "%5d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
+                           lv, PID1, PID2, i, j, k, 2004, Data1, Data2, AbsErr, RelErr );
+            }
+
+//          Bz
+            if ( WithMagFC1 && WithMagFC2 )
+            for (int k=0; k<PS1P1; k++)
+            for (int j=0; j<PS1;   j++)
+            for (int i=0; i<PS1;   i++)
+            {
+               Data1  = patch1.ptr[lv][PID1]->mag_fc[2][ IDX321_BZ(i,j,k) ];
+               Data2  = patch2.ptr[lv][PID2]->mag_fc[2][ IDX321_BZ(i,j,k) ];
+               AbsErr = Data1 - Data2;
+               RelErr = AbsErr / ( 0.5*(Data1+Data2) );
+
+               if ( Data1 == 0.0  &&  Data2 == 0.0 )  continue;
+
+               if ( fabs( RelErr ) >= TolErr  ||  !isfinite( RelErr )  )
+                  fprintf( File, "%5d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
+                           lv, PID1, PID2, i, j, k, 2005, Data1, Data2, AbsErr, RelErr );
+            }
+
 
             patch1.ptr[lv][PID1]->check = true;
             patch2.ptr[lv][PID2]->check = true;
@@ -541,9 +629,11 @@ void SortParticle( const long NPar, const real *PosX, const real *PosY, const re
 //                NParVarOut  : Number of particle attributes stored in the file
 //                NPar        : NUmber of particles
 //                ParData     : Particle data array (allocated here --> must be dallocated manually later)
+//                WithMagCC   : true --> the loaded data contain cell-centered magnetic field
+//                WithMagFC   : true --> the loaded data contain face-centered magnetic field
 //-------------------------------------------------------------------------------------------------------
-void LoadData( GAMER_t &patch, const char *FileName_In, bool &WithPot, int &WithParDens, bool &WithPar, int &NParVarOut,
-               long &NPar, real **&ParData )
+void LoadData( GAMER_t &patch, const char *FileName_In, bool &WithPot, int &WithParDens, bool &WithPar,
+               int &NParVarOut, long &NPar, real **&ParData, bool &WithMagCC, bool &WithMagFC )
 {
 
    fprintf( stdout, "Loading data %s ...\n", FileName_In );
@@ -645,7 +735,8 @@ void LoadData( GAMER_t &patch, const char *FileName_In, bool &WithPot, int &With
 // b. load all simulation parameters
 // =================================================================================================
    Load_Parameter_After_2000( File, FormatVersion, WithPot, WithParDens, HeaderOffset_Makefile, HeaderOffset_Constant,
-                              HeaderOffset_Parameter, patch.nx0_tot, patch.ngpu_x, WithPar, NParVarOut );
+                              HeaderOffset_Parameter, patch.nx0_tot, patch.ngpu_x, WithPar, NParVarOut,
+                              WithMagCC, WithMagFC );
 
 
 // c. load the simulation information
@@ -691,9 +782,13 @@ void LoadData( GAMER_t &patch, const char *FileName_In, bool &WithPot, int &With
 
    if ( WithPot )       NGridVar ++;
    if ( WithParDens )   NGridVar ++;
+   if ( WithMagCC )     NGridVar += NCOMP_MAG;
 
-   PatchDataSize = CUBE(PATCH_SIZE)*NGridVar*sizeof(real);
-   ExpectSize    = HeaderSize_Total;
+   PatchDataSize  = CUBE(PATCH_SIZE)*NGridVar*sizeof(real);
+   if ( WithMagFC )
+   PatchDataSize += PS1P1*SQR(PS1)*NCOMP_MAG*sizeof(real);
+
+   ExpectSize     = HeaderSize_Total;
 
    for (int lv=0; lv<NLEVEL; lv++)
    {
@@ -766,6 +861,14 @@ void LoadData( GAMER_t &patch, const char *FileName_In, bool &WithPot, int &With
 //          d2-3. load the particle density on grids
             if ( WithParDens )
             fread( patch.ptr[lv][PID]->par_dens, sizeof(real), PATCH_SIZE*PATCH_SIZE*PATCH_SIZE,             File );
+
+//          d2-4. load the cell-centered B field
+            if ( WithMagCC )
+            fread( patch.ptr[lv][PID]->mag_cc,   sizeof(real), PATCH_SIZE*PATCH_SIZE*PATCH_SIZE*NCOMP_MAG,   File );
+
+//          d2-5. load the face-centered B field
+            if ( WithMagFC )
+            fread( patch.ptr[lv][PID]->mag_fc,   sizeof(real), PS1P1*PATCH_SIZE*PATCH_SIZE*NCOMP_MAG,        File );
          }
       } // for (int LoadPID=0; LoadPID<NPatchTotal[lv]; LoadPID++)
 
@@ -781,6 +884,8 @@ void LoadData( GAMER_t &patch, const char *FileName_In, bool &WithPot, int &With
    if ( WithPar ) {
    printf( "   NParVarOut  = %d\n",  NParVarOut  );
    printf( "   NPar        = %ld\n", NPar        ); }
+   printf( "   WithMagCC   = %d\n",  WithMagCC   );
+   printf( "   WithMagFC   = %d\n",  WithMagFC   );
    for (int lv=0; lv<NLEVEL; lv++)
    printf( "   NPatch[%2d] = %d\n",  lv, patch.num[lv] );
 
@@ -830,13 +935,15 @@ void LoadData( GAMER_t &patch, const char *FileName_In, bool &WithPot, int &With
 //                NGPU_X         : Number of MPI processes along each direction
 //                WithPar        : Whether or not the RESTART file stores particles
 //                NParVarOut     : Number of particle attributes stored in the file
+//                WithMagCC      : true --> the loaded data contain cell-centered magnetic field
+//                WithMagFC      : true --> the loaded data contain face-centered magnetic field
 //
 // Return      :  LoadPot (END_T and END_STEP may also be set to the original values)
 //-------------------------------------------------------------------------------------------------------
 void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &WithPot, int &WithParDens,
                                 const long HeaderOffset_Makefile, const long HeaderOffset_Constant,
                                 const long HeaderOffset_Parameter, int *NX0_Tot, int *NGPU_X,
-                                bool &WithPar, int &NParVarOut )
+                                bool &WithPar, int &NParVarOut, bool &WithMagCC, bool &WithMagFC )
 {
 
    fprintf( stdout, "   Loading simulation parameters ...\n" );
@@ -848,6 +955,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &WithP
    bool intel, float8, serial, overlap_mpi, openmp;
    int  model, pot_scheme, flu_scheme, lr_scheme, rsolver, load_balance, nlevel, max_patch, gpu_arch, ncomp_passive;
    bool store_pot_ghost, unsplit_gravity, particle;
+   bool conserve_mass, laplacian_4th, self_interaction, laohu, support_hdf5, mhd;
 
    fseek( File, HeaderOffset_Makefile, SEEK_SET );
 
@@ -875,14 +983,18 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &WithP
    fread( &max_patch,                  sizeof(int),                     1,             File );
    fread( &store_pot_ghost,            sizeof(bool),                    1,             File );
    fread( &unsplit_gravity,            sizeof(bool),                    1,             File );
-   if ( FormatVersion >= 2100 )
    fread( &particle,                   sizeof(bool),                    1,             File );
-   else
-   particle = false;
-   if ( FormatVersion >= 2120 )
    fread( &ncomp_passive,              sizeof(int),                     1,             File );
-   else
-   ncomp_passive = 0;
+   fread( &conserve_mass,              sizeof(bool),                    1,             File );
+   fread( &laplacian_4th,              sizeof(bool),                    1,             File );
+   fread( &self_interaction,           sizeof(bool),                    1,             File );
+   fread( &laohu,                      sizeof(bool),                    1,             File );
+   fread( &support_hdf5,               sizeof(bool),                    1,             File );
+   fread( &mhd,                        sizeof(bool),                    1,             File );
+
+   if ( FormatVersion < 2100 )   particle      = false;
+   if ( FormatVersion < 2120 )   ncomp_passive = 0;
+   if ( FormatVersion < 2210 )   mhd           = false;
 
 
 // b. load the symbolic constants defined in "Macro.h, CUPOT.h, and CUFLU.h"
@@ -926,7 +1038,8 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &WithP
    bool   opt__adaptive_dt, opt__dt_user, opt__flag_rho, opt__flag_rho_gradient, opt__flag_pres_gradient;
    bool   opt__flag_engy_density, opt__flag_user, opt__fixup_flux, opt__fixup_restrict, opt__overlap_mpi;
    bool   opt__gra_p5_gradient, opt__int_time, opt__output_test_error, opt__output_base, opt__output_pot;
-   bool   opt__output_baseps, opt__timing_balance, opt__int_phase, opt__corr_unphy;
+   bool   opt__output_baseps, opt__timing_balance, opt__int_phase, opt__corr_unphy, opt__unit;
+   bool   opt__output_cc_mag;
    int    nx0_tot[3], mpi_nrank, mpi_nrank_x[3], omp_nthread, regrid_count, opt__output_par_dens;
    int    flag_buffer_size, max_level, opt__lr_limiter, opt__waf_limiter, flu_gpu_npgroup, gpu_nstream;
    int    sor_max_iter, sor_min_iter, mg_max_iter, mg_npre_smooth, mg_npost_smooth, pot_gpu_npgroup;
@@ -935,8 +1048,9 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &WithP
    int    opt__output_total, opt__output_part, opt__output_mode, output_step, opt__corr_unphy_scheme;
    long   end_step;
    double lb_wli_max, gamma, minmod_coeff, ep_coeff, elbdm_mass, elbdm_planck_const, newton_g, sor_omega;
-   double mg_tolerated_error, output_part_x, output_part_y, output_part_z;
-   double box_size, end_t, omega_m0, dt__fluid, dt__gravity, dt__phase, dt__max_delta_a, output_dt;
+   double mg_tolerated_error, output_part_x, output_part_y, output_part_z, molecular_weight;
+   double box_size, end_t, omega_m0, dt__fluid, dt__gravity, dt__phase, dt__max_delta_a, output_dt, hubble0;
+   double unit_l, unit_m, unit_t, unit_v, unit_d, unit_e, unit_p, unit_b;
 
    fseek( File, HeaderOffset_Parameter, SEEK_SET );
 
@@ -1008,11 +1122,22 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &WithP
    fread( &opt__output_baseps,         sizeof(bool),                    1,             File );
    fread( &opt__corr_unphy,            sizeof(bool),                    1,             File );
    fread( &opt__corr_unphy_scheme,     sizeof(int),                     1,             File );
-   if ( particle )
    fread( &opt__output_par_dens,       sizeof(int),                     1,             File );
-   else
-   opt__output_par_dens = 0;
+   fread( &hubble0,                    sizeof(double),                  1,             File );
+   fread( &opt__unit,                  sizeof(bool),                    1,             File );
+   fread( &unit_l,                     sizeof(double),                  1,             File );
+   fread( &unit_m,                     sizeof(double),                  1,             File );
+   fread( &unit_t,                     sizeof(double),                  1,             File );
+   fread( &unit_v,                     sizeof(double),                  1,             File );
+   fread( &unit_d,                     sizeof(double),                  1,             File );
+   fread( &unit_e,                     sizeof(double),                  1,             File );
+   fread( &unit_p,                     sizeof(double),                  1,             File );
+   fread( &molecular_weight,           sizeof(double),                  1,             File );
+   fread( &opt__output_cc_mag,         sizeof(bool),                    1,             File );
+   fread( &unit_b,                     sizeof(double),                  1,             File );
 
+   if ( !particle )  opt__output_par_dens = 0;
+   if ( !mhd      )  opt__output_cc_mag   = 0;
 
 
    fprintf( stdout, "   Loading simulation parameters ... done\n" );
@@ -1060,6 +1185,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &WithP
 
    WithParDens = opt__output_par_dens;
    WithPar     = particle;
+
    if ( WithPar )
    {
       if ( FormatVersion > 2131 )   NParVarOut = par_nvar;           // after version 2131, par_nvar = PAR_NATT_STORED
@@ -1067,6 +1193,9 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &WithP
    }
    else
                                     NParVarOut = -1;
+
+   WithMagCC   = opt__output_cc_mag;
+   WithMagFC   = mhd;
 
 } // FUNCTION : Load_Parameter_After_2000
 
@@ -1296,8 +1425,8 @@ int main( int argc, char ** argv )
 
    CheckParameter();
 
-   LoadData( patch1, FileName_In1, WithPot1, WithParDens1, WithPar1, NParVarOut1, NPar1, ParData1 );
-   LoadData( patch2, FileName_In2, WithPot2, WithParDens2, WithPar2, NParVarOut2, NPar2, ParData2 );
+   LoadData( patch1, FileName_In1, WithPot1, WithParDens1, WithPar1, NParVarOut1, NPar1, ParData1, WithMagCC1, WithMagFC1 );
+   LoadData( patch2, FileName_In2, WithPot2, WithParDens2, WithPar2, NParVarOut2, NPar2, ParData2, WithMagCC2, WithMagFC2 );
 
    CompareGridData();
    CompareParticleData();

@@ -15,7 +15,7 @@
 //                SaveSg            : Sandglass to store the updated data
 //                h_Pot_Array_P_Out : Host array storing the updated potential
 //                NPG               : Number of patch groups to store the updated data
-//                PID0_List         : List recording the patch indicies with LocalID==0 to be udpated
+//                PID0_List         : List recording the patch indices with LocalID==0 to be udpated
 //-------------------------------------------------------------------------------------------------------
 void Poi_Close( const int lv, const int SaveSg, const real h_Pot_Array_P_Out[][GRA_NXT][GRA_NXT][GRA_NXT],
                 const int NPG, const int *PID0_List )

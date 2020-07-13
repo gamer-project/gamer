@@ -276,7 +276,8 @@ void GetRMS()
    const int NPG       = 1;
    const NSide_t NSide = NSIDE_26;
 
-   int    ShellID, Var, i, j, k, im, jm, km, ip, jp, kp, TVar, POTE, PAR_DENS, NextIdx;
+   int    ShellID, Var, i, j, k, im, jm, km, ip, jp, kp, POTE, PAR_DENS, NextIdx;
+   long   TVar;
    double Radius, scale, dv;
    double x, x1, x2, y, y1, y2, z, z1, z2;   // (x,y,z) : relative coordinates to the vector "Center"
    real   pass[NCOMP_PASSIVE];
@@ -540,7 +541,8 @@ void ShellAverage()
    const int NPG       = 1;
    const NSide_t NSide = NSIDE_26;
 
-   int    ShellID, Var, i, j, k, im, jm, km, ip, jp, kp, TVar, POTE, PAR_DENS, NextIdx;
+   int    ShellID, Var, i, j, k, im, jm, km, ip, jp, kp, POTE, PAR_DENS, NextIdx;
+   long   TVar;
    double Radius, scale, dv;
    double x, x1, x2, y, y1, y2, z, z1, z2;   // (x,y,z) : relative coordinates to the vector "Center"
    real   pass[NCOMP_PASSIVE];

@@ -5,11 +5,15 @@
 
 
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-extern real (*h_PriVar)      [NCOMP_TOTAL][ CUBE(FLU_NXT)     ];
-extern real (*h_Slope_PPM)[3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ];
-extern real (*h_FC_Var)   [6][NCOMP_TOTAL][ CUBE(N_FC_VAR)    ];
-extern real (*h_FC_Flux)  [3][NCOMP_TOTAL][ CUBE(N_FC_FLUX)   ];
+extern real (*h_PriVar)      [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT)     ];
+extern real (*h_Slope_PPM)[3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ];
+extern real (*h_FC_Var)   [6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ];
+extern real (*h_FC_Flux)  [3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ];
+#ifdef MHD
+extern real (*h_FC_Mag_Half)[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
+extern real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 #endif
+#endif // FLU_SCHEME
 
 
 
@@ -52,15 +56,29 @@ void Init_MemAllocate_Fluid( const int Flu_NPatchGroup, const int Pot_NPatchGrou
 #     ifdef DUAL_ENERGY
       h_DE_Array_F_Out [t] = new char [Flu_NPatchGroup][ CUBE(PS2) ];
 #     endif
+
+#     ifdef MHD
+      h_Mag_Array_F_In [t] = new real [Flu_NPatchGroup][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
+      h_Mag_Array_F_Out[t] = new real [Flu_NPatchGroup][NCOMP_MAG][ PS2P1*SQR(PS2) ];
+
+      if ( amr->WithElectric )
+      h_Ele_Array      [t] = new real [Flu_NPatchGroup][9][NCOMP_ELE][ PS2P1*PS2 ];
+
+      h_Mag_Array_T    [t] = new real [Flu_NPatch][NCOMP_MAG][ PS1P1*SQR(PS1) ];
+#     endif
    } // for (int t=0; t<2; t++)
 
 
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-   h_FC_Var    = new real [Flu_NPatchGroup][6][NCOMP_TOTAL][ CUBE(N_FC_VAR)    ];
-   h_FC_Flux   = new real [Flu_NPatchGroup][3][NCOMP_TOTAL][ CUBE(N_FC_FLUX)   ];
-   h_PriVar    = new real [Flu_NPatchGroup]   [NCOMP_TOTAL][ CUBE(FLU_NXT)     ];
+   h_FC_Var      = new real [Flu_NPatchGroup][6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ];
+   h_FC_Flux     = new real [Flu_NPatchGroup][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ];
+   h_PriVar      = new real [Flu_NPatchGroup]   [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT)     ];
 #  if ( LR_SCHEME == PPM )
-   h_Slope_PPM = new real [Flu_NPatchGroup][3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ];
+   h_Slope_PPM   = new real [Flu_NPatchGroup][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ];
+#  endif
+#  ifdef MHD
+   h_FC_Mag_Half = new real [Flu_NPatchGroup][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
+   h_EC_Ele      = new real [Flu_NPatchGroup][NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 #  endif
 #  endif // FLU_SCHEME
 

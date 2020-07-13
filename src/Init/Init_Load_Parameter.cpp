@@ -132,10 +132,13 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__FLAG_RHO",              &OPT__FLAG_RHO,                   false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_RHO_GRADIENT",     &OPT__FLAG_RHO_GRADIENT,          false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_LOHNER_DENS",      &OPT__FLAG_LOHNER_DENS,           false,           Useless_bool,  Useless_bool   );
-#  if ( MODEL == HYDRO   ||  MODEL == MHD )
+#  if ( MODEL == HYDRO )
    ReadPara->Add( "OPT__FLAG_PRES_GRADIENT",    &OPT__FLAG_PRES_GRADIENT,         false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_VORTICITY",        &OPT__FLAG_VORTICITY,             false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_JEANS",            &OPT__FLAG_JEANS,                 false,           Useless_bool,  Useless_bool   );
+#  ifdef MHD
+   ReadPara->Add( "OPT__FLAG_CURRENT",          &OPT__FLAG_CURRENT,               false,           Useless_bool,  Useless_bool   );
+#  endif
    ReadPara->Add( "OPT__FLAG_LOHNER_ENGY",      &OPT__FLAG_LOHNER_ENGY,           false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_LOHNER_PRES",      &OPT__FLAG_LOHNER_PRES,           false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_LOHNER_TEMP",      &OPT__FLAG_LOHNER_TEMP,           false,           Useless_bool,  Useless_bool   );
@@ -183,6 +186,9 @@ void Init_Load_Parameter()
    ReadPara->Add( "GRACKLE_PE_HEATING",         &GRACKLE_PE_HEATING,              false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "GRACKLE_PE_HEATING_RATE",    &GRACKLE_PE_HEATING_RATE,         8.5e-26,         0.0,           NoMax_double   );
    ReadPara->Add( "GRACKLE_CLOUDY_TABLE",        GRACKLE_CLOUDY_TABLE,            Useless_str,     Useless_str,   Useless_str    );
+   ReadPara->Add( "GRACKLE_THREE_BODY_RATE",    &GRACKLE_THREE_BODY_RATE,         0,               0,             5              );
+   ReadPara->Add( "GRACKLE_CIE_COOLING",        &GRACKLE_CIE_COOLING,             false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "GRACKLE_H2_OPA_APPROX",      &GRACKLE_H2_OPA_APPROX,           0,               0,             1              );
 // do not check CHE_GPU_NPGROUP since it may be reset by either Init_ResetDefaultParameter() or CUAPI_Set_Default_GPU_Parameter()
    ReadPara->Add( "CHE_GPU_NPGROUP",            &CHE_GPU_NPGROUP,                -1,               NoMin_int,     NoMax_int      );
 #  endif
@@ -202,21 +208,18 @@ void Init_Load_Parameter()
 #  endif
 
 
-// fluid solvers in HYDRO and MHD
+// fluid solvers in HYDRO
 #  if ( MODEL == HYDRO )
    ReadPara->Add( "GAMMA",                      &GAMMA,                           5.0/3.0,         1.0,           NoMax_double   );
    ReadPara->Add( "MOLECULAR_WEIGHT",           &MOLECULAR_WEIGHT,                0.6,             Eps_double,    NoMax_double   );
    ReadPara->Add( "MINMOD_COEFF",               &MINMOD_COEFF,                    1.5,             1.0,           2.0            );
    ReadPara->Add( "OPT__LR_LIMITER",            &OPT__LR_LIMITER,                 VL_GMINMOD,      0,             5              );
-   ReadPara->Add( "OPT__1ST_FLUX_CORR",         &OPT__1ST_FLUX_CORR,              FIRST_FLUX_CORR_3D1D, 0,        2              );
+   ReadPara->Add( "OPT__1ST_FLUX_CORR",         &OPT__1ST_FLUX_CORR,             -1,               NoMin_int,     2              );
    ReadPara->Add( "OPT__1ST_FLUX_CORR_SCHEME",  &OPT__1ST_FLUX_CORR_SCHEME,       RSOLVER_1ST_ROE, 0,             3              );
 #  ifdef DUAL_ENERGY
    ReadPara->Add( "DUAL_ENERGY_SWITCH",         &DUAL_ENERGY_SWITCH,              2.0e-2,          0.0,           NoMax_double   );
 #  endif
-
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
-#  endif // #if ( MODEL == HYDRO/MHD )
+#  endif // #if ( MODEL == HYDRO )
 
 
 // fluid solver in ELBDM
@@ -237,16 +240,19 @@ void Init_Load_Parameter()
    ReadPara->Add( "FLU_GPU_NPGROUP",            &FLU_GPU_NPGROUP,                -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "GPU_NSTREAM",                &GPU_NSTREAM,                    -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "OPT__FIXUP_FLUX",            &OPT__FIXUP_FLUX,                 true,            Useless_bool,  Useless_bool   );
+#  ifdef MHD
+   ReadPara->Add( "OPT__FIXUP_ELECTRIC",        &OPT__FIXUP_ELECTRIC,             true,            Useless_bool,  Useless_bool   );
+#  endif
    ReadPara->Add( "OPT__FIXUP_RESTRICT",        &OPT__FIXUP_RESTRICT,             true,            Useless_bool,  Useless_bool   );
 // do not check OPT__CORR_AFTER_ALL_SYNC since it may be reset by Init_ResetDefaultParameter()
    ReadPara->Add( "OPT__CORR_AFTER_ALL_SYNC",   &OPT__CORR_AFTER_ALL_SYNC,       -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "OPT__NORMALIZE_PASSIVE",     &OPT__NORMALIZE_PASSIVE,          true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OVERLAP_MPI",           &OPT__OVERLAP_MPI,                false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__RESET_FLUID",           &OPT__RESET_FLUID,                false,           Useless_bool,  Useless_bool   );
-#  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+#  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    ReadPara->Add( "MIN_DENS",                   &MIN_DENS,                        0.0,             0.0,           NoMax_double   );
 #  endif
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( MODEL == HYDRO )
    ReadPara->Add( "MIN_PRES",                   &MIN_PRES,                        0.0,             0.0,           NoMax_double   );
    ReadPara->Add( "JEANS_MIN_PRES",             &JEANS_MIN_PRES,                  false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "JEANS_MIN_PRES_LEVEL",       &JEANS_MIN_PRES_LEVEL,           -1,               NoMin_int,     NLEVEL-1       );
@@ -296,7 +302,9 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__INIT_GRID_WITH_OMP",    &OPT__INIT_GRID_WITH_OMP,         true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__GPUID_SELECT",          &OPT__GPUID_SELECT,              -1,              -3,             NoMax_int      );
    ReadPara->Add( "INIT_SUBSAMPLING_NCELL",     &INIT_SUBSAMPLING_NCELL,          0,               0,             NoMax_int      );
-
+#  ifdef MHD
+   ReadPara->Add( "OPT__INIT_BFIELD_BYFILE",    &OPT__INIT_BFIELD_BYFILE,         false,           Useless_bool,  Useless_bool   );
+#  endif
 
 // interpolation schemes
    ReadPara->Add( "OPT__INT_TIME",              &OPT__INT_TIME,                   true,            Useless_bool,  Useless_bool   );
@@ -306,6 +314,10 @@ void Init_Load_Parameter()
 // do not check OPT__FLU_INT_SCHEME and OPT__REF_FLU_INT_SCHEME since they may be reset by Init_ResetDefaultParameter()
    ReadPara->Add( "OPT__FLU_INT_SCHEME",        &OPT__FLU_INT_SCHEME,             INT_DEFAULT,     NoMin_int,     NoMax_int      );
    ReadPara->Add( "OPT__REF_FLU_INT_SCHEME",    &OPT__REF_FLU_INT_SCHEME,         INT_DEFAULT,     NoMin_int,     NoMax_int      );
+#  ifdef MHD
+   ReadPara->Add( "OPT__MAG_INT_SCHEME",        &OPT__MAG_INT_SCHEME,             INT_CQUAD,       NoMin_int,     NoMax_int      );
+   ReadPara->Add( "OPT__REF_MAG_INT_SCHEME",    &OPT__REF_MAG_INT_SCHEME,         INT_CQUAD,       NoMin_int,     NoMax_int      );
+#  endif
 #  ifdef GRAVITY
    ReadPara->Add( "OPT__POT_INT_SCHEME",        &OPT__POT_INT_SCHEME,             INT_QUAD,        4,             5              );
    ReadPara->Add( "OPT__RHO_INT_SCHEME",        &OPT__RHO_INT_SCHEME,             INT_CQUAD,       1,             7              );
@@ -324,6 +336,9 @@ void Init_Load_Parameter()
 #  endif
    ReadPara->Add( "OPT__OUTPUT_BASEPS",         &OPT__OUTPUT_BASEPS,              false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_BASE",           &OPT__OUTPUT_BASE,                false,           Useless_bool,  Useless_bool   );
+#  ifdef MHD
+   ReadPara->Add( "OPT__OUTPUT_CC_MAG",         &OPT__OUTPUT_CC_MAG,              true,            Useless_bool,  Useless_bool   );
+#  endif
 #  ifdef GRAVITY
    ReadPara->Add( "OPT__OUTPUT_POT",            &OPT__OUTPUT_POT,                 false,           Useless_bool,  Useless_bool   );
 #  endif
@@ -372,12 +387,16 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__CK_FINITE",             &OPT__CK_FINITE,                  false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__CK_PATCH_ALLOCATE",     &OPT__CK_PATCH_ALLOCATE,          false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__CK_FLUX_ALLOCATE",      &OPT__CK_FLUX_ALLOCATE,           false,           Useless_bool,  Useless_bool   );
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( MODEL == HYDRO )
    ReadPara->Add( "OPT__CK_NEGATIVE",           &OPT__CK_NEGATIVE,                0,               0,             3              );
 #  endif
    ReadPara->Add( "OPT__CK_MEMFREE",            &OPT__CK_MEMFREE,                 1.0,             0.0,           NoMax_double   );
 #  ifdef PARTICLE
    ReadPara->Add( "OPT__CK_PARTICLE",           &OPT__CK_PARTICLE,                false,           Useless_bool,  Useless_bool   );
+#  endif
+#  ifdef MHD
+   ReadPara->Add( "OPT__CK_INTERFACE_B",        &OPT__CK_INTERFACE_B,             false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__CK_DIVERGENCE_B",       &OPT__CK_DIVERGENCE_B,            0,               0,             2              );
 #  endif
 
 

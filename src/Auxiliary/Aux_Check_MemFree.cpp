@@ -5,13 +5,13 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Aux_Check_MemFree
-// Description :  Check the total free memory and terminate the program if it is below a given threshold 
+// Description :  Check the total free memory and terminate the program if it is below a given threshold
 //
 // Note        :  1. The minimum free memory is specified by the variable "OPT__CK_MEMFREE"
 //                2. This check will be performed every "global step"
 //                   --> included in the function "Aux_Check"
 //                3. The total free memory is estimated as the sum of the free, buffer, and cached memories
-// 
+//
 // Parameter   :  MinMemFree_Total  : Minimum total free memory (in GB)
 //                comment           : You can put the location where this function is invoked in this string
 //-------------------------------------------------------------------------------------------------------
@@ -32,7 +32,7 @@ void Aux_Check_MemFree( const double MinMemFree_Total, const char *comment )
 // 1. read the memory information
    if ( !Aux_CheckFileExist(FileName_Mem) )
    {
-      Aux_Message( stderr, "WARNING : memory information file \"%s\" does not exist (Rank %d) !!\n", 
+      Aux_Message( stderr, "WARNING : memory information file \"%s\" does not exist (Rank %d) !!\n",
                    FileName_Mem, MPI_Rank );
       return;
    }
@@ -44,7 +44,7 @@ void Aux_Check_MemFree( const double MinMemFree_Total, const char *comment )
       if ( getline( &line, &len, MemFile ) == -1 )
       {
          Aux_Message( stderr, "WARNING : some memory information is not found at Rank %d ", MPI_Rank );
-         Aux_Message( stderr, "(MemTotal: %s, MemFree: %s, Buffers: %s, Cached: %s)\n", 
+         Aux_Message( stderr, "(MemTotal: %s, MemFree: %s, Buffers: %s, Cached: %s)\n",
                       GetMemTotal? "OK":"NO", GetMemFree? "OK":"NO", GetBuffers? "OK":"NO", GetCached? "OK":"NO" );
          break;
       }
@@ -91,7 +91,7 @@ void Aux_Check_MemFree( const double MinMemFree_Total, const char *comment )
 // 3. terminate the program if the total free memory is below the threshold
    int Terminate_global, Terminate_local;
 
-   if ( MemFree_Total < MinMemFree_Total )   
+   if ( MemFree_Total < MinMemFree_Total )
    {
       Terminate_local = true;
 

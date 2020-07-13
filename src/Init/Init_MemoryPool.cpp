@@ -71,18 +71,22 @@ void Init_MemoryPool()
 
 // allocate the memory pool
    const bool WithFluData_Yes = true;
+   const bool WithMagData_Yes = true;
    const bool WithPotData_Yes = true;
    const bool ReuseMemory_Yes = true;
 
    for (int lv=0; lv<=MAX_LEVEL; lv++)
    {
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Preallocating %8d patches at level %2d ... ", NPatchInPool[lv], lv );
+      if ( MPI_Rank == 0 )
+         Aux_Message( stdout, "   Preallocating %8d patches at level %2d ... ", NPatchInPool[lv], lv );
 
 //    preallocate patches (with corner arbitrarily set)
-      for (int PID=0; PID<NPatchInPool[lv]; PID++)    amr->pnew( lv, 0, 0, 0, NULL_INT, WithFluData_Yes, WithPotData_Yes );
+      for (int PID=0; PID<NPatchInPool[lv]; PID++)
+         amr->pnew( lv, 0, 0, 0, NULL_INT, WithFluData_Yes, WithMagData_Yes, WithPotData_Yes );
 
 //    deactivate all patches (which does not deallocate memory)
-      for (int PID=0; PID<NPatchInPool[lv]; PID++)    amr->pdelete( lv, PID, ReuseMemory_Yes );
+      for (int PID=0; PID<NPatchInPool[lv]; PID++)
+         amr->pdelete( lv, PID, ReuseMemory_Yes );
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
    }

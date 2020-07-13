@@ -7,21 +7,21 @@
 // Function    :  Int_MinMod1D
 // Description :  Perform spatial interpolation based on the MinMod limiter
 //
-// Note        :  a. The slope at each grid is determined by the minimum slope between the right slope
+// Note        :  1. The slope at each grid is determined by the minimum slope between the right slope
 //                   (difference between the right grid and itself) and the left slope (difference between
 //                   itself and the left slope)
-//                b. The slope is chosen to be zero if the right and left slopes have different signs
-//                c. The interpolation result is BOTH conservative and monotonic
-//                d. 3D interpolation is realized by computing the slopes at all three spatial directions
+//                2. The slope is chosen to be zero if the right and left slopes have different signs
+//                3. The interpolation result is BOTH conservative and monotonic
+//                4. 3D interpolation is realized by computing the slopes at all three spatial directions
 //                   at the same time
 //
-// Parameter   :  CData    : Input coarse-grid array
-//                CSize    : Size of the CData array
-//                CStart   : (x,y,z) starting indices to perform interpolation on the CData array
-//                CRange   : Number of grids in each direction to perform interpolation
-//                FData    : Output fine-grid array
-//                FStart   : (x,y,z) starting indcies to store the interpolation results
-//                NComp    : Number of components in the CData and FData array
+// Parameter   :  CData  : Input coarse-grid array
+//                CSize  : Size of the CData array
+//                CStart : (x,y,z) starting indices to perform interpolation on the CData array
+//                CRange : Number of grids in each direction to perform interpolation
+//                FData  : Output fine-grid array
+//                FStart : (x,y,z) starting indcies to store the interpolation results
+//                NComp  : Number of components in the CData and FData array
 //-------------------------------------------------------------------------------------------------------
 void Int_MinMod1D( const real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
                    real FData[], const int FSize[3], const int FStart[3], const int NComp )

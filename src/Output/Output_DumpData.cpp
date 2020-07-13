@@ -8,11 +8,11 @@ extern void (*Output_User_Ptr)();
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_DumpData
-// Description :  Trigger the output functions "Output_DumpData_Total, Output_DumpData_Part, Output_User,
-//                Output_BasePowerSpectrum, Par_Output_TextFile"
+// Description :  Trigger the output functions Output_DumpData_Total(), Output_DumpData_Part(), Output_User(),
+//                Output_BasePowerSpectrum(), Par_Output_TextFile()
 //
-// Note        :  1. The function pointer "Output_User_Ptr" points to "Output_User()" by default
-//                   but may be overwritten by various test problem initializers
+// Note        :  1. For OUTPUT_USER, the function pointer "Output_User_Ptr" must be set by a
+//                   test problem initializer
 //
 // Parameter   :  Stage : 0 : beginning of the run
 //                        1 : during the evolution
@@ -187,8 +187,12 @@ void Output_DumpData( const int Stage )
       if ( OPT__OUTPUT_TOTAL )            Output_DumpData_Total( FileName_Total );
       if ( OPT__OUTPUT_PART  )            Output_DumpData_Part( OPT__OUTPUT_PART, OPT__OUTPUT_BASE, OUTPUT_PART_X,
                                                                 OUTPUT_PART_Y, OUTPUT_PART_Z, FileName_Part );
-      if ( OPT__OUTPUT_USER  &&
-           Output_User_Ptr != NULL )      Output_User_Ptr();
+      if ( OPT__OUTPUT_USER )
+      {
+         if ( Output_User_Ptr != NULL )   Output_User_Ptr();
+         else
+            Aux_Error( ERROR_INFO, "Output_User_Ptr == NULL for OPT__OUTPUT_USER !!\n" );
+      }
 #     ifdef GRAVITY
       if ( OPT__OUTPUT_BASEPS )           Output_BasePowerSpectrum( FileName_PS );
 #     endif

@@ -1,14 +1,25 @@
 #include "GAMER.h"
 
-void InterpolateGhostZone( const int lv, const int PID, real IntData[], const int SibID, const double PrepTime,
-                           const int GhostSize, const IntScheme_t IntScheme, const int NTSib[], int *TSib[],
-                           const int TVar, const int NVar_Tot, const int NVar_Flu, const int TFluVarIdxList[],
-                           const int NVar_Der, const int TDerVarList[], const bool IntPhase,
-                           const OptFluBC_t FluBC[], const OptPotBC_t PotBC, const int BC_Face[], const real MinPres,
-                           const bool DE_Consistency );
+void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real IntData_FC[],
+                           const int FSide, const double PrepTime, const int GhostSize,
+                           const IntScheme_t IntScheme_CC, const IntScheme_t IntScheme_FC,
+                           const int NTSib[], int *TSib[], const long TVarCC, const int NVarCC_Tot,
+                           const int NVarCC_Flu, const int TVarCCIdxList_Flu[],
+                           const int NVarCC_Der, const long TVarCCList_Der[],
+                           const long TVarFC, const int NVarFC_Tot, const int TVarFCIdxList[],
+                           const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
+                           const int BC_Face[], const real MinPres, const bool DE_Consistency,
+                           const real *FInterface[6] );
 static void SetTargetSibling( int NTSib[], int *TSib[] );
 static int Table_01( const int SibID, const char dim, const int Count, const int GhostSize );
 static int Table_02( const int lv, const int PID, const int Side );
+void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, const double Time0, const double Time1,
+                     bool &IntTime, int &Sg, int &Sg_IntT, real &Weighting, real &Weighting_IntT );
+#ifdef MHD
+static void MHD_SetFInterface( real *FInt_Data, real *FInt_Ptr[6], const real *Data1PG_FC, const int lv, const int PID0,
+                               const int Side, const int GhostSize, const int MagSg, const int MagSg_IntT,
+                               const bool MagIntTime, const real MagWeighting, const real MagWeighting_IntT );
+#endif
 
 // flags for checking whether (1) Prepare_PatchData_InitParticleDensityArray() and (2) Par_CollectParticle2OneLevel()
 // are properly called before preparing either _PAR_DENS or _TOTAL_DENS
@@ -18,16 +29,34 @@ bool ParDensArray_Initialized = false;
 #endif
 
 
+// check the divergence-free B field (for debug)
+#ifdef MHD
+//#  define MHD_CHECK_DIV_B
+
+# ifdef MHD_CHECK_DIV_B
+#  ifdef FLOAT8
+#  define DIV_B_TOLERANCE  1.0e-12
+#  else
+#  define DIV_B_TOLERANCE  1.0e-5f
+#  endif
+
+static void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const real Tolerance,
+                           const int lv, const double PrepTime );
+# endif // #ifdef MHD_CHECK_DIV_B
+#endif // MHD
+
+
 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Prepare_PatchData
 // Description :  Prepare the uniform data including ghost zones for the target patches or patch groups
 //
-// Note        :  1. Use the input parameter "TVar" to control the target variables
-//                   --> TVar can be any combination of the symbolic constants defined in "Macro.h"
-//                       (e.g., "TVar = _DENS", "TVar = _MOMX|ENGY", or "TVar = _TOTAL")
-//                2. If "GhostSize != 0" --> the function "InterpolateGhostZone" will be used to fill up the
+// Note        :  1. Use the input parameters "TVarCC" and "TVarFC" to control the target cell-centered and
+//                   face-centered variables, respectively
+//                   --> TVarCC and TVarFC can be any combination of the symbolic constants defined in "Macro.h"
+//                       (e.g., "TVarCC = _DENS", "TVarCC = _MOMX|ENGY", "TVarCC = _TOTAL", "TVarFC = _MAGX|_MAGZ")
+//                2. If "GhostSize != 0" --> use InterpolateGhostZone() to fill out the
 //                   ghost-zone values by spatial interpolation if the corresponding sibling patches do
 //                   NOT exist
 //                4. Use PrepTime to determine the physical time to prepare data
@@ -59,24 +88,34 @@ bool ParDensArray_Initialized = false;
 //                9. For simplicity, currently the mode _TEMP returns **pressure/density**, which does NOT include normalization
 //                   --> For OPT__FLAG_LOHNER_TEMP only
 //                   --> Also note that MinPres is applied to _TEMP when calculating pressure
+//                10. Option "MHD_CHECK_DIV_B" on the top of this file can be used to check the divergence-free constraint
+//                    on the prepared B field
+//                    --> Note that when temporal interpolation is required in InterpolateGhostZone(), it will break div(B)=0 for
+//                        the interpolated fine-grid B field just outside the central patch group
+//                        --> It's because the temporal interpolated B field is in general not equal to the original fine-grid B
+//                            field on the coarse-fine interfaces of the central patch group
+//                        --> It's OK for the MHD solver since it will still guarantee that the updated B field within the patch group
+//                            is divergence free
 //
 // Parameter   :  lv             : Target refinement level
 //                PrepTime       : Target physical time to prepare data
-//                                 --> Currently it must be equal to either Time[lv] or Time_Prev[lv]
-//                                 --> Temporal interpolation at Lv=lv is NOT supported
-//                h_Input_Array  : Host array to store the prepared data
+//                OutputCC       : Returned array to store the prepared cell-centered data
+//                OutputFC       : Returned array to store the prepared face-centered data
 //                GhostSize      : Number of ghost zones to be prepared
 //                NPG            : Number of patch groups prepared at a time
-//                PID0_List      : List recording the patch indicies with LocalID==0 to be prepared
-//                TVar           : Target variables to be prepared
+//                PID0_List      : List recording the patch indices with LocalID==0 to be prepared
+//                TVarCC         : Target cell-centered variables to be prepared
 //                                 --> Supported variables in different models:
-//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _PRES, _TEMP,
+//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _PRES, _TEMP
 //                                             [, _POTE]
-//                                     MHD   :
 //                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE]
 //                                 --> _FLUID, _PASSIVE, _TOTAL, and _DERIVED apply to all models
-//                IntScheme      : Interpolation scheme
-//                                 --> currently supported schemes include
+//                TVarFC         : Target face-centered variables to be prepared
+//                                 --> Supported variables in different models:
+//                                     HYDRO with MHD : _MAGX, _MAGY, _MAGZ, _MAG
+//                                     ELBDM          : none
+//                IntScheme_CC   : Interpolation scheme for the cell-centered variables
+//                                 --> Supported schemes include
 //                                     INT_MINMOD1D : MinMod-1D
 //                                     INT_MINMOD3D : MinMod-3D
 //                                     INT_VANLEER  : vanLeer
@@ -84,6 +123,12 @@ bool ParDensArray_Initialized = false;
 //                                     INT_QUAD     : quadratic
 //                                     INT_CQUAR    : conservative quartic
 //                                     INT_QUAR     : quartic
+//                IntScheme_FC   : Interpolation scheme for the face-centered variables
+//                                 --> Supported schemes include
+//                                     INT_MINMOD1D : MinMod-1D
+//                                     INT_VANLEER  : vanLeer
+//                                     INT_CQUAD    : conservative quadratic
+//                                     INT_CQUAR    : conservative quartic
 //                PrepUnit       : Whether or not to separate the prepared data into individual patches
 //                                 --> UNIT_PATCH      : prepare data "patch by patch"
 //                                     UNIT_PATCHGROUP : prepare data "patch group by patch group"
@@ -92,7 +137,7 @@ bool ParDensArray_Initialized = false;
 //                                     NSIDE_06 (=  6) : prepare only sibling directions 0~5
 //                                     NSIDE_26 (= 26) : prepare all sibling directions 0~25
 //                IntPhase       : true --> Perform interpolation on rho/phase instead of real/imag parts in ELBDM
-//                                      --> TVar must contain _REAL and _IMAG
+//                                      --> TVarCC must contain _REAL and _IMAG
 //                FluBC          : Fluid boundary condition
 //                PotBC          : Gravity boundary condition
 //                MinDens/Pres   : Minimum allowed density/pressure in the output array (<0.0 ==> off)
@@ -105,20 +150,22 @@ bool ParDensArray_Initialized = false;
 //                                 --> Currently MinDens is applied in Flu_Prepare(), Flag_Real(), and Poi_Prepare_Rho()
 //                                     --> The Guideline is to apply MinDens check only when ghost zones are required
 //                                         (because density field is already stored in each patch and we don't want
-//                                         Prepare_PatchData() to MODIFY the existing data)
-//                                 --> Currently MinPres is applied in Flu_Prepare() and Flag_Real()
-//                                     --> The Guideline is to apply MinPres check whenever _PRES, _TEMP or _FLUID is required
+//                                         Prepare_PatchData() to modify the existing data)
+//                                 --> Currently MinPres is applied only in Flag_Real()
+//                                     --> The Guideline is to apply MinPres check whenever _PRES or _TEMP is required
 //                                         (because pressure field is NOT stored explicitly in each patch and thus existing data
 //                                         may still have pressure < MinPres due to round-off errors)
 //                DE_Consistency : Ensure the consistency between pressure, total energy density, and the dual-energy variable
 //                                 when DUAL_ENERGY is on
 //                                 --> Only apply to the ghost-zone interpolation on the assumption that the data stored
 //                                     in all patches already satisfy this consistency check
+//
+// Return      :  OutputCC, OutputFC
 //-------------------------------------------------------------------------------------------------------
-void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array,
-                        const int GhostSize, const int NPG, const int *PID0_List, int TVar,
-                        const IntScheme_t IntScheme, const PrepUnit_t PrepUnit, const NSide_t NSide,
-                        const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
+void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, real *OutputFC,
+                        const int GhostSize, const int NPG, const int *PID0_List, long TVarCC, long TVarFC,
+                        const IntScheme_t IntScheme_CC, const IntScheme_t IntScheme_FC, const PrepUnit_t PrepUnit,
+                        const NSide_t NSide, const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
                         const real MinDens, const real MinPres, const bool DE_Consistency )
 {
 
@@ -127,56 +174,58 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 
 // check
-// --> to be more cautious, we apply these checks even when GAMER_DEBUG is off
-//#  ifdef GAMER_DEBUG
+#  ifdef GAMER_DEBUG
 
-   int AllVar = ( _TOTAL | _DERIVED );
+   long AllVarCC = ( _TOTAL | _DERIVED );
 #  ifdef GRAVITY
-   AllVar |= _POTE;
+   AllVarCC |= _POTE;
 #  endif
 #  ifdef PARTICLE
-   AllVar |= _PAR_DENS;
-   AllVar |= _TOTAL_DENS;
+   AllVarCC |= _PAR_DENS;
+   AllVarCC |= _TOTAL_DENS;
 #  endif
-   if ( TVar & ~AllVar )   Aux_Error( ERROR_INFO, "unsupported parameter %s = %d !!\n", "TVar", TVar );
+   if ( TVarCC & ~AllVarCC )   Aux_Error( ERROR_INFO, "unsupported parameter %s = %d !!\n", "TVarCC", TVarCC );
 
-   if ( MinDens >= (real)0.0 )
+   long AllVarFC = 0;
+#  ifdef MHD
+   AllVarFC |= _MAG;
+#  endif
+   if ( TVarFC & ~AllVarFC )   Aux_Error( ERROR_INFO, "unsupported parameter %s = %d !!\n", "TVarFC", TVarFC );
+
+   if ( MinDens >= (real)0.0  &&  MPI_Rank == 0 )
    {
-#     if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+#     if ( MODEL == HYDRO  ||  MODEL == ELBDM )
 #     ifdef PARTICLE
-      if ( !(TVar & _DENS)  &&  !(TVar & _TOTAL_DENS) )
-         Aux_Error( ERROR_INFO, "MinDens (%13.7e) >= 0.0, but neither _DENS nor _TOTAL_DENS is found !!\n", MinDens );
+      if ( !(TVarCC & _DENS)  &&  !(TVarCC & _TOTAL_DENS) )
+         Aux_Message( stderr, "WARNING : MinDens (%13.7e) >= 0.0 but neither _DENS nor _TOTAL_DENS is found !!\n", MinDens );
 #     else
-      if ( !(TVar & _DENS) )
-         Aux_Error( ERROR_INFO, "MinDens (%13.7e) >= 0.0, but _DENS is not found !!\n", MinDens );
+      if ( !(TVarCC & _DENS) )
+         Aux_Message( stderr, "WARNING : MinDens (%13.7e) >= 0.0 but _DENS is not found !!\n", MinDens );
 #     endif
 #     else
-         Aux_Error( ERROR_INFO, "MinDens (%13.7e) >= 0.0 can only be applied to HYDRO/MHD/ELBDM !!\n", MinDens );
+         Aux_Message( stderr, "WARNING : MinDens (%13.7e) >= 0.0 can only be applied to HYDRO/ELBDM !!\n", MinDens );
 #     endif
 
 #     if ( MODEL == ELBDM )
-      if (  ( (TVar & _REAL) || (TVar & _IMAG) )  &&  MPI_Rank == 0  )
+      if (  ( TVarCC & _REAL )  ||  ( TVarCC & _IMAG )  )
          Aux_Message( stderr, "WARNING : real and imaginary parts are NOT rescaled after applying the minimum density check !!\n" );
 #     endif
    }
 
-   if ( MinPres >= (real)0.0 )
+   if ( MinPres >= (real)0.0  &&  MPI_Rank == 0 )
    {
-#     if ( MODEL == HYDRO  ||  MODEL == MHD )
-//    note that when PARTICLE is on, we should NOT allow MinPres check when TVar & _TOTAL_DENS == true because
-//    we won't have gas density prepared to calculate pressure (we only have **total** density)
-//    --> but when PARTICLE is off, we have _TOTAL_DENS == _DENS (see Macro.h), and thus MinPres check is allowed
-      if ( !(TVar & _PRES)  &&  !(TVar & _TEMP)  &&  (TVar & _FLUID) != _FLUID )
-         Aux_Error( ERROR_INFO, "MinPres (%13.7e) >= 0.0, but cannot find _PRES, _TEMP, or _FLUID !!\n", MinPres );
+#     if ( MODEL == HYDRO )
+      if (  !(TVarCC & _PRES)  &&  !(TVarCC & _TEMP)  )
+         Aux_Message( stderr, "WARNING : MinPres (%13.7e) >= 0.0 but neither _PRES nor _TEMP is found !!\n", MinPres );
 #     else
-         Aux_Error( ERROR_INFO, "MinPres (%13.7e) >= 0.0 can only be applied to HYDRO/MHD !!\n", MinPres );
+         Aux_Message( stderr, "WARNING : MinPres (%13.7e) >= 0.0 can only be applied to HYDRO !!\n", MinPres );
 #     endif
    }
 
    if ( IntPhase )
    {
 #     if ( MODEL == ELBDM )
-      if (  !(TVar & _REAL)  ||  !(TVar & _IMAG)  )
+      if (  !(TVarCC & _REAL)  ||  !(TVarCC & _IMAG)  )
       Aux_Error( ERROR_INFO, "real and/or imag parts are not found for phase interpolation in ELBDM !!\n" );
 #     else
       Aux_Error( ERROR_INFO, "\"interpolation on phase\" is useful only in ELBDM !!\n" );
@@ -208,7 +257,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
       Aux_Message( stderr, "WARNING : inconsistent NSide (%d) and GhostSize (%d) !!\n", NSide, GhostSize );
 
 #  ifdef PARTICLE
-   if (  TVar & _PAR_DENS  ||  TVar & _TOTAL_DENS )
+   if (  TVarCC & _PAR_DENS  ||  TVarCC & _TOTAL_DENS )
    {
 //    because we only collect particles from nearby 26 sibling patches
       if ( GhostSize > PS1 - amr->Par->GhostSize )
@@ -223,12 +272,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    }
 
 // _DENS, _PAR_DENS, and _TOTAL_DENS do not work together (actually we should be able to support _DENS + _PAR_DENS)
-   if (  ( TVar&_DENS && TVar&_PAR_DENS )  ||  ( TVar&_DENS && TVar&_TOTAL_DENS )  )
+   if (  ( TVarCC & _DENS && TVarCC & _PAR_DENS )  ||  ( TVarCC & _DENS && TVarCC & _TOTAL_DENS )  )
       Aux_Error( ERROR_INFO, "_DENS, _PAR_DENS, and _TOTAL_DENS cannot work together !!\n" );
 
 // for PAR_ONLY, we have _TOTAL_DENS == _PAR_DENS
 #  if ( MODEL != PAR_ONLY )
-   if ( TVar&_TOTAL_DENS && TVar&_PAR_DENS )
+   if ( TVarCC & _TOTAL_DENS  &&  TVarCC & _PAR_DENS )
       Aux_Error( ERROR_INFO, "_DENS, _PAR_DENS, and _TOTAL_DENS cannot work together !!\n" );
 #  endif
 #  endif // #ifdef PARTICLE
@@ -238,26 +287,24 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
       if ( PID0_List[TID] < 0  ||  PID0_List[TID] >= amr->NPatchComma[lv][1] )
          Aux_Error( ERROR_INFO, "incorrect target PID %d (NReal = %d) !!\n", PID0_List[TID], amr->NPatchComma[lv][1] );
 
-//#  endif // #ifdef GAMER_DEBUG
+#  endif // #ifdef GAMER_DEBUG
 
 
    const double dh               = amr->dh[lv];
-   const int    PGSize1D         = 2*( PATCH_SIZE + GhostSize );  // size of a single patch group including the ghost zone
-   const int    PGSize3D         = CUBE( PGSize1D );
+   const int    PGSize1D_CC      = 2*( PS1 + GhostSize );   // width of a single patch group including ghost zones
+   const int    PGSize3D_CC      = CUBE( PGSize1D_CC );
    const int    GhostSize_Padded = GhostSize + (GhostSize&1);
+   const int    PGSize1D_FC      = PGSize1D_CC + 1;
+   const int    PGSize3D_FC      = PGSize1D_FC*SQR(PGSize1D_CC);
 
 #  if   ( MODEL == HYDRO )
-   const bool CheckMinPres_No  = false;   // we check minimum pressure in the end of this function (step d)
    const real Gamma_m1         = GAMMA - (real)1.0;
    const real _Gamma_m1        = (real)1.0 / Gamma_m1;
-   const bool PrepVx           = ( TVar & _VELX ) ? true : false;
-   const bool PrepVy           = ( TVar & _VELY ) ? true : false;
-   const bool PrepVz           = ( TVar & _VELZ ) ? true : false;
-   const bool PrepPres         = ( TVar & _PRES ) ? true : false;
-   const bool PrepTemp         = ( TVar & _TEMP ) ? true : false;
-
-#  elif ( MODEL == MHD   )
-#  warning : WAIT MHD !!
+   const bool PrepVx           = ( TVarCC & _VELX ) ? true : false;
+   const bool PrepVy           = ( TVarCC & _VELY ) ? true : false;
+   const bool PrepVz           = ( TVarCC & _VELZ ) ? true : false;
+   const bool PrepPres         = ( TVarCC & _PRES ) ? true : false;
+   const bool PrepTemp         = ( TVarCC & _TEMP ) ? true : false;
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
@@ -267,7 +314,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #  endif
 
 #  ifdef GRAVITY
-   const bool PrepPot = ( TVar & _POTE ) ? true : false;
+   const bool PrepPot = ( TVarCC & _POTE ) ? true : false;
 #  endif
 
 #  ifdef PARTICLE
@@ -275,71 +322,101 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 // --> and we set PrepTotalDens == true ONLY when there are density fields other than particles
 // --> for PAR_ONLY mode, we always set PrepTotalDens == false to avoid confusion
 #  if ( MODEL == PAR_ONLY )
-   const bool PrepParOnlyDens = ( TVar & _PAR_DENS  ||  TVar & _TOTAL_DENS ) ? true : false;
+   const bool PrepParOnlyDens = ( TVarCC & _PAR_DENS  ||  TVarCC & _TOTAL_DENS ) ? true : false;
    const bool PrepTotalDens   = false;
 #  else
-   const bool PrepParOnlyDens = ( TVar & _PAR_DENS   ) ? true : false;
-   const bool PrepTotalDens   = ( TVar & _TOTAL_DENS ) ? true : false;
+   const bool PrepParOnlyDens = ( TVarCC & _PAR_DENS   ) ? true : false;
+   const bool PrepTotalDens   = ( TVarCC & _TOTAL_DENS ) ? true : false;
 #  endif
 
 // turn on _DENS automatically for preparing total density
-   if ( PrepTotalDens )    TVar |= _DENS;
+   if ( PrepTotalDens )    TVarCC |= _DENS;
 #  endif // #ifdef PARTICLE
 
 
-// TFluVarIdxList : List recording the target fluid and passive variable indices ( = [0 ... NCOMP_TOTAL-1] )
-   int NTSib[26], *TSib[26], NVar_Flu, NVar_Der, NVar_Tot, TFluVarIdxList[NCOMP_TOTAL];
+// TVarCCIdxList_Flu: list recording the target cell-centered fluid and passive variable indices (e.g., [0 ... NCOMP_TOTAL-1] )
+// TVarCCList_Der   : list recording the target cell-centered derived variable (e.g., _VELX, _PRES)
+// TVarFCIdxList    : list recording the target face-centered variable indices (e.g., [0 ... NCOMP_MAG-1])
+   int NTSib[26], *TSib[26], NVarCC_Flu, NVarCC_Der, NVarCC_Tot, TVarCCIdxList_Flu[NCOMP_TOTAL];
 
-// set up the target sibling indices for the function "InterpolateGhostZone"
+// set up the target sibling indices for InterpolateGhostZone()
    SetTargetSibling( NTSib, TSib );
 
-// determine the components to be prepared
-// --> assuming that _VAR_NAME = 1<<VAR_NAME (e.g., _DENS == 1<<DENS)
-// --> it also determines the order of variables stored in h_Input_Array (which is the same as patch->fluid[])
-   NVar_Flu = 0;
+// determine the cell-centered fluid components to be prepared
+// --> assuming that _VAR_NAME = 1L<<VAR_NAME (e.g., _DENS == 1L<<DENS)
+// --> it also determines the order of variables stored in OutputCC (which is the same as patch->fluid[])
+   NVarCC_Flu = 0;
    for (int v=0; v<NCOMP_TOTAL; v++)
-      if ( TVar & (1<<v) )    TFluVarIdxList[ NVar_Flu++ ] = v;
+      if ( TVarCC & (1L<<v) )    TVarCCIdxList_Flu[ NVarCC_Flu++ ] = v;
 
-   NVar_Der = 0;
+   NVarCC_Der = 0;
 
 #  if   ( MODEL == HYDRO )
-   const int NVar_Der_Max = 5;
-   int TDerVarList[NVar_Der_Max];
+   const int NVarCC_Der_Max = 5;
+   long TVarCCList_Der[NVarCC_Der_Max];
 
-   if ( PrepVx   )   TDerVarList[ NVar_Der ++ ] = _VELX;
-   if ( PrepVy   )   TDerVarList[ NVar_Der ++ ] = _VELY;
-   if ( PrepVz   )   TDerVarList[ NVar_Der ++ ] = _VELZ;
-   if ( PrepPres )   TDerVarList[ NVar_Der ++ ] = _PRES;
-   if ( PrepTemp )   TDerVarList[ NVar_Der ++ ] = _TEMP;
-
-#  elif ( MODEL == MHD   )
-#  warning : WAIT MHD !!
+   if ( PrepVx   )   TVarCCList_Der[ NVarCC_Der ++ ] = _VELX;
+   if ( PrepVy   )   TVarCCList_Der[ NVarCC_Der ++ ] = _VELY;
+   if ( PrepVz   )   TVarCCList_Der[ NVarCC_Der ++ ] = _VELZ;
+   if ( PrepPres )   TVarCCList_Der[ NVarCC_Der ++ ] = _PRES;
+   if ( PrepTemp )   TVarCCList_Der[ NVarCC_Der ++ ] = _TEMP;
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
-   const int NVar_Der_Max = 0;
-   int *TDerVarList = NULL;
+   const int NVarCC_Der_Max = 0;
+   long *TVarCCList_Der = NULL;
 
 #  else
 #  error : unsupported MODEL !!
 #  endif
 
-   NVar_Tot = NVar_Flu + NVar_Der;
+   NVarCC_Tot = NVarCC_Flu + NVarCC_Der;
 
 #  ifdef GRAVITY
-   if ( PrepPot )          NVar_Tot ++;
+   if ( PrepPot )    NVarCC_Tot ++;
 #  endif
 
-// do not increase NVar_Tot for PrepTotalDens since _DENS is already turned on automatically for that
+// do not increase NVarCC_Tot for PrepTotalDens since _DENS is already turned on automatically for that
 #  ifdef PARTICLE
-   if ( PrepParOnlyDens )  NVar_Tot ++;
+   if ( PrepParOnlyDens )  NVarCC_Tot ++;
 #  endif
 
-   if ( NVar_Tot == 0  &&  MPI_Rank == 0 )
+
+// determine the face-centered variables to be prepared
+// --> currently we do not consider any face-centered derived variable
+// --> assuming that _VAR_NAME = 1L<<VAR_NAME (e.g., _MAGX == 1L<<MAGX)
+// --> it also determines the order of variables stored in OutputFC (which is the same as patch->magnetic[])
+   int NVarFC_Tot = 0;
+
+#  ifdef MHD
+   const bool PrepMag = ( TVarFC & _MAG ) ? true : false;
+   int TVarFCIdxList[NCOMP_MAG];
+
+   for (int v=0; v<NCOMP_MAG; v++)
+      if ( TVarFC & (1L<<v) )    TVarFCIdxList[ NVarFC_Tot++ ] = v;
+
+#  else
+// currently no other models require any face-centered variable
+   int *TVarFCIdxList = NULL;
+#  endif
+
+
+// nothing to do if no target variable is found
+   if ( NVarCC_Tot == 0  &&  NVarFC_Tot == 0  &&  MPI_Rank == 0 )
    {
       Aux_Message( stderr, "WARNING : no target variable is found !!\n" );
       return;
    }
+
+
+// validate the output pointers
+#  ifdef GAMER_DEBUG
+   if ( NVarCC_Tot > 0  &&  OutputCC == NULL )
+      Aux_Error( ERROR_INFO, "OutputCC == NULL (NVarCC_Tot %d) !!\n", NVarCC_Tot );
+
+   if ( NVarFC_Tot > 0  &&  OutputFC == NULL )
+      Aux_Error( ERROR_INFO, "OutputFC == NULL (NVarFC_Tot %d) !!\n", NVarFC_Tot );
+#  endif
 
 
 // temporal interpolation parameters
@@ -347,91 +424,52 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    int  FluSg, FluSg_IntT;
    real FluWeighting, FluWeighting_IntT;
 
-   if ( NVar_Flu + NVar_Der != 0 ) {
-   if      (  Mis_CompareRealValue( PrepTime, amr->FluSgTime[lv][   amr->FluSg[lv] ], NULL, false )  )
+// fluid
+   if ( NVarCC_Flu + NVarCC_Der != 0 )
    {
-      FluIntTime        = false;
-      FluSg             = amr->FluSg[lv];
-      FluSg_IntT        = NULL_INT;
-      FluWeighting      = NULL_REAL;
-      FluWeighting_IntT = NULL_REAL;
-   }
+      SetTempIntPara( lv, amr->FluSg[lv], PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1],
+                      FluIntTime, FluSg, FluSg_IntT, FluWeighting, FluWeighting_IntT );
 
-   else if (  Mis_CompareRealValue( PrepTime, amr->FluSgTime[lv][ 1-amr->FluSg[lv] ], NULL, false )  )
-   {
-      FluIntTime        = false;
-      FluSg             = 1 - amr->FluSg[lv];
-      FluSg_IntT        = NULL_INT;
-      FluWeighting      = NULL_REAL;
-      FluWeighting_IntT = NULL_REAL;
-   }
-
-   else
-   {
 //    check: although temporal interpolation is allowed, currently PrepTime is expected to be equal to either
 //           amr->FluSgTime[lv][0] or amr->FluSgTime[lv][1]
-      Aux_Error( ERROR_INFO, "cannot determine FluSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
-                 lv, PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
+      if ( FluIntTime  &&  MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : cannot determine FluSg "
+                              "(lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e) !!\n",
+                      lv, PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
+   }
 
-//    print warning messages if temporal extrapolation is required
-      const double TimeMin = MIN( amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
-      const double TimeMax = MAX( amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
+// magnetic field
+#  ifdef MHD
+   bool MagIntTime;
+   int  MagSg, MagSg_IntT;
+   real MagWeighting, MagWeighting_IntT;
 
-      if ( TimeMin < 0.0 )
-         Aux_Error( ERROR_INFO, "TimeMin (%21.14e) < 0.0 ==> one of the fluid arrays has not been initialized !!\n", TimeMin );
+// check PrepPres and PrepTemp since they also require B field
+   if ( PrepMag || PrepPres || PrepTemp )
+   {
+      SetTempIntPara( lv, amr->MagSg[lv], PrepTime, amr->MagSgTime[lv][0], amr->MagSgTime[lv][1],
+                      MagIntTime, MagSg, MagSg_IntT, MagWeighting, MagWeighting_IntT );
 
-      if (  ( PrepTime < TimeMin  ||  PrepTime-TimeMax >= 1.0e-12*TimeMax )  &&  MPI_Rank == 0  )
-         Aux_Message( stderr, "WARNING : temporal extrapolation (lv %d, T_Prep %20.14e, T_Min %20.14e, T_Max %20.14e)\n",
-                      lv, PrepTime, TimeMin, TimeMax );
+//    check: although temporal interpolation is allowed, currently PrepTime is expected to be equal to either
+//           amr->MagSgTime[lv][0] or amr->MagSgTime[lv][1]
+      if ( MagIntTime  &&  MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : cannot determine MagSg "
+                              "(lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e) !!\n",
+                      lv, PrepTime, amr->MagSgTime[lv][0], amr->MagSgTime[lv][1] );
+   }
+#  endif // #ifdef MHD
 
-      if ( OPT__INT_TIME )
-      {
-         FluIntTime        = true;
-         FluSg             = 0;
-         FluSg_IntT        = 1;
-         FluWeighting      =   ( +amr->FluSgTime[lv][FluSg_IntT] - PrepTime )
-                             / (  amr->FluSgTime[lv][FluSg_IntT] - amr->FluSgTime[lv][FluSg] );
-         FluWeighting_IntT =   ( -amr->FluSgTime[lv][FluSg     ] + PrepTime )
-                             / (  amr->FluSgTime[lv][FluSg_IntT] - amr->FluSgTime[lv][FluSg] );
-      }
-
-      else
-      {
-         FluIntTime        = false;
-         FluSg             = amr->FluSg[lv]; // set to the current Sg
-         FluSg_IntT        = NULL_INT;
-         FluWeighting      = NULL_REAL;
-         FluWeighting_IntT = NULL_REAL;
-      }
-   } // Mis_CompareRealValue
-   } // if ( NVar_Flu + NVar_Der != 0 )
-
+// potential
 #  ifdef GRAVITY
    bool PotIntTime;
    int  PotSg, PotSg_IntT;
    real PotWeighting, PotWeighting_IntT;
 
-   if ( PrepPot ) {
-   if      (  Mis_CompareRealValue( PrepTime, amr->PotSgTime[lv][   amr->PotSg[lv] ], NULL, false )  )
+   if ( PrepPot )
    {
-      PotIntTime        = false;
-      PotSg             = amr->PotSg[lv];
-      PotSg_IntT        = NULL_INT;
-      PotWeighting      = NULL_REAL;
-      PotWeighting_IntT = NULL_REAL;
-   }
+      SetTempIntPara( lv, amr->PotSg[lv], PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1],
+                      PotIntTime, PotSg, PotSg_IntT, PotWeighting, PotWeighting_IntT );
 
-   else if (  Mis_CompareRealValue( PrepTime, amr->PotSgTime[lv][ 1-amr->PotSg[lv] ], NULL, false )  )
-   {
-      PotIntTime        = false;
-      PotSg             = 1 - amr->PotSg[lv];
-      PotSg_IntT        = NULL_INT;
-      PotWeighting      = NULL_REAL;
-      PotWeighting_IntT = NULL_REAL;
-   }
-
-   else
-   {
 //    check: although temporal interpolation is allowed, currently PrepTime is expected to be equal to either
 //           amr->PotSgTime[lv][0] or amr->PotSgTime[lv][1]
 //           --> the only exception is when calling Par_UpdateParticle() to prepare the coarse-grid potential
@@ -439,41 +477,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #     ifdef PARTICLE
       if ( amr->Par->ImproveAcc )
 #     endif
-      Aux_Error( ERROR_INFO, "cannot determine PotSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
-                 lv, PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
-
-//    print warning messages if temporal extrapolation is required
-      const double TimeMin = MIN( amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
-      const double TimeMax = MAX( amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
-
-      if ( TimeMin < 0.0 )
-         Aux_Error( ERROR_INFO, "TimeMin (%21.14e) < 0.0 ==> one of the potential arrays has not been initialized !!\n", TimeMin );
-
-      if (  ( PrepTime < TimeMin  ||  PrepTime-TimeMax >= 1.0e-12*TimeMax )  &&  MPI_Rank == 0  )
-         Aux_Message( stderr, "WARNING : temporal extrapolation (lv %d, T_Prep %20.14e, T_Min %20.14e, T_Max %20.14e)\n",
-                      lv, PrepTime, TimeMin, TimeMax );
-
-      if ( OPT__INT_TIME )
-      {
-         PotIntTime        = true;
-         PotSg             = 0;
-         PotSg_IntT        = 1;
-         PotWeighting      =   ( +amr->PotSgTime[lv][PotSg_IntT] - PrepTime )
-                             / ( amr->PotSgTime[lv][PotSg_IntT] - amr->PotSgTime[lv][PotSg] );
-         PotWeighting_IntT =   ( -amr->PotSgTime[lv][PotSg     ] + PrepTime )
-                             / ( amr->PotSgTime[lv][PotSg_IntT] - amr->PotSgTime[lv][PotSg] );
-      }
-
-      else
-      {
-         PotIntTime        = false;
-         PotSg             = amr->PotSg[lv]; // set to the current Sg
-         PotSg_IntT        = NULL_INT;
-         PotWeighting      = NULL_REAL;
-         PotWeighting_IntT = NULL_REAL;
-      }
-   } // Mis_CompareRealValue
-   } // if ( PrepPot )
+      if ( PotIntTime  &&  MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : cannot determine PotSg "
+                              "(lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e) !!\n",
+                      lv, PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
+   }
 #  endif // #ifdef GRAVITY
 
 
@@ -537,7 +545,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
             if ( SibPID0 >= 0 )
             {
-               for (int Count=0; Count<TABLE_04( Side ); Count++)
+               for (int Count=0; Count<TABLE_04(Side); Count++)
                {
 #                 ifdef DEBUG_PARTICLE
                   if ( NNearByPatch >= NNearByPatchMax )
@@ -610,20 +618,35 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #  pragma omp parallel
    {
 //    thread-private variables
-      int    J, K, I2, J2, K2, Idx1, Idx2, PID0, TFluVarIdx, BC_Sibling, BC_Idx_Start[3], BC_Idx_End[3];
+      int    J, K, I2, J2, K2, Idx1, Idx2, PID0, TVarCCIdx_Flu, TVarFCIdx, BC_Sibling, BC_Idx_Start[3], BC_Idx_End[3];
       double xyz0[3];            // corner coordinates for the user-specified B.C.
-#     if ( MODEL == HYDRO  ||  MODEL == MHD )
+#     if ( MODEL == HYDRO )
       real Fluid[NCOMP_FLUID];   // for calculating pressure and temperature only --> don't need NCOMP_TOTAL
 #     endif
 
-//    Array: array to store the prepared data of one patch group (including the ghost-zone data)
-//    --> for PrepUnit == UNIT_PATCHGROUP, this pointer points to h_Input_Array directly (which will be set later)
-      real *Array     = ( PrepUnit == UNIT_PATCH ) ? new real [ NVar_Tot*PGSize3D ] : NULL;
-      real *Array_Ptr = NULL;
+//    Data1PG_CC/FC: array to store the prepared cell-centered/face-centered data of one patch group
+//                   (including the ghost-zone data)
+//    --> for PrepUnit == UNIT_PATCHGROUP, these pointers point to OutputCC/FC directly (which will be set later)
+//        for PrepUnit == UNIT_PATCH, these arrays will be copied to different patches in OutputCC/FC later
+      real *Data1PG_CC     = ( PrepUnit == UNIT_PATCH ) ? new real [ NVarCC_Tot*PGSize3D_CC ] : NULL;
+      real *Data1PG_CC_Ptr = NULL;
+      real *Data1PG_FC     = ( PrepUnit == UNIT_PATCH ) ? new real [ NVarFC_Tot*PGSize3D_FC ] : NULL;
+      real *Data1PG_FC_Ptr = NULL;
 
 
-//    IntData: array to store the interpolation results (allocate with the maximum required size)
-      real *IntData = new real [ NVar_Tot*PS2*PS2*GhostSize_Padded ];
+//    IntData_CC/FC: arrays to store the interpolated cell-/face-centered results
+//    --> allocate it only once but with the maximum required size to reduce the number of memory allocations
+      real *IntData_CC = new real [ NVarCC_Tot*PS2*PS2*(GhostSize_Padded  ) ];
+      real *IntData_FC = new real [ NVarFC_Tot*PS2*PS2*(GhostSize_Padded+1) ];
+
+
+//    B field on the coarse-fine interfaces for the divergence-preserving interpolation
+//    --> allocate it only once but with the maximum required size to reduce the number of memory allocations
+#     ifdef MHD
+      real *FInterface_Data = NULL;
+
+      if ( NVarFC_Tot > 0 )   FInterface_Data = new real [ SQR(PS2) + 4*PS2*GhostSize_Padded ];
+#     endif
 
 
 //    assign particle mass onto grids
@@ -738,166 +761,190 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
          for (int d=0; d<3; d++)    xyz0[d] = amr->patch[0][lv][PID0]->EdgeL[d] + (0.5-GhostSize)*dh;
 
-//       Array points to h_Input_Array directly for PrepUnit == UNIT_PATCHGROUP
-         if ( PrepUnit == UNIT_PATCHGROUP )  Array = h_Input_Array + TID*NVar_Tot*PGSize3D;
+//       Data1PG_CC/FC point to OutputCC/FC directly for PrepUnit == UNIT_PATCHGROUP
+         if ( PrepUnit == UNIT_PATCHGROUP )
+         {
+            Data1PG_CC = OutputCC + TID*NVarCC_Tot*PGSize3D_CC;
+            Data1PG_FC = OutputFC + TID*NVarFC_Tot*PGSize3D_FC;
+         }
 
 
-//       a. fill up the central region of Array (ghost zone is not filled up yet)
+//       a. fill out the central region of Data1PG_CC[]/FC[] (ghost zones will be filled out later)
 // ------------------------------------------------------------------------------------------------------------
          for (int LocalID=0; LocalID<8; LocalID++ )
          {
             const int PID    = PID0 + LocalID;
-            const int Disp_i = TABLE_02( LocalID, 'x', GhostSize, GhostSize+PATCH_SIZE );
-            const int Disp_j = TABLE_02( LocalID, 'y', GhostSize, GhostSize+PATCH_SIZE );
-            const int Disp_k = TABLE_02( LocalID, 'z', GhostSize, GhostSize+PATCH_SIZE );
+            const int Disp_i = TABLE_02( LocalID, 'x', GhostSize, GhostSize+PS1 );
+            const int Disp_j = TABLE_02( LocalID, 'y', GhostSize, GhostSize+PS1 );
+            const int Disp_k = TABLE_02( LocalID, 'z', GhostSize, GhostSize+PS1 );
 
-            Array_Ptr = Array;
+            Data1PG_CC_Ptr = Data1PG_CC;
+            Data1PG_FC_Ptr = Data1PG_FC;
 
-//          (a1) fluid data
-            for (int v=0; v<NVar_Flu; v++)
+//          (a1) fluid data (cell-centered)
+            for (int v=0; v<NVarCC_Flu; v++)
             {
-               TFluVarIdx = TFluVarIdxList[v];
+               TVarCCIdx_Flu = TVarCCIdxList_Flu[v];
 
-               for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
-               for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
-               for (int i=0; i<PATCH_SIZE; i++)    {
+               for (int k=0; k<PS1; k++)  {  K    = k + Disp_k;
+               for (int j=0; j<PS1; j++)  {  J    = j + Disp_j;
+                                             Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
+               for (int i=0; i<PS1; i++)  {
 
-                  Array_Ptr[Idx1] = amr->patch[FluSg][lv][PID]->fluid[TFluVarIdx][k][j][i];
+                  Data1PG_CC_Ptr[Idx1] = amr->patch[FluSg][lv][PID]->fluid[TVarCCIdx_Flu][k][j][i];
 
                   if ( FluIntTime ) // temporal interpolation
-                  Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
-                                    + FluWeighting_IntT*amr->patch[FluSg_IntT][lv][PID]->fluid[TFluVarIdx][k][j][i];
+                  Data1PG_CC_Ptr[Idx1] =   FluWeighting     *Data1PG_CC_Ptr[Idx1]
+                                         + FluWeighting_IntT*amr->patch[FluSg_IntT][lv][PID]->fluid[TVarCCIdx_Flu][k][j][i];
                   Idx1 ++;
                }}}
 
-               Array_Ptr += PGSize3D;
+               Data1PG_CC_Ptr += PGSize3D_CC;
             }
 
 
-//          (a2) derived variables
+//          (a2) derived variables (cell-centered)
 #           if   ( MODEL == HYDRO )
             if ( PrepVx )
             {
-               for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
-               for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
-               for (int i=0; i<PATCH_SIZE; i++)    {
+               for (int k=0; k<PS1; k++)  {  K    = k + Disp_k;
+               for (int j=0; j<PS1; j++)  {  J    = j + Disp_j;
+                                             Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
+               for (int i=0; i<PS1; i++)  {
 
-                  Array_Ptr[Idx1] = amr->patch[FluSg][lv][PID]->fluid[MOMX][k][j][i] /
-                                    amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
+                  Data1PG_CC_Ptr[Idx1] = amr->patch[FluSg][lv][PID]->fluid[MOMX][k][j][i] /
+                                         amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
 
                   if ( FluIntTime ) // temporal interpolation
-                  Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
-                                    + FluWeighting_IntT*( amr->patch[FluSg_IntT][lv][PID]->fluid[MOMX][k][j][i] /
-                                                          amr->patch[FluSg_IntT][lv][PID]->fluid[DENS][k][j][i] );
+                  Data1PG_CC_Ptr[Idx1] =   FluWeighting     *Data1PG_CC_Ptr[Idx1]
+                                         + FluWeighting_IntT*( amr->patch[FluSg_IntT][lv][PID]->fluid[MOMX][k][j][i] /
+                                                               amr->patch[FluSg_IntT][lv][PID]->fluid[DENS][k][j][i] );
                   Idx1 ++;
                }}}
 
-               Array_Ptr += PGSize3D;
-            }
+               Data1PG_CC_Ptr += PGSize3D_CC;
+            } // if ( PrepVx )
 
             if ( PrepVy )
             {
-               for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
-               for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
-               for (int i=0; i<PATCH_SIZE; i++)    {
+               for (int k=0; k<PS1; k++)    {  K    = k + Disp_k;
+               for (int j=0; j<PS1; j++)    {  J    = j + Disp_j;
+                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
+               for (int i=0; i<PS1; i++)    {
 
-                  Array_Ptr[Idx1] = amr->patch[FluSg][lv][PID]->fluid[MOMY][k][j][i] /
-                                    amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
+                  Data1PG_CC_Ptr[Idx1] = amr->patch[FluSg][lv][PID]->fluid[MOMY][k][j][i] /
+                                         amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
 
                   if ( FluIntTime ) // temporal interpolation
-                  Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
-                                    + FluWeighting_IntT*( amr->patch[FluSg_IntT][lv][PID]->fluid[MOMY][k][j][i] /
-                                                          amr->patch[FluSg_IntT][lv][PID]->fluid[DENS][k][j][i] );
+                  Data1PG_CC_Ptr[Idx1] =   FluWeighting     *Data1PG_CC_Ptr[Idx1]
+                                         + FluWeighting_IntT*( amr->patch[FluSg_IntT][lv][PID]->fluid[MOMY][k][j][i] /
+                                                               amr->patch[FluSg_IntT][lv][PID]->fluid[DENS][k][j][i] );
                   Idx1 ++;
                }}}
 
-               Array_Ptr += PGSize3D;
-            }
+               Data1PG_CC_Ptr += PGSize3D_CC;
+            } // if ( PrepVy )
 
             if ( PrepVz )
             {
-               for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
-               for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
-               for (int i=0; i<PATCH_SIZE; i++)    {
+               for (int k=0; k<PS1; k++)  {  K    = k + Disp_k;
+               for (int j=0; j<PS1; j++)  {  J    = j + Disp_j;
+                                             Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
+               for (int i=0; i<PS1; i++)  {
 
-                  Array_Ptr[Idx1] = amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i] /
-                                    amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
+                  Data1PG_CC_Ptr[Idx1] = amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i] /
+                                          amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
 
                   if ( FluIntTime ) // temporal interpolation
-                  Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
-                                    + FluWeighting_IntT*( amr->patch[FluSg_IntT][lv][PID]->fluid[MOMZ][k][j][i] /
-                                                          amr->patch[FluSg_IntT][lv][PID]->fluid[DENS][k][j][i] );
+                  Data1PG_CC_Ptr[Idx1] =   FluWeighting     *Data1PG_CC_Ptr[Idx1]
+                                         + FluWeighting_IntT*( amr->patch[FluSg_IntT][lv][PID]->fluid[MOMZ][k][j][i] /
+                                                               amr->patch[FluSg_IntT][lv][PID]->fluid[DENS][k][j][i] );
                   Idx1 ++;
                }}}
 
-               Array_Ptr += PGSize3D;
-            }
+               Data1PG_CC_Ptr += PGSize3D_CC;
+            } // if ( PrepVz )
 
             if ( PrepPres )
             {
-               for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
-               for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
-               for (int i=0; i<PATCH_SIZE; i++)    {
+               for (int k=0; k<PS1; k++)  {  K    = k + Disp_k;
+               for (int j=0; j<PS1; j++)  {  J    = j + Disp_j;
+                                             Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
+               for (int i=0; i<PS1; i++)  {
 
                   for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
-                  Array_Ptr[Idx1] = Hydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                       Gamma_m1, CheckMinPres_No, NULL_REAL );
+#                 ifdef MHD
+                  const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
+#                 else
+                  const real EngyB = NULL_REAL;
+#                 endif
+                  Data1PG_CC_Ptr[Idx1] = Hydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                            Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
 
                   if ( FluIntTime ) // temporal interpolation
                   {
                      for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k][j][i];
 
-                     Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
-                                       + FluWeighting_IntT*Hydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
-                                                                              Fluid[MOMZ], Fluid[ENGY],
-                                                                              Gamma_m1, CheckMinPres_No, NULL_REAL );
+#                    ifdef MHD
+                     const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg_IntT );
+#                    else
+                     const real EngyB = NULL_REAL;
+#                    endif
+                     Data1PG_CC_Ptr[Idx1] =
+                        FluWeighting     *Data1PG_CC_Ptr[Idx1]
+                      + FluWeighting_IntT*Hydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                             Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
                   }
 
                   Idx1 ++;
                }}}
 
-               Array_Ptr += PGSize3D;
-            }
+               Data1PG_CC_Ptr += PGSize3D_CC;
+            } // if ( PrepPres )
 
             if ( PrepTemp )
             {
-               for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
-               for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
-               for (int i=0; i<PATCH_SIZE; i++)    {
+               for (int k=0; k<PS1; k++)  {  K    = k + Disp_k;
+               for (int j=0; j<PS1; j++)  {  J    = j + Disp_j;
+                                             Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
+               for (int i=0; i<PS1; i++)  {
 
                   for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
-                  Array_Ptr[Idx1] = Hydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                          Gamma_m1, (MinPres>=0.0), MinPres );
+#                 ifdef MHD
+                  const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
+#                 else
+                  const real EngyB = NULL_REAL;
+#                 endif
+                  Data1PG_CC_Ptr[Idx1] = Hydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                               Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
 
                   if ( FluIntTime ) // temporal interpolation
                   {
                      for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k][j][i];
 
-                     Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
-                                       + FluWeighting_IntT*Hydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
-                                                                                 Fluid[MOMZ], Fluid[ENGY],
-                                                                                 Gamma_m1, (MinPres>=0.0), MinPres );
+#                    ifdef MHD
+                     const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg_IntT );
+#                    else
+                     const real EngyB = NULL_REAL;
+#                    endif
+                     Data1PG_CC_Ptr[Idx1] =
+                        FluWeighting     *Data1PG_CC_Ptr[Idx1]
+                      + FluWeighting_IntT*Hydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                                Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
                   }
 
                   Idx1 ++;
                }}}
 
-               Array_Ptr += PGSize3D;
-            }
+               Data1PG_CC_Ptr += PGSize3D_CC;
+            } // if ( PrepTemp )
 
-#           elif ( MODEL == MHD   )
-#           warning : WAIT MHD !!
 
 #           elif ( MODEL == ELBDM )
 //          no derived variables yet
+
 
 #           else
 #           error : unsupported MODEL !!
@@ -905,31 +952,89 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 
 #           ifdef GRAVITY
-//          (a3) potential data
+//          (a3) potential data (cell-centered)
             if ( PrepPot )
             {
-               for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
-               for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
-               for (int i=0; i<PATCH_SIZE; i++)    {
+               for (int k=0; k<PS1; k++)  {  K    = k + Disp_k;
+               for (int j=0; j<PS1; j++)  {  J    = j + Disp_j;
+                                             Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
+               for (int i=0; i<PS1; i++)  {
 
-                  Array_Ptr[Idx1] = amr->patch[PotSg][lv][PID]->pot[k][j][i];
+                  Data1PG_CC_Ptr[Idx1] = amr->patch[PotSg][lv][PID]->pot[k][j][i];
 
                   if ( PotIntTime ) // temporal interpolation
-                  Array_Ptr[Idx1] =   PotWeighting     *Array_Ptr[Idx1]
-                                    + PotWeighting_IntT*amr->patch[PotSg_IntT][lv][PID]->pot[k][j][i];
+                  Data1PG_CC_Ptr[Idx1] =   PotWeighting     *Data1PG_CC_Ptr[Idx1]
+                                         + PotWeighting_IntT*amr->patch[PotSg_IntT][lv][PID]->pot[k][j][i];
                   Idx1 ++;
                }}}
 
-               Array_Ptr += PGSize3D;
+               Data1PG_CC_Ptr += PGSize3D_CC;
             } // if ( PrepPot )
 #           endif // #ifdef GRAVITY
+
+
+//          (a4) face-centered variables (e.g., magnetic field)
+            for (int v=0; v<NVarFC_Tot; v++)
+            {
+               TVarFCIdx = TVarFCIdxList[v];
+
+#              ifdef MHD
+
+//             set array indices
+               const int norm_dir = ( TVarFCIdx == MAGX ) ? 0 :
+                                    ( TVarFCIdx == MAGY ) ? 1 :
+                                    ( TVarFCIdx == MAGZ ) ? 2 : -1;
+#              ifdef GAMER_DEBUG
+               if ( norm_dir == -1 )   Aux_Error( ERROR_INFO, "Target face-centered variable != MAGX/Y/Z !!\n" );
+#              endif
+
+               int ijk_s[3], ijk_e[3], size_i[3], size_o[3], idx_i, idx_o;    // s/e=start/end; i/o=in/out
+
+               for (int d=0; d<3; d++)
+               {
+                  ijk_s [d] = 0;
+                  ijk_e [d] = PS1;
+                  size_i[d] = PS1;
+                  size_o[d] = PGSize1D_CC;
+               }
+
+//             avoid redundant assignment of the patch interface values by copying the left interface
+//             of only the left patch
+               ijk_s [norm_dir] += TABLE_02( LocalID, 'x'+norm_dir, 0, 1 );
+               ijk_e [norm_dir] ++;
+               size_i[norm_dir] ++;
+               size_o[norm_dir] ++;
+
+
+//             copy data
+               for (int k=ijk_s[2]; k<ijk_e[2]; k++)  {  K     = k + Disp_k;
+               for (int j=ijk_s[1]; j<ijk_e[1]; j++)  {  J     = j + Disp_j;
+                                                         idx_o = IDX321( ijk_s[0]+Disp_i, J, K, size_o[0], size_o[1] );
+                                                         idx_i = IDX321( ijk_s[0],        j, k, size_i[0], size_i[1] );
+               for (int i=ijk_s[0]; i<ijk_e[0]; i++)  {
+
+                  Data1PG_FC_Ptr[idx_o] = amr->patch[MagSg][lv][PID]->magnetic[TVarFCIdx][idx_i];
+
+                  if ( MagIntTime ) // temporal interpolation
+                  Data1PG_FC_Ptr[idx_o] =   MagWeighting     *Data1PG_FC_Ptr[idx_o]
+                                          + MagWeighting_IntT*amr->patch[MagSg_IntT][lv][PID]->magnetic[TVarFCIdx][idx_i];
+                  idx_i ++;
+                  idx_o ++;
+               }}}
+
+#              else
+               Aux_Error( ERROR_INFO, "currently only MHD supports face-centered variables !!" );
+#              endif // #ifdef MHD ... else ...
+
+               Data1PG_FC_Ptr += PGSize3D_FC;
+            } // for (int v=0; v<NVarFC_Tot; v++)
 
          } // for (int LocalID=0; LocalID<8; LocalID++ )
 
 
-//       b. fill up the ghost zone of Array[]
+//       b. fill out the ghost zones of Data1PG_CC[]/FC[]
 // ------------------------------------------------------------------------------------------------------------
+//       direct memory copy
          for (int Side=0; Side<NSide; Side++)
          {
 //          nothing to do if no ghost zone is required
@@ -941,165 +1046,186 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //          (b1) if the target sibling patch exists --> just copy data from the nearby patches at the same level
             if ( SibPID0 >= 0 )
             {
-               const int Loop_i  = TABLE_01( Side, 'x', GhostSize, PATCH_SIZE, GhostSize );
-               const int Loop_j  = TABLE_01( Side, 'y', GhostSize, PATCH_SIZE, GhostSize );
-               const int Loop_k  = TABLE_01( Side, 'z', GhostSize, PATCH_SIZE, GhostSize );
-               const int Disp_i2 = TABLE_01( Side, 'x', PATCH_SIZE-GhostSize, 0, 0 );
-               const int Disp_j2 = TABLE_01( Side, 'y', PATCH_SIZE-GhostSize, 0, 0 );
-               const int Disp_k2 = TABLE_01( Side, 'z', PATCH_SIZE-GhostSize, 0, 0 );
+               int loop[3], disp2[3];
+               for (int d=0; d<3; d++)
+               {
+                  loop [d] = TABLE_01( Side, 'x'+d, GhostSize, PS1, GhostSize );
+                  disp2[d] = TABLE_01( Side, 'x'+d, PS1-GhostSize, 0, 0 );
+               }
 
 //###OPTIMIZATION: simplify TABLE_03 and TABLE_04
                for (int Count=0; Count<TABLE_04( Side ); Count++)
                {
-                  const int SibPID = TABLE_03( Side, Count ) + SibPID0;
-                  const int Disp_i = Table_01( Side, 'x', Count, GhostSize );
-                  const int Disp_j = Table_01( Side, 'y', Count, GhostSize );
-                  const int Disp_k = Table_01( Side, 'z', Count, GhostSize );
+                  const int LocalID = TABLE_03( Side, Count );
+                  const int SibPID  = SibPID0 + LocalID;
 
-                  Array_Ptr = Array;
+                  int disp[3];
+                  for (int d=0; d<3; d++)    disp[d] = Table_01( Side, 'x'+d, Count, GhostSize );
 
-//                (b1-1) fluid data
-                  for (int v=0; v<NVar_Flu; v++)
+                  Data1PG_CC_Ptr = Data1PG_CC;
+                  Data1PG_FC_Ptr = Data1PG_FC;
+
+//                (b1-1) fluid data (cell-centered)
+                  for (int v=0; v<NVarCC_Flu; v++)
                   {
-                     TFluVarIdx = TFluVarIdxList[v];
+                     TVarCCIdx_Flu = TVarCCIdxList_Flu[v];
 
-                     for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
-                     for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j;   J2 = j + Disp_j2;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
-                     for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
+                     for (int k=0; k<loop[2]; k++)  { K = k + disp[2];   K2 = k + disp2[2];
+                     for (int j=0; j<loop[1]; j++)  { J = j + disp[1];   J2 = j + disp2[1];
+                                                      Idx1 = IDX321( disp[0], J, K, PGSize1D_CC, PGSize1D_CC );
+                     for (I2=disp2[0]; I2<disp2[0]+loop[0]; I2++) {
 
-                        Array_Ptr[Idx1] = amr->patch[FluSg][lv][SibPID]->fluid[TFluVarIdx][K2][J2][I2];
+                        Data1PG_CC_Ptr[Idx1] = amr->patch[FluSg][lv][SibPID]->fluid[TVarCCIdx_Flu][K2][J2][I2];
 
                         if ( FluIntTime ) // temporal interpolation
-                        Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
-                                          + FluWeighting_IntT*amr->patch[FluSg_IntT][lv][SibPID]->fluid[TFluVarIdx][K2][J2][I2];
+                        Data1PG_CC_Ptr[Idx1] =
+                           FluWeighting     *Data1PG_CC_Ptr[Idx1]
+                         + FluWeighting_IntT*amr->patch[FluSg_IntT][lv][SibPID]->fluid[TVarCCIdx_Flu][K2][J2][I2];
+
                         Idx1 ++;
                      }}}
 
-                     Array_Ptr += PGSize3D;
+                     Data1PG_CC_Ptr += PGSize3D_CC;
                   }
 
 
-//                (b1-2) derived variables
+//                (b1-2) derived variables (cell-centered)
 #                 if   ( MODEL == HYDRO )
                   if ( PrepVx )
                   {
-                     for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
-                     for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j;   J2 = j + Disp_j2;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
-                     for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
+                     for (int k=0; k<loop[2]; k++)  { K = k + disp[2];   K2 = k + disp2[2];
+                     for (int j=0; j<loop[1]; j++)  { J = j + disp[1];   J2 = j + disp2[1];
+                                                      Idx1 = IDX321( disp[0], J, K, PGSize1D_CC, PGSize1D_CC );
+                     for (I2=disp2[0]; I2<disp2[0]+loop[0]; I2++) {
 
-                        Array_Ptr[Idx1] = amr->patch[FluSg][lv][SibPID]->fluid[MOMX][K2][J2][I2] /
-                                          amr->patch[FluSg][lv][SibPID]->fluid[DENS][K2][J2][I2];
+                        Data1PG_CC_Ptr[Idx1] = amr->patch[FluSg][lv][SibPID]->fluid[MOMX][K2][J2][I2] /
+                                               amr->patch[FluSg][lv][SibPID]->fluid[DENS][K2][J2][I2];
 
                         if ( FluIntTime ) // temporal interpolation
-                        Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
-                                          + FluWeighting_IntT*( amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMX][K2][J2][I2] /
-                                                                amr->patch[FluSg_IntT][lv][SibPID]->fluid[DENS][K2][J2][I2] );
+                        Data1PG_CC_Ptr[Idx1] =   FluWeighting     *Data1PG_CC_Ptr[Idx1]
+                                               + FluWeighting_IntT*( amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMX][K2][J2][I2] /
+                                                                     amr->patch[FluSg_IntT][lv][SibPID]->fluid[DENS][K2][J2][I2] );
                         Idx1 ++;
                      }}}
 
-                     Array_Ptr += PGSize3D;
+                     Data1PG_CC_Ptr += PGSize3D_CC;
                   }
 
                   if ( PrepVy )
                   {
-                     for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
-                     for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j;   J2 = j + Disp_j2;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
-                     for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
+                     for (int k=0; k<loop[2]; k++)  { K = k + disp[2];   K2 = k + disp2[2];
+                     for (int j=0; j<loop[1]; j++)  { J = j + disp[1];   J2 = j + disp2[1];
+                                                      Idx1 = IDX321( disp[0], J, K, PGSize1D_CC, PGSize1D_CC );
+                     for (I2=disp2[0]; I2<disp2[0]+loop[0]; I2++) {
 
-                        Array_Ptr[Idx1] = amr->patch[FluSg][lv][SibPID]->fluid[MOMY][K2][J2][I2] /
-                                          amr->patch[FluSg][lv][SibPID]->fluid[DENS][K2][J2][I2];
+                        Data1PG_CC_Ptr[Idx1] = amr->patch[FluSg][lv][SibPID]->fluid[MOMY][K2][J2][I2] /
+                                               amr->patch[FluSg][lv][SibPID]->fluid[DENS][K2][J2][I2];
 
                         if ( FluIntTime ) // temporal interpolation
-                        Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
-                                          + FluWeighting_IntT*( amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMY][K2][J2][I2] /
-                                                                amr->patch[FluSg_IntT][lv][SibPID]->fluid[DENS][K2][J2][I2] );
+                        Data1PG_CC_Ptr[Idx1] =   FluWeighting     *Data1PG_CC_Ptr[Idx1]
+                                               + FluWeighting_IntT*( amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMY][K2][J2][I2] /
+                                                                     amr->patch[FluSg_IntT][lv][SibPID]->fluid[DENS][K2][J2][I2] );
                         Idx1 ++;
                      }}}
 
-                     Array_Ptr += PGSize3D;
+                     Data1PG_CC_Ptr += PGSize3D_CC;
                   }
 
                   if ( PrepVz )
                   {
-                     for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
-                     for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j;   J2 = j + Disp_j2;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
-                     for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
+                     for (int k=0; k<loop[2]; k++)  { K = k + disp[2];   K2 = k + disp2[2];
+                     for (int j=0; j<loop[1]; j++)  { J = j + disp[1];   J2 = j + disp2[1];
+                                                      Idx1 = IDX321( disp[0], J, K, PGSize1D_CC, PGSize1D_CC );
+                     for (I2=disp2[0]; I2<disp2[0]+loop[0]; I2++) {
 
-                        Array_Ptr[Idx1] = amr->patch[FluSg][lv][SibPID]->fluid[MOMZ][K2][J2][I2] /
-                                          amr->patch[FluSg][lv][SibPID]->fluid[DENS][K2][J2][I2];
+                        Data1PG_CC_Ptr[Idx1] = amr->patch[FluSg][lv][SibPID]->fluid[MOMZ][K2][J2][I2] /
+                                               amr->patch[FluSg][lv][SibPID]->fluid[DENS][K2][J2][I2];
 
                         if ( FluIntTime ) // temporal interpolation
-                        Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
-                                          + FluWeighting_IntT*( amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMZ][K2][J2][I2] /
-                                                                amr->patch[FluSg_IntT][lv][SibPID]->fluid[DENS][K2][J2][I2] );
+                        Data1PG_CC_Ptr[Idx1] =   FluWeighting     *Data1PG_CC_Ptr[Idx1]
+                                               + FluWeighting_IntT*( amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMZ][K2][J2][I2] /
+                                                                     amr->patch[FluSg_IntT][lv][SibPID]->fluid[DENS][K2][J2][I2] );
                         Idx1 ++;
                      }}}
 
-                     Array_Ptr += PGSize3D;
+                     Data1PG_CC_Ptr += PGSize3D_CC;
                   }
 
                   if ( PrepPres )
                   {
-                     for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
-                     for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j;   J2 = j + Disp_j2;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
-                     for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
+                     for (int k=0; k<loop[2]; k++)  { K = k + disp[2];   K2 = k + disp2[2];
+                     for (int j=0; j<loop[1]; j++)  { J = j + disp[1];   J2 = j + disp2[1];
+                                                      Idx1 = IDX321( disp[0], J, K, PGSize1D_CC, PGSize1D_CC );
+                     for (I2=disp2[0]; I2<disp2[0]+loop[0]; I2++) {
 
                         for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
 
-                        Array_Ptr[Idx1] = Hydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                             Gamma_m1, CheckMinPres_No, NULL_REAL );
+#                       ifdef MHD
+                        const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg );
+#                       else
+                        const real EngyB = NULL_REAL;
+#                       endif
+                        Data1PG_CC_Ptr[Idx1] = Hydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                                  Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
 
                         if ( FluIntTime ) // temporal interpolation
                         {
                            for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][K2][J2][I2];
 
-                           Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
-                                             + FluWeighting_IntT*Hydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
-                                                                                    Fluid[MOMZ], Fluid[ENGY],
-                                                                                    Gamma_m1, CheckMinPres_No, NULL_REAL );
+#                          ifdef MHD
+                           const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg_IntT );
+#                          else
+                           const real EngyB = NULL_REAL;
+#                          endif
+                           Data1PG_CC_Ptr[Idx1] =
+                              FluWeighting     *Data1PG_CC_Ptr[Idx1]
+                            + FluWeighting_IntT*Hydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                                   Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
                         }
 
                         Idx1 ++;
                      }}}
 
-                     Array_Ptr += PGSize3D;
+                     Data1PG_CC_Ptr += PGSize3D_CC;
                   }
 
                   if ( PrepTemp )
                   {
-                     for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
-                     for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j;   J2 = j + Disp_j2;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
-                     for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
+                     for (int k=0; k<loop[2]; k++)  { K = k + disp[2];   K2 = k + disp2[2];
+                     for (int j=0; j<loop[1]; j++)  { J = j + disp[1];   J2 = j + disp2[1];
+                                                      Idx1 = IDX321( disp[0], J, K, PGSize1D_CC, PGSize1D_CC );
+                     for (I2=disp2[0]; I2<disp2[0]+loop[0]; I2++) {
 
                         for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
 
-                        Array_Ptr[Idx1] = Hydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                                Gamma_m1, (MinPres>=0.0), MinPres );
+#                       ifdef MHD
+                        const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg );
+#                       else
+                        const real EngyB = NULL_REAL;
+#                       endif
+                        Data1PG_CC_Ptr[Idx1] = Hydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                                     Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
 
                         if ( FluIntTime ) // temporal interpolation
                         {
                            for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][K2][J2][I2];
 
-                           Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
-                                             + FluWeighting_IntT*Hydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
-                                                                                       Fluid[MOMZ], Fluid[ENGY],
-                                                                                       Gamma_m1, (MinPres>=0.0), MinPres );
+#                          ifdef MHD
+                           const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg_IntT );
+#                          else
+                           const real EngyB = NULL_REAL;
+#                          endif
+                           Data1PG_CC_Ptr[Idx1] =
+                              FluWeighting     *Data1PG_CC_Ptr[Idx1]
+                            + FluWeighting_IntT*Hydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                                      Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
                         }
 
                         Idx1 ++;
                      }}}
 
-                     Array_Ptr += PGSize3D;
+                     Data1PG_CC_Ptr += PGSize3D_CC;
                   }
-
-#                 elif ( MODEL == MHD   )
-#                 warning : WAIT MHD !!
 
 #                 elif ( MODEL == ELBDM )
 //                no derived variables yet
@@ -1110,31 +1236,109 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 
 #                 ifdef GRAVITY
-//                (b1-3) potential data
+//                (b1-3) potential data (cell-centered)
                   if ( PrepPot )
                   {
-                     for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
-                     for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j;   J2 = j + Disp_j2;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
-                     for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
+                     for (int k=0; k<loop[2]; k++)  { K = k + disp[2];   K2 = k + disp2[2];
+                     for (int j=0; j<loop[1]; j++)  { J = j + disp[1];   J2 = j + disp2[1];
+                                                      Idx1 = IDX321( disp[0], J, K, PGSize1D_CC, PGSize1D_CC );
+                     for (I2=disp2[0]; I2<disp2[0]+loop[0]; I2++) {
 
-                        Array_Ptr[Idx1] = amr->patch[PotSg][lv][SibPID]->pot[K2][J2][I2];
+                        Data1PG_CC_Ptr[Idx1] = amr->patch[PotSg][lv][SibPID]->pot[K2][J2][I2];
 
                         if ( PotIntTime ) // temporal interpolation
-                        Array_Ptr[Idx1] =   PotWeighting     *Array_Ptr[Idx1]
-                                          + PotWeighting_IntT*amr->patch[PotSg_IntT][lv][SibPID]->pot[K2][J2][I2];
+                        Data1PG_CC_Ptr[Idx1] =   PotWeighting     *Data1PG_CC_Ptr[Idx1]
+                                               + PotWeighting_IntT*amr->patch[PotSg_IntT][lv][SibPID]->pot[K2][J2][I2];
                         Idx1 ++;
                      }}}
 
-                     Array_Ptr += PGSize3D;
+                     Data1PG_CC_Ptr += PGSize3D_CC;
                   }
 #                 endif // #ifdef GRAVITY
+
+
+//                (b1-4) face-centered variables
+                  for (int v=0; v<NVarFC_Tot; v++)
+                  {
+                     TVarFCIdx = TVarFCIdxList[v];
+
+#                    ifdef MHD
+//                   set array indices
+                     const int norm_dir = ( TVarFCIdx == MAGX ) ? 0 :
+                                          ( TVarFCIdx == MAGY ) ? 1 :
+                                          ( TVarFCIdx == MAGZ ) ? 2 : -1;
+#                    ifdef GAMER_DEBUG
+                     if ( norm_dir == -1 )   Aux_Error( ERROR_INFO, "Target face-centered variable != MAGX/Y/Z !!\n" );
+#                    endif
+
+                     int ijk_s[3], ijk_e[3], size_i[3], size_o[3], disp_o[3], idx_i, idx_o;  // s/e=start/end; i/o=in/out
+
+                     for (int d=0; d<3; d++)
+                     {
+                        ijk_s [d] = disp2[d];
+                        ijk_e [d] = disp2[d] + loop[d];
+                        size_i[d] = PS1;
+                        size_o[d] = PGSize1D_CC;
+                        disp_o[d] = disp[d] - disp2[d];
+                     }
+
+//                   avoid redundant assignment of the patch interface values **within the same patch group**
+//                   by copying the left interface of only the left patch
+//                   --> but always assign the interface values of patches **outside** the target patch group (PID0)
+//                       --> to provide B field on the C-F interfaces for the divergence-free interpolation
+//                       --> but it will result in redundant data copy on the F-F interfaces
+//                           --> the checks of (Side<6) below only avoid the redundant copies on the F-F interfaces
+//                               between the central 8 patches and their sibling patches but do not remove the
+//                               redundant copies on the F-F interfaces between those sibling patches
+                     ijk_s [norm_dir] += TABLE_01( Side, 'x'+norm_dir, 0, TABLE_02(LocalID,'x'+norm_dir,0,1), (Side<6)?1:0 );
+                     ijk_e [norm_dir] += TABLE_01( Side, 'x'+norm_dir, (Side<6)?0:1, 1, 1 );
+                     size_i[norm_dir] ++;
+                     size_o[norm_dir] ++;
+
+
+//                   copy data
+                     for (int k=ijk_s[2]; k<ijk_e[2]; k++)  {  K     = k + disp_o[2];
+                     for (int j=ijk_s[1]; j<ijk_e[1]; j++)  {  J     = j + disp_o[1];
+                                                               idx_o = IDX321( ijk_s[0]+disp_o[0], J, K, size_o[0], size_o[1] );
+                                                               idx_i = IDX321( ijk_s[0],           j, k, size_i[0], size_i[1] );
+                     for (int i=ijk_s[0]; i<ijk_e[0]; i++)  {
+
+                        Data1PG_FC_Ptr[idx_o] = amr->patch[MagSg][lv][SibPID]->magnetic[TVarFCIdx][idx_i];
+
+                        if ( MagIntTime ) // temporal interpolation
+                        Data1PG_FC_Ptr[idx_o] =
+                           MagWeighting     *Data1PG_FC_Ptr[idx_o]
+                         + MagWeighting_IntT*amr->patch[MagSg_IntT][lv][SibPID]->magnetic[TVarFCIdx][idx_i];
+
+                        idx_i ++;
+                        idx_o ++;
+                     }}}
+
+#                    else
+                     Aux_Error( ERROR_INFO, "currently only MHD supports face-centered variables !!" );
+#                    endif // #ifdef MHD ... else ...
+
+                     Data1PG_FC_Ptr += PGSize3D_FC;
+                  } // for (int v=0; v<NVarFC_Tot; v++)
+
                } // for (int Count=0; Count<TABLE_04( Side ); Count++)
             } // if ( SibPID0 >= 0 )
+         } // for (int Side=0; Side<NSide; Side++)
 
+
+//       interpolation or boundary condition
+//       --> apply interpolation AFTER copying data from all existing sibling patches to Data1PG_CC[]
+//           since the divergence-free interpolation on the magnetic field requires these data
+         for (int Side=0; Side<NSide; Side++)
+         {
+//          nothing to do if no ghost zone is required
+            if ( GhostSize == 0 )   break;
+
+
+            const int SibPID0 = Table_02( lv, PID0, Side );    // the 0th patch of the sibling patch group
 
 //          (b2) if the target sibling patch does not exist --> interpolate from patches at level lv-1
-            else if ( SibPID0 == -1 )
+            if ( SibPID0 == -1 )
             {
 //             interpolation should never be applied to the base level
 #              ifdef GAMER_DEBUG
@@ -1144,12 +1348,13 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 //             get the array size to store the interpolation result
                int FSize[3];
-               for (int d=0; d<3; d++)  FSize[d] = TABLE_01( Side, 'x'+d, GhostSize_Padded, 2*PATCH_SIZE, GhostSize_Padded );
+               for (int d=0; d<3; d++)  FSize[d] = TABLE_01( Side, 'x'+d, GhostSize_Padded, PS2, GhostSize_Padded );
 
-               real *IntData_Ptr = NULL;
+               real *IntData_CC_Ptr = NULL;
+               real *IntData_FC_Ptr = NULL;
 
 
-//             determine the target PID at lv-1
+//             (b2-1) determine the target PID at lv-1
                const int FaPID    = amr->patch[0][lv][PID0]->father;
                const int FaSibPID = amr->patch[0][lv-1][FaPID]->sibling[Side];
 
@@ -1159,42 +1364,113 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #              endif
 
 
-//             perform interpolation and store the results in IntData
-               InterpolateGhostZone( lv-1, FaSibPID, IntData, Side, PrepTime, GhostSize, IntScheme, NTSib, TSib,
-                                     TVar, NVar_Tot, NVar_Flu, TFluVarIdxList, NVar_Der, TDerVarList, IntPhase,
-                                     FluBC, PotBC, BC_Face, MinPres, DE_Consistency );
+//             (b2-2) collect the fine-grid magnetic field on the coarse-fine interpolation boundaries
+//             for the divergence-preserving interpolation
+               real *FInterface_Ptr[6] = { NULL, NULL, NULL, NULL, NULL, NULL };
+#              ifdef MHD
+               if ( NVarFC_Tot > 0 )
+               MHD_SetFInterface( FInterface_Data, FInterface_Ptr, Data1PG_FC, lv, PID0, Side, GhostSize,
+                                  MagSg, MagSg_IntT, MagIntTime, MagWeighting, MagWeighting_IntT );
+#              endif
 
 
-//             properly copy data from IntData array to Array
+//             (b2-3) perform interpolation and store the results in IntData_CC[] and IntData_FC[]
+               InterpolateGhostZone( lv-1, FaSibPID, IntData_CC, IntData_FC, Side, PrepTime, GhostSize,
+                                     IntScheme_CC, IntScheme_FC, NTSib, TSib, TVarCC, NVarCC_Tot, NVarCC_Flu,
+                                     TVarCCIdxList_Flu, NVarCC_Der, TVarCCList_Der, TVarFC, NVarFC_Tot, TVarFCIdxList,
+                                     IntPhase, FluBC, PotBC, BC_Face, MinPres, DE_Consistency,
+                                     (const real **)FInterface_Ptr );
+
+
+//             (b2-4) copy cell-centered data from IntData_CC[] to Data1PG_CC[]
+//             --> must get rid of NUseless-cell-wide useless data returned by InterpolateGhostZone()
                const int NUseless = GhostSize & 1;
-               const int Loop_i   = TABLE_01( Side, 'x', GhostSize, 2*PATCH_SIZE, GhostSize );
-               const int Loop_j   = TABLE_01( Side, 'y', GhostSize, 2*PATCH_SIZE, GhostSize );
-               const int Loop_k   = TABLE_01( Side, 'z', GhostSize, 2*PATCH_SIZE, GhostSize );
-               const int Disp_i1  = TABLE_01( Side, 'x', 0, GhostSize, GhostSize+2*PATCH_SIZE );
-               const int Disp_j1  = TABLE_01( Side, 'y', 0, GhostSize, GhostSize+2*PATCH_SIZE );
-               const int Disp_k1  = TABLE_01( Side, 'z', 0, GhostSize, GhostSize+2*PATCH_SIZE );
-               const int Disp_i2  = TABLE_01( Side, 'x', NUseless, 0, 0 );
-               const int Disp_j2  = TABLE_01( Side, 'y', NUseless, 0, 0 );
-               const int Disp_k2  = TABLE_01( Side, 'z', NUseless, 0, 0 );
+               int loop[3], disp1[3], disp2[3];
 
-               Array_Ptr   = Array;
-               IntData_Ptr = IntData;
-
-               for (int v=0; v<NVar_Tot; v++)
+               for (int d=0; d<3; d++)
                {
-                  for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k1;  K2 = k + Disp_k2;
-                  for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j1;  J2 = j + Disp_j2;
-                                                   Idx1 = IDX321( Disp_i1, J,  K,  PGSize1D, PGSize1D );
-                                                   Idx2 = IDX321( Disp_i2, J2, K2, FSize[0], FSize[1] );
-                  for (int i=0; i<Loop_i; i++)  {
+                  loop [d] = TABLE_01( Side, 'x'+d, GhostSize, PS2, GhostSize );
+                  disp1[d] = TABLE_01( Side, 'x'+d, 0, GhostSize, GhostSize+PS2 );
+                  disp2[d] = TABLE_01( Side, 'x'+d, NUseless, 0, 0 );
+               }
 
-                     Array_Ptr[ Idx1 ++ ] = IntData_Ptr[ Idx2 ++ ];
+               Data1PG_CC_Ptr = Data1PG_CC;
+               IntData_CC_Ptr = IntData_CC;
+
+               for (int v=0; v<NVarCC_Tot; v++)
+               {
+                  for (int k=0; k<loop[2]; k++) {  K = k + disp1[2];  K2 = k + disp2[2];
+                  for (int j=0; j<loop[1]; j++) {  J = j + disp1[1];  J2 = j + disp2[1];
+                                                   Idx1 = IDX321( disp1[0], J,  K,  PGSize1D_CC, PGSize1D_CC );
+                                                   Idx2 = IDX321( disp2[0], J2, K2, FSize[0], FSize[1] );
+                  for (int i=0; i<loop[0]; i++) {
+
+                     Data1PG_CC_Ptr[ Idx1 ++ ] = IntData_CC_Ptr[ Idx2 ++ ];
 
                   }}}
 
-                  Array_Ptr   += PGSize3D;
-                  IntData_Ptr += FSize[0]*FSize[1]*FSize[2];
+                  Data1PG_CC_Ptr += PGSize3D_CC;
+                  IntData_CC_Ptr += FSize[0]*FSize[1]*FSize[2];
                }
+
+
+//             (b2-5) copy face-centered data from IntData_FC[] to Data1PG_FC[]
+//             --> must get rid of NUseless-cell-wide useless data returned by InterpolateGhostZone()
+               Data1PG_FC_Ptr = Data1PG_FC;
+               IntData_FC_Ptr = IntData_FC;
+
+               for (int v=0; v<NVarFC_Tot; v++)
+               {
+                  TVarFCIdx = TVarFCIdxList[v];
+
+#                 ifdef MHD
+
+//                set array indices
+                  const int norm_dir = ( TVarFCIdx == MAGX ) ? 0 :
+                                       ( TVarFCIdx == MAGY ) ? 1 :
+                                       ( TVarFCIdx == MAGZ ) ? 2 : -1;
+#                 ifdef GAMER_DEBUG
+                  if ( norm_dir == -1 )   Aux_Error( ERROR_INFO, "Target face-centered variable != MAGX/Y/Z !!\n" );
+#                 endif
+
+                  int ijk_s[3], ijk_e[3], size_i[3], size_o[3], disp_o[3], idx_i, idx_o;  // s/e=start/end; i/o=in/out
+
+                  for (int d=0; d<3; d++)
+                  {
+                     ijk_s [d] = disp2[d];
+                     ijk_e [d] = disp2[d] + loop[d];
+                     size_i[d] = FSize[d];
+                     size_o[d] = PGSize1D_CC;
+                     disp_o[d] = disp1[d] - disp2[d];
+                  }
+
+//                avoid redundant assignment of the patch interface values
+                  ijk_s [norm_dir] += TABLE_01( Side, 'x'+norm_dir, 0, 0, 1 );
+                  ijk_e [norm_dir] += TABLE_01( Side, 'x'+norm_dir, 0, 1, 1 );
+                  size_i[norm_dir] ++;
+                  size_o[norm_dir] ++;
+
+
+//                copy data
+                  for (int k=ijk_s[2]; k<ijk_e[2]; k++)  {  K     = k + disp_o[2];
+                  for (int j=ijk_s[1]; j<ijk_e[1]; j++)  {  J     = j + disp_o[1];
+                                                            idx_o = IDX321( ijk_s[0]+disp_o[0], J, K, size_o[0], size_o[1] );
+                                                            idx_i = IDX321( ijk_s[0],           j, k, size_i[0], size_i[1] );
+                  for (int i=ijk_s[0]; i<ijk_e[0]; i++)  {
+
+                     Data1PG_FC_Ptr[idx_o] = IntData_FC_Ptr[idx_i];
+
+                     idx_i ++;
+                     idx_o ++;
+                  }}}
+
+                  IntData_FC_Ptr += size_i[0]*size_i[1]*size_i[2];
+#                 else
+                  Aux_Error( ERROR_INFO, "currently only MHD supports face-centered variables !!" );
+#                 endif // #ifdef MHD ... else ...
+
+                  Data1PG_FC_Ptr += PGSize3D_FC;
+               } // for (int v=0; v<NVarFC_Tot; v++)
 
             } // else if ( SibPID0 == -1 )
 
@@ -1202,7 +1478,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //          (b3) if the target sibling patch lies outside the simulation domain --> apply the specified B.C.
             else if ( SibPID0 <= SIB_OFFSET_NONPERIODIC )
             {
-               Array_Ptr = Array;
+               Data1PG_CC_Ptr = Data1PG_CC;
+               Data1PG_FC_Ptr = Data1PG_FC;
 
                for (int d=0; d<3; d++)
                {
@@ -1222,38 +1499,35 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #              endif
 
 //             (b3-1) fluid B.C.
-               if ( TVar & (_TOTAL|_DERIVED) )
+               if ( TVarCC & (_TOTAL|_DERIVED) )
                {
                   switch ( FluBC[ BC_Face[BC_Sibling] ] )
                   {
 #                    if ( MODEL == HYDRO )
                      case BC_FLU_OUTFLOW:
-                        Hydro_BoundaryCondition_Outflow   ( Array_Ptr, BC_Face[BC_Sibling], NVar_Flu+NVar_Der, GhostSize,
-                                                            PGSize1D, PGSize1D, PGSize1D, BC_Idx_Start, BC_Idx_End );
+                        Hydro_BoundaryCondition_Outflow   ( Data1PG_CC_Ptr, BC_Face[BC_Sibling], NVarCC_Flu+NVarCC_Der, GhostSize,
+                                                            PGSize1D_CC, PGSize1D_CC, PGSize1D_CC, BC_Idx_Start, BC_Idx_End );
                      break;
 
                      case BC_FLU_REFLECTING:
-                        Hydro_BoundaryCondition_Reflecting( Array_Ptr, BC_Face[BC_Sibling], NVar_Flu,          GhostSize,
-                                                            PGSize1D, PGSize1D, PGSize1D, BC_Idx_Start, BC_Idx_End,
-                                                            TFluVarIdxList, NVar_Der, TDerVarList );
+                        Hydro_BoundaryCondition_Reflecting( Data1PG_CC_Ptr, BC_Face[BC_Sibling], NVarCC_Flu,            GhostSize,
+                                                            PGSize1D_CC, PGSize1D_CC, PGSize1D_CC, BC_Idx_Start, BC_Idx_End,
+                                                            TVarCCIdxList_Flu, NVarCC_Der, TVarCCList_Der );
                      break;
-#                    if ( MODEL == MHD )
-#                    warning : WAIT MHD !!!
-#                    endif
 #                    endif
 
                      case BC_FLU_USER:
-                        Flu_BoundaryCondition_User        ( Array_Ptr,                      NVar_Flu,
-                                                            PGSize1D, PGSize1D, PGSize1D, BC_Idx_Start, BC_Idx_End,
-                                                            TFluVarIdxList, PrepTime, dh, xyz0, TVar, lv );
+                        Flu_BoundaryCondition_User        ( Data1PG_CC_Ptr,                      NVarCC_Flu,
+                                                            PGSize1D_CC, PGSize1D_CC, PGSize1D_CC, BC_Idx_Start, BC_Idx_End,
+                                                            TVarCCIdxList_Flu, PrepTime, dh, xyz0, TVarCC, lv );
                      break;
 
                      default:
                         Aux_Error( ERROR_INFO, "unsupported fluid B.C. (%d) !!\n", FluBC[ BC_Face[BC_Sibling] ] );
                   } // switch ( FluBC[ BC_Face[BC_Sibling] ] )
 
-                  Array_Ptr += NVar_Flu*PGSize3D;
-               } // if ( TVar & (_TOTAL|_DERIVED) )
+                  Data1PG_CC_Ptr += NVarCC_Flu*PGSize3D_CC;
+               } // if ( TVarCC & (_TOTAL|_DERIVED) )
 
 
 //             (b3-2) potential B.C.
@@ -1261,16 +1535,56 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                if ( PrepPot )
                {
 //                extrapolate potential
-                  Poi_BoundaryCondition_Extrapolation( Array_Ptr, BC_Face[BC_Sibling], 1, GhostSize,
-                                                       PGSize1D, PGSize1D, PGSize1D, BC_Idx_Start, BC_Idx_End );
+                  Poi_BoundaryCondition_Extrapolation( Data1PG_CC_Ptr, BC_Face[BC_Sibling], 1, GhostSize,
+                                                       PGSize1D_CC, PGSize1D_CC, PGSize1D_CC, BC_Idx_Start, BC_Idx_End );
 
-                  Array_Ptr += 1*PGSize3D;
+                  Data1PG_CC_Ptr += 1*PGSize3D_CC;
                } // if ( PrepPot )
 #              endif // #ifdef GRAVITY
 
+
+//             (b3-3) face-centered variables B.C. (i.e., magnetic field)
+#              ifdef MHD
+               if ( NVarFC_Tot > 0 )
+               {
+                  real *MagDataPtr[NCOMP_MAG] = { NULL, NULL, NULL };
+                  for (int v=0; v<NVarFC_Tot; v++)
+                  {
+                     MagDataPtr[ TVarFCIdxList[v] ] = Data1PG_FC_Ptr;
+                     Data1PG_FC_Ptr                += PGSize3D_FC;
+                  }
+
+                  switch ( FluBC[ BC_Face[BC_Sibling] ] )
+                  {
+//                   input PGSize1D_CC instead PGSize1D_FC for the MHD boundary condition routines
+                     case BC_FLU_OUTFLOW:
+                        MHD_BoundaryCondition_Outflow   ( MagDataPtr, BC_Face[BC_Sibling], NVarFC_Tot, GhostSize,
+                                                          PGSize1D_CC, PGSize1D_CC, PGSize1D_CC, BC_Idx_Start, BC_Idx_End,
+                                                          TVarFCIdxList );
+                     break;
+
+                     case BC_FLU_REFLECTING:
+                        MHD_BoundaryCondition_Reflecting( MagDataPtr, BC_Face[BC_Sibling], NVarFC_Tot, GhostSize,
+                                                          PGSize1D_CC, PGSize1D_CC, PGSize1D_CC, BC_Idx_Start, BC_Idx_End,
+                                                          TVarFCIdxList );
+                     break;
+
+                     case BC_FLU_USER:
+                        MHD_BoundaryCondition_User      ( MagDataPtr, BC_Face[BC_Sibling], NVarFC_Tot,
+                                                          PGSize1D_CC, PGSize1D_CC, PGSize1D_CC, BC_Idx_Start, BC_Idx_End,
+                                                          TVarFCIdxList, PrepTime, dh, xyz0, lv );
+                     break;
+
+                     default:
+                        Aux_Error( ERROR_INFO, "unsupported MHD B.C. (%d) !!\n", FluBC[ BC_Face[BC_Sibling] ] );
+                  } // switch ( FluBC[ BC_Face[BC_Sibling] ] )
+               } // if ( NVarFC_Tot > 0 )
+#              endif // #ifdef MHD
+
             } // else if ( SibPID0 <= SIB_OFFSET_NONPERIODIC )
 
-            else
+
+            else if ( SibPID0 < 0 )
                Aux_Error( ERROR_INFO, "SibPID0 == %d (lv %d, PID0 %d, Side %d) !!\n", SibPID0, lv, PID0, Side );
 
          } // for (int Side=0; Side<NSide; Side++)
@@ -1287,9 +1601,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
             if ( PrepTotalDens )
             {
-               for (int v=0; v<NVar_Flu; v++)
+               for (int v=0; v<NVarCC_Flu; v++)
                {
-                  if ( TFluVarIdxList[v] == DENS )
+                  if ( TVarCCIdxList_Flu[v] == DENS )
                   {
                      DensIdx = v;
                      break;
@@ -1298,16 +1612,16 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
             }
 
             else
-               DensIdx = NVar_Tot - 1;    // store particle-only density in the last element
+               DensIdx = NVarCC_Tot - 1;  // store particle-only density in the last element
 
 #           ifdef DEBUG_PARTICLE
             if ( DensIdx == -1 )    Aux_Error( ERROR_INFO, "DensIdx == -1 !!\n" );
 #           endif
 
-            ArrayDens = Array + DensIdx*PGSize3D;
+            ArrayDens = Data1PG_CC + DensIdx*PGSize3D_CC;
 
 //          initialize density array as zero if there are no other density fields
-            if ( PrepParOnlyDens )  for (int t=0; t<PGSize3D; t++)   ArrayDens[t] = (real)0.0;
+            if ( PrepParOnlyDens )  for (int t=0; t<PGSize3D_CC; t++)   ArrayDens[t] = (real)0.0;
 
 
 //          (c2) deposit particle mass in the central eight patches
@@ -1320,21 +1634,21 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                     amr->patch[0][lv][PID]->rho_ext[0][0][0] == RHO_EXT_NEED_INIT )    continue;
 
 //             calculate the offset between rho_ext[] and ArrayDens[]
-               const int Disp_i = TABLE_02( LocalID, 'x', GhostSize-RHOEXT_GHOST_SIZE, GhostSize+PATCH_SIZE-RHOEXT_GHOST_SIZE );
-               const int Disp_j = TABLE_02( LocalID, 'y', GhostSize-RHOEXT_GHOST_SIZE, GhostSize+PATCH_SIZE-RHOEXT_GHOST_SIZE );
-               const int Disp_k = TABLE_02( LocalID, 'z', GhostSize-RHOEXT_GHOST_SIZE, GhostSize+PATCH_SIZE-RHOEXT_GHOST_SIZE );
+               const int Disp_i = TABLE_02( LocalID, 'x', GhostSize-RHOEXT_GHOST_SIZE, GhostSize+PS1-RHOEXT_GHOST_SIZE );
+               const int Disp_j = TABLE_02( LocalID, 'y', GhostSize-RHOEXT_GHOST_SIZE, GhostSize+PS1-RHOEXT_GHOST_SIZE );
+               const int Disp_k = TABLE_02( LocalID, 'z', GhostSize-RHOEXT_GHOST_SIZE, GhostSize+PS1-RHOEXT_GHOST_SIZE );
 
 //             take care of the case with GhostSize < RHOEXT_GHOST_SIZE
                const int is = ( Disp_i >= 0 ) ? 0 : -Disp_i;
                const int js = ( Disp_j >= 0 ) ? 0 : -Disp_j;
                const int ks = ( Disp_k >= 0 ) ? 0 : -Disp_k;
-               const int ie = ( RHOEXT_NXT+Disp_i <= PGSize1D ) ? RHOEXT_NXT-1 : PGSize1D-Disp_i-1;
-               const int je = ( RHOEXT_NXT+Disp_j <= PGSize1D ) ? RHOEXT_NXT-1 : PGSize1D-Disp_j-1;
-               const int ke = ( RHOEXT_NXT+Disp_k <= PGSize1D ) ? RHOEXT_NXT-1 : PGSize1D-Disp_k-1;
+               const int ie = ( RHOEXT_NXT+Disp_i <= PGSize1D_CC ) ? RHOEXT_NXT-1 : PGSize1D_CC-Disp_i-1;
+               const int je = ( RHOEXT_NXT+Disp_j <= PGSize1D_CC ) ? RHOEXT_NXT-1 : PGSize1D_CC-Disp_j-1;
+               const int ke = ( RHOEXT_NXT+Disp_k <= PGSize1D_CC ) ? RHOEXT_NXT-1 : PGSize1D_CC-Disp_k-1;
 
 //             add particle density to the total density array
                for (int k=ks; k<=ke; k++)  {  K    = k + Disp_k;
-               for (int j=js; j<=je; j++)  {  Idx1 = IDX321( is+Disp_i, j+Disp_j, K, PGSize1D, PGSize1D );
+               for (int j=js; j<=je; j++)  {  Idx1 = IDX321( is+Disp_i, j+Disp_j, K, PGSize1D_CC, PGSize1D_CC );
                for (int i=is; i<=ie; i++)  {
 
                   ArrayDens[ Idx1 ++ ] += amr->patch[0][lv][PID]->rho_ext[k][j][i];
@@ -1378,13 +1692,13 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                      const int is = ( is_LG+Disp_i >= 0 ) ? is_LG : -Disp_i;
                      const int js = ( js_LG+Disp_j >= 0 ) ? js_LG : -Disp_j;
                      const int ks = ( ks_LG+Disp_k >= 0 ) ? ks_LG : -Disp_k;
-                     const int ie = ( ie_LG+Disp_i < PGSize1D ) ? ie_LG : PGSize1D-Disp_i-1;
-                     const int je = ( je_LG+Disp_j < PGSize1D ) ? je_LG : PGSize1D-Disp_j-1;
-                     const int ke = ( ke_LG+Disp_k < PGSize1D ) ? ke_LG : PGSize1D-Disp_k-1;
+                     const int ie = ( ie_LG+Disp_i < PGSize1D_CC ) ? ie_LG : PGSize1D_CC-Disp_i-1;
+                     const int je = ( je_LG+Disp_j < PGSize1D_CC ) ? je_LG : PGSize1D_CC-Disp_j-1;
+                     const int ke = ( ke_LG+Disp_k < PGSize1D_CC ) ? ke_LG : PGSize1D_CC-Disp_k-1;
 
 //                   add particle density to the total density array
                      for (int k=ks; k<=ke; k++)  {  K    = k + Disp_k;
-                     for (int j=js; j<=je; j++)  {  Idx1 = IDX321( is+Disp_i, j+Disp_j, K, PGSize1D, PGSize1D );
+                     for (int j=js; j<=je; j++)  {  Idx1 = IDX321( is+Disp_i, j+Disp_j, K, PGSize1D_CC, PGSize1D_CC );
                      for (int i=is; i<=ie; i++)  {
 
                         ArrayDens[ Idx1 ++ ] += amr->patch[0][lv][SibPID]->rho_ext[k][j][i];
@@ -1469,7 +1783,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //                             away from the target patch boundaries (i.e., patch->EdgeL/R)
 //                             --> Periodic_Check, CheckFarAway_Yes
                   if ( NPar > 0 )
-                  Par_MassAssignment( ParList, NPar, amr->Par->Interp, ArrayDens, PGSize1D, EdgeL, dh,
+                  Par_MassAssignment( ParList, NPar, amr->Par->Interp, ArrayDens, PGSize1D_CC, EdgeL, dh,
                                       (amr->Par->PredictPos && !UseInputMassPos), PrepTime, InitZero_No,
                                       Periodic_Check, PeriodicNCell, UnitDens_No, CheckFarAway_Yes,
                                       UseInputMassPos, InputMassPos );
@@ -1479,112 +1793,143 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #        endif // #ifdef PARTICLE
 
 
-//       d. check minimum density and pressure
-//       --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
+//       d. checks
 // ------------------------------------------------------------------------------------------------------------
 //       (d1) minimum density
-#        if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+//       --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
+#        if ( MODEL == HYDRO  ||  MODEL == ELBDM )
          if ( MinDens >= (real)0.0 )
          {
 //          note that _DENS is turned on automatically for _TOTAL_DENS (and total density is stored in DENS)
-            if ( TVar & _DENS )
+            if ( TVarCC & _DENS )
             {
-//             assuming that the order of variables stored in h_Input_Array is the same as patch->fluid[]
+//             assuming that the order of variables stored in OutputCC is the same as patch->fluid[]
                const int DensIdx = DENS;
-               real *ArrayDens = Array + DensIdx*PGSize3D;
+               real *ArrayDens = Data1PG_CC + DensIdx*PGSize3D_CC;
 
 //             apply minimum density
 //             --> note that for ELBDM it will result in dens != real^2 + imag^2
-               for (int t=0; t<PGSize3D; t++)   ArrayDens[t] = FMAX( ArrayDens[t], MinDens );
+               for (int t=0; t<PGSize3D_CC; t++)   ArrayDens[t] = FMAX( ArrayDens[t], MinDens );
             }
          } // if ( MinDens >= (real)0.0 )
-#        endif // #if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+#        endif // #if ( MODEL == HYDRO  ||  MODEL == ELBDM )
 
 
-//       (d2) minimum pressure
-//            --> note that it should be applied AFTER checking the minimum density since modifying density will also
-//                modify pressure when calculating it from the energy field
-#        if ( MODEL == HYDRO  ||  MODEL == MHD )
-         if ( MinPres >= (real)0.0 )
-         {
-//          (d2-1) pressure as a derived field
-            if ( PrepPres )
-            {
-//             determine the array index for pressure
-               int PresIdx = NVar_Flu;
-               if ( PrepVx )  PresIdx ++;
-               if ( PrepVy )  PresIdx ++;
-               if ( PrepVz )  PresIdx ++;
-
-               real *ArrayPres = Array + PresIdx*PGSize3D;
-
-//             apply minimum pressure
-               for (int t=0; t<PGSize3D; t++)   ArrayPres[t] = FMAX( ArrayPres[t], MinPres );
-            }
-
-//          (d2-2) pressure in the energy field --> work only when ALL active fluid fields are prepared
-            if ( (TVar & _FLUID) == _FLUID )
-            {
-//             assuming that the order of variables stored in h_Input_Array is the same as patch->fluid[]
-               const int DensIdx = DENS;
-               const int MomXIdx = MOMX;
-               const int MomYIdx = MOMY;
-               const int MomZIdx = MOMZ;
-               const int EngyIdx = ENGY;
-
-               real *ArrayDens = Array + DensIdx*PGSize3D;
-               real *ArrayMomX = Array + MomXIdx*PGSize3D;
-               real *ArrayMomY = Array + MomYIdx*PGSize3D;
-               real *ArrayMomZ = Array + MomZIdx*PGSize3D;
-               real *ArrayEngy = Array + EngyIdx*PGSize3D;
-
-//             apply minimum pressure to the energy field
-               for (int t=0; t<PGSize3D; t++)
-                  ArrayEngy[t] = Hydro_CheckMinPresInEngy( ArrayDens[t], ArrayMomX[t], ArrayMomY[t], ArrayMomZ[t], ArrayEngy[t],
-                                                           Gamma_m1, _Gamma_m1, MinPres );
-            } // if ( (TVar & _FLUID) == _FLUID )
-         } // if ( MinPres >= (real)0.0 )
-#        endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
+//       (d2) divergence-free magnetic field
+#        if ( defined MHD  &&  defined MHD_CHECK_DIV_B )
+         if ( PrepMag )    MHD_CheckDivB( Data1PG_FC, GhostSize, DIV_B_TOLERANCE, lv, PrepTime );
+#        endif
 
 
-//       e. copy data from Array to h_Input_Array
+//       e. copy data from Data1PG_CC[] to OutputCC[]
 // ------------------------------------------------------------------------------------------------------------
          if ( PrepUnit == UNIT_PATCH ) // separate the prepared patch group data into individual patches
          {
-            const int PSize1D = PATCH_SIZE + 2*GhostSize;  // size of a single patch including the ghost zone
-            const int PSize3D = PSize1D*PSize1D*PSize1D;
-            real *InArray_Ptr = NULL;
+            const int PSize1D_CC = PS1 + 2*GhostSize;    // width of a single patch including ghost zones
+            const int PSize3D_CC = CUBE(PSize1D_CC);
+            const int PSize1D_FC = PSize1D_CC + 1;
+            const int PSize3D_FC = PSize1D_FC*SQR(PSize1D_CC);
+
+            real *OutputCC_Ptr = NULL;
+            real *OutputFC_Ptr = NULL;
+
 
             for (int LocalID=0; LocalID<8; LocalID++)
             {
                const int N      = 8*TID + LocalID;
-               const int Disp_i = TABLE_02( LocalID, 'x', 0, PATCH_SIZE );
-               const int Disp_j = TABLE_02( LocalID, 'y', 0, PATCH_SIZE );
-               const int Disp_k = TABLE_02( LocalID, 'z', 0, PATCH_SIZE );
+               const int Disp_i = TABLE_02( LocalID, 'x', 0, PS1 );
+               const int Disp_j = TABLE_02( LocalID, 'y', 0, PS1 );
+               const int Disp_k = TABLE_02( LocalID, 'z', 0, PS1 );
 
-               Array_Ptr   = Array;
-               InArray_Ptr = h_Input_Array + N*NVar_Tot*PSize3D;
-               Idx2        = 0;
+//             cell-centered variables
+               Data1PG_CC_Ptr = Data1PG_CC;
+               OutputCC_Ptr   = OutputCC + N*NVarCC_Tot*PSize3D_CC;
+               Idx2           = 0;
 
-               for (int v=0; v<NVar_Tot; v++)
+               for (int v=0; v<NVarCC_Tot; v++)
                {
-                  for (int k=Disp_k; k<Disp_k+PSize1D; k++)
-                  for (int j=Disp_j; j<Disp_j+PSize1D; j++)
+                  for (int k=Disp_k; k<Disp_k+PSize1D_CC; k++)
+                  for (int j=Disp_j; j<Disp_j+PSize1D_CC; j++)
                   {
-                     Idx1 = IDX321( Disp_i, j, k, PGSize1D, PGSize1D );
+                     Idx1 = IDX321( Disp_i, j, k, PGSize1D_CC, PGSize1D_CC );
 
-                     for (int i=0; i<PSize1D; i++)    InArray_Ptr[ Idx2 ++ ] = Array_Ptr[ Idx1 ++ ];
+                     for (int i=0; i<PSize1D_CC; i++)    OutputCC_Ptr[ Idx2 ++ ] = Data1PG_CC_Ptr[ Idx1 ++ ];
                   }
 
-                  Array_Ptr += PGSize3D;
+                  Data1PG_CC_Ptr += PGSize3D_CC;
                }
-            }
-         } // if ( PatchByPatch )
+
+
+//             face-centered variables
+               Data1PG_FC_Ptr = Data1PG_FC;
+               OutputFC_Ptr   = OutputFC + N*NVarFC_Tot*PSize3D_FC;
+               Idx2           = 0;
+
+               for (int v=0; v<NVarFC_Tot; v++)
+               {
+                  TVarFCIdx = TVarFCIdxList[v];
+
+#                 ifdef MHD
+
+//                set array indices
+                  int size_p[3], size_pg[3];    // p=patch, pg=patch_group
+
+
+                  const int norm_dir = ( TVarFCIdx == MAGX ) ? 0 :
+                                       ( TVarFCIdx == MAGY ) ? 1 :
+                                       ( TVarFCIdx == MAGZ ) ? 2 : -1;
+#                 ifdef GAMER_DEBUG
+                  if ( norm_dir == -1 )   Aux_Error( ERROR_INFO, "Target face-centered variable != MAGX/Y/Z !!\n" );
+#                 endif
+
+                  for (int d=0; d<3; d++)
+                  {
+                     if ( d == norm_dir )
+                     {
+                        size_p [d] = PSize1D_FC;
+                        size_pg[d] = PGSize1D_FC;
+                     }
+
+                     else
+                     {
+                        size_p [d] = PSize1D_CC;
+                        size_pg[d] = PGSize1D_CC;
+                     }
+                  }
+
+
+//                copy data
+                  for (int k=Disp_k; k<Disp_k+size_p[2]; k++)
+                  for (int j=Disp_j; j<Disp_j+size_p[1]; j++)
+                  {
+                     Idx1 = IDX321( Disp_i, j, k, size_pg[0], size_pg[1] );
+
+                     for (int i=0; i<size_p[0]; i++)  OutputFC_Ptr[ Idx2 ++ ] = Data1PG_FC_Ptr[ Idx1 ++ ];
+                  }
+
+#                 else
+                  Aux_Error( ERROR_INFO, "currently only MHD supports face-centered variables !!" );
+#                 endif // #ifdef MHD ... else ...
+
+                  Data1PG_FC_Ptr += PGSize3D_FC;
+               } // for (int v=0; v<NVarFC_Tot; v++)
+
+            } // for (int LocalID=0; LocalID<8; LocalID++)
+         } // if ( PrepUnit == UNIT_PATCH )
 
       } // for (int TID=0; TID<NPG; TID++)
 
-      if ( PrepUnit == UNIT_PATCH )    delete [] Array;
-      delete [] IntData;
+      if ( PrepUnit == UNIT_PATCH )
+      {
+         delete [] Data1PG_CC;
+         delete [] Data1PG_FC;
+      }
+      delete [] IntData_CC;
+      delete [] IntData_FC;
+
+#     ifdef MHD
+      delete [] FInterface_Data;
+#     endif
 
    } // end of OpenMP parallel region
 
@@ -1600,13 +1945,92 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SetTempIntPara
+// Description :  Set the temporal interpolation parameters
+//
+// Note        :  1. Invoked by Prepare_PatchData() and InterpolateGhostZone()
+//                2. Apply to fluid, potential, and magnetic field
+//                3. Use call-by-reference to set the returned parameters
+//
+// Parameter   :  lv            : Target refinement level
+//                Sg_Current    : Current Sg
+//                PrepTime      : Target physical time to prepare data
+//                Time0         : Physical time of Sg=0
+//                Time1         : Physical time of Sg=1
+//                IntTime       : Whether or not the temporal interpolation is required
+//                Sg            : Sg if temporal interpolation is not required
+//                Sg_Int        : Sg if temporal interpolation is required
+//                Weighting     : Weighting for the data stored in Sg
+//                Weighting_Int : Weighting for the data stored in Sg_Int
+//
+// Return      :  IntTime, Sg, Sg_Int, Weighting, Weighting_Int
+//-------------------------------------------------------------------------------------------------------
+void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, const double Time0, const double Time1,
+                     bool &IntTime, int &Sg, int &Sg_IntT, real &Weighting, real &Weighting_IntT )
+{
+
+   if      (  Mis_CompareRealValue( PrepTime, Time0, NULL, false )  )
+   {
+      IntTime        = false;
+      Sg             = 0;
+      Sg_IntT        = NULL_INT;
+      Weighting      = NULL_REAL;
+      Weighting_IntT = NULL_REAL;
+   }
+
+   else if (  Mis_CompareRealValue( PrepTime, Time1, NULL, false )  )
+   {
+      IntTime        = false;
+      Sg             = 1;
+      Sg_IntT        = NULL_INT;
+      Weighting      = NULL_REAL;
+      Weighting_IntT = NULL_REAL;
+   }
+
+   else
+   {
+//    print warning messages if temporal extrapolation is required
+      const double TimeMin = MIN( Time0, Time1 );
+      const double TimeMax = MAX( Time0, Time1 );
+
+      if ( TimeMin < 0.0 )
+         Aux_Error( ERROR_INFO, "TimeMin (%21.14e) < 0.0 ==> one of the data arrays has not been initialized !!\n", TimeMin );
+
+      if (  ( PrepTime < TimeMin  ||  PrepTime-TimeMax >= 1.0e-12*TimeMax )  &&  MPI_Rank == 0  )
+         Aux_Message( stderr, "WARNING : performing temporal extrapolation (lv %d, T_Prep %20.14e, T_Min %20.14e, T_Max %20.14e)\n",
+                      lv, PrepTime, TimeMin, TimeMax );
+
+      if ( OPT__INT_TIME )
+      {
+         IntTime        = true;
+         Sg             = 0;
+         Sg_IntT        = 1;
+         Weighting      =   ( +Time1 - PrepTime ) / ( Time1 - Time0 );
+         Weighting_IntT =   ( -Time0 + PrepTime ) / ( Time1 - Time0 );
+      }
+
+      else
+      {
+         IntTime        = false;
+         Sg             = Sg_Current;
+         Sg_IntT        = NULL_INT;
+         Weighting      = NULL_REAL;
+         Weighting_IntT = NULL_REAL;
+      }
+   } // Mis_CompareRealValue
+
+} // FUNCTION : SetTempIntPara
+
+
+
 // ============
 // |  Tables  |
 // ============
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Table_01
-// Description :  Return the displacement for the function "Prepare_PatchData"
+// Description :  Return the displacement for Prepare_PatchData()
 //
 // Parameter   :  SibID     : Sibling index (0~25)
 //                dim       : Target spatial direction (x/y/z)
@@ -1622,7 +2046,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
       {
          switch ( SibID )
          {
-            case 0:case 6: case 8: case 14: case 15: case 18: case 20: case 22: case 24:
+            case 0: case 6: case 8: case 14: case 15: case 18: case 20: case 22: case 24:
                return 0;
 
             case 2: case 3:
@@ -1630,7 +2054,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
                switch ( Count )
                {
                   case 0: case 2:   return GhostSize;
-                  case 1: case 3:   return GhostSize + PATCH_SIZE;
+                  case 1: case 3:   return GhostSize + PS1;
                   default:
                      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Count", Count );
@@ -1642,7 +2066,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
                switch ( Count )
                {
                   case 0: case 1:   return GhostSize;
-                  case 2: case 3:   return GhostSize + PATCH_SIZE;
+                  case 2: case 3:   return GhostSize + PS1;
                   default:
                      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Count", Count );
@@ -1654,7 +2078,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
                switch ( Count )
                {
                   case 0:  return GhostSize;
-                  case 1:  return GhostSize + PATCH_SIZE;
+                  case 1:  return GhostSize + PS1;
                   default:
                      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Count", Count );
@@ -1662,7 +2086,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
             }
 
             case 1: case 7: case 9: case 16: case 17: case 19: case 21: case 23: case 25:
-               return GhostSize + 2*PATCH_SIZE;
+               return GhostSize + 2*PS1;
 
             default:
                Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "SibID", SibID );
@@ -1683,7 +2107,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
                switch ( Count )
                {
                   case 0: case 1:   return GhostSize;
-                  case 2: case 3:   return GhostSize + PATCH_SIZE;
+                  case 2: case 3:   return GhostSize + PS1;
                   default:
                      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Count", Count );
@@ -1695,7 +2119,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
                switch ( Count )
                {
                   case 0: case 2:   return GhostSize;
-                  case 1: case 3:   return GhostSize + PATCH_SIZE;
+                  case 1: case 3:   return GhostSize + PS1;
                   default:
                      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Count", Count );
@@ -1707,7 +2131,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
                switch ( Count )
                {
                   case 0:  return GhostSize;
-                  case 1:  return GhostSize + PATCH_SIZE;
+                  case 1:  return GhostSize + PS1;
                   default:
                      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Count", Count );
@@ -1715,7 +2139,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
             }
 
             case 3: case 8: case 9: case 11: case 13: case 20: case 21: case 24: case 25:
-               return GhostSize + 2*PATCH_SIZE;
+               return GhostSize + 2*PS1;
 
             default:
                Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "SibID", SibID );
@@ -1736,7 +2160,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
                switch ( Count )
                {
                   case 0: case 2:   return GhostSize;
-                  case 1: case 3:   return GhostSize + PATCH_SIZE;
+                  case 1: case 3:   return GhostSize + PS1;
                   default:
                      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Count", Count );
@@ -1748,7 +2172,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
                switch ( Count )
                {
                   case 0: case 1:   return GhostSize;
-                  case 2: case 3:   return GhostSize + PATCH_SIZE;
+                  case 2: case 3:   return GhostSize + PS1;
                   default:
                      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Count", Count );
@@ -1760,7 +2184,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
                switch ( Count )
                {
                   case 0:  return GhostSize;
-                  case 1:  return GhostSize + PATCH_SIZE;
+                  case 1:  return GhostSize + PS1;
                   default:
                      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Count", Count );
@@ -1768,7 +2192,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
             }
 
             case 5: case 12: case 13: case 15: case 17: case 22: case 23: case 24: case 25:
-               return GhostSize + 2*PATCH_SIZE;
+               return GhostSize + 2*PS1;
 
             default:
                Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "SibID", SibID );
@@ -1792,11 +2216,11 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
 // Function    :  Table_02
 // Description :  Return the patch ID of the 0th patch (local ID = 0) of the sibling patch group
 //
-// Note        :  Work for the function "Prepare_PatchData"
+// Note        :  Work for Prepare_PatchData()
 //
-// Parameter   :  lv    : Target refinement level
-//                PID   : Target patch ID to find its sibling patches
-//                Side  : Sibling index (0~25)
+// Parameter   :  lv   : Target refinement level
+//                PID  : Target patch ID to find its sibling patches
+//                Side : Sibling index (0~25)
 //-------------------------------------------------------------------------------------------------------
 int Table_02( const int lv, const int PID, const int Side )
 {
@@ -1951,11 +2375,11 @@ int Table_02( const int lv, const int PID, const int Side )
 // Function    :  SetTargetSibling
 // Description :  Set the target sibling directions for preparing the ghost-zone data at the coarse-grid level
 //
-// Note        :  1. Work for the function "Prepare_PatchData"
+// Note        :  1. Work for Prepare_PatchData()
 //                2. TSib needs to be deallocated manually
 //                3. Sibling directions recorded in TSib must be in ascending numerical order for filling the
-//                   non-periodic ghost-zone data in the function "InterpolateGhostZone"
-//                   --> Therefore, this function CANNOT be applied in "LB_RecordExchangeDataPatchID", in which
+//                   non-periodic ghost-zone data in InterpolateGhostZone()
+//                   --> Therefore, this function CANNOT be applied in LB_RecordExchangeDataPatchID(), in which
 //                       case "SetTargetSibling" and "SetReceiveSibling" must be declared consistently
 //
 // Parameter   :  NTSib : Number of target sibling patches along different sibling directions
@@ -2295,7 +2719,7 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
 // Function    :  Prepare_PatchData_InitParticleDensityArray
 // Description :  Initialize rho_ext[] by setting rho_ext[0][0][0] = RHO_EXT_NEED_INIT
 //
-// Note        :  1. Currently this function is called by "Gra_AdvanceDt(), Main(), and Output_DumpData_Total()"
+// Note        :  1. Currently this function is called by Gra_AdvanceDt(), Main(), and Output_DumpData_Total()
 //                2. Apply to all (real and buffer) patches with rho_ext[] allocated already
 //                3. Do nothing if rho_ext == NULL. In this case, rho_ext[] will be allocated and initialized
 //                   as rho_ext[0][0][0] == RHO_EXT_NEED_INIT when calling Prepare_PatchData()
@@ -2324,7 +2748,7 @@ void Prepare_PatchData_InitParticleDensityArray( const int lv )
 // Function    :  Prepare_PatchData_FreeParticleDensityArray
 // Description :  Free rho_ext[] allocated by Prepare_PatchData() temporarily for storing the partice mass density
 //
-// Note        :  1. Currently this function is called by "Gra_AdvanceDt(), Main(), and Output_DumpData_Total()"
+// Note        :  1. Currently this function is called by Gra_AdvanceDt(), Main(), and Output_DumpData_Total()
 //                2. Apply to buffer patches as well
 //                3. Do not free memory if OPT__REUSE_MEMORY is on
 //
@@ -2350,3 +2774,361 @@ void Prepare_PatchData_FreeParticleDensityArray( const int lv )
 
 } // FUNCTION : Prepare_PatchData_FreeParticleDensityArray
 #endif // #ifdef PARTICLE
+
+
+
+#ifdef MHD
+//-------------------------------------------------------------------------------------------------------
+// Function    :  MHD_SetFInterface
+// Description :  Collect the fine-grid magnetic field on the coarse-fine interpolation boundaries
+//                for the divergence-preserving interpolation
+//
+// Note        :  1. Collected B field (i.e., the FInt_Ptr[] array) will be passed to
+//                   MHD_InterpolateBField() when invoking InterpolateGhostZone()
+//                2. Currently the temporal interpolation, although supported, is not actually used
+//                   --> MagIntTime is always false
+//                3. Since the interpolated ghost zones must be an even number (i.e., GhostSize_Padded),
+//                   one cannot use Data1PG_FC[] to get all the required fine-grid magnetic field when
+//                   GhostSize is an odd number
+//                   --> We only copy data from Data1PG_FC[] on the interfaces between the central
+//                       patch group and it's sibling patches
+//                   --> For the B field on the interfaces outside the central patch group, we recollect
+//                       data from nearby fine patches
+//                4. FInt_Data[] is preallocated to avoid frequent memory allocation/deallocation
+//
+// Parameter   :  FInt_Data         : Array to store the fine-grid magnetic field to be returned
+//                FInt_Ptr          : Pointer arrays pointing to FInt_Data[]
+//                Data1PG_FC        : Array storing the already prepared fine-grid magnetic field
+//                lv                : Target refinement level
+//                PID0              : 0th PID of the central patch group on lv
+//                Side              : Target sibling direction relative to PID0
+//                GhostSize         : Number of ghost zones to be prepared
+//                MagSg             : Sandglass of the magnetic field
+//                MagSg_IntT        : Sandglass for conducting temporal interpolation on the magnetic field
+//                MagIntTime        : Whether or not to perform temporal interpolation on the magnetic field
+//                MagWeighting      : Weighting of data stored in MagSg      when MagIntTime is on
+//                MagWeighting_IntT : Weighting of data stored in MagSg_IntT when MagIntTime is on
+//
+// Return      :  FInt_Data, FInt_Ptr
+//-------------------------------------------------------------------------------------------------------
+void MHD_SetFInterface( real *FInt_Data, real *FInt_Ptr[6], const real *Data1PG_FC, const int lv, const int PID0,
+                        const int Side, const int GhostSize, const int MagSg, const int MagSg_IntT,
+                        const bool MagIntTime, const real MagWeighting, const real MagWeighting_IntT )
+{
+
+// check
+#  ifdef GAMER_DEBUG
+   if ( lv == 0 )
+      Aux_Error( ERROR_INFO, "%s should NOT be applied to the base level !!\n", __FUNCTION__ );
+#  endif
+
+
+   const int FaPID            = amr->patch[0][lv][PID0]->father;
+   const int FaSibPID         = amr->patch[0][lv-1][FaPID]->sibling[Side];
+   const int GhostSize_Padded = GhostSize + (GhostSize&1);
+   const int PGSize1D_CC      = 2*( PS1 + GhostSize );
+   const int PGSize1D_FC      = PGSize1D_CC + 1;
+   const int PGSize3D_FC      = PGSize1D_FC*SQR(PGSize1D_CC);
+
+   const real *Data1PG_FC_Ptr = NULL;
+   int FaSibSibPID, norm_dir, sign, FInt_Side, Offset=0;
+   int LCR[3], loop[3], disp_i[3], disp_o[3], size_i[3], size_o[3], ijk_i[3], ijk_o[3], idx_i, idx_o;    // i/o=in/out
+
+
+// check
+#  ifdef GAMER_DEBUG
+   if ( FaSibPID < 0 )
+      Aux_Error( ERROR_INFO, "FaSibPID = %d < 0 (lv %d) !!\n", FaSibPID, lv );
+
+   if ( amr->patch[0][lv-1][FaSibPID]->son != -1 )
+      Aux_Error( ERROR_INFO, "son = %d != -1 (lv %d, FaSibPID %d) !!\n",
+                 amr->patch[0][lv-1][FaSibPID]->son, lv, FaSibPID );
+#  endif
+
+
+// iterate over the six faces of the target ghost-zone region
+   for (int f=0; f<6; f++)
+   {
+      norm_dir    = f/2;   // [0,0,1,1,2,2]
+      sign        = f&1;   // [0,1,0,1,0,1]
+      FInt_Ptr[f] = NULL;  // initialize as NULL --> coarse-coarse interface
+
+//    nothing to do on the left/right faces of left/right patches
+      if (  TABLE_01( Side, 'x'+norm_dir, 0, NULL_INT, 1 ) == sign  )   continue;
+
+
+      FaSibSibPID = amr->patch[0][lv-1][FaSibPID]->sibling[f];
+
+#     ifdef GAMER_DEBUG
+//    FaSibSibPID < -1 is possible due to non-periodic boundary conditions, but it
+//    cannot be -1 due to the proper-nesting constraint
+      if ( FaSibSibPID == -1 )   Aux_Error( ERROR_INFO, "FaSibSibPID == -1 !!\n" );
+#     endif
+
+//    check if the target face is a coarse-fine interface
+//    --> note that [FaSibSibPID]->son can be < -1 since the son may live abroad
+      if ( FaSibSibPID >= 0  &&  amr->patch[0][lv-1][FaSibSibPID]->son != -1 )
+      {
+//       1. get the sibling direction index relative to the central patch group
+//          --> i.e., between FaPID and FaSibSibPID
+         FInt_Side = -2;
+
+//       target sibling->sibling patch group == central patch group
+         if ( FaSibSibPID == FaPID )
+            FInt_Side = -1;
+
+         else
+         {
+            for (int s=0; s<26; s++)
+            {
+               if ( amr->patch[0][lv-1][FaPID]->sibling[s] == FaSibSibPID )
+               {
+                  const int LR[3] = {  TABLE_01( s, 'x', -1, 123, +1 ),
+                                       TABLE_01( s, 'y', -1, 123, +1 ),
+                                       TABLE_01( s, 'z', -1, 123, +1 )  };
+
+//                this check is necessary when there are only two patches along any periodic direction
+                  if (  TABLE_01( Side, 'x', +1, 456, -1 ) == LR[0]  ||
+                        TABLE_01( Side, 'y', +1, 456, -1 ) == LR[1]  ||
+                        TABLE_01( Side, 'z', +1, 456, -1 ) == LR[2]  ||
+                        TABLE_01(    f, 'x', +1, 456, -1 ) == LR[0]  ||
+                        TABLE_01(    f, 'y', +1, 456, -1 ) == LR[1]  ||
+                        TABLE_01(    f, 'z', +1, 456, -1 ) == LR[2]    )
+                     continue;
+
+                  else
+                  {
+                     FInt_Side = s;
+                     break;
+                  }
+               }
+            }
+         }
+
+         if ( FInt_Side == -2 )  Aux_Error( ERROR_INFO, "cannot determine the sibling direction index !!\n" );
+
+
+//       2. copy data to FInt_Data[] --> similar to step (b1) in Prepare_PatchData()
+         FInt_Ptr[f] = FInt_Data + Offset;
+
+//       2-1. copy data from the central patches
+//            --> note that these data have already been stored in Data1PG_FC[]
+         if ( FInt_Side == -1 )
+         {
+//          set array indices
+            for (int d=0; d<3; d++)
+            {
+               if ( d == norm_dir )
+               {
+                  size_i[d] = PGSize1D_FC;
+                  size_o[d] = 1;
+                  disp_i[d] = GhostSize + (1-sign)*PS2;
+               }
+
+               else
+               {
+                  size_i[d] = PGSize1D_CC;
+                  size_o[d] = PS2;
+                  disp_i[d] = GhostSize;
+               } // if ( d == norm_dir ) ... else ...
+            }  // for (int d=0; d<3; d++)
+
+//          copy data
+            Data1PG_FC_Ptr = Data1PG_FC + norm_dir*PGSize3D_FC;
+            idx_o = 0;
+
+            for (int k=0; k<size_o[2]; k++) { ijk_i[2] = k + disp_i[2];
+            for (int j=0; j<size_o[1]; j++) { ijk_i[1] = j + disp_i[1];
+                                              idx_i = IDX321( disp_i[0], ijk_i[1], ijk_i[2], size_i[0], size_i[1] );
+            for (int i=0; i<size_o[0]; i++) {
+
+//             no temporal interpolation since it has already been applied to Data1PG_FC_Ptr[] if necessary
+               FInt_Ptr[f][idx_o] = Data1PG_FC_Ptr[idx_i];
+
+               idx_i ++;
+               idx_o ++;
+            }}} // i,j,k
+         } // if ( FInt_Side == -1 )
+
+
+//       2-2. copy data from the sibling patches
+         else // FInt_Side = 0~25
+         {
+//          set array indices
+            for (int d=0; d<3; d++)
+            {
+               LCR[d] = TABLE_01( FInt_Side, 'x'+d, -1, 0, 1 );
+
+               if ( d == norm_dir )
+               {
+                  size_i[d] = PS1 + 1;
+                  size_o[d] = 1;
+                  loop  [d] = 1;
+                  disp_i[d] = ( sign == 0 ) ? PS1 : 0;
+               }
+
+               else
+               {
+                  size_i[d] = PS1;
+
+                  switch ( LCR[d] )
+                  {
+                     case -1:
+                        size_o[d] = GhostSize_Padded;
+                        loop  [d] = GhostSize_Padded;
+                        disp_i[d] = PS1 - GhostSize_Padded;
+                        break;
+
+                     case 0:
+                        size_o[d] = PS2;
+                        loop  [d] = PS1;
+                        disp_i[d] = 0;
+                        break;
+
+                     case 1:
+                        size_o[d] = GhostSize_Padded;
+                        loop  [d] = GhostSize_Padded;
+                        disp_i[d] = 0;
+                        break;
+
+                     default:
+                        Aux_Error( ERROR_INFO, "incorrect LCR[%d] = %d !!\n", d, LCR[d] );
+                        exit( -1 );
+                  }
+               } // if ( d == norm_dir ) ... else ...
+            }  // for (int d=0; d<3; d++)
+
+            for (int Count=0; Count<TABLE_04(FInt_Side); Count++)
+            {
+//             note that we should not get SibPID0 by amr->patch[0][lv-1][FaSibSibPID]->son
+//             since the latter can be < -1 for sons living abroad
+               const int LocalID = TABLE_03( FInt_Side, Count );
+               const int SibPID0 = Table_02( lv, PID0, FInt_Side );
+               const int SibPID  = SibPID0 + LocalID;
+#              ifdef GAMER_DEBUG
+               if ( SibPID0 <= -1 )    Aux_Error( ERROR_INFO, "SibPID0 = %d <= -1 !!\n", SibPID0 );
+#              endif
+
+//             skip patches not adjacent to the target coarse-fine interface
+               if (  TABLE_02( LocalID, 'x'+norm_dir, 0, 1 ) == sign  )    continue;
+
+//             set array indices
+               for (int d=0; d<3; d++)
+               {
+                  if (  d == norm_dir  ||  LCR[d] != 0 )    disp_o[d] = 0;
+                  else                                      disp_o[d] = TABLE_02( LocalID, 'x'+d, 0, PS1 );
+               }
+
+//             copy data
+               for (int k=0; k<loop[2]; k++) { ijk_i[2] = k + disp_i[2];   ijk_o[2] = k + disp_o[2];
+               for (int j=0; j<loop[1]; j++) { ijk_i[1] = j + disp_i[1];   ijk_o[1] = j + disp_o[1];
+                                               idx_i = IDX321( disp_i[0], ijk_i[1], ijk_i[2], size_i[0], size_i[1] );
+                                               idx_o = IDX321( disp_o[0], ijk_o[1], ijk_o[2], size_o[0], size_o[1] );
+               for (int i=0; i<loop[0]; i++) {
+
+                  FInt_Ptr[f][idx_o] = amr->patch[MagSg][lv][SibPID]->magnetic[norm_dir][idx_i];
+
+                  if ( MagIntTime ) // temporal interpolation
+                  FInt_Ptr[f][idx_o] =
+                     MagWeighting     *FInt_Ptr[f][idx_o]
+                   + MagWeighting_IntT*amr->patch[MagSg_IntT][lv][SibPID]->magnetic[norm_dir][idx_i];
+
+                  idx_i ++;
+                  idx_o ++;
+               }}} // i,j,k
+            } // for (int Count=0; Count<TABLE_04(FInt_Side); Count++)
+         } // if ( FInt_Side == -1 ) ... else ...
+
+         Offset += size_o[0]*size_o[1]*size_o[2];
+      } // check C-F interface
+   } // for (int f=0; f<6; f++)
+
+} // FUNCTION : MHD_SetFInterface
+
+
+
+#ifdef MHD_CHECK_DIV_B
+//-------------------------------------------------------------------------------------------------------
+// Function    :  MHD_CheckDivB
+// Description :  Check if the divergence of the prepared magnetic field exceeds a given threshold
+//
+// Note        :  1. To enable this check, define MHD_CHECK_DIV_B and set the tolerance value
+//                   in DIV_B_TOLERANCE manually on the top of this file
+//                   --> Currently this check is disabled even when GAMER_DEBUG is on
+//                2. This check may fail when both spatial and temporal interpolations are required
+//                   to prepare the ghost-zone B field
+//                   --> Because the area-averaged fine-grid B field on a coarse-fine interface !=
+//                       **temporally interpolated** coarse-grid B field on the same interface
+//                   --> Coarse cells adjacent to a C-F boundary is NOT divergence-free
+//                       --> Since we will use the original fine-grid data on this C-F interface
+//                   --> Moreover, the adopted interpolation scheme for B field is divergence-preserving
+//                       instead of divergence-free
+//
+// Parameter   :  Data1PG_FC : Array storing the prepared B field to be checked
+//                GhostSize  : Number of ghost zones
+//                Tolerance  : Tolerance relative error in div(B)
+//                             --> Relative error is defined as |div(B)|*dh/<B>
+//                lv         : Target refinement level
+//                PrepTime   : Target physical time
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const real Tolerance,
+                    const int lv, const double PrepTime )
+{
+
+   const int  PGSize1D_CC = 2*( PS1 + GhostSize );
+   const int  PGSize1D_FC = PGSize1D_CC + 1;
+   const int  PGSize3D_FC = PGSize1D_FC*SQR(PGSize1D_CC);
+   const int  didx_Bx     = 1;
+   const int  didx_By     = PGSize1D_CC;
+   const int  didx_Bz     = SQR(PGSize1D_CC);
+   const real one_six     = 1.0/6.0;
+
+   const real *Bx = Data1PG_FC + MAGX*PGSize3D_FC;
+   const real *By = Data1PG_FC + MAGY*PGSize3D_FC;
+   const real *Bz = Data1PG_FC + MAGZ*PGSize3D_FC;
+
+   real BxL, BxR, ByL, ByR, BzL, BzR, AveB, DivB, DivB_max=-1.0;
+   int  idx_Bx, idx_By, idx_Bz, i_max, j_max, k_max;
+
+
+// find the cell with the maximum div(B)
+   for (int k=0; k<PGSize1D_CC; k++ )
+   for (int j=0; j<PGSize1D_CC; j++ )
+   for (int i=0; i<PGSize1D_CC; i++ )
+   {
+      idx_Bx = IDX321( i, j, k, PGSize1D_FC, PGSize1D_CC );
+      idx_By = IDX321( i, j, k, PGSize1D_CC, PGSize1D_FC );
+      idx_Bz = IDX321( i, j, k, PGSize1D_CC, PGSize1D_CC );
+
+      BxL = Bx[ idx_Bx           ];
+      ByL = By[ idx_By           ];
+      BzL = Bz[ idx_Bz           ];
+      BxR = Bx[ idx_Bx + didx_Bx ];
+      ByR = By[ idx_By + didx_By ];
+      BzR = Bz[ idx_Bz + didx_Bz ];
+
+      AveB = ( BxR + ByR + BzR + BxL + ByL + BzL ) * one_six;
+      DivB = ( BxR + ByR + BzR - BxL - ByL - BzL );
+      DivB = FABS( DivB );
+
+      if ( DivB > DivB_max )
+      {
+         DivB_max = DivB;
+         i_max    = i;
+         j_max    = j;
+         k_max    = k;
+      }
+   } // i,j,k
+
+
+// warning if the maximum div(B) exceeds the tolerance value
+   if ( DivB_max > Tolerance )
+      Aux_Message( stderr, "WARNING : max div(B) = %20.14e at [%2d,%2d,%2d] (lv %d, PrepTime %20.14e, GhostSize %d) !!\n",
+                   DivB_max, i_max-GhostSize, j_max-GhostSize, k_max-GhostSize, lv, PrepTime, GhostSize );
+
+} // FUNCTION : MHD_CheckDivB
+#endif // #ifdef MHD_CHECK_DIV_B
+
+#endif // #ifdef MHD
