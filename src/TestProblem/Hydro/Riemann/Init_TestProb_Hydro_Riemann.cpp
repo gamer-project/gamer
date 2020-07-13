@@ -210,7 +210,7 @@ void SetParameter()
                             Riemann_MagL_T1 = +1.0;  Riemann_MagL_T2 = 0.0;
                             Riemann_MagR_T1 = -1.0;  Riemann_MagR_T2 = 0.0;
                             Riemann_Mag     = 0.75;
-                            sprintf( Riemann_Name, "Torrilhon" );
+                            sprintf( Riemann_Name, "Brio & Wu shock tube" );
                             break;
 #     endif // #ifdef MHD
 
