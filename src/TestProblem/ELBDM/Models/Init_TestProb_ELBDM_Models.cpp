@@ -125,7 +125,7 @@ void SetParameter()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ...\n" );
 
    //Models
-   Models_num = 1;//User Input
+   Models_num = 2;//User Input
 
    //User Input
    string TestProb_FileName[Models_num] = {"Input__TestProb1","Input__TestProb2"};     //Test problem input parameter filenames
