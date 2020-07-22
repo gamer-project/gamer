@@ -309,7 +309,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       H5_Status = H5Fclose( H5_FileID );
 
 //    3-4. free memory
-     for (int lv=0; lv<NLEVEL-1; lv++)   free( InputPara.FlagTable_User[lv].p );
+      for (int lv=0; lv<NLEVEL-1; lv++)   free( InputPara.FlagTable_User[lv].p );
    } // if ( MPI_Rank == 0 )
 
 
