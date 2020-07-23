@@ -303,11 +303,12 @@ double Models_calculator::set_rho(double x){
   
 }
 double Models_calculator::set_mass(double x){
+  
   if (model_type == "UNKNOWN"){
     if(x>=Table_MassProf_r_Models[Models_massprofnbin-1])return Table_MassProf_M_Models[Models_massprofnbin-1];
     return Mis_InterpolateFromTable( Models_massprofnbin, Table_MassProf_r_Models, Table_MassProf_M_Models, x );
   }
-
+  
   else{
     gsl_integration_workspace * w 
     = gsl_integration_workspace_alloc (1000);
@@ -512,11 +513,11 @@ void Models_calculator::init(string type,double al,double newton_g,double rho,do
 
   Trunc_Flag=trunc_flag;
   Trunc_Fac=trunc_fac;
-
+  
   //Set random seeds
   if(RNG==NULL)RNG = new RandomNumber_t( 1 );
   RNG->SetSeed( 0, rseed );
-
+  
   //Initialize densities with Table
   if(model_type=="UNKNOWN"){
     int Tcol_r[1]={r_col};
