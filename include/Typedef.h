@@ -364,7 +364,6 @@ const SF_CreateStarScheme_t
 
 
 // options in "Aux_ComputeProfile"
-// patch types
 typedef int PatchType_t;
 const PatchType_t
    PATCH_LEAF    = 0,
