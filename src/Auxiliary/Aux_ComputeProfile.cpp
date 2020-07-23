@@ -49,25 +49,25 @@ extern void SetTempIntPara( const int lv, const int Sg_Current, const double Pre
 //                NProf       : Number of Profile_t objects in Prof
 //                SingleLv    : Only consider patches on the specified level
 //                              --> If SingleLv<0, loop over all levels
-//                MaxLv       : Consier patches on levels equal/below MaxLv if SingleLv<0
+//                MaxLv       : Consider patches on levels equal/below MaxLv if SingleLv<0
 //                              --> If MaxLv<0, loop over all levels
 //                PatchType   : Only consider patches of the specified type
 //                              --> Supported PATCH_LEAF, PATCH_NONLEAF, PATCH_BOTH
 //                PrepTime    : Target physical time to prepare data
 //                              --> If PrepTime<0, turn off temporal interpolation
 //
-// Example     :  const double Center[3]      = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
-//                const double MaxRadius      = 0.5*amr->BoxSize[0];
-//                const double MinBinSize     = amr->dh[MAX_LEVEL];
-//                const bool   LogBin         = true;
-//                const double LogBinRatio    = 1.25;
-//                const bool   RemoveEmptyBin = true;
-//                const long   TVar[]         = { _DENS, _PRES };
-//                const int    NProf          = 2;
-//                const int    SingleLv       = -1;
-//                const int    MaxLv          = -1;
-//                const int    PatchType      = PATCH_LEAF;
-//                const double PrepTime       = -1.0;
+// Example     :  const double      Center[3]      = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
+//                const double      MaxRadius      = 0.5*amr->BoxSize[0];
+//                const double      MinBinSize     = amr->dh[MAX_LEVEL];
+//                const bool        LogBin         = true;
+//                const double      LogBinRatio    = 1.25;
+//                const bool        RemoveEmptyBin = true;
+//                const long        TVar[]         = { _DENS, _PRES };
+//                const int         NProf          = 2;
+//                const int         SingleLv       = -1;
+//                const int         MaxLv          = -1;
+//                const PatchType_t PatchType      = PATCH_LEAF;
+//                const double      PrepTime       = -1.0;
 //
 //                Profile_t Prof_Dens, Prof_Pres;
 //                Profile_t *Prof[] = { &Prof_Dens, &Prof_Pres };
@@ -94,7 +94,8 @@ extern void SetTempIntPara( const int lv, const int Sg_Current, const double Pre
 //-------------------------------------------------------------------------------------------------------
 void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double r_max_input, const double dr_min,
                          const bool LogBin, const double LogBinRatio, const bool RemoveEmpty, const long TVarBitIdx[],
-                         const int NProf, const int SingleLv, const int MaxLv, const int PatchType, const double PrepTime )
+                         const int NProf, const int SingleLv, const int MaxLv, const PatchType_t PatchType,
+                         const double PrepTime )
 {
 
 // check
@@ -107,6 +108,9 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
    if ( LogBin  &&  LogBinRatio <= 1.0 )
       Aux_Error( ERROR_INFO, "LogBinRatio (%14.7e) <= 1.0 !!\n", LogBinRatio );
+
+   if ( ( SingleLv > 0 )  &&  ( MaxLv > 0 ) )
+      Aux_Error( ERROR_INFO, "SingleLv (%d) and MaxLv (%d) cannot be both >= 0 !!\n", SingleLv, MaxLv );
 #  endif
 
 
@@ -121,6 +125,13 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
       for (int v=0; v<NCOMP_TOTAL; v++)
          if ( TVarBitIdx[p] & (1L<<v) )   TFluIntIdx[p] = v;
    }
+
+
+// check whether _POTE is in TVarBitIdx
+   bool InclPot = false;
+
+   for (int p=0; p<NProf; p++)
+      if ( TVarBitIdx[p] & _POTE )   InclPot = true;
 
 
 // initialize the profile objects
@@ -212,109 +223,55 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
          const double dh = amr->dh[lv];
          const double dv = CUBE( dh );
 
+
 //       determine temporal interpolation parameters
-//       fluid
          bool FluIntTime = false;
          int  FluSg      = amr->FluSg[lv];
          int  FluSg_IntT;
          real FluWeighting, FluWeighting_IntT;
 
-         if ( PrepTime >= 0.0 )
-         {
-            if ( MIN( amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] ) >= 0.0 )
-            {
-               SetTempIntPara( lv, amr->FluSg[lv], PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1],
-                               FluIntTime, FluSg, FluSg_IntT, FluWeighting, FluWeighting_IntT );
-
-               if ( FluIntTime  &&  MPI_Rank == 0  &&  TID == 0 )
-                  Aux_Message( stderr, "WARNING : cannot determine FluSg "
-                                       "(lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e) !!\n",
-                               lv, PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
-            }
-
-            else
-               if ( MPI_Rank == 0  &&  TID == 0 )
-                  Aux_Message( stderr, "WARNING : Disable temporal interpolation since "
-                                       "one of the fluid arrays has not been initialized (lv %d)\n", lv );
-         }
-
-//       magnetic field
 #        ifdef MHD
          bool MagIntTime = false;
          int  MagSg      = amr->MagSg[lv];
          int  MagSg_IntT;
          real MagWeighting, MagWeighting_IntT;
+#        endif
 
-         if ( PrepTime >= 0.0 )
-         {
-            if ( MIN( amr->MagSgTime[lv][0], amr->MagSgTime[lv][1] ) >= 0.0 )
-            {
-               SetTempIntPara( lv, amr->MagSg[lv], PrepTime, amr->MagSgTime[lv][0], amr->MagSgTime[lv][1],
-                               MagIntTime, MagSg, MagSg_IntT, MagWeighting, MagWeighting_IntT );
-
-               if ( MagIntTime  &&  MPI_Rank == 0  &&  TID == 0 )
-                  Aux_Message( stderr, "WARNING : cannot determine MagSg "
-                                       "(lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e) !!\n",
-                               lv, PrepTime, amr->MagSgTime[lv][0], amr->MagSgTime[lv][1] );
-            }
-
-            else
-               if ( MPI_Rank == 0  &&  TID == 0 )
-                  Aux_Message( stderr, "WARNING : Disable temporal interpolation since "
-                                       "one of the magnetic arrays has not been initialized (lv %d)\n", lv );
-         }
-#        endif // #ifdef MHD
-
-//       potential
 #        ifdef GRAVITY
          bool PotIntTime = false;
          int  PotSg      = amr->PotSg[lv];
          int  PotSg_IntT;
          real PotWeighting, PotWeighting_IntT;
+#        endif
 
          if ( PrepTime >= 0.0 )
          {
-            if ( MIN( amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] ) >= 0.0 )
-            {
+//          fluid
+            SetTempIntPara( lv, amr->FluSg[lv], PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1],
+                            FluIntTime, FluSg, FluSg_IntT, FluWeighting, FluWeighting_IntT );
+
+//          magnetic field
+#           ifdef MHD
+            SetTempIntPara( lv, amr->MagSg[lv], PrepTime, amr->MagSgTime[lv][0], amr->MagSgTime[lv][1],
+                            MagIntTime, MagSg, MagSg_IntT, MagWeighting, MagWeighting_IntT );
+#           endif
+
+//          potential
+#           ifdef GRAVITY
+            if ( InclPot )
                SetTempIntPara( lv, amr->PotSg[lv], PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1],
                                PotIntTime, PotSg, PotSg_IntT, PotWeighting, PotWeighting_IntT );
-
-               if ( PotIntTime  &&  MPI_Rank == 0  &&  TID == 0 )
-                  Aux_Message( stderr, "WARNING : cannot determine PotSg "
-                                       "(lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e) !!\n",
-                               lv, PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
-            }
-
-            else
-               if ( MPI_Rank == 0  &&  TID == 0 )
-                  Aux_Message( stderr, "WARNING : Disable temporal interpolation since "
-                                       "one of the potential arrays has not been initialized (lv %d)\n", lv );
+#           endif
          }
-#        endif // #ifdef GRAVITY
 
 
 #        pragma omp for schedule( runtime )
          for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
          {
 //          determine which type of patches to be looped
-            switch ( PatchType )
-            {
-               case PATCH_LEAF:
-                  if ( amr->patch[0][lv][PID]->son != -1 )  continue;
-               break;
-
-               case PATCH_NONLEAF:
-                  if ( amr->patch[0][lv][PID]->son == -1 )  continue;
-               break;
-
-               case PATCH_BOTH:
-                  ;
-               break;
-
-               default:
-                  Aux_Error( ERROR_INFO, "unsupported patch type (%d) !!\n", PatchType );
-                  exit( 1 );
-            }
+            if (  ( amr->patch[0][lv][PID]->son != -1 && PatchType == PATCH_LEAF    )  ||
+                  ( amr->patch[0][lv][PID]->son == -1 && PatchType == PATCH_NONLEAF )  )
+               continue;
 
 
             const real (*FluidPtr)[PS1][PS1][PS1] = amr->patch[ FluSg ][lv][PID]->fluid;

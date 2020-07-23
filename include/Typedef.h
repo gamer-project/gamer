@@ -363,5 +363,14 @@ const SF_CreateStarScheme_t
 #endif
 
 
+// options in "Aux_ComputeProfile"
+// patch types
+typedef int PatchType_t;
+const PatchType_t
+   PATCH_LEAF    = 0,
+   PATCH_NONLEAF = 1,
+   PATCH_BOTH    = 2;
+
+
 
 #endif  // #ifndef __TYPEDEF_H__

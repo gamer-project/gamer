@@ -37,7 +37,8 @@ void Aux_Record_CorrUnphy();
 int  Aux_CountRow( const char *FileName );
 void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double r_max_input, const double dr_min,
                          const bool LogBin, const double LogBinRatio, const bool RemoveEmpty, const long TVarBitIdx[],
-                         const int NProf, const int SingleLv, const int MaxLv, const int PatchType, const double PrepTime );
+                         const int NProf, const int SingleLv, const int MaxLv, const PatchType_t PatchType,
+                         const double PrepTime );
 #ifndef SERIAL
 void Aux_Record_BoundaryPatch( const int lv, int *NList, int **IDList, int **PosList );
 #endif
