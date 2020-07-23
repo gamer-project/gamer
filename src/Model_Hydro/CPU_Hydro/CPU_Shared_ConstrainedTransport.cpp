@@ -11,19 +11,8 @@
 
 // external functions
 #ifdef __CUDACC__
-
 #include "CUFLU_Shared_FluUtility.cu"
-#ifdef UNSPLIT_GRAVITY
-#include "../../SelfGravity/GPU_Gravity/CUPOT_ExternalAcc.cu"
 #endif
-
-#else // #ifdef __CUDACC__
-
-#ifdef UNSPLIT_GRAVITY
-void ExternalAcc( real Acc[], const double x, const double y, const double z, const double Time, const double UserArray[] );
-#endif
-
-#endif // #ifdef __CUDACC__ ... else ...
 
 
 // internal functions
@@ -38,7 +27,7 @@ void UpdateVelocityByGravity( real &v1, real &v2, const int TDir1, const int TDi
                               const int i_usg, const int j_usg, const int k_usg,
                               const real dt_half, const double dh_f8, const real GraConst,
                               const real g_Pot_USG[], const double Corner_USG[], const double Time,
-                              const OptGravityType_t GravityType, const double ExtAcc_AuxArray[] );
+                              const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[] );
 #endif
 
 
@@ -90,6 +79,7 @@ void UpdateVelocityByGravity( real &v1, real &v2, const int TDir1, const int TDi
 //                g_Corner        : Array storing the corner coordinates of each patch group  (for UNSPLIT_GRAVITY only)
 //                Time            : Current physical time                                     (for UNSPLIT_GRAVITY only)
 //                GravityType     : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
+//                ExtAcc_Func     : Function pointer to the external acceleration routine     (for UNSPLIT_GRAVITY only)
 //                ExtAcc_AuxArray : Auxiliary array for external acceleration                 (for UNSPLIT_GRAVITY only)
 //
 // Return      :  g_EC_Ele[], g_IntEle[]
@@ -101,8 +91,8 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                           const int NEle, const int NFlux, const int NPri, const int OffsetPri,
                           const real dt, const real dh,
                           const bool DumpIntEle, real g_IntEle[][NCOMP_ELE][ PS2P1*PS2 ],
-                          const bool CorrHalfVel, const real g_Pot_USG[], const double g_Corner[],
-                          const double Time, const OptGravityType_t GravityType, const double ExtAcc_AuxArray[] )
+                          const bool CorrHalfVel, const real g_Pot_USG[], const double g_Corner[], const double Time,
+                          const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[] )
 {
 
 // check
@@ -225,11 +215,11 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
             ijk_usg[1] = j_pri + idx_pri2usg;
             ijk_usg[2] = k_pri + idx_pri2usg;
             UpdateVelocityByGravity( V_L1, V_L2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
-                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_AuxArray );
+                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_Func, ExtAcc_AuxArray );
 
             ijk_usg[TDir2] ++;
             UpdateVelocityByGravity( V_R1, V_R2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
-                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_AuxArray );
+                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_Func, ExtAcc_AuxArray );
          } // if ( CorrHalfVel )
 #        endif // #ifdef UNSPLIT_GRAVITY
 
@@ -261,11 +251,11 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
             ijk_usg[2] = k_pri + idx_pri2usg;
             ijk_usg[TDir1] ++;
             UpdateVelocityByGravity( V_L1, V_L2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
-                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_AuxArray );
+                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_Func, ExtAcc_AuxArray );
 
             ijk_usg[TDir2] ++;
             UpdateVelocityByGravity( V_R1, V_R2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
-                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_AuxArray );
+                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_Func, ExtAcc_AuxArray );
          } // if ( CorrHalfVel )
 #        endif // #ifdef UNSPLIT_GRAVITY
 
@@ -296,11 +286,11 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
             ijk_usg[1] = j_pri + idx_pri2usg;
             ijk_usg[2] = k_pri + idx_pri2usg;
             UpdateVelocityByGravity( V_L1, V_L2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
-                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_AuxArray );
+                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_Func, ExtAcc_AuxArray );
 
             ijk_usg[TDir1] ++;
             UpdateVelocityByGravity( V_R1, V_R2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
-                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_AuxArray );
+                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_Func, ExtAcc_AuxArray );
          } // if ( CorrHalfVel )
 #        endif // #ifdef UNSPLIT_GRAVITY
 
@@ -332,11 +322,11 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
             ijk_usg[2] = k_pri + idx_pri2usg;
             ijk_usg[TDir2] ++;
             UpdateVelocityByGravity( V_L1, V_L2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
-                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_AuxArray );
+                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_Func, ExtAcc_AuxArray );
 
             ijk_usg[TDir1] ++;
             UpdateVelocityByGravity( V_R1, V_R2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
-                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_AuxArray );
+                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_Func, ExtAcc_AuxArray );
          } // if ( CorrHalfVel )
 #        endif // #ifdef UNSPLIT_GRAVITY
 
@@ -414,7 +404,7 @@ real dE_Upwind( const real FC_Ele_L, const real FC_Ele_R, const real FC_Mom, con
 
    real dE, CC_Ele_L, CC_Ele_R;  // CC_Ele_L/R: left/right cell-centered electric field
 
-// MAX_ERROR is defined in CUFLU.h
+// MAX_ERROR is defined in Macro.h
    if ( FABS(FC_Vel) <= MAX_ERROR )
    {
       CC_Ele_R = B_R1*V_R2 - B_R2*V_R1;
@@ -459,6 +449,7 @@ real dE_Upwind( const real FC_Ele_L, const real FC_Ele_R, const real FC_Mom, con
 //                Corner_USG      : Cell-centered coordinates of the 0th cell in g_Pot_USG[]
 //                Time            : Current physical time
 //                GravityType     : Types of gravity --> self-gravity, external gravity, both
+//                ExtAcc_Func     : Function pointer to the external acceleration routine
 //                ExtAcc_AuxArray : Auxiliary array for external acceleration
 //
 // Return      :  v1, v2
@@ -468,7 +459,7 @@ void UpdateVelocityByGravity( real &v1, real &v2, const int TDir1, const int TDi
                               const int i_usg, const int j_usg, const int k_usg,
                               const real dt_half, const double dh_f8, const real GraConst,
                               const real g_Pot_USG[], const double Corner_USG[], const double Time,
-                              const OptGravityType_t GravityType, const double ExtAcc_AuxArray[] )
+                              const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[] )
 {
 
    const int didx_usg[3] = { 1, USG_NXT_F, SQR(USG_NXT_F) };
@@ -482,7 +473,7 @@ void UpdateVelocityByGravity( real &v1, real &v2, const int TDir1, const int TDi
       xyz[1] = Corner_USG[1] + j_usg*dh_f8;
       xyz[2] = Corner_USG[2] + k_usg*dh_f8;
 
-      ExternalAcc( Acc, xyz[0], xyz[1], xyz[2], Time, ExtAcc_AuxArray );
+      ExtAcc_Func( Acc, xyz[0], xyz[1], xyz[2], Time, ExtAcc_AuxArray );
 
       Acc[TDir1] *= dt_half;
       Acc[TDir2] *= dt_half;

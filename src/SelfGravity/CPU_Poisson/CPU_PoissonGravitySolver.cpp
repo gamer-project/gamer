@@ -4,11 +4,6 @@
 
 
 
-#include "CUPOT.h"
-extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
-extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
-
-
 // Poisson solver prototypes
 #if   ( POT_SCHEME == SOR )
 void CPU_PoissonSolver_SOR( const real Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT],
@@ -39,7 +34,8 @@ void CPU_HydroGravitySolver(
    const real   g_EngyB_Array  [][ CUBE(PS1) ],
    const int NPatchGroup,
    const real dt, const real dh, const bool P5_Gradient,
-   const OptGravityType_t GravityType, const double c_ExtAcc_AuxArray[],
+   const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
+   const double c_ExtAcc_AuxArray[],
    const double TimeNew, const double TimeOld, const real MinEint );
 
 #elif ( MODEL == ELBDM )
@@ -47,7 +43,7 @@ void CPU_ELBDMGravitySolver(       real Flu_Array[][GRA_NIN][PATCH_SIZE][PATCH_S
                              const real Pot_Array[][GRA_NXT][GRA_NXT][GRA_NXT],
                              const double Corner_Array[][3],
                              const int NPatchGroup, const real EtaDt, const real dh, const real Lambda,
-                             const bool ExtPot, const double Time, const double ExtPot_AuxArray[] );
+                             const bool ExtPot, ExtPot_t ExtPot_Func, const double Time, const double c_ExtPot_AuxArray[] );
 
 #else
 #error : ERROR : unsupported MODEL !!
@@ -184,12 +180,12 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
                               (real(*)[GRA_NIN-1][ CUBE(PS1) ]) h_Flu_Array_USG,
                               (char(*)[ CUBE(PS1) ])            h_DE_Array,
                               (real(*)[ CUBE(PS1) ])            h_EngyB_Array,
-                              NPatchGroup, dt, dh, P5_Gradient, GravityType,
+                              NPatchGroup, dt, dh, P5_Gradient, GravityType, CPUExtAcc_Ptr,
                               ExtAcc_AuxArray, TimeNew, TimeOld, MinEint );
 
 #     elif ( MODEL == ELBDM )
       CPU_ELBDMGravitySolver( h_Flu_Array, h_Pot_Array_Out, h_Corner_Array, NPatchGroup, ELBDM_Eta*dt, dh, ELBDM_Lambda,
-                              ExtPot, TimeNew, ExtPot_AuxArray );
+                              ExtPot, CPUExtPot_Ptr, TimeNew, ExtPot_AuxArray );
 
 #     else
 #     error : ERROR : unsupported MODEL !!

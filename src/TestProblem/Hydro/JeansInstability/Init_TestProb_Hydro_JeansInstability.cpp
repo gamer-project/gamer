@@ -380,17 +380,8 @@ void Init_TestProb_Hydro_JeansInstability()
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr        = SetGridIC;
    Output_User_Ptr               = OutputError;
-   Init_Field_User_Ptr           = NULL;
-   Init_User_Ptr                 = NULL;
-   Flag_User_Ptr                 = NULL;
-   Mis_GetTimeStep_User_Ptr      = NULL;
-   Aux_Record_User_Ptr           = NULL;
-   BC_User_Ptr                   = NULL;
-   Flu_ResetByUser_Func_Ptr      = NULL;
-   End_User_Ptr                  = NULL;
 #  ifdef MHD
    Init_Function_BField_User_Ptr = SetBFieldIC;
-   BC_BField_User_Ptr            = NULL;
 #  endif
 #  endif // if ( MODEL == HYDRO  &&  defined GRAVITY )
 

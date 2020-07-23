@@ -427,12 +427,7 @@ void Init_TestProb_Hydro_CollidingJets()
 
 
    Init_Function_User_Ptr   = SetGridIC;
-   Flag_User_Ptr            = NULL;
-   Mis_GetTimeStep_User_Ptr = NULL;
-   BC_User_Ptr              = NULL;
    Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_CollidingJets;
-   Output_User_Ptr          = NULL;
-   Aux_Record_User_Ptr      = NULL;
    End_User_Ptr             = End_CollidingJets;
 #  endif // #if ( MODEL == HYDRO )
 

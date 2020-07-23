@@ -4,40 +4,10 @@
 
 
 
-// external functions and GPU-related set-up
+// include c_ExtAcc_AuxArray[]
 #ifdef __CUDACC__
-
-#include "../../SelfGravity/GPU_Gravity/CUPOT_ExternalAcc.cu"
-
-
-// variables reside in constant memory
-__constant__ double c_ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  CUPOT_SetConstMem_HydroGravitySolver
-// Description :  Set the constant memory used by CUPOT_HydroGravitySolver()
-//
-// Note        :  1. Adopt the suggested approach for CUDA version >= 5.0
-//                2. Invoked by CUAPI_Init_ExternalAccPot()
-//
-// Parameter   :  None
-//
-// Return      :  0/-1 : successful/failed
-//---------------------------------------------------------------------------------------------------
-__host__
-int CUPOT_SetConstMem_HydroGravitySolver( double h_ExtAcc_AuxArray[] )
-{
-
-   if (  cudaSuccess != cudaMemcpyToSymbol( c_ExtAcc_AuxArray, h_ExtAcc_AuxArray, EXT_ACC_NAUX_MAX*sizeof(double),
-                                            0, cudaMemcpyHostToDevice)  )
-      return -1;
-
-   else
-      return 0;
-
-} // FUNCTION : CUPOT_SetConstMem_HydroGravitySolver
-
-#endif // ifdef __CUDACC__
+#include "CUDA_ConstMemory.h"
+#endif
 
 
 
@@ -68,11 +38,10 @@ int CUPOT_SetConstMem_HydroGravitySolver( double h_ExtAcc_AuxArray[] )
 //                dh                : Cell size
 //                P5_Gradient       : Use 5-points stencil to evaluate the potential gradient
 //                GravityType       : Types of gravity --> self-gravity, external gravity, both
+//                ExtAcc_Func       : Function pointer to the external acceleration routine (for both CPU and GPU)
 //                c_ExtAcc_AuxArray : Auxiliary array for adding external acceleration (for CPU only)
-//                                    --> When using GPU, this array is stored in the constant memory and does
-//                                        not need to be passed as a function argument
-//                                        --> Declared on top of this file with the prefix "c_" to
-//                                            highlight that this is a constant variable on GPU
+//                                    --> When using GPU, this array is stored in the constant memory header
+//                                        CUDA_ConstMemory.h and does not need to be passed as a function argument
 //                TimeNew           : Physical time at the current  step (for the external gravity solver)
 //                TimeOld           : Physical time at the previous step (for the external gravity solver in UNSPLIT_GRAVITY)
 //                MinEint           : Minimum allowed internal energy (== MIN_PRES / (GAMMA-1))
@@ -90,7 +59,7 @@ void CUPOT_HydroGravitySolver(
          char   g_DE_Array     [][ CUBE(PS1) ],
    const real   g_EngyB_Array  [][ CUBE(PS1) ],
    const real dt, const real dh, const bool P5_Gradient,
-   const OptGravityType_t GravityType,
+   const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
    const double TimeNew, const double TimeOld, const real MinEint )
 #else
 void CPU_HydroGravitySolver(
@@ -103,7 +72,8 @@ void CPU_HydroGravitySolver(
    const real   g_EngyB_Array  [][ CUBE(PS1) ],
    const int NPatchGroup,
    const real dt, const real dh, const bool P5_Gradient,
-   const OptGravityType_t GravityType, const double c_ExtAcc_AuxArray[],
+   const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
+   const double c_ExtAcc_AuxArray[],
    const double TimeNew, const double TimeOld, const real MinEint )
 #endif
 {
@@ -229,11 +199,11 @@ void CPU_HydroGravitySolver(
             y = g_Corner_Array[P][1] + (double)(j_g0*dh);
             z = g_Corner_Array[P][2] + (double)(k_g0*dh);
 
-            ExternalAcc( acc_new, x, y, z, TimeNew, c_ExtAcc_AuxArray );
+            ExtAcc_Func( acc_new, x, y, z, TimeNew, c_ExtAcc_AuxArray );
             for (int d=0; d<3; d++)    acc_new[d] *= dt;
 
 #           ifdef UNSPLIT_GRAVITY
-            ExternalAcc( acc_old, x, y, z, TimeOld, c_ExtAcc_AuxArray );
+            ExtAcc_Func( acc_old, x, y, z, TimeOld, c_ExtAcc_AuxArray );
             for (int d=0; d<3; d++)    acc_old[d] *= dt;
 #           endif
          }

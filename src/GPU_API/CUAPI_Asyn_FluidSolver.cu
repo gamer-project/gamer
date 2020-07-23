@@ -36,7 +36,7 @@ void CUFLU_FluidSolver_MHM(
    const real dt, const real dh, const real Gamma,
    const bool StoreFlux, const bool StoreElectric,
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-   const double Time, const OptGravityType_t GravityType,
+   const double Time, const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
    const real MinDens, const real MinPres, const real DualEnergySwitch,
    const bool NormPassive, const int NNorm,
    const bool JeansMinPres, const real JeansMinPres_Coeff );
@@ -61,7 +61,7 @@ void CUFLU_FluidSolver_CTU(
    const real dt, const real dh, const real Gamma,
    const bool StoreFlux, const bool StoreElectric,
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-   const double Time, const OptGravityType_t GravityType,
+   const double Time, const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
    const real MinDens, const real MinPres, const real DualEnergySwitch,
    const bool NormPassive, const int NNorm,
    const bool JeansMinPres, const real JeansMinPres_Coeff );
@@ -77,6 +77,10 @@ __global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ FLU_NXT*FLU_NXT
 #else
 #error : ERROR : unsupported MODEL !!
 #endif // MODEL
+
+#ifndef GRAVITY
+static ExtAcc_t GPUExtAcc_Ptr = NULL;
+#endif
 
 
 // device pointers
@@ -392,7 +396,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               d_FC_Mag_Half     + UsedPatch[s],
               d_EC_Ele          + UsedPatch[s],
               dt, dh, Gamma, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff,
-              Time, GravityType, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm,
+              Time, GravityType, GPUExtAcc_Ptr, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm,
               JeansMinPres, JeansMinPres_Coeff );
 
 #        elif ( FLU_SCHEME == CTU )
@@ -414,7 +418,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               d_FC_Mag_Half     + UsedPatch[s],
               d_EC_Ele          + UsedPatch[s],
               dt, dh, Gamma, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff,
-              Time, GravityType, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm,
+              Time, GravityType, GPUExtAcc_Ptr, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm,
               JeansMinPres, JeansMinPres_Coeff );
 
 #        else

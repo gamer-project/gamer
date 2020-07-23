@@ -25,6 +25,13 @@ void Poi_Prepare_Rho( const int lv, const double PrepTime, real h_Rho_Array_P[][
                       const int NPG, const int *PID0_List )
 {
 
+// check
+#  ifdef GAMER_DEBUG
+   if ( OPT__GRAVITY_EXTRA_MASS  &&  Poi_AddExtraMassForGravity_Ptr == NULL )
+      Aux_Error( ERROR_INFO, "Poi_AddExtraMassForGravity_Ptr == NULL for OPT__GRAVITY_EXTRA_MASS !!\n" );
+#  endif
+
+
    const bool IntPhase_No       = false;
    const bool DE_Consistency_No = false;
    const real MinPres_No        = -1.0;
