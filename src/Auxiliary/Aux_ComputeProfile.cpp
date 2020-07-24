@@ -109,7 +109,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
    if ( LogBin  &&  LogBinRatio <= 1.0 )
       Aux_Error( ERROR_INFO, "LogBinRatio (%14.7e) <= 1.0 !!\n", LogBinRatio );
 
-   if ( ( SingleLv > 0 )  &&  ( MaxLv > 0 ) )
+   if ( ( SingleLv >= 0 )  &&  ( MaxLv >= 0 ) )
       Aux_Error( ERROR_INFO, "SingleLv (%d) and MaxLv (%d) cannot be both >= 0 !!\n", SingleLv, MaxLv );
 #  endif
 
@@ -128,10 +128,12 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
 
 // check whether _POTE is in TVarBitIdx
+#  ifdef GRAVITY
    bool InclPot = false;
 
    for (int p=0; p<NProf; p++)
       if ( TVarBitIdx[p] & _POTE )   InclPot = true;
+#  endif
 
 
 // initialize the profile objects
