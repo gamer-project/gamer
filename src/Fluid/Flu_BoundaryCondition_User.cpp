@@ -1,12 +1,12 @@
 #include "GAMER.h"
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
-static void BC_User( real fluid[], const double x, const double y, const double z, const double Time,
-                     const int lv, double AuxArray[] );
+static void BC_User_Template( real fluid[], const double x, const double y, const double z, const double Time,
+                              const int lv, double AuxArray[] );
 
-// this function pointer may be overwritten by various test problem initializers
+// this function pointer must be set by a test problem initializer
 void (*BC_User_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
-                     const int lv, double AuxArray[] ) = BC_User;
+                     const int lv, double AuxArray[] ) = NULL;
 
 #ifdef MHD
 extern void (*BC_BField_User_Ptr)( real magnetic[], const double x, const double y, const double z, const double Time,
@@ -17,12 +17,11 @@ extern void (*BC_BField_User_Ptr)( real magnetic[], const double x, const double
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  BC_User
-// Description :  User-specified boundary condition
+// Function    :  BC_User_Template
+// Description :  User-specified boundary condition template
 //
-// Note        :  1. Invoked by Flu_BoundaryCondition_User() using the function pointer "BC_User_Ptr"
-//                   --> The function pointer may be reset by various test problem initializers, in which case
-//                       this funtion will become useless
+// Note        :  1. Invoked by Flu_BoundaryCondition_User() using the function pointer
+//                   "BC_User_Ptr", which must be set by a test problem initializer
 //                2. Always return NCOMP_TOTAL variables
 //                3. Enabled by the runtime options "OPT__BC_FLU_* == 4"
 //                4. For MHD, do NOT add magnetic energy (i.e., 0.5*B^2) to fluid[ENGY] here
@@ -37,8 +36,8 @@ extern void (*BC_BField_User_Ptr)( real magnetic[], const double x, const double
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
-void BC_User( real fluid[], const double x, const double y, const double z, const double Time,
-              const int lv, double AuxArray[] )
+void BC_User_Template( real fluid[], const double x, const double y, const double z, const double Time,
+                       const int lv, double AuxArray[] )
 {
 
 // put your B.C. here
@@ -69,7 +68,7 @@ void BC_User( real fluid[], const double x, const double y, const double z, cons
 
 // ##########################################################################################################
 
-} // FUNCTION : BC_User
+} // FUNCTION : BC_User_Template
 
 
 
@@ -78,8 +77,7 @@ void BC_User( real fluid[], const double x, const double y, const double z, cons
 // Description :  Fill up the ghost-zone values by the user-specified boundary condition
 //
 // Note        :  1. Work for Prepare_PatchData(), InterpolateGhostZone(), Refine(), and LB_Refine_GetNewRealPatchList()
-//                2. The function pointer "BC_User_Ptr" points to BC_User() by default but may be overwritten
-//                   by various test problem initializers
+//                2. Function pointers "BC_User_Ptr" and "BC_BField_User_Ptr" must be set by a test problem initializer
 //                3. User-defined boundary conditions for the magnetic field are set in MHD_BoundaryCondition_User()
 //
 // Parameter   :  Array          : Array to store the prepared data including ghost zones
@@ -103,7 +101,13 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
 {
 
 // check
-   if ( BC_User_Ptr == NULL )    Aux_Error( ERROR_INFO, "BC_User_Ptr == NULL !!\n" );
+   if ( BC_User_Ptr == NULL )
+      Aux_Error( ERROR_INFO, "BC_User_Ptr == NULL for user-specified boundary conditions !!\n" );
+
+#  ifdef MHD
+   if ( BC_BField_User_Ptr == NULL )
+      Aux_Error( ERROR_INFO, "BC_BField_User_Ptr == NULL for user-specified boundary conditions !!\n" );
+#  endif
 
 
    const double x0 = Corner[0] + (double)Idx_Start[0]*dh;   // starting x,y,z coordinates

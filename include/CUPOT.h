@@ -181,11 +181,6 @@
 #endif
 
 
-// maximum size of the arrays ExtPot_AuxArray and ExtAcc_AuxArray
-#define EXT_POT_NAUX_MAX            10
-#define EXT_ACC_NAUX_MAX            10
-
-
 // warp size (which must be the same as the CUDA predefined constant "warpSize")
 // --> please refer to https://en.wikipedia.org/wiki/CUDA#Version_features_and_specifications
 //     for information on warp size
@@ -208,9 +203,11 @@
 
 // GPU device function specifier
 #ifdef __CUDACC__
-# define GPU_DEVICE __forceinline__ __device__
+# define GPU_DEVICE          __forceinline__ __device__
+# define GPU_DEVICE_NOINLINE    __noinline__ __device__
 #else
 # define GPU_DEVICE
+# define GPU_DEVICE_NOINLINE
 #endif
 
 // unified CPU/GPU loop

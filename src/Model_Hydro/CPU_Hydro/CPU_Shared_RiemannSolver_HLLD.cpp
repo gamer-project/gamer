@@ -233,7 +233,7 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
    if ( crit_Bx < MaxErr2 )   crit = Con_L[0]*Sd_L*Sdm_L;
    else                       crit = Con_L[0]*Sd_L*Sdm_L*_Bx2 - ONE;
 
-   if ( FABS( crit ) < MAX_ERROR )
+   if ( FABS(crit) < MAX_ERROR )
    {
       Con_Lst[2] = Con_Lst[0]*Pri_L[2];
       Con_Lst[3] = Con_Lst[0]*Pri_L[3];
@@ -262,7 +262,7 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
         Con_Lst[IdxBy] = ByL*tmp_2;
         Con_Lst[IdxBz] = BzL*tmp_2;
       }
-   } // if if ( FABS( crit ) < MAX_ERROR ) ... else ...
+   } // if ( FABS(crit) < MAX_ERROR ) ... else ...
 
    VBdot_Lst      = ( Con_Lst[1]*Con_Lst[IdxBx] + Con_Lst[2]*Con_Lst[IdxBy] + Con_Lst[3]*Con_Lst[IdxBz] ) / Con_Lst[0];
    Con_Lst[    4] = (  Sd_L*Con_L[4] - PT_L*Pri_L[1] + PT_st*Speed[2] +
@@ -276,7 +276,7 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
    if ( crit_Bx < MaxErr2 )   crit = Con_R[0]*Sd_R*Sdm_R;
    else                       crit = Con_R[0]*Sd_R*Sdm_R*_Bx2 - ONE;
 
-   if ( FABS( crit ) <  MAX_ERROR )
+   if ( FABS(crit) < MAX_ERROR )
    {
       Con_Rst[    2] = Con_Rst[0]*Pri_R[2];
       Con_Rst[    3] = Con_Rst[0]*Pri_R[3];
@@ -304,7 +304,7 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
         Con_Rst[IdxBy] = ByR*tmp_2;
         Con_Rst[IdxBz] = BzR*tmp_2;
       }
-   } // if ( FABS( crit ) <  MAX_ERROR ) ... else ...
+   } // if ( FABS(crit) < MAX_ERROR ) ... else ...
 
    VBdot_Rst  = ( Con_Rst[1]*Con_Rst[IdxBx] + Con_Rst[2]*Con_Rst[IdxBy] + Con_Rst[3]*Con_Rst[IdxBz] ) / Con_Rst[0];
    Con_Rst[4] = (  Sd_R*Con_R[4] - PT_R*Pri_R[1] + PT_st*Speed[2] +

@@ -232,7 +232,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
 //       enforce positive density and pressure
          Fluid_half[0] = FMAX( Fluid_half[0], MinDens );
          Fluid_half[4] = Hydro_CheckMinPresInEngy( Fluid_half[0], Fluid_half[1], Fluid_half[2], Fluid_half[3], Fluid_half[4],
-                                                   Gamma_m1, _Gamma_m1, MinPres );
+                                                   Gamma_m1, _Gamma_m1, MinPres, NULL_REAL );
       }
 
 
@@ -339,7 +339,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
 //       enforce positive density and pressure
          Fluid[0] = FMAX( Fluid[0], MinDens );
          Fluid[4] = Hydro_CheckMinPresInEngy( Fluid[0], Fluid[1], Fluid[2], Fluid[3], Fluid[4],
-                                              Gamma_m1, _Gamma_m1, MinPres );
+                                              Gamma_m1, _Gamma_m1, MinPres, NULL_REAL );
 
 
 //       check negative density and energy
