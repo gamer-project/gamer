@@ -52,9 +52,9 @@ extern void SetTempIntPara( const int lv, const int Sg_Current, const double Pre
 //                MaxLv       : Consider patches on levels equal/below MaxLv if SingleLv<0
 //                              --> If MaxLv<0, loop over all levels
 //                PatchType   : Only consider patches of the specified type
-//                              --> Supported PATCH_LEAF, PATCH_NONLEAF, PATCH_BOTH
+//                              --> Supported types: PATCH_LEAF, PATCH_NONLEAF, PATCH_BOTH
 //                PrepTime    : Target physical time to prepare data
-//                              --> If PrepTime<0, turn off temporal interpolation
+//                              --> If PrepTime<0, turn off temporal interpolation and always use the most recent data
 //
 // Example     :  const double      Center[3]      = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
 //                const double      MaxRadius      = 0.5*amr->BoxSize[0];
@@ -73,7 +73,7 @@ extern void SetTempIntPara( const int lv, const int Sg_Current, const double Pre
 //                Profile_t *Prof[] = { &Prof_Dens, &Prof_Pres };
 //
 //                Aux_ComputeProfile( Prof, Center, MaxRadius, MinBinSize, LogBin, LogBinRatio, RemoveEmptyBin,
-//                                    TVar, NProf, SingleLv, MaxLv, PatchType, PreTime );
+//                                    TVar, NProf, SingleLv, MaxLv, PatchType, PrepTime );
 //
 //                if ( MPI_Rank == 0 )
 //                {
