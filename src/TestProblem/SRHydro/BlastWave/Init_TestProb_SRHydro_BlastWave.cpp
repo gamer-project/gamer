@@ -295,6 +295,29 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #endif // #if ( MODEL == SR_HYDRO )
 
 
+bool Flag_User_Blast( const int i, const int j, const int k, const int lv, const int PID, const double Threshold )
+{
+   bool Flag = false;
+   const double dh     = amr->dh[lv];
+   const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,              // x,y,z position
+                           amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
+                           amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };
+ 
+   const double Center[3]      = { Blast_Center[0], 
+                                   Blast_Center[1], 
+                                   Blast_Center[2] };
+ 
+   const double dR[3]          = { Pos[0]-Center[0], Pos[1]-Center[1], Pos[2]-Center[2] };
+
+   const double R      = sqrt( SQR(dR[0]) + SQR(dR[1]) + SQR(dR[2]) );
+    
+   Flag |= R < dh*1.8;
+       
+   if ( Flag ) return true;
+   else        return false;
+}
+
+
 void End_Blast()
 {
 	  if ( NumSource > 1 )  delete [] Random_Data;
@@ -329,7 +352,7 @@ void Init_TestProb_SRHydro_BlastWave()
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr   = SetGridIC;
    Output_User_Ptr          = NULL;
-   Flag_User_Ptr            = NULL;
+   Flag_User_Ptr            = Flag_User_Blast;
    Mis_GetTimeStep_User_Ptr = NULL;
    Aux_Record_User_Ptr      = NULL;
    BC_User_Ptr              = NULL;
