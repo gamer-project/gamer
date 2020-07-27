@@ -103,7 +103,8 @@ void Init_GAMER( int *argc, char ***argv )
 // initialize the external potential and acceleration parameters
 // --> must be called AFTER Init_TestProb()
 #  ifdef GRAVITY
-   Init_ExtAccPot();
+   const bool OnlyInitAuxArray_No = false;
+   Init_ExtAccPot( OnlyInitAuxArray_No );
 #  endif
 
 
@@ -117,7 +118,7 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
    CUAPI_Set_Default_GPU_Parameter( GPU_NSTREAM, FLU_GPU_NPGROUP, POT_GPU_NPGROUP, CHE_GPU_NPGROUP );
 
-// CUAPI_SetConstMemory must be called AFTER Init_Field(), Init_ExtAccPot(), and Eos_Init()
+// CUAPI_SetConstMemory must be called AFTER Init_Field(), Init_ExtAccPot(), and EoS_Init()
    CUAPI_SetConstMemory();
 #  endif
 

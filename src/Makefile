@@ -389,7 +389,7 @@ LIBYT_PATH   :=
 
 # common source files
 # -------------------------------------------------------------------------------
-# Cuda source files (compiled with nvcc)
+# CUDA source files (compiled with nvcc)
 GPU_FILE    := CUAPI_Asyn_FluidSolver.cu  CUAPI_DiagnoseDevice.cu  CUAPI_MemAllocate_Fluid.cu \
                CUAPI_MemFree_Fluid.cu  CUAPI_Set_Default_GPU_Parameter.cu  CUAPI_SetDevice.cu \
                CUAPI_Synchronize.cu  CUAPI_Asyn_dtSolver.cu  CUAPI_SetConstMemory.cu
@@ -511,7 +511,7 @@ endif # MODEL
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
 GPU_FILE    += CUAPI_MemAllocate_PoissonGravity.cu  CUAPI_MemFree_PoissonGravity.cu \
-               CUAPI_Asyn_PoissonGravitySolver.cu
+               CUAPI_Asyn_PoissonGravitySolver.cu  CUAPI_SetConstMemory_ExtAccPot.cu
 
 GPU_FILE    += CUPOT_PoissonSolver_SOR_10to14cube.cu  CUPOT_PoissonSolver_SOR_16to18cube.cu \
                CUPOT_PoissonSolver_MG.cu  CUPOT_ExtAcc_PointMass.cu  CUPOT_ExtPot_PointMass.cu

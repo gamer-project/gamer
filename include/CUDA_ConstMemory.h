@@ -8,28 +8,17 @@
 #include "CUPOT.h"
 
 
-#if ( MODEL == HYDRO )
 
-#  if ( NCOMP_PASSIVE > 0 )
+#if ( NCOMP_PASSIVE > 0 )
 SET_GLOBAL( __constant__ int  c_NormIdx[NCOMP_PASSIVE] );
-#  else
+#else
 SET_GLOBAL( __constant__ int *c_NormIdx, NULL );
-#  endif
-
-#  ifdef GRAVITY
-SET_GLOBAL( __constant__ double c_ExtAcc_AuxArray[EXT_ACC_NAUX_MAX] );
-#  endif
-
-#elif ( MODEL == ELBDM )
-
-#  ifdef GRAVITY
-SET_GLOBAL( __constant__ double c_ExtPot_AuxArray[EXT_POT_NAUX_MAX] );
-#  endif
-
-#endif // MODEL
-
+#endif
 
 #ifdef GRAVITY
+SET_GLOBAL( __constant__ double c_ExtAcc_AuxArray[EXT_ACC_NAUX_MAX] );
+SET_GLOBAL( __constant__ double c_ExtPot_AuxArray[EXT_POT_NAUX_MAX] );
+
 SET_GLOBAL( __constant__ real c_Mp[3] );
 SET_GLOBAL( __constant__ real c_Mm[3] );
 #endif
