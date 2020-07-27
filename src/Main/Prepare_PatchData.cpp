@@ -231,8 +231,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 //    we have assumed in InterpolateGhostZone() that when adopting IntPhase this function will NOT prepare
 //    anything other than wave function and, optionally, density
 //    --> e.g., one cannot prepare wave function and potential at the same time when enabling IntPhase
-      if (  TVar & ~( _REAL | _IMAG | _DENS )  )
-      Aux_Error( ERROR_INFO, "unsupported parameter %s = %d for IntPhase !!\n", "TVar", TVar );
+      if (  TVarCC & ~( _REAL | _IMAG | _DENS )  )
+      Aux_Error( ERROR_INFO, "unsupported parameter %s = %d for IntPhase !!\n", "TVarCC", TVarCC );
 #     else
       Aux_Error( ERROR_INFO, "\"interpolation on phase\" is useful only in ELBDM !!\n" );
 #     endif

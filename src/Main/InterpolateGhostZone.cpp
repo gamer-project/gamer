@@ -1209,7 +1209,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
 //       get the density and wrapped phase at FluSg_IntT
 #        ifdef GAMER_DEBUG
-         if ( IntData_IntTime == NULL )   Aux_Error( ERROR_INFO, "IntData_IntTime == NULL !!\n" );
+         if ( IntData_CC_IntTime == NULL )   Aux_Error( ERROR_INFO, "IntData_CC_IntTime == NULL !!\n" );
 #        endif
 
          real *CData_Real_IntTime = CData_CC           + 0*CSize3D_CC;
