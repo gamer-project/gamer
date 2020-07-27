@@ -12,7 +12,7 @@
 ##PBS -W depend=afterok:JOB_ID
 ##PBS -W depend=afterany:JOB_ID
 
-if [ "$PBS_ENVIRONMENT" != "PBS_INTERACTIVE" ]; then
+if [ "$PBS_ENVIRONMENT" == "PBS_BATCH" ]; then
    cd $PBS_O_WORKDIR
 fi
 

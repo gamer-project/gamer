@@ -1,5 +1,8 @@
 #include "GAMER.h"
 
+extern void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, const double Time0, const double Time1,
+                            bool &IntTime, int &Sg, int &Sg_IntT, real &Weighting, real &Weighting_IntT );
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -46,22 +49,31 @@
 //                NProf       : Number of Profile_t objects in Prof
 //                SingleLv    : Only consider patches on the specified level
 //                              --> If SingleLv<0, loop over all levels
+//                MaxLv       : Consider patches on levels equal/below MaxLv if SingleLv<0
+//                              --> If MaxLv<0, loop over all levels
+//                PatchType   : Only consider patches of the specified type
+//                              --> Supported types: PATCH_LEAF, PATCH_NONLEAF, PATCH_BOTH
+//                PrepTime    : Target physical time to prepare data
+//                              --> If PrepTime<0, turn off temporal interpolation and always use the most recent data
 //
-// Example     :  const double Center[3]      = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
-//                const double MaxRadius      = 0.5*amr->BoxSize[0];
-//                const double MinBinSize     = amr->dh[MAX_LEVEL];
-//                const bool   LogBin         = true;
-//                const double LogBinRatio    = 1.25;
-//                const bool   RemoveEmptyBin = true;
-//                const long   TVar[]         = { _DENS, _PRES };
-//                const int    NProf          = 2;
-//                const int    SingleLv       = -1;
+// Example     :  const double      Center[3]      = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
+//                const double      MaxRadius      = 0.5*amr->BoxSize[0];
+//                const double      MinBinSize     = amr->dh[MAX_LEVEL];
+//                const bool        LogBin         = true;
+//                const double      LogBinRatio    = 1.25;
+//                const bool        RemoveEmptyBin = true;
+//                const long        TVar[]         = { _DENS, _PRES };
+//                const int         NProf          = 2;
+//                const int         SingleLv       = -1;
+//                const int         MaxLv          = -1;
+//                const PatchType_t PatchType      = PATCH_LEAF;
+//                const double      PrepTime       = -1.0;
 //
 //                Profile_t Prof_Dens, Prof_Pres;
 //                Profile_t *Prof[] = { &Prof_Dens, &Prof_Pres };
 //
 //                Aux_ComputeProfile( Prof, Center, MaxRadius, MinBinSize, LogBin, LogBinRatio, RemoveEmptyBin,
-//                                    TVar, NProf, SingleLv );
+//                                    TVar, NProf, SingleLv, MaxLv, PatchType, PrepTime );
 //
 //                if ( MPI_Rank == 0 )
 //                {
@@ -82,7 +94,8 @@
 //-------------------------------------------------------------------------------------------------------
 void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double r_max_input, const double dr_min,
                          const bool LogBin, const double LogBinRatio, const bool RemoveEmpty, const long TVarBitIdx[],
-                         const int NProf, const int SingleLv )
+                         const int NProf, const int SingleLv, const int MaxLv, const PatchType_t PatchType,
+                         const double PrepTime )
 {
 
 // check
@@ -95,6 +108,9 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
    if ( LogBin  &&  LogBinRatio <= 1.0 )
       Aux_Error( ERROR_INFO, "LogBinRatio (%14.7e) <= 1.0 !!\n", LogBinRatio );
+
+   if ( ( SingleLv >= 0 )  &&  ( MaxLv >= 0 ) )
+      Aux_Error( ERROR_INFO, "SingleLv (%d) and MaxLv (%d) cannot be both >= 0 !!\n", SingleLv, MaxLv );
 #  endif
 
 
@@ -109,6 +125,16 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
       for (int v=0; v<NCOMP_TOTAL; v++)
          if ( TVarBitIdx[p] & (1L<<v) )   TFluIntIdx[p] = v;
    }
+
+
+//###REVISE: update/remove InclPot in the future version where GREP is treated as external potential.
+// check whether _POTE is in TVarBitIdx since the potential array may have not been computed during initialization
+#  ifdef GRAVITY
+   bool InclPot = false;
+
+   for (int p=0; p<NProf; p++)
+      if ( TVarBitIdx[p] & _POTE )   InclPot = true;
+#  endif
 
 
 // initialize the profile objects
@@ -192,23 +218,76 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
       }
 
 //    determine which levels to be considered
-      const int lv_min = ( SingleLv < 0 ) ? 0         : SingleLv;
-      const int lv_max = ( SingleLv < 0 ) ? TOP_LEVEL : SingleLv;
+      const int lv_min = ( SingleLv < 0 ) ? 0                                     : SingleLv;
+      const int lv_max = ( SingleLv < 0 ) ? ( ( MaxLv < 0 ) ? TOP_LEVEL : MaxLv ) : SingleLv;
 
       for (int lv=lv_min; lv<=lv_max; lv++)
       {
          const double dh = amr->dh[lv];
          const double dv = CUBE( dh );
 
+
+//       determine temporal interpolation parameters
+         bool FluIntTime = false;
+         int  FluSg      = amr->FluSg[lv];
+         int  FluSg_IntT;
+         real FluWeighting, FluWeighting_IntT;
+
+#        ifdef MHD
+         bool MagIntTime = false;
+         int  MagSg      = amr->MagSg[lv];
+         int  MagSg_IntT;
+         real MagWeighting, MagWeighting_IntT;
+#        endif
+
+#        ifdef GRAVITY
+         bool PotIntTime = false;
+         int  PotSg      = amr->PotSg[lv];
+         int  PotSg_IntT;
+         real PotWeighting, PotWeighting_IntT;
+#        endif
+
+         if ( PrepTime >= 0.0 )
+         {
+//          fluid
+            SetTempIntPara( lv, amr->FluSg[lv], PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1],
+                            FluIntTime, FluSg, FluSg_IntT, FluWeighting, FluWeighting_IntT );
+
+//          magnetic field
+#           ifdef MHD
+            SetTempIntPara( lv, amr->MagSg[lv], PrepTime, amr->MagSgTime[lv][0], amr->MagSgTime[lv][1],
+                            MagIntTime, MagSg, MagSg_IntT, MagWeighting, MagWeighting_IntT );
+#           endif
+
+//          potential
+#           ifdef GRAVITY
+            if ( InclPot )
+               SetTempIntPara( lv, amr->PotSg[lv], PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1],
+                               PotIntTime, PotSg, PotSg_IntT, PotWeighting, PotWeighting_IntT );
+#           endif
+         }
+
+
 #        pragma omp for schedule( runtime )
          for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
          {
-            if ( amr->patch[0][lv][PID]->son != -1 )  continue;
+//          determine which type of patches to be looped
+            if (  ( amr->patch[0][lv][PID]->son != -1 && PatchType == PATCH_LEAF    )  ||
+                  ( amr->patch[0][lv][PID]->son == -1 && PatchType == PATCH_NONLEAF )  )
+               continue;
 
-            const real (*FluidPtr)[PS1][PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid;
+
+            const real (*FluidPtr)[PS1][PS1][PS1] = amr->patch[ FluSg ][lv][PID]->fluid;
 #           ifdef GRAVITY
-            const real (*PotPtr  )[PS1][PS1]      = amr->patch[ amr->PotSg[lv] ][lv][PID]->pot;
+            const real (*PotPtr  )[PS1][PS1]      = amr->patch[ PotSg ][lv][PID]->pot;
 #           endif
+
+//          pointer for temporal interpolation
+            const real (*FluidPtr_IntT)[PS1][PS1][PS1] = ( FluIntTime ) ? amr->patch[ FluSg_IntT ][lv][PID]->fluid : NULL;
+#           ifdef GRAVITY
+            const real (*PotPtr_IntT  )[PS1][PS1]      = ( PotIntTime ) ? amr->patch[ PotSg_IntT ][lv][PID]->pot   : NULL;
+#           endif
+
 
             const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh - Center[0];
             const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh - Center[1];
@@ -252,7 +331,10 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                      {
                         const real Weight = dv;
 
-                        OMP_Data  [p][TID][bin] += FluidPtr[ TFluIntIdx[p] ][k][j][i]*Weight;
+                        OMP_Data  [p][TID][bin] += ( FluIntTime )
+                                                 ? ( FluWeighting     *FluidPtr     [ TFluIntIdx[p] ][k][j][i]
+                                                   + FluWeighting_IntT*FluidPtr_IntT[ TFluIntIdx[p] ][k][j][i] )*Weight
+                                                 :                     FluidPtr     [ TFluIntIdx[p] ][k][j][i]  *Weight;
                         OMP_Weight[p][TID][bin] += Weight;
                         OMP_NCell [p][TID][bin] ++;
                      }
@@ -266,9 +348,15 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 #                          ifdef GRAVITY
                            case _POTE:
                            {
-                              const real Weight = FluidPtr[DENS][k][j][i]*dv;    // weighted by cell mass
+                              const real Weight = ( FluIntTime )    // weighted by cell mass
+                                                ? ( FluWeighting     *FluidPtr     [DENS][k][j][i]
+                                                  + FluWeighting_IntT*FluidPtr_IntT[DENS][k][j][i] )*dv
+                                                :                     FluidPtr     [DENS][k][j][i]  *dv;
 
-                              OMP_Data  [p][TID][bin] += PotPtr[k][j][i]*Weight;
+                              OMP_Data  [p][TID][bin] += ( PotIntTime )
+                                                       ? ( PotWeighting     *PotPtr     [k][j][i]
+                                                         + PotWeighting_IntT*PotPtr_IntT[k][j][i] )*Weight
+                                                       :                     PotPtr     [k][j][i]  *Weight;
                               OMP_Weight[p][TID][bin] += Weight;
                               OMP_NCell [p][TID][bin] ++;
                            }
@@ -279,10 +367,21 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 #                          if ( MODEL == HYDRO )
                            case _VELR:
                            {
-                              const real Weight = FluidPtr[DENS][k][j][i]*dv;    // weighted by cell mass
-                              const real MomR   = ( FluidPtr[MOMX][k][j][i]*dx +
-                                                    FluidPtr[MOMY][k][j][i]*dy +
-                                                    FluidPtr[MOMZ][k][j][i]*dz ) / r;
+                              const real Weight = ( FluIntTime )    // weighted by cell mass
+                                                ? ( FluWeighting     *FluidPtr     [DENS][k][j][i]
+                                                  + FluWeighting_IntT*FluidPtr_IntT[DENS][k][j][i] )*dv
+                                                :                     FluidPtr     [DENS][k][j][i]  *dv;
+
+                              const real MomR   = ( FluIntTime )
+                                                ? ( FluWeighting     *( FluidPtr     [MOMX][k][j][i]*dx +
+                                                                        FluidPtr     [MOMY][k][j][i]*dy +
+                                                                        FluidPtr     [MOMZ][k][j][i]*dz )
+                                                  + FluWeighting_IntT*( FluidPtr_IntT[MOMX][k][j][i]*dx +
+                                                                        FluidPtr_IntT[MOMY][k][j][i]*dy +
+                                                                        FluidPtr_IntT[MOMZ][k][j][i]*dz ) ) / r
+                                                :                     ( FluidPtr     [MOMX][k][j][i]*dx +
+                                                                        FluidPtr     [MOMY][k][j][i]*dy +
+                                                                        FluidPtr     [MOMZ][k][j][i]*dz )   / r;
 
                               OMP_Data  [p][TID][bin] += MomR*dv;    // vr*(rho*dv)
                               OMP_Weight[p][TID][bin] += Weight;
@@ -294,13 +393,33 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                            {
                               const real Weight = dv;
 #                             ifdef MHD
-                              const real EngyB  = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+                              const real EngyB      = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg      );
+                              const real EngyB_IntT = ( MagIntTime )
+                                                    ? MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg_IntT )
+                                                    : NULL_REAL;
 #                             else
-                              const real EngyB  = NULL_REAL;
+                              const real EngyB      = NULL_REAL;
+                              const real EngyB_IntT = NULL_REAL;
 #                             endif
-                              const real Pres   = Hydro_GetPressure( FluidPtr[DENS][k][j][i], FluidPtr[MOMX][k][j][i], FluidPtr[MOMY][k][j][i],
-                                                                     FluidPtr[MOMZ][k][j][i], FluidPtr[ENGY][k][j][i],
-                                                                     Gamma_m1, false, NULL_REAL, EngyB );
+                              const real Pres = ( FluIntTime )
+                                              ?   FluWeighting     *Hydro_GetPressure( FluidPtr     [DENS][k][j][i],
+                                                                                       FluidPtr     [MOMX][k][j][i],
+                                                                                       FluidPtr     [MOMY][k][j][i],
+                                                                                       FluidPtr     [MOMZ][k][j][i],
+                                                                                       FluidPtr     [ENGY][k][j][i],
+                                                                                       Gamma_m1, false, NULL_REAL, EngyB )
+                                                + FluWeighting_IntT*Hydro_GetPressure( FluidPtr_IntT[DENS][k][j][i],
+                                                                                       FluidPtr_IntT[MOMX][k][j][i],
+                                                                                       FluidPtr_IntT[MOMY][k][j][i],
+                                                                                       FluidPtr_IntT[MOMZ][k][j][i],
+                                                                                       FluidPtr_IntT[ENGY][k][j][i],
+                                                                                       Gamma_m1, false, NULL_REAL, EngyB_IntT )
+                                              :                     Hydro_GetPressure( FluidPtr     [DENS][k][j][i],
+                                                                                       FluidPtr     [MOMX][k][j][i],
+                                                                                       FluidPtr     [MOMY][k][j][i],
+                                                                                       FluidPtr     [MOMZ][k][j][i],
+                                                                                       FluidPtr     [ENGY][k][j][i],
+                                                                                       Gamma_m1, false, NULL_REAL, EngyB );
 
                               OMP_Data  [p][TID][bin] += Pres*Weight;
                               OMP_Weight[p][TID][bin] += Weight;
@@ -312,14 +431,34 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                            {
                               const real Weight = dv;
 #                             ifdef MHD
-                              const real EngyB  = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+                              const real EngyB      = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg      );
+                              const real EngyB_IntT = ( MagIntTime )
+                                                    ? MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg_IntT )
+                                                    : NULL_REAL;
 #                             else
-                              const real EngyB  = NULL_REAL;
+                              const real EngyB      = NULL_REAL;
+                              const real EngyB_IntT = NULL_REAL;
 #                             endif
-                              const real Pres   = Hydro_GetPressure( FluidPtr[DENS][k][j][i], FluidPtr[MOMX][k][j][i], FluidPtr[MOMY][k][j][i],
-                                                                     FluidPtr[MOMZ][k][j][i], FluidPtr[ENGY][k][j][i],
-                                                                     Gamma_m1, false, NULL_REAL, EngyB );
-                              const real Eint   = Pres/Gamma_m1;  // assuming gamma law for now; will be replaced by a general EoS
+                              const real Pres = ( FluIntTime )
+                                              ?   FluWeighting     *Hydro_GetPressure( FluidPtr     [DENS][k][j][i],
+                                                                                       FluidPtr     [MOMX][k][j][i],
+                                                                                       FluidPtr     [MOMY][k][j][i],
+                                                                                       FluidPtr     [MOMZ][k][j][i],
+                                                                                       FluidPtr     [ENGY][k][j][i],
+                                                                                       Gamma_m1, false, NULL_REAL, EngyB )
+                                                + FluWeighting_IntT*Hydro_GetPressure( FluidPtr_IntT[DENS][k][j][i],
+                                                                                       FluidPtr_IntT[MOMX][k][j][i],
+                                                                                       FluidPtr_IntT[MOMY][k][j][i],
+                                                                                       FluidPtr_IntT[MOMZ][k][j][i],
+                                                                                       FluidPtr_IntT[ENGY][k][j][i],
+                                                                                       Gamma_m1, false, NULL_REAL, EngyB_IntT )
+                                              :                     Hydro_GetPressure( FluidPtr     [DENS][k][j][i],
+                                                                                       FluidPtr     [MOMX][k][j][i],
+                                                                                       FluidPtr     [MOMY][k][j][i],
+                                                                                       FluidPtr     [MOMZ][k][j][i],
+                                                                                       FluidPtr     [ENGY][k][j][i],
+                                                                                       Gamma_m1, false, NULL_REAL, EngyB );
+                              const real Eint = Pres/Gamma_m1;  // assuming gamma law for now; will be replaced by a general EoS
 
                               OMP_Data  [p][TID][bin] += Eint*Weight;
                               OMP_Weight[p][TID][bin] += Weight;

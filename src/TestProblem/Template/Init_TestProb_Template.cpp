@@ -284,10 +284,10 @@ void Init_TestProb_Template()
 #  ifdef GPU
    SetGPUExtAcc_Ptr               = NULL; //                                           TestProblem/Hydro/Plummer/ExtAcc_Plummer.cu
 #  endif
-   Init_ExtPotAuxArray_Ptr        = NULL; // option: OPT__EXTERNAL_POT;       example: SelfGravity/CPU_Gravity/CPU_ExtPot_PointMass.cpp
-   SetCPUExtPot_Ptr               = NULL; //                                           SelfGravity/CPU_Gravity/CPU_ExtPot_PointMass.cpp
+   Init_ExtPotAuxArray_Ptr        = NULL; // option: OPT__EXTERNAL_POT;       example: SelfGravity/CPU_Poisson/CPU_ExtPot_PointMass.cpp
+   SetCPUExtPot_Ptr               = NULL; //                                           SelfGravity/CPU_Poisson/CPU_ExtPot_PointMass.cpp
 #  ifdef GPU
-   SetGPUExtPot_Ptr               = NULL; //                                           SelfGravity/GPU_Gravity/CPU_ExtPot_PointMass.cu
+   SetGPUExtPot_Ptr               = NULL; //                                           SelfGravity/GPU_Poisson/CUPOT_ExtPot_PointMass.cu
 #  endif
    Poi_AddExtraMassForGravity_Ptr = NULL; // option: OPT__GRAVITY_EXTRA_MASS; example: none
 #  endif // #ifdef GRAVITY

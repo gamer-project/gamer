@@ -67,8 +67,12 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //    0. reset the external acceleration and potential since they may be a function of time
 // ===============================================================================================
 #     ifdef GRAVITY
-      Init_ExtAccPot();
+      const bool OnlyInitAuxArray_Yes = true;
+      Init_ExtAccPot( OnlyInitAuxArray_Yes );
+#     ifdef GPU
+      CUAPI_SetConstMemory_ExtAccPot();
 #     endif
+#     endif // #ifdef GRAVITY
 
 
 //    1. calculate the evolution time-step

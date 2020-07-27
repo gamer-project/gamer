@@ -37,7 +37,8 @@ void Aux_Record_CorrUnphy();
 int  Aux_CountRow( const char *FileName );
 void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double r_max_input, const double dr_min,
                          const bool LogBin, const double LogBinRatio, const bool RemoveEmpty, const long TVarBitIdx[],
-                         const int NProf, const int SingleLv );
+                         const int NProf, const int SingleLv, const int MaxLv, const PatchType_t PatchType,
+                         const double PrepTime );
 #ifndef SERIAL
 void Aux_Record_BoundaryPatch( const int lv, int *NList, int **IDList, int **PosList );
 #endif
@@ -338,7 +339,7 @@ void Gra_Prepare_USG( const int lv, const double PrepTime,
 #endif
 void End_FFTW();
 void Init_FFTW();
-void Init_ExtAccPot();
+void Init_ExtAccPot( const bool OnlyInitAuxArray );
 void Init_GreenFuncK();
 void Init_MemAllocate_PoissonGravity( const int Pot_NPatchGroup );
 void Init_Set_Default_MG_Parameter( int &Max_Iter, int &NPre_Smooth, int &NPost_Smooth, double &Tolerated_Error );
@@ -507,6 +508,7 @@ void CUAPI_SetDevice( const int Mode );
 void CUAPI_SetConstMemory();
 void CUAPI_Synchronize();
 #ifdef GRAVITY
+void CUAPI_SetConstMemory_ExtAccPot();
 void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT],
                                       const real h_Pot_Array_In [][POT_NXT][POT_NXT][POT_NXT],
                                             real h_Pot_Array_Out[][GRA_NXT][GRA_NXT][GRA_NXT],
