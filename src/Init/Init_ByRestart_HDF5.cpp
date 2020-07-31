@@ -1580,6 +1580,7 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "HLL_NoRefState",       &RS.HLL_NoRefState,       SID, TID, NonFatal, &RT.HLL_NoRefState,        1, NonFatal );
    LoadField( "HLL_IncludeAllWaves",  &RS.HLL_IncludeAllWaves,  SID, TID, NonFatal, &RT.HLL_IncludeAllWaves,   1, NonFatal );
    LoadField( "HLLC_WaveSpeed",       &RS.HLLC_WaveSpeed,       SID, TID, NonFatal, &RT.HLLC_WaveSpeed,        1, NonFatal );
+   LoadField( "HLLE_WaveSpeed",       &RS.HLLE_WaveSpeed,       SID, TID, NonFatal, &RT.HLLE_WaveSpeed,        1, NonFatal );
 #  ifdef N_FC_VAR
    LoadField( "N_FC_Var",             &RS.N_FC_Var,             SID, TID, NonFatal, &RT.N_FC_Var,              1, NonFatal );
 #  endif

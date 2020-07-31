@@ -397,6 +397,7 @@ void Aux_TakeNote()
 #     endif
 
       fprintf( Note, "HLLC_WAVESPEED                  %d\n",      HLLC_WAVESPEED );
+      fprintf( Note, "HLLE_WAVESPEED                  %d\n",      HLLE_WAVESPEED );
 
 #     ifdef MHD
 #     ifdef EULERY

@@ -606,8 +606,8 @@ void Aux_Check_Parameter()
 #  endif
 
 #  if ( EOS != EOS_GAMMA )
-#   if ( HLLC_WAVESPEED == HLLC_WAVESPEED_ROE )
-#     error : ERROR : HLLC_WAVESPEED_ROE only works with EOS_GAMMA !!
+#   if ( HLLC_WAVESPEED == HLL_WAVESPEED_ROE  ||  HLLE_WAVESPEED == HLL_WAVESPEED_ROE )
+#     error : ERROR : HLL_WAVESPEED_ROE only works with EOS_GAMMA !!
 #   endif
 #  endif // if ( EOS != EOS_GAMMA )
 

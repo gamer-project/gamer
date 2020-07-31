@@ -107,7 +107,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
 
 // 2a. use the Roe average eigenvalues
-#  if   ( HLLC_WAVESPEED == HLLC_WAVESPEED_ROE )
+#  if   ( HLLC_WAVESPEED == HLL_WAVESPEED_ROE )
    real H_L, H_R, RhoL_sqrt, RhoR_sqrt, _RhoL_sqrt, _RhoR_sqrt, _RhoLR_sqrt_sum;
    real u_Roe, v_Roe, w_Roe, H_Roe;
 
@@ -130,7 +130,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 // --> otherwise, one needs to specify how to convert (H-0.5*V2, Rho) to Cs^2
 // --> see Eq. [A4] in Coleman 2020
 #  if ( EOS != EOS_GAMMA )
-#     error : ERROR : HLLC_WAVESPEED_ROE only works with EOS_GAMMA !!
+#     error : ERROR : HLL_WAVESPEED_ROE only works with EOS_GAMMA !!
 #  endif
 
    const real Gamma    = (real)EoS_AuxArray[0];
@@ -163,7 +163,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
 
 // 2b. use the primitive variable Riemann solver (PVRS)
-#  elif ( HLLC_WAVESPEED == HLLC_WAVESPEED_PVRS )
+#  elif ( HLLC_WAVESPEED == HLL_WAVESPEED_PVRS )
    real Rho_PVRS, Cs_PVRS, RhoCs_PVRS, P_PVRS, Gamma_SL, Gamma_SR, q_L, q_R;
 
    Rho_PVRS    = _TWO*( L[0] + R[0] );
@@ -213,10 +213,10 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
 // do not use u_L-W_L and u_R-W_R to prevent from large round-off errors when Cs<<u~W
 // ==> temp1_L ~ temp1_R ~ 0.0 ==> temp2 = inf
-#  if   ( HLLC_WAVESPEED == HLLC_WAVESPEED_ROE )
+#  if   ( HLLC_WAVESPEED == HLL_WAVESPEED_ROE )
    temp1_L = L[0]*(  (EVal_min<u_L-Cs_L) ? (u_L-EVal_min) : (+Cs_L)  );
    temp1_R = R[0]*(  (EVal_max>u_R+Cs_R) ? (u_R-EVal_max) : (-Cs_R)  );
-#  elif ( HLLC_WAVESPEED == HLLC_WAVESPEED_PVRS )
+#  elif ( HLLC_WAVESPEED == HLL_WAVESPEED_PVRS )
    temp1_L = +L[0]*( Cs_L*q_L );
    temp1_R = -R[0]*( Cs_R*q_R );
 #  else
