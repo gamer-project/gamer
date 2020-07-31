@@ -76,6 +76,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
 
 // 2. estimate the maximum wave speeds
+// 2-1. compute the left/right states
    const real ZERO             = (real)0.0;
    const real ONE              = (real)1.0;
    const real _TWO             = (real)0.5;
@@ -106,7 +107,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 #  endif
 
 
-// 2a. use the Roe average eigenvalues
+// 2-2a. use the Roe average eigenvalues
 #  if   ( HLLC_WAVESPEED == HLL_WAVESPEED_ROE )
    real H_L, H_R, RhoL_sqrt, RhoR_sqrt, _RhoL_sqrt, _RhoR_sqrt, _RhoLR_sqrt_sum;
    real u_Roe, v_Roe, w_Roe, H_Roe;
@@ -162,7 +163,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    W_R = FMAX( EVal_max, u_R+Cs_R );
 
 
-// 2b. use the primitive variable Riemann solver (PVRS)
+// 2-2b. use the primitive variable Riemann solver (PVRS)
 #  elif ( HLLC_WAVESPEED == HLL_WAVESPEED_PVRS )
    real Rho_PVRS, Cs_PVRS, RhoCs_PVRS, P_PVRS, Gamma_SL, Gamma_SR, q_L, q_R;
 

@@ -824,6 +824,10 @@ void Aux_Check_Parameter()
 #     error : ERROR : unsupported MHD scheme in the makefile (MHM_RP/CTU) !!
 #  endif
 
+#  if ( EOS != EOS_GAMMA )
+#     error : ERROR : MHD currently only supports EOS_GAMMA !!
+#  endif
+
    if ( OPT__MAG_INT_SCHEME != INT_MINMOD1D  &&  OPT__MAG_INT_SCHEME != INT_VANLEER  &&
         OPT__MAG_INT_SCHEME != INT_CQUAD  &&  OPT__MAG_INT_SCHEME != INT_CQUAR )
       Aux_Error( ERROR_INFO, "unsupported interpolation scheme \"%s = %d\" (2,3,4,6 only) !!\n",
