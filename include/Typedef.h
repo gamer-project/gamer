@@ -371,5 +371,13 @@ typedef void (*ExtAcc_t)( real Acc[], const double x, const double y, const doub
 typedef real (*ExtPot_t)( const double x, const double y, const double z, const double Time, const double UserArray[] );
 
 
+// options in "Aux_ComputeProfile"
+typedef int PatchType_t;
+const PatchType_t
+   PATCH_LEAF    = 0,
+   PATCH_NONLEAF = 1,
+   PATCH_BOTH    = 2;
+
+
 
 #endif  // #ifndef __TYPEDEF_H__
