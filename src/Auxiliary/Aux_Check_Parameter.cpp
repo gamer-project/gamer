@@ -620,10 +620,6 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "EOS_TABULAR is not supported yet !!\n" );
 #  endif
 
-#  if ( EOS == EOS_USER )
-      Aux_Error( ERROR_INFO, "EOS_USER is not supported yet !!\n" );
-#  endif
-
    if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
    {
 #     ifdef MHD
