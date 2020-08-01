@@ -399,6 +399,7 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
 
 
 // 4. evaluate the HLLE fluxes
+//###REVISE: handle the extreme case with MaxV_R==MaxV_L
    const real _MaxV_R_minus_L = ONE / ( MaxV_R - MaxV_L );
 
    for (int v=0; v<NWAVE; v++)
