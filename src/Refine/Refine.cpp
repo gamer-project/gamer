@@ -783,10 +783,10 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #           if ( MODEL == HYDRO )
 //          compute magnetic energy
 #           ifdef MHD
-            const real EngyB = MHD_GetCellCenteredBEnergy( Mag_FData[MAGX], Mag_FData[MAGY], Mag_FData[MAGZ],
-                                                           PS2, PS2, PS2, i, j, k );
+            const real Emag = MHD_GetCellCenteredBEnergy( Mag_FData[MAGX], Mag_FData[MAGY], Mag_FData[MAGZ],
+                                                          PS2, PS2, PS2, i, j, k );
 #           else
-            const real EngyB = NULL_REAL;
+            const real Emag = NULL_REAL;
 #           endif
 
 //          ensure consistency between pressure, total energy density, and the dual-energy variable
@@ -800,7 +800,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
             Hydro_DualEnergyFix( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
                                  Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i], Flu_FData[ENPY][k][j][i],
-                                 dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy, EngyB );
+                                 dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy, Emag );
 
 #           else // #ifdef DUAL_ENERGY
 
@@ -808,7 +808,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             Flu_FData[ENGY][k][j][i]
                = Hydro_CheckMinPresInEngy( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
                                            Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i],
-                                           Gamma_m1, _Gamma_m1, MIN_PRES, EngyB );
+                                           Gamma_m1, _Gamma_m1, MIN_PRES, Emag );
 #           endif // #ifdef DUAL_ENERGY ... else ...
 #           endif // #if ( MODEL == HYDRO )
 

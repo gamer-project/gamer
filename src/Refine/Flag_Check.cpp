@@ -150,12 +150,12 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 #     else // #ifdef DUAL_ENERGY
 
 #     ifdef MHD
-      const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+      const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
 #     else
-      const real EngyB = NULL_REAL;
+      const real Emag = NULL_REAL;
 #     endif
       const real Pres = Hydro_GetPressure( Dens, Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i], Fluid[MOMZ][k][j][i],
-                                           Fluid[ENGY][k][j][i], Gamma_m1, CheckMinPres_Yes, MIN_PRES, EngyB );
+                                           Fluid[ENGY][k][j][i], Gamma_m1, CheckMinPres_Yes, MIN_PRES, Emag );
 #     endif // #ifdef DUAL_ENERGY ... else ...
 
       Flag |= ( SQR(amr->dh[lv]) > JeansCoeff*Pres/SQR(Dens) );

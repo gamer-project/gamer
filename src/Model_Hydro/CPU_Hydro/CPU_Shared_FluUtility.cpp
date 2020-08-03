@@ -14,7 +14,7 @@
 #ifdef __CUDACC__
 GPU_DEVICE
 static real Hydro_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                               const real Gamma_m1, const bool CheckMinPres, const real MinPres, const real EngyB );
+                               const real Gamma_m1, const bool CheckMinPres, const real MinPres, const real Emag );
 GPU_DEVICE
 static real Hydro_CheckMinPres( const real InPres, const real MinPres );
 #endif
@@ -154,16 +154,16 @@ void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real
    const real Bx               = In[ MAG_OFFSET + 0 ];
    const real By               = In[ MAG_OFFSET + 1 ];
    const real Bz               = In[ MAG_OFFSET + 2 ];
-   const real EngyB            = (real)0.5*( SQR(Bx) + SQR(By) + SQR(Bz) );
+   const real Emag             = (real)0.5*( SQR(Bx) + SQR(By) + SQR(Bz) );
 #  else
-   const real EngyB            = NULL_REAL;
+   const real Emag             = NULL_REAL;
 #  endif
 
    Out[0] = In[0];
    Out[1] = In[1]*_Rho;
    Out[2] = In[2]*_Rho;
    Out[3] = In[3]*_Rho;
-   Out[4] = Hydro_GetPressure( In[0], In[1], In[2], In[3], In[4], Gamma_m1, CheckMinPres_Yes, MinPres, EngyB );
+   Out[4] = Hydro_GetPressure( In[0], In[1], In[2], In[3], In[4], Gamma_m1, CheckMinPres_Yes, MinPres, Emag );
 
 // pressure floor required to resolve the Jeans length
 // --> note that currently we do not modify the dual-energy variable (e.g., entropy) accordingly
@@ -275,17 +275,17 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Gam
    Hydro_Rotate3D( InRot, XYZ, true, NCOMP_FLUID );
 
 #  ifdef MHD
-   const real Bx    = InRot[ NCOMP_FLUID + 0 ];
-   const real By    = InRot[ NCOMP_FLUID + 1 ];
-   const real Bz    = InRot[ NCOMP_FLUID + 2 ];
-   const real EngyB = (real)0.5*( SQR(Bx) + SQR(By) + SQR(Bz) );
+   const real Bx   = InRot[ NCOMP_FLUID + 0 ];
+   const real By   = InRot[ NCOMP_FLUID + 1 ];
+   const real Bz   = InRot[ NCOMP_FLUID + 2 ];
+   const real Emag = (real)0.5*( SQR(Bx) + SQR(By) + SQR(Bz) );
 #  else
-   const real EngyB = NULL_REAL;
+   const real Emag = NULL_REAL;
 #  endif
-   const real Pres  = Hydro_GetPressure( InRot[0], InRot[1], InRot[2], InRot[3], InRot[4],
-                                         Gamma_m1, CheckMinPres_Yes, MinPres, EngyB );
-   const real _Rho  = (real)1.0 / InRot[0];
-   const real Vx    = _Rho*InRot[1];
+   const real Pres = Hydro_GetPressure( InRot[0], InRot[1], InRot[2], InRot[3], InRot[4],
+                                        Gamma_m1, CheckMinPres_Yes, MinPres, Emag );
+   const real _Rho = (real)1.0 / InRot[0];
+   const real Vx   = _Rho*InRot[1];
 
    Flux[0] = InRot[1];
    Flux[1] = Vx*InRot[1] + Pres;
@@ -303,10 +303,10 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Gam
    const real Vy = _Rho*InRot[2];
    const real Vz = _Rho*InRot[3];
 
-   Flux[              1 ] += EngyB - SQR(Bx);
+   Flux[              1 ] += Emag - SQR(Bx);
    Flux[              2 ] -= Bx*By;
    Flux[              3 ] -= Bx*Bz;
-   Flux[              4 ] += Vx*EngyB - Bx*( Bx*Vx + By*Vy + Bz*Vz );
+   Flux[              4 ] += Vx*Emag - Bx*( Bx*Vx + By*Vy + Bz*Vz );
    Flux[ MAG_OFFSET + 0 ]  = (real)0.0;
    Flux[ MAG_OFFSET + 1 ]  = By*Vx - Bx*Vy;
    Flux[ MAG_OFFSET + 2 ]  = Bz*Vx - Bx*Vz;
@@ -355,7 +355,7 @@ real Hydro_CheckMinPres( const real InPres, const real MinPres )
 //                   --> Currently it simply sets a minimum allowed value for pressure
 //                       --> Please set MIN_PRES in the runtime parameter file "Input__Parameter"
 //                3. One must input conserved variables instead of primitive variables
-//                4. For MHD, one must provide the magnetic energy density EngyB (i.e., 0.5*B^2)
+//                4. For MHD, one must provide the magnetic energy density Emag (i.e., 0.5*B^2)
 //
 // Parameter   :  Dens     : Mass density
 //                MomX/Y/Z : Momentum density
@@ -363,14 +363,14 @@ real Hydro_CheckMinPres( const real InPres, const real MinPres )
 //                Gamma_m1 : Gamma - 1
 //               _Gamma_m1 : 1/(Gamma - 1)
 //                MinPres  : Minimum allowed pressure
-//                EngyB    : Magnetic energy density (0.5*B^2)
+//                Emag     : Magnetic energy density (0.5*B^2)
 //                           --> For MHD only
 //
 // Return      :  Total energy with pressure greater than the given threshold
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 real Hydro_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                               const real Gamma_m1, const real _Gamma_m1, const real MinPres, const real EngyB )
+                               const real Gamma_m1, const real _Gamma_m1, const real MinPres, const real Emag )
 {
 
    real InPres, OutPres, Ek, _Dens;
@@ -379,7 +379,7 @@ real Hydro_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY
    _Dens   = (real)1.0 / Dens;
    Ek      = (real)0.5*( SQR(MomX) + SQR(MomY) + SQR(MomZ) ) * _Dens;
 #  ifdef MHD
-   InPres  = Gamma_m1*( Engy - Ek - EngyB );
+   InPres  = Gamma_m1*( Engy - Ek - Emag );
 #  else
    InPres  = Gamma_m1*( Engy - Ek );
 #  endif
@@ -392,7 +392,7 @@ real Hydro_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY
    else
    {
 #     ifdef MHD
-      return Ek + _Gamma_m1*OutPres + EngyB;
+      return Ek + _Gamma_m1*OutPres + Emag;
 #     else
       return Ek + _Gamma_m1*OutPres;
 #     endif
@@ -434,8 +434,8 @@ bool Hydro_CheckNegative( const real Input )
 //                2. Invoked by Hydro_GetTimeStep_Fluid(), Prepare_PatchData(), InterpolateGhostZone(),
 //                   Hydro_Aux_Check_Negative() ...
 //                3. One must input conserved variables instead of primitive variables
-//                4. For MHD, Engy is the total energy density including the magnetic energy EngyB=0.5*B^2,
-//                   and thus one must provide EngyB to calculate the gas pressure
+//                4. For MHD, Engy is the total energy density including the magnetic energy Emag=0.5*B^2,
+//                   and thus one must provide Emag to calculate the gas pressure
 //
 // Parameter   :  Dens         : Mass density
 //                MomX/Y/Z     : Momentum density
@@ -446,14 +446,14 @@ bool Hydro_CheckNegative( const real Input )
 //                                   for which we don't want to enable this option
 //                                   --> For example: Flu_FixUp(), Flu_Close(), Hydro_Aux_Check_Negative()
 //                MinPres      : Minimum allowed pressure
-//                EngyB        : Magnetic energy density (0.5*B^2)
+//                Emag         : Magnetic energy density (0.5*B^2)
 //                               --> For MHD only
 //
 // Return      :  Gas pressure (Pres)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 real Hydro_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                        const real Gamma_m1, const bool CheckMinPres, const real MinPres, const real EngyB )
+                        const real Gamma_m1, const bool CheckMinPres, const real MinPres, const real Emag )
 {
 
    real _Dens, Pres;
@@ -461,7 +461,7 @@ real Hydro_GetPressure( const real Dens, const real MomX, const real MomY, const
   _Dens  = (real)1.0 / Dens;
    Pres  = Engy - (real)0.5*_Dens*( SQR(MomX) + SQR(MomY) + SQR(MomZ) );
 #  ifdef MHD
-   Pres -= EngyB;
+   Pres -= Emag;
 #  endif
    Pres *= Gamma_m1;
 
@@ -492,17 +492,17 @@ real Hydro_GetPressure( const real Dens, const real MomX, const real MomY, const
 //                                   for which we don't want to enable this option
 //                                   --> For example: Flu_FixUp(), Flu_Close(), Hydro_Aux_Check_Negative()
 //                MinPres      : Minimum allowed pressure
-//                EngyB        : Magnetic energy density (0.5*B^2)
+//                Emag         : Magnetic energy density (0.5*B^2)
 //                               --> For MHD only
 //
 // Return      :  Temperature
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 real Hydro_GetTemperature( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                           const real Gamma_m1, const bool CheckMinPres, const real MinPres, const real EngyB )
+                           const real Gamma_m1, const bool CheckMinPres, const real MinPres, const real Emag )
 {
 
-   return Hydro_GetPressure( Dens, MomX, MomY, MomZ, Engy, Gamma_m1, CheckMinPres, MinPres, EngyB ) / Dens;
+   return Hydro_GetPressure( Dens, MomX, MomY, MomZ, Engy, Gamma_m1, CheckMinPres, MinPres, Emag ) / Dens;
 
 } // FUNCTION : Hydro_GetTemperature
 

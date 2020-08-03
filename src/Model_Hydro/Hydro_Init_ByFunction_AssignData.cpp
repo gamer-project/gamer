@@ -233,21 +233,21 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 
 //       add the magnetic energy
 #        ifdef MHD
-         const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
-         fluid[ENGY] += EngyB;
+         const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+         fluid[ENGY] += Emag;
 #        else
-         const real EngyB = NULL_REAL;
+         const real Emag = NULL_REAL;
 #        endif
 
 
 //       check minimum density and pressure
          fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
          fluid[ENGY] = Hydro_CheckMinPresInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                                 Gamma_m1, _Gamma_m1, MIN_PRES, EngyB );
+                                                 Gamma_m1, _Gamma_m1, MIN_PRES, Emag );
 
 //       calculate the dual-energy variable (entropy or internal energy)
 #        if   ( DUAL_ENERGY == DE_ENPY )
-         fluid[ENPY] = Hydro_Fluid2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Gamma_m1, EngyB );
+         fluid[ENPY] = Hydro_Fluid2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Gamma_m1, Emag );
 #        elif ( DUAL_ENERGY == DE_EINT )
 #        error : DE_EINT is NOT supported yet !!
 #        endif

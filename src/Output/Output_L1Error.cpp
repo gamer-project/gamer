@@ -319,13 +319,13 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
    const double Gamma_m1        = GAMMA - 1.0;
 #  ifdef MHD
    const real  *B_Nume          = Nume + NCOMP_FLUID;
-   const real   EngyB_Nume      = (real)0.5*( SQR(B_Nume[MAGX]) + SQR(B_Nume[MAGY]) + SQR(B_Nume[MAGZ]) );
+   const real   Emag_Nume       = (real)0.5*( SQR(B_Nume[MAGX]) + SQR(B_Nume[MAGY]) + SQR(B_Nume[MAGZ]) );
 #  else
-   const real   EngyB_Nume      = NULL_REAL;
+   const real   Emag_Nume       = NULL_REAL;
 #  endif
 
    Nume[ENGY] = Hydro_GetPressure( Nume[DENS], Nume[MOMX], Nume[MOMY], Nume[MOMZ], Nume[ENGY],
-                                   Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB_Nume );
+                                   Gamma_m1, CheckMinPres_No, NULL_REAL, Emag_Nume );
 #  endif // #if ( MODEL == HYDRO )
 
 
@@ -343,10 +343,10 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
 
 // convert total energy to pressure
 #  if ( MODEL == HYDRO )
-   const real EngyB_Zero = 0.0;  // Anal[ENGY] set by AnalFunc_Flu() does NOT include magentic energy
+   const real Emag_Zero = 0.0;   // Anal[ENGY] set by AnalFunc_Flu() does NOT include magentic energy
 
    Anal[ENGY] = Hydro_GetPressure( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY],
-                                   Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB_Zero );
+                                   Gamma_m1, CheckMinPres_No, NULL_REAL, Emag_Zero );
 #  endif
 
 

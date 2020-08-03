@@ -261,7 +261,7 @@ extern double     (*h_Corner_Array_G [2])[3];
 extern char       (*h_DE_Array_G     [2])[PS1][PS1][PS1];
 #endif
 #ifdef MHD
-extern real       (*h_EngyB_Array_G  [2])[PS1][PS1][PS1];
+extern real       (*h_Emag_Array_G   [2])[PS1][PS1][PS1];
 #endif
 
 #ifdef UNSPLIT_GRAVITY

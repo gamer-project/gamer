@@ -174,12 +174,12 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
 #        if   ( MODEL == HYDRO )
 //       magnetic field
 #        ifdef MHD
-         const real EngyB = ( magnetic == NULL ) ?
-                            NULL_REAL :
-                            MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
+         const real Emag = ( magnetic == NULL ) ?
+                           NULL_REAL :
+                           MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
          real B[3] = { NULL_REAL, NULL_REAL, NULL_REAL };
          if ( magnetic != NULL )    MHD_GetCellCenteredBFieldInPatch( B, lv, PID, i, j, k, MagSg );
-         fprintf( File, " %13.6e %13.6e %13.6e %13.6e", B[MAGX], B[MAGY], B[MAGZ], EngyB );
+         fprintf( File, " %13.6e %13.6e %13.6e %13.6e", B[MAGX], B[MAGY], B[MAGZ], Emag );
 #        endif
 
 //       pressure
@@ -189,7 +189,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
          const real Pres = ( magnetic == NULL ) ?
                            NULL_REAL :
                            Hydro_GetPressure( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY],
-                                              GAMMA-1.0, CheckMinPres_No, NULL_REAL, EngyB );
+                                              GAMMA-1.0, CheckMinPres_No, NULL_REAL, Emag );
 #        else
          const real Pres = Hydro_GetPressure( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY],
                                               GAMMA-1.0, CheckMinPres_No, NULL_REAL, NULL_REAL );

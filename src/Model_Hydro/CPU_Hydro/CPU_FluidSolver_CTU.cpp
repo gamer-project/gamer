@@ -550,13 +550,13 @@ void Hydro_TGradientCorrection(       real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ 
             const real Bx   = fc_var[f][ MAG_OFFSET + 0 ];
             const real By   = fc_var[f][ MAG_OFFSET + 1 ];
             const real Bz   = fc_var[f][ MAG_OFFSET + 2 ];
-            const real EngyB= (real)0.5*( SQR(Bx) + SQR(By) + SQR(Bz) );
+            const real Emag= (real)0.5*( SQR(Bx) + SQR(By) + SQR(Bz) );
 #           else
-            const real EngyB = NULL_REAL;
+            const real Emag = NULL_REAL;
 #           endif
             fc_var[f][0] = FMAX( fc_var[f][0], MinDens );
             fc_var[f][4] = Hydro_CheckMinPresInEngy( fc_var[f][0], fc_var[f][1], fc_var[f][2], fc_var[f][3], fc_var[f][4],
-                                                     Gamma_m1, _Gamma_m1, MinPres, EngyB );
+                                                     Gamma_m1, _Gamma_m1, MinPres, Emag );
 #           if ( NCOMP_PASSIVE > 0 )
             for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
             fc_var[f][v] = FMAX( fc_var[f][v], TINY_NUMBER );

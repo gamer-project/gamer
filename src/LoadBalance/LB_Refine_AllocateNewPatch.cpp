@@ -999,10 +999,10 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 #     if ( MODEL == HYDRO )
 //    compute magnetic energy
 #     ifdef MHD
-      const real EngyB = MHD_GetCellCenteredBEnergy( FData_Mag[MAGX], FData_Mag[MAGY], FData_Mag[MAGZ],
-                                                     PS2, PS2, PS2, i, j, k );
+      const real Emag = MHD_GetCellCenteredBEnergy( FData_Mag[MAGX], FData_Mag[MAGY], FData_Mag[MAGZ],
+                                                    PS2, PS2, PS2, i, j, k );
 #     else
-      const real EngyB = NULL_REAL;
+      const real Emag = NULL_REAL;
 #     endif
 
 //    ensure consistency between pressure, total energy density, and the dual-energy variable
@@ -1016,7 +1016,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
       Hydro_DualEnergyFix( FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i],
                            FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i], FData_Flu[ENPY][k][j][i],
-                           dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy, EngyB );
+                           dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy, Emag );
 
 #     else // #ifdef DUAL_ENERGY
 
@@ -1024,7 +1024,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       FData_Flu[ENGY][k][j][i]
          = Hydro_CheckMinPresInEngy( FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i],
                                      FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i],
-                                     Gamma_m1, _Gamma_m1, MIN_PRES, EngyB );
+                                     Gamma_m1, _Gamma_m1, MIN_PRES, Emag );
 #     endif // #ifdef DUAL_ENERGY ... else ...
 #     endif // #if ( MODEL == HYDRO )
 

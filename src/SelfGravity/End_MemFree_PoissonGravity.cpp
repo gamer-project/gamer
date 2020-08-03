@@ -29,7 +29,7 @@ void End_MemFree_PoissonGravity()
       delete [] h_DE_Array_G     [t];  h_DE_Array_G     [t] = NULL;
 #     endif
 #     ifdef MHD
-      delete [] h_EngyB_Array_G  [t];  h_EngyB_Array_G  [t] = NULL;
+      delete [] h_Emag_Array_G   [t];  h_Emag_Array_G   [t] = NULL;
 #     endif
       delete [] h_Pot_Array_T    [t];  h_Pot_Array_T    [t] = NULL;
    }

@@ -599,14 +599,14 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
       if ( EigenVal[t+1] > EigenVal[t] )  // skip the degenerate states
       {
 #        ifdef MHD
-         const real EngyB = _TWO*(  SQR( I_States[NCOMP_FLUID+0] )
-                                  + SQR( I_States[NCOMP_FLUID+1] )
-                                  + SQR( I_States[NCOMP_FLUID+2] )  );
+         const real Emag = _TWO*(  SQR( I_States[NCOMP_FLUID+0] )
+                                 + SQR( I_States[NCOMP_FLUID+1] )
+                                 + SQR( I_States[NCOMP_FLUID+2] )  );
 #        else
-         const real EngyB = NULL_REAL;
+         const real Emag = NULL_REAL;
 #        endif
          I_Pres = Hydro_GetPressure( I_States[0], I_States[1], I_States[2], I_States[3], I_States[4],
-                                     Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB );
+                                     Gamma_m1, CheckMinPres_No, NULL_REAL, Emag );
 
          if ( I_States[0] <= ZERO  ||  I_Pres <= ZERO )
          {

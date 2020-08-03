@@ -295,7 +295,7 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
    char (*h_DE_Array_G     [2])[PS1][PS1][PS1]                        = { NULL, NULL };
 #  endif
 #  if ( defined GRAVITY  &&  !defined MHD )
-   real (*h_EngyB_Array_G  [2])[PS1][PS1][PS1]                        = { NULL, NULL };
+   real (*h_Emag_Array_G   [2])[PS1][PS1][PS1]                        = { NULL, NULL };
 #  endif
 
 
@@ -316,7 +316,7 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
       break;
 
       case GRAVITY_SOLVER :
-         TIMING_SYNC(   Gra_Prepare_Flu( lv, h_Flu_Array_G[ArrayID], h_DE_Array_G[ArrayID], h_EngyB_Array_G[ArrayID],
+         TIMING_SYNC(   Gra_Prepare_Flu( lv, h_Flu_Array_G[ArrayID], h_DE_Array_G[ArrayID], h_Emag_Array_G[ArrayID],
                                          NPG, PID0_List ),
                         Timer_Poi_PreFlu[lv]   );
 
@@ -343,7 +343,7 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
          TIMING_SYNC(   Poi_Prepare_Pot( lv, TimeNew, h_Pot_Array_P_In[ArrayID], NPG, PID0_List ),
                         Timer_Poi_PrePot_C[lv]   );
 
-         TIMING_SYNC(   Gra_Prepare_Flu( lv, h_Flu_Array_G[ArrayID], h_DE_Array_G[ArrayID], h_EngyB_Array_G[ArrayID],
+         TIMING_SYNC(   Gra_Prepare_Flu( lv, h_Flu_Array_G[ArrayID], h_DE_Array_G[ArrayID], h_Emag_Array_G[ArrayID],
                                          NPG, PID0_List ),
                         Timer_Poi_PreFlu[lv]   );
 
@@ -477,7 +477,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
    real (*h_Ele_Array      [2])[9][NCOMP_ELE][ PS2P1*PS2 ]            = { NULL, NULL };
    real (*h_Mag_Array_T    [2])[NCOMP_MAG][ PS1P1*SQR(PS1) ]          = { NULL, NULL };
 #  ifdef GRAVITY
-   real (*h_EngyB_Array_G  [2])[PS1][PS1][PS1]                        = { NULL, NULL };
+   real (*h_Emag_Array_G  [2])[PS1][PS1][PS1]                         = { NULL, NULL };
 #  endif
 #  endif
 
@@ -553,7 +553,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
          CUAPI_Asyn_PoissonGravitySolver( NULL, NULL,
                                           h_Pot_Array_P_Out[ArrayID], h_Flu_Array_G[ArrayID], h_Corner_Array_G[ArrayID],
                                           h_Pot_Array_USG_G[ArrayID], h_Flu_Array_USG_G[ArrayID], h_DE_Array_G[ArrayID],
-                                          h_EngyB_Array_G[ArrayID],
+                                          h_Emag_Array_G[ArrayID],
                                           NPG, dt, dh, NULL_INT, NULL_INT,
                                           NULL_REAL, NULL_INT, NULL_INT, NULL_INT,
                                           NULL_REAL, NULL_REAL, (IntScheme_t)NULL_INT,
@@ -563,7 +563,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
          CPU_PoissonGravitySolver       ( NULL, NULL,
                                           h_Pot_Array_P_Out[ArrayID], h_Flu_Array_G[ArrayID], h_Corner_Array_G[ArrayID],
                                           h_Pot_Array_USG_G[ArrayID], h_Flu_Array_USG_G[ArrayID], h_DE_Array_G[ArrayID],
-                                          h_EngyB_Array_G[ArrayID],
+                                          h_Emag_Array_G[ArrayID],
                                           NPG, dt, dh, NULL_INT, NULL_INT,
                                           NULL_REAL, NULL_INT, NULL_INT, NULL_INT,
                                           NULL_REAL, NULL_REAL, (IntScheme_t)NULL_INT,
@@ -579,7 +579,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
          CUAPI_Asyn_PoissonGravitySolver( h_Rho_Array_P[ArrayID], h_Pot_Array_P_In[ArrayID],
                                           h_Pot_Array_P_Out[ArrayID], h_Flu_Array_G[ArrayID], h_Corner_Array_G[ArrayID],
                                           h_Pot_Array_USG_G[ArrayID], h_Flu_Array_USG_G[ArrayID], h_DE_Array_G[ArrayID],
-                                          h_EngyB_Array_G[ArrayID],
+                                          h_Emag_Array_G[ArrayID],
                                           NPG, dt, dh, SOR_MIN_ITER, SOR_MAX_ITER,
                                           SOR_OMEGA, MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH,
                                           MG_TOLERATED_ERROR, Poi_Coeff, OPT__POT_INT_SCHEME,
@@ -589,7 +589,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
          CPU_PoissonGravitySolver       ( h_Rho_Array_P[ArrayID], h_Pot_Array_P_In[ArrayID],
                                           h_Pot_Array_P_Out[ArrayID], h_Flu_Array_G[ArrayID], h_Corner_Array_G[ArrayID],
                                           h_Pot_Array_USG_G[ArrayID], h_Flu_Array_USG_G[ArrayID], h_DE_Array_G[ArrayID],
-                                          h_EngyB_Array_G[ArrayID],
+                                          h_Emag_Array_G[ArrayID],
                                           NPG, dt, dh, SOR_MIN_ITER, SOR_MAX_ITER,
                                           SOR_OMEGA, MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH,
                                           MG_TOLERATED_ERROR, Poi_Coeff, OPT__POT_INT_SCHEME,
@@ -694,7 +694,7 @@ void Closing_Step( const Solver_t TSolver, const int lv, const int SaveSg_Flu, c
    char (*h_DE_Array_G     [2])[PS1][PS1][PS1]                        = { NULL, NULL };
 #  endif
 #  if ( defined GRAVITY  &&  !defined MHD )
-   real (*h_EngyB_Array_G  [2])[PS1][PS1][PS1]                        = { NULL, NULL };
+   real (*h_Emag_Array_G   [2])[PS1][PS1][PS1]                        = { NULL, NULL };
 #  endif
 
    switch ( TSolver )
@@ -711,13 +711,13 @@ void Closing_Step( const Solver_t TSolver, const int lv, const int SaveSg_Flu, c
       break;
 
       case GRAVITY_SOLVER :
-         Gra_Close( lv, SaveSg_Flu, h_Flu_Array_G[ArrayID], h_DE_Array_G[ArrayID], h_EngyB_Array_G[ArrayID],
+         Gra_Close( lv, SaveSg_Flu, h_Flu_Array_G[ArrayID], h_DE_Array_G[ArrayID], h_Emag_Array_G[ArrayID],
                     NPG, PID0_List );
       break;
 
       case POISSON_AND_GRAVITY_SOLVER :
          Poi_Close( lv, SaveSg_Pot, h_Pot_Array_P_Out[ArrayID], NPG, PID0_List );
-         Gra_Close( lv, SaveSg_Flu, h_Flu_Array_G[ArrayID], h_DE_Array_G[ArrayID], h_EngyB_Array_G[ArrayID],
+         Gra_Close( lv, SaveSg_Flu, h_Flu_Array_G[ArrayID], h_DE_Array_G[ArrayID], h_Emag_Array_G[ArrayID],
                     NPG, PID0_List );
       break;
 #     endif

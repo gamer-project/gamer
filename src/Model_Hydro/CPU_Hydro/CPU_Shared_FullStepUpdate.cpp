@@ -118,14 +118,14 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
       /*
 #     ifdef MHD
 #     error : ERROR : MHD is not supported here !!!
-      const real EngyB = NULL_REAL;
+      const real Emag = NULL_REAL;
 #     else
-      const real EngyB = NULL_REAL;
+      const real Emag = NULL_REAL;
 #     endif
       Output_1Cell[DENS] = FMAX( Output_1Cell[DENS], MinDens );
       Output_1Cell[ENGY] = Hydro_CheckMinPresInEngy( Output_1Cell[DENS], Output_1Cell[MOMX],
                                                      Output_1Cell[MOMY], Output_1Cell[MOMZ],
-                                                     Output_1Cell[ENGY], Gamma_m1, _Gamma_m1, MinPres, EngyB );
+                                                     Output_1Cell[ENGY], Gamma_m1, _Gamma_m1, MinPres, Emag );
       */
 
 
@@ -146,10 +146,10 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 #     ifdef DUAL_ENERGY
 //    B field must be updated in advance
 #     ifdef MHD
-      const real EngyB = MHD_GetCellCenteredBEnergy( g_FC_B[MAGX], g_FC_B[MAGY], g_FC_B[MAGZ],
+      const real Emag = MHD_GetCellCenteredBEnergy( g_FC_B[MAGX], g_FC_B[MAGY], g_FC_B[MAGZ],
                                                      PS2, PS2, PS2, i_out, j_out, k_out );
 #     else
-      const real EngyB = NULL_REAL;
+      const real Emag = NULL_REAL;
 #     endif
 //    we no longer apply the minimum density and pressure checks here since we want to enable 1st-order-flux correction for that
       const bool CheckMinPres_No = false;
@@ -157,7 +157,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 
       Hydro_DualEnergyFix( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
                            Output_1Cell[ENGY], Output_1Cell[ENPY], g_DE_Status[idx_out],
-                           Gamma_m1, _Gamma_m1, CheckMinPres_No, NULL_REAL, DualEnergySwitch, EngyB );
+                           Gamma_m1, _Gamma_m1, CheckMinPres_No, NULL_REAL, DualEnergySwitch, Emag );
 #     endif // #ifdef DUAL_ENERGY
 
 

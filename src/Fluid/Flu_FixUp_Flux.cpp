@@ -184,9 +184,9 @@ void Flu_FixUp_Flux( const int lv )
                      break;
                } // switch ( s )
 
-               const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
+               const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
 #              else
-               const real EngyB = NULL_REAL;
+               const real Emag = NULL_REAL;
 #              endif
 
 #              if   ( DUAL_ENERGY == DE_ENPY )
@@ -195,7 +195,7 @@ void Flu_FixUp_Flux( const int lv )
 //             --> note that currently we adopt Hydro_DensEntropy2Pres() for DE_UPDATED_BY_MIN_PRES
                Pres = ( *DE_StatusPtr1D == DE_UPDATED_BY_ETOT  ||  *DE_StatusPtr1D == DE_UPDATED_BY_ETOT_GRA ) ?
                       Hydro_GetPressure( ForPres[DENS], ForPres[MOMX], ForPres[MOMY], ForPres[MOMZ], ForPres[ENGY],
-                                         Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB )
+                                         Gamma_m1, CheckMinPres_No, NULL_REAL, Emag )
                     : Hydro_DensEntropy2Pres( ForPres[DENS], ForPres[ENPY], Gamma_m1, CheckMinPres_No, NULL_REAL );
 
 #              elif ( DUAL_ENERGY == DE_EINT )
@@ -203,7 +203,7 @@ void Flu_FixUp_Flux( const int lv )
 
 #              else // DUAL_ENERGY
                Pres = Hydro_GetPressure( ForPres[DENS], ForPres[MOMX], ForPres[MOMY], ForPres[MOMZ], ForPres[ENGY],
-                                         Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB );
+                                         Gamma_m1, CheckMinPres_No, NULL_REAL, Emag );
 #              endif // DUAL_ENERGY
 #              endif // MODEL
 
@@ -249,7 +249,7 @@ void Flu_FixUp_Flux( const int lv )
                CorrVal[ENGY] = (real)0.5*( SQR(CorrVal[MOMX]) + SQR(CorrVal[MOMY]) + SQR(CorrVal[MOMZ]) ) / CorrVal[DENS]
                                + Pres*_Gamma_m1;
 #              ifdef MHD
-               CorrVal[ENGY] += EngyB;
+               CorrVal[ENGY] += Emag;
 #              endif
 
 #              if   ( DUAL_ENERGY == DE_ENPY )

@@ -139,12 +139,12 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
 //                MomX/Y/Z : Momentum density
 //                Engy     : Total energy density
 //                Gamma_m1 : Adiabatic index - 1.0
-//                EngyB    : Magnetic energy density (0.5*B^2) --> for MHD only
+//                Emag     : Magnetic energy density (0.5*B^2) --> for MHD only
 //
 // Return      :  Enpy
 //-------------------------------------------------------------------------------------------------------
 real Hydro_Fluid2Entropy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy, const real Gamma_m1,
-                          const real EngyB )
+                          const real Emag )
 {
 
 // currently this function does NOT apply the minimum pressure check when calling Hydro_GetPressure()
@@ -153,7 +153,7 @@ real Hydro_Fluid2Entropy( const real Dens, const real MomX, const real MomY, con
    real Pres, Enpy;
 
 // calculate pressure and convert it to entropy
-   Pres = Hydro_GetPressure( Dens, MomX, MomY, MomZ, Engy, Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB );
+   Pres = Hydro_GetPressure( Dens, MomX, MomY, MomZ, Engy, Gamma_m1, CheckMinPres_No, NULL_REAL, Emag );
    Enpy = Hydro_DensPres2Entropy( Dens, Pres, Gamma_m1 );
 
    return Enpy;

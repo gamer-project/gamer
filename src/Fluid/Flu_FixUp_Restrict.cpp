@@ -314,9 +314,9 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
       {
 //       compute magnetic energy
 #        ifdef MHD
-         const real EngyB = MHD_GetCellCenteredBEnergyInPatch( FaLv, FaPID, i, j, k, FaMagSg );
+         const real Emag = MHD_GetCellCenteredBEnergyInPatch( FaLv, FaPID, i, j, k, FaMagSg );
 #        else
-         const real EngyB = NULL_REAL;
+         const real Emag = NULL_REAL;
 #        endif
 
 #        ifdef DUAL_ENERGY
@@ -333,7 +333,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMZ][k][j][i],
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i],
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENPY][k][j][i],
-                              dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy, EngyB );
+                              dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy, Emag );
 
 #        else // #ifdef DUAL_ENERGY
 
@@ -344,7 +344,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                                         amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMY][k][j][i],
                                         amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMZ][k][j][i],
                                         amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i],
-                                        Gamma_m1, _Gamma_m1, MIN_PRES, EngyB );
+                                        Gamma_m1, _Gamma_m1, MIN_PRES, Emag );
 #        endif // #ifdef DUAL_ENERGY ... else ...
       } // i,j,k
 #     endif // #if ( MODEL == HYDRO )

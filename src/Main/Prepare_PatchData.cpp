@@ -875,26 +875,26 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                   for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
 #                 ifdef MHD
-                  const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
+                  const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
 #                 else
-                  const real EngyB = NULL_REAL;
+                  const real Emag = NULL_REAL;
 #                 endif
                   Data1PG_CC_Ptr[Idx1] = Hydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                            Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
+                                                            Gamma_m1, (MinPres>=(real)0.0), MinPres, Emag );
 
                   if ( FluIntTime ) // temporal interpolation
                   {
                      for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k][j][i];
 
 #                    ifdef MHD
-                     const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg_IntT );
+                     const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg_IntT );
 #                    else
-                     const real EngyB = NULL_REAL;
+                     const real Emag = NULL_REAL;
 #                    endif
                      Data1PG_CC_Ptr[Idx1] =
                         FluWeighting     *Data1PG_CC_Ptr[Idx1]
                       + FluWeighting_IntT*Hydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                             Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
+                                                             Gamma_m1, (MinPres>=(real)0.0), MinPres, Emag );
                   }
 
                   Idx1 ++;
@@ -913,26 +913,26 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                   for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
 #                 ifdef MHD
-                  const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
+                  const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
 #                 else
-                  const real EngyB = NULL_REAL;
+                  const real Emag = NULL_REAL;
 #                 endif
                   Data1PG_CC_Ptr[Idx1] = Hydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                               Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
+                                                               Gamma_m1, (MinPres>=(real)0.0), MinPres, Emag );
 
                   if ( FluIntTime ) // temporal interpolation
                   {
                      for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k][j][i];
 
 #                    ifdef MHD
-                     const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg_IntT );
+                     const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg_IntT );
 #                    else
-                     const real EngyB = NULL_REAL;
+                     const real Emag = NULL_REAL;
 #                    endif
                      Data1PG_CC_Ptr[Idx1] =
                         FluWeighting     *Data1PG_CC_Ptr[Idx1]
                       + FluWeighting_IntT*Hydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                                Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
+                                                                Gamma_m1, (MinPres>=(real)0.0), MinPres, Emag );
                   }
 
                   Idx1 ++;
@@ -1161,26 +1161,26 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
 
 #                       ifdef MHD
-                        const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg );
+                        const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg );
 #                       else
-                        const real EngyB = NULL_REAL;
+                        const real Emag = NULL_REAL;
 #                       endif
                         Data1PG_CC_Ptr[Idx1] = Hydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                                  Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
+                                                                  Gamma_m1, (MinPres>=(real)0.0), MinPres, Emag );
 
                         if ( FluIntTime ) // temporal interpolation
                         {
                            for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][K2][J2][I2];
 
 #                          ifdef MHD
-                           const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg_IntT );
+                           const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg_IntT );
 #                          else
-                           const real EngyB = NULL_REAL;
+                           const real Emag = NULL_REAL;
 #                          endif
                            Data1PG_CC_Ptr[Idx1] =
                               FluWeighting     *Data1PG_CC_Ptr[Idx1]
                             + FluWeighting_IntT*Hydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                                   Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
+                                                                   Gamma_m1, (MinPres>=(real)0.0), MinPres, Emag );
                         }
 
                         Idx1 ++;
@@ -1199,26 +1199,26 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
 
 #                       ifdef MHD
-                        const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg );
+                        const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg );
 #                       else
-                        const real EngyB = NULL_REAL;
+                        const real Emag = NULL_REAL;
 #                       endif
                         Data1PG_CC_Ptr[Idx1] = Hydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                                     Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
+                                                                     Gamma_m1, (MinPres>=(real)0.0), MinPres, Emag );
 
                         if ( FluIntTime ) // temporal interpolation
                         {
                            for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][K2][J2][I2];
 
 #                          ifdef MHD
-                           const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg_IntT );
+                           const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg_IntT );
 #                          else
-                           const real EngyB = NULL_REAL;
+                           const real Emag = NULL_REAL;
 #                          endif
                            Data1PG_CC_Ptr[Idx1] =
                               FluWeighting     *Data1PG_CC_Ptr[Idx1]
                             + FluWeighting_IntT*Hydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                                      Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
+                                                                      Gamma_m1, (MinPres>=(real)0.0), MinPres, Emag );
                         }
 
                         Idx1 ++;

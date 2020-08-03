@@ -393,13 +393,13 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                            {
                               const real Weight = dv;
 #                             ifdef MHD
-                              const real EngyB      = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg      );
-                              const real EngyB_IntT = ( MagIntTime )
-                                                    ? MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg_IntT )
-                                                    : NULL_REAL;
+                              const real Emag      = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg      );
+                              const real Emag_IntT = ( MagIntTime )
+                                                   ? MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg_IntT )
+                                                   : NULL_REAL;
 #                             else
-                              const real EngyB      = NULL_REAL;
-                              const real EngyB_IntT = NULL_REAL;
+                              const real Emag      = NULL_REAL;
+                              const real Emag_IntT = NULL_REAL;
 #                             endif
                               const real Pres = ( FluIntTime )
                                               ?   FluWeighting     *Hydro_GetPressure( FluidPtr     [DENS][k][j][i],
@@ -407,19 +407,19 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                                                                                        FluidPtr     [MOMY][k][j][i],
                                                                                        FluidPtr     [MOMZ][k][j][i],
                                                                                        FluidPtr     [ENGY][k][j][i],
-                                                                                       Gamma_m1, false, NULL_REAL, EngyB )
+                                                                                       Gamma_m1, false, NULL_REAL, Emag )
                                                 + FluWeighting_IntT*Hydro_GetPressure( FluidPtr_IntT[DENS][k][j][i],
                                                                                        FluidPtr_IntT[MOMX][k][j][i],
                                                                                        FluidPtr_IntT[MOMY][k][j][i],
                                                                                        FluidPtr_IntT[MOMZ][k][j][i],
                                                                                        FluidPtr_IntT[ENGY][k][j][i],
-                                                                                       Gamma_m1, false, NULL_REAL, EngyB_IntT )
+                                                                                       Gamma_m1, false, NULL_REAL, Emag_IntT )
                                               :                     Hydro_GetPressure( FluidPtr     [DENS][k][j][i],
                                                                                        FluidPtr     [MOMX][k][j][i],
                                                                                        FluidPtr     [MOMY][k][j][i],
                                                                                        FluidPtr     [MOMZ][k][j][i],
                                                                                        FluidPtr     [ENGY][k][j][i],
-                                                                                       Gamma_m1, false, NULL_REAL, EngyB );
+                                                                                       Gamma_m1, false, NULL_REAL, Emag );
 
                               OMP_Data  [p][TID][bin] += Pres*Weight;
                               OMP_Weight[p][TID][bin] += Weight;
@@ -431,13 +431,13 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                            {
                               const real Weight = dv;
 #                             ifdef MHD
-                              const real EngyB      = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg      );
-                              const real EngyB_IntT = ( MagIntTime )
-                                                    ? MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg_IntT )
-                                                    : NULL_REAL;
+                              const real Emag      = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg      );
+                              const real Emag_IntT = ( MagIntTime )
+                                                   ? MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg_IntT )
+                                                   : NULL_REAL;
 #                             else
-                              const real EngyB      = NULL_REAL;
-                              const real EngyB_IntT = NULL_REAL;
+                              const real Emag      = NULL_REAL;
+                              const real Emag_IntT = NULL_REAL;
 #                             endif
                               const real Pres = ( FluIntTime )
                                               ?   FluWeighting     *Hydro_GetPressure( FluidPtr     [DENS][k][j][i],
@@ -445,19 +445,19 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                                                                                        FluidPtr     [MOMY][k][j][i],
                                                                                        FluidPtr     [MOMZ][k][j][i],
                                                                                        FluidPtr     [ENGY][k][j][i],
-                                                                                       Gamma_m1, false, NULL_REAL, EngyB )
+                                                                                       Gamma_m1, false, NULL_REAL, Emag )
                                                 + FluWeighting_IntT*Hydro_GetPressure( FluidPtr_IntT[DENS][k][j][i],
                                                                                        FluidPtr_IntT[MOMX][k][j][i],
                                                                                        FluidPtr_IntT[MOMY][k][j][i],
                                                                                        FluidPtr_IntT[MOMZ][k][j][i],
                                                                                        FluidPtr_IntT[ENGY][k][j][i],
-                                                                                       Gamma_m1, false, NULL_REAL, EngyB_IntT )
+                                                                                       Gamma_m1, false, NULL_REAL, Emag_IntT )
                                               :                     Hydro_GetPressure( FluidPtr     [DENS][k][j][i],
                                                                                        FluidPtr     [MOMX][k][j][i],
                                                                                        FluidPtr     [MOMY][k][j][i],
                                                                                        FluidPtr     [MOMZ][k][j][i],
                                                                                        FluidPtr     [ENGY][k][j][i],
-                                                                                       Gamma_m1, false, NULL_REAL, EngyB );
+                                                                                       Gamma_m1, false, NULL_REAL, Emag );
                               const real Eint = Pres/Gamma_m1;  // assuming gamma law for now; will be replaced by a general EoS
 
                               OMP_Data  [p][TID][bin] += Eint*Weight;
