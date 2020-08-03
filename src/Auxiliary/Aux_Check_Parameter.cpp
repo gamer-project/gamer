@@ -617,6 +617,10 @@ void Aux_Check_Parameter()
 #   ifdef MHD
 #     error : ERROR : MHD currently only supports EOS_GAMMA !!
 #   endif
+
+#   if ( FLU_SCHEME == RTVD )
+#     error : RTVD only supports EOS_GAMMA !!
+#   endif
 #  endif // if ( EOS != EOS_GAMMA )
 
 
@@ -826,10 +830,6 @@ void Aux_Check_Parameter()
 
 #  if ( FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
 #     error : ERROR : unsupported MHD scheme in the makefile (MHM_RP/CTU) !!
-#  endif
-
-#  if ( EOS != EOS_GAMMA )
-#     error : ERROR : MHD currently only supports EOS_GAMMA !!
 #  endif
 
    if ( OPT__MAG_INT_SCHEME != INT_MINMOD1D  &&  OPT__MAG_INT_SCHEME != INT_VANLEER  &&
