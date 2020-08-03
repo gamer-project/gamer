@@ -1293,9 +1293,8 @@ void Aux_Check_Parameter()
    if ( OPT__OVERLAP_MPI )
       Aux_Message( stderr, "WARNING : currently SUPPORT_GRACKLE does not support \"%s\" !!\n", "OPT__OVERLAP_MPI" );
 
-#  if ( EOS == EOS_GAMMA )
+   if ( GRACKLE_PRIMORDIAL > 0 )
       Aux_Message( stderr, "WARNING : adiabatic index gamma is currently fixed to %13.7e for Grackle !!\n", GAMMA );
-#  endif
 
    } // if ( MPI_Rank == 0 )
 
