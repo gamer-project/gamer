@@ -31,7 +31,7 @@
 //                g_Pot_Array_USG   : Array storing the input potential          for UNSPLIT_GRAVITY (at the previous step)
 //                g_Flu_Array_USG   : Array storing the input density + momentum for UNSPLIT_GRAVITY (at the previous step)
 //                g_DE_Array        : Array storing the dual-energy status (for both input and output)
-//                g_EngyB_Array     : Array storing the cell-centered magnetic energy
+//                g_Emag_Array      : Array storing the cell-centered magnetic energy
 //                                    --> Only for checking minimum internal energy in MHD
 //                NPatchGroup       : Number of input patch groups (for CPU only)
 //                dt                : Time interval to advance solution
@@ -57,7 +57,7 @@ void CUPOT_HydroGravitySolver(
    const real   g_Pot_Array_USG[][ CUBE(USG_NXT_G) ],
    const real   g_Flu_Array_USG[][GRA_NIN-1][ CUBE(PS1) ],
          char   g_DE_Array     [][ CUBE(PS1) ],
-   const real   g_EngyB_Array  [][ CUBE(PS1) ],
+   const real   g_Emag_Array   [][ CUBE(PS1) ],
    const real dt, const real dh, const bool P5_Gradient,
    const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
    const double TimeNew, const double TimeOld, const real MinEint )
@@ -69,7 +69,7 @@ void CPU_HydroGravitySolver(
    const real   g_Pot_Array_USG[][ CUBE(USG_NXT_G) ],
    const real   g_Flu_Array_USG[][GRA_NIN-1][ CUBE(PS1) ],
          char   g_DE_Array     [][ CUBE(PS1) ],
-   const real   g_EngyB_Array  [][ CUBE(PS1) ],
+   const real   g_Emag_Array   [][ CUBE(PS1) ],
    const int NPatchGroup,
    const real dt, const real dh, const bool P5_Gradient,
    const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
@@ -100,8 +100,8 @@ void CPU_HydroGravitySolver(
 #  endif
 
 #  ifdef MHD
-   if ( g_EngyB_Array == NULL )
-      printf( "ERROR : g_EngyB_Array == NULL !!\n" );
+   if ( g_Emag_Array == NULL )
+      printf( "ERROR : g_Emag_Array == NULL !!\n" );
 #  endif
 #  endif // #ifdef GAMER_DEBUG
 
@@ -288,7 +288,7 @@ void CPU_HydroGravitySolver(
          Etot_in = g_Flu_Array_New[P][ENGY][idx_g0];
          Enki_in = Etot_in - _rho2*( SQR(px_new) + SQR(py_new) + SQR(pz_new) );
 #        ifdef MHD
-         Emag_in = g_EngyB_Array[P][idx_g0];
+         Emag_in = g_Emag_Array[P][idx_g0];
 #        endif
 
 //       update the momentum density

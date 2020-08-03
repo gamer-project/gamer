@@ -182,9 +182,9 @@ void Flu_FixUp_Flux( const int lv )
                      break;
                } // switch ( s )
 
-               const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
+               const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
 #              else
-               const real EngyB = NULL_REAL;
+               const real Emag = NULL_REAL;
 #              endif
 
 //             when adopting the dual-energy formalism, we must determine to use Hydro_Fluid2Eint() or Hydro_DensEntropy2Pres()
@@ -198,7 +198,7 @@ void Flu_FixUp_Flux( const int lv )
                {
                   const bool CheckMinEint_No = false;
                   Eint = Hydro_Fluid2Eint( ForEint[DENS], ForEint[MOMX], ForEint[MOMY], ForEint[MOMZ], ForEint[ENGY],
-                                           CheckMinEint_No, NULL_REAL, EngyB );
+                                           CheckMinEint_No, NULL_REAL, Emag );
                }
 
 #              if ( DUAL_ENERGY == DE_ENPY )
@@ -256,7 +256,7 @@ void Flu_FixUp_Flux( const int lv )
 //             --> assuming the variable "Eint" is correct
 //             --> no need to check the internal energy floor here since we have skipped failing cells
 #              if ( MODEL == HYDRO )
-               CorrVal[ENGY] = Hydro_ConEint2Etot( CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], Eint, EngyB );
+               CorrVal[ENGY] = Hydro_ConEint2Etot( CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], Eint, Emag );
 
 #              if   ( DUAL_ENERGY == DE_ENPY )
                CorrVal[ENPY] = Hydro_DensPres2Entropy( CorrVal[DENS],

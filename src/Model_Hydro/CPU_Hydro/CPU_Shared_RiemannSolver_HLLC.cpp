@@ -81,7 +81,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    const real ONE              = (real)1.0;
    const real _TWO             = (real)0.5;
    const bool CheckMinPres_Yes = true;
-   const real EngyB            = NULL_REAL;
+   const real Emag             = NULL_REAL;
 
    real _RhoL, _RhoR, u_L, u_R, P_L, P_R, Cs_L, Cs_R, W_L, W_R;
 
@@ -89,9 +89,9 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    _RhoR = ONE / R[0];
    u_L   = _RhoL*L[1];
    u_R   = _RhoR*R[1];
-   P_L   = Hydro_Fluid2Pres( L[0], L[1], L[2], L[3], L[4], CheckMinPres_Yes, MinPres, EngyB,
+   P_L   = Hydro_Fluid2Pres( L[0], L[1], L[2], L[3], L[4], CheckMinPres_Yes, MinPres, Emag,
                              EoS_DensEint2Pres, EoS_AuxArray );
-   P_R   = Hydro_Fluid2Pres( R[0], R[1], R[2], R[3], R[4], CheckMinPres_Yes, MinPres, EngyB,
+   P_R   = Hydro_Fluid2Pres( R[0], R[1], R[2], R[3], R[4], CheckMinPres_Yes, MinPres, Emag,
                              EoS_DensEint2Pres, EoS_AuxArray );
    Cs_L  = SQRT(  EoS_DensPres2CSqr( L[0], P_L, EoS_AuxArray )  );
    Cs_R  = SQRT(  EoS_DensPres2CSqr( R[0], P_R, EoS_AuxArray )  );

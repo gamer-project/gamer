@@ -14,14 +14,14 @@
 #ifdef __CUDACC__
 GPU_DEVICE
 static real Hydro_Fluid2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                              const bool CheckMinPres, const real MinPres, const real EngyB,
+                              const bool CheckMinPres, const real MinPres, const real Emag,
                               EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
 GPU_DEVICE
 static real Hydro_Fluid2Eint( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                              const bool CheckMinEint, const real MinEint, const real EngyB );
+                              const bool CheckMinEint, const real MinEint, const real Emag );
 GPU_DEVICE
 static real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, const real MomZ, const real Eint,
-                                const real EngyB );
+                                const real Emag );
 GPU_DEVICE
 static real Hydro_CheckMinPres( const real InPres, const real MinPres );
 #endif
@@ -162,16 +162,16 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
    const real Bx               = In[ MAG_OFFSET + 0 ];
    const real By               = In[ MAG_OFFSET + 1 ];
    const real Bz               = In[ MAG_OFFSET + 2 ];
-   const real EngyB            = (real)0.5*( SQR(Bx) + SQR(By) + SQR(Bz) );
+   const real Emag             = (real)0.5*( SQR(Bx) + SQR(By) + SQR(Bz) );
 #  else
-   const real EngyB            = NULL_REAL;
+   const real Emag             = NULL_REAL;
 #  endif
 
    Out[0] = In[0];
    Out[1] = In[1]*_Rho;
    Out[2] = In[2]*_Rho;
    Out[3] = In[3]*_Rho;
-   Out[4] = Hydro_Fluid2Pres( In[0], In[1], In[2], In[3], In[4], CheckMinPres_Yes, MinPres, EngyB,
+   Out[4] = Hydro_Fluid2Pres( In[0], In[1], In[2], In[3], In[4], CheckMinPres_Yes, MinPres, Emag,
                               EoS_DensEint2Pres, EoS_AuxArray );
 
 // pressure floor required to resolve the Jeans length
@@ -391,25 +391,25 @@ real Hydro_CheckMinEint( const real InEint, const real MinEint )
 //
 // Note        :  1. Invoke Hydro_CheckMinEint()
 //                2. Input conserved instead of primitive variables
-//                3. For MHD, one must provide the magnetic energy density EngyB (i.e., 0.5*B^2)
+//                3. For MHD, one must provide the magnetic energy density Emag (i.e., 0.5*B^2)
 //
 // Parameter   :  Dens     : Mass density
 //                MomX/Y/Z : Momentum density
 //                InEngy   : Energy density
 //                MinEint  : Internal energy density floor
-//                EngyB    : Magnetic energy density (0.5*B^2) --> For MHD only
+//                Emag    : Magnetic energy density (0.5*B^2) --> For MHD only
 //
 // Return      :  Total energy density with internal energy density greater than a given threshold
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real InEngy,
-                               const real MinEint, const real EngyB )
+                               const real MinEint, const real Emag )
 {
 
    const bool CheckMinEint_No = false;
    real InEint, OutEint, OutEngy;
 
-   InEint  = Hydro_Fluid2Eint( Dens, MomX, MomY, MomZ, InEngy, CheckMinEint_No, NULL_REAL, EngyB );
+   InEint  = Hydro_Fluid2Eint( Dens, MomX, MomY, MomZ, InEngy, CheckMinEint_No, NULL_REAL, Emag );
    OutEint = Hydro_CheckMinEint( InEint, MinEint );
 
 // do not modify energy (even the round-off errors) if the input data pass the check
@@ -451,8 +451,8 @@ bool Hydro_CheckNegative( const real Input )
 // Description :  Evaluate the fluid pressure
 //
 // Note        :  1. Invoke the EoS routine EoS_DensEint2Pres() to support different EoS
-//                2. For MHD, Engy is the total energy density including the magnetic energy EngyB=0.5*B^2
-//                   and thus one must provide EngyB to subtract it
+//                2. For MHD, Engy is the total energy density including the magnetic energy Emag=0.5*B^2
+//                   and thus one must provide Emag to subtract it
 //
 // Parameter   :  Dens              : Mass density
 //                MomX/Y/Z          : Momentum density
@@ -462,7 +462,7 @@ bool Hydro_CheckNegative( const real Input )
 //                                        for which this option should be disabled
 //                                        --> For example: Flu_FixUp(), Flu_Close(), Hydro_Aux_Check_Negative()
 //                MinPres           : Pressure floor
-//                EngyB             : Magnetic energy density (0.5*B^2) --> For MHD only
+//                Emag              : Magnetic energy density (0.5*B^2) --> For MHD only
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
 //                EoS_AuxArray      : Auxiliary array for EoS_DensEint2Pres()
 //
@@ -470,14 +470,14 @@ bool Hydro_CheckNegative( const real Input )
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 real Hydro_Fluid2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                       const bool CheckMinPres, const real MinPres, const real EngyB,
+                       const bool CheckMinPres, const real MinPres, const real Emag,
                        EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] )
 {
 
    const bool CheckMinEint_No = false;
    real Eint, Pres;
 
-   Eint = Hydro_Fluid2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, EngyB );
+   Eint = Hydro_Fluid2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, Emag );
    Pres = EoS_DensEint2Pres( Dens, Eint, EoS_AuxArray );
 
    if ( CheckMinPres )   Pres = Hydro_CheckMinPres( Pres, MinPres );
@@ -492,8 +492,8 @@ real Hydro_Fluid2Pres( const real Dens, const real MomX, const real MomY, const 
 // Function    :  Hydro_Fluid2Eint
 // Description :  Evaluate the gas internal energy density
 //
-// Note        :  1. For MHD, Engy is the total energy density including the magnetic energy EngyB=0.5*B^2
-//                   and thus one must provide EngyB to subtract it
+// Note        :  1. For MHD, Engy is the total energy density including the magnetic energy Emag=0.5*B^2
+//                   and thus one must provide Emag to subtract it
 //                2. Internal energy density is energy per volume instead of per mass
 //
 // Parameter   :  Dens         : Mass density
@@ -503,13 +503,13 @@ real Hydro_Fluid2Pres( const real Dens, const real MomX, const real MomY, const 
 //                               --> In some cases we actually want to check if internal energy becomes unphysical,
 //                                   for which this option should be disabled
 //                MinEint      : Internal energy floor
-//                EngyB        : Magnetic energy density (0.5*B^2) --> For MHD only
+//                Emag         : Magnetic energy density (0.5*B^2) --> For MHD only
 //
 // Return      :  Gas internal energy density (Eint)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 real Hydro_Fluid2Eint( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                       const bool CheckMinEint, const real MinEint, const real EngyB )
+                       const bool CheckMinEint, const real MinEint, const real Emag )
 {
 
 //###NOTE: assuming Etot = Eint + Ekin + Emag
@@ -517,7 +517,7 @@ real Hydro_Fluid2Eint( const real Dens, const real MomX, const real MomY, const 
 
    Eint  = Engy - (real)0.5*( SQR(MomX) + SQR(MomY) + SQR(MomZ) ) / Dens;
 #  ifdef MHD
-   Eint -= EngyB;
+   Eint -= Emag;
 #  endif
 
    if ( CheckMinEint )   Eint = Hydro_CheckMinEint( Eint, MinEint );
@@ -532,19 +532,19 @@ real Hydro_Fluid2Eint( const real Dens, const real MomX, const real MomY, const 
 // Function    :  Hydro_ConEint2Etot
 // Description :  Evaluate total energy from the input conserved variables and internal energy
 //
-// Note        :  1. For MHD, total energy density includes the magnetic energy EngyB=0.5*B^2
+// Note        :  1. For MHD, total energy density includes the magnetic energy Emag=0.5*B^2
 //                2. Internal energy density is energy per volume instead of per mass
 //
 // Parameter   :  Dens     : Mass density
 //                MomX/Y/Z : Momentum density
 //                Eint     : Internal energy density
-//                EngyB    : Magnetic energy density (0.5*B^2) --> For MHD only
+//                Emag     : Magnetic energy density (0.5*B^2) --> For MHD only
 //
 // Return      :  Total energy density (including the magnetic energy density for MHD)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, const real MomZ, const real Eint,
-                         const real EngyB )
+                         const real Emag )
 {
 
 //###NOTE: assuming Etot = Eint + Ekin + Emag
@@ -553,7 +553,7 @@ real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, cons
    Etot  = (real)0.5*( SQR(MomX) + SQR(MomY) + SQR(MomZ) ) / Dens;
    Etot += Eint;
 #  ifdef MHD
-   Etot += EngyB;
+   Etot += Emag;
 #  endif
 
    return Etot;

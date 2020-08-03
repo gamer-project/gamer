@@ -11,7 +11,7 @@ static void StoreFlux( const int lv, const real Flux_Array[][9][NFLUX_TOTAL][ SQ
 static void CorrectFlux( const int SonLv, const real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                          const int NPG, const int *PID0_List, const real dt );
 #if ( MODEL == HYDRO )
-static bool Unphysical( const real Fluid[], const int CheckMode, const real EngyB );
+static bool Unphysical( const real Fluid[], const int CheckMode, const real Emag );
 static void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                                const real h_Flu_Array_F_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                                real h_Flu_Array_F_Out[][FLU_NOUT][ CUBE(PS2) ],
@@ -359,11 +359,11 @@ void CorrectFlux( const int SonLv, const real h_Flux_Array[][9][NFLUX_TOTAL][ SQ
 //
 // Parameter   :  Fluid     : Input fluid variable array with size FLU_NOUT
 //                CheckMode : (0/1) --> check (total energy/internal energy)
-//                EngyB     : Magnetic energy (for MHD only)
+//                Emag      : Magnetic energy (for MHD only)
 //
 // Return      :  true/false <--> input Fluid[] is unphysical/physical
 //-------------------------------------------------------------------------------------------------------
-bool Unphysical( const real Fluid[], const int CheckMode, const real EngyB )
+bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
 {
 
    const int  CheckMinEtot = 0;
@@ -404,7 +404,7 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real EngyB )
 
 #           else // without DUAL_ENERGY
             Hydro_Fluid2Eint( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                              NoFloor, NULL_REAL, EngyB ) < (real)MIN_EINT
+                              NoFloor, NULL_REAL, Emag ) < (real)MIN_EINT
 
 #           endif // DUAL_ENERGY
          )
@@ -533,15 +533,15 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
 //       compute the magnetic energy
 #        ifdef MHD
-         const real EngyB_Out = MHD_GetCellCenteredBEnergy( h_Mag_Array_F_Out[TID][MAGX],
-                                                            h_Mag_Array_F_Out[TID][MAGY],
-                                                            h_Mag_Array_F_Out[TID][MAGZ],
-                                                            PS2, PS2, PS2, ijk_out[0], ijk_out[1], ijk_out[2] );
+         const real Emag_Out = MHD_GetCellCenteredBEnergy( h_Mag_Array_F_Out[TID][MAGX],
+                                                           h_Mag_Array_F_Out[TID][MAGY],
+                                                           h_Mag_Array_F_Out[TID][MAGZ],
+                                                           PS2, PS2, PS2, ijk_out[0], ijk_out[1], ijk_out[2] );
 #        else
-         const real EngyB_Out = NULL_REAL;
+         const real Emag_Out = NULL_REAL;
 #        endif
 
-         if ( Unphysical(Out, CheckMinEint, EngyB_Out) )
+         if ( Unphysical(Out, CheckMinEint, Emag_Out) )
          {
             const int idx_in = ( (ijk_out[2]+FLU_GHOST_SIZE)*FLU_NXT + (ijk_out[1]+FLU_GHOST_SIZE) )*FLU_NXT + (ijk_out[0]+FLU_GHOST_SIZE);
 
@@ -645,10 +645,10 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #              ifdef DUAL_ENERGY
                Hydro_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[ENPY],
                                     h_DE_Array_F_Out[TID][idx_out], Gamma_m1, _Gamma_m1, CorrPres_No, NULL_REAL,
-                                    DUAL_ENERGY_SWITCH, EngyB_Out );
+                                    DUAL_ENERGY_SWITCH, Emag_Out );
 #              endif
 
-               if ( Unphysical(Update, CheckMinEint, EngyB_Out) )
+               if ( Unphysical(Update, CheckMinEint, Emag_Out) )
                {
 //                collect nearby input coserved variables
                   for (int k=0; k<Corr1D_NCell; k++)  { Corr1D_didx2[2] = (k-Corr1D_NBuf)*didx[2];
@@ -736,7 +736,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   for (int v=0; v<NCOMP_TOTAL; v++)
                      Update[v] = Corr1D_InOut[Corr1D_NBuf][Corr1D_NBuf][Corr1D_NBuf][v];
 
-               } // if ( Unphysical(Update, CheckMinEint, EngyB_Out) )
+               } // if ( Unphysical(Update, CheckMinEint, Emag_Out) )
             } // if ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D1D )
 
 
@@ -779,7 +779,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #           ifdef DUAL_ENERGY
             Hydro_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[ENPY],
                                  h_DE_Array_F_Out[TID][idx_out], Gamma_m1, _Gamma_m1,
-                                 (AUTO_REDUCE_DT)?CorrPres_No:CorrPres_Yes, MIN_PRES, DUAL_ENERGY_SWITCH, EngyB_Out );
+                                 (AUTO_REDUCE_DT)?CorrPres_No:CorrPres_Yes, MIN_PRES, DUAL_ENERGY_SWITCH, Emag_Out );
 
 //          apply internal energy floor if dual-energy formalism is not adopted
 //          --> apply it only when AUTO_REDUCE_DT is disabled
@@ -787,7 +787,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #           else
             if ( !AUTO_REDUCE_DT )
                Update[ENGY] = Hydro_CheckMinEintInEngy( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
-                                                        MIN_EINT, EngyB_Out );
+                                                        MIN_EINT, Emag_Out );
 #           endif
 
 
@@ -797,7 +797,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //              (especially when Eint << kinematic energy)
 //              --> it will not crash the code since we always apply MIN_EINT/MIN_PRES when calculating Eint/pressure
 //          --> when AUTO_REDUCE_DT is enabled, we still check Eint instead of energy
-            if ( Unphysical(Update, (AUTO_REDUCE_DT)?CheckMinEint:CheckMinEtot, EngyB_Out) )
+            if ( Unphysical(Update, (AUTO_REDUCE_DT)?CheckMinEint:CheckMinEtot, Emag_Out) )
             {
 //             set CorrectUnphy = GAMER_FAILED if any cells fail
 //             --> use critical directive to avoid thread racing (may not be necessary here?)
@@ -821,17 +821,17 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   for (int v=0; v<NCOMP_TOTAL; v++)   In[v] = h_Flu_Array_F_In[TID][v][idx_in];
 
 #                 ifdef MHD
-                  const real EngyB_In     = MHD_GetCellCenteredBEnergy( h_Mag_Array_F_In[TID][MAGX],
-                                                                        h_Mag_Array_F_In[TID][MAGY],
-                                                                        h_Mag_Array_F_In[TID][MAGZ],
-                                                                        FLU_NXT, FLU_NXT, FLU_NXT,
-                                                                        ijk_out[0]+FLU_GHOST_SIZE,
-                                                                        ijk_out[1]+FLU_GHOST_SIZE,
-                                                                        ijk_out[2]+FLU_GHOST_SIZE );
-                  const real EngyB_Update = EngyB_Out;
+                  const real Emag_In     = MHD_GetCellCenteredBEnergy( h_Mag_Array_F_In[TID][MAGX],
+                                                                       h_Mag_Array_F_In[TID][MAGY],
+                                                                       h_Mag_Array_F_In[TID][MAGZ],
+                                                                       FLU_NXT, FLU_NXT, FLU_NXT,
+                                                                       ijk_out[0]+FLU_GHOST_SIZE,
+                                                                       ijk_out[1]+FLU_GHOST_SIZE,
+                                                                       ijk_out[2]+FLU_GHOST_SIZE );
+                  const real Emag_Update = Emag_Out;
 #                 else
-                  const real EngyB_In     = NULL_REAL;
-                  const real EngyB_Update = NULL_REAL;
+                  const real Emag_In     = NULL_REAL;
+                  const real Emag_Update = NULL_REAL;
 #                 endif
 
 //                output information about the failed cell
@@ -857,7 +857,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   fprintf( File, "input        = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
                            In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
                            Hydro_Fluid2Eint(In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
-                                            CheckMinEint_No, NULL_REAL, EngyB_In) );
+                                            CheckMinEint_No, NULL_REAL, Emag_In) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", In[ENPY] );
 #                 endif
@@ -866,7 +866,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   fprintf( File, "ouptut (old) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
                            Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
                            Hydro_Fluid2Eint(Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
-                                            CheckMinEint_No, NULL_REAL, EngyB_Out) );
+                                            CheckMinEint_No, NULL_REAL, Emag_Out) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", Out[ENPY] );
 #                 endif
@@ -875,7 +875,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   fprintf( File, "output (new) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
                            Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
                            Hydro_Fluid2Eint(Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
-                                            CheckMinEint_No, NULL_REAL, EngyB_Update) );
+                                            CheckMinEint_No, NULL_REAL, Emag_Update) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", Update[ENPY] );
 #                 endif
@@ -902,16 +902,16 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                      }
 
 #                    ifdef MHD
-                     const real EngyB_tmp = MHD_GetCellCenteredBEnergy( h_Mag_Array_F_In[TID][MAGX],
-                                                                        h_Mag_Array_F_In[TID][MAGY],
-                                                                        h_Mag_Array_F_In[TID][MAGZ],
-                                                                        FLU_NXT, FLU_NXT, FLU_NXT, i, j, k );
+                     const real Emag_tmp = MHD_GetCellCenteredBEnergy( h_Mag_Array_F_In[TID][MAGX],
+                                                                       h_Mag_Array_F_In[TID][MAGY],
+                                                                       h_Mag_Array_F_In[TID][MAGZ],
+                                                                       FLU_NXT, FLU_NXT, FLU_NXT, i, j, k );
 #                    else
-                     const real EngyB_tmp = NULL_REAL;
+                     const real Emag_tmp = NULL_REAL;
 #                    endif
 
                      fprintf( File, " %14.7e\n", Hydro_Fluid2Eint(tmp[0], tmp[1], tmp[2], tmp[3], tmp[4],
-                                                                  CheckMinEint_No, NULL_REAL, EngyB_tmp) );
+                                                                  CheckMinEint_No, NULL_REAL, Emag_tmp) );
                   }
 
                   fclose( File );
@@ -929,7 +929,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #                 endif
                   Output_Patch( lv, PID_Failed, amr->FluSg[lv], MagSg, PotSg, "Unphy" );
                } // if ( !AUTO_REDUCE_DT )
-            } // if ( Unphysical(Update, (AUTO_REDUCE_DT)?CheckMinEint:CheckMinEtot, EngyB_Out) )
+            } // if ( Unphysical(Update, (AUTO_REDUCE_DT)?CheckMinEint:CheckMinEtot, Emag_Out) )
 
             else
             {
@@ -978,7 +978,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //             record the number of corrected cells
                NCorrThisTime ++;
 
-            } // if ( Unphysical(Update, (AUTO_REDUCE_DT)?CheckMinEint:CheckMinEtot, EngyB_Out) ) ... else ...
+            } // if ( Unphysical(Update, (AUTO_REDUCE_DT)?CheckMinEint:CheckMinEtot, Emag_Out) ) ... else ...
          } // if need correction
       } // i,j,k
    } // for (int TID=0; TID<NPG; TID++)

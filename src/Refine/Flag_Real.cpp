@@ -277,15 +277,15 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #                    else // #ifdef DUAL_ENERGY
 
 #                    ifdef MHD
-                     const real EngyB = (real)0.5*(  SQR( MagCC[MAGX][k][j][i] )
-                                                   + SQR( MagCC[MAGY][k][j][i] )
-                                                   + SQR( MagCC[MAGZ][k][j][i] )  );
+                     const real Emag = (real)0.5*(  SQR( MagCC[MAGX][k][j][i] )
+                                                  + SQR( MagCC[MAGY][k][j][i] )
+                                                  + SQR( MagCC[MAGZ][k][j][i] )  );
 #                    else
-                     const real EngyB = NULL_REAL;
+                     const real Emag = NULL_REAL;
 #                    endif
                      Pres[k][j][i] = Hydro_Fluid2Pres( Fluid[DENS][k][j][i], Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i],
                                                        Fluid[MOMZ][k][j][i], Fluid[ENGY][k][j][i],
-                                                       CheckMinPres_Yes, MIN_PRES, EngyB,
+                                                       CheckMinPres_Yes, MIN_PRES, Emag,
                                                        EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
 #                    endif // #ifdef DUAL_ENERGY ... else ...
                   } // k,j,i

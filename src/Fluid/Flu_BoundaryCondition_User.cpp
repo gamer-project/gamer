@@ -163,7 +163,7 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
 //    add the magnetic energy for MHD
 #     if ( MODEL == HYDRO )
 #     ifdef MHD
-      real EngyB, BxL, BxR, Bx, ByL, ByR, By, BzL, BzR, Bz, B3v[NCOMP_MAG];
+      real Emag, BxL, BxR, Bx, ByL, ByR, By, BzL, BzR, Bz, B3v[NCOMP_MAG];
 
       BC_BField_User_Ptr( B3v, x-dh_2, y,      z,      Time, lv, NULL );   BxL = B3v[MAGX];
       BC_BField_User_Ptr( B3v, x+dh_2, y,      z,      Time, lv, NULL );   BxR = B3v[MAGX];
@@ -172,15 +172,15 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
       BC_BField_User_Ptr( B3v, x,      y,      z-dh_2, Time, lv, NULL );   BzL = B3v[MAGZ];
       BC_BField_User_Ptr( B3v, x,      y,      z+dh_2, Time, lv, NULL );   BzR = B3v[MAGZ];
 
-      Bx    = (real)0.5*( BxL + BxR );
-      By    = (real)0.5*( ByL + ByR );
-      Bz    = (real)0.5*( BzL + BzR );
-      EngyB = (real)0.5*( SQR(Bx) + SQR(By) + SQR(Bz) );
+      Bx   = (real)0.5*( BxL + BxR );
+      By   = (real)0.5*( ByL + ByR );
+      Bz   = (real)0.5*( BzL + BzR );
+      Emag = (real)0.5*( SQR(Bx) + SQR(By) + SQR(Bz) );
 
-      BVal[ENGY] += EngyB;
+      BVal[ENGY] += Emag;
 
 #     else
-      const real EngyB = NULL_REAL;
+      const real Emag = NULL_REAL;
 #     endif
 #     endif // #ifdef ( MODEL == HYDRO )
 
@@ -196,10 +196,10 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
       if ( PrepVy   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMY] / BVal[DENS];
       if ( PrepVz   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMZ] / BVal[DENS];
       if ( PrepPres )   Array3D[ v2 ++ ][k][j][i] = Hydro_Fluid2Pres( BVal[DENS], BVal[MOMX], BVal[MOMY], BVal[MOMZ], BVal[ENGY],
-                                                                      CheckMinPres_Yes, MIN_PRES, EngyB,
+                                                                      CheckMinPres_Yes, MIN_PRES, Emag,
                                                                       EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
       if ( PrepTemp )   Array3D[ v2 ++ ][k][j][i] = Hydro_Fluid2Temp( BVal[DENS], BVal[MOMX], BVal[MOMY], BVal[MOMZ], BVal[ENGY],
-                                                                      CheckMinPres_Yes, MIN_PRES, EngyB,
+                                                                      CheckMinPres_Yes, MIN_PRES, Emag,
                                                                       EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
 
 #     elif ( MODEL == ELBDM )

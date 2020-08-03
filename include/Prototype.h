@@ -88,11 +88,11 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const bool NormPassive, const int NNorm, const int NormIdx[],
                       const bool JeansMinPres, const real JeansMinPres_Coeff );
 real Hydro_Fluid2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                       const bool CheckMinPres, const real MinPres, const real EngyB,
+                       const bool CheckMinPres, const real MinPres, const real Emag,
                        EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
 real Hydro_Fluid2Eint( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                       const bool CheckMinEint, const real MinEint, const real EngyB );
-real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, const real MomZ, const real Eint, const real EngyB );
+                       const bool CheckMinEint, const real MinEint, const real Emag );
+real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, const real MomZ, const real Eint, const real Emag );
 real Hydro_Fluid2Temp( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                        const bool CheckMinPres, const real MinPres, const real Emag,
                        EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
@@ -108,14 +108,14 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
                           const real Emag );
 #if ( DUAL_ENERGY == DE_ENPY )
 real Hydro_Fluid2Entropy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy, const real Gamma_m1,
-                          const real EngyB );
+                          const real Emag );
 real Hydro_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1 );
 real Hydro_DensEntropy2Pres( const real Dens, const real Enpy, const real Gamma_m1,
                              const bool CheckMinPres, const real MinPres );
 #endif
 #endif
 real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real InEngy,
-                               const real MinEint, const real EngyB );
+                               const real MinEint, const real Emag );
 int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt,
                    const int SaveSg_Flu, const int SaveSg_Mag, const bool OverlapMPI, const bool Overlap_Sync );
 void Flu_AllocateFluxArray( const int lv );
@@ -310,7 +310,7 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
                                const real h_Pot_Array_USG[][USG_NXT_G][USG_NXT_G][USG_NXT_G],
                                const real h_Flu_Array_USG[][GRA_NIN-1][PS1][PS1][PS1],
                                      char h_DE_Array     [][PS1][PS1][PS1],
-                               const real h_EngyB_Array  [][PS1][PS1][PS1],
+                               const real h_Emag_Array   [][PS1][PS1][PS1],
                                const int NPatchGroup, const real dt, const real dh, const int SOR_Min_Iter,
                                const int SOR_Max_Iter, const real SOR_Omega, const int MG_Max_Iter,
                                const int MG_NPre_Smooth, const int MG_NPost_Smooth, const real MG_Tolerated_Error,
@@ -331,10 +331,10 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
                     const int SaveSg_Flu, const int SaveSg_Pot, const bool Poisson, const bool Gravity,
                     const bool OverlapMPI, const bool Overlap_Sync );
 void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_NIN][PS1][PS1][PS1],
-                const char h_DE_Array_G[][PS1][PS1][PS1], const real h_EngyB_Array_G[][PS1][PS1][PS1],
+                const char h_DE_Array_G[][PS1][PS1][PS1], const real h_Emag_Array_G[][PS1][PS1][PS1],
                 const int NPG, const int *PID0_List );
 void Gra_Prepare_Flu( const int lv, real h_Flu_Array_G[][GRA_NIN][PS1][PS1][PS1], char h_DE_Array_G[][PS1][PS1][PS1],
-                      real h_EngyB_Array_G[][PS1][PS1][PS1], const int NPG, const int *PID0_List );
+                      real h_Emag_Array_G[][PS1][PS1][PS1], const int NPG, const int *PID0_List );
 void Gra_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_Out[][GRA_NXT][GRA_NXT][GRA_NXT],
                       const int NPG, const int *PID0_List );
 void Gra_Prepare_Corner( const int lv, double h_Corner_Array[][3], const int NPG, const int *PID0_List );
@@ -523,7 +523,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
                                       const real h_Pot_Array_USG[][USG_NXT_G][USG_NXT_G][USG_NXT_G],
                                       const real h_Flu_Array_USG[][GRA_NIN-1][PS1][PS1][PS1],
                                             char h_DE_Array     [][PS1][PS1][PS1],
-                                      const real h_EngyB_Array  [][PS1][PS1][PS1],
+                                      const real h_Emag_Array   [][PS1][PS1][PS1],
                                       const int NPatchGroup, const real dt, const real dh, const int SOR_Min_Iter,
                                       const int SOR_Max_Iter, const real SOR_Omega, const int MG_Max_Iter,
                                       const int MG_NPre_Smooth, const int MG_NPost_Smooth,

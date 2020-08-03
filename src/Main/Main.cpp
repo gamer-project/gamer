@@ -261,16 +261,16 @@ real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ]        = NULL;
 
 #ifdef GRAVITY
 // (3-2) gravity solver
-real (*h_Rho_Array_P    [2])[RHO_NXT][RHO_NXT][RHO_NXT]            = { NULL, NULL };
-real (*h_Pot_Array_P_In [2])[POT_NXT][POT_NXT][POT_NXT]            = { NULL, NULL };
-real (*h_Pot_Array_P_Out[2])[GRA_NXT][GRA_NXT][GRA_NXT]            = { NULL, NULL };
-real (*h_Flu_Array_G    [2])[GRA_NIN][PS1][PS1][PS1]               = { NULL, NULL };
-double (*h_Corner_Array_G[2])[3]                                   = { NULL, NULL };
+real   (*h_Rho_Array_P    [2])[RHO_NXT][RHO_NXT][RHO_NXT]          = { NULL, NULL };
+real   (*h_Pot_Array_P_In [2])[POT_NXT][POT_NXT][POT_NXT]          = { NULL, NULL };
+real   (*h_Pot_Array_P_Out[2])[GRA_NXT][GRA_NXT][GRA_NXT]          = { NULL, NULL };
+real   (*h_Flu_Array_G    [2])[GRA_NIN][PS1][PS1][PS1]             = { NULL, NULL };
+double (*h_Corner_Array_G [2])[3]                                  = { NULL, NULL };
 #ifdef DUAL_ENERGY
-char (*h_DE_Array_G    [2])[PS1][PS1][PS1]                         = { NULL, NULL };
+char   (*h_DE_Array_G     [2])[PS1][PS1][PS1]                      = { NULL, NULL };
 #endif
 #ifdef MHD
-real (*h_EngyB_Array_G [2])[PS1][PS1][PS1]                         = { NULL, NULL };
+real   (*h_Emag_Array_G   [2])[PS1][PS1][PS1]                      = { NULL, NULL };
 #endif
 
 // (3-3) unsplit gravity correction
@@ -328,16 +328,16 @@ real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ]       = NULL;
 
 #ifdef GRAVITY
 // (4-2) gravity solver
-real (*d_Rho_Array_P    )[ CUBE(RHO_NXT) ]                       = NULL;
-real (*d_Pot_Array_P_In )[ CUBE(POT_NXT) ]                       = NULL;
-real (*d_Pot_Array_P_Out)[ CUBE(GRA_NXT) ]                       = NULL;
-real (*d_Flu_Array_G    )[GRA_NIN][ CUBE(PS1) ]                  = NULL;
+real   (*d_Rho_Array_P    )[ CUBE(RHO_NXT) ]                     = NULL;
+real   (*d_Pot_Array_P_In )[ CUBE(POT_NXT) ]                     = NULL;
+real   (*d_Pot_Array_P_Out)[ CUBE(GRA_NXT) ]                     = NULL;
+real   (*d_Flu_Array_G    )[GRA_NIN][ CUBE(PS1) ]                = NULL;
 double (*d_Corner_Array_G )[3]                                   = NULL;
 #ifdef DUAL_ENERGY
-char (*d_DE_Array_G     )[ CUBE(PS1) ]                           = NULL;
+char   (*d_DE_Array_G     )[ CUBE(PS1) ]                         = NULL;
 #endif
 #ifdef MHD
-real (*d_EngyB_Array_G  )[ CUBE(PS1) ]                           = NULL;
+real   (*d_Emag_Array_G   )[ CUBE(PS1) ]                         = NULL;
 #endif
 
 // (4-3) unsplit gravity correction

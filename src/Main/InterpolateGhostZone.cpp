@@ -377,12 +377,12 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k1][j1][i1];
 
 #        ifdef MHD
-         const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i1, j1, k1, MagSg );
+         const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i1, j1, k1, MagSg );
 #        else
-         const real EngyB = NULL_REAL;
+         const real Emag = NULL_REAL;
 #        endif
          CData_CC_Ptr[Idx] = Hydro_Fluid2Pres( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                               (MinPres>=(real)0.0), MinPres, EngyB,
+                                               (MinPres>=(real)0.0), MinPres, Emag,
                                                EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
 
          if ( FluIntTime ) // temporal interpolation
@@ -390,14 +390,14 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
             for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k1][j1][i1];
 
 #           ifdef MHD
-            const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i1, j1, k1, MagSg_IntT );
+            const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i1, j1, k1, MagSg_IntT );
 #           else
-            const real EngyB = NULL_REAL;
+            const real Emag = NULL_REAL;
 #           endif
             CData_CC_Ptr[Idx] =
                FluWeighting     *CData_CC_Ptr[Idx]
              + FluWeighting_IntT*Hydro_Fluid2Pres( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                   (MinPres>=(real)0.0), MinPres, EngyB,
+                                                   (MinPres>=(real)0.0), MinPres, Emag,
                                                    EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
          }
 
@@ -417,12 +417,12 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k1][j1][i1];
 
 #        ifdef MHD
-         const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i1, j1, k1, MagSg );
+         const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i1, j1, k1, MagSg );
 #        else
-         const real EngyB = NULL_REAL;
+         const real Emag = NULL_REAL;
 #        endif
          CData_CC_Ptr[Idx] = Hydro_Fluid2Temp( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                               (MinPres>=(real)0.0), MinPres, EngyB,
+                                               (MinPres>=(real)0.0), MinPres, Emag,
                                                EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
 
          if ( FluIntTime ) // temporal interpolation
@@ -430,14 +430,14 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
             for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k1][j1][i1];
 
 #           ifdef MHD
-            const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i1, j1, k1, MagSg_IntT );
+            const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i1, j1, k1, MagSg_IntT );
 #           else
-            const real EngyB = NULL_REAL;
+            const real Emag = NULL_REAL;
 #           endif
             CData_CC_Ptr[Idx] =
                FluWeighting     *CData_CC_Ptr[Idx]
              + FluWeighting_IntT*Hydro_Fluid2Temp( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                   (MinPres>=(real)0.0), MinPres, EngyB,
+                                                   (MinPres>=(real)0.0), MinPres, Emag,
                                                    EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
          }
 
@@ -655,12 +655,12 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][k2][j2][i2];
 
 #              ifdef MHD
-               const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, i2, j2, k2, MagSg );
+               const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, i2, j2, k2, MagSg );
 #              else
-               const real EngyB = NULL_REAL;
+               const real Emag = NULL_REAL;
 #              endif
                CData_CC_Ptr[Idx] = Hydro_Fluid2Pres( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                     (MinPres>=(real)0.0), MinPres, EngyB,
+                                                     (MinPres>=(real)0.0), MinPres, Emag,
                                                      EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
 
                if ( FluIntTime ) // temporal interpolation
@@ -668,14 +668,14 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                   for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][k2][j2][i2];
 
 #                 ifdef MHD
-                  const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, i2, j2, k2, MagSg_IntT );
+                  const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, i2, j2, k2, MagSg_IntT );
 #                 else
-                  const real EngyB = NULL_REAL;
+                  const real Emag = NULL_REAL;
 #                 endif
                   CData_CC_Ptr[Idx] =
                      FluWeighting     *CData_CC_Ptr[Idx]
                    + FluWeighting_IntT*Hydro_Fluid2Pres( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                         (MinPres>=(real)0.0), MinPres, EngyB,
+                                                         (MinPres>=(real)0.0), MinPres, Emag,
                                                          EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
                }
 
@@ -695,12 +695,12 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][k2][j2][i2];
 
 #              ifdef MHD
-               const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, i2, j2, k2, MagSg );
+               const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, i2, j2, k2, MagSg );
 #              else
-               const real EngyB = NULL_REAL;
+               const real Emag = NULL_REAL;
 #              endif
                CData_CC_Ptr[Idx] = Hydro_Fluid2Temp( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                     (MinPres>=(real)0.0), MinPres, EngyB,
+                                                     (MinPres>=(real)0.0), MinPres, Emag,
                                                      EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
 
                if ( FluIntTime ) // temporal interpolation
@@ -708,14 +708,14 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                   for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][k2][j2][i2];
 
 #                 ifdef MHD
-                  const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, i2, j2, k2, MagSg_IntT );
+                  const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, i2, j2, k2, MagSg_IntT );
 #                 else
-                  const real EngyB = NULL_REAL;
+                  const real Emag = NULL_REAL;
 #                 endif
                   CData_CC_Ptr[Idx] =
                      FluWeighting     *CData_CC_Ptr[Idx]
                    + FluWeighting_IntT*Hydro_Fluid2Temp( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                         (MinPres>=(real)0.0), MinPres, EngyB,
+                                                         (MinPres>=(real)0.0), MinPres, Emag,
                                                          EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
                }
 
@@ -1278,17 +1278,17 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          const int  i     = t % FSize_CC[0];
          const int  j     = t % size_ij / FSize_CC[0];
          const int  k     = t / size_ij;
-         const real EngyB = MHD_GetCellCenteredBEnergy( FData_FC[MAGX], FData_FC[MAGY], FData_FC[MAGZ],
-                                                        FSize_CC[0], FSize_CC[1], FSize_CC[2], i, j, k );
+         const real Emag = MHD_GetCellCenteredBEnergy( FData_FC[MAGX], FData_FC[MAGY], FData_FC[MAGZ],
+                                                       FSize_CC[0], FSize_CC[1], FSize_CC[2], i, j, k );
 #        else
-         const real EngyB = NULL_REAL;
+         const real Emag = NULL_REAL;
 #        endif
 
 //       here we ALWAYS use the dual-energy variable to correct the total energy density
 //       --> we achieve that by setting the dual-energy switch to an extremely larger number and ignore
 //           the runtime parameter DUAL_ENERGY_SWITCH here
          Hydro_DualEnergyFix( FData_Dens[t], FData_MomX[t], FData_MomY[t], FData_MomZ[t], FData_Engy[t], FData_Enpy[t],
-                              dummy, Gamma_m1, _Gamma_m1, (MinPres>=(real)0.0), MinPres, UseEnpy2FixEngy, EngyB );
+                              dummy, Gamma_m1, _Gamma_m1, (MinPres>=(real)0.0), MinPres, UseEnpy2FixEngy, Emag );
       }
    } // if (  DE_Consistency  &&  ( TVarCC & _TOTAL ) == _TOTAL  &&  TVarFC == _MAG )
 #  endif // if ( MODEL == HYDRO  &&  defined DUAL_ENERGY )

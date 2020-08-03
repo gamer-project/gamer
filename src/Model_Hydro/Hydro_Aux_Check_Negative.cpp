@@ -68,12 +68,12 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
             Pres = Hydro_DensEntropy2Pres( Fluid[DENS], Fluid[ENPY], Gamma_m1, CheckMinPres_No, NULL_REAL );
 #           else
 #           ifdef MHD
-            const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+            const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
 #           else
-            const real EngyB = NULL_REAL;
+            const real Emag = NULL_REAL;
 #           endif // MHD
             Pres = Hydro_Fluid2Pres( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                     CheckMinPres_No, NULL_REAL, EngyB,
+                                     CheckMinPres_No, NULL_REAL, Emag,
                                      EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
 #           endif // DUAL_ENERGY
 

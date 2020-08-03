@@ -617,14 +617,14 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
       if ( EigenVal[t+1] > EigenVal[t] )  // skip the degenerate states
       {
 #        ifdef MHD
-         const real EngyB = _TWO*(  SQR( I_States[NCOMP_FLUID+0] )
-                                  + SQR( I_States[NCOMP_FLUID+1] )
-                                  + SQR( I_States[NCOMP_FLUID+2] )  );
+         const real Emag = _TWO*(  SQR( I_States[NCOMP_FLUID+0] )
+                                 + SQR( I_States[NCOMP_FLUID+1] )
+                                 + SQR( I_States[NCOMP_FLUID+2] )  );
 #        else
-         const real EngyB = NULL_REAL;
+         const real Emag = NULL_REAL;
 #        endif
          I_Pres = Hydro_Fluid2Pres( I_States[0], I_States[1], I_States[2], I_States[3], I_States[4],
-                                    CheckMinPres_No, NULL_REAL, EngyB, EoS_DensEint2Pres, EoS_AuxArray );
+                                    CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres, EoS_AuxArray );
 
 //       if unphysical results occur, recalculate fluxes by a substitute Riemann solver
          if ( I_States[0] <= ZERO  ||  I_Pres <= ZERO )

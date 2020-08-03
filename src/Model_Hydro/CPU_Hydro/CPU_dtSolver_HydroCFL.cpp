@@ -86,7 +86,7 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][NCOMP_
 
       CGPU_LOOP( t, CUBE(PS1) )
       {
-         real fluid[NCOMP_FLUID], _Rho, Vx, Vy, Vz, Pres, EngyB, a2, CFLx, CFLy, CFLz;
+         real fluid[NCOMP_FLUID], _Rho, Vx, Vy, Vz, Pres, Emag, a2, CFLx, CFLy, CFLz;
 #        ifdef MHD
          int  i, j, k;
          real B[3], Bx2, By2, Bz2, B2, Ca2_plus_a2, Ca2_min_a2, Ca2_min_a2_sqr, four_a2_over_Rho;
@@ -95,19 +95,19 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][NCOMP_
          for (int v=0; v<NCOMP_FLUID; v++)   fluid[v] = g_Flu_Array[p][v][t];
 
 #        ifdef MHD
-         i     = t % PS1;
-         j     = t % SQR(PS1) / PS1;
-         k     = t / SQR(PS1);
+         i    = t % PS1;
+         j    = t % SQR(PS1) / PS1;
+         k    = t / SQR(PS1);
 
          MHD_GetCellCenteredBField( B, g_Mag_Array[p][MAGX], g_Mag_Array[p][MAGY], g_Mag_Array[p][MAGZ], PS1, PS1, PS1, i, j, k );
 
-         Bx2   = SQR( B[MAGX] );
-         By2   = SQR( B[MAGY] );
-         Bz2   = SQR( B[MAGZ] );
-         B2    = Bx2 + By2 + Bz2;
-         EngyB = (real)0.5*B2;
+         Bx2  = SQR( B[MAGX] );
+         By2  = SQR( B[MAGY] );
+         Bz2  = SQR( B[MAGZ] );
+         B2   = Bx2 + By2 + Bz2;
+         Emag = (real)0.5*B2;
 #        else
-         EngyB = NULL_REAL;
+         Emag = NULL_REAL;
 #        endif
 
         _Rho   = (real)1.0 / fluid[DENS];
@@ -115,7 +115,7 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][NCOMP_
          Vy    = FABS( fluid[MOMY] )*_Rho;
          Vz    = FABS( fluid[MOMZ] )*_Rho;
          Pres  = Hydro_Fluid2Pres( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                   CheckMinPres_Yes, MinPres, EngyB,
+                                   CheckMinPres_Yes, MinPres, Emag,
                                    EoS_DensEint2Pres_Func, c_EoS_AuxArray );
          a2    = EoS_DensPres2CSqr_Func( fluid[DENS], Pres, c_EoS_AuxArray ); // sound speed squared
 

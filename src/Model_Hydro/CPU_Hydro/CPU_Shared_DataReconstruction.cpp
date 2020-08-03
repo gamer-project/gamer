@@ -1848,13 +1848,13 @@ void Hydro_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real dh,
    {
 #     ifdef MHD
 #     error : ERROR : MHD is not supported here !!!
-      const real EngyB = NULL_REAL;
+      const real Emag = NULL_REAL;
 #     else
-      const real EngyB = NULL_REAL;
+      const real Emag = NULL_REAL;
 #     endif
       fc[f][0] = FMAX( fc[f][0], MinDens );
       fc[f][4] = Hydro_CheckMinEintInEngy( fc[f][0], fc[f][1], fc[f][2], fc[f][3], fc[f][4],
-                                           MinEint, EngyB );
+                                           MinEint, Emag );
 #     if ( NCOMP_PASSIVE > 0 )
       for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
       fc[f][v] = FMAX( fc[f][v], TINY_NUMBER );
