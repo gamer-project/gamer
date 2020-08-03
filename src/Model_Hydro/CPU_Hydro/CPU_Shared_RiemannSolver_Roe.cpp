@@ -81,9 +81,13 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
                               const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] )
 {
 
-
-//#### TO BE REMOVED
-const real Gamma = EoS_AuxArray[0];
+// check
+#  ifdef GAMER_DEBUG
+#  if ( EOS != EOS_GAMMA )
+   printf( "ERROR : EOS != EOS_GAMMA is NOT supported at file <%s>, line <%d>, function <%s> !!\n",
+           __FILE__, __LINE__, __FUNCTION__ );
+#  endif
+#  endif // #ifdef GAMER_DEBUG
 
 
 // 1. reorder the input variables for different spatial directions
@@ -103,7 +107,8 @@ const real Gamma = EoS_AuxArray[0];
    const real ZERO     = (real)0.0;
    const real ONE      = (real)1.0;
    const real _TWO     = (real)0.5;
-   const real Gamma_m1 = Gamma - ONE;
+   const real Gamma    = EoS_AuxArray[0];    // only support constant-gamma EoS (i.e., EOS_GAMMA)
+   const real Gamma_m1 = EoS_AuxArray[1];
 #  ifdef MHD
    const real TWO      = (real)2.0;
    const real Gamma_m2 = Gamma - TWO;

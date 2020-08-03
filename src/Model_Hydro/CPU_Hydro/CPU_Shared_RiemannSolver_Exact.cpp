@@ -57,13 +57,23 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
                                 const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] )
 {
 
+// check
+#  ifdef GAMER_DEBUG
+#  if ( EOS != EOS_GAMMA )
+   printf( "ERROR : EOS != EOS_GAMMA is NOT supported at file <%s>, line <%d>, function <%s> !!\n",
+           __FILE__, __LINE__, __FUNCTION__ );
+#  endif
 
-//#### TO BE REMOVED
-const real Gamma = EoS_AuxArray[0];
+#  ifdef MHD
+   printf( "ERROR : MHD is NOT supported at file <%s>, line <%d>, function <%s> !!\n",
+           __FILE__, __LINE__, __FUNCTION__ );
+#  endif
+#  endif // #ifdef GAMER_DEBUG
 
 
+   const real Gamma    = EoS_AuxArray[0];    // only support constant-gamma EoS (i.e., EOS_GAMMA)
+   const real Gamma_m1 = EoS_AuxArray[1];
    const real Gamma_p1 = Gamma + (real)1.0;
-   const real Gamma_m1 = Gamma - (real)1.0;
    const real c        = Gamma_m1 / Gamma_p1;
 
    real eival[5], L_star[5], R_star[5];

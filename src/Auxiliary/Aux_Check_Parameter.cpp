@@ -609,6 +609,14 @@ void Aux_Check_Parameter()
 #   if ( HLLC_WAVESPEED == HLL_WAVESPEED_ROE  ||  HLLE_WAVESPEED == HLL_WAVESPEED_ROE )
 #     error : ERROR : HLL_WAVESPEED_ROE only works with EOS_GAMMA !!
 #   endif
+
+#   if (  defined RSOLVER  &&  ( RSOLVER == ROE || RSOLVER == EXACT )  )
+#     error : ERROR : unsupported Riemann solver for EOS != EOS_GAMMA (HLLE/HLLC/HLLD) !!
+#   endif
+
+#   ifdef MHD
+#     error : ERROR : MHD currently only supports EOS_GAMMA !!
+#   endif
 #  endif // if ( EOS != EOS_GAMMA )
 
 

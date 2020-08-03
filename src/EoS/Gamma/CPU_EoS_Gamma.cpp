@@ -35,11 +35,7 @@
 // Description :  Convert gas mass density and internal energy density to gas pressure
 //
 // Note        :  1. Internal energy density here is per unit volume instead of per unit mass
-//                2. AuxArray[] is set by EoS_SetAuxArray_Gamma(), where
-//                      AuxArray[0] = gamma
-//                      AuxArray[1] = gamma-1
-//                      AuxArray[2] = 1/(gamma-1)
-//                      AuxArray[3] = 1/gamma
+//                2. See EoS_SetAuxArray_Gamma() for the values stored in AuxArray[]
 //
 // Parameter   :  Dens     : Gas mass density
 //                Eint     : Gas internal energy density
@@ -123,6 +119,11 @@ static real EoS_DensPres2CSqr_Gamma( const real Dens, const real Pres, const dou
 //-------------------------------------------------------------------------------------------------------
 // Function    :  EoS_SetAuxArray_Gamma
 // Description :  Set the auxiliary array AuxArray[]
+//
+//                   AuxArray[0] = gamma
+//                   AuxArray[1] = gamma-1
+//                   AuxArray[2] = 1/(gamma-1)
+//                   AuxArray[3] = 1/gamma
 //
 // Note        :  1. Invoked by EoS_Init_Gamma()
 //                2. AuxArray[] has the size of EOS_NAUX_MAX defined in Macro.h (default = 10)
