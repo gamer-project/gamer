@@ -618,8 +618,8 @@ void Aux_Check_Parameter()
 #     error : ERROR : MHD currently only supports EOS_GAMMA !!
 #   endif
 
-#   if ( FLU_SCHEME == RTVD )
-#     error : RTVD only supports EOS_GAMMA !!
+#   if ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == CTU )
+#     error : RTVD and CTU only support EOS_GAMMA !!
 #   endif
 #  endif // if ( EOS != EOS_GAMMA )
 
