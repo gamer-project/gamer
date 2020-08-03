@@ -1277,6 +1277,10 @@ void Aux_Check_Parameter()
                  CHE_GPU_NPGROUP, GPU_NSTREAM );
                  */
 
+#  if ( EOS != EOS_GAMMA )
+#     error : ERROR : SUPPORT_GRACKLE must work with EOS_GAMMA !!
+#  endif
+
 #  ifdef OPENMP
    if ( CHE_GPU_NPGROUP < OMP_NTHREAD )
       Aux_Error( ERROR_INFO, "CHE_GPU_NPGROUP (%d) < OMP_NTHREAD (%d) !!\n", CHE_GPU_NPGROUP, OMP_NTHREAD );
@@ -1288,6 +1292,10 @@ void Aux_Check_Parameter()
 
    if ( OPT__OVERLAP_MPI )
       Aux_Message( stderr, "WARNING : currently SUPPORT_GRACKLE does not support \"%s\" !!\n", "OPT__OVERLAP_MPI" );
+
+#  if ( EOS == EOS_GAMMA )
+      Aux_Message( stderr, "WARNING : adiabatic index gamma is currently fixed to %13.7e for Grackle !!\n", GAMMA );
+#  endif
 
    } // if ( MPI_Rank == 0 )
 
