@@ -759,6 +759,24 @@ void Init_ResetParameter()
 #  endif
 
 
+// MIN_PRES and MIN_EINT
+#  if ( MODEL == HYDRO )
+   if      ( MIN_PRES > 0.0  &&  MIN_EINT == 0.0 )
+   {
+      MIN_EINT = MIN_PRES*1.5;
+
+      PRINT_WARNING( MIN_EINT, FORMAT_FLT, "" );
+   }
+
+   else if ( MIN_EINT > 0.0  &&  MIN_PRES == 0.0 )
+   {
+      MIN_PRES = MIN_EINT/1.5;
+
+      PRINT_WARNING( MIN_PRES, FORMAT_FLT, "" );
+   }
+#  endif
+
+
 // AUTO_REDUCE_DT only works for DT_LEVEL_FLEXIBLE
    if ( AUTO_REDUCE_DT  &&  OPT__DT_LEVEL != DT_LEVEL_FLEXIBLE )
    {
