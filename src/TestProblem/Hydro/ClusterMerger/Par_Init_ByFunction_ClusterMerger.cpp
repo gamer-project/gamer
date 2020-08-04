@@ -146,6 +146,9 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 	NPar_ThisRank_EachCluster[0] = NPar_EachCluster[0] / MPI_NRank + ( (MPI_Rank != MPI_NRank-1)?NPar_EachCluster[0]%MPI_NRank:0 );
 	break;
       case 1:
+	    if (NCluster == 2)
+          NPar_ThisRank_EachCluster[1] = NPar_ThisRank -  NPar_ThisRank_EachCluster[0];
+        else
 	NPar_ThisRank_EachCluster[1] = NPar_EachCluster[1] / MPI_NRank + ( (MPI_Rank != MPI_NRank-1)?NPar_EachCluster[1]%MPI_NRank:0 );
 	break;
       case 2:
