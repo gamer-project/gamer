@@ -48,6 +48,8 @@ static int     Merger_NBin1;              // number of radial bins of cluster 1
 static int     Merger_NBin2;              // number of radial bins of cluster 2
 static int     Merger_NBin3;              // number of radial bins of cluster 3
 
+static FieldIdx_t ParTypeTagIdx = Idx_Undefined;
+
 // =======================================================================================
 
 // problem-specific function prototypes
@@ -62,8 +64,7 @@ void Par_Init_ByFunction_ClusterMerger(const long NPar_ThisRank,
 int Read_Num_Points_ClusterMerger(std::string filename);
 void Read_Profile_ClusterMerger(std::string filename, std::string fieldname, 
                                 double field[]);
-void Init_InsertBubble_ClusterMerger();
-void AddNewField_ClusterMerger();
+void AddNewParticleAttribute_ClusterMerger();
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
@@ -532,6 +533,7 @@ void Init_TestProb_Hydro_ClusterMerger()
    Init_Function_User_Ptr  = SetGridIC;
    End_User_Ptr            = End_ClusterMerger;
    Par_Init_ByFunction_Ptr = Par_Init_ByFunction_ClusterMerger;
+   Par_Init_Attribute_User_Ptr = AddNewParticleAttribute_ClusterMerger;
 #  ifdef MHD
    Init_Function_BField_User_Ptr  = SetBFieldIC;
 #  endif
@@ -587,3 +589,8 @@ void Read_Profile_ClusterMerger(std::string filename, std::string fieldname,
 
 #endif // #ifdef SUPPORT_HDF5
 
+void AddNewParticleAttribute_ClusterMerger()
+{
+    if (ParTypeTagIdx == Idx_Undefined)
+        ParTypeTagIdx = AddParticleAttribute("ParTypeTag");
+} // FUNCTION : AddNewParticleAttribute_ClusterMerger

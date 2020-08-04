@@ -29,12 +29,14 @@ extern double  Merger_Coll_VelY2;
 extern double  Merger_Coll_VelX3;
 extern double  Merger_Coll_VelY3;
 
+extern FieldIdx_t ParTypeTagIdx = Idx_Undefined;
+
 long Read_Particle_Number_ClusterMerger(std::string filename);
 void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
-                                  real_par_in xpos[], real_par_in ypos[], 
-				  real_par_in zpos[], real_par_in xvel[], 
-				  real_par_in yvel[], real_par_in zvel[],
-				  real_par_in mass[]);
+                                  real_par_in xpos[], real_par_in ypos[],
+                                  real_par_in zpos[], real_par_in xvel[],
+                                  real_par_in yvel[], real_par_in zvel[],
+				                  real_par_in mass[], real_par_in ptype[]);
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_Init_ByFunction_ClusterMerger
@@ -143,17 +145,17 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
       switch (c) {
       case 0:
-	NPar_ThisRank_EachCluster[0] = NPar_EachCluster[0] / MPI_NRank + ( (MPI_Rank != MPI_NRank-1)?NPar_EachCluster[0]%MPI_NRank:0 );
-	break;
+	    NPar_ThisRank_EachCluster[0] = NPar_EachCluster[0] / MPI_NRank + ( (MPI_Rank != MPI_NRank-1)?NPar_EachCluster[0]%MPI_NRank:0 );
+	    break;
       case 1:
 	    if (NCluster == 2)
           NPar_ThisRank_EachCluster[1] = NPar_ThisRank -  NPar_ThisRank_EachCluster[0];
         else
-	NPar_ThisRank_EachCluster[1] = NPar_EachCluster[1] / MPI_NRank + ( (MPI_Rank != MPI_NRank-1)?NPar_EachCluster[1]%MPI_NRank:0 );
-	break;
+          NPar_ThisRank_EachCluster[1] = NPar_EachCluster[1] / MPI_NRank + ( (MPI_Rank != MPI_NRank-1)?NPar_EachCluster[1]%MPI_NRank:0 );
+	    break;
       case 2:
-	NPar_ThisRank_EachCluster[2] = NPar_ThisRank - NPar_ThisRank_EachCluster[0] - NPar_ThisRank_EachCluster[1];
-	break;
+	    NPar_ThisRank_EachCluster[2] = NPar_ThisRank - NPar_ThisRank_EachCluster[0] - NPar_ThisRank_EachCluster[1];
+	    break;
       }
 
       MPI_Allgather( &NPar_ThisRank_EachCluster[c], 1, MPI_LONG, NPar_ThisCluster_EachRank, 1, MPI_LONG, MPI_COMM_WORLD );
@@ -184,16 +186,17 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 //    load data
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading cluster %d ... \n", c+1 );
 
-      real_par_in *mass = new real_par_in [NPar_ThisRank_EachCluster[c]];
-      real_par_in *xpos = new real_par_in [NPar_ThisRank_EachCluster[c]];
-      real_par_in *ypos = new real_par_in [NPar_ThisRank_EachCluster[c]];
-      real_par_in *zpos = new real_par_in [NPar_ThisRank_EachCluster[c]];
-      real_par_in *xvel = new real_par_in [NPar_ThisRank_EachCluster[c]];
-      real_par_in *yvel = new real_par_in [NPar_ThisRank_EachCluster[c]];
-      real_par_in *zvel = new real_par_in [NPar_ThisRank_EachCluster[c]];
+      real_par_in *mass  = new real_par_in [NPar_ThisRank_EachCluster[c]];
+      real_par_in *xpos  = new real_par_in [NPar_ThisRank_EachCluster[c]];
+      real_par_in *ypos  = new real_par_in [NPar_ThisRank_EachCluster[c]];
+      real_par_in *zpos  = new real_par_in [NPar_ThisRank_EachCluster[c]];
+      real_par_in *xvel  = new real_par_in [NPar_ThisRank_EachCluster[c]];
+      real_par_in *yvel  = new real_par_in [NPar_ThisRank_EachCluster[c]];
+      real_par_in *zvel  = new real_par_in [NPar_ThisRank_EachCluster[c]];
+      real_par_in *ptype = new real_par_in [NPar_ThisRank_EachCluster[c]];
 
       Read_Particles_ClusterMerger(filenames[c], Offset[c], NPar_ThisRank_EachCluster[c],
-                                   xpos, ypos, zpos, xvel, yvel, zvel, mass);
+                                   xpos, ypos, zpos, xvel, yvel, zvel, mass, ptype);
 
       if ( MPI_Rank == 0 ) Aux_Message( stdout, "done\n" );
 
@@ -210,9 +213,9 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
         break;
       case 1:
         coffset = NPar_ThisRank_EachCluster[0];
-	break;
+	    break;
       case 2:
-	coffset = NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1];
+	    coffset = NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1];
         break;
       }
       
@@ -235,6 +238,10 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
 //       synchronize all particles to the physical time at the base level
          ParTime[pp] = Time[0];
+
+//       set the particle type
+         AllAttribute[ParTypeTagIdx][p] = real( ptype[p] );
+
       }
 
       delete [] mass;
@@ -244,6 +251,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       delete [] xvel;
       delete [] yvel;
       delete [] zvel;
+      delete [] ptype;
 
    } // for (int c=0; c<NCluster; c++)
 
@@ -310,7 +318,7 @@ long Read_Particle_Number_ClusterMerger(std::string filename)
 
   file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
 
-  dataset   = H5Dopen(file_id, "/dm/particle_mass", H5P_DEFAULT);
+  dataset   = H5Dopen(file_id, "particle_mass", H5P_DEFAULT);
   dataspace = H5Dget_space(dataset);
   rank      = H5Sget_simple_extent_dims(dataspace, dims, maxdims);
 
@@ -326,7 +334,7 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
                                   real_par_in xpos[], real_par_in ypos[], 
                                   real_par_in zpos[], real_par_in xvel[], 
                                   real_par_in yvel[], real_par_in zvel[], 
-                                  real_par_in mass[])
+                                  real_par_in mass[], real_par_in ptype[])
 {
 
   hid_t   file_id, dataset, dataspace, memspace;
@@ -344,7 +352,7 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
   
   file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
 
-  dataset   = H5Dopen(file_id, "/dm/particle_position", H5P_DEFAULT);
+  dataset   = H5Dopen(file_id, "particle_position", H5P_DEFAULT);
 
   dataspace = H5Dget_space(dataset);
 
@@ -360,7 +368,7 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
   dims1d[0] = count1d[0];
   stride1d[0] = 1;
   start1d[0] = 0;
- 
+
   start[1] = 0;
 
   status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start,
@@ -373,7 +381,7 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
 
   if (status < 0) {
     Aux_Message(stderr, "Could not read particle x-position!!\n");
-  } 
+  }
 
   H5Sclose(memspace);
   H5Sclose(dataspace);
@@ -388,10 +396,10 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
                                stride1d, count1d, NULL);
   status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
                    H5P_DEFAULT, ypos);
-  
+
   if (status < 0) {
     Aux_Message(stderr, "Could not read particle y-position!!\n");
-  } 
+  }
 
   H5Sclose(memspace);
   H5Sclose(dataspace);
@@ -406,16 +414,16 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
                                stride1d, count1d, NULL);
   status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
                    H5P_DEFAULT, zpos);
-  
+
   if (status < 0) {
     Aux_Message(stderr, "Could not read particle z-position!!\n");
-  } 
+  }
 
   H5Sclose(memspace);
   H5Sclose(dataspace);
   H5Dclose(dataset);
 
-  dataset   = H5Dopen(file_id, "/dm/particle_velocity", H5P_DEFAULT);
+  dataset   = H5Dopen(file_id, "particle_velocity", H5P_DEFAULT);
 
   dataspace = H5Dget_space(dataset);
 
@@ -431,7 +439,7 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
 
   if (status < 0) {
     Aux_Message(stderr, "Could not read particle x-velocity!!\n");
-  } 
+  }
 
   H5Sclose(memspace);
   H5Sclose(dataspace);
@@ -450,7 +458,7 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
 
   if (status < 0) {
     Aux_Message(stderr, "Could not read particle y-velocity!!\n");
-  } 
+  }
 
   H5Sclose(memspace);
   H5Sclose(dataspace);
@@ -469,13 +477,13 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
 
   if (status < 0) {
     Aux_Message(stderr, "Could not read particle z-velocity!!\n");
-  } 
+  }
 
   H5Sclose(memspace);
   H5Sclose(dataspace);
   H5Dclose(dataset);
 
-  dataset   = H5Dopen(file_id, "/dm/particle_mass", H5P_DEFAULT);
+  dataset   = H5Dopen(file_id, "particle_mass", H5P_DEFAULT);
 
   dataspace = H5Dget_space(dataset);
 
@@ -493,11 +501,34 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
 
   if (status < 0) {
     Aux_Message( stderr, "Could not read particle mass!!\n");
-  } 
+  }
 
   H5Sclose(memspace);
   H5Sclose(dataspace);
+  H5Dclose(dataset);
 
+  dataset   = H5Dopen(file_id, "particle_type", H5P_DEFAULT);
+
+  dataspace = H5Dget_space(dataset);
+
+  start1d[0] = (hsize_t)offset;
+  start0[0] = 0;
+
+  status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start1d,
+                               stride1d, count1d, NULL);
+  rank      = H5Sget_simple_extent_dims(dataspace, dims1d, maxdims1d);
+  memspace = H5Screate_simple(1, dims1d, NULL);
+  status = H5Sselect_hyperslab(memspace, H5S_SELECT_SET, start0,
+                               stride1d, count1d, NULL);
+  status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
+                   H5P_DEFAULT, ptype);
+
+  if (status < 0) {
+    Aux_Message( stderr, "Could not read particle type!!\n");
+  }
+
+  H5Sclose(memspace);
+  H5Sclose(dataspace);
   H5Dclose(dataset);
 
   H5Fclose(file_id);
