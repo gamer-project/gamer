@@ -357,10 +357,10 @@ void CPU_FluidSolver_CTU(
 //                               --> Accessed with the stride N_FC_VAR
 //                g_FC_Flux    : Array storing the input face-centered fluxes
 //                               --> Accessed with the stride N_HF_FLUX
-//                g_FC_B_In   : Array storing the input initial   face-centered B field
-//                g_FC_B_Half : Array storing the input half-step face-centered B field
-//                g_EC_Ele    : Array storing the input edge-centered electric field
-//                g_PriVar    : Array storing the input cell-centered primitive variables
+//                g_FC_B_In    : Array storing the input initial   face-centered B field
+//                g_FC_B_Half  : Array storing the input half-step face-centered B field
+//                g_EC_Ele     : Array storing the input edge-centered electric field
+//                g_PriVar     : Array storing the input cell-centered primitive variables
 //                dt           : Time interval to advance solution
 //                dh           : Cell size
 //                MinDens/Eint : Density and internal energy floors

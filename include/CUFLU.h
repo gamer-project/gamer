@@ -132,9 +132,7 @@
 
 // perform spatial data reconstruction in characteristic variables (default: primitive variables)
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-#  ifndef GRAVITY
-#     define CHAR_RECONSTRUCTION
-#  endif
+//#  define CHAR_RECONSTRUCTION
 #endif
 
 
