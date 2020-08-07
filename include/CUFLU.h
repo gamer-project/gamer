@@ -136,15 +136,15 @@
 #endif
 
 
-// perform spatial data reconstruction in both internal energy and pressure (default: pressure only)
-// --> pros: improve performance by avoiding calling a potentially expensive EoS routine to convert
-//           pressure to internal energy after data reconstruction
-//     cons: (1) face-centered internal energy and pressure will NOT be fully self-consistent for general EoS
-//           --> May affect the accuracy of Riemann solver if it loads both conservative and primitive variables
-//           (2) incompatible with CTU
-//           --> It requires applying the characteristic tracing step to internal energy, which has not been
-//               implemented
-// --> unnecessary for EOS_GAMMA as this EoS is not expensive
+// perform spatial data reconstruction in internal energy and use that to convert the face-centered
+// primitive variables to conservative variables
+// --> when it's disabled, the internal energy is converted from pressure using a given EoS
+// --> pros: improve performance since the EoS conversion could be expensive
+//     cons: (1) face-centered internal energy and pressure will NOT be fully self-consistent for general EoS,
+//               which may affect the accuracy of Riemann solver if it loads both conservative and primitive variables
+//           (2) incompatible with CTU as it requires applying the characteristic tracing step to internal energy,
+//               which has not been implemented
+// --> unnecessary for EOS_GAMMA as this EoS is fast
 #if ( EOS != EOS_GAMMA  &&  FLU_SCHEME != CTU )
 #  define LR_EINT
 #endif
