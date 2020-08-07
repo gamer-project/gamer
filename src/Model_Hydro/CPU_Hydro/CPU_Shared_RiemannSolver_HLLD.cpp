@@ -22,7 +22,8 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
 void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
                     const bool NormPassive, const int NNorm, const int NormIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff,
-                    EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
+                    EoS_DE2P_t EoS_DensEint2Pres, EoS_DP2E_t EoS_DensPres2Eint,
+                    const double EoS_AuxArray[], real *EintOut );
 
 #endif // #ifdef __CUDACC__ ... else ...
 
@@ -95,9 +96,9 @@ const real Gamma = EoS_AuxArray[0];
 #  endif
 
    Hydro_Con2Pri( Con_L, Pri_L, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
-                  EoS_DensEint2Pres, EoS_AuxArray );
+                  EoS_DensEint2Pres, NULL, EoS_AuxArray, NULL );
    Hydro_Con2Pri( Con_R, Pri_R, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
-                  EoS_DensEint2Pres, EoS_AuxArray );
+                  EoS_DensEint2Pres, NULL, EoS_AuxArray, NULL );
 
    const real Vx_min = FMIN( Pri_L[1] , Pri_R[1] );
    const real Vx_max = FMAX( Pri_L[1] , Pri_R[1] );
@@ -278,7 +279,7 @@ const real Gamma = EoS_AuxArray[0];
                        Bx*( Pri_L[1]*Pri_L[IdxBx] + Pri_L[2]*Pri_L[IdxBy] + Pri_L[3]*Pri_L[IdxBz] - VBdot_Lst )  ) / Sdm_L;
 
    Hydro_Con2Pri( Con_Lst, Pri_Lst, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
-                  EoS_DensEint2Pres, EoS_AuxArray );
+                  EoS_DensEint2Pres, NULL, EoS_AuxArray, NULL );
 
    Con_Rst[    1] = Con_Rst[0]*Speed[2];
    Con_Rst[IdxBx] = Bx;
@@ -321,7 +322,7 @@ const real Gamma = EoS_AuxArray[0];
                    Bx*( Pri_R[1]*Pri_R[IdxBx] + Pri_R[2]*Pri_R[IdxBy] + Pri_R[3]*Pri_R[IdxBz] - VBdot_Rst )  ) / Sdm_R;
 
    Hydro_Con2Pri( Con_Rst, Pri_Rst, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
-                  EoS_DensEint2Pres, EoS_AuxArray );
+                  EoS_DensEint2Pres, NULL, EoS_AuxArray, NULL );
 
    if ( crit_Bx < MaxErr2 )
    {

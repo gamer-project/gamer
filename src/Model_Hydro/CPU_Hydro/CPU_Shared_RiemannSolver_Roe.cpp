@@ -620,7 +620,7 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
          const real Emag = NULL_REAL;
 #        endif
          I_Pres = Hydro_Fluid2Pres( I_States[0], I_States[1], I_States[2], I_States[3], I_States[4],
-                                    CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres, EoS_AuxArray );
+                                    CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres, EoS_AuxArray, NULL );
 
 //       if unphysical results occur, recalculate fluxes by a substitute Riemann solver
          if ( I_States[0] <= ZERO  ||  I_Pres <= ZERO )

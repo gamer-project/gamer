@@ -244,7 +244,7 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
          _rho = (real)1.0 / ux[0][i];
          vx   = _rho * ux[1][i];
          p    = Hydro_Fluid2Pres( ux[0][i], ux[1][i], ux[2][i], ux[3][i], ux[4][i],
-                                  CheckMinPres_Yes, MinPres, NULL_REAL, EoS_DensEint2Pres, EoS_AuxArray );
+                                  CheckMinPres_Yes, MinPres, NULL_REAL, EoS_DensEint2Pres, EoS_AuxArray, NULL );
 
 #        ifdef CHECK_NEGATIVE_IN_FLUID
          if ( Hydro_CheckNegative(p) )
@@ -309,7 +309,7 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
          _rho = (real)1.0 / u_half[0][i];
          vx   = _rho * u_half[1][i];
          p    = Hydro_Fluid2Pres( u_half[0][i], u_half[1][i], u_half[2][i], u_half[3][i], u_half[4][i],
-                                  CheckMinPres_Yes, MinPres, NULL_REAL, EoS_DensEint2Pres, EoS_AuxArray );
+                                  CheckMinPres_Yes, MinPres, NULL_REAL, EoS_DensEint2Pres, EoS_AuxArray, NULL );
 
 #        ifdef CHECK_NEGATIVE_IN_FLUID
          if ( Hydro_CheckNegative(p) )

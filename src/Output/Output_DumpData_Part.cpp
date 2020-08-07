@@ -258,7 +258,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
    const bool CheckMinPres_Yes = true;
    fprintf( File, " %13.6e", Hydro_Fluid2Pres(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],
                                               CheckMinPres_Yes,MIN_PRES,Emag,
-                                              EoS_DensEint2Pres_CPUPtr,EoS_AuxArray) );
+                                              EoS_DensEint2Pres_CPUPtr,EoS_AuxArray,NULL) );
 #  endif
 #  endif // MODEL
 

@@ -286,7 +286,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                      Pres[k][j][i] = Hydro_Fluid2Pres( Fluid[DENS][k][j][i], Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i],
                                                        Fluid[MOMZ][k][j][i], Fluid[ENGY][k][j][i],
                                                        CheckMinPres_Yes, MIN_PRES, Emag,
-                                                       EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
+                                                       EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
 #                    endif // #ifdef DUAL_ENERGY ... else ...
                   } // k,j,i
                } // if ( OPT__FLAG_PRES_GRADIENT )

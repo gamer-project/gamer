@@ -21,7 +21,8 @@
 void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
                     const bool NormPassive, const int NNorm, const int NormIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff,
-                    EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
+                    EoS_DE2P_t EoS_DensEint2Pres, EoS_DP2E_t EoS_DensPres2Eint,
+                    const double EoS_AuxArray[], real *EintOut );
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
 
 #endif // #ifdef __CUDACC__ ... else ...
@@ -84,9 +85,9 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
 
 // convert conserved variables to primitive variables
    Hydro_Con2Pri( L_In, L, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
-                  EoS_DensEint2Pres, EoS_AuxArray );
+                  EoS_DensEint2Pres, NULL, EoS_AuxArray, NULL );
    Hydro_Con2Pri( R_In, R, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
-                  EoS_DensEint2Pres, EoS_AuxArray );
+                  EoS_DensEint2Pres, NULL, EoS_AuxArray, NULL );
 
 
 // reorder the input variables for different spatial directions

@@ -89,7 +89,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const bool JeansMinPres, const real JeansMinPres_Coeff );
 real Hydro_Fluid2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                        const bool CheckMinPres, const real MinPres, const real Emag,
-                       EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
+                       EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[], real *EintOut );
 real Hydro_Fluid2Eint( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                        const bool CheckMinEint, const real MinEint, const real Emag );
 real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, const real MomZ, const real Eint, const real Emag );

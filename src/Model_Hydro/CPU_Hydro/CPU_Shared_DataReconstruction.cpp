@@ -20,7 +20,8 @@ void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int 
 void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
                     const bool NormPassive, const int NNorm, const int NormIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff,
-                    EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
+                    EoS_DE2P_t EoS_DensEint2Pres, EoS_DP2E_t EoS_DensPres2Eint,
+                    const double EoS_AuxArray[], real *EintOut );
 void Hydro_Pri2Con( const real In[], real Out[], const bool NormPassive, const int NNorm, const int NormIdx[],
                     EoS_DP2E_t EoS_DensPres2Eint, const double EoS_AuxArray[] );
 #if ( FLU_SCHEME == MHM )
@@ -270,7 +271,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #        endif
 
          Hydro_Con2Pri( ConVar_1Cell, PriVar_1Cell, MinPres, NormPassive, NNorm, NormIdx,
-                        JeansMinPres, JeansMinPres_Coeff, EoS_DensEint2Pres, EoS_AuxArray );
+                        JeansMinPres, JeansMinPres_Coeff, EoS_DensEint2Pres, EoS_DensPres2Eint, EoS_AuxArray, NULL );
 
          for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   g_PriVar[v][idx] = PriVar_1Cell[v];
       }
@@ -754,7 +755,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #        endif
 
          Hydro_Con2Pri( ConVar_1Cell, PriVar_1Cell, MinPres, NormPassive, NNorm, NormIdx,
-                        JeansMinPres, JeansMinPres_Coeff, EoS_DensEint2Pres, EoS_AuxArray );
+                        JeansMinPres, JeansMinPres_Coeff, EoS_DensEint2Pres, EoS_DensPres2Eint, EoS_AuxArray, NULL );
 
          for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   g_PriVar[v][idx] = PriVar_1Cell[v];
       }

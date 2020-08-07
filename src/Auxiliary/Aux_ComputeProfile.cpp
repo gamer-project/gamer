@@ -406,21 +406,24 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                                                                                       FluidPtr     [MOMZ][k][j][i],
                                                                                       FluidPtr     [ENGY][k][j][i],
                                                                                       CheckMinPres_No, NULL_REAL, Emag,
-                                                                                      EoS_DensEint2Pres_CPUPtr, EoS_AuxArray )
+                                                                                      EoS_DensEint2Pres_CPUPtr, EoS_AuxArray,
+                                                                                      NULL )
                                                 + FluWeighting_IntT*Hydro_Fluid2Pres( FluidPtr_IntT[DENS][k][j][i],
                                                                                       FluidPtr_IntT[MOMX][k][j][i],
                                                                                       FluidPtr_IntT[MOMY][k][j][i],
                                                                                       FluidPtr_IntT[MOMZ][k][j][i],
                                                                                       FluidPtr_IntT[ENGY][k][j][i],
                                                                                       CheckMinPres_No, NULL_REAL, Emag_IntT,
-                                                                                      EoS_DensEint2Pres_CPUPtr, EoS_AuxArray )
+                                                                                      EoS_DensEint2Pres_CPUPtr, EoS_AuxArray,
+                                                                                      NULL )
                                               :                     Hydro_Fluid2Pres( FluidPtr     [DENS][k][j][i],
                                                                                       FluidPtr     [MOMX][k][j][i],
                                                                                       FluidPtr     [MOMY][k][j][i],
                                                                                       FluidPtr     [MOMZ][k][j][i],
                                                                                       FluidPtr     [ENGY][k][j][i],
                                                                                       CheckMinPres_No, NULL_REAL, Emag,
-                                                                                      EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
+                                                                                      EoS_DensEint2Pres_CPUPtr, EoS_AuxArray,
+                                                                                      NULL );
 
                               OMP_Data  [p][TID][bin] += Pres*Weight;
                               OMP_Weight[p][TID][bin] += Weight;

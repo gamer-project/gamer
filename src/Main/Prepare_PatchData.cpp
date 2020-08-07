@@ -879,7 +879,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #                 endif
                   Data1PG_CC_Ptr[Idx1] = Hydro_Fluid2Pres( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
                                                            (MinPres>=(real)0.0), MinPres, Emag,
-                                                           EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
+                                                           EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
 
                   if ( FluIntTime ) // temporal interpolation
                   {
@@ -894,7 +894,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         FluWeighting     *Data1PG_CC_Ptr[Idx1]
                       + FluWeighting_IntT*Hydro_Fluid2Pres( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
                                                             (MinPres>=(real)0.0), MinPres, Emag,
-                                                            EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
+                                                            EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
                   }
 
                   Idx1 ++;
@@ -1169,7 +1169,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #                       endif
                         Data1PG_CC_Ptr[Idx1] = Hydro_Fluid2Pres( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
                                                                  (MinPres>=(real)0.0), MinPres, Emag,
-                                                                 EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
+                                                                 EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
 
                         if ( FluIntTime ) // temporal interpolation
                         {
@@ -1184,7 +1184,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                               FluWeighting     *Data1PG_CC_Ptr[Idx1]
                             + FluWeighting_IntT*Hydro_Fluid2Pres( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
                                                                   (MinPres>=(real)0.0), MinPres, Emag,
-                                                                  EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
+                                                                  EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
                         }
 
                         Idx1 ++;

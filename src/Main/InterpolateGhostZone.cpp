@@ -383,7 +383,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 #        endif
          CData_CC_Ptr[Idx] = Hydro_Fluid2Pres( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
                                                (MinPres>=(real)0.0), MinPres, Emag,
-                                               EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
+                                               EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
 
          if ( FluIntTime ) // temporal interpolation
          {
@@ -398,7 +398,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                FluWeighting     *CData_CC_Ptr[Idx]
              + FluWeighting_IntT*Hydro_Fluid2Pres( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
                                                    (MinPres>=(real)0.0), MinPres, Emag,
-                                                   EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
+                                                   EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
          }
 
          Idx ++;
@@ -661,7 +661,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 #              endif
                CData_CC_Ptr[Idx] = Hydro_Fluid2Pres( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
                                                      (MinPres>=(real)0.0), MinPres, Emag,
-                                                     EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
+                                                     EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
 
                if ( FluIntTime ) // temporal interpolation
                {
@@ -676,7 +676,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                      FluWeighting     *CData_CC_Ptr[Idx]
                    + FluWeighting_IntT*Hydro_Fluid2Pres( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
                                                          (MinPres>=(real)0.0), MinPres, Emag,
-                                                         EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
+                                                         EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
                }
 
                Idx ++;

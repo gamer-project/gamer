@@ -190,11 +190,11 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
                            NULL_REAL :
                            Hydro_Fluid2Pres( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY],
                                              CheckMinPres_No, NULL_REAL, Emag,
-                                             EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
+                                             EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
 #        else
          const real Pres = Hydro_Fluid2Pres( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY],
                                              CheckMinPres_No, NULL_REAL, NULL_REAL,
-                                             EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
+                                             EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
 #        endif
          fprintf( File, " %13.6e", Pres );
 

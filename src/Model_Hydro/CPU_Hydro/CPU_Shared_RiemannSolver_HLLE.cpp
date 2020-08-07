@@ -116,9 +116,9 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
 #  endif
 
    P_L   = Hydro_Fluid2Pres( L[0], L[1], L[2], L[3], L[4], CheckMinPres_Yes, MinPres, Emag_L,
-                             EoS_DensEint2Pres, EoS_AuxArray );
+                             EoS_DensEint2Pres, EoS_AuxArray, NULL );
    P_R   = Hydro_Fluid2Pres( R[0], R[1], R[2], R[3], R[4], CheckMinPres_Yes, MinPres, Emag_R,
-                             EoS_DensEint2Pres, EoS_AuxArray );
+                             EoS_DensEint2Pres, EoS_AuxArray, NULL );
    a2_L  = EoS_DensPres2CSqr( L[0], P_L, EoS_AuxArray );
    a2_R  = EoS_DensPres2CSqr( R[0], P_R, EoS_AuxArray );
 

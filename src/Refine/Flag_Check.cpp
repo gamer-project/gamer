@@ -158,7 +158,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 #     endif
       const real Pres = Hydro_Fluid2Pres( Dens, Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i], Fluid[MOMZ][k][j][i],
                                           Fluid[ENGY][k][j][i], CheckMinPres_Yes, MIN_PRES, Emag,
-                                          EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
+                                          EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
 #     endif // #ifdef DUAL_ENERGY ... else ...
 
       Flag |= ( SQR(amr->dh[lv]) > JeansCoeff*Pres/SQR(Dens) );
