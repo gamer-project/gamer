@@ -140,7 +140,7 @@
 // primitive variables to conservative variables
 // --> when it's disabled, the internal energy is converted from pressure using a given EoS
 // --> pros: improve performance since the EoS conversion could be expensive
-//     cons: (1) face-centered internal energy and pressure will NOT be fully self-consistent for general EoS,
+//     cons: (1) face-centered internal energy and pressure will NOT be fully self-consistent for a given EoS,
 //               which may affect the accuracy of Riemann solver if it loads both conservative and primitive variables
 //           (2) incompatible with CTU as it requires applying the characteristic tracing step to internal energy,
 //               which has not been implemented
