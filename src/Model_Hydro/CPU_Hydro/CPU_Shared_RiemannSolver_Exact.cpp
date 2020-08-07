@@ -18,6 +18,10 @@
 
 #else // #ifdef __CUDACC__
 
+void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
+                    const bool NormPassive, const int NNorm, const int NormIdx[],
+                    const bool JeansMinPres, const real JeansMinPres_Coeff,
+                    EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
 
 #endif // #ifdef __CUDACC__ ... else ...
@@ -42,10 +46,7 @@ GPU_DEVICE static void Set_Flux( real flux[], const real val[], const real Gamma
 //
 // Parameter   :  XYZ               : Target spatial direction : (0/1/2) --> (x/y/z)
 //                Flux_Out          : Output array to store the average flux along t axis
-//                L_In              : Input **primitive** variables in the left region
-//                                    --> But note that the input passive scalars should be mass density instead of mass fraction
-//                R_In              : Input **primitive** variables in the right region
-//                                    --> But note that the input passive scalars should be mass density instead of mass fraction
+//                L/R_In            : Input left/right states (conserved variables)
 //                MinPres           : Pressure floor
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
 //                EoS_DensPres2CSqr : EoS routine to compute the sound speed square
@@ -71,22 +72,24 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
 #  endif // #ifdef GAMER_DEBUG
 
 
-   const real Gamma    = EoS_AuxArray[0];    // only support constant-gamma EoS (i.e., EOS_GAMMA)
-   const real Gamma_m1 = EoS_AuxArray[1];
-   const real Gamma_p1 = Gamma + (real)1.0;
-   const real c        = Gamma_m1 / Gamma_p1;
+   const real Gamma           = EoS_AuxArray[0];      // only support constant-gamma EoS (i.e., EOS_GAMMA)
+   const real Gamma_m1        = EoS_AuxArray[1];
+   const real Gamma_p1        = Gamma + (real)1.0;
+   const real c               = Gamma_m1 / Gamma_p1;
+   const bool NormPassive_No  = false;                // no need to convert passive scalars to mass fraction
+   const bool JeansMinPres_No = false;
 
    real eival[5], L_star[5], R_star[5];
-   real L[5], R[5], Temp;
+   real L[NCOMP_TOTAL], R[NCOMP_TOTAL], Temp;
+
+// convert conserved variables to primitive variables
+   Hydro_Con2Pri( L_In, L, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
+                  EoS_DensEint2Pres, EoS_AuxArray );
+   Hydro_Con2Pri( R_In, R, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
+                  EoS_DensEint2Pres, EoS_AuxArray );
 
 
 // reorder the input variables for different spatial directions
-   for (int v=0; v<5; v++)
-   {
-      L[v] = L_In[v];
-      R[v] = R_In[v];
-   }
-
    Hydro_Rotate3D( L, XYZ, true, MAG_OFFSET );
    Hydro_Rotate3D( R, XYZ, true, MAG_OFFSET );
 

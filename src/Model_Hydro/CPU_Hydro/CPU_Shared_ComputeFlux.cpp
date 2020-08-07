@@ -27,10 +27,6 @@
 #else // #ifdef __CUDACC__
 
 #if   ( RSOLVER == EXACT )
-void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
-                    const bool NormPassive, const int NNorm, const int NormIdx[],
-                    const bool JeansMinPres, const real JeansMinPres_Coeff,
-                    EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
 void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                 const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
                                 const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] );
@@ -137,10 +133,6 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
    const int didx_fc[3] = { 1, N_FC_VAR, N_FC_VAR*N_FC_VAR };
 
    real ConVar_L[NCOMP_TOTAL_PLUS_MAG], ConVar_R[NCOMP_TOTAL_PLUS_MAG], Flux_1Face[NCOMP_TOTAL_PLUS_MAG];
-
-#  if ( RSOLVER == EXACT )
-   real PriVar_L[NCOMP_TOTAL], PriVar_R[NCOMP_TOTAL];
-#  endif
 
 #  ifdef UNSPLIT_GRAVITY
    const real   GraConst    = -(real)0.5*dt/dh;
@@ -284,15 +276,7 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
 
 //       2. invoke Riemann solver
 #        if   ( RSOLVER == EXACT  &&  !defined MHD )
-         const bool NormPassive_No  = false; // do NOT convert any passive variable to mass fraction for the Riemann solvers
-         const bool JeansMinPres_No = false;
-
-         Hydro_Con2Pri( ConVar_L, PriVar_L, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
-                        EoS_DensEint2Pres, EoS_AuxArray );
-         Hydro_Con2Pri( ConVar_R, PriVar_R, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
-                        EoS_DensEint2Pres, EoS_AuxArray );
-
-         Hydro_RiemannSolver_Exact( d, Flux_1Face, PriVar_L, PriVar_R, MinPres, EoS_DensEint2Pres, EoS_DensPres2CSqr, EoS_AuxArray );
+         Hydro_RiemannSolver_Exact( d, Flux_1Face, ConVar_L, ConVar_R, MinPres, EoS_DensEint2Pres, EoS_DensPres2CSqr, EoS_AuxArray );
 #        elif ( RSOLVER == ROE )
          Hydro_RiemannSolver_Roe  ( d, Flux_1Face, ConVar_L, ConVar_R, MinPres, EoS_DensEint2Pres, EoS_DensPres2CSqr, EoS_AuxArray );
 #        elif ( RSOLVER == HLLE )

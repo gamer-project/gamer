@@ -479,11 +479,6 @@ void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
    const int didx_cvar[3] = { 1, FLU_NXT, SQR(FLU_NXT) };
    real ConVar_L[NCOMP_TOTAL_PLUS_MAG], ConVar_R[NCOMP_TOTAL_PLUS_MAG], Flux_1Face[NCOMP_TOTAL_PLUS_MAG];
 
-#  if ( RSOLVER == EXACT )
-   real PriVar_L[NCOMP_TOTAL], PriVar_R[NCOMP_TOTAL];
-#  endif
-
-
 // loop over different spatial directions
    for (int d=0; d<3; d++)
    {
@@ -568,15 +563,7 @@ void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 
 //       invoke the Riemann solver
 #        if   ( RSOLVER == EXACT  &&  !defined MHD )
-         const bool NormPassive_No  = false;  // do NOT convert any passive variable to mass fraction for the Riemann solvers
-         const bool JeansMinPres_No = false;
-
-         Hydro_Con2Pri( ConVar_L, PriVar_L, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
-                        EoS_DensEint2Pres, EoS_AuxArray );
-         Hydro_Con2Pri( ConVar_R, PriVar_R, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
-                        EoS_DensEint2Pres, EoS_AuxArray );
-
-         Hydro_RiemannSolver_Exact( d, Flux_1Face, PriVar_L, PriVar_R, MinPres, EoS_DensEint2Pres, EoS_DensPres2CSqr, EoS_AuxArray );
+         Hydro_RiemannSolver_Exact( d, Flux_1Face, ConVar_L, ConVar_R, MinPres, EoS_DensEint2Pres, EoS_DensPres2CSqr, EoS_AuxArray );
 #        elif ( RSOLVER == ROE )
          Hydro_RiemannSolver_Roe  ( d, Flux_1Face, ConVar_L, ConVar_R, MinPres, EoS_DensEint2Pres, EoS_DensPres2CSqr, EoS_AuxArray );
 #        elif ( RSOLVER == HLLE )
