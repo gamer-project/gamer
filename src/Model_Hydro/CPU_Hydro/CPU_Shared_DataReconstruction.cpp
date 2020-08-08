@@ -23,7 +23,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
                     EoS_DE2P_t EoS_DensEint2Pres, EoS_DP2E_t EoS_DensPres2Eint,
                     const double EoS_AuxArray[], real *EintOut );
 void Hydro_Pri2Con( const real In[], real Out[], const bool NormPassive, const int NNorm, const int NormIdx[],
-                    EoS_DP2E_t EoS_DensPres2Eint, const double EoS_AuxArray[] );
+                    EoS_DP2E_t EoS_DensPres2Eint, const double EoS_AuxArray[], const real* const EintIn );
 #if ( FLU_SCHEME == MHM )
 void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres,
                      EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
@@ -572,10 +572,10 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
          real tmp[NCOMP_TOTAL_PLUS_MAG];  // input and output arrays must not overlap for Pri2Con()
 
          for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   tmp[v] = fc[faceL][v];
-         Hydro_Pri2Con( tmp, fc[faceL], NormPassive, NNorm, NormIdx, EoS_DensPres2Eint, EoS_AuxArray );
+         Hydro_Pri2Con( tmp, fc[faceL], NormPassive, NNorm, NormIdx, EoS_DensPres2Eint, EoS_AuxArray, NULL );
 
          for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   tmp[v] = fc[faceR][v];
-         Hydro_Pri2Con( tmp, fc[faceR], NormPassive, NNorm, NormIdx, EoS_DensPres2Eint, EoS_AuxArray );
+         Hydro_Pri2Con( tmp, fc[faceR], NormPassive, NNorm, NormIdx, EoS_DensPres2Eint, EoS_AuxArray, NULL );
 
       } // for (int d=0; d<3; d++)
 
@@ -1131,10 +1131,10 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
          real tmp[NCOMP_TOTAL_PLUS_MAG];  // input and output arrays must not overlap for Pri2Con()
 
          for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   tmp[v] = fc[faceL][v];
-         Hydro_Pri2Con( tmp, fc[faceL], NormPassive, NNorm, NormIdx, EoS_DensPres2Eint, EoS_AuxArray );
+         Hydro_Pri2Con( tmp, fc[faceL], NormPassive, NNorm, NormIdx, EoS_DensPres2Eint, EoS_AuxArray, NULL );
 
          for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   tmp[v] = fc[faceR][v];
-         Hydro_Pri2Con( tmp, fc[faceR], NormPassive, NNorm, NormIdx, EoS_DensPres2Eint, EoS_AuxArray );
+         Hydro_Pri2Con( tmp, fc[faceR], NormPassive, NNorm, NormIdx, EoS_DensPres2Eint, EoS_AuxArray, NULL );
 
       } // for (int d=0; d<3; d++)
 

@@ -222,6 +222,10 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 //                   --> See the input parameters "NormPassive, NNorm, NormIdx"
 //                3. In[] and Out[] must NOT point to the same array
 //                4. In[] and Out[] should have the size of NCOMP_TOTAL_PLUS_MAG
+//                5. Convert pressure to internal energy using the input EoS routine by default
+//                   --> But one can also specify internal energy directly through *EintIn*,
+//                       by which no EoS conversion is required and the input pressure will be useless
+//                       --> Mainly used by the option LR_EINT in data reconstruction
 //
 // Parameter   :  In                : Array storing the input primitive variables
 //                Out               : Array to store the output conserved variables
@@ -232,12 +236,14 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 //                                    --> Should be set to the global variable "PassiveNorm_VarIdx"
 //                EoS_DensPres2Eint : EoS routine to compute the gas internal energy
 //                EoS_AuxArray      : Auxiliary array for EoS_DensPres2Eint()
+//                EintIn            : Pointer storing the input internal energy (see the note above)
+//                                    --> Do nothing if it is NULL
 //
 // Return      :  Out[]
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_Pri2Con( const real In[], real Out[], const bool NormPassive, const int NNorm, const int NormIdx[],
-                    EoS_DP2E_t EoS_DensPres2Eint, const double EoS_AuxArray[] )
+                    EoS_DP2E_t EoS_DensPres2Eint, const double EoS_AuxArray[], const real* const EintIn )
 {
 
    real Eint, Emag=NULL_REAL;
@@ -253,7 +259,7 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool NormPassive, const i
    const real Bz = In[ MAG_OFFSET + 2 ];
    Emag   = (real)0.5*( SQR(Bx) + SQR(By) + SQR(Bz) );
 #  endif
-   Eint   = EoS_DensPres2Eint( In[0], In[4], EoS_AuxArray );
+   Eint   = ( EintIn == NULL ) ? EoS_DensPres2Eint( In[0], In[4], EoS_AuxArray ) : *EintIn;
    Out[4] = Hydro_ConEint2Etot( Out[0], Out[1], Out[2], Out[3], Eint, Emag );
 
 
