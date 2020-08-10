@@ -389,6 +389,11 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 //       4. advance the face-centered variables by half time-step for the CTU integrator
 #        if ( FLU_SCHEME == CTU )
+
+#        ifdef LR_EINT
+#           error : CTU does NOT support LR_EINT !!
+#        endif
+
          real Coeff_L, Coeff_R;
          real Correct_L[NCOMP_LR], Correct_R[NCOMP_LR], dfc[NCOMP_LR];
 
@@ -644,7 +649,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const real g_FC_B     [][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                                      real g_PriVar   [][ CUBE(FLU_NXT) ],
                                      real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
-                                     real g_Slope_PPM[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ],
+                                     real g_Slope_PPM[][NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ],
                                const bool Con2Pri, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh,
                                const real MinDens, const real MinPres, const real MinEint,
@@ -691,7 +696,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #  if ( FLU_SCHEME == CTU )
    const real dt_dh2         = (real)0.5*dt/dh;
 
-// index mapping between arrays with size NWAVE and NCOMP_TOTAL_PLUS_MAG;
+// index mapping between arrays with size NWAVE and NCOMP_TOTAL_PLUS_MAG/NCOMP_LR
 #  ifdef MHD
    const int idx_wave[NWAVE] = { 0, 1, 2, 3, 4, MAG_OFFSET+1, MAG_OFFSET+2 };
 #  else
@@ -769,6 +774,12 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
    if ( Con2Pri )
    {
       real ConVar_1Cell[NCOMP_TOTAL_PLUS_MAG], PriVar_1Cell[NCOMP_TOTAL_PLUS_MAG];
+#     ifdef LR_EINT
+      real Eint;
+      real* const EintPtr = &Eint;
+#     else
+      real* const EintPtr = NULL;
+#     endif
 
       CGPU_LOOP( idx, CUBE(NIn) )
       {
@@ -785,10 +796,14 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #        endif
 
          Hydro_Con2Pri( ConVar_1Cell, PriVar_1Cell, MinPres, NormPassive, NNorm, NormIdx,
-                        JeansMinPres, JeansMinPres_Coeff, EoS_DensEint2Pres, EoS_DensPres2Eint, EoS_AuxArray, NULL );
+                        JeansMinPres, JeansMinPres_Coeff, EoS_DensEint2Pres, EoS_DensPres2Eint, EoS_AuxArray, EintPtr );
 
          for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   g_PriVar[v][idx] = PriVar_1Cell[v];
-      }
+
+#        ifdef LR_EINT
+         g_PriVar[NCOMP_TOTAL_PLUS_MAG][idx] = Eint;  // store Eint in the last variable
+#        endif
+      } // CGPU_LOOP( idx, CUBE(NIn) )
 
 #     ifdef __CUDACC__
       __syncthreads();
@@ -806,10 +821,9 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
       const int idx_cc = IDX321( i_cc, j_cc, k_cc, NIn, NIn );
 
 //    cc_C/L/R: cell-centered variables of the Central/Left/Right cells
-      real cc_C[NCOMP_TOTAL_PLUS_MAG], cc_L[NCOMP_TOTAL_PLUS_MAG], cc_R[NCOMP_TOTAL_PLUS_MAG];
-      real Slope_Limiter[NCOMP_TOTAL_PLUS_MAG];
+      real cc_C[NCOMP_LR], cc_L[NCOMP_LR], cc_R[NCOMP_LR], Slope_Limiter[NCOMP_LR];
 
-      for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   cc_C[v] = g_PriVar[v][idx_cc];
+      for (int v=0; v<NCOMP_LR; v++)   cc_C[v] = g_PriVar[v][idx_cc];
 
 //    loop over different spatial directions
       for (int d=0; d<3; d++)
@@ -821,7 +835,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
          MHD_GetEigenSystem( cc_C, EigenVal[d], LEigenVec, REigenVec, EoS_DensPres2CSqr, EoS_AuxArray, d );
 #        endif
 
-         for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
+         for (int v=0; v<NCOMP_LR; v++)
          {
             cc_L[v] = g_PriVar[v][idx_ccL];
             cc_R[v] = g_PriVar[v][idx_ccR];
@@ -832,7 +846,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                            EoS_DensPres2CSqr, EoS_AuxArray );
 
 //       store the results to g_Slope_PPM[]
-         for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   g_Slope_PPM[d][v][idx_slope] = Slope_Limiter[v];
+         for (int v=0; v<NCOMP_LR; v++)   g_Slope_PPM[d][v][idx_slope] = Slope_Limiter[v];
 
       } // for (int d=0; d<3; d++)
    } // CGPU_LOOP( idx_slope, CUBE(N_SLOPE_PPM) )
@@ -872,11 +886,10 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
       idx_B[2] = IDX321( i_cc, j_cc, k_cc, NIn,    NIn    );
 #     endif
 
- //   cc/fc: cell/face-centered variables; _C_ncomp: central cell with all NCOMP_TOTAL_PLUS_MAG variables
-      real cc_C_ncomp[NCOMP_TOTAL_PLUS_MAG], fc[6][NCOMP_TOTAL_PLUS_MAG];
-      real dfc[NCOMP_TOTAL_PLUS_MAG], dfc6[NCOMP_TOTAL_PLUS_MAG];
+ //   cc/fc: cell/face-centered variables; _C_ncomp: central cell with all NCOMP_LR variables
+      real cc_C_ncomp[NCOMP_LR], fc[6][NCOMP_LR], dfc[NCOMP_LR], dfc6[NCOMP_LR];
 
-      for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   cc_C_ncomp[v] = g_PriVar[v][idx_cc];
+      for (int v=0; v<NCOMP_LR; v++)   cc_C_ncomp[v] = g_PriVar[v][idx_cc];
 
 
 //    2-a. evaluate the eigenvalues and eigenvectors along all three directions for the pure-hydro CTU integrator
@@ -902,7 +915,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
          const int idx_slopeL = idx_slope - didx_slope[d];
          const int idx_slopeR = idx_slope + didx_slope[d];
 
-         for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
+         for (int v=0; v<NCOMP_LR; v++)
          {
 //          cc/fc: cell/face-centered variables; _C/L/R: Central/Left/Right cells
             real cc_C, cc_L, cc_R, dcc_L, dcc_R, dcc_C, fc_L, fc_R, Max, Min;
@@ -949,16 +962,21 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
             fc[faceL][v] = fc_L;
             fc[faceR][v] = fc_R;
 
-         } // for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
+         } // for (int v=0; v<NCOMP_LR; v++)
 
 
 //       4. advance the face-centered variables by half time-step for the CTU integrator
 #        if ( FLU_SCHEME == CTU )
+
+#        ifdef LR_EINT
+#           error : CTU does NOT support LR_EINT !!
+#        endif
+
          real Coeff_L, Coeff_R;
-         real Correct_L[NCOMP_TOTAL_PLUS_MAG], Correct_R[NCOMP_TOTAL_PLUS_MAG];
+         real Correct_L[NCOMP_LR], Correct_R[NCOMP_LR];
 
 //       4-1. compute the PPM coefficient (for the passive scalars as well)
-         for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
+         for (int v=0; v<NCOMP_LR; v++)
          {
             dfc [v] = fc[faceR][v] - fc[faceL][v];
             dfc6[v] = (real)6.0*(  cc_C_ncomp[v] - (real)0.5*( fc[faceL][v] + fc[faceR][v] )  );
@@ -1121,7 +1139,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
          Hydro_Rotate3D( Correct_L, d, false, MAG_OFFSET );
          Hydro_Rotate3D( Correct_R, d, false, MAG_OFFSET );
 
-         for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
+         for (int v=0; v<NCOMP_LR; v++)
          {
             fc[faceL][v] += Correct_L[v];
             fc[faceR][v] += Correct_R[v];
@@ -1158,13 +1176,20 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 
 //       6. primitive variables --> conserved variables
-         real tmp[NCOMP_TOTAL_PLUS_MAG];  // input and output arrays must not overlap for Pri2Con()
+//          --> When LR_EINT is on, use the reconstructed internal energy instead of pressure in Hydro_Pri2Con()
+//              to skip expensive EoS conversion
+         real tmp[NCOMP_LR];  // input and output arrays must not overlap for Pri2Con()
+#        ifdef LR_EINT
+         real* const EintPtr = tmp + NCOMP_TOTAL_PLUS_MAG;
+#        else
+         real* const EintPtr = NULL;
+#        endif
 
-         for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   tmp[v] = fc[faceL][v];
-         Hydro_Pri2Con( tmp, fc[faceL], NormPassive, NNorm, NormIdx, EoS_DensPres2Eint, EoS_AuxArray, NULL );
+         for (int v=0; v<NCOMP_LR; v++)   tmp[v] = fc[faceL][v];
+         Hydro_Pri2Con( tmp, fc[faceL], NormPassive, NNorm, NormIdx, EoS_DensPres2Eint, EoS_AuxArray, EintPtr );
 
-         for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   tmp[v] = fc[faceR][v];
-         Hydro_Pri2Con( tmp, fc[faceR], NormPassive, NNorm, NormIdx, EoS_DensPres2Eint, EoS_AuxArray, NULL );
+         for (int v=0; v<NCOMP_LR; v++)   tmp[v] = fc[faceR][v];
+         Hydro_Pri2Con( tmp, fc[faceR], NormPassive, NNorm, NormIdx, EoS_DensPres2Eint, EoS_AuxArray, EintPtr );
 
       } // for (int d=0; d<3; d++)
 
@@ -1177,6 +1202,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 
 //    8. store the face-centered values to the output array
+//       --> use NCOMP_TOTAL_PLUS_MAG instead of LR_EINT since we don't need to store internal energy in g_FC_Var[]
       for (int f=0; f<6; f++)
       for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
          g_FC_Var[f][v][idx_fc] = fc[f][v];
