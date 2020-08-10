@@ -150,6 +150,14 @@
 #endif
 
 
+// total number of target variables in the data reconstruction
+#ifdef LR_EINT
+#  define NCOMP_LR   ( NCOMP_TOTAL_PLUS_MAG + 1 )
+#else
+#  define NCOMP_LR   ( NCOMP_TOTAL_PLUS_MAG     )
+#endif
+
+
 // verify that the density and pressure in the intermediate states of Roe's Riemann solver are positive.
 // --> if either is negative, we switch to other Riemann solvers (EXACT/HLLE/HLLC/HLLD)
 #if (  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  &&  RSOLVER == ROE  )
