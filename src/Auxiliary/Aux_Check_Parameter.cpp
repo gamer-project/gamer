@@ -618,6 +618,10 @@ void Aux_Check_Parameter()
 #     error : ERROR : unsupported Riemann solver for EOS != EOS_GAMMA (HLLE/HLLC/HLLD) !!
 #   endif
 
+#   if ( defined LR_SCHEME  &&  defined CHAR_RECONSTRUCTION )
+#     error : ERROR : CHAR_RECONSTRUCTION only works with EOS_GAMMA !!
+#   endif
+
 #   ifdef MHD
 #     error : ERROR : MHD currently only supports EOS_GAMMA !!
 #   endif
