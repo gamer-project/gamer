@@ -62,7 +62,8 @@ const TestProbID_t
    TESTPROB_ELBDM_ISOLATED_HALO                = 1007,
    TESTPROB_ELBDM_GAUSSIAN_WAVE_PACKET         = 1008,
    TESTPROB_ELBDM_LSS                          = 1009,
-   TESTPROB_ELBDM_MODELS                       = 1010;
+   TESTPROB_ELBDM_MODELS                       = 1010,
+   TESTPROB_ELBDM_NFW                          = 1011;
 
 
 // program initialization options

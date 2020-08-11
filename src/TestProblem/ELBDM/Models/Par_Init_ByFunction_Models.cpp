@@ -43,7 +43,7 @@ static void   RanVec_FixRadius( const double r, double RanVec[] );
 //
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, AllAttribute
 //-------------------------------------------------------------------------------------------------------
-Particle_IC_Constructor cal_Models;
+Particle_IC_Constructor constructor_Models;
 void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRank,
                                   real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                   real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
@@ -53,9 +53,9 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
    string *model_name;
    static bool *flag;
    if(good){
-      model_name=new string[cal_Models.params.Models_num];
-      flag =new bool[cal_Models.params.Models_num];
-      for(int k=0;k<cal_Models.params.Models_num;k++)flag[k]=0;
+      model_name=new string[constructor_Models.params.Models_num];
+      flag =new bool[constructor_Models.params.Models_num];
+      for(int k=0;k<constructor_Models.params.Models_num;k++)flag[k]=0;
       good=0;
    }
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -75,11 +75,11 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
       }
 
    
-   for(int k=0;k<cal_Models.params.Models_num;k++){
+   for(int k=0;k<constructor_Models.params.Models_num;k++){
    // Initialize calculators
       if(flag[k]==0){
-         const char* profile=cal_Models.params.Models_Profile[k].c_str();
-         cal_Models.init(cal_Models.params.Models_Type[k],cal_Models.params.Models_Alpha[k],NEWTON_G,cal_Models.params.Models_Rho0[k],cal_Models.params.Models_R0[k],cal_Models.params.Models_MassProfNBin[k],cal_Models.params.Models_MaxR[k],cal_Models.params.Models_RSeed[k],cal_Models.params.Models_truncation[k],0.7,cal_Models.params.Models_r_col[k],cal_Models.params.Models_rho_col[k],profile);
+         const char* profile=constructor_Models.params.Models_Profile[k].c_str();
+         constructor_Models.init(constructor_Models.params.Models_Type[k],constructor_Models.params.Models_Alpha[k],NEWTON_G,constructor_Models.params.Models_Rho0[k],constructor_Models.params.Models_R0[k],constructor_Models.params.Models_MassProfNBin[k],constructor_Models.params.Models_MaxR[k],constructor_Models.params.Models_RSeed[k],constructor_Models.params.Models_truncation[k],0.7,constructor_Models.params.Models_r_col[k],constructor_Models.params.Models_rho_col[k],profile);
          flag[k]=1;
       }
       
@@ -94,25 +94,25 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
 
    //    initialize the random number generator
          RNG = new RandomNumber_t( 1 );
-         RNG->SetSeed( 0, cal_Models.params.Models_RSeed[k]);
+         RNG->SetSeed( 0, constructor_Models.params.Models_RSeed[k]);
 
 
    //    determine the total enclosed mass within the maximum radius
-         TotM = MassProf_Models( cal_Models.params.Models_MaxR[k] ,model_name[k],k);
+         TotM = MassProf_Models( constructor_Models.params.Models_MaxR[k] ,model_name[k],k);
          ParM = TotM / NPar_AllRank;
 
 
    //    rescale particle mass to account for the gas contribution
-         ParM *= 1.0 - cal_Models.params.Models_GasMFrac[k];
+         ParM *= 1.0 - constructor_Models.params.Models_GasMFrac[k];
 
 
    //    construct the mass profile table
-         Table_MassProf_r = new double [cal_Models.params.Models_MassProfNBin[k]];
-         Table_MassProf_M = new double [cal_Models.params.Models_MassProfNBin[k]];
+         Table_MassProf_r = new double [constructor_Models.params.Models_MassProfNBin[k]];
+         Table_MassProf_M = new double [constructor_Models.params.Models_MassProfNBin[k]];
 
-         dr = cal_Models.params.Models_MaxR[k] / (cal_Models.params.Models_MassProfNBin[k]-1);
+         dr = constructor_Models.params.Models_MaxR[k] / (constructor_Models.params.Models_MassProfNBin[k]-1);
 
-         for (int b=0; b<cal_Models.params.Models_MassProfNBin[k]; b++)
+         for (int b=0; b<constructor_Models.params.Models_MassProfNBin[k]; b++)
          {
             Table_MassProf_r[b] = dr*b;
             Table_MassProf_M[b] = MassProf_Models( Table_MassProf_r[b] ,model_name[k],k);
@@ -120,7 +120,7 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
 
          double max=0.0;
    //    set particle attributes
-         for (long p=int(NPar_AllRank*k/cal_Models.params.Models_num); p<int(NPar_AllRank*(k+1)/cal_Models.params.Models_num); p++)
+         for (long p=int(NPar_AllRank*k/constructor_Models.params.Models_num); p<int(NPar_AllRank*(k+1)/constructor_Models.params.Models_num); p++)
          {
    //       mass
             Mass_AllRank[p] = ParM;
@@ -129,7 +129,7 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
    //       position
    //       --> sample from the cumulative mass profile with linear interpolation
             RanM = RNG->GetValue( 0, 0.0, 1.0 )*TotM;
-            RanR = Mis_InterpolateFromTable( cal_Models.params.Models_MassProfNBin[k], Table_MassProf_M, Table_MassProf_r, RanM );
+            RanR = Mis_InterpolateFromTable( constructor_Models.params.Models_MassProfNBin[k], Table_MassProf_M, Table_MassProf_r, RanM );
 
    //       record the maximum error
             EstM     = MassProf_Models( RanR ,model_name[k],k);
@@ -138,7 +138,7 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
 
    //       randomly set the position vector with a given radius
             RanVec_FixRadius( RanR, RanVec );
-            for (int d=0; d<3; d++)    Pos_AllRank[d][p] = RanVec[d] + cal_Models.params.Models_Center[k][d];
+            for (int d=0; d<3; d++)    Pos_AllRank[d][p] = RanVec[d] + constructor_Models.params.Models_Center[k][d];
 
 
 
@@ -152,12 +152,12 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
 
    //       velocity//main
 
-            double a3=RanR/cal_Models.params.Models_R0[k];
-            RanV = cal_Models.set_vel(a3);       
+            double a3=RanR/constructor_Models.params.Models_R0[k];
+            RanV = constructor_Models.set_vel(a3);       
 
    //       randomly set the velocity vector with the given amplitude (RanV*Vmax)
             RanVec_FixRadius( RanV, RanVec );
-            for (int d=0; d<3; d++)    Vel_AllRank[d][p] = RanVec[d] + cal_Models.params.Models_BulkVel[k][d];
+            for (int d=0; d<3; d++)    Vel_AllRank[d][p] = RanVec[d] + constructor_Models.params.Models_BulkVel[k][d];
 
          } // for (long p=0; p<NPar_AllRank; p++)
          
@@ -251,7 +251,7 @@ if ( MPI_Rank == 0 )
 
 double MassProf_Models( const double r ,string model_name,int k)
 {
-   return cal_Models.set_mass(r);
+   return constructor_Models.set_mass(r);
 } // FUNCTION : MassProf_Models
 
 

@@ -21,6 +21,7 @@ void Init_TestProb_Hydro_MHD_OrszagTangVortex();
 void Init_TestProb_Hydro_MHD_LinearWave();
 void Init_TestProb_Hydro_JeansInstability();
 void Init_TestProb_Hydro_MODELS();
+void Init_TestProb_Hydro_NFW();
 
 void Init_TestProb_ELBDM_ExtPot();
 void Init_TestProb_ELBDM_JeansInstabilityComoving();
@@ -33,6 +34,7 @@ void Init_TestProb_ELBDM_IsolatedHalo();
 void Init_TestProb_ELBDM_GaussianWavePacket();
 void Init_TestProb_ELBDM_LSS();
 void Init_TestProb_ELBDM_MODELS();
+void Init_TestProb_ELBDM_NFW();
 
 
 
@@ -87,6 +89,7 @@ void Init_TestProb()
       case TESTPROB_ELBDM_GAUSSIAN_WAVE_PACKET :         Init_TestProb_ELBDM_GaussianWavePacket();          break;
       case TESTPROB_ELBDM_LSS :                          Init_TestProb_ELBDM_LSS();                         break;
       case TESTPROB_ELBDM_MODELS :                       Init_TestProb_ELBDM_MODELS();                         break;
+      case TESTPROB_ELBDM_NFW :                          Init_TestProb_ELBDM_NFW();                         break;
 
       default: Aux_Error( ERROR_INFO, "unsupported TESTPROB_ID (%d) !!\n", TESTPROB_ID );
    } // switch( TESTPROB_ID )

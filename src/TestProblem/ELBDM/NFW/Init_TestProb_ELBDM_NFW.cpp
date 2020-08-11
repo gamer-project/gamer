@@ -2,11 +2,11 @@
 #include "TestProb.h"
 
 #include"Particle_IC_Constructor.h"
-#include"string"
+#include"string"//NEW INCLUDES
 
 using namespace std;
 extern Particle_IC_Constructor constructor_Models;//First Declared in Par_Init_ByFunction_Models
-static double Models_FreeT=10;
+static double NFW_FreeT=10;
 
 // problem-specific function prototypes
 #ifdef PARTICLE
@@ -77,7 +77,7 @@ void Validate()
 
 #if ( MODEL == ELBDM )
 //-------------------------------------------------------------------------------------------------------
-// Function    :  SetTotalTime
+// Function    :  SetTotalTime_NFW
 // Description :  Load and set the problem-specific runtime parameters
 //
 // Note        :  1. Filename is set to "Input__TestProb" by default
@@ -91,11 +91,11 @@ void Validate()
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void SetTotalTime()
+void SetTotalTime_NFW()
 {
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
    const long   End_Step_Default = __INT_MAX__;
-   const double End_T_Default    =  20.0*Models_FreeT;
+   const double End_T_Default    =  20.0*NFW_FreeT;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
@@ -108,7 +108,7 @@ void SetTotalTime()
    }
 
 
-} // FUNCTION : SetTotalTime
+} // FUNCTION : SetTotalTime_NFW
 #endif
 
 
@@ -143,7 +143,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_TestProb_ELBDM_MODELS
+// Function    :  Init_TestProb_ELBDM_NFW
 // Description :  Test problem initializer
 //
 // Note        :  None
@@ -152,7 +152,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Init_TestProb_ELBDM_MODELS()
+void Init_TestProb_ELBDM_NFW()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -164,19 +164,19 @@ void Init_TestProb_ELBDM_MODELS()
 
 #  if ( MODEL == ELBDM )
 // set the problem-specific runtime parameters
-   SetTotalTime();
+   SetTotalTime_NFW();
 
    // Input Model names
 
-   int Models_num = 2;//User Input
+   int NFW_num = 1;//User Input
 
    //User Input
-   vector <string> TestProb_FileName= {"Input__TestProb1","Input__TestProb2"};     //Test problem input parameter filenames
-   vector <string> TypeName= {"UNKNOWN","Plummer"};                               //Type of models 
-   vector <string> Profile_FileName= {"profile.txt","NONE"};
+   vector <string> TestProb_FileName= {"Input__TestProb1"};     //Test problem input parameter filenames
+   vector <string> TypeName= {"NFW"};                               //Type of models 
+   vector <string> Profile_FileName= {"NONE"};
+
    
-   
-   constructor_Models.construct_ic(Models_num,TestProb_FileName,TypeName,Profile_FileName);
+   constructor_Models.construct_ic(NFW_num,TestProb_FileName,TypeName,Profile_FileName);
 
    Init_Function_User_Ptr  = SetGridIC;
    
@@ -189,4 +189,4 @@ void Init_TestProb_ELBDM_MODELS()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Init_TestProb_ELBDM_MODELS
+} // FUNCTION : Init_TestProb_ELBDM_NFW
