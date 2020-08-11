@@ -370,6 +370,12 @@ void Aux_TakeNote()
       fprintf( Note, "CHAR_RECONSTRUCTION             OFF\n" );
 #     endif
 
+#     ifdef LR_EINT
+      fprintf( Note, "LR_EINT                         ON\n" );
+#     else
+      fprintf( Note, "LR_EINT                         OFF\n" );
+#     endif
+
 #     if   ( CHECK_INTERMEDIATE == EXACT )
       fprintf( Note, "CHECK_INTERMEDIATE              EXACT\n" );
 #     elif ( CHECK_INTERMEDIATE == HLLE )

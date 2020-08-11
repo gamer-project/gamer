@@ -237,6 +237,7 @@ struct SymConst_t
    int    Flu_BlockSize_y;
    int    CheckNegativeInFluid;
    int    CharReconstruction;
+   int    LR_Eint;
    int    CheckIntermediate;
    int    HLL_NoRefState;
    int    HLL_IncludeAllWaves;
