@@ -1,4 +1,4 @@
-#include "Models_calculator.h"
+#include "Particle_IC_Constructor.h"
 double Models_NEWTON_G;
 double Models_rho;
 double Models_r;
@@ -15,24 +15,185 @@ double *Table_MassProf_g_Models;
 double *Table_MassProf_pot_Models;
 
 
-Models_calculator::Models_calculator()
+Particle_IC_Constructor::Particle_IC_Constructor()
 {
 
 }
 
-Models_calculator::~Models_calculator()
+Particle_IC_Constructor::~Particle_IC_Constructor()
 {
 
 }
+//Input Parameter
+void check_InputFileName(vector <string>TestProb_FileName,vector <string>TypeName,vector <string>Profile_FileName,int num){
+  fstream file;
+  cout<<"Checking TestProb_FileName"<<endl;
+  for(int k=0;k<num;k++){
+    
+    const char * c = TestProb_FileName[k].c_str();
+    file.open(c, ios::in);
+    if(!file){
+      cout<< "Test Problem parameter file "<< TestProb_FileName[k]<<" cannot be found !!"<<endl;
+      Aux_Error( ERROR_INFO, "Error in the input of TestProb_FileName !!\n" );
+    }
+    file.close();
+  }
+
+  cout<<"Checking TypeName"<<endl;
+  vector <int> unknown_indices;
+  for(int k=0;k<num;k++){
+    int flag = 0;
+    if(TypeName[k]=="Plummer")flag=1;
+    else if(TypeName[k]=="NFW")flag=1;
+    else if(TypeName[k]=="Burkert")flag=1;
+    else if(TypeName[k]=="Jaffe")flag=1;
+    else if(TypeName[k]=="Hernquist")flag=1;
+    else if(TypeName[k]=="Einasto")flag=1;
+    else if(TypeName[k]=="UNKNOWN"){
+      flag=1;
+      unknown_indices.push_back(k);
+    }
+    if(flag==0){
+      cout<<TypeName[k]<<" is not a Model Type !!"<<endl;
+      Aux_Error( ERROR_INFO, "Error in the input of TypeName !!\n" );
+    }
+  }
+
+  cout<<"Checking Profile_FileName"<<endl;
+  
+  int len=unknown_indices.size();
+  for (int k=0;k<len;k++){
+    
+    const char * c = Profile_FileName[unknown_indices[k]].c_str();
+    
+    file.open(c, ios::in);
+    if(!file){
+      
+      cout<< "Density Profile "<< Profile_FileName[unknown_indices[k]]<<" cannot be found !!"<<endl;
+      Aux_Error( ERROR_INFO, "Error in the input of Profile_FileName !!\n" );
+    }
+    
+    file.close();
+  }
+}
+
+void Particle_IC_Constructor::construct_ic(int num,vector <string>TestProb_FileName,vector <string>TypeName,vector <string>Profile_FileName){
+  
+  if (TestProb_FileName.size()!=num)Aux_Error( ERROR_INFO, "Length of TestProb_FileName is not equal to # of Models !!\n" );
+  if (TypeName.size()!=num)                  Aux_Error( ERROR_INFO, "Length of TypeName is not equal to # of Models !!\n" );
+  if (Profile_FileName.size()!=num)  Aux_Error( ERROR_INFO, "Length of Profile_FileName is not equal to # of Models !!\n" );
+  check_InputFileName(TestProb_FileName,TypeName,Profile_FileName,num);
+    params.Models_num = num;
+    cout<<"Newing"<<endl;
+    for(int k=0;k<params.Models_num;k++){
+      params.Models_Paras.push_back( TestProb_FileName[k]);
+      params.Models_Type.push_back( TypeName[k]);
+      params.Models_Profile.push_back( Profile_FileName[k]);
+    }
+      
+    params.Models_RSeed= new int[params.Models_num];       // random seed for setting particle position and velocity
+    params.Models_Rho0= new double[params.Models_num];     // peak density
+    params.Models_R0= new double[params.Models_num];            // scale radius
+    params.Models_MaxR= new double[params.Models_num];          // maximum radius for particles
+
+    params.Models_Center= new double*[params.Models_num];     // central coordinates
+    params.Models_BulkVel= new double*[params.Models_num];    // bulk velocity
+
+    for(int k=0;k<params.Models_num;k++){
+      params.Models_Center[k]= new double[3];     // central coordinates
+      params.Models_BulkVel[k]= new double[3];   // bulk velocity
+    }
+      
+    params.Models_GasMFrac= new double[params.Models_num];      // gas mass fraction
+    params.Models_MassProfNBin= new int[params.Models_num];  // number of radial bins in the mass profile table
+
+    params.Models_Alpha= new double[params.Models_num];
+    params.Models_r_col= new int[params.Models_num];
+    params.Models_rho_col= new int[params.Models_num];
+    params.Models_truncation= new bool[params.Models_num];
+    
+  cout<<"Reading"<<endl;
+
+  for(int k=0;k<params.Models_num;k++){
+  // (1) load the problem-specific runtime parameters
+    const char* FileName=params.Models_Paras[k].c_str();
+    ReadPara_t *ReadPara  = new ReadPara_t;
+
+    // (1-1) add parameters in the following format:
+    // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+    // --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
+    // ********************************************************************************************************************************
+    // ReadPara->Add( "KEY_IN_THE_FILE",      &VARIABLE,              DEFAULT,       MIN,              MAX               );
+    // ********************************************************************************************************************************
+        ReadPara->Add( "Models_RSeed",        &params.Models_RSeed[k],         123,           0,                NoMax_int         );
+        ReadPara->Add( "Models_Rho0",         &params.Models_Rho0[k],          1.0,           Eps_double,       NoMax_double      );
+        ReadPara->Add( "Models_R0",           &params.Models_R0[k],            0.1,           Eps_double,       NoMax_double      );
+        ReadPara->Add( "Models_MaxR",         &params.Models_MaxR[k],          0.375,         Eps_double,       NoMax_double      );
+        ReadPara->Add( "Models_CenterX",      &params.Models_Center[k][0],     NoDef_double,  NoMin_double,     NoMax_double      );
+        ReadPara->Add( "Models_CenterY",      &params.Models_Center[k][1],     NoDef_double,  NoMin_double,     NoMax_double      );
+        ReadPara->Add( "Models_CenterZ",      &params.Models_Center[k][2],     NoDef_double,  NoMin_double,     NoMax_double      );
+        ReadPara->Add( "Models_BulkVelX",     &params.Models_BulkVel[k][0],    0.0,           NoMin_double,     NoMax_double      );
+        ReadPara->Add( "Models_BulkVelY",     &params.Models_BulkVel[k][1],    0.0,           NoMin_double,     NoMax_double      );
+        ReadPara->Add( "Models_BulkVelZ",     &params.Models_BulkVel[k][2],    0.0,           NoMin_double,     NoMax_double      );
+        ReadPara->Add( "Models_GasMFrac",     &params.Models_GasMFrac[k],      0.001,           Eps_double,       1.0               );
+        ReadPara->Add( "Models_MassProfNBin", &params.Models_MassProfNBin[k],  1000,          2,                NoMax_int         );
+        
+        if(params.Models_Type[k]=="Einasto")
+          ReadPara->Add( "Models_Alpha",     &params.Models_Alpha[k],         1.0,           0.1,              10.0      );
+        if(params.Models_Type[k]=="UNKNOWN"){
+          ReadPara->Add( "Models_r_col",     &params.Models_r_col[k],         0,            0,                   NoMax_int         );
+          ReadPara->Add( "Models_rho_col",   &params.Models_rho_col[k],       1,            0,                   NoMax_int         );
+        }
+        if(params.Models_Type[k]=="NFW" or "Burkert" or "Jaffe" or "Hernquist"){
+          ReadPara->Add( "Models_truncation",     &params.Models_truncation[k],         false,            Useless_bool,     Useless_bool         );
+        }
+          
+        
+        ReadPara->Read( FileName );
+
+        delete ReadPara;
+
+      // (1-2) set the default values
+        for (int d=0; d<3; d++)
+            if ( params.Models_Center[k][d] == NoDef_double )  params.Models_Center[k][d] = 0.5*amr->BoxSize[d];
+      // (2) make a note
+        if ( MPI_Rank == 0 )
+        {
+            Aux_Message( stdout, "=============================================================================\n" );
+            Aux_Message( stdout, "  test problem ID                           = %d\n",     TESTPROB_ID );
+            Aux_Message( stdout, "  random seed for setting particle position = %d\n",     params.Models_RSeed[k] );
+            Aux_Message( stdout, "  peak density                              = %13.7e\n", params.Models_Rho0[k] );
+            Aux_Message( stdout, "  scale radius                              = %13.7e\n", params.Models_R0[k] );
+            Aux_Message( stdout, "  maximum radius of particles               = %13.7e\n", params.Models_MaxR[k] );
+            
+            for (int d=0; d<3; d++)
+            Aux_Message( stdout, "  central coordinate [%d]                   = %14.7e\n", d, params.Models_Center[k][d] );
+            
+            for (int d=0; d<3; d++)
+            Aux_Message( stdout, "  bulk velocity [%d]                        = %14.7e\n", d, params.Models_BulkVel[k][d] );
+            Aux_Message( stdout, "  gas mass fraction                         = %13.7e\n", params.Models_GasMFrac[k] );
+            
+            Aux_Message( stdout, "  number of radial bins in the mass profile = %d\n",     params.Models_MassProfNBin[k] );
+            
+            Aux_Message( stdout, "=============================================================================\n" );
+        }
+      // (3) Warn against small R0
+        if ( params.Models_R0[k]<amr->dh[MAX_LEVEL] )Aux_Message( stdout, "WARNING : Characteristic length R0:%f is smaller than spatial resolution %f!\n",params.Models_R0,amr->dh[MAX_LEVEL] );
+        }
+
+        if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ... done\n" );
+  
+}
+
 //statistics
-double Models_calculator::ave(double* a,int start,int fin){
+double Particle_IC_Constructor::ave(double* a,int start,int fin){
   double sum=0;
   for(int k=start;k<fin;k++){
     sum+=a[k];
   }
   return sum/(fin-start);
 }
-double Models_calculator::var_n(double* a,int start,int fin){
+double Particle_IC_Constructor::var_n(double* a,int start,int fin){
   double sum=0;
   for(int k=start;k<fin;k++){
     sum+=(a[k])*(a[k]);
@@ -40,7 +201,7 @@ double Models_calculator::var_n(double* a,int start,int fin){
   sum=sum-(fin-start)*pow(ave(a,start,fin),2);
   return sum;
 }
-double Models_calculator::cor(double* x,double* y,int start,int fin){
+double Particle_IC_Constructor::cor(double* x,double* y,int start,int fin){
   double up=0,down = pow(var_n(x,start,fin)*var_n(y,start,fin),0.5);
   double ave_x = ave(x,start,fin),ave_y = ave(y,start,fin);
   for(int k=start;k<fin;k++){
@@ -48,7 +209,7 @@ double Models_calculator::cor(double* x,double* y,int start,int fin){
   }
   return up/down;
 }
-void Models_calculator::mask(double* x,int start,int fin){
+void Particle_IC_Constructor::mask(double* x,int start,int fin){
   double standard=3;
   for(int j=start;j<fin;j++){
     bool flag=0;
@@ -62,7 +223,7 @@ void Models_calculator::mask(double* x,int start,int fin){
     }
   }
 }
-void Models_calculator::add_num(double* x,int start,int fin){
+void Particle_IC_Constructor::add_num(double* x,int start,int fin){
   double sum=0;
   int num=0;
   for(int j=start;j<fin;j++){
@@ -77,7 +238,7 @@ void Models_calculator::add_num(double* x,int start,int fin){
     }
   }
 }
-void Models_calculator::smooth_all(double* x,int start,int fin){
+void Particle_IC_Constructor::smooth_all(double* x,int start,int fin){
   int num=10;
   for(int k=start;k<fin-num+1;k++){
     mask(x,k,k+num);
@@ -87,7 +248,7 @@ void Models_calculator::smooth_all(double* x,int start,int fin){
   }
 }
 
-double Models_calculator::slope(double* x,double* y,int start,int fin){
+double Particle_IC_Constructor::slope(double* x,double* y,int start,int fin){
   double cor_ = cor(x,y,start,fin);
   double var_n_x =var_n(x,start,fin), var_n_y =var_n(y,start,fin);
   double s =cor_*pow(var_n_y,0.5)/pow(var_n_x,0.5);
@@ -158,7 +319,7 @@ double inverse_psi_to_x_Models (double psi) {
   gsl_root_fsolver_free (s);
   return x0;
 }
-double Models_calculator::integration_eng_base_Models(double eng){
+double Particle_IC_Constructor::integration_eng_base_Models(double eng){
   double min =  eng_min_Models;
   double max = eng;
   int num=1000;
@@ -272,7 +433,7 @@ double mass_base_Einasto_trunc(double x,void *nothing){
 double test(double x,void *nothing){
   return 4*M_PI*Models_rho*pow(Models_r,3)*pow(x,2) *exp(-pow(x,alpha));
 }
-double Models_calculator::set_rho(double x){
+double Particle_IC_Constructor::set_rho(double x){
   if (model_type == "UNKNOWN"){
     if(x>=Table_MassProf_r_Models[Models_massprofnbin-1])return Table_MassProf_rho_Models[Models_massprofnbin-1];
     return Mis_InterpolateFromTable( Models_massprofnbin, Table_MassProf_r_Models, Table_MassProf_rho_Models, x );
@@ -302,11 +463,12 @@ double Models_calculator::set_rho(double x){
   }
   
 }
-double Models_calculator::set_mass(double x){
+double Particle_IC_Constructor::set_mass(double r){
   
+  double x = r/Models_r;
   if (model_type == "UNKNOWN"){
-    if(x>=Table_MassProf_r_Models[Models_massprofnbin-1])return Table_MassProf_M_Models[Models_massprofnbin-1];
-    return Mis_InterpolateFromTable( Models_massprofnbin, Table_MassProf_r_Models, Table_MassProf_M_Models, x );
+    if(r>=Table_MassProf_r_Models[Models_massprofnbin-1])return Table_MassProf_M_Models[Models_massprofnbin-1];
+    return Mis_InterpolateFromTable( Models_massprofnbin, Table_MassProf_r_Models, Table_MassProf_M_Models, r );
   }
   
   else{
@@ -347,7 +509,7 @@ double Models_calculator::set_mass(double x){
   }
   
 }
-void Models_calculator::initialize_mass_UNKNOWN(int Models_massprofnbin){
+void Particle_IC_Constructor::initialize_mass_UNKNOWN(int Models_massprofnbin){
   
   //Mass
   Table_MassProf_M_Models[0]=0;
@@ -377,7 +539,7 @@ void Models_calculator::initialize_mass_UNKNOWN(int Models_massprofnbin){
   
 }
 
-void Models_calculator::initialize_pot_UNKNOWN(int Models_massprofnbin){
+void Particle_IC_Constructor::initialize_pot_UNKNOWN(int Models_massprofnbin){
   
   
 
@@ -405,7 +567,7 @@ void Models_calculator::initialize_pot_UNKNOWN(int Models_massprofnbin){
   
 }
 
-void Models_calculator::initialize_mass_others(){
+void Particle_IC_Constructor::initialize_mass_others(){
   
   double dr = Models_maxr / (Models_massprofnbin-1);
   //Radius & Mass
@@ -413,7 +575,7 @@ void Models_calculator::initialize_mass_others(){
   {
     
     Table_MassProf_r_Models[b] = dr*b;
-    Table_MassProf_M_Models[b] = set_mass( Table_MassProf_r_Models[b]/Models_r);
+    Table_MassProf_M_Models[b] = set_mass( Table_MassProf_r_Models[b]);
     
   }
   
@@ -440,7 +602,7 @@ void Models_calculator::initialize_mass_others(){
   
 }
 
-void Models_calculator::initialize_pot_others(){
+void Particle_IC_Constructor::initialize_pot_others(){
 
   double dr = Models_maxr / (Models_massprofnbin-1);
 
@@ -466,7 +628,7 @@ void Models_calculator::initialize_pot_others(){
   }
   
 }
-void Models_calculator::initialize_prob_dens(){
+void Particle_IC_Constructor::initialize_prob_dens(){
   double min,max;
   min=-Table_MassProf_pot_Models[Models_massprofnbin-1];
   max =-Table_MassProf_pot_Models[1];
@@ -494,7 +656,7 @@ void Models_calculator::initialize_prob_dens(){
   smooth_all(prob_dens,0,size_Models);
 }
 
-void Models_calculator::init(string type,double al,double newton_g,double rho,double r,int nbin,double rmax,int rseed,bool trunc_flag,double trunc_fac,int r_col,int rho_col,const char* Filename){
+void Particle_IC_Constructor::init(string type,double al,double newton_g,double rho,double r,int nbin,double rmax,int rseed,bool trunc_flag,double trunc_fac,int r_col,int rho_col,const char* Filename){
   Table_MassProf_r_Models=NULL;
   Table_MassProf_M_Models=NULL;
   Table_MassProf_rho_Models=NULL;
@@ -523,12 +685,10 @@ void Models_calculator::init(string type,double al,double newton_g,double rho,do
     int Tcol_r[1]={r_col};
     int Tcol_rho[1]={rho_col};
     int row_r_Models;
-    if(sizeof(Table_MassProf_r_Models)==0)row_r_Models= Aux_LoadTable( Table_MassProf_r_Models, Filename, 1, Tcol_r,true,true );
-    else row_r_Models= Aux_LoadTable( Table_MassProf_r_Models, Filename, 1, Tcol_r,true,false );
+    row_r_Models= Aux_LoadTable( Table_MassProf_r_Models, Filename, 1, Tcol_r,true,true );
     
     int row_density_Models;
-    if(sizeof(Table_MassProf_rho_Models)==0)row_density_Models= Aux_LoadTable( Table_MassProf_rho_Models, Filename, 1, Tcol_rho,true,true );
-    else row_density_Models= Aux_LoadTable( Table_MassProf_rho_Models, Filename, 1, Tcol_rho,true,false );
+    row_density_Models= Aux_LoadTable( Table_MassProf_rho_Models, Filename, 1, Tcol_rho,true,true );
     
     Models_massprofnbin=row_r_Models;
 
@@ -560,7 +720,7 @@ void Models_calculator::init(string type,double al,double newton_g,double rho,do
 
   
 }
-double Models_calculator::set_vel(double x){  
+double Particle_IC_Constructor::set_vel(double x){  
   double index,sum=0;
   double psi_per =-potential_Models(x);
   for(int k =0;k<size_Models;k++){
@@ -594,7 +754,7 @@ double Models_calculator::set_vel(double x){
   return v;
 }  
 
-double Models_calculator::set_vel_test(double r){  
+double Particle_IC_Constructor::set_vel_test(double r){  
   const double TotM_Inf    = 4.0/3.0*M_PI*CUBE(Models_r)*Models_rho;
   const double Vmax_Fac    = sqrt( 2.0*Models_NEWTON_G*TotM_Inf );
 

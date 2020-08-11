@@ -1,6 +1,8 @@
-#ifndef Models_calculator_H
-#define Models_calculator_H
+#ifndef Particle_IC_Constructor_H
+#define Particle_IC_Constructor_H
 #include "GAMER.h"
+#include "TestProb.h"
+#include"vector"
 #include<iostream>
 #include<fstream>
 using namespace std;
@@ -12,14 +14,32 @@ using namespace std;
 #include <gsl/gsl_roots.h>
 
 #define size_Models 1000
+typedef struct Models_Input_Parameter{
+   int*    Models_RSeed;
+   double* Models_Rho0;
+   double* Models_R0;
+   double* Models_MaxR;
+   double ** Models_Center;
+   double ** Models_BulkVel;
+   double* Models_GasMFrac;
+   int*    Models_MassProfNBin;
+
+   int Models_num;
+   vector<string> Models_Paras;
+   vector<string> Models_Type;
+   vector<string> Models_Profile;
+   double* Models_Alpha;
+   int*    Models_r_col;
+   int*    Models_rho_col;
+   bool* Models_truncation;
+}MP;
 
 
-
-class Models_calculator
+class Particle_IC_Constructor
 {
     public:
-        Models_calculator();
-        virtual ~Models_calculator();
+        Particle_IC_Constructor();
+        virtual ~Particle_IC_Constructor();
         void init(string type,double al,double newton_g,double rho,double r,int nbin,double rmax,int rseed,bool trunc_flag,double trunc_fac,int r_col,int rho_col,const char* Filename);        
         double set_vel(double r);
         double set_vel_test(double r);
@@ -41,6 +61,9 @@ class Models_calculator
         double set_mass( double x );
         double set_rho( double x );
         
+        void construct_ic(int num,vector <string>TestProb_FileName,vector <string>TypeName,vector <string>Profile_FileName);
+        
+        MP params;
     protected:
         
     private:
@@ -68,4 +91,4 @@ class Models_calculator
 
 };
 
-#endif //Models_calculator_H
+#endif //Particle_IC_Constructor_H

@@ -1,29 +1,9 @@
 /***Total deep copy***/
 #include "GAMER.h"
 
-#include"Models_calculator.h"
+#include"Particle_IC_Constructor.h"
 #define DEBUG
 #ifdef PARTICLE
-
-extern int*    Models_RSeed;
-extern double* Models_Rho0;
-extern double* Models_R0;
-extern double* Models_MaxR;
-extern bool*   Models_Collision;
-extern double* Models_Collision_D;
-extern double** Models_Center;
-extern double** Models_BulkVel;
-extern double* Models_GasMFrac;
-extern int*    Models_MassProfNBin;
-
-extern int Models_num;
-extern string* Models_Paras;
-extern string* Models_Type;
-extern string* Models_Profile;
-extern double* Models_Alpha;
-extern int*    Models_r_col;
-extern int*    Models_rho_col;
-extern bool* Models_truncation;
 
 static RandomNumber_t *RNG = NULL;
 
@@ -63,20 +43,19 @@ static void   RanVec_FixRadius( const double r, double RanVec[] );
 //
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, AllAttribute
 //-------------------------------------------------------------------------------------------------------
-Models_calculator cal_Models;
+Particle_IC_Constructor cal_Models;
 void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRank,
                                   real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                   real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                   real *AllAttribute[PAR_NATT_TOTAL] )
 {
-// Input Model names
    static bool good=1;
    string *model_name;
    static bool *flag;
    if(good){
-      model_name=new string[Models_num];
-      flag =new bool[Models_num];
-      for(int k=0;k<Models_num;k++)flag[k]=0;
+      model_name=new string[cal_Models.params.Models_num];
+      flag =new bool[cal_Models.params.Models_num];
+      for(int k=0;k<cal_Models.params.Models_num;k++)flag[k]=0;
       good=0;
    }
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -96,12 +75,11 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
       }
 
    
-   for(int k=0;k<Models_num;k++){
+   for(int k=0;k<cal_Models.params.Models_num;k++){
    // Initialize calculators
-      model_name[k]=Models_Type[k];
       if(flag[k]==0){
-         const char* profile=Models_Profile[k].c_str();
-         cal_Models.init(model_name[k],Models_Alpha[k],NEWTON_G,Models_Rho0[k],Models_R0[k],Models_MassProfNBin[k],Models_MaxR[k],Models_RSeed[k],Models_truncation[k],0.7,Models_r_col[k],Models_rho_col[k],profile);
+         const char* profile=cal_Models.params.Models_Profile[k].c_str();
+         cal_Models.init(cal_Models.params.Models_Type[k],cal_Models.params.Models_Alpha[k],NEWTON_G,cal_Models.params.Models_Rho0[k],cal_Models.params.Models_R0[k],cal_Models.params.Models_MassProfNBin[k],cal_Models.params.Models_MaxR[k],cal_Models.params.Models_RSeed[k],cal_Models.params.Models_truncation[k],0.7,cal_Models.params.Models_r_col[k],cal_Models.params.Models_rho_col[k],profile);
          flag[k]=1;
       }
       
@@ -109,8 +87,6 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
    // only the master rank will construct the initial condition
       if ( MPI_Rank == 0 )
       {  
-         const double Coll_Offset = 0.5*Models_Collision_D[k]/sqrt(3.0);
-
          double *Table_MassProf_r = NULL;
          double *Table_MassProf_M = NULL;
          double  TotM, ParM, dr, RanM, RanR, EstM, ErrM, ErrM_Max=-1.0, RanVec[3];
@@ -118,26 +94,25 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
 
    //    initialize the random number generator
          RNG = new RandomNumber_t( 1 );
-         RNG->SetSeed( 0, Models_RSeed[k]);
+         RNG->SetSeed( 0, cal_Models.params.Models_RSeed[k]);
 
 
    //    determine the total enclosed mass within the maximum radius
-         TotM = MassProf_Models( Models_MaxR[k] ,model_name[k],k);
+         TotM = MassProf_Models( cal_Models.params.Models_MaxR[k] ,model_name[k],k);
          ParM = TotM / NPar_AllRank;
 
-         if ( Models_Collision[k] )   ParM *= 2.0;
 
    //    rescale particle mass to account for the gas contribution
-         ParM *= 1.0 - Models_GasMFrac[k];
+         ParM *= 1.0 - cal_Models.params.Models_GasMFrac[k];
 
 
    //    construct the mass profile table
-         Table_MassProf_r = new double [Models_MassProfNBin[k]];
-         Table_MassProf_M = new double [Models_MassProfNBin[k]];
+         Table_MassProf_r = new double [cal_Models.params.Models_MassProfNBin[k]];
+         Table_MassProf_M = new double [cal_Models.params.Models_MassProfNBin[k]];
 
-         dr = Models_MaxR[k] / (Models_MassProfNBin[k]-1);
+         dr = cal_Models.params.Models_MaxR[k] / (cal_Models.params.Models_MassProfNBin[k]-1);
 
-         for (int b=0; b<Models_MassProfNBin[k]; b++)
+         for (int b=0; b<cal_Models.params.Models_MassProfNBin[k]; b++)
          {
             Table_MassProf_r[b] = dr*b;
             Table_MassProf_M[b] = MassProf_Models( Table_MassProf_r[b] ,model_name[k],k);
@@ -145,7 +120,7 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
 
          double max=0.0;
    //    set particle attributes
-         for (long p=int(NPar_AllRank*k/Models_num); p<int(NPar_AllRank*(k+1)/Models_num); p++)
+         for (long p=int(NPar_AllRank*k/cal_Models.params.Models_num); p<int(NPar_AllRank*(k+1)/cal_Models.params.Models_num); p++)
          {
    //       mass
             Mass_AllRank[p] = ParM;
@@ -154,7 +129,7 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
    //       position
    //       --> sample from the cumulative mass profile with linear interpolation
             RanM = RNG->GetValue( 0, 0.0, 1.0 )*TotM;
-            RanR = Mis_InterpolateFromTable( Models_MassProfNBin[k], Table_MassProf_M, Table_MassProf_r, RanM );
+            RanR = Mis_InterpolateFromTable( cal_Models.params.Models_MassProfNBin[k], Table_MassProf_M, Table_MassProf_r, RanM );
 
    //       record the maximum error
             EstM     = MassProf_Models( RanR ,model_name[k],k);
@@ -163,11 +138,9 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
 
    //       randomly set the position vector with a given radius
             RanVec_FixRadius( RanR, RanVec );
-            for (int d=0; d<3; d++)    Pos_AllRank[d][p] = RanVec[d] + Models_Center[k][d];
+            for (int d=0; d<3; d++)    Pos_AllRank[d][p] = RanVec[d] + cal_Models.params.Models_Center[k][d];
 
-   //       set position offset for the Models collision test
-            if ( Models_Collision[k] )
-            for (int d=0; d<3; d++)    Pos_AllRank[d][p] += Coll_Offset*( (p<NPar_AllRank/2)?-1.0:+1.0 );
+
 
    //       check periodicity
             for (int d=0; d<3; d++)
@@ -179,12 +152,12 @@ void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRa
 
    //       velocity//main
 
-            double a3=RanR/Models_R0[k];
+            double a3=RanR/cal_Models.params.Models_R0[k];
             RanV = cal_Models.set_vel(a3);       
 
    //       randomly set the velocity vector with the given amplitude (RanV*Vmax)
             RanVec_FixRadius( RanV, RanVec );
-            for (int d=0; d<3; d++)    Vel_AllRank[d][p] = RanVec[d] + Models_BulkVel[k][d];
+            for (int d=0; d<3; d++)    Vel_AllRank[d][p] = RanVec[d] + cal_Models.params.Models_BulkVel[k][d];
 
          } // for (long p=0; p<NPar_AllRank; p++)
          
@@ -278,9 +251,7 @@ if ( MPI_Rank == 0 )
 
 double MassProf_Models( const double r ,string model_name,int k)
 {
-   
-   const double x = r / Models_R0[k];
-   return cal_Models.set_mass(x);
+   return cal_Models.set_mass(r);
 } // FUNCTION : MassProf_Models
 
 
