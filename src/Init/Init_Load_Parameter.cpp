@@ -219,7 +219,11 @@ void Init_Load_Parameter()
    ReadPara->Add( "MINMOD_COEFF",               &MINMOD_COEFF,                    1.5,             1.0,           2.0            );
    ReadPara->Add( "OPT__LR_LIMITER",            &OPT__LR_LIMITER,                 VL_GMINMOD,      0,             5              );
    ReadPara->Add( "OPT__1ST_FLUX_CORR",         &OPT__1ST_FLUX_CORR,             -1,               NoMin_int,     2              );
-   ReadPara->Add( "OPT__1ST_FLUX_CORR_SCHEME",  &OPT__1ST_FLUX_CORR_SCHEME,       RSOLVER_1ST_ROE, 0,             3              );
+#  ifdef MHD
+   ReadPara->Add( "OPT__1ST_FLUX_CORR_SCHEME",  &OPT__1ST_FLUX_CORR_SCHEME,   RSOLVER_1ST_DEFAULT, NoMin_int,     4              );
+#  else
+   ReadPara->Add( "OPT__1ST_FLUX_CORR_SCHEME",  &OPT__1ST_FLUX_CORR_SCHEME,   RSOLVER_1ST_DEFAULT, NoMin_int,     3              );
+#  endif
 #  ifdef DUAL_ENERGY
    ReadPara->Add( "DUAL_ENERGY_SWITCH",         &DUAL_ENERGY_SWITCH,              2.0e-2,          0.0,           NoMax_double   );
 #  endif

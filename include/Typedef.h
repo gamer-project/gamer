@@ -304,12 +304,12 @@ const Opt1stFluxCorr_t
 
 typedef int OptRSolver1st_t;
 const OptRSolver1st_t
-   RSOLVER_1ST_NONE    = 0
-  ,RSOLVER_1ST_ROE     = 1
-  ,RSOLVER_1ST_HLLC    = 2
-  ,RSOLVER_1ST_HLLE    = 3
-  ,RSOLVER_1ST_HLLD    = 4
-  ;
+   RSOLVER_1ST_DEFAULT = -1,
+   RSOLVER_1ST_NONE    = 0,
+   RSOLVER_1ST_ROE     = 1,
+   RSOLVER_1ST_HLLC    = 2,
+   RSOLVER_1ST_HLLE    = 3,
+   RSOLVER_1ST_HLLD    = 4;
 #endif // #if ( MODEL == HYDRO )
 
 

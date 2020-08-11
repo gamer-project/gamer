@@ -386,13 +386,24 @@ void Init_ResetParameter()
 #     endif
    }
 
-   if ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_NONE )
+   if      ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_NONE )
    {
       OPT__1ST_FLUX_CORR_SCHEME = RSOLVER_1ST_NONE;
 
       PRINT_WARNING( OPT__1ST_FLUX_CORR_SCHEME, FORMAT_INT, "since OPT__1ST_FLUX_CORR is disabled" );
    }
-#  endif
+
+   else if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_DEFAULT )
+   {
+#     ifdef MHD
+      OPT__1ST_FLUX_CORR_SCHEME = RSOLVER_1ST_HLLD;
+#     else
+      OPT__1ST_FLUX_CORR_SCHEME = RSOLVER_1ST_HLLC;
+#     endif
+
+      PRINT_WARNING( OPT__1ST_FLUX_CORR_SCHEME, FORMAT_INT, "" );
+   }
+#  endif // if ( MODEL == HYDRO )
 
 
 // timing options
