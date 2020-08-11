@@ -717,7 +717,7 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 
 //    store Eint in the last variable for LR_EINT
 #     ifdef LR_EINT
-      g_PriVar_Half[NCOMP_TOTAL_PLUS_MAG][idx_out] = Eint;
+      g_PriVar_Half[NCOMP_TOTAL_PLUS_MAG][idx_out] = FMAX( Eint, MinEint );
 #     endif
    } // i,j,k
 
