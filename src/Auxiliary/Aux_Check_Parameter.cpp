@@ -610,25 +610,28 @@ void Aux_Check_Parameter()
 #  endif
 
 #  if ( EOS != EOS_GAMMA )
-#   if ( HLLC_WAVESPEED == HLL_WAVESPEED_ROE  ||  HLLE_WAVESPEED == HLL_WAVESPEED_ROE )
-#     error : ERROR : HLL_WAVESPEED_ROE only works with EOS_GAMMA !!
-#   endif
+#     if ( HLLC_WAVESPEED == HLL_WAVESPEED_ROE  ||  HLLE_WAVESPEED == HLL_WAVESPEED_ROE )
+#        error : ERROR : HLL_WAVESPEED_ROE only works with EOS_GAMMA !!
+#     endif
 
-#   if (  defined RSOLVER  &&  ( RSOLVER == ROE || RSOLVER == EXACT )  )
-#     error : ERROR : unsupported Riemann solver for EOS != EOS_GAMMA (HLLE/HLLC/HLLD) !!
-#   endif
+#     if (  defined RSOLVER  &&  ( RSOLVER == ROE || RSOLVER == EXACT )  )
+#        error : ERROR : unsupported Riemann solver for EOS != EOS_GAMMA (HLLE/HLLC/HLLD) !!
+#     endif
 
-#   if ( defined LR_SCHEME  &&  defined CHAR_RECONSTRUCTION )
-#     error : ERROR : CHAR_RECONSTRUCTION only works with EOS_GAMMA !!
-#   endif
+#     if ( defined LR_SCHEME  &&  defined CHAR_RECONSTRUCTION )
+#        error : ERROR : CHAR_RECONSTRUCTION only works with EOS_GAMMA !!
+#     endif
 
-#   ifdef MHD
-#     error : ERROR : MHD currently only supports EOS_GAMMA !!
-#   endif
+#     ifdef MHD
+#        error : ERROR : MHD currently only supports EOS_GAMMA !!
+#     endif
 
-#   if ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == CTU )
-#     error : RTVD and CTU only support EOS_GAMMA !!
-#   endif
+#     if ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == CTU )
+#        error : RTVD and CTU only support EOS_GAMMA !!
+#     endif
+
+      if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_ROE )
+         Aux_Error( ERROR_INFO, "OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_ROE only supports EOS_GAMMA !!\n" );
 #  endif // if ( EOS != EOS_GAMMA )
 
 
