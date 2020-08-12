@@ -100,10 +100,7 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const double TT
       Aux_Error( ERROR_INFO, "Flu_ResetByUser_Func_Ptr == NULL for OPT__RESET_FLUID !!\n" );
 
 
-   const double dh       = amr->dh[lv];
-#  ifdef DUAL_ENERGY
-   const real   Gamma_m1 = GAMMA - 1.0;
-#  endif
+   const double dh = amr->dh[lv];
 
    bool   Reset;
    real   fluid[NCOMP_TOTAL];

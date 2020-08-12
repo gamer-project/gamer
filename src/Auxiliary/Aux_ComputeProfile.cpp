@@ -442,7 +442,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 #                             if   ( DUAL_ENERGY == DE_ENPY )
                               const bool CheckMinPres_No = false;
                               const real Enpy = FluidPtr[ENPY][k][j][i];
-                              const real Pres = Hydro_DensEntropy2Pres( Dens, Enpy, GAMMA-1.0, CheckMinPres_No, NULL_REAL );
+                              const real Pres = Hydro_DensEntropy2Pres( Dens, Enpy, EoS_AuxArray[1], CheckMinPres_No, NULL_REAL );
                               const real Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, EoS_AuxArray );
 #                             elif ( DUAL_ENERGY == DE_EINT )
 #                             error : DE_EINT is NOT supported yet !!

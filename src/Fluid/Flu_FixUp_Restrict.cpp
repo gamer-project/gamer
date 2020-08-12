@@ -80,22 +80,18 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
    Mis_CompareRealValue( Time[FaLv], Time[SonLv], __FUNCTION__, true );
 
 
-   const bool ResFlu    = TVarCC & _TOTAL;
+   const bool ResFlu  = TVarCC & _TOTAL;
 #  ifdef GRAVITY
-   const bool ResPot    = TVarCC & _POTE;
+   const bool ResPot  = TVarCC & _POTE;
 #  else
-   const bool ResPot    = false;
+   const bool ResPot  = false;
 #  endif
 #  ifdef MHD
-   const bool ResMag    = TVarFC & _MAG;
+   const bool ResMag  = TVarFC & _MAG;
 #  else
-   const bool ResMag    = false;
+   const bool ResMag  = false;
 #  endif
-#  ifdef DUAL_ENERGY
-   const real  Gamma_m1 = GAMMA - 1.0;
-   const real _Gamma_m1 = (real)1.0 / Gamma_m1;
-#  endif
-   const int PS1_half   = PS1 / 2;
+   const int PS1_half = PS1 / 2;
 
 
 // determine the components to be restricted (TFluVarIdx : target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
@@ -333,7 +329,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMZ][k][j][i],
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i],
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENPY][k][j][i],
-                              dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy, Emag );
+                              dummy, EoS_AuxArray[1], EoS_AuxArray[2], CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy, Emag );
 
 #        else // #ifdef DUAL_ENERGY
 

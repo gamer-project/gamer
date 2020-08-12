@@ -58,10 +58,6 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    const int  CMagSg      = amr->MagSg[lv  ];      // sandglass of magnetic field  at level "lv"
    const int  FMagSg      = amr->MagSg[lv+1];      // sandglass of magnetic field  at level "lv+1"
 #  endif
-#  ifdef DUAL_ENERGY
-   const real  Gamma_m1   = GAMMA - 1.0;
-   const real _Gamma_m1   = (real)1.0 / Gamma_m1;
-#  endif
 
    int *Cr            = NULL;    // corner coordinates
    int *BufGrandTable = NULL;    // table recording the patch IDs of grandson buffer patches
@@ -800,7 +796,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
             Hydro_DualEnergyFix( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
                                  Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i], Flu_FData[ENPY][k][j][i],
-                                 dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy, Emag );
+                                 dummy, EoS_AuxArray[1], EoS_AuxArray[2], CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy, Emag );
 
 #           else // #ifdef DUAL_ENERGY
 

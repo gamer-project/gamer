@@ -42,10 +42,6 @@ void Flu_FixUp_Flux( const int lv )
 #  endif
 */
 
-#  ifdef DUAL_ENERGY
-   const real Gamma_m1 = GAMMA - 1.0;
-#  endif
-
 
 // check
 #  ifdef GAMER_DEBUG
@@ -206,7 +202,7 @@ void Flu_FixUp_Flux( const int lv )
                {
                   const bool CheckMinPres_No = false;
                   real Pres;
-                  Pres = Hydro_DensEntropy2Pres( ForEint[DENS], ForEint[ENPY], Gamma_m1, CheckMinPres_No, NULL_REAL );
+                  Pres = Hydro_DensEntropy2Pres( ForEint[DENS], ForEint[ENPY], EoS_AuxArray[1], CheckMinPres_No, NULL_REAL );
                   Eint = EoS_DensPres2Eint_CPUPtr( ForEint[DENS], Pres, EoS_AuxArray );
                }
 #              endif
@@ -261,7 +257,7 @@ void Flu_FixUp_Flux( const int lv )
 #              if   ( DUAL_ENERGY == DE_ENPY )
                CorrVal[ENPY] = Hydro_DensPres2Entropy( CorrVal[DENS],
                                                        EoS_DensEint2Pres_CPUPtr(CorrVal[DENS],Eint,EoS_AuxArray),
-                                                       Gamma_m1 );
+                                                       EoS_AuxArray[1] );
 #              elif ( DUAL_ENERGY == DE_EINT )
 #              error : DE_EINT is NOT supported yet !!
 #              endif // DUAL_ENERGY

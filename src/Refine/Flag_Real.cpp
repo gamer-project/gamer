@@ -254,10 +254,6 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                if ( OPT__FLAG_PRES_GRADIENT )
                {
                   const bool CheckMinPres_Yes = true;
-#                 ifdef DUAL_ENERGY
-                  const real Gamma_m1         = GAMMA - 1.0;
-#                 endif
-
                   real Ek;
 
                   for (int k=0; k<PS1; k++)
@@ -269,7 +265,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 #                    if   ( DUAL_ENERGY == DE_ENPY )
                      Pres[k][j][i] = Hydro_DensEntropy2Pres( Fluid[DENS][k][j][i], Fluid[ENPY][k][j][i],
-                                                             Gamma_m1, CheckMinPres_Yes, MIN_PRES );
+                                                             EoS_AuxArray[1], CheckMinPres_Yes, MIN_PRES );
 #                    elif ( DUAL_ENERGY == DE_EINT )
 #                    error : DE_EINT is NOT supported yet !!
 #                    endif

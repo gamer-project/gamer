@@ -63,10 +63,6 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 
    const int  didx_flux[3] = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };
    const real dt_dh        = dt/dh;
-#  ifdef DUAL_ENERGY
-   const real  Gamma_m1    = (real)EoS_AuxArray[1];
-   const real _Gamma_m1    = (real)EoS_AuxArray[2];
-#  endif
 
    real dFlux[3][NCOMP_TOTAL], Output_1Cell[NCOMP_TOTAL];
 
@@ -152,13 +148,13 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 #     else
       const real Emag = NULL_REAL;
 #     endif
-//    we no longer apply the minimum density and pressure checks here since we want to enable 1st-order-flux correction for that
+//    we no longer apply density and pressure floors here since we want to enable 1st-order-flux correction for that
       const bool CheckMinPres_No = false;
 //    Output_1Cell[DENS] = FMAX( Output_1Cell[DENS], MinDens );
 
       Hydro_DualEnergyFix( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
                            Output_1Cell[ENGY], Output_1Cell[ENPY], g_DE_Status[idx_out],
-                           Gamma_m1, _Gamma_m1, CheckMinPres_No, NULL_REAL, DualEnergySwitch, Emag );
+                           EoS_AuxArray[1], EoS_AuxArray[2], CheckMinPres_No, NULL_REAL, DualEnergySwitch, Emag );
 #     endif // #ifdef DUAL_ENERGY
 
 

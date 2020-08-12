@@ -369,9 +369,6 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
    const int  CheckMinEtot = 0;
    const int  CheckMinEint = 1;
    const bool NoFloor      = false;
-#  if ( DUAL_ENERGY == DE_ENPY )
-   const real Gamma_m1     = GAMMA - 1.0;
-#  endif
 
 
 // if any checks below fail, return true
@@ -396,7 +393,7 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
 //          --> in general, MIN_PRES > 0.0 should be sufficient for detecting unphysical entropy
 //          --> however, the additional check "Fluid[ENPY] < (real)2.0*TINY_NUMBER" is necessary when MIN_PRES == 0.0
 #           if   ( DUAL_ENERGY == DE_ENPY )
-            Hydro_DensEntropy2Pres( Fluid[DENS], Fluid[ENPY], Gamma_m1, NoFloor, NULL_REAL ) < (real)MIN_PRES  ||
+            Hydro_DensEntropy2Pres( Fluid[DENS], Fluid[ENPY], EoS_AuxArray[1], NoFloor, NULL_REAL ) < (real)MIN_PRES  ||
             Fluid[ENPY] < (real)2.0*TINY_NUMBER
 
 #           elif ( DUAL_ENERGY == DE_EINT )
@@ -476,10 +473,6 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
    const int  CheckMinEtot     = 0;
    const int  CheckMinEint     = 1;
    const int  LocalID[2][2][2] = { 0, 1, 2, 4, 3, 6, 5, 7 };
-#  ifdef DUAL_ENERGY
-   const real  Gamma_m1        = GAMMA - 1.0;
-   const real _Gamma_m1        = (real)1.0 / Gamma_m1;
-#  endif
 
 // variables shared by all OpenMP threads
    long NCorrThisTime = 0;
@@ -644,7 +637,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //                 --> otherwise the pressure floor might disable the 1st-order-flux correction
 #              ifdef DUAL_ENERGY
                Hydro_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[ENPY],
-                                    h_DE_Array_F_Out[TID][idx_out], Gamma_m1, _Gamma_m1, CorrPres_No, NULL_REAL,
+                                    h_DE_Array_F_Out[TID][idx_out], EoS_AuxArray[1], EoS_AuxArray[2], CorrPres_No, NULL_REAL,
                                     DUAL_ENERGY_SWITCH, Emag_Out );
 #              endif
 
@@ -778,7 +771,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //              --> otherwise AUTO_REDUCE_DT may not be triggered due to this pressure floor
 #           ifdef DUAL_ENERGY
             Hydro_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[ENPY],
-                                 h_DE_Array_F_Out[TID][idx_out], Gamma_m1, _Gamma_m1,
+                                 h_DE_Array_F_Out[TID][idx_out], EoS_AuxArray[1], EoS_AuxArray[2],
                                  (AUTO_REDUCE_DT)?CorrPres_No:CorrPres_Yes, MIN_PRES, DUAL_ENERGY_SWITCH, Emag_Out );
 
 //          apply internal energy floor if dual-energy formalism is not adopted

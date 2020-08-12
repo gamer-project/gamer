@@ -162,9 +162,6 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
    const double dh       = amr->dh[lv];
    const double dh_sub   = dh / NSub;
    const double _NSub3   = 1.0/CUBE(NSub);
-#  ifdef DUAL_ENERGY
-   const real   Gamma_m1 = GAMMA - 1.0;
-#  endif
 #  ifdef MHD
    const double _NSub2   = 1.0/SQR(NSub);
 #  endif

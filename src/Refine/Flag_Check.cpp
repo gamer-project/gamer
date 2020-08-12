@@ -136,15 +136,12 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
    {
       const bool CheckMinPres_Yes = true;
       const real Dens             = Fluid[DENS][k][j][i];
-#     ifdef DUAL_ENERGY
-      const real Gamma_m1         = GAMMA - 1.0;
-#     endif
 
 //    if applicable, compute pressure from the dual-energy variable to reduce the round-off errors
 #     ifdef DUAL_ENERGY
 
 #     if   ( DUAL_ENERGY == DE_ENPY )
-      const real Pres = Hydro_DensEntropy2Pres( Dens, Fluid[ENPY][k][j][i], Gamma_m1, CheckMinPres_Yes, MIN_PRES );
+      const real Pres = Hydro_DensEntropy2Pres( Dens, Fluid[ENPY][k][j][i], EoS_AuxArray[1], CheckMinPres_Yes, MIN_PRES );
 #     elif ( DUAL_ENERGY == DE_EINT )
 #     error : DE_EINT is NOT supported yet !!
 #     endif

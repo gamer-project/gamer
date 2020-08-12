@@ -96,7 +96,6 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
    const int  Size1v           = NPG*Size1pg;
    const real MassRatio_pe    = Const_mp / Const_me;
 #  ifdef DUAL_ENERGY
-   const real Gamma_m1         = GAMMA - 1.0;
    const bool CheckMinPres_No  = false;
 #  else
    const bool CheckMinEint_Yes = true;
@@ -178,7 +177,7 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
 #           ifdef DUAL_ENERGY
 
 #           if   ( DUAL_ENERGY == DE_ENPY )
-            Pres = Hydro_DensEntropy2Pres( Dens, *(fluid[ENPY][0][0]+idx_p), Gamma_m1, CheckMinPres_No, NULL_REAL );
+            Pres = Hydro_DensEntropy2Pres( Dens, *(fluid[ENPY][0][0]+idx_p), EoS_AuxArray[1], CheckMinPres_No, NULL_REAL );
             Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, EoS_AuxArray );
 #           elif ( DUAL_ENERGY == DE_EINT )
 #           error : DE_EINT is NOT supported yet !!

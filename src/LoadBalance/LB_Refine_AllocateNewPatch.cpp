@@ -966,11 +966,6 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 // --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
 // --> but we do renormalize passive scalars here
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM  ||  (defined DENS && NCOMP_PASSIVE>0) )
-#  ifdef DUAL_ENERGY
-   const real  Gamma_m1 = GAMMA - 1.0;
-   const real _Gamma_m1 = (real)1.0 / Gamma_m1;
-#  endif
-
    for (int k=0; k<FSize_CC; k++)
    for (int j=0; j<FSize_CC; j++)
    for (int i=0; i<FSize_CC; i++)
@@ -1016,7 +1011,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
       Hydro_DualEnergyFix( FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i],
                            FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i], FData_Flu[ENPY][k][j][i],
-                           dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy, Emag );
+                           dummy, EoS_AuxArray[1], EoS_AuxArray[2], CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy, Emag );
 
 #     else // #ifdef DUAL_ENERGY
 
