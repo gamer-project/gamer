@@ -48,17 +48,19 @@ bool Flu_ResetByUser_Func_Template( real fluid[], const double x, const double y
    const real r       = SQRT( dr[0]*dr[0] + dr[1]*dr[1] + dr[2]*dr[2] );
 
    const real TRad    = 0.3;
-   const real MaxDens = 1.0e15;
-   const real MaxPres = 1.0e15;
+   const real MinDens = 1.0e-10;
+   const real MinPres = 1.0e-10;
+   const real MinEint = EoS_DensPres2Eint_CPUPtr( MinDens, MinPres, EoS_AuxArray );
+   const real MinEmag = 0.0;  // assuming MHD is not adopted
 
    if ( r <= TRad )
    {
 //    set active scalars
-      fluid[DENS] = MaxDens;
+      fluid[DENS] = MinDens;
       fluid[MOMX] = 0.0;
       fluid[MOMY] = 0.0;
       fluid[MOMZ] = 0.0;
-      fluid[ENGY] = MaxPres / ( GAMMA-1.0 );
+      fluid[ENGY] = Hydro_ConEint2Etot( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], MinEint, MinEmag );
 
 //    set passive scalars
 
