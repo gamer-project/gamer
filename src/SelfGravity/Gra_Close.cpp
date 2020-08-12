@@ -79,7 +79,7 @@ void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_N
                                          amr->patch[SaveSg][lv][PID]->fluid[MOMY][k][j][i],
                                          amr->patch[SaveSg][lv][PID]->fluid[MOMZ][k][j][i],
                                          amr->patch[SaveSg][lv][PID]->fluid[ENGY][k][j][i],
-                                         Gamma_m1, Emag );
+                                         Emag, EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
 #              elif ( DUAL_ENERGY == DE_EINT )
 #              error : DE_EINT is NOT supported yet !!
 #              endif

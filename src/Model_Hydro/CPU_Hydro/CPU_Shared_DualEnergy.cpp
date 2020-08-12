@@ -41,7 +41,7 @@ static real Hydro_DensEntropy2Pres( const real Dens, const real Enpy, const real
 //                Enpy             : Entropy
 //                DE_Status        : Assigned to (DE_UPDATED_BY_ETOT / DE_UPDATED_BY_DUAL / DE_UPDATED_BY_MIN_PRES)
 //                                   to indicate whether this cell is updated by the total energy, dual energy variable,
-//                                   or minimum allowed pressure (MinPres)
+//                                   or pressure floor (MinPres)
 //                Gamma_m1         : Adiabatic index - 1.0
 //                _Gamma_m1        : 1.0/Gamma_m1
 //                CheckMinPres     : Return Hydro_CheckMinPres()
@@ -64,7 +64,7 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
    const bool CheckMinPres_No = false;
    const bool CheckMinEint_No = false;
 
-// apply the minimum entropy check
+// apply entropy floor
    Enpy = FMAX( Enpy, TINY_NUMBER );
 
 
@@ -81,7 +81,7 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
    if ( Eint/Enth < DualEnergySwitch )
    {
 //    correct total energy
-//    --> we will check the minimum pressure later
+//    --> we will apply pressure floor later
 #     if   ( DUAL_ENERGY == DE_ENPY )
       Pres = Hydro_DensEntropy2Pres( Dens, Enpy, Gamma_m1, CheckMinPres_No, NULL_REAL );
       Eint = Pres*_Gamma_m1;
@@ -103,7 +103,7 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
    } // if ( Eint/Enth < DualEnergySwitch ) ... else ...
 
 
-// apply the minimum pressure check
+// apply pressure floor
    if ( CheckMinPres  &&  Pres < MinPres )
    {
       Pres = MinPres;
@@ -130,29 +130,31 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
 //
 // Note        :  1. Used by the dual-energy formalism
 //                2. Invoked by Hydro_Init_ByFunction_AssignData(), Gra_Close(), Init_ByFile(), ...
-//                3. Currently this function does NOT apply the minimum pressure check when calling Hydro_GetPressure()
+//                3. Currently this function does NOT apply pressure floor when calling Hydro_Fluid2Pres()
 //                   --> However, note that Hydro_DensPres2Entropy() does apply a floor value (TINY_NUMBER) for entropy
 //
-// Parameter   :  Dens     : Mass density
-//                MomX/Y/Z : Momentum density
-//                Engy     : Total energy density
-//                Gamma_m1 : Adiabatic index - 1.0
-//                Emag     : Magnetic energy density (0.5*B^2) --> for MHD only
+// Parameter   :  Dens              : Mass density
+//                MomX/Y/Z          : Momentum density
+//                Engy              : Total energy density
+//                Emag              : Magnetic energy density (0.5*B^2) --> for MHD only
+//                EoS_DensEint2Pres : EoS routine to compute the gas pressure
+//                EoS_AuxArray      : Auxiliary array for EoS_DensEint2Pres()
 //
 // Return      :  Enpy
 //-------------------------------------------------------------------------------------------------------
-real Hydro_Fluid2Entropy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy, const real Gamma_m1,
-                          const real Emag )
+real Hydro_Fluid2Entropy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                          const real Emag, EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] )
 {
 
-// currently this function does NOT apply the minimum pressure check when calling Hydro_GetPressure()
+// currently this function does NOT apply pressure floor when calling Hydro_Fluid2Pres()
    const bool CheckMinPres_No = false;
 
    real Pres, Enpy;
 
 // calculate pressure and convert it to entropy
-   Pres = Hydro_GetPressure( Dens, MomX, MomY, MomZ, Engy, Gamma_m1, CheckMinPres_No, NULL_REAL, Emag );
-   Enpy = Hydro_DensPres2Entropy( Dens, Pres, Gamma_m1 );
+   Pres = Hydro_Fluid2Pres( Dens, MomX, MomY, MomZ, Engy, CheckMinPres_No, NULL_REAL, Emag,
+                            EoS_DensEint2Pres, EoS_AuxArray, NULL );
+   Enpy = Hydro_DensPres2Entropy( Dens, Pres, EoS_AuxArray[1] );
 
    return Enpy;
 

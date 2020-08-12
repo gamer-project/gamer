@@ -48,9 +48,6 @@ void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[], co
 
    const int  Size1pg      = CUBE(PS2);
    const int  Size1v       = NPG*Size1pg;
-#  ifdef DUAL_ENERGY
-   const real Gamma_m1     = GAMMA - 1.0;
-#  endif
    const real MassRatio_ep = Const_me / Const_mp;
 
    const real *Ptr_Dens0  = h_Che_Array + CheIdx_Dens *Size1v;
@@ -130,7 +127,7 @@ void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[], co
 #           ifdef DUAL_ENERGY
 #           if   ( DUAL_ENERGY == DE_ENPY )
             Pres = EoS_DensEint2Pres_CPUPtr( Dens, Eint, EoS_AuxArray );
-            *( fluid[ENPY     ][0][0] + idx_p ) = Hydro_DensPres2Entropy( Dens, Pres, Gamma_m1 );
+            *( fluid[ENPY     ][0][0] + idx_p ) = Hydro_DensPres2Entropy( Dens, Pres, EoS_AuxArray[1] );
 
 #           elif ( DUAL_ENERGY == DE_EINT )
 #           error : DE_EINT is NOT supported yet !!

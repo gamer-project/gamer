@@ -268,7 +268,8 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 
 //       calculate the dual-energy variable (entropy or internal energy)
 #        if   ( DUAL_ENERGY == DE_ENPY )
-         fluid[ENPY] = Hydro_Fluid2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Gamma_m1, Emag );
+         fluid[ENPY] = Hydro_Fluid2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Emag,
+                                            EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
 #        elif ( DUAL_ENERGY == DE_EINT )
 #        error : DE_EINT is NOT supported yet !!
 #        endif

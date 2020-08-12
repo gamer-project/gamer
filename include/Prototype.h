@@ -107,8 +107,8 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
                           const bool CheckMinPres, const real MinPres, const real DualEnergySwitch,
                           const real Emag );
 #if ( DUAL_ENERGY == DE_ENPY )
-real Hydro_Fluid2Entropy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy, const real Gamma_m1,
-                          const real Emag );
+real Hydro_Fluid2Entropy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                          const real Emag, EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
 real Hydro_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1 );
 real Hydro_DensEntropy2Pres( const real Dens, const real Enpy, const real Gamma_m1,
                              const bool CheckMinPres, const real MinPres );
