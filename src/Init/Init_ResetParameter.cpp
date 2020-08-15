@@ -61,7 +61,7 @@ void Init_ResetParameter()
 #     if   ( FLU_SCHEME == RTVD )
       DT__FLUID = 0.50;
 #     elif ( FLU_SCHEME == MHM )
-      DT__FLUID = 1.00;
+      DT__FLUID = 0.80;
 #     elif ( FLU_SCHEME == MHM_RP )
       DT__FLUID = 0.80;
 #     elif ( FLU_SCHEME == CTU )
