@@ -204,6 +204,12 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 #  endif
 
 
+// 2-2c. use the min/max of the left and right eigenvalues
+#  elif ( HLLC_WAVESPEED == HLL_WAVESPEED_DAVIS )
+   W_L = FMIN( u_L-Cs_L, u_R-Cs_R );
+   W_R = FMAX( u_L+Cs_L, u_R+Cs_R );
+
+
 #  else
 #  error : ERROR : unsupported HLLC_WAVESPEED !!
 #  endif // HLLC_WAVESPEED
@@ -220,6 +226,9 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 #  elif ( HLLC_WAVESPEED == HLL_WAVESPEED_PVRS )
    temp1_L = +L[0]*( Cs_L*q_L );
    temp1_R = -R[0]*( Cs_R*q_R );
+#  elif ( HLLC_WAVESPEED == HLL_WAVESPEED_DAVIS )
+   temp1_L = +L[0]*( u_L - W_L );
+   temp1_R = +R[0]*( u_R - W_R );
 #  else
 #  error : ERROR : unsupported HLLC_WAVESPEED !!
 #  endif

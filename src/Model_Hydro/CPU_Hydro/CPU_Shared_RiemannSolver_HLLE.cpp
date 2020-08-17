@@ -330,7 +330,7 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
 #  elif ( HLLE_WAVESPEED == HLL_WAVESPEED_PVRS )
 
 #  ifdef MHD
-#  error : MHD is NOT supported yet !!
+#     error : HLL_WAVESPEED_PVRS does not support MHD !!
 #  endif
 
 // As=a=sound speed in PVRS
@@ -373,6 +373,14 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
       printf( "ERROR : invalid q_R (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               q_R, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
+
+
+// 2-2c. use the min/max of the left and right eigenvalues
+#  elif ( HLLE_WAVESPEED == HLL_WAVESPEED_DAVIS )
+   MaxV_L = FMIN( u_L-Cf_L, u_R-Cf_R );
+   MaxV_R = FMAX( u_L+Cf_L, u_R+Cf_R );
+   MaxV_L = FMIN( MaxV_L, ZERO );
+   MaxV_R = FMAX( MaxV_R, ZERO );
 
 
 #  else

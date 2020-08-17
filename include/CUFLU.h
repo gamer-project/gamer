@@ -190,17 +190,31 @@
 #endif
 
 
-// wave-speed estimates in the HLLC/HLLE Riemann solvers
-// --> HLL_WAVESPEED_ROE only supports the constant-gamma EoS (i.e., EOS_GAMMA)
+// wave-speed estimates in the HLL-like Riemann solvers
 #define HLL_WAVESPEED_ROE     1  // Roe average eigenvalues (Batten et al. 1997, SIAM J. Sci. Comput., 18, 1553)
 #define HLL_WAVESPEED_PVRS    2  // Primitive Variable Riemann Solver (Toro 1999, Sec. 10.5.2)
+#define HLL_WAVESPEED_DAVIS   3  // min/max of the left and right eigenvalues (Davis 1988, SIAM J. Sci. Stat, Comput., 9, 445)
+
+// supported options:
+// -> HLL_WAVESPEED_ROE (1) only supports the constant-gamma EoS (i.e., EOS_GAMMA)
+//    HLL_WAVESPEED_PVRS (2) does not support MHD
+// -> HLLC:
+//       MHD on : none
+//       MHD off: 1 for constant-gamma EoS and 2/3 for all EoS
+//    HLLE:
+//       MHD on : 1 for constant-gamma EoS and 3 for all EoS
+//       MHD off: 1 for constant-gamma EoS and 2/3 for all EoS
+//    HLLD:
+//       MHD on : 3 for all EoS
+//       MHD off: none
 
 #  define HLLC_WAVESPEED   HLL_WAVESPEED_PVRS
 #ifdef MHD
-#  define HLLE_WAVESPEED   HLL_WAVESPEED_ROE
+#  define HLLE_WAVESPEED   HLL_WAVESPEED_DAVIS
 #else
 #  define HLLE_WAVESPEED   HLL_WAVESPEED_PVRS
 #endif
+#  define HLLD_WAVESPEED   HLL_WAVESPEED_DAVIS
 
 
 // 2. ELBDM macro

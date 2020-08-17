@@ -57,6 +57,12 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
                                const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] )
 {
 
+// check
+#  if ( HLLD_WAVESPEED != HLL_WAVESPEED_DAVIS )
+#     error : ERROR : HLLD_WAVESPEED only supports HLL_WAVESPEED_DAVIS !!
+#  endif
+
+
 //#### TO BE REMOVED
 const real Gamma = EoS_AuxArray[0];
 
