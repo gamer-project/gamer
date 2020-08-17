@@ -164,6 +164,7 @@ struct SymConst_t
    int    PatchSize;
    int    Flu_NIn;
    int    Flu_NOut;
+   int    Flu_NIn_T;
    int    NFluxFluid;
    int    NFluxPassive;
    int    Flu_GhostSize;
