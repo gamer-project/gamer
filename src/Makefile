@@ -36,11 +36,11 @@ COMPILE_VERBOSE := 0
 SIMU_OPTION += -DMODEL=HYDRO
 
 # enable gravity
-#SIMU_OPTION += -DGRAVITY
+SIMU_OPTION += -DGRAVITY
 
 # enable particles
 # --> must enable GRAVITY
-#SIMU_OPTION += -DPARTICLE
+SIMU_OPTION += -DPARTICLE
 
 # support Grackle, a chemistry and radiative cooling library
 # --> must set NCOMP_PASSIVE_USER according to the primordial chemistry network set by GRACKLE_PRIMORDIAL
@@ -190,10 +190,10 @@ SIMU_OPTION += -DOPENMP
 #SIMU_OPTION += -DLAOHU
 
 # support HDF5 format
-#SIMU_OPTION += -DSUPPORT_HDF5
+SIMU_OPTION += -DSUPPORT_HDF5
 
 # support GNU scientific library
-#SIMU_OPTION += -DSUPPORT_GSL
+SIMU_OPTION += -DSUPPORT_GSL
 
 # support yt inline analysis
 #SIMU_OPTION += -DSUPPORT_LIBYT
@@ -275,11 +275,11 @@ endif
 
 # template
 CUDA_PATH    :=
-FFTW_PATH    :=
-MPI_PATH     :=
-HDF5_PATH    :=
+FFTW_PATH    :=/home/return/fftw
+MPI_PATH     :=/usr
+HDF5_PATH    :=/home/return/miniconda3/pkgs/hdf5-1.10.4-hb1b8bf9_0
 GRACKLE_PATH :=
-GSL_PATH     :=
+GSL_PATH     :=/home/return/gsl
 LIBYT_PATH   :=
 
 # NCSA-bluewaters (only need to specify the path of user-installed packages)
