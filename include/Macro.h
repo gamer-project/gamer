@@ -162,6 +162,15 @@
 #endif // MODEL
 
 
+// number of input fluid variables in the dt solver
+// --> EOS_GAMMA does not require passive scalars
+#if ( MODEL == HYDRO  &&  EOS == EOS_GAMMA )
+#  define FLU_NIN_T           NCOMP_FLUID
+#else
+#  define FLU_NIN_T           NCOMP_TOTAL
+#endif
+
+
 // built-in fields in different models
 #if   ( MODEL == HYDRO )
 // field indices of fluid[] --> element of [0 ... NCOMP_FLUID-1]

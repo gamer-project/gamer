@@ -489,6 +489,7 @@ void Aux_TakeNote()
       fprintf( Note, "#define NCOMP_PASSIVE           %d\n",      NCOMP_PASSIVE       );
       fprintf( Note, "#define FLU_NIN                 %d\n",      FLU_NIN             );
       fprintf( Note, "#define FLU_NOUT                %d\n",      FLU_NOUT            );
+      fprintf( Note, "#define FLU_NIN_T               %d\n",      FLU_NIN_T           );
       fprintf( Note, "#define NFLUX_FLUID             %d\n",      NFLUX_FLUID         );
       fprintf( Note, "#define NFLUX_PASSIVE           %d\n",      NFLUX_PASSIVE       );
 #     ifdef GRAVITY

@@ -298,7 +298,7 @@ extern code_units Che_Units;
 #endif
 
 extern real        *h_dt_Array_T[2];
-extern real       (*h_Flu_Array_T[2])[NCOMP_FLUID][ CUBE(PS1) ];
+extern real       (*h_Flu_Array_T[2])[FLU_NIN_T][ CUBE(PS1) ];
 #ifdef GRAVITY
 extern real       (*h_Pot_Array_T[2])[ CUBE(GRA_NXT) ];
 #endif

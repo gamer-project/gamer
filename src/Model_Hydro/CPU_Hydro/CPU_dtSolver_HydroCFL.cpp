@@ -56,12 +56,12 @@
 //-----------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __global__
-void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
+void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                               const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ],
                               const real dh, const real Safety, const real MinPres,
                               EoS_DE2P_t EoS_DensEint2Pres_Func, EoS_DP2C_t EoS_DensPres2CSqr_Func )
 #else
-void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
+void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                               const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const int NPG,
                               const real dh, const real Safety, const real MinPres,
                               EoS_DE2P_t EoS_DensEint2Pres_Func, EoS_DP2C_t EoS_DensPres2CSqr_Func,
@@ -86,13 +86,13 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][NCOMP_
 
       CGPU_LOOP( t, CUBE(PS1) )
       {
-         real fluid[NCOMP_FLUID], _Rho, Vx, Vy, Vz, Pres, Emag, a2, CFLx, CFLy, CFLz;
+         real fluid[FLU_NIN_T], _Rho, Vx, Vy, Vz, Pres, Emag, a2, CFLx, CFLy, CFLz;
 #        ifdef MHD
          int  i, j, k;
          real B[3], Bx2, By2, Bz2, B2, Ca2_plus_a2, Ca2_min_a2, Ca2_min_a2_sqr, four_a2_over_Rho;
 #        endif
 
-         for (int v=0; v<NCOMP_FLUID; v++)   fluid[v] = g_Flu_Array[p][v][t];
+         for (int v=0; v<FLU_NIN_T; v++)  fluid[v] = g_Flu_Array[p][v][t];
 
 #        ifdef MHD
          i    = t % PS1;

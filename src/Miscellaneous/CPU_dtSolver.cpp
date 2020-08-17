@@ -4,7 +4,7 @@
 
 
 #if   ( MODEL == HYDRO )
-void CPU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
+void CPU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                             const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const int NPG,
                             const real dh, const real Safety, const real MinPres,
                             EoS_DE2P_t EoS_DensEint2Pres_Func, EoS_DP2C_t EoS_DensPres2CSqr_Func,
@@ -54,7 +54,7 @@ void CPU_dtSolver_HydroGravity( real g_dt_Array[],
 //
 // Return      :  dt_Array
 //-------------------------------------------------------------------------------------------------------
-void CPU_dtSolver( const Solver_t TSolver, real dt_Array[], const real Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
+void CPU_dtSolver( const Solver_t TSolver, real dt_Array[], const real Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                    const real Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const real Pot_Array[][ CUBE(GRA_NXT) ],
                    const double Corner_Array[][3], const int NPatchGroup, const real dh, const real Safety,
                    const real MinPres, const bool P5_Gradient, const OptGravityType_t GravityType,

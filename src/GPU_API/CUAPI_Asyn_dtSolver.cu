@@ -10,7 +10,7 @@
 
 #if   ( MODEL == HYDRO )
 __global__
-void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
+void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                               const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ],
                               const real dh, const real Safety, const real MinPres,
                               EoS_DE2P_t EoS_DensEint2Pres_Func, EoS_DP2C_t EoS_DensPres2CSqr_Func );
@@ -31,7 +31,7 @@ void CUPOT_dtSolver_HydroGravity( real g_dt_Array[], const real g_Pot_Array[][ C
 
 // device pointers
 extern real *d_dt_Array_T;
-extern real (*d_Flu_Array_T)[NCOMP_FLUID][ CUBE(PS1) ];
+extern real (*d_Flu_Array_T)[FLU_NIN_T][ CUBE(PS1) ];
 #ifdef GRAVITY
 extern real (*d_Pot_Array_T)[ CUBE(GRA_NXT) ];
 extern double (*d_Corner_Array_G)[3];
@@ -81,7 +81,7 @@ extern cudaStream_t *Stream;
 //
 // Return      :  h_dt_Array
 //-------------------------------------------------------------------------------------------------------
-void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real h_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
+void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real h_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                           const real h_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const real h_Pot_Array[][ CUBE(GRA_NXT) ],
                           const double h_Corner_Array[][3], const int NPatchGroup, const real dh, const real Safety,
                           const real MinPres, const bool P5_Gradient, const OptGravityType_t GravityType,
@@ -180,7 +180,7 @@ void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real 
       switch ( TSolver )
       {
          case DT_FLU_SOLVER:
-            Flu_MemSize   [s] = sizeof(real  )*NPatch_per_Stream[s]*CUBE(PS1)*NCOMP_FLUID;
+            Flu_MemSize   [s] = sizeof(real  )*NPatch_per_Stream[s]*CUBE(PS1)*FLU_NIN_T;
 #           ifdef MHD
             Mag_MemSize   [s] = sizeof(real  )*NPatch_per_Stream[s]*PS1P1*SQR(PS1)*NCOMP_MAG;
 #           endif
