@@ -1,5 +1,5 @@
 //This program is an example for producing a density profile
-//The scenario is an NFW model with scaling radius r0 = 0.1, and the peak density is rho0 = 1.0
+//The scenario is an NFW model with scaling radius r0 = 0.01, and the peak density is rho0 = 1.0
 #include<stdlib.h>
 #include<iostream>
 #include <fstream>
@@ -11,10 +11,10 @@ double nfw(double x){
 int main()
 {
   double rho0 = 1.0;
-  double r0 = 0.1;
+  double r0 = 0.01;
   fstream file;
   file.open("profile.txt",ios::out);
-  file<<"Density Profile"<<endl;
+  file<<"radius"<<'\t'<<"density"<<endl;
   double dx = 20./1000;
   for(int k=1;k<1001;k++){
     double x= dx*k;

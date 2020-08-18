@@ -196,19 +196,22 @@ void Init_TestProb_Hydro_NFW()
    SetTotalTime_NFW();
 
    // User input
-   bool single_cloud = true;
+   bool single_cloud = false;
+   //You may observe different scenarios if you choose single_cloud to be true or false.
+   //If true, you may observe an NFW cloud evolving stably with time.
+   //If false, you may observe two neighbouring NFW clouds torn apart by each other's tidal force. 
    
    if(single_cloud)
    {int NFW_num = 1;//User Input
    //The scenario is a single NFW cloud
 
    //User Input
-   vector <string> TestProb_FileName= {"Input__TestProb1","Input__TestProb2"};     //Test problem input parameter filenames
-   vector <string> TypeName= {"NFW","UNKNOWN"};                               //Type of models 
+   vector <string> TestProb_FileName= {"Input__TestProb1"};     //Test problem input parameter filenames
+   vector <string> TypeName= {"NFW"};                               //Type of models 
    //"NFW" means generating paritcles using NFW density function.
    
 
-   vector <string> Profile_FileName= {"NONE","profile.txt"};
+   vector <string> Profile_FileName= {"NONE"};
    //"NONE" means no additinal profile table.
    constructor_Models.construct_ic(NFW_num,TestProb_FileName,TypeName,Profile_FileName);
    }
@@ -230,9 +233,6 @@ void Init_TestProb_Hydro_NFW()
    //"profile.txt" is the profile table file name.
    constructor_Models.construct_ic(NFW_num,TestProb_FileName,TypeName,Profile_FileName);
    }
-
-   
-   
 
    Init_Function_User_Ptr  = SetGridIC;
    
