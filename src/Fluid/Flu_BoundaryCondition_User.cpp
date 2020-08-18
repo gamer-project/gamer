@@ -52,25 +52,33 @@ void BC_User_Template( real fluid[], const double x, const double y, const doubl
    const real Emag0 = 0.0;    // must be zero here even for MHD
 
    real Dens, MomX, MomY, MomZ, Pres, Eint, Etot;
+#  if ( NCOMP_PASSIVE > 0 )
+   real Passive[NCOMP_PASSIVE];
+#  else
+   real *Passive = NULL;
+#  endif
 
-   Dens = Dens0 + 0.2*exp(  -(  SQR(1.1*x-0.5*amr->BoxSize[0])
-                               +SQR(2.2*y-0.5*amr->BoxSize[1])
-                               +SQR(3.3*z-0.5*amr->BoxSize[2]) ) / SQR( 1.8*amr->BoxSize[2] )  );
-   MomX = Dens*Vx;
-   MomY = Dens*Vy;
-   MomZ = Dens*Vz;
-   Pres = Pres0*(  2.0 + sin( 2.0*M_PI*(4.5*x+5.5*y*6.5*z)/amr->BoxSize[2] )  );
-   Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, EoS_AuxArray );
-   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, Emag0 );
+   Dens       = Dens0 + 0.2*exp(  -(  SQR(1.1*x-0.5*amr->BoxSize[0])
+                                     +SQR(2.2*y-0.5*amr->BoxSize[1])
+                                     +SQR(3.3*z-0.5*amr->BoxSize[2]) ) / SQR( 1.8*amr->BoxSize[2] )  );
+   MomX       = Dens*Vx;
+   MomY       = Dens*Vy;
+   MomZ       = Dens*Vz;
+   Pres       = Pres0*(  2.0 + sin( 2.0*M_PI*(4.5*x+5.5*y*6.5*z)/amr->BoxSize[2] )  );
+#  if ( NCOMP_PASSIVE > 0 )
+// Passive[X] = ...;
+#  endif
+   Eint       = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray );
+   Etot       = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, Emag0 );
 
    fluid[DENS] = Dens;
    fluid[MOMX] = MomX;
    fluid[MOMY] = MomY;
    fluid[MOMZ] = MomZ;
    fluid[ENGY] = Etot;
-
-// set passive scalars
-   fluid[EINT] = XXX;
+#  if ( NCOMP_PASSIVE > 0 )
+   fluid[XXXX] = ...;
+#  endif
    */
 
 
@@ -195,10 +203,12 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
       if ( PrepVx   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMX] / BVal[DENS];
       if ( PrepVy   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMY] / BVal[DENS];
       if ( PrepVz   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMZ] / BVal[DENS];
-      if ( PrepPres )   Array3D[ v2 ++ ][k][j][i] = Hydro_Fluid2Pres( BVal[DENS], BVal[MOMX], BVal[MOMY], BVal[MOMZ], BVal[ENGY],
+      if ( PrepPres )   Array3D[ v2 ++ ][k][j][i] = Hydro_Fluid2Pres( BVal[DENS], BVal[MOMX], BVal[MOMY],
+                                                                      BVal[MOMZ], BVal[ENGY], BVal+NCOMP_FLUID,
                                                                       CheckMinPres_Yes, MIN_PRES, Emag,
                                                                       EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
-      if ( PrepTemp )   Array3D[ v2 ++ ][k][j][i] = Hydro_Fluid2Temp( BVal[DENS], BVal[MOMX], BVal[MOMY], BVal[MOMZ], BVal[ENGY],
+      if ( PrepTemp )   Array3D[ v2 ++ ][k][j][i] = Hydro_Fluid2Temp( BVal[DENS], BVal[MOMX], BVal[MOMY],
+                                                                      BVal[MOMZ], BVal[ENGY], BVal+NCOMP_FLUID,
                                                                       CheckMinPres_Yes, MIN_PRES, Emag,
                                                                       EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
 

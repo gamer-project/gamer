@@ -78,12 +78,12 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
 {
 
 // check
-#  ifdef GAMER_DEBUG
-#  if ( EOS != EOS_GAMMA )
+#  if ( EOS == EOS_GAMMA )
+   const real *Passive = NULL;   // EOS_GAMMA does not involve passive scalars
+#  elif ( defined GAMER_DEBUG )
    printf( "ERROR : EOS != EOS_GAMMA is NOT supported at file <%s>, line <%d>, function <%s> !!\n",
            __FILE__, __LINE__, __FUNCTION__ );
 #  endif
-#  endif // #ifdef GAMER_DEBUG
 
 
 // 1. reorder the input variables for different spatial directions
@@ -619,7 +619,7 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
 #        else
          const real Emag = NULL_REAL;
 #        endif
-         I_Pres = Hydro_Fluid2Pres( I_States[0], I_States[1], I_States[2], I_States[3], I_States[4],
+         I_Pres = Hydro_Fluid2Pres( I_States[0], I_States[1], I_States[2], I_States[3], I_States[4], Passive,
                                     CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres, EoS_AuxArray, NULL );
 
 //       if unphysical results occur, recalculate fluxes by a substitute Riemann solver

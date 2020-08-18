@@ -208,10 +208,11 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
    const bool CheckMinPres_Yes = true;
    const real _dx              = (real)1.0/dx;     // one over dx
    const real dt_half          = (real)0.5*dt;     // for evaluating u_half
-   const int j_start           = j_skip;
-   const int k_start           = k_skip;
-   const int j_end             = FLU_NXT-j_skip;
-   const int k_end             = FLU_NXT-k_skip;
+   const real *Passive         = NULL;             // RTVD does not support passive scalars
+   const int  j_start          = j_skip;
+   const int  k_start          = k_skip;
+   const int  j_end            = FLU_NXT-j_skip;
+   const int  k_end            = FLU_NXT-k_skip;
 
 // set local variables
    real ux     [5][FLU_NXT];              // one column of u in x direction
@@ -243,7 +244,7 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
       {
          _rho = (real)1.0 / ux[0][i];
          vx   = _rho * ux[1][i];
-         p    = Hydro_Fluid2Pres( ux[0][i], ux[1][i], ux[2][i], ux[3][i], ux[4][i],
+         p    = Hydro_Fluid2Pres( ux[0][i], ux[1][i], ux[2][i], ux[3][i], ux[4][i], Passive,
                                   CheckMinPres_Yes, MinPres, NULL_REAL, EoS_DensEint2Pres, EoS_AuxArray, NULL );
 
 #        ifdef CHECK_NEGATIVE_IN_FLUID
@@ -256,7 +257,7 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
                          ux[0][i], __FILE__, __LINE__, __FUNCTION__ );
 #        endif
 
-         c    = FABS( vx ) + SQRT(  EoS_DensPres2CSqr( ux[0][i], p, EoS_AuxArray )  );
+         c    = FABS( vx ) + SQRT(  EoS_DensPres2CSqr( ux[0][i], p, Passive, EoS_AuxArray )  );
 
          cw[0][i] = ux[1][i];
          cw[1][i] = ux[1][i] * vx + p;
@@ -308,7 +309,7 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
       {
          _rho = (real)1.0 / u_half[0][i];
          vx   = _rho * u_half[1][i];
-         p    = Hydro_Fluid2Pres( u_half[0][i], u_half[1][i], u_half[2][i], u_half[3][i], u_half[4][i],
+         p    = Hydro_Fluid2Pres( u_half[0][i], u_half[1][i], u_half[2][i], u_half[3][i], u_half[4][i], Passive,
                                   CheckMinPres_Yes, MinPres, NULL_REAL, EoS_DensEint2Pres, EoS_AuxArray, NULL );
 
 #        ifdef CHECK_NEGATIVE_IN_FLUID
@@ -321,7 +322,7 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
                          u_half[0][i], __FILE__, __LINE__, __FUNCTION__ );
 #        endif
 
-         c    = FABS( vx ) + SQRT(  EoS_DensPres2CSqr( u_half[0][i], p, EoS_AuxArray )  );
+         c    = FABS( vx ) + SQRT(  EoS_DensPres2CSqr( u_half[0][i], p, Passive, EoS_AuxArray )  );
 
          cw[0][i] = u_half[1][i];
          cw[1][i] = u_half[1][i] * vx + p;

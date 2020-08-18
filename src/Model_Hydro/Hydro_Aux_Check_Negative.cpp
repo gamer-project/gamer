@@ -69,7 +69,7 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
 #           else
             const real Emag = NULL_REAL;
 #           endif // MHD
-            Pres = Hydro_Fluid2Pres( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+            Pres = Hydro_Fluid2Pres( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], Fluid+NCOMP_FLUID,
                                      CheckMinPres_No, NULL_REAL, Emag,
                                      EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
 #           endif // DUAL_ENERGY

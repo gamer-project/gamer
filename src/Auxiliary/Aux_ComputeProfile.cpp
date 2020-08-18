@@ -214,6 +214,12 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
          OMP_NCell [p][TID][b] = 0;
       }
 
+//    allocate passive scalar arrays
+#     if ( MODEL == HYDRO )
+      real *Passive      = new real [NCOMP_PASSIVE];
+      real *Passive_IntT = new real [NCOMP_PASSIVE];
+#     endif
+
 //    determine which levels to be considered
       const int lv_min = ( SingleLv < 0 ) ? 0                                     : SingleLv;
       const int lv_max = ( SingleLv < 0 ) ? ( ( MaxLv < 0 ) ? TOP_LEVEL : MaxLv ) : SingleLv;
@@ -321,6 +327,18 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                   if ( bin < 0 )    Aux_Error( ERROR_INFO, "bin (%d) < 0 !!\n", bin );
 #                 endif
 
+//                prepare passive scalars (for better sustainability, always do it even when unnecessary)
+#                 if ( MODEL == HYDRO )
+                  for (int v_out=0; v_out<NCOMP_PASSIVE; v_out++)
+                  {
+                     const int v_in = v_out + NCOMP_FLUID;
+
+                     Passive     [v_out] = FluidPtr     [v_in][k][j][i];
+                     if ( FluIntTime )
+                     Passive_IntT[v_out] = FluidPtr_IntT[v_in][k][j][i];
+                  }
+#                 endif
+
                   for (int p=0; p<NProf; p++)
                   {
 //                   intrinsic fluid fields
@@ -405,6 +423,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                                                                                       FluidPtr     [MOMY][k][j][i],
                                                                                       FluidPtr     [MOMZ][k][j][i],
                                                                                       FluidPtr     [ENGY][k][j][i],
+                                                                                      Passive,
                                                                                       CheckMinPres_No, NULL_REAL, Emag,
                                                                                       EoS_DensEint2Pres_CPUPtr, EoS_AuxArray,
                                                                                       NULL )
@@ -413,6 +432,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                                                                                       FluidPtr_IntT[MOMY][k][j][i],
                                                                                       FluidPtr_IntT[MOMZ][k][j][i],
                                                                                       FluidPtr_IntT[ENGY][k][j][i],
+                                                                                      Passive_IntT,
                                                                                       CheckMinPres_No, NULL_REAL, Emag_IntT,
                                                                                       EoS_DensEint2Pres_CPUPtr, EoS_AuxArray,
                                                                                       NULL )
@@ -421,6 +441,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                                                                                       FluidPtr     [MOMY][k][j][i],
                                                                                       FluidPtr     [MOMZ][k][j][i],
                                                                                       FluidPtr     [ENGY][k][j][i],
+                                                                                      Passive,
                                                                                       CheckMinPres_No, NULL_REAL, Emag,
                                                                                       EoS_DensEint2Pres_CPUPtr, EoS_AuxArray,
                                                                                       NULL );
@@ -443,7 +464,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                               const bool CheckMinPres_No = false;
                               const real Enpy = FluidPtr[ENPY][k][j][i];
                               const real Pres = Hydro_DensEntropy2Pres( Dens, Enpy, EoS_AuxArray[1], CheckMinPres_No, NULL_REAL );
-                              const real Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, EoS_AuxArray );
+                              const real Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray );
 #                             elif ( DUAL_ENERGY == DE_EINT )
 #                             error : DE_EINT is NOT supported yet !!
 #                             endif
@@ -502,6 +523,12 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
             }}} // i,j,k
          } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       } // for (int lv=lv_min; lv<=lv_max; lv++)
+
+#     if ( MODEL == HYDRO )
+      delete [] Passive;         Passive      = NULL;
+      delete [] Passive_IntT;    Passive_IntT = NULL;
+#     endif
+
    } // OpenMP parallel region
 
 

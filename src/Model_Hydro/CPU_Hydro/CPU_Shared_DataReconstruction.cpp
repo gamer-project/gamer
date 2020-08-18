@@ -1246,8 +1246,12 @@ void Hydro_Pri2Char( real InOut[], const real Dens, const real Pres, const real 
 {
 
 // check
-#  if ( EOS != EOS_GAMMA )
-#     error : Hydro_Pri2Char() only supports EOS_GAMMA !!
+#  if ( EOS == EOS_GAMMA )
+#  ifndef MHD
+   const real *Passive = NULL;   // EOS_GAMMA does not involve passive scalars
+#  endif
+#  else
+#  error : Hydro_Pri2Char() only supports EOS_GAMMA !!
 #  endif
 
 #  if ( defined CHECK_NEGATIVE_IN_FLUID  &&  !defined MHD )
@@ -1298,7 +1302,7 @@ void Hydro_Pri2Char( real InOut[], const real Dens, const real Pres, const real 
 
 // b. pure hydro
 #  else // #ifdef MHD
-   const real  a2 = EoS_DensPres2CSqr( Dens, Pres, EoS_AuxArray );
+   const real  a2 = EoS_DensPres2CSqr( Dens, Pres, Passive, EoS_AuxArray );
    const real _a2 = (real)1.0 / a2;
    const real _a  = SQRT( _a2 );
 
@@ -1339,8 +1343,10 @@ void Hydro_Char2Pri( real InOut[], const real Dens, const real Pres, const real 
 {
 
 // check
-#  if ( EOS != EOS_GAMMA )
-#     error : Hydro_Char2Pri() only supports EOS_GAMMA !!
+#  if ( EOS == EOS_GAMMA )
+   const real *Passive = NULL;   // EOS_GAMMA does not involve passive scalars
+#  else
+#  error : Hydro_Char2Pri() only supports EOS_GAMMA !!
 #  endif
 
 #  if ( defined CHECK_NEGATIVE_IN_FLUID  &&  !defined MHD )
@@ -1367,7 +1373,7 @@ void Hydro_Char2Pri( real InOut[], const real Dens, const real Pres, const real 
 
 
 // primitive --> characteristic
-   const real a2 = EoS_DensPres2CSqr( Dens, Pres, EoS_AuxArray );
+   const real a2 = EoS_DensPres2CSqr( Dens, Pres, Passive, EoS_AuxArray );
 
 // a. MHD
 #  ifdef MHD
@@ -1446,8 +1452,10 @@ void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
 #endif
 {
 
-#  if ( EOS != EOS_GAMMA )
-#     error : Hydro/MHD_GetEigenSystem() only supports EOS_GAMMA !!
+#  if ( EOS == EOS_GAMMA )
+   const real *Passive = NULL;   // EOS_GAMMA does not involve passive scalars
+#  else
+#  error : Hydro/MHD_GetEigenSystem() only supports EOS_GAMMA !!
 #  endif
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
@@ -1463,7 +1471,7 @@ void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
 
    const real  Rho = CC_Var[0];
    const real _Rho = (real)1.0/Rho;
-   const real  a2  = EoS_DensPres2CSqr( Rho, CC_Var[4], EoS_AuxArray );
+   const real  a2  = EoS_DensPres2CSqr( Rho, CC_Var[4], Passive, EoS_AuxArray );
    const real  a   = SQRT( a2 );
    const real _a   = (real)1.0/a;
    const real _a2  = _a*_a;

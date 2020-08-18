@@ -141,7 +141,7 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
 #        else
          const real Emag = NULL_REAL;
 #        endif
-         fprintf( File, "  %14.7e", Hydro_Fluid2Pres(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],
+         fprintf( File, "  %14.7e", Hydro_Fluid2Pres(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],u+NCOMP_FLUID,
                                                      CheckMinPres_No,NULL_REAL,Emag,
                                                      EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL) );
 #        endif // #if ( MODEL == HYDRO )

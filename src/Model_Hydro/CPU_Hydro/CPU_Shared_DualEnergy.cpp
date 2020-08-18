@@ -152,7 +152,8 @@ real Hydro_Fluid2Entropy( const real Dens, const real MomX, const real MomY, con
    real Pres, Enpy;
 
 // calculate pressure and convert it to entropy
-   Pres = Hydro_Fluid2Pres( Dens, MomX, MomY, MomZ, Engy, CheckMinPres_No, NULL_REAL, Emag,
+// --> note that DE_ENPY only works with EOS_GAMMA, which does not involve passive scalars
+   Pres = Hydro_Fluid2Pres( Dens, MomX, MomY, MomZ, Engy, NULL, CheckMinPres_No, NULL_REAL, Emag,
                             EoS_DensEint2Pres, EoS_AuxArray, NULL );
    Enpy = Hydro_DensPres2Entropy( Dens, Pres, EoS_AuxArray[1] );
 

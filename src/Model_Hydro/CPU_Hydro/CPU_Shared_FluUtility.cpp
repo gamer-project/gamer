@@ -14,7 +14,7 @@
 #ifdef __CUDACC__
 GPU_DEVICE
 static real Hydro_Fluid2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                              const bool CheckMinPres, const real MinPres, const real Emag,
+                              const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
                               EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[], real *EintOut );
 GPU_DEVICE
 static real Hydro_Fluid2Eint( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
@@ -174,12 +174,14 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
    const real Emag             = NULL_REAL;
 #  endif
 
+// conserved --> primitive
    Out[0] = In[0];
    Out[1] = In[1]*_Rho;
    Out[2] = In[2]*_Rho;
    Out[3] = In[3]*_Rho;
-   Out[4] = Hydro_Fluid2Pres( In[0], In[1], In[2], In[3], In[4], CheckMinPres_Yes, MinPres, Emag,
+   Out[4] = Hydro_Fluid2Pres( In[0], In[1], In[2], In[3], In[4], In+NCOMP_FLUID, CheckMinPres_Yes, MinPres, Emag,
                               EoS_DensEint2Pres, EoS_AuxArray, EintOut );
+
 
 // pressure floor required to resolve the Jeans length
 // --> note that currently we do not modify the dual-energy variable (e.g., entropy) accordingly
@@ -190,8 +192,9 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 
 //    recompute internal energy to be consistent with the updated pressure
       if ( EintOut != NULL  &&  Out[4] != Pres0 )
-         *EintOut = EoS_DensPres2Eint( Out[0], Out[4], EoS_AuxArray );
+         *EintOut = EoS_DensPres2Eint( Out[0], Out[4], In+NCOMP_FLUID, EoS_AuxArray );
    }
+
 
 // passive scalars
 #  if ( NCOMP_PASSIVE > 0 )
@@ -202,6 +205,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
    if ( NormPassive )
       for (int v=0; v<NNorm; v++)   Out[ NCOMP_FLUID + NormIdx[v] ] *= _Rho;
 #  endif
+
 
 // B field
 #  ifdef MHD
@@ -248,6 +252,20 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool NormPassive, const i
 
    real Eint, Emag=NULL_REAL;
 
+// passive scalars
+// --> do it before invoking EoS_DensPres2Eint() since the latter requires the mass density
+//     instead of mass fraction of passive scalars
+#  if ( NCOMP_PASSIVE > 0 )
+// copy all passive scalars
+   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[v];
+
+// convert the mass fraction of target passive scalars back to mass density
+   if ( NormPassive )
+      for (int v=0; v<NNorm; v++)   Out[ NCOMP_FLUID + NormIdx[v] ] *= In[0];
+#  endif
+
+
+// primitive --> conserved
    Out[0] = In[0];
    Out[1] = In[0]*In[1];
    Out[2] = In[0]*In[2];
@@ -259,19 +277,8 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool NormPassive, const i
    const real Bz = In[ MAG_OFFSET + 2 ];
    Emag   = (real)0.5*( SQR(Bx) + SQR(By) + SQR(Bz) );
 #  endif
-   Eint   = ( EintIn == NULL ) ? EoS_DensPres2Eint( In[0], In[4], EoS_AuxArray ) : *EintIn;
+   Eint   = ( EintIn == NULL ) ? EoS_DensPres2Eint( In[0], In[4], Out+NCOMP_FLUID, EoS_AuxArray ) : *EintIn;
    Out[4] = Hydro_ConEint2Etot( Out[0], Out[1], Out[2], Out[3], Eint, Emag );
-
-
-// passive scalars
-#  if ( NCOMP_PASSIVE > 0 )
-// copy all passive scalars
-   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[v];
-
-// convert the mass fraction of target passive scalars back to mass density
-   if ( NormPassive )
-      for (int v=0; v<NNorm; v++)   Out[ NCOMP_FLUID + NormIdx[v] ] *= In[0];
-#  endif
 
 
 // B field
@@ -323,7 +330,7 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
 #  else
    const real Emag = NULL_REAL;
 #  endif
-   const real Pres = Hydro_Fluid2Pres( InRot[0], InRot[1], InRot[2], InRot[3], InRot[4],
+   const real Pres = Hydro_Fluid2Pres( InRot[0], InRot[1], InRot[2], InRot[3], InRot[4], In+NCOMP_FLUID,
                                        CheckMinPres_Yes, MinPres, Emag, EoS_DensEint2Pres, EoS_AuxArray, NULL );
    const real _Rho = (real)1.0 / InRot[0];
    const real Vx   = _Rho*InRot[1];
@@ -481,6 +488,7 @@ bool Hydro_CheckNegative( const real Input )
 // Parameter   :  Dens              : Mass density
 //                MomX/Y/Z          : Momentum density
 //                Engy              : Energy density (including the magnetic energy density for MHD)
+//                Passive           : Passive scalars
 //                CheckMinPres      : Apply pressure floor by invoking Hydro_CheckMinPres()
 //                                    --> In some cases we actually want to check if pressure becomes unphysical,
 //                                        for which this option should be disabled
@@ -497,7 +505,7 @@ bool Hydro_CheckNegative( const real Input )
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 real Hydro_Fluid2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                       const bool CheckMinPres, const real MinPres, const real Emag,
+                       const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
                        EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[], real *EintOut )
 {
 
@@ -505,7 +513,7 @@ real Hydro_Fluid2Pres( const real Dens, const real MomX, const real MomY, const 
    real Eint, Pres;
 
    Eint = Hydro_Fluid2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, Emag );
-   Pres = EoS_DensEint2Pres( Dens, Eint, EoS_AuxArray );
+   Pres = EoS_DensEint2Pres( Dens, Eint, Passive, EoS_AuxArray );
 
    if ( CheckMinPres )   Pres = Hydro_CheckMinPres( Pres, MinPres );
 
@@ -603,6 +611,7 @@ real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, cons
 // Parameter   :  Dens              : Mass density
 //                MomX/Y/Z          : Momentum density
 //                Engy              : Energy density
+//                Passive           : Passive scalars
 //                CheckMinPres      : Apply pressure floor by calling Hydro_CheckMinPres()
 //                                    --> In some cases we actually want to check if pressure becomes unphysical,
 //                                        for which we don't want to enable this option
@@ -616,11 +625,11 @@ real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, cons
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 real Hydro_Fluid2Temp( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                       const bool CheckMinPres, const real MinPres, const real Emag,
+                       const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
                        EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] )
 {
 
-   const real Pres = Hydro_Fluid2Pres( Dens, MomX, MomY, MomZ, Engy, CheckMinPres, MinPres, Emag,
+   const real Pres = Hydro_Fluid2Pres( Dens, MomX, MomY, MomZ, Engy, Passive, CheckMinPres, MinPres, Emag,
                                        EoS_DensEint2Pres, EoS_AuxArray, NULL );
 
    return Pres / Dens;

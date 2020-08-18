@@ -89,12 +89,12 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    _RhoR = ONE / R[0];
    u_L   = _RhoL*L[1];
    u_R   = _RhoR*R[1];
-   P_L   = Hydro_Fluid2Pres( L[0], L[1], L[2], L[3], L[4], CheckMinPres_Yes, MinPres, Emag,
+   P_L   = Hydro_Fluid2Pres( L[0], L[1], L[2], L[3], L[4], L+NCOMP_FLUID, CheckMinPres_Yes, MinPres, Emag,
                              EoS_DensEint2Pres, EoS_AuxArray, NULL );
-   P_R   = Hydro_Fluid2Pres( R[0], R[1], R[2], R[3], R[4], CheckMinPres_Yes, MinPres, Emag,
+   P_R   = Hydro_Fluid2Pres( R[0], R[1], R[2], R[3], R[4], R+NCOMP_FLUID, CheckMinPres_Yes, MinPres, Emag,
                              EoS_DensEint2Pres, EoS_AuxArray, NULL );
-   Cs_L  = SQRT(  EoS_DensPres2CSqr( L[0], P_L, EoS_AuxArray )  );
-   Cs_R  = SQRT(  EoS_DensPres2CSqr( R[0], P_R, EoS_AuxArray )  );
+   Cs_L  = SQRT(  EoS_DensPres2CSqr( L[0], P_L, L+NCOMP_FLUID, EoS_AuxArray )  );
+   Cs_R  = SQRT(  EoS_DensPres2CSqr( R[0], P_R, R+NCOMP_FLUID, EoS_AuxArray )  );
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( Hydro_CheckNegative(P_L) )
@@ -184,8 +184,9 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    Rho_SL      = L[0] + ( u_L - u_PVRS )*Rho_Cs_PVRS;
    Rho_SR      = R[0] + ( u_PVRS - u_R )*Rho_Cs_PVRS;
    _P          = ONE / P_PVRS;
-   Gamma_SL    = EoS_DensPres2CSqr( Rho_SL, P_PVRS, EoS_AuxArray )*Rho_SL*_P;
-   Gamma_SR    = EoS_DensPres2CSqr( Rho_SR, P_PVRS, EoS_AuxArray )*Rho_SR*_P;
+// see Eq. [9.8] in Toro 1999 for passive scalars
+   Gamma_SL    = EoS_DensPres2CSqr( Rho_SL, P_PVRS, L+NCOMP_FLUID, EoS_AuxArray )*Rho_SL*_P;
+   Gamma_SR    = EoS_DensPres2CSqr( Rho_SR, P_PVRS, R+NCOMP_FLUID, EoS_AuxArray )*Rho_SR*_P;
 #  endif // EOS
 
    q_L = ( P_PVRS <= P_L ) ? ONE : SQRT(  ONE + _TWO*( Gamma_SL + ONE )/Gamma_SL*( P_PVRS/P_L - ONE )  );

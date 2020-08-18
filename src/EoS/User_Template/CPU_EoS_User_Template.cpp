@@ -39,13 +39,20 @@
 //
 // Parameter   :  Dens     : Gas mass density
 //                Eint     : Gas internal energy density
+//                Passive  : Passive scalars
 //                AuxArray : Auxiliary array (see the Note above)
 //
 // Return      :  Gas pressure
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, const double AuxArray[] )
+static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, const real Passive[], const double AuxArray[] )
 {
+
+// check
+#  ifdef GAMER_DEBUG
+   if ( Passive  == NULL )    printf( "ERROR : Passive == NULL in %s !!\n", __FUNCTION__ );
+   if ( AuxArray == NULL )    printf( "ERROR : AuxArray == NULL in %s !!\n", __FUNCTION__ );
+#  endif
 
    real Pres = -1.0;
 
@@ -53,10 +60,18 @@ static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, c
    Pres = ...;
    */
 
+// check
 #  ifdef GAMER_DEBUG
    if ( Pres <= 0.0 )
+   {
       printf( "ERROR : invalid pressure (%14.7e) in %s (Dens %14.7e, Eint %14.7e) !!\n",
               Pres, __FUNCTION__, Dens, Eint );
+#     if ( NCOMP_PASSIVE > 0 )
+      printf( "        Passive scalars:" );
+      for (int v=0; v<NCOMP_PASSIVE; v++)    printf( " %d=%14.7e", v, Passive[v] );
+      printf( "\n" );
+#     endif
+   }
 #  endif
 
    return Pres;
@@ -73,13 +88,20 @@ static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, c
 //
 // Parameter   :  Dens     : Gas mass density
 //                Pres     : Gas pressure
+//                Passive  : Passive scalars
 //                AuxArray : Auxiliary array (see the Note above)
 //
 // Return      :  Gas internal energy density
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, const double AuxArray[] )
+static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, const real Passive[], const double AuxArray[] )
 {
+
+// check
+#  ifdef GAMER_DEBUG
+   if ( Passive  == NULL )    printf( "ERROR : Passive == NULL in %s !!\n", __FUNCTION__ );
+   if ( AuxArray == NULL )    printf( "ERROR : AuxArray == NULL in %s !!\n", __FUNCTION__ );
+#  endif
 
    real Eint = -1.0;
 
@@ -87,10 +109,18 @@ static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, c
    Eint = ...;
    */
 
+// check
 #  ifdef GAMER_DEBUG
    if ( Eint <= 0.0 )
+   {
       printf( "ERROR : invalid internal energy density (%14.7e) in %s (Dens %14.7e, Pres %14.7e) !!\n",
               Eint, __FUNCTION__, Dens, Pres );
+#     if ( NCOMP_PASSIVE > 0 )
+      printf( "        Passive scalars:" );
+      for (int v=0; v<NCOMP_PASSIVE; v++)    printf( " %d=%14.7e", v, Passive[v] );
+      printf( "\n" );
+#     endif
+   }
 #  endif
 
    return Eint;
@@ -107,13 +137,20 @@ static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, c
 //
 // Parameter   :  Dens     : Gas mass density
 //                Pres     : Gas pressure
+//                Passive  : Passive scalars
 //                AuxArray : Auxiliary array (see the Note above)
 //
 // Return      :  Sound speed square
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_DensPres2CSqr_User_Template( const real Dens, const real Pres, const double AuxArray[] )
+static real EoS_DensPres2CSqr_User_Template( const real Dens, const real Pres, const real Passive[], const double AuxArray[] )
 {
+
+// check
+#  ifdef GAMER_DEBUG
+   if ( Passive  == NULL )    printf( "ERROR : Passive == NULL in %s !!\n", __FUNCTION__ );
+   if ( AuxArray == NULL )    printf( "ERROR : AuxArray == NULL in %s !!\n", __FUNCTION__ );
+#  endif
 
    real Cs2 = -1.0;
 
@@ -121,10 +158,18 @@ static real EoS_DensPres2CSqr_User_Template( const real Dens, const real Pres, c
    Cs2 = ...;
    */
 
+// check
 #  ifdef GAMER_DEBUG
    if ( Cs2 <= 0.0 )
+   {
       printf( "ERROR : invalid sound speed squared (%14.7e) in %s (Dens %14.7e, Pres %14.7e) !!\n",
               Cs2, __FUNCTION__, Dens, Pres );
+#     if ( NCOMP_PASSIVE > 0 )
+      printf( "        Passive scalars:" );
+      for (int v=0; v<NCOMP_PASSIVE; v++)    printf( " %d=%14.7e", v, Passive[v] );
+      printf( "\n" );
+#     endif
+   }
 #  endif
 
    return Cs2;

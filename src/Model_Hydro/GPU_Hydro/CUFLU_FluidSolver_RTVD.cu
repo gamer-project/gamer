@@ -168,6 +168,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
    const uint j_end            = FLU_NXT - j_gap;
    const uint k_end            = FLU_NXT - k_gap;
    const real dt_half          = (real)0.5*dt;
+   const real *Passive         = false;                     // RTVD does not support passive scalars
          bool RuleOut          = false;
    const bool CheckMinPres_Yes = true;
 
@@ -207,7 +208,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
 //    (a1). set variables defined in the center of cell
       _rho = (real)1.0 / Fluid[0];
       vx   = _rho * Fluid[1];
-      p    = Hydro_Fluid2Pres( Fluid[0], Fluid[1], Fluid[2], Fluid[3], Fluid[4],
+      p    = Hydro_Fluid2Pres( Fluid[0], Fluid[1], Fluid[2], Fluid[3], Fluid[4], Passive,
                                CheckMinPres_Yes, MinPres, NULL_REAL, EoS_DensEint2Pres, EoS_AuxArray, NULL );
 
 #     ifdef CHECK_NEGATIVE_IN_FLUID
@@ -219,7 +220,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
          printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  Fluid[0], __FILE__, __LINE__, __FUNCTION__ );
 #     endif
-      c    = FABS( vx ) + SQRT(  EoS_DensPres2CSqr( Fluid[0], p, EoS_AuxArray )  );
+      c    = FABS( vx ) + SQRT(  EoS_DensPres2CSqr( Fluid[0], p, Passive, EoS_AuxArray )  );
 
       s_cw[ty][0][i] = Fluid[1];
       s_cw[ty][1][i] = Fluid[1]*vx + p;
@@ -269,7 +270,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
       {
          _rho = (real)1.0 / Fluid_half[0];
          vx   = _rho * Fluid_half[1];
-         p    = Hydro_Fluid2Pres( Fluid_half[0], Fluid_half[1], Fluid_half[2], Fluid_half[3], Fluid_half[4],
+         p    = Hydro_Fluid2Pres( Fluid_half[0], Fluid_half[1], Fluid_half[2], Fluid_half[3], Fluid_half[4], Passive,
                                   CheckMinPres_Yes, MinPres, NULL_REAL, EoS_DensEint2Pres, EoS_AuxArray, NULL );
 
 #        ifdef CHECK_NEGATIVE_IN_FLUID
@@ -282,7 +283,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
                     Fluid_half[0], __FILE__, __LINE__, __FUNCTION__ );
 #        endif
 
-         c    = FABS( vx ) + SQRT(  EoS_DensPres2CSqr( Fluid_half[0], p, EoS_AuxArray )  );
+         c    = FABS( vx ) + SQRT(  EoS_DensPres2CSqr( Fluid_half[0], p, Passive, EoS_AuxArray )  );
 
          s_cw[ty][0][i] = Fluid_half[1];
          s_cw[ty][1][i] = Fluid_half[1]*vx + p;

@@ -39,12 +39,13 @@
 //
 // Parameter   :  Dens     : Gas mass density
 //                Eint     : Gas internal energy density
+//                Passive  : Passive scalars (must not used here)
 //                AuxArray : Auxiliary array (see the Note above)
 //
 // Return      :  Gas pressure
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_DensEint2Pres_Gamma( const real Dens, const real Eint, const double AuxArray[] )
+static real EoS_DensEint2Pres_Gamma( const real Dens, const real Eint, const real Passive[], const double AuxArray[] )
 {
 
    const real Gamma_m1 = (real)AuxArray[1];
@@ -66,12 +67,13 @@ static real EoS_DensEint2Pres_Gamma( const real Dens, const real Eint, const dou
 //
 // Parameter   :  Dens     : Gas mass density
 //                Pres     : Gas pressure
+//                Passive  : Passive scalars (must not used here)
 //                AuxArray : Auxiliary array (see the Note above)
 //
 // Return      :  Gas internal energy density
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_DensPres2Eint_Gamma( const real Dens, const real Pres, const double AuxArray[] )
+static real EoS_DensPres2Eint_Gamma( const real Dens, const real Pres, const real Passive[], const double AuxArray[] )
 {
 
    const real _Gamma_m1 = (real)AuxArray[2];
@@ -93,12 +95,13 @@ static real EoS_DensPres2Eint_Gamma( const real Dens, const real Pres, const dou
 //
 // Parameter   :  Dens     : Gas mass density
 //                Pres     : Gas pressure
+//                Passive  : Passive scalars (must not used here)
 //                AuxArray : Auxiliary array (see the Note above)
 //
 // Return      :  Sound speed square
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_DensPres2CSqr_Gamma( const real Dens, const real Pres, const double AuxArray[] )
+static real EoS_DensPres2CSqr_Gamma( const real Dens, const real Pres, const real Passive[], const double AuxArray[] )
 {
 
    const real Gamma = (real)AuxArray[0];
