@@ -1,8 +1,8 @@
 # problem-specific runtime parameters
 Models_RSeed           124                  # random seed for setting particle position and velocity (>=0) [123]
 Models_Rho0            1.0                  # peak density [1.0]
-Models_R0              0.1                  # scale radius [0.1]
-Models_MaxR            0.375                    # maximum radius for particles [0.375]
+Models_R0              0.01                 # scale radius [0.1]
+Models_MaxR            0.2                  # maximum radius for particles [0.375]
 Models_CenterX         2.0                  # central x coordinate [box center]
 Models_CenterY         1.5                  # central y coordinate [box center]
 Models_CenterZ         1.5                  # central z coordinate [box center]
