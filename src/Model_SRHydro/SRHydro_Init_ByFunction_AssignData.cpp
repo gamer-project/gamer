@@ -70,7 +70,6 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
       Prim1[3] = 0.0;
       Prim1[4] = pres_down;
 
-      SRHydro_3Velto4Vel (Prim1, Prim2);
       SRHydro_Pri2Con (Prim2, fluid, (real)GAMMA);
    }else{ // up-stream
       Prim1[0] = dens_up;
@@ -79,7 +78,6 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
       Prim1[3] = 0.0;
       Prim1[4] = pres_up;
 
-      SRHydro_3Velto4Vel (Prim1, Prim2);
       SRHydro_Pri2Con (Prim2, fluid, (real)GAMMA);
    }
 
@@ -152,7 +150,7 @@ void SRHydro_Init_ByFunction_AssignData( const int lv )
          for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] *= _NSub3;
 
 //       check minimum density and pressure
-#        ifdef CHECK_NEGATIVE_IN_FLUID
+#        ifdef CHECK_FAILED_CELL_IN_FLUID
 	 SRHydro_CheckUnphysical(fluid, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true);
 #        endif
 
@@ -177,7 +175,7 @@ void SRHydro_Init_ByFunction_AssignData( const int lv )
             Flu_ResetByUser_Func_Ptr( fluid, x, y, z, Time[lv], lv, NULL );
 
 //       check minimum density and pressure
-#        ifdef CHECK_NEGATIVE_IN_FLUID
+#        ifdef CHECK_FAILED_CELL_IN_FLUID
 	 SRHydro_CheckUnphysical(fluid, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true);
 #        endif
 

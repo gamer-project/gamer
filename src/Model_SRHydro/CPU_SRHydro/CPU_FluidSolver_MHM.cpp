@@ -61,20 +61,29 @@ static void SRHydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 // Parameter   :  [ 1] g_Flu_Array_In     : Array storing the input fluid variables
 //                [ 2] g_Flu_Array_Out    : Array to store the output fluid variables
 //                [ 3] g_Flux_Array       : Array to store the output fluxes
-//                [ 4] g_PriVar           : Array to store the primitive variables
-//                [ 5] g_Slope_PPM        : Array to store the slope for the PPM reconstruction
-//                [ 6] g_FC_Var           : Array to store the half-step variables
-//                [ 7] g_FC_Flux          : Array to store the face-centered fluxes
-//                [ 8] NPatchGroup        : Number of patch groups to be evaluated
-//                [ 9] dt                 : Time interval to advance solution
-//                [10] dh                 : Cell size
-//                [11] Gamma              : Ratio of specific heats
-//                [12] StoreFlux          : true --> store the coarse-fine fluxes
-//                [13] LR_Limiter         : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
+//                [ 4] g_Corner_Array     : Array storing the physical corner coordinates of each patch group (for UNSPLIT_GRAVITY)
+//                [ 5] g_Pot_Array_USG    : Array storing the input potential for UNSPLIT_GRAVITY
+//                [ 6] g_PriVar           : Array to store the primitive variables
+//                [ 7] g_Slope_PPM        : Array to store the slope for the PPM reconstruction
+//                [ 8] g_FC_Var           : Array to store the half-step variables
+//                [ 9] g_FC_Flux          : Array to store the face-centered fluxes
+//                [10] NPatchGroup        : Number of patch groups to be evaluated (for CPU only)
+//                [11] dt                 : Time interval to advance solution
+//                [12] dh                 : Cell size
+//                [13] Gamma              : Ratio of specific heats
+//                [14] StoreFlux          : true --> store the coarse-fine fluxes
+//                [15] LR_Limiter         : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
 //                                          (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
 //                                                         vanLeer + generalized MinMod/extrema-preserving) limiter
-//                [14] MinMod_Coeff       : Coefficient of the generalized MinMod limiter
-//             [15/16] MinDens/Temp       : Minimum allowed density and temperature
+//                [16] MinMod_Coeff       : Coefficient of the generalized MinMod limiter
+//                [17] Time               : Current physical time                                     (for UNSPLIT_GRAVITY only)
+//                [18] GravityType        : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
+//                [19] c_ExtAcc_AuxArray  : Auxiliary array for adding external acceleration          (for UNSPLIT_GRAVITY and CPU only)
+//                                          --> When using GPU, this array is stored in the constant memory and does
+//                                              not need to be passed as a function argument
+//                                              --> Declared in CUFLU_SetConstMem_FluidSolver.cu with the prefix "c_" to
+  //                                                highlight that this is a constant variable on GPU
+//             [20/21] MinDens/Temp       : Minimum allowed density and temperature
 //-------------------------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __global__
@@ -82,27 +91,38 @@ void CUFLU_FluidSolver_MHM(
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
          real   g_Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
          real   g_Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
+   const double g_Corner_Array [][3],
+   const real   g_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
          real   g_PriVar       [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
          real   g_Slope_PPM    [][3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
          real   g_FC_Var       [][6][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
          real   g_FC_Flux      [][3][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
    const real dt, const real dh, const real Gamma, const bool StoreFlux,
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+   const double Time, const OptGravityType_t GravityType,
    const real MinDens, const real MinTemp )
 #else
 void CPU_FluidSolver_MHM(
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
          real   g_Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
          real   g_Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
+   const double g_Corner_Array [][3],
+   const real   g_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
          real   g_PriVar       [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
          real   g_Slope_PPM    [][3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
          real   g_FC_Var       [][6][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
          real   g_FC_Flux      [][3][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
    const int NPatchGroup, const real dt, const real dh, const real Gamma,
    const bool StoreFlux, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-   const real MinDens, const real MinTemp )
+   const double Time, const OptGravityType_t GravityType,
+   const double c_ExtAcc_AuxArray[], const real MinDens, const real MinTemp )
 #endif // #ifdef __CUDACC__ ... else ...
 {
+#  ifdef UNSPLIT_GRAVITY
+   const bool CorrHalfVel_Yes = true;
+#  else
+   const bool CorrHalfVel_No  = false;
+#  endif
 
    const char Max = 4;
 
@@ -226,8 +246,17 @@ void CPU_FluidSolver_MHM(
 
 //             2. evaluate the full-step fluxes
 //                --> check unphysical cells in g_FC_Var_1PG[] before computing flux
-               SRHydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, 1, Gamma,
-                                    MinTemp, StoreFlux, g_Flux_Array[P] );
+#              ifdef UNSPLIT_GRAVITY
+               SRHydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, 1, Gamma, CorrHalfVel_Yes,
+                                    g_Pot_Array_USG[P], g_Corner_Array[P],
+                                    dt, dh, Time, GravityType, c_ExtAcc_AuxArray, MinTemp,
+                                    StoreFlux, g_Flux_Array[P] );
+#              else
+               SRHydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, 1, Gamma, CorrHalfVel_No,
+                                    NULL, NULL,
+                                    NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinTemp,
+                                    StoreFlux, g_Flux_Array[P] );
+#              endif
 
 
 //             3. full-step evolution
@@ -320,7 +349,7 @@ void SRHydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
          }
 
 //       check unphysical cells before computing flux
-#        ifdef CHECK_NEGATIVE_IN_FLUID
+#        ifdef CHECK_FAILED_CELL_IN_FLUID
          SRHydro_CheckUnphysical(ConVar_L, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true);
          SRHydro_CheckUnphysical(ConVar_R, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true);
 #        endif
@@ -406,7 +435,7 @@ void SRHydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
       for (int v=0; v<NCOMP_TOTAL; v++)
          out_con[v] = g_ConVar_In[v][idx_in] - dt_dh2*( dflux[0][v] + dflux[1][v] + dflux[2][v] );
 
-#     ifdef CHECK_NEGATIVE_IN_FLUID
+#     ifdef CHECK_FAILED_CELL_IN_FLUID
       SRHydro_CheckUnphysical(out_con, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true);
 #     endif
 
@@ -417,6 +446,10 @@ void SRHydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 //    conserved --> primitive variables
       SRHydro_Con2Pri( out_con, out_pri, Gamma, MinTemp );
 	  SRHydro_3Velto4Vel( out_pri, out_pri );
+
+#     ifdef USE_3_VELOCITY
+	  SRHydro_3Velto4Vel( out_pri, out_pri );
+#     endif
 
 //    store the results to g_Half_Var[]
       for (int v=0; v<NCOMP_TOTAL; v++)   g_Half_Var[v][idx_out] = out_pri[v];

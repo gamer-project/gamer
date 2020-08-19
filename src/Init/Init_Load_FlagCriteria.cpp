@@ -15,19 +15,23 @@ void Init_Load_FlagCriteria()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 #  if ( MODEL != HYDRO  &&  MODEL != MHD && MODEL != SR_HYDRO )
-   const bool OPT__FLAG_PRES_GRADIENT = false;
-   double *FlagTable_PresGradient     = NULL;
+   const bool OPT__FLAG_PRES_GRADIENT    = false;
+   const bool OPT__FLAG_ENGY_GRADIENT    = false;
+   const bool OPT__FLAG_LORENTZ_GRADIENT = false;
+   double *FlagTable_PresGradient        = NULL;
+   double *FlagTable_EngyGradient        = NULL;
 
-   const bool OPT__FLAG_VORTICITY     = false;
-   double *FlagTable_Vorticity        = NULL;
+   const bool OPT__FLAG_VORTICITY        = false;
+   double *FlagTable_Vorticity           = NULL;
 
-   const bool OPT__FLAG_JEANS         = false;
-   double *FlagTable_Jeans            = NULL;
+   const bool OPT__FLAG_JEANS            = false;
+   double *FlagTable_Jeans               = NULL;
 
-   const bool OPT__FLAG_LORENTZ       = false;
-   const bool OPT__FLAG_3VELOCITY     = false;
-   double *FlagTable_Lorentz          = NULL;
-   double *FlagTable_3Velocity        = NULL;
+   const bool OPT__FLAG_4VELOCITY        = false;
+   double *FlagTable_4Velocity           = NULL;
+
+   const bool OPT__FLAG_MOM_OVER_DENS    = false;
+   double *FlagTable_Mom_Over_Dens       = NULL;
 #  endif
 
 #  if ( MODEL != ELBDM )
@@ -57,31 +61,47 @@ void Init_Load_FlagCriteria()
                                 || OPT__FLAG_LOHNER_PRES 
                                 || OPT__FLAG_LOHNER_LRTZ
                                 || OPT__FLAG_LOHNER_TEMP );
-#  elif ( MODEL == SR_HYDRO )
 #  elif ( MODEL == ELBDM )
    const bool OPT__FLAG_LOHNER = OPT__FLAG_LOHNER_DENS;
 #  else
 #  error : unsupported MODEL !!
 #  endif
 
-   const int  NFlagMode         = 13;
+
+#  if ( MODEL == HYDRO )
+   const int  NFlagMode         = 11;
    const bool Flag[NFlagMode]   = { OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_PRES_GRADIENT,
                                     OPT__FLAG_ENGY_DENSITY, OPT__FLAG_LOHNER, OPT__FLAG_USER,
                                     (bool)OPT__FLAG_NPAR_PATCH, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL,
-                                    OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, OPT__FLAG_LORENTZ, OPT__FLAG_3VELOCITY };
+                                    OPT__FLAG_VORTICITY, OPT__FLAG_JEANS };
    const char ModeName[][100]   = { "OPT__FLAG_RHO"         , "OPT__FLAG_RHO_GRADIENT", "OPT__FLAG_PRES_GRADIENT",
                                     "OPT__FLAG_ENGY_DENSITY", "OPT__FLAG_LOHNER"      , "OPT__FLAG_USER"         ,
                                     "OPT__FLAG_NPAR_PATCH"  , "OPT__FLAG_NPAR_CELL"   , "OPT__FLAG_PAR_MASS_CELL",
-                                    "OPT__FLAG_VORTICITY"   , "OPT__FLAG_JEANS"       , "OPT__FLAG_LORENTZ"      ,
-                                    "OPT__FLAG_3VELOCITY"     };
+                                    "OPT__FLAG_VORTICITY"   , "OPT__FLAG_JEANS"      };
    const char FileName[][100]   = { "Input__Flag_Rho"        , "Input__Flag_RhoGradient", "Input__Flag_PresGradient",
                                     "Input__Flag_EngyDensity", "Input__Flag_Lohner"     , "Input__Flag_User"        ,
                                     "Input__Flag_NParPatch"  , "Input__Flag_NParCell"   , "Input__Flag_ParMassCell" ,
-                                    "Input__Flag_Vorticity"  , "Input__Flag_Jeans"      , "Input__Flag_Lorentz"     ,
-                                    "Input__Flag_3Velocity" };
+                                    "Input__Flag_Vorticity"  , "Input__Flag_Jeans"     };
    double *FlagTable[NFlagMode] = { FlagTable_Rho, FlagTable_RhoGradient, FlagTable_PresGradient,
                                     NULL, NULL, FlagTable_User, NULL, NULL, FlagTable_ParMassCell,
-                                    FlagTable_Vorticity, FlagTable_Jeans, FlagTable_Lorentz, FlagTable_3Velocity };
+                                    FlagTable_Vorticity, FlagTable_Jeans };
+#  elif ( MODEL == SR_HYDRO )
+   const int  NFlagMode         = 10;
+   const bool Flag[NFlagMode]   = { OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_PRES_GRADIENT, 
+                                    OPT__FLAG_ENGY_GRADIENT, OPT__FLAG_ENGY_DENSITY, OPT__FLAG_LOHNER, OPT__FLAG_USER, 
+                                    OPT__FLAG_4VELOCITY, OPT__FLAG_MOM_OVER_DENS, OPT__FLAG_LORENTZ_GRADIENT };
+   const char ModeName[][100]   = { "OPT__FLAG_RHO"          , "OPT__FLAG_RHO_GRADIENT", "OPT__FLAG_PRES_GRADIENT", 
+                                    "OPT__FLAG_ENGY_GRADIENT","OPT__FLAG_ENGY_DENSITY" , "OPT__FLAG_LOHNER"       , 
+                                    "OPT__FLAG_USER"         , "OPT__FLAG_4VELOCITY"   , "OPT__FLAG_MOM_OVER_DENS", 
+                                    "OPT__FLAG_LORENTZ_GRADIENT"  };
+   const char FileName[][100]   = { "Input__Flag_Rho"        , "Input__Flag_RhoGradient", "Input__Flag_PresGradient", 
+                                    "Input__Flag_EngyGradient","Input__Flag_EngyDensity", "Input__Flag_Lohner"      , 
+                                    "Input__Flag_User"        , "Input__Flag_4Velocity"  , "Input__Flag_Mom_Over_Dens",
+                                    "Input__Flag_LorentzGradient"   };
+   double *FlagTable[NFlagMode] = { FlagTable_Rho, FlagTable_RhoGradient, FlagTable_PresGradient, 
+                                    FlagTable_EngyGradient, NULL, NULL, FlagTable_User, FlagTable_4Velocity, 
+                                    FlagTable_Mom_Over_Dens, FlagTable_LorentzFactorGradient };
+#  endif
 
    FILE *File;
    char *input_line = NULL, TargetName[100];
@@ -107,10 +127,8 @@ void Init_Load_FlagCriteria()
 
 #     elif   ( MODEL == SR_HYDRO )
       FlagTable_PresGradient[lv]    = -1.0;
-      FlagTable_Vorticity   [lv]    = -1.0;
-      FlagTable_Jeans       [lv]    = -1.0;
-      FlagTable_Lorentz     [lv]    = -1.0;
-      FlagTable_3Velocity   [lv]    = -1.0;
+      FlagTable_EngyGradient[lv]    = -1.0;
+      FlagTable_4Velocity   [lv]    = -1.0;
 
 #     elif ( MODEL == ELBDM )
       for (int t=0; t<2; t++)
@@ -158,7 +176,7 @@ void Init_Load_FlagCriteria()
                Aux_Error( ERROR_INFO, "incorrect reading at level %d of the file <%s> !!\n",
                           lv, TargetName );
             }
-
+#           if ( MODEL == HYDRO )
 //          OPT__FLAG_ENGY_DENSITY and OPT__FLAG_LOHNER have two and three columns to be loaded, respectively
             if      ( FlagMode == 3 )  sscanf( input_line, "%d%lf%lf", &Trash, &FlagTable_EngyDensity[lv][0],
                                                                                &FlagTable_EngyDensity[lv][1] );
@@ -169,7 +187,15 @@ void Init_Load_FlagCriteria()
 //          OPT__FLAG_NPAR_PATCH/CELL load integers
             else if ( FlagMode == 6 )  sscanf( input_line, "%d%d",  &Trash, &FlagTable_NParPatch[lv] );
             else if ( FlagMode == 7 )  sscanf( input_line, "%d%d",  &Trash, &FlagTable_NParCell [lv] );
-
+#           elif ( MODEL == SR_HYDRO )
+            if      ( FlagMode == 4 )  sscanf( input_line, "%d%lf%lf", &Trash, &FlagTable_EngyDensity[lv][0],
+                                                                               &FlagTable_EngyDensity[lv][1] );
+            else if ( FlagMode == 5 )  sscanf( input_line, "%d%lf%lf%lf%lf", &Trash, &FlagTable_Lohner[lv][0],
+                                                                                     &FlagTable_Lohner[lv][1],
+                                                                                     &FlagTable_Lohner[lv][2],
+                                                                                     &FlagTable_Lohner[lv][3] );
+#           endif
+                 
 //          others use the default format: (integer, double)
             else                       sscanf( input_line, "%d%lf", &Trash, &FlagTable[FlagMode][lv] );
          }

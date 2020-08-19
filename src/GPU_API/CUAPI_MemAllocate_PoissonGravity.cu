@@ -9,7 +9,7 @@ extern real (*d_Pot_Array_P_In )[ POT_NXT*POT_NXT*POT_NXT ];
 extern real (*d_Pot_Array_P_Out)[ GRA_NXT*GRA_NXT*GRA_NXT ];
 #ifdef UNSPLIT_GRAVITY
 extern real (*d_Pot_Array_USG_G)[ USG_NXT_G*USG_NXT_G*USG_NXT_G ];
-extern real (*d_Flu_Array_USG_G)[GRA_NIN-1][ PS1*PS1*PS1 ];
+extern real (*d_Flu_Array_USG_G)[GRA_NIN_USG][ PS1*PS1*PS1 ];
 #endif
 extern real (*d_Flu_Array_G    )[GRA_NIN  ][ PS1*PS1*PS1 ];
 extern double (*d_Corner_Array_G)[3];
@@ -36,7 +36,7 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
    const long Pot_MemSize_P_Out = sizeof(real  )*Pot_NP*CUBE(GRA_NXT);
 #  ifdef UNSPLIT_GRAVITY
    const long Pot_MemSize_USG_G = sizeof(real  )*Pot_NP*CUBE(USG_NXT_G);
-   const long Flu_MemSize_USG_G = sizeof(real  )*Pot_NP*CUBE(PS1)*(GRA_NIN-1);
+   const long Flu_MemSize_USG_G = sizeof(real  )*Pot_NP*CUBE(PS1)*(GRA_NIN_USG);
 #  endif
    const long Flu_MemSize_G     = sizeof(real  )*Pot_NP*CUBE(PS1)*(GRA_NIN  );
    const long Corner_MemSize    = sizeof(double)*Pot_NP*3;

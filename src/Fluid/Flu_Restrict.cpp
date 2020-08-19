@@ -213,6 +213,14 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENPY][k][j][i],
                               dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy );
 
+#        elif ( MODEL == SR_HYDRO && defined(CHECK_FAILED_CELL_IN_FLUID) )
+
+	     real Con[NCOMP_FLUID];
+	     for(int v=0;v<NCOMP_FLUID;v++) Con[v]=amr->patch[FaFluSg][FaLv][FaPID]->fluid[v][k][j][i];
+
+	     if(SRHydro_CheckUnphysical(Con, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true))
+         exit(EXIT_FAILURE);
+
 #        elif ( MODEL != SR_HYDRO )
 
 //       actually it might not be necessary to check the minimum pressure here
@@ -223,14 +231,6 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
                                         amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMZ][k][j][i],
                                         amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i],
                                         Gamma_m1, _Gamma_m1, MIN_PRES );
-
-#        elif ( MODEL == SR_HYDRO && defined(CHECK_NEGATIVE_IN_FLUID) )
-
-	     real Con[NCOMP_FLUID];
-	     for(int v=0;v<NCOMP_FLUID;v++) Con[v]=amr->patch[FaFluSg][FaLv][FaPID]->fluid[v][k][j][i];
-
-	     if(SRHydro_CheckUnphysical(Con, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true))
-         exit(EXIT_FAILURE);
 
 #        endif // #ifdef DUAL_ENERGY ... else ...
       } // i,j,k

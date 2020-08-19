@@ -1,7 +1,8 @@
 #include "GAMER.h"
 
-static bool Check_Gradient( const int i, const int j, const int k, const real Input[], const double Threshold );
-extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
+static bool Check_Gradient    ( const int i, const int j, const int k, const real Input[], const double Threshold );
+extern bool (*Flag_User_Ptr)  ( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
+extern bool (*Flag_Region_Ptr)( const int i, const int j, const int k, const int lv, const int PID );
 
 
 
@@ -36,16 +37,17 @@ extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int l
 //-------------------------------------------------------------------------------------------------------
 bool Flag_Check( const int lv, const int PID, const int i, const int j, const int k, const real dv,
                  const real Fluid[][PS1][PS1][PS1], const real Pot[][PS1][PS1], const real Pres[][PS1][PS1],
-                 const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
-                 const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff )
+                 const real LorentzFactor[][PS1][PS1], const real *Lohner_Var, const real *Lohner_Ave, 
+                 const real *Lohner_Slope, const int Lohner_NVar, const real ParCount[][PS1][PS1], 
+                 const real ParDens[][PS1][PS1], const real JeansCoeff )
 {
    bool Flag = false;
 
 // check whether the input cell is within the regions allowed to be refined
 // ===========================================================================================
-   if ( OPT__FLAG_REGION )
+   if ( OPT__FLAG_REGION && Flag_Region_Ptr != NULL )
    {
-      if (  !Flag_Region( i, j, k, lv, PID )  )    return false;
+      if (  !Flag_Region_Ptr( i, j, k, lv, PID )  )    return false;
    }
 
 
@@ -88,6 +90,26 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
    }
 #  endif
 
+#  if ( MODEL == SR_HYDRO )
+// check M/D
+// ===========================================================================================
+   if ( OPT__FLAG_MOM_OVER_DENS )
+   {
+      real Cons[NCOMP_FLUID], M_D;
+      Cons[DENS]=Fluid[DENS][k][j][i];
+      Cons[MOMX]=Fluid[MOMX][k][j][i];
+      Cons[MOMY]=Fluid[MOMY][k][j][i];
+      Cons[MOMZ]=Fluid[MOMZ][k][j][i];
+
+      M_D = FABS( Cons[MOMX] ) + FABS( Cons[MOMY] ) + FABS( Cons[MOMZ] );
+
+      M_D /= Cons[DENS]; 
+
+      Flag |= ( M_D > FlagTable_Mom_Over_Dens[lv] );
+      if ( Flag )    return Flag;
+   }
+#  endif
+
 
 // check pressure gradient
 // ===========================================================================================
@@ -108,41 +130,15 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
       Flag |= Hydro_Flag_Vorticity( i, j, k, lv, PID, FlagTable_Vorticity[lv] );
       if ( Flag )    return Flag;
    }
-#  elif ( MODEL == SR_HYDRO )
-   if ( OPT__FLAG_VORTICITY )
-   {
-      Flag |= SRHydro_Flag_Vorticity( i, j, k, lv, PID, FlagTable_Vorticity[lv] );
-      if ( Flag )    return Flag;
-   }
 #  endif
 
-// check Lorentz factor
+// check magnitude of 4-velocity
 // ===========================================================================================
 #  if ( MODEL == SR_HYDRO )
-   if ( OPT__FLAG_LORENTZ )
+   if ( OPT__FLAG_4VELOCITY )
    {
-      real Dens, MomX, MomY, MomZ, Engy, LorentzFactor;
-      real Cons[NCOMP_FLUID], Prim[NCOMP_FLUID];
-
-      Cons[DENS]=Fluid[DENS][k][j][i];
-      Cons[MOMX]=Fluid[MOMX][k][j][i];
-      Cons[MOMY]=Fluid[MOMY][k][j][i];
-      Cons[MOMZ]=Fluid[MOMZ][k][j][i];
-      Cons[ENGY]=Fluid[ENGY][k][j][i];
-
-      LorentzFactor = SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
-
-      Flag |= ( LorentzFactor > FlagTable_Lorentz[lv] );
-
-      if ( Flag )    return Flag;
-   }
-
-// check 3-velocity
-// ===========================================================================================
-   if ( OPT__FLAG_3VELOCITY )
-   {
-      real Dens, MomX, MomY, MomZ, Engy, Mag_3Velocity;
-      real Cons[NCOMP_FLUID], Prim[NCOMP_FLUID];
+      real Dens, MomX, MomY, MomZ, Engy;
+      real Cons[NCOMP_FLUID], Prim[NCOMP_FLUID], U;
 
       Cons[DENS]=Fluid[DENS][k][j][i];
       Cons[MOMX]=Fluid[MOMX][k][j][i];
@@ -151,18 +147,38 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
       Cons[ENGY]=Fluid[ENGY][k][j][i];
 
       SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
-      SRHydro_4Velto3Vel( Prim, Prim );
-      Mag_3Velocity = SQRT( SQR(Prim[1]) + SQR(Prim[2]) + SQR(Prim[3]) );
 
-      Flag |= ( Mag_3Velocity > FlagTable_3Velocity[lv] );
+      U = SQRT( SQR(Prim[1]) + SQR(Prim[2]) + SQR(Prim[3]) );
 
+      Flag |= ( U > FlagTable_4Velocity[lv] );
+
+      if ( Flag )    return Flag;
+   }
+
+
+
+// check gradient of reduced energy density
+// ===========================================================================================
+   if ( OPT__FLAG_ENGY_GRADIENT )
+   {
+      Flag |= Check_Gradient( i, j, k, &Fluid[ENGY][0][0][0], FlagTable_EngyGradient[lv] );
+      if ( Flag )    return Flag;
+   }
+
+
+// check gradient of Lorentz factor
+// ===========================================================================================
+   if ( OPT__FLAG_LORENTZ_GRADIENT )
+   {
+      Flag |= Check_Gradient( i, j, k, &LorentzFactor[0][0][0], FlagTable_LorentzFactorGradient[lv] );
       if ( Flag )    return Flag;
    }
 #  endif
 
+
 // check Jeans length
 // ===========================================================================================
-#  if (  ( MODEL == HYDRO || MODEL == MHD || MODEL == SR_HYDRO )  &&  defined GRAVITY  )
+#  if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined GRAVITY  )
    if ( OPT__FLAG_JEANS )
    {
       const bool CheckMinPres_Yes = true;
@@ -259,8 +275,9 @@ bool Check_Gradient( const int i, const int j, const int k, const real Input[], 
    const int dIdx[3] = { 1, PS1, PS1*PS1 };
 
    int  Idx_p, Idx_m;
-   real _dh, Self, Gradient;
+   real _dh, Self;
    bool Flag = false;
+   real Gradient = (real)0.0;
 
    for (int d=0; d<3; d++)
    {
@@ -271,13 +288,15 @@ bool Check_Gradient( const int i, const int j, const int k, const real Input[], 
          default    : Idx_m = Idx-dIdx[d];   Idx_p = Idx+dIdx[d];    _dh = (real)0.5;  break;
       }
 
-      Self     = Input[Idx];
-      Gradient = _dh*( Input[Idx_p] - Input[Idx_m] );
-      Flag    |= (  FABS( Gradient/Self ) > Threshold  );
+      Gradient += FABS( _dh*( Input[Idx_p] - Input[Idx_m] ) );
 
-      if ( Flag )    return Flag;
    } // for (int d=0; d<3; d++)
 
-   return Flag;
+   Self = Input[Idx];
+
+   Flag = (  FABS( Gradient/Self ) > Threshold  );
+
+   if ( Flag )    return Flag;
+   else           return Flag;
 
 } // FUNCTION : Check_Gradient

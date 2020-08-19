@@ -840,7 +840,7 @@ GPU_DEVICE
 void Hydro_Pri2Char( real InOut[], const real Gamma, const real Rho, const real Pres, const int XYZ )
 {
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
+#  ifdef CHECK_FAILED_CELL_IN_FLUID
    if ( Hydro_CheckNegative(Pres) )
       printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               Pres, __FILE__, __LINE__, __FUNCTION__ );
@@ -886,7 +886,7 @@ GPU_DEVICE
 void Hydro_Char2Pri( real InOut[], const real Gamma, const real Rho, const real Pres, const int XYZ )
 {
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
+#  ifdef CHECK_FAILED_CELL_IN_FLUID
    if ( Hydro_CheckNegative(Pres) )
       printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               Pres, __FILE__, __LINE__, __FUNCTION__ );
@@ -937,7 +937,7 @@ void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NCOMP_FLUID], re
                            real REigenVec[][NCOMP_FLUID], const real Gamma )
 {
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
+#  ifdef CHECK_FAILED_CELL_IN_FLUID
    if ( Hydro_CheckNegative(CC_Var[4]) )
       printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               CC_Var[4], __FILE__, __LINE__, __FUNCTION__ );

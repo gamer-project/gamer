@@ -261,7 +261,6 @@ struct SymConst_t
    int    CheckIntermediate;
    int    HLL_NoRefState;
    int    HLL_IncludeAllWaves;
-   int    WAF_Dissipate;
 
 #  ifdef N_FC_VAR
    int    N_FC_Var;
@@ -395,10 +394,10 @@ struct InputPara_t
    int    Opt__Flag_Jeans;
 #  elif ( MODEL == SR_HYDRO )
    int    Opt__Flag_PresGradient;
-   int    Opt__Flag_Vorticity;
-   int    Opt__Flag_Jeans;
-   int    Opt__Flag_Lorentz;
-   int    Opt__Flag_3Velocity;
+   int    Opt__Flag_EngyGradient;
+   int    Opt__Flag_LorentzGradient;
+   int    Opt__Flag_4Velocity;
+   int    Opt__Flag_Mom_Over_Dens;
 #  endif
 #  if ( MODEL == ELBDM )
    int    Opt__Flag_EngyDensity;
@@ -633,10 +632,10 @@ struct InputPara_t
    double FlagTable_Jeans       [NLEVEL-1];
 #  elif   ( MODEL == SR_HYDRO )
    double FlagTable_PresGradient[NLEVEL-1];
-   double FlagTable_Vorticity   [NLEVEL-1];
-   double FlagTable_Jeans       [NLEVEL-1];
-   double FlagTable_Lorentz     [NLEVEL-1];
-   double FlagTable_3Velocity   [NLEVEL-1];
+   double FlagTable_EngyGradient[NLEVEL-1];
+   double FlagTable_LorentzFactorGradient[NLEVEL-1];
+   double FlagTable_4Velocity   [NLEVEL-1];
+   double FlagTable_Mom_Over_Dens   [NLEVEL-1];
 #  elif ( MODEL == ELBDM )
    double FlagTable_EngyDensity [NLEVEL-1][2];
 #  endif

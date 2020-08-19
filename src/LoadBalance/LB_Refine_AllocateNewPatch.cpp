@@ -829,9 +829,12 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
          FData_Flu[IMAG][k][j][i] = Amp*SIN( Phase );
       }
    }
-#  else // #if ( MODEL == ELBDM )
+#  elif ( MODEL == HYDRO )
    AdaptiveInterpolate( CData_Flu, CSize_Flu_Temp, CStart_Flu, CRange, &FData_Flu[0][0][0][0],
-                        FSize_Temp, FStart, NCOMP_TOTAL, _TOTAL, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity );
+                        FSize_Temp, FStart, NCOMP_TOTAL, _TOTAL, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity, 2 );
+#  elif ( MODEL == SR_HYDRO )
+   AdaptiveInterpolate( CData_Flu, CSize_Flu_Temp, CStart_Flu, CRange, &FData_Flu[0][0][0][0],
+                        FSize_Temp, FStart, NCOMP_TOTAL, _TOTAL, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity, 1 );
 
 #  endif // #if ( MODEL == ELBDM ) ... else
 
@@ -839,8 +842,8 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    const int CSize_Pot_Temp[3] = { CSize_Pot, CSize_Pot, CSize_Pot };
    real *const CData_Pot = CData + NCOMP_TOTAL*CSize_Flu*CSize_Flu*CSize_Flu;
 
-   Interpolate( CData_Pot, CSize_Pot_Temp, CStart_Pot, CRange, &FData_Pot[0][0][0],
-                FSize_Temp, FStart,     1, OPT__REF_POT_INT_SCHEME, PhaseUnwrapping_No, &EnsureMonotonicity_No );
+   AdaptiveInterpolate( CData_Pot, CSize_Pot_Temp, CStart_Pot, CRange, &FData_Pot[0][0][0],
+                        FSize_Temp, FStart,     1, _POTE, OPT__REF_POT_INT_SCHEME, PhaseUnwrapping_No, &EnsureMonotonicity_No, NULL_INT );
 #  endif
 
 

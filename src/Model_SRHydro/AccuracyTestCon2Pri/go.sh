@@ -1,8 +1,25 @@
 #!/bin/bash
-g++ main.cpp  CPU_Shared_FluUtility.cpp \
--DCONSERVED_ENERGY=2 \
+
+NAME=$1
+
+
+if [ -z "$NAME" ];then
+   echo "error: Please provide source code"
+   exit
+fi
+
+
+OUT=${NAME%.cpp}
+
+EOS=APPROXIMATED_GENERAL
+#EOS=CONSTANT_GAMMA
+CONSERVED_ENERGY=2
+PRECISION=FLOAT8
+
+
+g++ $1  CPU_Shared_FluUtility.cpp \
+-DCONSERVED_ENERGY=$CONSERVED_ENERGY \
 -DSERIAL \
--DFLOAT8 \
 -DLR_SCHEME=PLM \
 -DMODEL=SR_HYDRO \
 -DRANDOM_NUMBER=RNG_GNU_EXT \
@@ -10,6 +27,5 @@ g++ main.cpp  CPU_Shared_FluUtility.cpp \
 -DRSOLVER=HLLC \
 -DNLEVEL=10 \
 -DMAX_PATCH=200000 \
--DEOS=APPROXIMATED_GENERAL    -lm && ./a.out
-#-DEOS=CONSTANT_GAMMA         -lm && ./a.out
-#-DEOS=RELATIVISTIC_IDEAL_GAS -lm && ./a.out
+-D$PRECISION \
+-DEOS=$EOS -lm -o $OUT && ./$OUT

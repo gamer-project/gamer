@@ -8,6 +8,11 @@
 #include <cpuid.h>
 #endif
 
+
+//Stringizing operator in C/C++
+#define STR( x )                #x
+#define SHOW_MACRO( x )         STR( x )
+
 static int get_cpuid();
 
 
@@ -55,7 +60,7 @@ void Aux_TakeNote()
 #     elif ( MODEL == MHD )
       fprintf( Note, "MODEL                           MHD\n" );
 #     elif ( MODEL == SR_HYDRO )
-      fprintf( Note, "MODEL                           SR-HYDRO\n" );
+      fprintf( Note, "MODEL                           SR_HYDRO\n" );
 #     elif ( MODEL == ELBDM )
       fprintf( Note, "MODEL                           ELBDM\n" );
 #     elif ( MODEL == PAR_ONLY )
@@ -167,7 +172,7 @@ void Aux_TakeNote()
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
 
-//    d. options in SR-HYDRO
+//    d. options in SR_HYDRO
 #     elif   ( MODEL == SR_HYDRO )
 
 #     if ( EOS == CONSTANT_GAMMA )
@@ -180,6 +185,12 @@ void Aux_TakeNote()
       fprintf( Note, "FUSED_MULTIPLY_ADD              ON\n" );
 #     else
       fprintf( Note, "FUSED_MULTIPLY_ADD              OFF\n" );
+#     endif
+
+#     ifdef USE_3_VELOCITY
+      fprintf( Note, "USE_3_VELOCITY                  ON\n" );
+#     else
+      fprintf( Note, "USE_3_VELOCITY                  OFF\n" );
 #     endif
 
 
@@ -195,14 +206,10 @@ void Aux_TakeNote()
       fprintf( Note, "CONSERVED_ENERGY                TOTAL_ENERGY - REST_MASS\n" );
 #     endif
 
-#     if   ( FLU_SCHEME == RTVD )
-      fprintf( Note, "FLU_SCHEME                      RTVD\n" );
-#     elif ( FLU_SCHEME == MHM )
+#     if ( FLU_SCHEME == MHM )
       fprintf( Note, "FLU_SCHEME                      MHM\n" );
 #     elif ( FLU_SCHEME == MHM_RP )
       fprintf( Note, "FLU_SCHEME                      MHM with Riemann prediction\n" );
-#     elif ( FLU_SCHEME == CTU )
-      fprintf( Note, "FLU_SCHEME                      CTU\n" );
 #     elif ( FLU_SCHEME == NONE )
       fprintf( Note, "FLU_SCHEME                      NONE\n" );
 #     else
@@ -221,11 +228,7 @@ void Aux_TakeNote()
       fprintf( Note, "LR_SCHEME                       UNKNOWN\n" );
 #     endif
 
-#     if   ( RSOLVER == EXACT )
-      fprintf( Note, "RSOLVER                         EXACT\n" );
-#     elif ( RSOLVER == ROE )
-      fprintf( Note, "RSOLVER                         ROE\n" );
-#     elif ( RSOLVER == HLLE )
+#     if ( RSOLVER == HLLE )
       fprintf( Note, "RSOLVER                         HLLE\n" );
 #     elif ( RSOLVER == HLLC )
       fprintf( Note, "RSOLVER                         HLLC\n" );
@@ -235,15 +238,6 @@ void Aux_TakeNote()
       fprintf( Note, "RSOLVER                         UNKNOWN\n" );
 #     endif
 
-#     if   ( DUAL_ENERGY == DE_ENPY )
-      fprintf( Note, "DUAL_ENERGY                     DE_ENPY\n" );
-#     elif ( DUAL_ENERGY == DE_EINT )
-      fprintf( Note, "DUAL_ENERGY                     DE_EINT\n" );
-#     elif ( DUAL_ENERGY == NONE )
-      fprintf( Note, "DUAL_ENERGY                     NONE\n" );
-#     else
-      fprintf( Note, "DUAL_ENERGY                     UNKNOWN\n" );
-#     endif
 
 //    e. options in ELBDM
 #     elif ( MODEL == ELBDM )
@@ -410,10 +404,10 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
 
 #     if   ( MODEL == HYDRO )
-#     ifdef CHECK_NEGATIVE_IN_FLUID
-      fprintf( Note, "CHECK_NEGATIVE_IN_FLUID         ON\n" );
+#     ifdef CHECK_FAILED_CELL_IN_FLUID
+      fprintf( Note, "CHECK_FAILED_CELL_IN_FLUID      ON\n" );
 #     else
-      fprintf( Note, "CHECK_NEGATIVE_IN_FLUID         OFF\n" );
+      fprintf( Note, "CHECK_FAILED_CELL_IN_FLUID      OFF\n" );
 #     endif
 
 #     ifdef CHAR_RECONSTRUCTION
@@ -450,10 +444,10 @@ void Aux_TakeNote()
 #     warning : WAIT MHD !!!
 
 #     elif   ( MODEL == SR_HYDRO )
-#     ifdef CHECK_NEGATIVE_IN_FLUID
-      fprintf( Note, "CHECK_NEGATIVE_IN_FLUID         ON\n" );
+#     ifdef CHECK_FAILED_CELL_IN_FLUID
+      fprintf( Note, "CHECK_FAILED_CELL_IN_FLUID      ON\n" );
 #     else
-      fprintf( Note, "CHECK_NEGATIVE_IN_FLUID         OFF\n" );
+      fprintf( Note, "CHECK_FAILED_CELL_IN_FLUID      OFF\n" );
 #     endif
 
 #     ifdef CHAR_RECONSTRUCTION
@@ -564,6 +558,7 @@ void Aux_TakeNote()
       fprintf( Note, "#define NFLUX_PASSIVE           %d\n",      NFLUX_PASSIVE       );
 #     ifdef GRAVITY
       fprintf( Note, "#define GRA_NIN                 %d\n",      GRA_NIN             );
+      fprintf( Note, "#define GRA_NIN_USG             %d\n",      GRA_NIN_USG         );
 #     endif
       fprintf( Note, "#define PATCH_SIZE              %d\n",      PATCH_SIZE          );
       fprintf( Note, "#define MAX_PATCH               %d\n",      MAX_PATCH           );
@@ -680,8 +675,21 @@ void Aux_TakeNote()
       fprintf( Note, "UNIT_E (energy)                 %20.14e g*cm^2/s^2 (*)\n", UNIT_E                        );
       fprintf( Note, "UNIT_P (energy density)         %20.14e g/cm/s^2   (*)\n", UNIT_P                        ); }
 
-#     else
+#     elif ( MODEL == SR_HYDRO )
+      fprintf( Note, "UNIT_L (length)                 %20.14e kpc\n",            UNIT_L/Const_kpc              );
+      fprintf( Note, "                              = %20.14e cm            \n", UNIT_L                        );
+      fprintf( Note, "UNIT_M (mass)                   %20.14e mp\n",             UNIT_M/Const_mp               );
+      fprintf( Note, "                              = %20.14e g             \n", UNIT_M                        );
+      fprintf( Note, "UNIT_T (time)                   %20.14e Myr           \n", UNIT_T/Const_Myr              );
+      fprintf( Note, "                              = %20.14e s             \n", UNIT_T                        );
+      fprintf( Note, "UNIT_V (velocity)               %20.14e c\n",              UNIT_V/Const_c                );
+      fprintf( Note, "                              = %20.14e cm/s\n",           UNIT_V                        );
+      fprintf( Note, "UNIT_D (mass density)           %20.14e g/cm^3        \n", UNIT_D                        );
+      fprintf( Note, "                              = %20.14e 1/cm^3        \n", UNIT_D/Const_mp               );
+      fprintf( Note, "UNIT_E (energy)                 %20.14e g*cm^2/s^2    \n", UNIT_E                        );
+      fprintf( Note, "UNIT_P (energy density)         %20.14e g/cm/s^2      \n", UNIT_P                        ); }
 
+#     else
       fprintf( Note, "UNIT_L                          %20.14e cm\n",             UNIT_L                        );
       fprintf( Note, "UNIT_M                          %20.14e g\n",              UNIT_M                        );
       fprintf( Note, "UNIT_T                          %20.14e s\n",              UNIT_T                        );
@@ -753,7 +761,9 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "DT__FLUID                       %13.7e\n",  DT__FLUID                 );
       fprintf( Note, "DT__FLUID_INIT                  %13.7e\n",  DT__FLUID_INIT            );
+#     if ( MODEL == SR_HYDRO )
       fprintf( Note, "DT_SPEED_OF_LIGHT               %d\n",      DT_SPEED_OF_LIGHT         );
+#     endif
 #     ifdef GRAVITY
       fprintf( Note, "DT__GRAVITY                     %13.7e\n",  DT__GRAVITY               );
 #     endif
@@ -798,10 +808,9 @@ void Aux_TakeNote()
 #     warning : WAIT MHD !!!
 #     elif   ( MODEL == SR_HYDRO )
       fprintf( Note, "OPT__FLAG_PRES_GRADIENT         %d\n",      OPT__FLAG_PRES_GRADIENT   );
-      fprintf( Note, "OPT__FLAG_VORTICITY             %d\n",      OPT__FLAG_VORTICITY       );
-      fprintf( Note, "OPT__FLAG_JEANS                 %d\n",      OPT__FLAG_JEANS           );
-      fprintf( Note, "OPT__FLAG_LORENTZ               %d\n",      OPT__FLAG_LORENTZ         );
-      fprintf( Note, "OPT__FLAG_3VELOCITY             %d\n",      OPT__FLAG_3VELOCITY       );
+      fprintf( Note, "OPT__FLAG_ENGY_GRADIENT         %d\n",      OPT__FLAG_ENGY_GRADIENT   );
+      fprintf( Note, "OPT__FLAG_4VELOCITY             %d\n",      OPT__FLAG_4VELOCITY       );
+      fprintf( Note, "OPT__FLAG_LORENTZ_GRADIENT      %d\n",      OPT__FLAG_LORENTZ_GRADIENT);
 #     endif
 #     if ( MODEL == ELBDM )
       fprintf( Note, "OPT__FLAG_ENGY_DENSITY          %d\n",      OPT__FLAG_ENGY_DENSITY    );
@@ -935,23 +944,12 @@ void Aux_TakeNote()
       fprintf( Note, "GAMMA                           %13.7e\n",  GAMMA                   );
       fprintf( Note, "MOLECULAR_WEIGHT                %13.7e\n",  MOLECULAR_WEIGHT        );
       fprintf( Note, "MINMOD_COEFF                    %13.7e\n",  MINMOD_COEFF            );
-      fprintf( Note, "EP_COEFF                        %13.7e\n",  EP_COEFF                );
       fprintf( Note, "OPT__LR_LIMITER                 %s\n",      ( OPT__LR_LIMITER == VANLEER           ) ? "VANLEER"    :
                                                                   ( OPT__LR_LIMITER == GMINMOD           ) ? "GMINMOD"    :
                                                                   ( OPT__LR_LIMITER == ALBADA            ) ? "ALBADA"     :
                                                                   ( OPT__LR_LIMITER == VL_GMINMOD        ) ? "VL_GMINMOD" :
-                                                                  ( OPT__LR_LIMITER == EXTPRE            ) ? "EXTPRE"     :
                                                                   ( OPT__LR_LIMITER == LR_LIMITER_NONE   ) ? "NONE"       :
                                                                                                              "UNKNOWN" );
-      fprintf( Note, "OPT__1ST_FLUX_CORR              %s\n",      ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D   ) ? "3D"   :
-                                                                  ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D1D ) ? "3D1D" :
-                                                                  ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_NONE ) ? "NONE" :
-                                                                                                                   "UNKNOWN" );
-      fprintf( Note, "OPT__1ST_FLUX_CORR_SCHEME       %s\n",      ( OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_ROE  ) ? "RSOLVER_1ST_ROE"  :
-                                                                  ( OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_HLLC ) ? "RSOLVER_1ST_HLLC" :
-                                                                  ( OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_HLLE ) ? "RSOLVER_1ST_HLLE" :
-                                                                  ( OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_NONE ) ? "NONE"             :
-                                                                                                                "UNKNOWN" );
 #     elif ( MODEL == ELBDM )
       if ( OPT__UNIT ) {
 //    since the mass unit in cosmological simulation has the 1/h dependence, the actual ELBDM_MASS adopted in the
@@ -1221,7 +1219,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__CK_FINITE                  %d\n",      OPT__CK_FINITE            );
       fprintf( Note, "OPT__CK_PATCH_ALLOCATE          %d\n",      OPT__CK_PATCH_ALLOCATE    );
       fprintf( Note, "OPT__CK_FLUX_ALLOCATE           %d\n",      OPT__CK_FLUX_ALLOCATE     );
-#     if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
+#     if   ( MODEL == HYDRO )
       fprintf( Note, "OPT__CK_NEGATIVE                %d\n",      OPT__CK_NEGATIVE          );
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
@@ -1291,7 +1289,7 @@ void Aux_TakeNote()
 #     elif ( MODEL == SR_HYDRO )
       if ( OPT__FLAG_PRES_GRADIENT )
       {
-         fprintf( Note, "Flag Criterion (Pressure Gradient in HYDRO)\n" );
+         fprintf( Note, "Flag Criterion (Pressure Gradient in SR_HYDRO)\n" );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "  Level   Pressure Gradient\n" );
          for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_PresGradient[lv] );
@@ -1299,26 +1297,36 @@ void Aux_TakeNote()
          fprintf( Note, "\n\n");
       }
 
-      if ( OPT__FLAG_VORTICITY )
+      if ( OPT__FLAG_ENGY_GRADIENT )
       {
-         fprintf( Note, "Flag Criterion (Vorticity in HYDRO)\n" );
+         fprintf( Note, "Flag Criterion (Total Energy Density Gradient in SR_HYDRO)\n" );
          fprintf( Note, "***********************************************************************************\n" );
-         fprintf( Note, "  Level           Vorticity\n" );
-         for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_Vorticity[lv] );
+         fprintf( Note, "  Level   Reduced Energy Density Gradient\n" );
+         for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_EngyGradient[lv] );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n");
       }
-/*
-      if ( OPT__FLAG_JEANS )
+
+      if ( OPT__FLAG_LORENTZ_GRADIENT )
       {
-         fprintf( Note, "Flag Criterion (Jeans Length over Cell Size in HYDRO)\n" );
+         fprintf( Note, "Flag Criterion (Lorentz factor Gradient in SR_HYDRO)\n" );
          fprintf( Note, "***********************************************************************************\n" );
-         fprintf( Note, "  Level       lambda_J / dh\n" );
-         for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_Jeans[lv] );
+         fprintf( Note, "  Level   Lorentz factor Gradient\n" );
+         for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_LorentzFactorGradient[lv] );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n");
       }
-*/
+
+      if ( OPT__FLAG_MOM_OVER_DENS )
+      {
+         fprintf( Note, "Flag Criterion (Total Energy Density Gradient in SR_HYDRO)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level   Momentum over density\n" );
+         for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_Mom_Over_Dens[lv] );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
+      }
+
 #     endif
 
 #     if ( MODEL == ELBDM )
@@ -1416,18 +1424,19 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 
-//    record the SHA1 code on git (of the file "Aux_TakeNote")
-      fprintf( Note, "SHA1 on git\n" );
+//    record the SHA1 hash in git
+      fprintf( Note, "SHA1 in git\n" );
       fprintf( Note, "***********************************************************************************\n" );
-
-      char var[41];
-      FILE *fp = popen("git rev-parse HEAD", "r");
-      fgets(var, sizeof(var), fp);
-      pclose(fp);
-      fprintf( Note, "%s\n", var);
+      fprintf( Note, "%s\n", SHOW_MACRO( GIT_SHA1 ));
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 
+//    record current branch name in git
+      fprintf( Note, "branch name in git\n" );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "%s\n", SHOW_MACRO( GIT_BRANCH ));
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "\n\n");
 
       fclose( Note );
    } // if ( MPI_Rank == 0 )

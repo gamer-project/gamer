@@ -117,16 +117,17 @@ extern double           ELBDM_LAMBDA;
 #endif
 
 #elif   ( MODEL == SR_HYDRO )
-extern double           FlagTable_PresGradient[NLEVEL-1], FlagTable_Vorticity[NLEVEL-1],
-	                    FlagTable_Jeans[NLEVEL-1], FlagTable_Lorentz[NLEVEL-1], FlagTable_3Velocity[NLEVEL-1];
+extern double           FlagTable_PresGradient[NLEVEL-1], FlagTable_EngyGradient[NLEVEL-1], 
+                        FlagTable_4Velocity[NLEVEL-1], FlagTable_Mom_Over_Dens[NLEVEL-1],
+                        FlagTable_LorentzFactorGradient[NLEVEL-1];
 extern double           GAMMA, MINMOD_COEFF, EP_COEFF, MOLECULAR_WEIGHT;
 extern LR_Limiter_t     OPT__LR_LIMITER;
 extern Opt1stFluxCorr_t OPT__1ST_FLUX_CORR;
 extern OptRSolver1st_t  OPT__1ST_FLUX_CORR_SCHEME;
-extern bool             OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES,
-	                    OPT__FLAG_LOHNER_TEMP, OPT__FLAG_LOHNER_LRTZ;
-extern bool             OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, OPT__FLAG_LORENTZ, OPT__FLAG_3VELOCITY, JEANS_MIN_PRES;
-extern int              OPT__CK_NEGATIVE, JEANS_MIN_PRES_LEVEL, JEANS_MIN_PRES_NCELL;
+extern bool             OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_MOM_OVER_DENS,
+	                    OPT__FLAG_LOHNER_TEMP, OPT__FLAG_LOHNER_LRTZ, OPT__FLAG_4VELOCITY, OPT__FLAG_ENGY_GRADIENT,
+                        OPT__FLAG_LORENTZ_GRADIENT;
+extern int              OPT__CK_NEGATIVE;
 extern double           MIN_DENS, MIN_TEMP, MIN_PRES;
 
 #else
@@ -252,7 +253,7 @@ extern char       (*h_DE_Array_G     [2])[PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
 #ifdef UNSPLIT_GRAVITY
 extern real       (*h_Pot_Array_USG_F[2])[ CUBE(USG_NXT_F) ];
 extern real       (*h_Pot_Array_USG_G[2])[USG_NXT_G ][USG_NXT_G ][USG_NXT_G ];
-extern real       (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1];
+extern real       (*h_Flu_Array_USG_G[2])[GRA_NIN_USG][PS1][PS1][PS1];
 #endif
 #endif
 

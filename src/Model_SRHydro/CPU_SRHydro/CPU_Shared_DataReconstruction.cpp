@@ -25,7 +25,7 @@ static void SRHydro_LimitSlope( const real L1[], const real C0[], const real R1[
                                 const real MinMod_Coeff, const real Gamma, const int XYZ, real Slope_Limiter[] );
 #if ( FLU_SCHEME == MHM )
 GPU_DEVICE
-static void SRHydro_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real dh,
+static void SRHydro_HancockPredict( real fc_Con[][NCOMP_TOTAL], real fc_Pri[][NCOMP_TOTAL], const real dt, const real dh,
                                     const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
                                     const real MinDens, const real MinTemp, const real Gamma );
 #endif
@@ -100,11 +100,15 @@ void SRHydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
       {
          for (int v=0; v<NCOMP_TOTAL; v++)   ConVar_1Cell[v] = g_ConVar[v][idx];
 
-#        ifdef CHECK_NEGATIVE_IN_FLUID
+#        ifdef CHECK_FAILED_CELL_IN_FLUID
          SRHydro_CheckUnphysical( ConVar_1Cell, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true );
 #        endif
 
          SRHydro_Con2Pri( ConVar_1Cell, PriVar_1Cell, Gamma, MinTemp );
+
+#        ifdef USE_3_VELOCITY
+		 SRHydro_3Velto4Vel( PriVar_1Cell, PriVar_1Cell );
+#        endif
 
          for (int v=0; v<NCOMP_TOTAL; v++)   g_PriVar[v][idx] = PriVar_1Cell[v];
       }
@@ -124,7 +128,8 @@ void SRHydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
       const int idx_cc = IDX321( i_cc, j_cc, k_cc, NIn, NIn );
 
       real cc_C[NCOMP_TOTAL], cc_L[NCOMP_TOTAL], cc_R[NCOMP_TOTAL];  // cell-centered variables of the Central/Left/Right cells
-      real fc[6][NCOMP_TOTAL];                                       // face-centered variables of the central cell
+      real fc_Con[6][NCOMP_TOTAL];                                   // face-centered conservative variables of the central cell
+      real fc_Pri[6][NCOMP_TOTAL];                                   // face-centered primitive variables of the central cell
       real Slope_Limiter[NCOMP_TOTAL];
 
       for (int v=0; v<NCOMP_TOTAL; v++)   cc_C[v] = g_PriVar[v][idx_cc];
@@ -151,8 +156,8 @@ void SRHydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 //       3. get the face-centered primitive variables
          for (int v=0; v<NCOMP_TOTAL; v++)
          {
-            fc[faceL][v] = -(real)0.5 * Slope_Limiter[v] + cc_C[v];
-            fc[faceR][v] =  (real)0.5 * Slope_Limiter[v] + cc_C[v];
+            fc_Pri[faceL][v] = -(real)0.5 * Slope_Limiter[v] + cc_C[v];
+            fc_Pri[faceR][v] =  (real)0.5 * Slope_Limiter[v] + cc_C[v];
          }
 
 //       ensure the face-centered variables lie between neighboring cell-centered values
@@ -162,39 +167,39 @@ void SRHydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
             Min = ( cc_C[v] < cc_L[v] ) ? cc_C[v] : cc_L[v];
             Max = ( cc_C[v] > cc_L[v] ) ? cc_C[v] : cc_L[v];
-            fc[faceL][v] = ( fc[faceL][v] > Min ) ? fc[faceL][v] : Min;
-            fc[faceL][v] = ( fc[faceL][v] < Max ) ? fc[faceL][v] : Max;
-            fc[faceR][v] = (real)2.0 * cc_C[v] - fc[faceL][v];
+            fc_Pri[faceL][v] = ( fc_Pri[faceL][v] > Min ) ? fc_Pri[faceL][v] : Min;
+            fc_Pri[faceL][v] = ( fc_Pri[faceL][v] < Max ) ? fc_Pri[faceL][v] : Max;
+            fc_Pri[faceR][v] = (real)2.0 * cc_C[v] - fc_Pri[faceL][v];
 
             Min = ( cc_C[v] < cc_R[v] ) ? cc_C[v] : cc_R[v];
             Max = ( cc_C[v] > cc_R[v] ) ? cc_C[v] : cc_R[v];
-            fc[faceR][v] = ( fc[faceR][v] > Min ) ? fc[faceR][v] : Min;
-            fc[faceR][v] = ( fc[faceR][v] < Max ) ? fc[faceR][v] : Max;
-            fc[faceL][v] = (real)2.0 * cc_C[v] - fc[faceR][v];
+            fc_Pri[faceR][v] = ( fc_Pri[faceR][v] > Min ) ? fc_Pri[faceR][v] : Min;
+            fc_Pri[faceR][v] = ( fc_Pri[faceR][v] < Max ) ? fc_Pri[faceR][v] : Max;
+            fc_Pri[faceL][v] = (real)2.0 * cc_C[v] - fc_Pri[faceR][v];
          }
 
 //       5. primitive variables --> conserved variables
-         real tmp[NCOMP_TOTAL];  // input and output arrays must not overlap for Pri2Con()
+#        ifdef USE_3_VELOCITY
+		 SRHydro_4Velto3Vel( fc_Pri[faceL], fc_Pri[faceL] );
+		 SRHydro_4Velto3Vel( fc_Pri[faceR], fc_Pri[faceR] );
+#        endif
 
-         for (int v=0; v<NCOMP_TOTAL; v++)   tmp[v] = fc[faceL][v];
-         SRHydro_Pri2Con( tmp, fc[faceL], Gamma );
-
-         for (int v=0; v<NCOMP_TOTAL; v++)   tmp[v] = fc[faceR][v];
-         SRHydro_Pri2Con( tmp, fc[faceR], Gamma );
+         SRHydro_Pri2Con( fc_Pri[faceL], fc_Con[faceL], Gamma );
+         SRHydro_Pri2Con( fc_Pri[faceR], fc_Con[faceR], Gamma );
 
       } // for (int d=0; d<3; d++)
 
 
 #     if ( FLU_SCHEME == MHM )
 //    6. advance the face-centered variables by half time-step for the MHM integrator
-      SRHydro_HancockPredict( fc, dt, dh, g_ConVar, idx_cc, MinDens, MinTemp, Gamma );
+      SRHydro_HancockPredict( fc_Con, fc_Pri, dt, dh, g_ConVar, idx_cc, MinDens, MinTemp, Gamma );
 #     endif
 
 
 //    7. store the face-centered values to the output array
       for (int f=0; f<6; f++)
       for (int v=0; v<NCOMP_TOTAL; v++)
-         g_FC_Var[f][v][idx_fc] = fc[f][v];
+         g_FC_Var[f][v][idx_fc] = fc_Con[f][v];
 
    } // CGPU_LOOP( idx_fc, CUBE(NOut) )
 
@@ -257,11 +262,15 @@ real B = (real)0.25;
       {
          for (int v=0; v<NCOMP_TOTAL; v++)   ConVar_1Cell[v] = g_ConVar[v][idx];
 
-#        ifdef CHECK_NEGATIVE_IN_FLUID
+#        ifdef CHECK_FAILED_CELL_IN_FLUID
          SRHydro_CheckUnphysical( ConVar_1Cell, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true );
 #        endif
 
          SRHydro_Con2Pri( ConVar_1Cell, PriVar_1Cell, Gamma, MinTemp );
+
+#        ifdef USE_3_VELOCITY
+		 SRHydro_3Velto4Vel( PriVar_1Cell, PriVar_1Cell );
+#        endif
 
          for (int v=0; v<NCOMP_TOTAL; v++)   g_PriVar[v][idx] = PriVar_1Cell[v];
       }
@@ -281,7 +290,8 @@ real B = (real)0.25;
       const int idx_cc = IDX321( i_cc, j_cc, k_cc, NIn, NIn );
 
       real cc_C[NCOMP_TOTAL], cc_L1[NCOMP_TOTAL], cc_R1[NCOMP_TOTAL], cc_L2[NCOMP_TOTAL], cc_R2[NCOMP_TOTAL];
-      real fc[6][NCOMP_TOTAL];                                       // face-centered variables of the central cell
+      real fc_Con[6][NCOMP_TOTAL];                                   // face-centered conservative variables of the central cell
+      real fc_Pri[6][NCOMP_TOTAL];                                   // face-centered primitive variables of the central cell
       real Slope_Limiter[NCOMP_TOTAL];
 
       for (int v=0; v<NCOMP_TOTAL; v++)   cc_C[v] = g_PriVar[v][idx_cc];
@@ -335,41 +345,41 @@ real B = (real)0.25;
               SumAlphaR += AlphaR[i];
             }
 
-            fc[faceL][v] = fc[faceR][v] = (real)0.0;
+            fc_Pri[faceL][v] = fc_Pri[faceR][v] = (real)0.0;
                                                                                                                                             
             for (int i=0;i<3;i++)
             {
               OmegaL[i] = AlphaL[i] / SumAlphaL;
               OmegaR[i] = AlphaR[i] / SumAlphaR;
 
-              fc[faceR][v] += OmegaR[i]*RStencil[i];
-              fc[faceL][v] += OmegaL[i]*LStencil[i];
+              fc_Pri[faceR][v] += OmegaR[i]*RStencil[i];
+              fc_Pri[faceL][v] += OmegaL[i]*LStencil[i];
             }
          }
 
 
 //       5. primitive variables --> conserved variables
-         real tmp[NCOMP_TOTAL];  // input and output arrays must not overlap for Pri2Con()
+#        ifdef USE_3_VELOCITY
+		 SRHydro_4Velto3Vel( fc_Pri[faceL], fc_Pri[faceL] );
+		 SRHydro_4Velto3Vel( fc_Pri[faceR], fc_Pri[faceR] );
+#        endif
 
-         for (int v=0; v<NCOMP_TOTAL; v++)   tmp[v] = fc[faceL][v];
-         SRHydro_Pri2Con( tmp, fc[faceL], Gamma );
-
-         for (int v=0; v<NCOMP_TOTAL; v++)   tmp[v] = fc[faceR][v];
-         SRHydro_Pri2Con( tmp, fc[faceR], Gamma );
+         SRHydro_Pri2Con( fc_Pri[faceL], fc_Con[faceL], Gamma );
+         SRHydro_Pri2Con( fc_Pri[faceR], fc_Con[faceR], Gamma );
 
       } // for (int d=0; d<3; d++)
 
 
 #     if ( FLU_SCHEME == MHM )
 //    6. advance the face-centered variables by half time-step for the MHM integrator
-      SRHydro_HancockPredict( fc, dt, dh, g_ConVar, idx_cc, MinDens, MinTemp, Gamma );
+      SRHydro_HancockPredict( fc_Con, fc_Pri, dt, dh, g_ConVar, idx_cc, MinDens, MinTemp, Gamma );
 #     endif
 
 
 //    7. store the face-centered values to the output array
       for (int f=0; f<6; f++)
       for (int v=0; v<NCOMP_TOTAL; v++)
-         g_FC_Var[f][v][idx_fc] = fc[f][v];
+         g_FC_Var[f][v][idx_fc] = fc_Con[f][v];
 
    } // CGPU_LOOP( idx_fc, CUBE(NOut) )
 
@@ -417,11 +427,15 @@ void SRHydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
       {
          for (int v=0; v<NCOMP_TOTAL; v++)   ConVar_1Cell[v] = g_ConVar[v][idx];
 
-#        ifdef CHECK_NEGATIVE_IN_FLUID
+#        ifdef CHECK_FAILED_CELL_IN_FLUID
          SRHydro_CheckUnphysical( ConVar_1Cell, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true );
 #        endif
 
          SRHydro_Con2Pri( ConVar_1Cell, PriVar_1Cell, Gamma, MinTemp );
+
+#        ifdef USE_3_VELOCITY
+		 SRHydro_3Velto4Vel( PriVar_1Cell, PriVar_1Cell );
+#        endif
 
          for (int v=0; v<NCOMP_TOTAL; v++)   g_PriVar[v][idx] = PriVar_1Cell[v];
       }
@@ -490,7 +504,7 @@ void SRHydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
       const int idx_slope = IDX321( i_slope, j_slope, k_slope, NSlope, NSlope );
 
  //   cc/fc: cell/face-centered variables; _C_ncomp: central cell with all NCOMP_TOTAL variables
-      real cc_C_ncomp[NCOMP_TOTAL], fc[6][NCOMP_TOTAL], dfc[NCOMP_TOTAL], dfc6[NCOMP_TOTAL];
+      real cc_C_ncomp[NCOMP_TOTAL], fc_Con[6][NCOMP_TOTAL], fc_Pri[6][NCOMP_TOTAL], dfc[NCOMP_TOTAL], dfc6[NCOMP_TOTAL];
 
       for (int v=0; v<NCOMP_TOTAL; v++)   cc_C_ncomp[v] = g_PriVar[v][idx_cc];
 
@@ -550,34 +564,34 @@ void SRHydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
             fc_R = ( fc_R > Min  ) ? fc_R : Min;
             fc_R = ( fc_R < Max  ) ? fc_R : Max;
 
-            fc[faceL][v] = fc_L;
-            fc[faceR][v] = fc_R;
+            fc_Pri[faceL][v] = fc_L;
+            fc_Pri[faceR][v] = fc_R;
 
          } // for (int v=0; v<NCOMP_TOTAL; v++)
 
 
 //       5. primitive variables --> conserved variables
-         real tmp[NCOMP_TOTAL];  // input and output arrays must not overlap for Pri2Con()
+#        ifdef USE_3_VELOCITY
+		 SRHydro_4Velto3Vel( fc_Pri[faceL], fc_Pri[faceL] );
+		 SRHydro_4Velto3Vel( fc_Pri[faceR], fc_Pri[faceR] );
+#        endif
 
-         for (int v=0; v<NCOMP_TOTAL; v++)   tmp[v] = fc[faceL][v];
-         SRHydro_Pri2Con( tmp, fc[faceL], Gamma );
-
-         for (int v=0; v<NCOMP_TOTAL; v++)   tmp[v] = fc[faceR][v];
-         SRHydro_Pri2Con( tmp, fc[faceR], Gamma );
+         SRHydro_Pri2Con( fc_Pri[faceL], fc_Con[faceL], Gamma );
+         SRHydro_Pri2Con( fc_Pri[faceR], fc_Con[faceR], Gamma );
 
       } // for (int d=0; d<3; d++)
 
 
 #     if ( FLU_SCHEME == MHM )
 //    6. advance the face-centered variables by half time-step for the MHM integrator
-      SRHydro_HancockPredict( fc, dt, dh, g_ConVar, idx_cc, MinDens, MinTemp, Gamma );
+      SRHydro_HancockPredict( fc_Con, fc_Pri, dt, dh, g_ConVar, idx_cc, MinDens, MinTemp, Gamma );
 #     endif
 
 
 //    7. store the face-centered values to the output array
       for (int f=0; f<6; f++)
       for (int v=0; v<NCOMP_TOTAL; v++)
-         g_FC_Var[f][v][idx_fc] = fc[f][v];
+         g_FC_Var[f][v][idx_fc] = fc_Con[f][v];
 
    } // CGPU_LOOP( idx_fc, CUBE(NOut) )
 
@@ -699,7 +713,8 @@ void SRHydro_LimitSlope( const real L1[], const real C0[], const real R1[], cons
 //                2. Do NOT require data in the neighboring cells
 //                3. Input variables must be conserved variables
 //
-// Parameter   :  fc           : Face-centered conserved variables to be updated
+// Parameter   :  fc_Con       : Face-centered conserved variables to be updated
+//                fc_Pri       : Face-centered primitive variables to be updated
 //                dt           : Time interval to advance solution
 //                dh           : Cell size
 //                g_cc_array   : Array storing the cell-centered conserved variables for checking
@@ -709,9 +724,9 @@ void SRHydro_LimitSlope( const real L1[], const real C0[], const real R1[], cons
 //                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void SRHydro_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real dh,
-                           const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
-                           const real MinDens, const real MinTemp, const real Gamma )
+void SRHydro_HancockPredict( real fc_Con[][NCOMP_TOTAL], real fc_Pri[][NCOMP_TOTAL], const real dt, const real dh,
+                             const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
+                             const real MinDens, const real MinTemp, const real Gamma )
 {
 
    const real dt_dh2 = (real)0.5*dt/dh;
@@ -720,35 +735,35 @@ void SRHydro_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real d
 
 
 // calculate flux
-   for (int f=0; f<6; f++)    SRHydro_Con2Flux( f/2, Flux[f], fc[f], Gamma, MinTemp );
+   for (int f=0; f<6; f++)    SRHydro_Con2Flux( f/2, Flux[f], fc_Con[f], fc_Pri[f], Gamma, MinTemp );
 
 // update the face-centered variables
    for (int v=0; v<NCOMP_TOTAL; v++)
    {
       dFlux = dt_dh2*( Flux[1][v] - Flux[0][v] + Flux[3][v] - Flux[2][v] + Flux[5][v] - Flux[4][v] );
 
-      for (int f=0; f<6; f++)    fc[f][v] -= dFlux;
+      for (int f=0; f<6; f++)    fc_Con[f][v] -= dFlux;
    }
 
 // check the negative density and energy
    for (int f=0; f<6; f++)
    {
-      if ( SRHydro_CheckUnphysical( fc[f], NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, false ) )
+      if ( SRHydro_CheckUnphysical( fc_Con[f], NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, false ) )
       {
 //       set to the cell-centered values before update
          for (int f=0; f<6; f++)
          for (int v=0; v<NCOMP_TOTAL; v++)
-            fc[f][v] = g_cc_array[v][cc_idx];
+            fc_Con[f][v] = g_cc_array[v][cc_idx];
 
          break;
       }
    }
 
 // ensure positive density and pressure
-#  ifdef CHECK_NEGATIVE_IN_FLUID
+#  ifdef CHECK_FAILED_CELL_IN_FLUID
    for (int f=0; f<6; f++)
    {
-    SRHydro_CheckUnphysical( fc[f], NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true );
+    SRHydro_CheckUnphysical( fc_Con[f], NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true );
    }
 #  endif
 

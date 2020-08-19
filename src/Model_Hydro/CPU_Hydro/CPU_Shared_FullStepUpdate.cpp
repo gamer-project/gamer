@@ -134,7 +134,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 
 
 //    5. check the negative density and energy
-#     ifdef CHECK_NEGATIVE_IN_FLUID
+#     ifdef CHECK_FAILED_CELL_IN_FLUID
       if ( Hydro_CheckNegative(Output_1Cell[DENS]) )
          printf( "WARNING : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  Output_1Cell[DENS], __FILE__, __LINE__, __FUNCTION__ );

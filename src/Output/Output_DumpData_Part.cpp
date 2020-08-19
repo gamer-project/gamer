@@ -119,12 +119,12 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
 #           if ( MODEL == HYDRO  ||  MODEL == MHD )
             fprintf( File, "%14s", "Pressure[12]" );
 #           elif ( MODEL == SR_HYDRO )
-            fprintf( File, "%14s", "n[12]" );  // proper number density
+            fprintf( File, "%14s", "n[12]"  ); // proper mass density
             fprintf( File, "%14s", "Ux[13]" ); // 4-velocity
             fprintf( File, "%14s", "Uy[14]" );
             fprintf( File, "%14s", "Uz[15]" );
-            fprintf( File, "%14s", "Pressure[16]" );
-            fprintf( File, "%19s", "Lorentz Fac[17]" );
+            fprintf( File, "%14s", "Pressure[16]"      );
+            fprintf( File, "%19s", "LorentzFactor[17]" );
             fprintf( File, "%14s", "Vx[18]" ); // 3-velocity
             fprintf( File, "%14s", "Vy[19]" );
             fprintf( File, "%14s", "Vz[20]" );
@@ -228,23 +228,17 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
    fprintf( File, " %10d %10d %10d %20.14e %20.14e %20.14e",
             ii, jj, kk, (ii+scale_2)*dh_min, (jj+scale_2)*dh_min, (kk+scale_2)*dh_min );
 
-// output all conserved variables in the fluid or sr-fluid array
-#  ifdef FLOAT8
-   for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, " %30.16e", u[v] );
-#  else
-   for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, " %13.6e", u[v] );
-#  endif
+// output all conserved variables in the fluid array
+   for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, " %25.17e", u[v] );
 
 #  if (MODEL == SR_HYDRO)
-   real Pri4Vel[NCOMP_FLUID];
-   SRHydro_Con2Pri(u,Pri4Vel,(real) GAMMA, (real) MIN_TEMP );
-
-// output all primitive variables in the sr-fluid array
-#  ifdef FLOAT8
-   for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, " %30.16e", Pri4Vel[v] );
-#  else
-   for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, " %13.6e", Pri4Vel[v] );
+   real Pri[NCOMP_FLUID], LorentzFactor;
+   LorentzFactor = SRHydro_Con2Pri( u, Pri, GAMMA, MIN_TEMP );
+#  ifdef USE_3_VELOCITY
+   SRHydro_3Velto4Vel( Pri, Pri );
 #  endif
+
+   for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, " %25.17e", Pri[v] );
 #  endif
 
 // output potential
@@ -261,26 +255,15 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 #  warning : WAIT MHD !!!
 #  elif ( MODEL == SR_HYDRO )
 // output Lorentz factor
-#  ifdef FLOAT8
-   fprintf( File, " %30.16e", SQRT(1+SQR(Pri4Vel[1])+SQR(Pri4Vel[2])+SQR(Pri4Vel[3])) );
-#  else
-   fprintf( File, " %17.6e", SQRT(1+SQR(Pri4Vel[1])+SQR(Pri4Vel[2])+SQR(Pri4Vel[3])) );
-#  endif
+   fprintf( File, " %25.17e", LorentzFactor );
 
-   real Pri3Vel[NCOMP_FLUID];
 
-   SRHydro_4Velto3Vel(Pri4Vel,Pri3Vel);
+   SRHydro_4Velto3Vel( Pri, Pri );
 
 // output 3-velocity
-#  ifdef FLOAT8
-   fprintf( File, " %30.16e", Pri3Vel[1] );
-   fprintf( File, " %30.16e", Pri3Vel[2] );
-   fprintf( File, " %30.16e", Pri3Vel[3] );
-#  else
-   fprintf( File, " %13.6e", Pri3Vel[1] );
-   fprintf( File, " %13.6e", Pri3Vel[2] );
-   fprintf( File, " %13.6e", Pri3Vel[3] );
-#  endif
+   fprintf( File, " %25.17e", Pri[1] );
+   fprintf( File, " %25.17e", Pri[2] );
+   fprintf( File, " %25.17e", Pri[3] );
 
 #  endif // MODEL
 

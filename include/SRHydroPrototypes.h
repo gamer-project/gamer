@@ -10,7 +10,7 @@ void SRHydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                  const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                  const real dt, const real dh, const real MinDens, const real MinTemp );
 
-void SRHydro_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma, const real MinTemp );
+void SRHydro_Con2Flux( const int XYZ, real Flux[], const real ConVar[], const real PriVar[], const real Gamma, const real MinTemp );
 
 real SRHydro_Con2Pri( const real In[], real Out[], const real Gamma, const real MinTemp );
 
@@ -27,11 +27,11 @@ template <typename T>
 void SRHydro_3Velto4Vel( const T In[], T Out[] );
 #endif
 
-
-
 void SRHydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
                                 real g_FC_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
-                          const int Gap, const real Gamma, const real MinTemp, 
+                          const int Gap, const real Gamma, const bool CorrHalfVel, const real g_Pot_USG[],
+                          const double g_Corner[], const real dt, const real dh, const double Time,
+                          const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinTemp,
                           const bool DumpIntFlux, real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ] );
 
 void SRHydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
@@ -48,13 +48,15 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
 
 void SRHydro_Rotate3D( real InOut[], const int XYZ, const bool Forward );
 
+real SpecificEnthalpy( const real Con[], real Temp, real Gamma );
+real SRHydro_InternalEngy( real Con[], real Pri[], real Lorentz, real Gamma, bool frame);
+real SRHydro_ThermalEngy( real Con[], real Pri[], real Lorentz, real Gamma, bool frame );
+real SRHydro_KineticEngy( real Con[], real Pri[], real Lorentz, real Gamma );
+
+real SoundSpeedSquare( real Temp, real Gamma );
 
 real SRHydro_CheckMinTemp (const real InTemp, const real MinTemp);
-
-template <class T> 
-void SRHydro_4Velto3Vel ( const T In[], T Out[]);
-template <class T> 
-void SRHydro_3Velto4Vel (const T In[], T Out[]);
+real SRHydro_Temperature2HTilde (const real Temperature, const real Gamma );
 
 real SRHydro_CheckMinTempInEngy (const real Con[], const real MinTemp, const real Gamma);
 

@@ -80,10 +80,10 @@
 
 // check non-physical negative values (e.g., negative density) for the fluid solver
 #if (  defined GAMER_DEBUG  &&  ( MODEL == HYDRO || MODEL == MHD )  )
-#  define CHECK_NEGATIVE_IN_FLUID
+#  define CHECK_FAILED_CELL_IN_FLUID
 #endif
 
-#ifdef CHECK_NEGATIVE_IN_FLUID
+#ifdef CHECK_FAILED_CELL_IN_FLUID
 #  include "stdio.h"
    bool Hydro_CheckNegative( const real Input );
 #endif
@@ -174,10 +174,10 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 
 // check the non-physical negative values (e.g., negative density) inside the fluid solver
 #ifdef GAMER_DEBUG
-#  define CHECK_NEGATIVE_IN_FLUID
+#  define CHECK_FAILED_CELL_IN_FLUID
 #endif
 
-#ifdef CHECK_NEGATIVE_IN_FLUID
+#ifdef CHECK_FAILED_CELL_IN_FLUID
 #  include "stdio.h"
 #endif
 
@@ -548,7 +548,7 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 // ## CPU/GPU integration ##
 // #########################
 
-#if (  ( MODEL == HYDRO || MODEL == MHD || MODEL == SR_HYDRO )  &&  defined CHECK_NEGATIVE_IN_FLUID  )
+#if (  ( MODEL == HYDRO || MODEL == MHD || MODEL == SR_HYDRO )  &&  defined CHECK_FAILED_CELL_IN_FLUID  )
 extern bool CPU_CheckNegative( const real Input );
 #endif
 

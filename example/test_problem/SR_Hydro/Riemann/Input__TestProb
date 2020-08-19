@@ -1,10 +1,23 @@
 # problem-specific runtime parameters
-Riemann_Prob         1              # target Riemann problem (0 : Sod's shock tube
+Riemann_Prob         0              # target Riemann problem (0 : Sod's shock tube
                                     #                         1 : strong shock
                                     #                         2 : two shocks
                                     #                         3 : Einfeldt's 1-2-0-3
                                     #                         4 : Einfeldt's 1-1-2-5
                                     #                         5 : sonic rarefaction wave
+                                    #                         6 : user defined
 Riemann_LR          +1              # wave propagation direction (>0/<0 --> positive/negative direction) [1]
 Riemann_XYZ          0              # wave propagation axis (0/1/2 --> x/y/z) [0]
 
+
+# user-defined run-time parameters
+Riemann_RhoL       0.5              # left-state density
+Riemann_VelL       0.0              # left-state 4-velocity
+Riemann_PreL       1.0              # left-state pressure
+Riemann_VelL_T     0.0              # left-state transverse 4-velocity
+Riemann_RhoR       1.0              # right-state density
+Riemann_VelR       0.0              # right-state 4-velocity
+Riemann_PreR       0.2              # right-state pressure
+Riemann_VelR_T     0.0              # right-state transverse 4-velocity
+Riemann_PosIniJump 0.5              # position of initial jump
+Riemann_EndT       0.5              # end physical time

@@ -226,7 +226,7 @@ void Output_L1Error( void (*AnalFunc)( real fluid[], const double x, const doubl
 
 #        elif   ( MODEL == SR_HYDRO )
          fprintf( File_L1, "#%5s %13s %19s %19s %19s %19s %19s\n",
-                  "NGrid", "Time", "Error(Dens)", "Error(MomX)", "Error(MomY)", "Error(MomZ)", "Error(Pres)" );
+                  "NGrid", "Time", "Error(Rho)", "Error(Ux)", "Error(Uy)", "Error(Uz)", "Error(Pres)" );
 
 #        elif ( MODEL == ELBDM )
          fprintf( File_L1, "#%5s %13s %19s %19s %19s\n",
@@ -297,7 +297,8 @@ void WriteFile( void (*AnalFunc)( real fluid[], const double x, const double y, 
    fluid[ENGY] = Hydro_GetPressure( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
                                   Gamma_m1, CheckMinPres_No, NULL_REAL );
 #  elif ( MODEL == SR_HYDRO )
-   fluid[ENGY] = SRHydro_GetPressure( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], GAMMA, MIN_TEMP  );
+   real PriNum[NCOMP_FLUID];   
+   SRHydro_Con2Pri( fluid, PriNum, (double)GAMMA, (double)MIN_TEMP );
 #  endif
 
 
@@ -315,7 +316,8 @@ void WriteFile( void (*AnalFunc)( real fluid[], const double x, const double y, 
    Anal[ENGY] = Hydro_GetPressure( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY],
                                  Gamma_m1, CheckMinPres_No, NULL_REAL );
 #  elif ( MODEL == SR_HYDRO )
-   Anal[ENGY] = SRHydro_GetPressure( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY], GAMMA, MIN_TEMP  );
+   real PriAnal[NCOMP_FLUID];   
+   SRHydro_Con2Pri( Anal, PriAnal, (double)GAMMA, (double)MIN_TEMP );
 #  endif
 
 
@@ -335,10 +337,17 @@ void WriteFile( void (*AnalFunc)( real fluid[], const double x, const double y, 
 // estimate and output errors
    for (int v=0; v<NCOMP_FLUID; v++)
    {
+#     if ( MODEL != SR_HYDRO )
       Err   [v]  = FABS( Anal[v] - fluid[v] );
       L1_Err[v] += Err[v]*dh;
 
       fprintf( File[v], " %20.13e %20.13e %20.13e %20.13e\n", r, fluid[v], Anal[v], Err[v] );
+#     else
+      Err   [v]  = FABS( (double)1.0 - PriNum[v] / PriAnal[v] );
+      L1_Err[v] += Err[v]*dh;
+
+      fprintf( File[v], " %20.13e %20.13e %20.13e %20.13e\n", r, PriNum[v],   PriAnal[v], Err[v] );
+#     endif
    }
 
 } // FUNCTION : WriteFile

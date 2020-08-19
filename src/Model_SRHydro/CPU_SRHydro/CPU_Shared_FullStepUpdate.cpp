@@ -78,7 +78,7 @@ void SRHydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Outpu
       Output_1Cell[ENGY] = SRHydro_CheckMinTempInEngy( Output_1Cell, MinTemp, Gamma );
 #     endif
 
-      if( SRHydro_CheckUnphysical(Output_1Cell, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true) )
+      if( SRHydro_CheckUnphysical(Output_1Cell, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, false) )
       {
 #       ifdef __CUDACC__
         atomicOr ( (int*)state, 1);

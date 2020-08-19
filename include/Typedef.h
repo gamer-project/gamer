@@ -46,16 +46,16 @@ const TestProbID_t
    TESTPROB_HYDRO_COLLIDING_JETS               =   10,
    TESTPROB_HYDRO_PLUMMER                      =   11,
    TESTPROB_HYDRO_GRAVITY                      =   12,
+   TESTPROB_HYDRO_JETS                         =   13,
 
    TESTPROB_SRHYDRO_BLAST_WAVE                    =  600,
    TESTPROB_SRHYDRO_RIEMANN                       =  601,
    TESTPROB_SRHYDRO_DOUBLE_MACH_REFLECTION        =  602,
    TESTPROB_SRHYDRO_KELVIN_HELMHOLTZ_INSTABILITY  =  603,
    TESTPROB_SRHYDRO_JETS                          =  604,
-   TESTPROB_SRHYDRO_PRECESSED_JET                 =  605,
-   TESTPROB_SRHYDRO_DIFFERENTIAL_PRECESSED_JET    =  606,
    TESTPROB_SRHYDRO_WEAK_SCALING_BLAST_WAVE       =  607,
    TESTPROB_SRHYDRO_ACOUSTIC_WAVE                 =  608,
+   TESTPROB_SRHYDRO_PULSAR_WIND                   =  609,
 
    TESTPROB_ELBDM_EXTPOT                          = 1000;
 

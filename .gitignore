@@ -1,4 +1,5 @@
 *.o
+.nfs*
 cscope*
 bin/**
 gamer
@@ -10,3 +11,12 @@ a.out
 *.png
 log
 tool/analysis/gamer_compare_data/*
+con2pri_double
+pri2con_double
+con2pri_single
+pri2con_single
+ErrorMap
+pri2con
+con2pri
+*.pdf
+*.eps

@@ -1,0 +1,48 @@
+# Level                 Threshold                        Degree
+      0                      0.36                    # 20.00000                 
+      1                      1.43                    # 55.00000                 
+      2                      3.17                    # 72.50000                 
+      3                      6.50                    # 81.25000                 
+      4                     13.07                    # 85.62500                 
+      5                     26.18                    # 87.81250                 
+      6                     52.38                    # 88.90625                 
+      7                    104.77                    # 89.45313                 
+      8                    209.54                    # 89.72656                 
+      9                    419.08                    # 89.86328                 
+     10                    838.16                    # 89.93164                 
+     11                   1676.31                    # 89.96582                 
+     12                   3352.62                    # 89.98291                 
+     13                   6705.24                    # 89.99146                 
+     14                  13410.49                    # 89.99573                 
+     15                  26820.97                    # 89.99786                 
+     16                  53641.95                    # 89.99893                 
+     17                 107283.89                    # 89.99947                 
+     18                 214567.78                    # 89.99973                 
+     19                 429135.57                    # 89.99987
+
+#
+#                 ⎛  ⎛     -α⋅lv ⎞⎞
+#                 ⎜π⋅⎝1 - 2    ⋅C⎠⎟
+#  Threshold = tan⎜───────────────⎟
+#                 ⎝       2       ⎠
+#
+#   where (1) C is the constant determined by the threshold at root level
+#         (2) α is the constant which adjust the convergence speed to 90 degree
+#
+#  import numpy as np
+#   
+#  theta_0 = 20
+#  alpha = 0.5
+#
+#  theta_0 *= np.pi/180
+#   
+#  C = 1-2*theta_0/np.pi
+#   
+#  print( "{:>7s}".format("# Level"), "{:>25s}".format("Threshold"), "{:>29s}".format("Degree") )                                           
+#   
+#  for lv in range(20):
+#    threshold = np.tan( np.pi*0.5*( 1-C/2**(lv*alpha) ) ) 
+#   
+#    degree = np.arctan(threshold)*180/np.pi
+#   
+#    print( "{:>7d}".format(lv), "{:>25.2f}".format(  threshold ), "{:>20s}".format("#")  , "{:<25.5f}".format(degree))

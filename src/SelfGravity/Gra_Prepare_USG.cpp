@@ -26,7 +26,7 @@
 //-------------------------------------------------------------------------------------------------------
 void Gra_Prepare_USG( const int lv, const double PrepTime,
                       real h_Pot_Array_USG_G[][USG_NXT_G][USG_NXT_G][USG_NXT_G],
-                      real h_Flu_Array_USG_G[][GRA_NIN-1][PS1][PS1][PS1], const int NPG, const int *PID0_List )
+                      real h_Flu_Array_USG_G[][GRA_NIN_USG][PS1][PS1][PS1], const int NPG, const int *PID0_List )
 {
 
    const bool IntPhase_No       = false;
@@ -42,7 +42,14 @@ void Gra_Prepare_USG( const int lv, const double PrepTime,
 
 // prepare density + momentum
 // --> we do not check minimum density here since no ghost zones are required
-   Prepare_PatchData( lv, PrepTime,  h_Flu_Array_USG_G[0][0][0][0], 0,              NPG, PID0_List, _DENS|_MOMX|_MOMY|_MOMZ,
+#  if ( MODEL == HYDRO )
+   const int TVar = _DENS|_MOMX|_MOMY|_MOMZ;
+#  elif ( MODEL == SR_HYDRO )
+   const int TVar = _TOTAL;
+#  endif
+
+
+   Prepare_PatchData( lv, PrepTime,  h_Flu_Array_USG_G[0][0][0][0], 0,              NPG, PID0_List, TVar,
                       INT_NONE,            UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
                       MinDens_No, MinPres_No, DE_Consistency_No );
 

@@ -91,7 +91,7 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    HL    = (  L[4] + Gamma_m1*( L[4] - (real)0.5*( L[1]*L[1] + L[2]*L[2] + L[3]*L[3] )*_RhoL )  )*_RhoL;
    HR    = (  R[4] + Gamma_m1*( R[4] - (real)0.5*( R[1]*R[1] + R[2]*R[2] + R[3]*R[3] )*_RhoR )  )*_RhoR;
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
+#  ifdef CHECK_FAILED_CELL_IN_FLUID
    if ( Hydro_CheckNegative(L[0]) )
       printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               L[0], __FILE__, __LINE__, __FUNCTION__ );
@@ -118,7 +118,7 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    TempPres   = Hydro_CheckMinPres( TempPres, MinPres );
    GammaP_Rho = Gamma*TempPres*_TempRho;
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
+#  ifdef CHECK_FAILED_CELL_IN_FLUID
    if ( Hydro_CheckNegative(GammaP_Rho) )
       printf( "ERROR : negative GammaP_Rho (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               GammaP_Rho, __FILE__, __LINE__, __FUNCTION__ );

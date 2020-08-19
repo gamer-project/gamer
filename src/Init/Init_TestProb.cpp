@@ -16,15 +16,15 @@ void Init_TestProb_Hydro_Riemann();
 void Init_TestProb_Hydro_CollidingJets();
 void Init_TestProb_Hydro_Plummer();
 void Init_TestProb_Hydro_Gravity();
+void Init_TestProb_Hydro_Jets();
 
 void Init_TestProb_SRHydro_AcousticWave();
 void Init_TestProb_SRHydro_BlastWave();
 void Init_TestProb_SRHydro_Riemann();
 void Init_TestProb_SRHydro_DoubleMachReflection();
 void Init_TestProb_SRHydro_Jets();
-void Init_TestProb_SRHydro_PrecessedJet();
-void Init_TestProb_SRHydro_DiffPrecessedJet();
 void Init_TestProb_SRHydro_WScaling_BlastWave();
+void Init_TestProb_SRHydro_PulsarWind();
 
 void Init_TestProb_ELBDM_ExtPot();
 
@@ -64,6 +64,7 @@ void Init_TestProb()
       case TESTPROB_HYDRO_COLLIDING_JETS :               Init_TestProb_Hydro_CollidingJets();               break;
       case TESTPROB_HYDRO_PLUMMER :                      Init_TestProb_Hydro_Plummer();                     break;
       case TESTPROB_HYDRO_GRAVITY :                      Init_TestProb_Hydro_Gravity();                     break;
+      case TESTPROB_HYDRO_JETS:                          Init_TestProb_Hydro_Jets();                        break;
 #     elif ( MODEL == SR_HYDRO )
       case TESTPROB_SRHYDRO_ACOUSTIC_WAVE :              Init_TestProb_SRHydro_AcousticWave();              break;
       case TESTPROB_SRHYDRO_BLAST_WAVE :                 Init_TestProb_SRHydro_BlastWave();                 break;
@@ -71,8 +72,7 @@ void Init_TestProb()
       case TESTPROB_SRHYDRO_RIEMANN :                    Init_TestProb_SRHydro_Riemann();                   break;
       case TESTPROB_SRHYDRO_DOUBLE_MACH_REFLECTION :     Init_TestProb_SRHydro_DoubleMachReflection();      break;
       case TESTPROB_SRHYDRO_JETS:                        Init_TestProb_SRHydro_Jets();                      break;
-      case TESTPROB_SRHYDRO_PRECESSED_JET:               Init_TestProb_SRHydro_PrecessedJet();              break;
-      case TESTPROB_SRHYDRO_DIFFERENTIAL_PRECESSED_JET : Init_TestProb_SRHydro_DiffPrecessedJet();          break;
+      case TESTPROB_SRHYDRO_PULSAR_WIND:                 Init_TestProb_SRHydro_PulsarWind();                break;
 #     elif ( MODEL == ELBDM )
       case TESTPROB_ELBDM_EXTPOT :                       Init_TestProb_ELBDM_ExtPot();                      break;
 #     endif

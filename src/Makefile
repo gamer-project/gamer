@@ -106,6 +106,8 @@ else ifeq "$(filter -DMODEL=SR_HYDRO, $(SIMU_OPTION))" "-DMODEL=SR_HYDRO"
 # --> must be set when MODEL=HYDRO;
 SIMU_OPTION += -DFLU_SCHEME=MHM
 
+#SIMU_OPTION += -DUSE_3_VELOCITY
+
 SIMU_OPTION += -DEOS=APPROXIMATED_GENERAL
 
 #SIMU_OPTION += -DEOS=CONSTANT_GAMMA
@@ -115,7 +117,7 @@ SIMU_OPTION += -DCONSERVED_ENERGY=2
 # conserved energy = (total energy) - (rest mass energy)
 #SIMU_OPTION += -DCONSERVED_ENERGY=2
 #SIMU_OPTION += -DCHECK_MIN_TEMP
-#SIMU_OPTION += -DCHECK_NEGATIVE_IN_FLUID
+#SIMU_OPTION += -DCHECK_FAILED_CELL_IN_FLUID
 # scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic)
 # --> useless for RTVD
 SIMU_OPTION += -DLR_SCHEME=PLM
@@ -145,7 +147,7 @@ SIMU_OPTION += -DSTORE_POT_GHOST
 
 # use unsplitting method to couple gravity to the target model (recommended)
 # --> for HYDRO and MHD only; ELBDM is not supported yet
-SIMU_OPTION += -DUNSPLIT_GRAVITY
+#SIMU_OPTION += -DUNSPLIT_GRAVITY
 
 # comoving frame for cosmological simulations
 # --> not supported for PARTICLE
@@ -173,14 +175,14 @@ endif # PARTICLE
 # ------------------------------------------------------------------------------------
 # maximum number of AMR levels including the root level (level id = 0 ... NLEVEL-1)
 # --> must be set in any cases
-SIMU_OPTION += -DNLEVEL=10
+SIMU_OPTION += -DNLEVEL=19
 
 # fused multiply-add
 #SIMU_OPTION += -DFUSED_MULTIPLY_ADD
 
 # maximum number of patches on each AMR level
 # --> must be set in any cases
-SIMU_OPTION += -DMAX_PATCH=2000000
+SIMU_OPTION += -DMAX_PATCH=4000000
 
 # GPU acceleration
 # --> must set GPU_ARCH as well
@@ -193,7 +195,7 @@ SIMU_OPTION += -DGPU_ARCH=FERMI
 #SIMU_OPTION += -DGAMER_DEBUG
 
 # bitwise reproducibility
-#SIMU_OPTION += -DBITWISE_REPRODUCIBILITY
+SIMU_OPTION += -DBITWISE_REPRODUCIBILITY
 
 # measure the wall-clock time of GAMER
 SIMU_OPTION += -DTIMING
@@ -241,20 +243,23 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 
 
 
+
 # compiler and flags
 #######################################################################################################
 
 # intel
 # -------------------------------------------------------------------------------
- CXX         = icpc                                      # serial compiler
- CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
-##CXX         = CC                                        # cray wrapper script
- CXXFLAG     = -g -O3                                    # general flags
-##CXXFLAG     = -g -O3 -std=c++11 #-gxx-name=YOUR_G++
+ CXX         = icpc                                                # serial compiler
+ CXX         = $(MPI_PATH)/bin/mpicxx                              # MPI compiler
+#CXX         = CC                                                  # cray wrapper script
+#CXXFLAG     = -g -O3                                              # general flags
+ CXXFLAG     = -g -O3 -std=c++11                                   #-gxx-name=YOUR_G++
 #CXXFLAG     = -g -fast
-# CXXFLAG    += -w1                                       # warning flags
- OPENMPFLAG  = -fopenmp                                  # openmp flag
-# LIB         = -limf                                     # libraries and linker flags
+# CXXFLAG    += -w1                                                # warning flags
+ CXXFLAG     += -DGIT_SHA1="`git rev-parse HEAD`"                  # record SHA1 in git
+ CXXFLAG     += -DGIT_BRANCH="`git symbolic-ref --short -q HEAD`"  # record branch name in git
+ OPENMPFLAG  = -fopenmp                                            # openmp flag
+# LIB         = -limf                                              # libraries and linker flags
 #
 ## for debug only
 #ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
@@ -268,27 +273,29 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 #endif
 
 
-# gnu
-# -------------------------------------------------------------------------------
-# CXX         = g++                                       # serial compiler
-## CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
-##CXX         = CC                                        # cray wrapper script
-# CXXFLAG     = -g -O3                                    # general flags
+## gnu
+## -------------------------------------------------------------------------------
+## CXX         = g++                                                 # serial compiler
+# CXX         = $(MPI_PATH)/bin/mpicxx                             # MPI compiler
+##CXX         = CC                                                  # cray wrapper script
+# CXXFLAG     = -g -O3                                              # general flags
 ##CXXFLAG     = -g -O3 -std=c++11
 ##CXXFLAG     = -g -Ofast
-## CXXFLAG    += -Wall -Wextra                             # warning flags
+## CXXFLAG    += -Wall -Wextra                                      # warning flags
 ## CXXFLAG    += -Wno-unused-variable -Wno-unused-parameter \
 #               -Wno-maybe-uninitialized -Wno-unused-but-set-variable \
 #               -Wno-unused-result -Wno-unused-function
-# OPENMPFLAG  = -fopenmp                                  # openmp flag
-### LIB         =                                           # libraries and linker flags
-
-# for debug only
+# CXXFLAG     += -DGIT_SHA1="`git rev-parse HEAD`"                  # record SHA1 in git
+# CXXFLAG     += -DGIT_BRANCH="`git symbolic-ref --short -q HEAD`"  # record branch name in git
+# OPENMPFLAG  = -fopenmp                                            # openmp flag
+### LIB         =                                                   # libraries and linker flags
+#
+## for debug only
 #ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
 #CXXFLAG    += -fstack-protector-all
 #endif
-
-# suppress warning when OpenMP is disabled
+#
+## suppress warning when OpenMP is disabled
 #ifeq "$(filter -DOPENMP, $(SIMU_OPTION))" ""
 # CXXFLAG    += -Wno-unknown-pragmas
 #endif
@@ -348,23 +355,14 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 #GSL_PATH     := /usr/lib
 #LIBYT_PATH   := /home/hyschive/project/libyt/libyt.dev/libyt
 
-# NTU-hulk (openmpi-gcc-qlc)
-#FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
-#MPI_PATH     := /usr/mpi/gcc/openmpi-1.4.3-qlc
-#HDF5_PATH    := /opt/hdf5/default
-#GRACKLE_PATH := 
-#GSL_PATH     := /opt/math/gsl/default
-#LIBYT_PATH   := 
-#CUDA_PATH    := /opt/gpu/cuda/default
-
-# NTU-hulk (openmpi-intel-qlc)
-FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
-MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
-HDF5_PATH    := /opt/hdf5/default
+# NTU-eureka
+FFTW_PATH    := /software/fftw/default
+MPI_PATH     := /software/openmpi/default
+HDF5_PATH    := /software/hdf5/default
 GRACKLE_PATH := 
-GSL_PATH     := /opt/math/gsl/default
+GSL_PATH     := /software/gsl/default
 LIBYT_PATH   := 
-CUDA_PATH    := /opt/gpu/cuda/default
+CUDA_PATH    := /software/cuda/10.0
 
 # NTHU-fomalhaut (openmpi-gnu)
 #CUDA_PATH    := /usr/local/cuda-10.0
@@ -379,24 +377,6 @@ CUDA_PATH    := /opt/gpu/cuda/default
 #FFTW_PATH    := /ifs/data/hsiyu/Software/fftw/2.1.5-openmpi-1.3.2-intel
 #MPI_PATH     := /usr/mpi/intel/openmpi-1.3.2-qlc
 #GPUID_PATH   := /ifs/data/hsiyu/Software/gpudevmgr
-
-# gamer04
-#FFTW_PATH    := 
-#MPI_PATH     := /opt/openmpi/3.1.4-intel-tm
-#HDF5_PATH    := /opt/hdf5
-#GRACKLE_PATH := 
-#GSL_PATH     := 
-#LIBYT_PATH   := 
-#CUDA_PATH    := /opt/cuda/default
-#
-## Calab AMD2
-#FFTW_PATH    := 
-#MPI_PATH     := /home/gamer02/mpi/openmpi
-#HDF5_PATH    := /opt/hdf5
-#GRACKLE_PATH := 
-#GSL_PATH     := 
-#LIBYT_PATH   := 
-#CUDA_PATH    := /usr/local/cuda-10.0
 
 
 # source files
@@ -440,7 +420,8 @@ CC_FILE     += Interpolate.cpp  Int_CQuadratic.cpp  Int_MinMod1D.cpp  Int_MinMod
 CC_FILE     += Mis_CompareRealValue.cpp  Mis_GetTotalPatchNumber.cpp  Mis_GetTimeStep.cpp  Mis_Heapsort.cpp \
                Mis_BinarySearch.cpp  Mis_1D3DIdx.cpp  Mis_Matching.cpp  Mis_GetTimeStep_User.cpp \
                Mis_dTime2dt.cpp  Mis_CoordinateTransform.cpp  Mis_BinarySearch_Real.cpp  Mis_InterpolateFromTable.cpp \
-               CPU_dtSolver.cpp  dt_Prepare_Flu.cpp  dt_Prepare_Pot.cpp  dt_Close.cpp  dt_InvokeSolver.cpp
+               CPU_dtSolver.cpp  dt_Prepare_Flu.cpp  dt_Prepare_Pot.cpp  dt_Close.cpp  dt_InvokeSolver.cpp \
+               Mis_Transformation.cpp
 
 CC_FILE     += Output_DumpData_Total.cpp  Output_DumpData.cpp  Output_DumpManually.cpp  Output_PatchMap.cpp \
                Output_DumpData_Part.cpp  Output_FlagMap.cpp  Output_Patch.cpp  Output_PreparedPatch_Fluid.cpp \
@@ -516,6 +497,16 @@ CC_FILE     += SRHydro_Init_ByFunction_AssignData.cpp  SRHydro_Aux_Check_Negativ
 vpath %.cu     Model_SRHydro/GPU_SRHydro
 vpath %.cpp    Model_SRHydro/CPU_SRHydro Model_SRHydro
 
+
+ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
+CUDA_FILE   += CUPOT_HydroGravitySolver.cu  CUPOT_dtSolver_HydroGravity.cu
+
+CC_FILE     += CPU_HydroGravitySolver.cpp  CPU_dtSolver_HydroGravity.cpp
+
+vpath %.cu     Model_SRHydro/GPU_HydroGravity
+vpath %.cpp    Model_SRHydro/CPU_HydroGravity
+endif
+
 # ELBDM source files (included only inf "MODEL=ELBDM")
 # -------------------------------------------------------------------------------
 else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
@@ -554,7 +545,7 @@ CC_FILE     += CPU_PoissonGravitySolver.cpp  CPU_PoissonSolver_SOR.cpp  CPU_Pois
                CPU_PoissonSolver_MG.cpp
 
 CC_FILE     += Init_FFTW.cpp  Gra_Close.cpp  Gra_Prepare_Flu.cpp  Gra_Prepare_Pot.cpp  Gra_Prepare_Corner.cpp \
-               Gra_AdvanceDt.cpp  Poi_Close.cpp  Poi_Prepare_Pot.cpp  Poi_Prepare_Rho.cpp \
+               Gra_AdvanceDt.cpp  Poi_Close.cpp  Poi_Prepare_Pot.cpp  Poi_Prepare_Source.cpp \
                Output_PreparedPatch_Poisson.cpp  Init_MemAllocate_PoissonGravity.cpp  CPU_ExternalPot.cpp \
                End_MemFree_PoissonGravity.cpp  Init_Set_Default_SOR_Parameter.cpp \
                Init_Set_Default_MG_Parameter.cpp  Poi_GetAverageDensity.cpp  Init_GreenFuncK.cpp \
@@ -571,11 +562,11 @@ endif # GRAVITY
 ifeq "$(filter -DPARTICLE, $(SIMU_OPTION))" "-DPARTICLE"
 CUDA_FILE   +=
 
-CC_FILE     += Par_Init_ByFunction.cpp  Par_Output_TextFile.cpp  Par_FindHomePatch_UniformGrid.cpp  Par_PassParticle2Son.cpp \
-               Par_Aux_Check_Particle.cpp  Par_PassParticle2Father.cpp  Par_CollectParticle2OneLevel.cpp \
+CC_FILE     += Par_Init_ByFunction.cpp  Par_Output_TextFile.cpp  Par_FindHomePatch_UniformGrid.cpp  Par_PassParticle2Son_SinglePatch.cpp \
+               Par_Aux_Check_Particle.cpp  Par_PassParticle2Father.cpp  Par_CollectParticle2OneLevel.cpp Par_PassParticle2Son_MultiPatch.cpp \
                Par_MassAssignment.cpp  Par_UpdateParticle.cpp  Par_GetTimeStep_VelAcc.cpp \
                Par_PassParticle2Sibling.cpp  Par_CountParticleInDescendant.cpp  Par_Aux_GetConservedQuantity.cpp \
-               Par_Aux_InitCheck.cpp  Par_Aux_Record_ParticleCount.cpp  Par_PassParticle2Son_AllPatch.cpp \
+               Par_Aux_InitCheck.cpp  Par_Aux_Record_ParticleCount.cpp  \
                Par_Synchronize.cpp  Par_PredictPos.cpp  Par_Init_ByFile.cpp  Par_Init_Attribute.cpp
 
 vpath %.cu     Particle/GPU
@@ -585,7 +576,7 @@ ifeq "$(findstring -DLOAD_BALANCE, $(SIMU_OPTION))" "-DLOAD_BALANCE"
 CC_FILE     += Par_LB_SendParticleData.cpp  Par_LB_CollectParticle2OneLevel.cpp \
                Par_LB_CollectParticleFromRealPatch.cpp  Par_LB_RecordExchangeParticlePatchID.cpp \
                Par_LB_MapBuffer2RealPatch.cpp  Par_LB_ExchangeParticleBetweenPatch.cpp \
-               Par_LB_Refine_SendParticle2Father.cpp  Par_LB_Refine_SendParticle2Son.cpp
+               Par_LB_Refine_SendParticle2Father.cpp
 
 vpath %.cpp    Particle/LoadBalance
 endif # LOAD_BALANCE

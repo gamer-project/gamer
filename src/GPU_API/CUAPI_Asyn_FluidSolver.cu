@@ -65,12 +65,15 @@ void CUFLU_FluidSolver_MHM(
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
          real   g_Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
          real   g_Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
+   const double g_Corner_Array [][3],
+   const real   g_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
          real   g_PriVar       [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
          real   g_Slope_PPM    [][3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
          real   g_FC_Var       [][6][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
          real   g_FC_Flux      [][3][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
    const real dt, const real dh, const real Gamma, const bool StoreFlux,
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+   const double Time, const OptGravityType_t GravityType,
    const real MinDens, const real MinTemp );
 #endif // FLU_SCHEME
 
@@ -91,7 +94,7 @@ extern real (*d_Flu_Array_F_In )[FLU_NIN ][ CUBE(FLU_NXT) ];
 extern real (*d_Flu_Array_F_Out)[FLU_NOUT][ CUBE(PS2) ];
 extern real (*d_Flux_Array)[9][NFLUX_TOTAL][ SQR(PS2) ];
 extern double (*d_Corner_Array_F)[3];
-#if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
+#if ( MODEL == HYDRO  ||  MODEL == MHD )
 #ifdef DUAL_ENERGY
 extern char (*d_DE_Array_F_Out)[ CUBE(PS2) ];
 #else
@@ -120,7 +123,7 @@ extern real (*d_FC_Flux)  [3][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ];
 #ifdef UNSPLIT_GRAVITY
 extern real (*d_Pot_Array_USG_F)[ CUBE(USG_NXT_F) ];
 #else
-#if ( MODEL == HYDRO  ||  MODEL == MHD )
+#if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
 static real (*d_Pot_Array_USG_F)[ CUBE(USG_NXT_F) ] = NULL;
 #endif
 #endif // #ifdef UNSPLIT_GRAVITY ... else ...
@@ -403,11 +406,13 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
             ( d_Flu_Array_F_In  + UsedPatch[s],
               d_Flu_Array_F_Out + UsedPatch[s],
               d_Flux_Array      + UsedPatch[s],
+              d_Corner_Array_F  + UsedPatch[s],
+              d_Pot_Array_USG_F + UsedPatch[s],
               d_PriVar          + UsedPatch[s],
               d_Slope_PPM       + UsedPatch[s],
               d_FC_Var          + UsedPatch[s],
               d_FC_Flux         + UsedPatch[s],
-              dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff,
+              dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff, Time, GravityType,
               MinDens, MinTemp );
 
 #        else

@@ -1304,7 +1304,7 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
 
-//    check in SR-HYDRO
+//    check in SR_HYDRO
 #     elif ( MODEL == SR_HYDRO )
 
       CompareVar( "FLU_SCHEME",              flu_scheme,             FLU_SCHEME,                NonFatal );

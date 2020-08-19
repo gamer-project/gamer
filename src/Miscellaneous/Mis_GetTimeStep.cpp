@@ -89,7 +89,9 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 #  warning : WAIT MHD !!!
 
 #  elif   ( MODEL == SR_HYDRO )
-#  warning : WAIT SR_HYDRO !!!
+   dTime[NdTime] = dTime_dt * dt_InvokeSolver( DT_GRA_SOLVER, lv );
+   sprintf( dTime_Name[NdTime++], "%s", "SRHydro_Acc" );
+
 #  elif ( MODEL == ELBDM )
    dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Gravity( lv  );
    sprintf( dTime_Name[NdTime++], "%s", "ELBDM_Pot" );

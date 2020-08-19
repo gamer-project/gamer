@@ -186,7 +186,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
       p    = Gamma_m1*(  Fluid[4] - (real)0.5*_rho*( Fluid[1]*Fluid[1]+Fluid[2]*Fluid[2]+Fluid[3]*Fluid[3] )  );
       p    = Hydro_CheckMinPres( p, MinPres );
 
-#     ifdef CHECK_NEGATIVE_IN_FLUID
+#     ifdef CHECK_FAILED_CELL_IN_FLUID
       if ( Hydro_CheckNegative(p) )
          printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  p, __FILE__, __LINE__, __FUNCTION__ );
@@ -250,7 +250,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
                                               Fluid_half[3]*Fluid_half[3] )  );
          p    = Hydro_CheckMinPres( p, MinPres );
 
-#        ifdef CHECK_NEGATIVE_IN_FLUID
+#        ifdef CHECK_FAILED_CELL_IN_FLUID
          if ( Hydro_CheckNegative(p) )
             printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                     p, __FILE__, __LINE__, __FUNCTION__ );
@@ -343,7 +343,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
 
 
 //       check negative density and energy
-#        ifdef CHECK_NEGATIVE_IN_FLUID
+#        ifdef CHECK_FAILED_CELL_IN_FLUID
          if ( Hydro_CheckNegative(Fluid[0]) )
             printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                     Fluid[0], __FILE__, __LINE__, __FUNCTION__ );

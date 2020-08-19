@@ -97,7 +97,7 @@
 //               --> do not include passive components here, which is set by NCOMP_PASSIVE
 // NFLUX_FLUID : number of active components in the "flux" array
 //               --> do not include passive components here, which is set by NFLUX_PASSIVE
-#if   ( MODEL == HYDRO )
+#if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
 #  define NCOMP_FLUID         5
 #  define NFLUX_FLUID         NCOMP_FLUID
 
@@ -110,10 +110,6 @@
 #elif ( MODEL == ELBDM )
 #  define NCOMP_FLUID         3
 #  define NFLUX_FLUID         1
-
-#elif   ( MODEL == SR_HYDRO )
-#  define NCOMP_FLUID         5
-#  define NFLUX_FLUID         NCOMP_FLUID
 
 #elif ( MODEL == PAR_ONLY )
 #  define NCOMP_FLUID         0
@@ -146,7 +142,7 @@
 
 
 // number of input/output variables in the fluid solver
-#if   ( MODEL == HYDRO )
+#if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
 #  define FLU_NIN             NCOMP_TOTAL
 #  define FLU_NOUT            NCOMP_TOTAL
 
@@ -160,10 +156,6 @@
 #  define FLU_NIN             ( NCOMP_TOTAL - 1 )
 #  define FLU_NOUT            ( NCOMP_TOTAL - 0 )
 
-#elif   ( MODEL == SR_HYDRO )
-#  define FLU_NIN             NCOMP_TOTAL
-#  define FLU_NOUT            NCOMP_TOTAL
-
 #elif ( MODEL == PAR_ONLY )
 #  define FLU_NIN             0
 #  define FLU_NOUT            0
@@ -174,7 +166,7 @@
 
 
 // built-in fields in different models
-#if   ( MODEL == HYDRO )
+#if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
 // field indices of fluid[] --> element of [0 ... NCOMP_FLUID-1]
 // --> must NOT modify their values
 // --> in addition, they must be consistent with the order these fields are declared in Init_Field()
@@ -254,8 +246,11 @@
 #  define _VELZ               ( 1 << (NCOMP_TOTAL+2) )
 #  define _PRES               ( 1 << (NCOMP_TOTAL+3) )
 #  define _TEMP               ( 1 << (NCOMP_TOTAL+4) )
-#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP ) 
-#  define NDERIVE             5
+
+#  if ( MODEL == SR_HYDRO )
+#  define _LRTZ               ( 1 << (NCOMP_TOTAL+5) ) // Lorentz factor               
+#  define _3VEL               ( 1 << (NCOMP_TOTAL+6) ) // magnitude of 3-velocity
+#  endif
 
 
 #elif ( MODEL == MHD )
@@ -286,92 +281,6 @@
 #  define _DERIVED            0
 #  define NDERIVE             0
 
-#elif   ( MODEL == SR_HYDRO )
-// field indices of fluid[] --> element of [0 ... NCOMP_FLUID-1]
-// --> must NOT modify their values
-// --> in addition, they must be consistent with the order these fields are declared in Init_Field()
-#  define  DENS               0
-#  define  MOMX               1
-#  define  MOMY               2
-#  define  MOMZ               3
-#  define  ENGY               4
-
-// field indices of passive[] --> element of [NCOMP_FLUID ... NCOMP_TOTAL-1]
-#if ( NCOMP_PASSIVE > 0 )
-// always put the dual-energy variable at the END of the field list
-// --> so that ENPY/EINT can be determined during compilation
-// --> convenient (and probably also more efficient) for the fluid solver
-# if   ( DUAL_ENERGY == DE_ENPY )
-#  define  ENPY               ( NCOMP_TOTAL - 1 )
-# elif ( DUAL_ENERGY == DE_EINT )
-#  define  EINT               ( NCOMP_TOTAL - 1 )
-# endif
-#endif
-
-// flux indices of flux[] --> element of [0 ... NFLUX_FLUID-1]
-#  define  FLUX_DENS          0
-#  define  FLUX_MOMX          1
-#  define  FLUX_MOMY          2
-#  define  FLUX_MOMZ          3
-#  define  FLUX_ENGY          4
-
-// flux indices of flux_passive[] --> element of [NFLUX_FLUID ... NFLUX_TOTAL-1]
-#if ( NCOMP_PASSIVE > 0 )
-// always put the dual-energy variable at the END of the list
-# if   ( DUAL_ENERGY == DE_ENPY )
-#  define  FLUX_ENPY          ( NFLUX_TOTAL - 1 )
-# elif ( DUAL_ENERGY == DE_EINT )
-#  define  FLUX_EINT          ( NFLUX_TOTAL - 1 )
-# endif
-#endif
-
-// bitwise field indices
-// --> must have "_VAR_NAME = 1<<VAR_NAME" (e.g., _DENS == 1<<DENS)
-// --> convenient for determining subsets of fields (e.g., _DENS|_ENGY)
-// --> used as function parameters (e.g., Prepare_PatchData(), Flu_FixUp(), Flu_Restrict(), Buf_GetBufferData())
-#  define _DENS               ( 1 << DENS ) // 00001
-#  define _MOMX               ( 1 << MOMX ) // 00010
-#  define _MOMY               ( 1 << MOMY ) // 00100
-#  define _MOMZ               ( 1 << MOMZ ) // 01000 
-#  define _ENGY               ( 1 << ENGY ) // 10000
-
-#if ( NCOMP_PASSIVE > 0 )
-# if   ( DUAL_ENERGY == DE_ENPY )
-#  define _ENPY               ( 1 << ENPY )
-# elif ( DUAL_ENERGY == DE_EINT )
-#  define _EINT               ( 1 << EINT )
-# endif
-#endif // #if ( NCOMP_PASSIVE > 0 )
-
-// bitwise flux indices
-#  define _FLUX_DENS          ( 1 << FLUX_DENS ) // 00001
-#  define _FLUX_MOMX          ( 1 << FLUX_MOMX ) // 00010
-#  define _FLUX_MOMY          ( 1 << FLUX_MOMY ) // 00100
-#  define _FLUX_MOMZ          ( 1 << FLUX_MOMZ ) // 01000
-#  define _FLUX_ENGY          ( 1 << FLUX_ENGY ) // 10000
-
-#if ( NFLUX_PASSIVE > 0 )
-# if   ( DUAL_ENERGY == DE_ENPY )
-#  define _FLUX_ENPY          ( 1 << FLUX_ENPY )
-# elif ( DUAL_ENERGY == DE_EINT )
-#  define _FLUX_EINT          ( 1 << FLUX_EINT )
-# endif
-#endif // #if ( NFLUX_PASSIVE > 0 )
-
-// bitwise indices of primitive fields
-// --> start from (1<<NCOMP_TOTAL) to distinguish from the intrinsic fields
-// --> remember to define NDERIVE = total number of derived fields
-#  define _VELX               ( 1 << (NCOMP_TOTAL+0) ) // 4-velocity in x-direction          000000100000
-#  define _VELY               ( 1 << (NCOMP_TOTAL+1) ) // 4-velocity in y-direction          000001000000
-#  define _VELZ               ( 1 << (NCOMP_TOTAL+2) ) // 4-velocity in z-direction          000010000000
-#  define _PRES               ( 1 << (NCOMP_TOTAL+3) ) // pressure                           000100000000
-#  define _TEMP               ( 1 << (NCOMP_TOTAL+4) ) // temperature                        001000000000
-#  define _LRTZ               ( 1 << (NCOMP_TOTAL+5) ) // Lorentz factor                     010000000000
-#  define _3VEL               ( 1 << (NCOMP_TOTAL+6) ) // magnitude of 3-velocity            010000000000
-#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP | _LRTZ | _3VEL ) //1111111100000
-#  define NDERIVE             6
-
-
 #elif ( MODEL == PAR_ONLY )
 #  define _DERIVED            0
 #  define NDERIVE             0
@@ -382,14 +291,43 @@
 #endif // MODEL
 
 
+
+// self-gravity source
+#  if ( MODEL == HYDRO && defined GRAVITY )
+#  define PRE_GRAVITY_SOURCE     _TOTAL_DENS
+#  define GRAVITY_SOURCE         _DENS
+
+#  elif ( MODEL == SR_HYDRO && defined GRAVITY )
+#  define PRE_GRAVITY_SOURCE  ( 1 << (NCOMP_TOTAL+7) )
+#  define GRAVITY_SOURCE         _TOTAL
+#  endif
+
+
+
+// derived variables
+#  if ( MODEL == HYDRO )
+#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP ) 
+#  define NDERIVE             5
+#  elif ( MODEL == SR_HYDRO )
+#  ifdef GRAVITY
+#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP | _LRTZ | _3VEL | PRE_GRAVITY_SOURCE )
+#  define NDERIVE             8
+#  else
+#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP | _LRTZ | _3VEL )
+#  define NDERIVE             7
+#  endif
+#  endif
+
+
+
 // bitwise field indices used by all models
 // --> sum of geometric sequence
 # ifdef GRAVITY
 #  define _POTE               ( 1 << (NCOMP_TOTAL+NDERIVE) )
 # endif
-#  define _FLUID              (  ( 1 << NCOMP_FLUID ) - 1           )       // 11111
+#  define _FLUID              (  ( 1 << NCOMP_FLUID ) - 1           )
 #  define _PASSIVE            (  ( 1 << NCOMP_TOTAL ) - 1 - _FLUID  ) 
-#  define _TOTAL              (  ( 1 << NCOMP_TOTAL ) - 1           )       // 11111
+#  define _TOTAL              (  ( 1 << NCOMP_TOTAL ) - 1           )
 
 #  define _FLUX_FLUID         (  ( 1 << NFLUX_FLUID ) - 1                )
 #  define _FLUX_PASSIVE       (  ( 1 << NFLUX_TOTAL ) - 1 - _FLUX_FLUID  )
@@ -477,7 +415,7 @@
 
 
 // number of fluid ghost zones for the fluid solver
-#if   ( MODEL == HYDRO )   // hydro
+#if   ( MODEL == HYDRO || MODEL == SR_HYDRO )   // hydro
 #  if   ( FLU_SCHEME == RTVD )
 #        define FLU_GHOST_SIZE      3
 #  elif ( FLU_SCHEME == MHM )
@@ -511,33 +449,6 @@
 #        define FLU_GHOST_SIZE      3
 #  endif
 
-#elif   ( MODEL == SR_HYDRO )   // hydro
-#  if   ( FLU_SCHEME == RTVD )
-#        define FLU_GHOST_SIZE      3
-#  elif ( FLU_SCHEME == MHM )
-#     if   ( LR_SCHEME == PLM )
-#        define FLU_GHOST_SIZE      2
-#     elif ( LR_SCHEME == PPM )
-#        define FLU_GHOST_SIZE      3
-#     elif ( LR_SCHEME == WENO )
-#        define FLU_GHOST_SIZE      3
-#     endif
-#  elif ( FLU_SCHEME == MHM_RP )
-#     if   ( LR_SCHEME == PLM )
-#        define FLU_GHOST_SIZE      3
-#     elif ( LR_SCHEME == PPM )
-#        define FLU_GHOST_SIZE      4
-#     elif ( LR_SCHEME == WENO )
-#        define FLU_GHOST_SIZE      4
-#     endif
-#  elif ( FLU_SCHEME == CTU )
-#     if ( LR_SCHEME == PLM )
-#        define FLU_GHOST_SIZE      2
-#     else // PPM
-#        define FLU_GHOST_SIZE      3
-#     endif
-#  endif
-
 #else
 #  error : ERROR : unsupported MODEL !!
 #endif // MODEL
@@ -546,20 +457,25 @@
 // self-gravity constants
 #ifdef GRAVITY
 
+
+
 // number of input and output variables in the gravity solver
 #  if   ( MODEL == HYDRO )
 #     define GRA_NIN             NCOMP_FLUID
+#     define GRA_NIN_USG       ( NCOMP_FLUID-1 )
 
 #  elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
 #     define GRA_NIN             NCOMP_FLUID
 
+#  elif ( MODEL == SR_HYDRO )
+#     define GRA_NIN             NCOMP_FLUID
+#     define GRA_NIN_USG         NCOMP_FLUID
+
+
 // for ELBDM, we do not need to transfer the density component
 #  elif ( MODEL == ELBDM )
 #     define GRA_NIN             ( NCOMP_FLUID - 1 )
-
-#  elif   ( MODEL == SR_HYDRO )
-#     define GRA_NIN             NCOMP_FLUID
 
 #  else
 #     error Error : unsupported MODEL (please edit GRA_NIN in the new MODEL) !!
@@ -571,7 +487,7 @@
 
 
 // number of potential ghost zones for advancing fluid by gravity ~ Gravity solver
-#  if   ( MODEL == HYDRO )
+#  if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
 #     ifdef STORE_POT_GHOST
 #     define GRA_GHOST_SIZE      2
 #     else
@@ -592,14 +508,6 @@
 #     define GRA_GHOST_SIZE      2
 #     else
 #     define GRA_GHOST_SIZE      0
-#     endif
-
-#  elif   ( MODEL == SR_HYDRO )
-#     ifdef STORE_POT_GHOST
-#     define GRA_GHOST_SIZE      2
-#     else
-#     define GRA_GHOST_SIZE      1
-//#   define GRA_GHOST_SIZE      2
 #     endif
 
 #  elif ( MODEL == PAR_ONLY )
@@ -616,14 +524,12 @@
 
 // number of potential ghost zones for correcting the half-step velocity if UNSPLIT_GRAVITY is on
 #  ifdef UNSPLIT_GRAVITY
-#  if   ( MODEL == HYDRO )
+#  if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
 #     define USG_GHOST_SIZE      1
 #  elif ( MODEL == MHD )
 #     define USG_GHOST_SIZE      1
 #  elif ( MODEL == ELBDM )
 #     define USG_GHOST_SIZE      0
-#  elif   ( MODEL == SR_HYDRO )
-#     define USG_GHOST_SIZE      1
 #  else
 #     error : ERROR : unsupported MODEL !!
 #  endif // MODEL

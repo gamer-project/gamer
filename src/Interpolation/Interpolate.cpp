@@ -55,16 +55,10 @@ void Int_WENO_O3   (       real CData[], const int CSize[3], const int CStart[3]
 //               [11] Monotonic   : Ensure that all interpolation results are monotonic
 //                                  --> Useful for interpolating positive-definite variables, such as density, energy, ...
 //-------------------------------------------------------------------------------------------------------
-#if ( MODEL == SR_HYDRO )
 void Interpolate( real CData [], const int CSize[3], const int CStart[3], const int CRange[3],
                   real FData [], const int FSize[3], const int FStart[3],
                   const int NComp, const IntScheme_t IntScheme, const bool UnwrapPhase,
                   const bool Monotonic[], const real IntMonoCoeff )
-#else
-void Interpolate( real CData [], const int CSize[3], const int CStart[3], const int CRange[3],
-                  real FData [], const int FSize[3], const int FStart[3],
-                  const int NComp, const IntScheme_t IntScheme, const bool UnwrapPhase, const bool Monotonic[] )
-#endif
 {
 
 // check
@@ -113,7 +107,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
       case INT_MINMOD1D :
          Int_MinMod1D  ( CData, CSize, CStart, CRange, FData, FSize, FStart, NComp );
          break;
-#     if ( MODEL == SR_HYDRO )
+
       case INT_VANLEER :
          Int_vanLeer   ( CData, CSize, CStart, CRange, FData, FSize, FStart, NComp, UnwrapPhase,            IntMonoCoeff );
          break;
@@ -135,29 +129,10 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
          break;
 
       case INT_WENO_O3 :
+         Aux_Error(ERROR_INFO, "WENO scheme is still in progess!! function:%s, line:%d\n", __FUNCTION__, __LINE__);
          Int_WENO_O3  ( CData, CSize, CStart, CRange, FData, FSize, FStart, NComp, UnwrapPhase );
          break;
-#     else
-      case INT_VANLEER :
-         Int_vanLeer   ( CData, CSize, CStart, CRange, FData, FSize, FStart, NComp, UnwrapPhase,            INT_MONO_COEFF );
-         break;
 
-      case INT_CQUAD :
-         Int_CQuadratic( CData, CSize, CStart, CRange, FData, FSize, FStart, NComp, UnwrapPhase, Monotonic, INT_MONO_COEFF );
-         break;
-
-      case INT_QUAD :
-         Int_Quadratic ( CData, CSize, CStart, CRange, FData, FSize, FStart, NComp, UnwrapPhase, Monotonic, INT_MONO_COEFF );
-         break;
-
-      case INT_CQUAR :
-         Int_CQuartic  ( CData, CSize, CStart, CRange, FData, FSize, FStart, NComp, UnwrapPhase, Monotonic, INT_MONO_COEFF );
-         break;
-
-      case INT_QUAR :
-         Int_Quartic   ( CData, CSize, CStart, CRange, FData, FSize, FStart, NComp, UnwrapPhase, Monotonic, INT_MONO_COEFF );
-         break;
-#     endif
       default :
          Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "IntScheme", IntScheme );
    } // switch ( IntScheme )

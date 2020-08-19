@@ -142,14 +142,14 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__FLAG_LOHNER_TEMP",      &OPT__FLAG_LOHNER_TEMP,           false,           Useless_bool,  Useless_bool   );
 #  elif ( MODEL == SR_HYDRO )
    ReadPara->Add( "OPT__FLAG_PRES_GRADIENT",    &OPT__FLAG_PRES_GRADIENT,         false,           Useless_bool,  Useless_bool   );
-   ReadPara->Add( "OPT__FLAG_VORTICITY",        &OPT__FLAG_VORTICITY,             false,           Useless_bool,  Useless_bool   );
-   ReadPara->Add( "OPT__FLAG_LORENTZ",          &OPT__FLAG_LORENTZ,               false,           Useless_bool,  Useless_bool   );
-   ReadPara->Add( "OPT__FLAG_3VELOCITY",        &OPT__FLAG_3VELOCITY,             false,           Useless_bool,  Useless_bool   );
-   ReadPara->Add( "OPT__FLAG_JEANS",            &OPT__FLAG_JEANS,                 false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__FLAG_ENGY_GRADIENT",    &OPT__FLAG_ENGY_GRADIENT,         false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__FLAG_LORENTZ_GRADIENT", &OPT__FLAG_LORENTZ_GRADIENT,      false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__FLAG_4VELOCITY",        &OPT__FLAG_4VELOCITY,             false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_LOHNER_ENGY",      &OPT__FLAG_LOHNER_ENGY,           false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_LOHNER_PRES",      &OPT__FLAG_LOHNER_PRES,           false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_LOHNER_TEMP",      &OPT__FLAG_LOHNER_TEMP,           false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_LOHNER_LRTZ",      &OPT__FLAG_LOHNER_LRTZ,           false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__FLAG_MOM_OVER_DENS",    &OPT__FLAG_MOM_OVER_DENS,         false,           Useless_bool,  Useless_bool   );
 #  endif
 #  if ( MODEL == ELBDM )
    ReadPara->Add( "OPT__FLAG_ENGY_DENSITY",     &OPT__FLAG_ENGY_DENSITY,          false,           Useless_bool,  Useless_bool   );
@@ -232,13 +232,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "GAMMA",                      &GAMMA,                           5.0/3.0,         1.0,           NoMax_double   );
    ReadPara->Add( "MOLECULAR_WEIGHT",           &MOLECULAR_WEIGHT,                0.6,             Eps_double,    NoMax_double   );
    ReadPara->Add( "MINMOD_COEFF",               &MINMOD_COEFF,                    1.5,             1.0,           2.0            );
-   ReadPara->Add( "EP_COEFF",                   &EP_COEFF,                        1.25,            1.0,           NoMax_double   );
    ReadPara->Add( "OPT__LR_LIMITER",            &OPT__LR_LIMITER,                 VL_GMINMOD,      0,             9              );
-   ReadPara->Add( "OPT__1ST_FLUX_CORR",         &OPT__1ST_FLUX_CORR,              FIRST_FLUX_CORR_3D1D, 0,        2              );
-   ReadPara->Add( "OPT__1ST_FLUX_CORR_SCHEME",  &OPT__1ST_FLUX_CORR_SCHEME,       RSOLVER_1ST_ROE, 0,             3              );
-#  ifdef DUAL_ENERGY
-   ReadPara->Add( "DUAL_ENERGY_SWITCH",         &DUAL_ENERGY_SWITCH,              2.0e-2,          0.0,           NoMax_double   );
-#  endif
 
 #  endif // #if ( MODEL == HYDRO/MHD )
 

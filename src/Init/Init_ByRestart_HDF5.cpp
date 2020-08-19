@@ -1632,10 +1632,14 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "MaxLevel",                &RS.MaxLevel,                SID, TID, NonFatal, &RT.MaxLevel,                 1, NonFatal );
    LoadField( "Opt__Flag_Rho",           &RS.Opt__Flag_Rho,           SID, TID, NonFatal, &RT.Opt__Flag_Rho,            1, NonFatal );
    LoadField( "Opt__Flag_RhoGradient",   &RS.Opt__Flag_RhoGradient,   SID, TID, NonFatal, &RT.Opt__Flag_RhoGradient,    1, NonFatal );
-#  if ( MODEL == HYDRO || MODEL == SR_HYDRO )
+#  if ( MODEL == HYDRO )
    LoadField( "Opt__Flag_PresGradient",  &RS.Opt__Flag_PresGradient,  SID, TID, NonFatal, &RT.Opt__Flag_PresGradient,   1, NonFatal );
    LoadField( "Opt__Flag_Vorticity",     &RS.Opt__Flag_Vorticity,     SID, TID, NonFatal, &RT.Opt__Flag_Vorticity,      1, NonFatal );
    LoadField( "Opt__Flag_Jeans",         &RS.Opt__Flag_Jeans,         SID, TID, NonFatal, &RT.Opt__Flag_Jeans,          1, NonFatal );
+#  endif
+#  if ( MODEL == SR_HYDRO )
+   LoadField( "Opt__Flag_PresGradient",  &RS.Opt__Flag_PresGradient,  SID, TID, NonFatal, &RT.Opt__Flag_PresGradient,   1, NonFatal );
+   LoadField( "Opt__Flag_EngyGradient",  &RS.Opt__Flag_EngyGradient,  SID, TID, NonFatal, &RT.Opt__Flag_EngyGradient,   1, NonFatal );
 #  endif
 #  if ( MODEL == ELBDM )
    LoadField( "Opt__Flag_EngyDensity",   &RS.Opt__Flag_EngyDensity,   SID, TID, NonFatal, &RT.Opt__Flag_EngyDensity,    1, NonFatal );
@@ -1673,13 +1677,18 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__MinimizeMPIBarrier", &RS.Opt__MinimizeMPIBarrier, SID, TID, NonFatal, &RT.Opt__MinimizeMPIBarrier,  1, NonFatal );
 
 // fluid solvers in HYDRO
-#  if ( MODEL == HYDRO || MODEL == SR_HYDRO )
+#  if ( MODEL == HYDRO )
    LoadField( "Gamma",                   &RS.Gamma,                   SID, TID, NonFatal, &RT.Gamma,                    1, NonFatal );
    LoadField( "MolecularWeight",         &RS.MolecularWeight,         SID, TID, NonFatal, &RT.MolecularWeight,          1, NonFatal );
    LoadField( "MinMod_Coeff",            &RS.MinMod_Coeff,            SID, TID, NonFatal, &RT.MinMod_Coeff,             1, NonFatal );
    LoadField( "Opt__LR_Limiter",         &RS.Opt__LR_Limiter,         SID, TID, NonFatal, &RT.Opt__LR_Limiter,          1, NonFatal );
    LoadField( "Opt__1stFluxCorr",        &RS.Opt__1stFluxCorr,        SID, TID, NonFatal, &RT.Opt__1stFluxCorr,         1, NonFatal );
    LoadField( "Opt__1stFluxCorrScheme",  &RS.Opt__1stFluxCorrScheme,  SID, TID, NonFatal, &RT.Opt__1stFluxCorrScheme,   1, NonFatal );
+#  elif ( MODEL == SR_HYDRO )
+   LoadField( "Gamma",                   &RS.Gamma,                   SID, TID, NonFatal, &RT.Gamma,                    1, NonFatal );
+   LoadField( "MolecularWeight",         &RS.MolecularWeight,         SID, TID, NonFatal, &RT.MolecularWeight,          1, NonFatal );
+   LoadField( "MinMod_Coeff",            &RS.MinMod_Coeff,            SID, TID, NonFatal, &RT.MinMod_Coeff,             1, NonFatal );
+   LoadField( "Opt__LR_Limiter",         &RS.Opt__LR_Limiter,         SID, TID, NonFatal, &RT.Opt__LR_Limiter,          1, NonFatal );
 #  endif
 
 // ELBDM solvers
@@ -1889,8 +1898,10 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 
 #     if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
       RS.FlagTable_PresGradient[lv]    = -1.0;
-      RS.FlagTable_Vorticity   [lv]    = -1.0;
-      RS.FlagTable_Jeans       [lv]    = -1.0;
+
+#     elif ( MODEL == SR_HYDRO )
+      RS.FlagTable_EngyGradient[lv]    = -1.0;
+      RS.FlagTable_LorentzFactorGradient[lv]    = -1.0;
 
 #     elif ( MODEL == ELBDM )
       for (int t=0; t<2; t++)
@@ -1935,12 +1946,17 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "FlagTable_Jeans",          RS.FlagTable_Jeans,         SID, TID, NonFatal,  RT.FlagTable_Jeans,         N1, NonFatal );
 
 #  elif ( MODEL == SR_HYDRO )
-   if ( OPT__FLAG_LORENTZ )
-   LoadField( "FlagTable_Lorentz",        RS.FlagTable_Lorentz,       SID, TID, NonFatal,  RT.FlagTable_Lorentz,       N1, NonFatal );
+   if ( OPT__FLAG_ENGY_GRADIENT )
+   LoadField( "FlagTable_EngyGradient",   RS.FlagTable_EngyGradient,  SID, TID, NonFatal,  RT.FlagTable_EngyGradient,  N1, NonFatal );
 
-   if ( OPT__FLAG_3VELOCITY )
-   LoadField( "FlagTable_3Velocity",      RS.FlagTable_3Velocity,     SID, TID, NonFatal,  RT.FlagTable_3Velocity,     N1, NonFatal );
+   if ( OPT__FLAG_4VELOCITY )
+   LoadField( "FlagTable_4Velocity",      RS.FlagTable_4Velocity,     SID, TID, NonFatal,  RT.FlagTable_4Velocity,     N1, NonFatal );
 
+   if ( OPT__FLAG_MOM_OVER_DENS )
+   LoadField( "FlagTable_Mom_Over_Dens",  RS.FlagTable_Mom_Over_Dens, SID, TID, NonFatal,  RT.FlagTable_Mom_Over_Dens,     N1, NonFatal );
+
+   if ( OPT__FLAG_LORENTZ_GRADIENT )
+   LoadField( "FlagTable_LorentzFactorGradient",   RS.FlagTable_LorentzFactorGradient,  SID, TID, NonFatal,  RT.FlagTable_LorentzFactorGradient,  N1, NonFatal );
 #  elif ( MODEL == ELBDM )
    if ( OPT__FLAG_ENGY_DENSITY ) {
    LoadField( "FlagTable_EngyDensity",    RS.FlagTable_EngyDensity,   SID, TID, NonFatal,  NullPtr,                    -1, NonFatal );

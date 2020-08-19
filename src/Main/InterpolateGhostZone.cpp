@@ -4,6 +4,10 @@
 static int Table_01( const int SibID, const int Side, const char dim, const int w01, const int w02,
                      const int w10, const int w11, const int w12, const int w20, const int w21 );
 
+#if ( MODEL == SR_HYDRO )
+real VectorDotProduct( real V1, real V2, real V3 );
+#endif
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  InterpolateGhostZone
@@ -98,12 +102,15 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 #  warning : WAIT MHD !!
 
 #  elif   ( MODEL == SR_HYDRO )
-   const bool PrepVx          = ( TVar & _VELX    ) ? true : false; // 4-velocity in x-direction
-   const bool PrepVy          = ( TVar & _VELY    ) ? true : false; // 4-velocity in y-direction
-   const bool PrepVz          = ( TVar & _VELZ    ) ? true : false; // 4-velocity in z-direction
-   const bool PrepPres        = ( TVar & _PRES    ) ? true : false; // pressure
-   const bool PrepTemp        = ( TVar & _TEMP    ) ? true : false; // temperature
-   const bool PrepLrtz        = ( TVar & _LRTZ    ) ? true : false; // Lorentz factor
+   const bool PrepVx        = ( TVar & _VELX              ) ? true : false; // 4-velocity in x-direction
+   const bool PrepVy        = ( TVar & _VELY              ) ? true : false; // 4-velocity in y-direction
+   const bool PrepVz        = ( TVar & _VELZ              ) ? true : false; // 4-velocity in z-direction
+   const bool PrepPres      = ( TVar & _PRES              ) ? true : false; // pressure
+   const bool PrepTemp      = ( TVar & _TEMP              ) ? true : false; // temperature
+   const bool PrepLrtz      = ( TVar & _LRTZ              ) ? true : false; // Lorentz factor
+#  ifdef GRAVITY
+   const bool PrepGraSource = ( TVar & PRE_GRAVITY_SOURCE ) ? true : false; // source term in Poisson equation
+#  endif
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
@@ -121,10 +128,6 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 #  elif ( MODEL == SR_HYDRO )
    real Cons[NCOMP_FLUID], Prim[NCOMP_FLUID];
    real Fluid[NCOMP_FLUID];
-   int iteration;
-   real IntMonoCoeff;
-   const int Max = 3;
-   bool state;
 #  endif
 
 // set up parameters for the adopted interpolation scheme
@@ -640,6 +643,35 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
       CData_Ptr += CSize3D;
    }
+
+#  if ( MODEL == SR_HYDRO )
+   if ( PrepGraSource )
+   {
+      real Pres, Msqr;
+
+      for (int k=0; k<Loop1[2]; k++)   {  k1 = k + Disp1[2];   k2 = k + Disp2[2];
+      for (int j=0; j<Loop1[1]; j++)   {  j1 = j + Disp1[1];   j2 = j + Disp2[1];
+                                          Idx = IDX321( Disp2[0], j2, k2, CSize[0], CSize[1] );
+      for (i1=Disp1[0]; i1<Disp1[0]+Loop1[0]; i1++)   {
+
+         for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k1][j1][i1];
+
+         CData_Ptr[Idx] = SRHydro_PoissonSource( Fluid, GAMMA, MIN_TEMP );
+
+         if ( FluIntTime ) // temporal interpolation
+         {
+            for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k1][j1][i1];
+
+            CData_Ptr[Idx] = FluWeighting     *CData_Ptr[Idx]
+                           + FluWeighting_IntT*SRHydro_PoissonSource( Fluid, GAMMA, MIN_TEMP );
+         }
+
+         Idx ++;
+      }}}
+
+      CData_Ptr += CSize3D;
+   }
+#  endif
 #  endif // #ifdef GRAVITY
 
 
@@ -978,6 +1010,35 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
             CData_Ptr += CSize3D;
          }
 
+#        ifdef GRAVITY
+         if ( PrepGraSource )
+         {
+            real Pres, Msqr;
+
+            for (int k=0; k<Loop2[2]; k++)   {  k1 = k + Disp3[2];   k2 = k + Disp4[2];
+            for (int j=0; j<Loop2[1]; j++)   {  j1 = j + Disp3[1];   j2 = j + Disp4[1];
+                                                Idx = IDX321( Disp3[0], j1, k1, CSize[0], CSize[1] );
+            for (i2=Disp4[0]; i2<Disp4[0]+Loop2[0]; i2++)   {
+
+               for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][k2][j2][i2];
+
+               CData_Ptr[Idx] = SRHydro_PoissonSource( Fluid, GAMMA, MIN_TEMP );
+
+               if ( FluIntTime ) // temporal interpolation
+               {
+                  for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][k2][j2][i2];
+
+                  CData_Ptr[Idx] =  FluWeighting     *CData_Ptr[Idx]
+                                  + FluWeighting_IntT*SRHydro_PoissonSource( Fluid, GAMMA, MIN_TEMP );
+               }
+
+               Idx ++;
+            }}}
+
+            CData_Ptr += CSize3D;
+         }
+#        endif
+
 #        elif ( MODEL == ELBDM )
 //       no derived variables yet
 
@@ -1235,8 +1296,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    }
 #  else
 // c3. interpolation on original variables for models != ELBDM
-   AdaptiveInterpolate( CData, CSize, CStart, CRange, IntData, FSize, FStart, NVar_Flu, TVar, 
-                        IntScheme, PhaseUnwrapping_No, Monotonicity );
+   AdaptiveInterpolate( CData, CSize, CStart, CRange, IntData, FSize, FStart, NVar_Tot, TVar, 
+                        IntScheme, PhaseUnwrapping_No, Monotonicity, 1 );
 #  endif
 
 
@@ -1249,36 +1310,35 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    if ( PrepVx )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-
-                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
+                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, INT_MONO_COEFF );
       NVar_SoFar ++;
    }
 
    if ( PrepVy )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
+                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, INT_MONO_COEFF );
       NVar_SoFar ++;
    }
 
    if ( PrepVz )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
+                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, INT_MONO_COEFF );
       NVar_SoFar ++;
    }
 
    if ( PrepPres )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
+                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, INT_MONO_COEFF );
       NVar_SoFar ++;
    }
 
    if ( PrepTemp )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
+                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, INT_MONO_COEFF );
       NVar_SoFar ++;
    }
 
@@ -1291,35 +1351,35 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    if ( PrepVx )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, IntMonoCoeff  );
+                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, INT_MONO_COEFF  );
       NVar_SoFar ++;
    }
 
    if ( PrepVy )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, IntMonoCoeff  );
+                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, INT_MONO_COEFF  );
       NVar_SoFar ++;
    }
 
    if ( PrepVz )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, IntMonoCoeff  );
+                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, INT_MONO_COEFF  );
       NVar_SoFar ++;
    }
 
    if ( PrepPres )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, IntMonoCoeff  );
+                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, INT_MONO_COEFF  );
       NVar_SoFar ++;
    }
 
    if ( PrepTemp )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, IntMonoCoeff  );
+                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, INT_MONO_COEFF  );
       NVar_SoFar ++;
    }
 
@@ -1335,8 +1395,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 // c5. interpolation on potential
    if ( PrepPot )
    {
-      Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_No );
+      AdaptiveInterpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
+                           TVar, IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_No, NULL_INT );
       NVar_SoFar ++;
    }
 #  endif

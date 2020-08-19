@@ -415,7 +415,7 @@ void Init_ResetParameter()
 
 
 // 1st-order flux correction
-#  if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD )
    if ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_NONE )
    {
       OPT__1ST_FLUX_CORR_SCHEME = RSOLVER_1ST_NONE;
@@ -550,20 +550,20 @@ void Init_ResetParameter()
 #  endif
 
 
-// flux operations are useful in HYDRO/MHD/ELBDM/SR-HYDRO only
+// flux operations are useful in HYDRO/MHD/ELBDM/SR_HYDRO only
 #  if ( MODEL != HYDRO  &&  MODEL != MHD  &&  MODEL != ELBDM && MODEL != SR_HYDRO )
    if ( OPT__FIXUP_FLUX )
    {
       OPT__FIXUP_FLUX = false;
 
-      PRINT_WARNING( OPT__FIXUP_FLUX, FORMAT_INT, "since it's only supported in HYDRO/MHD/ELBDM/SR-HYDRO" );
+      PRINT_WARNING( OPT__FIXUP_FLUX, FORMAT_INT, "since it's only supported in HYDRO/MHD/ELBDM/SR_HYDRO" );
    }
 
    if ( OPT__CK_FLUX_ALLOCATE )
    {
       OPT__CK_FLUX_ALLOCATE = false;
 
-      PRINT_WARNING( OPT__CK_FLUX_ALLOCATE, FORMAT_INT, "since it's only supported in HYDRO/MHD/ELBDM/SR-HYDRO" );
+      PRINT_WARNING( OPT__CK_FLUX_ALLOCATE, FORMAT_INT, "since it's only supported in HYDRO/MHD/ELBDM/SR_HYDRO" );
    }
 #  endif
 
@@ -599,7 +599,7 @@ void Init_ResetParameter()
    {
       OPT__CK_CONSERVATION = false;
 
-      PRINT_WARNING( OPT__CK_CONSERVATION, FORMAT_INT, "since it's only supported in HYDRO/MHD/ELBDM/SR-HYDRO" );
+      PRINT_WARNING( OPT__CK_CONSERVATION, FORMAT_INT, "since it's only supported in HYDRO/MHD/ELBDM/SR_HYDRO" );
    }
 #  endif
 
@@ -618,7 +618,7 @@ void Init_ResetParameter()
 
 
 // disable the refinement flag of Jeans length if GRAVITY is disabled
-#  if (  (MODEL == HYDRO || MODEL == MHD || MODEL == SR_HYDRO )  &&  !defined GRAVITY  )
+#  if (  (MODEL == HYDRO || MODEL == MHD )  &&  !defined GRAVITY  )
    if ( OPT__FLAG_JEANS )
    {
       OPT__FLAG_JEANS = false;
@@ -762,7 +762,7 @@ void Init_ResetParameter()
 
 
 // JEANS_MIN_PRES must work with GRAVITY
-#  if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD )
 #  ifndef GRAVITY
    if ( JEANS_MIN_PRES )
    {

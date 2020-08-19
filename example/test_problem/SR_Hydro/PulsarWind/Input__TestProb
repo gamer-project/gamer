@@ -1,0 +1,18 @@
+# problem-specific runtime parameters
+Pulsar_DensBg         1e4            # background mass density
+Pulsar_PresBg         1.0           # background energy density
+
+Pulsar_WindDensRatio  1.0            # density ratio of center to background
+Pulsar_WindVelocity   1e6
+Pulsar_WindPresRatio  1.0           # pressure ratio of center to background
+
+Pulsar_JetDensRatio   1.0            # density ratio of center to background
+Pulsar_JetVelocity    0.0
+Pulsar_JetPresRatio   1.0           # pressure ratio of center to background
+
+Pulsar_DiskRadius     1.0            # explosion radius
+Pulsar_DiskHeight     0.1            # explosion radius
+
+Pulsar_Center_X      -1.0            # explosion center x (<0=default) [box center]
+Pulsar_Center_Y      -1.0            # explosion center y (<0=default) [box center]
+Pulsar_Center_Z      -1.0            # explosion center z (<0=default) [box center]

@@ -8,10 +8,10 @@
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_PreparedPatch_Poisson
 // Description :  Output the density/potential of a single patch plus its ghost zones prepared by
-//                Poi_Prepare_Rho() or Poi_Prepare_Pot()
+//                Poi_Prepare_Source() or Poi_Prepare_Pot()
 //
 // Note        :  For "TComp == 0", this function should be placed after invoking Prepare_PatchData() in
-//                Poi_Prepare_Rho().
+//                Poi_Prepare_Source().
 //                For "TComp == 1", this function should be placed in the end of Poi_Prepare_Pot().
 //
 //                Example:

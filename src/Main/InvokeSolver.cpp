@@ -281,7 +281,7 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
 
 #     ifdef GRAVITY
       case POISSON_SOLVER :
-         TIMING_SYNC(   Poi_Prepare_Rho( lv, TimeNew, h_Rho_Array_P   [ArrayID], NPG, PID0_List ),
+         TIMING_SYNC(   Poi_Prepare_Source( lv, TimeNew, h_Rho_Array_P   [ArrayID], NPG, PID0_List ),
                         Timer_Poi_PreRho[lv]   );
 
          TIMING_SYNC(   Poi_Prepare_Pot( lv, TimeNew, h_Pot_Array_P_In[ArrayID], NPG, PID0_List ),
@@ -310,7 +310,7 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
       break;
 
       case POISSON_AND_GRAVITY_SOLVER :
-         TIMING_SYNC(   Poi_Prepare_Rho( lv, TimeNew, h_Rho_Array_P   [ArrayID], NPG, PID0_List ),
+         TIMING_SYNC(   Poi_Prepare_Source( lv, TimeNew, h_Rho_Array_P   [ArrayID], NPG, PID0_List ),
                         Timer_Poi_PreRho[lv]   );
 
          TIMING_SYNC(   Poi_Prepare_Pot( lv, TimeNew, h_Pot_Array_P_In[ArrayID], NPG, PID0_List ),
@@ -432,7 +432,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
    real (*h_Pot_Array_USG_F[2])[ CUBE(USG_NXT_F) ]                  = { NULL, NULL };
 #  ifdef GRAVITY
    real (*h_Pot_Array_USG_G[2])[USG_NXT_G ][USG_NXT_G ][USG_NXT_G ] = { NULL, NULL };
-   real (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1]           = { NULL, NULL };
+   real (*h_Flu_Array_USG_G[2])[GRA_NIN_USG][PS1][PS1][PS1]           = { NULL, NULL };
 #  endif
 #  endif
 
@@ -449,7 +449,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #  if ( MODEL != SR_HYDRO )
    const real MinEint = MIN_PRES / ( GAMMA - (real)1.0 );
 #  else
-//   const real MinEint = MIN_PRES / ( GAMMA - (real)1.0 ); 
+   const real MinEint = NAN;
 #  endif
 
 #  if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined GRAVITY  )

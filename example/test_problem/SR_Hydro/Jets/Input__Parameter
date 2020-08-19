@@ -14,27 +14,30 @@
 
 
 # simulation scale
-BOX_SIZE                      100.0           # box size along the longest side (in Mpc/h if COMOVING is adopted)
-NX0_TOT_X                     160             # number of base-level cells along x
-NX0_TOT_Y                     64              # number of base-level cells along y
-NX0_TOT_Z                     64              # number of base-level cells along z
-OMP_NTHREAD                   3               # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
-END_T                         60.0            # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
-END_STEP                     -1               # end step (<0=auto -> must be set by test problems or restart) [-1]
+BOX_SIZE                      200.0        # box size along the longest side
+NX0_TOT_X                     160          # number of base-level cells along x
+NX0_TOT_Y                     160          # number of base-level cells along y
+NX0_TOT_Z                     160          # number of base-level cells along z
+OMP_NTHREAD                  -1            # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
+END_T                        -1.0          # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
+END_STEP                     -1            # end step (<0=auto -> must be set by test problems or restart) [-1]
 
 
 # test problems
-TESTPROB_ID                   604              # test problem ID [0]
-                                               # 604: relativistic jets
+TESTPROB_ID                   604         # test problem ID [0]
+                                          # 600: blast wave in sr-hydro
+                                          # 601: Riemann problem in sr-hydro
+                                          # 602: double mach reflection in pure sr-hydro
+                                          # 604: relativistic jets
 
 
 # code units (in cgs)
-OPT__UNIT                     0                 # specify code units -> must set exactly 3 basic units below [0] ##USELESS FOR COMOVING##
-UNIT_L                        1                 # length unit        (<=0 -> set to UNIT_V*UNIT_T or (UNIT_M/UNIT_D)^(1/3)) [-1.0]
-UNIT_M                        1                 # mass unit          (<=0 -> set to UNIT_D*UNIT_L^3)                        [-1.0]
-UNIT_T                        1                 # time unit          (<=0 -> set to UNIT_L/UNIT_V)                          [-1.0]
-UNIT_V                        1                 # velocity unit      (<=0 -> set to UNIT_L/UNIT_T)                          [-1.0]
-UNIT_D                        1                 # mass density unit  (<=0 -> set to UNIT_M/UNIT_L^3)                        [-1.0]
+OPT__UNIT                     1           # specify code units -> must set exactly 3 basic units below [0] ##USELESS FOR COMOVING##
+UNIT_L         3.08567758149e18           # length unit        (<=0 -> set to UNIT_V*UNIT_T or (UNIT_M/UNIT_D)^(1/3)) [-1.0]
+UNIT_M                        0           # mass unit          (<=0 -> set to UNIT_D*UNIT_L^3)                        [-1.0]
+UNIT_T                        0           # time unit          (<=0 -> set to UNIT_L/UNIT_V)                          [-1.0]
+UNIT_V                        0           # velocity unit      (<=0 -> set to UNIT_L/UNIT_T)                          [-1.0]
+UNIT_D                  5.0e-29           # mass density unit  (<=0 -> set to UNIT_M/UNIT_L^3)                        [-1.0]
 
 
 # boundary conditions
@@ -44,12 +47,14 @@ OPT__BC_FLU_YM                2           # fluid boundary condition at the -y f
 OPT__BC_FLU_YP                2           # fluid boundary condition at the +y face: (1=periodic, 2=outflow, 3=reflecting, 4=user)
 OPT__BC_FLU_ZM                2           # fluid boundary condition at the -z face: (1=periodic, 2=outflow, 3=reflecting, 4=user)
 OPT__BC_FLU_ZP                2           # fluid boundary condition at the +z face: (1=periodic, 2=outflow, 3=reflecting, 4=user)
+OPT__BC_POT                   2           # gravity boundary condition: (1=periodic, 2=isolated)
 
 
 # time-step
 DT__FLUID                     0.4         # dt criterion: fluid solver CFL factor (<0=auto) [-1.0]
 DT__FLUID_INIT                0.4         # dt criterion: DT__FLUID at the first step (<0=auto) [-1.0]
-DT_SPEED_OF_LIGHT             1           # compute time step based on speed of light
+DT_SPEED_OF_LIGHT             0           # compute time step based on speed of light
+DT__GRAVITY                   0.2         # dt criterion: gravity solver safety factor (<0=auto) [-1.0]
 DT__SYNC_PARENT_LV            0.1         # dt criterion: allow dt to adjust by (1.0+DT__SYNC_PARENT) in order to synchronize
                                           #               with the parent level (for OPT__DT_LEVEL==3 only) [0.1]
 DT__SYNC_CHILDREN_LV          0.1         # dt criterion: allow dt to adjust by (1.0-DT__SYNC_CHILDREN) in order to synchronize
@@ -67,22 +72,21 @@ REGRID_COUNT                  4           # refine every REGRID_COUNT sub-step [
 FLAG_BUFFER_SIZE              8           # number of buffer cells for the flag operation (0~PATCH_SIZE) [PATCH_SIZE]
 FLAG_BUFFER_SIZE_MAXM1_LV     4           # FLAG_BUFFER_SIZE at the level MAX_LEVEL-1 (<0=auto -> FLAG_BUFFER_SIZE) [-1]
 FLAG_BUFFER_SIZE_MAXM2_LV    -1           # FLAG_BUFFER_SIZE at the level MAX_LEVEL-2 (<0=auto) [-1]
-MAX_LEVEL                     5           # maximum refinement level (0~NLEVEL-1) [NLEVEL-1]
+MAX_LEVEL                     0           # maximum refinement level (0~NLEVEL-1) [NLEVEL-1]
 OPT__FLAG_RHO                 0           # flag: density (Input__Flag_Rho) [0]
 OPT__FLAG_RHO_GRADIENT        0           # flag: density gradient (Input__Flag_RhoGradient) [0]
-OPT__FLAG_PRES_GRADIENT       0           # flag: pressure gradient (Input__Flag_PresGradient) [0] ##SR_HYDRO ONLY##
-OPT__FLAG_VORTICITY           0           # flag: vorticity (Input__Flag_Vorticity) [0] ##SR_HYDRO ONLY##
-OPT__FLAG_LORENTZ             0           # flag: Lorentz factor (Input__Flag_Lorentz) [0] ##SR_HYDRO ONLY##
-OPT__FLAG_3VELOCITY           0           # flag: magnitude of 3-velocity (Input__Flag_3Velocity) [0] ##SR_HYDRO ONLY##
-OPT__FLAG_JEANS               0           # flag: Jeans length (Input__Flag_Jeans) [0] ##SR_HYDRO ONLY##
-OPT__FLAG_LOHNER_DENS         1           # flag: Lohner for number density    (Input__Flag_Lohner) [0] ##BOTH HYDRO,ELBDM AND SR_HYDRO ##
-OPT__FLAG_LOHNER_ENGY         0           # flag: Lohner for energy density    (Input__Flag_Lohner) [0] ##HYDRO AND SR_HYDRO##
-OPT__FLAG_LOHNER_PRES         0           # flag: Lohner for pressure          (Input__Flag_Lohner) [0] ##HYDRO AND SR_HYDRO##
-OPT__FLAG_LOHNER_TEMP         0           # flag: Lohner for temperature       (Input__Flag_Lohner) [0] ##HYDRO AND SR_HYDRO##
-OPT__FLAG_LOHNER_LRTZ         0           # flag: Lohner for Lorentz factor    (Input__Flag_Lohner) [0] ##SR_HYDRO ONLY##
+OPT__FLAG_PRES_GRADIENT       0           # flag: pressure gradient (Input__Flag_PresGradient) [0] ##SR_HYDRO/HYDRO##
+OPT__FLAG_ENGY_GRADIENT       1           # flag: pressure gradient (Input__Flag_EngyGradient) [0] ##SR_HYDRO/HYDRO##
+OPT__FLAG_LORENTZ_GRADIENT    0           # flag: Lorentz factor gradient (Input__Flag_LorentzGradient) [0] ##SR_HYDRO ONLY##
+OPT__FLAG_4VELOCITY           0           # flag: magnitude of 4-velocity (Input__Flag_4Velocity) [0] ##SR_HYDRO ONLY##
+OPT__FLAG_LOHNER_DENS         0           # flag: Lohner for mass density   (Input__Flag_Lohner) [0] ##HYDRO/SR_HYDRO/ELBDM##
+OPT__FLAG_LOHNER_ENGY         0           # flag: Lohner for energy density (Input__Flag_Lohner) [0] ##HYDRO/SR_HYDRO##
+OPT__FLAG_LOHNER_PRES         0           # flag: Lohner for pressure       (Input__Flag_Lohner) [0] ##HYDRO/SR_HYDRO##
+OPT__FLAG_LOHNER_TEMP         0           # flag: Lohner for temperature    (Input__Flag_Lohner) [0] ##HYDRO/SR_HYDRO##
+OPT__FLAG_LOHNER_LRTZ         0           # flag: Lohner for Lorentz factor (Input__Flag_Lohner) [0] ##SR_HYDRO ONLY##
 OPT__FLAG_LOHNER_FORM         2           # form of Lohner: (1=FLASH-1, 2=FLASH-2, 3=form-invariant-1, 4=form-invariant-2) [2]
-OPT__FLAG_USER                0           # flag: user-defined (Input__Flag_User) -> edit "Flag_User.cpp" [0]
-OPT__FLAG_REGION              0           # flag: specify the regions **allowed** to be refined -> edit "Flag_Region.cpp" [0]
+OPT__FLAG_USER                1           # flag: user-defined (Input__Flag_User) -> edit "Flag_User.cpp" [0]
+OPT__FLAG_REGION              1           # flag: specify the regions **allowed** to be refined -> edit "Flag_Region.cpp" [0]
 OPT__NO_FLAG_NEAR_BOUNDARY    0           # flag: disallow refinement near the boundaries [0]
 OPT__PATCH_COUNT              1           # record the # of patches   at each level: (0=off, 1=every step, 2=every sub-step) [1]
 OPT__REUSE_MEMORY             2           # reuse patch memory to reduce memory fragmentation: (0=off, 1=on, 2=aggressive) [2]
@@ -96,8 +100,8 @@ OPT__MINIMIZE_MPI_BARRIER     1           # minimize MPI barriers to improve loa
                                           # (STORE_POT_GHOST, PAR_IMPROVE_ACC=1, OPT__TIMING_BARRIER=0 only; recommend AUTO_REDUCE_DT=0)
 
 
-# fluid solver in SR_HYDRO (MODEL==SR_HYDRO only)
-GAMMA                         1.333333333 # ratio of specific heats (i.e., adiabatic index) [5.0/3.0]
+# fluid solver in HYDRO/SR_HYDRO (MODEL==HYDRO/SR_HYDRO only)
+GAMMA                         1.333333333333333333  # ratio of specific heats (i.e., adiabatic index)
 MOLECULAR_WEIGHT              0.6         # mean molecular weight -> currently only for post-processing [0.6]
 MINMOD_COEFF                  1.5         # coefficient of the generalized MinMod limiter (1.0~2.0) [1.5]
 EP_COEFF                      1.25        # coefficient of the extrema-preserving limiter (>=1.0) [1.25] ##DEPRECATED##
@@ -111,7 +115,7 @@ DUAL_ENERGY_SWITCH            2.0e-2      # apply dual-energy if E_int/E_kin < D
 
 
 # fluid solvers in all models
-FLU_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU fluid solver (<=0=auto) [-1]
+FLU_GPU_NPGROUP             192           # number of patch groups sent into the CPU/GPU fluid solver (<=0=auto) [-1]
 GPU_NSTREAM                  -1           # number of CUDA streams for the asynchronous memory copy in GPU (<=0=auto) [-1]
 OPT__FIXUP_FLUX               1           # correct coarse grids by the fine-grid boundary fluxes [1] ##SR_HYDRO and ELBDM ONLY##
 OPT__FIXUP_RESTRICT           1           # correct coarse grids by averaging the fine-grid data [1]
@@ -120,9 +124,18 @@ OPT__CORR_AFTER_ALL_SYNC     -1           # apply various corrections after all 
 OPT__NORMALIZE_PASSIVE        1           # ensure "sum(passive_scalar_density) == gas_density" [1]
 OPT__OVERLAP_MPI              0           # overlap MPI communication with CPU/GPU computations [0] ##NOT SUPPORTED YET##
 OPT__RESET_FLUID              1           # reset fluid variables after each update -> edit "Flu_ResetByUser.cpp" [0]
-MIN_DENS                      0.0         # minimum number density (must >= 0.0) [0.0] ##SR_HYDRO ONLY##
-MIN_PRES                      0.0         # minimum pressure       (must >= 0.0) [0.0] ##HYDRO, MHD and SR_HYDRO##
-MIN_TEMP                      0.0       # SR_HYDRO only
+MIN_DENS                      0.0         # minimum mass density (must >= 0.0) [0.0] ##HYDRO/SR_HYDRO/MHD/ELBDM ONLY##
+MIN_TEMP                      0.0         # minimum pressure     (must >= 0.0) [0.0] ##HYDRO/SR_HYDRO/MHD ONLY##
+
+
+# gravity solvers in all models
+NEWTON_G                      1.0         # gravitational constant (will be overwritten if OPT__UNIT or COMOVING is on)
+SOR_OMEGA                    -1.0         # over-relaxation parameter in SOR: (<0=auto) [-1.0]
+SOR_MAX_ITER                 -1           # maximum number of iterations in SOR: (<0=auto) [-1]
+SOR_MIN_ITER                 -1           # minimum number of iterations in SOR: (<0=auto) [-1]
+POT_GPU_NPGROUP              -1           # number of patch groups sent into the GPU Poisson solver (<=0=auto) [-1]
+OPT__GRA_P5_GRADIENT          0           # 5-points gradient in the Gravity solver (must have GRA/USG_GHOST_SIZE>=2) [0]
+OPT__GRAVITY_TYPE             1           # gravity source: (1=self-gravity, 2=external gravity, 3=both) ##2/3 for HYDRO ONLY##
 
 
 # initialization
@@ -132,7 +145,7 @@ OPT__RESTART_RESET            0           # reset some simulation status paramet
 OPT__INIT_RESTRICT            1           # restrict all data during the initialization [1]
 OPT__INIT_GRID_WITH_OMP       1           # enable OpenMP when assigning the initial condition of each grid patch [1]
 OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2=CUDA, -1=MPI rank, >=0=input) [-1]
-INIT_SUBSAMPLING_NCELL        2           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
+INIT_SUBSAMPLING_NCELL        0           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
 
 
 # interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar)
@@ -144,12 +157,14 @@ INT_MONO_COEFF                2.0         # coefficient for ensuring the interpo
 
 # data dump
 OPT__OUTPUT_TOTAL             1           # output the simulation snapshot: (0=off, 1=HDF5, 2=C-binary) [1]
-OPT__OUTPUT_PART              4           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag) [0]
+OPT__OUTPUT_PART              0           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag) [0]
 OPT__OUTPUT_USER              0           # output the user-specified data -> edit "Output_User.cpp" [0]
+OPT__OUTPUT_BASEPS            0           # output the base-level power spectrum [0]
 OPT__OUTPUT_BASE              0           # only output the base-level data [0] ##OPT__OUTPUT_PART ONLY##
-OPT__OUTPUT_MODE              1           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
+OPT__OUTPUT_POT               0           # output gravitational potential [0] ##OPT__OUTPUT_TOTAL ONLY##
+OPT__OUTPUT_MODE              2           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
 OUTPUT_STEP                   5           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
-OUTPUT_DT                     1.0         # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
+OUTPUT_DT                  6662           # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
 OUTPUT_PART_X                -1.0         # x coordinate for OPT__OUTPUT_PART [-1.0]
 OUTPUT_PART_Y                -1.0         # y coordinate for OPT__OUTPUT_PART [-1.0]
 OUTPUT_PART_Z                -1.0         # z coordinate for OPT__OUTPUT_PART [-1.0]

@@ -10,7 +10,7 @@ extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 
 
 // declare all GPU kernels requiring ExtPot_AuxArray[] and/or ExtAcc_AuxArray[]
-#if ( MODEL == HYDRO )
+#if ( MODEL == HYDRO || MODEL == SR_HYDRO )
 int CUPOT_SetConstMem_HydroGravitySolver( double ExtAcc_AuxArray_h[] );
 int CUPOT_SetConstMem_dtSolver_HydroGravity( double ExtAcc_AuxArray_h[] );
 #if (  defined UNSPLIT_GRAVITY  &&  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  )
@@ -38,7 +38,7 @@ int CUPOT_SetConstMem_ELBDMGravitySolver( double ExtPot_AuxArray_h[] );
 void CUAPI_Init_ExternalAccPot()
 {
 
-#  if ( MODEL == HYDRO )
+#  if ( MODEL == HYDRO || MODEL == SR_HYDRO)
    if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
    {
       if (  CUPOT_SetConstMem_HydroGravitySolver( ExtAcc_AuxArray ) != 0  )

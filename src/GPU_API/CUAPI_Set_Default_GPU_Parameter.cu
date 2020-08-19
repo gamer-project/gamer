@@ -80,15 +80,18 @@ __global__ void CUPOT_dtSolver_HydroGravity( real g_dt_Array[],
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 __global__
 void CUFLU_FluidSolver_MHM(
-   const real   Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
-         real   Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
-         real   Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
-         real   PriVar       [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
-         real   Slope_PPM    [][3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
-         real   FC_Var       [][6][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
-         real   FC_Flux      [][3][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
+   const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+         real   g_Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
+         real   g_Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
+   const double g_Corner_Array [][3],
+   const real   g_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
+         real   g_PriVar       [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+         real   g_Slope_PPM    [][3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
+         real   g_FC_Var       [][6][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
+         real   g_FC_Flux      [][3][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
    const real dt, const real dh, const real Gamma, const bool StoreFlux,
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+   const double Time, const OptGravityType_t GravityType,
    const real MinDens, const real MinTemp );
 #endif // FLU_SCHEME
 __global__ void CUFLU_dtSolver_SRHydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
@@ -134,14 +137,14 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
 
 
 // Gravity solver prototypes in different models
-#if   ( MODEL == HYDRO )
+#if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
 __global__
 void CUPOT_HydroGravitySolver(
          real   Flu_Array_New[][GRA_NIN][ CUBE(PS1) ],
    const real   Pot_Array_New[][ CUBE(GRA_NXT) ],
    const double Corner_Array [][3],
    const real   Pot_Array_USG[][ CUBE(USG_NXT_G) ],
-   const real   Flu_Array_USG[][GRA_NIN-1][ CUBE(PS1) ],
+   const real   Flu_Array_USG[][GRA_NIN_USG][ CUBE(PS1) ],
          char   DE_Array     [][ CUBE(PS1) ],
    const real dt, const real dh, const bool P5_Gradient,
    const OptGravityType_t GravityType,
@@ -436,7 +439,7 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 
 
 // (3-3) gravity solver
-#  if   ( MODEL == HYDRO )
+#  if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
    CUDA_CHECK_ERROR( cudaFuncSetCacheConfig( CUPOT_HydroGravitySolver,           cudaFuncCachePreferShared ) );
 
 #  elif ( MODEL == MHD )

@@ -28,13 +28,13 @@ void CPU_PoissonSolver_MG( const real Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT]
 
 
 // Gravity solver prototypes
-#if   ( MODEL == HYDRO )
+#if   ( MODEL == HYDRO || MODEL ==SR_HYDRO )
 void CPU_HydroGravitySolver(
          real   g_Flu_Array_New[][GRA_NIN][ CUBE(PS1) ],
    const real   g_Pot_Array_New[][ CUBE(GRA_NXT) ],
    const double g_Corner_Array [][3],
    const real   g_Pot_Array_USG[][ CUBE(USG_NXT_G) ],
-   const real   g_Flu_Array_USG[][GRA_NIN-1][ CUBE(PS1) ],
+   const real   g_Flu_Array_USG[][GRA_NIN_USG][ CUBE(PS1) ],
          char   g_DE_Array     [][ CUBE(PS1) ],
    const int NPatchGroup,
    const real dt, const real dh, const bool P5_Gradient,
@@ -108,7 +108,7 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
                                      real h_Flu_Array    [][GRA_NIN][PS1][PS1][PS1],
                                const double h_Corner_Array[][3],
                                const real h_Pot_Array_USG[][USG_NXT_G][USG_NXT_G][USG_NXT_G],
-                               const real h_Flu_Array_USG[][GRA_NIN-1][PS1][PS1][PS1],
+                               const real h_Flu_Array_USG[][GRA_NIN_USG][PS1][PS1][PS1],
                                      char h_DE_Array     [][PS1][PS1][PS1],
                                const int NPatchGroup, const real dt, const real dh, const int SOR_Min_Iter,
                                const int SOR_Max_Iter, const real SOR_Omega, const int MG_Max_Iter,
@@ -171,13 +171,13 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
 // Gravity solver
    if ( GraAcc )
    {
-#     if   ( MODEL == HYDRO )
-      CPU_HydroGravitySolver( (real(*)[GRA_NIN][ CUBE(PS1) ])   h_Flu_Array,
-                              (real(*)[ CUBE(GRA_NXT) ])        h_Pot_Array_Out,
-                                                                h_Corner_Array,
-                              (real(*)[ CUBE(USG_NXT_G) ])      h_Pot_Array_USG,
-                              (real(*)[GRA_NIN-1][ CUBE(PS1) ]) h_Flu_Array_USG,
-                              (char(*)[ CUBE(PS1) ])            h_DE_Array,
+#     if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
+      CPU_HydroGravitySolver( (real(*)[GRA_NIN][ CUBE(PS1) ])     h_Flu_Array,
+                              (real(*)[ CUBE(GRA_NXT) ])          h_Pot_Array_Out,
+                                                                  h_Corner_Array,
+                              (real(*)[ CUBE(USG_NXT_G) ])        h_Pot_Array_USG,
+                              (real(*)[GRA_NIN_USG][ CUBE(PS1) ]) h_Flu_Array_USG,
+                              (char(*)[ CUBE(PS1) ])              h_DE_Array,
                               NPatchGroup, dt, dh, P5_Gradient, GravityType,
                               ExtAcc_AuxArray, TimeNew, TimeOld, MinEint );
 

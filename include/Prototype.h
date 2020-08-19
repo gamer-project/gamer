@@ -124,6 +124,8 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const bool JeansMinPres, const real JeansMinPres_Coeff );
 
 real SRHydro_Con2Pri( const real In[], real Out[], const real Gamma, const real MinTemp);
+real SRHydro_GetHTilde( const real Con[], real Gamma );
+real SoundSpeedSquare( real Temp, real Gamma );
 
 #ifdef __CUDACC__
 void SRHydro_Pri2Con( const real In[], real Out[], const real Gamma);
@@ -225,8 +227,8 @@ void Init_ByRestart_HDF5( const char *FileName );
 void Int_Table( const IntScheme_t IntScheme, int &NSide, int &NGhost );
 void AdaptiveInterpolate( real CData [], const int CSize[3], const int CStart[3], const int CRange[3],
                           real FData [], const int FSize[3], const int FStart[3],
-                          const int NComp, const int TVar, const IntScheme_t IntScheme, const bool UnwrapPhase,
-                          const bool Monotonic[] );
+                          const int NVar_Tot, const int TVar, const IntScheme_t IntScheme, const bool UnwrapPhase,
+                          const bool Monotonic[], int Strategy );
 void Interpolate( real CData [], const int CSize[3], const int CStart[3], const int CRange[3],
                   real FData [], const int FSize[3], const int FStart[3],
                   const int NComp, const IntScheme_t IntScheme, const bool UnwrapPhase,
@@ -308,9 +310,9 @@ void FindFather( const int lv, const int Mode );
 void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc );
 bool Flag_Check( const int lv, const int PID, const int i, const int j, const int k, const real dv,
                  const real Fluid[][PS1][PS1][PS1], const real Pot[][PS1][PS1], const real Pres[][PS1][PS1],
-                 const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
-                 const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff );
-bool Flag_Region( const int i, const int j, const int k, const int lv, const int PID );
+                 const real LorentzFactor[][PS1][PS1], const real *Lohner_Var, const real *Lohner_Ave, 
+                 const real *Lohner_Slope, const int Lohner_NVar, const real ParCount[][PS1][PS1], 
+                 const real ParDens[][PS1][PS1], const real JeansCoeff );
 bool Flag_Lohner( const int i, const int j, const int k, const OptLohnerForm_t Form, const real *Var1D, const real *Ave1D,
                   const real *Slope1D, const int NVar, const double Threshold, const double Filter, const double Soften );
 void Refine( const int lv, const UseLBFunc_t UseLBFunc );
@@ -332,7 +334,7 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
                                      real h_Flu_Array    [][GRA_NIN][PS1][PS1][PS1],
                                const double h_Corner_Array [][3],
                                const real h_Pot_Array_USG[][USG_NXT_G][USG_NXT_G][USG_NXT_G],
-                               const real h_Flu_Array_USG[][GRA_NIN-1][PS1][PS1][PS1],
+                               const real h_Flu_Array_USG[][GRA_NIN_USG][PS1][PS1][PS1],
                                      char h_DE_Array     [][PS1][PS1][PS1],
                                const int NPatchGroup, const real dt, const real dh, const int SOR_Min_Iter,
                                const int SOR_Max_Iter, const real SOR_Omega, const int MG_Max_Iter,
@@ -363,7 +365,7 @@ void Gra_Prepare_Corner( const int lv, double h_Corner_Array[][3], const int NPG
 #ifdef UNSPLIT_GRAVITY
 void Gra_Prepare_USG( const int lv, const double PrepTime,
                       real h_Pot_Array_USG_G[][USG_NXT_G][USG_NXT_G][USG_NXT_G],
-                      real h_Flu_Array_USG_G[][GRA_NIN-1][PS1][PS1][PS1], const int NPG, const int *PID0_List );
+                      real h_Flu_Array_USG_G[][GRA_NIN_USG][PS1][PS1][PS1], const int NPG, const int *PID0_List );
 #endif
 void End_FFTW();
 void Init_FFTW();
@@ -384,8 +386,8 @@ void Poi_BoundaryCondition_Extrapolation( real *Array, const int BC_Face, const 
 void Poi_GetAverageDensity();
 void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In[][POT_NXT][POT_NXT][POT_NXT],
                       const int NPG, const int *PID0_List );
-void Poi_Prepare_Rho( const int lv, const double PrepTime, real h_Rho_Array_P[][RHO_NXT][RHO_NXT][RHO_NXT],
-                      const int NPG, const int *PID0_List );
+void Poi_Prepare_Source( const int lv, const double PrepTime, real h_Rho_Array_P[][RHO_NXT][RHO_NXT][RHO_NXT],
+                         const int NPG, const int *PID0_List );
 #ifdef STORE_POT_GHOST
 void Poi_StorePotWithGhostZone( const int lv, const int PotSg, const bool AllPatch );
 #endif
@@ -481,6 +483,10 @@ void SRHydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const
 bool SRHydro_Flag_Vorticity( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
 
 
+#ifdef GRAVITY
+real SRHydro_PoissonSource( real Con[], real Gamma, real MinTemp );
+#endif
+
 #else
 #error : ERROR : unsupported MODEL !!
 #endif
@@ -520,7 +526,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
                                             real h_Flu_Array    [][GRA_NIN][PS1][PS1][PS1],
                                       const double h_Corner_Array [][3],
                                       const real h_Pot_Array_USG[][USG_NXT_G][USG_NXT_G][USG_NXT_G],
-                                      const real h_Flu_Array_USG[][GRA_NIN-1][PS1][PS1][PS1],
+                                      const real h_Flu_Array_USG[][GRA_NIN_USG][PS1][PS1][PS1],
                                             char h_DE_Array     [][PS1][PS1][PS1],
                                       const int NPatchGroup, const real dt, const real dh, const int SOR_Min_Iter,
                                       const int SOR_Max_Iter, const real SOR_Omega, const int MG_Max_Iter,

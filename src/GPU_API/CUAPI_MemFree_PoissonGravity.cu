@@ -10,7 +10,7 @@ extern real (*d_Pot_Array_P_Out)[ CUBE(GRA_NXT) ];
 #ifdef UNSPLIT_GRAVITY
 extern real (*d_Pot_Array_USG_F)[ CUBE(USG_NXT_F) ];
 extern real (*d_Pot_Array_USG_G)[ CUBE(USG_NXT_G) ];
-extern real (*d_Flu_Array_USG_G)[GRA_NIN-1][ CUBE(PS1) ];
+extern real (*d_Flu_Array_USG_G)[GRA_NIN_USG][ CUBE(PS1) ];
 #endif
 extern real (*d_Flu_Array_G    )[GRA_NIN  ][ CUBE(PS1) ];
 extern double (*d_Corner_Array_G)[3];

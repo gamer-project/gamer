@@ -32,14 +32,14 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
 
 
 // Gravity solver prototypes
-#if   ( MODEL == HYDRO )
+#if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
 __global__
 void CUPOT_HydroGravitySolver(
          real   g_Flu_Array_New[][GRA_NIN][ CUBE(PS1) ],
    const real   g_Pot_Array_New[][ CUBE(GRA_NXT) ],
    const double g_Corner_Array [][3],
    const real   g_Pot_Array_USG[][ CUBE(USG_NXT_G) ],
-   const real   g_Flu_Array_USG[][GRA_NIN-1][ CUBE(PS1) ],
+   const real   g_Flu_Array_USG[][GRA_NIN_USG][ CUBE(PS1) ],
          char   g_DE_Array     [][ CUBE(PS1) ],
    const real dt, const real dh, const bool P5_Gradient,
    const OptGravityType_t GravityType,
@@ -65,13 +65,13 @@ extern real (*d_Pot_Array_P_In )[ CUBE(POT_NXT) ];
 extern real (*d_Pot_Array_P_Out)[ CUBE(GRA_NXT) ];
 extern real (*d_Flu_Array_G    )[GRA_NIN][ CUBE(PS1)];
 extern double (*d_Corner_Array_G)[3];
-#if ( MODEL == HYDRO  ||  MODEL == MHD )
+#if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
 #ifdef UNSPLIT_GRAVITY
 extern real (*d_Pot_Array_USG_G)[ CUBE(USG_NXT_G) ];
-extern real (*d_Flu_Array_USG_G)[GRA_NIN-1][ CUBE(PS1) ];
+extern real (*d_Flu_Array_USG_G)[GRA_NIN_USG][ CUBE(PS1) ];
 #else
 static real (*d_Pot_Array_USG_G)[ CUBE(USG_NXT_G) ] = NULL;
-static real (*d_Flu_Array_USG_G)[GRA_NIN-1][ CUBE(PS1) ] = NULL;
+static real (*d_Flu_Array_USG_G)[GRA_NIN_USG][ CUBE(PS1) ] = NULL;
 #endif
 #ifdef DUAL_ENERGY
 extern char (*d_DE_Array_G)[ CUBE(PS1) ];
@@ -101,40 +101,40 @@ extern cudaStream_t *Stream;
 //                b. Prefix "d" : for pointers pointing to the "Device" memory space
 //                   Prefix "h" : for pointers pointing to the "Host"   memory space
 //
-// Parameter   :  h_Rho_Array          : Host array storing the input density
-//                h_Pot_Array_In       : Host array storing the input "coarse-grid" potential for interpolation
-//                h_Pot_Array_Out      : Host array to store the output potential
-//                h_Flu_Array          : Host array to store the fluid variables for the Gravity solver
-//                h_Corner_Array       : Host array storing the physical corner coordinates of each patch
-//                h_Pot_Array_USG      : Host array storing the prepared potential for UNSPLIT_GRAVITY
-//                h_Flu_Array_USG      : Host array storing the prepared density + momentum for UNSPLIT_GRAVITY
-//                h_DE_Array           : Host array storing the dual-energy status (for both input and output)
-//                NPatchGroup          : Number of patch groups evaluated simultaneously by GPU
-//                dt                   : Time interval to advance solution
-//                dh                   : Grid size
-//                SOR_Min_Iter         : Minimum # of iterations for SOR
-//                SOR_Max_Iter         : Maximum # of iterations for SOR
-//                SOR_Omega            : Over-relaxation parameter
-//                MG_Max_Iter          : Maximum number of iterations for multigrid
-//                MG_NPre_Smooth       : Number of pre-smoothing steps for multigrid
-//                MG_NPos_tSmooth      : Number of post-smoothing steps for multigrid
-//                MG_Tolerated_Error   : Maximum tolerated error for multigrid
-//                Poi_Coeff            : Coefficient in front of density in the Poisson equation (4*Pi*Newton_G*a)
-//                IntScheme            : Interpolation scheme for potential
-//                                       --> currently supported schemes include
-//                                           INT_CQUAD : conservative quadratic interpolation
-//                                           INT_QUAD  : quadratic interpolation
-//                P5_Gradient          : Use 5-points stencil to evaluate the potential gradient
-//                ELBDM_Eta            : Particle mass / Planck constant in ELBDM
-//                ELBDM_Lambda         : Quartic self-interaction coefficient in ELBDM
-//                Poisson              : true --> invoke the Poisson solver
-//                GraAcc               : true --> invoke the Gravity solver
-//                GPU_NStream          : Number of CUDA streams for the asynchronous memory copy
-//                GravityType          : Types of gravity --> self-gravity, external gravity, both
-//                TimeNew              : Physical time at the current  step (for the external gravity solver)
-//                TimeOld              : Physical time at the previous step (for the external gravity solver in UNSPLIT_GRAVITY)
-//                ExtPot               : Add the external potential
-//                MinEint              : Minimum allowed internal energy (== MIN_PRES / (GAMMA-1))
+// Parameter   :  [ 1] h_Rho_Array          : Host array storing the input density
+//                [ 2] h_Pot_Array_In       : Host array storing the input "coarse-grid" potential for interpolation
+//                [ 3] h_Pot_Array_Out      : Host array to store the output potential
+//                [ 4] h_Flu_Array          : Host array to store the fluid variables for the Gravity solver
+//                [ 5] h_Corner_Array       : Host array storing the physical corner coordinates of each patch
+//                [ 6] h_Pot_Array_USG      : Host array storing the prepared potential for UNSPLIT_GRAVITY
+//                [ 7] h_Flu_Array_USG      : Host array storing the prepared density + momentum for UNSPLIT_GRAVITY
+//                [ 8] h_DE_Array           : Host array storing the dual-energy status (for both input and output)
+//                [ 9] NPatchGroup          : Number of patch groups evaluated simultaneously by GPU
+//                [10] dt                   : Time interval to advance solution
+//                [11] dh                   : Grid size
+//                [12] SOR_Min_Iter         : Minimum # of iterations for SOR
+//                [13] SOR_Max_Iter         : Maximum # of iterations for SOR
+//                [14] SOR_Omega            : Over-relaxation parameter
+//                [15] MG_Max_Iter          : Maximum number of iterations for multigrid
+//                [16] MG_NPre_Smooth       : Number of pre-smoothing steps for multigrid
+//                [17] MG_NPos_tSmooth      : Number of post-smoothing steps for multigrid
+//                [18] MG_Tolerated_Error   : Maximum tolerated error for multigrid
+//                [19] Poi_Coeff            : Coefficient in front of density in the Poisson equation (4*Pi*Newton_G*a)
+//                [20] IntScheme            : Interpolation scheme for potential
+//                                            --> currently supported schemes include
+//                                                INT_CQUAD : conservative quadratic interpolation
+//                                                INT_QUAD  : quadratic interpolation
+//                [21] P5_Gradient          : Use 5-points stencil to evaluate the potential gradient
+//                [22] ELBDM_Eta            : Particle mass / Planck constant in ELBDM
+//                [23] ELBDM_Lambda         : Quartic self-interaction coefficient in ELBDM
+//                [24] Poisson              : true --> invoke the Poisson solver
+//                [25] GraAcc               : true --> invoke the Gravity solver
+//                [26] GPU_NStream          : Number of CUDA streams for the asynchronous memory copy
+//                [27] GravityType          : Types of gravity --> self-gravity, external gravity, both
+//                [28] TimeNew              : Physical time at the current  step (for the external gravity solver)
+//                [29] TimeOld              : Physical time at the previous step (for the external gravity solver in UNSPLIT_GRAVITY)
+//                [30] ExtPot               : Add the external potential
+//                [31] MinEint              : Minimum allowed internal energy (== MIN_PRES / (GAMMA-1))
 //
 // Useless parameters in HYDRO : ELBDM_Eta, ELBDM_Lambda
 // Useless parameters in ELBDM : P5_Gradient
@@ -145,7 +145,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
                                             real h_Flu_Array    [][GRA_NIN][PS1][PS1][PS1],
                                       const double h_Corner_Array[][3],
                                       const real h_Pot_Array_USG[][USG_NXT_G][USG_NXT_G][USG_NXT_G],
-                                      const real h_Flu_Array_USG[][GRA_NIN-1][PS1][PS1][PS1],
+                                      const real h_Flu_Array_USG[][GRA_NIN_USG][PS1][PS1][PS1],
                                             char h_DE_Array     [][PS1][PS1][PS1],
                                       const int NPatchGroup, const real dt, const real dh, const int SOR_Min_Iter,
                                       const int SOR_Max_Iter, const real SOR_Omega, const int MG_Max_Iter,
@@ -176,6 +176,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
 
+#  elif ( MODEL == SR_HYDRO )
 #  elif ( MODEL == ELBDM )
    const real ELBDM_EtaDt = ELBDM_Eta*dt;
 
@@ -282,7 +283,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
       Corner_MemSize [s] = NPatch_per_Stream[s]*3              *sizeof(double);
 #     ifdef UNSPLIT_GRAVITY
       Pot_USG_MemSize[s] = NPatch_per_Stream[s]*CUBE(USG_NXT_G)*sizeof(real);
-      Flu_USG_MemSize[s] = NPatch_per_Stream[s]*CUBE(PS1      )*sizeof(real)*(GRA_NIN-1);
+      Flu_USG_MemSize[s] = NPatch_per_Stream[s]*CUBE(PS1      )*sizeof(real)*(GRA_NIN_USG);
 #     endif
 #     ifdef DUAL_ENERGY
       DE_MemSize     [s] = NPatch_per_Stream[s]*CUBE(PS1      )*sizeof(char);
@@ -379,7 +380,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
 //    b2. Gravity solver
       if ( GraAcc )
       {
-#        if   ( MODEL == HYDRO )
+#        if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
          CUPOT_HydroGravitySolver <<< NPatch_per_Stream[s], Gra_Block_Dim, 0, Stream[s] >>>
                                   ( d_Flu_Array_G     + UsedPatch[s],
                                     d_Pot_Array_P_Out + UsedPatch[s],

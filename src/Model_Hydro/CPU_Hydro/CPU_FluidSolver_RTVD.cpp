@@ -225,7 +225,7 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx, cons
                                                          ux[3][i]*ux[3][i] ) );
          p    = Hydro_CheckMinPres( p, MinPres );
 
-#        ifdef CHECK_NEGATIVE_IN_FLUID
+#        ifdef CHECK_FAILED_CELL_IN_FLUID
          if ( Hydro_CheckNegative(p) )
             Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                          p, __FILE__, __LINE__, __FUNCTION__ );
@@ -292,7 +292,7 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx, cons
                                                                u_half[3][i]*u_half[3][i] )  );
          p    = Hydro_CheckMinPres( p, MinPres );
 
-#        ifdef CHECK_NEGATIVE_IN_FLUID
+#        ifdef CHECK_FAILED_CELL_IN_FLUID
          if ( Hydro_CheckNegative(p) )
             Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                          p, __FILE__, __LINE__, __FUNCTION__ );
@@ -377,7 +377,7 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx, cons
 
 
 //    (b6). check negative density and energy
-#     ifdef CHECK_NEGATIVE_IN_FLUID
+#     ifdef CHECK_FAILED_CELL_IN_FLUID
       for (int i=3; i<FLU_NXT-3; i++)
       {
          if ( Hydro_CheckNegative(ux[0][i]) )

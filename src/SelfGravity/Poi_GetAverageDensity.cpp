@@ -2,7 +2,9 @@
 
 #ifdef GRAVITY
 
-
+#if ( MODEL == SR_HYDRO )
+real SRHydro_PoissonSource( real Con[], real Gamma, real MinTemp );
+#endif
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -188,7 +190,25 @@ void Poi_GetAverageDensity()
    for (int k=0; k<PATCH_SIZE; k++)
    for (int j=0; j<PATCH_SIZE; j++)
    for (int i=0; i<PATCH_SIZE; i++)
+   {
+#     if ( MODEL == HYDRO ) 
       AveDensity_Init_local += amr->patch[ amr->FluSg[0] ][0][PID]->fluid[DENS][k][j][i];
+#     elif ( MODEL == SR_HYDRO )
+	  real Cons[NCOMP_FLUID];
+
+	  Cons[DENS] = amr->patch[ amr->FluSg[0] ][0][PID]->fluid[DENS][k][j][i];
+	  Cons[MOMX] = amr->patch[ amr->FluSg[0] ][0][PID]->fluid[MOMX][k][j][i];
+	  Cons[MOMY] = amr->patch[ amr->FluSg[0] ][0][PID]->fluid[MOMY][k][j][i];
+	  Cons[MOMZ] = amr->patch[ amr->FluSg[0] ][0][PID]->fluid[MOMZ][k][j][i];
+	  Cons[ENGY] = amr->patch[ amr->FluSg[0] ][0][PID]->fluid[ENGY][k][j][i];
+
+#     ifdef CHECK_FAILED_CELL_IN_FLUID
+      SRHydro_CheckUnphysical(Cons, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true);
+#     endif
+
+	  AveDensity_Init_local += SRHydro_PoissonSource( Cons, GAMMA, MIN_TEMP );
+#     endif
+   }
 
 // sum over all MPI ranks
    MPI_Allreduce( &AveDensity_Init_local, &AveDensity_Init, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );

@@ -11,7 +11,7 @@ static void StoreFlux( const int lv, const real Flux_Array[][9][NFLUX_TOTAL][4*P
 static void CorrectFlux( const int lv, const real Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
                          const int NPG, const int *PID0_List, const real dt );
 #if ( MODEL == HYDRO  ||  MODEL == MHD )
-static bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngyOrPres );
+bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngyOrPres );
 static void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                                const real h_Flu_Array_F_In[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT],
                                real h_Flu_Array_F_Out[][FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],

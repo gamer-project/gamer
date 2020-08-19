@@ -99,16 +99,15 @@ double               DUAL_ENERGY_SWITCH;
 #endif
 
 #elif   ( MODEL == SR_HYDRO )
-double               FlagTable_PresGradient[NLEVEL-1], FlagTable_Vorticity[NLEVEL-1], 
-					 FlagTable_Jeans[NLEVEL-1], FlagTable_Lorentz[NLEVEL-1], FlagTable_3Velocity[NLEVEL-1];
+double               FlagTable_PresGradient[NLEVEL-1], FlagTable_EngyGradient[NLEVEL-1], 
+                     FlagTable_4Velocity[NLEVEL-1], FlagTable_Mom_Over_Dens[NLEVEL-1], 
+                     FlagTable_LorentzFactorGradient[NLEVEL-1];
 double               GAMMA, MINMOD_COEFF, EP_COEFF, MOLECULAR_WEIGHT;
 LR_Limiter_t         OPT__LR_LIMITER;
-Opt1stFluxCorr_t     OPT__1ST_FLUX_CORR;
-OptRSolver1st_t      OPT__1ST_FLUX_CORR_SCHEME;
-bool                 OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES,
-					 OPT__FLAG_LOHNER_TEMP, OPT__FLAG_LOHNER_LRTZ;
-bool                 OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, OPT__FLAG_LORENTZ, OPT__FLAG_3VELOCITY, JEANS_MIN_PRES;
-int                  OPT__CK_NEGATIVE, JEANS_MIN_PRES_LEVEL, JEANS_MIN_PRES_NCELL;
+bool                 OPT__FLAG_PRES_GRADIENT, OPT__FLAG_ENGY_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES,
+					 OPT__FLAG_LOHNER_TEMP, OPT__FLAG_LOHNER_LRTZ, OPT__FLAG_4VELOCITY, OPT__FLAG_MOM_OVER_DENS,
+                     OPT__FLAG_LORENTZ_GRADIENT;
+int                  OPT__CK_NEGATIVE;
 int                  DT_SPEED_OF_LIGHT;
 double               MIN_DENS, MIN_TEMP, MIN_PRES;
 #elif ( MODEL == ELBDM )
@@ -236,7 +235,7 @@ char (*h_DE_Array_G    [2])[PS1][PS1][PS1]                        = { NULL, NULL
 #ifdef UNSPLIT_GRAVITY
 real (*h_Pot_Array_USG_F[2])[ CUBE(USG_NXT_F) ]                   = { NULL, NULL };
 real (*h_Pot_Array_USG_G[2])[USG_NXT_G][USG_NXT_G][USG_NXT_G]     = { NULL, NULL };
-real (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1]            = { NULL, NULL };
+real (*h_Flu_Array_USG_G[2])[GRA_NIN_USG][PS1][PS1][PS1]          = { NULL, NULL };
 #endif
 #endif
 
@@ -283,19 +282,6 @@ real (*d_PriVar)      [NCOMP_TOTAL][ CUBE(FLU_NXT) ]              = NULL;
 real (*d_Slope_PPM)[3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ]          = NULL;
 real (*d_FC_Var)   [6][NCOMP_TOTAL][ CUBE(N_FC_VAR) ]             = NULL;
 real (*d_FC_Flux)  [3][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ]            = NULL;
-//real (*d_PriVar)     [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ]              = NULL;
-//real (*d_Slope_PPM_x)[NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ]  = NULL;
-//real (*d_Slope_PPM_y)[NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ]  = NULL;
-//real (*d_Slope_PPM_z)[NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ]  = NULL;
-//real (*d_FC_Var_xL)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]           = NULL;
-//real (*d_FC_Var_xR)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]           = NULL;
-//real (*d_FC_Var_yL)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]           = NULL;
-//real (*d_FC_Var_yR)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]           = NULL;
-//real (*d_FC_Var_zL)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]           = NULL;
-//real (*d_FC_Var_zR)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]           = NULL;
-//real (*d_FC_Flux_x)  [NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ]        = NULL;
-//real (*d_FC_Flux_y)  [NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ]        = NULL;
-//real (*d_FC_Flux_z)  [NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ]        = NULL;
 #endif // FLU_SCHEME
 
 #endif // MODEL
@@ -315,7 +301,7 @@ char (*d_DE_Array_G     )[ PS1*PS1*PS1 ]                         = NULL;
 #ifdef UNSPLIT_GRAVITY
 real (*d_Pot_Array_USG_F)[ CUBE(USG_NXT_F) ]                     = NULL;
 real (*d_Pot_Array_USG_G)[ CUBE(USG_NXT_G) ]                     = NULL;
-real (*d_Flu_Array_USG_G)[GRA_NIN-1][ CUBE(PS1) ]                = NULL;
+real (*d_Flu_Array_USG_G)[GRA_NIN_USG][ CUBE(PS1) ]              = NULL;
 #endif
 #endif
 

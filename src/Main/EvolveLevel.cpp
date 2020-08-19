@@ -331,7 +331,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          {
 //          exchange the updated density field in the buffer patches for the Poisson solver
             if ( SelfGravity )
-            TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL, _DENS, Rho_ParaBuf, USELB_YES ),
+            TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL, GRAVITY_SOURCE, Rho_ParaBuf, USELB_YES ),
                            Timer_GetBuf[lv][0]   );
 
             TIMING_FUNC(   Gra_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, SaveSg_Pot,

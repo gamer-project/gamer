@@ -4,13 +4,13 @@
 
 
 #include "CUPOT.h"
-
+#include "stdio.h"
 #ifdef GRAVITY
 
 
 
 // soften length implementation
-#  define SOFTEN_PLUMMER
+//#  define SOFTEN_PLUMMER
 //#  define SOFTEN_RUFFERT
 
 
@@ -57,18 +57,41 @@ void ExternalAcc( real Acc[], const double x, const double y, const double z, co
 #  if   ( defined SOFTEN_PLUMMER )
    const real _r3 = ( eps <= (real)0.0 ) ? (real)1.0/CUBE(r) : POW( SQR(r)+SQR(eps), (real)-1.5 );
 
+   Acc[0] = -GM*_r3*dx;
+   Acc[1] = -GM*_r3*dy;
+   Acc[2] = -GM*_r3*dz;
 // Ruffert 1994
 #  elif ( defined SOFTEN_RUFFERT )
    const real tmp = EXP( -SQR(r)/SQR(eps) );
    const real _r3 = ( eps <= (real)0.0 ) ? (real)1.0/CUBE(r) : POW( SQR(r)+SQR(eps)*tmp, (real)-1.5 )*( (real)1.0 - tmp );
 
+   Acc[0] = -GM*_r3*dx;
+   Acc[1] = -GM*_r3*dy;
+   Acc[2] = -GM*_r3*dz;
 #  else
    const real _r3 = (real)1.0/CUBE(r);
-#  endif
 
    Acc[0] = -GM*_r3*dx;
    Acc[1] = -GM*_r3*dy;
    Acc[2] = -GM*_r3*dz;
+#  endif
+
+   if ( UserArray[5] == 2.0 )
+   {
+     Acc[0] = - (real)UserArray[3] * dx / r / r;
+     Acc[1] = - (real)UserArray[3] * dy / r / r;
+     Acc[2] = - (real)UserArray[3] * dz / r / r;
+   }
+
+
+   if ( UserArray[5] == 4.0 )
+   {
+     real Rc = (real)UserArray[4];
+
+     Acc[0] = - (real)UserArray[3] * dx / ( Rc*Rc + r*r );
+     Acc[1] = - (real)UserArray[3] * dy / ( Rc*Rc + r*r );
+     Acc[2] = - (real)UserArray[3] * dz / ( Rc*Rc + r*r );
+   }
 
 } // FUNCTION : ExternalAcc
 
