@@ -113,7 +113,7 @@ SIMU_OPTION += -DEOS=APPROXIMATED_GENERAL
 #SIMU_OPTION += -DEOS=CONSTANT_GAMMA
 
 # conserved energy = (total energy)
-SIMU_OPTION += -DCONSERVED_ENERGY=1
+SIMU_OPTION += -DCONSERVED_ENERGY=2
 # conserved energy = (total energy) - (rest mass energy)
 #SIMU_OPTION += -DCONSERVED_ENERGY=2
 #SIMU_OPTION += -DCHECK_MIN_TEMP
@@ -175,7 +175,7 @@ endif # PARTICLE
 # ------------------------------------------------------------------------------------
 # maximum number of AMR levels including the root level (level id = 0 ... NLEVEL-1)
 # --> must be set in any cases
-SIMU_OPTION += -DNLEVEL=11
+SIMU_OPTION += -DNLEVEL=19
 
 # fused multiply-add
 #SIMU_OPTION += -DFUSED_MULTIPLY_ADD
@@ -252,8 +252,8 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
  CXX         = icpc                                                # serial compiler
  CXX         = $(MPI_PATH)/bin/mpicxx                              # MPI compiler
 #CXX         = CC                                                  # cray wrapper script
- CXXFLAG     = -g -O3                                              # general flags
-#CXXFLAG     = -g -O3 -std=c++11                                   #-gxx-name=YOUR_G++
+#CXXFLAG     = -g -O3                                              # general flags
+ CXXFLAG     = -g -O3 -std=c++11                                   #-gxx-name=YOUR_G++
 #CXXFLAG     = -g -fast
 # CXXFLAG    += -w1                                                # warning flags
  CXXFLAG     += -DGIT_SHA1="`git rev-parse HEAD`"                  # record SHA1 in git
