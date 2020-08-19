@@ -76,7 +76,7 @@ OPT__MINIMIZE_MPI_BARRIER     0           # minimize MPI barriers to improve loa
 
 
 # fluid solver in HYDRO/SR_HYDRO (MODEL==HYDRO/SR_HYDRO only)
-GAMMA                         1.333333333333333333  # ratio of specific heats (i.e., adiabatic index) [5.0/4.0]
+GAMMA                         1.333333333333333333  # ratio of specific heats (i.e., adiabatic index)
 MOLECULAR_WEIGHT              0.6         # mean molecular weight -> currently only for post-processing [0.6]
 MINMOD_COEFF                  1.5         # coefficient of the generalized MinMod limiter (1.0~2.0) [1.5]
 OPT__LR_LIMITER               4           # slope limiter of data reconstruction in the MHM/MHM_RP/CTU schemes:
@@ -124,7 +124,7 @@ OPT__RECORD_USER              0           # record the user-specified info -> ed
 OPT__CK_REFINE                0           # check the grid refinement [0]
 OPT__CK_PROPER_NESTING        0           # check the proper-nesting condition [0]
 OPT__CK_CONSERVATION          0           # check the conservation law [0]
-#OPT__CK_NORMALIZE_PASSIVE     0           # check the normalization of passive scalars [0] ##OPT__NORMALIZE_PASSIVE ONLY##
+OPT__CK_NORMALIZE_PASSIVE     0           # check the normalization of passive scalars [0] ##OPT__NORMALIZE_PASSIVE ONLY##
 OPT__CK_RESTRICT              0           # check the data restriction [0]
 OPT__CK_FINITE                0           # check if all variables are finite [0]
 OPT__CK_PATCH_ALLOCATE        0           # check if all patches are properly allocated [0]

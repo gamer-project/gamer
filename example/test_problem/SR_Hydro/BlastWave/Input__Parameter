@@ -13,20 +13,20 @@
 
 
 # simulation scale
-BOX_SIZE                      1.0         # box size along the longest side (in Mpc/h if COMOVING is adopted)
+BOX_SIZE                      1.0         # box size along the longest side
 NX0_TOT_X                     32          # number of base-level cells along x
 NX0_TOT_Y                     32          # number of base-level cells along y
 NX0_TOT_Z                     32          # number of base-level cells along z
-OMP_NTHREAD                   4           # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
-END_T                         5.0         # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
-END_STEP                     -1           # end step (<0=auto -> must be set by test problems or restart) [-1]
+OMP_NTHREAD                  -1           # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
+END_T                        -1.0         # end physical time (<0=auto -> 0.5*BOX_SIZE) [-1.0]
+END_STEP                     -1           # end step (<0=auto -> __INT_MAX__) [-1]
 
 
 # test problems
 TESTPROB_ID                   600         # test problem ID [0]
                                           # 0: none
-                                          # 600: blast wave in pure sr-hydro
-                                          # 601: Riemann problem in pure sr-hydro
+                                          # 600: blast wave in sr-hydro
+                                          # 601: Riemann problem in sr-hydro
                                           # 602: double mach reflection in pure sr-hydro
 
 # code units (in cgs)
@@ -73,11 +73,11 @@ OPT__FLAG_RHO                 0           # flag: density (Input__Flag_Rho) [0]
 OPT__FLAG_RHO_GRADIENT        0           # flag: density gradient (Input__Flag_RhoGradient) [0]
 OPT__FLAG_PRES_GRADIENT       0           # flag: pressure gradient (Input__Flag_PresGradient) [0] ##HYDRO ONLY##
 OPT__FLAG_4VELOCITY           0           # flag: magnitude of 3-velocity (Input__Flag_3Velocity) [0] ##SR_HYDRO ONLY##
-OPT__FLAG_LOHNER_DENS         0           # flag: Lohner for number density    (Input__Flag_Lohner) [0] ##BOTH HYDRO,ELBDM AND SR_HYDRO ##
-OPT__FLAG_LOHNER_ENGY         1           # flag: Lohner for energy density    (Input__Flag_Lohner) [0] ##HYDRO AND SR_HYDRO##
-OPT__FLAG_LOHNER_PRES         0           # flag: Lohner for pressure          (Input__Flag_Lohner) [0] ##HYDRO AND SR_HYDRO##
-OPT__FLAG_LOHNER_TEMP         0           # flag: Lohner for temperature       (Input__Flag_Lohner) [0] ##HYDRO AND SR_HYDRO##
-OPT__FLAG_LOHNER_LRTZ         0           # flag: Lohner for Lorentz factor    (Input__Flag_Lohner) [0] ##SR_HYDRO ONLY##
+OPT__FLAG_LOHNER_DENS         0           # flag: Lohner for mass density   (Input__Flag_Lohner) [0] ##HYDRO/SR_HYDRO/ELBDM##
+OPT__FLAG_LOHNER_ENGY         1           # flag: Lohner for energy density (Input__Flag_Lohner) [0] ##HYDRO/SR_HYDRO##
+OPT__FLAG_LOHNER_PRES         0           # flag: Lohner for pressure       (Input__Flag_Lohner) [0] ##HYDRO/SR_HYDRO##
+OPT__FLAG_LOHNER_TEMP         0           # flag: Lohner for temperature    (Input__Flag_Lohner) [0] ##HYDRO/SR_HYDRO##
+OPT__FLAG_LOHNER_LRTZ         0           # flag: Lohner for Lorentz factor (Input__Flag_Lohner) [0] ##SR_HYDRO ONLY##
 OPT__FLAG_LOHNER_FORM         2           # form of Lohner: (1=FLASH-1, 2=FLASH-2, 3=form-invariant-1, 4=form-invariant-2) [2]
 OPT__FLAG_USER                0           # flag: user-defined (Input__Flag_User) -> edit "Flag_User.cpp" [0]
 OPT__FLAG_REGION              0           # flag: specify the regions **allowed** to be refined -> edit "Flag_Region.cpp" [0]
@@ -94,19 +94,13 @@ OPT__MINIMIZE_MPI_BARRIER     0           # minimize MPI barriers to improve loa
                                           # (STORE_POT_GHOST, PAR_IMPROVE_ACC=1, OPT__TIMING_BARRIER=0 only; recommend AUTO_REDUCE_DT=0)
 
 
-# fluid solver in HYDRO (MODEL==HYDRO only)
-GAMMA                         1.333333333 # ratio of specific heats (i.e., adiabatic index) [5.0/3.0]
+# fluid solver in HYDRO/SR_HYDRO (MODEL==HYDRO/SR_HYDRO only)
+GAMMA                         1.333333333 # ratio of specific heats (i.e., adiabatic index)
 MOLECULAR_WEIGHT              0.6         # mean molecular weight -> currently only for post-processing [0.6]
 MINMOD_COEFF                  2.0         # coefficient of the generalized MinMod limiter (1.0~2.0) [1.5]
 EP_COEFF                      1.25        # coefficient of the extrema-preserving limiter (>=1.0) [1.25] ##DEPRECATED##
 OPT__LR_LIMITER               4           # slope limiter of data reconstruction in the MHM/MHM_RP/CTU schemes:
-                                          # (0=none, 1=vanLeer, 2=generalized MinMod, 3=vanAlbada, 4=vanLeer+generalized MinMod,
-                                          #  5=extrema-preserving) [4] ##5 IS DEPRECATED##
-OPT__1ST_FLUX_CORR            2           # correct unphysical results (defined by MIN_DENS/PRES) by the 1st-order fluxes:
-                                          # (0=off, 1=3D, 2=3D+1D) [2] ##MHM/MHM_RP/CTU ONLY##
-OPT__1ST_FLUX_CORR_SCHEME     2           # Riemann solver for OPT__1ST_FLUX_CORR (0=none, 1=Roe, 2=HLLC 3=HLLE) [1]
-DUAL_ENERGY_SWITCH            2.0e-2      # apply dual-energy if E_int/E_kin < DUAL_ENERGY_SWITCH [2.0e-2] ##DUAL_ENERGY ONLY##
-
+                                          # (0=none, 1=vanLeer, 2=generalized MinMod, 3=vanAlbada, 4=vanLeer+generalized MinMod) [4]
 
 # fluid solvers in all models
 FLU_GPU_NPGROUP             192           # number of patch groups sent into the GPU fluid solver (<=0=auto) [-1]
@@ -117,8 +111,8 @@ OPT__CORR_AFTER_ALL_SYNC     -1           # apply various corrections after all 
                                           # (-1=auto, 0=off, 1=every step, 2=before dump) [-1]
 OPT__OVERLAP_MPI              0           # overlap MPI communication with CPU/GPU computations [0] ##NOT SUPPORTED YET##
 OPT__RESET_FLUID              0           # reset fluid variables after each update -> edit "Flu_ResetByUser.cpp" [0]
-MIN_DENS                      0.0         # minimum number density (must >= 0.0) [0.0] ##SR_HYDRO ONLY##
-MIN_TEMP                      0.0         # SR_HYDRO only
+MIN_DENS                      0.0         # minimum mass density (must >= 0.0) [0.0] ##HYDRO/SR_HYDRO/MHD/ELBDM ONLY##
+MIN_TEMP                      0.0         # minimum pressure     (must >= 0.0) [0.0] ##HYDRO/SR_HYDRO/MHD ONLY##
 
 # initialization
 OPT__INIT                     1           # initialization option: (1=FUNCTION, 2=RESTART, 3=FILE->"UM_IC")
