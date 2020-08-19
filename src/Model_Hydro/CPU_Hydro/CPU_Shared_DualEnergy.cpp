@@ -73,7 +73,7 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
 // --> Enth (i.e., non-thermal energy) includes both kinetic and magnetic energies
    real Enth, Eint, Pres;
 
-   Eint = Hydro_Fluid2Eint( Dens, MomX, MomY, MomZ, Etot, CheckMinEint_No, NULL_REAL, Emag );
+   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Etot, CheckMinEint_No, NULL_REAL, Emag );
    Enth = Etot - Eint;
 
 
@@ -121,16 +121,16 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
 
 #if ( DUAL_ENERGY == DE_ENPY )
 
-// Hydro_Fluid2Entropy() is used by CPU only
+// Hydro_Con2Entropy() is used by CPU only
 #ifndef __CUDACC__
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_Fluid2Entropy
+// Function    :  Hydro_Con2Entropy
 // Description :  Evaluate the gas entropy from the input fluid variables
 //                --> Here entropy is defined as "pressure / density^(Gamma-1)" (i.e., entropy per volume)
 //
 // Note        :  1. Used by the dual-energy formalism
 //                2. Invoked by Hydro_Init_ByFunction_AssignData(), Gra_Close(), Init_ByFile(), ...
-//                3. Currently this function does NOT apply pressure floor when calling Hydro_Fluid2Pres()
+//                3. Currently this function does NOT apply pressure floor when calling Hydro_Con2Pres()
 //                   --> However, note that Hydro_DensPres2Entropy() does apply a floor value (TINY_NUMBER) for entropy
 //
 // Parameter   :  Dens              : Mass density
@@ -142,24 +142,24 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
 //
 // Return      :  Enpy
 //-------------------------------------------------------------------------------------------------------
-real Hydro_Fluid2Entropy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                          const real Emag, EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] )
+real Hydro_Con2Entropy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                        const real Emag, EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] )
 {
 
-// currently this function does NOT apply pressure floor when calling Hydro_Fluid2Pres()
+// currently this function does NOT apply pressure floor when calling Hydro_Con2Pres()
    const bool CheckMinPres_No = false;
 
    real Pres, Enpy;
 
 // calculate pressure and convert it to entropy
 // --> note that DE_ENPY only works with EOS_GAMMA, which does not involve passive scalars
-   Pres = Hydro_Fluid2Pres( Dens, MomX, MomY, MomZ, Engy, NULL, CheckMinPres_No, NULL_REAL, Emag,
-                            EoS_DensEint2Pres, EoS_AuxArray, NULL );
+   Pres = Hydro_Con2Pres( Dens, MomX, MomY, MomZ, Engy, NULL, CheckMinPres_No, NULL_REAL, Emag,
+                          EoS_DensEint2Pres, EoS_AuxArray, NULL );
    Enpy = Hydro_DensPres2Entropy( Dens, Pres, EoS_AuxArray[1] );
 
    return Enpy;
 
-} // FUNCTION : Hydro_Fluid2Entropy
+} // FUNCTION : Hydro_Con2Entropy
 #endif // ifndef __CUDACC__
 
 
@@ -170,7 +170,7 @@ real Hydro_Fluid2Entropy( const real Dens, const real MomX, const real MomY, con
 //                --> Here entropy is defined as "pressure / density^(Gamma-1)" (i.e., entropy per volume)
 //
 // Note        :  1. Used by the dual-energy formalism
-//                2. Invoked by Hydro_Fluid2Entropy() and Hydro_DualEnergyFix()
+//                2. Invoked by Hydro_Con2Entropy() and Hydro_DualEnergyFix()
 //                   --> This function is invoked by both CPU and GPU codes
 //                3. A floor value (TINY_NUMBER) is applied to the returned value
 //

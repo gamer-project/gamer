@@ -387,10 +387,10 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 #        else
          const real Emag = NULL_REAL;
 #        endif
-         CData_CC_Ptr[Idx] = Hydro_Fluid2Pres( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
-                                               FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                               (MinPres>=(real)0.0), MinPres, Emag,
-                                               EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
+         CData_CC_Ptr[Idx] = Hydro_Con2Pres( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                             FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
+                                             (MinPres>=(real)0.0), MinPres, Emag,
+                                             EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
 
          if ( FluIntTime ) // temporal interpolation
          {
@@ -403,10 +403,10 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 #           endif
             CData_CC_Ptr[Idx] =
                FluWeighting     *CData_CC_Ptr[Idx]
-             + FluWeighting_IntT*Hydro_Fluid2Pres( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
-                                                   FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                                   (MinPres>=(real)0.0), MinPres, Emag,
-                                                   EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
+             + FluWeighting_IntT*Hydro_Con2Pres( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                                 FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
+                                                 (MinPres>=(real)0.0), MinPres, Emag,
+                                                 EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
          }
 
          Idx ++;
@@ -429,10 +429,10 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 #        else
          const real Emag = NULL_REAL;
 #        endif
-         CData_CC_Ptr[Idx] = Hydro_Fluid2Temp( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
-                                               FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                               (MinPres>=(real)0.0), MinPres, Emag,
-                                               EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
+         CData_CC_Ptr[Idx] = Hydro_Con2Temp( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                             FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
+                                             (MinPres>=(real)0.0), MinPres, Emag,
+                                             EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
 
          if ( FluIntTime ) // temporal interpolation
          {
@@ -445,10 +445,10 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 #           endif
             CData_CC_Ptr[Idx] =
                FluWeighting     *CData_CC_Ptr[Idx]
-             + FluWeighting_IntT*Hydro_Fluid2Temp( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
-                                                   FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                                   (MinPres>=(real)0.0), MinPres, Emag,
-                                                   EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
+             + FluWeighting_IntT*Hydro_Con2Temp( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                                 FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
+                                                 (MinPres>=(real)0.0), MinPres, Emag,
+                                                 EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
          }
 
          Idx ++;
@@ -669,10 +669,10 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 #              else
                const real Emag = NULL_REAL;
 #              endif
-               CData_CC_Ptr[Idx] = Hydro_Fluid2Pres( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
-                                                     FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                                     (MinPres>=(real)0.0), MinPres, Emag,
-                                                     EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
+               CData_CC_Ptr[Idx] = Hydro_Con2Pres( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                                   FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
+                                                   (MinPres>=(real)0.0), MinPres, Emag,
+                                                   EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
 
                if ( FluIntTime ) // temporal interpolation
                {
@@ -685,10 +685,10 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 #                 endif
                   CData_CC_Ptr[Idx] =
                      FluWeighting     *CData_CC_Ptr[Idx]
-                   + FluWeighting_IntT*Hydro_Fluid2Pres( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
-                                                         FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                                         (MinPres>=(real)0.0), MinPres, Emag,
-                                                         EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
+                   + FluWeighting_IntT*Hydro_Con2Pres( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                                       FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
+                                                       (MinPres>=(real)0.0), MinPres, Emag,
+                                                       EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
                }
 
                Idx ++;
@@ -711,10 +711,10 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 #              else
                const real Emag = NULL_REAL;
 #              endif
-               CData_CC_Ptr[Idx] = Hydro_Fluid2Temp( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
-                                                     FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                                     (MinPres>=(real)0.0), MinPres, Emag,
-                                                     EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
+               CData_CC_Ptr[Idx] = Hydro_Con2Temp( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                                   FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
+                                                   (MinPres>=(real)0.0), MinPres, Emag,
+                                                   EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
 
                if ( FluIntTime ) // temporal interpolation
                {
@@ -727,10 +727,10 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 #                 endif
                   CData_CC_Ptr[Idx] =
                      FluWeighting     *CData_CC_Ptr[Idx]
-                   + FluWeighting_IntT*Hydro_Fluid2Temp( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
-                                                         FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                                         (MinPres>=(real)0.0), MinPres, Emag,
-                                                         EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
+                   + FluWeighting_IntT*Hydro_Con2Temp( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                                       FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
+                                                       (MinPres>=(real)0.0), MinPres, Emag,
+                                                       EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
                }
 
                Idx ++;

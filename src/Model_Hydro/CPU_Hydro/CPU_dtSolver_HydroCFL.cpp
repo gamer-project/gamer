@@ -114,9 +114,9 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
          Vx    = FABS( fluid[MOMX] )*_Rho;
          Vy    = FABS( fluid[MOMY] )*_Rho;
          Vz    = FABS( fluid[MOMZ] )*_Rho;
-         Pres  = Hydro_Fluid2Pres( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], fluid+NCOMP_FLUID,
-                                   CheckMinPres_Yes, MinPres, Emag,
-                                   EoS_DensEint2Pres_Func, c_EoS_AuxArray, NULL );
+         Pres  = Hydro_Con2Pres( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], fluid+NCOMP_FLUID,
+                                 CheckMinPres_Yes, MinPres, Emag,
+                                 EoS_DensEint2Pres_Func, c_EoS_AuxArray, NULL );
          a2    = EoS_DensPres2CSqr_Func( fluid[DENS], Pres, fluid+NCOMP_FLUID, c_EoS_AuxArray ); // sound speed squared
 
 //       compute the maximum information propagating speed

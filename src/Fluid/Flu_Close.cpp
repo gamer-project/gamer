@@ -400,8 +400,8 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
 #           error : DE_EINT is NOT supported yet !!
 
 #           else // without DUAL_ENERGY
-            Hydro_Fluid2Eint( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                              NoFloor, NULL_REAL, Emag ) < (real)MIN_EINT
+            Hydro_Con2Eint( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                            NoFloor, NULL_REAL, Emag ) < (real)MIN_EINT
 
 #           endif // DUAL_ENERGY
          )
@@ -849,8 +849,8 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
                   fprintf( File, "input        = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
                            In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
-                           Hydro_Fluid2Eint(In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
-                                            CheckMinEint_No, NULL_REAL, Emag_In) );
+                           Hydro_Con2Eint(In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
+                                          CheckMinEint_No, NULL_REAL, Emag_In) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", In[ENPY] );
 #                 endif
@@ -858,8 +858,8 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
                   fprintf( File, "ouptut (old) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
                            Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
-                           Hydro_Fluid2Eint(Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
-                                            CheckMinEint_No, NULL_REAL, Emag_Out) );
+                           Hydro_Con2Eint(Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
+                                          CheckMinEint_No, NULL_REAL, Emag_Out) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", Out[ENPY] );
 #                 endif
@@ -867,8 +867,8 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
                   fprintf( File, "output (new) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
                            Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
-                           Hydro_Fluid2Eint(Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
-                                            CheckMinEint_No, NULL_REAL, Emag_Update) );
+                           Hydro_Con2Eint(Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
+                                          CheckMinEint_No, NULL_REAL, Emag_Update) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", Update[ENPY] );
 #                 endif
@@ -903,8 +903,8 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                      const real Emag_tmp = NULL_REAL;
 #                    endif
 
-                     fprintf( File, " %14.7e\n", Hydro_Fluid2Eint(tmp[0], tmp[1], tmp[2], tmp[3], tmp[4],
-                                                                  CheckMinEint_No, NULL_REAL, Emag_tmp) );
+                     fprintf( File, " %14.7e\n", Hydro_Con2Eint(tmp[0], tmp[1], tmp[2], tmp[3], tmp[4],
+                                                                CheckMinEint_No, NULL_REAL, Emag_tmp) );
                   }
 
                   fclose( File );

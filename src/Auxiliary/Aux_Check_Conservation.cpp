@@ -169,7 +169,7 @@ void Aux_Check_Conservation( const char *comment )
                   Fluid_lv[6] += Epot;
 #                 endif
 
-                  Eint         = Hydro_Fluid2Eint( Dens, MomX, MomY, MomZ, Etot, CheckMinEint_No, NULL_REAL, Emag );
+                  Eint         = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Etot, CheckMinEint_No, NULL_REAL, Emag );
                   Fluid_lv[5] += Eint;
 
 //###NOTE: assuming Etot = Eint + Ekin + Emag

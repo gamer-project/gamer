@@ -89,10 +89,10 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    _RhoR = ONE / R[0];
    u_L   = _RhoL*L[1];
    u_R   = _RhoR*R[1];
-   P_L   = Hydro_Fluid2Pres( L[0], L[1], L[2], L[3], L[4], L+NCOMP_FLUID, CheckMinPres_Yes, MinPres, Emag,
-                             EoS_DensEint2Pres, EoS_AuxArray, NULL );
-   P_R   = Hydro_Fluid2Pres( R[0], R[1], R[2], R[3], R[4], R+NCOMP_FLUID, CheckMinPres_Yes, MinPres, Emag,
-                             EoS_DensEint2Pres, EoS_AuxArray, NULL );
+   P_L   = Hydro_Con2Pres( L[0], L[1], L[2], L[3], L[4], L+NCOMP_FLUID, CheckMinPres_Yes, MinPres, Emag,
+                           EoS_DensEint2Pres, EoS_AuxArray, NULL );
+   P_R   = Hydro_Con2Pres( R[0], R[1], R[2], R[3], R[4], R+NCOMP_FLUID, CheckMinPres_Yes, MinPres, Emag,
+                           EoS_DensEint2Pres, EoS_AuxArray, NULL );
    Cs_L  = SQRT(  EoS_DensPres2CSqr( L[0], P_L, L+NCOMP_FLUID, EoS_AuxArray )  );
    Cs_R  = SQRT(  EoS_DensPres2CSqr( R[0], P_R, R+NCOMP_FLUID, EoS_AuxArray )  );
 

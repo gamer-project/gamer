@@ -290,10 +290,10 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                      const real *Passive = NULL;
 #                    endif
 
-                     Pres[k][j][i] = Hydro_Fluid2Pres( Fluid[DENS][k][j][i], Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i],
-                                                       Fluid[MOMZ][k][j][i], Fluid[ENGY][k][j][i], Passive,
-                                                       CheckMinPres_Yes, MIN_PRES, Emag,
-                                                       EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
+                     Pres[k][j][i] = Hydro_Con2Pres( Fluid[DENS][k][j][i], Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i],
+                                                     Fluid[MOMZ][k][j][i], Fluid[ENGY][k][j][i], Passive,
+                                                     CheckMinPres_Yes, MIN_PRES, Emag,
+                                                     EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
 #                    endif // #ifdef DUAL_ENERGY ... else ...
                   } // k,j,i
                } // if ( NeedPres )

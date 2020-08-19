@@ -330,9 +330,9 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
    const real  Emag_Nume       = NULL_REAL;
 #  endif
 
-   Nume[ENGY] = Hydro_Fluid2Pres( Nume[DENS], Nume[MOMX], Nume[MOMY], Nume[MOMZ], Nume[ENGY], Nume+NCOMP_FLUID,
-                                  CheckMinPres_No, NULL_REAL, Emag_Nume,
-                                  EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
+   Nume[ENGY] = Hydro_Con2Pres( Nume[DENS], Nume[MOMX], Nume[MOMY], Nume[MOMZ], Nume[ENGY], Nume+NCOMP_FLUID,
+                                CheckMinPres_No, NULL_REAL, Emag_Nume,
+                                EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
 #  endif // #if ( MODEL == HYDRO )
 
 
@@ -352,9 +352,9 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
 #  if ( MODEL == HYDRO )
    const real Emag_Zero = 0.0;   // Anal[ENGY] set by AnalFunc_Flu() does NOT include magentic energy
 
-   Anal[ENGY] = Hydro_Fluid2Pres( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY], Anal+NCOMP_FLUID,
-                                  CheckMinPres_No, NULL_REAL, Emag_Zero,
-                                  EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
+   Anal[ENGY] = Hydro_Con2Pres( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY], Anal+NCOMP_FLUID,
+                                CheckMinPres_No, NULL_REAL, Emag_Zero,
+                                EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
 #  endif
 
 

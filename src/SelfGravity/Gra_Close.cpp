@@ -71,12 +71,12 @@ void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_N
 
 #              if   ( DUAL_ENERGY == DE_ENPY )
                amr->patch[SaveSg][lv][PID]->fluid[ENPY][k][j][i]
-                  = Hydro_Fluid2Entropy( amr->patch[SaveSg][lv][PID]->fluid[DENS][k][j][i],
-                                         amr->patch[SaveSg][lv][PID]->fluid[MOMX][k][j][i],
-                                         amr->patch[SaveSg][lv][PID]->fluid[MOMY][k][j][i],
-                                         amr->patch[SaveSg][lv][PID]->fluid[MOMZ][k][j][i],
-                                         amr->patch[SaveSg][lv][PID]->fluid[ENGY][k][j][i],
-                                         Emag, EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
+                  = Hydro_Con2Entropy( amr->patch[SaveSg][lv][PID]->fluid[DENS][k][j][i],
+                                       amr->patch[SaveSg][lv][PID]->fluid[MOMX][k][j][i],
+                                       amr->patch[SaveSg][lv][PID]->fluid[MOMY][k][j][i],
+                                       amr->patch[SaveSg][lv][PID]->fluid[MOMZ][k][j][i],
+                                       amr->patch[SaveSg][lv][PID]->fluid[ENGY][k][j][i],
+                                       Emag, EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
 #              elif ( DUAL_ENERGY == DE_EINT )
 #              error : DE_EINT is NOT supported yet !!
 #              endif

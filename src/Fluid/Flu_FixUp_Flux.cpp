@@ -183,7 +183,7 @@ void Flu_FixUp_Flux( const int lv )
                const real Emag = NULL_REAL;
 #              endif
 
-//             when adopting the dual-energy formalism, we must determine to use Hydro_Fluid2Eint() or Hydro_DensEntropy2Pres()
+//             when adopting the dual-energy formalism, we must determine to use Hydro_Con2Eint() or Hydro_DensEntropy2Pres()
 //             since the fluid variables stored in CorrVal[] may not be fully consistent
 //             --> because they have not been corrected by Hydro_DualEnergyFix()
 //             --> also note that currently we adopt Hydro_DensEntropy2Pres() for DE_UPDATED_BY_MIN_PRES
@@ -193,8 +193,8 @@ void Flu_FixUp_Flux( const int lv )
 #              endif
                {
                   const bool CheckMinEint_No = false;
-                  Eint = Hydro_Fluid2Eint( ForEint[DENS], ForEint[MOMX], ForEint[MOMY], ForEint[MOMZ], ForEint[ENGY],
-                                           CheckMinEint_No, NULL_REAL, Emag );
+                  Eint = Hydro_Con2Eint( ForEint[DENS], ForEint[MOMX], ForEint[MOMY], ForEint[MOMZ], ForEint[ENGY],
+                                         CheckMinEint_No, NULL_REAL, Emag );
                }
 
 #              if ( DUAL_ENERGY == DE_ENPY )

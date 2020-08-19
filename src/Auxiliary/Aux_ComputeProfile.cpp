@@ -418,33 +418,33 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                               const real Emag_IntT       = NULL_REAL;
 #                             endif
                               const real Pres = ( FluIntTime )
-                                              ?   FluWeighting     *Hydro_Fluid2Pres( FluidPtr     [DENS][k][j][i],
-                                                                                      FluidPtr     [MOMX][k][j][i],
-                                                                                      FluidPtr     [MOMY][k][j][i],
-                                                                                      FluidPtr     [MOMZ][k][j][i],
-                                                                                      FluidPtr     [ENGY][k][j][i],
-                                                                                      Passive,
-                                                                                      CheckMinPres_No, NULL_REAL, Emag,
-                                                                                      EoS_DensEint2Pres_CPUPtr, EoS_AuxArray,
-                                                                                      NULL )
-                                                + FluWeighting_IntT*Hydro_Fluid2Pres( FluidPtr_IntT[DENS][k][j][i],
-                                                                                      FluidPtr_IntT[MOMX][k][j][i],
-                                                                                      FluidPtr_IntT[MOMY][k][j][i],
-                                                                                      FluidPtr_IntT[MOMZ][k][j][i],
-                                                                                      FluidPtr_IntT[ENGY][k][j][i],
-                                                                                      Passive_IntT,
-                                                                                      CheckMinPres_No, NULL_REAL, Emag_IntT,
-                                                                                      EoS_DensEint2Pres_CPUPtr, EoS_AuxArray,
-                                                                                      NULL )
-                                              :                     Hydro_Fluid2Pres( FluidPtr     [DENS][k][j][i],
-                                                                                      FluidPtr     [MOMX][k][j][i],
-                                                                                      FluidPtr     [MOMY][k][j][i],
-                                                                                      FluidPtr     [MOMZ][k][j][i],
-                                                                                      FluidPtr     [ENGY][k][j][i],
-                                                                                      Passive,
-                                                                                      CheckMinPres_No, NULL_REAL, Emag,
-                                                                                      EoS_DensEint2Pres_CPUPtr, EoS_AuxArray,
-                                                                                      NULL );
+                                              ?   FluWeighting     *Hydro_Con2Pres( FluidPtr     [DENS][k][j][i],
+                                                                                    FluidPtr     [MOMX][k][j][i],
+                                                                                    FluidPtr     [MOMY][k][j][i],
+                                                                                    FluidPtr     [MOMZ][k][j][i],
+                                                                                    FluidPtr     [ENGY][k][j][i],
+                                                                                    Passive,
+                                                                                    CheckMinPres_No, NULL_REAL, Emag,
+                                                                                    EoS_DensEint2Pres_CPUPtr, EoS_AuxArray,
+                                                                                    NULL )
+                                                + FluWeighting_IntT*Hydro_Con2Pres( FluidPtr_IntT[DENS][k][j][i],
+                                                                                    FluidPtr_IntT[MOMX][k][j][i],
+                                                                                    FluidPtr_IntT[MOMY][k][j][i],
+                                                                                    FluidPtr_IntT[MOMZ][k][j][i],
+                                                                                    FluidPtr_IntT[ENGY][k][j][i],
+                                                                                    Passive_IntT,
+                                                                                    CheckMinPres_No, NULL_REAL, Emag_IntT,
+                                                                                    EoS_DensEint2Pres_CPUPtr, EoS_AuxArray,
+                                                                                    NULL )
+                                              :                     Hydro_Con2Pres( FluidPtr     [DENS][k][j][i],
+                                                                                    FluidPtr     [MOMX][k][j][i],
+                                                                                    FluidPtr     [MOMY][k][j][i],
+                                                                                    FluidPtr     [MOMZ][k][j][i],
+                                                                                    FluidPtr     [ENGY][k][j][i],
+                                                                                    Passive,
+                                                                                    CheckMinPres_No, NULL_REAL, Emag,
+                                                                                    EoS_DensEint2Pres_CPUPtr, EoS_AuxArray,
+                                                                                    NULL );
 
                               OMP_Data  [p][TID][bin] += Pres*Weight;
                               OMP_Weight[p][TID][bin] += Weight;
@@ -486,24 +486,24 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                               const real Emag_IntT       = NULL_REAL;
 #                             endif
                               const real Eint = ( FluIntTime )
-                                              ?   FluWeighting     *Hydro_Fluid2Eint( FluidPtr     [DENS][k][j][i],
-                                                                                      FluidPtr     [MOMX][k][j][i],
-                                                                                      FluidPtr     [MOMY][k][j][i],
-                                                                                      FluidPtr     [MOMZ][k][j][i],
-                                                                                      FluidPtr     [ENGY][k][j][i],
-                                                                                      CheckMinEint_No, NULL_REAL, Emag )
-                                                + FluWeighting_IntT*Hydro_Fluid2Eint( FluidPtr_IntT[DENS][k][j][i],
-                                                                                      FluidPtr_IntT[MOMX][k][j][i],
-                                                                                      FluidPtr_IntT[MOMY][k][j][i],
-                                                                                      FluidPtr_IntT[MOMZ][k][j][i],
-                                                                                      FluidPtr_IntT[ENGY][k][j][i],
-                                                                                      CheckMinEint_No, NULL_REAL, Emag_IntT )
-                                              :                     Hydro_Fluid2Eint( FluidPtr     [DENS][k][j][i],
-                                                                                      FluidPtr     [MOMX][k][j][i],
-                                                                                      FluidPtr     [MOMY][k][j][i],
-                                                                                      FluidPtr     [MOMZ][k][j][i],
-                                                                                      FluidPtr     [ENGY][k][j][i],
-                                                                                      CheckMinEint_No, NULL_REAL, Emag );
+                                              ?   FluWeighting     *Hydro_Con2Eint( FluidPtr     [DENS][k][j][i],
+                                                                                    FluidPtr     [MOMX][k][j][i],
+                                                                                    FluidPtr     [MOMY][k][j][i],
+                                                                                    FluidPtr     [MOMZ][k][j][i],
+                                                                                    FluidPtr     [ENGY][k][j][i],
+                                                                                    CheckMinEint_No, NULL_REAL, Emag )
+                                                + FluWeighting_IntT*Hydro_Con2Eint( FluidPtr_IntT[DENS][k][j][i],
+                                                                                    FluidPtr_IntT[MOMX][k][j][i],
+                                                                                    FluidPtr_IntT[MOMY][k][j][i],
+                                                                                    FluidPtr_IntT[MOMZ][k][j][i],
+                                                                                    FluidPtr_IntT[ENGY][k][j][i],
+                                                                                    CheckMinEint_No, NULL_REAL, Emag_IntT )
+                                              :                     Hydro_Con2Eint( FluidPtr     [DENS][k][j][i],
+                                                                                    FluidPtr     [MOMX][k][j][i],
+                                                                                    FluidPtr     [MOMY][k][j][i],
+                                                                                    FluidPtr     [MOMZ][k][j][i],
+                                                                                    FluidPtr     [ENGY][k][j][i],
+                                                                                    CheckMinEint_No, NULL_REAL, Emag );
 #                             endif // #ifdef DUAL_ENERGY ... else
 
                               OMP_Data  [p][TID][bin] += Eint*Weight;

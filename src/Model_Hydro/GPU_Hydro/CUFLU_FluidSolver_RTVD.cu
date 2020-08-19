@@ -208,8 +208,8 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
 //    (a1). set variables defined in the center of cell
       _rho = (real)1.0 / Fluid[0];
       vx   = _rho * Fluid[1];
-      p    = Hydro_Fluid2Pres( Fluid[0], Fluid[1], Fluid[2], Fluid[3], Fluid[4], Passive,
-                               CheckMinPres_Yes, MinPres, NULL_REAL, EoS_DensEint2Pres, EoS_AuxArray, NULL );
+      p    = Hydro_Con2Pres( Fluid[0], Fluid[1], Fluid[2], Fluid[3], Fluid[4], Passive,
+                             CheckMinPres_Yes, MinPres, NULL_REAL, EoS_DensEint2Pres, EoS_AuxArray, NULL );
 
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( Hydro_CheckNegative(p) )
@@ -270,8 +270,8 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
       {
          _rho = (real)1.0 / Fluid_half[0];
          vx   = _rho * Fluid_half[1];
-         p    = Hydro_Fluid2Pres( Fluid_half[0], Fluid_half[1], Fluid_half[2], Fluid_half[3], Fluid_half[4], Passive,
-                                  CheckMinPres_Yes, MinPres, NULL_REAL, EoS_DensEint2Pres, EoS_AuxArray, NULL );
+         p    = Hydro_Con2Pres( Fluid_half[0], Fluid_half[1], Fluid_half[2], Fluid_half[3], Fluid_half[4], Passive,
+                                CheckMinPres_Yes, MinPres, NULL_REAL, EoS_DensEint2Pres, EoS_AuxArray, NULL );
 
 #        ifdef CHECK_NEGATIVE_IN_FLUID
          if ( Hydro_CheckNegative(p) )

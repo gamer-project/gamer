@@ -203,14 +203,14 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
       if ( PrepVx   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMX] / BVal[DENS];
       if ( PrepVy   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMY] / BVal[DENS];
       if ( PrepVz   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMZ] / BVal[DENS];
-      if ( PrepPres )   Array3D[ v2 ++ ][k][j][i] = Hydro_Fluid2Pres( BVal[DENS], BVal[MOMX], BVal[MOMY],
-                                                                      BVal[MOMZ], BVal[ENGY], BVal+NCOMP_FLUID,
-                                                                      CheckMinPres_Yes, MIN_PRES, Emag,
-                                                                      EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
-      if ( PrepTemp )   Array3D[ v2 ++ ][k][j][i] = Hydro_Fluid2Temp( BVal[DENS], BVal[MOMX], BVal[MOMY],
-                                                                      BVal[MOMZ], BVal[ENGY], BVal+NCOMP_FLUID,
-                                                                      CheckMinPres_Yes, MIN_PRES, Emag,
-                                                                      EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
+      if ( PrepPres )   Array3D[ v2 ++ ][k][j][i] = Hydro_Con2Pres( BVal[DENS], BVal[MOMX], BVal[MOMY],
+                                                                    BVal[MOMZ], BVal[ENGY], BVal+NCOMP_FLUID,
+                                                                    CheckMinPres_Yes, MIN_PRES, Emag,
+                                                                    EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
+      if ( PrepTemp )   Array3D[ v2 ++ ][k][j][i] = Hydro_Con2Temp( BVal[DENS], BVal[MOMX], BVal[MOMY],
+                                                                    BVal[MOMZ], BVal[ENGY], BVal+NCOMP_FLUID,
+                                                                    CheckMinPres_Yes, MIN_PRES, Emag,
+                                                                    EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
 
 #     elif ( MODEL == ELBDM )
 //    no derived variables yet
