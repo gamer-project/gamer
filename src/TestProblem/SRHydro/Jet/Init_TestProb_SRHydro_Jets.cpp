@@ -1081,7 +1081,6 @@ bool Flag_User( const int i, const int j, const int k, const int lv, const int P
 
 
 
-   return Flag;
 
    bool Flag = false;
 
@@ -1092,25 +1091,6 @@ bool Flag_User( const int i, const int j, const int k, const int lv, const int P
 
    if ( Flag ) return true;
    else        return false;
-
-// ExtAcc_AuxArray has the size of EXT_ACC_NAUX_MAX defined in CUPOT.h (default = 10)
-// --> by default we set
-//     ExtAcc_AuxArray[0] = x coordinate of the external acceleration center
-//     ExtAcc_AuxArray[1] = y ...
-//     ExtAcc_AuxArray[2] = z ..
-//     ExtAcc_AuxArray[3] = gravitational_constant*point_source_mass
-//     ExtAcc_AuxArray[4] = soften_length (<=0.0 --> disable)
-// --> to change the this default behavior, please edit "GPU_Gravity/CUPOT_ExternalAcc.cu"
-
-   const double M   = 1e-3;
-   const double GM  = NEWTON_G*M;
-   const double Eps = 0.0;
-
-   ExtAcc_AuxArray[0] = 0.5*amr->BoxSize[0] - Jet_HSE_Dx;
-   ExtAcc_AuxArray[1] = 0.5*amr->BoxSize[1] - Jet_HSE_Dy;
-   ExtAcc_AuxArray[2] = 0.5*amr->BoxSize[2] - Jet_HSE_Dz;
-   ExtAcc_AuxArray[3] = GM;
-   ExtAcc_AuxArray[4] = Eps;
 
 } // FUNCTION : Init_ExternalAcc
 #endif

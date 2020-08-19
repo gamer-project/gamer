@@ -445,7 +445,6 @@ void SRHydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 
 //    conserved --> primitive variables
       SRHydro_Con2Pri( out_con, out_pri, Gamma, MinTemp );
-	  SRHydro_3Velto4Vel( out_pri, out_pri );
 
 #     ifdef USE_3_VELOCITY
 	  SRHydro_3Velto4Vel( out_pri, out_pri );
