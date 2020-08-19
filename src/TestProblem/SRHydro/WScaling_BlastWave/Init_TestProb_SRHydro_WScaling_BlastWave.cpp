@@ -5,16 +5,16 @@
 
 // problem-specific global variables
 // =======================================================================================
-static double Blast_Dens_Bg;       // background mass density
-static double Blast_Pres_Bg;       // background pressure
-static double Blast_Dens_Ratio;    // density ratio of center to background
-static double Blast_Pres_Ratio;    // pressure ratio of center to background
-static double Blast_Radius;        // initial explosion radius
-static double (*Blast_Center)[3];  // explosion center
+static double Blast_Dens_Bg;         // background mass density
+static double Blast_Pres_Bg;         // background pressure
+static double Blast_Dens_Ratio;      // density ratio of center to background
+static double Blast_Pres_Ratio;      // pressure ratio of center to background
+static double Blast_Radius;          // initial explosion radius
+static double (*Blast_Center)[3];    // explosion center
 static int (*Blast_Center_Temp)[3];  // explosion center
-static int    Number_BlastWave_X;  // number of blast wave in x-direction
-static int    Number_BlastWave_Y;  // number of blast wave in y-direction
-static int    Number_BlastWave_Z;  // number of blast wave in z-direction
+static int    Number_BlastWave_X;    // number of blast wave in x-direction
+static int    Number_BlastWave_Y;    // number of blast wave in y-direction
+static int    Number_BlastWave_Z;    // number of blast wave in z-direction
 // =======================================================================================
 
 

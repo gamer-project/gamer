@@ -72,7 +72,7 @@ MAX_LEVEL                     3           # maximum refinement level (0~NLEVEL-1
 OPT__FLAG_RHO                 0           # flag: density (Input__Flag_Rho) [0]
 OPT__FLAG_RHO_GRADIENT        0           # flag: density gradient (Input__Flag_RhoGradient) [0]
 OPT__FLAG_PRES_GRADIENT       0           # flag: pressure gradient (Input__Flag_PresGradient) [0] ##HYDRO ONLY##
-OPT__FLAG_4VELOCITY           0           # flag: magnitude of 3-velocity (Input__Flag_3Velocity) [0] ##SR_HYDRO ONLY##
+OPT__FLAG_4VELOCITY           0           # flag: magnitude of 4-velocity (Input__Flag_4Velocity) [0] ##SR_HYDRO ONLY##
 OPT__FLAG_LOHNER_DENS         0           # flag: Lohner for number density    (Input__Flag_Lohner) [0] ##BOTH HYDRO,ELBDM AND SR_HYDRO ##
 OPT__FLAG_LOHNER_ENGY         0           # flag: Lohner for energy density    (Input__Flag_Lohner) [0] ##HYDRO AND SR_HYDRO##
 OPT__FLAG_LOHNER_PRES         1           # flag: Lohner for pressure          (Input__Flag_Lohner) [0] ##HYDRO AND SR_HYDRO##
@@ -100,12 +100,7 @@ MOLECULAR_WEIGHT              0.6         # mean molecular weight -> currently o
 MINMOD_COEFF                  2.0         # coefficient of the generalized MinMod limiter (1.0~2.0) [1.5]
 EP_COEFF                      1.25        # coefficient of the extrema-preserving limiter (>=1.0) [1.25] ##DEPRECATED##
 OPT__LR_LIMITER               4           # slope limiter of data reconstruction in the MHM/MHM_RP/CTU schemes:
-                                          # (0=none, 1=vanLeer, 2=generalized MinMod, 3=vanAlbada, 4=vanLeer+generalized MinMod,
-                                          #  5=extrema-preserving) [4] ##5 IS DEPRECATED##
-OPT__1ST_FLUX_CORR            2           # correct unphysical results (defined by MIN_DENS/PRES) by the 1st-order fluxes:
-                                          # (0=off, 1=3D, 2=3D+1D) [2] ##MHM/MHM_RP/CTU ONLY##
-OPT__1ST_FLUX_CORR_SCHEME     2           # Riemann solver for OPT__1ST_FLUX_CORR (0=none, 1=Roe, 2=HLLC 3=HLLE) [1]
-DUAL_ENERGY_SWITCH            2.0e-2      # apply dual-energy if E_int/E_kin < DUAL_ENERGY_SWITCH [2.0e-2] ##DUAL_ENERGY ONLY##
+                                          # (0=none, 1=vanLeer, 2=generalized MinMod, 3=vanAlbada, 4=vanLeer+generalized MinMod
 
 
 # fluid solvers in all models

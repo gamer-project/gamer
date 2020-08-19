@@ -28,6 +28,7 @@ TESTPROB_ID                   600         # test problem ID [0]
                                           # 600: blast wave in sr-hydro
                                           # 601: Riemann problem in sr-hydro
                                           # 602: double mach reflection in pure sr-hydro
+                                          # 604: relativistic jets
 
 # code units (in cgs)
 OPT__UNIT                     0           # specify code units -> must set exactly 3 basic units below [0] ##USELESS FOR COMOVING##
@@ -74,7 +75,7 @@ OPT__FLAG_RHO_GRADIENT        0           # flag: density gradient (Input__Flag_
 OPT__FLAG_PRES_GRADIENT       0           # flag: pressure gradient (Input__Flag_PresGradient) [0] ##SR_HYDRO/HYDRO##
 OPT__FLAG_ENGY_GRADIENT       1           # flag: pressure gradient (Input__Flag_EngyGradient) [0] ##SR_HYDRO/HYDRO##
 OPT__FLAG_LORENTZ_GRADIENT    0           # flag: Lorentz factor gradient (Input__Flag_LorentzGradient) [0] ##SR_HYDRO ONLY##
-OPT__FLAG_4VELOCITY           0           # flag: magnitude of 3-velocity (Input__Flag_4Velocity) [0] ##SR_HYDRO ONLY##
+OPT__FLAG_4VELOCITY           0           # flag: magnitude of 4-velocity (Input__Flag_4Velocity) [0] ##SR_HYDRO ONLY##
 OPT__FLAG_LOHNER_DENS         0           # flag: Lohner for mass density   (Input__Flag_Lohner) [0] ##HYDRO/SR_HYDRO/ELBDM##
 OPT__FLAG_LOHNER_ENGY         1           # flag: Lohner for energy density (Input__Flag_Lohner) [0] ##HYDRO/SR_HYDRO##
 OPT__FLAG_LOHNER_PRES         0           # flag: Lohner for pressure       (Input__Flag_Lohner) [0] ##HYDRO/SR_HYDRO##
@@ -101,7 +102,7 @@ GAMMA                         1.333333333333333333  # ratio of specific heats (i
 MOLECULAR_WEIGHT              0.6         # mean molecular weight -> currently only for post-processing [0.6]
 MINMOD_COEFF                  2.0         # coefficient of the generalized MinMod limiter (1.0~2.0) [1.5]
 EP_COEFF                      1.25        # coefficient of the extrema-preserving limiter (>=1.0) [1.25] ##DEPRECATED##
-OPT__LR_LIMITER               4           # slope limiter of data reconstruction in the MHM/MHM_RP/CTU schemes:
+OPT__LR_LIMITER               4           # slope limiter of data reconstruction in the MHM/MHM_RP schemes:
                                           # (0=none, 1=vanLeer, 2=generalized MinMod, 3=vanAlbada, 4=vanLeer+generalized MinMod) [4]
 
 # fluid solvers in all models
@@ -114,12 +115,14 @@ OPT__CORR_AFTER_ALL_SYNC     -1           # apply various corrections after all 
 OPT__OVERLAP_MPI              0           # overlap MPI communication with CPU/GPU computations [0] ##NOT SUPPORTED YET##
 OPT__RESET_FLUID              0           # reset fluid variables after each update -> edit "Flu_ResetByUser.cpp" [0]
 MIN_DENS                      0.0         # minimum mass density (must >= 0.0) [0.0] ##HYDRO/SR_HYDRO/MHD/ELBDM ONLY##
-MIN_TEMP                      0.0         # minimum pressure     (must >= 0.0) [0.0] ##HYDRO/SR_HYDRO/MHD ONLY##
+MIN_TEMP                      0.0         # minimum temperature  (must >= 0.0) [0.0] ##HYDRO/SR_HYDRO/MHD ONLY##
 
 # initialization
 OPT__INIT                     1           # initialization option: (1=FUNCTION, 2=RESTART, 3=FILE->"UM_IC")
 RESTART_LOAD_NRANK            1           # number of parallel I/O (i.e., number of MPI ranks) for restart [1]
+OPT__RESTART_RESET            0           # reset some simulation status parameters (e.g., current step and time) during restart [0]
 OPT__INIT_RESTRICT            1           # restrict all data during the initialization [1]
+OPT__INIT_GRID_WITH_OMP       1           # enable OpenMP when assigning the initial condition of each grid patch [1]
 OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2=CUDA, -1=MPI rank, >=0=input) [-1]
 INIT_SUBSAMPLING_NCELL        0           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
 
@@ -155,6 +158,7 @@ OPT__RECORD_PERFORMANCE       1           # record the code performance [1]
 OPT__MANUAL_CONTROL           1           # support manually dump data or stop run during the runtime
                                           # (by generating the file DUMP_GAMER_DUMP or STOP_GAMER_STOP) [1]
 OPT__RECORD_USER              0           # record the user-specified info -> edit "Aux_RecordUser.cpp" [0]
+OPT__OPTIMIZE_AGGRESSIVE      0           # apply aggressive optimizations (experimental) [0]
 
 
 # checks
@@ -165,6 +169,6 @@ OPT__CK_NORMALIZE_PASSIVE     0           # check the normalization of passive s
 OPT__CK_RESTRICT              0           # check the data restriction [0]
 OPT__CK_FINITE                0           # check if all variables are finite [0]
 OPT__CK_PATCH_ALLOCATE        0           # check if all patches are properly allocated [0]
-OPT__CK_FLUX_ALLOCATE         0           # check if all flux arrays are properly allocated ##HYDRO and ELBDM ONLY## [0]
-OPT__CK_NEGATIVE              0           # check the negative values: (0=off, 1=density, 2=pressure and entropy, 3=ratio of momentum to energy, 4=all) [0] ##SR_HYDRO ONLY##
+OPT__CK_FLUX_ALLOCATE         0           # check if all flux arrays are properly allocated ##SR_HYDRO and ELBDM ONLY## [0]
+OPT__CK_NEGATIVE              0           # check the negative values: (0=off, 1=density, 2=pressure and entropy, 3=both) [0] ##SR_HYDRO ONLY##
 OPT__CK_MEMFREE               1.0         # check the free memory in GB (0=off, >0=threshold) [1.0]

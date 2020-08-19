@@ -55,8 +55,7 @@ OPT__FLAG_RHO_GRADIENT        0           # flag: density gradient (Input__Flag_
 OPT__FLAG_PRES_GRADIENT       0           # flag: pressure gradient (Input__Flag_PresGradient) [0] ##HYDRO/SR_HYDRO##
 OPT__FLAG_ENGY_GRADIENT       1           # flag: pressure gradient (Input__Flag_EngyGradient) [0] ##SR_HYDRO/HYDRO##
 OPT__FLAG_LORENTZ_GRADIENT    0           # flag: Lorentz factor gradient (Input__Flag_LorentzGradient) [0] ##SR_HYDRO ONLY##
-OPT__FLAG_4VELOCITY           0           # flag: magnitude of 3-velocity (Input__Flag_4Velocity) [0] ##SR_HYDRO ONLY##
-OPT__FLAG_4VELOCITY           0           # flag: magnitude of 3-velocity (Input__Flag_3Velocity) [0] ##SR_HYDRO ONLY##
+OPT__FLAG_4VELOCITY           0           # flag: magnitude of 4-velocity (Input__Flag_4Velocity) [0] ##SR_HYDRO ONLY##
 OPT__FLAG_LOHNER_DENS         0           # flag: Lohner for mass density   (Input__Flag_Lohner) [0] ##HYDRO/SR_HYDRO/ELBDM##
 OPT__FLAG_LOHNER_ENGY         0           # flag: Lohner for energy density (Input__Flag_Lohner) [0] ##HYDRO/SR_HYDRO##
 OPT__FLAG_LOHNER_PRES         0           # flag: Lohner for pressure       (Input__Flag_Lohner) [0] ##HYDRO/SR_HYDRO##

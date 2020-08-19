@@ -411,7 +411,7 @@ void SetParameter()
    {
       Sphere_Radius         *= Const_pc / UNIT_L;
       Sphere_CoreRadius     *= Const_pc / UNIT_L;
-      Sphere_CoreDens       *=       1.0 / UNIT_D;
+      Sphere_CoreDens       *=      1.0 / UNIT_D;
       Sphere_Center_x       *= Const_pc / UNIT_L; 
       Sphere_Center_y       *= Const_pc / UNIT_L;
       Sphere_Center_z       *= Const_pc / UNIT_L;   
@@ -582,8 +582,8 @@ void SetParameter()
    {
      Aux_Message( stdout, "  Sphere_Radius           = %14.7e pc\n",        Sphere_Radius*UNIT_L/Const_pc                  );
      Aux_Message( stdout, "  Sphere_CoreRadius       = %14.7e pc\n",        Sphere_CoreRadius*UNIT_L/Const_pc              );
-     Aux_Message( stdout, "  Sphere_CoreDens         = %14.7e g/cm^3\n",     Sphere_CoreDens*UNIT_D                          );
-     Aux_Message( stdout, "  Sphere_DensSurface      = %14.7e g/cm^3\n",     Sphere_CoreDens / ( 1.0 + SQR( Sphere_Radius / Sphere_CoreRadius) )*UNIT_D );
+     Aux_Message( stdout, "  Sphere_CoreDens         = %14.7e g/cm^3\n",    Sphere_CoreDens*UNIT_D                          );
+     Aux_Message( stdout, "  Sphere_DensSurface      = %14.7e g/cm^3\n",    Sphere_CoreDens / ( 1.0 + SQR( Sphere_Radius / Sphere_CoreRadius) )*UNIT_D );
      Aux_Message( stdout, "  Sphere_Center_x         = %14.7e pc\n",        Sphere_Center_x*UNIT_L/Const_pc                );
      Aux_Message( stdout, "  Sphere_Center_y         = %14.7e pc\n",        Sphere_Center_y*UNIT_L/Const_pc                );
      Aux_Message( stdout, "  Sphere_Center_z         = %14.7e pc\n",        Sphere_Center_z*UNIT_L/Const_pc                );
