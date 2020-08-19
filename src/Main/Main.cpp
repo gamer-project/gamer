@@ -104,8 +104,6 @@ double               FlagTable_PresGradient[NLEVEL-1], FlagTable_EngyGradient[NL
                      FlagTable_LorentzFactorGradient[NLEVEL-1];
 double               GAMMA, MINMOD_COEFF, EP_COEFF, MOLECULAR_WEIGHT;
 LR_Limiter_t         OPT__LR_LIMITER;
-Opt1stFluxCorr_t     OPT__1ST_FLUX_CORR;
-OptRSolver1st_t      OPT__1ST_FLUX_CORR_SCHEME;
 bool                 OPT__FLAG_PRES_GRADIENT, OPT__FLAG_ENGY_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES,
 					 OPT__FLAG_LOHNER_TEMP, OPT__FLAG_LOHNER_LRTZ, OPT__FLAG_4VELOCITY, OPT__FLAG_MOM_OVER_DENS,
                      OPT__FLAG_LORENTZ_GRADIENT;
@@ -284,19 +282,6 @@ real (*d_PriVar)      [NCOMP_TOTAL][ CUBE(FLU_NXT) ]              = NULL;
 real (*d_Slope_PPM)[3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ]          = NULL;
 real (*d_FC_Var)   [6][NCOMP_TOTAL][ CUBE(N_FC_VAR) ]             = NULL;
 real (*d_FC_Flux)  [3][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ]            = NULL;
-//real (*d_PriVar)     [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ]              = NULL;
-//real (*d_Slope_PPM_x)[NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ]  = NULL;
-//real (*d_Slope_PPM_y)[NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ]  = NULL;
-//real (*d_Slope_PPM_z)[NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ]  = NULL;
-//real (*d_FC_Var_xL)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]           = NULL;
-//real (*d_FC_Var_xR)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]           = NULL;
-//real (*d_FC_Var_yL)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]           = NULL;
-//real (*d_FC_Var_yR)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]           = NULL;
-//real (*d_FC_Var_zL)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]           = NULL;
-//real (*d_FC_Var_zR)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]           = NULL;
-//real (*d_FC_Flux_x)  [NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ]        = NULL;
-//real (*d_FC_Flux_y)  [NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ]        = NULL;
-//real (*d_FC_Flux_z)  [NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ]        = NULL;
 #endif // FLU_SCHEME
 
 #endif // MODEL

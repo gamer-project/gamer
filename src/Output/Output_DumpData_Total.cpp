@@ -580,10 +580,8 @@ void Output_DumpData_Total( const char *FileName )
 #     warning : WAIT MHD !!!
 #     elif ( MODEL == SR_HYDRO )
       const int    opt__lr_limiter           = (int)OPT__LR_LIMITER;
-
-//    convert OPT__1ST_FLUX_CORR to bool to be consistent with the old format where OPT__1ST_FLUX_CORR is bool instead of int
-      const bool   opt__1st_flux_corr        = (bool)OPT__1ST_FLUX_CORR;
-      const int    opt__1st_flux_corr_scheme = (int)OPT__1ST_FLUX_CORR_SCHEME;
+      const bool   opt__1st_flux_corr        = NULL_BOOL;
+      const int    opt__1st_flux_corr_scheme = NULL_INT;
 #     else
       const bool   OPT__FLAG_PRES_GRADIENT   = NULL_BOOL;
       const double GAMMA                     = NULL_REAL;

@@ -908,98 +908,47 @@ void Aux_Check_Parameter()
 #     error : ERROR : NCOMP_TOTAL != NFLUX_TOTAL !!
 #  endif
 
-#  if (  NCOMP_PASSIVE != 0  && FLU_SCHEME == RTVD  )
-#     error : RTVD scheme do NOT support passive scalars !!
+#  if (  NCOMP_PASSIVE != 0 )
+#     error : SR_HYDRO do NOT support passive scalars !!
 #  endif
 
-#  if ( FLU_SCHEME != RTVD  &&  FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
-#     error : ERROR : unsupported hydro scheme in the makefile !!
-#  endif
-
-#  if (  defined UNSPLIT_GRAVITY  &&   FLU_SCHEME == RTVD )
-#     error : ERROR : RTVD do not support UNSPLIT_GRAVITY !!
+#  if ( FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP )
+#     error : ERROR : unsupported sr-hydro scheme in the makefile !!
 #  endif
 
 #  if ( defined LR_SCHEME  &&  LR_SCHEME != PLM  &&  LR_SCHEME != PPM  &&  LR_SCHEME != WENO )
 #     error : ERROR : unsupported data reconstruction scheme (PLM/PPM/WENO) !!
 #  endif
 
-#  if ( defined RSOLVER  &&  RSOLVER != EXACT  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLC )
-#     error : ERROR : unsupported Riemann solver (EXACT/ROE/HLLE/HLLC) !!
+#  if ( defined RSOLVER  && RSOLVER != HLLE  &&  RSOLVER != HLLC )
+#     error : ERROR : unsupported Riemann solver (HLLE/HLLC) !!
 #  endif
 
-#  ifdef DUAL_ENERGY
-#  if ( FLU_SCHEME == RTVD )
-#     error : RTVD schemes do NOT support DUAL_ENERGY !!
-#  endif
 
-#  if ( DUAL_ENERGY != DE_ENPY )
-#     error : ERROR : unsupported dual-energy formalism (DE_ENPY only, DE_EINT is not supported yet) !!
-#  endif
-#  endif // #ifdef DUAL_ENERGY
-
-#  if ( defined CHECK_INTERMEDIATE  &&  CHECK_INTERMEDIATE != EXACT  &&  CHECK_INTERMEDIATE != HLLE  &&  \
-        CHECK_INTERMEDIATE != HLLC )
-#     error : ERROR : unsupported option in CHECK_INTERMEDIATE (EXACT/HLLE/HLLC) !!
-#  endif
-
-   if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
-   {
-      if ( OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_ROE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_HLLC  &&
-           OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_HLLE )
-         Aux_Error( ERROR_INFO, "unsupported parameter \"%s = %d\" !!\n", "OPT__1ST_FLUX_CORR_SCHEME", OPT__1ST_FLUX_CORR_SCHEME );
-
-#     if ( FLU_SCHEME == RTVD )
-         Aux_Error( ERROR_INFO, "RTVD fluid scheme do not support \"OPT__1ST_FLUX_CORR\" !!\n" );
-#     endif
-   }
 
    if ( MIN_DENS == 0.0  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : MIN_DENS == 0.0 could be dangerous and is mainly for debugging only !!\n" );
    else if ( MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : MIN_DENS (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_DENS );
 #  if ( MODEL != SR_HYDRO )
-   if ( MIN_PRES == 0.0  &&  MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : MIN_PRES == 0.0 could be dangerous and is mainly for debugging only !!\n" );
+   if ( MIN_TEMP == 0.0  &&  MPI_Rank == 0 )
+      Aux_Message( stderr, "WARNING : MIN_TEMP == 0.0 could be dangerous and is mainly for debugging only !!\n" );
    else if ( MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : MIN_PRES (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_PRES );
+      Aux_Message( stderr, "WARNING : MIN_TEMP (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_PRES );
 #  endif
 
-#  if ( FLU_SCHEME == RTVD )
-   if ( JEANS_MIN_PRES )
-      Aux_Error( ERROR_INFO, "RTVD fluid scheme do not support \"JEANS_MIN_PRES\" !!\n" );
-#  endif
 
 
 // warnings
 // ------------------------------
    if ( MPI_Rank == 0 ) {
 
-#  if ( defined RSOLVER  &&  RSOLVER == EXACT )
-#     warning : WARNING : exact Riemann solver is not recommended since the vacuum solution has not been implemented
-      Aux_Message( stderr, "WARNING : exact Riemann solver is not recommended since the vacuum solution " );
-      Aux_Message( stderr,           "has not been implemented !!\n" );
-#  endif
 
-#  if ( defined CHAR_RECONSTRUCTION  &&  defined GRAVITY )
-#     warning : WARNING : "CHAR_RECONSTRUCTION" is less robust and can cause negative density/pressure !!
-      Aux_Message( stderr, "WARNING : \"CHAR_RECONSTRUCTION\" is less robust and could cause negative " );
-      Aux_Message( stderr,           "density/pressure !!\n" );
-#  endif
-
-# if ( MODEL == HYDRO )
-   if ( !OPT__FIXUP_FLUX )
-      Aux_Message( stderr, "WARNING : \"%s\" is disabled in HYDRO !!\n", "OPT__FIXUP_FLUX" );
-
-   if ( !OPT__FIXUP_RESTRICT )
-      Aux_Message( stderr, "WARNING : \"%s\" is disabled in HYDRO !!\n", "OPT__FIXUP_RESTRICT" );
-#elif ( MODEL == SR_HYDRO )
    if ( !OPT__FIXUP_FLUX )
       Aux_Message( stderr, "WARNING : \"%s\" is disabled in SR_HYDRO !!\n", "OPT__FIXUP_FLUX" );
 
    if ( !OPT__FIXUP_RESTRICT )
       Aux_Message( stderr, "WARNING : \"%s\" is disabled in SR_HYDRO !!\n", "OPT__FIXUP_RESTRICT" );
-#endif
 
    if ( OPT__CK_FLUX_ALLOCATE  &&  !OPT__FIXUP_FLUX )
       Aux_Message( stderr, "WARNING : %s is useless since %s is off !!\n", "OPT__CK_FLUX_ALLOCATE", "OPT__FIXUP_FLUX" );
@@ -1007,33 +956,21 @@ void Aux_Check_Parameter()
    if ( OPT__INIT == INIT_BY_FILE )
       Aux_Message( stderr, "WARNING : currently we don't check MIN_DENS/PRES for the initial data loaded from UM_IC !!\n" );
 
-   if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
-      Aux_Message( stderr, "REMINDER : OPT__1ST_FLUX_CORR may break the strict conservation of fluid variables\n" );
-
-#  ifdef SUPPORT_GRACKLE
-   if ( GRACKLE_ACTIVATE && OPT__FLAG_LOHNER_TEMP )
-      Aux_Message( stderr, "WARNING : currently we do not use Grackle to calculate temperature for OPT__FLAG_LOHNER_TEMP !!\n" );
-#  endif
 
    } // if ( MPI_Rank == 0 )
 
 
 // check for MHM/MHM_RP/CTU
 // ------------------------------
-#  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
+#  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 
 // errors
 // ------------------------------
 #  if ( LR_SCHEME == PPM )
-   if ( OPT__LR_LIMITER == EXTPRE )
-      Aux_Error( ERROR_INFO, "currently the PPM reconstruction does not support the \"%s\" limiter\n",
-                 "extrema-preserving" );
 #  endif
 
-   if ( OPT__LR_LIMITER != VANLEER  &&  OPT__LR_LIMITER != GMINMOD  &&  OPT__LR_LIMITER != ALBADA  &&
-        OPT__LR_LIMITER != EXTPRE   &&  OPT__LR_LIMITER != VL_GMINMOD )
-      Aux_Error( ERROR_INFO, "unsupported data reconstruction limiter (OPT__LR_IMITER = %d) !!\n",
-                 OPT__LR_LIMITER );
+   if ( OPT__LR_LIMITER != VANLEER  &&  OPT__LR_LIMITER != GMINMOD  &&  OPT__LR_LIMITER != ALBADA  && OPT__LR_LIMITER != VL_GMINMOD )
+      Aux_Error( ERROR_INFO, "unsupported data reconstruction limiter (OPT__LR_IMITER = %d) !!\n", OPT__LR_LIMITER );
 
 
 // warnings
@@ -1047,34 +984,26 @@ void Aux_Check_Parameter()
 
 // check for MHM/CTU
 // ------------------------------
-#  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == CTU )
+#  if ( FLU_SCHEME == MHM  )
 
 #  if ( LR_SCHEME == PLM )
-   if ( OPT__LR_LIMITER == EXTPRE  &&  FLU_GHOST_SIZE < 3 )
+   if ( FLU_GHOST_SIZE < 2 )
       Aux_Error( ERROR_INFO, "please set \"%s\" for \"%s\" !!\n",
-                 "FLU_GHOST_SIZE = 3", "MHM/CTU scheme + PLM reconstruction + EXTPRE limiter" );
+                 "FLU_GHOST_SIZE = 2", "MHM scheme + PLM reconstruction" );
 
-   if ( OPT__LR_LIMITER == EXTPRE  &&  FLU_GHOST_SIZE > 3  &&  MPI_Rank == 0 )
+   if ( FLU_GHOST_SIZE > 2  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
-                   "FLU_GHOST_SIZE = 3", "MHM/CTU scheme + PLM reconstruction + EXTPRE limiter" );
-
-   if ( OPT__LR_LIMITER != EXTPRE  &&  FLU_GHOST_SIZE < 2 )
-      Aux_Error( ERROR_INFO, "please set \"%s\" for \"%s\" !!\n",
-                 "FLU_GHOST_SIZE = 2", "MHM/CTU scheme + PLM reconstruction + non-EXTPRE limiter" );
-
-   if ( OPT__LR_LIMITER != EXTPRE  &&  FLU_GHOST_SIZE > 2  &&  MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
-                   "FLU_GHOST_SIZE = 2", "MHM/CTU scheme + PLM reconstruction + non-EXTPRE limiter" );
+                   "FLU_GHOST_SIZE = 2", "MHM scheme + PLM reconstruction" );
 #  endif // #if ( LR_SCHEME == PLM )
 
 #  if ( LR_SCHEME == PPM )
    if ( FLU_GHOST_SIZE < 3 )
       Aux_Error( ERROR_INFO, "please set \"%s\" for \"%s\" !!\n",
-                 "FLU_GHOST_SIZE = 3", "MHM/CTU scheme + PPM reconstruction + non-EXTPRE limiter" );
+                 "FLU_GHOST_SIZE = 3", "MHM scheme + PPM reconstruction" );
 
    if ( FLU_GHOST_SIZE > 3  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
-                   "FLU_GHOST_SIZE = 3", "MHM/CTU scheme + PPM reconstruction + non-EXTPRE limiter" );
+                   "FLU_GHOST_SIZE = 3", "MHM scheme + PPM reconstruction" );
 #  endif // #if ( LR_SCHEME == PPM )
 
 #  endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == CTU )
@@ -1085,47 +1014,21 @@ void Aux_Check_Parameter()
 #  if ( FLU_SCHEME == MHM_RP )
 
 #  if ( LR_SCHEME == PLM )
-   if ( OPT__LR_LIMITER == EXTPRE  &&  FLU_GHOST_SIZE < 4 )
-      Aux_Error( ERROR_INFO, "please set \"%s\" for \"%s\" !!\n",
-                 "FLU_GHOST_SIZE = 4", "MHM_RP scheme + PLM reconstruction + EXTPRE limiter" );
-
-   if ( OPT__LR_LIMITER == EXTPRE  &&  FLU_GHOST_SIZE > 4  &&  MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
-                   "FLU_GHOST_SIZE = 4", "MHM_RP scheme + PLM reconstruction + EXTPRE limiter" );
-
-   if ( OPT__LR_LIMITER != EXTPRE  &&  FLU_GHOST_SIZE < 3 )
-      Aux_Error( ERROR_INFO, "please set \"%s\" for \"%s\" !!\n",
-                 "FLU_GHOST_SIZE = 3", "MHM_RP scheme + PLM reconstruction + non-EXTPRE limiter" );
-
-   if ( OPT__LR_LIMITER != EXTPRE  &&  FLU_GHOST_SIZE > 3  &&  MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
-                   "FLU_GHOST_SIZE = 3", "MHM_RP scheme + PLM reconstruction + non-EXTPRE limiter" );
 #  endif // #if ( LR_SCHEME == PLM )
 
 #  if ( LR_SCHEME == PPM )
    if ( FLU_GHOST_SIZE < 4 )
       Aux_Error( ERROR_INFO, "please set \"%s\" for \"%s\" !!\n",
-                 "FLU_GHOST_SIZE = 4", "MHM_RP scheme + PPM reconstruction + non-EXTPRE limiter" );
+                 "FLU_GHOST_SIZE = 4", "MHM_RP scheme + PPM reconstruction" );
 
    if ( FLU_GHOST_SIZE > 4  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
-                   "FLU_GHOST_SIZE = 4", "MHM_RP scheme + PPM reconstruction + non-EXTPRE limiter" );
+                   "FLU_GHOST_SIZE = 4", "MHM_RP scheme + PPM reconstruction" );
 #  endif // #if ( LR_SCHEME == PPM )
 
 #  endif // #if ( FLU_SCHEME == MHM_RP )
 
 
-
-
-// check for RTVD
-// ------------------------------
-#  if ( FLU_SCHEME == RTVD )
-
-#  if ( FLU_GHOST_SIZE != 3 )
-#     error : ERROR : please set FLU_GHOST_SIZE = 3 for the relaxing TVD scheme !!
-#  endif
-
-#  endif // if ( FLU_SCHEME == RTVD )
 
 
 

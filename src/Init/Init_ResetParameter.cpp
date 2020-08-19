@@ -415,7 +415,7 @@ void Init_ResetParameter()
 
 
 // 1st-order flux correction
-#  if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD )
    if ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_NONE )
    {
       OPT__1ST_FLUX_CORR_SCHEME = RSOLVER_1ST_NONE;

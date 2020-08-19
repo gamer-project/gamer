@@ -261,7 +261,6 @@ struct SymConst_t
    int    CheckIntermediate;
    int    HLL_NoRefState;
    int    HLL_IncludeAllWaves;
-   int    WAF_Dissipate;
 
 #  ifdef N_FC_VAR
    int    N_FC_Var;

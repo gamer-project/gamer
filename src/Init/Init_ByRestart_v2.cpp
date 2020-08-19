@@ -1500,12 +1500,8 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       else
       Aux_Message( stderr, "WARNING : restart file does not have the parameter \"%s\" !!\n", "MOLECULAR_WEIGHT" );
       CompareVar( "MINMOD_COEFF",            minmod_coeff,                 MINMOD_COEFF,              NonFatal );
-      CompareVar( "EP_COEFF",                ep_coeff,                     EP_COEFF,                  NonFatal );
       CompareVar( "OPT__LR_LIMITER",         opt__lr_limiter,         (int)OPT__LR_LIMITER,           NonFatal );
 
-//    convert OPT__1ST_FLUX_CORR to bool to be consistent with the old format where OPT__1ST_FLUX_CORR is bool instead of int
-      CompareVar( "OPT__1ST_FLUX_CORR",        opt__1st_flux_corr,        (bool)OPT__1ST_FLUX_CORR,        NonFatal );
-      CompareVar( "OPT__1ST_FLUX_CORR_SCHEME", opt__1st_flux_corr_scheme, (int )OPT__1ST_FLUX_CORR_SCHEME, NonFatal );
 
 #     elif ( MODEL == ELBDM )
       CompareVar( "DT__PHASE",               dt__phase,                    DT__PHASE,                 NonFatal );

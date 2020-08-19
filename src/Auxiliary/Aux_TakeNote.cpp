@@ -206,14 +206,10 @@ void Aux_TakeNote()
       fprintf( Note, "CONSERVED_ENERGY                TOTAL_ENERGY - REST_MASS\n" );
 #     endif
 
-#     if   ( FLU_SCHEME == RTVD )
-      fprintf( Note, "FLU_SCHEME                      RTVD\n" );
-#     elif ( FLU_SCHEME == MHM )
+#     if ( FLU_SCHEME == MHM )
       fprintf( Note, "FLU_SCHEME                      MHM\n" );
 #     elif ( FLU_SCHEME == MHM_RP )
       fprintf( Note, "FLU_SCHEME                      MHM with Riemann prediction\n" );
-#     elif ( FLU_SCHEME == CTU )
-      fprintf( Note, "FLU_SCHEME                      CTU\n" );
 #     elif ( FLU_SCHEME == NONE )
       fprintf( Note, "FLU_SCHEME                      NONE\n" );
 #     else
@@ -232,11 +228,7 @@ void Aux_TakeNote()
       fprintf( Note, "LR_SCHEME                       UNKNOWN\n" );
 #     endif
 
-#     if   ( RSOLVER == EXACT )
-      fprintf( Note, "RSOLVER                         EXACT\n" );
-#     elif ( RSOLVER == ROE )
-      fprintf( Note, "RSOLVER                         ROE\n" );
-#     elif ( RSOLVER == HLLE )
+#     if ( RSOLVER == HLLE )
       fprintf( Note, "RSOLVER                         HLLE\n" );
 #     elif ( RSOLVER == HLLC )
       fprintf( Note, "RSOLVER                         HLLC\n" );
@@ -246,15 +238,6 @@ void Aux_TakeNote()
       fprintf( Note, "RSOLVER                         UNKNOWN\n" );
 #     endif
 
-#     if   ( DUAL_ENERGY == DE_ENPY )
-      fprintf( Note, "DUAL_ENERGY                     DE_ENPY\n" );
-#     elif ( DUAL_ENERGY == DE_EINT )
-      fprintf( Note, "DUAL_ENERGY                     DE_EINT\n" );
-#     elif ( DUAL_ENERGY == NONE )
-      fprintf( Note, "DUAL_ENERGY                     NONE\n" );
-#     else
-      fprintf( Note, "DUAL_ENERGY                     UNKNOWN\n" );
-#     endif
 
 //    e. options in ELBDM
 #     elif ( MODEL == ELBDM )
@@ -961,23 +944,12 @@ void Aux_TakeNote()
       fprintf( Note, "GAMMA                           %13.7e\n",  GAMMA                   );
       fprintf( Note, "MOLECULAR_WEIGHT                %13.7e\n",  MOLECULAR_WEIGHT        );
       fprintf( Note, "MINMOD_COEFF                    %13.7e\n",  MINMOD_COEFF            );
-      fprintf( Note, "EP_COEFF                        %13.7e\n",  EP_COEFF                );
       fprintf( Note, "OPT__LR_LIMITER                 %s\n",      ( OPT__LR_LIMITER == VANLEER           ) ? "VANLEER"    :
                                                                   ( OPT__LR_LIMITER == GMINMOD           ) ? "GMINMOD"    :
                                                                   ( OPT__LR_LIMITER == ALBADA            ) ? "ALBADA"     :
                                                                   ( OPT__LR_LIMITER == VL_GMINMOD        ) ? "VL_GMINMOD" :
-                                                                  ( OPT__LR_LIMITER == EXTPRE            ) ? "EXTPRE"     :
                                                                   ( OPT__LR_LIMITER == LR_LIMITER_NONE   ) ? "NONE"       :
                                                                                                              "UNKNOWN" );
-      fprintf( Note, "OPT__1ST_FLUX_CORR              %s\n",      ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D   ) ? "3D"   :
-                                                                  ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D1D ) ? "3D1D" :
-                                                                  ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_NONE ) ? "NONE" :
-                                                                                                                   "UNKNOWN" );
-      fprintf( Note, "OPT__1ST_FLUX_CORR_SCHEME       %s\n",      ( OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_ROE  ) ? "RSOLVER_1ST_ROE"  :
-                                                                  ( OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_HLLC ) ? "RSOLVER_1ST_HLLC" :
-                                                                  ( OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_HLLE ) ? "RSOLVER_1ST_HLLE" :
-                                                                  ( OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_NONE ) ? "NONE"             :
-                                                                                                                "UNKNOWN" );
 #     elif ( MODEL == ELBDM )
       if ( OPT__UNIT ) {
 //    since the mass unit in cosmological simulation has the 1/h dependence, the actual ELBDM_MASS adopted in the
@@ -1247,7 +1219,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__CK_FINITE                  %d\n",      OPT__CK_FINITE            );
       fprintf( Note, "OPT__CK_PATCH_ALLOCATE          %d\n",      OPT__CK_PATCH_ALLOCATE    );
       fprintf( Note, "OPT__CK_FLUX_ALLOCATE           %d\n",      OPT__CK_FLUX_ALLOCATE     );
-#     if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
+#     if   ( MODEL == HYDRO )
       fprintf( Note, "OPT__CK_NEGATIVE                %d\n",      OPT__CK_NEGATIVE          );
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!

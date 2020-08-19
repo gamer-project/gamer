@@ -7,14 +7,14 @@ static void OutputError();
 
 // problem-specific global variables
 // =======================================================================================
-static double Acoustic_RhoAmp;      // amplitude of the proper number density perturbation (assuming background density = 1.0)
-static double Acoustic_Phase0;      // initial phase shift
-static double Acoustic_Temp0;
-static double Acoustic_Rho0;
-static double Acoustic_WaveLength;  // wavelength
-static double SQRT_3;
-static double Cs_Sqr;
-static double Cs;
+static double Acoustic_AmplitudeRho;      // amplitude of the proper number density perturbation (assuming background density = 1.0)
+static double Acoustic_InitPhase;         // initial phase shift
+static double Acoustic_Temp_Bg;           // ambient temperature
+static double Acoustic_Rho_Bg;            // ambient proper mass density
+static double Acoustic_WaveLength;        // wavelength
+static double SQRT3;                      // square root of 3
+static double Acoustic_Cs2;               // square of sound speed
+static double Acoustic_Cs;                // sound speed
 // =======================================================================================
 
 
@@ -97,26 +97,27 @@ void SetParameter()
 // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
 // --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
 // ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
+// ReadPara->Add( "KEY_IN_THE_FILE",         &VARIABLE,                 DEFAULT,          MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "Acoustic_RhoAmp",   &Acoustic_RhoAmp,       -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Acoustic_Phase0",   &Acoustic_Phase0,        0.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Acoustic_Temp0",    &Acoustic_Temp0,         1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Acoustic_Rho0",     &Acoustic_Rho0,          1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Acoustic_AmplitudeRho",   &Acoustic_AmplitudeRho,       -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Acoustic_InitPhase",      &Acoustic_InitPhase,           0.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Acoustic_Temp_Bg",        &Acoustic_Temp_Bg,             1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Acoustic_Rho_Bg",         &Acoustic_Rho_Bg,              1.0,          Eps_double,       NoMax_double      );
 
    ReadPara->Read( FileName );
 
    delete ReadPara;
 
-   SQRT_3 = sqrt(3.0);
+   SQRT3 = sqrt(3.0);
 
-   Acoustic_WaveLength = amr->BoxSize[0] / SQRT_3;
+   Acoustic_WaveLength = amr->BoxSize[0] / SQRT3;
 
-  Cs_Sqr = SoundSpeedSquare( Acoustic_Temp0, (double)GAMMA );
-  Cs = sqrt(Cs_Sqr);
-// (3) reset other general-purpose parameters
+  Acoustic_Cs2 = SoundSpeedSquare( Acoustic_Temp_Bg, (double)GAMMA );
+  Acoustic_Cs = sqrt(Acoustic_Cs2);
+
+// (2) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
-   const double End_T_Default    = Acoustic_WaveLength / Cs;
+   const double End_T_Default    = Acoustic_WaveLength / Acoustic_Cs;
    const long   End_Step_Default = __INT_MAX__;
 
    if ( END_STEP < 0 ) {
@@ -134,13 +135,13 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID     = %d\n",      TESTPROB_ID );
-      Aux_Message( stdout, "  density amplitude   = % 14.7e\n", Acoustic_RhoAmp );
-      Aux_Message( stdout, "  ambient temperature = % 14.7e\n", Acoustic_Temp0 );
-      Aux_Message( stdout, "  ambient density     = % 14.7e\n", Acoustic_Rho0 );
-      Aux_Message( stdout, "  initial phase shift = % 14.7e\n", Acoustic_Phase0 );
-      Aux_Message( stdout, "  wave length         = % 14.7e\n", Acoustic_WaveLength );
-      Aux_Message( stdout, "  sound speed         = % 14.7e\n", Cs );
+      Aux_Message( stdout, "  test problem ID     = %d\n",      TESTPROB_ID           );
+      Aux_Message( stdout, "  density amplitude   = % 14.7e\n", Acoustic_AmplitudeRho );
+      Aux_Message( stdout, "  ambient temperature = % 14.7e\n", Acoustic_Temp_Bg  );
+      Aux_Message( stdout, "  ambient density     = % 14.7e\n", Acoustic_Rho_Bg   );
+      Aux_Message( stdout, "  initial phase shift = % 14.7e\n", Acoustic_InitPhase    );
+      Aux_Message( stdout, "  wave length         = % 14.7e\n", Acoustic_WaveLength   );
+      Aux_Message( stdout, "  sound speed         = % 14.7e\n", Acoustic_Cs           );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -177,17 +178,17 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
   double Pri[NCOMP_FLUID], Con[NCOMP_FLUID];
   double K, LorentzFactor;
 
-  LorentzFactor = 1.0 / sqrt( 1.0 - Cs_Sqr );
+  LorentzFactor = 1.0 / sqrt( 1.0 - Acoustic_Cs2 );
 
   K = (double)2.0 * (double)M_PI  / Acoustic_WaveLength;
 
-  Phase = K * ( x + y + z ) / SQRT_3 - K * Cs * Time;
+  Phase = K * ( x + y + z ) / SQRT3 - K * Acoustic_Cs * Time;
 
-  Pri[0] = Acoustic_Rho0 * ( (double)1.0 + Acoustic_RhoAmp * sin( Phase + Acoustic_Phase0 ) );
-  Pri[1] = LorentzFactor * Cs / SQRT_3;
-  Pri[2] = LorentzFactor * Cs / SQRT_3;
-  Pri[3] = LorentzFactor * Cs / SQRT_3;
-  Pri[4] = Acoustic_Temp0 * Acoustic_Rho0;
+  Pri[0] = Acoustic_Rho_Bg * ( (double)1.0 + Acoustic_AmplitudeRho * sin( Phase + Acoustic_InitPhase ) );
+  Pri[1] = LorentzFactor * Acoustic_Cs / SQRT3;
+  Pri[2] = LorentzFactor * Acoustic_Cs / SQRT3;
+  Pri[3] = LorentzFactor * Acoustic_Cs / SQRT3;
+  Pri[4] = Acoustic_Temp_Bg * Acoustic_Rho_Bg;
 
   SRHydro_Pri2Con ( Pri, Con, (double)GAMMA );
 

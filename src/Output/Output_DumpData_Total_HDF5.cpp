@@ -1949,13 +1949,18 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__MinimizeMPIBarrier = OPT__MINIMIZE_MPI_BARRIER;
 
 // fluid solvers in HYDRO
-#  if ( MODEL == HYDRO || MODEL == SR_HYDRO )
+#  if ( MODEL == HYDRO )
    InputPara.Gamma                   = GAMMA;
    InputPara.MolecularWeight         = MOLECULAR_WEIGHT;
    InputPara.MinMod_Coeff            = MINMOD_COEFF;
    InputPara.Opt__LR_Limiter         = OPT__LR_LIMITER;
    InputPara.Opt__1stFluxCorr        = OPT__1ST_FLUX_CORR;
    InputPara.Opt__1stFluxCorrScheme  = OPT__1ST_FLUX_CORR_SCHEME;
+#  elif ( MODEL == SR_HYDRO )
+   InputPara.Gamma                   = GAMMA;
+   InputPara.MolecularWeight         = MOLECULAR_WEIGHT;
+   InputPara.MinMod_Coeff            = MINMOD_COEFF;
+   InputPara.Opt__LR_Limiter         = OPT__LR_LIMITER;
 #  endif
 
 // ELBDM solvers
