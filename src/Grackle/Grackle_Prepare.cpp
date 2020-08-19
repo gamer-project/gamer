@@ -178,7 +178,7 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
 
 #           if   ( DUAL_ENERGY == DE_ENPY )
             Pres = Hydro_DensEntropy2Pres( Dens, *(fluid[ENPY][0][0]+idx_p), EoS_AuxArray[1], CheckMinPres_No, NULL_REAL );
-            Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, EoS_AuxArray );
+            Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray );   // EOS_GAMMA does not involve passive scalars
 #           elif ( DUAL_ENERGY == DE_EINT )
 #           error : DE_EINT is NOT supported yet !!
 #           endif

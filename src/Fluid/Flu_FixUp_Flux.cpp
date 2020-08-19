@@ -203,7 +203,7 @@ void Flu_FixUp_Flux( const int lv )
                   const bool CheckMinPres_No = false;
                   real Pres;
                   Pres = Hydro_DensEntropy2Pres( ForEint[DENS], ForEint[ENPY], EoS_AuxArray[1], CheckMinPres_No, NULL_REAL );
-//                DE_ENPY only supports EOS_GAMMA that does not involve passive scalars
+//                DE_ENPY only supports EOS_GAMMA, which does not involve passive scalars
                   Eint = EoS_DensPres2Eint_CPUPtr( ForEint[DENS], Pres, NULL, EoS_AuxArray );
                }
 #              endif
@@ -256,7 +256,7 @@ void Flu_FixUp_Flux( const int lv )
                CorrVal[ENGY] = Hydro_ConEint2Etot( CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], Eint, Emag );
 
 #              if   ( DUAL_ENERGY == DE_ENPY )
-//             DE_ENPY only supports EOS_GAMMA that does not involve passive scalars
+//             DE_ENPY only supports EOS_GAMMA, which does not involve passive scalars
                CorrVal[ENPY] = Hydro_DensPres2Entropy( CorrVal[DENS],
                                                        EoS_DensEint2Pres_CPUPtr(CorrVal[DENS],Eint,NULL,EoS_AuxArray),
                                                        EoS_AuxArray[1] );

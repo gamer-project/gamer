@@ -159,16 +159,16 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
    const uint size_j           = FLU_NXT - (j_gap<<1);
    const uint size_k           = FLU_NXT - (k_gap<<1);
    const uint NColumn          = __umul24( size_j, size_k );
-   const uint i                = tx;                        // (i,j) the element in shared memory under evaluation
+   const uint i                = tx;                  // (i,j) the element in shared memory under evaluation
    const uint ip               = i+1;
    const uint im               = i-1;
          uint j                = j_gap + ty%size_j;
          uint k                = k_gap + ty/size_j;
-         uint Column0          = 0;                         // the total number of columns that have been updated
+         uint Column0          = 0;                   // the total number of columns that have been updated
    const uint j_end            = FLU_NXT - j_gap;
    const uint k_end            = FLU_NXT - k_gap;
    const real dt_half          = (real)0.5*dt;
-   const real *Passive         = false;                     // RTVD does not support passive scalars
+   const real *Passive         = NULL;                // RTVD does not support passive scalars
          bool RuleOut          = false;
    const bool CheckMinPres_Yes = true;
 

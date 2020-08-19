@@ -47,11 +47,16 @@ bool Flu_ResetByUser_Func_Template( real fluid[], const double x, const double y
    const real dr[3]   = { x-0.5*amr->BoxSize[0], y-0.5*amr->BoxSize[1], z-0.5*amr->BoxSize[2] };
    const real r       = SQRT( dr[0]*dr[0] + dr[1]*dr[1] + dr[2]*dr[2] );
 
-   const real TRad    = 0.3;
-   const real MinDens = 1.0e-10;
-   const real MinPres = 1.0e-10;
-   const real MinEint = EoS_DensPres2Eint_CPUPtr( MinDens, MinPres, EoS_AuxArray );
-   const real MinEmag = 0.0;  // assuming MHD is not adopted
+   const real TRad                      = 0.3;
+   const real MinDens                   = 1.0e-10;
+#  if ( NCOMP_PASSIVE > 0 )
+   const real MinPassive[NCOMP_PASSIVE] = { ... };
+#  else
+   const real *MinPassive = NULL;
+#  endif
+   const real MinPres                   = 1.0e-10;
+   const real MinEint                   = EoS_DensPres2Eint_CPUPtr( MinDens, MinPres, MinPassive, EoS_AuxArray );
+   const real MinEmag                   = 0.0;  // assuming MHD is not adopted
 
    if ( r <= TRad )
    {
@@ -63,6 +68,9 @@ bool Flu_ResetByUser_Func_Template( real fluid[], const double x, const double y
       fluid[ENGY] = Hydro_ConEint2Etot( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], MinEint, MinEmag );
 
 //    set passive scalars
+#     if ( NCOMP_PASSIVE > 0 )
+//    fluid[XXXX] = ...;
+#     endif
 
       return true;
    }
