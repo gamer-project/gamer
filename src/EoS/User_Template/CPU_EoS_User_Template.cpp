@@ -64,11 +64,11 @@ static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, c
 #  ifdef GAMER_DEBUG
    if ( Pres <= 0.0 )
    {
-      printf( "ERROR : invalid pressure (%14.7e) in %s (Dens %14.7e, Eint %14.7e) !!\n",
-              Pres, __FUNCTION__, Dens, Eint );
+      printf( "ERROR : invalid pressure (%13.7e) in %s() !!\n", Pres, __FUNCTION__ );
+      printf( "        Dens=%13.7e, Eint=%13.7e\n", Dens, Eint );
 #     if ( NCOMP_PASSIVE > 0 )
       printf( "        Passive scalars:" );
-      for (int v=0; v<NCOMP_PASSIVE; v++)    printf( " %d=%14.7e", v, Passive[v] );
+      for (int v=0; v<NCOMP_PASSIVE; v++)    printf( " %d=%13.7e", v, Passive[v] );
       printf( "\n" );
 #     endif
    }
@@ -113,11 +113,11 @@ static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, c
 #  ifdef GAMER_DEBUG
    if ( Eint <= 0.0 )
    {
-      printf( "ERROR : invalid internal energy density (%14.7e) in %s (Dens %14.7e, Pres %14.7e) !!\n",
-              Eint, __FUNCTION__, Dens, Pres );
+      printf( "ERROR : invalid internal energy density (%13.7e) in %s() !!\n", Eint, __FUNCTION__ );
+      printf( "        Dens=%13.7e, Pres=%13.7e\n", Dens, Pres );
 #     if ( NCOMP_PASSIVE > 0 )
       printf( "        Passive scalars:" );
-      for (int v=0; v<NCOMP_PASSIVE; v++)    printf( " %d=%14.7e", v, Passive[v] );
+      for (int v=0; v<NCOMP_PASSIVE; v++)    printf( " %d=%13.7e", v, Passive[v] );
       printf( "\n" );
 #     endif
    }
@@ -162,11 +162,11 @@ static real EoS_DensPres2CSqr_User_Template( const real Dens, const real Pres, c
 #  ifdef GAMER_DEBUG
    if ( Cs2 <= 0.0 )
    {
-      printf( "ERROR : invalid sound speed squared (%14.7e) in %s (Dens %14.7e, Pres %14.7e) !!\n",
-              Cs2, __FUNCTION__, Dens, Pres );
+      printf( "ERROR : invalid sound speed squared (%13.7e) in %s() !!\n", Cs2, __FUNCTION__ );
+      printf( "        Dens=%13.7e, Pres=%13.7e\n", Dens, Pres );
 #     if ( NCOMP_PASSIVE > 0 )
       printf( "        Passive scalars:" );
-      for (int v=0; v<NCOMP_PASSIVE; v++)    printf( " %d=%14.7e", v, Passive[v] );
+      for (int v=0; v<NCOMP_PASSIVE; v++)    printf( " %d=%13.7e", v, Passive[v] );
       printf( "\n" );
 #     endif
    }
