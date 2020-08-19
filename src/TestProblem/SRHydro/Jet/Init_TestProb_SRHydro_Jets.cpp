@@ -1092,8 +1092,7 @@ bool Flag_User( const int i, const int j, const int k, const int lv, const int P
    if ( Flag ) return true;
    else        return false;
 
-} // FUNCTION : Init_ExternalAcc
-#endif
+} // FUNCTION : Flag_User
 
 
 #  ifdef GRAVITY
