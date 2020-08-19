@@ -20,12 +20,12 @@ Jet_ParticleMassAmbient             1.672621898e-24         # particle mass in b
 
 
 # source geometry parameters
-Jet_Radius                                      0.5         # jet: radius of the cylinder-shape jet source (in kpc)
-Jet_HalfHeight                                  0.5         # jet: half height of the cylinder-shape jet source (in kpc)
+Jet_Radius                                      0.5         # jet: radius of the cylinder-shape jet source (in pc)
+Jet_HalfHeight                                  0.5         # jet: half height of the cylinder-shape jet source (in pc)
 Jet_HalfOpeningAngle                            0.0         # jet: half-opening angle
-Jet_CenOffset_x                                +0.0         # jet: jet central coordinates offset x (in kpc)
-Jet_CenOffset_y                                +0.0         # jet: jet central coordinates offset y (in kpc)
-Jet_CenOffset_z                                +0.0         # jet: jet central coordinates offset z (in kpc)
+Jet_CenOffset_x                                +0.0         # jet: jet central coordinates offset x (in pc)
+Jet_CenOffset_y                                +0.0         # jet: jet central coordinates offset y (in pc)
+Jet_CenOffset_z                                +0.0         # jet: jet central coordinates offset z (in pc)
 
 
 # precission parameters
@@ -49,10 +49,10 @@ Jet_HSE_BgTable_File  Input__HydrostaticEquilibrium         # for Jet_HSE: file 
 
 
 # Jet_Ambient == 1 || Jet_Ambient == 2
-Jet_HSE_Radius                                   80         # for Jet_HSE: radius of hydrostatic equilibrium halo  (in kpc)
-Jet_HSE_Dx                                      0.0         # for Jet_HSE: distance between box and cluster centre (in kpc)
-Jet_HSE_Dy                                      0.0         # for Jet_HSE: distance between box and cluster centre (in kpc)
-Jet_HSE_Dz                                      0.0         # for Jet_HSE: distance between box and cluster centre (in kpc)
+Jet_HSE_Radius                                   80         # for Jet_HSE: radius of hydrostatic equilibrium halo  (in pc)
+Jet_HSE_Dx                                      0.0         # for Jet_HSE: distance between box and cluster centre (in pc)
+Jet_HSE_Dy                                      0.0         # for Jet_HSE: distance between box and cluster centre (in pc)
+Jet_HSE_Dz                                      0.0         # for Jet_HSE: distance between box and cluster centre (in pc)
 
 # Beta model
 Jet_Beta_Beta                                   0.56        # beta-parameter in beta model 
