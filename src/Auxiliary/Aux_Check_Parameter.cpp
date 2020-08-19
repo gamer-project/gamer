@@ -636,6 +636,9 @@ void Aux_Check_Parameter()
 
       if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_ROE )
          Aux_Error( ERROR_INFO, "OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_ROE only supports EOS_GAMMA !!\n" );
+
+      if ( JEANS_MIN_PRES )
+         Aux_Error( ERROR_INFO, "JEANS_MIN_PRES currently only supports EOS_GAMMA !!\n" );
 #  endif // if ( EOS != EOS_GAMMA )
 
 

@@ -757,7 +757,7 @@ void Init_ResetParameter()
    {
       JEANS_MIN_PRES = false;
 
-      PRINT_WARNING( JEANS_MIN_PRES, FORMAT_INT, "since either SUPPORT_GRACKLE or GRAVITY is disabled" );
+      PRINT_WARNING( JEANS_MIN_PRES, FORMAT_INT, "since GRAVITY is disabled" );
    }
 #  endif
 
