@@ -622,16 +622,16 @@ void Aux_Check_Parameter()
 #        error : ERROR : CHAR_RECONSTRUCTION only works with EOS_GAMMA !!
 #     endif
 
-#     ifdef MHD
-#        error : ERROR : MHD currently only supports EOS_GAMMA !!
-#     endif
-
 #     if ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == CTU )
 #        error : RTVD and CTU only support EOS_GAMMA !!
 #     endif
 
 #     ifdef COMOVING
 #        error : ERROR : COMOVING currently only supports EOS_GAMMA !!
+#     endif
+
+#     ifdef MHD
+         Aux_Error( ERROR_INFO, "MHD currently only supports EOS_GAMMA !!\n" );
 #     endif
 
       if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_ROE )
