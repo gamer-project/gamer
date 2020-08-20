@@ -143,7 +143,7 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
 // Return      :  Enpy
 //-------------------------------------------------------------------------------------------------------
 real Hydro_Con2Entropy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                        const real Emag, EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] )
+                        const real Emag, const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] )
 {
 
 // currently this function does NOT apply pressure floor when calling Hydro_Con2Pres()

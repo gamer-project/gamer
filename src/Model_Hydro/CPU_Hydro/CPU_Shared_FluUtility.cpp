@@ -15,7 +15,7 @@
 GPU_DEVICE
 static real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                             const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
-                            EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[], real *EintOut );
+                            const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[], real *EintOut );
 GPU_DEVICE
 static real Hydro_Con2Eint( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                             const bool CheckMinEint, const real MinEint, const real Emag );
@@ -159,7 +159,7 @@ GPU_DEVICE
 void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
                     const bool NormPassive, const int NNorm, const int NormIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff,
-                    EoS_DE2P_t EoS_DensEint2Pres, EoS_DP2E_t EoS_DensPres2Eint,
+                    const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint,
                     const double EoS_AuxArray[], real* const EintOut )
 {
 
@@ -247,7 +247,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_Pri2Con( const real In[], real Out[], const bool NormPassive, const int NNorm, const int NormIdx[],
-                    EoS_DP2E_t EoS_DensPres2Eint, const double EoS_AuxArray[], const real* const EintIn )
+                    const EoS_DP2E_t EoS_DensPres2Eint, const double EoS_AuxArray[], const real* const EintIn )
 {
 
    real Eint, Emag=NULL_REAL;
@@ -308,7 +308,7 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool NormPassive, const i
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres,
-                     EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] )
+                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] )
 {
 
    const bool CheckMinPres_Yes = true;
@@ -506,7 +506,7 @@ bool Hydro_CheckNegative( const real Input )
 GPU_DEVICE
 real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                      const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
-                     EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[], real *EintOut )
+                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[], real *EintOut )
 {
 
    const bool CheckMinEint_No = false;
@@ -626,7 +626,7 @@ real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, cons
 GPU_DEVICE
 real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                      const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
-                     EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] )
+                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] )
 {
 
    const real Pres = Hydro_Con2Pres( Dens, MomX, MomY, MomZ, Engy, Passive, CheckMinPres, MinPres, Emag,

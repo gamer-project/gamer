@@ -20,13 +20,13 @@ void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int 
 void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
                     const bool NormPassive, const int NNorm, const int NormIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff,
-                    EoS_DE2P_t EoS_DensEint2Pres, EoS_DP2E_t EoS_DensPres2Eint,
+                    const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint,
                     const double EoS_AuxArray[], real* const EintOut );
 void Hydro_Pri2Con( const real In[], real Out[], const bool NormPassive, const int NNorm, const int NormIdx[],
-                    EoS_DP2E_t EoS_DensPres2Eint, const double EoS_AuxArray[], const real* const EintIn );
+                    const EoS_DP2E_t EoS_DensPres2Eint, const double EoS_AuxArray[], const real* const EintIn );
 #if ( FLU_SCHEME == MHM )
 void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres,
-                     EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
+                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
 #endif
 
 #endif // #ifdef __CUDACC__ ... else ...
@@ -37,19 +37,19 @@ GPU_DEVICE
 static void Hydro_LimitSlope( const real L[], const real C[], const real R[], const LR_Limiter_t LR_Limiter,
                               const real MinMod_Coeff, const int XYZ,
                               const real LEigenVec[][NWAVE], const real REigenVec[][NWAVE], real Slope_Limiter[],
-                              EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] );
+                              const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] );
 #if (  FLU_SCHEME == CTU  ||  ( defined MHD && defined CHAR_RECONSTRUCTION )  )
 #ifdef MHD
 GPU_DEVICE
 static void   MHD_GetEigenSystem( const real CC_Var[], real EigenVal[],
                                   real LEigenVec[][NWAVE], real REigenVec[][NWAVE],
-                                  EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[],
+                                  const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[],
                                   const int XYZ );
 #else
 GPU_DEVICE
 static void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
                                   real LEigenVec[][NWAVE], real REigenVec[][NWAVE],
-                                  EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] );
+                                  const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] );
 #endif
 #endif
 #if ( FLU_SCHEME == MHM )
@@ -57,15 +57,15 @@ GPU_DEVICE
 static void Hydro_HancockPredict( real fc[][NCOMP_LR], const real dt, const real dh,
                                   const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
                                   const real MinDens, const real MinPres, const real MinEint,
-                                  EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
+                                  const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
 #endif
 #ifdef CHAR_RECONSTRUCTION
 GPU_DEVICE
 static void Hydro_Pri2Char( real InOut[], const real Dens, const real Pres, const real LEigenVec[][NWAVE], const int XYZ,
-                            EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] );
+                            const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] );
 GPU_DEVICE
 static void Hydro_Char2Pri( real InOut[], const real Dens, const real Pres, const real REigenVec[][NWAVE], const int XYZ,
-                            EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] );
+                            const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] );
 #endif
 
 
@@ -1242,7 +1242,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_Pri2Char( real InOut[], const real Dens, const real Pres, const real LEigenVec[][NWAVE], const int XYZ,
-                     EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] )
+                     const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] )
 {
 
 // check
@@ -1339,7 +1339,7 @@ void Hydro_Pri2Char( real InOut[], const real Dens, const real Pres, const real 
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_Char2Pri( real InOut[], const real Dens, const real Pres, const real REigenVec[][NWAVE], const int XYZ,
-                     EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] )
+                     const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] )
 {
 
 // check
@@ -1443,12 +1443,12 @@ GPU_DEVICE
 #ifdef MHD
 void   MHD_GetEigenSystem( const real CC_Var[], real EigenVal[],
                            real LEigenVec[][NWAVE], real REigenVec[][NWAVE],
-                           EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[],
+                           const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[],
                            const int XYZ )
 #else
 void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
                            real LEigenVec[][NWAVE], real REigenVec[][NWAVE],
-                           EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] )
+                           const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] )
 #endif
 {
 
@@ -1762,7 +1762,7 @@ GPU_DEVICE
 void Hydro_LimitSlope( const real L[], const real C[], const real R[], const LR_Limiter_t LR_Limiter,
                        const real MinMod_Coeff, const int XYZ,
                        const real LEigenVec[][NWAVE], const real REigenVec[][NWAVE], real Slope_Limiter[],
-                       EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] )
+                       const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] )
 {
 
 // check
@@ -1895,7 +1895,7 @@ GPU_DEVICE
 void Hydro_HancockPredict( real fc[][NCOMP_LR], const real dt, const real dh,
                            const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
                            const real MinDens, const real MinPres, const real MinEint,
-                           EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] )
+                           const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] )
 {
 
    const real dt_dh2 = (real)0.5*dt/dh;

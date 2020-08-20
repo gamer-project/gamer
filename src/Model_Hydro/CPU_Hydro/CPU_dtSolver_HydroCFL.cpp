@@ -59,12 +59,12 @@ __global__
 void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                               const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ],
                               const real dh, const real Safety, const real MinPres,
-                              EoS_DE2P_t EoS_DensEint2Pres_Func, EoS_DP2C_t EoS_DensPres2CSqr_Func )
+                              const EoS_DE2P_t EoS_DensEint2Pres_Func, const EoS_DP2C_t EoS_DensPres2CSqr_Func )
 #else
 void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                               const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const int NPG,
                               const real dh, const real Safety, const real MinPres,
-                              EoS_DE2P_t EoS_DensEint2Pres_Func, EoS_DP2C_t EoS_DensPres2CSqr_Func,
+                              const EoS_DE2P_t EoS_DensEint2Pres_Func, const EoS_DP2C_t EoS_DensPres2CSqr_Func,
                               const double c_EoS_AuxArray[] )
 #endif
 {

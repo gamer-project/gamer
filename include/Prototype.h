@@ -89,13 +89,13 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const bool JeansMinPres, const real JeansMinPres_Coeff );
 real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                      const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
-                     EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[], real *EintOut );
+                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[], real *EintOut );
 real Hydro_Con2Eint( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                      const bool CheckMinEint, const real MinEint, const real Emag );
 real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, const real MomZ, const real Eint, const real Emag );
 real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                      const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
-                     EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
+                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
 double Hydro_Temp2Pres( const double Dens, const double Temp, const double mu, const double m_H,
                         const bool CheckMinPres, const double MinPres );
 real Hydro_CheckMinPres( const real InPres, const real MinPres );
@@ -108,7 +108,7 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
                           const real Emag );
 #if ( DUAL_ENERGY == DE_ENPY )
 real Hydro_Con2Entropy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                        const real Emag, EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
+                        const real Emag, const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
 real Hydro_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1 );
 real Hydro_DensEntropy2Pres( const real Dens, const real Enpy, const real Gamma_m1,
                              const bool CheckMinPres, const real MinPres );
