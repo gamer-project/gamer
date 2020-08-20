@@ -17,8 +17,8 @@ static double  *Jet_SrcTemp       = NULL;    // jet temperature
 static double (*Jet_Vec)[3]       = NULL;    // jet orientation vector (x,y,z) (NOT necessary to be a unit vector)
 static double (*Jet_CenOffset)[3] = NULL;    // jet central coordinates offset
 
-static double   Jet_BgEint;                  // ambient internal energy
-static double  *Jet_SrcEint       = NULL;    // jet internal energy
+static double   Jet_BgPres;                  // ambient pressure
+static double  *Jet_SrcPres       = NULL;    // jet pressure
 static double (*Jet_Cen)[3]       = NULL;    // jet central coordinates
 static double  *Jet_WaveK         = NULL;    // jet wavenumber used in the sin() function to have smooth bidirectional jets
 static double  *Jet_MaxDis        = NULL;    // maximum distance between the cylinder-shape jet source and the jet center
@@ -108,6 +108,9 @@ void SetParameter()
 // ********************************************************************************************************************************
 // load the number of jets first
    ReadPara->Add( "Jet_NJet",          &Jet_NJet,             -1,             1,                2                 );
+   ReadPara->Read( FileName );
+   delete ReadPara;
+   ReadPara = new ReadPara_t; // for loading the remaining parameters
 
 // allocate memory for the variables whose size depends on the number of jets
    Jet_Radius     = new double [Jet_NJet];
@@ -117,7 +120,7 @@ void SetParameter()
    Jet_SrcTemp    = new double [Jet_NJet];
    Jet_Vec        = new double [Jet_NJet][3];
    Jet_CenOffset  = new double [Jet_NJet][3];
-   Jet_SrcEint    = new double [Jet_NJet];
+   Jet_SrcPres    = new double [Jet_NJet];
    Jet_Cen        = new double [Jet_NJet][3];
    Jet_WaveK      = new double [Jet_NJet];
    Jet_MaxDis     = new double [Jet_NJet];
@@ -178,13 +181,13 @@ void SetParameter()
 
 
 // (2) set the problem-specific derived parameters
-   Jet_BgEint = Jet_BgDens*Jet_BgTemp/(MOLECULAR_WEIGHT*Const_amu/UNIT_M) / ( GAMMA - (real)1.0 );
+   Jet_BgPres = Jet_BgDens*Jet_BgTemp/(MOLECULAR_WEIGHT*Const_amu/UNIT_M);
 
    for (int n=0; n<Jet_NJet; n++)
    {
       Jet_WaveK  [n] = 0.5*M_PI/Jet_HalfHeight[n];
       Jet_MaxDis [n] = sqrt( SQR(Jet_HalfHeight[n]) + SQR(Jet_Radius[n]) );
-      Jet_SrcEint[n] = Jet_SrcDens[n]*Jet_SrcTemp[n]/(MOLECULAR_WEIGHT*Const_amu/UNIT_M) / ( GAMMA - (real)1.0 );
+      Jet_SrcPres[n] = Jet_SrcDens[n]*Jet_SrcTemp[n]/(MOLECULAR_WEIGHT*Const_amu/UNIT_M);
 
       for (int d=0; d<3; d++)    Jet_Cen[n][d] = 0.5*amr->BoxSize[d] + Jet_CenOffset[n][d];
    }
@@ -264,11 +267,22 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
-   fluid[DENS] = Jet_BgDens;
-   fluid[MOMX] = fluid[DENS]*Jet_BgVel[0];
-   fluid[MOMY] = fluid[DENS]*Jet_BgVel[1];
-   fluid[MOMZ] = fluid[DENS]*Jet_BgVel[2];
-   fluid[ENGY] = Jet_BgEint + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+   double Dens, MomX, MomY, MomZ, Pres, Eint, Etot;
+
+   Dens = Jet_BgDens;
+   MomX = Dens*Jet_BgVel[0];
+   MomY = Dens*Jet_BgVel[1];
+   MomZ = Dens*Jet_BgVel[2];
+   Pres = Jet_BgPres;
+   Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray );   // assuming EoS requires no passive scalars
+   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );      // do NOT include magnetic energy here
+
+// set the output array
+   fluid[DENS] = Dens;
+   fluid[MOMX] = MomX;
+   fluid[MOMY] = MomY;
+   fluid[MOMZ] = MomZ;
+   fluid[ENGY] = Etot;
 
 } // FUNCTION : SetGridIC
 
@@ -292,7 +306,7 @@ void End_CollidingJets()
    delete [] Jet_SrcTemp;
    delete [] Jet_Vec;
    delete [] Jet_CenOffset;
-   delete [] Jet_SrcEint;
+   delete [] Jet_SrcPres;
    delete [] Jet_Cen;
    delete [] Jet_WaveK;
    delete [] Jet_MaxDis;
@@ -385,7 +399,11 @@ bool Flu_ResetByUser_CollidingJets( real fluid[], const double x, const double y
          fluid[MOMY] = MomSin*Jet_SrcVel_xyz[1];
          fluid[MOMZ] = MomSin*Jet_SrcVel_xyz[2];
 
-         fluid[ENGY] = Jet_SrcEint[n] + 0.5*( SQR(fluid[MOMX])+SQR(fluid[MOMY])+SQR(fluid[MOMZ]) ) / fluid[DENS];
+//       assuming EoS requires no passive scalars
+         double Eint = EoS_DensPres2Eint_CPUPtr( Jet_SrcDens[n], Jet_SrcPres[n], NULL, EoS_AuxArray );
+
+//       do NOT include magnetic energy here
+         fluid[ENGY] = Hydro_ConEint2Etot( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], Eint, 0.0 );
 
 //       return immediately since we do NOT allow different jet source to overlap
          return true;
