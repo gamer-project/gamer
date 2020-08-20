@@ -221,7 +221,6 @@ double                SF_CREATE_STAR_MAX_STAR_MFRAC;
 double EoS_AuxArray[EOS_NAUX_MAX];
 
 // function pointers
-void (*EoS_Init_Ptr)();
 EoS_DE2P_t EoS_DensEint2Pres_CPUPtr = NULL;
 EoS_DP2E_t EoS_DensPres2Eint_CPUPtr = NULL;
 EoS_DP2C_t EoS_DensPres2CSqr_CPUPtr = NULL;

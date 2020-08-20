@@ -239,7 +239,6 @@ extern double                SF_CREATE_STAR_MAX_STAR_MFRAC;
 // =======================================================================================================
 #if ( MODEL == HYDRO )
 extern double EoS_AuxArray[EOS_NAUX_MAX];
-extern void (*EoS_Init_Ptr)();
 extern EoS_DE2P_t EoS_DensEint2Pres_CPUPtr;
 extern EoS_DP2E_t EoS_DensPres2Eint_CPUPtr;
 extern EoS_DP2C_t EoS_DensPres2CSqr_CPUPtr;
