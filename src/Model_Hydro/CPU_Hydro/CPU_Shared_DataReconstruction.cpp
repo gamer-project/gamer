@@ -290,7 +290,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
          for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   g_PriVar[v][idx] = PriVar_1Cell[v];
 
 #        ifdef LR_EINT
-         g_PriVar[NCOMP_TOTAL_PLUS_MAG][idx] = FMAX( Eint, MinEint );   // store Eint in the last variable
+         g_PriVar[NCOMP_TOTAL_PLUS_MAG][idx] = Hydro_CheckMinEint( Eint, MinEint ); // store Eint in the last variable
 #        endif
       } // CGPU_LOOP( idx, CUBE(NIn) )
 
@@ -801,7 +801,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
          for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   g_PriVar[v][idx] = PriVar_1Cell[v];
 
 #        ifdef LR_EINT
-         g_PriVar[NCOMP_TOTAL_PLUS_MAG][idx] = FMAX( Eint, MinEint );   // store Eint in the last variable
+         g_PriVar[NCOMP_TOTAL_PLUS_MAG][idx] = Hydro_CheckMinEint( Eint, MinEint ); // store Eint in the last variable
 #        endif
       } // CGPU_LOOP( idx, CUBE(NIn) )
 

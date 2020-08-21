@@ -377,17 +377,22 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
 //                       --> Set MIN_PRES in the runtime parameter file "Input__Parameter"
 //                2. We should also support a minimum **temperature** instead of **pressure**
 //                   --> NOT supported yet
+//                3. If the input pressure is NaN, return NaN in order to trigger auto-correction such as
+//                   "OPT__1ST_FLUX_CORR" and "AUTO_REDUCE_DT"
 //
 // Parameter   :  InPres  : Input pressure to be corrected
 //                MinPres : Minimum allowed pressure
 //
-// Return      :  max( InPres, MinPres )
+// Return      :  InPres != NaN --> max( InPres, MinPres )
+//                       == NaN --> NaN
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 real Hydro_CheckMinPres( const real InPres, const real MinPres )
 {
 
-   return FMAX( InPres, MinPres );
+// call FMAX() only if InPres is not NaN
+   if ( InPres == InPres )    return FMAX( InPres, MinPres );
+   else                       return InPres;
 
 } // FUNCTION : Hydro_CheckMinPres
 
@@ -403,13 +408,16 @@ real Hydro_CheckMinPres( const real InPres, const real MinPres )
 // Parameter   :  InEint  : Input Eint to be corrected
 //                MinEint : Minimum allowed Eint
 //
-// Return      :  max( InEint, MinEint )
+// Return      :  InEint != NaN --> max( InEint, MinEint )
+//                       == NaN --> NaN
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 real Hydro_CheckMinEint( const real InEint, const real MinEint )
 {
 
-   return FMAX( InEint, MinEint );
+// call FMAX() only if InEint is not NaN
+   if ( InEint == InEint )    return FMAX( InEint, MinEint );
+   else                       return InEint;
 
 } // FUNCTION : Hydro_CheckMinEint
 

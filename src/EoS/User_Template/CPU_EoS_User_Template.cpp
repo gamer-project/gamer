@@ -23,6 +23,10 @@
 
 4. All EoS conversion functions must be thread-safe and
    not use any global variable
+
+5. When an EoS conversion function fails, it is recommended
+   to return NAN in order to trigger auto-correction such as
+   "OPT__1ST_FLUX_CORR" and "AUTO_REDUCE_DT"
 ********************************************************/
 
 
