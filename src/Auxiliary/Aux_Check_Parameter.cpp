@@ -630,10 +630,6 @@ void Aux_Check_Parameter()
 #        error : ERROR : COMOVING currently only supports EOS_GAMMA !!
 #     endif
 
-#     ifdef MHD
-         Aux_Error( ERROR_INFO, "MHD currently only supports EOS_GAMMA !!\n" );
-#     endif
-
       if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_ROE )
          Aux_Error( ERROR_INFO, "OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_ROE only supports EOS_GAMMA !!\n" );
 
