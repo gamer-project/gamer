@@ -1,6 +1,7 @@
 #include "CUFLU.h"
 #ifdef __CUDACC__
 #include "CUAPI.h"
+#include "CUFLU_Shared_FluUtility.cu"
 #endif
 
 #if ( MODEL == HYDRO )
@@ -55,7 +56,19 @@ static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, c
 #  ifdef GAMER_DEBUG
    if ( Passive  == NULL )    printf( "ERROR : Passive == NULL in %s !!\n", __FUNCTION__ );
    if ( AuxArray == NULL )    printf( "ERROR : AuxArray == NULL in %s !!\n", __FUNCTION__ );
+
+#  ifdef CHECK_NEGATIVE_IN_FLUID
+   if ( Hydro_CheckNegative(Dens) )
+      printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              Dens, __FILE__, __LINE__, __FUNCTION__ );
+
+// note that some EoS may support Eint<0
+   if ( Hydro_CheckNegative(Eint) )
+      printf( "ERROR : invalid input internal energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              Eint, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
+#  endif // GAMER_DEBUG
+
 
    real Pres = -1.0;
 
@@ -63,11 +76,12 @@ static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, c
    Pres = ...;
    */
 
+
 // check
 #  ifdef GAMER_DEBUG
-   if ( Pres <= 0.0 )
+   if ( Hydro_CheckNegative(Pres) )
    {
-      printf( "ERROR : invalid pressure (%13.7e) in %s() !!\n", Pres, __FUNCTION__ );
+      printf( "ERROR : invalid output pressure (%13.7e) in %s() !!\n", Pres, __FUNCTION__ );
       printf( "        Dens=%13.7e, Eint=%13.7e\n", Dens, Eint );
 #     if ( NCOMP_PASSIVE > 0 )
       printf( "        Passive scalars:" );
@@ -75,7 +89,8 @@ static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, c
       printf( "\n" );
 #     endif
    }
-#  endif
+#  endif // GAMER_DEBUG
+
 
    return Pres;
 
@@ -104,7 +119,18 @@ static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, c
 #  ifdef GAMER_DEBUG
    if ( Passive  == NULL )    printf( "ERROR : Passive == NULL in %s !!\n", __FUNCTION__ );
    if ( AuxArray == NULL )    printf( "ERROR : AuxArray == NULL in %s !!\n", __FUNCTION__ );
+
+#  ifdef CHECK_NEGATIVE_IN_FLUID
+   if ( Hydro_CheckNegative(Dens) )
+      printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              Dens, __FILE__, __LINE__, __FUNCTION__ );
+
+   if ( Hydro_CheckNegative(Pres) )
+      printf( "ERROR : invalid input pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              Pres, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
+#  endif // GAMER_DEBUG
+
 
    real Eint = -1.0;
 
@@ -112,11 +138,13 @@ static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, c
    Eint = ...;
    */
 
+
 // check
 #  ifdef GAMER_DEBUG
-   if ( Eint <= 0.0 )
+// note that some EoS may support Eint<0
+   if ( Hydro_CheckNegative(Eint) )
    {
-      printf( "ERROR : invalid internal energy density (%13.7e) in %s() !!\n", Eint, __FUNCTION__ );
+      printf( "ERROR : invalid output internal energy density (%13.7e) in %s() !!\n", Eint, __FUNCTION__ );
       printf( "        Dens=%13.7e, Pres=%13.7e\n", Dens, Pres );
 #     if ( NCOMP_PASSIVE > 0 )
       printf( "        Passive scalars:" );
@@ -124,7 +152,8 @@ static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, c
       printf( "\n" );
 #     endif
    }
-#  endif
+#  endif // GAMER_DEBUG
+
 
    return Eint;
 
@@ -153,7 +182,18 @@ static real EoS_DensPres2CSqr_User_Template( const real Dens, const real Pres, c
 #  ifdef GAMER_DEBUG
    if ( Passive  == NULL )    printf( "ERROR : Passive == NULL in %s !!\n", __FUNCTION__ );
    if ( AuxArray == NULL )    printf( "ERROR : AuxArray == NULL in %s !!\n", __FUNCTION__ );
+
+#  ifdef CHECK_NEGATIVE_IN_FLUID
+   if ( Hydro_CheckNegative(Dens) )
+      printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              Dens, __FILE__, __LINE__, __FUNCTION__ );
+
+   if ( Hydro_CheckNegative(Pres) )
+      printf( "ERROR : invalid input pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              Pres, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
+#  endif // GAMER_DEBUG
+
 
    real Cs2 = -1.0;
 
@@ -161,11 +201,12 @@ static real EoS_DensPres2CSqr_User_Template( const real Dens, const real Pres, c
    Cs2 = ...;
    */
 
+
 // check
 #  ifdef GAMER_DEBUG
-   if ( Cs2 <= 0.0 )
+   if ( Hydro_CheckNegative(Cs2) )
    {
-      printf( "ERROR : invalid sound speed squared (%13.7e) in %s() !!\n", Cs2, __FUNCTION__ );
+      printf( "ERROR : invalid output sound speed squared (%13.7e) in %s() !!\n", Cs2, __FUNCTION__ );
       printf( "        Dens=%13.7e, Pres=%13.7e\n", Dens, Pres );
 #     if ( NCOMP_PASSIVE > 0 )
       printf( "        Passive scalars:" );
@@ -173,7 +214,8 @@ static real EoS_DensPres2CSqr_User_Template( const real Dens, const real Pres, c
       printf( "\n" );
 #     endif
    }
-#  endif
+#  endif // GAMER_DEBUG
+
 
    return Cs2;
 

@@ -716,6 +716,10 @@ endif
 # -------------------------------------------------------------------------------
 INCLUDE := -I../include
 
+ifeq "$(filter -DMODEL=HYDRO, $(SIMU_OPTION))" "-DMODEL=HYDRO"
+INCLUDE += -IModel_Hydro/GPU_Hydro
+endif
+
 ifeq "$(filter -DSERIAL, $(SIMU_OPTION))" ""
 INCLUDE += -I$(MPI_PATH)/include
 endif

@@ -1,6 +1,7 @@
 #include "CUFLU.h"
 #ifdef __CUDACC__
 #include "CUAPI.h"
+#include "CUFLU_Shared_FluUtility.cu"
 #endif
 
 #if ( MODEL == HYDRO )
@@ -48,6 +49,22 @@ GPU_DEVICE_NOINLINE
 static real EoS_DensEint2Pres_Gamma( const real Dens, const real Eint, const real Passive[], const double AuxArray[] )
 {
 
+// check
+#  ifdef GAMER_DEBUG
+   if ( AuxArray == NULL )    printf( "ERROR : AuxArray == NULL in %s !!\n", __FUNCTION__ );
+
+#  ifdef CHECK_NEGATIVE_IN_FLUID
+   if ( Hydro_CheckNegative(Dens) )
+      printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              Dens, __FILE__, __LINE__, __FUNCTION__ );
+
+   if ( Hydro_CheckNegative(Eint) )
+      printf( "ERROR : invalid input internal energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              Eint, __FILE__, __LINE__, __FUNCTION__ );
+#  endif
+#  endif // GAMER_DEBUG
+
+
    const real Gamma_m1 = (real)AuxArray[1];
    real Pres;
 
@@ -76,6 +93,22 @@ GPU_DEVICE_NOINLINE
 static real EoS_DensPres2Eint_Gamma( const real Dens, const real Pres, const real Passive[], const double AuxArray[] )
 {
 
+// check
+#  ifdef GAMER_DEBUG
+   if ( AuxArray == NULL )    printf( "ERROR : AuxArray == NULL in %s !!\n", __FUNCTION__ );
+
+#  ifdef CHECK_NEGATIVE_IN_FLUID
+   if ( Hydro_CheckNegative(Dens) )
+      printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              Dens, __FILE__, __LINE__, __FUNCTION__ );
+
+   if ( Hydro_CheckNegative(Pres) )
+      printf( "ERROR : invalid input pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              Pres, __FILE__, __LINE__, __FUNCTION__ );
+#  endif
+#  endif // GAMER_DEBUG
+
+
    const real _Gamma_m1 = (real)AuxArray[2];
    real Eint;
 
@@ -103,6 +136,22 @@ static real EoS_DensPres2Eint_Gamma( const real Dens, const real Pres, const rea
 GPU_DEVICE_NOINLINE
 static real EoS_DensPres2CSqr_Gamma( const real Dens, const real Pres, const real Passive[], const double AuxArray[] )
 {
+
+// check
+#  ifdef GAMER_DEBUG
+   if ( AuxArray == NULL )    printf( "ERROR : AuxArray == NULL in %s !!\n", __FUNCTION__ );
+
+#  ifdef CHECK_NEGATIVE_IN_FLUID
+   if ( Hydro_CheckNegative(Dens) )
+      printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              Dens, __FILE__, __LINE__, __FUNCTION__ );
+
+   if ( Hydro_CheckNegative(Pres) )
+      printf( "ERROR : invalid input pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              Pres, __FILE__, __LINE__, __FUNCTION__ );
+#  endif
+#  endif // GAMER_DEBUG
+
 
    const real Gamma = (real)AuxArray[0];
    real Cs2;
