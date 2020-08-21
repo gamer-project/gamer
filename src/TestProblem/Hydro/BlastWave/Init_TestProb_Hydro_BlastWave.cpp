@@ -134,15 +134,19 @@ void SetParameter()
 // (4) make a note
    if ( MPI_Rank == 0 )
    {
+//    assuming EOS_GAMMA (must not invoke any EoS routine here since it has not been initialized)
       const double ExpVol  = 4.0*M_PI/3.0*CUBE(Blast_Radius);
-      const double ExpEngy = EoS_DensPres2Eint_CPUPtr( Blast_Dens_Bg, Blast_Pres_Exp, NULL, EoS_AuxArray )*ExpVol;
+      const double ExpEngy = Blast_Pres_Exp/(GAMMA-1.0)*ExpVol;
+#     if ( EOS != EOS_GAMMA )
+      Aux_Message( stderr, "WARNING : the total explosion energy below assumes EOS_GAMMA !!\n" );
+#     endif
 
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "  test problem ID           = %d\n",     TESTPROB_ID );
       Aux_Message( stdout, "  background mass density   = %13.7e\n", Blast_Dens_Bg );
       Aux_Message( stdout, "  background pressure       = %13.7e\n", Blast_Pres_Bg );
       Aux_Message( stdout, "  explosion pressure        = %13.7e\n", Blast_Pres_Exp );
-      Aux_Message( stdout, "  total explosion energy    = %13.7e\n", ExpEngy );
+      Aux_Message( stdout, "  total explosion energy    = %13.7e (assuming constant-gamma EoS)\n", ExpEngy );
       Aux_Message( stdout, "  explosion radius          = %13.7e\n", Blast_Radius );
       Aux_Message( stdout, "  explosion center          = (%13.7e, %13.7e, %13.7e)\n", Blast_Center[0], Blast_Center[1],
                                                                                        Blast_Center[2] );
