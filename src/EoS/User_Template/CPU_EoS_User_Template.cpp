@@ -19,6 +19,9 @@
    I.   Implement EoS conversion functions
    II.  Set an EoS auxiliary array
    III. Set EoS initialization functions
+
+4. All EoS conversion functions must be thread-safe and
+   not use any global variable
 ********************************************************/
 
 
