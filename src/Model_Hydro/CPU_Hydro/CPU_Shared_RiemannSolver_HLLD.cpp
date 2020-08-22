@@ -121,7 +121,8 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
    real Speed[5] = { ZERO, ZERO, ZERO, ZERO, ZERO };
    real Con_Lst[NCOMP_TOTAL_PLUS_MAG], Con_Ldst[NCOMP_TOTAL_PLUS_MAG];
    real Con_Rdst[NCOMP_TOTAL_PLUS_MAG], Con_Rst[NCOMP_TOTAL_PLUS_MAG];
-   real Pri_Lst[NCOMP_TOTAL_PLUS_MAG], Pri_Rst[NCOMP_TOTAL_PLUS_MAG];
+   real _Rho_Lst, Vy_Lst, Vz_Lst;
+   real _Rho_Rst, Vy_Rst, Vz_Rst;
    real Flux_L[NCOMP_TOTAL_PLUS_MAG], Flux_R[NCOMP_TOTAL_PLUS_MAG];
 
    _RhoL       = ONE/Con_L[0];
@@ -282,9 +283,9 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
    VBdot_Lst      = ( Con_Lst[1]*Con_Lst[IdxBx] + Con_Lst[2]*Con_Lst[IdxBy] + Con_Lst[3]*Con_Lst[IdxBz] ) / Con_Lst[0];
    Con_Lst[    4] = (  Sd_L*Con_L[4] - PT_L*Pri_L[1] + PT_st*Speed[2] +
                        Bx*( Pri_L[1]*Pri_L[IdxBx] + Pri_L[2]*Pri_L[IdxBy] + Pri_L[3]*Pri_L[IdxBz] - VBdot_Lst )  ) / Sdm_L;
-
-   Hydro_Con2Pri( Con_Lst, Pri_Lst, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
-                  EoS_DensEint2Pres, NULL, EoS_AuxArray, NULL );
+   _Rho_Lst       = (real)1.0/Con_Lst[0];
+   Vy_Lst         = _Rho_Lst*Con_Lst[2];
+   Vz_Lst         = _Rho_Lst*Con_Lst[3];
 
    Con_Rst[    1] = Con_Rst[0]*Speed[2];
    Con_Rst[IdxBx] = Bx;
@@ -325,9 +326,9 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
    VBdot_Rst  = ( Con_Rst[1]*Con_Rst[IdxBx] + Con_Rst[2]*Con_Rst[IdxBy] + Con_Rst[3]*Con_Rst[IdxBz] ) / Con_Rst[0];
    Con_Rst[4] = (  Sd_R*Con_R[4] - PT_R*Pri_R[1] + PT_st*Speed[2] +
                    Bx*( Pri_R[1]*Pri_R[IdxBx] + Pri_R[2]*Pri_R[IdxBy] + Pri_R[3]*Pri_R[IdxBz] - VBdot_Rst )  ) / Sdm_R;
-
-   Hydro_Con2Pri( Con_Rst, Pri_Rst, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
-                  EoS_DensEint2Pres, NULL, EoS_AuxArray, NULL );
+   _Rho_Rst       = (real)1.0/Con_Rst[0];
+   Vy_Rst         = _Rho_Rst*Con_Rst[2];
+   Vz_Rst         = _Rho_Rst*Con_Rst[3];
 
    if ( crit_Bx < MaxErr2 )
    {
@@ -349,21 +350,21 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
      Con_Ldst[1] = Con_Lst[1];
      Con_Rdst[1] = Con_Rst[1];
 
-     tmp_1 = invsumd*(  sqrt_RhoLst*Pri_Lst[2] + sqrt_RhoRst*Pri_Rst[2] + Bxsig*( Pri_Rst[IdxBy] - Pri_Lst[IdxBy] )  );
+     tmp_1 = invsumd*(  sqrt_RhoLst*Vy_Lst + sqrt_RhoRst*Vy_Rst + Bxsig*( Con_Rst[IdxBy] - Con_Lst[IdxBy] )  );
      Con_Ldst[2] = Con_Ldst[0]*tmp_1;
      Con_Rdst[2] = Con_Rdst[0]*tmp_1;
 
-     tmp_1 = invsumd*(  sqrt_RhoLst*Pri_Lst[3] + sqrt_RhoRst*Pri_Rst[3] + Bxsig*( Pri_Rst[IdxBz] - Pri_Lst[IdxBz] )  );
+     tmp_1 = invsumd*(  sqrt_RhoLst*Vz_Lst + sqrt_RhoRst*Vz_Rst + Bxsig*( Con_Rst[IdxBz] - Con_Lst[IdxBz] )  );
      Con_Ldst[3] = Con_Ldst[0]*tmp_1;
      Con_Rdst[3] = Con_Rdst[0]*tmp_1;
 
-     tmp_1 = invsumd*(  sqrt_RhoLst*Pri_Rst[IdxBy] + sqrt_RhoRst*Pri_Lst[IdxBy] +
-                        Bxsig*sqrt_RhoLst*sqrt_RhoRst*( Pri_Rst[2] - Pri_Lst[2] )  );
+     tmp_1 = invsumd*(  sqrt_RhoLst*Con_Rst[IdxBy] + sqrt_RhoRst*Con_Lst[IdxBy] +
+                        Bxsig*sqrt_RhoLst*sqrt_RhoRst*( Vy_Rst - Vy_Lst )  );
      Con_Ldst[IdxBy] = tmp_1;
      Con_Rdst[IdxBy] = tmp_1;
 
-     tmp_1 = invsumd*(  sqrt_RhoLst*Pri_Rst[IdxBz] + sqrt_RhoRst*Pri_Lst[IdxBz] +
-                        Bxsig*sqrt_RhoLst*sqrt_RhoRst*( Pri_Rst[3] - Pri_Lst[3] )  );
+     tmp_1 = invsumd*(  sqrt_RhoLst*Con_Rst[IdxBz] + sqrt_RhoRst*Con_Lst[IdxBz] +
+                        Bxsig*sqrt_RhoLst*sqrt_RhoRst*( Vz_Rst - Vz_Lst )  );
      Con_Ldst[IdxBz] = tmp_1;
      Con_Rdst[IdxBz] = tmp_1;
 
