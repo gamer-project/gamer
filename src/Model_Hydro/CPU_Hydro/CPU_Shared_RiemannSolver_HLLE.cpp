@@ -150,15 +150,14 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
 
    if ( Cat2_L == ZERO )
    {
-      if      ( Cax2_L == a2_L )    Cf2_L = a2_L;
-      else if ( Cax2_L >  a2_L )    Cf2_L = Cax2_L;
-      else                          Cf2_L = a2_L;
+      if ( Cax2_L >= a2_L )   Cf2_L = Cax2_L;
+      else                    Cf2_L = a2_L;
    }
 
    else
    {
-      if ( Cax2_L == ZERO )         Cf2_L = a2_L + Cat2_L;
-      else                          Cf2_L = _TWO*( Ca2_plus_a2_L + Cf2_min_Cs2_L );
+      if ( Cax2_L == ZERO )   Cf2_L = a2_L + Cat2_L;
+      else                    Cf2_L = _TWO*( Ca2_plus_a2_L + Cf2_min_Cs2_L );
    } // if ( Cat2_L == ZERO ) ... else ...
 
    Cf_L = SQRT( Cf2_L );
@@ -172,15 +171,14 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
 
    if ( Cat2_R == ZERO )
    {
-      if      ( Cax2_R == a2_R )    Cf2_R = a2_R;
-      else if ( Cax2_R >  a2_R )    Cf2_R = Cax2_R;
-      else                          Cf2_R = a2_R;
+      if ( Cax2_R >= a2_R )   Cf2_R = Cax2_R;
+      else                    Cf2_R = a2_R;
    }
 
    else
    {
-      if      ( Cax2_R == ZERO )    Cf2_R = a2_R + Cat2_R;
-      else                          Cf2_R = _TWO*( Ca2_plus_a2_R + Cf2_min_Cs2_R );
+      if ( Cax2_R == ZERO )   Cf2_R = a2_R + Cat2_R;
+      else                    Cf2_R = _TWO*( Ca2_plus_a2_R + Cf2_min_Cs2_R );
    } // if ( Cat2_R == ZERO ) ... else ...
 
    Cf_R = SQRT( Cf2_R );

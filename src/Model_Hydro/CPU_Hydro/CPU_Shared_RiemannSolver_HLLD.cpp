@@ -147,15 +147,14 @@ const real Gamma = EoS_AuxArray[0];
 
    if ( Cat2 == ZERO )
    {
-      if      ( Cax2 == a2 )  Cf2 = a2;
-      else if ( Cax2 >  a2 )  Cf2 = Cax2;
-      else                    Cf2 = a2;
+      if ( Cax2 >= a2 )    Cf2 = Cax2;
+      else                 Cf2 = a2;
    }
 
    else
    {
-      if ( Cax2 == ZERO )     Cf2 = a2 + Cat2;
-      else                    Cf2 = _TWO*( Ca2_plus_a2 + Cf2_min_Cs2 );
+      if ( Cax2 == ZERO )  Cf2 = a2 + Cat2;
+      else                 Cf2 = _TWO*( Ca2_plus_a2 + Cf2_min_Cs2 );
    }
 
    Cf_L = SQRT( Cf2 );
@@ -169,15 +168,14 @@ const real Gamma = EoS_AuxArray[0];
 
    if ( Cat2 == ZERO )
    {
-      if      ( Cax2 == a2 )  Cf2 = a2;
-      else if ( Cax2 >  a2 )  Cf2 = Cax2;
-      else                    Cf2 = a2;
+      if ( Cax2 >= a2 )    Cf2 = Cax2;
+      else                 Cf2 = a2;
    }
 
    else
    {
-      if ( Cax2 == ZERO )     Cf2 = a2 + Cat2;
-      else                    Cf2 = _TWO*( Ca2_plus_a2 + Cf2_min_Cs2 );
+      if ( Cax2 == ZERO )  Cf2 = a2 + Cat2;
+      else                 Cf2 = _TWO*( Ca2_plus_a2 + Cf2_min_Cs2 );
    }
 
    Cf_R = SQRT( Cf2 );
