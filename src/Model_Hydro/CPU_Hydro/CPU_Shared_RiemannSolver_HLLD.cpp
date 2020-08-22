@@ -87,17 +87,20 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
    Hydro_Rotate3D( Con_L, XYZ, true, IdxBx );
    Hydro_Rotate3D( Con_R, XYZ, true, IdxBx );
 
-   const real BxL = Con_L[IdxBx];
-   const real ByL = Con_L[IdxBy];
-   const real BzL = Con_L[IdxBz];
-   const real ByR = Con_R[IdxBy];
-   const real BzR = Con_R[IdxBz];
+   const real Bx   = Con_L[IdxBx];
+   const real ByL  = Con_L[IdxBy];
+   const real BzL  = Con_L[IdxBz];
+   const real ByR  = Con_R[IdxBy];
+   const real BzR  = Con_R[IdxBz];
+
+   const real _Bx  = ONE / Bx;
+   const real Bx2  = SQR( Bx );
+   const real _Bx2 = SQR( _Bx );
 
 #  ifdef GAMER_DEBUG
-   const real BxR = Con_R[IdxBx];
-   if ( BxL != BxR )
+   if ( Con_L[IdxBx] != Con_R[IdxBx] )
       printf( "ERROR : BxL (%24.17e) != BxR (%24.17e) for XYZ %d at file <%s>, line <%d>, function <%s>!!\n",
-              BxL, BxR, XYZ, __FILE__, __LINE__, __FUNCTION__ );
+              Con_L[IdxBx], Con_R[IdxBx], XYZ, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
    Hydro_Con2Pri( Con_L, Pri_L, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
@@ -109,7 +112,7 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
    real _RhoL, _RhoR;
    real sqrt_RhoLst, sqrt_RhoRst;
    real PT_L, PT_R, PT_st;
-   real Bx, _Bx, Bx2, _Bx2, BtL2, BtR2, B2L_d2, B2R_d2;
+   real BtL2, BtR2, B2L_d2, B2R_d2;
    real a2 , Cf2 ,Cax2, Cat2, Ca2_plus_a2, Ca2_min_a2, Cf2_min_Cs2;
    real Cf_L, Cf_R;
    real Sd_L, Sd_R, Sdm_L, Sdm_R, SdL_SdmL, SdR_SdmR;
@@ -123,10 +126,6 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 
    _RhoL       = ONE/Con_L[0];
    _RhoR       = ONE/Con_R[0];
-   Bx          = BxL;
-   _Bx         = ONE/Bx;
-   Bx2         = SQR( Bx );
-   _Bx2        = ONE/Bx2;
    BtL2        = SQR( ByL ) + SQR( BzL );
    BtR2        = SQR( ByR ) + SQR( BzR );
    B2L_d2      = _TWO*( Bx2 + BtL2 );
