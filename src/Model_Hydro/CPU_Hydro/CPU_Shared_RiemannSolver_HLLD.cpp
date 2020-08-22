@@ -63,10 +63,6 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 #  endif
 
 
-//#### TO BE REMOVED
-const real Gamma = EoS_AuxArray[0];
-
-
    const real MaxErr2         = SQR(MAX_ERROR);
    const real ZERO            = (real)0.0;
    const real ONE             = (real)1.0;
@@ -138,7 +134,7 @@ const real Gamma = EoS_AuxArray[0];
    PT_L        = Pri_L[4] + B2L_d2;
    PT_R        = Pri_R[4] + B2R_d2;
 
-   a2          = Gamma*Pri_L[4]*_RhoL;
+   a2          = EoS_DensPres2CSqr( Con_L[0], Pri_L[4], Con_L+NCOMP_FLUID, EoS_AuxArray );
    Cax2        = Bx2*_RhoL;
    Cat2        = BtL2*_RhoL;
    Ca2_plus_a2 = Cat2 + Cax2 + a2;
@@ -159,7 +155,7 @@ const real Gamma = EoS_AuxArray[0];
 
    Cf_L = SQRT( Cf2 );
 
-   a2          = Gamma*Pri_R[4]*_RhoR;
+   a2          = EoS_DensPres2CSqr( Con_R[0], Pri_R[4], Con_R+NCOMP_FLUID, EoS_AuxArray );
    Cax2        = Bx2*_RhoR;
    Cat2        = BtR2*_RhoR;
    Ca2_plus_a2 = Cat2 + Cax2 + a2;
