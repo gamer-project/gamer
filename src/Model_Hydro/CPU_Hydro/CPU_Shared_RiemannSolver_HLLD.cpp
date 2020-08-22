@@ -32,15 +32,18 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_RiemannSolver_HLLD
-// Description :  Approximate Riemann solver of Harten, Lax, and van Leer.
-//                The wave speed is estimated by the same formula in the HLLE solver
+// Description :  Approximate Riemann solver of Harten, Lax, and van Leer extended to support MHD
 //
 // Note        :  1. Input data should be conserved variables
 //                2. Ref : (a) Riemann Solvers and Numerical Methods for Fluid Dynamics - A Practical Introduction
 //                             ~ by Eleuterio F. Toro
 //                         (b) Stone et al., ApJS, 178, 137 (2008)
 //                         (c) Batten et al., SIAM J. Sci. Comput., 18, 1553 (1997)
-//                3. This function is shared by MHM, MHM_RP, and CTU schemes
+//                         (d) Miyoshi & Kusano, JCP, 208, 315 (2005)
+//                         (e) Davis, SIAM J. Sci. Statist. Comput. 9, 445 (1988)
+//                3. Wave-speed estimator is set by HLLD_WAVESPEED in CUFLU.h
+//                4. Support general EoS
+//                5. This function is shared by MHM, MHM_RP, and CTU schemes
 //
 // Parameter   :  XYZ               : Target spatial direction : (0/1/2) --> (x/y/z)
 //                Flux_Out          : Array to store the output flux
@@ -102,16 +105,13 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
    Hydro_Con2Pri( Con_R, Pri_R, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
                   EoS_DensEint2Pres, NULL, EoS_AuxArray, NULL );
 
-   const real Vx_min = FMIN( Pri_L[1] , Pri_R[1] );
-   const real Vx_max = FMAX( Pri_L[1] , Pri_R[1] );
-
    real tmp_1, tmp_2, crit, crit_Bx;
    real _RhoL, _RhoR;
    real sqrt_RhoLst, sqrt_RhoRst;
    real PT_L, PT_R, PT_st;
    real Bx, _Bx, Bx2, _Bx2, BtL2, BtR2, B2L_d2, B2R_d2;
    real a2 , Cf2 ,Cax2, Cat2, Ca2_plus_a2, Ca2_min_a2, Cf2_min_Cs2;
-   real Cf_L, Cf_R, Cf_max;
+   real Cf_L, Cf_R;
    real Sd_L, Sd_R, Sdm_L, Sdm_R, SdL_SdmL, SdR_SdmR;
    real VBdot_Lst, VBdot_Rst;
 
@@ -176,9 +176,15 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 
    Cf_R = SQRT( Cf2 );
 
-   Cf_max   = FMAX( Cf_L , Cf_R );
-   Speed[0] = Vx_min - Cf_max;
-   Speed[4] = Vx_max + Cf_max;
+
+// estimate the maximum wave-speed using the min/max left and right eigenvalues
+#  if ( HLLD_WAVESPEED == HLL_WAVESPEED_DAVIS )
+   Speed[0] = FMIN( Pri_L[1]-Cf_L, Pri_R[1]-Cf_R );
+   Speed[4] = FMAX( Pri_L[1]+Cf_L, Pri_R[1]+Cf_R );
+#  else
+#  error : ERROR : unsupported HLLD_WAVESPEED !!
+#  endif
+
 
    Hydro_Con2Flux( 0, Flux_L, Con_L, MinPres, EoS_DensEint2Pres, EoS_AuxArray );
    Hydro_Con2Flux( 0, Flux_R, Con_R, MinPres, EoS_DensEint2Pres, EoS_AuxArray );
