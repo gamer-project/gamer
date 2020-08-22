@@ -27,7 +27,7 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_RiemannSolver_HLLC
-// Description :  Approximate Riemann solver of Harten, Lax, and van Leer.
+// Description :  Approximate Riemann solver of Harten, Lax, and van Leer extended to include the contact wave
 //
 // Note        :  1. Input data should be conserved variables
 //                2. Ref : a. Riemann Solvers and Numerical Methods for Fluid Dynamics - A Practical Introduction

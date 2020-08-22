@@ -27,8 +27,7 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_RiemannSolver_HLLE
-// Description :  Approximate Riemann solver of Harten, Lax, and van Leer using the
-//                wave-speed estimator of Einfeldt et al. (1991)
+// Description :  Approximate Riemann solver of Harten, Lax, and van Leer
 //
 // Note        :  1. Input data should be conserved variables
 //                2. Ref : (a) Riemann Solvers and Numerical Methods for Fluid Dynamics - A Practical Introduction
