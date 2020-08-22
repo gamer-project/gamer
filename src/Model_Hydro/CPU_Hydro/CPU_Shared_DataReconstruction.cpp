@@ -26,7 +26,8 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool NormPassive, const i
                     const EoS_DP2E_t EoS_DensPres2Eint, const double EoS_AuxArray[], const real* const EintIn );
 #if ( FLU_SCHEME == MHM )
 void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres,
-                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
+                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[],
+                     const real* const PresIn );
 #endif
 
 #endif // #ifdef __CUDACC__ ... else ...
@@ -1905,7 +1906,7 @@ void Hydro_HancockPredict( real fc[][NCOMP_LR], const real dt, const real dh,
 
 // calculate flux
    for (int f=0; f<6; f++)
-      Hydro_Con2Flux( f/2, Flux[f], fc[f], MinPres, EoS_DensEint2Pres, EoS_AuxArray );
+      Hydro_Con2Flux( f/2, Flux[f], fc[f], MinPres, EoS_DensEint2Pres, EoS_AuxArray, NULL );
 
 // update the face-centered variables
    for (int v=0; v<NCOMP_TOTAL; v++)

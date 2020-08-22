@@ -296,6 +296,9 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool NormPassive, const i
 //
 // Note        :  1. Flux[] and In[] may point to the same array
 //                2. Flux[] and In[] should have the size of NCOMP_TOTAL_PLUS_MAG
+//                3. By default, it computes pressure using the input EoS routine
+//                   --> But one can also specify pressure directly through *PresIn*,
+//                       by which no EoS conversion is required
 //
 // Parameter   :  XYZ               : Target spatial direction : (0/1/2) --> (x/y/z)
 //                Flux              : Array to store the output fluxes
@@ -303,12 +306,15 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool NormPassive, const i
 //                MinPres           : Minimum allowed pressure
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
 //                EoS_AuxArray      : Auxiliary array for EoS_DensEint2Pres()
+//                PresIn            : Pointer storing the input pressure (see the note above)
+//                                    --> Do nothing if it is NULL
 //
 // Return      :  Flux[]
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres,
-                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] )
+                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[],
+                     const real* const PresIn )
 {
 
    const bool CheckMinPres_Yes = true;
@@ -330,8 +336,10 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
 #  else
    const real Emag = NULL_REAL;
 #  endif
-   const real Pres = Hydro_Con2Pres( InRot[0], InRot[1], InRot[2], InRot[3], InRot[4], In+NCOMP_FLUID,
-                                     CheckMinPres_Yes, MinPres, Emag, EoS_DensEint2Pres, EoS_AuxArray, NULL );
+   const real Pres = ( PresIn == NULL ) ? Hydro_Con2Pres( InRot[0], InRot[1], InRot[2], InRot[3], InRot[4], In+NCOMP_FLUID,
+                                                          CheckMinPres_Yes, MinPres, Emag,
+                                                          EoS_DensEint2Pres, EoS_AuxArray, NULL )
+                                        : *PresIn;
    const real _Rho = (real)1.0 / InRot[0];
    const real Vx   = _Rho*InRot[1];
 

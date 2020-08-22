@@ -28,7 +28,8 @@
 
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
 void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres,
-                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
+                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[],
+                     const real* const PresIn );
 #if   ( CHECK_INTERMEDIATE == EXACT )
 void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                 const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
@@ -98,23 +99,31 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    Hydro_Rotate3D( L, XYZ, true, MAG_OFFSET );
    Hydro_Rotate3D( R, XYZ, true, MAG_OFFSET );
 
+// longitudinal B field in the left and right states should be the same
+#  ifdef GAMER_DEBUG
+   if ( L[MAG_OFFSET] != R[MAG_OFFSET] )
+      printf( "ERROR : BxL (%24.17e) != BxR (%24.17e) for XYZ %d at file <%s>, line <%d>, function <%s>!!\n",
+              L[MAG_OFFSET], R[MAG_OFFSET], XYZ, __FILE__, __LINE__, __FUNCTION__ );
+#  endif
+
 
 // 2. evaluate the average values
-   const real ZERO     = (real)0.0;
-   const real ONE      = (real)1.0;
-   const real _TWO     = (real)0.5;
-   const real Gamma    = EoS_AuxArray[0];    // only support constant-gamma EoS (i.e., EOS_GAMMA)
-   const real Gamma_m1 = EoS_AuxArray[1];
+   const real ZERO             = (real)0.0;
+   const real ONE              = (real)1.0;
+   const real _TWO             = (real)0.5;
+   const real Gamma            = EoS_AuxArray[0];    // only support constant-gamma EoS (i.e., EOS_GAMMA)
+   const real Gamma_m1         = EoS_AuxArray[1];
+   const bool CheckMinPres_Yes = true;
 #  ifdef MHD
-   const real TWO      = (real)2.0;
-   const real Gamma_m2 = Gamma - TWO;
+   const real TWO              = (real)2.0;
+   const real Gamma_m2         = Gamma - TWO;
 #  endif
 
    real Rho, _Rho, _RhoL, _RhoR, RhoL_sqrt, RhoR_sqrt, _RhoL_sqrt, _RhoR_sqrt, _RhoLR_sqrt_sum;
-   real HL, HR, u, v, w, V2, H, a, a2, GammaP_Rho;
+   real PL, PR, HL, HR, u, v, w, V2, H, a, a2, GammaP_Rho, EmagL=NULL_REAL, EmagR=NULL_REAL;
 #  ifdef MHD
    real Rho_sqrt, _Rho_sqrt;                    // Roe-average density
-   real BxL, ByL, BzL, BxR, ByR, BzR, BL2, BR2; // magnetic field from left and right states
+   real ByL, BzL, ByR, BzR;                     // magnetic field from left and right states
    real Bx, By, Bz, B2, Bn2, Bn, B2_Rho;        // Roe-average magnetic field
    real Cax, Cax2, Cat2, Cs, Cs2, Cf, Cf2;      // Alfven, slow, and fast waves
    real alpha_f, alpha_s, beta_y, beta_z;       // Eqs. (A16) and (A17) in ref-b
@@ -125,29 +134,28 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    real beta_n_star2, beta_y_star, beta_z_star; // Eq. (B28) in ref-b
 #  endif
 
-   _RhoL = ONE/L[0];
-   _RhoR = ONE/R[0];
-   HL    = (  L[4] + Gamma_m1*( L[4] - _TWO*( SQR(L[1]) + SQR(L[2]) + SQR(L[3]) )*_RhoL )  )*_RhoL;
-   HR    = (  R[4] + Gamma_m1*( R[4] - _TWO*( SQR(R[1]) + SQR(R[2]) + SQR(R[3]) )*_RhoR )  )*_RhoR;
+   _RhoL = ONE / L[0];
+   _RhoR = ONE / R[0];
 #  ifdef MHD
-   BxL   = L[ MAG_OFFSET + 0 ];
+   Bx    = L[ MAG_OFFSET + 0 ];  // assuming Bx=BxL=BxR
    ByL   = L[ MAG_OFFSET + 1 ];
    BzL   = L[ MAG_OFFSET + 2 ];
-   BxR   = R[ MAG_OFFSET + 0 ];
    ByR   = R[ MAG_OFFSET + 1 ];
    BzR   = R[ MAG_OFFSET + 2 ];
-   BL2   = SQR( BxL ) + SQR( ByL ) + SQR( BzL );
-   BR2   = SQR( BxR ) + SQR( ByR ) + SQR( BzR );
-   HL   -= _TWO*Gamma_m2*BL2*_RhoL;    // E = 0.5*rho*v^2 + Pstar/(gamma-1) + (gamma-2)/(gamma-1)*0.5*B^2
-   HR   -= _TWO*Gamma_m2*BR2*_RhoR;
-
-// longitudinal B field in the left and right states should be the same
-#  ifdef GAMER_DEBUG
-   if ( BxL != BxR )
-      printf( "ERROR : BxL (%24.17e) != BxR (%24.17e) for XYZ %d at file <%s>, line <%d>, function <%s>!!\n",
-              BxL, BxR, XYZ, __FILE__, __LINE__, __FUNCTION__ );
+   EmagL = _TWO*( SQR(Bx) + SQR(ByL) + SQR(BzL) );
+   EmagR = _TWO*( SQR(Bx) + SQR(ByR) + SQR(BzR) );
 #  endif
-#  endif // #ifdef MHD
+   PL    = Hydro_Con2Pres( L[0], L[1], L[2], L[3], L[4], L+NCOMP_FLUID, CheckMinPres_Yes, MinPres, EmagL,
+                           EoS_DensEint2Pres, EoS_AuxArray, NULL );
+   PR    = Hydro_Con2Pres( R[0], R[1], R[2], R[3], R[4], R+NCOMP_FLUID, CheckMinPres_Yes, MinPres, EmagR,
+                           EoS_DensEint2Pres, EoS_AuxArray, NULL );
+#  ifdef MHD
+   HL    = _RhoL*( L[4] + PL + EmagL );
+   HR    = _RhoR*( R[4] + PR + EmagR );
+#  else
+   HL    = _RhoL*( L[4] + PL );
+   HR    = _RhoR*( R[4] + PR );
+#  endif
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( Hydro_CheckNegative(L[0]) )
@@ -176,7 +184,6 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
 #  ifdef MHD
    Rho_sqrt  = SQRT( Rho );
    _Rho_sqrt = ONE/Rho_sqrt;
-   Bx        = BxL;
    By        = _RhoLR_sqrt_sum*( RhoL_sqrt*ByR + RhoR_sqrt*ByL );
    Bz        = _RhoLR_sqrt_sum*( RhoL_sqrt*BzR + RhoR_sqrt*BzL );
    Bn2       = SQR( By ) + SQR( Bz );
@@ -325,8 +332,8 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
 // 4. evaluate the left and right fluxes
    real Flux_L[NCOMP_TOTAL_PLUS_MAG], Flux_R[NCOMP_TOTAL_PLUS_MAG];
 
-   Hydro_Con2Flux( 0, Flux_L, L, MinPres, EoS_DensEint2Pres, EoS_AuxArray );
-   Hydro_Con2Flux( 0, Flux_R, R, MinPres, EoS_DensEint2Pres, EoS_AuxArray );
+   Hydro_Con2Flux( 0, Flux_L, L, MinPres, NULL, NULL, &PL );
+   Hydro_Con2Flux( 0, Flux_R, R, MinPres, NULL, NULL, &PR );
 
 // 5. return the upwind fluxes if flow is supersonic
    if ( EigenVal[0] >= ZERO )

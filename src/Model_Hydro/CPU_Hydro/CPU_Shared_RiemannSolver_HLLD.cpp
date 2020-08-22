@@ -18,7 +18,8 @@
 
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
 void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres,
-                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
+                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[],
+                     const real* const PresIn );
 void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
                     const bool NormPassive, const int NNorm, const int NormIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff,
@@ -186,8 +187,8 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 #  endif
 
 
-   Hydro_Con2Flux( 0, Flux_L, Con_L, MinPres, EoS_DensEint2Pres, EoS_AuxArray );
-   Hydro_Con2Flux( 0, Flux_R, Con_R, MinPres, EoS_DensEint2Pres, EoS_AuxArray );
+   Hydro_Con2Flux( 0, Flux_L, Con_L, MinPres, NULL, NULL, Pri_L+4 );
+   Hydro_Con2Flux( 0, Flux_R, Con_R, MinPres, NULL, NULL, Pri_R+4 );
 
 // return the upwind fluxes if flow is supersonic
    if ( Speed[0] >= ZERO )

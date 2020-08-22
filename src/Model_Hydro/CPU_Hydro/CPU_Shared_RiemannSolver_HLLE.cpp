@@ -18,7 +18,8 @@
 
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
 void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres,
-                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
+                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[],
+                     const real* const PresIn );
 
 #endif // #ifdef __CUDACC__ ... else ...
 
@@ -394,8 +395,8 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
 #  endif
    real Flux_L[NCOMP_TOTAL_PLUS_MAG], Flux_R[NCOMP_TOTAL_PLUS_MAG];  // use NCOMP_TOTAL_PLUS_MAG for Hydro_Con2Flux()
 
-   Hydro_Con2Flux( 0, Flux_L, L, MinPres, EoS_DensEint2Pres, EoS_AuxArray );
-   Hydro_Con2Flux( 0, Flux_R, R, MinPres, EoS_DensEint2Pres, EoS_AuxArray );
+   Hydro_Con2Flux( 0, Flux_L, L, MinPres, NULL, NULL, &P_L );
+   Hydro_Con2Flux( 0, Flux_R, R, MinPres, NULL, NULL, &P_R );
 
    for (int v=0; v<NWAVE; v++)
    {
