@@ -244,6 +244,9 @@ struct SymConst_t
    int    HLL_IncludeAllWaves;
    int    HLLC_WaveSpeed;
    int    HLLE_WaveSpeed;
+#  ifdef MHD
+   int    HLLD_WaveSpeed;
+#  endif
 #  ifdef N_FC_VAR
    int    N_FC_Var;
 #  endif

@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2412)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2413)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -182,6 +182,7 @@ Procedure for outputting new variables:
 //                2410 : 2020/07/31 --> output HLLE_WAVESPEED
 //                2411 : 2020/08/11 --> output LR_EINT
 //                2412 : 2020/08/17 --> output FLU_NIN_T
+//                2413 : 2020/08/23 --> output HLLD_WAVESPEED
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1379,7 +1380,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2412;
+   KeyInfo.FormatVersion        = 2413;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -1817,6 +1818,9 @@ void FillIn_SymConst( SymConst_t &SymConst )
 #  endif
    SymConst.HLLC_WaveSpeed       = HLLC_WAVESPEED;
    SymConst.HLLE_WaveSpeed       = HLLE_WAVESPEED;
+#  ifdef MHD
+   SymConst.HLLD_WaveSpeed       = HLLD_WAVESPEED;
+#  endif
 #  ifdef N_FC_VAR
    SymConst.N_FC_Var             = N_FC_VAR;
 #  endif
@@ -2504,6 +2508,9 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "HLL_IncludeAllWaves",  HOFFSET(SymConst_t,HLL_IncludeAllWaves ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "HLLC_WaveSpeed",       HOFFSET(SymConst_t,HLLC_WaveSpeed      ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "HLLE_WaveSpeed",       HOFFSET(SymConst_t,HLLE_WaveSpeed      ), H5T_NATIVE_INT    );
+#  ifdef MHD
+   H5Tinsert( H5_TypeID, "HLLD_WaveSpeed",       HOFFSET(SymConst_t,HLLD_WaveSpeed      ), H5T_NATIVE_INT    );
+#  endif
 #  ifdef N_FC_VAR
    H5Tinsert( H5_TypeID, "N_FC_Var",             HOFFSET(SymConst_t,N_FC_Var            ), H5T_NATIVE_INT    );
 #  endif
