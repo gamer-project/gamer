@@ -159,7 +159,7 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
       else                    Cf2_L = _TWO*( Ca2_plus_a2_L + Cf2_min_Cs2_L );
    } // if ( Cat2_L == ZERO ) ... else ...
 
-   Cf_L = SQRT( Cf2_L );
+   Cf_L = SQRT( Cf2_L );   // Cf2_L is positive definite using the above formula
 
 // right state
    Cax2_R        = Bx2_R*_RhoR;
@@ -180,7 +180,7 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
       else                    Cf2_R = _TWO*( Ca2_plus_a2_R + Cf2_min_Cs2_R );
    } // if ( Cat2_R == ZERO ) ... else ...
 
-   Cf_R = SQRT( Cf2_R );
+   Cf_R = SQRT( Cf2_R );   // Cf2_R is positive definite using the above formula
 
 #  else // #ifdef MHD
 

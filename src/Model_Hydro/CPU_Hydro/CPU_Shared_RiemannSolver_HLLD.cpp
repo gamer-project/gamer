@@ -152,7 +152,7 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
       else                 Cf2 = _TWO*( Ca2_plus_a2 + Cf2_min_Cs2 );
    }
 
-   Cf_L = SQRT( Cf2 );
+   Cf_L = SQRT( Cf2 );  // Cf2 is positive definite using the above formula
 
    a2          = EoS_DensPres2CSqr( Con_R[0], Pri_R[4], Con_R+NCOMP_FLUID, EoS_AuxArray );
    Cax2        = Bx2*_RhoR;
@@ -173,7 +173,7 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
       else                 Cf2 = _TWO*( Ca2_plus_a2 + Cf2_min_Cs2 );
    }
 
-   Cf_R = SQRT( Cf2 );
+   Cf_R = SQRT( Cf2 );  // Cf2 is positive definite using the above formula
 
 
 // estimate the maximum wave-speed using the min/max left and right eigenvalues
