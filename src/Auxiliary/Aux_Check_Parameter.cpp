@@ -463,7 +463,7 @@ void Aux_Check_Parameter()
 // ------------------------------
 #  if ( MODEL == HYDRO )
    if ( fabs(GAMMA-5.0/3.0) > 1.0e-4 )
-      Aux_Error( ERROR_INFO, "GAMMA must be equal to 5.0/3.0 in cosmological simuluations !!\n" );
+      Aux_Error( ERROR_INFO, "GAMMA must be equal to 5.0/3.0 for COMOVING !!\n" );
 #  endif
 
 
