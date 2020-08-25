@@ -304,6 +304,9 @@ void Init_TestProb_Template()
    Par_Init_ByFunction_Ptr        = NULL; // option: PAR_INIT=1;              example: Particle/Par_Init_ByFunction.cpp
    Par_Init_Attribute_User_Ptr    = NULL; // set PAR_NATT_USER;               example: TestProblem/Hydro/AGORA_IsolatedGalaxy/Init_TestProb_Hydro_AGORA_IsolatedGalaxy.cpp --> AddNewParticleAttribute()
 #  endif
+#  if ( EOS == EOS_USER )
+   EoS_Init_Ptr                   = NULL; // option: EOS in the Makefile;     example: EoS/Gamma/CPU_EoS_Gamma.cpp
+#  endif
 #  endif // #if ( MODEL == HYDRO )
 
 
