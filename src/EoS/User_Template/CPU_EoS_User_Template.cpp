@@ -17,8 +17,8 @@
 
 3. Three steps are required to implement an EoS
 
-   I.   Implement EoS conversion functions
-   II.  Set an EoS auxiliary array
+   I.   Set an EoS auxiliary array
+   II.  Implement EoS conversion functions
    III. Set EoS initialization functions
 
 4. All EoS conversion functions must be thread-safe and
@@ -32,10 +32,40 @@
 
 
 // =============================================
-// I. Implement EoS conversion functions
-//    (1) EoS_DensEint2Pres_*
-//    (2) EoS_DensPres2Eint_*
-//    (3) EoS_DensPres2CSqr_*
+// I. Set an EoS auxiliary array
+// =============================================
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  EoS_SetAuxArray_User_Template
+// Description :  Set the auxiliary array AuxArray[]
+//
+// Note        :  1. Invoked by EoS_Init_User_Template()
+//                2. AuxArray[] has the size of EOS_NAUX_MAX defined in Macro.h (default = 10)
+//                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
+//
+// Parameter   :  AuxArray : Array to be filled up
+//
+// Return      :  AuxArray[]
+//-------------------------------------------------------------------------------------------------------
+#ifndef __CUDACC__
+void EoS_SetAuxArray_User_Template( double AuxArray[] )
+{
+
+   /*
+   AuxArray[0] = ...;
+   AuxArray[1] = ...;
+   */
+
+} // FUNCTION : EoS_SetAuxArray_User_Template
+#endif // #ifndef __CUDACC__
+
+
+
+// =============================================
+// II. Implement EoS conversion functions
+//     (1) EoS_DensEint2Pres_*
+//     (2) EoS_DensPres2Eint_*
+//     (3) EoS_DensPres2CSqr_*
 // =============================================
 
 //-------------------------------------------------------------------------------------------------------
@@ -224,36 +254,6 @@ static real EoS_DensPres2CSqr_User_Template( const real Dens, const real Pres, c
    return Cs2;
 
 } // FUNCTION : EoS_DensPres2CSqr_User_Template
-
-
-
-// =============================================
-// II. Set an EoS auxiliary array
-// =============================================
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  EoS_SetAuxArray_User_Template
-// Description :  Set the auxiliary array AuxArray[]
-//
-// Note        :  1. Invoked by EoS_Init_User_Template()
-//                2. AuxArray[] has the size of EOS_NAUX_MAX defined in Macro.h (default = 10)
-//                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
-//
-// Parameter   :  AuxArray : Array to be filled up
-//
-// Return      :  AuxArray[]
-//-------------------------------------------------------------------------------------------------------
-#ifndef __CUDACC__
-void EoS_SetAuxArray_User_Template( double AuxArray[] )
-{
-
-   /*
-   AuxArray[0] = ...;
-   AuxArray[1] = ...;
-   */
-
-} // FUNCTION : EoS_SetAuxArray_User_Template
-#endif // #ifndef __CUDACC__
 
 
 

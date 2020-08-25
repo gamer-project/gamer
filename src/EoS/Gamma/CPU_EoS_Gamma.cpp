@@ -17,18 +17,55 @@
 
 3. Three steps are required to implement an EoS
 
-   I.   Implement EoS conversion functions
-   II.  Set an EoS auxiliary array
+   I.   Set an EoS auxiliary array
+   II.  Implement EoS conversion functions
    III. Set EoS initialization functions
 ********************************************************/
 
 
 
 // =============================================
-// I. Implement EoS conversion functions
-//    (1) EoS_DensEint2Pres_*
-//    (2) EoS_DensPres2Eint_*
-//    (3) EoS_DensPres2CSqr_*
+// I. Set an EoS auxiliary array
+// =============================================
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  EoS_SetAuxArray_Gamma
+// Description :  Set the auxiliary array AuxArray[]
+//
+//                   AuxArray[0] = gamma
+//                   AuxArray[1] = gamma-1
+//                   AuxArray[2] = 1/(gamma-1)
+//                   AuxArray[3] = 1/gamma
+//
+// Note        :  1. Invoked by EoS_Init_Gamma()
+//                2. AuxArray[] has the size of EOS_NAUX_MAX defined in Macro.h (default = 10)
+//                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
+//                4. Do not change the order of AuxArray[]
+//                   --> For example, the dual-energy routines assume AuxArray[0]=GAMMA
+//
+// Parameter   :  AuxArray : Array to be filled up
+//
+// Return      :  AuxArray[]
+//-------------------------------------------------------------------------------------------------------
+#ifndef __CUDACC__
+void EoS_SetAuxArray_Gamma( double AuxArray[] )
+{
+
+   AuxArray[0] = GAMMA;
+   AuxArray[1] = GAMMA - 1.0;
+   AuxArray[2] = 1.0 / ( GAMMA - 1.0 );
+   AuxArray[3] = 1.0 / GAMMA;
+
+} // FUNCTION : EoS_SetAuxArray_Gamma
+#endif // #ifndef __CUDACC__
+
+
+
+// =============================================
+// II. Implement EoS conversion functions
+//     (1) EoS_DensEint2Pres_*
+//     (2) EoS_DensPres2Eint_*
+//     (3) EoS_DensPres2CSqr_*
 // =============================================
 
 //-------------------------------------------------------------------------------------------------------
@@ -161,43 +198,6 @@ static real EoS_DensPres2CSqr_Gamma( const real Dens, const real Pres, const rea
    return Cs2;
 
 } // FUNCTION : EoS_DensPres2CSqr_Gamma
-
-
-
-// =============================================
-// II. Set an EoS auxiliary array
-// =============================================
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  EoS_SetAuxArray_Gamma
-// Description :  Set the auxiliary array AuxArray[]
-//
-//                   AuxArray[0] = gamma
-//                   AuxArray[1] = gamma-1
-//                   AuxArray[2] = 1/(gamma-1)
-//                   AuxArray[3] = 1/gamma
-//
-// Note        :  1. Invoked by EoS_Init_Gamma()
-//                2. AuxArray[] has the size of EOS_NAUX_MAX defined in Macro.h (default = 10)
-//                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
-//                4. Do not change the order of AuxArray[]
-//                   --> For example, the dual-energy routines assume AuxArray[0]=GAMMA
-//
-// Parameter   :  AuxArray : Array to be filled up
-//
-// Return      :  AuxArray[]
-//-------------------------------------------------------------------------------------------------------
-#ifndef __CUDACC__
-void EoS_SetAuxArray_Gamma( double AuxArray[] )
-{
-
-   AuxArray[0] = GAMMA;
-   AuxArray[1] = GAMMA - 1.0;
-   AuxArray[2] = 1.0 / ( GAMMA - 1.0 );
-   AuxArray[3] = 1.0 / GAMMA;
-
-} // FUNCTION : EoS_SetAuxArray_Gamma
-#endif // #ifndef __CUDACC__
 
 
 
