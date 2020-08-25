@@ -228,6 +228,9 @@ void Aux_Check_Parameter()
 #  ifdef BITWISE_REPRODUCIBILITY
    if ( OPT__CORR_AFTER_ALL_SYNC != CORR_AFTER_SYNC_BEFORE_DUMP  &&  OPT__CORR_AFTER_ALL_SYNC != CORR_AFTER_SYNC_EVERY_STEP )
       Aux_Error( ERROR_INFO, "please set OPT__CORR_AFTER_ALL_SYNC to 1/2 when BITWISE_REPRODUCIBILITY is enabled !!\n" );
+
+   if ( ! OPT__FIXUP_RESTRICT )
+      Aux_Error( ERROR_INFO, "must enable OPT__FIXUP_RESTRICT for BITWISE_REPRODUCIBILITY !!\n" );
 #  endif
 
 #  if ( !defined SERIAL  &&  !defined LOAD_BALANCE )
