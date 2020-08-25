@@ -3,9 +3,6 @@
 #if ( defined PARTICLE  &&  defined STAR_FORMATION  &&  MODEL == HYDRO )
 
 
-#ifdef GRAVITY
-
-
 
 
 //-------------------------------------------------------------------------------------------------------
