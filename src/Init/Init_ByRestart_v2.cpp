@@ -816,6 +816,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    bool intel, float8, serial, overlap_mpi, openmp, store_pot_ghost, unsplit_gravity, particle;
    bool conserve_mass, laplacian_4th, self_interaction, laohu, support_hdf5, mhd;
    int  model, pot_scheme, flu_scheme, lr_scheme, rsolver, load_balance, nlevel, max_patch, ncomp_passive, gpu_arch;
+   int  eos;
 
    fseek( File, HeaderOffset_Makefile, SEEK_SET );
 
@@ -851,6 +852,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    fread( &laohu,                      sizeof(bool),                    1,             File );
    fread( &support_hdf5,               sizeof(bool),                    1,             File );
    fread( &mhd,                        sizeof(bool),                    1,             File );
+   fread( &eos,                        sizeof(int),                     1,             File );
 
 
 // b. load the symbolic constants defined in "Macro.h, CUPOT.h, and CUFLU.h"
@@ -1005,6 +1007,8 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    }
 
    if ( FormatVersion < 2210 )   opt__output_cc_mag = false;
+
+   if ( FormatVersion < 2220 )   eos                = EOS_GAMMA;
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading simulation parameters ... done\n" );
@@ -1174,7 +1178,6 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
          Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n", "LAOHU", "ON", "OFF" );
 #     endif
 
-
       if ( nlevel < NLEVEL )
       {
          Aux_Message( stderr, "WARNING : %s : RESTART file (%d) < runtime (%d) !!\n", "NLEVEL", nlevel, NLEVEL );
@@ -1182,6 +1185,8 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       }
 
       CompareVar( "MAX_PATCH", max_patch, MAX_PATCH, NonFatal );
+
+      CompareVar( "EOS",       eos,       EOS,       NonFatal );
 
 
 
