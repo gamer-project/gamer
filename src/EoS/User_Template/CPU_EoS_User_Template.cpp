@@ -88,7 +88,9 @@ static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, c
 
 // check
 #  ifdef GAMER_DEBUG
+#  if ( NCOMP_PASSIVE > 0 )
    if ( Passive  == NULL )    printf( "ERROR : Passive == NULL in %s !!\n", __FUNCTION__ );
+#  endif
    if ( AuxArray == NULL )    printf( "ERROR : AuxArray == NULL in %s !!\n", __FUNCTION__ );
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
@@ -151,7 +153,9 @@ static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, c
 
 // check
 #  ifdef GAMER_DEBUG
+#  if ( NCOMP_PASSIVE > 0 )
    if ( Passive  == NULL )    printf( "ERROR : Passive == NULL in %s !!\n", __FUNCTION__ );
+#  endif
    if ( AuxArray == NULL )    printf( "ERROR : AuxArray == NULL in %s !!\n", __FUNCTION__ );
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
@@ -214,7 +218,9 @@ static real EoS_DensPres2CSqr_User_Template( const real Dens, const real Pres, c
 
 // check
 #  ifdef GAMER_DEBUG
+#  if ( NCOMP_PASSIVE > 0 )
    if ( Passive  == NULL )    printf( "ERROR : Passive == NULL in %s !!\n", __FUNCTION__ );
+#  endif
    if ( AuxArray == NULL )    printf( "ERROR : AuxArray == NULL in %s !!\n", __FUNCTION__ );
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
