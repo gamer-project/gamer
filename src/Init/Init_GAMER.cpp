@@ -108,6 +108,12 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
+// initialize the EoS routines
+#  if ( MODEL == HYDRO )
+   EoS_Init();
+#  endif
+
+
 // set the GPU parameters
 #  ifdef GPU
 #  ifndef GRAVITY

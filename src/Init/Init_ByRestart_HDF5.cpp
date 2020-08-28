@@ -85,6 +85,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  else
    const int  Magnetohydrodynamics = 0;
 #  endif
+   const int  EoS                  = EOS;
 #  endif
 
    KeyInfo_t KeyInfo;
@@ -1432,6 +1433,7 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
 #  endif
    LoadField( "DualEnergy",             &RS.DualEnergy,             SID, TID, NonFatal, &RT.DualEnergy,             1, NonFatal );
    LoadField( "Magnetohydrodynamics",   &RS.Magnetohydrodynamics,   SID, TID, NonFatal, &RT.Magnetohydrodynamics,   1,    Fatal );
+   LoadField( "EoS",                    &RS.EoS,                    SID, TID, NonFatal, &RT.EoS,                    1, NonFatal );
 
 #  elif ( MODEL == ELBDM )
    LoadField( "ConserveMass",           &RS.ConserveMass,           SID, TID, NonFatal, &RT.ConserveMass,           1, NonFatal );
@@ -1510,6 +1512,7 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "PatchSize",            &RS.PatchSize,            SID, TID, NonFatal, &RT.PatchSize,             1,    Fatal );
    LoadField( "Flu_NIn",              &RS.Flu_NIn,              SID, TID, NonFatal, &RT.Flu_NIn,               1, NonFatal );
    LoadField( "Flu_NOut",             &RS.Flu_NOut,             SID, TID, NonFatal, &RT.Flu_NOut,              1, NonFatal );
+   LoadField( "Flu_NIn_T",            &RS.Flu_NIn_T,            SID, TID, NonFatal, &RT.Flu_NIn_T,             1, NonFatal );
    LoadField( "NFluxFluid",           &RS.NFluxFluid,           SID, TID, NonFatal, &RT.NFluxFluid,            1, NonFatal );
    LoadField( "NFluxPassive",         &RS.NFluxPassive,         SID, TID, NonFatal, &RT.NFluxPassive,          1, NonFatal );
    LoadField( "Flu_GhostSize",        &RS.Flu_GhostSize,        SID, TID, NonFatal, &RT.Flu_GhostSize,         1, NonFatal );
@@ -1574,9 +1577,15 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "Flu_BlockSize_y",      &RS.Flu_BlockSize_y,      SID, TID, NonFatal, &RT.Flu_BlockSize_y,       1, NonFatal );
    LoadField( "CheckNegativeInFluid", &RS.CheckNegativeInFluid, SID, TID, NonFatal, &RT.CheckNegativeInFluid,  1, NonFatal );
    LoadField( "CharReconstruction",   &RS.CharReconstruction,   SID, TID, NonFatal, &RT.CharReconstruction,    1, NonFatal );
+   LoadField( "LR_Eint",              &RS.LR_Eint,              SID, TID, NonFatal, &RT.LR_Eint,               1, NonFatal );
    LoadField( "CheckIntermediate",    &RS.CheckIntermediate,    SID, TID, NonFatal, &RT.CheckIntermediate,     1, NonFatal );
    LoadField( "HLL_NoRefState",       &RS.HLL_NoRefState,       SID, TID, NonFatal, &RT.HLL_NoRefState,        1, NonFatal );
    LoadField( "HLL_IncludeAllWaves",  &RS.HLL_IncludeAllWaves,  SID, TID, NonFatal, &RT.HLL_IncludeAllWaves,   1, NonFatal );
+   LoadField( "HLLC_WaveSpeed",       &RS.HLLC_WaveSpeed,       SID, TID, NonFatal, &RT.HLLC_WaveSpeed,        1, NonFatal );
+   LoadField( "HLLE_WaveSpeed",       &RS.HLLE_WaveSpeed,       SID, TID, NonFatal, &RT.HLLE_WaveSpeed,        1, NonFatal );
+#  ifdef MHD
+   LoadField( "HLLD_WaveSpeed",       &RS.HLLD_WaveSpeed,       SID, TID, NonFatal, &RT.HLLD_WaveSpeed,        1, NonFatal );
+#  endif
 #  ifdef N_FC_VAR
    LoadField( "N_FC_Var",             &RS.N_FC_Var,             SID, TID, NonFatal, &RT.N_FC_Var,              1, NonFatal );
 #  endif
@@ -1586,6 +1595,7 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
 #  ifdef MHD
    LoadField( "EulerY",               &RS.EulerY,               SID, TID, NonFatal, &RT.EulerY,                1, NonFatal );
 #  endif
+   LoadField( "EoSNAuxMax",           &RS.EoSNAuxMax,           SID, TID, NonFatal, &RT.EoSNAuxMax,            1, NonFatal );
 
 #  elif  ( MODEL == ELBDM )
    LoadField( "Flu_BlockSize_x",      &RS.Flu_BlockSize_x,      SID, TID, NonFatal, &RT.Flu_BlockSize_x,       1, NonFatal );
@@ -1829,6 +1839,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  endif
 #  if ( MODEL == HYDRO )
    LoadField( "MinPres",                 &RS.MinPres,                 SID, TID, NonFatal, &RT.MinPres,                  1, NonFatal );
+   LoadField( "MinEint",                 &RS.MinEint,                 SID, TID, NonFatal, &RT.MinEint,                  1, NonFatal );
    LoadField( "JeansMinPres",            &RS.JeansMinPres,            SID, TID, NonFatal, &RT.JeansMinPres,             1, NonFatal );
    LoadField( "JeansMinPres_Level",      &RS.JeansMinPres_Level,      SID, TID, NonFatal, &RT.JeansMinPres_Level,       1, NonFatal );
    LoadField( "JeansMinPres_NCell",      &RS.JeansMinPres_NCell,      SID, TID, NonFatal, &RT.JeansMinPres_NCell,       1, NonFatal );

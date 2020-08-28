@@ -4,7 +4,6 @@
 
 
 #include "Macro.h"
-#include "CUFLU.h"
 
 #ifdef PARTICLE
 #  include <math.h>

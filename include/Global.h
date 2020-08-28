@@ -95,7 +95,7 @@ extern OptRSolver1st_t  OPT__1ST_FLUX_CORR_SCHEME;
 extern bool             OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP;
 extern bool             OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, JEANS_MIN_PRES;
 extern int              OPT__CK_NEGATIVE, JEANS_MIN_PRES_LEVEL, JEANS_MIN_PRES_NCELL;
-extern double           MIN_DENS, MIN_PRES;
+extern double           MIN_DENS, MIN_PRES, MIN_EINT;
 #ifdef DUAL_ENERGY
 extern double           DUAL_ENERGY_SWITCH;
 #endif
@@ -235,6 +235,22 @@ extern double                SF_CREATE_STAR_MAX_STAR_MFRAC;
 #endif
 
 
+// (2-9) equation of state
+// =======================================================================================================
+#if ( MODEL == HYDRO )
+extern double EoS_AuxArray[EOS_NAUX_MAX];
+extern EoS_DE2P_t EoS_DensEint2Pres_CPUPtr;
+extern EoS_DP2E_t EoS_DensPres2Eint_CPUPtr;
+extern EoS_DP2C_t EoS_DensPres2CSqr_CPUPtr;
+#ifdef GPU
+extern EoS_DE2P_t EoS_DensEint2Pres_GPUPtr;
+extern EoS_DP2E_t EoS_DensPres2Eint_GPUPtr;
+extern EoS_DP2C_t EoS_DensPres2CSqr_GPUPtr;
+#endif
+#endif // HYDRO
+
+
+
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
 // ============================================================================================================
@@ -281,7 +297,7 @@ extern code_units Che_Units;
 #endif
 
 extern real        *h_dt_Array_T[2];
-extern real       (*h_Flu_Array_T[2])[NCOMP_FLUID][ CUBE(PS1) ];
+extern real       (*h_Flu_Array_T[2])[FLU_NIN_T][ CUBE(PS1) ];
 #ifdef GRAVITY
 extern real       (*h_Pot_Array_T[2])[ CUBE(GRA_NXT) ];
 #endif
@@ -291,14 +307,14 @@ extern real       (*h_Mag_Array_T[2])[NCOMP_MAG][ PS1P1*SQR(PS1) ];
 
 
 
-// 4. GPU (device) global memory arrays and timers
+// 4/5. GPU (device) global memory arrays and timers
 // ============================================================================================================
 /*** These global variables are NOT included here. Instead, they are included by individual files
      only if necessary. ***/
 
 
 
-// 5. global variables related to different fields
+// 6. global variables related to different fields
 // ============================================================================================================
 /*** Defined in Field.h ***/
 

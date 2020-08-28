@@ -129,6 +129,7 @@ struct Makefile_t
 #  endif
    int DualEnergy;
    int Magnetohydrodynamics;
+   int EoS;
 
 #  elif ( MODEL == ELBDM )
    int ConserveMass;
@@ -163,6 +164,7 @@ struct SymConst_t
    int    PatchSize;
    int    Flu_NIn;
    int    Flu_NOut;
+   int    Flu_NIn_T;
    int    NFluxFluid;
    int    NFluxPassive;
    int    Flu_GhostSize;
@@ -236,9 +238,15 @@ struct SymConst_t
    int    Flu_BlockSize_y;
    int    CheckNegativeInFluid;
    int    CharReconstruction;
+   int    LR_Eint;
    int    CheckIntermediate;
    int    HLL_NoRefState;
    int    HLL_IncludeAllWaves;
+   int    HLLC_WaveSpeed;
+   int    HLLE_WaveSpeed;
+#  ifdef MHD
+   int    HLLD_WaveSpeed;
+#  endif
 #  ifdef N_FC_VAR
    int    N_FC_Var;
 #  endif
@@ -248,6 +256,7 @@ struct SymConst_t
 #  ifdef MHD
    int    EulerY;
 #  endif
+   int    EoSNAuxMax;
 
 #  elif  ( MODEL == ELBDM )
    int    Flu_BlockSize_x;
@@ -453,6 +462,7 @@ struct InputPara_t
 #  endif
 #  if ( MODEL == HYDRO )
    double MinPres;
+   double MinEint;
    int    JeansMinPres;
    int    JeansMinPres_Level;
    int    JeansMinPres_NCell;

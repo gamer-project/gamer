@@ -94,7 +94,7 @@ OPT__LR_LIMITER               4           # slope limiter of data reconstruction
                                           # (0=none, 1=vanLeer, 2=generalized MinMod, 3=vanAlbada, 4=vanLeer+generalized MinMod) [4]
 OPT__1ST_FLUX_CORR           -1           # correct unphysical results (defined by MIN_DENS/PRES) by the 1st-order fluxes:
                                           # (<0=auto, 0=off, 1=3D, 2=3D+1D) [-1] ##MHM/MHM_RP/CTU ONLY; NOT SUPPORTED IN MHD##
-OPT__1ST_FLUX_CORR_SCHEME     1           # Riemann solver for OPT__1ST_FLUX_CORR (0=none, 1=Roe, 2=HLLC, 3=HLLE, 4=HLLD) [1]
+OPT__1ST_FLUX_CORR_SCHEME    -1           # Riemann solver for OPT__1ST_FLUX_CORR (<0=auto, 0=none, 1=Roe, 2=HLLC, 3=HLLE, 4=HLLD) [-1]
 DUAL_ENERGY_SWITCH            2.0e-2      # apply dual-energy if E_int/E_kin < DUAL_ENERGY_SWITCH [2.0e-2] ##DUAL_ENERGY ONLY##
 
 
@@ -106,8 +106,9 @@ OPT__FIXUP_ELECTRIC           1           # correct coarse grids by the fine-gri
 OPT__FIXUP_RESTRICT           1           # correct coarse grids by averaging the fine-grid data [1]
 OPT__CORR_AFTER_ALL_SYNC     -1           # apply various corrections after all levels are synchronized (see "Flu_CorrAfterAllSync"):
                                           # (-1=auto, 0=off, 1=every step, 2=before dump) [-1]
-MIN_DENS                      0.0         # minimum mass density (must >= 0.0) [0.0] ##HYDRO, MHD, and ELBDM ONLY##
-MIN_PRES                      0.0         # minimum pressure     (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
+MIN_DENS                      0.0         # minimum mass density    (must >= 0.0) [0.0] ##HYDRO, MHD, and ELBDM ONLY##
+MIN_PRES                      0.0         # minimum pressure        (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
+MIN_EINT                      0.0         # minimum internal energy (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
 
 
 # initialization

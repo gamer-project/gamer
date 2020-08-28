@@ -261,7 +261,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double GasRho0 = Plummer_Rho0*Plummer_GasMFrac;
    const double PresBg  = 0.0;   // background pressure (set to 0.0 by default)
 
-   double r2, a2, Dens;
+   double Dens=0.0, MomX=0.0, MomY=0.0, MomZ=0.0, Pres=0.0, Eint, Etot;
+   double r2, a2, Dens1Cloud;
 
 
    if ( Plummer_Collision )
@@ -269,51 +270,57 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       const double Coll_Offset = 0.5*Plummer_Collision_D/sqrt(3.0);
       double Center[3];
 
-      fluid[DENS] = 0.0;
-      fluid[ENGY] = 0.0;
-      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = 0.0;
-
       for (int t=-1; t<=1; t+=2)
       {
          for (int d=0; d<3; d++)    Center[d] = Plummer_Center[d] + Coll_Offset*(double)t;
 
-         r2   = SQR(x-Center[0]) + SQR(y-Center[1]) + SQR(z-Center[2]);
-         a2   = r2 / SQR(Plummer_R0);
-         Dens = GasRho0 * pow( 1.0 + a2, -2.5 );
+         r2         = SQR(x-Center[0]) + SQR(y-Center[1]) + SQR(z-Center[2]);
+         a2         = r2 / SQR(Plummer_R0);
+         Dens1Cloud = GasRho0 * pow( 1.0 + a2, -2.5 );
 
-         fluid[DENS] += Dens;
+         Dens += Dens1Cloud;
 #        ifdef GRAVITY
-         fluid[ENGY] += (  NEWTON_G*TotM*GasRho0 / ( 6.0*Plummer_R0*CUBE(1.0 + a2) ) + PresBg  ) / ( GAMMA - 1.0 );
+         Pres += NEWTON_G*TotM*GasRho0 / ( 6.0*Plummer_R0*CUBE(1.0 + a2) ) + PresBg;
 #        endif
 
+//       add different colors for different clouds
          if ( Plummer_AddColor )
-         fluid[ (t==-1)?Plummer_Idx_Cloud0:Plummer_Idx_Cloud1 ] = Dens;
+         fluid[ (t==-1)?Plummer_Idx_Cloud0:Plummer_Idx_Cloud1 ] = Dens1Cloud;
       }
 
-      fluid[MOMX]  = fluid[DENS]*Plummer_BulkVel[0];
-      fluid[MOMY]  = fluid[DENS]*Plummer_BulkVel[1];
-      fluid[MOMZ]  = fluid[DENS]*Plummer_BulkVel[2];
-      fluid[ENGY] += 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
-   }
+      MomX = Dens*Plummer_BulkVel[0];
+      MomY = Dens*Plummer_BulkVel[1];
+      MomZ = Dens*Plummer_BulkVel[2];
+   } // if ( Plummer_Collision )
 
    else
    {
-      r2   = SQR(x-Plummer_Center[0]) + SQR(y-Plummer_Center[1]) + SQR(z-Plummer_Center[2]);
-      a2   = r2 / SQR(Plummer_R0);
-      Dens = GasRho0 * pow( 1.0 + a2, -2.5 );
+      r2         = SQR(x-Plummer_Center[0]) + SQR(y-Plummer_Center[1]) + SQR(z-Plummer_Center[2]);
+      a2         = r2 / SQR(Plummer_R0);
+      Dens1Cloud = GasRho0 * pow( 1.0 + a2, -2.5 );
 
-      fluid[DENS] = Dens;
-      fluid[MOMX] = fluid[DENS]*Plummer_BulkVel[0];
-      fluid[MOMY] = fluid[DENS]*Plummer_BulkVel[1];
-      fluid[MOMZ] = fluid[DENS]*Plummer_BulkVel[2];
+      Dens = Dens1Cloud;
+      MomX = Dens1Cloud*Plummer_BulkVel[0];
+      MomY = Dens1Cloud*Plummer_BulkVel[1];
+      MomZ = Dens1Cloud*Plummer_BulkVel[2];
 #     ifdef GRAVITY
-      fluid[ENGY] = (  NEWTON_G*TotM*GasRho0 / ( 6.0*Plummer_R0*CUBE(1.0 + a2) ) + PresBg  ) / ( GAMMA - 1.0 )
-                    + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+      Pres = NEWTON_G*TotM*GasRho0 / ( 6.0*Plummer_R0*CUBE(1.0 + a2) ) + PresBg;
 #     endif
 
 //    just set all passive scalars as zero
       for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = 0.0;
    } // if ( Plummer_Collision ) ... else ...
+
+// compute the total gas energy
+   Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray );   // assuming EoS requires no passive scalars
+   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );      // do NOT include magnetic energy here
+
+// set the output array
+   fluid[DENS] = Dens;
+   fluid[MOMX] = MomX;
+   fluid[MOMY] = MomY;
+   fluid[MOMZ] = MomZ;
+   fluid[ENGY] = Etot;
 
 } // FUNCTION : SetGridIC
 

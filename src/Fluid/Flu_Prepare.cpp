@@ -41,7 +41,6 @@ void Flu_Prepare( const int lv, const double PrepTime,
 
 #  if ( MODEL != HYDRO )
    const double MIN_DENS            = -1.0;  // set to an arbitrarily negative value to disable it
-   const double MIN_PRES            = -1.0;  // ...
 #  endif
 #  ifndef MHD
    const int    OPT__MAG_INT_SCHEME = INT_NONE;

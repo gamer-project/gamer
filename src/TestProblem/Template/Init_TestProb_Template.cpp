@@ -181,14 +181,23 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
-   /*
 // HYDRO example
-   fluid[DENS] = 1.0;
-   fluid[MOMX] = 0.0;
-   fluid[MOMY] = 0.0;
-   fluid[MOMZ] = 0.0;
-   fluid[ENGY] = 1.0 + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
-   */
+   double Dens, MomX, MomY, MomZ, Pres, Eint, Etot;
+
+   Dens = 1.0;
+   MomX = 0.0;
+   MomY = 0.0;
+   MomZ = 0.0;
+   Pres = 2.0;
+   Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray );   // assuming EoS requires no passive scalars
+   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );      // do NOT include magnetic energy here
+
+// set the output array
+   fluid[DENS] = Dens;
+   fluid[MOMX] = MomX;
+   fluid[MOMY] = MomY;
+   fluid[MOMZ] = MomZ;
+   fluid[ENGY] = Etot;
 
 } // FUNCTION : SetGridIC
 
@@ -294,6 +303,9 @@ void Init_TestProb_Template()
 #  ifdef PARTICLE
    Par_Init_ByFunction_Ptr        = NULL; // option: PAR_INIT=1;              example: Particle/Par_Init_ByFunction.cpp
    Par_Init_Attribute_User_Ptr    = NULL; // set PAR_NATT_USER;               example: TestProblem/Hydro/AGORA_IsolatedGalaxy/Init_TestProb_Hydro_AGORA_IsolatedGalaxy.cpp --> AddNewParticleAttribute()
+#  endif
+#  if ( EOS == EOS_USER )
+   EoS_Init_Ptr                   = NULL; // option: EOS in the Makefile;     example: EoS/Gamma/CPU_EoS_Gamma.cpp
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 
