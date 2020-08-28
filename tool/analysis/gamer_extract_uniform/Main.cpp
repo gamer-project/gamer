@@ -1229,6 +1229,12 @@ void CheckParameter()
       fprintf( stderr, "WARNING : option -k (ConvertCom2PhyV) is useless for non-cosmological simulations !!\n" );
    }
 
+   if ( OutputPres )
+   {
+      if ( MyRank == 0 )
+      fprintf( stderr, "WARNING : option -P (OutputPres) assumes constant-gamma EoS !!\n" );
+   }
+
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )
    if ( OutputTemp  &&  Convert2Temp < 0.0 )
       Aux_Error( ERROR_INFO, "Convert2Temp (%14.7e) < 0.0 for calculating temperature (use -u) !!\n",

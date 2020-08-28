@@ -235,8 +235,8 @@ void SetParameter()
    const bool CheckMinPres_Yes = true;
    AGORA_DiskGasDens0 = AGORA_DiskTotalMass*AGORA_DiskGasMassFrac / ( 4.0*M_PI*SQR(AGORA_DiskScaleLength)*AGORA_DiskScaleHeight );
    AGORA_HaloGasDens  = AGORA_HaloGasNumDensH*Const_mH/UNIT_M;
-   AGORA_HaloGasPres  = Hydro_Temperature2Pressure( AGORA_HaloGasDens, AGORA_HaloGasTemp, MOLECULAR_WEIGHT, Const_mH/UNIT_M,
-                                                    CheckMinPres_Yes, MIN_PRES );
+   AGORA_HaloGasPres  = Hydro_Temp2Pres( AGORA_HaloGasDens, AGORA_HaloGasTemp, MOLECULAR_WEIGHT, Const_mH/UNIT_M,
+                                         CheckMinPres_Yes, MIN_PRES );
 
 
 // (3) reset other general-purpose parameters
@@ -321,13 +321,14 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double h                = fabs( dz );
 
    double DiskGasDens, DiskGasPres, DiskGasVel;
+   double Dens, MomX, MomY, MomZ, Pres, Eint, Etot, Metal=NULL_REAL;
 
 // use the 5-point Gaussian quadrature integration to improve the accuracy of the average cell density
 // --> we don't want to use the sub-sampling for that purpose since it will break the initial uniform temperature
 // DiskGasDens = AGORA_DiskGasDens0 * exp( -r/AGORA_DiskScaleLength ) * exp( -h/AGORA_DiskScaleHeight );
    DiskGasDens = GaussianQuadratureIntegrate( dx, dy, dz, amr->dh[lv] );
-   DiskGasPres = Hydro_Temperature2Pressure( DiskGasDens, AGORA_DiskGasTemp, MOLECULAR_WEIGHT, Const_mH/UNIT_M,
-                                             CheckMinPres_Yes, MIN_PRES );
+   DiskGasPres = Hydro_Temp2Pres( DiskGasDens, AGORA_DiskGasTemp, MOLECULAR_WEIGHT, Const_mH/UNIT_M,
+                                  CheckMinPres_Yes, MIN_PRES );
 
 // disk component
    if ( DiskGasPres > AGORA_HaloGasPres )
@@ -339,30 +340,42 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       if (  ( DiskGasVel = Mis_InterpolateFromTable(AGORA_VcProf_NBin, Prof_R, Prof_V, r) ) == NULL_REAL  )
          Aux_Error( ERROR_INFO, "interpolation failed at radius %13.7e !!\n", r );
 
-      fluid[DENS] = DiskGasDens;
-      fluid[MOMX] = -dy/r*DiskGasVel*fluid[DENS];
-      fluid[MOMY] = +dx/r*DiskGasVel*fluid[DENS];
-      fluid[MOMZ] = 0.0;
-      fluid[ENGY] = DiskGasPres / ( GAMMA - 1.0 )
-                    + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+      Dens  = DiskGasDens;
+      MomX  = -dy/r*DiskGasVel*Dens;
+      MomY  = +dx/r*DiskGasVel*Dens;
+      MomZ  = 0.0;
+      Pres  = DiskGasPres;
 
       if ( AGORA_UseMetal )
-      fluid[Idx_Metal] = fluid[DENS]*AGORA_DiskMetalMassFrac;
-   }
+      Metal = Dens*AGORA_DiskMetalMassFrac;
+   } // if ( DiskGasPres > AGORA_HaloGasPres )
 
 // halo component
    else
    {
-      fluid[DENS] = AGORA_HaloGasDens;
-      fluid[MOMX] = 0.0;
-      fluid[MOMY] = 0.0;
-      fluid[MOMZ] = 0.0;
-      fluid[ENGY] = AGORA_HaloGasPres / ( GAMMA - 1.0 )
-                    + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+      Dens  = AGORA_HaloGasDens;
+      MomX  = 0.0;
+      MomY  = 0.0;
+      MomZ  = 0.0;
+      Pres  = AGORA_HaloGasPres;
 
       if ( AGORA_UseMetal )
-      fluid[Idx_Metal] = fluid[DENS]*AGORA_HaloMetalMassFrac;
+      Metal = Dens*AGORA_HaloMetalMassFrac;
    } // if ( DiskPres > AGORA_HaloGasPres ) ... else ...
+
+// compute the total gas energy
+   Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray );   // assuming EoS requires no passive scalars
+   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );      // do NOT include magnetic energy here
+
+// set the output array
+   fluid[DENS] = Dens;
+   fluid[MOMX] = MomX;
+   fluid[MOMY] = MomY;
+   fluid[MOMZ] = MomZ;
+   fluid[ENGY] = Etot;
+
+   if ( AGORA_UseMetal )
+   fluid[Idx_Metal] = Metal;
 
 } // FUNCTION : SetGridIC
 

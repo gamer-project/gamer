@@ -8,7 +8,7 @@
 extern int Che_NField;
 extern int CheIdx_Dens;
 extern int CheIdx_sEint;
-extern int CheIdx_Ek;
+extern int CheIdx_Ent;
 extern int CheIdx_e;
 extern int CheIdx_HI;
 extern int CheIdx_HII;
@@ -49,8 +49,8 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
       Aux_Error( ERROR_INFO, "CheIdx_Dens is undefined !!\n" );
    if ( CheIdx_sEint == Idx_Undefined )
       Aux_Error( ERROR_INFO, "CheIdx_sEint is undefined !!\n" );
-   if ( CheIdx_Ek == Idx_Undefined )
-      Aux_Error( ERROR_INFO, "CheIdx_Ek is undefined !!\n" );
+   if ( CheIdx_Ent == Idx_Undefined )
+      Aux_Error( ERROR_INFO, "CheIdx_Ent is undefined !!\n" );
 
    if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
       if (  Idx_e == Idx_Undefined  ||  CheIdx_e == Idx_Undefined  )
@@ -92,18 +92,18 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
 #  endif // #ifdef GAMER_DEBUG
 
 
-   const int  Size1pg         = CUBE(PS2);
-   const int  Size1v          = NPG*Size1pg;
-   const real mass_ratio_pe   = Const_mp/Const_me;
+   const int  Size1pg          = CUBE(PS2);
+   const int  Size1v           = NPG*Size1pg;
+   const real MassRatio_pe    = Const_mp / Const_me;
 #  ifdef DUAL_ENERGY
-   const real  Gamma_m1       = GAMMA - (real)1.0;
-   const real _Gamma_m1       = (real)1.0 / Gamma_m1;
-   const bool CheckMinPres_No = false;
+   const bool CheckMinPres_No  = false;
+#  else
+   const bool CheckMinEint_Yes = true;
 #  endif
 
    real *Ptr_Dens0  = h_Che_Array + CheIdx_Dens *Size1v;
    real *Ptr_sEint0 = h_Che_Array + CheIdx_sEint*Size1v;
-   real *Ptr_Ek0    = h_Che_Array + CheIdx_Ek   *Size1v;
+   real *Ptr_Ent0   = h_Che_Array + CheIdx_Ent  *Size1v;
    real *Ptr_e0     = h_Che_Array + CheIdx_e    *Size1v;
    real *Ptr_HI0    = h_Che_Array + CheIdx_HI   *Size1v;
    real *Ptr_HII0   = h_Che_Array + CheIdx_HII  *Size1v;
@@ -124,10 +124,15 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
 
 // thread-private variables
    int  idx_p, idx_pg, PID, PID0, offset;    // idx_p/idx_pg: array indices within a patch/patch group
-   real Dens, Px, Py, Pz, Etot, _Dens, Ek, sEint;
+   real Dens, Etot, Eint, Ent;
+#  ifdef DUAL_ENERGY
+   real Pres;
+#  else
+   real Px, Py, Pz, Emag=NULL_REAL;
+#  endif // #ifdef DUAL_ENERGY ... else ...
    real (*fluid)[PS1][PS1][PS1]=NULL;
 
-   real *Ptr_Dens=NULL, *Ptr_sEint=NULL, *Ptr_Ek=NULL, *Ptr_e=NULL, *Ptr_HI=NULL, *Ptr_HII=NULL;
+   real *Ptr_Dens=NULL, *Ptr_sEint=NULL, *Ptr_Ent=NULL, *Ptr_e=NULL, *Ptr_HI=NULL, *Ptr_HII=NULL;
    real *Ptr_HeI=NULL, *Ptr_HeII=NULL, *Ptr_HeIII=NULL, *Ptr_HM=NULL, *Ptr_H2I=NULL, *Ptr_H2II=NULL;
    real *Ptr_DI=NULL, *Ptr_DII=NULL, *Ptr_HDI=NULL, *Ptr_Metal=NULL;
 
@@ -140,7 +145,7 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
 
       Ptr_Dens  = Ptr_Dens0  + offset;
       Ptr_sEint = Ptr_sEint0 + offset;
-      Ptr_Ek    = Ptr_Ek0    + offset;
+      Ptr_Ent   = Ptr_Ent0   + offset;
       Ptr_e     = Ptr_e0     + offset;
       Ptr_HI    = Ptr_HI0    + offset;
       Ptr_HII   = Ptr_HII0   + offset;
@@ -165,41 +170,39 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
          for (int j=0; j<PS1; j++)
          for (int i=0; i<PS1; i++)
          {
-            Dens  = *( fluid[DENS][0][0] + idx_p );
-            Px    = *( fluid[MOMX][0][0] + idx_p );
-            Py    = *( fluid[MOMY][0][0] + idx_p );
-            Pz    = *( fluid[MOMZ][0][0] + idx_p );
-            Etot  = *( fluid[ENGY][0][0] + idx_p );
-            _Dens = (real)1.0 / Dens;
-            Ek    = (real)0.5*( SQR(Px) + SQR(Py) + SQR(Pz) )*_Dens;
+            Dens = *( fluid[DENS][0][0] + idx_p );
+            Etot = *( fluid[ENGY][0][0] + idx_p );
 
 //          use the dual-energy variable to calculate the internal energy if applicable
 #           ifdef DUAL_ENERGY
 
 #           if   ( DUAL_ENERGY == DE_ENPY )
-            sEint = Hydro_DensEntropy2Pres( Dens, *(fluid[ENPY][0][0]+idx_p), Gamma_m1, CheckMinPres_No, NULL_REAL )
-                    *_Dens*_Gamma_m1;
+            Pres = Hydro_DensEntropy2Pres( Dens, *(fluid[ENPY][0][0]+idx_p), EoS_AuxArray[1], CheckMinPres_No, NULL_REAL );
+            Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray );   // EOS_GAMMA does not involve passive scalars
 #           elif ( DUAL_ENERGY == DE_EINT )
 #           error : DE_EINT is NOT supported yet !!
 #           endif
 
 #           else // #ifdef DUAL_ENERGY
 
-            sEint  = Etot - Ek;
+            Px   = *( fluid[MOMX][0][0] + idx_p );
+            Py   = *( fluid[MOMY][0][0] + idx_p );
+            Pz   = *( fluid[MOMZ][0][0] + idx_p );
 #           ifdef MHD
-            sEint -= MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+            Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
 #           endif
-            sEint *= _Dens;
+            Eint = Hydro_Con2Eint( Dens, Px, Py, Pz, Etot, CheckMinEint_Yes, MIN_EINT, Emag );
+
 #           endif // #ifdef DUAL_ENERGY ... else
 
 //          mandatory fields
             Ptr_Dens [idx_pg] = Dens;
-            Ptr_sEint[idx_pg] = sEint;
-            Ptr_Ek   [idx_pg] = Ek;
+            Ptr_sEint[idx_pg] = Eint / Dens;
+            Ptr_Ent  [idx_pg] = Etot - Eint; // non-thermal energy density
 
 //          6-species network
             if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
-            Ptr_e    [idx_pg] = *( fluid[Idx_e    ][0][0] + idx_p ) * mass_ratio_pe;
+            Ptr_e    [idx_pg] = *( fluid[Idx_e    ][0][0] + idx_p ) * MassRatio_pe;
             Ptr_HI   [idx_pg] = *( fluid[Idx_HI   ][0][0] + idx_p );
             Ptr_HII  [idx_pg] = *( fluid[Idx_HII  ][0][0] + idx_p );
             Ptr_HeI  [idx_pg] = *( fluid[Idx_HeI  ][0][0] + idx_p );

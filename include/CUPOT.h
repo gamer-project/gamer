@@ -168,6 +168,7 @@
 #endif // POT_SCHEME
 
 
+
 // blockDim.z for the GPU Gravity solver
 #define GRA_BLOCK_SIZE              256
 

@@ -167,6 +167,18 @@ void Aux_TakeNote()
       fprintf( Note, "MHD                             OFF\n" );
 #     endif
 
+#     if   ( EOS == EOS_GAMMA )
+      fprintf( Note, "EOS                             EOS_GAMMA\n" );
+#     elif ( EOS == EOS_NUCLEAR )
+      fprintf( Note, "EOS                             EOS_NUCLEAR\n" );
+#     elif ( EOS == EOS_TABULAR )
+      fprintf( Note, "EOS                             EOS_TABULAR\n" );
+#     elif ( EOS == EOS_USER )
+      fprintf( Note, "EOS                             EOS_USER\n" );
+#     else
+      fprintf( Note, "EOS                             UNKNOWN\n" );
+#     endif
+
 //    c. options in ELBDM
 #     elif ( MODEL == ELBDM )
 
@@ -358,6 +370,12 @@ void Aux_TakeNote()
       fprintf( Note, "CHAR_RECONSTRUCTION             OFF\n" );
 #     endif
 
+#     ifdef LR_EINT
+      fprintf( Note, "LR_EINT                         ON\n" );
+#     else
+      fprintf( Note, "LR_EINT                         OFF\n" );
+#     endif
+
 #     if   ( CHECK_INTERMEDIATE == EXACT )
       fprintf( Note, "CHECK_INTERMEDIATE              EXACT\n" );
 #     elif ( CHECK_INTERMEDIATE == HLLE )
@@ -384,6 +402,12 @@ void Aux_TakeNote()
       fprintf( Note, "HLL_INCLUDE_ALL_WAVES           OFF\n" );
 #     endif
 
+      fprintf( Note, "HLLC_WAVESPEED                  %d\n",      HLLC_WAVESPEED );
+      fprintf( Note, "HLLE_WAVESPEED                  %d\n",      HLLE_WAVESPEED );
+#     ifdef MHD
+      fprintf( Note, "HLLD_WAVESPEED                  %d\n",      HLLD_WAVESPEED );
+#     endif
+
 #     ifdef MHD
 #     ifdef EULERY
       fprintf( Note, "EULERY                          ON\n" );
@@ -391,6 +415,8 @@ void Aux_TakeNote()
       fprintf( Note, "EULERY                          OFF\n" );
 #     endif
 #     endif // #ifdef MHD
+
+      fprintf( Note, "EOS_NAUX_MAX                    %d\n",      EOS_NAUX_MAX );
 
 #     elif ( MODEL == ELBDM )
 
@@ -466,6 +492,7 @@ void Aux_TakeNote()
       fprintf( Note, "#define NCOMP_PASSIVE           %d\n",      NCOMP_PASSIVE       );
       fprintf( Note, "#define FLU_NIN                 %d\n",      FLU_NIN             );
       fprintf( Note, "#define FLU_NOUT                %d\n",      FLU_NOUT            );
+      fprintf( Note, "#define FLU_NIN_T               %d\n",      FLU_NIN_T           );
       fprintf( Note, "#define NFLUX_FLUID             %d\n",      NFLUX_FLUID         );
       fprintf( Note, "#define NFLUX_PASSIVE           %d\n",      NFLUX_PASSIVE       );
 #     ifdef GRAVITY
@@ -906,6 +933,7 @@ void Aux_TakeNote()
 #     endif
 #     if ( MODEL == HYDRO )
       fprintf( Note, "MIN_PRES                        %13.7e\n",  MIN_PRES                 );
+      fprintf( Note, "MIN_EINT                        %13.7e\n",  MIN_EINT                 );
       fprintf( Note, "JEANS_MIN_PRES                  %d\n",      JEANS_MIN_PRES           );
       if ( JEANS_MIN_PRES ) {
       fprintf( Note, "JEANS_MIN_PRES_LEVEL            %d\n",      JEANS_MIN_PRES_LEVEL     );

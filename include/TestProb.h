@@ -54,6 +54,9 @@ extern void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPa
                                         real *AllAttribute[PAR_NATT_TOTAL] );
 extern void (*Par_Init_Attribute_User_Ptr)();
 #endif
+#if ( MODEL == HYDRO )
+extern void (*EoS_Init_Ptr)();
+#endif
 
 
 // helper macro for printing warning messages when resetting parameters

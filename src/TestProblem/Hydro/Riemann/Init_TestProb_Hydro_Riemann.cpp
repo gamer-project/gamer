@@ -165,6 +165,7 @@ void SetParameter()
                             Riemann_Mag = Riemann_MagL_T1 = Riemann_MagL_T2 = Riemann_MagR_T1 = Riemann_MagR_T2 = 0.0;
 #                           endif
                             sprintf( Riemann_Name, "Einfeldt's 1-2-0-3" );
+                            if ( GAMMA < 1.0 )  Aux_Error( ERROR_INFO, "GAMMA (%13.7e) < 1.0 !!\n", GAMMA );
                             break;
 
       case EINFELDT_1125  : Riemann_RhoL = 1.0;  Riemann_VelL = -1.0;  Riemann_PreL = 2.5*(GAMMA-1.0);  Riemann_VelL_T1 = -2.0;  Riemann_VelL_T2 = 0.0;
@@ -174,6 +175,7 @@ void SetParameter()
                             Riemann_Mag = Riemann_MagL_T1 = Riemann_MagL_T2 = Riemann_MagR_T1 = Riemann_MagR_T2 = 0.0;
 #                           endif
                             sprintf( Riemann_Name, "Einfeldt's 1-1-2-5" );
+                            if ( GAMMA < 1.0 )  Aux_Error( ERROR_INFO, "GAMMA (%13.7e) < 1.0 !!\n", GAMMA );
                             break;
 
       case SONIC_RARE     : Riemann_RhoL = 1.0;    Riemann_VelL = 0.75;  Riemann_PreL = 1.0;  Riemann_VelL_T1 = 0.0;  Riemann_VelL_T2 = 0.0;
@@ -322,43 +324,48 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
-   const double _Gamma_m1 = 1.0/(GAMMA-1.0);
-
-   double r, BoxCen;
-   int    TVar[NCOMP_FLUID];
+   double r, BoxCen, Pres, Eint;
+   int    MomIdx[3];
 
    switch ( Riemann_XYZ )
    {
-      case 0 : r=x; TVar[0]=DENS; TVar[1]=MOMX; TVar[2]=MOMY; TVar[3]=MOMZ; TVar[4]=ENGY; BoxCen=amr->BoxCenter[0]; break;
-      case 1 : r=y; TVar[0]=DENS; TVar[1]=MOMY; TVar[2]=MOMZ; TVar[3]=MOMX; TVar[4]=ENGY; BoxCen=amr->BoxCenter[1]; break;
-      case 2 : r=z; TVar[0]=DENS; TVar[1]=MOMZ; TVar[2]=MOMX; TVar[3]=MOMY; TVar[4]=ENGY; BoxCen=amr->BoxCenter[2]; break;
+      case 0 : r=x; MomIdx[0]=MOMX; MomIdx[1]=MOMY; MomIdx[2]=MOMZ; BoxCen=amr->BoxCenter[0]; break;
+      case 1 : r=y; MomIdx[0]=MOMY; MomIdx[1]=MOMZ; MomIdx[2]=MOMX; BoxCen=amr->BoxCenter[1]; break;
+      case 2 : r=z; MomIdx[0]=MOMZ; MomIdx[1]=MOMX; MomIdx[2]=MOMY; BoxCen=amr->BoxCenter[2]; break;
       default : Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "Riemann_XYZ", Riemann_XYZ );
    }
 
    if (  ( Riemann_LR > 0 && r < BoxCen )  ||  ( Riemann_LR < 0 && r > BoxCen )  )
    {
-      fluid[ TVar[0] ] = Riemann_RhoL;
-      fluid[ TVar[1] ] = Riemann_RhoL*Riemann_VelL;
-      fluid[ TVar[2] ] = Riemann_RhoL*Riemann_VelL_T1;
-      fluid[ TVar[3] ] = Riemann_RhoL*Riemann_VelL_T2;
-      fluid[ TVar[4] ] = 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) )/fluid[DENS] + Riemann_PreL*_Gamma_m1;
+      fluid[ DENS      ] = Riemann_RhoL;
+      fluid[ MomIdx[0] ] = Riemann_RhoL*Riemann_VelL;
+      fluid[ MomIdx[1] ] = Riemann_RhoL*Riemann_VelL_T1;
+      fluid[ MomIdx[2] ] = Riemann_RhoL*Riemann_VelL_T2;
+      Pres               = Riemann_PreL;
    }
 
    else
    {
-      fluid[ TVar[0] ] = Riemann_RhoR;
-      fluid[ TVar[1] ] = Riemann_RhoR*Riemann_VelR;
-      fluid[ TVar[2] ] = Riemann_RhoR*Riemann_VelR_T1;
-      fluid[ TVar[3] ] = Riemann_RhoR*Riemann_VelR_T2;
-      fluid[ TVar[4] ] = 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) )/fluid[DENS] + Riemann_PreR*_Gamma_m1;
+      fluid[ DENS      ] = Riemann_RhoR;
+      fluid[ MomIdx[0] ] = Riemann_RhoR*Riemann_VelR;
+      fluid[ MomIdx[1] ] = Riemann_RhoR*Riemann_VelR_T1;
+      fluid[ MomIdx[2] ] = Riemann_RhoR*Riemann_VelR_T2;
+      Pres               = Riemann_PreR;
    }
 
    if ( Riemann_LR < 0 )
    {
-      fluid[ TVar[1] ] *= -1.0;
-      fluid[ TVar[2] ] *= -1.0;
-      fluid[ TVar[3] ] *= -1.0;
+      fluid[ MomIdx[0] ] *= -1.0;
+      fluid[ MomIdx[1] ] *= -1.0;
+      fluid[ MomIdx[2] ] *= -1.0;
    }
+
+// compute and store the total gas energy
+// --> assuming EoS requires no passive scalars
+   Eint = EoS_DensPres2Eint_CPUPtr( fluid[DENS], Pres, NULL, EoS_AuxArray );
+
+// do NOT include magnetic energy here
+   fluid[ENGY] = Hydro_ConEint2Etot( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], Eint, 0.0 );
 
 } // FUNCTION : SetGridIC
 

@@ -134,12 +134,19 @@ void SetParameter()
 // (4) make a note
    if ( MPI_Rank == 0 )
    {
+//    assuming EOS_GAMMA (must not invoke any EoS routine here since it has not been initialized)
+      const double ExpVol  = 4.0*M_PI/3.0*CUBE(Blast_Radius);
+      const double ExpEngy = Blast_Pres_Exp/(GAMMA-1.0)*ExpVol;
+#     if ( EOS != EOS_GAMMA )
+      Aux_Message( stderr, "WARNING : the total explosion energy below assumes EOS_GAMMA !!\n" );
+#     endif
+
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "  test problem ID           = %d\n",     TESTPROB_ID );
       Aux_Message( stdout, "  background mass density   = %13.7e\n", Blast_Dens_Bg );
       Aux_Message( stdout, "  background pressure       = %13.7e\n", Blast_Pres_Bg );
       Aux_Message( stdout, "  explosion pressure        = %13.7e\n", Blast_Pres_Exp );
-      Aux_Message( stdout, "  total explosion energy    = %13.7e\n", Blast_Pres_Exp/(GAMMA-1.0)*4.0*M_PI/3.0*CUBE(Blast_Radius) );
+      Aux_Message( stdout, "  total explosion energy    = %13.7e (assuming constant-gamma EoS)\n", ExpEngy );
       Aux_Message( stdout, "  explosion radius          = %13.7e\n", Blast_Radius );
       Aux_Message( stdout, "  explosion center          = (%13.7e, %13.7e, %13.7e)\n", Blast_Center[0], Blast_Center[1],
                                                                                        Blast_Center[2] );
@@ -180,14 +187,22 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 {
 
    const double r = SQRT( SQR(x-Blast_Center[0]) + SQR(y-Blast_Center[1]) + SQR(z-Blast_Center[2]) );
+   double Dens, MomX, MomY, MomZ, Pres, Eint, Etot;
 
-   fluid[DENS] = Blast_Dens_Bg;
-   fluid[MOMX] = 0.0;
-   fluid[MOMY] = 0.0;
-   fluid[MOMZ] = 0.0;
+   Dens = Blast_Dens_Bg;
+   MomX = 0.0;
+   MomY = 0.0;
+   MomZ = 0.0;
+   Pres = ( r <= Blast_Radius ) ? Blast_Pres_Exp : Blast_Pres_Bg;
+   Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray );   // assuming EoS requires no passive scalars
+   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );      // do NOT include magnetic energy here
 
-   if ( r <= Blast_Radius )   fluid[ENGY] = Blast_Pres_Exp/(GAMMA-1.0);
-   else                       fluid[ENGY] = Blast_Pres_Bg /(GAMMA-1.0);
+// set the output array
+   fluid[DENS] = Dens;
+   fluid[MOMX] = MomX;
+   fluid[MOMY] = MomY;
+   fluid[MOMZ] = MomZ;
+   fluid[ENGY] = Etot;
 
 } // FUNCTION : SetGridIC
 

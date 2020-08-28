@@ -17,45 +17,60 @@
 #else // #ifdef __CUDACC__
 
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
-void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Gamma_m1, const real MinPres );
-real Hydro_CheckMinPres( const real InPres, const real MinPres );
-void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
+void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres,
+                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[],
+                     const real* const PresIn );
+void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
                     const bool NormPassive, const int NNorm, const int NormIdx[],
-                    const bool JeansMinPres, const real JeansMinPres_Coeff );
+                    const bool JeansMinPres, const real JeansMinPres_Coeff,
+                    const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint,
+                    const double EoS_AuxArray[], real* const EintOut );
 
 #endif // #ifdef __CUDACC__ ... else ...
 
 
 
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_RiemannSolver_HLLD
-// Description :  Approximate Riemann solver of Harten, Lax, and van Leer.
-//                The wave speed is estimated by the same formula in the HLLE solver
+// Description :  Approximate Riemann solver of Harten, Lax, and van Leer extended to support MHD
 //
 // Note        :  1. Input data should be conserved variables
 //                2. Ref : (a) Riemann Solvers and Numerical Methods for Fluid Dynamics - A Practical Introduction
 //                             ~ by Eleuterio F. Toro
 //                         (b) Stone et al., ApJS, 178, 137 (2008)
 //                         (c) Batten et al., SIAM J. Sci. Comput., 18, 1553 (1997)
-//                3. This function is shared by MHM, MHM_RP, and CTU schemes
+//                         (d) Miyoshi & Kusano, JCP, 208, 315 (2005)
+//                         (e) Davis, SIAM J. Sci. Statist. Comput. 9, 445 (1988)
+//                3. Wave-speed estimator is set by HLLD_WAVESPEED in CUFLU.h
+//                4. Support general EoS
+//                5. This function is shared by MHM, MHM_RP, and CTU schemes
 //
-// Parameter   :  XYZ      : Target spatial direction : (0/1/2) --> (x/y/z)
-//                Flux_Out : Array to store the output flux
-//                L_In     : Input left  state (conserved variables)
-//                R_In     : Input right state (conserved variables)
-//                Gamma    : Ratio of specific heats
-//                MinPres  : Minimum allowed pressure
+// Parameter   :  XYZ               : Target spatial direction : (0/1/2) --> (x/y/z)
+//                Flux_Out          : Array to store the output flux
+//                L_In              : Input left  state (conserved variables)
+//                R_In              : Input right state (conserved variables)
+//                MinPres           : Pressure floor
+//                EoS_DensEint2Pres : EoS routine to compute the gas pressure
+//                EoS_DensPres2CSqr : EoS routine to compute the sound speed square
+//                EoS_AuxArray      : Auxiliary array for the EoS routines
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                               const real Gamma, const real MinPres )
+                               const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                               const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] )
 {
+
+// check
+#  if ( HLLD_WAVESPEED != HLL_WAVESPEED_DAVIS )
+#     error : ERROR : HLLD_WAVESPEED only supports HLL_WAVESPEED_DAVIS !!
+#  endif
+
 
    const real MaxErr2         = SQR(MAX_ERROR);
    const real ZERO            = (real)0.0;
    const real ONE             = (real)1.0;
    const real _TWO            = (real)0.5;
-   const real Gamma_m1        = Gamma - ONE;
    const bool NormPassive_No  = false;
    const bool JeansMinPres_No = false;
    const int  IdxBx           = MAG_OFFSET + 0;
@@ -73,47 +88,46 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
    Hydro_Rotate3D( Con_L, XYZ, true, IdxBx );
    Hydro_Rotate3D( Con_R, XYZ, true, IdxBx );
 
-   const real BxL = Con_L[IdxBx];
-   const real ByL = Con_L[IdxBy];
-   const real BzL = Con_L[IdxBz];
-   const real BxR = Con_R[IdxBx];
-   const real ByR = Con_R[IdxBy];
-   const real BzR = Con_R[IdxBz];
+   const real Bx   = Con_L[IdxBx];
+   const real ByL  = Con_L[IdxBy];
+   const real BzL  = Con_L[IdxBz];
+   const real ByR  = Con_R[IdxBy];
+   const real BzR  = Con_R[IdxBz];
+
+   const real _Bx  = ONE / Bx;
+   const real Bx2  = SQR( Bx );
+   const real _Bx2 = SQR( _Bx );
 
 #  ifdef GAMER_DEBUG
-   if ( BxL != BxR )
+   if ( Con_L[IdxBx] != Con_R[IdxBx] )
       printf( "ERROR : BxL (%24.17e) != BxR (%24.17e) for XYZ %d at file <%s>, line <%d>, function <%s>!!\n",
-              BxL, BxR, XYZ, __FILE__, __LINE__, __FUNCTION__ );
+              Con_L[IdxBx], Con_R[IdxBx], XYZ, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
-   Hydro_Con2Pri( Con_L, Pri_L, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
-   Hydro_Con2Pri( Con_R, Pri_R, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
-
-   const real Vx_min = FMIN( Pri_L[1] , Pri_R[1] );
-   const real Vx_max = FMAX( Pri_L[1] , Pri_R[1] );
+   Hydro_Con2Pri( Con_L, Pri_L, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
+                  EoS_DensEint2Pres, NULL, EoS_AuxArray, NULL );
+   Hydro_Con2Pri( Con_R, Pri_R, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
+                  EoS_DensEint2Pres, NULL, EoS_AuxArray, NULL );
 
    real tmp_1, tmp_2, crit, crit_Bx;
    real _RhoL, _RhoR;
    real sqrt_RhoLst, sqrt_RhoRst;
    real PT_L, PT_R, PT_st;
-   real Bx, _Bx, Bx2, _Bx2, BtL2, BtR2, B2L_d2, B2R_d2;
+   real BtL2, BtR2, B2L_d2, B2R_d2;
    real a2 , Cf2 ,Cax2, Cat2, Ca2_plus_a2, Ca2_min_a2, Cf2_min_Cs2;
-   real Cf_L, Cf_R, Cf_max;
+   real Cf_L, Cf_R;
    real Sd_L, Sd_R, Sdm_L, Sdm_R, SdL_SdmL, SdR_SdmR;
    real VBdot_Lst, VBdot_Rst;
 
    real Speed[5] = { ZERO, ZERO, ZERO, ZERO, ZERO };
    real Con_Lst[NCOMP_TOTAL_PLUS_MAG], Con_Ldst[NCOMP_TOTAL_PLUS_MAG];
    real Con_Rdst[NCOMP_TOTAL_PLUS_MAG], Con_Rst[NCOMP_TOTAL_PLUS_MAG];
-   real Pri_Lst[NCOMP_TOTAL_PLUS_MAG], Pri_Rst[NCOMP_TOTAL_PLUS_MAG];
+   real _Rho_Lst, Vy_Lst, Vz_Lst;
+   real _Rho_Rst, Vy_Rst, Vz_Rst;
    real Flux_L[NCOMP_TOTAL_PLUS_MAG], Flux_R[NCOMP_TOTAL_PLUS_MAG];
 
    _RhoL       = ONE/Con_L[0];
    _RhoR       = ONE/Con_R[0];
-   Bx          = BxL;
-   _Bx         = ONE/Bx;
-   Bx2         = SQR( Bx );
-   _Bx2        = ONE/Bx2;
    BtL2        = SQR( ByL ) + SQR( BzL );
    BtR2        = SQR( ByR ) + SQR( BzR );
    B2L_d2      = _TWO*( Bx2 + BtL2 );
@@ -121,7 +135,7 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
    PT_L        = Pri_L[4] + B2L_d2;
    PT_R        = Pri_R[4] + B2R_d2;
 
-   a2          = Gamma*Pri_L[4]*_RhoL;
+   a2          = EoS_DensPres2CSqr( Con_L[0], Pri_L[4], Con_L+NCOMP_FLUID, EoS_AuxArray );
    Cax2        = Bx2*_RhoL;
    Cat2        = BtL2*_RhoL;
    Ca2_plus_a2 = Cat2 + Cax2 + a2;
@@ -130,20 +144,19 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 
    if ( Cat2 == ZERO )
    {
-      if      ( Cax2 == a2 )  Cf2 = a2;
-      else if ( Cax2 >  a2 )  Cf2 = Cax2;
-      else                    Cf2 = a2;
+      if ( Cax2 >= a2 )    Cf2 = Cax2;
+      else                 Cf2 = a2;
    }
 
    else
    {
-      if ( Cax2 == ZERO )     Cf2 = a2 + Cat2;
-      else                    Cf2 = _TWO*( Ca2_plus_a2 + Cf2_min_Cs2 );
+      if ( Cax2 == ZERO )  Cf2 = a2 + Cat2;
+      else                 Cf2 = _TWO*( Ca2_plus_a2 + Cf2_min_Cs2 );
    }
 
-   Cf_L = SQRT( Cf2 );
+   Cf_L = SQRT( Cf2 );  // Cf2 is positive definite using the above formula
 
-   a2          = Gamma*Pri_R[4]*_RhoR;
+   a2          = EoS_DensPres2CSqr( Con_R[0], Pri_R[4], Con_R+NCOMP_FLUID, EoS_AuxArray );
    Cax2        = Bx2*_RhoR;
    Cat2        = BtR2*_RhoR;
    Ca2_plus_a2 = Cat2 + Cax2 + a2;
@@ -152,26 +165,30 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 
    if ( Cat2 == ZERO )
    {
-      if      ( Cax2 == a2 )  Cf2 = a2;
-      else if ( Cax2 >  a2 )  Cf2 = Cax2;
-      else                    Cf2 = a2;
+      if ( Cax2 >= a2 )    Cf2 = Cax2;
+      else                 Cf2 = a2;
    }
 
    else
    {
-      if ( Cax2 == ZERO )     Cf2 = a2 + Cat2;
-      else                    Cf2 = _TWO*( Ca2_plus_a2 + Cf2_min_Cs2 );
+      if ( Cax2 == ZERO )  Cf2 = a2 + Cat2;
+      else                 Cf2 = _TWO*( Ca2_plus_a2 + Cf2_min_Cs2 );
    }
 
-   Cf_R = SQRT( Cf2 );
+   Cf_R = SQRT( Cf2 );  // Cf2 is positive definite using the above formula
 
-   Cf_max   = FMAX( Cf_L , Cf_R );
-   Speed[0] = Vx_min - Cf_max;
-   Speed[4] = Vx_max + Cf_max;
 
-   Hydro_Con2Flux( 0, Flux_L, Con_L, Gamma_m1, MinPres );
-   Hydro_Con2Flux( 0, Flux_R, Con_R, Gamma_m1, MinPres );
+// estimate the maximum wave-speed using the min/max left and right eigenvalues
+#  if ( HLLD_WAVESPEED == HLL_WAVESPEED_DAVIS )
+   Speed[0] = FMIN( Pri_L[1]-Cf_L, Pri_R[1]-Cf_R );
+   Speed[4] = FMAX( Pri_L[1]+Cf_L, Pri_R[1]+Cf_R );
+#  else
+#  error : ERROR : unsupported HLLD_WAVESPEED !!
+#  endif
 
+
+   Hydro_Con2Flux( 0, Flux_L, Con_L, MinPres, NULL, NULL, Pri_L+4 );
+   Hydro_Con2Flux( 0, Flux_R, Con_R, MinPres, NULL, NULL, Pri_R+4 );
 
 // return the upwind fluxes if flow is supersonic
    if ( Speed[0] >= ZERO )
@@ -267,8 +284,9 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
    VBdot_Lst      = ( Con_Lst[1]*Con_Lst[IdxBx] + Con_Lst[2]*Con_Lst[IdxBy] + Con_Lst[3]*Con_Lst[IdxBz] ) / Con_Lst[0];
    Con_Lst[    4] = (  Sd_L*Con_L[4] - PT_L*Pri_L[1] + PT_st*Speed[2] +
                        Bx*( Pri_L[1]*Pri_L[IdxBx] + Pri_L[2]*Pri_L[IdxBy] + Pri_L[3]*Pri_L[IdxBz] - VBdot_Lst )  ) / Sdm_L;
-
-   Hydro_Con2Pri( Con_Lst, Pri_Lst, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
+   _Rho_Lst       = (real)1.0/Con_Lst[0];
+   Vy_Lst         = _Rho_Lst*Con_Lst[2];
+   Vz_Lst         = _Rho_Lst*Con_Lst[3];
 
    Con_Rst[    1] = Con_Rst[0]*Speed[2];
    Con_Rst[IdxBx] = Bx;
@@ -309,8 +327,9 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
    VBdot_Rst  = ( Con_Rst[1]*Con_Rst[IdxBx] + Con_Rst[2]*Con_Rst[IdxBy] + Con_Rst[3]*Con_Rst[IdxBz] ) / Con_Rst[0];
    Con_Rst[4] = (  Sd_R*Con_R[4] - PT_R*Pri_R[1] + PT_st*Speed[2] +
                    Bx*( Pri_R[1]*Pri_R[IdxBx] + Pri_R[2]*Pri_R[IdxBy] + Pri_R[3]*Pri_R[IdxBz] - VBdot_Rst )  ) / Sdm_R;
-
-   Hydro_Con2Pri( Con_Rst, Pri_Rst, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
+   _Rho_Rst       = (real)1.0/Con_Rst[0];
+   Vy_Rst         = _Rho_Rst*Con_Rst[2];
+   Vz_Rst         = _Rho_Rst*Con_Rst[3];
 
    if ( crit_Bx < MaxErr2 )
    {
@@ -332,21 +351,21 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
      Con_Ldst[1] = Con_Lst[1];
      Con_Rdst[1] = Con_Rst[1];
 
-     tmp_1 = invsumd*(  sqrt_RhoLst*Pri_Lst[2] + sqrt_RhoRst*Pri_Rst[2] + Bxsig*( Pri_Rst[IdxBy] - Pri_Lst[IdxBy] )  );
+     tmp_1 = invsumd*(  sqrt_RhoLst*Vy_Lst + sqrt_RhoRst*Vy_Rst + Bxsig*( Con_Rst[IdxBy] - Con_Lst[IdxBy] )  );
      Con_Ldst[2] = Con_Ldst[0]*tmp_1;
      Con_Rdst[2] = Con_Rdst[0]*tmp_1;
 
-     tmp_1 = invsumd*(  sqrt_RhoLst*Pri_Lst[3] + sqrt_RhoRst*Pri_Rst[3] + Bxsig*( Pri_Rst[IdxBz] - Pri_Lst[IdxBz] )  );
+     tmp_1 = invsumd*(  sqrt_RhoLst*Vz_Lst + sqrt_RhoRst*Vz_Rst + Bxsig*( Con_Rst[IdxBz] - Con_Lst[IdxBz] )  );
      Con_Ldst[3] = Con_Ldst[0]*tmp_1;
      Con_Rdst[3] = Con_Rdst[0]*tmp_1;
 
-     tmp_1 = invsumd*(  sqrt_RhoLst*Pri_Rst[IdxBy] + sqrt_RhoRst*Pri_Lst[IdxBy] +
-                        Bxsig*sqrt_RhoLst*sqrt_RhoRst*( Pri_Rst[2] - Pri_Lst[2] )  );
+     tmp_1 = invsumd*(  sqrt_RhoLst*Con_Rst[IdxBy] + sqrt_RhoRst*Con_Lst[IdxBy] +
+                        Bxsig*sqrt_RhoLst*sqrt_RhoRst*( Vy_Rst - Vy_Lst )  );
      Con_Ldst[IdxBy] = tmp_1;
      Con_Rdst[IdxBy] = tmp_1;
 
-     tmp_1 = invsumd*(  sqrt_RhoLst*Pri_Rst[IdxBz] + sqrt_RhoRst*Pri_Lst[IdxBz] +
-                        Bxsig*sqrt_RhoLst*sqrt_RhoRst*( Pri_Rst[3] - Pri_Lst[3] )  );
+     tmp_1 = invsumd*(  sqrt_RhoLst*Con_Rst[IdxBz] + sqrt_RhoRst*Con_Lst[IdxBz] +
+                        Bxsig*sqrt_RhoLst*sqrt_RhoRst*( Vz_Rst - Vz_Lst )  );
      Con_Ldst[IdxBz] = tmp_1;
      Con_Rdst[IdxBz] = tmp_1;
 

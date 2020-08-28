@@ -17,35 +17,40 @@
 #else // #ifdef __CUDACC__
 
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
-void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Gamma_m1, const real MinPres );
-real Hydro_CheckMinPres( const real InPres, const real MinPres );
+void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres,
+                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[],
+                     const real* const PresIn );
 
 #endif // #ifdef __CUDACC__ ... else ...
 
 
 
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_RiemannSolver_HLLC
-// Description :  Approximate Riemann solver of Harten, Lax, and van Leer.
-//                The wave speed is estimated by the same formula in HLLE solver
+// Description :  Approximate Riemann solver of Harten, Lax, and van Leer extended to include the contact wave
 //
 // Note        :  1. Input data should be conserved variables
 //                2. Ref : a. Riemann Solvers and Numerical Methods for Fluid Dynamics - A Practical Introduction
-//                             ~ by Eleuterio F. Toro
-//                         b. Batten, P., Clarke, N., Lambert, C., & Causon, D. M. 1997, SIAM J. Sci. Comput.,
-//                            18, 1553
-//                3. This function is shared by MHM, MHM_RP, and CTU schemes
+//                             ~ by Eleuterio F. Toro (1999)
+//                         b. Batten, P., Clarke, N., Lambert, C., & Causon, D. M. 1997, SIAM J. Sci. Comput., 18, 1553
+//                         c. Coleman, M. S. B. 2020, ApJS, 248, 7
+//                3. Wave-speed estimator is set by HLLC_WAVESPEED in CUFLU.h
+//                4. Support general EoS
+//                5. Shared by the MHM, MHM_RP, and CTU schemes
 //
-// Parameter   :  XYZ      : Target spatial direction : (0/1/2) --> (x/y/z)
-//                Flux_Out : Array to store the output flux
-//                L_In     : Input left  state (conserved variables)
-//                R_In     : Input right state (conserved variables)
-//                Gamma    : Ratio of specific heats
-//                MinPres  : Minimum allowed pressure
+// Parameter   :  XYZ               : Target spatial direction : (0/1/2) --> (x/y/z)
+//                Flux_Out          : Array to store the output flux
+//                L/R_In            : Input left/right states (conserved variables)
+//                MinPres           : Pressure floor
+//                EoS_DensEint2Pres : EoS routine to compute the gas pressure
+//                EoS_DensPres2CSqr : EoS routine to compute the sound speed square
+//                EoS_AuxArray      : Auxiliary array for the EoS routines
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                               const real Gamma, const real MinPres )
+                               const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                               const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] )
 {
 
 // 1. reorder the input variables for different spatial directions
@@ -60,24 +65,6 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    Hydro_Rotate3D( L, XYZ, true, MAG_OFFSET );
    Hydro_Rotate3D( R, XYZ, true, MAG_OFFSET );
 
-
-// 2. evaluate the Roe's average values
-   const real Gamma_m1 = Gamma - (real)1.0;
-   const real  TempRho = (real)0.5*( L[0] + R[0] );
-   const real _TempRho = (real)1.0/TempRho;
-
-   real _RhoL, _RhoR, P_L, P_R, H_L, H_R, u, v, w, V2, H, Cs;
-   real RhoL_sqrt, RhoR_sqrt, _RhoL_sqrt, _RhoR_sqrt, _RhoLR_sqrt_sum, GammaP_Rho, TempPres;
-
-   _RhoL = (real)1.0 / L[0];
-   _RhoR = (real)1.0 / R[0];
-   P_L   = Gamma_m1*(  L[4] - (real)0.5*( L[1]*L[1] + L[2]*L[2] + L[3]*L[3] )*_RhoL  );
-   P_R   = Gamma_m1*(  R[4] - (real)0.5*( R[1]*R[1] + R[2]*R[2] + R[3]*R[3] )*_RhoR  );
-   P_L   = Hydro_CheckMinPres( P_L, MinPres );
-   P_R   = Hydro_CheckMinPres( P_R, MinPres );
-   H_L   = ( L[4] + P_L )*_RhoL;
-   H_R   = ( R[4] + P_R )*_RhoR;
-
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( Hydro_CheckNegative(L[0]) )
       printf( "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
@@ -88,38 +75,27 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
               R[0], __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
-   RhoL_sqrt       = SQRT( L[0] );
-   RhoR_sqrt       = SQRT( R[0] );
-   _RhoL_sqrt      = (real)1.0 / RhoL_sqrt;
-   _RhoR_sqrt      = (real)1.0 / RhoR_sqrt;
-   _RhoLR_sqrt_sum = (real)1.0 / (RhoL_sqrt + RhoR_sqrt);
 
-   u  = _RhoLR_sqrt_sum*( _RhoL_sqrt*L[1] + _RhoR_sqrt*R[1] );
-   v  = _RhoLR_sqrt_sum*( _RhoL_sqrt*L[2] + _RhoR_sqrt*R[2] );
-   w  = _RhoLR_sqrt_sum*( _RhoL_sqrt*L[3] + _RhoR_sqrt*R[3] );
-   V2 = u*u + v*v + w*w;
-   H  = _RhoLR_sqrt_sum*(  RhoL_sqrt*H_L  +  RhoR_sqrt*H_R  );
+// 2. estimate the maximum wave speeds
+// 2-1. compute the left/right states
+   const real ZERO             = (real)0.0;
+   const real ONE              = (real)1.0;
+   const real _TWO             = (real)0.5;
+   const bool CheckMinPres_Yes = true;
+   const real Emag             = NULL_REAL;
 
-   GammaP_Rho = Gamma_m1*( H - (real)0.5*V2 );
-   TempPres   = GammaP_Rho*TempRho/Gamma;
-   TempPres   = Hydro_CheckMinPres( TempPres, MinPres );
-   GammaP_Rho = Gamma*TempPres*_TempRho;
+   real _RhoL, _RhoR, u_L, u_R, P_L, P_R, Cs_L, Cs_R, W_L, W_R;
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( Hydro_CheckNegative(GammaP_Rho) )
-      printf( "ERROR : invalid GammaP_Rho (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              GammaP_Rho, __FILE__, __LINE__, __FUNCTION__ );
-#  endif
-
-   Cs = SQRT( GammaP_Rho );
-
-
-// 3. estimate the maximum wave speeds
-   const real EVal[NCOMP_FLUID] = { u-Cs, u, u, u, u+Cs };
-   real u_L, u_R, Cs_L, Cs_R, W_L, W_R, MaxV_L, MaxV_R;
-
-   u_L    = _RhoL*L[1];
-   u_R    = _RhoR*R[1];
+   _RhoL = ONE / L[0];
+   _RhoR = ONE / R[0];
+   u_L   = _RhoL*L[1];
+   u_R   = _RhoR*R[1];
+   P_L   = Hydro_Con2Pres( L[0], L[1], L[2], L[3], L[4], L+NCOMP_FLUID, CheckMinPres_Yes, MinPres, Emag,
+                           EoS_DensEint2Pres, EoS_AuxArray, NULL );
+   P_R   = Hydro_Con2Pres( R[0], R[1], R[2], R[3], R[4], R+NCOMP_FLUID, CheckMinPres_Yes, MinPres, Emag,
+                           EoS_DensEint2Pres, EoS_AuxArray, NULL );
+   Cs_L  = SQRT(  EoS_DensPres2CSqr( L[0], P_L, L+NCOMP_FLUID, EoS_AuxArray )  );
+   Cs_R  = SQRT(  EoS_DensPres2CSqr( R[0], P_R, R+NCOMP_FLUID, EoS_AuxArray )  );
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( Hydro_CheckNegative(P_L) )
@@ -131,71 +107,180 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
               P_R, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
-   Cs_L   = SQRT( Gamma*P_L*_RhoL );
-   Cs_R   = SQRT( Gamma*P_R*_RhoR );
-   W_L    = FMIN( EVal[            0], u_L-Cs_L );
-   W_R    = FMAX( EVal[NCOMP_FLUID-1], u_R+Cs_R );
-   MaxV_L = FMIN( W_L, (real)0.0 );
-   MaxV_R = FMAX( W_R, (real)0.0 );
+
+// 2-2a. use the Roe average eigenvalues
+#  if   ( HLLC_WAVESPEED == HLL_WAVESPEED_ROE )
+   real H_L, H_R, RhoL_sqrt, RhoR_sqrt, _RhoL_sqrt, _RhoR_sqrt, _RhoLR_sqrt_sum;
+   real u_Roe, v_Roe, w_Roe, H_Roe;
+
+// Roe averages
+   H_L             = ( L[4] + P_L )*_RhoL;
+   H_R             = ( R[4] + P_R )*_RhoR;
+   RhoL_sqrt       = SQRT( L[0] );
+   RhoR_sqrt       = SQRT( R[0] );
+   _RhoL_sqrt      = ONE / RhoL_sqrt;
+   _RhoR_sqrt      = ONE / RhoR_sqrt;
+   _RhoLR_sqrt_sum = ONE / ( RhoL_sqrt + RhoR_sqrt );
+
+   u_Roe = _RhoLR_sqrt_sum*( _RhoL_sqrt*L[1] + _RhoR_sqrt*R[1] );
+   v_Roe = _RhoLR_sqrt_sum*( _RhoL_sqrt*L[2] + _RhoR_sqrt*R[2] );
+   w_Roe = _RhoLR_sqrt_sum*( _RhoL_sqrt*L[3] + _RhoR_sqrt*R[3] );
+   H_Roe = _RhoLR_sqrt_sum*(  RhoL_sqrt*H_L  +  RhoR_sqrt*H_R  );
+
+// sound speed
+//###NOTE: we have assumed a constant-gamma EoS here
+// --> otherwise, one needs to specify how to convert (H-0.5*V2, Rho) to Cs^2
+// --> see Eq. [A4] in Coleman 2020
+#  if ( EOS != EOS_GAMMA )
+#     error : ERROR : HLL_WAVESPEED_ROE only works with EOS_GAMMA !!
+#  endif
+
+   const real Gamma    = (real)EoS_AuxArray[0];
+   const real Gamma_m1 = (real)EoS_AuxArray[1];
+   const real _Gamma   = (real)EoS_AuxArray[3];
+
+   real V2_Roe, Cs2_Roe, Cs_Roe, TempRho, TempPres;
+
+   V2_Roe   = SQR( u_Roe ) + SQR( v_Roe ) + SQR( w_Roe );
+   Cs2_Roe  = Gamma_m1*( H_Roe - _TWO*V2_Roe );
+   TempRho  = _TWO*( L[0] + R[0] );  // different from Roe aveage density and is only for applying pressure floor
+   TempPres = Cs2_Roe*TempRho*_Gamma;
+   TempPres = Hydro_CheckMinPres( TempPres, MinPres );
+   Cs2_Roe  = Gamma*TempPres/TempRho;
+   Cs_Roe   = SQRT( Cs2_Roe );
+
+#  ifdef CHECK_NEGATIVE_IN_FLUID
+   if ( Hydro_CheckNegative(Cs2_Roe) )
+      printf( "ERROR : invalid Cs2_Roe (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              Cs2_Roe, __FILE__, __LINE__, __FUNCTION__ );
+#  endif
+
+// maximum and minimum eigenvalues
+   const real EVal_min = u_Roe - Cs_Roe;
+   const real EVal_max = u_Roe + Cs_Roe;
+
+// left/right maximum wave speeds
+   W_L = FMIN( EVal_min, u_L-Cs_L );
+   W_R = FMAX( EVal_max, u_R+Cs_R );
 
 
-// 4. evaluate the star-region velocity (V_S) and pressure (P_S)
-   real V_S, P_S, temp1_L, temp1_R, temp2_L, temp2_R, temp3;
+// 2-2b. use the primitive variable Riemann solver (PVRS)
+#  elif ( HLLC_WAVESPEED == HLL_WAVESPEED_PVRS )
+   real Rho_PVRS, Cs_PVRS, RhoCs_PVRS, P_PVRS, Gamma_SL, Gamma_SR, q_L, q_R;
 
-// take care with large round-off errors when Cs_L<<u_L && Cs_R<<u_R && EVal.Rho>u_L && EVal.Egy<u_R
-// ==> temp1_L ~ temp1_R ~ 0.0 ==> temp3 = inf
-   /*
-   temp1_L = L[0]*( u_L - W_L );
-   temp1_R = R[0]*( u_R - W_R );
-   */
-   temp1_L = L[0]*(  (EVal[            0]<u_L-Cs_L) ? (u_L-EVal[            0]) : (+Cs_L)  );
-   temp1_R = R[0]*(  (EVal[NCOMP_FLUID-1]>u_R+Cs_R) ? (u_R-EVal[NCOMP_FLUID-1]) : (-Cs_R)  );
+   Rho_PVRS    = _TWO*( L[0] + R[0] );
+   Cs_PVRS     = _TWO*( Cs_L + Cs_R );
+   RhoCs_PVRS  = Rho_PVRS * Cs_PVRS;
+   P_PVRS      = _TWO*(  ( P_L + P_R ) + ( u_L - u_R )*RhoCs_PVRS  );
+   P_PVRS      = Hydro_CheckMinPres( P_PVRS, MinPres );
 
-   temp2_L = P_L + temp1_L*u_L;
-   temp2_R = P_R + temp1_R*u_R;
-   temp3   = real(1.0) / ( temp1_L - temp1_R );
+#  if ( EOS == EOS_GAMMA )
+   Gamma_SL    = (real)EoS_AuxArray[0];
+   Gamma_SR    = (real)EoS_AuxArray[0];
+#  else
+   real u_PVRS, Rho_Cs_PVRS, Rho_SL, Rho_SR, _P;
 
-   V_S = temp3*( P_L - P_R + temp1_L*u_L - temp1_R*u_R );
-   P_S = temp3*( temp1_L*temp2_R - temp1_R*temp2_L );
-   P_S = Hydro_CheckMinPres( P_S, MinPres );
+   u_PVRS      = _TWO*(  ( u_L + u_R ) + ( P_L - P_R )/RhoCs_PVRS  );
+   Rho_Cs_PVRS = Rho_PVRS / Cs_PVRS;
+   Rho_SL      = L[0] + ( u_L - u_PVRS )*Rho_Cs_PVRS;
+   Rho_SR      = R[0] + ( u_PVRS - u_R )*Rho_Cs_PVRS;
+   _P          = ONE / P_PVRS;
+// see Eq. [9.8] in Toro 1999 for passive scalars
+   Gamma_SL    = EoS_DensPres2CSqr( Rho_SL, P_PVRS, L+NCOMP_FLUID, EoS_AuxArray )*Rho_SL*_P;
+   Gamma_SR    = EoS_DensPres2CSqr( Rho_SR, P_PVRS, R+NCOMP_FLUID, EoS_AuxArray )*Rho_SR*_P;
+#  endif // EOS
+
+   q_L = ( P_PVRS <= P_L ) ? ONE : SQRT(  ONE + _TWO*( Gamma_SL + ONE )/Gamma_SL*( P_PVRS/P_L - ONE )  );
+   q_R = ( P_PVRS <= P_R ) ? ONE : SQRT(  ONE + _TWO*( Gamma_SR + ONE )/Gamma_SR*( P_PVRS/P_R - ONE )  );
+   W_L = u_L - Cs_L*q_L;
+   W_R = u_R + Cs_R*q_R;
+
+#  ifdef CHECK_NEGATIVE_IN_FLUID
+   if ( Hydro_CheckNegative(q_L) )
+      printf( "ERROR : invalid q_L (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              q_L, __FILE__, __LINE__, __FUNCTION__ );
+
+   if ( Hydro_CheckNegative(q_R) )
+      printf( "ERROR : invalid q_R (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              q_R, __FILE__, __LINE__, __FUNCTION__ );
+#  endif
 
 
-// 5. evaluate the weightings of the left(right) fluxes and contact wave
+// 2-2c. use the min/max of the left and right eigenvalues
+#  elif ( HLLC_WAVESPEED == HLL_WAVESPEED_DAVIS )
+   W_L = FMIN( u_L-Cs_L, u_R-Cs_R );
+   W_R = FMAX( u_L+Cs_L, u_R+Cs_R );
+
+
+#  else
+#  error : ERROR : unsupported HLLC_WAVESPEED !!
+#  endif // HLLC_WAVESPEED
+
+
+// 3. evaluate the star-region velocity (V_S) and pressure (P_S)
+   real temp1_L, temp1_R, temp2, V_S, P_S;
+
+// do not use u_L-W_L and u_R-W_R to prevent from large round-off errors when Cs<<u~W
+// ==> temp1_L ~ temp1_R ~ 0.0 ==> temp2 = inf
+#  if   ( HLLC_WAVESPEED == HLL_WAVESPEED_ROE )
+   temp1_L = L[0]*(  (EVal_min<u_L-Cs_L) ? (u_L-EVal_min) : (+Cs_L)  );
+   temp1_R = R[0]*(  (EVal_max>u_R+Cs_R) ? (u_R-EVal_max) : (-Cs_R)  );
+#  elif ( HLLC_WAVESPEED == HLL_WAVESPEED_PVRS )
+   temp1_L = +L[0]*( Cs_L*q_L );
+   temp1_R = -R[0]*( Cs_R*q_R );
+#  elif ( HLLC_WAVESPEED == HLL_WAVESPEED_DAVIS )
+   temp1_L = +L[0]*( u_L - W_L );
+   temp1_R = +R[0]*( u_R - W_R );
+#  else
+#  error : ERROR : unsupported HLLC_WAVESPEED !!
+#  endif
+
+   temp2 = ONE / ( temp1_L - temp1_R );
+   V_S   = temp2*( P_L - P_R + temp1_L*u_L - temp1_R*u_R );
+   P_S   = temp2*(  temp1_L*( P_R + temp1_R*u_R ) - temp1_R*( P_L + temp1_L*u_L )  );
+   P_S   = Hydro_CheckMinPres( P_S, MinPres );
+
+
+// 4. evaluate the weightings of the left/right fluxes and contact wave
    real Flux_LR[NCOMP_TOTAL], temp4, Coeff_LR, Coeff_S;  // use NCOMP_TOTAL for Flux_LR since it will be passed to Hydro_Con2Flux()
 
-   if ( V_S >= (real)0.0 )
+   if ( V_S >= ZERO )
    {
-      Hydro_Con2Flux( 0, Flux_LR, L, Gamma_m1, MinPres );
+      const real MaxV_L = FMIN( W_L, ZERO );
+
+      Hydro_Con2Flux( 0, Flux_LR, L, MinPres, NULL, NULL, &P_L );
 
       for (int v=0; v<NCOMP_FLUID; v++)   Flux_LR[v] -= MaxV_L*L[v];    // fluxes along the maximum wave speed
 
-      temp4    = (real)1.0 / ( V_S - MaxV_L );
+      temp4    = ONE / ( V_S - MaxV_L );
       Coeff_LR = temp4*V_S;
       Coeff_S  = -temp4*MaxV_L*P_S;
    }
 
    else // V_S < 0.0
    {
-      Hydro_Con2Flux( 0, Flux_LR, R, Gamma_m1, MinPres );
+      const real MaxV_R = FMAX( W_R, ZERO );
+
+      Hydro_Con2Flux( 0, Flux_LR, R, MinPres, NULL, NULL, &P_R );
 
       for (int v=0; v<NCOMP_FLUID; v++)    Flux_LR[v] -= MaxV_R*R[v];   // fluxes along the maximum wave speed
 
-      temp4    = (real)1.0 / ( V_S - MaxV_R );
+      temp4    = ONE / ( V_S - MaxV_R );
       Coeff_LR = temp4*V_S;
       Coeff_S  = -temp4*MaxV_R*P_S;
    }
 
 
-// 6. evaluate the HLLC fluxes
+// 5. evaluate the HLLC fluxes
    for (int v=0; v<NCOMP_FLUID; v++)   Flux_Out[v] = Coeff_LR*Flux_LR[v];
 
    Flux_Out[1] += Coeff_S;
    Flux_Out[4] += Coeff_S*V_S;
 
 
-// 7. evaluate the fluxes for passive scalars
+// 6. evaluate the fluxes of passive scalars
 #  if ( NCOMP_PASSIVE > 0 )
-   if ( Flux_Out[FLUX_DENS] >= (real)0.0 )
+   if ( Flux_Out[FLUX_DENS] >= ZERO )
    {
       const real vx = Flux_Out[FLUX_DENS]*_RhoL;
 
@@ -211,7 +296,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 #  endif
 
 
-// 8. restore the correct order
+// 7. restore the correct order
    Hydro_Rotate3D( Flux_Out, XYZ, false, MAG_OFFSET );
 
 } // FUNCTION : Hydro_RiemannSolver_HLLC
