@@ -36,16 +36,16 @@ COMPILE_VERBOSE := 0
 SIMU_OPTION += -DMODEL=HYDRO
 
 # enable gravity
-#SIMU_OPTION += -DGRAVITY
+SIMU_OPTION += -DGRAVITY
 
 # enable particles
 # --> must enable GRAVITY
-#SIMU_OPTION += -DPARTICLE
+SIMU_OPTION += -DPARTICLE
 
 # support Grackle, a chemistry and radiative cooling library
 # --> must set NCOMP_PASSIVE_USER according to the primordial chemistry network set by GRACKLE_PRIMORDIAL
 # --> please enable OpenMP when compiling Grackle (by "make omp-on")
-#SIMU_OPTION += -DSUPPORT_GRACKLE
+SIMU_OPTION += -DSUPPORT_GRACKLE
 
 
 # (b) options of different physical modules
@@ -55,21 +55,21 @@ ifeq "$(filter -DMODEL=HYDRO, $(SIMU_OPTION))" "-DMODEL=HYDRO"
 # hydrodynamic scheme: RTVD/MHM/MHM_RP/CTU
 # --> must be set when MODEL=HYDRO
 # --> MHD only supports MHM_RP and CTU
-SIMU_OPTION += -DFLU_SCHEME=CTU
+SIMU_OPTION += -DFLU_SCHEME=MHM
 
 # scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic)
 # --> useless for RTVD
-SIMU_OPTION += -DLR_SCHEME=PPM
+SIMU_OPTION += -DLR_SCHEME=PLM
 
 # Riemann solver: EXACT/ROE/HLLE/HLLC/HLLD
 # --> pure hydro: EXACT/ROE/HLLE/HLLC(*); MHD: ROE/HLLE/HLLD(*);
 #                 (recommended solvers are highlighted by *)
 # --> useless for RTVD
-SIMU_OPTION += -DRSOLVER=ROE
+SIMU_OPTION += -DRSOLVER=HLLC
 
 # dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy)
 # --> DE_EINT is not supported yet; useless for RTVD
-#SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
+SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
 
 # number of user-defined passively advected scalars
 # --> set it to 0 or comment it out if none is required
@@ -126,15 +126,15 @@ endif # GRAVITY
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DPARTICLE, $(SIMU_OPTION))" "-DPARTICLE"
 # store particle acceleration (recommended)
-SIMU_OPTION += -DSTORE_PAR_ACC
+#SIMU_OPTION += -DSTORE_PAR_ACC
 
 # allow for creating new particles after initialization
 # --> must turn on STORE_POT_GHOST when STORE_PAR_ACC is adopted
-#SIMU_OPTION += -DSTAR_FORMATION
+SIMU_OPTION += -DSTAR_FORMATION
 
 # number of user-defined particle attributes
 # --> set it to 0 or comment it out if none is required
-SIMU_OPTION += -DPAR_NATT_USER=0
+SIMU_OPTION += -DPAR_NATT_USER=1
 endif # PARTICLE
 
 
@@ -173,11 +173,11 @@ SIMU_OPTION += -DTIMING
 
 # serial mode (in which no MPI libraries are required)
 # --> must disable LOAD_BALANCE
-SIMU_OPTION += -DSERIAL
+#SIMU_OPTION += -DSERIAL
 
 # load-balance parallelization: HILBERT
 # --> must disable SERIAL
-#SIMU_OPTION += -DLOAD_BALANCE=HILBERT
+SIMU_OPTION += -DLOAD_BALANCE=HILBERT
 
 # overlap MPI communication with computation
 # --> NOT supported yet; must enable LOAD_BALANCE
@@ -190,10 +190,10 @@ SIMU_OPTION += -DOPENMP
 #SIMU_OPTION += -DLAOHU
 
 # support HDF5 format
-#SIMU_OPTION += -DSUPPORT_HDF5
+SIMU_OPTION += -DSUPPORT_HDF5
 
 # support GNU scientific library
-#SIMU_OPTION += -DSUPPORT_GSL
+SIMU_OPTION += -DSUPPORT_GSL
 
 # support yt inline analysis
 #SIMU_OPTION += -DSUPPORT_LIBYT
@@ -201,7 +201,8 @@ SIMU_OPTION += -DOPENMP
 # random number implementation: RNG_GNU_EXT/RNG_CPP11 (GNU extension drand48_r/c++11 <random>)
 # --> use RNG_GNU_EXT for compilers supporting GNU extensions (**not supported on some macOS**)
 #     use RNG_CPP11   for compilers supporting c++11 (**may need to add -std=c++11 to CXXFLAG**)
-SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
+#SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
+SIMU_OPTION += -DRANDOM_NUMBER=RNG_CPP11
 
 
 
@@ -212,52 +213,52 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 
 # intel
 # -------------------------------------------------------------------------------
-# CXX         = icpc                                      # serial compiler
+CXX         = mpiicpc                                      # serial compiler
 ##CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
 ##CXX         = CC                                        # cray wrapper script
 # CXXFLAG     = -g -O3                                    # general flags
-##CXXFLAG     = -g -O3 -std=c++11 #-gxx-name=YOUR_G++
+CXXFLAG     = -std=c++11 #-g -O3 -gxx-name=YOUR_G++
 ##CXXFLAG     = -g -fast
-# CXXFLAG    += -w1                                       # warning flags
-# OPENMPFLAG  = -fopenmp                                  # openmp flag
-# LIB         = -limf                                     # libraries and linker flags
+CXXFLAG    += -w1                                       # warning flags
+OPENMPFLAG  = -fopenmp                                  # openmp flag
+LIB         = -limf                                     # libraries and linker flags
 #
 ## for debug only
-#ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
+ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
 ##CXXFLAG    += -fstack-protector-all
 ##LIB        += -lssp
-#endif
+endif
 #
 ## suppress warning when OpenMP is disabled
-#ifeq "$(filter -DOPENMP, $(SIMU_OPTION))" ""
+ifeq "$(filter -DOPENMP, $(SIMU_OPTION))" ""
 # CXXFLAG    += -Wno-unknown-pragmas -diag-disable 3180
-#endif
+endif
 
 
 # gnu
 # -------------------------------------------------------------------------------
- CXX         = g++                                       # serial compiler
+# CXX         = g++                                       # serial compiler
 #CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
 #CXX         = CC                                        # cray wrapper script
- CXXFLAG     = -g -O3                                    # general flags
+# CXXFLAG     = -g -O3                                    # general flags
 #CXXFLAG     = -g -O3 -std=c++11
 #CXXFLAG     = -g -Ofast
- CXXFLAG    += -Wall -Wextra                             # warning flags
- CXXFLAG    += -Wno-unused-variable -Wno-unused-parameter \
+# CXXFLAG    += -Wall -Wextra                             # warning flags
+# CXXFLAG    += -Wno-unused-variable -Wno-unused-parameter \
                -Wno-maybe-uninitialized -Wno-unused-but-set-variable \
                -Wno-unused-result -Wno-unused-function
- OPENMPFLAG  = -fopenmp                                  # openmp flag
- LIB         =                                           # libraries and linker flags
+# OPENMPFLAG  = -fopenmp                                  # openmp flag
+# LIB         =                                           # libraries and linker flags
 
 # for debug only
-ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
+#ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
 #CXXFLAG    += -fstack-protector-all
-endif
+#endif
 
 # suppress warning when OpenMP is disabled
-ifeq "$(filter -DOPENMP, $(SIMU_OPTION))" ""
- CXXFLAG    += -Wno-unknown-pragmas
-endif
+#ifeq "$(filter -DOPENMP, $(SIMU_OPTION))" ""
+# CXXFLAG    += -Wno-unknown-pragmas
+#endif
 
 
 # CUDA
@@ -273,14 +274,17 @@ endif
 # library paths
 #######################################################################################################
 
+
 # template
 CUDA_PATH    :=
-FFTW_PATH    :=
-MPI_PATH     :=
-HDF5_PATH    :=
-GRACKLE_PATH :=
-GSL_PATH     :=
+FFTW_PATH    := /share/home/jtshen/soft/fftw2/single
+MPI_PATH     := /share/apps/intel/ipsxe2018u3/compilers_and_libraries_2018.3.222/linux/mpi/intel64
+HDF5_PATH    := /share/home/jtshen/soft/hdf5
+#HDF5_PATH    := /share/home/jtshen/soft/anaconda2/pkgs/hdf5-1.10.2-hba1933b_1
+GRACKLE_PATH := /share/home/jtshen/soft/Grackle/single
+GSL_PATH     := /share/home/jtshen/soft/gsl
 LIBYT_PATH   :=
+
 
 # NCSA-bluewaters (only need to specify the path of user-installed packages)
 #GRACKLE_PATH :=
