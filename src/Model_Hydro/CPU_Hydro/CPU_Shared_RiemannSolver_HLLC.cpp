@@ -254,10 +254,20 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
       for (int v=0; v<NCOMP_FLUID; v++)   Flux_LR[v] -= MaxV_L*L[v];    // fluxes along the maximum wave speed
 
-      temp4    = ONE / ( V_S - MaxV_L );
-      Coeff_LR = temp4*V_S;
-      Coeff_S  = -temp4*MaxV_L*P_S;
-   }
+//    deal with the special case of V_S=MaxV_L=0
+      if ( V_S == ZERO  &&  MaxV_L == ZERO )
+      {
+         Coeff_LR = ONE;
+         Coeff_S  = ZERO;
+      }
+
+      else
+      {
+         temp4    = ONE / ( V_S - MaxV_L );
+         Coeff_LR = temp4*V_S;
+         Coeff_S  = -temp4*MaxV_L*P_S;
+      }
+   } // if ( V_S >= ZERO )
 
    else // V_S < 0.0
    {
@@ -270,7 +280,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
       temp4    = ONE / ( V_S - MaxV_R );
       Coeff_LR = temp4*V_S;
       Coeff_S  = -temp4*MaxV_R*P_S;
-   }
+   } // if ( V_S >= ZERO ) ... else ...
 
 
 // 5. evaluate the HLLC fluxes

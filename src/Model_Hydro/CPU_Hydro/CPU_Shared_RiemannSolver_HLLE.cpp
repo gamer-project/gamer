@@ -408,11 +408,20 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
 
 
 // 4. evaluate the HLLE fluxes
-//###REVISE: handle the extreme case with MaxV_R==MaxV_L
-   const real _MaxV_R_minus_L = ONE / ( MaxV_R - MaxV_L );
+// deal with the special case of MaxV_L=MaxV_R=0
+   if ( MaxV_L == ZERO  &&  MaxV_R == ZERO )
+   {
+      for (int v=0; v<NWAVE; v++)
+         Flux_Out[ idx_wave[v] ] = Flux_L[ idx_wave[v] ];   // assuming Flux_L=Flux_R
+   }
 
-   for (int v=0; v<NWAVE; v++)
-      Flux_Out[ idx_wave[v] ] = _MaxV_R_minus_L*( MaxV_R*Flux_L[ idx_wave[v] ] - MaxV_L*Flux_R[ idx_wave[v] ] );
+   else
+   {
+      const real _MaxV_R_minus_L = ONE / ( MaxV_R - MaxV_L );
+
+      for (int v=0; v<NWAVE; v++)
+         Flux_Out[ idx_wave[v] ] = _MaxV_R_minus_L*( MaxV_R*Flux_L[ idx_wave[v] ] - MaxV_L*Flux_R[ idx_wave[v] ] );
+   }
 
 // longitudinal magnetic flux is always zero
 #  ifdef MHD
