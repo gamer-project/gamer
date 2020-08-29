@@ -31,7 +31,7 @@ void CPU_HydroGravitySolver(
    const real   g_Pot_Array_USG[][ CUBE(USG_NXT_G) ],
    const real   g_Flu_Array_USG[][GRA_NIN-1][ CUBE(PS1) ],
          char   g_DE_Array     [][ CUBE(PS1) ],
-   const real   g_EngyB_Array  [][ CUBE(PS1) ],
+   const real   g_Emag_Array   [][ CUBE(PS1) ],
    const int NPatchGroup,
    const real dt, const real dh, const bool P5_Gradient,
    const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
@@ -65,7 +65,7 @@ void CPU_ELBDMGravitySolver(       real Flu_Array[][GRA_NIN][PATCH_SIZE][PATCH_S
 //                h_Pot_Array_USG      : Host array storing the prepared potential for UNSPLIT_GRAVITY
 //                h_Flu_Array_USG      : Host array storing the prepared density + momentum for UNSPLIT_GRAVITY
 //                h_DE_Array           : Host array storing the dual-energy status (for both input and output)
-//                h_EngyB_Array        : Host array storing the cell-centered magnetic energy (MHD only)
+//                h_Emag_Array         : Host array storing the cell-centered magnetic energy (MHD only)
 //                NPatchGroup          : Number of patch groups evaluated simultaneously by GPU
 //                dt                   : Time interval to advance solution
 //                dh                   : Cell size
@@ -90,7 +90,7 @@ void CPU_ELBDMGravitySolver(       real Flu_Array[][GRA_NIN][PATCH_SIZE][PATCH_S
 //                TimeNew              : Physical time at the current  step (for the external gravity solver)
 //                TimeOld              : Physical time at the previous step (for the external gravity solver in UNSPLIT_GRAVITY)
 //                ExtPot               : Add the external potential
-//                MinEint              : Minimum allowed internal energy (== MIN_PRES / (GAMMA-1))
+//                MinEint              : Internal energy floor
 //
 // Useless parameters in HYDRO : ELBDM_Eta, ELBDM_Lambda
 // Useless parameters in ELBDM : P5_Gradient
@@ -105,7 +105,7 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
                                const real h_Pot_Array_USG[][USG_NXT_G][USG_NXT_G][USG_NXT_G],
                                const real h_Flu_Array_USG[][GRA_NIN-1][PS1][PS1][PS1],
                                      char h_DE_Array     [][PS1][PS1][PS1],
-                               const real h_EngyB_Array  [][PS1][PS1][PS1],
+                               const real h_Emag_Array   [][PS1][PS1][PS1],
                                const int NPatchGroup, const real dt, const real dh, const int SOR_Min_Iter,
                                const int SOR_Max_Iter, const real SOR_Omega, const int MG_Max_Iter,
                                const int MG_NPre_Smooth, const int MG_NPost_Smooth, const real MG_Tolerated_Error,
@@ -139,8 +139,8 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
 #     endif
 
 #     ifdef MHD
-      if ( h_EngyB_Array == NULL )
-         Aux_Error( ERROR_INFO, "h_EngyB_Array == NULL !!\n" );
+      if ( h_Emag_Array == NULL )
+         Aux_Error( ERROR_INFO, "h_Emag_Array == NULL !!\n" );
 #     endif
    }
 #  endif // #ifdef GAMER_DEBUG
@@ -179,7 +179,7 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
                               (real(*)[ CUBE(USG_NXT_G) ])      h_Pot_Array_USG,
                               (real(*)[GRA_NIN-1][ CUBE(PS1) ]) h_Flu_Array_USG,
                               (char(*)[ CUBE(PS1) ])            h_DE_Array,
-                              (real(*)[ CUBE(PS1) ])            h_EngyB_Array,
+                              (real(*)[ CUBE(PS1) ])            h_Emag_Array,
                               NPatchGroup, dt, dh, P5_Gradient, GravityType, CPUExtAcc_Ptr,
                               ExtAcc_AuxArray, TimeNew, TimeOld, MinEint );
 

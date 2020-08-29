@@ -30,22 +30,6 @@
 #endif
 
 
-// bitwise reproducibility in flux and electric field fix-up operations
-#ifdef BITWISE_REPRODUCIBILITY
-#  define BIT_REP_FLUX
-#endif
-
-// enable BIT_REP_ELECTRIC by default even when BITWISE_REPRODUCIBILITY is off
-// --> it ensures that the B field on the common interface between two nearby patches are fully
-//     consistent with each other (even the round-off errors are the same)
-//     --> reducing the div(B) errors significantly
-#ifdef MHD
-//#ifdef BITWISE_REPRODUCIBILITY
-#  define BIT_REP_ELECTRIC
-//#endif
-#endif
-
-
 
 // #################################
 // ## macros for different models ##
@@ -148,9 +132,29 @@
 
 // perform spatial data reconstruction in characteristic variables (default: primitive variables)
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-#  ifndef GRAVITY
-#     define CHAR_RECONSTRUCTION
-#  endif
+//#  define CHAR_RECONSTRUCTION
+#endif
+
+
+// perform spatial data reconstruction in internal energy and use that to convert the face-centered
+// primitive variables to conservative variables
+// --> when it's disabled, the internal energy is converted from pressure using a given EoS
+// --> pros: improve performance since the EoS conversion could be expensive
+//     cons: (1) face-centered internal energy and pressure will NOT be fully self-consistent for a given EoS,
+//               which may affect the accuracy of Riemann solver if it loads both conservative and primitive variables
+//           (2) incompatible with CTU as it requires applying the characteristic tracing step to internal energy,
+//               which has not been implemented
+// --> unnecessary for EOS_GAMMA as this EoS is fast
+#if ( EOS != EOS_GAMMA  &&  FLU_SCHEME != CTU )
+#  define LR_EINT
+#endif
+
+
+// total number of target variables in the data reconstruction
+#ifdef LR_EINT
+#  define NCOMP_LR   ( NCOMP_TOTAL_PLUS_MAG + 1 )
+#else
+#  define NCOMP_LR   ( NCOMP_TOTAL_PLUS_MAG     )
 #endif
 
 
@@ -184,6 +188,33 @@
 #  endif
 
 #endif
+
+
+// wave-speed estimates in the HLL-like Riemann solvers
+#define HLL_WAVESPEED_ROE     1  // Roe average eigenvalues (Batten et al. 1997, SIAM J. Sci. Comput., 18, 1553)
+#define HLL_WAVESPEED_PVRS    2  // Primitive Variable Riemann Solver (Toro 1999, Sec. 10.5.2)
+#define HLL_WAVESPEED_DAVIS   3  // min/max of the left and right eigenvalues (Davis 1988, SIAM J. Sci. Stat, Comput., 9, 445)
+
+// supported options:
+// -> HLL_WAVESPEED_ROE (1) only supports the constant-gamma EoS (i.e., EOS_GAMMA)
+//    HLL_WAVESPEED_PVRS (2) does not support MHD
+// -> HLLC:
+//       MHD on : none
+//       MHD off: 1 for constant-gamma EoS and 2/3 for all EoS
+//    HLLE:
+//       MHD on : 1 for constant-gamma EoS and 3 for all EoS
+//       MHD off: 1 for constant-gamma EoS and 2/3 for all EoS
+//    HLLD:
+//       MHD on : 3 for all EoS
+//       MHD off: none
+
+#  define HLLC_WAVESPEED   HLL_WAVESPEED_PVRS
+#ifdef MHD
+#  define HLLE_WAVESPEED   HLL_WAVESPEED_DAVIS
+#else
+#  define HLLE_WAVESPEED   HLL_WAVESPEED_PVRS
+#endif
+#  define HLLD_WAVESPEED   HLL_WAVESPEED_DAVIS
 
 
 // 2. ELBDM macro
@@ -410,9 +441,11 @@
 
 // GPU device function specifier
 #ifdef __CUDACC__
-# define GPU_DEVICE __forceinline__ __device__
+# define GPU_DEVICE          __forceinline__ __device__
+# define GPU_DEVICE_NOINLINE    __noinline__ __device__
 #else
 # define GPU_DEVICE
+# define GPU_DEVICE_NOINLINE
 #endif
 
 // unified CPU/GPU loop

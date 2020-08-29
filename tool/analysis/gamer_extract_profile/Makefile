@@ -59,7 +59,7 @@ vpath %.cpp ./ GAMER_Functions GAMER_Functions/Interpolation
 
 # rules and targets
 #######################################################################################################
-HDF5_PATH := /opt/hdf5/1.8.20
+HDF5_PATH := /software/hdf5/default
 
 CC    := icpc
 CFLAG := -O3 -w1 -g #-xSSE4.2 -fp-model precise

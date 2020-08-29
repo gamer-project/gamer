@@ -17,8 +17,11 @@ __global__ void CUFLU_FluidSolver_RTVD(
    real g_Flux     [][9][NCOMP_TOTAL][ SQR(PS2) ],
    const double g_Corner[][3],
    const real g_Pot_USG[][ CUBE(USG_NXT_F) ],
-   const real dt, const real _dh, const real Gamma, const bool StoreFlux,
-   const bool XYZ, const real MinDens, const real MinPres );
+   const real dt, const real _dh, const bool StoreFlux,
+   const bool XYZ, const real MinDens, const real MinPres, const real MinEint,
+   const EoS_DE2P_t EoS_DensEint2Pres_Func,
+   const EoS_DP2E_t EoS_DensPres2Eint_Func,
+   const EoS_DP2C_t EoS_DensPres2CSqr_Func );
 #elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 __global__
 void CUFLU_FluidSolver_MHM(
@@ -31,19 +34,22 @@ void CUFLU_FluidSolver_MHM(
          real   g_Ele_Array    [][9][NCOMP_ELE][ PS2P1*PS2 ],
    const double g_Corner_Array [][3],
    const real   g_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
-         real   g_PriVar       []   [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT) ],
-         real   g_Slope_PPM    [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ],
+         real   g_PriVar       []   [NCOMP_LR            ][ CUBE(FLU_NXT) ],
+         real   g_Slope_PPM    [][3][NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ],
          real   g_FC_Var       [][6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
          real   g_FC_Flux      [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
          real   g_FC_Mag_Half  [][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
          real   g_EC_Ele       [][NCOMP_MAG][ CUBE(N_EC_ELE) ],
-   const real dt, const real dh, const real Gamma,
+   const real dt, const real dh,
    const bool StoreFlux, const bool StoreElectric,
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
    const double Time, const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
-   const real MinDens, const real MinPres, const real DualEnergySwitch,
-   const bool NormPassive, const int NNorm,
-   const bool JeansMinPres, const real JeansMinPres_Coeff );
+   const real MinDens, const real MinPres, const real MinEint,
+   const real DualEnergySwitch, const bool NormPassive, const int NNorm,
+   const bool JeansMinPres, const real JeansMinPres_Coeff,
+   const EoS_DE2P_t EoS_DensEint2Pres_Func,
+   const EoS_DP2E_t EoS_DensPres2Eint_Func,
+   const EoS_DP2C_t EoS_DensPres2CSqr_Func );
 #elif ( FLU_SCHEME == CTU )
 __global__
 void CUFLU_FluidSolver_CTU(
@@ -56,23 +62,27 @@ void CUFLU_FluidSolver_CTU(
          real   g_Ele_Array    [][9][NCOMP_ELE][ PS2P1*PS2 ],
    const double g_Corner_Array [][3],
    const real   g_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
-         real   g_PriVar       []   [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT) ],
-         real   g_Slope_PPM    [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ],
+         real   g_PriVar       []   [NCOMP_LR            ][ CUBE(FLU_NXT) ],
+         real   g_Slope_PPM    [][3][NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ],
          real   g_FC_Var       [][6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
          real   g_FC_Flux      [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
          real   g_FC_Mag_Half  [][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
          real   g_EC_Ele       [][NCOMP_MAG][ CUBE(N_EC_ELE) ],
-   const real dt, const real dh, const real Gamma,
+   const real dt, const real dh,
    const bool StoreFlux, const bool StoreElectric,
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
    const double Time, const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
-   const real MinDens, const real MinPres, const real DualEnergySwitch,
-   const bool NormPassive, const int NNorm,
-   const bool JeansMinPres, const real JeansMinPres_Coeff );
+   const real MinDens, const real MinPres, const real MinEint,
+   const real DualEnergySwitch, const bool NormPassive, const int NNorm,
+   const bool JeansMinPres, const real JeansMinPres_Coeff,
+   const EoS_DE2P_t EoS_DensEint2Pres_Func,
+   const EoS_DP2E_t EoS_DensPres2Eint_Func,
+   const EoS_DP2C_t EoS_DensPres2CSqr_Func );
 #endif // FLU_SCHEME
-__global__ void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
+__global__ void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                                          const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ],
-                                         const real dh, const real Safety, const real Gamma, const real MinPres );
+                                         const real dh, const real Safety, const real MinPres,
+                                         const EoS_DE2P_t EoS_DensEint2Pres_Func, const EoS_DP2C_t EoS_DensPres2CSqr_Func );
 #ifdef GRAVITY
 __global__
 void CUPOT_dtSolver_HydroGravity( real g_dt_Array[], const real g_Pot_Array[][ CUBE(GRA_NXT) ],
@@ -131,7 +141,7 @@ void CUPOT_HydroGravitySolver(
    const real   g_Pot_Array_USG[][ CUBE(USG_NXT_G) ],
    const real   g_Flu_Array_USG[][GRA_NIN-1][ CUBE(PS1) ],
          char   g_DE_Array     [][ CUBE(PS1) ],
-   const real   g_EngyB_Array  [][ CUBE(PS1) ],
+   const real   g_Emag_Array   [][ CUBE(PS1) ],
    const real dt, const real dh, const bool P5_Gradient,
    const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
    const double TimeNew, const double TimeOld, const real MinEint );

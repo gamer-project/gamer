@@ -27,23 +27,26 @@
 #else // #ifdef __CUDACC__
 
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
-void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Gamma_m1, const real MinPres );
+void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres,
+                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[],
+                     const real* const PresIn );
 #if   ( CHECK_INTERMEDIATE == EXACT )
-void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
-                    const bool NormPassive, const int NNorm, const int NormIdx[],
-                    const bool JeansMinPres, const real JeansMinPres_Coeff );
-void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
+void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+                                const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                                const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] );
 #elif ( CHECK_INTERMEDIATE == HLLE )
 void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                               const real Gamma, const real MinPres );
+                               const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                               const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] );
 #elif ( CHECK_INTERMEDIATE == HLLC )
 void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                               const real Gamma, const real MinPres );
+                               const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                               const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] );
 #elif ( CHECK_INTERMEDIATE == HLLD )
 void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                               const real Gamma, const real MinPres );
+                               const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                               const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] );
 #endif
-real Hydro_CheckMinPres( const real InPres, const real MinPres );
 
 #endif // #ifdef __CUDACC__ ... else ...
 
@@ -58,19 +61,31 @@ real Hydro_CheckMinPres( const real InPres, const real MinPres );
 //                2. Ref : (a) "Riemann Solvers and Numerical Methods for Fluid Dynamics - A Practical Introduction
 //                             ~ by Eleuterio F. Toro"
 //                         (b) Stone et al., ApJS, 178, 137 (2008)
-//                3. This function is shared by MHM, MHM_RP, and CTU schemes
+//                3. Shared by MHM, MHM_RP, and CTU schemes
 //
-// Parameter   :  XYZ         : Target spatial direction : (0/1/2) --> (x/y/z)
-//                Flux_Out    : Array to store the output flux
-//                L_In        : Input left  state (conserved variables)
-//                R_In        : Input right state (conserved variables)
-//                Gamma       : Ratio of specific heats
-//                MinPres     : Minimum allowed pressure
+// Parameter   :  XYZ               : Target spatial direction : (0/1/2) --> (x/y/z)
+//                Flux_Out          : Array to store the output flux
+//                L_In              : Input left  state (conserved variables)
+//                R_In              : Input right state (conserved variables)
+//                MinPres           : Pressure floor
+//                EoS_DensEint2Pres : EoS routine to compute the gas pressure
+//                EoS_DensPres2CSqr : EoS routine to compute the sound speed square
+//                EoS_AuxArray      : Auxiliary array for the EoS routines
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                              const real Gamma, const real MinPres )
+                              const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                              const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] )
 {
+
+// check
+#  if ( EOS == EOS_GAMMA )
+   const real *Passive = NULL;   // EOS_GAMMA does not involve passive scalars
+#  elif ( defined GAMER_DEBUG )
+   printf( "ERROR : EOS != EOS_GAMMA is NOT supported at file <%s>, line <%d>, function <%s> !!\n",
+           __FILE__, __LINE__, __FUNCTION__ );
+#  endif
+
 
 // 1. reorder the input variables for different spatial directions
    real L[NCOMP_TOTAL_PLUS_MAG], R[NCOMP_TOTAL_PLUS_MAG];
@@ -84,22 +99,31 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    Hydro_Rotate3D( L, XYZ, true, MAG_OFFSET );
    Hydro_Rotate3D( R, XYZ, true, MAG_OFFSET );
 
+// longitudinal B field in the left and right states should be the same
+#  ifdef GAMER_DEBUG
+   if ( L[MAG_OFFSET] != R[MAG_OFFSET] )
+      printf( "ERROR : BxL (%24.17e) != BxR (%24.17e) for XYZ %d at file <%s>, line <%d>, function <%s>!!\n",
+              L[MAG_OFFSET], R[MAG_OFFSET], XYZ, __FILE__, __LINE__, __FUNCTION__ );
+#  endif
+
 
 // 2. evaluate the average values
-   const real ZERO     = (real)0.0;
-   const real ONE      = (real)1.0;
-   const real TWO      = (real)2.0;
-   const real _TWO     = (real)0.5;
-   const real Gamma_m1 = Gamma - ONE;
+   const real ZERO             = (real)0.0;
+   const real ONE              = (real)1.0;
+   const real _TWO             = (real)0.5;
+   const real Gamma            = EoS_AuxArray[0];    // only support constant-gamma EoS (i.e., EOS_GAMMA)
+   const real Gamma_m1         = EoS_AuxArray[1];
+   const bool CheckMinPres_Yes = true;
 #  ifdef MHD
-   const real Gamma_m2 = Gamma - TWO;
+   const real TWO              = (real)2.0;
+   const real Gamma_m2         = Gamma - TWO;
 #  endif
 
    real Rho, _Rho, _RhoL, _RhoR, RhoL_sqrt, RhoR_sqrt, _RhoL_sqrt, _RhoR_sqrt, _RhoLR_sqrt_sum;
-   real HL, HR, u, v, w, V2, H, a, a2, GammaP_Rho;
+   real PL, PR, HL, HR, u, v, w, V2, H, a, a2, GammaP_Rho, EmagL=NULL_REAL, EmagR=NULL_REAL;
 #  ifdef MHD
    real Rho_sqrt, _Rho_sqrt;                    // Roe-average density
-   real BxL, ByL, BzL, BxR, ByR, BzR, BL2, BR2; // magnetic field from left and right states
+   real ByL, BzL, ByR, BzR;                     // magnetic field from left and right states
    real Bx, By, Bz, B2, Bn2, Bn, B2_Rho;        // Roe-average magnetic field
    real Cax, Cax2, Cat2, Cs, Cs2, Cf, Cf2;      // Alfven, slow, and fast waves
    real alpha_f, alpha_s, beta_y, beta_z;       // Eqs. (A16) and (A17) in ref-b
@@ -110,29 +134,28 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    real beta_n_star2, beta_y_star, beta_z_star; // Eq. (B28) in ref-b
 #  endif
 
-   _RhoL = ONE/L[0];
-   _RhoR = ONE/R[0];
-   HL    = (  L[4] + Gamma_m1*( L[4] - _TWO*( SQR(L[1]) + SQR(L[2]) + SQR(L[3]) )*_RhoL )  )*_RhoL;
-   HR    = (  R[4] + Gamma_m1*( R[4] - _TWO*( SQR(R[1]) + SQR(R[2]) + SQR(R[3]) )*_RhoR )  )*_RhoR;
+   _RhoL = ONE / L[0];
+   _RhoR = ONE / R[0];
 #  ifdef MHD
-   BxL   = L[ MAG_OFFSET + 0 ];
+   Bx    = L[ MAG_OFFSET + 0 ];  // assuming Bx=BxL=BxR
    ByL   = L[ MAG_OFFSET + 1 ];
    BzL   = L[ MAG_OFFSET + 2 ];
-   BxR   = R[ MAG_OFFSET + 0 ];
    ByR   = R[ MAG_OFFSET + 1 ];
    BzR   = R[ MAG_OFFSET + 2 ];
-   BL2   = SQR( BxL ) + SQR( ByL ) + SQR( BzL );
-   BR2   = SQR( BxR ) + SQR( ByR ) + SQR( BzR );
-   HL   -= _TWO*Gamma_m2*BL2*_RhoL;    // E = 0.5*rho*v^2 + Pstar/(gamma-1) + (gamma-2)/(gamma-1)*0.5*B^2
-   HR   -= _TWO*Gamma_m2*BR2*_RhoR;
-
-// longitudinal B field in the left and right states should be the same
-#  ifdef GAMER_DEBUG
-   if ( BxL != BxR )
-      printf( "ERROR : BxL (%24.17e) != BxR (%24.17e) for XYZ %d at file <%s>, line <%d>, function <%s>!!\n",
-              BxL, BxR, XYZ, __FILE__, __LINE__, __FUNCTION__ );
+   EmagL = _TWO*( SQR(Bx) + SQR(ByL) + SQR(BzL) );
+   EmagR = _TWO*( SQR(Bx) + SQR(ByR) + SQR(BzR) );
 #  endif
-#  endif // #ifdef MHD
+   PL    = Hydro_Con2Pres( L[0], L[1], L[2], L[3], L[4], L+NCOMP_FLUID, CheckMinPres_Yes, MinPres, EmagL,
+                           EoS_DensEint2Pres, EoS_AuxArray, NULL );
+   PR    = Hydro_Con2Pres( R[0], R[1], R[2], R[3], R[4], R+NCOMP_FLUID, CheckMinPres_Yes, MinPres, EmagR,
+                           EoS_DensEint2Pres, EoS_AuxArray, NULL );
+#  ifdef MHD
+   HL    = _RhoL*( L[4] + PL + EmagL );
+   HR    = _RhoR*( R[4] + PR + EmagR );
+#  else
+   HL    = _RhoL*( L[4] + PL );
+   HR    = _RhoR*( R[4] + PR );
+#  endif
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( Hydro_CheckNegative(L[0]) )
@@ -161,7 +184,6 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
 #  ifdef MHD
    Rho_sqrt  = SQRT( Rho );
    _Rho_sqrt = ONE/Rho_sqrt;
-   Bx        = BxL;
    By        = _RhoLR_sqrt_sum*( RhoL_sqrt*ByR + RhoR_sqrt*ByL );
    Bz        = _RhoLR_sqrt_sum*( RhoL_sqrt*BzR + RhoR_sqrt*BzL );
    Bn2       = SQR( By ) + SQR( Bz );
@@ -310,9 +332,8 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
 // 4. evaluate the left and right fluxes
    real Flux_L[NCOMP_TOTAL_PLUS_MAG], Flux_R[NCOMP_TOTAL_PLUS_MAG];
 
-   Hydro_Con2Flux( 0, Flux_L, L, Gamma_m1, MinPres );
-   Hydro_Con2Flux( 0, Flux_R, R, Gamma_m1, MinPres );
-
+   Hydro_Con2Flux( 0, Flux_L, L, MinPres, NULL, NULL, &PL );
+   Hydro_Con2Flux( 0, Flux_R, R, MinPres, NULL, NULL, &PR );
 
 // 5. return the upwind fluxes if flow is supersonic
    if ( EigenVal[0] >= ZERO )
@@ -599,15 +620,16 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
       if ( EigenVal[t+1] > EigenVal[t] )  // skip the degenerate states
       {
 #        ifdef MHD
-         const real EngyB = _TWO*(  SQR( I_States[NCOMP_FLUID+0] )
-                                  + SQR( I_States[NCOMP_FLUID+1] )
-                                  + SQR( I_States[NCOMP_FLUID+2] )  );
+         const real Emag = _TWO*(  SQR( I_States[NCOMP_FLUID+0] )
+                                 + SQR( I_States[NCOMP_FLUID+1] )
+                                 + SQR( I_States[NCOMP_FLUID+2] )  );
 #        else
-         const real EngyB = NULL_REAL;
+         const real Emag = NULL_REAL;
 #        endif
-         I_Pres = Hydro_GetPressure( I_States[0], I_States[1], I_States[2], I_States[3], I_States[4],
-                                     Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB );
+         I_Pres = Hydro_Con2Pres( I_States[0], I_States[1], I_States[2], I_States[3], I_States[4], Passive,
+                                  CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres, EoS_AuxArray, NULL );
 
+//       if unphysical results occur, recalculate fluxes by a substitute Riemann solver
          if ( I_States[0] <= ZERO  ||  I_Pres <= ZERO )
          {
 #           ifdef GAMER_DEBUG
@@ -615,24 +637,14 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
                     I_States[0], I_Pres );
 #           endif
 
-#           if   ( CHECK_INTERMEDIATE == EXACT  &&  !defined MHD )   // recalculate fluxes by exact solver
-            const bool NormPassive_No  = false; // do NOT convert any passive variable to mass fraction for the Riemann solvers
-            const bool JeansMinPres_No = false;
-            real PriVar_L[NCOMP_TOTAL], PriVar_R[NCOMP_TOTAL]; // not NCOMP_TOTAL_PLUS_MAG since exact solver doesn't support MHD
-
-            Hydro_Con2Pri( L, PriVar_L, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
-            Hydro_Con2Pri( R, PriVar_R, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
-
-            Hydro_RiemannSolver_Exact( 0, Flux_Out, PriVar_L, PriVar_R, Gamma );
-
-#           elif ( CHECK_INTERMEDIATE == HLLE )                      // recalculate fluxes by HLLE solver
-            Hydro_RiemannSolver_HLLE ( 0, Flux_Out, L, R, Gamma, MinPres );
-
-#           elif ( CHECK_INTERMEDIATE == HLLC  &&  !defined MHD )    // recalculate fluxes by HLLC solver
-            Hydro_RiemannSolver_HLLC ( 0, Flux_Out, L, R, Gamma, MinPres );
-
-#           elif ( CHECK_INTERMEDIATE == HLLD  &&  defined MHD )     // recalculate fluxes by HLLD solver
-            Hydro_RiemannSolver_HLLD ( 0, Flux_Out, L, R, Gamma, MinPres );
+#           if   ( CHECK_INTERMEDIATE == EXACT  &&  !defined MHD )
+            Hydro_RiemannSolver_Exact( 0, Flux_Out, L, R, MinPres, EoS_DensEint2Pres, EoS_DensPres2CSqr, EoS_AuxArray );
+#           elif ( CHECK_INTERMEDIATE == HLLE )
+            Hydro_RiemannSolver_HLLE ( 0, Flux_Out, L, R, MinPres, EoS_DensEint2Pres, EoS_DensPres2CSqr, EoS_AuxArray );
+#           elif ( CHECK_INTERMEDIATE == HLLC  &&  !defined MHD )
+            Hydro_RiemannSolver_HLLC ( 0, Flux_Out, L, R, MinPres, EoS_DensEint2Pres, EoS_DensPres2CSqr, EoS_AuxArray );
+#           elif ( CHECK_INTERMEDIATE == HLLD  &&  defined MHD )
+            Hydro_RiemannSolver_HLLD ( 0, Flux_Out, L, R, MinPres, EoS_DensEint2Pres, EoS_DensPres2CSqr, EoS_AuxArray );
 
 #           else
 #           error : ERROR : unsupported CHECK_INTERMEDIATE (EXACT/HLLE/HLLC/HLLD) !!

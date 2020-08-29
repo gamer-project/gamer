@@ -42,12 +42,6 @@ void Flu_FixUp_Flux( const int lv )
 #  endif
 */
 
-#  if   ( MODEL == HYDRO )
-   const real  Gamma_m1       = GAMMA - (real)1.0;
-   const real _Gamma_m1       = (real)1.0 / Gamma_m1;
-   const bool CheckMinPres_No = false;
-#  endif // MODEL
-
 
 // check
 #  ifdef GAMER_DEBUG
@@ -152,19 +146,19 @@ void Flu_FixUp_Flux( const int lv )
                for (int v=0; v<NFLUX_TOTAL; v++)   CorrVal[v] = *FluidPtr1D[v] + FluxPtr[v][m][n]*Const[s];
 
 
-//             calculate the pressure
+//             calculate the internal energy density
 #              if ( MODEL == HYDRO )
-               real Pres;
-               real *ForPres = CorrVal;
+               real Eint;
+               real *ForEint = CorrVal;
 
 //###EXPERIMENTAL: (does not work well and thus has been disabled for now)
 /*
-               real ForPres[NCOMP_TOTAL];
+               real ForEint[NCOMP_TOTAL];
 //             when FixSEint is on, use FluidPtr1D to calculate the original pressure
                if ( FixSEint )
-                  for (int v=0; v<NCOMP_TOTAL; v++)   ForPres[v] = *FluidPtr1D[v];
+                  for (int v=0; v<NCOMP_TOTAL; v++)   ForEint[v] = *FluidPtr1D[v];
                else
-                  for (int v=0; v<NCOMP_TOTAL; v++)   ForPres[v] = CorrVal    [v];
+                  for (int v=0; v<NCOMP_TOTAL; v++)   ForEint[v] = CorrVal    [v];
 */
 
 //             calculate the magnetic energy first
@@ -184,40 +178,53 @@ void Flu_FixUp_Flux( const int lv )
                      break;
                } // switch ( s )
 
-               const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
+               const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
 #              else
-               const real EngyB = NULL_REAL;
+               const real Emag = NULL_REAL;
 #              endif
 
-#              if   ( DUAL_ENERGY == DE_ENPY )
-//             must determine to use Hydro_GetPressure() or Hydro_DensEntropy2Pres() since the fluid variables stored
-//             in CorrVal[] may not be fully consistent (as it's not corrected by Hydro_DualEnergyFix())
-//             --> note that currently we adopt Hydro_DensEntropy2Pres() for DE_UPDATED_BY_MIN_PRES
-               Pres = ( *DE_StatusPtr1D == DE_UPDATED_BY_ETOT  ||  *DE_StatusPtr1D == DE_UPDATED_BY_ETOT_GRA ) ?
-                      Hydro_GetPressure( ForPres[DENS], ForPres[MOMX], ForPres[MOMY], ForPres[MOMZ], ForPres[ENGY],
-                                         Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB )
-                    : Hydro_DensEntropy2Pres( ForPres[DENS], ForPres[ENPY], Gamma_m1, CheckMinPres_No, NULL_REAL );
+//             when adopting the dual-energy formalism, we must determine to use Hydro_Con2Eint() or Hydro_DensEntropy2Pres()
+//             since the fluid variables stored in CorrVal[] may not be fully consistent
+//             --> because they have not been corrected by Hydro_DualEnergyFix()
+//             --> also note that currently we adopt Hydro_DensEntropy2Pres() for DE_UPDATED_BY_MIN_PRES
+//             --> consistency among all dual-energy related variables will be ensured after determining Eint
+#              if ( DUAL_ENERGY == DE_ENPY )
+               if ( *DE_StatusPtr1D == DE_UPDATED_BY_ETOT  ||  *DE_StatusPtr1D == DE_UPDATED_BY_ETOT_GRA )
+#              endif
+               {
+                  const bool CheckMinEint_No = false;
+                  Eint = Hydro_Con2Eint( ForEint[DENS], ForEint[MOMX], ForEint[MOMY], ForEint[MOMZ], ForEint[ENGY],
+                                         CheckMinEint_No, NULL_REAL, Emag );
+               }
 
-#              elif ( DUAL_ENERGY == DE_EINT )
+#              if ( DUAL_ENERGY == DE_ENPY )
+               else
+               {
+                  const bool CheckMinPres_No = false;
+                  real Pres;
+                  Pres = Hydro_DensEntropy2Pres( ForEint[DENS], ForEint[ENPY], EoS_AuxArray[1], CheckMinPres_No, NULL_REAL );
+//                DE_ENPY only supports EOS_GAMMA, which does not involve passive scalars
+                  Eint = EoS_DensPres2Eint_CPUPtr( ForEint[DENS], Pres, NULL, EoS_AuxArray );
+               }
+#              endif
+
+#              if ( DUAL_ENERGY == DE_EINT )
 #              error : DE_EINT is NOT supported yet !!
+#              endif
 
-#              else // DUAL_ENERGY
-               Pres = Hydro_GetPressure( ForPres[DENS], ForPres[MOMX], ForPres[MOMY], ForPres[MOMZ], ForPres[ENGY],
-                                         Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB );
-#              endif // DUAL_ENERGY
-#              endif // MODEL
+#              endif // if ( MODEL == HYDRO )
 
 
 //###EXPERIMENTAL: (does not work well and thus has been disabled for now)
 /*
-//             correct pressure to restore the original specific internal energy
-               if ( FixSEint )   Pres *= CorrVal[DENS] / *FluidPtr1D[DENS];
+//             correct internal energy to restore the original specific internal energy
+               if ( FixSEint )   Eint *= CorrVal[DENS] / *FluidPtr1D[DENS];
 */
 
 
 //             do not apply the flux correction if there are any unphysical results
 #              if   ( MODEL == HYDRO )
-               if ( CorrVal[DENS] <= MIN_DENS  ||  Pres <= MIN_PRES  ||  !Aux_IsFinite(Pres)
+               if ( CorrVal[DENS] <= MIN_DENS  ||  Eint <= MIN_EINT  ||  !Aux_IsFinite(Eint)
 #                   if   ( DUAL_ENERGY == DE_ENPY )
                     ||  ( (*DE_StatusPtr1D == DE_UPDATED_BY_DUAL || *DE_StatusPtr1D == DE_UPDATED_BY_MIN_PRES)
                            && CorrVal[ENPY] <= (real)2.0*TINY_NUMBER )
@@ -243,17 +250,16 @@ void Flu_FixUp_Flux( const int lv )
 
 
 //             ensure the consistency between pressure, total energy density, and dual-energy variable
-//             --> assuming the variable "Pres" is correct
-//             --> no need to check the minimum pressure here since we have skipped those cells already
+//             --> assuming the variable "Eint" is correct
+//             --> no need to check the internal energy floor here since we have skipped failing cells
 #              if ( MODEL == HYDRO )
-               CorrVal[ENGY] = (real)0.5*( SQR(CorrVal[MOMX]) + SQR(CorrVal[MOMY]) + SQR(CorrVal[MOMZ]) ) / CorrVal[DENS]
-                               + Pres*_Gamma_m1;
-#              ifdef MHD
-               CorrVal[ENGY] += EngyB;
-#              endif
+               CorrVal[ENGY] = Hydro_ConEint2Etot( CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], Eint, Emag );
 
 #              if   ( DUAL_ENERGY == DE_ENPY )
-               CorrVal[ENPY] = Hydro_DensPres2Entropy( CorrVal[DENS], Pres, Gamma_m1 );
+//             DE_ENPY only supports EOS_GAMMA, which does not involve passive scalars
+               CorrVal[ENPY] = Hydro_DensPres2Entropy( CorrVal[DENS],
+                                                       EoS_DensEint2Pres_CPUPtr(CorrVal[DENS],Eint,NULL,EoS_AuxArray),
+                                                       EoS_AuxArray[1] );
 #              elif ( DUAL_ENERGY == DE_EINT )
 #              error : DE_EINT is NOT supported yet !!
 #              endif // DUAL_ENERGY

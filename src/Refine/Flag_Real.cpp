@@ -125,27 +125,32 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       real (*MagCC)[PS1][PS1][PS1]       = NULL;
       real (*Vel)[PS1][PS1][PS1]         = NULL;
       real (*Pres)[PS1][PS1]             = NULL;
+      real (*ParCount)[PS1][PS1]         = NULL;   // declare as **real** to be consistent with Par_MassAssignment()
+      real (*ParDens )[PS1][PS1]         = NULL;
       real (*Lohner_Var)                 = NULL;   // array storing the variables for Lohner
       real (*Lohner_Ave)                 = NULL;   // array storing the averages of Lohner_Var for Lohner
       real (*Lohner_Slope)               = NULL;   // array storing the slopes of Lohner_Var for Lohner
-      real (*ParCount)[PS1][PS1]         = NULL;   // declare as **real** to be consistent with Par_MassAssignment()
-      real (*ParDens )[PS1][PS1]         = NULL;
 
       int  i_start, i_end, j_start, j_end, k_start, k_end, SibID, SibPID, PID;
       bool ProperNesting, NextPatch;
 
 #     if ( MODEL == HYDRO )
-#     ifdef MHD
-      if ( OPT__FLAG_CURRENT  ||
-           OPT__FLAG_PRES_GRADIENT )   MagCC = new real [3][PS1][PS1][PS1];
-#     endif
-      if ( OPT__FLAG_VORTICITY )       Vel   = new real [3][PS1][PS1][PS1];
-      if ( OPT__FLAG_PRES_GRADIENT )   Pres  = new real    [PS1][PS1][PS1];
+      bool NeedPres = false;
+      if ( OPT__FLAG_PRES_GRADIENT )   NeedPres = true;
+#     ifdef GRAVITY
+      if ( OPT__FLAG_JEANS )           NeedPres = true;
 #     endif
 
+#     ifdef MHD
+      if ( OPT__FLAG_CURRENT || NeedPres )   MagCC    = new real [3][PS1][PS1][PS1];
+#     endif
+      if ( OPT__FLAG_VORTICITY )             Vel      = new real [3][PS1][PS1][PS1];
+      if ( NeedPres )                        Pres     = new real    [PS1][PS1][PS1];
+#     endif // HYDRO
+
 #     ifdef PARTICLE
-      if ( OPT__FLAG_NPAR_CELL )       ParCount = new real [PS1][PS1][PS1];
-      if ( OPT__FLAG_PAR_MASS_CELL )   ParDens  = new real [PS1][PS1][PS1];
+      if ( OPT__FLAG_NPAR_CELL )             ParCount = new real    [PS1][PS1][PS1];
+      if ( OPT__FLAG_PAR_MASS_CELL )         ParDens  = new real    [PS1][PS1][PS1];
 #     endif
 
       if ( Lohner_NVar > 0 )
@@ -218,7 +223,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #              if ( MODEL == HYDRO )
 #              ifdef MHD
 //             evaluate cell-centered B field
-               if ( OPT__FLAG_CURRENT  ||  OPT__FLAG_PRES_GRADIENT )
+               if ( OPT__FLAG_CURRENT || NeedPres )
                {
                   real MagCC_1Cell[NCOMP_MAG];
 
@@ -230,7 +235,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
                      for (int v=0; v<NCOMP_MAG; v++)  MagCC[v][k][j][i] = MagCC_1Cell[v];
                   }
-               } // if ( OPT__FLAG_CURRENT  ||  OPT__FLAG_PRES_GRADIENT )
+               } // if ( OPT__FLAG_CURRENT || NeedPres )
 #              endif // #ifdef MHD
 
 
@@ -251,12 +256,9 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 //             evaluate pressure
-               if ( OPT__FLAG_PRES_GRADIENT )
+               if ( NeedPres )
                {
                   const bool CheckMinPres_Yes = true;
-                  const real Gamma_m1         = GAMMA - (real)1.0;
-
-                  real Ek;
 
                   for (int k=0; k<PS1; k++)
                   for (int j=0; j<PS1; j++)
@@ -267,7 +269,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 #                    if   ( DUAL_ENERGY == DE_ENPY )
                      Pres[k][j][i] = Hydro_DensEntropy2Pres( Fluid[DENS][k][j][i], Fluid[ENPY][k][j][i],
-                                                             Gamma_m1, CheckMinPres_Yes, MIN_PRES );
+                                                             EoS_AuxArray[1], CheckMinPres_Yes, MIN_PRES );
 #                    elif ( DUAL_ENERGY == DE_EINT )
 #                    error : DE_EINT is NOT supported yet !!
 #                    endif
@@ -275,18 +277,26 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #                    else // #ifdef DUAL_ENERGY
 
 #                    ifdef MHD
-                     const real EngyB = (real)0.5*(  SQR( MagCC[MAGX][k][j][i] )
-                                                   + SQR( MagCC[MAGY][k][j][i] )
-                                                   + SQR( MagCC[MAGZ][k][j][i] )  );
+                     const real Emag = (real)0.5*(  SQR( MagCC[MAGX][k][j][i] )
+                                                  + SQR( MagCC[MAGY][k][j][i] )
+                                                  + SQR( MagCC[MAGZ][k][j][i] )  );
 #                    else
-                     const real EngyB = NULL_REAL;
+                     const real Emag = NULL_REAL;
 #                    endif
-                     Pres[k][j][i] = Hydro_GetPressure( Fluid[DENS][k][j][i], Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i],
-                                                        Fluid[MOMZ][k][j][i], Fluid[ENGY][k][j][i],
-                                                        Gamma_m1, CheckMinPres_Yes, MIN_PRES, EngyB );
+#                    if ( EOS != EOS_GAMMA  &&  NCOMP_PASSIVE > 0 )
+                     real Passive[NCOMP_PASSIVE];
+                     for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = Fluid[ NCOMP_FLUID + v ][k][j][i];
+#                    else
+                     const real *Passive = NULL;
+#                    endif
+
+                     Pres[k][j][i] = Hydro_Con2Pres( Fluid[DENS][k][j][i], Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i],
+                                                     Fluid[MOMZ][k][j][i], Fluid[ENGY][k][j][i], Passive,
+                                                     CheckMinPres_Yes, MIN_PRES, Emag,
+                                                     EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
 #                    endif // #ifdef DUAL_ENERGY ... else ...
                   } // k,j,i
-               } // if ( OPT__FLAG_PRES_GRADIENT )
+               } // if ( NeedPres )
 #              endif // #if ( MODEL == HYDRO )
 
 
@@ -489,13 +499,9 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       delete [] Pres;
       delete [] ParCount;
       delete [] ParDens;
-
-      if ( Lohner_NVar > 0 )
-      {
-         delete [] Lohner_Var;
-         delete [] Lohner_Ave;
-         delete [] Lohner_Slope;
-      }
+      delete [] Lohner_Var;
+      delete [] Lohner_Ave;
+      delete [] Lohner_Slope;
 
    } // OpenMP parallel region
 

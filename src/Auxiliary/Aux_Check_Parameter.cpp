@@ -228,6 +228,9 @@ void Aux_Check_Parameter()
 #  ifdef BITWISE_REPRODUCIBILITY
    if ( OPT__CORR_AFTER_ALL_SYNC != CORR_AFTER_SYNC_BEFORE_DUMP  &&  OPT__CORR_AFTER_ALL_SYNC != CORR_AFTER_SYNC_EVERY_STEP )
       Aux_Error( ERROR_INFO, "please set OPT__CORR_AFTER_ALL_SYNC to 1/2 when BITWISE_REPRODUCIBILITY is enabled !!\n" );
+
+   if ( ! OPT__FIXUP_RESTRICT )
+      Aux_Error( ERROR_INFO, "must enable OPT__FIXUP_RESTRICT for BITWISE_REPRODUCIBILITY !!\n" );
 #  endif
 
 #  if ( !defined SERIAL  &&  !defined LOAD_BALANCE )
@@ -463,7 +466,7 @@ void Aux_Check_Parameter()
 // ------------------------------
 #  if ( MODEL == HYDRO )
    if ( fabs(GAMMA-5.0/3.0) > 1.0e-4 )
-      Aux_Error( ERROR_INFO, "GAMMA must be equal to 5.0/3.0 in cosmological simuluations !!\n" );
+      Aux_Error( ERROR_INFO, "GAMMA must be equal to 5.0/3.0 for COMOVING !!\n" );
 #  endif
 
 
@@ -584,6 +587,10 @@ void Aux_Check_Parameter()
 #   if ( DUAL_ENERGY != DE_ENPY )
 #     error : ERROR : unsupported dual-energy formalism (DE_ENPY only, DE_EINT is not supported yet) !!
 #   endif
+
+#  if ( EOS != EOS_GAMMA )
+#     error : ERROR : DUAL_ENERGY currently only supports EOS_GAMMA !!
+#  endif
 #  endif // #ifdef DUAL_ENERGY
 
 #  ifdef MHD
@@ -596,6 +603,51 @@ void Aux_Check_Parameter()
 #     error : ERROR : unsupported option in CHECK_INTERMEDIATE (EXACT/HLLE/HLLC) !!
 #   endif
 #  endif // MHD
+
+#  if ( defined LR_EINT  &&  FLU_SCHEME == CTU )
+#     error : CTU does NOT support LR_EINT in CUFLU.h !!
+#  endif
+
+#  if ( EOS != EOS_GAMMA  &&  EOS != EOS_NUCLEAR  &&  EOS != EOS_TABULAR  &&  EOS != EOS_USER )
+#     error : ERROR : unsupported equation of state (EOS_GAMMA/EOS_NUCLEAR/EOS_TABULAR/EOS_USER) !!
+#  endif
+
+#  if ( EOS != EOS_GAMMA )
+#     if ( HLLC_WAVESPEED == HLL_WAVESPEED_ROE  ||  HLLE_WAVESPEED == HLL_WAVESPEED_ROE )
+#        error : ERROR : HLL_WAVESPEED_ROE only works with EOS_GAMMA !!
+#     endif
+
+#     if (  defined RSOLVER  &&  ( RSOLVER == ROE || RSOLVER == EXACT )  )
+#        error : ERROR : unsupported Riemann solver for EOS != EOS_GAMMA (HLLE/HLLC/HLLD) !!
+#     endif
+
+#     if ( defined LR_SCHEME  &&  defined CHAR_RECONSTRUCTION )
+#        error : ERROR : CHAR_RECONSTRUCTION only works with EOS_GAMMA !!
+#     endif
+
+#     if ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == CTU )
+#        error : RTVD and CTU only support EOS_GAMMA !!
+#     endif
+
+#     ifdef COMOVING
+#        error : ERROR : COMOVING currently only supports EOS_GAMMA !!
+#     endif
+
+      if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_ROE )
+         Aux_Error( ERROR_INFO, "OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_ROE only supports EOS_GAMMA !!\n" );
+
+      if ( JEANS_MIN_PRES )
+         Aux_Error( ERROR_INFO, "JEANS_MIN_PRES currently only supports EOS_GAMMA !!\n" );
+#  endif // if ( EOS != EOS_GAMMA )
+
+
+#  if ( EOS == EOS_NUCLEAR )
+      Aux_Error( ERROR_INFO, "EOS_NUCLEAR is not supported yet !!\n" );
+#  endif
+
+#  if ( EOS == EOS_TABULAR )
+      Aux_Error( ERROR_INFO, "EOS_TABULAR is not supported yet !!\n" );
+#  endif
 
    if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
    {
@@ -616,16 +668,6 @@ void Aux_Check_Parameter()
          Aux_Error( ERROR_INFO, "RTVD does not support \"OPT__1ST_FLUX_CORR\" !!\n" );
 #     endif
    }
-
-   if ( MIN_DENS == 0.0  &&  MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : MIN_DENS == 0.0 could be dangerous and is mainly for debugging only !!\n" );
-   else if ( MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : MIN_DENS (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_DENS );
-
-   if ( MIN_PRES == 0.0  &&  MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : MIN_PRES == 0.0 could be dangerous and is mainly for debugging only !!\n" );
-   else if ( MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : MIN_PRES (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_PRES );
 
 #  if ( FLU_SCHEME == RTVD )
    if ( JEANS_MIN_PRES )
@@ -669,6 +711,24 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : currently we do not use Grackle to calculate temperature for OPT__FLAG_LOHNER_TEMP !!\n" );
 #  endif
 
+   if ( MIN_DENS == 0.0 )
+      Aux_Message( stderr, "WARNING : MIN_DENS == 0.0 could be dangerous and is mainly for debugging only !!\n" );
+   else
+      Aux_Message( stderr, "WARNING : MIN_DENS (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_DENS );
+
+   if ( MIN_PRES == 0.0 )
+      Aux_Message( stderr, "WARNING : MIN_PRES == 0.0 could be dangerous and is mainly for debugging only !!\n" );
+   else
+      Aux_Message( stderr, "WARNING : MIN_PRES (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_PRES );
+
+   if ( MIN_EINT == 0.0 )
+      Aux_Message( stderr, "WARNING : MIN_EINT == 0.0 could be dangerous and is mainly for debugging only !!\n" );
+   else
+      Aux_Message( stderr, "WARNING : MIN_EINT (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_EINT );
+
+#  if ( defined LR_EINT  &&  EOS == EOS_GAMMA )
+      Aux_Message( stderr, "WARNING : LR_EINT is not recommended for EOS_GAMMA !!\n" );
+#  endif
    } // if ( MPI_Rank == 0 )
 
 
@@ -790,6 +850,14 @@ void Aux_Check_Parameter()
 
 #  if ( FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
 #     error : ERROR : unsupported MHD scheme in the makefile (MHM_RP/CTU) !!
+#  endif
+
+#  if ( HLLE_WAVESPEED == HLL_WAVESPEED_PVRS )
+#     error : ERROR : HLL_WAVESPEED_PVRS does not support MHD !!
+#  endif
+
+#  if ( HLLD_WAVESPEED != HLL_WAVESPEED_DAVIS )
+#     error : ERROR : HLLD_WAVESPEED only supports HLL_WAVESPEED_DAVIS !!
 #  endif
 
    if ( OPT__MAG_INT_SCHEME != INT_MINMOD1D  &&  OPT__MAG_INT_SCHEME != INT_VANLEER  &&
@@ -1237,6 +1305,10 @@ void Aux_Check_Parameter()
                  CHE_GPU_NPGROUP, GPU_NSTREAM );
                  */
 
+#  if ( EOS != EOS_GAMMA )
+#     error : ERROR : SUPPORT_GRACKLE must work with EOS_GAMMA !!
+#  endif
+
 #  ifdef OPENMP
    if ( CHE_GPU_NPGROUP < OMP_NTHREAD )
       Aux_Error( ERROR_INFO, "CHE_GPU_NPGROUP (%d) < OMP_NTHREAD (%d) !!\n", CHE_GPU_NPGROUP, OMP_NTHREAD );
@@ -1248,6 +1320,9 @@ void Aux_Check_Parameter()
 
    if ( OPT__OVERLAP_MPI )
       Aux_Message( stderr, "WARNING : currently SUPPORT_GRACKLE does not support \"%s\" !!\n", "OPT__OVERLAP_MPI" );
+
+   if ( GRACKLE_PRIMORDIAL > 0 )
+      Aux_Message( stderr, "WARNING : adiabatic index gamma is currently fixed to %13.7e for Grackle !!\n", GAMMA );
 
    } // if ( MPI_Rank == 0 )
 

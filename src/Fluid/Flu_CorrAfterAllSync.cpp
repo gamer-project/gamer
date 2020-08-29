@@ -67,6 +67,7 @@ void Flu_CorrAfterAllSync()
 
 
 // 2. restrict data
+   if ( OPT__FIXUP_RESTRICT )
    for (int lv=MAX_LEVEL-1; lv>=0; lv--)
    {
       if ( NPatchTotal[lv+1] == 0 )    continue;

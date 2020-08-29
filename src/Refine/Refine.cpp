@@ -58,10 +58,6 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    const int  CMagSg      = amr->MagSg[lv  ];      // sandglass of magnetic field  at level "lv"
    const int  FMagSg      = amr->MagSg[lv+1];      // sandglass of magnetic field  at level "lv+1"
 #  endif
-#  if ( MODEL == HYDRO )
-   const real  Gamma_m1   = GAMMA - (real)1.0;
-   const real _Gamma_m1   = (real)1.0 / Gamma_m1;
-#  endif
 
    int *Cr            = NULL;    // corner coordinates
    int *BufGrandTable = NULL;    // table recording the patch IDs of grandson buffer patches
@@ -751,7 +747,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #        endif
 
 
-//       (c1.3.4.3) check minimum density and pressure
+//       (c1.3.4.3) check minimum density and pressure/internal energy
 //       --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
 //       --> but we do renormalize passive scalars here
 #        if ( MODEL == HYDRO  ||  MODEL == ELBDM )
@@ -783,10 +779,10 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #           if ( MODEL == HYDRO )
 //          compute magnetic energy
 #           ifdef MHD
-            const real EngyB = MHD_GetCellCenteredBEnergy( Mag_FData[MAGX], Mag_FData[MAGY], Mag_FData[MAGZ],
-                                                           PS2, PS2, PS2, i, j, k );
+            const real Emag = MHD_GetCellCenteredBEnergy( Mag_FData[MAGX], Mag_FData[MAGY], Mag_FData[MAGZ],
+                                                          PS2, PS2, PS2, i, j, k );
 #           else
-            const real EngyB = NULL_REAL;
+            const real Emag = NULL_REAL;
 #           endif
 
 //          ensure consistency between pressure, total energy density, and the dual-energy variable
@@ -800,15 +796,14 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
             Hydro_DualEnergyFix( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
                                  Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i], Flu_FData[ENPY][k][j][i],
-                                 dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy, EngyB );
+                                 dummy, EoS_AuxArray[1], EoS_AuxArray[2], CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy, Emag );
 
 #           else // #ifdef DUAL_ENERGY
 
-//          check minimum pressure
+//          apply internal energy floor
             Flu_FData[ENGY][k][j][i]
-               = Hydro_CheckMinPresInEngy( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
-                                           Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i],
-                                           Gamma_m1, _Gamma_m1, MIN_PRES, EngyB );
+               = Hydro_CheckMinEintInEngy( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
+                                           Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i], MIN_EINT, Emag );
 #           endif // #ifdef DUAL_ENERGY ... else ...
 #           endif // #if ( MODEL == HYDRO )
 

@@ -86,7 +86,7 @@ OptRSolver1st_t      OPT__1ST_FLUX_CORR_SCHEME;
 bool                 OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP;
 bool                 OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, JEANS_MIN_PRES;
 int                  OPT__CK_NEGATIVE, JEANS_MIN_PRES_LEVEL, JEANS_MIN_PRES_NCELL;
-double               MIN_DENS, MIN_PRES;
+double               MIN_DENS, MIN_PRES, MIN_EINT;
 #ifdef DUAL_ENERGY
 double               DUAL_ENERGY_SWITCH;
 #endif
@@ -215,6 +215,22 @@ double                SF_CREATE_STAR_MIN_STAR_MASS;
 double                SF_CREATE_STAR_MAX_STAR_MFRAC;
 #endif
 
+// (2-9) equation of state
+#if ( MODEL == HYDRO )
+// auxiliary array
+double EoS_AuxArray[EOS_NAUX_MAX];
+
+// function pointers
+EoS_DE2P_t EoS_DensEint2Pres_CPUPtr = NULL;
+EoS_DP2E_t EoS_DensPres2Eint_CPUPtr = NULL;
+EoS_DP2C_t EoS_DensPres2CSqr_CPUPtr = NULL;
+#ifdef GPU
+EoS_DE2P_t EoS_DensEint2Pres_GPUPtr = NULL;
+EoS_DP2E_t EoS_DensPres2Eint_GPUPtr = NULL;
+EoS_DP2C_t EoS_DensPres2CSqr_GPUPtr = NULL;
+#endif
+#endif // HYDRO
+
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
 // =======================================================================================================
@@ -232,8 +248,8 @@ real (*h_Mag_Array_F_Out[2])[NCOMP_MAG][ PS2P1*SQR(PS2)          ] = { NULL, NUL
 real (*h_Ele_Array      [2])[9][NCOMP_ELE][ PS2P1*PS2 ]            = { NULL, NULL };
 #endif
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-real (*h_PriVar)      [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT)     ]  = NULL;
-real (*h_Slope_PPM)[3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ]  = NULL;
+real (*h_PriVar)      [NCOMP_LR            ][ CUBE(FLU_NXT)     ]  = NULL;
+real (*h_Slope_PPM)[3][NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ]  = NULL;
 real (*h_FC_Var)   [6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ]  = NULL;
 real (*h_FC_Flux)  [3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ]  = NULL;
 #ifdef MHD
@@ -244,16 +260,16 @@ real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ]        = NULL;
 
 #ifdef GRAVITY
 // (3-2) gravity solver
-real (*h_Rho_Array_P    [2])[RHO_NXT][RHO_NXT][RHO_NXT]            = { NULL, NULL };
-real (*h_Pot_Array_P_In [2])[POT_NXT][POT_NXT][POT_NXT]            = { NULL, NULL };
-real (*h_Pot_Array_P_Out[2])[GRA_NXT][GRA_NXT][GRA_NXT]            = { NULL, NULL };
-real (*h_Flu_Array_G    [2])[GRA_NIN][PS1][PS1][PS1]               = { NULL, NULL };
-double (*h_Corner_Array_G[2])[3]                                   = { NULL, NULL };
+real   (*h_Rho_Array_P    [2])[RHO_NXT][RHO_NXT][RHO_NXT]          = { NULL, NULL };
+real   (*h_Pot_Array_P_In [2])[POT_NXT][POT_NXT][POT_NXT]          = { NULL, NULL };
+real   (*h_Pot_Array_P_Out[2])[GRA_NXT][GRA_NXT][GRA_NXT]          = { NULL, NULL };
+real   (*h_Flu_Array_G    [2])[GRA_NIN][PS1][PS1][PS1]             = { NULL, NULL };
+double (*h_Corner_Array_G [2])[3]                                  = { NULL, NULL };
 #ifdef DUAL_ENERGY
-char (*h_DE_Array_G    [2])[PS1][PS1][PS1]                         = { NULL, NULL };
+char   (*h_DE_Array_G     [2])[PS1][PS1][PS1]                      = { NULL, NULL };
 #endif
 #ifdef MHD
-real (*h_EngyB_Array_G [2])[PS1][PS1][PS1]                         = { NULL, NULL };
+real   (*h_Emag_Array_G   [2])[PS1][PS1][PS1]                      = { NULL, NULL };
 #endif
 
 // (3-3) unsplit gravity correction
@@ -273,7 +289,7 @@ code_units Che_Units;
 
 // (3-5) dt solver
 real  *h_dt_Array_T[2]                                             = { NULL, NULL };
-real (*h_Flu_Array_T[2])[NCOMP_FLUID][ CUBE(PS1) ]                 = { NULL, NULL };
+real (*h_Flu_Array_T[2])[FLU_NIN_T][ CUBE(PS1) ]                   = { NULL, NULL };
 #ifdef GRAVITY
 real (*h_Pot_Array_T[2])[ CUBE(GRA_NXT) ]                          = { NULL, NULL };
 #endif
@@ -299,8 +315,8 @@ real (*d_Mag_Array_F_Out)[NCOMP_MAG][ PS2P1*SQR(PS2)          ]   = NULL;
 real (*d_Ele_Array      )[9][NCOMP_ELE][ PS2P1*PS2 ]              = NULL;
 #endif
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-real (*d_PriVar)      [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT)     ] = NULL;
-real (*d_Slope_PPM)[3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ] = NULL;
+real (*d_PriVar)      [NCOMP_LR            ][ CUBE(FLU_NXT)     ] = NULL;
+real (*d_Slope_PPM)[3][NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ] = NULL;
 real (*d_FC_Var)   [6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ] = NULL;
 real (*d_FC_Flux)  [3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ] = NULL;
 #ifdef MHD
@@ -311,16 +327,16 @@ real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ]       = NULL;
 
 #ifdef GRAVITY
 // (4-2) gravity solver
-real (*d_Rho_Array_P    )[ CUBE(RHO_NXT) ]                       = NULL;
-real (*d_Pot_Array_P_In )[ CUBE(POT_NXT) ]                       = NULL;
-real (*d_Pot_Array_P_Out)[ CUBE(GRA_NXT) ]                       = NULL;
-real (*d_Flu_Array_G    )[GRA_NIN][ CUBE(PS1) ]                  = NULL;
+real   (*d_Rho_Array_P    )[ CUBE(RHO_NXT) ]                     = NULL;
+real   (*d_Pot_Array_P_In )[ CUBE(POT_NXT) ]                     = NULL;
+real   (*d_Pot_Array_P_Out)[ CUBE(GRA_NXT) ]                     = NULL;
+real   (*d_Flu_Array_G    )[GRA_NIN][ CUBE(PS1) ]                = NULL;
 double (*d_Corner_Array_G )[3]                                   = NULL;
 #ifdef DUAL_ENERGY
-char (*d_DE_Array_G     )[ CUBE(PS1) ]                           = NULL;
+char   (*d_DE_Array_G     )[ CUBE(PS1) ]                         = NULL;
 #endif
 #ifdef MHD
-real (*d_EngyB_Array_G  )[ CUBE(PS1) ]                           = NULL;
+real   (*d_Emag_Array_G   )[ CUBE(PS1) ]                         = NULL;
 #endif
 
 // (4-3) unsplit gravity correction
@@ -335,7 +351,7 @@ real (*d_Flu_Array_USG_G)[GRA_NIN-1][ CUBE(PS1) ]                = NULL;
 
 // (4-5) dt solver
 real *d_dt_Array_T                                               = NULL;
-real (*d_Flu_Array_T)[NCOMP_FLUID][ CUBE(PS1) ]                  = NULL;
+real (*d_Flu_Array_T)[FLU_NIN_T][ CUBE(PS1) ]                    = NULL;
 #ifdef GRAVITY
 real (*d_Pot_Array_T)[ CUBE(GRA_NXT) ]                           = NULL;
 #endif

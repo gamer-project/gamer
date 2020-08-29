@@ -9,7 +9,8 @@
 //                estimating the evolution time-step
 //
 // Note        :  1. Always prepare the latest FluSg and MagSg data
-//                2. Prepare NCOMP_FLUID fluid variables and NCOMP_MAG B field components
+//                2. Prepare FLU_NIN_T fluid variables and NCOMP_MAG B field components
+//                   --> Including/Excluding passive scalars for general/constant-gamma EoS
 //                3. Use patches instead of patch groups as the basic unit
 //                4. No ghost zones
 //
@@ -19,7 +20,7 @@
 //                NPG           : Number of patch groups prepared at a time
 //                PID0_List     : List recording the target patch indices with LocalID==0
 //-------------------------------------------------------------------------------------------------------
-void dt_Prepare_Flu( const int lv, real h_Flu_Array_T[][NCOMP_FLUID][ CUBE(PS1) ],
+void dt_Prepare_Flu( const int lv, real h_Flu_Array_T[][FLU_NIN_T][ CUBE(PS1) ],
                      real h_Mag_Array_T[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const int NPG, const int *PID0_List )
 {
 
@@ -33,9 +34,9 @@ void dt_Prepare_Flu( const int lv, real h_Flu_Array_T[][NCOMP_FLUID][ CUBE(PS1) 
          const int PID = PID0 + LocalID;
          const int N   = 8*TID + LocalID;
 
-//       fluid variables (excluding passive scalars)
+//       fluid variables (including/excluding passive scalars for general/constant-gamma EoS)
          memcpy( h_Flu_Array_T[N][0], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[0][0][0],
-                 NCOMP_FLUID*CUBE(PS1)*sizeof(real) );
+                 FLU_NIN_T*CUBE(PS1)*sizeof(real) );
 
 //       B field
 #        ifdef MHD

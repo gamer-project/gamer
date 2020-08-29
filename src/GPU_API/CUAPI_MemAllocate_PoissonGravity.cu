@@ -17,7 +17,7 @@ extern double (*d_Corner_Array_G)[3];
 extern char (*d_DE_Array_G     )[ CUBE(PS1) ];
 #endif
 #ifdef MHD
-extern real (*d_EngyB_Array_G  )[ CUBE(PS1) ];
+extern real (*d_Emag_Array_G   )[ CUBE(PS1) ];
 #endif
 extern real (*d_Pot_Array_T)    [ CUBE(GRA_NXT) ];
 
@@ -47,7 +47,7 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
    const long DE_MemSize_G      = sizeof(char  )*Pot_NP*CUBE(PS1);
 #  endif
 #  ifdef MHD
-   const long EngyB_MemSize_G   = sizeof(real  )*Pot_NP*CUBE(PS1);
+   const long Emag_MemSize_G    = sizeof(real  )*Pot_NP*CUBE(PS1);
 #  endif
    const long Pot_MemSize_T     = sizeof(real  )*Pot_NP*CUBE(GRA_NXT);
 
@@ -61,7 +61,7 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
    TotalSize += DE_MemSize_G;
 #  endif
 #  ifdef MHD
-   TotalSize += EngyB_MemSize_G;
+   TotalSize += Emag_MemSize_G;
 #  endif
 
    if ( MPI_Rank == 0 )
@@ -87,7 +87,7 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
 #  endif
 
 #  ifdef MHD
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_EngyB_Array_G,   EngyB_MemSize_G   )  );
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Emag_Array_G,    Emag_MemSize_G   )  );
 #  endif
 
    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Pot_Array_T,     Pot_MemSize_T     )  );
@@ -113,7 +113,7 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
 #     endif
 
 #     ifdef MHD
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_EngyB_Array_G  [t], EngyB_MemSize_G   )  );
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Emag_Array_G   [t], Emag_MemSize_G    )  );
 #     endif
 
       CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Pot_Array_T    [t], Pot_MemSize_T     )  );

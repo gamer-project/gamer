@@ -10,9 +10,10 @@
 
 #if   ( MODEL == HYDRO )
 __global__
-void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
+void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                               const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ],
-                              const real dh, const real Safety, const real Gamma, const real MinPres );
+                              const real dh, const real Safety, const real MinPres,
+                              const EoS_DE2P_t EoS_DensEint2Pres_Func, const EoS_DP2C_t EoS_DensPres2CSqr_Func );
 #ifdef GRAVITY
 __global__
 void CUPOT_dtSolver_HydroGravity( real g_dt_Array[], const real g_Pot_Array[][ CUBE(GRA_NXT) ],
@@ -30,7 +31,7 @@ void CUPOT_dtSolver_HydroGravity( real g_dt_Array[], const real g_Pot_Array[][ C
 
 // device pointers
 extern real *d_dt_Array_T;
-extern real (*d_Flu_Array_T)[NCOMP_FLUID][ CUBE(PS1) ];
+extern real (*d_Flu_Array_T)[FLU_NIN_T][ CUBE(PS1) ];
 #ifdef GRAVITY
 extern real (*d_Pot_Array_T)[ CUBE(GRA_NXT) ];
 extern double (*d_Corner_Array_G)[3];
@@ -71,7 +72,6 @@ extern cudaStream_t *Stream;
 //                NPatchGroup    : Number of patch groups evaluated simultaneously by GPU
 //                dh             : Grid size
 //                Safety         : dt safety factor
-//                Gamma          : Ratio of specific heats
 //                MinPres        : Minimum allowed pressure
 //                P5_Gradient    : Use 5-points stencil to evaluate the potential gradient
 //                GravityType    : Types of gravity --> self-gravity, external gravity, both
@@ -81,10 +81,10 @@ extern cudaStream_t *Stream;
 //
 // Return      :  h_dt_Array
 //-------------------------------------------------------------------------------------------------------
-void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real h_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
+void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real h_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                           const real h_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const real h_Pot_Array[][ CUBE(GRA_NXT) ],
                           const double h_Corner_Array[][3], const int NPatchGroup, const real dh, const real Safety,
-                          const real Gamma, const real MinPres, const bool P5_Gradient, const OptGravityType_t GravityType,
+                          const real MinPres, const bool P5_Gradient, const OptGravityType_t GravityType,
                           const bool ExtPot, const double TargetTime, const int GPU_NStream )
 {
 
@@ -180,7 +180,7 @@ void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real 
       switch ( TSolver )
       {
          case DT_FLU_SOLVER:
-            Flu_MemSize   [s] = sizeof(real  )*NPatch_per_Stream[s]*CUBE(PS1)*NCOMP_FLUID;
+            Flu_MemSize   [s] = sizeof(real  )*NPatch_per_Stream[s]*CUBE(PS1)*FLU_NIN_T;
 #           ifdef MHD
             Mag_MemSize   [s] = sizeof(real  )*NPatch_per_Stream[s]*PS1P1*SQR(PS1)*NCOMP_MAG;
 #           endif
@@ -249,7 +249,8 @@ void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real 
                                     ( d_dt_Array_T  + UsedPatch[s],
                                       d_Flu_Array_T + UsedPatch[s],
                                       d_Mag_Array_T + UsedPatch[s],
-                                      dh, Safety, Gamma, MinPres );
+                                      dh, Safety, MinPres,
+                                      EoS_DensEint2Pres_GPUPtr, EoS_DensPres2CSqr_GPUPtr );
          break;
 
 #        ifdef GRAVITY

@@ -52,20 +52,51 @@ void Init_Function_User_Template( real fluid[], const double x, const double y, 
                                   const int lv, double AuxArray[] )
 {
 
-   const real P0   = 1.0;
-   const real Rho0 = 1.0;
-   const real Vx   = 1.25e-1;
-   const real Vy   = 2.30e-1;
-   const real Vz   = 3.70e-1;
+   const real Dens0 = 1.0;
+   const real Vx0   = 1.25e-1;
+   const real Vy0   = 2.30e-1;
+   const real Vz0   = 3.70e-1;
+   const real Pres0 = 1.0;
+   const real Emag0 = 0.0;    // must be zero here even for MHD
 
-   fluid[DENS] = Rho0 + 0.2*exp( -( SQR(1.1*x-0.5*amr->BoxSize[0])+SQR(2.2*y-0.5*amr->BoxSize[1])+SQR(3.3*z-0.5*amr->BoxSize[2]) ) / SQR(1.8*amr->BoxSize[2]) );
-   fluid[MOMX] = fluid[DENS]*Vx + 0.1;
-   fluid[MOMY] = fluid[DENS]*Vy + 0.2;
-   fluid[MOMZ] = fluid[DENS]*Vz + 0.3;
-   fluid[ENGY] = (P0)/(GAMMA-1.0)*(2.0+sin(2.0*M_PI*(4.5*x+5.5*y*6.5*z)/amr->BoxSize[2]))
-                 + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+   real Dens, Vx, Vy, Vz, Pres;
+   real MomX, MomY, MomZ, Eint, Etot;
+#  if ( NCOMP_PASSIVE > 0 )
+   real Passive[NCOMP_PASSIVE];
+#  else
+   real *Passive = NULL;
+#  endif
+
+// set the primitive variables
+   Dens = Dens0 + 0.2*exp(  -(  SQR(1.1*x-0.5*amr->BoxSize[0])
+                               +SQR(2.2*y-0.5*amr->BoxSize[1])
+                               +SQR(3.3*z-0.5*amr->BoxSize[2]) ) / SQR( 1.8*amr->BoxSize[2] )  );
+   Vx   = Vx0*sin( 2.0*M_PI/amr->BoxSize[0] );
+   Vy   = Vy0*cos( 2.0*M_PI/amr->BoxSize[1] );
+   Vz   = Vz0*sin( 2.0*M_PI/amr->BoxSize[2] );
+   Pres = Pres0*(  2.0 + sin( 2.0*M_PI*(4.5*x+5.5*y*6.5*z)/amr->BoxSize[2] )  );
 
 // set passive scalars
+#  if ( NCOMP_PASSIVE > 0 )
+// Passive[X] = ...;
+#  endif
+
+// convert primitive variables to conservative variables
+   MomX = Dens*Vx;
+   MomY = Dens*Vy;
+   MomZ = Dens*Vz;
+   Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray );
+   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, Emag0 );
+
+// store the results
+   fluid[DENS] = Dens;
+   fluid[MOMX] = MomX;
+   fluid[MOMY] = MomY;
+   fluid[MOMZ] = MomZ;
+   fluid[ENGY] = Etot;
+#  if ( NCOMP_PASSIVE > 0 )
+// fluid[XXXX] = ...;
+#  endif
 
 } // FUNCTION : Init_Function_User_Template
 
@@ -142,8 +173,6 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
    const double dh       = amr->dh[lv];
    const double dh_sub   = dh / NSub;
    const double _NSub3   = 1.0/CUBE(NSub);
-   const real   Gamma_m1 = GAMMA - (real)1.0;
-   const real  _Gamma_m1 = (real)1.0 / Gamma_m1;
 #  ifdef MHD
    const double _NSub2   = 1.0/SQR(NSub);
 #  endif
@@ -233,21 +262,22 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 
 //       add the magnetic energy
 #        ifdef MHD
-         const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
-         fluid[ENGY] += EngyB;
+         const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+         fluid[ENGY] += Emag;
 #        else
-         const real EngyB = NULL_REAL;
+         const real Emag = NULL_REAL;
 #        endif
 
 
-//       check minimum density and pressure
+//       apply density and internal energy floors
          fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
-         fluid[ENGY] = Hydro_CheckMinPresInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                                 Gamma_m1, _Gamma_m1, MIN_PRES, EngyB );
+         fluid[ENGY] = Hydro_CheckMinEintInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
+                                                 MIN_EINT, Emag );
 
 //       calculate the dual-energy variable (entropy or internal energy)
 #        if   ( DUAL_ENERGY == DE_ENPY )
-         fluid[ENPY] = Hydro_Fluid2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Gamma_m1, EngyB );
+         fluid[ENPY] = Hydro_Con2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Emag,
+                                          EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
 #        elif ( DUAL_ENERGY == DE_EINT )
 #        error : DE_EINT is NOT supported yet !!
 #        endif

@@ -304,12 +304,12 @@ const Opt1stFluxCorr_t
 
 typedef int OptRSolver1st_t;
 const OptRSolver1st_t
-   RSOLVER_1ST_NONE    = 0
-  ,RSOLVER_1ST_ROE     = 1
-  ,RSOLVER_1ST_HLLC    = 2
-  ,RSOLVER_1ST_HLLE    = 3
-  ,RSOLVER_1ST_HLLD    = 4
-  ;
+   RSOLVER_1ST_DEFAULT = -1,
+   RSOLVER_1ST_NONE    = 0,
+   RSOLVER_1ST_ROE     = 1,
+   RSOLVER_1ST_HLLC    = 2,
+   RSOLVER_1ST_HLLE    = 3,
+   RSOLVER_1ST_HLLD    = 4;
 #endif // #if ( MODEL == HYDRO )
 
 
@@ -364,8 +364,19 @@ const SF_CreateStarScheme_t
 
 
 // function pointers
+typedef real (*EoS_DE2P_t)( const real Dens, const real Eint, const real Passive[], const double UserArray[] );
+typedef real (*EoS_DP2E_t)( const real Dens, const real Pres, const real Passive[], const double UserArray[] );
+typedef real (*EoS_DP2C_t)( const real Dens, const real Pres, const real Passive[], const double UserArray[] );
 typedef void (*ExtAcc_t)( real Acc[], const double x, const double y, const double z, const double Time, const double UserArray[] );
 typedef real (*ExtPot_t)( const double x, const double y, const double z, const double Time, const double UserArray[] );
+
+
+// options in "Aux_ComputeProfile"
+typedef int PatchType_t;
+const PatchType_t
+   PATCH_LEAF    = 0,
+   PATCH_NONLEAF = 1,
+   PATCH_BOTH    = 2;
 
 
 

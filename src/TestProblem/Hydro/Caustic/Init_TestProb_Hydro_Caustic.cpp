@@ -167,14 +167,16 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
+   double Dens, MomX, MomY, MomZ, Pres, Eint, Etot;
+
 // x direction
    if ( Caustic_Dir == 0 )
    {
       const double WaveK = 2.0*M_PI/amr->BoxSize[0];
 
-      fluid[MOMX] = Caustic_Dens*Caustic_VelPeak*sin( WaveK*x );
-      fluid[MOMY] = 0.0;
-      fluid[MOMZ] = 0.0;
+      MomX = Caustic_Dens*Caustic_VelPeak*sin( WaveK*x );
+      MomY = 0.0;
+      MomZ = 0.0;
    }
 
 // diagonal direction
@@ -183,16 +185,25 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       const double WaveK = 2.0*M_PI/amr->BoxSize[0]*sqrt(3.0);
       const double r     = 1.0/sqrt(3.0)*( x + y + z );
 
-      fluid[MOMX] = Caustic_Dens*Caustic_VelPeak*sin( WaveK*r ) / sqrt(3.0);
-      fluid[MOMY] = fluid[MOMX];
-      fluid[MOMZ] = fluid[MOMX];
+      MomX = Caustic_Dens*Caustic_VelPeak*sin( WaveK*r ) / sqrt(3.0);
+      MomY = MomX;
+      MomZ = MomX;
    }
 
    else
       Aux_Error( ERROR_INFO, "Caustic_Dir = %d is NOT supported [0/1] !!\n", Caustic_Dir );
 
-   fluid[DENS] = Caustic_Dens;
-   fluid[ENGY] = Caustic_Pres/(GAMMA-1.0) + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+   Dens = Caustic_Dens;
+   Pres = Caustic_Pres;
+   Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray );   // assuming EoS requires no passive scalars
+   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );      // do NOT include magnetic energy here
+
+// set the output array
+   fluid[DENS] = Dens;
+   fluid[MOMX] = MomX;
+   fluid[MOMY] = MomY;
+   fluid[MOMZ] = MomZ;
+   fluid[ENGY] = Etot;
 
 } // FUNCTION : SetGridIC
 #endif // #if ( MODEL == HYDRO )
