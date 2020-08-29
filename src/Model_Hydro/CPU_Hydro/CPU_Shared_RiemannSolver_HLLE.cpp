@@ -42,14 +42,14 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
 // Parameter   :  XYZ               : Target spatial direction : (0/1/2) --> (x/y/z)
 //                Flux_Out          : Array to store the output flux
 //                L/R_In            : Input left/right states (conserved variables)
-//                MinPres           : Pressure floor
+//                MinDens/Pres      : Density and pressure floors
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
 //                EoS_DensPres2CSqr : EoS routine to compute the sound speed square
 //                EoS_AuxArray      : Auxiliary array for the EoS routines
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                               const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                               const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
                                const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] )
 {
 
@@ -350,6 +350,8 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
    Rho_As_PVRS = Rho_PVRS / As_PVRS;
    Rho_SL      = L[0] + ( u_L - u_PVRS )*Rho_As_PVRS;
    Rho_SR      = R[0] + ( u_PVRS - u_R )*Rho_As_PVRS;
+   Rho_SL      = FMAX( Rho_SL, MinDens );
+   Rho_SR      = FMAX( Rho_SR, MinDens );
    _P          = ONE / P_PVRS;
 // see Eq. [9.8] in Toro 1999 for passive scalars
    Gamma_SL    = EoS_DensPres2CSqr( Rho_SL, P_PVRS, L+NCOMP_FLUID, EoS_AuxArray )*Rho_SL*_P;
