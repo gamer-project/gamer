@@ -146,7 +146,7 @@
 //               which has not been implemented
 // --> unnecessary for EOS_GAMMA as this EoS is fast
 #if ( EOS != EOS_GAMMA  &&  FLU_SCHEME != CTU )
-#  define LR_EINT
+//#  define LR_EINT
 #endif
 
 
