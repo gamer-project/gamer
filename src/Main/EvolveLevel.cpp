@@ -16,6 +16,8 @@ extern Timer_t *Timer_Par_2Sib   [NLEVEL];
 extern Timer_t *Timer_Par_2Son   [NLEVEL];
 #endif
 
+bool AutoReduceDt_Continue;
+
 
 
 
@@ -148,6 +150,10 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       const int SaveSg_Mag = NULL_INT;
 #     endif
 
+//    whether or not to continue applying AUTO_REDUCE_DT if the fluid solver fails
+      AutoReduceDt_Continue = ( AUTO_REDUCE_DT ) ? ( AutoReduceDtCoeff*AUTO_REDUCE_DT_FACTOR >= AUTO_REDUCE_DT_FACTOR_MIN )
+                                                 : false;
+
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
          Aux_Message( stdout, "   Lv %2d: Flu_AdvanceDt, counter = %8ld ... ", lv, AdvanceCounter[lv] );
 
@@ -212,35 +218,35 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
             else
             {
-//             reduce the time-step coefficient
-               AutoReduceDtCoeff *= AUTO_REDUCE_DT_FACTOR;
+//             reduce the time-step coefficient if allowed
+               if ( AutoReduceDt_Continue )
+               {
+                  AutoReduceDtCoeff *= AUTO_REDUCE_DT_FACTOR;
+
+                  if ( MPI_Rank == 0 )
+                  {
+                     Aux_Message( stderr, "WARNING : fluid solver failed (Lv %2d, counter %8ld) --> ", lv, AdvanceCounter[lv] );
+                     Aux_Message( stderr, "auto-reduce dt by %13.7e\n", AutoReduceDtCoeff );
+                  }
+
+//                restart the sub-step while loop with a smaller dt
+                  continue;
+               }
 
 //             terminate the program if the time-step coefficient becomes smaller than the minimum threshold
-               if ( AutoReduceDtCoeff < AUTO_REDUCE_DT_FACTOR_MIN )
+               else
                {
                   if ( MPI_Rank == 0 )
                   {
                      Aux_Message( stderr, "\n\n===================================================================================\n" );
                      Aux_Message( stderr, "ERROR : AutoReduceDtCoeff (%13.7e) < AUTO_REDUCE_DT_FACTOR_MIN (%13.7e) !!\n",
                                   AutoReduceDtCoeff, AUTO_REDUCE_DT_FACTOR_MIN );
-                     Aux_Message( stderr, "        --> AUTO_REDUCE_DT failed, and the program will be terminated ......\n" );
+                     Aux_Message( stderr, "        --> AUTO_REDUCE_DT failed and the program will be terminated ......\n" );
                      Aux_Message( stderr, "===================================================================================\n\n\n" );
                      MPI_Exit();
                   }
-               }
-
-               else
-               {
-                  if ( MPI_Rank == 0 )
-                  {
-                     Aux_Message( stderr, "WARNING : fluid solver failed (Lv %2d, counter %8ld) --> ", lv, AdvanceCounter[lv] );
-                     Aux_Message( stderr, "auto-reduce dt by %13.7e\n", AutoReduceDtCoeff );
-                  }
-               }
-
-//             restart the sub-step while loop with a smaller dt
-               continue;
-            }
+               } // if ( AutoReduceDt_Continue ) ... else ...
+            } // if ( FluStatus_AllRank == GAMER_SUCCESS )
          } // if ( AUTO_REDUCE_DT )
       } // if ( OPT__OVERLAP_MPI ) ... else ...
 

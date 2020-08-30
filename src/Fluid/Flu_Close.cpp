@@ -5,6 +5,9 @@
 // status of the fluid solver used by AUTO_REDUCE_DT (declared in Flu_AdvanceDt.cpp)
 extern int FluStatus_ThisRank;
 
+// whether or not to continue applying AUTO_REDUCE_DT (decalred in Flu_AdvanceDt.cpp)
+extern bool AutoReduceDt_Continue;
+
 
 static void StoreFlux( const int lv, const real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                        const int NPG, const int *PID0_List, const real dt );
@@ -749,7 +752,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //          --> note that MIN_DENS is declared as double and must be converted to **real** before the comparison
 //              --> to be consistent with the check in Unphysical()
 //          --> do NOT check the minimum internal energy here since we want to apply the dual-energy correction first
-            if ( !AUTO_REDUCE_DT )  Update[DENS] = FMAX( Update[DENS], (real)MIN_DENS );
+            if ( ! AutoReduceDt_Continue )   Update[DENS] = FMAX( Update[DENS], (real)MIN_DENS );
 
 
 //          floor and normalize passive scalars
@@ -772,13 +775,13 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #           ifdef DUAL_ENERGY
             Hydro_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[ENPY],
                                  h_DE_Array_F_Out[TID][idx_out], EoS_AuxArray[1], EoS_AuxArray[2],
-                                 (AUTO_REDUCE_DT)?CorrPres_No:CorrPres_Yes, MIN_PRES, DUAL_ENERGY_SWITCH, Emag_Out );
+                                 (AutoReduceDt_Continue)?CorrPres_No:CorrPres_Yes, MIN_PRES, DUAL_ENERGY_SWITCH, Emag_Out );
 
 //          apply internal energy floor if dual-energy formalism is not adopted
 //          --> apply it only when AUTO_REDUCE_DT is disabled
 //              --> otherwise AUTO_REDUCE_DT may not be triggered due to this internal energy floor
 #           else
-            if ( !AUTO_REDUCE_DT )
+            if ( ! AutoReduceDt_Continue )
                Update[ENGY] = Hydro_CheckMinEintInEngy( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
                                                         MIN_EINT, Emag_Out );
 #           endif
@@ -790,7 +793,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //              (especially when Eint << kinematic energy)
 //              --> it will not crash the code since we always apply MIN_EINT/MIN_PRES when calculating Eint/pressure
 //          --> when AUTO_REDUCE_DT is enabled, we still check Eint instead of energy
-            if ( Unphysical(Update, (AUTO_REDUCE_DT)?CheckMinEint:CheckMinEtot, Emag_Out) )
+            if ( Unphysical(Update, (AutoReduceDt_Continue)?CheckMinEint:CheckMinEtot, Emag_Out) )
             {
 //             set CorrectUnphy = GAMER_FAILED if any cells fail
 //             --> use critical directive to avoid thread racing (may not be necessary here?)
@@ -799,7 +802,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
 
 //             output the debug information (only if AUTO_REDUCE_DT is disabled)
-               if ( !AUTO_REDUCE_DT )
+               if ( ! AutoReduceDt_Continue )
                {
                   const int  PID_Failed      = PID0_List[TID] + LocalID[ijk_out[2]/PS1][ijk_out[1]/PS1][ijk_out[0]/PS1];
                   const bool CheckMinEint_No = false;
@@ -921,8 +924,8 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   const int PotSg = NULL_INT;
 #                 endif
                   Output_Patch( lv, PID_Failed, amr->FluSg[lv], MagSg, PotSg, "Unphy" );
-               } // if ( !AUTO_REDUCE_DT )
-            } // if ( Unphysical(Update, (AUTO_REDUCE_DT)?CheckMinEint:CheckMinEtot, Emag_Out) )
+               } // if ( ! AutoReduceDt_Continue )
+            } // if ( Unphysical(Update, (AutoReduceDt_Continue)?CheckMinEint:CheckMinEtot, Emag_Out) )
 
             else
             {
@@ -971,7 +974,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //             record the number of corrected cells
                NCorrThisTime ++;
 
-            } // if ( Unphysical(Update, (AUTO_REDUCE_DT)?CheckMinEint:CheckMinEtot, Emag_Out) ) ... else ...
+            } // if ( Unphysical(Update, (AutoReduceDt_Continue)?CheckMinEint:CheckMinEtot, Emag_Out) ) ... else ...
          } // if need correction
       } // i,j,k
    } // for (int TID=0; TID<NPG; TID++)
