@@ -35,8 +35,12 @@ void CUAPI_SetConstMemory()
 // cudaMemcpyToSymbol() has the default parameters "offset=0, kind=cudaMemcpyHostToDevice" and so
 // we do not repeat them below
 
+#  if ( MODEL == HYDRO )
+   CUDA_CHECK_ERROR(  cudaMemcpyToSymbol( c_EoS_AuxArray, EoS_AuxArray,       EOS_NAUX_MAX*sizeof(double) )  );
+#  endif
+
 #  if ( NCOMP_PASSIVE > 0 )
-   CUDA_CHECK_ERROR(  cudaMemcpyToSymbol( c_NormIdx, PassiveNorm_VarIdx, NCOMP_PASSIVE*sizeof(int) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyToSymbol( c_NormIdx,      PassiveNorm_VarIdx, NCOMP_PASSIVE*sizeof(int  ) )  );
 #  endif
 
 #  ifdef GRAVITY

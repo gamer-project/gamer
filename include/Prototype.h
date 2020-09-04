@@ -79,21 +79,27 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       real h_Ele_Array[][9][NCOMP_ELE][ PS2P1*PS2 ],
                       const double h_Corner_Array[][3],
                       const real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
-                      const int NPatchGroup, const real dt, const real dh, const real Gamma,
+                      const int NPatchGroup, const real dt, const real dh,
                       const bool StoreFlux, const bool StoreElectric,
                       const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                       const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
                       const double Time, const OptGravityType_t GravityType,
-                      const real MinDens, const real MinPres, const real DualEnergySwitch,
+                      const real MinDens, const real MinPres, const real MinEint, const real DualEnergySwitch,
                       const bool NormPassive, const int NNorm, const int NormIdx[],
                       const bool JeansMinPres, const real JeansMinPres_Coeff );
-real Hydro_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                        const real Gamma_m1, const bool CheckMinPres, const real MinPres, const real Emag );
-real Hydro_GetTemperature( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                           const real Gamma_m1, const bool CheckMinPres, const real MinPres, const real Emag );
-double Hydro_Temperature2Pressure( const double Dens, const double Temp, const double mu, const double m_H,
-                                   const bool CheckMinPres, const double MinPres );
+real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                     const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
+                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[], real *EintOut );
+real Hydro_Con2Eint( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                     const bool CheckMinEint, const real MinEint, const real Emag );
+real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, const real MomZ, const real Eint, const real Emag );
+real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                     const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
+                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
+double Hydro_Temp2Pres( const double Dens, const double Temp, const double mu, const double m_H,
+                        const bool CheckMinPres, const double MinPres );
 real Hydro_CheckMinPres( const real InPres, const real MinPres );
+real Hydro_CheckMinEint( const real InEint, const real MinEint );
 void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
 #ifdef DUAL_ENERGY
 void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, const real MomZ,
@@ -101,15 +107,15 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
                           const bool CheckMinPres, const real MinPres, const real DualEnergySwitch,
                           const real Emag );
 #if ( DUAL_ENERGY == DE_ENPY )
-real Hydro_Fluid2Entropy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy, const real Gamma_m1,
-                          const real Emag );
+real Hydro_Con2Entropy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                        const real Emag, const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
 real Hydro_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1 );
 real Hydro_DensEntropy2Pres( const real Dens, const real Enpy, const real Gamma_m1,
                              const bool CheckMinPres, const real MinPres );
 #endif
 #endif
-real Hydro_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                               const real Gamma_m1, const real _Gamma_m1, const real MinPres, const real Emag );
+real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real InEngy,
+                               const real MinEint, const real Emag );
 int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt,
                    const int SaveSg_Flu, const int SaveSg_Mag, const bool OverlapMPI, const bool Overlap_Sync );
 void Flu_AllocateFluxArray( const int lv );
@@ -217,17 +223,17 @@ double Mis_Cell2PhySize( const int NCell, const int lv );
 int    Mis_Scale2Cell( const int Scale, const int lv );
 int    Mis_Cell2Scale( const int NCell, const int lv );
 double dt_InvokeSolver( const Solver_t TSolver, const int lv );
-void   dt_Prepare_Flu( const int lv, real h_Flu_Array_T[][NCOMP_FLUID][ CUBE(PS1) ],
+void   dt_Prepare_Flu( const int lv, real h_Flu_Array_T[][FLU_NIN_T][ CUBE(PS1) ],
                        real h_Mag_Array_T[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const int NPG, const int *PID0_List );
 #ifdef GRAVITY
 void   dt_Prepare_Pot( const int lv, real h_Pot_Array_T[][ CUBE(GRA_NXT) ], const int NPG, const int *PID0_List,
                        const double PrepTime );
 #endif
 void   dt_Close( const real h_dt_Array_T[], const int NPG );
-void   CPU_dtSolver( const Solver_t TSolver, real dt_Array[], const real Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
+void   CPU_dtSolver( const Solver_t TSolver, real dt_Array[], const real Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                      const real Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const real Pot_Array[][ CUBE(GRA_NXT) ],
                      const double Corner_Array[][3], const int NPatchGroup, const real dh, const real Safety,
-                     const real Gamma, const real MinPres, const bool P5_Gradient, const OptGravityType_t GravityType,
+                     const real MinPres, const bool P5_Gradient, const OptGravityType_t GravityType,
                      const bool ExtPot, const double TargetTime );
 
 
@@ -487,18 +493,18 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              real h_Ele_Array[][9][NCOMP_ELE][ PS2P1*PS2 ],
                              const double h_Corner_Array[][3],
                              real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
-                             const int NPatchGroup, const real dt, const real dh, const real Gamma,
+                             const int NPatchGroup, const real dt, const real dh,
                              const bool StoreFlux, const bool StoreElectric,
                              const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                              const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
                              const double Time, const OptGravityType_t GravityType,
-                             const int GPU_NStream, const real MinDens, const real MinPres, const real DualEnergySwitch,
-                             const bool NormPassive, const int NNorm,
+                             const int GPU_NStream, const real MinDens, const real MinPres, const real MinEint,
+                             const real DualEnergySwitch, const bool NormPassive, const int NNorm,
                              const bool JeansMinPres, const real JeansMinPres_Coeff );
-void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real h_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
+void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real h_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                           const real h_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const real h_Pot_Array[][ CUBE(GRA_NXT) ],
                           const double h_Corner_Array[][3], const int NPatchGroup, const real dh, const real Safety,
-                          const real Gamma, const real MinPres, const bool P5_Gradient, const OptGravityType_t GravityType,
+                          const real MinPres, const bool P5_Gradient, const OptGravityType_t GravityType,
                           const bool ExtPot, const double TargetTime, const int GPU_NStream );
 void CUAPI_DiagnoseDevice();
 void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GPU_NStream );
@@ -628,6 +634,12 @@ void SF_FreeRNG();
 void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, RandomNumber_t *RNG,
                           const real GasDensThres, const real Efficiency, const real MinStarMass, const real MaxStarMFrac,
                           const bool DetRandom, const bool UseMetal );
+#endif
+
+
+// EoS in hydrodynamics
+#if ( MODEL == HYDRO )
+void EoS_Init();
 #endif
 
 

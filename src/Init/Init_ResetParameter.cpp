@@ -61,7 +61,7 @@ void Init_ResetParameter()
 #     if   ( FLU_SCHEME == RTVD )
       DT__FLUID = 0.50;
 #     elif ( FLU_SCHEME == MHM )
-      DT__FLUID = 1.00;
+      DT__FLUID = 0.80;
 #     elif ( FLU_SCHEME == MHM_RP )
       DT__FLUID = 0.80;
 #     elif ( FLU_SCHEME == CTU )
@@ -386,13 +386,24 @@ void Init_ResetParameter()
 #     endif
    }
 
-   if ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_NONE )
+   if      ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_NONE )
    {
       OPT__1ST_FLUX_CORR_SCHEME = RSOLVER_1ST_NONE;
 
       PRINT_WARNING( OPT__1ST_FLUX_CORR_SCHEME, FORMAT_INT, "since OPT__1ST_FLUX_CORR is disabled" );
    }
-#  endif
+
+   else if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_DEFAULT )
+   {
+#     ifdef MHD
+      OPT__1ST_FLUX_CORR_SCHEME = RSOLVER_1ST_HLLD;
+#     else
+      OPT__1ST_FLUX_CORR_SCHEME = RSOLVER_1ST_HLLC;
+#     endif
+
+      PRINT_WARNING( OPT__1ST_FLUX_CORR_SCHEME, FORMAT_INT, "" );
+   }
+#  endif // if ( MODEL == HYDRO )
 
 
 // timing options
@@ -746,7 +757,7 @@ void Init_ResetParameter()
    {
       JEANS_MIN_PRES = false;
 
-      PRINT_WARNING( JEANS_MIN_PRES, FORMAT_INT, "since either SUPPORT_GRACKLE or GRAVITY is disabled" );
+      PRINT_WARNING( JEANS_MIN_PRES, FORMAT_INT, "since GRAVITY is disabled" );
    }
 #  endif
 
@@ -755,6 +766,24 @@ void Init_ResetParameter()
       JEANS_MIN_PRES_LEVEL = MAX_LEVEL;
 
       PRINT_WARNING( JEANS_MIN_PRES_LEVEL, FORMAT_INT, "" );
+   }
+#  endif
+
+
+// MIN_PRES and MIN_EINT
+#  if ( MODEL == HYDRO )
+   if      ( MIN_PRES > 0.0  &&  MIN_EINT == 0.0 )
+   {
+      MIN_EINT = MIN_PRES*1.5;
+
+      PRINT_WARNING( MIN_EINT, FORMAT_FLT, "" );
+   }
+
+   else if ( MIN_EINT > 0.0  &&  MIN_PRES == 0.0 )
+   {
+      MIN_PRES = MIN_EINT/1.5;
+
+      PRINT_WARNING( MIN_PRES, FORMAT_FLT, "" );
    }
 #  endif
 

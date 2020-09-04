@@ -5,9 +5,12 @@
 
 #include "Macro.h"
 #include "Typedef.h"
-#include "CUPOT.h"
 
 
+
+#if ( MODEL == HYDRO )
+SET_GLOBAL( __constant__ double c_EoS_AuxArray[EOS_NAUX_MAX] );
+#endif
 
 #if ( NCOMP_PASSIVE > 0 )
 SET_GLOBAL( __constant__ int  c_NormIdx[NCOMP_PASSIVE] );

@@ -4,9 +4,11 @@
 
 
 #if   ( MODEL == HYDRO )
-void CPU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
+void CPU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                             const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const int NPG,
-                            const real dh, const real Safety, const real Gamma, const real MinPres );
+                            const real dh, const real Safety, const real MinPres,
+                            const EoS_DE2P_t EoS_DensEint2Pres_Func, const EoS_DP2C_t EoS_DensPres2CSqr_Func,
+                            const double c_EoS_AuxArray[] );
 #ifdef GRAVITY
 void CPU_dtSolver_HydroGravity( real g_dt_Array[],
                                 const real g_Pot_Array[][ CUBE(GRA_NXT) ],
@@ -44,7 +46,6 @@ void CPU_dtSolver_HydroGravity( real g_dt_Array[],
 //                NPatchGroup  : Number of patch groups evaluated simultaneously by GPU
 //                dh           : Cell size
 //                Safety       : dt safety factor
-//                Gamma        : Ratio of specific heats
 //                MinPres      : Minimum allowed pressure
 //                P5_Gradient  : Use 5-points stencil to evaluate the potential gradient
 //                GravityType  : Types of gravity --> self-gravity, external gravity, both
@@ -53,10 +54,10 @@ void CPU_dtSolver_HydroGravity( real g_dt_Array[],
 //
 // Return      :  dt_Array
 //-------------------------------------------------------------------------------------------------------
-void CPU_dtSolver( const Solver_t TSolver, real dt_Array[], const real Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
+void CPU_dtSolver( const Solver_t TSolver, real dt_Array[], const real Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                    const real Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const real Pot_Array[][ CUBE(GRA_NXT) ],
                    const double Corner_Array[][3], const int NPatchGroup, const real dh, const real Safety,
-                   const real Gamma, const real MinPres, const bool P5_Gradient, const OptGravityType_t GravityType,
+                   const real MinPres, const bool P5_Gradient, const OptGravityType_t GravityType,
                    const bool ExtPot, const double TargetTime )
 {
 
@@ -64,7 +65,8 @@ void CPU_dtSolver( const Solver_t TSolver, real dt_Array[], const real Flu_Array
    {
 #     if   ( MODEL == HYDRO )
       case DT_FLU_SOLVER:
-         CPU_dtSolver_HydroCFL( dt_Array, Flu_Array, Mag_Array, NPatchGroup, dh, Safety, Gamma, MinPres );
+         CPU_dtSolver_HydroCFL( dt_Array, Flu_Array, Mag_Array, NPatchGroup, dh, Safety, MinPres,
+                                EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr, EoS_AuxArray );
       break;
 
 #     ifdef GRAVITY

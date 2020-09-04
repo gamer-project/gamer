@@ -70,6 +70,13 @@
 #endif
 
 
+// equation of states
+#define EOS_GAMMA       1
+#define EOS_NUCLEAR     2
+#define EOS_TABULAR     3
+#define EOS_USER        4
+
+
 // Poisson solvers
 #define SOR          1
 #define MG           2
@@ -153,6 +160,15 @@
 #else
 #  error : ERROR : unsupported MODEL (please edit FLU_NIN and FLU_NOUT for the new MODEL) !!
 #endif // MODEL
+
+
+// number of input fluid variables in the dt solver
+// --> EOS_GAMMA does not require passive scalars
+#if ( MODEL == HYDRO  &&  EOS == EOS_GAMMA )
+#  define FLU_NIN_T           NCOMP_FLUID
+#else
+#  define FLU_NIN_T           NCOMP_TOTAL
+#endif
 
 
 // built-in fields in different models
@@ -432,6 +448,7 @@
 #endif // MODEL
 
 
+
 // self-gravity constants
 #ifdef GRAVITY
 
@@ -512,6 +529,7 @@
 #endif // #ifdef GRAVITY
 
 
+
 // patch size (number of cells of a single patch in the x/y/z directions)
 #define PATCH_SIZE                   8
 #define PS1             ( 1*PATCH_SIZE )
@@ -521,7 +539,7 @@
 #define PS1P1           ( PS1 + 1 )
 
 
-// the size of arrays (in one dimension) sending into GPU
+// size of GPU arrays (in one dimension)
 //###REVISE: support interpolation schemes requiring 2 ghost cells on each side for POT_NXT
 #  define FLU_NXT       ( PS2 + 2*FLU_GHOST_SIZE )                // use patch group as the unit
 #  define FLU_NXT_P1    ( FLU_NXT + 1 )
@@ -546,53 +564,75 @@
 
 
 // size of auxiliary arrays
+#if ( MODEL == HYDRO )
+#  define EOS_NAUX_MAX           10    // EoS_AuxArray[]
+#endif
+
 #ifdef GRAVITY
 #  define EXT_POT_NAUX_MAX       10    // ExtPot_AuxArray[]
 #  define EXT_ACC_NAUX_MAX       10    // ExtAcc_AuxArray[]
 #endif
 
 
+// bitwise reproducibility in flux and electric field fix-up operations
+#if ( MODEL == HYDRO )
+# ifdef BITWISE_REPRODUCIBILITY
+#  define BIT_REP_FLUX
+# endif
+
+// enable BIT_REP_ELECTRIC by default even when BITWISE_REPRODUCIBILITY is off
+// --> ensures that the B field on the common interface between two nearby patches are fully
+//     consistent with each other (even the round-off errors are the same)
+// --> reduces the div(B) errors significantly
+# ifdef MHD
+//#ifdef BITWISE_REPRODUCIBILITY
+#  define BIT_REP_ELECTRIC
+//#endif
+# endif // MHD
+#endif // HYDRO
+
+
 // extreme values
 #ifndef __INT_MAX__
-#  define __INT_MAX__      2147483647
+#  define __INT_MAX__            2147483647
 #endif
 
 #ifndef __LONG_MAX__
-#  define __LONG_MAX__     9223372036854775807L
+#  define __LONG_MAX__           9223372036854775807L
 #endif
 
 #ifndef __UINT_MAX__
-#  define __UINT_MAX__     ( __INT_MAX__*2U + 1U )
+#  define __UINT_MAX__           ( __INT_MAX__*2U + 1U )
 #endif
 
 #ifndef __ULONG_MAX__
-#  define __ULONG_MAX__    18446744073709551615UL     // 2^64-1
+#  define __ULONG_MAX__          18446744073709551615UL     // 2^64-1
 #endif
 
 #ifndef __FLT_MAX__
-#  define __FLT_MAX__      3.40282347e+38F
+#  define __FLT_MAX__            3.40282347e+38F
 #endif
 
 #ifndef __FLT_MIN__
-#  define __FLT_MIN__      1.17549435e-38F
+#  define __FLT_MIN__            1.17549435e-38F
 #endif
 
 #ifndef __DBL_MAX__
-#  define __DBL_MAX__      1.79769313e+308
+#  define __DBL_MAX__            1.79769313e+308
 #endif
 
 #ifndef __DBL_MIN__
-#  define __DBL_MIN__      2.22507386e-308
+#  define __DBL_MIN__            2.22507386e-308
 #endif
 
 
 // extreme value used for various purposes (e.g., floor value for passive scalars)
 #ifdef FLOAT8
-#  define TINY_NUMBER      __DBL_MIN__
-#  define HUGE_NUMBER      __DBL_MAX__
+#  define TINY_NUMBER            __DBL_MIN__
+#  define HUGE_NUMBER            __DBL_MAX__
 #else
-#  define TINY_NUMBER      __FLT_MIN__
-#  define HUGE_NUMBER      __FLT_MAX__
+#  define TINY_NUMBER            __FLT_MIN__
+#  define HUGE_NUMBER            __FLT_MAX__
 #endif
 
 
