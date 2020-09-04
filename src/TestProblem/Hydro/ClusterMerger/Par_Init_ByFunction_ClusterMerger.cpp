@@ -368,7 +368,6 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
   dims1d[0] = count1d[0];
   stride1d[0] = 1;
   start1d[0] = 0;
-
   start[1] = 0;
 
   status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start,
