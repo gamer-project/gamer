@@ -409,6 +409,7 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
 
 // 4. evaluate the HLLE fluxes
 // deal with the special case of MaxV_L=MaxV_R=0
+//###REVISE: should it return zero flux due to symmetry?
    if ( MaxV_L == ZERO  &&  MaxV_R == ZERO )
    {
       for (int v=0; v<NWAVE; v++)

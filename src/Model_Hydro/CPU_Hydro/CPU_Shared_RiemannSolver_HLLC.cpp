@@ -255,6 +255,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
       for (int v=0; v<NCOMP_FLUID; v++)   Flux_LR[v] -= MaxV_L*L[v];    // fluxes along the maximum wave speed
 
 //    deal with the special case of V_S=MaxV_L=0
+//###REVISE: should it return zero flux due to symmetry?
       if ( V_S == ZERO  &&  MaxV_L == ZERO )
       {
          Coeff_LR = ONE;
