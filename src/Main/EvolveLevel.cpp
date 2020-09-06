@@ -240,7 +240,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                   {
                      Aux_Message( stderr, "\n\n===================================================================================\n" );
                      Aux_Message( stderr, "ERROR : AutoReduceDtCoeff (%13.7e) < AUTO_REDUCE_DT_FACTOR_MIN (%13.7e) !!\n",
-                                  AutoReduceDtCoeff, AUTO_REDUCE_DT_FACTOR_MIN );
+                                  AutoReduceDtCoeff*AUTO_REDUCE_DT_FACTOR, AUTO_REDUCE_DT_FACTOR_MIN );
                      Aux_Message( stderr, "        --> AUTO_REDUCE_DT failed and the program will be terminated ......\n" );
                      Aux_Message( stderr, "===================================================================================\n\n\n" );
                      MPI_Exit();
