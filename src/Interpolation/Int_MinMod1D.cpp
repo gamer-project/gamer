@@ -12,7 +12,7 @@
 //                   (2) Set slope to zero if the left and right **slopes** have opposite signs
 //                   (3) When enabling "OppSignOthOrder", set slope to zero if the left and right **values**
 //                       have opposite signs
-//                       --> Useful to avoid introducing unphysically large velocity in low density valleys
+//                       --> Useful to avoid introducing unphysically large velocity in low-density valleys
 //                       --> Because when momentum changes sign (e.g., -1e7, 0, +1e7), even though still
 //                           monotonic, the interpolated momentum may become much larger (e.g., O(1e7))
 //                           than the central value, which corresponds to extremely large velocity due to
