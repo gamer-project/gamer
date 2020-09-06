@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2413)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2414)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -183,6 +183,7 @@ Procedure for outputting new variables:
 //                2411 : 2020/08/11 --> output LR_EINT
 //                2412 : 2020/08/17 --> output FLU_NIN_T
 //                2413 : 2020/08/23 --> output HLLD_WAVESPEED
+//                2414 : 2020/09/06 --> output INT_OPP_SIGN_0TH_ORDER
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1380,7 +1381,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2413;
+   KeyInfo.FormatVersion        = 2414;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2157,6 +2158,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__RefPot_IntScheme   = OPT__REF_POT_INT_SCHEME;
 #  endif
    InputPara.IntMonoCoeff            = INT_MONO_COEFF;
+   InputPara.IntOppSign0thOrder      = INT_OPP_SIGN_0TH_ORDER;
 
 // data dump
    InputPara.Opt__Output_Total       = OPT__OUTPUT_TOTAL;
@@ -2896,6 +2898,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__RefPot_IntScheme",   HOFFSET(InputPara_t,Opt__RefPot_IntScheme  ), H5T_NATIVE_INT     );
 #  endif
    H5Tinsert( H5_TypeID, "IntMonoCoeff",            HOFFSET(InputPara_t,IntMonoCoeff           ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "IntOppSign0thOrder",      HOFFSET(InputPara_t,IntOppSign0thOrder     ), H5T_NATIVE_INT     );
 
 // data dump
    H5Tinsert( H5_TypeID, "Opt__Output_Total",       HOFFSET(InputPara_t,Opt__Output_Total      ), H5T_NATIVE_INT     );

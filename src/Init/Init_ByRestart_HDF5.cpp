@@ -1931,6 +1931,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__RefPot_IntScheme",   &RS.Opt__RefPot_IntScheme,   SID, TID, NonFatal, &RT.Opt__RefPot_IntScheme,    1, NonFatal );
 #  endif
    LoadField( "IntMonoCoeff",            &RS.IntMonoCoeff,            SID, TID, NonFatal, &RT.IntMonoCoeff,             1, NonFatal );
+   LoadField( "IntOppSign0thOrder",      &RS.IntOppSign0thOrder,      SID, TID, NonFatal, &RT.IntOppSign0thOrder,       1, NonFatal );
 
 // data dump
    LoadField( "Opt__Output_Total",       &RS.Opt__Output_Total,       SID, TID, NonFatal, &RT.Opt__Output_Total,        1, NonFatal );

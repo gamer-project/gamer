@@ -1093,6 +1093,7 @@ void Aux_TakeNote()
                                                                                                              "UNKNOWN" );
 #     endif
       fprintf( Note, "INT_MONO_COEFF                  %13.7e\n",  INT_MONO_COEFF          );
+      fprintf( Note, "INT_OPP_SIGN_0TH_ORDER          %d\n",      INT_OPP_SIGN_0TH_ORDER  );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 

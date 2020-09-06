@@ -390,6 +390,14 @@ void Aux_Check_Parameter()
    }
 #  endif
 
+#  if   ( MODEL == HYDRO )
+   if ( ! INT_OPP_SIGN_0TH_ORDER )
+      Aux_Message( stderr, "WARNING : disabling INT_OPP_SIGN_0TH_ORDER may cause unphysically large velocity during interpolation !!\n" );
+#  elif ( MODEL == ELBDM )
+   if (   INT_OPP_SIGN_0TH_ORDER )
+      Aux_Message( stderr, "WARNING : INT_OPP_SIGN_0TH_ORDER is not recommended for ELBDM !!\n" );
+#  endif
+
    } // if ( MPI_Rank == 0 )
 
 
