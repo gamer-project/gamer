@@ -7,27 +7,26 @@
 // Function    :  Int_vanLeer
 // Description :  Perform spatial interpolation based on the van Leer limiter
 //
-// Note        :  1. The slope at each grid is determined by taking the harmonic mean of the right slope
-//                   (difference between the right grid and itself) and the left slope (difference between
-//                   itself and the left slope)
-//                2. The slope is chosen to be zero if the right and left slopes have different signs
+// Note        :  1. Slope at each cell is set to the harmonic mean of the left and right slopes
+//                2. Set slope to zero if the left and right **slopes** have opposite signs
 //                3. The interpolation result is BOTH conservative and monotonic
 //		  4. 3D interpolation is achieved by performing interpolation along x, y, and z directions
 //		     in order --> different from MINMOD1D
 //
-// Parameter   :  CData       : Input coarse-grid array
-//                CSize       : Size of the CData array
-//                CStart      : (x,y,z) starting indices to perform interpolation on the CData array
-//                CRange      : Number of grids in each direction to perform interpolation
-//                FData       : Output fine-grid array
-//                FStart      : (x,y,z) starting indcies to store the interpolation results
-//                NComp       : Number of components in the CData and FData array
-//                UnwrapPhase : Unwrap phase when OPT__INT_PHASE is on (for ELBDM only)
-//                MonoCoeff   : Slope limiter coefficient for controlling the monotonicity
+// Parameter   :  CData           : Input coarse-grid array
+//                CSize           : Size of the CData array
+//                CStart          : (x,y,z) starting indices to perform interpolation on the CData array
+//                CRange          : Number of grids in each direction to perform interpolation
+//                FData           : Output fine-grid array
+//                FStart          : (x,y,z) starting indcies to store the interpolation results
+//                NComp           : Number of components in the CData and FData array
+//                UnwrapPhase     : Unwrap phase when OPT__INT_PHASE is on (for ELBDM only)
+//                MonoCoeff       : Slope limiter coefficient for controlling the monotonicity
+//                OppSign0thOrder : See Int_MinMod1D()
 //-------------------------------------------------------------------------------------------------------
 void Int_vanLeer( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
                   real FData[], const int FSize[3], const int FStart[3], const int NComp,
-                  const bool UnwrapPhase, const real MonoCoeff )
+                  const bool UnwrapPhase, const real MonoCoeff, const bool OppSign0thOrder )
 {
 
 // interpolation-scheme-dependent parameters
@@ -103,6 +102,8 @@ void Int_vanLeer( real CData[], const int CSize[3], const int CStart[3], const i
          if ( RSlope*LSlope <= (real)0.0 )   SlopeDh_4 = (real)0.0;
          else                                SlopeDh_4 = MonoCoeff_4*LSlope*RSlope/(LSlope+RSlope);
 
+         if ( OppSign0thOrder  &&  CPtr[Idx_InL]*CPtr[Idx_InR] < (real)0.0 )  SlopeDh_4 = (real)0.0;
+
          TDataX[ Idx_Out       ] = CPtr[Idx_InC] - SlopeDh_4;
          TDataX[ Idx_Out + Tdx ] = CPtr[Idx_InC] + SlopeDh_4;
 
@@ -141,6 +142,8 @@ void Int_vanLeer( real CData[], const int CSize[3], const int CStart[3], const i
          if ( RSlope*LSlope <= (real)0.0 )   SlopeDh_4 = (real)0.0;
          else                                SlopeDh_4 = MonoCoeff_4*LSlope*RSlope/(LSlope+RSlope);
 
+         if ( OppSign0thOrder  &&  TDataX[Idx_InL]*TDataX[Idx_InR] < (real)0.0 )    SlopeDh_4 = (real)0.0;
+
          TDataY[ Idx_Out       ] = TDataX[Idx_InC] - SlopeDh_4;
          TDataY[ Idx_Out + Tdy ] = TDataX[Idx_InC] + SlopeDh_4;
 
@@ -178,6 +181,8 @@ void Int_vanLeer( real CData[], const int CSize[3], const int CStart[3], const i
 
          if ( RSlope*LSlope <= (real)0.0 )   SlopeDh_4 = (real)0.0;
          else                                SlopeDh_4 = MonoCoeff_4*LSlope*RSlope/(LSlope+RSlope);
+
+         if ( OppSign0thOrder  &&  TDataY[Idx_InL]*TDataY[Idx_InR] < (real)0.0 )    SlopeDh_4 = (real)0.0;
 
          FPtr[ Idx_Out       ] = TDataY[Idx_InC] - SlopeDh_4;
          FPtr[ Idx_Out + Fdz ] = TDataY[Idx_InC] + SlopeDh_4;

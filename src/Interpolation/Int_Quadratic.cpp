@@ -7,30 +7,32 @@
 // Function    :  Int_Quadratic
 // Description :  Perform spatial interpolation based on the quadratic interpolation
 //
-// Note	       :  a. The spatial disribution is approximated by a parabola (quadratic polynomial) in each
+// Note	       :  1. The spatial disribution is approximated by a parabola (quadratic polynomial) in each
 //                   direction
 //                   --> A quadratic polynomial, which passes through the CENTRAL values in three cells,
 //                       is used to approximate the spatial distribution
-//		  b. The interpolation result is neither conservative nor monotonic
-//		  c. 3D interpolation is achieved by performing interpolation along x, y, and z directions
+//		  2. The interpolation result is neither conservative nor monotonic
+//		  3. 3D interpolation is achieved by performing interpolation along x, y, and z directions
 //		     in order
-//		  d. The "Monotonic" option is used to ensure that the interpolation results are monotonic
+//		  4. The "Monotonic" option is used to ensure that the interpolation results are monotonic
 //		     --> A slope limiter is adopted to ensure the monotonicity
 //
-// Parameter   :  CData	      : Input coarse-grid array
-//		  CSize	      : Size of the CData array
-//		  CStart      : (x,y,z) starting indices to perform interpolation on the CData array
-//		  CRange      : Number of grids in each direction to perform interpolation
-//		  FData	      : Output fine-grid array
-//		  FStart      : (x,y,z) starting indcies to store the interpolation results
-//		  NComp	      : Number of components in the CData and FData array
-//                UnwrapPhase : Unwrap phase when OPT__INT_PHASE is on (for ELBDM only)
-//                Monotonic   : Ensure that all interpolation results are monotonic
-//                MonoCoeff   : Slope limiter coefficient for the option "Monotonic"
+// Parameter   :  CData	          : Input coarse-grid array
+//		  CSize	          : Size of the CData array
+//		  CStart          : (x,y,z) starting indices to perform interpolation on the CData array
+//		  CRange          : Number of grids in each direction to perform interpolation
+//		  FData	          : Output fine-grid array
+//		  FStart          : (x,y,z) starting indcies to store the interpolation results
+//		  NComp	          : Number of components in the CData and FData array
+//                UnwrapPhase     : Unwrap phase when OPT__INT_PHASE is on (for ELBDM only)
+//                Monotonic       : Ensure that all interpolation results are monotonic
+//                MonoCoeff       : Slope limiter coefficient for the option "Monotonic"
+//                OppSign0thOrder : See Int_MinMod1D()
 //-------------------------------------------------------------------------------------------------------
 void Int_Quadratic( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
 		    real FData[], const int FSize[3], const int FStart[3], const int NComp,
-                    const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff )
+                    const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff,
+                    const bool OppSign0thOrder )
 {
 
 // interpolation-scheme-dependent parameters
@@ -150,6 +152,12 @@ void Int_Quadratic( real CData[], const int CSize[3], const int CStart[3], const
                TDataX[ Idx_Out + Tdx ] = CPtr[Idx_InC];
             } // if ( LSlopeDh_4*RSlopeDh_4 > (real)0.0 ) ... else
          } // if ( Monotonic[v] )
+
+         if ( OppSign0thOrder  &&  CPtr[Idx_InL]*CPtr[Idx_InR] < (real)0.0 )
+         {
+            TDataX[ Idx_Out       ] = CPtr[Idx_InC];
+            TDataX[ Idx_Out + Tdx ] = CPtr[Idx_InC];
+         }
       } // k,j,i
 
 
@@ -225,6 +233,12 @@ void Int_Quadratic( real CData[], const int CSize[3], const int CStart[3], const
                TDataY[ Idx_Out + Tdy ] = TDataX[Idx_InC];
             } // if ( LSlopeDh_4*RSlopeDh_4 > (real)0.0 ) ... else
          } // if ( Monotonic[v] )
+
+         if ( OppSign0thOrder  &&  TDataX[Idx_InL]*TDataX[Idx_InR] < (real)0.0 )
+         {
+            TDataY[ Idx_Out       ] = TDataX[Idx_InC];
+            TDataY[ Idx_Out + Tdy ] = TDataX[Idx_InC];
+         }
       } // k,j,i
 
 
@@ -300,6 +314,12 @@ void Int_Quadratic( real CData[], const int CSize[3], const int CStart[3], const
                FPtr[ Idx_Out + Fdz ] = TDataY[Idx_InC];
             } // if ( LSlopeDh_4*RSlopeDh_4 > (real)0.0 ) ... else
          } // if ( Monotonic[v] )
+
+         if ( OppSign0thOrder  &&  TDataY[Idx_InL]*TDataY[Idx_InR] < (real)0.0 )
+         {
+            FPtr[ Idx_Out       ] = TDataY[Idx_InC];
+            FPtr[ Idx_Out + Fdz ] = TDataY[Idx_InC];
+         }
       } // k,j,i
 
       CPtr += CDisp;
