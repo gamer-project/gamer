@@ -21,12 +21,11 @@
 //                FStart          : (x,y,z) starting indcies to store the interpolation results
 //                NComp           : Number of components in the CData and FData array
 //                UnwrapPhase     : Unwrap phase when OPT__INT_PHASE is on (for ELBDM only)
-//                MonoCoeff       : Slope limiter coefficient for controlling the monotonicity
 //                OppSign0thOrder : See Int_MinMod1D()
 //-------------------------------------------------------------------------------------------------------
 void Int_vanLeer( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
                   real FData[], const int FSize[3], const int FStart[3], const int NComp,
-                  const bool UnwrapPhase, const real MonoCoeff, const bool OppSign0thOrder )
+                  const bool UnwrapPhase, const bool OppSign0thOrder )
 {
 
 // interpolation-scheme-dependent parameters
@@ -55,9 +54,6 @@ void Int_vanLeer( real CData[], const int CSize[3], const int CStart[3], const i
 // index stride of different components
    const int CDisp  = CSize[0]*CSize[1]*CSize[2];
    const int FDisp  = FSize[0]*FSize[1]*FSize[2];
-
-// MonoCoeff/4
-   const real MonoCoeff_4 = (real)0.25*MonoCoeff;
 
    real *CPtr   = CData;
    real *FPtr   = FData;
@@ -100,7 +96,7 @@ void Int_vanLeer( real CData[], const int CSize[3], const int CStart[3], const i
          RSlope  = CPtr[Idx_InR] - CPtr[Idx_InC];
 
          if ( RSlope*LSlope <= (real)0.0 )   SlopeDh_4 = (real)0.0;
-         else                                SlopeDh_4 = MonoCoeff_4*LSlope*RSlope/(LSlope+RSlope);
+         else                                SlopeDh_4 = (real)0.5*LSlope*RSlope/(LSlope+RSlope);
 
          if ( OppSign0thOrder  &&  CPtr[Idx_InL]*CPtr[Idx_InR] < (real)0.0 )  SlopeDh_4 = (real)0.0;
 
@@ -140,7 +136,7 @@ void Int_vanLeer( real CData[], const int CSize[3], const int CStart[3], const i
          RSlope  = TDataX[Idx_InR] - TDataX[Idx_InC];
 
          if ( RSlope*LSlope <= (real)0.0 )   SlopeDh_4 = (real)0.0;
-         else                                SlopeDh_4 = MonoCoeff_4*LSlope*RSlope/(LSlope+RSlope);
+         else                                SlopeDh_4 = (real)0.5*LSlope*RSlope/(LSlope+RSlope);
 
          if ( OppSign0thOrder  &&  TDataX[Idx_InL]*TDataX[Idx_InR] < (real)0.0 )    SlopeDh_4 = (real)0.0;
 
@@ -180,7 +176,7 @@ void Int_vanLeer( real CData[], const int CSize[3], const int CStart[3], const i
          RSlope  = TDataY[Idx_InR] - TDataY[Idx_InC];
 
          if ( RSlope*LSlope <= (real)0.0 )   SlopeDh_4 = (real)0.0;
-         else                                SlopeDh_4 = MonoCoeff_4*LSlope*RSlope/(LSlope+RSlope);
+         else                                SlopeDh_4 = (real)0.5*LSlope*RSlope/(LSlope+RSlope);
 
          if ( OppSign0thOrder  &&  TDataY[Idx_InL]*TDataY[Idx_InR] < (real)0.0 )    SlopeDh_4 = (real)0.0;
 

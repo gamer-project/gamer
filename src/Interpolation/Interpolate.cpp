@@ -9,7 +9,7 @@ void Int_MinMod3D  (       real CData[], const int CSize[3], const int CStart[3]
                      const bool UnwrapPhase, const bool OppSign0thOrder );
 void Int_vanLeer(          real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
                            real FData[], const int FSize[3], const int FStart[3], const int NComp,
-                     const bool UnwrapPhase, const real MonoCoeff, const bool OppSign0thOrder );
+                     const bool UnwrapPhase, const bool OppSign0thOrder );
 void Int_CQuadratic(       real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
                            real FData[], const int FSize[3], const int FStart[3], const int NComp,
                      const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
@@ -107,7 +107,7 @@ void Interpolate( real CData[], const int CSize[3], const int CStart[3], const i
          break;
 
       case INT_VANLEER :
-         Int_vanLeer   ( CData, CSize, CStart, CRange, FData, FSize, FStart, NComp, UnwrapPhase,            INT_MONO_COEFF,
+         Int_vanLeer   ( CData, CSize, CStart, CRange, FData, FSize, FStart, NComp, UnwrapPhase,
                          OppSign0thOrder );
          break;
 

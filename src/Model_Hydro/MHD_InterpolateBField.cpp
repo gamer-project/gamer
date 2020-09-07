@@ -365,7 +365,7 @@ void GetFaceCoeff_C( real FaceCoeff[], const real *CData, const int Offset, cons
             RSlope = R1[t] - Cen;
 
             if ( RSlope*LSlope <= (real)0.0 )   FaceCoeff[idx] = (real)0.0;
-            else                                FaceCoeff[idx] = MonoCoeff*RSlope*LSlope/(LSlope+RSlope);
+            else                                FaceCoeff[idx] = (real)2.0*RSlope*LSlope/(LSlope+RSlope);
          }
       } // INT_VANLEER
       break;
