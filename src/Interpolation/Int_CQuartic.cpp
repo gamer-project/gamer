@@ -64,9 +64,6 @@ void Int_CQuartic( real CData[], const int CSize[3], const int CStart[3], const 
    const int CDisp  = CSize[0]*CSize[1]*CSize[2];
    const int FDisp  = FSize[0]*FSize[1]*FSize[2];
 
-// MonoCoeff/4
-   const real MonoCoeff_4 = (real)0.25*MonoCoeff;
-
    real *CPtr   = CData;
    real *FPtr   = FData;
    real *TDataX = new real [ (CRange[2]+2*CGhost)*TdzX ];   // temporary array after x interpolation
@@ -112,20 +109,23 @@ void Int_CQuartic( real CData[], const int CSize[3], const int CStart[3], const 
 //       ensure monotonicity
          if ( Monotonic[v] )
          {
-            LSlopeDh_4 = CPtr[Idx_InC ] - CPtr[Idx_InL1];
-            RSlopeDh_4 = CPtr[Idx_InR1] - CPtr[Idx_InC ];
+            LSlopeDh_4 = (real)0.25*( CPtr[Idx_InC ] - CPtr[Idx_InL1]) ;
+            RSlopeDh_4 = (real)0.25*( CPtr[Idx_InR1] - CPtr[Idx_InC ]) ;
 
             if ( LSlopeDh_4*RSlopeDh_4 > (real)0.0 )
             {
                if ( SlopeDh_4*LSlopeDh_4 < (real)0.0 )   SlopeDh_4 = (real)0.125*( CPtr[Idx_InR1] - CPtr[Idx_InL1] );
 
-               LSlopeDh_4 *= MonoCoeff_4;
-               RSlopeDh_4 *= MonoCoeff_4;
                Sign        = SIGN( LSlopeDh_4 );
+               SlopeDh_4  *= Sign;
+               LSlopeDh_4 *= Sign;
+               RSlopeDh_4 *= Sign;
 
-               SlopeDh_4 *= Sign;
-               SlopeDh_4  = FMIN( Sign*LSlopeDh_4, SlopeDh_4 );
-               SlopeDh_4  = FMIN( Sign*RSlopeDh_4, SlopeDh_4 );
+               if ( LSlopeDh_4 < RSlopeDh_4 )   LSlopeDh_4 *= MonoCoeff;
+               else                             RSlopeDh_4 *= MonoCoeff;
+
+               SlopeDh_4  = FMIN( LSlopeDh_4, SlopeDh_4 );
+               SlopeDh_4  = FMIN( RSlopeDh_4, SlopeDh_4 );
                SlopeDh_4 *= Sign;
             }
 
@@ -173,20 +173,23 @@ void Int_CQuartic( real CData[], const int CSize[3], const int CStart[3], const 
 
          if ( Monotonic[v] )
          {
-            LSlopeDh_4 = TDataX[Idx_InC ] - TDataX[Idx_InL1];
-            RSlopeDh_4 = TDataX[Idx_InR1] - TDataX[Idx_InC ];
+            LSlopeDh_4 = (real)0.25*( TDataX[Idx_InC ] - TDataX[Idx_InL1] );
+            RSlopeDh_4 = (real)0.25*( TDataX[Idx_InR1] - TDataX[Idx_InC ] );
 
             if ( LSlopeDh_4*RSlopeDh_4 > (real)0.0 )
             {
                if ( SlopeDh_4*LSlopeDh_4 < (real)0.0 )   SlopeDh_4 = (real)0.125*( TDataX[Idx_InR1] - TDataX[Idx_InL1] );
 
-               LSlopeDh_4 *= MonoCoeff_4;
-               RSlopeDh_4 *= MonoCoeff_4;
                Sign        = SIGN( LSlopeDh_4 );
+               SlopeDh_4  *= Sign;
+               LSlopeDh_4 *= Sign;
+               RSlopeDh_4 *= Sign;
 
-               SlopeDh_4 *= Sign;
-               SlopeDh_4  = FMIN( Sign*LSlopeDh_4, SlopeDh_4 );
-               SlopeDh_4  = FMIN( Sign*RSlopeDh_4, SlopeDh_4 );
+               if ( LSlopeDh_4 < RSlopeDh_4 )   LSlopeDh_4 *= MonoCoeff;
+               else                             RSlopeDh_4 *= MonoCoeff;
+
+               SlopeDh_4  = FMIN( LSlopeDh_4, SlopeDh_4 );
+               SlopeDh_4  = FMIN( RSlopeDh_4, SlopeDh_4 );
                SlopeDh_4 *= Sign;
             }
 
@@ -234,20 +237,23 @@ void Int_CQuartic( real CData[], const int CSize[3], const int CStart[3], const 
 
          if ( Monotonic[v] )
          {
-            LSlopeDh_4 = TDataY[Idx_InC ] - TDataY[Idx_InL1];
-            RSlopeDh_4 = TDataY[Idx_InR1] - TDataY[Idx_InC ];
+            LSlopeDh_4 = (real)0.25*( TDataY[Idx_InC ] - TDataY[Idx_InL1] );
+            RSlopeDh_4 = (real)0.25*( TDataY[Idx_InR1] - TDataY[Idx_InC ] );
 
             if ( LSlopeDh_4*RSlopeDh_4 > (real)0.0 )
             {
                if ( SlopeDh_4*LSlopeDh_4 < (real)0.0 )   SlopeDh_4 = (real)0.125*( TDataY[Idx_InR1] - TDataY[Idx_InL1] );
 
-               LSlopeDh_4 *= MonoCoeff_4;
-               RSlopeDh_4 *= MonoCoeff_4;
                Sign        = SIGN( LSlopeDh_4 );
+               SlopeDh_4  *= Sign;
+               LSlopeDh_4 *= Sign;
+               RSlopeDh_4 *= Sign;
 
-               SlopeDh_4 *= Sign;
-               SlopeDh_4  = FMIN( Sign*LSlopeDh_4, SlopeDh_4 );
-               SlopeDh_4  = FMIN( Sign*RSlopeDh_4, SlopeDh_4 );
+               if ( LSlopeDh_4 < RSlopeDh_4 )   LSlopeDh_4 *= MonoCoeff;
+               else                             RSlopeDh_4 *= MonoCoeff;
+
+               SlopeDh_4  = FMIN( LSlopeDh_4, SlopeDh_4 );
+               SlopeDh_4  = FMIN( RSlopeDh_4, SlopeDh_4 );
                SlopeDh_4 *= Sign;
             }
 
