@@ -130,6 +130,7 @@ struct Makefile_t
    int DualEnergy;
    int Magnetohydrodynamics;
    int EoS;
+   int BarotropicEoS;
 
 #  elif ( MODEL == ELBDM )
    int ConserveMass;
