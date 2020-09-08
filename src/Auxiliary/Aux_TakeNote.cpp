@@ -928,6 +928,9 @@ void Aux_TakeNote()
 
       fprintf( Note, "OPT__OVERLAP_MPI                %d\n",      OPT__OVERLAP_MPI         );
       fprintf( Note, "OPT__RESET_FLUID                %d\n",      OPT__RESET_FLUID         );
+#     if ( MODEL == HYDRO )
+      fprintf( Note, "OPT__LAST_RESORT_FLOOR          %d\n",      OPT__LAST_RESORT_FLOOR   );
+#     endif
 #     if ( MODEL == HYDRO  ||  MODEL == ELBDM )
       fprintf( Note, "MIN_DENS                        %13.7e\n",  MIN_DENS                 );
 #     endif

@@ -719,6 +719,9 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : currently we do not use Grackle to calculate temperature for OPT__FLAG_LOHNER_TEMP !!\n" );
 #  endif
 
+   if ( ! OPT__LAST_RESORT_FLOOR )
+      Aux_Message( stderr, "WARNING : disabling OPT__LAST_RESORT_FLOOR could be dangerous and is mainly for debugging only !!\n" );
+
    if ( MIN_DENS == 0.0 )
       Aux_Message( stderr, "WARNING : MIN_DENS == 0.0 could be dangerous and is mainly for debugging only !!\n" );
    else

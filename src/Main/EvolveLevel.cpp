@@ -59,8 +59,10 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
 
 // sub-step loop
-   dTime_SoFar       = 0.0;
-   AutoReduceDtCoeff = 1.0;
+   dTime_SoFar           = 0.0;
+   AutoReduceDtCoeff     = 1.0;
+   AutoReduceDt_Continue = AUTO_REDUCE_DT;   // if AUTO_REDUCE_DT is on, we will perform auto-dt correction
+                                             // at least once if the fluid solver fails
 
 // note that we have ensured "Time[lv] == Time[lv-1]" to avoid the round-off errors
    while (  ( lv == 0 && amr->NUpdateLv[lv] == 0 )  ||
@@ -150,10 +152,6 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       const int SaveSg_Mag = NULL_INT;
 #     endif
 
-//    whether or not to continue applying AUTO_REDUCE_DT if the fluid solver fails
-      AutoReduceDt_Continue = ( AUTO_REDUCE_DT ) ? ( AutoReduceDtCoeff*AUTO_REDUCE_DT_FACTOR >= AUTO_REDUCE_DT_FACTOR_MIN )
-                                                 : false;
-
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
          Aux_Message( stdout, "   Lv %2d: Flu_AdvanceDt, counter = %8ld ... ", lv, AdvanceCounter[lv] );
 
@@ -212,42 +210,49 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          {
             if ( FluStatus_AllRank == GAMER_SUCCESS )
             {
-//             reset the time-step coefficient to unity
-               AutoReduceDtCoeff = 1.0;
+//             restore the original parameters
+               AutoReduceDtCoeff     = 1.0;
+               AutoReduceDt_Continue = true;
             }
 
             else
             {
 //             reduce the time-step coefficient if allowed
-               if ( AutoReduceDt_Continue )
+               if ( AutoReduceDtCoeff >= AUTO_REDUCE_DT_FACTOR_MIN )
                {
-                  AutoReduceDtCoeff *= AUTO_REDUCE_DT_FACTOR;
+                  AutoReduceDtCoeff    *= AUTO_REDUCE_DT_FACTOR;
+                  AutoReduceDt_Continue = true;
 
                   if ( MPI_Rank == 0 )
                   {
                      Aux_Message( stderr, "WARNING : fluid solver failed (Lv %2d, counter %8ld) --> ", lv, AdvanceCounter[lv] );
-                     Aux_Message( stderr, "auto-reduce dt by %13.7e\n", AutoReduceDtCoeff );
+                     Aux_Message( stderr, "reduce dt by %13.7e\n", AutoReduceDtCoeff );
                   }
-
-//                restart the sub-step while loop with a smaller dt
-                  continue;
                }
 
-//             terminate the program if the time-step coefficient becomes smaller than the minimum threshold
+//             if the time-step coefficient becomes smaller than the given threshold, restore the original time-step
+//             and apply floor values in Flu_Close()
                else
                {
+                  const double AutoReduceDtCoeff_Failed = AutoReduceDtCoeff;
+
+                  AutoReduceDtCoeff     = 1.0;     // restore the original dt
+                  AutoReduceDt_Continue = false;   // trigger density/energy floors in Flu_Close()
+
                   if ( MPI_Rank == 0 )
                   {
-                     Aux_Message( stderr, "\n\n===================================================================================\n" );
-                     Aux_Message( stderr, "ERROR : AutoReduceDtCoeff (%13.7e) < AUTO_REDUCE_DT_FACTOR_MIN (%13.7e) !!\n",
-                                  AutoReduceDtCoeff*AUTO_REDUCE_DT_FACTOR, AUTO_REDUCE_DT_FACTOR_MIN );
-                     Aux_Message( stderr, "        --> AUTO_REDUCE_DT failed and the program will be terminated ......\n" );
-                     Aux_Message( stderr, "===================================================================================\n\n\n" );
-                     MPI_Exit();
+                     Aux_Message( stderr, "WARNING : AUTO_REDUCE_DT failed (Lv %2d, counter %8ld, dt-coeff=%13.7e < min=%13.7e) !!\n",
+                                  lv, AdvanceCounter[lv], AutoReduceDtCoeff_Failed, AUTO_REDUCE_DT_FACTOR_MIN );
+                     Aux_Message( stderr, "          --> Apply floor values with the original dt as the last resort ...\n" );
                   }
-               } // if ( AutoReduceDt_Continue ) ... else ...
-            } // if ( FluStatus_AllRank == GAMER_SUCCESS )
+               } // if ( AutoReduceDtCoeff >= AUTO_REDUCE_DT_FACTOR_MIN ) ... else ...
+
+//             restart the sub-step while loop
+               continue;
+
+            } // if ( FluStatus_AllRank == GAMER_SUCCESS ) ... else ...
          } // if ( AUTO_REDUCE_DT )
+
       } // if ( OPT__OVERLAP_MPI ) ... else ...
 
       amr->FluSg    [lv]             = SaveSg_Flu;

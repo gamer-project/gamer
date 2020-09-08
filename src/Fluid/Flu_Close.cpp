@@ -438,7 +438,8 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
 //                      else
 //                         Do nothing
 //
-//                      Apply floors
+//                      if ( ! AUTO_REDUCE_DT )
+//                         Apply floors
 //
 //                      if ( still_found_unphysical )
 //                         if ( AUTO_REDUCE_DT )
@@ -747,12 +748,13 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
 
 //          ensure positive density
-//          --> apply it only when AUTO_REDUCE_DT is disabled
+//          --> apply it only when AutoReduceDt_Continue is false
 //              --> otherwise AUTO_REDUCE_DT may not be triggered due to this density floor
 //          --> note that MIN_DENS is declared as double and must be converted to **real** before the comparison
 //              --> to be consistent with the check in Unphysical()
 //          --> do NOT check the minimum internal energy here since we want to apply the dual-energy correction first
-            if ( ! AutoReduceDt_Continue )   Update[DENS] = FMAX( Update[DENS], (real)MIN_DENS );
+            if ( ! AutoReduceDt_Continue  &&  OPT__LAST_RESORT_FLOOR )
+               Update[DENS] = FMAX( Update[DENS], (real)MIN_DENS );
 
 
 //          floor and normalize passive scalars
@@ -770,29 +772,29 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //          --> this might be redundant when OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D1D
 //              --> but it ensures the consistency between all fluid variables since we apply density floor AFTER
 //                  the 1st-order-flux correction
-//          --> we apply the minimum pressure check in Hydro_DualEnergyFix() here only when AUTO_REDUCE_DT is disabled
+//          --> we apply the minimum pressure check in Hydro_DualEnergyFix() here only when AutoReduceDt_Continue is false
 //              --> otherwise AUTO_REDUCE_DT may not be triggered due to this pressure floor
 #           ifdef DUAL_ENERGY
             Hydro_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[ENPY],
                                  h_DE_Array_F_Out[TID][idx_out], EoS_AuxArray[1], EoS_AuxArray[2],
-                                 (AutoReduceDt_Continue)?CorrPres_No:CorrPres_Yes, MIN_PRES, DUAL_ENERGY_SWITCH, Emag_Out );
+                                 (!AutoReduceDt_Continue && OPT__LAST_RESORT_FLOOR) ? CorrPres_Yes : CorrPres_No,
+                                 MIN_PRES, DUAL_ENERGY_SWITCH, Emag_Out );
 
 //          apply internal energy floor if dual-energy formalism is not adopted
-//          --> apply it only when AUTO_REDUCE_DT is disabled
+//          --> apply it only when AutoReduceDt_Continue is false
 //              --> otherwise AUTO_REDUCE_DT may not be triggered due to this internal energy floor
 #           else
-            if ( ! AutoReduceDt_Continue )
+            if ( ! AutoReduceDt_Continue  &&  OPT__LAST_RESORT_FLOOR )
                Update[ENGY] = Hydro_CheckMinEintInEngy( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
                                                         MIN_EINT, Emag_Out );
 #           endif
 
 
 //          check if the newly updated values are still unphysical
-//          --> note that, when AUTO_REDUCE_DT is disabled, we check **total energy** instead of **internal energy Eint**
-//              since even after calling Hydro_CheckMinEintInEngy() we may still have Eint < MIN_EINT due to round-off errors
-//              (especially when Eint << kinematic energy)
+//          --> note that, when AutoReduceDt_Continue is false, we check Etot instead of Eint since even after calling
+//              Hydro_CheckMinEintInEngy() we may still have Eint < MIN_EINT due to round-off errors (especially when Eint << Ekin)
 //              --> it will not crash the code since we always apply MIN_EINT/MIN_PRES when calculating Eint/pressure
-//          --> when AUTO_REDUCE_DT is enabled, we still check Eint instead of energy
+//          --> when AutoReduceDt_Continue is true, we still check Eint instead of Etot
             if ( Unphysical(Update, (AutoReduceDt_Continue)?CheckMinEint:CheckMinEtot, Emag_Out) )
             {
 //             set CorrectUnphy = GAMER_FAILED if any cells fail
@@ -801,7 +803,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                CorrectUnphy = GAMER_FAILED;
 
 
-//             output the debug information (only if AUTO_REDUCE_DT is disabled)
+//             output the debug information (only if AutoReduceDt_Continue is false)
                if ( ! AutoReduceDt_Continue )
                {
                   const int  PID_Failed      = PID0_List[TID] + LocalID[ijk_out[2]/PS1][ijk_out[1]/PS1][ijk_out[0]/PS1];
@@ -988,13 +990,13 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 // operations when CorrectUnphysical() fails
    if ( CorrectUnphy == GAMER_FAILED )
    {
-//    if AUTO_REDUCE_DT is enabled, set FluStatus_ThisRank as GAMER_FAILED to rerun Flu_AdvancedDt() with a smaller dt
-      if ( AUTO_REDUCE_DT )
+//    if AutoReduceDt_Continue is true, set FluStatus_ThisRank as GAMER_FAILED to rerun Flu_AdvancedDt() with a smaller dt
+      if ( AutoReduceDt_Continue )
          FluStatus_ThisRank = GAMER_FAILED;
 
 //    otherwise, terminate the program
       else
-         Aux_Error( ERROR_INFO, "first-order correction failed at Rank %d, lv %d, Time %20.14e, Step %ld, Counter %ld ...\n",
+         Aux_Error( ERROR_INFO, "fluid solver failed at Rank %d, lv %d, Time %20.14e, Step %ld, Counter %ld ...\n",
                     MPI_Rank, lv, Time[lv], Step, AdvanceCounter[lv] );
    }
 
