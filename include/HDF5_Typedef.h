@@ -463,6 +463,7 @@ struct InputPara_t
 #  if ( MODEL == HYDRO )
    double MinPres;
    double MinEint;
+   int    Opt__LastResortFloor;
    int    JeansMinPres;
    int    JeansMinPres_Level;
    int    JeansMinPres_NCell;
