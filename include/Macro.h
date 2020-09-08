@@ -72,9 +72,10 @@
 
 // equation of states
 #define EOS_GAMMA       1
-#define EOS_NUCLEAR     2
-#define EOS_TABULAR     3
-#define EOS_USER        4
+#define EOS_ISOTHERMAL  2
+#define EOS_NUCLEAR     3
+#define EOS_TABULAR     4
+#define EOS_USER        5
 
 
 // Poisson solvers

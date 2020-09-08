@@ -169,6 +169,8 @@ void Aux_TakeNote()
 
 #     if   ( EOS == EOS_GAMMA )
       fprintf( Note, "EOS                             EOS_GAMMA\n" );
+#     elif ( EOS == EOS_ISOTHERMAL )
+      fprintf( Note, "EOS                             EOS_ISOTHERMAL\n" );
 #     elif ( EOS == EOS_NUCLEAR )
       fprintf( Note, "EOS                             EOS_NUCLEAR\n" );
 #     elif ( EOS == EOS_TABULAR )
@@ -177,6 +179,12 @@ void Aux_TakeNote()
       fprintf( Note, "EOS                             EOS_USER\n" );
 #     else
       fprintf( Note, "EOS                             UNKNOWN\n" );
+#     endif
+
+#     ifdef BAROTROPIC_EOS
+      fprintf( Note, "BAROTROPIC_EOS                  ON\n" );
+#     else
+      fprintf( Note, "BAROTROPIC_EOS                  OFF\n" );
 #     endif
 
 //    c. options in ELBDM
