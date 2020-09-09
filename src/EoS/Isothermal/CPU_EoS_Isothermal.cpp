@@ -49,9 +49,9 @@ void EoS_SetAuxArray_Isothermal( double AuxArray[] )
 
    if ( MPI_Rank == 0 )
    {
-      Aux_Message( stdout, "   Temperature           = %21.14e K\n",    ISO_TEMP );
-      Aux_Message( stdout, "   Mean molecular weight = %21.14e\n",      MOLECULAR_WEIGHT );
-      Aux_Message( stdout, "   Sound speed           = %21.14e km/s\n", SQRT(AuxArray[0])*UNIT_V/Const_km );
+      Aux_Message( stdout, "   Temperature           = %13.7e K\n",    ISO_TEMP );
+      Aux_Message( stdout, "   Mean molecular weight = %13.7e\n",      MOLECULAR_WEIGHT );
+      Aux_Message( stdout, "   Sound speed           = %13.7e km/s\n", SQRT(AuxArray[0])*UNIT_V/Const_km );
    }
 
 #  ifdef GAMER_DEBUG
