@@ -29,14 +29,14 @@ extern double  Merger_Coll_VelY2;
 extern double  Merger_Coll_VelX3;
 extern double  Merger_Coll_VelY3;
 
-extern FieldIdx_t ParTypeTagIdx = Idx_Undefined;
+extern FieldIdx_t ParTypeTagIdx;
 
 long Read_Particle_Number_ClusterMerger(std::string filename);
 void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
                                   real_par_in xpos[], real_par_in ypos[],
                                   real_par_in zpos[], real_par_in xvel[],
                                   real_par_in yvel[], real_par_in zvel[],
-				                  real_par_in mass[], real_par_in ptype[]);
+				  real_par_in mass[], real_par_in ptype[]);
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_Init_ByFunction_ClusterMerger
@@ -108,16 +108,16 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       NPar_EachCluster[0] = Read_Particle_Number_ClusterMerger(filename1);
 
       Aux_Message( stdout, "   Number of particles in cluster 1 = %ld\n", 
-                  NPar_EachCluster[0] );
+                   NPar_EachCluster[0] );
 
       if ( Merger_Coll_NumHalos > 1 ) {
-         NPar_EachCluster[1] = Read_Particle_Number_ClusterMerger(filename2);
-         Aux_Message( stdout, "   Number of particles in cluster 2 = %ld\n", NPar_EachCluster[1] );
+	NPar_EachCluster[1] = Read_Particle_Number_ClusterMerger(filename2);
+	Aux_Message( stdout, "   Number of particles in cluster 2 = %ld\n", NPar_EachCluster[1] );
       }
 
       if ( Merger_Coll_NumHalos > 2 ) {
-	 NPar_EachCluster[2] = Read_Particle_Number_ClusterMerger(filename3);
-	 Aux_Message( stdout, "   Number of particles in cluster 3 = %ld\n", NPar_EachCluster[2] );
+	NPar_EachCluster[2] = Read_Particle_Number_ClusterMerger(filename3);
+	Aux_Message( stdout, "   Number of particles in cluster 3 = %ld\n", NPar_EachCluster[2] );
       }
 
    }
@@ -145,17 +145,17 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
       switch (c) {
       case 0:
-	    NPar_ThisRank_EachCluster[0] = NPar_EachCluster[0] / MPI_NRank + ( (MPI_Rank != MPI_NRank-1)?NPar_EachCluster[0]%MPI_NRank:0 );
-	    break;
+	NPar_ThisRank_EachCluster[0] = NPar_EachCluster[0] / MPI_NRank + ( (MPI_Rank<NPar_EachCluster[0]%MPI_NRank)?1:0 );
+	break;
       case 1:
-	    if (NCluster == 2)
-          NPar_ThisRank_EachCluster[1] = NPar_ThisRank -  NPar_ThisRank_EachCluster[0];
-        else
-          NPar_ThisRank_EachCluster[1] = NPar_EachCluster[1] / MPI_NRank + ( (MPI_Rank != MPI_NRank-1)?NPar_EachCluster[1]%MPI_NRank:0 );
-	    break;
+	if (NCluster == 2)
+	  NPar_ThisRank_EachCluster[1] = NPar_ThisRank - NPar_ThisRank_EachCluster[0];
+	else
+	  NPar_ThisRank_EachCluster[1] = NPar_EachCluster[1] / MPI_NRank + ( (MPI_Rank<NPar_EachCluster[1]%MPI_NRank)?1:0 );
+	break;
       case 2:
-	    NPar_ThisRank_EachCluster[2] = NPar_ThisRank - NPar_ThisRank_EachCluster[0] - NPar_ThisRank_EachCluster[1];
-	    break;
+	NPar_ThisRank_EachCluster[2] = NPar_ThisRank - NPar_ThisRank_EachCluster[0] - NPar_ThisRank_EachCluster[1];
+	break;
       }
 
       MPI_Allgather( &NPar_ThisRank_EachCluster[c], 1, MPI_LONG, NPar_ThisCluster_EachRank, 1, MPI_LONG, MPI_COMM_WORLD );
@@ -213,9 +213,9 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
         break;
       case 1:
         coffset = NPar_ThisRank_EachCluster[0];
-	    break;
+	break;
       case 2:
-	    coffset = NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1];
+	coffset = NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1];
         break;
       }
       
