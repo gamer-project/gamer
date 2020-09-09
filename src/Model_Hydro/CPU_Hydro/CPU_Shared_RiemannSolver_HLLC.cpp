@@ -174,9 +174,12 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    P_PVRS      = _TWO*(  ( P_L + P_R ) + ( u_L - u_R )*RhoCs_PVRS  );
    P_PVRS      = Hydro_CheckMinPres( P_PVRS, MinPres );
 
-#  if ( EOS == EOS_GAMMA )
+#  if   ( EOS == EOS_GAMMA )
    Gamma_SL    = (real)EoS_AuxArray[0];
    Gamma_SR    = (real)EoS_AuxArray[0];
+#  elif ( EOS == EOS_ISOTHERMAL )
+   Gamma_SL    = ONE;
+   Gamma_SR    = ONE;
 #  else
    real u_PVRS, Rho_Cs_PVRS, Rho_SL, Rho_SR, _P;
 

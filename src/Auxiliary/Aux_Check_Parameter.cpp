@@ -747,8 +747,8 @@ void Aux_Check_Parameter()
    else
       Aux_Message( stderr, "WARNING : MIN_EINT (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_EINT );
 
-#  if ( defined LR_EINT  &&  EOS == EOS_GAMMA )
-      Aux_Message( stderr, "WARNING : LR_EINT is not recommended for EOS_GAMMA !!\n" );
+#  if (  defined LR_EINT  &&  ( EOS == EOS_GAMMA || EOS == EOS_ISOTHERMAL )  )
+      Aux_Message( stderr, "WARNING : LR_EINT is not recommended for EOS_GAMMA/EOS_ISOTHERMAL !!\n" );
 #  endif
    } // if ( MPI_Rank == 0 )
 

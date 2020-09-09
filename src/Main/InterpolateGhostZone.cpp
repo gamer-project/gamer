@@ -139,8 +139,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
 // fluid variables for the EoS routines
 #  if ( MODEL == HYDRO )
-#  if ( EOS == EOS_GAMMA )
-   const int NFluForEoS = NCOMP_FLUID;    // don't need passsive scalars in EOS_GAMMA
+#  if ( EOS == EOS_GAMMA  ||  EOS == EOS_ISOTHERMAL )
+   const int NFluForEoS = NCOMP_FLUID;    // don't need passsive scalars in EOS_GAMMA/EOS_ISOTHERMAL
 #  else
    const int NFluForEoS = NCOMP_TOTAL;
 #  endif
