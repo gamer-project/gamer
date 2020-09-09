@@ -1919,7 +1919,11 @@ void Hydro_HancockPredict( real fc[][NCOMP_LR], const real dt, const real dh,
 // check the negative density and energy
    for (int f=0; f<6; f++)
    {
+#     ifdef BAROTROPIC_EOS
+      if ( fc[f][0] <= (real)0.0 )
+#     else
       if ( fc[f][0] <= (real)0.0  ||  fc[f][4] <= (real)0.0 )
+#     endif
       {
 //       set to the cell-centered values before update
          for (int f=0; f<6; f++)
@@ -1933,15 +1937,17 @@ void Hydro_HancockPredict( real fc[][NCOMP_LR], const real dt, const real dh,
 // apply density and internal energy floors
    for (int f=0; f<6; f++)
    {
+      fc[f][0] = FMAX( fc[f][0], MinDens );
+#     ifndef BAROTROPIC_EOS
 #     ifdef MHD
 #     error : ERROR : MHD is not supported here !!!
       const real Emag = NULL_REAL;
 #     else
       const real Emag = NULL_REAL;
 #     endif
-      fc[f][0] = FMAX( fc[f][0], MinDens );
       fc[f][4] = Hydro_CheckMinEintInEngy( fc[f][0], fc[f][1], fc[f][2], fc[f][3], fc[f][4],
                                            MinEint, Emag );
+#     endif // #ifndef BAROTROPIC_EOS
 #     if ( NCOMP_PASSIVE > 0 )
       for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
       fc[f][v] = FMAX( fc[f][v], TINY_NUMBER );
