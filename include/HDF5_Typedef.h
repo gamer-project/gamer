@@ -423,6 +423,7 @@ struct InputPara_t
 #  if ( MODEL == HYDRO )
    double Gamma;
    double MolecularWeight;
+   double IsoTemp;
    double MinMod_Coeff;
    int    Opt__LR_Limiter;
    int    Opt__1stFluxCorr;
