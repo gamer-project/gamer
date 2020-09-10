@@ -146,7 +146,7 @@
 //               which has not been implemented
 // --> unnecessary for EOS_GAMMA as this EoS is fast
 #if ( EOS != EOS_GAMMA  &&  FLU_SCHEME != CTU )
-#  define LR_EINT
+//#  define LR_EINT
 #endif
 
 
@@ -208,11 +208,13 @@
 //       MHD on : 3 for all EoS
 //       MHD off: none
 
-#  define HLLC_WAVESPEED   HLL_WAVESPEED_PVRS
+#  define HLLC_WAVESPEED   HLL_WAVESPEED_DAVIS
+//#  define HLLC_WAVESPEED   HLL_WAVESPEED_PVRS
 #ifdef MHD
 #  define HLLE_WAVESPEED   HLL_WAVESPEED_DAVIS
 #else
-#  define HLLE_WAVESPEED   HLL_WAVESPEED_PVRS
+#  define HLLE_WAVESPEED   HLL_WAVESPEED_DAVIS
+//#  define HLLE_WAVESPEED   HLL_WAVESPEED_PVRS
 #endif
 #  define HLLD_WAVESPEED   HLL_WAVESPEED_DAVIS
 
