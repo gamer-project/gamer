@@ -80,7 +80,7 @@ SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 #SIMU_OPTION += -DMHD
 
 # equation of state: EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TABULAR/EOS_USER
-# --> must be set when MODEL=HYDRO
+# --> must be set when MODEL=HYDRO; must also enable BAROTROPIC_EOS for EOS_ISOTHERMAL
 SIMU_OPTION += -DEOS=EOS_GAMMA
 
 # whether or not the EOS set above is barotropic
