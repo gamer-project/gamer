@@ -72,9 +72,10 @@
 
 // equation of states
 #define EOS_GAMMA       1
-#define EOS_NUCLEAR     2
-#define EOS_TABULAR     3
-#define EOS_USER        4
+#define EOS_ISOTHERMAL  2
+#define EOS_NUCLEAR     3
+#define EOS_TABULAR     4
+#define EOS_USER        5
 
 
 // Poisson solvers
@@ -163,8 +164,8 @@
 
 
 // number of input fluid variables in the dt solver
-// --> EOS_GAMMA does not require passive scalars
-#if ( MODEL == HYDRO  &&  EOS == EOS_GAMMA )
+// --> EOS_GAMMA/EOS_ISOTHERMAL do not require passive scalars
+#if (  MODEL == HYDRO  &&  ( EOS == EOS_GAMMA || EOS == EOS_ISOTHERMAL )  )
 #  define FLU_NIN_T           NCOMP_FLUID
 #else
 #  define FLU_NIN_T           NCOMP_TOTAL

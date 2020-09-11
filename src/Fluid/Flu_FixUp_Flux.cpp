@@ -147,7 +147,7 @@ void Flu_FixUp_Flux( const int lv )
 
 
 //             calculate the internal energy density
-#              if ( MODEL == HYDRO )
+#              if ( MODEL == HYDRO  &&  !defined BAROTROPIC_EOS )
                real Eint;
                real *ForEint = CorrVal;
 
@@ -212,7 +212,7 @@ void Flu_FixUp_Flux( const int lv )
 #              error : DE_EINT is NOT supported yet !!
 #              endif
 
-#              endif // if ( MODEL == HYDRO )
+#              endif // #if ( MODEL == HYDRO  &&  !defined BAROTROPIC_EOS )
 
 
 //###EXPERIMENTAL: (does not work well and thus has been disabled for now)
@@ -226,7 +226,10 @@ void Flu_FixUp_Flux( const int lv )
                bool ApplyFix;
 
 #              if   ( MODEL == HYDRO )
-               if ( CorrVal[DENS] <= MIN_DENS  ||  Eint <= MIN_EINT  ||  !Aux_IsFinite(Eint)
+               if ( CorrVal[DENS] <= MIN_DENS
+#                   ifndef BAROTROPIC_EOS
+                    ||  Eint <= MIN_EINT  ||  !Aux_IsFinite(Eint)
+#                   endif
 #                   if   ( DUAL_ENERGY == DE_ENPY )
                     ||  ( (*DE_StatusPtr1D == DE_UPDATED_BY_DUAL || *DE_StatusPtr1D == DE_UPDATED_BY_MIN_PRES)
                            && CorrVal[ENPY] <= (real)2.0*TINY_NUMBER )
@@ -264,8 +267,13 @@ void Flu_FixUp_Flux( const int lv )
 //                --> assuming the variable "Eint" is correct
 //                --> no need to check the internal energy floor here since we have skipped failing cells
 #                 if ( MODEL == HYDRO )
-                  CorrVal[ENGY] = Hydro_ConEint2Etot( CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], Eint, Emag );
 
+//                for barotropic EoS, do not apply flux correction at all
+#                 ifdef BAROTROPIC_EOS
+                  CorrVal[ENGY] = *FluidPtr1D[ENGY];  // just set to the input value
+
+#                 else
+                  CorrVal[ENGY] = Hydro_ConEint2Etot( CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], Eint, Emag );
 #                 if   ( DUAL_ENERGY == DE_ENPY )
 //                DE_ENPY only supports EOS_GAMMA, which does not involve passive scalars
                   CorrVal[ENPY] = Hydro_DensPres2Entropy( CorrVal[DENS],
@@ -275,6 +283,7 @@ void Flu_FixUp_Flux( const int lv )
 #                 error : DE_EINT is NOT supported yet !!
 #                 endif // DUAL_ENERGY
 
+#                 endif // #ifdef BAROTROPIC_EOS ... else ...
 #                 endif // #if ( MODEL == HYDRO )
 
 

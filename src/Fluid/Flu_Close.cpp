@@ -384,6 +384,7 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
          Fluid[DENS] < (real)MIN_DENS  )
       return true;
 
+#  ifndef BAROTROPIC_EOS
    if ( CheckMode == CheckMinEtot  &&  Fluid[ENGY] < (real)MIN_EINT )
       return true;
 
@@ -410,6 +411,7 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
          )
       )
       return true;
+#  endif // #ifndef BAROTROPIC_EOS
 
 
 // if all checks above pass, return false

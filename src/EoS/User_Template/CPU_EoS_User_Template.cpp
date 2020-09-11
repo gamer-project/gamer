@@ -93,7 +93,6 @@ static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, c
 #  endif
    if ( AuxArray == NULL )    printf( "ERROR : AuxArray == NULL in %s !!\n", __FUNCTION__ );
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( Hydro_CheckNegative(Dens) )
       printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               Dens, __FILE__, __LINE__, __FUNCTION__ );
@@ -102,7 +101,6 @@ static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, c
    if ( Hydro_CheckNegative(Eint) )
       printf( "ERROR : invalid input internal energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               Eint, __FILE__, __LINE__, __FUNCTION__ );
-#  endif
 #  endif // GAMER_DEBUG
 
 
@@ -158,7 +156,6 @@ static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, c
 #  endif
    if ( AuxArray == NULL )    printf( "ERROR : AuxArray == NULL in %s !!\n", __FUNCTION__ );
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( Hydro_CheckNegative(Dens) )
       printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               Dens, __FILE__, __LINE__, __FUNCTION__ );
@@ -166,7 +163,6 @@ static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, c
    if ( Hydro_CheckNegative(Pres) )
       printf( "ERROR : invalid input pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               Pres, __FILE__, __LINE__, __FUNCTION__ );
-#  endif
 #  endif // GAMER_DEBUG
 
 
@@ -223,7 +219,6 @@ static real EoS_DensPres2CSqr_User_Template( const real Dens, const real Pres, c
 #  endif
    if ( AuxArray == NULL )    printf( "ERROR : AuxArray == NULL in %s !!\n", __FUNCTION__ );
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( Hydro_CheckNegative(Dens) )
       printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               Dens, __FILE__, __LINE__, __FUNCTION__ );
@@ -231,7 +226,6 @@ static real EoS_DensPres2CSqr_User_Template( const real Dens, const real Pres, c
    if ( Hydro_CheckNegative(Pres) )
       printf( "ERROR : invalid input pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               Pres, __FILE__, __LINE__, __FUNCTION__ );
-#  endif
 #  endif // GAMER_DEBUG
 
 

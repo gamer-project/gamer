@@ -469,7 +469,6 @@ real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY
 
 
 
-#ifdef CHECK_NEGATIVE_IN_FLUID
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_CheckNegative
 // Description :  Check whether the input value is <= 0.0 (also check whether it's Inf or NAN)
@@ -489,7 +488,6 @@ bool Hydro_CheckNegative( const real Input )
    else                                                                       return false;
 
 } // FUNCTION : Hydro_CheckNegative
-#endif // #ifdef CHECK_NEGATIVE_IN_FLUID
 
 
 
