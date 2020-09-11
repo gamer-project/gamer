@@ -2,7 +2,6 @@
 #define __GAMER_H__
 
 
-
 #ifndef GAMER_DEBUG
 #  define NDEBUG
 #endif
