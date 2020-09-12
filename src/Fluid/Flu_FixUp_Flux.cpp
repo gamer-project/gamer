@@ -223,6 +223,8 @@ void Flu_FixUp_Flux( const int lv )
 
 
 //             do not apply the flux correction if there are any unphysical results
+               bool ApplyFix;
+
 #              if   ( MODEL == HYDRO )
                if ( CorrVal[DENS] <= MIN_DENS  ||  Eint <= MIN_EINT  ||  !Aux_IsFinite(Eint)
 #                   if   ( DUAL_ENERGY == DE_ENPY )
@@ -237,67 +239,78 @@ void Flu_FixUp_Flux( const int lv )
 #              elif ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
                if ( CorrVal[DENS] <= MIN_DENS )
 #              endif
-                  continue;
-
-
-//             floor and normalize the passive scalars
-#              if ( NCOMP_PASSIVE > 0 )
-               for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
-
-               if ( OPT__NORMALIZE_PASSIVE )
-                  Hydro_NormalizePassive( CorrVal[DENS], CorrVal+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
-#              endif
-
-
-//             ensure the consistency between pressure, total energy density, and dual-energy variable
-//             --> assuming the variable "Eint" is correct
-//             --> no need to check the internal energy floor here since we have skipped failing cells
-#              if ( MODEL == HYDRO )
-               CorrVal[ENGY] = Hydro_ConEint2Etot( CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], Eint, Emag );
-
-#              if   ( DUAL_ENERGY == DE_ENPY )
-//             DE_ENPY only supports EOS_GAMMA, which does not involve passive scalars
-               CorrVal[ENPY] = Hydro_DensPres2Entropy( CorrVal[DENS],
-                                                       EoS_DensEint2Pres_CPUPtr(CorrVal[DENS],Eint,NULL,EoS_AuxArray),
-                                                       EoS_AuxArray[1] );
-#              elif ( DUAL_ENERGY == DE_EINT )
-#              error : DE_EINT is NOT supported yet !!
-#              endif // DUAL_ENERGY
-
-#              endif // #if ( MODEL == HYDRO )
-
-
-//             store the corrected results
-               for (int v=0; v<NFLUX_TOTAL; v++)   *FluidPtr1D[v] = CorrVal[v];
-
-
-//             rescale the real and imaginary parts to be consistent with the corrected amplitude
-//             --> must NOT use CorrVal[REAL] and CorrVal[IMAG] below since NFLUX_TOTAL == 1 for ELBDM
-#              if ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
-               real Re, Im, Rho_Corr, Rho_Wrong, Rescale;
-
-               Re        = *FluidPtr1D[REAL];
-               Im        = *FluidPtr1D[IMAG];
-               Rho_Corr  = *FluidPtr1D[DENS];
-               Rho_Wrong = SQR(Re) + SQR(Im);
-
-//             be careful about the negative density introduced from the round-off errors
-               if ( Rho_Wrong <= (real)0.0  ||  Rho_Corr <= (real)0.0 )
                {
-                  *FluidPtr1D[DENS] = (real)0.0;
-                  Rescale           = (real)0.0;
+                  ApplyFix = false;
                }
-               else
-                  Rescale = SQRT( Rho_Corr/Rho_Wrong );
 
-               *FluidPtr1D[REAL] *= Rescale;
-               *FluidPtr1D[IMAG] *= Rescale;
-#              endif
+               else
+               {
+                  ApplyFix = true;
+               }
+
+
+               if ( ApplyFix )
+               {
+//                floor and normalize the passive scalars
+#                 if ( NCOMP_PASSIVE > 0 )
+                  for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
+
+                  if ( OPT__NORMALIZE_PASSIVE )
+                     Hydro_NormalizePassive( CorrVal[DENS], CorrVal+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
+#                 endif
+
+
+//                ensure the consistency between pressure, total energy density, and dual-energy variable
+//                --> assuming the variable "Eint" is correct
+//                --> no need to check the internal energy floor here since we have skipped failing cells
+#                 if ( MODEL == HYDRO )
+                  CorrVal[ENGY] = Hydro_ConEint2Etot( CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], Eint, Emag );
+
+#                 if   ( DUAL_ENERGY == DE_ENPY )
+//                DE_ENPY only supports EOS_GAMMA, which does not involve passive scalars
+                  CorrVal[ENPY] = Hydro_DensPres2Entropy( CorrVal[DENS],
+                                                          EoS_DensEint2Pres_CPUPtr(CorrVal[DENS],Eint,NULL,EoS_AuxArray),
+                                                          EoS_AuxArray[1] );
+#                 elif ( DUAL_ENERGY == DE_EINT )
+#                 error : DE_EINT is NOT supported yet !!
+#                 endif // DUAL_ENERGY
+
+#                 endif // #if ( MODEL == HYDRO )
+
+
+//                store the corrected results
+                  for (int v=0; v<NFLUX_TOTAL; v++)   *FluidPtr1D[v] = CorrVal[v];
+
+
+//                rescale the real and imaginary parts to be consistent with the corrected amplitude
+//                --> must NOT use CorrVal[REAL] and CorrVal[IMAG] below since NFLUX_TOTAL == 1 for ELBDM
+#                 if ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
+                  real Re, Im, Rho_Corr, Rho_Wrong, Rescale;
+
+                  Re        = *FluidPtr1D[REAL];
+                  Im        = *FluidPtr1D[IMAG];
+                  Rho_Corr  = *FluidPtr1D[DENS];
+                  Rho_Wrong = SQR(Re) + SQR(Im);
+
+//                be careful about the negative density introduced from the round-off errors
+                  if ( Rho_Wrong <= (real)0.0  ||  Rho_Corr <= (real)0.0 )
+                  {
+                     *FluidPtr1D[DENS] = (real)0.0;
+                     Rescale           = (real)0.0;
+                  }
+                  else
+                     Rescale = SQRT( Rho_Corr/Rho_Wrong );
+
+                  *FluidPtr1D[REAL] *= Rescale;
+                  *FluidPtr1D[IMAG] *= Rescale;
+#                 endif
+               } // if ( ApplyFix )
 
 
 //             update the fluid pointers
                for (int v=0; v<NCOMP_TOTAL; v++)
                FluidPtr1D[v]  += didx_n;
+
 #              ifdef DUAL_ENERGY
                DE_StatusPtr1D += didx_n;
 #              endif

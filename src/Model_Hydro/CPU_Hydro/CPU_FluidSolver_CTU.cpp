@@ -40,7 +40,7 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
                         const bool CorrHalfVel, const real g_Pot_USG[], const double g_Corner[],
                         const real dt, const real dh, const double Time,
                         const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[],
-                        const real MinPres, const bool DumpIntFlux, real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ],
+                        const real MinDens, const real MinPres, const bool DumpIntFlux, real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ],
                         const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2C_t EoS_DensPres2CSqr,
                         const double EoS_AuxArray[] );
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
@@ -278,7 +278,7 @@ void CPU_FluidSolver_CTU(
 //       2. evaluate the face-centered half-step fluxes by solving the Riemann problem
          Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_HF_FLUX, 0, 0, CorrHalfVel_No,
                             NULL, NULL, NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE,
-                            NULL, NULL, MinPres, StoreFlux_No, NULL,
+                            NULL, NULL, MinDens, MinPres, StoreFlux_No, NULL,
                             EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray );
 
 
@@ -315,7 +315,7 @@ void CPU_FluidSolver_CTU(
 #        endif
          Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, NSkip_N, NSkip_T, CorrHalfVel,
                             g_Pot_Array_USG[P], g_Corner_Array[P], dt, dh, Time, GravityType,
-                            ExtAcc_Func, c_ExtAcc_AuxArray, MinPres, StoreFlux, g_Flux_Array[P],
+                            ExtAcc_Func, c_ExtAcc_AuxArray, MinDens, MinPres, StoreFlux, g_Flux_Array[P],
                             EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray );
 
 

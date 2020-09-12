@@ -365,7 +365,7 @@ void GetFaceCoeff_C( real FaceCoeff[], const real *CData, const int Offset, cons
             RSlope = R1[t] - Cen;
 
             if ( RSlope*LSlope <= (real)0.0 )   FaceCoeff[idx] = (real)0.0;
-            else                                FaceCoeff[idx] = MonoCoeff*RSlope*LSlope/(LSlope+RSlope);
+            else                                FaceCoeff[idx] = (real)2.0*RSlope*LSlope/(LSlope+RSlope);
          }
       } // INT_VANLEER
       break;
@@ -386,13 +386,16 @@ void GetFaceCoeff_C( real FaceCoeff[], const real *CData, const int Offset, cons
 
                if ( LSlope*RSlope > (real)0.0 )
                {
-                  LSlope *= MonoCoeff;
-                  RSlope *= MonoCoeff;
-                  Sign    = SIGN( LSlope );
-
+                  Sign            = SIGN( LSlope );
                   FaceCoeff[idx] *= Sign;
-                  FaceCoeff[idx]  = FMIN( Sign*LSlope, FaceCoeff[idx] );
-                  FaceCoeff[idx]  = FMIN( Sign*RSlope, FaceCoeff[idx] );
+                  LSlope         *= Sign;
+                  RSlope         *= Sign;
+
+                  if ( LSlope < RSlope )  LSlope *= MonoCoeff;
+                  else                    RSlope *= MonoCoeff;
+
+                  FaceCoeff[idx]  = FMIN( LSlope, FaceCoeff[idx] );
+                  FaceCoeff[idx]  = FMIN( RSlope, FaceCoeff[idx] );
                   FaceCoeff[idx] *= Sign;
                }
                else
@@ -422,13 +425,16 @@ void GetFaceCoeff_C( real FaceCoeff[], const real *CData, const int Offset, cons
                {
                   if ( FaceCoeff[idx]*LSlope < (real)0.0 )  FaceCoeff[idx] = (real)0.5*( R1[t] - L1[t] );
 
-                  LSlope *= MonoCoeff;
-                  RSlope *= MonoCoeff;
-                  Sign    = SIGN( LSlope );
-
+                  Sign            = SIGN( LSlope );
                   FaceCoeff[idx] *= Sign;
-                  FaceCoeff[idx]  = FMIN( Sign*LSlope, FaceCoeff[idx] );
-                  FaceCoeff[idx]  = FMIN( Sign*RSlope, FaceCoeff[idx] );
+                  LSlope         *= Sign;
+                  RSlope         *= Sign;
+
+                  if ( LSlope < RSlope )  LSlope *= MonoCoeff;
+                  else                    RSlope *= MonoCoeff;
+
+                  FaceCoeff[idx]  = FMIN( LSlope, FaceCoeff[idx] );
+                  FaceCoeff[idx]  = FMIN( RSlope, FaceCoeff[idx] );
                   FaceCoeff[idx] *= Sign;
                }
                else

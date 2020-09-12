@@ -463,6 +463,7 @@ struct InputPara_t
 #  if ( MODEL == HYDRO )
    double MinPres;
    double MinEint;
+   int    Opt__LastResortFloor;
    int    JeansMinPres;
    int    JeansMinPres_Level;
    int    JeansMinPres_NCell;
@@ -557,6 +558,7 @@ struct InputPara_t
    int    Opt__RefPot_IntScheme;
 #  endif
    double IntMonoCoeff;
+   int    IntOppSign0thOrder;
 
 // data dump
    int    Opt__Output_Total;
