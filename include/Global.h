@@ -88,7 +88,7 @@ extern OptTimeStepLevel_t OPT__DT_LEVEL;
 // (2-1) fluid solver in different models
 #if   ( MODEL == HYDRO )
 extern double           FlagTable_PresGradient[NLEVEL-1], FlagTable_Vorticity[NLEVEL-1], FlagTable_Jeans[NLEVEL-1];
-extern double           GAMMA, MINMOD_COEFF, MOLECULAR_WEIGHT;
+extern double           GAMMA, MINMOD_COEFF, MOLECULAR_WEIGHT, ISO_TEMP;
 extern LR_Limiter_t     OPT__LR_LIMITER;
 extern Opt1stFluxCorr_t OPT__1ST_FLUX_CORR;
 extern OptRSolver1st_t  OPT__1ST_FLUX_CORR_SCHEME;

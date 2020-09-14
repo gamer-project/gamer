@@ -621,8 +621,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 //    fluid variables for the EoS routines
 #     if ( MODEL == HYDRO )
-#     if ( EOS == EOS_GAMMA )
-      const int NFluForEoS = NCOMP_FLUID;    // don't need passsive scalars in EOS_GAMMA
+#     if ( EOS == EOS_GAMMA  ||  EOS == EOS_ISOTHERMAL )
+      const int NFluForEoS = NCOMP_FLUID;    // don't need passsive scalars in EOS_GAMMA/EOS_ISOTHERMAL
 #     else
       const int NFluForEoS = NCOMP_TOTAL;
 #     endif

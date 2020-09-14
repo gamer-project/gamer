@@ -283,7 +283,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #                    else
                      const real Emag = NULL_REAL;
 #                    endif
-#                    if ( EOS != EOS_GAMMA  &&  NCOMP_PASSIVE > 0 )
+#                    if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  NCOMP_PASSIVE > 0 )
                      real Passive[NCOMP_PASSIVE];
                      for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = Fluid[ NCOMP_FLUID + v ][k][j][i];
 #                    else

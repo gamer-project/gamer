@@ -100,6 +100,7 @@ double Hydro_Temp2Pres( const double Dens, const double Temp, const double mu, c
                         const bool CheckMinPres, const double MinPres );
 real Hydro_CheckMinPres( const real InPres, const real MinPres );
 real Hydro_CheckMinEint( const real InEint, const real MinEint );
+bool Hydro_CheckNegative( const real Input );
 void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
 #ifdef DUAL_ENERGY
 void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, const real MomZ,
