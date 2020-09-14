@@ -633,10 +633,11 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 //       (c1.3.4) perform spatial interpolation
-         const bool PhaseUnwrapping_Yes = true;
-         const bool PhaseUnwrapping_No  = false;
-         const bool Monotonicity_Yes    = true;
-         const bool Monotonicity_No     = false;
+         const bool PhaseUnwrapping_Yes   = true;
+         const bool PhaseUnwrapping_No    = false;
+         const bool Monotonicity_Yes      = true;
+         const bool Monotonicity_No       = false;
+         const bool IntOppSign0thOrder_No = false;
 
 //       (c1.3.4.1) determine which variables require **monotonic** interpolation
          bool Monotonicity[NCOMP_TOTAL];
@@ -678,18 +679,21 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 //          interpolate density
             Interpolate( &Flu_CData[DENS][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[DENS][0][0][0],
-                         FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_Yes );
+                         FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_Yes,
+                         IntOppSign0thOrder_No );
 
 //          interpolate phase
             Interpolate( &Flu_CData[REAL][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[REAL][0][0][0],
-                         FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_Yes, &Monotonicity_No );
+                         FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_Yes, &Monotonicity_No,
+                         IntOppSign0thOrder_No );
          }
 
          else // if ( OPT__INT_PHASE )
          {
             for (int v=0; v<NCOMP_TOTAL; v++)
             Interpolate( &Flu_CData[v][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[v][0][0][0],
-                         FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity );
+                         FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity,
+                         IntOppSign0thOrder_No );
          }
 
          if ( OPT__INT_PHASE )
@@ -721,7 +725,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
          for (int v=0; v<NCOMP_TOTAL; v++)
          Interpolate( &Flu_CData[v][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[v][0][0][0],
-                      FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity );
+                      FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity,
+                      INT_OPP_SIGN_0TH_ORDER );
 
 #        endif // #if ( MODEL == ELBDM ) ... else
 
@@ -732,7 +737,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
          if ( SelfGravity )
          Interpolate( &Pot_CData[0][0][0], CSize_Pot_Temp, CStart_Pot, CRange_CC, &Pot_FData[0][0][0],
-                      FSize_CC3, FStart_CC, 1, OPT__REF_POT_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_No );
+                      FSize_CC3, FStart_CC, 1, OPT__REF_POT_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_No,
+                      IntOppSign0thOrder_No );
 #        endif
 
 

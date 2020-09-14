@@ -390,6 +390,14 @@ void Aux_Check_Parameter()
    }
 #  endif
 
+#  if   ( MODEL == HYDRO )
+   if ( ! INT_OPP_SIGN_0TH_ORDER )
+      Aux_Message( stderr, "WARNING : disabling INT_OPP_SIGN_0TH_ORDER may cause unphysically large velocity during interpolation !!\n" );
+#  elif ( MODEL == ELBDM )
+   if (   INT_OPP_SIGN_0TH_ORDER )
+      Aux_Message( stderr, "WARNING : INT_OPP_SIGN_0TH_ORDER is not recommended for ELBDM !!\n" );
+#  endif
+
    } // if ( MPI_Rank == 0 )
 
 
@@ -710,6 +718,9 @@ void Aux_Check_Parameter()
    if ( GRACKLE_ACTIVATE && OPT__FLAG_LOHNER_TEMP )
       Aux_Message( stderr, "WARNING : currently we do not use Grackle to calculate temperature for OPT__FLAG_LOHNER_TEMP !!\n" );
 #  endif
+
+   if ( ! OPT__LAST_RESORT_FLOOR )
+      Aux_Message( stderr, "WARNING : disabling OPT__LAST_RESORT_FLOOR could be dangerous and is mainly for debugging only !!\n" );
 
    if ( MIN_DENS == 0.0 )
       Aux_Message( stderr, "WARNING : MIN_DENS == 0.0 could be dangerous and is mainly for debugging only !!\n" );
