@@ -169,6 +169,8 @@ void Aux_TakeNote()
 
 #     if   ( EOS == EOS_GAMMA )
       fprintf( Note, "EOS                             EOS_GAMMA\n" );
+#     elif ( EOS == EOS_ISOTHERMAL )
+      fprintf( Note, "EOS                             EOS_ISOTHERMAL\n" );
 #     elif ( EOS == EOS_NUCLEAR )
       fprintf( Note, "EOS                             EOS_NUCLEAR\n" );
 #     elif ( EOS == EOS_TABULAR )
@@ -177,6 +179,12 @@ void Aux_TakeNote()
       fprintf( Note, "EOS                             EOS_USER\n" );
 #     else
       fprintf( Note, "EOS                             UNKNOWN\n" );
+#     endif
+
+#     ifdef BAROTROPIC_EOS
+      fprintf( Note, "BAROTROPIC_EOS                  ON\n" );
+#     else
+      fprintf( Note, "BAROTROPIC_EOS                  OFF\n" );
 #     endif
 
 //    c. options in ELBDM
@@ -850,6 +858,7 @@ void Aux_TakeNote()
 #     if   ( MODEL == HYDRO )
       fprintf( Note, "GAMMA                           %13.7e\n",  GAMMA                   );
       fprintf( Note, "MOLECULAR_WEIGHT                %13.7e\n",  MOLECULAR_WEIGHT        );
+      fprintf( Note, "ISO_TEMP                        %13.7e\n",  ISO_TEMP                );
       fprintf( Note, "MINMOD_COEFF                    %13.7e\n",  MINMOD_COEFF            );
       fprintf( Note, "OPT__LR_LIMITER                 %s\n",      ( OPT__LR_LIMITER == VANLEER           ) ? "VANLEER"    :
                                                                   ( OPT__LR_LIMITER == GMINMOD           ) ? "GMINMOD"    :
