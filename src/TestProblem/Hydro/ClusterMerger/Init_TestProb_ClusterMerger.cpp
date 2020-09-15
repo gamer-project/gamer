@@ -462,7 +462,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
      Pres2 = Mis_InterpolateFromTable( Merger_NBin2, Table_R2, Table_P2, r2 );
      Metl2 = Mis_InterpolateFromTable( Merger_NBin2, Table_R2, Table_M2, r2 );
    } else { 
-     r2    = 1.0e22;
+     r2    = HUGE_NUMBER;
      Dens2 = 0.0;
      Pres2 = 0.0;
      Metl2 = 0.0;
@@ -474,7 +474,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
      Pres3 = Mis_InterpolateFromTable( Merger_NBin3, Table_R3, Table_P3, r3 );
      Metl3 = Mis_InterpolateFromTable( Merger_NBin3, Table_R3, Table_M3, r3 );
    } else {
-     r3    = 1.0e22;
+     r3    = HUGE_NUMBER;
      Dens3 = 0.0;
      Pres3 = 0.0;
      Metl3 = 0.0;
