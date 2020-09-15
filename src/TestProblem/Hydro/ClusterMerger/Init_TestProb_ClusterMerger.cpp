@@ -213,6 +213,9 @@ void SetParameter()
    Merger_Coll_VelY2 *= (Const_km/Const_s) / UNIT_V;
    Merger_Coll_VelX3 *= (Const_km/Const_s) / UNIT_V;
    Merger_Coll_VelY3 *= (Const_km/Const_s) / UNIT_V;
+   Merger_Coll_ColorRad1 *= Const_kpc / UNIT_L;
+   Merger_Coll_ColorRad2 *= Const_kpc / UNIT_L;   
+   Merger_Coll_ColorRad3 *= Const_kpc / UNIT_L;
    
 // (2) load the radial profiles
    if ( OPT__INIT != INIT_BY_RESTART ) {
@@ -417,7 +420,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
-   if ( !( Merger_Coll_IsGas1 || Merger_Coll_IsGas1 || Merger_Coll_IsGas1 ))
+   if ( !( Merger_Coll_IsGas1 || Merger_Coll_IsGas2 || Merger_Coll_IsGas3 ))
      return;
 
    const double BoxCenter[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
@@ -511,22 +514,22 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
      + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
  
    if ( Merger_Coll_UseMetals ) {
-      Metl = Metl1*Dens1+Metl2+Dens2+Metl3*Dens3;
-      fluid[Idx_Metal] = Metl / fluid[DENS];
+      Metl = Metl1*Dens1+Metl2*Dens2+Metl3*Dens3;
+      fluid[Idx_Metal] = Metl;
    }
 
    if ( r1 < Merger_Coll_ColorRad1 )
-      fluid[ColorField1Idx] = 1.0;
+      fluid[ColorField1Idx] = fluid[DENS];
    else
       fluid[ColorField1Idx] = 0.0;
 
    if ( r2 < Merger_Coll_ColorRad2 )
-      fluid[ColorField2Idx] = 1.0;
+      fluid[ColorField2Idx] = fluid[DENS];
    else
       fluid[ColorField2Idx] = 0.0;
 
    if ( r3 < Merger_Coll_ColorRad3 )
-      fluid[ColorField3Idx] = 1.0;
+      fluid[ColorField3Idx] = fluid[DENS];
    else
       fluid[ColorField3Idx] = 0.0;
 
@@ -665,13 +668,14 @@ void Read_Profile_ClusterMerger(std::string filename, std::string fieldname,
 void AddNewField_ClusterMerger()
 {
 
-   Idx_Metal   = AddField( "Metal", NORMALIZE_NO );
-   if ( ColorField1Idx == Idx_Undefined )
-      ColorField1Idx = AddField( "ColorField1", NORMALIZE_YES );
-   if ( ColorField2Idx == Idx_Undefined )
-      ColorField2Idx = AddField( "ColorField2", NORMALIZE_YES );
-   if ( ColorField3Idx == Idx_Undefined )
-      ColorField3Idx = AddField( "ColorField3", NORMALIZE_YES );
+   if ( Merger_Coll_UseMetals )
+     Idx_Metal = AddField( "Metal", NORMALIZE_NO );
+   if ( Merger_Coll_NumHalos > 1 && ColorField1Idx == Idx_Undefined )
+      ColorField1Idx = AddField( "ColorField1", NORMALIZE_NO );
+   if ( Merger_Coll_NumHalos > 1 && ColorField2Idx == Idx_Undefined )
+      ColorField2Idx = AddField( "ColorField2", NORMALIZE_NO );
+   if ( Merger_Coll_NumHalos > 2 && ColorField3Idx == Idx_Undefined )
+      ColorField3Idx = AddField( "ColorField3", NORMALIZE_NO );
 
 }
 
@@ -679,4 +683,4 @@ void AddNewParticleAttribute_ClusterMerger()
 {
     if (ParTypeTagIdx == Idx_Undefined)
         ParTypeTagIdx = AddParticleAttribute("ParTypeTag");
-} // FUNCTION : AddNewParticleAttribute_ClusterMerger
+}
