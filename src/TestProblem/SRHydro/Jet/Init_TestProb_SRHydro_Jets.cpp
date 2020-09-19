@@ -698,6 +698,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    std::uniform_real_distribution<real> unif(-Jet_Rd_UpperBound, Jet_Rd_UpperBound);
    double RandNumber = unif(generator);
+   RandNumber = 0.0;
 
 // uniform ambient
    if ( Jet_Ambient == 0 )
@@ -892,7 +893,7 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
 
 
 
-  // shift origin to the point O
+  // shift coordinate origin to source center (the point O)
   xp[0] = x - Jet_Cen[0];
   xp[1] = y - Jet_Cen[1];
   xp[2] = z - Jet_Cen[2];
