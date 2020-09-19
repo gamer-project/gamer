@@ -893,7 +893,7 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
 
 
 
-  // shift coordinate origin to source center (the point O)
+  // shift the coordinate origin to the source center (the point O)
   xp[0] = x - Jet_Cen[0];
   xp[1] = y - Jet_Cen[1];
   xp[2] = z - Jet_Cen[2];
