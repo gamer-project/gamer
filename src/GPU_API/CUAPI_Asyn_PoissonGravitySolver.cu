@@ -52,7 +52,7 @@ void CUPOT_ELBDMGravitySolver(       real g_Flu_Array[][GRA_NIN][ PS1*PS1*PS1 ],
                                const real g_Pot_Array[][ GRA_NXT*GRA_NXT*GRA_NXT ],
                                const double g_Corner_Array[][3],
                                const real EtaDt, const real dh, const real Lambda,
-                               const bool ExtPot, ExtPot_t ExtPot_Func, const double TimeNew );
+                               const bool ExtPot, const ExtPot_t ExtPot_Func, const double TimeNew );
 
 #else
 #error : ERROR : unsupported MODEL !!

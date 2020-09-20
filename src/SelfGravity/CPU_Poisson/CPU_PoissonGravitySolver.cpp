@@ -43,7 +43,7 @@ void CPU_ELBDMGravitySolver(       real Flu_Array[][GRA_NIN][PATCH_SIZE][PATCH_S
                              const real Pot_Array[][GRA_NXT][GRA_NXT][GRA_NXT],
                              const double Corner_Array[][3],
                              const int NPatchGroup, const real EtaDt, const real dh, const real Lambda,
-                             const bool ExtPot, ExtPot_t ExtPot_Func, const double Time, const double c_ExtPot_AuxArray[] );
+                             const bool ExtPot, const ExtPot_t ExtPot_Func, const double Time, const double c_ExtPot_AuxArray[] );
 
 #else
 #error : ERROR : unsupported MODEL !!
