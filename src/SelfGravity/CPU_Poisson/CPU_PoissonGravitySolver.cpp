@@ -34,7 +34,7 @@ void CPU_HydroGravitySolver(
    const real   g_Emag_Array   [][ CUBE(PS1) ],
    const int NPatchGroup,
    const real dt, const real dh, const bool P5_Gradient,
-   const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
+   const OptGravityType_t GravityType, const ExtAcc_t ExtAcc_Func,
    const double c_ExtAcc_AuxArray[],
    const double TimeNew, const double TimeOld, const real MinEint );
 

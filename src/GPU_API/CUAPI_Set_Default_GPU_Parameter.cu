@@ -43,7 +43,7 @@ void CUFLU_FluidSolver_MHM(
    const real dt, const real dh,
    const bool StoreFlux, const bool StoreElectric,
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-   const double Time, const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
+   const double Time, const OptGravityType_t GravityType, const ExtAcc_t ExtAcc_Func,
    const real MinDens, const real MinPres, const real MinEint,
    const real DualEnergySwitch, const bool NormPassive, const int NNorm,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
@@ -71,7 +71,7 @@ void CUFLU_FluidSolver_CTU(
    const real dt, const real dh,
    const bool StoreFlux, const bool StoreElectric,
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-   const double Time, const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
+   const double Time, const OptGravityType_t GravityType, const ExtAcc_t ExtAcc_Func,
    const real MinDens, const real MinPres, const real MinEint,
    const real DualEnergySwitch, const bool NormPassive, const int NNorm,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
@@ -88,7 +88,7 @@ __global__
 void CUPOT_dtSolver_HydroGravity( real g_dt_Array[], const real g_Pot_Array[][ CUBE(GRA_NXT) ],
                                   const double g_Corner_Array[][3],
                                   const real dh, const real Safety, const bool P5_Gradient,
-                                  const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
+                                  const OptGravityType_t GravityType, const ExtAcc_t ExtAcc_Func,
                                   const double ExtAcc_Time );
 #endif
 
@@ -143,7 +143,7 @@ void CUPOT_HydroGravitySolver(
          char   g_DE_Array     [][ CUBE(PS1) ],
    const real   g_Emag_Array   [][ CUBE(PS1) ],
    const real dt, const real dh, const bool P5_Gradient,
-   const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
+   const OptGravityType_t GravityType, const ExtAcc_t ExtAcc_Func,
    const double TimeNew, const double TimeOld, const real MinEint );
 
 #elif ( MODEL == ELBDM )

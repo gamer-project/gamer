@@ -27,7 +27,7 @@ void UpdateVelocityByGravity( real &v1, real &v2, const int TDir1, const int TDi
                               const int i_usg, const int j_usg, const int k_usg,
                               const real dt_half, const double dh_f8, const real GraConst,
                               const real g_Pot_USG[], const double Corner_USG[], const double Time,
-                              const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[] );
+                              const OptGravityType_t GravityType, const ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[] );
 #endif
 
 
@@ -92,7 +92,7 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                           const real dt, const real dh,
                           const bool DumpIntEle, real g_IntEle[][NCOMP_ELE][ PS2P1*PS2 ],
                           const bool CorrHalfVel, const real g_Pot_USG[], const double g_Corner[], const double Time,
-                          const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[] )
+                          const OptGravityType_t GravityType, const ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[] )
 {
 
 // check
@@ -459,7 +459,7 @@ void UpdateVelocityByGravity( real &v1, real &v2, const int TDir1, const int TDi
                               const int i_usg, const int j_usg, const int k_usg,
                               const real dt_half, const double dh_f8, const real GraConst,
                               const real g_Pot_USG[], const double Corner_USG[], const double Time,
-                              const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[] )
+                              const OptGravityType_t GravityType, const ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[] )
 {
 
    const int didx_usg[3] = { 1, USG_NXT_F, SQR(USG_NXT_F) };

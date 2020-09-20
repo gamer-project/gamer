@@ -14,7 +14,7 @@ void CPU_dtSolver_HydroGravity( real g_dt_Array[],
                                 const real g_Pot_Array[][ CUBE(GRA_NXT) ],
                                 const double g_Corner_Array[][3],
                                 const int NPatchGroup, const real dh, const real Safety, const bool P5_Gradient,
-                                const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
+                                const OptGravityType_t GravityType, const ExtAcc_t ExtAcc_Func,
                                 const double c_ExtAcc_AuxArray[],
                                 const double ExtAcc_Time );
 #endif
