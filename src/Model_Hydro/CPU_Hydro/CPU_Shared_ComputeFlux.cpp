@@ -81,15 +81,16 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 //                                    --> "(N_FC_VAR-1-2*NSkip_N)" fluxes will be computed along the normal direction
 //                NSkip_T           : Number of cells to be skipped in the transverse directions
 //                                    --> "(N_FC_VAR-2*NSkip_T)^2" fluxes will be computed along the transverse direction
-//                CorrHalfVel       : true --> correct the half-step velocity by gravity        (for UNSPLIT_GRAVITY only)
-//                g_Pot_USG         : Array storing the input potential for CorrHalfVel         (for UNSPLIT_GRAVITY only)
-//                g_Corner          : Array storing the corner coordinates of each patch group  (for UNSPLIT_GRAVITY only)
-//                dt                : Time interval to advance the full-step solution           (for UNSPLIT_GRAVITY only)
-//                dh                : Cell size                                                 (for UNSPLIT_GRAVITY only)
-//                Time              : Current physical time                                     (for UNSPLIT_GRAVITY only)
-//                GravityType       : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
-//                ExtAcc_Func       : Function pointer to the external acceleration routine     (for UNSPLIT_GRAVITY only)
-//                ExtAcc_AuxArray   : Auxiliary array for external acceleration                 (for UNSPLIT_GRAVITY only)
+//                CorrHalfVel       : true --> correct the half-step velocity by gravity       (for UNSPLIT_GRAVITY only)
+//                g_Pot_USG         : Array storing the input potential for CorrHalfVel        (for UNSPLIT_GRAVITY only)
+//                g_Corner          : Array storing the corner coordinates of each patch group (for UNSPLIT_GRAVITY only)
+//                dt                : Time interval to advance the full-step solution          (for UNSPLIT_GRAVITY only)
+//                dh                : Cell size                                                (for UNSPLIT_GRAVITY only)
+//                Time              : Current physical time                                    (for UNSPLIT_GRAVITY only)
+//                UsePot            : Add self-gravity and/or external potential               (for UNSPLIT_GRAVITY only)
+//                ExtAcc            : Add external acceleration                                (for UNSPLIT_GRAVITY only)
+//                ExtAcc_Func       : Function pointer to the external acceleration routine    (for UNSPLIT_GRAVITY only)
+//                ExtAcc_AuxArray   : Auxiliary array for external acceleration                (for UNSPLIT_GRAVITY only)
 //                MinDens/Pres      : Density and pressure floors
 //                DumpIntFlux       : true --> store the inter-patch fluxes in g_IntFlux[]
 //                g_IntFlux         : Array for DumpIntFlux
@@ -102,8 +103,8 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
                               real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                         const int NFlux, const int NSkip_N, const int NSkip_T,
                         const bool CorrHalfVel, const real g_Pot_USG[], const double g_Corner[],
-                        const real dt, const real dh, const double Time,
-                        const OptGravityType_t GravityType, const ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[],
+                        const real dt, const real dh, const double Time, const bool UsePot,
+                        const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[],
                         const real MinDens, const real MinPres, const bool DumpIntFlux, real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ],
                         const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2C_t EoS_DensPres2CSqr,
                         const double EoS_AuxArray[] )
@@ -114,10 +115,10 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
 #  ifdef UNSPLIT_GRAVITY
    if ( CorrHalfVel )
    {
-      if (  ( GravityType == GRAVITY_SELF || GravityType == GRAVITY_BOTH )  &&  g_Pot_USG == NULL  )
+      if ( UsePot  &&  g_Pot_USG == NULL )
          printf( "ERROR : g_Pot_USG == NULL !!\n" );
 
-      if (  ( GravityType == GRAVITY_EXTERNAL || GravityType == GRAVITY_BOTH )  &&  g_Corner == NULL  )
+      if ( ExtAcc  &&  g_Corner == NULL )
          printf( "ERROR : g_Corner == NULL !!\n" );
    }
 #  else
@@ -145,7 +146,7 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
    double CrShift[3];
 
 // CrShift[]: central coordinates of the 0th cell in g_FC_Var[]
-   if (  CorrHalfVel  &&  ( GravityType == GRAVITY_EXTERNAL || GravityType == GRAVITY_BOTH )  )
+   if ( CorrHalfVel  &&  ExtAcc )
       for (int d=0; d<3; d++)    CrShift[d] = g_Corner[d] - double(dh*fc_ghost);
 
 // check
@@ -223,17 +224,14 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
 #        ifdef UNSPLIT_GRAVITY
          if ( CorrHalfVel )
          {
-            real   Acc[3], Enki_L, Enki_R;
-            double xyz[3];
+            real Acc[3] = { (real)0.0, (real)0.0, (real)0.0 };
+            real Enki_L, Enki_R;
 
-            Acc[0] = (real)0.0;
-            Acc[1] = (real)0.0;
-            Acc[2] = (real)0.0;
-
-//          external gravity
-            if ( GravityType == GRAVITY_EXTERNAL  ||  GravityType == GRAVITY_BOTH )
+//          external acceleration
+            if ( ExtAcc )
             {
-//             xyz[]: face-centered coordinates
+               double xyz[3]; // face-centered coordinates
+
                xyz[0]  = CrShift[0] + (double)(i_fc*dh);
                xyz[1]  = CrShift[1] + (double)(j_fc*dh);
                xyz[2]  = CrShift[2] + (double)(k_fc*dh);
@@ -244,8 +242,8 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
                for (int t=0; t<3; t++)    Acc[t] *= dt_half;
             }
 
-//          self-gravity
-            if ( GravityType == GRAVITY_SELF  ||  GravityType == GRAVITY_BOTH )
+//          self-gravity and external potential
+            if ( UsePot )
             {
                const int idx_usg = IDX321( i_fc+idx_fc2usg, j_fc+idx_fc2usg, k_fc+idx_fc2usg, USG_NXT_F, USG_NXT_F );
 
