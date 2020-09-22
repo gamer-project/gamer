@@ -134,7 +134,7 @@ extern double     GFUNC_COEFF0;
 extern double     DT__GRAVITY;
 extern double     NEWTON_G;
 extern int        POT_GPU_NPGROUP;
-extern bool       OPT__OUTPUT_POT, OPT__GRA_P5_GRADIENT, OPT__EXTERNAL_POT, OPT__GRAVITY_EXTRA_MASS;
+extern bool       OPT__OUTPUT_POT, OPT__GRA_P5_GRADIENT, OPT__SELF_GRAVITY, OPT__GRAVITY_EXTRA_MASS;
 extern double     SOR_OMEGA;
 extern int        SOR_MAX_ITER, SOR_MIN_ITER;
 extern double     MG_TOLERATED_ERROR;
@@ -142,7 +142,8 @@ extern int        MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH;
 
 extern IntScheme_t      OPT__POT_INT_SCHEME, OPT__RHO_INT_SCHEME, OPT__GRA_INT_SCHEME, OPT__REF_POT_INT_SCHEME;
 extern OptPotBC_t       OPT__BC_POT;
-extern OptGravityType_t OPT__GRAVITY_TYPE;
+extern OptExtAcc_t      OPT__EXT_ACC;
+extern OptExtPot_t      OPT__EXT_POT;
 
 extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
@@ -268,27 +269,27 @@ extern real       (*h_Ele_Array      [2])[9][NCOMP_ELE][ PS2P1*PS2 ];
 #endif
 
 #ifdef GRAVITY
-extern real       (*h_Rho_Array_P    [2])[RHO_NXT][RHO_NXT][RHO_NXT];
-extern real       (*h_Pot_Array_P_In [2])[POT_NXT][POT_NXT][POT_NXT];
-extern real       (*h_Pot_Array_P_Out[2])[GRA_NXT][GRA_NXT][GRA_NXT];
-extern real       (*h_Flu_Array_G    [2])[GRA_NIN][PS1][PS1][PS1];
-extern double     (*h_Corner_Array_G [2])[3];
+extern real       (*h_Rho_Array_P     [2])[RHO_NXT][RHO_NXT][RHO_NXT];
+extern real       (*h_Pot_Array_P_In  [2])[POT_NXT][POT_NXT][POT_NXT];
+extern real       (*h_Pot_Array_P_Out [2])[GRA_NXT][GRA_NXT][GRA_NXT];
+extern real       (*h_Flu_Array_G     [2])[GRA_NIN][PS1][PS1][PS1];
+extern double     (*h_Corner_Array_PGT[2])[3];
 #ifdef DUAL_ENERGY
-extern char       (*h_DE_Array_G     [2])[PS1][PS1][PS1];
+extern char       (*h_DE_Array_G      [2])[PS1][PS1][PS1];
 #endif
 #ifdef MHD
-extern real       (*h_Emag_Array_G   [2])[PS1][PS1][PS1];
+extern real       (*h_Emag_Array_G    [2])[PS1][PS1][PS1];
 #endif
 
 #ifdef UNSPLIT_GRAVITY
-extern real       (*h_Pot_Array_USG_F[2])[ CUBE(USG_NXT_F) ];
-extern real       (*h_Pot_Array_USG_G[2])[USG_NXT_G ][USG_NXT_G ][USG_NXT_G ];
-extern real       (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1];
+extern real       (*h_Pot_Array_USG_F [2])[ CUBE(USG_NXT_F) ];
+extern real       (*h_Pot_Array_USG_G [2])[USG_NXT_G ][USG_NXT_G ][USG_NXT_G ];
+extern real       (*h_Flu_Array_USG_G [2])[GRA_NIN-1][PS1][PS1][PS1];
 #endif
-#endif
+#endif // #ifdef GRAVITY
 
 #ifdef SUPPORT_GRACKLE
-extern real       (*h_Che_Array      [2]);
+extern real       (*h_Che_Array[2]);
 // do not declare Grackle variables for CUDA source files since they do not include <grackle.h>
 #ifndef __CUDACC__
 extern grackle_field_data *Che_FieldData;

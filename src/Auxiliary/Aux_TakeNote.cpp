@@ -991,8 +991,9 @@ void Aux_TakeNote()
 #     endif
       fprintf( Note, "POT_GPU_NPGROUP                 %d\n",      POT_GPU_NPGROUP         );
       fprintf( Note, "OPT__GRA_P5_GRADIENT            %d\n",      OPT__GRA_P5_GRADIENT    );
-      fprintf( Note, "OPT__GRAVITY_TYPE               %d\n",      OPT__GRAVITY_TYPE       );
-      fprintf( Note, "OPT__EXTERNAL_POT               %d\n",      OPT__EXTERNAL_POT       );
+      fprintf( Note, "OPT__SELF_GRAVITY               %d\n",      OPT__SELF_GRAVITY       );
+      fprintf( Note, "OPT__EXT_ACC                    %d\n",      OPT__EXT_ACC            );
+      fprintf( Note, "OPT__EXT_POT                    %d\n",      OPT__EXT_POT            );
       fprintf( Note, "OPT__GRAVITY_EXTRA_MASS         %d\n",      OPT__GRAVITY_EXTRA_MASS );
       fprintf( Note, "AveDensity_Init                 %13.7e\n",  AveDensity_Init         );
       fprintf( Note, "***********************************************************************************\n" );

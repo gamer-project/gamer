@@ -1060,8 +1060,8 @@ void Aux_Check_Parameter()
 #        error : ERROR : POT_GHOST_SIZE must <= 5 for the GPU Poisson solver !!
 #     endif
 
-   if (  ( OPT__GRAVITY_TYPE == GRAVITY_SELF || OPT__GRAVITY_TYPE == GRAVITY_BOTH )  &&  PATCH_SIZE != 8  )
-      Aux_Error( ERROR_INFO, "PATCH_SIZE must == 8 for the GPU Poisson solver !!\n" );
+   if ( OPT__SELF_GRAVITY  &&  PATCH_SIZE != 8 )
+      Aux_Error( ERROR_INFO, "PATCH_SIZE must == 8 for the GPU Poisson solver (OPT__SELF_GRAVITY) !!\n" );
 #  endif // GPU
 
 #  ifndef LOAD_BALANCE
@@ -1113,21 +1113,6 @@ void Aux_Check_Parameter()
    if ( OPT__BC_POT != BC_POT_PERIODIC  &&  OPT__BC_POT != BC_POT_ISOLATED )
       Aux_Error( ERROR_INFO, "unsupported option \"OPT__BC_POT = %d\" [1/2] !!\n", OPT__BC_POT );
 
-   if ( OPT__GRAVITY_TYPE != GRAVITY_SELF  &&  OPT__GRAVITY_TYPE != GRAVITY_EXTERNAL  &&  OPT__GRAVITY_TYPE != GRAVITY_BOTH )
-      Aux_Error( ERROR_INFO, "unsupported option \"%s = %d\" [1/2/3] !!\n", "OPT__GRAVITY_TYPE", OPT__GRAVITY_TYPE );
-
-   if (  OPT__EXTERNAL_POT  &&  ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL || OPT__GRAVITY_TYPE == GRAVITY_BOTH )  )
-   {
-      if ( MPI_Rank == 0 )
-      {
-         Aux_Message( stderr, "ERROR : OPT__EXTERNAL_POT does not work with \"OPT__GRAVITY_TYPE == 2/3 (EXTERNAL/BOTH)\" !!\n" );
-         Aux_Message( stderr, "        --> HYDRO : please use OPT__GRAVITY_TYPE = 2/3 only\n" );
-         Aux_Message( stderr, "            ELBDM : please use OPT__EXTERNAL_POT only\n" );
-      }
-
-      MPI_Exit();
-   }
-
    if ( NEWTON_G <= 0.0 )     Aux_Error( ERROR_INFO, "NEWTON_G (%14.7e) <= 0.0 !!\n", NEWTON_G );
 
 
@@ -1146,8 +1131,8 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : DT__GRAVITY (%14.7e) is not within the normal range [0...1] !!\n",
                    DT__GRAVITY );
 
-   if ( OPT__EXTERNAL_POT  &&  OPT__OUTPUT_POT )
-      Aux_Message( stderr, "WARNING : currently OPT__OUTPUT_POT does NOT include the external potential !!\n" );
+   if ( !OPT__SELF_GRAVITY  &&  !OPT__EXT_ACC  &&  !OPT__EXT_POT )
+      Aux_Message( stderr, "WARNING : all gravity options are disabled (OPT__SELF_GRAVITY, OPT__EXT_ACC, OPT__EXT_POT) !!\n" );
 
    } // if ( MPI_Rank == 0 )
 
@@ -1172,8 +1157,6 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "\"%s\" requires \"%s\" for UNSPLIT_GRAVITY !!\n",
                  "OPT__GRA_P5_GRADIENT", "USG_GHOST_SIZE_G == 2" );
 #  endif
-
-   if ( OPT__EXTERNAL_POT )   Aux_Error( ERROR_INFO, "OPT__EXTERNAL_POT is NOT supported in HYDRO --> use external gravity !!\n" );
 
 
 // warnings
@@ -1200,8 +1183,8 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
-   if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
-      Aux_Error( ERROR_INFO, "ELBDM does NOT support external gravity (OPT__GRAVITY_TYPE == 2/3) --> use external potential !!\n" );
+   if ( OPT__EXT_ACC )
+      Aux_Error( ERROR_INFO, "ELBDM does NOT support OPT__EXT_ACC --> use OPT__EXT_POT instead !!\n" );
 
 
 // warnings

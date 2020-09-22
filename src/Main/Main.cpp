@@ -123,14 +123,15 @@ double               GFUNC_COEFF0;
 double               DT__GRAVITY;
 double               NEWTON_G;
 int                  POT_GPU_NPGROUP;
-bool                 OPT__OUTPUT_POT, OPT__GRA_P5_GRADIENT, OPT__EXTERNAL_POT, OPT__GRAVITY_EXTRA_MASS;
+bool                 OPT__OUTPUT_POT, OPT__GRA_P5_GRADIENT, OPT__SELF_GRAVITY, OPT__GRAVITY_EXTRA_MASS;
 double               SOR_OMEGA;
 int                  SOR_MAX_ITER, SOR_MIN_ITER;
 double               MG_TOLERATED_ERROR;
 int                  MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH;
 IntScheme_t          OPT__POT_INT_SCHEME, OPT__RHO_INT_SCHEME, OPT__GRA_INT_SCHEME, OPT__REF_POT_INT_SCHEME;
 OptPotBC_t           OPT__BC_POT;
-OptGravityType_t     OPT__GRAVITY_TYPE;
+OptExtAcc_t          OPT__EXT_ACC;
+OptExtPot_t          OPT__EXT_POT;
 
 // external gravity variables
 // a. auxiliary arrays
@@ -259,17 +260,17 @@ real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ]        = NULL;
 #endif // FLU_SCHEME
 
 #ifdef GRAVITY
-// (3-2) gravity solver
-real   (*h_Rho_Array_P    [2])[RHO_NXT][RHO_NXT][RHO_NXT]          = { NULL, NULL };
-real   (*h_Pot_Array_P_In [2])[POT_NXT][POT_NXT][POT_NXT]          = { NULL, NULL };
-real   (*h_Pot_Array_P_Out[2])[GRA_NXT][GRA_NXT][GRA_NXT]          = { NULL, NULL };
-real   (*h_Flu_Array_G    [2])[GRA_NIN][PS1][PS1][PS1]             = { NULL, NULL };
-double (*h_Corner_Array_G [2])[3]                                  = { NULL, NULL };
+// (3-2) Poisson and gravity solver
+real   (*h_Rho_Array_P     [2])[RHO_NXT][RHO_NXT][RHO_NXT]         = { NULL, NULL };
+real   (*h_Pot_Array_P_In  [2])[POT_NXT][POT_NXT][POT_NXT]         = { NULL, NULL };
+real   (*h_Pot_Array_P_Out [2])[GRA_NXT][GRA_NXT][GRA_NXT]         = { NULL, NULL };
+real   (*h_Flu_Array_G     [2])[GRA_NIN][PS1][PS1][PS1]            = { NULL, NULL };
+double (*h_Corner_Array_PGT[2])[3]                                 = { NULL, NULL };
 #ifdef DUAL_ENERGY
-char   (*h_DE_Array_G     [2])[PS1][PS1][PS1]                      = { NULL, NULL };
+char   (*h_DE_Array_G      [2])[PS1][PS1][PS1]                     = { NULL, NULL };
 #endif
 #ifdef MHD
-real   (*h_Emag_Array_G   [2])[PS1][PS1][PS1]                      = { NULL, NULL };
+real   (*h_Emag_Array_G    [2])[PS1][PS1][PS1]                     = { NULL, NULL };
 #endif
 
 // (3-3) unsplit gravity correction
@@ -278,7 +279,7 @@ real (*h_Pot_Array_USG_F[2])[ CUBE(USG_NXT_F) ]                    = { NULL, NUL
 real (*h_Pot_Array_USG_G[2])[USG_NXT_G][USG_NXT_G][USG_NXT_G]      = { NULL, NULL };
 real (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1]             = { NULL, NULL };
 #endif
-#endif
+#endif // #ifdef GRAVITY
 
 // (3-4) Grackle chemistry
 #ifdef SUPPORT_GRACKLE
@@ -326,12 +327,12 @@ real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ]       = NULL;
 #endif // FLU_SCHEME
 
 #ifdef GRAVITY
-// (4-2) gravity solver
+// (4-2) Poisson and gravity solver
 real   (*d_Rho_Array_P    )[ CUBE(RHO_NXT) ]                     = NULL;
 real   (*d_Pot_Array_P_In )[ CUBE(POT_NXT) ]                     = NULL;
 real   (*d_Pot_Array_P_Out)[ CUBE(GRA_NXT) ]                     = NULL;
 real   (*d_Flu_Array_G    )[GRA_NIN][ CUBE(PS1) ]                = NULL;
-double (*d_Corner_Array_G )[3]                                   = NULL;
+double (*d_Corner_Array_PGT)[3]                                  = NULL;
 #ifdef DUAL_ENERGY
 char   (*d_DE_Array_G     )[ CUBE(PS1) ]                         = NULL;
 #endif

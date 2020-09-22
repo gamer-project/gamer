@@ -276,13 +276,20 @@ const ParPass2Son_t
 #endif // #ifdef PARTICLE
 
 
-// the gravity types (this type needs to be defined for the Fluid solver even when GRAVITY is off)
-typedef int OptGravityType_t;
-const OptGravityType_t
-   GRAVITY_NONE     = 0,
-   GRAVITY_SELF     = 1,
-   GRAVITY_EXTERNAL = 2,
-   GRAVITY_BOTH     = 3;
+// external acceleration (must be defined for the fluid solver even when GRAVITY is off)
+typedef int OptExtAcc_t;
+const OptExtAcc_t
+   EXT_ACC_NONE  = 0,
+   EXT_ACC_FUNC  = 1,
+   EXT_ACC_TABLE = 2;
+
+
+// external potential (must be defined for the fluid solver even when GRAVITY is off)
+typedef int OptExtPot_t;
+const OptExtPot_t
+   EXT_POT_NONE  = 0,
+   EXT_POT_FUNC  = 1,
+   EXT_POT_TABLE = 2;
 
 
 // forms of the Lohner's error estimator
