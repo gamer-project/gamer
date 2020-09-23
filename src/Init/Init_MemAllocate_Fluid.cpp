@@ -46,7 +46,7 @@ void Init_MemAllocate_Fluid( const int Flu_NPatchGroup, const int Pot_NPatchGrou
 #     ifdef UNSPLIT_GRAVITY
       h_Pot_Array_USG_F[t] = new real [Flu_NPatchGroup][ CUBE(USG_NXT_F) ];
 
-      if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH  ||  OPT__EXTERNAL_POT )
+      if ( OPT__EXT_ACC )
       h_Corner_Array_F [t] = new double [Flu_NPatchGroup][3];
 #     endif
 

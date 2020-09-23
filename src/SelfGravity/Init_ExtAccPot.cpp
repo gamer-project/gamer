@@ -10,7 +10,7 @@
 // Description :  Initialize the external acceleration and potential routines and auxiliary arrays
 //
 // Note        :  1. Invoked by Init_GAMER() and EvolveLevel()
-//                2. Enabled by the runtime options "OPT__GRAVITY_TYPE == 2/3" and "OPT__EXTERNAL_POT"
+//                2. Enabled by the runtime options "OPT__EXT_ACC" and "OPT__EXT_POT"
 //                3. Set the auxiliary CPU arrays of the external acceleration and potential by invoking
 //
 //                      Init_ExtAccAuxArray_Ptr() and Init_ExtPotAuxArray_Ptr()
@@ -35,7 +35,7 @@ void Init_ExtAccPot( const bool OnlyInitAuxArray )
 {
 
 // initialize the external acceleration
-   if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
+   if ( OPT__EXT_ACC )
    {
 //    initialize the auxiliary CPU array
       if ( Init_ExtAccAuxArray_Ptr != NULL )
@@ -72,11 +72,11 @@ void Init_ExtAccPot( const bool OnlyInitAuxArray )
             Aux_Error( ERROR_INFO, "SetGPUExtAcc_Ptr == NULL !!\n" );
       }
 #     endif
-   } // if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
+   } // if ( OPT__EXT_ACC )
 
 
 // initialize the external potential
-   if ( OPT__EXTERNAL_POT )
+   if ( OPT__EXT_POT )
    {
 //    initialize the auxiliary CPU array
       if ( Init_ExtPotAuxArray_Ptr != NULL )
@@ -113,7 +113,7 @@ void Init_ExtAccPot( const bool OnlyInitAuxArray )
             Aux_Error( ERROR_INFO, "SetGPUExtPot_Ptr == NULL !!\n" );
       }
 #     endif
-   } // if ( OPT__EXTERNAL_POT )
+   } // if ( OPT__EXT_POT )
 
 } // FUNCTION : Init_ExtAccPot
 
