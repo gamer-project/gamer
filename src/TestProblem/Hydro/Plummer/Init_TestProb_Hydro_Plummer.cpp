@@ -160,12 +160,12 @@ void SetParameter()
       Aux_Error( ERROR_INFO, "please set NCOMP_PASSIVE_USER to 2 for \"Plummer_AddColor\" !!\n" );
 
 #  ifdef GRAVITY
-   if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  &&  Plummer_ExtMFrac != 0.0 )
+   if ( !OPT__EXT_ACC  &&  Plummer_ExtMFrac != 0.0 )
    {
       Plummer_ExtMFrac = 0.0;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : \"Plummer_ExtMFrac\" is reset to 0.0 since external acceleration (OPT__GRAVITY_TYPE) is disabled !!\n" );
+         Aux_Message( stderr, "WARNING : \"Plummer_ExtMFrac\" is reset to 0.0 since OPT__EXT_ACC is disabled !!\n" );
    }
 #  endif
 

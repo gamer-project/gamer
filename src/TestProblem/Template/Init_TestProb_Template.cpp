@@ -288,12 +288,12 @@ void Init_TestProb_Template()
    Init_User_Ptr                  = NULL; // option: none;                    example: none
    End_User_Ptr                   = NULL; // option: none;                    example: TestProblem/Hydro/ClusterMerger_vs_Flash/Init_TestProb_ClusterMerger_vs_Flash.cpp --> End_ClusterMerger()
 #  ifdef GRAVITY
-   Init_ExtAccAuxArray_Ptr        = NULL; // option: OPT__GRAVITY_TYPE=2/3;   example: TestProblem/Hydro/Plummer/ExtAcc_Plummer.cpp
+   Init_ExtAccAuxArray_Ptr        = NULL; // option: OPT__EXT_ACC;            example: TestProblem/Hydro/Plummer/ExtAcc_Plummer.cpp
    SetCPUExtAcc_Ptr               = NULL; //                                           TestProblem/Hydro/Plummer/ExtAcc_Plummer.cpp
 #  ifdef GPU
    SetGPUExtAcc_Ptr               = NULL; //                                           TestProblem/Hydro/Plummer/ExtAcc_Plummer.cu
 #  endif
-   Init_ExtPotAuxArray_Ptr        = NULL; // option: OPT__EXTERNAL_POT;       example: SelfGravity/CPU_Poisson/CPU_ExtPot_PointMass.cpp
+   Init_ExtPotAuxArray_Ptr        = NULL; // option: OPT__EXT_POT;            example: SelfGravity/CPU_Poisson/CPU_ExtPot_PointMass.cpp
    SetCPUExtPot_Ptr               = NULL; //                                           SelfGravity/CPU_Poisson/CPU_ExtPot_PointMass.cpp
 #  ifdef GPU
    SetGPUExtPot_Ptr               = NULL; //                                           SelfGravity/GPU_Poisson/CUPOT_ExtPot_PointMass.cu
