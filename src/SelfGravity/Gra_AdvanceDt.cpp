@@ -26,20 +26,22 @@ extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const dou
 //                   --> It is because the lv-0 Poisson and Gravity solvers are invoked separately, and Gravity solver
 //                       needs to call Prepare_PatchData to get the updated potential
 //
-// Parameter   :  lv             : Target refinement level
-//                TimeNew        : Target physical time to reach
-//                TimeOld        : Physical time before update
-//                                 --> For Gravity solver, this function updates physical time from TimeOld to TimeNew
-//                                     For Poisson solver, this function calculates potential at **TimeNew**
-//                dt             : Time interval to advance solution (can be different from TimeNew-TimeOld if COMOVING is on)
-//                SaveSg_Flu     : Sandglass to store the updated fluid data (for the gravity solver)
-//                SaveSg_Pot     : Sandglass to store the updated potential data  (for the Poisson solver)
-//                Poisson        : true --> invoke the Poisson solver to evaluate the gravitational potential
-//                Gravity        : true --> invoke the Gravity solver to evolve fluid by the gravitational acceleration
-//                OverlapMPI     : true --> Overlap MPI time with CPU/GPU computation
-//                Overlap_Sync   : true  --> Advance the patches which cannot be overlapped with MPI communication
-//                                 false --> Advance the patches which can    be overlapped with MPI communication
-//                                 (useful only if "OverlapMPI == true")
+// Parameter   :  lv           : Target refinement level
+//                TimeNew      : Target physical time to reach
+//                TimeOld      : Physical time before update
+//                               --> For Gravity solver, this function updates physical time from TimeOld to TimeNew
+//                                   For Poisson solver, this function calculates potential at **TimeNew**
+//                dt           : Time interval to advance solution (can be different from TimeNew-TimeOld if COMOVING is on)
+//                SaveSg_Flu   : Sandglass to store the updated fluid data (for the gravity solver)
+//                SaveSg_Pot   : Sandglass to store the updated potential data  (for the Poisson solver)
+//                Poisson      : true --> invoke the Poisson solver to evaluate the gravitational potential
+//                                        (including both self-gravity potential and external potential)
+//                Gravity      : true --> invoke the Gravity solver to evolve fluid by the gravitational acceleration
+//                                        (including self-gravity, external potentional, and external acceleration)
+//                OverlapMPI   : true --> Overlap MPI time with CPU/GPU computation
+//                Overlap_Sync : true  --> Advance the patches which cannot be overlapped with MPI communication
+//                               false --> Advance the patches which can    be overlapped with MPI communication
+//                               (useful only if "OverlapMPI == true")
 //-------------------------------------------------------------------------------------------------------
 void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt,
                     const int SaveSg_Flu, const int SaveSg_Pot, const bool Poisson, const bool Gravity,
@@ -59,8 +61,8 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
       return;
    }
 
-   if ( !Poisson  &&  Gravity  &&  OPT__GRAVITY_TYPE != GRAVITY_EXTERNAL )
-      Aux_Message( stderr, "WARNING : Poisson=off, Gravity=on, GravityType!=external --> ARE YOU SURE ?!\n" );
+   if (  !Poisson  &&  Gravity  &&  ( OPT__SELF_GRAVITY || OPT__EXT_POT )  )
+      Aux_Message( stderr, "WARNING : Poisson=off but Gravity=on --> ARE YOU SURE ?!\n" );
 
 
 // coefficient in front of the RHS in the Poisson eq.
