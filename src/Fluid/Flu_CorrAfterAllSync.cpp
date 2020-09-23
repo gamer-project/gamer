@@ -90,7 +90,7 @@ void Flu_CorrAfterAllSync()
 
 // 3. recalculate gravitational potential
 #  ifdef GRAVITY
-   if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
+   if ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT )
    for (int lv=0; lv<=MAX_LEVEL; lv++)
    {
       if ( NPatchTotal[lv] == 0 )   break;
@@ -154,7 +154,7 @@ void Flu_CorrAfterAllSync()
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
-   } // for (int lv=0; lv<=MAX_LEVEL; lv++) if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
+   } // for (int lv=0; lv<=MAX_LEVEL; lv++) if ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT )
 #  endif // #ifdef GRAVITY
 
 
