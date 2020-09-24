@@ -25,7 +25,7 @@
 #endif
 
 // variables reside in constant memory
-#include "CUPOT_SetConstMem_PoissonSolver.cu"
+#include "CUDA_ConstMemory.h"
 
 
 

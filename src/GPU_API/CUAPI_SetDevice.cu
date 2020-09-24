@@ -24,7 +24,7 @@ extern "C" { int GetFreeGpuDevID( int, int ); }
 void CUAPI_SetDevice( const int Mode )
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "CUAPI_SetDevice ...\n" );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
 // check
@@ -179,8 +179,14 @@ void CUAPI_SetDevice( const int Mode )
                  DeviceProp.name, DeviceProp.major, DeviceProp.minor );
 
 #  elif ( GPU_ARCH == VOLTA )
-   if ( DeviceProp.major != 7 )
+   if ( DeviceProp.major != 7  &&  DeviceProp.minor != 0 )
       Aux_Error( ERROR_INFO, "GPU \"%s\" with the compute capability %d.%d is incompatible with the Volta architecture !!\n"
+                             "        --> Please reset GPU_ARCH in the Makefile properly\n",
+                 DeviceProp.name, DeviceProp.major, DeviceProp.minor );
+
+#  elif ( GPU_ARCH == TURING )
+   if ( DeviceProp.major != 7  &&  DeviceProp.minor != 5 )
+      Aux_Error( ERROR_INFO, "GPU \"%s\" with the compute capability %d.%d is incompatible with the Turing architecture !!\n"
                              "        --> Please reset GPU_ARCH in the Makefile properly\n",
                  DeviceProp.name, DeviceProp.major, DeviceProp.minor );
 
@@ -197,10 +203,6 @@ void CUAPI_SetDevice( const int Mode )
       if ( RuntimeVersion < 3020 )
          Aux_Error( ERROR_INFO, "CHECK_INTERMEDIATE == EXACT + FLOAT8 is not supported in CUDA < 3.2 !!" );
 #  endif
-
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
-
 #  endif // #if ( MODEL == HYDRO )
 
 // (6-2) SOR Poisson solver
@@ -229,7 +231,7 @@ void CUAPI_SetDevice( const int Mode )
                  DeviceProp.warpSize, WARP_SIZE );
 
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "CUAPI_SetDevice ... done\n" );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : CUAPI_SetDevice
 

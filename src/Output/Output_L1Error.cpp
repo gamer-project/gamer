@@ -1,9 +1,14 @@
 #include "GAMER.h"
 
-static void WriteFile( void (*AnalFunc)( real fluid[], const double x, const double y, const double z, const double Time,
-                                         const int lv, double AuxArray[] ),
+static void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double y, const double z, const double Time,
+                                             const int lv, double AuxArray[] ),
+                       void (*AnalFunc_Mag)( real magnetic[], const double x, const double y, const double z, const double Time,
+                                             const int lv, double AuxArray[] ),
                        FILE *File[], const int lv, const int PID, const int i, const int j, const int k,
                        double L1_Err[], const OptOutputPart_t Part );
+
+
+#define NERR   ( NCOMP_TOTAL + NCOMP_MAG )
 
 
 
@@ -15,21 +20,29 @@ static void WriteFile( void (*AnalFunc)( real fluid[], const double x, const dou
 // Note        :  1. Mainly invoked by various test problems
 //                2. Similar to Output_DumpData_Part()
 //                3. L1 errors are recorded in "Record__L1Err"
+//                4. For MHD, this function uses the average **cell-centered** magnetic field to compute errors
+//                5. Errors of passive scalars are NOT computed
 //
-// Parameter   :  AnalFunc : Function pointer to return the analytical solution
-//                           --> Usually set to the same function pointer for initializing grids
-//                               (e.g., SetGridIC() in various test problems)
-//                Prefix   : Prefix of the output filename
-//                Part     : OUTPUT_X    : x line
-//                           OUTPUT_Y    : y line
-//                           OUTPUT_Z    : z line
-//                           OUTPUT_DIAG : diagonal along (+1,+1,+1)
-//                x/y/z    : spatial coordinates for Part
+// Parameter   :  AnalFunc_Flu : Function pointer to return the analytical solution of the fluid variables
+//                               --> Usually set to the same function pointer for initializing grids
+//                                   (e.g., SetGridIC() in various test problems)
+//                               --> For MHD, the total energy set by this function must NOT include magnetic energy
+//                AnalFunc_Mag : Function pointer to return the analytical solution of the magnetic field (MHD only)
+//                               --> Usually set to the same function pointer for initializing B field
+//                                   (e.g., SetBFieldIC() in various test problems)
+//                Prefix       : Prefix of the output filename
+//                Part         : OUTPUT_X    : x line
+//                               OUTPUT_Y    : y line
+//                               OUTPUT_Z    : z line
+//                               OUTPUT_DIAG : diagonal along (+1,+1,+1)
+//                x/y/z        : spatial coordinates for Part
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Output_L1Error( void (*AnalFunc)( real fluid[], const double x, const double y, const double z, const double Time,
-                                       const int lv, double AuxArray[] ),
+void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const double y, const double z, const double Time,
+                                           const int lv, double AuxArray[] ),
+                     void (*AnalFunc_Mag)( real magnetic[], const double x, const double y, const double z, const double Time,
+                                           const int lv, double AuxArray[] ),
                      const char *Prefix, const OptOutputPart_t Part, const double x, const double y, const double z )
 {
 
@@ -43,24 +56,36 @@ void Output_L1Error( void (*AnalFunc)( real fluid[], const double x, const doubl
    for (int lv=1; lv<NLEVEL; lv++)
       if ( NPatchTotal[lv] != 0 )   Mis_CompareRealValue( Time[0], Time[lv], __FUNCTION__, true );
 
+   if ( AnalFunc_Flu == NULL )   Aux_Error( ERROR_INFO, "AnalyFunc_Flu == NULL !!\n" );
+
+#  ifdef MHD
+   if ( AnalFunc_Mag == NULL )   Aux_Error( ERROR_INFO, "AnalyFunc_Mag == NULL !!\n" );
+#  endif
+
 
 // output filename
-   char FileName[NCOMP_FLUID][200];
+   char FileName[NERR][MAX_STRING];
 
 #  if   ( MODEL == HYDRO )
-   sprintf( FileName[0], "%s_Dens_%06d", Prefix, DumpID );
-   sprintf( FileName[1], "%s_MomX_%06d", Prefix, DumpID );
-   sprintf( FileName[2], "%s_MomY_%06d", Prefix, DumpID );
-   sprintf( FileName[3], "%s_MomZ_%06d", Prefix, DumpID );
-   sprintf( FileName[4], "%s_Pres_%06d", Prefix, DumpID );
+   sprintf( FileName[            0], "%s_Dens_%06d", Prefix, DumpID );
+   sprintf( FileName[            1], "%s_MomX_%06d", Prefix, DumpID );
+   sprintf( FileName[            2], "%s_MomY_%06d", Prefix, DumpID );
+   sprintf( FileName[            3], "%s_MomZ_%06d", Prefix, DumpID );
+   sprintf( FileName[            4], "%s_Pres_%06d", Prefix, DumpID );
 
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
+   for (int v=0; v<NCOMP_PASSIVE; v++)
+   sprintf( FileName[NCOMP_FLUID+v], "%s_Passive%02d_%06d", Prefix, v, DumpID );
+
+#  ifdef MHD
+   sprintf( FileName[NCOMP_TOTAL+0], "%s_MagX_%06d", Prefix, DumpID );
+   sprintf( FileName[NCOMP_TOTAL+1], "%s_MagY_%06d", Prefix, DumpID );
+   sprintf( FileName[NCOMP_TOTAL+2], "%s_MagZ_%06d", Prefix, DumpID );
+#  endif
 
 #  elif ( MODEL == ELBDM )
-   sprintf( FileName[0], "%s_Dens_%06d", Prefix, DumpID );
-   sprintf( FileName[1], "%s_Real_%06d", Prefix, DumpID );
-   sprintf( FileName[2], "%s_Imag_%06d", Prefix, DumpID );
+   sprintf( FileName[            0], "%s_Dens_%06d", Prefix, DumpID );
+   sprintf( FileName[            1], "%s_Real_%06d", Prefix, DumpID );
+   sprintf( FileName[            2], "%s_Imag_%06d", Prefix, DumpID );
 
 #  else
 #  error : unsupported MODEL !!
@@ -70,7 +95,7 @@ void Output_L1Error( void (*AnalFunc)( real fluid[], const double x, const doubl
 // check if the output files already exist
    if ( MPI_Rank == 0 )
    {
-      for (int v=0; v<NCOMP_FLUID; v++)
+      for (int v=0; v<NERR; v++)
       {
          FILE *File_Check = fopen( FileName[v], "r" );
 
@@ -96,10 +121,10 @@ void Output_L1Error( void (*AnalFunc)( real fluid[], const double x, const doubl
    bool    Check_y = false;
    bool    Check_z = false;
 
-   double L1_Err[NCOMP_FLUID];
+   double L1_Err[NERR];
    static bool FirstTime = true;
 
-   for (int v=0; v<NCOMP_FLUID; v++)   L1_Err[v] = 0.0;
+   for (int v=0; v<NERR; v++)    L1_Err[v] = 0.0;
 
    switch ( Part )
    {
@@ -116,13 +141,13 @@ void Output_L1Error( void (*AnalFunc)( real fluid[], const double x, const doubl
    {
       if ( MPI_Rank == TRank )
       {
-         FILE *File[NCOMP_FLUID];
-         for (int v=0; v<NCOMP_FLUID; v++)   File[v] = fopen( FileName[v], "a" );
+         FILE *File[NERR];
+         for (int v=0; v<NERR; v++)    File[v] = fopen( FileName[v], "a" );
 
 //       output header
          if ( TRank == 0 )
          {
-            for (int v=0; v<NCOMP_FLUID; v++)
+            for (int v=0; v<NERR; v++)
                fprintf( File[v], "#%20s %20s %20s %20s\n", "Coord.", "Numerical", "Analytical", "Error" );
          }
 
@@ -147,7 +172,7 @@ void Output_L1Error( void (*AnalFunc)( real fluid[], const double x, const doubl
                      {
                         for (int k=0; k<PS1; k++)
                         {
-                           WriteFile( AnalFunc, File, lv, PID, k, k, k, L1_Err, Part );
+                           WriteFile( AnalFunc_Flu, AnalFunc_Mag, File, lv, PID, k, k, k, L1_Err, Part );
                         }
                      }
                   } // if ( Part == OUTPUT_DIAG )
@@ -170,7 +195,7 @@ void Output_L1Error( void (*AnalFunc)( real fluid[], const double x, const doubl
                         for (int i=0; i<PS1; i++)  {  xx = EdgeL[0] + i*dh;
                                                       if ( Check_x && ( xx>x || xx+dh<=x ) )    continue;
 
-                           WriteFile( AnalFunc, File, lv, PID, i, j, k, L1_Err, Part );
+                           WriteFile( AnalFunc_Flu, AnalFunc_Mag, File, lv, PID, i, j, k, L1_Err, Part );
 
                         }}}
                      }
@@ -179,7 +204,7 @@ void Output_L1Error( void (*AnalFunc)( real fluid[], const double x, const doubl
             } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
          } // for (int lv=0; lv<NLEVEL; lv++)
 
-         for (int v=0; v<NCOMP_FLUID; v++)   fclose( File[v] );
+         for (int v=0; v<NERR; v++)    fclose( File[v] );
 
       } // if ( MPI_Rank == TRank )
 
@@ -189,8 +214,8 @@ void Output_L1Error( void (*AnalFunc)( real fluid[], const double x, const doubl
 
 
 // gather the L1 error from all ranks and output the results
-   double L1_Err_Sum[NCOMP_FLUID], Norm;
-   MPI_Reduce( L1_Err, L1_Err_Sum, NCOMP_FLUID, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+   double L1_Err_Sum[NERR], Norm;
+   MPI_Reduce( L1_Err, L1_Err_Sum, NERR, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
 
    if ( MPI_Rank == 0 )
    {
@@ -203,7 +228,7 @@ void Output_L1Error( void (*AnalFunc)( real fluid[], const double x, const doubl
          default          :  Aux_Error( ERROR_INFO, "unsupported option \"Part = %d\" [4/5/6/7] !!\n", Part );
       }
 
-      for (int v=0; v<NCOMP_FLUID; v++)   L1_Err_Sum[v] /= Norm;
+      for (int v=0; v<NERR; v++)    L1_Err_Sum[v] /= Norm;
 
       FILE *File_L1 = fopen( "Record__L1Err", "a" );
 
@@ -211,11 +236,18 @@ void Output_L1Error( void (*AnalFunc)( real fluid[], const double x, const doubl
       if ( FirstTime )
       {
 #        if   ( MODEL == HYDRO )
-         fprintf( File_L1, "#%5s %13s %19s %19s %19s %19s %19s\n",
+         fprintf( File_L1, "#%5s %13s %19s %19s %19s %19s %19s",
                   "NGrid", "Time", "Error(Dens)", "Error(MomX)", "Error(MomY)", "Error(MomZ)", "Error(Pres)" );
 
-#        elif ( MODEL == MHD )
-#        warning : WAIT MHD !!!
+         for (int v=0; v<NCOMP_PASSIVE; v++)
+         fprintf( File_L1, "    Error(Passive%02d)", v );
+
+#        ifdef MHD
+         fprintf( File_L1, " %19s %19s %19s",
+                  "Error(MagX)", "Error(MagY)", "Error(MagZ)" );
+#        endif
+
+         fprintf( File_L1, "\n" );
 
 #        elif ( MODEL == ELBDM )
          fprintf( File_L1, "#%5s %13s %19s %19s %19s\n",
@@ -231,7 +263,7 @@ void Output_L1Error( void (*AnalFunc)( real fluid[], const double x, const doubl
 //    output data
       fprintf( File_L1, "%6d %13.7e", NX0_TOT[0], Time[0] );
 
-      for (int v=0; v<NCOMP_FLUID; v++)
+      for (int v=0; v<NERR; v++)
       fprintf( File_L1, " %19.12e", L1_Err_Sum[v] );
 
       fprintf( File_L1, "\n" );
@@ -248,44 +280,60 @@ void Output_L1Error( void (*AnalFunc)( real fluid[], const double x, const doubl
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  WriteFile
-// Description :  WRite the data of a single cell
+// Description :  Write the data of a single cell
 //
 // Note        :  1. Invoked by Output_L1Error()
 //
-// Parameter   :  AnalFunc : Function pointer to return the analytical solution
-//                File     : File pointer
-//                lv       : Target refinement level
-//                PID      : Patch ID
-//                i/j/k    : Cell indices within the patch
-//                L1_Err   : Array to record the L1 errors of all variables
-//                Part     : OUTPUT_X    : x line
-//                           OUTPUT_Y    : y line
-//                           OUTPUT_Z    : z line
-//                           OUTPUT_DIAG : diagonal along (+1,+1,+1)
+// Parameter   :  AnalFunc_Flu : Function pointer to return the analytical solution of the fluid variables
+//                               --> For MHD, the total energy set by this function must NOT include magnetic energy
+//                AnalFunc_Mag : Function pointer to return the analytical solution of the magnetic field (MHD only)
+//                File         : File pointer
+//                lv           : Target refinement level
+//                PID          : Patch ID
+//                i/j/k        : Cell indices within the patch
+//                L1_Err       : Array to record the L1 errors of all variables
+//                Part         : OUTPUT_X    : x line
+//                               OUTPUT_Y    : y line
+//                               OUTPUT_Z    : z line
+//                               OUTPUT_DIAG : diagonal along (+1,+1,+1)
 //
 // Return      :  L1_Err
 //-------------------------------------------------------------------------------------------------------
-void WriteFile( void (*AnalFunc)( real fluid[], const double x, const double y, const double z, const double Time,
-                                  const int lv, double AuxArray[] ),
+void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double y, const double z, const double Time,
+                                      const int lv, double AuxArray[] ),
+                void (*AnalFunc_Mag)( real magnetic[], const double x, const double y, const double z, const double Time,
+                                      const int lv, double AuxArray[] ),
                 FILE *File[], const int lv, const int PID, const int i, const int j, const int k,
                 double L1_Err[], const OptOutputPart_t Part )
 {
 
-   real fluid[NCOMP_FLUID], Anal[NCOMP_FLUID], Err[NCOMP_FLUID];
+   real Nume[NERR], Anal[NERR], Err[NERR];
 
 
 // get the numerical solution
-   for (int v=0; v<NCOMP_FLUID; v++)   fluid[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
+   for (int v=0; v<NCOMP_TOTAL; v++)
+      Nume[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
+
+// note that we use the cell-centered B field to compute errors
+#  ifdef MHD
+   MHD_GetCellCenteredBFieldInPatch( Nume+NCOMP_TOTAL, lv, PID, i, j, k, amr->MagSg[lv] );
+#  endif
 
 
 // convert total energy to pressure
 #  if ( MODEL == HYDRO )
-   const bool   CheckMinPres_No = false;
-   const double Gamma_m1        = GAMMA - 1.0;
-
-   fluid[ENGY] = Hydro_GetPressure( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                    Gamma_m1, CheckMinPres_No, NULL_REAL );
+   const bool  CheckMinPres_No = false;
+#  ifdef MHD
+   const real *B_Nume          = Nume + NCOMP_TOTAL;
+   const real  Emag_Nume       = (real)0.5*( SQR(B_Nume[MAGX]) + SQR(B_Nume[MAGY]) + SQR(B_Nume[MAGZ]) );
+#  else
+   const real  Emag_Nume       = NULL_REAL;
 #  endif
+
+   Nume[ENGY] = Hydro_Con2Pres( Nume[DENS], Nume[MOMX], Nume[MOMY], Nume[MOMZ], Nume[ENGY], Nume+NCOMP_FLUID,
+                                CheckMinPres_No, NULL_REAL, Emag_Nume,
+                                EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
+#  endif // #if ( MODEL == HYDRO )
 
 
 // get the analytical solution
@@ -294,13 +342,19 @@ void WriteFile( void (*AnalFunc)( real fluid[], const double x, const double y, 
    const double y  = amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh;
    const double z  = amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh;
 
-   AnalFunc( Anal, x, y, z, Time[0], lv, NULL );
+   AnalFunc_Flu( Anal,             x, y, z, Time[0], lv, NULL );
+#  ifdef MHD
+   AnalFunc_Mag( Anal+NCOMP_TOTAL, x, y, z, Time[0], lv, NULL );
+#  endif
 
 
 // convert total energy to pressure
 #  if ( MODEL == HYDRO )
-   Anal[ENGY] = Hydro_GetPressure( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY],
-                                   Gamma_m1, CheckMinPres_No, NULL_REAL );
+   const real Emag_Zero = 0.0;   // Anal[ENGY] set by AnalFunc_Flu() does NOT include magentic energy
+
+   Anal[ENGY] = Hydro_Con2Pres( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY], Anal+NCOMP_FLUID,
+                                CheckMinPres_No, NULL_REAL, Emag_Zero,
+                                EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
 #  endif
 
 
@@ -318,12 +372,12 @@ void WriteFile( void (*AnalFunc)( real fluid[], const double x, const double y, 
 
 
 // estimate and output errors
-   for (int v=0; v<NCOMP_FLUID; v++)
+   for (int v=0; v<NERR; v++)
    {
-      Err   [v]  = FABS( Anal[v] - fluid[v] );
+      Err   [v]  = FABS( Anal[v] - Nume[v] );
       L1_Err[v] += Err[v]*dh;
 
-      fprintf( File[v], " %20.13e %20.13e %20.13e %20.13e\n", r, fluid[v], Anal[v], Err[v] );
+      fprintf( File[v], " %20.13e %20.13e %20.13e %20.13e\n", r, Nume[v], Anal[v], Err[v] );
    }
 
 } // FUNCTION : WriteFile

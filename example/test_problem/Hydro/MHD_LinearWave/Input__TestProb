@@ -1,0 +1,9 @@
+# problem-specific runtime parameters
+MHDLinear_Mode        1              # (1/2/3) --> (fast/slow/Alfven wave)
+MHDLinear_Rho0        2.0            # background density
+MHDLinear_Rho1        1.0e-6         # density perturbation amplitude
+MHDLinear_P0          0.6            # background pressure
+MHDLinear_v0          0.0            # background velocity [0.0]
+MHDLinear_B0          1.0            # background magnetic field amplitude
+MHDLinear_Sign       +1              # (+1/-1) --> (right/left-moving wave) [+1]
+MHDLinear_Phase0      0.2            # initial phase shift [0.0]

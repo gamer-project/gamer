@@ -13,36 +13,36 @@ extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int l
 // Function    :  Flag_Check
 // Description :  Check if the target cell (i,j,k) satisfies the refinement criteria
 //
-// Note        :  1. Useless input arrays are set to NULL
-//                   (e.g, Pot if GRAVITY is off, Pres if OPT__FLAG_PRES_GRADIENT is off, ...)
-//                2. The function pointer "Flag_User_Ptr" points to "Flag_User()" by default
-//                   but may be overwritten by various test problem initializers
+// Note        :  1. Useless input arrays are set to NULL (e.g, Pot[] if GRAVITY is off)
+//                2. For OPT__FLAG_USER, the function pointer "Flag_User_Ptr" must be set by a
+//                   test problem initializer
 //
-// Parameter   :  lv             : Target refinement level
-//                PID            : Target patch ID
-//                i,j,k          : Indices of the target cell
-//                dv             : Cell volume at the target level
-//                Fluid          : Input fluid array (with NCOMP_TOTAL components)
-//                Pot            : Input potential array
-//                Vel            : Input velocity array
-//                Pres           : Input pressure array
-//                Lohner_Ave     : Input array storing the averages for the Lohner error estimator
-//                Lohner_Slope   : Input array storing the slopes for the Lohner error estimator
-//                Lohner_NVar    : Number of variables stored in Lohner_Ave and Lohner_Slope
-//                ParCount       : Input array storing the number of particles on each cell
-//                                 (note that it has the **real** type)
-//                ParDens        : Input array storing the particle mass density on each cell
-//                JeansCoeff     : Pi*GAMMA/(SafetyFactor^2*G), where SafetyFactor = FlagTable_Jeans[lv]
-//                                 --> Flag if dh^2 > JeansCoeff*Pres/Dens^2
+// Parameter   :  lv           : Target refinement level
+//                PID          : Target patch ID
+//                i,j,k        : Indices of the target cell
+//                dv           : Cell volume at the target level
+//                Fluid        : Input fluid array (with NCOMP_TOTAL components)
+//                Pot          : Input potential array
+//                MagCC        : Input cell-centered B field array
+//                Vel          : Input velocity array
+//                Pres         : Input pressure array
+//                Lohner_Ave   : Input array storing the averages for the Lohner error estimator
+//                Lohner_Slope : Input array storing the slopes for the Lohner error estimator
+//                Lohner_NVar  : Number of variables stored in Lohner_Ave and Lohner_Slope
+//                ParCount     : Input array storing the number of particles on each cell
+//                               (note that it has the **real** type)
+//                ParDens      : Input array storing the particle mass density on each cell
+//                JeansCoeff   : Pi*GAMMA/(SafetyFactor^2*G), where SafetyFactor = FlagTable_Jeans[lv]
+//                               --> Flag if dh^2 > JeansCoeff*Pres/Dens^2
 //
 // Return      :  "true"  if any  of the refinement criteria is satisfied
 //                "false" if none of the refinement criteria is satisfied
 //-------------------------------------------------------------------------------------------------------
 bool Flag_Check( const int lv, const int PID, const int i, const int j, const int k, const real dv,
-                 const real Fluid[][PS1][PS1][PS1], const real Pot[][PS1][PS1], const real Vel[][PS1][PS1][PS1],
-                 const real Pres[][PS1][PS1], const real *Lohner_Var, const real *Lohner_Ave,
-                 const real *Lohner_Slope, const int Lohner_NVar, const real ParCount[][PS1][PS1],
-                 const real ParDens[][PS1][PS1], const real JeansCoeff )
+                 const real Fluid[][PS1][PS1][PS1], const real Pot[][PS1][PS1], const real MagCC[][PS1][PS1][PS1],
+                 const real Vel[][PS1][PS1][PS1], const real Pres[][PS1][PS1],
+                 const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
+                 const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff )
 {
 
    bool Flag = false;
@@ -117,28 +117,30 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 #  endif
 
 
+// check current density in MHD
+// ===========================================================================================
+#  ifdef MHD
+   if ( OPT__FLAG_CURRENT )
+   {
+      Flag |= Check_Curl( i, j, k, MagCC[0], MagCC[1], MagCC[2], FlagTable_Current[lv] );
+      if ( Flag )    return Flag;
+   }
+#  endif
+
+
 // check Jeans length
 // ===========================================================================================
-#  if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined GRAVITY  )
+#  if ( MODEL == HYDRO  &&  defined GRAVITY )
    if ( OPT__FLAG_JEANS )
    {
-      const bool CheckMinPres_Yes = true;
-      const real Gamma_m1         = GAMMA - (real)1.0;
-      const real Dens             = Fluid[DENS][k][j][i];
-
-#     ifdef DUAL_ENERGY
-#     if   ( DUAL_ENERGY == DE_ENPY )
-      const real Pres = Hydro_DensEntropy2Pres( Dens, Fluid[ENPY][k][j][i], Gamma_m1, CheckMinPres_Yes, MIN_PRES );
-#     elif ( DUAL_ENERGY == DE_EINT )
-#     error : DE_EINT is NOT supported yet !!
+#     ifdef GAMER_DEBUG
+      if ( Pres == NULL )  Aux_Error( ERROR_INFO, "Pres == NULL !!\n" );
 #     endif
 
-#     else
-      const real Pres = Hydro_GetPressure( Dens, Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i], Fluid[MOMZ][k][j][i],
-                                           Fluid[ENGY][k][j][i], Gamma_m1, CheckMinPres_Yes, MIN_PRES );
-#     endif // #ifdef DUAL_ENERGY ... else ...
+      const real Dens_1Cell = Fluid[DENS][k][j][i];
+      const real Pres_1Cell = Pres       [k][j][i];
 
-      Flag |= ( SQR(amr->dh[lv]) > JeansCoeff*Pres/SQR(Dens) );
+      Flag |= (  SQR(amr->dh[lv]) > JeansCoeff*Pres_1Cell/SQR( Dens_1Cell )  );
       if ( Flag )    return Flag;
    }
 #  endif
@@ -172,10 +174,16 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
 // check user-defined criteria
 // ===========================================================================================
-   if ( OPT__FLAG_USER  &&  Flag_User_Ptr != NULL )
+   if ( OPT__FLAG_USER )
    {
-      Flag |= Flag_User_Ptr( i, j, k, lv, PID, FlagTable_User[lv] );
-      if ( Flag )    return Flag;
+      if ( Flag_User_Ptr != NULL )
+      {
+         Flag |= Flag_User_Ptr( i, j, k, lv, PID, FlagTable_User[lv] );
+         if ( Flag )    return Flag;
+      }
+
+      else
+         Aux_Error( ERROR_INFO, "Flag_User_Ptr == NULL for OPT__FLAG_USER !!\n" );
    }
 
 

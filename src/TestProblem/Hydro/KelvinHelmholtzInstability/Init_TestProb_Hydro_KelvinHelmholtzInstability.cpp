@@ -212,25 +212,38 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double z_shear     = 0.5*dz_periodic;
    const double z_periodic  = fmod( z, dz_periodic );
 
+   double Dens, MomX, MomY, MomZ, Pres, Eint, Etot;
+
 // region 1
    if ( z_periodic >= z_shear )
    {
-      fluid[DENS] = KH_Rho1;
-      fluid[MOMX] = KH_Rho1*( KH_Vx1 + RandomNumber(RNG,-KH_RAmp,KH_RAmp) );
-      fluid[MOMY] = KH_Rho1*( KH_Vy1 + RandomNumber(RNG,-KH_RAmp,KH_RAmp) );
-      fluid[MOMZ] = KH_Rho1*(    0.0 + RandomNumber(RNG,-KH_RAmp,KH_RAmp) );
+      Dens = KH_Rho1;
+      MomX = KH_Rho1*( KH_Vx1 + RandomNumber(RNG,-KH_RAmp,KH_RAmp) );
+      MomY = KH_Rho1*( KH_Vy1 + RandomNumber(RNG,-KH_RAmp,KH_RAmp) );
+      MomZ = KH_Rho1*(    0.0 + RandomNumber(RNG,-KH_RAmp,KH_RAmp) );
+      Pres = KH_Pres;
    }
 
 // region 2
    else
    {
-      fluid[DENS] = KH_Rho2;
-      fluid[MOMX] = KH_Rho2*( KH_Vx2 + RandomNumber(RNG,-KH_RAmp,KH_RAmp) );
-      fluid[MOMY] = KH_Rho2*( KH_Vy2 + RandomNumber(RNG,-KH_RAmp,KH_RAmp) );
-      fluid[MOMZ] = KH_Rho2*(    0.0 + RandomNumber(RNG,-KH_RAmp,KH_RAmp) );
+      Dens = KH_Rho2;
+      MomX = KH_Rho2*( KH_Vx2 + RandomNumber(RNG,-KH_RAmp,KH_RAmp) );
+      MomY = KH_Rho2*( KH_Vy2 + RandomNumber(RNG,-KH_RAmp,KH_RAmp) );
+      MomZ = KH_Rho2*(    0.0 + RandomNumber(RNG,-KH_RAmp,KH_RAmp) );
+      Pres = KH_Pres;
    }
 
-   fluid[ENGY] = KH_Pres/(GAMMA-1.0) + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+// compute the total gas energy
+   Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray );   // assuming EoS requires no passive scalars
+   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );      // do NOT include magnetic energy here
+
+// set the output array
+   fluid[DENS] = Dens;
+   fluid[MOMX] = MomX;
+   fluid[MOMY] = MomY;
+   fluid[MOMZ] = MomZ;
+   fluid[ENGY] = Etot;
 
 } // FUNCTION : SetGridIC
 #endif // #if ( MODEL == HYDRO )
@@ -289,14 +302,8 @@ void Init_TestProb_Hydro_KelvinHelmholtzInstability()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr   = SetGridIC;
-   Output_User_Ptr          = NULL;
-   Flag_User_Ptr            = Flag_KelvinHelmholtzInstability;
-   Mis_GetTimeStep_User_Ptr = NULL;
-   Aux_Record_User_Ptr      = NULL;
-   BC_User_Ptr              = NULL;
-   Flu_ResetByUser_Func_Ptr = NULL;
-   End_User_Ptr             = NULL;
+   Init_Function_User_Ptr = SetGridIC;
+   Flag_User_Ptr          = Flag_KelvinHelmholtzInstability;
 #  endif // #if ( MODEL == HYDRO )
 
 

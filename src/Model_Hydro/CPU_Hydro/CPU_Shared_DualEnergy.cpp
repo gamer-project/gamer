@@ -25,13 +25,13 @@ static real Hydro_DensEntropy2Pres( const real Dens, const real Enpy, const real
 // Function    :  Hydro_DualEnergyFix
 // Description :  Correct the internal and total energies using the dual-energy formalism
 //
-// Note        :  1. Invoked by Hydro_FullStepUpdate()
+// Note        :  1. Invoked by Hydro_FullStepUpdate(), InterpolateGhostZon(), ...
 //                2. A floor value "MinPres" is applied to the corrected pressure if CheckMinPres is on
 //                3  A floor value "TINY_NUMBER" is applied to the input entropy as well
 //                4. Call-by-reference for "Etot, Enpy, and DE_Status"
 //                5. Fluid variables returned by this function are guaranteed to be consistent with each other
 //                   --> They must satisfy "entropy = pressure / density^(Gamma-1)", where pressure is calculated
-//                       by (Etot - Ekin)*(Gamma-1.0)
+//                       by (Etot - Ekin - Emag)*(Gamma-1.0)
 //                   --> It doesn't matter we use entropy to correct Eint or vice versa, and it also holds even when
 //                       the floor value is applied to pressure
 //
@@ -41,42 +41,47 @@ static real Hydro_DensEntropy2Pres( const real Dens, const real Enpy, const real
 //                Enpy             : Entropy
 //                DE_Status        : Assigned to (DE_UPDATED_BY_ETOT / DE_UPDATED_BY_DUAL / DE_UPDATED_BY_MIN_PRES)
 //                                   to indicate whether this cell is updated by the total energy, dual energy variable,
-//                                   or minimum allowed pressure (MinPres)
+//                                   or pressure floor (MinPres)
 //                Gamma_m1         : Adiabatic index - 1.0
 //                _Gamma_m1        : 1.0/Gamma_m1
 //                CheckMinPres     : Return Hydro_CheckMinPres()
 //                                   --> In some cases we actually want to check if pressure becomes unphysical,
 //                                       for which we don't want to enable this option
 //                MinPres          : Minimum allowed pressure
-//                DualEnergySwitch : if ( Eint/Ekin < DualEnergySwitch ) ==> correct Eint and Etot
-//                                   else                                ==> correct Enpy
+//                DualEnergySwitch : if ( Eint/(Ekin+Emag) < DualEnergySwitch ) ==> correct Eint and Etot
+//                                   else                                       ==> correct Enpy
+//                Emag             : Magnetic energy density (0.5*B^2) --> for MHD only
 //
 // Return      :  Etot, Enpy, DE_Status
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, const real MomZ,
                           real &Etot, real &Enpy, char &DE_Status, const real Gamma_m1, const real _Gamma_m1,
-                          const bool CheckMinPres, const real MinPres, const real DualEnergySwitch )
+                          const bool CheckMinPres, const real MinPres, const real DualEnergySwitch,
+                          const real Emag )
 {
 
    const bool CheckMinPres_No = false;
+   const bool CheckMinEint_No = false;
 
-// apply the minimum entropy check
+// apply entropy floor
    Enpy = FMAX( Enpy, TINY_NUMBER );
 
 
-// calculate energies --> note that here Eint can even be negative due to numerical errors
-   real Ekin, Eint, Pres;
+// calculate energies
+// --> note that here Eint can even be negative due to numerical errors
+// --> Enth (i.e., non-thermal energy) includes both kinetic and magnetic energies
+   real Enth, Eint, Pres;
 
-   Ekin = (real)0.5*( SQR(MomX) + SQR(MomY) + SQR(MomZ) )/Dens;
-   Eint = Etot - Ekin;
+   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Etot, CheckMinEint_No, NULL_REAL, Emag );
+   Enth = Etot - Eint;
 
 
 // determine whether or not to use the dual-energy variable (entropy or internal energy) to correct the total energy density
-   if ( Eint/Ekin < DualEnergySwitch )
+   if ( Eint/Enth < DualEnergySwitch )
    {
 //    correct total energy
-//    --> we will check the minimum pressure later
+//    --> we will apply pressure floor later
 #     if   ( DUAL_ENERGY == DE_ENPY )
       Pres = Hydro_DensEntropy2Pres( Dens, Enpy, Gamma_m1, CheckMinPres_No, NULL_REAL );
       Eint = Pres*_Gamma_m1;
@@ -85,7 +90,7 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
 #     error : DE_EINT is NOT supported yet !!
 #     endif
 
-      Etot      = Ekin + Eint;
+      Etot      = Enth + Eint;
       DE_Status = DE_UPDATED_BY_DUAL;
    }
 
@@ -95,17 +100,17 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
       Pres      = Eint*Gamma_m1;
       Enpy      = Hydro_DensPres2Entropy( Dens, Pres, Gamma_m1 );
       DE_Status = DE_UPDATED_BY_ETOT;
-   } // if ( Eint/Ekin < DualEnergySwitch ) ... else ...
+   } // if ( Eint/Enth < DualEnergySwitch ) ... else ...
 
 
-// apply the minimum pressure check
+// apply pressure floor
    if ( CheckMinPres  &&  Pres < MinPres )
    {
       Pres = MinPres;
       Eint = Pres*_Gamma_m1;
 
 //    ensure that both energy and entropy are consistent with the pressure floor
-      Etot      = Ekin + Eint;
+      Etot      = Enth + Eint;
       Enpy      = Hydro_DensPres2Entropy( Dens, Pres, Gamma_m1 );
       DE_Status = DE_UPDATED_BY_MIN_PRES;
    }
@@ -116,40 +121,45 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
 
 #if ( DUAL_ENERGY == DE_ENPY )
 
-// Hydro_Fluid2Entropy() is used by CPU only
+// Hydro_Con2Entropy() is used by CPU only
 #ifndef __CUDACC__
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_Fluid2Entropy
+// Function    :  Hydro_Con2Entropy
 // Description :  Evaluate the gas entropy from the input fluid variables
 //                --> Here entropy is defined as "pressure / density^(Gamma-1)" (i.e., entropy per volume)
 //
 // Note        :  1. Used by the dual-energy formalism
-//                2. Invoked by the CPU functions Hydro_Init_ByFunction_AssignData() and Gra_Close()
-//                3. Currently this function does NOT apply the minimum pressure check when calling Hydro_GetPressure()
+//                2. Invoked by Hydro_Init_ByFunction_AssignData(), Gra_Close(), Init_ByFile(), ...
+//                3. Currently this function does NOT apply pressure floor when calling Hydro_Con2Pres()
 //                   --> However, note that Hydro_DensPres2Entropy() does apply a floor value (TINY_NUMBER) for entropy
 //
-// Parameter   :  Dens     : Mass density
-//                MomX/Y/Z : Momentum density
-//                Engy     : Energy density
-//                Gamma_m1 : Adiabatic index - 1.0
+// Parameter   :  Dens              : Mass density
+//                MomX/Y/Z          : Momentum density
+//                Engy              : Total energy density
+//                Emag              : Magnetic energy density (0.5*B^2) --> for MHD only
+//                EoS_DensEint2Pres : EoS routine to compute the gas pressure
+//                EoS_AuxArray      : Auxiliary array for EoS_DensEint2Pres()
 //
 // Return      :  Enpy
 //-------------------------------------------------------------------------------------------------------
-real Hydro_Fluid2Entropy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy, const real Gamma_m1 )
+real Hydro_Con2Entropy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                        const real Emag, const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] )
 {
 
-// currently this function does NOT apply the minimum pressure check when calling Hydro_GetPressure()
+// currently this function does NOT apply pressure floor when calling Hydro_Con2Pres()
    const bool CheckMinPres_No = false;
 
    real Pres, Enpy;
 
 // calculate pressure and convert it to entropy
-   Pres = Hydro_GetPressure( Dens, MomX, MomY, MomZ, Engy, Gamma_m1, CheckMinPres_No, NULL_REAL );
-   Enpy = Hydro_DensPres2Entropy( Dens, Pres, Gamma_m1 );
+// --> note that DE_ENPY only works with EOS_GAMMA, which does not involve passive scalars
+   Pres = Hydro_Con2Pres( Dens, MomX, MomY, MomZ, Engy, NULL, CheckMinPres_No, NULL_REAL, Emag,
+                          EoS_DensEint2Pres, EoS_AuxArray, NULL );
+   Enpy = Hydro_DensPres2Entropy( Dens, Pres, EoS_AuxArray[1] );
 
    return Enpy;
 
-} // FUNCTION : Hydro_Fluid2Entropy
+} // FUNCTION : Hydro_Con2Entropy
 #endif // ifndef __CUDACC__
 
 
@@ -160,7 +170,7 @@ real Hydro_Fluid2Entropy( const real Dens, const real MomX, const real MomY, con
 //                --> Here entropy is defined as "pressure / density^(Gamma-1)" (i.e., entropy per volume)
 //
 // Note        :  1. Used by the dual-energy formalism
-//                2. Invoked by Hydro_Fluid2Entropy() and Hydro_DualEnergyFix()
+//                2. Invoked by Hydro_Con2Entropy() and Hydro_DualEnergyFix()
 //                   --> This function is invoked by both CPU and GPU codes
 //                3. A floor value (TINY_NUMBER) is applied to the returned value
 //

@@ -1,10 +1,10 @@
 #include "GAMER.h"
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
-static void Init_Field_User();
+static void Init_Field_User_Template();
 
-// this function pointer may be overwritten by various test problem initializers
-void (*Init_Field_User_Ptr)() = Init_Field_User;
+// this function pointer must be set by a test problem initializer
+void (*Init_Field_User_Ptr)() = NULL;
 
 
 static int NDefinedField;  // total number of defined fields --> for debug only
@@ -18,6 +18,8 @@ static int NDefinedField;  // total number of defined fields --> for debug only
 //
 // Note        :  1. Invoked by Init_GAMER()
 //                2. Total number of fields is determined by NCOMP_TOTAL = NCOMP_FLUID + NCOMP_PASSIVE
+//                3. To initialize user-defined fields, the function pointer "Flag_User_Ptr" must be
+//                   set by a test problem initializer
 //
 // Parameter   :  None
 //
@@ -37,12 +39,18 @@ void Init_Field()
 // 1. add main predefined fields
 //    --> must not change the following order of declaration since they must be consistent
 //        with the symbolic constants defined in Macro.h (e.g., DENS)
-#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if   ( MODEL == HYDRO )
    Idx_Dens    = AddField( "Dens",     NORMALIZE_NO );
    Idx_MomX    = AddField( "MomX",     NORMALIZE_NO );
    Idx_MomY    = AddField( "MomY",     NORMALIZE_NO );
    Idx_MomZ    = AddField( "MomZ",     NORMALIZE_NO );
    Idx_Engy    = AddField( "Engy",     NORMALIZE_NO );
+
+#  ifdef MHD
+   MagLabel[MAGX] = "MagX";
+   MagLabel[MAGY] = "MagY";
+   MagLabel[MAGZ] = "MagZ";
+#  endif
 
 #  elif ( MODEL == ELBDM )
 
@@ -147,6 +155,9 @@ FieldIdx_t AddField( char *InputLabel, const NormPassive_t Norm )
 
 
 // check
+   if ( InputLabel == NULL )
+      Aux_Error( ERROR_INFO, "InputLabel == NULL !!\n" );
+
    if ( NDefinedField > NCOMP_TOTAL )
       Aux_Error( ERROR_INFO, "total number of defined fields (%d) exceeds expectation (%d) after adding the field \"%s\" !!\n"
                  "        --> Modify NCOMP_PASSIVE_USER in the Makefile properly\n",
@@ -158,7 +169,7 @@ FieldIdx_t AddField( char *InputLabel, const NormPassive_t Norm )
 
 
 // set field label
-   FieldLabel[FieldIdx] = InputLabel;
+   strcpy( FieldLabel[FieldIdx], InputLabel );
 
 
 // set the normalization list
@@ -227,21 +238,20 @@ FieldIdx_t GetFieldIndex( char *InputLabel, const Check_t Check )
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_Field_User
-// Description :  Add user-defined fields
+// Function    :  Init_Field_User_Template
+// Description :  Template of adding user-defined fields
 //
-// Note        :  1. Invoked by Init_Field() using the function pointer "Init_Field_User_Ptr"
-//                   --> The function pointer may be reset by various test problem initializers, in which case
-//                       this funtion will become useless
+// Note        :  1. Invoked by Init_Field() using the function pointer "Init_Field_User_Ptr",
+//                   which must be set by a test problem initializer
 //
 // Parameter   :  None
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Init_Field_User()
+void Init_Field_User_Template()
 {
 
 // example
 // Idx_NewField = AddField( "NewFieldLabel", NORMALIZE_YES );
 
-} // FUNCTION : Init_Field_User
+} // FUNCTION : Init_Field_User_Template

@@ -250,14 +250,14 @@ void LB_AllocateBufferPatch_Father( const int SonLv, const bool SearchAllSon, co
          if ( RecordFaPID )   (*NewFaBufPID0)[ NNew0 ++ ] = amr->num[FaLv];
 
 //       father patch is still unkown, data array is not allocated yet
-         amr->pnew( FaLv, FaCr3D[0],          FaCr3D[1],          FaCr3D[2],          -1, false, false );
-         amr->pnew( FaLv, FaCr3D[0]+FaPScale, FaCr3D[1],          FaCr3D[2],          -1, false, false );
-         amr->pnew( FaLv, FaCr3D[0],          FaCr3D[1]+FaPScale, FaCr3D[2],          -1, false, false );
-         amr->pnew( FaLv, FaCr3D[0],          FaCr3D[1],          FaCr3D[2]+FaPScale, -1, false, false );
-         amr->pnew( FaLv, FaCr3D[0]+FaPScale, FaCr3D[1]+FaPScale, FaCr3D[2],          -1, false, false );
-         amr->pnew( FaLv, FaCr3D[0],          FaCr3D[1]+FaPScale, FaCr3D[2]+FaPScale, -1, false, false );
-         amr->pnew( FaLv, FaCr3D[0]+FaPScale, FaCr3D[1],          FaCr3D[2]+FaPScale, -1, false, false );
-         amr->pnew( FaLv, FaCr3D[0]+FaPScale, FaCr3D[1]+FaPScale, FaCr3D[2]+FaPScale, -1, false, false );
+         amr->pnew( FaLv, FaCr3D[0],          FaCr3D[1],          FaCr3D[2],          -1, false, false, false );
+         amr->pnew( FaLv, FaCr3D[0]+FaPScale, FaCr3D[1],          FaCr3D[2],          -1, false, false, false );
+         amr->pnew( FaLv, FaCr3D[0],          FaCr3D[1]+FaPScale, FaCr3D[2],          -1, false, false, false );
+         amr->pnew( FaLv, FaCr3D[0],          FaCr3D[1],          FaCr3D[2]+FaPScale, -1, false, false, false );
+         amr->pnew( FaLv, FaCr3D[0]+FaPScale, FaCr3D[1]+FaPScale, FaCr3D[2],          -1, false, false, false );
+         amr->pnew( FaLv, FaCr3D[0],          FaCr3D[1]+FaPScale, FaCr3D[2]+FaPScale, -1, false, false, false );
+         amr->pnew( FaLv, FaCr3D[0]+FaPScale, FaCr3D[1],          FaCr3D[2]+FaPScale, -1, false, false, false );
+         amr->pnew( FaLv, FaCr3D[0]+FaPScale, FaCr3D[1]+FaPScale, FaCr3D[2]+FaPScale, -1, false, false, false );
 
 //       check : no external buffer patches should be allocated for the non-periodic B.C.
 #        ifdef GAMER_DEBUG

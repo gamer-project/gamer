@@ -43,15 +43,15 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                         ( lv == MAX_LEVEL-2 ) ? FLAG_BUFFER_SIZE_MAXM2_LV :
                                                                 FLAG_BUFFER_SIZE;
    const real dv                      = CUBE( amr->dh[lv] );
-   const bool IntPhase_No             = false;                 // for invoking "Prepare_PatchData"
-   const bool DE_Consistency_No       = false;                 // for invoking "Prepare_PatchData"
-   const int  NPG                     = 1;                     // for invoking "Prepare_PatchData"
+   const bool IntPhase_No             = false;                 // for invoking Prepare_PatchData()
+   const bool DE_Consistency_No       = false;                 // for invoking Prepare_PatchData()
+   const int  NPG                     = 1;                     // for invoking Prepare_PatchData()
    const int  Lohner_NGhost           = 2;                     // number of ghost cells for the Lohner error estimator
    const int  Lohner_NCell            = PS1 + 2*Lohner_NGhost; // size of the variable array for Lohner
    const int  Lohner_NAve             = Lohner_NCell - 2;      // size of the average array for Lohner
    const int  Lohner_NSlope           = Lohner_NAve;           // size of the slope array for Lohner
    const IntScheme_t Lohner_IntScheme = INT_MINMOD1D;          // interpolation scheme for Lohner
-#  if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined GRAVITY  )
+#  if ( MODEL == HYDRO  &&  defined GRAVITY )
    const real JeansCoeff              = M_PI*GAMMA/( SQR(FlagTable_Jeans[lv])*NEWTON_G ); // flag if dh^2 > JeansCoeff*Pres/Dens^2
 #  else
    const real JeansCoeff              = NULL_REAL;
@@ -79,17 +79,15 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 // set the variables for the Lohner's error estimator
-   int  Lohner_NVar=0, Lohner_TVar=0, Lohner_Stride;
+   int  Lohner_NVar=0, Lohner_Stride;
+   long Lohner_TVar=0;
    real MinDens=-1.0, MinPres=-1.0;    // default is to turn off minimum density/pressure checks
 
-#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if   ( MODEL == HYDRO )
    if ( OPT__FLAG_LOHNER_DENS )  {  Lohner_NVar++;   Lohner_TVar |= _DENS;   MinDens = MIN_DENS;  }
    if ( OPT__FLAG_LOHNER_ENGY )  {  Lohner_NVar++;   Lohner_TVar |= _ENGY;                        }
    if ( OPT__FLAG_LOHNER_PRES )  {  Lohner_NVar++;   Lohner_TVar |= _PRES;   MinPres = MIN_PRES;  }
    if ( OPT__FLAG_LOHNER_TEMP )  {  Lohner_NVar++;   Lohner_TVar |= _TEMP;   MinPres = MIN_PRES;  }
-
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
 
 #  elif ( MODEL == ELBDM )
    if ( OPT__FLAG_LOHNER_DENS )
@@ -124,27 +122,35 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    {
       const real (*Fluid)[PS1][PS1][PS1] = NULL;
       real (*Pot )[PS1][PS1]             = NULL;
+      real (*MagCC)[PS1][PS1][PS1]       = NULL;
       real (*Vel)[PS1][PS1][PS1]         = NULL;
       real (*Pres)[PS1][PS1]             = NULL;
+      real (*ParCount)[PS1][PS1]         = NULL;   // declare as **real** to be consistent with Par_MassAssignment()
+      real (*ParDens )[PS1][PS1]         = NULL;
       real (*Lohner_Var)                 = NULL;   // array storing the variables for Lohner
       real (*Lohner_Ave)                 = NULL;   // array storing the averages of Lohner_Var for Lohner
       real (*Lohner_Slope)               = NULL;   // array storing the slopes of Lohner_Var for Lohner
-      real (*ParCount)[PS1][PS1]         = NULL;   // declare as **real** to be consistent with Par_MassAssignment()
-      real (*ParDens )[PS1][PS1]         = NULL;
 
       int  i_start, i_end, j_start, j_end, k_start, k_end, SibID, SibPID, PID;
       bool ProperNesting, NextPatch;
 
-#     if   ( MODEL == HYDRO )
-      if ( OPT__FLAG_VORTICITY )       Vel  = new real [3][PS1][PS1][PS1];
-      if ( OPT__FLAG_PRES_GRADIENT )   Pres = new real    [PS1][PS1][PS1];
-#     elif ( MODEL == MHD )
-#     warning : WAIT MHD !!!
-#     endif // MODEL
+#     if ( MODEL == HYDRO )
+      bool NeedPres = false;
+      if ( OPT__FLAG_PRES_GRADIENT )   NeedPres = true;
+#     ifdef GRAVITY
+      if ( OPT__FLAG_JEANS )           NeedPres = true;
+#     endif
+
+#     ifdef MHD
+      if ( OPT__FLAG_CURRENT || NeedPres )   MagCC    = new real [3][PS1][PS1][PS1];
+#     endif
+      if ( OPT__FLAG_VORTICITY )             Vel      = new real [3][PS1][PS1][PS1];
+      if ( NeedPres )                        Pres     = new real    [PS1][PS1][PS1];
+#     endif // HYDRO
 
 #     ifdef PARTICLE
-      if ( OPT__FLAG_NPAR_CELL )       ParCount = new real [PS1][PS1][PS1];
-      if ( OPT__FLAG_PAR_MASS_CELL )   ParDens  = new real [PS1][PS1][PS1];
+      if ( OPT__FLAG_NPAR_CELL )             ParCount = new real    [PS1][PS1][PS1];
+      if ( OPT__FLAG_PAR_MASS_CELL )         ParDens  = new real    [PS1][PS1][PS1];
 #     endif
 
       if ( Lohner_NVar > 0 )
@@ -162,8 +168,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       {
 //       prepare the ghost-zone data for Lohner
          if ( Lohner_NVar > 0 )
-            Prepare_PatchData( lv, Time[lv], Lohner_Var, Lohner_NGhost, NPG, &PID0, Lohner_TVar,
-                               Lohner_IntScheme, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
+            Prepare_PatchData( lv, Time[lv], Lohner_Var, NULL, Lohner_NGhost, NPG, &PID0, Lohner_TVar, _NONE,
+                               Lohner_IntScheme, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
                                MinDens, MinPres, DE_Consistency_No );
 
 
@@ -214,7 +220,25 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #              endif
 
 
-#              if   ( MODEL == HYDRO )
+#              if ( MODEL == HYDRO )
+#              ifdef MHD
+//             evaluate cell-centered B field
+               if ( OPT__FLAG_CURRENT || NeedPres )
+               {
+                  real MagCC_1Cell[NCOMP_MAG];
+
+                  for (int k=0; k<PS1; k++)
+                  for (int j=0; j<PS1; j++)
+                  for (int i=0; i<PS1; i++)
+                  {
+                     MHD_GetCellCenteredBFieldInPatch( MagCC_1Cell, lv, PID, i, j, k, amr->MagSg[lv] );
+
+                     for (int v=0; v<NCOMP_MAG; v++)  MagCC[v][k][j][i] = MagCC_1Cell[v];
+                  }
+               } // if ( OPT__FLAG_CURRENT || NeedPres )
+#              endif // #ifdef MHD
+
+
 //             evaluate velocity
                if ( OPT__FLAG_VORTICITY )
                {
@@ -232,36 +256,48 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 //             evaluate pressure
-               if ( OPT__FLAG_PRES_GRADIENT )
+               if ( NeedPres )
                {
                   const bool CheckMinPres_Yes = true;
-                  const real Gamma_m1         = GAMMA - (real)1.0;
-
-                  real Ek;
 
                   for (int k=0; k<PS1; k++)
                   for (int j=0; j<PS1; j++)
                   for (int i=0; i<PS1; i++)
                   {
+//                   if applicable, compute pressure from the dual-energy variable to reduce the round-off errors
 #                    ifdef DUAL_ENERGY
+
 #                    if   ( DUAL_ENERGY == DE_ENPY )
                      Pres[k][j][i] = Hydro_DensEntropy2Pres( Fluid[DENS][k][j][i], Fluid[ENPY][k][j][i],
-                                                             Gamma_m1, CheckMinPres_Yes, MIN_PRES );
+                                                             EoS_AuxArray[1], CheckMinPres_Yes, MIN_PRES );
 #                    elif ( DUAL_ENERGY == DE_EINT )
 #                    error : DE_EINT is NOT supported yet !!
 #                    endif
 
+#                    else // #ifdef DUAL_ENERGY
+
+#                    ifdef MHD
+                     const real Emag = (real)0.5*(  SQR( MagCC[MAGX][k][j][i] )
+                                                  + SQR( MagCC[MAGY][k][j][i] )
+                                                  + SQR( MagCC[MAGZ][k][j][i] )  );
 #                    else
-                     Pres[k][j][i] = Hydro_GetPressure( Fluid[DENS][k][j][i], Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i],
-                                                        Fluid[MOMZ][k][j][i], Fluid[ENGY][k][j][i],
-                                                        Gamma_m1, CheckMinPres_Yes, MIN_PRES );
+                     const real Emag = NULL_REAL;
+#                    endif
+#                    if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  NCOMP_PASSIVE > 0 )
+                     real Passive[NCOMP_PASSIVE];
+                     for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = Fluid[ NCOMP_FLUID + v ][k][j][i];
+#                    else
+                     const real *Passive = NULL;
+#                    endif
+
+                     Pres[k][j][i] = Hydro_Con2Pres( Fluid[DENS][k][j][i], Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i],
+                                                     Fluid[MOMZ][k][j][i], Fluid[ENGY][k][j][i], Passive,
+                                                     CheckMinPres_Yes, MIN_PRES, Emag,
+                                                     EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
 #                    endif // #ifdef DUAL_ENERGY ... else ...
                   } // k,j,i
-               } // if ( OPT__FLAG_PRES_GRADIENT )
-
-#              elif ( MODEL == MHD )
-#              warning : WAIT MHD !!!
-#              endif // MODEL
+               } // if ( NeedPres )
+#              endif // #if ( MODEL == HYDRO )
 
 
 //             evaluate the averages and slopes along x/y/z for Lohner
@@ -369,7 +405,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                              i_end   = ( i + FlagBuf >= PS1 ) ? 2 : 1;
 
 //                check if the target cell satisfies the refinement criteria (useless pointers are always == NULL)
-                  if (  lv < MAX_LEVEL  &&  Flag_Check( lv, PID, i, j, k, dv, Fluid, Pot, Vel, Pres,
+                  if (  lv < MAX_LEVEL  &&  Flag_Check( lv, PID, i, j, k, dv, Fluid, Pot, MagCC, Vel, Pres,
                                                         Lohner_Var+LocalID*Lohner_Stride, Lohner_Ave, Lohner_Slope, Lohner_NVar,
                                                         ParCount, ParDens, JeansCoeff )  )
                   {
@@ -449,7 +485,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                            if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
                         }
                      }
-                  } // if ( NParThisPatch > NParFlag  )
+                  } // if ( NParThisPatch > NParFlag )
                } // if ( OPT__FLAG_NPAR_PATCH != 0 )
 #              endif // #ifdef PARTICLE
 
@@ -458,17 +494,14 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
 
 
+      delete [] MagCC;
       delete [] Vel;
       delete [] Pres;
       delete [] ParCount;
       delete [] ParDens;
-
-      if ( Lohner_NVar > 0 )
-      {
-         delete [] Lohner_Var;
-         delete [] Lohner_Ave;
-         delete [] Lohner_Slope;
-      }
+      delete [] Lohner_Var;
+      delete [] Lohner_Ave;
+      delete [] Lohner_Slope;
 
    } // OpenMP parallel region
 

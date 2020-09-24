@@ -48,7 +48,7 @@ extern int        Flu_ParaBuf;                        // number of parallel buff
 extern int        PassiveNorm_NVar;
 extern int        PassiveNorm_VarIdx[NCOMP_PASSIVE];
 
-extern double     BOX_SIZE, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT, DT__SYNC_PARENT_LV, DT__SYNC_CHILDREN_LV;
+extern double     BOX_SIZE, DT__MAX, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT, DT__SYNC_PARENT_LV, DT__SYNC_CHILDREN_LV;
 extern long int   END_STEP;
 extern int        NX0_TOT[3], OUTPUT_STEP, REGRID_COUNT, FLU_GPU_NPGROUP, OMP_NTHREAD;
 extern int        MPI_NRank, MPI_NRank_X[3];
@@ -67,7 +67,7 @@ extern bool       OPT__CK_RESTRICT, OPT__CK_PATCH_ALLOCATE, OPT__FIXUP_FLUX, OPT
 extern bool       OPT__UM_IC_DOWNGRADE, OPT__UM_IC_REFINE, OPT__TIMING_MPI;
 extern bool       OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
 extern bool       OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
-extern bool       OPT__RECORD_NOTE, OPT__RECORD_UNPHY;
+extern bool       OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
 
 extern UM_IC_Format_t     OPT__UM_IC_FORMAT;
 extern TestProbID_t       TESTPROB_ID;
@@ -88,23 +88,24 @@ extern OptTimeStepLevel_t OPT__DT_LEVEL;
 // (2-1) fluid solver in different models
 #if   ( MODEL == HYDRO )
 extern double           FlagTable_PresGradient[NLEVEL-1], FlagTable_Vorticity[NLEVEL-1], FlagTable_Jeans[NLEVEL-1];
-extern double           GAMMA, MINMOD_COEFF, MOLECULAR_WEIGHT;
+extern double           GAMMA, MINMOD_COEFF, MOLECULAR_WEIGHT, ISO_TEMP;
 extern LR_Limiter_t     OPT__LR_LIMITER;
 extern Opt1stFluxCorr_t OPT__1ST_FLUX_CORR;
 extern OptRSolver1st_t  OPT__1ST_FLUX_CORR_SCHEME;
 extern bool             OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP;
-extern bool             OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, JEANS_MIN_PRES;
+extern bool             OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, JEANS_MIN_PRES, OPT__LAST_RESORT_FLOOR;
 extern int              OPT__CK_NEGATIVE, JEANS_MIN_PRES_LEVEL, JEANS_MIN_PRES_NCELL;
-extern double           MIN_DENS, MIN_PRES;
+extern double           MIN_DENS, MIN_PRES, MIN_EINT;
 #ifdef DUAL_ENERGY
 extern double           DUAL_ENERGY_SWITCH;
 #endif
-
-#elif ( MODEL == MHD )
-#warning WAIT MHD !!!
-extern double           MIN_DENS, MIN_PRES;
-#ifdef DUAL_ENERGY
-extern double           DUAL_ENERGY_SWITCH;
+#ifdef MHD
+extern double           FlagTable_Current[NLEVEL-1];
+extern IntScheme_t      OPT__MAG_INT_SCHEME, OPT__REF_MAG_INT_SCHEME;
+extern bool             OPT__FIXUP_ELECTRIC, OPT__CK_INTERFACE_B, OPT__OUTPUT_CC_MAG, OPT__FLAG_CURRENT;
+extern int              OPT__CK_DIVERGENCE_B;
+extern double           UNIT_B;
+extern bool             OPT__INIT_BFIELD_BYFILE;
 #endif
 
 #elif ( MODEL == ELBDM )
@@ -142,7 +143,24 @@ extern int        MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH;
 extern IntScheme_t      OPT__POT_INT_SCHEME, OPT__RHO_INT_SCHEME, OPT__GRA_INT_SCHEME, OPT__REF_POT_INT_SCHEME;
 extern OptPotBC_t       OPT__BC_POT;
 extern OptGravityType_t OPT__GRAVITY_TYPE;
+
+extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
+extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
+extern void (*Init_ExtAccAuxArray_Ptr)( double [] );
+extern ExtAcc_t CPUExtAcc_Ptr;
+extern void (*SetCPUExtAcc_Ptr)( ExtAcc_t & );
+#ifdef GPU
+extern ExtAcc_t GPUExtAcc_Ptr;
+extern void (*SetGPUExtAcc_Ptr)( ExtAcc_t & );
 #endif
+extern void (*Init_ExtPotAuxArray_Ptr)( double [] );
+extern ExtPot_t CPUExtPot_Ptr;
+extern void (*SetCPUExtPot_Ptr)( ExtPot_t & );
+#ifdef GPU
+extern ExtPot_t GPUExtPot_Ptr;
+extern void (*SetGPUExtPot_Ptr)( ExtPot_t & );
+#endif
+#endif // #ifdef GRAVITY
 
 
 // (2-3) cosmology simulations
@@ -196,6 +214,9 @@ extern bool            GRACKLE_CMB_FLOOR;
 extern bool            GRACKLE_PE_HEATING;
 extern double          GRACKLE_PE_HEATING_RATE;
 extern char            GRACKLE_CLOUDY_TABLE[MAX_STRING];
+extern int             GRACKLE_THREE_BODY_RATE;
+extern bool            GRACKLE_CIE_COOLING;
+extern int             GRACKLE_H2_OPA_APPROX;
 extern int             CHE_GPU_NPGROUP;
 #endif
 
@@ -214,6 +235,22 @@ extern double                SF_CREATE_STAR_MAX_STAR_MFRAC;
 #endif
 
 
+// (2-9) equation of state
+// =======================================================================================================
+#if ( MODEL == HYDRO )
+extern double EoS_AuxArray[EOS_NAUX_MAX];
+extern EoS_DE2P_t EoS_DensEint2Pres_CPUPtr;
+extern EoS_DP2E_t EoS_DensPres2Eint_CPUPtr;
+extern EoS_DP2C_t EoS_DensPres2CSqr_CPUPtr;
+#ifdef GPU
+extern EoS_DE2P_t EoS_DensEint2Pres_GPUPtr;
+extern EoS_DP2E_t EoS_DensPres2Eint_GPUPtr;
+extern EoS_DP2C_t EoS_DensPres2CSqr_GPUPtr;
+#endif
+#endif // HYDRO
+
+
+
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
 // ============================================================================================================
@@ -224,15 +261,23 @@ extern double     (*h_Corner_Array_F [2])[3];
 #ifdef DUAL_ENERGY
 extern char       (*h_DE_Array_F_Out [2])[ CUBE(PS2) ];
 #endif
+#ifdef MHD
+extern real       (*h_Mag_Array_F_In [2])[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
+extern real       (*h_Mag_Array_F_Out[2])[NCOMP_MAG][ PS2P1*SQR(PS2)          ];
+extern real       (*h_Ele_Array      [2])[9][NCOMP_ELE][ PS2P1*PS2 ];
+#endif
 
 #ifdef GRAVITY
 extern real       (*h_Rho_Array_P    [2])[RHO_NXT][RHO_NXT][RHO_NXT];
 extern real       (*h_Pot_Array_P_In [2])[POT_NXT][POT_NXT][POT_NXT];
 extern real       (*h_Pot_Array_P_Out[2])[GRA_NXT][GRA_NXT][GRA_NXT];
-extern real       (*h_Flu_Array_G    [2])[GRA_NIN][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+extern real       (*h_Flu_Array_G    [2])[GRA_NIN][PS1][PS1][PS1];
 extern double     (*h_Corner_Array_G [2])[3];
 #ifdef DUAL_ENERGY
-extern char       (*h_DE_Array_G     [2])[PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+extern char       (*h_DE_Array_G     [2])[PS1][PS1][PS1];
+#endif
+#ifdef MHD
+extern real       (*h_Emag_Array_G   [2])[PS1][PS1][PS1];
 #endif
 
 #ifdef UNSPLIT_GRAVITY
@@ -252,21 +297,24 @@ extern code_units Che_Units;
 #endif
 
 extern real        *h_dt_Array_T[2];
-extern real       (*h_Flu_Array_T[2])[NCOMP_FLUID][ CUBE(PS1) ];
+extern real       (*h_Flu_Array_T[2])[FLU_NIN_T][ CUBE(PS1) ];
 #ifdef GRAVITY
 extern real       (*h_Pot_Array_T[2])[ CUBE(GRA_NXT) ];
+#endif
+#ifdef MHD
+extern real       (*h_Mag_Array_T[2])[NCOMP_MAG][ PS1P1*SQR(PS1) ];
 #endif
 
 
 
-// 4. GPU (device) global memory arrays and timers
+// 4/5. GPU (device) global memory arrays and timers
 // ============================================================================================================
 /*** These global variables are NOT included here. Instead, they are included by individual files
      only if necessary. ***/
 
 
 
-// 5. global variables related to different fields
+// 6. global variables related to different fields
 // ============================================================================================================
 /*** Defined in Field.h ***/
 

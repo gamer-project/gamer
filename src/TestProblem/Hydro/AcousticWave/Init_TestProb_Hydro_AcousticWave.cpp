@@ -35,6 +35,8 @@ void Validate()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ...\n", TESTPROB_ID );
 
+
+// errors
 #  if ( MODEL != HYDRO )
    Aux_Error( ERROR_INFO, "MODEL != HYDRO !!\n" );
 #  endif
@@ -55,12 +57,23 @@ void Validate()
    Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
 #  endif
 
+#  if ( EOS != EOS_GAMMA )
+   Aux_Error( ERROR_INFO, "EOS != EOS_GAMMA !!\n" );
+#  endif
+
    if ( amr->BoxSize[0] != amr->BoxSize[1]  ||  amr->BoxSize[0] != amr->BoxSize[2] )
       Aux_Error( ERROR_INFO, "simulation domain must be cubic !!\n" );
 
    for (int f=0; f<6; f++)
    if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC )
       Aux_Error( ERROR_INFO, "please set \"OPT__BC_FLU_* = 1\" (i.e., periodic BC) !!\n" );
+
+
+// warnings
+   if ( MPI_Rank == 0 )
+   {
+      if ( !OPT__OUTPUT_USER )   Aux_Message( stdout, "WARNING : OPT__OUTPUT_USER is off !!\n" );
+   }
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
@@ -180,10 +193,12 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
+// assuming EOS_GAMMA
    const double r         = 1.0/sqrt(3.0)*( x + y + z ) - Acoustic_v0*Time;
    const double _Gamma_m1 = 1.0/(GAMMA-1.0);
 
    double v1, P0, P1, Phase, WaveK, WaveW;
+   double Dens, MomX, MomY, MomZ, Pres, Eint, Etot;
 
    v1    = Acoustic_Sign*Acoustic_Cs*Acoustic_RhoAmp;
    P0    = SQR(Acoustic_Cs)/GAMMA;
@@ -193,12 +208,20 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    WaveW = 2.0*M_PI/(Acoustic_WaveLength/Acoustic_Cs);
    Phase = WaveK*r - Acoustic_Sign*WaveW*Time + Acoustic_Phase0;
 
-   fluid[DENS] = 1.0 + Acoustic_RhoAmp*cos(Phase);
-   fluid[MOMX] = fluid[DENS]*( v1*cos(Phase) + Acoustic_v0 ) / sqrt(3.0);
-   fluid[MOMY] = fluid[MOMX];
-   fluid[MOMZ] = fluid[MOMX];
-   fluid[ENGY] = 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) )/fluid[DENS]
-                 + ( P0 + P1*cos(Phase) )*_Gamma_m1;
+   Dens  = 1.0 + Acoustic_RhoAmp*cos(Phase);
+   MomX  = Dens*( v1*cos(Phase) + Acoustic_v0 ) / sqrt(3.0);
+   MomY  = MomX;
+   MomZ  = MomX;
+   Pres  = P0 + P1*cos(Phase);
+   Eint  = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray );  // assuming EoS requires no passive scalars
+   Etot  = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );     // do NOT include magnetic energy here
+
+// set the output array
+   fluid[DENS] = Dens;
+   fluid[MOMX] = MomX;
+   fluid[MOMY] = MomY;
+   fluid[MOMZ] = MomZ;
+   fluid[ENGY] = Etot;
 
 } // FUNCTION : SetGridIC
 
@@ -221,7 +244,7 @@ void OutputError()
    const char Prefix[100]     = "AcousticWave";
    const OptOutputPart_t Part = OUTPUT_DIAG;
 
-   Output_L1Error( SetGridIC, Prefix, Part, NULL_REAL, NULL_REAL, NULL_REAL );
+   Output_L1Error( SetGridIC, NULL, Prefix, Part, NULL_REAL, NULL_REAL, NULL_REAL );
 
 } // FUNCTION : OutputError
 #endif // #if ( MODEL == HYDRO )
@@ -254,14 +277,8 @@ void Init_TestProb_Hydro_AcousticWave()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr   = SetGridIC;
-   Output_User_Ptr          = OutputError;
-   Flag_User_Ptr            = NULL;
-   Mis_GetTimeStep_User_Ptr = NULL;
-   Aux_Record_User_Ptr      = NULL;
-   BC_User_Ptr              = NULL;
-   Flu_ResetByUser_Func_Ptr = NULL;
-   End_User_Ptr             = NULL;
+   Init_Function_User_Ptr = SetGridIC;
+   Output_User_Ptr        = OutputError;
 #  endif // #if ( MODEL == HYDRO )
 
 

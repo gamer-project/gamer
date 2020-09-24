@@ -262,6 +262,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double *Table_P2     = Merger_Prof2 + 1*Merger_NBin2;    // pressure table of cluster 2
    const double *Table_R2     = Merger_Prof2 + 2*Merger_NBin2;    // radius   table of cluster 2
 
+   double Dens, MomX, MomY, MomZ, Pres, Eint, Etot;
+
    if ( Merger_Coll )
    {
       const double ClusterCenter1[3] = { BoxCenter[0]-0.5*Merger_Coll_D, BoxCenter[1]-0.5*Merger_Coll_B, BoxCenter[2] };
@@ -284,31 +286,38 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       if ( Dens2 == NULL_REAL  ||  Pres2 == NULL_REAL )
          Aux_Error( ERROR_INFO, "interpolation failed at radius %13.7e for cluster 2 (probably outside the input table) !!\n", r2 );
 
-      fluid[DENS] = Dens1 + Dens2;
-      fluid[MOMX] = fluid[DENS]*Vel;
-      fluid[MOMY] = 0.0;
-      fluid[MOMZ] = 0.0;
-      fluid[ENGY] = ( Pres1 + Pres2 ) / ( GAMMA - 1.0 )
-                    + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
-   }
+      Dens = Dens1 + Dens2;
+      MomX = Dens*Vel;
+      MomY = 0.0;
+      MomZ = 0.0;
+      Pres = Pres1 + Pres2;
+   } // if ( Merger_Coll )
 
    else
    {
-      double r, Dens, Pres;
+      double r;
 
       r    = sqrt( SQR(x-BoxCenter[0]) + SQR(y-BoxCenter[1]) + SQR(z-BoxCenter[2]) );
       Dens = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_D1, r );
+      MomX = 0.0;
+      MomY = 0.0;
+      MomZ = 0.0;
       Pres = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_P1, r );
 
       if ( Dens == NULL_REAL  ||  Pres == NULL_REAL )
          Aux_Error( ERROR_INFO, "interpolation failed at radius %13.7e (probably outside the input table)!!\n", r );
-
-      fluid[DENS] = Dens;
-      fluid[MOMX] = 0.0;
-      fluid[MOMY] = 0.0;
-      fluid[MOMZ] = 0.0;
-      fluid[ENGY] = Pres / ( GAMMA - 1.0 );
    } // if ( Merger_Coll ) ... else ...
+
+// compute the total gas energy
+   Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray );   // assuming EoS requires no passive scalars
+   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );      // do NOT include magnetic energy here
+
+// set the output array
+   fluid[DENS] = Dens;
+   fluid[MOMX] = MomX;
+   fluid[MOMY] = MomY;
+   fluid[MOMZ] = MomZ;
+   fluid[ENGY] = Etot;
 
 } // FUNCTION : SetGridIC
 
@@ -359,17 +368,9 @@ void Init_TestProb_Hydro_ClusterMerger_vs_Flash()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr   = SetGridIC;
-   Output_User_Ptr          = NULL;
-   Flag_User_Ptr            = NULL;
-   Mis_GetTimeStep_User_Ptr = NULL;
-   Aux_Record_User_Ptr      = NULL;
-   BC_User_Ptr              = NULL;
-   Flu_ResetByUser_Func_Ptr = NULL;
-   End_User_Ptr             = End_ClusterMerger;
-   Init_ExternalAcc_Ptr     = NULL;
-   Init_ExternalPot_Ptr     = NULL;
-   Par_Init_ByFunction_Ptr  = Par_Init_ByFunction_Merger;
+   Init_Function_User_Ptr  = SetGridIC;
+   End_User_Ptr            = End_ClusterMerger;
+   Par_Init_ByFunction_Ptr = Par_Init_ByFunction_Merger;
 #  endif // if ( MODEL == HYDRO  &&  defined PARTICLE )
 
 
