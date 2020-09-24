@@ -48,10 +48,13 @@ void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In
 
 //###REVISE: support interpolation schemes requiring 2 ghost cells on each side
 // --> it's ok for now as the interpolation schemes adopted in the Poisson solver (CQUAD/QUAD) only require 1 ghost cell
-   const int IntGhost = 1;    // assuming interpolation ghost-zone == 1
-   const int CGhost   = (POT_GHOST_SIZE+1)/2 + IntGhost;
-   const int CWidth   = PS1 + 2*CGhost;
-   const int FaLv     = lv - 1;
+   const int    IntGhost = 1;    // assuming interpolation ghost-zone == 1
+   const int    CGhost   = (POT_GHOST_SIZE+1)/2 + IntGhost;
+   const int    CWidth   = PS1 + 2*CGhost;
+   const int    FaLv     = lv - 1;
+   const double dh       = amr->dh[FaLv];
+   const double dh_2     = 0.5*dh;
+
 
 
 // temporal interpolation parameters
@@ -139,7 +142,9 @@ void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In
 //    CPot : store the coarse-grid potential for interpoaltion
       real (*CPot)[CWidth][CWidth] = new real [CWidth][CWidth][CWidth];
 
-      int FaPID, FaSibPID, PID0, Idx_Start_Out[3], Idx_End_Out[3], Idx_Start_In[3], BC_Sibling;
+      double x0, y0, z0, x, y, z;
+      real   CPot_IntT;
+      int    FaPID, FaSibPID, PID0, Idx_Start_Out[3], Idx_End_Out[3], Idx_Start_In[3], BC_Sibling;
 
 //    prepare the coarse-grid potential for eight patches (one patch group) at a time
 #     pragma omp for schedule( runtime )
@@ -154,16 +159,33 @@ void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In
 
 //       a. fill up the central region of CPot[] (excluding ghost zones)
 // ------------------------------------------------------------------------------------------------------------
-         for (int ki=0, ko=CGhost; ki<PS1; ki++, ko++)
-         for (int ji=0, jo=CGhost; ji<PS1; ji++, jo++)
-         for (int ii=0, io=CGhost; ii<PS1; ii++, io++)
-         {
+         x0 = amr->patch[0][FaLv][FaPID]->EdgeL[0] + dh_2;
+         y0 = amr->patch[0][FaLv][FaPID]->EdgeL[1] + dh_2;
+         z0 = amr->patch[0][FaLv][FaPID]->EdgeL[2] + dh_2;
+
+         for (int ki=0, ko=CGhost; ki<PS1; ki++, ko++)  {  z = z0 + ki*dh;
+         for (int ji=0, jo=CGhost; ji<PS1; ji++, jo++)  {  y = y0 + ji*dh;
+         for (int ii=0, io=CGhost; ii<PS1; ii++, io++)  {  x = x0 + ii*dh;
+
             CPot[ko][jo][io] = amr->patch[PotSg][FaLv][FaPID]->pot[ki][ji][ii];
 
-            if ( PotIntTime ) // temporal interpolation
-            CPot[ko][jo][io] =   PotWeighting     *CPot[ko][jo][io]
-                               + PotWeighting_IntT*amr->patch[PotSg_IntT][FaLv][FaPID]->pot[ki][ji][ii];
-         }
+//          subtract external potential
+            if ( OPT__EXT_POT )
+               CPot[ko][jo][io] -= CPUExtPot_Ptr( x, y, z, amr->PotSgTime[FaLv][PotSg], ExtPot_AuxArray );
+
+//          temporal interpolation
+            if ( PotIntTime )
+            {
+               CPot_IntT = amr->patch[PotSg_IntT][FaLv][FaPID]->pot[ki][ji][ii];
+
+//             subtract external potential
+               if ( OPT__EXT_POT )
+                  CPot_IntT -= CPUExtPot_Ptr( x, y, z, amr->PotSgTime[FaLv][PotSg_IntT], ExtPot_AuxArray );
+
+               CPot[ko][jo][io] =   PotWeighting     *CPot[ko][jo][io]
+                                  + PotWeighting_IntT*CPot_IntT;
+            }
+         }}} // i,j,k
 
 
 //       b. fill up the ghost zones of CPot[] (do not require spatial interpolation from FaLv-1)
@@ -182,19 +204,36 @@ void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In
 //          b1. if the target sibling patch exists --> copy data directly
             if ( FaSibPID >= 0 )
             {
+               x0 = amr->patch[0][FaLv][FaSibPID]->EdgeL[0] + dh_2;
+               y0 = amr->patch[0][FaLv][FaSibPID]->EdgeL[1] + dh_2;
+               z0 = amr->patch[0][FaLv][FaSibPID]->EdgeL[2] + dh_2;
+
                for (int d=0; d<3; d++)    Idx_Start_In[d] = TABLE_01( sib, 'x'+d, PS1-CGhost, 0, 0 );
 
-               for (int ko=Idx_Start_Out[2], ki=Idx_Start_In[2]; ko<=Idx_End_Out[2]; ko++, ki++)
-               for (int jo=Idx_Start_Out[1], ji=Idx_Start_In[1]; jo<=Idx_End_Out[1]; jo++, ji++)
-               for (int io=Idx_Start_Out[0], ii=Idx_Start_In[0]; io<=Idx_End_Out[0]; io++, ii++)
-               {
+               for (int ko=Idx_Start_Out[2], ki=Idx_Start_In[2]; ko<=Idx_End_Out[2]; ko++, ki++)  {  z = z0 + ki*dh;
+               for (int jo=Idx_Start_Out[1], ji=Idx_Start_In[1]; jo<=Idx_End_Out[1]; jo++, ji++)  {  y = y0 + ji*dh;
+               for (int io=Idx_Start_Out[0], ii=Idx_Start_In[0]; io<=Idx_End_Out[0]; io++, ii++)  {  x = x0 + ii*dh;
+
                   CPot[ko][jo][io] = amr->patch[PotSg][FaLv][FaSibPID]->pot[ki][ji][ii];
 
-                  if ( PotIntTime ) // temporal interpolation
-                  CPot[ko][jo][io] =   PotWeighting     *CPot[ko][jo][io]
-                                     + PotWeighting_IntT*amr->patch[PotSg_IntT][FaLv][FaSibPID]->pot[ki][ji][ii];
-               }
-            }
+//                subtract external potential
+                  if ( OPT__EXT_POT )
+                     CPot[ko][jo][io] -= CPUExtPot_Ptr( x, y, z, amr->PotSgTime[FaLv][PotSg], ExtPot_AuxArray );
+
+//                temporal interpolation
+                  if ( PotIntTime )
+                  {
+                     CPot_IntT = amr->patch[PotSg_IntT][FaLv][FaSibPID]->pot[ki][ji][ii];
+
+//                   subtract external potential
+                     if ( OPT__EXT_POT )
+                        CPot_IntT -= CPUExtPot_Ptr( x, y, z, amr->PotSgTime[FaLv][PotSg_IntT], ExtPot_AuxArray );
+
+                     CPot[ko][jo][io] =   PotWeighting     *CPot[ko][jo][io]
+                                        + PotWeighting_IntT*CPot_IntT;
+                  }
+               }}} // i,j,k
+            } // if ( FaSibPID >= 0 )
 
 
 //          b2. if the target sibling patch lies outside the simulation domain --> apply the specified B.C.
