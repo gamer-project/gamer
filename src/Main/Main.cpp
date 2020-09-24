@@ -474,7 +474,7 @@ int main( int argc, char *argv[] )
 
 //    1. advance all physical attributes by one global time-step
 //    ---------------------------------------------------------------------------------------------------
-      TIMING_FUNC(   EvolveLevel( 0, NULL_REAL ),   Timer_Main[2]   );
+      TIMING_FUNC(   EvolveLevel( 0, NULL_REAL ),     Timer_Main[2],   TIMER_ON   );
 
       Step ++;
 //    ---------------------------------------------------------------------------------------------------
@@ -484,32 +484,32 @@ int main( int argc, char *argv[] )
 //       --> synchronize particles, restrict data, recalculate potential and particle acceleration, ...
 //    ---------------------------------------------------------------------------------------------------
       if ( OPT__CORR_AFTER_ALL_SYNC == CORR_AFTER_SYNC_EVERY_STEP )
-      TIMING_FUNC(   Flu_CorrAfterAllSync(),     Timer_Main[6]   );
+      TIMING_FUNC(   Flu_CorrAfterAllSync(),          Timer_Main[6],   TIMER_ON   );
 //    ---------------------------------------------------------------------------------------------------
 
 
 //    3. output data and execute auxiliary functions
 //    ---------------------------------------------------------------------------------------------------
-      TIMING_FUNC(   Output_DumpData( 1 ),            Timer_Main[3]   );
+      TIMING_FUNC(   Output_DumpData( 1 ),            Timer_Main[3],   TIMER_ON   );
 
       if ( OPT__PATCH_COUNT == 1 )
-      TIMING_FUNC(   Aux_Record_PatchCount(),         Timer_Main[4]   );
+      TIMING_FUNC(   Aux_Record_PatchCount(),         Timer_Main[4],   TIMER_ON   );
 
       if ( OPT__RECORD_MEMORY )
-      TIMING_FUNC(   Aux_GetMemInfo(),                Timer_Main[4]   );
+      TIMING_FUNC(   Aux_GetMemInfo(),                Timer_Main[4],   TIMER_ON   );
 
       if ( OPT__RECORD_USER )
-      TIMING_FUNC(   Aux_Record_User_Ptr(),           Timer_Main[4]   );
+      TIMING_FUNC(   Aux_Record_User_Ptr(),           Timer_Main[4],   TIMER_ON   );
 
       if ( OPT__RECORD_UNPHY )
-      TIMING_FUNC(   Aux_Record_CorrUnphy(),          Timer_Main[4]   );
+      TIMING_FUNC(   Aux_Record_CorrUnphy(),          Timer_Main[4],   TIMER_ON   );
 
 #     ifdef PARTICLE
       if ( OPT__PARTICLE_COUNT == 1 )
-      TIMING_FUNC(   Par_Aux_Record_ParticleCount(),  Timer_Main[4]   );
+      TIMING_FUNC(   Par_Aux_Record_ParticleCount(),  Timer_Main[4],   TIMER_ON   );
 #     endif
 
-      TIMING_FUNC(   Aux_Check(),                     Timer_Main[4]   );
+      TIMING_FUNC(   Aux_Check(),                     Timer_Main[4],   TIMER_ON   );
 //    ---------------------------------------------------------------------------------------------------
 
 
@@ -527,7 +527,7 @@ int main( int argc, char *argv[] )
 
 //    enable this functionality only if OPT__MANUAL_CONTROL is on
       if ( OPT__MANUAL_CONTROL )
-      TIMING_FUNC(   End_StopManually( Terminate ),   Timer_Main[4]   );
+      TIMING_FUNC(   End_StopManually( Terminate ),   Timer_Main[4],   TIMER_ON   );
 //    ---------------------------------------------------------------------------------------------------
 
 

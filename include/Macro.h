@@ -713,6 +713,11 @@
 #define GAMER_FAILED       0
 
 
+// timer switch
+#define TIMER_ON           1
+#define TIMER_OFF          0
+
+
 // symbolic constant for Aux_Error()
 #define ERROR_INFO         __FILE__, __LINE__, __FUNCTION__
 
