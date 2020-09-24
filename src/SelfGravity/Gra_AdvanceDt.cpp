@@ -87,11 +87,11 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
    if ( Poisson )
    {
       TIMING_FUNC(   Prepare_PatchData_InitParticleDensityArray( lv ),
-                     Timer_Par_Collect[lv]   );
+                     Timer_Par_Collect[lv],   TIMER_ON   );
 
       TIMING_FUNC(   Par_CollectParticle2OneLevel( lv, PredictPos, TimeNew, SibBufPatch, FaSibBufPatch,
                                                    JustCountNPar_No, TimingSendPar_Yes ),
-                     Timer_Par_Collect[lv]   );
+                     Timer_Par_Collect[lv],   TIMER_ON   );
    }
 #  endif
 
@@ -103,7 +103,7 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
       if ( Poisson )
       {
          TIMING_FUNC(   CPU_PoissonSolver_FFT( Poi_Coeff, SaveSg_Pot, TimeNew ),
-                        Timer_Gra_Advance[lv]   );
+                        Timer_Gra_Advance[lv],   TIMER_ON   );
 
          amr->PotSg    [lv]             = SaveSg_Pot;
          amr->PotSgTime[lv][SaveSg_Pot] = TimeNew;
@@ -111,12 +111,12 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 //       note that the MPI bandwidth achieved in the following command may be much lower than normal
 //       because of switching back from the MPI buffer used by FFTW
          TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, NULL_INT, SaveSg_Pot, POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES ),
-                        Timer_GetBuf[lv][1]  );
+                        Timer_GetBuf[lv][1],   TIMER_ON  );
 
 //       must call Poi_StorePotWithGhostZone AFTER collecting potential for buffer patches
 #        ifdef STORE_POT_GHOST
          TIMING_FUNC(   Poi_StorePotWithGhostZone( lv, SaveSg_Pot, true ),
-                        Timer_Gra_Advance[lv]   );
+                        Timer_Gra_Advance[lv],   TIMER_ON   );
 #        endif
       }
 
@@ -124,11 +124,11 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
       {
 //       TIMING_FUNC(   InvokeSolver( GRAVITY_SOLVER, lv, TimeNew, TimeOld, dt, NULL_REAL, SaveSg_Flu, NULL_INT, NULL_INT,
 //                                    OverlapMPI, Overlap_Sync ),
-//                      Timer_Gra_Advance[lv]  );
+//                      Timer_Gra_Advance[lv],   TIMER_ON  );
 
          TIMING_FUNC(   InvokeSolver( GRAVITY_SOLVER, lv, TimeNew, TimeOld, dt, NULL_REAL, SaveSg_Flu, NULL_INT, NULL_INT,
                                       false, false ),
-                        Timer_Gra_Advance[lv]   );
+                        Timer_Gra_Advance[lv],   TIMER_ON   );
 
 //       call Flu_ResetByUser_API_Ptr() here only if GRACKLE is disabled
 #        ifdef SUPPORT_GRACKLE
@@ -139,7 +139,7 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
             if ( Flu_ResetByUser_API_Ptr != NULL )
             {
                TIMING_FUNC(   Flu_ResetByUser_API_Ptr( lv, SaveSg_Flu, TimeNew ),
-                              Timer_Gra_Advance[lv]   );
+                              Timer_Gra_Advance[lv],   TIMER_ON   );
             }
 
             else
