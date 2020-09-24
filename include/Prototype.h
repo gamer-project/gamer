@@ -331,7 +331,7 @@ void Slab2Patch( const real *RhoK, real *SendBuf, real *RecvBuf, const int SaveS
 void End_MemFree_PoissonGravity();
 void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt,
                     const int SaveSg_Flu, const int SaveSg_Pot, const bool Poisson, const bool Gravity,
-                    const bool OverlapMPI, const bool Overlap_Sync );
+                    const bool OverlapMPI, const bool Overlap_Sync, const bool Timing );
 void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_NIN][PS1][PS1][PS1],
                 const char h_DE_Array_G[][PS1][PS1][PS1], const real h_Emag_Array_G[][PS1][PS1][PS1],
                 const int NPG, const int *PID0_List );

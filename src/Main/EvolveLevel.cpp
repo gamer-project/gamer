@@ -305,7 +305,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          Aux_Message( stdout, "   Lv %2d: Gra_AdvanceDt, counter = %8ld ... ", lv, AdvanceCounter[lv] );
 
       if ( lv == 0 )
-         Gra_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, SaveSg_Pot, SelfGravity, true, false, false );
+         Gra_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, SaveSg_Pot, SelfGravity, true, false, false, true );
 
       else // lv > 0
       {
@@ -320,7 +320,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
 //          advance patches needed to be sent
             TIMING_FUNC(   Gra_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, SaveSg_Pot,
-                           SelfGravity, true, true, true ),
+                           SelfGravity, true, true, true, true ),
                            Timer_Gra_Advance[lv],   TIMER_ON   );
 
 #           pragma omp parallel sections num_threads(2)
@@ -342,7 +342,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                {
 //                advance patches not needed to be sent
                   TIMING_FUNC(   Gra_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, SaveSg_Pot,
-                                                SelfGravity, true, true, false),
+                                                SelfGravity, true, true, false, true ),
                                  Timer_Gra_Advance[lv],   TIMER_ON   );
                }
             } // OpenMP parallel sections
@@ -363,7 +363,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                            Timer_GetBuf[lv][0],   TIMER_ON   );
 
             TIMING_FUNC(   Gra_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, SaveSg_Pot,
-                                          SelfGravity, true, false, false ),
+                                          SelfGravity, true, false, false, true ),
                            Timer_Gra_Advance[lv],   TIMER_ON   );
 
 //          exchange the updated potential in the buffer patches

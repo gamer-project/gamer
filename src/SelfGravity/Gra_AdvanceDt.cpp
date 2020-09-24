@@ -26,24 +26,25 @@ extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const dou
 //                   --> It is because the lv-0 Poisson and Gravity solvers are invoked separately, and Gravity solver
 //                       needs to call Prepare_PatchData to get the updated potential
 //
-// Parameter   :  lv             : Target refinement level
-//                TimeNew        : Target physical time to reach
-//                TimeOld        : Physical time before update
-//                                 --> For Gravity solver, this function updates physical time from TimeOld to TimeNew
-//                                     For Poisson solver, this function calculates potential at **TimeNew**
-//                dt             : Time interval to advance solution (can be different from TimeNew-TimeOld if COMOVING is on)
-//                SaveSg_Flu     : Sandglass to store the updated fluid data (for the gravity solver)
-//                SaveSg_Pot     : Sandglass to store the updated potential data  (for the Poisson solver)
-//                Poisson        : true --> invoke the Poisson solver to evaluate the gravitational potential
-//                Gravity        : true --> invoke the Gravity solver to evolve fluid by the gravitational acceleration
-//                OverlapMPI     : true --> Overlap MPI time with CPU/GPU computation
-//                Overlap_Sync   : true  --> Advance the patches which cannot be overlapped with MPI communication
-//                                 false --> Advance the patches which can    be overlapped with MPI communication
-//                                 (useful only if "OverlapMPI == true")
+// Parameter   :  lv           : Target refinement level
+//                TimeNew      : Target physical time to reach
+//                TimeOld      : Physical time before update
+//                               --> For Gravity solver, this function updates physical time from TimeOld to TimeNew
+//                                   For Poisson solver, this function calculates potential at **TimeNew**
+//                dt           : Time interval to advance solution (can be different from TimeNew-TimeOld if COMOVING is on)
+//                SaveSg_Flu   : Sandglass to store the updated fluid data (for the gravity solver)
+//                SaveSg_Pot   : Sandglass to store the updated potential data  (for the Poisson solver)
+//                Poisson      : true --> invoke the Poisson solver to evaluate the gravitational potential
+//                Gravity      : true --> invoke the Gravity solver to evolve fluid by the gravitational acceleration
+//                OverlapMPI   : true --> Overlap MPI time with CPU/GPU computation
+//                Overlap_Sync : true  --> Advance the patches which cannot be overlapped with MPI communication
+//                               false --> Advance the patches which can    be overlapped with MPI communication
+//                               (useful only if "OverlapMPI == true")
+//                Timing       : enable timing --> disable it in Flu_CorrAfterAllSync()
 //-------------------------------------------------------------------------------------------------------
 void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt,
                     const int SaveSg_Flu, const int SaveSg_Pot, const bool Poisson, const bool Gravity,
-                    const bool OverlapMPI, const bool Overlap_Sync )
+                    const bool OverlapMPI, const bool Overlap_Sync, const bool Timing )
 {
 
 // check
@@ -73,7 +74,7 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 
 // initialize the particle density array (rho_ext) and collect particles to the target level
 #  ifdef PARTICLE
-   const bool TimingSendPar_Yes = true;
+   const bool TimingSendPar_Yes = Timing;
    const bool JustCountNPar_No  = false;
 #  ifdef LOAD_BALANCE
    const bool PredictPos        = amr->Par->PredictPos;
@@ -84,16 +85,17 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
    const bool SibBufPatch       = NULL_BOOL;
    const bool FaSibBufPatch     = NULL_BOOL;
 #  endif
+
    if ( Poisson )
    {
       TIMING_FUNC(   Prepare_PatchData_InitParticleDensityArray( lv ),
-                     Timer_Par_Collect[lv],   TIMER_ON   );
+                     Timer_Par_Collect[lv],   Timing   );
 
       TIMING_FUNC(   Par_CollectParticle2OneLevel( lv, PredictPos, TimeNew, SibBufPatch, FaSibBufPatch,
                                                    JustCountNPar_No, TimingSendPar_Yes ),
-                     Timer_Par_Collect[lv],   TIMER_ON   );
+                     Timer_Par_Collect[lv],   Timing   );
    }
-#  endif
+#  endif // #ifdef PARTICLE
 
 
 // the base-level Poisson solver is implemented using the FFTW library (with CPUs only)
@@ -103,7 +105,7 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
       if ( Poisson )
       {
          TIMING_FUNC(   CPU_PoissonSolver_FFT( Poi_Coeff, SaveSg_Pot, TimeNew ),
-                        Timer_Gra_Advance[lv],   TIMER_ON   );
+                        Timer_Gra_Advance[lv],   Timing   );
 
          amr->PotSg    [lv]             = SaveSg_Pot;
          amr->PotSgTime[lv][SaveSg_Pot] = TimeNew;
@@ -111,12 +113,12 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 //       note that the MPI bandwidth achieved in the following command may be much lower than normal
 //       because of switching back from the MPI buffer used by FFTW
          TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, NULL_INT, SaveSg_Pot, POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES ),
-                        Timer_GetBuf[lv][1],   TIMER_ON  );
+                        Timer_GetBuf[lv][1],   Timing  );
 
 //       must call Poi_StorePotWithGhostZone AFTER collecting potential for buffer patches
 #        ifdef STORE_POT_GHOST
          TIMING_FUNC(   Poi_StorePotWithGhostZone( lv, SaveSg_Pot, true ),
-                        Timer_Gra_Advance[lv],   TIMER_ON   );
+                        Timer_Gra_Advance[lv],   Timing   );
 #        endif
       }
 
@@ -124,11 +126,11 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
       {
 //       TIMING_FUNC(   InvokeSolver( GRAVITY_SOLVER, lv, TimeNew, TimeOld, dt, NULL_REAL, SaveSg_Flu, NULL_INT, NULL_INT,
 //                                    OverlapMPI, Overlap_Sync ),
-//                      Timer_Gra_Advance[lv],   TIMER_ON  );
+//                      Timer_Gra_Advance[lv],   Timing  );
 
          TIMING_FUNC(   InvokeSolver( GRAVITY_SOLVER, lv, TimeNew, TimeOld, dt, NULL_REAL, SaveSg_Flu, NULL_INT, NULL_INT,
                                       false, false ),
-                        Timer_Gra_Advance[lv],   TIMER_ON   );
+                        Timer_Gra_Advance[lv],   Timing   );
 
 //       call Flu_ResetByUser_API_Ptr() here only if GRACKLE is disabled
 #        ifdef SUPPORT_GRACKLE
@@ -139,7 +141,7 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
             if ( Flu_ResetByUser_API_Ptr != NULL )
             {
                TIMING_FUNC(   Flu_ResetByUser_API_Ptr( lv, SaveSg_Flu, TimeNew ),
-                              Timer_Gra_Advance[lv],   TIMER_ON   );
+                              Timer_Gra_Advance[lv],   Timing   );
             }
 
             else
@@ -187,14 +189,14 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 //    don't use the TIMING_FUNC macro since we don't want to call MPI_Barrier here even when OPT__TIMING_BARRIER is on
 //    --> otherwise OPT__TIMING_BALANCE will fail because all ranks are synchronized before and after Gra_AdvanceDt
 #     ifdef TIMING
-      Timer_Par_Collect[lv]->Start();
+      if ( Timing )  Timer_Par_Collect[lv]->Start();
 #     endif
 
       Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch, FaSibBufPatch );
       Prepare_PatchData_FreeParticleDensityArray( lv );
 
 #     ifdef TIMING
-      Timer_Par_Collect[lv]->Stop();
+      if ( Timing )  Timer_Par_Collect[lv]->Stop();
 #     endif
    }
 #  endif
