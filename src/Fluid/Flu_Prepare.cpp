@@ -85,6 +85,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
       {
          PID0 = PID0_List[TID];
 
+//       not considering ghost zones
          for (int d=0; d<3; d++)    h_Corner_Array_F[TID][d] = amr->patch[0][lv][PID0]->EdgeL[d] + dh_half;
       } // for (int TID=0; TID<NPG; TID++)
    }
