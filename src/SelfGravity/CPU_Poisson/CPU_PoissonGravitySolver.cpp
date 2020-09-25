@@ -187,10 +187,8 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
 
       if ( ExtPot )
       {
-         const bool PotIsInit = SelfGravity;    // whether the input potential has been initialized
-
          CPU_ExtPotSolver( (real(*)[ CUBE(GRA_NXT) ])h_Pot_Array_Out, h_Corner_Array,
-                           NPatchGroup, dh, CPUExtPot_Ptr, ExtPot_AuxArray, TimeNew, PotIsInit );
+                           NPatchGroup, dh, CPUExtPot_Ptr, ExtPot_AuxArray, TimeNew, SelfGravity );
       }
    } // if ( Poisson )
 
