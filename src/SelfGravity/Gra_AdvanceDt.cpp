@@ -66,6 +66,10 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
       Aux_Message( stderr, "WARNING : Poisson=off but Gravity=on --> ARE YOU SURE ?!\n" );
 
 
+// whether we actually need potential
+   const bool UsePot = (  Poisson  &&  ( OPT__SELF_GRAVITY || OPT__EXT_POT )  );
+
+
 // coefficient in front of the RHS in the Poisson eq.
 #  ifdef COMOVING
    const double Poi_Coeff = 4.0*M_PI*NEWTON_G*TimeNew;   // use TimeNew for calculating potential
@@ -88,7 +92,7 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
    const bool FaSibBufPatch     = NULL_BOOL;
 #  endif
 
-   if ( Poisson )
+   if ( UsePot )
    {
       TIMING_FUNC(   Prepare_PatchData_InitParticleDensityArray( lv ),
                      Timer_Par_Collect[lv],   Timing   );
@@ -104,9 +108,14 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
    if ( lv == 0 )
    {
 //    do not need to calculate the gravitational potential if self-gravity is disabled
-      if ( Poisson )
+      if ( UsePot )
       {
+         if ( OPT__SELF_GRAVITY )
          TIMING_FUNC(   CPU_PoissonSolver_FFT( Poi_Coeff, SaveSg_Pot, TimeNew ),
+                        Timer_Gra_Advance[lv],   Timing   );
+
+         if ( OPT__EXT_POT )
+         TIMING_FUNC(   CPU_ExtPotSolver_BaseLevel( CPUExtPot_Ptr, ExtPot_AuxArray, TimeNew, OPT__SELF_GRAVITY, SaveSg_Pot ),
                         Timer_Gra_Advance[lv],   Timing   );
 
          amr->PotSg    [lv]             = SaveSg_Pot;
@@ -186,7 +195,7 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 
 // free memory for collecting particles from other ranks and levels, and free density arrays with ghost zones (rho_ext)
 #  ifdef PARTICLE
-   if ( Poisson )
+   if ( UsePot )
    {
 //    don't use the TIMING_FUNC macro since we don't want to call MPI_Barrier here even when OPT__TIMING_BARRIER is on
 //    --> otherwise OPT__TIMING_BALANCE will fail because all ranks are synchronized before and after Gra_AdvanceDt
