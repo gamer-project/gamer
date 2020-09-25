@@ -315,6 +315,11 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
          if ( OPT__SELF_GRAVITY )
          TIMING_SYNC(   Poi_Prepare_Pot( lv, TimeNew, h_Pot_Array_P_In[ArrayID], NPG, PID0_List ),
                         Timer_Poi_PrePot_C[lv]   );
+
+//       use the same timer "Timer_Poi_PreRho" as Poi_Prepare_Rho()
+         if ( OPT__EXT_POT )
+         TIMING_SYNC(   Gra_Prepare_Corner( lv, h_Corner_Array_PGT[ArrayID], NPG, PID0_List ),
+                        Timer_Poi_PreRho[lv]   );
       break;
 
       case GRAVITY_SOLVER :
@@ -326,12 +331,13 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
          TIMING_SYNC(   Gra_Prepare_Pot( lv, TimeNew, h_Pot_Array_P_Out[ArrayID], NPG, PID0_List ),
                         Timer_Poi_PrePot_F[lv]   );
 
+//       use the same timer "Timer_Poi_PreFlu" as Gra_Prepare_Flu()
          if ( OPT__EXT_ACC )
          TIMING_SYNC(   Gra_Prepare_Corner( lv, h_Corner_Array_PGT[ArrayID], NPG, PID0_List ),
                         Timer_Poi_PreFlu[lv]   );
 
 #        ifdef UNSPLIT_GRAVITY
-//       use the same timer "Timer_Poi_PreFlu" as Gra_Prepare_Flu and Gra_Prepare_Corner
+//       use the same timer "Timer_Poi_PreFlu" as Gra_Prepare_Flu()
          TIMING_SYNC(   Gra_Prepare_USG( lv, TimeOld, h_Pot_Array_USG_G[ArrayID], h_Flu_Array_USG_G[ArrayID],
                         NPG, PID0_List ),
                         Timer_Poi_PreFlu[lv]   );
@@ -351,12 +357,13 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
                                          NPG, PID0_List ),
                         Timer_Poi_PreFlu[lv]   );
 
+//       use the same timer "Timer_Poi_PreFlu" as Gra_Prepare_Flu()
          if ( OPT__EXT_POT  ||  OPT__EXT_ACC )
          TIMING_SYNC(   Gra_Prepare_Corner( lv, h_Corner_Array_PGT[ArrayID], NPG, PID0_List ),
                         Timer_Poi_PreFlu[lv]   );
 
 #        ifdef UNSPLIT_GRAVITY
-//       use the same timer "Timer_Poi_PreFlu" as Gra_Prepare_Flu and Gra_Prepare_Corner
+//       use the same timer "Timer_Poi_PreFlu" as Gra_Prepare_Flu()
          TIMING_SYNC(   Gra_Prepare_USG( lv, TimeOld, h_Pot_Array_USG_G[ArrayID], h_Flu_Array_USG_G[ArrayID],
                         NPG, PID0_List ),
                         Timer_Poi_PreFlu[lv]   );
