@@ -552,6 +552,7 @@ void Aux_TakeNote()
 #     elif ( POT_SCHEME == MG )
       fprintf( Note, "#define POT_BLOCK_SIZE_X        %d\n",      POT_BLOCK_SIZE_X    );
 #     endif
+      fprintf( Note, "#define EXTPOT_BLOCK_SIZE       %d\n",      EXTPOT_BLOCK_SIZE   );
       fprintf( Note, "#define GRA_BLOCK_SIZE          %d\n",      GRA_BLOCK_SIZE      );
 #     endif // #ifdef GRAVITY
       fprintf( Note, "#define DT_FLU_BLOCK_SIZE       %d\n",      DT_FLU_BLOCK_SIZE   );

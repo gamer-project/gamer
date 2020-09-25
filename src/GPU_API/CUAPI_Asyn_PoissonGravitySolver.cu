@@ -30,6 +30,12 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
                                         const IntScheme_t IntScheme );
 #endif // POT_SCHEME
 
+__global__
+void CUPOT_ExtPotSolver( real g_Pot_Array[][ CUBE(GRA_NXT) ],
+                         const double g_Corner_Array[][3],
+                         const real dh, const ExtPot_t ExtPot_Func,
+                         const double Time, const bool PotIsInit );
+
 
 // Gravity solver prototypes
 #if   ( MODEL == HYDRO )
@@ -173,6 +179,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
 #  elif ( POT_SCHEME == MG )
    const dim3 Poi_Block_Dim( POT_BLOCK_SIZE_X, 1, 1 );
 #  endif
+   const dim3 ExtPot_Block_Dim( EXTPOT_BLOCK_SIZE );
    const dim3 Gra_Block_Dim( GRA_BLOCK_SIZE );
    const int  NPatch      = NPatchGroup*8;
 #  if   ( POT_SCHEME == SOR )
@@ -339,7 +346,6 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
 
          if ( ExtPot )
          {
-//###TBF
             CUDA_CHECK_ERROR(  cudaMemcpyAsync( d_Corner_Array_PGT + UsedPatch[s], h_Corner_Array + UsedPatch[s],
                                                 Corner_MemSize[s], cudaMemcpyHostToDevice, Stream[s] )  );
          }
@@ -428,7 +434,10 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
 //       b1-2. external potential
          if ( ExtPot )
          {
-//###TBF
+            CUPOT_ExtPotSolver <<< NPatch_per_Stream[s], ExtPot_Block_Dim, 0, Stream[s] >>>
+                               ( d_Pot_Array_P_Out  + UsedPatch[s],
+                                 d_Corner_Array_PGT + UsedPatch[s],
+                                 dh, GPUExtPot_Ptr, TimeNew, SelfGravity );
          }
       } // if ( Poisson )
 

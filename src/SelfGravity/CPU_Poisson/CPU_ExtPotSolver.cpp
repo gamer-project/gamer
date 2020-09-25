@@ -17,8 +17,8 @@
 // Description :  Add external potential
 //
 // Note        :  1. External potential is specified by the input function ExtPot_Func()
-//                2. Input potential g_Pot_Array[] must be initialized in advance
-//                   --> Because here we use += to **add** external potential to the input data
+//                2. Set PotIsInit to false if the input potential g_Pot_Array[] has not been initialized
+//                   --> Useful when self-gravity is disabled
 //                3. Invoked by Gra_AdvanceDt(), CPU_PoissonGravitySolver(), and CUAPI_Asyn_PoissonGravitySolver()
 //
 // Parameter   :  g_Pot_Array       : Array storing the input and output potential data of each target patch
@@ -30,6 +30,9 @@
 //                                    --> When using GPU, this array is stored in the constant memory header
 //                                        CUDA_ConstMemory.h and does not need to be passed as a function argument
 //                Time              : Target physical time
+//                PotIsInit         : Whether the input potential has been initialized
+//                                    --> true : **add** external potential to the input data
+//                                        false: **overwrite** the input data
 //
 // Return      :  g_Pot_Array[]
 //-----------------------------------------------------------------------------------------
@@ -38,14 +41,14 @@ __global__
 void CUPOT_ExtPotSolver( real g_Pot_Array[][ CUBE(GRA_NXT) ],
                          const double g_Corner_Array[][3],
                          const real dh, const ExtPot_t ExtPot_Func,
-                         const double Time )
+                         const double Time, const bool PotIsInit )
 #else
 void CPU_ExtPotSolver  ( real g_Pot_Array[][ CUBE(GRA_NXT) ],
                          const double g_Corner_Array[][3],
                          const int NPatchGroup,
                          const real dh, const ExtPot_t ExtPot_Func,
                          const double c_ExtPot_AuxArray[],
-                         const double Time )
+                         const double Time, const bool PotIsInit )
 #endif
 {
 
@@ -64,6 +67,7 @@ void CPU_ExtPotSolver  ( real g_Pot_Array[][ CUBE(GRA_NXT) ],
       const double z0 = g_Corner_Array[P][2] - GRA_GHOST_SIZE*dh;
 
       double x, y, z;
+      real   ExtPot;
 
 //    loop over all cells of the target patch
       CGPU_LOOP( t, CUBE(GRA_NXT) )
@@ -76,7 +80,10 @@ void CPU_ExtPotSolver  ( real g_Pot_Array[][ CUBE(GRA_NXT) ],
          y = y0 + double(j*dh);
          z = z0 + double(k*dh);
 
-         g_Pot_Array[P][t] += ExtPot_Func( x, y, z, Time, c_ExtPot_AuxArray );
+         ExtPot = ExtPot_Func( x, y, z, Time, c_ExtPot_AuxArray );
+
+         if ( PotIsInit )  g_Pot_Array[P][t] += ExtPot;  // add to the input potential
+         else              g_Pot_Array[P][t]  = ExtPot;  // overwrite the input potential
       }
    } // for (int P=0; P<NPatchGroup*8; P++)
 

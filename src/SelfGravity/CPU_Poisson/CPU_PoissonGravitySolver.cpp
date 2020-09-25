@@ -21,6 +21,13 @@ void CPU_PoissonSolver_MG( const real Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT]
                            const IntScheme_t IntScheme );
 #endif // POT_SCHEME
 
+void CPU_ExtPotSolver( real g_Pot_Array[][ CUBE(GRA_NXT) ],
+                       const double g_Corner_Array[][3],
+                       const int NPatchGroup,
+                       const real dh, const ExtPot_t ExtPot_Func,
+                       const double c_ExtPot_AuxArray[],
+                       const double Time, const bool PotIsInit );
+
 
 // Gravity solver prototypes
 #if   ( MODEL == HYDRO )
@@ -180,7 +187,10 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
 
       if ( ExtPot )
       {
-//###TBF
+         const bool PotIsInit = SelfGravity;    // whether the input potential has been initialized
+
+         CPU_ExtPotSolver( (real(*)[ CUBE(GRA_NXT) ])h_Pot_Array_Out, h_Corner_Array,
+                           NPatchGroup, dh, CPUExtPot_Ptr, ExtPot_AuxArray, TimeNew, PotIsInit );
       }
    } // if ( Poisson )
 
