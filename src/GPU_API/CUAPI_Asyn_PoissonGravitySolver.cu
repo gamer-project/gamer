@@ -480,7 +480,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
    {
       if ( NPatch_per_Stream[s] == 0 )    continue;
 
-      if ( Poisson )
+      if ( Poisson  &&  ( SelfGravity || ExtPot )  )
          CUDA_CHECK_ERROR(  cudaMemcpyAsync( h_Pot_Array_Out + UsedPatch[s], d_Pot_Array_P_Out + UsedPatch[s],
                                              Pot_MemSize_Out[s], cudaMemcpyDeviceToHost, Stream[s] )  );
 
