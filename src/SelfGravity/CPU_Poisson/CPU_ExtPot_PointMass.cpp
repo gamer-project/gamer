@@ -87,6 +87,10 @@ void SetExtPotAuxArray_PointMass( double AuxArray[] )
 //                      UserArray[3] = gravitational_constant*point_source_mass
 //                3. Currently it does not support the soften length
 //
+// Parameter   :  x/y/z     : Target spatial coordinates
+//                Time      : Target physical time
+//                UserArray : User-provided auxiliary array
+//
 // Return      :  External potential at (x,y,z,Time)
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
