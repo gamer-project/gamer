@@ -31,11 +31,7 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
                                   real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                   real *AllAttribute[PAR_NATT_TOTAL] );
 #endif
-void Init_ExtAccAuxArray_Plummer( double AuxArray[] );
-void SetCPUExtAcc_Plummer( ExtAcc_t &CPUExtAcc_Ptr );
-# ifdef GPU
-void SetGPUExtAcc_Plummer( ExtAcc_t &GPUExtAcc_Ptr );
-# endif
+void Init_ExtAcc_Plummer( const bool OnlySetAuxArray );
 
 
 
@@ -385,12 +381,8 @@ void Init_TestProb_Hydro_Plummer()
    Par_Init_ByFunction_Ptr = Par_Init_ByFunction_Plummer;
 #  endif
 #  ifdef GRAVITY
-   Init_ExtAccAuxArray_Ptr = Init_ExtAccAuxArray_Plummer;
-   SetCPUExtAcc_Ptr        = SetCPUExtAcc_Plummer;
-#  ifdef GPU
-   SetGPUExtAcc_Ptr        = SetGPUExtAcc_Plummer;
+   Init_ExtAcc_Ptr = Init_ExtAcc_Plummer;
 #  endif
-#  endif // #ifdef GRAVITY
 #  endif // #if ( MODEL == HYDRO )
 
 

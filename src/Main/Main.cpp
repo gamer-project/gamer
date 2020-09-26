@@ -139,19 +139,12 @@ double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
 
 // b. function pointers
+ExtAcc_t CPUExtAcc_Ptr = NULL;
 ExtPot_t CPUExtPot_Ptr = NULL;
 #ifdef GPU
+ExtAcc_t GPUExtAcc_Ptr = NULL;
 ExtPot_t GPUExtPot_Ptr = NULL;
 #endif
-
-void (*Init_ExtAccAuxArray_Ptr)( double [] ) = NULL;
-ExtAcc_t CPUExtAcc_Ptr                       = NULL;
-void (*SetCPUExtAcc_Ptr)( ExtAcc_t & )       = NULL;
-#ifdef GPU
-ExtAcc_t GPUExtAcc_Ptr                       = NULL;
-void (*SetGPUExtAcc_Ptr)( ExtAcc_t & )       = NULL;
-#endif
-
 #endif // #ifdef GRAVITY
 
 // (2-3) cosmological simulations

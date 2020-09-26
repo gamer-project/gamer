@@ -4,83 +4,41 @@
 
 
 // these function pointers must be set by a test problem initializer
-void (*Init_ExtAcc_Ptr)() = NULL;
-void (*Init_ExtPot_Ptr)() = NULL;
+void (*Init_ExtAcc_Ptr)( const bool ) = NULL;
+void (*Init_ExtPot_Ptr)()             = NULL;
 
 
 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_ExtAccPot
-// Description :  Initialize the external acceleration and potential routines and auxiliary arrays
+// Description :  Initialize external acceleration and potential
 //
 // Note        :  1. Invoked by Init_GAMER() and EvolveLevel()
 //                2. Enabled by the runtime options "OPT__EXT_ACC" and "OPT__EXT_POT"
-//                3. Set the auxiliary CPU arrays of the external acceleration and potential by invoking
-//
-//                      Init_ExtAccAuxArray_Ptr() and Init_ExtPotAuxArray_Ptr()
-//
-//                   --> Corresponding GPU arrays are set by CUAPI_SetConstMemory()
-//                4. Set the CPU/GPU external acceleration and potential routines by invoking
-//
-//                      SetCPU/GPUExtAcc_Ptr() and SetCPU/GPUExtPot_Ptr()
-//
-//                5. Function pointers used here must be set in advance by a test problem initializer
-//                6. Must invoke either CUAPI_SetConstMemory() or CUAPI_SetConstMemory_ExtAccPot() afterward
+//                3. Function pointers Init_ExtAcc_Ptr and Init_ExtPot_Ptr must be set in advance by a
+//                   test problem initializer
+//                4. Must invoke either CUAPI_SetConstMemory() or CUAPI_SetConstMemory_ExtAccPot() afterward
 //                   to set the GPU constant memory
 //
-// Parameter   :  OnlyInitAuxArray : true:  Initialize the auxiliary arrays but do NOT set CPU/GPU routines
-//                                          --> Used by EvolveLevel()
-//                                   false: Both initialize the auxiliary arrays and set CPU/GPU routines
-//                                          --> Used by Init_GAMER()
+// Parameter   :  OnlySetAuxArray : true:  Set the auxiliary array but NOT the CPU/GPU routines
+//                                         --> Used by EvolveLevel()
+//                                  false: Set both the auxiliary array and CPU/GPU routines
+//                                         --> Used by Init_GAMER()
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Init_ExtAccPot( const bool OnlyInitAuxArray )
+void Init_ExtAccPot( const bool OnlySetAuxArray )
 {
 
-// initialize the external acceleration
+// external acceleration
    if ( OPT__EXT_ACC )
    {
-//    initialize the auxiliary CPU array
-      if ( Init_ExtAccAuxArray_Ptr != NULL )
-         Init_ExtAccAuxArray_Ptr( ExtAcc_AuxArray );
-      else
-         Aux_Error( ERROR_INFO, "Init_ExtAccAuxArray_Ptr == NULL for external acceleration !!\n" );
+      if ( Init_ExtAcc_Ptr != NULL )   Init_ExtAcc_Ptr( OnlySetAuxArray );
+      else                             Aux_Error( ERROR_INFO, "Init_ExtAcc_Ptr == NULL !!\n" );
+   }
 
-//    set the CPU routine
-      if ( ! OnlyInitAuxArray )
-      {
-         if ( SetCPUExtAcc_Ptr != NULL )
-         {
-            SetCPUExtAcc_Ptr( CPUExtAcc_Ptr );
-
-            if ( CPUExtAcc_Ptr == NULL )
-               Aux_Error( ERROR_INFO, "CPUExtAcc_Ptr == NULL for external acceleration !!\n" );
-         }
-         else
-            Aux_Error( ERROR_INFO, "SetCPUExtAcc_Ptr == NULL for external acceleration !!\n" );
-      }
-
-//    set the GPU routine
-#     ifdef GPU
-      if ( ! OnlyInitAuxArray )
-      {
-         if ( SetGPUExtAcc_Ptr != NULL )
-         {
-            SetGPUExtAcc_Ptr( GPUExtAcc_Ptr );
-
-            if ( GPUExtAcc_Ptr == NULL )
-               Aux_Error( ERROR_INFO, "GPUExtAcc_Ptr == NULL for external acceleration !!\n" );
-         }
-         else
-            Aux_Error( ERROR_INFO, "SetGPUExtAcc_Ptr == NULL !!\n" );
-      }
-#     endif
-   } // if ( OPT__EXT_ACC )
-
-
-// initialize the external potential
+// external potential
    if ( OPT__EXT_POT )
    {
       if ( Init_ExtPot_Ptr != NULL )   Init_ExtPot_Ptr();
