@@ -189,7 +189,7 @@ FUNC_SPACE EoS_DP2E_t EoS_DensPres2Eint_Ptr = EoS_DensPres2Eint_Isothermal;
 FUNC_SPACE EoS_DP2C_t EoS_DensPres2CSqr_Ptr = EoS_DensPres2CSqr_Isothermal;
 
 //-----------------------------------------------------------------------------------------
-// Function    :  EoS_InitCPU/GPUFunc_Isothermal
+// Function    :  EoS_SetCPU/GPUFunc_Isothermal
 // Description :  Return the function pointers of the CPU/GPU EoS routines
 //
 // Note        :  1. Invoked by EoS_Init_Isothermal()
