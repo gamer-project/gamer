@@ -218,7 +218,7 @@ FUNC_SPACE EoS_DP2C_t EoS_DensPres2CSqr_Ptr = EoS_DensPres2CSqr_Gamma;
 //                   since CPU and GPU functions are compiled completely separately in GAMER
 //                   --> In other words, a unified routine like the following won't work
 //
-//                      EoS_InitFunc_Gamma( CPU_FuncPtr, GPU_FuncPtr );
+//                      EoS_SetFunc_Gamma( CPU_FuncPtr, GPU_FuncPtr );
 //
 //                3. Call-by-reference
 //
