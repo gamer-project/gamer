@@ -139,6 +139,11 @@ double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
 
 // b. function pointers
+ExtPot_t CPUExtPot_Ptr = NULL;
+#ifdef GPU
+ExtPot_t GPUExtPot_Ptr = NULL;
+#endif
+
 void (*Init_ExtAccAuxArray_Ptr)( double [] ) = NULL;
 ExtAcc_t CPUExtAcc_Ptr                       = NULL;
 void (*SetCPUExtAcc_Ptr)( ExtAcc_t & )       = NULL;
@@ -147,13 +152,6 @@ ExtAcc_t GPUExtAcc_Ptr                       = NULL;
 void (*SetGPUExtAcc_Ptr)( ExtAcc_t & )       = NULL;
 #endif
 
-void (*Init_ExtPotAuxArray_Ptr)( double [] ) = NULL;
-ExtPot_t CPUExtPot_Ptr                       = NULL;
-void (*SetCPUExtPot_Ptr)( ExtPot_t & )       = NULL;
-#ifdef GPU
-ExtPot_t GPUExtPot_Ptr                       = NULL;
-void (*SetGPUExtPot_Ptr)( ExtPot_t & )       = NULL;
-#endif
 #endif // #ifdef GRAVITY
 
 // (2-3) cosmological simulations
@@ -218,10 +216,10 @@ double                SF_CREATE_STAR_MAX_STAR_MFRAC;
 
 // (2-9) equation of state
 #if ( MODEL == HYDRO )
-// auxiliary array
+// a. auxiliary array
 double EoS_AuxArray[EOS_NAUX_MAX];
 
-// function pointers
+// b. function pointers
 EoS_DE2P_t EoS_DensEint2Pres_CPUPtr = NULL;
 EoS_DP2E_t EoS_DensPres2Eint_CPUPtr = NULL;
 EoS_DP2C_t EoS_DensPres2CSqr_CPUPtr = NULL;

@@ -46,6 +46,8 @@ extern void (*End_User_Ptr)();
 #ifdef GRAVITY
 extern real (*Poi_AddExtraMassForGravity_Ptr)( const double x, const double y, const double z, const double Time,
                                                const int lv, double AuxArray[] );
+extern void (*Init_ExtAcc_Ptr)();
+extern void (*Init_ExtPot_Ptr)();
 #endif
 #ifdef PARTICLE
 extern void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPar_AllRank,

@@ -3,6 +3,11 @@
 #ifdef GRAVITY
 
 
+// these function pointers must be set by a test problem initializer
+void (*Init_ExtAcc_Ptr)() = NULL;
+void (*Init_ExtPot_Ptr)() = NULL;
+
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -78,42 +83,9 @@ void Init_ExtAccPot( const bool OnlyInitAuxArray )
 // initialize the external potential
    if ( OPT__EXT_POT )
    {
-//    initialize the auxiliary CPU array
-      if ( Init_ExtPotAuxArray_Ptr != NULL )
-         Init_ExtPotAuxArray_Ptr( ExtPot_AuxArray );
-      else
-         Aux_Error( ERROR_INFO, "Init_ExtPotAuxArray_Ptr == NULL for external potential !!\n" );
-
-//    set the CPU routine
-      if ( ! OnlyInitAuxArray )
-      {
-         if ( SetCPUExtPot_Ptr != NULL )
-         {
-            SetCPUExtPot_Ptr( CPUExtPot_Ptr );
-
-            if ( CPUExtPot_Ptr == NULL )
-               Aux_Error( ERROR_INFO, "CPUExtPot_Ptr == NULL for external potential !!\n" );
-         }
-         else
-            Aux_Error( ERROR_INFO, "SetCPUExtPot_Ptr == NULL for external potential !!\n" );
-      }
-
-//    set the GPU routine
-#     ifdef GPU
-      if ( ! OnlyInitAuxArray )
-      {
-         if ( SetGPUExtPot_Ptr != NULL )
-         {
-            SetGPUExtPot_Ptr( GPUExtPot_Ptr );
-
-            if ( GPUExtPot_Ptr == NULL )
-               Aux_Error( ERROR_INFO, "GPUExtPot_Ptr == NULL for external potential !!\n" );
-         }
-         else
-            Aux_Error( ERROR_INFO, "SetGPUExtPot_Ptr == NULL !!\n" );
-      }
-#     endif
-   } // if ( OPT__EXT_POT )
+      if ( Init_ExtPot_Ptr != NULL )   Init_ExtPot_Ptr();
+      else                             Aux_Error( ERROR_INFO, "Init_ExtPot_Ptr == NULL !!\n" );
+   }
 
 } // FUNCTION : Init_ExtAccPot
 
