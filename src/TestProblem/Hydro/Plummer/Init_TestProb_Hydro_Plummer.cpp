@@ -13,8 +13,9 @@
        double Plummer_Collision_D;  // distance between two colliding Plummer clouds
        double Plummer_Center[3];    // central coordinates
        double Plummer_BulkVel[3];   // bulk velocity
-       double Plummer_GasMFrac;     // gas mass fraction
-       double Plummer_ExtMFrac;     // external mass fraction
+       double Plummer_GasMFrac;     // gas                   mass fraction
+       double Plummer_ExtAccMFrac;  // external acceleration mass fraction
+       double Plummer_ExtPotMFrac;  // external potential    mass fraction
        int    Plummer_MassProfNBin; // number of radial bins in the mass profile table
 static bool   Plummer_AddColor;     // assign different colors to different clouds for Plummer_Collision
 
@@ -32,6 +33,7 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
                                   real *AllAttribute[PAR_NATT_TOTAL] );
 #endif
 void Init_ExtAcc_Plummer( const bool OnlySetAuxArray );
+void Init_ExtPot_Plummer();
 
 
 
@@ -135,8 +137,9 @@ void SetParameter()
    ReadPara->Add( "Plummer_BulkVelX",     &Plummer_BulkVel[0],    0.0,           NoMin_double,     NoMax_double      );
    ReadPara->Add( "Plummer_BulkVelY",     &Plummer_BulkVel[1],    0.0,           NoMin_double,     NoMax_double      );
    ReadPara->Add( "Plummer_BulkVelZ",     &Plummer_BulkVel[2],    0.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Plummer_GasMFrac",     &Plummer_GasMFrac,      0.5,           Eps_double,       1.0               );
-   ReadPara->Add( "Plummer_ExtMFrac",     &Plummer_ExtMFrac,      0.25,          0.0,              1.0               );
+   ReadPara->Add( "Plummer_GasMFrac",     &Plummer_GasMFrac,      0.25,          Eps_double,       1.0               );
+   ReadPara->Add( "Plummer_ExtAccMFrac",  &Plummer_ExtAccMFrac,   0.25,          0.0,              1.0               );
+   ReadPara->Add( "Plummer_ExtPotMFrac",  &Plummer_ExtPotMFrac,   0.25,          0.0,              1.0               );
    ReadPara->Add( "Plummer_MassProfNBin", &Plummer_MassProfNBin,  1000,          2,                NoMax_int         );
    ReadPara->Add( "Plummer_AddColor",     &Plummer_AddColor,      false,         Useless_bool,     Useless_bool      );
 
@@ -156,19 +159,36 @@ void SetParameter()
       Aux_Error( ERROR_INFO, "please set NCOMP_PASSIVE_USER to 2 for \"Plummer_AddColor\" !!\n" );
 
 #  ifdef GRAVITY
-   if ( !OPT__EXT_ACC  &&  Plummer_ExtMFrac != 0.0 )
+   if ( !OPT__EXT_ACC  &&  Plummer_ExtAccMFrac != 0.0 )
    {
-      Plummer_ExtMFrac = 0.0;
+      Plummer_ExtAccMFrac = 0.0;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : \"Plummer_ExtMFrac\" is reset to 0.0 since OPT__EXT_ACC is disabled !!\n" );
+         Aux_Message( stderr, "WARNING : \"Plummer_ExtAccMFrac\" is reset to 0.0 since OPT__EXT_ACC is disabled !!\n" );
+   }
+
+   if ( !OPT__EXT_POT  &&  Plummer_ExtPotMFrac != 0.0 )
+   {
+      Plummer_ExtPotMFrac = 0.0;
+
+      if ( MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : \"Plummer_ExtPotMFrac\" is reset to 0.0 since OPT__EXT_POT is disabled !!\n" );
    }
 #  endif
 
-#  ifndef PARTICLE
-   if (  ! Mis_CompareRealValue( Plummer_GasMFrac+Plummer_ExtMFrac, 1.0, NULL, false )  )
+   const double NonParMFrac = Plummer_GasMFrac + Plummer_ExtAccMFrac + Plummer_ExtPotMFrac;
+#  ifdef PARTICLE
+   if ( NonParMFrac > 1.0 )
+      Aux_Error( ERROR_INFO, "GasMFrac (%13.7e) + ExtAccMFrac (%13.7e) + ExtPotMFrac (%13.7e) = %13.7e > 1.0 !!\n",
+                 Plummer_GasMFrac, Plummer_ExtAccMFrac, Plummer_ExtPotMFrac, NonParMFrac );
+
+   else if ( MPI_Rank == 0 )
+      Aux_Message( stderr, "NOTE : particle mass fraction is set to %13.7e\n", 1.0-NonParMFrac );
+
+#  else
+   if (  ! Mis_CompareRealValue( NonParMFrac, 1.0, NULL, false )  )
    {
-      Plummer_GasMFrac = 1.0 - Plummer_ExtMFrac;
+      Plummer_GasMFrac = 1.0 - Plummer_ExtAccMFrac - Plummer_ExtPotMFrac;
 
       if ( MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : \"Plummer_GasMFrac\" is reset to %13.7e since PARTICLE is disabled !!\n", Plummer_GasMFrac );
@@ -215,8 +235,9 @@ void SetParameter()
       Aux_Message( stdout, "  assign colors to different clouds         = %d\n",     Plummer_AddColor ); }
       for (int d=0; d<3; d++)
       Aux_Message( stdout, "  bulk velocity [%d]                        = %14.7e\n", d, Plummer_BulkVel[d] );
-      Aux_Message( stdout, "  gas mass fraction                         = %13.7e\n", Plummer_GasMFrac );
-      Aux_Message( stdout, "  external mass fraction                    = %13.7e\n", Plummer_ExtMFrac );
+      Aux_Message( stdout, "  gas                   mass fraction       = %13.7e\n", Plummer_GasMFrac );
+      Aux_Message( stdout, "  external acceleration mass fraction       = %13.7e\n", Plummer_ExtAccMFrac );
+      Aux_Message( stdout, "  external potential    mass fraction       = %13.7e\n", Plummer_ExtPotMFrac );
       Aux_Message( stdout, "  number of radial bins in the mass profile = %d\n",     Plummer_MassProfNBin );
       Aux_Message( stdout, "  free-fall time at the scale radius        = %13.7e\n", Plummer_FreeT );
       Aux_Message( stdout, "=============================================================================\n" );
@@ -382,6 +403,7 @@ void Init_TestProb_Hydro_Plummer()
 #  endif
 #  ifdef GRAVITY
    Init_ExtAcc_Ptr = Init_ExtAcc_Plummer;
+   Init_ExtPot_Ptr = Init_ExtPot_Plummer;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 

@@ -17,61 +17,59 @@
 extern double Plummer_Rho0;
 extern double Plummer_R0;
 extern double Plummer_Center[3];
-extern double Plummer_ExtAccMFrac;
+extern double Plummer_ExtPotMFrac;
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  SetExtAccAuxArray_Plummer
-// Description :  Set the auxiliary array ExtAcc_AuxArray[] used by ExtAcc_Plummer()
+// Function    :  SetExtPotAuxArray_Plummer
+// Description :  Set the auxiliary array ExtPot_AuxArray[] used by ExtPot_Plummer()
 //
-// Note        :  1. Invoked by Init_ExtAcc_Plummer()
-//                2. AuxArray[] has the size of EXT_ACC_NAUX_MAX defined in Macro.h (default = 10)
+// Note        :  1. Invoked by Init_ExtPot_Plummer()
+//                2. AuxArray[] has the size of EXT_POT_NAUX_MAX defined in Macro.h (default = 10)
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
 // Parameter   :  AuxArray : Array to be filled up
 //
 // Return      :  AuxArray[]
 //-------------------------------------------------------------------------------------------------------
-void SetExtAccAuxArray_Plummer( double AuxArray[] )
+void SetExtPotAuxArray_Plummer( double AuxArray[] )
 {
 
-// acceleration = -G*M*r/(r^2+R0^2)^(3/2)
-   const double ExtAccM = (4.0/3.0)*M_PI*CUBE(Plummer_R0)*Plummer_Rho0*Plummer_ExtAccMFrac;
+// potential = -G*M/(r^2+R0^2)^(1/2)
+   const double ExtPotM = (4.0/3.0)*M_PI*CUBE(Plummer_R0)*Plummer_Rho0*Plummer_ExtPotMFrac;
 
-   AuxArray[0] = Plummer_Center[0];    // x coordinate of the external acceleration center
+   AuxArray[0] = Plummer_Center[0];    // x coordinate of the Plummer center
    AuxArray[1] = Plummer_Center[1];    // y ...
    AuxArray[2] = Plummer_Center[2];    // z ...
    AuxArray[3] = SQR( Plummer_R0 );    // scale_radius^2
-   AuxArray[4] = -NEWTON_G*ExtAccM;    // -G*M
+   AuxArray[4] = -NEWTON_G*ExtPotM;    // -G*M
 
-} // FUNCTION : SetExtAccAuxArray_Plummer
+} // FUNCTION : SetExtPotAuxArray_Plummer
 #endif // #ifndef __CUDACC__
 
 
 
 // =================================
-// II. Specify external acceleration
+// II. Specify external potential
 // =================================
 
 //-----------------------------------------------------------------------------------------
-// Function    :  ExtAcc_Plummer
-// Description :  Calculate the external acceleration at the given coordinates and time
+// Function    :  ExtPot_Plummer
+// Description :  Calculate the external potential at the given coordinates and time
 //
 // Note        :  1. This function is shared by CPU and GPU
-//                2. Auxiliary array UserArray[] is set by SetExtAccAuxArray_Plummer()
+//                2. Auxiliary array UserArray[] is set by SetExtPotAuxArray_Plummer()
 //
-// Parameter   :  Acc       : Array to store the output external acceleration
-//                x/y/z     : Target spatial coordinates
+// Parameter   :  x/y/z     : Target spatial coordinates
 //                Time      : Target physical time
 //                UserArray : User-provided auxiliary array
 //
-// Return      :  External acceleration Acc[] at (x,y,z,Time)
+// Return      :  External potential at (x,y,z,Time)
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static void ExtAcc_Plummer( real Acc[], const double x, const double y, const double z, const double Time,
-                              const double UserArray[] )
+static real ExtPot_Plummer( const double x, const double y, const double z, const double Time, const double UserArray[] )
 {
 
-// acceleration = -G*M*r/(r^2+a^2)^(3/2)
+// potential = -G*M/(r^2+R0^2)^(1/2)
    const double cx  =       UserArray[0];    // x coordinate of the Plummer center
    const double cy  =       UserArray[1];    // y ...
    const double cz  =       UserArray[2];    // z ...
@@ -82,13 +80,11 @@ static void ExtAcc_Plummer( real Acc[], const double x, const double y, const do
    const real   dy  = (real)(y - cy);
    const real   dz  = (real)(z - cz);
    const real   r2  = SQR(dx) + SQR(dy) + SQR(dz);
-   const real   tmp = mGM * POW( r2+a2, (real)-1.5 );
+   const real   pot = mGM / SQRT( r2 + a2 );
 
-   Acc[0] = tmp*dx;
-   Acc[1] = tmp*dy;
-   Acc[2] = tmp*dz;
+   return pot;
 
-} // FUNCTION : ExtAcc_Plummer
+} // FUNCTION : ExtPot_Plummer
 
 
 
@@ -102,30 +98,30 @@ static void ExtAcc_Plummer( real Acc[], const double x, const double y, const do
 #  define FUNC_SPACE            static
 #endif
 
-FUNC_SPACE ExtAcc_t ExtAcc_Ptr = ExtAcc_Plummer;
+FUNC_SPACE ExtPot_t ExtPot_Ptr = ExtPot_Plummer;
 
 //-----------------------------------------------------------------------------------------
-// Function    :  SetCPU/GPUExtAcc_Plummer
-// Description :  Return the function pointers of the CPU/GPU external acceleration routines
+// Function    :  SetCPU/GPUExtPot_Plummer
+// Description :  Return the function pointers of the CPU/GPU external potential routines
 //
-// Note        :  1. Invoked by Init_ExtAcc_Plummer()
+// Note        :  1. Invoked by Init_ExtPot_Plummer()
 //
-// Parameter   :  CPU/GPUExtAcc_Ptr (call-by-reference)
+// Parameter   :  CPU/GPUExtPot_Ptr (call-by-reference)
 //
-// Return      :  CPU/GPUExtAcc_Ptr
+// Return      :  CPU/GPUExtPot_Ptr
 //-----------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __host__
-void SetGPUExtAcc_Plummer( ExtAcc_t &GPUExtAcc_Ptr )
+void SetGPUExtPot_Plummer( ExtPot_t &GPUExtPot_Ptr )
 {
-   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &GPUExtAcc_Ptr, ExtAcc_Ptr, sizeof(ExtAcc_t) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &GPUExtPot_Ptr, ExtPot_Ptr, sizeof(ExtPot_t) )  );
 }
 
 #else // #ifdef __CUDACC__
 
-void SetCPUExtAcc_Plummer( ExtAcc_t &CPUExtAcc_Ptr )
+void SetCPUExtPot_Plummer( ExtPot_t &CPUExtPot_Ptr )
 {
-   CPUExtAcc_Ptr = ExtAcc_Ptr;
+   CPUExtPot_Ptr = ExtPot_Ptr;
 }
 
 #endif // #ifdef __CUDACC__ ... else ...
@@ -135,41 +131,37 @@ void SetCPUExtAcc_Plummer( ExtAcc_t &CPUExtAcc_Ptr )
 #ifndef __CUDACC__
 
 // local function prototypes
-void SetExtAccAuxArray_Plummer( double [] );
-void SetCPUExtAcc_Plummer( ExtAcc_t & );
+void SetExtPotAuxArray_Plummer( double [] );
+void SetCPUExtPot_Plummer( ExtPot_t & );
 #ifdef GPU
-void SetGPUExtAcc_Plummer( ExtAcc_t & );
+void SetGPUExtPot_Plummer( ExtPot_t & );
 #endif
 
 //-----------------------------------------------------------------------------------------
-// Function    :  Init_ExtAcc_Plummer
-// Description :  Initialize external acceleration
+// Function    :  Init_ExtPot_Plummer
+// Description :  Initialize external potential
 //
-// Note        :  1. Set an auxiliary array by invoking SetExtAccAuxArray_*()
+// Note        :  1. Set an auxiliary array by invoking SetExtPotAuxArray_*()
 //                   --> It will be copied to GPU automatically in CUAPI_SetConstMemory()
-//                2. Set the CPU/GPU external acceleration major routines by invoking SetCPU/GPUExtAcc_*()
+//                2. Set the CPU/GPU external potential major routines by invoking SetCPU/GPUExtPot_*()
 //                3. Invoked by Init_ExtAccPot()
-//                   --> Enable it by linking to the function pointer "Init_ExtAcc_Ptr"
+//                   --> Enable it by linking to the function pointer "Init_ExtPot_Ptr"
 //                4. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
-// Parameter   :  OnlySetAuxArray : See "src/SelfGravity/Init_ExtAccPot.cpp"
+// Parameter   :  None
 //
 // Return      :  None
 //-----------------------------------------------------------------------------------------
-void Init_ExtAcc_Plummer( const bool OnlySetAuxArray )
+void Init_ExtPot_Plummer()
 {
 
-   SetExtAccAuxArray_Plummer( ExtAcc_AuxArray );
+   SetExtPotAuxArray_Plummer( ExtPot_AuxArray );
+   SetCPUExtPot_Plummer( CPUExtPot_Ptr );
+#  ifdef GPU
+   SetGPUExtPot_Plummer( GPUExtPot_Ptr );
+#  endif
 
-   if ( ! OnlySetAuxArray )
-   {
-      SetCPUExtAcc_Plummer( CPUExtAcc_Ptr );
-#     ifdef GPU
-      SetGPUExtAcc_Plummer( GPUExtAcc_Ptr );
-#     endif
-   }
-
-} // FUNCTION : Init_ExtAcc_Plummer
+} // FUNCTION : Init_ExtPot_Plummer
 
 #endif // #ifndef __CUDACC__
 
