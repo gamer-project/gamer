@@ -22,7 +22,7 @@ void Poi_Close( const int lv, const int SaveSg, const real h_Pot_Array_P_Out[][G
 {
 
 // nothing to do if not using potential at all
-   if ( !OPT__SELF_GRAVITY  &&  !OPT__EXT_POG )    return;
+   if ( !OPT__SELF_GRAVITY  &&  !OPT__EXT_POT )    return;
 
 
    int ii, jj, kk, N, PID, PID0;
