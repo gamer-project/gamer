@@ -14,6 +14,7 @@
        double Plummer_Center[3];    // central coordinates
        double Plummer_BulkVel[3];   // bulk velocity
        double Plummer_GasMFrac;     // gas                   mass fraction
+       double Plummer_ParMFrac;     // particle              mass fraction
        double Plummer_ExtAccMFrac;  // external acceleration mass fraction
        double Plummer_ExtPotMFrac;  // external potential    mass fraction
        int    Plummer_MassProfNBin; // number of radial bins in the mass profile table
@@ -176,24 +177,100 @@ void SetParameter()
    }
 #  endif
 
-   const double NonParMFrac = Plummer_GasMFrac + Plummer_ExtAccMFrac + Plummer_ExtPotMFrac;
-#  ifdef PARTICLE
-   if ( NonParMFrac > 1.0 )
-      Aux_Error( ERROR_INFO, "GasMFrac (%13.7e) + ExtAccMFrac (%13.7e) + ExtPotMFrac (%13.7e) = %13.7e > 1.0 !!\n",
-                 Plummer_GasMFrac, Plummer_ExtAccMFrac, Plummer_ExtPotMFrac, NonParMFrac );
-
-   else if ( MPI_Rank == 0 )
-      Aux_Message( stderr, "NOTE : particle mass fraction is set to %13.7e\n", 1.0-NonParMFrac );
-
-#  else
-   if (  ! Mis_CompareRealValue( NonParMFrac, 1.0, NULL, false )  )
-   {
-      Plummer_GasMFrac = 1.0 - Plummer_ExtAccMFrac - Plummer_ExtPotMFrac;
-
-      if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : \"Plummer_GasMFrac\" is reset to %13.7e since PARTICLE is disabled !!\n", Plummer_GasMFrac );
-   }
+#  ifndef PARTICLE
+   Plummer_ParMFrac = 0.0;
 #  endif
+
+#  ifdef GRAVITY
+   if ( OPT__SELF_GRAVITY )
+   {
+//    ensure the sum of all mass fractions equals unity
+      const double NonParMFrac = Plummer_GasMFrac + Plummer_ExtAccMFrac + Plummer_ExtPotMFrac;
+
+#     ifdef PARTICLE
+      if ( NonParMFrac > 1.0 )
+         Aux_Error( ERROR_INFO, "GasMFrac (%13.7e) + ExtAccMFrac (%13.7e) + ExtPotMFrac (%13.7e) = %13.7e > 1.0 !!\n",
+                    Plummer_GasMFrac, Plummer_ExtAccMFrac, Plummer_ExtPotMFrac, NonParMFrac );
+
+      else
+         Plummer_ParMFrac = 1.0 - NonParMFrac;
+
+#     else
+      if (  ! Mis_CompareRealValue( NonParMFrac, 1.0, NULL, false )  )
+      {
+         Plummer_GasMFrac = 1.0 - Plummer_ExtAccMFrac - Plummer_ExtPotMFrac;
+
+         if ( MPI_Rank == 0 )
+            Aux_Message( stderr, "WARNING : \"Plummer_GasMFrac\" is reset to %13.7e !!\n", Plummer_GasMFrac );
+      }
+#     endif
+   } // if ( OPT__SELF_GRAVITY )
+
+   else
+   {
+//    without self-gravity, gas and particle mass normalization can be set arbitrarily as they contribute no gravity
+//    --> just ensure the sum of their mass fractions equals unity
+#     ifdef PARTICLE
+      if ( Plummer_GasMFrac > 1.0 )
+         Aux_Error( ERROR_INFO, "GasMFrac (%13.7e) > 1.0 !!\n", Plummer_GasMFrac );
+
+      else
+         Plummer_ParMFrac = 1.0 - Plummer_GasMFrac;
+
+#     else
+      if (  ! Mis_CompareRealValue( Plummer_GasMFrac, 1.0, NULL, false )  )
+      {
+         Plummer_GasMFrac = 1.0;
+
+         if ( MPI_Rank == 0 )
+            Aux_Message( stderr, "WARNING : \"Plummer_GasMFrac\" is reset to %13.7e !!\n", Plummer_GasMFrac );
+      }
+#     endif
+
+//    ensure the sum of the mass fractions of external acceleration and potential equals unity
+      if ( OPT__EXT_POT )
+      {
+         if ( OPT__EXT_ACC )
+         {
+            if (  ! Mis_CompareRealValue( Plummer_ExtAccMFrac+Plummer_ExtPotMFrac, 1.0, NULL, false )  )
+            {
+               Plummer_ExtPotMFrac = 1.0 - Plummer_ExtAccMFrac;
+
+               if ( MPI_Rank == 0 )
+                  Aux_Message( stderr, "WARNING : \"Plummer_ExtPotMFrac\" is reset to %13.7e !!\n", Plummer_ExtPotMFrac );
+            }
+         }
+
+         else
+         {
+            if (  ! Mis_CompareRealValue( Plummer_ExtPotMFrac, 1.0, NULL, false )  )
+            {
+               Plummer_ExtPotMFrac = 1.0;
+
+               if ( MPI_Rank == 0 )
+                  Aux_Message( stderr, "WARNING : \"Plummer_ExtPotMFrac\" is reset to %13.7e !!\n", Plummer_ExtPotMFrac );
+            }
+         }
+      } // if ( OPT__EXT_POT )
+
+      else
+      {
+         if ( OPT__EXT_ACC )
+         {
+            if (  ! Mis_CompareRealValue( Plummer_ExtAccMFrac, 1.0, NULL, false )  )
+            {
+               Plummer_ExtAccMFrac = 1.0;
+
+               if ( MPI_Rank == 0 )
+                  Aux_Message( stderr, "WARNING : \"Plummer_ExtAccMFrac\" is reset to %13.7e !!\n", Plummer_ExtAccMFrac );
+            }
+         }
+
+         else
+            Aux_Error( ERROR_INFO, "all gravity options are disabled (OPT__SELF_GRAVITY, OPT__EXT_ACC, OPT__EXT_POT) !!\n" );
+      } // if ( OPT__EXT_POT ) ... else ...
+   } // if ( OPT__SELF_GRAVITY ) ... else ...
+#  endif // #ifdef GRAVITY
 
 // (2) set the problem-specific derived parameters
 #  ifdef GRAVITY
@@ -236,6 +313,7 @@ void SetParameter()
       for (int d=0; d<3; d++)
       Aux_Message( stdout, "  bulk velocity [%d]                        = %14.7e\n", d, Plummer_BulkVel[d] );
       Aux_Message( stdout, "  gas                   mass fraction       = %13.7e\n", Plummer_GasMFrac );
+      Aux_Message( stdout, "  particle              mass fraction       = %13.7e\n", Plummer_ParMFrac );
       Aux_Message( stdout, "  external acceleration mass fraction       = %13.7e\n", Plummer_ExtAccMFrac );
       Aux_Message( stdout, "  external potential    mass fraction       = %13.7e\n", Plummer_ExtPotMFrac );
       Aux_Message( stdout, "  number of radial bins in the mass profile = %d\n",     Plummer_MassProfNBin );
