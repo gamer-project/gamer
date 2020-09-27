@@ -85,8 +85,15 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
    const real *Mass             = amr->Par->Mass;
 
    double Ep_ThisRank = 0.0;
-   double PrepPotTime, dh, _dh;
+   double PrepPotTime, dh, _dh, Ep_Coeff;
    int    PotSg;
+
+// set potential energy to zero when enabling both OPT__SELF_GRAVITY and OPT__EXT_POT
+// since the potential energy obtained here would be wrong anyway
+// --> to avoid possible misinterpretation
+   if      (  OPT__SELF_GRAVITY  &&  !OPT__EXT_POT )  Ep_Coeff = 0.5;
+   else if ( !OPT__SELF_GRAVITY  &&   OPT__EXT_POT )  Ep_Coeff = 1.0;
+   else                                               Ep_Coeff = 0.0;
 
 
 // check
@@ -235,7 +242,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                      } // for (int d=0; d<3; d++)
 
 //                   get potential energy
-                     Ep_ThisRank += 0.5*Mass[ParID]*Pot3D[P][ idx[2] ][ idx[1] ][ idx[0] ];
+                     Ep_ThisRank += Ep_Coeff*Mass[ParID]*Pot3D[P][ idx[2] ][ idx[1] ][ idx[0] ];
                   } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                } // PAR_INTERP_NGP
                break;
@@ -295,8 +302,8 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                      for (int k=0; k<2; k++)
                      for (int j=0; j<2; j++)
                      for (int i=0; i<2; i++)
-                     Ep_ThisRank += 0.5*Mass[ParID]*Pot3D[P][ idxLR[k][2] ][ idxLR[j][1] ][ idxLR[i][0] ]
-                                       *Frac[i][0]*Frac[j][1]*Frac[k][2];
+                     Ep_ThisRank += Ep_Coeff*Mass[ParID]*Pot3D[P][ idxLR[k][2] ][ idxLR[j][1] ][ idxLR[i][0] ]
+                                            *Frac[i][0]*Frac[j][1]*Frac[k][2];
                   } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                } // PAR_INTERP_CIC
                break;
@@ -359,8 +366,8 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                      for (int k=0; k<3; k++)
                      for (int j=0; j<3; j++)
                      for (int i=0; i<3; i++)
-                     Ep_ThisRank += 0.5*Mass[ParID]*Pot3D[P][ idxLCR[k][2] ][ idxLCR[j][1] ][ idxLCR[i][0] ]
-                                       *Frac[i][0]*Frac[j][1]*Frac[k][2];
+                     Ep_ThisRank += Ep_Coeff*Mass[ParID]*Pot3D[P][ idxLCR[k][2] ][ idxLCR[j][1] ][ idxLCR[i][0] ]
+                                            *Frac[i][0]*Frac[j][1]*Frac[k][2];
                   } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                } // PAR_INTERP_TSC
                break;
