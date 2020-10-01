@@ -33,7 +33,7 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
                                   real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                   real *AllAttribute[PAR_NATT_TOTAL] );
 #endif
-void Init_ExtAcc_Plummer( const bool OnlySetAuxArray );
+void Init_ExtAcc_Plummer();
 void Init_ExtPot_Plummer();
 
 

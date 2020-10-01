@@ -103,8 +103,7 @@ void Init_GAMER( int *argc, char ***argv )
 // initialize the external potential and acceleration parameters
 // --> must be called AFTER Init_TestProb()
 #  ifdef GRAVITY
-   const bool OnlyInitAuxArray_No = false;
-   Init_ExtAccPot( OnlyInitAuxArray_No );
+   Init_ExtAccPot();
 #  endif
 
 

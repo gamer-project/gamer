@@ -203,22 +203,19 @@ void SetGPUExtAcc_PointMass( ExtAcc_t & );
 //                   --> Enable it by linking to the function pointer "Init_ExtAcc_Ptr"
 //                4. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
-// Parameter   :  OnlySetAuxArray : See "src/SelfGravity/Init_ExtAccPot.cpp"
+// Parameter   :  None
 //
 // Return      :  None
 //-----------------------------------------------------------------------------------------
-void Init_ExtAcc_PointMass( const bool OnlySetAuxArray )
+void Init_ExtAcc_PointMass()
 {
 
    SetExtAccAuxArray_PointMass( ExtAcc_AuxArray );
 
-   if ( ! OnlySetAuxArray )
-   {
-      SetCPUExtAcc_PointMass( CPUExtAcc_Ptr );
-#     ifdef GPU
-      SetGPUExtAcc_PointMass( GPUExtAcc_Ptr );
-#     endif
-   }
+   SetCPUExtAcc_PointMass( CPUExtAcc_Ptr );
+#  ifdef GPU
+   SetGPUExtAcc_PointMass( GPUExtAcc_Ptr );
+#  endif
 
 } // FUNCTION : Init_ExtAcc_PointMass
 

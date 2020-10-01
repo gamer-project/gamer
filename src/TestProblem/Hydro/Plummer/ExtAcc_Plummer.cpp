@@ -152,22 +152,19 @@ void SetGPUExtAcc_Plummer( ExtAcc_t & );
 //                   --> Enable it by linking to the function pointer "Init_ExtAcc_Ptr"
 //                4. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
-// Parameter   :  OnlySetAuxArray : See "src/SelfGravity/Init_ExtAccPot.cpp"
+// Parameter   :  None
 //
 // Return      :  None
 //-----------------------------------------------------------------------------------------
-void Init_ExtAcc_Plummer( const bool OnlySetAuxArray )
+void Init_ExtAcc_Plummer()
 {
 
    SetExtAccAuxArray_Plummer( ExtAcc_AuxArray );
 
-   if ( ! OnlySetAuxArray )
-   {
-      SetCPUExtAcc_Plummer( CPUExtAcc_Ptr );
-#     ifdef GPU
-      SetGPUExtAcc_Plummer( GPUExtAcc_Ptr );
-#     endif
-   }
+   SetCPUExtAcc_Plummer( CPUExtAcc_Ptr );
+#  ifdef GPU
+   SetGPUExtAcc_Plummer( GPUExtAcc_Ptr );
+#  endif
 
 } // FUNCTION : Init_ExtAcc_Plummer
 

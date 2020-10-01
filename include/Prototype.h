@@ -349,7 +349,7 @@ void Gra_Prepare_USG( const int lv, const double PrepTime,
 #endif
 void End_FFTW();
 void Init_FFTW();
-void Init_ExtAccPot( const bool OnlyInitAuxArray );
+void Init_ExtAccPot();
 void Init_GreenFuncK();
 void Init_MemAllocate_PoissonGravity( const int Pot_NPatchGroup );
 void Init_Set_Default_MG_Parameter( int &Max_Iter, int &NPre_Smooth, int &NPost_Smooth, double &Tolerated_Error );
