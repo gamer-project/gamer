@@ -9,6 +9,7 @@ extern Timer_t *Timer_Par_Collect[NLEVEL];
 #endif
 
 extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TTime );
+extern void (*Poi_UserWorkBeforePoisson_Ptr)( const double Time, const int lv );
 
 
 
@@ -102,6 +103,12 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
                      Timer_Par_Collect[lv],   Timing   );
    }
 #  endif // #ifdef PARTICLE
+
+
+// user-specified work before invoking the Poisson solver
+   if ( UsePot  &&  Poi_UserWorkBeforePoisson_Ptr != NULL )
+      TIMING_FUNC(   Poi_UserWorkBeforePoisson_Ptr( TimeNew, lv ),
+                     Timer_Gra_Advance[lv],   ( Timing && lv == 0 )   );
 
 
 // the base-level Poisson solver is implemented using the FFTW library (with CPUs only)

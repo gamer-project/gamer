@@ -291,6 +291,7 @@ void Init_TestProb_Template()
    Init_ExtAcc_Ptr                = NULL; // option: OPT__EXT_ACC;            example: SelfGravity/CPU_Gravity/CPU_ExtAcc_PointMass.cpp
    Init_ExtPot_Ptr                = NULL; // option: OPT__EXT_POT;            example: SelfGravity/CPU_Poisson/CPU_ExtPot_PointMass.cpp
    Poi_AddExtraMassForGravity_Ptr = NULL; // option: OPT__GRAVITY_EXTRA_MASS; example: none
+   Poi_UserWorkBeforePoisson_Ptr  = NULL; // option: none;                    example: SelfGravity/Poi_UserWorkBeforePoisson.cpp
 #  endif
 #  ifdef PARTICLE
    Par_Init_ByFunction_Ptr        = NULL; // option: PAR_INIT=1;              example: Particle/Par_Init_ByFunction.cpp
