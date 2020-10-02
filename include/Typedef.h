@@ -292,6 +292,17 @@ const OptExtPot_t
    EXT_POT_TABLE = 2;
 
 
+// different usages of external potential when computing total potential on level Lv
+// --> ADD     : add external potential on Lv
+//     SUB     : subtract external potential for preparing self-gravity potential on Lv-1
+//     SUB_TINT: like SUB but for temporal interpolation
+typedef int ExtPotUsage_t;
+const ExtPotUsage_t
+   EXT_POT_USAGE_ADD      = 0,
+   EXT_POT_USAGE_SUB      = 1,
+   EXT_POT_USAGE_SUB_TINT = 2;
+
+
 // forms of the Lohner's error estimator
 typedef int OptLohnerForm_t;
 const OptLohnerForm_t
@@ -375,10 +386,11 @@ typedef real (*EoS_DE2P_t)( const real Dens, const real Eint, const real Passive
 typedef real (*EoS_DP2E_t)( const real Dens, const real Pres, const real Passive[], const double UserArray[] );
 typedef real (*EoS_DP2C_t)( const real Dens, const real Pres, const real Passive[], const double UserArray[] );
 typedef void (*ExtAcc_t)( real Acc[], const double x, const double y, const double z, const double Time, const double UserArray[] );
-typedef real (*ExtPot_t)( const double x, const double y, const double z, const double Time, const double UserArray[] );
+typedef real (*ExtPot_t)( const double x, const double y, const double z, const double Time, const double UserArray[],
+                          const ExtPotUsage_t Usage );
 
 
-// options in "Aux_ComputeProfile"
+// options in Aux_ComputeProfile()
 typedef int PatchType_t;
 const PatchType_t
    PATCH_LEAF    = 0,

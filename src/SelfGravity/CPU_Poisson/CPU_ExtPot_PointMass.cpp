@@ -90,11 +90,17 @@ void SetExtPotAuxArray_PointMass( double AuxArray[] )
 // Parameter   :  x/y/z     : Target spatial coordinates
 //                Time      : Target physical time
 //                UserArray : User-provided auxiliary array
+//                Usage     : Different usages of external potential when computing total potential on level Lv
+//                            --> EXT_POT_USAGE_ADD     : add external potential on Lv
+//                                EXT_POT_USAGE_SUB     : subtract external potential for preparing self-gravity potential on Lv-1
+//                                EXT_POT_USAGE_SUB_TINT: like SUB but for temporal interpolation
+//                            --> This parameter is useless in most cases
 //
 // Return      :  External potential at (x,y,z,Time)
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real ExtPot_PointMass( const double x, const double y, const double z, const double Time, const double UserArray[] )
+static real ExtPot_PointMass( const double x, const double y, const double z, const double Time, const double UserArray[],
+                              const ExtPotUsage_t Usage )
 {
 
    const double Cen[3] = { UserArray[0], UserArray[1], UserArray[2] };

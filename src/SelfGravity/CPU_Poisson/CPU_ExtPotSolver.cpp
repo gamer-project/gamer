@@ -80,7 +80,7 @@ void CPU_ExtPotSolver  ( real g_Pot_Array[][ CUBE(GRA_NXT) ],
          y = y0 + double(j*dh);
          z = z0 + double(k*dh);
 
-         ExtPot = ExtPot_Func( x, y, z, Time, c_ExtPot_AuxArray );
+         ExtPot = ExtPot_Func( x, y, z, Time, c_ExtPot_AuxArray, EXT_POT_USAGE_ADD );
 
          if ( PotIsInit )  g_Pot_Array[P][t] += ExtPot;  // add to the input potential
          else              g_Pot_Array[P][t]  = ExtPot;  // overwrite the input potential

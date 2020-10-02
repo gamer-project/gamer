@@ -65,7 +65,7 @@ void CPU_ExtPotSolver_BaseLevel( const ExtPot_t ExtPot_Func, const double ExtPot
          for (int j=0; j<PS1; j++)  {  y = y0 + j*dh;
          for (int i=0; i<PS1; i++)  {  x = x0 + i*dh;
 
-            ExtPot = ExtPot_Func( x, y, z, Time, ExtPot_AuxArray );
+            ExtPot = ExtPot_Func( x, y, z, Time, ExtPot_AuxArray, EXT_POT_USAGE_ADD );
 
             if ( PotIsInit )  amr->patch[SaveSg][lv][PID]->pot[k][j][i] += ExtPot;  // add
             else              amr->patch[SaveSg][lv][PID]->pot[k][j][i]  = ExtPot;  // overwrite
