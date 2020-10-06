@@ -599,6 +599,10 @@ void Aux_Check_Parameter()
 #  if ( EOS != EOS_GAMMA )
 #     error : ERROR : DUAL_ENERGY currently only supports EOS_GAMMA !!
 #  endif
+
+#   if ( DUAL_ENERGY == DE_ENPY  &&  defined COSMIC_RAY )
+#     error : COSMIC_RAY does NOT support DUAL_ENERGY=DE_ENPY !!
+#   endif
 #  endif // #ifdef DUAL_ENERGY
 
 #  ifdef MHD
