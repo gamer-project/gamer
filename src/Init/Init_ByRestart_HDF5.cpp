@@ -85,7 +85,12 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  else
    const int  Magnetohydrodynamics = 0;
 #  endif
+#  ifdef COSMIC_RAY
+   const int  CosmicRay            = 1;
+#  else
+   const int  CosmicRay            = 0;
 #  endif
+#  endif // #if ( MODEL == HYDRO )
 
    KeyInfo_t KeyInfo;
 
@@ -173,6 +178,9 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  if ( MODEL == HYDRO )
    if ( KeyInfo.FormatVersion >= 2400 )
    LoadField( "Magnetohydrodynamics", &KeyInfo.Magnetohydrodynamics, H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &Magnetohydrodynamics,  1,    Fatal );
+
+   if ( KeyInfo.FormatVersion >= 2500 )
+   LoadField( "CosmicRay",            &KeyInfo.CosmicRay,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &CosmicRay,             1,    Fatal );
 #  endif
 
    LoadField( "Step",                 &KeyInfo.Step,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
@@ -1432,6 +1440,7 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
 #  endif
    LoadField( "DualEnergy",             &RS.DualEnergy,             SID, TID, NonFatal, &RT.DualEnergy,             1, NonFatal );
    LoadField( "Magnetohydrodynamics",   &RS.Magnetohydrodynamics,   SID, TID, NonFatal, &RT.Magnetohydrodynamics,   1,    Fatal );
+   LoadField( "CosmicRay",              &RS.CosmicRay,              SID, TID, NonFatal, &RT.CosmicRay,              1,    Fatal );
    LoadField( "EoS",                    &RS.EoS,                    SID, TID, NonFatal, &RT.EoS,                    1, NonFatal );
    LoadField( "BarotropicEoS",          &RS.BarotropicEoS,          SID, TID, NonFatal, &RT.BarotropicEoS,          1, NonFatal );
 

@@ -167,6 +167,12 @@ void Aux_TakeNote()
       fprintf( Note, "MHD                             OFF\n" );
 #     endif
 
+#     ifdef COSMIC_RAY
+      fprintf( Note, "COSMIC_RAY                      ON\n" );
+#     else
+      fprintf( Note, "COSMIC_RAY                      OFF\n" );
+#     endif
+
 #     if   ( EOS == EOS_GAMMA )
       fprintf( Note, "EOS                             EOS_GAMMA\n" );
 #     elif ( EOS == EOS_ISOTHERMAL )

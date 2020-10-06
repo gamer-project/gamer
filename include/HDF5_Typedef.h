@@ -56,6 +56,7 @@ struct KeyInfo_t
    int    CellScale[NLEVEL];        // amr->scale[lv]
 #  if ( MODEL == HYDRO )
    int    Magnetohydrodynamics;
+   int    CosmicRay;
 #  endif
 
    long   Step;
@@ -129,6 +130,7 @@ struct Makefile_t
 #  endif
    int DualEnergy;
    int Magnetohydrodynamics;
+   int CosmicRay;
    int EoS;
    int BarotropicEoS;
 
