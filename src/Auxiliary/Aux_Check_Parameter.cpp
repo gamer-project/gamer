@@ -596,8 +596,8 @@ void Aux_Check_Parameter()
 #     error : ERROR : unsupported dual-energy formalism (DE_ENPY only, DE_EINT is not supported yet) !!
 #   endif
 
-#  if ( EOS != EOS_GAMMA )
-#     error : ERROR : DUAL_ENERGY currently only supports EOS_GAMMA !!
+#  if ( DUAL_ENERGY == DE_ENPY  &&  EOS != EOS_GAMMA )
+#     error : ERROR : EOS_GAMMA does NOT support DUAL_ENERGY=DE_ENPY !!
 #  endif
 #  endif // #ifdef DUAL_ENERGY
 
