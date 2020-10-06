@@ -46,6 +46,12 @@ void Init_Field()
    Idx_MomZ    = AddField( "MomZ",     NORMALIZE_NO );
    Idx_Engy    = AddField( "Engy",     NORMALIZE_NO );
 
+   if ( Idx_Dens != DENS )    Aux_Error( ERROR_INFO, "inconsistent Idx_Dens (%d != %d) !!\n", Idx_Dens, DENS );
+   if ( Idx_MomX != MOMX )    Aux_Error( ERROR_INFO, "inconsistent Idx_MomX (%d != %d) !!\n", Idx_MomX, MOMX );
+   if ( Idx_MomY != MOMY )    Aux_Error( ERROR_INFO, "inconsistent Idx_MomY (%d != %d) !!\n", Idx_MomY, MOMY );
+   if ( Idx_MomZ != MOMZ )    Aux_Error( ERROR_INFO, "inconsistent Idx_MomZ (%d != %d) !!\n", Idx_MomZ, MOMZ );
+   if ( Idx_Engy != ENGY )    Aux_Error( ERROR_INFO, "inconsistent Idx_Engy (%d != %d) !!\n", Idx_Engy, ENGY );
+
 #  ifdef MHD
    MagLabel[MAGX] = "MagX";
    MagLabel[MAGY] = "MagY";
@@ -93,13 +99,20 @@ void Init_Field()
    if ( Init_Field_User_Ptr != NULL )  Init_Field_User_Ptr();
 
 
-// 4. must put the dual-energy variable at the END of the field list to be consistent with the symbolic
-//    constant ENPY (or EINT) defined in Macro.h
+// 4. must put all built-in scalars at the END of the field list and with the same order as their
+//    corresponding symbolic constants (e.g., ENPY/EINT/CRAY) defined in Macro.h
 //    --> as we still rely on these constants (e.g., DENS, ENPY) in the fluid solvers
+#  ifdef COSMIC_RAY
+   Idx_CRay    = AddField( "CRay",     NORMALIZE_NO );
+   if ( Idx_CRay != CRAY )    Aux_Error( ERROR_INFO, "inconsistent Idx_CRay (%d != %d) !!\n", Idx_CRay, CRAY );
+#  endif
+
 #  if   ( DUAL_ENERGY == DE_ENPY )
    Idx_Enpy    = AddField( "Entropy",  NORMALIZE_NO );
+   if ( Idx_Enpy != ENPY )    Aux_Error( ERROR_INFO, "inconsistent Idx_Enpy (%d != %d) !!\n", Idx_Enpy, ENPY );
 #  elif ( DUAL_ENERGY == DE_EINT )
    Idx_Eint    = AddField( "Eint",     NORMALIZE_NO );
+   if ( Idx_Eint != EINT )    Aux_Error( ERROR_INFO, "inconsistent Idx_Eint (%d != %d) !!\n", Idx_Eint, EINT );
 #  endif
 
 
