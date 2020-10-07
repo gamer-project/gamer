@@ -296,6 +296,16 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__SELF_GRAVITY",          &OPT__SELF_GRAVITY,               true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__EXT_ACC",               &OPT__EXT_ACC,                    0,               0,             2              );
    ReadPara->Add( "OPT__EXT_POT",               &OPT__EXT_POT,                    0,               0,             2              );
+   ReadPara->Add( "EXT_POT_TABLE_NAME",          EXT_POT_TABLE_NAME,              Useless_str,     Useless_str,   Useless_str    );
+   ReadPara->Add( "EXT_POT_TABLE_NCELL_X",      &EXT_POT_TABLE_NCELL[0],         -1,               2,             NoMax_int      );
+   ReadPara->Add( "EXT_POT_TABLE_NCELL_Y",      &EXT_POT_TABLE_NCELL[1],         -1,               2,             NoMax_int      );
+   ReadPara->Add( "EXT_POT_TABLE_NCELL_Z",      &EXT_POT_TABLE_NCELL[2],         -1,               2,             NoMax_int      );
+   ReadPara->Add( "EXT_POT_TABLE_DH",           &EXT_POT_TABLE_DH,               -1.0,             Eps_double,    NoMax_double   );
+   ReadPara->Add( "EXT_POT_TABLE_EDGEL_X",      &EXT_POT_TABLE_EDGEL[0],          NoDef_double,    NoMin_double,  NoMax_double   );
+   ReadPara->Add( "EXT_POT_TABLE_EDGEL_Y",      &EXT_POT_TABLE_EDGEL[1],          NoDef_double,    NoMin_double,  NoMax_double   );
+   ReadPara->Add( "EXT_POT_TABLE_EDGEL_Z",      &EXT_POT_TABLE_EDGEL[2],          NoDef_double,    NoMin_double,  NoMax_double   );
+// do not check EXT_POT_TABLE_FLOAT8 since it may be reset by Init_ResetDefaultParameter()
+   ReadPara->Add( "EXT_POT_TABLE_FLOAT8",       &EXT_POT_TABLE_FLOAT8,           -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "OPT__GRAVITY_EXTRA_MASS",    &OPT__GRAVITY_EXTRA_MASS,         false,           Useless_bool,  Useless_bool   );
 #  endif // #ifdef GRAVITY
 

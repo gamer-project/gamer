@@ -124,26 +124,27 @@ extern double           ELBDM_LAMBDA;
 // (2-2) self-gravity
 // ============================================================================================================
 #ifdef GRAVITY
-extern double     AveDensity_Init;                    // initial average mass density (in all levels)
-extern int        Pot_ParaBuf;                        // number of parallel buffers to exchange potential for the
-                                                      // Poisson/Gravity solvers and the potential refinement
-extern int        Rho_ParaBuf;                        // number of parallel buffers to exchange density for the Poisson solver
-
-extern real      *GreenFuncK;
-extern double     GFUNC_COEFF0;
-extern double     DT__GRAVITY;
-extern double     NEWTON_G;
-extern int        POT_GPU_NPGROUP;
-extern bool       OPT__OUTPUT_POT, OPT__GRA_P5_GRADIENT, OPT__SELF_GRAVITY, OPT__GRAVITY_EXTRA_MASS;
-extern double     SOR_OMEGA;
-extern int        SOR_MAX_ITER, SOR_MIN_ITER;
-extern double     MG_TOLERATED_ERROR;
-extern int        MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH;
-
-extern IntScheme_t      OPT__POT_INT_SCHEME, OPT__RHO_INT_SCHEME, OPT__GRA_INT_SCHEME, OPT__REF_POT_INT_SCHEME;
-extern OptPotBC_t       OPT__BC_POT;
-extern OptExtAcc_t      OPT__EXT_ACC;
-extern OptExtPot_t      OPT__EXT_POT;
+extern double        AveDensity_Init;     // initial average mass density (in all levels)
+extern int           Pot_ParaBuf;         // number of parallel buffers to exchange potential for the
+                                          // Poisson/Gravity solvers and the potential refinement
+extern int           Rho_ParaBuf;         // number of parallel buffers to exchange density for the Poisson solver
+extern real         *GreenFuncK;
+extern double        GFUNC_COEFF0;
+extern double        DT__GRAVITY;
+extern double        NEWTON_G;
+extern int           POT_GPU_NPGROUP;
+extern bool          OPT__OUTPUT_POT, OPT__GRA_P5_GRADIENT, OPT__SELF_GRAVITY, OPT__GRAVITY_EXTRA_MASS;
+extern double        SOR_OMEGA;
+extern int           SOR_MAX_ITER, SOR_MIN_ITER;
+extern double        MG_TOLERATED_ERROR;
+extern int           MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH;
+extern char          EXT_POT_TABLE_NAME[MAX_STRING];
+extern double        EXT_POT_TABLE_DH, EXT_POT_TABLE_EDGEL[3];
+extern int           EXT_POT_TABLE_NCELL[3], EXT_POT_TABLE_FLOAT8;
+extern IntScheme_t   OPT__POT_INT_SCHEME, OPT__RHO_INT_SCHEME, OPT__GRA_INT_SCHEME, OPT__REF_POT_INT_SCHEME;
+extern OptPotBC_t    OPT__BC_POT;
+extern OptExtAcc_t   OPT__EXT_ACC;
+extern OptExtPot_t   OPT__EXT_POT;
 
 extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
