@@ -552,6 +552,7 @@ void Aux_TakeNote()
 #     elif ( POT_SCHEME == MG )
       fprintf( Note, "#define POT_BLOCK_SIZE_X        %d\n",      POT_BLOCK_SIZE_X    );
 #     endif
+      fprintf( Note, "#define EXTPOT_BLOCK_SIZE       %d\n",      EXTPOT_BLOCK_SIZE   );
       fprintf( Note, "#define GRA_BLOCK_SIZE          %d\n",      GRA_BLOCK_SIZE      );
 #     endif // #ifdef GRAVITY
       fprintf( Note, "#define DT_FLU_BLOCK_SIZE       %d\n",      DT_FLU_BLOCK_SIZE   );
@@ -991,8 +992,9 @@ void Aux_TakeNote()
 #     endif
       fprintf( Note, "POT_GPU_NPGROUP                 %d\n",      POT_GPU_NPGROUP         );
       fprintf( Note, "OPT__GRA_P5_GRADIENT            %d\n",      OPT__GRA_P5_GRADIENT    );
-      fprintf( Note, "OPT__GRAVITY_TYPE               %d\n",      OPT__GRAVITY_TYPE       );
-      fprintf( Note, "OPT__EXTERNAL_POT               %d\n",      OPT__EXTERNAL_POT       );
+      fprintf( Note, "OPT__SELF_GRAVITY               %d\n",      OPT__SELF_GRAVITY       );
+      fprintf( Note, "OPT__EXT_ACC                    %d\n",      OPT__EXT_ACC            );
+      fprintf( Note, "OPT__EXT_POT                    %d\n",      OPT__EXT_POT            );
       fprintf( Note, "OPT__GRAVITY_EXTRA_MASS         %d\n",      OPT__GRAVITY_EXTRA_MASS );
       fprintf( Note, "AveDensity_Init                 %13.7e\n",  AveDensity_Init         );
       fprintf( Note, "***********************************************************************************\n" );

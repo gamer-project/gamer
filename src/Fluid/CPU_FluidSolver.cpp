@@ -47,8 +47,8 @@ void CPU_FluidSolver_MHM(
    const int NPatchGroup,
    const real dt, const real dh,
    const bool StoreFlux, const bool StoreElectric,
-   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-   const double Time, const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
+   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const double Time,
+   const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const double c_ExtAcc_AuxArray[],
    const real MinDens, const real MinPres, const real MinEint,
    const real DualEnergySwitch, const bool NormPassive, const int NNorm,
@@ -77,8 +77,8 @@ void CPU_FluidSolver_CTU(
          real   g_EC_Ele       [][NCOMP_MAG][ CUBE(N_EC_ELE) ],
    const int NPatchGroup, const real dt, const real dh,
    const bool StoreFlux, const bool StoreElectric,
-   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-   const double Time, const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
+   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const double Time,
+   const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const double c_ExtAcc_AuxArray[],
    const real MinDens, const real MinPres, const real MinEint,
    const real DualEnergySwitch, const bool NormPassive, const int NNorm,
@@ -156,8 +156,9 @@ static real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ] = NULL;
 //                ELBDM_Taylor3_Coeff : Coefficient in front of the third term in the Taylor expansion for ELBDM
 //                ELBDM_Taylor3_Auto  : true --> Determine ELBDM_Taylor3_Coeff automatically by invoking the
 //                                               function "ELBDM_SetTaylor3Coeff"
-//                Time                : Current physical time                                     (for UNSPLIT_GRAVITY only)
-//                GravityType         : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
+//                Time                : Current physical time                      (for UNSPLIT_GRAVITY only)
+//                UsePot              : Add self-gravity and/or external potential (for UNSPLIT_GRAVITY only)
+//                ExtAcc              : Add external acceleration                  (for UNSPLIT_GRAVITY only)
 //                MinDens/Pres/Eint   : Density, pressure, and internal energy floors
 //                DualEnergySwitch    : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
 //                NormPassive         : true --> normalize passive scalars so that the sum of their mass density
@@ -182,7 +183,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const bool StoreFlux, const bool StoreElectric,
                       const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                       const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
-                      const double Time, const OptGravityType_t GravityType,
+                      const double Time, const bool UsePot, const OptExtAcc_t ExtAcc,
                       const real MinDens, const real MinPres, const real MinEint,
                       const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
                       const bool JeansMinPres, const real JeansMinPres_Coeff )
@@ -197,11 +198,9 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
 #  endif
 
 #  ifdef UNSPLIT_GRAVITY
-   if (  ( GravityType == GRAVITY_SELF || GravityType == GRAVITY_BOTH )  &&  h_Pot_Array_USG == NULL  )
-   Aux_Error( ERROR_INFO, "h_Pot_Array_USG == NULL !!\n" );
+   if ( UsePot  &&  h_Pot_Array_USG == NULL )   Aux_Error( ERROR_INFO, "h_Pot_Array_USG == NULL !!\n" );
 
-   if (  ( GravityType == GRAVITY_EXTERNAL || GravityType == GRAVITY_BOTH )  &&  h_Corner_Array == NULL  )
-   Aux_Error( ERROR_INFO, "h_Corner_Array == NULL !!\n" );
+   if ( ExtAcc  &&  h_Corner_Array == NULL )    Aux_Error( ERROR_INFO, "h_Corner_Array == NULL !!\n" );
 #  endif
 #  endif
 
@@ -220,7 +219,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                             h_DE_Array_Out, h_Flux_Array, h_Ele_Array, h_Corner_Array, h_Pot_Array_USG,
                             h_PriVar, h_Slope_PPM, h_FC_Var, h_FC_Flux, h_FC_Mag_Half, h_EC_Ele,
                             NPatchGroup, dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff, Time,
-                            GravityType, CPUExtAcc_Ptr, ExtAcc_AuxArray, MinDens, MinPres, MinEint,
+                            UsePot, ExtAcc, CPUExtAcc_Ptr, ExtAcc_AuxArray, MinDens, MinPres, MinEint,
                             DualEnergySwitch, NormPassive, NNorm, NormIdx, JeansMinPres, JeansMinPres_Coeff,
                             EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr, EoS_DensPres2CSqr_CPUPtr, EoS_AuxArray );
 
@@ -230,7 +229,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                             h_DE_Array_Out, h_Flux_Array, h_Ele_Array, h_Corner_Array, h_Pot_Array_USG,
                             h_PriVar, h_Slope_PPM, h_FC_Var, h_FC_Flux, h_FC_Mag_Half, h_EC_Ele,
                             NPatchGroup, dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff, Time,
-                            GravityType, CPUExtAcc_Ptr, ExtAcc_AuxArray, MinDens, MinPres, MinEint,
+                            UsePot, ExtAcc, CPUExtAcc_Ptr, ExtAcc_AuxArray, MinDens, MinPres, MinEint,
                             DualEnergySwitch, NormPassive, NNorm, NormIdx, JeansMinPres, JeansMinPres_Coeff,
                             EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr, EoS_DensPres2CSqr_CPUPtr, EoS_AuxArray );
 

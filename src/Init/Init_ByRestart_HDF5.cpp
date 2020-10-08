@@ -1540,6 +1540,7 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "USG_NxtF",             &RS.USG_NxtF,             SID, TID, NonFatal, &RT.USG_NxtF,              1, NonFatal );
    LoadField( "USG_NxtG",             &RS.USG_NxtG,             SID, TID, NonFatal, &RT.USG_NxtG,              1, NonFatal );
 #  endif
+   LoadField( "ExtPot_BlockSize",     &RS.ExtPot_BlockSize,     SID, TID, NonFatal, &RT.ExtPot_BlockSize,      1, NonFatal );
    LoadField( "Gra_BlockSize",        &RS.Gra_BlockSize,        SID, TID, NonFatal, &RT.Gra_BlockSize,         1, NonFatal );
    LoadField( "ExtPotNAuxMax",        &RS.ExtPotNAuxMax,        SID, TID, NonFatal, &RT.ExtPotNAuxMax,         1, NonFatal );
    LoadField( "ExtAccNAuxMax",        &RS.ExtAccNAuxMax,        SID, TID, NonFatal, &RT.ExtAccNAuxMax,         1, NonFatal );
@@ -1865,8 +1866,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  endif
    LoadField( "Pot_GPU_NPGroup",         &RS.Pot_GPU_NPGroup,         SID, TID, NonFatal, &RT.Pot_GPU_NPGroup,          1, NonFatal );
    LoadField( "Opt__GraP5Gradient",      &RS.Opt__GraP5Gradient,      SID, TID, NonFatal, &RT.Opt__GraP5Gradient,       1, NonFatal );
-   LoadField( "Opt__GravityType",        &RS.Opt__GravityType,        SID, TID, NonFatal, &RT.Opt__GravityType,         1, NonFatal );
-   LoadField( "Opt__ExternalPot",        &RS.Opt__ExternalPot,        SID, TID, NonFatal, &RT.Opt__ExternalPot,         1, NonFatal );
+   LoadField( "Opt__SelfGravity",        &RS.Opt__SelfGravity,        SID, TID, NonFatal, &RT.Opt__SelfGravity,         1, NonFatal );
+   LoadField( "Opt__ExtAcc",             &RS.Opt__ExtAcc,             SID, TID, NonFatal, &RT.Opt__ExtAcc,              1, NonFatal );
+   LoadField( "Opt__ExtPot",             &RS.Opt__ExtPot,             SID, TID, NonFatal, &RT.Opt__ExtPot,              1, NonFatal );
    LoadField( "Opt__GravityExtraMass",   &RS.Opt__GravityExtraMass,   SID, TID, NonFatal, &RT.Opt__GravityExtraMass,    1, NonFatal );
 #  endif
 

@@ -566,12 +566,12 @@
 
 // size of auxiliary arrays
 #if ( MODEL == HYDRO )
-#  define EOS_NAUX_MAX           10    // EoS_AuxArray[]
+#  define EOS_NAUX_MAX           20    // EoS_AuxArray[]
 #endif
 
 #ifdef GRAVITY
-#  define EXT_POT_NAUX_MAX       10    // ExtPot_AuxArray[]
-#  define EXT_ACC_NAUX_MAX       10    // ExtAcc_AuxArray[]
+#  define EXT_POT_NAUX_MAX       20    // ExtPot_AuxArray[]
+#  define EXT_ACC_NAUX_MAX       20    // ExtAcc_AuxArray[]
 #endif
 
 
