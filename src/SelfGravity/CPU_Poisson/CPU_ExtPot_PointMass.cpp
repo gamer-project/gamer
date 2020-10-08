@@ -47,7 +47,7 @@
 // Description :  Set the auxiliary array ExtPot_AuxArray[] used by ExtPot_PointMass()
 //
 // Note        :  1. Invoked by Init_ExtPot_PointMass()
-//                2. AuxArray[] has the size of EXT_POT_NAUX_MAX defined in Macro.h (default = 10)
+//                2. AuxArray[] has the size of EXT_POT_NAUX_MAX defined in Macro.h (default = 20)
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
 // Parameter   :  AuxArray : Array to be filled up
