@@ -216,7 +216,7 @@ void BC( real fluid[], const double x, const double y, const double z, const dou
 //
 // Note        :  1. External potential can be enabled by the runtime option "OPT__EXT_POT"
 //                2. Link to the function pointer "Init_ExtPotAuxArray_Ptr"
-//                3. AuxArray[] has the size of EXT_POT_NAUX_MAX defined in CUPOT.h (default = 20)
+//                3. AuxArray[] has the size of EXT_POT_NAUX_MAX defined in Macro.h (default = 20)
 //
 // Parameter   :  AuxArray : Array to be filled up
 //
