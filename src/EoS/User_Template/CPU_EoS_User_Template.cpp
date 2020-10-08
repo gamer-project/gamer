@@ -40,7 +40,7 @@
 // Description :  Set the auxiliary array AuxArray[]
 //
 // Note        :  1. Invoked by EoS_Init_User_Template()
-//                2. AuxArray[] has the size of EOS_NAUX_MAX defined in Macro.h (default = 10)
+//                2. AuxArray[] has the size of EOS_NAUX_MAX defined in Macro.h (default = 20)
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
 // Parameter   :  AuxArray : Array to be filled up

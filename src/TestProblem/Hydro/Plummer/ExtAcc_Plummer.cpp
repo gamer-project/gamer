@@ -24,7 +24,7 @@ extern double Plummer_ExtAccMFrac;
 // Description :  Set the auxiliary array ExtAcc_AuxArray[] used by ExtAcc_Plummer()
 //
 // Note        :  1. Invoked by Init_ExtAcc_Plummer()
-//                2. AuxArray[] has the size of EXT_ACC_NAUX_MAX defined in Macro.h (default = 10)
+//                2. AuxArray[] has the size of EXT_ACC_NAUX_MAX defined in Macro.h (default = 20)
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
 // Parameter   :  AuxArray : Array to be filled up

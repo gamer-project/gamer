@@ -38,7 +38,7 @@
 //                   AuxArray[3] = 1/gamma
 //
 // Note        :  1. Invoked by EoS_Init_Gamma()
-//                2. AuxArray[] has the size of EOS_NAUX_MAX defined in Macro.h (default = 10)
+//                2. AuxArray[] has the size of EOS_NAUX_MAX defined in Macro.h (default = 20)
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //                4. Do not change the order of AuxArray[]
 //                   --> For example, the dual-energy routines assume AuxArray[0]=GAMMA
