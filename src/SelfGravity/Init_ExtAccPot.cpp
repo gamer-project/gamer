@@ -28,6 +28,9 @@ void (*Init_ExtPot_Ptr)() = NULL;
 void Init_ExtAccPot()
 {
 
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
+
+
 // external acceleration
    if ( OPT__EXT_ACC )
    {
@@ -41,6 +44,9 @@ void Init_ExtAccPot()
       if ( Init_ExtPot_Ptr != NULL )   Init_ExtPot_Ptr();
       else                             Aux_Error( ERROR_INFO, "Init_ExtPot_Ptr == NULL !!\n" );
    }
+
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_ExtAccPot
 
