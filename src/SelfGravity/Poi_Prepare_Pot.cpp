@@ -171,7 +171,7 @@ void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In
 
 //          subtract external potential
             if ( OPT__EXT_POT )
-               CPot[ko][jo][io] -= CPUExtPot_Ptr( x, y, z, amr->PotSgTime[FaLv][PotSg], ExtPot_AuxArray,
+               CPot[ko][jo][io] -= CPUExtPot_Ptr( x, y, z, amr->PotSgTime[FaLv][PotSg], ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int,
                                                   EXT_POT_USAGE_SUB, h_ExtPotTable );
 
 //          temporal interpolation
@@ -181,7 +181,7 @@ void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In
 
 //             subtract external potential
                if ( OPT__EXT_POT )
-                  CPot_IntT -= CPUExtPot_Ptr( x, y, z, amr->PotSgTime[FaLv][PotSg_IntT], ExtPot_AuxArray,
+                  CPot_IntT -= CPUExtPot_Ptr( x, y, z, amr->PotSgTime[FaLv][PotSg_IntT], ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int,
                                               EXT_POT_USAGE_SUB_TINT, h_ExtPotTable );
 
                CPot[ko][jo][io] =   PotWeighting     *CPot[ko][jo][io]
@@ -220,7 +220,7 @@ void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In
 
 //                subtract external potential
                   if ( OPT__EXT_POT )
-                     CPot[ko][jo][io] -= CPUExtPot_Ptr( x, y, z, amr->PotSgTime[FaLv][PotSg], ExtPot_AuxArray,
+                     CPot[ko][jo][io] -= CPUExtPot_Ptr( x, y, z, amr->PotSgTime[FaLv][PotSg], ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int,
                                                         EXT_POT_USAGE_SUB, h_ExtPotTable );
 
 //                temporal interpolation
@@ -230,7 +230,7 @@ void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In
 
 //                   subtract external potential
                      if ( OPT__EXT_POT )
-                        CPot_IntT -= CPUExtPot_Ptr( x, y, z, amr->PotSgTime[FaLv][PotSg_IntT], ExtPot_AuxArray,
+                        CPot_IntT -= CPUExtPot_Ptr( x, y, z, amr->PotSgTime[FaLv][PotSg_IntT], ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int,
                                                     EXT_POT_USAGE_SUB_TINT, h_ExtPotTable );
 
                      CPot[ko][jo][io] =   PotWeighting     *CPot[ko][jo][io]

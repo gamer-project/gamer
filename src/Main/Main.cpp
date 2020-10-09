@@ -138,8 +138,9 @@ OptExtPot_t          OPT__EXT_POT;
 
 // external gravity variables
 // a. auxiliary arrays
-double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
-double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
+double ExtAcc_AuxArray    [EXT_ACC_NAUX_MAX];
+double ExtPot_AuxArray_Flt[EXT_POT_NAUX_MAX];
+int    ExtPot_AuxArray_Int[EXT_POT_NAUX_MAX];
 
 // b. function pointers
 ExtAcc_t CPUExtAcc_Ptr = NULL;

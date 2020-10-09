@@ -122,7 +122,8 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
                         Timer_Gra_Advance[lv],   Timing   );
 
          if ( OPT__EXT_POT )
-         TIMING_FUNC(   CPU_ExtPotSolver_BaseLevel( CPUExtPot_Ptr, ExtPot_AuxArray, TimeNew, OPT__SELF_GRAVITY, SaveSg_Pot ),
+         TIMING_FUNC(   CPU_ExtPotSolver_BaseLevel( CPUExtPot_Ptr, ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int, h_ExtPotTable,
+                                                    TimeNew, OPT__SELF_GRAVITY, SaveSg_Pot ),
                         Timer_Gra_Advance[lv],   Timing   );
 
          amr->PotSg    [lv]             = SaveSg_Pot;

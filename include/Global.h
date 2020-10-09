@@ -146,8 +146,9 @@ extern OptPotBC_t    OPT__BC_POT;
 extern OptExtAcc_t   OPT__EXT_ACC;
 extern OptExtPot_t   OPT__EXT_POT;
 
-extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
-extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
+extern double ExtAcc_AuxArray    [EXT_ACC_NAUX_MAX];
+extern double ExtPot_AuxArray_Flt[EXT_POT_NAUX_MAX];
+extern int    ExtPot_AuxArray_Int[EXT_POT_NAUX_MAX];
 extern ExtAcc_t CPUExtAcc_Ptr;
 extern ExtPot_t CPUExtPot_Ptr;
 #ifdef GPU
