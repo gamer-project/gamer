@@ -387,7 +387,7 @@ typedef real (*EoS_DP2E_t)( const real Dens, const real Pres, const real Passive
 typedef real (*EoS_DP2C_t)( const real Dens, const real Pres, const real Passive[], const double UserArray[] );
 typedef void (*ExtAcc_t)( real Acc[], const double x, const double y, const double z, const double Time, const double UserArray[] );
 typedef real (*ExtPot_t)( const double x, const double y, const double z, const double Time, const double UserArray[],
-                          const ExtPotUsage_t Usage );
+                          const ExtPotUsage_t Usage, const real PotTable[] );
 
 
 // options in Aux_ComputeProfile()

@@ -95,12 +95,13 @@ void SetExtPotAuxArray_PointMass( double AuxArray[] )
 //                                EXT_POT_USAGE_SUB     : subtract external potential for preparing self-gravity potential on Lv-1
 //                                EXT_POT_USAGE_SUB_TINT: like SUB but for temporal interpolation
 //                            --> This parameter is useless in most cases
+//                PotTable  : Potential 3D table used by EXT_POT_TABLE
 //
 // Return      :  External potential at (x,y,z,Time)
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real ExtPot_PointMass( const double x, const double y, const double z, const double Time, const double UserArray[],
-                              const ExtPotUsage_t Usage )
+                              const ExtPotUsage_t Usage, const real PotTable[] )
 {
 
    const double Cen[3] = { UserArray[0], UserArray[1], UserArray[2] };
