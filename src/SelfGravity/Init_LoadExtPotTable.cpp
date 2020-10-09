@@ -14,6 +14,7 @@
 //                2. Enabled by the runtime option "OPT__EXT_POT=EXT_POT_TABLE"
 //                3. Floating-point type is set by FLOAT8 for now
 //                   --> EXT_POT_TABLE_FLOAT8 is NOT supported yet
+//                4. The loaded table will be sent to GPU by invoking CUAPI_SendExtPotTable2GPU()
 //
 // Parameter   :  None
 //
@@ -70,7 +71,8 @@ void Init_LoadExtPotTable()
 
    fseek( FileTemp, 0, SEEK_END );
 
-   const long ExpectSize = (long)EXT_POT_TABLE_NCELL[0]*EXT_POT_TABLE_NCELL[1]*EXT_POT_TABLE_NCELL[2]*sizeof(real);
+   const long NCell3D    = (long)EXT_POT_TABLE_NCELL[0]*EXT_POT_TABLE_NCELL[1]*EXT_POT_TABLE_NCELL[2];
+   const long ExpectSize = NCell3D*sizeof(real);
    const long FileSize   = ftell( FileTemp );
    if ( FileSize != ExpectSize )
       Aux_Error( ERROR_INFO, "size of the external potential table <%s> (%ld) != expect (%ld) !!\n",
@@ -78,7 +80,23 @@ void Init_LoadExtPotTable()
 
    fclose( FileTemp );
 
+// memory allocation
+   if ( h_ExtPotTable == NULL )
+      Aux_Error( ERROR_INFO, "h_ExtPotTable[] has not been allocated !!\n" );
+
    MPI_Barrier( MPI_COMM_WORLD );
+
+
+// load table to CPU
+   FILE *File = fopen( EXT_POT_TABLE_NAME, "rb" );
+   fread( h_ExtPotTable, sizeof(real), NCell3D, File );
+   fclose( File );
+
+
+// transfer table to GPU
+#  ifdef GPU
+   CUAPI_SendExtPotTable2GPU( h_ExtPotTable );
+#  endif
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   %s ... done\n", __FUNCTION__ );
