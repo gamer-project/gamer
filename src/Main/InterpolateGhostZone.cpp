@@ -139,8 +139,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
 // fluid variables for the EoS routines
 #  if ( MODEL == HYDRO )
-#  if ( EOS == EOS_GAMMA )
-   const int NFluForEoS = NCOMP_FLUID;    // don't need passsive scalars in EOS_GAMMA
+#  if ( EOS == EOS_GAMMA  ||  EOS == EOS_ISOTHERMAL )
+   const int NFluForEoS = NCOMP_FLUID;    // don't need passsive scalars in EOS_GAMMA/EOS_ISOTHERMAL
 #  else
    const int NFluForEoS = NCOMP_TOTAL;
 #  endif
@@ -999,10 +999,12 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
 // c. interpolation : CData_CC[] --> IntData_CC[]
 // ------------------------------------------------------------------------------------------------------------
-   const bool PhaseUnwrapping_Yes = true;
-   const bool PhaseUnwrapping_No  = false;
-   const bool Monotonicity_Yes    = true;
-   const bool Monotonicity_No     = false;
+   const bool PhaseUnwrapping_Yes   = true;
+   const bool PhaseUnwrapping_No    = false;
+   const bool Monotonicity_Yes      = true;
+   const bool Monotonicity_No       = false;
+   const bool IntOppSign0thOrder_No = false;
+
    int CStart_CC[3], CRange_CC[3], FStart_CC[3], NVarCC_SoFar;
 
    for (int d=0; d<3; d++)
@@ -1095,11 +1097,11 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
 //    interpolate density
       Interpolate( CData_Dens, CSize_CC, CStart_CC, CRange_CC, FData_Dens, FSize_CC, FStart_CC,
-                   1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes );
+                   1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes, IntOppSign0thOrder_No );
 
 //    interpolate phase
       Interpolate( CData_Real, CSize_CC, CStart_CC, CRange_CC, FData_Real, FSize_CC, FStart_CC,
-                   1, IntScheme_CC, PhaseUnwrapping_Yes, &Monotonicity_No );
+                   1, IntScheme_CC, PhaseUnwrapping_Yes, &Monotonicity_No, IntOppSign0thOrder_No );
    } // if ( IntPhase )
 
 
@@ -1109,7 +1111,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
       for (int v=0; v<NVarCC_Flu; v++)
       Interpolate( CData_CC+CSize3D_CC*v, CSize_CC, CStart_CC, CRange_CC,
                    IntData_CC+FSize3D_CC*v, FSize_CC, FStart_CC,
-                   1, IntScheme_CC, PhaseUnwrapping_No, Monotonicity_CC );
+                   1, IntScheme_CC, PhaseUnwrapping_No, Monotonicity_CC,
+                   IntOppSign0thOrder_No );
    } // if ( IntPhase ) ... else ...
 
 // retrieve real and imaginary parts when phase interpolation is adopted
@@ -1143,7 +1146,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
    for (int v=0; v<NVarCC_Flu; v++)
       Interpolate( CData_CC+CSize3D_CC*v, CSize_CC, CStart_CC, CRange_CC,
                    IntData_CC+FSize3D_CC*v, FSize_CC, FStart_CC,
-                   1, IntScheme_CC, PhaseUnwrapping_No, Monotonicity_CC );
+                   1, IntScheme_CC, PhaseUnwrapping_No, Monotonicity_CC,
+                   INT_OPP_SIGN_0TH_ORDER );
 
 #  endif // #if ( MODEL == ELBDM ) ... else ...
 
@@ -1157,7 +1161,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
    {
       Interpolate( CData_CC+CSize3D_CC*NVarCC_SoFar, CSize_CC, CStart_CC, CRange_CC,
                    IntData_CC+FSize3D_CC*NVarCC_SoFar, FSize_CC, FStart_CC,
-                   1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes );
+                   1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes,
+                   IntOppSign0thOrder_No );
       NVarCC_SoFar ++;
    }
 
@@ -1165,7 +1170,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
    {
       Interpolate( CData_CC+CSize3D_CC*NVarCC_SoFar, CSize_CC, CStart_CC, CRange_CC,
                    IntData_CC+FSize3D_CC*NVarCC_SoFar, FSize_CC, FStart_CC,
-                   1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes );
+                   1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes,
+                   IntOppSign0thOrder_No );
       NVarCC_SoFar ++;
    }
 
@@ -1173,7 +1179,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
    {
       Interpolate( CData_CC+CSize3D_CC*NVarCC_SoFar, CSize_CC, CStart_CC, CRange_CC,
                    IntData_CC+FSize3D_CC*NVarCC_SoFar, FSize_CC, FStart_CC,
-                   1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes );
+                   1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes,
+                   IntOppSign0thOrder_No );
       NVarCC_SoFar ++;
    }
 
@@ -1181,7 +1188,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
    {
       Interpolate( CData_CC+CSize3D_CC*NVarCC_SoFar, CSize_CC, CStart_CC, CRange_CC,
                    IntData_CC+FSize3D_CC*NVarCC_SoFar, FSize_CC, FStart_CC,
-                   1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes );
+                   1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes,
+                   IntOppSign0thOrder_No );
       NVarCC_SoFar ++;
    }
 
@@ -1189,7 +1197,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
    {
       Interpolate( CData_CC+CSize3D_CC*NVarCC_SoFar, CSize_CC, CStart_CC, CRange_CC,
                    IntData_CC+FSize3D_CC*NVarCC_SoFar, FSize_CC, FStart_CC,
-                   1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes );
+                   1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes,
+                   IntOppSign0thOrder_No );
       NVarCC_SoFar ++;
    }
 
@@ -1207,7 +1216,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
    {
       Interpolate( CData_CC+CSize3D_CC*NVarCC_SoFar, CSize_CC, CStart_CC, CRange_CC,
                    IntData_CC+FSize3D_CC*NVarCC_SoFar, FSize_CC, FStart_CC,
-                   1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_No );
+                   1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_No,
+                   IntOppSign0thOrder_No );
       NVarCC_SoFar ++;
    }
 #  endif

@@ -38,7 +38,7 @@
 //                   AuxArray[3] = 1/gamma
 //
 // Note        :  1. Invoked by EoS_Init_Gamma()
-//                2. AuxArray[] has the size of EOS_NAUX_MAX defined in Macro.h (default = 10)
+//                2. AuxArray[] has the size of EOS_NAUX_MAX defined in Macro.h (default = 20)
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //                4. Do not change the order of AuxArray[]
 //                   --> For example, the dual-energy routines assume AuxArray[0]=GAMMA
@@ -90,7 +90,6 @@ static real EoS_DensEint2Pres_Gamma( const real Dens, const real Eint, const rea
 #  ifdef GAMER_DEBUG
    if ( AuxArray == NULL )    printf( "ERROR : AuxArray == NULL in %s !!\n", __FUNCTION__ );
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( Hydro_CheckNegative(Dens) )
       printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               Dens, __FILE__, __LINE__, __FUNCTION__ );
@@ -98,7 +97,6 @@ static real EoS_DensEint2Pres_Gamma( const real Dens, const real Eint, const rea
    if ( Hydro_CheckNegative(Eint) )
       printf( "ERROR : invalid input internal energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               Eint, __FILE__, __LINE__, __FUNCTION__ );
-#  endif
 #  endif // GAMER_DEBUG
 
 
@@ -134,7 +132,6 @@ static real EoS_DensPres2Eint_Gamma( const real Dens, const real Pres, const rea
 #  ifdef GAMER_DEBUG
    if ( AuxArray == NULL )    printf( "ERROR : AuxArray == NULL in %s !!\n", __FUNCTION__ );
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( Hydro_CheckNegative(Dens) )
       printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               Dens, __FILE__, __LINE__, __FUNCTION__ );
@@ -142,7 +139,6 @@ static real EoS_DensPres2Eint_Gamma( const real Dens, const real Pres, const rea
    if ( Hydro_CheckNegative(Pres) )
       printf( "ERROR : invalid input pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               Pres, __FILE__, __LINE__, __FUNCTION__ );
-#  endif
 #  endif // GAMER_DEBUG
 
 
@@ -178,7 +174,6 @@ static real EoS_DensPres2CSqr_Gamma( const real Dens, const real Pres, const rea
 #  ifdef GAMER_DEBUG
    if ( AuxArray == NULL )    printf( "ERROR : AuxArray == NULL in %s !!\n", __FUNCTION__ );
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( Hydro_CheckNegative(Dens) )
       printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               Dens, __FILE__, __LINE__, __FUNCTION__ );
@@ -186,7 +181,6 @@ static real EoS_DensPres2CSqr_Gamma( const real Dens, const real Pres, const rea
    if ( Hydro_CheckNegative(Pres) )
       printf( "ERROR : invalid input pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               Pres, __FILE__, __LINE__, __FUNCTION__ );
-#  endif
 #  endif // GAMER_DEBUG
 
 
@@ -216,7 +210,7 @@ FUNC_SPACE EoS_DP2E_t EoS_DensPres2Eint_Ptr = EoS_DensPres2Eint_Gamma;
 FUNC_SPACE EoS_DP2C_t EoS_DensPres2CSqr_Ptr = EoS_DensPres2CSqr_Gamma;
 
 //-----------------------------------------------------------------------------------------
-// Function    :  EoS_InitCPU/GPUFunc_Gamma
+// Function    :  EoS_SetCPU/GPUFunc_Gamma
 // Description :  Return the function pointers of the CPU/GPU EoS routines
 //
 // Note        :  1. Invoked by EoS_Init_Gamma()
@@ -224,7 +218,7 @@ FUNC_SPACE EoS_DP2C_t EoS_DensPres2CSqr_Ptr = EoS_DensPres2CSqr_Gamma;
 //                   since CPU and GPU functions are compiled completely separately in GAMER
 //                   --> In other words, a unified routine like the following won't work
 //
-//                      EoS_InitFunc_Gamma( CPU_FuncPtr, GPU_FuncPtr );
+//                      EoS_SetFunc_Gamma( CPU_FuncPtr, GPU_FuncPtr );
 //
 //                3. Call-by-reference
 //

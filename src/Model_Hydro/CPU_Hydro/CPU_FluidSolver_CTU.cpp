@@ -38,9 +38,9 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
                               real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                         const int NFlux, const int NSkip_N, const int NSkip_T,
                         const bool CorrHalfVel, const real g_Pot_USG[], const double g_Corner[],
-                        const real dt, const real dh, const double Time,
-                        const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[],
-                        const real MinPres, const bool DumpIntFlux, real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ],
+                        const real dt, const real dh, const double Time, const bool UsePot,
+                        const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[],
+                        const real MinDens, const real MinPres, const bool DumpIntFlux, real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ],
                         const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2C_t EoS_DensPres2CSqr,
                         const double EoS_AuxArray[] );
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
@@ -56,7 +56,8 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                           const real dt, const real dh,
                           const bool DumpIntEle, real g_IntEle[][NCOMP_ELE][ PS2P1*PS2 ],
                           const bool CorrHalfVel, const real g_Pot_USG[], const double g_Corner[], const double Time,
-                          const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[] );
+                          const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
+                          const double ExtAcc_AuxArray[] );
 void MHD_UpdateMagnetic( real *g_FC_Bx_Out, real *g_FC_By_Out, real *g_FC_Bz_Out,
                          const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                          const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
@@ -118,10 +119,11 @@ void Hydro_TGradientCorrection(       real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ 
 //                                         (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
 //                                                        vanLeer + generalized MinMod/extrema-preserving) limiter
 //                MinMod_Coeff           : Coefficient of the generalized MinMod limiter
-//                Time                   : Current physical time                                     (for UNSPLIT_GRAVITY only)
-//                GravityType            : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
-//                ExtAcc_Func            : Function pointer to the external acceleration routine     (for UNSPLIT_GRAVITY only)
-//                c_ExtAcc_AuxArray      : Auxiliary array for adding external acceleration          (for UNSPLIT_GRAVITY and CPU only)
+//                Time                   : Current physical time                                 (for UNSPLIT_GRAVITY only)
+//                UsePot                 : Add self-gravity and/or external potential            (for UNSPLIT_GRAVITY only)
+//                ExtAcc                 : Add external acceleration                             (for UNSPLIT_GRAVITY only)
+//                ExtAcc_Func            : Function pointer to the external acceleration routine (for UNSPLIT_GRAVITY only)
+//                c_ExtAcc_AuxArray      : Auxiliary array for adding external acceleration      (for UNSPLIT_GRAVITY and CPU only)
 //                                         --> When using GPU, this array is stored in the constant memory header
 //                                             CUDA_ConstMemory.h and does not need to be passed as a function argument
 //                MinDens/Pres/Eint      : Density, pressure, and internal energy floors
@@ -165,8 +167,8 @@ void CUFLU_FluidSolver_CTU(
          real   g_EC_Ele       [][NCOMP_MAG][ CUBE(N_EC_ELE) ],
    const real dt, const real dh,
    const bool StoreFlux, const bool StoreElectric,
-   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-   const double Time, const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
+   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const double Time,
+   const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const real MinDens, const real MinPres, const real MinEint,
    const real DualEnergySwitch, const bool NormPassive, const int NNorm,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
@@ -193,8 +195,8 @@ void CPU_FluidSolver_CTU(
    const int NPatchGroup,
    const real dt, const real dh,
    const bool StoreFlux, const bool StoreElectric,
-   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-   const double Time, const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
+   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const double Time,
+   const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const double c_ExtAcc_AuxArray[],
    const real MinDens, const real MinPres, const real MinEint,
    const real DualEnergySwitch, const bool NormPassive, const int NNorm,
@@ -277,8 +279,9 @@ void CPU_FluidSolver_CTU(
 
 //       2. evaluate the face-centered half-step fluxes by solving the Riemann problem
          Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_HF_FLUX, 0, 0, CorrHalfVel_No,
-                            NULL, NULL, NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE,
-                            NULL, NULL, MinPres, StoreFlux_No, NULL,
+                            NULL, NULL, NULL_REAL, NULL_REAL, NULL_REAL,
+                            EXT_POT_NONE, EXT_ACC_NONE, NULL, NULL,
+                            MinDens, MinPres, StoreFlux_No, NULL,
                             EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray );
 
 
@@ -286,7 +289,8 @@ void CPU_FluidSolver_CTU(
 #        ifdef MHD
          MHD_ComputeElectric( g_EC_Ele_1PG, g_FC_Flux_1PG, g_PriVar_1PG, N_HF_ELE, N_HF_FLUX,
                               FLU_NXT, LR_GHOST_SIZE, dt, dh, StoreElectric_No, NULL,
-                              CorrHalfVel_No, NULL, NULL, NULL_REAL, GRAVITY_NONE, NULL, NULL );
+                              CorrHalfVel_No, NULL, NULL, NULL_REAL,
+                              EXT_POT_NONE, EXT_ACC_NONE, NULL, NULL );
 
          MHD_UpdateMagnetic( g_FC_Mag_Half_1PG[0], g_FC_Mag_Half_1PG[1], g_FC_Mag_Half_1PG[2],
                              g_Mag_Array_In[P], g_EC_Ele_1PG, (real)0.5*dt, dh, N_HF_VAR, N_HF_ELE, FLU_GHOST_SIZE-1 );
@@ -314,8 +318,9 @@ void CPU_FluidSolver_CTU(
          const int NSkip_T = 1;
 #        endif
          Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, NSkip_N, NSkip_T, CorrHalfVel,
-                            g_Pot_Array_USG[P], g_Corner_Array[P], dt, dh, Time, GravityType,
-                            ExtAcc_Func, c_ExtAcc_AuxArray, MinPres, StoreFlux, g_Flux_Array[P],
+                            g_Pot_Array_USG[P], g_Corner_Array[P], dt, dh, Time,
+                            UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray,
+                            MinDens, MinPres, StoreFlux, g_Flux_Array[P],
                             EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray );
 
 
@@ -325,8 +330,8 @@ void CPU_FluidSolver_CTU(
 #        ifdef MHD
          MHD_ComputeElectric( g_EC_Ele_1PG, g_FC_Flux_1PG, g_PriVar_Half_1PG, N_FL_ELE, N_FL_FLUX,
                               N_HF_VAR, 0, dt, dh, StoreElectric, g_Ele_Array[P],
-                              CorrHalfVel, g_Pot_Array_USG[P], g_Corner_Array[P],
-                              Time, GravityType, ExtAcc_Func, c_ExtAcc_AuxArray );
+                              CorrHalfVel, g_Pot_Array_USG[P], g_Corner_Array[P], Time,
+                              UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray );
 
          MHD_UpdateMagnetic( g_Mag_Array_Out[P][0], g_Mag_Array_Out[P][1], g_Mag_Array_Out[P][2],
                              g_Mag_Array_In[P], g_EC_Ele_1PG, dt, dh, PS2, N_FL_ELE, FLU_GHOST_SIZE );

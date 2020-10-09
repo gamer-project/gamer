@@ -16,20 +16,22 @@
 //		  4. The "Monotonic" option is used to ensure that the interpolation results are monotonic
 //		     --> A slope limiter is adopted to ensure the monotonicity
 //
-// Parameter   :  CData       : Input coarse-grid array
-//                CSize       : Size of the CData array
-//                CStart      : (x,y,z) starting indices to perform interpolation on the CData array
-//                CRange      : Number of grids in each direction to perform interpolation
-//                FData       : Output fine-grid array
-//                FStart      : (x,y,z) starting indcies to store the interpolation results
-//                NComp       : Number of components in the CData and FData array
-//                UnwrapPhase : Unwrap phase when OPT__INT_PHASE is on (for ELBDM only)
-//                Monotonic   : Ensure that all interpolation results are monotonic
-//                MonoCoeff   : Slope limiter coefficient for the option "Monotonic"
+// Parameter   :  CData           : Input coarse-grid array
+//                CSize           : Size of the CData array
+//                CStart          : (x,y,z) starting indices to perform interpolation on the CData array
+//                CRange          : Number of grids in each direction to perform interpolation
+//                FData           : Output fine-grid array
+//                FStart          : (x,y,z) starting indcies to store the interpolation results
+//                NComp           : Number of components in the CData and FData array
+//                UnwrapPhase     : Unwrap phase when OPT__INT_PHASE is on (for ELBDM only)
+//                Monotonic       : Ensure that all interpolation results are monotonic
+//                MonoCoeff       : Slope limiter coefficient for the option "Monotonic"
+//                OppSign0thOrder : See Int_MinMod1D()
 //-------------------------------------------------------------------------------------------------------
 void Int_CQuadratic( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
                      real FData[], const int FSize[3], const int FStart[3], const int NComp,
-                     const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff )
+                     const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff,
+                     const bool OppSign0thOrder )
 {
 
 // interpolation-scheme-dependent parameters
@@ -58,9 +60,6 @@ void Int_CQuadratic( real CData[], const int CSize[3], const int CStart[3], cons
 // index stride of different components
    const int CDisp  = CSize[0]*CSize[1]*CSize[2];
    const int FDisp  = FSize[0]*FSize[1]*FSize[2];
-
-// MonoCoeff/4
-   const real MonoCoeff_4 = (real)0.25*MonoCoeff;
 
    real *CPtr   = CData;
    real *FPtr   = FData;
@@ -104,24 +103,29 @@ void Int_CQuadratic( real CData[], const int CSize[3], const int CStart[3], cons
 //       ensure monotonicity
          if ( Monotonic[v] )
          {
-            LSlopeDh_4 = CPtr[Idx_InC] - CPtr[Idx_InL];
-            RSlopeDh_4 = CPtr[Idx_InR] - CPtr[Idx_InC];
+            LSlopeDh_4 = (real)0.25*( CPtr[Idx_InC] - CPtr[Idx_InL] );
+            RSlopeDh_4 = (real)0.25*( CPtr[Idx_InR] - CPtr[Idx_InC] );
 
             if ( LSlopeDh_4*RSlopeDh_4 > (real)0.0 )
             {
-               LSlopeDh_4 *= MonoCoeff_4;
-               RSlopeDh_4 *= MonoCoeff_4;
                Sign        = SIGN( LSlopeDh_4 );
+               SlopeDh_4  *= Sign;
+               LSlopeDh_4 *= Sign;
+               RSlopeDh_4 *= Sign;
 
-               SlopeDh_4 *= Sign;
-               SlopeDh_4  = FMIN( Sign*LSlopeDh_4, SlopeDh_4 );
-               SlopeDh_4  = FMIN( Sign*RSlopeDh_4, SlopeDh_4 );
+               if ( LSlopeDh_4 < RSlopeDh_4 )   LSlopeDh_4 *= MonoCoeff;
+               else                             RSlopeDh_4 *= MonoCoeff;
+
+               SlopeDh_4  = FMIN( LSlopeDh_4, SlopeDh_4 );
+               SlopeDh_4  = FMIN( RSlopeDh_4, SlopeDh_4 );
                SlopeDh_4 *= Sign;
             }
 
             else
                SlopeDh_4 = (real)0.0;
          } // if ( Monotonic[v] )
+
+         if ( OppSign0thOrder  &&  CPtr[Idx_InL]*CPtr[Idx_InR] < (real)0.0 )  SlopeDh_4 = (real)0.0;
 
          TDataX[ Idx_Out       ] = CPtr[Idx_InC] - SlopeDh_4;
          TDataX[ Idx_Out + Tdx ] = CPtr[Idx_InC] + SlopeDh_4;
@@ -159,24 +163,29 @@ void Int_CQuadratic( real CData[], const int CSize[3], const int CStart[3], cons
 
          if ( Monotonic[v] )
          {
-            LSlopeDh_4 = TDataX[Idx_InC] - TDataX[Idx_InL];
-            RSlopeDh_4 = TDataX[Idx_InR] - TDataX[Idx_InC];
+            LSlopeDh_4 = (real)0.25*( TDataX[Idx_InC] - TDataX[Idx_InL] );
+            RSlopeDh_4 = (real)0.25*( TDataX[Idx_InR] - TDataX[Idx_InC] );
 
             if ( LSlopeDh_4*RSlopeDh_4 > (real)0.0 )
             {
-               LSlopeDh_4 *= MonoCoeff_4;
-               RSlopeDh_4 *= MonoCoeff_4;
                Sign        = SIGN( LSlopeDh_4 );
+               SlopeDh_4  *= Sign;
+               LSlopeDh_4 *= Sign;
+               RSlopeDh_4 *= Sign;
 
-               SlopeDh_4 *= Sign;
-               SlopeDh_4  = FMIN( Sign*LSlopeDh_4, SlopeDh_4 );
-               SlopeDh_4  = FMIN( Sign*RSlopeDh_4, SlopeDh_4 );
+               if ( LSlopeDh_4 < RSlopeDh_4 )   LSlopeDh_4 *= MonoCoeff;
+               else                             RSlopeDh_4 *= MonoCoeff;
+
+               SlopeDh_4  = FMIN( LSlopeDh_4, SlopeDh_4 );
+               SlopeDh_4  = FMIN( RSlopeDh_4, SlopeDh_4 );
                SlopeDh_4 *= Sign;
             }
 
             else
                SlopeDh_4 = (real)0.0;
          } // if ( Monotonic[v] )
+
+         if ( OppSign0thOrder  &&  TDataX[Idx_InL]*TDataX[Idx_InR] < (real)0.0 )    SlopeDh_4 = (real)0.0;
 
          TDataY[ Idx_Out       ] = TDataX[Idx_InC] - SlopeDh_4;
          TDataY[ Idx_Out + Tdy ] = TDataX[Idx_InC] + SlopeDh_4;
@@ -214,24 +223,29 @@ void Int_CQuadratic( real CData[], const int CSize[3], const int CStart[3], cons
 
          if ( Monotonic[v] )
          {
-            LSlopeDh_4 = TDataY[Idx_InC] - TDataY[Idx_InL];
-            RSlopeDh_4 = TDataY[Idx_InR] - TDataY[Idx_InC];
+            LSlopeDh_4 = (real)0.25*( TDataY[Idx_InC] - TDataY[Idx_InL] );
+            RSlopeDh_4 = (real)0.25*( TDataY[Idx_InR] - TDataY[Idx_InC] );
 
             if ( LSlopeDh_4*RSlopeDh_4 > (real)0.0 )
             {
-               LSlopeDh_4 *= MonoCoeff_4;
-               RSlopeDh_4 *= MonoCoeff_4;
                Sign        = SIGN( LSlopeDh_4 );
+               SlopeDh_4  *= Sign;
+               LSlopeDh_4 *= Sign;
+               RSlopeDh_4 *= Sign;
 
-               SlopeDh_4 *= Sign;
-               SlopeDh_4  = FMIN( Sign*LSlopeDh_4, SlopeDh_4 );
-               SlopeDh_4  = FMIN( Sign*RSlopeDh_4, SlopeDh_4 );
+               if ( LSlopeDh_4 < RSlopeDh_4 )   LSlopeDh_4 *= MonoCoeff;
+               else                             RSlopeDh_4 *= MonoCoeff;
+
+               SlopeDh_4  = FMIN( LSlopeDh_4, SlopeDh_4 );
+               SlopeDh_4  = FMIN( RSlopeDh_4, SlopeDh_4 );
                SlopeDh_4 *= Sign;
             }
 
             else
                SlopeDh_4 = (real)0.0;
          } // if ( Monotonic[v] )
+
+         if ( OppSign0thOrder  &&  TDataY[Idx_InL]*TDataY[Idx_InR] < (real)0.0 )    SlopeDh_4 = (real)0.0;
 
          FPtr[ Idx_Out       ] = TDataY[Idx_InC] - SlopeDh_4;
          FPtr[ Idx_Out + Fdz ] = TDataY[Idx_InC] + SlopeDh_4;

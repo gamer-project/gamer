@@ -22,10 +22,10 @@
 void CUAPI_SetConstMemory_ExtAccPot()
 {
 
-   if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
+   if ( OPT__EXT_ACC )
       CUDA_CHECK_ERROR(  cudaMemcpyToSymbol( c_ExtAcc_AuxArray, ExtAcc_AuxArray, EXT_ACC_NAUX_MAX*sizeof(double) )  );
 
-   if ( OPT__EXTERNAL_POT )
+   if ( OPT__EXT_POT )
       CUDA_CHECK_ERROR(  cudaMemcpyToSymbol( c_ExtPot_AuxArray, ExtPot_AuxArray, EXT_POT_NAUX_MAX*sizeof(double) )  );
 
 } // FUNCTION : CUAPI_SetConstMemory_ExtAccPot

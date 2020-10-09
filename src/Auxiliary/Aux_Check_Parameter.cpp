@@ -390,6 +390,14 @@ void Aux_Check_Parameter()
    }
 #  endif
 
+#  if   ( MODEL == HYDRO )
+   if ( ! INT_OPP_SIGN_0TH_ORDER )
+      Aux_Message( stderr, "WARNING : disabling INT_OPP_SIGN_0TH_ORDER may cause unphysically large velocity during interpolation !!\n" );
+#  elif ( MODEL == ELBDM )
+   if (   INT_OPP_SIGN_0TH_ORDER )
+      Aux_Message( stderr, "WARNING : INT_OPP_SIGN_0TH_ORDER is not recommended for ELBDM !!\n" );
+#  endif
+
    } // if ( MPI_Rank == 0 )
 
 
@@ -588,8 +596,8 @@ void Aux_Check_Parameter()
 #     error : ERROR : unsupported dual-energy formalism (DE_ENPY only, DE_EINT is not supported yet) !!
 #   endif
 
-#  if ( EOS != EOS_GAMMA )
-#     error : ERROR : DUAL_ENERGY currently only supports EOS_GAMMA !!
+#  if ( DUAL_ENERGY == DE_ENPY  &&  EOS != EOS_GAMMA )
+#     error : ERROR : EOS_GAMMA does NOT support DUAL_ENERGY=DE_ENPY !!
 #  endif
 #  endif // #ifdef DUAL_ENERGY
 
@@ -608,8 +616,8 @@ void Aux_Check_Parameter()
 #     error : CTU does NOT support LR_EINT in CUFLU.h !!
 #  endif
 
-#  if ( EOS != EOS_GAMMA  &&  EOS != EOS_NUCLEAR  &&  EOS != EOS_TABULAR  &&  EOS != EOS_USER )
-#     error : ERROR : unsupported equation of state (EOS_GAMMA/EOS_NUCLEAR/EOS_TABULAR/EOS_USER) !!
+#  if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  EOS != EOS_NUCLEAR  &&  EOS != EOS_TABULAR  &&  EOS != EOS_USER )
+#     error : ERROR : unsupported equation of state (EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TABULAR/EOS_USER) !!
 #  endif
 
 #  if ( EOS != EOS_GAMMA )
@@ -640,7 +648,6 @@ void Aux_Check_Parameter()
          Aux_Error( ERROR_INFO, "JEANS_MIN_PRES currently only supports EOS_GAMMA !!\n" );
 #  endif // if ( EOS != EOS_GAMMA )
 
-
 #  if ( EOS == EOS_NUCLEAR )
       Aux_Error( ERROR_INFO, "EOS_NUCLEAR is not supported yet !!\n" );
 #  endif
@@ -648,6 +655,17 @@ void Aux_Check_Parameter()
 #  if ( EOS == EOS_TABULAR )
       Aux_Error( ERROR_INFO, "EOS_TABULAR is not supported yet !!\n" );
 #  endif
+
+#  ifdef BAROTROPIC_EOS
+#     if ( EOS == EOS_GAMMA  ||  EOS == EOS_NUCLEAR )
+#        error : ERROR : BAROTROPIC_EOS is incompatible with EOS_GAMMA/EOS_NUCLEAR !!
+#     endif
+#  else
+#     if ( EOS == EOS_ISOTHERMAL )
+#        error : ERROR : must enable BAROTROPIC_EOS for EOS_ISOTHERMAL !!
+#     endif
+#  endif // #ifdef BAROTROPIC_EOS ... else ...
+
 
    if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
    {
@@ -711,6 +729,9 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : currently we do not use Grackle to calculate temperature for OPT__FLAG_LOHNER_TEMP !!\n" );
 #  endif
 
+   if ( ! OPT__LAST_RESORT_FLOOR )
+      Aux_Message( stderr, "WARNING : disabling OPT__LAST_RESORT_FLOOR could be dangerous and is mainly for debugging only !!\n" );
+
    if ( MIN_DENS == 0.0 )
       Aux_Message( stderr, "WARNING : MIN_DENS == 0.0 could be dangerous and is mainly for debugging only !!\n" );
    else
@@ -726,8 +747,8 @@ void Aux_Check_Parameter()
    else
       Aux_Message( stderr, "WARNING : MIN_EINT (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_EINT );
 
-#  if ( defined LR_EINT  &&  EOS == EOS_GAMMA )
-      Aux_Message( stderr, "WARNING : LR_EINT is not recommended for EOS_GAMMA !!\n" );
+#  if (  defined LR_EINT  &&  ( EOS == EOS_GAMMA || EOS == EOS_ISOTHERMAL )  )
+      Aux_Message( stderr, "WARNING : LR_EINT is not recommended for EOS_GAMMA/EOS_ISOTHERMAL !!\n" );
 #  endif
    } // if ( MPI_Rank == 0 )
 
@@ -1039,8 +1060,8 @@ void Aux_Check_Parameter()
 #        error : ERROR : POT_GHOST_SIZE must <= 5 for the GPU Poisson solver !!
 #     endif
 
-   if (  ( OPT__GRAVITY_TYPE == GRAVITY_SELF || OPT__GRAVITY_TYPE == GRAVITY_BOTH )  &&  PATCH_SIZE != 8  )
-      Aux_Error( ERROR_INFO, "PATCH_SIZE must == 8 for the GPU Poisson solver !!\n" );
+   if ( OPT__SELF_GRAVITY  &&  PATCH_SIZE != 8 )
+      Aux_Error( ERROR_INFO, "PATCH_SIZE must == 8 for the GPU Poisson solver (OPT__SELF_GRAVITY) !!\n" );
 #  endif // GPU
 
 #  ifndef LOAD_BALANCE
@@ -1092,21 +1113,6 @@ void Aux_Check_Parameter()
    if ( OPT__BC_POT != BC_POT_PERIODIC  &&  OPT__BC_POT != BC_POT_ISOLATED )
       Aux_Error( ERROR_INFO, "unsupported option \"OPT__BC_POT = %d\" [1/2] !!\n", OPT__BC_POT );
 
-   if ( OPT__GRAVITY_TYPE != GRAVITY_SELF  &&  OPT__GRAVITY_TYPE != GRAVITY_EXTERNAL  &&  OPT__GRAVITY_TYPE != GRAVITY_BOTH )
-      Aux_Error( ERROR_INFO, "unsupported option \"%s = %d\" [1/2/3] !!\n", "OPT__GRAVITY_TYPE", OPT__GRAVITY_TYPE );
-
-   if (  OPT__EXTERNAL_POT  &&  ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL || OPT__GRAVITY_TYPE == GRAVITY_BOTH )  )
-   {
-      if ( MPI_Rank == 0 )
-      {
-         Aux_Message( stderr, "ERROR : OPT__EXTERNAL_POT does not work with \"OPT__GRAVITY_TYPE == 2/3 (EXTERNAL/BOTH)\" !!\n" );
-         Aux_Message( stderr, "        --> HYDRO : please use OPT__GRAVITY_TYPE = 2/3 only\n" );
-         Aux_Message( stderr, "            ELBDM : please use OPT__EXTERNAL_POT only\n" );
-      }
-
-      MPI_Exit();
-   }
-
    if ( NEWTON_G <= 0.0 )     Aux_Error( ERROR_INFO, "NEWTON_G (%14.7e) <= 0.0 !!\n", NEWTON_G );
 
 
@@ -1125,8 +1131,8 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : DT__GRAVITY (%14.7e) is not within the normal range [0...1] !!\n",
                    DT__GRAVITY );
 
-   if ( OPT__EXTERNAL_POT  &&  OPT__OUTPUT_POT )
-      Aux_Message( stderr, "WARNING : currently OPT__OUTPUT_POT does NOT include the external potential !!\n" );
+   if ( !OPT__SELF_GRAVITY  &&  !OPT__EXT_ACC  &&  !OPT__EXT_POT )
+      Aux_Message( stderr, "WARNING : all gravity options are disabled (OPT__SELF_GRAVITY, OPT__EXT_ACC, OPT__EXT_POT) !!\n" );
 
    } // if ( MPI_Rank == 0 )
 
@@ -1151,8 +1157,6 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "\"%s\" requires \"%s\" for UNSPLIT_GRAVITY !!\n",
                  "OPT__GRA_P5_GRADIENT", "USG_GHOST_SIZE_G == 2" );
 #  endif
-
-   if ( OPT__EXTERNAL_POT )   Aux_Error( ERROR_INFO, "OPT__EXTERNAL_POT is NOT supported in HYDRO --> use external gravity !!\n" );
 
 
 // warnings
@@ -1179,8 +1183,8 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
-   if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
-      Aux_Error( ERROR_INFO, "ELBDM does NOT support external gravity (OPT__GRAVITY_TYPE == 2/3) --> use external potential !!\n" );
+   if ( OPT__EXT_ACC )
+      Aux_Error( ERROR_INFO, "ELBDM does NOT support OPT__EXT_ACC --> use OPT__EXT_POT instead !!\n" );
 
 
 // warnings

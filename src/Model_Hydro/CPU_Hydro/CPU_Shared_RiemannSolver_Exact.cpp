@@ -48,14 +48,14 @@ GPU_DEVICE static void Set_Flux( real flux[], const real val[], const real Gamma
 // Parameter   :  XYZ               : Target spatial direction : (0/1/2) --> (x/y/z)
 //                Flux_Out          : Output array to store the average flux along t axis
 //                L/R_In            : Input left/right states (conserved variables)
-//                MinPres           : Pressure floor
+//                MinDens/Pres      : Density and pressure floors
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
 //                EoS_DensPres2CSqr : EoS routine to compute the sound speed square
 //                EoS_AuxArray      : Auxiliary array for the EoS routines
 //------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                                const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                                const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
                                 const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] )
 {
 

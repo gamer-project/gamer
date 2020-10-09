@@ -7,7 +7,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Poi_Close
-// Description :  Copy the potential stored in the h_Pot_Array_P_Out array back into the patch pointers
+// Description :  Copy the potential data from h_Pot_Array_P_Out[] to the patch pointers
 //
 // Note        :  The potential will be stored in the same Sg as the current fluid data
 //
@@ -20,6 +20,10 @@
 void Poi_Close( const int lv, const int SaveSg, const real h_Pot_Array_P_Out[][GRA_NXT][GRA_NXT][GRA_NXT],
                 const int NPG, const int *PID0_List )
 {
+
+// nothing to do if not using potential at all
+   if ( !OPT__SELF_GRAVITY  &&  !OPT__EXT_POT )    return;
+
 
    int ii, jj, kk, N, PID, PID0;
 

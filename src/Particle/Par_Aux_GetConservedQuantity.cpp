@@ -72,6 +72,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
 // 2. potential energy
 #  ifdef GRAVITY
    const ParInterp_t IntScheme  = amr->Par->Interp;
+   const bool UsePot            = ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT );
    const bool IntPhase_No       = false;
    const bool DE_Consistency_No = false;
    const real MinDens_No        = -1.0;
@@ -84,12 +85,19 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
    const real *Mass             = amr->Par->Mass;
 
    double Ep_ThisRank = 0.0;
-   double PrepPotTime, dh, _dh;
+   double PrepPotTime, dh, _dh, Ep_Coeff;
    int    PotSg;
+
+// set potential energy to zero when enabling both OPT__SELF_GRAVITY and OPT__EXT_POT
+// since the potential energy obtained here would be wrong anyway
+// --> to avoid possible misinterpretation
+   if      (  OPT__SELF_GRAVITY  &&  !OPT__EXT_POT )  Ep_Coeff = 0.5;
+   else if ( !OPT__SELF_GRAVITY  &&   OPT__EXT_POT )  Ep_Coeff = 1.0;
+   else                                               Ep_Coeff = 0.0;
 
 
 // check
-// Par->ImproveAcc only works particle interpolation schemes with ParGhost == 1 (CIC & TSC)
+// Par->ImproveAcc only supports particle interpolation schemes with ParGhost == 1 (CIC & TSC)
    if ( amr->Par->ImproveAcc  &&  PotGhost != GRA_GHOST_SIZE-1 )
       Aux_Error( ERROR_INFO, "PotGhost (%d) != GRA_GHOST_SIZE-1 (%d) for amr->Par->ImproveAcc !!\n",
                  PotGhost, GRA_GHOST_SIZE-1 );
@@ -101,7 +109,11 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
 #  endif
 
 
-// loop over particles in all leaf patches
+// nothing to do if not using potential
+   if ( !UsePot )    Ep_Total = 0.0;
+
+// loop over particles in all leaf patches to compute potential energy
+   else
    for (int lv=0; lv<NLEVEL; lv++)
    {
       dh          = amr->dh[lv];
@@ -110,7 +122,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
 
 //    determine PotSg for STORE_POT_GHOST
 #     ifdef STORE_POT_GHOST
-      if (  ( OPT__GRAVITY_TYPE == GRAVITY_SELF || OPT__GRAVITY_TYPE == GRAVITY_BOTH )  &&  amr->Par->ImproveAcc  )
+      if ( amr->Par->ImproveAcc )
       {
          if      (  Mis_CompareRealValue( PrepPotTime, amr->PotSgTime[lv][   amr->PotSg[lv] ], NULL, false )  )
             PotSg =   amr->PotSg[lv];
@@ -132,7 +144,6 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
 //    per-thread variables
       bool   GotYou;
       long   ParID;
-      double PhyCorner_ExtPot[3], x, y, z;
 
       real *Pot = new real [ 8*CUBE(PotSize) ];    // 8: number of patches per patch group
       real (*Pot3D)[PotSize][PotSize][PotSize] = ( real (*)[PotSize][PotSize][PotSize] )Pot;
@@ -162,55 +173,37 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
 
 
 //       2-2. prepare the potential data for the patch group with particles (need NSIDE_26 for ParGhost>0 )
-         if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
+#        ifdef STORE_POT_GHOST
+         if ( amr->Par->ImproveAcc )
          {
-#           ifdef STORE_POT_GHOST
-            if ( amr->Par->ImproveAcc )
+            const int didx = 1;  // assuming GRA_GHOST_SIZE - Pot_Size = 1
+
+            for (int PID=PID0, P=0; PID<PID0+8; PID++, P++)
             {
-               const int didx = 1;  // assuming GRA_GHOST_SIZE - Pot_Size = 1
+               if ( amr->patch[0][lv][PID]->NPar == 0 )  continue;   // skip patches with no particles
 
-               for (int PID=PID0, P=0; PID<PID0+8; PID++, P++)
-               {
-                  if ( amr->patch[0][lv][PID]->NPar == 0 )  continue;   // skip patches with no particles
-
-                  for (int k=didx; k<GRA_NXT-didx; k++)
-                  for (int j=didx; j<GRA_NXT-didx; j++)
-                  for (int i=didx; i<GRA_NXT-didx; i++)
-                     Pot3D[P][k-didx][j-didx][i-didx] = amr->patch[PotSg][lv][PID]->pot_ext[k][j][i];
-               }
+               for (int k=didx; k<GRA_NXT-didx; k++)
+               for (int j=didx; j<GRA_NXT-didx; j++)
+               for (int i=didx; i<GRA_NXT-didx; i++)
+                  Pot3D[P][k-didx][j-didx][i-didx] = amr->patch[PotSg][lv][PID]->pot_ext[k][j][i];
             }
+         }
 
-            else
-#           endif
-               Prepare_PatchData( lv, PrepPotTime, Pot, NULL, PotGhost, 1, &PID0, _POTE, _NONE,
-                                  OPT__GRA_INT_SCHEME, INT_NONE, UNIT_PATCH, (PotGhost==0)?NSIDE_00:NSIDE_26, IntPhase_No,
-                                  OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, DE_Consistency_No );
-         } // if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
+         else
+#        endif
+            Prepare_PatchData( lv, PrepPotTime, Pot, NULL, PotGhost, 1, &PID0, _POTE, _NONE,
+                               OPT__GRA_INT_SCHEME, INT_NONE, UNIT_PATCH, (PotGhost==0)?NSIDE_00:NSIDE_26, IntPhase_No,
+                               OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, DE_Consistency_No );
 
 
+//       2-3. calculate potential energy
          for (int PID=PID0, P=0; PID<PID0+8; PID++, P++)
          {
             if ( amr->patch[0][lv][PID]->NPar == 0 )  continue;   // skip patches with no particles
 
-            for (int d=0; d<3; d++)
-               PhyCorner_ExtPot[d] = amr->patch[0][lv][PID]->EdgeL[d] + ( 0.5 - PotGhost )*dh;
-
-//          2-3. external potential (currently useful only for ELBDM)
-            if ( OPT__EXTERNAL_POT )
-            {
-               for (int k=0; k<PotSize; k++)    {  z = PhyCorner_ExtPot[2] + (double)k*dh;
-               for (int j=0; j<PotSize; j++)    {  y = PhyCorner_ExtPot[1] + (double)j*dh;
-               for (int i=0; i<PotSize; i++)    {  x = PhyCorner_ExtPot[0] + (double)i*dh;
-
-                  Pot3D[P][k][j][i] += CPUExtPot_Ptr( x, y, z, PrepPotTime, ExtPot_AuxArray );
-
-               }}}
-            }
-
-//          2-4. calculate potential energy
             switch ( IntScheme )
             {
-//             2-4-1 NGP
+//             2-3-1 NGP
                case ( PAR_INTERP_NGP ):
                {
                   int idx[3];
@@ -249,13 +242,13 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                      } // for (int d=0; d<3; d++)
 
 //                   get potential energy
-                     Ep_ThisRank += 0.5*Mass[ParID]*Pot3D[P][ idx[2] ][ idx[1] ][ idx[0] ];
+                     Ep_ThisRank += Ep_Coeff*Mass[ParID]*Pot3D[P][ idx[2] ][ idx[1] ][ idx[0] ];
                   } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                } // PAR_INTERP_NGP
                break;
 
 
-//             2-4-2. CIC
+//             2-3-2. CIC
                case ( PAR_INTERP_CIC ):
                {
                   int    idxLR[2][3];     // array index of the left (idxLR[0][d]) and right (idxLR[1][d]) cells
@@ -309,14 +302,14 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                      for (int k=0; k<2; k++)
                      for (int j=0; j<2; j++)
                      for (int i=0; i<2; i++)
-                     Ep_ThisRank += 0.5*Mass[ParID]*Pot3D[P][ idxLR[k][2] ][ idxLR[j][1] ][ idxLR[i][0] ]
-                                       *Frac[i][0]*Frac[j][1]*Frac[k][2];
+                     Ep_ThisRank += Ep_Coeff*Mass[ParID]*Pot3D[P][ idxLR[k][2] ][ idxLR[j][1] ][ idxLR[i][0] ]
+                                            *Frac[i][0]*Frac[j][1]*Frac[k][2];
                   } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                } // PAR_INTERP_CIC
                break;
 
 
-//             2-4-3. TSC
+//             2-3-3. TSC
                case ( PAR_INTERP_TSC ):
                {
                   int    idxLCR[3][3];    // array index of the left/central/right cells (idxLCR[0/1/2][d])
@@ -373,8 +366,8 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                      for (int k=0; k<3; k++)
                      for (int j=0; j<3; j++)
                      for (int i=0; i<3; i++)
-                     Ep_ThisRank += 0.5*Mass[ParID]*Pot3D[P][ idxLCR[k][2] ][ idxLCR[j][1] ][ idxLCR[i][0] ]
-                                       *Frac[i][0]*Frac[j][1]*Frac[k][2];
+                     Ep_ThisRank += Ep_Coeff*Mass[ParID]*Pot3D[P][ idxLCR[k][2] ][ idxLCR[j][1] ][ idxLCR[i][0] ]
+                                            *Frac[i][0]*Frac[j][1]*Frac[k][2];
                   } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                } // PAR_INTERP_TSC
                break;
@@ -384,14 +377,14 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
          } // for (int PID=PID0, P=0; PID<PID0+8; PID++, P++)
       } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
 
-//    2-5. free memory
+//    2-4. free memory
       delete [] Pot;
 
       } // end of OpenMP parallel region
    } // for (int lv=0; lv<NLEVEL; lv++)
 
 
-// 2.6. gather from all ranks
+// 2.5. gather from all ranks
    MPI_Reduce( &Ep_ThisRank, &Ep_Total, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
 
 #  else // #ifdef GRAVITY

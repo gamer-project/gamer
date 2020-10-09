@@ -206,50 +206,27 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 
 //       particle acceleration
 #        ifdef STORE_PAR_ACC
-         real pot_xm = (real)0.0;
-         real pot_xp = (real)0.0;
-         real pot_ym = (real)0.0;
-         real pot_yp = (real)0.0;
-         real pot_zm = (real)0.0;
-         real pot_zp = (real)0.0;
+         real GasAcc[3] = { (real)0.0, (real)0.0, (real)0.0 };
 
-//       self-gravity potential
-         if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
+//       external acceleration
+         if ( OPT__EXT_ACC )  CPUExtAcc_Ptr( GasAcc, x, y, z, TimeNew, ExtAcc_AuxArray );
+
+//       self-gravity and external potential
+         if ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT )
          {
             const int ii = i + GRA_GHOST_SIZE;
             const int jj = j + GRA_GHOST_SIZE;
             const int kk = k + GRA_GHOST_SIZE;
 
 #           ifdef STORE_POT_GHOST
-            pot_xm = pot_ext[kk  ][jj  ][ii-1];
-            pot_xp = pot_ext[kk  ][jj  ][ii+1];
-            pot_ym = pot_ext[kk  ][jj-1][ii  ];
-            pot_yp = pot_ext[kk  ][jj+1][ii  ];
-            pot_zm = pot_ext[kk-1][jj  ][ii  ];
-            pot_zp = pot_ext[kk+1][jj  ][ii  ];
+            const real pot_xm = pot_ext[kk  ][jj  ][ii-1];
+            const real pot_xp = pot_ext[kk  ][jj  ][ii+1];
+            const real pot_ym = pot_ext[kk  ][jj-1][ii  ];
+            const real pot_yp = pot_ext[kk  ][jj+1][ii  ];
+            const real pot_zm = pot_ext[kk-1][jj  ][ii  ];
+            const real pot_zp = pot_ext[kk+1][jj  ][ii  ];
 #           endif
-         }
 
-//       external potential (currently useful only for ELBDM; always work with OPT__GRAVITY_TYPE == GRAVITY_SELF)
-         if ( OPT__EXTERNAL_POT )
-         {
-            pot_xm += CPUExtPot_Ptr( x-dh, y,    z,    TimeNew, ExtPot_AuxArray );
-            pot_xp += CPUExtPot_Ptr( x+dh, y,    z,    TimeNew, ExtPot_AuxArray );
-            pot_ym += CPUExtPot_Ptr( x,    y-dh, z,    TimeNew, ExtPot_AuxArray );
-            pot_yp += CPUExtPot_Ptr( x,    y+dh, z,    TimeNew, ExtPot_AuxArray );
-            pot_zm += CPUExtPot_Ptr( x,    y,    z-dh, TimeNew, ExtPot_AuxArray );
-            pot_zp += CPUExtPot_Ptr( x,    y,    z+dh, TimeNew, ExtPot_AuxArray );
-         }
-
-//       external acceleration (currently useful only for HYDRO)
-         real GasAcc[3] = { (real)0.0, (real)0.0, (real)0.0 };
-
-         if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
-            CPUExtAcc_Ptr( GasAcc, x, y, z, TimeNew, ExtAcc_AuxArray );
-
-//       self-gravity
-         if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
-         {
             GasAcc[0] += GraConst*( pot_xp - pot_xm );
             GasAcc[1] += GraConst*( pot_yp - pot_ym );
             GasAcc[2] += GraConst*( pot_zp - pot_zm );

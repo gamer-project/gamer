@@ -169,6 +169,8 @@ void Aux_TakeNote()
 
 #     if   ( EOS == EOS_GAMMA )
       fprintf( Note, "EOS                             EOS_GAMMA\n" );
+#     elif ( EOS == EOS_ISOTHERMAL )
+      fprintf( Note, "EOS                             EOS_ISOTHERMAL\n" );
 #     elif ( EOS == EOS_NUCLEAR )
       fprintf( Note, "EOS                             EOS_NUCLEAR\n" );
 #     elif ( EOS == EOS_TABULAR )
@@ -177,6 +179,12 @@ void Aux_TakeNote()
       fprintf( Note, "EOS                             EOS_USER\n" );
 #     else
       fprintf( Note, "EOS                             UNKNOWN\n" );
+#     endif
+
+#     ifdef BAROTROPIC_EOS
+      fprintf( Note, "BAROTROPIC_EOS                  ON\n" );
+#     else
+      fprintf( Note, "BAROTROPIC_EOS                  OFF\n" );
 #     endif
 
 //    c. options in ELBDM
@@ -544,6 +552,7 @@ void Aux_TakeNote()
 #     elif ( POT_SCHEME == MG )
       fprintf( Note, "#define POT_BLOCK_SIZE_X        %d\n",      POT_BLOCK_SIZE_X    );
 #     endif
+      fprintf( Note, "#define EXTPOT_BLOCK_SIZE       %d\n",      EXTPOT_BLOCK_SIZE   );
       fprintf( Note, "#define GRA_BLOCK_SIZE          %d\n",      GRA_BLOCK_SIZE      );
 #     endif // #ifdef GRAVITY
       fprintf( Note, "#define DT_FLU_BLOCK_SIZE       %d\n",      DT_FLU_BLOCK_SIZE   );
@@ -850,6 +859,7 @@ void Aux_TakeNote()
 #     if   ( MODEL == HYDRO )
       fprintf( Note, "GAMMA                           %13.7e\n",  GAMMA                   );
       fprintf( Note, "MOLECULAR_WEIGHT                %13.7e\n",  MOLECULAR_WEIGHT        );
+      fprintf( Note, "ISO_TEMP                        %13.7e\n",  ISO_TEMP                );
       fprintf( Note, "MINMOD_COEFF                    %13.7e\n",  MINMOD_COEFF            );
       fprintf( Note, "OPT__LR_LIMITER                 %s\n",      ( OPT__LR_LIMITER == VANLEER           ) ? "VANLEER"    :
                                                                   ( OPT__LR_LIMITER == GMINMOD           ) ? "GMINMOD"    :
@@ -934,6 +944,7 @@ void Aux_TakeNote()
 #     if ( MODEL == HYDRO )
       fprintf( Note, "MIN_PRES                        %13.7e\n",  MIN_PRES                 );
       fprintf( Note, "MIN_EINT                        %13.7e\n",  MIN_EINT                 );
+      fprintf( Note, "OPT__LAST_RESORT_FLOOR          %d\n",      OPT__LAST_RESORT_FLOOR   );
       fprintf( Note, "JEANS_MIN_PRES                  %d\n",      JEANS_MIN_PRES           );
       if ( JEANS_MIN_PRES ) {
       fprintf( Note, "JEANS_MIN_PRES_LEVEL            %d\n",      JEANS_MIN_PRES_LEVEL     );
@@ -981,8 +992,9 @@ void Aux_TakeNote()
 #     endif
       fprintf( Note, "POT_GPU_NPGROUP                 %d\n",      POT_GPU_NPGROUP         );
       fprintf( Note, "OPT__GRA_P5_GRADIENT            %d\n",      OPT__GRA_P5_GRADIENT    );
-      fprintf( Note, "OPT__GRAVITY_TYPE               %d\n",      OPT__GRAVITY_TYPE       );
-      fprintf( Note, "OPT__EXTERNAL_POT               %d\n",      OPT__EXTERNAL_POT       );
+      fprintf( Note, "OPT__SELF_GRAVITY               %d\n",      OPT__SELF_GRAVITY       );
+      fprintf( Note, "OPT__EXT_ACC                    %d\n",      OPT__EXT_ACC            );
+      fprintf( Note, "OPT__EXT_POT                    %d\n",      OPT__EXT_POT            );
       fprintf( Note, "OPT__GRAVITY_EXTRA_MASS         %d\n",      OPT__GRAVITY_EXTRA_MASS );
       fprintf( Note, "AveDensity_Init                 %13.7e\n",  AveDensity_Init         );
       fprintf( Note, "***********************************************************************************\n" );
@@ -1093,6 +1105,7 @@ void Aux_TakeNote()
                                                                                                              "UNKNOWN" );
 #     endif
       fprintf( Note, "INT_MONO_COEFF                  %13.7e\n",  INT_MONO_COEFF          );
+      fprintf( Note, "INT_OPP_SIGN_0TH_ORDER          %d\n",      INT_OPP_SIGN_0TH_ORDER  );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 

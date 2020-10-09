@@ -72,9 +72,10 @@
 
 // equation of states
 #define EOS_GAMMA       1
-#define EOS_NUCLEAR     2
-#define EOS_TABULAR     3
-#define EOS_USER        4
+#define EOS_ISOTHERMAL  2
+#define EOS_NUCLEAR     3
+#define EOS_TABULAR     4
+#define EOS_USER        5
 
 
 // Poisson solvers
@@ -163,8 +164,8 @@
 
 
 // number of input fluid variables in the dt solver
-// --> EOS_GAMMA does not require passive scalars
-#if ( MODEL == HYDRO  &&  EOS == EOS_GAMMA )
+// --> EOS_GAMMA/EOS_ISOTHERMAL do not require passive scalars
+#if (  MODEL == HYDRO  &&  ( EOS == EOS_GAMMA || EOS == EOS_ISOTHERMAL )  )
 #  define FLU_NIN_T           NCOMP_FLUID
 #else
 #  define FLU_NIN_T           NCOMP_TOTAL
@@ -565,12 +566,12 @@
 
 // size of auxiliary arrays
 #if ( MODEL == HYDRO )
-#  define EOS_NAUX_MAX           10    // EoS_AuxArray[]
+#  define EOS_NAUX_MAX           20    // EoS_AuxArray[]
 #endif
 
 #ifdef GRAVITY
-#  define EXT_POT_NAUX_MAX       10    // ExtPot_AuxArray[]
-#  define EXT_ACC_NAUX_MAX       10    // ExtAcc_AuxArray[]
+#  define EXT_POT_NAUX_MAX       20    // ExtPot_AuxArray[]
+#  define EXT_ACC_NAUX_MAX       20    // ExtAcc_AuxArray[]
 #endif
 
 
@@ -710,6 +711,11 @@
 // GAMER status
 #define GAMER_SUCCESS      1
 #define GAMER_FAILED       0
+
+
+// timer switch
+#define TIMER_ON           1
+#define TIMER_OFF          0
 
 
 // symbolic constant for Aux_Error()

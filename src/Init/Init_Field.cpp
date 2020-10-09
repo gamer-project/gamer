@@ -18,7 +18,7 @@ static int NDefinedField;  // total number of defined fields --> for debug only
 //
 // Note        :  1. Invoked by Init_GAMER()
 //                2. Total number of fields is determined by NCOMP_TOTAL = NCOMP_FLUID + NCOMP_PASSIVE
-//                3. To initialize user-defined fields, the function pointer "Flag_User_Ptr" must be
+//                3. To initialize user-defined fields, the function pointer "Init_Field_User_Ptr" must be
 //                   set by a test problem initializer
 //
 // Parameter   :  None

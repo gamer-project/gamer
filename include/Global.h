@@ -67,7 +67,7 @@ extern bool       OPT__CK_RESTRICT, OPT__CK_PATCH_ALLOCATE, OPT__FIXUP_FLUX, OPT
 extern bool       OPT__UM_IC_DOWNGRADE, OPT__UM_IC_REFINE, OPT__TIMING_MPI;
 extern bool       OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
 extern bool       OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
-extern bool       OPT__RECORD_NOTE, OPT__RECORD_UNPHY;
+extern bool       OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
 
 extern UM_IC_Format_t     OPT__UM_IC_FORMAT;
 extern TestProbID_t       TESTPROB_ID;
@@ -88,12 +88,12 @@ extern OptTimeStepLevel_t OPT__DT_LEVEL;
 // (2-1) fluid solver in different models
 #if   ( MODEL == HYDRO )
 extern double           FlagTable_PresGradient[NLEVEL-1], FlagTable_Vorticity[NLEVEL-1], FlagTable_Jeans[NLEVEL-1];
-extern double           GAMMA, MINMOD_COEFF, MOLECULAR_WEIGHT;
+extern double           GAMMA, MINMOD_COEFF, MOLECULAR_WEIGHT, ISO_TEMP;
 extern LR_Limiter_t     OPT__LR_LIMITER;
 extern Opt1stFluxCorr_t OPT__1ST_FLUX_CORR;
 extern OptRSolver1st_t  OPT__1ST_FLUX_CORR_SCHEME;
 extern bool             OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP;
-extern bool             OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, JEANS_MIN_PRES;
+extern bool             OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, JEANS_MIN_PRES, OPT__LAST_RESORT_FLOOR;
 extern int              OPT__CK_NEGATIVE, JEANS_MIN_PRES_LEVEL, JEANS_MIN_PRES_NCELL;
 extern double           MIN_DENS, MIN_PRES, MIN_EINT;
 #ifdef DUAL_ENERGY
@@ -134,7 +134,7 @@ extern double     GFUNC_COEFF0;
 extern double     DT__GRAVITY;
 extern double     NEWTON_G;
 extern int        POT_GPU_NPGROUP;
-extern bool       OPT__OUTPUT_POT, OPT__GRA_P5_GRADIENT, OPT__EXTERNAL_POT, OPT__GRAVITY_EXTRA_MASS;
+extern bool       OPT__OUTPUT_POT, OPT__GRA_P5_GRADIENT, OPT__SELF_GRAVITY, OPT__GRAVITY_EXTRA_MASS;
 extern double     SOR_OMEGA;
 extern int        SOR_MAX_ITER, SOR_MIN_ITER;
 extern double     MG_TOLERATED_ERROR;
@@ -142,23 +142,16 @@ extern int        MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH;
 
 extern IntScheme_t      OPT__POT_INT_SCHEME, OPT__RHO_INT_SCHEME, OPT__GRA_INT_SCHEME, OPT__REF_POT_INT_SCHEME;
 extern OptPotBC_t       OPT__BC_POT;
-extern OptGravityType_t OPT__GRAVITY_TYPE;
+extern OptExtAcc_t      OPT__EXT_ACC;
+extern OptExtPot_t      OPT__EXT_POT;
 
 extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
-extern void (*Init_ExtAccAuxArray_Ptr)( double [] );
 extern ExtAcc_t CPUExtAcc_Ptr;
-extern void (*SetCPUExtAcc_Ptr)( ExtAcc_t & );
+extern ExtPot_t CPUExtPot_Ptr;
 #ifdef GPU
 extern ExtAcc_t GPUExtAcc_Ptr;
-extern void (*SetGPUExtAcc_Ptr)( ExtAcc_t & );
-#endif
-extern void (*Init_ExtPotAuxArray_Ptr)( double [] );
-extern ExtPot_t CPUExtPot_Ptr;
-extern void (*SetCPUExtPot_Ptr)( ExtPot_t & );
-#ifdef GPU
 extern ExtPot_t GPUExtPot_Ptr;
-extern void (*SetGPUExtPot_Ptr)( ExtPot_t & );
 #endif
 #endif // #ifdef GRAVITY
 
@@ -268,27 +261,27 @@ extern real       (*h_Ele_Array      [2])[9][NCOMP_ELE][ PS2P1*PS2 ];
 #endif
 
 #ifdef GRAVITY
-extern real       (*h_Rho_Array_P    [2])[RHO_NXT][RHO_NXT][RHO_NXT];
-extern real       (*h_Pot_Array_P_In [2])[POT_NXT][POT_NXT][POT_NXT];
-extern real       (*h_Pot_Array_P_Out[2])[GRA_NXT][GRA_NXT][GRA_NXT];
-extern real       (*h_Flu_Array_G    [2])[GRA_NIN][PS1][PS1][PS1];
-extern double     (*h_Corner_Array_G [2])[3];
+extern real       (*h_Rho_Array_P     [2])[RHO_NXT][RHO_NXT][RHO_NXT];
+extern real       (*h_Pot_Array_P_In  [2])[POT_NXT][POT_NXT][POT_NXT];
+extern real       (*h_Pot_Array_P_Out [2])[GRA_NXT][GRA_NXT][GRA_NXT];
+extern real       (*h_Flu_Array_G     [2])[GRA_NIN][PS1][PS1][PS1];
+extern double     (*h_Corner_Array_PGT[2])[3];
 #ifdef DUAL_ENERGY
-extern char       (*h_DE_Array_G     [2])[PS1][PS1][PS1];
+extern char       (*h_DE_Array_G      [2])[PS1][PS1][PS1];
 #endif
 #ifdef MHD
-extern real       (*h_Emag_Array_G   [2])[PS1][PS1][PS1];
+extern real       (*h_Emag_Array_G    [2])[PS1][PS1][PS1];
 #endif
 
 #ifdef UNSPLIT_GRAVITY
-extern real       (*h_Pot_Array_USG_F[2])[ CUBE(USG_NXT_F) ];
-extern real       (*h_Pot_Array_USG_G[2])[USG_NXT_G ][USG_NXT_G ][USG_NXT_G ];
-extern real       (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1];
+extern real       (*h_Pot_Array_USG_F [2])[ CUBE(USG_NXT_F) ];
+extern real       (*h_Pot_Array_USG_G [2])[USG_NXT_G ][USG_NXT_G ][USG_NXT_G ];
+extern real       (*h_Flu_Array_USG_G [2])[GRA_NIN-1][PS1][PS1][PS1];
 #endif
-#endif
+#endif // #ifdef GRAVITY
 
 #ifdef SUPPORT_GRACKLE
-extern real       (*h_Che_Array      [2]);
+extern real       (*h_Che_Array[2]);
 // do not declare Grackle variables for CUDA source files since they do not include <grackle.h>
 #ifndef __CUDACC__
 extern grackle_field_data *Che_FieldData;

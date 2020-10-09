@@ -42,14 +42,14 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
 // Parameter   :  XYZ               : Target spatial direction : (0/1/2) --> (x/y/z)
 //                Flux_Out          : Array to store the output flux
 //                L/R_In            : Input left/right states (conserved variables)
-//                MinPres           : Pressure floor
+//                MinDens/Pres      : Density and pressure floors
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
 //                EoS_DensPres2CSqr : EoS routine to compute the sound speed square
 //                EoS_AuxArray      : Auxiliary array for the EoS routines
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                               const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                               const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
                                const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] )
 {
 
@@ -340,9 +340,14 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
    P_PVRS      = _TWO*(  ( P_L + P_R ) + ( u_L - u_R )*RhoAs_PVRS  );
    P_PVRS      = Hydro_CheckMinPres( P_PVRS, MinPres );
 
-#  if ( EOS == EOS_GAMMA )
+// for EOS_GAMMA/EOS_ISOTHERMAL, the calculations of Gamma_SL/R can be greatly simplified
+// --> results should be exactly the same except for round-off errors
+#  if   ( EOS == EOS_GAMMA )
    Gamma_SL    = (real)EoS_AuxArray[0];
    Gamma_SR    = (real)EoS_AuxArray[0];
+#  elif ( EOS == EOS_ISOTHERMAL )
+   Gamma_SL    = ONE;
+   Gamma_SR    = ONE;
 #  else
    real u_PVRS, Rho_As_PVRS, Rho_SL, Rho_SR, _P;
 
@@ -350,6 +355,8 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
    Rho_As_PVRS = Rho_PVRS / As_PVRS;
    Rho_SL      = L[0] + ( u_L - u_PVRS )*Rho_As_PVRS;
    Rho_SR      = R[0] + ( u_PVRS - u_R )*Rho_As_PVRS;
+   Rho_SL      = FMAX( Rho_SL, MinDens );
+   Rho_SR      = FMAX( Rho_SR, MinDens );
    _P          = ONE / P_PVRS;
 // see Eq. [9.8] in Toro 1999 for passive scalars
    Gamma_SL    = EoS_DensPres2CSqr( Rho_SL, P_PVRS, L+NCOMP_FLUID, EoS_AuxArray )*Rho_SL*_P;
@@ -406,11 +413,21 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
 
 
 // 4. evaluate the HLLE fluxes
-//###REVISE: handle the extreme case with MaxV_R==MaxV_L
-   const real _MaxV_R_minus_L = ONE / ( MaxV_R - MaxV_L );
+// deal with the special case of MaxV_L=MaxV_R=0
+//###REVISE: should it return zero flux due to symmetry?
+   if ( MaxV_L == ZERO  &&  MaxV_R == ZERO )
+   {
+      for (int v=0; v<NWAVE; v++)
+         Flux_Out[ idx_wave[v] ] = Flux_L[ idx_wave[v] ];   // assuming Flux_L=Flux_R
+   }
 
-   for (int v=0; v<NWAVE; v++)
-      Flux_Out[ idx_wave[v] ] = _MaxV_R_minus_L*( MaxV_R*Flux_L[ idx_wave[v] ] - MaxV_L*Flux_R[ idx_wave[v] ] );
+   else
+   {
+      const real _MaxV_R_minus_L = ONE / ( MaxV_R - MaxV_L );
+
+      for (int v=0; v<NWAVE; v++)
+         Flux_Out[ idx_wave[v] ] = _MaxV_R_minus_L*( MaxV_R*Flux_L[ idx_wave[v] ] - MaxV_L*Flux_R[ idx_wave[v] ] );
+   }
 
 // longitudinal magnetic flux is always zero
 #  ifdef MHD
