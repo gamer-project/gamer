@@ -41,6 +41,9 @@ void Init_ExtAccPot()
 // external potential
    if ( OPT__EXT_POT )
    {
+//    load the potential table
+      if ( OPT__EXT_POT == EXT_POT_TABLE )   Init_LoadExtPotTable();
+
       if ( Init_ExtPot_Ptr != NULL )   Init_ExtPot_Ptr();
       else                             Aux_Error( ERROR_INFO, "Init_ExtPot_Ptr == NULL !!\n" );
    }

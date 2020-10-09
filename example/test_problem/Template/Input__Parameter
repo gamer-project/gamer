@@ -237,6 +237,7 @@ EXT_POT_TABLE_EDGEL_X        -1.0         # ...                     : starting x
 EXT_POT_TABLE_EDGEL_Y        -1.0         #
 EXT_POT_TABLE_EDGEL_Z        -1.0         #
 EXT_POT_TABLE_FLOAT8         -1           # ...                     : double precision (<0=auto -> FLOAT8, 0=off, 1=on) [-1]
+                                          # --> not supported yet; use -1 for now
 OPT__GRAVITY_EXTRA_MASS       0           # add extra mass source when computing gravity [0]
 
 
