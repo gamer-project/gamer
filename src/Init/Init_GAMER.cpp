@@ -221,6 +221,10 @@ void Init_GAMER( int *argc, char ***argv )
       if ( OPT__SELF_GRAVITY  &&  OPT__BC_POT == BC_POT_ISOLATED )    Init_GreenFuncK();
 
 
+//    load the external potential table
+      if ( OPT__EXT_POT == EXT_POT_TABLE )   Init_LoadExtPotTable();
+
+
 //    evaluate the initial average density if it is not set yet (may already be set in Init_ByRestart)
       if ( AveDensity_Init <= 0.0 )    Poi_GetAverageDensity();
 
