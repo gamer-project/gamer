@@ -266,6 +266,7 @@ char   (*h_DE_Array_G      [2])[PS1][PS1][PS1]                     = { NULL, NUL
 #ifdef MHD
 real   (*h_Emag_Array_G    [2])[PS1][PS1][PS1]                     = { NULL, NULL };
 #endif
+real    *h_ExtPotTable                                             = NULL;
 
 // (3-3) unsplit gravity correction
 #ifdef UNSPLIT_GRAVITY
@@ -297,48 +298,49 @@ real (*h_Mag_Array_T[2])[NCOMP_MAG][ PS1P1*SQR(PS1) ]              = { NULL, NUL
 // =======================================================================================================
 #ifdef GPU
 // (4-1) fluid solver
-real (*d_Flu_Array_F_In )[FLU_NIN ][ CUBE(FLU_NXT) ]              = NULL;
-real (*d_Flu_Array_F_Out)[FLU_NOUT][ CUBE(PS2) ]                  = NULL;
-real (*d_Flux_Array)[9][NFLUX_TOTAL][ SQR(PS2) ]                  = NULL;
-double (*d_Corner_Array_F)[3]                                     = NULL;
+real (*d_Flu_Array_F_In )[FLU_NIN ][ CUBE(FLU_NXT) ]               = NULL;
+real (*d_Flu_Array_F_Out)[FLU_NOUT][ CUBE(PS2) ]                   = NULL;
+real (*d_Flux_Array)[9][NFLUX_TOTAL][ SQR(PS2) ]                   = NULL;
+double (*d_Corner_Array_F)[3]                                      = NULL;
 #ifdef DUAL_ENERGY
-char (*d_DE_Array_F_Out)[ PS2*PS2*PS2 ]                           = NULL;
+char (*d_DE_Array_F_Out)[ PS2*PS2*PS2 ]                            = NULL;
 #endif
 #ifdef MHD
-real (*d_Mag_Array_F_In )[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ]   = NULL;
-real (*d_Mag_Array_F_Out)[NCOMP_MAG][ PS2P1*SQR(PS2)          ]   = NULL;
-real (*d_Ele_Array      )[9][NCOMP_ELE][ PS2P1*PS2 ]              = NULL;
+real (*d_Mag_Array_F_In )[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ]    = NULL;
+real (*d_Mag_Array_F_Out)[NCOMP_MAG][ PS2P1*SQR(PS2)          ]    = NULL;
+real (*d_Ele_Array      )[9][NCOMP_ELE][ PS2P1*PS2 ]               = NULL;
 #endif
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-real (*d_PriVar)      [NCOMP_LR            ][ CUBE(FLU_NXT)     ] = NULL;
-real (*d_Slope_PPM)[3][NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ] = NULL;
-real (*d_FC_Var)   [6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ] = NULL;
-real (*d_FC_Flux)  [3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ] = NULL;
+real (*d_PriVar)      [NCOMP_LR            ][ CUBE(FLU_NXT)     ]  = NULL;
+real (*d_Slope_PPM)[3][NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ]  = NULL;
+real (*d_FC_Var)   [6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ]  = NULL;
+real (*d_FC_Flux)  [3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ]  = NULL;
 #ifdef MHD
-real (*d_FC_Mag_Half)[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ]       = NULL;
-real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ]       = NULL;
+real (*d_FC_Mag_Half)[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ]        = NULL;
+real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ]        = NULL;
 #endif
 #endif // FLU_SCHEME
 
 #ifdef GRAVITY
 // (4-2) Poisson and gravity solver
-real   (*d_Rho_Array_P    )[ CUBE(RHO_NXT) ]                     = NULL;
-real   (*d_Pot_Array_P_In )[ CUBE(POT_NXT) ]                     = NULL;
-real   (*d_Pot_Array_P_Out)[ CUBE(GRA_NXT) ]                     = NULL;
-real   (*d_Flu_Array_G    )[GRA_NIN][ CUBE(PS1) ]                = NULL;
-double (*d_Corner_Array_PGT)[3]                                  = NULL;
+real   (*d_Rho_Array_P    )[ CUBE(RHO_NXT) ]                       = NULL;
+real   (*d_Pot_Array_P_In )[ CUBE(POT_NXT) ]                       = NULL;
+real   (*d_Pot_Array_P_Out)[ CUBE(GRA_NXT) ]                       = NULL;
+real   (*d_Flu_Array_G    )[GRA_NIN][ CUBE(PS1) ]                  = NULL;
+double (*d_Corner_Array_PGT)[3]                                    = NULL;
 #ifdef DUAL_ENERGY
-char   (*d_DE_Array_G     )[ CUBE(PS1) ]                         = NULL;
+char   (*d_DE_Array_G     )[ CUBE(PS1) ]                           = NULL;
 #endif
 #ifdef MHD
-real   (*d_Emag_Array_G   )[ CUBE(PS1) ]                         = NULL;
+real   (*d_Emag_Array_G   )[ CUBE(PS1) ]                           = NULL;
 #endif
+real    *d_ExtPotTable                                             = NULL;
 
 // (4-3) unsplit gravity correction
 #ifdef UNSPLIT_GRAVITY
-real (*d_Pot_Array_USG_F)[ CUBE(USG_NXT_F) ]                     = NULL;
-real (*d_Pot_Array_USG_G)[ CUBE(USG_NXT_G) ]                     = NULL;
-real (*d_Flu_Array_USG_G)[GRA_NIN-1][ CUBE(PS1) ]                = NULL;
+real (*d_Pot_Array_USG_F)[ CUBE(USG_NXT_F) ]                       = NULL;
+real (*d_Pot_Array_USG_G)[ CUBE(USG_NXT_G) ]                       = NULL;
+real (*d_Flu_Array_USG_G)[GRA_NIN-1][ CUBE(PS1) ]                  = NULL;
 #endif
 #endif
 
