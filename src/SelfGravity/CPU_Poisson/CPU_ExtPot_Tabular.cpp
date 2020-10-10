@@ -62,9 +62,9 @@ void SetExtPotAuxArray_Tabular( double AuxArray_Flt[], int AuxArray_Int[] )
    AuxArray_Flt[3] = 1.0 / EXT_POT_TABLE_DH;    // 1/dh
 
 // integer parameters
-   AuxArray_Int[0] = EXT_POT_TABLE_NCELL[0];    // table sizes along x/y/z
-   AuxArray_Int[1] = EXT_POT_TABLE_NCELL[1];
-   AuxArray_Int[2] = EXT_POT_TABLE_NCELL[2];
+   AuxArray_Int[0] = EXT_POT_TABLE_NPOINT[0];   // table sizes along x/y/z
+   AuxArray_Int[1] = EXT_POT_TABLE_NPOINT[1];
+   AuxArray_Int[2] = EXT_POT_TABLE_NPOINT[2];
 
 } // FUNCTION : SetExtPotAuxArray_Tabular
 #endif // #ifndef __CUDACC__
@@ -100,18 +100,18 @@ static real ExtPot_Tabular( const double x, const double y, const double z, cons
                             const ExtPotUsage_t Usage, const real PotTable[] )
 {
 
-   const double EdgeL_x = UserArray_Flt[0];
-   const double EdgeL_y = UserArray_Flt[1];
-   const double EdgeL_z = UserArray_Flt[2];
-   const double _dh     = UserArray_Flt[3];
+   const double EdgeL_x  = UserArray_Flt[0];
+   const double EdgeL_y  = UserArray_Flt[1];
+   const double EdgeL_z  = UserArray_Flt[2];
+   const double _dh      = UserArray_Flt[3];
 
-   const int    NCell_x = UserArray_Int[0];
-   const int    NCell_y = UserArray_Int[1];
-   const int    didx_x  = 1;
-   const int    didx_y  = NCell_x;
-   const int    didx_z  = NCell_x*NCell_y;
+   const int    NPoint_x = UserArray_Int[0];
+   const int    NPoint_y = UserArray_Int[1];
+   const int    didx_x   = 1;
+   const int    didx_y   = NPoint_x;
+   const int    didx_z   = NPoint_x*NPoint_y;
 
-   const real   ONE     = (real)1.0;
+   const real   ONE      = (real)1.0;
 
 
 // 1. get the lower corner cell index
@@ -129,17 +129,17 @@ static real ExtPot_Tabular( const double x, const double y, const double z, cons
 
 // it should never happen even considering round-off errors!
 #  if ( defined GAMER_DEBUG  &&  !defined __CUDACC__ )
-   const int NCell_z = UserArray_Int[2];
+   const int NPoint_z = UserArray_Int[2];
 
-   if ( idx_x < 0  ||  idx_x+1 >= NCell_x )
+   if ( idx_x < 0  ||  idx_x+1 >= NPoint_x )
       Aux_Error( ERROR_INFO, "x index outside the table range (x %14.7e, EdgeL %14.7e, _dh %13.7e, idx %d) !!\n",
                  x, EdgeL_x, _dh, idx_x );
 
-   if ( idx_y < 0  ||  idx_y+1 >= NCell_y )
+   if ( idx_y < 0  ||  idx_y+1 >= NPoint_y )
       Aux_Error( ERROR_INFO, "y index outside the table range (y %14.7e, EdgeL %14.7e, _dh %13.7e, idx %d) !!\n",
                  y, EdgeL_y, _dh, idx_y );
 
-   if ( idx_z < 0  ||  idx_z+1 >= NCell_z )
+   if ( idx_z < 0  ||  idx_z+1 >= NPoint_z )
       Aux_Error( ERROR_INFO, "z index outside the table range (z %14.7e, EdgeL %14.7e, _dh %13.7e, idx %d) !!\n",
                  z, EdgeL_z, _dh, idx_z );
 #  endif

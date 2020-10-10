@@ -2108,7 +2108,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__ExtPot             = OPT__EXT_POT;
    InputPara.ExtPotTable_Name        = EXT_POT_TABLE_NAME;
    for (int d=0; d<3; d++)
-   InputPara.ExtPotTable_NCell[d]    = EXT_POT_TABLE_NCELL[d];
+   InputPara.ExtPotTable_NPoint[d]   = EXT_POT_TABLE_NPOINT[d];
    InputPara.ExtPotTable_dh          = EXT_POT_TABLE_DH;
    for (int d=0; d<3; d++)
    InputPara.ExtPotTable_EdgeL[d]    = EXT_POT_TABLE_EDGEL[d];
@@ -2860,7 +2860,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__ExtAcc",             HOFFSET(InputPara_t,Opt__ExtAcc            ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__ExtPot",             HOFFSET(InputPara_t,Opt__ExtPot            ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "ExtPotTable_Name",        HOFFSET(InputPara_t,ExtPotTable_Name       ), H5_TypeID_VarStr            );
-   H5Tinsert( H5_TypeID, "ExtPotTable_NCell",       HOFFSET(InputPara_t,ExtPotTable_NCell      ), H5_TypeID_Arr_3Int          );
+   H5Tinsert( H5_TypeID, "ExtPotTable_NPoint",      HOFFSET(InputPara_t,ExtPotTable_NPoint     ), H5_TypeID_Arr_3Int          );
    H5Tinsert( H5_TypeID, "ExtPotTable_dh",          HOFFSET(InputPara_t,ExtPotTable_dh         ), H5T_NATIVE_DOUBLE           );
    H5Tinsert( H5_TypeID, "ExtPotTable_EdgeL",       HOFFSET(InputPara_t,ExtPotTable_EdgeL      ), H5_TypeID_Arr_3Double       );
    H5Tinsert( H5_TypeID, "ExtPotTable_Float8",      HOFFSET(InputPara_t,ExtPotTable_Float8     ), H5T_NATIVE_INT              );

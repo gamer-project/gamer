@@ -494,7 +494,7 @@ struct InputPara_t
    int    Opt__ExtAcc;
    int    Opt__ExtPot;
    char  *ExtPotTable_Name;
-   int    ExtPotTable_NCell[3];
+   int    ExtPotTable_NPoint[3];
    double ExtPotTable_dh;
    double ExtPotTable_EdgeL[3];
    int    ExtPotTable_Float8;

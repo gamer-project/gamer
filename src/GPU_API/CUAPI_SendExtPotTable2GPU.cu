@@ -23,7 +23,7 @@ extern real *d_ExtPotTable;
 void CUAPI_SendExtPotTable2GPU( const real *h_Table )
 {
 
-   const long MemSize = (long)sizeof(real)*EXT_POT_TABLE_NCELL[0]*EXT_POT_TABLE_NCELL[1]*EXT_POT_TABLE_NCELL[2];
+   const long MemSize = (long)sizeof(real)*EXT_POT_TABLE_NPOINT[0]*EXT_POT_TABLE_NPOINT[1]*EXT_POT_TABLE_NPOINT[2];
 
    CUDA_CHECK_ERROR(  cudaMemcpyAsync( d_ExtPotTable, h_Table, MemSize, cudaMemcpyHostToDevice )  );
 

@@ -997,9 +997,9 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__EXT_POT                    %d\n",      OPT__EXT_POT            );
       if ( OPT__EXT_POT == EXT_POT_TABLE ) {
       fprintf( Note, "EXT_POT_TABLE_NAME              %s\n",      EXT_POT_TABLE_NAME      );
-      fprintf( Note, "EXT_POT_TABLE_NCELL_X           %d\n",      EXT_POT_TABLE_NCELL[0]  );
-      fprintf( Note, "EXT_POT_TABLE_NCELL_Y           %d\n",      EXT_POT_TABLE_NCELL[1]  );
-      fprintf( Note, "EXT_POT_TABLE_NCELL_Z           %d\n",      EXT_POT_TABLE_NCELL[2]  );
+      fprintf( Note, "EXT_POT_TABLE_NPOINT_X          %d\n",      EXT_POT_TABLE_NPOINT[0] );
+      fprintf( Note, "EXT_POT_TABLE_NPOINT_Y          %d\n",      EXT_POT_TABLE_NPOINT[1] );
+      fprintf( Note, "EXT_POT_TABLE_NPOINT_Z          %d\n",      EXT_POT_TABLE_NPOINT[2] );
       fprintf( Note, "EXT_POT_TABLE_DH                %13.7e\n",  EXT_POT_TABLE_DH        );
       fprintf( Note, "EXT_POT_TABLE_EDGEL_X          %14.7e\n",   EXT_POT_TABLE_EDGEL[0]  );
       fprintf( Note, "EXT_POT_TABLE_EDGEL_Y          %14.7e\n",   EXT_POT_TABLE_EDGEL[1]  );

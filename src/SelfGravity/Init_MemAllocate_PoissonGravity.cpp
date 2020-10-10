@@ -46,7 +46,7 @@ void Init_MemAllocate_PoissonGravity( const int Pot_NPG )
 
 // external potential table
    if ( OPT__EXT_POT == EXT_POT_TABLE ) {
-      const long TableSize = (long)EXT_POT_TABLE_NCELL[0]*EXT_POT_TABLE_NCELL[1]*EXT_POT_TABLE_NCELL[2];
+      const long TableSize = (long)EXT_POT_TABLE_NPOINT[0]*EXT_POT_TABLE_NPOINT[1]*EXT_POT_TABLE_NPOINT[2];
       h_ExtPotTable = new real [TableSize];
    }
 

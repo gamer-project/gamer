@@ -33,8 +33,8 @@ void Init_LoadExtPotTable()
 // checks
 // parameters
    for (int d=0; d<3; d++) {
-      if ( EXT_POT_TABLE_NCELL[d] < 2 )
-         Aux_Error( ERROR_INFO, "EXT_POT_TABLE_NCELL[%d] = %d < 2 !!\n", d, EXT_POT_TABLE_NCELL[d] );
+      if ( EXT_POT_TABLE_NPOINT[d] < 2 )
+         Aux_Error( ERROR_INFO, "EXT_POT_TABLE_NPOINT[%d] = %d < 2 !!\n", d, EXT_POT_TABLE_NPOINT[d] );
    }
 
    if ( EXT_POT_TABLE_DH <= 0.0 )
@@ -57,9 +57,9 @@ void Init_LoadExtPotTable()
          Aux_Error( ERROR_INFO, "incorrect left boundary of the external potential table (table=%13.7e > simulation=%13.7e) !!\n",
                     EXT_POT_TABLE_EDGEL[d], amr->BoxEdgeL[d] );
 
-      if ( EXT_POT_TABLE_EDGEL[d]+(EXT_POT_TABLE_NCELL[d]-1)*EXT_POT_TABLE_DH < amr->BoxEdgeR[d] )
+      if ( EXT_POT_TABLE_EDGEL[d]+(EXT_POT_TABLE_NPOINT[d]-1)*EXT_POT_TABLE_DH < amr->BoxEdgeR[d] )
          Aux_Error( ERROR_INFO, "incorrect right boundary of the external potential table (table=%13.7e < simulation=%13.7e) !!\n",
-                    EXT_POT_TABLE_EDGEL[d]+(EXT_POT_TABLE_NCELL[d]-1)*EXT_POT_TABLE_DH, amr->BoxEdgeR[d] );
+                    EXT_POT_TABLE_EDGEL[d]+(EXT_POT_TABLE_NPOINT[d]-1)*EXT_POT_TABLE_DH, amr->BoxEdgeR[d] );
    }
 
 // file existence
@@ -71,8 +71,8 @@ void Init_LoadExtPotTable()
 
    fseek( FileTemp, 0, SEEK_END );
 
-   const long NCell3D    = (long)EXT_POT_TABLE_NCELL[0]*EXT_POT_TABLE_NCELL[1]*EXT_POT_TABLE_NCELL[2];
-   const long ExpectSize = NCell3D*sizeof(real);
+   const long NPoint3D   = (long)EXT_POT_TABLE_NPOINT[0]*EXT_POT_TABLE_NPOINT[1]*EXT_POT_TABLE_NPOINT[2];
+   const long ExpectSize = NPoint3D*sizeof(real);
    const long FileSize   = ftell( FileTemp );
    if ( FileSize != ExpectSize )
       Aux_Error( ERROR_INFO, "size of the external potential table <%s> (%ld) != expect (%ld) !!\n",
@@ -89,7 +89,7 @@ void Init_LoadExtPotTable()
 
 // load table to CPU
    FILE *File = fopen( EXT_POT_TABLE_NAME, "rb" );
-   fread( h_ExtPotTable, sizeof(real), NCell3D, File );
+   fread( h_ExtPotTable, sizeof(real), NPoint3D, File );
    fclose( File );
 
 

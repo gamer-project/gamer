@@ -298,9 +298,9 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__EXT_POT",               &OPT__EXT_POT,                    0,               0,             2              );
 // do not check the parameters of external potential table here --> do it in Init_LoadExtPotTable()
    ReadPara->Add( "EXT_POT_TABLE_NAME",          EXT_POT_TABLE_NAME,              Useless_str,     Useless_str,   Useless_str    );
-   ReadPara->Add( "EXT_POT_TABLE_NCELL_X",      &EXT_POT_TABLE_NCELL[0],         -1,               NoMin_int,     NoMax_int      );
-   ReadPara->Add( "EXT_POT_TABLE_NCELL_Y",      &EXT_POT_TABLE_NCELL[1],         -1,               NoMin_int,     NoMax_int      );
-   ReadPara->Add( "EXT_POT_TABLE_NCELL_Z",      &EXT_POT_TABLE_NCELL[2],         -1,               NoMin_int,     NoMax_int      );
+   ReadPara->Add( "EXT_POT_TABLE_NPOINT_X",     &EXT_POT_TABLE_NPOINT[0],        -1,               NoMin_int,     NoMax_int      );
+   ReadPara->Add( "EXT_POT_TABLE_NPOINT_Y",     &EXT_POT_TABLE_NPOINT[1],        -1,               NoMin_int,     NoMax_int      );
+   ReadPara->Add( "EXT_POT_TABLE_NPOINT_Z",     &EXT_POT_TABLE_NPOINT[2],        -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "EXT_POT_TABLE_DH",           &EXT_POT_TABLE_DH,               -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "EXT_POT_TABLE_EDGEL_X",      &EXT_POT_TABLE_EDGEL[0],          NoDef_double,    NoMin_double,  NoMax_double   );
    ReadPara->Add( "EXT_POT_TABLE_EDGEL_Y",      &EXT_POT_TABLE_EDGEL[1],          NoDef_double,    NoMin_double,  NoMax_double   );

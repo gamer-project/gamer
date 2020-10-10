@@ -51,7 +51,7 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
    const long Emag_MemSize_G    = sizeof(real  )*Pot_NP*CUBE(PS1);
 #  endif
    const long Pot_MemSize_T     = sizeof(real  )*Pot_NP*CUBE(GRA_NXT);
-   const long ExtPot_MemSize    = (long)sizeof(real)*EXT_POT_TABLE_NCELL[0]*EXT_POT_TABLE_NCELL[1]*EXT_POT_TABLE_NCELL[2];
+   const long ExtPot_MemSize    = (long)sizeof(real)*EXT_POT_TABLE_NPOINT[0]*EXT_POT_TABLE_NPOINT[1]*EXT_POT_TABLE_NPOINT[2];
 
 
 // output the total memory requirement
