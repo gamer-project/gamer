@@ -229,13 +229,13 @@ OPT__SELF_GRAVITY             1           # add self-gravity [1]
 OPT__EXT_ACC                  0           # add external acceleration (0=off, 1=function, 2=table) [0] ##HYDRO ONLY##
 OPT__EXT_POT                  0           # add external potential    (0=off, 1=function, 2=table) [0]
 EXT_POT_TABLE_NAME            ExtPotTable # external potential table: filename
-EXT_POT_TABLE_NPOINT_X        128         # ...                     : table size (i.e., number of data points) along x/y/z
-EXT_POT_TABLE_NPOINT_Y        128         #
-EXT_POT_TABLE_NPOINT_Z        128         #
-EXT_POT_TABLE_DH              1.0         # ...                     : spatial interval between adjacent data points
-EXT_POT_TABLE_EDGEL_X        -1.0         # ...                     : starting x/y/z coordinates
-EXT_POT_TABLE_EDGEL_Y        -1.0         #
-EXT_POT_TABLE_EDGEL_Z        -1.0         #
+EXT_POT_TABLE_NPOINT_X        129         # ...                     : table size (i.e., number of data points) along x/y/z
+EXT_POT_TABLE_NPOINT_Y        129         #
+EXT_POT_TABLE_NPOINT_Z        129         #
+EXT_POT_TABLE_DH              0.0078125   # ...                     : spatial interval between adjacent data points
+EXT_POT_TABLE_EDGEL_X         0.0         # ...                     : starting x/y/z coordinates
+EXT_POT_TABLE_EDGEL_Y         0.0         #
+EXT_POT_TABLE_EDGEL_Z         0.0         #
 EXT_POT_TABLE_FLOAT8         -1           # ...                     : double precision (<0=auto -> FLOAT8, 0=off, 1=on) [-1]
                                           # --> not supported yet; use -1 for now
 OPT__GRAVITY_EXTRA_MASS       0           # add extra mass source when computing gravity [0]
