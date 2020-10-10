@@ -57,9 +57,9 @@ void Init_LoadExtPotTable()
          Aux_Error( ERROR_INFO, "incorrect left boundary of the external potential table (table=%13.7e > simulation=%13.7e) !!\n",
                     EXT_POT_TABLE_EDGEL[d], amr->BoxEdgeL[d] );
 
-      if ( EXT_POT_TABLE_EDGEL[d]+EXT_POT_TABLE_NCELL[d]*EXT_POT_TABLE_DH < amr->BoxEdgeR[d] )
+      if ( EXT_POT_TABLE_EDGEL[d]+(EXT_POT_TABLE_NCELL[d]-1)*EXT_POT_TABLE_DH < amr->BoxEdgeR[d] )
          Aux_Error( ERROR_INFO, "incorrect right boundary of the external potential table (table=%13.7e < simulation=%13.7e) !!\n",
-                    EXT_POT_TABLE_EDGEL[d]+EXT_POT_TABLE_NCELL[d]*EXT_POT_TABLE_DH, amr->BoxEdgeR[d] );
+                    EXT_POT_TABLE_EDGEL[d]+(EXT_POT_TABLE_NCELL[d]-1)*EXT_POT_TABLE_DH, amr->BoxEdgeR[d] );
    }
 
 // file existence
