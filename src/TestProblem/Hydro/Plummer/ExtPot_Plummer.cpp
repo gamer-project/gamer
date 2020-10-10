@@ -9,7 +9,7 @@
 
 
 // =================================
-// I. Set an auxiliary array
+// I. Set auxiliary arrays
 // =================================
 
 #ifndef __CUDACC__
