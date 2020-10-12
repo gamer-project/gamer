@@ -1298,9 +1298,9 @@ void Aux_TakeNote()
          fprintf( Note, "  Level           Threshold\n" );
          for (int lv=0; lv<MAX_LEVEL; lv++)
          {
-                                                         fprintf( Note, "%7d", lv );
-            for ( int t=0; t<OPT__FLAG_USER_NUM; t++ )   fprintf( Note, "%20.7e", FlagTable_User[lv][t] );
-                                                         fprintf( Note, "\n", lv );
+                                                       fprintf( Note, "%7d",    lv );
+            for (int t=0; t<OPT__FLAG_USER_NUM; t++)   fprintf( Note, "%20.7e", FlagTable_User[lv][t] );
+                                                       fprintf( Note, "\n" );
          }
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n");

@@ -2259,7 +2259,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
       InputPara.FlagTable_User        [lv].p   = malloc( OPT__FLAG_USER_NUM*sizeof(double) );
       InputPara.FlagTable_User        [lv].len = OPT__FLAG_USER_NUM;
       for (int t=0; t<OPT__FLAG_USER_NUM; t++)
-      ( (double *) InputPara.FlagTable_User[lv].p )[t] = FlagTable_User        [lv][t];
+      ( (double *) InputPara.FlagTable_User[lv].p )[t] = FlagTable_User[lv][t];
 
 #     if   ( MODEL == HYDRO )
       InputPara.FlagTable_PresGradient[lv]    = FlagTable_PresGradient[lv];
@@ -2994,12 +2994,11 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 
 // flag tables
 #  if ( NLEVEL > 1 )
-   H5Tinsert( H5_TypeID, "FlagTable_Rho",          HOFFSET(InputPara_t,FlagTable_Rho           ), H5_TypeID_Arr_NLvM1Double    );
-   H5Tinsert( H5_TypeID, "FlagTable_RhoGradient",  HOFFSET(InputPara_t,FlagTable_RhoGradient   ), H5_TypeID_Arr_NLvM1Double    );
-   H5Tinsert( H5_TypeID, "FlagTable_Lohner",       HOFFSET(InputPara_t,FlagTable_Lohner        ), H5_TypeID_Arr_NLvM1_4Double  );
-//   H5Tinsert( H5_TypeID, "FlagTable_User",         HOFFSET(InputPara_t,FlagTable_User          ), H5_TypeID_Arr_NLvM1_VLDouble );
+   H5Tinsert( H5_TypeID, "FlagTable_Rho",          HOFFSET(InputPara_t,FlagTable_Rho           ), H5_TypeID_Arr_NLvM1Double   );
+   H5Tinsert( H5_TypeID, "FlagTable_RhoGradient",  HOFFSET(InputPara_t,FlagTable_RhoGradient   ), H5_TypeID_Arr_NLvM1Double   );
+   H5Tinsert( H5_TypeID, "FlagTable_Lohner",       HOFFSET(InputPara_t,FlagTable_Lohner        ), H5_TypeID_Arr_NLvM1_4Double );
 
-// store the user-defined threshold at all levels
+// store the user-defined thresholds at all levels
    for (int lv=0; lv<MAX_LEVEL; lv++)
    {
 //    key for each level
