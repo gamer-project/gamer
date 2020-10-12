@@ -3,7 +3,7 @@
 #SBATCH --job-name=gamer
 #SBATCH -o log-%j
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user=hyschive@phys.ntu.edu.tw
+#SBATCH --mail-user=PUT_YOUR_EMAIL_HERE
 #SBATCH --partition=gp4d
 #SBATCH --time=2:00:00
 #SBATCH --nodes=16 --ntasks-per-node=16

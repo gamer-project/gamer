@@ -28,12 +28,10 @@ void Flu_Prepare( const int lv, const double PrepTime,
 // check
 #  ifdef GAMER_DEBUG
 #  ifdef UNSPLIT_GRAVITY
-   if (  ( OPT__GRAVITY_TYPE == GRAVITY_SELF || OPT__GRAVITY_TYPE == GRAVITY_BOTH )  &&
-         ( h_Pot_Array_USG_F == NULL )  )
+   if (  ( OPT__SELF_GRAVITY || OPT__EXT_POT )  &&  h_Pot_Array_USG_F == NULL  )
       Aux_Error( ERROR_INFO, "h_Pot_Array_USG_F == NULL !!\n" );
 
-   if (  ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL || OPT__GRAVITY_TYPE == GRAVITY_BOTH || OPT__EXTERNAL_POT )  &&
-         ( h_Corner_Array_F == NULL )  )
+   if ( OPT__EXT_ACC  &&  h_Corner_Array_F == NULL )
       Aux_Error( ERROR_INFO, "h_Corner_Array_F == NULL !!\n" );
 #  endif
 #  endif
@@ -41,7 +39,6 @@ void Flu_Prepare( const int lv, const double PrepTime,
 
 #  if ( MODEL != HYDRO )
    const double MIN_DENS            = -1.0;  // set to an arbitrarily negative value to disable it
-   const double MIN_PRES            = -1.0;  // ...
 #  endif
 #  ifndef MHD
    const int    OPT__MAG_INT_SCHEME = INT_NONE;
@@ -70,14 +67,14 @@ void Flu_Prepare( const int lv, const double PrepTime,
 
 #  ifdef UNSPLIT_GRAVITY
 // prepare the potential array
-   if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
+   if ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT )
    Prepare_PatchData( lv, PrepTime, h_Pot_Array_USG_F[0], NULL,
                       USG_GHOST_SIZE_F, NPG, PID0_List, _POTE, _NONE,
                       OPT__GRA_INT_SCHEME, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
                       OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, DE_Consistency_No );
 
 // prepare the corner array
-   if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH  ||  OPT__EXTERNAL_POT )
+   if ( OPT__EXT_ACC )
    {
       const double dh_half = 0.5*amr->dh[lv];
 
@@ -88,6 +85,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
       {
          PID0 = PID0_List[TID];
 
+//       not considering ghost zones
          for (int d=0; d<3; d++)    h_Corner_Array_F[TID][d] = amr->patch[0][lv][PID0]->EdgeL[d] + dh_half;
       } // for (int TID=0; TID<NPG; TID++)
    }

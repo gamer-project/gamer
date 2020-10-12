@@ -31,20 +31,21 @@
 //                g_Pot_Array_USG   : Array storing the input potential          for UNSPLIT_GRAVITY (at the previous step)
 //                g_Flu_Array_USG   : Array storing the input density + momentum for UNSPLIT_GRAVITY (at the previous step)
 //                g_DE_Array        : Array storing the dual-energy status (for both input and output)
-//                g_EngyB_Array     : Array storing the cell-centered magnetic energy
+//                g_Emag_Array      : Array storing the cell-centered magnetic energy
 //                                    --> Only for checking minimum internal energy in MHD
 //                NPatchGroup       : Number of input patch groups (for CPU only)
 //                dt                : Time interval to advance solution
 //                dh                : Cell size
 //                P5_Gradient       : Use 5-points stencil to evaluate the potential gradient
-//                GravityType       : Types of gravity --> self-gravity, external gravity, both
+//                UsePot            : Add self-gravity and/or external potential
+//                ExtAcc            : Add external acceleration
 //                ExtAcc_Func       : Function pointer to the external acceleration routine (for both CPU and GPU)
 //                c_ExtAcc_AuxArray : Auxiliary array for adding external acceleration (for CPU only)
 //                                    --> When using GPU, this array is stored in the constant memory header
 //                                        CUDA_ConstMemory.h and does not need to be passed as a function argument
 //                TimeNew           : Physical time at the current  step (for the external gravity solver)
 //                TimeOld           : Physical time at the previous step (for the external gravity solver in UNSPLIT_GRAVITY)
-//                MinEint           : Minimum allowed internal energy (== MIN_PRES / (GAMMA-1))
+//                MinEint           : Internal energy floor
 //
 // Return      :  g_Flu_Array_New, g_DE_Array
 //-----------------------------------------------------------------------------------------
@@ -57,9 +58,9 @@ void CUPOT_HydroGravitySolver(
    const real   g_Pot_Array_USG[][ CUBE(USG_NXT_G) ],
    const real   g_Flu_Array_USG[][GRA_NIN-1][ CUBE(PS1) ],
          char   g_DE_Array     [][ CUBE(PS1) ],
-   const real   g_EngyB_Array  [][ CUBE(PS1) ],
+   const real   g_Emag_Array   [][ CUBE(PS1) ],
    const real dt, const real dh, const bool P5_Gradient,
-   const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
+   const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const double TimeNew, const double TimeOld, const real MinEint )
 #else
 void CPU_HydroGravitySolver(
@@ -69,10 +70,10 @@ void CPU_HydroGravitySolver(
    const real   g_Pot_Array_USG[][ CUBE(USG_NXT_G) ],
    const real   g_Flu_Array_USG[][GRA_NIN-1][ CUBE(PS1) ],
          char   g_DE_Array     [][ CUBE(PS1) ],
-   const real   g_EngyB_Array  [][ CUBE(PS1) ],
+   const real   g_Emag_Array   [][ CUBE(PS1) ],
    const int NPatchGroup,
    const real dt, const real dh, const bool P5_Gradient,
-   const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
+   const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const double c_ExtAcc_AuxArray[],
    const double TimeNew, const double TimeOld, const real MinEint )
 #endif
@@ -80,17 +81,17 @@ void CPU_HydroGravitySolver(
 
 // check
 #  ifdef GAMER_DEBUG
-   if ( GravityType == GRAVITY_EXTERNAL  ||  GravityType == GRAVITY_BOTH )
-   if ( TimeNew < 0.0 )
+   if ( ExtAcc  &&  TimeNew < 0.0 )
       printf( "ERROR : incorrect TimeNew (%14.7e) !!\n", TimeNew );
 
 #  ifdef UNSPLIT_GRAVITY
-   if ( GravityType == GRAVITY_SELF  ||  GravityType == GRAVITY_BOTH )
-   if ( g_Pot_Array_USG == NULL  ||  g_Flu_Array_USG == NULL )
-      printf( "ERROR : g_Pot_Array_USG == NULL  ||  g_Flu_Array_USG == NULL !!\n" );
+   if ( g_Flu_Array_USG == NULL )
+      printf( "ERROR : g_Flu_Array_USG == NULL !!\n" );
 
-   if ( GravityType == GRAVITY_EXTERNAL  ||  GravityType == GRAVITY_BOTH )
-   if ( TimeOld >= TimeNew  ||  TimeOld < 0.0 )
+   if ( UsePot  &&  g_Pot_Array_USG == NULL )
+      printf( "ERROR : g_Pot_Array_USG == NULL !!\n" );
+
+   if (  ExtAcc  &&  ( TimeOld >= TimeNew || TimeOld < 0.0 )  )
       printf( "ERROR : incorrect time (TimeOld %14.7e, TimeNew = %14.7e) !!\n", TimeOld, TimeNew );
 #  endif
 
@@ -100,8 +101,8 @@ void CPU_HydroGravitySolver(
 #  endif
 
 #  ifdef MHD
-   if ( g_EngyB_Array == NULL )
-      printf( "ERROR : g_EngyB_Array == NULL !!\n" );
+   if ( g_Emag_Array == NULL )
+      printf( "ERROR : g_Emag_Array == NULL !!\n" );
 #  endif
 #  endif // #ifdef GAMER_DEBUG
 
@@ -121,7 +122,7 @@ void CPU_HydroGravitySolver(
    __shared__ real s_pot_old[ CUBE(USG_NXT_G) ];
 #  endif
 
-   if ( GravityType == GRAVITY_SELF  ||  GravityType == GRAVITY_BOTH )
+   if ( UsePot )
    {
       for (int t=threadIdx.x; t<CUBE(GRA_NXT); t+=GRA_BLOCK_SIZE)
          s_pot_new[t] = g_Pot_Array_New[blockIdx.x][t];
@@ -164,13 +165,10 @@ void CPU_HydroGravitySolver(
 //    _g0: indices for the arrays without any ghost zone
       CGPU_LOOP( idx_g0, CUBE(PS1) )
       {
-//       Enk = Etot - Ek = Eint in hydro and Eint+Eb in MHD
-         real acc_new[3]={0.0, 0.0, 0.0}, px_new, py_new, pz_new, rho_new, Enk_in, Ek_out, Etot_in, Etot_out, _rho2;
+//       Enki = non-kinetic energy (i.e. Etot - Ekin)
+         real acc_new[3]={0.0, 0.0, 0.0}, px_new, py_new, pz_new, rho_new, Enki_in, Ekin_out, Etot_in, Etot_out, _rho2;
 #        ifdef UNSPLIT_GRAVITY
-         real acc_old[3]={0.0, 0.0, 0.0}, px_old, py_old, pz_old, rho_old;
-#        ifdef MHD
-         real Eb_in;
-#        endif
+         real acc_old[3]={0.0, 0.0, 0.0}, px_old, py_old, pz_old, rho_old, Emag_in=0.0;
 #        endif
 
          const int i_g0    = idx_g0 % PS1;
@@ -190,8 +188,8 @@ void CPU_HydroGravitySolver(
 #        endif
 
 
-//       external gravity
-         if ( GravityType == GRAVITY_EXTERNAL  ||  GravityType == GRAVITY_BOTH )
+//       external acceleration
+         if ( ExtAcc )
          {
             double x, y, z;
 
@@ -209,8 +207,8 @@ void CPU_HydroGravitySolver(
          }
 
 
-//       self-gravity
-         if ( GravityType == GRAVITY_SELF  ||  GravityType == GRAVITY_BOTH )
+//       self-gravity and external potential
+         if ( UsePot )
          {
             const int ip1_new = idx_new + didx_new[0];
             const int jp1_new = idx_new + didx_new[1];
@@ -271,7 +269,7 @@ void CPU_HydroGravitySolver(
                acc_old[2] += Gra_Const*( pot_old[kp1_old] - pot_old[km1_old] );
 #              endif
             } // if ( P5_Gradient ) ... else ...
-         } // if ( GravityType == GRAVITY_SELF  ||  GravityType == GRAVITY_BOTH )
+         } // if ( UsePot )
 
 
 //       advance fluid
@@ -286,12 +284,12 @@ void CPU_HydroGravitySolver(
          pz_new  = g_Flu_Array_New[P][MOMZ][idx_g0];
          pz_old  = g_Flu_Array_USG[P][MOMZ][idx_g0];
 
-//       backup the original internal energy so that we can restore it later if necessary
+//       backup the original non-kinetic energy so that we can restore it later if necessary
          _rho2   = (real)0.5/rho_new;
          Etot_in = g_Flu_Array_New[P][ENGY][idx_g0];
-         Enk_in  = Etot_in - _rho2*( SQR(px_new) + SQR(py_new) + SQR(pz_new) );
+         Enki_in = Etot_in - _rho2*( SQR(px_new) + SQR(py_new) + SQR(pz_new) );
 #        ifdef MHD
-         Eb_in   = g_EngyB_Array[P][idx_g0];
+         Emag_in = g_Emag_Array[P][idx_g0];
 #        endif
 
 //       update the momentum density
@@ -304,7 +302,7 @@ void CPU_HydroGravitySolver(
          g_Flu_Array_New[P][MOMZ][idx_g0] = pz_new;
 
 //       record the updated kinematic energy density
-         Ek_out = _rho2*( SQR(px_new) + SQR(py_new) + SQR(pz_new) );
+         Ekin_out = _rho2*( SQR(px_new) + SQR(py_new) + SQR(pz_new) );
 
 //       update the total energy density
 #        ifdef DUAL_ENERGY
@@ -318,7 +316,7 @@ void CPU_HydroGravitySolver(
          if ( g_DE_Array[P][idx_g0] == DE_UPDATED_BY_DUAL )
          {
 //          fix the internal energy and the dual-energy variable
-            Etot_out = Enk_in + Ek_out;
+            Etot_out = Enki_in + Ekin_out;
          }
 
          else
@@ -328,17 +326,14 @@ void CPU_HydroGravitySolver(
                                              px_new*acc_new[0] + py_new*acc_new[1] + pz_new*acc_new[2] );
 
 //          check the minimum internal energy
+//###NOTE: assuming Etot = Eint + Ekin + Emag
 //          (a) if the updated internal energy is greater than the threshold, set the dual-energy status == DE_UPDATED_BY_ETOT_GRA
-#           ifdef MHD
-            if ( Etot_out - Ek_out - Eb_in >= MinEint )
-#           else
-            if ( Etot_out - Ek_out         >= MinEint )
-#           endif
+            if ( Etot_out - Ekin_out - Emag_in >= MinEint )
                g_DE_Array[P][idx_g0] = DE_UPDATED_BY_ETOT_GRA;
 
 //          (b) otherwise restore the original internal energy and keep the original dual-energy status
             else
-               Etot_out = Enk_in + Ek_out;
+               Etot_out = Enki_in + Ekin_out;
          }
 
 #        else // # ifdef DUAL_ENERGY
@@ -352,12 +347,8 @@ void CPU_HydroGravitySolver(
 
 //       check the minimum internal energy
 //       --> restore the original internal energy if the updated value becomes smaller than the threshold
-#        ifdef MHD
-         if ( Etot_out - Ek_out - Eb_in < MinEint )
-#        else
-         if ( Etot_out - Ek_out         < MinEint )
-#        endif
-            Etot_out = Enk_in + Ek_out;
+         if ( Etot_out - Ekin_out - Emag_in < MinEint )
+            Etot_out = Enki_in + Ekin_out;
 
 #        endif // #ifdef DUAL_ENERGY ... else ...
 
@@ -373,7 +364,7 @@ void CPU_HydroGravitySolver(
 //       backup the original internal energy so that we can restore it later
          _rho2   = (real)0.5/rho_new;
          Etot_in = g_Flu_Array_New[P][ENGY][idx_g0];
-         Enk_in  = Etot_in - _rho2*( SQR(px_new) + SQR(py_new) + SQR(pz_new) );
+         Enki_in = Etot_in - _rho2*( SQR(px_new) + SQR(py_new) + SQR(pz_new) );
 
 //       update the momentum density
          px_new += rho_new*acc_new[0];
@@ -385,8 +376,8 @@ void CPU_HydroGravitySolver(
          g_Flu_Array_New[P][MOMZ][idx_g0] = pz_new;
 
 //       for the splitting method, we ensure that the internal energy is unchanged
-         Ek_out   = _rho2*( SQR(px_new) + SQR(py_new) + SQR(pz_new) );
-         Etot_out = Enk_in + Ek_out;
+         Ekin_out = _rho2*( SQR(px_new) + SQR(py_new) + SQR(pz_new) );
+         Etot_out = Enki_in + Ekin_out;
 
 #        endif // #ifdef UNSPLIT_GRAVITY ... else ...
 

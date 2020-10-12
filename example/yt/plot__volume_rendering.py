@@ -1,17 +1,24 @@
 
-# ref: https://yt-project.org/doc/visualizing/volume_rendering.html#
+# ref:
+# 1. https://yt-project.org/doc/visualizing/volume_rendering.html#
+# 2. https://yt-project.org/docs/dev/cookbook/complex_plots.html#moving-a-volume-rendering-camera
 
 import argparse
 import sys
 import yt
+import numpy as np
 
 
 # user-specified parameters
-field      = 'Dens'           # target field
-zoom       = 2.0              # zoom-in factor
-resolution = 512              # image resolution
-clip       = 8.0              # floor bright pixels for better contrast
-bounds     = (1.0e0, 1.0e6)   # bounds of the transfer function
+field         = 'Dens'           # target field
+rotate_angle  = 0.5*np.pi        # rotate rotate_angle in rotate_nframe frames
+rotate_nframe = 5
+zoom_factor   = 2.0              # zoom-in by a factor of zoom_factor in zoom_nframe frames
+zoom_nframe   = 5
+final_nframe  = 5                # rotate rotate_angle and zoom-out by a factor of zoom_factor in final_nframe frames
+resolution    = 512              # image resolution
+clip          = 8.0              # floor bright pixels for better contrast
+bounds        = (1.0e0, 1.0e6)   # bounds of the transfer function
 
 
 # load the command-line parameters
@@ -51,7 +58,8 @@ ts = yt.load( [ prefix_in+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1
 for ds in ts.piter():
 
 #  create a scene
-   sc = yt.create_scene( ds, field=field, lens_type='perspective' )
+   sc  = yt.create_scene( ds, field=field, lens_type='perspective' )
+   cam = sc.camera
 
 #  get a reference to the VolumeSource associated with this scene
    src = sc[0]
@@ -65,11 +73,8 @@ for ds in ts.piter():
 #  make underdense regions appear opaque
 #  src.tfh.grey_opacity = True
 
-#  zoom-in
-   sc.camera.zoom( zoom )
-
 #  set the image resolution
-   sc.camera.resolution = resolution
+   cam.resolution = resolution
 
 #  annotate grids
 #  sc.annotate_grids( ds, alpha=0.01 )
@@ -81,9 +86,27 @@ for ds in ts.piter():
 #  see how the transfer function corresponds to structure in the CDF
    src.tfh.plot( 'fig__transfer-function.png', profile_field=field )
 
-#  begin rendering
-   sc.render()
+#  save an image at the starting position, flooring especially bright pixels for better contrast
+   frame = 0
+   sc.save( prefix_out+'_'+ds.basename+'_frame%04d.png'%frame, sigma_clip=clip )
+   frame += 1
 
-#  save the image, flooring especially bright pixels for better contrast
-   sc.save( prefix_out+'_'+ds.basename+'.png', sigma_clip=clip )
+#  rotate
+   for _ in cam.iter_rotate( rotate_angle, rotate_nframe, rot_center=ds.domain_center ):
+      sc.save( prefix_out+'_'+ds.basename+'_frame%04d.png'%frame, sigma_clip=clip )
+      frame += 1
 
+#  zoom-in
+   for _ in cam.iter_zoom( zoom_factor, zoom_nframe ):
+      sc.save( prefix_out+'_'+ds.basename+'_frame%04d.png'%frame, sigma_clip=clip )
+      frame += 1
+
+#  zoom-out and rotate
+   rotate_dangle = rotate_angle/final_nframe
+   zoom_dfactor  = zoom_factor**(-1.0/final_nframe)
+
+   for _ in range( final_nframe ):
+      cam.rotate( rotate_dangle, rot_center=ds.domain_center )
+      cam.zoom( zoom_dfactor )
+      sc.save( prefix_out+'_'+ds.basename+'_frame%04d.png'%frame, sigma_clip=clip )
+      frame += 1

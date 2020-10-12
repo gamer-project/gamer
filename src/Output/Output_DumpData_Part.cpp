@@ -237,12 +237,12 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 // magnetic field
 #  if ( MODEL == HYDRO )
 #  ifdef MHD
-   const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+   const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
    real B[3];
    MHD_GetCellCenteredBFieldInPatch( B, lv, PID, i, j, k, amr->MagSg[lv] );
-   fprintf( File, " %13.6e %13.6e %13.6e %13.6e", B[MAGX], B[MAGY], B[MAGZ], EngyB );
+   fprintf( File, " %13.6e %13.6e %13.6e %13.6e", B[MAGX], B[MAGY], B[MAGZ], Emag );
 #  else
-   const real EngyB = NULL_REAL;
+   const real Emag = NULL_REAL;
 #  endif
 #  endif // # if ( MODEL == HYDRO )
 
@@ -255,8 +255,10 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 // output other derived fields
 #  if   ( MODEL == HYDRO )
 #  if ( MODEL == HYDRO )
-   const bool CheckMinPres_Yes = true;
-   fprintf( File, " %13.6e", Hydro_GetPressure(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],GAMMA-1.0,CheckMinPres_Yes,MIN_PRES,EngyB) );
+   const bool CheckMinPres_No = false;
+   fprintf( File, " %13.6e", Hydro_Con2Pres(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],u+NCOMP_FLUID,
+                                            CheckMinPres_No,NULL_REAL,Emag,
+                                            EoS_DensEint2Pres_CPUPtr,EoS_AuxArray,NULL) );
 #  endif
 #  endif // MODEL
 

@@ -53,13 +53,14 @@ void Aux_Check_Conservation( const char *comment )
 
 #  if   ( MODEL == HYDRO )
 #  ifdef MHD
-   const int    NVar_NoPassive    = 9;    // 9: mass, momentum (x/y/z), kinetic/thermal/potential/magnetic/total energies
+   const int    NVar_NoPassive    = 9;    // 9: mass, momentum (x/y/z), kinetic/internal/potential/magnetic/total energies
                                           // --> note that **total energy** is put in the last element
 #  else
-   const int    NVar_NoPassive    = 8;    // 8: mass, momentum (x/y/z), kinetic/thermal/potential/total energies
+   const int    NVar_NoPassive    = 8;    // 8: mass, momentum (x/y/z), kinetic/internal/potential/total energies
                                           // --> note that **total energy** is put in the last element
 #  endif
    const int    idx_etot          = NVar_NoPassive - 1;
+   const bool   CheckMinEint_No   = false;
 
 #  elif ( MODEL == ELBDM )
    const int    NVar_NoPassive    = 5;    // 5: mass, kinetic/gravitational/self-interaction/total energies
@@ -141,41 +142,47 @@ void Aux_Check_Conservation( const char *comment )
                for (int j=0; j<PATCH_SIZE; j++)
                for (int i=0; i<PATCH_SIZE; i++)
                {
-                  double Ekin, Ethe;
+                  double Dens, MomX, MomY, MomZ, Etot, Ekin, Eint;
 #                 ifdef GRAVITY
                   double Epot;
 #                 endif
-#                 ifdef MHD
-                  double Emag;
-#                 endif
+                  double Emag = NULL_REAL;
 
-                  Fluid_lv[0] += amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
-                  Fluid_lv[1] += amr->patch[FluSg][lv][PID]->fluid[MOMX][k][j][i];
-                  Fluid_lv[2] += amr->patch[FluSg][lv][PID]->fluid[MOMY][k][j][i];
-                  Fluid_lv[3] += amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i];
+                  Dens = amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
+                  MomX = amr->patch[FluSg][lv][PID]->fluid[MOMX][k][j][i];
+                  MomY = amr->patch[FluSg][lv][PID]->fluid[MOMY][k][j][i];
+                  MomZ = amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i];
+                  Etot = amr->patch[FluSg][lv][PID]->fluid[ENGY][k][j][i];
 
-                  Ekin         = 0.5*( SQR(amr->patch[FluSg][lv][PID]->fluid[MOMX][k][j][i])
-                                      +SQR(amr->patch[FluSg][lv][PID]->fluid[MOMY][k][j][i])
-                                      +SQR(amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i]) )
-                                    / amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
-                  Fluid_lv[4] += Ekin;
+                  Fluid_lv[0] += Dens;
+                  Fluid_lv[1] += MomX;
+                  Fluid_lv[2] += MomY;
+                  Fluid_lv[3] += MomZ;
 
 #                 ifdef MHD
                   Emag         = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
                   Fluid_lv[7] += Emag;
 #                 endif
 
-                  Ethe         = amr->patch[FluSg][lv][PID]->fluid[ENGY][k][j][i] - Ekin;
-#                 ifdef MHD
-                  Ethe        -= Emag;
-#                 endif
-                  Fluid_lv[5] += Ethe;
-
 #                 ifdef GRAVITY
-                  Epot         = 0.5*amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i]
-                                    *amr->patch[PotSg][lv][PID]->pot        [k][j][i];
+//                set potential energy to zero when enabling both OPT__SELF_GRAVITY and OPT__EXT_POT
+//                since the potential energy obtained here would be wrong anyway
+//                --> to avoid possible misinterpretation
+                  if      (  OPT__SELF_GRAVITY  &&  !OPT__EXT_POT )  Epot = 0.5*Dens*amr->patch[PotSg][lv][PID]->pot[k][j][i];
+                  else if ( !OPT__SELF_GRAVITY  &&   OPT__EXT_POT )  Epot =     Dens*amr->patch[PotSg][lv][PID]->pot[k][j][i];
+                  else                                               Epot = 0.0;
                   Fluid_lv[6] += Epot;
 #                 endif
+
+                  Eint         = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Etot, CheckMinEint_No, NULL_REAL, Emag );
+                  Fluid_lv[5] += Eint;
+
+//###NOTE: assuming Etot = Eint + Ekin + Emag
+                  Ekin         = Etot - Eint;
+#                 ifdef MHD
+                  Ekin        -= Emag;
+#                 endif
+                  Fluid_lv[4] += Ekin;
                } // i,j,k
 
 
@@ -188,8 +195,16 @@ void Aux_Check_Conservation( const char *comment )
                   Fluid_lv[0] += amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
 
 //                [2] potential energy in ELBDM
+//                set potential energy to zero when enabling both OPT__SELF_GRAVITY and OPT__EXT_POT
+//                since the potential energy obtained here would be wrong anyway
+//                --> to avoid possible misinterpretation
 #                 ifdef GRAVITY
+                  if      (  OPT__SELF_GRAVITY  &&  !OPT__EXT_POT )
                   Fluid_lv[2] += 0.5*amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i]
+                                    *amr->patch[PotSg][lv][PID]->pot        [k][j][i];
+
+                  else if ( !OPT__SELF_GRAVITY  &&   OPT__EXT_POT )
+                  Fluid_lv[2] +=     amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i]
                                     *amr->patch[PotSg][lv][PID]->pot        [k][j][i];
 #                 endif
 
@@ -313,7 +328,7 @@ void Aux_Check_Conservation( const char *comment )
          Aux_Message( File, "# Mass_Gas     : total HYDRO mass\n" );
          Aux_Message( File, "# MomX/Y/Z_Gas : total HYDRO momentum\n" );
          Aux_Message( File, "# Ekin_Gas     : total HYDRO kinetic energy\n" );
-         Aux_Message( File, "# Ethe_Gas     : total HYDRO thermal energy\n" );
+         Aux_Message( File, "# Eint_Gas     : total HYDRO internal energy\n" );
          Aux_Message( File, "# Epot_Gas     : total HYDRO potential energy\n" );
 #        ifdef MHD
          Aux_Message( File, "# Emag_Gas     : total HYDRO magnetic energy\n" );
@@ -369,7 +384,7 @@ void Aux_Check_Conservation( const char *comment )
          Aux_Message( File, "  %14s  %14s  %14s", "MomY_Gas", "MomY_Gas_AErr", "MomY_Gas_RErr" );
          Aux_Message( File, "  %14s  %14s  %14s", "MomZ_Gas", "MomZ_Gas_AErr", "MomZ_Gas_RErr" );
          Aux_Message( File, "  %14s  %14s  %14s", "Ekin_Gas", "Ekin_Gas_AErr", "Ekin_Gas_RErr" );
-         Aux_Message( File, "  %14s  %14s  %14s", "Ethe_Gas", "Ethe_Gas_AErr", "Ethe_Gas_RErr" );
+         Aux_Message( File, "  %14s  %14s  %14s", "Eint_Gas", "Eint_Gas_AErr", "Eint_Gas_RErr" );
          Aux_Message( File, "  %14s  %14s  %14s", "Epot_Gas", "Epot_Gas_AErr", "Epot_Gas_RErr" );
 #        ifdef MHD
          Aux_Message( File, "  %14s  %14s  %14s", "Emag_Gas", "Emag_Gas_AErr", "Emag_Gas_RErr" );

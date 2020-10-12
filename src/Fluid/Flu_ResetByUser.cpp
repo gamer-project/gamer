@@ -47,20 +47,30 @@ bool Flu_ResetByUser_Func_Template( real fluid[], const double x, const double y
    const real dr[3]   = { x-0.5*amr->BoxSize[0], y-0.5*amr->BoxSize[1], z-0.5*amr->BoxSize[2] };
    const real r       = SQRT( dr[0]*dr[0] + dr[1]*dr[1] + dr[2]*dr[2] );
 
-   const real TRad    = 0.3;
-   const real MaxDens = 1.0e15;
-   const real MaxPres = 1.0e15;
+   const real TRad                      = 0.3;
+   const real MinDens                   = 1.0e-10;
+#  if ( NCOMP_PASSIVE > 0 )
+   const real MinPassive[NCOMP_PASSIVE] = { ... };
+#  else
+   const real *MinPassive = NULL;
+#  endif
+   const real MinPres                   = 1.0e-10;
+   const real MinEint                   = EoS_DensPres2Eint_CPUPtr( MinDens, MinPres, MinPassive, EoS_AuxArray );
+   const real MinEmag                   = 0.0;  // assuming MHD is not adopted
 
    if ( r <= TRad )
    {
 //    set active scalars
-      fluid[DENS] = MaxDens;
+      fluid[DENS] = MinDens;
       fluid[MOMX] = 0.0;
       fluid[MOMY] = 0.0;
       fluid[MOMZ] = 0.0;
-      fluid[ENGY] = MaxPres / ( GAMMA-(real)1.0 );
+      fluid[ENGY] = Hydro_ConEint2Etot( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], MinEint, MinEmag );
 
 //    set passive scalars
+#     if ( NCOMP_PASSIVE > 0 )
+//    fluid[XXXX] = ...;
+#     endif
 
       return true;
    }
@@ -100,11 +110,7 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const double TT
       Aux_Error( ERROR_INFO, "Flu_ResetByUser_Func_Ptr == NULL for OPT__RESET_FLUID !!\n" );
 
 
-   const double dh       = amr->dh[lv];
-#  if ( MODEL == HYDRO )
-   const real   Gamma_m1 = GAMMA - (real)1.0;
-   const real  _Gamma_m1 = (real)1.0 / Gamma_m1;
-#  endif
+   const double dh = amr->dh[lv];
 
    bool   Reset;
    real   fluid[NCOMP_TOTAL];
@@ -132,19 +138,20 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const double TT
          {
 #           if ( MODEL == HYDRO )
 #           ifdef MHD
-            const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+            const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
 #           else
-            const real EngyB = NULL_REAL;
+            const real Emag = NULL_REAL;
 #           endif
 
-//          check minimum density and pressure
+//          apply density and internal energy floors
             fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
-            fluid[ENGY] = Hydro_CheckMinPresInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                                    Gamma_m1, _Gamma_m1, MIN_PRES, EngyB );
+            fluid[ENGY] = Hydro_CheckMinEintInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
+                                                    MIN_EINT, Emag );
 
 //          calculate the dual-energy variable (entropy or internal energy)
 #           if   ( DUAL_ENERGY == DE_ENPY )
-            fluid[ENPY] = Hydro_Fluid2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Gamma_m1, EngyB );
+            fluid[ENPY] = Hydro_Con2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Emag,
+                                             EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
 #           elif ( DUAL_ENERGY == DE_EINT )
 #           error : DE_EINT is NOT supported yet !!
 #           endif

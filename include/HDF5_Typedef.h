@@ -129,6 +129,8 @@ struct Makefile_t
 #  endif
    int DualEnergy;
    int Magnetohydrodynamics;
+   int EoS;
+   int BarotropicEoS;
 
 #  elif ( MODEL == ELBDM )
    int ConserveMass;
@@ -163,6 +165,7 @@ struct SymConst_t
    int    PatchSize;
    int    Flu_NIn;
    int    Flu_NOut;
+   int    Flu_NIn_T;
    int    NFluxFluid;
    int    NFluxPassive;
    int    Flu_GhostSize;
@@ -195,6 +198,7 @@ struct SymConst_t
    int    USG_NxtG;
 #  endif
 
+   int    ExtPot_BlockSize;
    int    Gra_BlockSize;
    int    ExtPotNAuxMax;
    int    ExtAccNAuxMax;
@@ -236,9 +240,15 @@ struct SymConst_t
    int    Flu_BlockSize_y;
    int    CheckNegativeInFluid;
    int    CharReconstruction;
+   int    LR_Eint;
    int    CheckIntermediate;
    int    HLL_NoRefState;
    int    HLL_IncludeAllWaves;
+   int    HLLC_WaveSpeed;
+   int    HLLE_WaveSpeed;
+#  ifdef MHD
+   int    HLLD_WaveSpeed;
+#  endif
 #  ifdef N_FC_VAR
    int    N_FC_Var;
 #  endif
@@ -248,6 +258,7 @@ struct SymConst_t
 #  ifdef MHD
    int    EulerY;
 #  endif
+   int    EoSNAuxMax;
 
 #  elif  ( MODEL == ELBDM )
    int    Flu_BlockSize_x;
@@ -414,6 +425,7 @@ struct InputPara_t
 #  if ( MODEL == HYDRO )
    double Gamma;
    double MolecularWeight;
+   double IsoTemp;
    double MinMod_Coeff;
    int    Opt__LR_Limiter;
    int    Opt__1stFluxCorr;
@@ -454,6 +466,8 @@ struct InputPara_t
 #  endif
 #  if ( MODEL == HYDRO )
    double MinPres;
+   double MinEint;
+   int    Opt__LastResortFloor;
    int    JeansMinPres;
    int    JeansMinPres_Level;
    int    JeansMinPres_NCell;
@@ -462,7 +476,7 @@ struct InputPara_t
    double DualEnergySwitch;
 #  endif
 
-// self-gravity
+// gravity
 #  ifdef GRAVITY
    double NewtonG;
 #  if   ( POT_SCHEME == SOR )
@@ -477,10 +491,11 @@ struct InputPara_t
 #  endif
    int    Pot_GPU_NPGroup;
    int    Opt__GraP5Gradient;
-   int    Opt__GravityType;
-   int    Opt__ExternalPot;
+   int    Opt__SelfGravity;
+   int    Opt__ExtAcc;
+   int    Opt__ExtPot;
    int    Opt__GravityExtraMass;
-#  endif
+#  endif // #ifdef GRAVITY
 
 // Grackle
 #  ifdef SUPPORT_GRACKLE
@@ -548,6 +563,7 @@ struct InputPara_t
    int    Opt__RefPot_IntScheme;
 #  endif
    double IntMonoCoeff;
+   int    IntOppSign0thOrder;
 
 // data dump
    int    Opt__Output_Total;
