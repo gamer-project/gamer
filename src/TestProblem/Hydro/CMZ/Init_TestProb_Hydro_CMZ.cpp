@@ -24,14 +24,10 @@ void Par_Init_ByFunction_BarredPot( const long NPar_ThisRank, const long NPar_Al
                                     real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                     real *AllAttribute[PAR_NATT_TOTAL] );
 #endif
-void Init_ExtAccAuxArray_BarredPot( double AuxArray[] );
-void SetCPUExtAcc_BarredPot( ExtAcc_t &CPUExtAcc_Ptr );
 static void IsolatedBC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] );
-# ifdef GPU
-void SetGPUExtAcc_BarredPot( ExtAcc_t &GPUExtAcc_Ptr );
-# endif
-
+void Init_ExtAcc_BarredPot();
+void Init_ExtPot_BarredPot();
 
 
 
@@ -377,11 +373,9 @@ void Init_TestProb_Hydro_BarredPot()
    Par_Init_Attribute_User_Ptr = AddNewParticleAttribute_BarredPot;
 #  endif
 #  ifdef GRAVITY
-   Init_ExtAccAuxArray_Ptr = Init_ExtAccAuxArray_BarredPot;
-   SetCPUExtAcc_Ptr        = SetCPUExtAcc_BarredPot;
-#  ifdef GPU
-   SetGPUExtAcc_Ptr        = SetGPUExtAcc_BarredPot;
-#  endif
+   Init_ExtAcc_Ptr         = Init_ExtAcc_BarredPot;
+   if ( OPT__EXT_POT == EXT_POT_FUNC )
+   Init_ExtPot_Ptr         = Init_ExtPot_BarredPot;
 #  endif // #ifdef GRAVITY
 #  endif // #if ( MODEL == HYDRO )
 
