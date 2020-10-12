@@ -124,41 +124,36 @@ extern double           ELBDM_LAMBDA;
 // (2-2) self-gravity
 // ============================================================================================================
 #ifdef GRAVITY
-extern double     AveDensity_Init;                    // initial average mass density (in all levels)
-extern int        Pot_ParaBuf;                        // number of parallel buffers to exchange potential for the
-                                                      // Poisson/Gravity solvers and the potential refinement
-extern int        Rho_ParaBuf;                        // number of parallel buffers to exchange density for the Poisson solver
+extern double        AveDensity_Init;     // initial average mass density (in all levels)
+extern int           Pot_ParaBuf;         // number of parallel buffers to exchange potential for the
+                                          // Poisson/Gravity solvers and the potential refinement
+extern int           Rho_ParaBuf;         // number of parallel buffers to exchange density for the Poisson solver
+extern real         *GreenFuncK;
+extern double        GFUNC_COEFF0;
+extern double        DT__GRAVITY;
+extern double        NEWTON_G;
+extern int           POT_GPU_NPGROUP;
+extern bool          OPT__OUTPUT_POT, OPT__GRA_P5_GRADIENT, OPT__SELF_GRAVITY, OPT__GRAVITY_EXTRA_MASS;
+extern double        SOR_OMEGA;
+extern int           SOR_MAX_ITER, SOR_MIN_ITER;
+extern double        MG_TOLERATED_ERROR;
+extern int           MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH;
+extern char          EXT_POT_TABLE_NAME[MAX_STRING];
+extern double        EXT_POT_TABLE_DH, EXT_POT_TABLE_EDGEL[3];
+extern int           EXT_POT_TABLE_NPOINT[3], EXT_POT_TABLE_FLOAT8;
+extern IntScheme_t   OPT__POT_INT_SCHEME, OPT__RHO_INT_SCHEME, OPT__GRA_INT_SCHEME, OPT__REF_POT_INT_SCHEME;
+extern OptPotBC_t    OPT__BC_POT;
+extern OptExtAcc_t   OPT__EXT_ACC;
+extern OptExtPot_t   OPT__EXT_POT;
 
-extern real      *GreenFuncK;
-extern double     GFUNC_COEFF0;
-extern double     DT__GRAVITY;
-extern double     NEWTON_G;
-extern int        POT_GPU_NPGROUP;
-extern bool       OPT__OUTPUT_POT, OPT__GRA_P5_GRADIENT, OPT__EXTERNAL_POT, OPT__GRAVITY_EXTRA_MASS;
-extern double     SOR_OMEGA;
-extern int        SOR_MAX_ITER, SOR_MIN_ITER;
-extern double     MG_TOLERATED_ERROR;
-extern int        MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH;
-
-extern IntScheme_t      OPT__POT_INT_SCHEME, OPT__RHO_INT_SCHEME, OPT__GRA_INT_SCHEME, OPT__REF_POT_INT_SCHEME;
-extern OptPotBC_t       OPT__BC_POT;
-extern OptGravityType_t OPT__GRAVITY_TYPE;
-
-extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
-extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
-extern void (*Init_ExtAccAuxArray_Ptr)( double [] );
+extern double ExtAcc_AuxArray    [EXT_ACC_NAUX_MAX];
+extern double ExtPot_AuxArray_Flt[EXT_POT_NAUX_MAX];
+extern int    ExtPot_AuxArray_Int[EXT_POT_NAUX_MAX];
 extern ExtAcc_t CPUExtAcc_Ptr;
-extern void (*SetCPUExtAcc_Ptr)( ExtAcc_t & );
+extern ExtPot_t CPUExtPot_Ptr;
 #ifdef GPU
 extern ExtAcc_t GPUExtAcc_Ptr;
-extern void (*SetGPUExtAcc_Ptr)( ExtAcc_t & );
-#endif
-extern void (*Init_ExtPotAuxArray_Ptr)( double [] );
-extern ExtPot_t CPUExtPot_Ptr;
-extern void (*SetCPUExtPot_Ptr)( ExtPot_t & );
-#ifdef GPU
 extern ExtPot_t GPUExtPot_Ptr;
-extern void (*SetGPUExtPot_Ptr)( ExtPot_t & );
 #endif
 #endif // #ifdef GRAVITY
 
@@ -268,27 +263,28 @@ extern real       (*h_Ele_Array      [2])[9][NCOMP_ELE][ PS2P1*PS2 ];
 #endif
 
 #ifdef GRAVITY
-extern real       (*h_Rho_Array_P    [2])[RHO_NXT][RHO_NXT][RHO_NXT];
-extern real       (*h_Pot_Array_P_In [2])[POT_NXT][POT_NXT][POT_NXT];
-extern real       (*h_Pot_Array_P_Out[2])[GRA_NXT][GRA_NXT][GRA_NXT];
-extern real       (*h_Flu_Array_G    [2])[GRA_NIN][PS1][PS1][PS1];
-extern double     (*h_Corner_Array_G [2])[3];
+extern real       (*h_Rho_Array_P     [2])[RHO_NXT][RHO_NXT][RHO_NXT];
+extern real       (*h_Pot_Array_P_In  [2])[POT_NXT][POT_NXT][POT_NXT];
+extern real       (*h_Pot_Array_P_Out [2])[GRA_NXT][GRA_NXT][GRA_NXT];
+extern real       (*h_Flu_Array_G     [2])[GRA_NIN][PS1][PS1][PS1];
+extern double     (*h_Corner_Array_PGT[2])[3];
 #ifdef DUAL_ENERGY
-extern char       (*h_DE_Array_G     [2])[PS1][PS1][PS1];
+extern char       (*h_DE_Array_G      [2])[PS1][PS1][PS1];
 #endif
 #ifdef MHD
-extern real       (*h_Emag_Array_G   [2])[PS1][PS1][PS1];
+extern real       (*h_Emag_Array_G    [2])[PS1][PS1][PS1];
 #endif
+extern real        *h_ExtPotTable;
 
 #ifdef UNSPLIT_GRAVITY
-extern real       (*h_Pot_Array_USG_F[2])[ CUBE(USG_NXT_F) ];
-extern real       (*h_Pot_Array_USG_G[2])[USG_NXT_G ][USG_NXT_G ][USG_NXT_G ];
-extern real       (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1];
+extern real       (*h_Pot_Array_USG_F [2])[ CUBE(USG_NXT_F) ];
+extern real       (*h_Pot_Array_USG_G [2])[USG_NXT_G ][USG_NXT_G ][USG_NXT_G ];
+extern real       (*h_Flu_Array_USG_G [2])[GRA_NIN-1][PS1][PS1][PS1];
 #endif
-#endif
+#endif // #ifdef GRAVITY
 
 #ifdef SUPPORT_GRACKLE
-extern real       (*h_Che_Array      [2]);
+extern real       (*h_Che_Array[2]);
 // do not declare Grackle variables for CUDA source files since they do not include <grackle.h>
 #ifndef __CUDACC__
 extern grackle_field_data *Che_FieldData;

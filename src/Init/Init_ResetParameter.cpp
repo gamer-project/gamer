@@ -10,7 +10,7 @@
 // Note        :  1. Parameters are reset here usually because they are either non-deterministic when
 //                   calling Init_Load_Parameter() (because they depend on compilation options and/or other
 //                   runtime parameters) or are useless/unsupported in the adopted compilation options
-//                2. This function must be invoked AFTER both Init_Load_Parameter and Init_Unit
+//                2. This function must be invoked AFTER both Init_Load_Parameter() and Init_Unit()
 //                   --> The latter may reset several physical constants (e.g., ELBDM_MASS) which are
 //                       required here
 //                3. This function also sets the default values for the derived runtime parameters
@@ -132,6 +132,22 @@ void Init_ResetParameter()
    Init_Set_Default_MG_Parameter( MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH, MG_TOLERATED_ERROR );
 #  endif
 #  endif // GRAVITY
+
+
+// external potential table
+#  ifdef GRAVITY
+   if ( OPT__EXT_POT == EXT_POT_TABLE  &&  EXT_POT_TABLE_FLOAT8 < 0 )
+   {
+//    set EXT_POT_TABLE_FLOAT8 = FLOAT8 by default
+#     ifdef FLOAT8
+      EXT_POT_TABLE_FLOAT8 = 1;
+#     else
+      EXT_POT_TABLE_FLOAT8 = 0;
+#     endif
+
+      PRINT_WARNING( EXT_POT_TABLE_FLOAT8, FORMAT_INT, "to be consistent with FLOAT8" );
+   }
+#  endif
 
 
 // GPU parameters when using CPU only (must set OMP_NTHREAD in advance)

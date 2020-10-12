@@ -36,7 +36,7 @@
 //                       Comoving coordinates : dt = delta(scale_factor) / ( Hubble_parameter*scale_factor^3 )
 //                   --> We convert dt back to the physical time interval, which equals "delta(scale_factor)"
 //                       in the comoving coordinates, in Mis_GetTimeStep()
-//                2. time-step is estimated by the free-fall time of the maximum gravitational acceleration
+//                2. Time-step is estimated by the free-fall time of the maximum gravitational acceleration
 //                3. Arrays with a prefix "g_" are stored in the global memory of GPU
 //
 // Parameter   :  g_dt_Array        : Array to store the minimum dt in each target patch
@@ -46,7 +46,8 @@
 //                dh                : Cell size
 //                Safety            : dt safety factor
 //                P5_Gradient       : Use 5-point stencil to evaluate the potential gradient
-//                GravityType       : Types of gravity --> self-gravity, external gravity, both
+//                UsePot            : Add self-gravity and/or external potential
+//                ExtAcc            : Add external acceleration
 //                ExtAcc_Func       : Function pointer to the external acceleration routine (for both CPU and GPU)
 //                c_ExtAcc_AuxArray : Auxiliary array for adding external acceleration (for CPU only)
 //                                    --> When using GPU, this array is stored in the constant memory header
@@ -60,13 +61,13 @@ __global__
 void CUPOT_dtSolver_HydroGravity( real g_dt_Array[], const real g_Pot_Array[][ CUBE(GRA_NXT) ],
                                   const double g_Corner_Array[][3],
                                   const real dh, const real Safety, const bool P5_Gradient,
-                                  const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
+                                  const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
                                   const double ExtAcc_Time )
 #else
 void CPU_dtSolver_HydroGravity  ( real g_dt_Array[], const real g_Pot_Array[][ CUBE(GRA_NXT) ],
                                   const double g_Corner_Array[][3], const int NPatchGroup,
                                   const real dh, const real Safety, const bool P5_Gradient,
-                                  const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
+                                  const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
                                   const double c_ExtAcc_AuxArray[],
                                   const double ExtAcc_Time )
 #endif
@@ -74,7 +75,7 @@ void CPU_dtSolver_HydroGravity  ( real g_dt_Array[], const real g_Pot_Array[][ C
 
 // check
 #  ifdef GAMER_DEBUG
-   if (  ( GravityType == GRAVITY_EXTERNAL || GravityType == GRAVITY_BOTH )  &&  ExtAcc_Time < 0.0 )
+   if ( ExtAcc  &&  ExtAcc_Time < 0.0 )
       printf( "ERROR : incorrect ExtAcc_Time (%14.7e) !!\n", ExtAcc_Time );
 #  endif
 
@@ -89,7 +90,7 @@ void CPU_dtSolver_HydroGravity  ( real g_dt_Array[], const real g_Pot_Array[][ C
 #  ifdef __CUDACC__
    __shared__ real s_Pot[ CUBE(GRA_NXT) ];
 
-   if ( GravityType == GRAVITY_SELF  ||  GravityType == GRAVITY_BOTH )
+   if ( UsePot )
    {
       for (int t=threadIdx.x; t<CUBE(GRA_NXT); t+=DT_GRA_BLOCK_SIZE)
          s_Pot[t] = g_Pot_Array[blockIdx.x][t];
@@ -122,19 +123,14 @@ void CPU_dtSolver_HydroGravity  ( real g_dt_Array[], const real g_Pot_Array[][ C
 //    loop over all cells of the target patch
       CGPU_LOOP( t, CUBE(PS1) )
       {
-         const int i_ext   = t % PS1;
-         const int j_ext   = t % PS1_sqr / PS1;
-         const int k_ext   = t / PS1_sqr;
+         const int i_ext = t % PS1;
+         const int j_ext = t % PS1_sqr / PS1;
+         const int k_ext = t / PS1_sqr;
 
-         const int i_pot   = i_ext + GRA_GHOST_SIZE;
-         const int j_pot   = j_ext + GRA_GHOST_SIZE;
-         const int k_pot   = k_ext + GRA_GHOST_SIZE;
-         const int idx_pot = IDX321( i_pot, j_pot, k_pot, GRA_NXT, GRA_NXT );
+         real Acc[3] = { (real)0.0, (real)0.0, (real)0.0 };
 
-         real Acc[3] = { 0.0, 0.0, 0.0 };
-
-//       external gravity
-         if ( GravityType == GRAVITY_EXTERNAL  ||  GravityType == GRAVITY_BOTH )
+//       external acceleration
+         if ( ExtAcc )
          {
             double x, y, z;
 
@@ -145,9 +141,14 @@ void CPU_dtSolver_HydroGravity  ( real g_dt_Array[], const real g_Pot_Array[][ C
             ExtAcc_Func( Acc, x, y, z, ExtAcc_Time, c_ExtAcc_AuxArray );
          }
 
-//       self-gravity
-         if ( GravityType == GRAVITY_SELF  ||  GravityType == GRAVITY_BOTH )
+//       self-gravity and external potential
+         if ( UsePot )
          {
+            const int i_pot   = i_ext + GRA_GHOST_SIZE;
+            const int j_pot   = j_ext + GRA_GHOST_SIZE;
+            const int k_pot   = k_ext + GRA_GHOST_SIZE;
+            const int idx_pot = IDX321( i_pot, j_pot, k_pot, GRA_NXT, GRA_NXT );
+
             const int idx_xp1 = idx_pot + didx_pot[0];
             const int idx_yp1 = idx_pot + didx_pot[1];
             const int idx_zp1 = idx_pot + didx_pot[2];
@@ -177,7 +178,7 @@ void CPU_dtSolver_HydroGravity  ( real g_dt_Array[], const real g_Pot_Array[][ C
                Acc[1] += Gra_Const * ( Pot[idx_yp1] - Pot[idx_ym1] );
                Acc[2] += Gra_Const * ( Pot[idx_zp1] - Pot[idx_zm1] );
             }
-         } // if ( GravityType == GRAVITY_SELF  ||  GravityType == GRAVITY_BOTH )
+         } // if ( UsePot )
 
 //       get the maximum acceleration
          for (int d=0; d<3; d++)    AccMax = FMAX( AccMax, FABS(Acc[d]) );

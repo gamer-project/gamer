@@ -165,7 +165,12 @@ void Aux_Check_Conservation( const char *comment )
 #                 endif
 
 #                 ifdef GRAVITY
-                  Epot         = 0.5*Dens*amr->patch[PotSg][lv][PID]->pot[k][j][i];
+//                set potential energy to zero when enabling both OPT__SELF_GRAVITY and OPT__EXT_POT
+//                since the potential energy obtained here would be wrong anyway
+//                --> to avoid possible misinterpretation
+                  if      (  OPT__SELF_GRAVITY  &&  !OPT__EXT_POT )  Epot = 0.5*Dens*amr->patch[PotSg][lv][PID]->pot[k][j][i];
+                  else if ( !OPT__SELF_GRAVITY  &&   OPT__EXT_POT )  Epot =     Dens*amr->patch[PotSg][lv][PID]->pot[k][j][i];
+                  else                                               Epot = 0.0;
                   Fluid_lv[6] += Epot;
 #                 endif
 
@@ -190,8 +195,16 @@ void Aux_Check_Conservation( const char *comment )
                   Fluid_lv[0] += amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
 
 //                [2] potential energy in ELBDM
+//                set potential energy to zero when enabling both OPT__SELF_GRAVITY and OPT__EXT_POT
+//                since the potential energy obtained here would be wrong anyway
+//                --> to avoid possible misinterpretation
 #                 ifdef GRAVITY
+                  if      (  OPT__SELF_GRAVITY  &&  !OPT__EXT_POT )
                   Fluid_lv[2] += 0.5*amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i]
+                                    *amr->patch[PotSg][lv][PID]->pot        [k][j][i];
+
+                  else if ( !OPT__SELF_GRAVITY  &&   OPT__EXT_POT )
+                  Fluid_lv[2] +=     amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i]
                                     *amr->patch[PotSg][lv][PID]->pot        [k][j][i];
 #                 endif
 

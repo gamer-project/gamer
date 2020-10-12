@@ -7,46 +7,23 @@
 
 
 
-/********************************************************
-1. Point-mass external potential
-   --> It can be regarded as a template for implementing
-       other external potential
-
-2. This file is shared by both CPU and GPU
-
-   GPU_Poisson/CUPOT_ExtPot_PointMass.cu -> CPU_Poisson/CPU_ExtPot_PointMass.cpp
-
-3. Three steps are required to implement external potential
-
-   I.   Set auxiliary arrays
-        --> SetExtPotAuxArray_PointMass()
-
-   II.  Specify external potential
-        --> ExtPot_PointMass()
-
-   III. Set initialization functions
-        --> SetGPUExtPot_PointMass()
-            SetCPUExtPot_PointMass()
-            Init_ExtPot_PointMass()
-
-4. The external potential major routine, ExtPot_PointMass(),
-   must be thread-safe and not use any global variable
-
-5. Reference: https://github.com/gamer-project/gamer/wiki/Gravity#external-accelerationpotential
-********************************************************/
-
-
 
 // =================================
 // I. Set auxiliary arrays
 // =================================
 
 #ifndef __CUDACC__
+
+extern double Plummer_Rho0;
+extern double Plummer_R0;
+extern double Plummer_Center[3];
+extern double Plummer_ExtPotMFrac;
+
 //-------------------------------------------------------------------------------------------------------
-// Function    :  SetExtPotAuxArray_PointMass
-// Description :  Set the auxiliary arrays ExtPot_AuxArray_Flt/Int[] used by ExtPot_PointMass()
+// Function    :  SetExtPotAuxArray_Plummer
+// Description :  Set the auxiliary arrays ExtPot_AuxArray_Flt/Int[] used by ExtPot_Plummer()
 //
-// Note        :  1. Invoked by Init_ExtPot_PointMass()
+// Note        :  1. Invoked by Init_ExtPot_Plummer()
 //                2. AuxArray_Flt/Int[] have the size of EXT_POT_NAUX_MAX defined in Macro.h (default = 20)
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
@@ -54,19 +31,19 @@
 //
 // Return      :  AuxArray_Flt/Int[]
 //-------------------------------------------------------------------------------------------------------
-void SetExtPotAuxArray_PointMass( double AuxArray_Flt[], int AuxArray_Int[] )
+void SetExtPotAuxArray_Plummer( double AuxArray_Flt[], int AuxArray_Int[] )
 {
 
-// example parameters
-   const double M  = 1.0;
-   const double GM = NEWTON_G*M;
+// potential = -G*M/(r^2+R0^2)^(1/2)
+   const double ExtPotM = (4.0/3.0)*M_PI*CUBE(Plummer_R0)*Plummer_Rho0*Plummer_ExtPotMFrac;
 
-   AuxArray_Flt[0] = 0.5*amr->BoxSize[0];    // x coordinate of the external potential center
-   AuxArray_Flt[1] = 0.5*amr->BoxSize[1];    // y ...
-   AuxArray_Flt[2] = 0.5*amr->BoxSize[2];    // z ...
-   AuxArray_Flt[3] = GM;                     // gravitational_constant*point_source_mass
+   AuxArray_Flt[0] = Plummer_Center[0];   // x coordinate of the Plummer center
+   AuxArray_Flt[1] = Plummer_Center[1];   // y ...
+   AuxArray_Flt[2] = Plummer_Center[2];   // z ...
+   AuxArray_Flt[3] = SQR( Plummer_R0 );   // scale_radius^2
+   AuxArray_Flt[4] = -NEWTON_G*ExtPotM;   // -G*M
 
-} // FUNCTION : SetExtPotAuxArray_PointMass
+} // FUNCTION : SetExtPotAuxArray_Plummer
 #endif // #ifndef __CUDACC__
 
 
@@ -76,16 +53,11 @@ void SetExtPotAuxArray_PointMass( double AuxArray_Flt[], int AuxArray_Int[] )
 // =================================
 
 //-----------------------------------------------------------------------------------------
-// Function    :  ExtPot_PointMass
+// Function    :  ExtPot_Plummer
 // Description :  Calculate the external potential at the given coordinates and time
 //
 // Note        :  1. This function is shared by CPU and GPU
-//                2. Auxiliary arrays UserArray_Flt/Int[] are set by SetExtPotAuxArray_PointMass(), where
-//                      UserArray_Flt[0] = x coordinate of the external potential center
-//                      UserArray_Flt[1] = y ...
-//                      UserArray_Flt[2] = z ..
-//                      UserArray_Flt[3] = gravitational_constant*point_source_mass
-//                3. Currently it does not support the soften length
+//                2. Auxiliary arrays UserArray_Flt/Int[] are set by SetExtPotAuxArray_Plummer()
 //
 // Parameter   :  x/y/z             : Target spatial coordinates
 //                Time              : Target physical time
@@ -100,21 +72,27 @@ void SetExtPotAuxArray_PointMass( double AuxArray_Flt[], int AuxArray_Int[] )
 // Return      :  External potential at (x,y,z,Time)
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real ExtPot_PointMass( const double x, const double y, const double z, const double Time,
-                              const double UserArray_Flt[], const int UserArray_Int[],
-                              const ExtPotUsage_t Usage, const real PotTable[] )
+static real ExtPot_Plummer( const double x, const double y, const double z, const double Time,
+                            const double UserArray_Flt[], const int UserArray_Int[],
+                            const ExtPotUsage_t Usage, const real PotTable[] )
 {
 
-   const double Cen[3] = { UserArray_Flt[0], UserArray_Flt[1], UserArray_Flt[2] };
-   const real   GM     = (real)UserArray_Flt[3];
-   const real   dx     = (real)(x - Cen[0]);
-   const real   dy     = (real)(y - Cen[1]);
-   const real   dz     = (real)(z - Cen[2]);
-   const real   _r     = 1.0/SQRT( dx*dx + dy*dy + dz*dz );
+// potential = -G*M/(r^2+R0^2)^(1/2)
+   const double cx  =       UserArray_Flt[0];   // x coordinate of the Plummer center
+   const double cy  =       UserArray_Flt[1];   // y ...
+   const double cz  =       UserArray_Flt[2];   // z ...
+   const real   a2  = (real)UserArray_Flt[3];   // scale_radius^2
+   const real   mGM = (real)UserArray_Flt[4];   // -G*M
 
-   return -GM*_r;
+   const real   dx  = (real)(x - cx);
+   const real   dy  = (real)(y - cy);
+   const real   dz  = (real)(z - cz);
+   const real   r2  = SQR(dx) + SQR(dy) + SQR(dz);
+   const real   pot = mGM / SQRT( r2 + a2 );
 
-} // FUNCTION : ExtPot_PointMass
+   return pot;
+
+} // FUNCTION : ExtPot_Plummer
 
 
 
@@ -128,18 +106,13 @@ static real ExtPot_PointMass( const double x, const double y, const double z, co
 #  define FUNC_SPACE            static
 #endif
 
-FUNC_SPACE ExtPot_t ExtPot_Ptr = ExtPot_PointMass;
+FUNC_SPACE ExtPot_t ExtPot_Ptr = ExtPot_Plummer;
 
 //-----------------------------------------------------------------------------------------
-// Function    :  SetCPU/GPUExtPot_PointMass
+// Function    :  SetCPU/GPUExtPot_Plummer
 // Description :  Return the function pointers of the CPU/GPU external potential routines
 //
-// Note        :  1. Invoked by Init_ExtPot_PointMass()
-//                2. Must obtain the CPU and GPU function pointers by **separate** routines
-//                   since CPU and GPU functions are compiled completely separately in GAMER
-//                   --> In other words, a unified routine like the following won't work
-//
-//                      SetExtPot_PointMass( ExtPot_t &CPUExtPot_Ptr, ExtPot_t &GPUExtPot_Ptr )
+// Note        :  1. Invoked by Init_ExtPot_Plummer()
 //
 // Parameter   :  CPU/GPUExtPot_Ptr (call-by-reference)
 //
@@ -147,14 +120,14 @@ FUNC_SPACE ExtPot_t ExtPot_Ptr = ExtPot_PointMass;
 //-----------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __host__
-void SetGPUExtPot_PointMass( ExtPot_t &GPUExtPot_Ptr )
+void SetGPUExtPot_Plummer( ExtPot_t &GPUExtPot_Ptr )
 {
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &GPUExtPot_Ptr, ExtPot_Ptr, sizeof(ExtPot_t) )  );
 }
 
 #else // #ifdef __CUDACC__
 
-void SetCPUExtPot_PointMass( ExtPot_t &CPUExtPot_Ptr )
+void SetCPUExtPot_Plummer( ExtPot_t &CPUExtPot_Ptr )
 {
    CPUExtPot_Ptr = ExtPot_Ptr;
 }
@@ -166,14 +139,14 @@ void SetCPUExtPot_PointMass( ExtPot_t &CPUExtPot_Ptr )
 #ifndef __CUDACC__
 
 // local function prototypes
-void SetExtPotAuxArray_PointMass( double [], int [] );
-void SetCPUExtPot_PointMass( ExtPot_t & );
+void SetExtPotAuxArray_Plummer( double [], int [] );
+void SetCPUExtPot_Plummer( ExtPot_t & );
 #ifdef GPU
-void SetGPUExtPot_PointMass( ExtPot_t & );
+void SetGPUExtPot_Plummer( ExtPot_t & );
 #endif
 
 //-----------------------------------------------------------------------------------------
-// Function    :  Init_ExtPot_PointMass
+// Function    :  Init_ExtPot_Plummer
 // Description :  Initialize external potential
 //
 // Note        :  1. Set auxiliary arrays by invoking SetExtPotAuxArray_*()
@@ -187,16 +160,16 @@ void SetGPUExtPot_PointMass( ExtPot_t & );
 //
 // Return      :  None
 //-----------------------------------------------------------------------------------------
-void Init_ExtPot_PointMass()
+void Init_ExtPot_Plummer()
 {
 
-   SetExtPotAuxArray_PointMass( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int );
-   SetCPUExtPot_PointMass( CPUExtPot_Ptr );
+   SetExtPotAuxArray_Plummer( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int );
+   SetCPUExtPot_Plummer( CPUExtPot_Ptr );
 #  ifdef GPU
-   SetGPUExtPot_PointMass( GPUExtPot_Ptr );
+   SetGPUExtPot_Plummer( GPUExtPot_Ptr );
 #  endif
 
-} // FUNCTION : Init_ExtPot_PointMass
+} // FUNCTION : Init_ExtPot_Plummer
 
 #endif // #ifndef __CUDACC__
 

@@ -47,13 +47,19 @@ void Validate()
    Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
 #  endif
 
+#  ifdef GRAVITY
+   if ( !OPT__SELF_GRAVITY )
+   Aux_Error( ERROR_INFO, "must enable OPT__SELF_GRAVITY !!\n" );
+
+   if ( OPT__EXT_ACC )
+   Aux_Error( ERROR_INFO, "must disable OPT__EXT_ACC !!\n" );
+
+   if ( OPT__EXT_POT )
+   Aux_Error( ERROR_INFO, "must disable OPT__EXT_POT !!\n" );
+#  endif
+
    if ( MPI_Rank == 0 )
    {
-#     ifdef GRAVITY
-      if ( OPT__GRAVITY_TYPE != GRAVITY_SELF )
-         Aux_Message( stderr, "WARNING : OPT__GRAVITY_TYPE != GRAVITY_SELF ??\n" );
-#     endif
-
 #     ifndef DUAL_ENERGY
          Aux_Message( stderr, "WARNING : it's recommended to enable DUAL_ENERGY for this test\n" );
 #     endif
