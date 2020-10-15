@@ -23,7 +23,7 @@ static RandomNumber_t *RNG = NULL;
 // =======================================================================================
 
 // problem-specific function prototypes
-bool Flag_KelvinHelmholtzInstability( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
+bool Flag_KelvinHelmholtzInstability( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 
 
 
