@@ -158,10 +158,10 @@ SIMU_OPTION += -DMAX_PATCH=1000000
 
 # GPU acceleration
 # --> must set GPU_ARCH as well
-#SIMU_OPTION += -DGPU
+# SIMU_OPTION += -DGPU
 
-# GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA/TURING
-SIMU_OPTION += -DGPU_ARCH=KEPLER
+# GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA
+# SIMU_OPTION += -DGPU_ARCH=FERMI
 
 # debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
@@ -185,7 +185,7 @@ SIMU_OPTION += -DSERIAL
 
 # load-balance parallelization: HILBERT
 # --> must disable SERIAL
-#SIMU_OPTION += -DLOAD_BALANCE=HILBERT
+# SIMU_OPTION += -DLOAD_BALANCE=HILBERT
 
 # overlap MPI communication with computation
 # --> NOT supported yet; must enable LOAD_BALANCE
@@ -198,13 +198,13 @@ SIMU_OPTION += -DOPENMP
 #SIMU_OPTION += -DLAOHU
 
 # support HDF5 format
-#SIMU_OPTION += -DSUPPORT_HDF5
+SIMU_OPTION += -DSUPPORT_HDF5
 
 # support GNU scientific library
 #SIMU_OPTION += -DSUPPORT_GSL
 
 # support yt inline analysis
-#SIMU_OPTION += -DSUPPORT_LIBYT
+SIMU_OPTION += -DSUPPORT_LIBYT
 
 # random number implementation: RNG_GNU_EXT/RNG_CPP11 (GNU extension drand48_r/c++11 <random>)
 # --> use RNG_GNU_EXT for compilers supporting GNU extensions (**not supported on some macOS**)
@@ -245,7 +245,7 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 # gnu
 # -------------------------------------------------------------------------------
  CXX         = g++                                       # serial compiler
-#CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
+CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
 #CXX         = CC                                        # cray wrapper script
  CXXFLAG     = -g -O3                                    # general flags
 #CXXFLAG     = -g -O3 -std=c++11
@@ -332,19 +332,19 @@ LIBYT_PATH   :=
 #LIBYT_PATH   := /home/hyschive/project/libyt/libyt.dev/libyt
 
 # NTU-eureka (default: openmpi-intel)
-#CUDA_PATH    := /software/cuda/default
-#FFTW_PATH    := /software/fftw/default
-#MPI_PATH     := /software/openmpi/default
-#HDF5_PATH    := /software/hdf5/default
-#GRACKLE_PATH :=
-#GSL_PATH     := /software/gsl/default
-#LIBYT_PATH   :=
+# CUDA_PATH    := /software/cuda/default
+FFTW_PATH    := /software/fftw/2.1.5-gnu
+MPI_PATH     := /software/openmpi/3.1.5-gnu
+HDF5_PATH    := /software/hdf5/1.10.6
+GRACKLE_PATH :=
+GSL_PATH     := /software/gsl/2.6
+LIBYT_PATH   := /work1/cindytsai/Project/libyt
 
 # NTU-hulk (openmpi-intel-qlc)
-#CUDA_PATH    := /opt/gpu/cuda/4.2
+# CUDA_PATH    := /opt/gpu/cuda/4.2
 #FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
-#MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
-#HDF5_PATH    := /opt/hdf5/1.8.20
+# MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
+# HDF5_PATH    := /opt/hdf5/1.8.20
 #GRACKLE_PATH := /work1/fish/Software/grackle
 #GSL_PATH     := /opt/math/gsl/2.5
 #LIBYT_PATH   := /project/fish/libyt/libyt
@@ -524,11 +524,10 @@ GPU_FILE    += CUAPI_MemAllocate_PoissonGravity.cu  CUAPI_MemFree_PoissonGravity
                CUAPI_Asyn_PoissonGravitySolver.cu  CUAPI_SetConstMemory_ExtAccPot.cu
 
 GPU_FILE    += CUPOT_PoissonSolver_SOR_10to14cube.cu  CUPOT_PoissonSolver_SOR_16to18cube.cu \
-               CUPOT_PoissonSolver_MG.cu  CUPOT_ExtAcc_PointMass.cu  CUPOT_ExtPot_PointMass.cu \
-               CUPOT_ExtPotSolver.cu
+               CUPOT_PoissonSolver_MG.cu  CUPOT_ExtAcc_PointMass.cu  CUPOT_ExtPot_PointMass.cu
 
 CPU_FILE    += CPU_PoissonGravitySolver.cpp  CPU_PoissonSolver_SOR.cpp  CPU_PoissonSolver_FFT.cpp \
-               CPU_PoissonSolver_MG.cpp  CPU_ExtPotSolver.cpp  CPU_ExtPotSolver_BaseLevel.cpp
+               CPU_PoissonSolver_MG.cpp
 
 CPU_FILE    += Init_FFTW.cpp  Gra_Close.cpp  Gra_Prepare_Flu.cpp  Gra_Prepare_Pot.cpp  Gra_Prepare_Corner.cpp \
                Gra_AdvanceDt.cpp  Poi_Close.cpp  Poi_Prepare_Pot.cpp  Poi_Prepare_Rho.cpp \
@@ -536,8 +535,7 @@ CPU_FILE    += Init_FFTW.cpp  Gra_Close.cpp  Gra_Prepare_Flu.cpp  Gra_Prepare_Po
                End_MemFree_PoissonGravity.cpp  Init_Set_Default_SOR_Parameter.cpp  Init_GreenFuncK.cpp \
                Init_Set_Default_MG_Parameter.cpp  Poi_GetAverageDensity.cpp  Poi_AddExtraMassForGravity.cpp \
                Poi_BoundaryCondition_Extrapolation.cpp  Gra_Prepare_USG.cpp  Poi_StorePotWithGhostZone.cpp \
-               Init_ExtAccPot.cpp  CPU_ExtAcc_PointMass.cpp  CPU_ExtPot_PointMass.cpp \
-               Poi_UserWorkBeforePoisson.cpp
+               Init_ExtAccPot.cpp  CPU_ExtAcc_PointMass.cpp  CPU_ExtPot_PointMass.cpp
 
 vpath %.cu     SelfGravity/GPU_Poisson  SelfGravity/GPU_Gravity
 vpath %.cpp    SelfGravity/CPU_Poisson  SelfGravity/CPU_Gravity  SelfGravity
