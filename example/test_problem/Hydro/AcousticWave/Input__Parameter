@@ -53,9 +53,9 @@ MAX_LEVEL                     0           # maximum refinement level (0~NLEVEL-1
 OPT__FLAG_RHO                 0           # flag: density (Input__Flag_Rho) [0]
 OPT__FLAG_RHO_GRADIENT        0           # flag: density gradient (Input__Flag_RhoGradient) [0]
 OPT__FLAG_PRES_GRADIENT       0           # flag: pressure gradient (Input__Flag_PresGradient) [0] ##HYDRO ONLY##
-OPT__FLAG_ENGY_GRADIENT       0           # flag: pressure gradient (Input__Flag_EngyGradient) [0] ##SR_HYDRO/HYDRO##
-OPT__FLAG_LORENTZ_GRADIENT    0           # flag: Lorentz factor gradient (Input__Flag_LorentzGradient) [0] ##SR_HYDRO ONLY##
-OPT__FLAG_4VELOCITY           0           # flag: magnitude of 4-velocity (Input__Flag_4Velocity) [0] ##SR_HYDRO ONLY##
+OPT__FLAG_ENGY_GRADIENT       0           # flag: pressure gradient (Input__Flag_EngyGradient) [0] ##SRHD/HYDRO##
+OPT__FLAG_LORENTZ_GRADIENT    0           # flag: Lorentz factor gradient (Input__Flag_LorentzGradient) [0] ##SRHD ONLY##
+OPT__FLAG_4VELOCITY           0           # flag: magnitude of 4-velocity (Input__Flag_4Velocity) [0] ##SRHD ONLY##
 OPT__FLAG_VORTICITY           0           # flag: vorticity (Input__Flag_Vorticity) [0] ##HYDRO ONLY##
 OPT__FLAG_JEANS               0           # flag: Jeans length (Input__Flag_Jeans) [0] ##HYDRO ONLY##
 OPT__FLAG_LOHNER_DENS         0           # flag: Lohner for mass density   (Input__Flag_Lohner) [0] ##BOTH HYDRO AND ELBDM##
@@ -78,7 +78,7 @@ OPT__MINIMIZE_MPI_BARRIER     0           # minimize MPI barriers to improve loa
                                           # (STORE_POT_GHOST, PAR_IMPROVE_ACC=1, OPT__TIMING_BARRIER=0 only; recommend AUTO_REDUCE_DT=0)
 
 
-# fluid solver in HYDRO/SR_HYDRO (MODEL==HYDRO/SR_HYDRO only)
+# fluid solver in HYDRO/SRHD (MODEL==HYDRO/SRHD only)
 GAMMA                         1.666666666666666667 # ratio of specific heats (i.e., adiabatic index) [5.0/3.0]
 MOLECULAR_WEIGHT              0.6         # mean molecular weight -> currently only for post-processing [0.6]
 MINMOD_COEFF                  1.5         # coefficient of the generalized MinMod limiter (1.0~2.0) [1.5]
