@@ -1,0 +1,9 @@
+# problem-specific runtime parameters
+ABC_Rho0       1.0   # background density [1.0]
+ABC_P0         1.0   # background pressure [1.0]
+ABC_V0         0.0   # background velocity along the diagonal direction [0.0]
+ABC_CoeffA     1.0   # coefficients A/B/C in the initial magnetic field
+                     # (see Eq. [20] in Zhang et al., 2018, ApJS, 236, 50) [1.0]
+ABC_CoeffB     1.0
+ABC_CoeffC     1.0
+ABC_NPeriod    1     # number of periods along each direction (integer) [1]

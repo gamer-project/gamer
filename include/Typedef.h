@@ -46,18 +46,12 @@ const TestProbID_t
    TESTPROB_HYDRO_COLLIDING_JETS               =   10,
    TESTPROB_HYDRO_PLUMMER                      =   11,
    TESTPROB_HYDRO_GRAVITY                      =   12,
-   TESTPROB_HYDRO_JETS                         =   13,
-
-   TESTPROB_SRHYDRO_BLAST_WAVE                    =  600,
-   TESTPROB_SRHYDRO_RIEMANN                       =  601,
-   TESTPROB_SRHYDRO_DOUBLE_MACH_REFLECTION        =  602,
-   TESTPROB_SRHYDRO_KELVIN_HELMHOLTZ_INSTABILITY  =  603,
-   TESTPROB_SRHYDRO_JETS                          =  604,
-   TESTPROB_SRHYDRO_WEAK_SCALING_BLAST_WAVE       =  607,
-   TESTPROB_SRHYDRO_ACOUSTIC_WAVE                 =  608,
-   TESTPROB_SRHYDRO_PULSAR_WIND                   =  609,
-
-   TESTPROB_ELBDM_EXTPOT                          = 1000;
+   TESTPROB_HYDRO_MHD_ABC                      =   13,
+   TESTPROB_HYDRO_MHD_ORSZAG_TANG_VORTEX       =   14,
+   TESTPROB_HYDRO_MHD_LINEAR_WAVE              =   15,
+   TESTPROB_HYDRO_JEANS_INSTABILITY            =   16,
+   TESTPROB_HYDRO_JETS                         =   17,
+   TESTPROB_ELBDM_EXTPOT                       = 1000;
 
 
 // program initialization options
@@ -102,8 +96,7 @@ const IntScheme_t
    INT_CQUAD    = 4,
    INT_QUAD     = 5,
    INT_CQUAR    = 6,
-   INT_QUAR     = 7,
-   INT_WENO_O3  = 8;
+   INT_QUAR     = 7;
 
 
 // data reconstruction TVD limiters
@@ -159,7 +152,7 @@ const NSide_t
    NSIDE_26 = 26;
 
 
-// use the load-balance alternative function in "Buf_GetBufferData" and "Flag_Real"
+// use the load-balance alternative functions
 typedef int UseLBFunc_t;
 const UseLBFunc_t
    USELB_NO  = 0,
@@ -173,7 +166,7 @@ const Check_t
    CHECK_ON  = 1;
 
 
-// target solver in "InvokeSolvers"
+// target solver in InvokeSolver()
 // --> must start from 0 because of the current TIMING_SOLVER implementation
 // --> when adding new solvers, please modify the NSOLVER constant accordingly
 const int NSOLVER = 7;
@@ -196,24 +189,22 @@ const Solver_t
   ;
 
 
-// target mode in "Buf_GetBufferData and LB_GetBufferData"
+// target mode in Buf_GetBufferData() and LB_GetBufferData()
 typedef int GetBufMode_t;
 const GetBufMode_t
+   DATA_GENERAL         = 1
+  ,DATA_AFTER_FIXUP     = 2
+  ,DATA_AFTER_REFINE    = 3
+  ,DATA_RESTRICT        = 4
+  ,COARSE_FINE_FLUX     = 5
 #ifdef GRAVITY
-   DATA_GENERAL      = 1,
-   DATA_AFTER_FIXUP  = 2,
-   DATA_AFTER_REFINE = 3,
-   DATA_RESTRICT     = 4,
-   COARSE_FINE_FLUX  = 5,
-   POT_FOR_POISSON   = 6,
-   POT_AFTER_REFINE  = 7;
-#else
-   DATA_GENERAL      = 1,
-   DATA_AFTER_FIXUP  = 2,
-   DATA_AFTER_REFINE = 3,
-   DATA_RESTRICT     = 4,
-   COARSE_FINE_FLUX  = 5;
-#endif // #ifdef GRAVITY ... else ...
+  ,POT_FOR_POISSON      = 6
+  ,POT_AFTER_REFINE     = 7
+#endif
+#ifdef MHD
+  ,COARSE_FINE_ELECTRIC = 8
+#endif
+  ;
 
 
 // fluid boundary conditions
@@ -285,13 +276,31 @@ const ParPass2Son_t
 #endif // #ifdef PARTICLE
 
 
-// the gravity types (this type needs to be defined for the Fluid solver even when GRAVITY is off)
-typedef int OptGravityType_t;
-const OptGravityType_t
-   GRAVITY_NONE     = 0,
-   GRAVITY_SELF     = 1,
-   GRAVITY_EXTERNAL = 2,
-   GRAVITY_BOTH     = 3;
+// external acceleration (must be defined for the fluid solver even when GRAVITY is off)
+typedef int OptExtAcc_t;
+const OptExtAcc_t
+   EXT_ACC_NONE  = 0,
+   EXT_ACC_FUNC  = 1,
+   EXT_ACC_TABLE = 2;
+
+
+// external potential (must be defined for the fluid solver even when GRAVITY is off)
+typedef int OptExtPot_t;
+const OptExtPot_t
+   EXT_POT_NONE  = 0,
+   EXT_POT_FUNC  = 1,
+   EXT_POT_TABLE = 2;
+
+
+// different usages of external potential when computing total potential on level Lv
+// --> ADD     : add external potential on Lv
+//     SUB     : subtract external potential for preparing self-gravity potential on Lv-1
+//     SUB_TINT: like SUB but for temporal interpolation
+typedef int ExtPotUsage_t;
+const ExtPotUsage_t
+   EXT_POT_USAGE_ADD      = 0,
+   EXT_POT_USAGE_SUB      = 1,
+   EXT_POT_USAGE_SUB_TINT = 2;
 
 
 // forms of the Lohner's error estimator
@@ -304,7 +313,7 @@ const OptLohnerForm_t
 
 
 // OPT__1ST_FLUX_CORR and OPT__1ST_FLUX_CORR_SCHEME options
-#if ( MODEL == HYDRO || MODEL == MHD || MODEL == SR_HYDRO )
+#if ( MODEL == HYDRO )
 typedef int Opt1stFluxCorr_t;
 const Opt1stFluxCorr_t
    FIRST_FLUX_CORR_NONE    = 0,
@@ -313,11 +322,13 @@ const Opt1stFluxCorr_t
 
 typedef int OptRSolver1st_t;
 const OptRSolver1st_t
+   RSOLVER_1ST_DEFAULT = -1,
    RSOLVER_1ST_NONE    = 0,
    RSOLVER_1ST_ROE     = 1,
    RSOLVER_1ST_HLLC    = 2,
-   RSOLVER_1ST_HLLE    = 3;
-#endif // #if ( MODEL == HYDRO || MODEL == MHD )
+   RSOLVER_1ST_HLLE    = 3,
+   RSOLVER_1ST_HLLD    = 4;
+#endif // #if ( MODEL == HYDRO )
 
 
 // OPT__CORR_AFTER_ALL_SYNC options
@@ -368,6 +379,27 @@ const SF_CreateStarScheme_t
    SF_CREATE_STAR_SCHEME_NONE  = 0,
    SF_CREATE_STAR_SCHEME_AGORA = 1;
 #endif
+
+
+// function pointers
+typedef real (*EoS_GUESS_t)( const real Con[], real* const Constant );
+typedef void (*EoS_H2TEM_t)( const real HTilde, real* const Temp, real* const DiffTemp, const real Passive[], const double AuxArray[] );
+typedef real (*EoS_TEM2H_t)( const real Temp, const real Passive[], const double AuxArray[] );
+typedef real (*EoS_TEM2C_t)( const real Rho, const real Pres, const real Passive[], const double AuxArray[] );
+typedef real (*EoS_DE2P_t)( const real Dens, const real Eint, const real Passive[], const double UserArray[] );
+typedef real (*EoS_DP2E_t)( const real Dens, const real Pres, const real Passive[], const double UserArray[] );
+typedef real (*EoS_DP2C_t)( const real Dens, const real Pres, const real Passive[], const double UserArray[] );
+typedef void (*ExtAcc_t)( real Acc[], const double x, const double y, const double z, const double Time, const double UserArray[] );
+typedef real (*ExtPot_t)( const double x, const double y, const double z, const double Time, const double UserArray[],
+                          const ExtPotUsage_t Usage );
+
+
+// options in Aux_ComputeProfile()
+typedef int PatchType_t;
+const PatchType_t
+   PATCH_LEAF    = 0,
+   PATCH_NONLEAF = 1,
+   PATCH_BOTH    = 2;
 
 
 

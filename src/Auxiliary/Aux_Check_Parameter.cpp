@@ -39,8 +39,8 @@ void Aux_Check_Parameter()
 #     error : ERROR : UNSPLIT_GRAVITY must work with GRAVITY !!
 #  endif
 
-#  if ( defined UNSPLIT_GRAVITY  &&  MODEL != HYDRO  &&  MODEL != SR_HYDRO )
-#     error : ERROR : currently UNSPLIT_GRAVITY is only supported in HYDRO and SR_HYDRO!!
+#  if ( defined UNSPLIT_GRAVITY  &&  MODEL != HYDRO )
+#     error : ERROR : currently UNSPLIT_GRAVITY is only supported in HYDRO !!
 #  endif
 
 #  if ( NCOMP_PASSIVE < 0 )
@@ -121,20 +121,12 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "currently the check \"%s\" must work with \"%s\" !!\n",
                  "OPT__CK_REFINE", "OPT__FLAG_RHO" );
 
-#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if   ( MODEL == HYDRO )
    if (  ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP )
          &&  Flu_ParaBuf < 2  )
       Aux_Error( ERROR_INFO, "Lohner error estimator does NOT work when Flu_ParaBuf (%d) < 2 !!\n", Flu_ParaBuf );
 #  elif ( MODEL == ELBDM )
    if (  OPT__FLAG_LOHNER_DENS  &&  Flu_ParaBuf < 2  )
-      Aux_Error( ERROR_INFO, "Lohner error estimator does NOT work when Flu_ParaBuf (%d) < 2 !!\n", Flu_ParaBuf );
-#  elif   ( MODEL == SR_HYDRO )
-   if (  ( OPT__FLAG_LOHNER_DENS 
-        || OPT__FLAG_LOHNER_ENGY 
-        || OPT__FLAG_LOHNER_PRES 
-        || OPT__FLAG_LOHNER_LRTZ 
-        || OPT__FLAG_LOHNER_TEMP )
-         &&  Flu_ParaBuf < 2  )
       Aux_Error( ERROR_INFO, "Lohner error estimator does NOT work when Flu_ParaBuf (%d) < 2 !!\n", Flu_ParaBuf );
 #  else
 #  error : ERROR : unsupported MODEL !!
@@ -177,10 +169,14 @@ void Aux_Check_Parameter()
                     "AUTO_REDUCE_DT", "OPT__DT_LEVEL == DT_LEVEL_FLEXIBLE" );
    }
 
-#  if ( ( MODEL != HYDRO ) && ( MODEL != SR_HYDRO )  )
+#  if ( MODEL != HYDRO )
+   for (int f=0; f<6; f++)
+      if ( OPT__BC_FLU[f] == BC_FLU_OUTFLOW )
+         Aux_Error( ERROR_INFO, "outflow boundary condition (OPT__BC_FLU=2) only works with HYDRO !!\n" );
+
    for (int f=0; f<6; f++)
       if ( OPT__BC_FLU[f] == BC_FLU_REFLECTING )
-         Aux_Error( ERROR_INFO, "reflecting boundary condition (OPT__BC_FLU=3) only works with HYDRO and SR_HYDRO !!\n" );
+         Aux_Error( ERROR_INFO, "reflecting boundary condition (OPT__BC_FLU=3) only works with HYDRO !!\n" );
 #  endif
 
    for (int f=0; f<6; f+=2)
@@ -195,6 +191,9 @@ void Aux_Check_Parameter()
 
    if ( OPT__DT_LEVEL == DT_LEVEL_SHARED  &&  OPT__INT_TIME )
       Aux_Error( ERROR_INFO, "OPT__INT_TIME should be disabled when \"OPT__DT_LEVEL == DT_LEVEL_SHARED\" !!\n" );
+
+   if ( INT_MONO_COEFF < 1.0  ||  INT_MONO_COEFF > 4.0 )
+      Aux_Error( ERROR_INFO, "INT_MONO_COEFF (%14.7e) is not within the correct range [1.0, 4.0] !!\n", INT_MONO_COEFF );
 
    if ( OPT__MEMORY_POOL  &&  !OPT__REUSE_MEMORY )
       Aux_Error( ERROR_INFO, "please turn on OPT__REUSE_MEMORY for OPT__MEMORY_POOL !!\n" );
@@ -229,6 +228,9 @@ void Aux_Check_Parameter()
 #  ifdef BITWISE_REPRODUCIBILITY
    if ( OPT__CORR_AFTER_ALL_SYNC != CORR_AFTER_SYNC_BEFORE_DUMP  &&  OPT__CORR_AFTER_ALL_SYNC != CORR_AFTER_SYNC_EVERY_STEP )
       Aux_Error( ERROR_INFO, "please set OPT__CORR_AFTER_ALL_SYNC to 1/2 when BITWISE_REPRODUCIBILITY is enabled !!\n" );
+
+   if ( ! OPT__FIXUP_RESTRICT )
+      Aux_Error( ERROR_INFO, "must enable OPT__FIXUP_RESTRICT for BITWISE_REPRODUCIBILITY !!\n" );
 #  endif
 
 #  if ( !defined SERIAL  &&  !defined LOAD_BALANCE )
@@ -290,7 +292,6 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : currently the check \"%s\" only works with \"%s\" !!\n",
                    "OPT__CK_REFINE", "OPT__FLAG_RHO == 1" );
 
-// common refine flag for all model
    bool Flag = ( OPT__FLAG_RHO  ||  OPT__FLAG_RHO_GRADIENT  ||  OPT__FLAG_LOHNER_DENS  ||  OPT__FLAG_USER );
 #  if ( MODEL == HYDRO )
    Flag |= OPT__FLAG_PRES_GRADIENT;
@@ -299,20 +300,19 @@ void Aux_Check_Parameter()
    Flag |= OPT__FLAG_LOHNER_ENGY;
    Flag |= OPT__FLAG_LOHNER_PRES;
    Flag |= OPT__FLAG_LOHNER_TEMP;
-#  elif ( MODEL == SR_HYDRO )
-   Flag |= OPT__FLAG_PRES_GRADIENT;
+#  ifdef MHD
+   Flag |= OPT__FLAG_CURRENT;
+#  endif
+#  ifdef SRHD
    Flag |= OPT__FLAG_ENGY_GRADIENT;
    Flag |= OPT__FLAG_4VELOCITY;
    Flag |= OPT__FLAG_MOM_OVER_DENS;
-   Flag |= OPT__FLAG_LOHNER_ENGY;
-   Flag |= OPT__FLAG_LOHNER_PRES;
-   Flag |= OPT__FLAG_LOHNER_TEMP;
-   Flag |= OPT__FLAG_LOHNER_LRTZ;
    Flag |= OPT__FLAG_LORENTZ_GRADIENT;
-#  elif ( MODEL == ELBDM )
+#  endif
+#  endif
+#  if ( MODEL == ELBDM )
    Flag |= OPT__FLAG_ENGY_DENSITY;
 #  endif
-
 #  ifdef PARTICLE
    Flag |= OPT__FLAG_NPAR_PATCH;
    Flag |= OPT__FLAG_NPAR_CELL;
@@ -396,6 +396,14 @@ void Aux_Check_Parameter()
    }
 #  endif
 
+#  if   ( MODEL == HYDRO )
+   if ( ! INT_OPP_SIGN_0TH_ORDER )
+      Aux_Message( stderr, "WARNING : disabling INT_OPP_SIGN_0TH_ORDER may cause unphysically large velocity during interpolation !!\n" );
+#  elif ( MODEL == ELBDM )
+   if (   INT_OPP_SIGN_0TH_ORDER )
+      Aux_Message( stderr, "WARNING : INT_OPP_SIGN_0TH_ORDER is not recommended for ELBDM !!\n" );
+#  endif
+
    } // if ( MPI_Rank == 0 )
 
 
@@ -470,11 +478,9 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
-#  if   ( MODEL == HYDRO )
+#  if ( MODEL == HYDRO )
    if ( fabs(GAMMA-5.0/3.0) > 1.0e-4 )
-      Aux_Error( ERROR_INFO, "GAMMA must be equal to 5.0/3.0 in cosmological simuluations !!\n" );
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
+      Aux_Error( ERROR_INFO, "GAMMA must be equal to 5.0/3.0 for COMOVING !!\n" );
 #  endif
 
 
@@ -503,6 +509,11 @@ void Aux_Check_Parameter()
    if ( FLU_GPU_NPGROUP % GPU_NSTREAM != 0 )
       Aux_Error( ERROR_INFO, "FLU_GPU_NPGROUP (%d) %%GPU_NSTREAM (%d) != 0 !!\n",
                  FLU_GPU_NPGROUP, GPU_NSTREAM );
+
+#  ifdef OPENMP
+   if ( FLU_GPU_NPGROUP < OMP_NTHREAD )
+      Aux_Error( ERROR_INFO, "FLU_GPU_NPGROUP (%d) < OMP_NTHREAD (%d) !!\n", FLU_GPU_NPGROUP, OMP_NTHREAD );
+#  endif
 
    if ( OPT__FIXUP_FLUX  &&  !amr->WithFlux )
       Aux_Error( ERROR_INFO, "%s is enabled but amr->WithFlux is off !!\n", "OPT__FIXUP_FLUX" );
@@ -572,44 +583,156 @@ void Aux_Check_Parameter()
 #     error : ERROR : unsupported data reconstruction scheme (PLM/PPM) !!
 #  endif
 
-#  if ( defined RSOLVER  &&  RSOLVER != EXACT  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLC )
+#  ifdef MHD
+#   if ( defined RSOLVER  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLD )
+#     error : ERROR : unsupported Riemann solver for MHD (ROE/HLLE/HLLD) !!
+#   endif
+#  else
+#   if ( defined RSOLVER  &&  RSOLVER != EXACT  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLC )
 #     error : ERROR : unsupported Riemann solver (EXACT/ROE/HLLE/HLLC) !!
+#   endif
+#  endif // MHD
+
+#  ifdef SRHD
+#   if ( defined RSOLVER  &&  RSOLVER != HLLC  &&  RSOLVER != HLLE )
+#     error : ERROR : unsupported Riemann solver for MHD (HLLC/HLLE) !!
+#   endif
+
+#  if ( defined GRAVITY )
+#     error : ERROR : SRHD does not support GRAVITY !!
 #  endif
+
+#  if ( defined PARTICLE )
+#     error : ERROR : SRHD does not support PARTICLE !!
+#  endif
+
+#  if ( NCOMP_PASSIVE != 0 )
+#     error : SRHD does NOT support passive scalars !!
+#  endif
+
+#  if ( defined DUAL_ENERGY )
+#     error : ERROR : SRHD does not support DUAL_ENERGY !!
+#  endif
+
+#  if ( defined SUPPORT_GRACKLE )
+#     error : ERROR : SRHD does not support GRACKLE !!
+#  endif
+
+#  if ( FLU_SCHEME != MHM && FLU_SCHEME != MHM_RP )
+#     error : ERROR : unsupported FLU_SCHEME for SRHD (MHM/MHM_RP) !!
+#  endif
+
+#  if ( EOS != EOS_TAUBMATHEWS )
+#     error : ERROR : unsupported EOS for SRHD (EOS_TAUBMATHEWS) !!
+#  endif
+
+#  else
+#  if ( EOS == EOS_TAUBMATHEWS )
+#     error : ERROR : unsupported EOS for non-SRHD (EOS_TAUBMATHEWS) !!
+#  endif
+
+#  endif // #  ifdef SRHD
 
 #  ifdef DUAL_ENERGY
-#  if ( FLU_SCHEME == RTVD )
+#   if ( FLU_SCHEME == RTVD )
 #     error : RTVD does NOT support DUAL_ENERGY !!
-#  endif
+#   endif
 
-#  if ( DUAL_ENERGY != DE_ENPY )
+#   if ( DUAL_ENERGY != DE_ENPY )
 #     error : ERROR : unsupported dual-energy formalism (DE_ENPY only, DE_EINT is not supported yet) !!
+#   endif
+
+#  if ( DUAL_ENERGY == DE_ENPY  &&  EOS != EOS_GAMMA )
+#     error : ERROR : EOS_GAMMA does NOT support DUAL_ENERGY=DE_ENPY !!
 #  endif
 #  endif // #ifdef DUAL_ENERGY
 
-#  if ( defined CHECK_INTERMEDIATE  &&  CHECK_INTERMEDIATE != EXACT  &&  CHECK_INTERMEDIATE != HLLE  &&  \
+#  ifdef MHD
+#   if ( defined CHECK_INTERMEDIATE  &&  CHECK_INTERMEDIATE != HLLE  &&  CHECK_INTERMEDIATE != HLLD )
+#     error : ERROR : unsupported option in CHECK_INTERMEDIATE (HLLE/HLLD) !!
+#   endif
+#  else
+#   if ( defined CHECK_INTERMEDIATE  &&  CHECK_INTERMEDIATE != EXACT  &&  CHECK_INTERMEDIATE != HLLE  &&  \
         CHECK_INTERMEDIATE != HLLC )
 #     error : ERROR : unsupported option in CHECK_INTERMEDIATE (EXACT/HLLE/HLLC) !!
+#   endif
+#  endif // MHD
+
+#  if ( defined LR_EINT  &&  FLU_SCHEME == CTU )
+#     error : CTU does NOT support LR_EINT in CUFLU.h !!
 #  endif
+
+#  if ( EOS != EOS_GAMMA       &&  EOS != EOS_ISOTHERMAL  &&  EOS != EOS_NUCLEAR  && \
+        EOS != EOS_TAUBMATHEWS &&  EOS != EOS_TABULAR     &&  EOS != EOS_USER )
+#     error : ERROR : unsupported equation of state (EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TAUBMATHEWS/EOS_TABULAR/EOS_USER) !!
+#  endif
+
+#  if ( EOS != EOS_GAMMA )
+#     if ( HLLC_WAVESPEED == HLL_WAVESPEED_ROE  ||  HLLE_WAVESPEED == HLL_WAVESPEED_ROE )
+#        error : ERROR : HLL_WAVESPEED_ROE only works with EOS_GAMMA !!
+#     endif
+
+#     if (  defined RSOLVER  &&  ( RSOLVER == ROE || RSOLVER == EXACT )  )
+#        error : ERROR : unsupported Riemann solver for EOS != EOS_GAMMA (HLLE/HLLC/HLLD) !!
+#     endif
+
+#     if ( defined LR_SCHEME  &&  defined CHAR_RECONSTRUCTION )
+#        error : ERROR : CHAR_RECONSTRUCTION only works with EOS_GAMMA !!
+#     endif
+
+#     if ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == CTU )
+#        error : RTVD and CTU only support EOS_GAMMA !!
+#     endif
+
+#     ifdef COMOVING
+#        error : ERROR : COMOVING currently only supports EOS_GAMMA !!
+#     endif
+
+      if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_ROE )
+         Aux_Error( ERROR_INFO, "OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_ROE only supports EOS_GAMMA !!\n" );
+
+      if ( JEANS_MIN_PRES )
+         Aux_Error( ERROR_INFO, "JEANS_MIN_PRES currently only supports EOS_GAMMA !!\n" );
+#  endif // if ( EOS != EOS_GAMMA )
+
+#  if ( EOS == EOS_NUCLEAR )
+      Aux_Error( ERROR_INFO, "EOS_NUCLEAR is not supported yet !!\n" );
+#  endif
+
+#  if ( EOS == EOS_TABULAR )
+      Aux_Error( ERROR_INFO, "EOS_TABULAR is not supported yet !!\n" );
+#  endif
+
+#  ifdef BAROTROPIC_EOS
+#     if ( EOS == EOS_GAMMA  ||  EOS == EOS_NUCLEAR )
+#        error : ERROR : BAROTROPIC_EOS is incompatible with EOS_GAMMA/EOS_NUCLEAR !!
+#     endif
+#  else
+#     if ( EOS == EOS_ISOTHERMAL )
+#        error : ERROR : must enable BAROTROPIC_EOS for EOS_ISOTHERMAL !!
+#     endif
+#  endif // #ifdef BAROTROPIC_EOS ... else ...
+
 
    if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
    {
+#     ifdef MHD
+      /*
+      if ( OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_ROE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_HLLD  &&
+           OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_HLLE )
+         Aux_Error( ERROR_INFO, "unsupported parameter \"%s = %d\" !!\n", "OPT__1ST_FLUX_CORR_SCHEME", OPT__1ST_FLUX_CORR_SCHEME );
+         */
+      Aux_Error( ERROR_INFO, "MHD does not support \"OPT__1ST_FLUX_CORR\" !!\n" );
+#     else
       if ( OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_ROE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_HLLC  &&
            OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_HLLE )
          Aux_Error( ERROR_INFO, "unsupported parameter \"%s = %d\" !!\n", "OPT__1ST_FLUX_CORR_SCHEME", OPT__1ST_FLUX_CORR_SCHEME );
+#     endif
 
 #     if ( FLU_SCHEME == RTVD )
          Aux_Error( ERROR_INFO, "RTVD does not support \"OPT__1ST_FLUX_CORR\" !!\n" );
 #     endif
    }
-
-   if ( MIN_DENS == 0.0  &&  MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : MIN_DENS == 0.0 could be dangerous and is mainly for debugging only !!\n" );
-   else if ( MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : MIN_DENS (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_DENS );
-   if ( MIN_PRES == 0.0  &&  MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : MIN_PRES == 0.0 could be dangerous and is mainly for debugging only !!\n" );
-   else if ( MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : MIN_PRES (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_PRES );
 
 #  if ( FLU_SCHEME == RTVD )
    if ( JEANS_MIN_PRES )
@@ -653,6 +776,27 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : currently we do not use Grackle to calculate temperature for OPT__FLAG_LOHNER_TEMP !!\n" );
 #  endif
 
+   if ( ! OPT__LAST_RESORT_FLOOR )
+      Aux_Message( stderr, "WARNING : disabling OPT__LAST_RESORT_FLOOR could be dangerous and is mainly for debugging only !!\n" );
+
+   if ( MIN_DENS == 0.0 )
+      Aux_Message( stderr, "WARNING : MIN_DENS == 0.0 could be dangerous and is mainly for debugging only !!\n" );
+   else
+      Aux_Message( stderr, "WARNING : MIN_DENS (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_DENS );
+
+   if ( MIN_PRES == 0.0 )
+      Aux_Message( stderr, "WARNING : MIN_PRES == 0.0 could be dangerous and is mainly for debugging only !!\n" );
+   else
+      Aux_Message( stderr, "WARNING : MIN_PRES (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_PRES );
+
+   if ( MIN_EINT == 0.0 )
+      Aux_Message( stderr, "WARNING : MIN_EINT == 0.0 could be dangerous and is mainly for debugging only !!\n" );
+   else
+      Aux_Message( stderr, "WARNING : MIN_EINT (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_EINT );
+
+#  if (  defined LR_EINT  &&  ( EOS == EOS_GAMMA || EOS == EOS_ISOTHERMAL )  )
+      Aux_Message( stderr, "WARNING : LR_EINT is not recommended for EOS_GAMMA/EOS_ISOTHERMAL !!\n" );
+#  endif
    } // if ( MPI_Rank == 0 )
 
 
@@ -764,17 +908,55 @@ void Aux_Check_Parameter()
 #  endif // if ( FLU_SCHEME == RTVD )
 
 
-
-// fluid solver in MHD
-// =======================================================================================
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
-
-// errors
+// check for MHD
 // ------------------------------
+#  ifdef MHD
 
-// warnings
-// ------------------------------
+#  if ( !defined SERIAL  &&  !defined LOAD_BALANCE )
+#     error : ERROR : MHD must work with either SERIAL or LOAD_BALANCE !!
+#  endif
+
+#  if ( FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
+#     error : ERROR : unsupported MHD scheme in the makefile (MHM_RP/CTU) !!
+#  endif
+
+#  if ( HLLE_WAVESPEED == HLL_WAVESPEED_PVRS )
+#     error : ERROR : HLL_WAVESPEED_PVRS does not support MHD !!
+#  endif
+
+#  if ( HLLD_WAVESPEED != HLL_WAVESPEED_DAVIS )
+#     error : ERROR : HLLD_WAVESPEED only supports HLL_WAVESPEED_DAVIS !!
+#  endif
+
+   if ( OPT__MAG_INT_SCHEME != INT_MINMOD1D  &&  OPT__MAG_INT_SCHEME != INT_VANLEER  &&
+        OPT__MAG_INT_SCHEME != INT_CQUAD  &&  OPT__MAG_INT_SCHEME != INT_CQUAR )
+      Aux_Error( ERROR_INFO, "unsupported interpolation scheme \"%s = %d\" (2,3,4,6 only) !!\n",
+                 "OPT__MAG_INT_SCHEME", OPT__MAG_INT_SCHEME );
+
+   if ( OPT__REF_MAG_INT_SCHEME != INT_MINMOD1D  &&  OPT__REF_MAG_INT_SCHEME != INT_VANLEER  &&
+        OPT__REF_MAG_INT_SCHEME != INT_CQUAD  &&  OPT__REF_MAG_INT_SCHEME != INT_CQUAR )
+      Aux_Error( ERROR_INFO, "unsupported interpolation scheme \"%s = %d\" (2,3,4,6 only) !!\n",
+                 "OPT__REF_MAG_INT_SCHEME", OPT__REF_MAG_INT_SCHEME );
+
+   if ( OPT__FIXUP_ELECTRIC  &&  !amr->WithElectric )
+      Aux_Error( ERROR_INFO, "%s is enabled but amr->Electric is off !!\n", "OPT__FIXUP_ELECTRIC" );
+
+   if ( OPT__OVERLAP_MPI )
+      Aux_Error( ERROR_INFO, "\"OPT__OVERLAP_MPI\" is NOT supported for MHD !!\n" );
+
+   if ( OPT__INIT == INIT_BY_FILE )
+      Aux_Error( ERROR_INFO, "MHD does NOT currently support \"OPT__INIT=3\" !!\n" );
+
+   if ( !OPT__FIXUP_RESTRICT )
+      Aux_Message( stderr, "WARNING : disabling \"OPT__FIXUP_RESTRICT\" in MHD will break the divergence-free constraint !!\n" );
+
+   if ( !OPT__FIXUP_ELECTRIC )
+      Aux_Message( stderr, "WARNING : disabling \"OPT__FIXUP_ELECTRIC\" in MHD will break the divergence-free constraint !!\n" );
+
+   if ( !OPT__OUTPUT_CC_MAG )
+      Aux_Message( stderr, "WARNING : yt requires \"OPT__OUTPUT_CC_MAG\" for analyzing magnetic field !!\n" );
+
+#  endif // #ifdef MHD
 
 
 
@@ -896,142 +1078,6 @@ void Aux_Check_Parameter()
 
    } // if ( MPI_Rank == 0 )
 
-#  elif   ( MODEL == SR_HYDRO )
-
-// errors
-// ------------------------------
-#  if ( NCOMP_FLUID != 5 )
-#     error : ERROR : NCOMP_FLUID != 5 in SR_HYDRO !!
-#  endif
-
-#  if ( NCOMP_TOTAL != NFLUX_TOTAL )
-#     error : ERROR : NCOMP_TOTAL != NFLUX_TOTAL !!
-#  endif
-
-#  if (  NCOMP_PASSIVE != 0 )
-#     error : SR_HYDRO do NOT support passive scalars !!
-#  endif
-
-#  if ( FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP )
-#     error : ERROR : unsupported sr-hydro scheme in the makefile !!
-#  endif
-
-#  if ( defined LR_SCHEME  &&  LR_SCHEME != PLM  &&  LR_SCHEME != PPM  &&  LR_SCHEME != WENO )
-#     error : ERROR : unsupported data reconstruction scheme (PLM/PPM/WENO) !!
-#  endif
-
-#  if ( defined RSOLVER  && RSOLVER != HLLE  &&  RSOLVER != HLLC )
-#     error : ERROR : unsupported Riemann solver (HLLE/HLLC) !!
-#  endif
-
-
-
-   if ( MIN_DENS == 0.0  &&  MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : MIN_DENS == 0.0 could be dangerous and is mainly for debugging only !!\n" );
-   else if ( MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : MIN_DENS (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_DENS );
-#  if ( MODEL != SR_HYDRO )
-   if ( MIN_TEMP == 0.0  &&  MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : MIN_TEMP == 0.0 could be dangerous and is mainly for debugging only !!\n" );
-   else if ( MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : MIN_TEMP (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_PRES );
-#  endif
-
-
-
-// warnings
-// ------------------------------
-   if ( MPI_Rank == 0 ) {
-
-
-   if ( !OPT__FIXUP_FLUX )
-      Aux_Message( stderr, "WARNING : \"%s\" is disabled in SR_HYDRO !!\n", "OPT__FIXUP_FLUX" );
-
-   if ( !OPT__FIXUP_RESTRICT )
-      Aux_Message( stderr, "WARNING : \"%s\" is disabled in SR_HYDRO !!\n", "OPT__FIXUP_RESTRICT" );
-
-   if ( OPT__CK_FLUX_ALLOCATE  &&  !OPT__FIXUP_FLUX )
-      Aux_Message( stderr, "WARNING : %s is useless since %s is off !!\n", "OPT__CK_FLUX_ALLOCATE", "OPT__FIXUP_FLUX" );
-
-   if ( OPT__INIT == INIT_BY_FILE )
-      Aux_Message( stderr, "WARNING : currently we don't check MIN_DENS/PRES for the initial data loaded from UM_IC !!\n" );
-
-
-   } // if ( MPI_Rank == 0 )
-
-
-// check for MHM/MHM_RP/CTU
-// ------------------------------
-#  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
-
-// errors
-// ------------------------------
-#  if ( LR_SCHEME == PPM )
-#  endif
-
-   if ( OPT__LR_LIMITER != VANLEER  &&  OPT__LR_LIMITER != GMINMOD  &&  OPT__LR_LIMITER != ALBADA  && OPT__LR_LIMITER != VL_GMINMOD )
-      Aux_Error( ERROR_INFO, "unsupported data reconstruction limiter (OPT__LR_IMITER = %d) !!\n", OPT__LR_LIMITER );
-
-
-// warnings
-// ------------------------------
-   if ( MPI_Rank == 0 ) {
-
-   } // if ( MPI_Rank == 0 )
-
-#  endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-
-
-// check for MHM/CTU
-// ------------------------------
-#  if ( FLU_SCHEME == MHM  )
-
-#  if ( LR_SCHEME == PLM )
-   if ( FLU_GHOST_SIZE < 2 )
-      Aux_Error( ERROR_INFO, "please set \"%s\" for \"%s\" !!\n",
-                 "FLU_GHOST_SIZE = 2", "MHM scheme + PLM reconstruction" );
-
-   if ( FLU_GHOST_SIZE > 2  &&  MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
-                   "FLU_GHOST_SIZE = 2", "MHM scheme + PLM reconstruction" );
-#  endif // #if ( LR_SCHEME == PLM )
-
-#  if ( LR_SCHEME == PPM )
-   if ( FLU_GHOST_SIZE < 3 )
-      Aux_Error( ERROR_INFO, "please set \"%s\" for \"%s\" !!\n",
-                 "FLU_GHOST_SIZE = 3", "MHM scheme + PPM reconstruction" );
-
-   if ( FLU_GHOST_SIZE > 3  &&  MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
-                   "FLU_GHOST_SIZE = 3", "MHM scheme + PPM reconstruction" );
-#  endif // #if ( LR_SCHEME == PPM )
-
-#  endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == CTU )
-
-
-// check for MHM_RP
-// ------------------------------
-#  if ( FLU_SCHEME == MHM_RP )
-
-#  if ( LR_SCHEME == PLM )
-#  endif // #if ( LR_SCHEME == PLM )
-
-#  if ( LR_SCHEME == PPM )
-   if ( FLU_GHOST_SIZE < 4 )
-      Aux_Error( ERROR_INFO, "please set \"%s\" for \"%s\" !!\n",
-                 "FLU_GHOST_SIZE = 4", "MHM_RP scheme + PPM reconstruction" );
-
-   if ( FLU_GHOST_SIZE > 4  &&  MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
-                   "FLU_GHOST_SIZE = 4", "MHM_RP scheme + PPM reconstruction" );
-#  endif // #if ( LR_SCHEME == PPM )
-
-#  endif // #if ( FLU_SCHEME == MHM_RP )
-
-
-
-
-
 #  else
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
@@ -1061,8 +1107,8 @@ void Aux_Check_Parameter()
 #        error : ERROR : POT_GHOST_SIZE must <= 5 for the GPU Poisson solver !!
 #     endif
 
-   if (  ( OPT__GRAVITY_TYPE == GRAVITY_SELF || OPT__GRAVITY_TYPE == GRAVITY_BOTH )  &&  PATCH_SIZE != 8  )
-      Aux_Error( ERROR_INFO, "PATCH_SIZE must == 8 for the GPU Poisson solver !!\n" );
+   if ( OPT__SELF_GRAVITY  &&  PATCH_SIZE != 8 )
+      Aux_Error( ERROR_INFO, "PATCH_SIZE must == 8 for the GPU Poisson solver (OPT__SELF_GRAVITY) !!\n" );
 #  endif // GPU
 
 #  ifndef LOAD_BALANCE
@@ -1098,6 +1144,11 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "POT_GPU_NPGROUP (%d) %% GPU_NSTREAM (%d) != 0 !!\n",
                  POT_GPU_NPGROUP, GPU_NSTREAM );
 
+#  ifdef OPENMP
+   if ( POT_GPU_NPGROUP < OMP_NTHREAD )
+      Aux_Error( ERROR_INFO, "POT_GPU_NPGROUP (%d) < OMP_NTHREAD (%d) !!\n", POT_GPU_NPGROUP, OMP_NTHREAD );
+#  endif
+
 #  if ( NLEVEL > 1 )
    int Trash_RefPot, NGhost_RefPot;
    Int_Table( OPT__REF_POT_INT_SCHEME, Trash_RefPot, NGhost_RefPot );
@@ -1108,21 +1159,6 @@ void Aux_Check_Parameter()
 
    if ( OPT__BC_POT != BC_POT_PERIODIC  &&  OPT__BC_POT != BC_POT_ISOLATED )
       Aux_Error( ERROR_INFO, "unsupported option \"OPT__BC_POT = %d\" [1/2] !!\n", OPT__BC_POT );
-
-   if ( OPT__GRAVITY_TYPE != GRAVITY_SELF  &&  OPT__GRAVITY_TYPE != GRAVITY_EXTERNAL  &&  OPT__GRAVITY_TYPE != GRAVITY_BOTH )
-      Aux_Error( ERROR_INFO, "unsupported option \"%s = %d\" [1/2/3] !!\n", "OPT__GRAVITY_TYPE", OPT__GRAVITY_TYPE );
-
-   if (  OPT__EXTERNAL_POT  &&  ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL || OPT__GRAVITY_TYPE == GRAVITY_BOTH )  )
-   {
-      if ( MPI_Rank == 0 )
-      {
-         Aux_Message( stderr, "ERROR : OPT__EXTERNAL_POT does not work with \"OPT__GRAVITY_TYPE == 2/3 (EXTERNAL/BOTH)\" !!\n" );
-         Aux_Message( stderr, "        --> HYDRO : please use OPT__GRAVITY_TYPE = 2/3 only\n" );
-         Aux_Message( stderr, "            ELBDM : please use OPT__EXTERNAL_POT only\n" );
-      }
-
-      MPI_Exit();
-   }
 
    if ( NEWTON_G <= 0.0 )     Aux_Error( ERROR_INFO, "NEWTON_G (%14.7e) <= 0.0 !!\n", NEWTON_G );
 
@@ -1142,8 +1178,8 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : DT__GRAVITY (%14.7e) is not within the normal range [0...1] !!\n",
                    DT__GRAVITY );
 
-   if ( OPT__EXTERNAL_POT  &&  OPT__OUTPUT_POT )
-      Aux_Message( stderr, "WARNING : currently OPT__OUTPUT_POT does NOT include the external potential !!\n" );
+   if ( !OPT__SELF_GRAVITY  &&  !OPT__EXT_ACC  &&  !OPT__EXT_POT )
+      Aux_Message( stderr, "WARNING : all gravity options are disabled (OPT__SELF_GRAVITY, OPT__EXT_ACC, OPT__EXT_POT) !!\n" );
 
    } // if ( MPI_Rank == 0 )
 
@@ -1151,7 +1187,7 @@ void Aux_Check_Parameter()
 
 // gravity solver in HYDRO
 // =======================================================================================
-#  if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
+#  if   ( MODEL == HYDRO )
 
 // errors
 // ------------------------------
@@ -1164,12 +1200,10 @@ void Aux_Check_Parameter()
                  "OPT__GRA_P5_GRADIENT", "GRA_GHOST_SIZE == 2" );
 
 #  ifdef UNSPLIT_GRAVITY
-   if ( OPT__GRA_P5_GRADIENT &&  USG_GHOST_SIZE == 1 )
+   if ( OPT__GRA_P5_GRADIENT &&  USG_GHOST_SIZE_G == 1 )
       Aux_Error( ERROR_INFO, "\"%s\" requires \"%s\" for UNSPLIT_GRAVITY !!\n",
-                 "OPT__GRA_P5_GRADIENT", "USG_GHOST_SIZE == 2" );
+                 "OPT__GRA_P5_GRADIENT", "USG_GHOST_SIZE_G == 2" );
 #  endif
-
-   if ( OPT__EXTERNAL_POT )   Aux_Error( ERROR_INFO, "OPT__EXTERNAL_POT is NOT supported in HYDRO --> use external gravity !!\n" );
 
 
 // warnings
@@ -1187,54 +1221,6 @@ void Aux_Check_Parameter()
    if ( GRA_GHOST_SIZE > 2 )  Aux_Message( stderr, "WARNING : \"GRA_GHOST_SIZE > 2\" !?\n" );
 
    } // if ( MPI_Rank == 0 )
-
-
-
-// gravity solver in MHD
-// =======================================================================================
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
-
-// errors
-// ------------------------------
-
-// warnings
-// ------------------------------
-
-
-#  if ( GRA_GHOST_SIZE < 1 )
-#     error : ERROR : GRA_GHOST_SIZE must >= 1
-#  endif
-
-   if ( OPT__GRA_P5_GRADIENT  &&  GRA_GHOST_SIZE == 1 )
-      Aux_Error( ERROR_INFO, "\"%s\" requires \"%s\" !!\n",
-                 "OPT__GRA_P5_GRADIENT", "GRA_GHOST_SIZE == 2" );
-
-#  ifdef UNSPLIT_GRAVITY
-   if ( OPT__GRA_P5_GRADIENT &&  USG_GHOST_SIZE == 1 )
-      Aux_Error( ERROR_INFO, "\"%s\" requires \"%s\" for UNSPLIT_GRAVITY !!\n",
-                 "OPT__GRA_P5_GRADIENT", "USG_GHOST_SIZE == 2" );
-#  endif
-
-   if ( OPT__EXTERNAL_POT )   Aux_Error( ERROR_INFO, "OPT__EXTERNAL_POT is NOT supported in SR_HYDRO --> use external gravity !!\n" );
-
-
-// warnings
-// ------------------------------
-   if ( MPI_Rank == 0 ) {
-
-#  ifndef STORE_POT_GHOST
-   if ( !OPT__GRA_P5_GRADIENT  &&  GRA_GHOST_SIZE == 2 )
-   {
-      Aux_Message( stderr, "WARNING : \"%s\" is useless when \"%s\" is disabled !!\n",
-                   "GRA_GHOST_SIZE == 2", "OPT__GRA_P5_GRADIENT" );
-   }
-#  endif
-
-   if ( GRA_GHOST_SIZE > 2 )  Aux_Message( stderr, "WARNING : \"GRA_GHOST_SIZE > 2\" !?\n" );
-
-   } // if ( MPI_Rank == 0 )
-
 
 
 
@@ -1244,8 +1230,8 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
-   if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
-      Aux_Error( ERROR_INFO, "ELBDM does NOT support external gravity (OPT__GRAVITY_TYPE == 2/3) --> use external potential !!\n" );
+   if ( OPT__EXT_ACC )
+      Aux_Error( ERROR_INFO, "ELBDM does NOT support OPT__EXT_ACC --> use OPT__EXT_POT instead !!\n" );
 
 
 // warnings
@@ -1370,12 +1356,24 @@ void Aux_Check_Parameter()
                  CHE_GPU_NPGROUP, GPU_NSTREAM );
                  */
 
+#  if ( EOS != EOS_GAMMA )
+#     error : ERROR : SUPPORT_GRACKLE must work with EOS_GAMMA !!
+#  endif
+
+#  ifdef OPENMP
+   if ( CHE_GPU_NPGROUP < OMP_NTHREAD )
+      Aux_Error( ERROR_INFO, "CHE_GPU_NPGROUP (%d) < OMP_NTHREAD (%d) !!\n", CHE_GPU_NPGROUP, OMP_NTHREAD );
+#  endif
+
 // warning
 // ------------------------------
    if ( MPI_Rank == 0 ) {
 
    if ( OPT__OVERLAP_MPI )
       Aux_Message( stderr, "WARNING : currently SUPPORT_GRACKLE does not support \"%s\" !!\n", "OPT__OVERLAP_MPI" );
+
+   if ( GRACKLE_PRIMORDIAL > 0 )
+      Aux_Message( stderr, "WARNING : adiabatic index gamma is currently fixed to %13.7e for Grackle !!\n", GAMMA );
 
    } // if ( MPI_Rank == 0 )
 

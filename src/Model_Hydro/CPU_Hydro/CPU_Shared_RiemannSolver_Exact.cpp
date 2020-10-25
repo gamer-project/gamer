@@ -5,7 +5,7 @@
 
 #include "CUFLU.h"
 
-#if (  MODEL == HYDRO  &&  \
+#if (  MODEL == HYDRO  &&  !defined SRHD  &&  \
        ( RSOLVER == EXACT || CHECK_INTERMEDIATE == EXACT )  &&  \
        ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  )
 
@@ -18,7 +18,12 @@
 
 #else // #ifdef __CUDACC__
 
-void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward );
+void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
+                    const bool NormPassive, const int NNorm, const int NormIdx[],
+                    const bool JeansMinPres, const real JeansMinPres_Coeff,
+                    const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint,
+                    const double EoS_AuxArray[], real* const EintOut );
+void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
 
 #endif // #ifdef __CUDACC__ ... else ...
 
@@ -36,39 +41,58 @@ GPU_DEVICE static void Set_Flux( real flux[], const real val[], const real Gamma
 // Function    :  Hydro_RiemmanSolver_Exact
 // Description :  Exact Riemann solver
 //
-// Note        :  1. The input data should be primitive variables
+// Note        :  1. Input data should be primitive variables
 //                2. This function is shared by MHM, MHM_RP, and CTU schemes
 //                3. Currently it does NOT check the minimum density and pressure criteria
 //
-// Parameter   :  XYZ         : Target spatial direction : (0/1/2) --> (x/y/z)
-//                Flux_Out    : Output array to store the average flux along t axis
-//                L_In        : Input **primitive** variables in the left region
-//                              --> But note that the input passive scalars should be mass density instead of mass fraction
-//                R_In        : Input **primitive** variables in the right region
-//                              --> But note that the input passive scalars should be mass density instead of mass fraction
-//                Gamma       : Ratio of specific heats
+// Parameter   :  XYZ               : Target spatial direction : (0/1/2) --> (x/y/z)
+//                Flux_Out          : Output array to store the average flux along t axis
+//                L/R_In            : Input left/right states (conserved variables)
+//                MinDens/Pres      : Density and pressure floors
+//                EoS_DensEint2Pres : EoS routine to compute the gas pressure
+//                EoS_DensPres2CSqr : EoS routine to compute the sound speed square
+//                EoS_AuxArray      : Auxiliary array for the EoS routines
 //------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[], const real Gamma )
+void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+                                const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                                const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] )
 {
 
-   const real Gamma_p1 = Gamma + (real)1.0;
-   const real Gamma_m1 = Gamma - (real)1.0;
-   const real c        = Gamma_m1 / Gamma_p1;
+// check
+#  ifdef GAMER_DEBUG
+#  if ( EOS != EOS_GAMMA )
+   printf( "ERROR : EOS != EOS_GAMMA is NOT supported at file <%s>, line <%d>, function <%s> !!\n",
+           __FILE__, __LINE__, __FUNCTION__ );
+#  endif
+
+#  ifdef MHD
+   printf( "ERROR : MHD is NOT supported at file <%s>, line <%d>, function <%s> !!\n",
+           __FILE__, __LINE__, __FUNCTION__ );
+#  endif
+#  endif // #ifdef GAMER_DEBUG
+
+
+   const real Gamma           = EoS_AuxArray[0];      // only support constant-gamma EoS (i.e., EOS_GAMMA)
+   const real Gamma_m1        = EoS_AuxArray[1];
+   const real Gamma_p1        = Gamma + (real)1.0;
+   const real c               = Gamma_m1 / Gamma_p1;
+   const bool NormPassive_No  = false;                // no need to convert passive scalars to mass fraction
+   const bool JeansMinPres_No = false;
 
    real eival[5], L_star[5], R_star[5];
-   real L[5], R[5], Temp;
+   real L[NCOMP_TOTAL], R[NCOMP_TOTAL], Temp;
+
+// convert conserved variables to primitive variables
+   Hydro_Con2Pri( L_In, L, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
+                  EoS_DensEint2Pres, NULL, EoS_AuxArray, NULL );
+   Hydro_Con2Pri( R_In, R, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
+                  EoS_DensEint2Pres, NULL, EoS_AuxArray, NULL );
 
 
 // reorder the input variables for different spatial directions
-   for (int v=0; v<5; v++)
-   {
-      L[v] = L_In[v];
-      R[v] = R_In[v];
-   }
-
-   Hydro_Rotate3D( L, XYZ, true );
-   Hydro_Rotate3D( R, XYZ, true );
+   Hydro_Rotate3D( L, XYZ, true, MAG_OFFSET );
+   Hydro_Rotate3D( R, XYZ, true, MAG_OFFSET );
 
 
 // solution of the tangential velocity
@@ -179,18 +203,18 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
    {
       L_star[0] = L[0]*POW( L_star[4]/L[4], (real)1.0/Gamma );    // solution of density
 
-#     ifdef CHECK_FAILED_CELL_IN_FLUID
+#     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( Hydro_CheckNegative(L[4]) )
-         printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+         printf( "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  L[4],      __FILE__, __LINE__, __FUNCTION__ );
       if ( Hydro_CheckNegative(L[0]) )
-         printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+         printf( "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  L[0],      __FILE__, __LINE__, __FUNCTION__ );
       if ( Hydro_CheckNegative(L_star[4]) )
-         printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+         printf( "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  L_star[4], __FILE__, __LINE__, __FUNCTION__ );
       if ( Hydro_CheckNegative(L_star[0]) )
-         printf( "ERROR : negative density(%14.7e) at file <%s>, line <%d>, function <%s>\n",
+         printf( "ERROR : invalid density(%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  L_star[0], __FILE__, __LINE__, __FUNCTION__ );
 #     endif
 
@@ -216,18 +240,18 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
    {
       R_star[0] = R[0]*POW( R_star[4]/R[4], (real)1.0/Gamma ); // solution of density
 
-#     ifdef CHECK_FAILED_CELL_IN_FLUID
+#     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( Hydro_CheckNegative(R[4]) )
-         printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+         printf( "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  R[4],      __FILE__, __LINE__, __FUNCTION__ );
       if ( Hydro_CheckNegative(R[0]) )
-         printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+         printf( "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  R[0],      __FILE__, __LINE__, __FUNCTION__ );
       if ( Hydro_CheckNegative(R_star[4]) )
-         printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+         printf( "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  R_star[4], __FILE__, __LINE__, __FUNCTION__ );
       if ( Hydro_CheckNegative(R_star[0]) )
-         printf( "ERROR : negative density(%14.7e) at file <%s>, line <%d>, function <%s>\n",
+         printf( "ERROR : invalid density(%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  R_star[0], __FILE__, __LINE__, __FUNCTION__ );
 #     endif
 
@@ -247,18 +271,18 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
    eival[2] = L_star[1];
    eival[3] = L_star[1];
 
-#  ifdef CHECK_FAILED_CELL_IN_FLUID
+#  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( Hydro_CheckNegative( R[4]) )
-      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+      printf( "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               R[4], __FILE__, __LINE__, __FUNCTION__ );
    if ( Hydro_CheckNegative(R[0]) )
-      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+      printf( "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               R[0], __FILE__, __LINE__, __FUNCTION__ );
    if ( Hydro_CheckNegative(L[4]) )
-      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+      printf( "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               L[4], __FILE__, __LINE__, __FUNCTION__ );
    if ( Hydro_CheckNegative(L[0]) )
-      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+      printf( "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               L[0], __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
@@ -266,9 +290,9 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
    {
       Temp = (real)0.5/Gamma*( Gamma_p1*L_star[4]/L[4] + Gamma_m1 );
 
-#     ifdef CHECK_FAILED_CELL_IN_FLUID
+#     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( Hydro_CheckNegative(Temp) )
-         printf( "ERROR : negative value (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+         printf( "ERROR : invalid value (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  Temp, __FILE__, __LINE__, __FUNCTION__ );
 #     endif
 
@@ -281,9 +305,9 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
    {
       Temp = (real)0.5/Gamma*( Gamma_p1*R_star[4]/R[4] + Gamma_m1 );
 
-#     ifdef CHECK_FAILED_CELL_IN_FLUID
+#     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( Hydro_CheckNegative(Temp) )
-         printf( "ERROR : negative value (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+         printf( "ERROR : invalid value (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  Temp, __FILE__, __LINE__, __FUNCTION__ );
 #     endif
 
@@ -339,7 +363,7 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
 
 
 // restore the correct order
-   Hydro_Rotate3D( Flux_Out, XYZ, false );
+   Hydro_Rotate3D( Flux_Out, XYZ, false, MAG_OFFSET );
 
 } // FUNCTION : Hydro_RiemannSolve_Exact
 
@@ -369,9 +393,9 @@ real Solve_f( const real rho, const real p, const real p_star, const real Gamma 
       real B = p*Gamma_m1/Gamma_p1;
       Temp   = A/(p_star+B);
 
-#     ifdef CHECK_FAILED_CELL_IN_FLUID
+#     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( Hydro_CheckNegative(Temp) )
-         printf( "ERROR : negative value (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+         printf( "ERROR : invalid value (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  Temp, __FILE__, __LINE__, __FUNCTION__ );
 #     endif
 
@@ -380,13 +404,13 @@ real Solve_f( const real rho, const real p, const real p_star, const real Gamma 
 
    else
    {
-#     ifdef CHECK_FAILED_CELL_IN_FLUID
+#     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( Hydro_CheckNegative(p) )
-         printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+         printf( "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  p, __FILE__, __LINE__, __FUNCTION__ );
 
       if ( Hydro_CheckNegative(rho) )
-         printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+         printf( "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  rho, __FILE__, __LINE__, __FUNCTION__ );
 #     endif
 

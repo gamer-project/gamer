@@ -24,7 +24,7 @@ extern "C" { int GetFreeGpuDevID( int, int ); }
 void CUAPI_SetDevice( const int Mode )
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "CUAPI_SetDevice ...\n" );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
 // check
@@ -203,17 +203,6 @@ void CUAPI_SetDevice( const int Mode )
       if ( RuntimeVersion < 3020 )
          Aux_Error( ERROR_INFO, "CHECK_INTERMEDIATE == EXACT + FLOAT8 is not supported in CUDA < 3.2 !!" );
 #  endif
-
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
-
-#  elif ( MODEL == SR_HYDRO )
-#  if (  defined FLOAT8  &&  CHECK_INTERMEDIATE == EXACT  && \
-         ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  )
-      if ( RuntimeVersion < 3020 )
-         Aux_Error( ERROR_INFO, "CHECK_INTERMEDIATE == EXACT + FLOAT8 is not supported in CUDA < 3.2 !!" );
-#  endif
-
 #  endif // #if ( MODEL == HYDRO )
 
 // (6-2) SOR Poisson solver
@@ -242,7 +231,7 @@ void CUAPI_SetDevice( const int Mode )
                  DeviceProp.warpSize, WARP_SIZE );
 
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "CUAPI_SetDevice ... done\n" );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : CUAPI_SetDevice
 

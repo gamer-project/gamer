@@ -4,17 +4,20 @@
 
 
 
-extern real (*d_Rho_Array_P    )[ RHO_NXT*RHO_NXT*RHO_NXT ];
-extern real (*d_Pot_Array_P_In )[ POT_NXT*POT_NXT*POT_NXT ];
-extern real (*d_Pot_Array_P_Out)[ GRA_NXT*GRA_NXT*GRA_NXT ];
+extern real (*d_Rho_Array_P    )[ CUBE(RHO_NXT) ];
+extern real (*d_Pot_Array_P_In )[ CUBE(POT_NXT) ];
+extern real (*d_Pot_Array_P_Out)[ CUBE(GRA_NXT) ];
 #ifdef UNSPLIT_GRAVITY
-extern real (*d_Pot_Array_USG_G)[ USG_NXT_G*USG_NXT_G*USG_NXT_G ];
-extern real (*d_Flu_Array_USG_G)[GRA_NIN_USG][ PS1*PS1*PS1 ];
+extern real (*d_Pot_Array_USG_G)[ CUBE(USG_NXT_G) ];
+extern real (*d_Flu_Array_USG_G)[GRA_NIN-1][ CUBE(PS1) ];
 #endif
-extern real (*d_Flu_Array_G    )[GRA_NIN  ][ PS1*PS1*PS1 ];
-extern double (*d_Corner_Array_G)[3];
+extern real (*d_Flu_Array_G    )[GRA_NIN  ][ CUBE(PS1) ];
+extern double (*d_Corner_Array_PGT)[3];
 #ifdef DUAL_ENERGY
-extern char (*d_DE_Array_G     )[ PS1*PS1*PS1 ];
+extern char (*d_DE_Array_G     )[ CUBE(PS1) ];
+#endif
+#ifdef MHD
+extern real (*d_Emag_Array_G   )[ CUBE(PS1) ];
 #endif
 extern real (*d_Pot_Array_T)    [ CUBE(GRA_NXT) ];
 
@@ -36,12 +39,15 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
    const long Pot_MemSize_P_Out = sizeof(real  )*Pot_NP*CUBE(GRA_NXT);
 #  ifdef UNSPLIT_GRAVITY
    const long Pot_MemSize_USG_G = sizeof(real  )*Pot_NP*CUBE(USG_NXT_G);
-   const long Flu_MemSize_USG_G = sizeof(real  )*Pot_NP*CUBE(PS1)*(GRA_NIN_USG);
+   const long Flu_MemSize_USG_G = sizeof(real  )*Pot_NP*CUBE(PS1)*(GRA_NIN-1);
 #  endif
    const long Flu_MemSize_G     = sizeof(real  )*Pot_NP*CUBE(PS1)*(GRA_NIN  );
    const long Corner_MemSize    = sizeof(double)*Pot_NP*3;
 #  ifdef DUAL_ENERGY
    const long DE_MemSize_G      = sizeof(char  )*Pot_NP*CUBE(PS1);
+#  endif
+#  ifdef MHD
+   const long Emag_MemSize_G    = sizeof(real  )*Pot_NP*CUBE(PS1);
 #  endif
    const long Pot_MemSize_T     = sizeof(real  )*Pot_NP*CUBE(GRA_NXT);
 
@@ -54,6 +60,9 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
 #  ifdef DUAL_ENERGY
    TotalSize += DE_MemSize_G;
 #  endif
+#  ifdef MHD
+   TotalSize += Emag_MemSize_G;
+#  endif
 
    if ( MPI_Rank == 0 )
       Aux_Message( stdout, "NOTE : total memory requirement in GPU Poisson and gravity solver = %ld MB\n",
@@ -61,45 +70,53 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
 
 
 // allocate the device memory
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Rho_Array_P,     Rho_MemSize_P     )  );
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Pot_Array_P_In,  Pot_MemSize_P_In  )  );
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Pot_Array_P_Out, Pot_MemSize_P_Out )  );
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Rho_Array_P,      Rho_MemSize_P     )  );
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Pot_Array_P_In,   Pot_MemSize_P_In  )  );
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Pot_Array_P_Out,  Pot_MemSize_P_Out )  );
 #  ifdef UNSPLIT_GRAVITY
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Pot_Array_USG_G, Pot_MemSize_USG_G )  );
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Flu_Array_USG_G, Flu_MemSize_USG_G )  );
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Pot_Array_USG_G,  Pot_MemSize_USG_G )  );
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Flu_Array_USG_G,  Flu_MemSize_USG_G )  );
 #  endif
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Flu_Array_G,     Flu_MemSize_G     )  );
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Flu_Array_G,      Flu_MemSize_G     )  );
 
-   if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH  ||  OPT__EXTERNAL_POT )
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Corner_Array_G,  Corner_MemSize    )  );
+   if ( OPT__EXT_ACC  ||  OPT__EXT_POT )
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Corner_Array_PGT, Corner_MemSize    )  );
 
 #  ifdef DUAL_ENERGY
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_DE_Array_G,      DE_MemSize_G      )  );
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_DE_Array_G,       DE_MemSize_G      )  );
 #  endif
 
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Pot_Array_T,     Pot_MemSize_T     )  );
+#  ifdef MHD
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Emag_Array_G,     Emag_MemSize_G   )  );
+#  endif
+
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Pot_Array_T,      Pot_MemSize_T     )  );
 
 
 // allocate the host memory by CUDA
    for (int t=0; t<2; t++)
    {
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Rho_Array_P    [t], Rho_MemSize_P     )  );
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Pot_Array_P_In [t], Pot_MemSize_P_In  )  );
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Pot_Array_P_Out[t], Pot_MemSize_P_Out )  );
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Rho_Array_P     [t], Rho_MemSize_P     )  );
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Pot_Array_P_In  [t], Pot_MemSize_P_In  )  );
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Pot_Array_P_Out [t], Pot_MemSize_P_Out )  );
 #     ifdef UNSPLIT_GRAVITY
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Pot_Array_USG_G[t], Pot_MemSize_USG_G )  );
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Flu_Array_USG_G[t], Flu_MemSize_USG_G )  );
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Pot_Array_USG_G [t], Pot_MemSize_USG_G )  );
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Flu_Array_USG_G [t], Flu_MemSize_USG_G )  );
 #     endif
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Flu_Array_G    [t], Flu_MemSize_G     )  );
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Flu_Array_G     [t], Flu_MemSize_G     )  );
 
-      if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH  ||  OPT__EXTERNAL_POT )
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Corner_Array_G [t], Corner_MemSize    )  );
+      if ( OPT__EXT_ACC  ||  OPT__EXT_POT )
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Corner_Array_PGT[t], Corner_MemSize    )  );
 
 #     ifdef DUAL_ENERGY
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_DE_Array_G     [t], DE_MemSize_G      )  );
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_DE_Array_G      [t], DE_MemSize_G      )  );
 #     endif
 
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Pot_Array_T    [t], Pot_MemSize_T     )  );
+#     ifdef MHD
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Emag_Array_G    [t], Emag_MemSize_G    )  );
+#     endif
+
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Pot_Array_T     [t], Pot_MemSize_T     )  );
    } // for (int t=0; t<2; t++)
 
 } // FUNCTION : CUAPI_MemAllocate_PoissonGravity

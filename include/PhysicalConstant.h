@@ -43,6 +43,16 @@ const double Const_Gyr           = 1.0e9*Const_yr;
 // temperature units
 const double Const_K             = 1.0;                     // kelvin
 
+// magnetic field units
+const double Const_Gauss         = 1.0;                     // gauss
+const double Const_mGauss        = 1.0e-3;                  // milligauss
+const double Const_muGauss       = 1.0e-6;                  // microgauss
+const double Const_nGauss        = 1.0e-9;                  // nanogauss
+const double Const_Tesla         = 1.0e4;                   // tesla
+const double Const_mTesla        = 1.0e1;                   // millitesla
+const double Const_muTesla       = 1.0e-2;                  // microtesla
+const double Const_nTesla        = 1.0e-5;                  // nanotesla
+
 // other physical constants
 const double Const_c             = 2.99792458e10;           // speed of light
 const double Const_Planck        = 1.054571800e-27;         // reduced Planck constant in erg*s

@@ -2,9 +2,10 @@
 
 #ifdef GRAVITY
 
-#if ( MODEL == SR_HYDRO )
-real SRHydro_PoissonSource( real Con[], real Gamma, real MinTemp );
-#endif
+extern real (*Poi_AddExtraMassForGravity_Ptr)( const double x, const double y, const double z, const double Time,
+                                               const int lv, double AuxArray[] );
+
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -40,15 +41,15 @@ void Poi_GetAverageDensity()
       Aux_Message( stderr, "WARNING : option \"%s\" is NOT turned on when evaluating the average density !!\n",
                    "OPT__INIT_RESTRICT" );
 
+   if ( OPT__GRAVITY_EXTRA_MASS  &&  Poi_AddExtraMassForGravity_Ptr == NULL )
+      Aux_Error( ERROR_INFO, "Poi_AddExtraMassForGravity_Ptr == NULL for OPT__GRAVITY_EXTRA_MASS !!\n" );
+
+
 // initialize it to zero
    AveDensity_Init = 0.0;
 
 
-// 1. for OOC computing (no longer useful)
-// ==================================================================================================
-
-
-// 2. for bitwise reproducibility
+// 1. for bitwise reproducibility
 // ==================================================================================================
 #  ifdef BITWISE_REPRODUCIBILITY
 
@@ -89,11 +90,28 @@ void Poi_GetAverageDensity()
       Cr1D_Local[PID] = ( (long)Cr3D[2]*NP[1] + (long)Cr3D[1] )*NP[0] + (long)Cr3D[0];
       Rho_Local [PID] = 0.0;
 
-      for (int k=0; k<PATCH_SIZE; k++)
-      for (int j=0; j<PATCH_SIZE; j++)
-      for (int i=0; i<PATCH_SIZE; i++)
+      for (int k=0; k<PS1; k++)
+      for (int j=0; j<PS1; j++)
+      for (int i=0; i<PS1; i++)
          Rho_Local[PID] += (double)amr->patch[ amr->FluSg[0] ][0][PID]->fluid[DENS][k][j][i];
-   }
+
+//    add extra mass source for gravity if required
+      if ( OPT__GRAVITY_EXTRA_MASS )
+      {
+         const double dh = amr->dh[0];
+         const double x0 = amr->patch[0][0][PID]->EdgeL[0] + 0.5*dh;
+         const double y0 = amr->patch[0][0][PID]->EdgeL[1] + 0.5*dh;
+         const double z0 = amr->patch[0][0][PID]->EdgeL[2] + 0.5*dh;
+
+         double x, y, z;
+
+         for (int k=0; k<PS1; k++)  {  z = z0 + k*dh;
+         for (int j=0; j<PS1; j++)  {  y = y0 + j*dh;
+         for (int i=0; i<PS1; i++)  {  x = x0 + i*dh;
+            Rho_Local[PID] += (double)Poi_AddExtraMassForGravity_Ptr( x, y, z, Time[0], 0, NULL );
+         }}}
+      }
+   } // for (int PID=0; PID<amr->NPatchComma[0][1]; PID++)
 
 // gather data
    MPI_Gatherv( Cr1D_Local, amr->NPatchComma[0][1], MPI_LONG,   Cr1D_All, NPatch_All, Disp, MPI_LONG,
@@ -178,7 +196,7 @@ void Poi_GetAverageDensity()
    }
 
 
-// 3. for general cases
+// 2. for general cases
 // ==================================================================================================
 #  else // #ifdef BITWISE_REPRODUCIBILITY
 
@@ -187,28 +205,29 @@ void Poi_GetAverageDensity()
    double AveDensity_Init_local = 0.0;
 
    for (int PID=0; PID<amr->NPatchComma[0][1]; PID++)
-   for (int k=0; k<PATCH_SIZE; k++)
-   for (int j=0; j<PATCH_SIZE; j++)
-   for (int i=0; i<PATCH_SIZE; i++)
    {
-#     if ( MODEL == HYDRO ) 
-      AveDensity_Init_local += amr->patch[ amr->FluSg[0] ][0][PID]->fluid[DENS][k][j][i];
-#     elif ( MODEL == SR_HYDRO )
-	  real Cons[NCOMP_FLUID];
+      for (int k=0; k<PATCH_SIZE; k++)
+      for (int j=0; j<PATCH_SIZE; j++)
+      for (int i=0; i<PATCH_SIZE; i++)
+         AveDensity_Init_local += amr->patch[ amr->FluSg[0] ][0][PID]->fluid[DENS][k][j][i];
 
-	  Cons[DENS] = amr->patch[ amr->FluSg[0] ][0][PID]->fluid[DENS][k][j][i];
-	  Cons[MOMX] = amr->patch[ amr->FluSg[0] ][0][PID]->fluid[MOMX][k][j][i];
-	  Cons[MOMY] = amr->patch[ amr->FluSg[0] ][0][PID]->fluid[MOMY][k][j][i];
-	  Cons[MOMZ] = amr->patch[ amr->FluSg[0] ][0][PID]->fluid[MOMZ][k][j][i];
-	  Cons[ENGY] = amr->patch[ amr->FluSg[0] ][0][PID]->fluid[ENGY][k][j][i];
+//    add extra mass source for gravity if required
+      if ( OPT__GRAVITY_EXTRA_MASS )
+      {
+         const double dh = amr->dh[0];
+         const double x0 = amr->patch[0][0][PID]->EdgeL[0] + 0.5*dh;
+         const double y0 = amr->patch[0][0][PID]->EdgeL[1] + 0.5*dh;
+         const double z0 = amr->patch[0][0][PID]->EdgeL[2] + 0.5*dh;
 
-#     ifdef CHECK_FAILED_CELL_IN_FLUID
-      SRHydro_CheckUnphysical(Cons, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true);
-#     endif
+         double x, y, z;
 
-	  AveDensity_Init_local += SRHydro_PoissonSource( Cons, GAMMA, MIN_TEMP );
-#     endif
-   }
+         for (int k=0; k<PS1; k++)  {  z = z0 + k*dh;
+         for (int j=0; j<PS1; j++)  {  y = y0 + j*dh;
+         for (int i=0; i<PS1; i++)  {  x = x0 + i*dh;
+            AveDensity_Init_local += (double)Poi_AddExtraMassForGravity_Ptr( x, y, z, Time[0], 0, NULL );
+         }}}
+      }
+   } // for (int PID=0; PID<amr->NPatchComma[0][1]; PID++)
 
 // sum over all MPI ranks
    MPI_Allreduce( &AveDensity_Init_local, &AveDensity_Init, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
@@ -235,7 +254,7 @@ void Poi_GetAverageDensity()
 #  endif // #ifdef BITWISE_REPRODUCIBILITY ... else ...
 
 
-// 4. output results
+// 3. output results
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "NOTE : background density = %20.14e\n", AveDensity_Init );

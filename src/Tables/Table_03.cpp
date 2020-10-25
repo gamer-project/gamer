@@ -6,7 +6,7 @@
 //-------------------------------------------------------------------------------------------------------
 // Function    :  TABLE_03
 // Description :  Return the information of patch ID for Prepare_PatchData(), SiblingSearch_Base(),
-//                Aux_Check_FluxAllocate(), and Flu_AllocateFluxArray_Buffer()
+//                Aux_Check_FluxAllocate(), Flu_AllocateFluxArray_Buffer(), and Refine()
 //
 // Parameter   :  SibID : Sibling index (0~25)
 //                Count : Patch counter (0~3)

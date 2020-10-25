@@ -15,12 +15,12 @@ static void SetReceiveSibling( int* RSib_List[] );
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LB_RecordExchangeDataPatchID
-// Description :  Construct the MPI sending and receiving data lists for exchanging both hydro
+// Description :  Construct the MPI sending and receiving data lists for exchanging fluid, magnetic field,
 //                and potential data
 //
 // Note        :  1. LB_RecvH_IDList[] is unsorted --> use LB_RecvH_IDList_Idxtable[] to obtain the correct order
 //                   <--> All other lists are sorted
-//                2. This function will NOT deallocate any fluid/pot arrays allocated previously
+//                2. This function will NOT deallocate any fluid/magnetic/pot arrays allocated previously
 //
 // Parameter   :  Lv          : Target refinement level for recording MPI lists
 //                AfterRefine : Record the difference between old and new MPI lists after grid refinement
@@ -153,7 +153,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
                SibPID = SibPID0 + TLocalID[s][Count];
                SibIdx = SibPID - NReal;
 
-//             2.1.1 hydro
+//             2.1.1 hydro and magnetic field
 //             record sibling indices
                if (  ( SibList_H[SibIdx] & SibMask_Check[RSib] ) == false  )
                {
@@ -163,6 +163,10 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 
 //             allocate memory for the buffer patches that will receive data
                for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][SibPID]->hnew();
+
+#              ifdef MHD
+               for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][SibPID]->mnew();
+#              endif
 
 #              ifdef GRAVITY // so that the XXX_H lists can also be applied to the potential data
                for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][SibPID]->gnew();
@@ -248,6 +252,10 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 
 //                allocate memory for the buffer patches that will receive data
                   for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][TPID]->hnew();
+
+#                 ifdef MHD
+                  for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][TPID]->mnew();
+#                 endif
 
 #                 ifdef GRAVITY // so that the XXX_H lists can also be applied to the potential data
                   for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][TPID]->gnew();
@@ -358,7 +366,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 // ============================================================================================================
    for (int t=0; t<NBuff; t++)
    {
-//    3.1 hydro
+//    3.1 hydro and magnetic field
       if ( SibList_H[t] )
       {
          SibPID   = t + NReal;
@@ -414,7 +422,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 
 // 4. get the MPI displacement arrays
 // ============================================================================================================
-// 4.1 hydro
+// 4.1 hydro and magnetic field
    int Send_Disp_H[MPI_NRank], Recv_Disp_H[MPI_NRank], NSend_Total_H, NRecv_Total_H;
 
 // 4.1.1 broadcast the number of elements received from different ranks
@@ -455,7 +463,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 
 // 5. sort the recv list
 // ============================================================================================================
-// 5.1 hydro
+// 5.1 hydro and magnetic field
 // 5.1.1 allocate memory
    if ( LB_RecvH_IDList_IdxTable[0] != NULL )   delete [] LB_RecvH_IDList_IdxTable[0];
    if ( LB_RecvH_SibDiffList    [0] != NULL )   delete [] LB_RecvH_SibDiffList    [0];
@@ -668,7 +676,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 
 // 6. broadcast the recv list to all other ranks
 // ============================================================================================================
-// 6.1 hydro
+// 6.1 hydro and magnetic field
    int  *SendBuf_SibList_H     = LB_RecvH_SibList    [0];
    int  *SendBuf_SibDiffList_H = LB_RecvH_SibDiffList[0];
    long *SendBuf_LBIdx_H       = LB_RecvH_LBIdxList  [0];
@@ -711,7 +719,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 
 // 7. construct the send list
 // ============================================================================================================
-// 7.1 hydro
+// 7.1 hydro and magnetic field
    for (int r=0; r<MPI_NRank; r++)
    {
 //    7.1.1 allocate the matching array

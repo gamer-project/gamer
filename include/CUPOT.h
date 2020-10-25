@@ -121,7 +121,7 @@
 #  if ( POT_GHOST_SIZE == 5 )
 // use shuffle reduction
 // --> only work for POT_GHOST_SIZE == 5 since # threads must be a multiple of warpSize
-// --> although strickly speaking the shuffle functions do NOT work for double precision, but experiments
+// --> although strictly speaking the shuffle functions do NOT work for double precision, but experiments
 //     show that residual_sum += (float)residual, where residual_sum is double, gives acceptable accuracy
 #  if ( GPU_ARCH == KEPLER  ||  GPU_ARCH == MAXWELL  ||  GPU_ARCH == PASCAL  ||  GPU_ARCH == VOLTA  ||  GPU_ARCH == TURING )
 #     define SOR_USE_SHUFFLE
@@ -168,7 +168,12 @@
 #endif // POT_SCHEME
 
 
-// blockDim.z for the GPU Gravity solver
+
+// blockDim.x for the GPU external potential solver
+#define EXTPOT_BLOCK_SIZE           256
+
+
+// blockDim.x for the GPU Gravity solver
 #define GRA_BLOCK_SIZE              256
 
 
@@ -179,11 +184,6 @@
 #if ( GPU_ARCH == KEPLER  ||  GPU_ARCH == MAXWELL  ||  GPU_ARCH == PASCAL  ||  GPU_ARCH == VOLTA  ||  GPU_ARCH == TURING )
 #   define DT_GRA_USE_SHUFFLE
 #endif
-
-
-// maximum size of the arrays ExtPot_AuxArray and ExtAcc_AuxArray
-#define EXT_POT_NAUX_MAX            10
-#define EXT_ACC_NAUX_MAX            10
 
 
 // warp size (which must be the same as the CUDA predefined constant "warpSize")
@@ -208,9 +208,11 @@
 
 // GPU device function specifier
 #ifdef __CUDACC__
-# define GPU_DEVICE __forceinline__ __device__
+# define GPU_DEVICE          __forceinline__ __device__
+# define GPU_DEVICE_NOINLINE    __noinline__ __device__
 #else
 # define GPU_DEVICE
+# define GPU_DEVICE_NOINLINE
 #endif
 
 // unified CPU/GPU loop
