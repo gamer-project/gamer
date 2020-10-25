@@ -276,7 +276,8 @@ void GetRMS()
    const int NPG       = 1;
    const NSide_t NSide = NSIDE_26;
 
-   int    ShellID, Var, i, j, k, im, jm, km, ip, jp, kp, TVar, POTE, PAR_DENS, NextIdx;
+   int    ShellID, Var, i, j, k, im, jm, km, ip, jp, kp, POTE, PAR_DENS, NextIdx;
+   long   TVar;
    double Radius, scale, dv;
    double x, x1, x2, y, y1, y2, z, z1, z2;   // (x,y,z) : relative coordinates to the vector "Center"
    real   pass[NCOMP_PASSIVE];
@@ -540,7 +541,8 @@ void ShellAverage()
    const int NPG       = 1;
    const NSide_t NSide = NSIDE_26;
 
-   int    ShellID, Var, i, j, k, im, jm, km, ip, jp, kp, TVar, POTE, PAR_DENS, NextIdx;
+   int    ShellID, Var, i, j, k, im, jm, km, ip, jp, kp, POTE, PAR_DENS, NextIdx;
+   long   TVar;
    double Radius, scale, dv;
    double x, x1, x2, y, y1, y2, z, z1, z2;   // (x,y,z) : relative coordinates to the vector "Center"
    real   pass[NCOMP_PASSIVE];
@@ -1103,6 +1105,10 @@ void ReadOption( int argc, char **argv )
 
    if ( UseMaxRhoPos_Par  &&  UseMaxRhoPos <= 0 )
          Aux_Error( ERROR_INFO, "UseMaxRhoPos_Par (-D) is useless when UseMaxRhoPos (-m) <= 0 !!\n" );
+
+#  if ( MODEL == HYDRO )
+      Aux_Message( stderr, "WARNING : pressure is computed by constant-gamma EoS !!\n" );
+#  endif
 
 } // FUNCTION : ReadOption
 

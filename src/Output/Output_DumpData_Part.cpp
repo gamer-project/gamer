@@ -3,9 +3,15 @@
 static void WriteFile( FILE *File, const int lv, const int PID, const int i, const int j, const int k,
                        const int ii, const int jj, const int kk );
 
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_DumpData_Part
 // Description :  Output part of data in the ASCII form
+//
+// Note        :  1. Used for the runtime option "OPT__OUTPUT_PART"
+//                2. For MHD, this function outputs the **cell-centered** magnetic field and energy
 //
 // Parameter   :  Part     : OUTPUT_XY   : xy plane
 //                           OUTPUT_YZ   : yz plane
@@ -104,11 +110,17 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
 //       output header
          if ( TargetMPIRank == 0 )
          {
-            fprintf( File, "#%10s %10s %10s %20s %20s %20s", "i[1]", "j[2]", "k[3]", "x[4]", "y[5]", "z[6]" );
-
+            fprintf( File, "#%10s %10s %10s %20s %20s %20s", "i", "j", "k", "x", "y", "z" );
 
             for (int v=0; v<NCOMP_TOTAL; v++)
             fprintf( File, "%14s", FieldLabel[v] );
+
+#           ifdef MHD
+            for (int v=0; v<NCOMP_MAG; v++)
+            fprintf( File, "%14s", MagLabel[v] );
+
+            fprintf( File, "%14s", "MagEngy" );
+#           endif
 
 #           ifdef GRAVITY
             if ( OPT__OUTPUT_POT )
@@ -116,19 +128,22 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
 #           endif
 
 //          other derived fields
-#           if ( MODEL == HYDRO  ||  MODEL == MHD )
-            fprintf( File, "%14s", "Pressure[12]" );
-#           elif ( MODEL == SR_HYDRO )
-            fprintf( File, "%14s", "n[12]"  ); // proper mass density
-            fprintf( File, "%14s", "Ux[13]" ); // 4-velocity
-            fprintf( File, "%14s", "Uy[14]" );
-            fprintf( File, "%14s", "Uz[15]" );
-            fprintf( File, "%14s", "Pressure[16]"      );
-            fprintf( File, "%19s", "LorentzFactor[17]" );
-            fprintf( File, "%14s", "Vx[18]" ); // 3-velocity
-            fprintf( File, "%14s", "Vy[19]" );
-            fprintf( File, "%14s", "Vz[20]" );
+#           if ( MODEL == HYDRO )
+#           ifdef SRHD
+            fprintf( File, "%14s", "rho"  );
+            fprintf( File, "%14s", "Ux" );
+            fprintf( File, "%14s", "Uy" );
+            fprintf( File, "%14s", "Uz" );
+            fprintf( File, "%14s", "Pressure"      );
+            fprintf( File, "%14s", "LorentzFactor" );
+            fprintf( File, "%14s", "Vx" );
+            fprintf( File, "%14s", "Vy" );
+            fprintf( File, "%14s", "Vz" );
+#           else
+            fprintf( File, "%14s", "Pressure" );
 #           endif
+#           endif
+
             fprintf( File, "\n" );
          } // if ( TargetMPIRank == 0 )
 
@@ -224,22 +239,35 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 
    for (int v=0; v<NCOMP_TOTAL; v++)   u[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
 
-// output cell indices and coordinates
+// cell indices and coordinates
    fprintf( File, " %10d %10d %10d %20.14e %20.14e %20.14e",
             ii, jj, kk, (ii+scale_2)*dh_min, (jj+scale_2)*dh_min, (kk+scale_2)*dh_min );
 
-// output all conserved variables in the fluid array
-   for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, " %25.17e", u[v] );
+// output all variables in the fluid array
+   for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, " %13.6e", u[v] );
 
-#  if (MODEL == SR_HYDRO)
+// primitive variables in SRHD
+#  ifdef SRHD
    real Pri[NCOMP_FLUID], LorentzFactor;
-   LorentzFactor = SRHydro_Con2Pri( u, Pri, GAMMA, MIN_TEMP );
-#  ifdef USE_3_VELOCITY
-   SRHydro_3Velto4Vel( Pri, Pri );
+
+   Hydro_Con2Pri( u, Pri, (real)NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
+                  (real)NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
+                  EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, NULL, NULL, &LorentzFactor );
+
+   for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, " %13.6e", Pri[v] );
 #  endif
 
-   for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, " %25.17e", Pri[v] );
+// magnetic field
+#  if ( MODEL == HYDRO )
+#  ifdef MHD
+   const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+   real B[3];
+   MHD_GetCellCenteredBFieldInPatch( B, lv, PID, i, j, k, amr->MagSg[lv] );
+   fprintf( File, " %13.6e %13.6e %13.6e %13.6e", B[MAGX], B[MAGY], B[MAGZ], Emag );
+#  else
+   const real Emag = NULL_REAL;
 #  endif
+#  endif // # if ( MODEL == HYDRO )
 
 // output potential
 #  ifdef GRAVITY
@@ -249,22 +277,21 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 
 // output other derived fields
 #  if   ( MODEL == HYDRO )
-   const bool CheckMinPres_Yes = true;
-   fprintf( File, " %13.6e", Hydro_GetPressure(u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], GAMMA-1.0, CheckMinPres_Yes, MIN_PRES) );
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
-#  elif ( MODEL == SR_HYDRO )
+   const bool CheckMinPres_No = false;
+   fprintf( File, " %13.6e", Hydro_Con2Pres(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],u+NCOMP_FLUID,
+                                            CheckMinPres_No,NULL_REAL,Emag,
+                                            EoS_DensEint2Pres_CPUPtr,
+                                            EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                            EoS_AuxArray, NULL ) );
+#  if   ( defined SRHD )
 // output Lorentz factor
-   fprintf( File, " %25.17e", LorentzFactor );
+   fprintf( File, " %13.6e", LorentzFactor );
 
-
-   SRHydro_4Velto3Vel( Pri, Pri );
-
-// output 3-velocity
-   fprintf( File, " %25.17e", Pri[1] );
-   fprintf( File, " %25.17e", Pri[2] );
-   fprintf( File, " %25.17e", Pri[3] );
-
+// output 3-velocities
+   fprintf( File, " %13.6e", Pri[1]/LorentzFactor );
+   fprintf( File, " %13.6e", Pri[2]/LorentzFactor );
+   fprintf( File, " %13.6e", Pri[3]/LorentzFactor );
+#  endif
 #  endif // MODEL
 
    fprintf( File, "\n" );

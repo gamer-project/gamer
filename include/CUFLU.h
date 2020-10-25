@@ -30,6 +30,7 @@
 #endif
 
 
+
 // #################################
 // ## macros for different models ##
 // #################################
@@ -39,51 +40,91 @@
 #if   ( MODEL == HYDRO )
 
 // size of different arrays
-#if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-
 // ** to reduce the GPU memory consumption, large arrays in the fluid solvers are reused as much as possible
 // ** --> the strides of arrays can change when accessed by different routines for different purposes
 
-// N_SLOPE_PPM : size of Slope_PPM[]
-// N_FC_VAR    : size of FC_Var[]
-// N_FC_FLUX   : size of FC_Flux[]
-// N_FL_FLUX   : for accessing FC_Flux[] in CPU_Shared_ComputeFlux() and CPU_Shared_FullStepUpdate()
-//               --> different from N_FC_FLUX in MHM_RP since for which FC_Flux[] is also linked
-//                   to Half_Flux[] used by Hydro_RiemannPredict_Flux() and Hydro_RiemannPredict()
-//               --> for the latter two routines, Half_Flux[] is accessed with N_FC_FLUX
-// N_HF_VAR    : for accessing Half_Var[], which is linked to PriVar[] with the size FLU_NXT^3
-//               --> used by MHM_RP only
+// N_SLOPE_PPM          : size of Slope_PPM[]
+// N_FC_VAR             : size of FC_Var[]
+// N_FC_FLUX            : size of FC_Flux[]
+// N_FL_FLUX/N_HF_FLUX  : for accessing FC_Flux[]
+//                        --> may be different from N_FC_FLUX
+//                            --> for example, in MHM_RP FC_Flux[] is also linked to Half_Flux[] used by
+//                                Hydro_RiemannPredict_Flux() and Hydro_RiemannPredict()
+//                            --> for the latter two routines, Half_Flux[] is accessed with N_HF_FLUX
+//                                that is smaller than N_FC_FLUX
+// N_HF_VAR             : for accessing PriVar_Half[], which is linked to PriVar[] with the size FLU_NXT^3
+//                        --> also for accessing FC_B_Half[] in MHD
 
-#  define N_FC_VAR        ( PS2 + 2      )
-#  define N_SLOPE_PPM     ( N_FC_VAR + 2 )
+// NWAVE                : number of characteristic waves
+// NCOMP_TOTAL_PLUS_MAG : total number of fluid variables plus magnetic field
+// MAG_OFFSET           : array offset of magnetic field for arrays with the size NCOMP_TOTAL_PLUS_MAG
+//
+#define NCOMP_TOTAL_PLUS_MAG     ( NCOMP_TOTAL + NCOMP_MAG )
+
+#ifdef MHD
+#  define NWAVE                  ( NCOMP_FLUID + 2 )
+#  define MAG_OFFSET             ( NCOMP_TOTAL )
+#else
+#  define NWAVE                  ( NCOMP_FLUID )
+#  define MAG_OFFSET             ( NULL_INT )
+#endif
+
+#if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 
 #  if   ( FLU_SCHEME == MHM )
 
-#     define N_FL_FLUX    ( PS2 + 1      )
-#     define N_FC_FLUX    ( N_FL_FLUX    )
+#     define N_FC_VAR            ( PS2 + 2 )
+#     define N_FL_FLUX           ( PS2 + 1 )
+#     define N_FC_FLUX           ( N_FL_FLUX )
 
 #  elif ( FLU_SCHEME == MHM_RP )
 
-#     define N_FL_FLUX    ( PS2 + 1      )
-#     define N_HF_VAR     ( FLU_NXT - 2  )
-#     define N_FC_FLUX    ( FLU_NXT - 1  )
+#    ifdef MHD
+#     define N_FC_VAR            ( PS2 + 2 )
+#     define N_FL_FLUX           ( PS2 + 2 )
+#     define N_HF_FLUX           ( FLU_NXT )
+#    else
+#     define N_FC_VAR            ( PS2 + 2 )
+#     define N_FL_FLUX           ( PS2 + 1 )
+#     define N_HF_FLUX           ( FLU_NXT - 1 )
+#    endif
+#     define N_FC_FLUX           ( N_HF_FLUX )
+#     define N_HF_VAR            ( FLU_NXT - 2 )
 
 #  elif ( FLU_SCHEME == CTU )
 
-#     define N_FL_FLUX    ( N_FC_VAR     )
-#     define N_FC_FLUX    ( N_FL_FLUX    )
+#    ifdef MHD
+#     define N_FC_VAR            ( PS2 + 4 )
+#     define N_FL_FLUX           ( N_FC_VAR - 2 )
+#     define N_HF_VAR            ( PS2 + 2 )
+#    else
+#     define N_FC_VAR            ( PS2 + 2 )
+#     define N_FL_FLUX           ( N_FC_VAR )
+#    endif
+#     define N_HF_FLUX           ( N_FC_VAR )
+#     define N_FC_FLUX           ( N_HF_FLUX )
 
+#  endif // FLU_SCHEME
+
+#  define N_SLOPE_PPM            ( N_FC_VAR + 2 )
+
+#  ifdef MHD
+#   define N_HF_ELE              ( N_FC_FLUX - 1 )
+#   define N_FL_ELE              ( N_FL_FLUX - 1 )
+#   define N_EC_ELE              ( N_FC_FLUX - 1 )
+#  else
+#   define N_EC_ELE              0
 #  endif
 
 #endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 
 
 // check non-physical negative values (e.g., negative density) for the fluid solver
-#if (  defined GAMER_DEBUG  &&  ( MODEL == HYDRO || MODEL == MHD )  )
-#  define CHECK_FAILED_CELL_IN_FLUID
+#if ( defined GAMER_DEBUG  &&  MODEL == HYDRO )
+#  define CHECK_NEGATIVE_IN_FLUID
 #endif
 
-#ifdef CHECK_FAILED_CELL_IN_FLUID
+#ifdef CHECK_NEGATIVE_IN_FLUID
 #  include "stdio.h"
    bool Hydro_CheckNegative( const real Input );
 #endif
@@ -91,22 +132,54 @@
 
 // perform spatial data reconstruction in characteristic variables (default: primitive variables)
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-#  ifndef GRAVITY
-#     define CHAR_RECONSTRUCTION
-#  endif
+//#  define CHAR_RECONSTRUCTION
+#endif
+
+
+// perform spatial data reconstruction in internal energy and use that to convert the face-centered
+// primitive variables to conservative variables
+// --> when it's disabled, the internal energy is converted from pressure using a given EoS
+// --> pros: improve performance since the EoS conversion could be expensive
+//     cons: (1) face-centered internal energy and pressure will NOT be fully self-consistent for a given EoS,
+//               which may affect the accuracy of Riemann solver if it loads both conservative and primitive variables
+//           (2) incompatible with CTU as it requires applying the characteristic tracing step to internal energy,
+//               which has not been implemented
+// --> unnecessary for EOS_GAMMA/EOS_ISOTHERMAL as they are fast
+// --> disable it by default
+#if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  FLU_SCHEME != CTU )
+//#  define LR_EINT
+#endif
+
+
+// total number of target variables in the data reconstruction
+#ifdef LR_EINT
+#  define NCOMP_LR   ( NCOMP_TOTAL_PLUS_MAG + 1 )
+#else
+#  define NCOMP_LR   ( NCOMP_TOTAL_PLUS_MAG     )
 #endif
 
 
 // verify that the density and pressure in the intermediate states of Roe's Riemann solver are positive.
-// --> if either is negative, we switch to other Riemann solvers (EXACT/HLLE/HLLC)
+// --> if either is negative, we switch to other Riemann solvers (EXACT/HLLE/HLLC/HLLD)
 #if (  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  &&  RSOLVER == ROE  )
-//#  define CHECK_INTERMEDIATE    HLLC
-#  define CHECK_INTERMEDIATE    HLLE
+#  ifdef MHD
+//#     define CHECK_INTERMEDIATE    HLLD
+#     define CHECK_INTERMEDIATE    HLLE
+#  else
+//#     define CHECK_INTERMEDIATE    HLLC
+#     define CHECK_INTERMEDIATE    HLLE
+#  endif
+#endif
+
+
+// use Eulerian with Y factor for Roe Solver in MHD
+#if (  defined MHD  &&  ( RSOLVER == ROE || RSOLVER == HLLE )  )
+#  define EULERY
 #endif
 
 
 // do not use the reference states for HLL solvers during the data reconstruction, as suggested in ATHENA
-#if (  FLU_SCHEME != RTVD  &&  ( RSOLVER == HLLE || RSOLVER == HLLC )  )
+#if (  defined RSOLVER  &&  ( RSOLVER == HLLE || RSOLVER == HLLC || RSOLVER == HLLD )  )
 
 #  define HLL_NO_REF_STATE
 
@@ -118,107 +191,39 @@
 #endif
 
 
-// maximum allowed error for the exact Riemann solver
-#if ( ( FLU_SCHEME != RTVD && RSOLVER == EXACT )  ||  CHECK_INTERMEDIATE == EXACT )
-#  ifdef FLOAT8
-#     define MAX_ERROR    1.e-15
-#  else
-#     define MAX_ERROR    1.e-06f
-#  endif
+// wave-speed estimates in the HLL-like Riemann solvers
+#define HLL_WAVESPEED_ROE     1  // Roe average eigenvalues (Batten et al. 1997, SIAM J. Sci. Comput., 18, 1553)
+#define HLL_WAVESPEED_PVRS    2  // Primitive Variable Riemann Solver (Toro 1999, Sec. 10.5.2)
+#define HLL_WAVESPEED_DAVIS   3  // min/max of the left and right eigenvalues (Davis 1988, SIAM J. Sci. Stat, Comput., 9, 445)
+
+// supported options:
+// -> HLL_WAVESPEED_ROE (1) only supports the constant-gamma EoS (i.e., EOS_GAMMA)
+//    HLL_WAVESPEED_PVRS (2) does not support MHD
+// -> HLLC:
+//       MHD on : none
+//       MHD off: 1 for constant-gamma EoS and 2/3 for all EoS
+//    HLLE:
+//       MHD on : 1 for constant-gamma EoS and 3 for all EoS
+//       MHD off: 1 for constant-gamma EoS and 2/3 for all EoS
+//    HLLD:
+//       MHD on : 3 for all EoS
+//       MHD off: none
+
+#  define HLLC_WAVESPEED   HLL_WAVESPEED_DAVIS
+//#  define HLLC_WAVESPEED   HLL_WAVESPEED_PVRS
+#ifdef MHD
+#  define HLLE_WAVESPEED   HLL_WAVESPEED_DAVIS
+#else
+#  define HLLE_WAVESPEED   HLL_WAVESPEED_DAVIS
+//#  define HLLE_WAVESPEED   HLL_WAVESPEED_PVRS
 #endif
+#  define HLLD_WAVESPEED   HLL_WAVESPEED_DAVIS
 
 
-// 2. MHD macro
-//=========================================================================================
-#elif ( MODEL == MHD )
-#warning : WAIT MHD !!!!
-
-
-// 3. ELBDM macro
+// 2. ELBDM macro
 //=========================================================================================
 #elif ( MODEL == ELBDM )
 
-// 4. SR_HYDRO macro
-//=========================================================================================
-#elif   ( MODEL == SR_HYDRO )
-// structure data type for the GPU hydro kernels
-// --> note that for FluVar we must define Passive[] even when NCOMP_PASSIVE == 0
-// --> FluVar5 is used for variables which do not need to consider passive scalars even when NCOMP_PASSIVE > 0
-//     (e.g., eigenvectors/eigenvalues in CUFLU_Shared_RiemannSolver_Roe() )
-struct FluVar  { real Rho, Px, Py, Pz, Egy, Passive[NCOMP_PASSIVE]; };
-struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
-
-
-// size of different arrays
-#if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
-
-#  define N_FC_VAR        ( PS2 + 2      )
-#  define N_SLOPE_PPM     ( N_FC_VAR + 2 )
-
-#  if   ( FLU_SCHEME == MHM )
-
-#     define N_FL_FLUX    ( PS2 + 1      )
-#     define N_FC_FLUX    ( N_FL_FLUX    )
-
-#  elif ( FLU_SCHEME == MHM_RP )
-
-#     define N_FL_FLUX    ( PS2 + 1      )
-#     define N_HF_VAR     ( FLU_NXT - 2  )
-#     define N_HF_FLUX    ( FLU_NXT - 1  )
-#     define N_FC_FLUX    ( N_HF_FLUX    )
-
-#  endif
-
-#endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-
-
-// check the non-physical negative values (e.g., negative density) inside the fluid solver
-#ifdef GAMER_DEBUG
-#  define CHECK_FAILED_CELL_IN_FLUID
-#endif
-
-#ifdef CHECK_FAILED_CELL_IN_FLUID
-#  include "stdio.h"
-#endif
-
-
-// perform spatial data reconstruction in characteristic variables (default: primitive variables)
-#if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-#  ifndef GRAVITY
-//#     define CHAR_RECONSTRUCTION
-#  endif
-#endif
-
-
-// verify that the density and pressure in the intermediate states of Roe's Riemann solver are positive.
-// --> if either is negative, we switch to other Riemann solvers (EXACT/HLLE/HLLC)
-#if (  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  &&  RSOLVER == ROE  )
-//#  define CHECK_INTERMEDIATE    HLLC
-#  define CHECK_INTERMEDIATE    HLLE
-#endif
-
-
-// do not use the reference states for HLL solvers during the data reconstruction, as suggested in ATHENA
-#if (  FLU_SCHEME != RTVD  &&  ( RSOLVER == HLLE || RSOLVER == HLLC )  )
-
-#  define HLL_NO_REF_STATE
-
-// include waves both from left and right directions during the data reconstruction, as suggested in ATHENA
-#  ifdef HLL_NO_REF_STATE
-#     define HLL_INCLUDE_ALL_WAVES
-#  endif
-
-#endif
-
-
-// maximum allowed error for the exact Riemann solver
-#if ( ( FLU_SCHEME != RTVD && RSOLVER == EXACT )  ||  CHECK_INTERMEDIATE == EXACT )
-#  ifdef FLOAT8
-#     define MAX_ERROR    1.e-15
-#  else
-#     define MAX_ERROR    1.e-06f
-#  endif
-#endif
 
 #else
 #  error : ERROR : unsupported MODEL !!
@@ -349,14 +354,7 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 #endif
 
 
-// 2. MHD solver
-//=========================================================================================
-#elif ( MODEL == MHD )
-#     define FLU_BLOCK_SIZE_X       0
-#     define FLU_BLOCK_SIZE_Y       0
-
-
-// 3. ELBDM kinematic solver
+// 2. ELBDM kinematic solver
 //=========================================================================================
 #elif ( MODEL == ELBDM )
 #     define FLU_BLOCK_SIZE_X       PS2
@@ -410,114 +408,10 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 #        endif
 #  endif
 
-// 3. SR_HYDRO solver
-//=========================================================================================
-#elif ( MODEL == SR_HYDRO )
-#if   ( FLU_SCHEME == RTVD )
-
-#     define FLU_BLOCK_SIZE_X       FLU_NXT
-
-#  ifdef FLOAT8
-#     define FLU_BLOCK_SIZE_Y       4
-#  else
-#     define FLU_BLOCK_SIZE_Y       8
-#  endif
-
-#elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
-
-#  if   ( GPU_ARCH == FERMI )
-#     ifdef FLOAT8
-#     define FLU_BLOCK_SIZE_X       256
-#     else
-#     define FLU_BLOCK_SIZE_X       512
-#     endif
-#  elif ( GPU_ARCH == KEPLER )
-#     ifdef FLOAT8
-#     define FLU_BLOCK_SIZE_X       256
-#     else
-#     define FLU_BLOCK_SIZE_X       512
-#     endif
-#  elif ( GPU_ARCH == MAXWELL )
-#     ifdef FLOAT8
-#     define FLU_BLOCK_SIZE_X       256
-#     else
-#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
-#     endif
-#  elif ( GPU_ARCH == PASCAL )
-#     ifdef FLOAT8
-#     define FLU_BLOCK_SIZE_X       256
-#     else
-#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
-#     endif
-#  elif ( GPU_ARCH == VOLTA )
-#     ifdef FLOAT8
-#     define FLU_BLOCK_SIZE_X       256
-#     else
-#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
-#     endif
-#  elif ( GPU_ARCH == TURING )
-#     ifdef FLOAT8
-#     define FLU_BLOCK_SIZE_X       256
-#     else
-#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
-#     endif
-#  else
-#     define FLU_BLOCK_SIZE_X       NULL_INT
-#     ifdef GPU
-#     error : UNKNOWN GPU_ARCH !!
-#     endif
-#  endif
-
-#     define FLU_BLOCK_SIZE_Y       1
-
-#elif ( FLU_SCHEME == CTU )
-
-#  if   ( GPU_ARCH == FERMI )
-#     ifdef FLOAT8
-#     define FLU_BLOCK_SIZE_X       256
-#     else
-#     define FLU_BLOCK_SIZE_X       512
-#     endif
-#  elif ( GPU_ARCH == KEPLER )
-#     ifdef FLOAT8
-#     define FLU_BLOCK_SIZE_X       256
-#     else
-#     define FLU_BLOCK_SIZE_X       512
-#     endif
-#  elif ( GPU_ARCH == MAXWELL )
-#     ifdef FLOAT8
-#     define FLU_BLOCK_SIZE_X       256
-#     else
-#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
-#     endif
-#  elif ( GPU_ARCH == PASCAL )
-#     ifdef FLOAT8
-#     define FLU_BLOCK_SIZE_X       256
-#     else
-#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
-#     endif
-#  elif ( GPU_ARCH == VOLTA )
-#     ifdef FLOAT8
-#     define FLU_BLOCK_SIZE_X       256
-#     else
-#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
-#     endif
-#  else
-#     define FLU_BLOCK_SIZE_X       NULL_INT
-#     ifdef GPU
-#     error : UNKNOWN GPU_ARCH !!
-#     endif
-#  endif
-
-#     define FLU_BLOCK_SIZE_Y       1
-
-#else
-#  error : ERROR : unsupported hydro scheme in the makefile !!
-#endif
 #endif // MODEL
 
 
-// 4. dt solver for fluid
+// 3. dt solver for fluid
 //=========================================================================================
 #     define DT_FLU_BLOCK_SIZE      512
 
@@ -548,15 +442,13 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 // ## CPU/GPU integration ##
 // #########################
 
-#if (  ( MODEL == HYDRO || MODEL == MHD || MODEL == SR_HYDRO )  &&  defined CHECK_FAILED_CELL_IN_FLUID  )
-extern bool CPU_CheckNegative( const real Input );
-#endif
-
 // GPU device function specifier
 #ifdef __CUDACC__
-# define GPU_DEVICE __forceinline__ __device__
+# define GPU_DEVICE          __forceinline__ __device__
+# define GPU_DEVICE_NOINLINE    __noinline__ __device__
 #else
 # define GPU_DEVICE
+# define GPU_DEVICE_NOINLINE
 #endif
 
 // unified CPU/GPU loop

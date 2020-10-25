@@ -26,12 +26,13 @@ double dt_InvokeSolver( const Solver_t TSolver, const int lv )
 
 
 // invoke the target dt solver
-   InvokeSolver( TSolver, lv, Time[lv], NULL_REAL, NULL_REAL, NULL_REAL, NULL_INT, NULL_INT, false, false );
+   InvokeSolver( TSolver, lv, Time[lv], NULL_REAL, NULL_REAL, NULL_REAL, NULL_INT, NULL_INT, NULL_INT, false, false );
 
 
 // get the minimum dt among all ranks
    double dt_min_all_rank;
    MPI_Allreduce( &dt_min_for_solver, &dt_min_all_rank, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD );
+
 
    return dt_min_all_rank;
 

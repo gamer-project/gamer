@@ -1,5 +1,0 @@
-# problem-specific runtime parameters
-Acoustic_AmplitudeRho   1e-6            # density perturbation amplitude (assuming background density = 1.0)
-Acoustic_InitPhase       0.2            # initial phase shift [0.0]
-Acoustic_Temp_Bg         1.0            # ambient temperature
-Acoustic_Rho_Bg          1.0            # ambient density

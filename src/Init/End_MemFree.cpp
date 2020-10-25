@@ -93,6 +93,10 @@ void End_MemFree()
 #  endif
 
 
+// 7. user-defined table for grid refinement
+   for (int lv=0; lv<NLEVEL-1; lv++)   free( FlagTable_User[lv] );
+
+
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
 } // FUNCTION : End_MemFree

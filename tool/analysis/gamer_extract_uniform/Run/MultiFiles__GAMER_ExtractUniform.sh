@@ -54,7 +54,7 @@ do
    fi
 
 
-#  begin sorting 
+#  begin sorting
    echo -e "***** Working on data $FILE_IN ... *****"
 
    mpirun -np 4 ./GAMER_ExtractUniform -i $FILE_IN -o "$SUFFIX" -l 0 -n 3 -p 1 -q 1 -r 4

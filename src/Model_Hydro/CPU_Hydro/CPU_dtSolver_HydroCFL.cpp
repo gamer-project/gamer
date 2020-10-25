@@ -8,6 +8,7 @@
 #ifdef __CUDACC__
 
 #include "CUFLU_Shared_FluUtility.cu"
+#include "CUDA_ConstMemory.h"
 
 // parallel reduction routine
 #define RED_NTHREAD  DT_FLU_BLOCK_SIZE
@@ -19,19 +20,14 @@
 #  include "../../GPU_Utility/CUUTI_BlockReduction_WarpSync.cu"
 #endif
 
-#else // #ifdef __CUDACC__
-
-real Hydro_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                        const real Gamma_m1, const bool CheckMinPres, const real MinPres );
-
-#endif // #ifdef __CUDACC__ ... else ...
+#endif // #ifdef __CUDACC__
 
 
 
 
 //-----------------------------------------------------------------------------------------
 // Function    :  CPU/CUFLU_dtSolver_HydroCFL
-// Description :  Estimate the evolution time-step (dt) from the CFL condition of the hydro solver
+// Description :  Estimate the evolution time-step (dt) from the CFL condition of the hydro/MHD solver
 //
 // Note        :  1. This function should be applied to both physical and comoving coordinates and always
 //                   return the evolution time-step (dt) actually used in various solvers
@@ -39,32 +35,49 @@ real Hydro_GetPressure( const real Dens, const real MomX, const real MomY, const
 //                       Comoving coordinates : dt = delta(scale_factor) / ( Hubble_parameter*scale_factor^3 )
 //                   --> We convert dt back to the physical time interval, which equals "delta(scale_factor)"
 //                       in the comoving coordinates, in Mis_GetTimeStep()
-//                2. time-step is estimated by the stability criterion from the von Neumann stability analysis
+//                2. Time-step is estimated by the stability criterion from the von Neumann stability analysis
 //                   --> CFL condition
 //                3. Arrays with a prefix "g_" are stored in the global memory of GPU
 //
-// Parameter   :  g_dt_Array  : Array to store the minimum dt in each target patch
-//                g_Flu_Array : Array storing the prepared fluid data of each target patch
-//                NPG         : Number of target patch groups (for CPU only)
-//                dh          : Cell size
-//                Safety      : dt safety factor
-//                Gamma       : Ratio of specific heats
-//                MinPres     : Minimum allowed pressure
+// Parameter   :  g_dt_Array             : Array to store the minimum dt in each target patch
+//                g_Flu_Array            : Array storing the prepared fluid   data of each target patch
+//                g_Mag_Array            : Array storing the prepared B field data of each target patch
+//                NPG                    : Number of target patch groups (for CPU only)
+//                dh                     : Cell size
+//                Safety                 : dt safety factor
+//                MinPres                : Minimum allowed pressure
+//                EoS_DensEint2Pres_Func : Function pointers to the EoS routines
+//                EoS_DensPres2CSqr_Func : ...
+//                EoS_Temper2CSqr_Func   : ... (SRHD only)
+//                EoS_GuessHTilde_Func   : ... (SRHD only)
+//                EoS_HTilde2Temp_Func   : ... (SRHD only)
+//                c_EoS_AuxArray         : Auxiliary array for the EoS routines (for CPU only)
+//                                         --> When using GPU, this array is stored in the constant memory header
+//                                             CUDA_ConstMemory.h and does not need to be passed as a function argument
 //
 // Return      :  g_dt_Array
 //-----------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __global__
-void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
-                              const real dh, const real Safety, const real Gamma, const real MinPres )
+void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
+                              const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ],
+                              const real dh, const real Safety, const real MinPres,
+                              const EoS_DE2P_t EoS_DensEint2Pres_Func, const EoS_DP2C_t EoS_DensPres2CSqr_Func,
+                              const EoS_TEM2C_t EoS_Temper2CSqr_Func, const EoS_GUESS_t EoS_GuessHTilde_Func,
+                              const EoS_H2TEM_t EoS_HTilde2Temp_Func )
 #else
-void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ], const int NPG,
-                              const real dh, const real Safety, const real Gamma, const real MinPres )
+void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
+                              const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const int NPG,
+                              const real dh, const real Safety, const real MinPres,
+                              const EoS_DE2P_t EoS_DensEint2Pres_Func, const EoS_DP2C_t EoS_DensPres2CSqr_Func,
+                              const EoS_TEM2C_t EoS_Temper2CSqr_Func, const EoS_GUESS_t EoS_GuessHTilde_Func,
+                              const EoS_H2TEM_t EoS_HTilde2Temp_Func, const double c_EoS_AuxArray[] )
 #endif
 {
 
+#  ifndef SRHD
    const bool CheckMinPres_Yes = true;
-   const real Gamma_m1         = Gamma - (real)1.0;
+#  endif
    const real dhSafety         = Safety*dh;
 
 // loop over all patches
@@ -81,26 +94,100 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][NCOMP_
 
       CGPU_LOOP( t, CUBE(PS1) )
       {
-         real fluid[NCOMP_FLUID], _Rho, Vx, Vy, Vz, Pres, Cs, MaxV;
+         real fluid[FLU_NIN_T], Rho, Pres, a2;
 
-         for (int v=0; v<NCOMP_FLUID; v++)   fluid[v] = g_Flu_Array[p][v][t];
+#        ifdef MHD
+         int  i, j, k;
+         real B[3], Bx2, By2, Bz2, B2, Ca2_plus_a2, Ca2_min_a2, Ca2_min_a2_sqr, four_a2_over_Rho;
+#        endif
 
-        _Rho  = (real)1.0 / fluid[DENS];
-         Vx   = FABS( fluid[MOMX] )*_Rho;
-         Vy   = FABS( fluid[MOMY] )*_Rho;
-         Vz   = FABS( fluid[MOMZ] )*_Rho;
-         Pres = Hydro_GetPressure( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                   Gamma_m1, CheckMinPres_Yes, MinPres );
-         Cs   = SQRT( Gamma*Pres*_Rho );
+#        ifdef SRHD
+         real Pri[FLU_NIN_T], LorentzFactor, U_Max, Us_Max, LorentzFactor_Max, LorentzFactor_s_Max, Us;
+#        else
+         real _Rho, CFLx, CFLy, CFLz, Vx, Vy, Vz, Emag;
+#        endif
+
+         for (int v=0; v<FLU_NIN_T; v++)  fluid[v] = g_Flu_Array[p][v][t];
+
+#        ifdef MHD
+         i    = t % PS1;
+         j    = t % SQR(PS1) / PS1;
+         k    = t / SQR(PS1);
+
+         MHD_GetCellCenteredBField( B, g_Mag_Array[p][MAGX], g_Mag_Array[p][MAGY], g_Mag_Array[p][MAGZ], PS1, PS1, PS1, i, j, k );
+
+         Bx2  = SQR( B[MAGX] );
+         By2  = SQR( B[MAGY] );
+         Bz2  = SQR( B[MAGZ] );
+         B2   = Bx2 + By2 + Bz2;
+         Emag = (real)0.5*B2;
+#        elif ( !defined SRHD )
+         Emag = NULL_REAL;
+#        endif
+
+#        ifdef SRHD
+         Hydro_Con2Pri( fluid, Pri,(real)NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
+                        (real)NULL_REAL, NULL, NULL,
+                        EoS_GuessHTilde_Func, EoS_HTilde2Temp_Func, NULL, NULL, &LorentzFactor );
+         Rho   = Pri[0];
+         Pres  = Pri[4];
+         a2    = EoS_Temper2CSqr_Func( Rho, Pres, fluid+NCOMP_FLUID, c_EoS_AuxArray ); // sound speed squared
+#        else
+         Rho   = fluid[DENS];
+        _Rho   = (real)1.0 / Rho;
+         Vx    = FABS( fluid[MOMX] )*_Rho;
+         Vy    = FABS( fluid[MOMY] )*_Rho;
+         Vz    = FABS( fluid[MOMZ] )*_Rho;
+         Pres  = Hydro_Con2Pres( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], fluid+NCOMP_FLUID,
+                                 CheckMinPres_Yes, MinPres, Emag,
+                                 EoS_DensEint2Pres_Func, NULL, NULL, c_EoS_AuxArray, NULL );
+         a2    = EoS_DensPres2CSqr_Func( Rho, Pres, fluid+NCOMP_FLUID, c_EoS_AuxArray ); // sound speed squared
+#        endif
+
+
+//       compute the maximum information propagating speed
+//       --> hydro   : bulk velocity + sound wave
+//           MHD     : bulk velocity +  fast wave
+//           sr-hydro: SRHD_TBD
+#        ifdef MHD
+         Ca2_plus_a2      = B2*_Rho + a2;
+         Ca2_min_a2       = B2*_Rho - a2;
+         Ca2_min_a2_sqr   = SQR( Ca2_min_a2 );
+         four_a2_over_Rho = (real)4.0*a2*_Rho;
+         CFLx             = (real)0.5*(  Ca2_plus_a2 + SQRT( Ca2_min_a2_sqr + four_a2_over_Rho*(By2+Bz2) )  );
+         CFLy             = (real)0.5*(  Ca2_plus_a2 + SQRT( Ca2_min_a2_sqr + four_a2_over_Rho*(Bx2+Bz2) )  );
+         CFLz             = (real)0.5*(  Ca2_plus_a2 + SQRT( Ca2_min_a2_sqr + four_a2_over_Rho*(Bx2+By2) )  );
+         CFLx             = SQRT( CFLx );
+         CFLy             = SQRT( CFLy );
+         CFLz             = SQRT( CFLz );
+#        elif ( defined SRHD )
+         Pri[1] /= LorentzFactor;
+         Pri[2] /= LorentzFactor;
+         Pri[3] /= LorentzFactor;
+         U_Max = FABS(Pri[1]) + FABS(Pri[2]) + FABS(Pri[3]);
+         Us = SQRT( a2 ) / SQRT( (real)1.0 - a2 );
+         Us_Max = (real)3.0 * Us;
+         LorentzFactor_Max   = SQRT( (real)1.0 +  U_Max *  U_Max );
+         LorentzFactor_s_Max = SQRT( (real)1.0 + Us_Max * Us_Max );
+         MaxCFL = FMAX( Us_Max * LorentzFactor_Max + LorentzFactor_s_Max * U_Max, MaxCFL );
+#        else
+         CFLx             = SQRT( a2 );
+         CFLy             = CFLx;
+         CFLz             = CFLx;
+#        endif // #ifdef MHD ... else ...
+
+#        ifndef SRHD
+         CFLx += Vx;
+         CFLy += Vy;
+         CFLz += Vz;
 
 #        if   ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == CTU )
-         MaxV   = FMAX( Vx, Vy );
-         MaxV   = FMAX( Vz, MaxV );
-         MaxCFL = FMAX( MaxV+Cs, MaxCFL );
-
+         MaxCFL = FMAX( CFLx, MaxCFL );
+         MaxCFL = FMAX( CFLy, MaxCFL );
+         MaxCFL = FMAX( CFLz, MaxCFL );
 #        elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
-         MaxV   = Vx + Vy + Vz;
-         MaxCFL = FMAX( MaxV+(real)3.0*Cs, MaxCFL );
+         MaxCFL = FMAX( CFLx+CFLy+CFLz, MaxCFL );
+#        endif
 #        endif
       } // CGPU_LOOP( t, CUBE(PS1) )
 
@@ -114,7 +201,12 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][NCOMP_
 #     endif
       if ( threadIdx.x == 0 )
 #     endif // #ifdef __CUDACC__
+
+#     ifdef SRHD
+      g_dt_Array[p] = dhSafety / ( MaxCFL / SQRT( (real)1.0 + MaxCFL*MaxCFL ) );
+#     else
       g_dt_Array[p] = dhSafety/MaxCFL;
+#     endif
 
    } // for (int p=0; p<8*NPG; p++)
 

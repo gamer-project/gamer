@@ -14,6 +14,12 @@ static double ExtPot_M;          // point source mass
 static double ExtPot_Cen[3];     // point source position
 // =======================================================================================
 
+// external potential routines
+void SetCPUExtPot_PointMass( ExtPot_t &CPUExtPot_Ptr );
+# ifdef GPU
+void SetGPUExtPot_PointMass( ExtPot_t &GPUExtPot_Ptr );
+# endif
+
 
 
 
@@ -50,8 +56,8 @@ void Validate()
 #  endif
 
 #  ifdef GRAVITY
-   if ( !OPT__EXTERNAL_POT )
-   Aux_Error( ERROR_INFO, "OPT__EXTERNAL_POT must be enabled !!\n" );
+   if ( !OPT__EXT_POT )
+   Aux_Error( ERROR_INFO, "OPT__EXT_POT must be enabled !!\n" );
 #  endif
 
 
@@ -205,24 +211,26 @@ void BC( real fluid[], const double x, const double y, const double z, const dou
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_ExtPot
-// Description :  Set ExtPot_AuxArray[] used by the external potential routine ExternalPot()
+// Function    :  Init_ExtPotAuxArray_ExtPotTest
+// Description :  Set the auxiliary array ExtPot_AuxArray[] used by the external potential routine
 //
-// Note        :  1. Linked to the function pointer "Init_ExternalPot_Ptr"
-//                2. Enabled by the runtime option "OPT__EXTERNAL_POT"
+// Note        :  1. External potential can be enabled by the runtime option "OPT__EXT_POT"
+//                2. Link to the function pointer "Init_ExtPotAuxArray_Ptr"
+//                3. AuxArray[] has the size of EXT_POT_NAUX_MAX defined in Macro.h (default = 20)
 //
-// Parameter   :  None
+// Parameter   :  AuxArray : Array to be filled up
+//
+// Return      :  AuxArray[]
 //-------------------------------------------------------------------------------------------------------
-void Init_ExtPot()
+void Init_ExtPotAuxArray_ExtPotTest( double AuxArray[] )
 {
 
-// ExtPot_AuxArray has the size of EXT_POT_NAUX_MAX (default = 10)
-   ExtPot_AuxArray[0] = ExtPot_Cen[0];
-   ExtPot_AuxArray[1] = ExtPot_Cen[1];
-   ExtPot_AuxArray[2] = ExtPot_Cen[2];
-   ExtPot_AuxArray[3] = ExtPot_M*NEWTON_G;
+   AuxArray[0] = ExtPot_Cen[0];
+   AuxArray[1] = ExtPot_Cen[1];
+   AuxArray[2] = ExtPot_Cen[2];
+   AuxArray[3] = ExtPot_M*NEWTON_G;
 
-} // FUNCTION : Init_ExtPot
+} // FUNCTION : Init_ExtPotAuxArray_ExtPotTest
 #endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
 
 
@@ -253,16 +261,13 @@ void Init_TestProb_ELBDM_ExtPot()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr   = SetGridIC;
-   Output_User_Ptr          = NULL;
-   Flag_User_Ptr            = NULL;
-   Mis_GetTimeStep_User_Ptr = NULL;
-   Aux_Record_User_Ptr      = NULL;
-   BC_User_Ptr              = BC;
-   Flu_ResetByUser_Func_Ptr = NULL;
-   End_User_Ptr             = NULL;
-   Init_ExternalAcc_Ptr     = NULL;
-   Init_ExternalPot_Ptr     = Init_ExtPot;
+   Init_Function_User_Ptr  = SetGridIC;
+   BC_User_Ptr             = BC;
+   Init_ExtPotAuxArray_Ptr = Init_ExtPotAuxArray_ExtPotTest;
+   SetCPUExtPot_Ptr        = SetCPUExtPot_PointMass;
+#  ifdef GPU
+   SetGPUExtPot_Ptr        = SetGPUExtPot_PointMass;
+#  endif
 #  endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
 
 

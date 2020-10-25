@@ -22,7 +22,7 @@ template <typename T>
 bool Mis_CompareRealValue( const T Input1, const T Input2, const char *comment, const bool Verbose )
 {
 
-   const double TolErr = ( typeid(T) == typeid(double) ) ? 1.0e-12 : 1.0e-5;
+   const double TolErr = ( typeid(T) == typeid(double) ) ? MAX_ERROR_DBL : MAX_ERROR_FLT;
 
    double RelErr;
 

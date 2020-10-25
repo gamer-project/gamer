@@ -17,85 +17,86 @@ __global__ void CUFLU_FluidSolver_RTVD(
    real g_Flux     [][9][NCOMP_TOTAL][ SQR(PS2) ],
    const double g_Corner[][3],
    const real g_Pot_USG[][ CUBE(USG_NXT_F) ],
-   const real dt, const real _dh, const real Gamma, const bool StoreFlux,
-   const bool XYZ, const real MinDens, const real MinPres );
+   const real dt, const real _dh, const bool StoreFlux,
+   const bool XYZ, const real MinDens, const real MinPres, const real MinEint,
+   const EoS_DE2P_t EoS_DensEint2Pres_Func,
+   const EoS_DP2E_t EoS_DensPres2Eint_Func,
+   const EoS_DP2C_t EoS_DensPres2CSqr_Func );
 #elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
-__global__
-void CUFLU_FluidSolver_MHM(
-   const real   Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
-         real   Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
-         char   DE_Array_Out [][ CUBE(PS2) ],
-         real   Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
-   const double Corner_Array [][3],
-   const real   Pot_Array_USG[][ CUBE(USG_NXT_F) ],
-         real   PriVar       [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
-         real   Slope_PPM    [][3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
-         real   FC_Var       [][6][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
-         real   FC_Flux      [][3][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
-   const real dt, const real dh, const real Gamma, const bool StoreFlux,
-   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-   const double Time, const OptGravityType_t GravityType,
-   const real MinDens, const real MinPres, const real DualEnergySwitch,
-   const bool NormPassive, const int NNorm,
-   const bool JeansMinPres, const real JeansMinPres_Coeff );
-#if ( NCOMP_PASSIVE > 0 )
-int CUFLU_SetConstMem_FluidSolver_NormIdx( int NormIdx_h[] );
-#endif
-#elif ( FLU_SCHEME == CTU )
-__global__
-void CUFLU_FluidSolver_CTU(
-   const real   Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
-         real   Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
-         char   DE_Array_Out [][ CUBE(PS2) ],
-         real   Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
-   const double Corner_Array [][3],
-   const real   Pot_Array_USG[][ CUBE(USG_NXT_F) ],
-         real   PriVar       [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
-         real   Slope_PPM    [][3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
-         real   FC_Var       [][6][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
-         real   FC_Flux      [][3][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
-   const real dt, const real dh, const real Gamma, const bool StoreFlux,
-   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-   const double Time, const OptGravityType_t GravityType,
-   const real MinDens, const real MinPres, const real DualEnergySwitch,
-   const bool NormPassive, const int NNorm,
-   const bool JeansMinPres, const real JeansMinPres_Coeff );
-#if ( NCOMP_PASSIVE > 0 )
-int CUFLU_SetConstMem_FluidSolver_NormIdx( int NormIdx_h[] );
-#endif
-#endif // FLU_SCHEME
-__global__ void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
-                                         const real dh, const real Safety, const real Gamma, const real MinPres );
-#ifdef GRAVITY
-__global__ void CUPOT_dtSolver_HydroGravity( real g_dt_Array[],
-                                             const real g_Pot_Array[][ CUBE(GRA_NXT) ],
-                                             const double g_Corner_Array[][3],
-                                             const real dh, const real Safety, const bool P5_Gradient,
-                                             const OptGravityType_t GravityType, const double ExtAcc_Time );
-#endif
-#elif ( MODEL == MHD )
-#warning : WAIT MHD !!!
-
-#elif ( MODEL == SR_HYDRO )
-#if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 __global__
 void CUFLU_FluidSolver_MHM(
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
          real   g_Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
+   const real   g_Mag_Array_In [][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
+         real   g_Mag_Array_Out[][NCOMP_MAG][ PS2P1*SQR(PS2) ],
+         char   g_DE_Array_Out [][ CUBE(PS2) ],
          real   g_Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
+         real   g_Ele_Array    [][9][NCOMP_ELE][ PS2P1*PS2 ],
    const double g_Corner_Array [][3],
    const real   g_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
-         real   g_PriVar       [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
-         real   g_Slope_PPM    [][3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
-         real   g_FC_Var       [][6][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
-         real   g_FC_Flux      [][3][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
-   const real dt, const real dh, const real Gamma, const bool StoreFlux,
-   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-   const double Time, const OptGravityType_t GravityType,
-   const real MinDens, const real MinTemp );
+         real   g_PriVar       []   [NCOMP_LR            ][ CUBE(FLU_NXT) ],
+         real   g_Slope_PPM    [][3][NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ],
+         real   g_FC_Var       [][6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
+         real   g_FC_Flux      [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+         real   g_FC_Mag_Half  [][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
+         real   g_EC_Ele       [][NCOMP_MAG][ CUBE(N_EC_ELE) ],
+   const real dt, const real dh,
+   const bool StoreFlux, const bool StoreElectric,
+   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const double Time,
+   const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
+   const real MinDens, const real MinPres, const real MinEint,
+   const real DualEnergySwitch, const bool NormPassive, const int NNorm,
+   const bool JeansMinPres, const real JeansMinPres_Coeff,
+   const EoS_DE2P_t EoS_DensEint2Pres_Func,
+   const EoS_DP2E_t EoS_DensPres2Eint_Func,
+   const EoS_DP2C_t EoS_DensPres2CSqr_Func,
+   const EoS_GUESS_t EoS_GuessHTilde_Func,
+   const EoS_H2TEM_t EoS_HTilde2Temp_Func,
+   const EoS_TEM2H_t EoS_Temp2HTilde_Func,
+   const EoS_TEM2C_t EoS_Temper2CSqr_Func );
+#elif ( FLU_SCHEME == CTU )
+__global__
+void CUFLU_FluidSolver_CTU(
+   const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+         real   g_Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
+   const real   g_Mag_Array_In [][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
+         real   g_Mag_Array_Out[][NCOMP_MAG][ PS2P1*SQR(PS2) ],
+         char   g_DE_Array_Out [][ CUBE(PS2) ],
+         real   g_Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
+         real   g_Ele_Array    [][9][NCOMP_ELE][ PS2P1*PS2 ],
+   const double g_Corner_Array [][3],
+   const real   g_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
+         real   g_PriVar       []   [NCOMP_LR            ][ CUBE(FLU_NXT) ],
+         real   g_Slope_PPM    [][3][NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ],
+         real   g_FC_Var       [][6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
+         real   g_FC_Flux      [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+         real   g_FC_Mag_Half  [][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
+         real   g_EC_Ele       [][NCOMP_MAG][ CUBE(N_EC_ELE) ],
+   const real dt, const real dh,
+   const bool StoreFlux, const bool StoreElectric,
+   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const double Time,
+   const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
+   const real MinDens, const real MinPres, const real MinEint,
+   const real DualEnergySwitch, const bool NormPassive, const int NNorm,
+   const bool JeansMinPres, const real JeansMinPres_Coeff,
+   const EoS_DE2P_t EoS_DensEint2Pres_Func,
+   const EoS_DP2E_t EoS_DensPres2Eint_Func,
+   const EoS_DP2C_t EoS_DensPres2CSqr_Func );
 #endif // FLU_SCHEME
-__global__ void CUFLU_dtSolver_SRHydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
-                                           const real dh, const real Safety, const real Gamma, const real MinPres );
+__global__ void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
+                                         const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ],
+                                         const real dh, const real Safety, const real MinPres,
+                                         const EoS_DE2P_t EoS_DensEint2Pres_Func, const EoS_DP2C_t EoS_DensPres2CSqr_Func,
+                                         const EoS_TEM2C_t EoS_Temper2CSqr_Func, const EoS_GUESS_t EoS_GuessHTilde_Func,
+                                         const EoS_H2TEM_t EoS_HTilde2Temp_Func );
+#ifdef GRAVITY
+__global__
+void CUPOT_dtSolver_HydroGravity( real g_dt_Array[], const real g_Pot_Array[][ CUBE(GRA_NXT) ],
+                                  const double g_Corner_Array[][3],
+                                  const real dh, const real Safety, const bool P5_Gradient,
+                                  const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
+                                  const double ExtAcc_Time );
+#endif
 
 #elif ( MODEL == ELBDM )
 __global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ],
@@ -137,34 +138,30 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
 
 
 // Gravity solver prototypes in different models
-#if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
+#if   ( MODEL == HYDRO )
 __global__
 void CUPOT_HydroGravitySolver(
-         real   Flu_Array_New[][GRA_NIN][ CUBE(PS1) ],
-   const real   Pot_Array_New[][ CUBE(GRA_NXT) ],
-   const double Corner_Array [][3],
-   const real   Pot_Array_USG[][ CUBE(USG_NXT_G) ],
-   const real   Flu_Array_USG[][GRA_NIN_USG][ CUBE(PS1) ],
-         char   DE_Array     [][ CUBE(PS1) ],
+         real   g_Flu_Array_New[][GRA_NIN][ CUBE(PS1) ],
+   const real   g_Pot_Array_New[][ CUBE(GRA_NXT) ],
+   const double g_Corner_Array [][3],
+   const real   g_Pot_Array_USG[][ CUBE(USG_NXT_G) ],
+   const real   g_Flu_Array_USG[][GRA_NIN-1][ CUBE(PS1) ],
+         char   g_DE_Array     [][ CUBE(PS1) ],
+   const real   g_Emag_Array   [][ CUBE(PS1) ],
    const real dt, const real dh, const bool P5_Gradient,
-   const OptGravityType_t GravityType,
+   const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const double TimeNew, const double TimeOld, const real MinEint );
 
-#elif ( MODEL == MHD )
-#warning :: WAIT MHD !!!
-
 #elif ( MODEL == ELBDM )
-__global__ void CUPOT_ELBDMGravitySolver(       real g_Flu_Array[][GRA_NIN][ PS1*PS1*PS1 ],
-                                          const real g_Pot_Array[][ GRA_NXT*GRA_NXT*GRA_NXT ],
-                                          const double g_Corner_Array[][3],
-                                          const real EtaDt, const real dh, const real Lambda, const bool ExtPot,
-                                          const double Time );
+__global__
+void CUPOT_ELBDMGravitySolver(       real g_Flu_Array[][GRA_NIN][ PS1*PS1*PS1 ],
+                               const real g_Pot_Array[][ GRA_NXT*GRA_NXT*GRA_NXT ],
+                               const double g_Corner_Array[][3],
+                               const real EtaDt, const real dh, const real Lambda );
 
 #else
 #error : ERROR : unsupported MODEL !!
 #endif // MODEL
-
-int CUPOT_SetConstMem_PoissonSolver();
 
 #endif // GRAVITY
 
@@ -206,35 +203,15 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #           if   ( GPU_ARCH == FERMI )
             GPU_NStream = 8;
 #           elif ( GPU_ARCH == KEPLER )
-            GPU_NStream = 32;
+            GPU_NStream = 16;
 #           elif ( GPU_ARCH == MAXWELL )
-            GPU_NStream = 32;
+            GPU_NStream = 16;
 #           elif ( GPU_ARCH == PASCAL )
-            GPU_NStream = 32;
+            GPU_NStream = 16;
 #           elif ( GPU_ARCH == VOLTA )
-            GPU_NStream = 32;
+            GPU_NStream = 16;
 #           elif ( GPU_ARCH == TURING )
-            GPU_NStream = 32;
-#           else
-#           error : UNKNOWN GPU_ARCH !!
-#           endif
-
-#        elif ( MODEL == MHD )
-#        warning :: WAIT MHD !!!
-
-#        elif ( MODEL == SR_HYDRO )
-#           if   ( GPU_ARCH == FERMI )
-            GPU_NStream = 8;
-#           elif ( GPU_ARCH == KEPLER )
-            GPU_NStream = 32;
-#           elif ( GPU_ARCH == MAXWELL )
-            GPU_NStream = 32;
-#           elif ( GPU_ARCH == PASCAL )
-            GPU_NStream = 32;
-#           elif ( GPU_ARCH == VOLTA )
-            GPU_NStream = 32;
-#           elif ( GPU_ARCH == TURING )
-            GPU_NStream = 32;
+            GPU_NStream = 16;
 #           else
 #           error : UNKNOWN GPU_ARCH !!
 #           endif
@@ -243,15 +220,15 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #           if   ( GPU_ARCH == FERMI )
             GPU_NStream = 8;
 #           elif ( GPU_ARCH == KEPLER )
-            GPU_NStream = 32;
+            GPU_NStream = 16;
 #           elif ( GPU_ARCH == MAXWELL )
-            GPU_NStream = 32;
+            GPU_NStream = 16;
 #           elif ( GPU_ARCH == PASCAL )
-            GPU_NStream = 32;
+            GPU_NStream = 16;
 #           elif ( GPU_ARCH == VOLTA )
-            GPU_NStream = 32;
+            GPU_NStream = 16;
 #           elif ( GPU_ARCH == TURING )
-            GPU_NStream = 32;
+            GPU_NStream = 16;
 #           else
 #           error : ERROR : UNKNOWN GPU_ARCH !!
 #           endif
@@ -274,26 +251,6 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
    if ( Flu_GPU_NPGroup <= 0 )
    {
 #     if   ( MODEL == HYDRO )
-#        if   ( GPU_ARCH == FERMI )
-         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#        elif ( GPU_ARCH == KEPLER )
-         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#        elif ( GPU_ARCH == MAXWELL )
-         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#        elif ( GPU_ARCH == PASCAL )
-         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#        elif ( GPU_ARCH == VOLTA )
-         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#        elif ( GPU_ARCH == TURING )
-         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
-#        else
-#        error : UNKNOWN GPU_ARCH !!
-#        endif
-
-#     elif ( MODEL == MHD )
-#        warning :: WAIT MHD !!!
-
-#     elif ( MODEL == SR_HYDRO )
 #        if   ( GPU_ARCH == FERMI )
          Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #        elif ( GPU_ARCH == KEPLER )
@@ -405,17 +362,6 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
    CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUPOT_dtSolver_HydroGravity, cudaFuncCachePreferShared )  );
 #  endif
 
-#  elif ( MODEL == MHD )
-#  warning :: WAIT MHD !!!
-
-#  elif ( MODEL == SR_HYDRO )
-#  if ( FLU_SCHEME == MHM )
-   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_MHM,       cudaFuncCachePreferL1     )  );
-#  elif ( FLU_SCHEME == MHM_RP )
-   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_MHM,       cudaFuncCachePreferL1     )  );
-#  endif
-   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_dtSolver_SRHydroCFL,     cudaFuncCachePreferShared )  );
-
 #  elif ( MODEL == ELBDM )
    CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_ELBDMSolver,      cudaFuncCachePreferShared )  );
 
@@ -439,11 +385,8 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 
 
 // (3-3) gravity solver
-#  if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
+#  if   ( MODEL == HYDRO )
    CUDA_CHECK_ERROR( cudaFuncSetCacheConfig( CUPOT_HydroGravitySolver,           cudaFuncCachePreferShared ) );
-
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
 
 #  elif ( MODEL == ELBDM )
    CUDA_CHECK_ERROR( cudaFuncSetCacheConfig( CUPOT_ELBDMGravitySolver,           cudaFuncCachePreferL1     ) );
@@ -453,28 +396,6 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #  endif // MODEL
 
 #  endif // GRAVITY
-
-
-// (4) set the constant variables
-// --> note that the auxiliary arrays for the external acceleration and potential are set by CUAPI_Init_ExternalAccPot()
-#  if ( NCOMP_PASSIVE > 0 )
-   if  ( OPT__NORMALIZE_PASSIVE )
-   {
-#     if ( MODEL == HYDRO  &&  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  )
-      if ( CUFLU_SetConstMem_FluidSolver_NormIdx(PassiveNorm_VarIdx) != 0  )
-         Aux_Error( ERROR_INFO, "CUFLU_SetConstMem_FluidSolver_NormIdx failed ...\n" );
-
-#     elif ( MODEL == MHD )
-#     warning : WAIT MHD !!!
-
-#     endif // MODEL
-   }
-#  endif // #if ( NCOMP_PASSIVE > 0 )
-
-#  ifdef GRAVITY
-   if ( CUPOT_SetConstMem_PoissonSolver() != 0 )
-      Aux_Error( ERROR_INFO, "CUPOT_SetConstMem_PoissonSolver failed ...\n" );
-#  endif // #ifdef GRAVITY
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

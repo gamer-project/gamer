@@ -11,7 +11,7 @@
 //                   (1) VmSize : current virtual memory size
 //                   (2) VmRSS  : current resident set size
 //                2. Only the maximum values among all MPI ranks will be recorded
-// 
+//
 // Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
 void Aux_GetMemInfo()
@@ -34,7 +34,7 @@ void Aux_GetMemInfo()
 
    if ( !Aux_CheckFileExist(FileName_Status) )
    {
-      Aux_Message( stderr, "WARNING : PID status file \"%s\" does not exist (Rank %d) !!\n", 
+      Aux_Message( stderr, "WARNING : PID status file \"%s\" does not exist (Rank %d) !!\n",
                    FileName_Status, MPI_Rank );
       return;
    }
@@ -87,13 +87,13 @@ void Aux_GetMemInfo()
          FirstTime = false;
 
          FILE *File_Record = fopen( FileName_Record, "a" );
-         fprintf( File_Record, "#%13s%14s%s%20s%20s%20s%20s\n", "Time", "Step", " ", "Virtual_Max (MB)", 
+         fprintf( File_Record, "#%13s%14s%s%20s%20s%20s%20s\n", "Time", "Step", " ", "Virtual_Max (MB)",
                   "Virtual_Sum (MB)", "Resident_Max (MB)", "Resident_Sum (MB)" );
          fclose( File_Record );
       }
 
       FILE *File_Record = fopen( FileName_Record, "a" );
-      fprintf( File_Record, "%14.7e%14ld%20.2f%20.2f%20.2f%20.2f\n", 
+      fprintf( File_Record, "%14.7e%14ld%20.2f%20.2f%20.2f%20.2f\n",
                Time[0], Step, Vm_max[0]/1024.0, Vm_sum[0]/1024.0, Vm_max[1]/1024.0, Vm_sum[1]/1024.0 );
       fclose( File_Record );
 

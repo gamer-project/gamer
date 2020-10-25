@@ -10,11 +10,11 @@ EXECUTABLE = GAMER_CompareData
 
 # siimulation options
 #######################################################################################################
-# model: HYDRO/MHD/ELBDM
-SIMU_OPTION += -DMODEL=SR_HYDRO
+# model: HYDRO/ELBDM
+SIMU_OPTION += -DMODEL=HYDRO
 
 # double precision
-SIMU_OPTION += -DFLOAT8
+#SIMU_OPTION += -DFLOAT8
 
 
 
@@ -35,8 +35,8 @@ SIMU_PARA = -DNLEVEL=$(NLEVEL) -DMAX_PATCH=$(MAX_PATCH) -DNCOMP_PASSIVE=$(NCOMP_
 # rules and targets
 #######################################################################################################
 CC    := icpc
-CFLAG := -O3 -mp1 -w1
-CFLAG += -g -fopenmp
+CFLAG := -O3 -w1
+CFLAG += -g
 
 
 $(EXECUTABLE): $(PROGRAM).o

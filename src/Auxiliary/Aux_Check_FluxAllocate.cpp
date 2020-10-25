@@ -50,7 +50,7 @@ void Aux_Check_FluxAllocate( const int lv, const char *comment )
          {
             SonPID = amr->patch[0][lv][PID]->son;
 
-            for (int sib=0; sib<6; sib++)    
+            for (int sib=0; sib<6; sib++)
             {
                FluxPtr = amr->patch[0][lv][PID]->flux[sib];
 
@@ -68,7 +68,7 @@ void Aux_Check_FluxAllocate( const int lv, const char *comment )
                         {
                            Aux_Message( stderr, "\"%s\" : <%s> FAILED at lv %2d, Time = %13.7e, Step = %ld !!\n",
                                         comment, __FUNCTION__, lv, Time[lv], Step );
-                           Aux_Message( stderr, "%4s\t%7s\t%7s\t\t%19s\t%7s\t\t%7s\n", 
+                           Aux_Message( stderr, "%4s\t%7s\t%7s\t\t%19s\t%7s\t\t%7s\n",
                                         "Rank", "PatchID", "SibID", "Patch Corner", "Surplus", "Missing" );
 
                            Pass = false;
@@ -82,7 +82,7 @@ void Aux_Check_FluxAllocate( const int lv, const char *comment )
 
 //                   sibling patch has sons --> C/F boundary
 #                    ifdef LOAD_BALANCE
-                     if (   (  ( PID <  amr->NPatchComma[lv][1] && SibSonPID != -1) || 
+                     if (   (  ( PID <  amr->NPatchComma[lv][1] && SibSonPID != -1) ||
                                ( PID >= amr->NPatchComma[lv][1] && SibSonPID >= 0 )  )
                           &&  FluxPtr == NULL )
 #                    else
@@ -93,7 +93,7 @@ void Aux_Check_FluxAllocate( const int lv, const char *comment )
                         {
                            Aux_Message( stderr, "\"%s\" : <%s> FAILED at lv %2d, Time = %13.7e, Step = %ld !!\n",
                                         comment, __FUNCTION__, lv, Time[lv], Step );
-                           Aux_Message( stderr, "%4s\t%7s\t%7s\t\t%19s\t%7s\t\t%7s\n", 
+                           Aux_Message( stderr, "%4s\t%7s\t%7s\t\t%19s\t%7s\t\t%7s\n",
                                         "Rank", "PatchID", "SibID", "Patch Corner", "Surplus", "Missing" );
 
                            Pass = false;
@@ -114,7 +114,7 @@ void Aux_Check_FluxAllocate( const int lv, const char *comment )
                         {
                            Aux_Message( stderr, "\"%s\" : <%s> FAILED at level %2d, Time = %13.7e, Step = %ld !!\n",
                                         comment, __FUNCTION__, lv, Time[lv], Step );
-                           Aux_Message( stderr, "%4s\t%7s\t%7s\t\t%19s\t%7s\t\t%7s\n", 
+                           Aux_Message( stderr, "%4s\t%7s\t%7s\t\t%19s\t%7s\t\t%7s\n",
                                         "Rank", "PatchID", "SibID", "Patch Corner", "Surplus", "Missing" );
 
                            Pass = false;
@@ -136,7 +136,7 @@ void Aux_Check_FluxAllocate( const int lv, const char *comment )
                      {
                         Aux_Message( stderr, "\"%s\" : <%s> FAILED at level %2d, Time = %13.7e, Step = %ld !!\n",
                                      comment, __FUNCTION__, lv, Time[lv], Step );
-                        Aux_Message( stderr, "%4s\t%7s\t%7s\t\t%19s\t%7s\t\t%7s\n", 
+                        Aux_Message( stderr, "%4s\t%7s\t%7s\t\t%19s\t%7s\t\t%7s\n",
                                      "Rank", "PatchID", "SibID", "Patch Corner", "Surplus", "Missing" );
 
                         Pass = false;
@@ -147,7 +147,7 @@ void Aux_Check_FluxAllocate( const int lv, const char *comment )
                                                       amr->patch[0][lv][PID]->corner[1],
                                                       amr->patch[0][lv][PID]->corner[2], "O", "X" );
                   }
-               } // if ( SonPID != -1 ) ... else ... 
+               } // if ( SonPID != -1 ) ... else ...
             } // for (int sib=0; sib<6; sib++)
          } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
@@ -174,7 +174,7 @@ void Aux_Check_FluxAllocate( const int lv, const char *comment )
                   SibPID = amr->patch[0][lv][PID]->sibling[ MirrorSib[sib] ];
 
                   if ( SibPID != -1 )
-                  {  
+                  {
 //                   it should never be an external patch
                      if ( SibPID < 0)  Aux_Error( ERROR_INFO, "SibPID = %d < 0 !!\n", SibPID );
 
@@ -186,7 +186,7 @@ void Aux_Check_FluxAllocate( const int lv, const char *comment )
                         {
                            Aux_Message( stderr, "\"%s\" : <%s> FAILED at lv %2d, Time = %13.7e, Step = %ld !!\n",
                                         comment, __FUNCTION__, lv, Time[lv], Step );
-                           Aux_Message( stderr, "%4s\t%7s\t%7s\t\t%19s\t%7s\t\t%7s\n", 
+                           Aux_Message( stderr, "%4s\t%7s\t%7s\t\t%19s\t%7s\t\t%7s\n",
                                         "Rank", "PatchID", "SibID", "Patch Corner", "Surplus", "Missing" );
 
                            Pass = false;
@@ -204,7 +204,7 @@ void Aux_Check_FluxAllocate( const int lv, const char *comment )
                         {
                            Aux_Message( stderr, "\"%s\" : <%s> FAILED at lv %2d, Time = %13.7e, Step = %ld !!\n",
                                         comment, __FUNCTION__, lv, Time[lv], Step );
-                           Aux_Message( stderr, "%4s\t%7s\t%7s\t\t%19s\t%7s\t\t%7s\n", 
+                           Aux_Message( stderr, "%4s\t%7s\t%7s\t\t%19s\t%7s\t\t%7s\n",
                                         "Rank", "PatchID", "SibID", "Patch Corner", "Surplus", "Missing" );
 
                            Pass = false;
@@ -225,7 +225,7 @@ void Aux_Check_FluxAllocate( const int lv, const char *comment )
                         {
                            Aux_Message( stderr, "\"%s\" : <%s> FAILED at level %2d, Time = %13.7e, Step = %ld !!\n",
                                         comment, __FUNCTION__, lv, Time[lv], Step );
-                           Aux_Message( stderr, "%4s\t%7s\t%7s\t\t%19s\t%7s\t\t%7s\n", 
+                           Aux_Message( stderr, "%4s\t%7s\t%7s\t\t%19s\t%7s\t\t%7s\n",
                                         "Rank", "PatchID", "SibID", "Patch Corner", "Surplus", "Missing" );
 
                            Pass = false;
@@ -247,7 +247,7 @@ void Aux_Check_FluxAllocate( const int lv, const char *comment )
                      {
                         Aux_Message( stderr, "\"%s\" : <%s> FAILED at level %2d, Time = %13.7e, Step = %ld !!\n",
                                      comment, __FUNCTION__, lv, Time[lv], Step );
-                        Aux_Message( stderr, "%4s\t%7s\t%7s\t\t%19s\t%7s\t\t%7s\n", 
+                        Aux_Message( stderr, "%4s\t%7s\t%7s\t\t%19s\t%7s\t\t%7s\n",
                                      "Rank", "PatchID", "SibID", "Patch Corner", "Surplus", "Missing" );
 
                         Pass = false;
@@ -260,7 +260,7 @@ void Aux_Check_FluxAllocate( const int lv, const char *comment )
                   }
                } // if ( SonPID != -1 ) ... else
 
-            } // for (int PID0=amr->NPatchComma[lv][1+sib]; PID0<amr->NPatchComma[lv][2+sib]; PID0+=8) 
+            } // for (int PID0=amr->NPatchComma[lv][1+sib]; PID0<amr->NPatchComma[lv][2+sib]; PID0+=8)
               // for (int t=0; t<4; t++)
          } // for (int sib=0; sib<6; sib++)
 #        endif // #ifndef LOAD_BALANCE
@@ -272,12 +272,12 @@ void Aux_Check_FluxAllocate( const int lv, const char *comment )
       MPI_Barrier( MPI_COMM_WORLD );
 
    } // for (int TargetRank=0; TargetRank<MPI_NRank; TargetRank++)
-   
+
 
    if ( Pass )
    {
-      if ( MPI_Rank == 0 )   
-         Aux_Message( stdout, "\"%s\" : <%s> PASSED at level %2d, Time = %13.7e, Step = %ld\n", 
+      if ( MPI_Rank == 0 )
+         Aux_Message( stdout, "\"%s\" : <%s> PASSED at level %2d, Time = %13.7e, Step = %ld\n",
                       comment, __FUNCTION__, lv, Time[lv], Step );
    }
 

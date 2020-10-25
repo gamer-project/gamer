@@ -32,7 +32,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 void Aux_Message( FILE *Type, const char *Format, ... );
 bool Aux_CheckFileExist( const char *FileName );
 void Prepare_PatchData( const int lv, real *h_Input_Array, const int GhostSize, const int NPG, const int *PID0_List, 
-                        const int TVar, const IntScheme_t IntScheme, const NSide_t NSide, const bool IntPhase );
+                        const long TVar, const IntScheme_t IntScheme, const NSide_t NSide, const bool IntPhase );
 void Int_Table( const IntScheme_t IntScheme, int &NSide, int &NGhost );
 void Interpolate( real CData [], const int CSize[3], const int CStart[3], const int CRange[3],
                   real FData [], const int FSize[3], const int FStart[3], 

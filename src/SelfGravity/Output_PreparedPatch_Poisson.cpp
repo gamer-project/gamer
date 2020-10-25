@@ -8,10 +8,10 @@
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_PreparedPatch_Poisson
 // Description :  Output the density/potential of a single patch plus its ghost zones prepared by
-//                Poi_Prepare_Source() or Poi_Prepare_Pot()
+//                Poi_Prepare_Rho() or Poi_Prepare_Pot()
 //
 // Note        :  For "TComp == 0", this function should be placed after invoking Prepare_PatchData() in
-//                Poi_Prepare_Source().
+//                Poi_Prepare_Rho().
 //                For "TComp == 1", this function should be placed in the end of Poi_Prepare_Pot().
 //
 //                Example:
@@ -36,7 +36,7 @@
 //                h_Rho_Array_P    : Input host density array for the Poisson solver
 //                h_Pot_Array_P_In : Input host coarse-grid potential array for the Poisson solver
 //                NPG              : Number of patch groups to be prepared at a time
-//                PID0_List        : List recording the patch indicies with LocalID==0 to be udpated
+//                PID0_List        : List recording the patch indices with LocalID==0 to be udpated
 //                CLv              : Level of data currently stored in the input arrays
 //                comment          : String to attach to the end of the file name
 //-------------------------------------------------------------------------------------------------------

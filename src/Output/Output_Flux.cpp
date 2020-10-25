@@ -74,12 +74,7 @@ void Output_Flux( const int lv, const int PID, const int Sib, const char *commen
 #     if   ( MODEL == HYDRO )
       fprintf( File, "( %c, %c )%16s%16s%16s%16s%16s\n", label[0], label[1], "Density Flux", "Px Flux",
                                                          "Py Flux", "Pz Flux", "Energy Flux" );
-#     elif ( MODEL == MHD )
-#     warning : WAIT MHD !!!
 
-#     elif   ( MODEL == SR_HYDRO )
-      fprintf( File, "( %c, %c )%16s%16s%16s%16s%16s\n", label[0], label[1], "Density Flux", "Px Flux",
-                                                         "Py Flux", "Pz Flux", "Energy Flux" );
 #     elif ( MODEL == ELBDM )
       fprintf( File, "( %c, %c )%16s\n",                 label[0], label[1], "Density Flux" );
 

@@ -3,22 +3,22 @@
 #if ( MODEL == HYDRO )
 
 static void BC_Reflecting_xm( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
-                              const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
+                              const long TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                               const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] );
 static void BC_Reflecting_xp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
-                              const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
+                              const long TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                               const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] );
 static void BC_Reflecting_ym( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
-                              const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
+                              const long TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                               const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] );
 static void BC_Reflecting_yp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
-                              const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
+                              const long TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                               const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] );
 static void BC_Reflecting_zm( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
-                              const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
+                              const long TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                               const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] );
 static void BC_Reflecting_zp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
-                              const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
+                              const long TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                               const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] );
 
 
@@ -28,10 +28,10 @@ static void BC_Reflecting_zp( real *Array, const int NVar_Flu, const int TFluVar
 // Function    :  Hydro_BoundaryCondition_Reflecting
 // Description :  Fill up the ghost-zone values by the reflecting B.C.
 //
-// Note        :  1. Work for the functions "Prepare_PatchData, InterpolateGhostZone, Refine, LB_Refine_AllocateNewPatch"
-//                2. Similar to the outflow (i.e., zero-gradient) B.C. except that the normal vecotor components change sign
+// Note        :  1. Work for Prepare_PatchData(), InterpolateGhostZone(), Refine(), and LB_Refine_GetNewRealPatchList()
+//                2. Similar to the outflow (i.e., zero-gradient) B.C. except that the normal vector components change sign
 //
-// Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
 //                BC_Face        : Boundary face (0~5) --> (-x,+x,-y,+y,-z,+z)
 //                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
 //                GhostSize      : Number of ghost zones
@@ -47,7 +47,7 @@ static void BC_Reflecting_zp( real *Array, const int NVar_Flu, const int TFluVar
 void Hydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const int NVar_Flu, const int GhostSize,
                                          const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
                                          const int Idx_Start[], const int Idx_End[], const int TFluVarIdxList[],
-                                         const int NVar_Der, const int TDerVarList[] )
+                                         const int NVar_Der, const long TDerVarList[] )
 {
 
 // check the index range
@@ -121,23 +121,15 @@ void Hydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const i
 // Function    :  BC_Reflecting_xm
 // Description :  Set the reflecting B.C. at the -x boundary
 //
-// Note        :  1. Work for the function "Hydro_BoundaryCondition_Reflecting"
+// Note        :  1. Work for Hydro_BoundaryCondition_Reflecting()
 //                2. Use the input parameter "NVar_Flu" and "TFluVarIdxList" to control the target fluid variables
 //
-// Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
-//                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
-//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
-//                NVar_Der       : Number of derived variables to be prepared
-//                TDerVarList    : List recording the target derived variables
-//                GhostSize      : Number of ghost zones
-//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
-//                Idx_Start      : Minimum array indices
-//                Idx_End        : Maximum array indices
+// Parameter   :  See Hydro_BoundaryCondition_Reflecting()
 //
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
 void BC_Reflecting_xm( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
-                       const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
+                       const long TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                        const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] )
 {
 
@@ -211,23 +203,15 @@ void BC_Reflecting_xm( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // Function    :  BC_Reflecting_xp
 // Description :  Set the reflecting B.C. at the +x boundary
 //
-// Note        :  1. Work for the function "Hydro_BoundaryCondition_Reflecting"
+// Note        :  1. Work for Hydro_BoundaryCondition_Reflecting()
 //                2. Use the input parameter "NVar_Flu" and "TFluVarIdxList" to control the target fluid variables
 //
-// Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
-//                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
-//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
-//                NVar_Der       : Number of derived variables to be prepared
-//                TDerVarList    : List recording the target derived variables
-//                GhostSize      : Number of ghost zones
-//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
-//                Idx_Start      : Minimum array indices
-//                Idx_End        : Maximum array indices
+// Parameter   :  See Hydro_BoundaryCondition_Reflecting()
 //
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
 void BC_Reflecting_xp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
-                       const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
+                       const long TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                        const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] )
 {
 
@@ -301,23 +285,15 @@ void BC_Reflecting_xp( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // Function    :  BC_Reflecting_ym
 // Description :  Set the reflecting B.C. at the -y boundary
 //
-// Note        :  1. Work for the function "Hydro_BoundaryCondition_Reflecting"
+// Note        :  1. Work for Hydro_BoundaryCondition_Reflecting()
 //                2. Use the input parameter "NVar_Flu" and "TFluVarIdxList" to control the target fluid variables
 //
-// Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
-//                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
-//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
-//                NVar_Der       : Number of derived variables to be prepared
-//                TDerVarList    : List recording the target derived variables
-//                GhostSize      : Number of ghost zones
-//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
-//                Idx_Start      : Minimum array indices
-//                Idx_End        : Maximum array indices
+// Parameter   :  See Hydro_BoundaryCondition_Reflecting()
 //
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
 void BC_Reflecting_ym( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
-                       const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
+                       const long TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                        const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] )
 {
 
@@ -391,23 +367,15 @@ void BC_Reflecting_ym( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // Function    :  BC_Reflecting_yp
 // Description :  Set the reflecting B.C. at the +y boundary
 //
-// Note        :  1. Work for the function "Hydro_BoundaryCondition_Reflecting"
+// Note        :  1. Work for Hydro_BoundaryCondition_Reflecting()
 //                2. Use the input parameter "NVar_Flu" and "TFluVarIdxList" to control the target fluid variables
 //
-// Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
-//                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
-//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
-//                NVar_Der       : Number of derived variables to be prepared
-//                TDerVarList    : List recording the target derived variables
-//                GhostSize      : Number of ghost zones
-//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
-//                Idx_Start      : Minimum array indices
-//                Idx_End        : Maximum array indices
+// Parameter   :  See Hydro_BoundaryCondition_Reflecting()
 //
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
 void BC_Reflecting_yp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
-                       const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
+                       const long TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                        const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] )
 {
 
@@ -481,23 +449,15 @@ void BC_Reflecting_yp( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // Function    :  BC_Reflecting_zm
 // Description :  Set the reflecting B.C. at the -z boundary
 //
-// Note        :  1. Work for the function "Hydro_BoundaryCondition_Reflecting"
+// Note        :  1. Work for Hydro_BoundaryCondition_Reflecting()
 //                2. Use the input parameter "NVar_Flu" and "TFluVarIdxList" to control the target fluid variables
 //
-// Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
-//                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
-//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
-//                NVar_Der       : Number of derived variables to be prepared
-//                TDerVarList    : List recording the target derived variables
-//                GhostSize      : Number of ghost zones
-//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
-//                Idx_Start      : Minimum array indices
-//                Idx_End        : Maximum array indices
+// Parameter   :  See Hydro_BoundaryCondition_Reflecting()
 //
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
 void BC_Reflecting_zm( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
-                       const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
+                       const long TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                        const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] )
 {
 
@@ -571,23 +531,15 @@ void BC_Reflecting_zm( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // Function    :  BC_Reflecting_zp
 // Description :  Set the reflecting B.C. at the +z boundary
 //
-// Note        :  1. Work for the function "Hydro_BoundaryCondition_Reflecting"
+// Note        :  1. Work for Hydro_BoundaryCondition_Reflecting()
 //                2. Use the input parameter "NVar_Flu" and "TFluVarIdxList" to control the target fluid variables
 //
-// Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
-//                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
-//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
-//                NVar_Der       : Number of derived variables to be prepared
-//                TDerVarList    : List recording the target derived variables
-//                GhostSize      : Number of ghost zones
-//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
-//                Idx_Start      : Minimum array indices
-//                Idx_End        : Maximum array indices
+// Parameter   :  See Hydro_BoundaryCondition_Reflecting()
 //
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
 void BC_Reflecting_zp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
-                       const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
+                       const long TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                        const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] )
 {
 
