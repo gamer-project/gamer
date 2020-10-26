@@ -621,7 +621,7 @@ void Aux_Check_Parameter()
 #  endif
 
 #  if ( defined LR_EINT  &&  FLU_SCHEME == CTU )
-#     error : CTU does NOT support LR_EINT in CUFLU.h !!
+#     error : ERROR : CTU does NOT support LR_EINT in CUFLU.h !!
 #  endif
 
 #  if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  EOS != EOS_NUCLEAR  &&  EOS != EOS_TABULAR  &&  EOS != EOS_USER )
