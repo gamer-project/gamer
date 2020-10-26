@@ -616,6 +616,10 @@ void Aux_Check_Parameter()
 #   endif
 #  endif // MHD
 
+#  ifdef COSMIC_RAY
+#     error : ERROR : COSMIC_RAY is NOT supported yet !!
+#  endif
+
 #  if ( defined LR_EINT  &&  FLU_SCHEME == CTU )
 #     error : CTU does NOT support LR_EINT in CUFLU.h !!
 #  endif
