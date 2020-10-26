@@ -5,7 +5,7 @@
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
 static real Poi_AddExtraMassForGravity_Template( const double x, const double y, const double z, const double Time,
-                                        const int lv, double AuxArray[] );
+                                                 const int lv, double AuxArray[] );
 
 // this function pointer must be set by a test problem initializer
 real (*Poi_AddExtraMassForGravity_Ptr)( const double x, const double y, const double z, const double Time,

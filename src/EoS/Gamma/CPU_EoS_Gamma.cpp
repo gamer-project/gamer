@@ -38,7 +38,7 @@
 //                   AuxArray[3] = 1/gamma
 //
 // Note        :  1. Invoked by EoS_Init_Gamma()
-//                2. AuxArray[] has the size of EOS_NAUX_MAX defined in Macro.h (default = 10)
+//                2. AuxArray[] has the size of EOS_NAUX_MAX defined in Macro.h (default = 20)
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //                4. Do not change the order of AuxArray[]
 //                   --> For example, the dual-energy routines assume AuxArray[0]=GAMMA
@@ -210,7 +210,7 @@ FUNC_SPACE EoS_DP2E_t EoS_DensPres2Eint_Ptr = EoS_DensPres2Eint_Gamma;
 FUNC_SPACE EoS_DP2C_t EoS_DensPres2CSqr_Ptr = EoS_DensPres2CSqr_Gamma;
 
 //-----------------------------------------------------------------------------------------
-// Function    :  EoS_InitCPU/GPUFunc_Gamma
+// Function    :  EoS_SetCPU/GPUFunc_Gamma
 // Description :  Return the function pointers of the CPU/GPU EoS routines
 //
 // Note        :  1. Invoked by EoS_Init_Gamma()
@@ -218,7 +218,7 @@ FUNC_SPACE EoS_DP2C_t EoS_DensPres2CSqr_Ptr = EoS_DensPres2CSqr_Gamma;
 //                   since CPU and GPU functions are compiled completely separately in GAMER
 //                   --> In other words, a unified routine like the following won't work
 //
-//                      EoS_InitFunc_Gamma( CPU_FuncPtr, GPU_FuncPtr );
+//                      EoS_SetFunc_Gamma( CPU_FuncPtr, GPU_FuncPtr );
 //
 //                3. Call-by-reference
 //

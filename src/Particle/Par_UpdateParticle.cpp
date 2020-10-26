@@ -54,6 +54,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 {
 
    const ParInterp_t IntScheme    = amr->Par->Interp;
+   const bool   UsePot            = ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT );
    const bool   IntPhase_No       = false;
    const bool   DE_Consistency_No = false;
    const real   MinDens_No        = -1.0;
@@ -85,7 +86,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
    real PotWeighting0, PotWeighting1;
    bool PotIntTime = false;
 
-   if (  ( OPT__GRAVITY_TYPE == GRAVITY_SELF || OPT__GRAVITY_TYPE == GRAVITY_BOTH )  &&  amr->Par->ImproveAcc  )
+   if ( UsePot  &&  amr->Par->ImproveAcc )
    {
       if      (  Mis_CompareRealValue( PrepPotTime, amr->PotSgTime[lv][   amr->PotSg[lv] ], NULL, false )  )
          PotSg =   amr->PotSg[lv];
@@ -174,10 +175,9 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
    real (*Pot3D)[PotSize][PotSize][PotSize] = ( real (*)[PotSize][PotSize][PotSize] )Pot;
    real (*Acc3D)[AccSize][AccSize][AccSize] = ( real (*)[AccSize][AccSize][AccSize] )Acc;
 
-   bool   GotYou;
-   long   ParID;
-   real   Acc_Temp[3], dt, dt_half;
-   double PhyCorner_ExtAcc[3], PhyCorner_ExtPot[3], x, y, z;
+   bool GotYou;
+   long ParID;
+   real Acc_Temp[3], dt, dt_half;
 
 
 // loop over all **real** patch groups
@@ -220,8 +220,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 
 
 //    2. prepare the potential data for the patch group with particles (need NSIDE_26 for ParGhost>0 )
-//    2.1 potential from self-gravity
-      if (  !UseStoredAcc  &&  ( OPT__GRAVITY_TYPE == GRAVITY_SELF || OPT__GRAVITY_TYPE == GRAVITY_BOTH )  )
+      if ( !UseStoredAcc  &&  UsePot )
       {
 #        ifdef STORE_POT_GHOST
          if ( amr->Par->ImproveAcc )
@@ -244,14 +243,14 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                else
                   memcpy( Pot3D[P], amr->patch[PotSg][lv][PID]->pot_ext, CUBE(PotSize)*sizeof(real) );
             }
-         }
+         } // if ( amr->Par->ImproveAcc )
 
          else
 #        endif // #ifdef STORE_POT_GHOST
             Prepare_PatchData( lv, PrepPotTime, Pot, NULL, PotGhost, 1, &PID0, _POTE, _NONE,
                                OPT__GRA_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No,
                                OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, DE_Consistency_No );
-      } // if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
+      } // if ( !UseStoredAcc  &&  UsePot )
 
 
       for (int PID=PID0, P=0; PID<PID0+8; PID++, P++)
@@ -260,24 +259,10 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 
          if ( !UseStoredAcc )
          {
+            double PhyCorner_ExtAcc[3], x, y, z;
+
             for (int d=0; d<3; d++)
-            {
                PhyCorner_ExtAcc[d] = amr->patch[0][lv][PID]->EdgeL[d] + (0.5-ParGhost)*dh;
-               PhyCorner_ExtPot[d] = amr->patch[0][lv][PID]->EdgeL[d] + (0.5-PotGhost)*dh;
-            }
-
-//          2.2 external potential (currently useful only for ELBDM)
-            if ( OPT__EXTERNAL_POT )
-            {
-               for (int k=0; k<PotSize; k++)    {  z = PhyCorner_ExtPot[2] + (double)k*dh;
-               for (int j=0; j<PotSize; j++)    {  y = PhyCorner_ExtPot[1] + (double)j*dh;
-               for (int i=0; i<PotSize; i++)    {  x = PhyCorner_ExtPot[0] + (double)i*dh;
-
-                  Pot3D[P][k][j][i] += CPUExtPot_Ptr( x, y, z, PrepPotTime, ExtPot_AuxArray );
-
-               }}}
-            }
-
 
 //          3. calculate acceleration on cells
             for (int k=GraGhost_Par, kk=0; k<PotSize-GraGhost_Par; k++, kk++)  {  z = PhyCorner_ExtAcc[2] + (double)kk*dh;
@@ -288,13 +273,12 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                Acc_Temp[1] = (real)0.0;
                Acc_Temp[2] = (real)0.0;
 
-//             3.1 external gravity (currently useful only for HYDRO)
-               if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
+//             3.1 external acceleration
+               if ( OPT__EXT_ACC )
                   CPUExtAcc_Ptr( Acc_Temp, x, y, z, PrepPotTime, ExtAcc_AuxArray );
 
-
-//             3.2 self-gravity
-               if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
+//             3.2 self-gravity and external potential
+               if ( UsePot )
                {
 //                OPT__GRA_P5_GRADIENT is not supported yet
 //                if ( OPT__GRA_P5_GRADIENT )
@@ -314,7 +298,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                      Acc_Temp[1] += GraConst * ( Pot3D[P][k  ][j+1][i  ] - Pot3D[P][k  ][j-1][i  ] );
                      Acc_Temp[2] += GraConst * ( Pot3D[P][k+1][j  ][i  ] - Pot3D[P][k-1][j  ][i  ] );
                   }
-               }
+               } // if ( UsePot )
 
                for (int d=0; d<3; d++)    Acc3D[d][kk][jj][ii] = Acc_Temp[d];
 

@@ -1,10 +1,10 @@
 #include "GAMER.h"
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
-static bool Flag_User_Template( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
+static bool Flag_User_Template( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 
 // this function pointer must be set by a test problem initializer
-bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int lv, const int PID, const double Threshold ) = NULL;
+bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold ) = NULL;
 
 
 
@@ -26,7 +26,7 @@ bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int lv, cons
 // Return      :  "true"  if the flag criteria are satisfied
 //                "false" if the flag criteria are not satisfied
 //-------------------------------------------------------------------------------------------------------
-bool Flag_User_Template( const int i, const int j, const int k, const int lv, const int PID, const double Threshold )
+bool Flag_User_Template( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold )
 {
 
    /*
@@ -66,7 +66,7 @@ bool Flag_User_Template( const int i, const int j, const int k, const int lv, co
    const double dr[3]     = { Pos[0]-Center[0], Pos[1]-Center[1], Pos[2]-Center[2] };
    const double Radius    = sqrt( dr[0]*dr[0] + dr[1]*dr[1] + dr[2]*dr[2] );
 
-   Flag = Radius < Threshold;
+   Flag = Radius < Threshold[0];
    */
 // ##########################################################################################################
 

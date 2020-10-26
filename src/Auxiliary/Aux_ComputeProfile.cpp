@@ -127,7 +127,6 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
    }
 
 
-//###REVISE: update/remove InclPot in the future version where GREP is treated as external potential.
 // check whether _POTE is in TVarBitIdx since the potential array may have not been computed during initialization
 #  ifdef GRAVITY
    bool InclPot = false;
