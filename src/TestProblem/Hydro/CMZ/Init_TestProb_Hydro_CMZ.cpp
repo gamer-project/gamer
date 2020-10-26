@@ -26,10 +26,11 @@ void Par_Init_ByFunction_BarredPot( const long NPar_ThisRank, const long NPar_Al
 #endif
 static void IsolatedBC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] );
-void Init_ExtAcc_BarredPot();
-void Init_ExtPot_BarredPot();
 
+//void Init_ExtAcc_BarredPot();
+//void Init_ExtPot_BarredPot();
 
+void Init_ExtPot_TabularP17();
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
@@ -218,9 +219,10 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
   double DiskGasDens, DiskGasPres, DiskGasVel;
   double Pres,Eint;
 
-  if (Rad >= 0.5 && Rad <= 3 && fabs(dz) <= 0.2)
+  if (Rad <= 11.5 && fabs(dz) <= 0.2)
   {
-     DiskGasDens = 0.025*(Const_Msun/CUBE(Const_pc))/(UNIT_M/CUBE(UNIT_L));
+ 
+     DiskGasDens = 0.2735*exp(-Rad/4.8)*1/SQR(cosh(dz/0.13))*(Const_Msun/CUBE(Const_pc))/(UNIT_M/CUBE(UNIT_L));    
      DiskGasPres = Hydro_Temp2Pres( DiskGasDens, BarredPot_initT, MOLECULAR_WEIGHT, Const_mH/UNIT_M,
                                                  CheckMinPres_Yes, MIN_PRES );
   }
@@ -373,9 +375,9 @@ void Init_TestProb_Hydro_BarredPot()
    Par_Init_Attribute_User_Ptr = AddNewParticleAttribute_BarredPot;
 #  endif
 #  ifdef GRAVITY
-   Init_ExtAcc_Ptr         = Init_ExtAcc_BarredPot;
-   if ( OPT__EXT_POT == EXT_POT_FUNC )
-   Init_ExtPot_Ptr         = Init_ExtPot_BarredPot;
+//   Init_ExtAcc_Ptr         = Init_ExtAcc_BarredPot;
+//   if ( OPT__EXT_POT == EXT_POT_FUNC )
+   Init_ExtPot_Ptr         = Init_ExtPot_TabularP17;
 #  endif // #ifdef GRAVITY
 #  endif // #if ( MODEL == HYDRO )
 

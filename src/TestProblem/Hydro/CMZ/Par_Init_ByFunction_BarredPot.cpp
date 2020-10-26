@@ -4,7 +4,7 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Par_Init_ByFunction_Plummer
+// Function    :  Par_Init_ByFunction_BarredPot
 // Description :  User-specified function to initialize particle attributes
 //
 // Note        :  1. Invoked by Init_GAMER() using the function pointer "Par_Init_ByFunction_Ptr"

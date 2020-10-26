@@ -17,10 +17,10 @@ MIN_EINT                      0.0         # minimum internal energy (must >= 0.0
 
 # simulation scale
 BOX_SIZE                      24.         # box size along the longest side (in Mpc/h if COMOVING is adopted)
-NX0_TOT_X                     256         # number of base-level cells along x
-NX0_TOT_Y                     256         # number of base-level cells along y
-NX0_TOT_Z                     256         # number of base-level cells along z
-OMP_NTHREAD                   8           # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
+NX0_TOT_X                     512        # number of base-level cells along x
+NX0_TOT_Y                     512        # number of base-level cells along y
+NX0_TOT_Z                     16          # number of base-level cells along z
+OMP_NTHREAD                   -1          # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
 END_T                        -1.0         # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
 END_STEP                     -1           # end step (<0=auto -> must be set by test problems or restart) [-1]
 
@@ -46,12 +46,12 @@ UNIT_D                       -1.0               # mass density unit  (<=0 -> set
 
 
 # boundary conditions
-OPT__BC_FLU_XM                2           # fluid boundary condition at the -x face: (1=periodic, 2=outflow, 3=reflecting, 4=user)
-OPT__BC_FLU_XP                2           # fluid boundary condition at the +x face: (1=periodic, 2=outflow, 3=reflecting, 4=user)
-OPT__BC_FLU_YM                2           # fluid boundary condition at the -y face: (1=periodic, 2=outflow, 3=reflecting, 4=user)
-OPT__BC_FLU_YP                2           # fluid boundary condition at the +y face: (1=periodic, 2=outflow, 3=reflecting, 4=user)
-OPT__BC_FLU_ZM                2           # fluid boundary condition at the -z face: (1=periodic, 2=outflow, 3=reflecting, 4=user)
-OPT__BC_FLU_ZP                2           # fluid boundary condition at the +z face: (1=periodic, 2=outflow, 3=reflecting, 4=user)
+OPT__BC_FLU_XM                4           # fluid boundary condition at the -x face: (1=periodic, 2=outflow, 3=reflecting, 4=user)
+OPT__BC_FLU_XP                4           # fluid boundary condition at the +x face: (1=periodic, 2=outflow, 3=reflecting, 4=user)
+OPT__BC_FLU_YM                4           # fluid boundary condition at the -y face: (1=periodic, 2=outflow, 3=reflecting, 4=user)
+OPT__BC_FLU_YP                4           # fluid boundary condition at the +y face: (1=periodic, 2=outflow, 3=reflecting, 4=user)
+OPT__BC_FLU_ZM                4           # fluid boundary condition at the -z face: (1=periodic, 2=outflow, 3=reflecting, 4=user)
+OPT__BC_FLU_ZP                4           # fluid boundary condition at the +z face: (1=periodic, 2=outflow, 3=reflecting, 4=user)
 OPT__BC_POT                   2           # gravity boundary condition: (1=periodic, 2=isolated)
 
 
@@ -89,7 +89,7 @@ REGRID_COUNT                  4           # refine every REGRID_COUNT sub-step [
 FLAG_BUFFER_SIZE              8           # number of buffer cells for the flag operation (0~PATCH_SIZE) [PATCH_SIZE]
 FLAG_BUFFER_SIZE_MAXM1_LV     2           # FLAG_BUFFER_SIZE at the level MAX_LEVEL-1 (<0=auto -> FLAG_BUFFER_SIZE) [-1]
 FLAG_BUFFER_SIZE_MAXM2_LV    -1           # FLAG_BUFFER_SIZE at the level MAX_LEVEL-2 (<0=auto) [-1]
-MAX_LEVEL                     4           # maximum refinement level (0~NLEVEL-1) [NLEVEL-1]
+MAX_LEVEL                     0           # maximum refinement level (0~NLEVEL-1) [NLEVEL-1]
 OPT__FLAG_RHO                 1           # flag: density (Input__Flag_Rho) [0]
 OPT__FLAG_RHO_GRADIENT        0           # flag: density gradient (Input__Flag_RhoGradient) [0]
 OPT__FLAG_PRES_GRADIENT       0           # flag: pressure gradient (Input__Flag_PresGradient) [0] ##HYDRO ONLY##
@@ -182,9 +182,17 @@ SOR_MAX_ITER                 -1           # maximum number of iterations in SOR:
 SOR_MIN_ITER                 -1           # minimum number of iterations in SOR: (<0=auto) [-1]
 POT_GPU_NPGROUP              -1           # number of patch groups sent into the GPU Poisson solver (<=0=auto) [-1]
 OPT__GRA_P5_GRADIENT          0           # 5-points gradient in the Gravity solver (must have GRA/USG_GHOST_SIZE_G>=2) [0]
-OPT__GRAVITY_TYPE             2           # gravity source: (1=self-gravity, 2=external gravity, 3=both) ##2/3 for HYDRO ONLY##
-OPT__EXTERNAL_POT             0           # add the external potential (incompatible with OPT__GRAVITY_TYPE==2) [0] ##ELBDM ONLY##
-
+OPT__SELF_GRAVITY             0           # add self-gravity [1]
+OPT__EXT_ACC                  0           # add external acceleration (0=off, 1=function, 2=table) [0] ##HYDRO ONLY##
+OPT__EXT_POT                  2           # add external potential    (0=off, 1=function, 2=table) [0]
+EXT_POT_TABLE_NAME            pot3D_P17Ob40.bin # external potential table: filename
+EXT_POT_TABLE_NPOINT_X        1200
+EXT_POT_TABLE_NPOINT_Y        1200
+EXT_POT_TABLE_NPOINT_Z        101
+EXT_POT_TABLE_DH              0.0200167
+EXT_POT_TABLE_EDGEL_X         0.0
+EXT_POT_TABLE_EDGEL_Y         0.0
+EXT_POT_TABLE_EDGEL_Z         0.0
 
 # initialization
 OPT__INIT                     1           # initialization option: (1=FUNCTION, 2=RESTART, 3=FILE->"UM_IC")
@@ -215,7 +223,7 @@ OPT__OUTPUT_PAR_DENS          1           # output the particle or total mass de
                                           # (0=off, 1=particle mass density, 2=total mass density) [1] ##OPT__OUTPUT_TOTAL ONLY##
 OPT__OUTPUT_MODE              2           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
 OUTPUT_STEP                   5           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
-OUTPUT_DT                     1.0e0       # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
+OUTPUT_DT                     1.0e-1       # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
 OUTPUT_PART_X                -1.0         # x coordinate for OPT__OUTPUT_PART [-1.0]
 OUTPUT_PART_Y                -1.0         # y coordinate for OPT__OUTPUT_PART [-1.0]
 OUTPUT_PART_Z                -1.0         # z coordinate for OPT__OUTPUT_PART [-1.0]
