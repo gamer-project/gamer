@@ -2628,7 +2628,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    const hid_t   H5_TypeID_Arr_NLvM1_4Double  = H5Tarray_create( H5T_NATIVE_DOUBLE, 2,  H5_ArrDims_NLvM1_4   );
    const hid_t   H5_TypeID_Arr_NLvM1_VLDouble = H5Tvlen_create ( H5T_NATIVE_DOUBLE );
 #  endif
-   const hid_t   H5_TypeID_Arr_3Double       = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_3Var      );
+   const hid_t   H5_TypeID_Arr_3Double        = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_3Var      );
 
 
 // create the "variable-length string" datatype
@@ -3067,7 +3067,8 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1_4Double  );
    H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1_VLDouble );
 #  endif
-   H5_Status = H5Tclose( H5_TypeID_VarStr );
+   H5_Status = H5Tclose( H5_TypeID_Arr_3Double        );
+   H5_Status = H5Tclose( H5_TypeID_VarStr             );
 
 } // FUNCTION : GetCompound_InputPara
 
