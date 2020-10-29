@@ -36,7 +36,7 @@ static int     AGORA_VcProf_NBin;               // number of radial bin in AGORA
 
 // problem-specific function prototypes
 double GaussianQuadratureIntegrate( const double dx, const double dy, const double dz, const double ds );
-bool Flag_AGORA( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
+bool Flag_AGORA( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 #ifdef PARTICLE
 void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRank,
                                 real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,

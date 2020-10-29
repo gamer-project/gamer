@@ -56,6 +56,7 @@ struct KeyInfo_t
    int    CellScale[NLEVEL];        // amr->scale[lv]
 #  if ( MODEL == HYDRO )
    int    Magnetohydrodynamics;
+   int    CosmicRay;
 #  endif
 
    long   Step;
@@ -129,6 +130,7 @@ struct Makefile_t
 #  endif
    int DualEnergy;
    int Magnetohydrodynamics;
+   int CosmicRay;
    int EoS;
    int BarotropicEoS;
 
@@ -396,6 +398,7 @@ struct InputPara_t
 #  endif
    int    Opt__Flag_LohnerForm;
    int    Opt__Flag_User;
+   int    Opt__Flag_User_Num;
    int    Opt__Flag_Region;
 #  ifdef PARTICLE
    int    Opt__Flag_NParPatch;
@@ -633,7 +636,7 @@ struct InputPara_t
    double FlagTable_Rho         [NLEVEL-1];
    double FlagTable_RhoGradient [NLEVEL-1];
    double FlagTable_Lohner      [NLEVEL-1][4];
-   double FlagTable_User        [NLEVEL-1];
+   hvl_t  FlagTable_User        [NLEVEL-1];
 #  if   ( MODEL == HYDRO )
    double FlagTable_PresGradient[NLEVEL-1];
    double FlagTable_Vorticity   [NLEVEL-1];

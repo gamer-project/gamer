@@ -79,6 +79,9 @@ SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 # magnetohydrodynamics
 #SIMU_OPTION += -DMHD
 
+# cosmic rays (not supported yet)
+#SIMU_OPTION += -DCOSMIC_RAY
+
 # equation of state: EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TABULAR/EOS_USER
 # --> must be set when MODEL=HYDRO; must also enable BAROTROPIC_EOS for EOS_ISOTHERMAL
 SIMU_OPTION += -DEOS=EOS_GAMMA

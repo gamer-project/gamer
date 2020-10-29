@@ -21,7 +21,7 @@ extern int  KH_PeriodicZFactor;
 // Return      :  "true"  if the flag criteria are satisfied
 //                "false" if the flag criteria are not satisfied
 //-------------------------------------------------------------------------------------------------------
-bool Flag_KelvinHelmholtzInstability( const int i, const int j, const int k, const int lv, const int PID, const double Threshold )
+bool Flag_KelvinHelmholtzInstability( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold )
 {
 
    const double dh          = amr->dh[lv];

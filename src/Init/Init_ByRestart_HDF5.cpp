@@ -85,7 +85,12 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  else
    const int  Magnetohydrodynamics = 0;
 #  endif
+#  ifdef COSMIC_RAY
+   const int  CosmicRay            = 1;
+#  else
+   const int  CosmicRay            = 0;
 #  endif
+#  endif // #if ( MODEL == HYDRO )
 
    KeyInfo_t KeyInfo;
 
@@ -173,6 +178,9 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  if ( MODEL == HYDRO )
    if ( KeyInfo.FormatVersion >= 2400 )
    LoadField( "Magnetohydrodynamics", &KeyInfo.Magnetohydrodynamics, H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &Magnetohydrodynamics,  1,    Fatal );
+
+   if ( KeyInfo.FormatVersion >= 2421 )
+   LoadField( "CosmicRay",            &KeyInfo.CosmicRay,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &CosmicRay,             1,    Fatal );
 #  endif
 
    LoadField( "Step",                 &KeyInfo.Step,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
@@ -1432,6 +1440,7 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
 #  endif
    LoadField( "DualEnergy",             &RS.DualEnergy,             SID, TID, NonFatal, &RT.DualEnergy,             1, NonFatal );
    LoadField( "Magnetohydrodynamics",   &RS.Magnetohydrodynamics,   SID, TID, NonFatal, &RT.Magnetohydrodynamics,   1,    Fatal );
+   LoadField( "CosmicRay",              &RS.CosmicRay,              SID, TID, NonFatal, &RT.CosmicRay,              1,    Fatal );
    LoadField( "EoS",                    &RS.EoS,                    SID, TID, NonFatal, &RT.EoS,                    1, NonFatal );
    LoadField( "BarotropicEoS",          &RS.BarotropicEoS,          SID, TID, NonFatal, &RT.BarotropicEoS,          1, NonFatal );
 
@@ -1776,6 +1785,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  endif
    LoadField( "Opt__Flag_LohnerForm",    &RS.Opt__Flag_LohnerForm,    SID, TID, NonFatal, &RT.Opt__Flag_LohnerForm,     1, NonFatal );
    LoadField( "Opt__Flag_User",          &RS.Opt__Flag_User,          SID, TID, NonFatal, &RT.Opt__Flag_User,           1, NonFatal );
+   LoadField( "Opt__Flag_User_Num",      &RS.Opt__Flag_User_Num,      SID, TID, NonFatal, &RT.Opt__Flag_User_Num,       1, NonFatal );
    LoadField( "Opt__Flag_Region",        &RS.Opt__Flag_Region,        SID, TID, NonFatal, &RT.Opt__Flag_Region,         1, NonFatal );
 #  ifdef PARTICLE
    LoadField( "Opt__Flag_NParPatch",     &RS.Opt__Flag_NParPatch,     SID, TID, NonFatal, &RT.Opt__Flag_NParPatch,      1, NonFatal );
@@ -2030,7 +2040,10 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
       for (int t=0; t<4; t++)
       RS.FlagTable_Lohner      [lv][t] = -1.0;
 
-      RS.FlagTable_User        [lv]    = -1.0;
+      RS.FlagTable_User        [lv].p   = malloc( OPT__FLAG_USER_NUM*sizeof(double) );
+      RS.FlagTable_User        [lv].len = OPT__FLAG_USER_NUM;
+      for (int t=0; t<OPT__FLAG_USER_NUM; t++)
+      ( (double *) RS.FlagTable_User[lv].p )[t] = -1.0;
 
 #     if   ( MODEL == HYDRO )
       RS.FlagTable_PresGradient[lv]    = -1.0;
@@ -2069,8 +2082,19 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
                        "FlagTable_Lohner", lv, t, RS.FlagTable_Lohner[lv][t],  RT.FlagTable_Lohner[lv][t] );
    }}
 
-   if ( OPT__FLAG_USER )
-   LoadField( "FlagTable_User",           RS.FlagTable_User,          SID, TID, NonFatal,  RT.FlagTable_User,          N1, NonFatal );
+   if ( OPT__FLAG_USER ) {
+   for (int lv=0; lv<MAX_LEVEL; lv++)
+   {
+      char Key[MAX_STRING];
+      sprintf( Key, "FlagTable_User_Lv%02d", lv );
+
+      LoadField( Key,                    &RS.FlagTable_User[lv],      SID, TID, NonFatal,  NullPtr,                    -1, NonFatal );
+
+      for (int t=0; t<OPT__FLAG_USER_NUM; t++)
+      if (  ( (double *) RS.FlagTable_User[lv].p )[t] != ( (double *) RT.FlagTable_User[lv].p )[t]  )
+         Aux_Message( stderr, "WARNING : \"%s[%d][%d]\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
+                      "FlagTable_User", lv, t, ( (double *) RS.FlagTable_User[lv].p )[t],  ( (double *) RT.FlagTable_User[lv].p )[t] );
+   }}
 
 #  if   ( MODEL == HYDRO )
    if ( OPT__FLAG_PRES_GRADIENT )
@@ -2116,6 +2140,13 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    Status = H5Tclose( TID );
    Status = H5Dclose( SID );
    Status = H5Fclose( FID );
+
+// free memory
+   for (int lv=0; lv<NLEVEL-1; lv++)
+   {
+      free( RS.FlagTable_User[lv].p );
+      free( RT.FlagTable_User[lv].p );
+   }
 
 } // FUNCTION : Check_InputPara
 
