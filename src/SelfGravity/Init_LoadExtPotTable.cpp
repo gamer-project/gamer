@@ -27,7 +27,7 @@ void Init_LoadExtPotTable()
    if ( OPT__EXT_POT != EXT_POT_TABLE )   return;
 
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   %s ...\n", __FUNCTION__ );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
 // checks
@@ -99,7 +99,7 @@ void Init_LoadExtPotTable()
 #  endif
 
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   %s ... done\n", __FUNCTION__ );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_LoadExtPotTable
 

@@ -161,6 +161,15 @@ void Init_GAMER( int *argc, char ***argv )
    Init_MemAllocate();
 
 
+// load the external potential table
+// --> before Init_ByFunction() so that the test problem initializer can access
+//     the external potential table if required
+// --> after Init_MemAllocate() to allocate the potential table array first
+#  ifdef GRAVITY
+   if ( OPT__EXT_POT == EXT_POT_TABLE )   Init_LoadExtPotTable();
+#  endif
+
+
 // initialize particles
 #  ifdef PARTICLE
    switch ( amr->Par->Init )
@@ -219,10 +228,6 @@ void Init_GAMER( int *argc, char ***argv )
    {
 //    initialize the k-space Green's function for the isolated BC.
       if ( OPT__SELF_GRAVITY  &&  OPT__BC_POT == BC_POT_ISOLATED )    Init_GreenFuncK();
-
-
-//    load the external potential table
-      if ( OPT__EXT_POT == EXT_POT_TABLE )   Init_LoadExtPotTable();
 
 
 //    evaluate the initial average density if it is not set yet (may already be set in Init_ByRestart)
