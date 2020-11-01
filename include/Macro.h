@@ -631,9 +631,10 @@
 #endif
 
 
-// size of auxiliary arrays
+// size of auxiliary arrays and EoS tables
 #if ( MODEL == HYDRO )
 #  define EOS_NAUX_MAX           20    // EoS_AuxArray[]
+#  define EOS_NTABLE_MAX         20    // EoS_Table[]
 #endif
 
 #ifdef GRAVITY
