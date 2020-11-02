@@ -232,7 +232,8 @@ extern double                SF_CREATE_STAR_MAX_STAR_MFRAC;
 // (2-9) equation of state
 // =======================================================================================================
 #if ( MODEL == HYDRO )
-extern double EoS_AuxArray[EOS_NAUX_MAX];
+extern double EoS_AuxArray_Flt[EOS_NAUX_MAX];
+extern int    EoS_AuxArray_Int[EOS_NAUX_MAX];
 extern EoS_DE2P_t EoS_DensEint2Pres_CPUPtr;
 extern EoS_DP2E_t EoS_DensPres2Eint_CPUPtr;
 extern EoS_DP2C_t EoS_DensPres2CSqr_CPUPtr;
@@ -297,6 +298,10 @@ extern real       (*h_Pot_Array_T[2])[ CUBE(GRA_NXT) ];
 #endif
 #ifdef MHD
 extern real       (*h_Mag_Array_T[2])[NCOMP_MAG][ PS1P1*SQR(PS1) ];
+#endif
+
+#if ( MODEL == HYDRO )
+extern real        *h_EoS_Table[EOS_NTABLE_MAX];
 #endif
 
 

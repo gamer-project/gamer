@@ -18,13 +18,14 @@
 
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
 void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres,
-                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[],
-                     const real* const PresIn );
+                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                     const real *const EoS_Table[EOS_NTABLE_MAX], const real* const PresIn );
 void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
                     const bool NormPassive, const int NNorm, const int NormIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff,
                     const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint,
-                    const double EoS_AuxArray[], real* const EintOut );
+                    const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                    const real *const EoS_Table[EOS_NTABLE_MAX], real* const EintOut );
 
 #endif // #ifdef __CUDACC__ ... else ...
 
@@ -53,12 +54,14 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 //                MinDens/Pres      : Density and pressure floors
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
 //                EoS_DensPres2CSqr : EoS routine to compute the sound speed square
-//                EoS_AuxArray      : Auxiliary array for the EoS routines
+//                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
+//                EoS_Table         : EoS tables
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
-                               const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] )
+                               const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
+                               const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] )
 {
 
 // check
@@ -105,9 +108,9 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 #  endif
 
    Hydro_Con2Pri( Con_L, Pri_L, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
-                  EoS_DensEint2Pres, NULL, EoS_AuxArray, NULL );
+                  EoS_DensEint2Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
    Hydro_Con2Pri( Con_R, Pri_R, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
-                  EoS_DensEint2Pres, NULL, EoS_AuxArray, NULL );
+                  EoS_DensEint2Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
 
    real tmp_1, tmp_2, crit, crit_Bx;
    real _RhoL, _RhoR;
@@ -135,7 +138,7 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
    PT_L        = Pri_L[4] + B2L_d2;
    PT_R        = Pri_R[4] + B2R_d2;
 
-   a2          = EoS_DensPres2CSqr( Con_L[0], Pri_L[4], Con_L+NCOMP_FLUID, EoS_AuxArray );
+   a2          = EoS_DensPres2CSqr( Con_L[0], Pri_L[4], Con_L+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
    Cax2        = Bx2*_RhoL;
    Cat2        = BtL2*_RhoL;
    Ca2_plus_a2 = Cat2 + Cax2 + a2;
@@ -156,7 +159,7 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 
    Cf_L = SQRT( Cf2 );  // Cf2 is positive definite using the above formula
 
-   a2          = EoS_DensPres2CSqr( Con_R[0], Pri_R[4], Con_R+NCOMP_FLUID, EoS_AuxArray );
+   a2          = EoS_DensPres2CSqr( Con_R[0], Pri_R[4], Con_R+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
    Cax2        = Bx2*_RhoR;
    Cat2        = BtR2*_RhoR;
    Ca2_plus_a2 = Cat2 + Cax2 + a2;
@@ -187,8 +190,8 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 #  endif
 
 
-   Hydro_Con2Flux( 0, Flux_L, Con_L, MinPres, NULL, NULL, Pri_L+4 );
-   Hydro_Con2Flux( 0, Flux_R, Con_R, MinPres, NULL, NULL, Pri_R+4 );
+   Hydro_Con2Flux( 0, Flux_L, Con_L, MinPres, NULL, NULL, NULL, NULL, Pri_L+4 );
+   Hydro_Con2Flux( 0, Flux_R, Con_R, MinPres, NULL, NULL, NULL, NULL, Pri_R+4 );
 
 // return the upwind fluxes if flow is supersonic
    if ( Speed[0] >= ZERO )

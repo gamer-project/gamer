@@ -50,7 +50,7 @@
 //                                   --> Should be set to the global variable "PassiveNorm_NVar"
 //                NormIdx          : Target variable indices to be normalized
 //                                   --> Should be set to the global variable "PassiveNorm_VarIdx"
-//                EoS_AuxArray     : Auxiliary array for the EoS routines
+//                EoS_AuxArray_Flt : Auxiliary array for the EoS routines
 //                                   --> Only for obtaining Gamma used by the dual-energy formalism
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
@@ -58,7 +58,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                            const real dt, const real dh, const real MinDens, const real MinEint,
                            const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
-                           const double EoS_AuxArray[] )
+                           const double EoS_AuxArray_Flt[] )
 {
 
    const int  didx_flux[3] = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };
@@ -155,7 +155,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 
       Hydro_DualEnergyFix( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
                            Output_1Cell[ENGY], Output_1Cell[ENPY], g_DE_Status[idx_out],
-                           EoS_AuxArray[1], EoS_AuxArray[2], CheckMinPres_No, NULL_REAL, DualEnergySwitch, Emag );
+                           EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2], CheckMinPres_No, NULL_REAL, DualEnergySwitch, Emag );
 #     endif // #ifdef DUAL_ENERGY
 
 

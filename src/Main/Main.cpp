@@ -210,8 +210,9 @@ double                SF_CREATE_STAR_MAX_STAR_MFRAC;
 
 // (2-9) equation of state
 #if ( MODEL == HYDRO )
-// a. auxiliary array
-double EoS_AuxArray[EOS_NAUX_MAX];
+// a. auxiliary arrays
+double EoS_AuxArray_Flt[EOS_NAUX_MAX];
+int    EoS_AuxArray_Int[EOS_NAUX_MAX];
 
 // b. function pointers
 EoS_DE2P_t EoS_DensEint2Pres_CPUPtr = NULL;
@@ -290,6 +291,11 @@ real (*h_Pot_Array_T[2])[ CUBE(GRA_NXT) ]                          = { NULL, NUL
 real (*h_Mag_Array_T[2])[NCOMP_MAG][ PS1P1*SQR(PS1) ]              = { NULL, NULL };
 #endif
 
+// (3-6) EoS tables
+#if ( MODEL == HYDRO )
+real *h_EoS_Table[EOS_NTABLE_MAX];
+#endif
+
 
 // 4. GPU (device) global memory arrays
 // =======================================================================================================
@@ -352,6 +358,11 @@ real (*d_Pot_Array_T)[ CUBE(GRA_NXT) ]                           = NULL;
 real (*d_Mag_Array_T)[NCOMP_MAG][ PS1P1*SQR(PS1) ]               = NULL;
 #endif
 #endif // #ifdef GPU
+
+// (4-6) EoS tables
+#if ( MODEL == HYDRO )
+real *d_EoS_Table[EOS_NTABLE_MAX];
+#endif
 
 
 // 5. timers

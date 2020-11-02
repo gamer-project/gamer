@@ -55,7 +55,8 @@ bool Flu_ResetByUser_Func_Template( real fluid[], const double x, const double y
    const real *MinPassive = NULL;
 #  endif
    const real MinPres                   = 1.0e-10;
-   const real MinEint                   = EoS_DensPres2Eint_CPUPtr( MinDens, MinPres, MinPassive, EoS_AuxArray );
+   const real MinEint                   = EoS_DensPres2Eint_CPUPtr( MinDens, MinPres, MinPassive,
+                                                                    EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
    const real MinEmag                   = 0.0;  // assuming MHD is not adopted
 
    if ( r <= TRad )
@@ -151,7 +152,7 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const double TT
 //          calculate the dual-energy variable (entropy or internal energy)
 #           if   ( DUAL_ENERGY == DE_ENPY )
             fluid[ENPY] = Hydro_Con2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Emag,
-                                             EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
+                                             EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #           elif ( DUAL_ENERGY == DE_EINT )
 #           error : DE_EINT is NOT supported yet !!
 #           endif

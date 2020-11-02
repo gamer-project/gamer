@@ -37,23 +37,26 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  EoS_SetAuxArray_User_Template
-// Description :  Set the auxiliary array AuxArray[]
+// Description :  Set the auxiliary arrays AuxArray_Flt/Int[]
 //
 // Note        :  1. Invoked by EoS_Init_User_Template()
-//                2. AuxArray[] has the size of EOS_NAUX_MAX defined in Macro.h (default = 20)
+//                2. AuxArray_Flt/Int[] have the size of EOS_NAUX_MAX defined in Macro.h (default = 20)
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
-// Parameter   :  AuxArray : Array to be filled up
+// Parameter   :  AuxArray_Flt/Int : Floating-point/Integer arrays to be filled up
 //
-// Return      :  AuxArray[]
+// Return      :  AuxArray_Flt/Int[]
 //-------------------------------------------------------------------------------------------------------
 #ifndef __CUDACC__
-void EoS_SetAuxArray_User_Template( double AuxArray[] )
+void EoS_SetAuxArray_User_Template( double AuxArray_Flt[], int AuxArray_Int[] )
 {
 
    /*
-   AuxArray[0] = ...;
-   AuxArray[1] = ...;
+   AuxArray_Flt[0] = ...;
+   AuxArray_Flt[1] = ...;
+
+   AuxArray_Int[0] = ...;
+   AuxArray_Int[1] = ...;
    */
 
 } // FUNCTION : EoS_SetAuxArray_User_Template
@@ -73,25 +76,28 @@ void EoS_SetAuxArray_User_Template( double AuxArray[] )
 // Description :  Convert gas mass density and internal energy density to gas pressure
 //
 // Note        :  1. Internal energy density here is per unit volume instead of per unit mass
-//                2. See EoS_SetAuxArray_User_Template() for the values stored in AuxArray[]
+//                2. See EoS_SetAuxArray_User_Template() for the values stored in AuxArray_Flt/Int[]
 //
-// Parameter   :  Dens     : Gas mass density
-//                Eint     : Gas internal energy density
-//                Passive  : Passive scalars
-//                AuxArray : Auxiliary array (see the Note above)
+// Parameter   :  Dens       : Gas mass density
+//                Eint       : Gas internal energy density
+//                Passive    : Passive scalars
+//                AuxArray_* : Auxiliary arrays (see the Note above)
+//                Table      : EoS tables
 //
 // Return      :  Gas pressure
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, const real Passive[], const double AuxArray[] )
+static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, const real Passive[], const double AuxArray_Flt[],
+                                             const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] )
 {
 
 // check
 #  ifdef GAMER_DEBUG
 #  if ( NCOMP_PASSIVE > 0 )
-   if ( Passive  == NULL )    printf( "ERROR : Passive == NULL in %s !!\n", __FUNCTION__ );
+   if ( Passive == NULL )  printf( "ERROR : Passive == NULL in %s !!\n", __FUNCTION__ );
 #  endif
-   if ( AuxArray == NULL )    printf( "ERROR : AuxArray == NULL in %s !!\n", __FUNCTION__ );
+   if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
+   if ( AuxArray_Int == NULL )   printf( "ERROR : AuxArray_Int == NULL in %s !!\n", __FUNCTION__ );
 
    if ( Hydro_CheckNegative(Dens) )
       printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
@@ -138,23 +144,26 @@ static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, c
 //
 // Note        :  1. See EoS_DensEint2Pres_User_Template()
 //
-// Parameter   :  Dens     : Gas mass density
-//                Pres     : Gas pressure
-//                Passive  : Passive scalars
-//                AuxArray : Auxiliary array (see the Note above)
+// Parameter   :  Dens       : Gas mass density
+//                Pres       : Gas pressure
+//                Passive    : Passive scalars
+//                AuxArray_* : Auxiliary arrays (see the Note above)
+//                Table      : EoS tables
 //
 // Return      :  Gas internal energy density
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, const real Passive[], const double AuxArray[] )
+static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, const real Passive[], const double AuxArray_Flt[],
+                                             const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] )
 {
 
 // check
 #  ifdef GAMER_DEBUG
 #  if ( NCOMP_PASSIVE > 0 )
-   if ( Passive  == NULL )    printf( "ERROR : Passive == NULL in %s !!\n", __FUNCTION__ );
+   if ( Passive == NULL )  printf( "ERROR : Passive == NULL in %s !!\n", __FUNCTION__ );
 #  endif
-   if ( AuxArray == NULL )    printf( "ERROR : AuxArray == NULL in %s !!\n", __FUNCTION__ );
+   if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
+   if ( AuxArray_Int == NULL )   printf( "ERROR : AuxArray_Int == NULL in %s !!\n", __FUNCTION__ );
 
    if ( Hydro_CheckNegative(Dens) )
       printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
@@ -201,23 +210,26 @@ static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, c
 //
 // Note        :  1. See EoS_DensEint2Pres_User_Template()
 //
-// Parameter   :  Dens     : Gas mass density
-//                Pres     : Gas pressure
-//                Passive  : Passive scalars
-//                AuxArray : Auxiliary array (see the Note above)
+// Parameter   :  Dens       : Gas mass density
+//                Pres       : Gas pressure
+//                Passive    : Passive scalars
+//                AuxArray_* : Auxiliary arrays (see the Note above)
+//                Table      : EoS tables
 //
 // Return      :  Sound speed square
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_DensPres2CSqr_User_Template( const real Dens, const real Pres, const real Passive[], const double AuxArray[] )
+static real EoS_DensPres2CSqr_User_Template( const real Dens, const real Pres, const real Passive[], const double AuxArray_Flt[],
+                                             const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] )
 {
 
 // check
 #  ifdef GAMER_DEBUG
 #  if ( NCOMP_PASSIVE > 0 )
-   if ( Passive  == NULL )    printf( "ERROR : Passive == NULL in %s !!\n", __FUNCTION__ );
+   if ( Passive == NULL )  printf( "ERROR : Passive == NULL in %s !!\n", __FUNCTION__ );
 #  endif
-   if ( AuxArray == NULL )    printf( "ERROR : AuxArray == NULL in %s !!\n", __FUNCTION__ );
+   if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
+   if ( AuxArray_Int == NULL )   printf( "ERROR : AuxArray_Int == NULL in %s !!\n", __FUNCTION__ );
 
    if ( Hydro_CheckNegative(Dens) )
       printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
@@ -319,7 +331,7 @@ void EoS_SetCPUFunc_User_Template( EoS_DE2P_t &EoS_DensEint2Pres_CPUPtr,
 #ifndef __CUDACC__
 
 // local function prototypes
-void EoS_SetAuxArray_User_Template( double [] );
+void EoS_SetAuxArray_User_Template( double [], int [] );
 void EoS_SetCPUFunc_User_Template( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t & );
 #ifdef GPU
 void EoS_SetGPUFunc_User_Template( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t & );
@@ -343,7 +355,7 @@ void EoS_SetGPUFunc_User_Template( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t & );
 void EoS_Init_User_Template()
 {
 
-   EoS_SetAuxArray_User_Template( EoS_AuxArray );
+   EoS_SetAuxArray_User_Template( EoS_AuxArray_Flt, EoS_AuxArray_Int );
    EoS_SetCPUFunc_User_Template( EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr, EoS_DensPres2CSqr_CPUPtr );
 #  ifdef GPU
    EoS_SetGPUFunc_User_Template( EoS_DensEint2Pres_GPUPtr, EoS_DensPres2Eint_GPUPtr, EoS_DensPres2CSqr_GPUPtr );
