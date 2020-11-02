@@ -380,10 +380,15 @@ void Init_ResetParameter()
       PRINT_WARNING( OPT__1ST_FLUX_CORR, FORMAT_INT, "for MHD" );
 
 #     else
+
+#     if ( FLU_SCHEME == RTVD )
+      OPT__1ST_FLUX_CORR = FIRST_FLUX_CORR_NONE;
+#     else
       OPT__1ST_FLUX_CORR = FIRST_FLUX_CORR_3D1D;
+#     endif
 
       PRINT_WARNING( OPT__1ST_FLUX_CORR, FORMAT_INT, "for HYDRO" );
-#     endif
+#     endif // #ifdef MHD ... else ...
    }
 
    if      ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_NONE )
