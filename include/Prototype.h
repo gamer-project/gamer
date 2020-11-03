@@ -649,6 +649,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 // EoS in hydrodynamics
 #if ( MODEL == HYDRO )
 void EoS_Init();
+void EoS_End();
 #endif
 
 

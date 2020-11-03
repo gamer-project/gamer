@@ -59,6 +59,7 @@ extern void (*Par_Init_Attribute_User_Ptr)();
 #endif
 #if ( MODEL == HYDRO )
 extern void (*EoS_Init_Ptr)();
+extern void (*EoS_End_Ptr)();
 #endif
 
 
