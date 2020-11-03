@@ -17,6 +17,11 @@ void EoS_Init_Isothermal();
 void (*EoS_Init_Ptr)() = NULL;
 
 
+#ifdef GPU
+extern real *d_EoS_Table[EOS_NTABLE_MAX];
+#endif
+
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -35,6 +40,16 @@ void EoS_Init()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
+
+
+// initialize the EoS table pointers as NULL
+   for (int t=0; t<EOS_NTABLE_MAX; t++)
+   {
+      h_EoS_Table[t] = NULL;
+#     ifdef GPU
+      d_EoS_Table[t] = NULL;
+#     endif
+   }
 
 
 // set the initialization function pointer for the built-in EoS
