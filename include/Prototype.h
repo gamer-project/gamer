@@ -479,6 +479,7 @@ void MHD_BoundaryCondition_User( real **Array, const int BC_Face, const int NVar
                                  const int Idx_Start[], const int Idx_End[], const int TVarIdxList[],
                                  const double Time, const double dh, const double *Corner, const int lv );
 void MHD_Init_BField_ByFile( const int B_lv );
+void Hydro_Init_ByFile( const int lv );
 #ifdef LOAD_BALANCE
 void MHD_LB_EnsureBFieldConsistencyAfterRestrict( const int lv );
 void MHD_LB_AllocateElectricArray( const int FaLv );
