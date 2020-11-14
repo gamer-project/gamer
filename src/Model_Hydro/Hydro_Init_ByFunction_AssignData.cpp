@@ -13,6 +13,8 @@ void (*Init_Function_User_Ptr)( real fluid[], const double x, const double y, co
 extern bool (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
                                          const int lv, double AuxArray[] );
 
+void Hydro_Init_ByFile( const int lv );
+
 #ifdef MHD
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
 static void Init_Function_BField_User_Template( real magnetic[], const double x, const double y, const double z, const double Time,
@@ -179,10 +181,12 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 
 
 #  ifdef MHD
+   if ( OPT__INIT_BFIELD_BYFILE )  MHD_Init_BField_ByFile(lv);
+#  endif
 
-   if ( OPT__INIT_BFIELD_BYFILE )
-     MHD_Init_BField_ByFile(lv);
-
+#  if ( MODEL == HYDRO )
+#  define OPT__INIT_HYDRO_BYFILE true
+   if ( OPT__INIT_HYDRO_BYFILE )  Hydro_Init_ByFile(lv);
 #  endif
 
 #  pragma omp parallel for schedule( runtime ) num_threads( OMP_NThread )
@@ -232,69 +236,69 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 
 #     endif // #ifdef MHD
 
+      if ( !OPT__INIT_HYDRO_BYFILE ) {
+
+//      2. set the fluid field
+        real fluid[NCOMP_TOTAL], fluid_sub[NCOMP_TOTAL];
+
+        for (int k=0; k<PS1; k++)  {  const double z0 = amr->patch[0][lv][PID]->EdgeL[2] + k*dh + 0.5*dh_sub;
+        for (int j=0; j<PS1; j++)  {  const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + j*dh + 0.5*dh_sub;
+        for (int i=0; i<PS1; i++)  {  const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + i*dh + 0.5*dh_sub;
+
+           for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] = (real)0.0;
+
+           for (int kk=0; kk<NSub; kk++)    {  const double z = z0 + kk*dh_sub;
+           for (int jj=0; jj<NSub; jj++)    {  const double y = y0 + jj*dh_sub;
+           for (int ii=0; ii<NSub; ii++)    {  const double x = x0 + ii*dh_sub;
+
+              Init_Function_User_Ptr( fluid_sub, x, y, z, Time[lv], lv, NULL );
+
+//            modify the initial condition if required
+              if ( OPT__RESET_FLUID )
+                 Flu_ResetByUser_Func_Ptr( fluid_sub, x, y, z, Time[lv], lv, NULL );
+
+              for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] += fluid_sub[v];
+
+           }}}
+
+           for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] *= _NSub3;
 
 
-//    2. set the fluid field
-      real fluid[NCOMP_TOTAL], fluid_sub[NCOMP_TOTAL];
-
-      for (int k=0; k<PS1; k++)  {  const double z0 = amr->patch[0][lv][PID]->EdgeL[2] + k*dh + 0.5*dh_sub;
-      for (int j=0; j<PS1; j++)  {  const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + j*dh + 0.5*dh_sub;
-      for (int i=0; i<PS1; i++)  {  const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + i*dh + 0.5*dh_sub;
-
-         for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] = (real)0.0;
-
-         for (int kk=0; kk<NSub; kk++)    {  const double z = z0 + kk*dh_sub;
-         for (int jj=0; jj<NSub; jj++)    {  const double y = y0 + jj*dh_sub;
-         for (int ii=0; ii<NSub; ii++)    {  const double x = x0 + ii*dh_sub;
-
-            Init_Function_User_Ptr( fluid_sub, x, y, z, Time[lv], lv, NULL );
-
-//          modify the initial condition if required
-            if ( OPT__RESET_FLUID )
-               Flu_ResetByUser_Func_Ptr( fluid_sub, x, y, z, Time[lv], lv, NULL );
-
-            for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] += fluid_sub[v];
-
-         }}}
-
-         for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] *= _NSub3;
+//         add the magnetic energy
+#          ifdef MHD
+           const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+           fluid[ENGY] += Emag;
+#          else
+           const real Emag = NULL_REAL;
+#          endif
 
 
-//       add the magnetic energy
-#        ifdef MHD
-         const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
-         fluid[ENGY] += Emag;
-#        else
-         const real Emag = NULL_REAL;
-#        endif
+//         apply density and internal energy floors
+#          if ( !defined SRHD )
+           fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
+           fluid[ENGY] = Hydro_CheckMinEintInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
+                                                   MIN_EINT, Emag );
+#          endif
 
+//         calculate the dual-energy variable (entropy or internal energy)
+#          if   ( DUAL_ENERGY == DE_ENPY )
+           fluid[ENPY] = Hydro_Con2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Emag,
+                                            EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
+#          elif ( DUAL_ENERGY == DE_EINT )
+#          error : DE_EINT is NOT supported yet !!
+#          endif
 
-//       apply density and internal energy floors
-#        if ( !defined SRHD )
-         fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
-         fluid[ENGY] = Hydro_CheckMinEintInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                                 MIN_EINT, Emag );
-#        endif
+//         floor and normalize passive scalars
+#          if ( NCOMP_PASSIVE > 0 )
+           for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = FMAX( fluid[v], TINY_NUMBER );
 
-//       calculate the dual-energy variable (entropy or internal energy)
-#        if   ( DUAL_ENERGY == DE_ENPY )
-         fluid[ENPY] = Hydro_Con2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Emag,
-                                          EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
-#        elif ( DUAL_ENERGY == DE_EINT )
-#        error : DE_EINT is NOT supported yet !!
-#        endif
+           if ( OPT__NORMALIZE_PASSIVE )
+              Hydro_NormalizePassive( fluid[DENS], fluid+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
+#          endif
 
-//       floor and normalize passive scalars
-#        if ( NCOMP_PASSIVE > 0 )
-         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = FMAX( fluid[v], TINY_NUMBER );
-
-         if ( OPT__NORMALIZE_PASSIVE )
-            Hydro_NormalizePassive( fluid[DENS], fluid+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
-#        endif
-
-         for (int v=0; v<NCOMP_TOTAL; v++)   amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i] = fluid[v];
-
-      }}} // i,j,k
+           for (int v=0; v<NCOMP_TOTAL; v++)   amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i] = fluid[v];
+        }}} // i,j,k
+      }
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
 } // FUNCTION : Hydro_Init_ByFunction_AssignData
