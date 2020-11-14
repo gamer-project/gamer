@@ -1,5 +1,7 @@
 *.o
+MakefileSR
 .nfs*
+Hydro_IC
 cscope*
 bin/**
 gamer
