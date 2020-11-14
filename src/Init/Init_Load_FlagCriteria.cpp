@@ -79,12 +79,12 @@ void Init_Load_FlagCriteria()
    const char ModeName[][100]   = { "OPT__FLAG_RHO", "OPT__FLAG_RHO_GRADIENT", "OPT__FLAG_PRES_GRADIENT",
                                     "OPT__FLAG_ENGY_DENSITY", "OPT__FLAG_LOHNER", "OPT__FLAG_USER",
                                     "OPT__FLAG_NPAR_PATCH", "OPT__FLAG_NPAR_CELL", "OPT__FLAG_PAR_MASS_CELL",
-                                    "OPT__FLAG_VORTICITY", "OPT__FLAG_JEANS", "OPT__FLAG_CURRENT", "OPT__FLAG_ENGY_GRADIENT,"
+                                    "OPT__FLAG_VORTICITY", "OPT__FLAG_JEANS", "OPT__FLAG_CURRENT", "OPT__FLAG_ENGY_GRADIENT",
                                     "OPT__FLAG_4VELOCITY", "OPT__FLAG_MOM_OVER_DENS", "OPT__FLAG_LORENTZ_GRADIENT" };
    const char FileName[][100]   = { "Input__Flag_Rho", "Input__Flag_RhoGradient", "Input__Flag_PresGradient",
                                     "Input__Flag_EngyDensity", "Input__Flag_Lohner", "Input__Flag_User",
                                     "Input__Flag_NParPatch", "Input__Flag_NParCell", "Input__Flag_ParMassCell",
-                                    "Input__Flag_Vorticity", "Input__Flag_Jeans", "Input__Flag_Current", "Input__Flag_EngyGradient"
+                                    "Input__Flag_Vorticity", "Input__Flag_Jeans", "Input__Flag_Current", "Input__Flag_EngyGradient",
                                     "Input__Flag_4Velocity", "Input__Flag_Mom_Over_Dens", "Input__Flag_LorentzGradient" };
    double *FlagTable[NFlagMode] = { FlagTable_Rho, FlagTable_RhoGradient, FlagTable_PresGradient,
                                     NULL, NULL, NULL, NULL, NULL, FlagTable_ParMassCell,
