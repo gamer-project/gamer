@@ -24,6 +24,7 @@ const Riemann_t
 static Riemann_t Riemann_Prob;         // target Riemann problem
 static int       Riemann_LR;           // wave propagation direction (>0/<0 --> positive/negative direction)
 static int       Riemann_XYZ;          // wave propagation direction (0/1/2 --> x/y/z)
+static double    Riemann_Pos;          // position of discontinuity
 
 static char      Riemann_Name[100];    // name of the target Riemann problem
 static double    Riemann_RhoL;         // left-state density
@@ -123,12 +124,15 @@ void SetParameter()
    ReadPara->Add( "Riemann_Prob",      &Riemann_Prob,          -1,            0,                9                 );
    ReadPara->Add( "Riemann_LR",        &Riemann_LR,             1,            NoMin_int,        NoMax_int         );
    ReadPara->Add( "Riemann_XYZ",       &Riemann_XYZ,            0,            0,                2                 );
+   ReadPara->Add( "Riemann_Pos",       &Riemann_Pos,            NoDef_double, NoMin_double,     NoMax_double      );
 
    ReadPara->Read( FileName );
 
    delete ReadPara;
 
 // (1-2) set the default values
+   if ( Riemann_Pos == NoDef_double )  Riemann_Pos = amr->BoxCenter[Riemann_XYZ];
+
    switch ( Riemann_Prob )
    {
       case SOD_SHOCK_TUBE : Riemann_RhoL = 1.0;    Riemann_VelL = 0.0;  Riemann_PreL = 1.0;  Riemann_VelL_T1 = 0.0;  Riemann_VelL_T2 = 0.0;
@@ -269,20 +273,21 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID                   = %d\n",     TESTPROB_ID );
-      Aux_Message( stdout, "  target Riemann problem            = %s\n",     Riemann_Name );
-      Aux_Message( stdout, "  left-state density                = %14.7e\n", Riemann_RhoL );
-      Aux_Message( stdout, "  left-state longitudinal velocity  = %14.7e\n", Riemann_VelL );
+      Aux_Message( stdout, "  test problem ID                   = %d\n",     TESTPROB_ID     );
+      Aux_Message( stdout, "  target Riemann problem            = %s\n",     Riemann_Name    );
+      Aux_Message( stdout, "  position of discontinuity         = %14.7e\n", Riemann_Pos     );
+      Aux_Message( stdout, "  left-state density                = %14.7e\n", Riemann_RhoL    );
+      Aux_Message( stdout, "  left-state longitudinal velocity  = %14.7e\n", Riemann_VelL    );
       Aux_Message( stdout, "  left-state transverse velocity 1  = %14.7e\n", Riemann_VelL_T1 );
       Aux_Message( stdout, "  left-state transverse velocity 2  = %14.7e\n", Riemann_VelL_T2 );
-      Aux_Message( stdout, "  left-state pressure               = %14.7e\n", Riemann_PreL );
-      Aux_Message( stdout, "  right-state density               = %14.7e\n", Riemann_RhoR );
-      Aux_Message( stdout, "  right-state longitudinal velocity = %14.7e\n", Riemann_VelR );
+      Aux_Message( stdout, "  left-state pressure               = %14.7e\n", Riemann_PreL    );
+      Aux_Message( stdout, "  right-state density               = %14.7e\n", Riemann_RhoR    );
+      Aux_Message( stdout, "  right-state longitudinal velocity = %14.7e\n", Riemann_VelR    );
       Aux_Message( stdout, "  right-state transverse velocity 1 = %14.7e\n", Riemann_VelR_T1 );
       Aux_Message( stdout, "  right-state transverse velocity 2 = %14.7e\n", Riemann_VelR_T2 );
-      Aux_Message( stdout, "  right-state pressure              = %14.7e\n", Riemann_PreR );
+      Aux_Message( stdout, "  right-state pressure              = %14.7e\n", Riemann_PreR    );
 #     ifdef MHD
-      Aux_Message( stdout, "  longitudinal B field              = %14.7e\n", Riemann_Mag );
+      Aux_Message( stdout, "  longitudinal B field              = %14.7e\n", Riemann_Mag     );
       Aux_Message( stdout, "  left-state transverse B field 1   = %14.7e\n", Riemann_MagL_T1 );
       Aux_Message( stdout, "  left-state transverse B field 2   = %14.7e\n", Riemann_MagL_T2 );
       Aux_Message( stdout, "  right-state transverse B field 1  = %14.7e\n", Riemann_MagR_T1 );
@@ -324,18 +329,18 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
-   double r, BoxCen, Pres, Eint;
+   double r, Pres, Eint;
    int    MomIdx[3];
 
    switch ( Riemann_XYZ )
    {
-      case 0 : r=x; MomIdx[0]=MOMX; MomIdx[1]=MOMY; MomIdx[2]=MOMZ; BoxCen=amr->BoxCenter[0]; break;
-      case 1 : r=y; MomIdx[0]=MOMY; MomIdx[1]=MOMZ; MomIdx[2]=MOMX; BoxCen=amr->BoxCenter[1]; break;
-      case 2 : r=z; MomIdx[0]=MOMZ; MomIdx[1]=MOMX; MomIdx[2]=MOMY; BoxCen=amr->BoxCenter[2]; break;
+      case 0 : r=x;  MomIdx[0]=MOMX;  MomIdx[1]=MOMY;  MomIdx[2]=MOMZ;  break;
+      case 1 : r=y;  MomIdx[0]=MOMY;  MomIdx[1]=MOMZ;  MomIdx[2]=MOMX;  break;
+      case 2 : r=z;  MomIdx[0]=MOMZ;  MomIdx[1]=MOMX;  MomIdx[2]=MOMY;  break;
       default : Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "Riemann_XYZ", Riemann_XYZ );
    }
 
-   if (  ( Riemann_LR > 0 && r < BoxCen )  ||  ( Riemann_LR < 0 && r > BoxCen )  )
+   if (  ( Riemann_LR > 0 && r < Riemann_Pos )  ||  ( Riemann_LR < 0 && r > Riemann_Pos )  )
    {
       fluid[ DENS      ] = Riemann_RhoL;
       fluid[ MomIdx[0] ] = Riemann_RhoL*Riemann_VelL;
@@ -392,15 +397,15 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
                   const int lv, double AuxArray[] )
 {
 
-   double r, BoxCen;
+   double r;
    int    DirL, DirT1, DirT2;
 
 // determine the longitudinal and transverse directions
    switch ( Riemann_XYZ )
    {
-      case 0 : r=x;  DirL=MAGX;  DirT1=MAGY;  DirT2=MAGZ;  BoxCen=amr->BoxCenter[0];  break;
-      case 1 : r=y;  DirL=MAGY;  DirT1=MAGZ;  DirT2=MAGX;  BoxCen=amr->BoxCenter[1];  break;
-      case 2 : r=z;  DirL=MAGZ;  DirT1=MAGX;  DirT2=MAGY;  BoxCen=amr->BoxCenter[2];  break;
+      case 0 : r=x;  DirL=MAGX;  DirT1=MAGY;  DirT2=MAGZ;  break;
+      case 1 : r=y;  DirL=MAGY;  DirT1=MAGZ;  DirT2=MAGX;  break;
+      case 2 : r=z;  DirL=MAGZ;  DirT1=MAGX;  DirT2=MAGY;  break;
       default : Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "Riemann_XYZ", Riemann_XYZ );
    }
 
@@ -410,13 +415,13 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
    magnetic[DirL] = Riemann_Mag;
 
 // transverse component 1
-   if (  ( Riemann_LR > 0 && r < BoxCen )  ||  ( Riemann_LR < 0 && r > BoxCen )  )
+   if (  ( Riemann_LR > 0 && r < Riemann_Pos )  ||  ( Riemann_LR < 0 && r > Riemann_Pos )  )
       magnetic[DirT1] = Riemann_MagL_T1;
    else
       magnetic[DirT1] = Riemann_MagR_T1;
 
 // transverse component 2
-   if (  ( Riemann_LR > 0 && r < BoxCen )  ||  ( Riemann_LR < 0 && r > BoxCen )  )
+   if (  ( Riemann_LR > 0 && r < Riemann_Pos )  ||  ( Riemann_LR < 0 && r > Riemann_Pos )  )
       magnetic[DirT2] = Riemann_MagL_T2;
    else
       magnetic[DirT2] = Riemann_MagR_T2;
