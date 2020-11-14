@@ -26,23 +26,23 @@ static int       Riemann_LR;           // wave propagation direction (>0/<0 --> 
 static int       Riemann_XYZ;          // wave propagation direction (0/1/2 --> x/y/z)
 
 static char      Riemann_Name[100];    // name of the target Riemann problem
-static real      Riemann_RhoL;         // left-state density
-static real      Riemann_VelL;         // left-state longitidual velocity
-static real      Riemann_VelL_T1;      // left-state transverse velocity 1
-static real      Riemann_VelL_T2;      // left-state transverse velocity 2
-static real      Riemann_PreL;         // left-state pressure
-static real      Riemann_RhoR;         // right-state density
-static real      Riemann_VelR;         // right-state longitidual velocity
-static real      Riemann_VelR_T1;      // right-state transverse velocity 1
-static real      Riemann_VelR_T2;      // right-state transverse velocity 2
-static real      Riemann_PreR;         // right-state pressure
+static double    Riemann_RhoL;         // left-state density
+static double    Riemann_VelL;         // left-state longitidual velocity
+static double    Riemann_VelL_T1;      // left-state transverse velocity 1
+static double    Riemann_VelL_T2;      // left-state transverse velocity 2
+static double    Riemann_PreL;         // left-state pressure
+static double    Riemann_RhoR;         // right-state density
+static double    Riemann_VelR;         // right-state longitidual velocity
+static double    Riemann_VelR_T1;      // right-state transverse velocity 1
+static double    Riemann_VelR_T2;      // right-state transverse velocity 2
+static double    Riemann_PreR;         // right-state pressure
 static double    Riemann_EndT;         // end physical time
 #ifdef MHD
-static real      Riemann_Mag;          // longitidual B field
-static real      Riemann_MagL_T1;      // left-state transverse B field 1
-static real      Riemann_MagL_T2;      // left-state transverse B field 2
-static real      Riemann_MagR_T1;      // right-state transverse B field 1
-static real      Riemann_MagR_T2;      // right-state transverse B field 2
+static double    Riemann_Mag;          // longitidual B field
+static double    Riemann_MagL_T1;      // left-state transverse B field 1
+static double    Riemann_MagL_T2;      // left-state transverse B field 2
+static double    Riemann_MagR_T1;      // right-state transverse B field 1
+static double    Riemann_MagR_T2;      // right-state transverse B field 2
 #endif
 // =======================================================================================
 
