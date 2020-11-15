@@ -357,11 +357,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double dPre = 0.5*( Riemann_PreR    - Riemann_PreL    );
    const double aPre = 0.5*( Riemann_PreR    + Riemann_PreL    );
 
-   fluid[ DENS      ] = aRho + dRho*Tanh;
-   fluid[ MomIdx[0] ] = aVel + dVel*Tanh;
-   fluid[ MomIdx[1] ] = aVT1 + dVT1*Tanh;
-   fluid[ MomIdx[2] ] = aVT2 + dVT2*Tanh;
-   Pres               = aPre + dPre*Tanh;
+   fluid[ DENS      ] =   aRho + dRho*Tanh;
+   fluid[ MomIdx[0] ] = ( aVel + dVel*Tanh )*fluid[DENS];
+   fluid[ MomIdx[1] ] = ( aVT1 + dVT1*Tanh )*fluid[DENS];
+   fluid[ MomIdx[2] ] = ( aVT2 + dVT2*Tanh )*fluid[DENS];
+   Pres               =   aPre + dPre*Tanh;
 
    if ( Riemann_LR < 0 )
    {
@@ -416,20 +416,19 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
 
 
 // set B field
+   const double ds      = ( r - Riemann_Pos ) / Riemann_Width;
+   const double Tanh    = tanh( ds )*SIGN( Riemann_LR );
+   const double dMag_T1 = 0.5*( Riemann_MagR_T1 - Riemann_MagL_T1 );
+   const double aMag_T1 = 0.5*( Riemann_MagR_T1 + Riemann_MagL_T1 );
+   const double dMag_T2 = 0.5*( Riemann_MagR_T2 - Riemann_MagL_T2 );
+   const double aMag_T2 = 0.5*( Riemann_MagR_T2 + Riemann_MagL_T2 );
+
 // longitudinal component
-   magnetic[DirL] = Riemann_Mag;
+   magnetic[DirL ] = Riemann_Mag;
 
-// transverse component 1
-   if (  ( Riemann_LR > 0 && r < Riemann_Pos )  ||  ( Riemann_LR < 0 && r > Riemann_Pos )  )
-      magnetic[DirT1] = Riemann_MagL_T1;
-   else
-      magnetic[DirT1] = Riemann_MagR_T1;
-
-// transverse component 2
-   if (  ( Riemann_LR > 0 && r < Riemann_Pos )  ||  ( Riemann_LR < 0 && r > Riemann_Pos )  )
-      magnetic[DirT2] = Riemann_MagL_T2;
-   else
-      magnetic[DirT2] = Riemann_MagR_T2;
+// transverse components
+   magnetic[DirT1] = aMag_T1 + dMag_T1*Tanh;
+   magnetic[DirT2] = aMag_T2 + dMag_T2*Tanh;
 
 
 // change the B field sign if wave propagates along the negative direction
