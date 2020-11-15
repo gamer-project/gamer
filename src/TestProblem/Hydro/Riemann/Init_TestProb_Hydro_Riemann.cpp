@@ -25,6 +25,7 @@ static Riemann_t Riemann_Prob;         // target Riemann problem
 static int       Riemann_LR;           // wave propagation direction (>0/<0 --> positive/negative direction)
 static int       Riemann_XYZ;          // wave propagation direction (0/1/2 --> x/y/z)
 static double    Riemann_Pos;          // position of discontinuity
+static double    Riemann_Width;        // width of discontinuity
 
 static char      Riemann_Name[100];    // name of the target Riemann problem
 static double    Riemann_RhoL;         // left-state density
@@ -125,13 +126,15 @@ void SetParameter()
    ReadPara->Add( "Riemann_LR",        &Riemann_LR,             1,            NoMin_int,        NoMax_int         );
    ReadPara->Add( "Riemann_XYZ",       &Riemann_XYZ,            0,            0,                2                 );
    ReadPara->Add( "Riemann_Pos",       &Riemann_Pos,            NoDef_double, NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Riemann_Width",     &Riemann_Width,          NoDef_double, Eps_double,       NoMax_double      );
 
    ReadPara->Read( FileName );
 
    delete ReadPara;
 
 // (1-2) set the default values
-   if ( Riemann_Pos == NoDef_double )  Riemann_Pos = amr->BoxCenter[Riemann_XYZ];
+   if ( Riemann_Pos   == NoDef_double )   Riemann_Pos   = amr->BoxCenter[Riemann_XYZ];
+   if ( Riemann_Width == NoDef_double )   Riemann_Width = 1.0e-10/UNIT_L;  // mimic a step function
 
    switch ( Riemann_Prob )
    {
@@ -276,6 +279,7 @@ void SetParameter()
       Aux_Message( stdout, "  test problem ID                   = %d\n",     TESTPROB_ID     );
       Aux_Message( stdout, "  target Riemann problem            = %s\n",     Riemann_Name    );
       Aux_Message( stdout, "  position of discontinuity         = %14.7e\n", Riemann_Pos     );
+      Aux_Message( stdout, "  width    of discontinuity         = %14.7e\n", Riemann_Width   );
       Aux_Message( stdout, "  left-state density                = %14.7e\n", Riemann_RhoL    );
       Aux_Message( stdout, "  left-state longitudinal velocity  = %14.7e\n", Riemann_VelL    );
       Aux_Message( stdout, "  left-state transverse velocity 1  = %14.7e\n", Riemann_VelL_T1 );
@@ -340,23 +344,24 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       default : Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "Riemann_XYZ", Riemann_XYZ );
    }
 
-   if (  ( Riemann_LR > 0 && r < Riemann_Pos )  ||  ( Riemann_LR < 0 && r > Riemann_Pos )  )
-   {
-      fluid[ DENS      ] = Riemann_RhoL;
-      fluid[ MomIdx[0] ] = Riemann_RhoL*Riemann_VelL;
-      fluid[ MomIdx[1] ] = Riemann_RhoL*Riemann_VelL_T1;
-      fluid[ MomIdx[2] ] = Riemann_RhoL*Riemann_VelL_T2;
-      Pres               = Riemann_PreL;
-   }
+   const double ds   = ( r - Riemann_Pos ) / Riemann_Width;
+   const double Tanh = tanh( ds )*SIGN( Riemann_LR );
+   const double dRho = 0.5*( Riemann_RhoR    - Riemann_RhoL    );
+   const double aRho = 0.5*( Riemann_RhoR    + Riemann_RhoL    );
+   const double dVel = 0.5*( Riemann_VelR    - Riemann_VelL    );
+   const double aVel = 0.5*( Riemann_VelR    + Riemann_VelL    );
+   const double dVT1 = 0.5*( Riemann_VelR_T1 - Riemann_VelL_T1 );
+   const double aVT1 = 0.5*( Riemann_VelR_T1 + Riemann_VelL_T1 );
+   const double dVT2 = 0.5*( Riemann_VelR_T2 - Riemann_VelL_T2 );
+   const double aVT2 = 0.5*( Riemann_VelR_T2 + Riemann_VelL_T2 );
+   const double dPre = 0.5*( Riemann_PreR    - Riemann_PreL    );
+   const double aPre = 0.5*( Riemann_PreR    + Riemann_PreL    );
 
-   else
-   {
-      fluid[ DENS      ] = Riemann_RhoR;
-      fluid[ MomIdx[0] ] = Riemann_RhoR*Riemann_VelR;
-      fluid[ MomIdx[1] ] = Riemann_RhoR*Riemann_VelR_T1;
-      fluid[ MomIdx[2] ] = Riemann_RhoR*Riemann_VelR_T2;
-      Pres               = Riemann_PreR;
-   }
+   fluid[ DENS      ] = aRho + dRho*Tanh;
+   fluid[ MomIdx[0] ] = aVel + dVel*Tanh;
+   fluid[ MomIdx[1] ] = aVT1 + dVT1*Tanh;
+   fluid[ MomIdx[2] ] = aVT2 + dVT2*Tanh;
+   Pres               = aPre + dPre*Tanh;
 
    if ( Riemann_LR < 0 )
    {
@@ -366,8 +371,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    }
 
 // compute and store the total gas energy
-// --> assuming EoS requires no passive scalars
-   Eint = EoS_DensPres2Eint_CPUPtr( fluid[DENS], Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+   Eint = EoS_DensPres2Eint_CPUPtr( fluid[DENS], Pres, fluid+NCOMP_FLUID,
+                                    EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
 // do NOT include magnetic energy here
    fluid[ENGY] = Hydro_ConEint2Etot( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], Eint, 0.0 );
