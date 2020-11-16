@@ -413,9 +413,11 @@ void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const in
 
                   Init_ByFile_User_Ptr( fluid_out, fluid_in, UM_NVar, x, y, z, Time[UM_lv], UM_lv, NULL );
 
+#                 if( MODEL == HYDRO )
 //                modify the initial condition if required
                   if ( OPT__RESET_FLUID )
                      Flu_ResetByUser_Func_Ptr( fluid_out, x, y, z, Time[UM_lv], UM_lv, NULL );
+#                 endif
 
                   for (int v=0; v<NCOMP_TOTAL; v++)
                      amr->patch[ amr->FluSg[UM_lv] ][UM_lv][PID]->fluid[v][k][j][i] = fluid_out[v];
