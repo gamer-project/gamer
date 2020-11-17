@@ -179,10 +179,10 @@ void Aux_TakeNote()
       fprintf( Note, "REDUCED_ENERGY                  OFF\n" );
 #     endif
 
-#     ifdef FOUR_VELOCITTY
-      fprintf( Note, "FOUR_VELOCITTY                  ON\n" );
+#     ifdef FOUR_VELOCITY
+      fprintf( Note, "FOUR_VELOCITY                  ON\n" );
 #     else
-      fprintf( Note, "FOUR_VELOCITTY                  OFF\n" );
+      fprintf( Note, "FOUR_VELOCITY                  OFF\n" );
 #     endif
 
 #     if   ( EOS == EOS_GAMMA )

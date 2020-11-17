@@ -88,7 +88,7 @@ SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 #SIMU_OPTION += -DREDUCED_ENERGY
 
 # using 4-velocity instead of 3-velocity in data reconstruction and recovering primitive variables
-#SIMU_OPTION += -DFOUR_VELOCITTY
+#SIMU_OPTION += -DFOUR_VELOCITY
 
 
 # equation of state: EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TAUBMATHEWS/EOS_TABULAR/EOS_USER

@@ -1750,7 +1750,7 @@ void FillIn_Makefile( Makefile_t &Makefile )
 #  ifdef SRHD
    Makefile.SRHydrodynamics        = 1;
    Makefile.SRHydroReducedEnergy   = REDUCED_ENERGY;
-   Makefile.SRHydroFourVelocity    = FOUR_VELOCITTY;
+   Makefile.SRHydroFourVelocity    = FOUR_VELOCITY;
 #  else
    Makefile.SRHydrodynamics        = 0;
 #  endif
