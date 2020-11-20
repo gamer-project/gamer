@@ -150,7 +150,10 @@ void CUPOT_HydroGravitySolver(
    const real   g_Emag_Array   [][ CUBE(PS1) ],
    const real dt, const real dh, const bool P5_Gradient,
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
-   const double TimeNew, const double TimeOld, const real MinEint );
+   const double TimeNew, const double TimeOld, const real MinEint,
+   const EoS_GUESS_t EoS_GuessHTilde_Func,
+   const EoS_TEM2H_t EoS_Temp2HTilde_Func,
+   const EoS_H2TEM_t EoS_HTilde2Temp_Func );
 
 #elif ( MODEL == ELBDM )
 __global__

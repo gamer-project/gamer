@@ -1098,7 +1098,7 @@ void CartesianRotate( double x[], double theta, double phi, bool inverse )
 }
 
 #  ifdef GRAVITY
-void Init_ExternalAcc()
+void Init_ExtAcc()
 {
   ExtAcc_AuxArray[0] = 0.5*amr->BoxSize[0] + Jet_HSE_Dx;
   ExtAcc_AuxArray[1] = 0.5*amr->BoxSize[1] + Jet_HSE_Dy;
@@ -1158,7 +1158,7 @@ void Init_TestProb_Hydro_Jets()
    Aux_Record_User_Ptr      = NULL;
    End_User_Ptr             = NULL;
 #  ifdef GRAVITY
-   Init_ExternalAcc_Ptr     = Init_ExternalAcc;
+   Init_ExtAcc_Ptr     = Init_ExtAcc;
 #  endif
 
 

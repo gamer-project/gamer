@@ -674,7 +674,7 @@ bool SRHD_CheckUnphysical( const real Con[], const real Pri[], const char Functi
         return true;
       }
 }
-#else
+#endif
 
 
 
@@ -872,7 +872,7 @@ double Hydro_Temp2Pres( const double Dens, const double Temp, const double mu, c
    return Pres;
 
 } // FUNCTION : Hydro_Temp2Pres
-#endif
+
 
 
 

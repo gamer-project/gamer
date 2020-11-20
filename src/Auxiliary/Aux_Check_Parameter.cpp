@@ -598,10 +598,6 @@ void Aux_Check_Parameter()
 #     error : ERROR : unsupported Riemann solver for MHD (HLLC/HLLE) !!
 #   endif
 
-#  if ( defined GRAVITY )
-#     error : ERROR : SRHD does not support GRAVITY !!
-#  endif
-
 #  if ( defined PARTICLE )
 #     error : ERROR : SRHD does not support PARTICLE !!
 #  endif
