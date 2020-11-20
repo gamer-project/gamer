@@ -23,8 +23,12 @@
 
 //-----------------------------------------------------------------------------------------
 // Function    :  CPU/CUPOT_HydroGravitySolver
-// Description :  Advances the momentum and energy density of a group of patches by gravitational acceleration
-//                (including external gravity)
+// Description :  1. Advances the momentum and energy density of a group of patches by gravitational acceleration
+//                   (including external gravity)
+//                2. Note the SRHD still use the Newtonian gravity as a source term in the relativistic Euler equations.
+//                   --> Hence SRHD with the Newtonian gravity can only simulate the low-mass relativistic component
+//                       embedded in giant gas sphere.
+//                       e.g., relativistic AGN jet in gas sphere.
 //
 // Note        :  1. Currently this function does NOT ensure the consistency between internal energy and
 //                   dual-energy variable (e.g., entropy)
@@ -180,11 +184,9 @@ void CPU_HydroGravitySolver(
 //    _g0: indices for the arrays without any ghost zone
       CGPU_LOOP( idx_g0, CUBE(PS1) )
       {
-#        ifdef SRHD
-#        ifdef UNSPLIT_GRAVITY
+#        if ( defined SRHD && defined UNSPLIT_GRAVITY )
          real Etot_in;
-#        endif
-#        else
+#        elif ( !defined SRHD )
 //       Enki = non-kinetic energy (i.e. Etot - Ekin)
          real Enki_in, Ekin_out, Etot_in, _rho2;
 #        endif
