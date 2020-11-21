@@ -332,7 +332,7 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
 
    Nume[ENGY] = Hydro_Con2Pres( Nume[DENS], Nume[MOMX], Nume[MOMY], Nume[MOMZ], Nume[ENGY], Nume+NCOMP_FLUID,
                                 CheckMinPres_No, NULL_REAL, Emag_Nume,
-                                EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
+                                EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 #  endif // #if ( MODEL == HYDRO )
 
 
@@ -354,7 +354,7 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
 
    Anal[ENGY] = Hydro_Con2Pres( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY], Anal+NCOMP_FLUID,
                                 CheckMinPres_No, NULL_REAL, Emag_Zero,
-                                EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
+                                EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 #  endif
 
 

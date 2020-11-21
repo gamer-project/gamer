@@ -261,6 +261,7 @@ struct SymConst_t
    int    EulerY;
 #  endif
    int    EoSNAuxMax;
+   int    EoSNTableMax;
 
 #  elif  ( MODEL == ELBDM )
    int    Flu_BlockSize_x;

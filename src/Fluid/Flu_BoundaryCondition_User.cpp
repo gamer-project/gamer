@@ -68,7 +68,7 @@ void BC_User_Template( real fluid[], const double x, const double y, const doubl
 #  if ( NCOMP_PASSIVE > 0 )
 // Passive[X] = ...;
 #  endif
-   Eint       = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray );
+   Eint       = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
    Etot       = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, Emag0 );
 
    fluid[DENS] = Dens;
@@ -206,11 +206,13 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
       if ( PrepPres )   Array3D[ v2 ++ ][k][j][i] = Hydro_Con2Pres( BVal[DENS], BVal[MOMX], BVal[MOMY],
                                                                     BVal[MOMZ], BVal[ENGY], BVal+NCOMP_FLUID,
                                                                     CheckMinPres_Yes, MIN_PRES, Emag,
-                                                                    EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
+                                                                    EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt,
+                                                                    EoS_AuxArray_Int, h_EoS_Table, NULL );
       if ( PrepTemp )   Array3D[ v2 ++ ][k][j][i] = Hydro_Con2Temp( BVal[DENS], BVal[MOMX], BVal[MOMY],
                                                                     BVal[MOMZ], BVal[ENGY], BVal+NCOMP_FLUID,
                                                                     CheckMinPres_Yes, MIN_PRES, Emag,
-                                                                    EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
+                                                                    EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt,
+                                                                    EoS_AuxArray_Int, h_EoS_Table );
 
 #     elif ( MODEL == ELBDM )
 //    no derived variables yet

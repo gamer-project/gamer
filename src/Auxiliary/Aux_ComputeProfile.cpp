@@ -424,8 +424,8 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                                                                                     FluidPtr     [ENGY][k][j][i],
                                                                                     Passive,
                                                                                     CheckMinPres_No, NULL_REAL, Emag,
-                                                                                    EoS_DensEint2Pres_CPUPtr, EoS_AuxArray,
-                                                                                    NULL )
+                                                                                    EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt,
+                                                                                    EoS_AuxArray_Int, h_EoS_Table, NULL )
                                                 + FluWeighting_IntT*Hydro_Con2Pres( FluidPtr_IntT[DENS][k][j][i],
                                                                                     FluidPtr_IntT[MOMX][k][j][i],
                                                                                     FluidPtr_IntT[MOMY][k][j][i],
@@ -433,8 +433,8 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                                                                                     FluidPtr_IntT[ENGY][k][j][i],
                                                                                     Passive_IntT,
                                                                                     CheckMinPres_No, NULL_REAL, Emag_IntT,
-                                                                                    EoS_DensEint2Pres_CPUPtr, EoS_AuxArray,
-                                                                                    NULL )
+                                                                                    EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt,
+                                                                                    EoS_AuxArray_Int, h_EoS_Table, NULL )
                                               :                     Hydro_Con2Pres( FluidPtr     [DENS][k][j][i],
                                                                                     FluidPtr     [MOMX][k][j][i],
                                                                                     FluidPtr     [MOMY][k][j][i],
@@ -442,8 +442,8 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                                                                                     FluidPtr     [ENGY][k][j][i],
                                                                                     Passive,
                                                                                     CheckMinPres_No, NULL_REAL, Emag,
-                                                                                    EoS_DensEint2Pres_CPUPtr, EoS_AuxArray,
-                                                                                    NULL );
+                                                                                    EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt,
+                                                                                    EoS_AuxArray_Int, h_EoS_Table, NULL );
 
                               OMP_Data  [p][TID][bin] += Pres*Weight;
                               OMP_Weight[p][TID][bin] += Weight;
@@ -462,8 +462,10 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 #                             if   ( DUAL_ENERGY == DE_ENPY )
                               const bool CheckMinPres_No = false;
                               const real Enpy = FluidPtr[ENPY][k][j][i];
-                              const real Pres = Hydro_DensEntropy2Pres( Dens, Enpy, EoS_AuxArray[1], CheckMinPres_No, NULL_REAL );
-                              const real Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray );
+                              const real Pres = Hydro_DensEntropy2Pres( Dens, Enpy, EoS_AuxArray_Flt[1],
+                                                                        CheckMinPres_No, NULL_REAL );
+                              const real Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray_Flt,
+                                                                          EoS_AuxArray_Int, h_EoS_Table );
 #                             elif ( DUAL_ENERGY == DE_EINT )
 #                             error : DE_EINT is NOT supported yet !!
 #                             endif

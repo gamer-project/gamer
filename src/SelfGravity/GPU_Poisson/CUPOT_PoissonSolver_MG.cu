@@ -5,7 +5,7 @@
 
 
 
-#define POT_NXT_F    ( PATCH_SIZE+2*POT_GHOST_SIZE )  
+#define POT_NXT_F    ( PATCH_SIZE+2*POT_GHOST_SIZE )
 #define POT_NTHREAD  ( POT_BLOCK_SIZE_X            )
 #define POT_USELESS  ( POT_GHOST_SIZE%2            )
 
@@ -58,13 +58,13 @@
 // prototype
 static __device__ void LoadRho( const real *g_Rho, real *s_Rho, const real Poi_Coeff, const uint g_Idx0 );
 static __device__ void Smoothing( real *Sol, const real *RHS, const real dh, const uint NGrid, const uint Idx0 );
-static __device__ void ComputeDefect( const real *Sol, const real *RHS, real *Def, const real dh, 
+static __device__ void ComputeDefect( const real *Sol, const real *RHS, real *Def, const real dh,
                                       const uint NGrid, const uint Idx0 );
 static __device__ void Restrict( const real *FData, real *CData, const uint NGrid_F, const uint NGrid_C,
                                  const uint Idx0 );
-static __device__ void Prolongate_and_Correct( const real *CData, real *FData, const uint NGrid_C, 
+static __device__ void Prolongate_and_Correct( const real *CData, real *FData, const uint NGrid_C,
                                                const uint NGrid_F, const uint FIdx0 );
-static __device__ void EstimateError( const real *Sol, const real *RHS, const real dh, real *s_Error, 
+static __device__ void EstimateError( const real *Sol, const real *RHS, const real dh, real *s_Error,
                                       real *s_SolSum, const uint tid );
 
 
@@ -72,14 +72,14 @@ static __device__ void EstimateError( const real *Sol, const real *RHS, const re
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CUPOT_PoissonSolver_MG
-// Description :  GPU Poisson solver using the multigrid scheme 
+// Description :  GPU Poisson solver using the multigrid scheme
 //
 // Note        :  a. Work for POT_GHOST_SIZE = 1, 2, 3, 4, 5 <--> POT_NXT_F = 10, 12, 14, 16, 18
 //                b. Prefix "g" for pointers pointing to the "Global" memory space
 //                   Prefix "s" for pointers pointing to the "Shared" memory space
 //                c. Reference : Numerical Recipes, Chapter 20.6
 //
-// Parameter   :  g_Rho_Array       : Global memory array storing the input density 
+// Parameter   :  g_Rho_Array       : Global memory array storing the input density
 //                g_Pot_Array_In    : Global memory array storing the input "coarse-grid" potential for ]
 //                                    interpolation
 //                g_Pot_Array_Out   : Global memory array to store the output potential
@@ -91,11 +91,11 @@ static __device__ void EstimateError( const real *Sol, const real *RHS, const re
 //                Poi_Coeff         : Coefficient in front of the RHS in the Poisson eq.
 //                IntScheme         : Interpolation scheme for potential
 //                                    --> currently supported schemes include
-//                                        INT_CQUAD : conservative quadratic interpolation 
-//                                        INT_QUAD  : quadratic interpolation 
+//                                        INT_CQUAD : conservative quadratic interpolation
+//                                        INT_QUAD  : quadratic interpolation
 //---------------------------------------------------------------------------------------------------
-__global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ], 
-                                        const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ], 
+__global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ],
+                                        const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ],
                                               real g_Pot_Array_Out[][ GRA_NXT*GRA_NXT*GRA_NXT ],
                                         const real dh_Min, const int Max_Iter, const int NPre_Smooth,
                                         const int NPost_Smooth, const real Tolerated_Error, const real Poi_Coeff,
@@ -103,7 +103,7 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
 {
 
    const uint bid = blockIdx.x;
-   const uint tid = threadIdx.x; 
+   const uint tid = threadIdx.x;
    const uint dy  = POT_NXT_F;
    const uint dz  = POT_NXT_F*POT_NXT_F;
 
@@ -123,7 +123,7 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
    for (uint Lv=1U; Lv<MAX_NLV; Lv++)   dh[Lv] = dh_Min * ( NGrid[0] - 1U ) / ( NGrid[Lv] - 1U );
 
 
-// allocate shared memory 
+// allocate shared memory
    __shared__ real s_Sol_Lv0[ NGRID_LV0*NGRID_LV0*NGRID_LV0 ];
 #  ifndef FLOAT8
    __shared__ real s_RHS_Lv0[ NGRID_LV0*NGRID_LV0*NGRID_LV0 ];
@@ -141,25 +141,25 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
    }
    __syncthreads();
 #  ifdef GAMER_DEBUG
-   if ( tid == 0 ) 
+   if ( tid == 0 )
    {
       if ( s_RHS_Lv0 == NULL )
       {
          printf( "ERROR : dynamic global memory allocation for \"%s\" failed at block %d in \"%s\" !!\n",
                  "s_RHS_Lv0", bid, __FUNCTION__ );
-         return; 
+         return;
       }
       if ( s_SolSum == NULL )
       {
          printf( "ERROR : dynamic global memory allocation for \"%s\" failed at block %d in \"%s\" !!\n",
                  "s_SolSum", bid, __FUNCTION__ );
-         return; 
+         return;
       }
       if ( s_Error == NULL )
       {
          printf( "ERROR : dynamic global memory allocation for \"%s\" failed at block %d in \"%s\" !!\n",
                  "s_Error", bid, __FUNCTION__ );
-         return; 
+         return;
       }
    }
 #  endif
@@ -167,7 +167,7 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
    real *s_Def_Lv0 = s_RHS_Lv0;  // s_Def_Lv0, s_CPot and RHS_Lv0 share the same shared-memory array
    real *s_CPot    = s_RHS_Lv0;
 
-#  ifdef REUSE_SHARED 
+#  ifdef REUSE_SHARED
 // reuse the shared-memory arrays due to the lack of shared memory
    real *s_Sol_Lv1 = s_RHS_Lv0;
    real *s_Sol_Lv2 = s_Sol_Lv1 + NGRID_LV1*NGRID_LV1*NGRID_LV1;
@@ -187,7 +187,7 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
    {
       printf( "ERROR : dynamic global memory allocation for \"%s\" failed at block %d in \"%s\" !!\n",
               "s_RHS_Lv1", bid, __FUNCTION__ );
-      return; 
+      return;
    }
 #  endif
 #  else // #ifdef REUSE_SHARED ... else ...
@@ -223,8 +223,8 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
    t = tid;
    while ( t < POT_NXT*POT_NXT*POT_NXT )
    {
-      s_CPot[t] = g_Pot_Array_In[bid][t];    
-      t += POT_NTHREAD; 
+      s_CPot[t] = g_Pot_Array_In[bid][t];
+      t += POT_NTHREAD;
    }
    __syncthreads();
 
@@ -305,28 +305,28 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
                Slope_12 = Const_512 * ( s_CPot[CID+Cdx+Cdy+Cdz] - s_CPot[CID-Cdx+Cdy+Cdz] );
 
 
-               TempFPot1 = - Slope_00 - Slope_01 - Slope_02 - Slope_03 - Slope_04 - Slope_05 + Slope_06 
+               TempFPot1 = - Slope_00 - Slope_01 - Slope_02 - Slope_03 - Slope_04 - Slope_05 + Slope_06
                            + Slope_07 + Slope_08 - Slope_09 + Slope_10 + Slope_11 - Slope_12 + s_CPot[CID];
 
-               TempFPot2 = + Slope_00 - Slope_01 - Slope_02 + Slope_03 - Slope_04 + Slope_05 - Slope_06 
+               TempFPot2 = + Slope_00 - Slope_01 - Slope_02 + Slope_03 - Slope_04 + Slope_05 - Slope_06
                            - Slope_07 + Slope_08 + Slope_09 - Slope_10 - Slope_11 + Slope_12 + s_CPot[CID];
 
-               TempFPot3 = - Slope_00 + Slope_01 - Slope_02 - Slope_03 + Slope_04 + Slope_05 - Slope_06 
+               TempFPot3 = - Slope_00 + Slope_01 - Slope_02 - Slope_03 + Slope_04 + Slope_05 - Slope_06
                            + Slope_07 - Slope_08 + Slope_09 - Slope_10 - Slope_11 + Slope_12 + s_CPot[CID];
 
                TempFPot4 = + Slope_00 + Slope_01 - Slope_02 + Slope_03 + Slope_04 - Slope_05 + Slope_06
                            - Slope_07 - Slope_08 - Slope_09 + Slope_10 + Slope_11 - Slope_12 + s_CPot[CID];
 
-               TempFPot5 = - Slope_00 - Slope_01 + Slope_02 + Slope_03 + Slope_04 - Slope_05 + Slope_06 
+               TempFPot5 = - Slope_00 - Slope_01 + Slope_02 + Slope_03 + Slope_04 - Slope_05 + Slope_06
                            - Slope_07 - Slope_08 + Slope_09 - Slope_10 - Slope_11 + Slope_12 + s_CPot[CID];
 
-               TempFPot6 = + Slope_00 - Slope_01 + Slope_02 - Slope_03 + Slope_04 + Slope_05 - Slope_06 
+               TempFPot6 = + Slope_00 - Slope_01 + Slope_02 - Slope_03 + Slope_04 + Slope_05 - Slope_06
                            + Slope_07 - Slope_08 - Slope_09 + Slope_10 + Slope_11 - Slope_12 + s_CPot[CID];
 
-               TempFPot7 = - Slope_00 + Slope_01 + Slope_02 + Slope_03 - Slope_04 + Slope_05 - Slope_06 
+               TempFPot7 = - Slope_00 + Slope_01 + Slope_02 + Slope_03 - Slope_04 + Slope_05 - Slope_06
                            - Slope_07 + Slope_08 - Slope_09 + Slope_10 + Slope_11 - Slope_12 + s_CPot[CID];
 
-               TempFPot8 = + Slope_00 + Slope_01 + Slope_02 - Slope_03 - Slope_04 - Slope_05 + Slope_06 
+               TempFPot8 = + Slope_00 + Slope_01 + Slope_02 - Slope_03 - Slope_04 - Slope_05 + Slope_06
                            + Slope_07 + Slope_08 + Slope_09 - Slope_10 - Slope_11 + Slope_12 + s_CPot[CID];
             }
             break; // INT_CQUAD
@@ -334,13 +334,13 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
 
             case INT_QUAD :
             {
-               TempFPot1 = TempFPot2 = TempFPot3 = TempFPot4 = (real)0.0; 
+               TempFPot1 = TempFPot2 = TempFPot3 = TempFPot4 = (real)0.0;
                TempFPot5 = TempFPot6 = TempFPot7 = TempFPot8 = (real)0.0;
-         
+
                for (int dk=-1; dk<=1; dk++)  {  Idz = dk+1;    kk = __mul24( dk, Cdz );
                for (int dj=-1; dj<=1; dj++)  {  Idy = dj+1;    jj = __mul24( dj, Cdy );
                for (int di=-1; di<=1; di++)  {  Idx = di+1;    ii = __mul24( di, Cdx );
-         
+
                   TempFPot1 += s_CPot[CID+kk+jj+ii] * c_Mm[Idz] * c_Mm[Idy] * c_Mm[Idx];
                   TempFPot2 += s_CPot[CID+kk+jj+ii] * c_Mm[Idz] * c_Mm[Idy] * c_Mp[Idx];
                   TempFPot3 += s_CPot[CID+kk+jj+ii] * c_Mm[Idz] * c_Mp[Idy] * c_Mm[Idx];
@@ -353,13 +353,13 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
                }}}
             }
             break; // INT_QUAD
-         
+
          } // switch ( IntScheme )
 
 
 
-//       save data to the shared-memory array. 
-//       Currently this part is highly diverge. However, since the interpolation takes much less time than the 
+//       save data to the shared-memory array.
+//       Currently this part is highly diverge. However, since the interpolation takes much less time than the
 //       Poisson solver does, we have not yet tried to optimize this part
          if ( FIDz >= 0 )
          {
@@ -368,7 +368,7 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
             if ( FIDx >= 0            &&  FIDy <= POT_NXT_F-2 )   s_Sol_Lv0[FID    +Fdy    ] = TempFPot3;
             if ( FIDx <= POT_NXT_F-2  &&  FIDy <= POT_NXT_F-2 )   s_Sol_Lv0[FID+Fdx+Fdy    ] = TempFPot4;
          }
-         
+
          if ( FIDz <= POT_NXT_F-2 )
          {
             if ( FIDx >= 0            &&  FIDy >= 0           )   s_Sol_Lv0[FID        +Fdz] = TempFPot5;
@@ -376,7 +376,7 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
             if ( FIDx >= 0            &&  FIDy <= POT_NXT_F-2 )   s_Sol_Lv0[FID    +Fdy+Fdz] = TempFPot7;
             if ( FIDx <= POT_NXT_F-2  &&  FIDy <= POT_NXT_F-2 )   s_Sol_Lv0[FID+Fdx+Fdy+Fdz] = TempFPot8;
          }
-         
+
          CID  += __mul24(   N_CSlice, Cdz );
          FID  += __mul24( 2*N_CSlice, Fdz );
          FIDz += 2*N_CSlice;
@@ -390,7 +390,7 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
 // c1. initialize s_Def_Lv{0-3} as zero (just to make sure that the boundary cells of s_Def_Lv{0-3} are zero)
 //    (note that s_Def_Lv0 and s_CPot share the same array)
 // -----------------------------------------------------------------------------------------------------------
-#  ifndef REUSE_SHARED 
+#  ifndef REUSE_SHARED
    t = tid;    while ( t < NGRID_LV0*NGRID_LV0*NGRID_LV0 )  {  s_Def_Lv0[t] = (real)0.0;  t += POT_NTHREAD; }
    t = tid;    while ( t < NGRID_LV1*NGRID_LV1*NGRID_LV1 )  {  s_Def_Lv1[t] = (real)0.0;  t += POT_NTHREAD; }
    t = tid;    while ( t < NGRID_LV2*NGRID_LV2*NGRID_LV2 )  {  s_Def_Lv2[t] = (real)0.0;  t += POT_NTHREAD; }
@@ -425,7 +425,7 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
          Restrict( s_Def[Lv], s_RHS[Lv+1], NGrid[Lv], NGrid[Lv+1], tid );
 
 //       initialize the correction at the next level to zero
-         t = tid;  
+         t = tid;
          while ( t < NGrid[Lv+1]*NGrid[Lv+1]*NGrid[Lv+1] )  {  s_Sol[Lv+1][t] = (real)0.0;  t += POT_NTHREAD; }
          __syncthreads();
       }
@@ -460,22 +460,22 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
 
 
 
-// e. store potential back to global memory 
+// e. store potential back to global memory
 // -----------------------------------------------------------------------------------------------------------
    t = tid;
    while ( t < GRA_NXT*GRA_NXT*GRA_NXT )
-   { 
-      s_Idx =   __umul24(  t/(GRA_NXT*GRA_NXT)         + POT_GHOST_SIZE - GRA_GHOST_SIZE,  dz  ) 
+   {
+      s_Idx =   __umul24(  t/(GRA_NXT*GRA_NXT)         + POT_GHOST_SIZE - GRA_GHOST_SIZE,  dz  )
               + __umul24(  t%(GRA_NXT*GRA_NXT)/GRA_NXT + POT_GHOST_SIZE - GRA_GHOST_SIZE,  dy  )
               +            t%(GRA_NXT        )         + POT_GHOST_SIZE - GRA_GHOST_SIZE;
 
       g_Pot_Array_Out[bid][t] = s_Sol_Lv0[s_Idx];
 
-      t += POT_NTHREAD; 
+      t += POT_NTHREAD;
    }
 
 // free memory
-#  ifdef REUSE_SHARED 
+#  ifdef REUSE_SHARED
    if ( tid == 0 )   free( s_RHS_Lv1 );
 #  endif
 #  ifdef FLOAT8
@@ -496,7 +496,7 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
 // Description :  Use Gauss-Seidel method for smoothing
 //
 // Note        :  1. B.C. should be stored in the input array "Sol"
-//                2. "__syncthreads" is invoked in the end of this function 
+//                2. "__syncthreads" is invoked in the end of this function
 //
 // Parameter   :  Sol   : 1D array to store the output solution to the Poisson equation
 //                RHS   : 1D array storing the RHS of the Poisson equation
@@ -571,7 +571,7 @@ __device__ void Smoothing( real *Sol, const real *RHS, const real dh, const uint
 // Note        :  1. B.C. should be stored in the input array "Sol"
 //                2. It is assumed that the boundary values of Def have already been initialized as zero
 //                   (unless REUSE_SHARED is defined)
-//                3. "__syncthreads" is invoked in the end of this function 
+//                3. "__syncthreads" is invoked in the end of this function
 //
 // Parameter   :  Sol            : 1D array storing the input solution to the Poisson equation
 //                RHS            : 1D array storing the RHS of the Poisson equation
@@ -580,7 +580,7 @@ __device__ void Smoothing( real *Sol, const real *RHS, const real dh, const uint
 //                NGrid          : Number of cells in each spatial direction for Sol and RHS
 //                Idx0           : Starting cell index
 //-------------------------------------------------------------------------------------------------------
-__device__ void ComputeDefect( const real *Sol, const real *RHS, real *Def, const real dh, const uint NGrid, 
+__device__ void ComputeDefect( const real *Sol, const real *RHS, real *Def, const real dh, const uint NGrid,
                                const uint Idx0 )
 {
 
@@ -618,10 +618,10 @@ __device__ void ComputeDefect( const real *Sol, const real *RHS, real *Def, cons
 
 
 // set the boundary values as zeros
-#  ifdef REUSE_SHARED 
+#  ifdef REUSE_SHARED
    Idx = Idx0;
    while ( Idx < NGrid2 )
-   {  
+   {
       i = Idx%NGrid;
       j = Idx/NGrid;
 
@@ -646,7 +646,7 @@ __device__ void ComputeDefect( const real *Sol, const real *RHS, real *Def, cons
 // Function    :  LoadRho
 // Description :  Load density field from the global memory to the shared memory
 //
-// Note        :  1. "__syncthreads" is invoked in the end of this function 
+// Note        :  1. "__syncthreads" is invoked in the end of this function
 //                2. Loaded data will be multiplied by "Poi_Coeff"
 //                3. The size of the shared-memory array "s_Rho" is "RHO_NXT+2" (padded with one zero on each
 //                   side in each direction)
@@ -682,14 +682,14 @@ __device__ void LoadRho( const real *g_Rho, real *s_Rho, const real Poi_Coeff, c
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Restrict
-// Description :  Restrict the input fine-grid data to get the coarse-grid data 
+// Description :  Restrict the input fine-grid data to get the coarse-grid data
 //
 // Note        :  1. We assume that the input arrays follow the "finite-difference" fashion, in which the data
 //                   are defined in the cell intersections instead of cell averages
 //                   --> N^3 cells define a 3D grid with the size equal to (N-1)^3
-//                2. Fine-grid and coarse-grid data at boundaries are assumed to be zero (because defect at 
+//                2. Fine-grid and coarse-grid data at boundaries are assumed to be zero (because defect at
 //                   boundaries are always zero)
-//                3. "__syncthreads" is invoked in the end of this function 
+//                3. "__syncthreads" is invoked in the end of this function
 //
 // Parameter   :  FData    : 1D array storing the input fine-grid data
 //                CData    : 1D array to store the output coarse-grid data
@@ -808,7 +808,7 @@ __device__ void Restrict( const real *FData, real *CData, const uint NGrid_F, co
 //                NGrid_F  : Number of fine-grid cells in each spatial direction
 //                FIdx0    : Starting fine-grid index
 //-------------------------------------------------------------------------------------------------------
-__device__ void Prolongate_and_Correct( const real *CData, real *FData, const uint NGrid_C, const uint NGrid_F, 
+__device__ void Prolongate_and_Correct( const real *CData, real *FData, const uint NGrid_C, const uint NGrid_F,
                                         const uint FIdx0 )
 {
 
@@ -871,9 +871,9 @@ __device__ void Prolongate_and_Correct( const real *CData, real *FData, const ui
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  EstimateError
-// Description :  Estimate the L1 error 
+// Description :  Estimate the L1 error
 //
-// Note        :  1. "__syncthreads" is invoked in the end of this function 
+// Note        :  1. "__syncthreads" is invoked in the end of this function
 //                2. Shared-memory arrays "s_Error" and "s_SolSum" are used for GPU reduction
 //
 // Parameter   :  Sol      : 1D array storing the input solution to the Poisson equation
@@ -897,7 +897,7 @@ __device__ void EstimateError( const real *Sol, const real *RHS, const real dh, 
    const uint FloorPow2 = 1<<(31-__clz(POT_NTHREAD) ); // largest power-of-two value not greater than POT_NTHREAD
    const uint Remain    = POT_NTHREAD - FloorPow2;
 
-   uint i, j, k, ip, jp, kp, im, jm, km, ijk; 
+   uint i, j, k, ip, jp, kp, im, jm, km, ijk;
    uint Idx = tid;
 
    s_Error [tid] = (real)0.0;
@@ -918,7 +918,7 @@ __device__ void EstimateError( const real *Sol, const real *RHS, const real dh, 
       jm  = ijk - dj;
       km  = ijk - dk;
 
-      s_Error [tid] += FABS(  _dh2*( Sol[kp]+Sol[km]+Sol[jp]+Sol[jm]+Sol[ip]+Sol[im]-(real)6.0*Sol[ijk] ) 
+      s_Error [tid] += FABS(  _dh2*( Sol[kp]+Sol[km]+Sol[jp]+Sol[jm]+Sol[ip]+Sol[im]-(real)6.0*Sol[ijk] )
                               + RHS[ijk]  );
       s_SolSum[tid] += FABS( Sol[ijk] );
 
@@ -931,7 +931,7 @@ __device__ void EstimateError( const real *Sol, const real *RHS, const real dh, 
 // 2. perform the reduction operation to get the L1 error
 
 // first sum up the elements larger than FloorPow2 to ensure that the number of remaining elements is power-of-two
-   if ( tid < Remain )  
+   if ( tid < Remain )
    {
       s_Error [tid] += s_Error [ tid + FloorPow2 ];
       s_SolSum[tid] += s_SolSum[ tid + FloorPow2 ];
@@ -943,7 +943,7 @@ __device__ void EstimateError( const real *Sol, const real *RHS, const real dh, 
 #  endif
 
 #  if ( POT_NTHREAD >= 512 )
-   if ( tid < 256 )  
+   if ( tid < 256 )
    {
       s_Error [tid] += s_Error [ tid + 256 ];
       s_SolSum[tid] += s_SolSum[ tid + 256 ];
@@ -951,7 +951,7 @@ __device__ void EstimateError( const real *Sol, const real *RHS, const real dh, 
    __syncthreads();
 #  endif
 
-#  if ( POT_NTHREAD >= 256 ) 
+#  if ( POT_NTHREAD >= 256 )
    if ( tid < 128 )
    {
       s_Error [tid] += s_Error [ tid + 128 ];
@@ -970,11 +970,11 @@ __device__ void EstimateError( const real *Sol, const real *RHS, const real dh, 
 #  endif
 
 // adopting warp-synchronous mechanism
-   if ( tid < 32 ) 
-   {  
+   if ( tid < 32 )
+   {
 //    declare volatile pointer to ensure that the operations are not reordered
-      volatile real *s_vErr = s_Error;   
-      volatile real *s_vSol = s_SolSum;   
+      volatile real *s_vErr = s_Error;
+      volatile real *s_vSol = s_SolSum;
 
       s_vErr[tid] += s_vErr[tid+32];   // here we have assumed that POT_NTHREAD >= 64
       s_vErr[tid] += s_vErr[tid+16];

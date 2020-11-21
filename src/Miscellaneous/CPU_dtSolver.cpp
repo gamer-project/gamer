@@ -8,7 +8,8 @@ void CPU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_
                             const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const int NPG,
                             const real dh, const real Safety, const real MinPres,
                             const EoS_DE2P_t EoS_DensEint2Pres_Func, const EoS_DP2C_t EoS_DensPres2CSqr_Func,
-                            const double c_EoS_AuxArray[] );
+                            const double c_EoS_AuxArray_Flt[], const int c_EoS_AuxArray_Int[],
+                            const real* const c_EoS_Table[EOS_NTABLE_MAX] );
 #ifdef GRAVITY
 void CPU_dtSolver_HydroGravity( real g_dt_Array[],
                                 const real g_Pot_Array[][ CUBE(GRA_NXT) ],
@@ -66,7 +67,8 @@ void CPU_dtSolver( const Solver_t TSolver, real dt_Array[], const real Flu_Array
 #     if   ( MODEL == HYDRO )
       case DT_FLU_SOLVER:
          CPU_dtSolver_HydroCFL( dt_Array, Flu_Array, Mag_Array, NPatchGroup, dh, Safety, MinPres,
-                                EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr, EoS_AuxArray );
+                                EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr, EoS_AuxArray_Flt,
+                                EoS_AuxArray_Int, h_EoS_Table );
       break;
 
 #     ifdef GRAVITY

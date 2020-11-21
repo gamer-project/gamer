@@ -26,7 +26,9 @@ static __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
                                       const real MinDens, const real MinPres, const real MinEint,
                                       const EoS_DE2P_t EoS_DensEint2Pres,
                                       const EoS_DP2C_t EoS_DensPres2CSqr,
-                                      const double EoS_AuxArray[] );
+                                      const double EoS_AuxArray_Flt[],
+                                      const int    EoS_AuxArray_Int[],
+                                      const real *const EoS_Table[EOS_NTABLE_MAX] );
 
 
 
@@ -78,30 +80,30 @@ __global__ void CUFLU_FluidSolver_RTVD(
    {
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, StoreFlux,              0,              0,
                      s_cu, s_cw, s_flux, s_RLflux, false, 0, MinDens, MinPres, MinEint,
-                     EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray );
+                     EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
 
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, StoreFlux, FLU_GHOST_SIZE,              0,
                      s_cu, s_cw, s_flux, s_RLflux, false, 3, MinDens, MinPres, MinEint,
-                     EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray );
+                     EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
 
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, StoreFlux, FLU_GHOST_SIZE, FLU_GHOST_SIZE,
                      s_cu, s_cw, s_flux, s_RLflux,  true, 6, MinDens, MinPres, MinEint,
-                     EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray );
+                     EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
    }
 
    else
    {
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, StoreFlux,              0,              0,
                      s_cu, s_cw, s_flux, s_RLflux, false, 6, MinDens, MinPres, MinEint,
-                     EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray );
+                     EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
 
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, StoreFlux,              0, FLU_GHOST_SIZE,
                      s_cu, s_cw, s_flux, s_RLflux, false, 3, MinDens, MinPres, MinEint,
-                     EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray );
+                     EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
 
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, StoreFlux, FLU_GHOST_SIZE, FLU_GHOST_SIZE,
                      s_cu, s_cw, s_flux, s_RLflux,  true, 0, MinDens, MinPres, MinEint,
-                     EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray );
+                     EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
    }
 
 } // FUNCTION : CUFLU_FluidSolver_RTVD
@@ -137,7 +139,8 @@ __global__ void CUFLU_FluidSolver_RTVD(
 //                MinEint           : Internal energy floor
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
 //                EoS_DensPres2CSqr : EoS routine to compute the sound speed square
-//                EoS_AuxArray      : Auxiliary array for the EoS routines
+//                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
+//                EoS_Table         : EoS tables
 //-------------------------------------------------------------------------------------------------------
 __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
                                real g_Fluid_Out[][5][ CUBE(PS2) ],
@@ -149,7 +152,9 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
                                const real MinDens, const real MinPres, const real MinEint,
                                const EoS_DE2P_t EoS_DensEint2Pres,
                                const EoS_DP2C_t EoS_DensPres2CSqr,
-                               const double EoS_AuxArray[] )
+                               const double EoS_AuxArray_Flt[],
+                               const int    EoS_AuxArray_Int[],
+                               const real *const EoS_Table[EOS_NTABLE_MAX] )
 {
 
    const uint bx               = blockIdx.x;
@@ -209,7 +214,8 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
       _rho = (real)1.0 / Fluid[0];
       vx   = _rho * Fluid[1];
       p    = Hydro_Con2Pres( Fluid[0], Fluid[1], Fluid[2], Fluid[3], Fluid[4], Passive,
-                             CheckMinPres_Yes, MinPres, NULL_REAL, EoS_DensEint2Pres, EoS_AuxArray, NULL );
+                             CheckMinPres_Yes, MinPres, NULL_REAL, EoS_DensEint2Pres,
+                             EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
 
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( Hydro_CheckNegative(p) )
@@ -220,7 +226,8 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
          printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  Fluid[0], __FILE__, __LINE__, __FUNCTION__ );
 #     endif
-      c    = FABS( vx ) + SQRT(  EoS_DensPres2CSqr( Fluid[0], p, Passive, EoS_AuxArray )  );
+      c    = FABS( vx ) + SQRT(  EoS_DensPres2CSqr( Fluid[0], p, Passive, EoS_AuxArray_Flt,
+                                                    EoS_AuxArray_Int, EoS_Table )  );
 
       s_cw[ty][0][i] = Fluid[1];
       s_cw[ty][1][i] = Fluid[1]*vx + p;
@@ -271,7 +278,8 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
          _rho = (real)1.0 / Fluid_half[0];
          vx   = _rho * Fluid_half[1];
          p    = Hydro_Con2Pres( Fluid_half[0], Fluid_half[1], Fluid_half[2], Fluid_half[3], Fluid_half[4], Passive,
-                                CheckMinPres_Yes, MinPres, NULL_REAL, EoS_DensEint2Pres, EoS_AuxArray, NULL );
+                                CheckMinPres_Yes, MinPres, NULL_REAL, EoS_DensEint2Pres,
+                                EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
 
 #        ifdef CHECK_NEGATIVE_IN_FLUID
          if ( Hydro_CheckNegative(p) )
@@ -283,7 +291,8 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
                     Fluid_half[0], __FILE__, __LINE__, __FUNCTION__ );
 #        endif
 
-         c    = FABS( vx ) + SQRT(  EoS_DensPres2CSqr( Fluid_half[0], p, Passive, EoS_AuxArray )  );
+         c    = FABS( vx ) + SQRT(  EoS_DensPres2CSqr( Fluid_half[0], p, Passive, EoS_AuxArray_Flt,
+                                                       EoS_AuxArray_Int, EoS_Table )  );
 
          s_cw[ty][0][i] = Fluid_half[1];
          s_cw[ty][1][i] = Fluid_half[1]*vx + p;

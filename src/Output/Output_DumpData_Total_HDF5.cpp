@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2422)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2423)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -193,6 +193,7 @@ Procedure for outputting new variables:
 //                2420 : 2020/10/12 --> output OPT__FLAG_USER_NUM and use variable-length datatype for FlagTable_User
 //                2421 : 2020/10/26 --> output COSMIC_RAY
 //                2422 : 2020/10/29 --> output the parameters of external potential table
+//                2423 : 2020/11/01 --> output EOS_NTABLE_MAX
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1393,7 +1394,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2422;
+   KeyInfo.FormatVersion        = 2423;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -1866,6 +1867,7 @@ void FillIn_SymConst( SymConst_t &SymConst )
 #  endif
 #  endif // MHD
    SymConst.EoSNAuxMax           = EOS_NAUX_MAX;
+   SymConst.EoSNTableMax         = EOS_NTABLE_MAX;
 
 #  elif  ( MODEL == ELBDM )
    SymConst.Flu_BlockSize_x      = FLU_BLOCK_SIZE_X;
@@ -2571,6 +2573,7 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "EulerY",               HOFFSET(SymConst_t,EulerY              ), H5T_NATIVE_INT    );
 #  endif
    H5Tinsert( H5_TypeID, "EoSNAuxMax",           HOFFSET(SymConst_t,EoSNAuxMax          ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "EoSNTableMax",         HOFFSET(SymConst_t,EoSNTableMax        ), H5T_NATIVE_INT    );
 
 #  elif  ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "Flu_BlockSize_x",      HOFFSET(SymConst_t,Flu_BlockSize_x     ), H5T_NATIVE_INT    );

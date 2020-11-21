@@ -7,6 +7,8 @@
 
 #ifdef GPU
 
+extern real *d_EoS_Table[EOS_NTABLE_MAX];
+
 #ifdef GRAVITY
 void CUAPI_SetConstMemory_ExtAccPot();
 #endif
@@ -36,11 +38,13 @@ void CUAPI_SetConstMemory()
 // we do not repeat them below
 
 #  if ( MODEL == HYDRO )
-   CUDA_CHECK_ERROR(  cudaMemcpyToSymbol( c_EoS_AuxArray, EoS_AuxArray,       EOS_NAUX_MAX*sizeof(double) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyToSymbol( c_EoS_AuxArray_Flt, EoS_AuxArray_Flt, EOS_NAUX_MAX  *sizeof(double) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyToSymbol( c_EoS_AuxArray_Int, EoS_AuxArray_Int, EOS_NAUX_MAX  *sizeof(int   ) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyToSymbol( c_EoS_Table,        d_EoS_Table,      EOS_NTABLE_MAX*sizeof(real* ) )  );
 #  endif
 
 #  if ( NCOMP_PASSIVE > 0 )
-   CUDA_CHECK_ERROR(  cudaMemcpyToSymbol( c_NormIdx,      PassiveNorm_VarIdx, NCOMP_PASSIVE*sizeof(int  ) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyToSymbol( c_NormIdx, PassiveNorm_VarIdx, NCOMP_PASSIVE*sizeof(int) )  );
 #  endif
 
 #  ifdef GRAVITY
