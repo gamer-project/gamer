@@ -3,7 +3,7 @@
 
 # problem-specific runtime parameters
 Jet_Exist                                         3         # [0/1/2/3]: no jet/jet1/jet2/bi-polar jet
-Jet_Ambient                                       1         # [0/1/2/3]: uniform / isothermal / sigular isothermal / beta model
+Jet_Ambient                                       0         # [0/1/2/3]: uniform / isothermal / sigular isothermal / beta model
 Jet_DiffPrecession                                0         # [0/1]: differetial precession
 Jet_Precession                                    0         # [0/1]: precession
 Jet_TimeDependentSrc                              0         # [0/1]: time-dependent source
@@ -49,7 +49,7 @@ Jet_HSE_BgTable_File  Input__HydrostaticEquilibrium         # for Jet_HSE: file 
 
 
 # Jet_Ambient == 1 || Jet_Ambient == 2
-Jet_HSE_Radius                                   80         # for Jet_HSE: radius of hydrostatic equilibrium halo  (in pc)
+Jet_HSE_Radius                                   -1         # for Jet_HSE: radius of hydrostatic equilibrium halo  (in pc)
 Jet_HSE_Dx                                      0.0         # for Jet_HSE: distance between box and cluster centre (in pc)
 Jet_HSE_Dy                                      0.0         # for Jet_HSE: distance between box and cluster centre (in pc)
 Jet_HSE_Dz                                      0.0         # for Jet_HSE: distance between box and cluster centre (in pc)

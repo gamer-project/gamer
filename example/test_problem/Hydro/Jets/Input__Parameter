@@ -24,7 +24,7 @@ END_STEP                     -1            # end step (<0=auto -> must be set by
 
 
 # test problems
-TESTPROB_ID                   604         # test problem ID [0]
+TESTPROB_ID                    17         # test problem ID [0]
                                           # 600: blast wave in sr-hydro
                                           # 601: Riemann problem in sr-hydro
                                           # 602: double mach reflection in pure sr-hydro
