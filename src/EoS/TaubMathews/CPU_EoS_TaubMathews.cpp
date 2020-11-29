@@ -300,7 +300,7 @@ void EoS_SetGPUFunc_TaubMathews(EoS_GUESS_t &, EoS_H2TEM_t &, EoS_TEM2H_t &, EoS
 void EoS_Init_TaubMathews()
 {
 
-   EoS_SetAuxArray_TaubMathews( EoS_AuxArray );
+   EoS_SetAuxArray_TaubMathews( EoS_AuxArray_Flt, EoS_AuxArray_Int );
    EoS_SetCPUFunc_TaubMathews( EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_Temper2CSqr_CPUPtr );
 #  ifdef GPU
    EoS_SetGPUFunc_TaubMathews( EoS_GuessHTilde_GPUPtr, EoS_HTilde2Temp_GPUPtr, EoS_Temp2HTilde_GPUPtr, EoS_Temper2CSqr_GPUPtr );

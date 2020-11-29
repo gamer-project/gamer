@@ -451,7 +451,6 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                                                                                     EoS_DensEint2Pres_CPUPtr,
                                                                                     EoS_GuessHTilde_CPUPtr,
                                                                                     EoS_HTilde2Temp_CPUPtr,
-                                                                                    EoS_AuxArray, NULL,
                                                                                     EoS_AuxArray_Flt,
                                                                                     EoS_AuxArray_Int, h_EoS_Table, NULL );
 
