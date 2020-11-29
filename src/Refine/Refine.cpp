@@ -802,7 +802,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
             Hydro_DualEnergyFix( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
                                  Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i], Flu_FData[ENPY][k][j][i],
-                                 dummy, EoS_AuxArray[1], EoS_AuxArray[2], CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy, Emag );
+                                 dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2], CheckMinPres_Yes, MIN_PRES,
+                                 UseEnpy2FixEngy, Emag );
 
 #           else // #ifdef DUAL_ENERGY
 

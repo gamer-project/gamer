@@ -57,6 +57,7 @@ struct KeyInfo_t
 #  if ( MODEL == HYDRO )
    int    Magnetohydrodynamics;
    int    SRHydrodynamics;
+   int    CosmicRay;
 #  endif
 
    long   Step;
@@ -131,6 +132,7 @@ struct Makefile_t
    int DualEnergy;
    int Magnetohydrodynamics;
    int SRHydrodynamics;
+   int CosmicRay;
    int EoS;
    int BarotropicEoS;
 #  ifdef SRHD
@@ -265,6 +267,7 @@ struct SymConst_t
    int    EulerY;
 #  endif
    int    EoSNAuxMax;
+   int    EoSNTableMax;
 
 #  elif  ( MODEL == ELBDM )
    int    Flu_BlockSize_x;
@@ -506,6 +509,11 @@ struct InputPara_t
    int    Opt__SelfGravity;
    int    Opt__ExtAcc;
    int    Opt__ExtPot;
+   char  *ExtPotTable_Name;
+   int    ExtPotTable_NPoint[3];
+   double ExtPotTable_dh;
+   double ExtPotTable_EdgeL[3];
+   int    ExtPotTable_Float8;
    int    Opt__GravityExtraMass;
 #  endif // #ifdef GRAVITY
 

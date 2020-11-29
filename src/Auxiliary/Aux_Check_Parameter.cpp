@@ -639,8 +639,12 @@ void Aux_Check_Parameter()
 #   endif
 
 #  if ( DUAL_ENERGY == DE_ENPY  &&  EOS != EOS_GAMMA )
-#     error : ERROR : EOS_GAMMA does NOT support DUAL_ENERGY=DE_ENPY !!
+#     error : ERROR : DUAL_ENERGY=DE_ENPY only supports EOS_GAMMA !!
 #  endif
+
+#   if ( DUAL_ENERGY == DE_ENPY  &&  defined COSMIC_RAY )
+#     error : COSMIC_RAY does NOT support DUAL_ENERGY=DE_ENPY !!
+#   endif
 #  endif // #ifdef DUAL_ENERGY
 
 #  ifdef MHD
@@ -654,8 +658,12 @@ void Aux_Check_Parameter()
 #   endif
 #  endif // MHD
 
+#  ifdef COSMIC_RAY
+#     error : ERROR : COSMIC_RAY is NOT supported yet !!
+#  endif
+
 #  if ( defined LR_EINT  &&  FLU_SCHEME == CTU )
-#     error : CTU does NOT support LR_EINT in CUFLU.h !!
+#     error : ERROR : CTU does NOT support LR_EINT in CUFLU.h !!
 #  endif
 
 #  if ( EOS != EOS_GAMMA       &&  EOS != EOS_ISOTHERMAL  &&  EOS != EOS_NUCLEAR  && \

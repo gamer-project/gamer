@@ -17,7 +17,8 @@ GPU_DEVICE
 real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                      const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
                      const EoS_DE2P_t EoS_DensEint2Pres, const EoS_GUESS_t EoS_GuessHTilde,
-                     const EoS_H2TEM_t EoS_HTilde2Temp, const double EoS_AuxArray[], real *EintOut );
+                     const EoS_H2TEM_t EoS_HTilde2Temp, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                     const real *const EoS_Table[EOS_NTABLE_MAX], real *EintOut );
 GPU_DEVICE
 static real Hydro_Con2Eint( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                             const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
@@ -171,7 +172,8 @@ void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int 
 //                EoS_DensPres2Eint  : EoS routine to compute the gas internal energy
 //                EoS_GuessHTilde    :        . . .               gussed reduced specific enthalpy
 //                EoS_HTilde2Temp    :        . . .               temperature
-//                EoS_AuxArray       : Auxiliary array for EoS_DensEint2Pres()
+//                EoS_AuxArray_*     : Auxiliary arrays for EoS_DensEint2Pres()
+//                EoS_Table          : EoS tables for EoS_DensEint2Pres()
 //                EintOut            : Pointer to store the output internal energy
 //                                     --> Do nothing if it is NULL
 //                                     --> Internal energy floor is not applied
@@ -185,7 +187,8 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
                     const bool JeansMinPres, const real JeansMinPres_Coeff,
                     const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint,
                     const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
-                    const double EoS_AuxArray[], real* const EintOut, real* LorentzFactor_Ptr )
+                    const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                    const real *const EoS_Table[EOS_NTABLE_MAX], real* const EintOut, real* LorentzFactor_Ptr )
 {
 
 #  ifndef SRHD
@@ -234,7 +237,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
    Out[2] = In[2]*_Rho;
    Out[3] = In[3]*_Rho;
    Out[4] = Hydro_Con2Pres( In[0], In[1], In[2], In[3], In[4], In+NCOMP_FLUID, CheckMinPres_Yes, MinPres, Emag,
-                            EoS_DensEint2Pres, NULL, NULL, EoS_AuxArray, EintOut );
+                            EoS_DensEint2Pres, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, EintOut );
 
 
 // pressure floor required to resolve the Jeans length
@@ -246,7 +249,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 
 //    recompute internal energy to be consistent with the updated pressure
       if ( EintOut != NULL  &&  Out[4] != Pres0 )
-         *EintOut = EoS_DensPres2Eint( Out[0], Out[4], In+NCOMP_FLUID, EoS_AuxArray );
+         *EintOut = EoS_DensPres2Eint( Out[0], Out[4], In+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
    }
 
 #  endif
@@ -294,9 +297,10 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 //                NormIdx           : Target variable indices for the option "NormPassive"
 //                                    --> Should be set to the global variable "PassiveNorm_VarIdx"
 //                EoS_DensPres2Eint : EoS routine to compute the gas internal energy
-//                EoS_AuxArray      : Auxiliary array for EoS_DensPres2Eint()
 //                EoS_Temp2HTilde   : EoS routine to compute the reduced specific enthalpy
 //                EoS_HTilde2Temp   : EoS routine to compute the temperature
+//                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensPres2Eint()
+//                EoS_Table         : EoS tables for EoS_DensPres2Eint()
 //                EintIn            : Pointer storing the input internal energy (see the note above)
 //                                    --> Do nothing if it is NULL
 //
@@ -304,8 +308,9 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_Pri2Con( const real In[], real Out[], const bool NormPassive, const int NNorm, const int NormIdx[],
-                    const EoS_DP2E_t EoS_DensPres2Eint, const double EoS_AuxArray[],
-                    const EoS_TEM2H_t EoS_Temp2HTilde,  const EoS_H2TEM_t EoS_HTilde2Temp, const real* const EintIn )
+                    const EoS_DP2E_t EoS_DensPres2Eint, const EoS_TEM2H_t EoS_Temp2HTilde,
+                    const EoS_H2TEM_t EoS_HTilde2Temp, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                    const real *const EoS_Table[EOS_NTABLE_MAX], const real* const EintIn )
 {
 
 #  ifdef SRHD
@@ -361,9 +366,11 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool NormPassive, const i
    Emag   = (real)0.5*( SQR(Bx) + SQR(By) + SQR(Bz) );
 #  endif
 
-
 #  ifndef SRHD
-   Eint   = ( EintIn == NULL ) ? EoS_DensPres2Eint( In[0], In[4], Out+NCOMP_FLUID, EoS_AuxArray ) : *EintIn;
+=======
+   Eint   = ( EintIn == NULL ) ? EoS_DensPres2Eint( In[0], In[4], Out+NCOMP_FLUID, EoS_AuxArray_Flt,
+                                                    EoS_AuxArray_Int, EoS_Table )
+                               : *EintIn;
    Out[4] = Hydro_ConEint2Etot( Out[0], Out[1], Out[2], Out[3], Eint, Emag );
 #  endif
 
@@ -392,7 +399,8 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool NormPassive, const i
 //                In                : Array storing the input conserved variables
 //                MinPres           : Minimum allowed pressure
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
-//                EoS_AuxArray      : Auxiliary array for EoS_DensEint2Pres()
+//                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensEint2Pres()
+//                EoS_Table         : EoS tables for EoS_DensEint2Pres()
 //                AuxArray          : Pointer storing
 //                                   (1) the input pressure in non-SRHD (see the note above)
 //                                    --> Do nothing if it is NULL
@@ -402,8 +410,8 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool NormPassive, const i
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres,
-                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[],
-                     const real AuxArray[] )
+                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                     const real *const EoS_Table[EOS_NTABLE_MAX], const real AuxArray[] )
 {
 
 #  ifndef SRHD
@@ -449,8 +457,9 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
    Flux[4] = ( InRot[4] + PriRot[4] )*Vx;
 #  else
    const real Pres = ( AuxArray == NULL ) ? Hydro_Con2Pres( InRot[0], InRot[1], InRot[2], InRot[3], InRot[4], In+NCOMP_FLUID,
-                                                          CheckMinPres_Yes, MinPres, Emag,
-                                                          EoS_DensEint2Pres, NULL, NULL, EoS_AuxArray, NULL )
+                                                            CheckMinPres_Yes, MinPres, Emag,
+                                                            EoS_DensEint2Pres, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                            EoS_Table, NULL )
                                         : AuxArray[0];
    const real _Rho = (real)1.0 / InRot[0];
    const real Vx   = _Rho*InRot[1];
@@ -895,7 +904,8 @@ double Hydro_Temp2Pres( const double Dens, const double Temp, const double mu, c
 //                MinPres           : Pressure floor
 //                Emag              : Magnetic energy density (0.5*B^2) --> For MHD only
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
-//                EoS_AuxArray      : Auxiliary array for EoS_DensEint2Pres()
+//                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensEint2Pres()
+//                EoS_Table         : EoS tables for EoS_DensEint2Pres()
 //                EintOut           : Pointer to store the output internal energy
 //                                    --> Do nothing if it is NULL
 //                                    --> Internal energy floor is not applied
@@ -906,7 +916,8 @@ GPU_DEVICE
 real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                      const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
                      const EoS_DE2P_t EoS_DensEint2Pres, const EoS_GUESS_t EoS_GuessHTilde,
-                     const EoS_H2TEM_t EoS_HTilde2Temp, const double EoS_AuxArray[], real *EintOut )
+                     const EoS_H2TEM_t EoS_HTilde2Temp, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                     const real *const EoS_Table[EOS_NTABLE_MAX], real *EintOut )
 {
 
    real Pres;
@@ -922,7 +933,7 @@ real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const re
    real Eint;
 
    Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Engy, NULL, NULL, CheckMinEint_No, NULL_REAL, Emag );
-   Pres = EoS_DensEint2Pres( Dens, Eint, Passive, EoS_AuxArray );
+   Pres = EoS_DensEint2Pres( Dens, Eint, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 
    if ( CheckMinPres )   Pres = Hydro_CheckMinPres( Pres, MinPres );
 
@@ -1014,7 +1025,8 @@ real Hydro_Con2Eint( const real Dens, const real MomX, const real MomY, const re
 //                MinPres           : Pressure floor
 //                Bmag              : Magnetic energy density (0.5*B^2) --> For MHD only
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
-//                EoS_AuxArray      : Auxiliary array for EoS_DensEint2Pres()
+//                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensEint2Pres()
+//                EoS_Table         : EoS tables for EoS_DensEint2Pres()
 //
 // Return      :  Gas temperature
 //-------------------------------------------------------------------------------------------------------
@@ -1022,7 +1034,8 @@ GPU_DEVICE
 real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                      const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
                      const EoS_DE2P_t EoS_DensEint2Pres, const EoS_GUESS_t EoS_GuessHTilde,
-                     const EoS_H2TEM_t EoS_HTilde2Temp, const double EoS_AuxArray[] )
+                     const EoS_H2TEM_t EoS_HTilde2Temp, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                     const real *const EoS_Table[EOS_NTABLE_MAX] )
 {
 
    real Temp;
@@ -1036,7 +1049,7 @@ real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const re
    Temp = Prim[4]/Prim[0];
 #  else
    const real Pres = Hydro_Con2Pres( Dens, MomX, MomY, MomZ, Engy, Passive, CheckMinPres, MinPres, Emag,
-                                     EoS_DensEint2Pres, NULL, NULL, EoS_AuxArray, NULL );
+                                     EoS_DensEint2Pres, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
 
    Temp = Pres/Dens;
 #  endif

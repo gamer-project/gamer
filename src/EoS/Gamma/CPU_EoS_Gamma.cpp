@@ -30,31 +30,31 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  EoS_SetAuxArray_Gamma
-// Description :  Set the auxiliary array AuxArray[]
+// Description :  Set the auxiliary arrays AuxArray_Flt/Int[]
 //
-//                   AuxArray[0] = gamma
-//                   AuxArray[1] = gamma-1
-//                   AuxArray[2] = 1/(gamma-1)
-//                   AuxArray[3] = 1/gamma
+//                   AuxArray_Flt[0] = gamma
+//                   AuxArray_Flt[1] = gamma-1
+//                   AuxArray_Flt[2] = 1/(gamma-1)
+//                   AuxArray_Flt[3] = 1/gamma
 //
 // Note        :  1. Invoked by EoS_Init_Gamma()
-//                2. AuxArray[] has the size of EOS_NAUX_MAX defined in Macro.h (default = 20)
+//                2. AuxArray_Flt/Int[] have the size of EOS_NAUX_MAX defined in Macro.h (default = 20)
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
-//                4. Do not change the order of AuxArray[]
-//                   --> For example, the dual-energy routines assume AuxArray[0]=GAMMA
+//                4. Do not change the order of AuxArray_Flt[]
+//                   --> For example, the dual-energy routines assume AuxArray_Flt[0]=GAMMA
 //
-// Parameter   :  AuxArray : Array to be filled up
+// Parameter   :  AuxArray_Flt/Int : Floating-point/Integer arrays to be filled up
 //
-// Return      :  AuxArray[]
+// Return      :  AuxArray_Flt/Int[]
 //-------------------------------------------------------------------------------------------------------
 #ifndef __CUDACC__
-void EoS_SetAuxArray_Gamma( double AuxArray[] )
+void EoS_SetAuxArray_Gamma( double AuxArray_Flt[], int AuxArray_Int[] )
 {
 
-   AuxArray[0] = GAMMA;
-   AuxArray[1] = GAMMA - 1.0;
-   AuxArray[2] = 1.0 / ( GAMMA - 1.0 );
-   AuxArray[3] = 1.0 / GAMMA;
+   AuxArray_Flt[0] = GAMMA;
+   AuxArray_Flt[1] = GAMMA - 1.0;
+   AuxArray_Flt[2] = 1.0 / ( GAMMA - 1.0 );
+   AuxArray_Flt[3] = 1.0 / GAMMA;
 
 } // FUNCTION : EoS_SetAuxArray_Gamma
 #endif // #ifndef __CUDACC__
@@ -73,22 +73,24 @@ void EoS_SetAuxArray_Gamma( double AuxArray[] )
 // Description :  Convert gas mass density and internal energy density to gas pressure
 //
 // Note        :  1. Internal energy density here is per unit volume instead of per unit mass
-//                2. See EoS_SetAuxArray_Gamma() for the values stored in AuxArray[]
+//                2. See EoS_SetAuxArray_Gamma() for the values stored in AuxArray_Flt/Int[]
 //
-// Parameter   :  Dens     : Gas mass density
-//                Eint     : Gas internal energy density
-//                Passive  : Passive scalars (must not used here)
-//                AuxArray : Auxiliary array (see the Note above)
+// Parameter   :  Dens       : Gas mass density
+//                Eint       : Gas internal energy density
+//                Passive    : Passive scalars (must not used here)
+//                AuxArray_* : Auxiliary arrays (see the Note above)
+//                Table      : EoS tables
 //
 // Return      :  Gas pressure
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_DensEint2Pres_Gamma( const real Dens, const real Eint, const real Passive[], const double AuxArray[] )
+static real EoS_DensEint2Pres_Gamma( const real Dens, const real Eint, const real Passive[], const double AuxArray_Flt[],
+                                     const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] )
 {
 
 // check
 #  ifdef GAMER_DEBUG
-   if ( AuxArray == NULL )    printf( "ERROR : AuxArray == NULL in %s !!\n", __FUNCTION__ );
+   if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
 
    if ( Hydro_CheckNegative(Dens) )
       printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
@@ -100,7 +102,7 @@ static real EoS_DensEint2Pres_Gamma( const real Dens, const real Eint, const rea
 #  endif // GAMER_DEBUG
 
 
-   const real Gamma_m1 = (real)AuxArray[1];
+   const real Gamma_m1 = (real)AuxArray_Flt[1];
    real Pres;
 
    Pres = Eint * Gamma_m1;
@@ -117,20 +119,22 @@ static real EoS_DensEint2Pres_Gamma( const real Dens, const real Eint, const rea
 //
 // Note        :  1. See EoS_DensEint2Pres_Gamma()
 //
-// Parameter   :  Dens     : Gas mass density
-//                Pres     : Gas pressure
-//                Passive  : Passive scalars (must not used here)
-//                AuxArray : Auxiliary array (see the Note above)
+// Parameter   :  Dens       : Gas mass density
+//                Pres       : Gas pressure
+//                Passive    : Passive scalars (must not used here)
+//                AuxArray_* : Auxiliary arrays (see the Note above)
+//                Table      : EoS tables
 //
 // Return      :  Gas internal energy density
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_DensPres2Eint_Gamma( const real Dens, const real Pres, const real Passive[], const double AuxArray[] )
+static real EoS_DensPres2Eint_Gamma( const real Dens, const real Pres, const real Passive[], const double AuxArray_Flt[],
+                                     const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] )
 {
 
 // check
 #  ifdef GAMER_DEBUG
-   if ( AuxArray == NULL )    printf( "ERROR : AuxArray == NULL in %s !!\n", __FUNCTION__ );
+   if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
 
    if ( Hydro_CheckNegative(Dens) )
       printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
@@ -142,7 +146,7 @@ static real EoS_DensPres2Eint_Gamma( const real Dens, const real Pres, const rea
 #  endif // GAMER_DEBUG
 
 
-   const real _Gamma_m1 = (real)AuxArray[2];
+   const real _Gamma_m1 = (real)AuxArray_Flt[2];
    real Eint;
 
    Eint = Pres * _Gamma_m1;
@@ -159,20 +163,22 @@ static real EoS_DensPres2Eint_Gamma( const real Dens, const real Pres, const rea
 //
 // Note        :  1. See EoS_DensEint2Pres_Gamma()
 //
-// Parameter   :  Dens     : Gas mass density
-//                Pres     : Gas pressure
-//                Passive  : Passive scalars (must not used here)
-//                AuxArray : Auxiliary array (see the Note above)
+// Parameter   :  Dens       : Gas mass density
+//                Pres       : Gas pressure
+//                Passive    : Passive scalars (must not used here)
+//                AuxArray_* : Auxiliary arrays (see the Note above)
+//                Table      : EoS tables
 //
 // Return      :  Sound speed square
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_DensPres2CSqr_Gamma( const real Dens, const real Pres, const real Passive[], const double AuxArray[] )
+static real EoS_DensPres2CSqr_Gamma( const real Dens, const real Pres, const real Passive[], const double AuxArray_Flt[],
+                                     const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] )
 {
 
 // check
 #  ifdef GAMER_DEBUG
-   if ( AuxArray == NULL )    printf( "ERROR : AuxArray == NULL in %s !!\n", __FUNCTION__ );
+   if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
 
    if ( Hydro_CheckNegative(Dens) )
       printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
@@ -184,7 +190,7 @@ static real EoS_DensPres2CSqr_Gamma( const real Dens, const real Pres, const rea
 #  endif // GAMER_DEBUG
 
 
-   const real Gamma = (real)AuxArray[0];
+   const real Gamma = (real)AuxArray_Flt[0];
    real Cs2;
 
    Cs2 = Gamma * Pres / Dens;
@@ -257,7 +263,7 @@ void EoS_SetCPUFunc_Gamma( EoS_DE2P_t &EoS_DensEint2Pres_CPUPtr,
 #ifndef __CUDACC__
 
 // local function prototypes
-void EoS_SetAuxArray_Gamma( double [] );
+void EoS_SetAuxArray_Gamma( double [], int [] );
 void EoS_SetCPUFunc_Gamma( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t & );
 #ifdef GPU
 void EoS_SetGPUFunc_Gamma( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t & );
@@ -281,7 +287,7 @@ void EoS_SetGPUFunc_Gamma( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t & );
 void EoS_Init_Gamma()
 {
 
-   EoS_SetAuxArray_Gamma( EoS_AuxArray );
+   EoS_SetAuxArray_Gamma( EoS_AuxArray_Flt, EoS_AuxArray_Int );
    EoS_SetCPUFunc_Gamma( EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr, EoS_DensPres2CSqr_CPUPtr );
 #  ifdef GPU
    EoS_SetGPUFunc_Gamma( EoS_DensEint2Pres_GPUPtr, EoS_DensPres2Eint_GPUPtr, EoS_DensPres2CSqr_GPUPtr );

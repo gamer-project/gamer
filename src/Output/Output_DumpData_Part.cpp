@@ -141,6 +141,7 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
             fprintf( File, "%14s", "Vz" );
 #           else
             fprintf( File, "%14s", "Pressure" );
+            fprintf( File, "%14s", "Sound speed" );
 #           endif
 #           endif
 
@@ -278,11 +279,16 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 // output other derived fields
 #  if   ( MODEL == HYDRO )
    const bool CheckMinPres_No = false;
-   fprintf( File, " %13.6e", Hydro_Con2Pres(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],u+NCOMP_FLUID,
-                                            CheckMinPres_No,NULL_REAL,Emag,
-                                            EoS_DensEint2Pres_CPUPtr,
-                                            EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                            EoS_AuxArray, NULL ) );
+   const real Pres = Hydro_Con2Pres(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],u+NCOMP_FLUID,
+                                    CheckMinPres_No,NULL_REAL,Emag,
+                                    EoS_DensEint2Pres_CPUPtr,
+                                    EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                    EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+
+   const real Cs   = SQRT(  EoS_DensPres2CSqr_CPUPtr( u[DENS], Pres, u+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                      h_EoS_Table )  );
+
+   fprintf( File, " %13.6e %13.6e", Pres, Cs );
 #  if   ( defined SRHD )
 // output Lorentz factor
    fprintf( File, " %13.6e", LorentzFactor );
@@ -292,7 +298,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
    fprintf( File, " %13.6e", Pri[2]/LorentzFactor );
    fprintf( File, " %13.6e", Pri[3]/LorentzFactor );
 #  endif
-#  endif // MODEL
+#  endif
 
    fprintf( File, "\n" );
 

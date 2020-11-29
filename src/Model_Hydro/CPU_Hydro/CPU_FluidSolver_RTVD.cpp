@@ -17,7 +17,9 @@ static void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real d
                           const real MinDens, const real MinPres, const real MinEint,
                           const EoS_DE2P_t EoS_DensEint2Pres,
                           const EoS_DP2C_t EoS_DensPres2CSqr,
-                          const double EoS_AuxArray[] );
+                          const double EoS_AuxArray_Flt[],
+                          const int    EoS_AuxArray_Int[],
+                          const real *const EoS_Table[EOS_NTABLE_MAX] );
 static void TransposeXY( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] );
 static void TransposeXZ( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] );
 
@@ -48,7 +50,10 @@ static void TransposeXZ( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] );
 //                EoS_DensEint2Pres_Func : Function pointer to the EoS routine of computing the gas pressure
 //                EoS_DensPres2Eint_Func :                    . . .                             gas internal energy
 //                EoS_DensPres2CSqr_Func :                    . . .                             sound speed square
-//                c_EoS_AuxArray         : Auxiliary array for the EoS routines
+//                c_EoS_AuxArray_*       : Auxiliary arrays for the EoS routines (for CPU only)
+//                c_EoS_Table            : EoS tables                            (for CPU only)
+//                                         --> When using GPU, these CPU-only variables are stored in the constant memory
+//                                             header CUDA_ConstMemory.h and do not need to be passed as function arguments
 //-------------------------------------------------------------------------------------------------------
 void CPU_FluidSolver_RTVD(
    real Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
@@ -62,7 +67,9 @@ void CPU_FluidSolver_RTVD(
    const EoS_DE2P_t EoS_DensEint2Pres_Func,
    const EoS_DP2E_t EoS_DensPres2Eint_Func,
    const EoS_DP2C_t EoS_DensPres2CSqr_Func,
-   const double c_EoS_AuxArray[] )
+   const double c_EoS_AuxArray_Flt[],
+   const int    c_EoS_AuxArray_Int[],
+   const real* const c_EoS_Table[EOS_NTABLE_MAX] )
 {
 
    if ( XYZ )
@@ -71,17 +78,17 @@ void CPU_FluidSolver_RTVD(
       for (int P=0; P<NPatchGroup; P++)
       {
          CPU_AdvanceX( Flu_Array_In[P], dt, dh, StoreFlux,              0,              0, MinDens, MinPres, MinEint,
-                       EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray );
+                       EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
 
          TransposeXY ( Flu_Array_In[P] );
 
          CPU_AdvanceX( Flu_Array_In[P], dt, dh, StoreFlux, FLU_GHOST_SIZE,              0, MinDens, MinPres, MinEint,
-                       EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray );
+                       EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
 
          TransposeXZ ( Flu_Array_In[P] );
 
          CPU_AdvanceX( Flu_Array_In[P], dt, dh, StoreFlux, FLU_GHOST_SIZE, FLU_GHOST_SIZE, MinDens, MinPres, MinEint,
-                       EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray );
+                       EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
 
          TransposeXZ ( Flu_Array_In[P] );
          TransposeXY ( Flu_Array_In[P] );
@@ -97,17 +104,17 @@ void CPU_FluidSolver_RTVD(
          TransposeXZ ( Flu_Array_In[P] );
 
          CPU_AdvanceX( Flu_Array_In[P], dt, dh, StoreFlux,              0,              0, MinDens, MinPres, MinEint,
-                       EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray );
+                       EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
 
          TransposeXZ ( Flu_Array_In[P] );
 
          CPU_AdvanceX( Flu_Array_In[P], dt, dh, StoreFlux,              0, FLU_GHOST_SIZE, MinDens, MinPres, MinEint,
-                       EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray );
+                       EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
 
          TransposeXY ( Flu_Array_In[P] );
 
          CPU_AdvanceX( Flu_Array_In[P], dt, dh, StoreFlux, FLU_GHOST_SIZE, FLU_GHOST_SIZE, MinDens, MinPres, MinEint,
-                       EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray );
+                       EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
       }
    }
 
@@ -195,14 +202,17 @@ void CPU_FluidSolver_RTVD(
 //                MinEint           : Internal energy floor
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
 //                EoS_DensPres2CSqr : EoS routine to compute the sound speed square
-//                EoS_AuxArray      : Auxiliary array for the EoS routines
+//                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
+//                EoS_Table         : EoS tables
 //-------------------------------------------------------------------------------------------------------
 void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
                    const bool StoreFlux, const int j_skip, const int k_skip,
                    const real MinDens, const real MinPres, const real MinEint,
                    const EoS_DE2P_t EoS_DensEint2Pres,
                    const EoS_DP2C_t EoS_DensPres2CSqr,
-                   const double EoS_AuxArray[] )
+                   const double EoS_AuxArray_Flt[],
+                   const int    EoS_AuxArray_Int[],
+                   const real *const EoS_Table[EOS_NTABLE_MAX] )
 {
 
    const bool CheckMinPres_Yes = true;
@@ -245,7 +255,8 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
          _rho = (real)1.0 / ux[0][i];
          vx   = _rho * ux[1][i];
          p    = Hydro_Con2Pres( ux[0][i], ux[1][i], ux[2][i], ux[3][i], ux[4][i], Passive,
-                                CheckMinPres_Yes, MinPres, NULL_REAL, EoS_DensEint2Pres, EoS_AuxArray, NULL );
+                                CheckMinPres_Yes, MinPres, NULL_REAL, EoS_DensEint2Pres,
+                                EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
 
 #        ifdef CHECK_NEGATIVE_IN_FLUID
          if ( Hydro_CheckNegative(p) )
@@ -257,7 +268,8 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
                          ux[0][i], __FILE__, __LINE__, __FUNCTION__ );
 #        endif
 
-         c    = FABS( vx ) + SQRT(  EoS_DensPres2CSqr( ux[0][i], p, Passive, EoS_AuxArray )  );
+         c    = FABS( vx ) + SQRT(  EoS_DensPres2CSqr( ux[0][i], p, Passive, EoS_AuxArray_Flt,
+                                                       EoS_AuxArray_Int, EoS_Table )  );
 
          cw[0][i] = ux[1][i];
          cw[1][i] = ux[1][i] * vx + p;
@@ -310,7 +322,8 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
          _rho = (real)1.0 / u_half[0][i];
          vx   = _rho * u_half[1][i];
          p    = Hydro_Con2Pres( u_half[0][i], u_half[1][i], u_half[2][i], u_half[3][i], u_half[4][i], Passive,
-                                CheckMinPres_Yes, MinPres, NULL_REAL, EoS_DensEint2Pres, EoS_AuxArray, NULL );
+                                CheckMinPres_Yes, MinPres, NULL_REAL, EoS_DensEint2Pres,
+                                EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
 
 #        ifdef CHECK_NEGATIVE_IN_FLUID
          if ( Hydro_CheckNegative(p) )
@@ -322,7 +335,8 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
                          u_half[0][i], __FILE__, __LINE__, __FUNCTION__ );
 #        endif
 
-         c    = FABS( vx ) + SQRT(  EoS_DensPres2CSqr( u_half[0][i], p, Passive, EoS_AuxArray )  );
+         c    = FABS( vx ) + SQRT(  EoS_DensPres2CSqr( u_half[0][i], p, Passive, EoS_AuxArray_Flt,
+                                                       EoS_AuxArray_Int, EoS_Table )  );
 
          cw[0][i] = u_half[1][i];
          cw[1][i] = u_half[1][i] * vx + p;

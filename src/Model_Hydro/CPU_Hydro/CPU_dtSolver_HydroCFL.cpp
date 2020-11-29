@@ -51,9 +51,10 @@
 //                EoS_Temper2CSqr_Func   : ... (SRHD only)
 //                EoS_GuessHTilde_Func   : ... (SRHD only)
 //                EoS_HTilde2Temp_Func   : ... (SRHD only)
-//                c_EoS_AuxArray         : Auxiliary array for the EoS routines (for CPU only)
-//                                         --> When using GPU, this array is stored in the constant memory header
-//                                             CUDA_ConstMemory.h and does not need to be passed as a function argument
+//                c_EoS_AuxArray_*       : Auxiliary arrays for the EoS routines (for CPU only)
+//                c_EoS_Table            : EoS tables                            (for CPU only)
+//                                         --> When using GPU, these CPU-only variables are stored in the constant memory
+//                                             header CUDA_ConstMemory.h and do not need to be passed as function arguments
 //
 // Return      :  g_dt_Array
 //-----------------------------------------------------------------------------------------
@@ -71,7 +72,9 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
                               const real dh, const real Safety, const real MinPres,
                               const EoS_DE2P_t EoS_DensEint2Pres_Func, const EoS_DP2C_t EoS_DensPres2CSqr_Func,
                               const EoS_TEM2C_t EoS_Temper2CSqr_Func, const EoS_GUESS_t EoS_GuessHTilde_Func,
-                              const EoS_H2TEM_t EoS_HTilde2Temp_Func, const double c_EoS_AuxArray[] )
+                              const EoS_H2TEM_t EoS_HTilde2Temp_Func,
+                              const double c_EoS_AuxArray_Flt[], const int c_EoS_AuxArray_Int[],
+                              const real* const c_EoS_Table[EOS_NTABLE_MAX] )
 #endif
 {
 
@@ -131,7 +134,6 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
                         EoS_GuessHTilde_Func, EoS_HTilde2Temp_Func, NULL, NULL, &LorentzFactor );
          Rho   = Pri[0];
          Pres  = Pri[4];
-         a2    = EoS_Temper2CSqr_Func( Rho, Pres, fluid+NCOMP_FLUID, c_EoS_AuxArray ); // sound speed squared
 #        else
          Rho   = fluid[DENS];
         _Rho   = (real)1.0 / Rho;
@@ -140,9 +142,10 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
          Vz    = FABS( fluid[MOMZ] )*_Rho;
          Pres  = Hydro_Con2Pres( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], fluid+NCOMP_FLUID,
                                  CheckMinPres_Yes, MinPres, Emag,
-                                 EoS_DensEint2Pres_Func, NULL, NULL, c_EoS_AuxArray, NULL );
-         a2    = EoS_DensPres2CSqr_Func( Rho, Pres, fluid+NCOMP_FLUID, c_EoS_AuxArray ); // sound speed squared
+                                 EoS_DensEint2Pres_Func, NULL, NULL, c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table, NULL );
 #        endif
+
+         a2    = EoS_DensPres2CSqr_Func( Rho, Pres, fluid+NCOMP_FLUID, c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table ); // sound speed squared
 
 
 //       compute the maximum information propagating speed
