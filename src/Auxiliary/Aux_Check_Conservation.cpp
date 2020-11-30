@@ -193,7 +193,8 @@ void Aux_Check_Conservation( const char *comment )
 
 #                 ifdef SRHD
                   real Cons[NCOMP_FLUID] = { Dens, MomX, MomY, MomZ, Ered };
-                  Ekin         = SRHD_Con2KineticEngy( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr );
+                  Ekin         = SRHD_Con2KineticEngy( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                       EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
                   Fluid_lv[7] += Ered;
 #                 else
                   //###NOTE: assuming Etot = Eint + Ekin + Emag

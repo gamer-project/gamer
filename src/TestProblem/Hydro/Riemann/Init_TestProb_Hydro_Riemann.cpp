@@ -76,10 +76,6 @@ void Validate()
    Aux_Error( ERROR_INFO, "GRAVITY must be disabled !!\n" );
 #  endif
 
-#  ifdef SRHD
-   Aux_Error( ERROR_INFO, "SRHD must be disabled !!!!\n" );
-#  endif
-
 #  ifdef COMOVING
    Aux_Error( ERROR_INFO, "COMOVING must be disabled !!\n" );
 #  endif
@@ -130,17 +126,17 @@ void SetParameter()
    ReadPara->Add( "Riemann_Prob",      &Riemann_Prob,          -1,            0,                10                );
    ReadPara->Add( "Riemann_LR",        &Riemann_LR,             1,            NoMin_int,        NoMax_int         );
    ReadPara->Add( "Riemann_XYZ",       &Riemann_XYZ,            0,            0,                2                 );
-   ReadPara->Add( "Riemann_RhoL",      &Riemann_RhoL,           HUGE_NUMBER,  TINY_NUMBER,      HUGE_NUMBER       );
-   ReadPara->Add( "Riemann_RhoR",      &Riemann_RhoR,           HUGE_NUMBER,  TINY_NUMBER,      HUGE_NUMBER       );
-   ReadPara->Add( "Riemann_VelL",      &Riemann_VelL,           HUGE_NUMBER, -HUGE_NUMBER,      HUGE_NUMBER       );
-   ReadPara->Add( "Riemann_VelR",      &Riemann_VelR,           HUGE_NUMBER, -HUGE_NUMBER,      HUGE_NUMBER       );
-   ReadPara->Add( "Riemann_PreL",      &Riemann_PreL,           HUGE_NUMBER,  TINY_NUMBER,      HUGE_NUMBER       );
-   ReadPara->Add( "Riemann_PreR",      &Riemann_PreR,           HUGE_NUMBER,  TINY_NUMBER,      HUGE_NUMBER       );
-   ReadPara->Add( "Riemann_VelL_T1",   &Riemann_VelL_T1,        HUGE_NUMBER, -HUGE_NUMBER,      HUGE_NUMBER       );
-   ReadPara->Add( "Riemann_VelL_T2",   &Riemann_VelL_T2,        HUGE_NUMBER, -HUGE_NUMBER,      HUGE_NUMBER       );
-   ReadPara->Add( "Riemann_VelR_T1",   &Riemann_VelR_T1,        HUGE_NUMBER, -HUGE_NUMBER,      HUGE_NUMBER       );
-   ReadPara->Add( "Riemann_VelR_T2",   &Riemann_VelR_T2,        HUGE_NUMBER, -HUGE_NUMBER,      HUGE_NUMBER       );
-   ReadPara->Add( "Riemann_EndT",      &Riemann_EndT,           TINY_NUMBER,  TINY_NUMBER,      HUGE_NUMBER       );
+   ReadPara->Add( "Riemann_RhoL",      &Riemann_RhoL,           __DBL_MAX__,  __DBL_MIN__,      __DBL_MAX__       );
+   ReadPara->Add( "Riemann_RhoR",      &Riemann_RhoR,           __DBL_MAX__,  __DBL_MIN__,      __DBL_MAX__       );
+   ReadPara->Add( "Riemann_VelL",      &Riemann_VelL,           __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
+   ReadPara->Add( "Riemann_VelR",      &Riemann_VelR,           __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
+   ReadPara->Add( "Riemann_PreL",      &Riemann_PreL,           __DBL_MAX__,  __DBL_MIN__,      __DBL_MAX__       );
+   ReadPara->Add( "Riemann_PreR",      &Riemann_PreR,           __DBL_MAX__,  __DBL_MIN__,      __DBL_MAX__       );
+   ReadPara->Add( "Riemann_VelL_T1",   &Riemann_VelL_T1,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
+   ReadPara->Add( "Riemann_VelL_T2",   &Riemann_VelL_T2,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
+   ReadPara->Add( "Riemann_VelR_T1",   &Riemann_VelR_T1,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
+   ReadPara->Add( "Riemann_VelR_T2",   &Riemann_VelR_T2,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
+   ReadPara->Add( "Riemann_EndT",      &Riemann_EndT,           __DBL_MIN__,  __DBL_MIN__,      __DBL_MAX__       );
    ReadPara->Add( "Riemann_Pos",       &Riemann_Pos,            NoDef_double, NoMin_double,     NoMax_double      );
    ReadPara->Add( "Riemann_Width",     &Riemann_Width,          NoDef_double, Eps_double,       NoMax_double      );
 
@@ -355,7 +351,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    double r, Pres, Eint;
    int    MomIdx[3];
 #  ifdef SRHD
-   double Prim[NCOMP_FLUID], Cons[NCOMP_FLUID];
+   real Prim[NCOMP_FLUID], Cons[NCOMP_FLUID];
 #  endif
 
    switch ( Riemann_XYZ )
@@ -386,8 +382,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    Prim[3] = (real)aVT2 + dVT2*Tanh;
    Prim[4] = (real)aPre + dPre*Tanh;
 
-   Hydro_Pri2Con( Prim, fluid, NULL_BOOL, NULL_INT, NULL, EoS_DensPres2Eint,                                      
-                  EoS_Temp2HTilde, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
+   Hydro_Pri2Con( Prim, fluid, NULL_BOOL, NULL_INT, NULL, NULL,
+                  EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
+                  EoS_AuxArray_Int, h_EoS_Table, NULL );
 #  else
    fluid[ DENS      ] =   aRho + dRho*Tanh;
    fluid[ MomIdx[0] ] = ( aVel + dVel*Tanh )*fluid[DENS];

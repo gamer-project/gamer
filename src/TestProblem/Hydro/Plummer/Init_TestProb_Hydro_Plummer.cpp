@@ -432,8 +432,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    } // if ( Plummer_Collision ) ... else ...
 
 #  ifdef SRHD
-   Hydro_Pri2Con( Prim, fluid, NULL_BOOL, NULL_INT, NULL, NULL, NULL,
-                  EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, NULL );
+   Hydro_Pri2Con( Prim, fluid, NULL_BOOL, NULL_INT, NULL, NULL,
+                  EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                  EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 #  else
 // compute the total gas energy
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,

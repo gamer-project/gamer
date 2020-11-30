@@ -255,7 +255,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
                      for ( int idx=0; idx<NCOMP_FLUID; idx++ ) In[idx] = Fluid[idx][k][j][i];
 
-                     HTilde = SRHD_Con2HTilde( In, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr );
+                     HTilde = SRHD_Con2HTilde( In, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                               EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
                      Factor0 = In[DENS] * HTilde + In[DENS];
 

@@ -217,8 +217,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    Prim[2] = Prim[1];
    Prim[3] = Prim[1];
    Prim[4] = P0 + P1*cos(Phase); 
-   Hydro_Pri2Con( Prim, Cons, NULL_BOOL, NULL_INT, NULL, NULL, NULL,
-                  EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
+   Hydro_Pri2Con( Prim, Cons, NULL_BOOL, NULL_INT, NULL, NULL,
+                  EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 #  else
    Cons[DENS] = 1.0 + Acoustic_RhoAmp*cos(Phase);
    Cons[MOMX] = Cons[DENS]*( v1*cos(Phase) + Acoustic_v0 ) / sqrt(3.0);

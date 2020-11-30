@@ -816,7 +816,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    
    Hydro_Pri2Con( PriReal, fluid, NULL_BOOL, NULL_INT, NULL, EoS_DensPres2Eint_CPUPtr,
                   EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                  EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
+                  EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
 } // FUNCTION : SetGridIC
 
@@ -984,7 +984,7 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
 
     Hydro_Pri2Con( PriReal, fluid, NULL_BOOL, NULL_INT, NULL, EoS_DensPres2Eint_CPUPtr,
                    EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
+                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
 	return true;
   }

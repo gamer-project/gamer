@@ -48,7 +48,10 @@ void CPU_HydroGravitySolver(
    const double TimeNew, const double TimeOld, const real MinEint
    const EoS_GUESS_t EoS_GuessHTilde_CPUPtr,
    const EoS_TEM2H_t EoS_Temp2HTilde_CPUPtr,
-   const EoS_H2TEM_t EoS_HTilde2Temp_CPUPtr );
+   const EoS_H2TEM_t EoS_HTilde2Temp_CPUPtr,
+   const double c_EoS_AuxArray_Flt[],
+   const int    c_EoS_AuxArray_Int[],
+   const real *const c_EoS_Table[EOS_NTABLE_MAX] )
 
 #elif ( MODEL == ELBDM )
 void CPU_ELBDMGravitySolver(       real Flu_Array[][GRA_NIN][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE],
@@ -215,7 +218,8 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
                               TimeNew, TimeOld, MinEint,
                               EoS_GuessHTilde_CPUPtr,
                               EoS_Temp2HTilde_CPUPtr,
-                              EoS_HTilde2Temp_CPUPtr );
+                              EoS_HTilde2Temp_CPUPtr,
+                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
 #     elif ( MODEL == ELBDM )
       CPU_ELBDMGravitySolver( h_Flu_Array, h_Pot_Array_Out, h_Corner_Array, NPatchGroup, ELBDM_Eta*dt, dh, ELBDM_Lambda );

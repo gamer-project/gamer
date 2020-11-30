@@ -1062,7 +1062,8 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #                 endif
                   Temp[PID][i][j][k] =  Hydro_Con2Temp( Cons[0], Cons[1], Cons[2], Cons[3], Cons[4], 
                                                         NULL, NULL_BOOL, NULL_REAL, NULL_REAL, NULL,
-                                                        EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, NULL );
+                                                        EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                        EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
                }
 
 //             copy conserved data and temperature into FieldData

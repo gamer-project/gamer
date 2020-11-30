@@ -87,10 +87,12 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
 /*  1. compute primitive vars. from conserved vars. */
     Hydro_Con2Pri (L, PL, (real)NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL, 
-                  (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp, NULL, NULL, &lFactor );
+                  (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
+                  EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, &lFactor );
 
     Hydro_Con2Pri (R, PR, (real)NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
-                   (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp, NULL, NULL, &rFactor );
+                   (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
+                  EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, &rFactor );
 
 #   ifdef CHECK_FAILED_CELL_IN_FLUID
     Hydro_CheckUnphysical(NULL, PL, Gamma, MinTemp, __FUNCTION__, __LINE__, true);
@@ -109,8 +111,8 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
 
 /*  3. Compute the max and min wave speeds used in Mignone */
-    cslsq = EoS_Temper2CSqr( PL[0], PL[4], NULL, NULL );
-    csrsq = EoS_Temper2CSqr( PR[0], PR[4], NULL, NULL );
+    cslsq = EoS_Temper2CSqr( PL[0], PL[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+    csrsq = EoS_Temper2CSqr( PR[0], PR[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 
 #   ifdef CHECK_FAILED_CELL_IN_FLUID
     if ( cslsq >= 1.0 || csrsq >= 1.0 || cslsq < 0.0 || csrsq < 0.0 )
