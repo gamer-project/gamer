@@ -92,10 +92,12 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
                     const bool JeansMinPres, const real JeansMinPres_Coeff,
                     const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint,
                     const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
-                    const double EoS_AuxArray[], real* const EintOut, real* LorentzFactor );
+                    const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                    const real *const EoS_Table[EOS_NTABLE_MAX], real* const EintOut, real* LorentzFactor_Ptr );
 void Hydro_Pri2Con( const real In[], real Out[], const bool NormPassive, const int NNorm, const int NormIdx[],
-                    const EoS_DP2E_t EoS_DensPres2Eint, const double EoS_AuxArray[],
-                    const EoS_TEM2H_t EoS_Temp2HTilde,  const EoS_H2TEM_t EoS_HTilde2Temp, const real* const EintIn );
+                    const EoS_DP2E_t EoS_DensPres2Eint, const EoS_TEM2H_t EoS_Temp2HTilde,
+                    const EoS_H2TEM_t EoS_HTilde2Temp, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                    const real *const EoS_Table[EOS_NTABLE_MAX], const real* const EintIn );
 real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                      const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
                      const EoS_DE2P_t EoS_DensEint2Pres, const EoS_GUESS_t EoS_GuessHTilde,
@@ -118,10 +120,16 @@ bool Hydro_CheckNegative( const real Input );
 bool SRHD_CheckUnphysical( const real Con[], const real Pri[], const char s[], const int line, bool show );
 void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
 #ifdef SRHD
-real SRHD_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp  );
+real SRHD_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
+                      const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                      const real *const EoS_Table[EOS_NTABLE_MAX] );
 void SRHD_HTildeFunction (real HTilde, real MSqr_DSqr, real Temp, real Constant,
-                          const EoS_H2TEM_t EoS_HTilde2Temp, real *Fun, real *DiffFun );
-real SRHD_Con2KineticEngy( real Con[], const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp );
+                          const EoS_H2TEM_t EoS_HTilde2Temp, real *Fun, real *DiffFun,
+                          const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                          const real *const EoS_Table[EOS_NTABLE_MAX] );
+real SRHD_Con2KineticEngy( real Con[], const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
+                           const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                           const real *const EoS_Table[EOS_NTABLE_MAX] );
 #endif
 
 #ifdef DUAL_ENERGY

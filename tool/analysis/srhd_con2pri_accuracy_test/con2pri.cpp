@@ -8,12 +8,14 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
                     const bool JeansMinPres, const real JeansMinPres_Coeff,
                     const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint,
                     const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
-                    const double EoS_AuxArray[], real* const EintOut, real*  LorentzFactor );
+                    const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                    const real *const EoS_Table[EOS_NTABLE_MAX], real* const EintOut, real* LorentzFactor_Ptr );
 
 
 void Hydro_Pri2Con( const real In[], real Out[], const bool NormPassive, const int NNorm, const int NormIdx[],
-                    const EoS_DP2E_t EoS_DensPres2Eint, const double EoS_AuxArray[],
-                    const EoS_TEM2H_t EoS_Temp2HTilde, const EoS_H2TEM_t EoS_HTilde2Temp, const real* const EintIn );
+                    const EoS_DP2E_t EoS_DensPres2Eint, const EoS_TEM2H_t EoS_Temp2HTilde,
+                    const EoS_H2TEM_t EoS_HTilde2Temp, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                    const real *const EoS_Table[EOS_NTABLE_MAX], const real* const EintIn );
 
 #ifdef FLOAT8
 typedef double real;
@@ -29,7 +31,9 @@ EoS_TEM2C_t  EoS_Temper2CSqr_CPUPtr = NULL;
 EoS_DE2P_t   EoS_DensEint2Pres_CPUPtr = NULL; 
 EoS_DE2P_t   EoS_DensPres2Eint_CPUPtr = NULL;
 
-double EoS_AuxArray[EOS_NAUX_MAX];
+double EoS_AuxArray_Flt[EOS_NAUX_MAX];
+int EoS_AuxArray_Int[EOS_NAUX_MAX];
+real* h_EoS_Table[EOS_NAUX_MAX] = {0};
 
 int MPI_Rank = 0;
 
@@ -78,7 +82,8 @@ main ()
 
   Hydro_Con2Pri( Con, Pri, (real)NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
                  (real)NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
-                 EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, NULL, NULL, &LorentzFactor );
+                 EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                 EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, &LorentzFactor );
 
   printf ("\nconservative --> primitive\n");
   printf ("=========================================\n\n");
@@ -95,8 +100,9 @@ main ()
 
   real Con_re[5] = { 0 };
 
-  Hydro_Pri2Con( Pri, Con_re, NULL, NULL_INT, NULL, NULL, NULL,
-                 EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, NULL );
+  Hydro_Pri2Con( Pri, Con_re, NULL_BOOL, NULL_INT, NULL, NULL,
+                 EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                 EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
 
   printf ("\nprimitive --> conservative\n");
