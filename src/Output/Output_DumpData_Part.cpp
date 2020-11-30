@@ -285,9 +285,12 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
                                     EoS_DensEint2Pres_CPUPtr,
                                     EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
-
+#  ifdef SRHD
+   const real Cs   = SQRT( EoS_Temper2CSqr_CPUPtr( Pri[0], Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ) );
+#  else
    const real Cs   = SQRT(  EoS_DensPres2CSqr_CPUPtr( u[DENS], Pres, u+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                       h_EoS_Table )  );
+#  endif
 
    fprintf( File, " %13.6e %13.6e", Pres, Cs );
 #  if   ( defined SRHD )
