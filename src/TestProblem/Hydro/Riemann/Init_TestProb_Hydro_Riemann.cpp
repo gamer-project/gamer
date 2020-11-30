@@ -123,7 +123,7 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "Riemann_Prob",      &Riemann_Prob,          -1,            0,                10                );
+   ReadPara->Add( "Riemann_Prob",      &Riemann_Prob,          -1,            0,                11                );
    ReadPara->Add( "Riemann_LR",        &Riemann_LR,             1,            NoMin_int,        NoMax_int         );
    ReadPara->Add( "Riemann_XYZ",       &Riemann_XYZ,            0,            0,                2                 );
    ReadPara->Add( "Riemann_RhoL",      &Riemann_RhoL,           __DBL_MAX__,  __DBL_MIN__,      __DBL_MAX__       );
@@ -136,7 +136,6 @@ void SetParameter()
    ReadPara->Add( "Riemann_VelL_T2",   &Riemann_VelL_T2,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
    ReadPara->Add( "Riemann_VelR_T1",   &Riemann_VelR_T1,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
    ReadPara->Add( "Riemann_VelR_T2",   &Riemann_VelR_T2,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
-   ReadPara->Add( "Riemann_EndT",      &Riemann_EndT,           __DBL_MIN__,  __DBL_MIN__,      __DBL_MAX__       );
    ReadPara->Add( "Riemann_Pos",       &Riemann_Pos,            NoDef_double, NoMin_double,     NoMax_double      );
    ReadPara->Add( "Riemann_Width",     &Riemann_Width,          NoDef_double, Eps_double,       NoMax_double      );
 
