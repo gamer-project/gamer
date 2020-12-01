@@ -128,6 +128,9 @@ void CPU_HydroGravitySolver(
 #  endif
 #  endif // #ifdef GAMER_DEBUG
 
+#if ( defined UNSPLIT_GRAVITY && defined SRHD )
+# error: SRHD do not support UNSPLIT_GRAVITY !!
+#endif
 
    const real Gra_Const   = ( P5_Gradient ) ? -dt/(12.0*dh) : -dt/(2.0*dh);
    const int  PS1_sqr     = SQR(PS1);
@@ -478,7 +481,7 @@ void CPU_HydroGravitySolver(
 #        ifdef SRHD
          real Msqr = SQR(px_new) + SQR(py_new) + SQR(pz_new);
          real Dsqr = SQR(Cons_new[DENS]);
-         real HTilde = EoS_Temp2HTilde_Func( Temperature, NULL, NULL );
+         real HTilde = EoS_Temp2HTilde_Func( Temperature, NULL, c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
          real h = HTilde + (real)1.0;
          real factor = SQRT( Dsqr*h*h + Msqr );
 
