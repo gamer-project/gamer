@@ -1,3 +1,3 @@
 #!/bin/bash
 make clean
-make -f MakefileSR -j $1
+make -f MyMakefile -j $1

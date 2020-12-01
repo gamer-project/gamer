@@ -1,5 +1,5 @@
 *.o
-MakefileSR
+MyMakefile
 .nfs*
 Hydro_IC
 cscope*

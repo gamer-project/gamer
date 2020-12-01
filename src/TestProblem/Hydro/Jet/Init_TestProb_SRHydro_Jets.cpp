@@ -344,7 +344,7 @@ void SetParameter()
    else if ( Jet_Ambient == 0 )
    {
 #     ifdef GRAVITY
-      Aux_Error( ERROR_INFO, "GRAVITY must be disabled !!\n" );
+      //Aux_Error( ERROR_INFO, "GRAVITY must be disabled !!\n" );
 #     endif
    }
 
