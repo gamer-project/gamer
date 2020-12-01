@@ -45,13 +45,13 @@ void CPU_HydroGravitySolver(
    const real dt, const real dh, const bool P5_Gradient,
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const double c_ExtAcc_AuxArray[],
-   const double TimeNew, const double TimeOld, const real MinEint
+   const double TimeNew, const double TimeOld, const real MinEint,
    const EoS_GUESS_t EoS_GuessHTilde_CPUPtr,
    const EoS_TEM2H_t EoS_Temp2HTilde_CPUPtr,
    const EoS_H2TEM_t EoS_HTilde2Temp_CPUPtr,
    const double c_EoS_AuxArray_Flt[],
    const int    c_EoS_AuxArray_Int[],
-   const real *const c_EoS_Table[EOS_NTABLE_MAX] )
+   const real *const c_EoS_Table[EOS_NTABLE_MAX] );
 
 #elif ( MODEL == ELBDM )
 void CPU_ELBDMGravitySolver(       real Flu_Array[][GRA_NIN][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE],
