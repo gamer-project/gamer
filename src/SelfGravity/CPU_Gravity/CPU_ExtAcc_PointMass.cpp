@@ -7,19 +7,88 @@
 
 
 
+/********************************************************
+1. Point-mass external acceleration
+   --> It can be regarded as a template for implementing
+       other external acceleration
+
+2. This file is shared by both CPU and GPU
+
+   GPU_Gravity/CUPOT_ExtAcc_PointMass.cu -> CPU_Gravity/CPU_ExtAcc_PointMass.cpp
+
+3. Three steps are required to implement external acceleration
+
+   I.   Set an auxiliary array
+        --> SetExtAccAuxArray_PointMass()
+
+   II.  Specify external acceleration
+        --> ExtAcc_PointMass()
+
+   III. Set initialization functions
+        --> SetGPUExtAcc_PointMass()
+            SetCPUExtAcc_PointMass()
+            Init_ExtAcc_PointMass()
+
+4. The external acceleration major routine, ExtAcc_PointMass(),
+   must be thread-safe and not use any global variable
+
+5. Reference: https://github.com/gamer-project/gamer/wiki/Gravity#external-accelerationpotential
+********************************************************/
+
+
+
 // soften length implementation
 #  define SOFTEN_PLUMMER
 //#  define SOFTEN_RUFFERT
 
 
 
+// =================================
+// I. Set an auxiliary array
+// =================================
+
+#ifndef __CUDACC__
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SetExtAccAuxArray_PointMass
+// Description :  Set the auxiliary array ExtAcc_AuxArray[] used by ExtAcc_PointMass()
+//
+// Note        :  1. Invoked by Init_ExtAcc_PointMass()
+//                2. AuxArray[] has the size of EXT_ACC_NAUX_MAX defined in Macro.h (default = 20)
+//                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
+//
+// Parameter   :  AuxArray : Array to be filled up
+//
+// Return      :  AuxArray[]
+//-------------------------------------------------------------------------------------------------------
+void SetExtAccAuxArray_PointMass( double AuxArray[] )
+{
+
+// example parameters
+   const double M   = 1.0;
+   const double GM  = NEWTON_G*M;
+   const double Eps = 0.0;
+
+   AuxArray[0] = 0.5*amr->BoxSize[0];  // x coordinate of the external acceleration center
+   AuxArray[1] = 0.5*amr->BoxSize[1];  // y ...
+   AuxArray[2] = 0.5*amr->BoxSize[2];  // z ...
+   AuxArray[3] = GM;                   // gravitational_constant*point_source_mass
+   AuxArray[4] = Eps;                  // soften_length (<=0.0 --> disable)
+
+} // FUNCTION : SetExtAccAuxArray_PointMass
+#endif // #ifndef __CUDACC__
+
+
+
+// =================================
+// II. Specify external acceleration
+// =================================
 
 //-----------------------------------------------------------------------------------------
 // Function    :  ExtAcc_PointMass
 // Description :  Calculate the external acceleration at the given coordinates and time
 //
 // Note        :  1. This function is shared by CPU and GPU
-//                2. Auxiliary array UserArray[] is set by Init_ExtAccAuxArray_PointMass(), where
+//                2. Auxiliary array UserArray[] is set by SetExtAccAuxArray_PointMass(), where
 //                      UserArray[0] = x coordinate of the external acceleration center
 //                      UserArray[1] = y ...
 //                      UserArray[2] = z ..
@@ -30,7 +99,7 @@
 //
 // Parameter   :  Acc       : Array to store the output external acceleration
 //                x/y/z     : Target spatial coordinates
-//                Time      : Current physical time
+//                Time      : Target physical time
 //                UserArray : User-provided auxiliary array
 //
 // Return      :  External acceleration Acc[] at (x,y,z,Time)
@@ -70,35 +139,23 @@ static void ExtAcc_PointMass( real Acc[], const double x, const double y, const 
 
 
 // =================================
-// get the CPU/GPU function pointers
+// III. Set initialization functions
 // =================================
 
 #ifdef __CUDACC__
-__device__
+#  define FUNC_SPACE __device__ static
+#else
+#  define FUNC_SPACE            static
 #endif
-static ExtAcc_t ExtAcc_Ptr = ExtAcc_PointMass;
+
+FUNC_SPACE ExtAcc_t ExtAcc_Ptr = ExtAcc_PointMass;
 
 //-----------------------------------------------------------------------------------------
 // Function    :  SetCPU/GPUExtAcc_PointMass
-// Description :  Return the function pointers to the CPU/GPU external acceleration routines
+// Description :  Return the function pointers of the CPU/GPU external acceleration routines
 //
-// Note        :  1. To enable this routine, link to the function pointers "SetCPU/GPUExtAcc_Ptr"
-//                   in a test problem initializer as follows:
-//
-//                      void SetCPUExtAcc_PointMass( ExtAcc_t &CPUExtAcc_Ptr );
-//                      # ifdef GPU
-//                      void SetGPUExtAcc_PointMass( ExtAcc_t &GPUExtAcc_Ptr );
-//                      # endif
-//
-//                      ...
-//
-//                      SetCPUExtAcc_Ptr = SetCPUExtAcc_PointMass;
-//                      # ifdef GPU
-//                      SetGPUExtAcc_Ptr = SetGPUExtAcc_PointMass;
-//                      # endif
-//
-//                   --> Then it will be invoked by Init_ExtAccPot()
-//                2. Must obtain the CPU and GPU function pointers by separate routines
+// Note        :  1. Invoked by Init_ExtAcc_PointMass()
+//                2. Must obtain the CPU and GPU function pointers by **separate** routines
 //                   since CPU and GPU functions are compiled completely separately in GAMER
 //                   --> In other words, a unified routine like the following won't work
 //
@@ -112,60 +169,56 @@ static ExtAcc_t ExtAcc_Ptr = ExtAcc_PointMass;
 __host__
 void SetGPUExtAcc_PointMass( ExtAcc_t &GPUExtAcc_Ptr )
 {
-
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &GPUExtAcc_Ptr, ExtAcc_Ptr, sizeof(ExtAcc_t) )  );
-
-} // FUNCTION : GetGPUFuncPtr_ExtAcc
+}
 
 #else // #ifdef __CUDACC__
 
 void SetCPUExtAcc_PointMass( ExtAcc_t &CPUExtAcc_Ptr )
 {
-
    CPUExtAcc_Ptr = ExtAcc_Ptr;
-
-} // FUNCTION : GetCPUFuncPtr_ExtAcc
+}
 
 #endif // #ifdef __CUDACC__ ... else ...
 
 
 
 #ifndef __CUDACC__
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Init_ExtAccAuxArray_PointMass
-// Description :  Set the auxiliary array ExtAcc_AuxArray[] used by ExtAcc_PointMass()
+
+// local function prototypes
+void SetExtAccAuxArray_PointMass( double [] );
+void SetCPUExtAcc_PointMass( ExtAcc_t & );
+#ifdef GPU
+void SetGPUExtAcc_PointMass( ExtAcc_t & );
+#endif
+
+//-----------------------------------------------------------------------------------------
+// Function    :  Init_ExtAcc_PointMass
+// Description :  Initialize external acceleration
 //
-// Note        :  1. To adopt this routine, link to the function pointer "Init_ExtAccAuxArray_Ptr"
-//                   in a test problem initializer as follows:
+// Note        :  1. Set an auxiliary array by invoking SetExtAccAuxArray_*()
+//                   --> It will be copied to GPU automatically in CUAPI_SetConstMemory()
+//                2. Set the CPU/GPU external acceleration major routines by invoking SetCPU/GPUExtAcc_*()
+//                3. Invoked by Init_ExtAccPot()
+//                   --> Enable it by linking to the function pointer "Init_ExtAcc_Ptr"
+//                4. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
-//                      void Init_ExtAccAuxArray_PointMass( double AuxArray[] );
+// Parameter   :  None
 //
-//                      ...
-//
-//                      Init_ExtAccAuxArray_Ptr = Init_ExtAccAuxArray_PointMass;
-//
-//                   --> Then it will be invoked by Init_ExtAccPot()
-//                2. AuxArray[] has the size of EXT_ACC_NAUX_MAX defined in Macro.h (default = 10)
-//
-// Parameter   :  AuxArray : Array to be filled up
-//
-// Return      :  AuxArray[]
-//-------------------------------------------------------------------------------------------------------
-void Init_ExtAccAuxArray_PointMass( double AuxArray[] )
+// Return      :  None
+//-----------------------------------------------------------------------------------------
+void Init_ExtAcc_PointMass()
 {
 
-// example parameters
-   const double M   = 1.0;
-   const double GM  = NEWTON_G*M;
-   const double Eps = 0.0;
+   SetExtAccAuxArray_PointMass( ExtAcc_AuxArray );
 
-   AuxArray[0] = 0.5*amr->BoxSize[0];  // x coordinate of the external acceleration center
-   AuxArray[1] = 0.5*amr->BoxSize[1];  // y ...
-   AuxArray[2] = 0.5*amr->BoxSize[2];  // z ...
-   AuxArray[3] = GM;                   // gravitational_constant*point_source_mass
-   AuxArray[4] = Eps;                  // soften_length (<=0.0 --> disable)
+   SetCPUExtAcc_PointMass( CPUExtAcc_Ptr );
+#  ifdef GPU
+   SetGPUExtAcc_PointMass( GPUExtAcc_Ptr );
+#  endif
 
-} // FUNCTION : Init_ExtAccAuxArray_PointMass
+} // FUNCTION : Init_ExtAcc_PointMass
+
 #endif // #ifndef __CUDACC__
 
 

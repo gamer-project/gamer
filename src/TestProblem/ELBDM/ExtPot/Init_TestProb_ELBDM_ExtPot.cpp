@@ -56,8 +56,8 @@ void Validate()
 #  endif
 
 #  ifdef GRAVITY
-   if ( !OPT__EXTERNAL_POT )
-   Aux_Error( ERROR_INFO, "OPT__EXTERNAL_POT must be enabled !!\n" );
+   if ( !OPT__EXT_POT )
+   Aux_Error( ERROR_INFO, "OPT__EXT_POT must be enabled !!\n" );
 #  endif
 
 
@@ -214,9 +214,9 @@ void BC( real fluid[], const double x, const double y, const double z, const dou
 // Function    :  Init_ExtPotAuxArray_ExtPotTest
 // Description :  Set the auxiliary array ExtPot_AuxArray[] used by the external potential routine
 //
-// Note        :  1. External potential can be enabled by the runtime option "OPT__EXTERNAL_POT"
+// Note        :  1. External potential can be enabled by the runtime option "OPT__EXT_POT"
 //                2. Link to the function pointer "Init_ExtPotAuxArray_Ptr"
-//                3. AuxArray[] has the size of EXT_POT_NAUX_MAX defined in CUPOT.h (default = 10)
+//                3. AuxArray[] has the size of EXT_POT_NAUX_MAX defined in Macro.h (default = 20)
 //
 // Parameter   :  AuxArray : Array to be filled up
 //

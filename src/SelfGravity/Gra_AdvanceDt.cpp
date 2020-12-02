@@ -9,6 +9,7 @@ extern Timer_t *Timer_Par_Collect[NLEVEL];
 #endif
 
 extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TTime );
+extern void (*Poi_UserWorkBeforePoisson_Ptr)( const double Time, const int lv );
 
 
 
@@ -35,7 +36,9 @@ extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const dou
 //                SaveSg_Flu   : Sandglass to store the updated fluid data (for the gravity solver)
 //                SaveSg_Pot   : Sandglass to store the updated potential data  (for the Poisson solver)
 //                Poisson      : true --> invoke the Poisson solver to evaluate the gravitational potential
+//                                        (including both self-gravity potential and external potential)
 //                Gravity      : true --> invoke the Gravity solver to evolve fluid by the gravitational acceleration
+//                                        (including self-gravity, external potentional, and external acceleration)
 //                OverlapMPI   : true --> Overlap MPI time with CPU/GPU computation
 //                Overlap_Sync : true  --> Advance the patches which cannot be overlapped with MPI communication
 //                               false --> Advance the patches which can    be overlapped with MPI communication
@@ -60,8 +63,12 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
       return;
    }
 
-   if ( !Poisson  &&  Gravity  &&  OPT__GRAVITY_TYPE != GRAVITY_EXTERNAL )
-      Aux_Message( stderr, "WARNING : Poisson=off, Gravity=on, GravityType!=external --> ARE YOU SURE ?!\n" );
+   if (  !Poisson  &&  Gravity  &&  ( OPT__SELF_GRAVITY || OPT__EXT_POT )  )
+      Aux_Message( stderr, "WARNING : Poisson=off but Gravity=on --> ARE YOU SURE ?!\n" );
+
+
+// whether we actually need potential
+   const bool UsePot = (  Poisson  &&  ( OPT__SELF_GRAVITY || OPT__EXT_POT )  );
 
 
 // coefficient in front of the RHS in the Poisson eq.
@@ -86,7 +93,7 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
    const bool FaSibBufPatch     = NULL_BOOL;
 #  endif
 
-   if ( Poisson )
+   if ( UsePot )
    {
       TIMING_FUNC(   Prepare_PatchData_InitParticleDensityArray( lv ),
                      Timer_Par_Collect[lv],   Timing   );
@@ -98,13 +105,24 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 #  endif // #ifdef PARTICLE
 
 
+// user-specified work before invoking the Poisson solver
+   if ( UsePot  &&  Poi_UserWorkBeforePoisson_Ptr != NULL )
+      TIMING_FUNC(   Poi_UserWorkBeforePoisson_Ptr( TimeNew, lv ),
+                     Timer_Gra_Advance[lv],   ( Timing && lv == 0 )   );
+
+
 // the base-level Poisson solver is implemented using the FFTW library (with CPUs only)
    if ( lv == 0 )
    {
 //    do not need to calculate the gravitational potential if self-gravity is disabled
-      if ( Poisson )
+      if ( UsePot )
       {
+         if ( OPT__SELF_GRAVITY )
          TIMING_FUNC(   CPU_PoissonSolver_FFT( Poi_Coeff, SaveSg_Pot, TimeNew ),
+                        Timer_Gra_Advance[lv],   Timing   );
+
+         if ( OPT__EXT_POT )
+         TIMING_FUNC(   CPU_ExtPotSolver_BaseLevel( CPUExtPot_Ptr, ExtPot_AuxArray, TimeNew, OPT__SELF_GRAVITY, SaveSg_Pot ),
                         Timer_Gra_Advance[lv],   Timing   );
 
          amr->PotSg    [lv]             = SaveSg_Pot;
@@ -184,7 +202,7 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 
 // free memory for collecting particles from other ranks and levels, and free density arrays with ghost zones (rho_ext)
 #  ifdef PARTICLE
-   if ( Poisson )
+   if ( UsePot )
    {
 //    don't use the TIMING_FUNC macro since we don't want to call MPI_Barrier here even when OPT__TIMING_BARRIER is on
 //    --> otherwise OPT__TIMING_BALANCE will fail because all ranks are synchronized before and after Gra_AdvanceDt
