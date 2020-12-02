@@ -414,6 +414,10 @@ void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const in
                   Init_ByFile_User_Ptr( fluid_out, fluid_in, UM_NVar, x, y, z, Time[UM_lv], UM_lv, NULL );
 
 #                 if( MODEL == HYDRO )
+//                check unphysical result
+#                 ifdef SRHD
+                  SRHD_CheckUnphysical( fluid_in, NULL, __FUNCTION__, __LINE__, true );
+#                 endif
 //                modify the initial condition if required
                   if ( OPT__RESET_FLUID )
                      Flu_ResetByUser_Func_Ptr( fluid_out, x, y, z, Time[UM_lv], UM_lv, NULL );
