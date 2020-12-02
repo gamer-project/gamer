@@ -51,7 +51,7 @@ static bool     Jet_SmoothVel;
 
 // sound speed
 static double Cs;
-static double CrossingTime;
+static double CsCrossingTime;
 
 // =======================================================================================
 /*        G       A       C              */ 
@@ -365,27 +365,32 @@ void SetParameter()
    if ( Jet_Precession && Jet_DiffPrecession )
       Aux_Error( ERROR_INFO, "Jet_Precession and Jet_DiffPrecession are not allowed to enable simultaneously !!\n" );
 
+// check UNIT_L is in reasonable range
+   if ( UNIT_L <= 0.5*Const_kpc || 2.0*Const_kpc <= UNIT_L )
+      Aux_Error( ERROR_INFO, "UNIT_L=%e is far from %e !!\n", UNIT_L, Const_kpc );
+
+
 // (1-2) convert to code unit
    Jet_SrcVel               *= Const_c   / UNIT_V;
    Jet_SrcTemp              *= Const_GeV / ( Jet_ParticleMassSrc * SQR(Const_c) );
    Jet_SrcDens              *= 1.0       / UNIT_D;
 
-   Jet_Radius               *= Const_pc / UNIT_L;
-   Jet_HalfHeight           *= Const_pc / UNIT_L;
+   Jet_Radius               *= Const_kpc / UNIT_L;
+   Jet_HalfHeight           *= Const_kpc / UNIT_L;
    Jet_HalfOpeningAngle     *= M_PI / 180.0;
    Jet_PrecessionAngle      *= M_PI / 180.0;
 
-   Jet_CenOffset[0]         *= Const_pc / UNIT_L;
-   Jet_CenOffset[1]         *= Const_pc / UNIT_L;
-   Jet_CenOffset[2]         *= Const_pc / UNIT_L;
+   Jet_CenOffset[0]         *= Const_kpc / UNIT_L;
+   Jet_CenOffset[1]         *= Const_kpc / UNIT_L;
+   Jet_CenOffset[2]         *= Const_kpc / UNIT_L;
 
-   Jet_HSE_Dx               *= Const_pc / UNIT_L;  
-   Jet_HSE_Dy               *= Const_pc / UNIT_L;  
-   Jet_HSE_Dz               *= Const_pc / UNIT_L;  
+   Jet_HSE_Dx               *= Const_kpc / UNIT_L;  
+   Jet_HSE_Dy               *= Const_kpc / UNIT_L;  
+   Jet_HSE_Dz               *= Const_kpc / UNIT_L;  
 
    if ( Jet_HSE_Radius > 0.0 )
    {
-     Jet_HSE_Radius         *= Const_pc / UNIT_L; 
+     Jet_HSE_Radius         *= Const_kpc / UNIT_L; 
    }
 
    if ( Jet_Ambient == 0 )
@@ -398,7 +403,7 @@ void SetParameter()
    
    if ( Jet_Ambient == 3 )
    {
-     Jet_Beta_Rcore         *= Const_pc  / UNIT_L;
+     Jet_Beta_Rcore         *= Const_kpc  / UNIT_L;
      Jet_Beta_PeakDens      *= 1.0       / UNIT_D;
    }
 
@@ -408,12 +413,12 @@ void SetParameter()
    
    if ( Sphere_Radius > 0.0 )
    {
-      Sphere_Radius         *= Const_pc / UNIT_L;
-      Sphere_CoreRadius     *= Const_pc / UNIT_L;
+      Sphere_Radius         *= Const_kpc / UNIT_L;
+      Sphere_CoreRadius     *= Const_kpc / UNIT_L;
       Sphere_CoreDens       *=      1.0 / UNIT_D;
-      Sphere_Center_x       *= Const_pc / UNIT_L; 
-      Sphere_Center_y       *= Const_pc / UNIT_L;
-      Sphere_Center_z       *= Const_pc / UNIT_L;   
+      Sphere_Center_x       *= Const_kpc / UNIT_L; 
+      Sphere_Center_y       *= Const_kpc / UNIT_L;
+      Sphere_Center_z       *= Const_kpc / UNIT_L;   
    }
 
    if ( Jet_Precession ) // uniform precession
@@ -469,7 +474,7 @@ void SetParameter()
 
       for (int b=0; b<Jet_HSE_BgTable_NBin; b++)
       {
-         Table_R[b] *= Const_pc / UNIT_L;
+         Table_R[b] *= Const_kpc / UNIT_L;
          Table_D[b] *= 1.0       / UNIT_D;
          Table_T[b] *= 1.0;
          Table_T[b] *= Const_GeV / ( Jet_ParticleMassAmbient * SQR(Const_c) );
@@ -487,7 +492,7 @@ void SetParameter()
 
    ( Jet_HSE_Radius <= 0.0 ) ? Distance = BOX_SIZE : Distance = Jet_HSE_Radius;
 
-   CrossingTime = ( Distance * Const_pc ) / Cs;
+   CsCrossingTime = ( Distance * Const_kpc ) / Cs;
 
 // (4) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
@@ -522,15 +527,15 @@ void SetParameter()
      Aux_Message( stdout, "  Jet_SrcDens             = %14.7e g/cm^3\n",     Jet_SrcDens*UNIT_D                              );
      Aux_Message( stdout, "  Jet_SrcTemp             = %14.7e GeV\n",        Jet_SrcTemp*Jet_ParticleMassSrc*SQR(Const_c)/Const_GeV     );
      Aux_Message( stdout, "  Jet_NumDensSrc          = %14.7e per cc\n",     Jet_SrcDens*UNIT_D/Jet_ParticleMassSrc          );
-     Aux_Message( stdout, "  Jet_CenOffset[x]        = %14.7e pc\n",         Jet_CenOffset [0]*UNIT_L/Const_pc               );
-     Aux_Message( stdout, "  Jet_CenOffset[y]        = %14.7e pc\n",         Jet_CenOffset [1]*UNIT_L/Const_pc               );
-     Aux_Message( stdout, "  Jet_CenOffset[z]        = %14.7e pc\n",         Jet_CenOffset [2]*UNIT_L/Const_pc               );
+     Aux_Message( stdout, "  Jet_CenOffset[x]        = %14.7e pc\n",         Jet_CenOffset [0]*UNIT_L/Const_kpc               );
+     Aux_Message( stdout, "  Jet_CenOffset[y]        = %14.7e pc\n",         Jet_CenOffset [1]*UNIT_L/Const_kpc               );
+     Aux_Message( stdout, "  Jet_CenOffset[z]        = %14.7e pc\n",         Jet_CenOffset [2]*UNIT_L/Const_kpc               );
      Aux_Message( stdout, "  Jet_Angular_Velocity    = %14.7e degree/kyr\n", Jet_Angular_Velocity                            );
      Aux_Message( stdout, "  Jet_PrecessionAngle     = %14.7e degree\n",     Jet_PrecessionAngle*180.0/M_PI                  );
      Aux_Message( stdout, "  Jet_HalfOpeningAngle    = %14.7e degree\n",     Jet_HalfOpeningAngle*180.0/M_PI                 );
-     Aux_Message( stdout, "  Jet_Radius              = %14.7e pc\n",         Jet_Radius*UNIT_L/Const_pc                      );
-     Aux_Message( stdout, "  Jet_HalfHeight          = %14.7e pc\n",         Jet_HalfHeight*UNIT_L/Const_pc                  );
-     Aux_Message( stdout, "  Jet_MaxDis              = %14.7e pc\n",         Jet_MaxDis*UNIT_L/Const_pc                      );
+     Aux_Message( stdout, "  Jet_Radius              = %14.7e pc\n",         Jet_Radius*UNIT_L/Const_kpc                      );
+     Aux_Message( stdout, "  Jet_HalfHeight          = %14.7e pc\n",         Jet_HalfHeight*UNIT_L/Const_kpc                  );
+     Aux_Message( stdout, "  Jet_MaxDis              = %14.7e pc\n",         Jet_MaxDis*UNIT_L/Const_kpc                      );
    }
 
    if ( Jet_Ambient == 0 && MPI_Rank == 0 )
@@ -547,7 +552,7 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
      Aux_Message( stdout, "  Cs                      = %14.7e c\n",          Cs / Const_c                                    );
-     Aux_Message( stdout, "  CrossingTime            = %14.7e pc/c\n",      CrossingTime / UNIT_T                            );
+     Aux_Message( stdout, "  CsCrossingTime          = %14.7e pc/c\n",       CsCrossingTime / UNIT_T                         );
    }
 
    if ( Jet_Ambient == 1 && MPI_Rank == 0 )
@@ -557,15 +562,15 @@ void SetParameter()
 
    if ( Jet_HSE_Radius > 0.0 && MPI_Rank == 0 )
    {
-     Aux_Message( stdout, "  Jet_HSE_Radius          = %14.7e pc\n",        Jet_HSE_Radius*UNIT_L/Const_pc                   );
-     Aux_Message( stdout, "  Jet_HSE_Dx              = %14.7e pc\n",        Jet_HSE_Dx*UNIT_L/Const_pc                       );
-     Aux_Message( stdout, "  Jet_HSE_Dy              = %14.7e pc\n",        Jet_HSE_Dy*UNIT_L/Const_pc                       );
-     Aux_Message( stdout, "  Jet_HSE_Dz              = %14.7e pc\n",        Jet_HSE_Dz*UNIT_L/Const_pc                       );
+     Aux_Message( stdout, "  Jet_HSE_Radius          = %14.7e pc\n",        Jet_HSE_Radius*UNIT_L/Const_kpc                   );
+     Aux_Message( stdout, "  Jet_HSE_Dx              = %14.7e pc\n",        Jet_HSE_Dx*UNIT_L/Const_kpc                       );
+     Aux_Message( stdout, "  Jet_HSE_Dy              = %14.7e pc\n",        Jet_HSE_Dy*UNIT_L/Const_kpc                       );
+     Aux_Message( stdout, "  Jet_HSE_Dz              = %14.7e pc\n",        Jet_HSE_Dz*UNIT_L/Const_kpc                       );
    }
 
    if ( Jet_Ambient == 3 && MPI_Rank == 0 )
    {
-     Aux_Message( stdout, "  Jet_Beta_Rcore          = %14.7e pc\n",        Jet_Beta_Rcore*UNIT_L/Const_pc                   );
+     Aux_Message( stdout, "  Jet_Beta_Rcore          = %14.7e pc\n",        Jet_Beta_Rcore*UNIT_L/Const_kpc                   );
      Aux_Message( stdout, "  Jet_Beta_PeakDens       = %14.7e g/cm^3\n",     Jet_Beta_PeakDens*UNIT_D                        );
      Aux_Message( stdout, "  Jet_Beta_Beta           = %14.7e\n",            Jet_Beta_Beta                                   );
    }
@@ -579,13 +584,13 @@ void SetParameter()
 
    if ( Sphere_Radius > 0.0 && MPI_Rank == 0 )
    {
-     Aux_Message( stdout, "  Sphere_Radius           = %14.7e pc\n",        Sphere_Radius*UNIT_L/Const_pc                    );
-     Aux_Message( stdout, "  Sphere_CoreRadius       = %14.7e pc\n",        Sphere_CoreRadius*UNIT_L/Const_pc                );
+     Aux_Message( stdout, "  Sphere_Radius           = %14.7e pc\n",        Sphere_Radius*UNIT_L/Const_kpc                    );
+     Aux_Message( stdout, "  Sphere_CoreRadius       = %14.7e pc\n",        Sphere_CoreRadius*UNIT_L/Const_kpc                );
      Aux_Message( stdout, "  Sphere_CoreDens         = %14.7e g/cm^3\n",    Sphere_CoreDens*UNIT_D                           );
      Aux_Message( stdout, "  Sphere_DensSurface      = %14.7e g/cm^3\n",    Sphere_CoreDens / ( 1.0 + SQR( Sphere_Radius / Sphere_CoreRadius) )*UNIT_D );
-     Aux_Message( stdout, "  Sphere_Center_x         = %14.7e pc\n",        Sphere_Center_x*UNIT_L/Const_pc                  );
-     Aux_Message( stdout, "  Sphere_Center_y         = %14.7e pc\n",        Sphere_Center_y*UNIT_L/Const_pc                  );
-     Aux_Message( stdout, "  Sphere_Center_z         = %14.7e pc\n",        Sphere_Center_z*UNIT_L/Const_pc                  );
+     Aux_Message( stdout, "  Sphere_Center_x         = %14.7e pc\n",        Sphere_Center_x*UNIT_L/Const_kpc                  );
+     Aux_Message( stdout, "  Sphere_Center_y         = %14.7e pc\n",        Sphere_Center_y*UNIT_L/Const_kpc                  );
+     Aux_Message( stdout, "  Sphere_Center_z         = %14.7e pc\n",        Sphere_Center_z*UNIT_L/Const_kpc                  );
 
    }
 
