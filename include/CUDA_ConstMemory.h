@@ -21,8 +21,9 @@ SET_GLOBAL( __constant__ int *c_NormIdx, NULL );
 #endif
 
 #ifdef GRAVITY
-SET_GLOBAL( __constant__ double c_ExtAcc_AuxArray[EXT_ACC_NAUX_MAX] );
-SET_GLOBAL( __constant__ double c_ExtPot_AuxArray[EXT_POT_NAUX_MAX] );
+SET_GLOBAL( __constant__ double c_ExtAcc_AuxArray    [EXT_ACC_NAUX_MAX] );
+SET_GLOBAL( __constant__ double c_ExtPot_AuxArray_Flt[EXT_POT_NAUX_MAX] );
+SET_GLOBAL( __constant__ int    c_ExtPot_AuxArray_Int[EXT_POT_NAUX_MAX] );
 
 SET_GLOBAL( __constant__ real c_Mp[3] );
 SET_GLOBAL( __constant__ real c_Mm[3] );

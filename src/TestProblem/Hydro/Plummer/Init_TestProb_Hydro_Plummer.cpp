@@ -481,8 +481,9 @@ void Init_TestProb_Hydro_Plummer()
    Par_Init_ByFunction_Ptr = Par_Init_ByFunction_Plummer;
 #  endif
 #  ifdef GRAVITY
-   Init_ExtAcc_Ptr = Init_ExtAcc_Plummer;
-   Init_ExtPot_Ptr = Init_ExtPot_Plummer;
+   Init_ExtAcc_Ptr         = Init_ExtAcc_Plummer;
+   if ( OPT__EXT_POT == EXT_POT_FUNC )
+   Init_ExtPot_Ptr         = Init_ExtPot_Plummer;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 

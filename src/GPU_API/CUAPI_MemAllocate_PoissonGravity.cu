@@ -20,6 +20,7 @@ extern char (*d_DE_Array_G     )[ CUBE(PS1) ];
 extern real (*d_Emag_Array_G   )[ CUBE(PS1) ];
 #endif
 extern real (*d_Pot_Array_T)    [ CUBE(GRA_NXT) ];
+extern real  *d_ExtPotTable;
 
 
 
@@ -50,6 +51,7 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
    const long Emag_MemSize_G    = sizeof(real  )*Pot_NP*CUBE(PS1);
 #  endif
    const long Pot_MemSize_T     = sizeof(real  )*Pot_NP*CUBE(GRA_NXT);
+   const long ExtPot_MemSize    = (long)sizeof(real)*EXT_POT_TABLE_NPOINT[0]*EXT_POT_TABLE_NPOINT[1]*EXT_POT_TABLE_NPOINT[2];
 
 
 // output the total memory requirement
@@ -63,6 +65,8 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
 #  ifdef MHD
    TotalSize += Emag_MemSize_G;
 #  endif
+   if ( OPT__EXT_POT == EXT_POT_TABLE )
+   TotalSize += ExtPot_MemSize;
 
    if ( MPI_Rank == 0 )
       Aux_Message( stdout, "NOTE : total memory requirement in GPU Poisson and gravity solver = %ld MB\n",
@@ -92,6 +96,9 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
 
    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Pot_Array_T,      Pot_MemSize_T     )  );
 
+   if ( OPT__EXT_POT == EXT_POT_TABLE )
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_ExtPotTable,      ExtPot_MemSize    )  );
+
 
 // allocate the host memory by CUDA
    for (int t=0; t<2; t++)
@@ -118,6 +125,9 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
 
       CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Pot_Array_T     [t], Pot_MemSize_T     )  );
    } // for (int t=0; t<2; t++)
+
+   if ( OPT__EXT_POT == EXT_POT_TABLE )
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_ExtPotTable,         ExtPot_MemSize    )  );
 
 } // FUNCTION : CUAPI_MemAllocate_PoissonGravity
 

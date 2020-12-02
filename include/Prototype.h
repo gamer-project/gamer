@@ -323,8 +323,8 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
                                const real ELBDM_Eta, const real ELBDM_Lambda, const bool Poisson, const bool GraAcc,
                                const bool SelfGravity, const OptExtPot_t ExtPot, const OptExtAcc_t ExtAcc,
                                const double TimeNew, const double TimeOld, const real MinEint );
-void CPU_ExtPotSolver_BaseLevel( const ExtPot_t ExtPot_Func, const double ExtPot_AuxArray[],
-                                 const double Time, const bool PotIsInit, const int SaveSg );
+void CPU_ExtPotSolver_BaseLevel( const ExtPot_t Func, const double AuxArray_Flt[], const int AuxArray_Int[],
+                                 const real Table[], const double Time, const bool PotIsInit, const int SaveSg );
 void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double PrepTime );
 void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf_SIdx, long *RecvBuf_SIdx,
                  int **List_PID, int **List_k, int *List_NSend_Rho, int *List_NRecv_Rho,
@@ -353,6 +353,7 @@ void Gra_Prepare_USG( const int lv, const double PrepTime,
 void End_FFTW();
 void Init_FFTW();
 void Init_ExtAccPot();
+void Init_LoadExtPotTable();
 void Init_GreenFuncK();
 void Init_MemAllocate_PoissonGravity( const int Pot_NPatchGroup );
 void Init_Set_Default_MG_Parameter( int &Max_Iter, int &NPre_Smooth, int &NPost_Smooth, double &Tolerated_Error );
@@ -541,6 +542,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
                                       const bool SelfGravity, const OptExtPot_t ExtPot, const OptExtAcc_t ExtAcc,
                                       const double TimeNew, const double TimeOld, const real MinEint,
                                       const int GPU_NStream );
+void CUAPI_SendExtPotTable2GPU( const real *h_Table );
 void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPatchGroup );
 void CUAPI_MemFree_PoissonGravity();
 #endif // #ifdef GRAVITY
