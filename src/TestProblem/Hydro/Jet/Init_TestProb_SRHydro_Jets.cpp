@@ -366,7 +366,7 @@ void SetParameter()
       Aux_Error( ERROR_INFO, "Jet_Precession and Jet_DiffPrecession are not allowed to enable simultaneously !!\n" );
 
 // check UNIT_L is in reasonable range
-   if ( UNIT_L <= 0.5*Const_kpc || 2.0*Const_kpc <= UNIT_L )
+   if ( ( UNIT_L <= 0.5*Const_kpc || 2.0*Const_kpc <= UNIT_L ) && OPT__UNIT )
       Aux_Error( ERROR_INFO, "UNIT_L=%e is far from %e !!\n", UNIT_L, Const_kpc );
 
 
