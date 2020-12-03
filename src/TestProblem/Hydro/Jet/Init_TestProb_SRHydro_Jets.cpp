@@ -11,7 +11,7 @@ void CartesianRotate( double x[], double theta, double phi, bool inverse );
 // =======================================================================================
 
 // options
-static bool     Jet_Ambient              // [true/false]: uniform/load from file
+static bool     Jet_Ambient;             // [true/false]: uniform/load from file
 static bool     Jet_Precession;          // flag: precessing jet source
 static bool     Jet_TimeDependentSrc;    // flag: time-dependent fluid variables in source
 static int      Jet_Exhaust;             // [0/1/2/3]: no jet/jet1/jet2/bipolar jet
@@ -33,8 +33,7 @@ static bool     Jet_SmoothVel;           // smooth radial component of 4-velocit
 
 
 // sound speed
-static double   Cs;                      // sound speed
-static double   CsCrossingTime;          // crossing-time of sound speed
+static double   CsCrossingTime;          // the time taken for sound to travel one diameter of sphere
 static double   FreeFallingTime;         // free-falling time 
 
 // =======================================================================================
@@ -189,7 +188,7 @@ void SetParameter()
    ReadPara->Add( "Amb_UniformTemp",         &Amb_UniformTemp,         -1.0,          Eps_double,     NoMax_double    );
 
 
-   ReadPara->Add( "Amb_Flu_SphereRadius",    &Amb_Flu_SphereRadius,    -1.0,          NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Amb_FluSphereRadius",     &Amb_FluSphereRadius,     -1.0,          NoMin_double,   NoMax_double    );
    ReadPara->Add( "CsCrossingTime",          &CsCrossingTime,          -1.0,          NoMin_double,   NoMax_double    );
    ReadPara->Add( "FreeFallingTime",         &FreeFallingTime,         -1.0,          NoMin_double,   NoMax_double    );
 
@@ -214,9 +213,9 @@ void SetParameter()
    Amb_UniformVel[2]    = NAN;
 
 
-   if ( Amb_Flu_SphereRadius < 0.0 )
+   if ( Amb_FluSphereRadius < 0.0 )
    {
-      Amb_Flu_SphereRadius = NAN;
+      Amb_FluSphereRadius = NAN;
    }
 
    
@@ -297,9 +296,9 @@ void SetParameter()
    Jet_AngularVelocity     *= 1.0;    // the unit of Jet_AngularVelocity is UNIT_T
 
    
-   if ( Amb_Flu_SphereRadius > 0.0 )
+   if ( Amb_FluSphereRadius > 0.0 )
    {
-      Amb_Flu_SphereRadius  *= Const_kpc / UNIT_L;
+      Amb_FluSphereRadius  *= Const_kpc / UNIT_L;
    }
 
 
@@ -385,7 +384,6 @@ void SetParameter()
 
    if ( MPI_Rank == 0 )
    {
-     Aux_Message( stdout, "  Cs                       = %14.7e c\n",          Cs / Const_c                                    );
      Aux_Message( stdout, "  CsCrossingTime           = %14.7e kpc/c\n",      CsCrossingTime / UNIT_T                         );
      Aux_Message( stdout, "  FreeFallingTime          = %14.7e kpc/c\n",      FreeFallingTime / UNIT_T                        );
    }
@@ -398,15 +396,9 @@ void SetParameter()
      Aux_Message( stdout, "  Jet_PrecessionAxis[z]    = %14.7e\n",            Jet_PrecessionAxis[2]                           );
    }
 
-   if ( Amb_Flu_SphereRadius > 0.0 && MPI_Rank == 0 ) 
+   if ( Amb_FluSphereRadius > 0.0 && MPI_Rank == 0 ) 
    {
-     Aux_Message( stdout, "  Amb_Flu_SphereRadius     = %14.7e kpc\n",        Amb_Flu_SphereRadius*UNIT_L/Const_kpc           );
-     Aux_Message( stdout, "  Sphere_CoreRadius        = %14.7e kpc\n",        Sphere_CoreRadius*UNIT_L/Const_kpc              );
-     Aux_Message( stdout, "  Sphere_CoreDens          = %14.7e g/cm^3\n",     Sphere_CoreDens*UNIT_D                          );
-     Aux_Message( stdout, "  Sphere_DensSurface       = %14.7e g/cm^3\n",     Sphere_CoreDens / ( 1.0 + SQR( Amb_Flu_SphereRadius / Sphere_CoreRadius) )*UNIT_D );
-     Aux_Message( stdout, "  Sphere_Center_x          = %14.7e kpc\n",        Sphere_Center_x*UNIT_L/Const_kpc                );
-     Aux_Message( stdout, "  Sphere_Center_y          = %14.7e kpc\n",        Sphere_Center_y*UNIT_L/Const_kpc                );
-     Aux_Message( stdout, "  Sphere_Center_z          = %14.7e kpc\n",        Sphere_Center_z*UNIT_L/Const_kpc                );
+     Aux_Message( stdout, "  Amb_FluSphereRadius      = %14.7e kpc\n",        Amb_FluSphereRadius*UNIT_L/Const_kpc           );
 
    }
 
@@ -485,9 +477,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    }
 
 
-   dx = x - amr->BoxCenter[0] - Sphere_Center_x;
-   dy = y - amr->BoxCenter[1] - Sphere_Center_y;
-   dz = z - amr->BoxCenter[2] - Sphere_Center_z;
+   dx = x - amr->BoxCenter[0];
+   dy = y - amr->BoxCenter[1];
+   dz = z - amr->BoxCenter[2];
 
    r = sqrt( dx*dx + dy*dy + dz*dz );
 
@@ -814,7 +806,7 @@ void Init_TestProb_Hydro_Jets()
    Aux_Record_User_Ptr      = NULL;
    End_User_Ptr             = NULL;
 #  ifdef GRAVITY
-   Init_ExtAcc_Ptr     = Init_ExtAcc;
+   Init_ExtAcc_Ptr          = NULL;
 #  endif
 
 

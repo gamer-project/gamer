@@ -41,7 +41,7 @@ Amb_UniformVel_x                               +0.0         # ambient velocity x
 Amb_UniformVel_y                               +0.0         # ambient velocity y [0.0]
 Amb_UniformVel_z                               +0.0         # ambient velocity z [0.0]
 
-Amb_FluSphereRadius                       
+Amb_FluSphereRadius                              -1
 CsCrossingTime                                   -1         # the time taken for sound to travel one diameter of sphere
 FreeFallingTime                                  -1         # free-falling time
 
