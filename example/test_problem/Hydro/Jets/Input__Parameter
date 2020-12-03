@@ -18,7 +18,7 @@ BOX_SIZE                      200.0        # box size along the longest side
 NX0_TOT_X                     160          # number of base-level cells along x
 NX0_TOT_Y                     160          # number of base-level cells along y
 NX0_TOT_Z                     160          # number of base-level cells along z
-OMP_NTHREAD                  -1            # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
+OMP_NTHREAD                   4            # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
 END_T                        -1.0          # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
 END_STEP                     -1            # end step (<0=auto -> must be set by test problems or restart) [-1]
 
@@ -114,7 +114,7 @@ DUAL_ENERGY_SWITCH            2.0e-2      # apply dual-energy if E_int/E_kin < D
 
 
 # fluid solvers in all models
-FLU_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU fluid solver (<=0=auto) [-1]
+FLU_GPU_NPGROUP             128           # number of patch groups sent into the CPU/GPU fluid solver (<=0=auto) [-1]
 GPU_NSTREAM                  -1           # number of CUDA streams for the asynchronous memory copy in GPU (<=0=auto) [-1]
 OPT__FIXUP_FLUX               1           # correct coarse grids by the fine-grid boundary fluxes [1] ##SRHD and ELBDM ONLY##
 OPT__FIXUP_ELECTRIC           1           # correct coarse grids by the fine-grid boundary electric field [1] ##MHD ONLY##
@@ -142,7 +142,7 @@ POT_GPU_NPGROUP              -1           # number of patch groups sent into the
 OPT__GRA_P5_GRADIENT          0           # 5-points gradient in the Gravity solver (must have GRA/USG_GHOST_SIZE_G>=2) [0]
 OPT__SELF_GRAVITY             1           # add self-gravity [1]
 OPT__EXT_ACC                  0           # add external acceleration (0=off, 1=function, 2=table) [0] ##HYDRO ONLY##
-OPT__EXT_POT                  0           # add external potential    (0=off, 1=function, 2=table) [0]
+OPT__EXT_POT                  2           # add external potential    (0=off, 1=function, 2=table) [0]
 EXT_POT_TABLE_NAME            EmptyTable  # external potential table: filename
 
 
