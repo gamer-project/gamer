@@ -471,6 +471,36 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                   EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
+
+// Uniform disk
+   const double dh     = amr->dh[lv];                                                         // grid size
+
+   const double Center[3] = { 0.5*amr->BoxSize[0], 
+                              0.5*amr->BoxSize[1], 
+                              0.5*amr->BoxSize[2] };
+
+   const double dR[3]     = { x-Center[0]-Jet_CenOffset[0], 
+                              y-Center[1]-Jet_CenOffset[1], 
+                              z-Center[2]-Jet_CenOffset[2] };
+   
+   const double R         = sqrt( SQR(dR[0]) + SQR(dR[1]) );
+
+   double DensRatio, DiskRadius, DiskHeight;
+
+   DiskRadius = 0.4*amr->BoxSize[0];
+   DiskHeight = 0.05*amr->BoxSize[2]; 
+   DensRatio  = 10.0;             // compared to Jet_SrcDens
+
+   if ( R <= DiskRadius && fabs(dR[2]) <= DiskHeight )
+   {
+      PriReal[0] *= DensRatio;
+
+      Hydro_Pri2Con( PriReal, fluid, NULL_BOOL, NULL_INT, NULL, EoS_DensPres2Eint_CPUPtr,
+                     EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+   }
+
+
 } // FUNCTION : SetGridIC
 
 
