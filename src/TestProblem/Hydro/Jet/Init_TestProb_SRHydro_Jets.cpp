@@ -207,11 +207,13 @@ void SetParameter()
    delete ReadPara;
 
 // replace useless parameters with NaN
-   Amb_UniformDens      = NAN;
-   Amb_UniformVel[0]    = NAN;
-   Amb_UniformVel[1]    = NAN;
-   Amb_UniformVel[2]    = NAN;
-
+   if ( Jet_Ambient )
+   {
+     Amb_UniformDens      = NAN;
+     Amb_UniformVel[0]    = NAN;
+     Amb_UniformVel[1]    = NAN;
+     Amb_UniformVel[2]    = NAN;
+   }
 
    if ( Amb_FluSphereRadius < 0.0 )
    {
@@ -283,7 +285,7 @@ void SetParameter()
    Jet_CenOffset[2]         *= Const_kpc / UNIT_L;
 
 
-   if ( Jet_Ambient )
+   if ( !Jet_Ambient )
    {
      Amb_UniformDens        *= 1.0       / UNIT_D;
      Amb_UniformVel[0]      *= Const_c   / UNIT_V;
@@ -325,8 +327,9 @@ void SetParameter()
 // (4) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
    const long   End_Step_Default = __INT_MAX__;
-   const double End_T_Default1   = Amb_FluSphereRadius / CsCrossingTime / UNIT_T;
-   const double End_T_Default2   = BOX_SIZE / Jet_SrcVel / UNIT_T;
+   const double End_T_Default1   = Amb_FluSphereRadius * UNIT_L / (CsCrossingTime*UNIT_V) / UNIT_T;
+   const double Jet_Src3Vel      = Jet_SrcVel / sqrt(1.0 + Jet_SrcVel*Jet_SrcVel);
+   const double End_T_Default2   = BOX_SIZE            * UNIT_L / (Jet_Src3Vel*UNIT_V) / UNIT_T;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
@@ -447,48 +450,16 @@ void SetParameter()
 void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] )
 {
-
-// variables for Jet_Ambient
-   double dx, dy, dz, r;
-   const int  NCol         = 3;           // total number of columns to load
-   const int  Col[NCol]    = {1, 2, 3};   // target columns: (radius, density, temperature)
-
-   double DropRatio = 1e-2;
-
 // variables for jet
    double Pri4Vel[NCOMP_FLUID];
    real   PriReal[NCOMP_FLUID];
 
-   dx = x - amr->BoxCenter[0];
-   dy = y - amr->BoxCenter[1];
-   dz = z - amr->BoxCenter[2];
 
-   r = sqrt( dx*dx + dy*dy + dz*dz );
-
-
-// uniform ambient
-   if ( Jet_Ambient == 0 )
-   {
-	  Pri4Vel[0] = Amb_UniformDens;
-      Pri4Vel[1] = Amb_UniformVel[0];
-      Pri4Vel[2] = Amb_UniformVel[1];
-      Pri4Vel[3] = Amb_UniformVel[2];
-	  Pri4Vel[4] = Amb_UniformTemp * Amb_UniformDens;
-   }
-
-
-   dx = x - amr->BoxCenter[0];
-   dy = y - amr->BoxCenter[1];
-   dz = z - amr->BoxCenter[2];
-
-   r = sqrt( dx*dx + dy*dy + dz*dz );
-
-
-   PriReal[0] = (real)Pri4Vel[0];
-   PriReal[1] = (real)Pri4Vel[1];
-   PriReal[2] = (real)Pri4Vel[2];
-   PriReal[3] = (real)Pri4Vel[3];
-   PriReal[4] = (real)Pri4Vel[4];
+   PriReal[0] = (real)Amb_UniformDens;
+   PriReal[1] = (real)Amb_UniformVel[0];
+   PriReal[2] = (real)Amb_UniformVel[1];
+   PriReal[3] = (real)Amb_UniformVel[2];
+   PriReal[4] = (real)Amb_UniformTemp * Amb_UniformDens;
    
    Hydro_Pri2Con( PriReal, fluid, NULL_BOOL, NULL_INT, NULL, EoS_DensPres2Eint_CPUPtr,
                   EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
