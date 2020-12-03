@@ -347,6 +347,12 @@ void SetParameter()
       PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
    }
 
+   if ( OUTPUT_DT < 0.0 )
+   {
+      OUTPUT_DT = END_T / 10.0;
+      PRINT_WARNING( "OUTPUT_DT", OUTPUT_DT, FORMAT_REAL );
+   }
+
 
 // (4) make a note
    if ( MPI_Rank == 0 )
