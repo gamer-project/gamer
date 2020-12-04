@@ -217,15 +217,15 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    Prim[2] = Prim[1];
    Prim[3] = Prim[1];
    Prim[4] = P0 + P1*cos(Phase); 
-   Hydro_Pri2Con( Prim, Cons, NULL_BOOL, NULL_INT, NULL, NULL, NULL,
-                  EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, NULL );
+   Hydro_Pri2Con( Prim, Cons, NULL_BOOL, NULL_INT, NULL, NULL,
+                  EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 #  else
    Cons[DENS] = 1.0 + Acoustic_RhoAmp*cos(Phase);
    Cons[MOMX] = Cons[DENS]*( v1*cos(Phase) + Acoustic_v0 ) / sqrt(3.0);
    Cons[MOMY] = Cons[MOMX];
    Cons[MOMZ] = Cons[MOMX];
    Pres       = P0 + P1*cos(Phase);
-   Eint       = EoS_DensPres2Eint_CPUPtr( Cons[DENS], Pres, NULL, EoS_AuxArray );  // assuming EoS requires no passive scalars
+   Eint       = EoS_DensPres2Eint_CPUPtr( Cons[DENS], Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );  // assuming EoS requires no passive scalars
    Cons[ENGY] = Hydro_ConEint2Etot( Cons[DENS], Cons[MOMX], Cons[MOMY],
                                     Cons[MOMZ], Eint, 0.0 );     // do NOT include magnetic energy here
 #  endif

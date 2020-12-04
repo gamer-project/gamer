@@ -132,29 +132,31 @@ extern double           ELBDM_LAMBDA;
 // (2-2) self-gravity
 // ============================================================================================================
 #ifdef GRAVITY
-extern double     AveDensity_Init;                    // initial average mass density (in all levels)
-extern int        Pot_ParaBuf;                        // number of parallel buffers to exchange potential for the
-                                                      // Poisson/Gravity solvers and the potential refinement
-extern int        Rho_ParaBuf;                        // number of parallel buffers to exchange density for the Poisson solver
+extern double        AveDensity_Init;     // initial average mass density (in all levels)
+extern int           Pot_ParaBuf;         // number of parallel buffers to exchange potential for the
+                                          // Poisson/Gravity solvers and the potential refinement
+extern int           Rho_ParaBuf;         // number of parallel buffers to exchange density for the Poisson solver
+extern real         *GreenFuncK;
+extern double        GFUNC_COEFF0;
+extern double        DT__GRAVITY;
+extern double        NEWTON_G;
+extern int           POT_GPU_NPGROUP;
+extern bool          OPT__OUTPUT_POT, OPT__GRA_P5_GRADIENT, OPT__SELF_GRAVITY, OPT__GRAVITY_EXTRA_MASS;
+extern double        SOR_OMEGA;
+extern int           SOR_MAX_ITER, SOR_MIN_ITER;
+extern double        MG_TOLERATED_ERROR;
+extern int           MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH;
+extern char          EXT_POT_TABLE_NAME[MAX_STRING];
+extern double        EXT_POT_TABLE_DH, EXT_POT_TABLE_EDGEL[3];
+extern int           EXT_POT_TABLE_NPOINT[3], EXT_POT_TABLE_FLOAT8;
+extern IntScheme_t   OPT__POT_INT_SCHEME, OPT__RHO_INT_SCHEME, OPT__GRA_INT_SCHEME, OPT__REF_POT_INT_SCHEME;
+extern OptPotBC_t    OPT__BC_POT;
+extern OptExtAcc_t   OPT__EXT_ACC;
+extern OptExtPot_t   OPT__EXT_POT;
 
-extern real      *GreenFuncK;
-extern double     GFUNC_COEFF0;
-extern double     DT__GRAVITY;
-extern double     NEWTON_G;
-extern int        POT_GPU_NPGROUP;
-extern bool       OPT__OUTPUT_POT, OPT__GRA_P5_GRADIENT, OPT__SELF_GRAVITY, OPT__GRAVITY_EXTRA_MASS;
-extern double     SOR_OMEGA;
-extern int        SOR_MAX_ITER, SOR_MIN_ITER;
-extern double     MG_TOLERATED_ERROR;
-extern int        MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH;
-
-extern IntScheme_t      OPT__POT_INT_SCHEME, OPT__RHO_INT_SCHEME, OPT__GRA_INT_SCHEME, OPT__REF_POT_INT_SCHEME;
-extern OptPotBC_t       OPT__BC_POT;
-extern OptExtAcc_t      OPT__EXT_ACC;
-extern OptExtPot_t      OPT__EXT_POT;
-
-extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
-extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
+extern double ExtAcc_AuxArray    [EXT_ACC_NAUX_MAX];
+extern double ExtPot_AuxArray_Flt[EXT_POT_NAUX_MAX];
+extern int    ExtPot_AuxArray_Int[EXT_POT_NAUX_MAX];
 extern ExtAcc_t CPUExtAcc_Ptr;
 extern ExtPot_t CPUExtPot_Ptr;
 #ifdef GPU
@@ -250,6 +252,8 @@ extern EoS_H2TEM_t EoS_HTilde2Temp_GPUPtr;
 extern EoS_TEM2H_t EoS_Temp2HTilde_GPUPtr;
 extern EoS_TEM2C_t EoS_Temper2CSqr_GPUPtr;
 #endif
+extern double EoS_AuxArray_Flt[EOS_NAUX_MAX];
+extern int    EoS_AuxArray_Int[EOS_NAUX_MAX];
 extern EoS_DE2P_t EoS_DensEint2Pres_CPUPtr;
 extern EoS_DP2E_t EoS_DensPres2Eint_CPUPtr;
 extern EoS_DP2C_t EoS_DensPres2CSqr_CPUPtr;
@@ -290,6 +294,7 @@ extern char       (*h_DE_Array_G      [2])[PS1][PS1][PS1];
 #ifdef MHD
 extern real       (*h_Emag_Array_G    [2])[PS1][PS1][PS1];
 #endif
+extern real        *h_ExtPotTable;
 
 #ifdef UNSPLIT_GRAVITY
 extern real       (*h_Pot_Array_USG_F [2])[ CUBE(USG_NXT_F) ];
@@ -314,6 +319,10 @@ extern real       (*h_Pot_Array_T[2])[ CUBE(GRA_NXT) ];
 #endif
 #ifdef MHD
 extern real       (*h_Mag_Array_T[2])[NCOMP_MAG][ PS1P1*SQR(PS1) ];
+#endif
+
+#if ( MODEL == HYDRO )
+extern real        *h_EoS_Table[EOS_NTABLE_MAX];
 #endif
 
 

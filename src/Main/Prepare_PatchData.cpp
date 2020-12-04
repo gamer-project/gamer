@@ -837,7 +837,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                   
                   Hydro_Con2Pri( FluidForEoS, Prim, (real)NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
                                  (real)NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
-                                 EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, NULL, NULL, &LorentzFactor );
+                                 EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
+                                 EoS_AuxArray_Int, h_EoS_Table, NULL, &LorentzFactor );
 
                   Data1PG_CC_Ptr[Idx1] = LorentzFactor;
 
@@ -847,7 +848,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
                      Hydro_Con2Pri( FluidForEoS, Prim, (real)NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
                                     (real)NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
-                                    EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, NULL, NULL, &LorentzFactor );
+                                    EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
+                                    EoS_AuxArray_Int, h_EoS_Table, NULL, &LorentzFactor );
 
                      Data1PG_CC_Ptr[Idx1] = FluWeighting*Data1PG_CC_Ptr[Idx1]+FluWeighting_IntT*LorentzFactor;
                   }
@@ -940,7 +942,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                                          (MinPres>=(real)0.0), MinPres, Emag,
                                          EoS_DensEint2Pres_CPUPtr, 
                                          EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                         EoS_AuxArray, NULL );
+                                         EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
                   Data1PG_CC_Ptr[Idx1] = Pres;
 
@@ -959,7 +961,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                                             (MinPres>=(real)0.0), MinPres, Emag,
                                             EoS_DensEint2Pres_CPUPtr,
                                             EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                            EoS_AuxArray, NULL );
+                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
                      Data1PG_CC_Ptr[Idx1] = FluWeighting*Data1PG_CC_Ptr[Idx1]+FluWeighting_IntT*Pres;
 
@@ -992,7 +994,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                                          FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
                                          (MinPres>=(real)0.0), MinPres, Emag, EoS_DensEint2Pres_CPUPtr,
                                          EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                         EoS_AuxArray );
+                                         EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
                   Data1PG_CC_Ptr[Idx1] = Temp;
 
@@ -1010,7 +1012,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                                             FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
                                             (MinPres>=(real)0.0), MinPres, Emag, EoS_DensEint2Pres_CPUPtr,
                                             EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                            EoS_AuxArray );
+                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
                      Data1PG_CC_Ptr[Idx1] = FluWeighting*Data1PG_CC_Ptr[Idx1]+FluWeighting_IntT*Temp;
                   }
@@ -1185,7 +1187,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         
                         Hydro_Con2Pri( FluidForEoS, Prim, (real)NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
                                        (real)NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
-                                       EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, NULL, NULL, &LorentzFactor );
+                                       EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
+                                       EoS_AuxArray_Int, h_EoS_Table, NULL, &LorentzFactor );
 
                         Data1PG_CC_Ptr[Idx1] = LorentzFactor;
 
@@ -1195,7 +1198,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
                            Hydro_Con2Pri( FluidForEoS, Prim, (real)NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
                                           (real)NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
-                                          EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, NULL, NULL, &LorentzFactor );
+                                          EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
+                                          EoS_AuxArray_Int, h_EoS_Table, NULL, &LorentzFactor );
 
                            Data1PG_CC_Ptr[Idx1] = FluWeighting*Data1PG_CC_Ptr[Idx1]+FluWeighting_IntT*LorentzFactor;
                         }
@@ -1289,7 +1293,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                                                (MinPres>=(real)0.0), MinPres, Emag,
                                                EoS_DensEint2Pres_CPUPtr,
                                                EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                               EoS_AuxArray, NULL );
+                                               EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
                         Data1PG_CC_Ptr[Idx1] = Pres;
 
@@ -1308,7 +1312,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                                                   (MinPres>=(real)0.0), MinPres, Emag,
                                                   EoS_DensEint2Pres_CPUPtr,
                                                   EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                                  EoS_AuxArray, NULL );
+                                                  EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
                            Data1PG_CC_Ptr[Idx1] = FluWeighting*Data1PG_CC_Ptr[Idx1]+FluWeighting_IntT*Pres;
                         }
@@ -1340,7 +1344,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                                                FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
                                                (MinPres>=(real)0.0), MinPres, Emag, EoS_DensEint2Pres_CPUPtr,
                                                EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                               EoS_AuxArray );
+                                               EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
                         Data1PG_CC_Ptr[Idx1] = Temp;
 
@@ -1358,7 +1362,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                                                   FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
                                                   (MinPres>=(real)0.0), MinPres, Emag, EoS_DensEint2Pres_CPUPtr,
                                                   EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                                  EoS_AuxArray );
+                                                  EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
                            Data1PG_CC_Ptr[Idx1] = FluWeighting*Data1PG_CC_Ptr[Idx1]+FluWeighting_IntT*Temp;
                         }

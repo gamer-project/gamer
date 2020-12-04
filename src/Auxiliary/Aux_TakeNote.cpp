@@ -169,10 +169,6 @@ void Aux_TakeNote()
 
 #     ifdef SRHD
       fprintf( Note, "SRHD                            ON\n" );
-#     else
-      fprintf( Note, "SRHD                            OFF\n" );
-#     endif
-
 #     ifdef REDUCED_ENERGY
       fprintf( Note, "REDUCED_ENERGY                  ON\n" );
 #     else
@@ -183,6 +179,15 @@ void Aux_TakeNote()
       fprintf( Note, "FOUR_VELOCITY                  ON\n" );
 #     else
       fprintf( Note, "FOUR_VELOCITY                  OFF\n" );
+#     endif
+#     else
+      fprintf( Note, "SRHD                            OFF\n" );
+#     endif
+
+#     ifdef COSMIC_RAY
+      fprintf( Note, "COSMIC_RAY                      ON\n" );
+#     else
+      fprintf( Note, "COSMIC_RAY                      OFF\n" );
 #     endif
 
 #     if   ( EOS == EOS_GAMMA )
@@ -444,7 +449,8 @@ void Aux_TakeNote()
 #     endif
 #     endif // #ifdef MHD
 
-      fprintf( Note, "EOS_NAUX_MAX                    %d\n",      EOS_NAUX_MAX );
+      fprintf( Note, "EOS_NAUX_MAX                    %d\n",      EOS_NAUX_MAX   );
+      fprintf( Note, "EOS_NTABLE_MAX                  %d\n",      EOS_NTABLE_MAX );
 
 #     elif ( MODEL == ELBDM )
 
@@ -1024,6 +1030,16 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__SELF_GRAVITY               %d\n",      OPT__SELF_GRAVITY       );
       fprintf( Note, "OPT__EXT_ACC                    %d\n",      OPT__EXT_ACC            );
       fprintf( Note, "OPT__EXT_POT                    %d\n",      OPT__EXT_POT            );
+      if ( OPT__EXT_POT == EXT_POT_TABLE ) {
+      fprintf( Note, "EXT_POT_TABLE_NAME              %s\n",      EXT_POT_TABLE_NAME      );
+      fprintf( Note, "EXT_POT_TABLE_NPOINT_X          %d\n",      EXT_POT_TABLE_NPOINT[0] );
+      fprintf( Note, "EXT_POT_TABLE_NPOINT_Y          %d\n",      EXT_POT_TABLE_NPOINT[1] );
+      fprintf( Note, "EXT_POT_TABLE_NPOINT_Z          %d\n",      EXT_POT_TABLE_NPOINT[2] );
+      fprintf( Note, "EXT_POT_TABLE_DH                %13.7e\n",  EXT_POT_TABLE_DH        );
+      fprintf( Note, "EXT_POT_TABLE_EDGEL_X          %14.7e\n",   EXT_POT_TABLE_EDGEL[0]  );
+      fprintf( Note, "EXT_POT_TABLE_EDGEL_Y          %14.7e\n",   EXT_POT_TABLE_EDGEL[1]  );
+      fprintf( Note, "EXT_POT_TABLE_EDGEL_Z          %14.7e\n",   EXT_POT_TABLE_EDGEL[2]  );
+      fprintf( Note, "EXT_POT_TABLE_FLOAT8            %d\n",      EXT_POT_TABLE_FLOAT8    ); }
       fprintf( Note, "OPT__GRAVITY_EXTRA_MASS         %d\n",      OPT__GRAVITY_EXTRA_MASS );
       fprintf( Note, "AveDensity_Init                 %13.7e\n",  AveDensity_Init         );
       fprintf( Note, "***********************************************************************************\n" );

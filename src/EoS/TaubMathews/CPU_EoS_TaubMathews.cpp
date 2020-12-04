@@ -42,7 +42,7 @@ real VectorDotProduct( real V1, real V2, real V3 );
 // Return      :  AuxArray[]
 //-------------------------------------------------------------------------------------------------------
 #ifndef __CUDACC__
-void EoS_SetAuxArray_TaubMathews( double AuxArray[] )
+void EoS_SetAuxArray_TaubMathews( double AuxArray_Flt[], int AuxArray_Int[] )
 {
   return;
 } // FUNCTION : EoS_SetAuxArray_TaubMathews
@@ -68,7 +68,8 @@ void EoS_SetAuxArray_TaubMathews( double AuxArray[] )
 // Return      :  Constant
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_GuessHTilde_TaubMathews( const real Con[], real* const Constant )
+static real EoS_GuessHTilde_TaubMathews( const real Con[], real* const Constant, const double AuxArray_Flt[],
+                                         const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] )
 {
   real GuessHTilde, Discrimination;
 
@@ -125,7 +126,8 @@ static real EoS_GuessHTilde_TaubMathews( const real Con[], real* const Constant 
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static void EoS_HTilde2Temp_TaubMathews( const real HTilde, real* const Temp, real* const DiffTemp,
-                                         const real Passive[], const double AuxArray[] )
+                                         const real Passive[], const double AuxArray_Flt[],
+                                         const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] )
 {
   real HTildeSqr = SQR(HTilde);
   real Factor0 = (real)2.0*HTildeSqr + (real)4.0*HTilde;
@@ -154,7 +156,8 @@ static void EoS_HTilde2Temp_TaubMathews( const real HTilde, real* const Temp, re
 // Return      :  Reduced energy density
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_Temp2HTilde_TaubMathews( const real Temp, const real Passive[], const double AuxArray[] )
+static real EoS_Temp2HTilde_TaubMathews( const real Temp, const real Passive[], const double AuxArray_Flt[],
+                                         const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] )
 {
 
    real HTilde; // Reduced enthalpy
@@ -185,7 +188,8 @@ static real EoS_Temp2HTilde_TaubMathews( const real Temp, const real Passive[], 
 // Return      :  Sound speed square
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_Temper2CSqr_TaubMathews( const real Rho, const real Pres, const real Passive[], const double AuxArray[] )
+static real EoS_Temper2CSqr_TaubMathews( const real Rho, const real Pres, const real Passive[], const double AuxArray_Flt[],
+                                         const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] )
 {
 
 // check
@@ -300,7 +304,7 @@ void EoS_SetGPUFunc_TaubMathews(EoS_GUESS_t &, EoS_H2TEM_t &, EoS_TEM2H_t &, EoS
 void EoS_Init_TaubMathews()
 {
 
-   EoS_SetAuxArray_TaubMathews( EoS_AuxArray );
+   EoS_SetAuxArray_TaubMathews( EoS_AuxArray_Flt, EoS_AuxArray_Int );
    EoS_SetCPUFunc_TaubMathews( EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_Temper2CSqr_CPUPtr );
 #  ifdef GPU
    EoS_SetGPUFunc_TaubMathews( EoS_GuessHTilde_GPUPtr, EoS_HTilde2Temp_GPUPtr, EoS_Temp2HTilde_GPUPtr, EoS_Temper2CSqr_GPUPtr );

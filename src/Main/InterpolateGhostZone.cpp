@@ -334,7 +334,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
          Hydro_Con2Pri( FluidForEoS, Prim, (real)NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
                         (real)NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
-                        EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, NULL, NULL, &LorentzFactor );
+                        EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
+                        EoS_AuxArray_Int, h_EoS_Table, NULL, &LorentzFactor );
 
          CData_CC_Ptr[Idx] = LorentzFactor;
 
@@ -434,7 +435,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                                 (MinPres>=(real)0.0), MinPres, Emag,
                                 EoS_DensEint2Pres_CPUPtr,
                                 EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                EoS_AuxArray, NULL );
+                                EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
          CData_CC_Ptr[Idx] = Pres;
 
@@ -453,7 +454,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                                    (MinPres>=(real)0.0), MinPres, Emag,
                                    EoS_DensEint2Pres_CPUPtr,
                                    EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                   EoS_AuxArray, NULL );
+                                   EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                   h_EoS_Table, NULL );
 
             CData_CC_Ptr[Idx] = FluWeighting*CData_CC_Ptr[Idx]+FluWeighting_IntT*Pres;
          }
@@ -485,7 +487,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                                 FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
                                 (MinPres>=(real)0.0), MinPres, Emag, EoS_DensEint2Pres_CPUPtr,
                                 EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                EoS_AuxArray );
+                                EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
          CData_CC_Ptr[Idx] = Temp;
 
@@ -503,7 +505,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                                    FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
                                    (MinPres>=(real)0.0), MinPres, Emag, EoS_DensEint2Pres_CPUPtr,
                                    EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                   EoS_AuxArray );
+                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
             CData_CC_Ptr[Idx] = FluWeighting*CData_CC_Ptr[Idx]+FluWeighting_IntT*Temp;
          }
@@ -666,7 +668,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
                Hydro_Con2Pri( FluidForEoS, Prim, (real)NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
                               (real)NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
-                              EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, NULL, NULL, &LorentzFactor );
+                              EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
+                              EoS_AuxArray_Int, h_EoS_Table, NULL, &LorentzFactor );
 
                CData_CC_Ptr[Idx] = LorentzFactor;
 
@@ -676,7 +679,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
                   Hydro_Con2Pri( FluidForEoS, Prim, (real)NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
                                  (real)NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
-                                 EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, NULL, NULL, &LorentzFactor );
+                                 EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
+                                 EoS_AuxArray_Int, h_EoS_Table, NULL, &LorentzFactor );
 
                   CData_CC_Ptr[Idx] = FluWeighting*CData_CC_Ptr[Idx]+FluWeighting_IntT*LorentzFactor;
                }
@@ -770,7 +774,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                                       (MinPres>=(real)0.0), MinPres, Emag,
                                       EoS_DensEint2Pres_CPUPtr,
                                       EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                      EoS_AuxArray, NULL );
+                                      EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
                CData_CC_Ptr[Idx] = Pres;
 
@@ -789,7 +793,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                                          (MinPres>=(real)0.0), MinPres, Emag,
                                          EoS_DensEint2Pres_CPUPtr,
                                          EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                         EoS_AuxArray, NULL );
+                                         EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
                   CData_CC_Ptr[Idx] = FluWeighting*CData_CC_Ptr[Idx]+FluWeighting_IntT*Pres;
                }
@@ -821,7 +825,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                                       FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
                                       (MinPres>=(real)0.0), MinPres, Emag, EoS_DensEint2Pres_CPUPtr,
                                       EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                      EoS_AuxArray );
+                                      EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
                CData_CC_Ptr[Idx] = Temp;
 
@@ -839,7 +843,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                                          FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
                                          (MinPres>=(real)0.0), MinPres, Emag, EoS_DensEint2Pres_CPUPtr,
                                          EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                         EoS_AuxArray );
+                                         EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
                   CData_CC_Ptr[Idx] = FluWeighting*CData_CC_Ptr[Idx]+FluWeighting_IntT*Temp;
                }
@@ -1432,7 +1436,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 //       --> we achieve that by setting the dual-energy switch to an extremely larger number and ignore
 //           the runtime parameter DUAL_ENERGY_SWITCH here
          Hydro_DualEnergyFix( FData_Dens[t], FData_MomX[t], FData_MomY[t], FData_MomZ[t], FData_Engy[t], FData_Enpy[t],
-                              dummy, EoS_AuxArray[1], EoS_AuxArray[2], (MinPres>=(real)0.0), MinPres, UseEnpy2FixEngy, Emag );
+                              dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2], (MinPres>=(real)0.0), MinPres,
+                              UseEnpy2FixEngy, Emag );
       }
    } // if (  DE_Consistency  &&  ( TVarCC & _TOTAL ) == _TOTAL  &&  TVarFC == _MAG )
 #  endif // if ( MODEL == HYDRO  &&  defined DUAL_ENERGY )

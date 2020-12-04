@@ -181,6 +181,7 @@ OPT__GRA_P5_GRADIENT          0           # 5-points gradient in the Gravity sol
 OPT__SELF_GRAVITY             1           # add self-gravity [1]
 OPT__EXT_ACC                  0           # add external acceleration (0=off, 1=function, 2=table) [0] ##HYDRO ONLY##
 OPT__EXT_POT                  0           # add external potential    (0=off, 1=function, 2=table) [0]
+EXT_POT_TABLE_NAME            EmptyTable  # external potential table: filename
 
 
 # initialization

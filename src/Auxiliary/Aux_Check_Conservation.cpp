@@ -184,8 +184,10 @@ void Aux_Check_Conservation( const char *comment )
 #                 ifdef SRHD
                   Eint         = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Ered, EoS_GuessHTilde_CPUPtr,
                                                  EoS_HTilde2Temp_CPUPtr, CheckMinEint_No, NULL_REAL, Emag );
+                  printf("%s: %d need EoS table !! \n", __FUNCTION__, __LINE__);
+                  exit(0);
 #                 else
-                  Eint         = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Etot, EoS_GuessHTilde_CPUPtr,
+                  Eint         = Hydro_Con2Eint(__FUNCTION__, __LINE__, Dens, MomX, MomY, MomZ, Etot, EoS_GuessHTilde_CPUPtr,
                                                  EoS_HTilde2Temp_CPUPtr, CheckMinEint_No, NULL_REAL, Emag );
 #                 endif
 
@@ -193,7 +195,8 @@ void Aux_Check_Conservation( const char *comment )
 
 #                 ifdef SRHD
                   real Cons[NCOMP_FLUID] = { Dens, MomX, MomY, MomZ, Ered };
-                  Ekin         = SRHD_Con2KineticEngy( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr );
+                  Ekin         = SRHD_Con2KineticEngy( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                       EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
                   Fluid_lv[7] += Ered;
 #                 else
                   //###NOTE: assuming Etot = Eint + Ekin + Emag

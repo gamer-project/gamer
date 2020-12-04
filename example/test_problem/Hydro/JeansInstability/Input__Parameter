@@ -131,6 +131,7 @@ SOR_MIN_ITER                 -1           # minimum number of iterations in SOR:
 POT_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU Poisson solver (<=0=auto) [-1]
 OPT__GRA_P5_GRADIENT          0           # 5-points gradient in the Gravity solver (must have GRA/USG_GHOST_SIZE_G>=2) [0]
 OPT__SELF_GRAVITY             1           # add self-gravity [1]
+EXT_POT_TABLE_NAME            EmptyTable  # external potential table: filename
 OPT__GRAVITY_EXTRA_MASS       0           # add extra mass source when computing gravity [0]
 
 

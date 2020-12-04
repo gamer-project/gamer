@@ -161,6 +161,15 @@ void Init_GAMER( int *argc, char ***argv )
    Init_MemAllocate();
 
 
+// load the external potential table
+// --> before Init_ByFunction() so that the test problem initializer can access
+//     the external potential table if required
+// --> after Init_MemAllocate() to allocate the potential table array first
+#  ifdef GRAVITY
+   if ( OPT__EXT_POT == EXT_POT_TABLE )   Init_LoadExtPotTable();
+#  endif
+
+
 // initialize particles
 #  ifdef PARTICLE
    switch ( amr->Par->Init )

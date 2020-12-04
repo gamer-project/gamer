@@ -339,13 +339,13 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
    real PriNume[NCOMP_FLUID];
    Hydro_Con2Pri( Nume, PriNume, (real)NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
                   (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                  NULL, NULL, NULL );
+                  EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, NULL );
 #  else
    Nume[ENGY] = Hydro_Con2Pres( Nume[DENS], Nume[MOMX], Nume[MOMY], Nume[MOMZ], Nume[ENGY], Nume+NCOMP_FLUID,
                                 CheckMinPres_No, NULL_REAL, Emag_Nume,
                                 EoS_DensEint2Pres_CPUPtr,
                                 EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                EoS_AuxArray, NULL );
+                                EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 
@@ -367,7 +367,7 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
    real AnalPri[NCOMP_FLUID];
    Hydro_Con2Pri( Anal, AnalPri, (real)NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
                   (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                  NULL, NULL, NULL );
+                  EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, NULL );
 #  else    // convert total energy to pressure (HD)
    const real Emag_Zero = 0.0;   // Anal[ENGY] set by AnalFunc_Flu() does NOT include magentic energy
 
@@ -375,7 +375,7 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
                                 CheckMinPres_No, NULL_REAL, Emag_Zero,
                                 EoS_DensEint2Pres_CPUPtr,
                                 EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                EoS_AuxArray, NULL );
+                                EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 #  endif
 #  endif
 

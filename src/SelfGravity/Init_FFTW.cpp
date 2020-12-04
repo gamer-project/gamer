@@ -15,7 +15,7 @@ rfftwnd_mpi_plan FFTW_Plan, FFTW_Plan_Inv, FFTW_Plan_PS;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_FFTW
-// Description :  Create the FFTW plans 
+// Description :  Create the FFTW plans
 //-------------------------------------------------------------------------------------------------------
 void Init_FFTW()
 {
@@ -27,7 +27,7 @@ void Init_FFTW()
    int FFT_Size[3] = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
 
 // the zero-padding method is adopted for the isolated BC.
-   if ( OPT__BC_POT == BC_POT_ISOLATED )  
+   if ( OPT__BC_POT == BC_POT_ISOLATED )
       for (int d=0; d<3; d++)    FFT_Size[d] *= 2;
 
 // check
@@ -40,18 +40,18 @@ void Init_FFTW()
 
 // create plans for the self-gravity solver
 #  ifdef SERIAL
-   FFTW_Plan     = rfftw3d_create_plan( FFT_Size[2], FFT_Size[1], FFT_Size[0], FFTW_REAL_TO_COMPLEX, 
+   FFTW_Plan     = rfftw3d_create_plan( FFT_Size[2], FFT_Size[1], FFT_Size[0], FFTW_REAL_TO_COMPLEX,
                                         FFTW_ESTIMATE | FFTW_IN_PLACE );
 
-   FFTW_Plan_Inv = rfftw3d_create_plan( FFT_Size[2], FFT_Size[1], FFT_Size[0], FFTW_COMPLEX_TO_REAL, 
+   FFTW_Plan_Inv = rfftw3d_create_plan( FFT_Size[2], FFT_Size[1], FFT_Size[0], FFTW_COMPLEX_TO_REAL,
                                         FFTW_ESTIMATE | FFTW_IN_PLACE );
 
 #  else
 
-   FFTW_Plan     = rfftw3d_mpi_create_plan( MPI_COMM_WORLD, FFT_Size[2], FFT_Size[1], FFT_Size[0], 
+   FFTW_Plan     = rfftw3d_mpi_create_plan( MPI_COMM_WORLD, FFT_Size[2], FFT_Size[1], FFT_Size[0],
                                             FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE );
 
-   FFTW_Plan_Inv = rfftw3d_mpi_create_plan( MPI_COMM_WORLD, FFT_Size[2], FFT_Size[1], FFT_Size[0], 
+   FFTW_Plan_Inv = rfftw3d_mpi_create_plan( MPI_COMM_WORLD, FFT_Size[2], FFT_Size[1], FFT_Size[0],
                                             FFTW_COMPLEX_TO_REAL, FFTW_ESTIMATE );
 #  endif
 
@@ -60,10 +60,10 @@ void Init_FFTW()
    if ( OPT__BC_POT == BC_POT_ISOLATED )
    {
 #     ifdef SERIAL
-      FFTW_Plan_PS = rfftw3d_create_plan( NX0_TOT[2], NX0_TOT[1], NX0_TOT[0], FFTW_REAL_TO_COMPLEX, 
+      FFTW_Plan_PS = rfftw3d_create_plan( NX0_TOT[2], NX0_TOT[1], NX0_TOT[0], FFTW_REAL_TO_COMPLEX,
                                           FFTW_ESTIMATE | FFTW_IN_PLACE );
 #     else
-      FFTW_Plan_PS = rfftw3d_mpi_create_plan( MPI_COMM_WORLD, NX0_TOT[2], NX0_TOT[1], NX0_TOT[0], 
+      FFTW_Plan_PS = rfftw3d_mpi_create_plan( MPI_COMM_WORLD, NX0_TOT[2], NX0_TOT[1], NX0_TOT[0],
                                               FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE );
 #     endif
    }
@@ -72,7 +72,7 @@ void Init_FFTW()
       FFTW_Plan_PS = FFTW_Plan;
 
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" ); 
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
 } // FUNCTION : Init_FFTW
 
@@ -80,7 +80,7 @@ void Init_FFTW()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  End_FFTW
-// Description :  Delete the FFTW plans 
+// Description :  Delete the FFTW plans
 //-------------------------------------------------------------------------------------------------------
 void End_FFTW()
 {
@@ -88,13 +88,13 @@ void End_FFTW()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... ", __FUNCTION__ );
 
 #  ifdef SERIAL
-   if ( FFTW_Plan_PS != FFTW_Plan ) 
+   if ( FFTW_Plan_PS != FFTW_Plan )
    rfftwnd_destroy_plan    ( FFTW_Plan_PS  );
 
    rfftwnd_destroy_plan    ( FFTW_Plan     );
    rfftwnd_destroy_plan    ( FFTW_Plan_Inv );
 #  else
-   if ( FFTW_Plan_PS != FFTW_Plan ) 
+   if ( FFTW_Plan_PS != FFTW_Plan )
    rfftwnd_mpi_destroy_plan( FFTW_Plan_PS  );
 
    rfftwnd_mpi_destroy_plan( FFTW_Plan     );

@@ -94,7 +94,10 @@ void CPU_HydroGravitySolver(
    const double TimeNew, const double TimeOld, const real MinEint,
    const EoS_GUESS_t EoS_GuessHTilde_Func,
    const EoS_TEM2H_t EoS_Temp2HTilde_Func,
-   const EoS_H2TEM_t EoS_HTilde2Temp_Func )
+   const EoS_H2TEM_t EoS_HTilde2Temp_Func,
+   const double c_EoS_AuxArray_Flt[],
+   const int    c_EoS_AuxArray_Int[],
+   const real *const c_EoS_Table[EOS_NTABLE_MAX] )
 #endif
 {
 
@@ -125,6 +128,9 @@ void CPU_HydroGravitySolver(
 #  endif
 #  endif // #ifdef GAMER_DEBUG
 
+#if ( defined UNSPLIT_GRAVITY && defined SRHD )
+# error: SRHD do not support UNSPLIT_GRAVITY !!
+#endif
 
    const real Gra_Const   = ( P5_Gradient ) ? -dt/(12.0*dh) : -dt/(2.0*dh);
    const int  PS1_sqr     = SQR(PS1);
@@ -307,7 +313,8 @@ void CPU_HydroGravitySolver(
 
          Hydro_Con2Pri( Cons_new, Prim_new, NULL_REAL, NULL_BOOL, NULL_INT, NULL,
                         NULL_BOOL, NULL_REAL, NULL, NULL, EoS_GuessHTilde_Func,
-                        EoS_HTilde2Temp_Func, NULL, NULL, &LorentzFactor_new );
+                        EoS_HTilde2Temp_Func, c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int,
+                        c_EoS_Table, NULL, &LorentzFactor_new );
 
          rho_new = Prim_new[0];
          px_new  = Cons_new[MOMX];
@@ -342,7 +349,8 @@ void CPU_HydroGravitySolver(
 
          Hydro_Con2Pri( Cons_old, Prim_old, NULL_REAL, NULL_BOOL, NULL_INT, NULL,
                         NULL_BOOL, NULL_REAL, NULL, NULL, EoS_GuessHTilde_Func,
-                        EoS_HTilde2Temp_Func, NULL, NULL, &LorentzFactor_old );
+                        EoS_HTilde2Temp_Func, c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int,
+                        c_EoS_Table, NULL, &LorentzFactor_old );
  
          rho_old = Prim_old[0];
          Vx_old  = Prim_old[1] / LorentzFactor_old;
@@ -473,7 +481,7 @@ void CPU_HydroGravitySolver(
 #        ifdef SRHD
          real Msqr = SQR(px_new) + SQR(py_new) + SQR(pz_new);
          real Dsqr = SQR(Cons_new[DENS]);
-         real HTilde = EoS_Temp2HTilde_Func( Temperature, NULL, NULL );
+         real HTilde = EoS_Temp2HTilde_Func( Temperature, NULL, c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
          real h = HTilde + (real)1.0;
          real factor = SQRT( Dsqr*h*h + Msqr );
 

@@ -7,6 +7,9 @@
 void (*Init_ExtAcc_Ptr)() = NULL;
 void (*Init_ExtPot_Ptr)() = NULL;
 
+// default initialization function of the tabular external potential
+void Init_ExtPot_Tabular();
+
 
 
 
@@ -28,6 +31,9 @@ void (*Init_ExtPot_Ptr)() = NULL;
 void Init_ExtAccPot()
 {
 
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
+
+
 // external acceleration
    if ( OPT__EXT_ACC )
    {
@@ -38,9 +44,16 @@ void Init_ExtAccPot()
 // external potential
    if ( OPT__EXT_POT )
    {
+//    set the default function pointer of the tabular external potential
+//    --> necessary only if it has not been overwritten by a test problem initializer
+      if ( OPT__EXT_POT == EXT_POT_TABLE  &&  Init_ExtPot_Ptr == NULL )    Init_ExtPot_Ptr = Init_ExtPot_Tabular;
+
       if ( Init_ExtPot_Ptr != NULL )   Init_ExtPot_Ptr();
       else                             Aux_Error( ERROR_INFO, "Init_ExtPot_Ptr == NULL !!\n" );
    }
+
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_ExtAccPot
 

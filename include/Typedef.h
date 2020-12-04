@@ -381,17 +381,25 @@ const SF_CreateStarScheme_t
 #endif
 
 
-// function pointers
-typedef real (*EoS_GUESS_t)( const real Con[], real* const Constant );
-typedef void (*EoS_H2TEM_t)( const real HTilde, real* const Temp, real* const DiffTemp, const real Passive[], const double AuxArray[] );
-typedef real (*EoS_TEM2H_t)( const real Temp, const real Passive[], const double AuxArray[] );
-typedef real (*EoS_TEM2C_t)( const real Rho, const real Pres, const real Passive[], const double AuxArray[] );
-typedef real (*EoS_DE2P_t)( const real Dens, const real Eint, const real Passive[], const double UserArray[] );
-typedef real (*EoS_DP2E_t)( const real Dens, const real Pres, const real Passive[], const double UserArray[] );
-typedef real (*EoS_DP2C_t)( const real Dens, const real Pres, const real Passive[], const double UserArray[] );
-typedef void (*ExtAcc_t)( real Acc[], const double x, const double y, const double z, const double Time, const double UserArray[] );
-typedef real (*ExtPot_t)( const double x, const double y, const double z, const double Time, const double UserArray[],
-                          const ExtPotUsage_t Usage );
+typedef real (*EoS_GUESS_t)( const real Cons[], real* const Constant, const double AuxArray_Flt[],
+                             const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] );
+typedef void (*EoS_H2TEM_t)( const real HTilde, real* const Temp, real* const DiffTemp, const real Passive[],
+                             const double AuxArray_Flt[], const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] );
+typedef real (*EoS_TEM2H_t)( const real Temp, const real Passive[], const double AuxArray_Flt[],
+                             const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] );
+typedef real (*EoS_TEM2C_t)( const real Rho, const real Pres, const real Passive[], const double AuxArray_Flt[],
+                             const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] );
+typedef real (*EoS_DE2P_t)( const real Dens, const real Eint, const real Passive[], const double AuxArray_Flt[],
+                            const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] );
+typedef real (*EoS_DP2E_t)( const real Dens, const real Pres, const real Passive[], const double AuxArray_Flt[],
+                            const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] );
+typedef real (*EoS_DP2C_t)( const real Dens, const real Pres, const real Passive[], const double AuxArray_Flt[],
+                            const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] );
+typedef void (*ExtAcc_t)( real Acc[], const double x, const double y, const double z, const double Time,
+                          const double UserArray[] );
+typedef real (*ExtPot_t)( const double x, const double y, const double z, const double Time,
+                          const double UserArray_Flt[], const int UserArray_Int[],
+                          const ExtPotUsage_t Usage, const real PotTable[] );
 
 
 // options in Aux_ComputeProfile()

@@ -18,13 +18,13 @@ BOX_SIZE                      200.0        # box size along the longest side
 NX0_TOT_X                     160          # number of base-level cells along x
 NX0_TOT_Y                     160          # number of base-level cells along y
 NX0_TOT_Z                     160          # number of base-level cells along z
-OMP_NTHREAD                  -1            # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
-END_T                        -1.0          # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
-END_STEP                     -1            # end step (<0=auto -> must be set by test problems or restart) [-1]
+OMP_NTHREAD                     4          # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
+END_T                          -1.0        # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
+END_STEP                       -1          # end step (<0=auto -> must be set by test problems or restart) [-1]
 
 
 # test problems
-TESTPROB_ID                   604         # test problem ID [0]
+TESTPROB_ID                    17         # test problem ID [0]
                                           # 600: blast wave in sr-hydro
                                           # 601: Riemann problem in sr-hydro
                                           # 602: double mach reflection in pure sr-hydro
@@ -33,7 +33,7 @@ TESTPROB_ID                   604         # test problem ID [0]
 
 # code units (in cgs)
 OPT__UNIT                     1           # specify code units -> must set exactly 3 basic units below [0] ##USELESS FOR COMOVING##
-UNIT_L         3.08567758149e18           # length unit        (<=0 -> set to UNIT_V*UNIT_T or (UNIT_M/UNIT_D)^(1/3)) [-1.0]
+UNIT_L         3.08567758149e21           # length unit        (<=0 -> set to UNIT_V*UNIT_T or (UNIT_M/UNIT_D)^(1/3)) [-1.0]
 UNIT_M                        0           # mass unit          (<=0 -> set to UNIT_D*UNIT_L^3)                        [-1.0]
 UNIT_T                        0           # time unit          (<=0 -> set to UNIT_L/UNIT_V)                          [-1.0]
 UNIT_V                        0           # velocity unit      (<=0 -> set to UNIT_L/UNIT_T)                          [-1.0]
@@ -54,7 +54,7 @@ OPT__BC_POT                   2           # gravity boundary condition: (1=perio
 DT__FLUID                     0.4         # dt criterion: fluid solver CFL factor (<0=auto) [-1.0]
 DT__FLUID_INIT                0.4         # dt criterion: DT__FLUID at the first step (<0=auto) [-1.0]
 DT_SPEED_OF_LIGHT             0           # compute time step based on speed of light ## SRHD ONLY ##
-DT__GRAVITY                   0.2         # dt criterion: gravity solver safety factor (<0=auto) [-1.0]
+DT__GRAVITY                   0.5         # dt criterion: gravity solver safety factor (<0=auto) [-1.0]
 DT__SYNC_PARENT_LV            0.1         # dt criterion: allow dt to adjust by (1.0+DT__SYNC_PARENT) in order to synchronize
                                           #               with the parent level (for OPT__DT_LEVEL==3 only) [0.1]
 DT__SYNC_CHILDREN_LV          0.1         # dt criterion: allow dt to adjust by (1.0-DT__SYNC_CHILDREN) in order to synchronize
@@ -72,7 +72,7 @@ REGRID_COUNT                  4           # refine every REGRID_COUNT sub-step [
 FLAG_BUFFER_SIZE              8           # number of buffer cells for the flag operation (0~PATCH_SIZE) [PATCH_SIZE]
 FLAG_BUFFER_SIZE_MAXM1_LV     4           # FLAG_BUFFER_SIZE at the level MAX_LEVEL-1 (<0=auto -> FLAG_BUFFER_SIZE) [-1]
 FLAG_BUFFER_SIZE_MAXM2_LV    -1           # FLAG_BUFFER_SIZE at the level MAX_LEVEL-2 (<0=auto) [-1]
-MAX_LEVEL                     0           # maximum refinement level (0~NLEVEL-1) [NLEVEL-1]
+MAX_LEVEL                     4           # maximum refinement level (0~NLEVEL-1) [NLEVEL-1]
 OPT__FLAG_RHO                 0           # flag: density (Input__Flag_Rho) [0]
 OPT__FLAG_RHO_GRADIENT        0           # flag: density gradient (Input__Flag_RhoGradient) [0]
 OPT__FLAG_PRES_GRADIENT       0           # flag: pressure gradient (Input__Flag_PresGradient) [0] ##SRHD/HYDRO##
@@ -114,7 +114,7 @@ DUAL_ENERGY_SWITCH            2.0e-2      # apply dual-energy if E_int/E_kin < D
 
 
 # fluid solvers in all models
-FLU_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU fluid solver (<=0=auto) [-1]
+FLU_GPU_NPGROUP             128           # number of patch groups sent into the CPU/GPU fluid solver (<=0=auto) [-1]
 GPU_NSTREAM                  -1           # number of CUDA streams for the asynchronous memory copy in GPU (<=0=auto) [-1]
 OPT__FIXUP_FLUX               1           # correct coarse grids by the fine-grid boundary fluxes [1] ##SRHD and ELBDM ONLY##
 OPT__FIXUP_ELECTRIC           1           # correct coarse grids by the fine-grid boundary electric field [1] ##MHD ONLY##
@@ -134,9 +134,23 @@ NEWTON_G                      1.0         # gravitational constant (will be over
 SOR_OMEGA                    -1.0         # over-relaxation parameter in SOR: (<0=auto) [-1.0]
 SOR_MAX_ITER                 -1           # maximum number of iterations in SOR: (<0=auto) [-1]
 SOR_MIN_ITER                 -1           # minimum number of iterations in SOR: (<0=auto) [-1]
-POT_GPU_NPGROUP              -1           # number of patch groups sent into the GPU Poisson solver (<=0=auto) [-1]
-OPT__GRA_P5_GRADIENT          0           # 5-points gradient in the Gravity solver (must have GRA/USG_GHOST_SIZE>=2) [0]
-OPT__GRAVITY_TYPE             1           # gravity source: (1=self-gravity, 2=external gravity, 3=both) ##2/3 for HYDRO ONLY##
+MG_MAX_ITER                  -1           # maximum number of iterations in multigrid: (<0=auto) [-1]
+MG_NPRE_SMOOTH               -1           # number of pre-smoothing steps in multigrid: (<0=auto) [-1]
+MG_NPOST_SMOOTH              -1           # number of post-smoothing steps in multigrid: (<0=auto) [-1]
+MG_TOLERATED_ERROR           -1.0         # maximum tolerated error in multigrid (<0=auto) [-1.0]
+POT_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU Poisson solver (<=0=auto) [-1]
+OPT__GRA_P5_GRADIENT          0           # 5-points gradient in the Gravity solver (must have GRA/USG_GHOST_SIZE_G>=2) [0]
+OPT__SELF_GRAVITY             1           # add self-gravity [1]
+OPT__EXT_ACC                  0           # add external acceleration (0=off, 1=function, 2=table) [0] ##HYDRO ONLY##
+OPT__EXT_POT                  2           # add external potential    (0=off, 1=function, 2=table) [0]
+EXT_POT_TABLE_NAME            EmptyTable  # external potential table: filename
+EXT_POT_TABLE_NPOINT_X      260           # NX0_TOT_X + 2*GRA_GHOST_SIZE
+EXT_POT_TABLE_NPOINT_Y      260           # NX0_TOT_Y + 2*GRA_GHOST_SIZE
+EXT_POT_TABLE_NPOINT_Z      260           # NX0_TOT_Z + 2*GRA_GHOST_SIZE
+EXT_POT_TABLE_DH              0.0390625   # BOX_SIZE / NX0_TOT_X  
+EXT_POT_TABLE_EDGEL_X        -0.0390625   # -EXT_POT_TABLE_DH 
+EXT_POT_TABLE_EDGEL_Y        -0.0390625   # -EXT_POT_TABLE_DH
+EXT_POT_TABLE_EDGEL_Z        -0.0390625   # -EXT_POT_TABLE_DH
 
 
 # initialization
@@ -167,7 +181,7 @@ OPT__OUTPUT_POT               0           # output gravitational potential [0] #
 OPT__OUTPUT_CC_MAG            1           # output **cell-centered** magnetic field (necessary for yt analysis) [1] ##MHD ONLY##
 OPT__OUTPUT_MODE              2           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
 OUTPUT_STEP                   5           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
-OUTPUT_DT                  6662           # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
+OUTPUT_DT                    -1.0         # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
 OUTPUT_PART_X                -1.0         # x coordinate for OPT__OUTPUT_PART [-1.0]
 OUTPUT_PART_Y                -1.0         # y coordinate for OPT__OUTPUT_PART [-1.0]
 OUTPUT_PART_Z                -1.0         # z coordinate for OPT__OUTPUT_PART [-1.0]
