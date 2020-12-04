@@ -41,9 +41,12 @@ Amb_UniformVel_x                               +0.0         # ambient velocity x
 Amb_UniformVel_y                               +0.0         # ambient velocity y [0.0]
 Amb_UniformVel_z                               +0.0         # ambient velocity z [0.0]
 
-Amb_FluSphereRadius                              -1
-CsCrossingTime                                   -1         # the time taken for sound to travel one diameter of sphere
-FreeFallingTime                                  -1         # free-falling time
+# estimate default evolution time (i.e. END_T)
+Amb_FluSphereRadius                              -1         # radius of sphere
+CharacteristicSpeed                              -1         # the characteristic speed of the simulation problem
+                                                            # the default end-time (END_T) will be estimated from
+                                                            # `CharacteristicSpeed` and `BOX_SIZE`
+                                                            # The unit of `CharacteristicSpeed` is UNIT_V
 
 # time-dependent source varibles
 Flag_BurstDens                                    0         # [0/1]: off/on

@@ -33,8 +33,9 @@ static bool     Jet_SmoothVel;           // smooth radial component of 4-velocit
 
 
 // sound speed
-static double   CsCrossingTime;          // the time taken for sound to travel one diameter of sphere
-static double   FreeFallingTime;         // free-falling time 
+static double   CharacteristicSpeed;     // the characteristic speed of the simulation problem
+                                         // the default end-time (END_T) will be estimated from
+                                         // `CharacteristicSpeed` and `BOX_SIZE`
 
 // =======================================================================================
 /*        G       A       C              */ 
@@ -189,8 +190,7 @@ void SetParameter()
 
 
    ReadPara->Add( "Amb_FluSphereRadius",     &Amb_FluSphereRadius,     -1.0,          NoMin_double,   NoMax_double    );
-   ReadPara->Add( "CsCrossingTime",          &CsCrossingTime,          -1.0,          NoMin_double,   NoMax_double    );
-   ReadPara->Add( "FreeFallingTime",         &FreeFallingTime,         -1.0,          NoMin_double,   NoMax_double    );
+   ReadPara->Add( "CharacteristicSpeed",     &CharacteristicSpeed,     -1.0,          NoMin_double,   NoMax_double    );
 
 // load time-dependent source varibles
    ReadPara->Add( "Jet_BurstStartTime",      &Jet_BurstStartTime,      -1.0,          NoMin_double,   NoMax_double    );
@@ -257,13 +257,17 @@ void SetParameter()
 
 
 // check uniform ambient
-   if ( Jet_Ambient ) // uniform (Jet_Ambient == true)
+   if ( !Jet_Ambient ) // uniform (Jet_Ambient == true)
    {
 #     ifdef GRAVITY
       Aux_Error( ERROR_INFO, "GRAVITY must be disabled !!\n" );
 #     endif
    }
 
+   if ( Jet_Ambient && OPT__INIT != 3 )
+   {
+      Aux_Error( ERROR_INFO, "OPT__INIT must be 3 !!\n" );
+   }
 
 // check UNIT_L is in reasonable range
    if ( ( UNIT_L <= 0.5*Const_kpc || 2.0*Const_kpc <= UNIT_L ) && OPT__UNIT )
@@ -327,9 +331,9 @@ void SetParameter()
 // (4) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
    const long   End_Step_Default = __INT_MAX__;
-   const double End_T_Default1   = Amb_FluSphereRadius * UNIT_L / (CsCrossingTime*UNIT_V) / UNIT_T;
+   const double End_T_Default1   = 10.0*Amb_FluSphereRadius * UNIT_L / (CharacteristicSpeed*UNIT_V) / UNIT_T;
    const double Jet_Src3Vel      = Jet_SrcVel / sqrt(1.0 + Jet_SrcVel*Jet_SrcVel);
-   const double End_T_Default2   = BOX_SIZE            * UNIT_L / (Jet_Src3Vel*UNIT_V) / UNIT_T;
+   const double End_T_Default2   = 10.0*BOX_SIZE            * UNIT_L / (Jet_Src3Vel        *UNIT_V) / UNIT_T;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
@@ -339,17 +343,17 @@ void SetParameter()
    if ( END_T < 0.0 ) {
       if ( Jet_Exhaust == 0 )
       {
-        if ( CsCrossingTime == -1.0 ) Aux_Error( ERROR_INFO, "CsCrossingTime must be provided !!\n" );
-        else                          END_T = End_T_Default1;
+        if ( CharacteristicSpeed == -1.0 ) Aux_Error( ERROR_INFO, "CharacteristicSpeed must be provided !!\n" );
+        else                               END_T = End_T_Default1;
       }
-      else                            END_T = End_T_Default2;
+      else                                 END_T = End_T_Default2;
 
       PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
    }
 
    if ( OUTPUT_DT < 0.0 )
    {
-      OUTPUT_DT = END_T / 10.0;
+      OUTPUT_DT = END_T / 20.0;
       PRINT_WARNING( "OUTPUT_DT", OUTPUT_DT, FORMAT_REAL );
    }
 
@@ -393,8 +397,7 @@ void SetParameter()
 
    if ( MPI_Rank == 0 )
    {
-     Aux_Message( stdout, "  CsCrossingTime           = %14.7e kpc/c\n",      CsCrossingTime / UNIT_T                         );
-     Aux_Message( stdout, "  FreeFallingTime          = %14.7e kpc/c\n",      FreeFallingTime / UNIT_T                        );
+     Aux_Message( stdout, "  CharacteristicSpeed      = %14.7e c\n",          CharacteristicSpeed / UNIT_T                    );
    }
 
 
@@ -470,6 +473,36 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    Hydro_Pri2Con( PriReal, fluid, NULL_BOOL, NULL_INT, NULL, EoS_DensPres2Eint_CPUPtr,
                   EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+
+
+// Uniform disk
+   const double dh     = amr->dh[lv];                                                         // grid size
+
+   const double Center[3] = { 0.5*amr->BoxSize[0], 
+                              0.5*amr->BoxSize[1], 
+                              0.5*amr->BoxSize[2] };
+
+   const double dR[3]     = { x-Center[0]-Jet_CenOffset[0], 
+                              y-Center[1]-Jet_CenOffset[1], 
+                              z-Center[2]-Jet_CenOffset[2] };
+   
+   const double R         = sqrt( SQR(dR[0]) + SQR(dR[1]) );
+
+   double DensRatio, DiskRadius, DiskHeight;
+
+   DiskRadius = 0.4*amr->BoxSize[0];
+   DiskHeight = 0.05*amr->BoxSize[2]; 
+   DensRatio  = 10.0;             // compared to Jet_SrcDens
+
+   if ( R <= DiskRadius && fabs(dR[2]) <= DiskHeight )
+   {
+      PriReal[0] *= DensRatio;
+
+      Hydro_Pri2Con( PriReal, fluid, NULL_BOOL, NULL_INT, NULL, EoS_DensPres2Eint_CPUPtr,
+                     EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+   }
+
 
 } // FUNCTION : SetGridIC
 
