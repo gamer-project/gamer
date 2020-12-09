@@ -88,12 +88,14 @@ extern OptTimeStepLevel_t OPT__DT_LEVEL;
 // ============================================================================================================
 // (2-1) fluid solver in different models
 #if   ( MODEL == HYDRO )
-extern double           FlagTable_PresGradient[NLEVEL-1], FlagTable_Vorticity[NLEVEL-1], FlagTable_Jeans[NLEVEL-1];
+extern double           FlagTable_PresGradient[NLEVEL-1], FlagTable_Vorticity[NLEVEL-1], FlagTable_Jeans[NLEVEL-1],
+                        FlagTable_EngyGradient[NLEVEL-1];
 extern double           GAMMA, MINMOD_COEFF, MOLECULAR_WEIGHT, ISO_TEMP;
 extern LR_Limiter_t     OPT__LR_LIMITER;
 extern Opt1stFluxCorr_t OPT__1ST_FLUX_CORR;
 extern OptRSolver1st_t  OPT__1ST_FLUX_CORR_SCHEME;
-extern bool             OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP;
+extern bool             OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP,
+                        OPT__FLAG_ENGY_GRADIENT;
 extern bool             OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, JEANS_MIN_PRES, OPT__LAST_RESORT_FLOOR;
 extern int              OPT__CK_NEGATIVE, JEANS_MIN_PRES_LEVEL, JEANS_MIN_PRES_NCELL;
 extern double           MIN_DENS, MIN_PRES, MIN_EINT;
@@ -109,9 +111,9 @@ extern double           UNIT_B;
 extern bool             OPT__INIT_BFIELD_BYFILE;
 #endif
 #ifdef SRHD
-extern double           FlagTable_EngyGradient[NLEVEL-1], FlagTable_4Velocity[NLEVEL-1], FlagTable_Mom_Over_Dens[NLEVEL-1],
+extern double           FlagTable_4Velocity[NLEVEL-1], FlagTable_Mom_Over_Dens[NLEVEL-1],
                         FlagTable_LorentzFactorGradient[NLEVEL-1];
-extern bool             OPT__FLAG_MOM_OVER_DENS, OPT__FLAG_4VELOCITY, OPT__FLAG_ENGY_GRADIENT, OPT__FLAG_LORENTZ_GRADIENT;
+extern bool             OPT__FLAG_MOM_OVER_DENS, OPT__FLAG_4VELOCITY, OPT__FLAG_LORENTZ_GRADIENT;
 extern double           MIN_TEMP;
 extern int              DT_SPEED_OF_LIGHT;
 #endif

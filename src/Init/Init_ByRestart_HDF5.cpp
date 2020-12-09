@@ -1774,6 +1774,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__Flag_RhoGradient",   &RS.Opt__Flag_RhoGradient,   SID, TID, NonFatal, &RT.Opt__Flag_RhoGradient,    1, NonFatal );
 #  if ( MODEL == HYDRO )
    LoadField( "Opt__Flag_PresGradient",  &RS.Opt__Flag_PresGradient,  SID, TID, NonFatal, &RT.Opt__Flag_PresGradient,   1, NonFatal );
+   LoadField( "Opt__Flag_EngyGradient",  &RS.Opt__Flag_EngyGradient,  SID, TID, NonFatal, &RT.Opt__Flag_EngyGradient,   1, NonFatal );
    LoadField( "Opt__Flag_Vorticity",     &RS.Opt__Flag_Vorticity,     SID, TID, NonFatal, &RT.Opt__Flag_Vorticity,      1, NonFatal );
    LoadField( "Opt__Flag_Jeans",         &RS.Opt__Flag_Jeans,         SID, TID, NonFatal, &RT.Opt__Flag_Jeans,          1, NonFatal );
 #  ifdef MHD
@@ -1782,7 +1783,6 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  ifdef SRHD
    LoadField( "Opt__Flag_MomOverDens",   &RS.Opt__Flag_MomOverDens,   SID, TID, NonFatal, &RT.Opt__Flag_MomOverDens,    1, NonFatal );
    LoadField( "Opt__Flag_4Velocity",     &RS.Opt__Flag_4Velocity,     SID, TID, NonFatal, &RT.Opt__Flag_4Velocity,      1, NonFatal );
-   LoadField( "Opt__Flag_EngyGradient",  &RS.Opt__Flag_EngyGradient,  SID, TID, NonFatal, &RT.Opt__Flag_EngyGradient,   1, NonFatal );
    LoadField( "Opt__Flag_LorentzGradient",&RS.Opt__Flag_LorentzGradient,     SID, TID, NonFatal, &RT.Opt__Flag_LorentzGradient,      1, NonFatal );
 #  endif
 #  endif

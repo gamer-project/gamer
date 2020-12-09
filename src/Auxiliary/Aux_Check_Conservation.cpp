@@ -187,7 +187,7 @@ void Aux_Check_Conservation( const char *comment )
                   printf("%s: %d need EoS table !! \n", __FUNCTION__, __LINE__);
                   exit(0);
 #                 else
-                  Eint         = Hydro_Con2Eint(__FUNCTION__, __LINE__, Dens, MomX, MomY, MomZ, Etot, EoS_GuessHTilde_CPUPtr,
+                  Eint         = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Etot, EoS_GuessHTilde_CPUPtr,
                                                  EoS_HTilde2Temp_CPUPtr, CheckMinEint_No, NULL_REAL, Emag );
 #                 endif
 
