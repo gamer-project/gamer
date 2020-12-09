@@ -295,6 +295,7 @@ void Aux_Check_Parameter()
    bool Flag = ( OPT__FLAG_RHO  ||  OPT__FLAG_RHO_GRADIENT  ||  OPT__FLAG_LOHNER_DENS  ||  OPT__FLAG_USER );
 #  if ( MODEL == HYDRO )
    Flag |= OPT__FLAG_PRES_GRADIENT;
+   Flag |= OPT__FLAG_ENGY_GRADIENT;
    Flag |= OPT__FLAG_VORTICITY;
    Flag |= OPT__FLAG_JEANS;
    Flag |= OPT__FLAG_LOHNER_ENGY;
@@ -304,7 +305,6 @@ void Aux_Check_Parameter()
    Flag |= OPT__FLAG_CURRENT;
 #  endif
 #  ifdef SRHD
-   Flag |= OPT__FLAG_ENGY_GRADIENT;
    Flag |= OPT__FLAG_4VELOCITY;
    Flag |= OPT__FLAG_MOM_OVER_DENS;
    Flag |= OPT__FLAG_LORENTZ_GRADIENT;

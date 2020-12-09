@@ -17,7 +17,9 @@ void Init_Load_FlagCriteria()
 
 #  if ( MODEL != HYDRO )
    const bool OPT__FLAG_PRES_GRADIENT = false;
+   const bool OPT__FLAG_ENGY_GRADIENT = false;
    double *FlagTable_PresGradient     = NULL;
+   double *FlagTable_EngyGradient     = NULL;
 
    const bool OPT__FLAG_VORTICITY     = false;
    double *FlagTable_Vorticity        = NULL;
@@ -35,8 +37,6 @@ void Init_Load_FlagCriteria()
    const bool OPT__FLAG_LORENTZ_GRADIENT   = false;
    double *FlagTable_LorentzFactorGradient = NULL;
 
-   const bool OPT__FLAG_ENGY_GRADIENT      = false;
-   double *FlagTable_EngyGradient          = NULL;
 
    const bool OPT__FLAG_4VELOCITY          = false;
    double *FlagTable_4Velocity             = NULL;
@@ -112,13 +112,13 @@ void Init_Load_FlagCriteria()
 
 #     if   ( MODEL == HYDRO )
       FlagTable_PresGradient[lv]    = -1.0;
+      FlagTable_EngyGradient[lv]    = -1.0;
       FlagTable_Vorticity   [lv]    = -1.0;
       FlagTable_Jeans       [lv]    = -1.0;
 #     ifdef MHD
       FlagTable_Current     [lv]    = -1.0;
 #     endif
 #     ifdef SRHD
-      FlagTable_EngyGradient          [lv]    = -1.0;
       FlagTable_4Velocity             [lv]    = -1.0;
       FlagTable_Mom_Over_Dens         [lv]    = -1.0;
       FlagTable_LorentzFactorGradient [lv]    = -1.0;

@@ -778,13 +778,13 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__FLAG_RHO_GRADIENT          %d\n",      OPT__FLAG_RHO_GRADIENT    );
 #     if ( MODEL == HYDRO )
       fprintf( Note, "OPT__FLAG_PRES_GRADIENT         %d\n",      OPT__FLAG_PRES_GRADIENT   );
+      fprintf( Note, "OPT__FLAG_ENGY_GRADIENT         %d\n",      OPT__FLAG_ENGY_GRADIENT   );
       fprintf( Note, "OPT__FLAG_VORTICITY             %d\n",      OPT__FLAG_VORTICITY       );
       fprintf( Note, "OPT__FLAG_JEANS                 %d\n",      OPT__FLAG_JEANS           );
 #     ifdef MHD
       fprintf( Note, "OPT__FLAG_CURRENT               %d\n",      OPT__FLAG_CURRENT         );
 #     endif
 #     ifdef SRHD
-      fprintf( Note, "OPT__FLAG_ENGY_GRADIENT         %d\n",      OPT__FLAG_ENGY_GRADIENT   );
       fprintf( Note, "OPT__FLAG_4VELOCITY             %d\n",      OPT__FLAG_4VELOCITY       );
       fprintf( Note, "OPT__FLAG_LORENTZ_GRADIENT      %d\n",      OPT__FLAG_LORENTZ_GRADIENT);
 #     endif
@@ -1273,7 +1273,6 @@ void Aux_TakeNote()
          fprintf( Note, "\n\n");
       }
 
-#     ifdef SRHD
       if ( OPT__FLAG_ENGY_GRADIENT )
       {
          fprintf( Note, "Flag Criterion (Reduced Energy Density Gradient in SRHD)\n" );
@@ -1284,6 +1283,7 @@ void Aux_TakeNote()
          fprintf( Note, "\n\n");
       }
 
+#     ifdef SRHD
       if ( OPT__FLAG_LORENTZ_GRADIENT )
       {
          fprintf( Note, "Flag Criterion (Lorentz factor Gradient in SRHD)\n" );

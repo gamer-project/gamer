@@ -388,13 +388,13 @@ struct InputPara_t
    int    Opt__Flag_RhoGradient;
 #  if ( MODEL == HYDRO )
    int    Opt__Flag_PresGradient;
+   int    Opt__Flag_EngyGradient;
    int    Opt__Flag_Vorticity;
    int    Opt__Flag_Jeans;
 #  ifdef MHD
    int    Opt__Flag_Current;
 #  endif
 #  ifdef SRHD
-   int    Opt__Flag_EngyGradient;
    int    Opt__Flag_LorentzGradient;
    int    Opt__Flag_4Velocity;
    int    Opt__Flag_MomOverDens;
@@ -656,13 +656,13 @@ struct InputPara_t
    hvl_t  FlagTable_User        [NLEVEL-1];
 #  if   ( MODEL == HYDRO )
    double FlagTable_PresGradient[NLEVEL-1];
+   double FlagTable_EngyGradient[NLEVEL-1];
    double FlagTable_Vorticity   [NLEVEL-1];
    double FlagTable_Jeans       [NLEVEL-1];
 #  ifdef MHD
    double FlagTable_Current     [NLEVEL-1];
 #  endif
 #  ifdef SRHD
-   double FlagTable_EngyGradient         [NLEVEL-1];
    double FlagTable_LorentzFactorGradient[NLEVEL-1];
    double FlagTable_4Velocity            [NLEVEL-1];
    double FlagTable_Mom_Over_Dens        [NLEVEL-1];

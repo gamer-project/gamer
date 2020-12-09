@@ -96,12 +96,21 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 #  endif
 
 
+#  if ( MODEL == HYDRO )
 // check pressure gradient
 // ===========================================================================================
-#  if ( MODEL == HYDRO )
    if ( OPT__FLAG_PRES_GRADIENT )
    {
       Flag |= Check_Gradient( i, j, k, &Pres[0][0][0], FlagTable_PresGradient[lv] );
+      if ( Flag )    return Flag;
+   }
+
+
+// check gradient of reduced energy density
+// ===========================================================================================
+   if ( OPT__FLAG_ENGY_GRADIENT )
+   {
+      Flag |= Check_Gradient( i, j, k, &Fluid[ENGY][0][0][0], FlagTable_EngyGradient[lv] );
       if ( Flag )    return Flag;
    }
 #  endif
@@ -171,15 +180,6 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
       Flag |= ( U > FlagTable_4Velocity[lv] );
 
-      if ( Flag )    return Flag;
-   }
-
-
-// check gradient of reduced energy density
-// ===========================================================================================
-   if ( OPT__FLAG_ENGY_GRADIENT )
-   {
-      Flag |= Check_Gradient( i, j, k, &Fluid[ENGY][0][0][0], FlagTable_EngyGradient[lv] );
       if ( Flag )    return Flag;
    }
 
