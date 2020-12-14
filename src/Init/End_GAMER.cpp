@@ -43,6 +43,10 @@ void End_GAMER()
    EoS_End();
 #  endif
 
+#  ifdef GRAVITY
+   End_ExtAccPot();
+#  endif
+
 
    if ( MPI_Rank == 0 )
    {
