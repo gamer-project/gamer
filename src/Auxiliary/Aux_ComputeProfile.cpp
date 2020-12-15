@@ -270,7 +270,8 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
          }
 
 
-#        pragma omp for schedule( runtime )
+//       use the "static" schedule for reproducibility
+#        pragma omp for schedule( static )
          for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
          {
 //          determine which type of patches to be looped
