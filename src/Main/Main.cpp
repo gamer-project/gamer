@@ -31,7 +31,7 @@ double               Time_Prev            [NLEVEL];
 double               FlagTable_Rho        [NLEVEL-1];
 double               FlagTable_RhoGradient[NLEVEL-1];
 double               FlagTable_Lohner     [NLEVEL-1][4];
-double               FlagTable_User       [NLEVEL-1];
+double              *FlagTable_User       [NLEVEL-1];
 double              *DumpTable = NULL;
 int                  DumpTable_NDump;
 int                  PassiveNorm_NVar;
@@ -53,6 +53,7 @@ double               OPT__CK_MEMFREE, INT_MONO_COEFF, UNIT_L, UNIT_M, UNIT_T, UN
 int                  OPT__UM_IC_LEVEL, OPT__UM_IC_NVAR, OPT__UM_IC_LOAD_NRANK, OPT__GPUID_SELECT, OPT__PATCH_COUNT;
 int                  INIT_DUMPID, INIT_SUBSAMPLING_NCELL, OPT__TIMING_BARRIER, OPT__REUSE_MEMORY, RESTART_LOAD_NRANK;
 bool                 OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_USER, OPT__FLAG_LOHNER_DENS, OPT__FLAG_REGION;
+int                  OPT__FLAG_USER_NUM;
 bool                 OPT__DT_USER, OPT__RECORD_DT, OPT__RECORD_MEMORY, OPT__MEMORY_POOL, OPT__RESTART_RESET;
 bool                 OPT__FIXUP_RESTRICT, OPT__INIT_RESTRICT, OPT__VERBOSE, OPT__MANUAL_CONTROL, OPT__UNIT;
 bool                 OPT__INT_TIME, OPT__OUTPUT_USER, OPT__OUTPUT_BASE, OPT__OVERLAP_MPI, OPT__TIMING_BALANCE;
@@ -213,8 +214,9 @@ double                SF_CREATE_STAR_MAX_STAR_MFRAC;
 
 // (2-9) equation of state
 #if ( MODEL == HYDRO )
-// a. auxiliary array
-double EoS_AuxArray[EOS_NAUX_MAX];
+// a. auxiliary arrays
+double EoS_AuxArray_Flt[EOS_NAUX_MAX];
+int    EoS_AuxArray_Int[EOS_NAUX_MAX];
 
 // b. function pointers
 EoS_DE2P_t EoS_DensEint2Pres_CPUPtr = NULL;
@@ -294,6 +296,11 @@ real (*h_Pot_Array_T[2])[ CUBE(GRA_NXT) ]                          = { NULL, NUL
 real (*h_Mag_Array_T[2])[NCOMP_MAG][ PS1P1*SQR(PS1) ]              = { NULL, NULL };
 #endif
 
+// (3-6) EoS tables
+#if ( MODEL == HYDRO )
+real *h_EoS_Table[EOS_NTABLE_MAX];
+#endif
+
 
 // 4. GPU (device) global memory arrays
 // =======================================================================================================
@@ -357,6 +364,11 @@ real (*d_Pot_Array_T)[ CUBE(GRA_NXT) ]                           = NULL;
 real (*d_Mag_Array_T)[NCOMP_MAG][ PS1P1*SQR(PS1) ]               = NULL;
 #endif
 #endif // #ifdef GPU
+
+// (4-6) EoS tables
+#if ( MODEL == HYDRO )
+real *d_EoS_Table[EOS_NTABLE_MAX];
+#endif
 
 
 // 5. timers

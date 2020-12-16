@@ -33,7 +33,9 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const EoS_DE2P_t EoS_DensEint2Pres,
                                const EoS_DP2E_t EoS_DensPres2Eint,
                                const EoS_DP2C_t EoS_DensPres2CSqr,
-                               const double EoS_AuxArray[] );
+                               const double EoS_AuxArray_Flt[],
+                               const int    EoS_AuxArray_Int[],
+                               const real *const EoS_Table[EOS_NTABLE_MAX] );
 void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
                               real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                         const int NFlux, const int NSkip_N, const int NSkip_T,
@@ -42,12 +44,13 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
                         const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[],
                         const real MinDens, const real MinPres, const bool DumpIntFlux, real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ],
                         const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2C_t EoS_DensPres2CSqr,
-                        const double EoS_AuxArray[] );
+                        const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                        const real *const EoS_Table[EOS_NTABLE_MAX] );
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                            const real dt, const real dh, const real MinDens, const real MinEint,
                            const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
-                           const double EoS_AuxArray[] );
+                           const double EoS_AuxArray_Flt[] );
 #ifdef MHD
 void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                           const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
@@ -143,9 +146,10 @@ void Hydro_TGradientCorrection(       real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ 
 //                EoS_DensEint2Pres_Func : Function pointer to the EoS routine of computing the gas pressure
 //                EoS_DensPres2Eint_Func :                    . . .                             gas internal energy
 //                EoS_DensPres2CSqr_Func :                    . . .                             sound speed square
-//                c_EoS_AuxArray         : Auxiliary array for the EoS routines (for CPU only)
-//                                         --> When using GPU, this array is stored in the constant memory header
-//                                             CUDA_ConstMemory.h and does not need to be passed as a function argument
+//                c_EoS_AuxArray_*       : Auxiliary arrays for the EoS routines (for CPU only)
+//                c_EoS_Table            : EoS tables                            (for CPU only)
+//                                         --> When using GPU, these CPU-only variables are stored in the constant memory
+//                                             header CUDA_ConstMemory.h and do not need to be passed as function arguments
 //-------------------------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __global__
@@ -205,7 +209,9 @@ void CPU_FluidSolver_CTU(
    const EoS_DE2P_t EoS_DensEint2Pres_Func,
    const EoS_DP2E_t EoS_DensPres2Eint_Func,
    const EoS_DP2C_t EoS_DensPres2CSqr_Func,
-   const double c_EoS_AuxArray[] )
+   const double c_EoS_AuxArray_Flt[],
+   const int    c_EoS_AuxArray_Int[],
+   const real* const c_EoS_Table[EOS_NTABLE_MAX] )
 #endif // #ifdef __CUDACC__ ... else ...
 {
 
@@ -274,7 +280,8 @@ void CPU_FluidSolver_CTU(
                                    Con2Pri_Yes, LR_Limiter, MinMod_Coeff, dt, dh,
                                    MinDens, MinPres, MinEint, NormPassive, NNorm, c_NormIdx,
                                    JeansMinPres, JeansMinPres_Coeff,
-                                   EoS_DensEint2Pres_Func, EoS_DensPres2Eint_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray );
+                                   EoS_DensEint2Pres_Func, EoS_DensPres2Eint_Func, EoS_DensPres2CSqr_Func,
+                                   c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
 
 
 //       2. evaluate the face-centered half-step fluxes by solving the Riemann problem
@@ -282,7 +289,8 @@ void CPU_FluidSolver_CTU(
                             NULL, NULL, NULL_REAL, NULL_REAL, NULL_REAL,
                             EXT_POT_NONE, EXT_ACC_NONE, NULL, NULL,
                             MinDens, MinPres, StoreFlux_No, NULL,
-                            EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray );
+                            EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func,
+                            c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
 
 
 //       3. evaluate electric field and update B field at the half time-step
@@ -321,7 +329,8 @@ void CPU_FluidSolver_CTU(
                             g_Pot_Array_USG[P], g_Corner_Array[P], dt, dh, Time,
                             UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray,
                             MinDens, MinPres, StoreFlux, g_Flux_Array[P],
-                            EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray );
+                            EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func,
+                            c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
 
 
 //       7. evaluate electric field and update B field at the full time-step
@@ -341,7 +350,7 @@ void CPU_FluidSolver_CTU(
 //       8. full-step evolution of the fluid data
          Hydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P], g_Mag_Array_Out[P],
                                g_FC_Flux_1PG, dt, dh, MinDens, MinEint, DualEnergySwitch,
-                               NormPassive, NNorm, c_NormIdx, c_EoS_AuxArray );
+                               NormPassive, NNorm, c_NormIdx, c_EoS_AuxArray_Flt );
 
       } // loop over all patch groups
    } // OpenMP parallel region

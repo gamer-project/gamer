@@ -27,7 +27,7 @@ void Init_LoadExtPotTable()
    if ( OPT__EXT_POT != EXT_POT_TABLE )   return;
 
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   %s ...\n", __FUNCTION__ );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
 // checks
@@ -48,18 +48,22 @@ void Init_LoadExtPotTable()
       Aux_Error( ERROR_INFO, "must disable EXT_POT_TABLE_FLOAT8 since FLOAT8 is off !!\n" );
 #  endif
 
-// table must cover the simulation domain
+// table must cover the simulation domain plus GRA_GHOST_SIZE (GRA_GHOST_SIZE-0.5, to be more specific)
+// level-one cells on each side
+// --> for CPU_ExtPotSolver() to fill in the ghost-zone potential (even when STORE_POT_GHOST is off)
+   const double ExtraWidth = 0.5*GRA_GHOST_SIZE*amr->dh[0]; // use GRA_GHOST_SIZE instead of GRA_GHOST_SIZE-0.5 for extra safety
+
    for (int d=0; d<3; d++) {
       if ( EXT_POT_TABLE_EDGEL[d] == NoDef_double )
          Aux_Error( ERROR_INFO, "EXT_POT_TABLE_EDGEL[%d] has not been set !!\n", d );
 
-      if ( EXT_POT_TABLE_EDGEL[d] > amr->BoxEdgeL[d] )
-         Aux_Error( ERROR_INFO, "incorrect left boundary of the external potential table (table=%13.7e > simulation=%13.7e) !!\n",
-                    EXT_POT_TABLE_EDGEL[d], amr->BoxEdgeL[d] );
+      if ( EXT_POT_TABLE_EDGEL[d] > amr->BoxEdgeL[d]-ExtraWidth )
+         Aux_Error( ERROR_INFO, "incorrect left boundary of the external potential table (table=%13.7e > min=%13.7e) !!\n",
+                    EXT_POT_TABLE_EDGEL[d], amr->BoxEdgeL[d]-ExtraWidth );
 
-      if ( EXT_POT_TABLE_EDGEL[d]+(EXT_POT_TABLE_NPOINT[d]-1)*EXT_POT_TABLE_DH < amr->BoxEdgeR[d] )
-         Aux_Error( ERROR_INFO, "incorrect right boundary of the external potential table (table=%13.7e < simulation=%13.7e) !!\n",
-                    EXT_POT_TABLE_EDGEL[d]+(EXT_POT_TABLE_NPOINT[d]-1)*EXT_POT_TABLE_DH, amr->BoxEdgeR[d] );
+      if ( EXT_POT_TABLE_EDGEL[d]+(EXT_POT_TABLE_NPOINT[d]-1)*EXT_POT_TABLE_DH < amr->BoxEdgeR[d]+ExtraWidth )
+         Aux_Error( ERROR_INFO, "incorrect right boundary of the external potential table (table=%13.7e < max=%13.7e) !!\n",
+                    EXT_POT_TABLE_EDGEL[d]+(EXT_POT_TABLE_NPOINT[d]-1)*EXT_POT_TABLE_DH, amr->BoxEdgeR[d]+ExtraWidth );
    }
 
 // file existence
@@ -99,7 +103,7 @@ void Init_LoadExtPotTable()
 #  endif
 
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   %s ... done\n", __FUNCTION__ );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_LoadExtPotTable
 

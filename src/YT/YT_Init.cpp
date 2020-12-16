@@ -9,7 +9,7 @@
 // Function    :  YT_Init
 // Description :  Initialize the yt inline analysis
 //
-// Note        :  1. This function must be invoked once and only once during the entire simulation 
+// Note        :  1. This function must be invoked once and only once during the entire simulation
 //
 // Parameter   :  argc : Argument count
 //                argv : Argument vector

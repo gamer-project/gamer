@@ -138,12 +138,14 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
 //                Engy              : Total energy density
 //                Emag              : Magnetic energy density (0.5*B^2) --> for MHD only
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
-//                EoS_AuxArray      : Auxiliary array for EoS_DensEint2Pres()
+//                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensEint2Pres()
+//                EoS_Table         : EoS tables
 //
 // Return      :  Enpy
 //-------------------------------------------------------------------------------------------------------
 real Hydro_Con2Entropy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                        const real Emag, const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] )
+                        const real Emag, const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[],
+                        const int EoS_AuxArray_Int[], const real *const EoS_Table[EOS_NTABLE_MAX] )
 {
 
 // currently this function does NOT apply pressure floor when calling Hydro_Con2Pres()
@@ -154,8 +156,8 @@ real Hydro_Con2Entropy( const real Dens, const real MomX, const real MomY, const
 // calculate pressure and convert it to entropy
 // --> note that DE_ENPY only works with EOS_GAMMA, which does not involve passive scalars
    Pres = Hydro_Con2Pres( Dens, MomX, MomY, MomZ, Engy, NULL, CheckMinPres_No, NULL_REAL, Emag,
-                          EoS_DensEint2Pres, EoS_AuxArray, NULL );
-   Enpy = Hydro_DensPres2Entropy( Dens, Pres, EoS_AuxArray[1] );
+                          EoS_DensEint2Pres, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
+   Enpy = Hydro_DensPres2Entropy( Dens, Pres, EoS_AuxArray_Flt[1] );
 
    return Enpy;
 

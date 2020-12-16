@@ -46,10 +46,15 @@ void Init_MemAllocate_PoissonGravity( const int Pot_NPG )
 
 // external potential table
    if ( OPT__EXT_POT == EXT_POT_TABLE ) {
+
       const long TableSize = (long)EXT_POT_TABLE_NPOINT[0]*EXT_POT_TABLE_NPOINT[1]*EXT_POT_TABLE_NPOINT[2];
+
+      if ( TableSize <= 0L )
+         Aux_Error( ERROR_INFO, "External potential table size = %ld <= 0 (EXT_POT_TABLE_NPOINT = [%d, %d, %d]) !!\n",
+                    TableSize, EXT_POT_TABLE_NPOINT[0], EXT_POT_TABLE_NPOINT[1], EXT_POT_TABLE_NPOINT[2] );
+
       h_ExtPotTable = new real [TableSize];
    }
-
 
 } // FUNCTION : Init_MemAllocate_PoissonGravity
 

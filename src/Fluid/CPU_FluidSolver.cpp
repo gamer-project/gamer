@@ -26,7 +26,9 @@ void CPU_FluidSolver_RTVD(
    const EoS_DE2P_t EoS_DensEint2Pres_Func,
    const EoS_DP2E_t EoS_DensPres2Eint_Func,
    const EoS_DP2C_t EoS_DensPres2CSqr_Func,
-   const double c_EoS_AuxArray[] );
+   const double c_EoS_AuxArray_Flt[],
+   const int    c_EoS_AuxArray_Int[],
+   const real* const c_EoS_Table[EOS_NTABLE_MAX] );
 #elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 void CPU_FluidSolver_MHM(
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
@@ -57,7 +59,9 @@ void CPU_FluidSolver_MHM(
    const EoS_DE2P_t EoS_DensEint2Pres_Func,
    const EoS_DP2E_t EoS_DensPres2Eint_Func,
    const EoS_DP2C_t EoS_DensPres2CSqr_Func,
-   const double c_EoS_AuxArray[] );
+   const double c_EoS_AuxArray_Flt[],
+   const int    c_EoS_AuxArray_Int[],
+   const real* const c_EoS_Table[EOS_NTABLE_MAX] );
 #elif ( FLU_SCHEME == CTU )
 void CPU_FluidSolver_CTU(
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
@@ -87,7 +91,9 @@ void CPU_FluidSolver_CTU(
    const EoS_DE2P_t EoS_DensEint2Pres_Func,
    const EoS_DP2E_t EoS_DensPres2Eint_Func,
    const EoS_DP2C_t EoS_DensPres2CSqr_Func,
-   const double c_EoS_AuxArray[] );
+   const double c_EoS_AuxArray_Flt[],
+   const int    c_EoS_AuxArray_Int[],
+   const real* const c_EoS_Table[EOS_NTABLE_MAX] );
 #endif // FLU_SCHEME
 
 #elif ( MODEL == ELBDM )
@@ -211,7 +217,8 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
 
       CPU_FluidSolver_RTVD( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, h_Corner_Array, h_Pot_Array_USG,
                             NPatchGroup, dt, dh, StoreFlux, XYZ, MinDens, MinPres, MinEint,
-                            EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr, EoS_DensPres2CSqr_CPUPtr, EoS_AuxArray );
+                            EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr, EoS_DensPres2CSqr_CPUPtr,
+                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
 #     elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 
@@ -221,7 +228,8 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                             NPatchGroup, dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff, Time,
                             UsePot, ExtAcc, CPUExtAcc_Ptr, ExtAcc_AuxArray, MinDens, MinPres, MinEint,
                             DualEnergySwitch, NormPassive, NNorm, NormIdx, JeansMinPres, JeansMinPres_Coeff,
-                            EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr, EoS_DensPres2CSqr_CPUPtr, EoS_AuxArray );
+                            EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr, EoS_DensPres2CSqr_CPUPtr,
+                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
 #     elif ( FLU_SCHEME == CTU )
 
@@ -231,7 +239,8 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                             NPatchGroup, dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff, Time,
                             UsePot, ExtAcc, CPUExtAcc_Ptr, ExtAcc_AuxArray, MinDens, MinPres, MinEint,
                             DualEnergySwitch, NormPassive, NNorm, NormIdx, JeansMinPres, JeansMinPres_Coeff,
-                            EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr, EoS_DensPres2CSqr_CPUPtr, EoS_AuxArray );
+                            EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr, EoS_DensPres2CSqr_CPUPtr,
+                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
 #     else
 
