@@ -17,7 +17,7 @@
 
 // problem-specific function prototypes
 
-bool Flag_CMZ( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
+bool Flag_CMZ( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 #ifdef PARTICLE
 void Par_Init_ByFunction_BarredPot( const long NPar_ThisRank, const long NPar_AllRank,
                                     real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
@@ -244,8 +244,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 #  if ( EOS == EOS_ISOTHERMAL )
 
-  Pres = EoS_DensEint2Pres_CPUPtr( fluid[DENS], 1.0 , NULL, EoS_AuxArray);
-  Eint = EoS_DensPres2Eint_CPUPtr( fluid[DENS], Pres, NULL, EoS_AuxArray );
+  Pres = EoS_DensEint2Pres_CPUPtr( fluid[DENS], 1.0 , NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, NULL);
+  Eint = EoS_DensPres2Eint_CPUPtr( fluid[DENS], Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, NULL);
   fluid[ENGY]  = Hydro_ConEint2Etot( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], Eint, 0.0 );
 
 #  else
