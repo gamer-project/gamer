@@ -228,7 +228,11 @@ POT_GPU_NPGROUP              -1           # number of patch groups sent into the
 OPT__GRA_P5_GRADIENT          0           # 5-points gradient in the Gravity solver (must have GRA/USG_GHOST_SIZE_G>=2) [0]
 OPT__SELF_GRAVITY             1           # add self-gravity [1]
 OPT__EXT_ACC                  0           # add external acceleration (0=off, 1=function, 2=table) [0] ##HYDRO ONLY##
+                                          # --> 2 (table) is not supported yet
 OPT__EXT_POT                  0           # add external potential    (0=off, 1=function, 2=table) [0]
+                                          # --> for 2 (table), edit the corresponding parameters below too
+
+# tabular external potential
 EXT_POT_TABLE_NAME            ExtPotTable # external potential table: filename
 EXT_POT_TABLE_NPOINT_X        129         # ...                     : table size (i.e., number of data points) along x/y/z
 EXT_POT_TABLE_NPOINT_Y        129         #
