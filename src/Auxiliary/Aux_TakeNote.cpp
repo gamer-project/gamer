@@ -820,6 +820,7 @@ void Aux_TakeNote()
 //    record the parameters of source terms
       fprintf( Note, "Parameters of Source Terms\n" );
       fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "SRC_DELEPTONIZATION             %d\n",      SRC_DELEPTONIZATION     );
       fprintf( Note, "SRC_USER                        %d\n",      SRC_USER                );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");

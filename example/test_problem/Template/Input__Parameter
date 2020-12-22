@@ -145,7 +145,8 @@ OPT__MINIMIZE_MPI_BARRIER     1           # minimize MPI barriers to improve loa
 
 
 # source terms
-SRC_USER                      0           # enable user-defined source terms -> edit "Src_User.cpp" [0]
+SRC_DELEPTONIZATION           0           # deleptonization (for neutron star simulations) [0]
+SRC_USER                      0           # user-defined source terms -> edit "Src_User.cpp" [0]
 
 
 # Grackle library for chemistry and radiative cooling (SUPPORT_GRACKLE only)

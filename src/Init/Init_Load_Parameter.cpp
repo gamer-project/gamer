@@ -176,6 +176,7 @@ void Init_Load_Parameter()
 
 
 // source terms
+   ReadPara->Add( "SRC_DELEPTONIZATION",        &SRC_DELEPTONIZATION,             false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "SRC_USER",                   &SRC_USER,                        false,           Useless_bool,  Useless_bool   );
 
 
