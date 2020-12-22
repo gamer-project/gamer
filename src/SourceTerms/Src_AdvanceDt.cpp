@@ -26,6 +26,10 @@ extern void (*Src_User_Ptr)( real fluid[], const double x, const double y, const
 void Src_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int FluSg )
 {
 
+// skip if there is no source term (must check all source terms)
+   if ( !SRC_USER )  return;
+
+
 // check
    if ( SRC_USER  &&  Src_User_Ptr == NULL )    Aux_Error( ERROR_INFO, "Src_User_Ptr == NULL !!\n" );
 
