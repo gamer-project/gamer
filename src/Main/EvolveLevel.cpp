@@ -4,6 +4,7 @@
 extern Timer_t *Timer_dt         [NLEVEL];
 extern Timer_t *Timer_Flu_Advance[NLEVEL];
 extern Timer_t *Timer_Gra_Advance[NLEVEL];
+extern Timer_t *Timer_Src_Advance[NLEVEL];
 extern Timer_t *Timer_Che_Advance[NLEVEL];
 extern Timer_t *Timer_SF         [NLEVEL];
 extern Timer_t *Timer_FixUp      [NLEVEL];
@@ -437,7 +438,10 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //    6-1. local source terms
 // *********************************
    const int InOutSg_Src = SaveSg_Flu;    // save in the same FluSg
-   Src_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu );
+
+//###REVISE: we have assumed that Src_AdvanceDt() requires no ghost zones
+   TIMING_FUNC(   Src_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu ),
+                  Timer_Src_Advance[lv]   );
 
 
 // *********************************
@@ -451,7 +455,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
             Aux_Message( stdout, "   Lv %2d: Grackle_AdvanceDt, counter = %4ld ... ", lv, AdvanceCounter[lv] );
 
-//       we have assumed that Grackle_AdvanceDt() requires no ghost zones
+//###REVISE: we have assumed that Grackle_AdvanceDt() requires no ghost zones
          TIMING_FUNC(   Grackle_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Che, false, false ),
                         Timer_Che_Advance[lv],   TIMER_ON   );
 
@@ -485,7 +489,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
             Aux_Message( stdout, "   Lv %2d: SF_CreateStar, counter = %8ld ... ", lv, AdvanceCounter[lv] );
 
-//       we have assumed that SF_CreateStar() requires no ghost zones
+//###REVISE: we have assumed that SF_CreateStar() requires no ghost zones
          TIMING_FUNC(   SF_CreateStar( lv, TimeNew, dt_SubStep ),
                         Timer_SF[lv],   TIMER_ON   );
 
