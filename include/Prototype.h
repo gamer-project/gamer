@@ -624,6 +624,10 @@ void YT_Inline();
 #endif // #ifdef SUPPORT_LIBYT
 
 
+// source terms
+void Src_AddSource( const int lv, const double TimeNew, const double TimeOld, const double dt, const int FluSg );
+
+
 // Grackle
 #ifdef SUPPORT_GRACKLE
 void Grackle_Init();

@@ -505,6 +505,9 @@ struct InputPara_t
    int    Opt__GravityExtraMass;
 #  endif // #ifdef GRAVITY
 
+// source terms
+   int    Src_User;
+
 // Grackle
 #  ifdef SUPPORT_GRACKLE
    int    Grackle_Activate;

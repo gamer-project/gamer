@@ -175,6 +175,10 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__MINIMIZE_MPI_BARRIER",  &OPT__MINIMIZE_MPI_BARRIER,       true,            Useless_bool,  Useless_bool   );
 
 
+// source terms
+   ReadPara->Add( "SRC_USER",                   &SRC_USER,                        false,           Useless_bool,  Useless_bool   );
+
+
 // Grackle
 #  ifdef SUPPORT_GRACKLE
    ReadPara->Add( "GRACKLE_ACTIVATE",           &GRACKLE_ACTIVATE,                true,            Useless_bool,  Useless_bool   );

@@ -629,6 +629,13 @@ vpath %.cpp    YT
 endif # SUPPORT_LIBYT
 
 
+# local source terms source files
+# ------------------------------------------------------------------------------------
+CC_FILE     += Src_AddSource.cpp  Src_User.cpp
+
+vpath %.cpp    SourceTerms
+
+
 # Grackle source files (included only if "SUPPORT_GRACKLE" is turned on)
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DSUPPORT_GRACKLE, $(SIMU_OPTION))" "-DSUPPORT_GRACKLE"

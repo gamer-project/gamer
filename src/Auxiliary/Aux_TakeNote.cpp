@@ -817,6 +817,14 @@ void Aux_TakeNote()
 #     endif // #ifndef SERIAL
 
 
+//    record the parameters of source terms
+      fprintf( Note, "Parameters of Source Terms\n" );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "SRC_USER                        %d\n",      SRC_USER                );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "\n\n");
+
+
 //    record the parameters of Grackle
 #     ifdef SUPPORT_GRACKLE
       fprintf( Note, "Parameters of Grackle\n" );
