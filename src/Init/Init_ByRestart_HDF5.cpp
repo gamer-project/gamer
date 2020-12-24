@@ -1889,6 +1889,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  endif
 
 // source terms
+   LoadField( "Src_Deleptonization",     &RS.Src_Deleptonization,     SID, TID, NonFatal, &RT.Src_Deleptonization,      1, NonFatal );
    LoadField( "Src_User",                &RS.Src_User,                SID, TID, NonFatal, &RT.Src_User,                 1, NonFatal );
 
 // Grackle

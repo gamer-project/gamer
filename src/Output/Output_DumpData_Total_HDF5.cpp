@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2424)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2425)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -195,6 +195,7 @@ Procedure for outputting new variables:
 //                2422 : 2020/10/29 --> output the parameters of external potential table
 //                2423 : 2020/11/01 --> output EOS_NTABLE_MAX
 //                2424 : 2020/12/22 --> output SRC_USER
+//                2425 : 2020/12/24 --> output SRC_DELEPTONIZATION
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1395,7 +1396,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2424;
+   KeyInfo.FormatVersion        = 2425;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2137,6 +2138,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  endif
 
 // source terms
+   InputPara.Src_Deleptonization     = SRC_DELEPTONIZATION;
    InputPara.Src_User                = SRC_USER;
 
 // Grackle
@@ -2900,6 +2902,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  endif // #ifdef GRAVITY
 
 // source terms
+   H5Tinsert( H5_TypeID, "Src_Deleptonization",     HOFFSET(InputPara_t,Src_Deleptonization    ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Src_User",                HOFFSET(InputPara_t,Src_User               ), H5T_NATIVE_INT              );
 
 // Grackle

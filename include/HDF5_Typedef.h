@@ -506,6 +506,7 @@ struct InputPara_t
 #  endif // #ifdef GRAVITY
 
 // source terms
+   int    Src_Deleptonization;
    int    Src_User;
 
 // Grackle
