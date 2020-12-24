@@ -152,7 +152,7 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
 #     warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
 #  endif
 
-   if ( SRC_ANY )
+   if ( Src_Any )
    {
       TotalSize += Flu_MemSize_S_In + Flu_MemSize_S_Out;
 #     ifdef MHD
@@ -211,7 +211,7 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
 #  endif
 #  endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 
-   if ( SRC_ANY ) {
+   if ( Src_Any ) {
    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Flu_Array_S_In,        Flu_MemSize_S_In        )  );
    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Flu_Array_S_Out,       Flu_MemSize_S_Out       )  );
 #  ifdef MHD
@@ -257,7 +257,7 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
       CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_dt_Array_T     [t], dt_MemSize_T            )  );
       CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Flu_Array_T    [t], Flu_MemSize_T           )  );
 
-      if ( SRC_ANY ) {
+      if ( Src_Any ) {
       CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Flu_Array_S_In [t], Flu_MemSize_S_In        )  );
       CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Flu_Array_S_Out[t], Flu_MemSize_S_Out       )  );
 #     ifdef MHD

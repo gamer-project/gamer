@@ -113,6 +113,10 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
+// initialize the source-term routines --> must be called before memory allocation
+   Src_Init();
+
+
 // set the GPU parameters
 #  ifdef GPU
 #  ifndef GRAVITY
