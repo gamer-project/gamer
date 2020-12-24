@@ -628,6 +628,18 @@ void YT_Inline();
 // source terms
 void Src_Init();
 void Src_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int FluSg );
+void Src_Prepare( const int lv,
+                  real h_Flu_Array_S_In[][FLU_NIN_S][ CUBE(PS1)      ],
+                  real h_Mag_Array_S_In[][NCOMP_MAG][ PS1P1*SQR(PS1) ],
+                  const int NPG, const int *PID0_List );
+void Src_Close( const int lv, const int SaveSg_Flu, const real h_Flu_Array_S_Out[][FLU_NOUT_S][ CUBE(PS1) ],
+                const int NPG, const int *PID0_List );
+void CPU_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(PS1)      ],
+                          real h_Flu_Array_Out[][FLU_NOUT_S][ CUBE(PS1)      ],
+                    const real h_Mag_Array_In [][NCOMP_MAG ][ PS1P1*SQR(PS1) ],
+                    const int NPatchGroup, const real dt, const real dh,
+                    const double TimeNew, const double TimeOld,
+                    const real MinDens, const real MinPres, const real MinEint );
 
 
 // Grackle
