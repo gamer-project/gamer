@@ -63,7 +63,7 @@ bool                 OPT__UM_IC_DOWNGRADE, OPT__UM_IC_REFINE, OPT__TIMING_MPI;
 bool                 OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
 bool                 OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
 bool                 OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
-bool                 SRC_USER, SRC_DELEPTONIZATION;
+bool                 SRC_ANY, SRC_USER, SRC_DELEPTONIZATION;
 UM_IC_Format_t       OPT__UM_IC_FORMAT;
 TestProbID_t         TESTPROB_ID;
 OptInit_t            OPT__INIT;
@@ -302,6 +302,12 @@ real (*h_Mag_Array_T[2])[NCOMP_MAG][ PS1P1*SQR(PS1) ]              = { NULL, NUL
 real *h_EoS_Table[EOS_NTABLE_MAX];
 #endif
 
+// (3-7) source terms
+real (*h_Flu_Array_S[2])[NCOMP_TOTAL][ CUBE(PS1)      ]            = { NULL, NULL };
+#ifdef MHD
+real (*h_Mag_Array_S[2])[NCOMP_MAG  ][ PS1P1*SQR(PS1) ]            = { NULL, NULL };
+#endif
+
 
 // 4. GPU (device) global memory arrays
 // =======================================================================================================
@@ -351,7 +357,7 @@ real (*d_Pot_Array_USG_F)[ CUBE(USG_NXT_F) ]                       = NULL;
 real (*d_Pot_Array_USG_G)[ CUBE(USG_NXT_G) ]                       = NULL;
 real (*d_Flu_Array_USG_G)[GRA_NIN-1][ CUBE(PS1) ]                  = NULL;
 #endif
-#endif
+#endif // #ifdef GRAVITY
 
 // (4-4) Grackle chemistry
 
@@ -364,12 +370,19 @@ real (*d_Pot_Array_T)[ CUBE(GRA_NXT) ]                           = NULL;
 #ifdef MHD
 real (*d_Mag_Array_T)[NCOMP_MAG][ PS1P1*SQR(PS1) ]               = NULL;
 #endif
-#endif // #ifdef GPU
 
 // (4-6) EoS tables
 #if ( MODEL == HYDRO )
 real *d_EoS_Table[EOS_NTABLE_MAX];
 #endif
+
+// (4-7) source terms
+real (*d_Flu_Array_S)[NCOMP_TOTAL][ CUBE(PS1)      ]             = NULL;
+#ifdef MHD
+real (*d_Mag_Array_S)[NCOMP_MAG  ][ PS1P1*SQR(PS1) ]             = NULL;
+#endif
+
+#endif // #ifdef GPU
 
 
 // 5. timers

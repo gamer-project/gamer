@@ -26,9 +26,11 @@ extern real (*d_Mag_Array_F_In )[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
 extern real (*d_Mag_Array_F_Out)[NCOMP_MAG][ PS2P1*SQR(PS2)          ];
 extern real (*d_Ele_Array      )[9][NCOMP_ELE][ PS2P1*PS2 ];
 extern real (*d_Mag_Array_T)[NCOMP_MAG][ PS1P1*SQR(PS1) ];
+extern real (*d_Mag_Array_S)[NCOMP_MAG][ PS1P1*SQR(PS1) ];
 #endif
 extern real *d_dt_Array_T;
 extern real (*d_Flu_Array_T)[FLU_NIN_T][ CUBE(PS1) ];
+extern real (*d_Flu_Array_S)[NCOMP_TOTAL][ CUBE(PS1) ];
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 extern real (*d_PriVar)      [NCOMP_LR            ][ CUBE(FLU_NXT)     ];
 extern real (*d_Slope_PPM)[3][NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ];
@@ -79,6 +81,7 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
    const long Mag_MemSize_F_Out   = sizeof(real  )*Flu_NPG*NCOMP_MAG*PS2P1*SQR(PS2);
    const long Ele_MemSize         = sizeof(real  )*Flu_NPG*9*NCOMP_ELE*PS2P1*PS2;
    const long Mag_MemSize_T       = sizeof(real  )*Flu_NP*NCOMP_MAG*PS1P1*SQR(PS1);
+   const long Mag_MemSize_S       = sizeof(real  )*Flu_NP*NCOMP_MAG*PS1P1*SQR(PS1);
 #  endif
 #  ifdef GRAVITY
    const long dt_MemSize_T        = sizeof(real  )*MAX( Flu_NP, Pot_NP ); // dt_Array_T is used for both DT_FLU_SOLVER and DT_GRA_SOLVER
@@ -86,6 +89,7 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
    const long dt_MemSize_T        = sizeof(real  )*Flu_NP;
 #  endif
    const long Flu_MemSize_T       = sizeof(real  )*Flu_NP*FLU_NIN_T*CUBE(PS1);
+   const long Flu_MemSize_S       = sizeof(real  )*Flu_NP*NCOMP_TOTAL*CUBE(PS1);
 
 // the size of the global memory arrays in different models
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
@@ -146,6 +150,14 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
 #     warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
 #  endif
 
+   if ( SRC_ANY )
+   {
+      TotalSize += Flu_MemSize_S;
+#     ifdef MHD
+      TotalSize += Mag_MemSize_S;
+#     endif
+   }
+
    if ( MPI_Rank == 0 )
       Aux_Message( stdout, "NOTE : total memory requirement in GPU fluid solver = %ld MB\n", TotalSize/(1<<20) );
 
@@ -197,6 +209,13 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
 #  endif
 #  endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 
+   if ( SRC_ANY ) {
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Flu_Array_S,           Flu_MemSize_S           )  );
+#  ifdef MHD
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Mag_Array_S,           Mag_MemSize_S           )  );
+#  endif
+   }
+
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #     warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
 #  endif
@@ -234,6 +253,13 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
 
       CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_dt_Array_T     [t], dt_MemSize_T            )  );
       CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Flu_Array_T    [t], Flu_MemSize_T           )  );
+
+      if ( SRC_ANY ) {
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Flu_Array_S    [t], Flu_MemSize_S           )  );
+#     ifdef MHD
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Mag_Array_S    [t], Mag_MemSize_S           )  );
+#     endif
+      }
    } // for (int t=0; t<2; t++)
 
 

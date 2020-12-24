@@ -69,7 +69,7 @@ extern bool       OPT__UM_IC_DOWNGRADE, OPT__UM_IC_REFINE, OPT__TIMING_MPI;
 extern bool       OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
 extern bool       OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
 extern bool       OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
-extern bool       SRC_USER, SRC_DELEPTONIZATION;
+extern bool       SRC_ANY, SRC_USER, SRC_DELEPTONIZATION;
 
 extern UM_IC_Format_t     OPT__UM_IC_FORMAT;
 extern TestProbID_t       TESTPROB_ID;
@@ -306,6 +306,11 @@ extern real       (*h_Mag_Array_T[2])[NCOMP_MAG][ PS1P1*SQR(PS1) ];
 
 #if ( MODEL == HYDRO )
 extern real        *h_EoS_Table[EOS_NTABLE_MAX];
+#endif
+
+extern real       (*h_Flu_Array_S[2])[NCOMP_TOTAL][ CUBE(PS1)      ];
+#ifdef MHD
+extern real       (*h_Mag_Array_S[2])[NCOMP_MAG  ][ PS1P1*SQR(PS1) ];
 #endif
 
 
