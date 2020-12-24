@@ -631,7 +631,7 @@ endif # SUPPORT_LIBYT
 
 # local source terms source files
 # ------------------------------------------------------------------------------------
-CC_FILE     += Src_AdvanceDt.cpp  Src_User.cpp
+CPU_FILE    += Src_AdvanceDt.cpp  Src_User.cpp
 
 vpath %.cpp    SourceTerms
 

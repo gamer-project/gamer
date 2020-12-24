@@ -441,7 +441,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
 //###REVISE: we have assumed that Src_AdvanceDt() requires no ghost zones
    TIMING_FUNC(   Src_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu ),
-                  Timer_Src_Advance[lv]   );
+                  Timer_Src_Advance[lv],   TIMER_ON   );
 
 
 // *********************************
