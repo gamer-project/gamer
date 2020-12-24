@@ -168,6 +168,8 @@ struct SymConst_t
    int    Flu_NIn;
    int    Flu_NOut;
    int    Flu_NIn_T;
+   int    Flu_NIn_S;
+   int    Flu_NOut_S;
    int    NFluxFluid;
    int    NFluxPassive;
    int    Flu_GhostSize;
