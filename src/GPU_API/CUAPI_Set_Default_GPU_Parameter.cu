@@ -170,8 +170,10 @@ void CUPOT_ELBDMGravitySolver(       real g_Flu_Array[][GRA_NIN][ PS1*PS1*PS1 ],
 //                Flu_GPU_NPGroup : Number of patch groups sent into GPU simultaneously for the fluid solver
 //                Pot_GPU_NPGroup : Number of patch groups sent into GPU simultaneously for the Poisson solver
 //                Che_GPU_NPGroup : Number of patch groups sent into GPU simultaneously for the Grackle solver
+//                Src_GPU_NPGroup : Number of patch groups sent into GPU simultaneously for the source-term solver
 //-------------------------------------------------------------------------------------------------------
-void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, int &Pot_GPU_NPGroup, int &Che_GPU_NPGroup )
+void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, int &Pot_GPU_NPGroup, int &Che_GPU_NPGroup,
+                                      int &Src_GPU_NPGroup )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -337,6 +339,30 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
                               " --> might be further fine-tuned\n", "CHE_GPU_NPGROUP", Che_GPU_NPGroup );
    } // if ( Che_GPU_NPGroup <= 0 )
 #  endif
+
+// (2-4) SRC_GPU_NPGROUP
+   if ( Src_GPU_NPGroup <= 0 )
+   {
+#     if   ( GPU_ARCH == FERMI )
+      Src_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#     elif ( GPU_ARCH == KEPLER )
+      Src_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#     elif ( GPU_ARCH == MAXWELL )
+      Src_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#     elif ( GPU_ARCH == PASCAL )
+      Src_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#     elif ( GPU_ARCH == VOLTA )
+      Src_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#     elif ( GPU_ARCH == TURING )
+      Src_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#     else
+#     error : UNKNOWN GPU_ARCH !!
+#     endif
+
+      if ( MPI_Rank == 0 )
+         Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d"
+                              " --> might be further fine-tuned\n", "SRC_GPU_NPGROUP", Src_GPU_NPGroup );
+   } // if ( Src_GPU_NPGroup <= 0 )
 
 
 // (3) cache preference

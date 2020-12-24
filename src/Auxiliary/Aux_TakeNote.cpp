@@ -825,6 +825,7 @@ void Aux_TakeNote()
       fprintf( Note, "Src_Any                         %d\n",      Src_Any                 );
       fprintf( Note, "SRC_DELEPTONIZATION             %d\n",      SRC_DELEPTONIZATION     );
       fprintf( Note, "SRC_USER                        %d\n",      SRC_USER                );
+      fprintf( Note, "SRC_GPU_NPGROUP                 %d\n",      SRC_GPU_NPGROUP         );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 

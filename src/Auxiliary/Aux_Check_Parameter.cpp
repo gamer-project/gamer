@@ -501,7 +501,7 @@ void Aux_Check_Parameter()
    if ( GPU_NSTREAM < 1 )  Aux_Error( ERROR_INFO, "GPU_NSTREAM (%d) < 1 !!\n", GPU_NSTREAM );
 
    if ( FLU_GPU_NPGROUP % GPU_NSTREAM != 0 )
-      Aux_Error( ERROR_INFO, "FLU_GPU_NPGROUP (%d) %%GPU_NSTREAM (%d) != 0 !!\n",
+      Aux_Error( ERROR_INFO, "FLU_GPU_NPGROUP (%d) %% GPU_NSTREAM (%d) != 0 !!\n",
                  FLU_GPU_NPGROUP, GPU_NSTREAM );
 
 #  ifdef OPENMP
@@ -1339,6 +1339,28 @@ void Aux_Check_Parameter()
    } // if ( MPI_Rank == 0 )
 
 #endif // SUPPORT_GRACKLE
+
+
+
+// source terms
+// =======================================================================================
+
+// errors
+// ------------------------------
+   if ( SRC_GPU_NPGROUP % GPU_NSTREAM != 0 )
+      Aux_Error( ERROR_INFO, "SRC_GPU_NPGROUP (%d) %% GPU_NSTREAM (%d) != 0 !!\n",
+                 SRC_GPU_NPGROUP, GPU_NSTREAM );
+
+#  ifdef OPENMP
+   if ( SRC_GPU_NPGROUP < OMP_NTHREAD )
+      Aux_Error( ERROR_INFO, "SRC_GPU_NPGROUP (%d) < OMP_NTHREAD (%d) !!\n", SRC_GPU_NPGROUP, OMP_NTHREAD );
+#  endif
+
+// warning
+// ------------------------------
+   if ( MPI_Rank == 0 ) {
+
+   } // if ( MPI_Rank == 0 )
 
 
 

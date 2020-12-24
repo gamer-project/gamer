@@ -125,7 +125,7 @@ void Init_GAMER( int *argc, char ***argv )
 #  ifndef SUPPORT_GRACKLE
    int CHE_GPU_NPGROUP = NULL_INT;
 #  endif
-   CUAPI_Set_Default_GPU_Parameter( GPU_NSTREAM, FLU_GPU_NPGROUP, POT_GPU_NPGROUP, CHE_GPU_NPGROUP );
+   CUAPI_Set_Default_GPU_Parameter( GPU_NSTREAM, FLU_GPU_NPGROUP, POT_GPU_NPGROUP, CHE_GPU_NPGROUP, SRC_GPU_NPGROUP );
 
 // CUAPI_SetConstMemory must be called AFTER Init_Field(), Init_ExtAccPot(), and EoS_Init()
    CUAPI_SetConstMemory();

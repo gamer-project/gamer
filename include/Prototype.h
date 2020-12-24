@@ -179,7 +179,7 @@ void Init_Load_Parameter();
 void Init_MemoryPool();
 void Init_ResetParameter();
 void Init_MemAllocate();
-void Init_MemAllocate_Fluid( const int Flu_NPatchGroup, const int Pot_NPatchGroup );
+void Init_MemAllocate_Fluid( const int Flu_NPatchGroup, const int Pot_NPatchGroup, const int Src_NPatchGroup );
 void Init_Parallelization();
 void Init_RecordBasePatch();
 void Init_Refine( const int lv );
@@ -517,9 +517,10 @@ void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real 
                           const real MinPres, const bool P5_Gradient, const bool UsePot, const OptExtAcc_t ExtAcc,
                           const double TargetTime, const int GPU_NStream );
 void CUAPI_DiagnoseDevice();
-void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GPU_NStream );
+void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src_NPG, const int GPU_NStream );
 void CUAPI_MemFree_Fluid( const int GPU_NStream );
-void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, int &Pot_GPU_NPGroup, int &Che_GPU_NPGroup );
+void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, int &Pot_GPU_NPGroup, int &Che_GPU_NPGroup,
+                                      int &Src_GPU_NPGroup );
 void CUAPI_SetDevice( const int Mode );
 void CUAPI_SetConstMemory();
 void CUAPI_Synchronize();

@@ -57,9 +57,10 @@ extern real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 // Parameter   :  Flu_NPG     : Number of patch groups evaluated simultaneously by GPU for the fluid solver
 //                Pot_NPG     : Number of patch groups evaluated simultaneously by GPU for the gravity solver
 //                              --> Here it is used only for the dt solver
+//                Src_NPG     : Number of patch groups evaluated simultaneously by GPU for the source-term solver
 //                GPU_NStream : Number of CUDA stream objects
 //-------------------------------------------------------------------------------------------------------
-void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GPU_NStream )
+void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src_NPG, const int GPU_NStream )
 {
 
 // size of the global memory arrays in all models
@@ -67,6 +68,7 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
 #  ifdef GRAVITY
    const int  Pot_NP              = 8*Pot_NPG;
 #  endif
+   const int  Src_NP              = 8*Src_NPG;
    const long Flu_MemSize_F_In    = sizeof(real  )*Flu_NPG*FLU_NIN *CUBE(FLU_NXT);
    const long Flu_MemSize_F_Out   = sizeof(real  )*Flu_NPG*FLU_NOUT*CUBE(PS2);
    const long Flux_MemSize        = sizeof(real  )*Flu_NPG*9*NFLUX_TOTAL*SQR(PS2);
@@ -82,7 +84,7 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
    const long Mag_MemSize_F_Out   = sizeof(real  )*Flu_NPG*NCOMP_MAG*PS2P1*SQR(PS2);
    const long Ele_MemSize         = sizeof(real  )*Flu_NPG*9*NCOMP_ELE*PS2P1*PS2;
    const long Mag_MemSize_T       = sizeof(real  )*Flu_NP*NCOMP_MAG*PS1P1*SQR(PS1);
-   const long Mag_MemSize_S_In    = sizeof(real  )*Flu_NP*NCOMP_MAG*PS1P1*SQR(PS1);
+   const long Mag_MemSize_S_In    = sizeof(real  )*Src_NP*NCOMP_MAG*PS1P1*SQR(PS1);
 #  endif
 #  ifdef GRAVITY
    const long dt_MemSize_T        = sizeof(real  )*MAX( Flu_NP, Pot_NP ); // dt_Array_T is used for both DT_FLU_SOLVER and DT_GRA_SOLVER
@@ -90,8 +92,8 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
    const long dt_MemSize_T        = sizeof(real  )*Flu_NP;
 #  endif
    const long Flu_MemSize_T       = sizeof(real  )*Flu_NP*FLU_NIN_T *CUBE(PS1);
-   const long Flu_MemSize_S_In    = sizeof(real  )*Flu_NP*FLU_NIN_S *CUBE(PS1);
-   const long Flu_MemSize_S_Out   = sizeof(real  )*Flu_NP*FLU_NOUT_S*CUBE(PS1);
+   const long Flu_MemSize_S_In    = sizeof(real  )*Src_NP*FLU_NIN_S *CUBE(PS1);
+   const long Flu_MemSize_S_Out   = sizeof(real  )*Src_NP*FLU_NOUT_S*CUBE(PS1);
 
 // the size of the global memory arrays in different models
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )

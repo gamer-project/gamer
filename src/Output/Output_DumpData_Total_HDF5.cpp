@@ -196,7 +196,7 @@ Procedure for outputting new variables:
 //                2423 : 2020/11/01 --> output EOS_NTABLE_MAX
 //                2424 : 2020/12/22 --> output SRC_USER
 //                2425 : 2020/12/24 --> output SRC_DELEPTONIZATION
-//                2426 : 2020/12/24 --> output FLU_NIN_S and FLU_NOUT_S
+//                2426 : 2020/12/24 --> output FLU_NIN_S, FLU_NOUT_S, and SRC_GPU_NPGROUP
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -2143,6 +2143,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
 // source terms
    InputPara.Src_Deleptonization     = SRC_DELEPTONIZATION;
    InputPara.Src_User                = SRC_USER;
+   InputPara.Src_GPU_NPGroup         = SRC_GPU_NPGROUP;
 
 // Grackle
 #  ifdef SUPPORT_GRACKLE
@@ -2909,6 +2910,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 // source terms
    H5Tinsert( H5_TypeID, "Src_Deleptonization",     HOFFSET(InputPara_t,Src_Deleptonization    ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Src_User",                HOFFSET(InputPara_t,Src_User               ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Src_GPU_NPGroup",         HOFFSET(InputPara_t,Src_GPU_NPGroup        ), H5T_NATIVE_INT              );
 
 // Grackle
 #  ifdef SUPPORT_GRACKLE

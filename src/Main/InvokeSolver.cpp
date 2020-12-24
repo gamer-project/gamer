@@ -120,6 +120,8 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
       case DT_GRA_SOLVER:              NPG_Max = POT_GPU_NPGROUP;    break;
 #     endif
 
+      case SRC_SOLVER:                 NPG_Max = SRC_GPU_NPGROUP;    break;
+
       default :
          Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TSolver", TSolver );
    }

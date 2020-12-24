@@ -510,6 +510,7 @@ struct InputPara_t
 // source terms
    int    Src_Deleptonization;
    int    Src_User;
+   int    Src_GPU_NPGroup;
 
 // Grackle
 #  ifdef SUPPORT_GRACKLE
