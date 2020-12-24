@@ -197,6 +197,12 @@
 #endif
 
 
+// number of input/output fluid variables in the source-term solver
+// --> fixed to NCOMP_TOTAL for now
+#  define FLU_NIN_S           NCOMP_TOTAL
+#  define FLU_NOUT_S          NCOMP_TOTAL
+
+
 // built-in fields in different models
 #if   ( MODEL == HYDRO )
 // field indices of fluid[] --> element of [0 ... NCOMP_FLUID-1]

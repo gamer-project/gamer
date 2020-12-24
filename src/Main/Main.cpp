@@ -303,9 +303,10 @@ real *h_EoS_Table[EOS_NTABLE_MAX];
 #endif
 
 // (3-7) source terms
-real (*h_Flu_Array_S[2])[NCOMP_TOTAL][ CUBE(PS1)      ]            = { NULL, NULL };
+real (*h_Flu_Array_S_In [2])[FLU_NIN_S ][ CUBE(PS1)      ]         = { NULL, NULL };
+real (*h_Flu_Array_S_Out[2])[FLU_NOUT_S][ CUBE(PS1)      ]         = { NULL, NULL };
 #ifdef MHD
-real (*h_Mag_Array_S[2])[NCOMP_MAG  ][ PS1P1*SQR(PS1) ]            = { NULL, NULL };
+real (*h_Mag_Array_S_In [2])[NCOMP_MAG ][ PS1P1*SQR(PS1) ]         = { NULL, NULL };
 #endif
 
 
@@ -377,9 +378,10 @@ real *d_EoS_Table[EOS_NTABLE_MAX];
 #endif
 
 // (4-7) source terms
-real (*d_Flu_Array_S)[NCOMP_TOTAL][ CUBE(PS1)      ]             = NULL;
+real (*d_Flu_Array_S_In )[FLU_NIN_S ][ CUBE(PS1)      ]          = NULL;
+real (*d_Flu_Array_S_Out)[FLU_NOUT_S][ CUBE(PS1)      ]          = NULL;
 #ifdef MHD
-real (*d_Mag_Array_S)[NCOMP_MAG  ][ PS1P1*SQR(PS1) ]             = NULL;
+real (*d_Mag_Array_S_In)[NCOMP_MAG  ][ PS1P1*SQR(PS1) ]          = NULL;
 #endif
 
 #endif // #ifdef GPU

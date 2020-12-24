@@ -308,9 +308,10 @@ extern real       (*h_Mag_Array_T[2])[NCOMP_MAG][ PS1P1*SQR(PS1) ];
 extern real        *h_EoS_Table[EOS_NTABLE_MAX];
 #endif
 
-extern real       (*h_Flu_Array_S[2])[NCOMP_TOTAL][ CUBE(PS1)      ];
+extern real       (*h_Flu_Array_S_In [2])[FLU_NIN_S ][ CUBE(PS1)      ];
+extern real       (*h_Flu_Array_S_Out[2])[FLU_NOUT_S][ CUBE(PS1)      ];
 #ifdef MHD
-extern real       (*h_Mag_Array_S[2])[NCOMP_MAG  ][ PS1P1*SQR(PS1) ];
+extern real       (*h_Mag_Array_S_In [2])[NCOMP_MAG ][ PS1P1*SQR(PS1) ];
 #endif
 
 
