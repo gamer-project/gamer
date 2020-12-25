@@ -26,6 +26,7 @@ extern void (*Src_User_Ptr)( real fluid[], const double x, const double y, const
 void Src_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int FluSg )
 {
 
+/*
 // skip if there is no source term (must check all source terms)
    if ( !SRC_USER )  return;
 
@@ -62,5 +63,6 @@ void Src_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
          for (int v=0; v<NCOMP_TOTAL; v++)   amr->patch[FluSg][lv][PID]->fluid[v][k][j][i] = fluid[v];
       }}} // i,j,k
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+*/
 
 } // FUNCTION : Src_AdvanceDt

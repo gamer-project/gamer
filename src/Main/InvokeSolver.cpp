@@ -696,13 +696,13 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
          CUAPI_Asyn_SrcSolver( h_Flu_Array_S_In [ArrayID],
                                h_Flu_Array_S_Out[ArrayID],
                                h_Mag_Array_S_In [ArrayID],
-                               NPG, dt, dh, TimeNew, TimeOld, MIN_DENS, MIN_PRES, MIN_EINT,
+                               SRC_TERMS, NPG, dt, dh, TimeNew, TimeOld, MIN_DENS, MIN_PRES, MIN_EINT,
                                GPU_NSTREAM );
 #        else
          CPU_SrcSolver       ( h_Flu_Array_S_In [ArrayID],
                                h_Flu_Array_S_Out[ArrayID],
                                h_Mag_Array_S_In [ArrayID],
-                               NPG, dt, dh, TimeNew, TimeOld, MIN_DENS, MIN_PRES, MIN_EINT );
+                               SRC_TERMS, NPG, dt, dh, TimeNew, TimeOld, MIN_DENS, MIN_PRES, MIN_EINT );
 #        endif
       break;
 

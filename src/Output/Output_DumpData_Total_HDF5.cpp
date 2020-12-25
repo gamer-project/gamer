@@ -2141,8 +2141,8 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  endif
 
 // source terms
-   InputPara.Src_Deleptonization     = SRC_DELEPTONIZATION;
-   InputPara.Src_User                = SRC_USER;
+   InputPara.Src_Deleptonization     = SRC_TERMS.Deleptonization;
+   InputPara.Src_User                = SRC_TERMS.User;
    InputPara.Src_GPU_NPGroup         = SRC_GPU_NPGROUP;
 
 // Grackle

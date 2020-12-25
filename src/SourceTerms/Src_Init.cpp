@@ -30,8 +30,12 @@ void Src_Init()
 
 
 // check if at least one source term is activated
-   if ( SRC_DELEPTONIZATION  ||  SRC_USER )  Src_Any = true;
-   else                                      Src_Any = false;
+   if ( SRC_TERMS.Deleptonization  ||
+        SRC_TERMS.User
+      )
+      SRC_TERMS.Any = true;
+   else
+      SRC_TERMS.Any = false;
 
 
 // initialize source terms
@@ -40,7 +44,7 @@ void Src_Init()
       Src_Init_Deleptonization();
       */
 
-   if ( SRC_USER )
+   if ( SRC_TERMS.User )
    {
       if ( Src_Init_User_Ptr == NULL )    Aux_Error( ERROR_INFO, "Src_Init_User_Ptr == NULL !!\n" );
 

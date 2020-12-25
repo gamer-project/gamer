@@ -19,6 +19,7 @@
 // Parameter   :  h_Flu_Array_In    : Host array storing the input fluid variables
 //                h_Flu_Array_Out   : Host array to store the output fluid variables
 //                h_Mag_Array_In    : Host array storing the input B field (for MHD only)
+//                SrcTerms          : Structure to store all source-term options
 //                NPatchGroup       : Number of patch groups to be evaluated
 //                dt                : Time interval to advance solution
 //                dh                : Grid size
@@ -30,7 +31,7 @@
 void CPU_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(PS1)      ],
                           real h_Flu_Array_Out[][FLU_NOUT_S][ CUBE(PS1)      ],
                     const real h_Mag_Array_In [][NCOMP_MAG ][ PS1P1*SQR(PS1) ],
-                    const int NPatchGroup, const real dt, const real dh,
+                    const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
                     const double TimeNew, const double TimeOld,
                     const real MinDens, const real MinPres, const real MinEint )
 {
@@ -41,6 +42,12 @@ void CPU_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(PS1)      ],
    if ( h_Flu_Array_Out == NULL )   Aux_Error( ERROR_INFO, "h_Flu_Array_Out = NULL !!\n" );
    if ( h_Mag_Array_In  == NULL )   Aux_Error( ERROR_INFO, "h_Mag_Array_In = NULL !!\n" );
 #  endif
+
+
+// nothing to do if no source term is activated
+   if ( ! SrcTerms.Any )   return;
+
+
 
 } // FUNCTION : CPU_SrcSolver
 
