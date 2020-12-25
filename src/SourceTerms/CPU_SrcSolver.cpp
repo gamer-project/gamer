@@ -3,6 +3,16 @@
 #ifndef GPU
 
 
+void CPU_SrcSolver_IterateAllCells(
+   const real g_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NXT)           ],
+         real g_Flu_Array_Out[][FLU_NOUT_S][ CUBE(SRC_NXT)           ],
+   const real g_Mag_Array_In [][NCOMP_MAG ][ SRC_NXT_P1*SQR(SRC_NXT) ],
+   const double g_Corner_Array[][3],
+   const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
+   const double TimeNew, const double TimeOld,
+   const real MinDens, const real MinPres, const real MinEint );
+
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -19,7 +29,7 @@
 // Parameter   :  h_Flu_Array_In    : Host array storing the input fluid variables
 //                h_Flu_Array_Out   : Host array to store the output fluid variables
 //                h_Mag_Array_In    : Host array storing the input B field (for MHD only)
-//                SrcTerms          : Structure to store all source-term options
+//                SrcTerms          : Structure storing all source-term options
 //                NPatchGroup       : Number of patch groups to be evaluated
 //                dt                : Time interval to advance solution
 //                dh                : Grid size
@@ -44,10 +54,9 @@ void CPU_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(PS1)      ],
 #  endif
 
 
-// nothing to do if no source term is activated
-   if ( ! SrcTerms.Any )   return;
-
-
+   CPU_SrcSolver_IterateAllCells( h_Flu_Array_In, h_Flu_Array_Out, h_Mag_Array_In, NULL,
+                                  SrcTerms, NPatchGroup, dt, dh, TimeNew, TimeOld,
+                                  MinDens, MinPres, MinEint );
 
 } // FUNCTION : CPU_SrcSolver
 

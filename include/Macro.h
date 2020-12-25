@@ -604,6 +604,12 @@
 
 
 
+// number of ghost zones for the source-term solver
+// --> fixed to zero for now since ghost zones in source terms are not supported yet
+#     define SRC_GHOST_SIZE         0
+
+
+
 // patch size (number of cells of a single patch in the x/y/z directions)
 #define PATCH_SIZE                   8
 #define PS1             ( 1*PATCH_SIZE )
@@ -635,6 +641,8 @@
 #ifdef PARTICLE
 #  define RHOEXT_NXT    ( PS1 + 2*RHOEXT_GHOST_SIZE )             // array rho_ext of each patch
 #endif
+#  define SRC_NXT       ( PS1 + 2*SRC_GHOST_SIZE )                // use patch as the unit
+#  define SRC_NXT_P1    ( SRC_NXT + 1 )
 
 
 // size of auxiliary arrays and EoS tables

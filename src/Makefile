@@ -631,8 +631,13 @@ endif # SUPPORT_LIBYT
 
 # local source terms source files
 # ------------------------------------------------------------------------------------
-CPU_FILE    += Src_AdvanceDt.cpp  Src_Prepare.cpp  Src_Close.cpp  Src_Init.cpp  CPU_SrcSolver.cpp  Src_User.cpp
+GPU_FILE    +=
 
+CPU_FILE    += CPU_SrcSolver.cpp  CPU_SrcSolver_IterateAllCells.cpp
+
+CPU_FILE    += Src_AdvanceDt.cpp  Src_Prepare.cpp  Src_Close.cpp  Src_Init.cpp  Src_User.cpp
+
+vpath %.cu     SourceTerms
 vpath %.cpp    SourceTerms
 
 
