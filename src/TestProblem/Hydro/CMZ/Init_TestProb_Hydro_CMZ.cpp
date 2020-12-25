@@ -216,42 +216,63 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
   const double Rad              = sqrt( SQR(dx) + SQR(dy) );
   const double r                = sqrt( SQR(dx) + SQR(dy) + SQR(dz));
 
-  double DiskGasDens, DiskGasPres, DiskGasVel;
-  double Pres,Eint;
+  double GasDens, GasPres, GasVel;
+  double Eint,Etot,MomX,MomY,MomZ;
+  double Metal=NULL_REAL;
 
   if (Rad <= 11.5 && fabs(dz) <= 0.2)
   {
  
-     DiskGasDens = 0.2735*exp(-Rad/4.8)*1/SQR(cosh(dz/0.13))*(Const_Msun/CUBE(Const_pc))/(UNIT_M/CUBE(UNIT_L));    
-     DiskGasPres = Hydro_Temp2Pres( DiskGasDens, BarredPot_initT, MOLECULAR_WEIGHT, Const_mH/UNIT_M,
+     GasDens = 0.2735*exp(-Rad/4.8)*1/SQR(cosh(dz/0.13))*(Const_Msun/CUBE(Const_pc))/(UNIT_M/CUBE(UNIT_L));    
+     GasPres = Hydro_Temp2Pres( GasDens, BarredPot_initT, MOLECULAR_WEIGHT, Const_mH/UNIT_M,
                                                  CheckMinPres_Yes, MIN_PRES );
+//  GasVel  = BarredPot_V0*Rad/sqrt(SQR(Rad) + SQR(BarredPot_Rc));
+     GasVel = -5.58683750e-05*pow(Rad,6) + 2.17357740e-03*pow(Rad,5) - 3.25132718e-02*pow(Rad,4)
+               +2.32860976e-01*pow(Rad,3) - 8.14564481e-01*pow(Rad,2) + 1.35601708e+00*Rad + 1.06059808e+00;     
+
+     MomX  = -dy/r*GasVel*GasDens;
+     MomY  = +dx/r*GasVel*GasDens;
+     MomZ  = 0.0;
+
+     Metal = GasDens*1.0e-2;
+
   }
   else
   {
-     DiskGasDens = 1.0e-6*(Const_Msun/CUBE(Const_pc))/(UNIT_M/CUBE(UNIT_L));
-//   DiskGasDens = 0.025 ;  // 1.0e-6
-     DiskGasPres = Hydro_Temp2Pres( DiskGasDens, 100.*BarredPot_initT, MOLECULAR_WEIGHT, Const_mH/UNIT_M,
+     GasDens = 1.0e-6*(Const_Msun/CUBE(Const_pc))/(UNIT_M/CUBE(UNIT_L));
+//   GasDens = 0.025 ;  // 1.0e-6
+     GasPres = Hydro_Temp2Pres( GasDens, 1.0e6, MOLECULAR_WEIGHT, Const_mH/UNIT_M,
                                                CheckMinPres_Yes, MIN_PRES );
+     MomX  = 0.0;
+     MomY  = 0.0;
+     MomZ  = 0.0;
+
+     Metal = GasDens*1.0e-8;
+
   }
 
 
-  DiskGasVel  = BarredPot_V0*Rad/sqrt(SQR(Rad) + SQR(BarredPot_Rc));
-
-  fluid[DENS]  = DiskGasDens ;
-  fluid[MOMX]  = fluid[DENS]*(-dy/Rad*DiskGasVel);
-  fluid[MOMY]  = fluid[DENS]*(+dx/Rad*DiskGasVel);
-  fluid[MOMZ]  = fluid[DENS]*0.0;
-
 #  if ( EOS == EOS_ISOTHERMAL )
 
-  Pres = EoS_DensEint2Pres_CPUPtr( fluid[DENS], 1.0 , NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, NULL);
-  Eint = EoS_DensPres2Eint_CPUPtr( fluid[DENS], Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, NULL);
-  fluid[ENGY]  = Hydro_ConEint2Etot( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], Eint, 0.0 );
+   GasPres = EoS_DensEint2Pres_CPUPtr( GasDens, 1.0 , NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, NULL);
+   Eint = EoS_DensPres2Eint_CPUPtr( GasDens, GasPres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, NULL);
+   Etot  = Hydro_ConEint2Etot( GasDens, MomX, MomY, MomZ, Eint, 0.0 );
 
 #  else
-  fluid[ENGY]  = DiskGasPres / ( GAMMA - 1.0 )
-                    + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+
+   Eint = EoS_DensPres2Eint_CPUPtr( GasDens, GasPres, NULL, EoS_AuxArray_Flt,
+                                    EoS_AuxArray_Int, h_EoS_Table );    // assuming EoS requires no passive scalars
+   Etot = Hydro_ConEint2Etot( GasDens, MomX, MomY, MomZ, Eint, 0.0 );      // do NOT include magnetic energy here
 #  endif
+
+
+  fluid[DENS] = GasDens ;
+  fluid[MOMX] = MomX;
+  fluid[MOMY] = MomY;
+  fluid[MOMZ] = MomZ;
+  fluid[ENGY] = Etot;
+  fluid[Idx_Metal] = Metal;
+
 
 } // FUNCTION : SetGridIC
 
@@ -310,6 +331,11 @@ void IsolatedBC( real fluid[], const double x, const double y, const double z, c
 //-------------------------------------------------------------------------------------------------------
 void AddNewField_BarredPot()
 {
+// add the metallicity field only if it has not been done
+// --> since Grackle may already add this field automatically when GRACKLE_METAL is enabled
+// --> also note that "Idx_Metal" has been predefined in Field.h
+    if ( Idx_Metal == Idx_Undefined )
+          Idx_Metal = AddField( "Metal", NORMALIZE_NO );
 
 
 } // FUNCTION : AddNewField_BarredPot
@@ -367,8 +393,8 @@ void Init_TestProb_Hydro_BarredPot()
    SetParameter();
 
    Init_Function_User_Ptr  = SetGridIC;
-   BC_User_Ptr             = IsolatedBC;
    Init_Field_User_Ptr     = AddNewField_BarredPot;
+   BC_User_Ptr             = IsolatedBC;
    Flag_User_Ptr           = Flag_CMZ;
 #  ifdef PARTICLE
    Par_Init_ByFunction_Ptr = Par_Init_ByFunction_BarredPot;
