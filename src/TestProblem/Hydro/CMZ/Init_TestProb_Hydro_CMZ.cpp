@@ -241,7 +241,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
   {
      GasDens = 1.0e-6*(Const_Msun/CUBE(Const_pc))/(UNIT_M/CUBE(UNIT_L));
 //   GasDens = 0.025 ;  // 1.0e-6
-     GasPres = Hydro_Temp2Pres( GasDens, 1.0e6, MOLECULAR_WEIGHT, Const_mH/UNIT_M,
+     GasPres = Hydro_Temp2Pres( GasDens, 100.*BarredPot_initT, MOLECULAR_WEIGHT, Const_mH/UNIT_M,
                                                CheckMinPres_Yes, MIN_PRES );
      MomX  = 0.0;
      MomY  = 0.0;

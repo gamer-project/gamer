@@ -40,12 +40,12 @@ SIMU_OPTION += -DGRAVITY
 
 # enable particles
 # --> must enable GRAVITY
-#SIMU_OPTION += -DPARTICLE
+SIMU_OPTION += -DPARTICLE
 
 # support Grackle, a chemistry and radiative cooling library
 # --> must set NCOMP_PASSIVE_USER according to the primordial chemistry network set by GRACKLE_PRIMORDIAL
 # --> please enable OpenMP when compiling Grackle (by "make omp-on")
-#SIMU_OPTION += -DSUPPORT_GRACKLE
+SIMU_OPTION += -DSUPPORT_GRACKLE
 
 
 # (b) options of different physical modules
@@ -74,7 +74,7 @@ SIMU_OPTION += -DRSOLVER=HLLC
 # number of user-defined passively advected scalars
 # --> set it to 0 or comment it out if none is required
 # --> useless for RTVD
-SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
+SIMU_OPTION += -DNCOMP_PASSIVE_USER=1
 
 # magnetohydrodynamics
 #SIMU_OPTION += -DMHD
@@ -84,12 +84,12 @@ SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 
 # equation of state: EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TABULAR/EOS_USER
 # --> must be set when MODEL=HYDRO
-#SIMU_OPTION += -DEOS=EOS_GAMMA
-SIMU_OPTION += -DEOS=EOS_ISOTHERMAL
+SIMU_OPTION += -DEOS=EOS_GAMMA
+#SIMU_OPTION += -DEOS=EOS_ISOTHERMAL
 
 # whether or not the EOS set above is barotropic
 # # --> mandatory for EOS_ISOTHERMAL; optional for EOS_TABULAR/EOS_USER
-SIMU_OPTION += -DBAROTROPIC_EOS
+#SIMU_OPTION += -DBAROTROPIC_EOS
 
 
 # (b-2) ELBDM options

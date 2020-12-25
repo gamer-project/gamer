@@ -137,7 +137,7 @@ static real ExtPot_TabularP17( const double x, const double y, const double z, c
    yp     = (real)(y - cy);
    rad    = (real)sqrt(SQR(xp) + SQR(yp));
 
-   if (rad <= 2*cx-0.1)
+   if (rad <= cx-0.1)
 
    {
 // 1. rotate x,y,z 
