@@ -9,8 +9,17 @@
 #include "CUFLU_Shared_FluUtility.cu"
 #endif
 #include "CUDA_ConstMemory.h"
+#include "Deleptonization/GPU_Src_Deleptonization.cu"
 
-#endif // #ifdef __CUDACC__
+#else
+
+void Src_Deleptonization( real fluid[], const real B[],
+                          const SrcTerms_t SrcTerms, const real dt, const real dh,
+                          const double x, const double y, const double z,
+                          const double TimeNew, const double TimeOld,
+                          const real MinDens, const real MinPres, const real MinEint );
+
+#endif // #ifdef __CUDACC__ ... else ...
 
 
 
@@ -27,7 +36,7 @@
 //                g_Flu_Array_Out   : Array to store the output fluid variables
 //                g_Mag_Array_In    : Array storing the input B field (for MHD only)
 //                g_Corner_Array    : Array storing the physical corner coordinates of each patch
-//                SrcTerms          : Structure storing all source-term options
+//                SrcTerms          : Structure storing all source-term variables
 //                NPatchGroup       : Number of patch groups to be evaluated
 //                dt                : Time interval to advance solution
 //                dh                : Grid size
@@ -101,16 +110,16 @@ void CPU_SrcSolver_IterateAllCells(
 
 
 //       add all source terms one by one
-/*
 //       (1) deleptonization
-         if ( SrcTerms.Deleptonization )  Src_Deleptonization( fluid, B, x, y, z, TimeNew, lv, dt );
+         if ( SrcTerms.Deleptonization )  Src_Deleptonization( fluid, B, SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld,
+                                                               MinDens, MinPres, MinEint );
 
 //       (2) user-defined
-         if ( SrcTerms.User            )  Src_User_Ptr       ( fluid, B, x, y, z, TimeNew, lv, dt );
-*/
+//       if ( SrcTerms.User            )  Src_User_Ptr       ( fluid, B, x, y, z, TimeNew, TimeOld, dt, lv );
 
 //       store the updated results
          for (int v=0; v<FLU_NOUT_S; v++)   g_Flu_Array_Out[p][v][t] = fluid[v];
+
       } // CGPU_LOOP( t, CUBE(SRC_NXT) )
    } // for (int p=0; p<8*NPG; p++)
 

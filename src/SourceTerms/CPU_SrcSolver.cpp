@@ -29,7 +29,7 @@ void CPU_SrcSolver_IterateAllCells(
 // Parameter   :  h_Flu_Array_In    : Host array storing the input fluid variables
 //                h_Flu_Array_Out   : Host array to store the output fluid variables
 //                h_Mag_Array_In    : Host array storing the input B field (for MHD only)
-//                SrcTerms          : Structure storing all source-term options
+//                SrcTerms          : Structure storing all source-term variables
 //                NPatchGroup       : Number of patch groups to be evaluated
 //                dt                : Time interval to advance solution
 //                dh                : Grid size

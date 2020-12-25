@@ -633,12 +633,12 @@ endif # SUPPORT_LIBYT
 # ------------------------------------------------------------------------------------
 GPU_FILE    +=
 
-CPU_FILE    += CPU_SrcSolver.cpp  CPU_SrcSolver_IterateAllCells.cpp
+CPU_FILE    += CPU_SrcSolver.cpp  CPU_SrcSolver_IterateAllCells.cpp  CPU_Src_Deleptonization.cpp
 
 CPU_FILE    += Src_AdvanceDt.cpp  Src_Prepare.cpp  Src_Close.cpp  Src_Init.cpp  Src_User.cpp
 
 vpath %.cu     SourceTerms
-vpath %.cpp    SourceTerms
+vpath %.cpp    SourceTerms  SourceTerms/Deleptonization
 
 
 # Grackle source files (included only if "SUPPORT_GRACKLE" is turned on)
