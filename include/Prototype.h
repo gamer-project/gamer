@@ -627,7 +627,8 @@ void YT_Inline();
 
 // source terms
 void Src_Init();
-void Src_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int FluSg );
+void Src_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                    const int SaveSg_Flu, const int SaveSg_Mag, const bool OverlapMPI, const bool Overlap_Sync );
 void Src_Prepare( const int lv,
                   real h_Flu_Array_S_In[][FLU_NIN_S][ CUBE(PS1)      ],
                   real h_Mag_Array_S_In[][NCOMP_MAG][ PS1P1*SQR(PS1) ],

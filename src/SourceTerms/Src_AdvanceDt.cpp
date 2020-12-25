@@ -1,9 +1,5 @@
 #include "GAMER.h"
 
-// function pointer for the user-defined source terms
-extern void (*Src_User_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
-                             const int lv, double AuxArray[], const double dt );
-
 
 
 
@@ -11,58 +7,33 @@ extern void (*Src_User_Ptr)( real fluid[], const double x, const double y, const
 // Function    :  Src_AdvanceDt
 // Description :  Add various local source terms
 //
-// Note        :  1. Invoked by Evolve()
-//                2. Grackle library is treated separately
+// Note        :  1. Invoke InvokeSolver()
+//                2. Invoked by EvolveLevel()
+//                3. Grackle library is treated separately
 //
-// Parameter   :  lv      : Target refinement level
-//                TimeNew : Target physical time to reach
-//                TimeOld : Physical time before update
-//                          --> This function updates physical time from TimeOld to TimeNew
-//                dt      : Time interval to advance solution
-//                FluSg   : Target fluid sandglass (for both input and output)
+// Parameter   :  lv           : Target refinement level
+//                TimeNew      : Target physical time to reach
+//                TimeOld      : Physical time before update
+//                               --> This function updates physical time from TimeOld to TimeNew
+//                dt           : Time interval to advance solution
+//                SaveSg_Flu   : Sandglass to store the updated fluid data
+//                SaveSg_Mag   : Sandglass to store the updated B field (NOT SUPPORTED YET)
+//                OverlapMPI   : true --> Overlap MPI time with CPU/GPU computation (NOT SUPPORTED YET)
+//                Overlap_Sync : true  --> Advance the patches which cannot be overlapped with MPI communication
+//                               false --> Advance the patches which can    be overlapped with MPI communication
+//                               (useful only if "OverlapMPI == true")
 //
 // Return      : fluid[] in all patches
 //-------------------------------------------------------------------------------------------------------
-void Src_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int FluSg )
+void Src_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                    const int SaveSg_Flu, const int SaveSg_Mag, const bool OverlapMPI, const bool Overlap_Sync )
 {
 
-/*
-// skip if there is no source term (must check all source terms)
-   if ( !SRC_USER )  return;
+// nothing to do if no source term is activated
+   if ( ! SRC_TERMS.Any )  return;
 
 
-// check
-   if ( SRC_USER  &&  Src_User_Ptr == NULL )    Aux_Error( ERROR_INFO, "Src_User_Ptr == NULL !!\n" );
-
-
-   const double dh = amr->dh[lv];
-   real   fluid[NCOMP_TOTAL];
-   double x, y, z, x0, y0, z0;
-
-
-#  pragma omp parallel for private( fluid, x, y, z, x0, y0, z0 ) schedule( runtime )
-   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-   {
-      x0 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
-      y0 = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
-      z0 = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
-
-      for (int k=0; k<PS1; k++)  {  z = z0 + k*dh;
-      for (int j=0; j<PS1; j++)  {  y = y0 + j*dh;
-      for (int i=0; i<PS1; i++)  {  x = x0 + i*dh;
-
-//       get the input array
-         for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
-
-//###REVISE: should we make different source terms "commutative"?
-//       add source terms
-//       (1) user-defined
-         if ( SRC_USER )   Src_User_Ptr( fluid, x, y, z, TimeNew, lv, NULL, dt );
-
-//       store the updated results
-         for (int v=0; v<NCOMP_TOTAL; v++)   amr->patch[FluSg][lv][PID]->fluid[v][k][j][i] = fluid[v];
-      }}} // i,j,k
-   } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-*/
+   InvokeSolver( SRC_SOLVER, lv, TimeNew, TimeOld, dt, NULL_REAL, SaveSg_Flu, SaveSg_Mag, NULL_INT,
+                 OverlapMPI, Overlap_Sync );
 
 } // FUNCTION : Src_AdvanceDt

@@ -440,7 +440,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
    const int InOutSg_Src = SaveSg_Flu;    // save in the same FluSg
 
 //###REVISE: we have assumed that Src_AdvanceDt() requires no ghost zones
-   TIMING_FUNC(   Src_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu ),
+   TIMING_FUNC(   Src_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, SaveSg_Mag, false, false ),
                   Timer_Src_Advance[lv],   TIMER_ON   );
 
 
