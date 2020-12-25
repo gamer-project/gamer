@@ -16,11 +16,11 @@ MIN_EINT                      0.0         # minimum internal energy (must >= 0.0
 
 
 # simulation scale
-BOX_SIZE                      24.         # box size along the longest side (in Mpc/h if COMOVING is adopted)
-NX0_TOT_X                     512        # number of base-level cells along x
-NX0_TOT_Y                     512        # number of base-level cells along y
-NX0_TOT_Z                     16          # number of base-level cells along z
-OMP_NTHREAD                   -1          # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
+BOX_SIZE                   23.6         # box size along the longest side (in Mpc/h if COMOVING is adopted)
+NX0_TOT_X                  1024          # number of base-level cells along x
+NX0_TOT_Y                  1024          # number of base-level cells along y
+NX0_TOT_Z                    32          # number of base-level cells along z
+OMP_NTHREAD                   -1         # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
 END_T                        -1.0         # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
 END_STEP                     -1           # end step (<0=auto -> must be set by test problems or restart) [-1]
 
@@ -89,7 +89,7 @@ REGRID_COUNT                  4           # refine every REGRID_COUNT sub-step [
 FLAG_BUFFER_SIZE              8           # number of buffer cells for the flag operation (0~PATCH_SIZE) [PATCH_SIZE]
 FLAG_BUFFER_SIZE_MAXM1_LV     2           # FLAG_BUFFER_SIZE at the level MAX_LEVEL-1 (<0=auto -> FLAG_BUFFER_SIZE) [-1]
 FLAG_BUFFER_SIZE_MAXM2_LV    -1           # FLAG_BUFFER_SIZE at the level MAX_LEVEL-2 (<0=auto) [-1]
-MAX_LEVEL                     0           # maximum refinement level (0~NLEVEL-1) [NLEVEL-1]
+MAX_LEVEL                     3           # maximum refinement level (0~NLEVEL-1) [NLEVEL-1]
 OPT__FLAG_RHO                 1           # flag: density (Input__Flag_Rho) [0]
 OPT__FLAG_RHO_GRADIENT        0           # flag: density gradient (Input__Flag_RhoGradient) [0]
 OPT__FLAG_PRES_GRADIENT       0           # flag: pressure gradient (Input__Flag_PresGradient) [0] ##HYDRO ONLY##
@@ -105,7 +105,7 @@ OPT__FLAG_REGION              0           # flag: specify the regions **allowed*
 OPT__FLAG_NPAR_PATCH          0           # flag: # of particles per patch (Input__Flag_NParPatch): (0=off, 1=itself, 2=itself+siblings) [0]
 OPT__FLAG_NPAR_CELL           0           # flag: # of particles per cell  (Input__Flag_NParCell) [0]
 OPT__FLAG_PAR_MASS_CELL       0           # flag: total particle mass per cell (Input__Flag_ParMassCell) [0]
-OPT__NO_FLAG_NEAR_BOUNDARY    0           # flag: disallow refinement near the boundaries [0]
+OPT__NO_FLAG_NEAR_BOUNDARY    1           # flag: disallow refinement near the boundaries [0]
 OPT__PATCH_COUNT              1           # record the # of patches   at each level: (0=off, 1=every step, 2=every sub-step) [1]
 OPT__PARTICLE_COUNT           1           # record the # of particles at each level: (0=off, 1=every step, 2=every sub-step) [1]
 OPT__REUSE_MEMORY             2           # reuse patch memory to reduce memory fragmentation: (0=off, 1=on, 2=aggressive) [2]
@@ -121,7 +121,7 @@ OPT__MINIMIZE_MPI_BARRIER     1           # minimize MPI barriers to improve loa
 
 
 # Grackle library for chemistry and radiative cooling (SUPPORT_GRACKLE only)
-GRACKLE_ACTIVATE              0           # enable Grackle [1]
+GRACKLE_ACTIVATE              1           # enable Grackle [1]
 GRACKLE_VERBOSE               1           # map to "grackle_verbose" [1]
 GRACKLE_COOLING               1           # ...    "with_radiative_cooling" [1]
 GRACKLE_PRIMORDIAL            0           # ...    "primordial_chemistry" (0=Cloudy, 1/2/3=6-/9-/12-species) [0]
@@ -147,8 +147,8 @@ SF_CREATE_STAR_MAX_STAR_MFRAC 0.5         # maximum gas mass fraction allowed to
 
 # fluid solver in HYDRO (MODEL==HYDRO only)
 GAMMA                         1.666667    # ratio of specific heats (i.e., adiabatic index) [5.0/3.0]
-MOLECULAR_WEIGHT              1.273       # mean molecular weight -> currently only for post-processing [0.6]
-ISO_TEMP                      1.0e4       # isothermal temperature in kelvin ##EOS_ISOTHERMAL ONLY##
+MOLECULAR_WEIGHT              0.6         # mean molecular weight -> currently only for post-processing [0.6]
+ISO_TEMP                      1.5455e4    # isothermal temperature in kelvin ##EOS_ISOTHERMAL ONLY##
 MINMOD_COEFF                  1.0         # coefficient of the generalized MinMod limiter (1.0~2.0) [1.5]
 OPT__LR_LIMITER               4           # slope limiter of data reconstruction in the MHM/MHM_RP/CTU schemes:
                                           # (0=none, 1=vanLeer, 2=generalized MinMod, 3=vanAlbada, 4=vanLeer+generalized MinMod) [4]
@@ -182,7 +182,7 @@ SOR_MAX_ITER                 -1           # maximum number of iterations in SOR:
 SOR_MIN_ITER                 -1           # minimum number of iterations in SOR: (<0=auto) [-1]
 POT_GPU_NPGROUP              -1           # number of patch groups sent into the GPU Poisson solver (<=0=auto) [-1]
 OPT__GRA_P5_GRADIENT          0           # 5-points gradient in the Gravity solver (must have GRA/USG_GHOST_SIZE_G>=2) [0]
-OPT__SELF_GRAVITY             0           # add self-gravity [1]
+OPT__SELF_GRAVITY             1           # add self-gravity [1]
 OPT__EXT_ACC                  0           # add external acceleration (0=off, 1=function, 2=table) [0] ##HYDRO ONLY##
 OPT__EXT_POT                  2           # add external potential    (0=off, 1=function, 2=table) [0]
 EXT_POT_TABLE_NAME            pot3D_P17Ob40.bin # external potential table: filename
@@ -190,9 +190,9 @@ EXT_POT_TABLE_NPOINT_X        1200
 EXT_POT_TABLE_NPOINT_Y        1200
 EXT_POT_TABLE_NPOINT_Z        101
 EXT_POT_TABLE_DH              0.0200167
-EXT_POT_TABLE_EDGEL_X         0.0
-EXT_POT_TABLE_EDGEL_Y         0.0
-EXT_POT_TABLE_EDGEL_Z         0.0
+EXT_POT_TABLE_EDGEL_X         -0.2
+EXT_POT_TABLE_EDGEL_Y         -0.2
+EXT_POT_TABLE_EDGEL_Z         -0.13125
 
 # initialization
 OPT__INIT                     1           # initialization option: (1=FUNCTION, 2=RESTART, 3=FILE->"UM_IC")
@@ -223,7 +223,7 @@ OPT__OUTPUT_PAR_DENS          1           # output the particle or total mass de
                                           # (0=off, 1=particle mass density, 2=total mass density) [1] ##OPT__OUTPUT_TOTAL ONLY##
 OPT__OUTPUT_MODE              2           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
 OUTPUT_STEP                   5           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
-OUTPUT_DT                     1.0e-1       # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
+OUTPUT_DT                     1.0       # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
 OUTPUT_PART_X                -1.0         # x coordinate for OPT__OUTPUT_PART [-1.0]
 OUTPUT_PART_Y                -1.0         # y coordinate for OPT__OUTPUT_PART [-1.0]
 OUTPUT_PART_Z                -1.0         # z coordinate for OPT__OUTPUT_PART [-1.0]
@@ -240,7 +240,7 @@ OPT__RECORD_PERFORMANCE       1           # record the code performance [1]
 OPT__MANUAL_CONTROL           1           # support manually dump data or stop run during the runtime
                                           # (by generating the file DUMP_GAMER_DUMP or STOP_GAMER_STOP) [1]
 OPT__RECORD_USER              0           # record the user-specified info -> edit "Aux_RecordUser.cpp" [0]
-OPT__OPTIMIZE_AGGRESSIVE      1           # apply aggressive optimizations (experimental) [0]
+OPT__OPTIMIZE_AGGRESSIVE      0           # apply aggressive optimizations (experimental) [0]
 
 
 # checks
