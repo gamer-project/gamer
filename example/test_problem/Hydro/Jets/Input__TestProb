@@ -12,7 +12,7 @@ Jet_TimeDependentSrc                              0         # [0/1]: time-depend
 Jet_SrcVel                                       10         # jet: jet 4-velocity ( in unit of speed of light )
 Jet_SmoothVel                                     1         # [0/1]: smooth velocity
 Jet_SrcDens                                 5.0e-31         # jet: jet density (in cgs units)
-Jet_SrcTemp                                     1.0         # jet: jet temperature (in GeV)
+Jet_SrcTemp                                     1.0         # jet: jet temperature (in K)
 Jet_ParticleMassSrc                 1.672621898e-24         # particle mass in source
 Jet_ParticleMassAmbient             1.672621898e-24         # particle mass in background
 
@@ -36,7 +36,7 @@ Jet_PrecessionAxis_z                            0.0         # z-corrdinate of pr
 
 # Jet_Ambient == 0
 Amb_UniformDens                             5.0e-29         # ambient density (in cgs units)
-Amb_UniformTemp                                1e-4         # ambient temperature (in GeV)
+Amb_UniformTemp                                1e-4         # ambient temperature (in iK)
 Amb_UniformVel_x                               +0.0         # ambient velocity x [0.0]
 Amb_UniformVel_y                               +0.0         # ambient velocity y [0.0]
 Amb_UniformVel_z                               +0.0         # ambient velocity z [0.0]

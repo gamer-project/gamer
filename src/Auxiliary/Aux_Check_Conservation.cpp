@@ -182,9 +182,9 @@ void Aux_Check_Conservation( const char *comment )
 #                 endif
 
 #                 ifdef SRHD
+                  printf("%s: %d need EoS table !! \n", __FUNCTION__, __LINE__);
                   Eint         = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Ered, EoS_GuessHTilde_CPUPtr,
                                                  EoS_HTilde2Temp_CPUPtr, CheckMinEint_No, NULL_REAL, Emag );
-                  printf("%s: %d need EoS table !! \n", __FUNCTION__, __LINE__);
                   exit(0);
 #                 else
                   Eint         = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Etot, EoS_GuessHTilde_CPUPtr,

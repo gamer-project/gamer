@@ -416,7 +416,7 @@ void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const in
 #                 if( MODEL == HYDRO )
 //                check unphysical result
 #                 ifdef SRHD
-                  SRHD_CheckUnphysical( fluid_in, NULL, __FUNCTION__, __LINE__, true );
+                  SRHD_CheckUnphysical( fluid_out, NULL, __FUNCTION__, __LINE__, true );
 #                 endif
 //                modify the initial condition if required
                   if ( OPT__RESET_FLUID )
@@ -526,6 +526,17 @@ void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nva
 #  elif ( DUAL_ENERGY == DE_EINT )
 #  error : DE_EINT is NOT supported yet !!
 #  endif
+
+
+// normalized fluid variables by UNIT
+   if ( OPT__UNIT )
+   {
+      fluid_out[DENS] = fluid_in[DENS] / UNIT_D;
+      fluid_out[MOMX] = fluid_in[MOMX] / UNIT_V / UNIT_D;
+      fluid_out[MOMY] = fluid_in[MOMY] / UNIT_V / UNIT_D;
+      fluid_out[MOMZ] = fluid_in[MOMZ] / UNIT_V / UNIT_D;
+      fluid_out[ENGY] = fluid_in[ENGY] / UNIT_P;
+   }
 
 // calculate the density field for ELBDM
 #  elif ( MODEL == ELBDM )

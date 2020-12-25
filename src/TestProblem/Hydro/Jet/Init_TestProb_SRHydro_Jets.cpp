@@ -273,10 +273,11 @@ void SetParameter()
    if ( ( UNIT_L <= 0.5*Const_kpc || 2.0*Const_kpc <= UNIT_L ) && OPT__UNIT )
       Aux_Error( ERROR_INFO, "UNIT_L=%e is far from %e !!\n", UNIT_L, Const_kpc );
 
+   const double Const_Erg2eV = 6.2415e11;
 
 // (1-2) convert to code unit
    Jet_SrcVel               *= Const_c   / UNIT_V;
-   Jet_SrcTemp              *= Const_GeV / ( Jet_ParticleMassSrc * SQR(Const_c) );
+   Jet_SrcTemp              *= Const_kB_eV / (Jet_ParticleMassSrc*Const_c*Const_c*Const_Erg2eV);
    Jet_SrcDens              *= 1.0       / UNIT_D;
 
    Jet_Radius               *= Const_kpc / UNIT_L;
@@ -298,7 +299,7 @@ void SetParameter()
    }
    
 
-   Amb_UniformTemp          *= Const_GeV / ( Jet_ParticleMassAmbient * SQR(Const_c) );
+   Amb_UniformTemp         *= Const_kB_eV / (Jet_ParticleMassAmbient*Const_c*Const_c*Const_Erg2eV);
    Jet_AngularVelocity     *= 1.0;    // the unit of Jet_AngularVelocity is UNIT_T
 
    
@@ -314,7 +315,6 @@ void SetParameter()
      Jet_BurstEndTime       *= 1e3*Const_yr / UNIT_T;
      Jet_Burst4VelRatio     *= Const_c      / UNIT_V;
      Jet_BurstDensRatio     *= 1.0          / UNIT_D;
-     Jet_BurstTempRatio     *= Const_GeV    / ( Jet_ParticleMassSrc * SQR(Const_c) );
    }
 
 
@@ -331,9 +331,7 @@ void SetParameter()
 // (4) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
    const long   End_Step_Default = __INT_MAX__;
-   const double End_T_Default1   = 10.0*Amb_FluSphereRadius * UNIT_L / (CharacteristicSpeed*UNIT_V) / UNIT_T;
-   const double Jet_Src3Vel      = Jet_SrcVel / sqrt(1.0 + Jet_SrcVel*Jet_SrcVel);
-   const double End_T_Default2   = 10.0*BOX_SIZE            * UNIT_L / (Jet_Src3Vel        *UNIT_V) / UNIT_T;
+   const double End_T_Default    = 10.0*BOX_SIZE * UNIT_L / (CharacteristicSpeed *UNIT_V) / UNIT_T;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
@@ -341,12 +339,8 @@ void SetParameter()
    }
 
    if ( END_T < 0.0 ) {
-      if ( Jet_Exhaust == 0 )
-      {
-        if ( CharacteristicSpeed == -1.0 ) Aux_Error( ERROR_INFO, "CharacteristicSpeed must be provided !!\n" );
-        else                               END_T = End_T_Default1;
-      }
-      else                                 END_T = End_T_Default2;
+      if ( CharacteristicSpeed == -1.0 ) Aux_Error( ERROR_INFO, "CharacteristicSpeed must be provided !!\n" );
+      else                               END_T = End_T_Default;
 
       PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
    }
@@ -372,7 +366,7 @@ void SetParameter()
      Aux_Message( stdout, "  Jet_ParticleMassAmbient  = %14.7e g\n",          Jet_ParticleMassAmbient                         );
      Aux_Message( stdout, "  Jet_SrcVel               = %14.7e c\n",          Jet_SrcVel                                      );
      Aux_Message( stdout, "  Jet_SrcDens              = %14.7e g/cm^3\n",     Jet_SrcDens*UNIT_D                              );
-     Aux_Message( stdout, "  Jet_SrcTemp              = %14.7e GeV\n",        Jet_SrcTemp*Jet_ParticleMassSrc*SQR(Const_c)/Const_GeV );
+     Aux_Message( stdout, "  Jet_SrcTemp              = %14.7e kT/mc**2\n",   Jet_SrcTemp                                     );
      Aux_Message( stdout, "  Jet_NumDensSrc           = %14.7e per cc\n",     Jet_SrcDens*UNIT_D/Jet_ParticleMassSrc          );
      Aux_Message( stdout, "  Jet_CenOffset[x]         = %14.7e kpc\n",        Jet_CenOffset [0]*UNIT_L/Const_kpc              );
      Aux_Message( stdout, "  Jet_CenOffset[y]         = %14.7e kpc\n",        Jet_CenOffset [1]*UNIT_L/Const_kpc              );
@@ -388,7 +382,7 @@ void SetParameter()
    if ( Jet_Ambient == 0 && MPI_Rank == 0 )
    {
      Aux_Message( stdout, "  Amb_UniformDens          = %14.7e g/cm^3\n",     Amb_UniformDens*UNIT_D                          );
-     Aux_Message( stdout, "  Amb_UniformTemp          = %14.7e GeV\n",        Amb_UniformTemp*Jet_ParticleMassAmbient*SQR(Const_c)/Const_GeV );
+     Aux_Message( stdout, "  Amb_UniformTemp          = %14.7e kT/mc**2\n",   Amb_UniformTemp                                 );
      Aux_Message( stdout, "  Amb_UniformVel[x]        = %14.7e c\n",          Amb_UniformVel[0]                               );
      Aux_Message( stdout, "  Amb_UniformVel[y]        = %14.7e c\n",          Amb_UniformVel[1]                               );
      Aux_Message( stdout, "  Amb_UniformVel[z]        = %14.7e c\n",          Amb_UniformVel[2]                               );
@@ -397,7 +391,7 @@ void SetParameter()
 
    if ( MPI_Rank == 0 )
    {
-     Aux_Message( stdout, "  CharacteristicSpeed      = %14.7e c\n",          CharacteristicSpeed / UNIT_T                    );
+     Aux_Message( stdout, "  CharacteristicSpeed      = %14.7e c\n",          CharacteristicSpeed / UNIT_V                    );
    }
 
 
@@ -420,7 +414,7 @@ void SetParameter()
      Aux_Message( stdout, "  Jet_BurstEndTime         = %14.7e kyr \n",       Jet_BurstEndTime*UNIT_T/(1e3*Const_yr)          );
      Aux_Message( stdout, "  Jet_Burst4VelRatio       = %14.7e c \n",         Jet_Burst4VelRatio                              );
      Aux_Message( stdout, "  Jet_BurstDensRatio       = %14.7e g/cm^3\n",     Jet_BurstDensRatio*UNIT_D                       );
-     Aux_Message( stdout, "  Jet_BurstTempRatio       = %14.7e GeV\n",        Jet_BurstTempRatio*Jet_ParticleMassSrc*SQR(Const_c)/Const_GeV );
+     Aux_Message( stdout, "  Jet_BurstTempRatio       = %14.7e\n",            Jet_BurstTempRatio                              );
      Aux_Message( stdout, "  Flag_Burst4Vel           = %d\n",                Flag_Burst4Vel                                  );
      Aux_Message( stdout, "  Flag_BurstDens           = %d\n",                Flag_BurstDens                                  );
      Aux_Message( stdout, "  Flag_BurstTemp           = %d\n",                Flag_BurstTemp                                  );
@@ -750,7 +744,6 @@ void CartesianRotate( double x[], double theta, double phi, bool inverse )
 
   for (int i=0;i<3;i++) x[i] = xp[i];
 }
-
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_TestProb_Hydro_Jets
