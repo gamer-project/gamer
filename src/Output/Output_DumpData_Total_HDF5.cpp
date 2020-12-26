@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2426)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2427)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -197,6 +197,7 @@ Procedure for outputting new variables:
 //                2424 : 2020/12/22 --> output SRC_USER
 //                2425 : 2020/12/24 --> output SRC_DELEPTONIZATION
 //                2426 : 2020/12/24 --> output FLU_NIN_S, FLU_NOUT_S, and SRC_GPU_NPGROUP
+//                2427 : 2020/12/26 --> output SRC_BLOCK_SIZE and SRC_GHOST_SIZE
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1397,7 +1398,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2426;
+   KeyInfo.FormatVersion        = 2427;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -1896,6 +1897,9 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.dt_Gra_UseShuffle    = 0;
 #  endif
 #  endif
+
+   SymConst.Src_BlockSize        = SRC_BLOCK_SIZE;
+   SymConst.Src_GhostSize        = SRC_GHOST_SIZE;
 
 } // FUNCTION : FillIn_SymConst
 
@@ -2601,6 +2605,9 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "dt_Gra_BlockSize",     HOFFSET(SymConst_t,dt_Gra_BlockSize    ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "dt_Gra_UseShuffle",    HOFFSET(SymConst_t,dt_Gra_UseShuffle   ), H5T_NATIVE_INT    );
 #  endif
+
+   H5Tinsert( H5_TypeID, "Src_BlockSize",        HOFFSET(SymConst_t,Src_BlockSize       ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "Src_GhostSize",        HOFFSET(SymConst_t,Src_GhostSize       ), H5T_NATIVE_INT    );
 
 } // FUNCTION : GetCompound_SymConst
 

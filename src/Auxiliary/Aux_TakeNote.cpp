@@ -539,6 +539,7 @@ void Aux_TakeNote()
       fprintf( Note, "#define RHOEXT_GHOST_SIZE       %d\n",      RHOEXT_GHOST_SIZE   );
 #     endif
 #     endif
+      fprintf( Note, "#define SRC_GHOST_SIZE          %d\n",      SRC_GHOST_SIZE      );
       fprintf( Note, "#define FLU_NXT                 %d\n",      FLU_NXT             );
 #     ifdef GRAVITY
       fprintf( Note, "#define POT_NXT                 %d\n",      POT_NXT             );
@@ -568,6 +569,7 @@ void Aux_TakeNote()
 #     ifdef GRAVITY
       fprintf( Note, "#define DT_GRA_BLOCK_SIZE       %d\n",      DT_GRA_BLOCK_SIZE   );
 #     endif
+      fprintf( Note, "#define SRC_BLOCK_SIZE          %d\n",      SRC_BLOCK_SIZE      );
 #     endif // #ifdef GPU
 #     ifdef PARTICLE
       fprintf( Note, "#define PAR_NATT_TOTAL          %d\n",      PAR_NATT_TOTAL      );

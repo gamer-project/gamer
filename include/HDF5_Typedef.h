@@ -280,6 +280,9 @@ struct SymConst_t
    int    dt_Gra_UseShuffle;
 #  endif
 
+   int    Src_BlockSize;
+   int    Src_GhostSize;
+
 }; // struct SymConst_t
 
 
