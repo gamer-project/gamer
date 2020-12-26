@@ -39,10 +39,8 @@ void Src_Init()
 
 
 // initialize source terms
-   /*
-   if ( SRC_DELEPTONIZATION )
+   if ( SRC_TERMS.Deleptonization )
       Src_Init_Deleptonization();
-      */
 
    if ( SRC_TERMS.User )
    {
