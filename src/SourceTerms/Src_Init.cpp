@@ -18,6 +18,7 @@ void (*Src_Init_User_Ptr)() = NULL;
 // Note        :  1. Invoked by Init_GAMER()
 //                2. For a non-built-in source term, "Src_Init_User_Ptr" must be set by a test problem initializer
 //                   in advance
+//                3. Set SRC_TERMS
 //
 // Parameter   :  None
 //
@@ -36,6 +37,21 @@ void Src_Init()
       SRC_TERMS.Any = true;
    else
       SRC_TERMS.Any = false;
+
+
+// set auxiliary parameters
+   for (int d=0; d<3; d++)    SRC_TERMS.BoxCenter[d] = amr->BoxCenter[d];
+
+   SRC_TERMS.Unit_L = UNIT_L;
+   SRC_TERMS.Unit_M = UNIT_M;
+   SRC_TERMS.Unit_T = UNIT_T;
+   SRC_TERMS.Unit_V = UNIT_V;
+   SRC_TERMS.Unit_D = UNIT_D;
+   SRC_TERMS.Unit_E = UNIT_E;
+   SRC_TERMS.Unit_P = UNIT_P;
+#  ifdef MHD
+   SRC_TERMS.Unit_B = UNIT_B;
+#  endif
 
 
 // initialize source terms
