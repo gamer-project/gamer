@@ -10,7 +10,13 @@ void CPU_SrcSolver_IterateAllCells(
    const double g_Corner_Array[][3],
    const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
    const double TimeNew, const double TimeOld,
-   const real MinDens, const real MinPres, const real MinEint );
+   const real MinDens, const real MinPres, const real MinEint,
+   const EoS_DE2P_t EoS_DensEint2Pres_Func,
+   const EoS_DP2E_t EoS_DensPres2Eint_Func,
+   const EoS_DP2C_t EoS_DensPres2CSqr_Func,
+   const double c_EoS_AuxArray_Flt[],
+   const int    c_EoS_AuxArray_Int[],
+   const real* const c_EoS_Table[EOS_NTABLE_MAX] );
 
 
 
@@ -61,7 +67,9 @@ void CPU_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(PS1)      ],
 
    CPU_SrcSolver_IterateAllCells( h_Flu_Array_In, h_Flu_Array_Out, h_Mag_Array_In, h_Corner_Array,
                                   SrcTerms, NPatchGroup, dt, dh, TimeNew, TimeOld,
-                                  MinDens, MinPres, MinEint );
+                                  MinDens, MinPres, MinEint,
+                                  EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr, EoS_DensPres2CSqr_CPUPtr,
+                                  EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
 } // FUNCTION : CPU_SrcSolver
 
