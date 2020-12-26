@@ -516,6 +516,14 @@ void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real 
                           const double h_Corner_Array[][3], const int NPatchGroup, const real dh, const real Safety,
                           const real MinPres, const bool P5_Gradient, const bool UsePot, const OptExtAcc_t ExtAcc,
                           const double TargetTime, const int GPU_NStream );
+void CUAPI_Asyn_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(PS1)      ],
+                                 real h_Flu_Array_Out[][FLU_NOUT_S][ CUBE(PS1)      ],
+                           const real h_Mag_Array_In [][NCOMP_MAG ][ PS1P1*SQR(PS1) ],
+                           const double h_Corner_Array[][3],
+                           const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
+                           const double TimeNew, const double TimeOld,
+                           const real MinDens, const real MinPres, const real MinEint,
+                           const int GPU_NStream );
 void CUAPI_DiagnoseDevice();
 void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src_NPG, const int GPU_NStream );
 void CUAPI_MemFree_Fluid( const int GPU_NStream );

@@ -631,7 +631,7 @@ endif # SUPPORT_LIBYT
 
 # local source terms source files
 # ------------------------------------------------------------------------------------
-GPU_FILE    +=
+GPU_FILE    += CUAPI_Asyn_SrcSolver.cu  CUSRC_SrcSolver_IterateAllCells.cu
 
 CPU_FILE    += CPU_SrcSolver.cpp  CPU_SrcSolver_IterateAllCells.cpp  CPU_Src_Deleptonization.cpp
 
@@ -892,6 +892,10 @@ $(OBJ_PATH)/$(PREFIX_GPU)CUFLU_%.o : CUFLU_%.cu
 $(OBJ_PATH)/$(PREFIX_GPU)CUPOT_%.o : CUPOT_%.cu
 	@echo "Compiling $<"
 	$(ECHO)$(NVCC) $(NVCCFLAG_COM) $(NVCCFLAG_POT) -o $@ -dc $<
+
+$(OBJ_PATH)/$(PREFIX_GPU)CUSRC_%.o : CUSRC_%.cu
+	@echo "Compiling $<"
+	$(ECHO)$(NVCC) $(NVCCFLAG_COM) -o $@ -dc $<
 
 $(OBJ_PATH)/$(PREFIX_GPU)CUAPI_%.o : CUAPI_%.cu
 	@echo "Compiling $<"

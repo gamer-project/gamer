@@ -55,6 +55,7 @@ void CPU_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(PS1)      ],
 #  ifdef MHD
    if ( h_Mag_Array_In  == NULL )   Aux_Error( ERROR_INFO, "h_Mag_Array_In = NULL !!\n" );
 #  endif
+   if ( h_Corner_Array  == NULL )   Aux_Error( ERROR_INFO, "h_Corner_Array = NULL !!\n" );
 #  endif
 
 

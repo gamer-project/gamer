@@ -49,7 +49,7 @@ void Src_Deleptonization( real fluid[], const real B[],
 //-------------------------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __global__
-void GPU_SrcSolver_IterateAllCells(
+void CUSRC_SrcSolver_IterateAllCells(
    const real g_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NXT)           ],
          real g_Flu_Array_Out[][FLU_NOUT_S][ CUBE(SRC_NXT)           ],
    const real g_Mag_Array_In [][NCOMP_MAG ][ SRC_NXT_P1*SQR(SRC_NXT) ],
@@ -83,6 +83,7 @@ void CPU_SrcSolver_IterateAllCells(
       const double y0 = g_Corner_Array[p][1] - SRC_GHOST_SIZE*dh;
       const double z0 = g_Corner_Array[p][2] - SRC_GHOST_SIZE*dh;
 
+//###REVISE: support ghost zones
       CGPU_LOOP( t, CUBE(SRC_NXT) )
       {
 //       compute the cell-centered coordinates
@@ -99,13 +100,16 @@ void CPU_SrcSolver_IterateAllCells(
 
 
 //       get the input arrays
-         real fluid[FLU_NIN_S], B[NCOMP_MAG];
+         real fluid[FLU_NIN_S];
 
          for (int v=0; v<FLU_NIN_S; v++)  fluid[v] = g_Flu_Array_In[p][v][t];
 
 #        ifdef MHD
+         real B[NCOMP_MAG];
          MHD_GetCellCenteredBField( B, g_Mag_Array_In[p][MAGX], g_Mag_Array_In[p][MAGY], g_Mag_Array_In[p][MAGZ],
                                     SRC_NXT, SRC_NXT, SRC_NXT, i, j, k );
+#        else
+         real *B = NULL;
 #        endif
 
 
@@ -121,6 +125,6 @@ void CPU_SrcSolver_IterateAllCells(
          for (int v=0; v<FLU_NOUT_S; v++)   g_Flu_Array_Out[p][v][t] = fluid[v];
 
       } // CGPU_LOOP( t, CUBE(SRC_NXT) )
-   } // for (int p=0; p<8*NPG; p++)
+   } // for (int p=0; p<8*NPatchGroup; p++)
 
 } // FUNCTION : CPU/GPU_SrcSolver_IterateAllCells
