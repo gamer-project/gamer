@@ -803,6 +803,7 @@ void Closing_Step( const Solver_t TSolver, const int lv, const int SaveSg_Flu, c
 
       case SRC_SOLVER :
          Src_Close( lv, SaveSg_Flu, h_Flu_Array_S_Out[ArrayID], NPG, PID0_List );
+      break;
 
       default:
          Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TSolver", TSolver );

@@ -50,7 +50,9 @@ void CPU_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(PS1)      ],
 #  ifdef GAMER_DEBUG
    if ( h_Flu_Array_In  == NULL )   Aux_Error( ERROR_INFO, "h_Flu_Array_In = NULL !!\n" );
    if ( h_Flu_Array_Out == NULL )   Aux_Error( ERROR_INFO, "h_Flu_Array_Out = NULL !!\n" );
+#  ifdef MHD
    if ( h_Mag_Array_In  == NULL )   Aux_Error( ERROR_INFO, "h_Mag_Array_In = NULL !!\n" );
+#  endif
 #  endif
 
 
