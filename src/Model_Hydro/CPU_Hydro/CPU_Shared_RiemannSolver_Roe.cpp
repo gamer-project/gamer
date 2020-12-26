@@ -106,7 +106,7 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    Hydro_Rotate3D( R, XYZ, true, MAG_OFFSET );
 
 // longitudinal B field in the left and right states should be the same
-#  ifdef GAMER_DEBUG
+#  if ( defined GAMER_DEBUG  &&  defined MHD )
    if ( L[MAG_OFFSET] != R[MAG_OFFSET] )
       printf( "ERROR : BxL (%24.17e) != BxR (%24.17e) for XYZ %d at file <%s>, line <%d>, function <%s>!!\n",
               L[MAG_OFFSET], R[MAG_OFFSET], XYZ, __FILE__, __LINE__, __FUNCTION__ );
