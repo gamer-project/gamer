@@ -635,6 +635,7 @@ void YT_Inline();
 
 // source terms
 void Src_Init();
+void Src_End();
 void Src_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt,
                     const int SaveSg_Flu, const int SaveSg_Mag, const bool OverlapMPI, const bool Overlap_Sync );
 void Src_Prepare( const int lv,
