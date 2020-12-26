@@ -29,6 +29,7 @@ void CPU_SrcSolver_IterateAllCells(
 // Parameter   :  h_Flu_Array_In    : Host array storing the input fluid variables
 //                h_Flu_Array_Out   : Host array to store the output fluid variables
 //                h_Mag_Array_In    : Host array storing the input B field (for MHD only)
+//                h_Corner_Array    : Host array storing the physical corner coordinates of each patch
 //                SrcTerms          : Structure storing all source-term variables
 //                NPatchGroup       : Number of patch groups to be evaluated
 //                dt                : Time interval to advance solution
@@ -41,6 +42,7 @@ void CPU_SrcSolver_IterateAllCells(
 void CPU_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(PS1)      ],
                           real h_Flu_Array_Out[][FLU_NOUT_S][ CUBE(PS1)      ],
                     const real h_Mag_Array_In [][NCOMP_MAG ][ PS1P1*SQR(PS1) ],
+                    const double h_Corner_Array[][3],
                     const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
                     const double TimeNew, const double TimeOld,
                     const real MinDens, const real MinPres, const real MinEint )
@@ -56,7 +58,7 @@ void CPU_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(PS1)      ],
 #  endif
 
 
-   CPU_SrcSolver_IterateAllCells( h_Flu_Array_In, h_Flu_Array_Out, h_Mag_Array_In, NULL,
+   CPU_SrcSolver_IterateAllCells( h_Flu_Array_In, h_Flu_Array_Out, h_Mag_Array_In, h_Corner_Array,
                                   SrcTerms, NPatchGroup, dt, dh, TimeNew, TimeOld,
                                   MinDens, MinPres, MinEint );
 

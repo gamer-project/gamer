@@ -313,6 +313,7 @@ extern real       (*h_Flu_Array_S_Out[2])[FLU_NOUT_S][ CUBE(PS1)      ];
 #ifdef MHD
 extern real       (*h_Mag_Array_S_In [2])[NCOMP_MAG ][ PS1P1*SQR(PS1) ];
 #endif
+extern double     (*h_Corner_Array_S[2])[3];
 
 
 

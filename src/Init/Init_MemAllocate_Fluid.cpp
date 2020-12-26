@@ -74,6 +74,7 @@ void Init_MemAllocate_Fluid( const int Flu_NPatchGroup, const int Pot_NPatchGrou
 #     ifdef MHD
       h_Mag_Array_S_In [t] = new real [Src_NPatch][NCOMP_MAG ][ PS1P1*SQR(PS1) ];
 #     endif
+      h_Corner_Array_S [t] = new double [Src_NPatch][3];
       }
    } // for (int t=0; t<2; t++)
 

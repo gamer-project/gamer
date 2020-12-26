@@ -309,6 +309,7 @@ real (*h_Flu_Array_S_Out[2])[FLU_NOUT_S][ CUBE(PS1)      ]         = { NULL, NUL
 #ifdef MHD
 real (*h_Mag_Array_S_In [2])[NCOMP_MAG ][ PS1P1*SQR(PS1) ]         = { NULL, NULL };
 #endif
+double (*h_Corner_Array_S[2])[3]                                   = { NULL, NULL };
 
 
 // 4. GPU (device) global memory arrays
@@ -364,13 +365,13 @@ real (*d_Flu_Array_USG_G)[GRA_NIN-1][ CUBE(PS1) ]                  = NULL;
 // (4-4) Grackle chemistry
 
 // (4-5) dt solver
-real *d_dt_Array_T                                               = NULL;
-real (*d_Flu_Array_T)[FLU_NIN_T][ CUBE(PS1) ]                    = NULL;
+real *d_dt_Array_T                                                 = NULL;
+real (*d_Flu_Array_T)[FLU_NIN_T][ CUBE(PS1) ]                      = NULL;
 #ifdef GRAVITY
-real (*d_Pot_Array_T)[ CUBE(GRA_NXT) ]                           = NULL;
+real (*d_Pot_Array_T)[ CUBE(GRA_NXT) ]                             = NULL;
 #endif
 #ifdef MHD
-real (*d_Mag_Array_T)[NCOMP_MAG][ PS1P1*SQR(PS1) ]               = NULL;
+real (*d_Mag_Array_T)[NCOMP_MAG][ PS1P1*SQR(PS1) ]                 = NULL;
 #endif
 
 // (4-6) EoS tables
@@ -379,11 +380,12 @@ real *d_EoS_Table[EOS_NTABLE_MAX];
 #endif
 
 // (4-7) source terms
-real (*d_Flu_Array_S_In )[FLU_NIN_S ][ CUBE(PS1)      ]          = NULL;
-real (*d_Flu_Array_S_Out)[FLU_NOUT_S][ CUBE(PS1)      ]          = NULL;
+real (*d_Flu_Array_S_In )[FLU_NIN_S ][ CUBE(PS1)      ]            = NULL;
+real (*d_Flu_Array_S_Out)[FLU_NOUT_S][ CUBE(PS1)      ]            = NULL;
 #ifdef MHD
-real (*d_Mag_Array_S_In)[NCOMP_MAG  ][ PS1P1*SQR(PS1) ]          = NULL;
+real (*d_Mag_Array_S_In)[NCOMP_MAG  ][ PS1P1*SQR(PS1) ]            = NULL;
 #endif
+double (*d_Corner_Array_S)[3]                                      = NULL;
 
 #endif // #ifdef GPU
 

@@ -400,7 +400,8 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
 #     endif
 
       case SRC_SOLVER:
-         Src_Prepare( lv, h_Flu_Array_S_In[ArrayID], h_Mag_Array_S_In[ArrayID], NPG, PID0_List );
+         Src_Prepare( lv, h_Flu_Array_S_In[ArrayID], h_Mag_Array_S_In[ArrayID], h_Corner_Array_S[ArrayID],
+                      NPG, PID0_List );
       break;
 
       default :
@@ -696,12 +697,14 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
          CUAPI_Asyn_SrcSolver( h_Flu_Array_S_In [ArrayID],
                                h_Flu_Array_S_Out[ArrayID],
                                h_Mag_Array_S_In [ArrayID],
+                               h_Corner_Array_S [ArrayID],
                                SRC_TERMS, NPG, dt, dh, TimeNew, TimeOld, MIN_DENS, MIN_PRES, MIN_EINT,
                                GPU_NSTREAM );
 #        else
          CPU_SrcSolver       ( h_Flu_Array_S_In [ArrayID],
                                h_Flu_Array_S_Out[ArrayID],
                                h_Mag_Array_S_In [ArrayID],
+                               h_Corner_Array_S [ArrayID],
                                SRC_TERMS, NPG, dt, dh, TimeNew, TimeOld, MIN_DENS, MIN_PRES, MIN_EINT );
 #        endif
       break;
