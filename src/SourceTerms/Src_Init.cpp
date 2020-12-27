@@ -39,6 +39,10 @@ void Src_Init()
       SRC_TERMS.Any = false;
 
 
+// initialize all function pointers as NULL
+   SRC_TERMS.User_FuncPtr = NULL;
+
+
 // set auxiliary parameters
    for (int d=0; d<3; d++)    SRC_TERMS.BoxCenter[d] = amr->BoxCenter[d];
 
@@ -63,6 +67,9 @@ void Src_Init()
       if ( Src_Init_User_Ptr == NULL )    Aux_Error( ERROR_INFO, "Src_Init_User_Ptr == NULL !!\n" );
 
       Src_Init_User_Ptr();
+
+//    check if the source-term function is set properly
+      if ( SRC_TERMS.User_FuncPtr == NULL )  Aux_Error( ERROR_INFO, "SrcTerms.User_FuncPtr == NULL !!\n" );
    }
 
 
