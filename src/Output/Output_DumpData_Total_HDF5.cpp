@@ -1901,9 +1901,7 @@ void FillIn_SymConst( SymConst_t &SymConst )
 
    SymConst.Src_BlockSize        = SRC_BLOCK_SIZE;
    SymConst.Src_GhostSize        = SRC_GHOST_SIZE;
-#  if ( MODEL == HYDRO )
    SymConst.Src_NAuxDlep         = SRC_NAUX_DLEP;
-#  endif
    SymConst.Src_NAuxUser         = SRC_NAUX_USER;
 
 } // FUNCTION : FillIn_SymConst
@@ -2613,9 +2611,7 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 
    H5Tinsert( H5_TypeID, "Src_BlockSize",        HOFFSET(SymConst_t,Src_BlockSize       ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Src_GhostSize",        HOFFSET(SymConst_t,Src_GhostSize       ), H5T_NATIVE_INT    );
-#  if ( MODEL == HYDRO )
    H5Tinsert( H5_TypeID, "Src_NAuxDlep",         HOFFSET(SymConst_t,Src_NAuxDlep        ), H5T_NATIVE_INT    );
-#  endif
    H5Tinsert( H5_TypeID, "Src_NAuxUser",         HOFFSET(SymConst_t,Src_NAuxUser        ), H5T_NATIVE_INT    );
 
 } // FUNCTION : GetCompound_SymConst

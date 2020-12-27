@@ -282,9 +282,7 @@ struct SymConst_t
 
    int    Src_BlockSize;
    int    Src_GhostSize;
-#  if ( MODEL == HYDRO )
    int    Src_NAuxDlep;
-#  endif
    int    Src_NAuxUser;
 
 }; // struct SymConst_t

@@ -554,9 +554,7 @@ void Aux_TakeNote()
       fprintf( Note, "#define EXT_POT_NAUX_MAX        %d\n",      EXT_POT_NAUX_MAX    );
       fprintf( Note, "#define EXT_ACC_NAUX_MAX        %d\n",      EXT_ACC_NAUX_MAX    );
 #     endif
-#     if ( MODEL == HYDRO )
       fprintf( Note, "#define SRC_NAUX_DLEP           %d\n",      SRC_NAUX_DLEP       );
-#     endif
       fprintf( Note, "#define SRC_NAUX_USER           %d\n",      SRC_NAUX_USER       );
 #     ifdef GPU
       fprintf( Note, "#define FLU_BLOCK_SIZE_X        %d\n",      FLU_BLOCK_SIZE_X    );
