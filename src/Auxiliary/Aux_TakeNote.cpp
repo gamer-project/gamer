@@ -430,9 +430,6 @@ void Aux_TakeNote()
 #     endif
 #     endif // #ifdef MHD
 
-      fprintf( Note, "EOS_NAUX_MAX                    %d\n",      EOS_NAUX_MAX   );
-      fprintf( Note, "EOS_NTABLE_MAX                  %d\n",      EOS_NTABLE_MAX );
-
 #     elif ( MODEL == ELBDM )
 
 #     else
@@ -487,13 +484,8 @@ void Aux_TakeNote()
 #     else
       fprintf( Note, "DT_GRA_USE_SHUFFLE              OFF\n" );
 #     endif
-#     endif
+#     endif // #ifdef GRAVITY
 #     endif // #ifdef GPU
-
-#     ifdef GRAVITY
-      fprintf( Note, "EXT_POT_NAUX_MAX                %d\n",      EXT_POT_NAUX_MAX );
-      fprintf( Note, "EXT_ACC_NAUX_MAX                %d\n",      EXT_ACC_NAUX_MAX );
-#     endif
 
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
@@ -553,6 +545,19 @@ void Aux_TakeNote()
 #     ifdef PARTICLE
       fprintf( Note, "#define RHOEXT_NXT              %d\n",      RHOEXT_NXT          );
 #     endif
+      fprintf( Note, "#define SRC_NXT                 %d\n",      SRC_NXT             );
+#     if ( MODEL == HYDRO )
+      fprintf( Note, "#define EOS_NAUX_MAX            %d\n",      EOS_NAUX_MAX        );
+      fprintf( Note, "#define EOS_NTABLE_MAX          %d\n",      EOS_NTABLE_MAX      );
+#     endif
+#     ifdef GRAVITY
+      fprintf( Note, "#define EXT_POT_NAUX_MAX        %d\n",      EXT_POT_NAUX_MAX    );
+      fprintf( Note, "#define EXT_ACC_NAUX_MAX        %d\n",      EXT_ACC_NAUX_MAX    );
+#     endif
+#     if ( MODEL == HYDRO )
+      fprintf( Note, "#define SRC_NAUX_DLEP           %d\n",      SRC_NAUX_DLEP       );
+#     endif
+      fprintf( Note, "#define SRC_NAUX_USER           %d\n",      SRC_NAUX_USER       );
 #     ifdef GPU
       fprintf( Note, "#define FLU_BLOCK_SIZE_X        %d\n",      FLU_BLOCK_SIZE_X    );
       fprintf( Note, "#define FLU_BLOCK_SIZE_Y        %d\n",      FLU_BLOCK_SIZE_Y    );
