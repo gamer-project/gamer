@@ -656,6 +656,8 @@
 #  define EXT_ACC_NAUX_MAX       20    // ExtAcc_AuxArray[]
 #endif
 
+#  define SRC_NAUX_USER          10    // SrcTerms.User_AuxArray_Flt/Int[]
+
 
 // bitwise reproducibility in flux and electric field fix-up operations
 #if ( MODEL == HYDRO )

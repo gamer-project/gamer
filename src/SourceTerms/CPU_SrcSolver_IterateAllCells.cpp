@@ -138,17 +138,15 @@ void CPU_SrcSolver_IterateAllCells(
 //       add all source terms one by one
 //       (1) deleptonization
          if ( SrcTerms.Deleptonization )
-            Src_Deleptonization( fluid, B, SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint,
-                                 EoS_DensEint2Pres_Func, EoS_DensPres2Eint_Func, EoS_DensPres2CSqr_Func,
-                                 c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
+            Src_Deleptonization  ( fluid, B, SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint,
+                                   EoS_DensEint2Pres_Func, EoS_DensPres2Eint_Func, EoS_DensPres2CSqr_Func,
+                                   c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
 
 //       (2) user-defined
-         /*
          if ( SrcTerms.User )
-            Src_User_Ptr       ( fluid, B, SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint,
-                                 EoS_DensEint2Pres_Func, EoS_DensPres2Eint_Func, EoS_DensPres2CSqr_Func,
-                                 c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
-         */
+            SrcTerms.User_FuncPtr( fluid, B, SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint,
+                                   EoS_DensEint2Pres_Func, EoS_DensPres2Eint_Func, EoS_DensPres2CSqr_Func,
+                                   c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
 
 //       store the updated results
          for (int v=0; v<FLU_NOUT_S; v++)   g_Flu_Array_Out[p][v][t] = fluid[v];

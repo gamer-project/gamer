@@ -42,7 +42,7 @@
 //                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
 //                EoS_Table         : EoS tables
 //
-// Return      :  fluid
+// Return      :  fluid[]
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE
 void Src_Deleptonization( real fluid[], const real B[],

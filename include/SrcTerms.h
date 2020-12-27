@@ -2,6 +2,24 @@
 #define __SRC_TERMS_H__
 
 
+// forward declaration of SrcTerms_t since it is required by SrcFunc_t
+// --> its content will be specified later
+struct SrcTerms_t;
+
+// typedef of the source-term function
+typedef void (*SrcFunc_t)( real fluid[], const real B[],
+                           const SrcTerms_t SrcTerms, const real dt, const real dh,
+                           const double x, const double y, const double z,
+                           const double TimeNew, const double TimeOld,
+                           const real MinDens, const real MinPres, const real MinEint,
+                           const EoS_DE2P_t EoS_DensEint2Pres,
+                           const EoS_DP2E_t EoS_DensPres2Eint,
+                           const EoS_DP2C_t EoS_DensPres2CSqr,
+                           const double EoS_AuxArray_Flt[],
+                           const int    EoS_AuxArray_Int[],
+                           const real *const EoS_Table[EOS_NTABLE_MAX] );
+
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -13,6 +31,8 @@
 //                User            : SRC_USER
 //                BoxCenter       : Simulation box center
 //                Unit_*          : Code units
+//                *_FuncPtr       : Major source-term functions
+//                *_AuxArray_*    : Auxiliary arrays
 //
 // Method      :  None --> It seems that CUDA does not support functions in a struct
 //-------------------------------------------------------------------------------------------------------
@@ -35,6 +55,11 @@ struct SrcTerms_t
 #  ifdef MHD
    real   Unit_B;
 #  endif
+
+// user-specified source term
+   SrcFunc_t User_FuncPtr;
+   double    User_AuxArray_Flt[SRC_NAUX_USER];
+   int       User_AuxArray_Int[SRC_NAUX_USER];
 
 }; // struct SrcTerms_t
 
