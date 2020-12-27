@@ -57,6 +57,11 @@ struct SrcTerms_t
    real   Unit_B;
 #  endif
 
+// deleptonization
+   SrcFunc_t Dlep_FuncPtr;
+   double    Dlep_AuxArray_Flt[SRC_NAUX_DLEP];
+   int       Dlep_AuxArray_Int[SRC_NAUX_DLEP];
+
 // user-specified source term
    SrcFunc_t User_FuncPtr;
    double    User_AuxArray_Flt[SRC_NAUX_USER];

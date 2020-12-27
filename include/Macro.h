@@ -656,6 +656,7 @@
 #  define EXT_ACC_NAUX_MAX       20    // ExtAcc_AuxArray[]
 #endif
 
+#  define SRC_NAUX_DLEP          5     // SrcTerms.Dlep_AuxArray_Flt/Int[]
 #  define SRC_NAUX_USER          10    // SrcTerms.User_AuxArray_Flt/Int[]
 
 

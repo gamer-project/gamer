@@ -5,7 +5,7 @@
 // prototypes of built-in source terms
 void Src_Init_Deleptonization();
 
-// this function pointer can be set by a test problem initializer for a non-built-in source term
+// this function pointer can be set by a test problem initializer for a user-specified source term
 void (*Src_Init_User_Ptr)() = NULL;
 
 
@@ -16,9 +16,8 @@ void (*Src_Init_User_Ptr)() = NULL;
 // Description :  Initialize the source terms
 //
 // Note        :  1. Invoked by Init_GAMER()
-//                2. For a non-built-in source term, "Src_Init_User_Ptr" must be set by a test problem initializer
-//                   in advance
-//                3. Set SRC_TERMS
+//                2. Set SRC_TERMS
+//                3. Set "Src_Init_User_Ptr" in a test problem initializer for a user-specified source term
 //
 // Parameter   :  None
 //
@@ -39,10 +38,6 @@ void Src_Init()
       SRC_TERMS.Any = false;
 
 
-// initialize all function pointers as NULL
-   SRC_TERMS.User_FuncPtr = NULL;
-
-
 // set auxiliary parameters
    for (int d=0; d<3; d++)    SRC_TERMS.BoxCenter[d] = amr->BoxCenter[d];
 
@@ -58,10 +53,22 @@ void Src_Init()
 #  endif
 
 
-// initialize source terms
+// initialize all function pointers as NULL
+   SRC_TERMS.Dlep_FuncPtr = NULL;
+   SRC_TERMS.User_FuncPtr = NULL;
+
+
+// initialize all source terms
+// (1) deleptonization
    if ( SRC_TERMS.Deleptonization )
+   {
       Src_Init_Deleptonization();
 
+//    check if the source-term function is set properly
+      if ( SRC_TERMS.Dlep_FuncPtr == NULL )  Aux_Error( ERROR_INFO, "SrcTerms.Dlep_FuncPtr == NULL !!\n" );
+   }
+
+// (2) user-specified source term
    if ( SRC_TERMS.User )
    {
       if ( Src_Init_User_Ptr == NULL )    Aux_Error( ERROR_INFO, "Src_Init_User_Ptr == NULL !!\n" );

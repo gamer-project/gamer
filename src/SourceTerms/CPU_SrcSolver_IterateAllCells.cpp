@@ -9,23 +9,8 @@
 #include "CUFLU_Shared_FluUtility.cu"
 #endif
 #include "CUDA_ConstMemory.h"
-#include "Deleptonization/GPU_Src_Deleptonization.cu"
 
-#else
-
-void Src_Deleptonization( real fluid[], const real B[],
-                          const SrcTerms_t SrcTerms, const real dt, const real dh,
-                          const double x, const double y, const double z,
-                          const double TimeNew, const double TimeOld,
-                          const real MinDens, const real MinPres, const real MinEint,
-                          const EoS_DE2P_t EoS_DensEint2Pres,
-                          const EoS_DP2E_t EoS_DensPres2Eint,
-                          const EoS_DP2C_t EoS_DensPres2CSqr,
-                          const double EoS_AuxArray_Flt[],
-                          const int    EoS_AuxArray_Int[],
-                          const real *const EoS_Table[EOS_NTABLE_MAX] );
-
-#endif // #ifdef __CUDACC__ ... else ...
+#endif // #ifdef __CUDACC__
 
 
 
@@ -138,9 +123,10 @@ void CPU_SrcSolver_IterateAllCells(
 //       add all source terms one by one
 //       (1) deleptonization
          if ( SrcTerms.Deleptonization )
-            Src_Deleptonization  ( fluid, B, SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint,
+            SrcTerms.Dlep_FuncPtr( fluid, B, SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint,
                                    EoS_DensEint2Pres_Func, EoS_DensPres2Eint_Func, EoS_DensPres2CSqr_Func,
-                                   c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
+                                   c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table,
+                                   SrcTerms.Dlep_AuxArray_Flt, SrcTerms.Dlep_AuxArray_Int );
 
 //       (2) user-defined
          if ( SrcTerms.User )
