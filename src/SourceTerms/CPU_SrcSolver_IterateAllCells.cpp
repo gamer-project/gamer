@@ -146,7 +146,8 @@ void CPU_SrcSolver_IterateAllCells(
          if ( SrcTerms.User )
             SrcTerms.User_FuncPtr( fluid, B, SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint,
                                    EoS_DensEint2Pres_Func, EoS_DensPres2Eint_Func, EoS_DensPres2CSqr_Func,
-                                   c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
+                                   c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table,
+                                   SrcTerms.User_AuxArray_Flt, SrcTerms.User_AuxArray_Int );
 
 //       store the updated results
          for (int v=0; v<FLU_NOUT_S; v++)   g_Flu_Array_Out[p][v][t] = fluid[v];

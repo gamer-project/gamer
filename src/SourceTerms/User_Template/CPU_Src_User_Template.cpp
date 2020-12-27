@@ -94,6 +94,7 @@ void Src_SetAuxArray_User_Template( double AuxArray_Flt[], int AuxArray_Int[] )
 //                EoS_DensPres2CSqr : EoS routine to compute the sound speed square
 //                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
 //                EoS_Table         : EoS tables
+//                AuxArray_*        : Auxiliary arrays (see the Note above)
 //
 // Return      :  fluid[]
 //-----------------------------------------------------------------------------------------
@@ -108,8 +109,15 @@ static void Src_User_Template( real fluid[], const real B[],
                                const EoS_DP2C_t EoS_DensPres2CSqr,
                                const double EoS_AuxArray_Flt[],
                                const int    EoS_AuxArray_Int[],
-                               const real *const EoS_Table[EOS_NTABLE_MAX] )
+                               const real *const EoS_Table[EOS_NTABLE_MAX],
+                               const double AuxArray_Flt[], const int AuxArray_Int[] )
 {
+
+// check
+#  ifdef GAMER_DEBUG
+   if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
+   if ( AuxArray_Int == NULL )   printf( "ERROR : AuxArray_Int == NULL in %s !!\n", __FUNCTION__ );
+#  endif
 
 /*
 // example

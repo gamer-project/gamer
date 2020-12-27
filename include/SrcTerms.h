@@ -17,7 +17,8 @@ typedef void (*SrcFunc_t)( real fluid[], const real B[],
                            const EoS_DP2C_t EoS_DensPres2CSqr,
                            const double EoS_AuxArray_Flt[],
                            const int    EoS_AuxArray_Int[],
-                           const real *const EoS_Table[EOS_NTABLE_MAX] );
+                           const real *const EoS_Table[EOS_NTABLE_MAX],
+                           const double AuxArray_Flt[], const int AuxArray_Int[] );
 
 
 
