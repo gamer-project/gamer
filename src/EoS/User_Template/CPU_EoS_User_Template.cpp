@@ -17,7 +17,7 @@
 
 3. Three steps are required to implement an EoS
 
-   I.   Set an EoS auxiliary array
+   I.   Set EoS auxiliary arrays
    II.  Implement EoS conversion functions
    III. Set EoS initialization functions
 
