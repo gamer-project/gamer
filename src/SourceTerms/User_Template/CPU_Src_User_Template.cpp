@@ -119,11 +119,25 @@ static void Src_User_Template( real fluid[], const real B[],
    if ( AuxArray_Int == NULL )   printf( "ERROR : AuxArray_Int == NULL in %s !!\n", __FUNCTION__ );
 #  endif
 
-/*
 // example
-   const real CoolingRate = (real)1.23;   // set arbitrarily here
-   fluid[ENGY] -= CoolingRate*dt
-*/
+   /*
+   const bool CheckMinEint_Yes = true;
+   const real CoolingRate      = (real)AuxArray_Flt[0];
+
+   real Eint, Enth, Emag;
+
+#  ifdef MHD
+   Emag  = (real)0.5*( SQR(B[MAGX]) + SQR(B[MAGY]) + SQR(B[MAGZ]) );
+#  else
+   Emag  = (real)0.0;
+#  endif
+   Eint  = Hydro_Con2Eint( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
+                           CheckMinEint_Yes, MinEint, Emag );
+   Enth  = fluid[ENGY] - Eint;
+   Eint -= fluid[DENS]*CoolingRate*dt;
+
+   fluid[ENGY] = Enth + Eint;
+   */
 
 } // FUNCTION : Src_User_Template
 
