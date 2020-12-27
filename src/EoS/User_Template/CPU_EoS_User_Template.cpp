@@ -300,7 +300,7 @@ FUNC_SPACE EoS_DP2C_t EoS_DensPres2CSqr_Ptr = EoS_DensPres2CSqr_User_Template;
 //                EoS_DensPres2Eint_CPU/GPUPtr : ...
 //                EoS_DensPres2CSqr_CPU/GPUPtr : ...
 //
-// Return      :  EoS_DensEint2Pres_CPU, EoS_DensPres2Eint_CPU/GPUPtr, EoS_DensPres2CSqr_CPU/GPUPtr
+// Return      :  EoS_DensEint2Pres_CPU/GPUPtr, EoS_DensPres2Eint_CPU/GPUPtr, EoS_DensPres2CSqr_CPU/GPUPtr
 //-----------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __host__
