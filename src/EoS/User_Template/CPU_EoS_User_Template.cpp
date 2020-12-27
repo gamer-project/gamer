@@ -341,7 +341,7 @@ void EoS_SetGPUFunc_User_Template( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t & );
 // Function    :  EoS_Init_User_Template
 // Description :  Initialize EoS
 //
-// Note        :  1. Set an auxiliary array by invoking EoS_SetAuxArray_*()
+// Note        :  1. Set auxiliary arrays by invoking EoS_SetAuxArray_*()
 //                   --> It will be copied to GPU automatically in CUAPI_SetConstMemory()
 //                2. Set the CPU/GPU EoS routines by invoking EoS_SetCPU/GPUFunc_*()
 //                3. Invoked by EoS_Init()
