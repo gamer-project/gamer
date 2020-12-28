@@ -1347,6 +1347,10 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
+#  if ( SRC_GHOST_SIZE != 0 )
+#     error : ERROR : SRC_GHOST_SIZE must be zero for now !!
+#  endif
+
 #  if ( MODEL != HYDRO )
    if ( SRC_TERMS.Deleptonization )
       Aux_Error( ERROR_INFO, "SRC_DELEPTONIZATION is only supported in HYDRO !!\n" );
