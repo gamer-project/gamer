@@ -516,9 +516,9 @@ void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real 
                           const double h_Corner_Array[][3], const int NPatchGroup, const real dh, const real Safety,
                           const real MinPres, const bool P5_Gradient, const bool UsePot, const OptExtAcc_t ExtAcc,
                           const double TargetTime, const int GPU_NStream );
-void CUAPI_Asyn_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(PS1)      ],
-                                 real h_Flu_Array_Out[][FLU_NOUT_S][ CUBE(PS1)      ],
-                           const real h_Mag_Array_In [][NCOMP_MAG ][ PS1P1*SQR(PS1) ],
+void CUAPI_Asyn_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NXT)           ],
+                                 real h_Flu_Array_Out[][FLU_NOUT_S][ CUBE(PS1)               ],
+                           const real h_Mag_Array_In [][NCOMP_MAG ][ SRC_NXT_P1*SQR(SRC_NXT) ],
                            const double h_Corner_Array[][3],
                            const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
                            const double TimeNew, const double TimeOld,
@@ -638,16 +638,16 @@ void Src_Init();
 void Src_End();
 void Src_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt,
                     const int SaveSg_Flu, const int SaveSg_Mag, const bool OverlapMPI, const bool Overlap_Sync );
-void Src_Prepare( const int lv,
-                  real h_Flu_Array_S_In[][FLU_NIN_S][ CUBE(PS1)      ],
-                  real h_Mag_Array_S_In[][NCOMP_MAG][ PS1P1*SQR(PS1) ],
+void Src_Prepare( const int lv, const double PrepTime,
+                  real h_Flu_Array_S_In[][FLU_NIN_S][ CUBE(SRC_NXT)           ],
+                  real h_Mag_Array_S_In[][NCOMP_MAG][ SRC_NXT_P1*SQR(SRC_NXT) ],
                   double h_Corner_Array_S[][3],
                   const int NPG, const int *PID0_List );
 void Src_Close( const int lv, const int SaveSg_Flu, const real h_Flu_Array_S_Out[][FLU_NOUT_S][ CUBE(PS1) ],
                 const int NPG, const int *PID0_List );
-void CPU_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(PS1)      ],
-                          real h_Flu_Array_Out[][FLU_NOUT_S][ CUBE(PS1)      ],
-                    const real h_Mag_Array_In [][NCOMP_MAG ][ PS1P1*SQR(PS1) ],
+void CPU_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NXT)           ],
+                          real h_Flu_Array_Out[][FLU_NOUT_S][ CUBE(PS1)               ],
+                    const real h_Mag_Array_In [][NCOMP_MAG ][ SRC_NXT_P1*SQR(SRC_NXT) ],
                     const double h_Corner_Array[][3],
                     const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
                     const double TimeNew, const double TimeOld,

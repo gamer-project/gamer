@@ -19,12 +19,12 @@ extern real (*d_Mag_Array_F_In )[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
 extern real (*d_Mag_Array_F_Out)[NCOMP_MAG][ PS2P1*SQR(PS2)          ];
 extern real (*d_Ele_Array      )[9][NCOMP_ELE][ PS2P1*PS2 ];
 extern real (*d_Mag_Array_T)[NCOMP_MAG][ PS1P1*SQR(PS1) ];
-extern real (*d_Mag_Array_S_In)[NCOMP_MAG][ PS1P1*SQR(PS1) ];
+extern real (*d_Mag_Array_S_In)[NCOMP_MAG][ SRC_NXT_P1*SQR(SRC_NXT) ];
 #endif
 extern real *d_dt_Array_T;
 extern real (*d_Flu_Array_T)[FLU_NIN_T][ CUBE(PS1) ];
-extern real (*d_Flu_Array_S_In )[FLU_NIN_S ][ CUBE(PS1) ];
-extern real (*d_Flu_Array_S_Out)[FLU_NOUT_S][ CUBE(PS1) ];
+extern real (*d_Flu_Array_S_In )[FLU_NIN_S ][ CUBE(SRC_NXT) ];
+extern real (*d_Flu_Array_S_Out)[FLU_NOUT_S][ CUBE(PS1)     ];
 extern double (*d_Corner_Array_S)[3];
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 extern real (*d_PriVar)      [NCOMP_LR            ][ CUBE(FLU_NXT)     ];

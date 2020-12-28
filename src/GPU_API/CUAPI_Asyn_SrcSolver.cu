@@ -8,7 +8,7 @@
 __global__
 void CUSRC_SrcSolver_IterateAllCells(
    const real g_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NXT)           ],
-         real g_Flu_Array_Out[][FLU_NOUT_S][ CUBE(SRC_NXT)           ],
+         real g_Flu_Array_Out[][FLU_NOUT_S][ CUBE(PS1)               ],
    const real g_Mag_Array_In [][NCOMP_MAG ][ SRC_NXT_P1*SQR(SRC_NXT) ],
    const double g_Corner_Array[][3],
    const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
@@ -19,12 +19,12 @@ void CUSRC_SrcSolver_IterateAllCells(
    const EoS_DP2C_t EoS_DensPres2CSqr_Func );
 
 // device pointers
-extern real (*d_Flu_Array_S_In )[FLU_NIN_S ][ CUBE(PS1)      ];
-extern real (*d_Flu_Array_S_Out)[FLU_NOUT_S][ CUBE(PS1)      ];
+extern real (*d_Flu_Array_S_In )[FLU_NIN_S ][ CUBE(SRC_NXT)           ];
+extern real (*d_Flu_Array_S_Out)[FLU_NOUT_S][ CUBE(PS1)               ];
 #ifdef MHD
-extern real (*d_Mag_Array_S_In)[NCOMP_MAG  ][ PS1P1*SQR(PS1) ];
+extern real (*d_Mag_Array_S_In)[NCOMP_MAG  ][ SRC_NXT_P1*SQR(SRC_NXT) ];
 #else
-static real (*d_Mag_Array_S_In)[NCOMP_MAG  ][ PS1P1*SQR(PS1) ] = NULL;
+static real (*d_Mag_Array_S_In)[NCOMP_MAG  ][ SRC_NXT_P1*SQR(SRC_NXT) ] = NULL;
 #endif
 extern double (*d_Corner_Array_S)[3];
 
@@ -63,9 +63,9 @@ extern cudaStream_t *Stream;
 //
 // Return      :  h_Flu_Array_Out[]
 //-------------------------------------------------------------------------------------------------------
-void CUAPI_Asyn_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(PS1)      ],
-                                 real h_Flu_Array_Out[][FLU_NOUT_S][ CUBE(PS1)      ],
-                           const real h_Mag_Array_In [][NCOMP_MAG ][ PS1P1*SQR(PS1) ],
+void CUAPI_Asyn_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NXT)           ],
+                                 real h_Flu_Array_Out[][FLU_NOUT_S][ CUBE(PS1)               ],
+                           const real h_Mag_Array_In [][NCOMP_MAG ][ SRC_NXT_P1*SQR(SRC_NXT) ],
                            const double h_Corner_Array[][3],
                            const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
                            const double TimeNew, const double TimeOld,

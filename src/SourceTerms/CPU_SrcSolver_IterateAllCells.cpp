@@ -49,7 +49,7 @@
 __global__
 void CUSRC_SrcSolver_IterateAllCells(
    const real g_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NXT)           ],
-         real g_Flu_Array_Out[][FLU_NOUT_S][ CUBE(SRC_NXT)           ],
+         real g_Flu_Array_Out[][FLU_NOUT_S][ CUBE(PS1)               ],
    const real g_Mag_Array_In [][NCOMP_MAG ][ SRC_NXT_P1*SQR(SRC_NXT) ],
    const double g_Corner_Array[][3],
    const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
@@ -61,7 +61,7 @@ void CUSRC_SrcSolver_IterateAllCells(
 #else
 void CPU_SrcSolver_IterateAllCells(
    const real g_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NXT)           ],
-         real g_Flu_Array_Out[][FLU_NOUT_S][ CUBE(SRC_NXT)           ],
+         real g_Flu_Array_Out[][FLU_NOUT_S][ CUBE(PS1)               ],
    const real g_Mag_Array_In [][NCOMP_MAG ][ SRC_NXT_P1*SQR(SRC_NXT) ],
    const double g_Corner_Array[][3],
    const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
@@ -91,30 +91,31 @@ void CPU_SrcSolver_IterateAllCells(
       const double z0 = g_Corner_Array[p][2] - SRC_GHOST_SIZE*dh;
 
 //###REVISE: support ghost zones
-      CGPU_LOOP( t, CUBE(SRC_NXT) )
+      CGPU_LOOP( idx_out, CUBE(PS1) )
       {
 //       compute the cell-centered coordinates
          double x, y, z;
-         int    i, j, k;
+         int    i_in, j_in, k_in, idx_in;
 
-         i = t % SRC_NXT;
-         j = t % SQR(SRC_NXT) / SRC_NXT;
-         k = t / SQR(SRC_NXT);
+         i_in   = SRC_GHOST_SIZE + idx_out % PS1;
+         j_in   = SRC_GHOST_SIZE + idx_out % SQR(PS1) / PS1;
+         k_in   = SRC_GHOST_SIZE + idx_out / SQR(PS1);
+         idx_in = IDX321( i_in, j_in, k_in, SRC_NXT, SRC_NXT );
 
-         x = x0 + double(i*dh);
-         y = y0 + double(j*dh);
-         z = z0 + double(k*dh);
+         x      = x0 + double(i_in*dh);
+         y      = y0 + double(j_in*dh);
+         z      = z0 + double(k_in*dh);
 
 
 //       get the input arrays
          real fluid[FLU_NIN_S];
 
-         for (int v=0; v<FLU_NIN_S; v++)  fluid[v] = g_Flu_Array_In[p][v][t];
+         for (int v=0; v<FLU_NIN_S; v++)  fluid[v] = g_Flu_Array_In[p][v][idx_in];
 
 #        ifdef MHD
          real B[NCOMP_MAG];
          MHD_GetCellCenteredBField( B, g_Mag_Array_In[p][MAGX], g_Mag_Array_In[p][MAGY], g_Mag_Array_In[p][MAGZ],
-                                    SRC_NXT, SRC_NXT, SRC_NXT, i, j, k );
+                                    SRC_NXT, SRC_NXT, SRC_NXT, i_in, j_in, k_in );
 #        else
          real *B = NULL;
 #        endif
@@ -136,9 +137,9 @@ void CPU_SrcSolver_IterateAllCells(
                                    SrcTerms.User_AuxArray_Flt, SrcTerms.User_AuxArray_Int );
 
 //       store the updated results
-         for (int v=0; v<FLU_NOUT_S; v++)   g_Flu_Array_Out[p][v][t] = fluid[v];
+         for (int v=0; v<FLU_NOUT_S; v++)   g_Flu_Array_Out[p][v][idx_out] = fluid[v];
 
-      } // CGPU_LOOP( t, CUBE(SRC_NXT) )
+      } // CGPU_LOOP( idx_out, CUBE(PS1) )
    } // for (int p=0; p<8*NPatchGroup; p++)
 
 } // FUNCTION : CPU/GPU_SrcSolver_IterateAllCells

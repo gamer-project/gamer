@@ -297,7 +297,7 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
 #  ifndef MHD
    real (*h_Mag_Array_F_In [2])[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ] = { NULL, NULL };
    real (*h_Mag_Array_T    [2])[NCOMP_MAG][ PS1P1*SQR(PS1) ]          = { NULL, NULL };
-   real (*h_Mag_Array_S_In [2])[NCOMP_MAG][ PS1P1*SQR(PS1) ]          = { NULL, NULL };
+   real (*h_Mag_Array_S_In [2])[NCOMP_MAG][ SRC_NXT_P1*SQR(SRC_NXT) ] = { NULL, NULL };
 #  endif
 #  if ( defined GRAVITY  &&  !defined DUAL_ENERGY )
    char (*h_DE_Array_G     [2])[PS1][PS1][PS1]                        = { NULL, NULL };
@@ -400,7 +400,7 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
 #     endif
 
       case SRC_SOLVER:
-         Src_Prepare( lv, h_Flu_Array_S_In[ArrayID], h_Mag_Array_S_In[ArrayID], h_Corner_Array_S[ArrayID],
+         Src_Prepare( lv, TimeNew, h_Flu_Array_S_In[ArrayID], h_Mag_Array_S_In[ArrayID], h_Corner_Array_S[ArrayID],
                       NPG, PID0_List );
       break;
 
@@ -508,7 +508,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #  ifdef GRAVITY
    real (*h_Emag_Array_G  [2])[PS1][PS1][PS1]                         = { NULL, NULL };
 #  endif
-   real (*h_Mag_Array_S_In [2])[NCOMP_MAG][ PS1P1*SQR(PS1) ]          = { NULL, NULL };
+   real (*h_Mag_Array_S_In [2])[NCOMP_MAG][ SRC_NXT_P1*SQR(SRC_NXT) ] = { NULL, NULL };
 #  endif
 
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
@@ -754,7 +754,6 @@ void Closing_Step( const Solver_t TSolver, const int lv, const int SaveSg_Flu, c
    real (*h_Mag_Array_F_In [2])[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ] = { NULL, NULL };
    real (*h_Mag_Array_F_Out[2])[NCOMP_MAG][ PS2P1*SQR(PS2) ]          = { NULL, NULL };
    real (*h_Ele_Array      [2])[9][NCOMP_ELE][ PS2P1*PS2 ]            = { NULL, NULL };
-   real (*h_Mag_Array_S_Out[2])[NCOMP_MAG][ PS2P1*SQR(PS2) ]          = { NULL, NULL };
 #  endif
 #  if ( defined GRAVITY  &&  !defined DUAL_ENERGY )
    char (*h_DE_Array_G     [2])[PS1][PS1][PS1]                        = { NULL, NULL };
