@@ -1833,7 +1833,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #                    endif
 
                      case BC_FLU_USER:
-                        Flu_BoundaryCondition_User        ( Data1PG_CC_Ptr,                      NVarCC_Flu,
+                        Flu_BoundaryCondition_User        ( Data1PG_CC_Ptr,                      NVarCC_Flu,            GhostSize,
                                                             PGSize1D_CC, PGSize1D_CC, PGSize1D_CC, BC_Idx_Start, BC_Idx_End,
                                                             TVarCCIdxList_Flu, PrepTime, dh, xyz0, TVarCC, lv );
                      break;

@@ -200,8 +200,10 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
-void BC( real fluid[], const double x, const double y, const double z, const double Time,
-         const int lv, double AuxArray[] )
+void BC( real Array3D[][][][], real fluid[], const int NVar_Flu, const int GhostSize,
+         const int i, const int j, const int k, const double x, const double y,
+         const double z, const double Time, const int lv, const int TFluVarIdxList[],
+         double AuxArray[] )
 {
 
    SetGridIC( fluid, x, y, z, Time, lv, AuxArray );
