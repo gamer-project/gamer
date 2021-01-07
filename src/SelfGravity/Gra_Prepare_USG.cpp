@@ -35,7 +35,7 @@ void Gra_Prepare_USG( const int lv, const double PrepTime,
    const real MinPres_No        = -1.0;
 
 // prepare potential
-   if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
+   if ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT )
    Prepare_PatchData( lv, PrepTime, &h_Pot_Array_USG_G[0][0][0][0], NULL, USG_GHOST_SIZE_G, NPG, PID0_List,
                       _POTE, _NONE, OPT__GRA_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_06, IntPhase_No,
                       OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, DE_Consistency_No );

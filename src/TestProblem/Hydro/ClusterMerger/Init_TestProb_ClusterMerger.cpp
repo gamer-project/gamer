@@ -440,10 +440,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double ClusterCenter2[3] = { Merger_Coll_PosX2, Merger_Coll_PosY2, BoxCenter[2] };
    const double ClusterCenter3[3] = { Merger_Coll_PosX3, Merger_Coll_PosY3, BoxCenter[2] };
 
-   double r1, r2, r3, Dens1, Dens2, Dens3, Pres1, Pres2, Pres3, VelX, VelY, Dens;
-   double Metl1, Metl2, Metl3, Color1, Color2, Color3, Metl;
+   double r1, r2, r3, Dens1, Dens2, Dens3, Pres1, Pres2, Pres3;
+   double Metl1, Metl2, Metl3, Color1, Color2, Color;
+   double Dens, MomX, MomY, MomZ, Pres, Eint, Etot, Metl;
 
-//    for each cell, we sum up the density and pressure from each halo and then calculate the weighted velocity
+   //    for each cell, we sum up the density and pressure from each halo and then calculate the weighted velocity
    if ( Merger_Coll_IsGas1 ) {
      r1    = sqrt( SQR(x-ClusterCenter1[0]) + SQR(y-ClusterCenter1[1]) + SQR(z-ClusterCenter1[2]) );
      Dens1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_D1, r1 );
@@ -503,13 +504,22 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    Dens = Dens1 + Dens2 + Dens3;
 
-   VelX  = ( Merger_Coll_VelX1*Dens1 + Merger_Coll_VelX2*Dens2 + Merger_Coll_VelX3*Dens3 ) / Dens;
-   VelY  = ( Merger_Coll_VelY1*Dens1 + Merger_Coll_VelY2*Dens2 + Merger_Coll_VelY3*Dens3 ) / Dens;
+   MomX = Merger_Coll_VelX1*Dens1 + Merger_Coll_VelX2*Dens2 + Merger_Coll_VelX3*Dens3;
+   MomY = Merger_Coll_VelY1*Dens1 + Merger_Coll_VelY2*Dens2 + Merger_Coll_VelY3*Dens3;
+   MomZ = 0.0;
 
-   fluid[DENS] = Dens1 + Dens2 + Dens3;
-   fluid[MOMX] = fluid[DENS]*VelX;
-   fluid[MOMY] = fluid[DENS]*VelY;
-   fluid[MOMZ] = 0.0;
+   // compute the total gas energy
+   Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
+                                    EoS_AuxArray_Int, h_EoS_Table );    // assuming EoS requires no passive scalars
+
+   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );      // do NOT include magnetic energy here
+
+   fluid[DENS] = Dens;
+   fluid[MOMX] = MomX;
+   fluid[MOMY] = MomY;
+   fluid[MOMZ] = MomZ;
+   fluid[ENGY] = Etot;
+
    fluid[ENGY] = ( Pres1 + Pres2 + Pres3 ) / ( GAMMA - 1.0 )
      + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
  
@@ -605,11 +615,11 @@ void Init_TestProb_Hydro_ClusterMerger()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr  = SetGridIC;
-   End_User_Ptr            = End_ClusterMerger;
-   Par_Init_ByFunction_Ptr = Par_Init_ByFunction_ClusterMerger;
-   Init_Field_User_Ptr     = AddNewField_ClusterMerger;
-   Par_Init_Attribute_User_Ptr = AddNewParticleAttribute_ClusterMerger;
+   Init_Function_User_Ptr         = SetGridIC;
+   End_User_Ptr                   = End_ClusterMerger;
+   Par_Init_ByFunction_Ptr        = Par_Init_ByFunction_ClusterMerger;
+   Init_Field_User_Ptr            = AddNewField_ClusterMerger;
+   Par_Init_Attribute_User_Ptr    = AddNewParticleAttribute_ClusterMerger;
 #  ifdef MHD
    Init_Function_BField_User_Ptr  = SetBFieldIC;
 #  endif

@@ -48,9 +48,10 @@
 //                MinPres                : Minimum allowed pressure
 //                EoS_DensEint2Pres_Func : Function pointers to the EoS routines
 //                EoS_DensPres2CSqr_Func : ...
-//                c_EoS_AuxArray         : Auxiliary array for the EoS routines (for CPU only)
-//                                         --> When using GPU, this array is stored in the constant memory header
-//                                             CUDA_ConstMemory.h and does not need to be passed as a function argument
+//                c_EoS_AuxArray_*       : Auxiliary arrays for the EoS routines (for CPU only)
+//                c_EoS_Table            : EoS tables                            (for CPU only)
+//                                         --> When using GPU, these CPU-only variables are stored in the constant memory
+//                                             header CUDA_ConstMemory.h and do not need to be passed as function arguments
 //
 // Return      :  g_dt_Array
 //-----------------------------------------------------------------------------------------
@@ -65,7 +66,8 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
                               const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const int NPG,
                               const real dh, const real Safety, const real MinPres,
                               const EoS_DE2P_t EoS_DensEint2Pres_Func, const EoS_DP2C_t EoS_DensPres2CSqr_Func,
-                              const double c_EoS_AuxArray[] )
+                              const double c_EoS_AuxArray_Flt[], const int c_EoS_AuxArray_Int[],
+                              const real* const c_EoS_Table[EOS_NTABLE_MAX] )
 #endif
 {
 
@@ -116,8 +118,9 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
          Vz    = FABS( fluid[MOMZ] )*_Rho;
          Pres  = Hydro_Con2Pres( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], fluid+NCOMP_FLUID,
                                  CheckMinPres_Yes, MinPres, Emag,
-                                 EoS_DensEint2Pres_Func, c_EoS_AuxArray, NULL );
-         a2    = EoS_DensPres2CSqr_Func( fluid[DENS], Pres, fluid+NCOMP_FLUID, c_EoS_AuxArray ); // sound speed squared
+                                 EoS_DensEint2Pres_Func, c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table, NULL );
+         a2    = EoS_DensPres2CSqr_Func( fluid[DENS], Pres, fluid+NCOMP_FLUID, c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int,
+                                         c_EoS_Table ); // sound speed squared
 
 //       compute the maximum information propagating speed
 //       --> hydro: bulk velocity + sound wave

@@ -148,18 +148,26 @@ struct Timer_t
 // macro for timing functions
 #ifdef TIMING
 
-#  define TIMING_FUNC( call, timer )                              \
-   {                                                              \
-      if ( OPT__TIMING_BARRIER ) MPI_Barrier( MPI_COMM_WORLD );   \
-      timer->Start();                                             \
-      call;                                                       \
-      if ( OPT__TIMING_BARRIER ) MPI_Barrier( MPI_COMM_WORLD );   \
-      timer->Stop();                                              \
+#  define TIMING_FUNC( call, timer, timer_on )                       \
+   {                                                                 \
+      if ( timer_on )                                                \
+      {                                                              \
+         if ( OPT__TIMING_BARRIER ) MPI_Barrier( MPI_COMM_WORLD );   \
+         timer->Start();                                             \
+      }                                                              \
+                                                                     \
+      call;                                                          \
+                                                                     \
+      if ( timer_on )                                                \
+      {                                                              \
+         if ( OPT__TIMING_BARRIER ) MPI_Barrier( MPI_COMM_WORLD );   \
+         timer->Stop();                                              \
+      }                                                              \
    }
 
 #else
 
-#  define TIMING_FUNC( call, timer )   call
+#  define TIMING_FUNC( call, timer, timer_on )  call
 
 #endif
 

@@ -22,7 +22,8 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
                     const bool NormPassive, const int NNorm, const int NormIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff,
                     const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint,
-                    const double EoS_AuxArray[], real* const EintOut );
+                    const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                    const real *const EoS_Table[EOS_NTABLE_MAX], real* const EintOut );
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
 
 #endif // #ifdef __CUDACC__ ... else ...
@@ -51,12 +52,14 @@ GPU_DEVICE static void Set_Flux( real flux[], const real val[], const real Gamma
 //                MinDens/Pres      : Density and pressure floors
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
 //                EoS_DensPres2CSqr : EoS routine to compute the sound speed square
-//                EoS_AuxArray      : Auxiliary array for the EoS routines
+//                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
+//                EoS_Table         : EoS tables
 //------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                 const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
-                                const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray[] )
+                                const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
+                                const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] )
 {
 
 // check
@@ -73,8 +76,8 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
 #  endif // #ifdef GAMER_DEBUG
 
 
-   const real Gamma           = EoS_AuxArray[0];      // only support constant-gamma EoS (i.e., EOS_GAMMA)
-   const real Gamma_m1        = EoS_AuxArray[1];
+   const real Gamma           = EoS_AuxArray_Flt[0];  // only support constant-gamma EoS (i.e., EOS_GAMMA)
+   const real Gamma_m1        = EoS_AuxArray_Flt[1];
    const real Gamma_p1        = Gamma + (real)1.0;
    const real c               = Gamma_m1 / Gamma_p1;
    const bool NormPassive_No  = false;                // no need to convert passive scalars to mass fraction
@@ -85,9 +88,9 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
 
 // convert conserved variables to primitive variables
    Hydro_Con2Pri( L_In, L, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
-                  EoS_DensEint2Pres, NULL, EoS_AuxArray, NULL );
+                  EoS_DensEint2Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
    Hydro_Con2Pri( R_In, R, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
-                  EoS_DensEint2Pres, NULL, EoS_AuxArray, NULL );
+                  EoS_DensEint2Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
 
 
 // reorder the input variables for different spatial directions

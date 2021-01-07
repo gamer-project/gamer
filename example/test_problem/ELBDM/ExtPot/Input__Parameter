@@ -107,8 +107,10 @@ SOR_MAX_ITER                 -1           # maximum number of iterations in SOR:
 SOR_MIN_ITER                 -1           # minimum number of iterations in SOR: (<0=auto) [-1]
 POT_GPU_NPGROUP              -1           # number of patch groups sent into the GPU Poisson solver (<=0=auto) [-1]
 OPT__GRA_P5_GRADIENT          0           # 5-points gradient in the Gravity solver (must have GRA/USG_GHOST_SIZE_G>=2) [0]
-OPT__GRAVITY_TYPE             1           # gravity source: (1=self-gravity, 2=external gravity, 3=both) ##2/3 for HYDRO ONLY##
-OPT__EXTERNAL_POT             1           # add the external potential (incompatible with OPT__GRAVITY_TYPE==2) [0] ##ELBDM ONLY##
+OPT__SELF_GRAVITY             1           # add self-gravity [1]
+OPT__EXT_ACC                  0           # add external acceleration (0=off, 1=function, 2=table) [0] ##HYDRO ONLY##
+OPT__EXT_POT                  1           # add external potential    (0=off, 1=function, 2=table) [0]
+EXT_POT_TABLE_NAME            EmptyTable  # external potential table: filename
 
 
 # initialization

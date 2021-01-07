@@ -30,7 +30,7 @@ extern double     dTime_Base;                         // physical time interval 
 extern double     FlagTable_Rho        [NLEVEL-1];    // refinement criterion of density
 extern double     FlagTable_RhoGradient[NLEVEL-1];    // refinement criterion of density gradient
 extern double     FlagTable_Lohner     [NLEVEL-1][4]; // refinement criterion based on Lohner's error estimator
-extern double     FlagTable_User       [NLEVEL-1];    // user-defined refinement criterion
+extern double    *FlagTable_User       [NLEVEL-1];    // user-defined refinement criterion
 extern double    *DumpTable;                          // dump table recording the physical times to output data
 extern int        DumpTable_NDump;                    // number of data dumps in the dump table
 extern int        DumpID;                             // index of the current output file
@@ -59,6 +59,7 @@ extern int        INIT_DUMPID, INIT_SUBSAMPLING_NCELL, OPT__TIMING_BARRIER, OPT_
 extern double     OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z, AUTO_REDUCE_DT_FACTOR, AUTO_REDUCE_DT_FACTOR_MIN;
 extern double     OPT__CK_MEMFREE, INT_MONO_COEFF, UNIT_L, UNIT_M, UNIT_T, UNIT_V, UNIT_D, UNIT_E, UNIT_P;
 extern bool       OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_USER, OPT__FLAG_LOHNER_DENS, OPT__FLAG_REGION;
+extern int        OPT__FLAG_USER_NUM;
 extern bool       OPT__DT_USER, OPT__RECORD_DT, OPT__RECORD_MEMORY, OPT__MEMORY_POOL, OPT__RESTART_RESET;
 extern bool       OPT__FIXUP_RESTRICT, OPT__INIT_RESTRICT, OPT__VERBOSE, OPT__MANUAL_CONTROL, OPT__UNIT;
 extern bool       OPT__INT_TIME, OPT__OUTPUT_USER, OPT__OUTPUT_BASE, OPT__OVERLAP_MPI, OPT__TIMING_BALANCE;
@@ -124,41 +125,36 @@ extern double           ELBDM_LAMBDA;
 // (2-2) self-gravity
 // ============================================================================================================
 #ifdef GRAVITY
-extern double     AveDensity_Init;                    // initial average mass density (in all levels)
-extern int        Pot_ParaBuf;                        // number of parallel buffers to exchange potential for the
-                                                      // Poisson/Gravity solvers and the potential refinement
-extern int        Rho_ParaBuf;                        // number of parallel buffers to exchange density for the Poisson solver
+extern double        AveDensity_Init;     // initial average mass density (in all levels)
+extern int           Pot_ParaBuf;         // number of parallel buffers to exchange potential for the
+                                          // Poisson/Gravity solvers and the potential refinement
+extern int           Rho_ParaBuf;         // number of parallel buffers to exchange density for the Poisson solver
+extern real         *GreenFuncK;
+extern double        GFUNC_COEFF0;
+extern double        DT__GRAVITY;
+extern double        NEWTON_G;
+extern int           POT_GPU_NPGROUP;
+extern bool          OPT__OUTPUT_POT, OPT__GRA_P5_GRADIENT, OPT__SELF_GRAVITY, OPT__GRAVITY_EXTRA_MASS;
+extern double        SOR_OMEGA;
+extern int           SOR_MAX_ITER, SOR_MIN_ITER;
+extern double        MG_TOLERATED_ERROR;
+extern int           MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH;
+extern char          EXT_POT_TABLE_NAME[MAX_STRING];
+extern double        EXT_POT_TABLE_DH, EXT_POT_TABLE_EDGEL[3];
+extern int           EXT_POT_TABLE_NPOINT[3], EXT_POT_TABLE_FLOAT8;
+extern IntScheme_t   OPT__POT_INT_SCHEME, OPT__RHO_INT_SCHEME, OPT__GRA_INT_SCHEME, OPT__REF_POT_INT_SCHEME;
+extern OptPotBC_t    OPT__BC_POT;
+extern OptExtAcc_t   OPT__EXT_ACC;
+extern OptExtPot_t   OPT__EXT_POT;
 
-extern real      *GreenFuncK;
-extern double     GFUNC_COEFF0;
-extern double     DT__GRAVITY;
-extern double     NEWTON_G;
-extern int        POT_GPU_NPGROUP;
-extern bool       OPT__OUTPUT_POT, OPT__GRA_P5_GRADIENT, OPT__EXTERNAL_POT, OPT__GRAVITY_EXTRA_MASS;
-extern double     SOR_OMEGA;
-extern int        SOR_MAX_ITER, SOR_MIN_ITER;
-extern double     MG_TOLERATED_ERROR;
-extern int        MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH;
-
-extern IntScheme_t      OPT__POT_INT_SCHEME, OPT__RHO_INT_SCHEME, OPT__GRA_INT_SCHEME, OPT__REF_POT_INT_SCHEME;
-extern OptPotBC_t       OPT__BC_POT;
-extern OptGravityType_t OPT__GRAVITY_TYPE;
-
-extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
-extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
-extern void (*Init_ExtAccAuxArray_Ptr)( double [] );
+extern double ExtAcc_AuxArray    [EXT_ACC_NAUX_MAX];
+extern double ExtPot_AuxArray_Flt[EXT_POT_NAUX_MAX];
+extern int    ExtPot_AuxArray_Int[EXT_POT_NAUX_MAX];
 extern ExtAcc_t CPUExtAcc_Ptr;
-extern void (*SetCPUExtAcc_Ptr)( ExtAcc_t & );
+extern ExtPot_t CPUExtPot_Ptr;
 #ifdef GPU
 extern ExtAcc_t GPUExtAcc_Ptr;
-extern void (*SetGPUExtAcc_Ptr)( ExtAcc_t & );
-#endif
-extern void (*Init_ExtPotAuxArray_Ptr)( double [] );
-extern ExtPot_t CPUExtPot_Ptr;
-extern void (*SetCPUExtPot_Ptr)( ExtPot_t & );
-#ifdef GPU
 extern ExtPot_t GPUExtPot_Ptr;
-extern void (*SetGPUExtPot_Ptr)( ExtPot_t & );
 #endif
 #endif // #ifdef GRAVITY
 
@@ -238,7 +234,8 @@ extern double                SF_CREATE_STAR_MAX_STAR_MFRAC;
 // (2-9) equation of state
 // =======================================================================================================
 #if ( MODEL == HYDRO )
-extern double EoS_AuxArray[EOS_NAUX_MAX];
+extern double EoS_AuxArray_Flt[EOS_NAUX_MAX];
+extern int    EoS_AuxArray_Int[EOS_NAUX_MAX];
 extern EoS_DE2P_t EoS_DensEint2Pres_CPUPtr;
 extern EoS_DP2E_t EoS_DensPres2Eint_CPUPtr;
 extern EoS_DP2C_t EoS_DensPres2CSqr_CPUPtr;
@@ -268,27 +265,28 @@ extern real       (*h_Ele_Array      [2])[9][NCOMP_ELE][ PS2P1*PS2 ];
 #endif
 
 #ifdef GRAVITY
-extern real       (*h_Rho_Array_P    [2])[RHO_NXT][RHO_NXT][RHO_NXT];
-extern real       (*h_Pot_Array_P_In [2])[POT_NXT][POT_NXT][POT_NXT];
-extern real       (*h_Pot_Array_P_Out[2])[GRA_NXT][GRA_NXT][GRA_NXT];
-extern real       (*h_Flu_Array_G    [2])[GRA_NIN][PS1][PS1][PS1];
-extern double     (*h_Corner_Array_G [2])[3];
+extern real       (*h_Rho_Array_P     [2])[RHO_NXT][RHO_NXT][RHO_NXT];
+extern real       (*h_Pot_Array_P_In  [2])[POT_NXT][POT_NXT][POT_NXT];
+extern real       (*h_Pot_Array_P_Out [2])[GRA_NXT][GRA_NXT][GRA_NXT];
+extern real       (*h_Flu_Array_G     [2])[GRA_NIN][PS1][PS1][PS1];
+extern double     (*h_Corner_Array_PGT[2])[3];
 #ifdef DUAL_ENERGY
-extern char       (*h_DE_Array_G     [2])[PS1][PS1][PS1];
+extern char       (*h_DE_Array_G      [2])[PS1][PS1][PS1];
 #endif
 #ifdef MHD
-extern real       (*h_Emag_Array_G   [2])[PS1][PS1][PS1];
+extern real       (*h_Emag_Array_G    [2])[PS1][PS1][PS1];
 #endif
+extern real        *h_ExtPotTable;
 
 #ifdef UNSPLIT_GRAVITY
-extern real       (*h_Pot_Array_USG_F[2])[ CUBE(USG_NXT_F) ];
-extern real       (*h_Pot_Array_USG_G[2])[USG_NXT_G ][USG_NXT_G ][USG_NXT_G ];
-extern real       (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1];
+extern real       (*h_Pot_Array_USG_F [2])[ CUBE(USG_NXT_F) ];
+extern real       (*h_Pot_Array_USG_G [2])[USG_NXT_G ][USG_NXT_G ][USG_NXT_G ];
+extern real       (*h_Flu_Array_USG_G [2])[GRA_NIN-1][PS1][PS1][PS1];
 #endif
-#endif
+#endif // #ifdef GRAVITY
 
 #ifdef SUPPORT_GRACKLE
-extern real       (*h_Che_Array      [2]);
+extern real       (*h_Che_Array[2]);
 // do not declare Grackle variables for CUDA source files since they do not include <grackle.h>
 #ifndef __CUDACC__
 extern grackle_field_data *Che_FieldData;
@@ -303,6 +301,10 @@ extern real       (*h_Pot_Array_T[2])[ CUBE(GRA_NXT) ];
 #endif
 #ifdef MHD
 extern real       (*h_Mag_Array_T[2])[NCOMP_MAG][ PS1P1*SQR(PS1) ];
+#endif
+
+#if ( MODEL == HYDRO )
+extern real        *h_EoS_Table[EOS_NTABLE_MAX];
 #endif
 
 

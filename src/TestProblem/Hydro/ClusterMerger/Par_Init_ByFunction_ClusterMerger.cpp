@@ -84,7 +84,6 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
-   const long NParAtt = 7;   // mass, pos*3, vel*3
 // check file existence
    if ( !Aux_CheckFileExist(Merger_File_Par1) )
       Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", Merger_File_Par1 );

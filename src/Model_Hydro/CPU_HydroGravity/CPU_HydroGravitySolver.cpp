@@ -37,7 +37,8 @@
 //                dt                : Time interval to advance solution
 //                dh                : Cell size
 //                P5_Gradient       : Use 5-points stencil to evaluate the potential gradient
-//                GravityType       : Types of gravity --> self-gravity, external gravity, both
+//                UsePot            : Add self-gravity and/or external potential
+//                ExtAcc            : Add external acceleration
 //                ExtAcc_Func       : Function pointer to the external acceleration routine (for both CPU and GPU)
 //                c_ExtAcc_AuxArray : Auxiliary array for adding external acceleration (for CPU only)
 //                                    --> When using GPU, this array is stored in the constant memory header
@@ -59,7 +60,7 @@ void CUPOT_HydroGravitySolver(
          char   g_DE_Array     [][ CUBE(PS1) ],
    const real   g_Emag_Array   [][ CUBE(PS1) ],
    const real dt, const real dh, const bool P5_Gradient,
-   const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
+   const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const double TimeNew, const double TimeOld, const real MinEint )
 #else
 void CPU_HydroGravitySolver(
@@ -72,7 +73,7 @@ void CPU_HydroGravitySolver(
    const real   g_Emag_Array   [][ CUBE(PS1) ],
    const int NPatchGroup,
    const real dt, const real dh, const bool P5_Gradient,
-   const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
+   const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const double c_ExtAcc_AuxArray[],
    const double TimeNew, const double TimeOld, const real MinEint )
 #endif
@@ -80,17 +81,17 @@ void CPU_HydroGravitySolver(
 
 // check
 #  ifdef GAMER_DEBUG
-   if ( GravityType == GRAVITY_EXTERNAL  ||  GravityType == GRAVITY_BOTH )
-   if ( TimeNew < 0.0 )
+   if ( ExtAcc  &&  TimeNew < 0.0 )
       printf( "ERROR : incorrect TimeNew (%14.7e) !!\n", TimeNew );
 
 #  ifdef UNSPLIT_GRAVITY
-   if ( GravityType == GRAVITY_SELF  ||  GravityType == GRAVITY_BOTH )
-   if ( g_Pot_Array_USG == NULL  ||  g_Flu_Array_USG == NULL )
-      printf( "ERROR : g_Pot_Array_USG == NULL  ||  g_Flu_Array_USG == NULL !!\n" );
+   if ( g_Flu_Array_USG == NULL )
+      printf( "ERROR : g_Flu_Array_USG == NULL !!\n" );
 
-   if ( GravityType == GRAVITY_EXTERNAL  ||  GravityType == GRAVITY_BOTH )
-   if ( TimeOld >= TimeNew  ||  TimeOld < 0.0 )
+   if ( UsePot  &&  g_Pot_Array_USG == NULL )
+      printf( "ERROR : g_Pot_Array_USG == NULL !!\n" );
+
+   if (  ExtAcc  &&  ( TimeOld >= TimeNew || TimeOld < 0.0 )  )
       printf( "ERROR : incorrect time (TimeOld %14.7e, TimeNew = %14.7e) !!\n", TimeOld, TimeNew );
 #  endif
 
@@ -121,7 +122,7 @@ void CPU_HydroGravitySolver(
    __shared__ real s_pot_old[ CUBE(USG_NXT_G) ];
 #  endif
 
-   if ( GravityType == GRAVITY_SELF  ||  GravityType == GRAVITY_BOTH )
+   if ( UsePot )
    {
       for (int t=threadIdx.x; t<CUBE(GRA_NXT); t+=GRA_BLOCK_SIZE)
          s_pot_new[t] = g_Pot_Array_New[blockIdx.x][t];
@@ -187,8 +188,8 @@ void CPU_HydroGravitySolver(
 #        endif
 
 
-//       external gravity
-         if ( GravityType == GRAVITY_EXTERNAL  ||  GravityType == GRAVITY_BOTH )
+//       external acceleration
+         if ( ExtAcc )
          {
             double x, y, z;
 
@@ -206,8 +207,8 @@ void CPU_HydroGravitySolver(
          }
 
 
-//       self-gravity
-         if ( GravityType == GRAVITY_SELF  ||  GravityType == GRAVITY_BOTH )
+//       self-gravity and external potential
+         if ( UsePot )
          {
             const int ip1_new = idx_new + didx_new[0];
             const int jp1_new = idx_new + didx_new[1];
@@ -268,7 +269,7 @@ void CPU_HydroGravitySolver(
                acc_old[2] += Gra_Const*( pot_old[kp1_old] - pot_old[km1_old] );
 #              endif
             } // if ( P5_Gradient ) ... else ...
-         } // if ( GravityType == GRAVITY_SELF  ||  GravityType == GRAVITY_BOTH )
+         } // if ( UsePot )
 
 
 //       advance fluid
