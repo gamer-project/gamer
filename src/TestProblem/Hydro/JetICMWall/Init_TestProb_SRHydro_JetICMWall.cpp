@@ -54,7 +54,7 @@ void Validate()
    Aux_Error( ERROR_INFO, "GRAVITY must be disabled !!\n" );
 #  endif
 
-   if ( !OPT_UNIT )
+   if ( !OPT__UNIT )
        Aux_Error( ERROR_INFO, "OPT__UNIT must be enabled !!\n" );
 
 // warnings
@@ -211,7 +211,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // variables for jet
    real PriReal[NCOMP_FLUID];
 
-   if ( x < ICM_Position + ICM_Tangent*(y-0.5*amr->BoxSize[1]) )
+   if ( x < ICM_Position + ICM_Tangent*(y-0.5*amr->BoxSize[1]) ) {
        PriReal[0] = (real)ICM_Density;
    } else {
        PriReal[0] = (real)Lobe_Density;
@@ -243,10 +243,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
-void BC( real Array3D[][][][], real fluid[], const int NVar_Flu, const int GhostSize,
-         const int i, const int j, const int k, const double x, const double y,
-         const double z, const double Time, const int lv, const int TFluVarIdxList[],
-         double AuxArray[] )
+void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+	 const int GhostSize, const int idx[], const double pos[], const double Time,
+	 const int lv, const int TFluVarIdxList[], double AuxArray[] )
 {
 
     if ( !Jet_Fire ) return;
@@ -255,11 +254,15 @@ void BC( real Array3D[][][][], real fluid[], const int NVar_Flu, const int Ghost
 
     const int j_ref = GhostSize;  // reference j index
 
-    double rad = sqrt( SQR(x-Jet_Center[0]) + SQR(z-Jet_Center[1]) );
+    double rad = sqrt( SQR(pos[0]-Jet_Center[0]) + SQR(pos[2]-Jet_Center[1]) );
 
-    // set fluid variable inside source
+    // 1D array -> 3D array
+    real (*Array3D)[ArraySize[0]][ArraySize[1]][ArraySize[2]] = ( real (*)[ArraySize[0]][ArraySize[1]][ArraySize[2]] )Array;
+
     if ( rad <= Jet_Radius )
     {
+
+        // set fluid variable inside source
 
         PriReal[0] = (real)Jet_Density;
         PriReal[1] = 0.0;
@@ -270,7 +273,7 @@ void BC( real Array3D[][][][], real fluid[], const int NVar_Flu, const int Ghost
     } else {
 
         for (int v=0; v<NVar_Flu; v++)
-            PriReal[ TFluVarIdxList[v] ] = Array3D[v][k][j_ref][i];
+            PriReal[ TFluVarIdxList[v] ] = Array3D[v][idx[2]][j_ref][idx[0]];
 
     }
 

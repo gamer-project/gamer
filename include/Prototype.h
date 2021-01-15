@@ -155,7 +155,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
 void Flu_FixUp_Flux( const int lv );
 void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const int SonMagSg, const int FaMagSg,
                          const int SonPotSg, const int FaPotSg, const long TVarCC, const long TVarFC );
-void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int ArraySizeX, const int ArraySizeY,
+void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                                  const int ArraySizeZ, const int Idx_Start[], const int Idx_End[],
                                  const int TFluVarIdxList[], const double Time, const double dh, const double *Corner,
                                  const long TVar, const int lv );

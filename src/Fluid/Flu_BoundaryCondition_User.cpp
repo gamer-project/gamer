@@ -1,16 +1,14 @@
 #include "GAMER.h"
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
-static void BC_User_Template( real Array3D[][][][], real fluid[], const int NVar_Flu, const int GhostSize,
-                              const int i, const int j, const int k, const double x, const double y,
-                              const double z, const double Time, const int lv, const int TFluVarIdxList[],
-                              double AuxArray[] );
+static void BC_User_Template( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu, 
+			      const int GhostSize, const int idx[], const double pos[], const double Time, 
+			      const int lv, const int TFluVarIdxList[], double AuxArray[] );
 
 // this function pointer must be set by a test problem initializer
-void (*BC_User_Ptr)( real Array3D[][][][], real fluid[], const int NVar_Flu, const int GhostSize,
-                     const int i, const int j, const int k, const double x, const double y,
-                     const double z, const double Time, const int lv, const int TFluVarIdxList[],
-                     double AuxArray[] ) = NULL;
+void (*BC_User_Ptr)( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+		     const int GhostSize, const int idx[], const double pos[], const double Time,
+		     const int lv, const int TFluVarIdxList[], double AuxArray[] ) = NULL;
 
 #ifdef MHD
 extern void (*BC_BField_User_Ptr)( real magnetic[], const double x, const double y, const double z, const double Time,
@@ -40,10 +38,9 @@ extern void (*BC_BField_User_Ptr)( real magnetic[], const double x, const double
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
-void BC_User_Template( real Array3D[][][][], real fluid[], const int NVar_Flu, const int GhostSize,
-                       const int i, const int j, const int k, const double x, const double y,
-                       const double z, const double Time, const int lv, const int TFluVarIdxList[],
-                       double AuxArray[] )
+void BC_User_Template( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+		       const int GhostSize, const int idx[], const double pos[], const double Time,
+		       const int lv, const int TFluVarIdxList[], double AuxArray[] )
 {
 
 // put your B.C. here
@@ -179,7 +176,10 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Ghos
    {
 //    1. primary variables
 //    get the boundary values of all NCOMP_TOTAL fields
-      BC_User_Ptr( Array3D, BVal, NVar_Flu, GhostSize, i, j, k, x, y, z,
+      const int ArraySize[3] = { ArraySizeX, ArraySizeY, ArraySizeZ };
+      const int idx[3] = { i, j, k };
+      const double pos[3] = { x, y, z };
+      BC_User_Ptr( Array, ArraySize, BVal, NVar_Flu, GhostSize, idx, pos,
                    Time, lv, TFluVarIdxList, NULL );
 
 //    add the magnetic energy for MHD
