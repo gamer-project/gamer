@@ -4,6 +4,10 @@
 
 #if ( MODEL == HYDRO )
 
+static void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+		const int GhostSize, const int idx[], const double pos[], const double Time,
+		const int lv, const int TFluVarIdxList[], double AuxArray[] );
+
 // problem-specific global variables
 // =======================================================================================
 
