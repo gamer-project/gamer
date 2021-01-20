@@ -437,11 +437,12 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 // *********************************
 //    6-1. local source terms
 // *********************************
-   const int InOutSg_Src = SaveSg_Flu;    // save in the same FluSg
+      const int SaveSg_SrcFlu = SaveSg_Flu;  // save in the same Flu/MagSg
+      const int SaveSg_SrcMag = SaveSg_Mag;
 
 //###REVISE: we have assumed that Src_AdvanceDt() requires no ghost zones
-   TIMING_FUNC(   Src_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, SaveSg_Mag, false, false ),
-                  Timer_Src_Advance[lv],   TIMER_ON   );
+      TIMING_FUNC(   Src_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_SrcFlu, SaveSg_SrcMag, false, false ),
+                     Timer_Src_Advance[lv],   TIMER_ON   );
 
 
 // *********************************
