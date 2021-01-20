@@ -19,9 +19,13 @@ extern real (*d_Mag_Array_F_In )[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
 extern real (*d_Mag_Array_F_Out)[NCOMP_MAG][ PS2P1*SQR(PS2)          ];
 extern real (*d_Ele_Array      )[9][NCOMP_ELE][ PS2P1*PS2 ];
 extern real (*d_Mag_Array_T)[NCOMP_MAG][ PS1P1*SQR(PS1) ];
+extern real (*d_Mag_Array_S_In)[NCOMP_MAG][ SRC_NXT_P1*SQR(SRC_NXT) ];
 #endif
 extern real *d_dt_Array_T;
 extern real (*d_Flu_Array_T)[FLU_NIN_T][ CUBE(PS1) ];
+extern real (*d_Flu_Array_S_In )[FLU_NIN_S ][ CUBE(SRC_NXT) ];
+extern real (*d_Flu_Array_S_Out)[FLU_NOUT_S][ CUBE(PS1)     ];
+extern double (*d_Corner_Array_S)[3];
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 extern real (*d_PriVar)      [NCOMP_LR            ][ CUBE(FLU_NXT)     ];
 extern real (*d_Slope_PPM)[3][NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ];
@@ -66,17 +70,21 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
    if ( d_Mag_Array_F_Out != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Mag_Array_F_Out )  );  d_Mag_Array_F_Out = NULL; }
    if ( d_Ele_Array       != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Ele_Array       )  );  d_Ele_Array       = NULL; }
    if ( d_Mag_Array_T     != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Mag_Array_T     )  );  d_Mag_Array_T     = NULL; }
+   if ( d_Mag_Array_S_In  != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Mag_Array_S_In  )  );  d_Mag_Array_S_In  = NULL; }
 #  endif
    if ( d_dt_Array_T      != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_dt_Array_T      )  );  d_dt_Array_T      = NULL; }
    if ( d_Flu_Array_T     != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Flu_Array_T     )  );  d_Flu_Array_T     = NULL; }
+   if ( d_Flu_Array_S_In  != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Flu_Array_S_In  )  );  d_Flu_Array_S_In  = NULL; }
+   if ( d_Flu_Array_S_Out != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Flu_Array_S_Out )  );  d_Flu_Array_S_Out = NULL; }
+   if ( d_Corner_Array_S  != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Corner_Array_S  )  );  d_Corner_Array_S  = NULL; }
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-   if ( d_PriVar      != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_PriVar      )  );  d_PriVar      = NULL; }
-   if ( d_Slope_PPM   != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Slope_PPM   )  );  d_Slope_PPM   = NULL; }
-   if ( d_FC_Var      != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_FC_Var      )  );  d_FC_Var      = NULL; }
-   if ( d_FC_Flux     != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_FC_Flux     )  );  d_FC_Flux     = NULL; }
+   if ( d_PriVar          != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_PriVar          )  );  d_PriVar          = NULL; }
+   if ( d_Slope_PPM       != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Slope_PPM       )  );  d_Slope_PPM       = NULL; }
+   if ( d_FC_Var          != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_FC_Var          )  );  d_FC_Var          = NULL; }
+   if ( d_FC_Flux         != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_FC_Flux         )  );  d_FC_Flux         = NULL; }
 #  ifdef MHD
-   if ( d_FC_Mag_Half != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_FC_Mag_Half )  );  d_FC_Mag_Half = NULL; }
-   if ( d_EC_Ele      != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_EC_Ele      )  );  d_EC_Ele      = NULL; }
+   if ( d_FC_Mag_Half     != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_FC_Mag_Half     )  );  d_FC_Mag_Half     = NULL; }
+   if ( d_EC_Ele          != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_EC_Ele          )  );  d_EC_Ele          = NULL; }
 #  endif
 #  endif // FLU_SCHEME
 
@@ -102,9 +110,13 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
       if ( h_Mag_Array_F_Out[t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Mag_Array_F_Out[t] )  );  h_Mag_Array_F_Out[t] = NULL; }
       if ( h_Ele_Array      [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Ele_Array      [t] )  );  h_Ele_Array      [t] = NULL; }
       if ( h_Mag_Array_T    [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Mag_Array_T    [t] )  );  h_Mag_Array_T    [t] = NULL; }
+      if ( h_Mag_Array_S_In [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Mag_Array_S_In [t] )  );  h_Mag_Array_S_In [t] = NULL; }
 #     endif
       if ( h_dt_Array_T     [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_dt_Array_T     [t] )  );  h_dt_Array_T     [t] = NULL; }
       if ( h_Flu_Array_T    [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Flu_Array_T    [t] )  );  h_Flu_Array_T    [t] = NULL; }
+      if ( h_Flu_Array_S_In [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Flu_Array_S_In [t] )  );  h_Flu_Array_S_In [t] = NULL; }
+      if ( h_Flu_Array_S_Out[t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Flu_Array_S_Out[t] )  );  h_Flu_Array_S_Out[t] = NULL; }
+      if ( h_Corner_Array_S [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Corner_Array_S [t] )  );  h_Corner_Array_S [t] = NULL; }
    } // for (int t=0; t<2; t++)
 
 

@@ -160,6 +160,21 @@ void CUPOT_ELBDMGravitySolver(       real g_Flu_Array[][GRA_NIN][ PS1*PS1*PS1 ],
 #endif // GRAVITY
 
 
+// source-term solver prototype
+__global__
+void CUSRC_SrcSolver_IterateAllCells(
+   const real g_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NXT)           ],
+         real g_Flu_Array_Out[][FLU_NOUT_S][ CUBE(PS1)               ],
+   const real g_Mag_Array_In [][NCOMP_MAG ][ SRC_NXT_P1*SQR(SRC_NXT) ],
+   const double g_Corner_Array[][3],
+   const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
+   const double TimeNew, const double TimeOld,
+   const real MinDens, const real MinPres, const real MinEint,
+   const EoS_DE2P_t EoS_DensEint2Pres_Func,
+   const EoS_DP2E_t EoS_DensPres2Eint_Func,
+   const EoS_DP2C_t EoS_DensPres2CSqr_Func );
+
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -170,8 +185,10 @@ void CUPOT_ELBDMGravitySolver(       real g_Flu_Array[][GRA_NIN][ PS1*PS1*PS1 ],
 //                Flu_GPU_NPGroup : Number of patch groups sent into GPU simultaneously for the fluid solver
 //                Pot_GPU_NPGroup : Number of patch groups sent into GPU simultaneously for the Poisson solver
 //                Che_GPU_NPGroup : Number of patch groups sent into GPU simultaneously for the Grackle solver
+//                Src_GPU_NPGroup : Number of patch groups sent into GPU simultaneously for the source-term solver
 //-------------------------------------------------------------------------------------------------------
-void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, int &Pot_GPU_NPGroup, int &Che_GPU_NPGroup )
+void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, int &Pot_GPU_NPGroup, int &Che_GPU_NPGroup,
+                                      int &Src_GPU_NPGroup )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -338,26 +355,50 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
    } // if ( Che_GPU_NPGroup <= 0 )
 #  endif
 
+// (2-4) SRC_GPU_NPGROUP
+   if ( Src_GPU_NPGroup <= 0 )
+   {
+#     if   ( GPU_ARCH == FERMI )
+      Src_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#     elif ( GPU_ARCH == KEPLER )
+      Src_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#     elif ( GPU_ARCH == MAXWELL )
+      Src_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#     elif ( GPU_ARCH == PASCAL )
+      Src_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#     elif ( GPU_ARCH == VOLTA )
+      Src_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#     elif ( GPU_ARCH == TURING )
+      Src_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#     else
+#     error : UNKNOWN GPU_ARCH !!
+#     endif
+
+      if ( MPI_Rank == 0 )
+         Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d"
+                              " --> might be further fine-tuned\n", "SRC_GPU_NPGROUP", Src_GPU_NPGroup );
+   } // if ( Src_GPU_NPGroup <= 0 )
+
 
 // (3) cache preference
 // (3-1) fluid solver
 #  if   ( MODEL == HYDRO )
 #  if   ( FLU_SCHEME == RTVD )
-   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_RTVD,      cudaFuncCachePreferShared )  );
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_RTVD,             cudaFuncCachePreferShared )  );
 #  elif ( FLU_SCHEME == MHM )
-   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_MHM,       cudaFuncCachePreferL1     )  );
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_MHM,              cudaFuncCachePreferL1     )  );
 #  elif ( FLU_SCHEME == MHM_RP )
-   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_MHM,       cudaFuncCachePreferL1     )  );
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_MHM,              cudaFuncCachePreferL1     )  );
 #  elif ( FLU_SCHEME == CTU )
-   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_CTU,       cudaFuncCachePreferL1     )  );
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_CTU,              cudaFuncCachePreferL1     )  );
 #  endif
-   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_dtSolver_HydroCFL,     cudaFuncCachePreferShared )  );
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_dtSolver_HydroCFL,            cudaFuncCachePreferShared )  );
 #  ifdef GRAVITY
-   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUPOT_dtSolver_HydroGravity, cudaFuncCachePreferShared )  );
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUPOT_dtSolver_HydroGravity,        cudaFuncCachePreferShared )  );
 #  endif
 
 #  elif ( MODEL == ELBDM )
-   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_ELBDMSolver,      cudaFuncCachePreferShared )  );
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_ELBDMSolver,                  cudaFuncCachePreferShared )  );
 
 #  else
 #  error : ERROR : unsupported MODEL !!
@@ -369,27 +410,31 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 // (3-2) Poisson solver
 #  if   ( POT_SCHEME == SOR )
 #  ifdef USE_PSOLVER_10TO14
-   CUDA_CHECK_ERROR( cudaFuncSetCacheConfig( CUPOT_PoissonSolver_SOR_10to14cube, cudaFuncCachePreferShared ) );
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUPOT_PoissonSolver_SOR_10to14cube, cudaFuncCachePreferShared )  );
 #  else
-   CUDA_CHECK_ERROR( cudaFuncSetCacheConfig( CUPOT_PoissonSolver_SOR_16to18cube, cudaFuncCachePreferShared ) );
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUPOT_PoissonSolver_SOR_16to18cube, cudaFuncCachePreferShared )  );
 #  endif
 #  elif ( POT_SCHEME == MG )
-   CUDA_CHECK_ERROR( cudaFuncSetCacheConfig( CUPOT_PoissonSolver_MG,             cudaFuncCachePreferShared ) );
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUPOT_PoissonSolver_MG,             cudaFuncCachePreferShared )  );
 #  endif // POT_SCHEME
 
 
 // (3-3) gravity solver
 #  if   ( MODEL == HYDRO )
-   CUDA_CHECK_ERROR( cudaFuncSetCacheConfig( CUPOT_HydroGravitySolver,           cudaFuncCachePreferShared ) );
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUPOT_HydroGravitySolver,           cudaFuncCachePreferShared )  );
 
 #  elif ( MODEL == ELBDM )
-   CUDA_CHECK_ERROR( cudaFuncSetCacheConfig( CUPOT_ELBDMGravitySolver,           cudaFuncCachePreferL1     ) );
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUPOT_ELBDMGravitySolver,           cudaFuncCachePreferL1     )  );
 
 #  else
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
 
 #  endif // GRAVITY
+
+
+// (3-4) source-term solver
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUSRC_SrcSolver_IterateAllCells,   cudaFuncCachePreferL1      )  );
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

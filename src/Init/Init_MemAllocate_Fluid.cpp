@@ -24,7 +24,7 @@ extern real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 //
 // Note        :  Work when using CPUs only
 //-------------------------------------------------------------------------------------------------------
-void Init_MemAllocate_Fluid( const int Flu_NPatchGroup, const int Pot_NPatchGroup )
+void Init_MemAllocate_Fluid( const int Flu_NPatchGroup, const int Pot_NPatchGroup, const int Src_NPatchGroup )
 {
 
    const int Flu_NPatch = 8*Flu_NPatchGroup;
@@ -34,6 +34,7 @@ void Init_MemAllocate_Fluid( const int Flu_NPatchGroup, const int Pot_NPatchGrou
 #  else
    const int dt_NPatch  = Flu_NPatch;
 #  endif
+   const int Src_NPatch = 8*Src_NPatchGroup;
 
    for (int t=0; t<2; t++)
    {
@@ -66,6 +67,15 @@ void Init_MemAllocate_Fluid( const int Flu_NPatchGroup, const int Pot_NPatchGrou
 
       h_Mag_Array_T    [t] = new real [Flu_NPatch][NCOMP_MAG][ PS1P1*SQR(PS1) ];
 #     endif
+
+      if ( SRC_TERMS.Any ) {
+      h_Flu_Array_S_In [t] = new real [Src_NPatch][FLU_NIN_S ][ CUBE(SRC_NXT)           ];
+      h_Flu_Array_S_Out[t] = new real [Src_NPatch][FLU_NOUT_S][ CUBE(PS1)               ];
+#     ifdef MHD
+      h_Mag_Array_S_In [t] = new real [Src_NPatch][NCOMP_MAG ][ SRC_NXT_P1*SQR(SRC_NXT) ];
+#     endif
+      h_Corner_Array_S [t] = new double [Src_NPatch][3];
+      }
    } // for (int t=0; t<2; t++)
 
 

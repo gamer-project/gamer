@@ -186,6 +186,7 @@ const Solver_t
 #ifdef GRAVITY
   ,DT_GRA_SOLVER              = 6
 #endif
+  ,SRC_SOLVER                 = 7
   ;
 
 

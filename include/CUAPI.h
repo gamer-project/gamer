@@ -16,6 +16,7 @@
 #include "Macro.h"
 #include "Typedef.h"
 #include "Timer.h"
+#include "SrcTerms.h"
 #include "Global.h"
 #include "PhysicalConstant.h"
 

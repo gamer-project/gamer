@@ -12,6 +12,7 @@
 #ifdef __CUDACC__
 # include "Macro.h"
 # include "Typedef.h"
+# include "SrcTerms.h"
 #else
 # include "GAMER.h"
 #endif
@@ -419,6 +420,11 @@
 #  if ( GPU_ARCH == KEPLER  ||  GPU_ARCH == MAXWELL  ||  GPU_ARCH == PASCAL  ||  GPU_ARCH == VOLTA  ||  GPU_ARCH == TURING )
 #     define DT_FLU_USE_SHUFFLE
 #  endif
+
+
+// 4. source-term solver
+//=========================================================================================
+#     define SRC_BLOCK_SIZE         512
 
 
 

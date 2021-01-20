@@ -43,6 +43,8 @@ void End_GAMER()
    EoS_End();
 #  endif
 
+   Src_End();
+
 #  ifdef GRAVITY
    End_ExtAccPot();
 #  endif
