@@ -43,7 +43,7 @@ int                  Flu_ParaBuf;
 
 double               BOX_SIZE, DT__MAX, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT, DT__SYNC_PARENT_LV, DT__SYNC_CHILDREN_LV;
 long                 END_STEP;
-int                  NX0_TOT[3], OUTPUT_STEP, REGRID_COUNT, FLU_GPU_NPGROUP, OMP_NTHREAD;
+int                  NX0_TOT[3], OUTPUT_STEP, REGRID_COUNT, FLU_GPU_NPGROUP, SRC_GPU_NPGROUP, OMP_NTHREAD;
 int                  MPI_NRank, MPI_NRank_X[3];
 int                  GPU_NSTREAM, FLAG_BUFFER_SIZE, FLAG_BUFFER_SIZE_MAXM1_LV, FLAG_BUFFER_SIZE_MAXM2_LV, MAX_LEVEL;
 
@@ -63,6 +63,8 @@ bool                 OPT__UM_IC_DOWNGRADE, OPT__UM_IC_REFINE, OPT__TIMING_MPI;
 bool                 OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
 bool                 OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
 bool                 OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
+
+SrcTerms_t           SRC_TERMS;
 UM_IC_Format_t       OPT__UM_IC_FORMAT;
 TestProbID_t         TESTPROB_ID;
 OptInit_t            OPT__INIT;
@@ -301,6 +303,14 @@ real (*h_Mag_Array_T[2])[NCOMP_MAG][ PS1P1*SQR(PS1) ]              = { NULL, NUL
 real *h_EoS_Table[EOS_NTABLE_MAX];
 #endif
 
+// (3-7) source terms
+real (*h_Flu_Array_S_In [2])[FLU_NIN_S ][ CUBE(SRC_NXT)  ]         = { NULL, NULL };
+real (*h_Flu_Array_S_Out[2])[FLU_NOUT_S][ CUBE(PS1)      ]         = { NULL, NULL };
+#ifdef MHD
+real (*h_Mag_Array_S_In [2])[NCOMP_MAG][ SRC_NXT_P1*SQR(SRC_NXT) ] = { NULL, NULL };
+#endif
+double (*h_Corner_Array_S[2])[3]                                   = { NULL, NULL };
+
 
 // 4. GPU (device) global memory arrays
 // =======================================================================================================
@@ -350,25 +360,34 @@ real (*d_Pot_Array_USG_F)[ CUBE(USG_NXT_F) ]                       = NULL;
 real (*d_Pot_Array_USG_G)[ CUBE(USG_NXT_G) ]                       = NULL;
 real (*d_Flu_Array_USG_G)[GRA_NIN-1][ CUBE(PS1) ]                  = NULL;
 #endif
-#endif
+#endif // #ifdef GRAVITY
 
 // (4-4) Grackle chemistry
 
 // (4-5) dt solver
-real *d_dt_Array_T                                               = NULL;
-real (*d_Flu_Array_T)[FLU_NIN_T][ CUBE(PS1) ]                    = NULL;
+real *d_dt_Array_T                                                 = NULL;
+real (*d_Flu_Array_T)[FLU_NIN_T][ CUBE(PS1) ]                      = NULL;
 #ifdef GRAVITY
-real (*d_Pot_Array_T)[ CUBE(GRA_NXT) ]                           = NULL;
+real (*d_Pot_Array_T)[ CUBE(GRA_NXT) ]                             = NULL;
 #endif
 #ifdef MHD
-real (*d_Mag_Array_T)[NCOMP_MAG][ PS1P1*SQR(PS1) ]               = NULL;
+real (*d_Mag_Array_T)[NCOMP_MAG][ PS1P1*SQR(PS1) ]                 = NULL;
 #endif
-#endif // #ifdef GPU
 
 // (4-6) EoS tables
 #if ( MODEL == HYDRO )
 real *d_EoS_Table[EOS_NTABLE_MAX];
 #endif
+
+// (4-7) source terms
+real (*d_Flu_Array_S_In )[FLU_NIN_S ][ CUBE(SRC_NXT)  ]            = NULL;
+real (*d_Flu_Array_S_Out)[FLU_NOUT_S][ CUBE(PS1)      ]            = NULL;
+#ifdef MHD
+real (*d_Mag_Array_S_In)[NCOMP_MAG  ][ SRC_NXT_P1*SQR(SRC_NXT) ]   = NULL;
+#endif
+double (*d_Corner_Array_S)[3]                                      = NULL;
+
+#endif // #ifdef GPU
 
 
 // 5. timers
@@ -379,6 +398,7 @@ Timer_t *Timer_MPI[3];
 Timer_t *Timer_dt         [NLEVEL];
 Timer_t *Timer_Flu_Advance[NLEVEL];
 Timer_t *Timer_Gra_Advance[NLEVEL];
+Timer_t *Timer_Src_Advance[NLEVEL];
 Timer_t *Timer_Che_Advance[NLEVEL];
 Timer_t *Timer_SF         [NLEVEL];
 Timer_t *Timer_FixUp      [NLEVEL];

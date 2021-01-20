@@ -430,9 +430,6 @@ void Aux_TakeNote()
 #     endif
 #     endif // #ifdef MHD
 
-      fprintf( Note, "EOS_NAUX_MAX                    %d\n",      EOS_NAUX_MAX   );
-      fprintf( Note, "EOS_NTABLE_MAX                  %d\n",      EOS_NTABLE_MAX );
-
 #     elif ( MODEL == ELBDM )
 
 #     else
@@ -487,13 +484,8 @@ void Aux_TakeNote()
 #     else
       fprintf( Note, "DT_GRA_USE_SHUFFLE              OFF\n" );
 #     endif
-#     endif
+#     endif // #ifdef GRAVITY
 #     endif // #ifdef GPU
-
-#     ifdef GRAVITY
-      fprintf( Note, "EXT_POT_NAUX_MAX                %d\n",      EXT_POT_NAUX_MAX );
-      fprintf( Note, "EXT_ACC_NAUX_MAX                %d\n",      EXT_ACC_NAUX_MAX );
-#     endif
 
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
@@ -508,6 +500,8 @@ void Aux_TakeNote()
       fprintf( Note, "#define FLU_NIN                 %d\n",      FLU_NIN             );
       fprintf( Note, "#define FLU_NOUT                %d\n",      FLU_NOUT            );
       fprintf( Note, "#define FLU_NIN_T               %d\n",      FLU_NIN_T           );
+      fprintf( Note, "#define FLU_NIN_S               %d\n",      FLU_NIN_S           );
+      fprintf( Note, "#define FLU_NOUT_S              %d\n",      FLU_NOUT_S          );
       fprintf( Note, "#define NFLUX_FLUID             %d\n",      NFLUX_FLUID         );
       fprintf( Note, "#define NFLUX_PASSIVE           %d\n",      NFLUX_PASSIVE       );
 #     ifdef GRAVITY
@@ -537,6 +531,7 @@ void Aux_TakeNote()
       fprintf( Note, "#define RHOEXT_GHOST_SIZE       %d\n",      RHOEXT_GHOST_SIZE   );
 #     endif
 #     endif
+      fprintf( Note, "#define SRC_GHOST_SIZE          %d\n",      SRC_GHOST_SIZE      );
       fprintf( Note, "#define FLU_NXT                 %d\n",      FLU_NXT             );
 #     ifdef GRAVITY
       fprintf( Note, "#define POT_NXT                 %d\n",      POT_NXT             );
@@ -550,6 +545,17 @@ void Aux_TakeNote()
 #     ifdef PARTICLE
       fprintf( Note, "#define RHOEXT_NXT              %d\n",      RHOEXT_NXT          );
 #     endif
+      fprintf( Note, "#define SRC_NXT                 %d\n",      SRC_NXT             );
+#     if ( MODEL == HYDRO )
+      fprintf( Note, "#define EOS_NAUX_MAX            %d\n",      EOS_NAUX_MAX        );
+      fprintf( Note, "#define EOS_NTABLE_MAX          %d\n",      EOS_NTABLE_MAX      );
+#     endif
+#     ifdef GRAVITY
+      fprintf( Note, "#define EXT_POT_NAUX_MAX        %d\n",      EXT_POT_NAUX_MAX    );
+      fprintf( Note, "#define EXT_ACC_NAUX_MAX        %d\n",      EXT_ACC_NAUX_MAX    );
+#     endif
+      fprintf( Note, "#define SRC_NAUX_DLEP           %d\n",      SRC_NAUX_DLEP       );
+      fprintf( Note, "#define SRC_NAUX_USER           %d\n",      SRC_NAUX_USER       );
 #     ifdef GPU
       fprintf( Note, "#define FLU_BLOCK_SIZE_X        %d\n",      FLU_BLOCK_SIZE_X    );
       fprintf( Note, "#define FLU_BLOCK_SIZE_Y        %d\n",      FLU_BLOCK_SIZE_Y    );
@@ -566,6 +572,7 @@ void Aux_TakeNote()
 #     ifdef GRAVITY
       fprintf( Note, "#define DT_GRA_BLOCK_SIZE       %d\n",      DT_GRA_BLOCK_SIZE   );
 #     endif
+      fprintf( Note, "#define SRC_BLOCK_SIZE          %d\n",      SRC_BLOCK_SIZE      );
 #     endif // #ifdef GPU
 #     ifdef PARTICLE
       fprintf( Note, "#define PAR_NATT_TOTAL          %d\n",      PAR_NATT_TOTAL      );
@@ -815,6 +822,17 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 #     endif // #ifndef SERIAL
+
+
+//    record the parameters of source terms
+      fprintf( Note, "Parameters of Source Terms\n" );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "SRC_ANY                         %d\n",      SRC_TERMS.Any             );
+      fprintf( Note, "SRC_DELEPTONIZATION             %d\n",      SRC_TERMS.Deleptonization );
+      fprintf( Note, "SRC_USER                        %d\n",      SRC_TERMS.User            );
+      fprintf( Note, "SRC_GPU_NPGROUP                 %d\n",      SRC_GPU_NPGROUP           );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "\n\n");
 
 
 //    record the parameters of Grackle

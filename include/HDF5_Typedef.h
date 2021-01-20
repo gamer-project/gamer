@@ -168,6 +168,8 @@ struct SymConst_t
    int    Flu_NIn;
    int    Flu_NOut;
    int    Flu_NIn_T;
+   int    Flu_NIn_S;
+   int    Flu_NOut_S;
    int    NFluxFluid;
    int    NFluxPassive;
    int    Flu_GhostSize;
@@ -277,6 +279,11 @@ struct SymConst_t
    int    dt_Gra_BlockSize;
    int    dt_Gra_UseShuffle;
 #  endif
+
+   int    Src_BlockSize;
+   int    Src_GhostSize;
+   int    Src_NAuxDlep;
+   int    Src_NAuxUser;
 
 }; // struct SymConst_t
 
@@ -504,6 +511,11 @@ struct InputPara_t
    int    ExtPotTable_Float8;
    int    Opt__GravityExtraMass;
 #  endif // #ifdef GRAVITY
+
+// source terms
+   int    Src_Deleptonization;
+   int    Src_User;
+   int    Src_GPU_NPGroup;
 
 // Grackle
 #  ifdef SUPPORT_GRACKLE

@@ -42,6 +42,7 @@ extern Timer_t *Timer_Poi_PrePot_F[NLEVEL];
 //                                   GRACKLE_SOLVER             : Grackle solver
 //                                   DT_FLU_SOLVER              : dt solver for fluid
 //                                   DT_GRA_SOLVER              : dt solver for gravity
+//                                   SRC_SOLVER                 : source-term solver
 //                lv           : Target refinement level
 //                TimeNew      : Target physical time to reach
 //                TimeOld      : Physical time before update
@@ -72,7 +73,7 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
                  SaveSg_Flu, amr->FluSg[lv], lv );
 
    if ( TSolver == FLUID_SOLVER  &&  ( SaveSg_Flu != 0 &&  SaveSg_Flu != 1 )  )
-      Aux_Error( ERROR_INFO, "incorrect SaveSg_Flu (%d) !!\n", SaveSg_Flu );
+      Aux_Error( ERROR_INFO, "incorrect SaveSg_Flu (%d) for the solver %d !!\n", SaveSg_Flu, TSolver );
 
 #  ifdef MHD
    if ( TSolver == FLUID_SOLVER  &&  SaveSg_Mag == amr->MagSg[lv] )
@@ -80,21 +81,24 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
                  SaveSg_Mag, amr->MagSg[lv], lv );
 
    if ( TSolver == FLUID_SOLVER  &&  ( SaveSg_Mag != 0 &&  SaveSg_Mag != 1 )  )
-      Aux_Error( ERROR_INFO, "incorrect SaveSg_Mag (%d) !!\n", SaveSg_Mag );
+      Aux_Error( ERROR_INFO, "incorrect SaveSg_Mag (%d) for the solver %d !!\n", SaveSg_Mag, TSolver );
 #  endif
 
 #  ifdef GRAVITY
    if (  ( TSolver == GRAVITY_SOLVER || TSolver == POISSON_AND_GRAVITY_SOLVER ) && ( SaveSg_Flu != 0 && SaveSg_Flu != 1 )  )
-      Aux_Error( ERROR_INFO, "incorrect SaveSg_Flu (%d) !!\n", SaveSg_Flu );
+      Aux_Error( ERROR_INFO, "incorrect SaveSg_Flu (%d) for the solver %d !!\n", SaveSg_Flu, TSolver );
 
    if (  ( TSolver == POISSON_SOLVER || TSolver == POISSON_AND_GRAVITY_SOLVER ) && ( SaveSg_Pot != 0 && SaveSg_Pot != 1 )  )
-      Aux_Error( ERROR_INFO, "incorrect SaveSg_Pot (%d) !!\n", SaveSg_Pot );
+      Aux_Error( ERROR_INFO, "incorrect SaveSg_Pot (%d) for the solver %d !!\n", SaveSg_Pot, TSolver );
 #  endif
 
 #  ifdef SUPPORT_GRACKLE
    if (  TSolver == GRACKLE_SOLVER  && ( SaveSg_Flu != 0 && SaveSg_Flu != 1 )  )
-      Aux_Error( ERROR_INFO, "incorrect SaveSg_Flu (%d) !!\n", SaveSg_Flu );
+      Aux_Error( ERROR_INFO, "incorrect SaveSg_Flu (%d) for the solver %d !!\n", SaveSg_Flu, TSolver );
 #  endif
+
+   if ( TSolver == SRC_SOLVER  &&  ( SaveSg_Flu != 0 &&  SaveSg_Flu != 1 )  )
+      Aux_Error( ERROR_INFO, "incorrect SaveSg_Flu (%d) for the solver %d !!\n", SaveSg_Flu, TSolver );
 
 
 // set the maximum number of patch groups to be updated at a time
@@ -119,6 +123,8 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 #     ifdef GRAVITY
       case DT_GRA_SOLVER:              NPG_Max = POT_GPU_NPGROUP;    break;
 #     endif
+
+      case SRC_SOLVER:                 NPG_Max = SRC_GPU_NPGROUP;    break;
 
       default :
          Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TSolver", TSolver );
@@ -267,6 +273,7 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 //                                GRACKLE_SOLVER             : Grackle solver
 //                                DT_FLU_SOLVER              : dt solver for fluid
 //                                DT_GRA_SOLVER              : dt solver for gravity
+//                                SRC_SOLVER                 : source-term solver
 //                lv        : Target refinement level
 //                TimeNew   : Target physical time to reach
 //                TimeOld   : Physical time before update
@@ -290,6 +297,7 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
 #  ifndef MHD
    real (*h_Mag_Array_F_In [2])[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ] = { NULL, NULL };
    real (*h_Mag_Array_T    [2])[NCOMP_MAG][ PS1P1*SQR(PS1) ]          = { NULL, NULL };
+   real (*h_Mag_Array_S_In [2])[NCOMP_MAG][ SRC_NXT_P1*SQR(SRC_NXT) ] = { NULL, NULL };
 #  endif
 #  if ( defined GRAVITY  &&  !defined DUAL_ENERGY )
    char (*h_DE_Array_G     [2])[PS1][PS1][PS1]                        = { NULL, NULL };
@@ -377,12 +385,12 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
       break;
 #     endif
 
-      case DT_FLU_SOLVER:
+      case DT_FLU_SOLVER :
          dt_Prepare_Flu( lv, h_Flu_Array_T[ArrayID], h_Mag_Array_T[ArrayID], NPG, PID0_List );
       break;
 
 #     ifdef GRAVITY
-      case DT_GRA_SOLVER:
+      case DT_GRA_SOLVER :
          if ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT )
          dt_Prepare_Pot( lv, h_Pot_Array_T[ArrayID], NPG, PID0_List, TimeNew );
 
@@ -390,6 +398,11 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
          Gra_Prepare_Corner( lv, h_Corner_Array_PGT[ArrayID], NPG, PID0_List );
       break;
 #     endif
+
+      case SRC_SOLVER:
+         Src_Prepare( lv, TimeNew, h_Flu_Array_S_In[ArrayID], h_Mag_Array_S_In[ArrayID], h_Corner_Array_S[ArrayID],
+                      NPG, PID0_List );
+      break;
 
       default :
          Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TSolver", TSolver );
@@ -411,8 +424,10 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
 //                                POISSON_SOLVER             : Poisson solver
 //                                GRAVITY_SOLVER             : Gravity solver
 //                                POISSON_AND_GRAVITY_SOLVER : Poisson + Gravity solvers
+//                                GRACKLE_SOLVER             : Grackle solver
 //                                DT_FLU_SOLVER              : dt solver for fluid
 //                                DT_GRA_SOLVER              : dt solver for gravity
+//                                SRC_SOLVER                 : source-term solver
 //                lv        : Target refinement level
 //                TimeNew   : Target physical time to reach (for external gravity)
 //                TimeOld   : Physical time before update   (for external gravity with UNSPLIT_GRAVITY)
@@ -493,6 +508,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #  ifdef GRAVITY
    real (*h_Emag_Array_G  [2])[PS1][PS1][PS1]                         = { NULL, NULL };
 #  endif
+   real (*h_Mag_Array_S_In [2])[NCOMP_MAG][ SRC_NXT_P1*SQR(SRC_NXT) ] = { NULL, NULL };
 #  endif
 
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
@@ -633,7 +649,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 
 
 #     if   ( MODEL == HYDRO )
-      case DT_FLU_SOLVER:
+      case DT_FLU_SOLVER :
 #        ifdef GPU
          CUAPI_Asyn_dtSolver( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID],
                               h_Mag_Array_T[ArrayID], NULL, NULL,
@@ -649,7 +665,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
       break;
 
 #     ifdef GRAVITY
-      case DT_GRA_SOLVER:
+      case DT_GRA_SOLVER :
 #        ifdef GPU
          CUAPI_Asyn_dtSolver( TSolver, h_dt_Array_T[ArrayID], NULL,
                               NULL, h_Pot_Array_T[ArrayID], h_Corner_Array_PGT[ArrayID],
@@ -667,13 +683,31 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 
 #     elif ( MODEL == ELBDM )
 #     ifdef GRAVITY
-      case DT_GRA_SOLVER:
+      case DT_GRA_SOLVER :
       break;
 #     endif
 
 #     else
 #        error : ERROR : unsupported MODEL !!
 #     endif // MODEL
+
+
+      case SRC_SOLVER :
+#        ifdef GPU
+         CUAPI_Asyn_SrcSolver( h_Flu_Array_S_In [ArrayID],
+                               h_Flu_Array_S_Out[ArrayID],
+                               h_Mag_Array_S_In [ArrayID],
+                               h_Corner_Array_S [ArrayID],
+                               SRC_TERMS, NPG, dt, dh, TimeNew, TimeOld, MIN_DENS, MIN_PRES, MIN_EINT,
+                               GPU_NSTREAM );
+#        else
+         CPU_SrcSolver       ( h_Flu_Array_S_In [ArrayID],
+                               h_Flu_Array_S_Out[ArrayID],
+                               h_Mag_Array_S_In [ArrayID],
+                               h_Corner_Array_S [ArrayID],
+                               SRC_TERMS, NPG, dt, dh, TimeNew, TimeOld, MIN_DENS, MIN_PRES, MIN_EINT );
+#        endif
+      break;
 
 
       default :
@@ -699,6 +733,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 //                                 GRACKLE_SOLVER             : Grackle solver
 //                                 DT_FLU_SOLVER              : dt solver for fluid
 //                                 DT_GRA_SOLVER              : dt solver for gravity
+//                                 SRC_SOLVER                 : source-term solver
 //                lv         : Target refinement level
 //                SaveSg_Flu : Sandglass to store the updated fluid data (for both the fluid, gravity, and Grackle solvers)
 //                SaveSg_Mag : Sandglass to store the updated B field (for the fluid solver)
@@ -758,15 +793,19 @@ void Closing_Step( const Solver_t TSolver, const int lv, const int SaveSg_Flu, c
       break;
 #     endif
 
-      case DT_FLU_SOLVER:
+      case DT_FLU_SOLVER :
          dt_Close( h_dt_Array_T[ArrayID], NPG );
       break;
 
 #     ifdef GRAVITY
-      case DT_GRA_SOLVER:
+      case DT_GRA_SOLVER :
          dt_Close( h_dt_Array_T[ArrayID], NPG );
       break;
 #     endif
+
+      case SRC_SOLVER :
+         Src_Close( lv, SaveSg_Flu, h_Flu_Array_S_Out[ArrayID], NPG, PID0_List );
+      break;
 
       default:
          Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TSolver", TSolver );
