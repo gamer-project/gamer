@@ -215,4 +215,24 @@ void Src_Init_User_Template()
 
 } // FUNCTION : Src_Init_User_Template
 
+
+
+//-----------------------------------------------------------------------------------------
+// Function    :  Src_End_User_Template
+// Description :  Free the resources used by a user-specified source term
+//
+// Note        :  1. Invoked by Src_End()
+//                   --> Enable it by linking to the function pointer "Src_End_User_Ptr"
+//                2. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-----------------------------------------------------------------------------------------
+void Src_End_User_Template()
+{
+
+
+} // FUNCTION : Src_End_User_Template
+
 #endif // #ifndef __CUDACC__
