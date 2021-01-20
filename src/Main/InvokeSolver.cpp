@@ -73,7 +73,7 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
                  SaveSg_Flu, amr->FluSg[lv], lv );
 
    if ( TSolver == FLUID_SOLVER  &&  ( SaveSg_Flu != 0 &&  SaveSg_Flu != 1 )  )
-      Aux_Error( ERROR_INFO, "incorrect SaveSg_Flu (%d) !!\n", SaveSg_Flu );
+      Aux_Error( ERROR_INFO, "incorrect SaveSg_Flu (%d) for the solver %d !!\n", SaveSg_Flu, TSolver );
 
 #  ifdef MHD
    if ( TSolver == FLUID_SOLVER  &&  SaveSg_Mag == amr->MagSg[lv] )
@@ -81,24 +81,24 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
                  SaveSg_Mag, amr->MagSg[lv], lv );
 
    if ( TSolver == FLUID_SOLVER  &&  ( SaveSg_Mag != 0 &&  SaveSg_Mag != 1 )  )
-      Aux_Error( ERROR_INFO, "incorrect SaveSg_Mag (%d) !!\n", SaveSg_Mag );
+      Aux_Error( ERROR_INFO, "incorrect SaveSg_Mag (%d) for the solver %d !!\n", SaveSg_Mag, TSolver );
 #  endif
 
 #  ifdef GRAVITY
    if (  ( TSolver == GRAVITY_SOLVER || TSolver == POISSON_AND_GRAVITY_SOLVER ) && ( SaveSg_Flu != 0 && SaveSg_Flu != 1 )  )
-      Aux_Error( ERROR_INFO, "incorrect SaveSg_Flu (%d) !!\n", SaveSg_Flu );
+      Aux_Error( ERROR_INFO, "incorrect SaveSg_Flu (%d) for the solver %d !!\n", SaveSg_Flu, TSolver );
 
    if (  ( TSolver == POISSON_SOLVER || TSolver == POISSON_AND_GRAVITY_SOLVER ) && ( SaveSg_Pot != 0 && SaveSg_Pot != 1 )  )
-      Aux_Error( ERROR_INFO, "incorrect SaveSg_Pot (%d) !!\n", SaveSg_Pot );
+      Aux_Error( ERROR_INFO, "incorrect SaveSg_Pot (%d) for the solver %d !!\n", SaveSg_Pot, TSolver );
 #  endif
 
 #  ifdef SUPPORT_GRACKLE
    if (  TSolver == GRACKLE_SOLVER  && ( SaveSg_Flu != 0 && SaveSg_Flu != 1 )  )
-      Aux_Error( ERROR_INFO, "incorrect SaveSg_Flu (%d) !!\n", SaveSg_Flu );
+      Aux_Error( ERROR_INFO, "incorrect SaveSg_Flu (%d) for the solver %d !!\n", SaveSg_Flu, TSolver );
 #  endif
 
    if ( TSolver == SRC_SOLVER  &&  ( SaveSg_Flu != 0 &&  SaveSg_Flu != 1 )  )
-      Aux_Error( ERROR_INFO, "incorrect SaveSg_Flu (%d) !!\n", SaveSg_Flu );
+      Aux_Error( ERROR_INFO, "incorrect SaveSg_Flu (%d) for the solver %d !!\n", SaveSg_Flu, TSolver );
 
 
 // set the maximum number of patch groups to be updated at a time
