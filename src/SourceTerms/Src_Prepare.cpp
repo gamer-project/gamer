@@ -35,7 +35,6 @@ void Src_Prepare( const int lv, const double PrepTime,
                   const int NPG, const int *PID0_List )
 {
 
-
 // check
 // assuming we are always preparing the lastest data
 #  ifdef GAMER_DEBUG
