@@ -96,8 +96,8 @@ Procedure for outputting new variables:
 //                   FLOAT8 is on / off
 //                9. It is found that in the parallel environment each rank must try to "synchronize" the HDF5 file
 //                   before opening the existed file and add data
-//                   --> To achieve that, please always invoke "SyncHDF5File" before calling "H5Fopen"
-//                   --> "SyncHDF5File" is defined in "HDF5_Typedef.h", which simply openes the file
+//                   --> To achieve that, always invoke "SyncHDF5File" before calling "H5Fopen"
+//                   --> "SyncHDF5File" is defined in "HDF5_Typedef.h", which simply opens the file
 //                       with the appending mode and then closes it immediately
 //                10. With PARTICLE on, two additional particle information will be recorded:
 //                    --> "NPar" dataset under "Tree" records the number of active particles in all patches
