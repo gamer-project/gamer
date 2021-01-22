@@ -28,6 +28,7 @@ static double   Jet_Position;            // position of jet
 static double   Jet_Lobe_Ratio;          // ratio of jet/lobe densities
 static double   Jet_Center[2];           // jet central coordinates
 static double   Jet_Density;             // jet density
+static double   Jet_Gamma;               // jet relativistic gamma
 
 // =======================================================================================
 
@@ -126,6 +127,8 @@ void SetParameter()
    ReadPara->Read( FileName );
 
    delete ReadPara;
+
+   Jet_Gamma = 1.0 / sqrt(1.0-SQR(Jet_Velocity));
 
 // (1-2) convert to code unit
    Jet_Velocity *= Const_c   / UNIT_V;
@@ -252,8 +255,6 @@ void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
 	 const int lv, const int TFluVarIdxList[], double AuxArray[] )
 {
 
-    if ( !Jet_Fire ) return;
-
     real PriReal[NCOMP_FLUID];
 
     const int j_ref = GhostSize;  // reference j index
@@ -261,35 +262,34 @@ void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
     double rad = sqrt( SQR(pos[0]-Jet_Center[0]) + SQR(pos[2]-Jet_Center[1]) );
 
     // 1D array -> 3D array
-    real (*Array3D)[ArraySize[0]][ArraySize[1]][ArraySize[2]] = ( real (*)[ArraySize[0]][ArraySize[1]][ArraySize[2]] )Array;
+    real (*Array3D)[ArraySize[2]][ArraySize[1]][ArraySize[0]] = ( real (*)[ArraySize[2]][ArraySize[1]][ArraySize[0]] )Array;
 
-    if ( rad <= Jet_Radius )
+    if ( Jet_Fire && rad <= Jet_Radius )
     {
 
         // set fluid variable inside source
 
         PriReal[0] = (real)Jet_Density;
         PriReal[1] = 0.0;
-        PriReal[2] = (real)Jet_Velocity;
+        PriReal[2] = (real)(Jet_Gamma*Jet_Velocity);
         PriReal[3] = 0.0;
         PriReal[4] = (real)Amb_Pressure;
 
+	Hydro_Pri2Con( PriReal, fluid, NULL_BOOL, NULL_INT, NULL, EoS_DensPres2Eint_CPUPtr,
+		       EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+		       EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
     } else {
 
         for (int v=0; v<NVar_Flu; v++)
-            PriReal[ TFluVarIdxList[v] ] = Array3D[v][idx[2]][j_ref][idx[0]];
+            fluid[ TFluVarIdxList[v] ] = Array3D[v][idx[2]][j_ref][idx[0]];
 
     }
-
-    Hydro_Pri2Con( PriReal, fluid, NULL_BOOL, NULL_INT, NULL, EoS_DensPres2Eint_CPUPtr,
-                   EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
 } // FUNCTION : BC
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_TestProb_SRHydro_JetICMWall
+// Function    :  Init_TestProb_Hydro_JetICMWall
 // Description :  Test problem initializer
 //
 // Note        :  None
@@ -298,7 +298,7 @@ void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Init_TestProb_SRHydro_JetICMWall()
+void Init_TestProb_Hydro_JetICMWall()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
