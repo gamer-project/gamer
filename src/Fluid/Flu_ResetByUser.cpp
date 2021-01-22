@@ -44,7 +44,7 @@ bool Flu_ResetByUser_Func_Template( real fluid[], const double x, const double y
 
 // Example : reset fluid variables to extremely small values if the cell is within a specific sphere
    /*
-   const real dr[3]   = { x-0.5*amr->BoxSize[0], y-0.5*amr->BoxSize[1], z-0.5*amr->BoxSize[2] };
+   const real dr[3]   = { x-amr->BoxCenter[0], y-amr->BoxCenter[1], z-amr->BoxCenter[2] };
    const real r       = SQRT( dr[0]*dr[0] + dr[1]*dr[1] + dr[2]*dr[2] );
 
    const real TRad                      = 0.3;

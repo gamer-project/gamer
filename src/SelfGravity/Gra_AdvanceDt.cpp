@@ -8,7 +8,6 @@ extern Timer_t *Timer_GetBuf     [NLEVEL][8];
 extern Timer_t *Timer_Par_Collect[NLEVEL];
 #endif
 
-extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TTime );
 extern void (*Poi_UserWorkBeforePoisson_Ptr)( const double Time, const int lv );
 
 
@@ -151,22 +150,6 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
                                       false, false ),
                         Timer_Gra_Advance[lv],   Timing   );
 
-//       call Flu_ResetByUser_API_Ptr() here only if GRACKLE is disabled
-#        ifdef SUPPORT_GRACKLE
-         if ( !GRACKLE_ACTIVATE )
-#        endif
-         if ( OPT__RESET_FLUID )
-         {
-            if ( Flu_ResetByUser_API_Ptr != NULL )
-            {
-               TIMING_FUNC(   Flu_ResetByUser_API_Ptr( lv, SaveSg_Flu, TimeNew ),
-                              Timer_Gra_Advance[lv],   Timing   );
-            }
-
-            else
-               Aux_Error( ERROR_INFO, "Flu_ResetByUser_API_Ptr == NULL for OPT__RESET_FLUID !!\n" );
-         }
-
          amr->FluSg[0] = SaveSg_Flu;
       } // if ( Gravity )
    } // if ( lv == 0 )
@@ -185,19 +168,6 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
       else if (  Poisson  &&   Gravity )
          InvokeSolver( POISSON_AND_GRAVITY_SOLVER, lv, TimeNew, TimeOld, dt,        Poi_Coeff, SaveSg_Flu, NULL_INT, SaveSg_Pot,
                        OverlapMPI, Overlap_Sync );
-
-//    call Flu_ResetByUser_API_Ptr() here only if GRACKLE is disabled
-#     ifdef SUPPORT_GRACKLE
-      if ( !GRACKLE_ACTIVATE )
-#     endif
-      if ( Gravity  &&  OPT__RESET_FLUID )
-      {
-         if ( Flu_ResetByUser_API_Ptr != NULL )
-            Flu_ResetByUser_API_Ptr( lv, SaveSg_Flu, TimeNew );
-
-         else
-            Aux_Error( ERROR_INFO, "Flu_ResetByUser_API_Ptr == NULL for OPT__RESET_FLUID !!\n" );
-      }
    }
 
 
