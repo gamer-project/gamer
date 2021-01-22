@@ -441,7 +441,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double ClusterCenter3[3] = { Merger_Coll_PosX3, Merger_Coll_PosY3, BoxCenter[2] };
 
    double r1, r2, r3, Dens1, Dens2, Dens3, Pres1, Pres2, Pres3;
-   double Metl1, Metl2, Metl3, Color1, Color2, Color;
+   double Metl1, Metl2, Metl3;
    double Dens, MomX, MomY, MomZ, Pres, Eint, Etot, Metl;
 
    //    for each cell, we sum up the density and pressure from each halo and then calculate the weighted velocity
@@ -451,7 +451,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
      Pres1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_P1, r1 );
      Metl1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_M1, r1 );
    } else {	
-     r1    = 1.0e22;
+     r1    = HUGE_NUMBER;
      Dens1 = 0.0;
      Pres1 = 0.0;
      Metl1 = 0.0;
@@ -529,17 +529,17 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    }
 
    if ( r1 < Merger_Coll_ColorRad1 )
-      fluid[ColorField1Idx] = fluid[DENS];
+      fluid[ColorField1Idx] = Dens;
    else
       fluid[ColorField1Idx] = 0.0;
 
-   if ( r2 < Merger_Coll_ColorRad2 )
-      fluid[ColorField2Idx] = fluid[DENS];
+   if ( Merger_Coll_NumHalos > 1 && r2 < Merger_Coll_ColorRad2 )
+      fluid[ColorField2Idx] = Dens;
    else
       fluid[ColorField2Idx] = 0.0;
 
-   if ( r3 < Merger_Coll_ColorRad3 )
-      fluid[ColorField3Idx] = fluid[DENS];
+   if ( Merger_Coll_NumHalos > 2 && r3 < Merger_Coll_ColorRad3 )
+      fluid[ColorField3Idx] = Dens;
    else
       fluid[ColorField3Idx] = 0.0;
 
@@ -680,7 +680,7 @@ void AddNewField_ClusterMerger()
 
    if ( Merger_Coll_UseMetals )
      Idx_Metal = AddField( "Metal", NORMALIZE_NO );
-   if ( Merger_Coll_NumHalos > 1 && ColorField1Idx == Idx_Undefined )
+   if ( ColorField1Idx == Idx_Undefined )
       ColorField1Idx = AddField( "ColorField1", NORMALIZE_NO );
    if ( Merger_Coll_NumHalos > 1 && ColorField2Idx == Idx_Undefined )
       ColorField2Idx = AddField( "ColorField2", NORMALIZE_NO );

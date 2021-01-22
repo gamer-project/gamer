@@ -239,7 +239,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
          ParTime[pp] = Time[0];
 
 //       set the particle type
-         AllAttribute[ParTypeTagIdx][p] = real( ptype[p] );
+         AllAttribute[ParTypeTagIdx][pp] = real( ptype[p] );
 
       }
 
