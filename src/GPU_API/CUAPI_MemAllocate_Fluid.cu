@@ -26,9 +26,13 @@ extern real (*d_Mag_Array_F_In )[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
 extern real (*d_Mag_Array_F_Out)[NCOMP_MAG][ PS2P1*SQR(PS2)          ];
 extern real (*d_Ele_Array      )[9][NCOMP_ELE][ PS2P1*PS2 ];
 extern real (*d_Mag_Array_T)[NCOMP_MAG][ PS1P1*SQR(PS1) ];
+extern real (*d_Mag_Array_S_In)[NCOMP_MAG][ SRC_NXT_P1*SQR(SRC_NXT) ];
 #endif
 extern real *d_dt_Array_T;
 extern real (*d_Flu_Array_T)[FLU_NIN_T][ CUBE(PS1) ];
+extern real (*d_Flu_Array_S_In )[FLU_NIN_S ][ CUBE(SRC_NXT) ];
+extern real (*d_Flu_Array_S_Out)[FLU_NOUT_S][ CUBE(PS1)     ];
+extern double (*d_Corner_Array_S)[3];
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 extern real (*d_PriVar)      [NCOMP_LR            ][ CUBE(FLU_NXT)     ];
 extern real (*d_Slope_PPM)[3][NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ];
@@ -54,9 +58,10 @@ extern real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 // Parameter   :  Flu_NPG     : Number of patch groups evaluated simultaneously by GPU for the fluid solver
 //                Pot_NPG     : Number of patch groups evaluated simultaneously by GPU for the gravity solver
 //                              --> Here it is used only for the dt solver
+//                Src_NPG     : Number of patch groups evaluated simultaneously by GPU for the source-term solver
 //                GPU_NStream : Number of CUDA stream objects
 //-------------------------------------------------------------------------------------------------------
-void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GPU_NStream )
+void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src_NPG, const int GPU_NStream )
 {
 
 // size of the global memory arrays in all models
@@ -64,12 +69,13 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
 #  ifdef GRAVITY
    const int  Pot_NP              = 8*Pot_NPG;
 #  endif
+   const int  Src_NP              = 8*Src_NPG;
    const long Flu_MemSize_F_In    = sizeof(real  )*Flu_NPG*FLU_NIN *CUBE(FLU_NXT);
    const long Flu_MemSize_F_Out   = sizeof(real  )*Flu_NPG*FLU_NOUT*CUBE(PS2);
    const long Flux_MemSize        = sizeof(real  )*Flu_NPG*9*NFLUX_TOTAL*SQR(PS2);
 #  ifdef UNSPLIT_GRAVITY
    const long Pot_MemSize_USG_F   = sizeof(real  )*Flu_NPG*CUBE(USG_NXT_F);
-   const long Corner_MemSize      = sizeof(double)*Flu_NPG*3;
+   const long Corner_MemSize_F    = sizeof(double)*Flu_NPG*3;
 #  endif
 #  ifdef DUAL_ENERGY
    const long DE_MemSize_F_Out    = sizeof(char  )*Flu_NPG*CUBE(PS2);
@@ -79,13 +85,17 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
    const long Mag_MemSize_F_Out   = sizeof(real  )*Flu_NPG*NCOMP_MAG*PS2P1*SQR(PS2);
    const long Ele_MemSize         = sizeof(real  )*Flu_NPG*9*NCOMP_ELE*PS2P1*PS2;
    const long Mag_MemSize_T       = sizeof(real  )*Flu_NP*NCOMP_MAG*PS1P1*SQR(PS1);
+   const long Mag_MemSize_S_In    = sizeof(real  )*Src_NP*NCOMP_MAG*SRC_NXT_P1*SQR(SRC_NXT);
 #  endif
 #  ifdef GRAVITY
    const long dt_MemSize_T        = sizeof(real  )*MAX( Flu_NP, Pot_NP ); // dt_Array_T is used for both DT_FLU_SOLVER and DT_GRA_SOLVER
 #  else
    const long dt_MemSize_T        = sizeof(real  )*Flu_NP;
 #  endif
-   const long Flu_MemSize_T       = sizeof(real  )*Flu_NP*FLU_NIN_T*CUBE(PS1);
+   const long Flu_MemSize_T       = sizeof(real  )*Flu_NP*FLU_NIN_T *CUBE(PS1);
+   const long Flu_MemSize_S_In    = sizeof(real  )*Src_NP*FLU_NIN_S *CUBE(SRC_NXT);
+   const long Flu_MemSize_S_Out   = sizeof(real  )*Src_NP*FLU_NOUT_S*CUBE(PS1);
+   const long Corner_MemSize_S    = sizeof(double)*Src_NP*3;
 
 // the size of the global memory arrays in different models
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
@@ -116,7 +126,7 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
    TotalSize += Pot_MemSize_USG_F;
 
    if ( OPT__EXT_ACC )
-   TotalSize += Corner_MemSize;
+   TotalSize += Corner_MemSize_F;
 #  endif
 
 #  ifdef DUAL_ENERGY
@@ -146,6 +156,15 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
 #     warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
 #  endif
 
+   if ( SRC_TERMS.Any )
+   {
+      TotalSize += Flu_MemSize_S_In + Flu_MemSize_S_Out;
+#     ifdef MHD
+      TotalSize += Mag_MemSize_S_In;
+#     endif
+      TotalSize += Corner_MemSize_S;
+   }
+
    if ( MPI_Rank == 0 )
       Aux_Message( stdout, "NOTE : total memory requirement in GPU fluid solver = %ld MB\n", TotalSize/(1<<20) );
 
@@ -161,7 +180,7 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Pot_Array_USG_F,       Pot_MemSize_USG_F       )  );
 
    if ( OPT__EXT_ACC )
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Corner_Array_F,        Corner_MemSize          )  );
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Corner_Array_F,        Corner_MemSize_F        )  );
 #  endif
 
 #  ifdef DUAL_ENERGY
@@ -197,6 +216,15 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
 #  endif
 #  endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 
+   if ( SRC_TERMS.Any ) {
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Flu_Array_S_In,        Flu_MemSize_S_In        )  );
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Flu_Array_S_Out,       Flu_MemSize_S_Out       )  );
+#  ifdef MHD
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Mag_Array_S_In,        Mag_MemSize_S_In        )  );
+#  endif
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Corner_Array_S,        Corner_MemSize_S        )  );
+   }
+
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #     warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
 #  endif
@@ -215,7 +243,7 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
       CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Pot_Array_USG_F[t], Pot_MemSize_USG_F       )  );
 
       if ( OPT__EXT_ACC )
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Corner_Array_F [t], Corner_MemSize          )  );
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Corner_Array_F [t], Corner_MemSize_F        )  );
 #     endif
 
 #     ifdef DUAL_ENERGY
@@ -234,6 +262,15 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
 
       CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_dt_Array_T     [t], dt_MemSize_T            )  );
       CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Flu_Array_T    [t], Flu_MemSize_T           )  );
+
+      if ( SRC_TERMS.Any ) {
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Flu_Array_S_In [t], Flu_MemSize_S_In        )  );
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Flu_Array_S_Out[t], Flu_MemSize_S_Out       )  );
+#     ifdef MHD
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Mag_Array_S_In [t], Mag_MemSize_S_In        )  );
+#     endif
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Corner_Array_S [t], Corner_MemSize_S        )  );
+      }
    } // for (int t=0; t<2; t++)
 
 

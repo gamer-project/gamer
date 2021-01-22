@@ -17,7 +17,7 @@
 
 3. Three steps are required to implement an EoS
 
-   I.   Set an EoS auxiliary array
+   I.   Set EoS auxiliary arrays
    II.  Implement EoS conversion functions
    III. Set EoS initialization functions
 
@@ -32,7 +32,7 @@
 
 
 // =============================================
-// I. Set an EoS auxiliary array
+// I. Set EoS auxiliary arrays
 // =============================================
 
 //-------------------------------------------------------------------------------------------------------
@@ -300,7 +300,7 @@ FUNC_SPACE EoS_DP2C_t EoS_DensPres2CSqr_Ptr = EoS_DensPres2CSqr_User_Template;
 //                EoS_DensPres2Eint_CPU/GPUPtr : ...
 //                EoS_DensPres2CSqr_CPU/GPUPtr : ...
 //
-// Return      :  EoS_DensEint2Pres_CPU, EoS_DensPres2Eint_CPU/GPUPtr, EoS_DensPres2CSqr_CPU/GPUPtr
+// Return      :  EoS_DensEint2Pres_CPU/GPUPtr, EoS_DensPres2Eint_CPU/GPUPtr, EoS_DensPres2CSqr_CPU/GPUPtr
 //-----------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __host__
@@ -341,7 +341,7 @@ void EoS_SetGPUFunc_User_Template( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t & );
 // Function    :  EoS_Init_User_Template
 // Description :  Initialize EoS
 //
-// Note        :  1. Set an auxiliary array by invoking EoS_SetAuxArray_*()
+// Note        :  1. Set auxiliary arrays by invoking EoS_SetAuxArray_*()
 //                   --> It will be copied to GPU automatically in CUAPI_SetConstMemory()
 //                2. Set the CPU/GPU EoS routines by invoking EoS_SetCPU/GPUFunc_*()
 //                3. Invoked by EoS_Init()

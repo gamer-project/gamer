@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2423)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2428)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -96,8 +96,8 @@ Procedure for outputting new variables:
 //                   FLOAT8 is on / off
 //                9. It is found that in the parallel environment each rank must try to "synchronize" the HDF5 file
 //                   before opening the existed file and add data
-//                   --> To achieve that, please always invoke "SyncHDF5File" before calling "H5Fopen"
-//                   --> "SyncHDF5File" is defined in "HDF5_Typedef.h", which simply openes the file
+//                   --> To achieve that, always invoke "SyncHDF5File" before calling "H5Fopen"
+//                   --> "SyncHDF5File" is defined in "HDF5_Typedef.h", which simply opens the file
 //                       with the appending mode and then closes it immediately
 //                10. With PARTICLE on, two additional particle information will be recorded:
 //                    --> "NPar" dataset under "Tree" records the number of active particles in all patches
@@ -194,6 +194,11 @@ Procedure for outputting new variables:
 //                2421 : 2020/10/26 --> output COSMIC_RAY
 //                2422 : 2020/10/29 --> output the parameters of external potential table
 //                2423 : 2020/11/01 --> output EOS_NTABLE_MAX
+//                2424 : 2020/12/22 --> output SRC_USER
+//                2425 : 2020/12/24 --> output SRC_DELEPTONIZATION
+//                2426 : 2020/12/24 --> output FLU_NIN_S, FLU_NOUT_S, and SRC_GPU_NPGROUP
+//                2427 : 2020/12/26 --> output SRC_BLOCK_SIZE and SRC_GHOST_SIZE
+//                2428 : 2020/12/27 --> output SRC_NAUX_DLEP and SRC_NAUX_USER
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1394,7 +1399,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2423;
+   KeyInfo.FormatVersion        = 2428;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -1709,6 +1714,8 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.Flu_NIn              = FLU_NIN;
    SymConst.Flu_NOut             = FLU_NOUT;
    SymConst.Flu_NIn_T            = FLU_NIN_T;
+   SymConst.Flu_NIn_S            = FLU_NIN_S;
+   SymConst.Flu_NOut_S           = FLU_NOUT_S;
    SymConst.NFluxFluid           = NFLUX_FLUID;
    SymConst.NFluxPassive         = NFLUX_PASSIVE;
    SymConst.Flu_GhostSize        = FLU_GHOST_SIZE;
@@ -1891,6 +1898,11 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.dt_Gra_UseShuffle    = 0;
 #  endif
 #  endif
+
+   SymConst.Src_BlockSize        = SRC_BLOCK_SIZE;
+   SymConst.Src_GhostSize        = SRC_GHOST_SIZE;
+   SymConst.Src_NAuxDlep         = SRC_NAUX_DLEP;
+   SymConst.Src_NAuxUser         = SRC_NAUX_USER;
 
 } // FUNCTION : FillIn_SymConst
 
@@ -2134,6 +2146,11 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.ExtPotTable_Float8      = EXT_POT_TABLE_FLOAT8;
    InputPara.Opt__GravityExtraMass   = OPT__GRAVITY_EXTRA_MASS;
 #  endif
+
+// source terms
+   InputPara.Src_Deleptonization     = SRC_TERMS.Deleptonization;
+   InputPara.Src_User                = SRC_TERMS.User;
+   InputPara.Src_GPU_NPGroup         = SRC_GPU_NPGROUP;
 
 // Grackle
 #  ifdef SUPPORT_GRACKLE
@@ -2492,6 +2509,8 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Flu_NIn",              HOFFSET(SymConst_t,Flu_NIn             ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Flu_NOut",             HOFFSET(SymConst_t,Flu_NOut            ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Flu_NIn_T",            HOFFSET(SymConst_t,Flu_NIn_T           ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "Flu_NIn_S",            HOFFSET(SymConst_t,Flu_NIn_S           ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "Flu_NOut_S",           HOFFSET(SymConst_t,Flu_NOut_S          ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "NFluxFluid",           HOFFSET(SymConst_t,NFluxFluid          ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "NFluxPassive",         HOFFSET(SymConst_t,NFluxPassive        ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Flu_GhostSize",        HOFFSET(SymConst_t,Flu_GhostSize       ), H5T_NATIVE_INT    );
@@ -2589,6 +2608,11 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "dt_Gra_BlockSize",     HOFFSET(SymConst_t,dt_Gra_BlockSize    ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "dt_Gra_UseShuffle",    HOFFSET(SymConst_t,dt_Gra_UseShuffle   ), H5T_NATIVE_INT    );
 #  endif
+
+   H5Tinsert( H5_TypeID, "Src_BlockSize",        HOFFSET(SymConst_t,Src_BlockSize       ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "Src_GhostSize",        HOFFSET(SymConst_t,Src_GhostSize       ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "Src_NAuxDlep",         HOFFSET(SymConst_t,Src_NAuxDlep        ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "Src_NAuxUser",         HOFFSET(SymConst_t,Src_NAuxUser        ), H5T_NATIVE_INT    );
 
 } // FUNCTION : GetCompound_SymConst
 
@@ -2894,6 +2918,11 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "ExtPotTable_Float8",      HOFFSET(InputPara_t,ExtPotTable_Float8     ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__GravityExtraMass",   HOFFSET(InputPara_t,Opt__GravityExtraMass  ), H5T_NATIVE_INT              );
 #  endif // #ifdef GRAVITY
+
+// source terms
+   H5Tinsert( H5_TypeID, "Src_Deleptonization",     HOFFSET(InputPara_t,Src_Deleptonization    ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Src_User",                HOFFSET(InputPara_t,Src_User               ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Src_GPU_NPGroup",         HOFFSET(InputPara_t,Src_GPU_NPGroup        ), H5T_NATIVE_INT              );
 
 // Grackle
 #  ifdef SUPPORT_GRACKLE

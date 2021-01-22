@@ -197,6 +197,12 @@
 #endif
 
 
+// number of input/output fluid variables in the source-term solver
+// --> fixed to NCOMP_TOTAL for now
+#  define FLU_NIN_S           NCOMP_TOTAL
+#  define FLU_NOUT_S          NCOMP_TOTAL
+
+
 // built-in fields in different models
 #if   ( MODEL == HYDRO )
 // field indices of fluid[] --> element of [0 ... NCOMP_FLUID-1]
@@ -598,6 +604,12 @@
 
 
 
+// number of ghost zones for the source-term solver
+// --> fixed to zero for now since ghost zones in source terms are not supported yet
+#     define SRC_GHOST_SIZE         0
+
+
+
 // patch size (number of cells of a single patch in the x/y/z directions)
 #define PATCH_SIZE                   8
 #define PS1             ( 1*PATCH_SIZE )
@@ -629,6 +641,8 @@
 #ifdef PARTICLE
 #  define RHOEXT_NXT    ( PS1 + 2*RHOEXT_GHOST_SIZE )             // array rho_ext of each patch
 #endif
+#  define SRC_NXT       ( PS1 + 2*SRC_GHOST_SIZE )                // use patch as the unit
+#  define SRC_NXT_P1    ( SRC_NXT + 1 )
 
 
 // size of auxiliary arrays and EoS tables
@@ -641,6 +655,13 @@
 #  define EXT_POT_NAUX_MAX       20    // ExtPot_AuxArray[]
 #  define EXT_ACC_NAUX_MAX       20    // ExtAcc_AuxArray[]
 #endif
+
+#if ( MODEL == HYDRO )
+#  define SRC_NAUX_DLEP          5     // SrcTerms.Dlep_AuxArray_Flt/Int[]
+#else
+#  define SRC_NAUX_DLEP          0
+#endif
+#  define SRC_NAUX_USER          10    // SrcTerms.User_AuxArray_Flt/Int[]
 
 
 // bitwise reproducibility in flux and electric field fix-up operations
