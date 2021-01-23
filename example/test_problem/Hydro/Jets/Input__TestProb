@@ -3,7 +3,7 @@
 
 # problem-specific runtime parameters
 Jet_Ambient                                       0         # [0/1]: uniform/file
-Jet_Exhaust                                       3         # [0/1/2/3]: no jet/jet1/jet2/bi-polar jet
+Jet_Exhaust                                       3         # [0/1/2/3]: no-jet/left-half-jet/right-half-jet/bipolar-jet
 Jet_Precession                                    0         # [0/1]: precession
 Jet_TimeDependentSrc                              0         # [0/1]: time-dependent source
 
@@ -36,7 +36,7 @@ Jet_PrecessionAxis_z                            0.0         # z-corrdinate of pr
 
 # Jet_Ambient == 0
 Amb_UniformDens                             5.0e-29         # ambient density (in cgs units)
-Amb_UniformTemp                                1e-4         # ambient temperature (in iK)
+Amb_UniformTemp                                1e-4         # ambient temperature (in K)
 Amb_UniformVel_x                               +0.0         # ambient velocity x [0.0]
 Amb_UniformVel_y                               +0.0         # ambient velocity y [0.0]
 Amb_UniformVel_z                               +0.0         # ambient velocity z [0.0]

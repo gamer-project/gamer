@@ -454,17 +454,16 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 // variables for jet
-   double Pri4Vel[NCOMP_FLUID];
-   real   PriReal[NCOMP_FLUID];
+   real  Pri[NCOMP_FLUID];
 
 
-   PriReal[0] = (real)Amb_UniformDens;
-   PriReal[1] = (real)Amb_UniformVel[0];
-   PriReal[2] = (real)Amb_UniformVel[1];
-   PriReal[3] = (real)Amb_UniformVel[2];
-   PriReal[4] = (real)Amb_UniformTemp * Amb_UniformDens;
+   Pri[0] = (real)Amb_UniformDens;
+   Pri[1] = (real)Amb_UniformVel[0];
+   Pri[2] = (real)Amb_UniformVel[1];
+   Pri[3] = (real)Amb_UniformVel[2];
+   Pri[4] = (real)Amb_UniformTemp * Amb_UniformDens;
    
-   Hydro_Pri2Con( PriReal, fluid, NULL_BOOL, NULL_INT, NULL, EoS_DensPres2Eint_CPUPtr,
+   Hydro_Pri2Con( Pri, fluid, NULL_BOOL, NULL_INT, NULL, EoS_DensPres2Eint_CPUPtr,
                   EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
