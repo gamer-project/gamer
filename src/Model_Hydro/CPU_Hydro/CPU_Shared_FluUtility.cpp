@@ -681,7 +681,7 @@ bool SRHD_CheckUnphysical( const real Con[], const real Pri[], const char Functi
       {
         if ( Show )
          {
-           printf( "\n\nfunction: %s: %d\n", FunctionName, Line);
+           printf( "\n\nError!! function: %s: %d\n", FunctionName, Line);
 
            if ( Con != NULL && Pri == NULL)
            {
