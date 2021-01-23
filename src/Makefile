@@ -85,9 +85,11 @@ SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 #SIMU_OPTION += -DSRHD
 
 # evolving reduced energy density instead of total energy density
+# --> must be set when SRHD is enabled
 #SIMU_OPTION += -DREDUCED_ENERGY
 
 # using 4-velocity instead of 3-velocity in data reconstruction and recovering primitive variables
+# --> must be set when SRHD is enabled
 #SIMU_OPTION += -DFOUR_VELOCITY
 
 # equation of state: EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TAUBMATHEWS/EOS_TABULAR/EOS_USER
@@ -96,7 +98,7 @@ SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 
 # equation of state: EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TABULAR/EOS_USER
 # --> must be set when MODEL=HYDRO; must also enable BAROTROPIC_EOS for EOS_ISOTHERMAL
-# --> SRHD only supports EOS_GAMMA and EOS_TAUBMATHEWS
+# --> SRHD only supports EOS_TAUBMATHEWS
 SIMU_OPTION += -DEOS=EOS_GAMMA
 
 # whether or not the EOS set above is barotropic
