@@ -3,10 +3,12 @@
 
 
 // prototypes of built-in source terms
-void Src_WorkBeforeMajorFunc_Deleptonization( const int lv, const double TimeNew, const double TimeOld, const double dt );
+void Src_WorkBeforeMajorFunc_Deleptonization( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                                              double AuxArray_Flt[], int AuxArray_Int[] );
 
 // this function pointer can be set by a test problem initializer for a user-specified source term
-void (*Src_WorkBeforeMajorFunc_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt ) = NULL;
+void (*Src_WorkBeforeMajorFunc_User_Ptr)    ( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                                              double AuxArray_Flt[], int AuxArray_Int[] ) = NULL;
 
 
 
@@ -35,11 +37,13 @@ void Src_WorkBeforeMajorFunc( const int lv, const double TimeNew, const double T
 
 // (1) deleptonization
    if ( SRC_TERMS.Deleptonization )
-      Src_WorkBeforeMajorFunc_Deleptonization( lv, TimeNew, TimeOld, dt );
+      Src_WorkBeforeMajorFunc_Deleptonization( lv, TimeNew, TimeOld, dt,
+                                               SRC_TERMS.Dlep_AuxArray_Flt, SRC_TERMS.Dlep_AuxArray_Int );
 
 // (2) user-specified source term
 // --> users may not define Src_WorkBeforeMajorFunc_User_Ptr 
    if ( SRC_TERMS.User  &&  Src_WorkBeforeMajorFunc_User_Ptr != NULL )
-      Src_WorkBeforeMajorFunc_User_Ptr       ( lv, TimeNew, TimeOld, dt );
+      Src_WorkBeforeMajorFunc_User_Ptr       ( lv, TimeNew, TimeOld, dt,
+                                               SRC_TERMS.User_AuxArray_Flt, SRC_TERMS.User_AuxArray_Int );
 
 } // FUNCTION : Src_WorkBeforeMajorFunc

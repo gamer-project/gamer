@@ -158,20 +158,25 @@ static void Src_User_Template( real fluid[], const real B[],
 //                   --> By linking to "Src_WorkBeforeMajorFunc_User_Ptr" in Src_Init_User_Template()
 //                2. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
-// Parameter   :  lv      : Target refinement level
-//                TimeNew : Target physical time to reach
-//                TimeOld : Physical time before update
-//                          --> The major source-term function will update the system from TimeOld to TimeNew
-//                dt      : Time interval to advance solution
-//                          --> Physical coordinates : TimeNew - TimeOld == dt
-//                              Comoving coordinates : TimeNew - TimeOld == delta(scale factor) != dt
+// Parameter   :  lv               : Target refinement level
+//                TimeNew          : Target physical time to reach
+//                TimeOld          : Physical time before update
+//                                   --> The major source-term function will update the system from TimeOld to TimeNew
+//                dt               : Time interval to advance solution
+//                                   --> Physical coordinates : TimeNew - TimeOld == dt
+//                                       Comoving coordinates : TimeNew - TimeOld == delta(scale factor) != dt
+//                AuxArray_Flt/Int : Auxiliary arrays
+//                                   --> Can be used and/or modified here
 //
-// Return      :  None
+// Return      :  AuxArray_Flt/Int[]
 //-------------------------------------------------------------------------------------------------------
-void Src_WorkBeforeMajorFunc_User_Template( const int lv, const double TimeNew, const double TimeOld, const double dt )
+#ifndef __CUDACC__
+void Src_WorkBeforeMajorFunc_User_Template( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                                            double AuxArray_Flt[], int AuxArray_Int[] )
 {
 
 } // FUNCTION : Src_WorkBeforeMajorFunc_User_Template
+#endif
 
 
 
@@ -219,8 +224,13 @@ void Src_SetFunc_User_Template( SrcFunc_t &SrcFunc_CPUPtr )
 
 #ifndef __CUDACC__
 
+// local function prototypes
+void Src_SetAuxArray_User_Template( double [], int [] );
+void Src_SetFunc_User_Template( SrcFunc_t & );
+
 // function pointer
-extern void (*Src_WorkBeforeMajorFunc_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt );
+extern void (*Src_WorkBeforeMajorFunc_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                                                 double AuxArray_Flt[], int AuxArray_Int[] );
 
 //-----------------------------------------------------------------------------------------
 // Function    :  Src_Init_User_Template
@@ -230,9 +240,10 @@ extern void (*Src_WorkBeforeMajorFunc_User_Ptr)( const int lv, const double Time
 //                2. Set the source-term function by invoking Src_SetFunc_*()
 //                   --> Unlike other modules (e.g., EoS), here we use either CPU or GPU but not
 //                       both of them
-//                3. Invoked by Src_Init()
+//                3. Set "Src_WorkBeforeMajorFunc_User_Ptr"
+//                4. Invoked by Src_Init()
 //                   --> Enable it by linking to the function pointer "Src_Init_User_Ptr"
-//                4. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
+//                5. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
 // Parameter   :  None
 //

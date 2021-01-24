@@ -133,22 +133,27 @@ static void Src_Deleptonization( real fluid[], const real B[],
 // Note        :  1. Invoked by Src_WorkBeforeMajorFunc()
 //                2. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
-// Parameter   :  lv      : Target refinement level
-//                TimeNew : Target physical time to reach
-//                TimeOld : Physical time before update
-//                          --> The major source-term function will update the system from TimeOld to TimeNew
-//                dt      : Time interval to advance solution
-//                          --> Physical coordinates : TimeNew - TimeOld == dt
-//                              Comoving coordinates : TimeNew - TimeOld == delta(scale factor) != dt
+// Parameter   :  lv               : Target refinement level
+//                TimeNew          : Target physical time to reach
+//                TimeOld          : Physical time before update
+//                                   --> The major source-term function will update the system from TimeOld to TimeNew
+//                dt               : Time interval to advance solution
+//                                   --> Physical coordinates : TimeNew - TimeOld == dt
+//                                       Comoving coordinates : TimeNew - TimeOld == delta(scale factor) != dt
+//                AuxArray_Flt/Int : Auxiliary arrays
+//                                   --> Can be used and/or modified here
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Src_WorkBeforeMajorFunc_Deleptonization( const int lv, const double TimeNew, const double TimeOld, const double dt )
+#ifndef __CUDACC__
+void Src_WorkBeforeMajorFunc_Deleptonization( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                                              double AuxArray_Flt[], int AuxArray_Int[] )
 {
 
 // TBF
 
 } // FUNCTION : Src_WorkBeforeMajorFunc_Deleptonization
+#endif
 
 
 
@@ -195,6 +200,10 @@ void Src_SetFunc_Deleptonization( SrcFunc_t &SrcFunc_CPUPtr )
 
 
 #ifndef __CUDACC__
+
+// local function prototypes
+void Src_SetAuxArray_Deleptonization( double [], int [] );
+void Src_SetFunc_Deleptonization( SrcFunc_t & );
 
 //-----------------------------------------------------------------------------------------
 // Function    :  Src_Init_Deleptonization
