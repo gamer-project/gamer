@@ -147,7 +147,7 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Ghos
    const bool   CheckMinPres_Yes = true;
    const bool   CheckMinTemp_Yes = true;
 #  ifdef SRHD
-   const bool   PrepLrtz         = ( TVar   & _LORENTZ_FACTOR ) ? true : false; // Lorentz factor
+   const bool   PrepLrtz         = ( TVar & _LORENTZ_FACTOR ) ? true : false; // Lorentz factor
 #  else
    const bool   PrepVx           = ( TVar & _VELX ) ? true : false;
    const bool   PrepVy           = ( TVar & _VELY ) ? true : false;
@@ -211,13 +211,28 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Ghos
 #     endif // #ifdef ( MODEL == HYDRO )
 
 //    store results to the output array
-      for (int v=0; v<NVar_Flu; v++)   Array3D[v][k][j][i] = BVal[ TFluVarIdxList[v] ];
+      for (int v=0; v<NVar_Flu; v++)
+        Array3D[v][k][j][i] = BVal[ TFluVarIdxList[v] ];
+        
 
 
 //    2. derived variables
       v2 = NVar_Flu;
 
 #     if   ( MODEL == HYDRO )
+#     ifdef SRHD
+      if ( PrepLrtz )
+      {
+         real LorentzFactor, Prim[NCOMP_FLUID];
+
+         Hydro_Con2Pri( BVal, Prim, (real)NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
+                        (real)NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
+                        EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
+                        EoS_AuxArray_Int, h_EoS_Table, NULL, &LorentzFactor );
+
+         Array3D[ v2 ++ ][k][j][i] = LorentzFactor;
+      } 
+#     else
       if ( PrepVx   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMX] / BVal[DENS];
       if ( PrepVy   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMY] / BVal[DENS];
       if ( PrepVz   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMZ] / BVal[DENS];
