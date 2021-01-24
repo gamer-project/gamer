@@ -280,8 +280,8 @@ void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
 		       EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
     } else {
 
-        for (int v=0; v<NVar_Flu; v++)
-            fluid[ TFluVarIdxList[v] ] = Array3D[v][idx[2]][j_ref][idx[0]];
+        for (int v=0; v<NCOMP_FLUID; v++)
+            fluid[v] = Array3D[v][idx[2]][j_ref][idx[0]];
 
     }
 
