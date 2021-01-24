@@ -21,11 +21,13 @@
 
    CUSRC_Src_User_Template.cu -> CPU_Src_User_Template.cpp
 
-3. Three steps are required to implement a source term
+3. Four steps are required to implement a source term
 
    I.   Set auxiliary arrays
    II.  Implement the source-term function
-   III. Set initialization functions
+   III. [Optional] Add the work to be done every time
+        before calling the major source-term function
+   IV.  Set initialization functions
 
 4. The source-term function must be thread-safe and
    not use any global variable
@@ -33,9 +35,9 @@
 
 
 
-// =============================================
+// =======================
 // I. Set auxiliary arrays
-// =============================================
+// =======================
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Src_SetAuxArray_User_Template
@@ -66,9 +68,9 @@ void Src_SetAuxArray_User_Template( double AuxArray_Flt[], int AuxArray_Int[] )
 
 
 
-// =============================================
+// ======================================
 // II. Implement the source-term function
-// =============================================
+// ======================================
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Src_User_Template
@@ -143,9 +145,39 @@ static void Src_User_Template( real fluid[], const real B[],
 
 
 
-// =============================================
-// III. Set initialization functions
-// =============================================
+// ==================================================
+// III. [Optional] Add the work to be done every time
+//      before calling the major source-term function
+// ==================================================
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Src_WorkBeforeMajorFunc_User_Template
+// Description :  Specify work to be done every time before calling the major source-term function
+//
+// Note        :  1. Invoked by Src_WorkBeforeMajorFunc()
+//                   --> By linking to "Src_WorkBeforeMajorFunc_User_Ptr" in Src_Init_User_Template()
+//                2. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
+//
+// Parameter   :  lv      : Target refinement level
+//                TimeNew : Target physical time to reach
+//                TimeOld : Physical time before update
+//                          --> The major source-term function will update the system from TimeOld to TimeNew
+//                dt      : Time interval to advance solution
+//                          --> Physical coordinates : TimeNew - TimeOld == dt
+//                              Comoving coordinates : TimeNew - TimeOld == delta(scale factor) != dt
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Src_WorkBeforeMajorFunc_User_Template( const int lv, const double TimeNew, const double TimeOld, const double dt )
+{
+
+} // FUNCTION : Src_WorkBeforeMajorFunc_User_Template
+
+
+
+// ================================
+// IV. Set initialization functions
+// ================================
 
 #ifdef __CUDACC__
 #  define FUNC_SPACE __device__ static
@@ -187,9 +219,8 @@ void Src_SetFunc_User_Template( SrcFunc_t &SrcFunc_CPUPtr )
 
 #ifndef __CUDACC__
 
-// local function prototypes
-void Src_SetAuxArray_User_Template( double [], int [] );
-void Src_SetFunc_User_Template( SrcFunc_t & );
+// function pointer
+extern void (*Src_WorkBeforeMajorFunc_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt );
 
 //-----------------------------------------------------------------------------------------
 // Function    :  Src_Init_User_Template
@@ -211,7 +242,10 @@ void Src_Init_User_Template()
 {
 
    Src_SetAuxArray_User_Template( SRC_TERMS.User_AuxArray_Flt, SRC_TERMS.User_AuxArray_Int );
+
    Src_SetFunc_User_Template( SRC_TERMS.User_FuncPtr );
+
+   Src_WorkBeforeMajorFunc_User_Ptr = Src_WorkBeforeMajorFunc_User_Template;
 
 } // FUNCTION : Src_Init_User_Template
 
@@ -234,5 +268,7 @@ void Src_End_User_Template()
 
 
 } // FUNCTION : Src_End_User_Template
+
+
 
 #endif // #ifndef __CUDACC__

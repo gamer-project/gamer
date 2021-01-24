@@ -21,11 +21,13 @@
 
    CUSRC_Src_Deleptonization.cu -> CPU_Src_Deleptonization.cpp
 
-3. Three steps are required to implement a source term
+3. Four steps are required to implement a source term
 
    I.   Set auxiliary arrays
    II.  Implement the source-term function
-   III. Set initialization functions
+   III. [Optional] Add the work to be done every time
+        before calling the major source-term function
+   IV.  Set initialization functions
 
 4. The source-term function must be thread-safe and
    not use any global variable
@@ -33,9 +35,9 @@
 
 
 
-// =============================================
+// =======================
 // I. Set auxiliary arrays
-// =============================================
+// =======================
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Src_SetAuxArray_Deleptonization
@@ -60,9 +62,9 @@ void Src_SetAuxArray_Deleptonization( double AuxArray_Flt[], int AuxArray_Int[] 
 
 
 
-// =============================================
+// ======================================
 // II. Implement the source-term function
-// =============================================
+// ======================================
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Src_Deleptonization
@@ -119,9 +121,40 @@ static void Src_Deleptonization( real fluid[], const real B[],
 
 
 
-// =============================================
-// III. Set initialization functions
-// =============================================
+// ==================================================
+// III. [Optional] Add the work to be done every time
+//      before calling the major source-term function
+// ==================================================
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Src_WorkBeforeMajorFunc_Deleptonization
+// Description :  Specify work to be done every time before calling the major source-term function
+//
+// Note        :  1. Invoked by Src_WorkBeforeMajorFunc()
+//                2. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
+//
+// Parameter   :  lv      : Target refinement level
+//                TimeNew : Target physical time to reach
+//                TimeOld : Physical time before update
+//                          --> The major source-term function will update the system from TimeOld to TimeNew
+//                dt      : Time interval to advance solution
+//                          --> Physical coordinates : TimeNew - TimeOld == dt
+//                              Comoving coordinates : TimeNew - TimeOld == delta(scale factor) != dt
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Src_WorkBeforeMajorFunc_Deleptonization( const int lv, const double TimeNew, const double TimeOld, const double dt )
+{
+
+// TBF
+
+} // FUNCTION : Src_WorkBeforeMajorFunc_Deleptonization
+
+
+
+// ================================
+// IV. Set initialization functions
+// ================================
 
 #ifdef __CUDACC__
 #  define FUNC_SPACE __device__ static
@@ -163,10 +196,6 @@ void Src_SetFunc_Deleptonization( SrcFunc_t &SrcFunc_CPUPtr )
 
 #ifndef __CUDACC__
 
-// local function prototypes
-void Src_SetAuxArray_Deleptonization( double [], int [] );
-void Src_SetFunc_Deleptonization( SrcFunc_t & );
-
 //-----------------------------------------------------------------------------------------
 // Function    :  Src_Init_Deleptonization
 // Description :  Initialize the deleptonization source term
@@ -186,6 +215,7 @@ void Src_Init_Deleptonization()
 {
 
    Src_SetAuxArray_Deleptonization( SRC_TERMS.Dlep_AuxArray_Flt, SRC_TERMS.Dlep_AuxArray_Int );
+
    Src_SetFunc_Deleptonization( SRC_TERMS.Dlep_FuncPtr );
 
 } // FUNCTION : Src_Init_Deleptonization

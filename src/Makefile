@@ -637,7 +637,8 @@ GPU_FILE    += CUAPI_Asyn_SrcSolver.cu  CUSRC_SrcSolver_IterateAllCells.cu  CUSR
 CPU_FILE    += CPU_SrcSolver.cpp  CPU_SrcSolver_IterateAllCells.cpp  CPU_Src_Deleptonization.cpp \
                CPU_Src_User_Template.cpp
 
-CPU_FILE    += Src_AdvanceDt.cpp  Src_Prepare.cpp  Src_Close.cpp  Src_Init.cpp  Src_End.cpp
+CPU_FILE    += Src_AdvanceDt.cpp  Src_Prepare.cpp  Src_Close.cpp  Src_Init.cpp  Src_End.cpp \
+               Src_WorkBeforeMajorFunc.cpp
 
 vpath %.cu     SourceTerms  SourceTerms/User_Template  SourceTerms/Deleptonization
 vpath %.cpp    SourceTerms  SourceTerms/User_Template  SourceTerms/Deleptonization

@@ -645,6 +645,7 @@ void Src_Prepare( const int lv, const double PrepTime,
                   const int NPG, const int *PID0_List );
 void Src_Close( const int lv, const int SaveSg_Flu, const real h_Flu_Array_S_Out[][FLU_NOUT_S][ CUBE(PS1) ],
                 const int NPG, const int *PID0_List );
+void Src_WorkBeforeMajorFunc( const int lv, const double TimeNew, const double TimeOld, const double dt );
 void CPU_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NXT)           ],
                           real h_Flu_Array_Out[][FLU_NOUT_S][ CUBE(PS1)               ],
                     const real h_Mag_Array_In [][NCOMP_MAG ][ SRC_NXT_P1*SQR(SRC_NXT) ],
