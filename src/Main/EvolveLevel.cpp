@@ -442,9 +442,17 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       const int SaveSg_SrcFlu = SaveSg_Flu;  // save in the same Flu/MagSg
       const int SaveSg_SrcMag = SaveSg_Mag;
 
+      if ( SRC_TERMS.Any )
+      {
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+            Aux_Message( stdout, "   Lv %2d: Src_AdvanceDt, counter = %8ld ... ", lv, AdvanceCounter[lv] );
+
 //###REVISE: we have assumed that Src_AdvanceDt() requires no ghost zones
-      TIMING_FUNC(   Src_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_SrcFlu, SaveSg_SrcMag, false, false ),
-                     Timer_Src_Advance[lv],   TIMER_ON   );
+         TIMING_FUNC(   Src_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_SrcFlu, SaveSg_SrcMag, false, false ),
+                        Timer_Src_Advance[lv],   TIMER_ON   );
+
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+      }
 
 
 // *********************************
