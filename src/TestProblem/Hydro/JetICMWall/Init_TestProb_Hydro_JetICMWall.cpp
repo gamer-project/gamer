@@ -3,6 +3,7 @@
 #include "TestProb.h"
 
 #if ( MODEL == HYDRO )
+extern bool OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP;
 
 static void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
 		const int GhostSize, const int idx[], const double pos[], const double Time,
@@ -254,6 +255,11 @@ void BC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu,
 	 const int GhostSize, const int idx[], const double pos[], const double Time,
 	 const int lv, const int TFluVarIdxList[], double AuxArray[] )
 {
+// check
+    if (OPT__FLAG_LOHNER_PRES == 1 || OPT__FLAG_LOHNER_TEMP == 1 )
+        Aux_Error( ERROR_INFO, "temporary solution does not support OPT__FLAG_LOHNER_PRES or OPT__FLAG_LOHNER_TEMP !!" );
+
+
     int i, j, k;
 
      i = idx[0];
