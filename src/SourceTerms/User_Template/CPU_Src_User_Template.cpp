@@ -19,6 +19,9 @@ void Src_SetAuxArray_User_Template( double [], int [] );
 void Src_SetConstMemory_User_Template( const double AuxArray_Flt[], const int AuxArray_Int[],
                                        double *&DevPtr_Flt, int *&DevPtr_Int );
 void Src_SetFunc_User_Template( SrcFunc_t & );
+void Src_WorkBeforeMajorFunc_User_Template( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                                            double AuxArray_Flt[], int AuxArray_Int[] );
+void Src_End_User_Template();
 
 #endif
 
@@ -276,6 +279,7 @@ void Src_SetConstMemory_User_Template( const double AuxArray_Flt[], const int Au
 // function pointer
 extern void (*Src_WorkBeforeMajorFunc_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
                                                  double AuxArray_Flt[], int AuxArray_Int[] );
+extern void (*Src_End_User_Ptr)();
 
 //-----------------------------------------------------------------------------------------
 // Function    :  Src_Init_User_Template
@@ -286,7 +290,7 @@ extern void (*Src_WorkBeforeMajorFunc_User_Ptr)( const int lv, const double Time
 //                2. Set the source-term function by invoking Src_SetFunc_*()
 //                   --> Unlike other modules (e.g., EoS), here we use either CPU or GPU but not
 //                       both of them
-//                3. Set "Src_WorkBeforeMajorFunc_User_Ptr"
+//                3. Set the function pointers "Src_WorkBeforeMajorFunc_User_Ptr" and "Src_End_User_Ptr"
 //                4. Invoked by Src_Init()
 //                   --> Enable it by linking to the function pointer "Src_Init_User_Ptr"
 //                5. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
@@ -313,8 +317,9 @@ void Src_Init_User_Template()
 // set the major source-term function
    Src_SetFunc_User_Template( SrcTerms.User_FuncPtr );
 
-// set the preparation function
+// set the auxiliary functions
    Src_WorkBeforeMajorFunc_User_Ptr = Src_WorkBeforeMajorFunc_User_Template;
+   Src_End_User_Ptr                 = Src_End_User_Template;
 
 } // FUNCTION : Src_Init_User_Template
 

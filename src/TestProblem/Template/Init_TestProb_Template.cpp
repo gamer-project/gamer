@@ -306,7 +306,6 @@ void Init_TestProb_Template()
 #  endif
 #  endif // #if ( MODEL == HYDRO )
    Src_Init_User_Ptr              = NULL; // option: SRC_USER;                example: SourceTerms/User_Template/CPU_Src_User_Template.cpp
-   Src_End_User_Ptr               = NULL;
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
