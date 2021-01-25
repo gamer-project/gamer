@@ -29,11 +29,11 @@ void Src_End()
 
 
 // stop all source terms
-   if ( SRC_TERMS.Deleptonization )
+   if ( SrcTerms.Deleptonization )
       Src_End_Deleptonization();
 
 // users may not define Src_End_User_Ptr
-   if ( SRC_TERMS.User  &&  Src_End_User_Ptr )
+   if ( SrcTerms.User  &&  Src_End_User_Ptr )
       Src_End_User_Ptr();
 
 

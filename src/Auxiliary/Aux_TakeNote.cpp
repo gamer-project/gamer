@@ -827,9 +827,9 @@ void Aux_TakeNote()
 //    record the parameters of source terms
       fprintf( Note, "Parameters of Source Terms\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "SRC_ANY                         %d\n",      SRC_TERMS.Any             );
-      fprintf( Note, "SRC_DELEPTONIZATION             %d\n",      SRC_TERMS.Deleptonization );
-      fprintf( Note, "SRC_USER                        %d\n",      SRC_TERMS.User            );
+      fprintf( Note, "SRC_ANY                         %d\n",      SrcTerms.Any              );
+      fprintf( Note, "SRC_DELEPTONIZATION             %d\n",      SrcTerms.Deleptonization  );
+      fprintf( Note, "SRC_USER                        %d\n",      SrcTerms.User             );
       fprintf( Note, "SRC_GPU_NPGROUP                 %d\n",      SRC_GPU_NPGROUP           );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");

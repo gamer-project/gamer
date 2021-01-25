@@ -442,7 +442,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       const int SaveSg_SrcFlu = SaveSg_Flu;  // save in the same Flu/MagSg
       const int SaveSg_SrcMag = SaveSg_Mag;
 
-      if ( SRC_TERMS.Any )
+      if ( SrcTerms.Any )
       {
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
             Aux_Message( stdout, "   Lv %2d: Src_AdvanceDt, counter = %8ld ... ", lv, AdvanceCounter[lv] );

@@ -31,7 +31,7 @@ void Src_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 {
 
 // nothing to do if no source term is activated
-   if ( ! SRC_TERMS.Any )  return;
+   if ( ! SrcTerms.Any )  return;
 
 // work before calling the major source-term function
    Src_WorkBeforeMajorFunc( lv, TimeNew, TimeOld, dt );

@@ -223,9 +223,9 @@ void Src_SetFunc_Deleptonization( SrcFunc_t & );
 void Src_Init_Deleptonization()
 {
 
-   Src_SetAuxArray_Deleptonization( SRC_TERMS.Dlep_AuxArray_Flt, SRC_TERMS.Dlep_AuxArray_Int );
+   Src_SetAuxArray_Deleptonization( SrcTerms.Dlep_AuxArray_Flt, SrcTerms.Dlep_AuxArray_Int );
 
-   Src_SetFunc_Deleptonization( SRC_TERMS.Dlep_FuncPtr );
+   Src_SetFunc_Deleptonization( SrcTerms.Dlep_FuncPtr );
 
 } // FUNCTION : Src_Init_Deleptonization
 

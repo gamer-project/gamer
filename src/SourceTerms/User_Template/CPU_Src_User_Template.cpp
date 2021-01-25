@@ -252,9 +252,9 @@ extern void (*Src_WorkBeforeMajorFunc_User_Ptr)( const int lv, const double Time
 void Src_Init_User_Template()
 {
 
-   Src_SetAuxArray_User_Template( SRC_TERMS.User_AuxArray_Flt, SRC_TERMS.User_AuxArray_Int );
+   Src_SetAuxArray_User_Template( SrcTerms.User_AuxArray_Flt, SrcTerms.User_AuxArray_Int );
 
-   Src_SetFunc_User_Template( SRC_TERMS.User_FuncPtr );
+   Src_SetFunc_User_Template( SrcTerms.User_FuncPtr );
 
    Src_WorkBeforeMajorFunc_User_Ptr = Src_WorkBeforeMajorFunc_User_Template;
 

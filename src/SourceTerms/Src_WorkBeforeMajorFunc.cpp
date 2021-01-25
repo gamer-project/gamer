@@ -36,14 +36,14 @@ void Src_WorkBeforeMajorFunc( const int lv, const double TimeNew, const double T
 {
 
 // (1) deleptonization
-   if ( SRC_TERMS.Deleptonization )
+   if ( SrcTerms.Deleptonization )
       Src_WorkBeforeMajorFunc_Deleptonization( lv, TimeNew, TimeOld, dt,
-                                               SRC_TERMS.Dlep_AuxArray_Flt, SRC_TERMS.Dlep_AuxArray_Int );
+                                               SrcTerms.Dlep_AuxArray_Flt, SrcTerms.Dlep_AuxArray_Int );
 
 // (2) user-specified source term
 // --> users may not define Src_WorkBeforeMajorFunc_User_Ptr 
-   if ( SRC_TERMS.User  &&  Src_WorkBeforeMajorFunc_User_Ptr != NULL )
+   if ( SrcTerms.User  &&  Src_WorkBeforeMajorFunc_User_Ptr != NULL )
       Src_WorkBeforeMajorFunc_User_Ptr       ( lv, TimeNew, TimeOld, dt,
-                                               SRC_TERMS.User_AuxArray_Flt, SRC_TERMS.User_AuxArray_Int );
+                                               SrcTerms.User_AuxArray_Flt, SrcTerms.User_AuxArray_Int );
 
 } // FUNCTION : Src_WorkBeforeMajorFunc

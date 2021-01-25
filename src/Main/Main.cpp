@@ -64,7 +64,6 @@ bool                 OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, O
 bool                 OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
 bool                 OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
 
-SrcTerms_t           SRC_TERMS;
 UM_IC_Format_t       OPT__UM_IC_FORMAT;
 TestProbID_t         TESTPROB_ID;
 OptInit_t            OPT__INIT;
@@ -230,6 +229,13 @@ EoS_DP2E_t EoS_DensPres2Eint_GPUPtr = NULL;
 EoS_DP2C_t EoS_DensPres2CSqr_GPUPtr = NULL;
 #endif
 #endif // HYDRO
+
+// (2-10) source terms
+SrcTerms_t SrcTerms;
+double     Src_Dlep_AuxArray_Flt[SRC_NAUX_DLEP];
+int        Src_Dlep_AuxArray_Int[SRC_NAUX_DLEP];
+double     Src_User_AuxArray_Flt[SRC_NAUX_USER];
+int        Src_User_AuxArray_Int[SRC_NAUX_USER];
 
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU

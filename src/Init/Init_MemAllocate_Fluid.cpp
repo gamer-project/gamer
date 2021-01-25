@@ -68,7 +68,7 @@ void Init_MemAllocate_Fluid( const int Flu_NPatchGroup, const int Pot_NPatchGrou
       h_Mag_Array_T    [t] = new real [Flu_NPatch][NCOMP_MAG][ PS1P1*SQR(PS1) ];
 #     endif
 
-      if ( SRC_TERMS.Any ) {
+      if ( SrcTerms.Any ) {
       h_Flu_Array_S_In [t] = new real [Src_NPatch][FLU_NIN_S ][ CUBE(SRC_NXT)           ];
       h_Flu_Array_S_Out[t] = new real [Src_NPatch][FLU_NOUT_S][ CUBE(PS1)               ];
 #     ifdef MHD

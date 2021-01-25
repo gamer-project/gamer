@@ -33,7 +33,9 @@ typedef void (*SrcFunc_t)( real fluid[], const real B[],
 //                BoxCenter       : Simulation box center
 //                Unit_*          : Code units
 //                *_FuncPtr       : Major source-term functions
-//                *_AuxArray_*    : Auxiliary arrays
+//                *_AuxArray_*    : Auxiliary array pointers
+//                                  --> For GPU, these pointers store the addresses of constant memory arrays,
+//                                      which should NOT be used by host
 //
 // Method      :  None --> It seems that CUDA does not support functions in a struct
 //-------------------------------------------------------------------------------------------------------
@@ -59,13 +61,13 @@ struct SrcTerms_t
 
 // deleptonization
    SrcFunc_t Dlep_FuncPtr;
-   double    Dlep_AuxArray_Flt[SRC_NAUX_DLEP];
-   int       Dlep_AuxArray_Int[SRC_NAUX_DLEP];
+   double   *Dlep_AuxArray_Flt;
+   int      *Dlep_AuxArray_Int;
 
 // user-specified source term
    SrcFunc_t User_FuncPtr;
-   double    User_AuxArray_Flt[SRC_NAUX_USER];
-   int       User_AuxArray_Int[SRC_NAUX_USER];
+   double   *User_AuxArray_Flt;
+   int      *User_AuxArray_Int;
 
 }; // struct SrcTerms_t
 
