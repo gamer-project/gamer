@@ -12,6 +12,17 @@
 #endif // #ifdef __CUDACC__
 
 
+// local function prototypes
+#ifndef __CUDACC__
+
+void Src_SetAuxArray_User_Template( double [], int [] );
+void Src_SetConstMemory_User_Template( const double AuxArray_Flt[], const int AuxArray_Int[],
+                                       double *&DevPtr_Flt, int *&DevPtr_Int );
+void Src_SetFunc_User_Template( SrcFunc_t & );
+
+#endif
+
+
 
 /********************************************************
 1. Template of a user-defined source term
@@ -167,6 +178,7 @@ static void Src_User_Template( real fluid[], const real B[],
 //                                       Comoving coordinates : TimeNew - TimeOld == delta(scale factor) != dt
 //                AuxArray_Flt/Int : Auxiliary arrays
 //                                   --> Can be used and/or modified here
+//                                   --> Must call Src_SetConstMemory_User_Template() after modification
 //
 // Return      :  AuxArray_Flt/Int[]
 //-------------------------------------------------------------------------------------------------------
@@ -174,6 +186,12 @@ static void Src_User_Template( real fluid[], const real B[],
 void Src_WorkBeforeMajorFunc_User_Template( const int lv, const double TimeNew, const double TimeOld, const double dt,
                                             double AuxArray_Flt[], int AuxArray_Int[] )
 {
+
+// uncomment the following lines if the auxiliary arrays have been modified
+#  ifdef GPU
+   Src_SetConstMemory_User_Template( AuxArray_Flt, AuxArray_Int,
+                                     SrcTerms.User_AuxArrayDevPtr_Flt, SrcTerms.User_AuxArrayDevPtr_Int );
+#  endif
 
 } // FUNCTION : Src_WorkBeforeMajorFunc_User_Template
 #endif
@@ -222,11 +240,38 @@ void Src_SetFunc_User_Template( SrcFunc_t &SrcFunc_CPUPtr )
 
 
 
-#ifndef __CUDACC__
+#ifdef __CUDACC__
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Src_SetConstMemory_User_Template
+// Description :  Set the constant memory variables on GPU
+//
+// Note        :  1. Adopt the suggested approach for CUDA version >= 5.0
+//                2. Invoked by Src_Init_User_Template() and, if necessary, Src_WorkBeforeMajorFunc_User_Template()
+//                3. SRC_NAUX_USER is defined in Macro.h
+//
+// Parameter   :  AuxArray_Flt/Int : Auxiliary arrays to be copied to the constant memory
+//                DevPtr_Flt/Int   : Pointers to store the addresses of constant memory arrays
+//
+// Return      :  c_Src_User_AuxArray_Flt[], c_Src_User_AuxArray_Int[], DevPtr_Flt, DevPtr_Int
+//---------------------------------------------------------------------------------------------------
+void Src_SetConstMemory_User_Template( const double AuxArray_Flt[], const int AuxArray_Int[],
+                                       double *&DevPtr_Flt, int *&DevPtr_Int )
+{
 
-// local function prototypes
-void Src_SetAuxArray_User_Template( double [], int [] );
-void Src_SetFunc_User_Template( SrcFunc_t & );
+// copy data to constant memory
+   CUDA_CHECK_ERROR(  cudaMemcpyToSymbol( c_Src_User_AuxArray_Flt, AuxArray_Flt, SRC_NAUX_USER*sizeof(double) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyToSymbol( c_Src_User_AuxArray_Int, AuxArray_Int, SRC_NAUX_USER*sizeof(int   ) )  );
+
+// obtain the constant-memory pointers
+   CUDA_CHECK_ERROR(  cudaGetSymbolAddress( (void **)&DevPtr_Flt, c_Src_User_AuxArray_Flt) );
+   CUDA_CHECK_ERROR(  cudaGetSymbolAddress( (void **)&DevPtr_Int, c_Src_User_AuxArray_Int) );
+
+} // FUNCTION : Src_SetConstMemory_User_Template
+#endif // #ifdef __CUDACC__
+
+
+
+#ifndef __CUDACC__
 
 // function pointer
 extern void (*Src_WorkBeforeMajorFunc_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
@@ -237,6 +282,7 @@ extern void (*Src_WorkBeforeMajorFunc_User_Ptr)( const int lv, const double Time
 // Description :  Initialize a user-specified source term
 //
 // Note        :  1. Set auxiliary arrays by invoking Src_SetAuxArray_*()
+//                   --> Copy to the GPU constant memory and store the associated addresses
 //                2. Set the source-term function by invoking Src_SetFunc_*()
 //                   --> Unlike other modules (e.g., EoS), here we use either CPU or GPU but not
 //                       both of them
@@ -252,10 +298,22 @@ extern void (*Src_WorkBeforeMajorFunc_User_Ptr)( const int lv, const double Time
 void Src_Init_User_Template()
 {
 
-   Src_SetAuxArray_User_Template( SrcTerms.User_AuxArray_Flt, SrcTerms.User_AuxArray_Int );
+// set the auxiliary arrays
+   Src_SetAuxArray_User_Template( Src_User_AuxArray_Flt, Src_User_AuxArray_Int );
 
+// copy the auxiliary arrays to the GPU constant memory and store the associated addresses
+#  ifdef GPU
+   Src_SetConstMemory_User_Template( Src_User_AuxArray_Flt, Src_User_AuxArray_Int,
+                                     SrcTerms.User_AuxArrayDevPtr_Flt, SrcTerms.User_AuxArrayDevPtr_Int );
+#  else
+   SrcTerms.User_AuxArrayDevPtr_Flt = Src_User_AuxArray_Flt;
+   SrcTerms.User_AuxArrayDevPtr_Int = Src_User_AuxArray_Int;
+#  endif
+
+// set the major source-term function
    Src_SetFunc_User_Template( SrcTerms.User_FuncPtr );
 
+// set the preparation function
    Src_WorkBeforeMajorFunc_User_Ptr = Src_WorkBeforeMajorFunc_User_Template;
 
 } // FUNCTION : Src_Init_User_Template
@@ -279,7 +337,5 @@ void Src_End_User_Template()
 
 
 } // FUNCTION : Src_End_User_Template
-
-
 
 #endif // #ifndef __CUDACC__

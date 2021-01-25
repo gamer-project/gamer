@@ -54,8 +54,12 @@ void Src_Init()
 
 
 // initialize all function pointers as NULL
-   SrcTerms.Dlep_FuncPtr = NULL;
-   SrcTerms.User_FuncPtr = NULL;
+   SrcTerms.Dlep_FuncPtr            = NULL;
+   SrcTerms.Dlep_AuxArrayDevPtr_Flt = NULL;
+   SrcTerms.Dlep_AuxArrayDevPtr_Int = NULL;
+   SrcTerms.User_FuncPtr            = NULL;
+   SrcTerms.User_AuxArrayDevPtr_Flt = NULL;
+   SrcTerms.User_AuxArrayDevPtr_Int = NULL;
 
 
 // initialize all source terms
