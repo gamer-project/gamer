@@ -272,33 +272,25 @@ void BC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu,
 
     bool CompleteFluidField = true;
 
-    if ( NVar_Flu == NCOMP_FLUID )
-         for ( int v=0;v<NVar_Flu;v++) CompleteFluidField &= TFluVarIdxList[v] == v;
-    else
-         CompleteFluidField = false;
-
-    if ( CompleteFluidField )
+    if ( Jet_Fire && rad <= Jet_Radius )
     {
-       if ( Jet_Fire && rad <= Jet_Radius )
-       {
-                // set fluid variable inside source
-                PriReal[0] = (real)Jet_Density;
-                PriReal[1] = 0.0;
-                PriReal[2] = (real)(Jet_Velocity);
-                PriReal[3] = 0.0;
-                PriReal[4] = (real)Amb_Pressure;
+             // set fluid variable inside source
+             PriReal[0] = (real)Jet_Density;
+             PriReal[1] = 0.0;
+             PriReal[2] = (real)(Jet_Velocity);
+             PriReal[3] = 0.0;
+             PriReal[4] = (real)Amb_Pressure;
 
-                for (int v=0;v<NCOMP_FLUID;v++) fluid[v] = Array3D[v][idx[2]][idx[1]][idx[0]];
+             for (int v=0;v<NCOMP_FLUID;v++) fluid[v] = Array3D[v][idx[2]][idx[1]][idx[0]];
 
-                Hydro_Pri2Con( PriReal, BVal, NULL_BOOL, NULL_INT, NULL, EoS_DensPres2Eint_CPUPtr,
-	        	               EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-	        	               EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
-       }
-       else 
-       {
-           for (int v=0; v<NVar_Flu; v++)
-                BVal[v] = Array3D[v][k][j_ref][i];
-       }
+             Hydro_Pri2Con( PriReal, BVal, NULL_BOOL, NULL_INT, NULL, EoS_DensPres2Eint_CPUPtr,
+	     	               EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+	     	               EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+    }
+    else 
+    {
+        for (int v=0; v<NVar_Flu; v++)
+             BVal[v] = Array3D[v][k][j_ref][i];
     }
 
 } // FUNCTION : BC
