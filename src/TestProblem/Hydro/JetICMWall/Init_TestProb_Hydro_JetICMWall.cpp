@@ -270,8 +270,6 @@ void BC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu,
     real (*Array3D)[ArraySize[2]][ArraySize[1]][ArraySize[0]] = ( real (*)[ArraySize[2]][ArraySize[1]][ArraySize[0]] )Array;
 
 
-    bool CompleteFluidField = true;
-
     if ( Jet_Fire && rad <= Jet_Radius )
     {
              // set fluid variable inside source
