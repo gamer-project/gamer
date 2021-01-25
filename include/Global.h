@@ -250,8 +250,10 @@ extern EoS_DP2C_t EoS_DensPres2CSqr_GPUPtr;
 // (2-10) source terms
 // =======================================================================================================
 extern SrcTerms_t SrcTerms;
+#if ( MODEL == HYDRO )
 extern double     Src_Dlep_AuxArray_Flt[SRC_NAUX_DLEP];
 extern int        Src_Dlep_AuxArray_Int[SRC_NAUX_DLEP];
+#endif
 extern double     Src_User_AuxArray_Flt[SRC_NAUX_USER];
 extern int        Src_User_AuxArray_Int[SRC_NAUX_USER];
 

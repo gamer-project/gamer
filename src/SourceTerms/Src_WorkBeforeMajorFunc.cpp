@@ -3,8 +3,10 @@
 
 
 // prototypes of built-in source terms
+#if ( MODEL == HYDRO )
 void Src_WorkBeforeMajorFunc_Deleptonization( const int lv, const double TimeNew, const double TimeOld, const double dt,
                                               double AuxArray_Flt[], int AuxArray_Int[] );
+#endif
 
 // this function pointer can be set by a test problem initializer for a user-specified source term
 void (*Src_WorkBeforeMajorFunc_User_Ptr)    ( const int lv, const double TimeNew, const double TimeOld, const double dt,
@@ -36,9 +38,11 @@ void Src_WorkBeforeMajorFunc( const int lv, const double TimeNew, const double T
 {
 
 // (1) deleptonization
+#  if ( MODEL == HYDRO )
    if ( SrcTerms.Deleptonization )
       Src_WorkBeforeMajorFunc_Deleptonization( lv, TimeNew, TimeOld, dt,
                                                Src_Dlep_AuxArray_Flt, Src_Dlep_AuxArray_Int );
+#  endif
 
 // (2) user-specified source term
 // --> users may not define Src_WorkBeforeMajorFunc_User_Ptr 

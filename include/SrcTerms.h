@@ -60,9 +60,11 @@ struct SrcTerms_t
 #  endif
 
 // deleptonization
+#  if ( MODEL == HYDRO )
    SrcFunc_t Dlep_FuncPtr;
    double   *Dlep_AuxArrayDevPtr_Flt;
    int      *Dlep_AuxArrayDevPtr_Int;
+#  endif
 
 // user-specified source term
    SrcFunc_t User_FuncPtr;

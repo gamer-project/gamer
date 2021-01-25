@@ -232,8 +232,10 @@ EoS_DP2C_t EoS_DensPres2CSqr_GPUPtr = NULL;
 
 // (2-10) source terms
 SrcTerms_t SrcTerms;
+#if ( MODEL == HYDRO )
 double     Src_Dlep_AuxArray_Flt[SRC_NAUX_DLEP];
 int        Src_Dlep_AuxArray_Int[SRC_NAUX_DLEP];
+#endif
 double     Src_User_AuxArray_Flt[SRC_NAUX_USER];
 int        Src_User_AuxArray_Int[SRC_NAUX_USER];
 

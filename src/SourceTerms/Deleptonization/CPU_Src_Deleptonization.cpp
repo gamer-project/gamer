@@ -1,5 +1,7 @@
 #include "CUFLU.h"
 
+#if ( MODEL == HYDRO )
+
 
 
 // external functions and GPU-related set-up
@@ -307,3 +309,7 @@ void Src_End_Deleptonization()
 } // FUNCTION : Src_End_Deleptonization
 
 #endif // #ifndef __CUDACC__
+
+
+
+#endif // #if ( MODEL == HYDRO )

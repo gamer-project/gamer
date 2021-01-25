@@ -123,11 +123,13 @@ void CPU_SrcSolver_IterateAllCells(
 
 //       add all source terms one by one
 //       (1) deleptonization
+#        if ( MODEL == HYDRO )
          if ( SrcTerms.Deleptonization )
             SrcTerms.Dlep_FuncPtr( fluid, B, SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint,
                                    EoS_DensEint2Pres_Func, EoS_DensPres2Eint_Func, EoS_DensPres2CSqr_Func,
                                    c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table,
                                    SrcTerms.Dlep_AuxArrayDevPtr_Flt, SrcTerms.Dlep_AuxArrayDevPtr_Int );
+#        endif
 
 //       (2) user-defined
          if ( SrcTerms.User )
