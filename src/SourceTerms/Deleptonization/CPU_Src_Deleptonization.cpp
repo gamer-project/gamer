@@ -170,7 +170,10 @@ void Src_WorkBeforeMajorFunc_Deleptonization( const int lv, const double TimeNew
                                               double AuxArray_Flt[], int AuxArray_Int[] )
 {
 
-// compute profiles (TBF)
+// TBF
+
+/*
+// compute profiles
 // --> here is just an example; see GREP for a more efficient implementation
 // --> SRC_DLEP_PROF_NVAR and SRC_DLEP_PROF_NBINMAX are defined in Macro.h (default = 6 and 4000, respectively)
 // --> be careful about the issue of center drifting
@@ -219,16 +222,15 @@ void Src_WorkBeforeMajorFunc_Deleptonization( const int lv, const double TimeNew
 
 
 // uncomment the following lines if the auxiliary arrays have been modified
-/*
-#  ifdef GPU
-   Src_SetConstMemory_Deleptonization( AuxArray_Flt, AuxArray_Int,
-                                       SrcTerms.Dlep_AuxArrayDevPtr_Flt, SrcTerms.Dlep_AuxArrayDevPtr_Int );
-#  endif
-*/
+//#  ifdef GPU
+//   Src_SetConstMemory_Deleptonization( AuxArray_Flt, AuxArray_Int,
+//                                       SrcTerms.Dlep_AuxArrayDevPtr_Flt, SrcTerms.Dlep_AuxArrayDevPtr_Int );
+//#  endif
 
 
 // free memory
    for (int v=0; v<SRC_DLEP_PROF_NVAR; v++)  delete Prof[v];
+*/
 
 } // FUNCTION : Src_WorkBeforeMajorFunc_Deleptonization
 #endif
