@@ -658,6 +658,8 @@
 
 #if ( MODEL == HYDRO )
 #  define SRC_NAUX_DLEP          5     // SrcTerms.Dlep_AuxArray_Flt/Int[]
+#  define SRC_DLEP_PROF_NVAR     6     // SrcTerms.Dlep_Profile_DataDevPtr[]/RadiusDevPtr[]
+#  define SRC_DLEP_PROF_NBINMAX  4000
 #else
 #  define SRC_NAUX_DLEP          0
 #endif

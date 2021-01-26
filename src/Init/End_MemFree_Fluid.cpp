@@ -54,17 +54,25 @@ void End_MemFree_Fluid()
    } // for (int t=0; t<2; t++)
 
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-   delete [] h_FC_Var;        h_FC_Var      = NULL;
-   delete [] h_FC_Flux;       h_FC_Flux     = NULL;
-   delete [] h_PriVar;        h_PriVar      = NULL;
+   delete [] h_FC_Var;               h_FC_Var             = NULL;
+   delete [] h_FC_Flux;              h_FC_Flux            = NULL;
+   delete [] h_PriVar;               h_PriVar             = NULL;
 #  if ( LR_SCHEME == PPM )
-   delete [] h_Slope_PPM;     h_Slope_PPM   = NULL;
+   delete [] h_Slope_PPM;            h_Slope_PPM          = NULL;
 #  endif
 #  ifdef MHD
-   delete [] h_FC_Mag_Half;   h_FC_Mag_Half = NULL;
-   delete [] h_EC_Ele;        h_EC_Ele      = NULL;
+   delete [] h_FC_Mag_Half;          h_FC_Mag_Half        = NULL;
+   delete [] h_EC_Ele;               h_EC_Ele             = NULL;
 #  endif
 #  endif // FLU_SCHEME
+
+#  if ( MODEL == HYDRO )
+   delete [] h_SrcDlepProf_Data;     h_SrcDlepProf_Data   = NULL;
+   delete [] h_SrcDlepProf_Radius;   h_SrcDlepProf_Radius = NULL;
+
+   SrcTerms.Dlep_Profile_DataDevPtr   = NULL;
+   SrcTerms.Dlep_Profile_RadiusDevPtr = NULL;
+#  endif
 
 } // FUNCTION : End_MemFree_Fluid
 

@@ -318,6 +318,10 @@ real (*h_Flu_Array_S_Out[2])[FLU_NOUT_S][ CUBE(PS1)      ]         = { NULL, NUL
 real (*h_Mag_Array_S_In [2])[NCOMP_MAG][ SRC_NXT_P1*SQR(SRC_NXT) ] = { NULL, NULL };
 #endif
 double (*h_Corner_Array_S[2])[3]                                   = { NULL, NULL };
+#if ( MODEL == HYDRO )
+real (*h_SrcDlepProf_Data)[SRC_DLEP_PROF_NBINMAX]                  = NULL;
+real  *h_SrcDlepProf_Radius                                        = NULL;
+#endif
 
 
 // 4. GPU (device) global memory arrays
@@ -394,6 +398,10 @@ real (*d_Flu_Array_S_Out)[FLU_NOUT_S][ CUBE(PS1)      ]            = NULL;
 real (*d_Mag_Array_S_In)[NCOMP_MAG  ][ SRC_NXT_P1*SQR(SRC_NXT) ]   = NULL;
 #endif
 double (*d_Corner_Array_S)[3]                                      = NULL;
+#if ( MODEL == HYDRO )
+real (*d_SrcDlepProf_Data)[SRC_DLEP_PROF_NBINMAX]                  = NULL;
+real  *d_SrcDlepProf_Radius                                        = NULL;
+#endif
 
 #endif // #ifdef GPU
 

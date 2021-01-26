@@ -11,6 +11,9 @@
 #include "CUFLU_Shared_FluUtility.cu"
 #include "CUDA_ConstMemory.h"
 
+extern real (*d_SrcDlepProf_Data)[SRC_DLEP_PROF_NBINMAX];
+extern real  *d_SrcDlepProf_Radius;
+
 #endif // #ifdef __CUDACC__
 
 
@@ -21,6 +24,7 @@ void Src_SetAuxArray_Deleptonization( double [], int [] );
 void Src_SetFunc_Deleptonization( SrcFunc_t & );
 void Src_SetConstMemory_Deleptonization( const double AuxArray_Flt[], const int AuxArray_Int[],
                                          double *&DevPtr_Flt, int *&DevPtr_Int );
+void Src_PassData2GPU_Deleptonization();
 
 #endif
 
@@ -129,6 +133,8 @@ static void Src_Deleptonization( real fluid[], const real B[],
 #  endif
 
 // TBF
+// profiles are stored in SrcTerms.Dlep_Profile_DataDevPtr/Dlep_Profile_RadiusDevPtr/Dlep_Profile_NBin
+// --> see "include/SrcTerms.h"
 
 } // FUNCTION : Src_Deleptonization
 
@@ -164,16 +170,95 @@ void Src_WorkBeforeMajorFunc_Deleptonization( const int lv, const double TimeNew
                                               double AuxArray_Flt[], int AuxArray_Int[] )
 {
 
-// TBF
+// compute profiles (TBF)
+// --> here is just an example; see GREP for a more efficient implementation
+// --> SRC_DLEP_PROF_NVAR and SRC_DLEP_PROF_NBINMAX are defined in Macro.h (default = 6 and 4000, respectively)
+// --> be careful about the issue of center drifting
+   const double      Center[3]      = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
+   const double      MaxRadius      = 0.5*amr->BoxSize[0];
+   const double      MinBinSize     = amr->dh[MAX_LEVEL];
+   const bool        LogBin         = true;
+   const double      LogBinRatio    = 1.25;
+   const bool        RemoveEmptyBin = true;
+   const long        TVar[]         = { _DENS, _MOMX, _ENGY, _PRES, _VELR, _EINT_DER };
+   const int         NProf          = SRC_DLEP_PROF_NVAR;
+   const int         SingleLv       = -1;
+   const int         MaxLv          = -1;
+   const PatchType_t PatchType      = PATCH_LEAF;
+   const double      PrepTime       = TimeNew;
+
+   Profile_t *Prof[SRC_DLEP_PROF_NVAR];
+   for (int v=0; v<SRC_DLEP_PROF_NVAR; v++)  Prof[v] = new Profile_t();
+
+   Aux_ComputeProfile( Prof, Center, MaxRadius, MinBinSize, LogBin, LogBinRatio, RemoveEmptyBin,
+                       TVar, NProf, SingleLv, MaxLv, PatchType, PrepTime );
+
+
+// check and store the number of radial bins
+   if ( Prof[0]->NBin > SRC_DLEP_PROF_NBINMAX )
+      Aux_Error( ERROR_INFO, "Number of radial bins (%d) exceeds the maximum size (%d) !!\n",
+                 Prof[0]->NBin, SRC_DLEP_PROF_NBINMAX );
+
+   SrcTerms.Dlep_Profile_NBin = Prof[0]->NBin;
+
+
+// store profiles in the host arrays
+// --> note the typecasting from double to real
+   for (int v=0; v<SRC_DLEP_PROF_NVAR; v++)
+   for (int b=0; b<Prof[v]->NBin; b++)
+      h_SrcDlepProf_Data[v][b] = (real)Prof[v]->Data[b];
+
+   for (int b=0; b<Prof[0]->NBin; b++)
+      h_SrcDlepProf_Radius[b] = (real)Prof[0]->Radius[b];
+
+
+// pass profiles to GPU
+#  ifdef GPU
+   Src_PassData2GPU_Deleptonization();
+#  endif
+
 
 // uncomment the following lines if the auxiliary arrays have been modified
+/*
 #  ifdef GPU
    Src_SetConstMemory_Deleptonization( AuxArray_Flt, AuxArray_Int,
                                        SrcTerms.Dlep_AuxArrayDevPtr_Flt, SrcTerms.Dlep_AuxArrayDevPtr_Int );
 #  endif
+*/
+
+
+// free memory
+   for (int v=0; v<SRC_DLEP_PROF_NVAR; v++)  delete Prof[v];
 
 } // FUNCTION : Src_WorkBeforeMajorFunc_Deleptonization
 #endif
+
+
+
+#ifdef __CUDACC__
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Src_PassData2GPU_Deleptonization
+// Description :  Transfer data to GPU
+//
+// Note        :  1. Invoked by Src_WorkBeforeMajorFunc_Deleptonization()
+//                2. Use synchronous transfer
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Src_PassData2GPU_Deleptonization()
+{
+
+   const long Size_Data   = sizeof(real)*SRC_DLEP_PROF_NVAR*SRC_DLEP_PROF_NBINMAX;
+   const long Size_Radius = sizeof(real)*                   SRC_DLEP_PROF_NBINMAX;
+
+// use synchronous transfer
+   CUDA_CHECK_ERROR(  cudaMemcpy( d_SrcDlepProf_Data,   h_SrcDlepProf_Data,   Size_Data,   cudaMemcpyHostToDevice )  );
+   CUDA_CHECK_ERROR(  cudaMemcpy( d_SrcDlepProf_Radius, h_SrcDlepProf_Radius, Size_Radius, cudaMemcpyHostToDevice )  );
+
+} // FUNCTION : Src_PassData2GPU_Deleptonization
+#endif // #ifdef __CUDACC__
 
 
 

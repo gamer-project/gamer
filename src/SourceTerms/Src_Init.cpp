@@ -60,13 +60,15 @@ void Src_Init()
 
 // initialize all function pointers as NULL
 #  if ( MODEL == HYDRO )
-   SrcTerms.Dlep_FuncPtr            = NULL;
-   SrcTerms.Dlep_AuxArrayDevPtr_Flt = NULL;
-   SrcTerms.Dlep_AuxArrayDevPtr_Int = NULL;
+   SrcTerms.Dlep_FuncPtr              = NULL;
+   SrcTerms.Dlep_AuxArrayDevPtr_Flt   = NULL;
+   SrcTerms.Dlep_AuxArrayDevPtr_Int   = NULL;
+   SrcTerms.Dlep_Profile_DataDevPtr   = NULL;
+   SrcTerms.Dlep_Profile_RadiusDevPtr = NULL;
 #  endif
-   SrcTerms.User_FuncPtr            = NULL;
-   SrcTerms.User_AuxArrayDevPtr_Flt = NULL;
-   SrcTerms.User_AuxArrayDevPtr_Int = NULL;
+   SrcTerms.User_FuncPtr              = NULL;
+   SrcTerms.User_AuxArrayDevPtr_Flt   = NULL;
+   SrcTerms.User_AuxArrayDevPtr_Int   = NULL;
 
 
 // initialize all source terms

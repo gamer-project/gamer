@@ -27,15 +27,20 @@ typedef void (*SrcFunc_t)( real fluid[], const real B[],
 // Structure   :  SrcTerms_t
 // Description :  Data structure storing the source-term variables to be passed to the CPU/GPU solvers
 //
-// Data Member :  Any             : True if at least one of the source terms is activated
-//                Deleptonization : SRC_DELEPTONIZATION
-//                User            : SRC_USER
-//                BoxCenter       : Simulation box center
-//                Unit_*          : Code units
-//                *_FuncPtr       : Major source-term functions
-//                *_DevPtr_*      : Auxiliary array pointers
-//                                  --> For GPU, these pointers store the addresses of constant memory arrays,
-//                                      which should NOT be used by host
+// Data Member :  Any                       : True if at least one of the source terms is activated
+//                Deleptonization           : SRC_DELEPTONIZATION
+//                User                      : SRC_USER
+//                BoxCenter                 : Simulation box center
+//                Unit_*                    : Code units
+//                *_FuncPtr                 : Major source-term functions
+//                *_AuxArrayDevPtr_*        : Auxiliary array pointers
+//                                            --> For GPU, these pointers store the addresses of constant memory arrays,
+//                                                which should NOT be used by host
+//                Dlep_Profile_DataDevPtr   : Profile array pointer used by deleptonization
+//                Dlep_Profile_RadiusDevPtr : Radius array pointer associated with Dlep_Profile_DataDevPtr[]
+//                                            --> For GPU, Dlep_Profile_DataDevPtr[]/RadiusDevPtr[] store the
+//                                                addresses of global memory arrays, which should NOT be used by host
+//                Dlep_Profile_NBin         : Number of radial bins in Dlep_Profile_*
 //
 // Method      :  None --> It seems that CUDA does not support functions in a struct
 //-------------------------------------------------------------------------------------------------------
@@ -64,6 +69,9 @@ struct SrcTerms_t
    SrcFunc_t Dlep_FuncPtr;
    double   *Dlep_AuxArrayDevPtr_Flt;
    int      *Dlep_AuxArrayDevPtr_Int;
+   real    (*Dlep_Profile_DataDevPtr)[SRC_DLEP_PROF_NBINMAX];
+   real     *Dlep_Profile_RadiusDevPtr;
+   int       Dlep_Profile_NBin;
 #  endif
 
 // user-specified source term
