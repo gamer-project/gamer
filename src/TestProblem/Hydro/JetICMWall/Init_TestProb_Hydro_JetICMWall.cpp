@@ -14,9 +14,10 @@ static void BC( real Array[], const int ArraySize[], real fluid[], const int NVa
 
 // background parameters
 static double   ICM_Density;             // ICM density
-static double   ICM_Position;            // position of interface
-static double   ICM_Angle;               // inclination of interface
-static double   ICM_Tangent;             // tangent of interface angle
+static double   Jump_Position;           // position of interface
+static double   Jump_Angle;              // inclination of interface
+static double   Jump_Tangent;            // tangent of interface angle
+static double   Jump_Width;              // width of jump
 static double   Amb_Pressure;            // ambient pressure
 static double   Lobe_ICM_Ratio;          // ratio of lobe/ICM densities
 static double   Lobe_Density;            // lobe density
@@ -113,10 +114,11 @@ void SetParameter()
 
 // background parameters
    ReadPara->Add( "ICM_Density",      &ICM_Density,     NoDef_double,  NoMin_double,   NoMax_double );
-   ReadPara->Add( "ICM_Position",     &ICM_Position,    NoDef_double,  NoMin_double,   NoMax_double );
-   ReadPara->Add( "ICM_Angle",        &ICM_Angle,       NoDef_double,  NoMin_double,   NoMax_double );
+   ReadPara->Add( "Jump_Position",    &Jump_Position,   NoDef_double,  NoMin_double,   NoMax_double );
+   ReadPara->Add( "Jump_Angle",       &Jump_Angle,      NoDef_double,  NoMin_double,   NoMax_double );
    ReadPara->Add( "Amb_Pressure",     &Amb_Pressure,    NoDef_double,  NoMin_double,   NoMax_double );
    ReadPara->Add( "Lobe_ICM_Ratio",   &Lobe_ICM_Ratio,  NoDef_double,  NoMin_double,   NoMax_double );
+   ReadPara->Add( "Jump_Width",       &Jump_Width,      NoDef_double,  NoMin_double,   NoMax_double );
 
 // jet parameters
    ReadPara->Add( "Jet_Fire",         &Jet_Fire,        false,         Useless_bool,   Useless_bool );
@@ -132,16 +134,17 @@ void SetParameter()
    Jet_Gamma = 1.0 / sqrt(1.0-SQR(Jet_Velocity));
 
 // (1-2) convert to code unit
-   Jet_Velocity *= Const_c   / UNIT_V;
-   ICM_Density  *= 1.0       / UNIT_D;
-   Jet_Radius   *= Const_kpc / UNIT_L;
-   Jet_Position *= Const_kpc / UNIT_L;
-   ICM_Position *= Const_kpc / UNIT_L;
-   Amb_Pressure *= 1.0       / UNIT_P;
+   Jet_Velocity  *= Const_c   / UNIT_V;
+   ICM_Density   *= 1.0       / UNIT_D;
+   Jet_Radius    *= Const_kpc / UNIT_L;
+   Jet_Position  *= Const_kpc / UNIT_L;
+   Jump_Position *= Const_kpc / UNIT_L;
+   Amb_Pressure  *= 1.0       / UNIT_P;
+   Jump_Width    *= Const_kpc / UNIT_L;
 
 // (2) set the problem-specific derived parameters
 
-   ICM_Tangent   = tan(ICM_Angle*M_PI/180.0);
+   Jump_Tangent  = tan(Jump_Angle*M_PI/180.0);
    Lobe_Density  = Lobe_ICM_Ratio*ICM_Density;
    Jet_Density   = Jet_Lobe_Ratio*Lobe_Density;
    Jet_Center[0] = Jet_Position;
@@ -165,23 +168,24 @@ void SetParameter()
 // (4) make a note
    if ( MPI_Rank == 0 )
    {
-     Aux_Message( stdout, "=============================================================================\n" );
-     Aux_Message( stdout, "  test problem ID          = %d\n",                TESTPROB_ID                   );
-     Aux_Message( stdout, "  ICM_Density              = %14.7e g/cm^3\n",     ICM_Density*UNIT_D            );
-     Aux_Message( stdout, "  ICM_Position             = %14.7e kpc\n",        ICM_Position*UNIT_L/Const_kpc );
-     Aux_Message( stdout, "  ICM_Angle                = %14.7e degree\n",     ICM_Angle                     );
-     Aux_Message( stdout, "  Amb_Pressure             = %14.7e erg/cm^3\n",   Amb_Pressure*UNIT_P           );
-     Aux_Message( stdout, "  Lobe_ICM_Ratio           = %14.7e\n",            Lobe_ICM_Ratio                );
-     Aux_Message( stdout, "  Lobe_Density             = %14.7e g/cm^3\n",     Lobe_Density*UNIT_D           );
+     Aux_Message( stdout, "=============================================================================\n " );
+     Aux_Message( stdout, "  test problem ID          = %d\n",                TESTPROB_ID                    );
+     Aux_Message( stdout, "  ICM_Density              = %14.7e g/cm^3\n",     ICM_Density*UNIT_D             );
+     Aux_Message( stdout, "  Jump_Position            = %14.7e kpc\n",        Jump_Position*UNIT_L/Const_kpc );
+     Aux_Message( stdout, "  Jump_Angle               = %14.7e degree\n",     Jump_Angle                     );
+     Aux_Message( stdout, "  Jump_Width               = %14.7e kpc\n",        Jump_Width*UNIT_L/Const_kpc    );
+     Aux_Message( stdout, "  Amb_Pressure             = %14.7e erg/cm^3\n",   Amb_Pressure*UNIT_P            );
+     Aux_Message( stdout, "  Lobe_ICM_Ratio           = %14.7e\n",            Lobe_ICM_Ratio                 );
+     Aux_Message( stdout, "  Lobe_Density             = %14.7e g/cm^3\n",     Lobe_Density*UNIT_D            );
    }
 
    if ( Jet_Fire && MPI_Rank == 0 )
    {
-     Aux_Message( stdout, "  Jet_Radius               = %14.7e kpc\n",        Jet_Radius*UNIT_L/Const_kpc   );
-     Aux_Message( stdout, "  Jet_Position             = %14.7e kpc\n",        Jet_Position*UNIT_L/Const_kpc );
-     Aux_Message( stdout, "  Jet_Velocity             = %14.7e c\n",          Jet_Velocity*UNIT_V/Const_c   );
-     Aux_Message( stdout, "  Jet_Density              = %14.7e g/cm^3\n",     Jet_Density*UNIT_D            );
-     Aux_Message( stdout, "  Jet_Lobe_Ratio           = %14.7e\n",            Jet_Lobe_Ratio                );
+     Aux_Message( stdout, "  Jet_Radius               = %14.7e kpc\n",        Jet_Radius*UNIT_L/Const_kpc    );
+     Aux_Message( stdout, "  Jet_Position             = %14.7e kpc\n",        Jet_Position*UNIT_L/Const_kpc  );
+     Aux_Message( stdout, "  Jet_Velocity             = %14.7e c\n",          Jet_Velocity*UNIT_V/Const_c    );
+     Aux_Message( stdout, "  Jet_Density              = %14.7e g/cm^3\n",     Jet_Density*UNIT_D             );
+     Aux_Message( stdout, "  Jet_Lobe_Ratio           = %14.7e\n",            Jet_Lobe_Ratio                 );
    }
 
    if ( MPI_Rank == 0 )
@@ -219,11 +223,16 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // variables for jet
    real PriReal[NCOMP_FLUID];
 
-   if ( x < ICM_Position + ICM_Tangent*(y-0.5*amr->BoxSize[1]) ) {
-       PriReal[0] = (real)ICM_Density;
+   double xx = x - Jump_Tangent*(y-0.5*amr->BoxSize[1]) - Jump_Position;
+   double d0 = 0.5*(ICM_Density-Lobe_Density);
+   double d;
+
+   if ( xx < 0.0 ) {
+     d = ICM_Density - d0*exp(xx/Jump_Width);
    } else {
-       PriReal[0] = (real)Lobe_Density;
+     d = Lobe_Density + d0*exp(-xx/Jump_Width);
    }
+   PriReal[0] = (real)d;
    PriReal[1] = 0.0;
    PriReal[2] = 0.0;
    PriReal[3] = 0.0;
@@ -266,7 +275,7 @@ void BC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu,
      j = idx[1];
      k = idx[2];
 
-    real PriReal[NCOMP_FLUID], fluid[NCOMP_FLUID];
+    real PriReal[NCOMP_FLUID];
 
     const int j_ref = GhostSize;  // reference j index
 
@@ -278,23 +287,23 @@ void BC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu,
 
     if ( Jet_Fire && rad <= Jet_Radius )
     {
-             // set fluid variable inside source
-             PriReal[0] = (real)Jet_Density;
-             PriReal[1] = 0.0;
-             PriReal[2] = (real)(Jet_Velocity);
-             PriReal[3] = 0.0;
-             PriReal[4] = (real)Amb_Pressure;
-
-             for (int v=0;v<NCOMP_FLUID;v++) fluid[v] = Array3D[v][idx[2]][idx[1]][idx[0]];
-
-             Hydro_Pri2Con( PriReal, BVal, NULL_BOOL, NULL_INT, NULL, EoS_DensPres2Eint_CPUPtr,
-	     	               EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-	     	               EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+      // set fluid variable inside source
+      PriReal[0] = (real)Jet_Density;
+      PriReal[1] = 0.0;
+      PriReal[2] = (real)Jet_Velocity;
+      PriReal[3] = 0.0;
+      PriReal[4] = (real)Amb_Pressure;
+            
+      Hydro_Pri2Con( PriReal, BVal, NULL_BOOL, NULL_INT, NULL, EoS_DensPres2Eint_CPUPtr,
+		     EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+		     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
     }
     else 
-    {
-        for (int v=0; v<NVar_Flu; v++)
-             BVal[v] = Array3D[v][k][j_ref][i];
+    { 
+     
+      for (int v=0; v<NVar_Flu; v++)
+	BVal[TFluVarIdxList[v]] = Array3D[v][k][j_ref][i];
+
     }
 
 } // FUNCTION : BC
