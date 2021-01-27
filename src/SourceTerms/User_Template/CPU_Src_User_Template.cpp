@@ -105,11 +105,7 @@ void Src_SetAuxArray_User_Template( double AuxArray_Flt[], int AuxArray_Int[] )
 //                TimeOld           : Physical time before update
 //                                    --> This function updates physical time from TimeOld to TimeNew
 //                MinDens/Pres/Eint : Density, pressure, and internal energy floors
-//                EoS_DensEint2Pres : EoS routine to compute the gas pressure
-//                EoS_DensPres2Eint : EoS routine to compute the gas internal energy
-//                EoS_DensPres2CSqr : EoS routine to compute the sound speed square
-//                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
-//                EoS_Table         : EoS tables
+//                EoS               : EoS object
 //                AuxArray_*        : Auxiliary arrays (see the Note above)
 //
 // Return      :  fluid[]
@@ -120,13 +116,7 @@ static void Src_User_Template( real fluid[], const real B[],
                                const double x, const double y, const double z,
                                const double TimeNew, const double TimeOld,
                                const real MinDens, const real MinPres, const real MinEint,
-                               const EoS_DE2P_t EoS_DensEint2Pres,
-                               const EoS_DP2E_t EoS_DensPres2Eint,
-                               const EoS_DP2C_t EoS_DensPres2CSqr,
-                               const double EoS_AuxArray_Flt[],
-                               const int    EoS_AuxArray_Int[],
-                               const real *const EoS_Table[EOS_NTABLE_MAX],
-                               const double AuxArray_Flt[], const int AuxArray_Int[] )
+                               const EoS_t *EoS, const double AuxArray_Flt[], const int AuxArray_Int[] )
 {
 
 // check

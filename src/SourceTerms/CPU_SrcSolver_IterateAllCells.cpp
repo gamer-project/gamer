@@ -23,25 +23,19 @@
 //                2. No ghost zones
 //                   --> Should support ghost zones in the future
 //
-// Parameter   :  g_Flu_Array_In         : Array storing the input fluid variables
-//                g_Flu_Array_Out        : Array to store the output fluid variables
-//                g_Mag_Array_In         : Array storing the input B field (for MHD only)
-//                g_Corner_Array         : Array storing the physical corner coordinates of each patch
-//                SrcTerms               : Structure storing all source-term variables
-//                NPatchGroup            : Number of patch groups to be evaluated
-//                dt                     : Time interval to advance solution
-//                dh                     : Grid size
-//                TimeNew                : Target physical time to reach
-//                TimeOld                : Physical time before update
-//                                         --> This function updates physical time from TimeOld to TimeNew
-//                MinDens/Pres/Eint      : Density, pressure, and internal energy floors
-//                EoS_DensEint2Pres_Func : Function pointer to the EoS routine of computing the gas pressure
-//                EoS_DensPres2Eint_Func :                    . . .                             gas internal energy
-//                EoS_DensPres2CSqr_Func :                    . . .                             sound speed square
-//                c_EoS_AuxArray_*       : Auxiliary arrays for the EoS routines (for CPU only)
-//                c_EoS_Table            : EoS tables                            (for CPU only)
-//                                         --> When using GPU, these CPU-only variables are stored in the constant memory
-//                                             header CUDA_ConstMemory.h and do not need to be passed as function arguments
+// Parameter   :  g_Flu_Array_In    : Array storing the input fluid variables
+//                g_Flu_Array_Out   : Array to store the output fluid variables
+//                g_Mag_Array_In    : Array storing the input B field (for MHD only)
+//                g_Corner_Array    : Array storing the physical corner coordinates of each patch
+//                SrcTerms          : Structure storing all source-term variables
+//                NPatchGroup       : Number of patch groups to be evaluated
+//                dt                : Time interval to advance solution
+//                dh                : Grid size
+//                TimeNew           : Target physical time to reach
+//                TimeOld           : Physical time before update
+//                                    --> This function updates physical time from TimeOld to TimeNew
+//                MinDens/Pres/Eint : Density, pressure, and internal energy floors
+//                EoS               : EoS object
 //
 // Return      : fluid[] in all patches
 //-------------------------------------------------------------------------------------------------------
@@ -54,10 +48,7 @@ void CUSRC_SrcSolver_IterateAllCells(
    const double g_Corner_Array[][3],
    const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
    const double TimeNew, const double TimeOld,
-   const real MinDens, const real MinPres, const real MinEint,
-   const EoS_DE2P_t EoS_DensEint2Pres_Func,
-   const EoS_DP2E_t EoS_DensPres2Eint_Func,
-   const EoS_DP2C_t EoS_DensPres2CSqr_Func )
+   const real MinDens, const real MinPres, const real MinEint, const EoS_t EoS )
 #else
 void CPU_SrcSolver_IterateAllCells(
    const real g_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NXT)           ],
@@ -66,13 +57,7 @@ void CPU_SrcSolver_IterateAllCells(
    const double g_Corner_Array[][3],
    const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
    const double TimeNew, const double TimeOld,
-   const real MinDens, const real MinPres, const real MinEint,
-   const EoS_DE2P_t EoS_DensEint2Pres_Func,
-   const EoS_DP2E_t EoS_DensPres2Eint_Func,
-   const EoS_DP2C_t EoS_DensPres2CSqr_Func,
-   const double c_EoS_AuxArray_Flt[],
-   const int    c_EoS_AuxArray_Int[],
-   const real* const c_EoS_Table[EOS_NTABLE_MAX] )
+   const real MinDens, const real MinPres, const real MinEint, const EoS_t EoS )
 #endif
 {
 
@@ -125,17 +110,13 @@ void CPU_SrcSolver_IterateAllCells(
 //       (1) deleptonization
 #        if ( MODEL == HYDRO )
          if ( SrcTerms.Deleptonization )
-            SrcTerms.Dlep_FuncPtr( fluid, B, SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint,
-                                   EoS_DensEint2Pres_Func, EoS_DensPres2Eint_Func, EoS_DensPres2CSqr_Func,
-                                   c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table,
+            SrcTerms.Dlep_FuncPtr( fluid, B, SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint, &EoS,
                                    SrcTerms.Dlep_AuxArrayDevPtr_Flt, SrcTerms.Dlep_AuxArrayDevPtr_Int );
 #        endif
 
 //       (2) user-defined
          if ( SrcTerms.User )
-            SrcTerms.User_FuncPtr( fluid, B, SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint,
-                                   EoS_DensEint2Pres_Func, EoS_DensPres2Eint_Func, EoS_DensPres2CSqr_Func,
-                                   c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table,
+            SrcTerms.User_FuncPtr( fluid, B, SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint, &EoS,
                                    SrcTerms.User_AuxArrayDevPtr_Flt, SrcTerms.User_AuxArrayDevPtr_Int );
 
 //       store the updated results

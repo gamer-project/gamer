@@ -15,9 +15,7 @@ __global__ void CUFLU_FluidSolver_RTVD(
    const real g_Pot_USG[][ CUBE(USG_NXT_F) ],
    const real dt, const real _dh, const bool StoreFlux,
    const bool XYZ, const real MinDens, const real MinPres, const real MinEint,
-   const EoS_DE2P_t EoS_DensEint2Pres_Func,
-   const EoS_DP2E_t EoS_DensPres2Eint_Func,
-   const EoS_DP2C_t EoS_DensPres2CSqr_Func );
+   const EoS_t EoS );
 #elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 __global__
 void CUFLU_FluidSolver_MHM(
@@ -43,9 +41,7 @@ void CUFLU_FluidSolver_MHM(
    const real MinDens, const real MinPres, const real MinEint,
    const real DualEnergySwitch, const bool NormPassive, const int NNorm,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
-   const EoS_DE2P_t EoS_DensEint2Pres_Func,
-   const EoS_DP2E_t EoS_DensPres2Eint_Func,
-   const EoS_DP2C_t EoS_DensPres2CSqr_Func );
+   const EoS_t EoS );
 #elif ( FLU_SCHEME == CTU )
 __global__
 void CUFLU_FluidSolver_CTU(
@@ -71,9 +67,7 @@ void CUFLU_FluidSolver_CTU(
    const real MinDens, const real MinPres, const real MinEint,
    const real DualEnergySwitch, const bool NormPassive, const int NNorm,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
-   const EoS_DE2P_t EoS_DensEint2Pres_Func,
-   const EoS_DP2E_t EoS_DensPres2Eint_Func,
-   const EoS_DP2C_t EoS_DensPres2CSqr_Func );
+   const EoS_t EoS );
 #endif // FLU_SCHEME
 
 #elif ( MODEL == ELBDM )
@@ -383,8 +377,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               d_Flux_Array      + UsedPatch[s],
               d_Corner_Array_F  + UsedPatch[s],
               d_Pot_Array_USG_F + UsedPatch[s],
-              dt, 1.0/dh, StoreFlux, XYZ, MinDens, MinPres, MinEint,
-              EoS_DensEint2Pres_GPUPtr, EoS_DensPres2Eint_GPUPtr, EoS_DensPres2CSqr_GPUPtr );
+              dt, 1.0/dh, StoreFlux, XYZ, MinDens, MinPres, MinEint, EoS );
 
 #        elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 
@@ -406,8 +399,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               d_EC_Ele          + UsedPatch[s],
               dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff,
               Time, UsePot, ExtAcc, GPUExtAcc_Ptr, MinDens, MinPres, MinEint,
-              DualEnergySwitch, NormPassive, NNorm, JeansMinPres, JeansMinPres_Coeff,
-              EoS_DensEint2Pres_GPUPtr, EoS_DensPres2Eint_GPUPtr, EoS_DensPres2CSqr_GPUPtr );
+              DualEnergySwitch, NormPassive, NNorm, JeansMinPres, JeansMinPres_Coeff, EoS );
 
 #        elif ( FLU_SCHEME == CTU )
 
@@ -429,8 +421,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               d_EC_Ele          + UsedPatch[s],
               dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff,
               Time, UsePot, ExtAcc, GPUExtAcc_Ptr, MinDens, MinPres, MinEint,
-              DualEnergySwitch, NormPassive, NNorm, JeansMinPres, JeansMinPres_Coeff,
-              EoS_DensEint2Pres_GPUPtr, EoS_DensPres2Eint_GPUPtr, EoS_DensPres2CSqr_GPUPtr );
+              DualEnergySwitch, NormPassive, NNorm, JeansMinPres, JeansMinPres_Coeff, EoS );
 
 #        else
 

@@ -15,11 +15,7 @@
 static void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
                           const bool StoreFlux, const int j_skip, const int k_skip,
                           const real MinDens, const real MinPres, const real MinEint,
-                          const EoS_DE2P_t EoS_DensEint2Pres,
-                          const EoS_DP2C_t EoS_DensPres2CSqr,
-                          const double EoS_AuxArray_Flt[],
-                          const int    EoS_AuxArray_Int[],
-                          const real *const EoS_Table[EOS_NTABLE_MAX] );
+                          const EoS_t *EoS );
 static void TransposeXY( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] );
 static void TransposeXZ( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] );
 
@@ -33,27 +29,21 @@ static void TransposeXZ( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] );
 // Note        :  The three-dimensional evolution is achieved by using the dimensional-split method
 //                --> Use the input pamameter "XYZ" to control the order of update
 //
-// Parameter   :  Flu_Array_In           : Array storing the input fluid variables
-//                Flu_Array_Out          : Array to store the output fluid variables
-//                Flux_Array             : Array to store the output flux
-//                Corner_Array           : Array storing the physical corner coordinates of each patch group (USELESS CURRENTLY)
-//                Pot_Array_USG          : Array storing the input potential for UNSPLIT_GRAVITY (NOT SUPPORTED in RTVD)
-//                NPatchGroup            : Number of patch groups to be evaluated
-//                dt                     : Time interval to advance solution
-//                dh                     : Grid size
-//                StoreFlux              : true --> store the coarse-fine fluxes
-//                XYZ                    : true  : x->y->z ( forward sweep)
-//                                         false : z->y->x (backward sweep)
-//                MinDens                : Density floor
-//                MinPres                : Pressure floor
-//                MinEint                : Internal energy floor
-//                EoS_DensEint2Pres_Func : Function pointer to the EoS routine of computing the gas pressure
-//                EoS_DensPres2Eint_Func :                    . . .                             gas internal energy
-//                EoS_DensPres2CSqr_Func :                    . . .                             sound speed square
-//                c_EoS_AuxArray_*       : Auxiliary arrays for the EoS routines (for CPU only)
-//                c_EoS_Table            : EoS tables                            (for CPU only)
-//                                         --> When using GPU, these CPU-only variables are stored in the constant memory
-//                                             header CUDA_ConstMemory.h and do not need to be passed as function arguments
+// Parameter   :  Flu_Array_In  : Array storing the input fluid variables
+//                Flu_Array_Out : Array to store the output fluid variables
+//                Flux_Array    : Array to store the output flux
+//                Corner_Array  : Array storing the physical corner coordinates of each patch group (USELESS CURRENTLY)
+//                Pot_Array_USG : Array storing the input potential for UNSPLIT_GRAVITY (NOT SUPPORTED in RTVD)
+//                NPatchGroup   : Number of patch groups to be evaluated
+//                dt            : Time interval to advance solution
+//                dh            : Grid size
+//                StoreFlux     : true --> store the coarse-fine fluxes
+//                XYZ           : true  : x->y->z ( forward sweep)
+//                                false : z->y->x (backward sweep)
+//                MinDens       : Density floor
+//                MinPres       : Pressure floor
+//                MinEint       : Internal energy floor
+//                EoS           : EoS object
 //-------------------------------------------------------------------------------------------------------
 void CPU_FluidSolver_RTVD(
    real Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
@@ -64,12 +54,7 @@ void CPU_FluidSolver_RTVD(
    const int NPatchGroup, const real dt, const real dh,
    const bool StoreFlux, const bool XYZ,
    const real MinDens, const real MinPres, const real MinEint,
-   const EoS_DE2P_t EoS_DensEint2Pres_Func,
-   const EoS_DP2E_t EoS_DensPres2Eint_Func,
-   const EoS_DP2C_t EoS_DensPres2CSqr_Func,
-   const double c_EoS_AuxArray_Flt[],
-   const int    c_EoS_AuxArray_Int[],
-   const real* const c_EoS_Table[EOS_NTABLE_MAX] )
+   const EoS_t EoS )
 {
 
    if ( XYZ )
@@ -77,18 +62,15 @@ void CPU_FluidSolver_RTVD(
 #     pragma omp parallel for schedule( runtime )
       for (int P=0; P<NPatchGroup; P++)
       {
-         CPU_AdvanceX( Flu_Array_In[P], dt, dh, StoreFlux,              0,              0, MinDens, MinPres, MinEint,
-                       EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
+         CPU_AdvanceX( Flu_Array_In[P], dt, dh, StoreFlux,              0,              0, MinDens, MinPres, MinEint, &EoS );
 
          TransposeXY ( Flu_Array_In[P] );
 
-         CPU_AdvanceX( Flu_Array_In[P], dt, dh, StoreFlux, FLU_GHOST_SIZE,              0, MinDens, MinPres, MinEint,
-                       EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
+         CPU_AdvanceX( Flu_Array_In[P], dt, dh, StoreFlux, FLU_GHOST_SIZE,              0, MinDens, MinPres, MinEint, &EoS );
 
          TransposeXZ ( Flu_Array_In[P] );
 
-         CPU_AdvanceX( Flu_Array_In[P], dt, dh, StoreFlux, FLU_GHOST_SIZE, FLU_GHOST_SIZE, MinDens, MinPres, MinEint,
-                       EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
+         CPU_AdvanceX( Flu_Array_In[P], dt, dh, StoreFlux, FLU_GHOST_SIZE, FLU_GHOST_SIZE, MinDens, MinPres, MinEint, &EoS );
 
          TransposeXZ ( Flu_Array_In[P] );
          TransposeXY ( Flu_Array_In[P] );
@@ -103,18 +85,15 @@ void CPU_FluidSolver_RTVD(
          TransposeXY ( Flu_Array_In[P] );
          TransposeXZ ( Flu_Array_In[P] );
 
-         CPU_AdvanceX( Flu_Array_In[P], dt, dh, StoreFlux,              0,              0, MinDens, MinPres, MinEint,
-                       EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
+         CPU_AdvanceX( Flu_Array_In[P], dt, dh, StoreFlux,              0,              0, MinDens, MinPres, MinEint, &EoS );
 
          TransposeXZ ( Flu_Array_In[P] );
 
-         CPU_AdvanceX( Flu_Array_In[P], dt, dh, StoreFlux,              0, FLU_GHOST_SIZE, MinDens, MinPres, MinEint,
-                       EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
+         CPU_AdvanceX( Flu_Array_In[P], dt, dh, StoreFlux,              0, FLU_GHOST_SIZE, MinDens, MinPres, MinEint, &EoS );
 
          TransposeXY ( Flu_Array_In[P] );
 
-         CPU_AdvanceX( Flu_Array_In[P], dt, dh, StoreFlux, FLU_GHOST_SIZE, FLU_GHOST_SIZE, MinDens, MinPres, MinEint,
-                       EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func, c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
+         CPU_AdvanceX( Flu_Array_In[P], dt, dh, StoreFlux, FLU_GHOST_SIZE, FLU_GHOST_SIZE, MinDens, MinPres, MinEint, &EoS );
       }
    }
 
@@ -191,28 +170,21 @@ void CPU_FluidSolver_RTVD(
 //
 // Note        :  Based on the TVD scheme
 //
-// Parameter   :  u                 : Input fluid array
-//                dt                : Time interval to advance solution
-//                dx                : Grid size
-//                StoreFlux         : true --> store the coarse-fine fluxes
-//                j_skip            : Number of cells that can be skipped on each side in the y direction
-//                k_skip            : Number of cells that can be skipped on each side in the z direction
-//                MinDens           : Density floor
-//                MinPres           : Pressure floor
-//                MinEint           : Internal energy floor
-//                EoS_DensEint2Pres : EoS routine to compute the gas pressure
-//                EoS_DensPres2CSqr : EoS routine to compute the sound speed square
-//                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
-//                EoS_Table         : EoS tables
+// Parameter   :  u         : Input fluid array
+//                dt        : Time interval to advance solution
+//                dx        : Grid size
+//                StoreFlux : true --> store the coarse-fine fluxes
+//                j_skip    : Number of cells that can be skipped on each side in the y direction
+//                k_skip    : Number of cells that can be skipped on each side in the z direction
+//                MinDens   : Density floor
+//                MinPres   : Pressure floor
+//                MinEint   : Internal energy floor
+//                EoS       : EoS object
 //-------------------------------------------------------------------------------------------------------
 void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
                    const bool StoreFlux, const int j_skip, const int k_skip,
                    const real MinDens, const real MinPres, const real MinEint,
-                   const EoS_DE2P_t EoS_DensEint2Pres,
-                   const EoS_DP2C_t EoS_DensPres2CSqr,
-                   const double EoS_AuxArray_Flt[],
-                   const int    EoS_AuxArray_Int[],
-                   const real *const EoS_Table[EOS_NTABLE_MAX] )
+                   const EoS_t *EoS )
 {
 
    const bool CheckMinPres_Yes = true;
@@ -255,8 +227,8 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
          _rho = (real)1.0 / ux[0][i];
          vx   = _rho * ux[1][i];
          p    = Hydro_Con2Pres( ux[0][i], ux[1][i], ux[2][i], ux[3][i], ux[4][i], Passive,
-                                CheckMinPres_Yes, MinPres, NULL_REAL, EoS_DensEint2Pres,
-                                EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
+                                CheckMinPres_Yes, MinPres, NULL_REAL, EoS->DensEint2Pres_FuncPtr,
+                                EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
 
 #        ifdef CHECK_NEGATIVE_IN_FLUID
          if ( Hydro_CheckNegative(p) )
@@ -268,8 +240,8 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
                          ux[0][i], __FILE__, __LINE__, __FUNCTION__ );
 #        endif
 
-         c    = FABS( vx ) + SQRT(  EoS_DensPres2CSqr( ux[0][i], p, Passive, EoS_AuxArray_Flt,
-                                                       EoS_AuxArray_Int, EoS_Table )  );
+         c    = FABS( vx ) + SQRT(  EoS->DensPres2CSqr_FuncPtr( ux[0][i], p, Passive, EoS->AuxArrayDevPtr_Flt,
+                                                                EoS->AuxArrayDevPtr_Int, EoS->Table )  );
 
          cw[0][i] = ux[1][i];
          cw[1][i] = ux[1][i] * vx + p;
@@ -322,8 +294,8 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
          _rho = (real)1.0 / u_half[0][i];
          vx   = _rho * u_half[1][i];
          p    = Hydro_Con2Pres( u_half[0][i], u_half[1][i], u_half[2][i], u_half[3][i], u_half[4][i], Passive,
-                                CheckMinPres_Yes, MinPres, NULL_REAL, EoS_DensEint2Pres,
-                                EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
+                                CheckMinPres_Yes, MinPres, NULL_REAL, EoS->DensEint2Pres_FuncPtr,
+                                EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
 
 #        ifdef CHECK_NEGATIVE_IN_FLUID
          if ( Hydro_CheckNegative(p) )
@@ -335,8 +307,8 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
                          u_half[0][i], __FILE__, __LINE__, __FUNCTION__ );
 #        endif
 
-         c    = FABS( vx ) + SQRT(  EoS_DensPres2CSqr( u_half[0][i], p, Passive, EoS_AuxArray_Flt,
-                                                       EoS_AuxArray_Int, EoS_Table )  );
+         c    = FABS( vx ) + SQRT(  EoS->DensPres2CSqr_FuncPtr( u_half[0][i], p, Passive, EoS->AuxArrayDevPtr_Flt,
+                                                                EoS->AuxArrayDevPtr_Int, EoS->Table )  );
 
          cw[0][i] = u_half[1][i];
          cw[1][i] = u_half[1][i] * vx + p;

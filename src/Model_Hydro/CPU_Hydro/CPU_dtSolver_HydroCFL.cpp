@@ -39,19 +39,14 @@
 //                   --> CFL condition
 //                3. Arrays with a prefix "g_" are stored in the global memory of GPU
 //
-// Parameter   :  g_dt_Array             : Array to store the minimum dt in each target patch
-//                g_Flu_Array            : Array storing the prepared fluid   data of each target patch
-//                g_Mag_Array            : Array storing the prepared B field data of each target patch
-//                NPG                    : Number of target patch groups (for CPU only)
-//                dh                     : Cell size
-//                Safety                 : dt safety factor
-//                MinPres                : Minimum allowed pressure
-//                EoS_DensEint2Pres_Func : Function pointers to the EoS routines
-//                EoS_DensPres2CSqr_Func : ...
-//                c_EoS_AuxArray_*       : Auxiliary arrays for the EoS routines (for CPU only)
-//                c_EoS_Table            : EoS tables                            (for CPU only)
-//                                         --> When using GPU, these CPU-only variables are stored in the constant memory
-//                                             header CUDA_ConstMemory.h and do not need to be passed as function arguments
+// Parameter   :  g_dt_Array  : Array to store the minimum dt in each target patch
+//                g_Flu_Array : Array storing the prepared fluid   data of each target patch
+//                g_Mag_Array : Array storing the prepared B field data of each target patch
+//                NPG         : Number of target patch groups (for CPU only)
+//                dh          : Cell size
+//                Safety      : dt safety factor
+//                MinPres     : Minimum allowed pressure
+//                EoS         : EoS object
 //
 // Return      :  g_dt_Array
 //-----------------------------------------------------------------------------------------
@@ -59,15 +54,11 @@
 __global__
 void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                               const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ],
-                              const real dh, const real Safety, const real MinPres,
-                              const EoS_DE2P_t EoS_DensEint2Pres_Func, const EoS_DP2C_t EoS_DensPres2CSqr_Func )
+                              const real dh, const real Safety, const real MinPres, const EoS_t EoS )
 #else
 void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                               const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const int NPG,
-                              const real dh, const real Safety, const real MinPres,
-                              const EoS_DE2P_t EoS_DensEint2Pres_Func, const EoS_DP2C_t EoS_DensPres2CSqr_Func,
-                              const double c_EoS_AuxArray_Flt[], const int c_EoS_AuxArray_Int[],
-                              const real* const c_EoS_Table[EOS_NTABLE_MAX] )
+                              const real dh, const real Safety, const real MinPres, const EoS_t EoS )
 #endif
 {
 
@@ -118,9 +109,9 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
          Vz    = FABS( fluid[MOMZ] )*_Rho;
          Pres  = Hydro_Con2Pres( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], fluid+NCOMP_FLUID,
                                  CheckMinPres_Yes, MinPres, Emag,
-                                 EoS_DensEint2Pres_Func, c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table, NULL );
-         a2    = EoS_DensPres2CSqr_Func( fluid[DENS], Pres, fluid+NCOMP_FLUID, c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int,
-                                         c_EoS_Table ); // sound speed squared
+                                 EoS.DensEint2Pres_FuncPtr, EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table, NULL );
+         a2    = EoS.DensPres2CSqr_FuncPtr( fluid[DENS], Pres, fluid+NCOMP_FLUID, EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int,
+                                            EoS.Table ); // sound speed squared
 
 //       compute the maximum information propagating speed
 //       --> hydro: bulk velocity + sound wave
