@@ -109,7 +109,7 @@ void Src_SetAuxArray_Deleptonization( double AuxArray_Flt[], int AuxArray_Int[] 
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static void Src_Deleptonization( real fluid[], const real B[],
-                                 const SrcTerms_t SrcTerms, const real dt, const real dh,
+                                 const SrcTerms_t *SrcTerms, const real dt, const real dh,
                                  const double x, const double y, const double z,
                                  const double TimeNew, const double TimeOld,
                                  const real MinDens, const real MinPres, const real MinEint,
@@ -123,7 +123,7 @@ static void Src_Deleptonization( real fluid[], const real B[],
 #  endif
 
 // TBF
-// profiles are stored in SrcTerms.Dlep_Profile_DataDevPtr/Dlep_Profile_RadiusDevPtr/Dlep_Profile_NBin
+// profiles are stored in SrcTerms->Dlep_Profile_DataDevPtr/Dlep_Profile_RadiusDevPtr/Dlep_Profile_NBin
 // --> see "include/SrcTerms.h"
 
 } // FUNCTION : Src_Deleptonization
@@ -160,7 +160,10 @@ void Src_WorkBeforeMajorFunc_Deleptonization( const int lv, const double TimeNew
                                               double AuxArray_Flt[], int AuxArray_Int[] )
 {
 
-// compute profiles (TBF)
+// TBF
+
+/*
+// compute profiles
 // --> here is just an example; see GREP for a more efficient implementation
 // --> SRC_DLEP_PROF_NVAR and SRC_DLEP_PROF_NBINMAX are defined in Macro.h (default = 6 and 4000, respectively)
 // --> be careful about the issue of center drifting
@@ -209,16 +212,15 @@ void Src_WorkBeforeMajorFunc_Deleptonization( const int lv, const double TimeNew
 
 
 // uncomment the following lines if the auxiliary arrays have been modified
-/*
-#  ifdef GPU
-   Src_SetConstMemory_Deleptonization( AuxArray_Flt, AuxArray_Int,
-                                       SrcTerms.Dlep_AuxArrayDevPtr_Flt, SrcTerms.Dlep_AuxArrayDevPtr_Int );
-#  endif
-*/
+//#  ifdef GPU
+//   Src_SetConstMemory_Deleptonization( AuxArray_Flt, AuxArray_Int,
+//                                       SrcTerms.Dlep_AuxArrayDevPtr_Flt, SrcTerms.Dlep_AuxArrayDevPtr_Int );
+//#  endif
 
 
 // free memory
    for (int v=0; v<SRC_DLEP_PROF_NVAR; v++)  delete Prof[v];
+*/
 
 } // FUNCTION : Src_WorkBeforeMajorFunc_Deleptonization
 #endif

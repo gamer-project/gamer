@@ -11,7 +11,7 @@ struct SrcTerms_t;
 
 // typedef of the source-term function
 typedef void (*SrcFunc_t)( real fluid[], const real B[],
-                           const SrcTerms_t SrcTerms, const real dt, const real dh,
+                           const SrcTerms_t *SrcTerms, const real dt, const real dh,
                            const double x, const double y, const double z,
                            const double TimeNew, const double TimeOld,
                            const real MinDens, const real MinPres, const real MinEint,

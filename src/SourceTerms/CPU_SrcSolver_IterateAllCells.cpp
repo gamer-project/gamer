@@ -110,13 +110,13 @@ void CPU_SrcSolver_IterateAllCells(
 //       (1) deleptonization
 #        if ( MODEL == HYDRO )
          if ( SrcTerms.Deleptonization )
-            SrcTerms.Dlep_FuncPtr( fluid, B, SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint, &EoS,
+            SrcTerms.Dlep_FuncPtr( fluid, B, &SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint, &EoS,
                                    SrcTerms.Dlep_AuxArrayDevPtr_Flt, SrcTerms.Dlep_AuxArrayDevPtr_Int );
 #        endif
 
 //       (2) user-defined
          if ( SrcTerms.User )
-            SrcTerms.User_FuncPtr( fluid, B, SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint, &EoS,
+            SrcTerms.User_FuncPtr( fluid, B, &SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint, &EoS,
                                    SrcTerms.User_AuxArrayDevPtr_Flt, SrcTerms.User_AuxArrayDevPtr_Int );
 
 //       store the updated results
