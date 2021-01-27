@@ -116,7 +116,7 @@ void Src_SetAuxArray_User_Template( double AuxArray_Flt[], int AuxArray_Int[] )
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static void Src_User_Template( real fluid[], const real B[],
-                               const SrcTerms_t SrcTerms, const real dt, const real dh,
+                               const SrcTerms_t *SrcTerms, const real dt, const real dh,
                                const double x, const double y, const double z,
                                const double TimeNew, const double TimeOld,
                                const real MinDens, const real MinPres, const real MinEint,
@@ -191,10 +191,10 @@ void Src_WorkBeforeMajorFunc_User_Template( const int lv, const double TimeNew, 
 {
 
 // uncomment the following lines if the auxiliary arrays have been modified
-#  ifdef GPU
-   Src_SetConstMemory_User_Template( AuxArray_Flt, AuxArray_Int,
-                                     SrcTerms.User_AuxArrayDevPtr_Flt, SrcTerms.User_AuxArrayDevPtr_Int );
-#  endif
+//#  ifdef GPU
+//   Src_SetConstMemory_User_Template( AuxArray_Flt, AuxArray_Int,
+//                                     SrcTerms.User_AuxArrayDevPtr_Flt, SrcTerms.User_AuxArrayDevPtr_Int );
+//#  endif
 
 } // FUNCTION : Src_WorkBeforeMajorFunc_User_Template
 #endif

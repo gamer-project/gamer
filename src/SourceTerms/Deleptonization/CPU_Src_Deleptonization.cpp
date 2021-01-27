@@ -113,7 +113,7 @@ void Src_SetAuxArray_Deleptonization( double AuxArray_Flt[], int AuxArray_Int[] 
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static void Src_Deleptonization( real fluid[], const real B[],
-                                 const SrcTerms_t SrcTerms, const real dt, const real dh,
+                                 const SrcTerms_t *SrcTerms, const real dt, const real dh,
                                  const double x, const double y, const double z,
                                  const double TimeNew, const double TimeOld,
                                  const real MinDens, const real MinPres, const real MinEint,
@@ -133,7 +133,7 @@ static void Src_Deleptonization( real fluid[], const real B[],
 #  endif
 
 // TBF
-// profiles are stored in SrcTerms.Dlep_Profile_DataDevPtr/Dlep_Profile_RadiusDevPtr/Dlep_Profile_NBin
+// profiles are stored in SrcTerms->Dlep_Profile_DataDevPtr/Dlep_Profile_RadiusDevPtr/Dlep_Profile_NBin
 // --> see "include/SrcTerms.h"
 
 } // FUNCTION : Src_Deleptonization

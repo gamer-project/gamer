@@ -125,7 +125,7 @@ void CPU_SrcSolver_IterateAllCells(
 //       (1) deleptonization
 #        if ( MODEL == HYDRO )
          if ( SrcTerms.Deleptonization )
-            SrcTerms.Dlep_FuncPtr( fluid, B, SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint,
+            SrcTerms.Dlep_FuncPtr( fluid, B, &SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint,
                                    EoS_DensEint2Pres_Func, EoS_DensPres2Eint_Func, EoS_DensPres2CSqr_Func,
                                    c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table,
                                    SrcTerms.Dlep_AuxArrayDevPtr_Flt, SrcTerms.Dlep_AuxArrayDevPtr_Int );
@@ -133,7 +133,7 @@ void CPU_SrcSolver_IterateAllCells(
 
 //       (2) user-defined
          if ( SrcTerms.User )
-            SrcTerms.User_FuncPtr( fluid, B, SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint,
+            SrcTerms.User_FuncPtr( fluid, B, &SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint,
                                    EoS_DensEint2Pres_Func, EoS_DensPres2Eint_Func, EoS_DensPres2CSqr_Func,
                                    c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table,
                                    SrcTerms.User_AuxArrayDevPtr_Flt, SrcTerms.User_AuxArrayDevPtr_Int );
