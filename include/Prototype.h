@@ -531,6 +531,7 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
                                       int &Src_GPU_NPGroup );
 void CUAPI_SetDevice( const int Mode );
 void CUAPI_SetConstMemory();
+void CUAPI_SetConstMemory_EoS();
 void CUAPI_Synchronize();
 #ifdef GRAVITY
 void CUAPI_SetConstMemory_ExtAccPot();

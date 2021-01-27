@@ -69,6 +69,26 @@ void EoS_Init()
       Aux_Error( ERROR_INFO, "EoS_Init_Ptr == NULL for EoS %d !!\n", EOS );
 
 
+// store relevant variables in the object "EoS" for the CPU/GPU solvers
+#  ifdef GPU
+   EoS.DensEint2Pres_FuncPtr = EoS_DensEint2Pres_GPUPtr;
+   EoS.DensPres2Eint_FuncPtr = EoS_DensPres2Eint_GPUPtr;
+   EoS.DensPres2CSqr_FuncPtr = EoS_DensPres2CSqr_GPUPtr;
+
+   CUAPI_SetConstMemory_EoS();
+
+#  else
+
+   EoS.DensEint2Pres_FuncPtr = EoS_DensEint2Pres_CPUPtr;
+   EoS.DensPres2Eint_FuncPtr = EoS_DensPres2Eint_CPUPtr;
+   EoS.DensPres2CSqr_FuncPtr = EoS_DensPres2CSqr_CPUPtr;
+
+   EoS.AuxArrayDevPtr_Flt    = EoS_AuxArray_Flt;
+   EoS.AuxArrayDevPtr_Int    = EoS_AuxArray_Int;
+   EoS.Table                 = h_EoS_Table;
+#  endif // #ifdef GPU ... else ...
+
+
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : EoS_Init
