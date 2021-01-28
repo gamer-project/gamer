@@ -10,6 +10,7 @@
 // Note        :  1. Invoke InvokeSolver()
 //                2. Invoked by EvolveLevel()
 //                3. Grackle library is treated separately
+//                4. Invoke Src_WorkBeforeMajorFunc()
 //
 // Parameter   :  lv           : Target refinement level
 //                TimeNew      : Target physical time to reach
@@ -30,9 +31,12 @@ void Src_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 {
 
 // nothing to do if no source term is activated
-   if ( ! SRC_TERMS.Any )  return;
+   if ( ! SrcTerms.Any )  return;
 
+// work before calling the major source-term function
+   Src_WorkBeforeMajorFunc( lv, TimeNew, TimeOld, dt );
 
+// major source-term function
    InvokeSolver( SRC_SOLVER, lv, TimeNew, TimeOld, dt, NULL_REAL, SaveSg_Flu, SaveSg_Mag, NULL_INT,
                  OverlapMPI, Overlap_Sync );
 

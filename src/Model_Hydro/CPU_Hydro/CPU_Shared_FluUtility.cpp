@@ -195,7 +195,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 
 //    recompute internal energy to be consistent with the updated pressure
       if ( EintOut != NULL  &&  Out[4] != Pres0 )
-         *EintOut = EoS_DensPres2Eint( Out[0], Out[4], In+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+         *EintOut = EoS_DensPres2Eint( Out[0], Out[4], In+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
    }
 
 
@@ -283,7 +283,7 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool NormPassive, const i
    Emag   = (real)0.5*( SQR(Bx) + SQR(By) + SQR(Bz) );
 #  endif
    Eint   = ( EintIn == NULL ) ? EoS_DensPres2Eint( In[0], In[4], Out+NCOMP_FLUID, EoS_AuxArray_Flt,
-                                                    EoS_AuxArray_Int, EoS_Table )
+                                                    EoS_AuxArray_Int, EoS_Table, NULL )
                                : *EintIn;
    Out[4] = Hydro_ConEint2Etot( Out[0], Out[1], Out[2], Out[3], Eint, Emag );
 
@@ -537,7 +537,7 @@ real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const re
    real Eint, Pres;
 
    Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, Emag );
-   Pres = EoS_DensEint2Pres( Dens, Eint, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+   Pres = EoS_DensEint2Pres( Dens, Eint, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
 
    if ( CheckMinPres )   Pres = Hydro_CheckMinPres( Pres, MinPres );
 

@@ -19,9 +19,7 @@ __global__ void CUFLU_FluidSolver_RTVD(
    const real g_Pot_USG[][ CUBE(USG_NXT_F) ],
    const real dt, const real _dh, const bool StoreFlux,
    const bool XYZ, const real MinDens, const real MinPres, const real MinEint,
-   const EoS_DE2P_t EoS_DensEint2Pres_Func,
-   const EoS_DP2E_t EoS_DensPres2Eint_Func,
-   const EoS_DP2C_t EoS_DensPres2CSqr_Func );
+   const EoS_t EoS );
 #elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 __global__
 void CUFLU_FluidSolver_MHM(
@@ -47,9 +45,7 @@ void CUFLU_FluidSolver_MHM(
    const real MinDens, const real MinPres, const real MinEint,
    const real DualEnergySwitch, const bool NormPassive, const int NNorm,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
-   const EoS_DE2P_t EoS_DensEint2Pres_Func,
-   const EoS_DP2E_t EoS_DensPres2Eint_Func,
-   const EoS_DP2C_t EoS_DensPres2CSqr_Func );
+   const EoS_t EoS );
 #elif ( FLU_SCHEME == CTU )
 __global__
 void CUFLU_FluidSolver_CTU(
@@ -75,14 +71,11 @@ void CUFLU_FluidSolver_CTU(
    const real MinDens, const real MinPres, const real MinEint,
    const real DualEnergySwitch, const bool NormPassive, const int NNorm,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
-   const EoS_DE2P_t EoS_DensEint2Pres_Func,
-   const EoS_DP2E_t EoS_DensPres2Eint_Func,
-   const EoS_DP2C_t EoS_DensPres2CSqr_Func );
+   const EoS_t EoS );
 #endif // FLU_SCHEME
 __global__ void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                                          const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ],
-                                         const real dh, const real Safety, const real MinPres,
-                                         const EoS_DE2P_t EoS_DensEint2Pres_Func, const EoS_DP2C_t EoS_DensPres2CSqr_Func );
+                                         const real dh, const real Safety, const real MinPres, const EoS_t EoS );
 #ifdef GRAVITY
 __global__
 void CUPOT_dtSolver_HydroGravity( real g_dt_Array[], const real g_Pot_Array[][ CUBE(GRA_NXT) ],
@@ -169,10 +162,7 @@ void CUSRC_SrcSolver_IterateAllCells(
    const double g_Corner_Array[][3],
    const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
    const double TimeNew, const double TimeOld,
-   const real MinDens, const real MinPres, const real MinEint,
-   const EoS_DE2P_t EoS_DensEint2Pres_Func,
-   const EoS_DP2E_t EoS_DensPres2Eint_Func,
-   const EoS_DP2C_t EoS_DensPres2CSqr_Func );
+   const real MinDens, const real MinPres, const real MinEint, const EoS_t EoS );
 
 
 

@@ -127,7 +127,7 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
    CUAPI_Set_Default_GPU_Parameter( GPU_NSTREAM, FLU_GPU_NPGROUP, POT_GPU_NPGROUP, CHE_GPU_NPGROUP, SRC_GPU_NPGROUP );
 
-// CUAPI_SetConstMemory must be called AFTER Init_Field(), Init_ExtAccPot(), and EoS_Init()
+// CUAPI_SetConstMemory must be called AFTER Init_Field() and Init_ExtAccPot()
    CUAPI_SetConstMemory();
 #  endif
 

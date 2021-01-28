@@ -1352,7 +1352,7 @@ void Aux_Check_Parameter()
 #  endif
 
 #  if ( MODEL != HYDRO )
-   if ( SRC_TERMS.Deleptonization )
+   if ( SrcTerms.Deleptonization )
       Aux_Error( ERROR_INFO, "SRC_DELEPTONIZATION is only supported in HYDRO !!\n" );
 #  endif
 

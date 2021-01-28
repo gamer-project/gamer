@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2428)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2429)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -199,6 +199,7 @@ Procedure for outputting new variables:
 //                2426 : 2020/12/24 --> output FLU_NIN_S, FLU_NOUT_S, and SRC_GPU_NPGROUP
 //                2427 : 2020/12/26 --> output SRC_BLOCK_SIZE and SRC_GHOST_SIZE
 //                2428 : 2020/12/27 --> output SRC_NAUX_DLEP and SRC_NAUX_USER
+//                2429 : 2021/01/26 --> output SRC_DLEP_PROF_NVAR and SRC_DLEP_PROF_NBINMAX
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1399,7 +1400,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2428;
+   KeyInfo.FormatVersion        = 2429;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -1902,6 +1903,8 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.Src_BlockSize        = SRC_BLOCK_SIZE;
    SymConst.Src_GhostSize        = SRC_GHOST_SIZE;
    SymConst.Src_NAuxDlep         = SRC_NAUX_DLEP;
+   SymConst.Src_DlepProfNVar     = SRC_DLEP_PROF_NVAR;
+   SymConst.Src_DlepProfNBinMax  = SRC_DLEP_PROF_NBINMAX;
    SymConst.Src_NAuxUser         = SRC_NAUX_USER;
 
 } // FUNCTION : FillIn_SymConst
@@ -2148,8 +2151,8 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  endif
 
 // source terms
-   InputPara.Src_Deleptonization     = SRC_TERMS.Deleptonization;
-   InputPara.Src_User                = SRC_TERMS.User;
+   InputPara.Src_Deleptonization     = SrcTerms.Deleptonization;
+   InputPara.Src_User                = SrcTerms.User;
    InputPara.Src_GPU_NPGroup         = SRC_GPU_NPGROUP;
 
 // Grackle
@@ -2612,6 +2615,8 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Src_BlockSize",        HOFFSET(SymConst_t,Src_BlockSize       ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Src_GhostSize",        HOFFSET(SymConst_t,Src_GhostSize       ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Src_NAuxDlep",         HOFFSET(SymConst_t,Src_NAuxDlep        ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "Src_DlepProfNVar",     HOFFSET(SymConst_t,Src_DlepProfNVar    ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "Src_DlepProfNBinMax",  HOFFSET(SymConst_t,Src_DlepProfNBinMax ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Src_NAuxUser",         HOFFSET(SymConst_t,Src_NAuxUser        ), H5T_NATIVE_INT    );
 
 } // FUNCTION : GetCompound_SymConst

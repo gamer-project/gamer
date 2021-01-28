@@ -283,6 +283,8 @@ struct SymConst_t
    int    Src_BlockSize;
    int    Src_GhostSize;
    int    Src_NAuxDlep;
+   int    Src_DlepProfNVar;
+   int    Src_DlepProfNBinMax;
    int    Src_NAuxUser;
 
 }; // struct SymConst_t

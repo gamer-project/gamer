@@ -64,6 +64,7 @@ extern "C" {
 #include "RandomNumber.h"
 #include "Profile.h"
 #include "SrcTerms.h"
+#include "EoS.h"
 #include "Global.h"
 #include "Field.h"
 #include "Prototype.h"

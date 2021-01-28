@@ -13,6 +13,7 @@
 # include "Macro.h"
 # include "Typedef.h"
 # include "SrcTerms.h"
+# include "EoS.h"
 #else
 # include "GAMER.h"
 #endif

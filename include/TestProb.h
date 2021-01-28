@@ -64,7 +64,6 @@ extern void (*EoS_Init_Ptr)();
 extern void (*EoS_End_Ptr)();
 #endif
 extern void (*Src_Init_User_Ptr)();
-extern void (*Src_End_User_Ptr)();
 
 
 // helper macro for printing warning messages when resetting parameters

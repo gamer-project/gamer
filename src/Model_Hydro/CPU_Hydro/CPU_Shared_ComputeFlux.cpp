@@ -79,30 +79,27 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 //                6. For the unsplitting scheme in gravity (i.e., UNSPLIT_GRAVITY), this function also corrects the half-step
 //                   velocity by gravity when CorrHalfVel==true
 //
-// Parameter   :  g_FC_Var          : Array storing the input face-centered conserved variables
-//                g_FC_Flux         : Array to store the output face-centered fluxes
-//                NFlux             : Stride for accessing g_FC_Flux[]
-//                NSkip_N           : Number of cells to be skipped in the normal directions
-//                                    --> "(N_FC_VAR-1-2*NSkip_N)" fluxes will be computed along the normal direction
-//                NSkip_T           : Number of cells to be skipped in the transverse directions
-//                                    --> "(N_FC_VAR-2*NSkip_T)^2" fluxes will be computed along the transverse direction
-//                CorrHalfVel       : true --> correct the half-step velocity by gravity       (for UNSPLIT_GRAVITY only)
-//                g_Pot_USG         : Array storing the input potential for CorrHalfVel        (for UNSPLIT_GRAVITY only)
-//                g_Corner          : Array storing the corner coordinates of each patch group (for UNSPLIT_GRAVITY only)
-//                dt                : Time interval to advance the full-step solution          (for UNSPLIT_GRAVITY only)
-//                dh                : Cell size                                                (for UNSPLIT_GRAVITY only)
-//                Time              : Current physical time                                    (for UNSPLIT_GRAVITY only)
-//                UsePot            : Add self-gravity and/or external potential               (for UNSPLIT_GRAVITY only)
-//                ExtAcc            : Add external acceleration                                (for UNSPLIT_GRAVITY only)
-//                ExtAcc_Func       : Function pointer to the external acceleration routine    (for UNSPLIT_GRAVITY only)
-//                ExtAcc_AuxArray   : Auxiliary array for external acceleration                (for UNSPLIT_GRAVITY only)
-//                MinDens/Pres      : Density and pressure floors
-//                DumpIntFlux       : true --> store the inter-patch fluxes in g_IntFlux[]
-//                g_IntFlux         : Array for DumpIntFlux
-//                EoS_DensEint2Pres : EoS routine to compute the gas pressure
-//                EoS_DensPres2CSqr : EoS routine to compute the sound speed square
-//                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
-//                EoS_Table         : EoS tables
+// Parameter   :  g_FC_Var        : Array storing the input face-centered conserved variables
+//                g_FC_Flux       : Array to store the output face-centered fluxes
+//                NFlux           : Stride for accessing g_FC_Flux[]
+//                NSkip_N         : Number of cells to be skipped in the normal directions
+//                                  --> "(N_FC_VAR-1-2*NSkip_N)" fluxes will be computed along the normal direction
+//                NSkip_T         : Number of cells to be skipped in the transverse directions
+//                                  --> "(N_FC_VAR-2*NSkip_T)^2" fluxes will be computed along the transverse direction
+//                CorrHalfVel     : true --> correct the half-step velocity by gravity       (for UNSPLIT_GRAVITY only)
+//                g_Pot_USG       : Array storing the input potential for CorrHalfVel        (for UNSPLIT_GRAVITY only)
+//                g_Corner        : Array storing the corner coordinates of each patch group (for UNSPLIT_GRAVITY only)
+//                dt              : Time interval to advance the full-step solution          (for UNSPLIT_GRAVITY only)
+//                dh              : Cell size                                                (for UNSPLIT_GRAVITY only)
+//                Time            : Current physical time                                    (for UNSPLIT_GRAVITY only)
+//                UsePot          : Add self-gravity and/or external potential               (for UNSPLIT_GRAVITY only)
+//                ExtAcc          : Add external acceleration                                (for UNSPLIT_GRAVITY only)
+//                ExtAcc_Func     : Function pointer to the external acceleration routine    (for UNSPLIT_GRAVITY only)
+//                ExtAcc_AuxArray : Auxiliary array for external acceleration                (for UNSPLIT_GRAVITY only)
+//                MinDens/Pres    : Density and pressure floors
+//                DumpIntFlux     : true --> store the inter-patch fluxes in g_IntFlux[]
+//                g_IntFlux       : Array for DumpIntFlux
+//                EoS             : EoS object
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
@@ -113,9 +110,7 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
                         const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[],
                         const real MinDens, const real MinPres, const bool DumpIntFlux,
                         real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ],
-                        const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2C_t EoS_DensPres2CSqr,
-                        const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
-                        const real *const EoS_Table[EOS_NTABLE_MAX] )
+                        const EoS_t *EoS )
 {
 
 // check
@@ -283,19 +278,24 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
 //       2. invoke Riemann solver
 #        if   ( RSOLVER == EXACT  &&  !defined MHD )
          Hydro_RiemannSolver_Exact( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
-                                    EoS_DensEint2Pres, EoS_DensPres2CSqr, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+                                    EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
+                                    EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
 #        elif ( RSOLVER == ROE )
          Hydro_RiemannSolver_Roe  ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
-                                    EoS_DensEint2Pres, EoS_DensPres2CSqr, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+                                    EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
+                                    EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
 #        elif ( RSOLVER == HLLE )
          Hydro_RiemannSolver_HLLE ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
-                                    EoS_DensEint2Pres, EoS_DensPres2CSqr, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+                                    EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
+                                    EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
 #        elif ( RSOLVER == HLLC  &&  !defined MHD )
          Hydro_RiemannSolver_HLLC ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
-                                    EoS_DensEint2Pres, EoS_DensPres2CSqr, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+                                    EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
+                                    EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
 #        elif ( RSOLVER == HLLD  &&  defined MHD )
          Hydro_RiemannSolver_HLLD ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
-                                    EoS_DensEint2Pres, EoS_DensPres2CSqr, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+                                    EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
+                                    EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
 #        else
 #        error : ERROR : unsupported Riemann solver (EXACT/ROE/HLLE/HLLC/HLLD) !!
 #        endif

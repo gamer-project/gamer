@@ -190,8 +190,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    MomZ = 0.0;
    Pres = 2.0;
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
-                                    EoS_AuxArray_Int, h_EoS_Table );    // assuming EoS requires no passive scalars
-   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );      // do NOT include magnetic energy here
+                                    EoS_AuxArray_Int, h_EoS_Table, NULL ); // assuming EoS requires no passive scalars
+   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );         // do NOT include magnetic energy here
 
 // set the output array
    fluid[DENS] = Dens;
@@ -306,7 +306,6 @@ void Init_TestProb_Template()
 #  endif
 #  endif // #if ( MODEL == HYDRO )
    Src_Init_User_Ptr              = NULL; // option: SRC_USER;                example: SourceTerms/User_Template/CPU_Src_User_Template.cpp
-   Src_End_User_Ptr               = NULL;
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

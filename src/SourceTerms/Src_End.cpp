@@ -3,7 +3,9 @@
 
 
 // prototypes of built-in source terms
+#if ( MODEL == HYDRO )
 void Src_End_Deleptonization();
+#endif
 
 // this function pointer can be set by a test problem initializer for a non-built-in source term
 void (*Src_End_User_Ptr)() = NULL;
@@ -29,11 +31,13 @@ void Src_End()
 
 
 // stop all source terms
-   if ( SRC_TERMS.Deleptonization )
+#  if ( MODEL == HYDRO )
+   if ( SrcTerms.Deleptonization )
       Src_End_Deleptonization();
+#  endif
 
 // users may not define Src_End_User_Ptr
-   if ( SRC_TERMS.User  &&  Src_End_User_Ptr )
+   if ( SrcTerms.User  &&  Src_End_User_Ptr )
       Src_End_User_Ptr();
 
 

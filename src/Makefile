@@ -409,7 +409,7 @@ LIBYT_PATH   :=
 # CUDA source files (compiled with nvcc)
 GPU_FILE    := CUAPI_Asyn_FluidSolver.cu  CUAPI_DiagnoseDevice.cu  CUAPI_MemAllocate_Fluid.cu \
                CUAPI_MemFree_Fluid.cu  CUAPI_Set_Default_GPU_Parameter.cu  CUAPI_SetDevice.cu \
-               CUAPI_Synchronize.cu  CUAPI_Asyn_dtSolver.cu  CUAPI_SetConstMemory.cu
+               CUAPI_Synchronize.cu  CUAPI_Asyn_dtSolver.cu  CUAPI_SetConstMemory.cu  CUAPI_SetConstMemory_EoS.cu
 
 
 # C/C++ source files (compiled with c++ compiler)
@@ -643,7 +643,8 @@ GPU_FILE    += CUAPI_Asyn_SrcSolver.cu  CUSRC_SrcSolver_IterateAllCells.cu  CUSR
 CPU_FILE    += CPU_SrcSolver.cpp  CPU_SrcSolver_IterateAllCells.cpp  CPU_Src_Deleptonization.cpp \
                CPU_Src_User_Template.cpp
 
-CPU_FILE    += Src_AdvanceDt.cpp  Src_Prepare.cpp  Src_Close.cpp  Src_Init.cpp  Src_End.cpp
+CPU_FILE    += Src_AdvanceDt.cpp  Src_Prepare.cpp  Src_Close.cpp  Src_Init.cpp  Src_End.cpp \
+               Src_WorkBeforeMajorFunc.cpp
 
 vpath %.cu     SourceTerms  SourceTerms/User_Template  SourceTerms/Deleptonization
 vpath %.cpp    SourceTerms  SourceTerms/User_Template  SourceTerms/Deleptonization

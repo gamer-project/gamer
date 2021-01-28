@@ -260,7 +260,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
                                      CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres_CPUPtr,
                                      EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
    const real Cs   = SQRT(  EoS_DensPres2CSqr_CPUPtr( u[DENS], Pres, u+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                                                      h_EoS_Table )  );
+                                                      h_EoS_Table, NULL )  );
    fprintf( File, " %13.6e %13.6e", Pres, Cs );
 #  endif
 

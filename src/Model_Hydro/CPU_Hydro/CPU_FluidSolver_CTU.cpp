@@ -30,12 +30,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const real MinDens, const real MinPres, const real MinEint,
                                const bool NormPassive, const int NNorm, const int NormIdx[],
                                const bool JeansMinPres, const real JeansMinPres_Coeff,
-                               const EoS_DE2P_t EoS_DensEint2Pres,
-                               const EoS_DP2E_t EoS_DensPres2Eint,
-                               const EoS_DP2C_t EoS_DensPres2CSqr,
-                               const double EoS_AuxArray_Flt[],
-                               const int    EoS_AuxArray_Int[],
-                               const real *const EoS_Table[EOS_NTABLE_MAX] );
+                               const EoS_t *EoS );
 void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
                               real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                         const int NFlux, const int NSkip_N, const int NSkip_T,
@@ -43,14 +38,12 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
                         const real dt, const real dh, const double Time, const bool UsePot,
                         const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[],
                         const real MinDens, const real MinPres, const bool DumpIntFlux, real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ],
-                        const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2C_t EoS_DensPres2CSqr,
-                        const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
-                        const real *const EoS_Table[EOS_NTABLE_MAX] );
+                        const EoS_t *EoS );
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                            const real dt, const real dh, const real MinDens, const real MinEint,
                            const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
-                           const double EoS_AuxArray_Flt[] );
+                           const EoS_t *EoS );
 #ifdef MHD
 void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                           const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
@@ -98,58 +91,52 @@ void Hydro_TGradientCorrection(       real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ 
 //                   such as N_FC_VAR, N_FC_FLUX, N_SLOPE_PPM, N_FL_FLUX, N_HF_VAR
 //                3. Arrays with a prefix "g_" are stored in the global memory of GPU
 //
-// Parameter   :  g_Flu_Array_In         : Array storing the input fluid variables
-//                g_Flu_Array_Out        : Array to store the output fluid variables
-//                g_Mag_Array_In         : Array storing the input B field (for MHD only)
-//                g_Mag_Array_Out        : Array to store the output B field (for MHD only)
-//                g_DE_Array_Out         : Array to store the dual-energy status
-//                g_Flux_Array           : Array to store the output fluxes
-//                g_Ele_Array            : Array to store the output electric field (for MHD only)
-//                g_Corner_Array         : Array storing the physical corner coordinates of each patch group (for UNSPLIT_GRAVITY)
-//                g_Pot_Array_USG        : Array storing the input potential for UNSPLIT_GRAVITY
-//                g_PriVar               : Array to store the primitive variables
-//                g_Slope_PPM            : Array to store the slope for the PPM reconstruction
-//                g_FC_Var               : Array to store the half-step variables
-//                g_FC_Flux              : Array to store the face-centered fluxes
-//                g_FC_Mag_Half          : Array to store the half-step B field (for MHD only)
-//                g_EC_Ele               : Array to store the edge-centered electric field (for MHD only)
-//                NPatchGroup            : Number of patch groups to be evaluated
-//                dt                     : Time interval to advance solution
-//                dh                     : Cell size
-//                StoreFlux              : true --> store the coarse-fine fluxes
-//                StoreElectric          : true --> store the coarse-fine electric field
-//                LR_Limiter             : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
-//                                         (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
-//                                                        vanLeer + generalized MinMod/extrema-preserving) limiter
-//                MinMod_Coeff           : Coefficient of the generalized MinMod limiter
-//                Time                   : Current physical time                                 (for UNSPLIT_GRAVITY only)
-//                UsePot                 : Add self-gravity and/or external potential            (for UNSPLIT_GRAVITY only)
-//                ExtAcc                 : Add external acceleration                             (for UNSPLIT_GRAVITY only)
-//                ExtAcc_Func            : Function pointer to the external acceleration routine (for UNSPLIT_GRAVITY only)
-//                c_ExtAcc_AuxArray      : Auxiliary array for adding external acceleration      (for UNSPLIT_GRAVITY and CPU only)
-//                                         --> When using GPU, this array is stored in the constant memory header
-//                                             CUDA_ConstMemory.h and does not need to be passed as a function argument
-//                MinDens/Pres/Eint      : Density, pressure, and internal energy floors
-//                DualEnergySwitch       : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
-//                NormPassive            : true --> normalize passive scalars so that the sum of their mass density
-//                                                  is equal to the gas mass density
-//                NNorm                  : Number of passive scalars to be normalized
-//                                         --> Should be set to the global variable "PassiveNorm_NVar"
-//                c_NormIdx              : Target variable indices to be normalized
-//                                         --> Should be set to the global variable "PassiveNorm_VarIdx"
-//                                         --> When using GPU, this array is stored in the constant memory and does
-//                                             not need to be passed as a function argument
-//                                             --> Declared in CUDA_ConstMemory.h with the prefix "c_" to
-//                                                 highlight that this is a constant variable on GPU
-//                JeansMinPres           : Apply minimum pressure estimated from the Jeans length
-//                JeansMinPres_Coeff     : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
-//                EoS_DensEint2Pres_Func : Function pointer to the EoS routine of computing the gas pressure
-//                EoS_DensPres2Eint_Func :                    . . .                             gas internal energy
-//                EoS_DensPres2CSqr_Func :                    . . .                             sound speed square
-//                c_EoS_AuxArray_*       : Auxiliary arrays for the EoS routines (for CPU only)
-//                c_EoS_Table            : EoS tables                            (for CPU only)
-//                                         --> When using GPU, these CPU-only variables are stored in the constant memory
-//                                             header CUDA_ConstMemory.h and do not need to be passed as function arguments
+// Parameter   :  g_Flu_Array_In     : Array storing the input fluid variables
+//                g_Flu_Array_Out    : Array to store the output fluid variables
+//                g_Mag_Array_In     : Array storing the input B field (for MHD only)
+//                g_Mag_Array_Out    : Array to store the output B field (for MHD only)
+//                g_DE_Array_Out     : Array to store the dual-energy status
+//                g_Flux_Array       : Array to store the output fluxes
+//                g_Ele_Array        : Array to store the output electric field (for MHD only)
+//                g_Corner_Array     : Array storing the physical corner coordinates of each patch group (for UNSPLIT_GRAVITY)
+//                g_Pot_Array_USG    : Array storing the input potential for UNSPLIT_GRAVITY
+//                g_PriVar           : Array to store the primitive variables
+//                g_Slope_PPM        : Array to store the slope for the PPM reconstruction
+//                g_FC_Var           : Array to store the half-step variables
+//                g_FC_Flux          : Array to store the face-centered fluxes
+//                g_FC_Mag_Half      : Array to store the half-step B field (for MHD only)
+//                g_EC_Ele           : Array to store the edge-centered electric field (for MHD only)
+//                NPatchGroup        : Number of patch groups to be evaluated
+//                dt                 : Time interval to advance solution
+//                dh                 : Cell size
+//                StoreFlux          : true --> store the coarse-fine fluxes
+//                StoreElectric      : true --> store the coarse-fine electric field
+//                LR_Limiter         : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
+//                                     (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
+//                                                    vanLeer + generalized MinMod/extrema-preserving) limiter
+//                MinMod_Coeff       : Coefficient of the generalized MinMod limiter
+//                Time               : Current physical time                                 (for UNSPLIT_GRAVITY only)
+//                UsePot             : Add self-gravity and/or external potential            (for UNSPLIT_GRAVITY only)
+//                ExtAcc             : Add external acceleration                             (for UNSPLIT_GRAVITY only)
+//                ExtAcc_Func        : Function pointer to the external acceleration routine (for UNSPLIT_GRAVITY only)
+//                c_ExtAcc_AuxArray  : Auxiliary array for adding external acceleration      (for UNSPLIT_GRAVITY and CPU only)
+//                                     --> When using GPU, this array is stored in the constant memory header
+//                                         CUDA_ConstMemory.h and does not need to be passed as a function argument
+//                MinDens/Pres/Eint  : Density, pressure, and internal energy floors
+//                DualEnergySwitch   : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
+//                NormPassive        : true --> normalize passive scalars so that the sum of their mass density
+//                                              is equal to the gas mass density
+//                NNorm              : Number of passive scalars to be normalized
+//                                     --> Should be set to the global variable "PassiveNorm_NVar"
+//                c_NormIdx          : Target variable indices to be normalized
+//                                     --> Should be set to the global variable "PassiveNorm_VarIdx"
+//                                     --> When using GPU, this array is stored in the constant memory and does
+//                                         not need to be passed as a function argument
+//                                         --> Declared in CUDA_ConstMemory.h with the prefix "c_" to
+//                                             highlight that this is a constant variable on GPU
+//                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
+//                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
+//                EoS                : EoS object
 //-------------------------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __global__
@@ -176,9 +163,7 @@ void CUFLU_FluidSolver_CTU(
    const real MinDens, const real MinPres, const real MinEint,
    const real DualEnergySwitch, const bool NormPassive, const int NNorm,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
-   const EoS_DE2P_t EoS_DensEint2Pres_Func,
-   const EoS_DP2E_t EoS_DensPres2Eint_Func,
-   const EoS_DP2C_t EoS_DensPres2CSqr_Func )
+   const EoS_t EoS )
 #else
 void CPU_FluidSolver_CTU(
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
@@ -206,12 +191,7 @@ void CPU_FluidSolver_CTU(
    const real DualEnergySwitch, const bool NormPassive, const int NNorm,
    const int c_NormIdx[],
    const bool JeansMinPres, const real JeansMinPres_Coeff,
-   const EoS_DE2P_t EoS_DensEint2Pres_Func,
-   const EoS_DP2E_t EoS_DensPres2Eint_Func,
-   const EoS_DP2C_t EoS_DensPres2CSqr_Func,
-   const double c_EoS_AuxArray_Flt[],
-   const int    c_EoS_AuxArray_Int[],
-   const real* const c_EoS_Table[EOS_NTABLE_MAX] )
+   const EoS_t EoS )
 #endif // #ifdef __CUDACC__ ... else ...
 {
 
@@ -279,18 +259,14 @@ void CPU_FluidSolver_CTU(
          Hydro_DataReconstruction( g_Flu_Array_In[P], g_Mag_Array_In[P], g_PriVar_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
                                    Con2Pri_Yes, LR_Limiter, MinMod_Coeff, dt, dh,
                                    MinDens, MinPres, MinEint, NormPassive, NNorm, c_NormIdx,
-                                   JeansMinPres, JeansMinPres_Coeff,
-                                   EoS_DensEint2Pres_Func, EoS_DensPres2Eint_Func, EoS_DensPres2CSqr_Func,
-                                   c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
+                                   JeansMinPres, JeansMinPres_Coeff, &EoS );
 
 
 //       2. evaluate the face-centered half-step fluxes by solving the Riemann problem
          Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_HF_FLUX, 0, 0, CorrHalfVel_No,
                             NULL, NULL, NULL_REAL, NULL_REAL, NULL_REAL,
                             EXT_POT_NONE, EXT_ACC_NONE, NULL, NULL,
-                            MinDens, MinPres, StoreFlux_No, NULL,
-                            EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func,
-                            c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
+                            MinDens, MinPres, StoreFlux_No, NULL, &EoS );
 
 
 //       3. evaluate electric field and update B field at the half time-step
@@ -328,9 +304,7 @@ void CPU_FluidSolver_CTU(
          Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, NSkip_N, NSkip_T, CorrHalfVel,
                             g_Pot_Array_USG[P], g_Corner_Array[P], dt, dh, Time,
                             UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray,
-                            MinDens, MinPres, StoreFlux, g_Flux_Array[P],
-                            EoS_DensEint2Pres_Func, EoS_DensPres2CSqr_Func,
-                            c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table );
+                            MinDens, MinPres, StoreFlux, g_Flux_Array[P], &EoS );
 
 
 //       7. evaluate electric field and update B field at the full time-step
@@ -350,7 +324,7 @@ void CPU_FluidSolver_CTU(
 //       8. full-step evolution of the fluid data
          Hydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P], g_Mag_Array_Out[P],
                                g_FC_Flux_1PG, dt, dh, MinDens, MinEint, DualEnergySwitch,
-                               NormPassive, NNorm, c_NormIdx, c_EoS_AuxArray_Flt );
+                               NormPassive, NNorm, c_NormIdx, &EoS );
 
       } // loop over all patch groups
    } // OpenMP parallel region

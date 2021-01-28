@@ -70,7 +70,6 @@ extern bool       OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT_
 extern bool       OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
 extern bool       OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
 
-extern SrcTerms_t         SRC_TERMS;
 extern UM_IC_Format_t     OPT__UM_IC_FORMAT;
 extern TestProbID_t       TESTPROB_ID;
 extern OptInit_t          OPT__INIT;
@@ -240,13 +239,26 @@ extern int    EoS_AuxArray_Int[EOS_NAUX_MAX];
 extern EoS_DE2P_t EoS_DensEint2Pres_CPUPtr;
 extern EoS_DP2E_t EoS_DensPres2Eint_CPUPtr;
 extern EoS_DP2C_t EoS_DensPres2CSqr_CPUPtr;
+extern EoS_GENE_t EoS_General_CPUPtr;
 #ifdef GPU
 extern EoS_DE2P_t EoS_DensEint2Pres_GPUPtr;
 extern EoS_DP2E_t EoS_DensPres2Eint_GPUPtr;
 extern EoS_DP2C_t EoS_DensPres2CSqr_GPUPtr;
+extern EoS_GENE_t EoS_General_GPUPtr;
 #endif
+extern EoS_t EoS;
 #endif // HYDRO
 
+
+// (2-10) source terms
+// =======================================================================================================
+extern SrcTerms_t SrcTerms;
+#if ( MODEL == HYDRO )
+extern double     Src_Dlep_AuxArray_Flt[SRC_NAUX_DLEP];
+extern int        Src_Dlep_AuxArray_Int[SRC_NAUX_DLEP];
+#endif
+extern double     Src_User_AuxArray_Flt[SRC_NAUX_USER];
+extern int        Src_User_AuxArray_Int[SRC_NAUX_USER];
 
 
 
@@ -314,6 +326,10 @@ extern real       (*h_Flu_Array_S_Out[2])[FLU_NOUT_S][ CUBE(PS1)               ]
 extern real       (*h_Mag_Array_S_In [2])[NCOMP_MAG ][ SRC_NXT_P1*SQR(SRC_NXT) ];
 #endif
 extern double     (*h_Corner_Array_S[2])[3];
+#if ( MODEL == HYDRO )
+extern real       (*h_SrcDlepProf_Data)[SRC_DLEP_PROF_NBINMAX];
+extern real        *h_SrcDlepProf_Radius;
+#endif
 
 
 
