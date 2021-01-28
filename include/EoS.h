@@ -33,6 +33,7 @@ struct EoS_t
    EoS_DE2P_t DensEint2Pres_FuncPtr;
    EoS_DP2E_t DensPres2Eint_FuncPtr;
    EoS_DP2C_t DensPres2CSqr_FuncPtr;
+   EoS_GENE_t General_FuncPtr;
 
 // table pointers
    real **Table;

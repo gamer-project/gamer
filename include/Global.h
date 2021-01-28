@@ -239,10 +239,12 @@ extern int    EoS_AuxArray_Int[EOS_NAUX_MAX];
 extern EoS_DE2P_t EoS_DensEint2Pres_CPUPtr;
 extern EoS_DP2E_t EoS_DensPres2Eint_CPUPtr;
 extern EoS_DP2C_t EoS_DensPres2CSqr_CPUPtr;
+extern EoS_GENE_t EoS_General_CPUPtr;
 #ifdef GPU
 extern EoS_DE2P_t EoS_DensEint2Pres_GPUPtr;
 extern EoS_DP2E_t EoS_DensPres2Eint_GPUPtr;
 extern EoS_DP2C_t EoS_DensPres2CSqr_GPUPtr;
+extern EoS_GENE_t EoS_General_GPUPtr;
 #endif
 extern EoS_t EoS;
 #endif // HYDRO

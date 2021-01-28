@@ -223,10 +223,12 @@ int    EoS_AuxArray_Int[EOS_NAUX_MAX];
 EoS_DE2P_t EoS_DensEint2Pres_CPUPtr = NULL;
 EoS_DP2E_t EoS_DensPres2Eint_CPUPtr = NULL;
 EoS_DP2C_t EoS_DensPres2CSqr_CPUPtr = NULL;
+EoS_GENE_t EoS_General_CPUPtr       = NULL;
 #ifdef GPU
 EoS_DE2P_t EoS_DensEint2Pres_GPUPtr = NULL;
 EoS_DP2E_t EoS_DensPres2Eint_GPUPtr = NULL;
 EoS_DP2C_t EoS_DensPres2CSqr_GPUPtr = NULL;
+EoS_GENE_t EoS_General_GPUPtr       = NULL;
 #endif
 
 // c. data structure for the CPU/GPU solvers
