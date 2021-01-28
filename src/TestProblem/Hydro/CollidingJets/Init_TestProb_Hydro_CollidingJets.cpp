@@ -275,8 +275,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    MomZ = Dens*Jet_BgVel[2];
    Pres = Jet_BgPres;
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
-                                    EoS_AuxArray_Int, h_EoS_Table );    // assuming EoS requires no passive scalars
-   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );      // do NOT include magnetic energy here
+                                    EoS_AuxArray_Int, h_EoS_Table, NULL ); // assuming EoS requires no passive scalars
+   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );         // do NOT include magnetic energy here
 
 // set the output array
    fluid[DENS] = Dens;
@@ -402,7 +402,7 @@ bool Flu_ResetByUser_CollidingJets( real fluid[], const double x, const double y
 
 //       assuming EoS requires no passive scalars
          double Eint = EoS_DensPres2Eint_CPUPtr( Jet_SrcDens[n], Jet_SrcPres[n], NULL,
-                                                 EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+                                                 EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
 //       do NOT include magnetic energy here
          fluid[ENGY] = Hydro_ConEint2Etot( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], Eint, 0.0 );

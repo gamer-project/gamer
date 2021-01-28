@@ -138,7 +138,7 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
    PT_L        = Pri_L[4] + B2L_d2;
    PT_R        = Pri_R[4] + B2R_d2;
 
-   a2          = EoS_DensPres2CSqr( Con_L[0], Pri_L[4], Con_L+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+   a2          = EoS_DensPres2CSqr( Con_L[0], Pri_L[4], Con_L+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
    Cax2        = Bx2*_RhoL;
    Cat2        = BtL2*_RhoL;
    Ca2_plus_a2 = Cat2 + Cax2 + a2;
@@ -159,7 +159,7 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 
    Cf_L = SQRT( Cf2 );  // Cf2 is positive definite using the above formula
 
-   a2          = EoS_DensPres2CSqr( Con_R[0], Pri_R[4], Con_R+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+   a2          = EoS_DensPres2CSqr( Con_R[0], Pri_R[4], Con_R+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
    Cax2        = Bx2*_RhoR;
    Cat2        = BtR2*_RhoR;
    Ca2_plus_a2 = Cat2 + Cax2 + a2;

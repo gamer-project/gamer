@@ -84,12 +84,15 @@ void EoS_SetAuxArray_User_Template( double AuxArray_Flt[], int AuxArray_Int[] )
 //                Passive    : Passive scalars
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
+//                ExtraInOut : Array to store extra input and output variables if required
+//                             --> Optional and only used when it is not NULL
 //
 // Return      :  Gas pressure
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, const real Passive[], const double AuxArray_Flt[],
-                                             const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] )
+static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, const real Passive[],
+                                             const double AuxArray_Flt[], const int AuxArray_Int[],
+                                             const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] )
 {
 
 // check
@@ -133,6 +136,15 @@ static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, c
 #  endif // GAMER_DEBUG
 
 
+// store extra output variables if required
+   /*
+   if ( ExtraInOut != NULL )
+   {
+      ExtraInOut[...] = ...;
+   }
+   */
+
+
    return Pres;
 
 } // FUNCTION : EoS_DensEint2Pres_User_Template
@@ -150,12 +162,15 @@ static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, c
 //                Passive    : Passive scalars
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
+//                ExtraInOut : Array to store extra input and output variables if required
+//                             --> Optional and only used when it is not NULL
 //
 // Return      :  Gas internal energy density
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, const real Passive[], const double AuxArray_Flt[],
-                                             const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] )
+static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, const real Passive[],
+                                             const double AuxArray_Flt[], const int AuxArray_Int[],
+                                             const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] )
 {
 
 // check
@@ -199,6 +214,15 @@ static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, c
 #  endif // GAMER_DEBUG
 
 
+// store extra output variables if required
+   /*
+   if ( ExtraInOut != NULL )
+   {
+      ExtraInOut[...] = ...;
+   }
+   */
+
+
    return Eint;
 
 } // FUNCTION : EoS_DensPres2Eint_User_Template
@@ -216,12 +240,15 @@ static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, c
 //                Passive    : Passive scalars
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
+//                ExtraInOut : Array to store extra input and output variables if required
+//                             --> Optional and only used when it is not NULL
 //
 // Return      :  Sound speed square
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_DensPres2CSqr_User_Template( const real Dens, const real Pres, const real Passive[], const double AuxArray_Flt[],
-                                             const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] )
+static real EoS_DensPres2CSqr_User_Template( const real Dens, const real Pres, const real Passive[],
+                                             const double AuxArray_Flt[], const int AuxArray_Int[],
+                                             const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] )
 {
 
 // check
@@ -262,6 +289,15 @@ static real EoS_DensPres2CSqr_User_Template( const real Dens, const real Pres, c
 #     endif
    }
 #  endif // GAMER_DEBUG
+
+
+// store extra output variables if required
+   /*
+   if ( ExtraInOut != NULL )
+   {
+      ExtraInOut[...] = ...;
+   }
+   */
 
 
    return Cs2;

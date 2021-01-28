@@ -86,12 +86,14 @@ void EoS_SetAuxArray_Isothermal( double AuxArray_Flt[], int AuxArray_Int[] )
 //                Passive    : Passive scalars
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
+//                ExtraInOut : Useless for this EoS
 //
 // Return      :  Gas pressure
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_DensEint2Pres_Isothermal( const real Dens, const real Eint, const real Passive[], const double AuxArray_Flt[],
-                                          const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] )
+static real EoS_DensEint2Pres_Isothermal( const real Dens, const real Eint, const real Passive[],
+                                          const double AuxArray_Flt[], const int AuxArray_Int[],
+                                          const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] )
 {
 
 // check
@@ -124,12 +126,14 @@ static real EoS_DensEint2Pres_Isothermal( const real Dens, const real Eint, cons
 //                Passive    : Passive scalars
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
+//                ExtraInOut : Useless for this EoS
 //
 // Return      :  Gas internal energy density
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_DensPres2Eint_Isothermal( const real Dens, const real Pres, const real Passive[], const double AuxArray_Flt[],
-                                          const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] )
+static real EoS_DensPres2Eint_Isothermal( const real Dens, const real Pres, const real Passive[],
+                                          const double AuxArray_Flt[], const int AuxArray_Int[],
+                                          const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] )
 {
 
 // check
@@ -161,12 +165,14 @@ static real EoS_DensPres2Eint_Isothermal( const real Dens, const real Pres, cons
 //                Passive    : Passive scalars
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
+//                ExtraInOut : Useless for this EoS
 //
 // Return      :  Sound speed square
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_DensPres2CSqr_Isothermal( const real Dens, const real Pres, const real Passive[], const double AuxArray_Flt[],
-                                          const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] )
+static real EoS_DensPres2CSqr_Isothermal( const real Dens, const real Pres, const real Passive[],
+                                          const double AuxArray_Flt[], const int AuxArray_Int[],
+                                          const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] )
 {
 
 // check
