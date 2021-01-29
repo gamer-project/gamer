@@ -1,6 +1,6 @@
 Compilation flags:
 ========================================
-Enable : MODEL=HYDRO, GRAVITY, PARTICLE
+Enable : MODEL=HYDRO, GRAVITY, PARTICLE, MHD
 Disable: COMOVING
 
 
@@ -18,7 +18,7 @@ Default setup:
     -->[V] = [L]/[T] ~ 9.8e1 km/s
     -->[D] = [M]/[D]^3 ~ 6.8e-27 g/cm^3
 
-2. Default resolution ~ 28 kpc (MAX_LEVEL = 2)
+2. Default resolution ~ 10 kpc (MAX_LEVEL = 3)
 
 
 Note:
