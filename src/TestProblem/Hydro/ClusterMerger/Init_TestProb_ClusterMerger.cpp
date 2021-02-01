@@ -533,15 +533,19 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    else
       fluid[ColorField1Idx] = 0.0;
 
-   if ( Merger_Coll_NumHalos > 1 && r2 < Merger_Coll_ColorRad2 )
-      fluid[ColorField2Idx] = Dens;
-   else
-      fluid[ColorField2Idx] = 0.0;
+   if ( Merger_Coll_NumHalos > 1) {
+     if ( r2 < Merger_Coll_ColorRad2 )
+       fluid[ColorField2Idx] = Dens;
+     else
+       fluid[ColorField2Idx] = 0.0;
+   }
 
-   if ( Merger_Coll_NumHalos > 2 && r3 < Merger_Coll_ColorRad3 )
-      fluid[ColorField3Idx] = Dens;
-   else
-      fluid[ColorField3Idx] = 0.0;
+   if ( Merger_Coll_NumHalos > 2 ) {
+     if ( r3 < Merger_Coll_ColorRad3 )
+       fluid[ColorField3Idx] = Dens;
+     else
+       fluid[ColorField3Idx] = 0.0;
+   }
 
 } // FUNCTION : SetGridIC
 
