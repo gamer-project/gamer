@@ -29,7 +29,7 @@ extern double  Merger_Coll_VelY2;
 extern double  Merger_Coll_VelX3;
 extern double  Merger_Coll_VelY3;
 
-extern FieldIdx_t ParTypeTagIdx;
+extern FieldIdx_t ParTypeIdx;
 
 long Read_Particle_Number_ClusterMerger(std::string filename);
 void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
@@ -239,7 +239,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
          ParTime[pp] = Time[0];
 
 //       set the particle type
-         AllAttribute[ParTypeTagIdx][pp] = real( ptype[p] );
+         AllAttribute[ParTypeIdx][pp] = real( ptype[p] );
 
       }
 

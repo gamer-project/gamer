@@ -55,7 +55,7 @@ static int     Merger_NBin1;              // number of radial bins of cluster 1
 static int     Merger_NBin2;              // number of radial bins of cluster 2
 static int     Merger_NBin3;              // number of radial bins of cluster 3
 
-FieldIdx_t ParTypeTagIdx  = Idx_Undefined;
+FieldIdx_t ParTypeIdx  = Idx_Undefined;
 static FieldIdx_t ColorField1Idx = Idx_Undefined;
 static FieldIdx_t ColorField2Idx = Idx_Undefined;
 static FieldIdx_t ColorField3Idx = Idx_Undefined;
@@ -695,6 +695,6 @@ void AddNewField_ClusterMerger()
 
 void AddNewParticleAttribute_ClusterMerger()
 {
-    if (ParTypeTagIdx == Idx_Undefined)
-        ParTypeTagIdx = AddParticleAttribute("ParTypeTag");
+    if (ParTypeIdx == Idx_Undefined)
+        ParTypeIdx = AddParticleAttribute("ParType");
 }
