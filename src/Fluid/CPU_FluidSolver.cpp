@@ -7,9 +7,7 @@
 
 #ifndef GRAVITY
 static double *ExtAcc_AuxArray = NULL;
-static double *ExtPot_AuxArray = NULL;
 static ExtAcc_t CPUExtAcc_Ptr  = NULL;
-static ExtPot_t CPUExtPot_Ptr  = NULL;
 #endif
 
 #if   ( MODEL == HYDRO )
