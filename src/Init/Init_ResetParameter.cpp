@@ -380,6 +380,7 @@ void Init_ResetParameter()
 #  ifdef GRAVITY
    if ( OPT__BC_POT == BC_POT_ISOLATED  &&  GFUNC_COEFF0 < 0.0 )
    {
+      /*
 #     ifdef PARTICLE
       switch ( amr->Par->Interp )
       {
@@ -391,6 +392,9 @@ void Init_ResetParameter()
 #     else
       GFUNC_COEFF0 = 0.0;
 #     endif
+      */
+
+      GFUNC_COEFF0 = 3.8;  // empirically determined value for minimizing the center-of-mass drift
 
       PRINT_WARNING( GFUNC_COEFF0, FORMAT_FLT, "" );
    }
