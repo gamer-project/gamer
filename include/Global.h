@@ -290,6 +290,7 @@ extern char       (*h_DE_Array_G      [2])[PS1][PS1][PS1];
 extern real       (*h_Emag_Array_G    [2])[PS1][PS1][PS1];
 #endif
 extern real        *h_ExtPotTable;
+extern void       **h_GenePotTable;
 
 #ifdef UNSPLIT_GRAVITY
 extern real       (*h_Pot_Array_USG_F [2])[ CUBE(USG_NXT_F) ];

@@ -56,6 +56,15 @@ void Init_MemAllocate_PoissonGravity( const int Pot_NPG )
       h_ExtPotTable = new real [TableSize];
    }
 
+
+// general potential table
+   if ( OPT__EXT_POT == EXT_POT_GREP ) {
+
+      const long TableSize = 6*sizeof(void*);
+
+      h_GenePotTable = new void [TableSize];
+   }
+
 } // FUNCTION : Init_MemAllocate_PoissonGravity
 
 

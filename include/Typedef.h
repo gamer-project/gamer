@@ -408,7 +408,7 @@ typedef void (*ExtAcc_t)( real Acc[], const double x, const double y, const doub
                           const double UserArray[] );
 typedef real (*ExtPot_t)( const double x, const double y, const double z, const double Time,
                           const double UserArray_Flt[], const int UserArray_Int[],
-                          const ExtPotUsage_t Usage, const real PotTable[] );
+                          const ExtPotUsage_t Usage, const real PotTable[], void **GenePotTable );
 
 
 
