@@ -24,7 +24,7 @@
 // Parameter   :  g_Pot_Array               : Array storing the input and output potential data of each target patch
 //                g_Corner_Array            : Array storing the physical corner coordinates of each patch
 //                g_ExtPotTable             : Array storing the external potential 3D table
-//                g_GenePotTable            : Array storing the pointers to general potential table
+//                g_GenePotTable            : Array storing the pointers to general potential tables
 //                NPatchGroup               : Number of target patch groups (for CPU only)
 //                dh                        : Cell size
 //                ExtPot_Func               : Function pointer to the external potential routine (for both CPU and GPU)

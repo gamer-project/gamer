@@ -17,7 +17,7 @@
 // Parameter   :  Func             : Function pointer to the external potential routine
 //                AuxArray_Flt/Int : Auxiliary floating-point/integer arrays for adding external potential
 //                Table            : 3D potential table for EXT_POT_TABLE
-//                GeneTable        : Array of pointers for general potential table
+//                GeneTable        : Array of pointers for general potential tables
 //                Time             : Target physical time
 //                PotIsInit        : Whether patch->pot[] has been initialized
 //                                   --> true : **add** to the original data

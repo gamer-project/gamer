@@ -62,7 +62,7 @@ void Init_MemAllocate_PoissonGravity( const int Pot_NPG )
 
       const long TableSize = 6*sizeof(void*);
 
-      h_GenePotTable = new void [TableSize];
+      h_GenePotTable = new void* [TableSize];
    }
 
 } // FUNCTION : Init_MemAllocate_PoissonGravity

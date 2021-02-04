@@ -96,7 +96,7 @@ void SetExtPotAuxArray_PointMass( double AuxArray_Flt[], int AuxArray_Int[] )
 //                                        EXT_POT_USAGE_SUB_TINT: like SUB but for temporal interpolation
 //                                    --> This parameter is useless in most cases
 //                PotTable          : 3D potential table used by EXT_POT_TABLE
-//                GenePotTable      : Array of pointers for general potential table
+//                GenePotTable      : Array of pointers for general potential tables
 //
 // Return      :  External potential at (x,y,z,Time)
 //-----------------------------------------------------------------------------------------
