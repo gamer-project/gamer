@@ -240,7 +240,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
       {
          if ( h_Corner_Array     == NULL )   Aux_Error( ERROR_INFO, "h_Corner_Array == NULL !!\n" );
          if ( d_Corner_Array_PGT == NULL )   Aux_Error( ERROR_INFO, "d_Corner_Array_PGT == NULL !!\n" );
-         if ( ExtPot == EXT_POT_TABLE  &&  d_ExtPotTable  == NULL )
+         if ( ExtPot == EXT_POT_TABLE  &&  d_ExtPotTable == NULL )
                                              Aux_Error( ERROR_INFO, "d_ExtPotTable == NULL !!\n" );
          if ( d_GenePotTable     == NULL )   Aux_Error( ERROR_INFO, "d_GenePotTable == NULL !!\n" );
       }
