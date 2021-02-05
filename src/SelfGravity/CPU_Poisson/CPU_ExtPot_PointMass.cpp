@@ -86,6 +86,7 @@ void SetExtPotAuxArray_PointMass( double AuxArray_Flt[], int AuxArray_Int[] )
 //                      UserArray_Flt[2] = z ..
 //                      UserArray_Flt[3] = gravitational_constant*point_source_mass
 //                3. Currently it does not support the soften length
+//                4. GenePotTable has the size of EXT_GENEPOT_NAUX_MAX defined in Macro.h (default = 6)
 //
 // Parameter   :  x/y/z             : Target spatial coordinates
 //                Time              : Target physical time

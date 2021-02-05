@@ -81,6 +81,7 @@ void SetExtPotAuxArray_Tabular( double AuxArray_Flt[], int AuxArray_Int[] )
 //
 // Note        :  1. This function is shared by CPU and GPU
 //                2. Auxiliary arrays UserArray_Flt/Int[] are set by SetExtPotAuxArray_Tabular()
+//                3. GenePotTable has the size of EXT_GENEPOT_NAUX_MAX defined in Macro.h (default = 6)
 //
 // Parameter   :  x/y/z             : Target spatial coordinates
 //                Time              : Target physical time
