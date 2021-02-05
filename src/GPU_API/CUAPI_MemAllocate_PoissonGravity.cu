@@ -53,7 +53,7 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
 #  endif
    const long Pot_MemSize_T     = sizeof(real  )*Pot_NP*CUBE(GRA_NXT);
    const long ExtPot_MemSize    = (long)sizeof(real)*EXT_POT_TABLE_NPOINT[0]*EXT_POT_TABLE_NPOINT[1]*EXT_POT_TABLE_NPOINT[2];
-   const long GenePot_MemSize   = sizeof(void* )*6;
+   const long GenePot_MemSize   = sizeof(void* )*EXT_GENEPOT_NAUX_MAX;
 
 
 // output the total memory requirement

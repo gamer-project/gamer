@@ -58,7 +58,7 @@ void Init_MemAllocate_PoissonGravity( const int Pot_NPG )
 
 
 // general potential table
-   const long TableSize = 6*sizeof(void*);
+   const long TableSize = sizeof(void*)*EXT_GENEPOT_NAUX_MAX;
 
    h_GenePotTable = new void* [TableSize];
 
