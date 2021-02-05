@@ -67,10 +67,9 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
 #  ifdef MHD
    TotalSize += Emag_MemSize_G;
 #  endif
+   TotalSize += GenePot_MemSize;
    if ( OPT__EXT_POT == EXT_POT_TABLE )
    TotalSize += ExtPot_MemSize;
-   if ( OPT__EXT_POT == EXT_POT_GREP )
-   TotalSize += GenePot_MemSize;
 
    if ( MPI_Rank == 0 )
       Aux_Message( stdout, "NOTE : total memory requirement in GPU Poisson and gravity solver = %ld MB\n",
@@ -103,7 +102,6 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
    if ( OPT__EXT_POT == EXT_POT_TABLE )
    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_ExtPotTable,      ExtPot_MemSize    )  );
 
-   if ( OPT__EXT_POT == EXT_POT_GREP )
    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_GenePotTable,     GenePot_MemSize   )  );
 
 
@@ -136,7 +134,6 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
    if ( OPT__EXT_POT == EXT_POT_TABLE )
       CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_ExtPotTable,         ExtPot_MemSize    )  );
 
-   if ( OPT__EXT_POT == EXT_POT_GREP )
       CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_GenePotTable,        GenePot_MemSize   )  );
 
 } // FUNCTION : CUAPI_MemAllocate_PoissonGravity

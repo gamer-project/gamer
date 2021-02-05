@@ -242,8 +242,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
          if ( d_Corner_Array_PGT == NULL )   Aux_Error( ERROR_INFO, "d_Corner_Array_PGT == NULL !!\n" );
          if ( ExtPot == EXT_POT_TABLE  &&  d_ExtPotTable  == NULL )
                                              Aux_Error( ERROR_INFO, "d_ExtPotTable == NULL !!\n" );
-         if ( ExtPot == EXT_POT_GREP   &&  d_GenePotTable == NULL )
-                                             Aux_Error( ERROR_INFO, "d_GenePotTable == NULL !!\n" );
+         if ( d_GenePotTable     == NULL )   Aux_Error( ERROR_INFO, "d_GenePotTable == NULL !!\n" );
       }
    } // if ( Poisson )
 
