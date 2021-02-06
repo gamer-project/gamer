@@ -144,6 +144,12 @@ OPT__MINIMIZE_MPI_BARRIER     1           # minimize MPI barriers to improve loa
                                           # (STORE_POT_GHOST, PAR_IMPROVE_ACC=1, OPT__TIMING_BARRIER=0 only; recommend AUTO_REDUCE_DT=0)
 
 
+# source terms
+SRC_DELEPTONIZATION           0           # deleptonization (for simulations of stellar core collapse) [0] ##HYDRO ONLY##
+SRC_USER                      0           # user-defined source terms -> edit "Src_User.cpp" [0]
+SRC_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU source-term solver (<=0=auto) [-1]
+
+
 # Grackle library for chemistry and radiative cooling (SUPPORT_GRACKLE only)
 GRACKLE_ACTIVATE              1           # enable Grackle [1]
 GRACKLE_VERBOSE               1           # map to "grackle_verbose" [1]
@@ -228,7 +234,21 @@ POT_GPU_NPGROUP              -1           # number of patch groups sent into the
 OPT__GRA_P5_GRADIENT          0           # 5-points gradient in the Gravity solver (must have GRA/USG_GHOST_SIZE_G>=2) [0]
 OPT__SELF_GRAVITY             1           # add self-gravity [1]
 OPT__EXT_ACC                  0           # add external acceleration (0=off, 1=function, 2=table) [0] ##HYDRO ONLY##
+                                          # --> 2 (table) is not supported yet
 OPT__EXT_POT                  0           # add external potential    (0=off, 1=function, 2=table) [0]
+                                          # --> for 2 (table), edit the corresponding parameters below too
+
+# tabular external potential
+EXT_POT_TABLE_NAME            ExtPotTable # external potential table: filename
+EXT_POT_TABLE_NPOINT_X        129         # ...                     : table size (i.e., number of data points) along x/y/z
+EXT_POT_TABLE_NPOINT_Y        129         #
+EXT_POT_TABLE_NPOINT_Z        129         #
+EXT_POT_TABLE_DH              0.0078125   # ...                     : spatial interval between adjacent data points
+EXT_POT_TABLE_EDGEL_X         0.0         # ...                     : starting x/y/z coordinates
+EXT_POT_TABLE_EDGEL_Y         0.0         #
+EXT_POT_TABLE_EDGEL_Z         0.0         #
+EXT_POT_TABLE_FLOAT8         -1           # ...                     : double precision (<0=auto -> FLOAT8, 0=off, 1=on) [-1]
+                                          # --> not supported yet; use -1 for now
 OPT__GRAVITY_EXTRA_MASS       0           # add extra mass source when computing gravity [0]
 
 
@@ -300,7 +320,7 @@ OPT__RECORD_MEMORY            1           # record the memory consumption [1]
 OPT__RECORD_PERFORMANCE       1           # record the code performance [1]
 OPT__MANUAL_CONTROL           1           # support manually dump data or stop run during the runtime
                                           # (by generating the file DUMP_GAMER_DUMP or STOP_GAMER_STOP) [1]
-OPT__RECORD_USER              0           # record the user-specified info -> edit "Aux_RecordUser.cpp" [0]
+OPT__RECORD_USER              0           # record the user-specified info -> edit "Aux_Record_User.cpp" [0]
 OPT__OPTIMIZE_AGGRESSIVE      0           # apply aggressive optimizations (experimental) [0]
 
 

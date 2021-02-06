@@ -37,7 +37,7 @@ void Aux_Record_CorrUnphy();
 int  Aux_CountRow( const char *FileName );
 void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double r_max_input, const double dr_min,
                          const bool LogBin, const double LogBinRatio, const bool RemoveEmpty, const long TVarBitIdx[],
-                         const int NProf, const int SingleLv, const int MaxLv, const PatchType_t PatchType,
+                         const int NProf, const int MinLv, const int MaxLv, const PatchType_t PatchType,
                          const double PrepTime );
 #ifndef SERIAL
 void Aux_Record_BoundaryPatch( const int lv, int *NList, int **IDList, int **PosList );
@@ -89,13 +89,15 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const bool JeansMinPres, const real JeansMinPres_Coeff );
 real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                      const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
-                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[], real *EintOut );
+                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                     const real *const EoS_Table[EOS_NTABLE_MAX], real *EintOut );
 real Hydro_Con2Eint( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                      const bool CheckMinEint, const real MinEint, const real Emag );
 real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, const real MomZ, const real Eint, const real Emag );
 real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                      const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
-                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
+                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                     const real *const EoS_Table[EOS_NTABLE_MAX] );
 double Hydro_Temp2Pres( const double Dens, const double Temp, const double mu, const double m_H,
                         const bool CheckMinPres, const double MinPres );
 real Hydro_CheckMinPres( const real InPres, const real MinPres );
@@ -109,7 +111,8 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
                           const real Emag );
 #if ( DUAL_ENERGY == DE_ENPY )
 real Hydro_Con2Entropy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                        const real Emag, const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray[] );
+                        const real Emag, const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[],
+                        const int EoS_AuxArray_Int[], const real *const EoS_Table[EOS_NTABLE_MAX] );
 real Hydro_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1 );
 real Hydro_DensEntropy2Pres( const real Dens, const real Enpy, const real Gamma_m1,
                              const bool CheckMinPres, const real MinPres );
@@ -176,7 +179,7 @@ void Init_Load_Parameter();
 void Init_MemoryPool();
 void Init_ResetParameter();
 void Init_MemAllocate();
-void Init_MemAllocate_Fluid( const int Flu_NPatchGroup, const int Pot_NPatchGroup );
+void Init_MemAllocate_Fluid( const int Flu_NPatchGroup, const int Pot_NPatchGroup, const int Src_NPatchGroup );
 void Init_Parallelization();
 void Init_RecordBasePatch();
 void Init_Refine( const int lv );
@@ -320,8 +323,8 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
                                const real ELBDM_Eta, const real ELBDM_Lambda, const bool Poisson, const bool GraAcc,
                                const bool SelfGravity, const OptExtPot_t ExtPot, const OptExtAcc_t ExtAcc,
                                const double TimeNew, const double TimeOld, const real MinEint );
-void CPU_ExtPotSolver_BaseLevel( const ExtPot_t ExtPot_Func, const double ExtPot_AuxArray[],
-                                 const double Time, const bool PotIsInit, const int SaveSg );
+void CPU_ExtPotSolver_BaseLevel( const ExtPot_t Func, const double AuxArray_Flt[], const int AuxArray_Int[],
+                                 const real Table[], const double Time, const bool PotIsInit, const int SaveSg );
 void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double PrepTime );
 void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf_SIdx, long *RecvBuf_SIdx,
                  int **List_PID, int **List_k, int *List_NSend_Rho, int *List_NRecv_Rho,
@@ -350,6 +353,8 @@ void Gra_Prepare_USG( const int lv, const double PrepTime,
 void End_FFTW();
 void Init_FFTW();
 void Init_ExtAccPot();
+void End_ExtAccPot();
+void Init_LoadExtPotTable();
 void Init_GreenFuncK();
 void Init_MemAllocate_PoissonGravity( const int Pot_NPatchGroup );
 void Init_Set_Default_MG_Parameter( int &Max_Iter, int &NPre_Smooth, int &NPost_Smooth, double &Tolerated_Error );
@@ -511,12 +516,22 @@ void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real 
                           const double h_Corner_Array[][3], const int NPatchGroup, const real dh, const real Safety,
                           const real MinPres, const bool P5_Gradient, const bool UsePot, const OptExtAcc_t ExtAcc,
                           const double TargetTime, const int GPU_NStream );
+void CUAPI_Asyn_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NXT)           ],
+                                 real h_Flu_Array_Out[][FLU_NOUT_S][ CUBE(PS1)               ],
+                           const real h_Mag_Array_In [][NCOMP_MAG ][ SRC_NXT_P1*SQR(SRC_NXT) ],
+                           const double h_Corner_Array[][3],
+                           const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
+                           const double TimeNew, const double TimeOld,
+                           const real MinDens, const real MinPres, const real MinEint,
+                           const int GPU_NStream );
 void CUAPI_DiagnoseDevice();
-void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GPU_NStream );
+void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src_NPG, const int GPU_NStream );
 void CUAPI_MemFree_Fluid( const int GPU_NStream );
-void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, int &Pot_GPU_NPGroup, int &Che_GPU_NPGroup );
+void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, int &Pot_GPU_NPGroup, int &Che_GPU_NPGroup,
+                                      int &Src_GPU_NPGroup );
 void CUAPI_SetDevice( const int Mode );
 void CUAPI_SetConstMemory();
+void CUAPI_SetConstMemory_EoS();
 void CUAPI_Synchronize();
 #ifdef GRAVITY
 void CUAPI_SetConstMemory_ExtAccPot();
@@ -538,6 +553,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
                                       const bool SelfGravity, const OptExtPot_t ExtPot, const OptExtAcc_t ExtAcc,
                                       const double TimeNew, const double TimeOld, const real MinEint,
                                       const int GPU_NStream );
+void CUAPI_SendExtPotTable2GPU( const real *h_Table );
 void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPatchGroup );
 void CUAPI_MemFree_PoissonGravity();
 #endif // #ifdef GRAVITY
@@ -618,6 +634,28 @@ void YT_Inline();
 #endif // #ifdef SUPPORT_LIBYT
 
 
+// source terms
+void Src_Init();
+void Src_End();
+void Src_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                    const int SaveSg_Flu, const int SaveSg_Mag, const bool OverlapMPI, const bool Overlap_Sync );
+void Src_Prepare( const int lv, const double PrepTime,
+                  real h_Flu_Array_S_In[][FLU_NIN_S][ CUBE(SRC_NXT)           ],
+                  real h_Mag_Array_S_In[][NCOMP_MAG][ SRC_NXT_P1*SQR(SRC_NXT) ],
+                  double h_Corner_Array_S[][3],
+                  const int NPG, const int *PID0_List );
+void Src_Close( const int lv, const int SaveSg_Flu, const real h_Flu_Array_S_Out[][FLU_NOUT_S][ CUBE(PS1) ],
+                const int NPG, const int *PID0_List );
+void Src_WorkBeforeMajorFunc( const int lv, const double TimeNew, const double TimeOld, const double dt );
+void CPU_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NXT)           ],
+                          real h_Flu_Array_Out[][FLU_NOUT_S][ CUBE(PS1)               ],
+                    const real h_Mag_Array_In [][NCOMP_MAG ][ SRC_NXT_P1*SQR(SRC_NXT) ],
+                    const double h_Corner_Array[][3],
+                    const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
+                    const double TimeNew, const double TimeOld,
+                    const real MinDens, const real MinPres, const real MinEint );
+
+
 // Grackle
 #ifdef SUPPORT_GRACKLE
 void Grackle_Init();
@@ -646,6 +684,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 // EoS in hydrodynamics
 #if ( MODEL == HYDRO )
 void EoS_Init();
+void EoS_End();
 #endif
 
 

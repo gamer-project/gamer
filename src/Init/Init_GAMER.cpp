@@ -113,6 +113,10 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
+// initialize the source-term routines --> must be called before memory allocation
+   Src_Init();
+
+
 // set the GPU parameters
 #  ifdef GPU
 #  ifndef GRAVITY
@@ -121,9 +125,9 @@ void Init_GAMER( int *argc, char ***argv )
 #  ifndef SUPPORT_GRACKLE
    int CHE_GPU_NPGROUP = NULL_INT;
 #  endif
-   CUAPI_Set_Default_GPU_Parameter( GPU_NSTREAM, FLU_GPU_NPGROUP, POT_GPU_NPGROUP, CHE_GPU_NPGROUP );
+   CUAPI_Set_Default_GPU_Parameter( GPU_NSTREAM, FLU_GPU_NPGROUP, POT_GPU_NPGROUP, CHE_GPU_NPGROUP, SRC_GPU_NPGROUP );
 
-// CUAPI_SetConstMemory must be called AFTER Init_Field(), Init_ExtAccPot(), and EoS_Init()
+// CUAPI_SetConstMemory must be called AFTER Init_Field() and Init_ExtAccPot()
    CUAPI_SetConstMemory();
 #  endif
 
@@ -159,6 +163,15 @@ void Init_GAMER( int *argc, char ***argv )
 
 // allocate memory for several global arrays
    Init_MemAllocate();
+
+
+// load the external potential table
+// --> before Init_ByFunction() so that the test problem initializer can access
+//     the external potential table if required
+// --> after Init_MemAllocate() to allocate the potential table array first
+#  ifdef GRAVITY
+   if ( OPT__EXT_POT == EXT_POT_TABLE )   Init_LoadExtPotTable();
+#  endif
 
 
 // initialize particles

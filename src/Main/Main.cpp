@@ -43,7 +43,7 @@ int                  Flu_ParaBuf;
 
 double               BOX_SIZE, DT__MAX, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT, DT__SYNC_PARENT_LV, DT__SYNC_CHILDREN_LV;
 long                 END_STEP;
-int                  NX0_TOT[3], OUTPUT_STEP, REGRID_COUNT, FLU_GPU_NPGROUP, OMP_NTHREAD;
+int                  NX0_TOT[3], OUTPUT_STEP, REGRID_COUNT, FLU_GPU_NPGROUP, SRC_GPU_NPGROUP, OMP_NTHREAD;
 int                  MPI_NRank, MPI_NRank_X[3];
 int                  GPU_NSTREAM, FLAG_BUFFER_SIZE, FLAG_BUFFER_SIZE_MAXM1_LV, FLAG_BUFFER_SIZE_MAXM2_LV, MAX_LEVEL;
 
@@ -63,6 +63,7 @@ bool                 OPT__UM_IC_DOWNGRADE, OPT__UM_IC_REFINE, OPT__TIMING_MPI;
 bool                 OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
 bool                 OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
 bool                 OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
+
 UM_IC_Format_t       OPT__UM_IC_FORMAT;
 TestProbID_t         TESTPROB_ID;
 OptInit_t            OPT__INIT;
@@ -129,6 +130,9 @@ double               SOR_OMEGA;
 int                  SOR_MAX_ITER, SOR_MIN_ITER;
 double               MG_TOLERATED_ERROR;
 int                  MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH;
+char                 EXT_POT_TABLE_NAME[MAX_STRING];
+double               EXT_POT_TABLE_DH, EXT_POT_TABLE_EDGEL[3];
+int                  EXT_POT_TABLE_NPOINT[3], EXT_POT_TABLE_FLOAT8;
 IntScheme_t          OPT__POT_INT_SCHEME, OPT__RHO_INT_SCHEME, OPT__GRA_INT_SCHEME, OPT__REF_POT_INT_SCHEME;
 OptPotBC_t           OPT__BC_POT;
 OptExtAcc_t          OPT__EXT_ACC;
@@ -136,8 +140,9 @@ OptExtPot_t          OPT__EXT_POT;
 
 // external gravity variables
 // a. auxiliary arrays
-double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
-double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
+double ExtAcc_AuxArray    [EXT_ACC_NAUX_MAX];
+double ExtPot_AuxArray_Flt[EXT_POT_NAUX_MAX];
+int    ExtPot_AuxArray_Int[EXT_POT_NAUX_MAX];
 
 // b. function pointers
 ExtAcc_t CPUExtAcc_Ptr = NULL;
@@ -210,19 +215,34 @@ double                SF_CREATE_STAR_MAX_STAR_MFRAC;
 
 // (2-9) equation of state
 #if ( MODEL == HYDRO )
-// a. auxiliary array
-double EoS_AuxArray[EOS_NAUX_MAX];
+// a. auxiliary arrays
+double EoS_AuxArray_Flt[EOS_NAUX_MAX];
+int    EoS_AuxArray_Int[EOS_NAUX_MAX];
 
 // b. function pointers
 EoS_DE2P_t EoS_DensEint2Pres_CPUPtr = NULL;
 EoS_DP2E_t EoS_DensPres2Eint_CPUPtr = NULL;
 EoS_DP2C_t EoS_DensPres2CSqr_CPUPtr = NULL;
+EoS_GENE_t EoS_General_CPUPtr       = NULL;
 #ifdef GPU
 EoS_DE2P_t EoS_DensEint2Pres_GPUPtr = NULL;
 EoS_DP2E_t EoS_DensPres2Eint_GPUPtr = NULL;
 EoS_DP2C_t EoS_DensPres2CSqr_GPUPtr = NULL;
+EoS_GENE_t EoS_General_GPUPtr       = NULL;
 #endif
+
+// c. data structure for the CPU/GPU solvers
+EoS_t EoS;
 #endif // HYDRO
+
+// (2-10) source terms
+SrcTerms_t SrcTerms;
+#if ( MODEL == HYDRO )
+double     Src_Dlep_AuxArray_Flt[SRC_NAUX_DLEP];
+int        Src_Dlep_AuxArray_Int[SRC_NAUX_DLEP];
+#endif
+double     Src_User_AuxArray_Flt[SRC_NAUX_USER];
+int        Src_User_AuxArray_Int[SRC_NAUX_USER];
 
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
@@ -264,6 +284,7 @@ char   (*h_DE_Array_G      [2])[PS1][PS1][PS1]                     = { NULL, NUL
 #ifdef MHD
 real   (*h_Emag_Array_G    [2])[PS1][PS1][PS1]                     = { NULL, NULL };
 #endif
+real    *h_ExtPotTable                                             = NULL;
 
 // (3-3) unsplit gravity correction
 #ifdef UNSPLIT_GRAVITY
@@ -290,67 +311,103 @@ real (*h_Pot_Array_T[2])[ CUBE(GRA_NXT) ]                          = { NULL, NUL
 real (*h_Mag_Array_T[2])[NCOMP_MAG][ PS1P1*SQR(PS1) ]              = { NULL, NULL };
 #endif
 
+// (3-6) EoS tables
+#if ( MODEL == HYDRO )
+real *h_EoS_Table[EOS_NTABLE_MAX];
+#endif
+
+// (3-7) source terms
+real (*h_Flu_Array_S_In [2])[FLU_NIN_S ][ CUBE(SRC_NXT)  ]         = { NULL, NULL };
+real (*h_Flu_Array_S_Out[2])[FLU_NOUT_S][ CUBE(PS1)      ]         = { NULL, NULL };
+#ifdef MHD
+real (*h_Mag_Array_S_In [2])[NCOMP_MAG][ SRC_NXT_P1*SQR(SRC_NXT) ] = { NULL, NULL };
+#endif
+double (*h_Corner_Array_S[2])[3]                                   = { NULL, NULL };
+#if ( MODEL == HYDRO )
+real (*h_SrcDlepProf_Data)[SRC_DLEP_PROF_NBINMAX]                  = NULL;
+real  *h_SrcDlepProf_Radius                                        = NULL;
+#endif
+
 
 // 4. GPU (device) global memory arrays
 // =======================================================================================================
 #ifdef GPU
 // (4-1) fluid solver
-real (*d_Flu_Array_F_In )[FLU_NIN ][ CUBE(FLU_NXT) ]              = NULL;
-real (*d_Flu_Array_F_Out)[FLU_NOUT][ CUBE(PS2) ]                  = NULL;
-real (*d_Flux_Array)[9][NFLUX_TOTAL][ SQR(PS2) ]                  = NULL;
-double (*d_Corner_Array_F)[3]                                     = NULL;
+real (*d_Flu_Array_F_In )[FLU_NIN ][ CUBE(FLU_NXT) ]               = NULL;
+real (*d_Flu_Array_F_Out)[FLU_NOUT][ CUBE(PS2) ]                   = NULL;
+real (*d_Flux_Array)[9][NFLUX_TOTAL][ SQR(PS2) ]                   = NULL;
+double (*d_Corner_Array_F)[3]                                      = NULL;
 #ifdef DUAL_ENERGY
-char (*d_DE_Array_F_Out)[ PS2*PS2*PS2 ]                           = NULL;
+char (*d_DE_Array_F_Out)[ PS2*PS2*PS2 ]                            = NULL;
 #endif
 #ifdef MHD
-real (*d_Mag_Array_F_In )[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ]   = NULL;
-real (*d_Mag_Array_F_Out)[NCOMP_MAG][ PS2P1*SQR(PS2)          ]   = NULL;
-real (*d_Ele_Array      )[9][NCOMP_ELE][ PS2P1*PS2 ]              = NULL;
+real (*d_Mag_Array_F_In )[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ]    = NULL;
+real (*d_Mag_Array_F_Out)[NCOMP_MAG][ PS2P1*SQR(PS2)          ]    = NULL;
+real (*d_Ele_Array      )[9][NCOMP_ELE][ PS2P1*PS2 ]               = NULL;
 #endif
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-real (*d_PriVar)      [NCOMP_LR            ][ CUBE(FLU_NXT)     ] = NULL;
-real (*d_Slope_PPM)[3][NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ] = NULL;
-real (*d_FC_Var)   [6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ] = NULL;
-real (*d_FC_Flux)  [3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ] = NULL;
+real (*d_PriVar)      [NCOMP_LR            ][ CUBE(FLU_NXT)     ]  = NULL;
+real (*d_Slope_PPM)[3][NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ]  = NULL;
+real (*d_FC_Var)   [6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ]  = NULL;
+real (*d_FC_Flux)  [3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ]  = NULL;
 #ifdef MHD
-real (*d_FC_Mag_Half)[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ]       = NULL;
-real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ]       = NULL;
+real (*d_FC_Mag_Half)[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ]        = NULL;
+real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ]        = NULL;
 #endif
 #endif // FLU_SCHEME
 
 #ifdef GRAVITY
 // (4-2) Poisson and gravity solver
-real   (*d_Rho_Array_P    )[ CUBE(RHO_NXT) ]                     = NULL;
-real   (*d_Pot_Array_P_In )[ CUBE(POT_NXT) ]                     = NULL;
-real   (*d_Pot_Array_P_Out)[ CUBE(GRA_NXT) ]                     = NULL;
-real   (*d_Flu_Array_G    )[GRA_NIN][ CUBE(PS1) ]                = NULL;
-double (*d_Corner_Array_PGT)[3]                                  = NULL;
+real   (*d_Rho_Array_P    )[ CUBE(RHO_NXT) ]                       = NULL;
+real   (*d_Pot_Array_P_In )[ CUBE(POT_NXT) ]                       = NULL;
+real   (*d_Pot_Array_P_Out)[ CUBE(GRA_NXT) ]                       = NULL;
+real   (*d_Flu_Array_G    )[GRA_NIN][ CUBE(PS1) ]                  = NULL;
+double (*d_Corner_Array_PGT)[3]                                    = NULL;
 #ifdef DUAL_ENERGY
-char   (*d_DE_Array_G     )[ CUBE(PS1) ]                         = NULL;
+char   (*d_DE_Array_G     )[ CUBE(PS1) ]                           = NULL;
 #endif
 #ifdef MHD
-real   (*d_Emag_Array_G   )[ CUBE(PS1) ]                         = NULL;
+real   (*d_Emag_Array_G   )[ CUBE(PS1) ]                           = NULL;
 #endif
+real    *d_ExtPotTable                                             = NULL;
 
 // (4-3) unsplit gravity correction
 #ifdef UNSPLIT_GRAVITY
-real (*d_Pot_Array_USG_F)[ CUBE(USG_NXT_F) ]                     = NULL;
-real (*d_Pot_Array_USG_G)[ CUBE(USG_NXT_G) ]                     = NULL;
-real (*d_Flu_Array_USG_G)[GRA_NIN-1][ CUBE(PS1) ]                = NULL;
+real (*d_Pot_Array_USG_F)[ CUBE(USG_NXT_F) ]                       = NULL;
+real (*d_Pot_Array_USG_G)[ CUBE(USG_NXT_G) ]                       = NULL;
+real (*d_Flu_Array_USG_G)[GRA_NIN-1][ CUBE(PS1) ]                  = NULL;
 #endif
-#endif
+#endif // #ifdef GRAVITY
 
 // (4-4) Grackle chemistry
 
 // (4-5) dt solver
-real *d_dt_Array_T                                               = NULL;
-real (*d_Flu_Array_T)[FLU_NIN_T][ CUBE(PS1) ]                    = NULL;
+real *d_dt_Array_T                                                 = NULL;
+real (*d_Flu_Array_T)[FLU_NIN_T][ CUBE(PS1) ]                      = NULL;
 #ifdef GRAVITY
-real (*d_Pot_Array_T)[ CUBE(GRA_NXT) ]                           = NULL;
+real (*d_Pot_Array_T)[ CUBE(GRA_NXT) ]                             = NULL;
 #endif
 #ifdef MHD
-real (*d_Mag_Array_T)[NCOMP_MAG][ PS1P1*SQR(PS1) ]               = NULL;
+real (*d_Mag_Array_T)[NCOMP_MAG][ PS1P1*SQR(PS1) ]                 = NULL;
 #endif
+
+// (4-6) EoS tables
+#if ( MODEL == HYDRO )
+real *d_EoS_Table[EOS_NTABLE_MAX];
+#endif
+
+// (4-7) source terms
+real (*d_Flu_Array_S_In )[FLU_NIN_S ][ CUBE(SRC_NXT)  ]            = NULL;
+real (*d_Flu_Array_S_Out)[FLU_NOUT_S][ CUBE(PS1)      ]            = NULL;
+#ifdef MHD
+real (*d_Mag_Array_S_In)[NCOMP_MAG  ][ SRC_NXT_P1*SQR(SRC_NXT) ]   = NULL;
+#endif
+double (*d_Corner_Array_S)[3]                                      = NULL;
+#if ( MODEL == HYDRO )
+real (*d_SrcDlepProf_Data)[SRC_DLEP_PROF_NBINMAX]                  = NULL;
+real  *d_SrcDlepProf_Radius                                        = NULL;
+#endif
+
 #endif // #ifdef GPU
 
 
@@ -362,6 +419,7 @@ Timer_t *Timer_MPI[3];
 Timer_t *Timer_dt         [NLEVEL];
 Timer_t *Timer_Flu_Advance[NLEVEL];
 Timer_t *Timer_Gra_Advance[NLEVEL];
+Timer_t *Timer_Src_Advance[NLEVEL];
 Timer_t *Timer_Che_Advance[NLEVEL];
 Timer_t *Timer_SF         [NLEVEL];
 Timer_t *Timer_FixUp      [NLEVEL];

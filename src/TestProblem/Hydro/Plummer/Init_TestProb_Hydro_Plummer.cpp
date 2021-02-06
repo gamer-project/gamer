@@ -407,8 +407,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    } // if ( Plummer_Collision ) ... else ...
 
 // compute the total gas energy
-   Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray );   // assuming EoS requires no passive scalars
-   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );      // do NOT include magnetic energy here
+   Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
+                                    EoS_AuxArray_Int, h_EoS_Table, NULL ); // assuming EoS requires no passive scalars
+   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );         // do NOT include magnetic energy here
 
 // set the output array
    fluid[DENS] = Dens;
@@ -480,8 +481,9 @@ void Init_TestProb_Hydro_Plummer()
    Par_Init_ByFunction_Ptr = Par_Init_ByFunction_Plummer;
 #  endif
 #  ifdef GRAVITY
-   Init_ExtAcc_Ptr = Init_ExtAcc_Plummer;
-   Init_ExtPot_Ptr = Init_ExtPot_Plummer;
+   Init_ExtAcc_Ptr         = Init_ExtAcc_Plummer;
+   if ( OPT__EXT_POT == EXT_POT_FUNC )
+   Init_ExtPot_Ptr         = Init_ExtPot_Plummer;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 

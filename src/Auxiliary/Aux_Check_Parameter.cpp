@@ -501,7 +501,7 @@ void Aux_Check_Parameter()
    if ( GPU_NSTREAM < 1 )  Aux_Error( ERROR_INFO, "GPU_NSTREAM (%d) < 1 !!\n", GPU_NSTREAM );
 
    if ( FLU_GPU_NPGROUP % GPU_NSTREAM != 0 )
-      Aux_Error( ERROR_INFO, "FLU_GPU_NPGROUP (%d) %%GPU_NSTREAM (%d) != 0 !!\n",
+      Aux_Error( ERROR_INFO, "FLU_GPU_NPGROUP (%d) %% GPU_NSTREAM (%d) != 0 !!\n",
                  FLU_GPU_NPGROUP, GPU_NSTREAM );
 
 #  ifdef OPENMP
@@ -597,8 +597,12 @@ void Aux_Check_Parameter()
 #   endif
 
 #  if ( DUAL_ENERGY == DE_ENPY  &&  EOS != EOS_GAMMA )
-#     error : ERROR : EOS_GAMMA does NOT support DUAL_ENERGY=DE_ENPY !!
+#     error : ERROR : DUAL_ENERGY=DE_ENPY only supports EOS_GAMMA !!
 #  endif
+
+#   if ( DUAL_ENERGY == DE_ENPY  &&  defined COSMIC_RAY )
+#     error : COSMIC_RAY does NOT support DUAL_ENERGY=DE_ENPY !!
+#   endif
 #  endif // #ifdef DUAL_ENERGY
 
 #  ifdef MHD
@@ -612,8 +616,12 @@ void Aux_Check_Parameter()
 #   endif
 #  endif // MHD
 
+#  ifdef COSMIC_RAY
+#     error : ERROR : COSMIC_RAY is NOT supported yet !!
+#  endif
+
 #  if ( defined LR_EINT  &&  FLU_SCHEME == CTU )
-#     error : CTU does NOT support LR_EINT in CUFLU.h !!
+#     error : ERROR : CTU does NOT support LR_EINT in CUFLU.h !!
 #  endif
 
 #  if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  EOS != EOS_NUCLEAR  &&  EOS != EOS_TABULAR  &&  EOS != EOS_USER )
@@ -1331,6 +1339,37 @@ void Aux_Check_Parameter()
    } // if ( MPI_Rank == 0 )
 
 #endif // SUPPORT_GRACKLE
+
+
+
+// source terms
+// =======================================================================================
+
+// errors
+// ------------------------------
+#  if ( SRC_GHOST_SIZE != 0 )
+#     error : ERROR : SRC_GHOST_SIZE must be zero for now !!
+#  endif
+
+#  if ( MODEL != HYDRO )
+   if ( SrcTerms.Deleptonization )
+      Aux_Error( ERROR_INFO, "SRC_DELEPTONIZATION is only supported in HYDRO !!\n" );
+#  endif
+
+   if ( SRC_GPU_NPGROUP % GPU_NSTREAM != 0 )
+      Aux_Error( ERROR_INFO, "SRC_GPU_NPGROUP (%d) %% GPU_NSTREAM (%d) != 0 !!\n",
+                 SRC_GPU_NPGROUP, GPU_NSTREAM );
+
+#  ifdef OPENMP
+   if ( SRC_GPU_NPGROUP < OMP_NTHREAD )
+      Aux_Error( ERROR_INFO, "SRC_GPU_NPGROUP (%d) < OMP_NTHREAD (%d) !!\n", SRC_GPU_NPGROUP, OMP_NTHREAD );
+#  endif
+
+// warning
+// ------------------------------
+   if ( MPI_Rank == 0 ) {
+
+   } // if ( MPI_Rank == 0 )
 
 
 

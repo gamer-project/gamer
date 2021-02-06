@@ -21,6 +21,7 @@ extern char (*d_DE_Array_G     )[ CUBE(PS1) ];
 extern real (*d_Emag_Array_G   )[ CUBE(PS1) ];
 #endif
 extern real (*d_Pot_Array_T    )[ CUBE(GRA_NXT) ];
+extern real  *d_ExtPotTable;
 
 
 
@@ -52,6 +53,7 @@ void CUAPI_MemFree_PoissonGravity()
    if ( d_Emag_Array_G     != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Emag_Array_G     )  );  d_Emag_Array_G     = NULL; }
 #  endif
    if ( d_Pot_Array_T      != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Pot_Array_T      )  );  d_Pot_Array_T      = NULL; }
+   if ( d_ExtPotTable      != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_ExtPotTable      )  );  d_ExtPotTable      = NULL; }
 
 
 // free the host memory allocated by CUDA
@@ -75,6 +77,8 @@ void CUAPI_MemFree_PoissonGravity()
 #     endif
       if ( h_Pot_Array_T     [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Pot_Array_T     [t] )  );  h_Pot_Array_T     [t] = NULL; }
    } // for (int t=0; t<2; t++)
+
+      if ( h_ExtPotTable         != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_ExtPotTable         )  );  h_ExtPotTable         = NULL; }
 
 } // FUNCTION : CUAPI_MemFree_PoissonGravity
 

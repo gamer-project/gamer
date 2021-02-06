@@ -56,6 +56,7 @@ struct KeyInfo_t
    int    CellScale[NLEVEL];        // amr->scale[lv]
 #  if ( MODEL == HYDRO )
    int    Magnetohydrodynamics;
+   int    CosmicRay;
 #  endif
 
    long   Step;
@@ -129,6 +130,7 @@ struct Makefile_t
 #  endif
    int DualEnergy;
    int Magnetohydrodynamics;
+   int CosmicRay;
    int EoS;
    int BarotropicEoS;
 
@@ -166,6 +168,8 @@ struct SymConst_t
    int    Flu_NIn;
    int    Flu_NOut;
    int    Flu_NIn_T;
+   int    Flu_NIn_S;
+   int    Flu_NOut_S;
    int    NFluxFluid;
    int    NFluxPassive;
    int    Flu_GhostSize;
@@ -259,6 +263,7 @@ struct SymConst_t
    int    EulerY;
 #  endif
    int    EoSNAuxMax;
+   int    EoSNTableMax;
 
 #  elif  ( MODEL == ELBDM )
    int    Flu_BlockSize_x;
@@ -274,6 +279,13 @@ struct SymConst_t
    int    dt_Gra_BlockSize;
    int    dt_Gra_UseShuffle;
 #  endif
+
+   int    Src_BlockSize;
+   int    Src_GhostSize;
+   int    Src_NAuxDlep;
+   int    Src_DlepProfNVar;
+   int    Src_DlepProfNBinMax;
+   int    Src_NAuxUser;
 
 }; // struct SymConst_t
 
@@ -494,8 +506,18 @@ struct InputPara_t
    int    Opt__SelfGravity;
    int    Opt__ExtAcc;
    int    Opt__ExtPot;
+   char  *ExtPotTable_Name;
+   int    ExtPotTable_NPoint[3];
+   double ExtPotTable_dh;
+   double ExtPotTable_EdgeL[3];
+   int    ExtPotTable_Float8;
    int    Opt__GravityExtraMass;
 #  endif // #ifdef GRAVITY
+
+// source terms
+   int    Src_Deleptonization;
+   int    Src_User;
+   int    Src_GPU_NPGroup;
 
 // Grackle
 #  ifdef SUPPORT_GRACKLE

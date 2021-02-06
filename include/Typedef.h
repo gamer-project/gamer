@@ -186,6 +186,7 @@ const Solver_t
 #ifdef GRAVITY
   ,DT_GRA_SOLVER              = 6
 #endif
+  ,SRC_SOLVER                 = 7
   ;
 
 
@@ -381,21 +382,33 @@ const SF_CreateStarScheme_t
 #endif
 
 
-// function pointers
-typedef real (*EoS_DE2P_t)( const real Dens, const real Eint, const real Passive[], const double UserArray[] );
-typedef real (*EoS_DP2E_t)( const real Dens, const real Pres, const real Passive[], const double UserArray[] );
-typedef real (*EoS_DP2C_t)( const real Dens, const real Pres, const real Passive[], const double UserArray[] );
-typedef void (*ExtAcc_t)( real Acc[], const double x, const double y, const double z, const double Time, const double UserArray[] );
-typedef real (*ExtPot_t)( const double x, const double y, const double z, const double Time, const double UserArray[],
-                          const ExtPotUsage_t Usage );
-
-
 // options in Aux_ComputeProfile()
 typedef int PatchType_t;
 const PatchType_t
-   PATCH_LEAF    = 0,
-   PATCH_NONLEAF = 1,
-   PATCH_BOTH    = 2;
+   PATCH_LEAF                 = 0,
+   PATCH_NONLEAF              = 1,
+   PATCH_BOTH                 = 2,
+   PATCH_LEAF_PLUS_MAXNONLEAF = 3;
+
+
+// function pointers
+typedef real (*EoS_DE2P_t)( const real Dens, const real Eint, const real Passive[],
+                            const double AuxArray_Flt[], const int AuxArray_Int[],
+                            const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] );
+typedef real (*EoS_DP2E_t)( const real Dens, const real Pres, const real Passive[],
+                            const double AuxArray_Flt[], const int AuxArray_Int[],
+                            const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] );
+typedef real (*EoS_DP2C_t)( const real Dens, const real Pres, const real Passive[],
+                            const double AuxArray_Flt[], const int AuxArray_Int[],
+                            const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] );
+typedef void (*EoS_GENE_t)( const int Mode, real Out[], const real In[],
+                            const double AuxArray_Flt[], const int AuxArray_Int[],
+                            const real *const Table[EOS_NTABLE_MAX] );
+typedef void (*ExtAcc_t)( real Acc[], const double x, const double y, const double z, const double Time,
+                          const double UserArray[] );
+typedef real (*ExtPot_t)( const double x, const double y, const double z, const double Time,
+                          const double UserArray_Flt[], const int UserArray_Int[],
+                          const ExtPotUsage_t Usage, const real PotTable[] );
 
 
 

@@ -47,12 +47,11 @@ extern void SetTempIntPara( const int lv, const int Sg_Current, const double Pre
 //                              --> For a passive scalar with an integer field index FieldIdx returned by AddField(),
 //                                  one can convert it to a bitwise field index by BIDX(FieldIdx)
 //                NProf       : Number of Profile_t objects in Prof
-//                SingleLv    : Only consider patches on the specified level
-//                              --> If SingleLv<0, loop over all levels
-//                MaxLv       : Consider patches on levels equal/below MaxLv if SingleLv<0
-//                              --> If MaxLv<0, loop over all levels
+//                Min/MaxLv   : Consider patches on levels from MinLv to MaxLv
 //                PatchType   : Only consider patches of the specified type
-//                              --> Supported types: PATCH_LEAF, PATCH_NONLEAF, PATCH_BOTH
+//                              --> Supported types: PATCH_LEAF, PATCH_NONLEAF, PATCH_BOTH, PATCH_LEAF_PLUS_MAXNONLEAF
+//                              --> PATCH_LEAF_PLUS_MAXNONLEAF includes leaf patches on all target levels
+//                                  (i.e., MinLv ~ MaxLv) and non-leaf patches only on MaxLv
 //                PrepTime    : Target physical time to prepare data
 //                              --> If PrepTime<0, turn off temporal interpolation and always use the most recent data
 //
@@ -64,16 +63,16 @@ extern void SetTempIntPara( const int lv, const int Sg_Current, const double Pre
 //                const bool        RemoveEmptyBin = true;
 //                const long        TVar[]         = { _DENS, _PRES };
 //                const int         NProf          = 2;
-//                const int         SingleLv       = -1;
-//                const int         MaxLv          = -1;
-//                const PatchType_t PatchType      = PATCH_LEAF;
+//                const int         MinLv          = 0;
+//                const int         MaxLv          = MAX_LEVEL;
+//                const PatchType_t PatchType      = PATCH_LEAF_PLUS_MAXNONLEAF;
 //                const double      PrepTime       = -1.0;
 //
 //                Profile_t Prof_Dens, Prof_Pres;
 //                Profile_t *Prof[] = { &Prof_Dens, &Prof_Pres };
 //
 //                Aux_ComputeProfile( Prof, Center, MaxRadius, MinBinSize, LogBin, LogBinRatio, RemoveEmptyBin,
-//                                    TVar, NProf, SingleLv, MaxLv, PatchType, PrepTime );
+//                                    TVar, NProf, MinLv, MaxLv, PatchType, PrepTime );
 //
 //                if ( MPI_Rank == 0 )
 //                {
@@ -94,7 +93,7 @@ extern void SetTempIntPara( const int lv, const int Sg_Current, const double Pre
 //-------------------------------------------------------------------------------------------------------
 void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double r_max_input, const double dr_min,
                          const bool LogBin, const double LogBinRatio, const bool RemoveEmpty, const long TVarBitIdx[],
-                         const int NProf, const int SingleLv, const int MaxLv, const PatchType_t PatchType,
+                         const int NProf, const int MinLv, const int MaxLv, const PatchType_t PatchType,
                          const double PrepTime )
 {
 
@@ -109,8 +108,14 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
    if ( LogBin  &&  LogBinRatio <= 1.0 )
       Aux_Error( ERROR_INFO, "LogBinRatio (%14.7e) <= 1.0 !!\n", LogBinRatio );
 
-   if ( ( SingleLv >= 0 )  &&  ( MaxLv >= 0 ) )
-      Aux_Error( ERROR_INFO, "SingleLv (%d) and MaxLv (%d) cannot be both >= 0 !!\n", SingleLv, MaxLv );
+   if ( MinLv < 0  ||  MinLv > TOP_LEVEL )
+      Aux_Error( ERROR_INFO, "incorrect MinLv (%d) !!\n", MinLv );
+
+   if ( MaxLv < 0  ||  MaxLv > TOP_LEVEL )
+      Aux_Error( ERROR_INFO, "incorrect MaxLv (%d) !!\n", MaxLv );
+
+   if ( MinLv > MaxLv )
+      Aux_Error( ERROR_INFO, "MinLv (%d) > MaxLv (%d) !!\n", MinLv, MaxLv );
 #  endif
 
 
@@ -219,11 +224,8 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
       real *Passive_IntT = new real [NCOMP_PASSIVE];
 #     endif
 
-//    determine which levels to be considered
-      const int lv_min = ( SingleLv < 0 ) ? 0                                     : SingleLv;
-      const int lv_max = ( SingleLv < 0 ) ? ( ( MaxLv < 0 ) ? TOP_LEVEL : MaxLv ) : SingleLv;
-
-      for (int lv=lv_min; lv<=lv_max; lv++)
+//    loop over all target levels
+      for (int lv=MinLv; lv<=MaxLv; lv++)
       {
          const double dh = amr->dh[lv];
          const double dv = CUBE( dh );
@@ -270,13 +272,21 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
          }
 
 
-#        pragma omp for schedule( runtime )
+//       use the "static" schedule for reproducibility
+#        pragma omp for schedule( static )
          for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
          {
-//          determine which type of patches to be looped
-            if (  ( amr->patch[0][lv][PID]->son != -1 && PatchType == PATCH_LEAF    )  ||
-                  ( amr->patch[0][lv][PID]->son == -1 && PatchType == PATCH_NONLEAF )  )
-               continue;
+//          skip untargeted patches
+            if ( amr->patch[0][lv][PID]->son != -1 )
+            {
+               if ( PatchType == PATCH_LEAF )                                    continue;
+               if ( PatchType == PATCH_LEAF_PLUS_MAXNONLEAF  &&  lv != MaxLv )   continue;
+            }
+
+            else
+            {
+               if ( PatchType == PATCH_NONLEAF )                                 continue;
+            }
 
 
             const real (*FluidPtr)[PS1][PS1][PS1] = amr->patch[ FluSg ][lv][PID]->fluid;
@@ -424,8 +434,8 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                                                                                     FluidPtr     [ENGY][k][j][i],
                                                                                     Passive,
                                                                                     CheckMinPres_No, NULL_REAL, Emag,
-                                                                                    EoS_DensEint2Pres_CPUPtr, EoS_AuxArray,
-                                                                                    NULL )
+                                                                                    EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt,
+                                                                                    EoS_AuxArray_Int, h_EoS_Table, NULL )
                                                 + FluWeighting_IntT*Hydro_Con2Pres( FluidPtr_IntT[DENS][k][j][i],
                                                                                     FluidPtr_IntT[MOMX][k][j][i],
                                                                                     FluidPtr_IntT[MOMY][k][j][i],
@@ -433,8 +443,8 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                                                                                     FluidPtr_IntT[ENGY][k][j][i],
                                                                                     Passive_IntT,
                                                                                     CheckMinPres_No, NULL_REAL, Emag_IntT,
-                                                                                    EoS_DensEint2Pres_CPUPtr, EoS_AuxArray,
-                                                                                    NULL )
+                                                                                    EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt,
+                                                                                    EoS_AuxArray_Int, h_EoS_Table, NULL )
                                               :                     Hydro_Con2Pres( FluidPtr     [DENS][k][j][i],
                                                                                     FluidPtr     [MOMX][k][j][i],
                                                                                     FluidPtr     [MOMY][k][j][i],
@@ -442,8 +452,8 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                                                                                     FluidPtr     [ENGY][k][j][i],
                                                                                     Passive,
                                                                                     CheckMinPres_No, NULL_REAL, Emag,
-                                                                                    EoS_DensEint2Pres_CPUPtr, EoS_AuxArray,
-                                                                                    NULL );
+                                                                                    EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt,
+                                                                                    EoS_AuxArray_Int, h_EoS_Table, NULL );
 
                               OMP_Data  [p][TID][bin] += Pres*Weight;
                               OMP_Weight[p][TID][bin] += Weight;
@@ -462,8 +472,10 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 #                             if   ( DUAL_ENERGY == DE_ENPY )
                               const bool CheckMinPres_No = false;
                               const real Enpy = FluidPtr[ENPY][k][j][i];
-                              const real Pres = Hydro_DensEntropy2Pres( Dens, Enpy, EoS_AuxArray[1], CheckMinPres_No, NULL_REAL );
-                              const real Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray );
+                              const real Pres = Hydro_DensEntropy2Pres( Dens, Enpy, EoS_AuxArray_Flt[1],
+                                                                        CheckMinPres_No, NULL_REAL );
+                              const real Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray_Flt,
+                                                                          EoS_AuxArray_Int, h_EoS_Table, NULL );
 #                             elif ( DUAL_ENERGY == DE_EINT )
 #                             error : DE_EINT is NOT supported yet !!
 #                             endif

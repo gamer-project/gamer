@@ -269,7 +269,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 #                    if   ( DUAL_ENERGY == DE_ENPY )
                      Pres[k][j][i] = Hydro_DensEntropy2Pres( Fluid[DENS][k][j][i], Fluid[ENPY][k][j][i],
-                                                             EoS_AuxArray[1], CheckMinPres_Yes, MIN_PRES );
+                                                             EoS_AuxArray_Flt[1], CheckMinPres_Yes, MIN_PRES );
 #                    elif ( DUAL_ENERGY == DE_EINT )
 #                    error : DE_EINT is NOT supported yet !!
 #                    endif
@@ -293,7 +293,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                      Pres[k][j][i] = Hydro_Con2Pres( Fluid[DENS][k][j][i], Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i],
                                                      Fluid[MOMZ][k][j][i], Fluid[ENGY][k][j][i], Passive,
                                                      CheckMinPres_Yes, MIN_PRES, Emag,
-                                                     EoS_DensEint2Pres_CPUPtr, EoS_AuxArray, NULL );
+                                                     EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
+                                                     NULL );
 #                    endif // #ifdef DUAL_ENERGY ... else ...
                   } // k,j,i
                } // if ( NeedPres )

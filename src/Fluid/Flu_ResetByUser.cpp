@@ -28,7 +28,7 @@ void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TTi
 //                       Model_Init_ByFunction_AssignData()
 //                5. Enabled by the runtime option "OPT__RESET_FLUID"
 //
-// Parameter   :  fluid    : Fluid array storing both the input (origial) and reset values
+// Parameter   :  fluid    : Fluid array storing both the input (original) and reset values
 //                           --> Including both active and passive variables
 //                x/y/z    : Target physical coordinates
 //                Time     : Target physical time
@@ -44,7 +44,7 @@ bool Flu_ResetByUser_Func_Template( real fluid[], const double x, const double y
 
 // Example : reset fluid variables to extremely small values if the cell is within a specific sphere
    /*
-   const real dr[3]   = { x-0.5*amr->BoxSize[0], y-0.5*amr->BoxSize[1], z-0.5*amr->BoxSize[2] };
+   const real dr[3]   = { x-amr->BoxCenter[0], y-amr->BoxCenter[1], z-amr->BoxCenter[2] };
    const real r       = SQRT( dr[0]*dr[0] + dr[1]*dr[1] + dr[2]*dr[2] );
 
    const real TRad                      = 0.3;
@@ -55,7 +55,8 @@ bool Flu_ResetByUser_Func_Template( real fluid[], const double x, const double y
    const real *MinPassive = NULL;
 #  endif
    const real MinPres                   = 1.0e-10;
-   const real MinEint                   = EoS_DensPres2Eint_CPUPtr( MinDens, MinPres, MinPassive, EoS_AuxArray );
+   const real MinEint                   = EoS_DensPres2Eint_CPUPtr( MinDens, MinPres, MinPassive,
+                                                                    EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
    const real MinEmag                   = 0.0;  // assuming MHD is not adopted
 
    if ( r <= TRad )
@@ -151,7 +152,7 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const double TT
 //          calculate the dual-energy variable (entropy or internal energy)
 #           if   ( DUAL_ENERGY == DE_ENPY )
             fluid[ENPY] = Hydro_Con2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Emag,
-                                             EoS_DensEint2Pres_CPUPtr, EoS_AuxArray );
+                                             EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #           elif ( DUAL_ENERGY == DE_EINT )
 #           error : DE_EINT is NOT supported yet !!
 #           endif

@@ -13,7 +13,7 @@
 // Note        :  1. For calculating the external acceleration and/or potential
 //                2. Corner coordinates are defined as the central coordinates of the first cell located
 //                   at the bottom left corner
-//                   --> Not considering ghost zones
+//                   --> Excluding ghost zones
 //
 // Parameter   :  lv                 : Target refinement level
 //                h_Corner_Array_PGT : Host array to store the prepared data
@@ -25,18 +25,15 @@ void Gra_Prepare_Corner( const int lv, double h_Corner_Array_PGT[][3], const int
 
    const double dh_half = 0.5*amr->dh[lv];
 
-   int N, PID, PID0;
-
-
-#  pragma omp parallel for private( N, PID, PID0 ) schedule( static )
+#  pragma omp parallel for schedule( static )
    for (int TID=0; TID<NPG; TID++)
    {
-      PID0 = PID0_List[TID];
+      const int PID0 = PID0_List[TID];
 
       for (int LocalID=0; LocalID<8; LocalID++)
       {
-         PID = PID0 + LocalID;
-         N   = 8*TID + LocalID;
+         const int PID = PID0 + LocalID;
+         const int N   = 8*TID + LocalID;
 
          for (int d=0; d<3; d++)    h_Corner_Array_PGT[N][d] = amr->patch[0][lv][PID]->EdgeL[d] + dh_half;
       }

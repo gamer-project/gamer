@@ -17,6 +17,11 @@ void EoS_Init_Isothermal();
 void (*EoS_Init_Ptr)() = NULL;
 
 
+#ifdef GPU
+extern real *d_EoS_Table[EOS_NTABLE_MAX];
+#endif
+
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -37,6 +42,16 @@ void EoS_Init()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
+// initialize the EoS table pointers as NULL
+   for (int t=0; t<EOS_NTABLE_MAX; t++)
+   {
+      h_EoS_Table[t] = NULL;
+#     ifdef GPU
+      d_EoS_Table[t] = NULL;
+#     endif
+   }
+
+
 // set the initialization function pointer for the built-in EoS
 #  if   ( EOS == EOS_GAMMA )
    EoS_Init_Ptr = EoS_Init_Gamma;
@@ -52,6 +67,28 @@ void EoS_Init()
       EoS_Init_Ptr();
    else
       Aux_Error( ERROR_INFO, "EoS_Init_Ptr == NULL for EoS %d !!\n", EOS );
+
+
+// store relevant variables in the object "EoS" for the CPU/GPU solvers
+#  ifdef GPU
+   EoS.DensEint2Pres_FuncPtr = EoS_DensEint2Pres_GPUPtr;
+   EoS.DensPres2Eint_FuncPtr = EoS_DensPres2Eint_GPUPtr;
+   EoS.DensPres2CSqr_FuncPtr = EoS_DensPres2CSqr_GPUPtr;
+   EoS.General_FuncPtr       = EoS_General_GPUPtr;
+
+   CUAPI_SetConstMemory_EoS();
+
+#  else
+
+   EoS.DensEint2Pres_FuncPtr = EoS_DensEint2Pres_CPUPtr;
+   EoS.DensPres2Eint_FuncPtr = EoS_DensPres2Eint_CPUPtr;
+   EoS.DensPres2CSqr_FuncPtr = EoS_DensPres2CSqr_CPUPtr;
+   EoS.General_FuncPtr       = EoS_General_CPUPtr;
+
+   EoS.AuxArrayDevPtr_Flt    = EoS_AuxArray_Flt;
+   EoS.AuxArrayDevPtr_Int    = EoS_AuxArray_Int;
+   EoS.Table                 = h_EoS_Table;
+#  endif // #ifdef GPU ... else ...
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

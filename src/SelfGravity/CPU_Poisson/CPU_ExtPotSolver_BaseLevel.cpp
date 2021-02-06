@@ -9,32 +9,36 @@
 // Function    :  CPU_ExtPotSolver_BaseLevel
 // Description :  Add external potential on the base level
 //
-// Note        :  1. External potential is specified by the input function ExtPot_Func()
+// Note        :  1. External potential is specified by the input function Func()
 //                2. Set PotIsInit to false if the base-level potential has not been initialized
 //                   --> Useful when self-gravity is disabled
 //                3. Invoked by Gra_AdvanceDt()
 //
-// Parameter   :  ExtPot_Func     : Function pointer to the external potential routine
-//                ExtPot_AuxArray : Auxiliary array for adding external potential
-//                Time            : Target physical time
-//                PotIsInit       : Whether patch->pot[] has been initialized
-//                                  --> true : **add** to the original data
-//                                      false: **overwrite** the original data
-//                SaveSg          : Sandglass to store the updated potential
+// Parameter   :  Func             : Function pointer to the external potential routine
+//                AuxArray_Flt/Int : Auxiliary floating-point/integer arrays for adding external potential
+//                Table            : 3D potential table for EXT_POT_TABLE
+//                Time             : Target physical time
+//                PotIsInit        : Whether patch->pot[] has been initialized
+//                                   --> true : **add** to the original data
+//                                       false: **overwrite** the original data
+//                SaveSg           : Sandglass to store the updated potential
 //
 // Return      :  amr->patch->pot[]
 //-----------------------------------------------------------------------------------------
-void CPU_ExtPotSolver_BaseLevel( const ExtPot_t ExtPot_Func, const double ExtPot_AuxArray[],
-                                 const double Time, const bool PotIsInit, const int SaveSg )
+void CPU_ExtPotSolver_BaseLevel( const ExtPot_t Func, const double AuxArray_Flt[], const int AuxArray_Int[],
+                                 const real Table[], const double Time, const bool PotIsInit, const int SaveSg )
 {
 
 // check
 #  ifdef GAMER_DEBUG
-   if ( ExtPot_Func == NULL )
-      Aux_Error( ERROR_INFO, "ExtPot_Func == NULL !!\n" );
+   if ( Func == NULL )
+      Aux_Error( ERROR_INFO, "Func == NULL !!\n" );
 
-   if ( ExtPot_AuxArray == NULL )
-      Aux_Error( ERROR_INFO, "ExtPot_AuxArray == NULL !!\n" );
+   if ( AuxArray_Flt == NULL )
+      Aux_Error( ERROR_INFO, "AuxArray_Flt == NULL !!\n" );
+
+   if ( AuxArray_Int == NULL )
+      Aux_Error( ERROR_INFO, "AuxArray_Int == NULL !!\n" );
 
    if ( SaveSg != 0  &&  SaveSg != 1 )
       Aux_Error( ERROR_INFO, "incorrect SaveSg (%d) !!\n", SaveSg );
@@ -65,7 +69,7 @@ void CPU_ExtPotSolver_BaseLevel( const ExtPot_t ExtPot_Func, const double ExtPot
          for (int j=0; j<PS1; j++)  {  y = y0 + j*dh;
          for (int i=0; i<PS1; i++)  {  x = x0 + i*dh;
 
-            ExtPot = ExtPot_Func( x, y, z, Time, ExtPot_AuxArray, EXT_POT_USAGE_ADD );
+            ExtPot = Func( x, y, z, Time, AuxArray_Flt, AuxArray_Int, EXT_POT_USAGE_ADD, Table );
 
             if ( PotIsInit )  amr->patch[SaveSg][lv][PID]->pot[k][j][i] += ExtPot;  // add
             else              amr->patch[SaveSg][lv][PID]->pot[k][j][i]  = ExtPot;  // overwrite

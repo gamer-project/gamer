@@ -175,6 +175,12 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__MINIMIZE_MPI_BARRIER",  &OPT__MINIMIZE_MPI_BARRIER,       true,            Useless_bool,  Useless_bool   );
 
 
+// source terms
+   ReadPara->Add( "SRC_DELEPTONIZATION",        &SrcTerms.Deleptonization,        false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "SRC_USER",                   &SrcTerms.User,                   false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "SRC_GPU_NPGROUP",            &SRC_GPU_NPGROUP,                -1,               NoMin_int,     NoMax_int      );
+
+
 // Grackle
 #  ifdef SUPPORT_GRACKLE
    ReadPara->Add( "GRACKLE_ACTIVATE",           &GRACKLE_ACTIVATE,                true,            Useless_bool,  Useless_bool   );
@@ -295,8 +301,19 @@ void Init_Load_Parameter()
    ReadPara->Add( "POT_GPU_NPGROUP",            &POT_GPU_NPGROUP,                -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "OPT__GRA_P5_GRADIENT",       &OPT__GRA_P5_GRADIENT,            false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__SELF_GRAVITY",          &OPT__SELF_GRAVITY,               true,            Useless_bool,  Useless_bool   );
-   ReadPara->Add( "OPT__EXT_ACC",               &OPT__EXT_ACC,                    0,               0,             2              );
+   ReadPara->Add( "OPT__EXT_ACC",               &OPT__EXT_ACC,                    0,               0,             1              );
    ReadPara->Add( "OPT__EXT_POT",               &OPT__EXT_POT,                    0,               0,             2              );
+// do not check the parameters of external potential table here --> do it in Init_LoadExtPotTable()
+   ReadPara->Add( "EXT_POT_TABLE_NAME",          EXT_POT_TABLE_NAME,              Useless_str,     Useless_str,   Useless_str    );
+   ReadPara->Add( "EXT_POT_TABLE_NPOINT_X",     &EXT_POT_TABLE_NPOINT[0],        -1,               NoMin_int,     NoMax_int      );
+   ReadPara->Add( "EXT_POT_TABLE_NPOINT_Y",     &EXT_POT_TABLE_NPOINT[1],        -1,               NoMin_int,     NoMax_int      );
+   ReadPara->Add( "EXT_POT_TABLE_NPOINT_Z",     &EXT_POT_TABLE_NPOINT[2],        -1,               NoMin_int,     NoMax_int      );
+   ReadPara->Add( "EXT_POT_TABLE_DH",           &EXT_POT_TABLE_DH,               -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "EXT_POT_TABLE_EDGEL_X",      &EXT_POT_TABLE_EDGEL[0],          NoDef_double,    NoMin_double,  NoMax_double   );
+   ReadPara->Add( "EXT_POT_TABLE_EDGEL_Y",      &EXT_POT_TABLE_EDGEL[1],          NoDef_double,    NoMin_double,  NoMax_double   );
+   ReadPara->Add( "EXT_POT_TABLE_EDGEL_Z",      &EXT_POT_TABLE_EDGEL[2],          NoDef_double,    NoMin_double,  NoMax_double   );
+// fix EXT_POT_TABLE_FLOAT8 to -1 for now since this option is not supported yet
+   ReadPara->Add( "EXT_POT_TABLE_FLOAT8",       &EXT_POT_TABLE_FLOAT8,           -1,              -1,            -1              );
    ReadPara->Add( "OPT__GRAVITY_EXTRA_MASS",    &OPT__GRAVITY_EXTRA_MASS,         false,           Useless_bool,  Useless_bool   );
 #  endif // #ifdef GRAVITY
 

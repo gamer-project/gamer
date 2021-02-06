@@ -85,7 +85,12 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  else
    const int  Magnetohydrodynamics = 0;
 #  endif
+#  ifdef COSMIC_RAY
+   const int  CosmicRay            = 1;
+#  else
+   const int  CosmicRay            = 0;
 #  endif
+#  endif // #if ( MODEL == HYDRO )
 
    KeyInfo_t KeyInfo;
 
@@ -173,6 +178,9 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  if ( MODEL == HYDRO )
    if ( KeyInfo.FormatVersion >= 2400 )
    LoadField( "Magnetohydrodynamics", &KeyInfo.Magnetohydrodynamics, H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &Magnetohydrodynamics,  1,    Fatal );
+
+   if ( KeyInfo.FormatVersion >= 2421 )
+   LoadField( "CosmicRay",            &KeyInfo.CosmicRay,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &CosmicRay,             1,    Fatal );
 #  endif
 
    LoadField( "Step",                 &KeyInfo.Step,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
@@ -1432,6 +1440,7 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
 #  endif
    LoadField( "DualEnergy",             &RS.DualEnergy,             SID, TID, NonFatal, &RT.DualEnergy,             1, NonFatal );
    LoadField( "Magnetohydrodynamics",   &RS.Magnetohydrodynamics,   SID, TID, NonFatal, &RT.Magnetohydrodynamics,   1,    Fatal );
+   LoadField( "CosmicRay",              &RS.CosmicRay,              SID, TID, NonFatal, &RT.CosmicRay,              1,    Fatal );
    LoadField( "EoS",                    &RS.EoS,                    SID, TID, NonFatal, &RT.EoS,                    1, NonFatal );
    LoadField( "BarotropicEoS",          &RS.BarotropicEoS,          SID, TID, NonFatal, &RT.BarotropicEoS,          1, NonFatal );
 
@@ -1513,6 +1522,8 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "Flu_NIn",              &RS.Flu_NIn,              SID, TID, NonFatal, &RT.Flu_NIn,               1, NonFatal );
    LoadField( "Flu_NOut",             &RS.Flu_NOut,             SID, TID, NonFatal, &RT.Flu_NOut,              1, NonFatal );
    LoadField( "Flu_NIn_T",            &RS.Flu_NIn_T,            SID, TID, NonFatal, &RT.Flu_NIn_T,             1, NonFatal );
+   LoadField( "Flu_NIn_S",            &RS.Flu_NIn_S,            SID, TID, NonFatal, &RT.Flu_NIn_S,             1, NonFatal );
+   LoadField( "Flu_NOut_S",           &RS.Flu_NOut_S,           SID, TID, NonFatal, &RT.Flu_NOut_S,            1, NonFatal );
    LoadField( "NFluxFluid",           &RS.NFluxFluid,           SID, TID, NonFatal, &RT.NFluxFluid,            1, NonFatal );
    LoadField( "NFluxPassive",         &RS.NFluxPassive,         SID, TID, NonFatal, &RT.NFluxPassive,          1, NonFatal );
    LoadField( "Flu_GhostSize",        &RS.Flu_GhostSize,        SID, TID, NonFatal, &RT.Flu_GhostSize,         1, NonFatal );
@@ -1597,6 +1608,7 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "EulerY",               &RS.EulerY,               SID, TID, NonFatal, &RT.EulerY,                1, NonFatal );
 #  endif
    LoadField( "EoSNAuxMax",           &RS.EoSNAuxMax,           SID, TID, NonFatal, &RT.EoSNAuxMax,            1, NonFatal );
+   LoadField( "EoSNTableMax",         &RS.EoSNTableMax,         SID, TID, NonFatal, &RT.EoSNTableMax,          1, NonFatal );
 
 #  elif  ( MODEL == ELBDM )
    LoadField( "Flu_BlockSize_x",      &RS.Flu_BlockSize_x,      SID, TID, NonFatal, &RT.Flu_BlockSize_x,       1, NonFatal );
@@ -1612,6 +1624,13 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "dt_Gra_BlockSize",     &RS.dt_Gra_BlockSize,     SID, TID, NonFatal, &RT.dt_Gra_BlockSize,      1, NonFatal );
    LoadField( "dt_Gra_UseShuffle",    &RS.dt_Gra_UseShuffle,    SID, TID, NonFatal, &RT.dt_Gra_UseShuffle,     1, NonFatal );
 #  endif
+
+   LoadField( "Src_BlockSize",        &RS.Src_BlockSize,        SID, TID, NonFatal, &RT.Src_BlockSize,         1, NonFatal );
+   LoadField( "Src_GhostSize",        &RS.Src_GhostSize,        SID, TID, NonFatal, &RT.Src_GhostSize,         1, NonFatal );
+   LoadField( "Src_NAuxDlep",         &RS.Src_NAuxDlep,         SID, TID, NonFatal, &RT.Src_NAuxDlep,          1, NonFatal );
+   LoadField( "Src_DlepProfNVar",     &RS.Src_DlepProfNVar,     SID, TID, NonFatal, &RT.Src_DlepProfNVar,      1, NonFatal );
+   LoadField( "Src_DlepProfNBinMax",  &RS.Src_DlepProfNBinMax,  SID, TID, NonFatal, &RT.Src_DlepProfNBinMax,   1, NonFatal );
+   LoadField( "Src_NAuxUser",         &RS.Src_NAuxUser,         SID, TID, NonFatal, &RT.Src_NAuxUser,          1, NonFatal );
 
 
 // 5. close all objects
@@ -1870,8 +1889,18 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__SelfGravity",        &RS.Opt__SelfGravity,        SID, TID, NonFatal, &RT.Opt__SelfGravity,         1, NonFatal );
    LoadField( "Opt__ExtAcc",             &RS.Opt__ExtAcc,             SID, TID, NonFatal, &RT.Opt__ExtAcc,              1, NonFatal );
    LoadField( "Opt__ExtPot",             &RS.Opt__ExtPot,             SID, TID, NonFatal, &RT.Opt__ExtPot,              1, NonFatal );
+   LoadField( "ExtPotTable_Name",        &RS.ExtPotTable_Name,        SID, TID, NonFatal,  RT.ExtPotTable_Name,         1, NonFatal );
+   LoadField( "ExtPotTable_NPoint",       RS.ExtPotTable_NPoint,      SID, TID, NonFatal,  RT.ExtPotTable_NPoint,       3, NonFatal );
+   LoadField( "ExtPotTable_dh",          &RS.ExtPotTable_dh,          SID, TID, NonFatal, &RT.ExtPotTable_dh,           1, NonFatal );
+   LoadField( "ExtPotTable_EdgeL",        RS.ExtPotTable_EdgeL,       SID, TID, NonFatal,  RT.ExtPotTable_EdgeL,        3, NonFatal );
+   LoadField( "ExtPotTable_Float8",      &RS.ExtPotTable_Float8,      SID, TID, NonFatal, &RT.ExtPotTable_Float8,       1, NonFatal );
    LoadField( "Opt__GravityExtraMass",   &RS.Opt__GravityExtraMass,   SID, TID, NonFatal, &RT.Opt__GravityExtraMass,    1, NonFatal );
 #  endif
+
+// source terms
+   LoadField( "Src_Deleptonization",     &RS.Src_Deleptonization,     SID, TID, NonFatal, &RT.Src_Deleptonization,      1, NonFatal );
+   LoadField( "Src_User",                &RS.Src_User,                SID, TID, NonFatal, &RT.Src_User,                 1, NonFatal );
+   LoadField( "Src_GPU_NPGroup",         &RS.Src_GPU_NPGroup,         SID, TID, NonFatal, &RT.Src_GPU_NPGroup,          1, NonFatal );
 
 // Grackle
 #  ifdef SUPPORT_GRACKLE

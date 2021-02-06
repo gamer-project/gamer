@@ -7,6 +7,8 @@
 
 #ifdef GPU
 
+extern real *d_EoS_Table[EOS_NTABLE_MAX];
+
 #ifdef GRAVITY
 void CUAPI_SetConstMemory_ExtAccPot();
 #endif
@@ -21,6 +23,9 @@ void CUAPI_SetConstMemory_ExtAccPot();
 // Note        :  1. Adopt the suggested approach for CUDA version >= 5.0
 //                2. Invoked by Init_GAMER()
 //                3. Invoke CUAPI_SetConstMemory_ExtAccPot()
+//                4. Some constant memory variables are set elsewhere. For example,
+//                   (1) Source-term variables are set by individual source-term initializer
+//                   (2) EoS variables are set by CUAPI_SetConstMemory_EoS()
 //
 // Parameter   :  None
 //
@@ -35,12 +40,8 @@ void CUAPI_SetConstMemory()
 // cudaMemcpyToSymbol() has the default parameters "offset=0, kind=cudaMemcpyHostToDevice" and so
 // we do not repeat them below
 
-#  if ( MODEL == HYDRO )
-   CUDA_CHECK_ERROR(  cudaMemcpyToSymbol( c_EoS_AuxArray, EoS_AuxArray,       EOS_NAUX_MAX*sizeof(double) )  );
-#  endif
-
 #  if ( NCOMP_PASSIVE > 0 )
-   CUDA_CHECK_ERROR(  cudaMemcpyToSymbol( c_NormIdx,      PassiveNorm_VarIdx, NCOMP_PASSIVE*sizeof(int  ) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyToSymbol( c_NormIdx, PassiveNorm_VarIdx, NCOMP_PASSIVE*sizeof(int) )  );
 #  endif
 
 #  ifdef GRAVITY

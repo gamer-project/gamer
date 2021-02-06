@@ -49,6 +49,8 @@ extern real (*Poi_AddExtraMassForGravity_Ptr)( const double x, const double y, c
 extern void (*Poi_UserWorkBeforePoisson_Ptr)( const double Time, const int lv );
 extern void (*Init_ExtAcc_Ptr)();
 extern void (*Init_ExtPot_Ptr)();
+extern void (*End_ExtAcc_Ptr)();
+extern void (*End_ExtPot_Ptr)();
 #endif
 #ifdef PARTICLE
 extern void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPar_AllRank,
@@ -59,7 +61,9 @@ extern void (*Par_Init_Attribute_User_Ptr)();
 #endif
 #if ( MODEL == HYDRO )
 extern void (*EoS_Init_Ptr)();
+extern void (*EoS_End_Ptr)();
 #endif
+extern void (*Src_Init_User_Ptr)();
 
 
 // helper macro for printing warning messages when resetting parameters
