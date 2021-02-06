@@ -36,7 +36,7 @@ void End_MemFree_PoissonGravity()
 
    delete [] GreenFuncK;     GreenFuncK     = NULL;
    delete [] h_ExtPotTable;  h_ExtPotTable  = NULL;
-   delete [] h_GenePotTable; h_GenePotTable = NULL;
+   delete [] h_GenePtrArray; h_GenePtrArray = NULL;
 
 } // FUNCTION : End_MemFree_PoissonGravity
 
