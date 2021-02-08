@@ -22,7 +22,7 @@ extern real (*d_Emag_Array_G   )[ CUBE(PS1) ];
 #endif
 extern real (*d_Pot_Array_T    )[ CUBE(GRA_NXT) ];
 extern real  *d_ExtPotTable;
-extern void **d_GenePtrArray;
+extern void **d_ExtPotGenePtr;
 
 
 
@@ -55,7 +55,7 @@ void CUAPI_MemFree_PoissonGravity()
 #  endif
    if ( d_Pot_Array_T      != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Pot_Array_T      )  );  d_Pot_Array_T      = NULL; }
    if ( d_ExtPotTable      != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_ExtPotTable      )  );  d_ExtPotTable      = NULL; }
-   if ( d_GenePtrArray     != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_GenePtrArray     )  );  d_GenePtrArray     = NULL; }
+   if ( d_ExtPotGenePtr    != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_ExtPotGenePtr    )  );  d_ExtPotGenePtr    = NULL; }
 
 
 // free the host memory allocated by CUDA
@@ -81,7 +81,7 @@ void CUAPI_MemFree_PoissonGravity()
    } // for (int t=0; t<2; t++)
 
       if ( h_ExtPotTable         != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_ExtPotTable         )  );  h_ExtPotTable         = NULL; }
-      if ( h_GenePtrArray        != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_GenePtrArray        )  );  h_GenePtrArray        = NULL; }
+      if ( h_ExtPotGenePtr       != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_ExtPotGenePtr       )  );  h_ExtPotGenePtr       = NULL; }
 
 } // FUNCTION : CUAPI_MemFree_PoissonGravity
 
