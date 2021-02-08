@@ -207,7 +207,7 @@ SIMU_OPTION += -DSUPPORT_HDF5
 #SIMU_OPTION += -DSUPPORT_GSL
 
 # support yt inline analysis
-#SIMU_OPTION += -DSUPPORT_LIBYT
+SIMU_OPTION += -DSUPPORT_LIBYT
 
 # random number implementation: RNG_GNU_EXT/RNG_CPP11 (GNU extension drand48_r/c++11 <random>)
 # --> use RNG_GNU_EXT for compilers supporting GNU extensions (**not supported on some macOS**)
@@ -335,13 +335,13 @@ LIBYT_PATH   :=
 #LIBYT_PATH   := /home/hyschive/project/libyt/libyt.dev/libyt
 
 # NTU-eureka (default: openmpi-intel)
-#CUDA_PATH    := /software/cuda/default
-#FFTW_PATH    := /software/fftw/default
-#MPI_PATH     := /software/openmpi/default
-#HDF5_PATH    := /software/hdf5/default
-#GRACKLE_PATH :=
-#GSL_PATH     := /software/gsl/default
-#LIBYT_PATH   :=
+# CUDA_PATH    := /software/cuda/default
+FFTW_PATH    := /software/fftw/2.1.5-gnu
+MPI_PATH     := /software/openmpi/3.1.5-gnu
+HDF5_PATH    := /software/hdf5/1.10.6
+GRACKLE_PATH :=
+GSL_PATH     := /software/gsl/2.6
+LIBYT_PATH   := /work1/cindytsai/Project/libyt
 
 # NTU-hulk (openmpi-intel-qlc)
 CUDA_PATH    := /opt/gpu/cuda/4.2
@@ -532,7 +532,7 @@ GPU_FILE    += CUPOT_PoissonSolver_SOR_10to14cube.cu  CUPOT_PoissonSolver_SOR_16
                CUPOT_ExtPotSolver.cu  CUPOT_ExtPot_Tabular.cu
 
 CPU_FILE    += CPU_PoissonGravitySolver.cpp  CPU_PoissonSolver_SOR.cpp  CPU_PoissonSolver_FFT.cpp \
-               CPU_PoissonSolver_MG.cpp  CPU_ExtPotSolver.cpp  CPU_ExtPotSolver_BaseLevel.cpp
+               CPU_PoissonSolver_MG.cpp
 
 CPU_FILE    += Init_FFTW.cpp  Gra_Close.cpp  Gra_Prepare_Flu.cpp  Gra_Prepare_Pot.cpp  Gra_Prepare_Corner.cpp \
                Gra_AdvanceDt.cpp  Poi_Close.cpp  Poi_Prepare_Pot.cpp  Poi_Prepare_Rho.cpp \
