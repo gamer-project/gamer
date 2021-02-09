@@ -164,7 +164,7 @@ SIMU_OPTION += -DMAX_PATCH=1000000
 SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA
-SIMU_OPTION += -DGPU_ARCH=FERMI
+SIMU_OPTION += -DGPU_ARCH=TURING
 
 # debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
@@ -207,7 +207,7 @@ SIMU_OPTION += -DSUPPORT_HDF5
 #SIMU_OPTION += -DSUPPORT_GSL
 
 # support yt inline analysis
-SIMU_OPTION += -DSUPPORT_LIBYT
+#SIMU_OPTION += -DSUPPORT_LIBYT
 
 # random number implementation: RNG_GNU_EXT/RNG_CPP11 (GNU extension drand48_r/c++11 <random>)
 # --> use RNG_GNU_EXT for compilers supporting GNU extensions (**not supported on some macOS**)
@@ -248,7 +248,7 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 # gnu
 # -------------------------------------------------------------------------------
  CXX         = g++                                       # serial compiler
-CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
+ CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
 #CXX         = CC                                        # cray wrapper script
  CXXFLAG     = -g -O3                                    # general flags
 #CXXFLAG     = -g -O3 -std=c++11
@@ -285,13 +285,13 @@ endif
 #######################################################################################################
 
 # template
-CUDA_PATH    :=
+CUDA_PATH    := /usr/local/cuda-11.2
 FFTW_PATH    :=
-MPI_PATH     :=
-HDF5_PATH    :=
+MPI_PATH     := /home/cindytsai/software/openmpi/3.1.5-gnu
+HDF5_PATH    := /home/cindytsai/software/hdf5/1.10.6
 GRACKLE_PATH :=
 GSL_PATH     :=
-LIBYT_PATH   :=
+LIBYT_PATH   := /home/cindytsai/Documents/GitHub/libyt
 
 # NCSA-bluewaters (only need to specify the path of user-installed packages)
 #GRACKLE_PATH :=
@@ -336,18 +336,18 @@ LIBYT_PATH   :=
 
 # NTU-eureka (default: openmpi-intel)
 # CUDA_PATH    := /software/cuda/default
-FFTW_PATH    := /software/fftw/2.1.5-gnu
-MPI_PATH     := /software/openmpi/3.1.5-gnu
-HDF5_PATH    := /software/hdf5/1.10.6
-GRACKLE_PATH :=
-GSL_PATH     := /software/gsl/2.6
-LIBYT_PATH   := /work1/cindytsai/Project/libyt
+#FFTW_PATH    := /software/fftw/2.1.5-gnu
+#MPI_PATH     := /software/openmpi/3.1.5-gnu
+#HDF5_PATH    := /software/hdf5/1.10.6
+#GRACKLE_PATH :=
+#GSL_PATH     := /software/gsl/2.6
+#LIBYT_PATH   := /work1/cindytsai/Project/libyt
 
 # NTU-hulk (openmpi-intel-qlc)
-CUDA_PATH    := /opt/gpu/cuda/4.2
+#CUDA_PATH    := /opt/gpu/cuda/4.2
 #FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
-MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
-HDF5_PATH    := /opt/hdf5/1.8.20
+#MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
+#HDF5_PATH    := /opt/hdf5/1.8.20
 #GRACKLE_PATH := /work1/fish/Software/grackle
 #GSL_PATH     := /opt/math/gsl/2.5
 #LIBYT_PATH   := /project/fish/libyt/libyt
