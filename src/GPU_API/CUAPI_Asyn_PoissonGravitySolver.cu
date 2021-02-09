@@ -34,6 +34,7 @@ __global__
 void CUPOT_ExtPotSolver( real g_Pot_Array[][ CUBE(GRA_NXT) ],
                          const double g_Corner_Array[][3],
                          const real g_ExtPotTable[],
+                         void **g_ExtPotGenePtr,
                          const real dh, const ExtPot_t ExtPot_Func,
                          const double Time, const bool PotIsInit );
 
@@ -91,6 +92,7 @@ static real (*d_Emag_Array_G)[ CUBE(PS1) ] = NULL;
 #endif
 #endif // #if ( MODEL == HYDRO )
 extern real  *d_ExtPotTable;
+extern void **d_ExtPotGenePtr;
 
 extern cudaStream_t *Stream;
 
@@ -240,6 +242,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
          if ( d_Corner_Array_PGT == NULL )   Aux_Error( ERROR_INFO, "d_Corner_Array_PGT == NULL !!\n" );
          if ( ExtPot == EXT_POT_TABLE  &&  d_ExtPotTable == NULL )
                                              Aux_Error( ERROR_INFO, "d_ExtPotTable == NULL !!\n" );
+         if ( d_ExtPotGenePtr    == NULL )   Aux_Error( ERROR_INFO, "d_ExtPotGenePtr == NULL !!\n" );
       }
    } // if ( Poisson )
 
@@ -441,7 +444,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
             CUPOT_ExtPotSolver <<< NPatch_per_Stream[s], ExtPot_Block_Dim, 0, Stream[s] >>>
                                ( d_Pot_Array_P_Out  + UsedPatch[s],
                                  d_Corner_Array_PGT + UsedPatch[s],
-                                 d_ExtPotTable,
+                                 d_ExtPotTable, d_ExtPotGenePtr,
                                  dh, GPUExtPot_Ptr, TimeNew, SelfGravity );
          }
       } // if ( Poisson )

@@ -24,6 +24,7 @@
 // Parameter   :  g_Pot_Array               : Array storing the input and output potential data of each target patch
 //                g_Corner_Array            : Array storing the physical corner coordinates of each patch
 //                g_ExtPotTable             : Array storing the external potential 3D table
+//                g_ExtPotGenePtr           : Array storing the pointers to general potential tables
 //                NPatchGroup               : Number of target patch groups (for CPU only)
 //                dh                        : Cell size
 //                ExtPot_Func               : Function pointer to the external potential routine (for both CPU and GPU)
@@ -42,12 +43,14 @@ __global__
 void CUPOT_ExtPotSolver( real g_Pot_Array[][ CUBE(GRA_NXT) ],
                          const double g_Corner_Array[][3],
                          const real g_ExtPotTable[],
+                         void **g_ExtPotGenePtr,
                          const real dh, const ExtPot_t ExtPot_Func,
                          const double Time, const bool PotIsInit )
 #else
 void CPU_ExtPotSolver  ( real g_Pot_Array[][ CUBE(GRA_NXT) ],
                          const double g_Corner_Array[][3],
                          const real g_ExtPotTable[],
+                         void **g_ExtPotGenePtr,
                          const int NPatchGroup,
                          const real dh, const ExtPot_t ExtPot_Func,
                          const double c_ExtPot_AuxArray_Flt[],
@@ -84,7 +87,8 @@ void CPU_ExtPotSolver  ( real g_Pot_Array[][ CUBE(GRA_NXT) ],
          y = y0 + double(j*dh);
          z = z0 + double(k*dh);
 
-         ExtPot = ExtPot_Func( x, y, z, Time, c_ExtPot_AuxArray_Flt, c_ExtPot_AuxArray_Int, EXT_POT_USAGE_ADD, g_ExtPotTable );
+         ExtPot = ExtPot_Func( x, y, z, Time, c_ExtPot_AuxArray_Flt, c_ExtPot_AuxArray_Int, EXT_POT_USAGE_ADD,
+                               g_ExtPotTable, g_ExtPotGenePtr );
 
          if ( PotIsInit )  g_Pot_Array[P][t] += ExtPot;  // add to the input potential
          else              g_Pot_Array[P][t]  = ExtPot;  // overwrite the input potential

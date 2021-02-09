@@ -81,6 +81,7 @@ void SetExtPotAuxArray_Tabular( double AuxArray_Flt[], int AuxArray_Int[] )
 //
 // Note        :  1. This function is shared by CPU and GPU
 //                2. Auxiliary arrays UserArray_Flt/Int[] are set by SetExtPotAuxArray_Tabular()
+//                3. GenePtr has the size of EXT_POT_NGENE_MAX defined in Macro.h (default = 6)
 //
 // Parameter   :  x/y/z             : Target spatial coordinates
 //                Time              : Target physical time
@@ -91,13 +92,14 @@ void SetExtPotAuxArray_Tabular( double AuxArray_Flt[], int AuxArray_Int[] )
 //                                        EXT_POT_USAGE_SUB_TINT: like SUB but for temporal interpolation
 //                                    --> This parameter is useless in most cases
 //                PotTable          : 3D potential table used by EXT_POT_TABLE
+//                GenePtr           : Array of pointers for general potential tables
 //
 // Return      :  External potential at (x,y,z,Time)
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real ExtPot_Tabular( const double x, const double y, const double z, const double Time,
                             const double UserArray_Flt[], const int UserArray_Int[],
-                            const ExtPotUsage_t Usage, const real PotTable[] )
+                            const ExtPotUsage_t Usage, const real PotTable[], void **GenePtr )
 {
 
    const double EdgeL_x  = UserArray_Flt[0];

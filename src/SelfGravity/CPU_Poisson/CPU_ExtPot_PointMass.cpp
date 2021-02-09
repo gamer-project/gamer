@@ -86,6 +86,7 @@ void SetExtPotAuxArray_PointMass( double AuxArray_Flt[], int AuxArray_Int[] )
 //                      UserArray_Flt[2] = z ..
 //                      UserArray_Flt[3] = gravitational_constant*point_source_mass
 //                3. Currently it does not support the soften length
+//                4. GenePtr has the size of EXT_POT_NGENE_MAX defined in Macro.h (default = 6)
 //
 // Parameter   :  x/y/z             : Target spatial coordinates
 //                Time              : Target physical time
@@ -96,13 +97,14 @@ void SetExtPotAuxArray_PointMass( double AuxArray_Flt[], int AuxArray_Int[] )
 //                                        EXT_POT_USAGE_SUB_TINT: like SUB but for temporal interpolation
 //                                    --> This parameter is useless in most cases
 //                PotTable          : 3D potential table used by EXT_POT_TABLE
+//                GenePtr           : Array of pointers for general potential tables
 //
 // Return      :  External potential at (x,y,z,Time)
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real ExtPot_PointMass( const double x, const double y, const double z, const double Time,
                               const double UserArray_Flt[], const int UserArray_Int[],
-                              const ExtPotUsage_t Usage, const real PotTable[] )
+                              const ExtPotUsage_t Usage, const real PotTable[], void **GenePtr )
 {
 
    const double Cen[3] = { UserArray_Flt[0], UserArray_Flt[1], UserArray_Flt[2] };

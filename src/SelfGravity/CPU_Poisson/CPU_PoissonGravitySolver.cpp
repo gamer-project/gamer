@@ -24,6 +24,7 @@ void CPU_PoissonSolver_MG( const real Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT]
 void CPU_ExtPotSolver( real g_Pot_Array[][ CUBE(GRA_NXT) ],
                        const double g_Corner_Array[][3],
                        const real g_ExtPotTable[],
+                       void **g_ExtPotGenePtr,
                        const int NPatchGroup,
                        const real dh, const ExtPot_t ExtPot_Func,
                        const double c_ExtPot_AuxArray_Flt[],
@@ -189,7 +190,7 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
 
       if ( ExtPot )
       {
-         CPU_ExtPotSolver( (real(*)[ CUBE(GRA_NXT) ])h_Pot_Array_Out, h_Corner_Array, h_ExtPotTable,
+         CPU_ExtPotSolver( (real(*)[ CUBE(GRA_NXT) ])h_Pot_Array_Out, h_Corner_Array, h_ExtPotTable, h_ExtPotGenePtr,
                            NPatchGroup, dh, CPUExtPot_Ptr, ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int,
                            TimeNew, SelfGravity );
       }

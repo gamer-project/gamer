@@ -654,6 +654,7 @@
 #ifdef GRAVITY
 #  define EXT_POT_NAUX_MAX       20    // ExtPot_AuxArray[]
 #  define EXT_ACC_NAUX_MAX       20    // ExtAcc_AuxArray[]
+#  define EXT_POT_NGENE_MAX       6    // h/d_ExtPotGenePtr
 #endif
 
 #if ( MODEL == HYDRO )
