@@ -152,6 +152,11 @@ void Flu_CorrAfterAllSync();
 #ifndef SERIAL
 void Flu_AllocateFluxArray_Buffer( const int lv );
 #endif
+#if ( MODEL == HYDRO )
+void Flu_DerivedField_DivVel( real Out[], const real FluIn[], const real MagIn[], const int NFieldOut,
+                              const int NCellInX, const int NCellInY, const int NCellInZ,
+                              const int NGhost, const double dh );
+#endif
 
 
 // GAMER
