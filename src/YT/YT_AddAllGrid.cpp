@@ -28,6 +28,9 @@ void YT_AddAllGrid( const int *GID_Offset )
 // loop over local patches at all levels
    for (int lv=0; lv<NLEVEL; lv++)
    {
+      // calculate local grids array index LID
+      int LID = (lv == 0) ? 0 : (amr->NPatchComma[lv-1][1]);
+
       const int FaLv  = lv - 1;
       const int FluSg = amr->FluSg[lv];
 #     ifdef GRAVITY
@@ -36,6 +39,9 @@ void YT_AddAllGrid( const int *GID_Offset )
 
       for (int PID=0; PID<(amr->NPatchComma[lv][1]); PID++)
       {
+         
+         LID = LID + PID;
+
          const int GID = PID + GID_Offset[lv];
 
          for (int d=0; d<3; d++)
