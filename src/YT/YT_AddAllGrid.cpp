@@ -25,12 +25,12 @@ void YT_AddAllGrid( const int *GID_Offset )
    yt_grid *YT_Grids;
    yt_get_gridsPtr( &YT_Grids );
 
+// record local grids index
+   int LID = 0;
+
 // loop over local patches at all levels
    for (int lv=0; lv<NLEVEL; lv++)
    {
-      // calculate local grids array index LID
-      int LID = (lv == 0) ? 0 : (amr->NPatchComma[lv-1][1]);
-
       const int FaLv  = lv - 1;
       const int FluSg = amr->FluSg[lv];
 #     ifdef GRAVITY
@@ -39,35 +39,34 @@ void YT_AddAllGrid( const int *GID_Offset )
 
       for (int PID=0; PID<(amr->NPatchComma[lv][1]); PID++)
       {
-         
-         LID = LID + PID;
-
          const int GID = PID + GID_Offset[lv];
 
          for (int d=0; d<3; d++)
          {
-            YT_Grids[PID].left_edge [d] = amr->patch[0][lv][PID]->EdgeL[d];
-            YT_Grids[PID].right_edge[d] = amr->patch[0][lv][PID]->EdgeR[d];
-            YT_Grids[PID].dimensions[d] = PATCH_SIZE;
+            YT_Grids[LID].left_edge [d] = amr->patch[0][lv][PID]->EdgeL[d];
+            YT_Grids[LID].right_edge[d] = amr->patch[0][lv][PID]->EdgeR[d];
+            YT_Grids[LID].dimensions[d] = PATCH_SIZE;
          }
 
 #        ifdef PARTICLE
-         YT_Grids[PID].particle_count = amr->patch[0][lv][PID]->NPar;
+         YT_Grids[LID].particle_count = amr->patch[0][lv][PID]->NPar;
 #        else
-         YT_Grids[PID].particle_count = 0;
+         YT_Grids[LID].particle_count = 0;
 #        endif
 
-         YT_Grids[PID].id             = GID;
-         YT_Grids[PID].parent_id      = ( amr->patch[0][lv][PID]->father < 0 ) ? -1 : amr->patch[0][lv][PID]->father + GID_Offset[FaLv];
-         YT_Grids[PID].level          = lv;
+         YT_Grids[LID].id             = GID;
+         YT_Grids[LID].parent_id      = ( amr->patch[0][lv][PID]->father < 0 ) ? -1 : amr->patch[0][lv][PID]->father + GID_Offset[FaLv];
+         YT_Grids[LID].level          = lv;
 
          for (int v = 0; v < NCOMP_TOTAL; v++){
-            YT_Grids[PID].field_data[v]           = amr->patch[FluSg][lv][PID]->fluid[v];
+            YT_Grids[LID].field_data[v]           = amr->patch[FluSg][lv][PID]->fluid[v];
          }
 
 #        ifdef GRAVITY
-         YT_Grids[PID].field_data[NCOMP_TOTAL] = amr->patch[PotSg][lv][PID]->pot;
+         YT_Grids[LID].field_data[NCOMP_TOTAL] = amr->patch[PotSg][lv][PID]->pot;
 #        endif
+         
+         LID = LID + 1;
       }
    }
 
