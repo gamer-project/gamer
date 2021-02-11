@@ -19,7 +19,7 @@
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchLocalLv, char **FieldLabel )
+void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchLocalLv, const char **FieldLabel )
 {
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -42,7 +42,7 @@ void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchL
 
    param_yt.num_fields              = NField;
    param_yt.num_grids_local         = NPatchLocalLv;
-   param_yt.field_labels            = (const char **)FieldLabel;
+   param_yt.field_labels            = (char **)FieldLabel;
 
 #  ifdef FLOAT8
    param_yt.field_ftype             = YT_DOUBLE;
