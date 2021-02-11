@@ -388,6 +388,9 @@ void Init_Load_Parameter()
 #  ifdef PARTICLE
    ReadPara->Add( "OPT__OUTPUT_PAR_DENS",       &OPT__OUTPUT_PAR_DENS,            PAR_OUTPUT_DENS_PAR_ONLY, 0,    2              );
 #  endif
+#  if ( MODEL == HYDRO )
+   ReadPara->Add( "OPT__OUTPUT_DIVVEL",         &OPT__OUTPUT_DIVVEL,              false,           Useless_bool,  Useless_bool   );
+#  endif
    ReadPara->Add( "OPT__OUTPUT_MODE",           &OPT__OUTPUT_MODE,               -1,               1,             3              );
 // do not check OUTPUT_STEP and OUTPUT_DT since they depend on OPT__OUTPUT_MODE
    ReadPara->Add( "OUTPUT_STEP",                &OUTPUT_STEP,                    -1,               NoMin_int,     NoMax_int      );

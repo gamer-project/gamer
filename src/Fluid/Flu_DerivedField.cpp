@@ -13,6 +13,7 @@
 //                      Out  [] : NFieldOut*(NCellInX-2*NGhost)*(NCellInY-2*NGhost)*(NCellInZ-2*NGhost)
 //                      FluIn[] : NCOMP_TOTAL*NCellInX*NCellInY*NCellInZ
 //                      MagIn[] : NCOMP_MAG  *NCellInX*NCellInY*NCellInZ
+//                3. NFieldOut must NOT be larger than DER_NOUT_MAX defined in Macro.h (default = 10)
 //
 // Parameter   :  Out          : Output array
 //                FluIn        : Input fluid array
@@ -47,6 +48,7 @@ void Flu_DerivedField_DivVel( real Out[], const real FluIn[], const real MagIn[]
    if ( NCellOutX <= 0 )            Aux_Error( ERROR_INFO, "NCellOutX (%d) <= 0 !!\n", NCellOutX );
    if ( NCellOutY <= 0 )            Aux_Error( ERROR_INFO, "NCellOutY (%d) <= 0 !!\n", NCellOutY );
    if ( NCellOutZ <= 0 )            Aux_Error( ERROR_INFO, "NCellOutZ (%d) <= 0 !!\n", NCellOutZ );
+   if ( NFieldOut > DER_NOUT_MAX )  Aux_Error( ERROR_INFO, "NFieldOut (%d) > DER_NOUT_MAX (%d) !!\n", NFieldOut, DER_NOUT_MAX );
 
 // specific to this function
    if ( NGhost < 1 )                Aux_Error( ERROR_INFO, "NGhost (%d) < 1 !!\n", NGhost );
