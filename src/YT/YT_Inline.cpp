@@ -2,7 +2,7 @@
 
 #ifdef SUPPORT_LIBYT
 
-void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchLocal, char **FieldLabel );
+void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchLocalLv, const char **FieldLabel );
 void YT_AddAllGrid( const int *GID_Offset );
 
 
