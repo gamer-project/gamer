@@ -2,8 +2,8 @@
 
 #ifdef SUPPORT_LIBYT
 
-void YT_SetParameter( const int NPatchAllLv );
-void YT_AddAllGrid( yt_grid *Grid, const int *GID_Offset, const int NField, char **FieldLabelForYT );
+void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchLocal, char **FieldLabel );
+void YT_AddAllGrid( const int *GID_Offset );
 
 
 
@@ -28,11 +28,16 @@ void YT_Inline()
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
-// 1. gather the number of patches at different MPI ranks and set the corresponding GID offset
+// 1. gather the number of patches at different MPI ranks, calculate number of local patches
+//    and set the corresponding GID offset
    int (*NPatchAllRank)[NLEVEL] = new int [MPI_NRank][NLEVEL];
-   int NPatchLocal[NLEVEL], NPatchAllLv=0, GID_Offset[NLEVEL];
+   int NPatchLocal[NLEVEL], NPatchAllLv=0, NPatchLocalLv=0, GID_Offset[NLEVEL];
 
-   for (int lv=0; lv<NLEVEL; lv++)  NPatchLocal[lv] = amr->NPatchComma[lv][1];
+   for (int lv=0; lv<NLEVEL; lv++)  
+   {
+      NPatchLocal[lv] = amr->NPatchComma[lv][1];
+      NPatchLocalLv = NPatchLocalLv + NPatchLocal[lv];
+   }
 
    MPI_Allgather( NPatchLocal, NLEVEL, MPI_INT, NPatchAllRank[0], NLEVEL, MPI_INT, MPI_COMM_WORLD );
 
@@ -47,34 +52,28 @@ void YT_Inline()
       NPatchAllLv += NPatchTotal[lv];
    }
 
-
 // 2. prepare YT-specific parameters
-   YT_SetParameter( NPatchAllLv );
-
-
-// 3. prepare the hierarchy information and data of all patches
-// 3-1. determine the number of fields
+// 2-1. determine the number of fields
    int NField = NCOMP_TOTAL;
 #  ifdef GRAVITY
-   NField ++;
+   NField = NField + 1;
 #  endif
 
-// 3-2. set the field labels
+// 2-2. determine the field labels
    char **FieldLabelForYT = new char* [NField];
-   for (int v=0; v<NField; v++)  FieldLabelForYT[v] = new char [MAX_STRING];
-
-   for (int v=0; v<NCOMP_TOTAL; v++)   sprintf( FieldLabelForYT[v], FieldLabel[v] );
+   for (int v=0; v<NField; v++)  { FieldLabelForYT[v] = new char [MAX_STRING]; }
+   for (int v=0; v<NCOMP_TOTAL; v++)   { sprintf( FieldLabelForYT[v], FieldLabel[v] ); }
 
 #  ifdef GRAVITY
    sprintf( FieldLabelForYT[NCOMP_TOTAL], PotLabel );
 #  endif
 
-// 3-3. prepare all patches for libyt
-   yt_grid *Grid = new yt_grid [NPatchAllLv];
+// 2-3. Call YT_SetParameter
+   YT_SetParameter( NPatchAllLv, NField, NPatchLocalLv, FieldLabelForYT );
 
-   for (int GID=0; GID<NPatchAllLv; GID++)   Grid[GID].field_data = new void* [NField];
 
-   YT_AddAllGrid( Grid, GID_Offset, NField, FieldLabelForYT );
+// 3. prepare all patches for libyt
+   YT_AddAllGrid( GID_Offset );
 
 
 // 4. perform yt inline analysis
@@ -85,8 +84,6 @@ void YT_Inline()
    delete [] NPatchAllRank;
    for (int v=0; v<NField; v++)  delete [] FieldLabelForYT[v];
    delete [] FieldLabelForYT;
-   for (int GID=0; GID<NPatchAllLv; GID++)   delete [] Grid[GID].field_data;
-   delete [] Grid;
 
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
