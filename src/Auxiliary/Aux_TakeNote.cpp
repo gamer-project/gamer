@@ -502,6 +502,7 @@ void Aux_TakeNote()
       fprintf( Note, "#define FLU_NIN_T               %d\n",      FLU_NIN_T             );
       fprintf( Note, "#define FLU_NIN_S               %d\n",      FLU_NIN_S             );
       fprintf( Note, "#define FLU_NOUT_S              %d\n",      FLU_NOUT_S            );
+      fprintf( Note, "#define DER_NOUT_MAX            %d\n",      DER_NOUT_MAX          );
       fprintf( Note, "#define NFLUX_FLUID             %d\n",      NFLUX_FLUID           );
       fprintf( Note, "#define NFLUX_PASSIVE           %d\n",      NFLUX_PASSIVE         );
 #     ifdef GRAVITY
@@ -532,6 +533,7 @@ void Aux_TakeNote()
 #     endif
 #     endif
       fprintf( Note, "#define SRC_GHOST_SIZE          %d\n",      SRC_GHOST_SIZE        );
+      fprintf( Note, "#define DER_GHOST_SIZE          %d\n",      DER_GHOST_SIZE        );
       fprintf( Note, "#define FLU_NXT                 %d\n",      FLU_NXT               );
 #     ifdef GRAVITY
       fprintf( Note, "#define POT_NXT                 %d\n",      POT_NXT               );
@@ -546,6 +548,7 @@ void Aux_TakeNote()
       fprintf( Note, "#define RHOEXT_NXT              %d\n",      RHOEXT_NXT            );
 #     endif
       fprintf( Note, "#define SRC_NXT                 %d\n",      SRC_NXT               );
+      fprintf( Note, "#define DER_NXT                 %d\n",      DER_NXT               );
 #     if ( MODEL == HYDRO )
       fprintf( Note, "#define EOS_NAUX_MAX            %d\n",      EOS_NAUX_MAX          );
       fprintf( Note, "#define EOS_NTABLE_MAX          %d\n",      EOS_NTABLE_MAX        );
@@ -1168,6 +1171,9 @@ void Aux_TakeNote()
 #     endif
 #     ifdef MHD
       fprintf( Note, "OPT__OUTPUT_CC_MAG              %d\n",      OPT__OUTPUT_CC_MAG   );
+#     endif
+#     if ( MODEL == HYDRO )
+      fprintf( Note, "OPT__OUTPUT_DIVVEL              %d\n",      OPT__OUTPUT_DIVVEL   );
 #     endif
       fprintf( Note, "OPT__OUTPUT_MODE                %d\n",      OPT__OUTPUT_MODE     );
       fprintf( Note, "OUTPUT_STEP                     %d\n",      OUTPUT_STEP          );

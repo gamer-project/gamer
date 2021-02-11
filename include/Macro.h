@@ -203,6 +203,10 @@
 #  define FLU_NOUT_S          NCOMP_TOTAL
 
 
+// maximum number of output derived fields
+#  define DER_NOUT_MAX        10
+
+
 // built-in fields in different models
 #if   ( MODEL == HYDRO )
 // field indices of fluid[] --> element of [0 ... NCOMP_FLUID-1]
@@ -603,11 +607,13 @@
 #endif // #ifdef GRAVITY
 
 
-
 // number of ghost zones for the source-term solver
 // --> fixed to zero for now since ghost zones in source terms are not supported yet
-#     define SRC_GHOST_SIZE         0
+#        define SRC_GHOST_SIZE      0
 
+
+// number of ghost zones for computing derived fields
+#        define DER_GHOST_SIZE      1
 
 
 // patch size (number of cells of a single patch in the x/y/z directions)
@@ -643,6 +649,7 @@
 #endif
 #  define SRC_NXT       ( PS1 + 2*SRC_GHOST_SIZE )                // use patch as the unit
 #  define SRC_NXT_P1    ( SRC_NXT + 1 )
+#  define DER_NXT       ( PS1 + 2*DER_GHOST_SIZE )                // use patch as the unit
 
 
 // size of auxiliary arrays and EoS tables
