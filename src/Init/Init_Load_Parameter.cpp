@@ -389,6 +389,8 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__OUTPUT_PAR_DENS",       &OPT__OUTPUT_PAR_DENS,            PAR_OUTPUT_DENS_PAR_ONLY, 0,    2              );
 #  endif
 #  if ( MODEL == HYDRO )
+   ReadPara->Add( "OPT__OUTPUT_PRES",           &OPT__OUTPUT_PRES,                false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__OUTPUT_CS",             &OPT__OUTPUT_CS,                  false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_DIVVEL",         &OPT__OUTPUT_DIVVEL,              false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_MACH",           &OPT__OUTPUT_MACH,                false,           Useless_bool,  Useless_bool   );
 #  endif

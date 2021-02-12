@@ -295,6 +295,8 @@ OPT__OUTPUT_POT               0           # output gravitational potential [0] #
 OPT__OUTPUT_PAR_DENS          1           # output the particle or total mass density on grids:
                                           # (0=off, 1=particle mass density, 2=total mass density) [1] ##OPT__OUTPUT_TOTAL ONLY##
 OPT__OUTPUT_CC_MAG            1           # output **cell-centered** magnetic field (necessary for yt analysis) [1] ##MHD ONLY##
+OPT__OUTPUT_PRES              0           # output gas pressure [0] ##HYDRO ONLY##
+OPT__OUTPUT_CS                0           # output sound speed [0] ##HYDRO ONLY##
 OPT__OUTPUT_DIVVEL            0           # output divergence(velocity) [0] ##HYDRO ONLY##
 OPT__OUTPUT_MACH              0           # output mach number [0] ##HYDRO ONLY##
 OPT__OUTPUT_MODE              1           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3

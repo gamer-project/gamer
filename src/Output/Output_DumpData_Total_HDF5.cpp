@@ -775,6 +775,12 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #  endif
 
 #  if ( MODEL == HYDRO )
+   int PresDumpIdx = -1;
+   if ( OPT__OUTPUT_PRES )    PresDumpIdx   = NFieldOut ++;
+
+   int CsDumpIdx = -1;
+   if ( OPT__OUTPUT_CS )      CsDumpIdx     = NFieldOut ++;
+
    int DivVelDumpIdx = -1;
    if ( OPT__OUTPUT_DIVVEL )  DivVelDumpIdx = NFieldOut ++;
 
@@ -809,8 +815,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #  endif
 
 #  if ( MODEL == HYDRO )
+   if ( OPT__OUTPUT_PRES   )  sprintf( FieldName[PresDumpIdx  ], "Pres"   );
+   if ( OPT__OUTPUT_CS     )  sprintf( FieldName[CsDumpIdx    ], "Cs"     );
    if ( OPT__OUTPUT_DIVVEL )  sprintf( FieldName[DivVelDumpIdx], "DivVel" );
-   if ( OPT__OUTPUT_MACH )    sprintf( FieldName[MachDumpIdx  ], "Mach" );
+   if ( OPT__OUTPUT_MACH   )  sprintf( FieldName[MachDumpIdx  ], "Mach"   );
 #  endif
 
 
@@ -893,8 +901,6 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    const bool SibBufPatch         = NULL_BOOL;
    const bool FaSibBufPatch       = NULL_BOOL;
 #  endif
-
-   int *PID0List = NULL;
 #  endif // #ifdef PARTICLE
 
 // for the derived fields
@@ -912,9 +918,14 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 // allocate the maximum required memory (i.e., with NCOMP_TOTAL fields) for the temporary array Der_Temp[]
    real (*Der_Temp) = new real [ Der_NP*NCOMP_TOTAL*CUBE(DER_NXT) ];
 
+
 // output one level at a time so that data at the same level are consecutive on disk (even for multiple ranks)
    for (int lv=0; lv<NLEVEL; lv++)
    {
+//    set the PID0 list for general purposes
+      int *PID0List = new int [ amr->NPatchComma[lv][1]/8 ];
+      for (int PID0=0, t=0; PID0<amr->NPatchComma[lv][1]; PID0+=8, t++)    PID0List[t] = PID0;
+
 //    5-3-0. initialize the particle density array (rho_ext) and collect particles from higher levels for outputting particle density
 #     ifdef PARTICLE
       if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )
@@ -987,17 +998,11 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #              ifdef PARTICLE
                if ( v == ParDensDumpIdx )
                {
-                  PID0List = new int [ amr->NPatchComma[lv][1]/8 ];
-
-                  for (int PID0=0, t=0; PID0<amr->NPatchComma[lv][1]; PID0+=8, t++)    PID0List[t] = PID0;
-
 //                we do not check minimum density here (just because it's unnecessary)
                   Prepare_PatchData( lv, Time[lv], FieldData[0][0][0], NULL, 0, amr->NPatchComma[lv][1]/8, PID0List,
                                      ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_PAR_ONLY ) ? _PAR_DENS : _TOTAL_DENS, _NONE,
                                      OPT__RHO_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
                                      MinDens_No, MinPres_No, DE_Consistency_No );
-
-                  delete [] PID0List;
                }
                else
 #              endif
@@ -1024,8 +1029,45 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #              endif
 
 //             d. derived fields
-//             d-1. divergence(velocity)
 #              if ( MODEL == HYDRO )
+//             d-1. gas pressure
+               if ( v == PresDumpIdx )
+               {
+//                we do not check minimum pressure here
+                  Prepare_PatchData( lv, Time[lv], FieldData[0][0][0], NULL, 0, amr->NPatchComma[lv][1]/8, PID0List,
+                                     _PRES, _NONE, OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00,
+                                     IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, DE_Consistency_No );
+               }
+               else
+
+//             d-2. sound speed
+               if ( v == CsDumpIdx )
+               {
+                  const bool CheckMinPres_No = false;
+
+                  for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                  for (int k=0; k<PS1; k++)
+                  for (int j=0; j<PS1; j++)
+                  for (int i=0; i<PS1; i++)
+                  {
+                     real u[NCOMP_TOTAL], Pres, Cs2, Emag=NULL_REAL;
+
+                     for (int v=0; v<NCOMP_TOTAL; v++)   u[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
+
+#                    ifdef MHD
+                     Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+#                    endif
+                     Pres = Hydro_Con2Pres( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
+                                            CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres_CPUPtr,
+                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+                     Cs2  = EoS_DensPres2CSqr_CPUPtr( u[DENS], Pres, u+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                      h_EoS_Table, NULL );
+                     FieldData[PID][k][j][i] = SQRT( Cs2 );
+                  }
+               } // if ( v == CsDumpIdx )
+               else
+
+//             d-3. divergence(velocity)
                if ( v == DivVelDumpIdx )
                {
                   for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
@@ -1060,7 +1102,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                } // if ( v == DivVelDumpIdx )
                else
 
-//             d-2. Mach number
+//             d-4. Mach number
                if ( v == MachDumpIdx )
                {
                   for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
@@ -1197,6 +1239,8 @@ void Output_DumpData_Total_HDF5( const char *FileName )
          MPI_Barrier( MPI_COMM_WORLD );
 
       } // for (int TRank=0; TRank<MPI_NRank; TRank++)
+
+      delete [] PID0List;
    } // for (int lv=0; lv<NLEVEL; lv++)
 
    H5_Status = H5Sclose( H5_SpaceID_Field );
