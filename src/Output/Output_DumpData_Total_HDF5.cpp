@@ -774,6 +774,11 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    }
 #  endif
 
+#  if ( MODEL == HYDRO )
+   int DivVelDumpIdx = -1;
+   if ( OPT__OUTPUT_DIVVEL )  DivVelDumpIdx = NFieldOut ++;
+#  endif
+
 
 // 5-1. set the output field names
    FieldName = new char [NFieldOut][MAX_STRING];
@@ -798,6 +803,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    }
 
    for (int v=0; v<NCOMP_MAG; v++)  sprintf( FCMagName[v], MagLabel[v] );
+#  endif
+
+#  if ( MODEL == HYDRO )
+   if ( OPT__OUTPUT_DIVVEL )  sprintf( FieldName[DivVelDumpIdx], "DivVel" );
 #  endif
 
 
@@ -862,24 +871,42 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 
 // 5-3. start to dump data (serial instead of parallel)
+   const bool IntPhase_No         = false;
+   const bool DE_Consistency_No   = false;
+   const real MinDens_No          = -1.0;
+   const real MinPres_No          = -1.0;
+#  ifndef MHD
+   const int  OPT__MAG_INT_SCHEME = INT_NONE;
+#  endif
 #  ifdef PARTICLE
-   const bool IntPhase_No       = false;
-   const bool DE_Consistency_No = false;
-   const real MinDens_No        = -1.0;
-   const real MinPres_No        = -1.0;
-   const bool TimingSendPar_No  = false;
-   const bool PredictParPos_No  = false;   // particles synchronization is done in "Flu_CorrAfterAllSync()"
-   const bool JustCountNPar_No  = false;
+   const bool TimingSendPar_No    = false;
+   const bool PredictParPos_No    = false;   // particles synchronization is done in "Flu_CorrAfterAllSync()"
+   const bool JustCountNPar_No    = false;
 #  ifdef LOAD_BALANCE
-   const bool SibBufPatch       = true;
-   const bool FaSibBufPatch     = true;
+   const bool SibBufPatch         = true;
+   const bool FaSibBufPatch       = true;
 #  else
-   const bool SibBufPatch       = NULL_BOOL;
-   const bool FaSibBufPatch     = NULL_BOOL;
+   const bool SibBufPatch         = NULL_BOOL;
+   const bool FaSibBufPatch       = NULL_BOOL;
 #  endif
 
    int *PID0List = NULL;
 #  endif // #ifdef PARTICLE
+
+// for the derived fields
+   const int Der_NP = 8;
+
+   real (*Der_FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ] = new real [Der_NP][NCOMP_TOTAL ][ CUBE(DER_NXT)            ];
+   real (*Der_Out  )             [ CUBE(PS1)                ] = new real         [DER_NOUT_MAX][ CUBE(PS1)                ];
+#  ifdef MHD
+   real (*Der_MagFC)[NCOMP_MAG  ][ (DER_NXT+1)*SQR(DER_NXT) ] = new real [Der_NP][NCOMP_MAG   ][ (DER_NXT+1)*SQR(DER_NXT) ];
+   real (*Der_MagCC)             [ CUBE(DER_NXT)            ] = new real         [NCOMP_MAG   ][ CUBE(DER_NXT)            ];
+#  else
+   real (*Der_MagFC)[NCOMP_MAG  ][ (DER_NXT+1)*SQR(DER_NXT) ] = NULL;
+   real (*Der_MagCC)             [ CUBE(DER_NXT)            ] = NULL;
+#  endif
+// allocate the maximum required memory (i.e., with NCOMP_TOTAL fields) for the temporary array Der_Temp[]
+   real (*Der_Temp) = new real [ Der_NP*NCOMP_TOTAL*CUBE(DER_NXT) ];
 
 // output one level at a time so that data at the same level are consecutive on disk (even for multiple ranks)
    for (int lv=0; lv<NLEVEL; lv++)
@@ -992,11 +1019,53 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                else
 #              endif
 
-//             d. fluid variables
+//             d. derived fields
+//             d-1. divergence(velocity)
+#              if ( MODEL == HYDRO )
+               if ( v == DivVelDumpIdx )
+               {
+                  for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+                  {
+//                   prepare the input density and momentum
+//                   --> no need to prepare other fields
+//                   --> store in Der_Temp[] first and then copy to Der_FluIn[] since the shape of the latter
+//                       is fixed to "[Der_NP][NCOMP_TOTAL][CUBE(DER_NXT)]" even though some fields may be useless
+                     Prepare_PatchData( lv, Time[lv], Der_Temp, NULL, DER_GHOST_SIZE, 1, &PID0,
+                                        _DENS|_MOMX|_MOMY|_MOMZ, _NONE, OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26,
+                                        IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, DE_Consistency_No );
+
+//                   type casting for convenience
+                     real (*Der_Temp3D)[4][ CUBE(DER_NXT) ] = ( real (*)[4][ CUBE(DER_NXT) ] )Der_Temp;
+
+                     for (int LocalID=0; LocalID<8; LocalID++)
+                     {
+//                      copy data from Der_Temp[] to Der_FluIn[]
+                        const int Size1v = sizeof(real)*CUBE(DER_NXT);
+                        memcpy( Der_FluIn[LocalID][DENS], Der_Temp3D[LocalID][0], Size1v );
+                        memcpy( Der_FluIn[LocalID][MOMX], Der_Temp3D[LocalID][1], Size1v );
+                        memcpy( Der_FluIn[LocalID][MOMY], Der_Temp3D[LocalID][2], Size1v );
+                        memcpy( Der_FluIn[LocalID][MOMZ], Der_Temp3D[LocalID][3], Size1v );
+
+//                      compute and store the target derived field(s)
+                        const int PID       = PID0 + LocalID;
+                        const int NFieldOut = 1;
+                        Flu_DerivedField_DivVel( FieldData[PID][0][0], Der_FluIn[LocalID][0], NULL,
+                                                 NFieldOut, DER_NXT, DER_NXT, DER_NXT, DER_GHOST_SIZE, amr->dh[lv] );
+                     }
+                  } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+               } // if ( v == DivVelDumpIdx )
+               else
+#              endif
+
+//             e. fluid variables
+               if ( v < NCOMP_TOTAL )
                {
                   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
                      memcpy( FieldData[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
                }
+
+               else
+                  Aux_Error( ERROR_INFO, "incorrect index (%d) !!\n", v );
 
 
 //             5-3-1-4. write data to disk
@@ -1090,6 +1159,14 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    for (int v=0; v<NCOMP_MAG; v++)
    H5_Status = H5Sclose( H5_SpaceID_FCMag[v] );
 #  endif
+
+   delete [] Der_FluIn;
+   delete [] Der_Out;
+#  ifdef MHD
+   delete [] Der_MagFC;
+   delete [] Der_MagCC;
+#  endif
+   delete [] Der_Temp;
 
 
 
