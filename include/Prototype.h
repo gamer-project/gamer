@@ -156,6 +156,9 @@ void Flu_AllocateFluxArray_Buffer( const int lv );
 void Flu_DerivedField_DivVel( real Out[], const real FluIn[], const real MagIn[], const int NFieldOut,
                               const int NCellInX, const int NCellInY, const int NCellInZ,
                               const int NGhost, const double dh );
+void Flu_DerivedField_Mach( real Out[], const real FluIn[], const real MagIn[], const int NFieldOut,
+                            const int NCellInX, const int NCellInY, const int NCellInZ,
+                            const int NGhost, const double dh );
 #endif
 
 

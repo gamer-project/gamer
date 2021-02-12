@@ -151,8 +151,8 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
 #           if ( MODEL == HYDRO )
             fprintf( File, "%14s", "Pressure" );
             fprintf( File, "%14s", "Sound speed" );
-            if ( OPT__OUTPUT_DIVVEL )
-            fprintf( File, "%14s", "Div(Vel)" );
+            if ( OPT__OUTPUT_DIVVEL )  fprintf( File, "%14s", "Div(Vel)" );
+            if ( OPT__OUTPUT_MACH   )  fprintf( File, "%14s", "Mach" );
 #           endif
 
             fprintf( File, "\n" );
@@ -314,7 +314,13 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
       fprintf( File, " %13.6e", DerField[Der_FieldIdx][Der_CellIdx] );
       Der_FieldIdx += 1;
    }
-#  endif
+
+   if ( OPT__OUTPUT_MACH )
+   {
+      fprintf( File, " %13.6e", DerField[Der_FieldIdx][Der_CellIdx] );
+      Der_FieldIdx += 1;
+   }
+#  endif // #if ( MODEL == HYDRO )
 
    fprintf( File, "\n" );
 
@@ -400,8 +406,21 @@ void GetDerivedField( real (*FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ],
       if ( OutFieldIdx >= DER_NOUT_MAX )
          Aux_Error( ERROR_INFO, "OutFieldIdx (%d) >= DER_NOUT_MAX (%d) !!\n", OutFieldIdx, DER_NOUT_MAX );
 
-      Flu_DerivedField_DivVel( Out[OutFieldIdx], FluIn[LocalID][0], MagCC[0],
+      Flu_DerivedField_DivVel( Out[OutFieldIdx], FluIn[LocalID][0], NULL,
                                NFieldOut, DER_NXT, DER_NXT, DER_NXT, DER_GHOST_SIZE, dh );
+
+      OutFieldIdx += NFieldOut;
+   }
+
+   if ( OPT__OUTPUT_MACH )
+   {
+      const int NFieldOut = 1;
+
+      if ( OutFieldIdx >= DER_NOUT_MAX )
+         Aux_Error( ERROR_INFO, "OutFieldIdx (%d) >= DER_NOUT_MAX (%d) !!\n", OutFieldIdx, DER_NOUT_MAX );
+
+      Flu_DerivedField_Mach( Out[OutFieldIdx], FluIn[LocalID][0], MagCC[0],
+                             NFieldOut, DER_NXT, DER_NXT, DER_NXT, DER_GHOST_SIZE, dh );
 
       OutFieldIdx += NFieldOut;
    }

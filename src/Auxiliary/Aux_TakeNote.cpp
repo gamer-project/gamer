@@ -1174,6 +1174,7 @@ void Aux_TakeNote()
 #     endif
 #     if ( MODEL == HYDRO )
       fprintf( Note, "OPT__OUTPUT_DIVVEL              %d\n",      OPT__OUTPUT_DIVVEL   );
+      fprintf( Note, "OPT__OUTPUT_MACH                %d\n",      OPT__OUTPUT_MACH     );
 #     endif
       fprintf( Note, "OPT__OUTPUT_MODE                %d\n",      OPT__OUTPUT_MODE     );
       fprintf( Note, "OUTPUT_STEP                     %d\n",      OUTPUT_STEP          );
