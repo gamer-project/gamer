@@ -777,6 +777,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #  if ( MODEL == HYDRO )
    int DivVelDumpIdx = -1;
    if ( OPT__OUTPUT_DIVVEL )  DivVelDumpIdx = NFieldOut ++;
+
+   int MachDumpIdx = -1;
+   if ( OPT__OUTPUT_MACH )    MachDumpIdx   = NFieldOut ++;
 #  endif
 
 
@@ -807,6 +810,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 #  if ( MODEL == HYDRO )
    if ( OPT__OUTPUT_DIVVEL )  sprintf( FieldName[DivVelDumpIdx], "DivVel" );
+   if ( OPT__OUTPUT_MACH )    sprintf( FieldName[MachDumpIdx  ], "Mach" );
 #  endif
 
 
@@ -1055,7 +1059,48 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                } // if ( v == DivVelDumpIdx )
                else
-#              endif
+
+//             d-2. Mach number
+               if ( v == MachDumpIdx )
+               {
+                  for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+                  {
+//                   prepare the input fields
+//                   --> must prepare all NCOMP_TOTAL and NCOMP_MAG fields
+                     Prepare_PatchData( lv, Time[lv], Der_FluIn[0][0], Der_MagFC[0][0], DER_GHOST_SIZE, 1, &PID0,
+                                        _TOTAL, _MAG, OPT__FLU_INT_SCHEME, OPT__MAG_INT_SCHEME, UNIT_PATCH, NSIDE_26,
+                                        IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, DE_Consistency_No );
+
+                     for (int LocalID=0; LocalID<8; LocalID++)
+                     {
+//                      convert B field from face-centered to cell-centered
+#                       ifdef MHD
+                        for (int k=0; k<DER_NXT; k++)
+                        for (int j=0; j<DER_NXT; j++)
+                        for (int i=0; i<DER_NXT; i++)
+                        {
+                           const int IdxCC = IDX321( i, j, k, DER_NXT, DER_NXT );
+                           real B_CC[NCOMP_MAG];
+
+                           MHD_GetCellCenteredBField( B_CC, Der_MagFC[LocalID][MAGX], Der_MagFC[LocalID][MAGY],
+                                                      Der_MagFC[LocalID][MAGZ], DER_NXT, DER_NXT, DER_NXT, i, j, k );
+
+                           Der_MagCC[MAGX][IdxCC] = B_CC[MAGX];
+                           Der_MagCC[MAGY][IdxCC] = B_CC[MAGY];
+                           Der_MagCC[MAGZ][IdxCC] = B_CC[MAGZ];
+                        }
+#                       endif // #ifdef MHD
+
+//                      compute and store the target derived field(s)
+                        const int PID       = PID0 + LocalID;
+                        const int NFieldOut = 1;
+                        Flu_DerivedField_Mach( FieldData[PID][0][0], Der_FluIn[LocalID][0], Der_MagCC[0],
+                                               NFieldOut, DER_NXT, DER_NXT, DER_NXT, DER_GHOST_SIZE, amr->dh[lv] );
+                     } // for (int LocalID=0; LocalID<8; LocalID++)
+                  } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+               } // if ( v == MachDumpIdx )
+               else
+#              endif // #if ( MODEL == HYDRO )
 
 //             e. fluid variables
                if ( v < NCOMP_TOTAL )
