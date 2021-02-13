@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2430)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2431)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -201,6 +201,7 @@ Procedure for outputting new variables:
 //                2428 : 2020/12/27 --> output SRC_NAUX_DLEP and SRC_NAUX_USER
 //                2429 : 2021/01/26 --> output SRC_DLEP_PROF_NVAR and SRC_DLEP_PROF_NBINMAX
 //                2430 : 2021/02/05 --> output EXT_POT_NGENE_MAX
+//                2431 : 2021/02/13 --> output DER_GHOST_SIZE, DER_NXT, DER_NOUT_MAX, SRC_NXT
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1653,7 +1654,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2430;
+   KeyInfo.FormatVersion        = 2431;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2156,10 +2157,15 @@ void FillIn_SymConst( SymConst_t &SymConst )
 
    SymConst.Src_BlockSize        = SRC_BLOCK_SIZE;
    SymConst.Src_GhostSize        = SRC_GHOST_SIZE;
+   SymConst.Src_Nxt              = SRC_NXT;
    SymConst.Src_NAuxDlep         = SRC_NAUX_DLEP;
    SymConst.Src_DlepProfNVar     = SRC_DLEP_PROF_NVAR;
    SymConst.Src_DlepProfNBinMax  = SRC_DLEP_PROF_NBINMAX;
    SymConst.Src_NAuxUser         = SRC_NAUX_USER;
+
+   SymConst.Der_GhostSize        = DER_GHOST_SIZE;
+   SymConst.Der_Nxt              = DER_NXT;
+   SymConst.Der_NOut_Max         = DER_NOUT_MAX;
 
 } // FUNCTION : FillIn_SymConst
 
@@ -2869,10 +2875,15 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 
    H5Tinsert( H5_TypeID, "Src_BlockSize",        HOFFSET(SymConst_t,Src_BlockSize       ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Src_GhostSize",        HOFFSET(SymConst_t,Src_GhostSize       ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "Src_Nxt",              HOFFSET(SymConst_t,Src_Nxt             ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Src_NAuxDlep",         HOFFSET(SymConst_t,Src_NAuxDlep        ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Src_DlepProfNVar",     HOFFSET(SymConst_t,Src_DlepProfNVar    ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Src_DlepProfNBinMax",  HOFFSET(SymConst_t,Src_DlepProfNBinMax ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Src_NAuxUser",         HOFFSET(SymConst_t,Src_NAuxUser        ), H5T_NATIVE_INT    );
+
+   H5Tinsert( H5_TypeID, "Der_GhostSize",        HOFFSET(SymConst_t,Der_GhostSize       ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "Der_Nxt",              HOFFSET(SymConst_t,Der_Nxt             ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "Der_NOut_Max",         HOFFSET(SymConst_t,Der_NOut_Max        ), H5T_NATIVE_INT    );
 
 } // FUNCTION : GetCompound_SymConst
 

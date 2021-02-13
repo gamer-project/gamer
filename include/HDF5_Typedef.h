@@ -274,6 +274,7 @@ struct SymConst_t
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
 
+
    int    dt_Flu_BlockSize;
    int    dt_Flu_UseShuffle;
 #  ifdef GRAVITY
@@ -283,10 +284,15 @@ struct SymConst_t
 
    int    Src_BlockSize;
    int    Src_GhostSize;
+   int    Src_Nxt;
    int    Src_NAuxDlep;
    int    Src_DlepProfNVar;
    int    Src_DlepProfNBinMax;
    int    Src_NAuxUser;
+
+   int    Der_GhostSize;
+   int    Der_Nxt;
+   int    Der_NOut_Max;
 
 }; // struct SymConst_t
 
