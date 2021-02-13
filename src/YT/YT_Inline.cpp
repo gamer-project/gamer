@@ -54,6 +54,12 @@ void YT_Inline()
       GID_LvStart[lv] = ( lv == 0 ) ? 0 : GID_LvStart[lv-1] + NPatchTotal[lv-1];
    }
 
+   for (int lv=0; lv<NLEVEL; lv++){
+      for (int r=0; r<MPI_NRank; r++){
+         printf("NPatchAllRank[%d][%d] = %d\n", r, lv, NPatchAllRank[r][lv]);
+      }
+   }
+
 // 2. prepare YT-specific parameters
 // 2-1. determine the number of fields
    int NField = NCOMP_TOTAL;
@@ -75,7 +81,15 @@ void YT_Inline()
 
 
 // 3. prepare all patches for libyt
-   YT_AddAllGrid( GID_Offset, GID_LvStart, (const int **)NPatchAllRank );
+   int **NPatchAllRank_TEMP = new int* [MPI_NRank];
+   for (int r=0; r<MPI_NRank; r++) {
+      NPatchAllRank_TEMP[r] = new int [NLEVEL];
+      for (int lv=0; lv<NLEVEL; lv++){
+         NPatchAllRank_TEMP[r][lv] = NPatchAllRank[r][lv];
+      }
+   }
+
+   YT_AddAllGrid( GID_Offset, GID_LvStart, (const int **)NPatchAllRank_TEMP );
 
 
 // 4. perform yt inline analysis
@@ -86,7 +100,8 @@ void YT_Inline()
    delete [] NPatchAllRank;
    for (int v=0; v<NField; v++)  delete [] FieldLabelForYT[v];
    delete [] FieldLabelForYT;
-
+   for (int r=0; r<MPI_NRank; r++) delete [] NPatchAllRank_TEMP[r];
+   delete [] NPatchAllRank_TEMP;
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
