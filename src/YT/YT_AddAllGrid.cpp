@@ -119,7 +119,7 @@ void YT_AddAllGrid( const int *GID_Offset, const int *GID_LvStart, const int **N
 #           endif // DEBUG_HDF5
 
             long FaLBIdx = amr->patch[0][FaLv][FaPID]->LB_Idx;
-            long MatchIdx;
+            int MatchIdx;
             Mis_Matching_int( NPatchTotal[FaLv], LBIdxList_Sort[FaLv], 1, &FaLBIdx, &MatchIdx );
 
 #           ifdef DEBUG_HDF5
