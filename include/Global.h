@@ -105,6 +105,7 @@ extern double           DUAL_ENERGY_SWITCH;
 extern double           FlagTable_Current[NLEVEL-1];
 extern IntScheme_t      OPT__MAG_INT_SCHEME, OPT__REF_MAG_INT_SCHEME;
 extern bool             OPT__FIXUP_ELECTRIC, OPT__CK_INTERFACE_B, OPT__OUTPUT_CC_MAG, OPT__FLAG_CURRENT;
+extern bool             OPT__OUTPUT_DIVMAG;
 extern int              OPT__CK_DIVERGENCE_B;
 extern double           UNIT_B;
 extern bool             OPT__INIT_BFIELD_BYFILE;

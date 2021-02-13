@@ -788,6 +788,11 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    if ( OPT__OUTPUT_MACH )    MachDumpIdx   = NFieldOut ++;
 #  endif
 
+#  ifdef MHD
+   int DivMagDumpIdx = -1;
+   if ( OPT__OUTPUT_DIVMAG )  DivMagDumpIdx = NFieldOut ++;
+#  endif
+
    int UserDumpIdx0 = -1;
    if ( OPT__OUTPUT_USER_FIELD )
    {
@@ -827,7 +832,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    if ( OPT__OUTPUT_DIVVEL )  sprintf( FieldName[DivVelDumpIdx], "DivVel" );
    if ( OPT__OUTPUT_MACH   )  sprintf( FieldName[MachDumpIdx  ], "Mach"   );
 #  endif
-
+#  ifdef MHD
+   if ( OPT__OUTPUT_DIVMAG )  sprintf( FieldName[DivMagDumpIdx], "DivMag" );
+#  endif
    if ( OPT__OUTPUT_USER_FIELD )
    {
       for (int v=0; v<UserDerField_Num; v++)
@@ -1157,7 +1164,43 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                else
 #              endif // #if ( MODEL == HYDRO )
 
-//             d-5. user-defined derived fields
+//             d-5. divergence(B field)
+#              ifdef MHD
+               if ( v == DivMagDumpIdx )
+               {
+                  for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                  for (int k=0; k<PS1; k++)
+                  for (int j=0; j<PS1; j++)
+                  for (int i=0; i<PS1; i++)
+                  {
+                     const real (*B)[PS1P1*PS1*PS1] = amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic;
+                     const int idx_BxL              = IDX321_BX( i, j, k, PS1, PS1 );
+                     const int idx_ByL              = IDX321_BY( i, j, k, PS1, PS1 );
+                     const int idx_BzL              = IDX321_BZ( i, j, k, PS1, PS1 );
+
+                     real BxL, BxR, ByL, ByR, BzL, BzR, DivB, AmpB;
+
+                     BxL = B[MAGX][ idx_BxL            ];
+                     BxR = B[MAGX][ idx_BxL + 1        ];
+                     ByL = B[MAGY][ idx_ByL            ];
+                     ByR = B[MAGY][ idx_ByL + PS1      ];
+                     BzL = B[MAGZ][ idx_BzL            ];
+                     BzR = B[MAGZ][ idx_BzL + SQR(PS1) ];
+
+                     DivB = ( BxR - BxL ) + ( ByR - ByL ) + ( BzR - BzL );
+                     AmpB = FABS(BxR) + FABS(BxL) + FABS(ByR) + FABS(ByL) + FABS(BzR) + FABS(BzL);
+
+//                   what it actually computes is the dimensionless quantity |div(B)*dh/(3*<|B|>)|
+//                   --> except when B=0 on all 6 faces, for which it simply returns 0
+                     if ( AmpB != (real)0.0 )   DivB = FABS( DivB/AmpB );
+
+                     FieldData[PID][k][j][i] = DivB;
+                  } // k,j,i
+               } // if ( v == DivMagDumpIdx )
+               else
+#              endif // #ifdef MHD
+
+//             d-6. user-defined derived fields
 //             the following check also works for OPT__OUTPUT_USER_FIELD==false since UserDerField_Num is initialized as -1
                if ( v >= UserDumpIdx0  &&  v < UserDumpIdx0 + UserDerField_Num )
                {

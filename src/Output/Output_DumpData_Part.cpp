@@ -153,6 +153,9 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
             if ( OPT__OUTPUT_DIVVEL )  fprintf( File, "%14s", "Div(Vel)" );
             if ( OPT__OUTPUT_MACH   )  fprintf( File, "%14s", "Mach" );
 #           endif
+#           ifdef MHD
+            if ( OPT__OUTPUT_DIVMAG )  fprintf( File, "%14s", "Div(Mag)" );
+#           endif
             if ( OPT__OUTPUT_USER_FIELD ) {
                for (int v=0; v<UserDerField_Num; v++)    fprintf( File, "%14s", UserDerField_Label[v] );
             }
@@ -324,6 +327,34 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
    if ( OPT__OUTPUT_MACH )
       fprintf( File, " %13.6e", DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
 #  endif // #if ( MODEL == HYDRO )
+
+#  ifdef MHD
+   if ( OPT__OUTPUT_DIVMAG )
+   {
+      const real (*B)[PS1P1*PS1*PS1] = amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic;
+      const int idx_BxL              = IDX321_BX( i, j, k, PS1, PS1 );
+      const int idx_ByL              = IDX321_BY( i, j, k, PS1, PS1 );
+      const int idx_BzL              = IDX321_BZ( i, j, k, PS1, PS1 );
+
+      real BxL, BxR, ByL, ByR, BzL, BzR, DivB, AmpB;
+
+      BxL = B[MAGX][ idx_BxL            ];
+      BxR = B[MAGX][ idx_BxL + 1        ];
+      ByL = B[MAGY][ idx_ByL            ];
+      ByR = B[MAGY][ idx_ByL + PS1      ];
+      BzL = B[MAGZ][ idx_BzL            ];
+      BzR = B[MAGZ][ idx_BzL + SQR(PS1) ];
+
+      DivB = ( BxR - BxL ) + ( ByR - ByL ) + ( BzR - BzL );
+      AmpB = FABS(BxR) + FABS(BxL) + FABS(ByR) + FABS(ByL) + FABS(BzR) + FABS(BzL);
+
+//    what it actually computes is the dimensionless quantity |div(B)*dh/(3*<|B|>)|
+//    --> except when B=0 on all 6 faces, for which it simply returns 0
+      if ( AmpB != (real)0.0 )   DivB = FABS( DivB/AmpB );
+
+      fprintf( File, " %13.6e", DivB );
+   } // if ( OPT__OUTPUT_DIVMAG )
+#  endif // #ifdef MHD
 
    if ( OPT__OUTPUT_USER_FIELD )
       for (int v=0; v<UserDerField_Num; v++)
