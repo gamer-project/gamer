@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2431)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2432)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -202,6 +202,7 @@ Procedure for outputting new variables:
 //                2429 : 2021/01/26 --> output SRC_DLEP_PROF_NVAR and SRC_DLEP_PROF_NBINMAX
 //                2430 : 2021/02/05 --> output EXT_POT_NGENE_MAX
 //                2431 : 2021/02/13 --> output DER_GHOST_SIZE, DER_NXT, DER_NOUT_MAX, SRC_NXT
+//                2432 : 2021/02/13 --> output OPT__OUTPUT_* of various derived fields
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1654,7 +1655,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2431;
+   KeyInfo.FormatVersion        = 2432;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2501,6 +2502,17 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  ifdef MHD
    InputPara.Opt__Output_CC_Mag      = OPT__OUTPUT_CC_MAG;
 #  endif
+#  if ( MODEL == HYDRO )
+   InputPara.Opt__Output_Pres        = OPT__OUTPUT_PRES;
+   InputPara.Opt__Output_Temp        = OPT__OUTPUT_TEMP;
+   InputPara.Opt__Output_Cs          = OPT__OUTPUT_CS;
+   InputPara.Opt__Output_DivVel      = OPT__OUTPUT_DIVVEL;
+   InputPara.Opt__Output_Mach        = OPT__OUTPUT_MACH;
+#  ifdef MHD
+   InputPara.Opt__Output_DivMag      = OPT__OUTPUT_DIVMAG;
+#  endif
+#  endif // #if ( MODEL == HYDRO )
+   InputPara.Opt__Output_UserField   = OPT__OUTPUT_USER_FIELD;
    InputPara.Opt__Output_Mode        = OPT__OUTPUT_MODE;
    InputPara.Opt__Output_Step        = OUTPUT_STEP;
    InputPara.Opt__Output_Dt          = OUTPUT_DT;
@@ -3281,6 +3293,17 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  ifdef MHD
    H5Tinsert( H5_TypeID, "Opt__Output_CC_Mag",      HOFFSET(InputPara_t,Opt__Output_CC_Mag     ), H5T_NATIVE_INT              );
 #  endif
+#  if ( MODEL == HYDRO )
+   H5Tinsert( H5_TypeID, "Opt__Output_Pres",        HOFFSET(InputPara_t,Opt__Output_Pres       ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Temp",        HOFFSET(InputPara_t,Opt__Output_Temp       ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Cs",          HOFFSET(InputPara_t,Opt__Output_Cs         ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_DivVel",      HOFFSET(InputPara_t,Opt__Output_DivVel     ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Mach",        HOFFSET(InputPara_t,Opt__Output_Mach       ), H5T_NATIVE_INT              );
+#  ifdef MHD
+   H5Tinsert( H5_TypeID, "Opt__Output_DivMag",      HOFFSET(InputPara_t,Opt__Output_DivMag     ), H5T_NATIVE_INT              );
+#  endif
+#  endif // #if ( MODEL == HYDRO )
+   H5Tinsert( H5_TypeID, "Opt__Output_UserField",   HOFFSET(InputPara_t,Opt__Output_UserField  ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Mode",        HOFFSET(InputPara_t,Opt__Output_Mode       ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Step",        HOFFSET(InputPara_t,Opt__Output_Step       ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Dt",          HOFFSET(InputPara_t,Opt__Output_Dt         ), H5T_NATIVE_DOUBLE           );

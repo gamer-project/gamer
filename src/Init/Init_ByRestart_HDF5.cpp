@@ -1992,6 +1992,17 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  ifdef MHD
    LoadField( "Opt__Output_CC_Mag",      &RS.Opt__Output_CC_Mag,      SID, TID, NonFatal, &RT.Opt__Output_CC_Mag,       1, NonFatal );
 #  endif
+#  if ( MODEL == HYDRO )
+   LoadField( "Opt__Output_Pres",        &RS.Opt__Output_Pres,        SID, TID, NonFatal, &RT.Opt__Output_Pres,         1, NonFatal );
+   LoadField( "Opt__Output_Temp",        &RS.Opt__Output_Temp,        SID, TID, NonFatal, &RT.Opt__Output_Temp,         1, NonFatal );
+   LoadField( "Opt__Output_Cs",          &RS.Opt__Output_Cs,          SID, TID, NonFatal, &RT.Opt__Output_Cs,           1, NonFatal );
+   LoadField( "Opt__Output_DivVel",      &RS.Opt__Output_DivVel,      SID, TID, NonFatal, &RT.Opt__Output_DivVel,       1, NonFatal );
+   LoadField( "Opt__Output_Mach",        &RS.Opt__Output_Mach,        SID, TID, NonFatal, &RT.Opt__Output_Mach,         1, NonFatal );
+#  ifdef MHD
+   LoadField( "Opt__Output_DivMag",      &RS.Opt__Output_DivMag,      SID, TID, NonFatal, &RT.Opt__Output_DivMag,       1, NonFatal );
+#  endif
+#  endif // #if ( MODEL == HYDRO )
+   LoadField( "Opt__Output_UserField",   &RS.Opt__Output_UserField,   SID, TID, NonFatal, &RT.Opt__Output_UserField,    1, NonFatal );
 #  ifdef PARTICLE
    if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS || OPT__OUTPUT_PAR_TEXT ) {
 #  else

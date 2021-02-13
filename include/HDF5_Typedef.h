@@ -612,6 +612,17 @@ struct InputPara_t
 #  ifdef PARTICLE
    int    Opt__Output_ParDens;
 #  endif
+#  if ( MODEL == HYDRO )
+   int    Opt__Output_Pres;
+   int    Opt__Output_Temp;
+   int    Opt__Output_Cs;
+   int    Opt__Output_DivVel;
+   int    Opt__Output_Mach;
+#  ifdef MHD
+   int    Opt__Output_DivMag;
+#  endif
+#  endif // #if ( MODEL == HYDRO )
+   int    Opt__Output_UserField;
    int    Opt__Output_Mode;
    int    Opt__Output_Step;
    double Opt__Output_Dt;
