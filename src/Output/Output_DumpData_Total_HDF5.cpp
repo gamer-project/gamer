@@ -1173,32 +1173,12 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   for (int j=0; j<PS1; j++)
                   for (int i=0; i<PS1; i++)
                   {
-                     const real (*B)[PS1P1*PS1*PS1] = amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic;
-                     const int idx_BxL              = IDX321_BX( i, j, k, PS1, PS1 );
-                     const int idx_ByL              = IDX321_BY( i, j, k, PS1, PS1 );
-                     const int idx_BzL              = IDX321_BZ( i, j, k, PS1, PS1 );
-
-                     real BxL, BxR, ByL, ByR, BzL, BzR, DivB, AmpB;
-
-                     BxL = B[MAGX][ idx_BxL            ];
-                     BxR = B[MAGX][ idx_BxL + 1        ];
-                     ByL = B[MAGY][ idx_ByL            ];
-                     ByR = B[MAGY][ idx_ByL + PS1      ];
-                     BzL = B[MAGZ][ idx_BzL            ];
-                     BzR = B[MAGZ][ idx_BzL + SQR(PS1) ];
-
-                     DivB = ( BxR - BxL ) + ( ByR - ByL ) + ( BzR - BzL );
-                     AmpB = FABS(BxR) + FABS(BxL) + FABS(ByR) + FABS(ByL) + FABS(BzR) + FABS(BzL);
-
-//                   what it actually computes is the dimensionless quantity |div(B)*dh/(3*<|B|>)|
-//                   --> except when B=0 on all 6 faces, for which it simply returns 0
-                     if ( AmpB != (real)0.0 )   DivB = FABS( DivB/AmpB );
-
+                     const real DivB = MHD_GetCellCenteredDivBInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
                      FieldData[PID][k][j][i] = DivB;
-                  } // k,j,i
-               } // if ( v == DivMagDumpIdx )
+                  }
+               }
                else
-#              endif // #ifdef MHD
+#              endif
 
 //             d-6. user-defined derived fields
 //             the following check also works for OPT__OUTPUT_USER_FIELD==false since UserDerField_Num is initialized as -1

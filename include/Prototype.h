@@ -455,6 +455,8 @@ void MHD_GetCellCenteredBFieldInPatch( real B[], const int lv, const int PID, co
                                        const int MagSg );
 real MHD_GetCellCenteredBEnergyInPatch( const int lv, const int PID, const int i, const int j, const int k,
                                         const int MagSg );
+real MHD_GetCellCenteredDivBInPatch( const int lv, const int PID, const int i, const int j, const int k,
+                                     const int MagSg );
 void MHD_InterpolateBField( const real **CData, const int CSize[3][3], const int CStart[3][3], const int CRange[3],
                                   real **FData, const int FSize[3][3], const int FStart[3][3],
                             const real *FInterface[6], const IntScheme_t IntScheme, const bool Monotonic );
