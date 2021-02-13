@@ -288,6 +288,9 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : you might want to turn on BITWISE_REPRODUCIBILITY for GAMER_DEBUG !!\n" );
 #  endif
 
+   if ( OPT__OUTPUT_TOTAL == OUTPUT_FORMAT_CBINARY )
+      Aux_Message( stderr, "WARNING : OPT__OUTPUT_TOTAL = 2 (C-binary) is deprecated !!\n" );
+
    if ( !OPT__OUTPUT_TOTAL  &&  !OPT__OUTPUT_PART  &&  !OPT__OUTPUT_USER  &&  !OPT__OUTPUT_BASEPS )
 #  ifdef PARTICLE
    if ( !OPT__OUTPUT_PAR_TEXT )
