@@ -3,7 +3,7 @@
 #ifdef SUPPORT_LIBYT
 
 void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchLocalLv, char **FieldLabel );
-void YT_AddAllGrid( const int *GID_Offset );
+void YT_AddAllGrid( const int *GID_Offset, const int *GID_LvStart, const int **NPatchAllRank);
 
 
 
@@ -31,7 +31,7 @@ void YT_Inline()
 // 1. gather the number of patches at different MPI ranks, calculate number of local patches
 //    and set the corresponding GID offset
    int (*NPatchAllRank)[NLEVEL] = new int [MPI_NRank][NLEVEL];
-   int NPatchLocal[NLEVEL], NPatchAllLv=0, NPatchLocalLv=0, GID_Offset[NLEVEL];
+   int NPatchLocal[NLEVEL], NPatchAllLv=0, NPatchLocalLv=0, GID_Offset[NLEVEL], GID_LvStart[NLEVEL];
 
    for (int lv=0; lv<NLEVEL; lv++)  
    {
@@ -50,6 +50,8 @@ void YT_Inline()
       for (int FaLv=0; FaLv<lv; FaLv++)   GID_Offset[lv] += NPatchTotal[FaLv];
 
       NPatchAllLv += NPatchTotal[lv];
+
+      GID_LvStart[lv] = ( lv == 0 ) ? 0 : GID_LvStart[lv-1] + NPatchTotal[lv-1];
    }
 
 // 2. prepare YT-specific parameters
@@ -73,7 +75,7 @@ void YT_Inline()
 
 
 // 3. prepare all patches for libyt
-   YT_AddAllGrid( GID_Offset );
+   YT_AddAllGrid( GID_Offset, GID_LvStart, (const int **)NPatchAllRank );
 
 
 // 4. perform yt inline analysis
