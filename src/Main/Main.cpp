@@ -245,6 +245,12 @@ int        Src_Dlep_AuxArray_Int[SRC_NAUX_DLEP];
 double     Src_User_AuxArray_Flt[SRC_NAUX_USER];
 int        Src_User_AuxArray_Int[SRC_NAUX_USER];
 
+// (2-11) user-defined derived fields
+bool OPT__OUTPUT_USER_FIELD;
+int  UserDerField_Num                  = -1;    // must be negative for Output_DumpData_Total_HDF5()
+char (*UserDerField_Label)[MAX_STRING] = NULL;
+char (*UserDerField_Unit )[MAX_STRING] = NULL;
+
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
 // =======================================================================================================

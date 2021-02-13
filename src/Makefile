@@ -420,7 +420,8 @@ CPU_FILE    += Aux_Check_Parameter.cpp  Aux_Check_Conservation.cpp  Aux_Check.cp
 
 CPU_FILE    += CPU_FluidSolver.cpp  Flu_AdvanceDt.cpp  Flu_Prepare.cpp  Flu_Close.cpp  Flu_FixUp_Flux.cpp \
                Flu_FixUp_Restrict.cpp  Flu_AllocateFluxArray.cpp  Flu_BoundaryCondition_User.cpp  Flu_ResetByUser.cpp \
-               Flu_CorrAfterAllSync.cpp  Flu_ManageFixUpTempArray.cpp  Flu_DerivedField_BuiltIn.cpp
+               Flu_CorrAfterAllSync.cpp  Flu_ManageFixUpTempArray.cpp  Flu_DerivedField_BuiltIn.cpp \
+               Flu_DerivedField_User.cpp
 
 CPU_FILE    += End_GAMER.cpp  End_MemFree.cpp  End_MemFree_Fluid.cpp  End_StopManually.cpp  End_User.cpp \
                Init_BaseLevel.cpp  Init_GAMER.cpp  Init_Load_DumpTable.cpp \

@@ -262,6 +262,18 @@ extern double     Src_User_AuxArray_Flt[SRC_NAUX_USER];
 extern int        Src_User_AuxArray_Int[SRC_NAUX_USER];
 
 
+// (2-11) user-defined derived fields
+// =======================================================================================================
+extern bool OPT__OUTPUT_USER_FIELD;
+extern int  UserDerField_Num;
+extern char (*UserDerField_Label)[MAX_STRING];
+extern char (*UserDerField_Unit )[MAX_STRING];
+// Flu_DerivedField_User_Ptr is defined in Flu_DerivedField_User.cpp
+extern void (*Flu_DerivedField_User_Ptr)( real Out[], const real FluIn[], const real MagIn[], const int NFieldOut,
+                                          const int NCellInX, const int NCellInY, const int NCellInZ,
+                                          const int NGhost, const double dh );
+
+
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
 // ============================================================================================================

@@ -238,6 +238,24 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "must enable either SERIAL or LOAD_BALANCE for OPT__INIT=3 !!\n" );
 #  endif
 
+   if ( OPT__OUTPUT_USER_FIELD )
+   {
+      int NDerField = UserDerField_Num;
+#     if ( MODEL == HYDRO )
+      if ( OPT__OUTPUT_DIVVEL )  NDerField ++;
+      if ( OPT__OUTPUT_MACH   )  NDerField ++;
+#     endif
+
+      if ( NDerField > DER_NOUT_MAX )
+         Aux_Error( ERROR_INFO, "Total number of derived fields (%d) > DER_NOUT_MAX (%d) !!\n", NDerField, DER_NOUT_MAX );
+
+      if ( UserDerField_Label == NULL )
+         Aux_Error( ERROR_INFO, "UserDerField_Label == NULL for OPT__OUTPUT_USER_FIELD !!\n" );
+
+      if ( UserDerField_Unit == NULL )
+         Aux_Error( ERROR_INFO, "UserDerField_Unit == NULL for OPT__OUTPUT_USER_FIELD !!\n" );
+   } // if ( OPT__OUTPUT_USER_FIELD )
+
 
 
 // general warnings

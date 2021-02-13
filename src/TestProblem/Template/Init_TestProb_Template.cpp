@@ -284,6 +284,7 @@ void Init_TestProb_Template()
    BC_BField_User_Ptr             = NULL; // option: OPT__BC_FLU_*=4;
 #  endif
    Flu_ResetByUser_Func_Ptr       = NULL; // option: OPT__RESET_FLUID;        example: Fluid/Flu_ResetByUser.cpp
+   Init_DerivedField_User_Ptr     = NULL; // option: OPT__OUTPUT_USER_FIELD;  example: Fluid/Flu_DerivedField_User.cpp
    Output_User_Ptr                = NULL; // option: OPT__OUTPUT_USER;        example: TestProblem/Hydro/AcousticWave/Init_TestProb_Hydro_AcousticWave.cpp --> OutputError()
    Aux_Record_User_Ptr            = NULL; // option: OPT__RECORD_USER;        example: Auxiliary/Aux_Record_User.cpp
    Init_User_Ptr                  = NULL; // option: none;                    example: none

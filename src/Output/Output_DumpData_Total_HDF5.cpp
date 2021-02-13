@@ -788,6 +788,13 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    if ( OPT__OUTPUT_MACH )    MachDumpIdx   = NFieldOut ++;
 #  endif
 
+   int UserDumpIdx0 = -1;
+   if ( OPT__OUTPUT_USER_FIELD )
+   {
+      UserDumpIdx0 = NFieldOut;
+      NFieldOut   += UserDerField_Num;
+   }
+
 
 // 5-1. set the output field names
    FieldName = new char [NFieldOut][MAX_STRING];
@@ -820,6 +827,12 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    if ( OPT__OUTPUT_DIVVEL )  sprintf( FieldName[DivVelDumpIdx], "DivVel" );
    if ( OPT__OUTPUT_MACH   )  sprintf( FieldName[MachDumpIdx  ], "Mach"   );
 #  endif
+
+   if ( OPT__OUTPUT_USER_FIELD )
+   {
+      for (int v=0; v<UserDerField_Num; v++)
+         sprintf( FieldName[ UserDumpIdx0 + v ], UserDerField_Label[v] );
+   }
 
 
 // 5-2. initialize the "GridData" group and the datasets of all fields and magnetic field
@@ -915,8 +928,8 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    real (*Der_MagFC)[NCOMP_MAG  ][ (DER_NXT+1)*SQR(DER_NXT) ] = NULL;
    real (*Der_MagCC)             [ CUBE(DER_NXT)            ] = NULL;
 #  endif
-// allocate the maximum required memory (i.e., with NCOMP_TOTAL fields) for the temporary array Der_Temp[]
-   real (*Der_Temp) = new real [ Der_NP*NCOMP_TOTAL*CUBE(DER_NXT) ];
+// allocate the maximum required memory (i.e., with NCOMP_TOTAL fields) for the temporary array Der_FluInTmp[]
+   real (*Der_FluInTmp) = new real [ Der_NP*NCOMP_TOTAL*CUBE(DER_NXT) ];
 
 
 // output one level at a time so that data at the same level are consecutive on disk (even for multiple ranks)
@@ -1074,25 +1087,25 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   {
 //                   prepare the input density and momentum
 //                   --> no need to prepare other fields
-//                   --> store in Der_Temp[] first and then copy to Der_FluIn[] since the shape of the latter
+//                   --> store in Der_FluInTmp[] first and then copy to Der_FluIn[] since the shape of the latter
 //                       is fixed to "[Der_NP][NCOMP_TOTAL][CUBE(DER_NXT)]" even though some fields may be useless
-                     Prepare_PatchData( lv, Time[lv], Der_Temp, NULL, DER_GHOST_SIZE, 1, &PID0,
+                     Prepare_PatchData( lv, Time[lv], Der_FluInTmp, NULL, DER_GHOST_SIZE, 1, &PID0,
                                         _DENS|_MOMX|_MOMY|_MOMZ, _NONE, OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26,
                                         IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, DE_Consistency_No );
 
 //                   type casting for convenience
-                     real (*Der_Temp3D)[4][ CUBE(DER_NXT) ] = ( real (*)[4][ CUBE(DER_NXT) ] )Der_Temp;
+                     real (*Der_FluInTmp3D)[4][ CUBE(DER_NXT) ] = ( real (*)[4][ CUBE(DER_NXT) ] )Der_FluInTmp;
 
                      for (int LocalID=0; LocalID<8; LocalID++)
                      {
-//                      copy data from Der_Temp[] to Der_FluIn[]
+//                      copy data from Der_FluInTmp[] to Der_FluIn[]
                         const int Size1v = sizeof(real)*CUBE(DER_NXT);
-                        memcpy( Der_FluIn[LocalID][DENS], Der_Temp3D[LocalID][0], Size1v );
-                        memcpy( Der_FluIn[LocalID][MOMX], Der_Temp3D[LocalID][1], Size1v );
-                        memcpy( Der_FluIn[LocalID][MOMY], Der_Temp3D[LocalID][2], Size1v );
-                        memcpy( Der_FluIn[LocalID][MOMZ], Der_Temp3D[LocalID][3], Size1v );
+                        memcpy( Der_FluIn[LocalID][DENS], Der_FluInTmp3D[LocalID][0], Size1v );
+                        memcpy( Der_FluIn[LocalID][MOMX], Der_FluInTmp3D[LocalID][1], Size1v );
+                        memcpy( Der_FluIn[LocalID][MOMY], Der_FluInTmp3D[LocalID][2], Size1v );
+                        memcpy( Der_FluIn[LocalID][MOMZ], Der_FluInTmp3D[LocalID][3], Size1v );
 
-//                      compute and store the target derived field(s)
+//                      compute and store the target derived field
                         const int PID       = PID0 + LocalID;
                         const int NFieldOut = 1;
                         Flu_DerivedField_DivVel( FieldData[PID][0][0], Der_FluIn[LocalID][0], NULL,
@@ -1133,7 +1146,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                         }
 #                       endif // #ifdef MHD
 
-//                      compute and store the target derived field(s)
+//                      compute and store the target derived field
                         const int PID       = PID0 + LocalID;
                         const int NFieldOut = 1;
                         Flu_DerivedField_Mach( FieldData[PID][0][0], Der_FluIn[LocalID][0], Der_MagCC[0],
@@ -1143,6 +1156,56 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                } // if ( v == MachDumpIdx )
                else
 #              endif // #if ( MODEL == HYDRO )
+
+//             d-5. user-defined derived fields
+//             the following check also works for OPT__OUTPUT_USER_FIELD==false since UserDerField_Num is initialized as -1
+               if ( v >= UserDumpIdx0  &&  v < UserDumpIdx0 + UserDerField_Num )
+               {
+                  for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+                  {
+//                   prepare the input fields
+//                   --> must prepare all NCOMP_TOTAL and NCOMP_MAG fields
+                     Prepare_PatchData( lv, Time[lv], Der_FluIn[0][0], Der_MagFC[0][0], DER_GHOST_SIZE, 1, &PID0,
+                                        _TOTAL, _MAG, OPT__FLU_INT_SCHEME, OPT__MAG_INT_SCHEME, UNIT_PATCH, NSIDE_26,
+                                        IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, DE_Consistency_No );
+
+                     for (int LocalID=0; LocalID<8; LocalID++)
+                     {
+//                      convert B field from face-centered to cell-centered
+#                       ifdef MHD
+                        for (int k=0; k<DER_NXT; k++)
+                        for (int j=0; j<DER_NXT; j++)
+                        for (int i=0; i<DER_NXT; i++)
+                        {
+                           const int IdxCC = IDX321( i, j, k, DER_NXT, DER_NXT );
+                           real B_CC[NCOMP_MAG];
+
+                           MHD_GetCellCenteredBField( B_CC, Der_MagFC[LocalID][MAGX], Der_MagFC[LocalID][MAGY],
+                                                      Der_MagFC[LocalID][MAGZ], DER_NXT, DER_NXT, DER_NXT, i, j, k );
+
+                           Der_MagCC[MAGX][IdxCC] = B_CC[MAGX];
+                           Der_MagCC[MAGY][IdxCC] = B_CC[MAGY];
+                           Der_MagCC[MAGZ][IdxCC] = B_CC[MAGZ];
+                        }
+#                       endif // #ifdef MHD
+
+//                      compute and store the target derived field
+//                      --> store in Der_Out[] first and then copy to FieldData[] since we only output one field at a time
+//                      --> there are redundant calculations in Flu_DerivedField_User_Ptr since it always computes
+//                          UserDerField_Num fields while we only need one field at a time
+//###OPTIMIZATION: only compute the derived field being dumped
+                        const int PID       = PID0 + LocalID;
+                        const int NFieldOut = UserDerField_Num;
+                        Flu_DerivedField_User_Ptr( Der_Out[0], Der_FluIn[LocalID][0], Der_MagCC[0],
+                                                   NFieldOut, DER_NXT, DER_NXT, DER_NXT, DER_GHOST_SIZE, amr->dh[lv] );
+
+//                      copy data from Der_Der[] to FieldData[]
+                        const int DerIdx = v - UserDumpIdx0;
+                        memcpy( FieldData[PID], Der_Out[DerIdx], FieldSizeOnePatch );
+                     } // for (int LocalID=0; LocalID<8; LocalID++)
+                  } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+               } // if ( v >= UserDumpIdx0  &&  v < UserDumpIdx0 + UserDerField_Num )
+               else
 
 //             e. fluid variables
                if ( v < NCOMP_TOTAL )
@@ -1255,7 +1318,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    delete [] Der_MagFC;
    delete [] Der_MagCC;
 #  endif
-   delete [] Der_Temp;
+   delete [] Der_FluInTmp;
 
 
 

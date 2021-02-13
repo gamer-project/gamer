@@ -153,6 +153,9 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
             if ( OPT__OUTPUT_DIVVEL )  fprintf( File, "%14s", "Div(Vel)" );
             if ( OPT__OUTPUT_MACH   )  fprintf( File, "%14s", "Mach" );
 #           endif
+            if ( OPT__OUTPUT_USER_FIELD ) {
+               for (int v=0; v<UserDerField_Num; v++)    fprintf( File, "%14s", UserDerField_Label[v] );
+            }
 
             fprintf( File, "\n" );
          } // if ( TargetMPIRank == 0 )
@@ -316,17 +319,15 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
       fprintf( File, " %13.6e", Cs );
 
    if ( OPT__OUTPUT_DIVVEL )
-   {
-      fprintf( File, " %13.6e", DerField[Der_FieldIdx][Der_CellIdx] );
-      Der_FieldIdx += 1;
-   }
+      fprintf( File, " %13.6e", DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
 
    if ( OPT__OUTPUT_MACH )
-   {
-      fprintf( File, " %13.6e", DerField[Der_FieldIdx][Der_CellIdx] );
-      Der_FieldIdx += 1;
-   }
+      fprintf( File, " %13.6e", DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
 #  endif // #if ( MODEL == HYDRO )
+
+   if ( OPT__OUTPUT_USER_FIELD )
+      for (int v=0; v<UserDerField_Num; v++)
+      fprintf( File, " %13.6e", DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
 
    fprintf( File, "\n" );
 
@@ -405,12 +406,14 @@ void GetDerivedField( real (*FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ],
 // calculate the derived fields
    int OutFieldIdx = 0;
 
+#  if ( MODEL == HYDRO )
    if ( OPT__OUTPUT_DIVVEL )
    {
       const int NFieldOut = 1;
 
-      if ( OutFieldIdx >= DER_NOUT_MAX )
-         Aux_Error( ERROR_INFO, "OutFieldIdx (%d) >= DER_NOUT_MAX (%d) !!\n", OutFieldIdx, DER_NOUT_MAX );
+      if ( OutFieldIdx + NFieldOut > DER_NOUT_MAX )
+         Aux_Error( ERROR_INFO, "OutFieldIdx (%d) + NFieldOut (%d) > DER_NOUT_MAX (%d) !!\n",
+                    OutFieldIdx, NFieldOut, DER_NOUT_MAX );
 
       Flu_DerivedField_DivVel( Out[OutFieldIdx], FluIn[LocalID][0], NULL,
                                NFieldOut, DER_NXT, DER_NXT, DER_NXT, DER_GHOST_SIZE, dh );
@@ -422,11 +425,27 @@ void GetDerivedField( real (*FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ],
    {
       const int NFieldOut = 1;
 
-      if ( OutFieldIdx >= DER_NOUT_MAX )
-         Aux_Error( ERROR_INFO, "OutFieldIdx (%d) >= DER_NOUT_MAX (%d) !!\n", OutFieldIdx, DER_NOUT_MAX );
+      if ( OutFieldIdx + NFieldOut > DER_NOUT_MAX )
+         Aux_Error( ERROR_INFO, "OutFieldIdx (%d) + NFieldOut (%d) > DER_NOUT_MAX (%d) !!\n",
+                    OutFieldIdx, NFieldOut, DER_NOUT_MAX );
 
       Flu_DerivedField_Mach( Out[OutFieldIdx], FluIn[LocalID][0], MagCC[0],
                              NFieldOut, DER_NXT, DER_NXT, DER_NXT, DER_GHOST_SIZE, dh );
+
+      OutFieldIdx += NFieldOut;
+   }
+#  endif // #if ( MODEL == HYDRO )
+
+   if ( OPT__OUTPUT_USER_FIELD )
+   {
+      const int NFieldOut = UserDerField_Num;
+
+      if ( OutFieldIdx + NFieldOut > DER_NOUT_MAX )
+         Aux_Error( ERROR_INFO, "OutFieldIdx (%d) + NFieldOut (%d) > DER_NOUT_MAX (%d) !!\n",
+                    OutFieldIdx, NFieldOut, DER_NOUT_MAX );
+
+      Flu_DerivedField_User_Ptr( Out[OutFieldIdx], FluIn[LocalID][0], MagCC[0],
+                                 NFieldOut, DER_NXT, DER_NXT, DER_NXT, DER_GHOST_SIZE, dh );
 
       OutFieldIdx += NFieldOut;
    }
