@@ -71,7 +71,8 @@ void EoS_SetAuxArray_Gamma( double AuxArray_Flt[], int AuxArray_Int[] )
 //     (2) EoS_DensPres2Eint_*
 //     (3) EoS_DensPres2CSqr_*
 //     (4) EoS_DensEint2Temp_* [OPTIONAL]
-//     (5) EoS_General_*       [OPTIONAL]
+//     (5) EoS_DensTemp2Pres_* [OPTIONAL]
+//     (6) EoS_General_*       [OPTIONAL]
 // =============================================
 
 //-------------------------------------------------------------------------------------------------------
@@ -264,6 +265,53 @@ static real EoS_DensEint2Temp_Gamma( const real Dens, const real Eint, const rea
 
 
 //-------------------------------------------------------------------------------------------------------
+// Function    :  EoS_DensTemp2Pres_Gamma
+// Description :  Convert gas mass density and temperature to gas pressure
+//
+// Note        :  1. See EoS_SetAuxArray_Gamma() for the values stored in AuxArray_Flt/Int[]
+//                2. Temperature is in kelvin
+//
+// Parameter   :  Dens       : Gas mass density
+//                Temp       : Gas temperature in kelvin
+//                Passive    : Passive scalars (must not used here)
+//                AuxArray_* : Auxiliary arrays (see the Note above)
+//                Table      : EoS tables
+//                ExtraInOut : Useless for this EoS
+//
+// Return      :  Gas pressure
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE_NOINLINE
+static real EoS_DensTemp2Pres_Gamma( const real Dens, const real Temp, const real Passive[],
+                                     const double AuxArray_Flt[], const int AuxArray_Int[],
+                                     const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] )
+{
+
+// check
+#  ifdef GAMER_DEBUG
+   if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
+
+   if ( Hydro_CheckNegative(Dens) )
+      printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              Dens, __FILE__, __LINE__, __FUNCTION__ );
+
+   if ( Hydro_CheckNegative(Temp) )
+      printf( "ERROR : invalid input temperature (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              Temp, __FILE__, __LINE__, __FUNCTION__ );
+#  endif // GAMER_DEBUG
+
+
+   const real _m_kB = (real)AuxArray_Flt[5];
+   real Pres;
+
+   Pres = Temp * Dens * _m_kB;
+
+   return Pres;
+
+} // FUNCTION : EoS_DensTemp2Pres_Gamma
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  EoS_General_Gamma
 // Description :  General EoS converter: In[] -> Out[]
 //
@@ -304,6 +352,7 @@ FUNC_SPACE EoS_DE2P_t EoS_DensEint2Pres_Ptr = EoS_DensEint2Pres_Gamma;
 FUNC_SPACE EoS_DP2E_t EoS_DensPres2Eint_Ptr = EoS_DensPres2Eint_Gamma;
 FUNC_SPACE EoS_DP2C_t EoS_DensPres2CSqr_Ptr = EoS_DensPres2CSqr_Gamma;
 FUNC_SPACE EoS_DE2T_t EoS_DensEint2Temp_Ptr = EoS_DensEint2Temp_Gamma;
+FUNC_SPACE EoS_DT2P_t EoS_DensTemp2Pres_Ptr = EoS_DensTemp2Pres_Gamma;
 FUNC_SPACE EoS_GENE_t EoS_General_Ptr       = EoS_General_Gamma;
 
 //-----------------------------------------------------------------------------------------
@@ -323,11 +372,12 @@ FUNC_SPACE EoS_GENE_t EoS_General_Ptr       = EoS_General_Gamma;
 //                EoS_DensPres2Eint_CPU/GPUPtr : ...
 //                EoS_DensPres2CSqr_CPU/GPUPtr : ...
 //                EoS_DensEint2Temp_CPU/GPUPtr : ...
+//                EoS_DensTemp2Pres_CPU/GPUPtr : ...
 //                EoS_General_CPU/GPUPtr       : ...
 //
 // Return      :  EoS_DensEint2Pres_CPU/GPUPtr, EoS_DensPres2Eint_CPU/GPUPtr,
 //                EoS_DensPres2CSqr_CPU/GPUPtr, EoS_DensEint2Temp_CPU/GPUPtr,
-//                EoS_General_CPU/GPUPtr
+//                EoS_DensTemp2Pres_CPU/GPUPtr, EoS_General_CPU/GPUPtr
 //-----------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __host__
@@ -335,12 +385,14 @@ void EoS_SetGPUFunc_Gamma( EoS_DE2P_t &EoS_DensEint2Pres_GPUPtr,
                            EoS_DP2E_t &EoS_DensPres2Eint_GPUPtr,
                            EoS_DP2C_t &EoS_DensPres2CSqr_GPUPtr,
                            EoS_DE2T_t &EoS_DensEint2Temp_GPUPtr,
+                           EoS_DT2P_t &EoS_DensTemp2Pres_GPUPtr,
                            EoS_GENE_t &EoS_General_GPUPtr )
 {
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensEint2Pres_GPUPtr, EoS_DensEint2Pres_Ptr, sizeof(EoS_DE2P_t) )  );
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensPres2Eint_GPUPtr, EoS_DensPres2Eint_Ptr, sizeof(EoS_DP2E_t) )  );
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensPres2CSqr_GPUPtr, EoS_DensPres2CSqr_Ptr, sizeof(EoS_DP2C_t) )  );
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensEint2Temp_GPUPtr, EoS_DensEint2Temp_Ptr, sizeof(EoS_DE2T_t) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensTemp2Pres_GPUPtr, EoS_DensTemp2Pres_Ptr, sizeof(EoS_DT2P_t) )  );
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_General_GPUPtr,       EoS_General_Ptr,       sizeof(EoS_GENE_t) )  );
 }
 
@@ -350,12 +402,14 @@ void EoS_SetCPUFunc_Gamma( EoS_DE2P_t &EoS_DensEint2Pres_CPUPtr,
                            EoS_DP2E_t &EoS_DensPres2Eint_CPUPtr,
                            EoS_DP2C_t &EoS_DensPres2CSqr_CPUPtr,
                            EoS_DE2T_t &EoS_DensEint2Temp_CPUPtr,
+                           EoS_DT2P_t &EoS_DensTemp2Pres_CPUPtr,
                            EoS_GENE_t &EoS_General_CPUPtr )
 {
    EoS_DensEint2Pres_CPUPtr = EoS_DensEint2Pres_Ptr;
    EoS_DensPres2Eint_CPUPtr = EoS_DensPres2Eint_Ptr;
    EoS_DensPres2CSqr_CPUPtr = EoS_DensPres2CSqr_Ptr;
    EoS_DensEint2Temp_CPUPtr = EoS_DensEint2Temp_Ptr;
+   EoS_DensTemp2Pres_CPUPtr = EoS_DensTemp2Pres_Ptr;
    EoS_General_CPUPtr       = EoS_General_Ptr;
 }
 
@@ -367,9 +421,9 @@ void EoS_SetCPUFunc_Gamma( EoS_DE2P_t &EoS_DensEint2Pres_CPUPtr,
 
 // local function prototypes
 void EoS_SetAuxArray_Gamma( double [], int [] );
-void EoS_SetCPUFunc_Gamma( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t &, EoS_DE2T_t &, EoS_GENE_t & );
+void EoS_SetCPUFunc_Gamma( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t &, EoS_DE2T_t &, EoS_DT2P_t &, EoS_GENE_t & );
 #ifdef GPU
-void EoS_SetGPUFunc_Gamma( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t &, EoS_DE2T_t &, EoS_GENE_t & );
+void EoS_SetGPUFunc_Gamma( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t &, EoS_DE2T_t &, EoS_DT2P_t &, EoS_GENE_t & );
 #endif
 
 //-----------------------------------------------------------------------------------------
@@ -393,11 +447,11 @@ void EoS_Init_Gamma()
    EoS_SetAuxArray_Gamma( EoS_AuxArray_Flt, EoS_AuxArray_Int );
    EoS_SetCPUFunc_Gamma( EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
                          EoS_DensPres2CSqr_CPUPtr, EoS_DensEint2Temp_CPUPtr,
-                         EoS_General_CPUPtr );
+                         EoS_DensTemp2Pres_CPUPtr, EoS_General_CPUPtr );
 #  ifdef GPU
    EoS_SetGPUFunc_Gamma( EoS_DensEint2Pres_GPUPtr, EoS_DensPres2Eint_GPUPtr,
                          EoS_DensPres2CSqr_GPUPtr, EoS_DensEint2Temp_GPUPtr,
-                         EoS_General_GPUPtr );
+                         EoS_DensTemp2Pres_GPUPtr, EoS_General_GPUPtr );
 #  endif
 
 } // FUNCTION : EoS_Init_Gamma

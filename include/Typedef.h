@@ -407,6 +407,9 @@ typedef void (*EoS_GENE_t)( const int Mode, real Out[], const real In[],
 typedef real (*EoS_DE2T_t)( const real Dens, const real Eint, const real Passive[],
                             const double AuxArray_Flt[], const int AuxArray_Int[],
                             const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] );
+typedef real (*EoS_DT2P_t)( const real Dens, const real Temp, const real Passive[],
+                            const double AuxArray_Flt[], const int AuxArray_Int[],
+                            const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] );
 typedef void (*ExtAcc_t)( real Acc[], const double x, const double y, const double z, const double Time,
                           const double UserArray[] );
 typedef real (*ExtPot_t)( const double x, const double y, const double z, const double Time,
