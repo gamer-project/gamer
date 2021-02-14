@@ -25,6 +25,10 @@ static real Hydro_ConEint2Etot( const real Dens, const real MomX, const real Mom
                                 const real Emag );
 GPU_DEVICE
 static real Hydro_CheckMinPres( const real InPres, const real MinPres );
+GPU_DEVICE
+static real Hydro_CheckMinEint( const real InEint, const real MinEint );
+GPU_DEVICE
+static real Hydro_CheckMinTemp( const real InTemp, const real MinTemp );
 #endif
 
 
@@ -384,7 +388,7 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_CheckMinPres
-// Description :  Check if the input pressure is great than the minimum allowed threshold
+// Description :  Check if the input pressure is greater than the minimum allowed threshold
 //
 // Note        :  1. This function is used to correct unphysical (usually negative) pressure caused by
 //                   numerical errors
@@ -436,6 +440,31 @@ real Hydro_CheckMinEint( const real InEint, const real MinEint )
    else                       return InEint;
 
 } // FUNCTION : Hydro_CheckMinEint
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Hydro_CheckMinTemp
+// Description :  Similar to Hydro_CheckMinPres() except that this function checks the gas temperature
+//                instead of pressure
+//
+// Note        :  1. See Hydro_CheckMinPres()
+//
+// Parameter   :  InTemp  : Input temperature to be corrected
+//                MinTemp : Minimum allowed temperature
+//
+// Return      :  InTemp != NaN --> max( InTemp, MinTemp )
+//                       == NaN --> NaN
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+real Hydro_CheckMinTemp( const real InTemp, const real MinTemp )
+{
+
+// call FMAX() only if InTemp is not NaN
+   if ( InTemp == InTemp )    return FMAX( InTemp, MinTemp );
+   else                       return InTemp;
+
+} // FUNCTION : Hydro_CheckMinTemp
 
 
 
@@ -627,10 +656,9 @@ real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, cons
 // Function    :  Hydro_Con2Temp
 // Description :  Evaluate the fluid temperature
 //
-// Note        :  1. For simplicity, currently this function only returns **pressure/density**, which does
-//                   NOT include normalization
-//                   --> For OPT__FLAG_LOHNER_TEMP only
-//                   --> Also note that currently it only checks minimum pressure but not minimum density
+// Note        :  1. Invoke the EoS routine EoS_DensEint2Temp() to support different EoS
+//                2. Returned temperature is in kelvin
+//                3. No pressure or temperature floors are applied here
 //
 // Parameter   :  Dens              : Mass density
 //                MomX/Y/Z          : Momentum density
