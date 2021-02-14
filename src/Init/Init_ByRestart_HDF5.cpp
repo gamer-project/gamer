@@ -1868,6 +1868,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  if ( MODEL == HYDRO )
    LoadField( "MinPres",                 &RS.MinPres,                 SID, TID, NonFatal, &RT.MinPres,                  1, NonFatal );
    LoadField( "MinEint",                 &RS.MinEint,                 SID, TID, NonFatal, &RT.MinEint,                  1, NonFatal );
+   LoadField( "MinTemp",                 &RS.MinTemp,                 SID, TID, NonFatal, &RT.MinTemp,                  1, NonFatal );
    LoadField( "Opt__LastResortFloor",    &RS.Opt__LastResortFloor,    SID, TID, NonFatal, &RT.Opt__LastResortFloor,     1, NonFatal );
    LoadField( "JeansMinPres",            &RS.JeansMinPres,            SID, TID, NonFatal, &RT.JeansMinPres,             1, NonFatal );
    LoadField( "JeansMinPres_Level",      &RS.JeansMinPres_Level,      SID, TID, NonFatal, &RT.JeansMinPres_Level,       1, NonFatal );

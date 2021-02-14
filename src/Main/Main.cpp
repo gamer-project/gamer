@@ -90,7 +90,7 @@ bool                 OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, JEANS_MIN_PRES, OPT__
 bool                 OPT__OUTPUT_DIVVEL, OPT__OUTPUT_MACH, OPT__OUTPUT_PRES, OPT__OUTPUT_CS;
 bool                 OPT__OUTPUT_TEMP;
 int                  OPT__CK_NEGATIVE, JEANS_MIN_PRES_LEVEL, JEANS_MIN_PRES_NCELL;
-double               MIN_DENS, MIN_PRES, MIN_EINT;
+double               MIN_DENS, MIN_PRES, MIN_EINT, MIN_TEMP;
 #ifdef DUAL_ENERGY
 double               DUAL_ENERGY_SWITCH;
 #endif

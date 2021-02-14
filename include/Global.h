@@ -98,7 +98,7 @@ extern bool             OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, JEANS_MIN_PRES, OP
 extern bool             OPT__OUTPUT_DIVVEL, OPT__OUTPUT_MACH, OPT__OUTPUT_PRES, OPT__OUTPUT_CS;
 extern bool             OPT__OUTPUT_TEMP;
 extern int              OPT__CK_NEGATIVE, JEANS_MIN_PRES_LEVEL, JEANS_MIN_PRES_NCELL;
-extern double           MIN_DENS, MIN_PRES, MIN_EINT;
+extern double           MIN_DENS, MIN_PRES, MIN_EINT, MIN_TEMP;
 #ifdef DUAL_ENERGY
 extern double           DUAL_ENERGY_SWITCH;
 #endif
