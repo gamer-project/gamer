@@ -82,6 +82,7 @@ void Validate()
 //                   (2) set the problem-specific derived parameters
 //                   (3) reset other general-purpose parameters if necessary
 //                   (4) make a note of the problem-specific parameters
+//                3. Must NOT call any EoS routine here since it hasn't been initialized at this point
 //
 // Parameter   :  None
 //

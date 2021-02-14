@@ -98,8 +98,6 @@ real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const re
                      const real Passive[], const bool CheckMinTemp, const real MinTemp, const real Emag,
                      const EoS_DE2T_t EoS_DensEint2Temp, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX] );
-double Hydro_Temp2Pres( const double Dens, const double Temp, const double mu, const double m_H,
-                        const bool CheckMinPres, const double MinPres );
 real Hydro_CheckMinPres( const real InPres, const real MinPres );
 real Hydro_CheckMinEint( const real InEint, const real MinEint );
 bool Hydro_CheckNegative( const real Input );
