@@ -53,12 +53,7 @@ void YT_Inline()
 
       GID_LvStart[lv] = ( lv == 0 ) ? 0 : GID_LvStart[lv-1] + NPatchTotal[lv-1];
    }
-
-   for (int lv=0; lv<NLEVEL; lv++){
-      for (int r=0; r<MPI_NRank; r++){
-         printf("NPatchAllRank[%d][%d] = %d\n", r, lv, NPatchAllRank[r][lv]);
-      }
-   }
+   
 
 // 2. prepare YT-specific parameters
 // 2-1. determine the number of fields

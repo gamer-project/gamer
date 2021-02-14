@@ -40,12 +40,6 @@ void YT_AddAllGrid( const int *GID_Offset, const int *GID_LvStart, const int **N
       LBIdxList_Sort_IdxTable[lv] = new int  [ NPatchTotal[lv] ];
    }
 
-   for (int lv=0; lv<NLEVEL; lv++){
-      for (int r=0; r<MPI_NRank; r++){
-         printf("NPatchAllRank[%d][%d] = %d\n", r, lv, NPatchAllRank[r][lv]);
-      }
-   }
-
    for (int lv=0; lv<NLEVEL; lv++)
    {
       for (int r=0; r<MPI_NRank; r++)
