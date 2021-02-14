@@ -18,7 +18,7 @@
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int **NPatchAllRank)
+void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (*NPatchAllRank)[NLEVEL])
 {
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );

@@ -3,7 +3,7 @@
 #ifdef SUPPORT_LIBYT
 
 void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchLocalLv, char **FieldLabel );
-void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int **NPatchAllRank);
+void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (*NPatchAllRank)[NLEVEL]);
 
 
 
@@ -76,15 +76,7 @@ void YT_Inline()
 
 
 // 3. prepare local patches for libyt
-   int **NPatchAllRank_TEMP = new int* [MPI_NRank];
-   for (int r=0; r<MPI_NRank; r++) {
-      NPatchAllRank_TEMP[r] = new int [NLEVEL];
-      for (int lv=0; lv<NLEVEL; lv++){
-         NPatchAllRank_TEMP[r][lv] = NPatchAllRank[r][lv];
-      }
-   }
-
-   YT_AddLocalGrid( GID_Offset, GID_LvStart, (const int **)NPatchAllRank_TEMP );
+   YT_AddLocalGrid( GID_Offset, GID_LvStart, NPatchAllRank );
 
 
 // 4. perform yt inline analysis
@@ -95,8 +87,6 @@ void YT_Inline()
    delete [] NPatchAllRank;
    for (int v=0; v<NField; v++)  delete [] FieldLabelForYT[v];
    delete [] FieldLabelForYT;
-   for (int r=0; r<MPI_NRank; r++) delete [] NPatchAllRank_TEMP[r];
-   delete [] NPatchAllRank_TEMP;
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
