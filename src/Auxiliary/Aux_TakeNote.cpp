@@ -1183,6 +1183,20 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OUTPUT_DIVMAG              %d\n",      OPT__OUTPUT_DIVMAG     );
 #     endif
       fprintf( Note, "OPT__OUTPUT_USER_FIELD          %d\n",      OPT__OUTPUT_USER_FIELD );
+
+//    user-defined derived fields
+      if ( OPT__OUTPUT_USER_FIELD ) {
+      fprintf( Note, "   Number of fields             %d\n",      UserDerField_Num       );
+      if ( UserDerField_Num > 0 ) {
+      fprintf( Note, "   Labels                      "                                   );
+      for (int v=0; v<UserDerField_Num; v++)
+      fprintf( Note, " %s",                                       UserDerField_Label[v]  );
+      fprintf( Note, "\n" );
+      fprintf( Note, "   Units                       "                                   );
+      for (int v=0; v<UserDerField_Num; v++)
+      fprintf( Note, " %s",                                       UserDerField_Unit [v]  );
+      fprintf( Note, "\n" ); } }
+
       fprintf( Note, "OPT__OUTPUT_MODE                %d\n",      OPT__OUTPUT_MODE       );
       fprintf( Note, "OUTPUT_STEP                     %d\n",      OUTPUT_STEP            );
       fprintf( Note, "OUTPUT_DT                       %20.14e\n", OUTPUT_DT              );
