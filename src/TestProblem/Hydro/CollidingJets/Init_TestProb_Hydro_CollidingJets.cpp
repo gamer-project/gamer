@@ -181,6 +181,8 @@ void SetParameter()
 
 
 // (2) set the problem-specific derived parameters
+//###REVISE: better to use EoS_DensTemp2Pres() to get both Jet_BgPres and Jet_SrcPres
+//           --> but currently infeasible since EoS hasn't been initialized when calling SetParameter()
    Jet_BgPres = Jet_BgDens*Jet_BgTemp/(MOLECULAR_WEIGHT*Const_amu/UNIT_M);
 
    for (int n=0; n<Jet_NJet; n++)
