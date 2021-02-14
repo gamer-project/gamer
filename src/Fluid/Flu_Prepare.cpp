@@ -46,6 +46,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
    const bool   IntPhase_No         = false;
    const real   MinDens_No          = -1.0;
    const real   MinPres_No          = -1.0;
+   const real   MinTemp_No          = -1.0;
    const bool   DE_Consistency_Yes  = true;
    const bool   DE_Consistency_No   = false;
    const bool   DE_Consistency      = ( OPT__OPTIMIZE_AGGRESSIVE ) ? DE_Consistency_No : DE_Consistency_Yes;
@@ -57,12 +58,12 @@ void Flu_Prepare( const int lv, const double PrepTime,
    Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In[0][0], NULL,
                       FLU_GHOST_SIZE, NPG, PID0_List, _REAL|_IMAG|_PASSIVE, _NONE,
                       OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, OPT__INT_PHASE,
-                      OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, DE_Consistency_No );
+                      OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, DE_Consistency_No );
 #  else
    Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In[0][0], h_Mag_Array_F_In[0][0],
                       FLU_GHOST_SIZE, NPG, PID0_List, _TOTAL, _MAG,
                       OPT__FLU_INT_SCHEME, OPT__MAG_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
-                      OPT__BC_FLU, BC_POT_NONE, MinDens,    MinPres_No, DE_Consistency );
+                      OPT__BC_FLU, BC_POT_NONE, MinDens,    MinPres_No, MinTemp_No, DE_Consistency );
 #  endif
 
 #  ifdef UNSPLIT_GRAVITY
@@ -71,7 +72,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
    Prepare_PatchData( lv, PrepTime, h_Pot_Array_USG_F[0], NULL,
                       USG_GHOST_SIZE_F, NPG, PID0_List, _POTE, _NONE,
                       OPT__GRA_INT_SCHEME, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
-                      OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, DE_Consistency_No );
+                      OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, MinTemp_No, DE_Consistency_No );
 
 // prepare the corner array
    if ( OPT__EXT_ACC )

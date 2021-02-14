@@ -657,36 +657,39 @@ real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, cons
 // Description :  Evaluate the fluid temperature
 //
 // Note        :  1. Invoke the EoS routine EoS_DensEint2Temp() to support different EoS
-//                2. Returned temperature is in kelvin
-//                3. No pressure or temperature floors are applied here
+//                2. Temperature is in kelvin
 //
 // Parameter   :  Dens              : Mass density
 //                MomX/Y/Z          : Momentum density
 //                Engy              : Energy density
 //                Passive           : Passive scalars
-//                CheckMinPres      : Apply pressure floor by calling Hydro_CheckMinPres()
-//                                    --> In some cases we actually want to check if pressure becomes unphysical,
+//                CheckMinTemp      : Apply temperature floor by calling Hydro_CheckMinTemp()
+//                                    --> In some cases we actually want to check if temperature becomes unphysical,
 //                                        for which we don't want to enable this option
-//                                        --> For example: Flu_FixUp(), Flu_Close(), Hydro_Aux_Check_Negative()
-//                MinPres           : Pressure floor
+//                MinTemp           : Temperature floor
 //                Bmag              : Magnetic energy density (0.5*B^2) --> For MHD only
-//                EoS_DensEint2Pres : EoS routine to compute the gas pressure
-//                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensEint2Pres()
-//                EoS_Table         : EoS tables for EoS_DensEint2Pres()
+//                EoS_DensEint2Temp : EoS routine to compute the gas temperature
+//                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensEint2Temp()
+//                EoS_Table         : EoS tables for EoS_DensEint2Temp()
 //
-// Return      :  Gas temperature
+// Return      :  Gas temperature in kelvin
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                     const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
-                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                     const real Passive[], const bool CheckMinTemp, const real MinTemp, const real Emag,
+                     const EoS_DE2T_t EoS_DensEint2Temp, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX] )
 {
 
-   const real Pres = Hydro_Con2Pres( Dens, MomX, MomY, MomZ, Engy, Passive, CheckMinPres, MinPres, Emag,
-                                     EoS_DensEint2Pres, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
+   const bool CheckMinEint_No = false;
+   real Eint, Temp;
 
-   return Pres / Dens;
+   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, Emag );
+   Temp = EoS_DensEint2Temp( Dens, Eint, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
+
+   if ( CheckMinTemp )   Temp = Hydro_CheckMinTemp( Temp, MinTemp );
+
+   return Temp;
 
 } // FUNCTION : Hydro_Con2Temp
 

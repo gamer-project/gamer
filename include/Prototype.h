@@ -95,8 +95,8 @@ real Hydro_Con2Eint( const real Dens, const real MomX, const real MomY, const re
                      const bool CheckMinEint, const real MinEint, const real Emag );
 real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, const real MomZ, const real Eint, const real Emag );
 real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                     const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
-                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                     const real Passive[], const bool CheckMinTemp, const real MinTemp, const real Emag,
+                     const EoS_DE2T_t EoS_DensEint2Temp, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX] );
 double Hydro_Temp2Pres( const double Dens, const double Temp, const double mu, const double m_H,
                         const bool CheckMinPres, const double MinPres );
@@ -171,7 +171,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         const int GhostSize, const int NPG, const int *PID0_List, long TVarCC, long TVarFC,
                         const IntScheme_t IntScheme_CC, const IntScheme_t IntScheme_FC, const PrepUnit_t PrepUnit,
                         const NSide_t NSide, const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
-                        const real MinDens, const real MinPres, const bool DE_Consistency );
+                        const real MinDens, const real MinPres, const real MinTemp, const bool DE_Consistency );
 
 
 // Init

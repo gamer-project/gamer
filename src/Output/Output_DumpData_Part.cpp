@@ -383,6 +383,7 @@ void GetDerivedField( real (*FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ],
       const bool IntPhase_No         = false;
       const real MinDens_No          = -1.0;
       const real MinPres_No          = -1.0;
+      const real MinTemp_No          = -1.0;
       const bool DE_Consistency_No   = false;
 #     ifndef MHD
       const int  OPT__MAG_INT_SCHEME = INT_NONE;
@@ -391,7 +392,7 @@ void GetDerivedField( real (*FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ],
 //    always prepare all fields
       Prepare_PatchData( lv, Time[lv], FluIn[0][0], MagFC[0][0], DER_GHOST_SIZE, 1, &PID0,
                          _TOTAL, _MAG, OPT__FLU_INT_SCHEME, OPT__MAG_INT_SCHEME, UNIT_PATCH, NSIDE_26,
-                         IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, DE_Consistency_No );
+                         IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, DE_Consistency_No );
    } // if ( PrepFluIn )
 
 

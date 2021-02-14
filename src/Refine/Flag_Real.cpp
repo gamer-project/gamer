@@ -81,13 +81,13 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 // set the variables for the Lohner's error estimator
    int  Lohner_NVar=0, Lohner_Stride;
    long Lohner_TVar=0;
-   real MinDens=-1.0, MinPres=-1.0;    // default is to turn off minimum density/pressure checks
+   real MinDens=-1.0, MinPres=-1.0, MinTemp=-1.0;  // default is to disable all floors
 
 #  if   ( MODEL == HYDRO )
    if ( OPT__FLAG_LOHNER_DENS )  {  Lohner_NVar++;   Lohner_TVar |= _DENS;   MinDens = MIN_DENS;  }
    if ( OPT__FLAG_LOHNER_ENGY )  {  Lohner_NVar++;   Lohner_TVar |= _ENGY;                        }
    if ( OPT__FLAG_LOHNER_PRES )  {  Lohner_NVar++;   Lohner_TVar |= _PRES;   MinPres = MIN_PRES;  }
-   if ( OPT__FLAG_LOHNER_TEMP )  {  Lohner_NVar++;   Lohner_TVar |= _TEMP;   MinPres = MIN_PRES;  }
+   if ( OPT__FLAG_LOHNER_TEMP )  {  Lohner_NVar++;   Lohner_TVar |= _TEMP;   MinTemp = MIN_TEMP;  }
 
 #  elif ( MODEL == ELBDM )
    if ( OPT__FLAG_LOHNER_DENS )
@@ -170,7 +170,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
          if ( Lohner_NVar > 0 )
             Prepare_PatchData( lv, Time[lv], Lohner_Var, NULL, Lohner_NGhost, NPG, &PID0, Lohner_TVar, _NONE,
                                Lohner_IntScheme, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
-                               MinDens, MinPres, DE_Consistency_No );
+                               MinDens, MinPres, MinTemp, DE_Consistency_No );
 
 
 //       loop over all local patches within the same patch group
