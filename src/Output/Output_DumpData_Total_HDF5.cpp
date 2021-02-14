@@ -2595,6 +2595,13 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #     endif
    } // for (int lv=0; lv<NLEVEL-1; lv++)
 
+   InputPara.UserDerField_Num = UserDerField_Num;
+   for (int v=0; v<UserDerField_Num; v++)
+   {
+      InputPara.UserDerField_Label[v] = UserDerField_Label[v];
+      InputPara.UserDerField_Unit [v] = UserDerField_Unit [v];
+   }
+
 } // FUNCTION : FillIn_InputPara
 
 
@@ -3378,6 +3385,30 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "FlagTable_ParMassCell",  HOFFSET(InputPara_t,FlagTable_ParMassCell   ), H5_TypeID_Arr_NLvM1Double   );
 #  endif
 #  endif
+
+// user-defined derived fields
+   H5Tinsert( H5_TypeID, "UserDerField_Num",        HOFFSET(InputPara_t,UserDerField_Num       ), H5T_NATIVE_INT              );
+
+// --> only need to insert UserDerField_Num strings even though *UserDerField_Label/Unit are pointer arrays with
+//     a size DER_NOUT_MAX in InputPara_t
+// --> it should be fine as long as the "offset" (i.e., HOFFSET(InputPara_t,UserDerField_Label[0])+v*PtrSize) is correct
+   for (int v=0; v<UserDerField_Num; v++)
+   {
+//    key for each field label
+      sprintf( Key, "UserDerField_Label%02d", v );
+
+//    assuming the offset between successive UserDerField_Label pointers is "PtrSize", which is equal to "sizeof( char* )"
+      H5Tinsert( H5_TypeID, Key, HOFFSET(InputPara_t,UserDerField_Label[0])+v*PtrSize, H5_TypeID_VarStr );
+   }
+
+   for (int v=0; v<UserDerField_Num; v++)
+   {
+//    key for each field unit
+      sprintf( Key, "UserDerField_Unit%02d", v );
+
+//    assuming the offset between successive UserDerField_Unit pointers is "PtrSize", which is equal to "sizeof( char* )"
+      H5Tinsert( H5_TypeID, Key, HOFFSET(InputPara_t,UserDerField_Unit [0])+v*PtrSize, H5_TypeID_VarStr );
+   }
 
 
 // free memory

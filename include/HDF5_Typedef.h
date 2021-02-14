@@ -686,6 +686,13 @@ struct InputPara_t
    double FlagTable_ParMassCell [NLEVEL-1];
 #  endif
 
+// user-defined derived fields
+// --> always allocate DER_NOUT_MAX labels and units but only record UserDerField_Num of them in HDF5
+// --> more convenient since storing dynamic arrays such as (*UserDerField_Label)[MAX_STRING] in HDF5 can be tricky
+   int    UserDerField_Num;
+   char  *UserDerField_Label[DER_NOUT_MAX];
+   char  *UserDerField_Unit [DER_NOUT_MAX];
+
 }; // struct InputPara_t
 
 
