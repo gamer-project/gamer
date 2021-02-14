@@ -3,7 +3,7 @@
 #ifdef SUPPORT_LIBYT
 
 void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchLocalLv, char **FieldLabel );
-void YT_AddAllGrid( const int *GID_Offset, const int *GID_LvStart, const int **NPatchAllRank);
+void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int **NPatchAllRank);
 
 
 
@@ -14,7 +14,7 @@ void YT_AddAllGrid( const int *GID_Offset, const int *GID_LvStart, const int **N
 //
 // Note        :  1. This function conducts the following three basic steps for performing the yt inline analysis
 //                   1-1. YT_SetParameter --> invoke yt_set_parameter()
-//                   1-2. YT_AddAllGrid   --> invoke yt_add_grid() for all patches
+//                   1-2. YT_AddLocalGrid   --> invoke yt_get_gridsPtr(), yt_add_grids() for local patches
 //                   1-3. yt_inline()
 //                2. This function is invoked by main() directly
 //
@@ -53,7 +53,7 @@ void YT_Inline()
 
       GID_LvStart[lv] = ( lv == 0 ) ? 0 : GID_LvStart[lv-1] + NPatchTotal[lv-1];
    }
-   
+
 
 // 2. prepare YT-specific parameters
 // 2-1. determine the number of fields
@@ -75,7 +75,7 @@ void YT_Inline()
    YT_SetParameter( NPatchAllLv, NField, NPatchLocalLv, FieldLabelForYT );
 
 
-// 3. prepare all patches for libyt
+// 3. prepare local patches for libyt
    int **NPatchAllRank_TEMP = new int* [MPI_NRank];
    for (int r=0; r<MPI_NRank; r++) {
       NPatchAllRank_TEMP[r] = new int [NLEVEL];
@@ -84,7 +84,7 @@ void YT_Inline()
       }
    }
 
-   YT_AddAllGrid( GID_Offset, GID_LvStart, (const int **)NPatchAllRank_TEMP );
+   YT_AddLocalGrid( GID_Offset, GID_LvStart, (const int **)NPatchAllRank_TEMP );
 
 
 // 4. perform yt inline analysis

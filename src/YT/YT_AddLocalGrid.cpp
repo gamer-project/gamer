@@ -6,17 +6,19 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  YT_AddAllGrid
-// Description :  Send the hierarchy information and data of all patches to libyt
+// Function    :  YT_AddLocalGrid
+// Description :  Send the hierarchy information and data of local patches to libyt
 //
 // Note        :  1. One must call YT_SetParameter() before invoking this function
 //                2. Invoked by YT_Inline()
 //
-// Parameter   :  GID_Offset : Global patch index offset at each refinement level for this rank
+// Parameter   :  GID_Offset    : Global patch index offset at each refinement level for this rank
+//                GID_LvStart   : Glocal patch index that this level starts at
+//                NPatchAllRank : Number of patches in [MPI rank][level]
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void YT_AddAllGrid( const int *GID_Offset, const int *GID_LvStart, const int **NPatchAllRank)
+void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int **NPatchAllRank)
 {
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
