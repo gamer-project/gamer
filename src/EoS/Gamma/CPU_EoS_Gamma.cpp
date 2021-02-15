@@ -44,7 +44,7 @@
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //                4. Do not change the order of AuxArray_Flt[]
 //                   --> For example, the dual-energy routines assume AuxArray_Flt[0]=GAMMA
-//                5. Physical constants such as Const_mH/Const_kB are set to unity when disabling OPT__UNIT
+//                5. Physical constants such as Const_mH/Const_kB should be set to unity when disabling OPT__UNIT
 //
 // Parameter   :  AuxArray_Flt/Int : Floating-point/Integer arrays to be filled up
 //
