@@ -9,7 +9,7 @@
 
 
 /********************************************************
-1. Ideal gas EoS with a constant adiabatic index (gamma)
+1. Ideal gas EoS with a constant adiabatic index (EOS_GAMMA)
 
 2. This file is shared by both CPU and GPU
 
