@@ -42,9 +42,9 @@
 // Note        :  1. Invoked by EoS_Init_Gamma()
 //                2. AuxArray_Flt/Int[] have the size of EOS_NAUX_MAX defined in Macro.h (default = 20)
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
-//                4. Do not change the order of AuxArray_Flt[]
+//                4. Physical constants such as Const_amu/Const_kB should be set to unity when disabling OPT__UNIT
+//                5. Do not change the order of AuxArray_Flt[]
 //                   --> For example, the dual-energy routines assume AuxArray_Flt[0]=GAMMA
-//                5. Physical constants such as Const_amu/Const_kB should be set to unity when disabling OPT__UNIT
 //
 // Parameter   :  AuxArray_Flt/Int : Floating-point/Integer arrays to be filled up
 //
