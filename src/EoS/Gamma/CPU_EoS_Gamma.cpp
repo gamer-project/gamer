@@ -36,7 +36,7 @@
 //                   AuxArray_Flt[1] = gamma-1
 //                   AuxArray_Flt[2] = 1/(gamma-1)
 //                   AuxArray_Flt[3] = 1/gamma
-//                   AuxArray_Flt[4] = (mean molecular weight)*(hydrogen mass)/(Boltzmann constant)*(UNIT_E/UNIT_M)
+//                   AuxArray_Flt[4] = (mean molecular weight)*(atomic mass unit)/(Boltzmann constant)*(UNIT_E/UNIT_M)
 //                   AuxArray_Flt[5] = 1/AuxArray_Flt[4]
 //
 // Note        :  1. Invoked by EoS_Init_Gamma()
@@ -44,7 +44,7 @@
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //                4. Do not change the order of AuxArray_Flt[]
 //                   --> For example, the dual-energy routines assume AuxArray_Flt[0]=GAMMA
-//                5. Physical constants such as Const_mH/Const_kB should be set to unity when disabling OPT__UNIT
+//                5. Physical constants such as Const_amu/Const_kB should be set to unity when disabling OPT__UNIT
 //
 // Parameter   :  AuxArray_Flt/Int : Floating-point/Integer arrays to be filled up
 //
@@ -58,7 +58,7 @@ void EoS_SetAuxArray_Gamma( double AuxArray_Flt[], int AuxArray_Int[] )
    AuxArray_Flt[1] = GAMMA - 1.0;
    AuxArray_Flt[2] = 1.0 / ( GAMMA - 1.0 );
    AuxArray_Flt[3] = 1.0 / GAMMA;
-   AuxArray_Flt[4] = ( OPT__UNIT ) ? MOLECULAR_WEIGHT * Const_mH / Const_kB * (UNIT_E/UNIT_M)
+   AuxArray_Flt[4] = ( OPT__UNIT ) ? MOLECULAR_WEIGHT * Const_amu / Const_kB * (UNIT_E/UNIT_M)
                                    : MOLECULAR_WEIGHT;
    AuxArray_Flt[5] = 1.0 / AuxArray_Flt[4];
 
