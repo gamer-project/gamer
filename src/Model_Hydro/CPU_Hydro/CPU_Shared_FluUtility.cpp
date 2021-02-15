@@ -681,6 +681,20 @@ real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const re
                      const real *const EoS_Table[EOS_NTABLE_MAX] )
 {
 
+// check
+#  ifdef GAMER_DEBUG
+   if ( EoS_DensEint2Temp == NULL )
+   {
+#     ifdef __CUDACC__
+      printf( "ERROR : EoS_DensEint2Temp == NULL at file <%s>, line <%d>, function <%s> !!\n",
+              __FILE__, __LINE__, __FUNCTION__ );
+#     else
+      Aux_Error( ERROR_INFO, "EoS_DensEint2Temp == NULL !!\n" );
+#     endif
+   }
+#  endif // #ifdef GAMER_DEBUG
+
+
    const bool CheckMinEint_No = false;
    real Eint, Temp;
 

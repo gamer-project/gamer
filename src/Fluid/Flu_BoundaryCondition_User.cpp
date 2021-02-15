@@ -127,6 +127,11 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
       Aux_Error( ERROR_INFO, "BC_BField_User_Ptr == NULL for user-specified boundary conditions !!\n" );
 #  endif
 
+#  if ( MODEL == HYDRO )
+   if (  ( TVar & _TEMP )  &&  EoS_DensEint2Temp_CPUPtr == NULL )
+      Aux_Error( ERROR_INFO, "EoS_DensEint2Temp_CPUPtr == NULL !!\n" );
+#  endif
+
 
    const double x0 = Corner[0] + (double)Idx_Start[0]*dh;   // starting x,y,z coordinates
    const double y0 = Corner[1] + (double)Idx_Start[1]*dh;

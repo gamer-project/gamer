@@ -296,6 +296,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
       if ( PID0_List[TID] < 0  ||  PID0_List[TID] >= amr->NPatchComma[lv][1] )
          Aux_Error( ERROR_INFO, "incorrect target PID %d (NReal = %d) !!\n", PID0_List[TID], amr->NPatchComma[lv][1] );
 
+#  if ( MODEL == HYDRO )
+   if (  ( TVarCC & _TEMP )  &&  EoS_DensEint2Temp_CPUPtr == NULL )
+      Aux_Error( ERROR_INFO, "EoS_DensEint2Temp_CPUPtr == NULL !!\n" );
+#  endif
+
 #  endif // #ifdef GAMER_DEBUG
 
 

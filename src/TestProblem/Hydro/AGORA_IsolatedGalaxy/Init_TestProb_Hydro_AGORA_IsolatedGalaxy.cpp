@@ -306,6 +306,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #  ifdef GAMER_DEBUG
    if ( AGORA_UseMetal  &&  Idx_Metal == Idx_Undefined )
       Aux_Error( ERROR_INFO, "Idx_Metal is undefined for \"AGORA_UseMetal\" !!\n" );
+
+   if ( EoS_DensTemp2Pres_CPUPtr == NULL )
+      Aux_Error( ERROR_INFO, "EoS_DensTemp2Pres_CPUPtr == NULL !!\n" );
 #  endif
 
    const bool   CheckMinPres_Yes = true;
