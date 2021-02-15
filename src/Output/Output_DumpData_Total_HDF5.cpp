@@ -781,6 +781,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    int PresDumpIdx = -1;
    if ( OPT__OUTPUT_PRES )    PresDumpIdx   = NFieldOut ++;
 
+   int TempDumpIdx = -1;
+   if ( OPT__OUTPUT_TEMP )    TempDumpIdx   = NFieldOut ++;
+
    int CsDumpIdx = -1;
    if ( OPT__OUTPUT_CS )      CsDumpIdx     = NFieldOut ++;
 
@@ -831,6 +834,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 #  if ( MODEL == HYDRO )
    if ( OPT__OUTPUT_PRES   )  sprintf( FieldName[PresDumpIdx  ], "Pres"   );
+   if ( OPT__OUTPUT_TEMP   )  sprintf( FieldName[TempDumpIdx  ], "Temp"   );
    if ( OPT__OUTPUT_CS     )  sprintf( FieldName[CsDumpIdx    ], "Cs"     );
    if ( OPT__OUTPUT_DIVVEL )  sprintf( FieldName[DivVelDumpIdx], "DivVel" );
    if ( OPT__OUTPUT_MACH   )  sprintf( FieldName[MachDumpIdx  ], "Mach"   );
@@ -1065,7 +1069,32 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                }
                else
 
-//             d-2. sound speed
+//             d-2. gas temperature
+               if ( v == TempDumpIdx )
+               {
+                  const bool CheckMinTemp_No = false;
+
+                  for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                  for (int k=0; k<PS1; k++)
+                  for (int j=0; j<PS1; j++)
+                  for (int i=0; i<PS1; i++)
+                  {
+                     real u[NCOMP_TOTAL], Temp, Emag=NULL_REAL;
+
+                     for (int v=0; v<NCOMP_TOTAL; v++)   u[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
+
+#                    ifdef MHD
+                     Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+#                    endif
+                     Temp = Hydro_Con2Temp( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
+                                            CheckMinTemp_No, NULL_REAL, Emag, EoS_DensEint2Temp_CPUPtr,
+                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+                     FieldData[PID][k][j][i] = Temp;
+                  }
+               } // if ( v == TempDumpIdx )
+               else
+
+//             d-3. sound speed
                if ( v == CsDumpIdx )
                {
                   const bool CheckMinPres_No = false;
@@ -1092,7 +1121,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                } // if ( v == CsDumpIdx )
                else
 
-//             d-3. divergence(velocity)
+//             d-4. divergence(velocity)
                if ( v == DivVelDumpIdx )
                {
                   for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
@@ -1128,7 +1157,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                } // if ( v == DivVelDumpIdx )
                else
 
-//             d-4. Mach number
+//             d-5. Mach number
                if ( v == MachDumpIdx )
                {
                   for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
@@ -1171,7 +1200,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                else
 #              endif // #if ( MODEL == HYDRO )
 
-//             d-5. divergence(B field)
+//             d-6. divergence(B field)
 #              ifdef MHD
                if ( v == DivMagDumpIdx )
                {
@@ -1187,7 +1216,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                else
 #              endif
 
-//             d-6. user-defined derived fields
+//             d-7. user-defined derived fields
 //             the following check also works for OPT__OUTPUT_USER_FIELD==false since UserDerField_Num is initialized as -1
                if ( v >= UserDumpIdx0  &&  v < UserDumpIdx0 + UserDerField_Num )
                {

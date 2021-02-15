@@ -149,6 +149,7 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
 //          derived fields
 #           if ( MODEL == HYDRO )
             if ( OPT__OUTPUT_PRES )    fprintf( File, "%14s", "Pressure" );
+            if ( OPT__OUTPUT_TEMP )    fprintf( File, "%14s", "Temperature" );
             if ( OPT__OUTPUT_CS )      fprintf( File, "%14s", "Sound speed" );
             if ( OPT__OUTPUT_DIVVEL )  fprintf( File, "%14s", "Div(Vel)" );
             if ( OPT__OUTPUT_MACH   )  fprintf( File, "%14s", "Mach" );
@@ -306,17 +307,24 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
    int Der_FieldIdx = 0;
 
 #  if ( MODEL == HYDRO )
-// we compute both pressure and sound speed regardless of OPT__OUTPUT_PRES/CS since it's cheap anyway
+// compute these quantities regardless of OPT__OUTPUT_* since it's cheap anyway
    const bool CheckMinPres_No = false;
+   const bool CheckMinTemp_No = false;
    const real Pres = Hydro_Con2Pres( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
                                      CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres_CPUPtr,
                                      EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+   const real Temp = Hydro_Con2Temp( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
+                                     CheckMinTemp_No, NULL_REAL, Emag, EoS_DensEint2Temp_CPUPtr,
+                                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
    const real Cs   = SQRT(  EoS_DensPres2CSqr_CPUPtr( u[DENS], Pres, u+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                       h_EoS_Table, NULL )  );
 
-// no need to increase Der_FieldIdx for OPT__OUTPUT_PRES/CS since they do not use DerField[]
+// no need to increase Der_FieldIdx for fields not using DerField[]
    if ( OPT__OUTPUT_PRES )
       fprintf( File, " %13.6e", Pres );
+
+   if ( OPT__OUTPUT_TEMP )
+      fprintf( File, " %13.6e", Temp );
 
    if ( OPT__OUTPUT_CS )
       fprintf( File, " %13.6e", Cs );
