@@ -1094,7 +1094,38 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                } // if ( v == TempDumpIdx )
                else
 
-//             d-3. sound speed
+//             d-3. gas entropy
+               if ( v == EntrDumpIdx )
+               {
+                  const bool CheckMinEint_No = false;
+
+                  for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                  for (int k=0; k<PS1; k++)
+                  for (int j=0; j<PS1; j++)
+                  for (int i=0; i<PS1; i++)
+                  {
+                     real u[NCOMP_TOTAL], Out[2], Eint, Pres, Emag=NULL_REAL, Entr=NULL_REAL;
+
+                     for (int v=0; v<NCOMP_TOTAL; v++)   u[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
+
+#                    ifdef MHD
+                     Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+#                    endif
+
+#                    if ( EOS == EOS_NUCLEAR )
+                     Eint = Hydro_Con2Eint( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], CheckMinEint_No, NULL_REAL, Emag );
+                     Pres = EoS_DensEint2Pres_CPUPtr( u[DENS], Eint, u+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                      h_EoS_Table, Out );
+                     Entr = Out[1];
+#                    else
+                     Aux_Error( ERROR_INFO, "OPT__OUTPUT_ENTR is only supported by EOS_NUCLEAR !!\n" );
+#                    endif
+                     FieldData[PID][k][j][i] = Entr;
+                  }
+               } // if ( v == EntrDumpIdx )
+               else
+
+//             d-4. sound speed
                if ( v == CsDumpIdx )
                {
                   const bool CheckMinPres_No = false;
@@ -1121,7 +1152,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                } // if ( v == CsDumpIdx )
                else
 
-//             d-4. divergence(velocity)
+//             d-5. divergence(velocity)
                if ( v == DivVelDumpIdx )
                {
                   for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
@@ -1157,7 +1188,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                } // if ( v == DivVelDumpIdx )
                else
 
-//             d-5. Mach number
+//             d-6. Mach number
                if ( v == MachDumpIdx )
                {
                   for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
@@ -1200,7 +1231,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                else
 #              endif // #if ( MODEL == HYDRO )
 
-//             d-6. divergence(B field)
+//             d-7. divergence(B field)
 #              ifdef MHD
                if ( v == DivMagDumpIdx )
                {
@@ -1216,7 +1247,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                else
 #              endif
 
-//             d-7. user-defined derived fields
+//             d-8. user-defined derived fields
 //             the following check also works for OPT__OUTPUT_USER_FIELD==false since UserDerField_Num is initialized as -1
                if ( v >= UserDumpIdx0  &&  v < UserDumpIdx0 + UserDerField_Num )
                {
