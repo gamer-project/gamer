@@ -2620,6 +2620,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  if ( MODEL == HYDRO )
    InputPara.Opt__Output_Pres        = OPT__OUTPUT_PRES;
    InputPara.Opt__Output_Temp        = OPT__OUTPUT_TEMP;
+   InputPara.Opt__Output_Entr        = OPT__OUTPUT_ENTR;
    InputPara.Opt__Output_Cs          = OPT__OUTPUT_CS;
    InputPara.Opt__Output_DivVel      = OPT__OUTPUT_DIVVEL;
    InputPara.Opt__Output_Mach        = OPT__OUTPUT_MACH;
@@ -3446,6 +3447,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  if ( MODEL == HYDRO )
    H5Tinsert( H5_TypeID, "Opt__Output_Pres",        HOFFSET(InputPara_t,Opt__Output_Pres       ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Temp",        HOFFSET(InputPara_t,Opt__Output_Temp       ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Entr",        HOFFSET(InputPara_t,Opt__Output_Entr       ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Cs",          HOFFSET(InputPara_t,Opt__Output_Cs         ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_DivVel",      HOFFSET(InputPara_t,Opt__Output_DivVel     ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Mach",        HOFFSET(InputPara_t,Opt__Output_Mach       ), H5T_NATIVE_INT              );
