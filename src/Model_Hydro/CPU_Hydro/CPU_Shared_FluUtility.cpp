@@ -25,6 +25,10 @@ static real Hydro_ConEint2Etot( const real Dens, const real MomX, const real Mom
                                 const real Emag );
 GPU_DEVICE
 static real Hydro_CheckMinPres( const real InPres, const real MinPres );
+GPU_DEVICE
+static real Hydro_CheckMinEint( const real InEint, const real MinEint );
+GPU_DEVICE
+static real Hydro_CheckMinTemp( const real InTemp, const real MinTemp );
 #endif
 
 
@@ -384,7 +388,7 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_CheckMinPres
-// Description :  Check if the input pressure is great than the minimum allowed threshold
+// Description :  Check if the input pressure is greater than the minimum allowed threshold
 //
 // Note        :  1. This function is used to correct unphysical (usually negative) pressure caused by
 //                   numerical errors
@@ -436,6 +440,31 @@ real Hydro_CheckMinEint( const real InEint, const real MinEint )
    else                       return InEint;
 
 } // FUNCTION : Hydro_CheckMinEint
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Hydro_CheckMinTemp
+// Description :  Similar to Hydro_CheckMinPres() except that this function checks the gas temperature
+//                instead of pressure
+//
+// Note        :  1. See Hydro_CheckMinPres()
+//
+// Parameter   :  InTemp  : Input temperature to be corrected
+//                MinTemp : Minimum allowed temperature
+//
+// Return      :  InTemp != NaN --> max( InTemp, MinTemp )
+//                       == NaN --> NaN
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+real Hydro_CheckMinTemp( const real InTemp, const real MinTemp )
+{
+
+// call FMAX() only if InTemp is not NaN
+   if ( InTemp == InTemp )    return FMAX( InTemp, MinTemp );
+   else                       return InTemp;
+
+} // FUNCTION : Hydro_CheckMinTemp
 
 
 
@@ -627,86 +656,56 @@ real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, cons
 // Function    :  Hydro_Con2Temp
 // Description :  Evaluate the fluid temperature
 //
-// Note        :  1. For simplicity, currently this function only returns **pressure/density**, which does
-//                   NOT include normalization
-//                   --> For OPT__FLAG_LOHNER_TEMP only
-//                   --> Also note that currently it only checks minimum pressure but not minimum density
+// Note        :  1. Invoke the EoS routine EoS_DensEint2Temp() to support different EoS
+//                2. Temperature is in kelvin
 //
 // Parameter   :  Dens              : Mass density
 //                MomX/Y/Z          : Momentum density
 //                Engy              : Energy density
 //                Passive           : Passive scalars
-//                CheckMinPres      : Apply pressure floor by calling Hydro_CheckMinPres()
-//                                    --> In some cases we actually want to check if pressure becomes unphysical,
+//                CheckMinTemp      : Apply temperature floor by calling Hydro_CheckMinTemp()
+//                                    --> In some cases we actually want to check if temperature becomes unphysical,
 //                                        for which we don't want to enable this option
-//                                        --> For example: Flu_FixUp(), Flu_Close(), Hydro_Aux_Check_Negative()
-//                MinPres           : Pressure floor
+//                MinTemp           : Temperature floor
 //                Bmag              : Magnetic energy density (0.5*B^2) --> For MHD only
-//                EoS_DensEint2Pres : EoS routine to compute the gas pressure
-//                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensEint2Pres()
-//                EoS_Table         : EoS tables for EoS_DensEint2Pres()
+//                EoS_DensEint2Temp : EoS routine to compute the gas temperature
+//                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensEint2Temp()
+//                EoS_Table         : EoS tables for EoS_DensEint2Temp()
 //
-// Return      :  Gas temperature
+// Return      :  Gas temperature in kelvin
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                     const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
-                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                     const real Passive[], const bool CheckMinTemp, const real MinTemp, const real Emag,
+                     const EoS_DE2T_t EoS_DensEint2Temp, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX] )
 {
 
-   const real Pres = Hydro_Con2Pres( Dens, MomX, MomY, MomZ, Engy, Passive, CheckMinPres, MinPres, Emag,
-                                     EoS_DensEint2Pres, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
+// check
+#  ifdef GAMER_DEBUG
+   if ( EoS_DensEint2Temp == NULL )
+   {
+#     ifdef __CUDACC__
+      printf( "ERROR : EoS_DensEint2Temp == NULL at file <%s>, line <%d>, function <%s> !!\n",
+              __FILE__, __LINE__, __FUNCTION__ );
+#     else
+      Aux_Error( ERROR_INFO, "EoS_DensEint2Temp == NULL !!\n" );
+#     endif
+   }
+#  endif // #ifdef GAMER_DEBUG
 
-   return Pres / Dens;
+
+   const bool CheckMinEint_No = false;
+   real Eint, Temp;
+
+   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, Emag );
+   Temp = EoS_DensEint2Temp( Dens, Eint, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
+
+   if ( CheckMinTemp )   Temp = Hydro_CheckMinTemp( Temp, MinTemp );
+
+   return Temp;
 
 } // FUNCTION : Hydro_Con2Temp
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_Temp2Pres
-// Description :  Convert gas temperature to pressure
-//
-// Note        :  1. Assume the ideal-gas law
-//                   --> P = \rho*K*T / ( mu*m_H )
-//                2. Assume both input and output to be code units
-//                   --> Temperature should be converted to UNIT_E in advance
-//                       --> Example: T_code_unit = T_kelvin * Const_kB / UNIT_E
-//                3. Pressure floor (MinPres) is applied when enabling CheckMinPres
-//                4. Adopt double precision since
-//                   (1) both Temp and m_H may exhibit extreme values depending on the code units, and
-//                   (2) we don't really care about the performance here since this function is usually
-//                       only used for constructing the initial condition
-//
-// Parameter   :  Dens         : Gas mass density in code units
-//                Temp         : Gas temperature in code units
-//                mu           : Mean molecular weight
-//                m_H          : Atomic hydrogen mass in code units
-//                               --> Sometimes we use the atomic mass unit (Const_amu defined in PhysicalConstant.h)
-//                                   and m_H (Const_mH defined in PhysicalConstant.h) interchangeably since the
-//                                   difference is small (m_H ~ 1.007825 amu)
-//                CheckMinPres : Apply pressure floor by calling Hydro_CheckMinPres()
-//                               --> In some cases we actually want to check if pressure becomes unphysical,
-//                                   for which we don't want to enable this option
-//                MinPres      : Pressure floor
-//
-// Return      :  Gas pressure
-//-------------------------------------------------------------------------------------------------------
-GPU_DEVICE
-double Hydro_Temp2Pres( const double Dens, const double Temp, const double mu, const double m_H,
-                        const bool CheckMinPres, const double MinPres )
-{
-
-   double Pres;
-
-   Pres = Dens*Temp/(mu*m_H);
-
-   if ( CheckMinPres )  Pres = Hydro_CheckMinPres( (real)Pres, (real)MinPres );
-
-   return Pres;
-
-} // FUNCTION : Hydro_Temp2Pres
 
 
 

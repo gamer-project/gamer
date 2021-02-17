@@ -238,6 +238,29 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "must enable either SERIAL or LOAD_BALANCE for OPT__INIT=3 !!\n" );
 #  endif
 
+   if ( OPT__OUTPUT_USER_FIELD )
+   {
+      int NDerField = UserDerField_Num;
+#     if ( MODEL == HYDRO )
+      if ( OPT__OUTPUT_DIVVEL )  NDerField ++;
+      if ( OPT__OUTPUT_MACH   )  NDerField ++;
+#     endif
+
+      if ( NDerField > DER_NOUT_MAX )
+         Aux_Error( ERROR_INFO, "Total number of derived fields (%d) > DER_NOUT_MAX (%d) !!\n", NDerField, DER_NOUT_MAX );
+
+      if ( UserDerField_Label == NULL )
+         Aux_Error( ERROR_INFO, "UserDerField_Label == NULL for OPT__OUTPUT_USER_FIELD !!\n" );
+
+      if ( UserDerField_Unit == NULL )
+         Aux_Error( ERROR_INFO, "UserDerField_Unit == NULL for OPT__OUTPUT_USER_FIELD !!\n" );
+   } // if ( OPT__OUTPUT_USER_FIELD )
+
+#  if ( MODEL == HYDRO )
+   if (  OPT__OUTPUT_TEMP  &&  EoS_DensEint2Temp_CPUPtr == NULL )
+      Aux_Error( ERROR_INFO, "EoS_DensEint2Temp_CPUPtr == NULL for OPT__OUTPUT_TEMP !!\n" );
+#  endif
+
 
 
 // general warnings
@@ -269,6 +292,9 @@ void Aux_Check_Parameter()
 #  if ( defined GAMER_DEBUG  &&  !defined BITWISE_REPRODUCIBILITY )
       Aux_Message( stderr, "WARNING : you might want to turn on BITWISE_REPRODUCIBILITY for GAMER_DEBUG !!\n" );
 #  endif
+
+   if ( OPT__OUTPUT_TOTAL == OUTPUT_FORMAT_CBINARY )
+      Aux_Message( stderr, "WARNING : OPT__OUTPUT_TOTAL = 2 (C-binary) is deprecated !!\n" );
 
    if ( !OPT__OUTPUT_TOTAL  &&  !OPT__OUTPUT_PART  &&  !OPT__OUTPUT_USER  &&  !OPT__OUTPUT_BASEPS )
 #  ifdef PARTICLE
@@ -754,6 +780,11 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : MIN_EINT == 0.0 could be dangerous and is mainly for debugging only !!\n" );
    else
       Aux_Message( stderr, "WARNING : MIN_EINT (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_EINT );
+
+   if ( MIN_TEMP == 0.0 )
+      Aux_Message( stderr, "WARNING : MIN_TEMP == 0.0 could be dangerous and is mainly for debugging only !!\n" );
+   else
+      Aux_Message( stderr, "WARNING : MIN_TEMP (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_TEMP );
 
 #  if (  defined LR_EINT  &&  ( EOS == EOS_GAMMA || EOS == EOS_ISOTHERMAL )  )
       Aux_Message( stderr, "WARNING : LR_EINT is not recommended for EOS_GAMMA/EOS_ISOTHERMAL !!\n" );

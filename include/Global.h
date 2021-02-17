@@ -95,8 +95,10 @@ extern Opt1stFluxCorr_t OPT__1ST_FLUX_CORR;
 extern OptRSolver1st_t  OPT__1ST_FLUX_CORR_SCHEME;
 extern bool             OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP;
 extern bool             OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, JEANS_MIN_PRES, OPT__LAST_RESORT_FLOOR;
+extern bool             OPT__OUTPUT_DIVVEL, OPT__OUTPUT_MACH, OPT__OUTPUT_PRES, OPT__OUTPUT_CS;
+extern bool             OPT__OUTPUT_TEMP;
 extern int              OPT__CK_NEGATIVE, JEANS_MIN_PRES_LEVEL, JEANS_MIN_PRES_NCELL;
-extern double           MIN_DENS, MIN_PRES, MIN_EINT;
+extern double           MIN_DENS, MIN_PRES, MIN_EINT, MIN_TEMP;
 #ifdef DUAL_ENERGY
 extern double           DUAL_ENERGY_SWITCH;
 #endif
@@ -104,6 +106,7 @@ extern double           DUAL_ENERGY_SWITCH;
 extern double           FlagTable_Current[NLEVEL-1];
 extern IntScheme_t      OPT__MAG_INT_SCHEME, OPT__REF_MAG_INT_SCHEME;
 extern bool             OPT__FIXUP_ELECTRIC, OPT__CK_INTERFACE_B, OPT__OUTPUT_CC_MAG, OPT__FLAG_CURRENT;
+extern bool             OPT__OUTPUT_DIVMAG;
 extern int              OPT__CK_DIVERGENCE_B;
 extern double           UNIT_B;
 extern bool             OPT__INIT_BFIELD_BYFILE;
@@ -239,11 +242,15 @@ extern int    EoS_AuxArray_Int[EOS_NAUX_MAX];
 extern EoS_DE2P_t EoS_DensEint2Pres_CPUPtr;
 extern EoS_DP2E_t EoS_DensPres2Eint_CPUPtr;
 extern EoS_DP2C_t EoS_DensPres2CSqr_CPUPtr;
+extern EoS_DE2T_t EoS_DensEint2Temp_CPUPtr;
+extern EoS_DT2P_t EoS_DensTemp2Pres_CPUPtr;
 extern EoS_GENE_t EoS_General_CPUPtr;
 #ifdef GPU
 extern EoS_DE2P_t EoS_DensEint2Pres_GPUPtr;
 extern EoS_DP2E_t EoS_DensPres2Eint_GPUPtr;
 extern EoS_DP2C_t EoS_DensPres2CSqr_GPUPtr;
+extern EoS_DE2T_t EoS_DensEint2Temp_GPUPtr;
+extern EoS_DT2P_t EoS_DensTemp2Pres_GPUPtr;
 extern EoS_GENE_t EoS_General_GPUPtr;
 #endif
 extern EoS_t EoS;
@@ -259,6 +266,18 @@ extern int        Src_Dlep_AuxArray_Int[SRC_NAUX_DLEP];
 #endif
 extern double     Src_User_AuxArray_Flt[SRC_NAUX_USER];
 extern int        Src_User_AuxArray_Int[SRC_NAUX_USER];
+
+
+// (2-11) user-defined derived fields
+// =======================================================================================================
+extern bool OPT__OUTPUT_USER_FIELD;
+extern int  UserDerField_Num;
+extern char (*UserDerField_Label)[MAX_STRING];
+extern char (*UserDerField_Unit )[MAX_STRING];
+// Flu_DerivedField_User_Ptr is defined in Flu_DerivedField_User.cpp
+extern void (*Flu_DerivedField_User_Ptr)( real Out[], const real FluIn[], const real MagIn[], const int NFieldOut,
+                                          const int NCellInX, const int NCellInY, const int NCellInZ,
+                                          const int NGhost, const double dh );
 
 
 
@@ -290,6 +309,7 @@ extern char       (*h_DE_Array_G      [2])[PS1][PS1][PS1];
 extern real       (*h_Emag_Array_G    [2])[PS1][PS1][PS1];
 #endif
 extern real        *h_ExtPotTable;
+extern void       **h_ExtPotGenePtr;
 
 #ifdef UNSPLIT_GRAVITY
 extern real       (*h_Pot_Array_USG_F [2])[ CUBE(USG_NXT_F) ];
