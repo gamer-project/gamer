@@ -11,19 +11,32 @@ void CartesianRotate( double x[], double theta, double phi, bool inverse );
 // =======================================================================================
 
 // options
-static bool     Jet_Ambient;             // [true/false]: uniform/load from file
+static int      Jet_Ambient;             // [0/1/9]: uniform/Milky-Way/load-from-file
 static bool     Jet_Precession;          // flag: precessing jet source
 static bool     Jet_TimeDependentSrc;    // flag: time-dependent fluid variables in source
-static int      Jet_Exhaust;             // [0/1/2/3]: no jet/jet1/jet2/bipolar jet
+static int      Jet_Fire;             // [0/1/2/3]: no jet/jet1/jet2/bipolar jet
 
 // general parameters
-static double   Jet_ParticleMassSrc;     // particle mass in jet source [g]
-static double   Jet_ParticleMassAmbient; // particle mass in ambient    [g]
+static double   ParticleMass;       // atomic mass unit in jet source
 
 // uniform background parameters
 static double   Amb_UniformDens;         // uniform ambient density
 static double   Amb_UniformVel[3];       // uniform ambient 4-velocity
 static double   Amb_UniformTemp;         // uniform ambient temperature
+
+// Milky Way parameters
+       double   MilkyWay_Halo_v;
+       double   MilkyWay_Halo_d;
+       double   MilkyWay_Disk_M;
+       double   MilkyWay_Disk_a;
+       double   MilkyWay_Disk_b;
+       double   MilkyWay_Bulge_M;
+       double   MilkyWay_Bulge_d;
+       double   MilkyWay_Center[3];
+       int      MilkyWay_Trun;
+       double   MilkyWay_TrunRhoRatio;
+       double   MilkyWay_Temperature;
+static double   MilkyWay_Ne0;
 
 // jet fluid parameters
 static double   Jet_SrcVel;              // jet 4-velocity
@@ -36,6 +49,8 @@ static bool     Jet_SmoothVel;           // smooth radial component of 4-velocit
 static double   CharacteristicSpeed;     // the characteristic speed of the simulation problem
                                          // the default end-time (END_T) will be estimated from
                                          // `CharacteristicSpeed` and `BOX_SIZE`
+
+void Init_ExtPot_MilkyWay(); 
 
 // =======================================================================================
 /*        G       A       C              */ 
@@ -103,6 +118,10 @@ void Validate()
    Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
 #  endif
 
+#  ifndef GRAVITY
+   if ( Jet_Ambient == 1 )
+        Aux_Error( ERROR_INFO, "GRAVITY must be enabled !!\n" );
+#  endif
 
 // warnings
    if ( MPI_Rank == 0 )
@@ -153,8 +172,8 @@ void SetParameter()
 // ************************************************************************************************************************
 
 // load options
-   ReadPara->Add( "Jet_Ambient",             &Jet_Ambient,              false,        Useless_bool,   Useless_bool    );
-   ReadPara->Add( "Jet_Exhaust",             &Jet_Exhaust,              3,                       0,              3    );
+   ReadPara->Add( "Jet_Ambient",             &Jet_Ambient,              1,                       0,              9    );
+   ReadPara->Add( "Jet_Fire",             &Jet_Fire,              3,                       0,              3    );
    ReadPara->Add( "Jet_Precession",          &Jet_Precession,           false,        Useless_bool,   Useless_bool    );
    ReadPara->Add( "Jet_TimeDependentSrc",    &Jet_TimeDependentSrc,     false,        Useless_bool,   Useless_bool    );
 
@@ -163,8 +182,7 @@ void SetParameter()
    ReadPara->Add( "Jet_SmoothVel",           &Jet_SmoothVel ,           false,        Useless_bool,   Useless_bool    );
    ReadPara->Add( "Jet_SrcDens",             &Jet_SrcDens   ,          -1.0,          Eps_double,     NoMax_double    );
    ReadPara->Add( "Jet_SrcTemp",             &Jet_SrcTemp   ,          -1.0,          Eps_double,     NoMax_double    );
-   ReadPara->Add( "Jet_ParticleMassSrc",     &Jet_ParticleMassSrc,     -1.0,          Eps_double,     NoMax_double    );
-   ReadPara->Add( "Jet_ParticleMassAmbient", &Jet_ParticleMassAmbient, -1.0,          Eps_double,     NoMax_double    );
+   ReadPara->Add( "ParticleMass",            &ParticleMass,            -1.0,          Eps_double,     NoMax_double    );
 
 // load source geometry parameters
    ReadPara->Add( "Jet_Radius",              &Jet_Radius,              -1.0,          Eps_double,     NoMax_double    );
@@ -192,6 +210,22 @@ void SetParameter()
    ReadPara->Add( "Amb_FluSphereRadius",     &Amb_FluSphereRadius,     -1.0,          NoMin_double,   NoMax_double    );
    ReadPara->Add( "CharacteristicSpeed",     &CharacteristicSpeed,     -1.0,          NoMin_double,   NoMax_double    );
 
+// load Milky Way parameters
+   ReadPara->Add( "MilkyWay_Halo_v",         &MilkyWay_Halo_v,         -1.0,          Eps_double,     NoMax_double    );
+   ReadPara->Add( "MilkyWay_Halo_d",         &MilkyWay_Halo_d,         -1.0,          Eps_double,     NoMax_double    );
+   ReadPara->Add( "MilkyWay_Disk_M",         &MilkyWay_Disk_M,         -1.0,          Eps_double,     NoMax_double    );
+   ReadPara->Add( "MilkyWay_Disk_a",         &MilkyWay_Disk_a,         -1.0,          Eps_double,     NoMax_double    );
+   ReadPara->Add( "MilkyWay_Disk_b",         &MilkyWay_Disk_b,         -1.0,          Eps_double,     NoMax_double    );
+   ReadPara->Add( "MilkyWay_Bulge_M",        &MilkyWay_Bulge_M,        -1.0,          Eps_double,     NoMax_double    );
+   ReadPara->Add( "MilkyWay_Bulge_d",        &MilkyWay_Bulge_d,        -1.0,          Eps_double,     NoMax_double    );
+   ReadPara->Add( "MilkyWay_Temperature",    &MilkyWay_Temperature,    -1.0,          Eps_double,     NoMax_double    );
+   ReadPara->Add( "MilkyWay_Ne0",            &MilkyWay_Ne0,            -1.0,          Eps_double,     NoMax_double    );
+   ReadPara->Add( "MilkyWay_Trun",           &MilkyWay_Trun,              1,                   0,                1    );
+   ReadPara->Add( "MilkyWay_TrunRhoRatio",   &MilkyWay_TrunRhoRatio,   -1.0,          Eps_double,     NoMax_double    );
+   ReadPara->Add( "MilkyWay_Center_x",       &MilkyWay_Center[0],      -1.0,          NoMin_double,   NoMax_double    );
+   ReadPara->Add( "MilkyWay_Center_y",       &MilkyWay_Center[1],      -1.0,          NoMin_double,   NoMax_double    );
+   ReadPara->Add( "MilkyWay_Center_z",       &MilkyWay_Center[2],      -1.0,          NoMin_double,   NoMax_double    );
+
 // load time-dependent source varibles
    ReadPara->Add( "Jet_BurstStartTime",      &Jet_BurstStartTime,      -1.0,          NoMin_double,   NoMax_double    );
    ReadPara->Add( "Jet_BurstEndTime",        &Jet_BurstEndTime,        -1.0,          NoMin_double,   NoMax_double    );
@@ -207,7 +241,7 @@ void SetParameter()
    delete ReadPara;
 
 // replace useless parameters with NaN
-   if ( Jet_Ambient )
+   if ( Jet_Ambient != 0 )
    {
      Amb_UniformDens      = NAN;
      Amb_UniformVel[0]    = NAN;
@@ -254,20 +288,20 @@ void SetParameter()
        Aux_Error( ERROR_INFO, "Jet_BurstTempRatio <= Eps_double !!\n" );
    }
 
+   if ( MilkyWay_Center[0] == -1.0 )
+        MilkyWay_Center[0] = 0.5*amr->BoxSize[0];
 
+   if ( MilkyWay_Center[1] == -1.0 )
+        MilkyWay_Center[1] = 0.5*amr->BoxSize[1];
 
-// check uniform ambient
-   if ( !Jet_Ambient ) // uniform (Jet_Ambient == true)
-   {
-#     ifdef GRAVITY
-      Aux_Error( ERROR_INFO, "GRAVITY must be disabled !!\n" );
-#     endif
-   }
+   if ( MilkyWay_Center[2] == -1.0 )
+        MilkyWay_Center[2] = 0.5*amr->BoxSize[2];
 
-   if ( Jet_Ambient && OPT__INIT != 3 )
+   if ( Jet_Ambient == 9 && OPT__INIT != 3 )
    {
       Aux_Error( ERROR_INFO, "OPT__INIT must be 3 !!\n" );
    }
+
 
 // check UNIT_L is in reasonable range
    if ( ( UNIT_L <= 0.5*Const_kpc || 2.0*Const_kpc <= UNIT_L ) && OPT__UNIT )
@@ -276,36 +310,50 @@ void SetParameter()
    const double Const_Erg2eV = 6.2415e11;
 
 // (1-2) convert to code unit
-   Jet_SrcVel               *= Const_c   / UNIT_V;
-   Jet_SrcTemp              *= Const_kB_eV / (Jet_ParticleMassSrc*Const_c*Const_c*Const_Erg2eV);
-   Jet_SrcDens              *= 1.0       / UNIT_D;
+   Jet_SrcVel               *= Const_c     / UNIT_V;
+   Jet_SrcTemp              *= Const_kB    / (MOLECULAR_WEIGHT*ParticleMass*Const_c*Const_c);
+   Jet_SrcDens              *= 1.0         / UNIT_D;
 
-   Jet_Radius               *= Const_kpc / UNIT_L;
-   Jet_HalfHeight           *= Const_kpc / UNIT_L;
-   Jet_HalfOpeningAngle     *= M_PI / 180.0;
-   Jet_PrecessionAngle      *= M_PI / 180.0;
+   Jet_Radius               *= Const_kpc   / UNIT_L;
+   Jet_HalfHeight           *= Const_kpc   / UNIT_L;
+   Jet_HalfOpeningAngle     *= M_PI        / 180.0;
+   Jet_PrecessionAngle      *= M_PI        / 180.0;
 
-   Jet_CenOffset[0]         *= Const_kpc / UNIT_L;
-   Jet_CenOffset[1]         *= Const_kpc / UNIT_L;
-   Jet_CenOffset[2]         *= Const_kpc / UNIT_L;
+   Jet_CenOffset[0]         *= Const_kpc   / UNIT_L;
+   Jet_CenOffset[1]         *= Const_kpc   / UNIT_L;
+   Jet_CenOffset[2]         *= Const_kpc   / UNIT_L;
 
 
-   if ( !Jet_Ambient )
+   if ( Jet_Ambient == 0  )
    {
-     Amb_UniformDens        *= 1.0       / UNIT_D;
-     Amb_UniformVel[0]      *= Const_c   / UNIT_V;
-     Amb_UniformVel[1]      *= Const_c   / UNIT_V;
-     Amb_UniformVel[2]      *= Const_c   / UNIT_V;
+     Amb_UniformDens        *= 1.0         / UNIT_D;
+     Amb_UniformVel[0]      *= Const_c     / UNIT_V;
+     Amb_UniformVel[1]      *= Const_c     / UNIT_V;
+     Amb_UniformVel[2]      *= Const_c     / UNIT_V;
+   }
+   else if ( Jet_Ambient == 1 )
+   {
+     MilkyWay_Halo_v        *= 1e5         / UNIT_V;
+     MilkyWay_Halo_d        *= Const_kpc   / UNIT_L;
+     MilkyWay_Disk_M        *= Const_Msun  / UNIT_M;
+     MilkyWay_Disk_a        *= Const_kpc   / UNIT_L;
+     MilkyWay_Disk_b        *= Const_kpc   / UNIT_L;
+     MilkyWay_Bulge_M       *= Const_Msun  / UNIT_M;
+     MilkyWay_Bulge_d       *= Const_kpc   / UNIT_L;
+     MilkyWay_Temperature   *= Const_kB    / (MOLECULAR_WEIGHT*ParticleMass*Const_c*Const_c);
+     MilkyWay_Center[0]     *= Const_kpc   / UNIT_L;
+     MilkyWay_Center[1]     *= Const_kpc   / UNIT_L;
+     MilkyWay_Center[2]     *= Const_kpc   / UNIT_L;
    }
    
 
-   Amb_UniformTemp         *= Const_kB_eV / (Jet_ParticleMassAmbient*Const_c*Const_c*Const_Erg2eV);
-   Jet_AngularVelocity     *= 1.0;    // the unit of Jet_AngularVelocity is UNIT_T
+   Amb_UniformTemp          *= Const_kB    / (MOLECULAR_WEIGHT*ParticleMass*Const_c*Const_c);
+   Jet_AngularVelocity      *= 1.0;    // the unit of Jet_AngularVelocity is UNIT_T
 
    
    if ( Amb_FluSphereRadius > 0.0 )
    {
-      Amb_FluSphereRadius  *= Const_kpc / UNIT_L;
+      Amb_FluSphereRadius   *= Const_kpc / UNIT_L;
    }
 
 
@@ -327,11 +375,10 @@ void SetParameter()
    for (int d=0; d<3; d++)    Jet_Center[d] = 0.5*amr->BoxSize[d] + Jet_CenOffset[d];
 
 
-
 // (4) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
    const long   End_Step_Default = __INT_MAX__;
-   const double End_T_Default    = 10.0*BOX_SIZE * UNIT_L / (CharacteristicSpeed *UNIT_V) / UNIT_T;
+   const double End_T_Default    = BOX_SIZE * UNIT_L / (CharacteristicSpeed *UNIT_V) / UNIT_T;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
@@ -358,16 +405,15 @@ void SetParameter()
      Aux_Message( stdout, "=============================================================================\n" );
      Aux_Message( stdout, "  test problem ID          = %d\n",                TESTPROB_ID                                     );
      Aux_Message( stdout, "  Jet_Ambient              = %d\n",                Jet_Ambient                                     );
-     Aux_Message( stdout, "  Jet_Exhaust              = %d\n",                Jet_Exhaust                                     );
+     Aux_Message( stdout, "  Jet_Fire                 = %d\n",                Jet_Fire                                        );
      Aux_Message( stdout, "  Jet_SmoothVel            = %d\n",                Jet_SmoothVel                                   );
      Aux_Message( stdout, "  Jet_Precession           = %d\n",                Jet_Precession                                  );
      Aux_Message( stdout, "  Jet_TimeDependentSrc     = %d\n",                Jet_TimeDependentSrc                            );
-     Aux_Message( stdout, "  Jet_ParticleMassSrc      = %14.7e g\n",          Jet_ParticleMassSrc                             );
-     Aux_Message( stdout, "  Jet_ParticleMassAmbient  = %14.7e g\n",          Jet_ParticleMassAmbient                         );
+     Aux_Message( stdout, "  ParticleMass             = %14.7e g\n",          ParticleMass                                    );
      Aux_Message( stdout, "  Jet_SrcVel               = %14.7e c\n",          Jet_SrcVel                                      );
      Aux_Message( stdout, "  Jet_SrcDens              = %14.7e g/cm^3\n",     Jet_SrcDens*UNIT_D                              );
      Aux_Message( stdout, "  Jet_SrcTemp              = %14.7e kT/mc**2\n",   Jet_SrcTemp                                     );
-     Aux_Message( stdout, "  Jet_NumDensSrc           = %14.7e per cc\n",     Jet_SrcDens*UNIT_D/Jet_ParticleMassSrc          );
+     Aux_Message( stdout, "  Jet_NumDensSrc           = %14.7e per cc\n",     Jet_SrcDens*UNIT_D/ParticleMass                 );
      Aux_Message( stdout, "  Jet_CenOffset[x]         = %14.7e kpc\n",        Jet_CenOffset [0]*UNIT_L/Const_kpc              );
      Aux_Message( stdout, "  Jet_CenOffset[y]         = %14.7e kpc\n",        Jet_CenOffset [1]*UNIT_L/Const_kpc              );
      Aux_Message( stdout, "  Jet_CenOffset[z]         = %14.7e kpc\n",        Jet_CenOffset [2]*UNIT_L/Const_kpc              );
@@ -386,7 +432,24 @@ void SetParameter()
      Aux_Message( stdout, "  Amb_UniformVel[x]        = %14.7e c\n",          Amb_UniformVel[0]                               );
      Aux_Message( stdout, "  Amb_UniformVel[y]        = %14.7e c\n",          Amb_UniformVel[1]                               );
      Aux_Message( stdout, "  Amb_UniformVel[z]        = %14.7e c\n",          Amb_UniformVel[2]                               );
-     Aux_Message( stdout, "  Jet_UniformNumDens       = %14.7e per cc\n",     Amb_UniformDens*UNIT_D/Jet_ParticleMassAmbient  );
+     Aux_Message( stdout, "  Jet_UniformNumDens       = %14.7e per cc\n",     Amb_UniformDens*UNIT_D/ParticleMass             );
+   }
+   else if ( Jet_Ambient == 1 && MPI_Rank == 0 )
+   {
+     Aux_Message( stdout, "  MilkyWay_Halo_v          = %14.7e km/s\n",       MilkyWay_Halo_v*UNIT_V/Const_c                  );
+     Aux_Message( stdout, "  MilkyWay_Halo_d          = %14.7e kpc\n",        MilkyWay_Halo_d*UNIT_L/Const_kpc                );
+     Aux_Message( stdout, "  MilkyWay_Disk_M          = %14.7e solar-mass\n", MilkyWay_Disk_M*UNIT_M/Const_Msun               );
+     Aux_Message( stdout, "  MilkyWay_Disk_a          = %14.7e kpc\n",        MilkyWay_Disk_a*UNIT_L/Const_kpc                );
+     Aux_Message( stdout, "  MilkyWay_Disk_b          = %14.7e kpc\n",        MilkyWay_Disk_b*UNIT_L/Const_kpc                );
+     Aux_Message( stdout, "  MilkyWay_Bulge_M         = %14.7e solar-mass\n", MilkyWay_Bulge_M*UNIT_M/Const_Msun              );
+     Aux_Message( stdout, "  MilkyWay_Bulge_d         = %14.7e kpc\n",        MilkyWay_Bulge_d*UNIT_L/Const_kpc               );
+     Aux_Message( stdout, "  MilkyWay_Temperature     = %14.7e kT/mc**2\n",   MilkyWay_Temperature                            );
+     Aux_Message( stdout, "  MilkyWay_Ne0             = %14.7e 1/cm**3\n",    MilkyWay_Ne0                                    );
+     Aux_Message( stdout, "  MilkyWay_Trun            = %d\n",                MilkyWay_Trun                                   );
+     Aux_Message( stdout, "  MilkyWay_TrunRhoRatio    = %14.7e\n",            MilkyWay_TrunRhoRatio                           );
+     Aux_Message( stdout, "  MilkyWay_Center[0]       = %14.7e kpc\n",        MilkyWay_Center[0]*UNIT_L/Const_kpc             );
+     Aux_Message( stdout, "  MilkyWay_Center[1]       = %14.7e kpc\n",        MilkyWay_Center[1]*UNIT_L/Const_kpc             );
+     Aux_Message( stdout, "  MilkyWay_Center[2]       = %14.7e kpc\n",        MilkyWay_Center[2]*UNIT_L/Const_kpc             );
    }
 
    if ( MPI_Rank == 0 )
@@ -454,15 +517,58 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 // variables for jet
-   real  Pri[NCOMP_FLUID];
+   real   Pri[NCOMP_FLUID];
 
+   if ( Jet_Ambient == 0 ) // uniform ambient
+   {
+      Pri[0] = (real)Amb_UniformDens;
+      Pri[1] = (real)Amb_UniformVel[0];
+      Pri[2] = (real)Amb_UniformVel[1];
+      Pri[3] = (real)Amb_UniformVel[2];
+      Pri[4] = (real)Amb_UniformTemp * Amb_UniformDens;
+   }
+   else if ( Jet_Ambient == 1 ) //Milky Way
+   {
+      double Pot, Rho, PotCenter_x, PotCenter_y, PotCenter_z;
+      double Rho0, MolecularWeightPerElectron, PotCenter;
+#     ifdef GRAVITY
+      PotCenter_x = ExtPot_AuxArray_Flt[0];
+      PotCenter_y = ExtPot_AuxArray_Flt[1];
+      PotCenter_z = ExtPot_AuxArray_Flt[2];
 
-   Pri[0] = (real)Amb_UniformDens;
-   Pri[1] = (real)Amb_UniformVel[0];
-   Pri[2] = (real)Amb_UniformVel[1];
-   Pri[3] = (real)Amb_UniformVel[2];
-   Pri[4] = (real)Amb_UniformTemp * Amb_UniformDens;
-   
+      if ( CPUExtPot_Ptr == NULL )
+           Aux_Error( ERROR_INFO, "CPUExtPot_Ptr == NULL (see if OPT__EXT_POT is enabled in Init_ExtAccPot.cpp)!!\n" );
+
+      Pot = CPUExtPot_Ptr( x, y, z, Time, ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int, NULL_INT, NULL );
+
+      PotCenter = CPUExtPot_Ptr( PotCenter_x, PotCenter_y, PotCenter_z, Time, ExtPot_AuxArray_Flt,
+                                 ExtPot_AuxArray_Int, NULL_INT, NULL );
+#     endif
+      MolecularWeightPerElectron = 5.0*MOLECULAR_WEIGHT/(2.0 + MOLECULAR_WEIGHT);
+    
+      Rho0 = MolecularWeightPerElectron * MilkyWay_Ne0 * ParticleMass / UNIT_D;
+
+      Pri[0] = (real)Rho0*exp( -( Pot- PotCenter ) / MilkyWay_Temperature );
+      Pri[1] = (real)0.0;
+      Pri[2] = (real)0.0;
+      Pri[3] = (real)0.0;
+
+ 
+	  if ( MilkyWay_Trun == 1 )
+      {
+         if ( Rho0/Pri[0] > MilkyWay_TrunRhoRatio )
+              Pri[0] = Rho0/MilkyWay_TrunRhoRatio;
+      }
+
+      Pri[4] = Pri[0] * MilkyWay_Temperature;
+
+      if (SRHD_CheckUnphysical( NULL, Pri, __FUNCTION__, __LINE__, true  ))
+      {
+          printf( "Pot=%e, PotCenter=%e, MilkyWay_Temperature=%e, Rho0=%e\n", Pot, PotCenter, MilkyWay_Temperature, Rho0);
+          exit(0);
+      }
+   }
+
    Hydro_Pri2Con( Pri, fluid, NULL_BOOL, NULL_INT, NULL, EoS_DensPres2Eint_CPUPtr,
                   EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
@@ -516,7 +622,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const double z, const double Time,
                                          const int lv, double AuxArray[] )
 {
-  if ( Jet_Exhaust == 0 ) return false;
+  if ( Jet_Fire == 0 ) return false;
 
   double xp[3], rp[3];
   double Prim[5], Cons[5], Vel[3];
@@ -575,8 +681,8 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
 
 
   // set fluid variable inside source
-  if ( ( InsideUpperCone && ( Jet_Exhaust == 1 || Jet_Exhaust == 3 ) ) 
-	|| ( InsideLowerCone && ( Jet_Exhaust == 2 || Jet_Exhaust == 3 ) ) )
+  if ( ( InsideUpperCone && ( Jet_Fire == 1 || Jet_Fire == 3 ) ) 
+	|| ( InsideLowerCone && ( Jet_Fire == 2 || Jet_Fire == 3 ) ) )
   {
     if ( Jet_HalfOpeningAngle == 0.0 )
   	{
@@ -779,7 +885,7 @@ void Init_TestProb_Hydro_Jets()
    Aux_Record_User_Ptr      = NULL;
    End_User_Ptr             = NULL;
 #  ifdef GRAVITY
-   Init_ExtAcc_Ptr          = NULL;
+   Init_ExtPot_Ptr          = Init_ExtPot_MilkyWay;
 #  endif
 
 
