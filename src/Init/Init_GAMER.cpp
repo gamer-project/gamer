@@ -81,10 +81,6 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
-// initialize the test problem parameters
-   Init_TestProb();
-
-
 // initialize all fields and particle attributes
 // --> Init_Field() must be called BEFORE CUAPI_Set_Default_GPU_Parameter()
    Init_Field();
@@ -100,16 +96,21 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
+// initialize the EoS routines
+// --> must be called before Init_TestProb() as EoS_Temper2CSqr_CPUPtr() is needed in AcousticWave test problem in SRHD
+#  if ( MODEL == HYDRO )
+   EoS_Init();
+#  endif
+
+
+// initialize the test problem parameters
+   Init_TestProb();
+
+
 // initialize the external potential and acceleration parameters
 // --> must be called AFTER Init_TestProb()
 #  ifdef GRAVITY
    Init_ExtAccPot();
-#  endif
-
-
-// initialize the EoS routines
-#  if ( MODEL == HYDRO )
-   EoS_Init();
 #  endif
 
 
