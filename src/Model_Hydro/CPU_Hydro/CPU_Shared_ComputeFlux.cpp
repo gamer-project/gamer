@@ -39,8 +39,10 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
 #elif ( RSOLVER == HLLE )
 void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
-                               const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
-                               const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
+                               const EoS_DP2C_t EoS_DensPres2CSqr, const EoS_GUESS_t EoS_GuessHTilde,
+                               const EoS_H2TEM_t EoS_HTilde2Temp, const EoS_TEM2C_t EoS_Temper2CSqr,
+                               const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                               const real* const EoS_Table[EOS_NTABLE_MAX] );
 #elif ( RSOLVER == HLLC )
 void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
@@ -296,7 +298,8 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
                                     EoS_DensEint2Pres, EoS_DensPres2CSqr, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 #        elif ( RSOLVER == HLLE )
          Hydro_RiemannSolver_HLLE ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
-                                    EoS_DensEint2Pres, EoS_DensPres2CSqr, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+                                    EoS_DensEint2Pres, EoS_DensPres2CSqr, EoS_GuessHTilde, EoS_HTilde2Temp,
+                                    EoS_Temper2CSqr, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 #        elif ( RSOLVER == HLLC  &&  !defined MHD )
          Hydro_RiemannSolver_HLLC ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
                                     EoS_DensEint2Pres, EoS_DensPres2CSqr, EoS_GuessHTilde, EoS_HTilde2Temp,

@@ -138,6 +138,7 @@ void SetParameter()
    ReadPara->Add( "Riemann_VelR_T2",   &Riemann_VelR_T2,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
    ReadPara->Add( "Riemann_Pos",       &Riemann_Pos,            NoDef_double, NoMin_double,     NoMax_double      );
    ReadPara->Add( "Riemann_Width",     &Riemann_Width,          NoDef_double, Eps_double,       NoMax_double      );
+   ReadPara->Add( "Riemann_EndT",      &Riemann_EndT,           __DBL_MAX__, -__DBL_MIN__,      __DBL_MAX__       );
 
    ReadPara->Read( FileName );
 
