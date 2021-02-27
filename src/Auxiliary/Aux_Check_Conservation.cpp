@@ -25,7 +25,7 @@ extern double ELBDM_Vcm[3];
 //                   (e.g., total energy of gas and particles) will also be recorded
 //
 // Parameter   :  comment : You can put the location where this function is invoked in this string
-//                           (not used currently)
+//                          (not used currently)
 //
 // Return      :  Log file "Record__Conservation"
 //-------------------------------------------------------------------------------------------------------
