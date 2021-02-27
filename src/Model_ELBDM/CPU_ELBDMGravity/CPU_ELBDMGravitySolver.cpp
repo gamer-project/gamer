@@ -30,7 +30,6 @@
 //
 // Parameter   :  g_Flu_Array       : Array to store the input and output data
 //                g_Pot_Array       : Array storing the input potential for evaluating the gravitational acceleration
-//                g_Corner_Array    : Array storing the physical corner coordinates of each patch
 //                NPatchGroup       : Number of patch groups to be evaluated (for CPU only)
 //                EtaDt             : Particle mass / Planck constant * dt
 //                dh                : Cell size
@@ -42,12 +41,10 @@
 __global__
 void CUPOT_ELBDMGravitySolver(       real   g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
                                const real   g_Pot_Array[][ CUBE(GRA_NXT) ],
-                               const double g_Corner_Array[][3],
                                const real EtaDt, const real dh, const real Lambda )
 #else
 void CPU_ELBDMGravitySolver  (       real   g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
                                const real   g_Pot_Array[][ CUBE(GRA_NXT) ],
-                               const double g_Corner_Array[][3],
                                const int NPatchGroup,
                                const real EtaDt, const real dh, const real Lambda )
 #endif

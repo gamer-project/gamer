@@ -3,8 +3,6 @@
 #if ( MODEL == ELBDM  &&  defined GRAVITY )
 
 #include "CUPOT.h"
-extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
-extern ExtPot_t CPUExtPot_Ptr;
 
 static real GetMaxPot( const int lv );
 
