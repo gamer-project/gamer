@@ -10,13 +10,6 @@
 
 
 
-// include c_ExtPot_AuxArray[]
-#ifdef __CUDACC__
-#include "CUDA_ConstMemory.h"
-#endif
-
-
-
 
 //-----------------------------------------------------------------------------------------
 // Function    :  CPU/CUPOT_ELBDMGravitySolver
@@ -42,39 +35,23 @@
 //                EtaDt             : Particle mass / Planck constant * dt
 //                dh                : Cell size
 //                Lambda            : Quartic self-interaction coefficient in ELBDM
-//                ExtPot            : Add the external potential
-//                ExtPot_Func       : Function pointer to the external potential routine (for both CPU and GPU)
-//                Time              : Physical time --> used by ExtPot_Func()
-//                c_ExtPot_AuxArray : Auxiliary array for adding external potential (for CPU only)
-//                                    --> When using GPU, this array is stored in the constant memory header
-//                                        CUDA_ConstMemory.h and does not need to be passed as a function argument
 //
-//
-// Return      :  g_Flu_Array
+// Return      :  g_Flu_Array[]
 //-----------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __global__
 void CUPOT_ELBDMGravitySolver(       real   g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
                                const real   g_Pot_Array[][ CUBE(GRA_NXT) ],
                                const double g_Corner_Array[][3],
-                               const real EtaDt, const real dh, const real Lambda,
-                               const bool ExtPot, ExtPot_t ExtPot_Func, const double Time )
+                               const real EtaDt, const real dh, const real Lambda )
 #else
 void CPU_ELBDMGravitySolver  (       real   g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
                                const real   g_Pot_Array[][ CUBE(GRA_NXT) ],
                                const double g_Corner_Array[][3],
                                const int NPatchGroup,
-                               const real EtaDt, const real dh, const real Lambda,
-                               const bool ExtPot, ExtPot_t ExtPot_Func, const double Time,
-                               const double c_ExtPot_AuxArray[] )
+                               const real EtaDt, const real dh, const real Lambda )
 #endif
 {
-
-// check
-#  ifdef GAMER_DEBUG
-   if ( ExtPot  &&  g_Corner_Array == NULL )    printf( "ERROR : g_Corner_Array == NULL for ExtPot !!\n" );
-#  endif
-
 
    const int PS1_sqr = SQR(PS1);
 
@@ -107,19 +84,8 @@ void CPU_ELBDMGravitySolver  (       real   g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
          Im   = g_Flu_Array[P][1][idx_flu];
          Pot  = g_Pot_Array[P]   [idx_pot];
 #        ifdef QUARTIC_SELF_INTERACTION
-         Pot  += Lambda*( SQR(Re) + SQR(Im) );
+         Pot += Lambda*( SQR(Re) + SQR(Im) );
 #        endif
-
-         if ( ExtPot )
-         {
-            double x, y, z;
-
-            x = g_Corner_Array[P][0] + (double)(i_flu*dh);
-            y = g_Corner_Array[P][1] + (double)(j_flu*dh);
-            z = g_Corner_Array[P][2] + (double)(k_flu*dh);
-
-            Pot += ExtPot_Func( x, y, z, Time, c_ExtPot_AuxArray );
-         }
 
          Phase     = EtaDt * Pot;
          Cos_Phase = COS( Phase );

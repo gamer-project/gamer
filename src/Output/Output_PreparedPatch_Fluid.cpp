@@ -134,15 +134,17 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
 #        if ( MODEL == HYDRO )
          const bool CheckMinPres_No = false;
 #        ifdef MHD
-         const real EngyB = MHD_GetCellCenteredBEnergy( h_Mag_Array[TID][MAGX],
-                                                        h_Mag_Array[TID][MAGY],
-                                                        h_Mag_Array[TID][MAGZ],
-                                                        FLU_NXT, FLU_NXT, FLU_NXT, I, J, K );
+         const real Emag = MHD_GetCellCenteredBEnergy( h_Mag_Array[TID][MAGX],
+                                                       h_Mag_Array[TID][MAGY],
+                                                       h_Mag_Array[TID][MAGZ],
+                                                       FLU_NXT, FLU_NXT, FLU_NXT, I, J, K );
 #        else
-         const real EngyB = NULL_REAL;
+         const real Emag = NULL_REAL;
 #        endif
-         fprintf( File, "  %14.7e",
-                  Hydro_GetPressure(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],GAMMA-1.0,CheckMinPres_No,NULL_REAL,EngyB) );
+         fprintf( File, "  %14.7e", Hydro_Con2Pres(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],u+NCOMP_FLUID,
+                                                   CheckMinPres_No,NULL_REAL,Emag,
+                                                   EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                   h_EoS_Table, NULL) );
 #        endif // #if ( MODEL == HYDRO )
 
          fprintf( File, "\n" );

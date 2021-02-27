@@ -1,6 +1,7 @@
 #include "GAMER.h"
 
 extern void (*Init_User_Ptr)();
+extern void (*Init_DerivedField_User_Ptr)();
 #ifdef PARTICLE
 extern void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPar_AllRank,
                                         real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
@@ -103,9 +104,29 @@ void Init_GAMER( int *argc, char ***argv )
 // initialize the external potential and acceleration parameters
 // --> must be called AFTER Init_TestProb()
 #  ifdef GRAVITY
-   const bool OnlyInitAuxArray_No = false;
-   Init_ExtAccPot( OnlyInitAuxArray_No );
+   Init_ExtAccPot();
 #  endif
+
+
+// initialize the EoS routines
+#  if ( MODEL == HYDRO )
+   EoS_Init();
+#  endif
+
+
+// initialize the source-term routines --> must be called before memory allocation
+   Src_Init();
+
+
+// initialize the user-defined derived fields
+   if ( OPT__OUTPUT_USER_FIELD )
+   {
+      if ( Init_DerivedField_User_Ptr != NULL )
+         Init_DerivedField_User_Ptr();
+
+      else
+         Aux_Error( ERROR_INFO, "Init_DerivedField_User_Ptr == NULL for OPT__OUTPUT_USER_FIELD !!\n" );
+   }
 
 
 // set the GPU parameters
@@ -116,9 +137,9 @@ void Init_GAMER( int *argc, char ***argv )
 #  ifndef SUPPORT_GRACKLE
    int CHE_GPU_NPGROUP = NULL_INT;
 #  endif
-   CUAPI_Set_Default_GPU_Parameter( GPU_NSTREAM, FLU_GPU_NPGROUP, POT_GPU_NPGROUP, CHE_GPU_NPGROUP );
+   CUAPI_Set_Default_GPU_Parameter( GPU_NSTREAM, FLU_GPU_NPGROUP, POT_GPU_NPGROUP, CHE_GPU_NPGROUP, SRC_GPU_NPGROUP );
 
-// CUAPI_SetConstMemory must be called AFTER Init_Field(), Init_ExtAccPot(), and EoS_Init()
+// CUAPI_SetConstMemory must be called AFTER Init_Field() and Init_ExtAccPot()
    CUAPI_SetConstMemory();
 #  endif
 
@@ -154,6 +175,15 @@ void Init_GAMER( int *argc, char ***argv )
 
 // allocate memory for several global arrays
    Init_MemAllocate();
+
+
+// load the external potential table
+// --> before Init_ByFunction() so that the test problem initializer can access
+//     the external potential table if required
+// --> after Init_MemAllocate() to allocate the potential table array first
+#  ifdef GRAVITY
+   if ( OPT__EXT_POT == EXT_POT_TABLE )   Init_LoadExtPotTable();
+#  endif
 
 
 // initialize particles
@@ -210,10 +240,10 @@ void Init_GAMER( int *argc, char ***argv )
 
 
 #  ifdef GRAVITY
-   if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
+   if ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT )
    {
 //    initialize the k-space Green's function for the isolated BC.
-      if ( OPT__BC_POT == BC_POT_ISOLATED )  Init_GreenFuncK();
+      if ( OPT__SELF_GRAVITY  &&  OPT__BC_POT == BC_POT_ISOLATED )    Init_GreenFuncK();
 
 
 //    evaluate the initial average density if it is not set yet (may already be set in Init_ByRestart)
@@ -229,7 +259,7 @@ void Init_GAMER( int *argc, char ***argv )
 
          Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, NULL_INT, DATA_GENERAL, _DENS, _NONE, Rho_ParaBuf, USELB_YES );
 
-         Gra_AdvanceDt( lv, Time[lv], NULL_REAL, NULL_REAL, NULL_INT, amr->PotSg[lv], true, false, false, false );
+         Gra_AdvanceDt( lv, Time[lv], NULL_REAL, NULL_REAL, NULL_INT, amr->PotSg[lv], true, false, false, false, true );
 
          if ( lv > 0 )
          Buf_GetBufferData( lv, NULL_INT, NULL_INT, amr->PotSg[lv], POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES );
@@ -238,7 +268,7 @@ void Init_GAMER( int *argc, char ***argv )
       } // for (int lv=0; lv<NLEVEL; lv++)
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Calculating gravitational potential" );
-   } // if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
+   } // if ( OPT__SELF_GRAVITY_TYPE  ||  OPT__EXT_POT )
 #  endif // #ifdef GARVITY
 
 

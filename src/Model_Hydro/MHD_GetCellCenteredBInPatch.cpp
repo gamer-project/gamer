@@ -101,4 +101,71 @@ real MHD_GetCellCenteredBEnergyInPatch( const int lv, const int PID, const int i
 
 
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  MHD_GetCellCenteredDivBInPatch
+// Description :  Calculate the cell-centered divergence(magnetic field) from the face-centered values
+//                of a given cell in a given patch
+//
+// Note        :  1. The MHD algorithms in GAMER should guarantee the divergence-free constraint to the
+//                   machine precision
+//                   --> This function is thus mainly for debugging purposes
+//                2. To be more specific, this function computes the dimensionless quantity |div(B)*dh/(3*<|B|>)|
+//                   --> Except when B=0 on all 6 faces, for which it simply returns 0
+//
+// Parameter   :  lv    : Target AMR level
+//                PID   : Target patch index
+//                i/j/k : Target array indices of the patch
+//                MagSg : Sandglass of the magnetic field data
+//
+// Return      :  |div(B)*dh/(3*<|B|>)| at the center of the target cell
+//-------------------------------------------------------------------------------------------------------
+real MHD_GetCellCenteredDivBInPatch( const int lv, const int PID, const int i, const int j, const int k,
+                                     const int MagSg )
+{
+
+// check
+#  ifdef GAMER_DEBUG
+   if ( lv < 0  ||  lv > TOP_LEVEL )   Aux_Error( ERROR_INFO, "incorrect lv = %d !!\n", lv );
+
+   if ( PID < 0  ||  PID >= amr->num[lv] )
+      Aux_Error( ERROR_INFO, "incorrect PID = %d (total number of patches = %d) !!\n", PID, amr->num[lv] );
+
+   if ( i < 0  ||  i >= PS1 )    Aux_Error( ERROR_INFO, "incorrect i = %d !!\n", i );
+   if ( j < 0  ||  j >= PS1 )    Aux_Error( ERROR_INFO, "incorrect j = %d !!\n", j );
+   if ( k < 0  ||  k >= PS1 )    Aux_Error( ERROR_INFO, "incorrect k = %d !!\n", k );
+
+   if ( MagSg != 0  &&  MagSg != 1 )   Aux_Error( ERROR_INFO, "MagSg (%d) != 0/1 !!\n", MagSg );
+
+   if ( amr->patch[MagSg][lv][PID]->magnetic == NULL )
+      Aux_Error( ERROR_INFO, "magnetic == NULL (lv %d, PID %d, MagSg %d) !!\n", lv, PID, MagSg );
+#  endif
+
+
+   const real (*B)[PS1P1*PS1*PS1] = amr->patch[MagSg][lv][PID]->magnetic;
+
+   const int idx_BxL = IDX321_BX( i, j, k, PS1, PS1 );
+   const int idx_ByL = IDX321_BY( i, j, k, PS1, PS1 );
+   const int idx_BzL = IDX321_BZ( i, j, k, PS1, PS1 );
+
+   real BxL, BxR, ByL, ByR, BzL, BzR, DivB, AmpB;
+
+   BxL = B[MAGX][ idx_BxL            ];
+   BxR = B[MAGX][ idx_BxL + 1        ];
+   ByL = B[MAGY][ idx_ByL            ];
+   ByR = B[MAGY][ idx_ByL + PS1      ];
+   BzL = B[MAGZ][ idx_BzL            ];
+   BzR = B[MAGZ][ idx_BzL + SQR(PS1) ];
+
+   DivB = ( BxR - BxL ) + ( ByR - ByL ) + ( BzR - BzL );
+   AmpB = FABS(BxR) + FABS(BxL) + FABS(ByR) + FABS(ByL) + FABS(BzR) + FABS(BzL);
+
+// return 0 if B is zero on all 6 faces
+   if ( AmpB != (real)0.0 )   DivB = FABS( DivB/AmpB );
+
+   return DivB;
+
+} // FUNCTION : MHD_GetCellCenteredDivBInPatch
+
+
+
 #endif // #if ( MODEL == HYDRO  &&  defined MHD )

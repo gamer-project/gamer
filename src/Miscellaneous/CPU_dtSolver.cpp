@@ -4,15 +4,16 @@
 
 
 #if   ( MODEL == HYDRO )
-void CPU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
+void CPU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                             const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const int NPG,
-                            const real dh, const real Safety, const real Gamma, const real MinPres );
+                            const real dh, const real Safety, const real MinPres,
+                            const EoS_t EoS );
 #ifdef GRAVITY
 void CPU_dtSolver_HydroGravity( real g_dt_Array[],
                                 const real g_Pot_Array[][ CUBE(GRA_NXT) ],
                                 const double g_Corner_Array[][3],
                                 const int NPatchGroup, const real dh, const real Safety, const bool P5_Gradient,
-                                const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
+                                const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
                                 const double c_ExtAcc_AuxArray[],
                                 const double ExtAcc_Time );
 #endif
@@ -44,33 +45,32 @@ void CPU_dtSolver_HydroGravity( real g_dt_Array[],
 //                NPatchGroup  : Number of patch groups evaluated simultaneously by GPU
 //                dh           : Cell size
 //                Safety       : dt safety factor
-//                Gamma        : Ratio of specific heats
 //                MinPres      : Minimum allowed pressure
 //                P5_Gradient  : Use 5-points stencil to evaluate the potential gradient
-//                GravityType  : Types of gravity --> self-gravity, external gravity, both
-//                ExtPot       : Add the external potential for ELBDM (currently not used)
+//                UsePot       : Add self-gravity and/or external potential
+//                ExtAcc       : Add external acceleration
 //                TargetTime   : Target physical time
 //
 // Return      :  dt_Array
 //-------------------------------------------------------------------------------------------------------
-void CPU_dtSolver( const Solver_t TSolver, real dt_Array[], const real Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
+void CPU_dtSolver( const Solver_t TSolver, real dt_Array[], const real Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                    const real Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const real Pot_Array[][ CUBE(GRA_NXT) ],
                    const double Corner_Array[][3], const int NPatchGroup, const real dh, const real Safety,
-                   const real Gamma, const real MinPres, const bool P5_Gradient, const OptGravityType_t GravityType,
-                   const bool ExtPot, const double TargetTime )
+                   const real MinPres, const bool P5_Gradient,
+                   const bool UsePot, const OptExtAcc_t ExtAcc, const double TargetTime )
 {
 
    switch ( TSolver )
    {
 #     if   ( MODEL == HYDRO )
       case DT_FLU_SOLVER:
-         CPU_dtSolver_HydroCFL( dt_Array, Flu_Array, Mag_Array, NPatchGroup, dh, Safety, Gamma, MinPres );
+         CPU_dtSolver_HydroCFL( dt_Array, Flu_Array, Mag_Array, NPatchGroup, dh, Safety, MinPres, EoS );
       break;
 
 #     ifdef GRAVITY
       case DT_GRA_SOLVER:
          CPU_dtSolver_HydroGravity( dt_Array, Pot_Array, Corner_Array, NPatchGroup, dh, Safety, P5_Gradient,
-                                    GravityType, CPUExtAcc_Ptr, ExtAcc_AuxArray, TargetTime );
+                                    UsePot, ExtAcc, CPUExtAcc_Ptr, ExtAcc_AuxArray, TargetTime );
       break;
 #     endif
 

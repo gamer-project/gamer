@@ -168,7 +168,12 @@
 #endif // POT_SCHEME
 
 
-// blockDim.z for the GPU Gravity solver
+
+// blockDim.x for the GPU external potential solver
+#define EXTPOT_BLOCK_SIZE           256
+
+
+// blockDim.x for the GPU Gravity solver
 #define GRA_BLOCK_SIZE              256
 
 

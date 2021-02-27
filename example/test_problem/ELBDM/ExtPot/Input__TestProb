@@ -1,6 +1,6 @@
 # problem-specific runtime parameters
-ExtPot_Amp         1.0        # initial wave function amplitude
-ExtPot_M           1.0e2      # point source mass
-ExtPot_Cen_X      -1.0        # point source position x (<0=default) [box center]
-ExtPot_Cen_Y      -1.0        # point source position y (<0=default) [box center]
-ExtPot_Cen_Z      -1.0        # point source position z (<0=default) [box center]
+ELBDM_ExtPot_Amp         1.0        # initial wave function amplitude
+ELBDM_ExtPot_M           1.0e2      # point source mass
+ELBDM_ExtPot_Cen_X      -1.0        # point source position x (<0=default) [box center]
+ELBDM_ExtPot_Cen_Y      -1.0        # point source position y (<0=default) [box center]
+ELBDM_ExtPot_Cen_Z      -1.0        # point source position z (<0=default) [box center]

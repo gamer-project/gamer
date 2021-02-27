@@ -228,11 +228,37 @@ void Aux_Check_Parameter()
 #  ifdef BITWISE_REPRODUCIBILITY
    if ( OPT__CORR_AFTER_ALL_SYNC != CORR_AFTER_SYNC_BEFORE_DUMP  &&  OPT__CORR_AFTER_ALL_SYNC != CORR_AFTER_SYNC_EVERY_STEP )
       Aux_Error( ERROR_INFO, "please set OPT__CORR_AFTER_ALL_SYNC to 1/2 when BITWISE_REPRODUCIBILITY is enabled !!\n" );
+
+   if ( ! OPT__FIXUP_RESTRICT )
+      Aux_Error( ERROR_INFO, "must enable OPT__FIXUP_RESTRICT for BITWISE_REPRODUCIBILITY !!\n" );
 #  endif
 
 #  if ( !defined SERIAL  &&  !defined LOAD_BALANCE )
    if ( OPT__INIT == INIT_BY_FILE )
       Aux_Error( ERROR_INFO, "must enable either SERIAL or LOAD_BALANCE for OPT__INIT=3 !!\n" );
+#  endif
+
+   if ( OPT__OUTPUT_USER_FIELD )
+   {
+      int NDerField = UserDerField_Num;
+#     if ( MODEL == HYDRO )
+      if ( OPT__OUTPUT_DIVVEL )  NDerField ++;
+      if ( OPT__OUTPUT_MACH   )  NDerField ++;
+#     endif
+
+      if ( NDerField > DER_NOUT_MAX )
+         Aux_Error( ERROR_INFO, "Total number of derived fields (%d) > DER_NOUT_MAX (%d) !!\n", NDerField, DER_NOUT_MAX );
+
+      if ( UserDerField_Label == NULL )
+         Aux_Error( ERROR_INFO, "UserDerField_Label == NULL for OPT__OUTPUT_USER_FIELD !!\n" );
+
+      if ( UserDerField_Unit == NULL )
+         Aux_Error( ERROR_INFO, "UserDerField_Unit == NULL for OPT__OUTPUT_USER_FIELD !!\n" );
+   } // if ( OPT__OUTPUT_USER_FIELD )
+
+#  if ( MODEL == HYDRO )
+   if (  OPT__OUTPUT_TEMP  &&  EoS_DensEint2Temp_CPUPtr == NULL )
+      Aux_Error( ERROR_INFO, "EoS_DensEint2Temp_CPUPtr == NULL for OPT__OUTPUT_TEMP !!\n" );
 #  endif
 
 
@@ -266,6 +292,9 @@ void Aux_Check_Parameter()
 #  if ( defined GAMER_DEBUG  &&  !defined BITWISE_REPRODUCIBILITY )
       Aux_Message( stderr, "WARNING : you might want to turn on BITWISE_REPRODUCIBILITY for GAMER_DEBUG !!\n" );
 #  endif
+
+   if ( OPT__OUTPUT_TOTAL == OUTPUT_FORMAT_CBINARY )
+      Aux_Message( stderr, "WARNING : OPT__OUTPUT_TOTAL = 2 (C-binary) is deprecated !!\n" );
 
    if ( !OPT__OUTPUT_TOTAL  &&  !OPT__OUTPUT_PART  &&  !OPT__OUTPUT_USER  &&  !OPT__OUTPUT_BASEPS )
 #  ifdef PARTICLE
@@ -387,6 +416,14 @@ void Aux_Check_Parameter()
    }
 #  endif
 
+#  if   ( MODEL == HYDRO )
+   if ( ! INT_OPP_SIGN_0TH_ORDER )
+      Aux_Message( stderr, "WARNING : disabling INT_OPP_SIGN_0TH_ORDER may cause unphysically large velocity during interpolation !!\n" );
+#  elif ( MODEL == ELBDM )
+   if (   INT_OPP_SIGN_0TH_ORDER )
+      Aux_Message( stderr, "WARNING : INT_OPP_SIGN_0TH_ORDER is not recommended for ELBDM !!\n" );
+#  endif
+
    } // if ( MPI_Rank == 0 )
 
 
@@ -463,7 +500,7 @@ void Aux_Check_Parameter()
 // ------------------------------
 #  if ( MODEL == HYDRO )
    if ( fabs(GAMMA-5.0/3.0) > 1.0e-4 )
-      Aux_Error( ERROR_INFO, "GAMMA must be equal to 5.0/3.0 in cosmological simuluations !!\n" );
+      Aux_Error( ERROR_INFO, "GAMMA must be equal to 5.0/3.0 for COMOVING !!\n" );
 #  endif
 
 
@@ -490,7 +527,7 @@ void Aux_Check_Parameter()
    if ( GPU_NSTREAM < 1 )  Aux_Error( ERROR_INFO, "GPU_NSTREAM (%d) < 1 !!\n", GPU_NSTREAM );
 
    if ( FLU_GPU_NPGROUP % GPU_NSTREAM != 0 )
-      Aux_Error( ERROR_INFO, "FLU_GPU_NPGROUP (%d) %%GPU_NSTREAM (%d) != 0 !!\n",
+      Aux_Error( ERROR_INFO, "FLU_GPU_NPGROUP (%d) %% GPU_NSTREAM (%d) != 0 !!\n",
                  FLU_GPU_NPGROUP, GPU_NSTREAM );
 
 #  ifdef OPENMP
@@ -584,6 +621,14 @@ void Aux_Check_Parameter()
 #   if ( DUAL_ENERGY != DE_ENPY )
 #     error : ERROR : unsupported dual-energy formalism (DE_ENPY only, DE_EINT is not supported yet) !!
 #   endif
+
+#  if ( DUAL_ENERGY == DE_ENPY  &&  EOS != EOS_GAMMA )
+#     error : ERROR : DUAL_ENERGY=DE_ENPY only supports EOS_GAMMA !!
+#  endif
+
+#   if ( DUAL_ENERGY == DE_ENPY  &&  defined COSMIC_RAY )
+#     error : COSMIC_RAY does NOT support DUAL_ENERGY=DE_ENPY !!
+#   endif
 #  endif // #ifdef DUAL_ENERGY
 
 #  ifdef MHD
@@ -596,6 +641,65 @@ void Aux_Check_Parameter()
 #     error : ERROR : unsupported option in CHECK_INTERMEDIATE (EXACT/HLLE/HLLC) !!
 #   endif
 #  endif // MHD
+
+#  ifdef COSMIC_RAY
+#     error : ERROR : COSMIC_RAY is NOT supported yet !!
+#  endif
+
+#  if ( defined LR_EINT  &&  FLU_SCHEME == CTU )
+#     error : ERROR : CTU does NOT support LR_EINT in CUFLU.h !!
+#  endif
+
+#  if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  EOS != EOS_NUCLEAR  &&  EOS != EOS_TABULAR  &&  EOS != EOS_USER )
+#     error : ERROR : unsupported equation of state (EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TABULAR/EOS_USER) !!
+#  endif
+
+#  if ( EOS != EOS_GAMMA )
+#     if ( HLLC_WAVESPEED == HLL_WAVESPEED_ROE  ||  HLLE_WAVESPEED == HLL_WAVESPEED_ROE )
+#        error : ERROR : HLL_WAVESPEED_ROE only works with EOS_GAMMA !!
+#     endif
+
+#     if (  defined RSOLVER  &&  ( RSOLVER == ROE || RSOLVER == EXACT )  )
+#        error : ERROR : unsupported Riemann solver for EOS != EOS_GAMMA (HLLE/HLLC/HLLD) !!
+#     endif
+
+#     if ( defined LR_SCHEME  &&  defined CHAR_RECONSTRUCTION )
+#        error : ERROR : CHAR_RECONSTRUCTION only works with EOS_GAMMA !!
+#     endif
+
+#     if ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == CTU )
+#        error : RTVD and CTU only support EOS_GAMMA !!
+#     endif
+
+#     ifdef COMOVING
+#        error : ERROR : COMOVING currently only supports EOS_GAMMA !!
+#     endif
+
+      if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_ROE )
+         Aux_Error( ERROR_INFO, "OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_ROE only supports EOS_GAMMA !!\n" );
+
+      if ( JEANS_MIN_PRES )
+         Aux_Error( ERROR_INFO, "JEANS_MIN_PRES currently only supports EOS_GAMMA !!\n" );
+#  endif // if ( EOS != EOS_GAMMA )
+
+#  if ( EOS == EOS_NUCLEAR )
+      Aux_Error( ERROR_INFO, "EOS_NUCLEAR is not supported yet !!\n" );
+#  endif
+
+#  if ( EOS == EOS_TABULAR )
+      Aux_Error( ERROR_INFO, "EOS_TABULAR is not supported yet !!\n" );
+#  endif
+
+#  ifdef BAROTROPIC_EOS
+#     if ( EOS == EOS_GAMMA  ||  EOS == EOS_NUCLEAR )
+#        error : ERROR : BAROTROPIC_EOS is incompatible with EOS_GAMMA/EOS_NUCLEAR !!
+#     endif
+#  else
+#     if ( EOS == EOS_ISOTHERMAL )
+#        error : ERROR : must enable BAROTROPIC_EOS for EOS_ISOTHERMAL !!
+#     endif
+#  endif // #ifdef BAROTROPIC_EOS ... else ...
+
 
    if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
    {
@@ -616,16 +720,6 @@ void Aux_Check_Parameter()
          Aux_Error( ERROR_INFO, "RTVD does not support \"OPT__1ST_FLUX_CORR\" !!\n" );
 #     endif
    }
-
-   if ( MIN_DENS == 0.0  &&  MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : MIN_DENS == 0.0 could be dangerous and is mainly for debugging only !!\n" );
-   else if ( MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : MIN_DENS (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_DENS );
-
-   if ( MIN_PRES == 0.0  &&  MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : MIN_PRES == 0.0 could be dangerous and is mainly for debugging only !!\n" );
-   else if ( MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : MIN_PRES (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_PRES );
 
 #  if ( FLU_SCHEME == RTVD )
    if ( JEANS_MIN_PRES )
@@ -669,6 +763,32 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : currently we do not use Grackle to calculate temperature for OPT__FLAG_LOHNER_TEMP !!\n" );
 #  endif
 
+   if ( ! OPT__LAST_RESORT_FLOOR )
+      Aux_Message( stderr, "WARNING : disabling OPT__LAST_RESORT_FLOOR could be dangerous and is mainly for debugging only !!\n" );
+
+   if ( MIN_DENS == 0.0 )
+      Aux_Message( stderr, "WARNING : MIN_DENS == 0.0 could be dangerous and is mainly for debugging only !!\n" );
+   else
+      Aux_Message( stderr, "WARNING : MIN_DENS (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_DENS );
+
+   if ( MIN_PRES == 0.0 )
+      Aux_Message( stderr, "WARNING : MIN_PRES == 0.0 could be dangerous and is mainly for debugging only !!\n" );
+   else
+      Aux_Message( stderr, "WARNING : MIN_PRES (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_PRES );
+
+   if ( MIN_EINT == 0.0 )
+      Aux_Message( stderr, "WARNING : MIN_EINT == 0.0 could be dangerous and is mainly for debugging only !!\n" );
+   else
+      Aux_Message( stderr, "WARNING : MIN_EINT (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_EINT );
+
+   if ( MIN_TEMP == 0.0 )
+      Aux_Message( stderr, "WARNING : MIN_TEMP == 0.0 could be dangerous and is mainly for debugging only !!\n" );
+   else
+      Aux_Message( stderr, "WARNING : MIN_TEMP (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_TEMP );
+
+#  if (  defined LR_EINT  &&  ( EOS == EOS_GAMMA || EOS == EOS_ISOTHERMAL )  )
+      Aux_Message( stderr, "WARNING : LR_EINT is not recommended for EOS_GAMMA/EOS_ISOTHERMAL !!\n" );
+#  endif
    } // if ( MPI_Rank == 0 )
 
 
@@ -790,6 +910,14 @@ void Aux_Check_Parameter()
 
 #  if ( FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
 #     error : ERROR : unsupported MHD scheme in the makefile (MHM_RP/CTU) !!
+#  endif
+
+#  if ( HLLE_WAVESPEED == HLL_WAVESPEED_PVRS )
+#     error : ERROR : HLL_WAVESPEED_PVRS does not support MHD !!
+#  endif
+
+#  if ( HLLD_WAVESPEED != HLL_WAVESPEED_DAVIS )
+#     error : ERROR : HLLD_WAVESPEED only supports HLL_WAVESPEED_DAVIS !!
 #  endif
 
    if ( OPT__MAG_INT_SCHEME != INT_MINMOD1D  &&  OPT__MAG_INT_SCHEME != INT_VANLEER  &&
@@ -979,8 +1107,8 @@ void Aux_Check_Parameter()
 #        error : ERROR : POT_GHOST_SIZE must <= 5 for the GPU Poisson solver !!
 #     endif
 
-   if (  ( OPT__GRAVITY_TYPE == GRAVITY_SELF || OPT__GRAVITY_TYPE == GRAVITY_BOTH )  &&  PATCH_SIZE != 8  )
-      Aux_Error( ERROR_INFO, "PATCH_SIZE must == 8 for the GPU Poisson solver !!\n" );
+   if ( OPT__SELF_GRAVITY  &&  PATCH_SIZE != 8 )
+      Aux_Error( ERROR_INFO, "PATCH_SIZE must == 8 for the GPU Poisson solver (OPT__SELF_GRAVITY) !!\n" );
 #  endif // GPU
 
 #  ifndef LOAD_BALANCE
@@ -1032,21 +1160,6 @@ void Aux_Check_Parameter()
    if ( OPT__BC_POT != BC_POT_PERIODIC  &&  OPT__BC_POT != BC_POT_ISOLATED )
       Aux_Error( ERROR_INFO, "unsupported option \"OPT__BC_POT = %d\" [1/2] !!\n", OPT__BC_POT );
 
-   if ( OPT__GRAVITY_TYPE != GRAVITY_SELF  &&  OPT__GRAVITY_TYPE != GRAVITY_EXTERNAL  &&  OPT__GRAVITY_TYPE != GRAVITY_BOTH )
-      Aux_Error( ERROR_INFO, "unsupported option \"%s = %d\" [1/2/3] !!\n", "OPT__GRAVITY_TYPE", OPT__GRAVITY_TYPE );
-
-   if (  OPT__EXTERNAL_POT  &&  ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL || OPT__GRAVITY_TYPE == GRAVITY_BOTH )  )
-   {
-      if ( MPI_Rank == 0 )
-      {
-         Aux_Message( stderr, "ERROR : OPT__EXTERNAL_POT does not work with \"OPT__GRAVITY_TYPE == 2/3 (EXTERNAL/BOTH)\" !!\n" );
-         Aux_Message( stderr, "        --> HYDRO : please use OPT__GRAVITY_TYPE = 2/3 only\n" );
-         Aux_Message( stderr, "            ELBDM : please use OPT__EXTERNAL_POT only\n" );
-      }
-
-      MPI_Exit();
-   }
-
    if ( NEWTON_G <= 0.0 )     Aux_Error( ERROR_INFO, "NEWTON_G (%14.7e) <= 0.0 !!\n", NEWTON_G );
 
 
@@ -1065,8 +1178,8 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : DT__GRAVITY (%14.7e) is not within the normal range [0...1] !!\n",
                    DT__GRAVITY );
 
-   if ( OPT__EXTERNAL_POT  &&  OPT__OUTPUT_POT )
-      Aux_Message( stderr, "WARNING : currently OPT__OUTPUT_POT does NOT include the external potential !!\n" );
+   if ( !OPT__SELF_GRAVITY  &&  !OPT__EXT_ACC  &&  !OPT__EXT_POT )
+      Aux_Message( stderr, "WARNING : all gravity options are disabled (OPT__SELF_GRAVITY, OPT__EXT_ACC, OPT__EXT_POT) !!\n" );
 
    } // if ( MPI_Rank == 0 )
 
@@ -1091,8 +1204,6 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "\"%s\" requires \"%s\" for UNSPLIT_GRAVITY !!\n",
                  "OPT__GRA_P5_GRADIENT", "USG_GHOST_SIZE_G == 2" );
 #  endif
-
-   if ( OPT__EXTERNAL_POT )   Aux_Error( ERROR_INFO, "OPT__EXTERNAL_POT is NOT supported in HYDRO --> use external gravity !!\n" );
 
 
 // warnings
@@ -1119,8 +1230,8 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
-   if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
-      Aux_Error( ERROR_INFO, "ELBDM does NOT support external gravity (OPT__GRAVITY_TYPE == 2/3) --> use external potential !!\n" );
+   if ( OPT__EXT_ACC )
+      Aux_Error( ERROR_INFO, "ELBDM does NOT support OPT__EXT_ACC --> use OPT__EXT_POT instead !!\n" );
 
 
 // warnings
@@ -1245,6 +1356,10 @@ void Aux_Check_Parameter()
                  CHE_GPU_NPGROUP, GPU_NSTREAM );
                  */
 
+#  if ( EOS != EOS_GAMMA )
+#     error : ERROR : SUPPORT_GRACKLE must work with EOS_GAMMA !!
+#  endif
+
 #  ifdef OPENMP
    if ( CHE_GPU_NPGROUP < OMP_NTHREAD )
       Aux_Error( ERROR_INFO, "CHE_GPU_NPGROUP (%d) < OMP_NTHREAD (%d) !!\n", CHE_GPU_NPGROUP, OMP_NTHREAD );
@@ -1257,9 +1372,43 @@ void Aux_Check_Parameter()
    if ( OPT__OVERLAP_MPI )
       Aux_Message( stderr, "WARNING : currently SUPPORT_GRACKLE does not support \"%s\" !!\n", "OPT__OVERLAP_MPI" );
 
+   if ( GRACKLE_PRIMORDIAL > 0 )
+      Aux_Message( stderr, "WARNING : adiabatic index gamma is currently fixed to %13.7e for Grackle !!\n", GAMMA );
+
    } // if ( MPI_Rank == 0 )
 
 #endif // SUPPORT_GRACKLE
+
+
+
+// source terms
+// =======================================================================================
+
+// errors
+// ------------------------------
+#  if ( SRC_GHOST_SIZE != 0 )
+#     error : ERROR : SRC_GHOST_SIZE must be zero for now !!
+#  endif
+
+#  if ( MODEL != HYDRO )
+   if ( SrcTerms.Deleptonization )
+      Aux_Error( ERROR_INFO, "SRC_DELEPTONIZATION is only supported in HYDRO !!\n" );
+#  endif
+
+   if ( SRC_GPU_NPGROUP % GPU_NSTREAM != 0 )
+      Aux_Error( ERROR_INFO, "SRC_GPU_NPGROUP (%d) %% GPU_NSTREAM (%d) != 0 !!\n",
+                 SRC_GPU_NPGROUP, GPU_NSTREAM );
+
+#  ifdef OPENMP
+   if ( SRC_GPU_NPGROUP < OMP_NTHREAD )
+      Aux_Error( ERROR_INFO, "SRC_GPU_NPGROUP (%d) < OMP_NTHREAD (%d) !!\n", SRC_GPU_NPGROUP, OMP_NTHREAD );
+#  endif
+
+// warning
+// ------------------------------
+   if ( MPI_Rank == 0 ) {
+
+   } // if ( MPI_Rank == 0 )
 
 
 

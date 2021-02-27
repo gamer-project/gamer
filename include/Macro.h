@@ -70,6 +70,14 @@
 #endif
 
 
+// equation of states
+#define EOS_GAMMA       1
+#define EOS_ISOTHERMAL  2
+#define EOS_NUCLEAR     3
+#define EOS_TABULAR     4
+#define EOS_USER        5
+
+
 // Poisson solvers
 #define SOR          1
 #define MG           2
@@ -120,16 +128,41 @@
 
 
 // number of passively advected components in each cell
-// --> define NCOMP_PASSIVE_USER if not set in the Makefile
+
+// define NCOMP_PASSIVE_USER if not set in the Makefile
 #ifndef NCOMP_PASSIVE_USER
 #  define NCOMP_PASSIVE_USER  0
 #endif
-// --> including entropy (or internal energy) when the dual energy formalism is adopted
-#if ( MODEL == HYDRO  &&  defined DUAL_ENERGY )
-#  define NCOMP_PASSIVE       ( NCOMP_PASSIVE_USER + 1 )
-#else
-#  define NCOMP_PASSIVE       ( NCOMP_PASSIVE_USER )
+
+// add built-in scalars
+#if ( MODEL == HYDRO )
+
+// entropy (or internal energy) for the dual-energy formalism
+# ifdef DUAL_ENERGY
+#  define NCOMP_PASSIVE_BUILTIN0    1
+# else
+#  define NCOMP_PASSIVE_BUILTIN0    0
+# endif
+
+// cosmic rays
+# ifdef COSMIC_RAY
+#  define NCOMP_PASSIVE_BUILTIN1    1
+# else
+#  define NCOMP_PASSIVE_BUILTIN1    0
+# endif
+
+// total number of built-in scalars
+#  define NCOMP_PASSIVE_BUILTIN     ( NCOMP_PASSIVE_BUILTIN0 + NCOMP_PASSIVE_BUILTIN1 )
+
+#endif // #if ( MODEL == HYDRO )
+
+// define NCOMP_PASSIVE_BUILTIN if not set yet
+#ifndef NCOMP_PASSIVE_BUILTIN
+#  define NCOMP_PASSIVE_BUILTIN     0
 #endif
+
+// total number of passive scalars
+#  define NCOMP_PASSIVE       ( NCOMP_PASSIVE_USER + NCOMP_PASSIVE_BUILTIN )
 
 // assuming all passive scalars have the corresponding fluxes
 #  define NFLUX_PASSIVE       NCOMP_PASSIVE
@@ -159,52 +192,101 @@
 #endif // MODEL
 
 
+// number of input fluid variables in the dt solver
+// --> EOS_GAMMA/EOS_ISOTHERMAL do not require passive scalars
+#if (  MODEL == HYDRO  &&  ( EOS == EOS_GAMMA || EOS == EOS_ISOTHERMAL )  )
+#  define FLU_NIN_T           NCOMP_FLUID
+#else
+#  define FLU_NIN_T           NCOMP_TOTAL
+#endif
+
+
+// number of input/output fluid variables in the source-term solver
+// --> fixed to NCOMP_TOTAL for now
+#  define FLU_NIN_S           NCOMP_TOTAL
+#  define FLU_NOUT_S          NCOMP_TOTAL
+
+
+// maximum number of output derived fields
+#  define DER_NOUT_MAX        10
+
+
 // built-in fields in different models
 #if   ( MODEL == HYDRO )
 // field indices of fluid[] --> element of [0 ... NCOMP_FLUID-1]
 // --> must NOT modify their values
 // --> in addition, they must be consistent with the order these fields are declared in Init_Field()
-#  define  DENS               0
-#  define  MOMX               1
-#  define  MOMY               2
-#  define  MOMZ               3
-#  define  ENGY               4
+#  define DENS                0
+#  define MOMX                1
+#  define MOMY                2
+#  define MOMZ                3
+#  define ENGY                4
 
 // field indices of passive[] --> element of [NCOMP_FLUID ... NCOMP_TOTAL-1]
 #if ( NCOMP_PASSIVE > 0 )
-// always put the dual-energy variable at the END of the field list
-// --> so that ENPY/EINT can be determined during compilation
+
+// always put the built-in variables at the END of the field list
+// --> so that their indices (e.g., ENPY/EINT/CRAY) can be determined during compilation
 // --> convenient (and probably also more efficient) for the fluid solver
+#  define PASSIVE_NEXT_IDX0   ( NCOMP_TOTAL - 1   )
+
 # if   ( DUAL_ENERGY == DE_ENPY )
-#  define  ENPY               ( NCOMP_TOTAL - 1 )
+#  define ENPY                ( PASSIVE_NEXT_IDX0 )
+#  define PASSIVE_NEXT_IDX1   ( ENPY - 1          )
 # elif ( DUAL_ENERGY == DE_EINT )
-#  define  EINT               ( NCOMP_TOTAL - 1 )
+#  define EINT                ( PASSIVE_NEXT_IDX0 )
+#  define PASSIVE_NEXT_IDX1   ( EINT - 1          )
+# else
+#  define PASSIVE_NEXT_IDX1   ( PASSIVE_NEXT_IDX0 )
 # endif
-#endif
+
+# ifdef COSMIC_RAY
+#  define CRAY                ( PASSIVE_NEXT_IDX1 )
+#  define PASSIVE_NEXT_IDX2   ( CRAY - 1          )
+# else
+#  define PASSIVE_NEXT_IDX2   ( PASSIVE_NEXT_IDX1 )
+# endif
+
+#endif // #if ( NCOMP_PASSIVE > 0 )
 
 // field indices of magnetic --> element of [0 ... NCOMP_MAG-1]
 # ifdef MHD
-#  define  MAGX               0
-#  define  MAGY               1
-#  define  MAGZ               2
+#  define MAGX                0
+#  define MAGY                1
+#  define MAGZ                2
 # endif
 
 // flux indices of flux[] --> element of [0 ... NFLUX_FLUID-1]
-#  define  FLUX_DENS          0
-#  define  FLUX_MOMX          1
-#  define  FLUX_MOMY          2
-#  define  FLUX_MOMZ          3
-#  define  FLUX_ENGY          4
+#  define FLUX_DENS           0
+#  define FLUX_MOMX           1
+#  define FLUX_MOMY           2
+#  define FLUX_MOMZ           3
+#  define FLUX_ENGY           4
 
 // flux indices of flux_passive[] --> element of [NFLUX_FLUID ... NFLUX_TOTAL-1]
 #if ( NCOMP_PASSIVE > 0 )
-// always put the dual-energy variable at the END of the list
+
+// always put the built-in variables at the END of the list
+#  define FLUX_NEXT_IDX0   ( NFLUX_TOTAL - 1 )
+
 # if   ( DUAL_ENERGY == DE_ENPY )
-#  define  FLUX_ENPY          ( NFLUX_TOTAL - 1 )
+#  define FLUX_ENPY        ( FLUX_NEXT_IDX0  )
+#  define FLUX_NEXT_IDX1   ( FLUX_ENPY - 1   )
 # elif ( DUAL_ENERGY == DE_EINT )
-#  define  FLUX_EINT          ( NFLUX_TOTAL - 1 )
+#  define FLUX_EINT        ( FLUX_NEXT_IDX0  )
+#  define FLUX_NEXT_IDX1   ( FLUX_EINT - 1   )
+# else
+#  define FLUX_NEXT_IDX1   ( FLUX_NEXT_IDX0  )
 # endif
-#endif
+
+# ifdef COSMIC_RAY
+#  define FLUX_CRAY        ( FLUX_NEXT_IDX1  )
+#  define FLUX_NEXT_IDX2   ( FLUX_CRAY - 1   )
+# else
+#  define FLUX_NEXT_IDX2   ( FLUX_NEXT_IDX1  )
+# endif
+
+#endif // #if ( NCOMP_PASSIVE > 0 )
 
 // bitwise field indices
 // --> must have "_VAR_NAME = 1L<<VAR_NAME" (e.g., _DENS == 1L<<DENS)
@@ -217,11 +299,17 @@
 #  define _ENGY               ( 1L << ENGY )
 
 #if ( NCOMP_PASSIVE > 0 )
+
 # if   ( DUAL_ENERGY == DE_ENPY )
 #  define _ENPY               ( 1L << ENPY )
 # elif ( DUAL_ENERGY == DE_EINT )
 #  define _EINT               ( 1L << EINT )
 # endif
+
+# ifdef COSMIC_RAY
+#  define _CRAY               ( 1L << CRAY )
+# endif
+
 #endif // #if ( NCOMP_PASSIVE > 0 )
 
 // magnetic field
@@ -242,11 +330,17 @@
 #  define _FLUX_ENGY          ( 1L << FLUX_ENGY )
 
 #if ( NFLUX_PASSIVE > 0 )
+
 # if   ( DUAL_ENERGY == DE_ENPY )
 #  define _FLUX_ENPY          ( 1L << FLUX_ENPY )
 # elif ( DUAL_ENERGY == DE_EINT )
 #  define _FLUX_EINT          ( 1L << FLUX_EINT )
 # endif
+
+# ifdef COSMIC_RAY
+#  define _FLUX_CRAY          ( 1L << FLUX_CRAY )
+# endif
+
 #endif // #if ( NFLUX_PASSIVE > 0 )
 
 // bitwise indices of derived fields
@@ -343,7 +437,7 @@
 #  define PAR_NATT_BUILTIN2   0
 # endif
 
-// **total** number of bulit-in particle attributes
+// **total** number of built-in particle attributes
 #  define PAR_NATT_BUILTIN    ( PAR_NATT_BUILTIN0 + PAR_NATT_BUILTIN1 + PAR_NATT_BUILTIN2 )
 
 
@@ -439,6 +533,7 @@
 #endif // MODEL
 
 
+
 // self-gravity constants
 #ifdef GRAVITY
 
@@ -519,6 +614,15 @@
 #endif // #ifdef GRAVITY
 
 
+// number of ghost zones for the source-term solver
+// --> fixed to zero for now since ghost zones in source terms are not supported yet
+#        define SRC_GHOST_SIZE      0
+
+
+// number of ghost zones for computing derived fields
+#        define DER_GHOST_SIZE      1
+
+
 // patch size (number of cells of a single patch in the x/y/z directions)
 #define PATCH_SIZE                   8
 #define PS1             ( 1*PATCH_SIZE )
@@ -528,7 +632,7 @@
 #define PS1P1           ( PS1 + 1 )
 
 
-// the size of arrays (in one dimension) sending into GPU
+// size of GPU arrays (in one dimension)
 //###REVISE: support interpolation schemes requiring 2 ghost cells on each side for POT_NXT
 #  define FLU_NXT       ( PS2 + 2*FLU_GHOST_SIZE )                // use patch group as the unit
 #  define FLU_NXT_P1    ( FLU_NXT + 1 )
@@ -550,56 +654,95 @@
 #ifdef PARTICLE
 #  define RHOEXT_NXT    ( PS1 + 2*RHOEXT_GHOST_SIZE )             // array rho_ext of each patch
 #endif
+#  define SRC_NXT       ( PS1 + 2*SRC_GHOST_SIZE )                // use patch as the unit
+#  define SRC_NXT_P1    ( SRC_NXT + 1 )
+#  define DER_NXT       ( PS1 + 2*DER_GHOST_SIZE )                // use patch as the unit
 
 
-// size of auxiliary arrays
-#ifdef GRAVITY
-#  define EXT_POT_NAUX_MAX       10    // ExtPot_AuxArray[]
-#  define EXT_ACC_NAUX_MAX       10    // ExtAcc_AuxArray[]
+// size of auxiliary arrays and EoS tables
+#if ( MODEL == HYDRO )
+#  define EOS_NAUX_MAX           20    // EoS_AuxArray_Flt/Int[]
+#  define EOS_NTABLE_MAX         20    // *_EoS_Table[]
+#else
+#  define EOS_NAUX_MAX           0
+#  define EOS_NTABLE_MAX         0
 #endif
+
+#ifdef GRAVITY
+#  define EXT_POT_NAUX_MAX       20    // ExtPot_AuxArray[]
+#  define EXT_ACC_NAUX_MAX       20    // ExtAcc_AuxArray[]
+#  define EXT_POT_NGENE_MAX       6    // h/d_ExtPotGenePtr
+#endif
+
+#if ( MODEL == HYDRO )
+#  define SRC_NAUX_DLEP          5     // SrcTerms.Dlep_AuxArray_Flt/Int[]
+#  define SRC_DLEP_PROF_NVAR     6     // SrcTerms.Dlep_Profile_DataDevPtr[]/RadiusDevPtr[]
+#  define SRC_DLEP_PROF_NBINMAX  4000
+#else
+#  define SRC_NAUX_DLEP          0
+#endif
+#  define SRC_NAUX_USER          10    // SrcTerms.User_AuxArray_Flt/Int[]
+
+
+// bitwise reproducibility in flux and electric field fix-up operations
+#if ( MODEL == HYDRO )
+# ifdef BITWISE_REPRODUCIBILITY
+#  define BIT_REP_FLUX
+# endif
+
+// enable BIT_REP_ELECTRIC by default even when BITWISE_REPRODUCIBILITY is off
+// --> ensures that the B field on the common interface between two nearby patches are fully
+//     consistent with each other (even the round-off errors are the same)
+// --> reduces the div(B) errors significantly
+# ifdef MHD
+//#ifdef BITWISE_REPRODUCIBILITY
+#  define BIT_REP_ELECTRIC
+//#endif
+# endif // MHD
+#endif // HYDRO
 
 
 // extreme values
 #ifndef __INT_MAX__
-#  define __INT_MAX__      2147483647
+#  define __INT_MAX__            2147483647
 #endif
 
 #ifndef __LONG_MAX__
-#  define __LONG_MAX__     9223372036854775807L
+#  define __LONG_MAX__           9223372036854775807L
 #endif
 
 #ifndef __UINT_MAX__
-#  define __UINT_MAX__     ( __INT_MAX__*2U + 1U )
+#  define __UINT_MAX__           ( __INT_MAX__*2U + 1U )
 #endif
 
 #ifndef __ULONG_MAX__
-#  define __ULONG_MAX__    18446744073709551615UL     // 2^64-1
+#  define __ULONG_MAX__          18446744073709551615UL     // 2^64-1
 #endif
 
 #ifndef __FLT_MAX__
-#  define __FLT_MAX__      3.40282347e+38F
+#  define __FLT_MAX__            3.40282347e+38F
 #endif
 
 #ifndef __FLT_MIN__
-#  define __FLT_MIN__      1.17549435e-38F
+#  define __FLT_MIN__            1.17549435e-38F
 #endif
 
 #ifndef __DBL_MAX__
-#  define __DBL_MAX__      1.79769313e+308
+#  define __DBL_MAX__            1.79769313e+308
 #endif
 
 #ifndef __DBL_MIN__
-#  define __DBL_MIN__      2.22507386e-308
+#  define __DBL_MIN__            2.22507386e-308
 #endif
 
 
 // extreme value used for various purposes (e.g., floor value for passive scalars)
 #ifdef FLOAT8
-#  define TINY_NUMBER      __DBL_MIN__
-#  define HUGE_NUMBER      __DBL_MAX__
+#  define TINY_NUMBER            __DBL_MIN__
+#  define HUGE_NUMBER            __DBL_MAX__
 #else
-#  define TINY_NUMBER      __FLT_MIN__
-#  define HUGE_NUMBER      __FLT_MAX__
+#  define TINY_NUMBER            __FLT_MIN__
+#  define HUGE_NUMBER            __FLT_MAX__
 #endif
 
 
@@ -677,6 +820,11 @@
 // GAMER status
 #define GAMER_SUCCESS      1
 #define GAMER_FAILED       0
+
+
+// timer switch
+#define TIMER_ON           1
+#define TIMER_OFF          0
 
 
 // symbolic constant for Aux_Error()

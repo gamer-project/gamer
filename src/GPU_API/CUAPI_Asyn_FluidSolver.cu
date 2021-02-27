@@ -13,8 +13,9 @@ __global__ void CUFLU_FluidSolver_RTVD(
    real g_Flux     [][9][NCOMP_TOTAL][ SQR(PS2) ],
    const double g_Corner[][3],
    const real g_Pot_USG[][ CUBE(USG_NXT_F) ],
-   const real dt, const real _dh, const real Gamma, const bool StoreFlux,
-   const bool XYZ, const real MinDens, const real MinPres );
+   const real dt, const real _dh, const bool StoreFlux,
+   const bool XYZ, const real MinDens, const real MinPres, const real MinEint,
+   const EoS_t EoS );
 #elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 __global__
 void CUFLU_FluidSolver_MHM(
@@ -27,19 +28,20 @@ void CUFLU_FluidSolver_MHM(
          real   g_Ele_Array    [][9][NCOMP_ELE][ PS2P1*PS2 ],
    const double g_Corner_Array [][3],
    const real   g_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
-         real   g_PriVar       []   [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT) ],
-         real   g_Slope_PPM    [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ],
+         real   g_PriVar       []   [NCOMP_LR            ][ CUBE(FLU_NXT) ],
+         real   g_Slope_PPM    [][3][NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ],
          real   g_FC_Var       [][6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
          real   g_FC_Flux      [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
          real   g_FC_Mag_Half  [][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
          real   g_EC_Ele       [][NCOMP_MAG][ CUBE(N_EC_ELE) ],
-   const real dt, const real dh, const real Gamma,
+   const real dt, const real dh,
    const bool StoreFlux, const bool StoreElectric,
-   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-   const double Time, const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
-   const real MinDens, const real MinPres, const real DualEnergySwitch,
-   const bool NormPassive, const int NNorm,
-   const bool JeansMinPres, const real JeansMinPres_Coeff );
+   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const double Time,
+   const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
+   const real MinDens, const real MinPres, const real MinEint,
+   const real DualEnergySwitch, const bool NormPassive, const int NNorm,
+   const bool JeansMinPres, const real JeansMinPres_Coeff,
+   const EoS_t EoS );
 #elif ( FLU_SCHEME == CTU )
 __global__
 void CUFLU_FluidSolver_CTU(
@@ -52,19 +54,20 @@ void CUFLU_FluidSolver_CTU(
          real   g_Ele_Array    [][9][NCOMP_ELE][ PS2P1*PS2 ],
    const double g_Corner_Array [][3],
    const real   g_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
-         real   g_PriVar       []   [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT) ],
-         real   g_Slope_PPM    [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ],
+         real   g_PriVar       []   [NCOMP_LR            ][ CUBE(FLU_NXT) ],
+         real   g_Slope_PPM    [][3][NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ],
          real   g_FC_Var       [][6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
          real   g_FC_Flux      [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
          real   g_FC_Mag_Half  [][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
          real   g_EC_Ele       [][NCOMP_MAG][ CUBE(N_EC_ELE) ],
-   const real dt, const real dh, const real Gamma,
+   const real dt, const real dh,
    const bool StoreFlux, const bool StoreElectric,
-   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-   const double Time, const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
-   const real MinDens, const real MinPres, const real DualEnergySwitch,
-   const bool NormPassive, const int NNorm,
-   const bool JeansMinPres, const real JeansMinPres_Coeff );
+   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const double Time,
+   const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
+   const real MinDens, const real MinPres, const real MinEint,
+   const real DualEnergySwitch, const bool NormPassive, const int NNorm,
+   const bool JeansMinPres, const real JeansMinPres_Coeff,
+   const EoS_t EoS );
 #endif // FLU_SCHEME
 
 #elif ( MODEL == ELBDM )
@@ -105,8 +108,8 @@ static real (*d_Mag_Array_F_Out)[NCOMP_MAG][ PS2P1*SQR(PS2)          ] = NULL;
 static real (*d_Ele_Array      )[9][NCOMP_ELE][ PS2P1*PS2 ]            = NULL;
 #endif
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-extern real (*d_PriVar)      [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT)     ];
-extern real (*d_Slope_PPM)[3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ];
+extern real (*d_PriVar)      [NCOMP_LR            ][ CUBE(FLU_NXT)     ];
+extern real (*d_Slope_PPM)[3][NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ];
 extern real (*d_FC_Var)   [6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ];
 extern real (*d_FC_Flux)  [3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ];
 #ifdef MHD
@@ -166,7 +169,6 @@ extern cudaStream_t *Stream;
 //                NPatchGroup         : Number of patch groups evaluated simultaneously by GPU
 //                dt                  : Time interval to advance solution
 //                dh                  : Cell size
-//                Gamma               : Ratio of specific heats
 //                StoreFlux           : true --> store the coarse-fine fluxes
 //                StoreElectric       : true --> store the coarse-fine electric field
 //                XYZ                 : true  : x->y->z ( forward sweep)
@@ -180,10 +182,10 @@ extern cudaStream_t *Stream;
 //                ELBDM_Taylor3_Coeff : Coefficient in front of the third term in the Taylor expansion for ELBDM
 //                ELBDM_Taylor3_Auto  : true --> Determine ELBDM_Taylor3_Coeff automatically by invoking the
 //                                               function "ELBDM_SetTaylor3Coeff"
-//                Time                : Current physical time                                     (for UNSPLIT_GRAVITY only)
-//                GravityType         : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
-//                GPU_NStream         : Number of CUDA streams for the asynchronous memory copy
-//                MinDens/Pres        : Minimum allowed density and pressure
+//                Time                : Current physical time                      (for UNSPLIT_GRAVITY only)
+//                UsePot              : Add self-gravity and/or external potential (for UNSPLIT_GRAVITY only)
+//                ExtAcc              : Add external acceleration                  (for UNSPLIT_GRAVITY only)
+//                MinDens/Pres/Eint   : Density, pressure, and internal energy floors
 //                DualEnergySwitch    : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
 //                NormPassive         : true --> normalize passive scalars so that the sum of their mass density
 //                                               is equal to the gas mass density
@@ -191,9 +193,7 @@ extern cudaStream_t *Stream;
 //                                      --> Should be set to the global variable "PassiveNorm_NVar"
 //                JeansMinPres        : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff  : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
-//
-// Useless parameters in HYDRO : ELBDM_Eta
-// Useless parameters in ELBDM : h_Flux_Array, h_Ele_Array, Gamma, LR_Limiter, MinMod_Coeff, MinPres
+//                GPU_NStream         : Number of CUDA streams for the asynchronous memory copy
 //-------------------------------------------------------------------------------------------------------
 void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              real h_Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
@@ -204,14 +204,15 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              real h_Ele_Array[][9][NCOMP_ELE][ PS2P1*PS2 ],
                              const double h_Corner_Array[][3],
                              real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
-                             const int NPatchGroup, const real dt, const real dh, const real Gamma,
+                             const int NPatchGroup, const real dt, const real dh,
                              const bool StoreFlux, const bool StoreElectric,
                              const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                              const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
-                             const double Time, const OptGravityType_t GravityType,
-                             const int GPU_NStream, const real MinDens, const real MinPres, const real DualEnergySwitch,
-                             const bool NormPassive, const int NNorm,
-                             const bool JeansMinPres, const real JeansMinPres_Coeff )
+                             const double Time, const bool UsePot, const OptExtAcc_t ExtAcc,
+                             const real MinDens, const real MinPres, const real MinEint,
+                             const real DualEnergySwitch, const bool NormPassive, const int NNorm,
+                             const bool JeansMinPres, const real JeansMinPres_Coeff,
+                             const int GPU_NStream )
 {
 
 // check
@@ -222,13 +223,13 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
       Aux_Error( ERROR_INFO, "unsupported limiter (%d) !!\n", LR_Limiter );
 
 #  ifdef UNSPLIT_GRAVITY
-   if ( GravityType == GRAVITY_SELF  ||  GravityType == GRAVITY_BOTH )
+   if ( UsePot )
    {
       if ( h_Pot_Array_USG   == NULL )   Aux_Error( ERROR_INFO, "h_Pot_Array_USG == NULL !!\n" );
       if ( d_Pot_Array_USG_F == NULL )   Aux_Error( ERROR_INFO, "d_Pot_Array_USG_F == NULL !!\n" );
    }
 
-   if ( GravityType == GRAVITY_EXTERNAL  ||  GravityType == GRAVITY_BOTH )
+   if ( ExtAcc )
    {
       if ( h_Corner_Array   == NULL )    Aux_Error( ERROR_INFO, "h_Corner_Array == NULL !!\n" );
       if ( d_Corner_Array_F == NULL )    Aux_Error( ERROR_INFO, "d_Corner_Array_F == NULL !!\n" );
@@ -350,10 +351,11 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #     endif
 
 #     ifdef UNSPLIT_GRAVITY
+      if ( UsePot )
       CUDA_CHECK_ERROR(  cudaMemcpyAsync( d_Pot_Array_USG_F + UsedPatch[s], h_Pot_Array_USG + UsedPatch[s],
                          USG_MemSize   [s], cudaMemcpyHostToDevice, Stream[s] )  );
 
-      if ( GravityType == GRAVITY_EXTERNAL  ||  GravityType == GRAVITY_BOTH )
+      if ( ExtAcc )
       CUDA_CHECK_ERROR(  cudaMemcpyAsync( d_Corner_Array_F  + UsedPatch[s], h_Corner_Array  + UsedPatch[s],
                          Corner_MemSize[s], cudaMemcpyHostToDevice, Stream[s] )  );
 #     endif
@@ -376,7 +378,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               d_Flux_Array      + UsedPatch[s],
               d_Corner_Array_F  + UsedPatch[s],
               d_Pot_Array_USG_F + UsedPatch[s],
-              dt, 1.0/dh, Gamma, StoreFlux, XYZ, MinDens, MinPres );
+              dt, 1.0/dh, StoreFlux, XYZ, MinDens, MinPres, MinEint, EoS );
 
 #        elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 
@@ -396,9 +398,9 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               d_FC_Flux         + UsedPatch[s],
               d_FC_Mag_Half     + UsedPatch[s],
               d_EC_Ele          + UsedPatch[s],
-              dt, dh, Gamma, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff,
-              Time, GravityType, GPUExtAcc_Ptr, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm,
-              JeansMinPres, JeansMinPres_Coeff );
+              dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff,
+              Time, UsePot, ExtAcc, GPUExtAcc_Ptr, MinDens, MinPres, MinEint,
+              DualEnergySwitch, NormPassive, NNorm, JeansMinPres, JeansMinPres_Coeff, EoS );
 
 #        elif ( FLU_SCHEME == CTU )
 
@@ -418,9 +420,9 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               d_FC_Flux         + UsedPatch[s],
               d_FC_Mag_Half     + UsedPatch[s],
               d_EC_Ele          + UsedPatch[s],
-              dt, dh, Gamma, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff,
-              Time, GravityType, GPUExtAcc_Ptr, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm,
-              JeansMinPres, JeansMinPres_Coeff );
+              dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff,
+              Time, UsePot, ExtAcc, GPUExtAcc_Ptr, MinDens, MinPres, MinEint,
+              DualEnergySwitch, NormPassive, NNorm, JeansMinPres, JeansMinPres_Coeff, EoS );
 
 #        else
 

@@ -51,7 +51,7 @@ double ELBDM_GetTimeStep_Gravity( const int lv )
 // Description :  Get the maximum potential at the target level among all MPI ranks
 //
 // Note        :  1. Invoked by ELBDM_GetTimeStep_Gravity()
-//                2. Include gravitational, self-interaction, and external potentials
+//                2. Include gravitational and self-interaction potentials
 //
 // Parameter   :  lv : Target refinement level
 //
@@ -60,15 +60,15 @@ double ELBDM_GetTimeStep_Gravity( const int lv )
 real GetMaxPot( const int lv )
 {
 
-   real   PotG, PotS, PotE;      // PotG/S/E: gravitational/self-interaction/external potential
-   real   Pot, MaxPot=0.0;       // Pot = PotG + PotS + PotE
+   real   PotG, PotS;            // PotG/S: gravitational (both self- and external gravity) / self-interaction potential
+   real   Pot, MaxPot=0.0;       // Pot = PotG + PotS
    double x0, y0, z0, x, y, z;
    int    SibPID;
    bool   Skip;
 
 
 // get the maximum potential in this rank
-#  pragma omp parallel for private( PotG, PotS, PotE, Pot, x0, y0, z0, x, y, z, SibPID, Skip ) reduction( max:MaxPot ) schedule( runtime )
+#  pragma omp parallel for private( PotG, PotS, Pot, x0, y0, z0, x, y, z, SibPID, Skip ) reduction( max:MaxPot ) schedule( runtime )
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
 //    skip all non-leaf patches not adjacent to any coarse-fine boundaries (since their data are useless)
@@ -118,9 +118,8 @@ real GetMaxPot( const int lv )
 #        else
          PotS   = (real)0.0;
 #        endif
-         PotE   = ( OPT__EXTERNAL_POT ) ? CPUExtPot_Ptr( x, y, z, Time[lv], ExtPot_AuxArray ) : (real)0.0;
 
-         Pot    = FABS( PotG + PotS + PotE );  // remember to take the absolute value
+         Pot    = FABS( PotG + PotS );    // remember to take the absolute value
          MaxPot = MAX( MaxPot, Pot );
       }}} // k,j,i
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)

@@ -21,6 +21,16 @@ void CPU_PoissonSolver_MG( const real Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT]
                            const IntScheme_t IntScheme );
 #endif // POT_SCHEME
 
+void CPU_ExtPotSolver( real g_Pot_Array[][ CUBE(GRA_NXT) ],
+                       const double g_Corner_Array[][3],
+                       const real g_ExtPotTable[],
+                       void **g_ExtPotGenePtr,
+                       const int NPatchGroup,
+                       const real dh, const ExtPot_t ExtPot_Func,
+                       const double c_ExtPot_AuxArray_Flt[],
+                       const int    c_ExtPot_AuxArray_Int[],
+                       const double Time, const bool PotIsInit );
+
 
 // Gravity solver prototypes
 #if   ( MODEL == HYDRO )
@@ -31,10 +41,10 @@ void CPU_HydroGravitySolver(
    const real   g_Pot_Array_USG[][ CUBE(USG_NXT_G) ],
    const real   g_Flu_Array_USG[][GRA_NIN-1][ CUBE(PS1) ],
          char   g_DE_Array     [][ CUBE(PS1) ],
-   const real   g_EngyB_Array  [][ CUBE(PS1) ],
+   const real   g_Emag_Array   [][ CUBE(PS1) ],
    const int NPatchGroup,
    const real dt, const real dh, const bool P5_Gradient,
-   const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func,
+   const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const double c_ExtAcc_AuxArray[],
    const double TimeNew, const double TimeOld, const real MinEint );
 
@@ -43,9 +53,7 @@ void CPU_ELBDMGravitySolver  (       real   g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
                                const real   g_Pot_Array[][ CUBE(GRA_NXT) ],
                                const double g_Corner_Array[][3],
                                const int NPatchGroup,
-                               const real EtaDt, const real dh, const real Lambda,
-                               const bool ExtPot, ExtPot_t ExtPot_Func, const double Time,
-                               const double c_ExtPot_AuxArray[] );
+                               const real EtaDt, const real dh, const real Lambda );
 
 #else
 #error : ERROR : unsupported MODEL !!
@@ -59,40 +67,43 @@ void CPU_ELBDMGravitySolver  (       real   g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
 // Description :  Invoke the CPU_PoissonSolver and/or CPU_GravitySolver to evaluate the potential and/or
 //                advance the fluid variables by the gravitational acceleration for a group of patches
 //
-// Parameter   :  h_Rho_Array          : Host array storing the input density
-//                h_Pot_Array_In       : Host array storing the input "coarse-grid" potential for interpolation
-//                h_Pot_Array_Out      : Host array to store the output potential
-//                h_Flu_Array          : Host array to store the fluid variables for the Gravity solver
-//                h_Corner_Array       : Host array storing the physical corner coordinates of each patch
-//                h_Pot_Array_USG      : Host array storing the prepared potential for UNSPLIT_GRAVITY
-//                h_Flu_Array_USG      : Host array storing the prepared density + momentum for UNSPLIT_GRAVITY
-//                h_DE_Array           : Host array storing the dual-energy status (for both input and output)
-//                h_EngyB_Array        : Host array storing the cell-centered magnetic energy (MHD only)
-//                NPatchGroup          : Number of patch groups evaluated simultaneously by GPU
-//                dt                   : Time interval to advance solution
-//                dh                   : Cell size
-//                SOR_Min_Iter         : Minimum number of iterations for SOR
-//                SOR_Max_Iter         : Maximum number of iterations for SOR
-//                SOR_Omega            : Over-relaxation parameter
-//                MG_Max_Iter          : Maximum number of iterations for multigrid
-//                MG_NPre_Smooth       : Number of pre-smoothing steps for multigrid
-//                MG_NPos_tSmooth      : Number of post-smoothing steps for multigrid
-//                MG_Tolerated_Error   : Maximum tolerated error for multigrid
-//                Poi_Coeff            : Coefficient in front of the RHS in the Poisson eq.
-//                IntScheme            : Interpolation scheme for potential
-//                                       --> currently supported schemes include
-//                                           INT_CQUAD : conservative quadratic interpolation
-//                                           INT_QUAD  : quadratic interpolation
-//                P5_Gradient          : Use 5-points stencil to evaluate the potential gradient
-//                ELBDM_Eta            : Particle mass / Planck constant in ELBDM
-//                ELBDM_Lambda         : Quartic self-interaction coefficient in ELBDM
-//                Poisson              : true --> invoke the Poisson solver
-//                GraAcc               : true --> invoke the Gravity solver
-//                GravityType          : Types of gravity --> self-gravity, external gravity, both
-//                TimeNew              : Physical time at the current  step (for the external gravity solver)
-//                TimeOld              : Physical time at the previous step (for the external gravity solver in UNSPLIT_GRAVITY)
-//                ExtPot               : Add the external potential
-//                MinEint              : Minimum allowed internal energy (== MIN_PRES / (GAMMA-1))
+// Parameter   :  h_Rho_Array        : Host array storing the input density
+//                h_Pot_Array_In     : Host array storing the input "coarse-grid" potential for interpolation
+//                h_Pot_Array_Out    : Host array to store the output potential
+//                h_Flu_Array        : Host array to store the fluid variables for the Gravity solver
+//                h_Corner_Array     : Host array storing the physical corner coordinates of each patch
+//                h_Pot_Array_USG    : Host array storing the prepared potential for UNSPLIT_GRAVITY
+//                h_Flu_Array_USG    : Host array storing the prepared density + momentum for UNSPLIT_GRAVITY
+//                h_DE_Array         : Host array storing the dual-energy status (for both input and output)
+//                h_Emag_Array       : Host array storing the cell-centered magnetic energy (MHD only)
+//                NPatchGroup        : Number of patch groups evaluated simultaneously by GPU
+//                dt                 : Time interval to advance solution
+//                dh                 : Cell size
+//                SOR_Min_Iter       : Minimum number of iterations for SOR
+//                SOR_Max_Iter       : Maximum number of iterations for SOR
+//                SOR_Omega          : Over-relaxation parameter
+//                MG_Max_Iter        : Maximum number of iterations for multigrid
+//                MG_NPre_Smooth     : Number of pre-smoothing steps for multigrid
+//                MG_NPos_tSmooth    : Number of post-smoothing steps for multigrid
+//                MG_Tolerated_Error : Maximum tolerated error for multigrid
+//                Poi_Coeff          : Coefficient in front of the RHS in the Poisson eq.
+//                IntScheme          : Interpolation scheme for potential
+//                                     --> currently supported schemes include
+//                                         INT_CQUAD : conservative quadratic interpolation
+//                                         INT_QUAD  : quadratic interpolation
+//                P5_Gradient        : Use 5-points stencil to evaluate the potential gradient
+//                ELBDM_Eta          : Particle mass / Planck constant in ELBDM
+//                ELBDM_Lambda       : Quartic self-interaction coefficient in ELBDM
+//                Poisson            : true --> compute the self-gravity potential and/or external potential
+//                GraAcc             : true --> compute the gravitational acceleration (which can include
+//                                              self-gravity, external potential, and external acceleration)
+//                                              to update fluid
+//                SelfGravity        : Add self-gravity potential
+//                ExtPot             : Add external potential
+//                ExtAcc             : Add external acceleration
+//                TimeNew            : Physical time at the current  step (for external gravity)
+//                TimeOld            : Physical time at the previous step (for external gravity in UNSPLIT_GRAVITY)
+//                MinEint            : Internal energy floor
 //
 // Useless parameters in HYDRO : ELBDM_Eta, ELBDM_Lambda
 // Useless parameters in ELBDM : P5_Gradient
@@ -107,28 +118,34 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
                                const real h_Pot_Array_USG[][USG_NXT_G][USG_NXT_G][USG_NXT_G],
                                const real h_Flu_Array_USG[][GRA_NIN-1][PS1][PS1][PS1],
                                      char h_DE_Array     [][PS1][PS1][PS1],
-                               const real h_EngyB_Array  [][PS1][PS1][PS1],
+                               const real h_Emag_Array   [][PS1][PS1][PS1],
                                const int NPatchGroup, const real dt, const real dh, const int SOR_Min_Iter,
                                const int SOR_Max_Iter, const real SOR_Omega, const int MG_Max_Iter,
                                const int MG_NPre_Smooth, const int MG_NPost_Smooth, const real MG_Tolerated_Error,
                                const real Poi_Coeff, const IntScheme_t IntScheme, const bool P5_Gradient,
                                const real ELBDM_Eta, const real ELBDM_Lambda, const bool Poisson, const bool GraAcc,
-                               const OptGravityType_t GravityType, const double TimeNew, const double TimeOld,
-                               const bool ExtPot, const real MinEint )
+                               const bool SelfGravity, const OptExtPot_t ExtPot, const OptExtAcc_t ExtAcc,
+                               const double TimeNew, const double TimeOld, const real MinEint )
 {
 
 // check
 #  ifdef GAMER_DEBUG
-   if (  Poisson  &&  ( IntScheme != INT_CQUAD && IntScheme != INT_QUAD )  )
-      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "IntScheme", IntScheme );
+   if ( Poisson )
+   {
+      if ( SelfGravity  &&  IntScheme != INT_CQUAD  &&  IntScheme != INT_QUAD )
+         Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "IntScheme", IntScheme );
+
+      if ( ExtPot  &&  h_Corner_Array == NULL )
+         Aux_Error( ERROR_INFO, "h_Corner_Array == NULL !!\n" );
+   }
 
    if ( GraAcc )
    {
-      if (  ( GravityType == GRAVITY_EXTERNAL || GravityType == GRAVITY_BOTH || ExtPot )  &&  h_Corner_Array == NULL  )
+      if ( ExtAcc  &&  h_Corner_Array == NULL )
          Aux_Error( ERROR_INFO, "h_Corner_Array == NULL !!\n" );
 
 #     ifdef UNSPLIT_GRAVITY
-      if (  ( GravityType == GRAVITY_SELF || GravityType == GRAVITY_BOTH )  &&  h_Pot_Array_USG == NULL  )
+      if (  ( SelfGravity || ExtPot )  &&  h_Pot_Array_USG == NULL  )
          Aux_Error( ERROR_INFO, "h_Pot_Array_USG == NULL !!\n" );
 
       if ( h_Flu_Array_USG == NULL )
@@ -141,33 +158,43 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
 #     endif
 
 #     ifdef MHD
-      if ( h_EngyB_Array == NULL )
-         Aux_Error( ERROR_INFO, "h_EngyB_Array == NULL !!\n" );
+      if ( h_Emag_Array == NULL )
+         Aux_Error( ERROR_INFO, "h_Emag_Array == NULL !!\n" );
 #     endif
-   }
+   } // if ( GraAcc )
 #  endif // #ifdef GAMER_DEBUG
 
 
 // Poisson solver
    if ( Poisson )
    {
-#     if   ( POT_SCHEME == SOR )
+      if ( SelfGravity )
+      {
+#        if   ( POT_SCHEME == SOR )
 
-      CPU_PoissonSolver_SOR( h_Rho_Array, h_Pot_Array_In, h_Pot_Array_Out, NPatchGroup, dh,
-                             SOR_Min_Iter, SOR_Max_Iter, SOR_Omega,
-                             Poi_Coeff, IntScheme );
+         CPU_PoissonSolver_SOR( h_Rho_Array, h_Pot_Array_In, h_Pot_Array_Out, NPatchGroup, dh,
+                                SOR_Min_Iter, SOR_Max_Iter, SOR_Omega,
+                                Poi_Coeff, IntScheme );
 
-#     elif ( POT_SCHEME == MG  )
+#        elif ( POT_SCHEME == MG  )
 
-      CPU_PoissonSolver_MG ( h_Rho_Array, h_Pot_Array_In, h_Pot_Array_Out, NPatchGroup, dh,
-                             MG_Max_Iter, MG_NPre_Smooth, MG_NPost_Smooth, MG_Tolerated_Error,
-                             Poi_Coeff, IntScheme );
+         CPU_PoissonSolver_MG ( h_Rho_Array, h_Pot_Array_In, h_Pot_Array_Out, NPatchGroup, dh,
+                                MG_Max_Iter, MG_NPre_Smooth, MG_NPost_Smooth, MG_Tolerated_Error,
+                                Poi_Coeff, IntScheme );
 
-#     else
+#        else
 
-#     error : ERROR : unsupported CPU Poisson solver !!
+#        error : ERROR : unsupported CPU Poisson solver !!
 
-#     endif
+#        endif
+      }
+
+      if ( ExtPot )
+      {
+         CPU_ExtPotSolver( (real(*)[ CUBE(GRA_NXT) ])h_Pot_Array_Out, h_Corner_Array, h_ExtPotTable, h_ExtPotGenePtr,
+                           NPatchGroup, dh, CPUExtPot_Ptr, ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int,
+                           TimeNew, SelfGravity );
+      }
    } // if ( Poisson )
 
 
@@ -181,16 +208,16 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
                               (real(*)[ CUBE(USG_NXT_G) ])      h_Pot_Array_USG,
                               (real(*)[GRA_NIN-1][ CUBE(PS1) ]) h_Flu_Array_USG,
                               (char(*)[ CUBE(PS1) ])            h_DE_Array,
-                              (real(*)[ CUBE(PS1) ])            h_EngyB_Array,
-                              NPatchGroup, dt, dh, P5_Gradient, GravityType, CPUExtAcc_Ptr,
-                              ExtAcc_AuxArray, TimeNew, TimeOld, MinEint );
+                              (real(*)[ CUBE(PS1) ])            h_Emag_Array,
+                              NPatchGroup, dt, dh, P5_Gradient,
+                              (SelfGravity || ExtPot), ExtAcc, CPUExtAcc_Ptr, ExtAcc_AuxArray,
+                              TimeNew, TimeOld, MinEint );
 
 #     elif ( MODEL == ELBDM )
       CPU_ELBDMGravitySolver( (real(*)[GRA_NIN][ CUBE(PS1) ]) h_Flu_Array,
                               (real(*)[ CUBE(GRA_NXT) ])      h_Pot_Array_Out,
                                                               h_Corner_Array,
-                              NPatchGroup, ELBDM_Eta*dt, dh, ELBDM_Lambda,
-                              ExtPot, CPUExtPot_Ptr, TimeNew, ExtPot_AuxArray );
+                              NPatchGroup, ELBDM_Eta*dt, dh, ELBDM_Lambda );
 
 #     else
 #     error : ERROR : unsupported MODEL !!

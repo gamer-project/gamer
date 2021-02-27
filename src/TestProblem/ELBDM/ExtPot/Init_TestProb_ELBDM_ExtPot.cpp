@@ -4,21 +4,17 @@
 
 static void BC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] );
-static void Init_ExtPot();
 
 
 // problem-specific global variables
 // =======================================================================================
-static double ExtPot_Amp;        // initial wave function amplitude
-static double ExtPot_M;          // point source mass
-static double ExtPot_Cen[3];     // point source position
+static double ELBDM_ExtPot_Amp;     // initial wave function amplitude
+       double ELBDM_ExtPot_M;       // point source mass
+       double ELBDM_ExtPot_Cen[3];  // point source position
 // =======================================================================================
 
 // external potential routines
-void SetCPUExtPot_PointMass( ExtPot_t &CPUExtPot_Ptr );
-# ifdef GPU
-void SetGPUExtPot_PointMass( ExtPot_t &GPUExtPot_Ptr );
-# endif
+void Init_ExtPot_ELBDM_ExtPot();
 
 
 
@@ -56,8 +52,8 @@ void Validate()
 #  endif
 
 #  ifdef GRAVITY
-   if ( !OPT__EXTERNAL_POT )
-   Aux_Error( ERROR_INFO, "OPT__EXTERNAL_POT must be enabled !!\n" );
+   if ( OPT__EXT_POT != EXT_POT_FUNC )
+   Aux_Error( ERROR_INFO, "OPT__EXT_POT != EXT_POT_FUNC (%d) !!\n", EXT_POT_FUNC );
 #  endif
 
 
@@ -97,13 +93,13 @@ void SetParameter()
 // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
 // --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
 // ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
+// ReadPara->Add( "KEY_IN_THE_FILE",      &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "ExtPot_Amp",        &ExtPot_Amp,            -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "ExtPot_M",          &ExtPot_M,              -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "ExtPot_Cen_X",      &ExtPot_Cen[0],         -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "ExtPot_Cen_Y",      &ExtPot_Cen[1],         -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "ExtPot_Cen_Z",      &ExtPot_Cen[2],         -1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "ELBDM_ExtPot_Amp",     &ELBDM_ExtPot_Amp,      -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "ELBDM_ExtPot_M",       &ELBDM_ExtPot_M,        -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "ELBDM_ExtPot_Cen_X",   &ELBDM_ExtPot_Cen[0],   -1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "ELBDM_ExtPot_Cen_Y",   &ELBDM_ExtPot_Cen[1],   -1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "ELBDM_ExtPot_Cen_Z",   &ELBDM_ExtPot_Cen[2],   -1.0,          NoMin_double,     NoMax_double      );
 
    ReadPara->Read( FileName );
 
@@ -111,7 +107,7 @@ void SetParameter()
 
 // set the default center
    for (int d=0; d<3; d++)
-      if ( ExtPot_Cen[d] < 0.0 )    ExtPot_Cen[d] = 0.5*amr->BoxSize[d];
+      if ( ELBDM_ExtPot_Cen[d] < 0.0 )    ELBDM_ExtPot_Cen[d] = 0.5*amr->BoxSize[d];
 
 
 // (2) set the problem-specific derived parameters
@@ -138,11 +134,11 @@ void SetParameter()
    {
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "  test problem ID         = %d\n",                       TESTPROB_ID );
-      Aux_Message( stdout, "  wave function amplitude = %13.7e\n",                   ExtPot_Amp );
-      Aux_Message( stdout, "  point source mass       = %13.7e\n",                   ExtPot_M );
-      Aux_Message( stdout, "  point source position   = (%13.7e, %13.7e, %13.7e)\n", ExtPot_Cen[0],
-                                                                                     ExtPot_Cen[1],
-                                                                                     ExtPot_Cen[2] );
+      Aux_Message( stdout, "  wave function amplitude = %13.7e\n",                   ELBDM_ExtPot_Amp );
+      Aux_Message( stdout, "  point source mass       = %13.7e\n",                   ELBDM_ExtPot_M );
+      Aux_Message( stdout, "  point source position   = (%13.7e, %13.7e, %13.7e)\n", ELBDM_ExtPot_Cen[0],
+                                                                                     ELBDM_ExtPot_Cen[1],
+                                                                                     ELBDM_ExtPot_Cen[2] );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -174,11 +170,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
-   const double r     = sqrt( SQR(x-ExtPot_Cen[0]) + SQR(y-ExtPot_Cen[1]) + SQR(z-ExtPot_Cen[2]) );
-   const double Coeff = 2.0*SQR(ELBDM_ETA)*NEWTON_G*ExtPot_M;
+   const double r     = sqrt( SQR(x-ELBDM_ExtPot_Cen[0]) + SQR(y-ELBDM_ExtPot_Cen[1]) + SQR(z-ELBDM_ExtPot_Cen[2]) );
+   const double Coeff = 2.0*SQR(ELBDM_ETA)*NEWTON_G*ELBDM_ExtPot_M;
    const double R     = sqrt( Coeff*r );
 
-   fluid[REAL] = ExtPot_Amp*j1( 2.0*R )/R;
+   fluid[REAL] = ELBDM_ExtPot_Amp*j1( 2.0*R )/R;
    fluid[IMAG] = 0.0;                                       // imaginary part is always zero --> no initial velocity
    fluid[DENS] = SQR( fluid[REAL] ) + SQR( fluid[IMAG] );
 
@@ -207,30 +203,6 @@ void BC( real fluid[], const double x, const double y, const double z, const dou
    SetGridIC( fluid, x, y, z, Time, lv, AuxArray );
 
 } // FUNCTION : BC
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Init_ExtPotAuxArray_ExtPotTest
-// Description :  Set the auxiliary array ExtPot_AuxArray[] used by the external potential routine
-//
-// Note        :  1. External potential can be enabled by the runtime option "OPT__EXTERNAL_POT"
-//                2. Link to the function pointer "Init_ExtPotAuxArray_Ptr"
-//                3. AuxArray[] has the size of EXT_POT_NAUX_MAX defined in CUPOT.h (default = 10)
-//
-// Parameter   :  AuxArray : Array to be filled up
-//
-// Return      :  AuxArray[]
-//-------------------------------------------------------------------------------------------------------
-void Init_ExtPotAuxArray_ExtPotTest( double AuxArray[] )
-{
-
-   AuxArray[0] = ExtPot_Cen[0];
-   AuxArray[1] = ExtPot_Cen[1];
-   AuxArray[2] = ExtPot_Cen[2];
-   AuxArray[3] = ExtPot_M*NEWTON_G;
-
-} // FUNCTION : Init_ExtPotAuxArray_ExtPotTest
 #endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
 
 
@@ -261,13 +233,9 @@ void Init_TestProb_ELBDM_ExtPot()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr  = SetGridIC;
-   BC_User_Ptr             = BC;
-   Init_ExtPotAuxArray_Ptr = Init_ExtPotAuxArray_ExtPotTest;
-   SetCPUExtPot_Ptr        = SetCPUExtPot_PointMass;
-#  ifdef GPU
-   SetGPUExtPot_Ptr        = SetGPUExtPot_PointMass;
-#  endif
+   Init_Function_User_Ptr = SetGridIC;
+   BC_User_Ptr            = BC;
+   Init_ExtPot_Ptr        = Init_ExtPot_ELBDM_ExtPot;
 #  endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
 
 

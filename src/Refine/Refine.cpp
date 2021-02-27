@@ -52,15 +52,11 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #  ifdef GRAVITY
    const int  CPotSg      = amr->PotSg[lv  ];      // sandglass of potential       at level "lv"
    const int  FPotSg      = amr->PotSg[lv+1];      // sandglass of potential       at level "lv+1"
-   const bool SelfGravity = ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH );
+   const bool UsePot      = ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT );
 #  endif
 #  ifdef MHD
    const int  CMagSg      = amr->MagSg[lv  ];      // sandglass of magnetic field  at level "lv"
    const int  FMagSg      = amr->MagSg[lv+1];      // sandglass of magnetic field  at level "lv+1"
-#  endif
-#  if ( MODEL == HYDRO )
-   const real  Gamma_m1   = GAMMA - (real)1.0;
-   const real _Gamma_m1   = (real)1.0 / Gamma_m1;
 #  endif
 
    int *Cr            = NULL;    // corner coordinates
@@ -252,7 +248,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 //       potential data
 #        ifdef GRAVITY
-         if ( SelfGravity )
+         if ( UsePot )
          for (int k=0; k<PS1; k++)  {  k_out = k + CGhost_Pot;
          for (int j=0; j<PS1; j++)  {  j_out = j + CGhost_Pot;
          for (int i=0; i<PS1; i++)  {  i_out = i + CGhost_Pot;
@@ -383,7 +379,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 //       (c1.3.2.2) prepare the potential data
 #        ifdef GRAVITY
-         if ( SelfGravity )
+         if ( UsePot )
          for (int sib=0; sib<NSide_Pot; sib++)
          {
             const int SibPID = Pedigree->sibling[sib];
@@ -637,10 +633,11 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 //       (c1.3.4) perform spatial interpolation
-         const bool PhaseUnwrapping_Yes = true;
-         const bool PhaseUnwrapping_No  = false;
-         const bool Monotonicity_Yes    = true;
-         const bool Monotonicity_No     = false;
+         const bool PhaseUnwrapping_Yes   = true;
+         const bool PhaseUnwrapping_No    = false;
+         const bool Monotonicity_Yes      = true;
+         const bool Monotonicity_No       = false;
+         const bool IntOppSign0thOrder_No = false;
 
 //       (c1.3.4.1) determine which variables require **monotonic** interpolation
          bool Monotonicity[NCOMP_TOTAL];
@@ -682,18 +679,21 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 //          interpolate density
             Interpolate( &Flu_CData[DENS][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[DENS][0][0][0],
-                         FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_Yes );
+                         FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_Yes,
+                         IntOppSign0thOrder_No );
 
 //          interpolate phase
             Interpolate( &Flu_CData[REAL][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[REAL][0][0][0],
-                         FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_Yes, &Monotonicity_No );
+                         FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_Yes, &Monotonicity_No,
+                         IntOppSign0thOrder_No );
          }
 
          else // if ( OPT__INT_PHASE )
          {
             for (int v=0; v<NCOMP_TOTAL; v++)
             Interpolate( &Flu_CData[v][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[v][0][0][0],
-                         FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity );
+                         FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity,
+                         IntOppSign0thOrder_No );
          }
 
          if ( OPT__INT_PHASE )
@@ -725,7 +725,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
          for (int v=0; v<NCOMP_TOTAL; v++)
          Interpolate( &Flu_CData[v][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[v][0][0][0],
-                      FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity );
+                      FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity,
+                      INT_OPP_SIGN_0TH_ORDER );
 
 #        endif // #if ( MODEL == ELBDM ) ... else
 
@@ -734,9 +735,10 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #        ifdef GRAVITY
          const int CSize_Pot_Temp[3] = { CSize_Pot, CSize_Pot, CSize_Pot };
 
-         if ( SelfGravity )
+         if ( UsePot )
          Interpolate( &Pot_CData[0][0][0], CSize_Pot_Temp, CStart_Pot, CRange_CC, &Pot_FData[0][0][0],
-                      FSize_CC3, FStart_CC, 1, OPT__REF_POT_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_No );
+                      FSize_CC3, FStart_CC, 1, OPT__REF_POT_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_No,
+                      IntOppSign0thOrder_No );
 #        endif
 
 
@@ -751,7 +753,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #        endif
 
 
-//       (c1.3.4.3) check minimum density and pressure
+//       (c1.3.4.3) check minimum density and pressure/internal energy
 //       --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
 //       --> but we do renormalize passive scalars here
 #        if ( MODEL == HYDRO  ||  MODEL == ELBDM )
@@ -783,10 +785,10 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #           if ( MODEL == HYDRO )
 //          compute magnetic energy
 #           ifdef MHD
-            const real EngyB = MHD_GetCellCenteredBEnergy( Mag_FData[MAGX], Mag_FData[MAGY], Mag_FData[MAGZ],
-                                                           PS2, PS2, PS2, i, j, k );
+            const real Emag = MHD_GetCellCenteredBEnergy( Mag_FData[MAGX], Mag_FData[MAGY], Mag_FData[MAGZ],
+                                                          PS2, PS2, PS2, i, j, k );
 #           else
-            const real EngyB = NULL_REAL;
+            const real Emag = NULL_REAL;
 #           endif
 
 //          ensure consistency between pressure, total energy density, and the dual-energy variable
@@ -800,15 +802,15 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
             Hydro_DualEnergyFix( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
                                  Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i], Flu_FData[ENPY][k][j][i],
-                                 dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy, EngyB );
+                                 dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2], CheckMinPres_Yes, MIN_PRES,
+                                 UseEnpy2FixEngy, Emag );
 
 #           else // #ifdef DUAL_ENERGY
 
-//          check minimum pressure
+//          apply internal energy floor
             Flu_FData[ENGY][k][j][i]
-               = Hydro_CheckMinPresInEngy( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
-                                           Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i],
-                                           Gamma_m1, _Gamma_m1, MIN_PRES, EngyB );
+               = Hydro_CheckMinEintInEngy( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
+                                           Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i], MIN_EINT, Emag );
 #           endif // #ifdef DUAL_ENERGY ... else ...
 #           endif // #if ( MODEL == HYDRO )
 
@@ -852,7 +854,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 //          potential data
 #           ifdef GRAVITY
-            if ( SelfGravity )
+            if ( UsePot )
             for (int k=0; k<PS1; k++)  {  k_in = k + offset_in[2];
             for (int j=0; j<PS1; j++)  {  j_in = j + offset_in[1];
             for (int i=0; i<PS1; i++)  {  i_in = i + offset_in[0];

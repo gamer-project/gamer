@@ -796,10 +796,11 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
 // 3.2 perform spatial interpolation
 // 3.2.1 determine which variables require **monotonic** interpolation
-   const bool PhaseUnwrapping_Yes = true;
-   const bool PhaseUnwrapping_No  = false;
-   const bool Monotonicity_Yes    = true;
-   const bool Monotonicity_No     = false;
+   const bool PhaseUnwrapping_Yes   = true;
+   const bool PhaseUnwrapping_No    = false;
+   const bool Monotonicity_Yes      = true;
+   const bool Monotonicity_No       = false;
+   const bool IntOppSign0thOrder_No = false;
 
    bool Monotonicity[NCOMP_TOTAL];
 
@@ -852,18 +853,21 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
 //    interpolate density
       Interpolate( CData_Dens, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[DENS][0][0][0],
-                   FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_Yes );
+                   FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_Yes,
+                   IntOppSign0thOrder_No );
 
 //    interpolate phase
       Interpolate( CData_Real, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[REAL][0][0][0],
-                   FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_Yes, &Monotonicity_No );
+                   FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_Yes, &Monotonicity_No,
+                   IntOppSign0thOrder_No );
    }
 
    else // if ( OPT__INT_PHASE )
    {
       for (int v=0; v<NCOMP_TOTAL; v++)
       Interpolate( CData_Flu+v*CSize_Flu1v, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[v][0][0][0],
-                   FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity );
+                   FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity,
+                   IntOppSign0thOrder_No );
    }
 
    if ( OPT__INT_PHASE )
@@ -895,7 +899,8 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
    for (int v=0; v<NCOMP_TOTAL; v++)
    Interpolate( CData_Flu+v*CSize_Flu1v, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[v][0][0][0],
-                FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity );
+                FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity,
+                INT_OPP_SIGN_0TH_ORDER );
 
 #  endif // #if ( MODEL == ELBDM ) ... else
 
@@ -911,7 +916,8 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    real (*FData_Pot)[FSize_CC][FSize_CC] = new real [FSize_CC][FSize_CC][FSize_CC];
 
    Interpolate( CData_Pot, CSize_Pot3, CStart_Pot, CRange_CC, &FData_Pot[0][0][0],
-                FSize_CC3, FStart_CC, 1, OPT__REF_POT_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_No );
+                FSize_CC3, FStart_CC, 1, OPT__REF_POT_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_No,
+                IntOppSign0thOrder_No );
 #  endif
 
 
@@ -962,15 +968,10 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 #  endif // #ifdef MHD
 
 
-// 3.2.3 check minimum density and pressure
+// 3.2.3 check minimum density and pressure/internal energy
 // --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
 // --> but we do renormalize passive scalars here
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM  ||  (defined DENS && NCOMP_PASSIVE>0) )
-#  if ( MODEL == HYDRO )
-   const real  Gamma_m1 = GAMMA - (real)1.0;
-   const real _Gamma_m1 = (real)1.0 / Gamma_m1;
-#  endif
-
    for (int k=0; k<FSize_CC; k++)
    for (int j=0; j<FSize_CC; j++)
    for (int i=0; i<FSize_CC; i++)
@@ -991,7 +992,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
          }
 #        endif
 
-//       apply minimum density
+//       apply density floor
          FData_Flu[DENS][k][j][i] = MIN_DENS;
       }
 
@@ -999,10 +1000,10 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 #     if ( MODEL == HYDRO )
 //    compute magnetic energy
 #     ifdef MHD
-      const real EngyB = MHD_GetCellCenteredBEnergy( FData_Mag[MAGX], FData_Mag[MAGY], FData_Mag[MAGZ],
-                                                     PS2, PS2, PS2, i, j, k );
+      const real Emag = MHD_GetCellCenteredBEnergy( FData_Mag[MAGX], FData_Mag[MAGY], FData_Mag[MAGZ],
+                                                    PS2, PS2, PS2, i, j, k );
 #     else
-      const real EngyB = NULL_REAL;
+      const real Emag = NULL_REAL;
 #     endif
 
 //    ensure consistency between pressure, total energy density, and the dual-energy variable
@@ -1016,15 +1017,15 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
       Hydro_DualEnergyFix( FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i],
                            FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i], FData_Flu[ENPY][k][j][i],
-                           dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy, EngyB );
+                           dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2], CheckMinPres_Yes, MIN_PRES,
+                           UseEnpy2FixEngy, Emag );
 
 #     else // #ifdef DUAL_ENERGY
 
-//    check minimum pressure
+//    apply internal energy floor
       FData_Flu[ENGY][k][j][i]
-         = Hydro_CheckMinPresInEngy( FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i],
-                                     FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i],
-                                     Gamma_m1, _Gamma_m1, MIN_PRES, EngyB );
+         = Hydro_CheckMinEintInEngy( FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i],
+                                     FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i], MIN_EINT, Emag );
 #     endif // #ifdef DUAL_ENERGY ... else ...
 #     endif // #if ( MODEL == HYDRO )
 

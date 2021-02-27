@@ -9,19 +9,19 @@
 // Function    :  Gra_Prepare_Flu
 // Description :  Fill up the input array "h_Flu_Array_G" with fluid variables for the Gravity solver
 //                --> When DUAL_ENERGY is on, this function also prepares the dual-energy status array h_DE_Array_G[]
-//                --> When MHD is on, this function also prepares the cell-centered magnetic energy array h_EngyB_Array_G[]
+//                --> When MHD is on, this function also prepares the cell-centered magnetic energy array h_Emag_Array_G[]
 //
 // Note        :  1. Always prepare the latest FluSg data
 //
-// Parameter   :  lv              : Target refinement level
-//                h_Flu_Array_G   : Host array to store the prepared data
-//                h_DE_Array_G    : Host array to store the dual-energy status
-//                h_EngyB_Array_G : Host array to store the cell-centered magnetic energy (MHD only)
-//                NPG             : Number of patch groups prepared at a time
-//                PID0_List       : List recording the patch indices with LocalID==0 to be udpated
+// Parameter   :  lv             : Target refinement level
+//                h_Flu_Array_G  : Host array to store the prepared data
+//                h_DE_Array_G   : Host array to store the dual-energy status
+//                h_Emag_Array_G : Host array to store the cell-centered magnetic energy (MHD only)
+//                NPG            : Number of patch groups prepared at a time
+//                PID0_List      : List recording the patch indices with LocalID==0 to be udpated
 //-------------------------------------------------------------------------------------------------------
 void Gra_Prepare_Flu( const int lv, real h_Flu_Array_G[][GRA_NIN][PS1][PS1][PS1], char h_DE_Array_G[][PS1][PS1][PS1],
-                      real h_EngyB_Array_G[][PS1][PS1][PS1], const int NPG, const int *PID0_List )
+                      real h_Emag_Array_G[][PS1][PS1][PS1], const int NPG, const int *PID0_List )
 {
 
    int N, PID, PID0;
@@ -57,7 +57,7 @@ void Gra_Prepare_Flu( const int lv, real h_Flu_Array_G[][GRA_NIN][PS1][PS1][PS1]
          for (int k=0; k<PS1; k++)
          for (int j=0; j<PS1; j++)
          for (int i=0; i<PS1; i++)
-            h_EngyB_Array_G[N][k][j][i] = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+            h_Emag_Array_G[N][k][j][i] = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
 #        endif
 
 

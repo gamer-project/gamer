@@ -42,9 +42,7 @@
 //                                       allocated size is N_FC_FLUX^3
 //                dt               : Time interval to advance solution
 //                dh               : Cell size
-//                Gamma            : Ratio of specific heats
-//                MinDens          : Minimum allowed density
-//                MinPres          : Minimum allowed pressure
+//                MinDens/Eint     : Density and internal energy floors
 //                DualEnergySwitch : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
 //                NormPassive      : true --> normalize passive scalars so that the sum of their mass density
 //                                            is equal to the gas mass density
@@ -52,22 +50,21 @@
 //                                   --> Should be set to the global variable "PassiveNorm_NVar"
 //                NormIdx          : Target variable indices to be normalized
 //                                   --> Should be set to the global variable "PassiveNorm_VarIdx"
+//                EoS              : EoS object
+//                                   --> Only for obtaining Gamma used by the dual-energy formalism
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                           const real dt, const real dh, const real Gamma, const real MinDens, const real MinPres,
-                           const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[] )
+                           const real dt, const real dh, const real MinDens, const real MinEint,
+                           const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
+                           const EoS_t *EoS )
 {
 
    const int  didx_flux[3] = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };
    const real dt_dh        = dt/dh;
-#  ifdef DUAL_ENERGY
-   const real  Gamma_m1    = Gamma - (real)1.0;
-   const real _Gamma_m1    = (real)1.0 / Gamma_m1;
-#  endif
 
-   real dFlux[3][NCOMP_TOTAL], Output_1Cell[NCOMP_TOTAL];
+   real dFlux[3][NCOMP_TOTAL], Output_1Cell[NCOMP_TOTAL], Emag;
 
 
    const int size_ij = SQR(PS2);
@@ -115,18 +112,19 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //        because we want to apply 1st-order-flux correction BEFORE setting a minimum density and pressure
 //    --> this consideration holds even when DUAL_ENERGY is adopted (e.g., when density is negative,
 //        even when DUAL_ENERGY is on, we still want to try the 1st-order-flux correction before setting a floor value)
-      /*
+//    --> but for barotropic EoS, we apply Eint floor here to avoid any false alarm caused by Eint<0
+#     ifdef BAROTROPIC_EOS
 #     ifdef MHD
-#     error : ERROR : MHD is not supported here !!!
-      const real EngyB = NULL_REAL;
+      Emag = MHD_GetCellCenteredBEnergy( g_FC_B[MAGX], g_FC_B[MAGY], g_FC_B[MAGZ],
+                                         PS2, PS2, PS2, i_out, j_out, k_out );
 #     else
-      const real EngyB = NULL_REAL;
+      Emag = NULL_REAL;
 #     endif
-      Output_1Cell[DENS] = FMAX( Output_1Cell[DENS], MinDens );
-      Output_1Cell[ENGY] = Hydro_CheckMinPresInEngy( Output_1Cell[DENS], Output_1Cell[MOMX],
+//    Output_1Cell[DENS] = FMAX( Output_1Cell[DENS], MinDens );
+      Output_1Cell[ENGY] = Hydro_CheckMinEintInEngy( Output_1Cell[DENS], Output_1Cell[MOMX],
                                                      Output_1Cell[MOMY], Output_1Cell[MOMZ],
-                                                     Output_1Cell[ENGY], Gamma_m1, _Gamma_m1, MinPres, EngyB );
-      */
+                                                     Output_1Cell[ENGY], MinEint, Emag );
+#     endif // #ifdef BAROTROPIC_EOS
 
 
 //    2. floor and normalize passive scalars
@@ -146,18 +144,19 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 #     ifdef DUAL_ENERGY
 //    B field must be updated in advance
 #     ifdef MHD
-      const real EngyB = MHD_GetCellCenteredBEnergy( g_FC_B[MAGX], g_FC_B[MAGY], g_FC_B[MAGZ],
-                                                     PS2, PS2, PS2, i_out, j_out, k_out );
+      Emag = MHD_GetCellCenteredBEnergy( g_FC_B[MAGX], g_FC_B[MAGY], g_FC_B[MAGZ],
+                                         PS2, PS2, PS2, i_out, j_out, k_out );
 #     else
-      const real EngyB = NULL_REAL;
+      Emag = NULL_REAL;
 #     endif
-//    we no longer apply the minimum density and pressure checks here since we want to enable 1st-order-flux correction for that
+//    we no longer apply density and pressure floors here since we want to enable 1st-order-flux correction for that
       const bool CheckMinPres_No = false;
 //    Output_1Cell[DENS] = FMAX( Output_1Cell[DENS], MinDens );
 
       Hydro_DualEnergyFix( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
                            Output_1Cell[ENGY], Output_1Cell[ENPY], g_DE_Status[idx_out],
-                           Gamma_m1, _Gamma_m1, CheckMinPres_No, NULL_REAL, DualEnergySwitch, EngyB );
+                           EoS->AuxArrayDevPtr_Flt[1], EoS->AuxArrayDevPtr_Flt[2], CheckMinPres_No, NULL_REAL,
+                           DualEnergySwitch, Emag );
 #     endif // #ifdef DUAL_ENERGY
 
 

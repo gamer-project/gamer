@@ -67,6 +67,7 @@ void Flu_CorrAfterAllSync()
 
 
 // 2. restrict data
+   if ( OPT__FIXUP_RESTRICT )
    for (int lv=MAX_LEVEL-1; lv>=0; lv--)
    {
       if ( NPatchTotal[lv+1] == 0 )    continue;
@@ -89,7 +90,7 @@ void Flu_CorrAfterAllSync()
 
 // 3. recalculate gravitational potential
 #  ifdef GRAVITY
-   if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
+   if ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT )
    for (int lv=0; lv<=MAX_LEVEL; lv++)
    {
       if ( NPatchTotal[lv] == 0 )   break;
@@ -97,63 +98,17 @@ void Flu_CorrAfterAllSync()
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
          Aux_Message( stdout, "      recalculate potential at Lv %2d        ... ", lv );
 
-#     ifdef COMOVING
-      const double Poi_Coeff = 4.0*M_PI*NEWTON_G*Time[lv];
-#     else
-      const double Poi_Coeff = 4.0*M_PI*NEWTON_G;
-#     endif
+      if ( lv > 0 )
+      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, NULL_INT, DATA_GENERAL, _DENS, _NONE, Rho_ParaBuf, USELB_YES );
 
-//    initialize the particle density array (rho_ext) and collect particles to the target level
-#     ifdef PARTICLE
-      const bool TimingSendPar_No = false;
-      const bool JustCountNPar_No = false;
-#     ifdef LOAD_BALANCE
-      const bool PredictPos       = amr->Par->PredictPos;
-      const bool SibBufPatch      = true;
-      const bool FaSibBufPatch    = true;
-#     else
-      const bool PredictPos       = false;
-      const bool SibBufPatch      = NULL_BOOL;
-      const bool FaSibBufPatch    = NULL_BOOL;
-#     endif
+      Gra_AdvanceDt( lv, Time[lv], NULL_REAL, NULL_REAL, NULL_INT, amr->PotSg[lv], true, false, false, false, false );
 
-      Prepare_PatchData_InitParticleDensityArray( lv );
-
-      Par_CollectParticle2OneLevel( lv, PredictPos, Time[lv], SibBufPatch, FaSibBufPatch, JustCountNPar_No,
-                                    TimingSendPar_No );
-#     endif // #ifdef PARTICLE
-
-      if ( lv == 0 )
-      {
-         CPU_PoissonSolver_FFT( Poi_Coeff, amr->PotSg[lv], Time[lv] );
-
-         Buf_GetBufferData( lv, NULL_INT, NULL_INT, amr->PotSg[lv], POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES );
-
-//       must call Poi_StorePotWithGhostZone() AFTER collecting potential for buffer patches
-#        ifdef STORE_POT_GHOST
-         Poi_StorePotWithGhostZone( lv, amr->PotSg[lv], true );
-#        endif
-      }
-
-      else
-      {
-         Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, NULL_INT, DATA_GENERAL, _DENS, _NONE, Rho_ParaBuf, USELB_YES );
-
-         InvokeSolver( POISSON_SOLVER, lv, Time[lv], NULL_REAL, NULL_REAL, Poi_Coeff, NULL_INT, NULL_INT, amr->PotSg[lv], false, false );
-
-         Buf_GetBufferData( lv, NULL_INT, NULL_INT, amr->PotSg[lv], POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES );
-      }
-
-//    free memory for collecting particles from other ranks and levels, and free density arrays with ghost zones (rho_ext)
-#     ifdef PARTICLE
-      Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch, FaSibBufPatch );
-
-      Prepare_PatchData_FreeParticleDensityArray( lv );
-#     endif
+      if ( lv > 0 )
+      Buf_GetBufferData( lv, NULL_INT, NULL_INT, amr->PotSg[lv], POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES );
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
-   } // for (int lv=0; lv<=MAX_LEVEL; lv++) if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
+   } // for (int lv=0; lv<=MAX_LEVEL; lv++) if ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT )
 #  endif // #ifdef GRAVITY
 
 

@@ -36,7 +36,6 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
    if ( Mode < 1  ||  Mode > 3 )    Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "Mode", Mode );
 
 
-   const real Gamma_m1        = GAMMA - (real)1.0;
    const bool CheckMinPres_No = false;
 
    int  Pass = true;
@@ -63,15 +62,16 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
             for (int v=0; v<NCOMP_TOTAL; v++)   Fluid[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
 
 #           if ( DUAL_ENERGY == DE_ENPY )
-            Pres = Hydro_DensEntropy2Pres( Fluid[DENS], Fluid[ENPY], Gamma_m1, CheckMinPres_No, NULL_REAL );
+            Pres = Hydro_DensEntropy2Pres( Fluid[DENS], Fluid[ENPY], EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
 #           else
 #           ifdef MHD
-            const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+            const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
 #           else
-            const real EngyB = NULL_REAL;
+            const real Emag = NULL_REAL;
 #           endif // MHD
-            Pres = Hydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                      Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB );
+            Pres = Hydro_Con2Pres( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], Fluid+NCOMP_FLUID,
+                                   CheckMinPres_No, NULL_REAL, Emag,
+                                   EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 #           endif // DUAL_ENERGY
 
             if ( Mode == 1  ||  Mode == 3 )

@@ -8,8 +8,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                            const int NVarCC_Der, const long TVarCCList_Der[],
                            const long TVarFC, const int NVarFC_Tot, const int TVarFCIdxList[],
                            const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
-                           const int BC_Face[], const real MinPres, const bool DE_Consistency,
-                           const real *FInterface[6] );
+                           const int BC_Face[], const real MinPres, const real MinTemp,
+                           const bool DE_Consistency, const real *FInterface[6] );
 static void SetTargetSibling( int NTSib[], int *TSib[] );
 static int Table_01( const int SibID, const char dim, const int Count, const int GhostSize );
 static int Table_02( const int lv, const int PID, const int Side );
@@ -85,17 +85,14 @@ static void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const re
 //                       (1) Par_CollectParticle2OneLevel_FreeMemory()
 //                       (2) Prepare_PatchData_FreeParticleDensityArray()
 //                8. Patches stored in PID0_List must be real patches (cannot NOT be buffer patches)
-//                9. For simplicity, currently the mode _TEMP returns **pressure/density**, which does NOT include normalization
-//                   --> For OPT__FLAG_LOHNER_TEMP only
-//                   --> Also note that MinPres is applied to _TEMP when calculating pressure
-//                10. Option "MHD_CHECK_DIV_B" on the top of this file can be used to check the divergence-free constraint
-//                    on the prepared B field
-//                    --> Note that when temporal interpolation is required in InterpolateGhostZone(), it will break div(B)=0 for
-//                        the interpolated fine-grid B field just outside the central patch group
-//                        --> It's because the temporal interpolated B field is in general not equal to the original fine-grid B
-//                            field on the coarse-fine interfaces of the central patch group
-//                        --> It's OK for the MHD solver since it will still guarantee that the updated B field within the patch group
-//                            is divergence free
+//                9. Option "MHD_CHECK_DIV_B" on the top of this file can be used to check the divergence-free constraint
+//                   on the prepared B field
+//                   --> Note that when temporal interpolation is required in InterpolateGhostZone(), it will break div(B)=0 for
+//                       the interpolated fine-grid B field just outside the central patch group
+//                       --> It's because the temporal interpolated B field is in general not equal to the original fine-grid B
+//                           field on the coarse-fine interfaces of the central patch group
+//                       --> It's OK for the MHD solver since it will still guarantee that the updated B field within the patch group
+//                           is divergence free
 //
 // Parameter   :  lv             : Target refinement level
 //                PrepTime       : Target physical time to prepare data
@@ -140,7 +137,9 @@ static void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const re
 //                                      --> TVarCC must contain _REAL and _IMAG
 //                FluBC          : Fluid boundary condition
 //                PotBC          : Gravity boundary condition
-//                MinDens/Pres   : Minimum allowed density/pressure in the output array (<0.0 ==> off)
+//                MinDens        : See MinTemp
+//                MinPres        : See MinTemp
+//                MinTemp        : Minimum allowed density/pressure/temperature in the output array (<0.0 ==> off)
 //                                 --> MinDens can be applied to both _DENS and _TOTAL_DENS but cannot be applied to _PAR_DENS
 //                                 --> Note that when preparing both density and real/imaginary parts for ELBDM, we do NOT
 //                                     rescale wave functions after applying MinDens
@@ -166,7 +165,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         const int GhostSize, const int NPG, const int *PID0_List, long TVarCC, long TVarFC,
                         const IntScheme_t IntScheme_CC, const IntScheme_t IntScheme_FC, const PrepUnit_t PrepUnit,
                         const NSide_t NSide, const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
-                        const real MinDens, const real MinPres, const bool DE_Consistency )
+                        const real MinDens, const real MinPres, const real MinTemp, const bool DE_Consistency )
 {
 
 // nothing to do if there is no target patch group
@@ -215,10 +214,20 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    if ( MinPres >= (real)0.0  &&  MPI_Rank == 0 )
    {
 #     if ( MODEL == HYDRO )
-      if (  !(TVarCC & _PRES)  &&  !(TVarCC & _TEMP)  )
-         Aux_Message( stderr, "WARNING : MinPres (%13.7e) >= 0.0 but neither _PRES nor _TEMP is found !!\n", MinPres );
+      if ( !(TVarCC & _PRES) )
+         Aux_Message( stderr, "WARNING : MinPres (%13.7e) >= 0.0 but _PRES is not found !!\n", MinPres );
 #     else
          Aux_Message( stderr, "WARNING : MinPres (%13.7e) >= 0.0 can only be applied to HYDRO !!\n", MinPres );
+#     endif
+   }
+
+   if ( MinTemp >= (real)0.0  &&  MPI_Rank == 0 )
+   {
+#     if ( MODEL == HYDRO )
+      if ( !(TVarCC & _TEMP) )
+         Aux_Message( stderr, "WARNING : MinTemp (%13.7e) >= 0.0 but _TEMP is not found !!\n", MinTemp );
+#     else
+         Aux_Message( stderr, "WARNING : MinTemp (%13.7e) >= 0.0 can only be applied to HYDRO !!\n", MinTemp );
 #     endif
    }
 
@@ -293,6 +302,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
       if ( PID0_List[TID] < 0  ||  PID0_List[TID] >= amr->NPatchComma[lv][1] )
          Aux_Error( ERROR_INFO, "incorrect target PID %d (NReal = %d) !!\n", PID0_List[TID], amr->NPatchComma[lv][1] );
 
+#  if ( MODEL == HYDRO )
+   if (  ( TVarCC & _TEMP )  &&  EoS_DensEint2Temp_CPUPtr == NULL )
+      Aux_Error( ERROR_INFO, "EoS_DensEint2Temp_CPUPtr == NULL !!\n" );
+#  endif
+
 #  endif // #ifdef GAMER_DEBUG
 
 
@@ -304,8 +318,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    const int    PGSize3D_FC      = PGSize1D_FC*SQR(PGSize1D_CC);
 
 #  if   ( MODEL == HYDRO )
-   const real Gamma_m1         = GAMMA - (real)1.0;
-   const real _Gamma_m1        = (real)1.0 / Gamma_m1;
    const bool PrepVx           = ( TVarCC & _VELX ) ? true : false;
    const bool PrepVy           = ( TVarCC & _VELY ) ? true : false;
    const bool PrepVz           = ( TVarCC & _VELZ ) ? true : false;
@@ -625,9 +637,16 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    {
 //    thread-private variables
       int    J, K, I2, J2, K2, Idx1, Idx2, PID0, TVarCCIdx_Flu, TVarFCIdx, BC_Sibling, BC_Idx_Start[3], BC_Idx_End[3];
-      double xyz0[3];            // corner coordinates for the user-specified B.C.
+      double xyz0[3];   // corner coordinates for the user-specified B.C.
+
+//    fluid variables for the EoS routines
 #     if ( MODEL == HYDRO )
-      real Fluid[NCOMP_FLUID];   // for calculating pressure and temperature only --> don't need NCOMP_TOTAL
+#     if ( EOS == EOS_GAMMA  ||  EOS == EOS_ISOTHERMAL )
+      const int NFluForEoS = NCOMP_FLUID;    // don't need passsive scalars in EOS_GAMMA/EOS_ISOTHERMAL
+#     else
+      const int NFluForEoS = NCOMP_TOTAL;
+#     endif
+      real FluidForEoS[NFluForEoS];
 #     endif
 
 //    Data1PG_CC/FC: array to store the prepared cell-centered/face-centered data of one patch group
@@ -888,29 +907,35 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                                              Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
                for (int i=0; i<PS1; i++)  {
 
-                  for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
+                  for (int v=0; v<NFluForEoS; v++)    FluidForEoS[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
 #                 ifdef MHD
-                  const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
+                  const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
 #                 else
-                  const real EngyB = NULL_REAL;
+                  const real Emag = NULL_REAL;
 #                 endif
-                  Data1PG_CC_Ptr[Idx1] = Hydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                            Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
+                  Data1PG_CC_Ptr[Idx1] = Hydro_Con2Pres( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                                         FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
+                                                         (MinPres>=(real)0.0), MinPres, Emag,
+                                                         EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                         h_EoS_Table, NULL );
 
                   if ( FluIntTime ) // temporal interpolation
                   {
-                     for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k][j][i];
+                     for (int v=0; v<NFluForEoS; v++)    FluidForEoS[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k][j][i];
 
 #                    ifdef MHD
-                     const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg_IntT );
+                     const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg_IntT );
 #                    else
-                     const real EngyB = NULL_REAL;
+                     const real Emag = NULL_REAL;
 #                    endif
                      Data1PG_CC_Ptr[Idx1] =
                         FluWeighting     *Data1PG_CC_Ptr[Idx1]
-                      + FluWeighting_IntT*Hydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                             Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
+                      + FluWeighting_IntT*Hydro_Con2Pres( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                                          FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
+                                                          (MinPres>=(real)0.0), MinPres, Emag,
+                                                          EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                          h_EoS_Table, NULL );
                   }
 
                   Idx1 ++;
@@ -926,29 +951,35 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                                              Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
                for (int i=0; i<PS1; i++)  {
 
-                  for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
+                  for (int v=0; v<NFluForEoS; v++)    FluidForEoS[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
 #                 ifdef MHD
-                  const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
+                  const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
 #                 else
-                  const real EngyB = NULL_REAL;
+                  const real Emag = NULL_REAL;
 #                 endif
-                  Data1PG_CC_Ptr[Idx1] = Hydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                               Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
+                  Data1PG_CC_Ptr[Idx1] = Hydro_Con2Temp( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                                         FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
+                                                         (MinTemp>=(real)0.0), MinTemp, Emag,
+                                                         EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                         h_EoS_Table );
 
                   if ( FluIntTime ) // temporal interpolation
                   {
-                     for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k][j][i];
+                     for (int v=0; v<NFluForEoS; v++)    FluidForEoS[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k][j][i];
 
 #                    ifdef MHD
-                     const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg_IntT );
+                     const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg_IntT );
 #                    else
-                     const real EngyB = NULL_REAL;
+                     const real Emag = NULL_REAL;
 #                    endif
                      Data1PG_CC_Ptr[Idx1] =
                         FluWeighting     *Data1PG_CC_Ptr[Idx1]
-                      + FluWeighting_IntT*Hydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                                Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
+                      + FluWeighting_IntT*Hydro_Con2Temp( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                                          FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
+                                                          (MinTemp>=(real)0.0), MinTemp, Emag,
+                                                          EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                          h_EoS_Table );
                   }
 
                   Idx1 ++;
@@ -1174,29 +1205,35 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                                                       Idx1 = IDX321( disp[0], J, K, PGSize1D_CC, PGSize1D_CC );
                      for (I2=disp2[0]; I2<disp2[0]+loop[0]; I2++) {
 
-                        for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
+                        for (int v=0; v<NFluForEoS; v++)    FluidForEoS[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
 
 #                       ifdef MHD
-                        const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg );
+                        const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg );
 #                       else
-                        const real EngyB = NULL_REAL;
+                        const real Emag = NULL_REAL;
 #                       endif
-                        Data1PG_CC_Ptr[Idx1] = Hydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                                  Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
+                        Data1PG_CC_Ptr[Idx1] = Hydro_Con2Pres( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                                               FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
+                                                               (MinPres>=(real)0.0), MinPres, Emag,
+                                                               EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                               h_EoS_Table, NULL );
 
                         if ( FluIntTime ) // temporal interpolation
                         {
-                           for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][K2][J2][I2];
+                           for (int v=0; v<NFluForEoS; v++)    FluidForEoS[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][K2][J2][I2];
 
 #                          ifdef MHD
-                           const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg_IntT );
+                           const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg_IntT );
 #                          else
-                           const real EngyB = NULL_REAL;
+                           const real Emag = NULL_REAL;
 #                          endif
                            Data1PG_CC_Ptr[Idx1] =
                               FluWeighting     *Data1PG_CC_Ptr[Idx1]
-                            + FluWeighting_IntT*Hydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                                   Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
+                            + FluWeighting_IntT*Hydro_Con2Pres( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                                                FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
+                                                                (MinPres>=(real)0.0), MinPres, Emag,
+                                                                EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                                h_EoS_Table, NULL );
                         }
 
                         Idx1 ++;
@@ -1212,29 +1249,35 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                                                       Idx1 = IDX321( disp[0], J, K, PGSize1D_CC, PGSize1D_CC );
                      for (I2=disp2[0]; I2<disp2[0]+loop[0]; I2++) {
 
-                        for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
+                        for (int v=0; v<NFluForEoS; v++)    FluidForEoS[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
 
 #                       ifdef MHD
-                        const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg );
+                        const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg );
 #                       else
-                        const real EngyB = NULL_REAL;
+                        const real Emag = NULL_REAL;
 #                       endif
-                        Data1PG_CC_Ptr[Idx1] = Hydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                                     Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
+                        Data1PG_CC_Ptr[Idx1] = Hydro_Con2Temp( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                                               FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
+                                                               (MinTemp>=(real)0.0), MinTemp, Emag,
+                                                               EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                               h_EoS_Table );
 
                         if ( FluIntTime ) // temporal interpolation
                         {
-                           for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][K2][J2][I2];
+                           for (int v=0; v<NFluForEoS; v++)    FluidForEoS[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][K2][J2][I2];
 
 #                          ifdef MHD
-                           const real EngyB = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg_IntT );
+                           const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg_IntT );
 #                          else
-                           const real EngyB = NULL_REAL;
+                           const real Emag = NULL_REAL;
 #                          endif
                            Data1PG_CC_Ptr[Idx1] =
                               FluWeighting     *Data1PG_CC_Ptr[Idx1]
-                            + FluWeighting_IntT*Hydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                                      Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
+                            + FluWeighting_IntT*Hydro_Con2Temp( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                                                FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
+                                                                (MinTemp>=(real)0.0), MinTemp, Emag,
+                                                                EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                                h_EoS_Table );
                         }
 
                         Idx1 ++;
@@ -1394,7 +1437,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                InterpolateGhostZone( lv-1, FaSibPID, IntData_CC, IntData_FC, IntData_CC_IntTime, Side, PrepTime, GhostSize,
                                      IntScheme_CC, IntScheme_FC, NTSib, TSib, TVarCC, NVarCC_Tot, NVarCC_Flu,
                                      TVarCCIdxList_Flu, NVarCC_Der, TVarCCList_Der, TVarFC, NVarFC_Tot, TVarFCIdxList,
-                                     IntPhase, FluBC, PotBC, BC_Face, MinPres, DE_Consistency,
+                                     IntPhase, FluBC, PotBC, BC_Face, MinPres, MinTemp, DE_Consistency,
                                      (const real **)FInterface_Ptr );
 
 

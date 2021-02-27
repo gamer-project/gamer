@@ -503,13 +503,14 @@ void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nva
 
 #  ifdef MHD
    Aux_Error( ERROR_INFO, "MHD is NOT supported yet !!\n" );
-   const real EngyB = NULL_REAL;
+   const real Emag = NULL_REAL;
 #  else
-   const real EngyB = NULL_REAL;
+   const real Emag = NULL_REAL;
 #  endif
 
 #  if   ( DUAL_ENERGY == DE_ENPY )
-   fluid_out[ENPY] = Hydro_Fluid2Entropy( fluid_in[DENS], fluid_in[MOMX], fluid_in[MOMY], fluid_in[MOMZ], fluid_in[ENGY], GAMMA-1.0, EngyB );
+   fluid_out[ENPY] = Hydro_Con2Entropy( fluid_in[DENS], fluid_in[MOMX], fluid_in[MOMY], fluid_in[MOMZ], fluid_in[ENGY], Emag,
+                                        EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #  elif ( DUAL_ENERGY == DE_EINT )
 #  error : DE_EINT is NOT supported yet !!
 #  endif

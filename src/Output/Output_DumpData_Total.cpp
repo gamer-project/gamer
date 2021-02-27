@@ -16,7 +16,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total (FormatVersion = 2210)
+// Function    :  Output_DumpData_Total (FormatVersion = 2220)
 // Description :  Output all simulation data in the binary form, which can be used as a restart file
 //
 // Note        :  1. This output format is deprecated and is mainly used for debugging only
@@ -37,6 +37,7 @@ Procedure for outputting new variables:
 //                2202 : 2018/12/15 --> set WAF-related variables to arbitrary values since they no longer exist
 //                2203 : 2018/12/27 --> replace GRA_BLOCK_SIZE_Z by GRA_BLOCK_SIZE
 //                2210 : 2019/06/07 --> support MHD
+//                2220 : 2020/08/25 --> output EOS
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total( const char *FileName )
 {
@@ -181,7 +182,7 @@ void Output_DumpData_Total( const char *FileName )
 
 //    a. output the information of data format
 //    =================================================================================================
-      const long FormatVersion = 2210;
+      const long FormatVersion = 2220;
       const long CheckCode     = 123456789;
 
       fseek( File, HeaderOffset_Format, SEEK_SET );
@@ -374,6 +375,12 @@ void Output_DumpData_Total( const char *FileName )
       const bool mhd                 = false;
 #     endif
 
+#     if ( MODEL == HYDRO )
+      const int eos                  = EOS;
+#     else
+      const int eos                  = NULL_INT;
+#     endif
+
       const int nlevel               = NLEVEL;
       const int max_patch            = MAX_PATCH;
 
@@ -409,6 +416,7 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( &laohu,                     sizeof(bool),                    1,             File );
       fwrite( &support_hdf5,              sizeof(bool),                    1,             File );
       fwrite( &mhd,                       sizeof(bool),                    1,             File );
+      fwrite( &eos,                       sizeof(int),                     1,             File );
 
 
 //    c. output the symbolic constants defined in "Macro.h, CUPOT.h, and CUFLU.h"
@@ -750,6 +758,7 @@ void Output_DumpData_Total( const char *FileName )
    const bool DE_Consistency_No = false;
    const real MinDens_No        = -1.0;
    const real MinPres_No        = -1.0;
+   const real MinTemp_No        = -1.0;
    const bool TimingSendPar_No  = false;
    const bool PredictParPos_No  = false;   // particles synchronization is done in "Flu_CorrAfterAllSync()"
    const bool JustCountNPar_No  = false;
@@ -803,7 +812,7 @@ void Output_DumpData_Total( const char *FileName )
                         Prepare_PatchData( lv, Time[lv], ParDensArray[0], NULL, 0, 1, &PID,
                                            ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_PAR_ONLY ) ? _PAR_DENS : _TOTAL_DENS,
                                            _NONE, OPT__RHO_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No,
-                                           OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, DE_Consistency_No );
+                                           OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, DE_Consistency_No );
                         break;
                      }
                   }

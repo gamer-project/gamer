@@ -80,22 +80,18 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
    Mis_CompareRealValue( Time[FaLv], Time[SonLv], __FUNCTION__, true );
 
 
-   const bool ResFlu    = TVarCC & _TOTAL;
+   const bool ResFlu  = TVarCC & _TOTAL;
 #  ifdef GRAVITY
-   const bool ResPot    = TVarCC & _POTE;
+   const bool ResPot  = TVarCC & _POTE;
 #  else
-   const bool ResPot    = false;
+   const bool ResPot  = false;
 #  endif
 #  ifdef MHD
-   const bool ResMag    = TVarFC & _MAG;
+   const bool ResMag  = TVarFC & _MAG;
 #  else
-   const bool ResMag    = false;
+   const bool ResMag  = false;
 #  endif
-#  if ( MODEL == HYDRO )
-   const real  Gamma_m1 = GAMMA - (real)1.0;
-   const real _Gamma_m1 = (real)1.0 / Gamma_m1;
-#  endif
-   const int PS1_half   = PS1 / 2;
+   const int PS1_half = PS1 / 2;
 
 
 // determine the components to be restricted (TFluVarIdx : target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
@@ -299,7 +295,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 #     endif // #ifdef MHD
 
 
-//    check the minimum pressure and, when the dual-energy formalism is adopted, ensure the consistency between
+//    check the minimum pressure/internal energy and, when the dual-energy formalism is adopted, ensure the consistency between
 //    pressure, total energy density, and the dual-energy variable
 #     if ( MODEL == HYDRO )
 //    apply this correction only when preparing all fluid variables or magnetic field
@@ -314,9 +310,9 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
       {
 //       compute magnetic energy
 #        ifdef MHD
-         const real EngyB = MHD_GetCellCenteredBEnergyInPatch( FaLv, FaPID, i, j, k, FaMagSg );
+         const real Emag = MHD_GetCellCenteredBEnergyInPatch( FaLv, FaPID, i, j, k, FaMagSg );
 #        else
-         const real EngyB = NULL_REAL;
+         const real Emag = NULL_REAL;
 #        endif
 
 #        ifdef DUAL_ENERGY
@@ -333,18 +329,19 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMZ][k][j][i],
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i],
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENPY][k][j][i],
-                              dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy, EngyB );
+                              dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2], CheckMinPres_Yes, MIN_PRES,
+                              UseEnpy2FixEngy, Emag );
 
 #        else // #ifdef DUAL_ENERGY
 
-//       actually it might not be necessary to check the minimum pressure here
+//       actually it might not be necessary to check the minimum internal energy here
          amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i]
-            = Hydro_CheckMinPresInEngy( amr->patch[FaFluSg][FaLv][FaPID]->fluid[DENS][k][j][i],
+            = Hydro_CheckMinEintInEngy( amr->patch[FaFluSg][FaLv][FaPID]->fluid[DENS][k][j][i],
                                         amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMX][k][j][i],
                                         amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMY][k][j][i],
                                         amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMZ][k][j][i],
                                         amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i],
-                                        Gamma_m1, _Gamma_m1, MIN_PRES, EngyB );
+                                        MIN_EINT, Emag );
 #        endif // #ifdef DUAL_ENERGY ... else ...
       } // i,j,k
 #     endif // #if ( MODEL == HYDRO )

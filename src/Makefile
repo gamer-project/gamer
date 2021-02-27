@@ -79,6 +79,17 @@ SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 # magnetohydrodynamics
 #SIMU_OPTION += -DMHD
 
+# cosmic rays (not supported yet)
+#SIMU_OPTION += -DCOSMIC_RAY
+
+# equation of state: EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TABULAR/EOS_USER
+# --> must be set when MODEL=HYDRO; must also enable BAROTROPIC_EOS for EOS_ISOTHERMAL
+SIMU_OPTION += -DEOS=EOS_GAMMA
+
+# whether or not the EOS set above is barotropic
+# --> mandatory for EOS_ISOTHERMAL; optional for EOS_TABULAR/EOS_USER
+#SIMU_OPTION += -DBAROTROPIC_EOS
+
 
 # (b-2) ELBDM options
 # ------------------------------------------------------------------------------------
@@ -392,7 +403,7 @@ LIBYT_PATH   :=
 # CUDA source files (compiled with nvcc)
 GPU_FILE    := CUAPI_Asyn_FluidSolver.cu  CUAPI_DiagnoseDevice.cu  CUAPI_MemAllocate_Fluid.cu \
                CUAPI_MemFree_Fluid.cu  CUAPI_Set_Default_GPU_Parameter.cu  CUAPI_SetDevice.cu \
-               CUAPI_Synchronize.cu  CUAPI_Asyn_dtSolver.cu  CUAPI_SetConstMemory.cu
+               CUAPI_Synchronize.cu  CUAPI_Asyn_dtSolver.cu  CUAPI_SetConstMemory.cu  CUAPI_SetConstMemory_EoS.cu
 
 
 # C/C++ source files (compiled with c++ compiler)
@@ -409,7 +420,8 @@ CPU_FILE    += Aux_Check_Parameter.cpp  Aux_Check_Conservation.cpp  Aux_Check.cp
 
 CPU_FILE    += CPU_FluidSolver.cpp  Flu_AdvanceDt.cpp  Flu_Prepare.cpp  Flu_Close.cpp  Flu_FixUp_Flux.cpp \
                Flu_FixUp_Restrict.cpp  Flu_AllocateFluxArray.cpp  Flu_BoundaryCondition_User.cpp  Flu_ResetByUser.cpp \
-               Flu_CorrAfterAllSync.cpp  Flu_ManageFixUpTempArray.cpp
+               Flu_CorrAfterAllSync.cpp  Flu_ManageFixUpTempArray.cpp  Flu_DerivedField_BuiltIn.cpp \
+               Flu_DerivedField_User.cpp
 
 CPU_FILE    += End_GAMER.cpp  End_MemFree.cpp  End_MemFree_Fluid.cpp  End_StopManually.cpp  End_User.cpp \
                Init_BaseLevel.cpp  Init_GAMER.cpp  Init_Load_DumpTable.cpp \
@@ -445,19 +457,21 @@ vpath %.cpp    Main  Init  Refine  Fluid  Interpolation  Tables  Output  Miscell
 # hydrodynamic source files (included only if "MODEL=HYDRO")
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DMODEL=HYDRO, $(SIMU_OPTION))" "-DMODEL=HYDRO"
-GPU_FILE    += CUFLU_dtSolver_HydroCFL.cu  CUFLU_FluidSolver_RTVD.cu  CUFLU_FluidSolver_MHM.cu  CUFLU_FluidSolver_CTU.cu
+GPU_FILE    += CUFLU_dtSolver_HydroCFL.cu  CUFLU_FluidSolver_RTVD.cu  CUFLU_FluidSolver_MHM.cu  CUFLU_FluidSolver_CTU.cu \
+               GPU_EoS_Gamma.cu  GPU_EoS_User_Template.cu  GPU_EoS_Isothermal.cu
 
 CPU_FILE    += CPU_FluidSolver_RTVD.cpp  CPU_FluidSolver_MHM.cpp  CPU_FluidSolver_CTU.cpp \
                CPU_Shared_DataReconstruction.cpp  CPU_Shared_FluUtility.cpp  CPU_Shared_ComputeFlux.cpp \
                CPU_Shared_FullStepUpdate.cpp  CPU_Shared_RiemannSolver_Exact.cpp  CPU_Shared_RiemannSolver_Roe.cpp \
                CPU_Shared_RiemannSolver_HLLE.cpp  CPU_Shared_RiemannSolver_HLLC.cpp  CPU_Shared_DualEnergy.cpp \
-               CPU_dtSolver_HydroCFL.cpp
+               CPU_dtSolver_HydroCFL.cpp  CPU_EoS_Gamma.cpp  CPU_EoS_User_Template.cpp  CPU_EoS_Isothermal.cpp
 
 CPU_FILE    += Hydro_Init_ByFunction_AssignData.cpp  Hydro_Aux_Check_Negative.cpp \
-               Hydro_BoundaryCondition_Reflecting.cpp  Hydro_BoundaryCondition_Outflow.cpp
+               Hydro_BoundaryCondition_Reflecting.cpp  Hydro_BoundaryCondition_Outflow.cpp \
+               EoS_Init.cpp  EoS_End.cpp
 
-vpath %.cu     Model_Hydro/GPU_Hydro
-vpath %.cpp    Model_Hydro/CPU_Hydro  Model_Hydro
+vpath %.cu     Model_Hydro/GPU_Hydro  EoS  EoS/Gamma  EoS/User_Template  EoS/Isothermal
+vpath %.cpp    Model_Hydro/CPU_Hydro  Model_Hydro  EoS  EoS/Gamma  EoS/User_Template  EoS/Isothermal
 
 ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
 GPU_FILE    += CUPOT_HydroGravitySolver.cu  CUPOT_dtSolver_HydroGravity.cu
@@ -511,13 +525,15 @@ endif # MODEL
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
 GPU_FILE    += CUAPI_MemAllocate_PoissonGravity.cu  CUAPI_MemFree_PoissonGravity.cu \
-               CUAPI_Asyn_PoissonGravitySolver.cu  CUAPI_SetConstMemory_ExtAccPot.cu
+               CUAPI_Asyn_PoissonGravitySolver.cu  CUAPI_SetConstMemory_ExtAccPot.cu \
+               CUAPI_SendExtPotTable2GPU.cu
 
 GPU_FILE    += CUPOT_PoissonSolver_SOR_10to14cube.cu  CUPOT_PoissonSolver_SOR_16to18cube.cu \
-               CUPOT_PoissonSolver_MG.cu  CUPOT_ExtAcc_PointMass.cu  CUPOT_ExtPot_PointMass.cu
+               CUPOT_PoissonSolver_MG.cu  CUPOT_ExtAcc_PointMass.cu  CUPOT_ExtPot_PointMass.cu \
+               CUPOT_ExtPotSolver.cu  CUPOT_ExtPot_Tabular.cu
 
 CPU_FILE    += CPU_PoissonGravitySolver.cpp  CPU_PoissonSolver_SOR.cpp  CPU_PoissonSolver_FFT.cpp \
-               CPU_PoissonSolver_MG.cpp
+               CPU_PoissonSolver_MG.cpp  CPU_ExtPotSolver.cpp  CPU_ExtPotSolver_BaseLevel.cpp
 
 CPU_FILE    += Init_FFTW.cpp  Gra_Close.cpp  Gra_Prepare_Flu.cpp  Gra_Prepare_Pot.cpp  Gra_Prepare_Corner.cpp \
                Gra_AdvanceDt.cpp  Poi_Close.cpp  Poi_Prepare_Pot.cpp  Poi_Prepare_Rho.cpp \
@@ -525,7 +541,8 @@ CPU_FILE    += Init_FFTW.cpp  Gra_Close.cpp  Gra_Prepare_Flu.cpp  Gra_Prepare_Po
                End_MemFree_PoissonGravity.cpp  Init_Set_Default_SOR_Parameter.cpp  Init_GreenFuncK.cpp \
                Init_Set_Default_MG_Parameter.cpp  Poi_GetAverageDensity.cpp  Poi_AddExtraMassForGravity.cpp \
                Poi_BoundaryCondition_Extrapolation.cpp  Gra_Prepare_USG.cpp  Poi_StorePotWithGhostZone.cpp \
-               Init_ExtAccPot.cpp  CPU_ExtAcc_PointMass.cpp  CPU_ExtPot_PointMass.cpp
+               Init_ExtAccPot.cpp  End_ExtAccPot.cpp  CPU_ExtAcc_PointMass.cpp  CPU_ExtPot_PointMass.cpp \
+               Poi_UserWorkBeforePoisson.cpp  Init_LoadExtPotTable.cpp  CPU_ExtPot_Tabular.cpp
 
 vpath %.cu     SelfGravity/GPU_Poisson  SelfGravity/GPU_Gravity
 vpath %.cpp    SelfGravity/CPU_Poisson  SelfGravity/CPU_Gravity  SelfGravity
@@ -611,6 +628,21 @@ CPU_FILE    += YT_Init.cpp  YT_End.cpp  YT_SetParameter.cpp  YT_AddAllGrid.cpp  
 
 vpath %.cpp    YT
 endif # SUPPORT_LIBYT
+
+
+# local source terms source files
+# ------------------------------------------------------------------------------------
+GPU_FILE    += CUAPI_Asyn_SrcSolver.cu  CUSRC_SrcSolver_IterateAllCells.cu  CUSRC_Src_Deleptonization.cu \
+               CUSRC_Src_User_Template.cu
+
+CPU_FILE    += CPU_SrcSolver.cpp  CPU_SrcSolver_IterateAllCells.cpp  CPU_Src_Deleptonization.cpp \
+               CPU_Src_User_Template.cpp
+
+CPU_FILE    += Src_AdvanceDt.cpp  Src_Prepare.cpp  Src_Close.cpp  Src_Init.cpp  Src_End.cpp \
+               Src_WorkBeforeMajorFunc.cpp
+
+vpath %.cu     SourceTerms  SourceTerms/User_Template  SourceTerms/Deleptonization
+vpath %.cpp    SourceTerms  SourceTerms/User_Template  SourceTerms/Deleptonization
 
 
 # Grackle source files (included only if "SUPPORT_GRACKLE" is turned on)
@@ -709,6 +741,10 @@ endif
 # headers
 # -------------------------------------------------------------------------------
 INCLUDE := -I../include
+
+ifeq "$(filter -DMODEL=HYDRO, $(SIMU_OPTION))" "-DMODEL=HYDRO"
+INCLUDE += -IModel_Hydro/GPU_Hydro
+endif
 
 ifeq "$(filter -DSERIAL, $(SIMU_OPTION))" ""
 INCLUDE += -I$(MPI_PATH)/include
@@ -860,6 +896,10 @@ $(OBJ_PATH)/$(PREFIX_GPU)CUFLU_%.o : CUFLU_%.cu
 $(OBJ_PATH)/$(PREFIX_GPU)CUPOT_%.o : CUPOT_%.cu
 	@echo "Compiling $<"
 	$(ECHO)$(NVCC) $(NVCCFLAG_COM) $(NVCCFLAG_POT) -o $@ -dc $<
+
+$(OBJ_PATH)/$(PREFIX_GPU)CUSRC_%.o : CUSRC_%.cu
+	@echo "Compiling $<"
+	$(ECHO)$(NVCC) $(NVCCFLAG_COM) -o $@ -dc $<
 
 $(OBJ_PATH)/$(PREFIX_GPU)CUAPI_%.o : CUAPI_%.cu
 	@echo "Compiling $<"

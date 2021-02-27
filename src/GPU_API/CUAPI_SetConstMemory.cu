@@ -7,6 +7,8 @@
 
 #ifdef GPU
 
+extern real *d_EoS_Table[EOS_NTABLE_MAX];
+
 #ifdef GRAVITY
 void CUAPI_SetConstMemory_ExtAccPot();
 #endif
@@ -21,6 +23,9 @@ void CUAPI_SetConstMemory_ExtAccPot();
 // Note        :  1. Adopt the suggested approach for CUDA version >= 5.0
 //                2. Invoked by Init_GAMER()
 //                3. Invoke CUAPI_SetConstMemory_ExtAccPot()
+//                4. Some constant memory variables are set elsewhere. For example,
+//                   (1) Source-term variables are set by individual source-term initializer
+//                   (2) EoS variables are set by CUAPI_SetConstMemory_EoS()
 //
 // Parameter   :  None
 //
