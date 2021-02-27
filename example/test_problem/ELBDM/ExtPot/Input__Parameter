@@ -7,7 +7,8 @@
 # 3. Parameters set to "auto" (usually by setting to a negative value) do not have deterministic default values
 #    and will be set according to the adopted compilation options and/or other runtime parameters
 # 4. To add new parameters, please edit "Init/Init_Load_Parameter.cpp"
-# 5. All dimensional variables should be set consistently with the code units (set by UNIT_L/M/T/V/D)
+# 5. All dimensional variables should be set consistently with the code units (set by UNIT_L/M/T/V/D) unless
+#    otherwise specified (e.g., SF_CREATE_STAR_MIN_GAS_DENS & SF_CREATE_STAR_MIN_STAR_MASS)
 # 6. For boolean options: 0/1 -> off/on
 # =================================================================================================================
 
@@ -42,6 +43,7 @@ OPT__BC_POT                   2           # gravity boundary condition: (1=perio
 
 
 # time-step
+DT__MAX                      -1.0         # dt criterion: maximum allowed dt (<0=off) [-1.0]
 DT__FLUID                    -1.0         # dt criterion: fluid solver CFL factor (<0=auto) [-1.0]
 DT__FLUID_INIT               -1.0         # dt criterion: DT__FLUID at the first step (<0=auto) [-1.0]
 DT__GRAVITY                  -1.0         # dt criterion: gravity solver safety factor (<0=auto) [-1.0]
@@ -108,10 +110,10 @@ SOR_OMEGA                    -1.0         # over-relaxation parameter in SOR: (<
 SOR_MAX_ITER                 -1           # maximum number of iterations in SOR: (<0=auto) [-1]
 SOR_MIN_ITER                 -1           # minimum number of iterations in SOR: (<0=auto) [-1]
 POT_GPU_NPGROUP              -1           # number of patch groups sent into the GPU Poisson solver (<=0=auto) [-1]
-OPT__GRA_P5_GRADIENT          0           # 5-points gradient in the Gravity solver (must have GRA/USG_GHOST_SIZE_G>=2) [0]
 OPT__SELF_GRAVITY             1           # add self-gravity [1]
 OPT__EXT_ACC                  0           # add external acceleration (0=off, 1=function, 2=table) [0] ##HYDRO ONLY##
 OPT__EXT_POT                  1           # add external potential    (0=off, 1=function, 2=table) [0]
+                                          # --> for 2 (table), edit the corresponding parameters below too
 EXT_POT_TABLE_NAME            EmptyTable  # external potential table: filename
 
 

@@ -268,7 +268,7 @@ void Init_GAMER( int *argc, char ***argv )
       } // for (int lv=0; lv<NLEVEL; lv++)
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Calculating gravitational potential" );
-   } // if ( OPT__SELF_GRAVITY_TYPE  ||  OPT__EXT_POT )
+   } // if ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT )
 #  endif // #ifdef GARVITY
 
 
