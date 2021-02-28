@@ -51,7 +51,6 @@ void CPU_HydroGravitySolver(
 #elif ( MODEL == ELBDM )
 void CPU_ELBDMGravitySolver  (       real   g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
                                const real   g_Pot_Array[][ CUBE(GRA_NXT) ],
-                               const double g_Corner_Array[][3],
                                const int NPatchGroup,
                                const real EtaDt, const real dh, const real Lambda );
 
@@ -216,7 +215,6 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
 #     elif ( MODEL == ELBDM )
       CPU_ELBDMGravitySolver( (real(*)[GRA_NIN][ CUBE(PS1) ]) h_Flu_Array,
                               (real(*)[ CUBE(GRA_NXT) ])      h_Pot_Array_Out,
-                                                              h_Corner_Array,
                               NPatchGroup, ELBDM_Eta*dt, dh, ELBDM_Lambda );
 
 #     else
