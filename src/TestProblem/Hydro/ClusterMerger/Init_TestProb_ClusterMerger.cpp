@@ -55,7 +55,7 @@ static int     Merger_NBin1;              // number of radial bins of cluster 1
 static int     Merger_NBin2;              // number of radial bins of cluster 2
 static int     Merger_NBin3;              // number of radial bins of cluster 3
 
-FieldIdx_t ParTypeIdx  = Idx_Undefined;
+       FieldIdx_t ParTypeIdx     = Idx_Undefined;
 static FieldIdx_t ColorField1Idx = Idx_Undefined;
 static FieldIdx_t ColorField2Idx = Idx_Undefined;
 static FieldIdx_t ColorField3Idx = Idx_Undefined;
@@ -92,7 +92,6 @@ void Validate()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ...\n", TESTPROB_ID );
 
-
 #  if ( MODEL != HYDRO )
    Aux_Error( ERROR_INFO, "MODEL != HYDRO !!\n" );
 #  endif
@@ -128,8 +127,10 @@ void Validate()
 #  ifdef PARTICLE
    if ( OPT__INIT == INIT_BY_FUNCTION  &&  amr->Par->Init != PAR_INIT_BY_FUNCTION )
       Aux_Error( ERROR_INFO, "please set PAR_INIT = 1 (by FUNCTION) !!\n" );
+   
+   if ( PAR_NATT_USER != 1 )
+      Aux_Error( ERROR_INFO, "please set PAR_NATT_USER = 1 in the Makefile !!\n" );
 #  endif
-
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
 
@@ -157,7 +158,6 @@ void SetParameter()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ...\n" );
-
 
 // (1) load the problem-specific runtime parameters
    const char FileName[] = "Input__TestProb";
@@ -199,6 +199,12 @@ void SetParameter()
    ReadPara->Read( FileName );
 
    delete ReadPara;
+
+// Validate that we have the correct number of passive scalars
+
+   if ( Merger_Coll_NumHalos + (int)Merger_Coll_UseMetals ) < NCOMP_PASSIVE_USER ) 
+      Aux_Error( ERROR_INFO, 
+                 "please set NCOMP_PASSIVE_USER >= Merger_Coll_NumHalos + Merger_Coll_UseMetals in the Makefile !!\n" );
 
 // convert to code units
    Merger_Coll_PosX1 *= Const_kpc / UNIT_L;
@@ -518,7 +524,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
      + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
  
    if ( Merger_Coll_UseMetals ) {
-      Metl = Metl1*Dens1+Metl2*Dens2+Metl3*Dens3;
+      Metl = Metl1*Dens1 + Metl2*Dens2 + Metl3*Dens3;
       fluid[Idx_Metal] = Metl;
    }
 
@@ -679,7 +685,7 @@ void AddNewField_ClusterMerger()
 {
 
    if ( Merger_Coll_UseMetals )
-     Idx_Metal = AddField( "Metal", NORMALIZE_NO );
+      Idx_Metal = AddField( "Metal", NORMALIZE_NO );
    if ( ColorField1Idx == Idx_Undefined )
       ColorField1Idx = AddField( "ColorField1", NORMALIZE_NO );
    if ( Merger_Coll_NumHalos > 1 && ColorField2Idx == Idx_Undefined )

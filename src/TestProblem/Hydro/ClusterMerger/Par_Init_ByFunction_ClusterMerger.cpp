@@ -129,7 +129,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       Aux_Error( ERROR_INFO, "total number of particles found in cluster [%ld] != expect [%ld] !!\n",
                  NPar_AllCluster, NPar_AllRank );
 
-// prepare to load data
+   // prepare to load data
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Preparing to load data ... " );
 
    const int NCluster = Merger_Coll_NumHalos;
@@ -137,7 +137,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
    for (int c=0; c<NCluster; c++)
    {
-//    get the number of particles loaded by each rank for each cluster
+      // get the number of particles loaded by each rank for each cluster
       long NPar_ThisCluster_EachRank[MPI_NRank];
 
       switch (c) {
@@ -157,7 +157,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
       MPI_Allgather( &NPar_ThisRank_EachCluster[c], 1, MPI_LONG, NPar_ThisCluster_EachRank, 1, MPI_LONG, MPI_COMM_WORLD );
 
-//    check if the total number of particles is correct
+      // check if the total number of particles is correct
       long NPar_Check = 0;
       for (int r=0; r<MPI_NRank; r++)  
          NPar_Check += NPar_ThisCluster_EachRank[r];
@@ -165,7 +165,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
             Aux_Error( ERROR_INFO, "total number of particles in cluster %d: found (%ld) != expect (%ld) !!\n",
                        c, NPar_Check, NPar_EachCluster[c] );
 
-//    set the file offset for this rank
+      // set the file offset for this rank
       Offset[c] = 0;
       for (int r=0; r<MPI_Rank; r++) 
          Offset[c] = Offset[c] + NPar_ThisCluster_EachRank[r];
@@ -173,13 +173,13 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
-// load data to the particle repository
+   // load data to the particle repository
 
    const std::string filenames[3] = { Merger_File_Par1, Merger_File_Par2, Merger_File_Par3 };
  
    for ( int c=0; c<NCluster; c++ )
    {
-//    load data
+      // load data
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading cluster %d ... \n", c+1 );
 
       real_par_in *mass  = new real_par_in [NPar_ThisRank_EachCluster[c]];
@@ -196,11 +196,11 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
       if ( MPI_Rank == 0 ) Aux_Message( stdout, "done\n" );
 
-//    store data to the particle repository
+      // store data to the particle repository
       if ( MPI_Rank == 0 )    
          Aux_Message( stdout, "   Storing cluster %d to the particle repository ... \n", c+1 );
 
-//    Compute offsets for assigning particles
+      // Compute offsets for assigning particles
 
       double coffset;
       switch (c) {
@@ -217,11 +217,11 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       
       for (long p=0; p<NPar_ThisRank_EachCluster[c]; p++)
       {
-//       particle index offset
+         // particle index offset
          const long pp = p + coffset;
 
-//       --> convert to code unit before storing to the particle repository to avoid floating-point overflow
-//       --> we have assumed that the loaded data are in cgs
+         // --> convert to code unit before storing to the particle repository to avoid floating-point overflow
+         // --> we have assumed that the loaded data are in cgs
          ParMass[pp] = real( mass[p] / UNIT_M );
 
          ParPosX[pp] = real( xpos[p] / UNIT_L );
@@ -232,10 +232,10 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
          ParVelY[pp] = real( yvel[p] / UNIT_V );
          ParVelZ[pp] = real( zvel[p] / UNIT_V );
 
-//       synchronize all particles to the physical time at the base level
+         // synchronize all particles to the physical time at the base level
          ParTime[pp] = Time[0];
 
-//       set the particle type
+         // set the particle type
          AllAttribute[ParTypeIdx][pp] = real( ptype[p] );
 
       }
@@ -253,7 +253,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
-// shift center (assuming the center of loaded particles = [0,0,0])
+   // shift center (assuming the center of loaded particles = [0,0,0])
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Shifting particle center and adding bulk velocity ... " );
 
    real *ParPos[3] = { ParPosX, ParPosY, ParPosZ };
