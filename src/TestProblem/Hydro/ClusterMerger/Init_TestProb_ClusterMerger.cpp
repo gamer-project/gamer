@@ -695,8 +695,12 @@ void AddNewField_ClusterMerger()
 
 }
 
+#ifdef PARTICLE
+
 void AddNewParticleAttribute_ClusterMerger()
 {
     if (ParTypeIdx == Idx_Undefined)
         ParTypeIdx = AddParticleAttribute("ParType");
 }
+
+#endif
