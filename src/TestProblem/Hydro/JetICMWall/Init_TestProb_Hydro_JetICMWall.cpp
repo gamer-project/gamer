@@ -14,7 +14,8 @@ static void BC( real Array[], const int ArraySize[], real fluid[], const int NVa
 
 // background parameters
 static double   ICM_Density;             // ICM density
-static double   Jump_Position;           // position of interface
+static double   Jump_Position_x;           // position of interface
+static double   Jump_Position_y;           // position of interface
 static double   Jump_Angle;              // inclination of interface
 static double   Jump_Tangent;            // tangent of interface angle
 static double   Jump_Width;              // width of jump
@@ -26,7 +27,7 @@ static double   Lobe_Density;            // lobe density
 static bool     Jet_Fire;                // [true/false]: jet on/off
 static double   Jet_Velocity;            // jet y-velocity (units of c)
 static double   Jet_Radius;              // radius of jet
-static double   Jet_Position;            // position of jet
+static double   Jet_Position;          // position of jet
 static double   Jet_Lobe_Ratio;          // ratio of jet/lobe densities
 static double   Jet_Center[2];           // jet central coordinates
 static double   Jet_Density;             // jet density
@@ -114,7 +115,8 @@ void SetParameter()
 
 // background parameters
    ReadPara->Add( "ICM_Density",      &ICM_Density,     NoDef_double,  NoMin_double,   NoMax_double );
-   ReadPara->Add( "Jump_Position",    &Jump_Position,   NoDef_double,  NoMin_double,   NoMax_double );
+   ReadPara->Add( "Jump_Position_x",  &Jump_Position_x, NoDef_double,  NoMin_double,   NoMax_double );
+   ReadPara->Add( "Jump_Position_y",  &Jump_Position_y, NoDef_double,  NoMin_double,   NoMax_double );
    ReadPara->Add( "Jump_Angle",       &Jump_Angle,      NoDef_double,  NoMin_double,   NoMax_double );
    ReadPara->Add( "Amb_Pressure",     &Amb_Pressure,    NoDef_double,  NoMin_double,   NoMax_double );
    ReadPara->Add( "Lobe_ICM_Ratio",   &Lobe_ICM_Ratio,  NoDef_double,  NoMin_double,   NoMax_double );
@@ -138,7 +140,8 @@ void SetParameter()
    ICM_Density   *= 1.0       / UNIT_D;
    Jet_Radius    *= Const_kpc / UNIT_L;
    Jet_Position  *= Const_kpc / UNIT_L;
-   Jump_Position *= Const_kpc / UNIT_L;
+   Jump_Position_x *= Const_kpc / UNIT_L;
+   Jump_Position_y *= Const_kpc / UNIT_L;
    Amb_Pressure  *= 1.0       / UNIT_P;
    Jump_Width    *= Const_kpc / UNIT_L;
 
@@ -171,7 +174,8 @@ void SetParameter()
      Aux_Message( stdout, "=============================================================================\n " );
      Aux_Message( stdout, "  test problem ID          = %d\n",                TESTPROB_ID                    );
      Aux_Message( stdout, "  ICM_Density              = %14.7e g/cm^3\n",     ICM_Density*UNIT_D             );
-     Aux_Message( stdout, "  Jump_Position            = %14.7e kpc\n",        Jump_Position*UNIT_L/Const_kpc );
+     Aux_Message( stdout, "  Jump_Position_x          = %14.7e kpc\n",        Jump_Position_x*UNIT_L/Const_kpc );
+     Aux_Message( stdout, "  Jump_Position_y          = %14.7e kpc\n",        Jump_Position_y*UNIT_L/Const_kpc );
      Aux_Message( stdout, "  Jump_Angle               = %14.7e degree\n",     Jump_Angle                     );
      Aux_Message( stdout, "  Jump_Width               = %14.7e kpc\n",        Jump_Width*UNIT_L/Const_kpc    );
      Aux_Message( stdout, "  Amb_Pressure             = %14.7e erg/cm^3\n",   Amb_Pressure*UNIT_P            );
@@ -223,7 +227,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // variables for jet
    real PriReal[NCOMP_FLUID];
 
-   double xx = x - Jump_Tangent*(y-0.5*amr->BoxSize[1]) - Jump_Position;
+   double xx = x - Jump_Tangent*(y-Jump_Position_y) - Jump_Position_x;
    double d0 = 0.5*(ICM_Density-Lobe_Density);
    double d;
 
