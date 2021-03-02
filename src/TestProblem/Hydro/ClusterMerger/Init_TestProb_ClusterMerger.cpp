@@ -371,23 +371,49 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID   = %d\n",           TESTPROB_ID );
+      Aux_Message( stdout, "  test problem ID        = %d\n",           TESTPROB_ID );
+      Aux_Message( stdout, "  number of clusters     = %d\n",           Merger_Coll_NumHalos );
       if ( Merger_Coll_IsGas1 )
-      Aux_Message( stdout, "   profile file 1   = %s\n",           Merger_File_Prof1 );
-      if ( Merger_Coll_NumHalos > 1 && Merger_Coll_IsGas2 )
-      Aux_Message( stdout, "   profile file 2   = %s\n",           Merger_File_Prof2 );
-      if ( Merger_Coll_NumHalos > 2 && Merger_Coll_IsGas3 )
-      Aux_Message( stdout, "   profile file 3   = %s\n",           Merger_File_Prof3 );
-      Aux_Message( stdout, "   particle file 1  = %s\n",           Merger_File_Par1 );
-      if ( Merger_Coll_NumHalos > 1 )
-      Aux_Message( stdout, "   particle file 2  = %s\n",           Merger_File_Par2 );
-      if ( Merger_Coll_NumHalos > 2 )
-      Aux_Message( stdout, "   particle file 3  = %s\n",           Merger_File_Par3 );
-      Aux_Message( stdout, "   cluster 1 w/ gas = %s\n",          (Merger_Coll_IsGas1)? "yes":"no" );
-      if ( Merger_Coll_NumHalos > 1 )
-      Aux_Message( stdout, "   cluster 2 w/ gas = %s\n",          (Merger_Coll_IsGas2)? "yes":"no" );
-      if ( Merger_Coll_NumHalos > 2 )
-      Aux_Message( stdout, "   cluster 3 w/ gas = %s\n",          (Merger_Coll_IsGas3)? "yes":"no" );
+      Aux_Message( stdout, "  profile file 1         = %s\n",           Merger_File_Prof1 );
+      Aux_Message( stdout, "  particle file 1        = %s\n",           Merger_File_Par1 );
+      Aux_Message( stdout, "  cluster 1 w/ gas       = %s\n",          (Merger_Coll_IsGas1)? "yes":"no" );
+      if ( Merger_Coll_IsGas1 )
+      Aux_Message( stdout, "  cluster 1 color radius = %g\n",           Merger_Coll_ColorRad1 );
+      Aux_Message( stdout, "  cluster 1 x-position   = %g\n",           Merger_Coll_PosX1 );
+      Aux_Message( stdout, "  cluster 1 y-position   = %g\n",           Merger_Coll_PosY1 );
+      Aux_Message( stdout, "  cluster 1 z-position   = %g\n",           Merger_Coll_PosZ1 );
+      Aux_Message( stdout, "  cluster 1 x-velocity   = %g\n",           Merger_Coll_VelX1 );
+      Aux_Message( stdout, "  cluster 1 y-velocity   = %g\n",           Merger_Coll_VelY1 );
+      Aux_Message( stdout, "  cluster 1 z-velocity   = %g\n",           Merger_Coll_VelZ1 );
+      if ( Merger_Coll_NumHalos > 1 ) {
+      if ( Merger_Coll_IsGas2 )
+      Aux_Message( stdout, "  profile file 2         = %s\n",           Merger_File_Prof2 );
+      Aux_Message( stdout, "  particle file 2        = %s\n",           Merger_File_Par2 );
+      Aux_Message( stdout, "  cluster 2 w/ gas       = %s\n",          (Merger_Coll_IsGas2)? "yes":"no" );
+      if ( Merger_Coll_IsGas2 )
+      Aux_Message( stdout, "  cluster 2 color radius = %g\n",           Merger_Coll_ColorRad2 );
+      Aux_Message( stdout, "  cluster 2 x-position   = %g\n",           Merger_Coll_PosX2 );
+      Aux_Message( stdout, "  cluster 2 y-position   = %g\n",           Merger_Coll_PosY2 );
+      Aux_Message( stdout, "  cluster 2 z-position   = %g\n",           Merger_Coll_PosZ2 );
+      Aux_Message( stdout, "  cluster 2 x-velocity   = %g\n",           Merger_Coll_VelX2 );
+      Aux_Message( stdout, "  cluster 2 y-velocity   = %g\n",           Merger_Coll_VelY2 );
+      Aux_Message( stdout, "  cluster 2 z-velocity   = %g\n",           Merger_Coll_VelZ2 );
+      }
+      if ( Merger_Coll_NumHalos > 2 ) {
+      if ( Merger_Coll_IsGas3 )
+      Aux_Message( stdout, "  profile file 3         = %s\n",           Merger_File_Prof3 );   
+      Aux_Message( stdout, "  particle file 3        = %s\n",           Merger_File_Par3 );
+      Aux_Message( stdout, "  cluster 3 w/ gas       = %s\n",          (Merger_Coll_IsGas3)? "yes":"no" );
+      if ( Merger_Coll_IsGas3 )
+      Aux_Message( stdout, "  cluster 3 color radius = %g\n",           Merger_Coll_ColorRad3 );
+      Aux_Message( stdout, "  cluster 3 x-position   = %g\n",           Merger_Coll_PosX3 );
+      Aux_Message( stdout, "  cluster 3 y-position   = %g\n",           Merger_Coll_PosY3 );
+      Aux_Message( stdout, "  cluster 3 z-position   = %g\n",           Merger_Coll_PosZ3 );
+      Aux_Message( stdout, "  cluster 3 x-velocity   = %g\n",           Merger_Coll_VelX3 );
+      Aux_Message( stdout, "  cluster 3 y-velocity   = %g\n",           Merger_Coll_VelY3 );
+      Aux_Message( stdout, "  cluster 3 z-velocity   = %g\n",           Merger_Coll_VelZ3 );
+      }
+      Aux_Message( stdout, "  use metals             = %s\n",          (Merger_Coll_UseMetals)? "yes":"no" );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -423,22 +449,20 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    if ( !( Merger_Coll_IsGas1 || Merger_Coll_IsGas2 || Merger_Coll_IsGas3 ))
       return;
 
-   const double BoxCenter[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
-
    double ClusterCenter1[3]; 
 
    if ( Merger_Coll_NumHalos == 1 ) {
-      ClusterCenter1[0] = BoxCenter[0];
-      ClusterCenter1[1] = BoxCenter[1];
+      ClusterCenter1[0] = amr->BoxCenter[0];
+      ClusterCenter1[1] = amr->BoxCenter[1];
    } else {
       ClusterCenter1[0] = Merger_Coll_PosX1;
       ClusterCenter1[1] = Merger_Coll_PosY1;
    }
 
-   ClusterCenter1[2] = BoxCenter[2];
+   ClusterCenter1[2] = amr->BoxCenter[2];
    
-   const double ClusterCenter2[3] = { Merger_Coll_PosX2, Merger_Coll_PosY2, BoxCenter[2] };
-   const double ClusterCenter3[3] = { Merger_Coll_PosX3, Merger_Coll_PosY3, BoxCenter[2] };
+   const double ClusterCenter2[3] = { Merger_Coll_PosX2, Merger_Coll_PosY2, amr->BoxCenter[2] };
+   const double ClusterCenter3[3] = { Merger_Coll_PosX3, Merger_Coll_PosY3, amr->BoxCenter[2] };
 
    double r1, r2, r3, Dens1, Dens2, Dens3, Pres1, Pres2, Pres3;
    double Metl1, Metl2, Metl3;
@@ -503,6 +527,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Metl3 = Table_M3[Merger_NBin3-1];
 
    Dens = Dens1 + Dens2 + Dens3;
+   Pres = Pres1 + Pres2 + Pres3;
 
    MomX = Merger_Coll_VelX1*Dens1 + Merger_Coll_VelX2*Dens2 + Merger_Coll_VelX3*Dens3;
    MomY = Merger_Coll_VelY1*Dens1 + Merger_Coll_VelY2*Dens2 + Merger_Coll_VelY3*Dens3;
@@ -519,28 +544,27 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[MOMY] = MomY;
    fluid[MOMZ] = MomZ;
    fluid[ENGY] = Etot;
-
-   fluid[ENGY] = ( Pres1 + Pres2 + Pres3 ) / ( GAMMA - 1.0 )
-     + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
  
    if ( Merger_Coll_UseMetals ) {
       Metl = Metl1*Dens1 + Metl2*Dens2 + Metl3*Dens3;
       fluid[Idx_Metal] = Metl;
    }
 
-   if ( r1 < Merger_Coll_ColorRad1 )
-      fluid[ColorField1Idx] = Dens;
-   else
-      fluid[ColorField1Idx] = 0.0;
+   if ( Merger_Coll_IsGas1 ) {
+      if ( r1 < Merger_Coll_ColorRad1 )
+         fluid[ColorField1Idx] = Dens;
+      else
+         fluid[ColorField1Idx] = 0.0;
+   }
 
-   if ( Merger_Coll_NumHalos > 1) {
+   if ( Merger_Coll_NumHalos > 1 && Merger_Coll_IsGas2 ) {
       if ( r2 < Merger_Coll_ColorRad2 )
          fluid[ColorField2Idx] = Dens;
       else
          fluid[ColorField2Idx] = 0.0;
    }
 
-   if ( Merger_Coll_NumHalos > 2 ) {
+   if ( Merger_Coll_NumHalos > 2 && Merger_Coll_IsGas3 ) {
       if ( r3 < Merger_Coll_ColorRad3 )
          fluid[ColorField3Idx] = Dens;
       else
