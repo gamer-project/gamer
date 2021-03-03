@@ -447,18 +447,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    if ( !( Merger_Coll_IsGas1 || Merger_Coll_IsGas2 || Merger_Coll_IsGas3 ))
       return;
 
-   double ClusterCenter1[3]; 
-
-   if ( Merger_Coll_NumHalos == 1 ) {
-      ClusterCenter1[0] = amr->BoxCenter[0];
-      ClusterCenter1[1] = amr->BoxCenter[1];
-   } else {
-      ClusterCenter1[0] = Merger_Coll_PosX1;
-      ClusterCenter1[1] = Merger_Coll_PosY1;
-   }
-
-   ClusterCenter1[2] = amr->BoxCenter[2];
-   
+   const double ClusterCenter1[3] = { Merger_Coll_PosX1, Merger_Coll_PosY1, amr->BoxCenter[2] };
    const double ClusterCenter2[3] = { Merger_Coll_PosX2, Merger_Coll_PosY2, amr->BoxCenter[2] };
    const double ClusterCenter3[3] = { Merger_Coll_PosX3, Merger_Coll_PosY3, amr->BoxCenter[2] };
 

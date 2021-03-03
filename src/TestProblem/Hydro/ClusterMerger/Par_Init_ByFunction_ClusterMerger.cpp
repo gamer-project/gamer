@@ -261,41 +261,33 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
    real *ParPos[3] = { ParPosX, ParPosY, ParPosZ };
 
-   if ( Merger_Coll_NumHalos > 1 )
-   {
-      const double ClusterCenter1[3]
-         = { Merger_Coll_PosX1, Merger_Coll_PosY1, amr->BoxCenter[2] };
-      const double ClusterCenter2[3]
-         = { Merger_Coll_PosX2, Merger_Coll_PosY2, amr->BoxCenter[2] };
-      const double ClusterCenter3[3]
-         = { Merger_Coll_PosX3, Merger_Coll_PosY3, amr->BoxCenter[2] };
+   const double ClusterCenter1[3]
+      = { Merger_Coll_PosX1, Merger_Coll_PosY1, amr->BoxCenter[2] };
+   const double ClusterCenter2[3]
+      = { Merger_Coll_PosX2, Merger_Coll_PosY2, amr->BoxCenter[2] };
+   const double ClusterCenter3[3]
+      = { Merger_Coll_PosX3, Merger_Coll_PosY3, amr->BoxCenter[2] };
 
-      for (long p=0; p<NPar_ThisRank_EachCluster[0]; p++) {
-         ParVelX[p] += Merger_Coll_VelX1;
-         ParVelY[p] += Merger_Coll_VelY1;
-         for (int d=0; d<3; d++)
-            ParPos[d][p] += ClusterCenter1[d];
-      }
+   for (long p=0; p<NPar_ThisRank_EachCluster[0]; p++) {
+      ParVelX[p] += Merger_Coll_VelX1;
+      ParVelY[p] += Merger_Coll_VelY1;
+      for (int d=0; d<3; d++)
+         ParPos[d][p] += ClusterCenter1[d];
+   }
       
-      for (long p=NPar_ThisRank_EachCluster[0]; p<NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1]; p++) {
-         ParVelX[p] += Merger_Coll_VelX2;
-         ParVelY[p] += Merger_Coll_VelY2;
-         for (int d=0; d<3; d++)
-            ParPos[d][p] += ClusterCenter2[d];
-      }
+   for (long p=NPar_ThisRank_EachCluster[0]; p<NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1]; p++) {
+      ParVelX[p] += Merger_Coll_VelX2;
+      ParVelY[p] += Merger_Coll_VelY2;
+      for (int d=0; d<3; d++)
+         ParPos[d][p] += ClusterCenter2[d];
+   }
 
-      for (long p=NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1]; p<NPar_ThisRank; p++) {
-         ParVelX[p] += Merger_Coll_VelX3;
-         ParVelY[p] += Merger_Coll_VelY3;
-         for (int d=0; d<3; d++)
-            ParPos[d][p] += ClusterCenter3[d];
-      }
-
-   } else {
-      for (long p=0; p<NPar_ThisRank; p++)
-         for (int d=0; d<3; d++)
-            ParPos[d][p] += amr->BoxCenter[d];
-   } // if ( Merger_Coll_NumHalos > 1 )
+   for (long p=NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1]; p<NPar_ThisRank; p++) {
+      ParVelX[p] += Merger_Coll_VelX3;
+      ParVelY[p] += Merger_Coll_VelY3;
+      for (int d=0; d<3; d++)
+         ParPos[d][p] += ClusterCenter3[d];
+   }
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
