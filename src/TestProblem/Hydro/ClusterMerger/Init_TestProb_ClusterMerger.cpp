@@ -157,6 +157,8 @@ void Validate()
 void SetParameter()
 {
 
+#ifdef SUPPORT_HDF5
+
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ...\n" );
 
 // (1) load the problem-specific runtime parameters
@@ -202,9 +204,9 @@ void SetParameter()
 
 // Validate that we have the correct number of passive scalars
 
-   if ( Merger_Coll_NumHalos + (int)Merger_Coll_UseMetals ) < NCOMP_PASSIVE_USER ) 
+   if ( Merger_Coll_NumHalos + (int)Merger_Coll_UseMetals != NCOMP_PASSIVE_USER ) 
       Aux_Error( ERROR_INFO, 
-                 "please set NCOMP_PASSIVE_USER >= Merger_Coll_NumHalos + Merger_Coll_UseMetals in the Makefile !!\n" );
+                 "please set NCOMP_PASSIVE_USER (currently %d) == Merger_Coll_NumHalos + Merger_Coll_UseMetals (currently %d) in the Makefile !!\n", NCOMP_PASSIVE_USER, Merger_Coll_NumHalos + (int)Merger_Coll_UseMetals );
 
 // convert to code units
    Merger_Coll_PosX1 *= Const_kpc / UNIT_L;
@@ -253,7 +255,7 @@ void SetParameter()
 	            Read_Profile_ClusterMerger(filename1, "/fields/metallicity", Table_M1);
             else
 	            for ( int i; i < Merger_NBin1; i++ ) Table_M1[i] = 0.0;
-            }
+            
             // convert to code units (assuming the input units are cgs)
             for (int b=0; b<Merger_NBin1; b++) {
     	         Table_R1[b] /= UNIT_L;
@@ -261,7 +263,7 @@ void SetParameter()
 	            Table_P1[b] /= UNIT_P;
             }
 
-         }
+	 }
 
          MPI_Bcast(Table_R1, Merger_NBin1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
          MPI_Bcast(Table_D1, Merger_NBin1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -293,19 +295,19 @@ void SetParameter()
 	            Read_Profile_ClusterMerger(filename2, "/fields/metallicity", Table_M2);
             else
 	            for ( int i; i < Merger_NBin2; i++ ) Table_M2[i] = 0.0;
+	    // convert to code units (assuming the input units are cgs)
+	    for (int b=0; b<Merger_NBin2; b++) {
+	       Table_R2[b] /= UNIT_L;
+	       Table_D2[b] /= UNIT_D;
+	       Table_P2[b] /= UNIT_P;
+	    }
+
          }
 
          MPI_Bcast(Table_R2, Merger_NBin2, MPI_DOUBLE, 0, MPI_COMM_WORLD);
          MPI_Bcast(Table_D2, Merger_NBin2, MPI_DOUBLE, 0, MPI_COMM_WORLD);
          MPI_Bcast(Table_P2, Merger_NBin2, MPI_DOUBLE, 0, MPI_COMM_WORLD);
          MPI_Bcast(Table_M2, Merger_NBin2, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
-         // convert to code units (assuming the input units are cgs)
-         for (int b=0; b<Merger_NBin2; b++) {
-            Table_R2[b] /= UNIT_L;
-            Table_D2[b] /= UNIT_D;
-            Table_P2[b] /= UNIT_P;
-         }
 
       } // if ( Merger_Coll_NumHalos > 1 && Merger_Coll_IsGas2 )
 
@@ -332,19 +334,19 @@ void SetParameter()
                Read_Profile_ClusterMerger(filename3, "/fields/metallicity", Table_M3);
             else
 	            for ( int i; i < Merger_NBin3; i++ ) Table_M3[i] = 0.0;
+	    // convert to code units (assuming the input units are cgs)
+	    for (int b=0; b<Merger_NBin3; b++) {
+	      Table_R3[b] /= UNIT_L;
+	      Table_D3[b] /= UNIT_D;
+	      Table_P3[b] /= UNIT_P;
+	    }
+
          }
 
          MPI_Bcast(Table_R3, Merger_NBin3, MPI_DOUBLE, 0, MPI_COMM_WORLD);
          MPI_Bcast(Table_D3, Merger_NBin3, MPI_DOUBLE, 0, MPI_COMM_WORLD);
          MPI_Bcast(Table_P3, Merger_NBin3, MPI_DOUBLE, 0, MPI_COMM_WORLD);
          MPI_Bcast(Table_M3, Merger_NBin3, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
-         // convert to code units (assuming the input units are cgs)
-         for (int b=0; b<Merger_NBin3; b++) {
-            Table_R3[b] /= UNIT_L;
-            Table_D3[b] /= UNIT_D;
-            Table_P3[b] /= UNIT_P;
-         }
 
       } // if ( Merger_Coll_NumHalos > 2 && Merger_Coll_IsGas3 )
 
@@ -381,10 +383,8 @@ void SetParameter()
       Aux_Message( stdout, "  cluster 1 color radius = %g\n",           Merger_Coll_ColorRad1 );
       Aux_Message( stdout, "  cluster 1 x-position   = %g\n",           Merger_Coll_PosX1 );
       Aux_Message( stdout, "  cluster 1 y-position   = %g\n",           Merger_Coll_PosY1 );
-      Aux_Message( stdout, "  cluster 1 z-position   = %g\n",           Merger_Coll_PosZ1 );
       Aux_Message( stdout, "  cluster 1 x-velocity   = %g\n",           Merger_Coll_VelX1 );
       Aux_Message( stdout, "  cluster 1 y-velocity   = %g\n",           Merger_Coll_VelY1 );
-      Aux_Message( stdout, "  cluster 1 z-velocity   = %g\n",           Merger_Coll_VelZ1 );
       if ( Merger_Coll_NumHalos > 1 ) {
       if ( Merger_Coll_IsGas2 )
       Aux_Message( stdout, "  profile file 2         = %s\n",           Merger_File_Prof2 );
@@ -394,10 +394,8 @@ void SetParameter()
       Aux_Message( stdout, "  cluster 2 color radius = %g\n",           Merger_Coll_ColorRad2 );
       Aux_Message( stdout, "  cluster 2 x-position   = %g\n",           Merger_Coll_PosX2 );
       Aux_Message( stdout, "  cluster 2 y-position   = %g\n",           Merger_Coll_PosY2 );
-      Aux_Message( stdout, "  cluster 2 z-position   = %g\n",           Merger_Coll_PosZ2 );
       Aux_Message( stdout, "  cluster 2 x-velocity   = %g\n",           Merger_Coll_VelX2 );
       Aux_Message( stdout, "  cluster 2 y-velocity   = %g\n",           Merger_Coll_VelY2 );
-      Aux_Message( stdout, "  cluster 2 z-velocity   = %g\n",           Merger_Coll_VelZ2 );
       }
       if ( Merger_Coll_NumHalos > 2 ) {
       if ( Merger_Coll_IsGas3 )
@@ -408,16 +406,16 @@ void SetParameter()
       Aux_Message( stdout, "  cluster 3 color radius = %g\n",           Merger_Coll_ColorRad3 );
       Aux_Message( stdout, "  cluster 3 x-position   = %g\n",           Merger_Coll_PosX3 );
       Aux_Message( stdout, "  cluster 3 y-position   = %g\n",           Merger_Coll_PosY3 );
-      Aux_Message( stdout, "  cluster 3 z-position   = %g\n",           Merger_Coll_PosZ3 );
       Aux_Message( stdout, "  cluster 3 x-velocity   = %g\n",           Merger_Coll_VelX3 );
       Aux_Message( stdout, "  cluster 3 y-velocity   = %g\n",           Merger_Coll_VelY3 );
-      Aux_Message( stdout, "  cluster 3 z-velocity   = %g\n",           Merger_Coll_VelZ3 );
       }
       Aux_Message( stdout, "  use metals             = %s\n",          (Merger_Coll_UseMetals)? "yes":"no" );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ... done\n" );
+
+#endif // #ifdef SUPPORT_HDF5
 
 } // FUNCTION : SetParameter
 

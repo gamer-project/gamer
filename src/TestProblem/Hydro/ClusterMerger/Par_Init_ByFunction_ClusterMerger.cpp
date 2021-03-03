@@ -1,7 +1,5 @@
 #include "GAMER.h"
 
-#ifdef PARTICLE
-
 #ifdef SUPPORT_HDF5
 #include "hdf5.h"
 #endif
@@ -31,6 +29,7 @@ extern double  Merger_Coll_VelY3;
 
 extern FieldIdx_t ParTypeIdx;
 
+#ifdef PARTICLE
 long Read_Particle_Number_ClusterMerger(std::string filename);
 void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
                                   real_par_in xpos[], real_par_in ypos[],
@@ -76,11 +75,15 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
 //
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, AllAttribute
 //-------------------------------------------------------------------------------------------------------
+
 void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPar_AllRank,
                                         real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                         real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                         real *AllAttribute[PAR_NATT_TOTAL] )
 {
+
+#ifdef SUPPORT_HDF5
+
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
@@ -297,6 +300,8 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
+
+#endif // #ifdef SUPPORT_HDF5
 
 } // FUNCTION : Par_Init_ByFunction_ClusterMerger
 
@@ -532,7 +537,6 @@ void Read_Particles_ClusterMerger( std::string filename, long offset, long num,
 } // FUNCTION : Read_Particles_ClusterMerger
 
 #endif // #ifdef SUPPORT_HDF5
-
 #endif // #ifdef PARTICLE
 
 
