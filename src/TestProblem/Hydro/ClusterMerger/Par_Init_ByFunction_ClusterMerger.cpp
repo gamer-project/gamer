@@ -35,7 +35,7 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
                                   real_par_in xpos[], real_par_in ypos[],
                                   real_par_in zpos[], real_par_in xvel[],
                                   real_par_in yvel[], real_par_in zvel[],
-				                      real_par_in mass[], real_par_in ptype[]);
+                                  real_par_in mass[], real_par_in ptype[]);
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_Init_ByFunction_ClusterMerger
@@ -154,8 +154,8 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
             NPar_ThisRank_EachCluster[1] = NPar_EachCluster[1] / MPI_NRank + ( (MPI_Rank<NPar_EachCluster[1]%MPI_NRank)?1:0 );
          break;
       case 2:
-	      NPar_ThisRank_EachCluster[2] = NPar_ThisRank - NPar_ThisRank_EachCluster[0] - NPar_ThisRank_EachCluster[1];
-	      break;
+         NPar_ThisRank_EachCluster[2] = NPar_ThisRank - NPar_ThisRank_EachCluster[0] - NPar_ThisRank_EachCluster[1];
+         break;
       }
 
       MPI_Allgather( &NPar_ThisRank_EachCluster[c], 1, MPI_LONG, NPar_ThisCluster_EachRank, 1, MPI_LONG, MPI_COMM_WORLD );
@@ -212,9 +212,9 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
          break;
       case 1:
          coffset = NPar_ThisRank_EachCluster[0];
-	      break;
+         break;
       case 2:
-	      coffset = NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1];
+         coffset = NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1];
          break;
       }
       
@@ -268,7 +268,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       const double ClusterCenter2[3]
          = { Merger_Coll_PosX2, Merger_Coll_PosY2, amr->BoxCenter[2] };
       const double ClusterCenter3[3]
-	      = { Merger_Coll_PosX3, Merger_Coll_PosY3, amr->BoxCenter[2] };
+         = { Merger_Coll_PosX3, Merger_Coll_PosY3, amr->BoxCenter[2] };
 
       for (long p=0; p<NPar_ThisRank_EachCluster[0]; p++) {
          ParVelX[p] += Merger_Coll_VelX1;
@@ -287,8 +287,8 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       for (long p=NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1]; p<NPar_ThisRank; p++) {
          ParVelX[p] += Merger_Coll_VelX3;
          ParVelY[p] += Merger_Coll_VelY3;
-	      for (int d=0; d<3; d++)
-	         ParPos[d][p] += ClusterCenter3[d];
+         for (int d=0; d<3; d++)
+            ParPos[d][p] += ClusterCenter3[d];
       }
 
    } else {

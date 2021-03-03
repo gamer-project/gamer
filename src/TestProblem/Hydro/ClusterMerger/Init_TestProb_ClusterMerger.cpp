@@ -236,8 +236,8 @@ void SetParameter()
       if ( Merger_Coll_IsGas1 ) {   
 
          if ( MPI_Rank == 0 ) {
-	         Merger_NBin1 = Read_Num_Points_ClusterMerger(filename1);
-	         Aux_Message(stdout, "num_points1 = %d\n", Merger_NBin1);
+            Merger_NBin1 = Read_Num_Points_ClusterMerger(filename1);
+            Aux_Message(stdout, "num_points1 = %d\n", Merger_NBin1);
          }
 
          MPI_Bcast(&Merger_NBin1, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -252,18 +252,18 @@ void SetParameter()
             Read_Profile_ClusterMerger(filename1, "/fields/density", Table_D1);
             Read_Profile_ClusterMerger(filename1, "/fields/pressure", Table_P1);
             if ( Merger_Coll_UseMetals ) 
-	            Read_Profile_ClusterMerger(filename1, "/fields/metallicity", Table_M1);
+               Read_Profile_ClusterMerger(filename1, "/fields/metallicity", Table_M1);
             else
-	            for ( int i; i < Merger_NBin1; i++ ) Table_M1[i] = 0.0;
+               for ( int i; i < Merger_NBin1; i++ ) Table_M1[i] = 0.0;
             
             // convert to code units (assuming the input units are cgs)
-            for (int b=0; b<Merger_NBin1; b++) {
-    	         Table_R1[b] /= UNIT_L;
-	            Table_D1[b] /= UNIT_D;
-	            Table_P1[b] /= UNIT_P;
+            for ( int b=0; b<Merger_NBin1; b++ ) {
+               Table_R1[b] /= UNIT_L;
+               Table_D1[b] /= UNIT_D;
+               Table_P1[b] /= UNIT_P;
             }
 
-	 }
+         }
 
          MPI_Bcast(Table_R1, Merger_NBin1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
          MPI_Bcast(Table_D1, Merger_NBin1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -276,8 +276,8 @@ void SetParameter()
       if ( Merger_Coll_NumHalos > 1 && Merger_Coll_IsGas2) {
 
          if (MPI_Rank == 0) {
-	         Merger_NBin2 = Read_Num_Points_ClusterMerger(filename2);
-	         Aux_Message(stdout, "num_points2 = %d\n", Merger_NBin2);
+            Merger_NBin2 = Read_Num_Points_ClusterMerger(filename2);
+            Aux_Message(stdout, "num_points2 = %d\n", Merger_NBin2);
          }
 
          MPI_Bcast(&Merger_NBin2, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -292,15 +292,15 @@ void SetParameter()
             Read_Profile_ClusterMerger(filename2, "/fields/density", Table_D2);
             Read_Profile_ClusterMerger(filename2, "/fields/pressure", Table_P2);
             if ( Merger_Coll_UseMetals )
-	            Read_Profile_ClusterMerger(filename2, "/fields/metallicity", Table_M2);
+               Read_Profile_ClusterMerger(filename2, "/fields/metallicity", Table_M2);
             else
-	            for ( int i; i < Merger_NBin2; i++ ) Table_M2[i] = 0.0;
-	    // convert to code units (assuming the input units are cgs)
-	    for (int b=0; b<Merger_NBin2; b++) {
-	       Table_R2[b] /= UNIT_L;
-	       Table_D2[b] /= UNIT_D;
-	       Table_P2[b] /= UNIT_P;
-	    }
+               for ( int i; i < Merger_NBin2; i++ ) Table_M2[i] = 0.0;
+            // convert to code units (assuming the input units are cgs)
+            for ( int b=0; b<Merger_NBin2; b++ ) {
+               Table_R2[b] /= UNIT_L;
+               Table_D2[b] /= UNIT_D;
+               Table_P2[b] /= UNIT_P;
+            }
 
          }
 
@@ -314,7 +314,7 @@ void SetParameter()
       // cluster 3
       if ( Merger_Coll_NumHalos > 2 && Merger_Coll_IsGas3) {
        
-         if (MPI_Rank == 0) {
+         if ( MPI_Rank == 0 ) {
             Merger_NBin3 = Read_Num_Points_ClusterMerger(filename3);
             Aux_Message(stdout, "num_points3 = %d\n", Merger_NBin3);
          }
@@ -333,13 +333,13 @@ void SetParameter()
             if ( Merger_Coll_UseMetals )
                Read_Profile_ClusterMerger(filename3, "/fields/metallicity", Table_M3);
             else
-	            for ( int i; i < Merger_NBin3; i++ ) Table_M3[i] = 0.0;
-	    // convert to code units (assuming the input units are cgs)
-	    for (int b=0; b<Merger_NBin3; b++) {
-	      Table_R3[b] /= UNIT_L;
-	      Table_D3[b] /= UNIT_D;
-	      Table_P3[b] /= UNIT_P;
-	    }
+               for ( int i; i < Merger_NBin3; i++ ) Table_M3[i] = 0.0;
+            // convert to code units (assuming the input units are cgs)
+            for (int b=0; b<Merger_NBin3; b++) {
+               Table_R3[b] /= UNIT_L;
+               Table_D3[b] /= UNIT_D;
+               Table_P3[b] /= UNIT_P;
+            }
 
          }
 
@@ -472,7 +472,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Dens1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_D1, r1 );
       Pres1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_P1, r1 );
       Metl1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_M1, r1 );
-   } else {	
+   } else {     
       r1    = HUGE_NUMBER;
       Dens1 = 0.0;
       Pres1 = 0.0;
