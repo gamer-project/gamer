@@ -109,7 +109,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
       NPar_EachCluster[0] = Read_Particle_Number_ClusterMerger(filename1);
 
-      Aux_Message( stdout, "   Number of particles in cluster 1 = %ld\n", 
+      Aux_Message( stdout, "   Number of particles in cluster 1 = %ld\n",
                    NPar_EachCluster[0] );
 
       if ( Merger_Coll_NumHalos > 1 ) {
@@ -162,7 +162,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
       // check if the total number of particles is correct
       long NPar_Check = 0;
-      for (int r=0; r<MPI_NRank; r++)  
+      for (int r=0; r<MPI_NRank; r++)
          NPar_Check += NPar_ThisCluster_EachRank[r];
          if ( NPar_Check != NPar_EachCluster[c] )
             Aux_Error( ERROR_INFO, "total number of particles in cluster %d: found (%ld) != expect (%ld) !!\n",
@@ -170,7 +170,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
       // set the file offset for this rank
       Offset[c] = 0;
-      for (int r=0; r<MPI_Rank; r++) 
+      for (int r=0; r<MPI_Rank; r++)
          Offset[c] = Offset[c] + NPar_ThisCluster_EachRank[r];
    }
 
@@ -179,7 +179,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
    // load data to the particle repository
 
    const std::string filenames[3] = { Merger_File_Par1, Merger_File_Par2, Merger_File_Par3 };
- 
+
    for ( int c=0; c<NCluster; c++ )
    {
       // load data
@@ -200,7 +200,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       if ( MPI_Rank == 0 ) Aux_Message( stdout, "done\n" );
 
       // store data to the particle repository
-      if ( MPI_Rank == 0 )    
+      if ( MPI_Rank == 0 )
          Aux_Message( stdout, "   Storing cluster %d to the particle repository ... \n", c+1 );
 
       // Compute offsets for assigning particles
@@ -217,7 +217,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
          coffset = NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1];
          break;
       }
-      
+
       for (long p=0; p<NPar_ThisRank_EachCluster[c]; p++)
       {
          // particle index offset
@@ -274,7 +274,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       for (int d=0; d<3; d++)
          ParPos[d][p] += ClusterCenter1[d];
    }
-      
+
    for (long p=NPar_ThisRank_EachCluster[0]; p<NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1]; p++) {
       ParVelX[p] += Merger_Coll_VelX2;
       ParVelY[p] += Merger_Coll_VelY2;
@@ -322,10 +322,10 @@ long Read_Particle_Number_ClusterMerger(std::string filename)
 
 } // FUNCTION : Read_Particle_Number_ClusterMerger
 
-void Read_Particles_ClusterMerger( std::string filename, long offset, long num, 
-                                   real_par_in xpos[], real_par_in ypos[], 
-                                   real_par_in zpos[], real_par_in xvel[], 
-                                   real_par_in yvel[], real_par_in zvel[], 
+void Read_Particles_ClusterMerger( std::string filename, long offset, long num,
+                                   real_par_in xpos[], real_par_in ypos[],
+                                   real_par_in zpos[], real_par_in xvel[],
+                                   real_par_in yvel[], real_par_in zvel[],
                                    real_par_in mass[], real_par_in ptype[] )
 {
 
@@ -341,7 +341,7 @@ void Read_Particles_ClusterMerger( std::string filename, long offset, long num,
    stride[0] = 1;
    stride[1] = 1;
    start[0] = (hsize_t)offset;
-   
+
    file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
 
    dataset   = H5Dopen(file_id, "particle_position", H5P_DEFAULT);

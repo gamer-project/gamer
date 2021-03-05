@@ -17,7 +17,7 @@ static char    Merger_File_Prof3[1000];   // profile table of cluster 3
        char    Merger_File_Par2 [1000];   // particle file of cluster 2
        char    Merger_File_Par3 [1000];   // particle file of cluster 3
        bool    Merger_Coll_IsGas1;        // (true/false) --> does cluster 1 have gas
-       bool    Merger_Coll_IsGas2;        // (true/false) --> does cluster 2 have gas 
+       bool    Merger_Coll_IsGas2;        // (true/false) --> does cluster 2 have gas
        bool    Merger_Coll_IsGas3;        // (true/false) --> does cluster 3 have gas
        bool    Merger_Coll_UseMetals;     // (true/false) --> do the clusters have a metal field
        double  Merger_Coll_PosX1;         // x-position of the first cluster
@@ -30,7 +30,7 @@ static char    Merger_File_Prof3[1000];   // profile table of cluster 3
        double  Merger_Coll_VelY1;         // y-velocity of the first cluster
        double  Merger_Coll_VelX2;         // x-velocity of the second cluster
        double  Merger_Coll_VelY2;         // y-velocity of the second cluster
-       double  Merger_Coll_VelX3;         // x-velocity of the third cluster 
+       double  Merger_Coll_VelX3;         // x-velocity of the third cluster
        double  Merger_Coll_VelY3;         // y-velocity of the third cluster
        double  Merger_Coll_ColorRad1;     // "color" radius of the first cluster
        double  Merger_Coll_ColorRad2;     // "color" radius of the second cluster
@@ -64,7 +64,7 @@ static FieldIdx_t ColorField3Idx = Idx_Undefined;
 
 // problem-specific function prototypes
 #ifdef PARTICLE
-void Par_Init_ByFunction_ClusterMerger(const long NPar_ThisRank, 
+void Par_Init_ByFunction_ClusterMerger(const long NPar_ThisRank,
                                        const long NPar_AllRank,
                                        real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                        real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
@@ -72,7 +72,7 @@ void Par_Init_ByFunction_ClusterMerger(const long NPar_ThisRank,
 #endif
 
 int Read_Num_Points_ClusterMerger(std::string filename);
-void Read_Profile_ClusterMerger(std::string filename, std::string fieldname, 
+void Read_Profile_ClusterMerger(std::string filename, std::string fieldname,
                                 double field[]);
 void AddNewField_ClusterMerger();
 void AddNewParticleAttribute_ClusterMerger();
@@ -127,7 +127,7 @@ void Validate()
 #  ifdef PARTICLE
    if ( OPT__INIT == INIT_BY_FUNCTION  &&  amr->Par->Init != PAR_INIT_BY_FUNCTION )
       Aux_Error( ERROR_INFO, "please set PAR_INIT = 1 (by FUNCTION) !!\n" );
-   
+
    if ( PAR_NATT_USER != 1 )
       Aux_Error( ERROR_INFO, "please set PAR_NATT_USER = 1 in the Makefile !!\n" );
 #  endif
@@ -197,15 +197,15 @@ void SetParameter()
    ReadPara->Add( "Merger_Coll_ColorRad1",  &Merger_Coll_ColorRad1,  -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "Merger_Coll_ColorRad2",  &Merger_Coll_ColorRad2,  -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "Merger_Coll_ColorRad3",  &Merger_Coll_ColorRad3,  -1.0,             NoMin_double,  NoMax_double   );
-   
+
    ReadPara->Read( FileName );
 
    delete ReadPara;
 
 // Validate that we have the correct number of passive scalars
 
-   if ( Merger_Coll_NumHalos + (int)Merger_Coll_UseMetals != NCOMP_PASSIVE_USER ) 
-      Aux_Error( ERROR_INFO, 
+   if ( Merger_Coll_NumHalos + (int)Merger_Coll_UseMetals != NCOMP_PASSIVE_USER )
+      Aux_Error( ERROR_INFO,
                  "please set NCOMP_PASSIVE_USER (currently %d) == Merger_Coll_NumHalos + Merger_Coll_UseMetals (currently %d) in the Makefile !!\n", NCOMP_PASSIVE_USER, Merger_Coll_NumHalos + (int)Merger_Coll_UseMetals );
 
 // convert to code units
@@ -222,18 +222,18 @@ void SetParameter()
    Merger_Coll_VelX3 *= (Const_km/Const_s) / UNIT_V;
    Merger_Coll_VelY3 *= (Const_km/Const_s) / UNIT_V;
    Merger_Coll_ColorRad1 *= Const_kpc / UNIT_L;
-   Merger_Coll_ColorRad2 *= Const_kpc / UNIT_L;   
+   Merger_Coll_ColorRad2 *= Const_kpc / UNIT_L;
    Merger_Coll_ColorRad3 *= Const_kpc / UNIT_L;
-   
+
 // (2) load the radial profiles
    if ( OPT__INIT != INIT_BY_RESTART ) {
 
       const std::string filename1(Merger_File_Prof1);
       const std::string filename2(Merger_File_Prof2);
       const std::string filename3(Merger_File_Prof3);
-     
+
       // cluster 1
-      if ( Merger_Coll_IsGas1 ) {   
+      if ( Merger_Coll_IsGas1 ) {
 
          if ( MPI_Rank == 0 ) {
             Merger_NBin1 = Read_Num_Points_ClusterMerger(filename1);
@@ -251,11 +251,11 @@ void SetParameter()
             Read_Profile_ClusterMerger(filename1, "/fields/radius", Table_R1);
             Read_Profile_ClusterMerger(filename1, "/fields/density", Table_D1);
             Read_Profile_ClusterMerger(filename1, "/fields/pressure", Table_P1);
-            if ( Merger_Coll_UseMetals ) 
+            if ( Merger_Coll_UseMetals )
                Read_Profile_ClusterMerger(filename1, "/fields/metallicity", Table_M1);
             else
                for ( int i; i < Merger_NBin1; i++ ) Table_M1[i] = 0.0;
-            
+
             // convert to code units (assuming the input units are cgs)
             for ( int b=0; b<Merger_NBin1; b++ ) {
                Table_R1[b] /= UNIT_L;
@@ -313,7 +313,7 @@ void SetParameter()
 
       // cluster 3
       if ( Merger_Coll_NumHalos > 2 && Merger_Coll_IsGas3) {
-       
+
          if ( MPI_Rank == 0 ) {
             Merger_NBin3 = Read_Num_Points_ClusterMerger(filename3);
             Aux_Message(stdout, "num_points3 = %d\n", Merger_NBin3);
@@ -325,7 +325,7 @@ void SetParameter()
          Table_D3 = new double [Merger_NBin3];
          Table_P3 = new double [Merger_NBin3];
          Table_M3 = new double [Merger_NBin3];
-         
+
          if ( MPI_Rank == 0 ) {
             Read_Profile_ClusterMerger(filename3, "/fields/radius", Table_R3);
             Read_Profile_ClusterMerger(filename3, "/fields/density", Table_D3);
@@ -399,7 +399,7 @@ void SetParameter()
       }
       if ( Merger_Coll_NumHalos > 2 ) {
       if ( Merger_Coll_IsGas3 )
-      Aux_Message( stdout, "  profile file 3         = %s\n",           Merger_File_Prof3 );   
+      Aux_Message( stdout, "  profile file 3         = %s\n",           Merger_File_Prof3 );
       Aux_Message( stdout, "  particle file 3        = %s\n",           Merger_File_Par3 );
       Aux_Message( stdout, "  cluster 3 w/ gas       = %s\n",          (Merger_Coll_IsGas3)? "yes":"no" );
       if ( Merger_Coll_IsGas3 )
@@ -461,19 +461,19 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Dens1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_D1, r1 );
       Pres1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_P1, r1 );
       Metl1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_M1, r1 );
-   } else {     
+   } else {
       r1    = HUGE_NUMBER;
       Dens1 = 0.0;
       Pres1 = 0.0;
       Metl1 = 0.0;
    }
 
-   if ( Merger_Coll_NumHalos > 1 && Merger_Coll_IsGas2 ) { 
+   if ( Merger_Coll_NumHalos > 1 && Merger_Coll_IsGas2 ) {
       r2    = sqrt( SQR(x-ClusterCenter2[0]) + SQR(y-ClusterCenter2[1]) + SQR(z-ClusterCenter2[2]) );
       Dens2 = Mis_InterpolateFromTable( Merger_NBin2, Table_R2, Table_D2, r2 );
       Pres2 = Mis_InterpolateFromTable( Merger_NBin2, Table_R2, Table_P2, r2 );
       Metl2 = Mis_InterpolateFromTable( Merger_NBin2, Table_R2, Table_M2, r2 );
-   } else { 
+   } else {
       r2    = HUGE_NUMBER;
       Dens2 = 0.0;
       Pres2 = 0.0;
@@ -531,7 +531,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[MOMY] = MomY;
    fluid[MOMZ] = MomZ;
    fluid[ENGY] = Etot;
- 
+
    if ( Merger_Coll_UseMetals ) {
       Metl = Metl1*Dens1 + Metl2*Dens2 + Metl3*Dens3;
       fluid[Idx_Metal] = Metl;
@@ -670,7 +670,7 @@ int Read_Num_Points_ClusterMerger(std::string filename)
 
 } // FUNCTION : Read_Num_Points_ClusterMerger
 
-void Read_Profile_ClusterMerger(std::string filename, std::string fieldname, 
+void Read_Profile_ClusterMerger(std::string filename, std::string fieldname,
                                 double field[])
 {
 
