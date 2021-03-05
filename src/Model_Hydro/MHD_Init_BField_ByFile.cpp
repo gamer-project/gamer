@@ -180,7 +180,7 @@ void MHD_Init_BField_ByFile( const int B_lv )
 
 #     ifdef SUPPORT_HDF5
       VecPot_ReadField( mag_file_id, ibegin, jbegin, kbegin,
-			               iend, jend, kend, Axf, Ayf, Azf );
+			iend, jend, kend, Axf, Ayf, Azf );
 #     endif
 
 //    Loop over the indices in this patch and interpolate the vector potential

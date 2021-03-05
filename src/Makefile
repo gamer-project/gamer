@@ -390,7 +390,13 @@ LIBYT_PATH   :=
 #GRACKLE_PATH :=
 #GSL_PATH     := /usr/local/gsl-1.16
 
-
+# NASA Pleiades (intel compilers and SGI MPI)
+#CUDA_PATH    := /nasa/cuda/9.0/
+#FFTW_PATH    := /u/jzuhone/opt/fftw-2.1.5
+#MPI_PATH     := /nasa/sgi/mpt/2.14r19
+#HDF5_PATH    := /nasa/hdf5/1.8.18_serial
+#GRACKLE_PATH :=
+#GSL_PATH     :=
 
 
 

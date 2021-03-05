@@ -1,0 +1,35 @@
+# problem-specific runtime parameters
+Merger_Coll_NumHalos    2 # number of halos
+
+# parameters for cluster 1
+Merger_File_Prof1       binary_R1_profile_gamer.h5 # profile table of cluster 1
+Merger_File_Par1        1to3_b0.0_gamerp_1.h5 # particle file of cluster 1
+Merger_Coll_PosX1       3541.5784 # X-center of cluster 1 in kpc
+Merger_Coll_PosY1       5000.0 # Y-center of cluster 1 in kpc
+Merger_Coll_VelX1       305.99049868918786 # X-velocity of cluster 1 in km/s
+Merger_Coll_VelY1       0.0 # Y-velocity of cluster 1 in km/s
+Merger_Coll_ColorRad1   1722.516798 # radius within which cluster 1 color field is set in kpc
+Merger_Coll_IsGas1      1 # If cluster 1 should have gas and not have DM only
+
+# parameters for cluster 2
+Merger_File_Prof2       binary_R3_profile_gamer.h5 # profile table of cluster 2
+Merger_File_Par2        1to3_b0.0_gamerp_2.h5 # particle file of cluster 2
+Merger_Coll_PosX2       6458.4216 # X-center of cluster 2 in kpc
+Merger_Coll_PosY2       5000.0 # Y-center of cluster 2 in kpc
+Merger_Coll_VelX2       -917.9714960675635 # X-velocity of cluster 2 in km/s
+Merger_Coll_VelY2       0.0 # Y-velocity of cluster 2 in km/s
+Merger_Coll_ColorRad2   1194.326442 # radius within which cluster 2 color field is set in kpc
+Merger_Coll_IsGas2      1 # If cluster 2 should have gas and not have DM only
+
+# parameters for cluster 3 (disabled for this example)
+Merger_File_Prof3       none # profile table of cluster 3
+Merger_File_Par3        none # particle file of cluster 3
+Merger_Coll_PosX3       0 # X-center of cluster 3 in kpc
+Merger_Coll_PosY3       0.0 # Y-center of cluster 3 in kpc
+Merger_Coll_VelX3       0.0 # X-velocity of cluster 3 in km/s
+Merger_Coll_VelY3       0.0 # Y-velocity of cluster 3 in km/s
+Merger_Coll_ColorRad3   -1.0 # radius within which cluster 3 color field is set in kpc
+Merger_Coll_IsGas3      0 # If cluster 3 should have gas and not have DM only
+
+# other	parameters
+Merger_Coll_UseMetals   0 # look for a metal field in the profile files
