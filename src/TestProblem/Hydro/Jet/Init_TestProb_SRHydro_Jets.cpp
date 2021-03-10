@@ -562,11 +562,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
       Pri[4] = Pri[0] * MilkyWay_Temperature;
 
-      if (SRHD_CheckUnphysical( NULL, Pri, __FUNCTION__, __LINE__, true  ))
-      {
-          printf( "Pot=%e, PotCenter=%e, MilkyWay_Temperature=%e, Rho0=%e\n", Pot, PotCenter, MilkyWay_Temperature, Rho0);
-          exit(0);
-      }
+      //if (SRHD_CheckUnphysical( NULL, Pri, __FUNCTION__, __LINE__, true  ))
+      //{
+      //    printf( "Pot=%e, PotCenter=%e, MilkyWay_Temperature=%e, Rho0=%e\n", Pot, PotCenter, MilkyWay_Temperature, Rho0);
+      //    exit(0);
+      //}
    }
 
    Hydro_Pri2Con( Pri, fluid, NULL_BOOL, NULL_INT, NULL, EoS_DensPres2Eint_CPUPtr,
