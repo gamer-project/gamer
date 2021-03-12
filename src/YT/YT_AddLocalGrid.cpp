@@ -154,7 +154,7 @@ void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (
       delete [] LBIdxList_Sort_IdxTable[lv];
    }
 
-   if ( yt_add_grids( ) != YT_SUCCESS )  Aux_Error( ERROR_INFO, "yt_add_grids() failed !!\n" );
+   if ( yt_commit_grids( ) != YT_SUCCESS )  Aux_Error( ERROR_INFO, "yt_commit_grids() failed !!\n" );
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 

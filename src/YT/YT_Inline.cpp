@@ -80,10 +80,11 @@ void YT_Inline()
 
 
 // 4. perform yt inline analysis
-   if ( yt_inline() != YT_SUCCESS )    Aux_Error( ERROR_INFO, "yt_inline() failed !!\n" );
+   if ( yt_inline( "yt_inline" ) != YT_SUCCESS )    Aux_Error( ERROR_INFO, "yt_inline() failed !!\n" );
 
 
 // 5. free resource
+   if ( yt_free_gridsPtr() != YT_SUCCESS )    Aux_Error( ERROR_INFO, "yt_free_gridsPtr() failed !!\n" );
    delete [] NPatchAllRank;
    for (int v=0; v<NField; v++)  delete [] FieldLabelForYT[v];
    delete [] FieldLabelForYT;
