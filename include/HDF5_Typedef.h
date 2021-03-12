@@ -474,6 +474,9 @@ struct InputPara_t
    int    Opt__NormalizePassive;
    int    NormalizePassive_NVar;
    int    NormalizePassive_VarIdx[NCOMP_PASSIVE];
+   int    Opt__IntFracPassive_LR;
+   int    IntFracPassive_NVar;
+   int    IntFracPassive_VarIdx[NCOMP_PASSIVE];
    char  *FieldLabel[NCOMP_TOTAL];
 #  ifdef MHD
    char  *MagLabel[NCOMP_MAG];

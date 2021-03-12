@@ -1860,6 +1860,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__NormalizePassive",   &RS.Opt__NormalizePassive,   SID, TID, NonFatal, &RT.Opt__NormalizePassive,    1, NonFatal );
    LoadField( "NormalizePassive_NVar",   &RS.NormalizePassive_NVar,   SID, TID, NonFatal, &RT.NormalizePassive_NVar,    1, NonFatal );
    LoadField( "NormalizePassive_VarIdx",  RS.NormalizePassive_VarIdx, SID, TID, NonFatal,  RT.NormalizePassive_VarIdx, NP, NonFatal );
+   LoadField( "Opt__IntFracPassive_LR",  &RS.Opt__IntFracPassive_LR,  SID, TID, NonFatal, &RT.Opt__IntFracPassive_LR,   1, NonFatal );
+   LoadField( "IntFracPassive_NVar",     &RS.IntFracPassive_NVar,     SID, TID, NonFatal, &RT.IntFracPassive_NVar,      1, NonFatal );
+   LoadField( "IntFracPassive_VarIdx",    RS.IntFracPassive_VarIdx,   SID, TID, NonFatal,  RT.IntFracPassive_VarIdx,   NP, NonFatal );
    LoadField( "Opt__OverlapMPI",         &RS.Opt__OverlapMPI,         SID, TID, NonFatal, &RT.Opt__OverlapMPI,          1, NonFatal );
    LoadField( "Opt__ResetFluid",         &RS.Opt__ResetFluid,         SID, TID, NonFatal, &RT.Opt__ResetFluid,          1, NonFatal );
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )

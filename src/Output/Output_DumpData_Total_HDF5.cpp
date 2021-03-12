@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2433)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2434)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -204,6 +204,7 @@ Procedure for outputting new variables:
 //                2431 : 2021/02/13 --> output DER_GHOST_SIZE, DER_NXT, DER_NOUT_MAX, SRC_NXT
 //                2432 : 2021/02/13 --> output OPT__OUTPUT_* of various derived fields
 //                2433 : 2021/02/14 --> output MIN_TEMP
+//                2434 : 2021/03/12 --> output OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, and PassiveIntFrac_VarIdx
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1690,7 +1691,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2433;
+   KeyInfo.FormatVersion        = 2434;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2392,6 +2393,13 @@ void FillIn_InputPara( InputPara_t &InputPara )
 
    for (int v=0; v<NCOMP_PASSIVE; v++)
    InputPara.NormalizePassive_VarIdx[v] = PassiveNorm_VarIdx[v];
+
+   InputPara.Opt__IntFracPassive_LR  = OPT__INT_FRAC_PASSIVE_LR;
+
+   InputPara.IntFracPassive_NVar     = PassiveIntFrac_NVar;
+
+   for (int v=0; v<NCOMP_PASSIVE; v++)
+   InputPara.IntFracPassive_VarIdx[v] = PassiveIntFrac_VarIdx[v];
 
    for (int v=0; v<NCOMP_TOTAL; v++)
    InputPara.FieldLabel[v]           = FieldLabel[v];
@@ -3179,6 +3187,11 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "NormalizePassive_NVar",   HOFFSET(InputPara_t,NormalizePassive_NVar  ), H5T_NATIVE_INT     );
 #  if ( NCOMP_PASSIVE > 0 )
    H5Tinsert( H5_TypeID, "NormalizePassive_VarIdx", HOFFSET(InputPara_t,NormalizePassive_VarIdx), H5_TypeID_Arr_NPassive );
+#  endif
+   H5Tinsert( H5_TypeID, "Opt__IntFracPassive_LR",  HOFFSET(InputPara_t,Opt__IntFracPassive_LR ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "IntFracPassive_NVar",     HOFFSET(InputPara_t,IntFracPassive_NVar    ), H5T_NATIVE_INT     );
+#  if ( NCOMP_PASSIVE > 0 )
+   H5Tinsert( H5_TypeID, "IntFracPassive_VarIdx",   HOFFSET(InputPara_t,IntFracPassive_VarIdx  ), H5_TypeID_Arr_NPassive );
 #  endif
 
 // store the name of all fields
