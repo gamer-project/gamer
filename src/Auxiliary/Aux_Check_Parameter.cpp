@@ -414,6 +414,9 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "REMINDER : disabling OPT__NORMALIZE_PASSIVE will break the strict equality between\n" );
       Aux_Message( stderr, "           sum(passive_scalar_mass_density) and gas_mass_density\n" );
    }
+
+   if ( ! OPT__INT_FRAC_PASSIVE_LR )
+      Aux_Message( stderr, "WARNING : disabling OPT__INT_FRAC_PASSIVE_LR is not recommended !!\n" );
 #  endif
 
 #  if   ( MODEL == HYDRO )

@@ -968,6 +968,16 @@ void Aux_TakeNote()
       fprintf( Note, " %s",                                       FieldLabel[ NCOMP_FLUID + PassiveNorm_VarIdx[v] ] );
       fprintf( Note, "\n" ); }
 
+      fprintf( Note, "OPT__INT_FRAC_PASSIVE_LR        %d\n",      OPT__INT_FRAC_PASSIVE_LR );
+
+//    target passive scalars to be interpolated in fractional form
+      fprintf( Note, "   Number of fields             %d\n",      PassiveIntFrac_NVar      );
+      if ( PassiveIntFrac_NVar > 0 ) {
+      fprintf( Note, "   Target fields               "                                     );
+      for (int v=0; v<PassiveIntFrac_NVar; v++)
+      fprintf( Note, " %s",                                       FieldLabel[ NCOMP_FLUID + PassiveIntFrac_VarIdx[v] ] );
+      fprintf( Note, "\n" ); }
+
       fprintf( Note, "OPT__OVERLAP_MPI                %d\n",      OPT__OVERLAP_MPI         );
       fprintf( Note, "OPT__RESET_FLUID                %d\n",      OPT__RESET_FLUID         );
 #     if ( MODEL == HYDRO  ||  MODEL == ELBDM )

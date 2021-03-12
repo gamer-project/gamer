@@ -132,7 +132,19 @@ void Init_Field()
       OPT__NORMALIZE_PASSIVE = false;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : disabling \"OPT__NORMALIZE_PASSIVE\" since there are no passive scalars to be normalized !!\n" );
+         Aux_Message( stderr, "WARNING : disabling \"OPT__NORMALIZE_PASSIVE\" since there are no passive scalars\n"
+                              "          to be normalized !!\n" );
+   }
+
+
+// 7. turn off OPT__INT_FRAC_PASSIVE_* if there are no passive scalars to be interpolated in fractional form
+   if ( OPT__INT_FRAC_PASSIVE_LR  &&  PassiveIntFrac_NVar == 0 )
+   {
+      OPT__INT_FRAC_PASSIVE_LR = false;
+
+      if ( MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : disabling \"OPT__INT_FRAC_PASSIVE_*\" since there are no passive scalars\n"
+                              "          to be interpolated in fractional form !!\n" );
    }
 
 
