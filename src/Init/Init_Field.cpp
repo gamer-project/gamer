@@ -31,10 +31,16 @@ void Init_Field()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
-// 0. initialize counters as zeros
+// 0. initialize variables
    NDefinedField       = 0;
    PassiveNorm_NVar    = 0;
    PassiveIntFrac_NVar = 0;
+
+   for (int v=0; v<NCOMP_PASSIVE; v++)
+   {
+      PassiveNorm_VarIdx   [v] = -1;
+      PassiveIntFrac_VarIdx[v] = -1;
+   }
 
 
 // 1. add main predefined fields
