@@ -197,7 +197,7 @@ void Init_TestProb();
 void Init_ByFile();
 void Init_UniformGrid( const int lv, const bool FindHomePatchForPar );
 void Init_Field();
-FieldIdx_t AddField( char *InputLabel, const NormPassive_t Norm );
+FieldIdx_t AddField( char *InputLabel, const NormPassive_t Norm, const IntFracPassive_t IntFrac );
 FieldIdx_t GetFieldIndex( char *InputLabel, const Check_t Check );
 #ifdef OPENMP
 void Init_OpenMP();

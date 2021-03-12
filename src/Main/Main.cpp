@@ -34,8 +34,8 @@ double               FlagTable_Lohner     [NLEVEL-1][4];
 double              *FlagTable_User       [NLEVEL-1];
 double              *DumpTable = NULL;
 int                  DumpTable_NDump;
-int                  PassiveNorm_NVar;
-int                  PassiveNorm_VarIdx[NCOMP_PASSIVE];
+int                  PassiveNorm_NVar, PassiveNorm_VarIdx[NCOMP_PASSIVE];
+int                  PassiveIntFrac_NVar, PassiveIntFrac_VarIdx[NCOMP_PASSIVE];
 
 int                  MPI_Rank, MPI_Rank_X[3], MPI_SibRank[26], NX0[3], NPatchTotal[NLEVEL];
 int                 *BaseP = NULL;
