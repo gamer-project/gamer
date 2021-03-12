@@ -692,6 +692,7 @@ void Read_Profile_ClusterMerger(std::string filename, std::string fieldname,
 
 #endif // #ifdef SUPPORT_HDF5
 
+#if ( MODEL == HYDRO )
 void AddNewField_ClusterMerger()
 {
 
@@ -705,6 +706,7 @@ void AddNewField_ClusterMerger()
       ColorField3Idx = AddField( "ColorField3", NORMALIZE_NO );
 
 }
+#endif
 
 #ifdef PARTICLE
 
