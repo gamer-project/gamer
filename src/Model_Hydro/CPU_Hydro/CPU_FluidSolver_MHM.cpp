@@ -39,7 +39,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const bool Con2Pri, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh,
                                const real MinDens, const real MinPres, const real MinEint,
-                               const bool NormPassive, const int NNorm, const int NormIdx[],
+                               const bool FracPassive, const int NFrac, const int FracIdx[],
                                const bool JeansMinPres, const real JeansMinPres_Coeff,
                                const EoS_t *EoS );
 void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
@@ -83,7 +83,7 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 #endif
 #if ( FLU_SCHEME == MHM_RP )
 void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
-                    const bool NormPassive, const int NNorm, const int NormIdx[],
+                    const bool FracPassive, const int NFrac, const int FracIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff,
                     const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint,
                     const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
@@ -124,7 +124,7 @@ static void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
                                         real g_PriVar_Half[][ CUBE(FLU_NXT) ],
                                   const real dt, const real dh,
                                   const real MinDens, const real MinPres, const real MinEint,
-                                  const bool NormPassive, const int NNorm, const int NormIdx[],
+                                  const bool FracPassive, const int NFrac, const int FracIdx[],
                                   const bool JeansMinPres, const real JeansMinPres_Coeff,
                                   const EoS_t *EoS );
 #endif
@@ -385,7 +385,7 @@ void CPU_FluidSolver_MHM(
 
 //       1-a-4. evaluate the half-step solutions
          Hydro_RiemannPredict( g_Flu_Array_In[P], g_FC_Mag_Half_1PG, g_Flux_Half_1PG, g_PriVar_Half_1PG,
-                               dt, dh, MinDens, MinPres, MinEint, NormPassive, NNorm, c_NormIdx,
+                               dt, dh, MinDens, MinPres, MinEint, FracPassive, NFrac, c_FracIdx,
                                JeansMinPres, JeansMinPres_Coeff, &EoS );
 
 
@@ -393,7 +393,7 @@ void CPU_FluidSolver_MHM(
 //              --> note that g_PriVar_Half_1PG[] returned by Hydro_RiemannPredict() stores the primitive variables
          Hydro_DataReconstruction( NULL, g_FC_Mag_Half_1PG, g_PriVar_Half_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
                                    Con2Pri_No, LR_Limiter, MinMod_Coeff, dt, dh,
-                                   MinDens, MinPres, MinEint, NormPassive, NNorm, c_NormIdx,
+                                   MinDens, MinPres, MinEint, FracPassive, NFrac, c_FracIdx,
                                    JeansMinPres, JeansMinPres_Coeff, &EoS );
 
 
@@ -403,7 +403,7 @@ void CPU_FluidSolver_MHM(
 //       evaluate the face-centered values by data reconstruction
          Hydro_DataReconstruction( g_Flu_Array_In[P], NULL, g_PriVar_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
                                    Con2Pri_Yes, LR_Limiter, MinMod_Coeff, dt, dh,
-                                   MinDens, MinPres, MinEint, NormPassive, NNorm, c_NormIdx,
+                                   MinDens, MinPres, MinEint, FracPassive, NFrac, c_FracIdx,
                                    JeansMinPres, JeansMinPres_Coeff, &EoS );
 
 #        endif // #if ( FLU_SCHEME == MHM_RP ) ... else ...
@@ -623,11 +623,9 @@ void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 //                dt                 : Time interval to advance solution
 //                dh                 : Cell size
 //                MinDens/Pres/Eint  : Density, pressure, and internal energy floors
-//                NormPassive        : true --> convert passive scalars to mass fraction
-//                NNorm              : Number of passive scalars for the option "NormPassive"
-//                                     --> Should be set to the global variable "PassiveNorm_NVar"
-//                NormIdx            : Target variable indices for the option "NormPassive"
-//                                     --> Should be set to the global variable "PassiveNorm_VarIdx"
+//                FracPassive        : true --> convert passive scalars to mass fraction during data reconstruction
+//                NFrac              : Number of passive scalars for the option "FracPassive"
+//                FracIdx            : Target variable indices for the option "FracPassive"
 //                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //                EoS                : EoS object
@@ -639,7 +637,7 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
                                  real g_PriVar_Half[][ CUBE(FLU_NXT) ],
                            const real dt, const real dh,
                            const real MinDens, const real MinPres, const real MinEint,
-                           const bool NormPassive, const int NNorm, const int NormIdx[],
+                           const bool FracPassive, const int NFrac, const int FracIdx[],
                            const bool JeansMinPres, const real JeansMinPres_Coeff,
                            const EoS_t *EoS )
 {
@@ -716,7 +714,7 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 #     endif
 
 //    conserved --> primitive variables
-      Hydro_Con2Pri( out_con, out_pri, MinPres, NormPassive, NNorm, NormIdx, JeansMinPres, JeansMinPres_Coeff,
+      Hydro_Con2Pri( out_con, out_pri, MinPres, FracPassive, NFrac, FracIdx, JeansMinPres, JeansMinPres_Coeff,
                      EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,
                      EoS->Table, EintPtr );
 

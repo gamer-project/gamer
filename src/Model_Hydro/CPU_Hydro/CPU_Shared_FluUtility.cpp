@@ -146,9 +146,7 @@ void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int 
 //                MinPres            : Minimum allowed pressure
 //                FracPassive        : true --> convert passive scalars to mass fraction
 //                NFrac              : Number of passive scalars for the option "FracPassive"
-//                                     --> Should be set to the global variable "PassiveIntFrac_NVar"
 //                FracIdx            : Target variable indices for the option "FracPassive"
-//                                     --> Should be set to the global variable "PassiveIntFrac_VarIdx"
 //                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //                EoS_DensEint2Pres  : EoS routine to compute the gas pressure
@@ -242,9 +240,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 //                Out               : Array to store the output conserved variables
 //                FracPassive       : true --> input passive scalars are mass fraction instead of density
 //                NFrac             : Number of passive scalars for the option "FracPassive"
-//                                    --> Should be set to the global variable "PassiveIntFrac_NVar"
 //                FracIdx           : Target variable indices for the option "FracPassive"
-//                                    --> Should be set to the global variable "PassiveIntFrac_VarIdx"
 //                EoS_DensPres2Eint : EoS routine to compute the gas internal energy
 //                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensPres2Eint()
 //                EoS_Table         : EoS tables for EoS_DensPres2Eint()
