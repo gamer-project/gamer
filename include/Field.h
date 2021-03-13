@@ -88,7 +88,7 @@ SET_GLOBAL( FieldIdx_t Idx_ParMetalFrac,  Idx_Undefined );
 // field and particle attribute labels
 SET_GLOBAL( char FieldLabel[NCOMP_TOTAL][MAX_STRING] );
 #ifdef GRAVITY
-SET_GLOBAL( char *PotLabel, "Pote" );  // potential label is currently fixed
+SET_GLOBAL( const char *PotLabel, "Pote" );  // potential label is currently fixed
 #endif
 #ifdef MHD
 SET_GLOBAL( char *MagLabel[NCOMP_MAG] );
