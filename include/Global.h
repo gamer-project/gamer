@@ -45,8 +45,8 @@ extern int       *BaseP;                              // table recording the IDs
 extern int        Flu_ParaBuf;                        // number of parallel buffers to exchange all fluid
                                                       // variables for the fluid solver and fluid refinement
 
-extern int        PassiveNorm_NVar;
-extern int        PassiveNorm_VarIdx[NCOMP_PASSIVE];
+extern int        PassiveNorm_NVar, PassiveNorm_VarIdx[NCOMP_PASSIVE];
+extern int        PassiveIntFrac_NVar, PassiveIntFrac_VarIdx[NCOMP_PASSIVE];
 
 extern double     BOX_SIZE, DT__MAX, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT, DT__SYNC_PARENT_LV, DT__SYNC_CHILDREN_LV;
 extern long int   END_STEP;
@@ -69,6 +69,7 @@ extern bool       OPT__UM_IC_DOWNGRADE, OPT__UM_IC_REFINE, OPT__TIMING_MPI;
 extern bool       OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
 extern bool       OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
 extern bool       OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
+extern bool       OPT__INT_FRAC_PASSIVE_LR;
 
 extern UM_IC_Format_t     OPT__UM_IC_FORMAT;
 extern TestProbID_t       TESTPROB_ID;

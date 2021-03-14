@@ -43,7 +43,9 @@ void CUFLU_FluidSolver_MHM(
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const double Time,
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const real MinDens, const real MinPres, const real MinEint,
-   const real DualEnergySwitch, const bool NormPassive, const int NNorm,
+   const real DualEnergySwitch,
+   const bool NormPassive, const int NNorm,
+   const bool FracPassive, const int NFrac,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
    const EoS_t EoS );
 #elif ( FLU_SCHEME == CTU )
@@ -69,7 +71,9 @@ void CUFLU_FluidSolver_CTU(
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const double Time,
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const real MinDens, const real MinPres, const real MinEint,
-   const real DualEnergySwitch, const bool NormPassive, const int NNorm,
+   const real DualEnergySwitch,
+   const bool NormPassive, const int NNorm,
+   const bool FracPassive, const int NFrac,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
    const EoS_t EoS );
 #endif // FLU_SCHEME

@@ -364,6 +364,11 @@ const NormPassive_t
    NORMALIZE_NO  = 0,
    NORMALIZE_YES = 1;
 
+typedef int IntFracPassive_t;
+const IntFracPassive_t
+   INTERP_FRAC_NO  = 0,
+   INTERP_FRAC_YES = 1;
+
 
 // field types
 typedef int FieldIdx_t;

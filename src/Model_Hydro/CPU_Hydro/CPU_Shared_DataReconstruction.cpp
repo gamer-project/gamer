@@ -18,12 +18,12 @@
 
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
 void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
-                    const bool NormPassive, const int NNorm, const int NormIdx[],
+                    const bool FracPassive, const int NFrac, const int FracIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff,
                     const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint,
                     const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                     const real *const EoS_Table[EOS_NTABLE_MAX], real* const EintOut );
-void Hydro_Pri2Con( const real In[], real Out[], const bool NormPassive, const int NNorm, const int NormIdx[],
+void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive, const int NFrac, const int FracIdx[],
                     const EoS_DP2E_t EoS_DensPres2Eint, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                     const real *const EoS_Table[EOS_NTABLE_MAX], const real* const EintIn );
 #if ( FLU_SCHEME == MHM )
@@ -137,11 +137,9 @@ static void Hydro_Char2Pri( real InOut[], const real Dens, const real Pres, cons
 //                dt                 : Time interval to advance solution (for the CTU scheme)
 //                dh                 : Cell size
 //                MinDens/Pres/Eint  : Density, pressure, and internal energy floors
-//                NormPassive        : true --> convert passive scalars to mass fraction
-//                NNorm              : Number of passive scalars for the option "NormPassive"
-//                                     --> Should be set to the global variable "PassiveNorm_NVar"
-//                NormIdx            : Target variable indices for the option "NormPassive"
-//                                     --> Should be set to the global variable "PassiveNorm_VarIdx"
+//                FracPassive        : true --> convert passive scalars to mass fraction during data reconstruction
+//                NFrac              : Number of passive scalars for the option "FracPassive"
+//                FracIdx            : Target variable indices for the option "FracPassive"
 //                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //                EoS                : EoS object
@@ -155,7 +153,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const bool Con2Pri, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh,
                                const real MinDens, const real MinPres, const real MinEint,
-                               const bool NormPassive, const int NNorm, const int NormIdx[],
+                               const bool FracPassive, const int NFrac, const int FracIdx[],
                                const bool JeansMinPres, const real JeansMinPres_Coeff,
                                const EoS_t *EoS )
 {
@@ -280,7 +278,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
          MHD_GetCellCenteredBField( ConVar_1Cell+NCOMP_TOTAL, g_FC_B[0], g_FC_B[1], g_FC_B[2], NIn, NIn, NIn, i, j, k );
 #        endif
 
-         Hydro_Con2Pri( ConVar_1Cell, PriVar_1Cell, MinPres, NormPassive, NNorm, NormIdx,
+         Hydro_Con2Pri( ConVar_1Cell, PriVar_1Cell, MinPres, FracPassive, NFrac, FracIdx,
                         JeansMinPres, JeansMinPres_Coeff, EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr,
                         EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, EintPtr );
 
@@ -598,11 +596,11 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #        endif
 
          for (int v=0; v<NCOMP_LR; v++)   tmp[v] = fc[faceL][v];
-         Hydro_Pri2Con( tmp, fc[faceL], NormPassive, NNorm, NormIdx, EoS->DensPres2Eint_FuncPtr,
+         Hydro_Pri2Con( tmp, fc[faceL], FracPassive, NFrac, FracIdx, EoS->DensPres2Eint_FuncPtr,
                         EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, EintPtr );
 
          for (int v=0; v<NCOMP_LR; v++)   tmp[v] = fc[faceR][v];
-         Hydro_Pri2Con( tmp, fc[faceR], NormPassive, NNorm, NormIdx, EoS->DensPres2Eint_FuncPtr,
+         Hydro_Pri2Con( tmp, fc[faceR], FracPassive, NFrac, FracIdx, EoS->DensPres2Eint_FuncPtr,
                         EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, EintPtr );
 
       } // for (int d=0; d<3; d++)
@@ -650,7 +648,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const bool Con2Pri, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh,
                                const real MinDens, const real MinPres, const real MinEint,
-                               const bool NormPassive, const int NNorm, const int NormIdx[],
+                               const bool FracPassive, const int NFrac, const int FracIdx[],
                                const bool JeansMinPres, const real JeansMinPres_Coeff,
                                const EoS_t *EoS )
 {
@@ -789,7 +787,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
          MHD_GetCellCenteredBField( ConVar_1Cell+NCOMP_TOTAL, g_FC_B[0], g_FC_B[1], g_FC_B[2], NIn, NIn, NIn, i, j, k );
 #        endif
 
-         Hydro_Con2Pri( ConVar_1Cell, PriVar_1Cell, MinPres, NormPassive, NNorm, NormIdx,
+         Hydro_Con2Pri( ConVar_1Cell, PriVar_1Cell, MinPres, FracPassive, NFrac, FracIdx,
                         JeansMinPres, JeansMinPres_Coeff, EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr,
                         EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, EintPtr );
 
@@ -1180,11 +1178,11 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #        endif
 
          for (int v=0; v<NCOMP_LR; v++)   tmp[v] = fc[faceL][v];
-         Hydro_Pri2Con( tmp, fc[faceL], NormPassive, NNorm, NormIdx, EoS->DensPres2Eint_FuncPtr,
+         Hydro_Pri2Con( tmp, fc[faceL], FracPassive, NFrac, FracIdx, EoS->DensPres2Eint_FuncPtr,
                         EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, EintPtr );
 
          for (int v=0; v<NCOMP_LR; v++)   tmp[v] = fc[faceR][v];
-         Hydro_Pri2Con( tmp, fc[faceR], NormPassive, NNorm, NormIdx, EoS->DensPres2Eint_FuncPtr,
+         Hydro_Pri2Con( tmp, fc[faceR], FracPassive, NFrac, FracIdx, EoS->DensPres2Eint_FuncPtr,
                         EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, EintPtr );
 
       } // for (int d=0; d<3; d++)

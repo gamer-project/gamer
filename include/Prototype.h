@@ -84,8 +84,10 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                       const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
                       const double Time, const bool UsePot, const OptExtAcc_t ExtAcc,
-                      const real MinDens, const real MinPres, const real MinEint, const real DualEnergySwitch,
+                      const real MinDens, const real MinPres, const real MinEint,
+                      const real DualEnergySwitch,
                       const bool NormPassive, const int NNorm, const int NormIdx[],
+                      const bool FracPassive, const int NFrac, const int FracIdx[],
                       const bool JeansMinPres, const real JeansMinPres_Coeff );
 bool Hydro_CheckNegative( const real Input );
 void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
@@ -199,8 +201,8 @@ void Init_TestProb();
 void Init_ByFile();
 void Init_UniformGrid( const int lv, const bool FindHomePatchForPar );
 void Init_Field();
-FieldIdx_t AddField( char *InputLabel, const NormPassive_t Norm );
-FieldIdx_t GetFieldIndex( char *InputLabel, const Check_t Check );
+FieldIdx_t AddField( const char *InputLabel, const NormPassive_t Norm, const IntFracPassive_t IntFrac );
+FieldIdx_t GetFieldIndex( const char *InputLabel, const Check_t Check );
 #ifdef OPENMP
 void Init_OpenMP();
 #endif
@@ -519,7 +521,9 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
                              const double Time, const bool UsePot, const OptExtAcc_t ExtAcc,
                              const real MinDens, const real MinPres, const real MinEint,
-                             const real DualEnergySwitch, const bool NormPassive, const int NNorm,
+                             const real DualEnergySwitch,
+                             const bool NormPassive, const int NNorm,
+                             const bool FracPassive, const int NFrac,
                              const bool JeansMinPres, const real JeansMinPres_Coeff,
                              const int GPU_NStream );
 void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real h_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
@@ -607,8 +611,8 @@ void Par_PredictPos( const long NPar, const long *ParList, real *ParPosX, real *
                      const double TargetTime );
 void Par_Init_Attribute();
 void Par_AddParticleAfterInit( const long NNewPar, real *NewParAtt[PAR_NATT_TOTAL] );
-FieldIdx_t AddParticleAttribute( char *InputLabel );
-FieldIdx_t GetParticleAttributeIndex( char *InputLabel, const Check_t Check );
+FieldIdx_t AddParticleAttribute( const char *InputLabel );
+FieldIdx_t GetParticleAttributeIndex( const char *InputLabel, const Check_t Check );
 #ifdef LOAD_BALANCE
 void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, const double TargetTime,
                                       const bool SibBufPatch, const bool FaSibBufPatch, const bool JustCountNPar,

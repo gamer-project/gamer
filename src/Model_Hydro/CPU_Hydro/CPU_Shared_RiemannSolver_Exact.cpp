@@ -19,7 +19,7 @@
 #else // #ifdef __CUDACC__
 
 void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
-                    const bool NormPassive, const int NNorm, const int NormIdx[],
+                    const bool FracPassive, const int NFrac, const int FracIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff,
                     const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint,
                     const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
@@ -80,16 +80,16 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
    const real Gamma_m1        = EoS_AuxArray_Flt[1];
    const real Gamma_p1        = Gamma + (real)1.0;
    const real c               = Gamma_m1 / Gamma_p1;
-   const bool NormPassive_No  = false;                // no need to convert passive scalars to mass fraction
+   const bool FracPassive_No  = false;                // no need to convert passive scalars to mass fraction
    const bool JeansMinPres_No = false;
 
    real eival[5], L_star[5], R_star[5];
    real L[NCOMP_TOTAL], R[NCOMP_TOTAL], Temp;
 
 // convert conserved variables to primitive variables
-   Hydro_Con2Pri( L_In, L, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
+   Hydro_Con2Pri( L_In, L, MinPres, FracPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
                   EoS_DensEint2Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
-   Hydro_Con2Pri( R_In, R, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
+   Hydro_Con2Pri( R_In, R, MinPres, FracPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
                   EoS_DensEint2Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
 
 

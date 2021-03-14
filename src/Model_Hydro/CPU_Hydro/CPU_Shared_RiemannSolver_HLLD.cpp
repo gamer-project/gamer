@@ -21,7 +21,7 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
                      const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX], const real* const PresIn );
 void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
-                    const bool NormPassive, const int NNorm, const int NormIdx[],
+                    const bool FracPassive, const int NFrac, const int FracIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff,
                     const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint,
                     const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
@@ -74,7 +74,7 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
    const real ZERO            = (real)0.0;
    const real ONE             = (real)1.0;
    const real _TWO            = (real)0.5;
-   const bool NormPassive_No  = false;
+   const bool FracPassive_No  = false;
    const bool JeansMinPres_No = false;
    const int  IdxBx           = MAG_OFFSET + 0;
    const int  IdxBy           = MAG_OFFSET + 1;
@@ -107,9 +107,9 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
               Con_L[IdxBx], Con_R[IdxBx], XYZ, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
-   Hydro_Con2Pri( Con_L, Pri_L, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
+   Hydro_Con2Pri( Con_L, Pri_L, MinPres, FracPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
                   EoS_DensEint2Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
-   Hydro_Con2Pri( Con_R, Pri_R, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
+   Hydro_Con2Pri( Con_R, Pri_R, MinPres, FracPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
                   EoS_DensEint2Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
 
    real tmp_1, tmp_2, crit, crit_Bx;

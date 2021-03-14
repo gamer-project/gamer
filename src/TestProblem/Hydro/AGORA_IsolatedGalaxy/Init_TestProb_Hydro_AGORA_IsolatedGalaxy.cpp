@@ -466,7 +466,7 @@ void AddNewField_AGORA()
 // --> since Grackle may already add this field automatically when GRACKLE_METAL is enabled
 // --> also note that "Idx_Metal" has been predefined in Field.h
    if ( AGORA_UseMetal  &&  Idx_Metal == Idx_Undefined )
-      Idx_Metal = AddField( "Metal", NORMALIZE_NO );
+      Idx_Metal = AddField( "Metal", NORMALIZE_NO, INTERP_FRAC_YES );
 
 } // FUNCTION : AddNewField_AGORA
 

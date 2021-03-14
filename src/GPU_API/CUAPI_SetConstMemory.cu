@@ -29,7 +29,7 @@ void CUAPI_SetConstMemory_ExtAccPot();
 //
 // Parameter   :  None
 //
-// Return      :  c_NormIdx[], c_Mp[], c_Mm[], c_ExtAcc_AuxArray[], c_ExtPot_AuxArray[]
+// Return      :  c_NormIdx[], c_FracIdx[], c_Mp[], c_Mm[], c_ExtAcc_AuxArray[], c_ExtPot_AuxArray[]
 //---------------------------------------------------------------------------------------------------
 void CUAPI_SetConstMemory()
 {
@@ -41,7 +41,8 @@ void CUAPI_SetConstMemory()
 // we do not repeat them below
 
 #  if ( NCOMP_PASSIVE > 0 )
-   CUDA_CHECK_ERROR(  cudaMemcpyToSymbol( c_NormIdx, PassiveNorm_VarIdx, NCOMP_PASSIVE*sizeof(int) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyToSymbol( c_NormIdx, PassiveNorm_VarIdx,    NCOMP_PASSIVE*sizeof(int) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyToSymbol( c_FracIdx, PassiveIntFrac_VarIdx, NCOMP_PASSIVE*sizeof(int) )  );
 #  endif
 
 #  ifdef GRAVITY
