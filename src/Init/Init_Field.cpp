@@ -66,9 +66,13 @@ void Init_Field()
 #  endif
 
 #  elif ( MODEL == ELBDM )
-   Idx_Dens    = AddField( "Dens",     NORMALIZE_NO );
-   Idx_Real    = AddField( "Real",     NORMALIZE_NO );
-   Idx_Imag    = AddField( "Imag",     NORMALIZE_NO );
+   Idx_Dens    = AddField( "Dens",     NORMALIZE_NO, INTERP_FRAC_NO );
+   Idx_Real    = AddField( "Real",     NORMALIZE_NO, INTERP_FRAC_NO );
+   Idx_Imag    = AddField( "Imag",     NORMALIZE_NO, INTERP_FRAC_NO );
+
+   if ( Idx_Dens != DENS )    Aux_Error( ERROR_INFO, "inconsistent Idx_Dens (%d != %d) !!\n", Idx_Dens, DENS );
+   if ( Idx_Real != REAL )    Aux_Error( ERROR_INFO, "inconsistent Idx_Real (%d != %d) !!\n", Idx_Real, REAL );
+   if ( Idx_Imag != IMAG )    Aux_Error( ERROR_INFO, "inconsistent Idx_Imag (%d != %d) !!\n", Idx_Imag, IMAG );
 
 #  else
 #    error : ERROR : unsupported MODEL !!
