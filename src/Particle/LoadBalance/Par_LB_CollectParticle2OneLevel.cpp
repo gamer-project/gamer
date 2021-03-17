@@ -17,7 +17,7 @@ extern Timer_t *Timer_Par_MPI[NLEVEL][6];
 // Note        :  1. ParList[] in all descendants will NOT be changeed after calling this function
 //                2. ParMassPos_Copy[] will be allocated for the target patches at FaLv
 //                   --> Must be deallocated afterward by calling Par_LB_CollectParticle2OneLevel_FreeMemory()
-//                3. Only work on non-leaf real patches and buffer patches (which can be either real or buffer)
+//                3. Only work on non-leaf real patches and buffer patches (the latter can be either leaf or non-leaf)
 //                   --> For leaf real patches the ParList_Copy[] will NOT be allocated
 //                   --> However, it does take into account the corner case where non-leaf real patches may
 //                       have NPar>0 temporarily after updating particle position.
