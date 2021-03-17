@@ -653,10 +653,10 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
                                        EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 #           elif ( CHECK_INTERMEDIATE == HLLE )
             Hydro_RiemannSolver_HLLE ( 0, Flux_Out, L, R, MinDens, MinPres, EoS_DensEint2Pres, EoS_DensPres2CSqr,
-                                       NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+                                       NULL, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 #           elif ( CHECK_INTERMEDIATE == HLLC  &&  !defined MHD )
             Hydro_RiemannSolver_HLLC ( 0, Flux_Out, L, R, MinDens, MinPres, EoS_DensEint2Pres, EoS_DensPres2CSqr,
-                                       NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+                                       NULL, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 #           elif ( CHECK_INTERMEDIATE == HLLD  &&  defined MHD )
             Hydro_RiemannSolver_HLLD ( 0, Flux_Out, L, R, MinDens, MinPres, EoS_DensEint2Pres, EoS_DensPres2CSqr,
                                        EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
