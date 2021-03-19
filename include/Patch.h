@@ -822,7 +822,7 @@ struct patch_t
 
       if ( rho_ext == NULL )  rho_ext = new real [RHOEXT_NXT][RHOEXT_NXT][RHOEXT_NXT];
 
-//    always initialize rho_ext (even if rho_ext != NULL when calling this this function) to indicate that this array
+//    always initialize rho_ext (even if rho_ext != NULL when calling this function) to indicate that this array
 //    has NOT been properly set --> used by Prepare_PatchData()
       rho_ext[0][0][0] = RHO_EXT_NEED_INIT;
 

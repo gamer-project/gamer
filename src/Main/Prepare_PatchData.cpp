@@ -72,8 +72,8 @@ static void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const re
 //                7. For _PAR_DENS and _TOTAL_DENS (for PARTICLE only), the rho_ext[] arrays of patches at Lv=lv will be
 //                   allocated to store the partice mass density
 //                   --> amr->patch[0][lv][PID]->rho_ext
-//                   --> These arrays must be deallocated manually by calling Prepare_PatchData_FreeParticleDensityArray
-//                       --> If OPT__REUSE_MEMORY is on, Prepare_PatchData_FreeParticleDensityArray will NOT free memory
+//                   --> These arrays must be deallocated manually by calling Prepare_PatchData_FreeParticleDensityArray()
+//                       --> If OPT__REUSE_MEMORY is on, Prepare_PatchData_FreeParticleDensityArray() will NOT free memory
 //                           for rho_ext[]. Instead, rho_ext[] will be free'd together with other data arrays (e.g., fluid, pot)
 //                   --> Note that this array does NOT necessary store the correct particle mass density
 //                       (especially for cells adjacent to the C-C and C-F boundaries) and thus should NOT be used outside
