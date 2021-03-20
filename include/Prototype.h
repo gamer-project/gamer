@@ -597,7 +597,7 @@ int  Par_CountParticleInDescendant( const int FaLv, const int FaPID );
 void Par_Aux_GetConservedQuantity( double &Mass, double &MomX, double &MomY, double &MomZ, double &Ek, double &Ep );
 void Par_Aux_InitCheck();
 void Par_Aux_Record_ParticleCount();
-void Par_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, const double TargetTime,
+void Par_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, const bool PredictPos, const double TargetTime,
                                    const bool SibBufPatch, const bool FaSibBufPatch, const bool JustCountNPar,
                                    const bool TimingSendPar );
 void Par_CollectParticle2OneLevel_FreeMemory( const int FaLv, const bool SibBufPatch, const bool FaSibBufPatch );
@@ -612,11 +612,11 @@ void Par_AddParticleAfterInit( const long NNewPar, real *NewParAtt[PAR_NATT_TOTA
 FieldIdx_t AddParticleAttribute( const char *InputLabel );
 FieldIdx_t GetParticleAttributeIndex( const char *InputLabel, const Check_t Check );
 #ifdef LOAD_BALANCE
-void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, const double TargetTime,
+void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, const bool PredictPos, const double TargetTime,
                                       const bool SibBufPatch, const bool FaSibBufPatch, const bool JustCountNPar,
                                       const bool TimingSendPar );
 void Par_LB_CollectParticle2OneLevel_FreeMemory( const int lv, const bool SibBufPatch, const bool FaSibBufPatch );
-void Par_LB_CollectParticleFromRealPatch( const int lv,
+void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
                                           const int Buff_NPatchTotal, const int *Buff_PIDList, int *Buff_NPatchEachRank,
                                           const int Real_NPatchTotal, const int *Real_PIDList, int *Real_NPatchEachRank,
                                           const bool PredictPos, const double TargetTime,
