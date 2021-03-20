@@ -52,6 +52,30 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
    if ( lv > MAX_LEVEL )  return;
 
 
+// 0. determine the target particle attributes
+// --> assuming _VAR_NAME = 1L<<VAR_NAME (e.g., _PAR_MASS == 1L<<PAR_MASS == BIDX(PAR_MASS))
+// --> PosSendIdx[] is used by Par_PredictPos()
+   int NAtt=0, AttIntIdx[PAR_NATT_TOTAL], PosSendIdx[3]={-1, -1, -1};
+
+   for (int v=0; v<PAR_NATT_TOTAL; v++)
+      if ( AttBitIdx & (1L<<v) )    AttIntIdx[ NAtt ++ ] = v;
+
+   if ( PredictPos )
+   {
+      for (int v=0; v<NAtt; v++)
+      {
+         if      ( AttIntIdx[v] == PAR_POSX )   PosSendIdx[0] = v;
+         else if ( AttIntIdx[v] == PAR_POSY )   PosSendIdx[1] = v;
+         else if ( AttIntIdx[v] == PAR_POSZ )   PosSendIdx[2] = v;
+      }
+
+#     ifdef DEBUG_PARTICLE
+      for (int d=0; d<3; d++)
+         if ( PosSendIdx[d] == -1 )    Aux_Error( ERROR_INFO, "PosSendIdx[%d] == -1 for PredictPos !!\n", d );
+#     endif
+   }
+
+
 // check
 #  ifdef DEBUG_PARTICLE
    if ( lv < 0  ||  lv >= NLEVEL )     Aux_Error( ERROR_INFO, "incorrect target level (%d) !!\n", lv );
@@ -141,30 +165,6 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
 // must NOT call "return" here even if Buff/Real_NPatchTotal==0 since this rank still needs to call Par_LB_SendParticleData()
 // if ( Real_NPatchTotal == 0 )   return;
 // if ( Buff_NPatchTotal == 0 )   return;
-
-
-// 0. determine the target particle attributes
-// --> assuming _VAR_NAME = 1L<<VAR_NAME (e.g., _PAR_MASS == 1L<<PAR_MASS == BIDX(PAR_MASS))
-// --> PosSendIdx[] is used by Par_PredictPos()
-   int NAtt=0, AttIntIdx[PAR_NATT_TOTAL], PosSendIdx[3]={-1, -1, -1};
-
-   for (int v=0; v<PAR_NATT_TOTAL; v++)
-      if ( AttBitIdx & (1L<<v) )    AttIntIdx[ NAtt ++ ] = v;
-
-   if ( PredictPos )
-   {
-      for (int v=0; v<NAtt; v++)
-      {
-         if      ( AttIntIdx[v] == PAR_POSX )   PosSendIdx[0] = v;
-         else if ( AttIntIdx[v] == PAR_POSY )   PosSendIdx[1] = v;
-         else if ( AttIntIdx[v] == PAR_POSZ )   PosSendIdx[2] = v;
-      }
-
-#     ifdef DEBUG_PARTICLE
-      for (int d=0; d<3; d++)
-         if ( PosSendIdx[d] == -1 )    Aux_Error( ERROR_INFO, "PosSendIdx[%d] == -1 for PredictPos !!\n", d );
-#     endif
-   }
 
 
 // 1. get the number of particles to be sent

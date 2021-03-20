@@ -712,7 +712,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #              ifdef LOAD_BALANCE
                ParList         = NULL;
                UseInputMassPos = true;
-               InputMassPos    = amr->patch[0][lv][PID]->ParMassPos_Copy;
+               InputMassPos    = amr->patch[0][lv][PID]->ParAtt_Copy;
 #              else
                ParList         = amr->patch[0][lv][PID]->ParList_Copy;
                UseInputMassPos = false;
@@ -728,15 +728,15 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
             {
                if ( UseInputMassPos )
                {
-                  for (int v=0; v<4; v++)
-                  if ( InputMassPos[v] == NULL )
-                  Aux_Error( ERROR_INFO, "InputMassPos[%d] == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
-                             v, NPar, lv, PID );
+                  if ( InputMassPos[PAR_MASS] == NULL  ||  InputMassPos[PAR_POSX] == NULL  ||
+                       InputMassPos[PAR_POSY] == NULL  ||  InputMassPos[PAR_POSZ] == NULL  )
+                     Aux_Error( ERROR_INFO, "InputMassPos[0/1/2/3] == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
+                                NPar, lv, PID );
                }
 
                else if ( ParList == NULL )
-               Aux_Error( ERROR_INFO, "ParList == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
-                          NPar, lv, PID );
+                  Aux_Error( ERROR_INFO, "ParList == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
+                             NPar, lv, PID );
             }
 #           endif // #ifdef DEBUG_PARTICLE
 
@@ -1793,7 +1793,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                      NPar            = amr->patch[0][lv-1][FaSibPID]->NPar_Copy;
                      ParList         = NULL;
                      UseInputMassPos = true;
-                     InputMassPos    = amr->patch[0][lv-1][FaSibPID]->ParMassPos_Copy;
+                     InputMassPos    = amr->patch[0][lv-1][FaSibPID]->ParAtt_Copy;
 #                    else
                      Aux_Error( ERROR_INFO, "FaSibPID (%d) is not a real patch (NReal %d) !!\n",
                                 FaSibPID, amr->NPatchComma[lv-1][1] );
@@ -1809,15 +1809,15 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                   {
                      if ( UseInputMassPos )
                      {
-                        for (int v=0; v<4; v++)
-                        if ( InputMassPos[v] == NULL )
-                        Aux_Error( ERROR_INFO, "InputMassPos[%d] == NULL for NPar (%d) > 0 (lv %d, FaSibPID %d) !!\n",
-                                   v, NPar, lv-1, FaSibPID );
+                        if ( InputMassPos[PAR_MASS] == NULL  ||  InputMassPos[PAR_POSX] == NULL  ||
+                             InputMassPos[PAR_POSY] == NULL  ||  InputMassPos[PAR_POSZ] == NULL  )
+                           Aux_Error( ERROR_INFO, "InputMassPos[0/1/2/3] == NULL for NPar (%d) > 0 (lv %d, FaSibPID %d) !!\n",
+                                      NPar, lv-1, FaSibPID );
                      }
 
                      else if ( ParList == NULL )
-                     Aux_Error( ERROR_INFO, "ParList == NULL for NPar (%d) > 0 (lv %d, FaSibPID %d) !!\n",
-                                NPar, lv-1, FaSibPID );
+                        Aux_Error( ERROR_INFO, "ParList == NULL for NPar (%d) > 0 (lv %d, FaSibPID %d) !!\n",
+                                   NPar, lv-1, FaSibPID );
                   }
 #                 endif // #ifdef DEBUG_PARTICLE
 
