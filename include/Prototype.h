@@ -694,6 +694,13 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 #endif
 
 
+// feedback
+#ifdef FEEDBACK
+void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                   const int SaveSg_Flu, const int SaveSg_Mag );
+#endif
+
+
 // EoS in hydrodynamics
 #if ( MODEL == HYDRO )
 void EoS_Init();

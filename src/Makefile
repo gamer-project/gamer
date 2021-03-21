@@ -143,6 +143,9 @@ SIMU_OPTION += -DSTORE_PAR_ACC
 # --> must turn on STORE_POT_GHOST when STORE_PAR_ACC is adopted
 #SIMU_OPTION += -DSTAR_FORMATION
 
+# feedback from particles to grids
+#SIMU_OPTION += -DFEEDBACK
+
 # number of user-defined particle attributes
 # --> set it to 0 or comment it out if none is required
 SIMU_OPTION += -DPAR_NATT_USER=0
@@ -670,6 +673,15 @@ CPU_FILE    += SF_CreateStar.cpp  SF_CreateStar_AGORA.cpp
 
 vpath %.cpp    StarFormation
 endif # STAR_FORMATION
+
+
+# feedback source files (included only if "FEEDBACK" is turned on)
+# ------------------------------------------------------------------------------------
+ifeq "$(filter -DFEEDBACK, $(SIMU_OPTION))" "-DFEEDBACK"
+CPU_FILE    += FB_AdvanceDt.cpp
+
+vpath %.cpp    Feedback
+endif # FEEDBACK
 
 
 # test problem source files

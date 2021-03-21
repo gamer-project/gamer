@@ -515,7 +515,7 @@ void Aux_Check_Parameter()
                    "COMOVING", "GRAVITY" );
 #  endif
 
-#endif // COMOVING
+#endif // #ifdef COMOVING
 
 
 
@@ -1240,7 +1240,7 @@ void Aux_Check_Parameter()
 #  error : unsupported MODEL !!
 #  endif // MODEL
 
-#endif // GRAVITY
+#endif // #ifdef GRAVITY
 
 
 
@@ -1335,7 +1335,7 @@ void Aux_Check_Parameter()
    }
 
 
-#endif // PARTICLE
+#endif // #ifdef PARTICLE
 
 
 
@@ -1372,7 +1372,7 @@ void Aux_Check_Parameter()
 
    } // if ( MPI_Rank == 0 )
 
-#endif // SUPPORT_GRACKLE
+#endif // #ifdef SUPPORT_GRACKLE
 
 
 
@@ -1438,7 +1438,27 @@ void Aux_Check_Parameter()
 
    } // if ( MPI_Rank == 0 )
 
-#endif // ifdef STAR_FORMATION
+#endif // #ifdef STAR_FORMATION
+
+
+
+// feedback
+// =======================================================================================
+#ifdef FEEDBACK
+
+// errors
+// ------------------------------
+#  ifndef PARTICLE
+#     error : FEEDBACK must work with PARTICLE !!
+#  endif
+
+// warning
+// ------------------------------
+   if ( MPI_Rank == 0 ) {
+
+   } // if ( MPI_Rank == 0 )
+
+#endif // #ifdef FEEDBACK
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_Check_Parameter ... done\n" );

@@ -215,6 +215,11 @@ void Init_Load_Parameter()
 #  endif
 
 
+// feedback
+#  ifdef FEEDBACK
+#  endif
+
+
 // fluid solvers in HYDRO
 #  if ( MODEL == HYDRO )
 #  if ( EOS == EOS_GAMMA )

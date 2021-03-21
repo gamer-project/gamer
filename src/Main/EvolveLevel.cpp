@@ -508,6 +508,28 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       } // if ( SF_CREATE_STAR_SCHEME != SF_CREATE_STAR_SCHEME_NONE )
 #     endif // #ifdef STAR_FORMATION
 
+
+// *********************************
+//    6-4. feedback
+// *********************************
+#     ifdef FEEDBACK
+      const int SaveSg_FBFlu = SaveSg_Flu;   // save in the same Flu/MagSg
+      const int SaveSg_FBMag = SaveSg_Mag;
+
+      if ( true )
+      {
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+            Aux_Message( stdout, "   Lv %2d: FB_AdvanceDt, counter = %8ld ... ", lv, AdvanceCounter[lv] );
+
+//###REVISE: we have assumed that FB_AdvanceDt() requires no ghost zones
+                        FB_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_FBFlu, SaveSg_FBMag );
+//       TIMING_FUNC(   FB_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_FBFlu, SaveSg_FBMag, false, false ),
+//                      Timer_FB_Advance[lv],   TIMER_ON   );
+
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+      }
+#     endif // #ifdef FEEDBACK
+
 // ===============================================================================================
 
 

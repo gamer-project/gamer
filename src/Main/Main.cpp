@@ -258,6 +258,10 @@ int  UserDerField_Num                  = -1;    // must be negative for Output_D
 char (*UserDerField_Label)[MAX_STRING] = NULL;
 char (*UserDerField_Unit )[MAX_STRING] = NULL;
 
+// (2-12) feedback
+#ifdef FEEDBACK
+#endif
+
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
 // =======================================================================================================

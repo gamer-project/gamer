@@ -220,6 +220,7 @@ void Aux_TakeNote()
 
 //    d. options in PARTICLE
 #     ifdef PARTICLE
+
 #     ifdef STORE_PAR_ACC
       fprintf( Note, "STORE_PAR_ACC                   ON\n" );
 #     else
@@ -231,7 +232,14 @@ void Aux_TakeNote()
 #     else
       fprintf( Note, "STAR_FORMATION                  OFF\n" );
 #     endif
+
+#     ifdef FEEDBACK
+      fprintf( Note, "FEEDBACK                        ON\n" );
+#     else
+      fprintf( Note, "FEEDBACK                        OFF\n" );
 #     endif
+
+#     endif // #ifdef PARTICLE
 
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
@@ -883,6 +891,15 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 #     endif // #ifdef STAR_FORMATION
+
+
+//    record the parameters of feedback
+#     ifdef FEEDBACK
+      fprintf( Note, "Parameters of Feedback\n" );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "\n\n");
+#     endif // #ifdef FEEDBACK
 
 
 //    record the parameters of Fluid solver in different models
