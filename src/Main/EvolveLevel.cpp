@@ -475,6 +475,9 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #     endif // #ifdef SUPPORT_GRACKLE
 
 
+// *********************************
+//    6-3. star formation
+// *********************************
 #     ifdef PARTICLE
 //    pass particles to the children patches here if OPT__MINIMIZE_MPI_BARRIER is adopted
 //    --> do this before any star-formation routines so that particles always live in the leaf patches
@@ -491,9 +494,6 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #     endif // #ifdef PARTICLE
 
 
-// *********************************
-//    6-3. star formation
-// *********************************
 #     ifdef STAR_FORMATION
       if ( SF_CREATE_STAR_SCHEME != SF_CREATE_STAR_SCHEME_NONE )
       {
