@@ -561,6 +561,11 @@ struct InputPara_t
    double SF_CreateStar_MaxStarMFrac;
 #  endif
 
+// feedback
+#  ifdef FEEDBACK
+   int   FB_Level;
+#  endif
+
 // initialization
    int    Opt__Init;
    int    RestartLoadNRank;

@@ -1943,6 +1943,11 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "SF_CreateStar_MaxStarMFrac", &RS.SF_CreateStar_MaxStarMFrac, SID, TID, NonFatal, &RT.SF_CreateStar_MaxStarMFrac, 1, NonFatal );
 #  endif
 
+// feedback
+#  ifdef FEEDBACK
+   LoadField( "FB_Level",                &RS.FB_Level,                SID, TID, NonFatal, &RT.FB_Level,                 1, NonFatal );
+#  endif
+
 // initialization
    LoadField( "Opt__Init",               &RS.Opt__Init,               SID, TID, NonFatal, &RT.Opt__Init,                1, NonFatal );
    LoadField( "RestartLoadNRank",        &RS.RestartLoadNRank,        SID, TID, NonFatal, &RT.RestartLoadNRank,         1, NonFatal );
