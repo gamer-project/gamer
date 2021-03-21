@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2434)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2435)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -205,6 +205,7 @@ Procedure for outputting new variables:
 //                2432 : 2021/02/13 --> output OPT__OUTPUT_* of various derived fields
 //                2433 : 2021/02/14 --> output MIN_TEMP
 //                2434 : 2021/03/12 --> output OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, and PassiveIntFrac_VarIdx
+//                2435 : 2021/03/21 --> output FEEDBACK
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1691,7 +1692,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2434;
+   KeyInfo.FormatVersion        = 2435;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -1978,6 +1979,12 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.StarFormation          = 1;
 #  else
    Makefile.StarFormation          = 0;
+#  endif
+
+#  ifdef FEEDBACK
+   Makefile.Feedback               = 1;
+#  else
+   Makefile.Feedback               = 0;
 #  endif
 
    Makefile.Par_NAttUser           = PAR_NATT_USER;
@@ -2807,6 +2814,7 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "StoreParAcc",            HOFFSET(Makefile_t,StoreParAcc            ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "StarFormation",          HOFFSET(Makefile_t,StarFormation          ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "Feedback",               HOFFSET(Makefile_t,Feedback               ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Par_NAttUser",           HOFFSET(Makefile_t,Par_NAttUser           ), H5T_NATIVE_INT );
 #  endif
 

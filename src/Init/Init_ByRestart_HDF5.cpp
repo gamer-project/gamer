@@ -1456,6 +1456,7 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
 #  ifdef PARTICLE
    LoadField( "StoreParAcc",            &RS.StoreParAcc,            SID, TID, NonFatal, &RT.StoreParAcc,            1, NonFatal );
    LoadField( "StarFormation",          &RS.StarFormation,          SID, TID, NonFatal, &RT.StarFormation,          1, NonFatal );
+   LoadField( "Feedback",               &RS.Feedback,               SID, TID, NonFatal, &RT.Feedback,               1, NonFatal );
    if ( FormatVersion >= 2300 )
    LoadField( "Par_NAttUser",           &RS.Par_NAttUser,           SID, TID, NonFatal, &RT.Par_NAttUser,           1,    Fatal );
    else

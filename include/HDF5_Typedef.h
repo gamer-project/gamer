@@ -146,6 +146,7 @@ struct Makefile_t
 #  ifdef PARTICLE
    int StoreParAcc;
    int StarFormation;
+   int Feedback;
    int Par_NAttUser;
 #  endif
 
