@@ -180,6 +180,7 @@ SF_CREATE_STAR_MAX_STAR_MFRAC 0.5         # maximum gas mass fraction allowed to
 
 
 # feedback (FEEDBACK only)
+FB_LEVEL                     -1           # AMR level to apply feedback (must be MAX_LEVEL for now; <0=auto -> MAX_LEVEL) [-1]
 
 
 # fluid solver in HYDRO (MODEL==HYDRO only)

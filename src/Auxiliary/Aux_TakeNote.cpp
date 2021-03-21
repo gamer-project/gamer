@@ -897,6 +897,7 @@ void Aux_TakeNote()
 #     ifdef FEEDBACK
       fprintf( Note, "Parameters of Feedback\n" );
       fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "FB_LEVEL                        %d\n",      FB_LEVEL                );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 #     endif // #ifdef FEEDBACK

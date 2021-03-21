@@ -1452,6 +1452,8 @@ void Aux_Check_Parameter()
 #     error : FEEDBACK must work with PARTICLE !!
 #  endif
 
+   if ( FB_LEVEL != MAX_LEVEL )  Aux_Error( ERROR_INFO, "FB_LEVEL (%d) != MAX_LEVEL (%d) !!\n", FB_LEVEL, MAX_LEVEL );
+
 // warning
 // ------------------------------
    if ( MPI_Rank == 0 ) {
