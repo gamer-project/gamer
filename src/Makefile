@@ -457,7 +457,7 @@ CPU_FILE    += Flag_Real.cpp  Refine.cpp   SiblingSearch.cpp  SiblingSearch_Base
                Flag_User.cpp  Flag_Check.cpp  Flag_Lohner.cpp  Flag_Region.cpp
 
 CPU_FILE    += Table_01.cpp  Table_02.cpp  Table_03.cpp  Table_04.cpp  Table_05.cpp  Table_06.cpp \
-               Table_07.cpp  Table_SiblingSharingSameEdge.cpp
+               Table_07.cpp  Table_SiblingSharingSameEdge.cpp  Table_SiblingPatch.cpp
 
 vpath %.cu     GPU_API
 vpath %.cpp    Main  Init  Refine  Fluid  Interpolation  Tables  Output  Miscellaneous  Auxiliary

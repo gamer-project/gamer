@@ -397,6 +397,8 @@ int TABLE_05( const int SibID );
 int TABLE_06( const int SibID, const int FlagLayer );
 int TABLE_07( const int SibID, const int Count );
 void TABLE_SiblingSharingSameEdge( const int EdgeID, int SibID[], int SibSibID[] );
+void TABLE_GetSibPID_Delta( int NSibPatch[], int *SibPID_Delta[] );
+void TABLE_GetSibPID_Based( const int lv, const int PID0, int SibPID_Based[] );
 
 
 // LoadBalance
