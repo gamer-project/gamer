@@ -17,10 +17,13 @@
 //
 //                   TABLE_GetSibPID_Based( Lv, PID0, SibPID_Based );
 //
-//                   for (int s=0; s<26; s++)
-//                   for (int c=0; c<NSibPatch[s]; c++)
-//                   {
-//                      const int SibPID = SibPID_Based[s] + SibPID_Delta[s][c];
+//                   for (int s=0; s<26; s++) {
+//                      const int SibPID0 = SibPID_Based[s];
+//                      if ( SibPID0 >= 0 ) {
+//                         for (int c=0; c<NSibPatch[s]; c++) {
+//                            const int SibPID = SibPID0 + SibPID_Delta[s][c];
+//                         }
+//                      }
 //                   }
 //
 // Parameter   :  NSibPatch    : Number of sibling patches along different directions
