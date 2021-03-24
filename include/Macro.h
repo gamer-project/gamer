@@ -203,6 +203,10 @@
 #  define FLU_NOUT_S          NCOMP_TOTAL
 
 
+// maximum number of output derived fields
+#  define DER_NOUT_MAX        10
+
+
 // built-in fields in different models
 #if   ( MODEL == HYDRO )
 // field indices of fluid[] --> element of [0 ... NCOMP_FLUID-1]
@@ -465,7 +469,24 @@
 #  define  PAR_TIME           ( PAR_NATT_TOTAL - 1 )
 
 
-// bitwise field indices related to particles
+// bitwise indices of particles
+// particle attributes
+#  define _PAR_MASS           ( 1L << PAR_MASS )
+#  define _PAR_POSX           ( 1L << PAR_POSX )
+#  define _PAR_POSY           ( 1L << PAR_POSY )
+#  define _PAR_POSZ           ( 1L << PAR_POSZ )
+#  define _PAR_VELX           ( 1L << PAR_VELX )
+#  define _PAR_VELY           ( 1L << PAR_VELY )
+#  define _PAR_VELZ           ( 1L << PAR_VELZ )
+# ifdef STORE_PAR_ACC
+#  define _PAR_ACCX           ( 1L << PAR_ACCX )
+#  define _PAR_ACCY           ( 1L << PAR_ACCY )
+#  define _PAR_ACCZ           ( 1L << PAR_ACCZ )
+# endif
+#  define _PAR_TIME           ( 1L << PAR_TIME )
+#  define _PAR_TOTAL          (  ( 1L << PAR_NATT_TOTAL ) - 1L )
+
+// grid fields related to particles
 // --> note that _POTE = ( 1L << (NCOMP_TOTAL+NDERIVE) )
 #  define _PAR_DENS           ( 1L << (NCOMP_TOTAL+NDERIVE+1) )
 
@@ -603,11 +624,13 @@
 #endif // #ifdef GRAVITY
 
 
-
 // number of ghost zones for the source-term solver
 // --> fixed to zero for now since ghost zones in source terms are not supported yet
-#     define SRC_GHOST_SIZE         0
+#        define SRC_GHOST_SIZE      0
 
+
+// number of ghost zones for computing derived fields
+#        define DER_GHOST_SIZE      1
 
 
 // patch size (number of cells of a single patch in the x/y/z directions)
@@ -643,6 +666,7 @@
 #endif
 #  define SRC_NXT       ( PS1 + 2*SRC_GHOST_SIZE )                // use patch as the unit
 #  define SRC_NXT_P1    ( SRC_NXT + 1 )
+#  define DER_NXT       ( PS1 + 2*DER_GHOST_SIZE )                // use patch as the unit
 
 
 // size of auxiliary arrays and EoS tables
@@ -654,6 +678,7 @@
 #ifdef GRAVITY
 #  define EXT_POT_NAUX_MAX       20    // ExtPot_AuxArray[]
 #  define EXT_ACC_NAUX_MAX       20    // ExtAcc_AuxArray[]
+#  define EXT_POT_NGENE_MAX       6    // h/d_ExtPotGenePtr
 #endif
 
 #if ( MODEL == HYDRO )

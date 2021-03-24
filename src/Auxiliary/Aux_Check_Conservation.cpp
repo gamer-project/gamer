@@ -126,10 +126,11 @@ void Aux_Check_Conservation( const char *comment )
 #        if ( MODEL == ELBDM)
          const real MinDens_No = -1.0;
          const real MinPres_No = -1.0;
+         const real MinTemp_No = -1.0;
 
          Prepare_PatchData( lv, Time[lv], Flu_ELBDM[0][0][0][0], NULL, NGhost, NPG, &PID0, _REAL|_IMAG, _NONE,
                             IntScheme, INT_NONE, UNIT_PATCH, NSIDE_06, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
-                            MinDens_No, MinPres_No, DE_Consistency_No );
+                            MinDens_No, MinPres_No, MinTemp_No, DE_Consistency_No );
 #        endif
 
          for (int PID=PID0; PID<PID0+8; PID++)

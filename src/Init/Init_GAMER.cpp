@@ -1,6 +1,7 @@
 #include "GAMER.h"
 
 extern void (*Init_User_Ptr)();
+extern void (*Init_DerivedField_User_Ptr)();
 #ifdef PARTICLE
 extern void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPar_AllRank,
                                         real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
@@ -115,6 +116,17 @@ void Init_GAMER( int *argc, char ***argv )
 
 // initialize the source-term routines --> must be called before memory allocation
    Src_Init();
+
+
+// initialize the user-defined derived fields
+   if ( OPT__OUTPUT_USER_FIELD )
+   {
+      if ( Init_DerivedField_User_Ptr != NULL )
+         Init_DerivedField_User_Ptr();
+
+      else
+         Aux_Error( ERROR_INFO, "Init_DerivedField_User_Ptr == NULL for OPT__OUTPUT_USER_FIELD !!\n" );
+   }
 
 
 // set the GPU parameters

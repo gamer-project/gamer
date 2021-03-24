@@ -97,8 +97,8 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
       TIMING_FUNC(   Prepare_PatchData_InitParticleDensityArray( lv ),
                      Timer_Par_Collect[lv],   Timing   );
 
-      TIMING_FUNC(   Par_CollectParticle2OneLevel( lv, PredictPos, TimeNew, SibBufPatch, FaSibBufPatch,
-                                                   JustCountNPar_No, TimingSendPar_Yes ),
+      TIMING_FUNC(   Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, PredictPos, TimeNew,
+                                                   SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_Yes ),
                      Timer_Par_Collect[lv],   Timing   );
    }
 #  endif // #ifdef PARTICLE
@@ -121,7 +121,8 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
                         Timer_Gra_Advance[lv],   Timing   );
 
          if ( OPT__EXT_POT )
-         TIMING_FUNC(   CPU_ExtPotSolver_BaseLevel( CPUExtPot_Ptr, ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int, h_ExtPotTable,
+         TIMING_FUNC(   CPU_ExtPotSolver_BaseLevel( CPUExtPot_Ptr, ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int,
+                                                    h_ExtPotTable, h_ExtPotGenePtr,
                                                     TimeNew, OPT__SELF_GRAVITY, SaveSg_Pot ),
                         Timer_Gra_Advance[lv],   Timing   );
 

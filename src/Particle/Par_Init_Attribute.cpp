@@ -104,7 +104,7 @@ void Par_Init_Attribute()
 // Return      :  (1) ParAttLabel[]
 //                (2) Index of the newly added attribute
 //-------------------------------------------------------------------------------------------------------
-FieldIdx_t AddParticleAttribute( char *InputLabel )
+FieldIdx_t AddParticleAttribute( const char *InputLabel )
 {
 
    const FieldIdx_t AttIdx = NDefinedAtt ++;
@@ -149,7 +149,7 @@ FieldIdx_t AddParticleAttribute( char *InputLabel )
 // Return      :  Sucess: index of the target attribute
 //                Failed: Idx_Undefined
 //-------------------------------------------------------------------------------------------------------
-FieldIdx_t GetParticleAttributeIndex( char *InputLabel, const Check_t Check )
+FieldIdx_t GetParticleAttributeIndex( const char *InputLabel, const Check_t Check )
 {
 
    FieldIdx_t Idx_Out = Idx_Undefined;

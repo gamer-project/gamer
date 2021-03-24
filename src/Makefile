@@ -390,7 +390,13 @@ HDF5_PATH    := /opt/hdf5/1.8.20
 #GRACKLE_PATH :=
 #GSL_PATH     := /usr/local/gsl-1.16
 
-
+# NASA Pleiades (intel compilers and SGI MPI)
+#CUDA_PATH    := /nasa/cuda/9.0/
+#FFTW_PATH    := /u/jzuhone/opt/fftw-2.1.5
+#MPI_PATH     := /nasa/sgi/mpt/2.14r19
+#HDF5_PATH    := /nasa/hdf5/1.8.18_serial
+#GRACKLE_PATH :=
+#GSL_PATH     :=
 
 
 
@@ -420,7 +426,8 @@ CPU_FILE    += Aux_Check_Parameter.cpp  Aux_Check_Conservation.cpp  Aux_Check.cp
 
 CPU_FILE    += CPU_FluidSolver.cpp  Flu_AdvanceDt.cpp  Flu_Prepare.cpp  Flu_Close.cpp  Flu_FixUp_Flux.cpp \
                Flu_FixUp_Restrict.cpp  Flu_AllocateFluxArray.cpp  Flu_BoundaryCondition_User.cpp  Flu_ResetByUser.cpp \
-               Flu_CorrAfterAllSync.cpp  Flu_ManageFixUpTempArray.cpp
+               Flu_CorrAfterAllSync.cpp  Flu_ManageFixUpTempArray.cpp  Flu_DerivedField_BuiltIn.cpp \
+               Flu_DerivedField_User.cpp
 
 CPU_FILE    += End_GAMER.cpp  End_MemFree.cpp  End_MemFree_Fluid.cpp  End_StopManually.cpp  End_User.cpp \
                Init_BaseLevel.cpp  Init_GAMER.cpp  Init_Load_DumpTable.cpp \
@@ -447,7 +454,7 @@ CPU_FILE    += Flag_Real.cpp  Refine.cpp   SiblingSearch.cpp  SiblingSearch_Base
                Flag_User.cpp  Flag_Check.cpp  Flag_Lohner.cpp  Flag_Region.cpp
 
 CPU_FILE    += Table_01.cpp  Table_02.cpp  Table_03.cpp  Table_04.cpp  Table_05.cpp  Table_06.cpp \
-               Table_07.cpp  Table_SiblingSharingSameEdge.cpp
+               Table_07.cpp  Table_SiblingSharingSameEdge.cpp  Table_SiblingPatch.cpp
 
 vpath %.cu     GPU_API
 vpath %.cpp    Main  Init  Refine  Fluid  Interpolation  Tables  Output  Miscellaneous  Auxiliary

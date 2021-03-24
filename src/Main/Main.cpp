@@ -34,8 +34,8 @@ double               FlagTable_Lohner     [NLEVEL-1][4];
 double              *FlagTable_User       [NLEVEL-1];
 double              *DumpTable = NULL;
 int                  DumpTable_NDump;
-int                  PassiveNorm_NVar;
-int                  PassiveNorm_VarIdx[NCOMP_PASSIVE];
+int                  PassiveNorm_NVar, PassiveNorm_VarIdx[NCOMP_PASSIVE];
+int                  PassiveIntFrac_NVar, PassiveIntFrac_VarIdx[NCOMP_PASSIVE];
 
 int                  MPI_Rank, MPI_Rank_X[3], MPI_SibRank[26], NX0[3], NPatchTotal[NLEVEL];
 int                 *BaseP = NULL;
@@ -63,6 +63,7 @@ bool                 OPT__UM_IC_DOWNGRADE, OPT__UM_IC_REFINE, OPT__TIMING_MPI;
 bool                 OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
 bool                 OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
 bool                 OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
+bool                 OPT__INT_FRAC_PASSIVE_LR;
 
 UM_IC_Format_t       OPT__UM_IC_FORMAT;
 TestProbID_t         TESTPROB_ID;
@@ -87,8 +88,10 @@ Opt1stFluxCorr_t     OPT__1ST_FLUX_CORR;
 OptRSolver1st_t      OPT__1ST_FLUX_CORR_SCHEME;
 bool                 OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP;
 bool                 OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, JEANS_MIN_PRES, OPT__LAST_RESORT_FLOOR;
+bool                 OPT__OUTPUT_DIVVEL, OPT__OUTPUT_MACH, OPT__OUTPUT_PRES, OPT__OUTPUT_CS;
+bool                 OPT__OUTPUT_TEMP;
 int                  OPT__CK_NEGATIVE, JEANS_MIN_PRES_LEVEL, JEANS_MIN_PRES_NCELL;
-double               MIN_DENS, MIN_PRES, MIN_EINT;
+double               MIN_DENS, MIN_PRES, MIN_EINT, MIN_TEMP;
 #ifdef DUAL_ENERGY
 double               DUAL_ENERGY_SWITCH;
 #endif
@@ -96,6 +99,7 @@ double               DUAL_ENERGY_SWITCH;
 double               FlagTable_Current[NLEVEL-1];
 IntScheme_t          OPT__MAG_INT_SCHEME, OPT__REF_MAG_INT_SCHEME;
 bool                 OPT__FIXUP_ELECTRIC, OPT__CK_INTERFACE_B, OPT__OUTPUT_CC_MAG, OPT__FLAG_CURRENT;
+bool                 OPT__OUTPUT_DIVMAG;
 int                  OPT__CK_DIVERGENCE_B;
 double               UNIT_B;
 bool                 OPT__INIT_BFIELD_BYFILE;
@@ -223,11 +227,15 @@ int    EoS_AuxArray_Int[EOS_NAUX_MAX];
 EoS_DE2P_t EoS_DensEint2Pres_CPUPtr = NULL;
 EoS_DP2E_t EoS_DensPres2Eint_CPUPtr = NULL;
 EoS_DP2C_t EoS_DensPres2CSqr_CPUPtr = NULL;
+EoS_DE2T_t EoS_DensEint2Temp_CPUPtr = NULL;
+EoS_DT2P_t EoS_DensTemp2Pres_CPUPtr = NULL;
 EoS_GENE_t EoS_General_CPUPtr       = NULL;
 #ifdef GPU
 EoS_DE2P_t EoS_DensEint2Pres_GPUPtr = NULL;
 EoS_DP2E_t EoS_DensPres2Eint_GPUPtr = NULL;
 EoS_DP2C_t EoS_DensPres2CSqr_GPUPtr = NULL;
+EoS_DE2T_t EoS_DensEint2Temp_GPUPtr = NULL;
+EoS_DT2P_t EoS_DensTemp2Pres_GPUPtr = NULL;
 EoS_GENE_t EoS_General_GPUPtr       = NULL;
 #endif
 
@@ -243,6 +251,12 @@ int        Src_Dlep_AuxArray_Int[SRC_NAUX_DLEP];
 #endif
 double     Src_User_AuxArray_Flt[SRC_NAUX_USER];
 int        Src_User_AuxArray_Int[SRC_NAUX_USER];
+
+// (2-11) user-defined derived fields
+bool OPT__OUTPUT_USER_FIELD;
+int  UserDerField_Num                  = -1;    // must be negative for Output_DumpData_Total_HDF5()
+char (*UserDerField_Label)[MAX_STRING] = NULL;
+char (*UserDerField_Unit )[MAX_STRING] = NULL;
 
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
@@ -285,6 +299,7 @@ char   (*h_DE_Array_G      [2])[PS1][PS1][PS1]                     = { NULL, NUL
 real   (*h_Emag_Array_G    [2])[PS1][PS1][PS1]                     = { NULL, NULL };
 #endif
 real    *h_ExtPotTable                                             = NULL;
+void   **h_ExtPotGenePtr                                           = NULL;
 
 // (3-3) unsplit gravity correction
 #ifdef UNSPLIT_GRAVITY
@@ -370,6 +385,7 @@ char   (*d_DE_Array_G     )[ CUBE(PS1) ]                           = NULL;
 real   (*d_Emag_Array_G   )[ CUBE(PS1) ]                           = NULL;
 #endif
 real    *d_ExtPotTable                                             = NULL;
+void   **d_ExtPotGenePtr                                           = NULL;
 
 // (4-3) unsplit gravity correction
 #ifdef UNSPLIT_GRAVITY
