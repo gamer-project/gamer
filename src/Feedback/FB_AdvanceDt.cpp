@@ -119,7 +119,8 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //       --> allocate the **maximum** required size among all nearby patches of a given patch group **just once**
 //           for better performance
       real *ParAtt_Local[PAR_NATT_TOTAL];
-      int NParMax = -1;
+      int  *ParSortID = NULL;
+      int   NParMax = -1;
 
       for (int t=0; t<NNearbyPatch; t++)
       {
@@ -131,10 +132,14 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
       }
 
       if ( NParMax > 0 )
-      for (int v=0; v<PAR_NATT_TOTAL; v++)
       {
-         if ( ParAttBitIdx & BIDX(v) )    ParAtt_Local[v] = new real [NParMax];
-         else                             ParAtt_Local[v] = NULL;
+         for (int v=0; v<PAR_NATT_TOTAL; v++)
+         {
+            if ( ParAttBitIdx & BIDX(v) )    ParAtt_Local[v] = new real [NParMax];
+            else                             ParAtt_Local[v] = NULL;
+         }
+
+         ParSortID = new int [NParMax];   // it will fail if "long" is actually required for NParMax
       }
 
 
@@ -222,15 +227,10 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
          } // if ( UseParAttCopy ) ... else ...
 
 
-         /*
-// 3-1/2: sort particles by their position to fix the order of mass assignment
-//        --> necessary for achieving bitwise reproducibility
-#  ifdef BITWISE_REPRODUCIBILITY
-   int *Sort_IdxTable = new int [NPar];   // it will fail if "long" is actually required for NPar
-
-   SortParticle( NPar, Pos[0], Pos[1], Pos[2], Sort_IdxTable );
-#  endif
-         */
+//       5-3. sort particles by positions to fix their order
+//            --> necessary when feedback involves random numbers
+//            --> because otherwise the same particle in real and buffer patches may have different random numbers
+         Par_SortByPos( NPar, ParAtt_Ptr[PAR_POSX], ParAtt_Ptr[PAR_POSY], ParAtt_Ptr[PAR_POSZ], ParSortID );
 
       } // for (int t=0; t<NNearbyPatch; t++)
 
@@ -255,6 +255,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 //    free memory
       for (int v=0; v<PAR_NATT_TOTAL; v++)   delete [] ParAtt_Local[v];
+      delete [] ParSortID;
 
    } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
 
