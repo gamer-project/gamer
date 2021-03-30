@@ -178,7 +178,7 @@ void Aux_TakeNote()
 #     ifdef FOUR_VELOCITY
       fprintf( Note, "FOUR_VELOCITY                   ON\n" );
 #     else
-      fprintf( Note, "FOUR_VELOCITY                  OFF\n" );
+      fprintf( Note, "FOUR_VELOCITY                   OFF\n" );
 #     endif
 #     else
       fprintf( Note, "SRHD                            OFF\n" );

@@ -14,10 +14,10 @@ void CartesianRotate( double x[], double theta, double phi, bool inverse );
 static int      Jet_Ambient;             // [0/1/9]: uniform/Milky-Way/load-from-file
 static bool     Jet_Precession;          // flag: precessing jet source
 static bool     Jet_TimeDependentSrc;    // flag: time-dependent fluid variables in source
-static int      Jet_Fire;             // [0/1/2/3]: no jet/jet1/jet2/bipolar jet
+static int      Jet_Fire;                // [0/1/2/3]: no jet/jet1/jet2/bipolar jet
 
 // general parameters
-static double   ParticleMass;       // atomic mass unit in jet source
+static double   ParticleMass;            // atomic mass unit in jet source
 
 // uniform background parameters
 static double   Amb_UniformDens;         // uniform ambient density
@@ -173,7 +173,7 @@ void SetParameter()
 
 // load options
    ReadPara->Add( "Jet_Ambient",             &Jet_Ambient,              1,                       0,              9    );
-   ReadPara->Add( "Jet_Fire",             &Jet_Fire,              3,                       0,              3    );
+   ReadPara->Add( "Jet_Fire",                &Jet_Fire,                 3,                       0,              3    );
    ReadPara->Add( "Jet_Precession",          &Jet_Precession,           false,        Useless_bool,   Useless_bool    );
    ReadPara->Add( "Jet_TimeDependentSrc",    &Jet_TimeDependentSrc,     false,        Useless_bool,   Useless_bool    );
 

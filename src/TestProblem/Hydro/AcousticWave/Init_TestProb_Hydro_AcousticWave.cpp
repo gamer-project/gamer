@@ -125,7 +125,7 @@ void SetParameter()
 // ********************************************************************************************************************************
    ReadPara->Add( "Acoustic_RhoAmp",   &Acoustic_RhoAmp,       -1.0,          Eps_double,       NoMax_double      );
 #  ifdef SRHD
-   ReadPara->Add( "Acoustic_Temp_Bg",  &Acoustic_Temp_Bg,       1.0,          Eps_double,       NoMax_double      );         
+   ReadPara->Add( "Acoustic_Temp_Bg",  &Acoustic_Temp_Bg,       1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "Acoustic_Rho_Bg",   &Acoustic_Rho_Bg,        1.0,          Eps_double,       NoMax_double      );
 #  else
    ReadPara->Add( "Acoustic_Cs",       &Acoustic_Cs,           -1.0,          Eps_double,       NoMax_double      );
