@@ -514,7 +514,7 @@ void CPU_HydroGravitySolver(
          Cons[MOMZ] = g_Flu_Array_New[P][MOMZ][idx_g0];
          Cons[ENGY] = g_Flu_Array_New[P][ENGY][idx_g0];
 
-         SRHydro_CheckUnphysical( Cons, NULL, __FUNCTION__, __LINE__, true );
+         SRHD_CheckUnphysical( Cons, NULL, __FUNCTION__, __LINE__, true );
 #        endif
 #        endif
 

@@ -696,6 +696,10 @@ bool SRHD_CheckUnphysical( const real Con[], const real Pri[], const char Functi
            }
 
          }
+
+#       ifndef __CUDACC__
+        exit(0);
+#       endif
         return true;
       }
 }

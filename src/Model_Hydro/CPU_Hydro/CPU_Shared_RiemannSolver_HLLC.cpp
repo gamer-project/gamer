@@ -95,8 +95,8 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, &rFactor );
 
 #   ifdef CHECK_FAILED_CELL_IN_FLUID
-    Hydro_CheckUnphysical(NULL, PL, Gamma, MinTemp, __FUNCTION__, __LINE__, true);
-    Hydro_CheckUnphysical(NULL, PR, Gamma, MinTemp, __FUNCTION__, __LINE__, true);
+    SRHD_CheckUnphysical(NULL, PL, __FUNCTION__, __LINE__, true);
+    SRHD_CheckUnphysical(NULL, PR, __FUNCTION__, __LINE__, true);
 #   endif
 
 /*  2. Transform 4-velocity to 3-velocity */
@@ -277,7 +277,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
     Usl[4] = FMA( - PL[4], lV1, FMA( L[4], factor0, ps * lmdas ) ) * den;
 
 #   ifdef CHECK_FAILED_CELL_IN_FLUID
-    Hydro_CheckUnphysical(Usl, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true);
+    SRHD_CheckUnphysical(Usl, NULL, __FUNCTION__, __LINE__, true);
 #   endif
 
     /* now calculate Fsr using Mignone Eq 14 */
@@ -305,7 +305,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
     Usr[4] = FMA( - PR[4], rV1, FMA( R[4], factor0, ps * lmdas ) ) * den;
 
 #   ifdef CHECK_FAILED_CELL_IN_FLUID
-    Hydro_CheckUnphysical(Usr, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true);
+    SRHD_CheckUnphysical(Usr, NULL, __FUNCTION__, __LINE__, true);
 #   endif
 
     /* now calculate Fsr using Mignone Eq 14 */
