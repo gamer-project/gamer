@@ -14,21 +14,18 @@
 
 
 # simulation scale
-BOX_SIZE                      100.0        # box size along the longest side
-NX0_TOT_X                     320          # number of base-level cells along x
-NX0_TOT_Y                     160          # number of base-level cells along y
-NX0_TOT_Z                     160          # number of base-level cells along z
-OMP_NTHREAD                     4          # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
-END_T                          -1.0        # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
-END_STEP                       -1          # end step (<0=auto -> must be set by test problems or restart) [-1]
+BOX_SIZE                    100.0         # box size along the longest side
+NX0_TOT_X                   320           # number of base-level cells along x
+NX0_TOT_Y                   160           # number of base-level cells along y
+NX0_TOT_Z                   160           # number of base-level cells along z
+OMP_NTHREAD                   4           # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
+END_T                        -1.0         # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
+END_STEP                     -1           # end step (<0=auto -> must be set by test problems or restart) [-1]
 
 
 # test problems
-TESTPROB_ID                    17         # test problem ID [0]
-                                          # 600: blast wave in sr-hydro
-                                          # 601: Riemann problem in sr-hydro
-                                          # 602: double mach reflection in pure sr-hydro
-                                          # 604: relativistic jets
+TESTPROB_ID                  17           # test problem ID [0]
+                                          # 17: relativistic jets
 
 
 # code units (in cgs)

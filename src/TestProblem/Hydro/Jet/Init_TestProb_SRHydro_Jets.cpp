@@ -50,7 +50,7 @@ static double   CharacteristicSpeed;     // the characteristic speed of the simu
                                          // the default end-time (END_T) will be estimated from
                                          // `CharacteristicSpeed` and `BOX_SIZE`
 
-void Init_ExtPot_MilkyWay(); 
+//void Init_ExtPot_MilkyWay(); 
 
 // =======================================================================================
 /*        G       A       C              */ 
@@ -394,7 +394,7 @@ void SetParameter()
 
    if ( OUTPUT_DT < 0.0 )
    {
-      OUTPUT_DT = END_T / 20.0;
+      OUTPUT_DT = END_T / 30.0;
       PRINT_WARNING( "OUTPUT_DT", OUTPUT_DT, FORMAT_REAL );
    }
 
@@ -884,9 +884,9 @@ void Init_TestProb_Hydro_Jets()
    Output_User_Ptr          = NULL;
    Aux_Record_User_Ptr      = NULL;
    End_User_Ptr             = NULL;
-#  ifdef GRAVITY
-   Init_ExtPot_Ptr          = Init_ExtPot_MilkyWay;
-#  endif
+//#  ifdef GRAVITY
+//   Init_ExtPot_Ptr          = Init_ExtPot_MilkyWay;
+//#  endif
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
