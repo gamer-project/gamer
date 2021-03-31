@@ -86,7 +86,9 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
                          OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, DE_Consistency_No );
 
 
-//    3. collect nearby patches
+
+//    3. collect patch information
+//    3-1. get nearby patches
 //       --> this is not really necessary since currently we use patches instead of patch groups as the basic unit
 //           when calling the feedback routines
 //       --> but it will be necessary if we switch to patch groups in the future
@@ -111,6 +113,13 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
             Nearby_PID_List[ NNearbyPatch ++ ] = SibPID;
          }
       }
+
+
+//    3-2. record the coarse-fine boundaries
+//         --> regard non-periodic boundaries as coarse-fine boundaries too
+      bool CoarseFine[26];
+      for (int s=0; s<26; s++)   CoarseFine[s] = ( SibPID0_List[s] < 0 ) ? true : false;
+
 
 
 //    4. allocate arrays to store the local particle data
@@ -235,7 +244,11 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
       } // for (int t=0; t<NNearbyPatch; t++)
 
 
-//    6. store the updated fluid data
+//    6. invoke feedback routines
+
+
+
+//    7. store the updated fluid data
       for (int LocalID=0; LocalID<8; LocalID++)
       {
          const int PID    = PID0 + LocalID;
