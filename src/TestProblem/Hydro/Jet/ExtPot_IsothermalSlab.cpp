@@ -17,6 +17,7 @@
 extern double IsothermalSlab_Center[3];
 extern double IsothermalSlab_Temperature;
 extern double IsothermalSlab_PeakDens;
+extern double IsothermalSlab_Truncation;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetExtPotAuxArray_IsothermalSlab
@@ -40,6 +41,7 @@ void SetExtPotAuxArray_IsothermalSlab( double AuxArray_Flt[], int AuxArray_Int[]
    AuxArray_Flt[ 4] = IsothermalSlab_PeakDens;           // 
    AuxArray_Flt[ 6] = NEWTON_G;
    AuxArray_Flt[ 7] =  amr->BoxSize[2];
+   AuxArray_Flt[ 8] = IsothermalSlab_Truncation;
 
 } // FUNCTION : SetExtPotAuxArray_IsothermalSlab
 #endif // #ifndef __CUDACC__
@@ -81,17 +83,21 @@ static real ExtPot_IsothermalSlab( const double x, const double y, const double 
    const real   IsothermalSlab_PeakDens           = (real)UserArray_Flt[ 4];   // 
    const real   NewtonG                           =       UserArray_Flt[ 6];
    const real   BoxSize_Z                         =       UserArray_Flt[ 7];    
+   const double dz                                = z - cz;
+   const real   IsothermalSlab_Truncation         = (real)UserArray_Flt[ 8];   // 
 
 
    real stellarDiskPot = sqrt( ( 2.0*M_PI*NewtonG*IsothermalSlab_PeakDens ) / IsothermalSlab_Temperature );
-        stellarDiskPot = 2.0*IsothermalSlab_Temperature*log(cosh(z*stellarDiskPot));
 
 #  ifndef __CUDACC__
    if ( cz != 0.5*BoxSize_Z ) Aux_Error( ERROR_INFO, "We expect the z-position of stellar disk is at box-center!\n"); 
 #  endif
 
-   double centerZ = 0.5*BoxSize_Z;
-   stellarDiskPot = 2.0*IsothermalSlab_Temperature*log(cosh(centerZ*stellarDiskPot));
+   if ( abs(dz) > IsothermalSlab_Truncation )
+     stellarDiskPot = 2.0*IsothermalSlab_Temperature*log(cosh(IsothermalSlab_Truncation*stellarDiskPot));
+   else
+     stellarDiskPot = 2.0*IsothermalSlab_Temperature*log(cosh(dz*stellarDiskPot));
+
 
    return stellarDiskPot;
 

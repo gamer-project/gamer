@@ -685,13 +685,13 @@ bool SRHD_CheckUnphysical( const real Con[], const real Pri[], const char Functi
 
            if ( Con != NULL && Pri == NULL)
            {
-              printf( "D=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n",
+              printf( "D=%20.16e, Mx=%20.16e, My=%20.16e, Mz=%20.16e, E=%20.16e\n",
                                    Con[DENS], Con[MOMX], Con[MOMY], Con[MOMZ], Con[ENGY]);
-              printf( "E^2+2*E*D-|M|^2=%14.7e\n", discriminant );
+              printf( "E^2+2*E*D-|M|^2=%20.16e\n", discriminant );
            }
            else
            {
-              printf( "n=%14.7e, Ux=%14.7e, Uy=%14.7e, Uz=%14.7e, P=%14.7e\n",
+              printf( "n=%20.16e, Ux=%20.16e, Uy=%20.16e, Uz=%20.16e, P=%20.16e\n",
                                    Pri[0], Pri[1], Pri[2], Pri[3], Pri[4]);
            }
 

@@ -28,6 +28,7 @@ static double   Amb_UniformTemp;         // uniform ambient temperature
        double   IsothermalSlab_Center[3];
        double   IsothermalSlab_Temperature;
        double   IsothermalSlab_PeakDens;
+       double   IsothermalSlab_Truncation;
 
 // jet fluid parameters
 static double   Jet_SrcVel;              // jet 4-velocity
@@ -207,6 +208,7 @@ void SetParameter()
    ReadPara->Add( "IsothermalSlab_Center_x",          &IsothermalSlab_Center[0],          -1.0,          NoMin_double,   NoMax_double    );
    ReadPara->Add( "IsothermalSlab_Center_y",          &IsothermalSlab_Center[1],          -1.0,          NoMin_double,   NoMax_double    );
    ReadPara->Add( "IsothermalSlab_Center_z",          &IsothermalSlab_Center[2],          -1.0,          NoMin_double,   NoMax_double    );
+   ReadPara->Add( "IsothermalSlab_Truncation",        &IsothermalSlab_Truncation,         -1.0,          Eps_double,     NoMax_double    );
 
 // load time-dependent source varibles
    ReadPara->Add( "Jet_BurstStartTime",      &Jet_BurstStartTime,      -1.0,          NoMin_double,   NoMax_double    );
@@ -313,13 +315,14 @@ void SetParameter()
      Amb_UniformVel[1]      *= Const_c     / UNIT_V;
      Amb_UniformVel[2]      *= Const_c     / UNIT_V;
    }
-   else if ( Jet_Ambient == 1 )
+   else if ( Jet_Ambient == 2 )
    {
      IsothermalSlab_PeakDens      *= 1.0         / UNIT_D;
      IsothermalSlab_Temperature   *= Const_kB    / (MOLECULAR_WEIGHT*ParticleMass*Const_c*Const_c);
      IsothermalSlab_Center[0]     *= Const_kpc   / UNIT_L;
      IsothermalSlab_Center[1]     *= Const_kpc   / UNIT_L;
      IsothermalSlab_Center[2]     *= Const_kpc   / UNIT_L;
+     IsothermalSlab_Truncation    *= Const_kpc   / UNIT_L;
    }
    
 
@@ -410,13 +413,14 @@ void SetParameter()
      Aux_Message( stdout, "  Amb_UniformVel[z]        = %14.7e c\n",          Amb_UniformVel[2]                               );
      Aux_Message( stdout, "  Jet_UniformNumDens       = %14.7e per cc\n",     Amb_UniformDens*UNIT_D/ParticleMass             );
    }
-   else if ( Jet_Ambient == 1 && MPI_Rank == 0 )
+   else if ( Jet_Ambient == 2 && MPI_Rank == 0 )
    {
      Aux_Message( stdout, "  IsothermalSlab_Temperature        = %14.7e kT/mc**2\n", IsothermalSlab_Temperature                );
      Aux_Message( stdout, "  IsothermalSlab_PeakDens           = %14.7e kT/mc**2\n", IsothermalSlab_PeakDens                   );
      Aux_Message( stdout, "  IsothermalSlab_Center[0]          = %14.7e kpc\n",      IsothermalSlab_Center[0]*UNIT_L/Const_kpc );
      Aux_Message( stdout, "  IsothermalSlab_Center[1]          = %14.7e kpc\n",      IsothermalSlab_Center[1]*UNIT_L/Const_kpc );
      Aux_Message( stdout, "  IsothermalSlab_Center[2]          = %14.7e kpc\n",      IsothermalSlab_Center[2]*UNIT_L/Const_kpc );
+     Aux_Message( stdout, "  IsothermalSlab_Truncation         = %14.7e kpc\n",      IsothermalSlab_Truncation*UNIT_L/Const_kpc );
    }
 
    if ( MPI_Rank == 0 )
