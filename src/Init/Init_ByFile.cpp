@@ -528,15 +528,6 @@ void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nva
 #  endif
 
 
-// normalized fluid variables by UNIT
-   if ( OPT__UNIT )
-   {
-      fluid_out[DENS] = fluid_in[DENS] / UNIT_D;
-      fluid_out[MOMX] = fluid_in[MOMX] / UNIT_V / UNIT_D;
-      fluid_out[MOMY] = fluid_in[MOMY] / UNIT_V / UNIT_D;
-      fluid_out[MOMZ] = fluid_in[MOMZ] / UNIT_V / UNIT_D;
-      fluid_out[ENGY] = fluid_in[ENGY] / UNIT_P;
-   }
 
 // calculate the density field for ELBDM
 #  elif ( MODEL == ELBDM )
