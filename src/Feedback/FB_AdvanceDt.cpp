@@ -47,10 +47,9 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
                                  JustCountNPar_No, TimingSendPar_Yes );
 
 
-// iterate over all real patches
+// get the sibling index differences along different directions
    int NSibPID_Delta[26], *SibPID_Delta[26];
 
-// get the sibling index differences along different directions
    TABLE_GetSibPID_Delta( NSibPID_Delta, SibPID_Delta );
 
 // start of OpenMP parallel region
@@ -64,9 +63,14 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
    real (*fluid_PG)[PS2][PS2][PS2] = new real [NCOMP_TOTAL][PS2][PS2][PS2];
 
 
+// iterate over all real patches
 #  pragma omp for schedule( runtime )
    for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
    {
+      const double PGCenter[3] = { amr->patch[0][lv][PID0+7]->EdgeL[0],
+                                   amr->patch[0][lv][PID0+7]->EdgeL[1],
+                                   amr->patch[0][lv][PID0+7]->EdgeL[2] };
+
 //    2. prepare the fluid data to be updated
 //    --> exclude magnetic field for now
 //    --> use patch group as the basic unit
@@ -241,10 +245,37 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //            --> because otherwise the same particle in real and buffer patches may have different random numbers
          Par_SortByPos( NPar, ParAtt_Ptr[PAR_POSX], ParAtt_Ptr[PAR_POSY], ParAtt_Ptr[PAR_POSZ], ParSortID );
 
+
+
+//       5-4. periodic boundary conditions
+//            --> assuming there are at least TWO patch groups along each spatial direction (i.e., NX0_TOT[*]/PS2>=2)
+//            --> so each particle won't affect the target patch group more than once
+         const bool   Periodic [3] = { OPT__BC_FLU[0] == BC_FLU_PERIODIC,
+                                       OPT__BC_FLU[2] == BC_FLU_PERIODIC,
+                                       OPT__BC_FLU[4] == BC_FLU_PERIODIC };
+         const double HalfBox  [3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
+         const int    ParPosIdx[3] = { PAR_POSX, PAR_POSY, PAR_POSZ };
+
+         if ( Periodic[0]  ||  Periodic[1]  ||  Periodic[2] )
+         for (int p=0; p<NPar; p++)
+         {
+            for (int d=0; d<3; d++)
+            {
+               if ( Periodic[d] )
+               {
+                  real *ParPos = ParAtt_Ptr[ ParPosIdx[d] ] + p;
+                  const double dr = *ParPos - PGCenter[d];
+
+                  if      ( dr > +HalfBox[d] )  *ParPos -= amr->BoxSize[d];
+                  else if ( dr < -HalfBox[d] )  *ParPos += amr->BoxSize[d];
+               }
+            }
+         } // for (int p=0; p<NPar; p++)
+
+
+//       6. invoke feedback routines
+
       } // for (int t=0; t<NNearbyPatch; t++)
-
-
-//    6. invoke feedback routines
 
 
 
