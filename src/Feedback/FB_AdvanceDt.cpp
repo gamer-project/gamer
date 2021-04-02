@@ -53,6 +53,13 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
    Par_CollectParticle2OneLevel( lv, ParAttBitIdx, PredictPos_No, TimeNew, SibBufPatch_Yes, FaSibBufPatch_No,
                                  JustCountNPar_No, TimingSendPar_Yes );
 
+#  ifdef DEBUG_PARTICLE
+   if (  ! ( ParAttBitIdx & _PAR_POSX )  ||
+         ! ( ParAttBitIdx & _PAR_POSY )  ||
+         ! ( ParAttBitIdx & _PAR_POSZ )  )
+      Aux_Error( ERROR_INFO, "ParAttBitIdx must include particle positions !!\n" );
+#  endif
+
 
 // get the sibling index differences along different directions
    int NSibPID_Delta[26], *SibPID_Delta[26];
@@ -134,8 +141,8 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 
 //    4. allocate arrays to store the local particle data
-//       --> **local** means particles in the leaf **real** patches of this MPI rank
-//       --> exclude **buffer** patches since their particle data have been stored in ParAtt_Copy[] already
+//       --> **local** means particles that affect the target patch group
+//       --> include particles in both real and buffer patches
 //       --> allocate the **maximum** required size among all nearby patches of a given patch group **just once**
 //           for better performance
       real *ParAtt_Local[PAR_NATT_TOTAL];
@@ -202,25 +209,27 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
          } // if ( amr->patch[0][lv][PID]->son == -1  &&  PID < amr->NPatchComma[lv][1] ) ... else ...
 
 
-//       5-2. prepare the particle data
+//       5-2. copy the particle data
+//            --> we don't want to modify the input particle data here since different patch groups will be
+//                affected by the same particles when feedback is non-local
+//            --> if we modify the input particle data here, some patch groups may read the **updated** particle data
+//            --> instead, we will store the updated particle data in a temporary particle repository ParAtt_Updated[]
          if ( NPar <= 0 )  continue;   // skip patches without any particle
 
-         real *ParAtt_Ptr[PAR_NATT_TOTAL];
-
 #        ifdef LOAD_BALANCE
-         if ( UseParAttCopy )
-         {
-            for (int v=0; v<PAR_NATT_TOTAL; v++)
-            {
-               ParAtt_Ptr[v] = amr->patch[0][lv][PID]->ParAtt_Copy[v];
+         if ( UseParAttCopy ) {
+            for (int v=0; v<PAR_NATT_TOTAL; v++) {
+               if ( ParAttBitIdx & BIDX(v) ) {
 
-#              ifdef DEBUG_PARTICLE
-               if (  ( ParAttBitIdx & BIDX(v) )  &&  ParAtt_Ptr[v] == NULL )
-                  Aux_Error( ERROR_INFO, "ParAtt_Ptr[%d] == NULL (NPar %d, lv %d, PID %d) !!\n",
-                             v, NPar, lv, PID );
-#              endif
-            }
-         }
+#                 ifdef DEBUG_PARTICLE
+                  if ( amr->patch[0][lv][PID]->ParAtt_Copy[v] == NULL )
+                     Aux_Error( ERROR_INFO, "ParAtt_Copy == NULL for NPar (%d) > 0 (lv %d, PID %d, v %d) !!\n",
+                                NPar, lv, PID, v );
+#                 endif
+
+                  for (int p=0; p<NPar; p++)
+                     ParAtt_Local[v][p] = amr->patch[0][lv][PID]->ParAtt_Copy[v][p];
+        }}}
 
          else
 #        endif // #ifdef LOAD_BALANCE
@@ -231,26 +240,18 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
                           NPar, lv, PID );
 #           endif
 
-            for (int v=0; v<PAR_NATT_TOTAL; v++)
-            {
-               if ( ParAttBitIdx & BIDX(v) )
-               {
-                  for (int p=0; p<NPar; p++)
-                  {
-                     const long ParID = ParList[p];
-                     ParAtt_Local[v][p] = amr->Par->Attribute[v][ParID];
-                  }
-               }
-
-               ParAtt_Ptr[v] = ParAtt_Local[v];
-            }
+            for (int v=0; v<PAR_NATT_TOTAL; v++) {
+               if ( ParAttBitIdx & BIDX(v) ) {
+                  for (int p=0; p<NPar; p++) {
+                     ParAtt_Local[v][p] = amr->Par->Attribute[v][ ParList[p] ];
+            }}}
          } // if ( UseParAttCopy ) ... else ...
 
 
 //       5-3. sort particles by positions to fix their order
 //            --> necessary when feedback involves random numbers
 //            --> because otherwise the same particle in real and buffer patches may have different random numbers
-         Par_SortByPos( NPar, ParAtt_Ptr[PAR_POSX], ParAtt_Ptr[PAR_POSY], ParAtt_Ptr[PAR_POSZ], ParSortID );
+         Par_SortByPos( NPar, ParAtt_Local[PAR_POSX], ParAtt_Local[PAR_POSY], ParAtt_Local[PAR_POSZ], ParSortID );
 
 
 
@@ -270,7 +271,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
             {
                if ( Periodic[d] )
                {
-                  real *ParPos = ParAtt_Ptr[ ParPosIdx[d] ] + p;
+                  real *ParPos = ParAtt_Local[ ParPosIdx[d] ] + p;
                   const double dr = *ParPos - PGCenter[d];
 
                   if      ( dr > +HalfBox[d] )  *ParPos -= amr->BoxSize[d];
@@ -281,7 +282,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 
 //       6. invoke all feedback routines
-         if ( FB_USER )    FB_User_Ptr( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAtt_Ptr, fluid_PG,
+         if ( FB_USER )    FB_User_Ptr( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAtt_Local, fluid_PG,
                                         amr->patch[0][lv][PID0]->EdgeL, amr->dh[lv], CoarseFine );
 
       } // for (int t=0; t<NNearbyPatch; t++)
