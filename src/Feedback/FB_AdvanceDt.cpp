@@ -4,6 +4,13 @@
 
 
 
+// defined in FB_Init.cpp
+extern void (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                            const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
+                            real (*Fluid)[PS2][PS2][PS2], const double EdgeL[], const double dh, bool CoarseFine[] );
+
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  FB_AdvanceDt
@@ -228,7 +235,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
             {
                if ( ParAttBitIdx & BIDX(v) )
                {
-                  for (long p=0; p<NPar; p++)
+                  for (int p=0; p<NPar; p++)
                   {
                      const long ParID = ParList[p];
                      ParAtt_Local[v][p] = amr->Par->Attribute[v][ParID];
@@ -273,7 +280,9 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
          } // for (int p=0; p<NPar; p++)
 
 
-//       6. invoke feedback routines
+//       6. invoke all feedback routines
+         if ( FB_USER )    FB_User_Ptr( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAtt_Ptr, fluid_PG,
+                                        amr->patch[0][lv][PID0]->EdgeL, amr->dh[lv], CoarseFine );
 
       } // for (int t=0; t<NNearbyPatch; t++)
 
