@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2436)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2437)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -207,6 +207,7 @@ Procedure for outputting new variables:
 //                2434 : 2021/03/12 --> output OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, and PassiveIntFrac_VarIdx
 //                2435 : 2021/03/21 --> output FEEDBACK
 //                2436 : 2021/03/21 --> output FB_LEVEL
+//                2437 : 2021/04/02 --> output FB_SNE and FB_USER
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1693,7 +1694,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2436;
+   KeyInfo.FormatVersion        = 2437;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2501,6 +2502,8 @@ void FillIn_InputPara( InputPara_t &InputPara )
 // feedback
 #  ifdef FEEDBACK
    InputPara.FB_Level                = FB_LEVEL;
+   InputPara.FB_SNe                  = FB_SNE;
+   InputPara.FB_User                 = FB_USER;
 #  endif
 
 // initialization
@@ -3311,6 +3314,8 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 // feedback
 #  ifdef FEEDBACK
    H5Tinsert( H5_TypeID, "FB_Level",                HOFFSET(InputPara_t,FB_Level               ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "FB_SNe",                  HOFFSET(InputPara_t,FB_SNe                 ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "FB_User",                 HOFFSET(InputPara_t,FB_User                ), H5T_NATIVE_INT              );
 #  endif
 
 // initialization
