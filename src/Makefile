@@ -678,7 +678,7 @@ endif # STAR_FORMATION
 # feedback source files (included only if "FEEDBACK" is turned on)
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DFEEDBACK, $(SIMU_OPTION))" "-DFEEDBACK"
-CPU_FILE    += FB_AdvanceDt.cpp  FB_Init.cpp  FB_User_Template.cpp
+CPU_FILE    += FB_AdvanceDt.cpp  FB_Init.cpp  FB_End.cpp  FB_User_Template.cpp  FB_SNe.cpp
 
 vpath %.cpp    Feedback  Feedback/User_Template  Feedback/SNe
 endif # FEEDBACK

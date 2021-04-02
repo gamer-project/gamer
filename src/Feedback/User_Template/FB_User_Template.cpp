@@ -26,6 +26,7 @@
 //                   ^        20  11  21
 //                   |        14  04  16     z-1 plane
 //                   --->x    18  10  19
+//                5. Invoked by FB_AdvanceDt()
 //
 // Parameter   :  lv         : Target refinement level
 //                TimeNew    : Target physical time to reach
