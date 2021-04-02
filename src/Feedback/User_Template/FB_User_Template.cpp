@@ -20,11 +20,12 @@ extern void (*FB_End_User_Ptr)();
 // Note        :  1. Input and output fluid and particle data are stored in Fluid[] and ParAtt[], respectively
 //                2. Must use ParSortID[] to access ParAtt[]
 //                   --> ParAtt[PAR_MASS/PAR_POSX/etc][ ParSortID[...] ]
-//                3. To ensure the consistency of random numbers, one must call the random number generator for
-//                   ALL particles, including those too far away to affect the target patch group
-//                4. No need to worry about the periodic boundary condition here
+//                3. Particles may be outside the target region
+//                4. To ensure the consistency of random numbers, one must call the random number generator for
+//                   ALL particles, including those too far away to affect the target region
+//                5. No need to worry about the periodic boundary condition here
 //                   --> Particle positions have been remapped in FB_AdvanceDt()
-//                5. CoarseFine[] records the coarse-fine boundaries along the 26 sibling directions, defined as
+//                6. CoarseFine[] records the coarse-fine boundaries along the 26 sibling directions, defined as
 //                            24  13  25
 //                            15  05  17     z+1 plane
 //                            22  12  23
@@ -36,8 +37,8 @@ extern void (*FB_End_User_Ptr)();
 //                   ^        20  11  21
 //                   |        14  04  16     z-1 plane
 //                   --->x    18  10  19
-//                6. Invoked by FB_AdvanceDt()
-//                7. Linked to FB_User_Ptr in FB_Init_User_Template()
+//                7. Invoked by FB_AdvanceDt()
+//                8. Linked to FB_User_Ptr in FB_Init_User_Template()
 //
 // Parameter   :  lv         : Target refinement level
 //                TimeNew    : Target physical time to reach
