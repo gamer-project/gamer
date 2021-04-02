@@ -4,6 +4,14 @@
 
 
 
+// function pointers to be set by FB_Init_User_Template()
+extern void (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                            const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
+                            real (*Fluid)[PS2][PS2][PS2], const double EdgeL[], const double dh, bool CoarseFine[] );
+extern void (*FB_End_User_Ptr)();
+
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  FB_User_Template
@@ -27,6 +35,7 @@
 //                   |        14  04  16     z-1 plane
 //                   --->x    18  10  19
 //                5. Invoked by FB_AdvanceDt()
+//                6. Linked to FB_User_Ptr in FB_Init_User_Template()
 //
 // Parameter   :  lv         : Target refinement level
 //                TimeNew    : Target physical time to reach
@@ -67,5 +76,45 @@ void FB_User_Template( const int lv, const double TimeNew, const double TimeOld,
 
 
 
-#endif // #ifdef FEEDBACK
+//-------------------------------------------------------------------------------------------------------
+// Function    :  FB_End_User_Template
+// Description :  Free the resources used by the user-specified feedback
+//
+// Note        :  1. Invoked by FB_End()
+//                2. Linked to FB_End_User_Ptr in FB_Init_User_Template()
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void FB_End_User_Template()
+{
 
+
+} // FUNCTION : FB_End_User_Template
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  FB_Init_User_Template
+// Description :  Initialize the user-specified feedback
+//
+// Note        :  1. Invoked by FB_Init()
+//                   --> Enable it by linking to the function pointer "FB_Init_User_Ptr"
+//                2. Set FB_User_Ptr and FB_End_User_Ptr
+//
+// Parameter   :  None
+//
+// Return      :  FB_User_Ptr and FB_End_User_Ptr
+//-------------------------------------------------------------------------------------------------------
+void FB_Init_User_Template()
+{
+
+   FB_User_Ptr     = FB_User_Template;
+   FB_End_User_Ptr = FB_End_User_Template;
+
+} // FUNCTION : FB_Init_User_Template
+
+
+
+#endif // #ifdef FEEDBACK
