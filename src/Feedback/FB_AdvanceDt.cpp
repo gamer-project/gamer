@@ -7,7 +7,10 @@
 // user-specified feedback to be set by a test problem initializer
 void (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
                      const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-                     real (*Fluid)[PS2][PS2][PS2], const double EdgeL[], const double dh, bool CoarseFine[] ) = NULL;
+                     real (*Fluid)[PS2][PS2][PS2], const double EdgeL[], const double dh, bool CoarseFine[],
+                     const int TID, const RandomNumber_t *RNG ) = NULL;
+
+extern RandomNumber_t *FB_RNG;
 
 
 
@@ -97,6 +100,12 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
    const int NNearbyPatchMax = 64;  // maximum number of neaby patches of a patch group (including 8 local patches)
    int Nearby_PID_List[NNearbyPatchMax], NNearbyPatch, SibPID0_List[26];
 
+#  ifdef OPENMP
+   const int TID = omp_get_thread_num();
+#  else
+   const int TID = 0;
+#  endif
+
    real (*fluid_PG)[PS2][PS2][PS2] = new real [NCOMP_TOTAL][PS2][PS2][PS2];
 
 
@@ -107,6 +116,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
       const double PGCenter[3] = { amr->patch[0][lv][PID0+7]->EdgeL[0],
                                    amr->patch[0][lv][PID0+7]->EdgeL[1],
                                    amr->patch[0][lv][PID0+7]->EdgeL[2] };
+
 
 //    3. prepare the fluid data to be updated
 //    --> exclude magnetic field for now
@@ -197,6 +207,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
       for (int t=0; t<NNearbyPatch; t++)
       {
          const int PID = Nearby_PID_List[t];
+
 
 //       6. prepare the input particle data
 //       6-1. get the particle list of the target patch
@@ -305,9 +316,19 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 
 
-//       7. invoke all feedback routines
+//       7. feedback
+//       7-1. set the random seed
+//            --> to get deterministic and different random numbers for all patch groups, reset the random seed of
+//                each patch group according to its location and counter
+//            --> factor 1e8 at the end is just to make random seeds at different times more different
+         const long RSeed = FB_RSEED + amr->patch[0][lv][PID0]->LB_Idx + AdvanceCounter[lv]*100000000L;
+         FB_RNG->SetSeed( TID, RSeed );
+
+
+//       7-2. invoke all feedback routines
          if ( FB_USER )    FB_User_Ptr( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAtt_Local, fluid_PG,
-                                        amr->patch[0][lv][PID0]->EdgeL, amr->dh[lv], CoarseFine );
+                                        amr->patch[0][lv][PID0]->EdgeL, amr->dh[lv], CoarseFine,
+                                        TID, FB_RNG );
 
 
 

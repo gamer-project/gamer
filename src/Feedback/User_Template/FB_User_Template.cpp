@@ -7,7 +7,8 @@
 // function pointers to be set by FB_Init_User_Template()
 extern void (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
                             const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-                            real (*Fluid)[PS2][PS2][PS2], const double EdgeL[], const double dh, bool CoarseFine[] );
+                            real (*Fluid)[PS2][PS2][PS2], const double EdgeL[], const double dh, bool CoarseFine[],
+                            const int TID, const RandomNumber_t *RNG );
 extern void (*FB_End_User_Ptr)();
 
 
@@ -54,12 +55,17 @@ extern void (*FB_End_User_Ptr)();
 //                             --> Right edge is given by EdgeL[]+PS2*dh
 //                dh         : Cell size of Fluid[]
 //                CoarseFine : Coarse-fine boundaries along the 26 sibling directions
+//                TID        : Thread ID
+//                RNG        : Random number generator
+//                             --> Random number can be obtained by "RNG->GetValue( TID, Min, Max )",
+//                                 where Min/Max specify the range of random numbers
 //
 // Return      :  Fluid, ParAtt
 //-------------------------------------------------------------------------------------------------------
 void FB_User_Template( const int lv, const double TimeNew, const double TimeOld, const double dt,
                        const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-                       real (*Fluid)[PS2][PS2][PS2], const double EdgeL[], const double dh, bool CoarseFine[] )
+                       real (*Fluid)[PS2][PS2][PS2], const double EdgeL[], const double dh, bool CoarseFine[],
+                       const int TID, const RandomNumber_t *RNG )
 {
 
 // check
