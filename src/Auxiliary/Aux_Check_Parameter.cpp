@@ -1454,6 +1454,14 @@ void Aux_Check_Parameter()
 
    if ( FB_LEVEL != MAX_LEVEL )  Aux_Error( ERROR_INFO, "FB_LEVEL (%d) != MAX_LEVEL (%d) !!\n", FB_LEVEL, MAX_LEVEL );
 
+   for (int d=0; d<3; d++)
+   {
+//    we have assumed that OPT__BC_FLU[2*d] == OPT__BC_FLU[2*d+1] when adopting the periodic BC
+      if ( OPT__BC_FLU[2*d] == BC_FLU_PERIODIC  &&  NX0_TOT[d]/PS2 == 1 )
+         Aux_Error( ERROR_INFO, "\"%s\" does NOT work for NX0_TOT[%d] = 2*PATCH_SIZE when periodic BC is adopted !!\n",
+                    "FB_AdvanceDt()", d );
+   }
+
 // warning
 // ------------------------------
    if ( MPI_Rank == 0 ) {
