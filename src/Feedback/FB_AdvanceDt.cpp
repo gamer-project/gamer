@@ -267,7 +267,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
                if ( ParAttBitIdx_In & BIDX(v) ) {
 
 #                 ifdef DEBUG_PARTICLE
-                  if ( amr->patch[0][lv][PID]->ParAtt_Copy[v] == NULL )
+                  if ( NPar > 0  &&  amr->patch[0][lv][PID]->ParAtt_Copy[v] == NULL )
                      Aux_Error( ERROR_INFO, "ParAtt_Copy == NULL for NPar (%d) > 0 (lv %d, PID %d, v %d) !!\n",
                                 NPar, lv, PID, v );
 #                 endif
@@ -280,7 +280,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 #        endif // #ifdef LOAD_BALANCE
          {
 #           ifdef DEBUG_PARTICLE
-            if ( ParList == NULL )
+            if ( NPar > 0  &&  ParList == NULL )
                Aux_Error( ERROR_INFO, "ParList == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
                           NPar, lv, PID );
 #           endif
