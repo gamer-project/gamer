@@ -5,7 +5,7 @@
 
 
 // prototypes of built-in feedbacks
-void FB_End_SNE();
+void FB_End_SNe();
 
 
 // user-specified feedback to be set by a test problem initializer
@@ -37,6 +37,8 @@ void FB_End()
 
 
 // call the ending routines of different feedbacks
+   if ( FB_SNE )                                FB_End_SNe();
+
    if ( FB_USER  &&  FB_End_User_Ptr != NULL )  FB_End_User_Ptr();
 
 

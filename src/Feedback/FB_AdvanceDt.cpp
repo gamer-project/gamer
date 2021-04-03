@@ -4,12 +4,21 @@
 
 
 
+// prototypes of built-in feedbacks
+void FB_SNe( const int lv, const double TimeNew, const double TimeOld, const double dt,
+             const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
+             real (*Fluid)[PS2][PS2][PS2], const double EdgeL[], const double dh, bool CoarseFine[],
+             const int TID, const RandomNumber_t *RNG );
+
+
 // user-specified feedback to be set by a test problem initializer
 void (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
                      const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
                      real (*Fluid)[PS2][PS2][PS2], const double EdgeL[], const double dh, bool CoarseFine[],
                      const int TID, const RandomNumber_t *RNG ) = NULL;
 
+
+// random number generators
 extern RandomNumber_t *FB_RNG;
 
 
@@ -324,6 +333,9 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 
 //       7-2. invoke all feedback routines
+         if ( FB_SNE  )    FB_SNe     ( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAtt_Local, fluid_PG,
+                                        amr->patch[0][lv][PID0]->EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
+
          if ( FB_USER )    FB_User_Ptr( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAtt_Local, fluid_PG,
                                         amr->patch[0][lv][PID0]->EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
 

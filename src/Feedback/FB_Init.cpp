@@ -5,7 +5,7 @@
 
 
 // prototypes of built-in feedbacks
-void FB_Init_SNE();
+void FB_Init_SNe();
 
 
 // user-specified feedback to be set by a test problem initializer
@@ -43,6 +43,8 @@ void FB_Init()
 
 
 // call the initialization routines of different feedbacks
+   if ( FB_SNE)   FB_Init_SNe();
+
    if ( FB_USER )
    {
       if ( FB_Init_User_Ptr != NULL )  FB_Init_User_Ptr();
