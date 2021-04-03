@@ -564,6 +564,7 @@ struct InputPara_t
 // feedback
 #  ifdef FEEDBACK
    int   FB_Level;
+   int   FB_RSeed;
    int   FB_SNe;
    int   FB_User;
 #  endif
