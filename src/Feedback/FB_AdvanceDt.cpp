@@ -98,16 +98,15 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 #  pragma omp parallel
    {
 
-// per-thread variables
-   const int NNearbyPatchMax = 64;  // maximum number of neaby patches of a patch group (including 8 local patches)
-   int Nearby_PID_List[NNearbyPatchMax], NNearbyPatch, SibPID0_List[26];
-
+// thread ID
 #  ifdef OPENMP
    const int TID = omp_get_thread_num();
 #  else
    const int TID = 0;
 #  endif
 
+
+// array to store the input and output fluid data
    real (*fluid_PG)[PS2][PS2][PS2] = new real [NCOMP_TOTAL][PS2][PS2][PS2];
 
 
@@ -143,10 +142,10 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 
 //    4. collect patch information
+      const int NNearbyPatchMax = 64;  // maximum number of neaby patches of a patch group (including 8 local patches)
+      int Nearby_PID_List[NNearbyPatchMax], NNearbyPatch, SibPID0_List[26];
+
 //    4-1. get nearby patches
-//       --> this is not really necessary since currently we use patches instead of patch groups as the basic unit
-//           when calling the feedback routines
-//       --> but it will be necessary if we switch to patch groups in the future
       NNearbyPatch = 0;
 
 //    local patches
@@ -184,7 +183,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //           for better performance
       real *ParAtt_Local[PAR_NATT_TOTAL];
       int  *ParSortID = NULL;
-      int   NParMax = -1;
+      int   NParMax   = -1;
 
       for (int t=0; t<NNearbyPatch; t++)
       {
@@ -207,7 +206,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
       }
 
 
-//    iterate over all nearby patches to apply feedback
+//    iterate over all nearby patches of the target patch group to apply feedback
       for (int t=0; t<NNearbyPatch; t++)
       {
          const int PID = Nearby_PID_List[t];
@@ -248,12 +247,11 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 
 //       6-2. copy the particle data
-//            --> we don't want to modify the input particle data here since different patch groups will be
-//                affected by the same particles when feedback is non-local
+//            --> we don't want to modify the input particle data during the iteration of different patch groups
+//                since different patch groups will be affected by the same particles when feedback is non-local
 //            --> if we modify the input particle data here, some patch groups may read the **updated** particle data
-//            --> instead, we will store the updated particle data in a temporary particle repository ParAtt_Updated[]
-         if ( NPar <= 0 )  continue;   // skip patches without any particle
-
+//            --> to solve this problem, we will store the updated particle data in a temporary particle repository
+//                ParAtt_Updated[]
 #        ifdef LOAD_BALANCE
          if ( UseParAttCopy ) {
             for (int v=0; v<PAR_NATT_TOTAL; v++) {
@@ -267,7 +265,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
                   for (int p=0; p<NPar; p++)
                      ParAtt_Local[v][p] = amr->patch[0][lv][PID]->ParAtt_Copy[v][p];
-        }}}
+         }}}
 
          else
 #        endif // #ifdef LOAD_BALANCE
@@ -279,75 +277,69 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 #           endif
 
             for (int v=0; v<PAR_NATT_TOTAL; v++) {
-               if ( ParAttBitIdx_In & BIDX(v) ) {
-                  for (int p=0; p<NPar; p++) {
+               if ( ParAttBitIdx_In & BIDX(v) )
+                  for (int p=0; p<NPar; p++)
                      ParAtt_Local[v][p] = amr->Par->Attribute[v][ ParList[p] ];
-            }}}
+            }
          } // if ( UseParAttCopy ) ... else ...
 
 
 //       6-3. sort particles by positions to fix their order
 //            --> necessary when feedback involves random numbers
-//            --> because otherwise the same particle in real and buffer patches may have different random numbers
+//            --> otherwise, the same particles accessed by different patches may have different random numbers
          Par_SortByPos( NPar, ParAtt_Local[PAR_POSX], ParAtt_Local[PAR_POSY], ParAtt_Local[PAR_POSZ], ParSortID );
 
 
 
 //       6-4. periodic boundary conditions
 //            --> assuming there are at least TWO patch groups along each spatial direction (i.e., NX0_TOT[*]/PS2>=2)
-//            --> so each particle won't affect the target patch group more than once
+//            --> so each particle won't affect the same patch group more than once
          const bool   Periodic [3] = { OPT__BC_FLU[0] == BC_FLU_PERIODIC,
                                        OPT__BC_FLU[2] == BC_FLU_PERIODIC,
                                        OPT__BC_FLU[4] == BC_FLU_PERIODIC };
          const double HalfBox  [3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
          const int    ParPosIdx[3] = { PAR_POSX, PAR_POSY, PAR_POSZ };
 
-         if ( Periodic[0]  ||  Periodic[1]  ||  Periodic[2] )
-         for (int p=0; p<NPar; p++)
-         {
-            for (int d=0; d<3; d++)
-            {
-               if ( Periodic[d] )
-               {
+         for (int d=0; d<3; d++) {
+            if ( Periodic[d] ) {
+               for (int p=0; p<NPar; p++) {
+
                   real *ParPos = ParAtt_Local[ ParPosIdx[d] ] + p;
                   const double dr = *ParPos - PGCenter[d];
 
                   if      ( dr > +HalfBox[d] )  *ParPos -= amr->BoxSize[d];
                   else if ( dr < -HalfBox[d] )  *ParPos += amr->BoxSize[d];
                }
-            }
-         } // for (int p=0; p<NPar; p++)
+         }} // for d, if ( Periodic[d] )
 
 
 
 //       7. feedback
 //       7-1. set the random seed
-//            --> to get deterministic and different random numbers for all patch groups, reset the random seed of
-//                each patch group according to its location and counter
+//            --> to get deterministic and different random numbers for all patches, reset the random seed of
+//                each patch according to its location and counter
 //            --> factor 1e8 at the end is just to make random seeds at different times more different
-         const long RSeed = FB_RSEED + amr->patch[0][lv][PID0]->LB_Idx + AdvanceCounter[lv]*100000000L;
+         const long RSeed = FB_RSEED + amr->patch[0][lv][PID]->LB_Idx + AdvanceCounter[lv]*100000000L;
          FB_RNG->SetSeed( TID, RSeed );
 
 
 //       7-2. invoke all feedback routines
          if ( FB_USER )    FB_User_Ptr( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAtt_Local, fluid_PG,
-                                        amr->patch[0][lv][PID0]->EdgeL, amr->dh[lv], CoarseFine,
-                                        TID, FB_RNG );
+                                        amr->patch[0][lv][PID0]->EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
 
 
 
-//       8. store the updated particle data to a temporary particle repository ParAtt_Updated[]
+//       8. store the updated particle data in ParAtt_Updated[]
 //          --> only for particles in the central 8 patches
-//              --> particles in the sibling patches will be updated when applying feedback to these patches
+//              --> particles in the sibling patches will be updated and stored when applying feedback to these patches
 //              --> avoid duplicate updates
 //          --> different OpenMP threads work on different patch groups and thus won't update the same particles
-         if ( ! UseParAttCopy ) {
+         if ( t < 8  &&  amr->patch[0][lv][PID]->son == -1 ) {
             for (int v=0; v<PAR_NATT_TOTAL; v++)
                if ( ParAttBitIdx_Out & BIDX(v) )
                   for (int p=0; p<NPar; p++)
                      ParAtt_Updated[v][ ParList[p] ] = ParAtt_Local[v][p];
          }
-
       } // for (int t=0; t<NNearbyPatch; t++)
 
 
