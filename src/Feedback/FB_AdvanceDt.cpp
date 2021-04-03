@@ -68,6 +68,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 // 2. allocate a temporary particle repository to store the updated particle data
 //    --> no need to initialize it (except for particle mass in order to include inactive particles)
 //###OPTIMIZATION: only store the attributes being updated
+//###OPTIMIZATION: only count particles on FB_LEVEL
    const long ParAttBitIdx_Out = _PAR_TOTAL;
    real *ParAtt_Updated[PAR_NATT_TOTAL];
 
@@ -91,6 +92,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
    int NSibPID_Delta[26], *SibPID_Delta[26];
 
    TABLE_GetSibPID_Delta( NSibPID_Delta, SibPID_Delta );
+
 
 // start of OpenMP parallel region
 #  pragma omp parallel
@@ -131,8 +133,10 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
       const real MinPres_No          = -1.0;
       const real MinTemp_No          = -1.0;
       const bool DE_Consistency_No   = false;
+//###OPTIMIZATION: only prepare the necessary fluid fields
+      const long FluidBitIdx         = _TOTAL;
 
-      Prepare_PatchData( lv, TimeNew, fluid_PG[0][0][0], NULL, GhostZone_No, NPG, &PID0, _TOTAL, _NONE,
+      Prepare_PatchData( lv, TimeNew, fluid_PG[0][0][0], NULL, GhostZone_No, NPG, &PID0, FluidBitIdx, _NONE,
                          OPT__FLU_INT_SCHEME, OPT__MAG_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
                          OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, DE_Consistency_No );
 
@@ -334,8 +338,9 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 //       8. store the updated particle data to a temporary particle repository ParAtt_Updated[]
 //          --> only for particles in the central 8 patches
-//          --> particles in the sibling patches will be updated when applying feedback to these patches
-//          --> avoid duplicate updates
+//              --> particles in the sibling patches will be updated when applying feedback to these patches
+//              --> avoid duplicate updates
+//          --> different OpenMP threads work on different patch groups and thus won't update the same particles
          if ( ! UseParAttCopy ) {
             for (int v=0; v<PAR_NATT_TOTAL; v++)
                if ( ParAttBitIdx_Out & BIDX(v) )
@@ -348,6 +353,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 
 //    9. store the updated fluid data
+//       --> different OpenMP threads work on different patch groups and thus won't update the same fluid data
       for (int LocalID=0; LocalID<8; LocalID++)
       {
          const int PID    = PID0 + LocalID;
@@ -356,14 +362,18 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
          const int Disp_k = TABLE_02( LocalID, 'z', 0, PS1 );
 
          for (int v=0; v<NCOMP_TOTAL; v++)   {
-         for (int k_o=0; k_o<PS1; k_o++)     {  const int k_i = Disp_k + k_o;
-         for (int j_o=0; j_o<PS1; j_o++)     {  const int j_i = Disp_j + j_o;
-         for (int i_o=0; i_o<PS1; i_o++)     {  const int i_i = Disp_i + i_o;
 
-            amr->patch[SaveSg_Flu][lv][PID]->fluid[v][k_o][j_o][i_o] = fluid_PG[v][k_i][j_i][i_i];
+            if ( FluidBitIdx & BIDX(v) )
+            for (int k_o=0; k_o<PS1; k_o++)  {  const int k_i = Disp_k + k_o;
+            for (int j_o=0; j_o<PS1; j_o++)  {  const int j_i = Disp_j + j_o;
+            for (int i_o=0; i_o<PS1; i_o++)  {  const int i_i = Disp_i + i_o;
 
-         }}}}
+               amr->patch[SaveSg_Flu][lv][PID]->fluid[v][k_o][j_o][i_o] = fluid_PG[v][k_i][j_i][i_i];
+
+            }}}
+         }
       } // for (int LocalID=0; LocalID<8; LocalID++)
+
 
 //    free memory
       for (int v=0; v<PAR_NATT_TOTAL; v++)   delete [] ParAtt_Local[v];
