@@ -75,7 +75,10 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 
 // 2. allocate a temporary particle repository to store the updated particle data
-//    --> no need to initialize it (except for particle mass in order to include inactive particles)
+//    --> must initialize it since we will replace amr->Par->Attribute[] by ParAtt_Updated[]
+//        at the end of this routine
+//        --> otherwise, the data of particles skipped by this routine (e.g., those not on FB_LEVEL) will be incorrect
+//        --> also to retain the information of inactive particles
 //###OPTIMIZATION: only store the attributes being updated
 //###OPTIMIZATION: only count particles on FB_LEVEL
    real *ParAtt_Updated[PAR_NATT_TOTAL];
@@ -88,17 +91,12 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 #  endif
 
    for (int v=0; v<PAR_NATT_TOTAL; v++) {
-      if ( ParAttBitIdx_Out & BIDX(v) )   ParAtt_Updated[v] = new real [ amr->Par->ParListSize ];
-      else                                ParAtt_Updated[v] = NULL;
-   }
-
-// record the inactive particles
-// --> necessary because we will replace amr->Par->Attribute[PAR_MASS] by ParAtt_Updated[PAR_MASS]
-//     at the end of this function
-   if ( ParAttBitIdx_Out & _PAR_MASS ) {
-      for (long p=0; p<amr->Par->ParListSize; p++)
-         if ( amr->Par->Attribute[PAR_MASS][p] < 0.0 )
-            ParAtt_Updated[PAR_MASS][p] = amr->Par->Attribute[PAR_MASS][p];
+      if ( ParAttBitIdx_Out & BIDX(v) ) {
+         ParAtt_Updated[v] = new real [ amr->Par->ParListSize ];
+         memcpy( ParAtt_Updated[v], amr->Par->Attribute[v], amr->Par->ParListSize*sizeof(real) );
+      }
+      else
+         ParAtt_Updated[v] = NULL;
    }
 
 
