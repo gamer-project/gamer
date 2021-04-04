@@ -78,8 +78,14 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //    --> no need to initialize it (except for particle mass in order to include inactive particles)
 //###OPTIMIZATION: only store the attributes being updated
 //###OPTIMIZATION: only count particles on FB_LEVEL
-   const long ParAttBitIdx_Out = _PAR_TOTAL;
    real *ParAtt_Updated[PAR_NATT_TOTAL];
+   long  ParAttBitIdx_Out = _PAR_TOTAL;;
+
+// do not update particle positions and accelerations
+   ParAttBitIdx_Out &= ~( _PAR_POSX | _PAR_POSY | _PAR_POSZ );
+#  ifdef STORE_PAR_ACC
+   ParAttBitIdx_Out &= ~( _PAR_ACCX | _PAR_ACCY | _PAR_ACCZ );
+#  endif
 
    for (int v=0; v<PAR_NATT_TOTAL; v++) {
       if ( ParAttBitIdx_Out & BIDX(v) )   ParAtt_Updated[v] = new real [ amr->Par->ParListSize ];
