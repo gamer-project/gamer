@@ -251,10 +251,10 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
          ParAtt_Copy = amr->patch[0][lv][PID]->ParAtt_Copy;
 
 #        ifdef DEBUG_PARTICLE
-         for (int v=0; v<PAR_NATT_TOTAL; v++)
-            if ( ParAtt_Copy[v] == NULL )
+         for (int v=0; v<NAtt; v++)
+            if ( ParAtt_Copy[ AttIntIdx[v] ] == NULL )
                Aux_Error( ERROR_INFO, "ParAtt_Copy[%d] == NULL for NParThisPatch (%d) > 0 (lv %d, PID %d) !!\n",
-                          v, NParThisPatch, lv, PID );
+                          AttIntIdx[v], NParThisPatch, lv, PID );
 #        endif
 
          for (int p=0; p<NParThisPatch; p++)
