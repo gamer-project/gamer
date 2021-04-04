@@ -30,6 +30,7 @@
 //                   |        14  04  16     z-1 plane
 //                   --->x    18  10  19
 //                7. Invoked by FB_AdvanceDt()
+//                8. Must NOT change particle positions
 //
 // Parameter   :  lv         : Target refinement level
 //                TimeNew    : Target physical time to reach

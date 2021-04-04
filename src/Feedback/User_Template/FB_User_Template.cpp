@@ -39,7 +39,8 @@ extern void (*FB_End_User_Ptr)();
 //                   |        14  04  16     z-1 plane
 //                   --->x    18  10  19
 //                7. Invoked by FB_AdvanceDt()
-//                8. Linked to FB_User_Ptr in FB_Init_User_Template()
+//                8. Must NOT change particle positions
+//                9. Linked to FB_User_Ptr in FB_Init_User_Template()
 //
 // Parameter   :  lv         : Target refinement level
 //                TimeNew    : Target physical time to reach
@@ -85,7 +86,10 @@ void FB_User_Template( const int lv, const double TimeNew, const double TimeOld,
 
    for (int t=0; t<NPar; t++)
    {
-      const int p = ParSortID[t];
+      const int  p = ParSortID[t];
+      const real x = ParAtt[PAR_POSX][p];
+      const real y = ParAtt[PAR_POSY][p];
+      const real z = ParAtt[PAR_POSZ][p];
 
       RNG->GetValue( TID, RMin, RMax );
    }
