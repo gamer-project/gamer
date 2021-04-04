@@ -49,6 +49,10 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
    if ( lv != FB_LEVEL )   return;
 
 
+// nothing to do if all feedback options are disabled
+   if ( ! FB_Any )   return;
+
+
 // 1. collect particles for the sibling buffer patches
 //    --> exclude father-sibling buffer patches (FaSibBufPatch_No) since currently we assume FB_LEVEL == MAX_LEVEL
 //    --> for simplicity, we disable particle postition prediction (PredictPos_No) currently even though particles

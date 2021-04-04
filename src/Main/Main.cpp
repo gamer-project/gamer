@@ -262,6 +262,7 @@ char (*UserDerField_Unit )[MAX_STRING] = NULL;
 #ifdef FEEDBACK
 int  FB_LEVEL, FB_RSEED;
 bool FB_SNE, FB_USER;
+bool FB_Any;
 #endif
 
 
