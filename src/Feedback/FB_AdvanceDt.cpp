@@ -8,14 +8,14 @@
 void FB_SNe( const int lv, const double TimeNew, const double TimeOld, const double dt,
              const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
              real (*Fluid)[PS2][PS2][PS2], const double EdgeL[], const double dh, bool CoarseFine[],
-             const int TID, const RandomNumber_t *RNG );
+             const int TID, RandomNumber_t *RNG );
 
 
 // user-specified feedback to be set by a test problem initializer
 void (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
                      const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
                      real (*Fluid)[PS2][PS2][PS2], const double EdgeL[], const double dh, bool CoarseFine[],
-                     const int TID, const RandomNumber_t *RNG ) = NULL;
+                     const int TID, RandomNumber_t *RNG ) = NULL;
 
 
 // random number generators
@@ -327,8 +327,8 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //       7-1. set the random seed
 //            --> to get deterministic and different random numbers for all patches, reset the random seed of
 //                each patch according to its location and counter
-//            --> factor 1e8 at the end is just to make random seeds at different times more different
-         const long RSeed = FB_RSEED + amr->patch[0][lv][PID]->LB_Idx + AdvanceCounter[lv]*100000000L;
+//            --> factors 1e2 and  1e8 are to make random seeds more different
+         const long RSeed = FB_RSEED + amr->patch[0][lv][PID]->LB_Idx*100L + AdvanceCounter[lv]*100000000L;
          FB_RNG->SetSeed( TID, RSeed );
 
 

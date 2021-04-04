@@ -8,7 +8,7 @@
 extern void (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
                             const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
                             real (*Fluid)[PS2][PS2][PS2], const double EdgeL[], const double dh, bool CoarseFine[],
-                            const int TID, const RandomNumber_t *RNG );
+                            const int TID, RandomNumber_t *RNG );
 extern void (*FB_End_User_Ptr)();
 
 
@@ -65,7 +65,7 @@ extern void (*FB_End_User_Ptr)();
 void FB_User_Template( const int lv, const double TimeNew, const double TimeOld, const double dt,
                        const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
                        real (*Fluid)[PS2][PS2][PS2], const double EdgeL[], const double dh, bool CoarseFine[],
-                       const int TID, const RandomNumber_t *RNG )
+                       const int TID, RandomNumber_t *RNG )
 {
 
 // check
@@ -79,7 +79,17 @@ void FB_User_Template( const int lv, const double TimeNew, const double TimeOld,
 #  endif // #ifdef GAMER_DEBUG
 
 
+   /*
+   const double RMin = 0.0;
+   const double RMax = 1.0;
 
+   for (int t=0; t<NPar; t++)
+   {
+      const int p = ParSortID[t];
+
+      RNG->GetValue( TID, RMin, RMax );
+   }
+   */
 
 } // FUNCTION : FB_User_Template
 

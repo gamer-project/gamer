@@ -55,7 +55,7 @@
 void FB_SNe( const int lv, const double TimeNew, const double TimeOld, const double dt,
              const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
              real (*Fluid)[PS2][PS2][PS2], const double EdgeL[], const double dh, bool CoarseFine[],
-             const int TID, const RandomNumber_t *RNG )
+             const int TID, RandomNumber_t *RNG )
 {
 
 // check
