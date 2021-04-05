@@ -81,18 +81,32 @@ void FB_User_Template( const int lv, const double TimeNew, const double TimeOld,
 
 
    /*
-   const double RMin = 0.0;
-   const double RMax = 1.0;
+   const double Frac = 1.0e-5;
+   const double _dh  = 1.0 / dh;
 
    for (int t=0; t<NPar; t++)
    {
-      const int  p = ParSortID[t];
-      const real x = ParAtt[PAR_POSX][p];
-      const real y = ParAtt[PAR_POSY][p];
-      const real z = ParAtt[PAR_POSZ][p];
+      const int    p       = ParSortID[t];
+      const double xyz[3]  = { ParAtt[PAR_POSX][p], ParAtt[PAR_POSY][p], ParAtt[PAR_POSZ][p] };
+      const real   MassFac = RNG->GetValue( TID, 0.0, 1.0 );
+      const real   EngyFac = RNG->GetValue( TID, 5.0e0, 1.0e1 );
 
-      RNG->GetValue( TID, RMin, RMax );
-   }
+      if ( MassFac > 1.0 - Frac )
+      {
+         int idx[3];
+         for (int d=0; d<3; d++)    idx[d] = (int)FLOOR( ( xyz[d] - EdgeL[d] )*_dh );
+
+         for (int dk=-1; dk<=1; dk++)  {  const int k = idx[2] + dk;  if ( k < 0 || k >= PS2 )  continue;
+         for (int dj=-1; dj<=1; dj++)  {  const int j = idx[1] + dj;  if ( j < 0 || j >= PS2 )  continue;
+         for (int di=-1; di<=1; di++)  {  const int i = idx[0] + di;  if ( i < 0 || i >= PS2 )  continue;
+
+            Fluid[ENGY][k][j][i] *= EngyFac;
+
+         }}}
+
+         ParAtt[PAR_MASS][p] *= MassFac;
+      }
+   } // for (int t=0; t<NPar; t++)
    */
 
 } // FUNCTION : FB_User_Template
