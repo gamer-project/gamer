@@ -7,6 +7,7 @@ extern Timer_t *Timer_Gra_Advance[NLEVEL];
 extern Timer_t *Timer_Src_Advance[NLEVEL];
 extern Timer_t *Timer_Che_Advance[NLEVEL];
 extern Timer_t *Timer_SF         [NLEVEL];
+extern Timer_t *Timer_FB_Advance [NLEVEL];
 extern Timer_t *Timer_FixUp      [NLEVEL];
 extern Timer_t *Timer_Flag       [NLEVEL];
 extern Timer_t *Timer_Refine     [NLEVEL];
@@ -480,7 +481,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 // *********************************
 #     ifdef PARTICLE
 //    pass particles to the children patches here if OPT__MINIMIZE_MPI_BARRIER is adopted
-//    --> do this before any star-formation routines so that particles always live in the leaf patches
+//    --> do this before any star-formation and feedback routines so that particles always live in the leaf patches
       if ( OPT__MINIMIZE_MPI_BARRIER )
       {
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
@@ -522,9 +523,8 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
             Aux_Message( stdout, "   Lv %2d: FB_AdvanceDt, counter = %9ld ... ", lv, AdvanceCounter[lv] );
 
 //###REVISE: we have assumed that FB_AdvanceDt() requires no ghost zones
-                        FB_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_FBFlu, SaveSg_FBMag );
-//       TIMING_FUNC(   FB_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_FBFlu, SaveSg_FBMag, false, false ),
-//                      Timer_FB_Advance[lv],   TIMER_ON   );
+         TIMING_FUNC(   FB_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_FBFlu, SaveSg_FBMag ),
+                        Timer_FB_Advance[lv],   TIMER_ON   );
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
       }
