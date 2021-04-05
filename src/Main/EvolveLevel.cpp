@@ -519,7 +519,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       if ( true )
       {
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
-            Aux_Message( stdout, "   Lv %2d: FB_AdvanceDt, counter = %8ld ... ", lv, AdvanceCounter[lv] );
+            Aux_Message( stdout, "   Lv %2d: FB_AdvanceDt, counter = %9ld ... ", lv, AdvanceCounter[lv] );
 
 //###REVISE: we have assumed that FB_AdvanceDt() requires no ghost zones
                         FB_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_FBFlu, SaveSg_FBMag );
