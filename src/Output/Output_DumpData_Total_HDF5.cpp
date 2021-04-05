@@ -758,11 +758,6 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 // 5-0. determine variable indices
    NFieldOut = NCOMP_TOTAL;
 
-#  ifdef GRAVITY
-   int PotDumpIdx = -1;
-   if ( OPT__OUTPUT_POT )  PotDumpIdx = NFieldOut ++;
-#  endif
-
 #  ifdef PARTICLE
    int ParDensDumpIdx = -1;
    if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )   ParDensDumpIdx = NFieldOut ++;
@@ -771,6 +766,11 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #  ifdef SRHD
    int TempDumpIdx = -1; // dump index for temperature
    TempDumpIdx = NFieldOut ++;
+#  endif
+
+#  ifdef GRAVITY
+   int PotDumpIdx = -1;
+   if ( OPT__OUTPUT_POT )  PotDumpIdx = NFieldOut ++;
 #  endif
 
 #  ifdef MHD

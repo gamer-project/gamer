@@ -15,7 +15,7 @@
 #ifndef __CUDACC__
 
 extern double IsothermalSlab_Center[3];
-extern double IsothermalSlab_Temperature;
+extern double IsothermalSlab_VelocityDispersion;
 extern double IsothermalSlab_PeakDens;
 extern double IsothermalSlab_Truncation;
 
@@ -37,11 +37,11 @@ void SetExtPotAuxArray_IsothermalSlab( double AuxArray_Flt[], int AuxArray_Int[]
    AuxArray_Flt[ 0] = IsothermalSlab_Center[0];                // x coordinate of the IsothermalSlab center
    AuxArray_Flt[ 1] = IsothermalSlab_Center[1];                // y ...
    AuxArray_Flt[ 2] = IsothermalSlab_Center[2];                // z ...
-   AuxArray_Flt[ 3] = IsothermalSlab_Temperature;        // 
+   AuxArray_Flt[ 3] = IsothermalSlab_VelocityDispersion;        // 
    AuxArray_Flt[ 4] = IsothermalSlab_PeakDens;           // 
-   AuxArray_Flt[ 6] = NEWTON_G;
-   AuxArray_Flt[ 7] =  amr->BoxSize[2];
-   AuxArray_Flt[ 8] = IsothermalSlab_Truncation;
+   AuxArray_Flt[ 5] = NEWTON_G;
+   AuxArray_Flt[ 6] =  amr->BoxSize[2];
+   AuxArray_Flt[ 7] = IsothermalSlab_Truncation;
 
 } // FUNCTION : SetExtPotAuxArray_IsothermalSlab
 #endif // #ifndef __CUDACC__
@@ -79,24 +79,25 @@ static real ExtPot_IsothermalSlab( const double x, const double y, const double 
 
 // halo potential
    const double cz                                =       UserArray_Flt[ 2];   // z ...
-   const real   IsothermalSlab_Temperature        = (real)UserArray_Flt[ 3];   // 
+   const real   IsothermalSlab_VelocityDispersion = (real)UserArray_Flt[ 3];   // 
    const real   IsothermalSlab_PeakDens           = (real)UserArray_Flt[ 4];   // 
-   const real   NewtonG                           =       UserArray_Flt[ 6];
-   const real   BoxSize_Z                         =       UserArray_Flt[ 7];    
+   const real   NewtonG                           =       UserArray_Flt[ 5];
+   const real   BoxSize_Z                         =       UserArray_Flt[ 6];    
    const double dz                                = z - cz;
-   const real   IsothermalSlab_Truncation         = (real)UserArray_Flt[ 8];   // 
+   const real   IsothermalSlab_Truncation         = (real)UserArray_Flt[ 7];   // 
 
+   const double IsothermalSlab_VelocityDispersion_Sqr = SQR(IsothermalSlab_VelocityDispersion);
 
-   real stellarDiskPot = sqrt( ( 2.0*M_PI*NewtonG*IsothermalSlab_PeakDens ) / IsothermalSlab_Temperature );
+   real stellarDiskPot = sqrt( ( 2.0*M_PI*NewtonG*IsothermalSlab_PeakDens ) / IsothermalSlab_VelocityDispersion_Sqr );
 
 #  ifndef __CUDACC__
    if ( cz != 0.5*BoxSize_Z ) Aux_Error( ERROR_INFO, "We expect the z-position of stellar disk is at box-center!\n"); 
 #  endif
 
-   if ( abs(dz) > IsothermalSlab_Truncation )
-     stellarDiskPot = 2.0*IsothermalSlab_Temperature*log(cosh(IsothermalSlab_Truncation*stellarDiskPot));
+   if ( fabs(dz) > IsothermalSlab_Truncation )
+     stellarDiskPot = 2.0*IsothermalSlab_VelocityDispersion_Sqr*log(cosh(IsothermalSlab_Truncation*stellarDiskPot));
    else
-     stellarDiskPot = 2.0*IsothermalSlab_Temperature*log(cosh(dz*stellarDiskPot));
+     stellarDiskPot = 2.0*IsothermalSlab_VelocityDispersion_Sqr*log(cosh(dz*stellarDiskPot));
 
 
    return stellarDiskPot;
