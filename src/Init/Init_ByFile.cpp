@@ -147,6 +147,8 @@ void Init_ByFile()
 
 
 // 2. initialize load-balancing (or construct patch relation for SERIAL)
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Constructing patch relation ...\n" );
+
 #  ifdef LOAD_BALANCE
 // no need to redistribute patches since Init_UniformGrid() already takes into account load balancing
 // --> but particle weighting is not considered yet
@@ -190,9 +192,13 @@ void Init_ByFile()
    }
 #  endif // #ifdef LOAD_BALANCE ... else ...
 
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Constructing patch relation ... done\n" );
+
 
 
 // 3. assign data on level OPT__UM_IC_LEVEL by the input file UM_IC
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Assigning data on level %d ...\n", OPT__UM_IC_LEVEL );
+
    Init_ByFile_AssignData( UM_Filename, OPT__UM_IC_LEVEL, OPT__UM_IC_NVAR, OPT__UM_IC_LOAD_NRANK, OPT__UM_IC_FORMAT );
 
 #  ifdef LOAD_BALANCE
@@ -200,34 +206,11 @@ void Init_ByFile()
                       DATA_GENERAL, _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
 #  endif
 
-
-// 4. assign data on levels 0 ~ OPT__UM_IC_LEVEL-1 by data restriction
-   for (int lv=OPT__UM_IC_LEVEL-1; lv>=0; lv--)
-   {
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Restricting level %d ... ", lv );
-
-      Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv], NULL_INT, NULL_INT, _TOTAL, _MAG );
-
-#     ifdef LOAD_BALANCE
-      Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, _MAG, NULL_INT,    USELB_YES );
-
-      Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_GENERAL,  _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
-#     endif
-
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
-   }
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Assigning data on level %d ... done\n", OPT__UM_IC_LEVEL );
 
 
 
-// 5. optimize load-balancing to take into account particle weighting
-#  if ( defined PARTICLE  &&  defined LOAD_BALANCE )
-   if ( Par_Weight > 0.0 )
-      LB_Init_LoadBalance( Redistribute_Yes, Par_Weight, ResetLB_Yes, AllLv );
-#  endif
-
-
-
-// 6. construct levels OPT__UM_IC_LEVEL+1 to OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1
+// 4. construct levels OPT__UM_IC_LEVEL+1 to OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1 by the input file UM_IC
    /*
    for (int lv=OPT__UM_IC_LEVEL+1; lv<=OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1; lv++)
    {
@@ -249,6 +232,36 @@ void Init_ByFile()
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Constructing level %d ... done\n", lv );
    } // for (int lv=OPT__UM_IC_LEVEL+1; lv<=OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1; lv++)
    */
+
+
+
+// 5. restrict data on levels 0 ~ MAX_LEVEL-1
+//    --> assign data on levels 0 ~ OPT__UM_IC_LEVEL-1
+//    --> ensure data consistency on levels OPT__UM_IC_LEVEL ~ MAX_LEVEL when OPT__UM_IC_NLEVEL>1
+   for (int lv=MAX_LEVEL-1; lv>=0; lv--)
+   {
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Restricting level %d ... ", lv );
+
+      Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv], NULL_INT, NULL_INT,
+                          _TOTAL, _MAG );
+
+#     ifdef LOAD_BALANCE
+      Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, _MAG, NULL_INT,    USELB_YES );
+
+//    use DATA_GENERAL instead of DATA_AFTER_FIXUP since we haven't call Buf_GetBufferData() on all levels yet
+      Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_GENERAL,  _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
+#     endif
+
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+   }
+
+
+
+// 6. optimize load-balancing to take into account particle weighting
+#  if ( defined PARTICLE  &&  defined LOAD_BALANCE )
+   if ( Par_Weight > 0.0 )
+      LB_Init_LoadBalance( Redistribute_Yes, Par_Weight, ResetLB_Yes, AllLv );
+#  endif
 
 
 
@@ -290,7 +303,7 @@ void Init_ByFile()
 
 
 
-// 9. restrict data
+// 9. restrict data again
 //    --> for bitwise reproducibility only
 //    --> strictly speaking, it is only necessary for C-binary output (i.e., OPT__OUTPUT_TOTAL=2)
 //        since that output format does not store non-leaf patch data
@@ -302,10 +315,11 @@ void Init_ByFile()
       if ( NPatchTotal[lv+1] == 0 )    continue;
 
 //    no need to restrict potential since it will be recalculated later
-      Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv], NULL_INT, NULL_INT, _TOTAL, _MAG );
+      Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv], NULL_INT, NULL_INT,
+                          _TOTAL, _MAG );
 
 #     ifdef LOAD_BALANCE
-      LB_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, _MAG, NULL_INT );
+      Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_RESTRICT,    _TOTAL, _MAG, NULL_INT,    USELB_YES );
 
       Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_AFTER_FIXUP, _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
 #     endif
