@@ -565,6 +565,7 @@ struct InputPara_t
    int    RestartLoadNRank;
    int    Opt__RestartReset;
    int    Opt__UM_IC_Level;
+   int    Opt__UM_IC_NLevel;
    int    Opt__UM_IC_NVar;
    int    Opt__UM_IC_Format;
    int    Opt__UM_IC_Downgrade;
