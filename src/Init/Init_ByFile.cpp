@@ -243,13 +243,6 @@ void Init_ByFile()
 
 //    fill the buffer patches
 #     ifdef LOAD_BALANCE
-//    no need to exchange potential since we haven't calculated it yet
-      Buf_GetBufferData( lv,   amr->FluSg[lv  ], amr->MagSg[lv  ], NULL_INT, DATA_AFTER_REFINE,
-                         _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
-
-      Buf_GetBufferData( lv+1, amr->FluSg[lv+1], amr->MagSg[lv+1], NULL_INT, DATA_AFTER_REFINE,
-                         _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
-
       LB_Init_LoadBalance( Redistribute_Yes, Par_Weight, ResetLB_Yes, lv+1 );
 #     endif
 
@@ -270,13 +263,6 @@ void Init_ByFile()
       Refine( lv, UseLB );
 
 #     ifdef LOAD_BALANCE
-//    no need to exchange potential since we haven't calculated it yet
-      Buf_GetBufferData( lv,   amr->FluSg[lv  ], amr->MagSg[lv  ], NULL_INT, DATA_AFTER_REFINE,
-                         _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
-
-      Buf_GetBufferData( lv+1, amr->FluSg[lv+1], amr->MagSg[lv+1], NULL_INT, DATA_AFTER_REFINE,
-                         _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
-
       LB_Init_LoadBalance( Redistribute_Yes, Par_Weight, ResetLB_Yes, lv+1 );
 #     endif
 
@@ -296,13 +282,6 @@ void Init_ByFile()
       Refine( lv, UseLB );
 
 #     ifdef LOAD_BALANCE
-//    no need to exchange potential since we haven't calculated it yet
-      Buf_GetBufferData( lv,   amr->FluSg[lv  ], amr->MagSg[lv  ], NULL_INT, DATA_AFTER_REFINE,
-                         _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
-
-      Buf_GetBufferData( lv+1, amr->FluSg[lv+1], amr->MagSg[lv+1], NULL_INT, DATA_AFTER_REFINE,
-                         _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
-
       LB_Init_LoadBalance( Redistribute_Yes, Par_Weight, ResetLB_Yes, lv+1 );
 #     endif
 
