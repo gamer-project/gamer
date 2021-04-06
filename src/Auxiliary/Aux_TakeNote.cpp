@@ -1091,8 +1091,9 @@ void Aux_TakeNote()
       fprintf( Note, "   %3d  %10d  %10d  %10d  %10d  %10d  %10d\n",
                t+1, RefineRegion[t][0], RefineRegion[t][1], RefineRegion[t][2],
                     RefineRegion[t][3], RefineRegion[t][4], RefineRegion[t][5] );
-      fprintf( Note, "------------------------------------------------------------------------------\n" ); }
-      fprintf( Note, "\n" );
+      fprintf( Note, "------------------------------------------------------------------------------\n" );
+      fprintf( Note, "\n" ); }
+
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 

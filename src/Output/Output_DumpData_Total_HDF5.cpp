@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2435)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2436)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -206,6 +206,7 @@ Procedure for outputting new variables:
 //                2433 : 2021/02/14 --> output MIN_TEMP
 //                2434 : 2021/03/12 --> output OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, and PassiveIntFrac_VarIdx
 //                2435 : 2021/04/06 --> output OPT__UM_IC_NLEVEL
+//                2436 : 2021/04/06 --> output UM_IC_RefineRegion
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1692,7 +1693,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2435;
+   KeyInfo.FormatVersion        = 2436;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2502,6 +2503,26 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__UM_IC_Downgrade    = OPT__UM_IC_DOWNGRADE;
    InputPara.Opt__UM_IC_Refine       = OPT__UM_IC_REFINE;
    InputPara.Opt__UM_IC_LoadNRank    = OPT__UM_IC_LOAD_NRANK;
+
+   if ( OPT__INIT == INIT_BY_FILE  &&  OPT__UM_IC_NLEVEL > 1  &&  UM_IC_RefineRegion != NULL )
+   {
+      const int (*RefineRegion)[6] = ( int(*)[6] )UM_IC_RefineRegion;
+
+      for (int t=0; t<NLEVEL-1; t++)
+         if ( t < OPT__UM_IC_NLEVEL - 1 )
+            for (int s=0; s<6; s++)
+               InputPara.UM_IC_RefineRegion[t][s] = RefineRegion[t][s];
+         else
+            for (int s=0; s<6; s++)
+               InputPara.UM_IC_RefineRegion[t][s] = -1;
+   }
+   else
+   {
+      for (int t=0; t<NLEVEL-1; t++)
+      for (int s=0; s<6; s++)
+         InputPara.UM_IC_RefineRegion[t][s] = -1;
+   }
+
    InputPara.Opt__InitRestrict       = OPT__INIT_RESTRICT;
    InputPara.Opt__InitGridWithOMP    = OPT__INIT_GRID_WITH_OMP;
    InputPara.Opt__GPUID_Select       = OPT__GPUID_SELECT;
@@ -2977,6 +2998,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    const hsize_t H5_ArrDims_NLvM1             = NLEVEL-1;             // array size of [NLEVEL-1]
    const hsize_t H5_ArrDims_NLvM1_2[2]        = { NLEVEL-1, 2 };      // array size of [NLEVEL-1][2]
    const hsize_t H5_ArrDims_NLvM1_4[2]        = { NLEVEL-1, 4 };      // array size of [NLEVEL-1][4]
+   const hsize_t H5_ArrDims_NLvM1_6[2]        = { NLEVEL-1, 6 };      // array size of [NLEVEL-1][6]
 #  endif
 
    const hid_t   H5_TypeID_Arr_3Int           = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_3Var      );
@@ -2986,6 +3008,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  endif
 #  if ( NLEVEL > 1 )
    const hid_t   H5_TypeID_Arr_NLvM1Int       = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_NLvM1     );
+   const hid_t   H5_TypeID_Arr_NLvM1_6Int     = H5Tarray_create( H5T_NATIVE_INT,    2,  H5_ArrDims_NLvM1_6   );
    const hid_t   H5_TypeID_Arr_NLvM1Double    = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_NLvM1     );
    const hid_t   H5_TypeID_Arr_NLvM1_2Double  = H5Tarray_create( H5T_NATIVE_DOUBLE, 2,  H5_ArrDims_NLvM1_2   );
    const hid_t   H5_TypeID_Arr_NLvM1_4Double  = H5Tarray_create( H5T_NATIVE_DOUBLE, 2,  H5_ArrDims_NLvM1_4   );
@@ -3307,6 +3330,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__UM_IC_Downgrade",    HOFFSET(InputPara_t,Opt__UM_IC_Downgrade   ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__UM_IC_Refine",       HOFFSET(InputPara_t,Opt__UM_IC_Refine      ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__UM_IC_LoadNRank",    HOFFSET(InputPara_t,Opt__UM_IC_LoadNRank   ), H5T_NATIVE_INT              );
+#  if ( NLEVEL > 1 )
+   H5Tinsert( H5_TypeID, "UM_IC_RefineRegion",      HOFFSET(InputPara_t,UM_IC_RefineRegion     ), H5_TypeID_Arr_NLvM1_6Int    );
+#  endif
    H5Tinsert( H5_TypeID, "Opt__InitRestrict",       HOFFSET(InputPara_t,Opt__InitRestrict      ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__InitGridWithOMP",    HOFFSET(InputPara_t,Opt__InitGridWithOMP   ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__GPUID_Select",       HOFFSET(InputPara_t,Opt__GPUID_Select      ), H5T_NATIVE_INT              );
