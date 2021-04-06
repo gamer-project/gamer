@@ -12,6 +12,7 @@ void (*Init_ByFile_User_Ptr)( real fluid_out[], const real fluid_in[], const int
 
 static void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const int UM_NVar, const int UM_LoadNRank,
                                     const UM_IC_Format_t UM_Format );
+static void Load_RefineRegion( const char Filename[] );
 
 
 
@@ -56,6 +57,7 @@ void Init_ByFile()
 
 
    const char UM_Filename[] = "UM_IC";
+   const char RR_Filename[] = "Input__UM_IC_RefineRegion";  // RR = Refinement Region
    const long UM_Size3D[3]  = { NX0_TOT[0]*(1<<OPT__UM_IC_LEVEL),
                                 NX0_TOT[1]*(1<<OPT__UM_IC_LEVEL),
                                 NX0_TOT[2]*(1<<OPT__UM_IC_LEVEL) };
@@ -68,16 +70,19 @@ void Init_ByFile()
    if ( OPT__UM_IC_LEVEL < 0  ||  OPT__UM_IC_LEVEL > TOP_LEVEL )
       Aux_Error( ERROR_INFO, "OPT__UM_IC_LEVEL (%d) > TOP_LEVEL (%d) !!\n", OPT__UM_IC_LEVEL, TOP_LEVEL );
 
-   if ( OPT__UM_IC_LEVEL + OPT__UM_IC_NLEVEL - 1 > MAX_LEVEL )
-      Aux_Error( ERROR_INFO, "OPT__UM_IC_LEVEL (%d) + OPT__UM_IC_NLEVEL (%d) - 1 = %d > MAX_LEVEL (%d) !!\n",
-                 OPT__UM_IC_LEVEL, OPT__UM_IC_NLEVEL, OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1, MAX_LEVEL );
-
    if ( OPT__UM_IC_NVAR < 1  ||  OPT__UM_IC_NVAR > NCOMP_TOTAL )
       Aux_Error( ERROR_INFO, "invalid OPT__UM_IC_NVAR = %d (accepeted range: %d ~ %d) !!\n",
                  OPT__UM_IC_NVAR, 1, NCOMP_TOTAL );
 
    if ( !Aux_CheckFileExist(UM_Filename) )
       Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", UM_Filename );
+
+   if ( OPT__UM_IC_LEVEL + OPT__UM_IC_NLEVEL - 1 > MAX_LEVEL )
+      Aux_Error( ERROR_INFO, "OPT__UM_IC_LEVEL (%d) + OPT__UM_IC_NLEVEL (%d) - 1 = %d > MAX_LEVEL (%d) !!\n",
+                 OPT__UM_IC_LEVEL, OPT__UM_IC_NLEVEL, OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1, MAX_LEVEL );
+
+   if ( OPT__UM_IC_NLEVEL > 1  &&  !Aux_CheckFileExist(RR_Filename) )
+      Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", RR_Filename );
 
 // check file size
    FILE *FileTemp = fopen( UM_Filename, "rb" );
@@ -210,7 +215,17 @@ void Init_ByFile()
 
 
 
-// 6. derefine the uniform-mesh data from levels OPT__UM_IC_LEVEL to 1
+// 6. load the refinement data
+   if ( OPT__UM_IC_NLEVEL > 1 )
+   {
+      Load_RefineRegion( RR_Filename );
+
+
+   } // if ( OPT__UM_IC_NLEVEL > 1 )
+
+
+
+// 7. derefine the uniform-mesh data from levels OPT__UM_IC_LEVEL to 1
 #  if ( defined PARTICLE  &&  defined LOAD_BALANCE )
    const double Par_Weight = amr->LB->Par_Weight;
 #  else
@@ -247,7 +262,7 @@ void Init_ByFile()
 
 
 
-// 7. refine the uniform-mesh data from levels OPT__UM_IC_LEVEL to MAX_LEVEL-1
+// 8. refine the uniform-mesh data from levels OPT__UM_IC_LEVEL to MAX_LEVEL-1
    if ( OPT__UM_IC_REFINE )
    for (int lv=OPT__UM_IC_LEVEL; lv<MAX_LEVEL; lv++)
    {
@@ -273,7 +288,7 @@ void Init_ByFile()
 
 
 
-// 8. restrict data
+// 9. restrict data
 //    --> for bitwise reproducibility only
 //    --> strictly speaking, it is only necessary for C-binary output (i.e., OPT__OUTPUT_TOTAL=2)
 //        since that output format does not store non-leaf patch data
@@ -524,4 +539,57 @@ void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nva
    fluid_out[DENS] = SQR( fluid_out[REAL] ) + SQR( fluid_out[IMAG] );
 #  endif
 
-} // Init_ByFile_Default
+} // FUNCTION : Init_ByFile_Default
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Load_RefineRegion
+// Description :  Load the information of refinement regions from the table "Filename"
+//
+// Note        :  1. Invoked by Init_ByFile()
+//                2. Only useful when OPT__UM_IC_NLEVEL>1
+//
+// Parameter   :  Filename : Target file name
+//
+// Return      :  UM_IC_RefineRegion[]
+//-------------------------------------------------------------------------------------------------------
+void Load_RefineRegion( const char Filename[] )
+{
+
+   const bool RowMajor_Yes = true;                 // load data into the row-major order
+   const bool AllocMem_Yes = true;                 // allocate memory for UM_IC_RefineRegion[]
+   const int  NCol        = 6;                     // total number of columns to load
+   const int  Col[NCol]   = {1,2,3,4,5,6};         // target columns (skip the first column)
+   const int  NLv         = OPT__UM_IC_NLEVEL - 1; // number of AMR levels to load
+
+   int NRow, (*RefineRegion)[6];
+
+   NRow         = Aux_LoadTable( UM_IC_RefineRegion, Filename, NCol, Col, RowMajor_Yes, AllocMem_Yes );
+   RefineRegion = ( int(*)[6] )UM_IC_RefineRegion;
+
+
+// check
+   if ( NRow < NLv )
+      Aux_Error( ERROR_INFO, "Number of rows in %s = %d < OPT__UM_IC_NLEVEL-1 = %d !!\n",
+                 Filename, NRow, NLv );
+
+   for (int t=0; t<NLv; t++)
+   for (int s=0; s<6; s++)
+      if ( RefineRegion[t][s] < 1 )
+         Aux_Error( ERROR_INFO, "RefineRegion[%d][%d] = %d < 1 !!\n", t, s, RefineRegion[t][s] );
+
+
+// log
+   if ( OPT__VERBOSE )
+   {
+      Aux_Message( stdout, "%3s  %10s  %10s  %10s  %10s  %10s  %10s\n",
+                   "dLv", "NP_Skip_xL", "NP_Skip_xR", "NP_Skip_yL", "NP_Skip_yR", "NP_Skip_zL", "NP_Skip_zR" );
+
+      for (int t=0; t<NLv; t++)
+      Aux_Message( stdout, "%3d  %10d  %10d  %10d  %10d  %10d  %10d\n",
+                   t+1, RefineRegion[t][0], RefineRegion[t][1], RefineRegion[t][2],
+                        RefineRegion[t][3], RefineRegion[t][4], RefineRegion[t][5] );
+   }
+
+} // FUNCTION : Load_RefineRegion

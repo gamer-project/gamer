@@ -89,6 +89,10 @@ void End_MemFree()
    delete [] UserDerField_Unit;     UserDerField_Unit  = NULL;
 
 
+// 9. table of refinement region for OPT__UM_IC_NLEVEL>1
+   delete [] UM_IC_RefineRegion;    UM_IC_RefineRegion = NULL;
+
+
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
 } // FUNCTION : End_MemFree

@@ -35,6 +35,7 @@ extern double    *DumpTable;                          // dump table recording th
 extern int        DumpTable_NDump;                    // number of data dumps in the dump table
 extern int        DumpID;                             // index of the current output file
 extern double     DumpTime;                           // time of the next dump (for OPT__OUTPUT_MODE=1)
+extern int       *UM_IC_RefineRegion;                 // refinement region for OPT__UM_IC_NLEVEL>1
 
 extern int        MPI_Rank;                           // MPI rank ID in the MPI_COMM_WORLD
 extern int        MPI_Rank_X[3];                      // order of this MPI process in x/y/z directions
