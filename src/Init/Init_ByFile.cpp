@@ -211,13 +211,14 @@ void Init_ByFile()
 
 
 // 4. construct levels OPT__UM_IC_LEVEL+1 to OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1 by the input file UM_IC
-   /*
    for (int lv=OPT__UM_IC_LEVEL+1; lv<=OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1; lv++)
    {
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Constructing level %d ...\n", lv );
 
 //    flag level "lv-1"
-//    Flag_Real( lv-1, UseLB );
+      for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+      {
+      }
 
 //    create level "lv"
       Refine( lv-1, UseLB );
@@ -231,7 +232,6 @@ void Init_ByFile()
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Constructing level %d ... done\n", lv );
    } // for (int lv=OPT__UM_IC_LEVEL+1; lv<=OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1; lv++)
-   */
 
 
 
@@ -248,7 +248,7 @@ void Init_ByFile()
 #     ifdef LOAD_BALANCE
       Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, _MAG, NULL_INT,    USELB_YES );
 
-//    use DATA_GENERAL instead of DATA_AFTER_FIXUP since we haven't call Buf_GetBufferData() on all levels yet
+//    use DATA_GENERAL instead of DATA_AFTER_FIXUP since we haven't call Buf_GetBufferData() on levels 0 ~ OPT__UM_IC_LEVEL-1
       Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_GENERAL,  _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
 #     endif
 
@@ -615,3 +615,30 @@ void Load_RefineRegion( const char Filename[] )
    }
 
 } // FUNCTION : Load_RefineRegion
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Flag_RefineRegion 
+// Description :  Flag patches in the refinement region specified by NP_Skip[]
+//
+// Note        :  1. Invoked by Init_ByFile()
+//                2. Only useful when OPT__UM_IC_NLEVEL>1
+//                3. NP_Skip[6] specifies the number of patches on level "lv" to be skipped on each side
+//                   along each direction
+//
+// Parameter   :  lv      : Target AMR level
+//                NP_Skip : See above
+//
+// Return      :  amr->patch[0][lv][*]->flag 
+//-------------------------------------------------------------------------------------------------------
+void Flag_RefineRegion()
+{
+
+   int P
+
+   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+   {
+   }
+
+} // FUNCTION : Flag_RefineRegion
