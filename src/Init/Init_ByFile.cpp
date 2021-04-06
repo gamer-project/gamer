@@ -62,6 +62,10 @@ void Init_ByFile()
                                 NX0_TOT[1]*(1<<OPT__UM_IC_LEVEL),
                                 NX0_TOT[2]*(1<<OPT__UM_IC_LEVEL) };
 
+// 0. load the information of refinement regions for OPT__UM_IC_NLEVEL > 1
+   if ( OPT__UM_IC_NLEVEL > 1 )  Load_RefineRegion( RR_Filename );
+
+
 // check
 #  if ( !defined SERIAL  &&  !defined LOAD_BALANCE )
       Aux_Error( ERROR_INFO, "must enable either SERIAL or LOAD_BALANCE for %s !!\n", __FUNCTION__ );
@@ -80,9 +84,6 @@ void Init_ByFile()
    if ( OPT__UM_IC_LEVEL + OPT__UM_IC_NLEVEL - 1 > MAX_LEVEL )
       Aux_Error( ERROR_INFO, "OPT__UM_IC_LEVEL (%d) + OPT__UM_IC_NLEVEL (%d) - 1 = %d > MAX_LEVEL (%d) !!\n",
                  OPT__UM_IC_LEVEL, OPT__UM_IC_NLEVEL, OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1, MAX_LEVEL );
-
-   if ( OPT__UM_IC_NLEVEL > 1  &&  !Aux_CheckFileExist(RR_Filename) )
-      Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", RR_Filename );
 
 // check file size
    FILE *FileTemp = fopen( UM_Filename, "rb" );
@@ -218,9 +219,6 @@ void Init_ByFile()
 // 6. load the refinement data
    if ( OPT__UM_IC_NLEVEL > 1 )
    {
-      Load_RefineRegion( RR_Filename );
-
-
    } // if ( OPT__UM_IC_NLEVEL > 1 )
 
 
@@ -549,6 +547,8 @@ void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nva
 //
 // Note        :  1. Invoked by Init_ByFile()
 //                2. Only useful when OPT__UM_IC_NLEVEL>1
+//                3. UM_IC_RefineRegion[] will be allocated here
+//                   --> Deallocated by End_MemFree()
 //
 // Parameter   :  Filename : Target file name
 //
@@ -556,6 +556,10 @@ void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nva
 //-------------------------------------------------------------------------------------------------------
 void Load_RefineRegion( const char Filename[] )
 {
+
+// check
+   if ( ! Aux_CheckFileExist(Filename) )  Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", Filename );
+
 
    const bool RowMajor_Yes = true;                 // load data into the row-major order
    const bool AllocMem_Yes = true;                 // allocate memory for UM_IC_RefineRegion[]
