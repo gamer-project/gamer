@@ -231,7 +231,7 @@ void Init_ByFile()
    /*
    for (int lv=OPT__UM_IC_LEVEL+1; lv<=OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1; lv++)
    {
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Constructing level %d ... ", lv );
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Constructing level %d ...\n", lv );
 
 //    flag level "lv-1"
 //    Flag_Real( lv-1, UseLB );
@@ -253,7 +253,7 @@ void Init_ByFile()
       LB_Init_LoadBalance( Redistribute_Yes, Par_Weight, ResetLB_Yes, lv+1 );
 #     endif
 
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Constructing level %d ... done\n", lv );
    } // for (int lv=OPT__UM_IC_LEVEL+1; lv<=OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1; lv++)
    */
 
@@ -263,7 +263,7 @@ void Init_ByFile()
    if ( OPT__UM_IC_DOWNGRADE )
    for (int lv=OPT__UM_IC_LEVEL-1; lv>=0; lv--)
    {
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Downgrading level %d ... ", lv+1 );
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Downgrading level %d ...\n", lv+1 );
 
       Flag_Real( lv, UseLB );
 
@@ -280,7 +280,7 @@ void Init_ByFile()
       LB_Init_LoadBalance( Redistribute_Yes, Par_Weight, ResetLB_Yes, lv+1 );
 #     endif
 
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Downgrading level %d ... done\n", lv+1 );
    } // for (int lv=OPT__UM_IC_LEVEL-1; lv>=0; lv--)
 
 
@@ -289,7 +289,7 @@ void Init_ByFile()
    if ( OPT__UM_IC_REFINE )
    for (int lv=OPT__UM_IC_LEVEL; lv<MAX_LEVEL; lv++)
    {
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Refining level %d ... ", lv );
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Refining level %d ...\n", lv );
 
       Flag_Real( lv, UseLB );
 
@@ -306,7 +306,7 @@ void Init_ByFile()
       LB_Init_LoadBalance( Redistribute_Yes, Par_Weight, ResetLB_Yes, lv+1 );
 #     endif
 
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Refining level %d ... done\n", lv );
    } // for (int lv=OPT__UM_IC_LEVEL; lv<MAX_LEVEL; lv++)
 
 
