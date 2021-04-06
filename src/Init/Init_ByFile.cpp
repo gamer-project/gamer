@@ -56,11 +56,22 @@ void Init_ByFile()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
-   const char UM_Filename[] = "UM_IC";
-   const char RR_Filename[] = "Input__UM_IC_RefineRegion";  // RR = Refinement Region
-   const long UM_Size3D[3]  = { NX0_TOT[0]*(1<<OPT__UM_IC_LEVEL),
-                                NX0_TOT[1]*(1<<OPT__UM_IC_LEVEL),
-                                NX0_TOT[2]*(1<<OPT__UM_IC_LEVEL) };
+   const char   UM_Filename[] = "UM_IC";
+   const char   RR_Filename[] = "Input__UM_IC_RefineRegion";   // RR = Refinement Region
+   const long   UM_Size3D[3]  = { NX0_TOT[0]*(1<<OPT__UM_IC_LEVEL),
+                                  NX0_TOT[1]*(1<<OPT__UM_IC_LEVEL),
+                                  NX0_TOT[2]*(1<<OPT__UM_IC_LEVEL) };
+#  if ( defined PARTICLE  &&  defined LOAD_BALANCE )
+   const double Par_Weight    = amr->LB->Par_Weight;
+#  else
+   const double Par_Weight    = 0.0;
+#  endif
+#  ifdef LOAD_BALANCE
+   const UseLBFunc_t UseLB    = USELB_YES;
+#  else
+   const UseLBFunc_t UseLB    = USELB_NO;
+#  endif
+
 
 // 0. load the information of refinement regions for OPT__UM_IC_NLEVEL > 1
    if ( OPT__UM_IC_NLEVEL > 1 )  Load_RefineRegion( RR_Filename );
@@ -210,31 +221,45 @@ void Init_ByFile()
 
 // 5. optimize load-balancing to take into account particle weighting
 #  if ( defined PARTICLE  &&  defined LOAD_BALANCE )
-   if ( amr->LB->Par_Weight > 0.0 )
-      LB_Init_LoadBalance( Redistribute_Yes, amr->LB->Par_Weight, ResetLB_Yes, AllLv );
+   if ( Par_Weight > 0.0 )
+      LB_Init_LoadBalance( Redistribute_Yes, Par_Weight, ResetLB_Yes, AllLv );
 #  endif
 
 
 
-// 6. load the refinement data
-   if ( OPT__UM_IC_NLEVEL > 1 )
+// 6. construct levels OPT__UM_IC_LEVEL+1 to OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1
+   /*
+   for (int lv=OPT__UM_IC_LEVEL+1; lv<=OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1; lv++)
    {
-   } // if ( OPT__UM_IC_NLEVEL > 1 )
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Constructing level %d ... ", lv );
+
+//    flag level "lv-1"
+//    Flag_Real( lv-1, UseLB );
+
+//    create level "lv"
+      Refine( lv-1, UseLB );
+
+//    assign data on level "lv"
+
+//    fill the buffer patches
+#     ifdef LOAD_BALANCE
+//    no need to exchange potential since we haven't calculated it yet
+      Buf_GetBufferData( lv,   amr->FluSg[lv  ], amr->MagSg[lv  ], NULL_INT, DATA_AFTER_REFINE,
+                         _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
+
+      Buf_GetBufferData( lv+1, amr->FluSg[lv+1], amr->MagSg[lv+1], NULL_INT, DATA_AFTER_REFINE,
+                         _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
+
+      LB_Init_LoadBalance( Redistribute_Yes, Par_Weight, ResetLB_Yes, lv+1 );
+#     endif
+
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+   } // for (int lv=OPT__UM_IC_LEVEL+1; lv<=OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1; lv++)
+   */
 
 
 
 // 7. derefine the uniform-mesh data from levels OPT__UM_IC_LEVEL to 1
-#  if ( defined PARTICLE  &&  defined LOAD_BALANCE )
-   const double Par_Weight = amr->LB->Par_Weight;
-#  else
-   const double Par_Weight = 0.0;
-#  endif
-#  ifdef LOAD_BALANCE
-   const UseLBFunc_t UseLB = USELB_YES;
-#  else
-   const UseLBFunc_t UseLB = USELB_NO;
-#  endif
-
    if ( OPT__UM_IC_DOWNGRADE )
    for (int lv=OPT__UM_IC_LEVEL-1; lv>=0; lv--)
    {
