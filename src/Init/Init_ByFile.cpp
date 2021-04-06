@@ -35,11 +35,11 @@ static void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, c
 //                       variables using the function pointer Init_ByFile_User_Ptr()
 //                       --> Two exceptions:
 //                           (1) When enabling DUAL_ENERGY, we will calculate the dual-energy field
-//                               (e.g., entropy) directly instead of load it from the disk
+//                               (e.g., entropy) directly instead of loading it from the disk
 //                               --> Only NCOMP_TOTAL-1 (which equals 5+NCOMP_PASSIVE_USER currently) fields
 //                                   should be stored in "UM_IC"
 //                           (2) For ELBDM, we will calculate the density field from the input wave function
-//                               directly instead of load it from the disk
+//                               directly instead of loading it from the disk
 //                               --> Only NCOMP_TOTAL-1 (which equals 2+NCOMP_PASSIVE_USER currently) fields
 //                                   should be stored in "UM_IC"
 //                4. The data format of the UM_IC file is controlled by the runtime parameter OPT__UM_IC_FORMAT
@@ -67,6 +67,10 @@ void Init_ByFile()
 
    if ( OPT__UM_IC_LEVEL < 0  ||  OPT__UM_IC_LEVEL > TOP_LEVEL )
       Aux_Error( ERROR_INFO, "OPT__UM_IC_LEVEL (%d) > TOP_LEVEL (%d) !!\n", OPT__UM_IC_LEVEL, TOP_LEVEL );
+
+   if ( OPT__UM_IC_LEVEL + OPT__UM_IC_NLEVEL - 1 > MAX_LEVEL )
+      Aux_Error( ERROR_INFO, "OPT__UM_IC_LEVEL (%d) + OPT__UM_IC_NLEVEL (%d) - 1 = %d > MAX_LEVEL (%d) !!\n",
+                 OPT__UM_IC_LEVEL, OPT__UM_IC_NLEVEL, OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1, MAX_LEVEL );
 
    if ( OPT__UM_IC_NVAR < 1  ||  OPT__UM_IC_NVAR > NCOMP_TOTAL )
       Aux_Error( ERROR_INFO, "invalid OPT__UM_IC_NVAR = %d (accepeted range: %d ~ %d) !!\n",
