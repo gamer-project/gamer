@@ -75,36 +75,57 @@ void Init_ByFile()
 
 
 // 1. determine the refinement regions for OPT__UM_IC_NLEVEL > 1
-// 1-1. load the information of refinement regions for OPT__UM_IC_NLEVEL > 1
-   if ( OPT__UM_IC_NLEVEL > 1 )  Load_RefineRegion( RR_Filename );
-
-// 1-2. set the range of patches to be flagged on each side along each direction on levels
-//      OPT__UM_IC_LEVEL ~ OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-2
-//      --> the first patch along each direction is labeled as 0
-//      --> [lv][0/1]: leftmost/rightmost patches along the x direction to be flagged on level lv
+//    FlagPatch: the range of patches to be flagged on each side along each direction on levels
+//               OPT__UM_IC_LEVEL ~ OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-2
+//    --> the first patch along each direction is labeled as 0
+//    --> [lv][0/1]: leftmost/rightmost patches along the x direction to be flagged on level lv
    int FlagPatch[NLEVEL][6];
-   const int (*RefineRegion)[6] = ( int(*)[6] )UM_IC_RefineRegion;
 
-// count the number of patches to be skipped
-   for (int t=0; t<OPT__UM_IC_NLEVEL-1; t++)
-   for (int s=0; s<6; s++)
+   if ( OPT__UM_IC_NLEVEL > 1 )
    {
-      FlagPatch[t][s] = RefineRegion[t][s];
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting refinement level ...\n" );
 
-//    include the number of patches to be skipped on the parent level
-      if ( t > 0 )   FlagPatch[t][s] += FlagPatch[t-1][s]*2;
-   }
+//    1-1. load the information of refinement regions for OPT__UM_IC_NLEVEL > 1
+      Load_RefineRegion( RR_Filename );
 
-// set the rightmost patches to be flagged
-   for (int t=0; t<OPT__UM_IC_NLEVEL-1; t++)
-   for (int d=0; d<3; d++)
-   {
-      const int lv = OPT__UM_IC_LEVEL + t;
-      const int s  = 2*d + 1;
-      const int NP = Mis_Scale2Cell( amr->BoxScale[d], lv ) / PS1;
 
-      FlagPatch[t][s] = NP - 1 - FlagPatch[t][s];
-   }
+//    1-2. set FlagPatch[]
+      const int (*RefineRegion)[6] = ( int(*)[6] )UM_IC_RefineRegion;
+
+//    count the number of patches to be skipped
+      for (int t=0; t<OPT__UM_IC_NLEVEL-1; t++)
+      for (int s=0; s<6; s++)
+      {
+         FlagPatch[t][s] = RefineRegion[t][s];
+
+//       include the number of patches to be skipped on the parent level
+         if ( t > 0 )   FlagPatch[t][s] += FlagPatch[t-1][s]*2;
+      }
+
+//    set the rightmost patches to be flagged
+      for (int t=0; t<OPT__UM_IC_NLEVEL-1; t++)
+      for (int d=0; d<3; d++)
+      {
+         const int lv = OPT__UM_IC_LEVEL + t;
+         const int s  = 2*d + 1;
+         const int NP = Mis_Scale2Cell( amr->BoxScale[d], lv ) / PS1;
+
+         FlagPatch[t][s] = NP - 1 - FlagPatch[t][s];
+
+//       check if rightmost patch > leftmost patch
+         if ( FlagPatch[t][s] <= FlagPatch[t][s-1] )
+            Aux_Error( ERROR_INFO, "FlagPatch: [%d][%d] (%d) <= [%d][%d] (%d) !!\n",
+                       t, s, FlagPatch[t][s], t, s-1, FlagPatch[t][s-1] );
+      }
+
+      if ( OPT__VERBOSE )
+      for (int t=0; t<OPT__UM_IC_NLEVEL-1; t++)
+         Aux_Message( stdout, "   FlagPatch[%d]: [%4d, %4d, %4d, %4d, %4d, %4d]\n",
+                   t, FlagPatch[t][0], FlagPatch[t][1], FlagPatch[t][2], FlagPatch[t][3], FlagPatch[t][4], FlagPatch[t][5] );
+
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting refinement level ... done\n" );
+
+   } // if ( OPT__UM_IC_NLEVEL > 1 )
 
 
 
@@ -242,27 +263,36 @@ void Init_ByFile()
 
 
 // 5. construct levels OPT__UM_IC_LEVEL+1 to OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1 by the input file UM_IC
-   for (int lv=OPT__UM_IC_LEVEL+1; lv<=OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1; lv++)
+   for (int t=0; t<OPT__UM_IC_NLEVEL-1; t++)
    {
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Constructing level %d ...\n", lv );
+      const int FaLv  = OPT__UM_IC_LEVEL + t;
+      const int SonLv = FaLv + 1;
 
-      const int FaLv = lv - 1;
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Constructing level %d ...\n", SonLv );
 
-//    flag level "lv-1"
-      Flag_RefineRegion( FaLv, FlagPatch[FaLv-OPT__UM_IC_LEVEL] );
+//    flag FaLv
+      Flag_RefineRegion( FaLv, FlagPatch[t] );
 
-//    create level "lv"
+//    create SonLv
       Refine( FaLv, UseLB );
 
-//    assign data on level "lv"
+//    check the total number of patches on SonLv
+      const int NPatchExpect = 8*( FlagPatch[t][1] - FlagPatch[t][0] + 1 )
+                                *( FlagPatch[t][3] - FlagPatch[t][2] + 1 )
+                                *( FlagPatch[t][5] - FlagPatch[t][4] + 1 );
+      if ( NPatchTotal[SonLv] != NPatchExpect )
+         Aux_Error( ERROR_INFO, "Total number of patches on level %d (%d) != expected (%d) !!\n",
+                    SonLv, NPatchTotal[SonLv], NPatchExpect );
 
-//    fill the buffer patches
+//    assign data on SonLv
+
+//    fill the buffer patches on SonLv
 #     ifdef LOAD_BALANCE
-      LB_Init_LoadBalance( Redistribute_Yes, Par_Weight, ResetLB_Yes, lv );
+      LB_Init_LoadBalance( Redistribute_Yes, Par_Weight, ResetLB_Yes, SonLv );
 #     endif
 
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Constructing level %d ... done\n", lv );
-   } // for (int lv=OPT__UM_IC_LEVEL+1; lv<=OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1; lv++)
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Constructing level %d ... done\n", SonLv );
+   } // for (int t=0; t<OPT__UM_IC_NLEVEL-1; t++)
 
 
 
@@ -636,11 +666,11 @@ void Load_RefineRegion( const char Filename[] )
 // log
    if ( OPT__VERBOSE )
    {
-      Aux_Message( stdout, "%3s  %10s  %10s  %10s  %10s  %10s  %10s\n",
+      Aux_Message( stdout, "   %3s  %10s  %10s  %10s  %10s  %10s  %10s\n",
                    "dLv", "NP_Skip_xL", "NP_Skip_xR", "NP_Skip_yL", "NP_Skip_yR", "NP_Skip_zL", "NP_Skip_zR" );
 
       for (int t=0; t<NLv; t++)
-      Aux_Message( stdout, "%3d  %10d  %10d  %10d  %10d  %10d  %10d\n",
+      Aux_Message( stdout, "   %3d  %10d  %10d  %10d  %10d  %10d  %10d\n",
                    t+1, RefineRegion[t][0], RefineRegion[t][1], RefineRegion[t][2],
                         RefineRegion[t][3], RefineRegion[t][4], RefineRegion[t][5] );
    }
@@ -658,7 +688,8 @@ void Load_RefineRegion( const char Filename[] )
 //
 // Parameter   :  lv        : Target AMR level
 //                FlagPatch : Range of patches to be flagged
-//                            --> For details, see the description under point 1-2
+//                            --> For details, see the description under its declaration at the beginning
+//                                of Init_ByFile()
 //
 // Return      :  amr->patch[0][lv][*]->flag
 //-------------------------------------------------------------------------------------------------------
