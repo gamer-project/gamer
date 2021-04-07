@@ -10,8 +10,9 @@ void (*Init_ByFile_User_Ptr)( real fluid_out[], const real fluid_in[], const int
                               const double x, const double y, const double z, const double Time,
                               const int lv, double AuxArray[] ) = Init_ByFile_Default;
 
-static void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const int UM_NVar, const int UM_LoadNRank,
-                                    const UM_IC_Format_t UM_Format );
+static void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const int UM_lv0, const int UM_NVar,
+                                    const int UM_LoadNRank, const UM_IC_Format_t UM_Format, const long UM_Size3D[][3],
+                                    const int FlagPatch[][6] );
 static void Load_RefineRegion( const char Filename[] );
 static void Flag_RefineRegion( const int lv, const int FlagPatch[6] );
 
@@ -59,9 +60,6 @@ void Init_ByFile()
 
    const char   UM_Filename[] = "UM_IC";
    const char   RR_Filename[] = "Input__UM_IC_RefineRegion";   // RR = Refinement Region
-   const long   UM_Size3D[3]  = { NX0_TOT[0]*(1<<OPT__UM_IC_LEVEL),
-                                  NX0_TOT[1]*(1<<OPT__UM_IC_LEVEL),
-                                  NX0_TOT[2]*(1<<OPT__UM_IC_LEVEL) };
 #  if ( defined PARTICLE  &&  defined LOAD_BALANCE )
    const double Par_Weight    = amr->LB->Par_Weight;
 #  else
@@ -128,6 +126,19 @@ void Init_ByFile()
    } // if ( OPT__UM_IC_NLEVEL > 1 )
 
 
+// 1-3. determine the file size on each level
+   long UM_Size3D[NLEVEL][3];
+
+// level OPT__UM_IC_LEVEL
+   for (int d=0; d<3; d++)
+      UM_Size3D[0][d] = NX0_TOT[d]*(1<<OPT__UM_IC_LEVEL);
+
+// levels OPT__UM_IC_LEVEL+1 ~ OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1
+   for (int t=1; t<OPT__UM_IC_NLEVEL; t++)
+   for (int d=0; d<3; d++)
+      UM_Size3D[t][d] = ( FlagPatch[t-1][2*d+1] - FlagPatch[t-1][2*d] + 1 )*PS2;
+
+
 
 // check
 #  if ( !defined SERIAL  &&  !defined LOAD_BALANCE )
@@ -149,16 +160,20 @@ void Init_ByFile()
                  OPT__UM_IC_LEVEL, OPT__UM_IC_NLEVEL, OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1, MAX_LEVEL );
 
 // check file size
+   long FileSize, ExpectSize;
+
    FILE *FileTemp = fopen( UM_Filename, "rb" );
-
    fseek( FileTemp, 0, SEEK_END );
-
-   const long ExpectSize = long(OPT__UM_IC_NVAR)*UM_Size3D[0]*UM_Size3D[1]*UM_Size3D[2]*sizeof(real);
-   const long FileSize   = ftell( FileTemp );
-   if ( FileSize != ExpectSize )
-      Aux_Error( ERROR_INFO, "size of the file <%s> (%ld) != expect (%ld) !!\n", UM_Filename, FileSize, ExpectSize );
-
+   FileSize = ftell( FileTemp );
    fclose( FileTemp );
+
+   ExpectSize = 0;
+   for (int t=0; t<OPT__UM_IC_NLEVEL; t++)
+      ExpectSize += long(OPT__UM_IC_NVAR)*UM_Size3D[t][0]*UM_Size3D[t][1]*UM_Size3D[t][2]*sizeof(real);
+
+   if ( FileSize != ExpectSize )
+      Aux_Error( ERROR_INFO, "size of the file <%s> (%ld) != expected (%ld) !!\n", UM_Filename, FileSize, ExpectSize );
+
 
    MPI_Barrier( MPI_COMM_WORLD );
 
@@ -251,7 +266,8 @@ void Init_ByFile()
 // 4. assign data on level OPT__UM_IC_LEVEL by the input file UM_IC
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Assigning data on level %d ...\n", OPT__UM_IC_LEVEL );
 
-   Init_ByFile_AssignData( UM_Filename, OPT__UM_IC_LEVEL, OPT__UM_IC_NVAR, OPT__UM_IC_LOAD_NRANK, OPT__UM_IC_FORMAT );
+   Init_ByFile_AssignData( UM_Filename, OPT__UM_IC_LEVEL, OPT__UM_IC_LEVEL, OPT__UM_IC_NVAR, OPT__UM_IC_LOAD_NRANK,
+                           OPT__UM_IC_FORMAT, UM_Size3D, FlagPatch );
 
 #  ifdef LOAD_BALANCE
    Buf_GetBufferData( OPT__UM_IC_LEVEL, amr->FluSg[OPT__UM_IC_LEVEL], amr->MagSg[OPT__UM_IC_LEVEL], NULL_INT,
@@ -285,6 +301,8 @@ void Init_ByFile()
                     SonLv, NPatchTotal[SonLv], NPatchExpect );
 
 //    assign data on SonLv
+      Init_ByFile_AssignData( UM_Filename, SonLv, OPT__UM_IC_LEVEL, OPT__UM_IC_NVAR, OPT__UM_IC_LOAD_NRANK,
+                              OPT__UM_IC_FORMAT, UM_Size3D, FlagPatch );
 
 //    fill the buffer patches on SonLv
 #     ifdef LOAD_BALANCE
@@ -403,41 +421,52 @@ void Init_ByFile()
 //
 // Note        :  1. The function pointer Init_ByFile_User_Ptr() points to Init_ByFile_Default() by default
 //                   but may be overwritten by various test problem initializers
+//                2. Can be applied to levels OPT__UM_IC_LEVEL ~ OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1
 //
 // Parameter   :  UM_Filename  : Target file name
-//                UM_lv        : Target AMR level
+//                UM_lv        : Target AMR level --> OPT__UM_IC_LEVEL ~ OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1
+//                UM_lv0       : First AMR level in the file UM_Filename (i.e., OPT__UM_IC_LEVEL)
 //                UM_NVar      : Number of variables
 //                UM_LoadNRank : Number of parallel I/O
-//                UM_Format    : Data format of the file "UM_Filename"
+//                UM_Format    : Data format of the file UM_Filename
 //                               --> UM_IC_FORMAT_VZYX: [field][z][y][x] in a row-major order
 //                                   UM_IC_FORMAT_ZYXV: [z][y][x][field] in a row-major order
+//                UM_Size3D    : Size of the file UM_Filename on each level
+//                FlagPatch    : Range of patches to be flagged on each level
+//                               --> For details, see the description under its declaration at the beginning
+//                                   of Init_ByFile()
 //
 // Return      :  amr->patch->fluid
 //-------------------------------------------------------------------------------------------------------
-void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const int UM_NVar, const int UM_LoadNRank,
-                             const UM_IC_Format_t UM_Format )
+void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const int UM_lv0, const int UM_NVar,
+                             const int UM_LoadNRank, const UM_IC_Format_t UM_Format, const long UM_Size3D[][3],
+                             const int FlagPatch[][6] )
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading data from the input file ...\n" );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "      Loading data from the input file on level %d ...\n", UM_lv );
 
 
 // check
    if ( Init_ByFile_User_Ptr == NULL )  Aux_Error( ERROR_INFO, "Init_ByFile_User_Ptr == NULL !!\n" );
 
 
-   const long   UM_Size3D[3] = { NX0_TOT[0]*(1<<UM_lv),
-                                 NX0_TOT[1]*(1<<UM_lv),
-                                 NX0_TOT[2]*(1<<UM_lv) };
-   const long   UM_Size1v    =  UM_Size3D[0]*UM_Size3D[1]*UM_Size3D[2];
-   const int    NVarPerLoad  = ( UM_Format == UM_IC_FORMAT_ZYXV ) ? UM_NVar : 1;
-   const int    scale        = amr->scale[UM_lv];
-   const double dh           = amr->dh[UM_lv];
+   const int    dlv         = UM_lv - UM_lv0;
+   const long   UM_Size1v   = UM_Size3D[dlv][0]*UM_Size3D[dlv][1]*UM_Size3D[dlv][2];
+   const int    NVarPerLoad = ( UM_Format == UM_IC_FORMAT_ZYXV ) ? UM_NVar : 1;
+   const int    scale       = amr->scale[UM_lv];
+   const double dh          = amr->dh[UM_lv];
 
-   long   Offset3D_File0[3], Offset_File0, Offset_File, Offset_PG;
+   long   Offset3D_File0[3], Offset_File0, Offset_File, Offset_PG, Offset_lv;
    real   fluid_in[UM_NVar], fluid_out[NCOMP_TOTAL];
    double x, y, z;
 
    real *PG_Data = new real [ CUBE(PS2)*UM_NVar ];
+
+
+// calculate the file offset of the target level
+   Offset_lv = 0;
+   for (int t=0; t<dlv; t++)
+      Offset_lv += long(UM_NVar)*UM_Size3D[t][0]*UM_Size3D[t][1]*UM_Size3D[t][2]*sizeof(real);
 
 
 // load data with UM_LoadNRank ranks at a time
@@ -453,10 +482,20 @@ void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const in
 //       load one patch group at a time
          for (int PID0=0; PID0<amr->NPatchComma[UM_lv][1]; PID0+=8)
          {
-//          calculate the file offset of the target patch group
+//          calculate Offset_File0, which is the file offset of the target patch group relative to Offset_lv
             for (int d=0; d<3; d++)    Offset3D_File0[d] = amr->patch[0][UM_lv][PID0]->corner[d] / scale;
 
-            Offset_File0  = IDX321( Offset3D_File0[0], Offset3D_File0[1], Offset3D_File0[2], UM_Size3D[0], UM_Size3D[1] );
+            if ( dlv > 0 )
+            for (int d=0; d<3; d++)
+            {
+               Offset3D_File0[d] -= FlagPatch[dlv-1][2*d]*PS2;
+
+               if ( Offset3D_File0[d] < 0 )
+                  Aux_Error( ERROR_INFO, "Offset3D_File0[%d] = %ld < 0 !!\n", d, Offset3D_File0[d] );
+            }
+
+            Offset_File0  = IDX321( Offset3D_File0[0], Offset3D_File0[1], Offset3D_File0[2],
+                                    UM_Size3D[dlv][0], UM_Size3D[dlv][1] );
             Offset_File0 *= (long)NVarPerLoad*sizeof(real);
 
 
@@ -468,7 +507,8 @@ void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const in
                for (int k=0; k<PS2; k++)
                for (int j=0; j<PS2; j++)
                {
-                  Offset_File = Offset_File0 + (long)NVarPerLoad*sizeof(real)*( ((long)k*UM_Size3D[1] + j)*UM_Size3D[0] )
+                  Offset_File = Offset_lv + Offset_File0
+                                + (long)NVarPerLoad*sizeof(real)*( ((long)k*UM_Size3D[dlv][1] + j)*UM_Size3D[dlv][0] )
                                 + v*UM_Size1v*sizeof(real);
 
                   fseek( File, Offset_File, SEEK_SET );
@@ -524,7 +564,7 @@ void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const in
    delete [] PG_Data;
 
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading data from the input file ... done\n" );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "      Loading data from the input file on level %d ... done\n", UM_lv );
 
 } // FUNCTION : Init_ByFile_AssignData
 
