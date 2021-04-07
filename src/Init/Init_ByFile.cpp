@@ -13,6 +13,7 @@ void (*Init_ByFile_User_Ptr)( real fluid_out[], const real fluid_in[], const int
 static void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const int UM_NVar, const int UM_LoadNRank,
                                     const UM_IC_Format_t UM_Format );
 static void Load_RefineRegion( const char Filename[] );
+static void Flag_RefineRegion( const int lv, const int FlagPatch[6] );
 
 
 
@@ -73,8 +74,38 @@ void Init_ByFile()
 #  endif
 
 
-// 0. load the information of refinement regions for OPT__UM_IC_NLEVEL > 1
+// 1. determine the refinement regions for OPT__UM_IC_NLEVEL > 1
+// 1-1. load the information of refinement regions for OPT__UM_IC_NLEVEL > 1
    if ( OPT__UM_IC_NLEVEL > 1 )  Load_RefineRegion( RR_Filename );
+
+// 1-2. set the range of patches to be flagged on each side along each direction on levels
+//      OPT__UM_IC_LEVEL ~ OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-2
+//      --> the first patch along each direction is labeled as 0
+//      --> [lv][0/1]: leftmost/rightmost patches along the x direction to be flagged on level lv
+   int FlagPatch[NLEVEL][6];
+   const int (*RefineRegion)[6] = ( int(*)[6] )UM_IC_RefineRegion;
+
+// count the number of patches to be skipped
+   for (int t=0; t<OPT__UM_IC_NLEVEL-1; t++)
+   for (int s=0; s<6; s++)
+   {
+      FlagPatch[t][s] = RefineRegion[t][s];
+
+//    include the number of patches to be skipped on the parent level
+      if ( t > 0 )   FlagPatch[t][s] += FlagPatch[t-1][s]*2;
+   }
+
+// set the rightmost patches to be flagged
+   for (int t=0; t<OPT__UM_IC_NLEVEL-1; t++)
+   for (int d=0; d<3; d++)
+   {
+      const int lv = OPT__UM_IC_LEVEL + t;
+      const int s  = 2*d + 1;
+      const int NP = Mis_Scale2Cell( amr->BoxScale[d], lv ) / PS1;
+
+      FlagPatch[t][s] = NP - 1 - FlagPatch[t][s];
+   }
+
 
 
 // check
@@ -112,7 +143,7 @@ void Init_ByFile()
 
 
 
-// 1. allocate all real patches on levels 0 ~ OPT__UM_IC_LEVEL
+// 2. allocate all real patches on levels 0 ~ OPT__UM_IC_LEVEL
    const bool FindHomePatchForPar_Yes = true;
    const bool FindHomePatchForPar_No  = false;
 
@@ -146,7 +177,7 @@ void Init_ByFile()
 
 
 
-// 2. initialize load-balancing (or construct patch relation for SERIAL)
+// 3. initialize load-balancing (or construct patch relation for SERIAL)
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Constructing patch relation ...\n" );
 
 #  ifdef LOAD_BALANCE
@@ -196,7 +227,7 @@ void Init_ByFile()
 
 
 
-// 3. assign data on level OPT__UM_IC_LEVEL by the input file UM_IC
+// 4. assign data on level OPT__UM_IC_LEVEL by the input file UM_IC
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Assigning data on level %d ...\n", OPT__UM_IC_LEVEL );
 
    Init_ByFile_AssignData( UM_Filename, OPT__UM_IC_LEVEL, OPT__UM_IC_NVAR, OPT__UM_IC_LOAD_NRANK, OPT__UM_IC_FORMAT );
@@ -210,24 +241,24 @@ void Init_ByFile()
 
 
 
-// 4. construct levels OPT__UM_IC_LEVEL+1 to OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1 by the input file UM_IC
+// 5. construct levels OPT__UM_IC_LEVEL+1 to OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1 by the input file UM_IC
    for (int lv=OPT__UM_IC_LEVEL+1; lv<=OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1; lv++)
    {
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Constructing level %d ...\n", lv );
 
+      const int FaLv = lv - 1;
+
 //    flag level "lv-1"
-      for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-      {
-      }
+      Flag_RefineRegion( FaLv, FlagPatch[FaLv-OPT__UM_IC_LEVEL] );
 
 //    create level "lv"
-      Refine( lv-1, UseLB );
+      Refine( FaLv, UseLB );
 
 //    assign data on level "lv"
 
 //    fill the buffer patches
 #     ifdef LOAD_BALANCE
-      LB_Init_LoadBalance( Redistribute_Yes, Par_Weight, ResetLB_Yes, lv+1 );
+      LB_Init_LoadBalance( Redistribute_Yes, Par_Weight, ResetLB_Yes, lv );
 #     endif
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Constructing level %d ... done\n", lv );
@@ -235,7 +266,7 @@ void Init_ByFile()
 
 
 
-// 5. restrict data on levels 0 ~ MAX_LEVEL-1
+// 6. restrict data on levels 0 ~ MAX_LEVEL-1
 //    --> assign data on levels 0 ~ OPT__UM_IC_LEVEL-1
 //    --> ensure data consistency on levels OPT__UM_IC_LEVEL ~ MAX_LEVEL when OPT__UM_IC_NLEVEL>1
    for (int lv=MAX_LEVEL-1; lv>=0; lv--)
@@ -257,7 +288,7 @@ void Init_ByFile()
 
 
 
-// 6. optimize load-balancing to take into account particle weighting
+// 7. optimize load-balancing to take into account particle weighting
 #  if ( defined PARTICLE  &&  defined LOAD_BALANCE )
    if ( Par_Weight > 0.0 )
       LB_Init_LoadBalance( Redistribute_Yes, Par_Weight, ResetLB_Yes, AllLv );
@@ -265,7 +296,7 @@ void Init_ByFile()
 
 
 
-// 7. derefine the uniform-mesh data from levels OPT__UM_IC_LEVEL to 1
+// 8. derefine the uniform-mesh data from levels OPT__UM_IC_LEVEL to 1
    if ( OPT__UM_IC_DOWNGRADE )
    for (int lv=OPT__UM_IC_LEVEL-1; lv>=0; lv--)
    {
@@ -284,7 +315,7 @@ void Init_ByFile()
 
 
 
-// 8. refine the uniform-mesh data from levels OPT__UM_IC_LEVEL to MAX_LEVEL-1
+// 9. refine the uniform-mesh data from levels OPT__UM_IC_LEVEL to MAX_LEVEL-1
    if ( OPT__UM_IC_REFINE )
    for (int lv=OPT__UM_IC_LEVEL; lv<MAX_LEVEL; lv++)
    {
@@ -303,7 +334,7 @@ void Init_ByFile()
 
 
 
-// 9. restrict data again
+// 10. restrict data again
 //    --> for bitwise reproducibility only
 //    --> strictly speaking, it is only necessary for C-binary output (i.e., OPT__OUTPUT_TOTAL=2)
 //        since that output format does not store non-leaf patch data
@@ -619,26 +650,35 @@ void Load_RefineRegion( const char Filename[] )
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Flag_RefineRegion 
-// Description :  Flag patches in the refinement region specified by NP_Skip[]
+// Function    :  Flag_RefineRegion
+// Description :  Flag patches within the refinement region specified by FlagPatch[]
 //
 // Note        :  1. Invoked by Init_ByFile()
 //                2. Only useful when OPT__UM_IC_NLEVEL>1
-//                3. NP_Skip[6] specifies the number of patches on level "lv" to be skipped on each side
-//                   along each direction
 //
-// Parameter   :  lv      : Target AMR level
-//                NP_Skip : See above
+// Parameter   :  lv        : Target AMR level
+//                FlagPatch : Range of patches to be flagged
+//                            --> For details, see the description under point 1-2
 //
-// Return      :  amr->patch[0][lv][*]->flag 
+// Return      :  amr->patch[0][lv][*]->flag
 //-------------------------------------------------------------------------------------------------------
-void Flag_RefineRegion()
+void Flag_RefineRegion( const int lv, const int FlagPatch[6] )
 {
 
-   int P
+// initialize all flags as false
+   for (int PID=0; PID<amr->num[lv]; PID++)  amr->patch[0][lv][PID]->flag = false;
 
+
+// flag patches
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
+      int order[3]; // order of the target patch along each direction
+      for (int d=0; d<3; d++)    order[d] = Mis_Scale2Cell( amr->patch[0][lv][PID]->corner[d], lv )/PS1;
+
+      if ( order[0] >= FlagPatch[0]  &&  order[0] <= FlagPatch[1]  &&
+           order[1] >= FlagPatch[2]  &&  order[1] <= FlagPatch[3]  &&
+           order[2] >= FlagPatch[4]  &&  order[2] <= FlagPatch[5] )
+         amr->patch[0][lv][PID]->flag = true;
    }
 
 } // FUNCTION : Flag_RefineRegion
