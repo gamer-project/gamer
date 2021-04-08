@@ -116,7 +116,7 @@ void Init_ByFile()
                        t, s, FlagPatch[t][s], t, s-1, FlagPatch[t][s-1] );
       }
 
-      if ( OPT__VERBOSE )
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
       for (int t=0; t<OPT__UM_IC_NLEVEL-1; t++)
          Aux_Message( stdout, "   FlagPatch[%d]: [%4d, %4d, %4d, %4d, %4d, %4d]\n",
                    t, FlagPatch[t][0], FlagPatch[t][1], FlagPatch[t][2], FlagPatch[t][3], FlagPatch[t][4], FlagPatch[t][5] );
@@ -704,7 +704,7 @@ void Load_RefineRegion( const char Filename[] )
 
 
 // log
-   if ( OPT__VERBOSE )
+   if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
    {
       Aux_Message( stdout, "   %3s  %10s  %10s  %10s  %10s  %10s  %10s\n",
                    "dLv", "NP_Skip_xL", "NP_Skip_xR", "NP_Skip_yL", "NP_Skip_yR", "NP_Skip_zL", "NP_Skip_zR" );
