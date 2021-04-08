@@ -95,8 +95,8 @@ void Output_BasePowerSpectrum( const char *FileName )
 
    Prepare_PatchData_InitParticleDensityArray( 0 );
 
-   Par_CollectParticle2OneLevel( 0, PredictPos, Time[0], SibBufPatch, FaSibBufPatch, JustCountNPar_No,
-                                 TimingSendPar_No );
+   Par_CollectParticle2OneLevel( 0, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, PredictPos, Time[0],
+                                 SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
 #  endif // #ifdef PARTICLE
 
 

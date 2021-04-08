@@ -476,7 +476,24 @@
 #  define  PAR_TIME           ( PAR_NATT_TOTAL - 1 )
 
 
-// bitwise field indices related to particles
+// bitwise indices of particles
+// particle attributes
+#  define _PAR_MASS           ( 1L << PAR_MASS )
+#  define _PAR_POSX           ( 1L << PAR_POSX )
+#  define _PAR_POSY           ( 1L << PAR_POSY )
+#  define _PAR_POSZ           ( 1L << PAR_POSZ )
+#  define _PAR_VELX           ( 1L << PAR_VELX )
+#  define _PAR_VELY           ( 1L << PAR_VELY )
+#  define _PAR_VELZ           ( 1L << PAR_VELZ )
+# ifdef STORE_PAR_ACC
+#  define _PAR_ACCX           ( 1L << PAR_ACCX )
+#  define _PAR_ACCY           ( 1L << PAR_ACCY )
+#  define _PAR_ACCZ           ( 1L << PAR_ACCZ )
+# endif
+#  define _PAR_TIME           ( 1L << PAR_TIME )
+#  define _PAR_TOTAL          (  ( 1L << PAR_NATT_TOTAL ) - 1L )
+
+// grid fields related to particles
 // --> note that _POTE = ( 1L << (NCOMP_TOTAL+NDERIVE) )
 #  define _PAR_DENS           ( 1L << (NCOMP_TOTAL+NDERIVE+1) )
 

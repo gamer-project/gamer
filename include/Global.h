@@ -35,6 +35,7 @@ extern double    *DumpTable;                          // dump table recording th
 extern int        DumpTable_NDump;                    // number of data dumps in the dump table
 extern int        DumpID;                             // index of the current output file
 extern double     DumpTime;                           // time of the next dump (for OPT__OUTPUT_MODE=1)
+extern int       *UM_IC_RefineRegion;                 // refinement region for OPT__UM_IC_NLEVEL>1
 
 extern int        MPI_Rank;                           // MPI rank ID in the MPI_COMM_WORLD
 extern int        MPI_Rank_X[3];                      // order of this MPI process in x/y/z directions
@@ -54,7 +55,7 @@ extern int        NX0_TOT[3], OUTPUT_STEP, REGRID_COUNT, FLU_GPU_NPGROUP, SRC_GP
 extern int        MPI_NRank, MPI_NRank_X[3];
 extern int        GPU_NSTREAM, FLAG_BUFFER_SIZE, FLAG_BUFFER_SIZE_MAXM1_LV, FLAG_BUFFER_SIZE_MAXM2_LV, MAX_LEVEL;
 
-extern int        OPT__UM_IC_LEVEL, OPT__UM_IC_NVAR, OPT__UM_IC_LOAD_NRANK, OPT__GPUID_SELECT, OPT__PATCH_COUNT;
+extern int        OPT__UM_IC_LEVEL, OPT__UM_IC_NLEVEL, OPT__UM_IC_NVAR, OPT__UM_IC_LOAD_NRANK, OPT__GPUID_SELECT, OPT__PATCH_COUNT;
 extern int        INIT_DUMPID, INIT_SUBSAMPLING_NCELL, OPT__TIMING_BARRIER, OPT__REUSE_MEMORY, RESTART_LOAD_NRANK;
 extern double     OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z, AUTO_REDUCE_DT_FACTOR, AUTO_REDUCE_DT_FACTOR_MIN;
 extern double     OPT__CK_MEMFREE, INT_MONO_COEFF, UNIT_L, UNIT_M, UNIT_T, UNIT_V, UNIT_D, UNIT_E, UNIT_P;
