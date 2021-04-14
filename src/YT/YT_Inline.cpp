@@ -13,9 +13,10 @@ void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (
 // Description :  Invoke the yt inline analysis
 //
 // Note        :  1. This function conducts the following three basic steps for performing the yt inline analysis
-//                   1-1. YT_SetParameter --> invoke yt_set_parameter()
+//                   1-1. YT_SetParameter   --> invoke yt_set_parameter()
 //                   1-2. YT_AddLocalGrid   --> invoke yt_get_gridsPtr(), yt_add_grids() for local patches
-//                   1-3. yt_inline()
+//                   1-3. yt_inline(), yt_inline_argument
+//                   1-4. yt_free_gridsPtr()
 //                2. This function is invoked by main() directly
 //
 // Parameter   :  None
