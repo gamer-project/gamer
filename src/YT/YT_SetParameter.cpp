@@ -42,7 +42,15 @@ void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchL
 
    param_yt.num_fields              = NField;
    param_yt.num_grids_local         = NPatchLocalLv;
-   param_yt.field_labels            = FieldLabel;
+
+   // TODO: Set field_list as yt_field array.   
+   yt_field *FieldList = new yt_field [NField];
+   for ( int i = 0; i < NField; i++){
+      FieldList[i].field_name = FieldLabel[i];
+      // Add this is needed, default is "cell-centered"
+      // FieldList[i].field_define_type = "define_type"
+   }
+   param_yt.field_list              = FieldList;
 
 #  ifdef FLOAT8
    param_yt.field_ftype             = YT_DOUBLE;
