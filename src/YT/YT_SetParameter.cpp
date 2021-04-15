@@ -87,6 +87,10 @@ void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchL
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
+// Free unneed resource FieldList
+// TODO: This might be libyt's job in the future precedure.
+//   delete [] FieldList;
+
 
 } // FUNCTION : YT_SetParameter
 
