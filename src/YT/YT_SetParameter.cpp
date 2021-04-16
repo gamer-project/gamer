@@ -19,7 +19,7 @@
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchLocalLv, char **FieldLabel )
+void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchLocalLv, yt_field *FieldList )
 {
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -35,6 +35,10 @@ void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchL
    param_yt.mass_unit               = UNIT_M;
    param_yt.time_unit               = UNIT_T;
 
+#ifdef MHD
+   param_yt.magnetic_unit           = UNIT_B;
+#endif
+
    param_yt.current_time            = Time[0];
    param_yt.dimensionality          = 3;
    param_yt.refine_by               = 2;
@@ -42,14 +46,6 @@ void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchL
 
    param_yt.num_fields              = NField;
    param_yt.num_grids_local         = NPatchLocalLv;
-
-   // TODO: Set field_list as yt_field array.   
-   yt_field *FieldList = new yt_field [NField];
-   for ( int i = 0; i < NField; i++){
-      FieldList[i].field_name = FieldLabel[i];
-      // Add this is needed, default is "cell-centered"
-      // FieldList[i].field_define_type = "define_type"
-   }
    param_yt.field_list              = FieldList;
 
 #  ifdef FLOAT8
@@ -86,10 +82,6 @@ void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchL
 
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
-
-// Free unneed resource FieldList
-// TODO: This might be libyt's job in the future precedure.
-//   delete [] FieldList;
 
 
 } // FUNCTION : YT_SetParameter

@@ -15,10 +15,11 @@
 // Parameter   :  GID_Offset    : Global patch index offset at each refinement level for this rank
 //                GID_LvStart   : Glocal patch index that this level starts at
 //                NPatchAllRank : Number of patches in [MPI rank][level]
+//                NField        : Number of fields to be loaded to YT.
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (*NPatchAllRank)[NLEVEL])
+void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (*NPatchAllRank)[NLEVEL], int NField)
 {
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -138,8 +139,16 @@ void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (
             YT_Grids[LID].field_data[v] = amr->patch[FluSg][lv][PID]->fluid[v];
          }
 
+         // TODO: This seems strange ... How we calculate the index is corresponded to YT_Inline.cpp line 61.
+         // We assume that the order is FLUID -> GRAVITY -> MHD
 #        ifdef GRAVITY
          YT_Grids[LID].field_data[NCOMP_TOTAL] = amr->patch[PotSg][lv][PID]->pot;
+#        endif
+
+#        ifdef MHD
+         for (int v = NField-NCOMP_MAG; v<NField; v++){
+             YT_Grids[LID].field_data[v] = ; // TODO: Load MHD Data, start from Output_DumpData_Total_HDF5.cpp line 1063
+         }
 #        endif
 
          LID = LID + 1;

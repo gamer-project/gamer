@@ -2,8 +2,8 @@
 
 #ifdef SUPPORT_LIBYT
 
-void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchLocalLv, char **FieldLabel );
-void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (*NPatchAllRank)[NLEVEL]);
+void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchLocalLv, yt_field *FieldList );
+void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (*NPatchAllRank)[NLEVEL], int NField);
 
 
 
@@ -60,24 +60,39 @@ void YT_Inline()
 // 2-1. determine the number of fields
    int NField = NCOMP_TOTAL;
 #  ifdef GRAVITY
+   int PotIdx = NField;
    NField = NField + 1;
 #  endif
 
-// 2-2. determine the field labels
-   char **FieldLabelForYT = new char* [NField];
-   for (int v=0; v<NField; v++)  { FieldLabelForYT[v] = new char [MAX_STRING]; }
-   for (int v=0; v<NCOMP_TOTAL; v++)   { sprintf( FieldLabelForYT[v], FieldLabel[v] ); }
+#ifdef MHD
+   int MHDIdx = NField;
+   NField = NField + NCOMP_MAG;
+#endif
 
-#  ifdef GRAVITY
-   sprintf( FieldLabelForYT[NCOMP_TOTAL], PotLabel );
-#  endif
+// 2-2. determine the field labels, and declare a yt_field type array
+//      which stores the field labels and field define type (ex: cell-centered, face-centered)
+   yt_field *FieldList = new yt_field [NField];
+   for (int v=0; v<NCOMP_TOTAL; v++){
+       FieldList[v].field_name = FieldLabel[v];
+   }
+
+#ifdef GRAVITY
+   FieldList[PotIdx].field_name = PotLabel;
+#endif
+
+#ifdef MHD
+   for (int v=0; v<NCOMP_MAG; v++){
+       FieldList[v + MHDIdx].field_name        = MagLabel[v];
+       FieldList[v + MHDIdx].field_define_type = "face-centered";
+   }
+#endif
 
 // 2-3. Call YT_SetParameter
-   YT_SetParameter( NPatchAllLv, NField, NPatchLocalLv, FieldLabelForYT );
+   YT_SetParameter( NPatchAllLv, NField, NPatchLocalLv, FieldList );
 
 
 // 3. prepare local patches for libyt
-   YT_AddLocalGrid( GID_Offset, GID_LvStart, NPatchAllRank );
+   YT_AddLocalGrid( GID_Offset, GID_LvStart, NPatchAllRank, NField);
 
 
 // 4. perform yt inline analysis
@@ -87,8 +102,7 @@ void YT_Inline()
 // 5. free resource
    if ( yt_free_gridsPtr() != YT_SUCCESS )    Aux_Error( ERROR_INFO, "yt_free_gridsPtr() failed !!\n" );
    delete [] NPatchAllRank;
-   for (int v=0; v<NField; v++)  delete [] FieldLabelForYT[v];
-   delete [] FieldLabelForYT;
+   delete [] FieldList;    // TODO: This might be libyt's job in the future precedure.
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
