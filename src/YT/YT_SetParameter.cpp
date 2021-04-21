@@ -15,7 +15,7 @@
 // Parameter   :  NPatchAllLv : Total number of patches at all levels
 //                NField      : Total number of fields
 //                NPatchLocal : Number of local patches at all levels
-//                FieldLabel  : Each fields names
+//                FieldList   : Each fields names
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------

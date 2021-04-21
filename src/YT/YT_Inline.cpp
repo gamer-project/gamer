@@ -102,7 +102,7 @@ void YT_Inline()
 // 5. free resource
    if ( yt_free_gridsPtr() != YT_SUCCESS )    Aux_Error( ERROR_INFO, "yt_free_gridsPtr() failed !!\n" );
    delete [] NPatchAllRank;
-   delete [] FieldList;    // TODO: This might be libyt's job in the future precedure.
+   delete [] FieldList;
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 

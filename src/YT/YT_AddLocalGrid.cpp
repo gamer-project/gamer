@@ -11,15 +11,16 @@
 //
 // Note        :  1. One must call YT_SetParameter() before invoking this function
 //                2. Invoked by YT_Inline()
+//                3. FieldList is used by MHD field, since it needs to load dimensions to yt_field.
 //
 // Parameter   :  GID_Offset    : Global patch index offset at each refinement level for this rank
 //                GID_LvStart   : Glocal patch index that this level starts at
 //                NPatchAllRank : Number of patches in [MPI rank][level]
-//                NField        : Number of fields to be loaded to YT.
-//
+//                NField        : Number of fields loaded to YT.
+//                FieldList     : List of field_name, field_define_type, field_dimension.
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (*NPatchAllRank)[NLEVEL], int NField)
+void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (*NPatchAllRank)[NLEVEL], int NField, yt_field *FieldList)
 {
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -69,6 +70,10 @@ void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (
       const int FluSg = amr->FluSg[lv];
 #     ifdef GRAVITY
       const int PotSg = amr->PotSg[lv];
+#     endif
+
+#     ifdef MHD
+      const int MagSg = amr->MagSg[lv];
 #     endif
 
       for (int PID=0; PID<(amr->NPatchComma[lv][1]); PID++)
@@ -146,8 +151,22 @@ void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (
 #        endif
 
 #        ifdef MHD
-         for (int v = NField-NCOMP_MAG; v<NField; v++){
-             YT_Grids[LID].field_data[v] = ; // TODO: Load MHD Data, start from Output_DumpData_Total_HDF5.cpp line 1063
+         for (int v = 0; v < NCOMP_MAG; v++){
+             // to make the input order same as FieldList
+             YT_Grids[LID].field_data[NField-(NCOMP_MAG-v)] = amr->patch[MagSg][lv][PID]->magnetic[v];
+             // input the field dimension, since MHD has different dimension. // TODO: This is hard-coded
+             for (int d = 0; d < 3; d++){
+                 FieldList[NField-(NCOMP_MAG-v)].field_dimension[d] = PATCH_SIZE; // Patch size
+                 if ( FieldList[NField-(NCOMP_MAG-v)].field_name == "MagX" && d == 2) {
+                     FieldList[NField-(NCOMP_MAG-v)].field_dimension[d] = PATCH_SIZE + 1;
+                 }
+                 if ( FieldList[NField-(NCOMP_MAG-v)].field_name == "MagY" && d == 1) {
+                     FieldList[NField-(NCOMP_MAG-v)].field_dimension[d] = PATCH_SIZE + 1;
+                 }
+                 if ( FieldList[NField-(NCOMP_MAG-v)].field_name == "MagZ" && d == 0) {
+                     FieldList[NField-(NCOMP_MAG-v)].field_dimension[d] = PATCH_SIZE + 1;
+                 }
+             }
          }
 #        endif
 
