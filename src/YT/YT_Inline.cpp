@@ -3,8 +3,7 @@
 #ifdef SUPPORT_LIBYT
 
 void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchLocalLv, yt_field *FieldList );
-void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (*NPatchAllRank)[NLEVEL], int NField);
-
+void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (*NPatchAllRank)[NLEVEL], int NField, yt_field *FieldList)
 
 
 
