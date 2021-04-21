@@ -80,6 +80,10 @@ void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchL
 // 2. transfer simulation information to libyt
    if ( yt_set_parameter( &param_yt ) != YT_SUCCESS )    Aux_Error( ERROR_INFO, "yt_set_parameter() failed !!\n" );
 
+#  ifdef MHD
+   const int mhd = 1;
+   if (yt_add_user_parameter("mhd", 1, &mhd) != YT_SUCCESS)  Aux_Error( ERROR_INFO, "yt_add_user_parameter() failed !!\n" );
+#  endif
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
