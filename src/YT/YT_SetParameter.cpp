@@ -82,7 +82,7 @@ void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchL
 
 #  ifdef MHD
    const int mhd = 1;
-   if (yt_add_user_parameter("mhd", 1, &mhd) != YT_SUCCESS)  Aux_Error( ERROR_INFO, "yt_add_user_parameter() failed !!\n" );
+   if (yt_add_user_parameter_int("mhd", 1, &mhd) != YT_SUCCESS)  Aux_Error( ERROR_INFO, "yt_add_user_parameter() failed !!\n" );
 #  endif
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
