@@ -91,7 +91,7 @@ void YT_Inline()
 
 
 // 3. prepare local patches for libyt
-   YT_AddLocalGrid( GID_Offset, GID_LvStart, NPatchAllRank, NField);
+   YT_AddLocalGrid( GID_Offset, GID_LvStart, NPatchAllRank, NField, FieldList);
 
 
 // 4. perform yt inline analysis
