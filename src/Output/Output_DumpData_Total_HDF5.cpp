@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2436)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2437)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -207,6 +207,7 @@ Procedure for outputting new variables:
 //                2434 : 2021/03/12 --> output OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, and PassiveIntFrac_VarIdx
 //                2435 : 2021/04/06 --> output OPT__UM_IC_NLEVEL
 //                2436 : 2021/04/06 --> output UM_IC_RefineRegion
+//                2437 : 2021/05/12 --> output OPT__CHECK_PRES_AFTER_FLU
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1693,7 +1694,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2436;
+   KeyInfo.FormatVersion        = 2437;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2420,6 +2421,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.MinPres                 = MIN_PRES;
    InputPara.MinEint                 = MIN_EINT;
    InputPara.MinTemp                 = MIN_TEMP;
+   InputPara.Opt__CheckPresAfterFlu  = OPT__CHECK_PRES_AFTER_FLU,
    InputPara.Opt__LastResortFloor    = OPT__LAST_RESORT_FLOOR;
    InputPara.JeansMinPres            = JEANS_MIN_PRES;
    InputPara.JeansMinPres_Level      = JEANS_MIN_PRES_LEVEL;
@@ -3249,6 +3251,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "MinPres",                 HOFFSET(InputPara_t,MinPres                ), H5T_NATIVE_DOUBLE           );
    H5Tinsert( H5_TypeID, "MinEint",                 HOFFSET(InputPara_t,MinEint                ), H5T_NATIVE_DOUBLE           );
    H5Tinsert( H5_TypeID, "MinTemp",                 HOFFSET(InputPara_t,MinTemp                ), H5T_NATIVE_DOUBLE           );
+   H5Tinsert( H5_TypeID, "Opt__CheckPresAfterFlu",  HOFFSET(InputPara_t,Opt__CheckPresAfterFlu ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__LastResortFloor",    HOFFSET(InputPara_t,Opt__LastResortFloor   ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "JeansMinPres",            HOFFSET(InputPara_t,JeansMinPres           ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "JeansMinPres_Level",      HOFFSET(InputPara_t,JeansMinPres_Level     ), H5T_NATIVE_INT              );
