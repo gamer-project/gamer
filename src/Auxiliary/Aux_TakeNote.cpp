@@ -1453,6 +1453,12 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 
+//    record the SHA1 hash in git
+      fprintf( Note, "SHA1 in git\n" );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "%s\n", SHOW_MACRO( GIT_SHA1 ));
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "\n\n" );
 
       fclose( Note );
    } // if ( MPI_Rank == 0 )
