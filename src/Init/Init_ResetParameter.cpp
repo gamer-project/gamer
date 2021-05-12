@@ -824,6 +824,27 @@ void Init_ResetParameter()
 #  endif
 
 
+// OPT__CHECK_PRES_AFTER_FLU
+#  if ( MODEL == HYDRO )
+   if ( OPT__CHECK_PRES_AFTER_FLU < 0 )
+   {
+      if ( EOS == EOS_NUCLEAR  ||  EOS == EOS_TABULAR )
+      {
+         OPT__CHECK_PRES_AFTER_FLU = 1;
+
+         PRINT_WARNING( OPT__CHECK_PRES_AFTER_FLU, FORMAT_INT, "" );
+      }
+
+      else
+      {
+         OPT__CHECK_PRES_AFTER_FLU = 0;
+
+         PRINT_WARNING( OPT__CHECK_PRES_AFTER_FLU, FORMAT_INT, "" );
+      }
+   }
+#  endif
+
+
 // AUTO_REDUCE_DT only works for DT_LEVEL_FLEXIBLE
    if ( AUTO_REDUCE_DT  &&  OPT__DT_LEVEL != DT_LEVEL_FLEXIBLE )
    {
