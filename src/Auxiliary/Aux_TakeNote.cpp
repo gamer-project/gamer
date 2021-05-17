@@ -1456,14 +1456,14 @@ void Aux_TakeNote()
 //    record the SHA1 hash in git
       fprintf( Note, "SHA1 in git\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "%s\n", SHOW_MACRO( GIT_SHA1 ));
+      fprintf( Note, "%s\n", EXPAND_AND_QUOTE( GIT_SHA1 ));
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n" );
 
 //    record the branch name in git
       fprintf( Note, "branch name in git\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "%s\n", SHOW_MACRO( GIT_BRANCH ));
+      fprintf( Note, "%s\n", EXPAND_AND_QUOTE( GIT_BRANCH ));
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n" );
 

@@ -271,7 +271,7 @@ ifeq "$(filter -DOPENMP, $(SIMU_OPTION))" ""
 endif
 
 CXXFLAG    += -DGIT_SHA1="`git rev-parse HEAD`"                 # record SHA1 in git
-CXXFLAG    += -DGIT_BRANCH="`git symbolic-ref --short -q HEAD`" # record SHA1 in git
+CXXFLAG    += -DGIT_BRANCH="`git rev-parse --abbrev-ref HEAD`"  # record SHA1 in git
 
 # CUDA
 # -------------------------------------------------------------------------------
