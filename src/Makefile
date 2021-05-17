@@ -231,7 +231,6 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 ##CXXFLAG     = -g -fast
 # CXXFLAG    += -w1                                       # warning flags
 # OPENMPFLAG  = -fopenmp                                  # openmp flag
-# CXXFLAG    += -DGIT_SHA1="`git rev-parse HEAD`"         # record SHA1 in git
 # LIB         = -limf                                     # libraries and linker flags
 #
 ## for debug only
@@ -259,7 +258,6 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
                -Wno-maybe-uninitialized -Wno-unused-but-set-variable \
                -Wno-unused-result -Wno-unused-function
  OPENMPFLAG  = -fopenmp                                  # openmp flag
- CXXFLAG    += -DGIT_SHA1="`git rev-parse HEAD`"         # record SHA1 in git
  LIB         =                                           # libraries and linker flags
 
 # for debug only
@@ -272,6 +270,8 @@ ifeq "$(filter -DOPENMP, $(SIMU_OPTION))" ""
  CXXFLAG    += -Wno-unknown-pragmas
 endif
 
+CXXFLAG    += -DGIT_SHA1="`git rev-parse HEAD`"                 # record SHA1 in git
+CXXFLAG    += -DGIT_BRANCH="`git symbolic-ref --short -q HEAD`" # record SHA1 in git
 
 # CUDA
 # -------------------------------------------------------------------------------

@@ -1460,6 +1460,13 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n" );
 
+//    record the branch name in git
+      fprintf( Note, "branch name in git\n" );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "%s\n", SHOW_MACRO( GIT_BRANCH ));
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "\n\n" );
+
       fclose( Note );
    } // if ( MPI_Rank == 0 )
 
