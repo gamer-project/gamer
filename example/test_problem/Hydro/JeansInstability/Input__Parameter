@@ -176,9 +176,9 @@ OPT__OUTPUT_USER_FIELD        0           # output user-defined derived fields [
 OPT__OUTPUT_MODE              1           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
 OUTPUT_STEP                   5           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
 OUTPUT_DT                     1.0         # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
-OUTPUT_PART_X                -1.0         # x coordinate for OPT__OUTPUT_PART [-1.0]
-OUTPUT_PART_Y                -1.0         # y coordinate for OPT__OUTPUT_PART [-1.0]
-OUTPUT_PART_Z                -1.0         # z coordinate for OPT__OUTPUT_PART [-1.0]
+OUTPUT_PART_X                 0.0         # x coordinate for OPT__OUTPUT_PART [-1.0]
+OUTPUT_PART_Y                 0.0         # y coordinate for OPT__OUTPUT_PART [-1.0]
+OUTPUT_PART_Z                 0.0         # z coordinate for OPT__OUTPUT_PART [-1.0]
 INIT_DUMPID                  -1           # set the first dump ID (<0=auto) [-1]
 
 
