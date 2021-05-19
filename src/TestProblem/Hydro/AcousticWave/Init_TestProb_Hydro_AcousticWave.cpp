@@ -126,13 +126,13 @@ void SetParameter()
 
    delete ReadPara;
 
-// force Acoustic_Sign to be +1.0/-1.0
-   if ( Acoustic_Sign >= 0.0 )   Acoustic_Sign = +1.0;
-   else                          Acoustic_Sign = -1.0;
-
 
 // (2) set the problem-specific derived parameters
    Acoustic_WaveLength = ( Acoustic_Dir == 3 ) ? amr->BoxSize[0]/sqrt(3.0) : amr->BoxSize[Acoustic_Dir];
+
+// force Acoustic_Sign to be +1.0/-1.0
+   if ( Acoustic_Sign >= 0.0 )   Acoustic_Sign = +1.0;
+   else                          Acoustic_Sign = -1.0;
 
 
 // (3) reset other general-purpose parameters
