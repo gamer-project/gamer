@@ -802,11 +802,11 @@ void Aux_Check_Parameter()
 // errors
 // ------------------------------
    if ( OPT__LR_LIMITER == EXTPRE )
-      Aux_Error( ERROR_INFO, "currently the \"%s\" limiter (OPT__LR_IMITER = %d) is not supported !!\n",
+      Aux_Error( ERROR_INFO, "\"%s\" limiter (OPT__LR_IMITER = %d) is not supported yet !!\n",
                  "extrema-preserving", OPT__LR_LIMITER );
 
    if ( OPT__LR_LIMITER != VANLEER  &&  OPT__LR_LIMITER != GMINMOD  &&  OPT__LR_LIMITER != ALBADA  &&
-        OPT__LR_LIMITER != EXTPRE   &&  OPT__LR_LIMITER != VL_GMINMOD )
+        OPT__LR_LIMITER != EXTPRE   &&  OPT__LR_LIMITER != VL_GMINMOD  &&  OPT__LR_LIMITER != CENTRAL )
       Aux_Error( ERROR_INFO, "unsupported data reconstruction limiter (OPT__LR_IMITER = %d) !!\n",
                  OPT__LR_LIMITER );
 
@@ -814,6 +814,12 @@ void Aux_Check_Parameter()
 // warnings
 // ------------------------------
    if ( MPI_Rank == 0 ) {
+
+#     if ( LR_SCHEME == PLM )
+      if ( OPT__LR_LIMITER == CENTRAL )
+         Aux_Message( stderr, "WARNING : OPT__LR_LIMITER = %d (CENTRAL) is not recommended for PLM !!\n",
+                      OPT__LR_LIMITER );
+#     endif
 
    } // if ( MPI_Rank == 0 )
 
