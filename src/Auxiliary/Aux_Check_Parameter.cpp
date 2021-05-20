@@ -801,11 +801,9 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
-#  if ( LR_SCHEME == PPM )
    if ( OPT__LR_LIMITER == EXTPRE )
-      Aux_Error( ERROR_INFO, "currently the PPM reconstruction does not support the \"%s\" limiter\n",
-                 "extrema-preserving" );
-#  endif
+      Aux_Error( ERROR_INFO, "currently the \"%s\" limiter (OPT__LR_IMITER = %d) is not supported !!\n",
+                 "extrema-preserving", OPT__LR_LIMITER );
 
    if ( OPT__LR_LIMITER != VANLEER  &&  OPT__LR_LIMITER != GMINMOD  &&  OPT__LR_LIMITER != ALBADA  &&
         OPT__LR_LIMITER != EXTPRE   &&  OPT__LR_LIMITER != VL_GMINMOD )
