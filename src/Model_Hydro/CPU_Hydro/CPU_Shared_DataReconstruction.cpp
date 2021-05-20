@@ -926,6 +926,13 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 
 //          3-2. monotonicity constraint
+//          extra monotonicity check for the CENTRAL limiter since it's not TVD
+            if ( LR_Limiter == CENTRAL )
+            {
+               if ( (cc_C-fc_L)*(fc_L-cc_L) < (real)0.0 )   fc_L = (real)0.5*( cc_C + cc_L );
+               if ( (cc_R-fc_R)*(fc_R-cc_C) < (real)0.0 )   fc_R = (real)0.5*( cc_C + cc_R );
+            }
+
             dfc [v] = fc_R - fc_L;
             dfc6[v] = (real)6.0*(  cc_C - (real)0.5*( fc_L + fc_R )  );
 
@@ -1811,6 +1818,13 @@ void Hydro_LimitSlope( const real L[], const real C[], const real R[], const LR_
       {
          switch ( LR_Limiter )
          {
+//          notes for CENTRAL:
+//          (1) not TVD --> extra monotonicity check outside this function is required
+//          (2) mainly for MHM_RP+PPM to achieve 2nd-order accuracy in linear wave tests
+            case CENTRAL:     // central
+               Slope_Limiter[v] = Slope_C[v];
+               break;
+
             case VANLEER:     // van-Leer
                Slope_Limiter[v] = (real)2.0*Slope_LR/( Slope_L[v] + Slope_R[v] );
                break;
