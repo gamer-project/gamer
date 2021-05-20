@@ -815,6 +815,12 @@ void Aux_Check_Parameter()
 // ------------------------------
    if ( MPI_Rank == 0 ) {
 
+#     if ( FLU_SCHEME == MHM_RP  &&  LR_SCHEME == PPM )
+      if ( OPT__LR_LIMITER != CENTRAL )
+         Aux_Message( stderr, "WARNING : OPT__LR_LIMITER = %d (CENTRAL) is recommended for MHM_RP+PPM !!\n",
+                      CENTRAL );
+#     endif
+
 #     if ( LR_SCHEME == PLM )
       if ( OPT__LR_LIMITER == CENTRAL )
          Aux_Message( stderr, "WARNING : OPT__LR_LIMITER = %d (CENTRAL) is not recommended for PLM !!\n",

@@ -631,15 +631,37 @@ void Init_ResetParameter()
 #  endif
 
 
-// disable OPT__LR_LIMITER if it is useless
-#  if ( MODEL == HYDRO  &&  FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
+// OPT__LR_LIMITER
+#  if ( MODEL == HYDRO )
+#  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
+
+#  if ( FLU_SCHEME == MHM_RP  &&  LR_SCHEME == PPM )
+   if ( OPT__LR_LIMITER == LR_LIMITER_DEFAULT )
+   {
+      OPT__LR_LIMITER = CENTRAL;
+
+      PRINT_WARNING( OPT__LR_LIMITER, FORMAT_INT, "for MHM_RP+PPM" );
+   }
+#  else
+   if ( OPT__LR_LIMITER == LR_LIMITER_DEFAULT )
+   {
+      OPT__LR_LIMITER = VL_GMINMOD;
+
+      PRINT_WARNING( OPT__LR_LIMITER, FORMAT_INT, "" );
+   }
+#  endif // #if ( FLU_SCHEME == MHM_RP  &&  LR_SCHEME == PPM ) ... else ...
+
+#  else // if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
+
    if ( OPT__LR_LIMITER != LR_LIMITER_NONE )
    {
       OPT__LR_LIMITER = LR_LIMITER_NONE;
 
-      PRINT_WARNING( OPT__LR_LIMITER, FORMAT_INT, "since it's only useful for the MHM/MHM_RP/CTU schemes" );
+      PRINT_WARNING( OPT__LR_LIMITER, FORMAT_INT, "since it's only useful for the MHM/MHM_RP/CTU integrators" );
    }
-#  endif
+
+#  endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU ) ... else ...
+#  endif // #if ( MODEL == HYDRO )
 
 
 // disable the refinement flag of Jeans length if GRAVITY is disabled
