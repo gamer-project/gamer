@@ -83,7 +83,17 @@ void YT_Inline()
    for (int v=0; v<NCOMP_MAG; v++){
        FieldList[v + MHDIdx].field_name        = MagLabel[v];
        FieldList[v + MHDIdx].field_define_type = "face-centered";
+       FieldList[v + MHDIdx].field_unit        = "code_magnetic";
    }
+   FieldList[ MHDIdx ].field_display_name = "B_x";
+   FieldList[ MHDIdx + 1 ].field_display_name = "B_y";
+   FieldList[ MHDIdx + 2 ].field_display_name = "B_z";
+
+   // Add alias names to "MAGX"
+   char *MHDX_name_alias[2] = {"test_alias_name", "magnetic_x"};
+   FieldList[ MHDIdx ].num_field_name_alias = 2;
+   FieldList[ MHDIdx ].field_name_alias = MHDX_name_alias;
+
 #endif
 
 // 2-3. Call YT_SetParameter
