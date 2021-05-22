@@ -28,6 +28,7 @@ void LB_Init_ByFunction()
    const bool   FindHomePatchForPar_Yes = true;
    const bool   Redistribute_Yes        = true;
    const bool   ResetLB_Yes             = true;
+   const bool   AllocData_Yes           = true;
 #  ifdef PARTICLE
    const double Par_Weight              = amr->LB->Par_Weight;
 #  else
@@ -49,7 +50,7 @@ void LB_Init_ByFunction()
       {
          Flag_Real( lv-1, USELB_YES );
 
-         LB_Init_Refine( lv-1 );
+         LB_Init_Refine( lv-1, AllocData_Yes );
       }
 
 //    get the total number of real patches

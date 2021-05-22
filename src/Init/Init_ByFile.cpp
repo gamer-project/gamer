@@ -281,8 +281,9 @@ void Init_ByFile()
 // 5. construct levels OPT__UM_IC_LEVEL+1 to OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1 by the input file UM_IC
    for (int t=0; t<OPT__UM_IC_NLEVEL-1; t++)
    {
-      const int FaLv  = OPT__UM_IC_LEVEL + t;
-      const int SonLv = FaLv + 1;
+      const int  FaLv         = OPT__UM_IC_LEVEL + t;
+      const int  SonLv        = FaLv + 1;
+      const bool AllocData_No = false;
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Constructing level %d ...\n", SonLv );
 
@@ -291,7 +292,7 @@ void Init_ByFile()
 
 //    create SonLv
 #     ifdef LOAD_BALANCE
-      LB_Init_Refine( FaLv );
+      LB_Init_Refine( FaLv, AllocData_No );
 #     else // for SERIAL
       Init_Refine( FaLv );
 #     endif
