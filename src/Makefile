@@ -77,7 +77,7 @@ SIMU_OPTION += -DRSOLVER=ROE
 SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 
 # magnetohydrodynamics
-#SIMU_OPTION += -DMHD
+SIMU_OPTION += -DMHD
 
 # cosmic rays (not supported yet)
 #SIMU_OPTION += -DCOSMIC_RAY
@@ -161,10 +161,10 @@ SIMU_OPTION += -DMAX_PATCH=1000000
 
 # GPU acceleration
 # --> must set GPU_ARCH as well
-SIMU_OPTION += -DGPU
+#SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA
-SIMU_OPTION += -DGPU_ARCH=TURING
+#SIMU_OPTION += -DGPU_ARCH=TURING
 
 # debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
@@ -207,7 +207,7 @@ SIMU_OPTION += -DSUPPORT_HDF5
 #SIMU_OPTION += -DSUPPORT_GSL
 
 # support yt inline analysis
-#SIMU_OPTION += -DSUPPORT_LIBYT
+SIMU_OPTION += -DSUPPORT_LIBYT
 
 # random number implementation: RNG_GNU_EXT/RNG_CPP11 (GNU extension drand48_r/c++11 <random>)
 # --> use RNG_GNU_EXT for compilers supporting GNU extensions (**not supported on some macOS**)
