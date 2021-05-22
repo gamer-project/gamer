@@ -278,7 +278,7 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  LB_RedistrubteRealPatch
+// Function    :  LB_RedistributeRealPatch
 // Description :  Redistribute real patches (and particles) to different ranks according to the cut point
 //                array amr->LB->CutPoint[]
 //
@@ -849,7 +849,7 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
    delete [] ParList;
 #  endif
 
-} // FUNCTION : LB_RedistributePatch
+} // FUNCTION : LB_RedistributeRealPatch
 
 
 
