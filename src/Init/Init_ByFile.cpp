@@ -290,9 +290,14 @@ void Init_ByFile()
       Flag_RefineRegion( FaLv, FlagPatch[t] );
 
 //    create SonLv
-      Refine( FaLv, UseLB );
+#     ifdef LOAD_BALANCE
+      LB_Init_Refine( FaLv );
+#     else // for SERIAL
+      Init_Refine( FaLv );
+#     endif
 
-//    check the total number of patches on SonLv
+//    get and check the total number of patches on SonLv
+      Mis_GetTotalPatchNumber( SonLv );
       const int NPatchExpect = 8*( FlagPatch[t][1] - FlagPatch[t][0] + 1 )
                                 *( FlagPatch[t][3] - FlagPatch[t][2] + 1 )
                                 *( FlagPatch[t][5] - FlagPatch[t][4] + 1 );
