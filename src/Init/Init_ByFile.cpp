@@ -226,11 +226,13 @@ void Init_ByFile()
    const double ParWeight_Zero   = 0.0;
    const bool   Redistribute_Yes = true;
    const bool   Redistribute_No  = false;
+   const bool   SendGridData_Yes = true;
+   const bool   SendGridData_No  = false;
    const bool   ResetLB_Yes      = true;
    const bool   ResetLB_No       = false;
    const int    AllLv            = -1;
 
-   LB_Init_LoadBalance( Redistribute_No, ParWeight_Zero, ResetLB_No, AllLv );
+   LB_Init_LoadBalance( Redistribute_No, SendGridData_No, ParWeight_Zero, ResetLB_No, AllLv );
 
 #  else // for SERIAL
 
@@ -281,8 +283,9 @@ void Init_ByFile()
 // 5. construct levels OPT__UM_IC_LEVEL+1 to OPT__UM_IC_LEVEL+OPT__UM_IC_NLEVEL-1 by the input file UM_IC
    for (int t=0; t<OPT__UM_IC_NLEVEL-1; t++)
    {
-      const int FaLv  = OPT__UM_IC_LEVEL + t;
-      const int SonLv = FaLv + 1;
+      const int  FaLv         = OPT__UM_IC_LEVEL + t;
+      const int  SonLv        = FaLv + 1;
+      const bool AllocData_No = false;
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Constructing level %d ...\n", SonLv );
 
@@ -290,9 +293,15 @@ void Init_ByFile()
       Flag_RefineRegion( FaLv, FlagPatch[t] );
 
 //    create SonLv
-      Refine( FaLv, UseLB );
+//    --> do not allocate grid data here to reduce memory consumption
+#     ifdef LOAD_BALANCE
+      LB_Init_Refine( FaLv, AllocData_No );
+#     else // for SERIAL
+      Init_Refine( FaLv );
+#     endif
 
-//    check the total number of patches on SonLv
+//    get and check the total number of patches on SonLv
+      Mis_GetTotalPatchNumber( SonLv );
       const int NPatchExpect = 8*( FlagPatch[t][1] - FlagPatch[t][0] + 1 )
                                 *( FlagPatch[t][3] - FlagPatch[t][2] + 1 )
                                 *( FlagPatch[t][5] - FlagPatch[t][4] + 1 );
@@ -300,13 +309,20 @@ void Init_ByFile()
          Aux_Error( ERROR_INFO, "Total number of patches on level %d (%d) != expected (%d) !!\n",
                     SonLv, NPatchTotal[SonLv], NPatchExpect );
 
+//    redistribute patches for load balancing
+//    --> no need to send grid data since it hasn't been assigned yet
+#     ifdef LOAD_BALANCE
+      LB_Init_LoadBalance( Redistribute_Yes, SendGridData_No, Par_Weight, ResetLB_Yes, SonLv );
+#     endif
+
 //    assign data on SonLv
       Init_ByFile_AssignData( UM_Filename, SonLv, OPT__UM_IC_LEVEL, OPT__UM_IC_NVAR, OPT__UM_IC_LOAD_NRANK,
                               OPT__UM_IC_FORMAT, UM_Size3D, FlagPatch );
 
 //    fill the buffer patches on SonLv
 #     ifdef LOAD_BALANCE
-      LB_Init_LoadBalance( Redistribute_Yes, Par_Weight, ResetLB_Yes, SonLv );
+      Buf_GetBufferData( SonLv, amr->FluSg[SonLv], amr->MagSg[SonLv], NULL_INT,
+                         DATA_GENERAL, _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
 #     endif
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Constructing level %d ... done\n", SonLv );
@@ -339,7 +355,7 @@ void Init_ByFile()
 // 7. optimize load-balancing to take into account particle weighting
 #  if ( defined PARTICLE  &&  defined LOAD_BALANCE )
    if ( Par_Weight > 0.0 )
-      LB_Init_LoadBalance( Redistribute_Yes, Par_Weight, ResetLB_Yes, AllLv );
+      LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, Par_Weight, ResetLB_Yes, AllLv );
 #  endif
 
 
@@ -355,7 +371,7 @@ void Init_ByFile()
       Refine( lv, UseLB );
 
 #     ifdef LOAD_BALANCE
-      LB_Init_LoadBalance( Redistribute_Yes, Par_Weight, ResetLB_Yes, lv+1 );
+      LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, Par_Weight, ResetLB_Yes, lv+1 );
 #     endif
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Downgrading level %d ... done\n", lv+1 );
@@ -374,7 +390,7 @@ void Init_ByFile()
       Refine( lv, UseLB );
 
 #     ifdef LOAD_BALANCE
-      LB_Init_LoadBalance( Redistribute_Yes, Par_Weight, ResetLB_Yes, lv+1 );
+      LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, Par_Weight, ResetLB_Yes, lv+1 );
 #     endif
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Refining level %d ... done\n", lv );
