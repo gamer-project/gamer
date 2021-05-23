@@ -261,7 +261,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
       } // if ( FirstTime )
 
 //    output data
-      fprintf( File_L1, "%6d %13.7e", NX0_TOT[0], Time[0] );
+      fprintf( File_L1, "%6d %13.7e", (Part==OUTPUT_DIAG)?NX0_TOT[0]:NX0_TOT[Part-OUTPUT_X], Time[0] );
 
       for (int v=0; v<NERR; v++)
       fprintf( File_L1, " %19.12e", L1_Err_Sum[v] );

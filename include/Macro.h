@@ -29,6 +29,7 @@
 #define PASCAL       4
 #define VOLTA        5
 #define TURING       6
+#define AMPERE       7
 
 
 // models

@@ -926,6 +926,13 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 
 //          3-2. monotonicity constraint
+//          extra monotonicity check for the CENTRAL limiter since it's not TVD
+            if ( LR_Limiter == LR_LIMITER_CENTRAL )
+            {
+               if ( (cc_C-fc_L)*(fc_L-cc_L) < (real)0.0 )   fc_L = (real)0.5*( cc_C + cc_L );
+               if ( (cc_R-fc_R)*(fc_R-cc_C) < (real)0.0 )   fc_R = (real)0.5*( cc_C + cc_R );
+            }
+
             dfc [v] = fc_R - fc_L;
             dfc6[v] = (real)6.0*(  cc_C - (real)0.5*( fc_L + fc_R )  );
 
@@ -1776,7 +1783,7 @@ void Hydro_LimitSlope( const real L[], const real C[], const real R[], const LR_
       Slope_C[v] = (real)0.5*( Slope_L[v] + Slope_R[v] );
    }
 
-   if ( LR_Limiter == VL_GMINMOD )
+   if ( LR_Limiter == LR_LIMITER_VL_GMINMOD )
    {
       for (int v=0; v<NCOMP_LR; v++)
       {
@@ -1797,7 +1804,7 @@ void Hydro_LimitSlope( const real L[], const real C[], const real R[], const LR_
    Hydro_Pri2Char( Slope_R, Dens, Pres, LEigenVec, XYZ, EoS );
    Hydro_Pri2Char( Slope_C, Dens, Pres, LEigenVec, XYZ, EoS );
 
-   if ( LR_Limiter == VL_GMINMOD )
+   if ( LR_Limiter == LR_LIMITER_VL_GMINMOD )
    Hydro_Pri2Char( Slope_A, Dens, Pres, LEigenVec, XYZ, EoS );
 #  endif
 
@@ -1811,11 +1818,18 @@ void Hydro_LimitSlope( const real L[], const real C[], const real R[], const LR_
       {
          switch ( LR_Limiter )
          {
-            case VANLEER:     // van-Leer
+//          notes for LR_LIMITER_CENTRAL:
+//          (1) not TVD --> extra monotonicity check outside this function is required
+//          (2) mainly for MHM_RP+PPM to achieve 2nd-order accuracy in linear wave tests
+            case LR_LIMITER_CENTRAL:      // central
+               Slope_Limiter[v] = Slope_C[v];
+               break;
+
+            case LR_LIMITER_VANLEER:      // van-Leer
                Slope_Limiter[v] = (real)2.0*Slope_LR/( Slope_L[v] + Slope_R[v] );
                break;
 
-            case GMINMOD:     // generalized MinMod
+            case LR_LIMITER_GMINMOD:      // generalized MinMod
                Slope_L[v] *= MinMod_Coeff;
                Slope_R[v] *= MinMod_Coeff;
                Slope_Limiter[v]  = FMIN(  FABS( Slope_L[v] ), FABS( Slope_R[v] )  );
@@ -1823,12 +1837,12 @@ void Hydro_LimitSlope( const real L[], const real C[], const real R[], const LR_
                Slope_Limiter[v] *= SIGN( Slope_C[v] );
                break;
 
-            case ALBADA:      // van-Albada
+            case LR_LIMITER_ALBADA:       // van-Albada
                Slope_Limiter[v] = Slope_LR*( Slope_L[v] + Slope_R[v] ) /
                                   ( Slope_L[v]*Slope_L[v] + Slope_R[v]*Slope_R[v] );
                break;
 
-            case VL_GMINMOD:  // van-Leer + generalized MinMod
+            case LR_LIMITER_VL_GMINMOD:   // van-Leer + generalized MinMod
                Slope_L[v] *= MinMod_Coeff;
                Slope_R[v] *= MinMod_Coeff;
                Slope_Limiter[v]  = FMIN(  FABS( Slope_L[v] ), FABS( Slope_R[v] )  );

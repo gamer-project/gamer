@@ -493,6 +493,7 @@ struct InputPara_t
    double MinPres;
    double MinEint;
    double MinTemp;
+   int    Opt__CheckPresAfterFlu;
    int    Opt__LastResortFloor;
    int    JeansMinPres;
    int    JeansMinPres_Level;

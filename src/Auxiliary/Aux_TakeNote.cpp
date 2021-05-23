@@ -318,6 +318,8 @@ void Aux_TakeNote()
       fprintf( Note, "GPU_ARCH                        VOLTA\n" );
 #     elif ( GPU_ARCH == TURING )
       fprintf( Note, "GPU_ARCH                        TURING\n" );
+#     elif ( GPU_ARCH == AMPERE )
+      fprintf( Note, "GPU_ARCH                        AMPERE\n" );
 #     else
       fprintf( Note, "GPU_ARCH                        UNKNOWN\n" );
 #     endif
@@ -895,13 +897,14 @@ void Aux_TakeNote()
       fprintf( Note, "MOLECULAR_WEIGHT                %13.7e\n",  MOLECULAR_WEIGHT        );
       fprintf( Note, "ISO_TEMP                        %13.7e\n",  ISO_TEMP                );
       fprintf( Note, "MINMOD_COEFF                    %13.7e\n",  MINMOD_COEFF            );
-      fprintf( Note, "OPT__LR_LIMITER                 %s\n",      ( OPT__LR_LIMITER == VANLEER           ) ? "VANLEER"    :
-                                                                  ( OPT__LR_LIMITER == GMINMOD           ) ? "GMINMOD"    :
-                                                                  ( OPT__LR_LIMITER == ALBADA            ) ? "ALBADA"     :
-                                                                  ( OPT__LR_LIMITER == VL_GMINMOD        ) ? "VL_GMINMOD" :
-                                                                  ( OPT__LR_LIMITER == EXTPRE            ) ? "EXTPRE"     :
-                                                                  ( OPT__LR_LIMITER == LR_LIMITER_NONE   ) ? "NONE"       :
-                                                                                                             "UNKNOWN" );
+      fprintf( Note, "OPT__LR_LIMITER                 %s\n",      ( OPT__LR_LIMITER == LR_LIMITER_VANLEER    ) ? "VANLEER"    :
+                                                                  ( OPT__LR_LIMITER == LR_LIMITER_GMINMOD    ) ? "GMINMOD"    :
+                                                                  ( OPT__LR_LIMITER == LR_LIMITER_ALBADA     ) ? "ALBADA"     :
+                                                                  ( OPT__LR_LIMITER == LR_LIMITER_VL_GMINMOD ) ? "VL_GMINMOD" :
+                                                                  ( OPT__LR_LIMITER == LR_LIMITER_EXTPRE     ) ? "EXTPRE"     :
+                                                                  ( OPT__LR_LIMITER == LR_LIMITER_CENTRAL    ) ? "CENTRAL"    :
+                                                                  ( OPT__LR_LIMITER == LR_LIMITER_NONE       ) ? "NONE"       :
+                                                                                                                 "UNKNOWN" );
       fprintf( Note, "OPT__1ST_FLUX_CORR              %s\n",      ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D   ) ? "3D"   :
                                                                   ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D1D ) ? "3D1D" :
                                                                   ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_NONE ) ? "NONE" :
@@ -990,6 +993,7 @@ void Aux_TakeNote()
       fprintf( Note, "MIN_PRES                        %13.7e\n",  MIN_PRES                 );
       fprintf( Note, "MIN_EINT                        %13.7e\n",  MIN_EINT                 );
       fprintf( Note, "MIN_TEMP                        %13.7e\n",  MIN_TEMP                 );
+      fprintf( Note, "OPT__CHECK_PRES_AFTER_FLU       %d\n",      OPT__CHECK_PRES_AFTER_FLU);
       fprintf( Note, "OPT__LAST_RESORT_FLOOR          %d\n",      OPT__LAST_RESORT_FLOOR   );
       fprintf( Note, "JEANS_MIN_PRES                  %d\n",      JEANS_MIN_PRES           );
       if ( JEANS_MIN_PRES ) {

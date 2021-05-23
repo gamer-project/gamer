@@ -111,12 +111,14 @@ const IntScheme_t
 // data reconstruction TVD limiters
 typedef int LR_Limiter_t;
 const LR_Limiter_t
-   LR_LIMITER_NONE = 0,
-   VANLEER         = 1,
-   GMINMOD         = 2,
-   ALBADA          = 3,
-   VL_GMINMOD      = 4,
-   EXTPRE          = 5;
+   LR_LIMITER_DEFAULT    = -1,
+   LR_LIMITER_NONE       = 0,
+   LR_LIMITER_VANLEER    = 1,
+   LR_LIMITER_GMINMOD    = 2,
+   LR_LIMITER_ALBADA     = 3,
+   LR_LIMITER_VL_GMINMOD = 4,
+   LR_LIMITER_EXTPRE     = 5,
+   LR_LIMITER_CENTRAL    = 6;
 
 
 // data output formats

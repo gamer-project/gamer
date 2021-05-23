@@ -137,12 +137,16 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
          CFLy += Vy;
          CFLz += Vz;
 
-#        if   ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == CTU )
+#        if   ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
          MaxCFL = FMAX( CFLx, MaxCFL );
          MaxCFL = FMAX( CFLy, MaxCFL );
          MaxCFL = FMAX( CFLz, MaxCFL );
-#        elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
+#        else
+#        error : ERROR : unsupported FLU_SCHEME !!
+         /*
+//       no longer used
          MaxCFL = FMAX( CFLx+CFLy+CFLz, MaxCFL );
+         */
 #        endif
       } // CGPU_LOOP( t, CUBE(PS1) )
 
