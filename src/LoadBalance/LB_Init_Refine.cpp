@@ -17,7 +17,7 @@
 //
 // Parameter   :  FaLv      : Target level to be refined (FaLv --> FaLv+1)
 //                AllocData : Allocate grid data
-//                            --> For Init_ByFile() to reduce memory consumption
+//                            --> Set to false by Init_ByFile() to reduce memory consumption
 //-------------------------------------------------------------------------------------------------------
 void LB_Init_Refine( const int FaLv, const bool AllocData )
 {

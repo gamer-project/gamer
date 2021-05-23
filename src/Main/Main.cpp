@@ -616,6 +616,7 @@ int main( int argc, char *argv[] )
          }
 
          const bool   Redistribute_Yes = true;
+         const bool   SendGridData_Yes = true;
          const bool   ResetLB_Yes      = true;
 #        ifdef PARTICLE
          const double ParWeight        = amr->LB->Par_Weight;
@@ -624,7 +625,7 @@ int main( int argc, char *argv[] )
 #        endif
          const int    AllLv            = -1;
 
-         LB_Init_LoadBalance( Redistribute_Yes, ParWeight, ResetLB_Yes, AllLv );
+         LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, ParWeight, ResetLB_Yes, AllLv );
 
          if ( OPT__PATCH_COUNT > 0 )         Aux_Record_PatchCount();
 
