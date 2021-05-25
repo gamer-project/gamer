@@ -500,6 +500,9 @@ int main( int argc, char *argv[] )
    Aux_ResetTimer();
 #  endif
 
+#  ifdef SUPPORT_LIBYT
+   YT_Inline();
+#  endif
 
 #  ifdef TIMING
    Timer_Init.Stop();
