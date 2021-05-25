@@ -792,6 +792,9 @@ endif
 COMMONFLAG := $(INCLUDE) $(SIMU_OPTION)
 CXXFLAG    += $(COMMONFLAG) $(OPENMPFLAG)
 
+# grep git informations
+GIT_INFO    += -DGIT_SHA1="`git rev-parse HEAD`"                 # record SHA1 in git
+GIT_INFO    += -DGIT_BRANCH="`git rev-parse --abbrev-ref HEAD`"  # record git branch name
 
 # NVCC flags
 # -------------------------------------------------------------------------------
@@ -882,6 +885,7 @@ NVCC         := $(strip $(NVCC))
 NVCCFLAG_COM := $(strip $(NVCCFLAG_COM))
 NVCCFLAG_FLU := $(strip $(NVCCFLAG_FLU))
 NVCCFLAG_POT := $(strip $(NVCCFLAG_POT))
+GIT_INFO     := $(strip $(GIT_INFO))
 
 
 # implicit rules (do NOT modify the order of the following rules)
@@ -916,9 +920,6 @@ $(OBJ_PATH)/$(PREFIX_GPU)%.o : %.cu
 	$(ECHO)$(NVCC) $(NVCCFLAG_COM) -o $@ -dc $<
 endif # GPU
 
-# grep git informations
-GIT_INFO    += -DGIT_SHA1="`git rev-parse HEAD`"                 # record SHA1 in git
-GIT_INFO    += -DGIT_BRANCH="`git rev-parse --abbrev-ref HEAD`"  # record git branch name
 # CPU codes
 $(OBJ_PATH)/$(PREFIX_CPU)%.o : %.cpp
 	@echo "Compiling $<"
