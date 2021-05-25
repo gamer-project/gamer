@@ -11,6 +11,7 @@ static double MHDLinear_Rho1;          // amplitude of the density perturbation
 static double MHDLinear_P0;            // background pressure
 static double MHDLinear_v0;            // background velocity
 static double MHDLinear_B0;            // background magnetic field
+static int    MHDLinear_Dir;           // wave direction: (0/1/2/3) --> (x/y/z/diagonal)
 static double MHDLinear_Sign;          // (+1/-1) --> (right/left-moving wave)
 static double MHDLinear_Phase0;        // initial phase shift
 
@@ -62,8 +63,8 @@ void Validate()
    Aux_Error( ERROR_INFO, "EOS != EOS_GAMMA !!\n" );
 #  endif
 
-   if ( amr->BoxSize[0] != amr->BoxSize[1]  ||  amr->BoxSize[0] != amr->BoxSize[2] )
-      Aux_Error( ERROR_INFO, "simulation domain must be cubic !!\n" );
+   if ( MHDLinear_Dir == 3  &&  ( amr->BoxSize[0] != amr->BoxSize[1] || amr->BoxSize[0] != amr->BoxSize[2] )  )
+      Aux_Error( ERROR_INFO, "simulation domain must be cubic for MHDLinear_Dir = %d !!\n", MHDLinear_Dir );
 
    for (int f=0; f<6; f++)
    if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC )
@@ -120,6 +121,7 @@ void SetParameter()
    ReadPara->Add( "MHDLinear_Rho1",    &MHDLinear_Rho1,        -1.0,          0.0,              NoMax_double      );
    ReadPara->Add( "MHDLinear_P0",      &MHDLinear_P0,          -1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "MHDLinear_v0",      &MHDLinear_v0,           0.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "MHDLinear_Dir",     &MHDLinear_Dir,          3,            0,                3                 );
    ReadPara->Add( "MHDLinear_B0",      &MHDLinear_B0,          -1.0,          0.0,              NoMax_double      );
    ReadPara->Add( "MHDLinear_Sign",    &MHDLinear_Sign,         1.0,          NoMin_double,     NoMax_double      );
    ReadPara->Add( "MHDLinear_Phase0",  &MHDLinear_Phase0,       0.0,          NoMin_double,     NoMax_double      );
@@ -130,7 +132,7 @@ void SetParameter()
 
 
 // (2) set the problem-specific derived parameters
-   MHDLinear_WaveLength = amr->BoxSize[0] / sqrt(3.0);   // 3 wavelengths along the diagonal
+   MHDLinear_WaveLength = ( MHDLinear_Dir == 3 ) ? amr->BoxSize[0]/sqrt(3.0) : amr->BoxSize[MHDLinear_Dir];
 
 // assuming EOS_GAMMA
    if ( MHDLinear_Mode == 1 )
@@ -163,17 +165,18 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID      = %d\n",     TESTPROB_ID          );
-      Aux_Message( stdout, "  mode                 = %d\n",     MHDLinear_Mode       );
-      Aux_Message( stdout, "  background density   = %14.7e\n", MHDLinear_Rho0       );
-      Aux_Message( stdout, "  density perturbation = %14.7e\n", MHDLinear_Rho1       );
-      Aux_Message( stdout, "  background pressure  = %14.7e\n", MHDLinear_P0         );
-      Aux_Message( stdout, "  background velocity  = %14.7e\n", MHDLinear_v0         );
-      Aux_Message( stdout, "  background B field   = %14.7e\n", MHDLinear_B0         );
-      Aux_Message( stdout, "  direction            = %14.7e\n", MHDLinear_Sign       );
-      Aux_Message( stdout, "  initial phase shift  = %14.7e\n", MHDLinear_Phase0     );
-      Aux_Message( stdout, "  wave speed           = %14.7e\n", MHDLinear_WaveSpeed  );
-      Aux_Message( stdout, "  wavelength           = %14.7e\n", MHDLinear_WaveLength );
+      Aux_Message( stdout, "  test problem ID      = %d\n",      TESTPROB_ID          );
+      Aux_Message( stdout, "  mode                 = %d\n",      MHDLinear_Mode       );
+      Aux_Message( stdout, "  background density   = % 14.7e\n", MHDLinear_Rho0       );
+      Aux_Message( stdout, "  density perturbation = % 14.7e\n", MHDLinear_Rho1       );
+      Aux_Message( stdout, "  background pressure  = % 14.7e\n", MHDLinear_P0         );
+      Aux_Message( stdout, "  background velocity  = % 14.7e\n", MHDLinear_v0         );
+      Aux_Message( stdout, "  background B field   = % 14.7e\n", MHDLinear_B0         );
+      Aux_Message( stdout, "  direction            = %d\n",      MHDLinear_Dir        );
+      Aux_Message( stdout, "  sign (R/L)           = % 14.7e\n", MHDLinear_Sign       );
+      Aux_Message( stdout, "  initial phase shift  = % 14.7e\n", MHDLinear_Phase0     );
+      Aux_Message( stdout, "  wave speed           = % 14.7e\n", MHDLinear_WaveSpeed  );
+      Aux_Message( stdout, "  wavelength           = % 14.7e\n", MHDLinear_WaveLength );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -218,9 +221,16 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double WaveSpeed  = MHDLinear_WaveSpeed;
    const double WaveLength = MHDLinear_WaveLength;
 
-   const double r = 1.0/sqrt(3.0)*( x + y + z ) - v0*Time;
-   double v1, B1, P1, WaveK, WaveW, SinPhase;
-   double Dens, MomX, MomY, MomZ, Pres, Eint, Etot;
+   double r, v1, B1, P1, WaveK, WaveW, SinPhase;
+   double Dens, Mom, MomX, MomY, MomZ, Pres, Eint, Etot;
+
+   switch ( MHDLinear_Dir ) {
+      case 0:  r = x;                        break;
+      case 1:  r = y;                        break;
+      case 2:  r = z;                        break;
+      case 3:  r = ( x + y + z )/sqrt(3.0);  break;
+   }
+   r -= v0*Time;
 
    if ( MHDLinear_Mode == 1 )
    {
@@ -232,9 +242,15 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       SinPhase = sin( WaveK*r - Sign*WaveW*Time + Phase0 );
 
       Dens = Rho0 + Rho1*SinPhase;
-      MomX = Dens*( v1*SinPhase + v0 )/sqrt(3.0);
-      MomY = MomX;
-      MomZ = MomX;
+      Mom  = Dens*( v1*SinPhase + v0 );
+
+      switch ( MHDLinear_Dir ) {
+         case 0:  MomX = Mom;            MomY = 0.0;   MomZ = 0.0;   break;
+         case 1:  MomX = 0.0;            MomY = Mom;   MomZ = 0.0;   break;
+         case 2:  MomX = 0.0;            MomY = 0.0;   MomZ = Mom;   break;
+         case 3:  MomX = Mom/sqrt(3.0);  MomY = MomX;  MomZ = MomX;  break;
+      }
+
       Pres = P0 + P1*SinPhase;
    } // if ( MHDLinear_Mode == 1 )
 
@@ -288,8 +304,15 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
    const double WaveSpeed  = MHDLinear_WaveSpeed;
    const double WaveLength = MHDLinear_WaveLength;
 
-   const double r = 1.0/sqrt(3.0)*( x + y + z ) - v0*Time;
-   double v1, B1, WaveK, WaveW, SinPhase;
+   double r, v1, B1, B, WaveK, WaveW, SinPhase;
+
+   switch ( MHDLinear_Dir ) {
+      case 0:  r = x;                        break;
+      case 1:  r = y;                        break;
+      case 2:  r = z;                        break;
+      case 3:  r = ( x + y + z )/sqrt(3.0);  break;
+   }
+   r -= v0*Time;
 
    if ( MHDLinear_Mode == 1 )
    {
@@ -298,10 +321,29 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
       WaveK    = 2.0*M_PI/WaveLength;
       WaveW    = WaveK*WaveSpeed;
       SinPhase = sin( WaveK*r - Sign*WaveW*Time + Phase0 );
+      B        = B0 + B1*SinPhase;
 
-      magnetic[MAGZ] = ( B0 + B1*SinPhase ) / sqrt(1.5);
-      magnetic[MAGY] = -0.5*magnetic[MAGZ];
-      magnetic[MAGX] = -0.5*magnetic[MAGZ];
+      switch ( MHDLinear_Dir ) {
+         case 0: magnetic[MAGX] = 0.0;
+                 magnetic[MAGY] = +B / sqrt(2.0);
+                 magnetic[MAGZ] = +B / sqrt(2.0);
+                 break;
+
+         case 1: magnetic[MAGX] = +B / sqrt(2.0);
+                 magnetic[MAGY] = 0.0;
+                 magnetic[MAGZ] = +B / sqrt(2.0);
+                 break;
+
+         case 2: magnetic[MAGX] = +B / sqrt(2.0);
+                 magnetic[MAGY] = +B / sqrt(2.0);
+                 magnetic[MAGZ] = 0.0;
+                 break;
+
+         case 3: magnetic[MAGX] = -B / ( 2.0*sqrt(1.5) );
+                 magnetic[MAGY] = -B / ( 2.0*sqrt(1.5) );
+                 magnetic[MAGZ] = +B / sqrt(1.5);
+                 break;
+      }
    } // if ( MHDLinear_Mode == 1 )
 
    else
@@ -326,9 +368,9 @@ static void OutputError()
 {
 
    const char Prefix[100]     = "MHDLinearWave";
-   const OptOutputPart_t Part = OUTPUT_DIAG;
+   const OptOutputPart_t Part = OUTPUT_X + MHDLinear_Dir;
 
-   Output_L1Error( SetGridIC, SetBFieldIC, Prefix, Part, NULL_REAL, NULL_REAL, NULL_REAL );
+   Output_L1Error( SetGridIC, SetBFieldIC, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
 
 } // FUNCTION : OutputError
 #endif // #ifdef MHD

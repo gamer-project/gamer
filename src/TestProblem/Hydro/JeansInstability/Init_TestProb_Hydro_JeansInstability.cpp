@@ -9,6 +9,7 @@ static double Jeans_Rho0;           // background density
 static double Jeans_Rho1;           // amplitude of the density perturbation
 static double Jeans_P0;             // background pressure
 static double Jeans_v0;             // background velocity
+static int    Jeans_Dir;            // wave direction: (0/1/2/3) --> (x/y/z/diagonal)
 static double Jeans_Sign;           // (+1/-1) --> (stable: right/left-moving wave; unstable: growing/decaying mode)
 static double Jeans_Phase0;         // initial phase shift
 #ifdef MHD
@@ -59,8 +60,8 @@ void Validate()
    Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
 #  endif
 
-   if ( amr->BoxSize[0] != amr->BoxSize[1]  ||  amr->BoxSize[0] != amr->BoxSize[2] )
-      Aux_Error( ERROR_INFO, "simulation domain must be cubic !!\n" );
+   if ( Jeans_Dir == 3  &&  ( amr->BoxSize[0] != amr->BoxSize[1] || amr->BoxSize[0] != amr->BoxSize[2] )  )
+      Aux_Error( ERROR_INFO, "simulation domain must be cubic for Jeans_Dir = %d !!\n", Jeans_Dir );
 
    for (int f=0; f<6; f++)
    if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC )
@@ -125,6 +126,7 @@ void SetParameter()
    ReadPara->Add( "Jeans_Rho1",        &Jeans_Rho1,           -1.0,           0.0,              NoMax_double      );
    ReadPara->Add( "Jeans_P0",          &Jeans_P0,             -1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "Jeans_v0",          &Jeans_v0,              0.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jeans_Dir",         &Jeans_Dir,             3,             0,                3                 );
    ReadPara->Add( "Jeans_Sign",        &Jeans_Sign,            1.0,           NoMin_double,     NoMax_double      );
    ReadPara->Add( "Jeans_Phase0",      &Jeans_Phase0,          0.0,           NoMin_double,     NoMax_double      );
 #  ifdef MHD
@@ -137,7 +139,7 @@ void SetParameter()
 
 
 // (2) set the problem-specific derived parameters
-   Jeans_WaveLength = amr->BoxSize[0] / sqrt(3.0);   // 3 wavelengths along the diagonal
+   Jeans_WaveLength = ( Jeans_Dir == 3 ) ? amr->BoxSize[0]/sqrt(3.0) : amr->BoxSize[Jeans_Dir];
 #  ifdef MHD
    Jeans_WaveSpeed  = sqrt( GAMMA*Jeans_P0/Jeans_Rho0 + SQR(Jeans_B0)/Jeans_Rho0 );    // assuming EOS_GAMMA
 #  else
@@ -181,6 +183,7 @@ void SetParameter()
 #     ifdef MHD
       Aux_Message( stdout, "  background B field     = %14.7e\n", Jeans_B0         );
 #     endif
+      Aux_Message( stdout, "  direction              = %d\n",     Jeans_Dir        );
       Aux_Message( stdout, "  sign (grow/decay;R/L)  = %14.7e\n", Jeans_Sign       );
       Aux_Message( stdout, "  initial phase shift    = %14.7e\n", Jeans_Phase0     );
       Aux_Message( stdout, "  wave speed             = %14.7e\n", Jeans_WaveSpeed  );
@@ -233,9 +236,16 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double WaveW  = Jeans_WaveW;
 
    double r, v1, P1, CosPhase, SinPhase, ExpPhase;
-   double Dens, MomX, MomY, MomZ, Pres, Eint, Etot;
+   double Dens, Mom, MomX, MomY, MomZ, Pres, Eint, Etot;
 
-   r  = 1.0/sqrt(3.0)*( x + y + z ) - v0*Time;
+   switch ( Jeans_Dir ) {
+      case 0:  r = x;                        break;
+      case 1:  r = y;                        break;
+      case 2:  r = z;                        break;
+      case 3:  r = ( x + y + z )/sqrt(3.0);  break;
+   }
+   r -= v0*Time;
+
    v1 = Sign*Rho1/Rho0*WaveW/WaveK;
    P1 = GAMMA*P0/Rho0*Rho1;   // assuming EOS_GAMMA
 
@@ -244,9 +254,15 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       CosPhase = cos( WaveK*r - Sign*WaveW*Time + Phase0 );
 
       Dens = Rho0 + Rho1*CosPhase;
-      MomX = Dens*( v0 + v1*CosPhase )/sqrt(3.0);
-      MomY = MomX;
-      MomZ = MomX;
+      Mom  = Dens*( v0 + v1*CosPhase );
+
+      switch ( Jeans_Dir ) {
+         case 0:  MomX = Mom;            MomY = 0.0;   MomZ = 0.0;   break;
+         case 1:  MomX = 0.0;            MomY = Mom;   MomZ = 0.0;   break;
+         case 2:  MomX = 0.0;            MomY = 0.0;   MomZ = Mom;   break;
+         case 3:  MomX = Mom/sqrt(3.0);  MomY = MomX;  MomZ = MomX;  break;
+      }
+
       Pres = P0 + P1*CosPhase;
    }
 
@@ -257,9 +273,15 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       ExpPhase = exp( Jeans_Sign*Jeans_WaveW*Time );
 
       Dens = Rho0 + Rho1*CosPhase*ExpPhase;
-      MomX = Dens*( v0 - v1*SinPhase*ExpPhase )/sqrt(3.0);
-      MomY = MomX;
-      MomZ = MomX;
+      Mom  = Dens*( v0 - v1*SinPhase*ExpPhase );
+
+      switch ( Jeans_Dir ) {
+         case 0:  MomX = Mom;            MomY = 0.0;   MomZ = 0.0;   break;
+         case 1:  MomX = 0.0;            MomY = Mom;   MomZ = 0.0;   break;
+         case 2:  MomX = 0.0;            MomY = 0.0;   MomZ = Mom;   break;
+         case 3:  MomX = Mom/sqrt(3.0);  MomY = MomX;  MomZ = MomX;  break;
+      }
+
       Pres = P0 + P1*CosPhase*ExpPhase;
    }
 
@@ -310,29 +332,74 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
    const double WaveK  = Jeans_WaveK;
    const double WaveW  = Jeans_WaveW;
 
-   double r, B1, CosPhase, ExpPhase;
+   double r, B1, B, CosPhase, ExpPhase;
 
-   r  = 1.0/sqrt(3.0)*( x + y + z ) - v0*Time;
+   switch ( Jeans_Dir ) {
+      case 0:  r = x;                        break;
+      case 1:  r = y;                        break;
+      case 2:  r = z;                        break;
+      case 3:  r = ( x + y + z )/sqrt(3.0);  break;
+   }
+   r -= v0*Time;
    B1 = B0/Rho0*Rho1;
 
 // assuming transverse component only
    if ( Jeans_Stable )
    {
       CosPhase = cos( WaveK*r - Sign*WaveW*Time + Phase0 );
+      B        = B0 + B1*CosPhase;
 
-      magnetic[MAGZ] = ( B0 + B1*CosPhase ) / sqrt(1.5);
-   }
+      switch ( Jeans_Dir ) {
+         case 0: magnetic[MAGX] = 0.0;
+                 magnetic[MAGY] = +B / sqrt(2.0);
+                 magnetic[MAGZ] = +B / sqrt(2.0);
+                 break;
+
+         case 1: magnetic[MAGX] = +B / sqrt(2.0);
+                 magnetic[MAGY] = 0.0;
+                 magnetic[MAGZ] = +B / sqrt(2.0);
+                 break;
+
+         case 2: magnetic[MAGX] = +B / sqrt(2.0);
+                 magnetic[MAGY] = +B / sqrt(2.0);
+                 magnetic[MAGZ] = 0.0;
+                 break;
+
+         case 3: magnetic[MAGX] = -B / ( 2.0*sqrt(1.5) );
+                 magnetic[MAGY] = -B / ( 2.0*sqrt(1.5) );
+                 magnetic[MAGZ] = +B / sqrt(1.5);
+                 break;
+      }
+   } // if ( Jeans_Stable )
 
    else
    {
       CosPhase = cos( WaveK*r + Phase0 );
       ExpPhase = exp( Jeans_Sign*Jeans_WaveW*Time );
+      B        = B0 + B1*CosPhase*ExpPhase;
 
-      magnetic[MAGZ] = ( B0 + B1*CosPhase*ExpPhase ) / sqrt(1.5);
-   }
+      switch ( Jeans_Dir ) {
+         case 0: magnetic[MAGX] = 0.0;
+                 magnetic[MAGY] = +B / sqrt(2.0);
+                 magnetic[MAGZ] = +B / sqrt(2.0);
+                 break;
 
-   magnetic[MAGX] = -0.5*magnetic[MAGZ];
-   magnetic[MAGY] = -0.5*magnetic[MAGZ];
+         case 1: magnetic[MAGX] = +B / sqrt(2.0);
+                 magnetic[MAGY] = 0.0;
+                 magnetic[MAGZ] = +B / sqrt(2.0);
+                 break;
+
+         case 2: magnetic[MAGX] = +B / sqrt(2.0);
+                 magnetic[MAGY] = +B / sqrt(2.0);
+                 magnetic[MAGZ] = 0.0;
+                 break;
+
+         case 3: magnetic[MAGX] = -B / ( 2.0*sqrt(1.5) );
+                 magnetic[MAGY] = -B / ( 2.0*sqrt(1.5) );
+                 magnetic[MAGZ] = +B / sqrt(1.5);
+                 break;
+      }
+   } // if ( Jeans_Stable ) ... else ...
 
 } // FUNCTION : SetBFieldIC
 #endif // #ifdef MHD
@@ -354,12 +421,12 @@ static void OutputError()
 {
 
    const char Prefix[100]     = "Jeans";
-   const OptOutputPart_t Part = OUTPUT_DIAG;
+   const OptOutputPart_t Part = OUTPUT_X + Jeans_Dir;
 
 #  ifdef MHD
-   Output_L1Error( SetGridIC, SetBFieldIC, Prefix, Part, NULL_REAL, NULL_REAL, NULL_REAL );
+   Output_L1Error( SetGridIC, SetBFieldIC, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
 #  else
-   Output_L1Error( SetGridIC, NULL,        Prefix, Part, NULL_REAL, NULL_REAL, NULL_REAL );
+   Output_L1Error( SetGridIC, NULL,        Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
 #  endif
 
 } // FUNCTION : OutputError

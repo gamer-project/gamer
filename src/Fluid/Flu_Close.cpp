@@ -372,9 +372,10 @@ void CorrectFlux( const int SonLv, const real h_Flux_Array[][9][NFLUX_TOTAL][ SQ
 bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
 {
 
-   const int  CheckMinEtot = 0;
-   const int  CheckMinEint = 1;
-   const bool NoFloor      = false;
+   const int  CheckMinEtot    = 0;
+   const int  CheckMinEint    = 1;
+   const bool CheckMinPres_No = false;
+   const bool NoFloor         = false;
 
 
 // if any checks below fail, return true
@@ -414,6 +415,18 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
          )
       )
       return true;
+
+   if ( OPT__CHECK_PRES_AFTER_FLU )
+   {
+      const real Pres = Hydro_Con2Pres( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ],
+                                        Fluid[ENGY], Fluid+NCOMP_FLUID,
+                                        CheckMinPres_No, NULL_REAL, Emag,
+                                        EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt,
+                                        EoS_AuxArray_Int, h_EoS_Table, NULL );
+
+      if ( !Aux_IsFinite(Pres)  ||  Pres < (real)0.0 )
+         return true;
+   }
 #  endif // #ifndef BAROTROPIC_EOS
 
 

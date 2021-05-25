@@ -4,7 +4,7 @@
 
 
 
-static void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool RemoveParFromRepo );
+static void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool RemoveParFromRepo, const bool SendGridData );
 #ifdef PARTICLE
 static void LB_RedistributeParticle_Init( real **ParAtt_Old );
 static void LB_RedistributeParticle_End( real **ParAtt_Old );
@@ -31,6 +31,9 @@ static void LB_RedistributeParticle_End( real **ParAtt_Old );
 //                                         and LB_RedistributeRealPatch() to redistribute all real patches
 //                                     --> Currently it is used only during the RESTART process since we already call
 //                                         LB_SetCutPoint() and load real patches accordingly when calling Init_ByRestart_*()
+//                SendGridData : Transfer grid data
+//                               --> Set to false by Init_ByFile() to reduce memory consumption
+//                               --> Useless when Redistribute==false
 //                ParWeight    : Relative load-balance weighting of particles
 //                               --> Weighting of each patch is estimated as "PATCH_SIZE^3 + NParThisPatch*ParWeight"
 //                               --> <= 0.0 : do not consider particle weighting
@@ -46,7 +49,7 @@ static void LB_RedistributeParticle_End( real **ParAtt_Old );
 //                               --> 0~TOP_LEVEL : only apply to a specific level
 //                                   <0          : apply to all levels
 //-------------------------------------------------------------------------------------------------------
-void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const bool Reset, const int TLv )
+void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, const double ParWeight, const bool Reset, const int TLv )
 {
 
    if ( MPI_Rank == 0 )
@@ -136,7 +139,7 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const
 
 //    3.1 re-distribute real patches (and particles)
       if ( Redistribute )
-      LB_RedistributeRealPatch( lv, ParAtt_Old, (TLv<0)?RemoveParFromRepo_No:RemoveParFromRepo_Yes );
+      LB_RedistributeRealPatch( lv, ParAtt_Old, (TLv<0)?RemoveParFromRepo_No:RemoveParFromRepo_Yes, SendGridData );
 
 //    3.2 allocate sibling-buffer patches at lv
       LB_AllocateBufferPatch_Sibling( lv );
@@ -278,7 +281,7 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  LB_RedistrubteRealPatch
+// Function    :  LB_RedistributeRealPatch
 // Description :  Redistribute real patches (and particles) to different ranks according to the cut point
 //                array amr->LB->CutPoint[]
 //
@@ -292,8 +295,10 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const
 //                ParAtt_Old        : Pointers pointing to the particle attribute arrays (amr->Par->Attribute[])
 //                RemoveParFromRepo : Remove particles on lv from the particle repository (amr->Par)
 //                                    --> Useful when applying LB_Init_LoadBalance() to a single level (i.e., TLv>=0)
+//                SendGridData      : Transfer grid data
+//                                    --> Particle data will always be transferred
 //-------------------------------------------------------------------------------------------------------
-void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool RemoveParFromRepo )
+void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool RemoveParFromRepo, const bool SendGridData )
 {
 
 // 1. count the number of real patches (and particles) to be sent and received
@@ -458,15 +463,15 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
 
    real *SendPtr         = NULL;
    long *SendBuf_LBIdx   = new long [ NSend_Total_Patch ];
-   real *SendBuf_Flu     = new real [ SendDataSizeFlu1v*NCOMP_TOTAL ];
+   real *SendBuf_Flu     = ( SendGridData ) ? new real [ SendDataSizeFlu1v*NCOMP_TOTAL ] : NULL;
 #  ifdef GRAVITY
-   real *SendBuf_Pot     = new real [ SendDataSizeFlu1v ];
+   real *SendBuf_Pot     = ( SendGridData ) ? new real [ SendDataSizeFlu1v ]             : NULL;
 #  ifdef STORE_POT_GHOST
-   real *SendBuf_PotExt  = new real [ SendDataSizePotExt ];
+   real *SendBuf_PotExt  = ( SendGridData ) ? new real [ SendDataSizePotExt ]            : NULL;
 #  endif
 #  endif // GRAVITY
 #  ifdef MHD
-   real *SendBuf_Mag     = new real [ SendDataSizeMag1v*NCOMP_MAG ];
+   real *SendBuf_Mag     = ( SendGridData ) ? new real [ SendDataSizeMag1v*NCOMP_MAG ]   : NULL;
 #  endif
 #  ifdef PARTICLE
    real *SendBuf_ParData = new real [ NSend_Total_ParData ];
@@ -489,33 +494,36 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
 //    2.1 LB_Idx
       SendBuf_LBIdx[ Send_NDisp_Patch[TRank] + NDone_Patch[TRank] ] = LB_Idx;
 
-//    2.2 fluid
-      for (int v=0; v<NCOMP_TOTAL; v++)
+      if ( SendGridData )
       {
-         SendPtr = SendBuf_Flu + v*SendDataSizeFlu1v + Send_NDisp_Flu1v[TRank] + NDone_Patch[TRank]*FluSize1v;
-         memcpy( SendPtr, &amr->patch[FluSg][lv][PID]->fluid[v][0][0][0], FluSize1v*sizeof(real) );
-      }
+//       2.2 fluid
+         for (int v=0; v<NCOMP_TOTAL; v++)
+         {
+            SendPtr = SendBuf_Flu + v*SendDataSizeFlu1v + Send_NDisp_Flu1v[TRank] + NDone_Patch[TRank]*FluSize1v;
+            memcpy( SendPtr, &amr->patch[FluSg][lv][PID]->fluid[v][0][0][0], FluSize1v*sizeof(real) );
+         }
 
-#     ifdef GRAVITY
-//    2.3 potential
-      SendPtr = SendBuf_Pot + Send_NDisp_Flu1v[TRank] + NDone_Patch[TRank]*FluSize1v;
-      memcpy( SendPtr, &amr->patch[PotSg][lv][PID]->pot[0][0][0], FluSize1v*sizeof(real) );
+#        ifdef GRAVITY
+//       2.3 potential
+         SendPtr = SendBuf_Pot + Send_NDisp_Flu1v[TRank] + NDone_Patch[TRank]*FluSize1v;
+         memcpy( SendPtr, &amr->patch[PotSg][lv][PID]->pot[0][0][0], FluSize1v*sizeof(real) );
 
-//    2.4 potential with ghost zones
-#     ifdef STORE_POT_GHOST
-      SendPtr = SendBuf_PotExt + Send_NDisp_PotExt[TRank] + NDone_Patch[TRank]*GraNxtSize;
-      memcpy( SendPtr, &amr->patch[PotSg][lv][PID]->pot_ext[0][0][0], GraNxtSize*sizeof(real) );
-#     endif
-#     endif
+//       2.4 potential with ghost zones
+#        ifdef STORE_POT_GHOST
+         SendPtr = SendBuf_PotExt + Send_NDisp_PotExt[TRank] + NDone_Patch[TRank]*GraNxtSize;
+         memcpy( SendPtr, &amr->patch[PotSg][lv][PID]->pot_ext[0][0][0], GraNxtSize*sizeof(real) );
+#        endif
+#        endif
 
-//    2.5 magnetic field
-#     ifdef MHD
-      for (int v=0; v<NCOMP_MAG; v++)
-      {
-         SendPtr = SendBuf_Mag + v*SendDataSizeMag1v + Send_NDisp_Mag1v[TRank] + NDone_Patch[TRank]*MagSize1v;
-         memcpy( SendPtr, &amr->patch[MagSg][lv][PID]->magnetic[v][0], MagSize1v*sizeof(real) );
-      }
-#     endif
+//       2.5 magnetic field
+#        ifdef MHD
+         for (int v=0; v<NCOMP_MAG; v++)
+         {
+            SendPtr = SendBuf_Mag + v*SendDataSizeMag1v + Send_NDisp_Mag1v[TRank] + NDone_Patch[TRank]*MagSize1v;
+            memcpy( SendPtr, &amr->patch[MagSg][lv][PID]->magnetic[v][0], MagSize1v*sizeof(real) );
+         }
+#        endif
+      } // if ( SendGridData )
 
 //    2.6 particle
 #     ifdef PARTICLE
@@ -565,15 +573,15 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
 
 // allocate recv buffers AFTER deleting old patches
    long *RecvBuf_LBIdx   = new long [ NRecv_Total_Patch ];
-   real *RecvBuf_Flu     = new real [ RecvDataSizeFlu1v*NCOMP_TOTAL ];
+   real *RecvBuf_Flu     = ( SendGridData ) ? new real [ RecvDataSizeFlu1v*NCOMP_TOTAL ] : NULL;
 #  ifdef GRAVITY
-   real *RecvBuf_Pot     = new real [ RecvDataSizeFlu1v ];
+   real *RecvBuf_Pot     = ( SendGridData ) ? new real [ RecvDataSizeFlu1v ]             : NULL;
 #  ifdef STORE_POT_GHOST
-   real *RecvBuf_PotExt  = new real [ RecvDataSizePotExt ];
+   real *RecvBuf_PotExt  = ( SendGridData ) ? new real [ RecvDataSizePotExt ]            : NULL;
 #  endif
 #  endif // GRAVITY
 #  ifdef MHD
-   real *RecvBuf_Mag     = new real [ RecvDataSizeMag1v*NCOMP_MAG ];
+   real *RecvBuf_Mag     = ( SendGridData ) ? new real [ RecvDataSizeMag1v*NCOMP_MAG ]   : NULL;
 #  endif
 #  ifdef PARTICLE
    real *RecvBuf_ParData = new real [ NRecv_Total_ParData ];
@@ -587,56 +595,59 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
    MPI_Alltoallv( SendBuf_LBIdx, Send_NCount_Patch, Send_NDisp_Patch, MPI_LONG,
                   RecvBuf_LBIdx, Recv_NCount_Patch, Recv_NDisp_Patch, MPI_LONG, MPI_COMM_WORLD );
 
-// 4.2 fluid (transfer one component at a time to avoid exceeding the maximum allowed transfer size in MPI)
-   for (int v=0; v<NCOMP_TOTAL; v++)
+   if ( SendGridData )
    {
+//    4.2 fluid (transfer one component at a time to avoid exceeding the maximum allowed transfer size in MPI)
+      for (int v=0; v<NCOMP_TOTAL; v++)
+      {
+#        ifdef FLOAT8
+         MPI_Alltoallv( SendBuf_Flu + v*SendDataSizeFlu1v, Send_NCount_Flu1v, Send_NDisp_Flu1v, MPI_DOUBLE,
+                        RecvBuf_Flu + v*RecvDataSizeFlu1v, Recv_NCount_Flu1v, Recv_NDisp_Flu1v, MPI_DOUBLE, MPI_COMM_WORLD );
+#        else
+         MPI_Alltoallv( SendBuf_Flu + v*SendDataSizeFlu1v, Send_NCount_Flu1v, Send_NDisp_Flu1v, MPI_FLOAT,
+                        RecvBuf_Flu + v*RecvDataSizeFlu1v, Recv_NCount_Flu1v, Recv_NDisp_Flu1v, MPI_FLOAT,  MPI_COMM_WORLD );
+#        endif
+      }
+
+#     ifdef GRAVITY
+//    4.3 potential
+//    --> debugger may report that the potential data are NOT initialized when calling LB_Init_LoadBalance()
+//        during initialization
+//    --> it's fine since we will calculate potential AFTER invoking LB_Init_LoadBalance() in Init_GAMER()
 #     ifdef FLOAT8
-      MPI_Alltoallv( SendBuf_Flu + v*SendDataSizeFlu1v, Send_NCount_Flu1v, Send_NDisp_Flu1v, MPI_DOUBLE,
-                     RecvBuf_Flu + v*RecvDataSizeFlu1v, Recv_NCount_Flu1v, Recv_NDisp_Flu1v, MPI_DOUBLE, MPI_COMM_WORLD );
+      MPI_Alltoallv( SendBuf_Pot, Send_NCount_Flu1v, Send_NDisp_Flu1v, MPI_DOUBLE,
+                     RecvBuf_Pot, Recv_NCount_Flu1v, Recv_NDisp_Flu1v, MPI_DOUBLE, MPI_COMM_WORLD );
 #     else
-      MPI_Alltoallv( SendBuf_Flu + v*SendDataSizeFlu1v, Send_NCount_Flu1v, Send_NDisp_Flu1v, MPI_FLOAT,
-                     RecvBuf_Flu + v*RecvDataSizeFlu1v, Recv_NCount_Flu1v, Recv_NDisp_Flu1v, MPI_FLOAT,  MPI_COMM_WORLD );
+      MPI_Alltoallv( SendBuf_Pot, Send_NCount_Flu1v, Send_NDisp_Flu1v, MPI_FLOAT,
+                     RecvBuf_Pot, Recv_NCount_Flu1v, Recv_NDisp_Flu1v, MPI_FLOAT,  MPI_COMM_WORLD );
 #     endif
-   }
 
-#  ifdef GRAVITY
-// 4.3 potential
-// --> debugger may report that the potential data are NOT initialized when calling LB_Init_LoadBalance()
-//     during initialization
-// --> it's fine since we will calculate potential AFTER invoking LB_Init_LoadBalance() in Init_GAMER()
-#  ifdef FLOAT8
-   MPI_Alltoallv( SendBuf_Pot, Send_NCount_Flu1v, Send_NDisp_Flu1v, MPI_DOUBLE,
-                  RecvBuf_Pot, Recv_NCount_Flu1v, Recv_NDisp_Flu1v, MPI_DOUBLE, MPI_COMM_WORLD );
-#  else
-   MPI_Alltoallv( SendBuf_Pot, Send_NCount_Flu1v, Send_NDisp_Flu1v, MPI_FLOAT,
-                  RecvBuf_Pot, Recv_NCount_Flu1v, Recv_NDisp_Flu1v, MPI_FLOAT,  MPI_COMM_WORLD );
-#  endif
-
-// 4.4 potential with ghost zones
-#  ifdef STORE_POT_GHOST
-#  ifdef FLOAT8
-   MPI_Alltoallv( SendBuf_PotExt, Send_NCount_PotExt, Send_NDisp_PotExt, MPI_DOUBLE,
-                  RecvBuf_PotExt, Recv_NCount_PotExt, Recv_NDisp_PotExt, MPI_DOUBLE, MPI_COMM_WORLD );
-#  else
-   MPI_Alltoallv( SendBuf_PotExt, Send_NCount_PotExt, Send_NDisp_PotExt, MPI_FLOAT,
-                  RecvBuf_PotExt, Recv_NCount_PotExt, Recv_NDisp_PotExt, MPI_FLOAT,  MPI_COMM_WORLD );
-#  endif
-#  endif // STORE_POT_GHOST
-#  endif // GRAVITY
-
-// 4.5 magnetic field (transfer one component at a time to avoid exceeding the maximum allowed transfer size in MPI)
-#  ifdef MHD
-   for (int v=0; v<NCOMP_MAG; v++)
-   {
+//    4.4 potential with ghost zones
+#     ifdef STORE_POT_GHOST
 #     ifdef FLOAT8
-      MPI_Alltoallv( SendBuf_Mag + v*SendDataSizeMag1v, Send_NCount_Mag1v, Send_NDisp_Mag1v, MPI_DOUBLE,
-                     RecvBuf_Mag + v*RecvDataSizeMag1v, Recv_NCount_Mag1v, Recv_NDisp_Mag1v, MPI_DOUBLE, MPI_COMM_WORLD );
+      MPI_Alltoallv( SendBuf_PotExt, Send_NCount_PotExt, Send_NDisp_PotExt, MPI_DOUBLE,
+                     RecvBuf_PotExt, Recv_NCount_PotExt, Recv_NDisp_PotExt, MPI_DOUBLE, MPI_COMM_WORLD );
 #     else
-      MPI_Alltoallv( SendBuf_Mag + v*SendDataSizeMag1v, Send_NCount_Mag1v, Send_NDisp_Mag1v, MPI_FLOAT,
-                     RecvBuf_Mag + v*RecvDataSizeMag1v, Recv_NCount_Mag1v, Recv_NDisp_Mag1v, MPI_FLOAT,  MPI_COMM_WORLD );
+      MPI_Alltoallv( SendBuf_PotExt, Send_NCount_PotExt, Send_NDisp_PotExt, MPI_FLOAT,
+                     RecvBuf_PotExt, Recv_NCount_PotExt, Recv_NDisp_PotExt, MPI_FLOAT,  MPI_COMM_WORLD );
 #     endif
-   }
-#  endif
+#     endif // STORE_POT_GHOST
+#     endif // GRAVITY
+
+//    4.5 magnetic field (transfer one component at a time to avoid exceeding the maximum allowed transfer size in MPI)
+#     ifdef MHD
+      for (int v=0; v<NCOMP_MAG; v++)
+      {
+#        ifdef FLOAT8
+         MPI_Alltoallv( SendBuf_Mag + v*SendDataSizeMag1v, Send_NCount_Mag1v, Send_NDisp_Mag1v, MPI_DOUBLE,
+                        RecvBuf_Mag + v*RecvDataSizeMag1v, Recv_NCount_Mag1v, Recv_NDisp_Mag1v, MPI_DOUBLE, MPI_COMM_WORLD );
+#        else
+         MPI_Alltoallv( SendBuf_Mag + v*SendDataSizeMag1v, Send_NCount_Mag1v, Send_NDisp_Mag1v, MPI_FLOAT,
+                        RecvBuf_Mag + v*RecvDataSizeMag1v, Recv_NCount_Mag1v, Recv_NDisp_Mag1v, MPI_FLOAT,  MPI_COMM_WORLD );
+#        endif
+      }
+#     endif
+   } // if ( SendGridData )
 
 #  ifdef PARTICLE
 // 4.6 particle count
@@ -739,33 +750,36 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
       {
          PID = PID0 + LocalID;
 
-//       fluid
-         for (int v=0; v<NCOMP_TOTAL; v++)
+         if ( SendGridData )
          {
-            RecvPtr_Grid = RecvBuf_Flu + v*RecvDataSizeFlu1v + PID*FluSize1v;
-            memcpy( &amr->patch[FluSg][lv][PID]->fluid[v][0][0][0], RecvPtr_Grid, FluSize1v*sizeof(real) );
-         }
+//          fluid
+            for (int v=0; v<NCOMP_TOTAL; v++)
+            {
+               RecvPtr_Grid = RecvBuf_Flu + v*RecvDataSizeFlu1v + PID*FluSize1v;
+               memcpy( &amr->patch[FluSg][lv][PID]->fluid[v][0][0][0], RecvPtr_Grid, FluSize1v*sizeof(real) );
+            }
 
-#        ifdef GRAVITY
-//       potential
-         RecvPtr_Grid = RecvBuf_Pot + PID*FluSize1v;
-         memcpy( &amr->patch[PotSg][lv][PID]->pot[0][0][0], RecvPtr_Grid, FluSize1v*sizeof(real) );
+#           ifdef GRAVITY
+//          potential
+            RecvPtr_Grid = RecvBuf_Pot + PID*FluSize1v;
+            memcpy( &amr->patch[PotSg][lv][PID]->pot[0][0][0], RecvPtr_Grid, FluSize1v*sizeof(real) );
 
-//       potential with ghost zones
-#        ifdef STORE_POT_GHOST
-         RecvPtr_Grid = RecvBuf_PotExt + PID*GraNxtSize;
-         memcpy( &amr->patch[PotSg][lv][PID]->pot_ext[0][0][0], RecvPtr_Grid, GraNxtSize*sizeof(real) );
-#        endif
-#        endif // GRAVITY
+//          potential with ghost zones
+#           ifdef STORE_POT_GHOST
+            RecvPtr_Grid = RecvBuf_PotExt + PID*GraNxtSize;
+            memcpy( &amr->patch[PotSg][lv][PID]->pot_ext[0][0][0], RecvPtr_Grid, GraNxtSize*sizeof(real) );
+#           endif
+#           endif // GRAVITY
 
-//       magnetic field
-#        ifdef MHD
-         for (int v=0; v<NCOMP_MAG; v++)
-         {
-            RecvPtr_Grid = RecvBuf_Mag + v*RecvDataSizeMag1v + PID*MagSize1v;
-            memcpy( &amr->patch[MagSg][lv][PID]->magnetic[v][0], RecvPtr_Grid, MagSize1v*sizeof(real) );
-         }
-#        endif
+//          magnetic field
+#           ifdef MHD
+            for (int v=0; v<NCOMP_MAG; v++)
+            {
+               RecvPtr_Grid = RecvBuf_Mag + v*RecvDataSizeMag1v + PID*MagSize1v;
+               memcpy( &amr->patch[MagSg][lv][PID]->magnetic[v][0], RecvPtr_Grid, MagSize1v*sizeof(real) );
+            }
+#           endif
+         } // if ( SendGridData )
 
 //       particle
 #        ifdef PARTICLE
@@ -849,7 +863,7 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
    delete [] ParList;
 #  endif
 
-} // FUNCTION : LB_RedistributePatch
+} // FUNCTION : LB_RedistributeRealPatch
 
 
 
@@ -862,7 +876,7 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
 //                   then allocate the new particle attribute arrays
 //                2. This function will also reallocate particle repository by calling amr->Par->InitRepo().
 //                   However, we reset NPar_AcPlusInac to zero since we will update it level by level
-//                   when calling LB_RedistributeRealPatch later().
+//                   when calling LB_RedistributeRealPatch() later.
 //                3. One must call LB_SetCutPoint() for all levels in advance
 //
 // Parameter   :  ParAtt_Old : Pointers for backing up the old particle attribute arrays (amr->Par->Attribute[])
