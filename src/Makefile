@@ -270,8 +270,6 @@ ifeq "$(filter -DOPENMP, $(SIMU_OPTION))" ""
  CXXFLAG    += -Wno-unknown-pragmas
 endif
 
-CXXFLAG    += -DGIT_SHA1="`git rev-parse HEAD`"                 # record SHA1 in git
-CXXFLAG    += -DGIT_BRANCH="`git rev-parse --abbrev-ref HEAD`"  # record SHA1 in git
 
 # CUDA
 # -------------------------------------------------------------------------------
@@ -918,10 +916,13 @@ $(OBJ_PATH)/$(PREFIX_GPU)%.o : %.cu
 	$(ECHO)$(NVCC) $(NVCCFLAG_COM) -o $@ -dc $<
 endif # GPU
 
+# grep git informations
+GIT_INFO    += -DGIT_SHA1="`git rev-parse HEAD`"                 # record SHA1 in git
+GIT_INFO    += -DGIT_BRANCH="`git rev-parse --abbrev-ref HEAD`"  # record git branch name
 # CPU codes
 $(OBJ_PATH)/$(PREFIX_CPU)%.o : %.cpp
 	@echo "Compiling $<"
-	$(ECHO)$(CXX) $(CXXFLAG) -o $@ -c $<
+	$(ECHO)$(CXX) $(CXXFLAG) $(GIT_INFO) -o $@ -c $<
 
 
 # linking
