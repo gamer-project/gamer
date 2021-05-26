@@ -793,8 +793,15 @@ COMMONFLAG := $(INCLUDE) $(SIMU_OPTION)
 CXXFLAG    += $(COMMONFLAG) $(OPENMPFLAG)
 
 # grep git informations
-GIT_INFO    += -DGIT_SHA1="`git rev-parse HEAD`"                 # record SHA1 in git
-GIT_INFO    += -DGIT_BRANCH="`git rev-parse --abbrev-ref HEAD`"  # record git branch name
+GIT_INFO    :=
+GIT_FAIL    := $(shell git rev-parse 2>&1 | cat)
+ifeq "$(GIT_FAIL)" ""
+   GIT_INFO += -DGIT_SHA1="`git rev-parse HEAD`"                # record SHA1 in git
+   GIT_INFO += -DGIT_BRANCH="`git rev-parse --abbrev-ref HEAD`" # record git branch name
+else
+   GIT_INFO += -DGIT_SHA1="unknown"
+   GIT_INFO += -DGIT_BRANCH="unknown"
+endif
 
 # NVCC flags
 # -------------------------------------------------------------------------------
@@ -897,6 +904,7 @@ else
 ECHO =
 endif
 
+
 # GPU codes
 ifeq "$(filter -DGPU, $(SIMU_OPTION))" "-DGPU"
 $(OBJ_PATH)/$(PREFIX_GPU)CUFLU_%.o : CUFLU_%.cu
@@ -960,6 +968,4 @@ clean :
 	@rm -f $(OBJ_PATH)/*
 	@rm -f $(EXECUTABLE)
 	@rm -f ./*.linkinfo
-
-
 
