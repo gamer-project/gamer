@@ -1117,7 +1117,11 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          Re = CData_Real[t];
          Im = CData_Imag[t];
 
-         CData_Phas[t] = ATAN2( Im, Re );
+//###ISSUE: atan2() sometimes returns NaN when both inputs are zero, not sure why ...
+//          --> this seems to provide a temporary fix (but needs to be checked further)
+         if ( Re == (real)0.0  &&  Im == (real)0.0 )  CData_Phas[t] = (real)0.0;
+         else                                         CData_Phas[t] = ATAN2( Im, Re );
+
          if ( DensIdx == -1 ) // only need to recalculate density if it's not prepared already
          CData_Dens[t] = Re*Re + Im*Im;
       }
@@ -1252,7 +1256,11 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
             Re = CData_Real_IntTime[t];
             Im = CData_Imag_IntTime[t];
 
-            CData_Phas_IntTime[t] = ATAN2( Im, Re );
+//###ISSUE: atan2() sometimes returns NaN when both inputs are zero, not sure why ...
+//          --> this seems to provide a temporary fix (but needs to be checked further)
+            if ( Re == (real)0.0  &&  Im == (real)0.0 )  CData_Phas_IntTime[t] = (real)0.0;
+            else                                         CData_Phas_IntTime[t] = ATAN2( Im, Re );
+
             CData_Dens_IntTime[t] = Re*Re + Im*Im;
          }
 
