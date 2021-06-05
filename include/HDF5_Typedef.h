@@ -78,6 +78,7 @@ struct KeyInfo_t
    char  *DumpWallTime;
    char  *GitBranch;
    char  *GitCommit;
+   long   UniqueDataID;
 
 }; // struct KeyInfo_t
 
