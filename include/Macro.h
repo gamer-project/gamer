@@ -894,6 +894,7 @@
 #  define ATAN2( a, b )    atan2f( a, b )
 #endif
 
+
 // sign function
 #define SIGN( a )       (  ( (a) < (real)0.0 ) ? (real)-1.0 : (real)+1.0  )
 

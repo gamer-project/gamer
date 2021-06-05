@@ -792,15 +792,15 @@ endif
 COMMONFLAG := $(INCLUDE) $(SIMU_OPTION)
 CXXFLAG    += $(COMMONFLAG) $(OPENMPFLAG)
 
-# grep git informations
+# grep git information
 GIT_INFO    :=
 GIT_FAIL    := $(shell git rev-parse 2>&1 | cat)
 ifeq "$(GIT_FAIL)" ""
-   GIT_INFO += -DGIT_SHA1="`git rev-parse HEAD`"                # record SHA1 in git
-   GIT_INFO += -DGIT_BRANCH="`git rev-parse --abbrev-ref HEAD`" # record git branch name
+   GIT_INFO += -DGIT_COMMIT="`git rev-parse HEAD`"              # commit
+   GIT_INFO += -DGIT_BRANCH="`git rev-parse --abbrev-ref HEAD`" # branch
 else
-   GIT_INFO += -DGIT_SHA1="unknown"
-   GIT_INFO += -DGIT_BRANCH="unknown"
+   GIT_INFO += -DGIT_COMMIT="N/A"
+   GIT_INFO += -DGIT_BRANCH="N/A"
 endif
 
 # NVCC flags
@@ -912,7 +912,6 @@ ECHO = @
 else
 ECHO =
 endif
-
 
 # GPU codes
 ifeq "$(filter -DGPU, $(SIMU_OPTION))" "-DGPU"

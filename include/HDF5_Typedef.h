@@ -76,6 +76,8 @@ struct KeyInfo_t
 
    char  *CodeVersion;
    char  *DumpWallTime;
+   char  *GitBranch;
+   char  *GitCommit;
 
 }; // struct KeyInfo_t
 
