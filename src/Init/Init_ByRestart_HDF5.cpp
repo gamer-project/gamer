@@ -203,6 +203,8 @@ void Init_ByRestart_HDF5( const char *FileName )
 
    LoadField( "CodeVersion",          &KeyInfo.CodeVersion,          H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
    LoadField( "DumpWallTime",         &KeyInfo.DumpWallTime,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "GitBranch",            &KeyInfo.GitBranch,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "GitCommit",            &KeyInfo.GitCommit,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
 
 
 // 1-4. close all objects
@@ -878,6 +880,8 @@ void Init_ByRestart_HDF5( const char *FileName )
 // 4. close all HDF5 objects and free memory (especially for the variable-length string)
    free ( KeyInfo.CodeVersion );
    free ( KeyInfo.DumpWallTime );
+   free ( KeyInfo.GitBranch );
+   free ( KeyInfo.GitCommit );
 
    delete [] FieldName;
    delete [] CrList_AllLv;
