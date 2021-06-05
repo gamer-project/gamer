@@ -1760,6 +1760,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
    KeyInfo.GitBranch    = EXPAND_AND_QUOTE( GIT_BRANCH );
    KeyInfo.GitCommit    = EXPAND_AND_QUOTE( GIT_COMMIT );
 
+//###REVISE: replace rand() by UUID
    srand( time(NULL) );
    KeyInfo.UniqueDataID = rand();
 
