@@ -23,9 +23,6 @@ void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, 
 //                6. Use PrepTime to determine the physical time to prepare data
 //                   --> Temporal interpolation/extrapolation will be conducted automatically if PrepTime
 //                       is NOT equal to the time of data stored previously (e.g., FluSgTime[0/1])
-//                7. For simplicity, currently the mode _TEMP returns **pressure/density**, which does NOT include normalization
-//                   --> For OPT__FLAG_LOHNER_TEMP only
-//                   --> Also note that MinPres is applied to _TEMP when calculating pressure
 //
 // Parameter   :  lv                : Target "coarse-grid" refinement level
 //                PID               : Patch ID at level "lv" used for interpolation
@@ -77,7 +74,7 @@ void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, 
 //                FluBC             : Fluid boundary condition
 //                PotBC             : Gravity boundary condition (not used currently)
 //                BC_Face           : Priority of the B.C. along different boundary faces (z>y>x)
-//                MinPres           : Minimum allowed pressure
+//                MinPres/Temp      : Minimum allowed pressure/temperature (<0.0 ==> off)
 //                DE_Consistency    : Ensure the consistency between pressure, total energy density, and the
 //                                    dual-energy variable when DUAL_ENERGY is on
 //                FInterface        : B field on the coarse-fine interfaces for the divergence-preserving interpolation
@@ -90,8 +87,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                            const int NVarCC_Der, const long TVarCCList_Der[],
                            const long TVarFC, const int NVarFC_Tot, const int TVarFCIdxList[],
                            const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
-                           const int BC_Face[], const real MinPres, const bool DE_Consistency,
-                           const real *FInterface[6] )
+                           const int BC_Face[], const real MinPres, const real MinTemp,
+                           const bool DE_Consistency, const real *FInterface[6] )
 {
 
 // check
@@ -433,8 +430,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 #        endif
          CData_CC_Ptr[Idx] = Hydro_Con2Temp( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                              FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                             (MinPres>=(real)0.0), MinPres, Emag,
-                                             EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                             (MinTemp>=(real)0.0), MinTemp, Emag,
+                                             EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                              h_EoS_Table );
 
          if ( FluIntTime ) // temporal interpolation
@@ -450,8 +447,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                FluWeighting     *CData_CC_Ptr[Idx]
              + FluWeighting_IntT*Hydro_Con2Temp( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                  FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                                 (MinPres>=(real)0.0), MinPres, Emag,
-                                                 EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                 (MinTemp>=(real)0.0), MinTemp, Emag,
+                                                 EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                  h_EoS_Table );
          }
 
@@ -719,8 +716,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 #              endif
                CData_CC_Ptr[Idx] = Hydro_Con2Temp( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                    FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                                   (MinPres>=(real)0.0), MinPres, Emag,
-                                                   EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                   (MinTemp>=(real)0.0), MinTemp, Emag,
+                                                   EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                    h_EoS_Table );
 
                if ( FluIntTime ) // temporal interpolation
@@ -736,8 +733,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                      FluWeighting     *CData_CC_Ptr[Idx]
                    + FluWeighting_IntT*Hydro_Con2Temp( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                        FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                                       (MinPres>=(real)0.0), MinPres, Emag,
-                                                       EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                       (MinTemp>=(real)0.0), MinTemp, Emag,
+                                                       EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                        h_EoS_Table );
                }
 

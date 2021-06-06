@@ -1,6 +1,7 @@
 #include "GAMER.h"
 
 extern void (*Init_User_Ptr)();
+extern void (*Init_DerivedField_User_Ptr)();
 #ifdef PARTICLE
 extern void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPar_AllRank,
                                         real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
@@ -117,6 +118,17 @@ void Init_GAMER( int *argc, char ***argv )
    Src_Init();
 
 
+// initialize the user-defined derived fields
+   if ( OPT__OUTPUT_USER_FIELD )
+   {
+      if ( Init_DerivedField_User_Ptr != NULL )
+         Init_DerivedField_User_Ptr();
+
+      else
+         Aux_Error( ERROR_INFO, "Init_DerivedField_User_Ptr == NULL for OPT__OUTPUT_USER_FIELD !!\n" );
+   }
+
+
 // set the GPU parameters
 #  ifdef GPU
 #  ifndef GRAVITY
@@ -127,7 +139,7 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
    CUAPI_Set_Default_GPU_Parameter( GPU_NSTREAM, FLU_GPU_NPGROUP, POT_GPU_NPGROUP, CHE_GPU_NPGROUP, SRC_GPU_NPGROUP );
 
-// CUAPI_SetConstMemory must be called AFTER Init_Field(), Init_ExtAccPot(), and EoS_Init()
+// CUAPI_SetConstMemory must be called AFTER Init_Field() and Init_ExtAccPot()
    CUAPI_SetConstMemory();
 #  endif
 

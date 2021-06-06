@@ -68,7 +68,7 @@ void Init_MemAllocate_Fluid( const int Flu_NPatchGroup, const int Pot_NPatchGrou
       h_Mag_Array_T    [t] = new real [Flu_NPatch][NCOMP_MAG][ PS1P1*SQR(PS1) ];
 #     endif
 
-      if ( SRC_TERMS.Any ) {
+      if ( SrcTerms.Any ) {
       h_Flu_Array_S_In [t] = new real [Src_NPatch][FLU_NIN_S ][ CUBE(SRC_NXT)           ];
       h_Flu_Array_S_Out[t] = new real [Src_NPatch][FLU_NOUT_S][ CUBE(PS1)               ];
 #     ifdef MHD
@@ -91,6 +91,18 @@ void Init_MemAllocate_Fluid( const int Flu_NPatchGroup, const int Pot_NPatchGrou
    h_EC_Ele      = new real [Flu_NPatchGroup][NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 #  endif
 #  endif // FLU_SCHEME
+
+#  if ( MODEL == HYDRO )
+   if ( SrcTerms.Deleptonization )
+   {
+      h_SrcDlepProf_Data   = new real [SRC_DLEP_PROF_NVAR][SRC_DLEP_PROF_NBINMAX];
+      h_SrcDlepProf_Radius = new real                     [SRC_DLEP_PROF_NBINMAX];
+
+//    store the host pointers in SrcTerms when not using GPU
+      SrcTerms.Dlep_Profile_DataDevPtr   = h_SrcDlepProf_Data;
+      SrcTerms.Dlep_Profile_RadiusDevPtr = h_SrcDlepProf_Radius;
+   }
+#  endif
 
 } // FUNCTION : Init_MemAllocate_Fluid
 

@@ -76,6 +76,9 @@ struct KeyInfo_t
 
    char  *CodeVersion;
    char  *DumpWallTime;
+   char  *GitBranch;
+   char  *GitCommit;
+   long   UniqueDataID;
 
 }; // struct KeyInfo_t
 
@@ -206,6 +209,7 @@ struct SymConst_t
    int    Gra_BlockSize;
    int    ExtPotNAuxMax;
    int    ExtAccNAuxMax;
+   int    ExtPotNGeneMax;
 
 #  if   ( POT_SCHEME == SOR )
    int    Pot_BlockSize_z;
@@ -273,6 +277,7 @@ struct SymConst_t
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
 
+
    int    dt_Flu_BlockSize;
    int    dt_Flu_UseShuffle;
 #  ifdef GRAVITY
@@ -282,8 +287,15 @@ struct SymConst_t
 
    int    Src_BlockSize;
    int    Src_GhostSize;
+   int    Src_Nxt;
    int    Src_NAuxDlep;
+   int    Src_DlepProfNVar;
+   int    Src_DlepProfNBinMax;
    int    Src_NAuxUser;
+
+   int    Der_GhostSize;
+   int    Der_Nxt;
+   int    Der_NOut_Max;
 
 }; // struct SymConst_t
 
@@ -465,6 +477,9 @@ struct InputPara_t
    int    Opt__NormalizePassive;
    int    NormalizePassive_NVar;
    int    NormalizePassive_VarIdx[NCOMP_PASSIVE];
+   int    Opt__IntFracPassive_LR;
+   int    IntFracPassive_NVar;
+   int    IntFracPassive_VarIdx[NCOMP_PASSIVE];
    char  *FieldLabel[NCOMP_TOTAL];
 #  ifdef MHD
    char  *MagLabel[NCOMP_MAG];
@@ -477,6 +492,8 @@ struct InputPara_t
 #  if ( MODEL == HYDRO )
    double MinPres;
    double MinEint;
+   double MinTemp;
+   int    Opt__CheckPresAfterFlu;
    int    Opt__LastResortFloor;
    int    JeansMinPres;
    int    JeansMinPres_Level;
@@ -552,11 +569,13 @@ struct InputPara_t
    int    RestartLoadNRank;
    int    Opt__RestartReset;
    int    Opt__UM_IC_Level;
+   int    Opt__UM_IC_NLevel;
    int    Opt__UM_IC_NVar;
    int    Opt__UM_IC_Format;
    int    Opt__UM_IC_Downgrade;
    int    Opt__UM_IC_Refine;
    int    Opt__UM_IC_LoadNRank;
+   int    UM_IC_RefineRegion[NLEVEL-1][6];
    int    Opt__InitRestrict;
    int    Opt__InitGridWithOMP;
    int    Opt__GPUID_Select;
@@ -603,6 +622,17 @@ struct InputPara_t
 #  ifdef PARTICLE
    int    Opt__Output_ParDens;
 #  endif
+#  if ( MODEL == HYDRO )
+   int    Opt__Output_Pres;
+   int    Opt__Output_Temp;
+   int    Opt__Output_Cs;
+   int    Opt__Output_DivVel;
+   int    Opt__Output_Mach;
+#  ifdef MHD
+   int    Opt__Output_DivMag;
+#  endif
+#  endif // #if ( MODEL == HYDRO )
+   int    Opt__Output_UserField;
    int    Opt__Output_Mode;
    int    Opt__Output_Step;
    double Opt__Output_Dt;
@@ -665,6 +695,13 @@ struct InputPara_t
    int    FlagTable_NParCell    [NLEVEL-1];
    double FlagTable_ParMassCell [NLEVEL-1];
 #  endif
+
+// user-defined derived fields
+// --> always allocate DER_NOUT_MAX labels and units but only record UserDerField_Num of them in HDF5
+// --> more convenient since storing dynamic arrays such as (*UserDerField_Label)[MAX_STRING] in HDF5 can be tricky
+   int    UserDerField_Num;
+   char  *UserDerField_Label[DER_NOUT_MAX];
+   char  *UserDerField_Unit [DER_NOUT_MAX];
 
 }; // struct InputPara_t
 

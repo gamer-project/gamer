@@ -2,5 +2,6 @@
 Acoustic_RhoAmp      1.0e-6         # density perturbation amplitude (assuming background density = 1.0)
 Acoustic_Cs          1.0            # sound speed
 Acoustic_v0          0.0            # background velocity [0.0]
+Acoustic_Dir         3              # wave direction: (0/1/2/3) --> (x/y/z/diagonal)
 Acoustic_Sign       +1              # (+1/-1) --> (right/left-moving wave) [+1]
 Acoustic_Phase0      0.2            # initial phase shift [0.0]

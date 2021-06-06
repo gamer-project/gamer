@@ -13,10 +13,7 @@ void CUSRC_SrcSolver_IterateAllCells(
    const double g_Corner_Array[][3],
    const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
    const double TimeNew, const double TimeOld,
-   const real MinDens, const real MinPres, const real MinEint,
-   const EoS_DE2P_t EoS_DensEint2Pres_Func,
-   const EoS_DP2E_t EoS_DensPres2Eint_Func,
-   const EoS_DP2C_t EoS_DensPres2CSqr_Func );
+   const real MinDens, const real MinPres, const real MinEint, const EoS_t EoS );
 
 // device pointers
 extern real (*d_Flu_Array_S_In )[FLU_NIN_S ][ CUBE(SRC_NXT)           ];
@@ -158,8 +155,7 @@ void CUAPI_Asyn_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NX
                                         d_Mag_Array_S_In  + UsedPatch[s],
                                         d_Corner_Array_S  + UsedPatch[s],
                                         SrcTerms, NPatchGroup, dt, dh, TimeNew, TimeOld,
-                                        MinDens, MinPres, MinEint,
-                                        EoS_DensEint2Pres_GPUPtr, EoS_DensPres2Eint_GPUPtr, EoS_DensPres2CSqr_GPUPtr );
+                                        MinDens, MinPres, MinEint, EoS );
 
       CUDA_CHECK_ERROR( cudaGetLastError() );
    } // for (int s=0; s<GPU_NStream; s++)

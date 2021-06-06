@@ -17,6 +17,7 @@
 // Parameter   :  Func             : Function pointer to the external potential routine
 //                AuxArray_Flt/Int : Auxiliary floating-point/integer arrays for adding external potential
 //                Table            : 3D potential table for EXT_POT_TABLE
+//                GenePtr          : Array of pointers for general potential tables
 //                Time             : Target physical time
 //                PotIsInit        : Whether patch->pot[] has been initialized
 //                                   --> true : **add** to the original data
@@ -26,7 +27,8 @@
 // Return      :  amr->patch->pot[]
 //-----------------------------------------------------------------------------------------
 void CPU_ExtPotSolver_BaseLevel( const ExtPot_t Func, const double AuxArray_Flt[], const int AuxArray_Int[],
-                                 const real Table[], const double Time, const bool PotIsInit, const int SaveSg )
+                                 const real Table[], void **GenePtr,
+                                 const double Time, const bool PotIsInit, const int SaveSg )
 {
 
 // check
@@ -69,7 +71,7 @@ void CPU_ExtPotSolver_BaseLevel( const ExtPot_t Func, const double AuxArray_Flt[
          for (int j=0; j<PS1; j++)  {  y = y0 + j*dh;
          for (int i=0; i<PS1; i++)  {  x = x0 + i*dh;
 
-            ExtPot = Func( x, y, z, Time, AuxArray_Flt, AuxArray_Int, EXT_POT_USAGE_ADD, Table );
+            ExtPot = Func( x, y, z, Time, AuxArray_Flt, AuxArray_Int, EXT_POT_USAGE_ADD, Table, GenePtr );
 
             if ( PotIsInit )  amr->patch[SaveSg][lv][PID]->pot[k][j][i] += ExtPot;  // add
             else              amr->patch[SaveSg][lv][PID]->pot[k][j][i]  = ExtPot;  // overwrite

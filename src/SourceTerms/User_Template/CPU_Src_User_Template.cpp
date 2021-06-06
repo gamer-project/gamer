@@ -12,6 +12,20 @@
 #endif // #ifdef __CUDACC__
 
 
+// local function prototypes
+#ifndef __CUDACC__
+
+void Src_SetAuxArray_User_Template( double [], int [] );
+void Src_SetConstMemory_User_Template( const double AuxArray_Flt[], const int AuxArray_Int[],
+                                       double *&DevPtr_Flt, int *&DevPtr_Int );
+void Src_SetFunc_User_Template( SrcFunc_t & );
+void Src_WorkBeforeMajorFunc_User_Template( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                                            double AuxArray_Flt[], int AuxArray_Int[] );
+void Src_End_User_Template();
+
+#endif
+
+
 
 /********************************************************
 1. Template of a user-defined source term
@@ -21,11 +35,13 @@
 
    CUSRC_Src_User_Template.cu -> CPU_Src_User_Template.cpp
 
-3. Three steps are required to implement a source term
+3. Four steps are required to implement a source term
 
    I.   Set auxiliary arrays
    II.  Implement the source-term function
-   III. Set initialization functions
+   III. [Optional] Add the work to be done every time
+        before calling the major source-term function
+   IV.  Set initialization functions
 
 4. The source-term function must be thread-safe and
    not use any global variable
@@ -33,9 +49,9 @@
 
 
 
-// =============================================
+// =======================
 // I. Set auxiliary arrays
-// =============================================
+// =======================
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Src_SetAuxArray_User_Template
@@ -66,9 +82,9 @@ void Src_SetAuxArray_User_Template( double AuxArray_Flt[], int AuxArray_Int[] )
 
 
 
-// =============================================
+// ======================================
 // II. Implement the source-term function
-// =============================================
+// ======================================
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Src_User_Template
@@ -89,28 +105,18 @@ void Src_SetAuxArray_User_Template( double AuxArray_Flt[], int AuxArray_Int[] )
 //                TimeOld           : Physical time before update
 //                                    --> This function updates physical time from TimeOld to TimeNew
 //                MinDens/Pres/Eint : Density, pressure, and internal energy floors
-//                EoS_DensEint2Pres : EoS routine to compute the gas pressure
-//                EoS_DensPres2Eint : EoS routine to compute the gas internal energy
-//                EoS_DensPres2CSqr : EoS routine to compute the sound speed square
-//                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
-//                EoS_Table         : EoS tables
+//                EoS               : EoS object
 //                AuxArray_*        : Auxiliary arrays (see the Note above)
 //
 // Return      :  fluid[]
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static void Src_User_Template( real fluid[], const real B[],
-                               const SrcTerms_t SrcTerms, const real dt, const real dh,
+                               const SrcTerms_t *SrcTerms, const real dt, const real dh,
                                const double x, const double y, const double z,
                                const double TimeNew, const double TimeOld,
                                const real MinDens, const real MinPres, const real MinEint,
-                               const EoS_DE2P_t EoS_DensEint2Pres,
-                               const EoS_DP2E_t EoS_DensPres2Eint,
-                               const EoS_DP2C_t EoS_DensPres2CSqr,
-                               const double EoS_AuxArray_Flt[],
-                               const int    EoS_AuxArray_Int[],
-                               const real *const EoS_Table[EOS_NTABLE_MAX],
-                               const double AuxArray_Flt[], const int AuxArray_Int[] )
+                               const EoS_t *EoS, const double AuxArray_Flt[], const int AuxArray_Int[] )
 {
 
 // check
@@ -143,9 +149,51 @@ static void Src_User_Template( real fluid[], const real B[],
 
 
 
-// =============================================
-// III. Set initialization functions
-// =============================================
+// ==================================================
+// III. [Optional] Add the work to be done every time
+//      before calling the major source-term function
+// ==================================================
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Src_WorkBeforeMajorFunc_User_Template
+// Description :  Specify work to be done every time before calling the major source-term function
+//
+// Note        :  1. Invoked by Src_WorkBeforeMajorFunc()
+//                   --> By linking to "Src_WorkBeforeMajorFunc_User_Ptr" in Src_Init_User_Template()
+//                2. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
+//
+// Parameter   :  lv               : Target refinement level
+//                TimeNew          : Target physical time to reach
+//                TimeOld          : Physical time before update
+//                                   --> The major source-term function will update the system from TimeOld to TimeNew
+//                dt               : Time interval to advance solution
+//                                   --> Physical coordinates : TimeNew - TimeOld == dt
+//                                       Comoving coordinates : TimeNew - TimeOld == delta(scale factor) != dt
+//                AuxArray_Flt/Int : Auxiliary arrays
+//                                   --> Can be used and/or modified here
+//                                   --> Must call Src_SetConstMemory_User_Template() after modification
+//
+// Return      :  AuxArray_Flt/Int[]
+//-------------------------------------------------------------------------------------------------------
+#ifndef __CUDACC__
+void Src_WorkBeforeMajorFunc_User_Template( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                                            double AuxArray_Flt[], int AuxArray_Int[] )
+{
+
+// uncomment the following lines if the auxiliary arrays have been modified
+//#  ifdef GPU
+//   Src_SetConstMemory_User_Template( AuxArray_Flt, AuxArray_Int,
+//                                     SrcTerms.User_AuxArrayDevPtr_Flt, SrcTerms.User_AuxArrayDevPtr_Int );
+//#  endif
+
+} // FUNCTION : Src_WorkBeforeMajorFunc_User_Template
+#endif
+
+
+
+// ================================
+// IV. Set initialization functions
+// ================================
 
 #ifdef __CUDACC__
 #  define FUNC_SPACE __device__ static
@@ -185,23 +233,57 @@ void Src_SetFunc_User_Template( SrcFunc_t &SrcFunc_CPUPtr )
 
 
 
+#ifdef __CUDACC__
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Src_SetConstMemory_User_Template
+// Description :  Set the constant memory variables on GPU
+//
+// Note        :  1. Adopt the suggested approach for CUDA version >= 5.0
+//                2. Invoked by Src_Init_User_Template() and, if necessary, Src_WorkBeforeMajorFunc_User_Template()
+//                3. SRC_NAUX_USER is defined in Macro.h
+//
+// Parameter   :  AuxArray_Flt/Int : Auxiliary arrays to be copied to the constant memory
+//                DevPtr_Flt/Int   : Pointers to store the addresses of constant memory arrays
+//
+// Return      :  c_Src_User_AuxArray_Flt[], c_Src_User_AuxArray_Int[], DevPtr_Flt, DevPtr_Int
+//---------------------------------------------------------------------------------------------------
+void Src_SetConstMemory_User_Template( const double AuxArray_Flt[], const int AuxArray_Int[],
+                                       double *&DevPtr_Flt, int *&DevPtr_Int )
+{
+
+// copy data to constant memory
+   CUDA_CHECK_ERROR(  cudaMemcpyToSymbol( c_Src_User_AuxArray_Flt, AuxArray_Flt, SRC_NAUX_USER*sizeof(double) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyToSymbol( c_Src_User_AuxArray_Int, AuxArray_Int, SRC_NAUX_USER*sizeof(int   ) )  );
+
+// obtain the constant-memory pointers
+   CUDA_CHECK_ERROR(  cudaGetSymbolAddress( (void **)&DevPtr_Flt, c_Src_User_AuxArray_Flt) );
+   CUDA_CHECK_ERROR(  cudaGetSymbolAddress( (void **)&DevPtr_Int, c_Src_User_AuxArray_Int) );
+
+} // FUNCTION : Src_SetConstMemory_User_Template
+#endif // #ifdef __CUDACC__
+
+
+
 #ifndef __CUDACC__
 
-// local function prototypes
-void Src_SetAuxArray_User_Template( double [], int [] );
-void Src_SetFunc_User_Template( SrcFunc_t & );
+// function pointer
+extern void (*Src_WorkBeforeMajorFunc_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                                                 double AuxArray_Flt[], int AuxArray_Int[] );
+extern void (*Src_End_User_Ptr)();
 
 //-----------------------------------------------------------------------------------------
 // Function    :  Src_Init_User_Template
 // Description :  Initialize a user-specified source term
 //
 // Note        :  1. Set auxiliary arrays by invoking Src_SetAuxArray_*()
+//                   --> Copy to the GPU constant memory and store the associated addresses
 //                2. Set the source-term function by invoking Src_SetFunc_*()
 //                   --> Unlike other modules (e.g., EoS), here we use either CPU or GPU but not
 //                       both of them
-//                3. Invoked by Src_Init()
+//                3. Set the function pointers "Src_WorkBeforeMajorFunc_User_Ptr" and "Src_End_User_Ptr"
+//                4. Invoked by Src_Init()
 //                   --> Enable it by linking to the function pointer "Src_Init_User_Ptr"
-//                4. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
+//                5. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
 // Parameter   :  None
 //
@@ -210,8 +292,24 @@ void Src_SetFunc_User_Template( SrcFunc_t & );
 void Src_Init_User_Template()
 {
 
-   Src_SetAuxArray_User_Template( SRC_TERMS.User_AuxArray_Flt, SRC_TERMS.User_AuxArray_Int );
-   Src_SetFunc_User_Template( SRC_TERMS.User_FuncPtr );
+// set the auxiliary arrays
+   Src_SetAuxArray_User_Template( Src_User_AuxArray_Flt, Src_User_AuxArray_Int );
+
+// copy the auxiliary arrays to the GPU constant memory and store the associated addresses
+#  ifdef GPU
+   Src_SetConstMemory_User_Template( Src_User_AuxArray_Flt, Src_User_AuxArray_Int,
+                                     SrcTerms.User_AuxArrayDevPtr_Flt, SrcTerms.User_AuxArrayDevPtr_Int );
+#  else
+   SrcTerms.User_AuxArrayDevPtr_Flt = Src_User_AuxArray_Flt;
+   SrcTerms.User_AuxArrayDevPtr_Int = Src_User_AuxArray_Int;
+#  endif
+
+// set the major source-term function
+   Src_SetFunc_User_Template( SrcTerms.User_FuncPtr );
+
+// set the auxiliary functions
+   Src_WorkBeforeMajorFunc_User_Ptr = Src_WorkBeforeMajorFunc_User_Template;
+   Src_End_User_Ptr                 = Src_End_User_Template;
 
 } // FUNCTION : Src_Init_User_Template
 

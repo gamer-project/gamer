@@ -31,11 +31,11 @@ extern bool Particle_Collected;
 //                       It's because particles travelling from coarse to fine grids will stay in coarse grids
 //                       temporarily until the velocity correction is done.
 //                       --> For these patches, NPar_Copy will be **the sum of NPar and the number of particles
-//                           collected from other patches**, and ParList_Copy (or ParMassPos_Copy) will contain
+//                           collected from other patches**, and ParList_Copy (or ParAtt_Copy) will contain
 //                           information of particles belonging to NPar as well.
 //                       --> It makes implementation simplier. **For leaf real patches, one only needs to consider
 //                           NPar and ParList. While for all other patches, one only needs to consider NPar_Copy,
-//                           ParList_Copy (or ParMassPos_Copy). One never needs to consider both.**
+//                           ParList_Copy (or ParAtt_Copy). One never needs to consider both.**
 //                5. When using OpenMP, one must ensure that different threads do NOT invoke this function
 //                   for the same patch at the same time !!!
 //                   --> Because this function will modify "NPar_Copy & ParList_Copy" for the target patch
@@ -52,6 +52,10 @@ extern bool Particle_Collected;
 //                   --> Particle count is stored in NPar_Copy
 //
 // Parameter   :  FaLv          : Target refinement leve
+//                AttBitIdx     : Bitwise indices of the target particle attributes (e.g., _PAR_MASS | _PAR_VELX)
+//                                --> A user-defined attribute with an integer index AttIntIdx returned by
+//                                    AddParticleAttribute() can be converted to a bitwise index by BIDX(AttIntIdx)
+//                                --> Used by LOAD_BALANCE only
 //                PredictPos    : true --> Predict particle position to TargetTime (for LOAD_BALANCE only)
 //                TargetTime    : Target time for predicting the particle position (for LOAD_BALANCE only)
 //                SibBufPatch   : true --> Collect particles for sibling-buffer patches at FaLv as well
@@ -65,21 +69,21 @@ extern bool Particle_Collected;
 //
 // Return      :  NPar_Copy and ParList_Copy (if JustCountNPar == false) for all non-leaf real patches at FaLv
 //-------------------------------------------------------------------------------------------------------
-void Par_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, const double TargetTime,
+void Par_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, const bool PredictPos, const double TargetTime,
                                    const bool SibBufPatch, const bool FaSibBufPatch, const bool JustCountNPar,
                                    const bool TimingSendPar )
 {
 
 // set this flag to true to indicate that this function has been called
-// --> must be set before invoking the load-balance alternative routine "Par_LB_CollectParticle2OneLevel"
+// --> must be set before invoking the load-balance alternative routine Par_LB_CollectParticle2OneLevel()
    Particle_Collected = true;
 
 
 // call the parallel version instead
 #  ifdef LOAD_BALANCE
-// note that if SibBufPatch or FaSibBufPatch is on, we need to call Par_LB_CollectParticle2OneLevel
+// note that if SibBufPatch or FaSibBufPatch is on, we need to call Par_LB_CollectParticle2OneLevel()
 // even when FaLv == MAX_LEVEL
-   Par_LB_CollectParticle2OneLevel( FaLv, PredictPos, TargetTime, SibBufPatch, FaSibBufPatch, JustCountNPar, TimingSendPar );
+   Par_LB_CollectParticle2OneLevel( FaLv, AttBitIdx, PredictPos, TargetTime, SibBufPatch, FaSibBufPatch, JustCountNPar, TimingSendPar );
 
    return;
 

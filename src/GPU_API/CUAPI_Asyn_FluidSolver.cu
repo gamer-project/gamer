@@ -15,9 +15,7 @@ __global__ void CUFLU_FluidSolver_RTVD(
    const real g_Pot_USG[][ CUBE(USG_NXT_F) ],
    const real dt, const real _dh, const bool StoreFlux,
    const bool XYZ, const real MinDens, const real MinPres, const real MinEint,
-   const EoS_DE2P_t EoS_DensEint2Pres_Func,
-   const EoS_DP2E_t EoS_DensPres2Eint_Func,
-   const EoS_DP2C_t EoS_DensPres2CSqr_Func );
+   const EoS_t EoS );
 #elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 __global__
 void CUFLU_FluidSolver_MHM(
@@ -41,11 +39,11 @@ void CUFLU_FluidSolver_MHM(
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const double Time,
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const real MinDens, const real MinPres, const real MinEint,
-   const real DualEnergySwitch, const bool NormPassive, const int NNorm,
+   const real DualEnergySwitch,
+   const bool NormPassive, const int NNorm,
+   const bool FracPassive, const int NFrac,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
-   const EoS_DE2P_t EoS_DensEint2Pres_Func,
-   const EoS_DP2E_t EoS_DensPres2Eint_Func,
-   const EoS_DP2C_t EoS_DensPres2CSqr_Func );
+   const EoS_t EoS );
 #elif ( FLU_SCHEME == CTU )
 __global__
 void CUFLU_FluidSolver_CTU(
@@ -69,11 +67,11 @@ void CUFLU_FluidSolver_CTU(
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const double Time,
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const real MinDens, const real MinPres, const real MinEint,
-   const real DualEnergySwitch, const bool NormPassive, const int NNorm,
+   const real DualEnergySwitch,
+   const bool NormPassive, const int NNorm,
+   const bool FracPassive, const int NFrac,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
-   const EoS_DE2P_t EoS_DensEint2Pres_Func,
-   const EoS_DP2E_t EoS_DensPres2Eint_Func,
-   const EoS_DP2C_t EoS_DensPres2CSqr_Func );
+   const EoS_t EoS );
 #endif // FLU_SCHEME
 
 #elif ( MODEL == ELBDM )
@@ -196,6 +194,9 @@ extern cudaStream_t *Stream;
 //                                               is equal to the gas mass density
 //                NNorm               : Number of passive scalars to be normalized
 //                                      --> Should be set to the global variable "PassiveNorm_NVar"
+//                FracPassive         : true --> convert passive scalars to mass fraction during data reconstruction
+//                NFrac               : Number of passive scalars for the option "FracPassive"
+//                                      --> Should be set to the global variable "PassiveIntFrac_NVar"
 //                JeansMinPres        : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff  : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //                GPU_NStream         : Number of CUDA streams for the asynchronous memory copy
@@ -215,7 +216,9 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
                              const double Time, const bool UsePot, const OptExtAcc_t ExtAcc,
                              const real MinDens, const real MinPres, const real MinEint,
-                             const real DualEnergySwitch, const bool NormPassive, const int NNorm,
+                             const real DualEnergySwitch,
+                             const bool NormPassive, const int NNorm,
+                             const bool FracPassive, const int NFrac,
                              const bool JeansMinPres, const real JeansMinPres_Coeff,
                              const int GPU_NStream )
 {
@@ -223,9 +226,6 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 // check
 #  ifdef GAMER_DEBUG
 #  if   ( MODEL == HYDRO )
-   if ( LR_Limiter != VANLEER  &&  LR_Limiter != GMINMOD  &&  LR_Limiter != ALBADA  &&  LR_Limiter != EXTPRE  &&
-        LR_Limiter != VL_GMINMOD  &&  LR_Limiter != LR_LIMITER_NONE )
-      Aux_Error( ERROR_INFO, "unsupported limiter (%d) !!\n", LR_Limiter );
 
 #  ifdef UNSPLIT_GRAVITY
    if ( UsePot )
@@ -383,8 +383,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               d_Flux_Array      + UsedPatch[s],
               d_Corner_Array_F  + UsedPatch[s],
               d_Pot_Array_USG_F + UsedPatch[s],
-              dt, 1.0/dh, StoreFlux, XYZ, MinDens, MinPres, MinEint,
-              EoS_DensEint2Pres_GPUPtr, EoS_DensPres2Eint_GPUPtr, EoS_DensPres2CSqr_GPUPtr );
+              dt, 1.0/dh, StoreFlux, XYZ, MinDens, MinPres, MinEint, EoS );
 
 #        elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 
@@ -406,8 +405,8 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               d_EC_Ele          + UsedPatch[s],
               dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff,
               Time, UsePot, ExtAcc, GPUExtAcc_Ptr, MinDens, MinPres, MinEint,
-              DualEnergySwitch, NormPassive, NNorm, JeansMinPres, JeansMinPres_Coeff,
-              EoS_DensEint2Pres_GPUPtr, EoS_DensPres2Eint_GPUPtr, EoS_DensPres2CSqr_GPUPtr );
+              DualEnergySwitch, NormPassive, NNorm, FracPassive, NFrac,
+              JeansMinPres, JeansMinPres_Coeff, EoS );
 
 #        elif ( FLU_SCHEME == CTU )
 
@@ -429,8 +428,8 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               d_EC_Ele          + UsedPatch[s],
               dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff,
               Time, UsePot, ExtAcc, GPUExtAcc_Ptr, MinDens, MinPres, MinEint,
-              DualEnergySwitch, NormPassive, NNorm, JeansMinPres, JeansMinPres_Coeff,
-              EoS_DensEint2Pres_GPUPtr, EoS_DensPres2Eint_GPUPtr, EoS_DensPres2CSqr_GPUPtr );
+              DualEnergySwitch, NormPassive, NNorm, FracPassive, NFrac,
+              JeansMinPres, JeansMinPres_Coeff, EoS );
 
 #        else
 

@@ -1,21 +1,19 @@
 #!/bin/bash
-#SBATCH --account=ACD108024
-#SBATCH --job-name=gamer
-#SBATCH -o log-%j
-#SBATCH --mail-type=ALL
-#SBATCH --mail-user=PUT_YOUR_EMAIL_HERE
-#SBATCH --partition=gp4d
-#SBATCH --time=2:00:00
-#SBATCH --nodes=16 --ntasks-per-node=16
-#SBATCH --gres=gpu:8 --cpus-per-task=2
-#SBATCH --ntasks-per-core=1
 
+#SBATCH --job-name=YOUR_JOB_NAME          ## job name
+#SBATCH --mail-type=ALL                   ## mail notification type
+#SBATCH --mail-user=YOUR_EMAIL            ## mail address
+#SBATCH --account=YOUR_ACCOUNT            ## account (https://www.twcc.ai/user/dashboard)
+#SBATCH --partition=gp1d                  ## queue name (gtest/gp1d/gp2d/gp4d)
+#SBATCH --nodes=2                         ## number of nodes
+#SBATCH --gres=gpu:8                      ## number of GPUs per node
+#SBATCH --ntasks-per-node=8               ## number of tasks per node
+#SBATCH --cpus-per-task=4                 ## number of CPUs per task
+#SBATCH --time=02:00:00                   ## time limit (hh:mm:ss)
+#SBATCH --output=log-%j                   ## stdout output file
+
+#Load module
 module purge
-module load nvidia/cuda/10.1 compiler/intel/2018 openmpi3/3.1.4
+module load compiler/gnu/4.8.5 nvidia/cuda/10.0 openmpi/3.1.4
 
-export OMP_PROC_BIND="spread"	## make cores in order inside a task
-
-srun --cpu-bind=v,cores -m block:block ./gamer
-
-##srun --hint=nomultithread ./gamer
-##srun ./gamer
+srun ./gamer 1>>log 2>&1

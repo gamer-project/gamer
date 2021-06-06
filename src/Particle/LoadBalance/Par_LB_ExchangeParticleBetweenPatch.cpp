@@ -84,9 +84,9 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
       if ( amr->patch[0][lv][PID]->NPar_Copy != -1 )
          Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar_Copy = %d != -1 !!\n", lv, PID, amr->patch[0][lv][PID]->NPar_Copy );
 
-      for (int v=0; v<4; v++)
-      if ( amr->patch[0][lv][PID]->ParMassPos_Copy[v] != NULL )
-         Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar_Copy = %d, ParMassPos_Copy[%d] != NULL !!\n",
+      for (int v=0; v<PAR_NATT_TOTAL; v++)
+      if ( amr->patch[0][lv][PID]->ParAtt_Copy[v] != NULL )
+         Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar_Copy = %d, ParAtt_Copy[%d] != NULL !!\n",
                     lv, PID, amr->patch[0][lv][PID]->NPar_Copy, v );
    } // for m, t
 

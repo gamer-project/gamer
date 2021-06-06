@@ -19,6 +19,8 @@ extern Timer_t *Timer_Par_2Son   [NLEVEL];
 
 bool AutoReduceDt_Continue;
 
+extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TTime );
+
 
 
 
@@ -440,9 +442,17 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       const int SaveSg_SrcFlu = SaveSg_Flu;  // save in the same Flu/MagSg
       const int SaveSg_SrcMag = SaveSg_Mag;
 
+      if ( SrcTerms.Any )
+      {
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+            Aux_Message( stdout, "   Lv %2d: Src_AdvanceDt, counter = %8ld ... ", lv, AdvanceCounter[lv] );
+
 //###REVISE: we have assumed that Src_AdvanceDt() requires no ghost zones
-      TIMING_FUNC(   Src_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_SrcFlu, SaveSg_SrcMag, false, false ),
-                     Timer_Src_Advance[lv],   TIMER_ON   );
+         TIMING_FUNC(   Src_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_SrcFlu, SaveSg_SrcMag, false, false ),
+                        Timer_Src_Advance[lv],   TIMER_ON   );
+
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+      }
 
 
 // *********************************
@@ -498,6 +508,23 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       } // if ( SF_CREATE_STAR_SCHEME != SF_CREATE_STAR_SCHEME_NONE )
 #     endif // #ifdef STAR_FORMATION
 
+// ===============================================================================================
+
+
+//    7. overwrite the fluid fields
+// ===============================================================================================
+      if ( OPT__RESET_FLUID )
+      {
+//       use the same timer as the fluid solver for now
+         if ( Flu_ResetByUser_API_Ptr != NULL )
+         {
+            TIMING_FUNC(   Flu_ResetByUser_API_Ptr( lv, SaveSg_Flu, TimeNew ),
+                           Timer_Flu_Advance[lv],   TIMER_ON   );
+         }
+
+         else
+            Aux_Error( ERROR_INFO, "Flu_ResetByUser_API_Ptr == NULL for OPT__RESET_FLUID !!\n" );
+      }
 // ===============================================================================================
 
 

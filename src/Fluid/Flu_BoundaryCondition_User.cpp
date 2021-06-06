@@ -68,7 +68,7 @@ void BC_User_Template( real fluid[], const double x, const double y, const doubl
 #  if ( NCOMP_PASSIVE > 0 )
 // Passive[X] = ...;
 #  endif
-   Eint       = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+   Eint       = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
    Etot       = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, Emag0 );
 
    fluid[DENS] = Dens;
@@ -127,6 +127,11 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
       Aux_Error( ERROR_INFO, "BC_BField_User_Ptr == NULL for user-specified boundary conditions !!\n" );
 #  endif
 
+#  if ( MODEL == HYDRO )
+   if (  ( TVar & _TEMP )  &&  EoS_DensEint2Temp_CPUPtr == NULL )
+      Aux_Error( ERROR_INFO, "EoS_DensEint2Temp_CPUPtr == NULL !!\n" );
+#  endif
+
 
    const double x0 = Corner[0] + (double)Idx_Start[0]*dh;   // starting x,y,z coordinates
    const double y0 = Corner[1] + (double)Idx_Start[1]*dh;
@@ -137,6 +142,7 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
    const double dh_2             = 0.5*dh;
 #  endif
    const bool   CheckMinPres_Yes = true;
+   const bool   CheckMinTemp_Yes = true;
    const bool   PrepVx           = ( TVar & _VELX ) ? true : false;
    const bool   PrepVy           = ( TVar & _VELY ) ? true : false;
    const bool   PrepVz           = ( TVar & _VELZ ) ? true : false;
@@ -210,8 +216,8 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
                                                                     EoS_AuxArray_Int, h_EoS_Table, NULL );
       if ( PrepTemp )   Array3D[ v2 ++ ][k][j][i] = Hydro_Con2Temp( BVal[DENS], BVal[MOMX], BVal[MOMY],
                                                                     BVal[MOMZ], BVal[ENGY], BVal+NCOMP_FLUID,
-                                                                    CheckMinPres_Yes, MIN_PRES, Emag,
-                                                                    EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt,
+                                                                    CheckMinTemp_Yes, MIN_TEMP, Emag,
+                                                                    EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt,
                                                                     EoS_AuxArray_Int, h_EoS_Table );
 
 #     elif ( MODEL == ELBDM )

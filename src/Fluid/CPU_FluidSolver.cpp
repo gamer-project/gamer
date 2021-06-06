@@ -7,9 +7,7 @@
 
 #ifndef GRAVITY
 static double *ExtAcc_AuxArray = NULL;
-static double *ExtPot_AuxArray = NULL;
 static ExtAcc_t CPUExtAcc_Ptr  = NULL;
-static ExtPot_t CPUExtPot_Ptr  = NULL;
 #endif
 
 #if   ( MODEL == HYDRO )
@@ -23,12 +21,7 @@ void CPU_FluidSolver_RTVD(
    const int NPatchGroup, const real dt, const real dh,
    const bool StoreFlux, const bool XYZ,
    const real MinDens, const real MinPres, const real MinEint,
-   const EoS_DE2P_t EoS_DensEint2Pres_Func,
-   const EoS_DP2E_t EoS_DensPres2Eint_Func,
-   const EoS_DP2C_t EoS_DensPres2CSqr_Func,
-   const double c_EoS_AuxArray_Flt[],
-   const int    c_EoS_AuxArray_Int[],
-   const real* const c_EoS_Table[EOS_NTABLE_MAX] );
+   const EoS_t EoS );
 #elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 void CPU_FluidSolver_MHM(
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
@@ -53,15 +46,11 @@ void CPU_FluidSolver_MHM(
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const double c_ExtAcc_AuxArray[],
    const real MinDens, const real MinPres, const real MinEint,
-   const real DualEnergySwitch, const bool NormPassive, const int NNorm,
-   const int c_NormIdx[],
+   const real DualEnergySwitch,
+   const bool NormPassive, const int NNorm, const int c_NormIdx[],
+   const bool FracPassive, const int NFrac, const int c_FracIdx[],
    const bool JeansMinPres, const real JeansMinPres_Coeff,
-   const EoS_DE2P_t EoS_DensEint2Pres_Func,
-   const EoS_DP2E_t EoS_DensPres2Eint_Func,
-   const EoS_DP2C_t EoS_DensPres2CSqr_Func,
-   const double c_EoS_AuxArray_Flt[],
-   const int    c_EoS_AuxArray_Int[],
-   const real* const c_EoS_Table[EOS_NTABLE_MAX] );
+   const EoS_t EoS );
 #elif ( FLU_SCHEME == CTU )
 void CPU_FluidSolver_CTU(
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
@@ -85,15 +74,11 @@ void CPU_FluidSolver_CTU(
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const double c_ExtAcc_AuxArray[],
    const real MinDens, const real MinPres, const real MinEint,
-   const real DualEnergySwitch, const bool NormPassive, const int NNorm,
-   const int c_NormIdx[],
+   const real DualEnergySwitch,
+   const bool NormPassive, const int NNorm, const int c_NormIdx[],
+   const bool FracPassive, const int NFrac, const int c_FracIdx[],
    const bool JeansMinPres, const real JeansMinPres_Coeff,
-   const EoS_DE2P_t EoS_DensEint2Pres_Func,
-   const EoS_DP2E_t EoS_DensPres2Eint_Func,
-   const EoS_DP2C_t EoS_DensPres2CSqr_Func,
-   const double c_EoS_AuxArray_Flt[],
-   const int    c_EoS_AuxArray_Int[],
-   const real* const c_EoS_Table[EOS_NTABLE_MAX] );
+   const EoS_t EoS );
 #endif // FLU_SCHEME
 
 #elif ( MODEL == ELBDM )
@@ -173,6 +158,11 @@ static real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ] = NULL;
 //                                      --> Should be set to the global variable "PassiveNorm_NVar"
 //                NormIdx             : Target variable indices to be normalized
 //                                      --> Should be set to the global variable "PassiveNorm_VarIdx"
+//                FracPassive         : true --> convert passive scalars to mass fraction during data reconstruction
+//                NFrac               : Number of passive scalars for the option "FracPassive"
+//                                      --> Should be set to the global variable "PassiveIntFrac_NVar"
+//                FracIdx             : Target variable indices for the option "FracPassive"
+//                                      --> Should be set to the global variable "PassiveIntFrac_VarIdx"
 //                JeansMinPres        : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff  : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //-------------------------------------------------------------------------------------------------------
@@ -191,7 +181,9 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
                       const double Time, const bool UsePot, const OptExtAcc_t ExtAcc,
                       const real MinDens, const real MinPres, const real MinEint,
-                      const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
+                      const real DualEnergySwitch,
+                      const bool NormPassive, const int NNorm, const int NormIdx[],
+                      const bool FracPassive, const int NFrac, const int FracIdx[],
                       const bool JeansMinPres, const real JeansMinPres_Coeff )
 {
 
@@ -216,9 +208,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
 #     if   ( FLU_SCHEME == RTVD )
 
       CPU_FluidSolver_RTVD( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, h_Corner_Array, h_Pot_Array_USG,
-                            NPatchGroup, dt, dh, StoreFlux, XYZ, MinDens, MinPres, MinEint,
-                            EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr, EoS_DensPres2CSqr_CPUPtr,
-                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+                            NPatchGroup, dt, dh, StoreFlux, XYZ, MinDens, MinPres, MinEint, EoS );
 
 #     elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 
@@ -227,9 +217,8 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                             h_PriVar, h_Slope_PPM, h_FC_Var, h_FC_Flux, h_FC_Mag_Half, h_EC_Ele,
                             NPatchGroup, dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff, Time,
                             UsePot, ExtAcc, CPUExtAcc_Ptr, ExtAcc_AuxArray, MinDens, MinPres, MinEint,
-                            DualEnergySwitch, NormPassive, NNorm, NormIdx, JeansMinPres, JeansMinPres_Coeff,
-                            EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr, EoS_DensPres2CSqr_CPUPtr,
-                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+                            DualEnergySwitch, NormPassive, NNorm, NormIdx, FracPassive, NFrac, FracIdx,
+                            JeansMinPres, JeansMinPres_Coeff, EoS );
 
 #     elif ( FLU_SCHEME == CTU )
 
@@ -238,9 +227,8 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                             h_PriVar, h_Slope_PPM, h_FC_Var, h_FC_Flux, h_FC_Mag_Half, h_EC_Ele,
                             NPatchGroup, dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff, Time,
                             UsePot, ExtAcc, CPUExtAcc_Ptr, ExtAcc_AuxArray, MinDens, MinPres, MinEint,
-                            DualEnergySwitch, NormPassive, NNorm, NormIdx, JeansMinPres, JeansMinPres_Coeff,
-                            EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr, EoS_DensPres2CSqr_CPUPtr,
-                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+                            DualEnergySwitch, NormPassive, NNorm, NormIdx, FracPassive, NFrac, FracIdx,
+                            JeansMinPres, JeansMinPres_Coeff, EoS );
 
 #     else
 

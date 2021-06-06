@@ -34,8 +34,9 @@ double               FlagTable_Lohner     [NLEVEL-1][4];
 double              *FlagTable_User       [NLEVEL-1];
 double              *DumpTable = NULL;
 int                  DumpTable_NDump;
-int                  PassiveNorm_NVar;
-int                  PassiveNorm_VarIdx[NCOMP_PASSIVE];
+int                 *UM_IC_RefineRegion = NULL;
+int                  PassiveNorm_NVar, PassiveNorm_VarIdx[NCOMP_PASSIVE];
+int                  PassiveIntFrac_NVar, PassiveIntFrac_VarIdx[NCOMP_PASSIVE];
 
 int                  MPI_Rank, MPI_Rank_X[3], MPI_SibRank[26], NX0[3], NPatchTotal[NLEVEL];
 int                 *BaseP = NULL;
@@ -50,7 +51,7 @@ int                  GPU_NSTREAM, FLAG_BUFFER_SIZE, FLAG_BUFFER_SIZE_MAXM1_LV, F
 IntScheme_t          OPT__FLU_INT_SCHEME, OPT__REF_FLU_INT_SCHEME;
 double               OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z, AUTO_REDUCE_DT_FACTOR, AUTO_REDUCE_DT_FACTOR_MIN;
 double               OPT__CK_MEMFREE, INT_MONO_COEFF, UNIT_L, UNIT_M, UNIT_T, UNIT_V, UNIT_D, UNIT_E, UNIT_P;
-int                  OPT__UM_IC_LEVEL, OPT__UM_IC_NVAR, OPT__UM_IC_LOAD_NRANK, OPT__GPUID_SELECT, OPT__PATCH_COUNT;
+int                  OPT__UM_IC_LEVEL, OPT__UM_IC_NLEVEL, OPT__UM_IC_NVAR, OPT__UM_IC_LOAD_NRANK, OPT__GPUID_SELECT, OPT__PATCH_COUNT;
 int                  INIT_DUMPID, INIT_SUBSAMPLING_NCELL, OPT__TIMING_BARRIER, OPT__REUSE_MEMORY, RESTART_LOAD_NRANK;
 bool                 OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_USER, OPT__FLAG_LOHNER_DENS, OPT__FLAG_REGION;
 int                  OPT__FLAG_USER_NUM;
@@ -63,8 +64,8 @@ bool                 OPT__UM_IC_DOWNGRADE, OPT__UM_IC_REFINE, OPT__TIMING_MPI;
 bool                 OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
 bool                 OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
 bool                 OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
+bool                 OPT__INT_FRAC_PASSIVE_LR;
 
-SrcTerms_t           SRC_TERMS;
 UM_IC_Format_t       OPT__UM_IC_FORMAT;
 TestProbID_t         TESTPROB_ID;
 OptInit_t            OPT__INIT;
@@ -88,8 +89,10 @@ Opt1stFluxCorr_t     OPT__1ST_FLUX_CORR;
 OptRSolver1st_t      OPT__1ST_FLUX_CORR_SCHEME;
 bool                 OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP;
 bool                 OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, JEANS_MIN_PRES, OPT__LAST_RESORT_FLOOR;
-int                  OPT__CK_NEGATIVE, JEANS_MIN_PRES_LEVEL, JEANS_MIN_PRES_NCELL;
-double               MIN_DENS, MIN_PRES, MIN_EINT;
+bool                 OPT__OUTPUT_DIVVEL, OPT__OUTPUT_MACH, OPT__OUTPUT_PRES, OPT__OUTPUT_CS;
+bool                 OPT__OUTPUT_TEMP;
+int                  OPT__CK_NEGATIVE, JEANS_MIN_PRES_LEVEL, JEANS_MIN_PRES_NCELL, OPT__CHECK_PRES_AFTER_FLU;
+double               MIN_DENS, MIN_PRES, MIN_EINT, MIN_TEMP;
 #ifdef DUAL_ENERGY
 double               DUAL_ENERGY_SWITCH;
 #endif
@@ -97,6 +100,7 @@ double               DUAL_ENERGY_SWITCH;
 double               FlagTable_Current[NLEVEL-1];
 IntScheme_t          OPT__MAG_INT_SCHEME, OPT__REF_MAG_INT_SCHEME;
 bool                 OPT__FIXUP_ELECTRIC, OPT__CK_INTERFACE_B, OPT__OUTPUT_CC_MAG, OPT__FLAG_CURRENT;
+bool                 OPT__OUTPUT_DIVMAG;
 int                  OPT__CK_DIVERGENCE_B;
 double               UNIT_B;
 bool                 OPT__INIT_BFIELD_BYFILE;
@@ -224,12 +228,36 @@ int    EoS_AuxArray_Int[EOS_NAUX_MAX];
 EoS_DE2P_t EoS_DensEint2Pres_CPUPtr = NULL;
 EoS_DP2E_t EoS_DensPres2Eint_CPUPtr = NULL;
 EoS_DP2C_t EoS_DensPres2CSqr_CPUPtr = NULL;
+EoS_DE2T_t EoS_DensEint2Temp_CPUPtr = NULL;
+EoS_DT2P_t EoS_DensTemp2Pres_CPUPtr = NULL;
+EoS_GENE_t EoS_General_CPUPtr       = NULL;
 #ifdef GPU
 EoS_DE2P_t EoS_DensEint2Pres_GPUPtr = NULL;
 EoS_DP2E_t EoS_DensPres2Eint_GPUPtr = NULL;
 EoS_DP2C_t EoS_DensPres2CSqr_GPUPtr = NULL;
+EoS_DE2T_t EoS_DensEint2Temp_GPUPtr = NULL;
+EoS_DT2P_t EoS_DensTemp2Pres_GPUPtr = NULL;
+EoS_GENE_t EoS_General_GPUPtr       = NULL;
 #endif
+
+// c. data structure for the CPU/GPU solvers
+EoS_t EoS;
 #endif // HYDRO
+
+// (2-10) source terms
+SrcTerms_t SrcTerms;
+#if ( MODEL == HYDRO )
+double     Src_Dlep_AuxArray_Flt[SRC_NAUX_DLEP];
+int        Src_Dlep_AuxArray_Int[SRC_NAUX_DLEP];
+#endif
+double     Src_User_AuxArray_Flt[SRC_NAUX_USER];
+int        Src_User_AuxArray_Int[SRC_NAUX_USER];
+
+// (2-11) user-defined derived fields
+bool OPT__OUTPUT_USER_FIELD;
+int  UserDerField_Num                  = -1;    // must be negative for Output_DumpData_Total_HDF5()
+char (*UserDerField_Label)[MAX_STRING] = NULL;
+char (*UserDerField_Unit )[MAX_STRING] = NULL;
 
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
@@ -272,6 +300,7 @@ char   (*h_DE_Array_G      [2])[PS1][PS1][PS1]                     = { NULL, NUL
 real   (*h_Emag_Array_G    [2])[PS1][PS1][PS1]                     = { NULL, NULL };
 #endif
 real    *h_ExtPotTable                                             = NULL;
+void   **h_ExtPotGenePtr                                           = NULL;
 
 // (3-3) unsplit gravity correction
 #ifdef UNSPLIT_GRAVITY
@@ -310,6 +339,10 @@ real (*h_Flu_Array_S_Out[2])[FLU_NOUT_S][ CUBE(PS1)      ]         = { NULL, NUL
 real (*h_Mag_Array_S_In [2])[NCOMP_MAG][ SRC_NXT_P1*SQR(SRC_NXT) ] = { NULL, NULL };
 #endif
 double (*h_Corner_Array_S[2])[3]                                   = { NULL, NULL };
+#if ( MODEL == HYDRO )
+real (*h_SrcDlepProf_Data)[SRC_DLEP_PROF_NBINMAX]                  = NULL;
+real  *h_SrcDlepProf_Radius                                        = NULL;
+#endif
 
 
 // 4. GPU (device) global memory arrays
@@ -353,6 +386,7 @@ char   (*d_DE_Array_G     )[ CUBE(PS1) ]                           = NULL;
 real   (*d_Emag_Array_G   )[ CUBE(PS1) ]                           = NULL;
 #endif
 real    *d_ExtPotTable                                             = NULL;
+void   **d_ExtPotGenePtr                                           = NULL;
 
 // (4-3) unsplit gravity correction
 #ifdef UNSPLIT_GRAVITY
@@ -386,6 +420,10 @@ real (*d_Flu_Array_S_Out)[FLU_NOUT_S][ CUBE(PS1)      ]            = NULL;
 real (*d_Mag_Array_S_In)[NCOMP_MAG  ][ SRC_NXT_P1*SQR(SRC_NXT) ]   = NULL;
 #endif
 double (*d_Corner_Array_S)[3]                                      = NULL;
+#if ( MODEL == HYDRO )
+real (*d_SrcDlepProf_Data)[SRC_DLEP_PROF_NBINMAX]                  = NULL;
+real  *d_SrcDlepProf_Radius                                        = NULL;
+#endif
 
 #endif // #ifdef GPU
 
@@ -479,6 +517,9 @@ int main( int argc, char *argv[] )
    Aux_ResetTimer();
 #  endif
 
+#  ifdef SUPPORT_LIBYT
+   YT_Inline();
+#  endif
 
 #  ifdef TIMING
    Timer_Init.Stop();
@@ -578,6 +619,7 @@ int main( int argc, char *argv[] )
          }
 
          const bool   Redistribute_Yes = true;
+         const bool   SendGridData_Yes = true;
          const bool   ResetLB_Yes      = true;
 #        ifdef PARTICLE
          const double ParWeight        = amr->LB->Par_Weight;
@@ -586,7 +628,7 @@ int main( int argc, char *argv[] )
 #        endif
          const int    AllLv            = -1;
 
-         LB_Init_LoadBalance( Redistribute_Yes, ParWeight, ResetLB_Yes, AllLv );
+         LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, ParWeight, ResetLB_Yes, AllLv );
 
          if ( OPT__PATCH_COUNT > 0 )         Aux_Record_PatchCount();
 
