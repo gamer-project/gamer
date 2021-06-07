@@ -4,10 +4,10 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Flag_AGORA
-// Description :  Flag cells for refinement for the AGORA isolated galaxy simulation
+// Function    :  Flag_CMZ
+// Description :  Flag cells for refinement for the CMZ simulation
 //
-// Note        :  1. Linked to the function pointer "Flag_User_Ptr" by "Init_TestProb_Hydro_AGORA_IsolatedGalaxy()"
+// Note        :  1. Linked to the function pointer "Flag_User_Ptr" by "Init_TestProb_Hydro_CMZ()"
 //                   to replace "Flag_User()"
 //                2. Please turn on the runtime option "OPT__FLAG_USER"
 //
@@ -44,5 +44,5 @@ bool Flag_CMZ(const int i, const int j, const int k, const int lv, const int PID
 
    return Flag;
 
-} // FUNCTION : Flag_AGORA
+} // FUNCTION : Flag_CMZ
 

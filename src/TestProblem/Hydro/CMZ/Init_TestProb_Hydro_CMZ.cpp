@@ -139,7 +139,6 @@ void SetParameter()
    BarredPot_Rc       *= Const_kpc            / UNIT_L;
    BarredPot_Omegabar *= (Const_km/Const_kpc) / (1/UNIT_T);
    BarredPot_fullBS   *= Const_Gyr            / UNIT_T;
-   BarredPot_initT    *= Const_kB             / UNIT_E;
 
 
 // (2) set the problem-specific derived parameters
@@ -173,7 +172,7 @@ void SetParameter()
       Aux_Message( stdout, "  Log bar axis ratio            = %13.7e \n",         BarredPot_q                     );
       Aux_Message( stdout, "  Log bar pattern speed         = %13.7e km/s/kpc\n", BarredPot_Omegabar/UNIT_T
                                                                                               *Const_kpc/Const_km );
-      Aux_Message( stdout, "  Initial Gas disk temperature  = %13.7e K \n",       BarredPot_initT*UNIT_E/Const_kB );
+      Aux_Message( stdout, "  Initial Gas disk temperature  = %13.7e K \n",       BarredPot_initT                 );
       Aux_Message( stdout, "==================================================================================\n" );
    }
 
@@ -207,6 +206,13 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
+// check
+#  ifdef GAMER_DEBUG
+   if ( EoS_DensTemp2Pres_CPUPtr == NULL )
+      Aux_Error( ERROR_INFO, "EoS_DensTemp2Pres_CPUPtr == NULL !!\n" );
+#  endif
+
+
 // Uniform gas disk, initially circular rotation 
 
   const bool   CheckMinPres_Yes = true;
@@ -224,8 +230,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
   {
  
      GasDens = 0.2735*exp(-Rad/4.8)*1/SQR(cosh(dz/0.13))*(Const_Msun/CUBE(Const_pc))/(UNIT_M/CUBE(UNIT_L));    
-     GasPres = Hydro_Temp2Pres( GasDens, BarredPot_initT, MOLECULAR_WEIGHT, Const_mH/UNIT_M,
-                                                 CheckMinPres_Yes, MIN_PRES );
+     GasPres = EoS_DensTemp2Pres_CPUPtr( GasDens, BarredPot_initT, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                         h_EoS_Table, NULL ); // assuming EoS requires no passive scalars
 //  GasVel  = BarredPot_V0*Rad/sqrt(SQR(Rad) + SQR(BarredPot_Rc));
      GasVel = -5.58683750e-05*pow(Rad,6) + 2.17357740e-03*pow(Rad,5) - 3.25132718e-02*pow(Rad,4)
                +2.32860976e-01*pow(Rad,3) - 8.14564481e-01*pow(Rad,2) + 1.35601708e+00*Rad + 1.06059808e+00;     
@@ -241,8 +247,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
   {
      GasDens = 1.0e-6*(Const_Msun/CUBE(Const_pc))/(UNIT_M/CUBE(UNIT_L));
 //   GasDens = 0.025 ;  // 1.0e-6
-     GasPres = Hydro_Temp2Pres( GasDens, 100.*BarredPot_initT, MOLECULAR_WEIGHT, Const_mH/UNIT_M,
-                                               CheckMinPres_Yes, MIN_PRES );
+     GasPres = EoS_DensTemp2Pres_CPUPtr( GasDens, 100.*BarredPot_initT, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                         h_EoS_Table, NULL ); // assuming EoS requires no passive scalars
      MomX  = 0.0;
      MomY  = 0.0;
      MomZ  = 0.0;
@@ -254,15 +260,15 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 #  if ( EOS == EOS_ISOTHERMAL )
 
-   GasPres = EoS_DensEint2Pres_CPUPtr( GasDens, 1.0 , NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, NULL);
-   Eint = EoS_DensPres2Eint_CPUPtr( GasDens, GasPres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, NULL);
-   Etot  = Hydro_ConEint2Etot( GasDens, MomX, MomY, MomZ, Eint, 0.0 );
+   GasPres = EoS_DensEint2Pres_CPUPtr( GasDens, 1.0,     NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, NULL, NULL );
+   Eint    = EoS_DensPres2Eint_CPUPtr( GasDens, GasPres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, NULL, NULL );
+   Etot    = Hydro_ConEint2Etot( GasDens, MomX, MomY, MomZ, Eint, 0.0 );
 
 #  else
 
-   Eint = EoS_DensPres2Eint_CPUPtr( GasDens, GasPres, NULL, EoS_AuxArray_Flt,
-                                    EoS_AuxArray_Int, h_EoS_Table );    // assuming EoS requires no passive scalars
-   Etot = Hydro_ConEint2Etot( GasDens, MomX, MomY, MomZ, Eint, 0.0 );      // do NOT include magnetic energy here
+   Eint    = EoS_DensPres2Eint_CPUPtr( GasDens, GasPres, NULL, EoS_AuxArray_Flt,
+                                       EoS_AuxArray_Int, h_EoS_Table, NULL );    // assuming EoS requires no passive scalars
+   Etot    = Hydro_ConEint2Etot( GasDens, MomX, MomY, MomZ, Eint, 0.0 );         // do NOT include magnetic energy here
 #  endif
 
 
@@ -334,14 +340,14 @@ void AddNewField_BarredPot()
 // add the metallicity field only if it has not been done
 // --> since Grackle may already add this field automatically when GRACKLE_METAL is enabled
 // --> also note that "Idx_Metal" has been predefined in Field.h
-    if ( Idx_Metal == Idx_Undefined )
-          Idx_Metal = AddField( "Metal", NORMALIZE_NO );
+   if ( Idx_Metal == Idx_Undefined )
+      Idx_Metal = AddField( "Metal", NORMALIZE_NO, INTERP_FRAC_YES );
 
 
 } // FUNCTION : AddNewField_BarredPot
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  AddNewParticleAttribute_AGORA
+// Function    :  AddNewParticleAttribute_BarredPot
 // Description :  Add the problem-specific particle attributes
 //
 // Note        :  1. Ref: https://github.com/gamer-project/gamer/wiki/Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes
@@ -363,7 +369,7 @@ void AddNewParticleAttribute_BarredPot()
     if ( Idx_ParMetalFrac == Idx_Undefined )
           Idx_ParMetalFrac = AddParticleAttribute( "ParMetalFrac" );
 
-} // FUNCTION : AddNewParticleAttribute_AGORA
+} // FUNCTION : AddNewParticleAttribute_BarredPot
 #endif
 #endif // #if ( MODEL == HYDRO)
 

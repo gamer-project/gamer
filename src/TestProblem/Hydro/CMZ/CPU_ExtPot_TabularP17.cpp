@@ -98,13 +98,14 @@ void SetExtPotAuxArray_TabularP17( double AuxArray_Flt[], int AuxArray_Int[] )
 //                                        EXT_POT_USAGE_SUB_TINT: like SUB but for temporal interpolation
 //                                    --> This parameter is useless in most cases
 //                PotTable          : 3D potential table used by EXT_POT_TABLE
+//                GenePtr           : Array of pointers for general potential tables
 //
 // Return      :  External potential at (x,y,z,Time)
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real ExtPot_TabularP17( const double x, const double y, const double z, const double Time,
                                const double UserArray_Flt[], const int UserArray_Int[],
-                               const ExtPotUsage_t Usage, const real PotTable[] )
+                               const ExtPotUsage_t Usage, const real PotTable[], void **GenePtr )
 {
 
    const double EdgeL_x  = UserArray_Flt[0];
@@ -124,14 +125,14 @@ static real ExtPot_TabularP17( const double x, const double y, const double z, c
 
    const double cx       = EdgeL_x + 0.5*(NPoint_x-1)/_dhx;
    const double cy       = EdgeL_y + 0.5*(NPoint_y-1)/_dhy;
-   const double cz       = EdgeL_z + 0.5*(NPoint_z-1)/_dhz;
+// const double cz       = EdgeL_z + 0.5*(NPoint_z-1)/_dhz;
 
    const real   ONE      = (real)1.0;
 
    int  idx_x, idx_y, idx_z;
    long idx0;
    real dx, dy, dz;
-   real xp,yp,zp, rad, dxrot, dyrot, angle;
+   real xp, yp, rad, dxrot, dyrot, angle;
 
    xp     = (real)(x - cx);
    yp     = (real)(y - cy);

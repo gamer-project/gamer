@@ -72,14 +72,14 @@ void SetExtPotAuxArray_BarredPot(double AuxArray_Flt[], int AuxArray_Int[])
 //                                        EXT_POT_USAGE_SUB_TINT: like SUB but for temporal interpolation
 //                                    --> This parameter is useless in most cases
 //                PotTable          : 3D potential table used by EXT_POT_TABLE
+//                GenePtr           : Array of pointers for general potential tables
 //
 // Return      :  External potential at (x,y,z,Time)
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-
 static real ExtPot_BarredPot(const double x, const double y, const double z, const double Time,
                              const double UserArray_Flt[], const int UserArray_Int[],
-                             const ExtPotUsage_t Usage, const real PotTable[] )
+                             const ExtPotUsage_t Usage, const real PotTable[], void **GenePtr )
 {
 
    const double cx     =       UserArray_Flt[5];    // x coordinate of the external acceleration center
