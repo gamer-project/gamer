@@ -311,7 +311,9 @@ void Init_Load_Parameter()
    ReadPara->Add( "EXT_POT_TABLE_NPOINT_X",     &EXT_POT_TABLE_NPOINT[0],        -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "EXT_POT_TABLE_NPOINT_Y",     &EXT_POT_TABLE_NPOINT[1],        -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "EXT_POT_TABLE_NPOINT_Z",     &EXT_POT_TABLE_NPOINT[2],        -1,               NoMin_int,     NoMax_int      );
-   ReadPara->Add( "EXT_POT_TABLE_DH",           &EXT_POT_TABLE_DH,               -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "EXT_POT_TABLE_DH_X",         &EXT_POT_TABLE_DH[0],            -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "EXT_POT_TABLE_DH_Y",         &EXT_POT_TABLE_DH[1],            -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "EXT_POT_TABLE_DH_Z",         &EXT_POT_TABLE_DH[2],            -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "EXT_POT_TABLE_EDGEL_X",      &EXT_POT_TABLE_EDGEL[0],          NoDef_double,    NoMin_double,  NoMax_double   );
    ReadPara->Add( "EXT_POT_TABLE_EDGEL_Y",      &EXT_POT_TABLE_EDGEL[1],          NoDef_double,    NoMin_double,  NoMax_double   );
    ReadPara->Add( "EXT_POT_TABLE_EDGEL_Z",      &EXT_POT_TABLE_EDGEL[2],          NoDef_double,    NoMin_double,  NoMax_double   );

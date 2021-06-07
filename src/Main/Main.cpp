@@ -136,7 +136,7 @@ int                  SOR_MAX_ITER, SOR_MIN_ITER;
 double               MG_TOLERATED_ERROR;
 int                  MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH;
 char                 EXT_POT_TABLE_NAME[MAX_STRING];
-double               EXT_POT_TABLE_DH, EXT_POT_TABLE_EDGEL[3];
+double               EXT_POT_TABLE_DH[3], EXT_POT_TABLE_EDGEL[3];
 int                  EXT_POT_TABLE_NPOINT[3], EXT_POT_TABLE_FLOAT8;
 IntScheme_t          OPT__POT_INT_SCHEME, OPT__RHO_INT_SCHEME, OPT__GRA_INT_SCHEME, OPT__REF_POT_INT_SCHEME;
 OptPotBC_t           OPT__BC_POT;
