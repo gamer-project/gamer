@@ -153,9 +153,9 @@ struct Particle_t
    real         *VelZ;
    real         *Time;
 #  ifdef STORE_PAR_ACC
-   real       *AccX;
-   real       *AccY;
-   real       *AccZ;
+   real         *AccX;
+   real         *AccY;
+   real         *AccZ;
 #  endif
 
 

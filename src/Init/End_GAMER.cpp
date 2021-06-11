@@ -9,8 +9,9 @@ extern void (*End_User_Ptr)();
 // Function    :  End_GAMER
 // Description :  Put everything you want to do before terminating the program right here
 //
-// Note        :  1. The function pointer "End_User_Ptr" points to "End_User()" by default
-//                   but may be overwritten by various test problem initializers
+// Note        :  1. Function pointer "End_User_Ptr" may be set by a test problem initializer
+//
+// Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
 void End_GAMER()
 {
@@ -34,9 +35,18 @@ void End_GAMER()
    YT_End();
 #  endif
 
-
 #  ifdef SUPPORT_GRACKLE
    Grackle_End();
+#  endif
+
+#  if ( MODEL == HYDRO )
+   EoS_End();
+#  endif
+
+   Src_End();
+
+#  ifdef GRAVITY
+   End_ExtAccPot();
 #  endif
 
 

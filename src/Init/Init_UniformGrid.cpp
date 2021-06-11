@@ -90,14 +90,14 @@ void Init_UniformGrid( const int lv, const bool FindHomePatchForPar )
       if (  LB_Index2Rank( lv, LBIdx0, CHECK_ON ) == MPI_Rank  )
 #     endif
       {
-         amr->pnew( lv, Cr[0],        Cr[1],        Cr[2],        -1, true, true );
-         amr->pnew( lv, Cr[0]+PScale, Cr[1],        Cr[2],        -1, true, true );
-         amr->pnew( lv, Cr[0],        Cr[1]+PScale, Cr[2],        -1, true, true );
-         amr->pnew( lv, Cr[0],        Cr[1],        Cr[2]+PScale, -1, true, true );
-         amr->pnew( lv, Cr[0]+PScale, Cr[1]+PScale, Cr[2],        -1, true, true );
-         amr->pnew( lv, Cr[0],        Cr[1]+PScale, Cr[2]+PScale, -1, true, true );
-         amr->pnew( lv, Cr[0]+PScale, Cr[1],        Cr[2]+PScale, -1, true, true );
-         amr->pnew( lv, Cr[0]+PScale, Cr[1]+PScale, Cr[2]+PScale, -1, true, true );
+         amr->pnew( lv, Cr[0],        Cr[1],        Cr[2],        -1, true, true, true );
+         amr->pnew( lv, Cr[0]+PScale, Cr[1],        Cr[2],        -1, true, true, true );
+         amr->pnew( lv, Cr[0],        Cr[1]+PScale, Cr[2],        -1, true, true, true );
+         amr->pnew( lv, Cr[0],        Cr[1],        Cr[2]+PScale, -1, true, true, true );
+         amr->pnew( lv, Cr[0]+PScale, Cr[1]+PScale, Cr[2],        -1, true, true, true );
+         amr->pnew( lv, Cr[0],        Cr[1]+PScale, Cr[2]+PScale, -1, true, true, true );
+         amr->pnew( lv, Cr[0]+PScale, Cr[1],        Cr[2]+PScale, -1, true, true, true );
+         amr->pnew( lv, Cr[0]+PScale, Cr[1]+PScale, Cr[2]+PScale, -1, true, true, true );
       }
 
    }}}
@@ -107,7 +107,11 @@ void Init_UniformGrid( const int lv, const bool FindHomePatchForPar )
 
 // 3. find the home patches on lv for all particles
 #  ifdef PARTICLE
-   if ( FindHomePatchForPar )    Par_FindHomePatch_UniformGrid( lv );
+   if ( FindHomePatchForPar )
+   {
+      const bool OldParOnly_Yes = true;
+      Par_FindHomePatch_UniformGrid( lv, OldParOnly_Yes, NULL_INT, NULL );
+   }
 #  endif
 
 } // FUNCTION : Init_UniformGrid

@@ -81,34 +81,34 @@ do for [ID=START_ID:END_ID:DELTA_ID] {
 #  plot
    if ( BINARY ) {
       if ( FLOAT8 == 1 ) {
-         if ( VIEW == 0 ) { splot FILE_IN binary format="%7double" u 3:4:5 w p pt 5 notitle }
-         if ( VIEW == 1 ) {  plot FILE_IN binary format="%7double" u 3:4   w p pt 5 notitle }
-         if ( VIEW == 2 ) {  plot FILE_IN binary format="%7double" u 4:5   w p pt 5 notitle }
-         if ( VIEW == 3 ) {  plot FILE_IN binary format="%7double" u 3:5   w p pt 5 notitle }
+         if ( VIEW == 0 ) { splot FILE_IN binary format="%7double" u 2:3:4 w p pt 5 notitle }
+         if ( VIEW == 1 ) {  plot FILE_IN binary format="%7double" u 2:3   w p pt 5 notitle }
+         if ( VIEW == 2 ) {  plot FILE_IN binary format="%7double" u 3:4   w p pt 5 notitle }
+         if ( VIEW == 3 ) {  plot FILE_IN binary format="%7double" u 2:4   w p pt 5 notitle }
       }
       else {
-         if ( VIEW == 0 ) { splot FILE_IN binary format="%7float"  u 3:4:5 w p pt 5 notitle }
-         if ( VIEW == 1 ) {  plot FILE_IN binary format="%7float"  u 3:4   w p pt 5 notitle }
-         if ( VIEW == 2 ) {  plot FILE_IN binary format="%7float"  u 4:5   w p pt 5 notitle }
-         if ( VIEW == 3 ) {  plot FILE_IN binary format="%7float"  u 3:5   w p pt 5 notitle }
+         if ( VIEW == 0 ) { splot FILE_IN binary format="%7float"  u 2:3:4 w p pt 5 notitle }
+         if ( VIEW == 1 ) {  plot FILE_IN binary format="%7float"  u 2:3   w p pt 5 notitle }
+         if ( VIEW == 2 ) {  plot FILE_IN binary format="%7float"  u 3:4   w p pt 5 notitle }
+         if ( VIEW == 3 ) {  plot FILE_IN binary format="%7float"  u 2:4   w p pt 5 notitle }
       }
    }
    else {
-      if ( VIEW == 0 ) { splot FILE_IN u 3:4:5 w p pt 5 notitle }
-      if ( VIEW == 1 ) {  plot FILE_IN u 3:4 every ::0::9999      w p pt 5 ps 0.6 lc 1 notit, \
-                               FILE_IN u 3:4 every ::0::0         w p pt 7 ps 1.0 lc 4 notit, \
-                               FILE_IN u 3:4 every ::1::1         w p pt 7 ps 1.0 lc 5 notit, \
-                               FILE_IN u 3:4 every ::2::2         w p pt 7 ps 1.0 lc 3 notit, \
-                               FILE_IN u 3:4 every ::3::3         w p pt 7 ps 1.0 lc 7 notit, \
-                               FILE_IN u 3:4 every ::4::4         w p pt 7 ps 1.0 lc 8 notit, \
-                               FILE_IN u 3:4 every ::10000::19999 w p pt 5 ps 0.6 lc 2 notit, \
-                               FILE_IN u 3:4 every ::10000::10000 w p pt 9 ps 1.0 lc 4 notit, \
-                               FILE_IN u 3:4 every ::10001::10001 w p pt 9 ps 1.0 lc 5 notit, \
-                               FILE_IN u 3:4 every ::10002::10002 w p pt 9 ps 1.0 lc 3 notit, \
-                               FILE_IN u 3:4 every ::10003::10003 w p pt 9 ps 1.0 lc 7 notit, \
-                               FILE_IN u 3:4 every ::10004::10004 w p pt 9 ps 1.0 lc 8 notit }
-      if ( VIEW == 2 ) {  plot FILE_IN u 4:5   w p pt 5 notitle }
-      if ( VIEW == 3 ) {  plot FILE_IN u 3:5   w p pt 5 notitle }
+      if ( VIEW == 0 ) { splot FILE_IN u 2:3:4 w p pt 5 notitle }
+      if ( VIEW == 1 ) {  plot FILE_IN u 2:3 every ::0::9999      w p pt 5 ps 0.6 lc 1 notit, \
+                               FILE_IN u 2:3 every ::0::0         w p pt 7 ps 1.0 lc 4 notit, \
+                               FILE_IN u 2:3 every ::1::1         w p pt 7 ps 1.0 lc 5 notit, \
+                               FILE_IN u 2:3 every ::2::2         w p pt 7 ps 1.0 lc 3 notit, \
+                               FILE_IN u 2:3 every ::3::3         w p pt 7 ps 1.0 lc 7 notit, \
+                               FILE_IN u 2:3 every ::4::4         w p pt 7 ps 1.0 lc 8 notit, \
+                               FILE_IN u 2:3 every ::10000::19999 w p pt 5 ps 0.6 lc 2 notit, \
+                               FILE_IN u 2:3 every ::10000::10000 w p pt 9 ps 1.0 lc 4 notit, \
+                               FILE_IN u 2:3 every ::10001::10001 w p pt 9 ps 1.0 lc 5 notit, \
+                               FILE_IN u 2:3 every ::10002::10002 w p pt 9 ps 1.0 lc 3 notit, \
+                               FILE_IN u 2:3 every ::10003::10003 w p pt 9 ps 1.0 lc 7 notit, \
+                               FILE_IN u 2:3 every ::10004::10004 w p pt 9 ps 1.0 lc 8 notit }
+      if ( VIEW == 2 ) {  plot FILE_IN u 3:4   w p pt 5 notitle }
+      if ( VIEW == 3 ) {  plot FILE_IN u 2:4   w p pt 5 notitle }
    }
 
 

@@ -37,7 +37,7 @@ const TestProbID_t
    TESTPROB_HYDRO_BLAST_WAVE                   =    1,
    TESTPROB_HYDRO_ACOUSTIC_WAVE                =    2,
    TESTPROB_HYDRO_BONDI                        =    3,
-   TESTPROB_HYDRO_CLUSTER_MERGER_VS_FLASH      =    4,
+   TESTPROB_HYDRO_CLUSTER_MERGER               =    4,
    TESTPROB_HYDRO_AGORA_ISOLATED_GALAXY        =    5,
    TESTPROB_HYDRO_CAUSTIC                      =    6,
    TESTPROB_HYDRO_SPHERICAL_COLLAPSE           =    7,
@@ -46,6 +46,11 @@ const TestProbID_t
    TESTPROB_HYDRO_COLLIDING_JETS               =   10,
    TESTPROB_HYDRO_PLUMMER                      =   11,
    TESTPROB_HYDRO_GRAVITY                      =   12,
+   TESTPROB_HYDRO_MHD_ABC                      =   13,
+   TESTPROB_HYDRO_MHD_ORSZAG_TANG_VORTEX       =   14,
+   TESTPROB_HYDRO_MHD_LINEAR_WAVE              =   15,
+   TESTPROB_HYDRO_JEANS_INSTABILITY            =   16,
+   TESTPROB_HYDRO_BARRED_POT                   =   51,
 
    TESTPROB_ELBDM_EXTPOT                       = 1000;
 
@@ -98,22 +103,14 @@ const IntScheme_t
 // data reconstruction TVD limiters
 typedef int LR_Limiter_t;
 const LR_Limiter_t
-   LR_LIMITER_NONE = 0,
-   VANLEER         = 1,
-   GMINMOD         = 2,
-   ALBADA          = 3,
-   VL_GMINMOD      = 4,
-   EXTPRE          = 5;
-
-
-// TVD limiters for the WAF scheme
-typedef int WAF_Limiter_t;
-const WAF_Limiter_t
-   WAF_LIMITER_NONE = 0,
-   WAF_SUPERBEE     = 1,
-   WAF_VANLEER      = 2,
-   WAF_ALBADA       = 3,
-   WAF_MINBEE       = 4;
+   LR_LIMITER_DEFAULT    = -1,
+   LR_LIMITER_NONE       = 0,
+   LR_LIMITER_VANLEER    = 1,
+   LR_LIMITER_GMINMOD    = 2,
+   LR_LIMITER_ALBADA     = 3,
+   LR_LIMITER_VL_GMINMOD = 4,
+   LR_LIMITER_EXTPRE     = 5,
+   LR_LIMITER_CENTRAL    = 6;
 
 
 // data output formats
@@ -158,7 +155,7 @@ const NSide_t
    NSIDE_26 = 26;
 
 
-// use the load-balance alternative function in "Buf_GetBufferData" and "Flag_Real"
+// use the load-balance alternative functions
 typedef int UseLBFunc_t;
 const UseLBFunc_t
    USELB_NO  = 0,
@@ -172,7 +169,7 @@ const Check_t
    CHECK_ON  = 1;
 
 
-// target solver in "InvokeSolvers"
+// target solver in InvokeSolver()
 // --> must start from 0 because of the current TIMING_SOLVER implementation
 // --> when adding new solvers, please modify the NSOLVER constant accordingly
 const int NSOLVER = 7;
@@ -192,27 +189,26 @@ const Solver_t
 #ifdef GRAVITY
   ,DT_GRA_SOLVER              = 6
 #endif
+  ,SRC_SOLVER                 = 7
   ;
 
 
-// target mode in "Buf_GetBufferData and LB_GetBufferData"
+// target mode in Buf_GetBufferData() and LB_GetBufferData()
 typedef int GetBufMode_t;
 const GetBufMode_t
+   DATA_GENERAL         = 1
+  ,DATA_AFTER_FIXUP     = 2
+  ,DATA_AFTER_REFINE    = 3
+  ,DATA_RESTRICT        = 4
+  ,COARSE_FINE_FLUX     = 5
 #ifdef GRAVITY
-   DATA_GENERAL      = 1,
-   DATA_AFTER_FIXUP  = 2,
-   DATA_AFTER_REFINE = 3,
-   DATA_RESTRICT     = 4,
-   COARSE_FINE_FLUX  = 5,
-   POT_FOR_POISSON   = 6,
-   POT_AFTER_REFINE  = 7;
-#else
-   DATA_GENERAL      = 1,
-   DATA_AFTER_FIXUP  = 2,
-   DATA_AFTER_REFINE = 3,
-   DATA_RESTRICT     = 4,
-   COARSE_FINE_FLUX  = 5;
-#endif // #ifdef GRAVITY ... else ...
+  ,POT_FOR_POISSON      = 6
+  ,POT_AFTER_REFINE     = 7
+#endif
+#ifdef MHD
+  ,COARSE_FINE_ELECTRIC = 8
+#endif
+  ;
 
 
 // fluid boundary conditions
@@ -276,16 +272,39 @@ const ParOutputDens_t
    PAR_OUTPUT_DENS_NONE     = 0,
    PAR_OUTPUT_DENS_PAR_ONLY = 1,
    PAR_OUTPUT_DENS_TOTAL    = 2;
+
+typedef int ParPass2Son_t;
+const ParPass2Son_t
+   PAR_PASS2SON_GENERAL = 1,
+   PAR_PASS2SON_EVOLVE  = 2;
 #endif // #ifdef PARTICLE
 
 
-// the gravity types (this type needs to be defined for the Fluid solver even when GRAVITY is off)
-typedef int OptGravityType_t;
-const OptGravityType_t
-   GRAVITY_NONE     = 0,
-   GRAVITY_SELF     = 1,
-   GRAVITY_EXTERNAL = 2,
-   GRAVITY_BOTH     = 3;
+// external acceleration (must be defined for the fluid solver even when GRAVITY is off)
+typedef int OptExtAcc_t;
+const OptExtAcc_t
+   EXT_ACC_NONE  = 0,
+   EXT_ACC_FUNC  = 1,
+   EXT_ACC_TABLE = 2;
+
+
+// external potential (must be defined for the fluid solver even when GRAVITY is off)
+typedef int OptExtPot_t;
+const OptExtPot_t
+   EXT_POT_NONE  = 0,
+   EXT_POT_FUNC  = 1,
+   EXT_POT_TABLE = 2;
+
+
+// different usages of external potential when computing total potential on level Lv
+// --> ADD     : add external potential on Lv
+//     SUB     : subtract external potential for preparing self-gravity potential on Lv-1
+//     SUB_TINT: like SUB but for temporal interpolation
+typedef int ExtPotUsage_t;
+const ExtPotUsage_t
+   EXT_POT_USAGE_ADD      = 0,
+   EXT_POT_USAGE_SUB      = 1,
+   EXT_POT_USAGE_SUB_TINT = 2;
 
 
 // forms of the Lohner's error estimator
@@ -298,7 +317,7 @@ const OptLohnerForm_t
 
 
 // OPT__1ST_FLUX_CORR and OPT__1ST_FLUX_CORR_SCHEME options
-#if ( MODEL == HYDRO || MODEL == MHD )
+#if ( MODEL == HYDRO )
 typedef int Opt1stFluxCorr_t;
 const Opt1stFluxCorr_t
    FIRST_FLUX_CORR_NONE    = 0,
@@ -307,11 +326,13 @@ const Opt1stFluxCorr_t
 
 typedef int OptRSolver1st_t;
 const OptRSolver1st_t
+   RSOLVER_1ST_DEFAULT = -1,
    RSOLVER_1ST_NONE    = 0,
    RSOLVER_1ST_ROE     = 1,
    RSOLVER_1ST_HLLC    = 2,
-   RSOLVER_1ST_HLLE    = 3;
-#endif // #if ( MODEL == HYDRO || MODEL == MHD )
+   RSOLVER_1ST_HLLE    = 3,
+   RSOLVER_1ST_HLLD    = 4;
+#endif // #if ( MODEL == HYDRO )
 
 
 // OPT__CORR_AFTER_ALL_SYNC options
@@ -331,11 +352,16 @@ const OptTimeStepLevel_t
    DT_LEVEL_FLEXIBLE  = 3;
 
 
-// AddField() option
+// AddField() options
 typedef int NormPassive_t;
 const NormPassive_t
    NORMALIZE_NO  = 0,
    NORMALIZE_YES = 1;
+
+typedef int IntFracPassive_t;
+const IntFracPassive_t
+   INTERP_FRAC_NO  = 0,
+   INTERP_FRAC_YES = 1;
 
 
 // field types
@@ -362,6 +388,41 @@ const SF_CreateStarScheme_t
    SF_CREATE_STAR_SCHEME_NONE  = 0,
    SF_CREATE_STAR_SCHEME_AGORA = 1;
 #endif
+
+
+// options in Aux_ComputeProfile()
+typedef int PatchType_t;
+const PatchType_t
+   PATCH_LEAF                 = 0,
+   PATCH_NONLEAF              = 1,
+   PATCH_BOTH                 = 2,
+   PATCH_LEAF_PLUS_MAXNONLEAF = 3;
+
+
+// function pointers
+typedef real (*EoS_DE2P_t)( const real Dens, const real Eint, const real Passive[],
+                            const double AuxArray_Flt[], const int AuxArray_Int[],
+                            const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] );
+typedef real (*EoS_DP2E_t)( const real Dens, const real Pres, const real Passive[],
+                            const double AuxArray_Flt[], const int AuxArray_Int[],
+                            const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] );
+typedef real (*EoS_DP2C_t)( const real Dens, const real Pres, const real Passive[],
+                            const double AuxArray_Flt[], const int AuxArray_Int[],
+                            const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] );
+typedef void (*EoS_GENE_t)( const int Mode, real Out[], const real In[],
+                            const double AuxArray_Flt[], const int AuxArray_Int[],
+                            const real *const Table[EOS_NTABLE_MAX] );
+typedef real (*EoS_DE2T_t)( const real Dens, const real Eint, const real Passive[],
+                            const double AuxArray_Flt[], const int AuxArray_Int[],
+                            const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] );
+typedef real (*EoS_DT2P_t)( const real Dens, const real Temp, const real Passive[],
+                            const double AuxArray_Flt[], const int AuxArray_Int[],
+                            const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] );
+typedef void (*ExtAcc_t)( real Acc[], const double x, const double y, const double z, const double Time,
+                          const double UserArray[] );
+typedef real (*ExtPot_t)( const double x, const double y, const double z, const double Time,
+                          const double UserArray_Flt[], const int UserArray_Int[],
+                          const ExtPotUsage_t Usage, const real PotTable[], void **GenePtr );
 
 
 

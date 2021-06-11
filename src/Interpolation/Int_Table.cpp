@@ -8,7 +8,7 @@
 // Description :  Return the number of sides (6 or 26) and ghost zones for the queried interpolation scheme
 //
 // Parameter   :  IntScheme : Interpolation scheme
-//                            --> currently supported schemes include
+//                            --> Currently supported schemes include
 //                                INT_MINMOD3D : MinMod-3D
 //                                INT_MINMOD1D : MinMod-1D
 //                                INT_VANLEER  : vanLeer

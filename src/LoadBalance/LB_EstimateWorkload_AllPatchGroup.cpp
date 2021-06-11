@@ -53,8 +53,8 @@ void LB_EstimateWorkload_AllPatchGroup( const int lv, const double ParWeight, do
       const bool JustCountNPar_Yes = true;
       const bool TimingSendPar_No  = false;
 
-      Par_CollectParticle2OneLevel( lv, PredictPos_No, NULL_REAL, SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_Yes,
-                                    TimingSendPar_No );
+      Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, PredictPos_No, NULL_REAL,
+                                    SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_Yes, TimingSendPar_No );
 
       for (int t=0; t<NPG_ThisRank; t++)
       for (int PID=t*8; PID<(t+1)*8; PID++)

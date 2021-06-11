@@ -1,7 +1,10 @@
 #include "GAMER.h"
 
 static bool Check_Gradient( const int i, const int j, const int k, const real Input[], const double Threshold );
-extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
+static bool Check_Curl( const int i, const int j, const int k,
+                        const real vx[][PS1][PS1], const real vy[][PS1][PS1], const real vz[][PS1][PS1],
+                        const double Threshold );
+extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 
 
 
@@ -10,32 +13,34 @@ extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int l
 // Function    :  Flag_Check
 // Description :  Check if the target cell (i,j,k) satisfies the refinement criteria
 //
-// Note        :  1. Useless input arrays are set to NULL
-//                   (e.g, Pot if GRAVITY is off, Pres if OPT__FLAG_PRES_GRADIENT is off, ...)
-//                2. The function pointer "Flag_User_Ptr" points to "Flag_User()" by default
-//                   but may be overwritten by various test problem initializers
+// Note        :  1. Useless input arrays are set to NULL (e.g, Pot[] if GRAVITY is off)
+//                2. For OPT__FLAG_USER, the function pointer "Flag_User_Ptr" must be set by a
+//                   test problem initializer
 //
-// Parameter   :  lv             : Target refinement level
-//                PID            : Target patch ID
-//                i,j,k          : Indices of the target cell
-//                dv             : Cell volume at the target level
-//                Fluid          : Input fluid array (with NCOMP_TOTAL components)
-//                Pot            : Input potential array
-//                Pres           : Input pressure array
-//                Lohner_Ave     : Input array storing the averages for the Lohner error estimator
-//                Lohner_Slope   : Input array storing the slopes for the Lohner error estimator
-//                Lohner_NVar    : Number of variables stored in Lohner_Ave and Lohner_Slope
-//                ParCount       : Input array storing the number of particles on each cell
-//                                 (note that it has the **real** type)
-//                ParDens        : Input array storing the particle mass density on each cell
-//                JeansCoeff     : Pi*GAMMA/(SafetyFactor^2*G), where SafetyFactor = FlagTable_Jeans[lv]
-//                                 --> Flag if dh^2 > JeansCoeff*Pres/Dens^2
+// Parameter   :  lv           : Target refinement level
+//                PID          : Target patch ID
+//                i,j,k        : Indices of the target cell
+//                dv           : Cell volume at the target level
+//                Fluid        : Input fluid array (with NCOMP_TOTAL components)
+//                Pot          : Input potential array
+//                MagCC        : Input cell-centered B field array
+//                Vel          : Input velocity array
+//                Pres         : Input pressure array
+//                Lohner_Ave   : Input array storing the averages for the Lohner error estimator
+//                Lohner_Slope : Input array storing the slopes for the Lohner error estimator
+//                Lohner_NVar  : Number of variables stored in Lohner_Ave and Lohner_Slope
+//                ParCount     : Input array storing the number of particles on each cell
+//                               (note that it has the **real** type)
+//                ParDens      : Input array storing the particle mass density on each cell
+//                JeansCoeff   : Pi*GAMMA/(SafetyFactor^2*G), where SafetyFactor = FlagTable_Jeans[lv]
+//                               --> Flag if dh^2 > JeansCoeff*Pres/Dens^2
 //
 // Return      :  "true"  if any  of the refinement criteria is satisfied
 //                "false" if none of the refinement criteria is satisfied
 //-------------------------------------------------------------------------------------------------------
 bool Flag_Check( const int lv, const int PID, const int i, const int j, const int k, const real dv,
-                 const real Fluid[][PS1][PS1][PS1], const real Pot[][PS1][PS1], const real Pres[][PS1][PS1],
+                 const real Fluid[][PS1][PS1][PS1], const real Pot[][PS1][PS1], const real MagCC[][PS1][PS1][PS1],
+                 const real Vel[][PS1][PS1][PS1], const real Pres[][PS1][PS1],
                  const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
                  const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff )
 {
@@ -106,7 +111,18 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 #  if ( MODEL == HYDRO )
    if ( OPT__FLAG_VORTICITY )
    {
-      Flag |= Hydro_Flag_Vorticity( i, j, k, lv, PID, FlagTable_Vorticity[lv] );
+      Flag |= Check_Curl( i, j, k, Vel[0], Vel[1], Vel[2], FlagTable_Vorticity[lv] );
+      if ( Flag )    return Flag;
+   }
+#  endif
+
+
+// check current density in MHD
+// ===========================================================================================
+#  ifdef MHD
+   if ( OPT__FLAG_CURRENT )
+   {
+      Flag |= Check_Curl( i, j, k, MagCC[0], MagCC[1], MagCC[2], FlagTable_Current[lv] );
       if ( Flag )    return Flag;
    }
 #  endif
@@ -114,26 +130,17 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
 // check Jeans length
 // ===========================================================================================
-#  if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined GRAVITY  )
+#  if ( MODEL == HYDRO  &&  defined GRAVITY )
    if ( OPT__FLAG_JEANS )
    {
-      const bool CheckMinPres_Yes = true;
-      const real Gamma_m1         = GAMMA - (real)1.0;
-      const real Dens             = Fluid[DENS][k][j][i];
-
-#     ifdef DUAL_ENERGY
-#     if   ( DUAL_ENERGY == DE_ENPY )
-      const real Pres = CPU_DensEntropy2Pres( Dens, Fluid[ENPY][k][j][i], Gamma_m1, CheckMinPres_Yes, MIN_PRES );
-#     elif ( DUAL_ENERGY == DE_EINT )
-#     error : DE_EINT is NOT supported yet !!
+#     ifdef GAMER_DEBUG
+      if ( Pres == NULL )  Aux_Error( ERROR_INFO, "Pres == NULL !!\n" );
 #     endif
 
-#     else
-      const real Pres = CPU_GetPressure( Dens, Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i], Fluid[MOMZ][k][j][i],
-                                         Fluid[ENGY][k][j][i], Gamma_m1, CheckMinPres_Yes, MIN_PRES );
-#     endif // #ifdef DUAL_ENERGY ... else ...
+      const real Dens_1Cell = Fluid[DENS][k][j][i];
+      const real Pres_1Cell = Pres       [k][j][i];
 
-      Flag |= ( SQR(amr->dh[lv]) > JeansCoeff*Pres/SQR(Dens) );
+      Flag |= (  SQR(amr->dh[lv]) > JeansCoeff*Pres_1Cell/SQR( Dens_1Cell )  );
       if ( Flag )    return Flag;
    }
 #  endif
@@ -167,10 +174,16 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
 // check user-defined criteria
 // ===========================================================================================
-   if ( OPT__FLAG_USER  &&  Flag_User_Ptr != NULL )
+   if ( OPT__FLAG_USER )
    {
-      Flag |= Flag_User_Ptr( i, j, k, lv, PID, FlagTable_User[lv] );
-      if ( Flag )    return Flag;
+      if ( Flag_User_Ptr != NULL )
+      {
+         Flag |= Flag_User_Ptr( i, j, k, lv, PID, FlagTable_User[lv] );
+         if ( Flag )    return Flag;
+      }
+
+      else
+         Aux_Error( ERROR_INFO, "Flag_User_Ptr == NULL for OPT__FLAG_USER !!\n" );
    }
 
 
@@ -185,13 +198,13 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 // Description :  Check if the gradient of the input data at the cell (i,j,k) exceeds the given threshold
 //
 // Note        :  1. Size of the array "Input" should be PATCH_SIZE^3
-//                2. For cells adjacent to the patch boundary, only first-order approximation is adopted
+//                2. For cells adjacent to the patch boundaries, only first-order approximation is adopted
 //                   to estimate gradient. Otherwise, second-order approximation is adopted.
-//                   --> Do NOT need to prepare the ghost-zone data for the target patch
+//                   --> Advantage: NO need to prepare the ghost-zone data for the target patch
 //
-// Parameter   :  i,j,k       : Indices of the target cell in the array "Input"
-//                Input       : Input array
-//                Threshold   : Threshold for the flag operation
+// Parameter   :  i,j,k     : Indices of the target cell in the array "Input"
+//                Input     : Input array
+//                Threshold : Threshold for the flag operation
 //
 // Return      :  "true"  if the gradient is larger           than the given threshold
 //                "false" if the gradient is equal or smaller than the given threshold
@@ -233,3 +246,71 @@ bool Check_Gradient( const int i, const int j, const int k, const real Input[], 
    return Flag;
 
 } // FUNCTION : Check_Gradient
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Check_Curl
+// Description :  Check if the curl of the input vector at the cell (i,j,k) exceeds the given threshold
+//
+// Note        :  1. Flag if |curl(v)|*dh/|v| > threshold
+//                2. For cells adjacent to the patch boundaries, only first-order approximation is adopted
+//                   to estimate derivatives. Otherwise, second-order approximation is adopted.
+//                   --> Advantage: NO need to prepare the ghost-zone data for the target patch
+//                3. Size of the input arrays "vx/y/z" should be PATCH_SIZE^3
+//                   --> They should store **cell-centered** values
+//
+// Parameter   :  i,j,k     : Target array indices
+//                vx/y/z    : Input vectors
+//                Threshold : Refinement threshold
+//
+// Return      :  "true"  if |curl(v)|*dh/|v| >  threshold
+//                "false" if |curl(v)|*dh/|v| <= threshold
+//-------------------------------------------------------------------------------------------------------
+bool Check_Curl( const int i, const int j, const int k,
+                 const real vx[][PS1][PS1], const real vy[][PS1][PS1], const real vz[][PS1][PS1],
+                 const double Threshold )
+{
+
+// check
+#  ifdef GAMER_DEBUG
+   if (  i < 0  ||  i >= PS1  ||  j < 0 ||  j >= PS1  ||  k < 0  ||  k >= PS1   )
+      Aux_Error( ERROR_INFO, "incorrect index (i,j,k) = (%d,%d,%d) !!\n", i, j, k );
+#  endif
+
+   int  im, ip, jm, jp, km, kp;
+   real _dx, _dy, _dz, v2, wx, wy, wz, w2;
+   bool Flag = false;
+
+
+// check if the target cell indices are adjacent to the patch boundaries
+   if      ( i == 0     ) { im = 0;       ip = 1;       _dx = (real)1.0; }
+   else if ( i == PS1-1 ) { im = PS1-2;   ip = PS1-1;   _dx = (real)1.0; }
+   else                   { im = i-1;     ip = i+1;     _dx = (real)0.5; }
+
+   if      ( j == 0     ) { jm = 0;       jp = 1;       _dy = (real)1.0; }
+   else if ( j == PS1-1 ) { jm = PS1-2;   jp = PS1-1;   _dy = (real)1.0; }
+   else                   { jm = j-1;     jp = j+1;     _dy = (real)0.5; }
+
+   if      ( k == 0     ) { km = 0;       kp = 1;       _dz = (real)1.0; }
+   else if ( k == PS1-1 ) { km = PS1-2;   kp = PS1-1;   _dz = (real)1.0; }
+   else                   { km = k-1;     kp = k+1;     _dz = (real)0.5; }
+
+
+// calculate magnitude
+   v2 = SQR( vx[k][j][i] ) + SQR( vy[k][j][i] ) + SQR( vz[k][j][i] );
+
+
+// calculate w=curl(v)*dh
+   wx = _dy*( vz[k ][jp][i ] - vz[k ][jm][i ] ) - _dz*( vy[kp][j ][i ] - vy[km][j ][i ] );
+   wy = _dz*( vx[kp][j ][i ] - vx[km][j ][i ] ) - _dx*( vz[k ][j ][ip] - vz[k ][j ][im] );
+   wz = _dx*( vy[k ][j ][ip] - vy[k ][j ][im] ) - _dy*( vx[k ][jp][i ] - vx[k ][jm][i ] );
+   w2 = SQR(wx) + SQR(wy) + SQR(wz);
+
+
+// flag if |curl(v)|*dh/|v| > threshold
+   Flag = ( w2/v2 > SQR(Threshold) );
+
+   return Flag;
+
+} // FUNCTION : Check_Curl

@@ -27,7 +27,9 @@ void LB_Init_ByFunction()
 
    const bool   FindHomePatchForPar_Yes = true;
    const bool   Redistribute_Yes        = true;
+   const bool   SendGridData_Yes        = true;
    const bool   ResetLB_Yes             = true;
+   const bool   AllocData_Yes           = true;
 #  ifdef PARTICLE
    const double Par_Weight              = amr->LB->Par_Weight;
 #  else
@@ -49,7 +51,7 @@ void LB_Init_ByFunction()
       {
          Flag_Real( lv-1, USELB_YES );
 
-         LB_Init_Refine( lv-1 );
+         LB_Init_Refine( lv-1, AllocData_Yes );
       }
 
 //    get the total number of real patches
@@ -59,7 +61,7 @@ void LB_Init_ByFunction()
       Init_ByFunction_AssignData( lv );
 
 //    load balance
-      LB_Init_LoadBalance( Redistribute_Yes, Par_Weight, ResetLB_Yes, lv );
+      LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, Par_Weight, ResetLB_Yes, lv );
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Constructing level %d ... done\n", lv );
 
@@ -72,11 +74,11 @@ void LB_Init_ByFunction()
    {
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Restricting level %d ... ", lv );
 
-      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _TOTAL );
+      Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv], NULL_INT, NULL_INT, _TOTAL, _MAG );
 
-      LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, NULL_INT );
+      LB_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, _MAG, NULL_INT );
 
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
    }

@@ -16,13 +16,16 @@ const FieldIdx_t Idx_Undefined = -1;   // must be outside the range [0, NCOMP_TO
 // **                                                       **
 // ***********************************************************
 
-#if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#if   ( MODEL == HYDRO )
 // main fields
 SET_GLOBAL( FieldIdx_t Idx_Dens,          Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_MomX,          Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_MomY,          Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_MomZ,          Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_Engy,          Idx_Undefined );
+#ifdef COSMIC_RAY
+SET_GLOBAL( FieldIdx_t Idx_CRay,          Idx_Undefined );
+#endif
 #if   ( DUAL_ENERGY == DE_ENPY )
 SET_GLOBAL( FieldIdx_t Idx_Enpy,          Idx_Undefined );
 #elif ( DUAL_ENERGY == DE_EINT )
@@ -83,12 +86,15 @@ SET_GLOBAL( FieldIdx_t Idx_ParMetalFrac,  Idx_Undefined );
 
 
 // field and particle attribute labels
-SET_GLOBAL( char *FieldLabel[NCOMP_TOTAL] );
+SET_GLOBAL( char FieldLabel[NCOMP_TOTAL][MAX_STRING] );
 #ifdef GRAVITY
-SET_GLOBAL( char *PotLabel, "Pote" );  // potential label is currently fixed
+SET_GLOBAL( const char *PotLabel, "Pote" );  // potential label is currently fixed
+#endif
+#ifdef MHD
+SET_GLOBAL( char *MagLabel[NCOMP_MAG] );
 #endif
 #ifdef PARTICLE
-SET_GLOBAL( char *ParAttLabel[PAR_NATT_TOTAL] );
+SET_GLOBAL( char ParAttLabel[PAR_NATT_TOTAL][MAX_STRING] );
 #endif
 
 

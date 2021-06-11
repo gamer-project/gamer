@@ -81,14 +81,14 @@ void LB_Refine_AllocateBufferPatch_Sibling( const int SonLv )
 //             1. data array is not allocated here
 //             2. father indices of sibling-buffer patches are always set to -1
 //             3. we do not reset the son indices for father patches with sons not home
-               amr->pnew( SonLv, FaCr[0],        FaCr[1],        FaCr[2],        -1, false, false );
-               amr->pnew( SonLv, FaCr[0]+PScale, FaCr[1],        FaCr[2],        -1, false, false );
-               amr->pnew( SonLv, FaCr[0],        FaCr[1]+PScale, FaCr[2],        -1, false, false );
-               amr->pnew( SonLv, FaCr[0],        FaCr[1],        FaCr[2]+PScale, -1, false, false );
-               amr->pnew( SonLv, FaCr[0]+PScale, FaCr[1]+PScale, FaCr[2],        -1, false, false );
-               amr->pnew( SonLv, FaCr[0],        FaCr[1]+PScale, FaCr[2]+PScale, -1, false, false );
-               amr->pnew( SonLv, FaCr[0]+PScale, FaCr[1],        FaCr[2]+PScale, -1, false, false );
-               amr->pnew( SonLv, FaCr[0]+PScale, FaCr[1]+PScale, FaCr[2]+PScale, -1, false, false );
+               amr->pnew( SonLv, FaCr[0],        FaCr[1],        FaCr[2],        -1, false, false, false );
+               amr->pnew( SonLv, FaCr[0]+PScale, FaCr[1],        FaCr[2],        -1, false, false, false );
+               amr->pnew( SonLv, FaCr[0],        FaCr[1]+PScale, FaCr[2],        -1, false, false, false );
+               amr->pnew( SonLv, FaCr[0],        FaCr[1],        FaCr[2]+PScale, -1, false, false, false );
+               amr->pnew( SonLv, FaCr[0]+PScale, FaCr[1]+PScale, FaCr[2],        -1, false, false, false );
+               amr->pnew( SonLv, FaCr[0],        FaCr[1]+PScale, FaCr[2]+PScale, -1, false, false, false );
+               amr->pnew( SonLv, FaCr[0]+PScale, FaCr[1],        FaCr[2]+PScale, -1, false, false, false );
+               amr->pnew( SonLv, FaCr[0]+PScale, FaCr[1]+PScale, FaCr[2]+PScale, -1, false, false, false );
 
                amr->NPatchComma[SonLv][2] += 8;
 

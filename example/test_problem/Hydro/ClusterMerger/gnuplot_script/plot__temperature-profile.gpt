@@ -1,0 +1,114 @@
+# -----------------------------------------------------------
+# GNUPLOT template 1D v1.1
+# -----------------------------------------------------------
+
+
+reset
+
+
+# target files
+# -----------------------------------------------------------
+FILE_IN_PREFIX_DENS = 'AveRho'
+FILE_IN_PREFIX_PRES = 'AvePre'
+
+FILE_IN_SUFFIX  = ''
+FILE_OUT_PREFIX = 'Fig__TemperatureProfile'
+START_ID        = 0
+END_ID          = 500
+DELTA_ID        = 1
+PAUSE           = 0.40  # <= 0.0 --> mouse
+
+
+# terminal
+# -----------------------------------------------------------
+ set term x11 enhanced
+#set term png enhanced crop size 1280,800 font ",14"
+#set term postscript eps enhanced color 'Helvetica' 16
+
+
+# plot style
+# -----------------------------------------------------------
+ set log xy
+ set key reverse Left spacing 1.5 left bottom
+ set xlabel "r [Mpc]"
+ set ylabel "Temperature [K]"
+ set format x "10^{%T}"
+ set format y "10^{%T}"
+ set pointsize 1.0
+ set size square
+ set xrange [1.0e-2:1.0e1]
+ set yrange [5.0e6:2.0e8]
+
+
+
+# set the output file extension automatically
+# -----------------------------------------------------------
+if      ( GPVAL_TERM eq 'pngcairo'   ) FILE_OUT_EXT='png'; \
+else if ( GPVAL_TERM eq 'postscript' ) FILE_OUT_EXT='eps'; \
+else if ( GPVAL_TERM ne 'x11'        ) print 'Unkown terminal for settting the output file extension !!'; quit
+
+
+
+# loop over all files
+# -----------------------------------------------------------
+print "Start plotting ..."
+
+do for [ID=START_ID:END_ID:DELTA_ID] {
+
+#  set the input and output filenames
+   ID1     = ID%10
+   ID2     = (ID%100)/10
+   ID3     = (ID%1000)/100
+   ID4     = ID/1000
+
+   FILE_IN_DENS  = sprintf( '%s_00%d%d%d%d%s', FILE_IN_PREFIX_DENS, ID4, ID3, ID2, ID1, FILE_IN_SUFFIX )
+   FILE_IN_PRES  = sprintf( '%s_00%d%d%d%d%s', FILE_IN_PREFIX_PRES, ID4, ID3, ID2, ID1, FILE_IN_SUFFIX )
+   FILE_IN_DENS0 = sprintf( '%s_000000',       FILE_IN_PREFIX_DENS,                     FILE_IN_SUFFIX )
+   FILE_IN_PRES0 = sprintf( '%s_000000',       FILE_IN_PREFIX_PRES,                     FILE_IN_SUFFIX )
+
+   if ( GPVAL_TERM ne 'x11' ) { set output sprintf( '%s_00%d%d%d%d.%s', FILE_OUT_PREFIX, ID4, ID3, ID2, ID1, FILE_OUT_EXT ) }
+
+
+#  units and physical constants in CGS
+   UNIT_L = 3.08567758149000e+24
+   UNIT_T = 3.15569252000000e+17
+   UNIT_D = 6.76821209430561e-27
+   UNIT_P = 6.47121291670164e-13
+
+   kpc    = 3.08567758149e21
+   Mpc    = 3.08567758149e24
+   Gyr    = 3.15569252e16
+   Msun   = 1.9885e33
+   amu    = 1.660539040e-24
+   mu     = 0.6
+   kB     = 1.38064852e-16
+
+
+#  load the physical time
+   DUMP_TABLE   = './Record__Dump'
+   NHEADER      = 1
+   LOAD_TIME    = sprintf( "awk '{if(NR==%d+%d) {print $2}}' %s", NHEADER, ID+1, DUMP_TABLE  )
+   TIME         = system( LOAD_TIME )*UNIT_T/Gyr
+
+
+#  set title
+   set title sprintf( 'Data %d%d%d%d (t = %5.2f Gyr)', ID4, ID3, ID2, ID1, TIME )
+   print sprintf( '   Plotting DataID %d%d%d%d (t = %5.2f Gyr) ...', ID4, ID3, ID2, ID1, TIME )
+
+
+#  plot
+   FileTemp  = '<paste '.FILE_IN_DENS.' '.FILE_IN_PRES
+   FileTemp0 = '<paste '.FILE_IN_DENS0.' '.FILE_IN_PRES0
+   plot FileTemp  u ($1*UNIT_L/Mpc):($11*UNIT_P/($3*UNIT_D)*amu*mu/kB) w lp pt 6 lc 7 lw 1.5 ps 1.5 dt 1 tit 'Temperature' \
+       ,FileTemp0 u ($1*UNIT_L/Mpc):($11*UNIT_P/($3*UNIT_D)*amu*mu/kB) w l       lc 8 lw 1.5        dt 1 tit 'Temperature - initial'
+
+
+   if ( GPVAL_TERM eq 'x11' ) { if ( PAUSE <= 0.0 ) { pause mouse }   else { pause PAUSE } };
+
+} #do for [ID=START_ID:END_ID:DELTA_ID]
+
+
+print "Done";
+if ( GPVAL_TERM eq 'x11' ) { pause -1 };
+
+

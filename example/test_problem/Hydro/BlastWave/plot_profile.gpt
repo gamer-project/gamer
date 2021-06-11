@@ -5,7 +5,7 @@ reset
 # -----------------------------------------------------------
 FILE_IN_PREFIX  = 'Diag'
 FILE_IN_SUFFIX  = ''
-FILE_OUT_PREFIX = 'Fig__BlasetWave'
+FILE_OUT_PREFIX = 'Fig__BlastWave'
 START_ID        = 0
 END_ID          = 10
 DELTA_ID        = 1

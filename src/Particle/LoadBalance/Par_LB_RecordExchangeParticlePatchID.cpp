@@ -4,12 +4,6 @@
 
 
 
-// defined in LB_RecordExchangeDataPatchID.cpp
-extern void SetTargetLocalID( int NTLocalID[], int *TLocalID[] );
-extern void SetTargetSibPID0( const int lv, const int PID0, int SibPID0_List[] );
-
-
-
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_LB_RecordExchangeParticlePatchID
@@ -39,9 +33,9 @@ extern void SetTargetSibPID0( const int lv, const int PID0, int SibPID0_List[] )
 //                        --> Therefore, B2R list is a subset of the R2B list
 //
 //                3. F2S : send particles from fathers (at MainLv-1) to sons (at MainLv)
-//                   3-1. Exact procedure is to send particles from real father patches at MainLv-1 to the father-buffer
-//                        patches at MainLv, and then call Par_PassParticle2Son() to transfer particles from father-buffer
-//                        patches to their real son patches in the same rank
+//                   3-1. Exact procedure is to send particles from real father patches at MainLv-1 to the
+//                        corresponding father-buffer patches first, and then call Par_PassParticle2Son_MultiPatch() to transfer
+//                        particles from father-buffer patches to their real son patches at MainLv in the same rank
 //                        --> This function only records the real father patches at MainLv-1 (those to send particles)
 //                            and the corresponding father-buffer patches at MainLv-1 (those to receive particles)
 //
@@ -63,7 +57,7 @@ void Par_LB_RecordExchangeParticlePatchID( const int MainLv )
    const int NLv          = ( MainLv > 0 ) ? 2 : 1;
 
    int lv, NReal[2], NBuff[2], MemUnit_R2B[2], MemUnit_B2R[2], MemUnit_F2S, MemSize_R2B[2], MemSize_B2R[2], MemSize_F2S;
-   int FaPID, FaSibPID, SibPID, SibPID0, SibPID0_List[26], NTLocalID[26], *TLocalID[26], Buff_NPatchTotal_Dup;
+   int FaPID, FaSibPID, SibPID, SibPID0, SibPID0_List[26], NSibPID_Delta[26], *SibPID_Delta[26], Buff_NPatchTotal_Dup;
 
 
 // 1. initialize arrays
@@ -99,7 +93,7 @@ void Par_LB_RecordExchangeParticlePatchID( const int MainLv )
    } // for (int t=0; t<NLv; t++)
 
 // set up the target local indices
-   SetTargetLocalID( NTLocalID, TLocalID );
+   TABLE_GetSibPID_Delta( NSibPID_Delta, SibPID_Delta );
 
 
 // 2. get the buffer patches at MainLv and MainLv-1 to RECEIVE particles
@@ -107,7 +101,7 @@ void Par_LB_RecordExchangeParticlePatchID( const int MainLv )
 // loop over all "real (both leaf and non-leaf)" patches at MainLv with LocalID == 0
    for (int PID0=0; PID0<NReal[0]; PID0+=8)
    {
-      SetTargetSibPID0( MainLv, PID0, SibPID0_List );
+      TABLE_GetSibPID_Based( MainLv, PID0, SibPID0_List );
 
       for (int s=0; s<26; s++)
       {
@@ -116,9 +110,9 @@ void Par_LB_RecordExchangeParticlePatchID( const int MainLv )
 //       check if SibPID0 exists and is a buffer patch
          if ( SibPID0 >= NReal[0] )    // work for both periodic and non-periodic boundary conditions
          {
-            for (int Count=0; Count<NTLocalID[s]; Count++)
+            for (int Count=0; Count<NSibPID_Delta[s]; Count++)
             {
-               SibPID = SibPID0 + TLocalID[s][Count];
+               SibPID = SibPID0 + SibPID_Delta[s][Count];
 
 //             allocate enough memory for the PID array
                if ( amr->Par->R2B_Buff_NPatchTotal[MainLv][0] >= MemSize_R2B[0] )
@@ -130,7 +124,7 @@ void Par_LB_RecordExchangeParticlePatchID( const int MainLv )
 
 //             2-1. store the target sibling-buffer patch index into the R2B list (note that there may be duplicate PID)
                amr->Par->R2B_Buff_PIDList[MainLv][0][ amr->Par->R2B_Buff_NPatchTotal[MainLv][0] ++ ] = SibPID;
-            } // for (int Count=0; Count<NTLocalID[s]; Count++)
+            } // for (int Count=0; Count<NSibPID_Delta[s]; Count++)
          } // if ( SibPID0 >= NReal[0] )
 
          else if ( SibPID0 == -1 )  // work for both periodic and non-periodic boundary conditions
@@ -288,7 +282,7 @@ void Par_LB_RecordExchangeParticlePatchID( const int MainLv )
                                                                  MemSize_F2S*sizeof(int) );
             }
 
-//          store the target sibling-buffer patch index (note that there may be duplicate PID)
+//          store the target real father patch index
             amr->Par->F2S_Send_PIDList[FaLv][ amr->Par->F2S_Send_NPatchTotal[FaLv] ++ ] = FaPID;
             break;
          }
@@ -384,7 +378,7 @@ void Par_LB_RecordExchangeParticlePatchID( const int MainLv )
 
 
 // 7. free memory
-   for (int s=0; s<26; s++)   delete [] TLocalID[s];
+   for (int s=0; s<26; s++)   delete [] SibPID_Delta[s];
 
 } // FUNCTION : Par_LB_RecordExchangeParticlePatchID
 

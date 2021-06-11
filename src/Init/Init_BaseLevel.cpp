@@ -22,14 +22,14 @@ void Init_BaseLevel()
    for (int Py=0; Py<NPatch[1]; Py+=2)    {  Cr[1] = MPI_Rank_X[1]*NX0[1]*scale0 + Py*PATCH_SIZE*scale0;
    for (int Px=0; Px<NPatch[0]; Px+=2)    {  Cr[0] = MPI_Rank_X[0]*NX0[0]*scale0 + Px*PATCH_SIZE*scale0;
 
-      amr->pnew( 0, Cr[0],       Cr[1],       Cr[2],       -1, true, true );
-      amr->pnew( 0, Cr[0]+Width, Cr[1],       Cr[2],       -1, true, true );
-      amr->pnew( 0, Cr[0],       Cr[1]+Width, Cr[2],       -1, true, true );
-      amr->pnew( 0, Cr[0],       Cr[1],       Cr[2]+Width, -1, true, true );
-      amr->pnew( 0, Cr[0]+Width, Cr[1]+Width, Cr[2],       -1, true, true );
-      amr->pnew( 0, Cr[0],       Cr[1]+Width, Cr[2]+Width, -1, true, true );
-      amr->pnew( 0, Cr[0]+Width, Cr[1],       Cr[2]+Width, -1, true, true );
-      amr->pnew( 0, Cr[0]+Width, Cr[1]+Width, Cr[2]+Width, -1, true, true );
+      amr->pnew( 0, Cr[0],       Cr[1],       Cr[2],       -1, true, true, true );
+      amr->pnew( 0, Cr[0]+Width, Cr[1],       Cr[2],       -1, true, true, true );
+      amr->pnew( 0, Cr[0],       Cr[1]+Width, Cr[2],       -1, true, true, true );
+      amr->pnew( 0, Cr[0],       Cr[1],       Cr[2]+Width, -1, true, true, true );
+      amr->pnew( 0, Cr[0]+Width, Cr[1]+Width, Cr[2],       -1, true, true, true );
+      amr->pnew( 0, Cr[0],       Cr[1]+Width, Cr[2]+Width, -1, true, true, true );
+      amr->pnew( 0, Cr[0]+Width, Cr[1],       Cr[2]+Width, -1, true, true, true );
+      amr->pnew( 0, Cr[0]+Width, Cr[1]+Width, Cr[2]+Width, -1, true, true, true );
 
    }}}
 
@@ -53,7 +53,8 @@ void Init_BaseLevel()
 
 // find the base-level home patches of all particles
 #  ifdef PARTICLE
-   Par_FindHomePatch_UniformGrid( 0 );
+   const bool OldParOnly_Yes = true;
+   Par_FindHomePatch_UniformGrid( 0, OldParOnly_Yes, NULL_INT, NULL );
 #  endif
 
 } // FUNCTION : Init_BaseLevel

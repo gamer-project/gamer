@@ -11,15 +11,15 @@
 //                   to replace "Flag_User()"
 //                2. Please turn on the runtime option "OPT__FLAG_USER"
 //
-// Parameter   :  i,j,k       : Indices of the targeted element in the patch ptr[ amr->FluSg[lv] ][lv][PID]
-//                lv          : Refinement level of the targeted patch
-//                PID         : ID of the targeted patch
+// Parameter   :  i,j,k       : Indices of the target element in the patch ptr[ amr->FluSg[lv] ][lv][PID]
+//                lv          : Refinement level of the target patch
+//                PID         : ID of the target patch
 //                Threshold   : Useless here
 //
 // Return      :  "true"  if the flag criteria are satisfied
 //                "false" if the flag criteria are not satisfied
 //-------------------------------------------------------------------------------------------------------
-bool Flag_AGORA( const int i, const int j, const int k, const int lv, const int PID, const double Threshold )
+bool Flag_AGORA( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold )
 {
 
    const double dh     = amr->dh[lv];                                                  // grid size
@@ -28,8 +28,8 @@ bool Flag_AGORA( const int i, const int j, const int k, const int lv, const int 
                            amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };
 
 // flag cells within the target region [Threshold ... BoxSize-Threshold]
-   const double EdgeL = Threshold;
-   const double EdgeR = amr->BoxSize[0]-Threshold;    // here we have assumed a cubic box
+   const double EdgeL = Threshold[0];
+   const double EdgeR = amr->BoxSize[0]-Threshold[0];    // here we have assumed a cubic box
 
    bool Flag;
 

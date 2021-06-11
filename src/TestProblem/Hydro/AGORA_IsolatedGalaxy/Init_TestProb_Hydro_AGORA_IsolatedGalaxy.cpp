@@ -28,7 +28,6 @@ static double  AGORA_HaloMetalMassFrac;         // halo metal mass fraction (hal
 
 static double  AGORA_DiskGasDens0;              // disk gas mass density coefficient
 static double  AGORA_HaloGasDens;               // halo gas mass density
-static double  AGORA_HaloGasPres;               // halo gas pressure
 static double *AGORA_VcProf = NULL;             // circular velocity radial profile [radius, velocity]
 static int     AGORA_VcProf_NBin;               // number of radial bin in AGORA_VcProf
 // =======================================================================================
@@ -36,7 +35,7 @@ static int     AGORA_VcProf_NBin;               // number of radial bin in AGORA
 
 // problem-specific function prototypes
 double GaussianQuadratureIntegrate( const double dx, const double dy, const double dz, const double ds );
-bool Flag_AGORA( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
+bool Flag_AGORA( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 #ifdef PARTICLE
 void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRank,
                                 real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
@@ -107,7 +106,15 @@ void Validate()
          Aux_Message( stderr, "WARNING : it's recommended to enable DUAL_ENERGY for this test !!\n" );
 #     endif
 
-#     if ( MODEL == HYDRO  ||  MODEL == MHD )
+#     if ( !defined MHD  &&  RSOLVER != HLLC )
+         Aux_Message( stderr, "WARNING : it's recommended to adopt the HLLC Riemann solver for this test !!\n" );
+#     endif
+
+#     ifndef STAR_FORMATION
+         Aux_Message( stderr, "WARNING : STAR_FORMATION is disabled !!\n" );
+#     endif
+
+#     if ( MODEL == HYDRO )
       if ( MINMOD_COEFF > 1.5 )
          Aux_Message( stderr, "WARNING : it's recommended to set MINMOD_COEFF <= 1.5 for this test !!\n" );
 
@@ -124,8 +131,8 @@ void Validate()
       if ( amr->BoxSize[0] != amr->BoxSize[1]  ||  amr->BoxSize[0] != amr->BoxSize[2] )
          Aux_Message( stderr, "WARNING : non-cubic box (currently the flag routine \"Flag_AGORA()\" assumes a cubic box) !!\n" );
 
-      if ( INIT_SUBSAMPLING_NCELL != 0 )
-         Aux_Message( stderr, "WARNING : INIT_SUBSAMPLING_NCELL (%d) != 0 will lead to non-uniform initial disk temperature !!\n",
+      if ( INIT_SUBSAMPLING_NCELL > 1 )
+         Aux_Message( stderr, "WARNING : INIT_SUBSAMPLING_NCELL (%d) > 1 will lead to non-uniform initial disk temperature !!\n",
                       INIT_SUBSAMPLING_NCELL );
    } // if ( MPI_Rank == 0 )
 
@@ -197,9 +204,7 @@ void SetParameter()
    AGORA_DiskScaleLength *= Const_kpc  / UNIT_L;
    AGORA_DiskScaleHeight *= Const_kpc  / UNIT_L;
    AGORA_DiskTotalMass   *= Const_Msun / UNIT_M;
-   AGORA_DiskGasTemp     *= Const_kB   / UNIT_E;
    AGORA_HaloGasNumDensH *= 1.0        * CUBE(UNIT_L);
-   AGORA_HaloGasTemp     *= Const_kB   / UNIT_E;
 
 // load the circular velocity radial profile
    if ( OPT__INIT != INIT_BY_RESTART )
@@ -227,8 +232,6 @@ void SetParameter()
    const bool CheckMinPres_Yes = true;
    AGORA_DiskGasDens0 = AGORA_DiskTotalMass*AGORA_DiskGasMassFrac / ( 4.0*M_PI*SQR(AGORA_DiskScaleLength)*AGORA_DiskScaleHeight );
    AGORA_HaloGasDens  = AGORA_HaloGasNumDensH*Const_mH/UNIT_M;
-   AGORA_HaloGasPres  = CPU_Temperature2Pressure( AGORA_HaloGasDens, AGORA_HaloGasTemp, MOLECULAR_WEIGHT, Const_mH/UNIT_M,
-                                                  CheckMinPres_Yes, MIN_PRES );
 
 
 // (3) reset other general-purpose parameters
@@ -260,9 +263,9 @@ void SetParameter()
       Aux_Message( stdout, "  DiskScaleHeight   = %13.7e kpc\n",     AGORA_DiskScaleHeight * UNIT_L/Const_kpc  );
       Aux_Message( stdout, "  DiskTotalMass     = %13.7e Msun\n",    AGORA_DiskTotalMass   * UNIT_M/Const_Msun );
       Aux_Message( stdout, "  DiskGasMassFrac   = %13.7e\n",         AGORA_DiskGasMassFrac                     );
-      Aux_Message( stdout, "  DiskGasTemp       = %13.7e K\n",       AGORA_DiskGasTemp     * UNIT_E/Const_kB   );
+      Aux_Message( stdout, "  DiskGasTemp       = %13.7e K\n",       AGORA_DiskGasTemp                         );
       Aux_Message( stdout, "  HaloGasNumDensH   = %13.7e cm^{-3}\n", AGORA_HaloGasNumDensH / CUBE(UNIT_L)      );
-      Aux_Message( stdout, "  HaloGasTemp       = %13.7e K\n",       AGORA_HaloGasTemp     * UNIT_E/Const_kB   );
+      Aux_Message( stdout, "  HaloGasTemp       = %13.7e K\n",       AGORA_HaloGasTemp                         );
       Aux_Message( stdout, "  UseMetal          = %d\n",             AGORA_UseMetal                            );
       if ( AGORA_UseMetal ) {
       Aux_Message( stdout, "  DiskMetalMassFrac = %13.7e\n",         AGORA_DiskMetalMassFrac                   );
@@ -303,6 +306,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #  ifdef GAMER_DEBUG
    if ( AGORA_UseMetal  &&  Idx_Metal == Idx_Undefined )
       Aux_Error( ERROR_INFO, "Idx_Metal is undefined for \"AGORA_UseMetal\" !!\n" );
+
+   if ( EoS_DensTemp2Pres_CPUPtr == NULL )
+      Aux_Error( ERROR_INFO, "EoS_DensTemp2Pres_CPUPtr == NULL !!\n" );
 #  endif
 
    const bool   CheckMinPres_Yes = true;
@@ -312,17 +318,20 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double r                = sqrt( SQR(dx) + SQR(dy) );
    const double h                = fabs( dz );
 
-   double DiskGasDens, DiskGasPres, DiskGasVel;
+   double DiskGasDens, DiskGasPres, DiskGasVel, HaloGasPres;
+   double Dens, MomX, MomY, MomZ, Pres, Eint, Etot, Metal=NULL_REAL;
 
 // use the 5-point Gaussian quadrature integration to improve the accuracy of the average cell density
 // --> we don't want to use the sub-sampling for that purpose since it will break the initial uniform temperature
 // DiskGasDens = AGORA_DiskGasDens0 * exp( -r/AGORA_DiskScaleLength ) * exp( -h/AGORA_DiskScaleHeight );
    DiskGasDens = GaussianQuadratureIntegrate( dx, dy, dz, amr->dh[lv] );
-   DiskGasPres = CPU_Temperature2Pressure( DiskGasDens, AGORA_DiskGasTemp, MOLECULAR_WEIGHT, Const_mH/UNIT_M,
-                                           CheckMinPres_Yes, MIN_PRES );
+   DiskGasPres = EoS_DensTemp2Pres_CPUPtr( DiskGasDens,       AGORA_DiskGasTemp, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                           h_EoS_Table, NULL ); // assuming EoS requires no passive scalars
+   HaloGasPres = EoS_DensTemp2Pres_CPUPtr( AGORA_HaloGasDens, AGORA_HaloGasTemp, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                           h_EoS_Table, NULL ); // assuming EoS requires no passive scalars
 
 // disk component
-   if ( DiskGasPres > AGORA_HaloGasPres )
+   if ( DiskGasPres > HaloGasPres )
    {
 //    perform linear interpolation to get the gas circular velocity at r
       const double *Prof_R = AGORA_VcProf + 0*AGORA_VcProf_NBin;
@@ -331,30 +340,43 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       if (  ( DiskGasVel = Mis_InterpolateFromTable(AGORA_VcProf_NBin, Prof_R, Prof_V, r) ) == NULL_REAL  )
          Aux_Error( ERROR_INFO, "interpolation failed at radius %13.7e !!\n", r );
 
-      fluid[DENS] = DiskGasDens;
-      fluid[MOMX] = -dy/r*DiskGasVel*fluid[DENS];
-      fluid[MOMY] = +dx/r*DiskGasVel*fluid[DENS];
-      fluid[MOMZ] = 0.0;
-      fluid[ENGY] = DiskGasPres / ( GAMMA - 1.0 )
-                    + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+      Dens  = DiskGasDens;
+      MomX  = -dy/r*DiskGasVel*Dens;
+      MomY  = +dx/r*DiskGasVel*Dens;
+      MomZ  = 0.0;
+      Pres  = DiskGasPres;
 
       if ( AGORA_UseMetal )
-      fluid[Idx_Metal] = fluid[DENS]*AGORA_DiskMetalMassFrac;
-   }
+      Metal = Dens*AGORA_DiskMetalMassFrac;
+   } // if ( DiskGasPres > HaloGasPres )
 
 // halo component
    else
    {
-      fluid[DENS] = AGORA_HaloGasDens;
-      fluid[MOMX] = 0.0;
-      fluid[MOMY] = 0.0;
-      fluid[MOMZ] = 0.0;
-      fluid[ENGY] = AGORA_HaloGasPres / ( GAMMA - 1.0 )
-                    + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+      Dens  = AGORA_HaloGasDens;
+      MomX  = 0.0;
+      MomY  = 0.0;
+      MomZ  = 0.0;
+      Pres  = HaloGasPres;
 
       if ( AGORA_UseMetal )
-      fluid[Idx_Metal] = fluid[DENS]*AGORA_HaloMetalMassFrac;
-   } // if ( DiskPres > AGORA_HaloGasPres ) ... else ...
+      Metal = Dens*AGORA_HaloMetalMassFrac;
+   } // if ( DiskPres > HaloGasPres ) ... else ...
+
+// compute the total gas energy
+   Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
+                                    EoS_AuxArray_Int, h_EoS_Table, NULL ); // assuming EoS requires no passive scalars
+   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );         // do NOT include magnetic energy here
+
+// set the output array
+   fluid[DENS] = Dens;
+   fluid[MOMX] = MomX;
+   fluid[MOMY] = MomY;
+   fluid[MOMZ] = MomZ;
+   fluid[ENGY] = Etot;
+
+   if ( AGORA_UseMetal )
+   fluid[Idx_Metal] = Metal;
 
 } // FUNCTION : SetGridIC
 
@@ -444,7 +466,7 @@ void AddNewField_AGORA()
 // --> since Grackle may already add this field automatically when GRACKLE_METAL is enabled
 // --> also note that "Idx_Metal" has been predefined in Field.h
    if ( AGORA_UseMetal  &&  Idx_Metal == Idx_Undefined )
-      Idx_Metal = AddField( "Metal", NORMALIZE_NO );
+      Idx_Metal = AddField( "Metal", NORMALIZE_NO, INTERP_FRAC_YES );
 
 } // FUNCTION : AddNewField_AGORA
 
@@ -504,15 +526,8 @@ void Init_TestProb_Hydro_AGORA_IsolatedGalaxy()
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr      = SetGridIC;
    Init_Field_User_Ptr         = AddNewField_AGORA;
-   Output_User_Ptr             = NULL;
    Flag_User_Ptr               = Flag_AGORA;
-   Mis_GetTimeStep_User_Ptr    = NULL;
-   Aux_Record_User_Ptr         = NULL;
-   BC_User_Ptr                 = NULL;
-   Flu_ResetByUser_Func_Ptr    = NULL;
    End_User_Ptr                = End_AGORA;
-   Init_ExternalAcc_Ptr        = NULL;
-   Init_ExternalPot_Ptr        = NULL;
    Par_Init_ByFunction_Ptr     = Par_Init_ByFunction_AGORA;
    Par_Init_Attribute_User_Ptr = AddNewParticleAttribute_AGORA;
 #  endif // if ( MODEL == HYDRO  &&  defined PARTICLE )

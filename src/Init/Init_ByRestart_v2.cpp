@@ -8,7 +8,8 @@
 #endif
 
 void Init_ByRestart_v1( const char FileName[] );
-void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Restart, bool &LoadPot, bool &LoadParDens,
+void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Restart,
+                                bool &LoadPot, bool &LoadParDens, bool &LoadCCMag,
                                 const long HeaderOffset_Makefile, const long HeaderOffset_Constant,
                                 const long HeaderOffset_Parameter );
 void CompareVar( const char *VarName, const bool   RestartVar, const bool   RuntimeVar, const bool Fatal );
@@ -134,6 +135,11 @@ void Init_ByRestart()
       if ( FormatVersion < 2100 )
          Aux_Error( ERROR_INFO, "unsupported data format version for particles (only support version >= 2100) !!\n" );
 #     endif
+
+#     ifdef MHD
+      if ( FormatVersion < 2210 )
+         Aux_Error( ERROR_INFO, "unsupported data format version for MHD (only support version >= 2210) !!\n" );
+#     endif
    }
    MPI_Barrier( MPI_COMM_WORLD );
 
@@ -173,8 +179,9 @@ void Init_ByRestart()
    int  NLv_Restart = NLEVEL;
    bool LoadPot     = false;
    bool LoadParDens = false;
+   bool LoadCCMag   = false;
 
-   Load_Parameter_After_2000( File, FormatVersion, NLv_Restart, LoadPot, LoadParDens,
+   Load_Parameter_After_2000( File, FormatVersion, NLv_Restart, LoadPot, LoadParDens, LoadCCMag,
                               HeaderOffset_Makefile, HeaderOffset_Constant, HeaderOffset_Parameter );
 
 
@@ -266,6 +273,9 @@ void Init_ByRestart()
    for (int lv=0; lv<NLEVEL; lv++)
    {
       amr->FluSgTime[lv][ amr->FluSg[lv] ] = Time[lv];
+#     ifdef MHD
+      amr->MagSgTime[lv][ amr->MagSg[lv] ] = Time[lv];
+#     endif
 #     ifdef GRAVITY
       amr->PotSgTime[lv][ amr->PotSg[lv] ] = Time[lv];
 #     endif
@@ -289,9 +299,15 @@ void Init_ByRestart()
 #  ifdef PARTICLE
    if ( LoadParDens )   NGridVar ++;
 #  endif
+#  ifdef MHD
+   if ( LoadCCMag )     NGridVar += NCOMP_MAG;
+#  endif
 
-   PatchDataSize = CUBE(PS1)*NGridVar*sizeof(real);
-   ExpectSize    = HeaderSize_Total;
+   PatchDataSize  = CUBE(PS1)*NGridVar*sizeof(real);
+#  ifdef MHD
+   PatchDataSize += PS1P1*SQR(PS1)*NCOMP_MAG*sizeof(real);
+#  endif
+   ExpectSize     = HeaderSize_Total;
 
    for (int lv=0; lv<NLv_Restart; lv++)
    {
@@ -462,7 +478,7 @@ void Init_ByRestart()
                      LoadCorner[2] >= TargetRange_Min[2]  &&  LoadCorner[2] < TargetRange_Max[2]     )
 #              endif
                {
-                  amr->pnew( lv, LoadCorner[0], LoadCorner[1], LoadCorner[2], -1, true, true );
+                  amr->pnew( lv, LoadCorner[0], LoadCorner[1], LoadCorner[2], -1, true, true, true );
 
 //                d3. load the physical data if it is a leaf patch
                   if ( *LoadSon == -1 )
@@ -485,12 +501,23 @@ void Init_ByRestart()
 //                   d3-1. load the fluid variables
                      fread( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid, sizeof(real), CUBE(PS1)*NCOMP_TOTAL, File );
 
-//                   d3-2. abandon the gravitational potential and particle density data
+//                   d3-2. skip gravitational potential
 #                    ifdef GRAVITY
                      if ( LoadPot )       fseek( File, CUBE(PS1)*sizeof(real), SEEK_CUR );
 #                    endif
+
+//                   d3-3. skip particle density
 #                    ifdef PARTICLE
                      if ( LoadParDens )   fseek( File, CUBE(PS1)*sizeof(real), SEEK_CUR );
+#                    endif
+
+//                   d3-4. load magnetic field
+#                    ifdef MHD
+//                   skip the cell-centered data
+                     if ( LoadCCMag )     fseek( File, CUBE(PS1)*NCOMP_MAG*sizeof(real), SEEK_CUR );
+
+//                   load the face-centered data
+                     fread( amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic, sizeof(real), PS1P1*SQR(PS1)*NCOMP_MAG, File );
 #                    endif
                   } // if ( *LoadSon == -1 )
                } // within the target range
@@ -675,16 +702,18 @@ void Init_ByRestart()
    const double ParWeight_Zero   = 0.0;
    const bool   Redistribute_Yes = true;
    const bool   Redistribute_No  = false;
+   const bool   SendGridData_Yes = true;
+   const bool   SendGridData_No  = false;
    const bool   ResetLB_Yes      = true;
    const bool   ResetLB_No       = false;
    const int    AllLv            = -1;
 
-   LB_Init_LoadBalance( Redistribute_No, ParWeight_Zero, ResetLB_No, AllLv );
+   LB_Init_LoadBalance( Redistribute_No, SendGridData_No, ParWeight_Zero, ResetLB_No, AllLv );
 
 // redistribute patches again if we want to take into account the load-balance weighting of particles
 #  ifdef PARTICLE
    if ( amr->LB->Par_Weight > 0.0 )
-   LB_Init_LoadBalance( Redistribute_Yes, amr->LB->Par_Weight, ResetLB_Yes, AllLv );
+   LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, amr->LB->Par_Weight, ResetLB_Yes, AllLv );
 #  endif
 
 
@@ -692,11 +721,11 @@ void Init_ByRestart()
 // --> only necessary when restarting from a C-binary snapshot since it does not store non-leaf data
    for (int lv=NLEVEL-2; lv>=0; lv--)
    {
-      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _TOTAL );
+      Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv], NULL_INT, NULL_INT, _TOTAL, _MAG );
 
-      LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, NULL_INT );
+      LB_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, _MAG, NULL_INT );
 
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
    }
 
 
@@ -725,23 +754,28 @@ void Init_ByRestart()
 //    get the IDs of patches for sending and receiving data between neighbor ranks
       Buf_RecordExchangeDataPatchID( lv );
 
-//    allocate the flux arrays at the level "lv-1"
+//    allocate flux arrays on level "lv-1"
       if ( lv > 0  &&  amr->WithFlux )    Flu_AllocateFluxArray( lv-1 );
+
+//    allocate electric arrays on level "lv-1"
+#     ifdef MHD
+      if ( lv > 0  &&  amr->WithElectric )   MHD_AllocateElectricArray( lv-1 );
+#     endif
    } // for (int lv=0; lv<NLEVEL; lv++)
 
 
 // fill up the data for top-level buffer patches
-   Buf_GetBufferData( NLEVEL-1, amr->FluSg[NLEVEL-1], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );
+   Buf_GetBufferData( NLEVEL-1, amr->FluSg[NLEVEL-1], amr->MagSg[NLEVEL-1], NULL_INT, DATA_GENERAL, _TOTAL, _MAG, Flu_ParaBuf, USELB_NO );
 
 
 // fill up the data for patches that are not leaf patches
    for (int lv=NLEVEL-2; lv>=0; lv--)
    {
 //    data restriction: lv+1 --> lv
-      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _TOTAL );
+      Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv], NULL_INT, NULL_INT, _TOTAL, _MAG );
 
 //    fill up the data in the buffer patches
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );
+      Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, _MAG, Flu_ParaBuf, USELB_NO );
    } // for (int lv=NLEVEL-2; lv>=0; lv--)
 
 #  endif // #ifdef LOAD_BALANCE ... else ...
@@ -764,11 +798,13 @@ void Init_ByRestart()
 //                NLv_Restart    : NLEVEL recorded in the RESTART file
 //                LoadPot        : Whether or not the RESTART file stores the potential data
 //                LoadParDens    : Whether or not the RESTART file stores the particle (or total) density data
+//                LoadCCMag      : Whether or not the RESTART file stores the cell-centered magnetic field
 //                HeaderOffset_X : Offsets of different headers
 //
-// Return      :  NLv_Restart, LoadPot, LoadParDens (END_T and END_STEP may also be set to the original values)
+// Return      :  NLv_Restart, LoadPot, LoadParDens, LoadCCMag (END_T and END_STEP may also be set to the original values)
 //-------------------------------------------------------------------------------------------------------
-void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Restart, bool &LoadPot, bool &LoadParDens,
+void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Restart,
+                                bool &LoadPot, bool &LoadParDens, bool &LoadCCMag,
                                 const long HeaderOffset_Makefile, const long HeaderOffset_Constant,
                                 const long HeaderOffset_Parameter )
 {
@@ -780,8 +816,9 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 // =================================================================================================
    bool gravity, individual_timestep, comoving, gpu, gamer_optimization, gamer_debug, timing, timing_solver;
    bool intel, float8, serial, overlap_mpi, openmp, store_pot_ghost, unsplit_gravity, particle;
-   bool conserve_mass, laplacian_4th, self_interaction, laohu, support_hdf5;
+   bool conserve_mass, laplacian_4th, self_interaction, laohu, support_hdf5, mhd;
    int  model, pot_scheme, flu_scheme, lr_scheme, rsolver, load_balance, nlevel, max_patch, ncomp_passive, gpu_arch;
+   int  eos;
 
    fseek( File, HeaderOffset_Makefile, SEEK_SET );
 
@@ -816,14 +853,16 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    fread( &self_interaction,           sizeof(bool),                    1,             File );
    fread( &laohu,                      sizeof(bool),                    1,             File );
    fread( &support_hdf5,               sizeof(bool),                    1,             File );
+   fread( &mhd,                        sizeof(bool),                    1,             File );
+   fread( &eos,                        sizeof(int),                     1,             File );
 
 
 // b. load the symbolic constants defined in "Macro.h, CUPOT.h, and CUFLU.h"
 // =================================================================================================
-   bool   enforce_positive, char_reconstruction, hll_no_ref_state, hll_include_all_waves, waf_dissipate;
+   bool   enforce_positive, char_reconstruction, hll_no_ref_state, hll_include_all_waves, waf_dissipate_useless;
    bool   use_psolver_10to14;
    int    ncomp_fluid, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate;
-   int    flu_block_size_x, flu_block_size_y, pot_block_size_x, pot_block_size_z, gra_block_size_z;
+   int    flu_block_size_x, flu_block_size_y, pot_block_size_x, pot_block_size_z, gra_block_size;
    int    par_natt_stored, par_natt_user;
    double min_pres, max_error;
 
@@ -840,14 +879,14 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    fread( &check_intermediate,         sizeof(int),                     1,             File );
    fread( &hll_no_ref_state,           sizeof(bool),                    1,             File );
    fread( &hll_include_all_waves,      sizeof(bool),                    1,             File );
-   fread( &waf_dissipate,              sizeof(bool),                    1,             File );
+   fread( &waf_dissipate_useless,      sizeof(bool),                    1,             File );
    fread( &max_error,                  sizeof(double),                  1,             File );
    fread( &flu_block_size_x,           sizeof(int),                     1,             File );
    fread( &flu_block_size_y,           sizeof(int),                     1,             File );
    fread( &use_psolver_10to14,         sizeof(bool),                    1,             File );
    fread( &pot_block_size_x,           sizeof(int),                     1,             File );
    fread( &pot_block_size_z,           sizeof(int),                     1,             File );
-   fread( &gra_block_size_z,           sizeof(int),                     1,             File );
+   fread( &gra_block_size,             sizeof(int),                     1,             File );
    fread( &par_natt_stored,            sizeof(int),                     1,             File );
    fread( &par_natt_user,              sizeof(int),                     1,             File );
 
@@ -858,8 +897,9 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    bool   opt__flag_engy_density, opt__flag_user, opt__fixup_flux, opt__fixup_restrict, opt__overlap_mpi;
    bool   opt__gra_p5_gradient, opt__int_time, opt__output_user, opt__output_base, opt__output_pot;
    bool   opt__output_baseps, opt__timing_balance, opt__int_phase, opt__1st_flux_corr, opt__unit;
+   bool   opt__output_cc_mag;
    int    nx0_tot[3], mpi_nrank, mpi_nrank_x[3], omp_nthread, regrid_count, opt__output_par_dens;
-   int    flag_buffer_size, max_level, opt__lr_limiter, opt__waf_limiter, flu_gpu_npgroup, gpu_nstream;
+   int    flag_buffer_size, max_level, opt__lr_limiter, opt__waf_limiter_useless, flu_gpu_npgroup, gpu_nstream;
    int    sor_max_iter, sor_min_iter, mg_max_iter, mg_npre_smooth, mg_npost_smooth, pot_gpu_npgroup;
    int    opt__flu_int_scheme, opt__pot_int_scheme, opt__rho_int_scheme;
    int    opt__gra_int_scheme, opt__ref_flu_int_scheme, opt__ref_pot_int_scheme;
@@ -868,7 +908,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    double lb_wli_max, gamma, minmod_coeff, ep_coeff, elbdm_mass, elbdm_planck_const, newton_g, sor_omega;
    double mg_tolerated_error, output_part_x, output_part_y, output_part_z, molecular_weight;
    double box_size, end_t, omega_m0, dt__fluid, dt__gravity, dt__phase, dt__max_delta_a, output_dt, hubble0;
-   double unit_l, unit_m, unit_t, unit_v, unit_d, unit_e, unit_p;
+   double unit_l, unit_m, unit_t, unit_v, unit_d, unit_e, unit_p, unit_b;
 
    fseek( File, HeaderOffset_Parameter, SEEK_SET );
 
@@ -899,7 +939,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    fread( &minmod_coeff,               sizeof(double),                  1,             File );
    fread( &ep_coeff,                   sizeof(double),                  1,             File );
    fread( &opt__lr_limiter,            sizeof(int),                     1,             File );
-   fread( &opt__waf_limiter,           sizeof(int),                     1,             File );
+   fread( &opt__waf_limiter_useless,   sizeof(int),                     1,             File );
    fread( &elbdm_mass,                 sizeof(double),                  1,             File );
    fread( &elbdm_planck_const,         sizeof(double),                  1,             File );
    fread( &flu_gpu_npgroup,            sizeof(int),                     1,             File );
@@ -951,6 +991,8 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    fread( &unit_e,                     sizeof(double),                  1,             File );
    fread( &unit_p,                     sizeof(double),                  1,             File );
    fread( &molecular_weight,           sizeof(double),                  1,             File );
+   fread( &opt__output_cc_mag,         sizeof(bool),                    1,             File );
+   fread( &unit_b,                     sizeof(double),                  1,             File );
 
 
 // set some default parameters
@@ -965,6 +1007,10 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       END_STEP = end_step;
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "      NOTE : parameter %s is reset to %ld\n", "END_STEP", END_STEP );
    }
+
+   if ( FormatVersion < 2210 )   opt__output_cc_mag = false;
+
+   if ( FormatVersion < 2220 )   eos                = EOS_GAMMA;
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading simulation parameters ... done\n" );
@@ -1017,6 +1063,14 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 #     else
       if (  particle )
          Aux_Error( ERROR_INFO, "%s : RESTART file (%s) != runtime (%s) !!\n", "PARTICLE", "ON", "OFF" );
+#     endif
+
+#     ifdef MHD
+      if ( !mhd  ||  FormatVersion < 2210 )
+         Aux_Error( ERROR_INFO, "%s : RESTART file (%s) != runtime (%s) !!\n", "MHD", "OFF", "ON" );
+#     else
+      if (  mhd  &&  FormatVersion >= 2210 )
+         Aux_Error( ERROR_INFO, "%s : RESTART file (%s) != runtime (%s) !!\n", "MHD", "ON", "OFF" );
 #     endif
 
       if ( nlevel > NLEVEL )
@@ -1126,7 +1180,6 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
          Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n", "LAOHU", "ON", "OFF" );
 #     endif
 
-
       if ( nlevel < NLEVEL )
       {
          Aux_Message( stderr, "WARNING : %s : RESTART file (%d) < runtime (%d) !!\n", "NLEVEL", nlevel, NLEVEL );
@@ -1134,6 +1187,8 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       }
 
       CompareVar( "MAX_PATCH", max_patch, MAX_PATCH, NonFatal );
+
+      CompareVar( "EOS",       eos,       EOS,       NonFatal );
 
 
 
@@ -1145,7 +1200,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "FLU_GHOST_SIZE",          flu_ghost_size,         FLU_GHOST_SIZE,            NonFatal );
       CompareVar( "FLU_BLOCK_SIZE_X",        flu_block_size_x,       FLU_BLOCK_SIZE_X,          NonFatal );
       CompareVar( "FLU_BLOCK_SIZE_Y",        flu_block_size_y,       FLU_BLOCK_SIZE_Y,          NonFatal );
-#     if ( MODEL == HYDRO  ||  MODEL == MHD )
+#     if ( MODEL == HYDRO )
       CompareVar( "MIN_PRES",                min_pres,               MIN_PRES,                  NonFatal );
 #     endif
 
@@ -1166,8 +1221,8 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "POT_BLOCK_SIZE_Z",        pot_block_size_z,       POT_BLOCK_SIZE_Z,          NonFatal );
 #     endif
 
-#     ifdef GRA_BLOCK_SIZE_Z
-      CompareVar( "GRA_BLOCK_SIZE_Z",        gra_block_size_z,       GRA_BLOCK_SIZE_Z,          NonFatal );
+#     ifdef GRA_BLOCK_SIZE
+      CompareVar( "GRA_BLOCK_SIZE",          gra_block_size,         GRA_BLOCK_SIZE,            NonFatal );
 #     endif
 
 #     if ( POT_SCHEME == SOR )
@@ -1223,9 +1278,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "CHECK_INTERMEDIATE",      check_intermediate,     CHECK_INTERMEDIATE,        NonFatal );
 #     endif
 
-#     ifdef MAX_ERROR
       CompareVar( "MAX_ERROR",               max_error,      (double)MAX_ERROR,                 NonFatal );
-#     endif
 
       if ( !enforce_positive )
          Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
@@ -1260,22 +1313,6 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
          Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
                       "HLL_INCLUDE_ALL_WAVES", "ON", "OFF" );
 #     endif
-
-#     ifdef WAF_DISSIPATE
-      if ( !waf_dissipate )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
-                      "WAF_DISSIPATE", "OFF", "ON" );
-#     else
-      if (  waf_dissipate )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
-                      "WAF_DISSIPATE", "ON", "OFF" );
-#     endif
-
-
-//    check in MHD
-//    ----------------
-#     elif ( MODEL == MHD )
-#     warning : WAIT MHD !!!
 
 
 //    check in ELBDM
@@ -1435,16 +1472,11 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       else
       Aux_Message( stderr, "WARNING : restart file does not have the parameter \"%s\" !!\n", "MOLECULAR_WEIGHT" );
       CompareVar( "MINMOD_COEFF",            minmod_coeff,                 MINMOD_COEFF,              NonFatal );
-      CompareVar( "EP_COEFF",                ep_coeff,                     EP_COEFF,                  NonFatal );
       CompareVar( "OPT__LR_LIMITER",         opt__lr_limiter,         (int)OPT__LR_LIMITER,           NonFatal );
-      CompareVar( "OPT__WAF_LIMITER",        opt__waf_limiter,        (int)OPT__WAF_LIMITER,          NonFatal );
 
 //    convert OPT__1ST_FLUX_CORR to bool to be consistent with the old format where OPT__1ST_FLUX_CORR is bool instead of int
       CompareVar( "OPT__1ST_FLUX_CORR",        opt__1st_flux_corr,        (bool)OPT__1ST_FLUX_CORR,        NonFatal );
       CompareVar( "OPT__1ST_FLUX_CORR_SCHEME", opt__1st_flux_corr_scheme, (int )OPT__1ST_FLUX_CORR_SCHEME, NonFatal );
-
-#     elif ( MODEL == MHD )
-#     warning : WAIT MHD !!!
 
 #     elif ( MODEL == ELBDM )
       CompareVar( "DT__PHASE",               dt__phase,                    DT__PHASE,                 NonFatal );
@@ -1473,6 +1505,11 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       else if ( MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : restart file does not have any information about the code units !!\n" );
 
+#     ifdef MHD
+      CompareVar( "OPT__OUTPUT_CC_MAG",      opt__output_cc_mag,           OPT__OUTPUT_CC_MAG,        NonFatal );
+      CompareVar( "UNIT_B",                  unit_b,                       UNIT_B,                    NonFatal );
+#     endif
+
       Aux_Message( stdout, "   Checking loaded parameters ... done\n" );
 
    } // if ( MPI_Rank == 0 )
@@ -1488,6 +1525,11 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    LoadParDens = ( opt__output_par_dens != (int)PAR_OUTPUT_DENS_NONE );
 #  else
    LoadParDens = false;
+#  endif
+#  ifdef MHD
+   LoadCCMag   = opt__output_cc_mag;
+#  else
+   LoadCCMag   = false;
 #  endif
    NLv_Restart = nlevel;
 

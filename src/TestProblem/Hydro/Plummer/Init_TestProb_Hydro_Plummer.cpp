@@ -13,7 +13,10 @@
        double Plummer_Collision_D;  // distance between two colliding Plummer clouds
        double Plummer_Center[3];    // central coordinates
        double Plummer_BulkVel[3];   // bulk velocity
-       double Plummer_GasMFrac;     // gas mass fraction
+       double Plummer_GasMFrac;     // gas                   mass fraction
+       double Plummer_ParMFrac;     // particle              mass fraction
+       double Plummer_ExtAccMFrac;  // external acceleration mass fraction
+       double Plummer_ExtPotMFrac;  // external potential    mass fraction
        int    Plummer_MassProfNBin; // number of radial bins in the mass profile table
 static bool   Plummer_AddColor;     // assign different colors to different clouds for Plummer_Collision
 
@@ -30,6 +33,8 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
                                   real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                   real *AllAttribute[PAR_NATT_TOTAL] );
 #endif
+void Init_ExtAcc_Plummer();
+void Init_ExtPot_Plummer();
 
 
 
@@ -133,7 +138,9 @@ void SetParameter()
    ReadPara->Add( "Plummer_BulkVelX",     &Plummer_BulkVel[0],    0.0,           NoMin_double,     NoMax_double      );
    ReadPara->Add( "Plummer_BulkVelY",     &Plummer_BulkVel[1],    0.0,           NoMin_double,     NoMax_double      );
    ReadPara->Add( "Plummer_BulkVelZ",     &Plummer_BulkVel[2],    0.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Plummer_GasMFrac",     &Plummer_GasMFrac,      0.5,           Eps_double,       1.0               );
+   ReadPara->Add( "Plummer_GasMFrac",     &Plummer_GasMFrac,      0.25,          Eps_double,       1.0               );
+   ReadPara->Add( "Plummer_ExtAccMFrac",  &Plummer_ExtAccMFrac,   0.25,          0.0,              1.0               );
+   ReadPara->Add( "Plummer_ExtPotMFrac",  &Plummer_ExtPotMFrac,   0.25,          0.0,              1.0               );
    ReadPara->Add( "Plummer_MassProfNBin", &Plummer_MassProfNBin,  1000,          2,                NoMax_int         );
    ReadPara->Add( "Plummer_AddColor",     &Plummer_AddColor,      false,         Useless_bool,     Useless_bool      );
 
@@ -152,15 +159,118 @@ void SetParameter()
    if ( Plummer_AddColor  &&  NCOMP_PASSIVE_USER != 2 )
       Aux_Error( ERROR_INFO, "please set NCOMP_PASSIVE_USER to 2 for \"Plummer_AddColor\" !!\n" );
 
-#  ifndef PARTICLE
-   if ( Plummer_GasMFrac != 1.0 )
+#  ifdef GRAVITY
+   if ( !OPT__EXT_ACC  &&  Plummer_ExtAccMFrac != 0.0 )
    {
-      Plummer_GasMFrac = 1.0;
+      Plummer_ExtAccMFrac = 0.0;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : \"Plummer_GasMFrac\" is reset to 1.0 since PARTICLE is disabled !!\n" );
+         Aux_Message( stderr, "WARNING : \"Plummer_ExtAccMFrac\" is reset to 0.0 since OPT__EXT_ACC is disabled !!\n" );
+   }
+
+   if ( !OPT__EXT_POT  &&  Plummer_ExtPotMFrac != 0.0 )
+   {
+      Plummer_ExtPotMFrac = 0.0;
+
+      if ( MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : \"Plummer_ExtPotMFrac\" is reset to 0.0 since OPT__EXT_POT is disabled !!\n" );
    }
 #  endif
+
+#  ifndef PARTICLE
+   Plummer_ParMFrac = 0.0;
+#  endif
+
+#  ifdef GRAVITY
+   if ( OPT__SELF_GRAVITY )
+   {
+//    ensure the sum of all mass fractions equals unity
+      const double NonParMFrac = Plummer_GasMFrac + Plummer_ExtAccMFrac + Plummer_ExtPotMFrac;
+
+#     ifdef PARTICLE
+      if ( NonParMFrac > 1.0 )
+         Aux_Error( ERROR_INFO, "GasMFrac (%13.7e) + ExtAccMFrac (%13.7e) + ExtPotMFrac (%13.7e) = %13.7e > 1.0 !!\n",
+                    Plummer_GasMFrac, Plummer_ExtAccMFrac, Plummer_ExtPotMFrac, NonParMFrac );
+
+      else
+         Plummer_ParMFrac = 1.0 - NonParMFrac;
+
+#     else
+      if (  ! Mis_CompareRealValue( NonParMFrac, 1.0, NULL, false )  )
+      {
+         Plummer_GasMFrac = 1.0 - Plummer_ExtAccMFrac - Plummer_ExtPotMFrac;
+
+         if ( MPI_Rank == 0 )
+            Aux_Message( stderr, "WARNING : \"Plummer_GasMFrac\" is reset to %13.7e !!\n", Plummer_GasMFrac );
+      }
+#     endif
+   } // if ( OPT__SELF_GRAVITY )
+
+   else
+   {
+//    without self-gravity, gas and particle mass normalization can be set arbitrarily as they contribute no gravity
+//    --> just ensure the sum of their mass fractions equals unity
+#     ifdef PARTICLE
+      if ( Plummer_GasMFrac > 1.0 )
+         Aux_Error( ERROR_INFO, "GasMFrac (%13.7e) > 1.0 !!\n", Plummer_GasMFrac );
+
+      else
+         Plummer_ParMFrac = 1.0 - Plummer_GasMFrac;
+
+#     else
+      if (  ! Mis_CompareRealValue( Plummer_GasMFrac, 1.0, NULL, false )  )
+      {
+         Plummer_GasMFrac = 1.0;
+
+         if ( MPI_Rank == 0 )
+            Aux_Message( stderr, "WARNING : \"Plummer_GasMFrac\" is reset to %13.7e !!\n", Plummer_GasMFrac );
+      }
+#     endif
+
+//    ensure the sum of the mass fractions of external acceleration and potential equals unity
+      if ( OPT__EXT_POT )
+      {
+         if ( OPT__EXT_ACC )
+         {
+            if (  ! Mis_CompareRealValue( Plummer_ExtAccMFrac+Plummer_ExtPotMFrac, 1.0, NULL, false )  )
+            {
+               Plummer_ExtPotMFrac = 1.0 - Plummer_ExtAccMFrac;
+
+               if ( MPI_Rank == 0 )
+                  Aux_Message( stderr, "WARNING : \"Plummer_ExtPotMFrac\" is reset to %13.7e !!\n", Plummer_ExtPotMFrac );
+            }
+         }
+
+         else
+         {
+            if (  ! Mis_CompareRealValue( Plummer_ExtPotMFrac, 1.0, NULL, false )  )
+            {
+               Plummer_ExtPotMFrac = 1.0;
+
+               if ( MPI_Rank == 0 )
+                  Aux_Message( stderr, "WARNING : \"Plummer_ExtPotMFrac\" is reset to %13.7e !!\n", Plummer_ExtPotMFrac );
+            }
+         }
+      } // if ( OPT__EXT_POT )
+
+      else
+      {
+         if ( OPT__EXT_ACC )
+         {
+            if (  ! Mis_CompareRealValue( Plummer_ExtAccMFrac, 1.0, NULL, false )  )
+            {
+               Plummer_ExtAccMFrac = 1.0;
+
+               if ( MPI_Rank == 0 )
+                  Aux_Message( stderr, "WARNING : \"Plummer_ExtAccMFrac\" is reset to %13.7e !!\n", Plummer_ExtAccMFrac );
+            }
+         }
+
+         else
+            Aux_Error( ERROR_INFO, "all gravity options are disabled (OPT__SELF_GRAVITY, OPT__EXT_ACC, OPT__EXT_POT) !!\n" );
+      } // if ( OPT__EXT_POT ) ... else ...
+   } // if ( OPT__SELF_GRAVITY ) ... else ...
+#  endif // #ifdef GRAVITY
 
 // (2) set the problem-specific derived parameters
 #  ifdef GRAVITY
@@ -202,9 +312,10 @@ void SetParameter()
       Aux_Message( stdout, "  assign colors to different clouds         = %d\n",     Plummer_AddColor ); }
       for (int d=0; d<3; d++)
       Aux_Message( stdout, "  bulk velocity [%d]                        = %14.7e\n", d, Plummer_BulkVel[d] );
-#     if ( MODEL == HYDRO )
-      Aux_Message( stdout, "  gas mass fraction                         = %13.7e\n", Plummer_GasMFrac );
-#     endif
+      Aux_Message( stdout, "  gas                   mass fraction       = %13.7e\n", Plummer_GasMFrac );
+      Aux_Message( stdout, "  particle              mass fraction       = %13.7e\n", Plummer_ParMFrac );
+      Aux_Message( stdout, "  external acceleration mass fraction       = %13.7e\n", Plummer_ExtAccMFrac );
+      Aux_Message( stdout, "  external potential    mass fraction       = %13.7e\n", Plummer_ExtPotMFrac );
       Aux_Message( stdout, "  number of radial bins in the mass profile = %d\n",     Plummer_MassProfNBin );
       Aux_Message( stdout, "  free-fall time at the scale radius        = %13.7e\n", Plummer_FreeT );
       Aux_Message( stdout, "=============================================================================\n" );
@@ -245,7 +356,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double GasRho0 = Plummer_Rho0*Plummer_GasMFrac;
    const double PresBg  = 0.0;   // background pressure (set to 0.0 by default)
 
-   double r2, a2, Dens;
+   double Dens=0.0, MomX=0.0, MomY=0.0, MomZ=0.0, Pres=0.0, Eint, Etot;
+   double r2, a2, Dens1Cloud;
 
 
    if ( Plummer_Collision )
@@ -253,51 +365,58 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       const double Coll_Offset = 0.5*Plummer_Collision_D/sqrt(3.0);
       double Center[3];
 
-      fluid[DENS] = 0.0;
-      fluid[ENGY] = 0.0;
-      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = 0.0;
-
       for (int t=-1; t<=1; t+=2)
       {
          for (int d=0; d<3; d++)    Center[d] = Plummer_Center[d] + Coll_Offset*(double)t;
 
-         r2   = SQR(x-Center[0]) + SQR(y-Center[1]) + SQR(z-Center[2]);
-         a2   = r2 / SQR(Plummer_R0);
-         Dens = GasRho0 * pow( 1.0 + a2, -2.5 );
+         r2         = SQR(x-Center[0]) + SQR(y-Center[1]) + SQR(z-Center[2]);
+         a2         = r2 / SQR(Plummer_R0);
+         Dens1Cloud = GasRho0 * pow( 1.0 + a2, -2.5 );
 
-         fluid[DENS] += Dens;
+         Dens += Dens1Cloud;
 #        ifdef GRAVITY
-         fluid[ENGY] += (  NEWTON_G*TotM*GasRho0 / ( 6.0*Plummer_R0*CUBE(1.0 + a2) ) + PresBg  ) / ( GAMMA - 1.0 );
+         Pres += NEWTON_G*TotM*GasRho0 / ( 6.0*Plummer_R0*CUBE(1.0 + a2) ) + PresBg;
 #        endif
 
+//       add different colors for different clouds
          if ( Plummer_AddColor )
-         fluid[ (t==-1)?Plummer_Idx_Cloud0:Plummer_Idx_Cloud1 ] = Dens;
+         fluid[ (t==-1)?Plummer_Idx_Cloud0:Plummer_Idx_Cloud1 ] = Dens1Cloud;
       }
 
-      fluid[MOMX]  = fluid[DENS]*Plummer_BulkVel[0];
-      fluid[MOMY]  = fluid[DENS]*Plummer_BulkVel[1];
-      fluid[MOMZ]  = fluid[DENS]*Plummer_BulkVel[2];
-      fluid[ENGY] += 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
-   }
+      MomX = Dens*Plummer_BulkVel[0];
+      MomY = Dens*Plummer_BulkVel[1];
+      MomZ = Dens*Plummer_BulkVel[2];
+   } // if ( Plummer_Collision )
 
    else
    {
-      r2   = SQR(x-Plummer_Center[0]) + SQR(y-Plummer_Center[1]) + SQR(z-Plummer_Center[2]);
-      a2   = r2 / SQR(Plummer_R0);
-      Dens = GasRho0 * pow( 1.0 + a2, -2.5 );
+      r2         = SQR(x-Plummer_Center[0]) + SQR(y-Plummer_Center[1]) + SQR(z-Plummer_Center[2]);
+      a2         = r2 / SQR(Plummer_R0);
+      Dens1Cloud = GasRho0 * pow( 1.0 + a2, -2.5 );
 
-      fluid[DENS] = Dens;
-      fluid[MOMX] = fluid[DENS]*Plummer_BulkVel[0];
-      fluid[MOMY] = fluid[DENS]*Plummer_BulkVel[1];
-      fluid[MOMZ] = fluid[DENS]*Plummer_BulkVel[2];
+      Dens = Dens1Cloud;
+      MomX = Dens1Cloud*Plummer_BulkVel[0];
+      MomY = Dens1Cloud*Plummer_BulkVel[1];
+      MomZ = Dens1Cloud*Plummer_BulkVel[2];
 #     ifdef GRAVITY
-      fluid[ENGY] = (  NEWTON_G*TotM*GasRho0 / ( 6.0*Plummer_R0*CUBE(1.0 + a2) ) + PresBg  ) / ( GAMMA - 1.0 )
-                    + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+      Pres = NEWTON_G*TotM*GasRho0 / ( 6.0*Plummer_R0*CUBE(1.0 + a2) ) + PresBg;
 #     endif
 
 //    just set all passive scalars as zero
       for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = 0.0;
    } // if ( Plummer_Collision ) ... else ...
+
+// compute the total gas energy
+   Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
+                                    EoS_AuxArray_Int, h_EoS_Table, NULL ); // assuming EoS requires no passive scalars
+   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );         // do NOT include magnetic energy here
+
+// set the output array
+   fluid[DENS] = Dens;
+   fluid[MOMX] = MomX;
+   fluid[MOMY] = MomY;
+   fluid[MOMZ] = MomZ;
+   fluid[ENGY] = Etot;
 
 } // FUNCTION : SetGridIC
 
@@ -322,8 +441,8 @@ void AddNewField_Plummer()
 
    if ( Plummer_AddColor )
    {
-      Plummer_Idx_Cloud0 = AddField( "Cloud0", NORMALIZE_YES );
-      Plummer_Idx_Cloud1 = AddField( "Cloud1", NORMALIZE_YES );
+      Plummer_Idx_Cloud0 = AddField( "Cloud0", NORMALIZE_YES, INTERP_FRAC_YES );
+      Plummer_Idx_Cloud1 = AddField( "Cloud1", NORMALIZE_YES, INTERP_FRAC_YES );
    }
 
 } // FUNCTION : AddNewField_Plummer
@@ -356,21 +475,15 @@ void Init_TestProb_Hydro_Plummer()
    SetParameter();
 
 
-   Init_Function_User_Ptr   = SetGridIC;
-   Init_Field_User_Ptr      = AddNewField_Plummer;
-   Flag_User_Ptr            = NULL;
-   Mis_GetTimeStep_User_Ptr = NULL;
-   BC_User_Ptr              = NULL;
-   Flu_ResetByUser_Func_Ptr = NULL;
-   Output_User_Ptr          = NULL;
-   Aux_Record_User_Ptr      = NULL;
-   End_User_Ptr             = NULL;
-#  ifdef GRAVITY
-   Init_ExternalAcc_Ptr     = NULL;
-   Init_ExternalPot_Ptr     = NULL;
-#  endif
+   Init_Function_User_Ptr  = SetGridIC;
+   Init_Field_User_Ptr     = AddNewField_Plummer;
 #  ifdef PARTICLE
-   Par_Init_ByFunction_Ptr  = Par_Init_ByFunction_Plummer;
+   Par_Init_ByFunction_Ptr = Par_Init_ByFunction_Plummer;
+#  endif
+#  ifdef GRAVITY
+   Init_ExtAcc_Ptr         = Init_ExtAcc_Plummer;
+   if ( OPT__EXT_POT == EXT_POT_FUNC )
+   Init_ExtPot_Ptr         = Init_ExtPot_Plummer;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 
