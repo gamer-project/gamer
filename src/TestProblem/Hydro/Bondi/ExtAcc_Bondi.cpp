@@ -7,6 +7,11 @@
 
 
 
+// soften length implementation
+#  define SOFTEN_PLUMMER
+//#  define SOFTEN_RUFFERT
+
+
 
 // =================================
 // I. Set an auxiliary array
@@ -14,16 +19,14 @@
 
 #ifndef __CUDACC__
 
-extern double Plummer_Rho0;
-extern double Plummer_R0;
-extern double Plummer_Center[3];
-extern double Plummer_ExtAccMFrac;
+extern double Bondi_MassBH;
+extern double Bondi_Soften_R;
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  SetExtAccAuxArray_Plummer
-// Description :  Set the auxiliary array ExtAcc_AuxArray[] used by ExtAcc_Plummer()
+// Function    :  SetExtAccAuxArray_Bondi
+// Description :  Set the auxiliary array ExtAcc_AuxArray[] used by ExtAcc_Bondi()
 //
-// Note        :  1. Invoked by Init_ExtAcc_Plummer()
+// Note        :  1. Invoked by Init_ExtAcc_Bondi()
 //                2. AuxArray[] has the size of EXT_ACC_NAUX_MAX defined in Macro.h (default = 20)
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
@@ -31,19 +34,16 @@ extern double Plummer_ExtAccMFrac;
 //
 // Return      :  AuxArray[]
 //-------------------------------------------------------------------------------------------------------
-void SetExtAccAuxArray_Plummer( double AuxArray[] )
+void SetExtAccAuxArray_Bondi( double AuxArray[] )
 {
 
-// acceleration = -G*M*r/(r^2+R0^2)^(3/2)
-   const double ExtAccM = (4.0/3.0)*M_PI*CUBE(Plummer_R0)*Plummer_Rho0*Plummer_ExtAccMFrac;
+   AuxArray[0] = amr->BoxCenter[0];
+   AuxArray[1] = amr->BoxCenter[1];
+   AuxArray[2] = amr->BoxCenter[2];
+   AuxArray[3] = NEWTON_G*Bondi_MassBH;   // gravitational_constant*point_source_mass
+   AuxArray[4] = Bondi_Soften_R;          // soften_length (<=0.0 --> disable)
 
-   AuxArray[0] = Plummer_Center[0];    // x coordinate of the external acceleration center
-   AuxArray[1] = Plummer_Center[1];    // y ...
-   AuxArray[2] = Plummer_Center[2];    // z ...
-   AuxArray[3] = SQR( Plummer_R0 );    // scale_radius^2
-   AuxArray[4] = -NEWTON_G*ExtAccM;    // -G*M
-
-} // FUNCTION : SetExtAccAuxArray_Plummer
+} // FUNCTION : SetExtAccAuxArray_Bondi
 #endif // #ifndef __CUDACC__
 
 
@@ -53,11 +53,11 @@ void SetExtAccAuxArray_Plummer( double AuxArray[] )
 // =================================
 
 //-----------------------------------------------------------------------------------------
-// Function    :  ExtAcc_Plummer
+// Function    :  ExtAcc_Bondi
 // Description :  Calculate the external acceleration at the given coordinates and time
 //
 // Note        :  1. This function is shared by CPU and GPU
-//                2. Auxiliary array UserArray[] is set by SetExtAccAuxArray_Plummer()
+//                2. Auxiliary array UserArray[] is set by SetExtAccAuxArray_Bondi()
 //
 // Parameter   :  Acc       : Array to store the output external acceleration
 //                x/y/z     : Target spatial coordinates
@@ -67,28 +67,36 @@ void SetExtAccAuxArray_Plummer( double AuxArray[] )
 // Return      :  External acceleration Acc[] at (x,y,z,Time)
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static void ExtAcc_Plummer( real Acc[], const double x, const double y, const double z, const double Time,
-                            const double UserArray[] )
+static void ExtAcc_Bondi( real Acc[], const double x, const double y, const double z, const double Time,
+                          const double UserArray[] )
 {
 
-// acceleration = -G*M*r/(r^2+a^2)^(3/2)
-   const double cx  =       UserArray[0];    // x coordinate of the Plummer center
-   const double cy  =       UserArray[1];    // y ...
-   const double cz  =       UserArray[2];    // z ...
-   const real   a2  = (real)UserArray[3];    // scale_radius^2
-   const real   mGM = (real)UserArray[4];    // -G*M
+   const double Cen[3] = { UserArray[0], UserArray[1], UserArray[2] };
+   const real GM       = (real)UserArray[3];
+   const real eps      = (real)UserArray[4];
+   const real dx       = (real)(x - Cen[0]);
+   const real dy       = (real)(y - Cen[1]);
+   const real dz       = (real)(z - Cen[2]);
+   const real r        = SQRT( dx*dx + dy*dy + dz*dz );
 
-   const real   dx  = (real)(x - cx);
-   const real   dy  = (real)(y - cy);
-   const real   dz  = (real)(z - cz);
-   const real   r2  = SQR(dx) + SQR(dy) + SQR(dz);
-   const real   tmp = mGM * POW( r2+a2, (real)-1.5 );
+// Plummer
+#  if   ( defined SOFTEN_PLUMMER )
+   const real _r3 = ( eps <= (real)0.0 ) ? (real)1.0/CUBE(r) : POW( SQR(r)+SQR(eps), (real)-1.5 );
 
-   Acc[0] = tmp*dx;
-   Acc[1] = tmp*dy;
-   Acc[2] = tmp*dz;
+// Ruffert 1994
+#  elif ( defined SOFTEN_RUFFERT )
+   const real tmp = EXP( -SQR(r)/SQR(eps) );
+   const real _r3 = ( eps <= (real)0.0 ) ? (real)1.0/CUBE(r) : POW( SQR(r)+SQR(eps)*tmp, (real)-1.5 )*( (real)1.0 - tmp );
 
-} // FUNCTION : ExtAcc_Plummer
+#  else
+   const real _r3 = (real)1.0/CUBE(r);
+#  endif
+
+   Acc[0] = -GM*_r3*dx;
+   Acc[1] = -GM*_r3*dy;
+   Acc[2] = -GM*_r3*dz;
+
+} // FUNCTION : ExtAcc_Bondi
 
 
 
@@ -102,13 +110,13 @@ static void ExtAcc_Plummer( real Acc[], const double x, const double y, const do
 #  define FUNC_SPACE            static
 #endif
 
-FUNC_SPACE ExtAcc_t ExtAcc_Ptr = ExtAcc_Plummer;
+FUNC_SPACE ExtAcc_t ExtAcc_Ptr = ExtAcc_Bondi;
 
 //-----------------------------------------------------------------------------------------
-// Function    :  SetCPU/GPUExtAcc_Plummer
+// Function    :  SetCPU/GPUExtAcc_Bondi
 // Description :  Return the function pointers of the CPU/GPU external acceleration routines
 //
-// Note        :  1. Invoked by Init_ExtAcc_Plummer()
+// Note        :  1. Invoked by Init_ExtAcc_Bondi()
 //
 // Parameter   :  CPU/GPUExtAcc_Ptr (call-by-reference)
 //
@@ -116,14 +124,14 @@ FUNC_SPACE ExtAcc_t ExtAcc_Ptr = ExtAcc_Plummer;
 //-----------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __host__
-void SetGPUExtAcc_Plummer( ExtAcc_t &GPUExtAcc_Ptr )
+void SetGPUExtAcc_Bondi( ExtAcc_t &GPUExtAcc_Ptr )
 {
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &GPUExtAcc_Ptr, ExtAcc_Ptr, sizeof(ExtAcc_t) )  );
 }
 
 #else // #ifdef __CUDACC__
 
-void SetCPUExtAcc_Plummer( ExtAcc_t &CPUExtAcc_Ptr )
+void SetCPUExtAcc_Bondi( ExtAcc_t &CPUExtAcc_Ptr )
 {
    CPUExtAcc_Ptr = ExtAcc_Ptr;
 }
@@ -135,14 +143,14 @@ void SetCPUExtAcc_Plummer( ExtAcc_t &CPUExtAcc_Ptr )
 #ifndef __CUDACC__
 
 // local function prototypes
-void SetExtAccAuxArray_Plummer( double [] );
-void SetCPUExtAcc_Plummer( ExtAcc_t & );
+void SetExtAccAuxArray_Bondi( double [] );
+void SetCPUExtAcc_Bondi( ExtAcc_t & );
 #ifdef GPU
-void SetGPUExtAcc_Plummer( ExtAcc_t & );
+void SetGPUExtAcc_Bondi( ExtAcc_t & );
 #endif
 
 //-----------------------------------------------------------------------------------------
-// Function    :  Init_ExtAcc_Plummer
+// Function    :  Init_ExtAcc_Bondi
 // Description :  Initialize external acceleration
 //
 // Note        :  1. Set an auxiliary array by invoking SetExtAccAuxArray_*()
@@ -156,17 +164,17 @@ void SetGPUExtAcc_Plummer( ExtAcc_t & );
 //
 // Return      :  None
 //-----------------------------------------------------------------------------------------
-void Init_ExtAcc_Plummer()
+void Init_ExtAcc_Bondi()
 {
 
-   SetExtAccAuxArray_Plummer( ExtAcc_AuxArray );
+   SetExtAccAuxArray_Bondi( ExtAcc_AuxArray );
 
-   SetCPUExtAcc_Plummer( CPUExtAcc_Ptr );
+   SetCPUExtAcc_Bondi( CPUExtAcc_Ptr );
 #  ifdef GPU
-   SetGPUExtAcc_Plummer( GPUExtAcc_Ptr );
+   SetGPUExtAcc_Bondi( GPUExtAcc_Ptr );
 #  endif
 
-} // FUNCTION : Init_ExtAcc_Plummer
+} // FUNCTION : Init_ExtAcc_Bondi
 
 #endif // #ifndef __CUDACC__
 
