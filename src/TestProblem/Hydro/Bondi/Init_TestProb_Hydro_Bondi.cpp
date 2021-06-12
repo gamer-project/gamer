@@ -79,7 +79,7 @@ static double Bondi_HSE_Beta_P2;          // P1=G*MassBH*Rho0/Rcore, and P2 curr
 
 
 // problem-specific function prototypes
-void Init_ExtAcc_Plummer();
+void Init_ExtAcc_Bondi();
 void Record_Bondi();
 bool Flag_Bondi( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 bool Flu_ResetByUser_Func_Bondi( real fluid[], const double x, const double y, const double z, const double Time,
@@ -640,7 +640,7 @@ void Init_TestProb_Hydro_Bondi()
    Flu_ResetByUser_API_Ptr  = Flu_ResetByUser_API_Bondi;
    End_User_Ptr             = End_Bondi;
 #  ifdef GRAVITY
-   Init_ExtAcc_Ptr         = Init_ExtAcc_Plummer;
+   Init_ExtAcc_Ptr         = Init_ExtAcc_Bondi;
 #  endif
 #  endif // #if ( MODEL == HYDRO  &&  defined GRAVITY )
 
