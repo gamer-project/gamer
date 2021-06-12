@@ -60,6 +60,13 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
+// initialize GPU
+// --> must be called BEFORE Init_ExtAccPot() and EoS_Init()
+#  ifdef GPU
+   CUAPI_SetDevice( OPT__GPUID_SELECT );
+#  endif
+
+
 // initialize yt inline analysis
 #  ifdef SUPPORT_LIBYT
    YT_Init( *argc, *argv );
@@ -91,13 +98,6 @@ void Init_GAMER( int *argc, char ***argv )
    Init_Field();
 #  ifdef PARTICLE
    Par_Init_Attribute();
-#  endif
-
-
-// set the GPU ID
-// --> must be called BEFORE Init_ExtAccPot() and EoS_Init()
-#  ifdef GPU
-   CUAPI_SetDevice( OPT__GPUID_SELECT );
 #  endif
 
 
