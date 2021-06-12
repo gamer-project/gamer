@@ -4,7 +4,7 @@
 
 
 
-// specific global variables declared in Init_TestProb_Bondi.cpp
+// specific global variables declared in Init_TestProb_Hydro_Bondi.cpp
 // =======================================================================================
 extern double Bondi_SinkMass;
 extern double Bondi_SinkMomX;
@@ -25,8 +25,7 @@ extern int    Bondi_SinkNCell;
 // Function    :  Record_Bondi
 // Description :  Record the accretion rates of various quantities
 //
-// Note        :  1. Linked to the function pointer "Aux_Record_User_Ptr" by "Init_TestProb_Bondi()"
-//                   to replace "Aux_Record_User()"
+// Note        :  1. Linked to the function pointer "Aux_Record_User_Ptr" by Init_TestProb_Hydro_Bondi()
 //                2. Please turn on the runtime option "OPT__RECORD_USER"
 //                3. This function only outputs the header when first calling it
 //
@@ -38,7 +37,8 @@ void Record_Bondi()
 {
 
    const char FileName[] = "Record__BondiAccretionRate";
-   static bool FirstTime = true;
+
+   static bool   FirstTime = true;
    static double Time0, dTime;
 
    if ( FirstTime )
@@ -105,7 +105,7 @@ void Record_Bondi()
       }
    } // if ( FirstTime ) ... else ...
 
-// reset the cumulative mass to zero
+// reset the cumulative variables to zero
    Bondi_SinkMass    = 0.0;
    Bondi_SinkMomX    = 0.0;
    Bondi_SinkMomY    = 0.0;

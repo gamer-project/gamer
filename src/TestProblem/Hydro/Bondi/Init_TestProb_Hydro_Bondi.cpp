@@ -5,27 +5,29 @@
 
 // problem-specific global variables
 // =======================================================================================
-       double Bondi_MassBH;         // black hole mass (in internal units)
-static double Bondi_Rho0;           // background density (in internal units)
-static double Bondi_T0;             // background temperature (in internal units)
-       double Bondi_RefineRadius0;  // refinement radius at the base level (in internal units)
+       double Bondi_MassBH;         // black hole mass
+static double Bondi_Rho0;           // background density
+static double Bondi_T0;             // background temperature
+       double Bondi_RefineRadius0;  // refinement radius at the base level
                                     // NOTE: refinement radius at Lv is set to Bondi_RefineRadius0*2^(-Lv)
                                     // --> all refinement shells have roughly the same number of cells at its level
                                     //     (except Lv=MAX_LEVEL, which will have twice the number of cells along the radius
-                                    //      unless Bondi_HalfMaxLvRefR is on)
+                                    //     unless Bondi_HalfMaxLvRefR is on)
        bool   Bondi_HalfMaxLvRefR;  // halve the refinement radius at the maximum level
-       double Bondi_InBC_Rho;       // density     inside the void region (in internal units)
-static double Bondi_InBC_T;         // temperature inside the void region (in internal units)
+       double Bondi_InBC_Rho;       // density     inside the void region
+static double Bondi_InBC_T;         // temperature inside the void region
 static double Bondi_InBC_NCell;     // number of finest cells for the radius of the void region
-static double Bondi_Soften_NCell;   // number of finest cells for the soften length (<0.0 ==> disable)
+static double Bondi_Soften_NCell;   // number of finest cells for the soften length (<=0.0 ==> disable)
 
        double Bondi_InBC_R;         // radius of the void region (=Bondi_InBC_NCell*dh[MAX_LEVEL])
-       double Bondi_InBC_E;         // energy inside the void region (
+       double Bondi_InBC_P;         // pressure inside the void region
+       double Bondi_InBC_E;         // energy inside the void region
        double Bondi_Soften_R;       // soften length (=Bondi_Soften_NCell*dh[MAX_LEVEL])
+static double Bondi_P0;             // background pressure
 static double Bondi_Cs;             // background sound speed
-static double Bondi_RS;             // Schwarzschild radius (in kpc)
-static double Bondi_RB;             // Bondi radius (in kpc)
-static double Bondi_TimeB;          // Bondi time (in Myr)
+static double Bondi_RS;             // Schwarzschild radius
+static double Bondi_RB;             // Bondi radius
+static double Bondi_TimeB;          // Bondi time
 
        double Bondi_SinkMass;       // total mass             in the void region removed in one global time-step
        double Bondi_SinkMomX;       // total x-momentum       ...
@@ -77,9 +79,9 @@ static double Bondi_HSE_Beta_P2;          // P1=G*MassBH*Rho0/Rcore, and P2 curr
 
 
 // problem-specific function prototypes
+void Init_ExtAcc_Plummer();
 void Record_Bondi();
-bool Flag_Bondi( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
-void Init_ExternalAcc_Bondi();
+bool Flag_Bondi( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 bool Flu_ResetByUser_Func_Bondi( real fluid[], const double x, const double y, const double z, const double Time,
                                  const int lv, double AuxArray[] );
 void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double TTime );
@@ -128,14 +130,20 @@ void Validate()
    if ( OPT__BC_POT != BC_POT_ISOLATED )
       Aux_Error( ERROR_INFO, "please set \"OPT__BC_POT = 2\" (i.e., isolated gravity) !!\n" );
 
-   if ( OPT__GRAVITY_TYPE != GRAVITY_EXTERNAL  &&  MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : OPT__GRAVITY_TYPE != GRAVITY_EXTERNAL ??\n" );
+   if ( OPT__SELF_GRAVITY  &&  MPI_Rank == 0 )
+      Aux_Message( stderr, "WARNING : are you sure about enabling \"OPT__SELF_GRAVITY\" !?\n" );
+
+   if ( OPT__EXT_ACC != EXT_ACC_FUNC  &&  MPI_Rank == 0 )
+      Aux_Message( stderr, "WARNING : OPT__EXT_ACC != EXT_ACC_FUNC (1) !?\n" );
 #  endif
 
 #  ifndef DUAL_ENERGY
    if ( MPI_Rank == 0 )
    {
-      Aux_Message( stderr, "WARNING : it's recommended to enable DUAL_ENERGY, espeically for small GAMMA and large MAX_LEVEL\n" );
+      Aux_Message( stderr, "WARNING : it's recommended to enable DUAL_ENERGY, espeically for small GAMMA and large MAX_LEVEL !!\n" );
+
+      if ( amr->BoxSize[0] != amr->BoxSize[1]  ||  amr->BoxSize[0] != amr->BoxSize[2] )
+         Aux_Message( stderr, "WARNING : simulation domain is not cubic !?\n" );
    }
 #  endif
 
@@ -157,6 +165,7 @@ void Validate()
 //                   (2) set the problem-specific derived parameters
 //                   (3) reset other general-purpose parameters if necessary
 //                   (4) make a note of the problem-specific parameters
+//                3. Must NOT call any EoS routine here since it hasn't been initialized at this point
 //
 // Parameter   :  None
 //
@@ -233,10 +242,20 @@ void SetParameter()
 
 
 // (2) set the problem-specific derived parameters
+   if ( EoS_DensTemp2Pres_CPUPtr == NULL )
+      Aux_Error( ERROR_INFO, "EoS_DensTemp2Pres_CPUPtr == NULL !!\n" );
+
+// the following assumes that EoS requires no passive scalars
    Bondi_InBC_R   = Bondi_InBC_NCell*amr->dh[MAX_LEVEL];
-   Bondi_InBC_E   = Bondi_InBC_Rho*Bondi_InBC_T/(MOLECULAR_WEIGHT*Const_mH/UNIT_M)/(GAMMA-1.0);
+   Bondi_InBC_P   = EoS_DensTemp2Pres_CPUPtr( Bondi_InBC_Rho, Bondi_InBC_T*UNIT_E/Const_kB, NULL,
+                                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+   Bondi_InBC_E   = EoS_DensPres2Eint_CPUPtr( Bondi_InBC_Rho, Bondi_InBC_P, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                              h_EoS_Table, NULL );
    Bondi_Soften_R = Bondi_Soften_NCell*amr->dh[MAX_LEVEL];
-   Bondi_Cs       = sqrt( GAMMA*Bondi_T0/(MOLECULAR_WEIGHT*Const_mH/UNIT_M) );
+   Bondi_P0       = EoS_DensTemp2Pres_CPUPtr( Bondi_Rho0, Bondi_T0*UNIT_E/Const_kB, NULL,
+                                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+   Bondi_Cs       = EoS_DensPres2CSqr_CPUPtr( Bondi_Rho0, Bondi_P0, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                              h_EoS_Table, NULL );
 #  ifdef GRAVITY
    Bondi_RS       = 2.0*NEWTON_G*Bondi_MassBH/SQR(Const_c/UNIT_V);
    Bondi_RB       =     NEWTON_G*Bondi_MassBH/SQR(Bondi_Cs);
@@ -377,9 +396,12 @@ void SetParameter()
 // Note        :  1. This function may also be used to estimate the numerical errors when OPT__OUTPUT_USER is enabled
 //                   --> In this case, it should provide the analytical solution at the given "Time"
 //                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
+//                   (unless OPT__INIT_GRID_WITH_OMP is disabled)
 //                   --> Please ensure that everything here is thread-safe
 //                3. Even when DUAL_ENERGY is adopted for HYDRO, one does NOT need to set the dual-energy variable here
 //                   --> It will be calculated automatically
+//                4. For MHD, do NOT add magnetic energy (i.e., 0.5*B^2) to fluid[ENGY] here
+//                   --> It will be added automatically later
 //
 // Parameter   :  fluid    : Fluid field to be initialized
 //                x/y/z    : Physical coordinates
@@ -393,13 +415,17 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
-// note that the central void region will be reset by calling ResetVoid()
+   double Dens, MomX, MomY, MomZ, Pres, Eint, Etot;
+
+   MomX = 0.0;
+   MomY = 0.0;
+   MomZ = 0.0;
+
+// note that the central void region will be reset by calling Flu_ResetByUser_Func_Bondi()
 // hydrostatic equilibrium
    if ( Bondi_HSE )
    {
-      double r, Dens, Pres;
-
-      r = sqrt( SQR(x-amr->BoxCenter[0]) + SQR(y-amr->BoxCenter[1]) + SQR(z-amr->BoxCenter[2]) );
+      const double r = sqrt( SQR(x-amr->BoxCenter[0]) + SQR(y-amr->BoxCenter[1]) + SQR(z-amr->BoxCenter[2]) );
 
       if ( Bondi_HSE_Mode == 1 )
       {
@@ -411,7 +437,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
          if ( Dens == NULL_REAL )
             Aux_Error( ERROR_INFO, "interpolation failed at radius %13.7e --> reset Bondi_HSE_Dens_MinR/MaxR !!\n", r );
 
-         Pres = Dens*Bondi_T0/(MOLECULAR_WEIGHT*Const_mH/UNIT_M);
+         Pres = EoS_DensTemp2Pres_CPUPtr( Dens, Bondi_T0*UNIT_E/Const_kB, NULL,
+                                          EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
       }
 
       else if ( Bondi_HSE_Mode == 2 )
@@ -430,22 +457,28 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
       else
          Aux_Error( ERROR_INFO, "unsupported Bondi_HSE_Mode (%d) !!\n", Bondi_HSE_Mode );
-
-      fluid[DENS] = Dens;
-      fluid[ENGY] = Pres/( GAMMA-1.0 );
    } // if ( Bondi_HSE )
 
 
 // uniform background
    else
    {
-      fluid[DENS] = Bondi_Rho0;
-      fluid[ENGY] = SQR(Bondi_Cs)*Bondi_Rho0/( GAMMA*(GAMMA-1.0) );
+      Dens = Bondi_Rho0;
+      Pres = Bondi_P0;
    }
 
-   fluid[MOMX] = 0.0;
-   fluid[MOMY] = 0.0;
-   fluid[MOMZ] = 0.0;
+
+// compute the total gas energy
+   Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
+                                    EoS_AuxArray_Int, h_EoS_Table, NULL ); // assuming EoS requires no passive scalars
+   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );         // do NOT include magnetic energy here
+
+// set the output array
+   fluid[DENS] = Dens;
+   fluid[MOMX] = MomX;
+   fluid[MOMY] = MomY;
+   fluid[MOMZ] = MomZ;
+   fluid[ENGY] = Etot;
 
 } // FUNCTION : SetGridIC
 
@@ -455,7 +488,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // Function    :  HSE_SetDensProfileTable
 // Description :  Set up the density profile table for HSE
 //
-// Note        :  1. Assume isotheral
+// Note        :  1. Assume isotheral (for Bondi_HSE_Mode=1)
 //                   --> log(rho2/rho1) = G*MassBH/A*( 1/r2 - 1/r1 ), where A = kB*T/(mu*mH)
 //                   --> r1 and rho1 are for normalization and are set by Bondi_HSE_Dens_NormR/D
 //                2. Invoked by SetParameter()
@@ -597,16 +630,15 @@ void Init_TestProb_Hydro_Bondi()
 
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr   = SetGridIC;
-   Output_User_Ptr          = NULL;
    Flag_User_Ptr            = Flag_Bondi;
-   Mis_GetTimeStep_User_Ptr = NULL;
    Aux_Record_User_Ptr      = Record_Bondi;
    BC_User_Ptr              = SetGridIC;
    Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_Func_Bondi;
    Flu_ResetByUser_API_Ptr  = Flu_ResetByUser_API_Bondi;
    End_User_Ptr             = End_Bondi;
-   Init_ExternalAcc_Ptr     = Init_ExternalAcc_Bondi;
-   Init_ExternalPot_Ptr     = NULL;
+#  ifdef GRAVITY
+   Init_ExtAcc_Ptr         = Init_ExtAcc_Plummer;
+#  endif
 #  endif // #if ( MODEL == HYDRO  &&  defined GRAVITY )
 
 

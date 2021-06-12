@@ -26,16 +26,15 @@ extern int    Bondi_SinkNCell;
 // Function    :  Flu_ResetByUser_Func_Bondi
 // Description :  Function to reset the fluid field in the Bondi accretion problem
 //
-// Note        :  1. Invoked by "Flu_ResetByUser_API_Bondi()" and "Model_Init_StartOver_AssignData()" using the
+// Note        :  1. Invoked by Flu_ResetByUser_API_Bondi() and Hydro_Init_ByFunction_AssignData() using the
 //                   function pointer "Flu_ResetByUser_Func_Ptr"
-//                   --> This function pointer is reset by "Init_TestProb_Bondi()"
-//                2. This function will be invoked when constructing the initial condition
-//                    (by calling "Model_Init_StartOver_AssignData()") and after each update
-//                    (by calling "Flu_ResetByUser_API_Bondi()")
-//                3. Input "fluid" array stores the original values
-//                4. Even when DUAL_ENERGY is adopted, one does NOT need to set the dual-energy variable here
-//                   --> It will be set automatically in "Flu_ResetByUser_API_Bondi()" and "Model_Init_StartOver_AssignData()"
-//                5. Enabled by the runtime option "OPT__RESET_FLUID"
+//                   --> This function pointer is reset by Init_TestProb_Hydro_Bondi()
+//                   --> Hydro_Init_ByFunction_AssignData(): constructing initial condition
+//                       Flu_ResetByUser_API_Bondi()       : after each update
+//                2. Input fluid[] stores the original values
+//                3. Even when DUAL_ENERGY is adopted, one does NOT need to set the dual-energy variable here
+//                   --> It will be set automatically
+//                4. Enabled by the runtime option "OPT__RESET_FLUID"
 //
 // Parameter   :  fluid    : Fluid array storing both the input (origial) and reset values
 //                           --> Including both active and passive variables
@@ -57,8 +56,7 @@ bool Flu_ResetByUser_Func_Bondi( real fluid[], const double x, const double y, c
 
    for (int d=0; d<3; d++)
    {
-      dr2[d] = Pos[d] - 0.5*amr->BoxSize[d];
-      dr2[d] = SQR( dr2[d] );
+      dr2[d] = SQR( Pos[d] - amr->BoxCenter[d] );
 
 //    skip cells far away from the void region
       if ( dr2[d] > InBC_R2 )    return false;
@@ -89,11 +87,10 @@ bool Flu_ResetByUser_Func_Bondi( real fluid[], const double x, const double y, c
 // Description :  API for resetting the fluid array in the Bondi accretion problem
 //
 // Note        :  1. Enabled by the runtime option "OPT__RESET_FLUID"
-//                2. Invoked by either "Flu_AdvanceDt()" or "Gra_AdvanceDt()" using the function pointer
-//                   "Flu_ResetByUser_API_Ptr"
-//                   --> This function pointer is reset by "Init_TestProb_Bondi()"
+//                2. Invoked using the function pointer "Flu_ResetByUser_API_Ptr"
+//                   --> This function pointer is reset by Init_TestProb_Hydro_Bondi()
 //                3. Currently does not work with "OPT__OVERLAP_MPI"
-//                4. Invoke "Flu_ResetByUser_Func_Bondi" directly
+//                4. Invoke Flu_ResetByUser_Func_Bondi() directly
 //
 // Parameter   :  lv    : Target refinement level
 //                FluSg : Target fluid sandglass
@@ -144,15 +141,22 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double TTim
 //       operations necessary only when this cell has been reset
          if ( Reset )
          {
+//          apply density and energy floors
 #           if ( MODEL == HYDRO  ||  MODEL == MHD )
-//          check minimum density and pressure
+#           ifdef MHD
+            const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+#           else
+            const real Emag = NULL_REAL;
+#           endif
+
             fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
-            fluid[ENGY] = CPU_CheckMinPresInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                                  Gamma_m1, _Gamma_m1, MIN_PRES );
+            fluid[ENGY] = Hydro_CheckMinEintInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
+                                                    (real)MIN_EINT, Emag );
 
 //          calculate the dual-energy variable (entropy or internal energy)
 #           if   ( DUAL_ENERGY == DE_ENPY )
-            fluid[ENPY] = CPU_Fluid2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Gamma_m1 );
+            fluid[ENPY] = Hydro_Con2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Emag,
+                                             EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #           elif ( DUAL_ENERGY == DE_EINT )
 #           error : DE_EINT is NOT supported yet !!
 #           endif
@@ -162,7 +166,7 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double TTim
             for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = FMAX( fluid[v], TINY_NUMBER );
 
             if ( OPT__NORMALIZE_PASSIVE )
-               CPU_NormalizePassive( fluid[DENS], fluid+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
+               Hydro_NormalizePassive( fluid[DENS], fluid+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
 #           endif
 #           endif // if ( MODEL == HYDRO  ||  MODEL == MHD )
 
