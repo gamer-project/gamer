@@ -257,8 +257,8 @@ void SetParameter()
    Bondi_Soften_R = Bondi_Soften_NCell*amr->dh[MAX_LEVEL];
    Bondi_P0       = EoS_DensTemp2Pres_CPUPtr( Bondi_Rho0, Bondi_T0*UNIT_E/Const_kB, NULL,
                                               EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
-   Bondi_Cs       = EoS_DensPres2CSqr_CPUPtr( Bondi_Rho0, Bondi_P0, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                                              h_EoS_Table, NULL );
+   Bondi_Cs       = sqrt(  EoS_DensPres2CSqr_CPUPtr( Bondi_Rho0, Bondi_P0, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                     h_EoS_Table, NULL )  );
 #  ifdef GRAVITY
    Bondi_RS       = 2.0*NEWTON_G*Bondi_MassBH/SQR(Const_c/UNIT_V);
    Bondi_RB       =     NEWTON_G*Bondi_MassBH/SQR(Bondi_Cs);
