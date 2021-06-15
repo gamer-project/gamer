@@ -1,10 +1,9 @@
 
 
 
-# file names
+# executable file
 #######################################################################################################
-PROGRAM    = GAMER_CompareData
-EXECUTABLE = GAMER_CompareData
+EXECUTABLE := GAMER_CompareData
 
 
 
@@ -32,21 +31,29 @@ SIMU_PARA = -DNLEVEL=$(NLEVEL) -DMAX_PATCH=$(MAX_PATCH) -DNCOMP_PASSIVE=$(NCOMP_
 
 
 
+# sources
+# #######################################################################################################
+SOURCE = GAMER_CompareData.cpp
+
+
 # rules and targets
 #######################################################################################################
 CC    := icpc
 CFLAG := -O3 -w1
 CFLAG += -g
 
+OBJ_DIR := ./Object
+OBJ     := $(patsubst %.cpp, $(OBJ_DIR)/%.o, $(SOURCE))
 
-$(EXECUTABLE): $(PROGRAM).o
-	$(CC) $(CFLAG) -o $@ $<
-	cp $(EXECUTABLE) ./Run/
 
-$(PROGRAM).o: $(PROGRAM).cpp
+$(OBJ_DIR)/%.o : %.cpp
 	$(CC) $(CFLAG) $(SIMU_PARA) $(SIMU_OPTION) -o $@ -c $<
 
+$(EXECUTABLE): $(OBJ)
+	$(CC) $(CFLAG) -o $@ $^
+	cp $(EXECUTABLE) ./Run/
+
 clean:
-	rm -f *.o
+	rm -f $(OBJ_DIR)/*.o
 	rm -f $(EXECUTABLE)
 
