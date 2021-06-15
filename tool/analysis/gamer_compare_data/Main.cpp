@@ -57,41 +57,27 @@ void ReadOption( int argc, char **argv )
 void CheckParameter()
 {
 
-   cout << "CheckParameter ... " << endl;
+   Aux_Message( stdout, "%s ... \n", __FUNCTION__ );
 
 
    if ( FileName_In1 == NULL )
-   {
-      cerr << "ERROR : please provide the name of the input file one (-i FileName1) !!" << endl;
-      exit( 1 );
-   }
+      Aux_Error( ERROR_INFO, "please provide the name of the input file one (-i FileName1) !!\n" );
 
    if ( FileName_In2 == NULL )
-   {
-      cerr << "ERROR : please provide the name of the input file two (-j FileName2) !!" << endl;
-      exit( 1 );
-   }
+      Aux_Error( ERROR_INFO, "please provide the name of the input file two (-j FileName2) !!\n" );
 
    if ( FileName_Out == NULL )
-   {
-      cerr << "ERROR : please provide the name of the output file (-o FileNmae) !!" << endl;
-      exit( 1 );
-   }
+      Aux_Error( ERROR_INFO, "please provide the name of the output file (-o FileName) !!\n" );
 
    if ( TolErr == 1.e-20 )
-   {
-      cerr << "WARNING : please provide the tolerant error (-e Tolerant Error) !!" << endl;
-   }
+      Aux_Message( stderr, "WARNING : please provide the tolerant error (-e Tolerant Error) !!\n" );
 
    if ( UseCorner == false )
-   {
-      cerr << "WARNING : please make sure that the order of patches storing in the input files are the same."
-           << endl
-           << "          Otherwise, you should turn on the option \"-c\" !!" << endl;
-   }
+      Aux_Message( stderr, "WARNING : please make sure that the order of patches stored in the input files are the same.\n"
+                           "          Otherwise, you should turn on the option \"-c\" !!\n" );
 
 
-   cout << "CheckParameter ... done" << endl;
+   Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : CheckParameter
 
@@ -104,18 +90,15 @@ void CheckParameter()
 void CompareGridData()
 {
 
-   cout << "CompareGridData ... " << endl;
+   Aux_Message( stdout, "%s ... \n", __FUNCTION__ );
 
 
 // verify that the total number of patches at each level of patch1 and patch2 are the same
    for (int lv=0; lv<NLEVEL; lv++)
    {
       if ( patch1.num[lv] != patch2.num[lv] )
-      {
-         fprintf( stderr, "ERROR : patch1.num[%d] (%d) != patch2.num[%d] (%d) !!\n",
-                  lv, patch1.num[lv], lv, patch2.num[lv] );
-         exit( 1 );
-      }
+         Aux_Error( ERROR_INFO, "patch1.num[%d] (%d) != patch2.num[%d] (%d) !!\n",
+                    lv, patch1.num[lv], lv, patch2.num[lv] );
    }
 
 
@@ -123,11 +106,8 @@ void CompareGridData()
    for (int d=0; d<3; d++)
    {
       if ( patch1.nx0_tot[d] != patch2.nx0_tot[d] )
-      {
-         fprintf( stderr, "ERROR : patch1.nx0_tot[%d] (%d) != patch2.nx0_tot[%d] (%d) !!\n",
-                  d, patch1.nx0_tot[d], d, patch2.nx0_tot[d] );
-         exit( 1 );
-      }
+         Aux_Error( ERROR_INFO, "patch1.nx0_tot[%d] (%d) != patch2.nx0_tot[%d] (%d) !!\n",
+                    d, patch1.nx0_tot[d], d, patch2.nx0_tot[d] );
    }
 
 
@@ -138,9 +118,9 @@ void CompareGridData()
       {
          if ( patch1.ngpu_x[d] != patch2.ngpu_x[d] )
          {
-            fprintf( stderr, "WARNING : patch1.ngpu_x[%d] (%d) != patch2.ngpu_x[%d] (%d) !!\n",
-                     d, patch1.ngpu_x[d], d, patch2.ngpu_x[d] );
-            fprintf( stderr, "          --> The option \"-c\" is turned on automatically\n" );
+            Aux_Message( stderr, "WARNING : patch1.ngpu_x[%d] (%d) != patch2.ngpu_x[%d] (%d) !!\n"
+                                 "          --> The option \"-c\" is turned on automatically\n",
+                         d, patch1.ngpu_x[d], d, patch2.ngpu_x[d] );
 
             UseCorner = true;
             break;
@@ -151,32 +131,23 @@ void CompareGridData()
 
 // check whether both inputs store the potential data or not
    if ( WithPot1 != WithPot2 )
-   {
-      fprintf( stderr, "WARNING : one of the input files does NOT store the potential data !!\n" );
-      fprintf( stderr, "          --> Potential data will not be compared ...\n" );
-   }
+      Aux_Message( stderr, "WARNING : one of the input files does NOT store the potential data !!\n"
+                           "          --> Potential data will not be compared ...\n" );
 
 
 // check whether both inputs store the particle (or total) density data or not
    if ( WithParDens1 != WithParDens2 )
-   {
-      fprintf( stderr, "WARNING : one of the input files does NOT store the particle (or total) density data !!\n" );
-      fprintf( stderr, "          --> Particle density data will not be compared ...\n" );
-   }
+      Aux_Message( stderr, "WARNING : one of the input files does NOT store the particle (or total) density data !!\n"
+                           "          --> Particle density data will not be compared ...\n" );
 
 
 // check whether both inputs store the B field
    if ( WithMagCC1 != WithMagCC2 )
-   {
-      fprintf( stderr, "WARNING : one of the input files does NOT store the cell-centered B field data !!\n" );
-      fprintf( stderr, "          --> Cell-centered B field data will not be compared ...\n" );
-   }
+      Aux_Message( stderr, "WARNING : one of the input files does NOT store the cell-centered B field data !!\n"
+                           "          --> Cell-centered B field data will not be compared ...\n" );
 
    if ( WithMagFC1 != WithMagFC2 )
-   {
-      fprintf( stderr, "ERROR : one of the input files does NOT store the face-centered B field data !!\n" );
-      exit( -1 );
-   }
+      Aux_Error( ERROR_INFO, "one of the input files does NOT store the face-centered B field data !!\n" );
 
 
 // compare data
@@ -192,7 +163,7 @@ void CompareGridData()
 
    for (int lv=0; lv<NLEVEL; lv++)
    {
-      cout << "  Comparing level " << lv << " ... " << flush;
+      Aux_Message( stdout, "  Comparing level %d ... ", lv );
 
       for (PID1=0; PID1<patch1.num[lv]; PID1++)
       {
@@ -347,7 +318,7 @@ void CompareGridData()
 
       } // for (PID1=0; PID1<patch1.num[lv]; PID1++)
 
-      cout << "done" << endl;
+      Aux_Message( stdout, "done\n" );
 
    } // for (int lv=0; lv<NLEVEL; lv++)
 
@@ -360,14 +331,14 @@ void CompareGridData()
    for (int PID=0; PID<patch1.num[lv]; PID++)
    {
       if ( patch1.ptr[lv][PID]->son == -1  &&  patch1.ptr[lv][PID]->check == false )
-         fprintf( stderr, "WARNING : patch %5d at level %d in input 1 has NOT been checked !!\n", PID, lv );
+         Aux_Message( stderr, "WARNING : patch %5d at level %d in input 1 has NOT been checked !!\n", PID, lv );
 
       if ( patch2.ptr[lv][PID]->son == -1  &&  patch2.ptr[lv][PID]->check == false )
-         fprintf( stderr, "WARNING : patch %5d at level %d in input 2 has NOT been checked !!\n", PID, lv );
+         Aux_Message( stderr, "WARNING : patch %5d at level %d in input 2 has NOT been checked !!\n", PID, lv );
    }
 
 
-   cout << "CompareGridData ... done" << endl;
+   Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : CompareGridData
 
@@ -380,13 +351,13 @@ void CompareGridData()
 void CompareParticleData()
 {
 
-   cout << "CompareParticleData ... " << endl;
+   Aux_Message( stdout, "%s ... \n", __FUNCTION__ );
 
 
 // nothing to do if there are not particle data in both files
    if ( !WithPar1  &&  !WithPar2 )
    {
-      fprintf( stdout, "   No particle data are found in both files\n" );
+      Aux_Message( stdout, "   No particle data are found in both files\n" );
       return;
    }
 
@@ -395,7 +366,7 @@ void CompareParticleData()
 // --> we must return here since ParDataX[...] is ill-defined if NParX == 0
    if ( NPar1 == 0  &&  NPar2 == 0 )
    {
-      fprintf( stdout, "   No particle data are found in both files\n" );
+      Aux_Message( stdout, "   No particle data are found in both files\n" );
       return;
    }
 
@@ -460,7 +431,7 @@ void CompareParticleData()
    delete [] IdxTable2;
 
 
-   cout << "CompareParticleData ... done" << endl;
+   Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : CompareParticleData
 
@@ -486,7 +457,7 @@ int main( int argc, char ** argv )
    Aux_DeallocateArray2D( ParData1 );
    Aux_DeallocateArray2D( ParData2 );
 
-   cout << "Program terminated successfully" << endl;
+   Aux_Message( stdout, "Program terminated successfully\n" );
 
    return 0;
 

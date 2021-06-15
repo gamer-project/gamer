@@ -10,7 +10,6 @@
 #include <cmath>
 #include <cstdio>
 #include <unistd.h>
-#include <stdarg.h>
 
 using namespace std;
 

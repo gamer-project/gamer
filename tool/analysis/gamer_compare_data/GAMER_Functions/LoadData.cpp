@@ -29,7 +29,7 @@ void LoadData( GAMER_t &patch, const char *FileName_In, bool &WithPot, int &With
                int &NParVarOut, long &NPar, real **&ParData, bool &WithMagCC, bool &WithMagFC )
 {
 
-   fprintf( stdout, "Loading data %s ...\n", FileName_In );
+   Aux_Message( stdout, "Loading data %s ...\n", FileName_In );
 
 
 // check if the target file exists
@@ -86,13 +86,10 @@ void LoadData( GAMER_t &patch, const char *FileName_In, bool &WithPot, int &With
 
 
 // verify the input data format version
-   fprintf( stdout, "   The format version of the input file = %ld\n", FormatVersion );
+   Aux_Message( stdout, "   The format version of the input file = %ld\n", FormatVersion );
 
    if ( FormatVersion < 2000 )
-   {
-      fprintf( stderr, "ERROR : unsupported data format version (only support version >= 2000) !!\n" );
-      exit( EXIT_FAILURE );
-   }
+      Aux_Error( ERROR_INFO, "unsupported data format version (only support version >= 2000) !!\n" );
 
 
 // check if the size of different data types are consistent
@@ -134,7 +131,7 @@ void LoadData( GAMER_t &patch, const char *FileName_In, bool &WithPot, int &With
 
 // c. load the simulation information
 // =================================================================================================
-   fprintf( stdout, "   Loading simulation information ... \n" );
+   Aux_Message( stdout, "   Loading simulation information ... \n" );
 
 // verify the check code
    long checkcode;
@@ -168,7 +165,7 @@ void LoadData( GAMER_t &patch, const char *FileName_In, bool &WithPot, int &With
 
 
 // verify the size of the RESTART file
-   fprintf( stdout, "      Verifying the size of the RESTART file ...\n" );
+   Aux_Message( stdout, "      Verifying the size of the RESTART file ...\n" );
 
    long ExpectSize, InputSize, PatchDataSize, DataSize[NLEVEL];
    int  NGridVar = NCOMP_TOTAL;  // number of grid variables
@@ -213,8 +210,8 @@ void LoadData( GAMER_t &patch, const char *FileName_In, bool &WithPot, int &With
       Aux_Error( ERROR_INFO, "size of the file <%s> is incorrect --> input = %ld <-> expect = %ld !!\n",
                  FileName_In, InputSize, ExpectSize );
 
-   fprintf( stdout, "      Verifying the size of the RESTART file ... passed\n" );
-   fprintf( stdout, "   Loading simulation information ... done\n" );
+   Aux_Message( stdout, "      Verifying the size of the RESTART file ... passed\n" );
+   Aux_Message( stdout, "   Loading simulation information ... done\n" );
 
 
 // d. load the simulation data
@@ -225,7 +222,7 @@ void LoadData( GAMER_t &patch, const char *FileName_In, bool &WithPot, int &With
 
    for (int lv=0; lv<NLEVEL; lv++)
    {
-      fprintf( stdout, "   Loading grid data at level %2d ... ", lv );
+      Aux_Message( stdout, "   Loading grid data at level %2d ... ", lv );
 
       for (int LoadPID=0; LoadPID<NPatchTotal[lv]; LoadPID++)
       {
@@ -265,22 +262,22 @@ void LoadData( GAMER_t &patch, const char *FileName_In, bool &WithPot, int &With
          }
       } // for (int LoadPID=0; LoadPID<NPatchTotal[lv]; LoadPID++)
 
-      fprintf( stdout, "done\n" );
+      Aux_Message( stdout, "done\n" );
    } // for (int lv=0; lv<NLEVEL; lv++)
 
-   printf( "   DumpID      = %d\n",  DumpID      );
-   printf( "   Step        = %ld\n", Step        );
-   printf( "   Time        = %lf\n", Time[0]     );
-   printf( "   WithPot     = %d\n",  WithPot     );
-   printf( "   WithParDens = %d\n",  WithParDens );
-   printf( "   WithPar     = %d\n",  WithPar     );
+   Aux_Message( stdout, "   DumpID      = %d\n",  DumpID      );
+   Aux_Message( stdout, "   Step        = %ld\n", Step        );
+   Aux_Message( stdout, "   Time        = %lf\n", Time[0]     );
+   Aux_Message( stdout, "   WithPot     = %d\n",  WithPot     );
+   Aux_Message( stdout, "   WithParDens = %d\n",  WithParDens );
+   Aux_Message( stdout, "   WithPar     = %d\n",  WithPar     );
    if ( WithPar ) {
-   printf( "   NParVarOut  = %d\n",  NParVarOut  );
-   printf( "   NPar        = %ld\n", NPar        ); }
-   printf( "   WithMagCC   = %d\n",  WithMagCC   );
-   printf( "   WithMagFC   = %d\n",  WithMagFC   );
+   Aux_Message( stdout, "   NParVarOut  = %d\n",  NParVarOut  );
+   Aux_Message( stdout, "   NPar        = %ld\n", NPar        ); }
+   Aux_Message( stdout, "   WithMagCC   = %d\n",  WithMagCC   );
+   Aux_Message( stdout, "   WithMagFC   = %d\n",  WithMagFC   );
    for (int lv=0; lv<NLEVEL; lv++)
-   printf( "   NPatch[%2d] = %d\n",  lv, patch.num[lv] );
+   Aux_Message( stdout, "   NPatch[%2d] = %d\n",  lv, patch.num[lv] );
 
    fclose( File );
 
@@ -307,7 +304,7 @@ void LoadData( GAMER_t &patch, const char *FileName_In, bool &WithPot, int &With
    } // if ( WithPar )
 
 
-   fprintf( stdout, "Loading data %s ... done\n", FileName_In );
+   Aux_Message( stdout, "Loading data %s ... done\n", FileName_In );
 
 } // FUNCTION : LoadData
 
@@ -339,7 +336,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &WithP
                                 bool &WithPar, int &NParVarOut, bool &WithMagCC, bool &WithMagFC )
 {
 
-   fprintf( stdout, "   Loading simulation parameters ...\n" );
+   Aux_Message( stdout, "   Loading simulation parameters ...\n" );
 
 
 // a. load the simulation options and parameters defined in the Makefile
@@ -533,12 +530,12 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &WithP
    if ( !mhd      )  opt__output_cc_mag   = 0;
 
 
-   fprintf( stdout, "   Loading simulation parameters ... done\n" );
+   Aux_Message( stdout, "   Loading simulation parameters ... done\n" );
 
 
 // d. check parameters (before loading any size-dependent parameters)
 // =================================================================================================
-   fprintf( stdout, "   Checking loaded parameters ...\n" );
+   Aux_Message( stdout, "   Checking loaded parameters ...\n" );
 
 
    const bool Fatal    = true;
@@ -546,16 +543,10 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &WithP
 
 #  ifdef FLOAT8
    if ( !float8 )
-   {
-      fprintf( stderr, "ERROR : %s : RESTART file (%s) != runtime (%s) !!\n", "FLOAT8", "OFF", "ON" );
-      exit( 1 );
-   }
+      Aux_Error( ERROR_INFO, "%s : RESTART file (%s) != runtime (%s) !!\n", "FLOAT8", "OFF", "ON" );
 #  else
    if (  float8 )
-   {
-      fprintf( stderr, "ERROR : %s : RESTART file (%s) != runtime (%s) !!\n", "FLOAT8", "ON", "OFF" );
-      exit( 1 );
-   }
+      Aux_Error( ERROR_INFO, "%s : RESTART file (%s) != runtime (%s) !!\n", "FLOAT8", "ON", "OFF" );
 #  endif
 
    CompareVar( "MODEL",                   model,                  MODEL,                        Fatal );
@@ -565,7 +556,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &WithP
    CompareVar( "PATCH_SIZE",              patch_size,             PATCH_SIZE,                   Fatal );
 
 
-   fprintf( stdout, "   Checking loaded parameters ... done\n" );
+   Aux_Message( stdout, "   Checking loaded parameters ... done\n" );
 
 
 // set the returned variables
@@ -613,14 +604,11 @@ void CompareVar( const char *VarName, const int RestartVar, const int RuntimeVar
    if ( RestartVar != RuntimeVar )
    {
       if ( Fatal )
-      {
-         fprintf( stderr, "ERROR : %s : RESTART file (%d) != runtime (%d) !!\n",
-                  VarName, RestartVar, RuntimeVar );
-         exit( 1 );
-      }
+         Aux_Error( ERROR_INFO, "%s : RESTART file (%d) != runtime (%d) !!\n",
+                    VarName, RestartVar, RuntimeVar );
       else
-         fprintf( stderr, "WARNING : %s : RESTART file (%d) != runtime (%d) !!\n",
-                  VarName, RestartVar, RuntimeVar );
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%d) != runtime (%d) !!\n",
+                      VarName, RestartVar, RuntimeVar );
    }
 
 } // FUNCTION : CompareVar (int)

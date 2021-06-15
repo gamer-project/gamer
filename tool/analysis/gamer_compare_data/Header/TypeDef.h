@@ -67,6 +67,9 @@ typedef float  real;
 #define ERROR_INFO         __FILE__, __LINE__, __FUNCTION__
 
 
+void Aux_Error( const char *File, const int Line, const char *Func, const char *Format, ... );
+
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -207,21 +210,15 @@ struct GAMER_t
    void pnew( const int lv, const int x, const int y, const int z, const int FaPID, const bool Data )
    {
       if ( ptr[lv][num[lv]] != NULL )
-      {
-	 fprintf( stderr, "ERROR : \"allocate an existing patch !!\" : Lv %d, PID %d, FaPID %d\n",
-		  lv, num[lv], FaPID );
-	 exit(-1);
-      }
+	 Aux_Error( ERROR_INFO, "allocate an existing patch (Lv %d, PID %d, FaPID %d) !!\n",
+		    lv, num[lv], FaPID );
 
       ptr[lv][ num[lv] ] = new patch_t( x, y, z, FaPID, Data );
 
       num[lv] ++;
 
       if ( num[lv] > MAX_PATCH )
-      {
-         fprintf( stderr, "ERROR : exceed MAX_PATCH !!\n" );
-         exit(-1);
-      }
+         Aux_Error( ERROR_INFO, "exceed MAX_PATCH !!\n" );
    }
 
 }; // struct GAMER_t
