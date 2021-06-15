@@ -41,10 +41,10 @@ SIMU_PARA = -DNLEVEL=$(NLEVEL) -DMAX_PATCH=$(MAX_PATCH) -DNCOMP_PASSIVE=$(NCOMP_
 # #######################################################################################################
 SOURCE  = Main.cpp
 
-SOURCE += LoadData.cpp  LoadData_HDF5.cpp
+SOURCE += LoadData.cpp  LoadData_HDF5.cpp  Aux_AllocateArray2D.cpp  Aux_CheckFileExist.cpp  Aux_Error.cpp \
+          Aux_Message.cpp  SortParticle.cpp
 
-
-vpath %.cpp ./ GAMER_Functions GAMER_Functions/Interpolation
+vpath %.cpp ./ GAMER_Functions
 
 
 

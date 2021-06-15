@@ -53,12 +53,19 @@ typedef float  real;
 
 #  define NCOMP_TOTAL      ( NCOMP_FLUID + NCOMP_PASSIVE )
 
+
+// useful macros
 #define SQR(  a )       ( (a)*(a)     )
 #define CUBE( a )       ( (a)*(a)*(a) )
 
 #define IDX321_BX( i, j, k )   (  ( (k)*PS1   + (j) )*PS1P1 + (i)  )
 #define IDX321_BY( i, j, k )   (  ( (k)*PS1P1 + (j) )*PS1   + (i)  )
 #define IDX321_BZ( i, j, k )   (  ( (k)*PS1   + (j) )*PS1   + (i)  )
+
+
+// macro for Aux_Error()
+#define ERROR_INFO         __FILE__, __LINE__, __FUNCTION__
+
 
 
 
