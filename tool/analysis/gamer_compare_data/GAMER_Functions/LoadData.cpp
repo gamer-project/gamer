@@ -33,9 +33,10 @@ void LoadData( AMR_t &amr, const char *FileName_In, bool &WithPot, int &WithParD
 
 
 // check if the target file exists
-   FILE *File = fopen( FileName_In, "rb" );
+   if ( !Aux_CheckFileExist(FileName_In) )
+      Aux_Error( ERROR_INFO, "iput file \"%s\" does not exist !!\n", FileName_In );
 
-   if ( File == NULL )  Aux_Error( ERROR_INFO, "input file \"%s\" does not exist !!\n", FileName_In );
+   FILE *File = fopen( FileName_In, "rb" );
 
 
 // record the size of different data types
