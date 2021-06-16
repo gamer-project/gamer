@@ -4,7 +4,7 @@
 
 AMR_t    amr1, amr2;
 char    *FileName_In1=NULL, *FileName_In2=NULL, *FileName_Out=NULL;
-bool     WithPot1, WithPot2, WithMagCC1, WithMagCC2, WithMagFC1, WithMagFC2;
+bool     WithPot1=false, WithPot2=false, WithMagCC1=false, WithMagCC2=false, WithMagFC1=false, WithMagFC2=false;
 bool     UseCorner=false, WithPar1=false, WithPar2=false;
 int      WithParDens1=0, WithParDens2=0, NParVarOut1=-1, NParVarOut2=-1;
 long     NPar1=-1, NPar2=-1;
@@ -111,24 +111,6 @@ void CompareGridData()
    }
 
 
-// verify that the domain decomposition of amr1 and amr2 are the same
-   if ( UseCorner == false )
-   {
-      for (int d=0; d<3; d++)
-      {
-         if ( amr1.ngpu_x[d] != amr2.ngpu_x[d] )
-         {
-            Aux_Message( stderr, "WARNING : amr1.ngpu_x[%d] (%d) != amr2.ngpu_x[%d] (%d) !!\n"
-                                 "          --> The option \"-c\" is turned on automatically\n",
-                         d, amr1.ngpu_x[d], d, amr2.ngpu_x[d] );
-
-            UseCorner = true;
-            break;
-         }
-      }
-   }
-
-
 // check whether both inputs store the potential data or not
    if ( WithPot1 != WithPot2 )
       Aux_Message( stderr, "WARNING : one of the input files does NOT store the potential data !!\n"
@@ -170,7 +152,6 @@ void CompareGridData()
 //       only compare patches without son
          if ( amr1.patch[lv][PID1]->son == -1 )
          {
-
 //          set the targeted patch ID in the second input
             if ( UseCorner )
             {

@@ -58,6 +58,9 @@ typedef float  real;
 #define SQR(  a )       ( (a)*(a)     )
 #define CUBE( a )       ( (a)*(a)*(a) )
 
+#define MAX( a, b )     (  ( (a) > (b) ) ? (a) : (b)  )
+#define MIN( a, b )     (  ( (a) < (b) ) ? (a) : (b)  )
+
 #define IDX321_BX( i, j, k )   (  ( (k)*PS1   + (j) )*PS1P1 + (i)  )
 #define IDX321_BY( i, j, k )   (  ( (k)*PS1P1 + (j) )*PS1   + (i)  )
 #define IDX321_BZ( i, j, k )   (  ( (k)*PS1   + (j) )*PS1   + (i)  )
@@ -92,10 +95,10 @@ struct patch_t
 
 // data members
 // ===================================================================================
-   real (*fluid   )[PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
-   real (*pot     )[PATCH_SIZE][PATCH_SIZE];
-   real (*par_dens)[PATCH_SIZE][PATCH_SIZE];
-   real (*mag_cc  )[PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+   real (*fluid   )[PS1][PS1][PS1];
+   real (*pot     )[PS1][PS1];
+   real (*par_dens)[PS1][PS1];
+   real (*mag_cc  )[PS1][PS1][PS1];
    real (*mag_fc  )[PS1P1*PS1*PS1];
 
    int  corner[3];
@@ -132,10 +135,10 @@ struct patch_t
 
       if ( Data )
       {
-         fluid    = new real [NCOMP_TOTAL][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
-         pot      = new real              [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
-         par_dens = new real              [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
-         mag_cc   = new real [NCOMP_MAG  ][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+         fluid    = new real [NCOMP_TOTAL][PS1][PS1][PS1];
+         pot      = new real              [PS1][PS1][PS1];
+         par_dens = new real              [PS1][PS1][PS1];
+         mag_cc   = new real [NCOMP_MAG  ][PS1][PS1][PS1];
          mag_fc   = new real [NCOMP_MAG  ][ PS1P1*SQR(PS1) ];
       }
    }
@@ -167,7 +170,6 @@ struct AMR_t
    int num[NLEVEL];
    int scale[NLEVEL];
    int nx0_tot[3];
-   int ngpu_x[3];
 
 
 
@@ -181,14 +183,13 @@ struct AMR_t
    {
       for (int lv=0; lv<NLEVEL; lv++)
       {
-         num[lv]            = 0;
-         scale[lv]          = 1<<(NLEVEL-1-lv);
+         num  [lv] = 0;
+         scale[lv] = 1<<(NLEVEL-1-lv);
       }
 
       for (int d=0; d<3; d++)
       {
          nx0_tot[d] = 0;
-         ngpu_x [d] = 0;
       }
 
       for (int lv=0; lv<NLEVEL; lv++)

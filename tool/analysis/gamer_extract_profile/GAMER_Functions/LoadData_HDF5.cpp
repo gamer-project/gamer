@@ -527,7 +527,7 @@ void LoadData_HDF5( const char *FileName )
 
 
 
-// 6. set the shell width and other parameters
+// 7. set the shell width and other parameters
    if ( LogBin > 1.0 )
    {
       ShellWidth = GetMinShellWidth( Center, Center_Map );

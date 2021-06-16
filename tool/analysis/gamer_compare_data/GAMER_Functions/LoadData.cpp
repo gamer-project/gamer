@@ -1,10 +1,13 @@
 #include "CompareData.h"
+#ifdef SUPPORT_HDF5
+#include "hdf5.h"
+#endif
 
 
 static void CompareVar( const char *VarName, const int RestartVar, const int RuntimeVar, const bool Fatal );
 static void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &WithPot, int &WithParDens,
                                        const long HeaderOffset_Makefile, const long HeaderOffset_Constant,
-                                       const long HeaderOffset_Parameter, int *NX0_Tot, int *NGPU_X,
+                                       const long HeaderOffset_Parameter, int *NX0_Tot,
                                        bool &WithPar, int &NParVarOut, bool &WithMagCC, bool &WithMagFC );
 
 
@@ -12,10 +15,10 @@ static void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LoadData
-// Description :  Load the input data from the file "FileName_In"
+// Description :  Load the input data from the binary file "FileName"
 //
 // Parameter   :  amr         : Targeted GAMER pointer
-//                FileName_In : Name of the input file
+//                FileName    : Name of the input file
 //                WithPot     : true --> the loaded data contain potential field
 //                WithParDens : > 0  --> the loaded data contain particle density on grids
 //                WithPar     : true --> the loaded data contain particles
@@ -25,18 +28,29 @@ static void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool
 //                WithMagCC   : true --> the loaded data contain cell-centered magnetic field
 //                WithMagFC   : true --> the loaded data contain face-centered magnetic field
 //-------------------------------------------------------------------------------------------------------
-void LoadData( AMR_t &amr, const char *FileName_In, bool &WithPot, int &WithParDens, bool &WithPar,
+void LoadData( AMR_t &amr, const char *FileName, bool &WithPot, int &WithParDens, bool &WithPar,
                int &NParVarOut, long &NPar, real **&ParData, bool &WithMagCC, bool &WithMagFC )
 {
 
-   Aux_Message( stdout, "Loading data %s ...\n", FileName_In );
+
+// load the HDF5 data
+#  ifdef SUPPORT_HDF5
+   if (  Aux_CheckFileExist(FileName)  &&  H5Fis_hdf5(FileName)  )
+   {
+      LoadData_HDF5( amr, FileName, WithPot, WithParDens, WithPar, NParVarOut, NPar, ParData, WithMagCC, WithMagFC );
+      return;
+   }
+#  endif
+
+
+   Aux_Message( stdout, "Loading binary data %s ...\n", FileName );
 
 
 // check if the target file exists
-   if ( !Aux_CheckFileExist(FileName_In) )
-      Aux_Error( ERROR_INFO, "input file \"%s\" does not exist !!\n", FileName_In );
+   if ( !Aux_CheckFileExist(FileName) )
+      Aux_Error( ERROR_INFO, "input file \"%s\" does not exist !!\n", FileName );
 
-   FILE *File = fopen( FileName_In, "rb" );
+   FILE *File = fopen( FileName, "rb" );
 
 
 // record the size of different data types
@@ -126,7 +140,7 @@ void LoadData( AMR_t &amr, const char *FileName_In, bool &WithPot, int &WithParD
 // b. load all simulation parameters
 // =================================================================================================
    Load_Parameter_After_2000( File, FormatVersion, WithPot, WithParDens, HeaderOffset_Makefile, HeaderOffset_Constant,
-                              HeaderOffset_Parameter, amr.nx0_tot, amr.ngpu_x, WithPar, NParVarOut,
+                              HeaderOffset_Parameter, amr.nx0_tot, WithPar, NParVarOut,
                               WithMagCC, WithMagFC );
 
 
@@ -209,7 +223,7 @@ void LoadData( AMR_t &amr, const char *FileName_In, bool &WithPot, int &WithParD
 
    if ( InputSize != ExpectSize )
       Aux_Error( ERROR_INFO, "size of the file <%s> is incorrect --> input = %ld <-> expect = %ld !!\n",
-                 FileName_In, InputSize, ExpectSize );
+                 FileName, InputSize, ExpectSize );
 
    Aux_Message( stdout, "      Verifying the size of the RESTART file ... passed\n" );
    Aux_Message( stdout, "   Loading simulation information ... done\n" );
@@ -290,7 +304,7 @@ void LoadData( AMR_t &amr, const char *FileName_In, bool &WithPot, int &WithParD
 
       Aux_AllocateArray2D( ParData, NParVarOut, NPar );
 
-      File = fopen( FileName_In, "rb" );
+      File = fopen( FileName, "rb" );
 
 //    one must not call fread when NPar == 0, for which ParData[0...NParVarOut-1] will be ill-defined
       if ( NPar > 0 )
@@ -305,7 +319,7 @@ void LoadData( AMR_t &amr, const char *FileName_In, bool &WithPot, int &WithParD
    } // if ( WithPar )
 
 
-   Aux_Message( stdout, "Loading data %s ... done\n", FileName_In );
+   Aux_Message( stdout, "Loading binary data %s ... done\n", FileName );
 
 } // FUNCTION : LoadData
 
@@ -323,7 +337,6 @@ void LoadData( AMR_t &amr, const char *FileName_In, bool &WithPot, int &WithParD
 //                WithParDens    : Whether or not the RESTART file stores the particle density data (deposited onto grids)
 //                HeaderOffset_X : Offsets of different headers
 //                NX0_Tot        : Total number of base-level cells along each direction
-//                NGPU_X         : Number of MPI processes along each direction
 //                WithPar        : Whether or not the RESTART file stores particles
 //                NParVarOut     : Number of particle attributes stored in the file
 //                WithMagCC      : true --> the loaded data contain cell-centered magnetic field
@@ -333,7 +346,7 @@ void LoadData( AMR_t &amr, const char *FileName_In, bool &WithPot, int &WithParD
 //-------------------------------------------------------------------------------------------------------
 void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &WithPot, int &WithParDens,
                                 const long HeaderOffset_Makefile, const long HeaderOffset_Constant,
-                                const long HeaderOffset_Parameter, int *NX0_Tot, int *NGPU_X,
+                                const long HeaderOffset_Parameter, int *NX0_Tot,
                                 bool &WithPar, int &NParVarOut, bool &WithMagCC, bool &WithMagFC )
 {
 
@@ -564,8 +577,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &WithP
    WithPot = opt__output_pot;
    for (int d=0; d<3; d++)
    {
-      NX0_Tot[d]  = nx0_tot    [d];
-      NGPU_X [d]  = mpi_nrank_x[d];
+      NX0_Tot[d] = nx0_tot[d];
    }
 
    WithParDens = opt__output_par_dens;
