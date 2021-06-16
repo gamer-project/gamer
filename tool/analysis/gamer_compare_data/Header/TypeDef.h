@@ -76,16 +76,16 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 // Structure   :  patch_t
 // Description :  data structure of a single patch
 //
-// Data Member :  fluid	      : fluid variables (mass density, momentum density x, y ,z, energy density)
-//		  pot	      : potential
-//		  par_dens    : particle density deposited onto grids
-//		  mag_cc/fc   : cell-/face-centered B field
-//		  corner[3]   : physical coordinates of the patch corner
-//		  father      : patch ID of the father patch
-//		  son	      : patch ID of the child patch
+// Data Member :  fluid       : fluid variables (mass density, momentum density x, y ,z, energy density)
+//                pot         : potential
+//                par_dens    : particle density deposited onto grids
+//                mag_cc/fc   : cell-/face-centered B field
+//                corner[3]   : physical coordinates of the patch corner
+//                father      : patch ID of the father patch
+//                son         : patch ID of the child patch
 //
 // Method      :  patch_t     : constructor
-//		  ~patch_t    : destructor
+//                ~patch_t    : destructor
 //-------------------------------------------------------------------------------------------------------
 struct patch_t
 {
@@ -98,8 +98,8 @@ struct patch_t
    real (*mag_cc  )[PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
    real (*mag_fc  )[PS1P1*PS1*PS1];
 
-   int	corner[3];
-   int 	father;
+   int  corner[3];
+   int  father;
    int  son;
    bool check;
 
@@ -109,11 +109,11 @@ struct patch_t
    // Constructor :  patch_t
    // Description :  constructor of the structure "patch_t"
    //
-   // Note	  :  initialize data members
+   // Note        :  initialize data members
    //
    // Parameter   :  x,y,z : physical coordinates of the patch corner
-   //		     FaPID : patch ID of the father patch
-   //		     Data  : true --> allocate physical data (fluid + pot + par_dens + mag_cc/fc)
+   //                FaPID : patch ID of the father patch
+   //                Data  : true --> allocate physical data (fluid + pot + par_dens + mag_cc/fc)
    //===================================================================================
    patch_t( const int x, const int y, const int z, const int FaPID, const bool Data )
    {
@@ -132,11 +132,11 @@ struct patch_t
 
       if ( Data )
       {
-	 fluid    = new real [NCOMP_TOTAL][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
-	 pot      = new real              [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
-	 par_dens = new real              [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
-	 mag_cc   = new real [NCOMP_MAG  ][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
-	 mag_fc   = new real [NCOMP_MAG  ][ PS1P1*SQR(PS1) ];
+         fluid    = new real [NCOMP_TOTAL][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+         pot      = new real              [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+         par_dens = new real              [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+         mag_cc   = new real [NCOMP_MAG  ][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+         mag_fc   = new real [NCOMP_MAG  ][ PS1P1*SQR(PS1) ];
       }
    }
 
@@ -147,22 +147,22 @@ struct patch_t
 
 
 //-------------------------------------------------------------------------------------------------------
-// Structure   :  GAMER_t
+// Structure   :  AMR_t
 // Description :  data structure of GAMER
 //
-// Data Member :  ptr		 : pointer of each patch
-//		  num		 : number of patches (real patch + buffer patch) at each level
-//		  scale 	 : grid size at each level (normalize to the grid size at the finest level
+// Data Member :  patch : pointer of each patch
+//                num   : number of patches (real patch + buffer patch) at each level
+//                scale : grid size at each level (normalize to the grid size at the finest level
 //
-// Method      :  pnew		 : allocate one patch
-//		  pdelete	 : deallocate one patch
+// Method      :  pnew    : allocate one patch
+//                pdelete : deallocate one patch
 //-------------------------------------------------------------------------------------------------------
-struct GAMER_t
+struct AMR_t
 {
 
 // data members
 // ===================================================================================
-   patch_t *ptr[NLEVEL][MAX_PATCH];
+   patch_t *patch[NLEVEL][MAX_PATCH];
 
    int num[NLEVEL];
    int scale[NLEVEL];
@@ -172,48 +172,48 @@ struct GAMER_t
 
 
    //===================================================================================
-   // Constructor :  GAMER_t
-   // Description :  constructor of the structure "GAMER_t"
+   // Constructor :  AMR_t
+   // Description :  constructor of the structure "AMR_t"
    //
-   // Note	  :  initialize data members
+   // Note        :  initialize data members
    //===================================================================================
-   GAMER_t()
+   AMR_t()
    {
       for (int lv=0; lv<NLEVEL; lv++)
       {
-         num[lv]	    = 0;
-         scale[lv]	    = 1<<(NLEVEL-1-lv);
+         num[lv]            = 0;
+         scale[lv]          = 1<<(NLEVEL-1-lv);
       }
 
       for (int d=0; d<3; d++)
       {
-	 nx0_tot[d] = 0;
-	 ngpu_x [d] = 0;
+         nx0_tot[d] = 0;
+         ngpu_x [d] = 0;
       }
 
       for (int lv=0; lv<NLEVEL; lv++)
       for (int PID=0; PID<MAX_PATCH; PID++)
-	 ptr[lv][PID] = NULL;
+         patch[lv][PID] = NULL;
    }
 
 
 
    //===================================================================================
-   // Method	  :  pnew
+   // Method      :  pnew
    // Description :  allocate a single patch
    //
-   // Parameter   :  lv	   : the targeted refinement level
-   //		     x,y,z : physical coordinates of the patch corner
-   //		     FaPID : the patch ID of the parent patch at level "lv-1"
-   //		     Data  : true --> allocate physical data (fluid + pot + par_dens + mag_cc/fc)
+   // Parameter   :  lv    : the targeted refinement level
+   //                x,y,z : physical coordinates of the patch corner
+   //                FaPID : the patch ID of the parent patch at level "lv-1"
+   //                Data  : true --> allocate physical data (fluid + pot + par_dens + mag_cc/fc)
    //===================================================================================
    void pnew( const int lv, const int x, const int y, const int z, const int FaPID, const bool Data )
    {
-      if ( ptr[lv][num[lv]] != NULL )
-	 Aux_Error( ERROR_INFO, "allocate an existing patch (Lv %d, PID %d, FaPID %d) !!\n",
-		    lv, num[lv], FaPID );
+      if ( patch[lv][num[lv]] != NULL )
+         Aux_Error( ERROR_INFO, "allocate an existing patch (Lv %d, PID %d, FaPID %d) !!\n",
+                    lv, num[lv], FaPID );
 
-      ptr[lv][ num[lv] ] = new patch_t( x, y, z, FaPID, Data );
+      patch[lv][ num[lv] ] = new patch_t( x, y, z, FaPID, Data );
 
       num[lv] ++;
 
@@ -221,7 +221,7 @@ struct GAMER_t
          Aux_Error( ERROR_INFO, "exceed MAX_PATCH !!\n" );
    }
 
-}; // struct GAMER_t
+}; // struct AMR_t
 
 
 

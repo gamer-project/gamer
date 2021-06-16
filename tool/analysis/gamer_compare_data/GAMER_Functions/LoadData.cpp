@@ -14,7 +14,7 @@ static void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool
 // Function    :  LoadData
 // Description :  Load the input data from the file "FileName_In"
 //
-// Parameter   :  patch       : Targeted GAMER pointer
+// Parameter   :  amr         : Targeted GAMER pointer
 //                FileName_In : Name of the input file
 //                WithPot     : true --> the loaded data contain potential field
 //                WithParDens : > 0  --> the loaded data contain particle density on grids
@@ -25,7 +25,7 @@ static void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool
 //                WithMagCC   : true --> the loaded data contain cell-centered magnetic field
 //                WithMagFC   : true --> the loaded data contain face-centered magnetic field
 //-------------------------------------------------------------------------------------------------------
-void LoadData( GAMER_t &patch, const char *FileName_In, bool &WithPot, int &WithParDens, bool &WithPar,
+void LoadData( AMR_t &amr, const char *FileName_In, bool &WithPot, int &WithParDens, bool &WithPar,
                int &NParVarOut, long &NPar, real **&ParData, bool &WithMagCC, bool &WithMagFC )
 {
 
@@ -125,7 +125,7 @@ void LoadData( GAMER_t &patch, const char *FileName_In, bool &WithPot, int &With
 // b. load all simulation parameters
 // =================================================================================================
    Load_Parameter_After_2000( File, FormatVersion, WithPot, WithParDens, HeaderOffset_Makefile, HeaderOffset_Constant,
-                              HeaderOffset_Parameter, patch.nx0_tot, patch.ngpu_x, WithPar, NParVarOut,
+                              HeaderOffset_Parameter, amr.nx0_tot, amr.ngpu_x, WithPar, NParVarOut,
                               WithMagCC, WithMagFC );
 
 
@@ -236,29 +236,29 @@ void LoadData( GAMER_t &patch, const char *FileName_In, bool &WithPot, int &With
 //          skip particle info
             if ( WithPar ) fseek( File, 2*sizeof(long), SEEK_CUR );
 
-            PID = patch.num[lv];
+            PID = amr.num[lv];
 
-            patch.pnew( lv, LoadCorner[0], LoadCorner[1], LoadCorner[2], -1, true );
-            patch.ptr[lv][PID]->son = -1;    // set the SonPID as -1 to indicate that it's a leaf patch
+            amr.pnew( lv, LoadCorner[0], LoadCorner[1], LoadCorner[2], -1, true );
+            amr.patch[lv][PID]->son = -1;    // set the SonPID as -1 to indicate that it's a leaf patch
 
 //          d2-1. load the fluid variables
-            fread( patch.ptr[lv][PID]->fluid,    sizeof(real), PATCH_SIZE*PATCH_SIZE*PATCH_SIZE*NCOMP_TOTAL, File );
+            fread( amr.patch[lv][PID]->fluid,    sizeof(real), PATCH_SIZE*PATCH_SIZE*PATCH_SIZE*NCOMP_TOTAL, File );
 
 //          d2-2. load the gravitational potential
             if ( WithPot )
-            fread( patch.ptr[lv][PID]->pot,      sizeof(real), PATCH_SIZE*PATCH_SIZE*PATCH_SIZE,             File );
+            fread( amr.patch[lv][PID]->pot,      sizeof(real), PATCH_SIZE*PATCH_SIZE*PATCH_SIZE,             File );
 
 //          d2-3. load the particle density on grids
             if ( WithParDens )
-            fread( patch.ptr[lv][PID]->par_dens, sizeof(real), PATCH_SIZE*PATCH_SIZE*PATCH_SIZE,             File );
+            fread( amr.patch[lv][PID]->par_dens, sizeof(real), PATCH_SIZE*PATCH_SIZE*PATCH_SIZE,             File );
 
 //          d2-4. load the cell-centered B field
             if ( WithMagCC )
-            fread( patch.ptr[lv][PID]->mag_cc,   sizeof(real), PATCH_SIZE*PATCH_SIZE*PATCH_SIZE*NCOMP_MAG,   File );
+            fread( amr.patch[lv][PID]->mag_cc,   sizeof(real), PATCH_SIZE*PATCH_SIZE*PATCH_SIZE*NCOMP_MAG,   File );
 
 //          d2-5. load the face-centered B field
             if ( WithMagFC )
-            fread( patch.ptr[lv][PID]->mag_fc,   sizeof(real), PS1P1*PATCH_SIZE*PATCH_SIZE*NCOMP_MAG,        File );
+            fread( amr.patch[lv][PID]->mag_fc,   sizeof(real), PS1P1*PATCH_SIZE*PATCH_SIZE*NCOMP_MAG,        File );
          }
       } // for (int LoadPID=0; LoadPID<NPatchTotal[lv]; LoadPID++)
 
@@ -277,7 +277,7 @@ void LoadData( GAMER_t &patch, const char *FileName_In, bool &WithPot, int &With
    Aux_Message( stdout, "   WithMagCC   = %d\n",  WithMagCC   );
    Aux_Message( stdout, "   WithMagFC   = %d\n",  WithMagFC   );
    for (int lv=0; lv<NLEVEL; lv++)
-   Aux_Message( stdout, "   NPatch[%2d] = %d\n",  lv, patch.num[lv] );
+   Aux_Message( stdout, "   NPatch[%2d] = %d\n",  lv, amr.num[lv] );
 
    fclose( File );
 

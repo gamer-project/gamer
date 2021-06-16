@@ -2,7 +2,7 @@
 
 
 
-GAMER_t  patch1, patch2;
+AMR_t    amr1, amr2;
 char    *FileName_In1=NULL, *FileName_In2=NULL, *FileName_Out=NULL;
 bool     WithPot1, WithPot2, WithMagCC1, WithMagCC2, WithMagFC1, WithMagFC2;
 bool     UseCorner=false, WithPar1=false, WithPar2=false;
@@ -93,34 +93,34 @@ void CompareGridData()
    Aux_Message( stdout, "%s ... \n", __FUNCTION__ );
 
 
-// verify that the total number of patches at each level of patch1 and patch2 are the same
+// verify that the total number of patches at each level of amr1 and amr2 are the same
    for (int lv=0; lv<NLEVEL; lv++)
    {
-      if ( patch1.num[lv] != patch2.num[lv] )
-         Aux_Error( ERROR_INFO, "patch1.num[%d] (%d) != patch2.num[%d] (%d) !!\n",
-                    lv, patch1.num[lv], lv, patch2.num[lv] );
+      if ( amr1.num[lv] != amr2.num[lv] )
+         Aux_Error( ERROR_INFO, "amr1.num[%d] (%d) != amr2.num[%d] (%d) !!\n",
+                    lv, amr1.num[lv], lv, amr2.num[lv] );
    }
 
 
-// verify that the simulation domains of patch1 and patch2 are the same
+// verify that the simulation domains of amr1 and amr2 are the same
    for (int d=0; d<3; d++)
    {
-      if ( patch1.nx0_tot[d] != patch2.nx0_tot[d] )
-         Aux_Error( ERROR_INFO, "patch1.nx0_tot[%d] (%d) != patch2.nx0_tot[%d] (%d) !!\n",
-                    d, patch1.nx0_tot[d], d, patch2.nx0_tot[d] );
+      if ( amr1.nx0_tot[d] != amr2.nx0_tot[d] )
+         Aux_Error( ERROR_INFO, "amr1.nx0_tot[%d] (%d) != amr2.nx0_tot[%d] (%d) !!\n",
+                    d, amr1.nx0_tot[d], d, amr2.nx0_tot[d] );
    }
 
 
-// verify that the domain decomposition of patch1 and patch2 are the same
+// verify that the domain decomposition of amr1 and amr2 are the same
    if ( UseCorner == false )
    {
       for (int d=0; d<3; d++)
       {
-         if ( patch1.ngpu_x[d] != patch2.ngpu_x[d] )
+         if ( amr1.ngpu_x[d] != amr2.ngpu_x[d] )
          {
-            Aux_Message( stderr, "WARNING : patch1.ngpu_x[%d] (%d) != patch2.ngpu_x[%d] (%d) !!\n"
+            Aux_Message( stderr, "WARNING : amr1.ngpu_x[%d] (%d) != amr2.ngpu_x[%d] (%d) !!\n"
                                  "          --> The option \"-c\" is turned on automatically\n",
-                         d, patch1.ngpu_x[d], d, patch2.ngpu_x[d] );
+                         d, amr1.ngpu_x[d], d, amr2.ngpu_x[d] );
 
             UseCorner = true;
             break;
@@ -165,20 +165,20 @@ void CompareGridData()
    {
       Aux_Message( stdout, "  Comparing level %d ... ", lv );
 
-      for (PID1=0; PID1<patch1.num[lv]; PID1++)
+      for (PID1=0; PID1<amr1.num[lv]; PID1++)
       {
 //       only compare patches without son
-         if ( patch1.ptr[lv][PID1]->son == -1 )
+         if ( amr1.patch[lv][PID1]->son == -1 )
          {
 
 //          set the targeted patch ID in the second input
             if ( UseCorner )
             {
-               Cr1 = patch1.ptr[lv][PID1]->corner;
+               Cr1 = amr1.patch[lv][PID1]->corner;
 
-               for (PID2=0; PID2<patch2.num[lv]; PID2++)
+               for (PID2=0; PID2<amr2.num[lv]; PID2++)
                {
-                  Cr2 = patch2.ptr[lv][PID2]->corner;
+                  Cr2 = amr2.patch[lv][PID2]->corner;
 
                   if ( Cr1[0] == Cr2[0]  &&  Cr1[1] == Cr2[1]  &&  Cr1[2] == Cr2[2] )  break;
                }
@@ -194,8 +194,8 @@ void CompareGridData()
 //             fluid data
                for (int v=0; v<NCOMP_TOTAL; v++)
                {
-                  Data1  = patch1.ptr[lv][PID1]->fluid[v][k][j][i];
-                  Data2  = patch2.ptr[lv][PID2]->fluid[v][k][j][i];
+                  Data1  = amr1.patch[lv][PID1]->fluid[v][k][j][i];
+                  Data2  = amr2.patch[lv][PID2]->fluid[v][k][j][i];
                   AbsErr = Data1 - Data2;
                   RelErr = AbsErr / ( 0.5*(Data1+Data2) );
 
@@ -209,8 +209,8 @@ void CompareGridData()
 //             gravitational potential
                if ( WithPot1 && WithPot2 )
                {
-                  Data1  = patch1.ptr[lv][PID1]->pot[k][j][i];
-                  Data2  = patch2.ptr[lv][PID2]->pot[k][j][i];
+                  Data1  = amr1.patch[lv][PID1]->pot[k][j][i];
+                  Data2  = amr2.patch[lv][PID2]->pot[k][j][i];
                   AbsErr = Data1 - Data2;
                   RelErr = AbsErr / ( 0.5*(Data1+Data2) );
 
@@ -224,8 +224,8 @@ void CompareGridData()
 //             particle density
                if ( WithParDens1 > 0  &&  WithParDens1 == WithParDens2 )
                {
-                  Data1  = patch1.ptr[lv][PID1]->par_dens[k][j][i];
-                  Data2  = patch2.ptr[lv][PID2]->par_dens[k][j][i];
+                  Data1  = amr1.patch[lv][PID1]->par_dens[k][j][i];
+                  Data2  = amr2.patch[lv][PID2]->par_dens[k][j][i];
                   AbsErr = Data1 - Data2;
                   RelErr = AbsErr / ( 0.5*(Data1+Data2) );
 
@@ -241,8 +241,8 @@ void CompareGridData()
                {
                   for (int v=0; v<NCOMP_MAG; v++)
                   {
-                     Data1  = patch1.ptr[lv][PID1]->mag_cc[v][k][j][i];
-                     Data2  = patch2.ptr[lv][PID2]->mag_cc[v][k][j][i];
+                     Data1  = amr1.patch[lv][PID1]->mag_cc[v][k][j][i];
+                     Data2  = amr2.patch[lv][PID2]->mag_cc[v][k][j][i];
                      AbsErr = Data1 - Data2;
                      RelErr = AbsErr / ( 0.5*(Data1+Data2) );
 
@@ -262,8 +262,8 @@ void CompareGridData()
             for (int j=0; j<PS1;   j++)
             for (int i=0; i<PS1P1; i++)
             {
-               Data1  = patch1.ptr[lv][PID1]->mag_fc[0][ IDX321_BX(i,j,k) ];
-               Data2  = patch2.ptr[lv][PID2]->mag_fc[0][ IDX321_BX(i,j,k) ];
+               Data1  = amr1.patch[lv][PID1]->mag_fc[0][ IDX321_BX(i,j,k) ];
+               Data2  = amr2.patch[lv][PID2]->mag_fc[0][ IDX321_BX(i,j,k) ];
                AbsErr = Data1 - Data2;
                RelErr = AbsErr / ( 0.5*(Data1+Data2) );
 
@@ -280,8 +280,8 @@ void CompareGridData()
             for (int j=0; j<PS1P1; j++)
             for (int i=0; i<PS1;   i++)
             {
-               Data1  = patch1.ptr[lv][PID1]->mag_fc[1][ IDX321_BY(i,j,k) ];
-               Data2  = patch2.ptr[lv][PID2]->mag_fc[1][ IDX321_BY(i,j,k) ];
+               Data1  = amr1.patch[lv][PID1]->mag_fc[1][ IDX321_BY(i,j,k) ];
+               Data2  = amr2.patch[lv][PID2]->mag_fc[1][ IDX321_BY(i,j,k) ];
                AbsErr = Data1 - Data2;
                RelErr = AbsErr / ( 0.5*(Data1+Data2) );
 
@@ -298,8 +298,8 @@ void CompareGridData()
             for (int j=0; j<PS1;   j++)
             for (int i=0; i<PS1;   i++)
             {
-               Data1  = patch1.ptr[lv][PID1]->mag_fc[2][ IDX321_BZ(i,j,k) ];
-               Data2  = patch2.ptr[lv][PID2]->mag_fc[2][ IDX321_BZ(i,j,k) ];
+               Data1  = amr1.patch[lv][PID1]->mag_fc[2][ IDX321_BZ(i,j,k) ];
+               Data2  = amr2.patch[lv][PID2]->mag_fc[2][ IDX321_BZ(i,j,k) ];
                AbsErr = Data1 - Data2;
                RelErr = AbsErr / ( 0.5*(Data1+Data2) );
 
@@ -311,12 +311,12 @@ void CompareGridData()
             }
 
 
-            patch1.ptr[lv][PID1]->check = true;
-            patch2.ptr[lv][PID2]->check = true;
+            amr1.patch[lv][PID1]->check = true;
+            amr2.patch[lv][PID2]->check = true;
 
-         } // if ( patch1[lv][PID1]->son == -1 )
+         } // if ( amr1[lv][PID1]->son == -1 )
 
-      } // for (PID1=0; PID1<patch1.num[lv]; PID1++)
+      } // for (PID1=0; PID1<amr1.num[lv]; PID1++)
 
       Aux_Message( stdout, "done\n" );
 
@@ -328,12 +328,12 @@ void CompareGridData()
 
 // verify that all patches without son have been checked
    for (int lv=0; lv<NLEVEL; lv++)
-   for (int PID=0; PID<patch1.num[lv]; PID++)
+   for (int PID=0; PID<amr1.num[lv]; PID++)
    {
-      if ( patch1.ptr[lv][PID]->son == -1  &&  patch1.ptr[lv][PID]->check == false )
+      if ( amr1.patch[lv][PID]->son == -1  &&  amr1.patch[lv][PID]->check == false )
          Aux_Message( stderr, "WARNING : patch %5d at level %d in input 1 has NOT been checked !!\n", PID, lv );
 
-      if ( patch2.ptr[lv][PID]->son == -1  &&  patch2.ptr[lv][PID]->check == false )
+      if ( amr2.patch[lv][PID]->son == -1  &&  amr2.patch[lv][PID]->check == false )
          Aux_Message( stderr, "WARNING : patch %5d at level %d in input 2 has NOT been checked !!\n", PID, lv );
    }
 
@@ -448,8 +448,8 @@ int main( int argc, char ** argv )
 
    CheckParameter();
 
-   LoadData( patch1, FileName_In1, WithPot1, WithParDens1, WithPar1, NParVarOut1, NPar1, ParData1, WithMagCC1, WithMagFC1 );
-   LoadData( patch2, FileName_In2, WithPot2, WithParDens2, WithPar2, NParVarOut2, NPar2, ParData2, WithMagCC2, WithMagFC2 );
+   LoadData( amr1, FileName_In1, WithPot1, WithParDens1, WithPar1, NParVarOut1, NPar1, ParData1, WithMagCC1, WithMagFC1 );
+   LoadData( amr2, FileName_In2, WithPot2, WithParDens2, WithPar2, NParVarOut2, NPar2, ParData2, WithMagCC2, WithMagFC2 );
 
    CompareGridData();
    CompareParticleData();
