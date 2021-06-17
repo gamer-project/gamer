@@ -127,7 +127,7 @@ void CompareGridData()
    {
       UseCorner = true;
 
-      Aux_Message( stderr, "WARNING : Format1 (%d) != Format2 (%d) !!"
+      Aux_Message( stderr, "WARNING : Format1 (%d) != Format2 (%d) !!\n"
                            "          --> The option \"-c\" is turned on automatically\n",
                    Format1, Format2 );
    }
