@@ -489,7 +489,7 @@ void LoadData_HDF5( const char *FileName )
 
 // 4-5. record the total number of loaded patches at each level
    Aux_Message( stdout, "\n" );
-   for (int lv=0; lv<NLEVEL; lv++)     Aux_Message( stdout, "      Lv %2d: %10d patches loaded)\n", lv, amr.num[lv] );
+   for (int lv=0; lv<NLEVEL; lv++)     Aux_Message( stdout, "      Lv %2d: %10d patches loaded\n", lv, amr.num[lv] );
    Aux_Message( stdout, "\n" );
 
 #  ifdef DEBUG_HDF5
