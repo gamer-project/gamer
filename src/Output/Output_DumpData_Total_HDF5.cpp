@@ -1154,10 +1154,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                         memcpy( Der_FluIn[LocalID][MOMZ], Der_FluInTmp3D[LocalID][3], Size1v );
 
 //                      compute and store the target derived field
-                        const int PID       = PID0 + LocalID;
-                        const int NFieldOut = 1;
+                        const int PID  = PID0 + LocalID;
+                        const int NDer = 1;
                         Flu_DerivedField_DivVel( FieldData[PID][0][0], Der_FluIn[LocalID][0], NULL,
-                                                 NFieldOut, DER_NXT, DER_NXT, DER_NXT, DER_GHOST_SIZE, amr->dh[lv] );
+                                                 NDer, DER_NXT, DER_NXT, DER_NXT, DER_GHOST_SIZE, amr->dh[lv] );
                      }
                   } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                } // if ( v == DivVelDumpIdx )
@@ -1196,10 +1196,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #                       endif // #ifdef MHD
 
 //                      compute and store the target derived field
-                        const int PID       = PID0 + LocalID;
-                        const int NFieldOut = 1;
+                        const int PID  = PID0 + LocalID;
+                        const int NDer = 1;
                         Flu_DerivedField_Mach( FieldData[PID][0][0], Der_FluIn[LocalID][0], Der_MagCC[0],
-                                               NFieldOut, DER_NXT, DER_NXT, DER_NXT, DER_GHOST_SIZE, amr->dh[lv] );
+                                               NDer, DER_NXT, DER_NXT, DER_NXT, DER_GHOST_SIZE, amr->dh[lv] );
                      } // for (int LocalID=0; LocalID<8; LocalID++)
                   } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                } // if ( v == MachDumpIdx )
@@ -1260,10 +1260,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //                      --> there are redundant calculations in Flu_DerivedField_User_Ptr since it always computes
 //                          UserDerField_Num fields while we only need one field at a time
 //###OPTIMIZATION: only compute the derived field being dumped
-                        const int PID       = PID0 + LocalID;
-                        const int NFieldOut = UserDerField_Num;
+                        const int PID  = PID0 + LocalID;
+                        const int NDer = UserDerField_Num;
                         Flu_DerivedField_User_Ptr( Der_Out[0], Der_FluIn[LocalID][0], Der_MagCC[0],
-                                                   NFieldOut, DER_NXT, DER_NXT, DER_NXT, DER_GHOST_SIZE, amr->dh[lv] );
+                                                   NDer, DER_NXT, DER_NXT, DER_NXT, DER_GHOST_SIZE, amr->dh[lv] );
 
 //                      copy data from Der_Der[] to FieldData[]
                         const int DerIdx = v - UserDumpIdx0;
