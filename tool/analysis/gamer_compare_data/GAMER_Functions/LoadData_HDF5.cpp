@@ -187,8 +187,8 @@ void LoadData_HDF5( AMR_t &amr, const char *FileName, bool &WithPot, int &WithPa
 
 
 
-// 3. load the tree information (i.e., corner and son) of all patches
-// 3-1. corner
+// 2. load the tree information (i.e., corner and son) of all patches
+// 2-1. corner
    Aux_Message( stdout, "   Loading corner table ...\n" );
 
 // allocate memory
@@ -203,7 +203,7 @@ void LoadData_HDF5( AMR_t &amr, const char *FileName, bool &WithPot, int &WithPa
    Aux_Message( stdout, "   Loading corner table ... done\n" );
 
 
-// 3-2. son
+// 2-2. son
    Aux_Message( stdout, "   Loading son table ...\n" );
 
 // allocate memory
@@ -219,7 +219,7 @@ void LoadData_HDF5( AMR_t &amr, const char *FileName, bool &WithPot, int &WithPa
 
 
 
-// 4. load and allocate patches
+// 3. load and allocate patches
    Aux_Message( stdout, "   Loading patches ...\n" );
 
    const bool Recursive_Yes = true;
@@ -232,7 +232,7 @@ void LoadData_HDF5( AMR_t &amr, const char *FileName, bool &WithPot, int &WithPa
    hid_t   H5_SetID_Field[ NCOMP_TOTAL + NCOMP_ADD ], H5_MemID_Field, H5_SpaceID_Field, H5_GroupID_GridData;
 
 
-// 4-1. set the names of all grid variables
+// 3-1. set the names of all grid variables
    for (int v=0; v<NCOMP_TOTAL; v++)
    sprintf( FieldName[v], FieldName_In[v] );
 
@@ -244,7 +244,7 @@ void LoadData_HDF5( AMR_t &amr, const char *FileName, bool &WithPot, int &WithPa
                                                            "Unknown" );
 
 
-// 4-2. initialize relevant HDF5 objects
+// 3-2. initialize relevant HDF5 objects
    H5_SetDims_Field[0] = NPatchAllLv;
    H5_SetDims_Field[1] = PS1;
    H5_SetDims_Field[2] = PS1;
@@ -262,7 +262,7 @@ void LoadData_HDF5( AMR_t &amr, const char *FileName, bool &WithPot, int &WithPa
    if ( H5_MemID_Field < 0 )  Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_MemDims_Field" );
 
 
-// 4-3. open the target datasets just once
+// 3-3. open the target datasets just once
    H5_GroupID_GridData = H5Gopen( H5_FileID, "GridData", H5P_DEFAULT );
    if ( H5_GroupID_GridData < 0 )   Aux_Error( ERROR_INFO, "failed to open the group \"%s\" !!\n", "GridData" );
 
@@ -287,7 +287,7 @@ void LoadData_HDF5( AMR_t &amr, const char *FileName, bool &WithPot, int &WithPa
    }
 
 
-// 4-4. begin to load data
+// 3-4. begin to load data
 // loop over all root-level patches
    const int TenPercent = MAX( NPatchTotal[0]/10, 1 );
 
@@ -312,7 +312,7 @@ void LoadData_HDF5( AMR_t &amr, const char *FileName, bool &WithPot, int &WithPa
    H5_Status = H5Sclose( H5_MemID_Field );
 
 
-// 4-5. record the total number of loaded patches at each level
+// 3-5. record the total number of loaded patches at each level
    Aux_Message( stdout, "\n" );
    for (int lv=0; lv<NLEVEL; lv++)     Aux_Message( stdout, "      Lv %2d: %10d patches loaded\n", lv, amr.num[lv] );
    Aux_Message( stdout, "\n" );
@@ -328,14 +328,14 @@ void LoadData_HDF5( AMR_t &amr, const char *FileName, bool &WithPot, int &WithPa
 
 
 
-// 5. close all HDF5 objects and free memory
+// 4. close all HDF5 objects and free memory
    delete [] FieldName;
    delete [] CrList_AllLv;
    delete [] SonList_AllLv;
 
 
 
-// 6. record parameters
+// 5. record parameters
 // =================================================================================================
    Format = 2;
 
