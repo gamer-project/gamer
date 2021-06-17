@@ -201,10 +201,17 @@ void Init_ByRestart_HDF5( const char *FileName )
    LoadField( "AveDens_Init",         &KeyInfo.AveDens_Init,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
 #  endif
 
-   LoadField( "CodeVersion",          &KeyInfo.CodeVersion,          H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  VERSION,               1, NonFatal );
-   LoadField( "DumpWallTime",         &KeyInfo.DumpWallTime,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "GitBranch",            &KeyInfo.GitBranch,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  EXPAND_AND_QUOTE(GIT_BRANCH), 1, NonFatal );
-   LoadField( "GitCommit",            &KeyInfo.GitCommit,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  EXPAND_AND_QUOTE(GIT_COMMIT), 1, NonFatal );
+// must initialize all char* pointers as NULL so that we can safely free them later
+// --> in case they do not exist in the restart file
+   KeyInfo.CodeVersion  = NULL;
+   KeyInfo.DumpWallTime = NULL;
+   KeyInfo.GitBranch    = NULL;
+   KeyInfo.GitCommit    = NULL;
+
+   LoadField( "CodeVersion",          &KeyInfo.CodeVersion,          H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal,  VERSION,               1, NonFatal );
+   LoadField( "DumpWallTime",         &KeyInfo.DumpWallTime,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal,  NullPtr,              -1, NonFatal );
+   LoadField( "GitBranch",            &KeyInfo.GitBranch,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal,  EXPAND_AND_QUOTE(GIT_BRANCH), 1, NonFatal );
+   LoadField( "GitCommit",            &KeyInfo.GitCommit,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal,  EXPAND_AND_QUOTE(GIT_COMMIT), 1, NonFatal );
 
 
 // 1-4. close all objects
@@ -878,10 +885,10 @@ void Init_ByRestart_HDF5( const char *FileName )
 
 
 // 4. close all HDF5 objects and free memory (especially for the variable-length string)
-   free ( KeyInfo.CodeVersion );
-   free ( KeyInfo.DumpWallTime );
-   free ( KeyInfo.GitBranch );
-   free ( KeyInfo.GitCommit );
+   free( KeyInfo.CodeVersion );
+   free( KeyInfo.DumpWallTime );
+   free( KeyInfo.GitBranch );
+   free( KeyInfo.GitCommit );
 
    delete [] FieldName;
    delete [] CrList_AllLv;
