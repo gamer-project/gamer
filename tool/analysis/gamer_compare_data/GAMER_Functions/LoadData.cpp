@@ -189,7 +189,7 @@ void LoadData( AMR_t &amr, const char *FileName, bool &WithPot, int &WithParDens
    if ( WithParDens )   NGridVar ++;
    if ( WithMagCC )     NGridVar += NCOMP_MAG;
 
-   PatchDataSize  = CUBE(PATCH_SIZE)*NGridVar*sizeof(real);
+   PatchDataSize  = CUBE(PS1)*NGridVar*sizeof(real);
    if ( WithMagFC )
    PatchDataSize += PS1P1*SQR(PS1)*NCOMP_MAG*sizeof(real);
 
@@ -257,23 +257,23 @@ void LoadData( AMR_t &amr, const char *FileName, bool &WithPot, int &WithParDens
             amr.patch[lv][PID]->son = -1;    // set the SonPID as -1 to indicate that it's a leaf patch
 
 //          d2-1. load the fluid variables
-            fread( amr.patch[lv][PID]->fluid,    sizeof(real), PATCH_SIZE*PATCH_SIZE*PATCH_SIZE*NCOMP_TOTAL, File );
+            fread( amr.patch[lv][PID]->fluid,    sizeof(real), CUBE(PS1)*NCOMP_TOTAL,    File );
 
 //          d2-2. load the gravitational potential
             if ( WithPot )
-            fread( amr.patch[lv][PID]->pot,      sizeof(real), PATCH_SIZE*PATCH_SIZE*PATCH_SIZE,             File );
+            fread( amr.patch[lv][PID]->pot,      sizeof(real), CUBE(PS1),                File );
 
 //          d2-3. load the particle density on grids
             if ( WithParDens )
-            fread( amr.patch[lv][PID]->par_dens, sizeof(real), PATCH_SIZE*PATCH_SIZE*PATCH_SIZE,             File );
+            fread( amr.patch[lv][PID]->par_dens, sizeof(real), CUBE(PS1),                File );
 
 //          d2-4. load the cell-centered B field
             if ( WithMagCC )
-            fread( amr.patch[lv][PID]->mag_cc,   sizeof(real), PATCH_SIZE*PATCH_SIZE*PATCH_SIZE*NCOMP_MAG,   File );
+            fread( amr.patch[lv][PID]->mag_cc,   sizeof(real), CUBE(PS1)*NCOMP_MAG,      File );
 
 //          d2-5. load the face-centered B field
             if ( WithMagFC )
-            fread( amr.patch[lv][PID]->mag_fc,   sizeof(real), PS1P1*PATCH_SIZE*PATCH_SIZE*NCOMP_MAG,        File );
+            fread( amr.patch[lv][PID]->mag_fc,   sizeof(real), PS1P1*SQR(PS1)*NCOMP_MAG, File );
          }
       } // for (int LoadPID=0; LoadPID<NPatchTotal[lv]; LoadPID++)
 
