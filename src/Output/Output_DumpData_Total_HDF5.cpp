@@ -4,7 +4,7 @@
 #include "HDF5_Typedef.h"
 #include <ctime>
 
-void FillIn_KeyInfo  (   KeyInfo_t &KeyInfo   );
+void FillIn_KeyInfo  (   KeyInfo_t &KeyInfo, const int NFieldStored );
 void FillIn_Makefile (  Makefile_t &Makefile  );
 void FillIn_SymConst (  SymConst_t &SymConst  );
 void FillIn_InputPara( InputPara_t &InputPara );
@@ -287,6 +287,57 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 
 // 3. output the simulation information
+// 3-0. determine the field indices first so that we can set KeyInfo.NFieldStored
+   int NFieldOut = NCOMP_TOTAL;
+
+#  ifdef GRAVITY
+   int PotDumpIdx = -1;
+   if ( OPT__OUTPUT_POT )  PotDumpIdx = NFieldOut ++;
+#  endif
+
+#  ifdef PARTICLE
+   int ParDensDumpIdx = -1;
+   if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )   ParDensDumpIdx = NFieldOut ++;
+#  endif
+
+#  ifdef MHD
+   int CCMagDumpIdx = -1;
+   if ( OPT__OUTPUT_CC_MAG )
+   {
+      CCMagDumpIdx = NFieldOut;
+      NFieldOut   += NCOMP_MAG;
+   }
+#  endif
+
+#  if ( MODEL == HYDRO )
+   int PresDumpIdx = -1;
+   if ( OPT__OUTPUT_PRES )    PresDumpIdx   = NFieldOut ++;
+
+   int TempDumpIdx = -1;
+   if ( OPT__OUTPUT_TEMP )    TempDumpIdx   = NFieldOut ++;
+
+   int CsDumpIdx = -1;
+   if ( OPT__OUTPUT_CS )      CsDumpIdx     = NFieldOut ++;
+
+   int DivVelDumpIdx = -1;
+   if ( OPT__OUTPUT_DIVVEL )  DivVelDumpIdx = NFieldOut ++;
+
+   int MachDumpIdx = -1;
+   if ( OPT__OUTPUT_MACH )    MachDumpIdx   = NFieldOut ++;
+#  endif
+
+#  ifdef MHD
+   int DivMagDumpIdx = -1;
+   if ( OPT__OUTPUT_DIVMAG )  DivMagDumpIdx = NFieldOut ++;
+#  endif
+
+   int UserDumpIdx0 = -1;
+   if ( OPT__OUTPUT_USER_FIELD )
+   {
+      UserDumpIdx0 = NFieldOut;
+      NFieldOut   += UserDerField_Num;
+   }
+
    if ( MPI_Rank == 0 )
    {
 //    3-1. collect all information to be recorded
@@ -295,7 +346,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       SymConst_t  SymConst;
       InputPara_t InputPara;
 
-      FillIn_KeyInfo  ( KeyInfo   );
+      FillIn_KeyInfo  ( KeyInfo, NFieldOut );
       FillIn_Makefile ( Makefile  );
       FillIn_SymConst ( SymConst  );
       FillIn_InputPara( InputPara );
@@ -751,7 +802,6 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 // 5. output the simulation grid data (density, momentum, ... etc)
    const int FieldSizeOnePatch = sizeof(real)*CUBE(PS1);
-   int  NFieldOut;
    char (*FieldName)[MAX_STRING]     = NULL;
    real (*FieldData)[PS1][PS1][PS1]  = NULL;
 
@@ -760,57 +810,6 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    char FCMagName[NCOMP_MAG][MAX_STRING];
    real (*FCMagData)[PS1P1*SQR(PS1)] = NULL;
 #  endif
-
-// 5-0. determine variable indices
-   NFieldOut = NCOMP_TOTAL;
-
-#  ifdef GRAVITY
-   int PotDumpIdx = -1;
-   if ( OPT__OUTPUT_POT )  PotDumpIdx = NFieldOut ++;
-#  endif
-
-#  ifdef PARTICLE
-   int ParDensDumpIdx = -1;
-   if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )   ParDensDumpIdx = NFieldOut ++;
-#  endif
-
-#  ifdef MHD
-   int CCMagDumpIdx = -1;
-   if ( OPT__OUTPUT_CC_MAG )
-   {
-      CCMagDumpIdx = NFieldOut;
-      NFieldOut   += NCOMP_MAG;
-   }
-#  endif
-
-#  if ( MODEL == HYDRO )
-   int PresDumpIdx = -1;
-   if ( OPT__OUTPUT_PRES )    PresDumpIdx   = NFieldOut ++;
-
-   int TempDumpIdx = -1;
-   if ( OPT__OUTPUT_TEMP )    TempDumpIdx   = NFieldOut ++;
-
-   int CsDumpIdx = -1;
-   if ( OPT__OUTPUT_CS )      CsDumpIdx     = NFieldOut ++;
-
-   int DivVelDumpIdx = -1;
-   if ( OPT__OUTPUT_DIVVEL )  DivVelDumpIdx = NFieldOut ++;
-
-   int MachDumpIdx = -1;
-   if ( OPT__OUTPUT_MACH )    MachDumpIdx   = NFieldOut ++;
-#  endif
-
-#  ifdef MHD
-   int DivMagDumpIdx = -1;
-   if ( OPT__OUTPUT_DIVMAG )  DivMagDumpIdx = NFieldOut ++;
-#  endif
-
-   int UserDumpIdx0 = -1;
-   if ( OPT__OUTPUT_USER_FIELD )
-   {
-      UserDumpIdx0 = NFieldOut;
-      NFieldOut   += UserDerField_Num;
-   }
 
 
 // 5-1. set the output field names
@@ -1689,9 +1688,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 // Note        :  1. Data structure is defined in "HDF5_Typedef.h"
 //                2. Call-by-reference
 //
-// Parameter   :  KeyInfo : Pointer to be filled in
+// Parameter   :  KeyInfo      : Pointer to be filled in
+//                NFieldStored : Number of grid fields to be stored on disk
 //-------------------------------------------------------------------------------------------------------
-void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
+void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 {
 
    const time_t CalTime = time( NULL );   // calendar time
@@ -1720,6 +1720,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 #  else
    KeyInfo.Float8               = 0;
 #  endif
+   KeyInfo.NFieldStored         = NFieldStored;
 #  ifdef PARTICLE
    KeyInfo.Par_NPar             = amr->Par->NPar_Active_AllRank;
    KeyInfo.Par_NAttStored       = PAR_NATT_STORED;
@@ -2740,6 +2741,7 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
 
    H5Tinsert( H5_TypeID, "Step",                 HOFFSET(KeyInfo_t,Step                ), H5T_NATIVE_LONG         );
    H5Tinsert( H5_TypeID, "AdvanceCounter",       HOFFSET(KeyInfo_t,AdvanceCounter      ), H5_TypeID_Arr_NLvLong   );
+   H5Tinsert( H5_TypeID, "NFieldStored",         HOFFSET(KeyInfo_t,NFieldStored        ), H5T_NATIVE_INT          );
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Par_NPar",             HOFFSET(KeyInfo_t,Par_NPar),             H5T_NATIVE_LONG         );
    H5Tinsert( H5_TypeID, "Par_NAttStored",       HOFFSET(KeyInfo_t,Par_NAttStored      ), H5T_NATIVE_INT          );
