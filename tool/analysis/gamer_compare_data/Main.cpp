@@ -94,11 +94,22 @@ void CompareGridData()
 
 
 // verify that the total number of patches at each level of amr1 and amr2 are the same
+   int NPatch1=-1, NPatch2=-1;
    for (int lv=0; lv<NLEVEL; lv++)
    {
-      if ( amr1.num[lv] != amr2.num[lv] )
-         Aux_Error( ERROR_INFO, "amr1.num[%d] (%d) != amr2.num[%d] (%d) !!\n",
-                    lv, amr1.num[lv], lv, amr2.num[lv] );
+      NPatch1 = amr1.num[lv];
+      NPatch2 = amr2.num[lv];
+
+//    exclude non-leaf patches in HDF5 when comparing it with a C-binary file
+      if ( lv != NLEVEL-1 )
+      {
+         if      ( Format1 == 1  &&  Format2 == 2 )   NPatch2 -= amr2.num[lv+1]/8;
+         else if ( Format1 == 2  &&  Format2 == 1 )   NPatch1 -= amr1.num[lv+1]/8;
+      }
+
+      if ( NPatch1 != NPatch2 )
+         Aux_Error( ERROR_INFO, "inconsistent patch count: level %d, file 1 (%d) != file 2 (%d) !!\n",
+                    lv, NPatch1, NPatch2 );
    }
 
 
@@ -108,6 +119,18 @@ void CompareGridData()
       if ( amr1.nx0_tot[d] != amr2.nx0_tot[d] )
          Aux_Error( ERROR_INFO, "amr1.nx0_tot[%d] (%d) != amr2.nx0_tot[%d] (%d) !!\n",
                     d, amr1.nx0_tot[d], d, amr2.nx0_tot[d] );
+   }
+
+
+// enable UseCorner when comparing files with different formats
+   if ( UseCorner == false  &&  Format1 != Format2 )
+   {
+      UseCorner = true;
+
+      Aux_Message( stderr, "WARNING : Format1 (%d) != Format2 (%d) !!",
+      Aux_Message( stderr, "          --> The option \"-c\" is turned on automatically\n",
+                   Format1, Format2 );
+      break;
    }
 
 
@@ -132,16 +155,19 @@ void CompareGridData()
       Aux_Error( ERROR_INFO, "one of the input files does NOT store the face-centered B field data !!\n" );
 
 
+// only compare non-leaf patches for C-binary files
+   const bool LeafOnly = ( Format1 == 1 || Format2 == 1 ) ? true : false;
+
+
 // compare data
    double Data1, Data2, AbsErr, RelErr;
-   int PID1, PID2;
-   int *Cr1, *Cr2;
+   int    PID1, PID2;
+   int   *Cr1, *Cr2;
 
    FILE *File = fopen( FileName_Out, "w" );
 
    fprintf( File, "%5s%8s%8s  (%3s,%3s,%3s )%6s%16s%16s%16s%16s\n",
                   "Level", "PID1", "PID2", "i", "j", "k", "Comp", "Data1", "Data2", "AbsErr", "RelErr" );
-
 
    for (int lv=0; lv<NLEVEL; lv++)
    {
@@ -149,8 +175,8 @@ void CompareGridData()
 
       for (PID1=0; PID1<amr1.num[lv]; PID1++)
       {
-//       only compare patches without son
-         if ( amr1.patch[lv][PID1]->son == -1 )
+//       only compare leaf patches when enabling LeafOnly
+         if ( !LeafOnly  ||  amr1.patch[lv][PID1]->son == -1 )
          {
 //          set the targeted patch ID in the second input
             if ( UseCorner )
