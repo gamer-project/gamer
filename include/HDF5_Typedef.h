@@ -62,6 +62,7 @@ struct KeyInfo_t
    long   Step;
    long   AdvanceCounter[NLEVEL];
    int    NFieldStored;             // number of grid fields to be stored (excluding B field)
+   int    NMagStored;               // NCOMP_MAG (declare it even when MHD is off)
 #  ifdef PARTICLE
    long   Par_NPar;                 // amr->Par->NPar_Active_AllRank
    int    Par_NAttStored;           // PAR_NATT_STORED
