@@ -6,7 +6,7 @@ AMR_t    amr1, amr2;
 char    *FileName_In1=NULL, *FileName_In2=NULL, *FileName_Out=NULL;
 bool     WithPot1=false, WithPot2=false, WithMagCC1=false, WithMagCC2=false, WithMagFC1=false, WithMagFC2=false;
 bool     UseCorner=false, WithPar1=false, WithPar2=false;
-int      WithParDens1=0, WithParDens2=0, NParVarOut1=-1, NParVarOut2=-1;
+int      WithParDens1=0, WithParDens2=0, NParVarOut1=-1, NParVarOut2=-1, Format1=-1, Format2=-1;
 long     NPar1=-1, NPar2=-1;
 double   TolErr=__FLT_MIN__;
 real   **ParData1=NULL, **ParData2=NULL;
@@ -429,8 +429,8 @@ int main( int argc, char ** argv )
 
    CheckParameter();
 
-   LoadData( amr1, FileName_In1, WithPot1, WithParDens1, WithPar1, NParVarOut1, NPar1, ParData1, WithMagCC1, WithMagFC1 );
-   LoadData( amr2, FileName_In2, WithPot2, WithParDens2, WithPar2, NParVarOut2, NPar2, ParData2, WithMagCC2, WithMagFC2 );
+   LoadData( amr1, FileName_In1, WithPot1, WithParDens1, WithPar1, NParVarOut1, NPar1, ParData1, WithMagCC1, WithMagFC1, Format1 );
+   LoadData( amr2, FileName_In2, WithPot2, WithParDens2, WithPar2, NParVarOut2, NPar2, ParData2, WithMagCC2, WithMagFC2, Format2 );
 
    CompareGridData();
    CompareParticleData();

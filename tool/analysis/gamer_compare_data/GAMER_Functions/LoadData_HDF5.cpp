@@ -42,11 +42,12 @@ static void LoadOnePatch( AMR_t &amr, const hid_t H5_FileID, const int lv, const
 //                ParData     : Particle data array (allocated here --> must be dallocated manually later)
 //                WithMagCC   : true --> the loaded data contain cell-centered magnetic field
 //                WithMagFC   : true --> the loaded data contain face-centered magnetic field
+//                Format      : 1/2 --> C-binary/HDF5
 //
-// Return      :  amr, WithPot, WithParDens, WithPar, NParVarOut, NPar, ParData, WithMagCC, WithMagFC
+// Return      :  amr, WithPot, WithParDens, WithPar, NParVarOut, NPar, ParData, WithMagCC, WithMagFC, Format
 //-------------------------------------------------------------------------------------------------------
 void LoadData_HDF5( AMR_t &amr, const char *FileName, bool &WithPot, int &WithParDens, bool &WithPar,
-                    int &NParVarOut, long &NPar, real **&ParData, bool &WithMagCC, bool &WithMagFC )
+                    int &NParVarOut, long &NPar, real **&ParData, bool &WithMagCC, bool &WithMagFC, int &Format )
 {
 
    Aux_Message( stdout, "Loading HDF5 data %s ...\n", FileName );
@@ -78,7 +79,9 @@ void LoadData_HDF5( AMR_t &amr, const char *FileName, bool &WithPot, int &WithPa
    const int  MaxString       = 512;
 
    int    Model_RS, PatchSize_RS, NLevel_RS, NCompFluid_RS, NCompPassive_RS, Float8_RS;
-   int    FormatVersion, Gravity, NPatchTotal[NLEVEL], NPatchAllLv;
+   int    FormatVersion, Gravity, NPatchTotal[NLEVEL], NPatchAllLv, DumpID;
+   long   Step;
+   double Time[NLEVEL];
    char  *FieldName_In[NCOMP_TOTAL];
    int   *NullPtr = NULL;
 
@@ -130,22 +133,27 @@ void LoadData_HDF5( AMR_t &amr, const char *FileName, bool &WithPot, int &WithPa
    LoadField( "PatchSize",            &PatchSize_RS,        H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal, &PatchSize_RT,    1,    Fatal );
    LoadField( "NCompFluid",           &NCompFluid_RS,       H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal, &NCompFluid_RT,   1,    Fatal );
    LoadField( "NCompPassive",         &NCompPassive_RS,     H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal, &NCompPassive_RT, 1,    Fatal );
-   LoadField( "Gravity",              &Gravity,             H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,  NullPtr,        -1, NonFatal );
-   LoadField( "Particle",             &WithPar,             H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,  NullPtr,        -1, NonFatal );
-   LoadField( "Par_NAttStored",       &NParVarOut,          H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,  NullPtr,        -1, NonFatal );
-   LoadField( "Par_NPar",             &NPar,                H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,  NullPtr,        -1, NonFatal );
    LoadField( "NPatch",                NPatchTotal,         H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,  NullPtr,        -1, NonFatal );
    LoadField( "NX0",                   amr.nx0_tot,         H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,  NullPtr,        -1, NonFatal );
+   LoadField( "DumpID",               &DumpID,              H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,  NullPtr,        -1, NonFatal );
+   LoadField( "Step",                 &Step,                H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,  NullPtr,        -1, NonFatal );
+   LoadField( "Time",                  Time,                H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,  NullPtr,        -1, NonFatal );
 
+   LoadField( "Gravity",              &Gravity,             H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,  NullPtr,        -1, NonFatal );
    if ( Gravity )
    LoadField( "Opt__Output_Pot",      &WithPot,             H5_SetID_InputPara,  H5_TypeID_InputPara, Fatal,  NullPtr,        -1, NonFatal );
    else
    WithPot = false;
 
-   if ( WithPar )
-   LoadField( "Opt__Output_ParDens",  &WithParDens,         H5_SetID_InputPara,  H5_TypeID_InputPara, Fatal,  NullPtr,        -1, NonFatal );
-   else
-   WithParDens = 0;
+   LoadField( "Particle",             &WithPar,             H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,  NullPtr,        -1, NonFatal );
+   if ( WithPar ) {
+   LoadField( "Par_NAttStored",       &NParVarOut,          H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,  NullPtr,        -1, NonFatal );
+   LoadField( "Par_NPar",             &NPar,                H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,  NullPtr,        -1, NonFatal );
+   LoadField( "Opt__Output_ParDens",  &WithParDens,         H5_SetID_InputPara,  H5_TypeID_InputPara, Fatal,  NullPtr,        -1, NonFatal ); }
+   else {
+   NParVarOut  = 0;
+   NPar        = 0;
+   WithParDens = 0; }
 
 // check if B field is included
 #  if ( MODEL == HYDRO )
@@ -324,6 +332,27 @@ void LoadData_HDF5( AMR_t &amr, const char *FileName, bool &WithPot, int &WithPa
    delete [] FieldName;
    delete [] CrList_AllLv;
    delete [] SonList_AllLv;
+
+
+
+// 6. record parameters
+// =================================================================================================
+   Format = 2;
+
+   Aux_Message( stdout, "   DumpID      = %d\n",  DumpID      );
+   Aux_Message( stdout, "   Step        = %ld\n", Step        );
+   Aux_Message( stdout, "   Time        = %lf\n", Time[0]     );
+   Aux_Message( stdout, "   Format      = %d\n",  Format      );
+   Aux_Message( stdout, "   WithPot     = %d\n",  WithPot     );
+   Aux_Message( stdout, "   WithParDens = %d\n",  WithParDens );
+   Aux_Message( stdout, "   WithPar     = %d\n",  WithPar     );
+   if ( WithPar ) {
+   Aux_Message( stdout, "   NParVarOut  = %d\n",  NParVarOut  );
+   Aux_Message( stdout, "   NPar        = %ld\n", NPar        ); }
+   Aux_Message( stdout, "   WithMagCC   = %d\n",  WithMagCC   );
+   Aux_Message( stdout, "   WithMagFC   = %d\n",  WithMagFC   );
+   for (int lv=0; lv<NLEVEL; lv++)
+   Aux_Message( stdout, "   NPatch[%2d] = %d\n",  lv, amr.num[lv] );
 
 
    Aux_Message( stdout, "Loading HDF5 data %s ... done\n", FileName );

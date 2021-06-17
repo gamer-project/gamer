@@ -27,9 +27,12 @@ static void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool
 //                ParData     : Particle data array (allocated here --> must be dallocated manually later)
 //                WithMagCC   : true --> the loaded data contain cell-centered magnetic field
 //                WithMagFC   : true --> the loaded data contain face-centered magnetic field
+//                Format      : 1/2 --> C-binary/HDF5
+//
+// Return      :  amr, WithPot, WithParDens, WithPar, NParVarOut, NPar, ParData, WithMagCC, WithMagFC, Format
 //-------------------------------------------------------------------------------------------------------
 void LoadData( AMR_t &amr, const char *FileName, bool &WithPot, int &WithParDens, bool &WithPar,
-               int &NParVarOut, long &NPar, real **&ParData, bool &WithMagCC, bool &WithMagFC )
+               int &NParVarOut, long &NPar, real **&ParData, bool &WithMagCC, bool &WithMagFC, int &Format )
 {
 
 
@@ -37,7 +40,7 @@ void LoadData( AMR_t &amr, const char *FileName, bool &WithPot, int &WithParDens
 #  ifdef SUPPORT_HDF5
    if (  Aux_CheckFileExist(FileName)  &&  H5Fis_hdf5(FileName)  )
    {
-      LoadData_HDF5( amr, FileName, WithPot, WithParDens, WithPar, NParVarOut, NPar, ParData, WithMagCC, WithMagFC );
+      LoadData_HDF5( amr, FileName, WithPot, WithParDens, WithPar, NParVarOut, NPar, ParData, WithMagCC, WithMagFC, Format );
       return;
    }
 #  endif
@@ -280,20 +283,6 @@ void LoadData( AMR_t &amr, const char *FileName, bool &WithPot, int &WithParDens
       Aux_Message( stdout, "done\n" );
    } // for (int lv=0; lv<NLEVEL; lv++)
 
-   Aux_Message( stdout, "   DumpID      = %d\n",  DumpID      );
-   Aux_Message( stdout, "   Step        = %ld\n", Step        );
-   Aux_Message( stdout, "   Time        = %lf\n", Time[0]     );
-   Aux_Message( stdout, "   WithPot     = %d\n",  WithPot     );
-   Aux_Message( stdout, "   WithParDens = %d\n",  WithParDens );
-   Aux_Message( stdout, "   WithPar     = %d\n",  WithPar     );
-   if ( WithPar ) {
-   Aux_Message( stdout, "   NParVarOut  = %d\n",  NParVarOut  );
-   Aux_Message( stdout, "   NPar        = %ld\n", NPar        ); }
-   Aux_Message( stdout, "   WithMagCC   = %d\n",  WithMagCC   );
-   Aux_Message( stdout, "   WithMagFC   = %d\n",  WithMagFC   );
-   for (int lv=0; lv<NLEVEL; lv++)
-   Aux_Message( stdout, "   NPatch[%2d] = %d\n",  lv, amr.num[lv] );
-
    fclose( File );
 
 
@@ -317,6 +306,26 @@ void LoadData( AMR_t &amr, const char *FileName, bool &WithPot, int &WithParDens
 
       fclose( File );
    } // if ( WithPar )
+
+
+// e. record parameters
+// =================================================================================================
+   Format = 1;
+
+   Aux_Message( stdout, "   DumpID      = %d\n",  DumpID      );
+   Aux_Message( stdout, "   Step        = %ld\n", Step        );
+   Aux_Message( stdout, "   Time        = %lf\n", Time[0]     );
+   Aux_Message( stdout, "   Format      = %d\n",  Format      );
+   Aux_Message( stdout, "   WithPot     = %d\n",  WithPot     );
+   Aux_Message( stdout, "   WithParDens = %d\n",  WithParDens );
+   Aux_Message( stdout, "   WithPar     = %d\n",  WithPar     );
+   if ( WithPar ) {
+   Aux_Message( stdout, "   NParVarOut  = %d\n",  NParVarOut  );
+   Aux_Message( stdout, "   NPar        = %ld\n", NPar        ); }
+   Aux_Message( stdout, "   WithMagCC   = %d\n",  WithMagCC   );
+   Aux_Message( stdout, "   WithMagFC   = %d\n",  WithMagFC   );
+   for (int lv=0; lv<NLEVEL; lv++)
+   Aux_Message( stdout, "   NPatch[%2d] = %d\n",  lv, amr.num[lv] );
 
 
    Aux_Message( stdout, "Loading binary data %s ... done\n", FileName );
