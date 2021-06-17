@@ -332,15 +332,24 @@ void CompareGridData()
    fclose( File );
 
 
-// verify that all patches without son have been checked
+// verify that all target patches have been checked
    for (int lv=0; lv<NLEVEL; lv++)
-   for (int PID=0; PID<amr1.num[lv]; PID++)
    {
-      if ( amr1.patch[lv][PID]->son == -1  &&  amr1.patch[lv][PID]->check == false )
-         Aux_Message( stderr, "WARNING : patch %5d at level %d in input 1 has NOT been checked !!\n", PID, lv );
+      for (int PID=0; PID<amr1.num[lv]; PID++)
+      {
+         if ( LeafOnly  &&  amr1.patch[lv][PID]->son != -1 )   continue;
 
-      if ( amr2.patch[lv][PID]->son == -1  &&  amr2.patch[lv][PID]->check == false )
-         Aux_Message( stderr, "WARNING : patch %5d at level %d in input 2 has NOT been checked !!\n", PID, lv );
+         if ( amr1.patch[lv][PID]->check == false )
+            Aux_Message( stderr, "WARNING : patch %5d at level %d in input 1 has NOT been checked !!\n", PID, lv );
+      }
+
+      for (int PID=0; PID<amr2.num[lv]; PID++)
+      {
+         if ( LeafOnly  &&  amr2.patch[lv][PID]->son != -1 )   continue;
+
+         if ( amr2.patch[lv][PID]->check == false )
+            Aux_Message( stderr, "WARNING : patch %5d at level %d in input 2 has NOT been checked !!\n", PID, lv );
+      }
    }
 
 
