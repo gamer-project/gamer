@@ -16,8 +16,8 @@ static void Load_Parameter_After_2000( FILE *File, const int FormatVersion, cons
 // Function    :  LoadData
 // Description :  Load the input data from the binary file "FileName"
 //
-// Parameter   :  amr       : Targeted GAMER pointer
-//                FileName  : Name of the input file
+// Parameter   :  FileName  : Name of the input file
+//                amr       : Target AMR_t pointer
 //                Format    : 1/2 --> C-binary/HDF5
 //                NField    : Number of cell-centered fields stored in the file
 //                NMag      : Number of face-centered magnetic components stored in the file
@@ -25,9 +25,9 @@ static void Load_Parameter_After_2000( FILE *File, const int FormatVersion, cons
 //                NPar      : NUmber of particles
 //                ParData   : Particle data array (allocated here --> must be dallocated manually later)
 //
-// Return      :  amr, WithPot, WithParDens, WithPar, NParAtt, NPar, ParData, WithMagCC, WithMagFC, Format
+// Return      :  amr, Format, NField, NMag, NParAtt, NPar, ParData
 //-------------------------------------------------------------------------------------------------------
-void LoadData( AMR_t &amr, const char *FileName, int &Format, int &NField, int &NMag, int &NParAtt,
+void LoadData( const char *FileName, AMR_t &amr, int &Format, int &NField, int &NMag, int &NParAtt,
                long &NPar, real **&ParData )
 {
 
@@ -35,7 +35,7 @@ void LoadData( AMR_t &amr, const char *FileName, int &Format, int &NField, int &
 #  ifdef SUPPORT_HDF5
    if (  Aux_CheckFileExist(FileName)  &&  H5Fis_hdf5(FileName)  )
    {
-      LoadData_HDF5( amr, FileName, Format, NField, NMag, NParAtt, NPar, ParData );
+      LoadData_HDF5( FileName, amr, Format, NField, NMag, NParAtt, NPar, ParData );
       return;
    }
 #  endif
@@ -144,7 +144,7 @@ void LoadData( AMR_t &amr, const char *FileName, int &Format, int &NField, int &
 
 // c. load the simulation information
 // =================================================================================================
-   Aux_Message( stdout, "   Loading simulation information ... \n" );
+   Aux_Message( stdout, "   Loading simulation information ...\n" );
 
 // verify the check code
    long checkcode;
@@ -287,6 +287,9 @@ void LoadData( AMR_t &amr, const char *FileName, int &Format, int &NField, int &
 // =================================================================================================
    Format = 1;
 
+   Aux_Message( stdout, "\n" );
+   Aux_Message( stdout, "   Data information\n" );
+   Aux_Message( stdout, "   ==============================\n" );
    Aux_Message( stdout, "   DumpID      = %d\n",  DumpID      );
    Aux_Message( stdout, "   Step        = %ld\n", Step        );
    Aux_Message( stdout, "   Time        = %lf\n", Time[0]     );
@@ -299,6 +302,8 @@ void LoadData( AMR_t &amr, const char *FileName, int &Format, int &NField, int &
    Aux_Message( stdout, "   NPar        = %ld\n", NPar        ); }
    for (int lv=0; lv<NLEVEL; lv++)
    Aux_Message( stdout, "   NPatch[%2d] = %d\n",  lv, amr.num[lv] );
+   Aux_Message( stdout, "   ==============================\n" );
+   Aux_Message( stdout, "\n" );
 
 
    Aux_Message( stdout, "Loading binary data %s ... done\n", FileName );

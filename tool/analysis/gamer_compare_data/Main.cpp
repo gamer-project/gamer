@@ -2,13 +2,14 @@
 
 
 
-AMR_t    amr1, amr2;
-char    *FileName_In1=NULL, *FileName_In2=NULL, *FileName_Out=NULL;
-bool     UseCorner=false;
-int      NField1=-1, NField2=-1, NMag1=-1, NMag2=1, NParAtt1=-1, NParAtt2=-1, Format1=-1, Format2=-1;
-long     NPar1=-1, NPar2=-1;
-double   TolErr=__FLT_MIN__;
-real   **ParData1=NULL, **ParData2=NULL;
+// no need to share with other files
+static AMR_t    amr1, amr2;
+static char    *FileName_In1=NULL, *FileName_In2=NULL, *FileName_Out=NULL;
+static bool     UseCorner=false;
+static int      NField1=-1, NField2=-1, NMag1=-1, NMag2=-1, NParAtt1=-1, NParAtt2=-1, Format1=-1, Format2=-1;
+static long     NPar1=-1, NPar2=-1;
+static double   TolErr=__FLT_MIN__;
+static real   **ParData1=NULL, **ParData2=NULL;
 
 
 
@@ -56,7 +57,7 @@ void ReadOption( int argc, char **argv )
 void CheckParameter()
 {
 
-   Aux_Message( stdout, "%s ... \n", __FUNCTION__ );
+   Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
    if ( FileName_In1 == NULL )
@@ -89,7 +90,7 @@ void CheckParameter()
 void CompareGridData()
 {
 
-   Aux_Message( stdout, "%s ... \n", __FUNCTION__ );
+   Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
 // check
@@ -155,7 +156,7 @@ void CompareGridData()
 
    for (int lv=0; lv<NLEVEL; lv++)
    {
-      Aux_Message( stdout, "  Comparing level %d ... ", lv );
+      Aux_Message( stdout, "  Comparing level %d ...", lv );
 
       for (PID1=0; PID1<amr1.num[lv]; PID1++)
       {
@@ -279,7 +280,7 @@ void CompareGridData()
 void CompareParticleData()
 {
 
-   Aux_Message( stdout, "%s ... \n", __FUNCTION__ );
+   Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
 // check if particle information is consistent in both files
@@ -361,8 +362,8 @@ int main( int argc, char ** argv )
 
    CheckParameter();
 
-   LoadData( amr1, FileName_In1, Format1, NField1, NMag1, NParAtt1, NPar1, ParData1 );
-   LoadData( amr2, FileName_In2, Format2, NField2, NMag2, NParAtt2, NPar2, ParData2 );
+   LoadData( FileName_In1, amr1, Format1, NField1, NMag1, NParAtt1, NPar1, ParData1 );
+   LoadData( FileName_In2, amr2, Format2, NField2, NMag2, NParAtt2, NPar2, ParData2 );
 
    CompareGridData();
    CompareParticleData();

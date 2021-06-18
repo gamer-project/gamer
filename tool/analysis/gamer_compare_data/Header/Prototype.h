@@ -15,9 +15,9 @@ void Aux_Message( FILE *Type, const char *Format, ... );
 bool Aux_CheckFileExist( const char *FileName );
 void Aux_AllocateArray2D( real** &Array, const int J, const int I );
 void Aux_DeallocateArray2D( real** &Array );
-void LoadData( AMR_t &amr, const char *FileName, int &Format, int &NField, int &NMag, int &NParAtt,
+void LoadData( const char *FileName, AMR_t &amr, int &Format, int &NField, int &NMag, int &NParAtt,
                long &NPar, real **&ParData );
-void LoadData_HDF5( AMR_t &amr, const char *FileName, int &Format, int &NField, int &NMag, int &NParAtt,
+void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, int &NMag, int &NParAtt,
                     long &NPar, real **&ParData );
 void SortParticle( const long NPar, const real *PosX, const real *PosY, const real *PosZ, const real *VelX, long *IdxTable );
 

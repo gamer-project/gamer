@@ -20,7 +20,7 @@ static herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_S
                          const T *ComprPtr, const int NCompr, const bool Fatal_Compr );
 static void LoadOnePatch( AMR_t &amr, const hid_t H5_FileID, const int lv, const int GID, const bool Recursive, const int *SonList,
                           const int (*CrList)[3], const hid_t *H5_SetID_Field, const hid_t H5_SpaceID_Field, const hid_t H5_MemID_Field,
-                          const bool WithPot, const int WithParDens );
+                          const int NField, const int NMag );
 
 
 
@@ -29,25 +29,23 @@ static void LoadOnePatch( AMR_t &amr, const hid_t H5_FileID, const int lv, const
 // Function    :  LoadData_HDF5
 // Description :  Load data from the input HDF5 file
 //
-// Note        :  1. Only work for format version >= 2300
+// Note        :  1. Only work for format version >= 2440
+//                   --> NField and NMag are supported only after 2440
 //                2. Unlike LoadData(), this function always loads and allocates both leaf and non-leaf patches
 //
-// Parameter   :  amr         : Targeted AMR_t pointer
-//                FileName    : Name of the input file
-//                WithPot     : true --> the loaded data contain potential field
-//                WithParDens : > 0  --> the loaded data contain particle density on grids
-//                WithPar     : true --> the loaded data contain particles
-//                NParVarOut  : Number of particle attributes stored in the file
-//                NPar        : NUmber of particles
-//                ParData     : Particle data array (allocated here --> must be dallocated manually later)
-//                WithMagCC   : true --> the loaded data contain cell-centered magnetic field
-//                WithMagFC   : true --> the loaded data contain face-centered magnetic field
-//                Format      : 1/2 --> C-binary/HDF5
+// Parameter   :  FileName  : Name of the input file
+//                amr       : Target AMR_t pointer
+//                Format    : 1/2 --> C-binary/HDF5
+//                NField    : Number of cell-centered fields stored in the file
+//                NMag      : Number of face-centered magnetic components stored in the file
+//                NParAtt   : Number of particle attributes stored in the file
+//                NPar      : NUmber of particles
+//                ParData   : Particle data array (allocated here --> must be dallocated manually later)
 //
-// Return      :  amr, WithPot, WithParDens, WithPar, NParVarOut, NPar, ParData, WithMagCC, WithMagFC, Format
+// Return      :  amr, Format, NField, NMag, NParAtt, NPar, ParData
 //-------------------------------------------------------------------------------------------------------
-void LoadData_HDF5( AMR_t &amr, const char *FileName, bool &WithPot, int &WithParDens, bool &WithPar,
-                    int &NParVarOut, long &NPar, real **&ParData, bool &WithMagCC, bool &WithMagFC, int &Format )
+void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, int &NMag, int &NParAtt,
+                    long &NPar, real **&ParData )
 {
 
    Aux_Message( stdout, "Loading HDF5 data %s ...\n", FileName );
@@ -64,30 +62,24 @@ void LoadData_HDF5( AMR_t &amr, const char *FileName, bool &WithPot, int &WithPa
 // 1. load the simulation info
    Aux_Message( stdout, "   Loading simulation information ...\n" );
 
-   const bool    Fatal        = true;
-   const bool NonFatal        = false;
-   const int  Model_RT        = MODEL;
-   const int  PatchSize_RT    = PS1;
-   const int  NLevel_RT       = NLEVEL;
-   const int  NCompFluid_RT   = NCOMP_FLUID;
-   const int  NCompPassive_RT = NCOMP_PASSIVE;
+   const bool    Fatal     = true;
+   const bool NonFatal     = false;
+   const int  PatchSize_RT = PS1;
+   const int  NLevel_RT    = NLEVEL;
 #  ifdef FLOAT8
-   const int  Float8_RT       = 1;
+   const int  Float8_RT    = 1;
 #  else
-   const int  Float8_RT       = 0;
+   const int  Float8_RT    = 0;
 #  endif
-   const int  MaxString       = 512;
+   const int  MaxString    = 512;
 
-   int    Model_RS, PatchSize_RS, NLevel_RS, NCompFluid_RS, NCompPassive_RS, Float8_RS;
-   int    FormatVersion, Gravity, NPatchTotal[NLEVEL], NPatchAllLv, DumpID;
+   int    PatchSize_RS, NLevel_RS, Float8_RS;
+   int    FormatVersion, NPatchTotal[NLEVEL], NPatchAllLv, DumpID;
    long   Step;
    double Time[NLEVEL];
-   char  *FieldName_In[NCOMP_TOTAL];
-   int   *NullPtr = NULL;
-
-#  if ( MODEL == HYDRO )
-   int    Magnetohydrodynamics;
-#  endif
+   char **FieldName_In=NULL;
+   int   *NullPtr=NULL;
+   int    WithPar;
 
    hid_t  H5_FileID, H5_SetID_KeyInfo, H5_TypeID_KeyInfo, H5_SetID_InputPara, H5_TypeID_InputPara;
    hid_t  H5_SetID_Cr, H5_SetID_Son;
@@ -124,52 +116,38 @@ void LoadData_HDF5( AMR_t &amr, const char *FileName, bool &WithPot, int &WithPa
 
    Aux_Message( stdout, "      The format version of the HDF5 file = %ld\n", FormatVersion );
 
-   if ( FormatVersion < 2300 )
-      Aux_Error( ERROR_INFO, "unsupported data format version (only support version >= 2300) !!\n" );
+   if ( FormatVersion < 2440 )
+      Aux_Error( ERROR_INFO, "unsupported data format version (only support version >= 2440) !!\n" );
 
-   LoadField( "Model",                &Model_RS,            H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal, &Model_RT,        1,    Fatal );
-   LoadField( "Float8",               &Float8_RS,           H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal, &Float8_RT,       1,    Fatal );
-   LoadField( "NLevel",               &NLevel_RS,           H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal, &NLevel_RT,       1,    Fatal );
-   LoadField( "PatchSize",            &PatchSize_RS,        H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal, &PatchSize_RT,    1,    Fatal );
-   LoadField( "NCompFluid",           &NCompFluid_RS,       H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal, &NCompFluid_RT,   1,    Fatal );
-   LoadField( "NCompPassive",         &NCompPassive_RS,     H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal, &NCompPassive_RT, 1,    Fatal );
-   LoadField( "NPatch",                NPatchTotal,         H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,  NullPtr,        -1, NonFatal );
-   LoadField( "NX0",                   amr.nx0_tot,         H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,  NullPtr,        -1, NonFatal );
-   LoadField( "DumpID",               &DumpID,              H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,  NullPtr,        -1, NonFatal );
-   LoadField( "Step",                 &Step,                H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,  NullPtr,        -1, NonFatal );
-   LoadField( "Time",                  Time,                H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,  NullPtr,        -1, NonFatal );
+// general info
+   LoadField( "Float8",               &Float8_RS,           H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,  &Float8_RT,        1,    Fatal );
+   LoadField( "NLevel",               &NLevel_RS,           H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,  &NLevel_RT,        1,    Fatal );
+   LoadField( "PatchSize",            &PatchSize_RS,        H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,  &PatchSize_RT,     1,    Fatal );
+   LoadField( "NPatch",                NPatchTotal,         H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,   NullPtr,         -1, NonFatal );
+   LoadField( "NX0",                   amr.nx0_tot,         H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,   NullPtr,         -1, NonFatal );
+   LoadField( "DumpID",               &DumpID,              H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,   NullPtr,         -1, NonFatal );
+   LoadField( "Step",                 &Step,                H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,   NullPtr,         -1, NonFatal );
+   LoadField( "Time",                  Time,                H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,   NullPtr,         -1, NonFatal );
 
-   LoadField( "Gravity",              &Gravity,             H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,  NullPtr,        -1, NonFatal );
-   if ( Gravity )
-   LoadField( "Opt__Output_Pot",      &WithPot,             H5_SetID_InputPara,  H5_TypeID_InputPara, Fatal,  NullPtr,        -1, NonFatal );
-   else
-   WithPot = false;
-
-   LoadField( "Particle",             &WithPar,             H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,  NullPtr,        -1, NonFatal );
+// numbers of grid fields, particle attributes, and particles
+   LoadField( "NFieldStored",         &NField,              H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,   NullPtr,         -1, NonFatal );
+   LoadField( "NMagStored",           &NMag,                H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,   NullPtr,         -1, NonFatal );
+   LoadField( "Particle",             &WithPar,             H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,   NullPtr,         -1, NonFatal );
    if ( WithPar ) {
-   LoadField( "Par_NAttStored",       &NParVarOut,          H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,  NullPtr,        -1, NonFatal );
-   LoadField( "Par_NPar",             &NPar,                H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,  NullPtr,        -1, NonFatal );
-   LoadField( "Opt__Output_ParDens",  &WithParDens,         H5_SetID_InputPara,  H5_TypeID_InputPara, Fatal,  NullPtr,        -1, NonFatal ); }
+   LoadField( "Par_NAttStored",       &NParAtt,             H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,   NullPtr,         -1, NonFatal );
+   LoadField( "Par_NPar",             &NPar,                H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,   NullPtr,         -1, NonFatal ); }
    else {
-   NParVarOut  = 0;
-   NPar        = 0;
-   WithParDens = 0; }
-
-// check if B field is included
-#  if ( MODEL == HYDRO )
-   if ( FormatVersion >= 2400 )
-   LoadField( "Magnetohydrodynamics", &Magnetohydrodynamics,H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,   NullPtr,       -1, NonFatal );
-   else
-   Magnetohydrodynamics = 0;
-#  endif
+   NParAtt = 0;
+   NPar    = 0; }
 
 // field labels
-   for (int v=0; v<NCOMP_TOTAL; v++)
+   FieldName_In = new char* [NField];
+   for (int v=0; v<NField; v++)
    {
       char Key[MaxString];
       sprintf( Key, "FieldLabel%02d", v );
 
-      LoadField( Key,                 &FieldName_In[v],     H5_SetID_InputPara,  H5_TypeID_InputPara,    Fatal,   NullPtr,    -1, NonFatal );
+      LoadField( Key,                 &FieldName_In[v],     H5_SetID_InputPara,  H5_TypeID_InputPara, Fatal,   NullPtr,         -1, NonFatal );
    }
 
    NPatchAllLv = 0;
@@ -223,25 +201,15 @@ void LoadData_HDF5( AMR_t &amr, const char *FileName, bool &WithPot, int &WithPa
    Aux_Message( stdout, "   Loading patches ...\n" );
 
    const bool Recursive_Yes = true;
-   const int  NCOMP_ADD     = 2;    // maximum number of additional variables
-                                    // --> currently 2: potential and particle/total density
 
-   char (*FieldName)[MaxString] = new char [ NCOMP_TOTAL + NCOMP_ADD ][MaxString];
+   char (*FieldName)[MaxString] = new char [NField][MaxString];
 
    hsize_t H5_SetDims_Field[4], H5_MemDims_Field[4];
-   hid_t   H5_SetID_Field[ NCOMP_TOTAL + NCOMP_ADD ], H5_MemID_Field, H5_SpaceID_Field, H5_GroupID_GridData;
+   hid_t   H5_SetID_Field[NField], H5_MemID_Field, H5_SpaceID_Field, H5_GroupID_GridData;
 
 
 // 3-1. set the names of all grid variables
-   for (int v=0; v<NCOMP_TOTAL; v++)
-   sprintf( FieldName[v], FieldName_In[v] );
-
-// set the names of potential and particle/total density
-   sprintf( FieldName[ NCOMP_TOTAL + 0 ], (WithPot)?"Pote":"None" );
-   sprintf( FieldName[ NCOMP_TOTAL + 1 ], (WithParDens==0)?"None":
-                                          (WithParDens==1)?"ParDens":
-                                          (WithParDens==2)?"TotalDens":
-                                                           "Unknown" );
+   for (int v=0; v<NField; v++)  sprintf( FieldName[v], FieldName_In[v] );
 
 
 // 3-2. initialize relevant HDF5 objects
@@ -266,22 +234,8 @@ void LoadData_HDF5( AMR_t &amr, const char *FileName, bool &WithPot, int &WithPa
    H5_GroupID_GridData = H5Gopen( H5_FileID, "GridData", H5P_DEFAULT );
    if ( H5_GroupID_GridData < 0 )   Aux_Error( ERROR_INFO, "failed to open the group \"%s\" !!\n", "GridData" );
 
-   for (int v=0; v<NCOMP_TOTAL; v++)
+   for (int v=0; v<NField; v++)
    {
-      H5_SetID_Field[v] = H5Dopen( H5_GroupID_GridData, FieldName[v], H5P_DEFAULT );
-      if ( H5_SetID_Field[v] < 0 )  Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", FieldName[v] );
-   }
-
-   if ( WithPot )
-   {
-      const int v = NCOMP_TOTAL + 0;
-      H5_SetID_Field[v] = H5Dopen( H5_GroupID_GridData, FieldName[v], H5P_DEFAULT );
-      if ( H5_SetID_Field[v] < 0 )  Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", FieldName[v] );
-   }
-
-   if ( WithParDens )
-   {
-      const int v = NCOMP_TOTAL + 1;
       H5_SetID_Field[v] = H5Dopen( H5_GroupID_GridData, FieldName[v], H5P_DEFAULT );
       if ( H5_SetID_Field[v] < 0 )  Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", FieldName[v] );
    }
@@ -298,13 +252,11 @@ void LoadData_HDF5( AMR_t &amr, const char *FileName, bool &WithPot, int &WithPa
 
 //    load the entire patch family recursively (actually it's not necessary here since we load all patches anyway)
       LoadOnePatch( amr, H5_FileID, 0, GID, Recursive_Yes, SonList_AllLv, CrList_AllLv,
-                    H5_SetID_Field, H5_SpaceID_Field, H5_MemID_Field, WithPot, WithParDens );
+                    H5_SetID_Field, H5_SpaceID_Field, H5_MemID_Field, NField, NMag );
    }
 
 // free HDF5 objects
-   for (int v=0; v<NCOMP_TOTAL; v++)   H5_Status = H5Dclose( H5_SetID_Field[            v] );
-   if ( WithPot )                      H5_Status = H5Dclose( H5_SetID_Field[NCOMP_TOTAL+0] );
-   if ( WithParDens )                  H5_Status = H5Dclose( H5_SetID_Field[NCOMP_TOTAL+1] );
+   for (int v=0; v<NField; v++)  H5_Status = H5Dclose( H5_SetID_Field[v] );
 
    H5_Status = H5Gclose( H5_GroupID_GridData );
    H5_Status = H5Fclose( H5_FileID );
@@ -328,31 +280,39 @@ void LoadData_HDF5( AMR_t &amr, const char *FileName, bool &WithPot, int &WithPa
 
 
 
-// 4. close all HDF5 objects and free memory
+// 4. load particles
+
+
+
+// 5. close all HDF5 objects and free memory
+   for (int v=0; v<NField; v++)  free( FieldName_In[v] );
    delete [] FieldName;
+   delete [] FieldName_In;
    delete [] CrList_AllLv;
    delete [] SonList_AllLv;
 
 
 
-// 5. record parameters
-// =================================================================================================
+// 6. record parameters
    Format = 2;
 
+   Aux_Message( stdout, "\n" );
+   Aux_Message( stdout, "   Data information\n" );
+   Aux_Message( stdout, "   ==============================\n" );
    Aux_Message( stdout, "   DumpID      = %d\n",  DumpID      );
    Aux_Message( stdout, "   Step        = %ld\n", Step        );
    Aux_Message( stdout, "   Time        = %lf\n", Time[0]     );
    Aux_Message( stdout, "   Format      = %d\n",  Format      );
-   Aux_Message( stdout, "   WithPot     = %d\n",  WithPot     );
-   Aux_Message( stdout, "   WithParDens = %d\n",  WithParDens );
    Aux_Message( stdout, "   WithPar     = %d\n",  WithPar     );
+   Aux_Message( stdout, "   NField      = %d\n",  NField      );
+   Aux_Message( stdout, "   NMag        = %d\n",  NMag        );
    if ( WithPar ) {
-   Aux_Message( stdout, "   NParVarOut  = %d\n",  NParVarOut  );
+   Aux_Message( stdout, "   NParAtt     = %d\n",  NParAtt     );
    Aux_Message( stdout, "   NPar        = %ld\n", NPar        ); }
-   Aux_Message( stdout, "   WithMagCC   = %d\n",  WithMagCC   );
-   Aux_Message( stdout, "   WithMagFC   = %d\n",  WithMagFC   );
    for (int lv=0; lv<NLEVEL; lv++)
    Aux_Message( stdout, "   NPatch[%2d] = %d\n",  lv, amr.num[lv] );
+   Aux_Message( stdout, "   ==============================\n" );
+   Aux_Message( stdout, "\n" );
 
 
    Aux_Message( stdout, "Loading HDF5 data %s ... done\n", FileName );
@@ -519,13 +479,12 @@ herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Ta
 //                H5_SetID_Field   : HDF5 dataset ID for grid data
 //                H5_SpaceID_Field : HDF5 dataset dataspace ID for grid data
 //                H5_MemID_Field   : HDF5 memory dataspace ID for grid data
-//                WithPot          : load potential field
-//                WithParDens      : load particle density on grids
+//                NField           : Number of cell-centered fields stored in the file
+//                NMag             : Number of face-centered magnetic components stored in the file
 //-------------------------------------------------------------------------------------------------------
 void LoadOnePatch( AMR_t &amr, const hid_t H5_FileID, const int lv, const int GID, const bool Recursive, const int *SonList,
                    const int (*CrList)[3], const hid_t *H5_SetID_Field, const hid_t H5_SpaceID_Field, const hid_t H5_MemID_Field,
-                   const bool WithPot, const int WithParDens )
-
+                   const int NField, const int NMag )
 {
 
    if ( SonList == NULL )  Aux_Error( ERROR_INFO, "SonList == NULL (lv %d, GID %d) !!\n", lv, GID );
@@ -546,7 +505,7 @@ void LoadOnePatch( AMR_t &amr, const hid_t H5_FileID, const int lv, const int GI
       CrR[d] = CrL[d] + PScale;
    }
 
-   amr.pnew( lv, CrL[0], CrL[1], CrL[2], -1, WithData );
+   amr.pnew( lv, CrL[0], CrL[1], CrL[2], -1, WithData, NField, NMag );
 
 
 // distinguish leaf and non-leaf patches
@@ -557,51 +516,27 @@ void LoadOnePatch( AMR_t &amr, const hid_t H5_FileID, const int lv, const int GI
    amr.patch[lv][PID]->son = ( SonGID0 == -1 ) ? -1 : 1;
 
 
-// load field data from disk
-   if ( WithData )
+// determine the subset of dataspace for grid data
+   H5_Offset_Field[0] = GID;
+   H5_Offset_Field[1] = 0;
+   H5_Offset_Field[2] = 0;
+   H5_Offset_Field[3] = 0;
+
+   H5_Count_Field [0] = 1;
+   H5_Count_Field [1] = PS1;
+   H5_Count_Field [2] = PS1;
+   H5_Count_Field [3] = PS1;
+
+   H5_Status = H5Sselect_hyperslab( H5_SpaceID_Field, H5S_SELECT_SET, H5_Offset_Field, NULL, H5_Count_Field, NULL );
+   if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to create a hyperslab for the grid data !!\n" );
+
+// load the cell-centered fields
+   for (int v=0; v<NField; v++)
    {
-//    determine the subset of dataspace for grid data
-      H5_Offset_Field[0] = GID;
-      H5_Offset_Field[1] = 0;
-      H5_Offset_Field[2] = 0;
-      H5_Offset_Field[3] = 0;
-
-      H5_Count_Field [0] = 1;
-      H5_Count_Field [1] = PS1;
-      H5_Count_Field [2] = PS1;
-      H5_Count_Field [3] = PS1;
-
-      H5_Status = H5Sselect_hyperslab( H5_SpaceID_Field, H5S_SELECT_SET, H5_Offset_Field, NULL, H5_Count_Field, NULL );
-      if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to create a hyperslab for the grid data !!\n" );
-
-//    load the fluid data
-      for (int v=0; v<NCOMP_TOTAL; v++)
-      {
-         H5_Status = H5Dread( H5_SetID_Field[v], H5T_GAMER_REAL, H5_MemID_Field, H5_SpaceID_Field, H5P_DEFAULT,
-                              amr.patch[lv][PID]->fluid[v] );
-         if ( H5_Status < 0 )
-            Aux_Error( ERROR_INFO, "failed to load a field variable (lv %d, GID %d, v %d) !!\n", lv, GID, v );
-      }
-
-//    load the potential data
-      if ( WithPot )
-      {
-         const int v = NCOMP_TOTAL + 0;
-         H5_Status = H5Dread( H5_SetID_Field[v], H5T_GAMER_REAL, H5_MemID_Field, H5_SpaceID_Field, H5P_DEFAULT,
-                              amr.patch[lv][PID]->pot );
-         if ( H5_Status < 0 )
-            Aux_Error( ERROR_INFO, "failed to load the potential data (lv %d, GID %d) !!\n", lv, GID );
-      }
-
-//    load the particle (or total) density data
-      if ( WithParDens )
-      {
-         const int v = NCOMP_TOTAL + 1;
-         H5_Status = H5Dread( H5_SetID_Field[v], H5T_GAMER_REAL, H5_MemID_Field, H5_SpaceID_Field, H5P_DEFAULT,
-                              amr.patch[lv][PID]->par_dens );
-         if ( H5_Status < 0 )
-            Aux_Error( ERROR_INFO, "failed to load the particle density data (lv %d, GID %d) !!\n", lv, GID );
-      }
+      H5_Status = H5Dread( H5_SetID_Field[v], H5T_GAMER_REAL, H5_MemID_Field, H5_SpaceID_Field, H5P_DEFAULT,
+                           amr.patch[lv][PID]->field[v] );
+      if ( H5_Status < 0 )
+         Aux_Error( ERROR_INFO, "failed to load a field variable (lv %d, GID %d, v %d) !!\n", lv, GID, v );
    }
 
 
@@ -612,7 +547,7 @@ void LoadOnePatch( AMR_t &amr, const hid_t H5_FileID, const int lv, const int GI
       {
          for (int SonGID=SonGID0; SonGID<SonGID0+8; SonGID++)
             LoadOnePatch( amr, H5_FileID, lv+1, SonGID, Recursive, SonList, CrList,
-                          H5_SetID_Field, H5_SpaceID_Field, H5_MemID_Field, WithPot, WithParDens );
+                          H5_SetID_Field, H5_SpaceID_Field, H5_MemID_Field, NField, NMag );
       }
    }
 
