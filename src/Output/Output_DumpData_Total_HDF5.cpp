@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2439)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2440)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -210,6 +210,7 @@ Procedure for outputting new variables:
 //                2437 : 2021/05/12 --> output OPT__CHECK_PRES_AFTER_FLU
 //                2438 : 2021/06/05 --> output git information
 //                2439 : 2021/06/05 --> output UniqueDataID
+//                2440 : 2021/06/17 --> output NFieldStored and NMagStored
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1696,7 +1697,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2439;
+   KeyInfo.FormatVersion        = 2440;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
