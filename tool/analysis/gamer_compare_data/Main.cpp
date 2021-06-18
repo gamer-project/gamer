@@ -4,9 +4,8 @@
 
 AMR_t    amr1, amr2;
 char    *FileName_In1=NULL, *FileName_In2=NULL, *FileName_Out=NULL;
-bool     WithPot1=false, WithPot2=false, WithMagCC1=false, WithMagCC2=false, WithMagFC1=false, WithMagFC2=false;
-bool     UseCorner=false, WithPar1=false, WithPar2=false;
-int      WithParDens1=0, WithParDens2=0, NParVarOut1=-1, NParVarOut2=-1, Format1=-1, Format2=-1;
+bool     UseCorner=false;
+int      NField1=-1, NField2=-1, NMag1=-1, NMag2=1, NParAtt1=-1, NParAtt2=-1, Format1=-1, Format2=-1;
 long     NPar1=-1, NPar2=-1;
 double   TolErr=__FLT_MIN__;
 real   **ParData1=NULL, **ParData2=NULL;
@@ -93,7 +92,8 @@ void CompareGridData()
    Aux_Message( stdout, "%s ... \n", __FUNCTION__ );
 
 
-// verify that the total number of patches at each level of amr1 and amr2 are the same
+// check
+// verify that the total numbers of patches on each level are consistent
    int NPatch1=-1, NPatch2=-1;
    for (int lv=0; lv<NLEVEL; lv++)
    {
@@ -108,18 +108,24 @@ void CompareGridData()
       }
 
       if ( NPatch1 != NPatch2 )
-         Aux_Error( ERROR_INFO, "inconsistent patch count: level %d, file 1 (%d) != file 2 (%d) !!\n",
+         Aux_Error( ERROR_INFO, "inconsistent numbers of patches on level %d (%d vs %d) !!\n",
                     lv, NPatch1, NPatch2 );
    }
 
-
-// verify that the simulation domains of amr1 and amr2 are the same
+// verify that the simulation domains are consistent
    for (int d=0; d<3; d++)
    {
       if ( amr1.nx0_tot[d] != amr2.nx0_tot[d] )
-         Aux_Error( ERROR_INFO, "amr1.nx0_tot[%d] (%d) != amr2.nx0_tot[%d] (%d) !!\n",
-                    d, amr1.nx0_tot[d], d, amr2.nx0_tot[d] );
+         Aux_Error( ERROR_INFO, "inconsistent root level grid size ([%d]: %d vs %d) !!\n",
+                    d, amr1.nx0_tot[d], amr2.nx0_tot[d] );
    }
+
+// verify that the numbers of fields are consistent
+   if ( NField1 != NField2 )
+      Aux_Error( ERROR_INFO, "inconsistent numbers of fields (%d vs %d) !!\n", NField1, NField2 );
+
+   if ( NMag1 != NMag2 )
+      Aux_Error( ERROR_INFO, "inconsistent numbers of magnetic components (%d vs %d) !!\n", NMag1, NMag2 );
 
 
 // enable UseCorner when comparing files with different formats
@@ -131,27 +137,6 @@ void CompareGridData()
                            "          --> The option \"-c\" is turned on automatically\n",
                    Format1, Format2 );
    }
-
-
-// check whether both inputs store the potential data or not
-   if ( WithPot1 != WithPot2 )
-      Aux_Message( stderr, "WARNING : one of the input files does NOT store the potential data !!\n"
-                           "          --> Potential data will not be compared ...\n" );
-
-
-// check whether both inputs store the particle (or total) density data or not
-   if ( WithParDens1 != WithParDens2 )
-      Aux_Message( stderr, "WARNING : one of the input files does NOT store the particle (or total) density data !!\n"
-                           "          --> Particle density data will not be compared ...\n" );
-
-
-// check whether both inputs store the B field
-   if ( WithMagCC1 != WithMagCC2 )
-      Aux_Message( stderr, "WARNING : one of the input files does NOT store the cell-centered B field data !!\n"
-                           "          --> Cell-centered B field data will not be compared ...\n" );
-
-   if ( WithMagFC1 != WithMagFC2 )
-      Aux_Error( ERROR_INFO, "one of the input files does NOT store the face-centered B field data !!\n" );
 
 
 // only compare non-leaf patches for C-binary files
@@ -166,7 +151,7 @@ void CompareGridData()
    FILE *File = fopen( FileName_Out, "w" );
 
    fprintf( File, "%5s%8s%8s  (%3s,%3s,%3s )%6s%16s%16s%16s%16s\n",
-                  "Level", "PID1", "PID2", "i", "j", "k", "Comp", "Data1", "Data2", "AbsErr", "RelErr" );
+                  "Level", "PID1", "PID2", "i", "j", "k", "Field", "Data1", "Data2", "AbsErr", "RelErr" );
 
    for (int lv=0; lv<NLEVEL; lv++)
    {
@@ -193,129 +178,57 @@ void CompareGridData()
             else
                PID2 = PID1;
 
-            for (int k=0; k<PATCH_SIZE; k++)
-            for (int j=0; j<PATCH_SIZE; j++)
-            for (int i=0; i<PATCH_SIZE; i++)
+
+//          a. cell-centered fields
+            for (int k=0; k<PS1; k++)
+            for (int j=0; j<PS1; j++)
+            for (int i=0; i<PS1; i++)
+            for (int v=0; v<NField1; v++)
             {
-//             fluid data
-               for (int v=0; v<NCOMP_TOTAL; v++)
+               Data1  = amr1.patch[lv][PID1]->field[v][k][j][i];
+               Data2  = amr2.patch[lv][PID2]->field[v][k][j][i];
+               AbsErr = Data1 - Data2;
+               RelErr = AbsErr / ( 0.5*(Data1+Data2) );
+
+               if ( Data1 == 0.0  &&  Data2 == 0.0 )  continue;
+
+               if ( fabs( RelErr ) >= TolErr  ||  !isfinite( RelErr )  )
+                  fprintf( File, "%5d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
+                           lv, PID1, PID2, i, j, k, v, Data1, Data2, AbsErr, RelErr );
+            } // i,j,k,v
+
+
+//          b. face-centered B field
+            for (int t=0; t<PS1P1*SQR(PS1); t++)
+            for (int v=0; v<NMag1; v++)
+            {
+               Data1  = amr1.patch[lv][PID1]->mag[v][t];
+               Data2  = amr2.patch[lv][PID2]->mag[v][t];
+               AbsErr = Data1 - Data2;
+               RelErr = AbsErr / ( 0.5*(Data1+Data2) );
+
+               if ( Data1 == 0.0  &&  Data2 == 0.0 )  continue;
+
+               if ( fabs( RelErr ) >= TolErr  ||  !isfinite( RelErr )  )
                {
-                  Data1  = amr1.patch[lv][PID1]->fluid[v][k][j][i];
-                  Data2  = amr2.patch[lv][PID2]->fluid[v][k][j][i];
-                  AbsErr = Data1 - Data2;
-                  RelErr = AbsErr / ( 0.5*(Data1+Data2) );
+                  int size_i, size_j, size_k, size_ij, i, j, k;
 
-                  if ( Data1 == 0.0  &&  Data2 == 0.0 )  continue;
-
-                  if ( fabs( RelErr ) >= TolErr  ||  !isfinite( RelErr )  )
-                     fprintf( File, "%5d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
-                              lv, PID1, PID2, i, j, k, v, Data1, Data2, AbsErr, RelErr );
-               }
-
-//             gravitational potential
-               if ( WithPot1 && WithPot2 )
-               {
-                  Data1  = amr1.patch[lv][PID1]->pot[k][j][i];
-                  Data2  = amr2.patch[lv][PID2]->pot[k][j][i];
-                  AbsErr = Data1 - Data2;
-                  RelErr = AbsErr / ( 0.5*(Data1+Data2) );
-
-                  if ( Data1 == 0.0  &&  Data2 == 0.0 )  continue;
-
-                  if ( fabs( RelErr ) >= TolErr  ||  !isfinite( RelErr )  )
-                     fprintf( File, "%5d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
-                              lv, PID1, PID2, i, j, k, 1000, Data1, Data2, AbsErr, RelErr );
-               }
-
-//             particle density
-               if ( WithParDens1 > 0  &&  WithParDens1 == WithParDens2 )
-               {
-                  Data1  = amr1.patch[lv][PID1]->par_dens[k][j][i];
-                  Data2  = amr2.patch[lv][PID2]->par_dens[k][j][i];
-                  AbsErr = Data1 - Data2;
-                  RelErr = AbsErr / ( 0.5*(Data1+Data2) );
-
-                  if ( Data1 == 0.0  &&  Data2 == 0.0 )  continue;
-
-                  if ( fabs( RelErr ) >= TolErr  ||  !isfinite( RelErr )  )
-                     fprintf( File, "%5d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
-                              lv, PID1, PID2, i, j, k, 1001, Data1, Data2, AbsErr, RelErr );
-               }
-
-//             cell-centered B field
-               if ( WithMagCC1 && WithMagCC2 )
-               {
-                  for (int v=0; v<NCOMP_MAG; v++)
+                  switch ( v )
                   {
-                     Data1  = amr1.patch[lv][PID1]->mag_cc[v][k][j][i];
-                     Data2  = amr2.patch[lv][PID2]->mag_cc[v][k][j][i];
-                     AbsErr = Data1 - Data2;
-                     RelErr = AbsErr / ( 0.5*(Data1+Data2) );
-
-                     if ( Data1 == 0.0  &&  Data2 == 0.0 )  continue;
-
-                     if ( fabs( RelErr ) >= TolErr  ||  !isfinite( RelErr )  )
-                        fprintf( File, "%5d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
-                                 lv, PID1, PID2, i, j, k, 2000+v, Data1, Data2, AbsErr, RelErr );
+                     case 0:  size_i = PS1P1;  size_j = PS1;    size_k = PS1;    break;
+                     case 1:  size_i = PS1;    size_j = PS1P1;  size_k = PS1;    break;
+                     case 2:  size_i = PS1;    size_j = PS1;    size_k = PS1P1;  break;
                   }
+
+                  size_ij = size_i*size_j;
+                  i       = t % size_i;
+                  j       = t % size_ij / size_i;
+                  k       = t / size_ij;
+
+                  fprintf( File, "%5d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
+                           lv, PID1, PID2, i, j, k, v, Data1, Data2, AbsErr, RelErr );
                }
-            } // i,j,k
-
-//          face-centered B field
-//          Bx
-            if ( WithMagFC1 && WithMagFC2 )
-            for (int k=0; k<PS1;   k++)
-            for (int j=0; j<PS1;   j++)
-            for (int i=0; i<PS1P1; i++)
-            {
-               Data1  = amr1.patch[lv][PID1]->mag_fc[0][ IDX321_BX(i,j,k) ];
-               Data2  = amr2.patch[lv][PID2]->mag_fc[0][ IDX321_BX(i,j,k) ];
-               AbsErr = Data1 - Data2;
-               RelErr = AbsErr / ( 0.5*(Data1+Data2) );
-
-               if ( Data1 == 0.0  &&  Data2 == 0.0 )  continue;
-
-               if ( fabs( RelErr ) >= TolErr  ||  !isfinite( RelErr )  )
-                  fprintf( File, "%5d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
-                           lv, PID1, PID2, i, j, k, 2003, Data1, Data2, AbsErr, RelErr );
-            }
-
-//          By
-            if ( WithMagFC1 && WithMagFC2 )
-            for (int k=0; k<PS1;   k++)
-            for (int j=0; j<PS1P1; j++)
-            for (int i=0; i<PS1;   i++)
-            {
-               Data1  = amr1.patch[lv][PID1]->mag_fc[1][ IDX321_BY(i,j,k) ];
-               Data2  = amr2.patch[lv][PID2]->mag_fc[1][ IDX321_BY(i,j,k) ];
-               AbsErr = Data1 - Data2;
-               RelErr = AbsErr / ( 0.5*(Data1+Data2) );
-
-               if ( Data1 == 0.0  &&  Data2 == 0.0 )  continue;
-
-               if ( fabs( RelErr ) >= TolErr  ||  !isfinite( RelErr )  )
-                  fprintf( File, "%5d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
-                           lv, PID1, PID2, i, j, k, 2004, Data1, Data2, AbsErr, RelErr );
-            }
-
-//          Bz
-            if ( WithMagFC1 && WithMagFC2 )
-            for (int k=0; k<PS1P1; k++)
-            for (int j=0; j<PS1;   j++)
-            for (int i=0; i<PS1;   i++)
-            {
-               Data1  = amr1.patch[lv][PID1]->mag_fc[2][ IDX321_BZ(i,j,k) ];
-               Data2  = amr2.patch[lv][PID2]->mag_fc[2][ IDX321_BZ(i,j,k) ];
-               AbsErr = Data1 - Data2;
-               RelErr = AbsErr / ( 0.5*(Data1+Data2) );
-
-               if ( Data1 == 0.0  &&  Data2 == 0.0 )  continue;
-
-               if ( fabs( RelErr ) >= TolErr  ||  !isfinite( RelErr )  )
-                  fprintf( File, "%5d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
-                           lv, PID1, PID2, i, j, k, 2005, Data1, Data2, AbsErr, RelErr );
-            }
-
+            } // for v, t
 
             amr1.patch[lv][PID1]->check = true;
             amr2.patch[lv][PID2]->check = true;
@@ -340,7 +253,7 @@ void CompareGridData()
          if ( LeafOnly  &&  amr1.patch[lv][PID]->son != -1 )   continue;
 
          if ( amr1.patch[lv][PID]->check == false )
-            Aux_Message( stderr, "WARNING : patch %5d at level %d in input 1 has NOT been checked !!\n", PID, lv );
+            Aux_Message( stderr, "WARNING : patch %5d on level %d in input 1 has NOT been checked !!\n", PID, lv );
       }
 
       for (int PID=0; PID<amr2.num[lv]; PID++)
@@ -348,7 +261,7 @@ void CompareGridData()
          if ( LeafOnly  &&  amr2.patch[lv][PID]->son != -1 )   continue;
 
          if ( amr2.patch[lv][PID]->check == false )
-            Aux_Message( stderr, "WARNING : patch %5d at level %d in input 2 has NOT been checked !!\n", PID, lv );
+            Aux_Message( stderr, "WARNING : patch %5d on level %d in input 2 has NOT been checked !!\n", PID, lv );
       }
    }
 
@@ -369,45 +282,30 @@ void CompareParticleData()
    Aux_Message( stdout, "%s ... \n", __FUNCTION__ );
 
 
-// nothing to do if there are not particle data in both files
-   if ( !WithPar1  &&  !WithPar2 )
-   {
-      Aux_Message( stdout, "   No particle data are found in both files\n" );
-      return;
-   }
-
-
-// nothing to do if there are no particles at all
-// --> we must return here since ParDataX[...] is ill-defined if NParX == 0
-   if ( NPar1 == 0  &&  NPar2 == 0 )
-   {
-      Aux_Message( stdout, "   No particle data are found in both files\n" );
-      return;
-   }
-
-
 // check if particle information is consistent in both files
-   if ( WithPar1 != WithPar2 )
-      Aux_Error( ERROR_INFO, "One of the input files does NOT have particles !!\n" );
-
    if ( NPar1 != NPar2 )
-      Aux_Error( ERROR_INFO, "Numbers of particles in the two files are inconsistent (%ld vs %ld) !!\n",
-                 NPar1, NPar2 );
+      Aux_Error( ERROR_INFO, "inconsistent numbers of particles (%ld vs %ld) !!\n", NPar1, NPar2 );
 
-   if ( NParVarOut1 != NParVarOut2 )
-      Aux_Error( ERROR_INFO, "Numbers of particle attributes in the two files are inconsistent (%d vs %d) !!\n",
-                 NParVarOut1, NParVarOut2 );
+   if ( NPar1 > 0 )
+   {
+      if ( NParAtt1 != NParAtt2 )
+         Aux_Error( ERROR_INFO, "inconsistent numbers of particle attributes (%d vs %d) !!\n", NParAtt1, NParAtt2 );
 
-   if ( ParData1 == NULL  ||  ParData2 == NULL )
-      Aux_Error( ERROR_INFO, "Particle arrays have not been allocated yet !!\n" );
+      if ( ParData1 == NULL  ||  ParData2 == NULL )
+         Aux_Error( ERROR_INFO, "particle arrays have not been allocated yet !!\n" );
+   }
 
 
 // sort particles by their x and y coordinates
    long *IdxTable1 = new long [NPar1];
    long *IdxTable2 = new long [NPar2];
 
-   SortParticle( NPar1, ParData1[1], ParData1[2], ParData1[3], ParData1[4], IdxTable1 );
-   SortParticle( NPar2, ParData2[1], ParData2[2], ParData2[3], ParData2[4], IdxTable2 );
+// do not call SortParticle() if NPar==0 since ParDataX[0/1/2][] is ill-defined
+   if ( NPar1 > 0 )
+   {
+      SortParticle( NPar1, ParData1[1], ParData1[2], ParData1[3], ParData1[4], IdxTable1 );
+      SortParticle( NPar2, ParData2[1], ParData2[2], ParData2[3], ParData2[4], IdxTable2 );
+   }
 
 
 // compare data
@@ -420,9 +318,9 @@ void CompareParticleData()
    fprintf( File, "\n\n" );
    fprintf( File, "=============================================================================================================\n" );
    fprintf( File, "  %12s  %12s  %4s  %14s  %14s  %14s  %14s\n",
-                  "ParID1", "ParID2", "Var", "Data1", "Data2", "AbsErr", "RelErr" );
+                  "ParID1", "ParID2", "Att", "Data1", "Data2", "AbsErr", "RelErr" );
 
-   for (int v=0; v<NParVarOut1; v++)
+   for (int v=0; v<NParAtt1; v++)
    for (long p=0; p<NPar1; p++)
    {
       ParID1 = IdxTable1[p];
@@ -463,8 +361,8 @@ int main( int argc, char ** argv )
 
    CheckParameter();
 
-   LoadData( amr1, FileName_In1, WithPot1, WithParDens1, WithPar1, NParVarOut1, NPar1, ParData1, WithMagCC1, WithMagFC1, Format1 );
-   LoadData( amr2, FileName_In2, WithPot2, WithParDens2, WithPar2, NParVarOut2, NPar2, ParData2, WithMagCC2, WithMagFC2, Format2 );
+   LoadData( amr1, FileName_In1, Format1, NField1, NMag1, NParAtt1, NPar1, ParData1 );
+   LoadData( amr2, FileName_In2, Format2, NField2, NMag2, NParAtt2, NPar2, ParData2 );
 
    CompareGridData();
    CompareParticleData();

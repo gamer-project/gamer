@@ -5,10 +5,9 @@
 
 
 static void CompareVar( const char *VarName, const int RestartVar, const int RuntimeVar, const bool Fatal );
-static void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &WithPot, int &WithParDens,
-                                       const long HeaderOffset_Makefile, const long HeaderOffset_Constant,
-                                       const long HeaderOffset_Parameter, int *NX0_Tot,
-                                       bool &WithPar, int &NParVarOut, bool &WithMagCC, bool &WithMagFC );
+static void Load_Parameter_After_2000( FILE *File, const int FormatVersion, const long HeaderOffset_Makefile,
+                                       const long HeaderOffset_Constant, const long HeaderOffset_Parameter,
+                                       int *NX0_Tot, bool &WithPar, int &NField, int &NMag, int &NParAtt );
 
 
 
@@ -17,30 +16,26 @@ static void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool
 // Function    :  LoadData
 // Description :  Load the input data from the binary file "FileName"
 //
-// Parameter   :  amr         : Targeted GAMER pointer
-//                FileName    : Name of the input file
-//                WithPot     : true --> the loaded data contain potential field
-//                WithParDens : > 0  --> the loaded data contain particle density on grids
-//                WithPar     : true --> the loaded data contain particles
-//                NParVarOut  : Number of particle attributes stored in the file
-//                NPar        : NUmber of particles
-//                ParData     : Particle data array (allocated here --> must be dallocated manually later)
-//                WithMagCC   : true --> the loaded data contain cell-centered magnetic field
-//                WithMagFC   : true --> the loaded data contain face-centered magnetic field
-//                Format      : 1/2 --> C-binary/HDF5
+// Parameter   :  amr       : Targeted GAMER pointer
+//                FileName  : Name of the input file
+//                Format    : 1/2 --> C-binary/HDF5
+//                NField    : Number of cell-centered fields stored in the file
+//                NMag      : Number of face-centered magnetic components stored in the file
+//                NParAtt   : Number of particle attributes stored in the file
+//                NPar      : NUmber of particles
+//                ParData   : Particle data array (allocated here --> must be dallocated manually later)
 //
-// Return      :  amr, WithPot, WithParDens, WithPar, NParVarOut, NPar, ParData, WithMagCC, WithMagFC, Format
+// Return      :  amr, WithPot, WithParDens, WithPar, NParAtt, NPar, ParData, WithMagCC, WithMagFC, Format
 //-------------------------------------------------------------------------------------------------------
-void LoadData( AMR_t &amr, const char *FileName, bool &WithPot, int &WithParDens, bool &WithPar,
-               int &NParVarOut, long &NPar, real **&ParData, bool &WithMagCC, bool &WithMagFC, int &Format )
+void LoadData( AMR_t &amr, const char *FileName, int &Format, int &NField, int &NMag, int &NParAtt,
+               long &NPar, real **&ParData )
 {
-
 
 // load the HDF5 data
 #  ifdef SUPPORT_HDF5
    if (  Aux_CheckFileExist(FileName)  &&  H5Fis_hdf5(FileName)  )
    {
-      LoadData_HDF5( amr, FileName, WithPot, WithParDens, WithPar, NParVarOut, NPar, ParData, WithMagCC, WithMagFC, Format );
+      LoadData_HDF5( amr, FileName, Format, NField, NMag, NParAtt, NPar, ParData );
       return;
    }
 #  endif
@@ -142,9 +137,9 @@ void LoadData( AMR_t &amr, const char *FileName, bool &WithPot, int &WithParDens
 
 // b. load all simulation parameters
 // =================================================================================================
-   Load_Parameter_After_2000( File, FormatVersion, WithPot, WithParDens, HeaderOffset_Makefile, HeaderOffset_Constant,
-                              HeaderOffset_Parameter, amr.nx0_tot, WithPar, NParVarOut,
-                              WithMagCC, WithMagFC );
+   bool WithPar;
+   Load_Parameter_After_2000( File, FormatVersion, HeaderOffset_Makefile, HeaderOffset_Constant,
+                              HeaderOffset_Parameter, amr.nx0_tot, WithPar, NField, NMag, NParAtt );
 
 
 // c. load the simulation information
@@ -177,25 +172,22 @@ void LoadData( AMR_t &amr, const char *FileName, bool &WithPot, int &WithParDens
    fread( AdvanceCounter,   sizeof(long),   NLEVEL, File );
    fseek( File, sizeof(double), SEEK_CUR );
 
-   if ( WithPar ) {
-   fread( &NPar,                sizeof(long),    1, File );
-   fread( &FileOffset_Particle, sizeof(long),    1, File ); }
+   if ( WithPar )
+   {
+      fread( &NPar,                sizeof(long), 1, File );
+      fread( &FileOffset_Particle, sizeof(long), 1, File );
+   }
+   else
+      NPar = 0;
 
 
 // verify the size of the RESTART file
    Aux_Message( stdout, "      Verifying the size of the RESTART file ...\n" );
 
    long ExpectSize, InputSize, PatchDataSize, DataSize[NLEVEL];
-   int  NGridVar = NCOMP_TOTAL;  // number of grid variables
 
-   if ( WithPot )       NGridVar ++;
-   if ( WithParDens )   NGridVar ++;
-   if ( WithMagCC )     NGridVar += NCOMP_MAG;
-
-   PatchDataSize  = CUBE(PS1)*NGridVar*sizeof(real);
-   if ( WithMagFC )
-   PatchDataSize += PS1P1*SQR(PS1)*NCOMP_MAG*sizeof(real);
-
+   PatchDataSize  = CUBE(PS1)*NField*sizeof(real);
+   PatchDataSize += PS1P1*SQR(PS1)*NMag*sizeof(real);
    ExpectSize     = HeaderSize_Total;
 
    for (int lv=0; lv<NLEVEL; lv++)
@@ -203,7 +195,6 @@ void LoadData( AMR_t &amr, const char *FileName, bool &WithPot, int &WithParDens
       DataSize[lv]  = 0;
       DataSize[lv] += NPatchTotal[lv]*4*sizeof(int);        // 4 = corner(3) + son(1)
       DataSize[lv] += NDataPatch_Total[lv]*PatchDataSize;
-
       ExpectSize   += DataSize[lv];
    }
 
@@ -218,7 +209,7 @@ void LoadData( AMR_t &amr, const char *FileName, bool &WithPot, int &WithParDens
          ExpectSize   += ParInfoSize;
       }
 
-      ExpectSize += (long)NParVarOut*NPar*sizeof(real);
+      ExpectSize += (long)NParAtt*NPar*sizeof(real);
    }
 
    fseek( File, 0, SEEK_END );
@@ -252,31 +243,18 @@ void LoadData( AMR_t &amr, const char *FileName, bool &WithPot, int &WithParDens
          if ( LoadSon == -1 )
          {
 //          skip particle info
-            if ( WithPar ) fseek( File, 2*sizeof(long), SEEK_CUR );
+            if ( WithPar )    fseek( File, 2*sizeof(long), SEEK_CUR );
 
             PID = amr.num[lv];
 
-            amr.pnew( lv, LoadCorner[0], LoadCorner[1], LoadCorner[2], -1, true );
+            amr.pnew( lv, LoadCorner[0], LoadCorner[1], LoadCorner[2], -1, true, NField, NMag );
             amr.patch[lv][PID]->son = -1;    // set the SonPID as -1 to indicate that it's a leaf patch
 
-//          d2-1. load the fluid variables
-            fread( amr.patch[lv][PID]->fluid,    sizeof(real), CUBE(PS1)*NCOMP_TOTAL,    File );
+//          cell-centered fields
+            fread( amr.patch[lv][PID]->field, sizeof(real), CUBE(PS1)*NField,    File );
 
-//          d2-2. load the gravitational potential
-            if ( WithPot )
-            fread( amr.patch[lv][PID]->pot,      sizeof(real), CUBE(PS1),                File );
-
-//          d2-3. load the particle density on grids
-            if ( WithParDens )
-            fread( amr.patch[lv][PID]->par_dens, sizeof(real), CUBE(PS1),                File );
-
-//          d2-4. load the cell-centered B field
-            if ( WithMagCC )
-            fread( amr.patch[lv][PID]->mag_cc,   sizeof(real), CUBE(PS1)*NCOMP_MAG,      File );
-
-//          d2-5. load the face-centered B field
-            if ( WithMagFC )
-            fread( amr.patch[lv][PID]->mag_fc,   sizeof(real), PS1P1*SQR(PS1)*NCOMP_MAG, File );
+//          face-centered B field
+            fread( amr.patch[lv][PID]->mag,   sizeof(real), PS1P1*SQR(PS1)*NMag, File );
          }
       } // for (int LoadPID=0; LoadPID<NPatchTotal[lv]; LoadPID++)
 
@@ -287,25 +265,22 @@ void LoadData( AMR_t &amr, const char *FileName, bool &WithPot, int &WithParDens
 
 
 // load particles
-   if ( WithPar )
+   if ( NPar > 0 )
    {
       const long ParDataSize1v = NPar*sizeof(real);
 
-      Aux_AllocateArray2D( ParData, NParVarOut, NPar );
+      Aux_AllocateArray2D( ParData, NParAtt, NPar );
 
       File = fopen( FileName, "rb" );
 
-//    one must not call fread when NPar == 0, for which ParData[0...NParVarOut-1] will be ill-defined
-      if ( NPar > 0 )
-      for (int v=0; v<NParVarOut; v++)
+      for (int v=0; v<NParAtt; v++)
       {
          fseek( File, FileOffset_Particle + v*ParDataSize1v, SEEK_SET );
-
          fread( ParData[v], sizeof(real), NPar, File );
       }
 
       fclose( File );
-   } // if ( WithPar )
+   } // if ( NPar > 0 )
 
 
 // e. record parameters
@@ -316,14 +291,12 @@ void LoadData( AMR_t &amr, const char *FileName, bool &WithPot, int &WithParDens
    Aux_Message( stdout, "   Step        = %ld\n", Step        );
    Aux_Message( stdout, "   Time        = %lf\n", Time[0]     );
    Aux_Message( stdout, "   Format      = %d\n",  Format      );
-   Aux_Message( stdout, "   WithPot     = %d\n",  WithPot     );
-   Aux_Message( stdout, "   WithParDens = %d\n",  WithParDens );
    Aux_Message( stdout, "   WithPar     = %d\n",  WithPar     );
+   Aux_Message( stdout, "   NField      = %d\n",  NField      );
+   Aux_Message( stdout, "   NMag        = %d\n",  NMag        );
    if ( WithPar ) {
-   Aux_Message( stdout, "   NParVarOut  = %d\n",  NParVarOut  );
+   Aux_Message( stdout, "   NParAtt     = %d\n",  NParAtt     );
    Aux_Message( stdout, "   NPar        = %ld\n", NPar        ); }
-   Aux_Message( stdout, "   WithMagCC   = %d\n",  WithMagCC   );
-   Aux_Message( stdout, "   WithMagFC   = %d\n",  WithMagFC   );
    for (int lv=0; lv<NLEVEL; lv++)
    Aux_Message( stdout, "   NPatch[%2d] = %d\n",  lv, amr.num[lv] );
 
@@ -342,21 +315,18 @@ void LoadData( AMR_t &amr, const char *FileName, bool &WithPot, int &WithParDens
 //
 // Parameter   :  File           : RESTART file pointer
 //                FormatVersion  : Format version of the RESTART file
-//                WithPot        : Whether or not the RESTART file stores the potential data
-//                WithParDens    : Whether or not the RESTART file stores the particle density data (deposited onto grids)
 //                HeaderOffset_X : Offsets of different headers
 //                NX0_Tot        : Total number of base-level cells along each direction
 //                WithPar        : Whether or not the RESTART file stores particles
-//                NParVarOut     : Number of particle attributes stored in the file
-//                WithMagCC      : true --> the loaded data contain cell-centered magnetic field
-//                WithMagFC      : true --> the loaded data contain face-centered magnetic field
+//                NField         : Number of cell-centered fields stored in the file
+//                NMag           : Number of face-centered magnetic components stored in the file
+//                NParAtt        : Number of particle attributes stored in the file
 //
-// Return      :  LoadPot (END_T and END_STEP may also be set to the original values)
+// Return      :  NX0_Tot, WithPar, NField, NMag, NParAtt
 //-------------------------------------------------------------------------------------------------------
-void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &WithPot, int &WithParDens,
-                                const long HeaderOffset_Makefile, const long HeaderOffset_Constant,
-                                const long HeaderOffset_Parameter, int *NX0_Tot,
-                                bool &WithPar, int &NParVarOut, bool &WithMagCC, bool &WithMagFC )
+void Load_Parameter_After_2000( FILE *File, const int FormatVersion, const long HeaderOffset_Makefile,
+                                const long HeaderOffset_Constant, const long HeaderOffset_Parameter,
+                                int *NX0_Tot, bool &WithPar, int &NField, int &NMag, int &NParAtt )
 {
 
    Aux_Message( stdout, "   Loading simulation parameters ...\n" );
@@ -572,36 +542,28 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &WithP
       Aux_Error( ERROR_INFO, "%s : RESTART file (%s) != runtime (%s) !!\n", "FLOAT8", "ON", "OFF" );
 #  endif
 
-   CompareVar( "MODEL",                   model,                  MODEL,                        Fatal );
-   CompareVar( "NLEVEL",                  nlevel,                 NLEVEL,                       Fatal );
-   CompareVar( "NCOMP_FLUID",             ncomp_fluid,            NCOMP_FLUID,                  Fatal );
-   CompareVar( "NCOMP_PASSIVE",           ncomp_passive,          NCOMP_PASSIVE,                Fatal );
-   CompareVar( "PATCH_SIZE",              patch_size,             PATCH_SIZE,                   Fatal );
+   CompareVar( "MODEL",      model,      MODEL,      Fatal );
+   CompareVar( "NLEVEL",     nlevel,     NLEVEL,     Fatal );
+   CompareVar( "PATCH_SIZE", patch_size, PATCH_SIZE, Fatal );
 
 
    Aux_Message( stdout, "   Checking loaded parameters ... done\n" );
 
 
 // set the returned variables
-   WithPot = opt__output_pot;
-   for (int d=0; d<3; d++)
-   {
-      NX0_Tot[d] = nx0_tot[d];
-   }
+   for (int d=0; d<3; d++)    NX0_Tot[d] = nx0_tot[d];
 
-   WithParDens = opt__output_par_dens;
-   WithPar     = particle;
+   WithPar = particle;
+   NField  = ncomp_fluid + ncomp_passive;
+   NMag    = ( mhd ) ? 3 : 0;
 
    if ( WithPar )
    {
-      if ( FormatVersion > 2131 )   NParVarOut = par_nvar;           // after version 2131, par_nvar = PAR_NATT_STORED
-      else                          NParVarOut = 7 + par_npassive;   // mass, position x/y/z, velocity x/y/z, and passive variables
+      if ( FormatVersion > 2131 )   NParAtt = par_nvar;           // after version 2131, par_nvar = PAR_NATT_STORED
+      else                          NParAtt = 7 + par_npassive;   // mass, position x/y/z, velocity x/y/z, and passive variables
    }
    else
-                                    NParVarOut = -1;
-
-   WithMagCC   = opt__output_cc_mag;
-   WithMagFC   = mhd;
+                                    NParAtt = 0;
 
 } // FUNCTION : Load_Parameter_After_2000
 

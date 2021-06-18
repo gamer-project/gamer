@@ -31,29 +31,6 @@ typedef float  real;
 #define PS1P1              ( PS1 + 1 )
 
 
-// number of components in each cell and the variable indices in the array "fluid"
-#if   ( MODEL == HYDRO )
-#  define NCOMP_FLUID      5
-#  define NCOMP_MAG        3
-#  define DENS             0
-#  define MOMX             1
-#  define MOMY             2
-#  define MOMZ             3
-#  define ENGY             4
-
-#elif ( MODEL == ELBDM )
-#  define NCOMP_FLUID      3
-#  define DENS             0
-#  define REAL             1
-#  define IMAG             2
-
-#else
-#  error : ERROR : unsupported MODEL !!
-#endif // MODEL
-
-#  define NCOMP_TOTAL      ( NCOMP_FLUID + NCOMP_PASSIVE )
-
-
 // useful macros
 #define SQR(  a )       ( (a)*(a)     )
 #define CUBE( a )       ( (a)*(a)*(a) )
@@ -79,27 +56,22 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 // Structure   :  patch_t
 // Description :  data structure of a single patch
 //
-// Data Member :  fluid       : fluid variables (mass density, momentum density x, y ,z, energy density)
-//                pot         : potential
-//                par_dens    : particle density deposited onto grids
-//                mag_cc/fc   : cell-/face-centered B field
-//                corner[3]   : physical coordinates of the patch corner
-//                father      : patch ID of the father patch
-//                son         : patch ID of the child patch
+// Data Member :  field     : cell-centered fields
+//                mag       : face-centered magnetic field
+//                corner[3] : physical coordinates of the patch corner
+//                father    : patch ID of the father patch
+//                son       : patch ID of the child patch
 //
-// Method      :  patch_t     : constructor
-//                ~patch_t    : destructor
+// Method      :  patch_t   : constructor
+//                ~patch_t  : destructor
 //-------------------------------------------------------------------------------------------------------
 struct patch_t
 {
 
 // data members
 // ===================================================================================
-   real (*fluid   )[PS1][PS1][PS1];
-   real (*pot     )[PS1][PS1];
-   real (*par_dens)[PS1][PS1];
-   real (*mag_cc  )[PS1][PS1][PS1];
-   real (*mag_fc  )[PS1P1*PS1*PS1];
+   real (*field)[PS1][PS1][PS1];
+   real (*mag  )[PS1P1*PS1*PS1];
 
    int  corner[3];
    int  father;
@@ -114,11 +86,14 @@ struct patch_t
    //
    // Note        :  initialize data members
    //
-   // Parameter   :  x,y,z : physical coordinates of the patch corner
-   //                FaPID : patch ID of the father patch
-   //                Data  : true --> allocate physical data (fluid + pot + par_dens + mag_cc/fc)
+   // Parameter   :  x,y,z  : physical coordinates of the patch corner
+   //                FaPID  : patch ID of the father patch
+   //                Data   : true --> allocate physical data (field[] and mag[])
+   //                NField : number of fields (excluding magnetic field)
+   //                NMag   : number of magnetic field components
    //===================================================================================
-   patch_t( const int x, const int y, const int z, const int FaPID, const bool Data )
+   patch_t( const int x, const int y, const int z, const int FaPID, const bool Data,
+            const int NField, const int NMag )
    {
       corner[0] = x;
       corner[1] = y;
@@ -127,19 +102,13 @@ struct patch_t
       son       = -1;
       check     = false;
 
-      fluid    = NULL;
-      pot      = NULL;
-      par_dens = NULL;
-      mag_cc   = NULL;
-      mag_fc   = NULL;
+      field    = NULL;
+      mag      = NULL;
 
       if ( Data )
       {
-         fluid    = new real [NCOMP_TOTAL][PS1][PS1][PS1];
-         pot      = new real              [PS1][PS1][PS1];
-         par_dens = new real              [PS1][PS1][PS1];
-         mag_cc   = new real [NCOMP_MAG  ][PS1][PS1][PS1];
-         mag_fc   = new real [NCOMP_MAG  ][ PS1P1*SQR(PS1) ];
+         field = new real [NField][PS1][PS1][PS1];
+         mag   = new real [NMag][ PS1P1*SQR(PS1) ];
       }
    }
 
@@ -203,18 +172,21 @@ struct AMR_t
    // Method      :  pnew
    // Description :  allocate a single patch
    //
-   // Parameter   :  lv    : the targeted refinement level
-   //                x,y,z : physical coordinates of the patch corner
-   //                FaPID : the patch ID of the parent patch at level "lv-1"
-   //                Data  : true --> allocate physical data (fluid + pot + par_dens + mag_cc/fc)
+   // Parameter   :  lv     : the targeted refinement level
+   //                x,y,z  : physical coordinates of the patch corner
+   //                FaPID  : the patch ID of the parent patch at level "lv-1"
+   //                Data   : true --> allocate physical data (field[] and mag[])
+   //                NField : number of fields (excluding magnetic field)
+   //                NMag   : number of magnetic field components
    //===================================================================================
-   void pnew( const int lv, const int x, const int y, const int z, const int FaPID, const bool Data )
+   void pnew( const int lv, const int x, const int y, const int z, const int FaPID, const bool Data,
+              const int NField, const int NMag )
    {
       if ( patch[lv][num[lv]] != NULL )
          Aux_Error( ERROR_INFO, "allocate an existing patch (Lv %d, PID %d, FaPID %d) !!\n",
                     lv, num[lv], FaPID );
 
-      patch[lv][ num[lv] ] = new patch_t( x, y, z, FaPID, Data );
+      patch[lv][ num[lv] ] = new patch_t( x, y, z, FaPID, Data, NField, NMag );
 
       num[lv] ++;
 
