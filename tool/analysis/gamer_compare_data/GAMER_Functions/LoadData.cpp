@@ -16,26 +16,31 @@ static void Load_Parameter_After_2000( FILE *File, const int FormatVersion, cons
 // Function    :  LoadData
 // Description :  Load the input data from the binary file "FileName"
 //
-// Parameter   :  FileName  : Name of the input file
-//                amr       : Target AMR_t pointer
-//                Format    : 1/2 --> C-binary/HDF5
-//                NField    : Number of cell-centered fields stored in the file
-//                NMag      : Number of face-centered magnetic components stored in the file
-//                NParAtt   : Number of particle attributes stored in the file
-//                NPar      : NUmber of particles
-//                ParData   : Particle data array (allocated here --> must be dallocated manually later)
+// Parameter   :  FileName    : Name of the input file
+//                amr         : Target AMR_t pointer
+//                Format      : 1/2 --> C-binary/HDF5
+//                NField      : Number of cell-centered fields stored in the file
+//                NMag        : Number of face-centered magnetic components stored in the file
+//                NParAtt     : Number of particle attributes stored in the file
+//                NPar        : NUmber of particles
+//                ParData     : Particle data array (allocated here --> must be dallocated manually later)
+//                FieldLabel  : Labels of cell-centered fields
+//                MagLabel    : Labels of face-centered magnetic components
+//                ParAttLabel : Labels of particle attributes
 //
 // Return      :  amr, Format, NField, NMag, NParAtt, NPar, ParData
+//                FieldLabel, MagLabel, ParAttLabel (for HDF5 only)
 //-------------------------------------------------------------------------------------------------------
-void LoadData( const char *FileName, AMR_t &amr, int &Format, int &NField, int &NMag, int &NParAtt,
-               long &NPar, real **&ParData )
+void LoadData( const char *FileName, AMR_t &amr, int &Format, int &NField, int &NMag, int &NParAtt, long &NPar, real **&ParData,
+               char (*&FieldLabel)[MAX_STRING], char (*&MagLabel)[MAX_STRING], char (*&ParAttLabel)[MAX_STRING] )
 {
 
 // load the HDF5 data
 #  ifdef SUPPORT_HDF5
    if (  Aux_CheckFileExist(FileName)  &&  H5Fis_hdf5(FileName)  )
    {
-      LoadData_HDF5( FileName, amr, Format, NField, NMag, NParAtt, NPar, ParData );
+      LoadData_HDF5( FileName, amr, Format, NField, NMag, NParAtt, NPar, ParData,
+                     FieldLabel, MagLabel, ParAttLabel );
       return;
    }
 #  endif

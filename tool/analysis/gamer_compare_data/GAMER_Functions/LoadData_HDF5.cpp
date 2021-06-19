@@ -15,7 +15,7 @@
 #endif
 
 template <typename T>
-static herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Target,
+static herr_t LoadField( const char *FieldLabel, void *FieldPtr, const hid_t H5_SetID_Target,
                          const hid_t H5_TypeID_Target, const bool Fatal_Nonexist,
                          const T *ComprPtr, const int NCompr, const bool Fatal_Compr );
 static void LoadOnePatch( AMR_t &amr, const hid_t H5_FileID, const int lv, const int GID, const bool Recursive, const int *SonList,
@@ -32,20 +32,25 @@ static void LoadOnePatch( AMR_t &amr, const hid_t H5_FileID, const int lv, const
 // Note        :  1. Only work for format version >= 2440
 //                   --> NField and NMag are supported only after 2440
 //                2. Unlike LoadData(), this function always loads and allocates both leaf and non-leaf patches
+//                3. *Label[MAX_STRING] will be allocated here and must be deallocated manually
 //
-// Parameter   :  FileName  : Name of the input file
-//                amr       : Target AMR_t pointer
-//                Format    : 1/2 --> C-binary/HDF5
-//                NField    : Number of cell-centered fields stored in the file
-//                NMag      : Number of face-centered magnetic components stored in the file
-//                NParAtt   : Number of particle attributes stored in the file
-//                NPar      : NUmber of particles
-//                ParData   : Particle data array (allocated here --> must be dallocated manually later)
+// Parameter   :  FileName    : Name of the input file
+//                amr         : Target AMR_t pointer
+//                Format      : 1/2 --> C-binary/HDF5
+//                NField      : Number of cell-centered fields stored in the file
+//                NMag        : Number of face-centered magnetic components stored in the file
+//                NParAtt     : Number of particle attributes stored in the file
+//                NPar        : NUmber of particles
+//                ParData     : Particle data array (allocated here --> must be dallocated manually later)
+//                FieldLabel  : Labels of cell-centered fields
+//                MagLabel    : Labels of face-centered magnetic components
+//                ParAttLabel : Labels of particle attributes
 //
 // Return      :  amr, Format, NField, NMag, NParAtt, NPar, ParData
+//                FieldLabel, MagLabel, ParAttLabel
 //-------------------------------------------------------------------------------------------------------
-void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, int &NMag, int &NParAtt,
-                    long &NPar, real **&ParData )
+void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, int &NMag, int &NParAtt, long &NPar, real **&ParData,
+                    char (*&FieldLabel)[MAX_STRING], char (*&MagLabel)[MAX_STRING], char (*&ParAttLabel)[MAX_STRING] )
 {
 
    Aux_Message( stdout, "Loading HDF5 data %s ...\n", FileName );
@@ -71,13 +76,12 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
 #  else
    const int  Float8_RT    = 0;
 #  endif
-   const int  MaxString    = 512;
 
    int    PatchSize_RS, NLevel_RS, Float8_RS;
    int    FormatVersion, NPatchTotal[NLEVEL], NPatchAllLv, DumpID;
    long   Step;
    double Time[NLEVEL];
-   char **FieldName_In=NULL;
+   char **FieldLabel_In=NULL;
    int   *NullPtr=NULL;
    int    WithPar;
 
@@ -141,13 +145,13 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
    NPar    = 0; }
 
 // field labels
-   FieldName_In = new char* [NField];
+   FieldLabel_In = new char* [NField];
    for (int v=0; v<NField; v++)
    {
-      char Key[MaxString];
+      char Key[MAX_STRING];
       sprintf( Key, "FieldLabel%02d", v );
 
-      LoadField( Key,                 &FieldName_In[v],     H5_SetID_InputPara,  H5_TypeID_InputPara, Fatal,   NullPtr,         -1, NonFatal );
+      LoadField( Key,                &FieldLabel_In[v],     H5_SetID_InputPara,  H5_TypeID_InputPara, Fatal,   NullPtr,         -1, NonFatal );
    }
 
    NPatchAllLv = 0;
@@ -202,14 +206,14 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
 
    const bool Recursive_Yes = true;
 
-   char (*FieldName)[MaxString] = new char [NField][MaxString];
+   FieldLabel = new char [NField][MAX_STRING];
 
    hsize_t H5_SetDims_Field[4], H5_MemDims_Field[4];
    hid_t   H5_SetID_Field[NField], H5_MemID_Field, H5_SpaceID_Field, H5_GroupID_GridData;
 
 
 // 3-1. set the names of all grid variables
-   for (int v=0; v<NField; v++)  sprintf( FieldName[v], FieldName_In[v] );
+   for (int v=0; v<NField; v++)  sprintf( FieldLabel[v], FieldLabel_In[v] );
 
 
 // 3-2. initialize relevant HDF5 objects
@@ -236,8 +240,8 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
 
    for (int v=0; v<NField; v++)
    {
-      H5_SetID_Field[v] = H5Dopen( H5_GroupID_GridData, FieldName[v], H5P_DEFAULT );
-      if ( H5_SetID_Field[v] < 0 )  Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", FieldName[v] );
+      H5_SetID_Field[v] = H5Dopen( H5_GroupID_GridData, FieldLabel[v], H5P_DEFAULT );
+      if ( H5_SetID_Field[v] < 0 )  Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", FieldLabel[v] );
    }
 
 
@@ -285,9 +289,8 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
 
 
 // 5. close all HDF5 objects and free memory
-   for (int v=0; v<NField; v++)  free( FieldName_In[v] );
-   delete [] FieldName;
-   delete [] FieldName_In;
+   for (int v=0; v<NField; v++)  free( FieldLabel_In[v] );
+   delete [] FieldLabel_In;
    delete [] CrList_AllLv;
    delete [] SonList_AllLv;
 
@@ -334,7 +337,7 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
 //                   --> Please make sure that "FieldPtr" and "ComprPtr" point to the same type since we
 //                       use the type of "ComprPtr" to typecast "FieldPtr"
 //
-// Parameter   :  FieldName         : Name of the target field
+// Parameter   :  FieldLabel        : Name of the target field
 //                FieldPtr          : Pointer to store the retrieved data
 //                H5_SetID_Target   : HDF5 dataset  ID of the target compound variable
 //                H5_TypeID_Target  : HDF5 datatype ID of the target compound variable
@@ -350,7 +353,7 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
 // Return      :  Success/fail <-> 0/-1
 //-------------------------------------------------------------------------------------------------------
 template <typename T>
-herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Target,
+herr_t LoadField( const char *FieldLabel, void *FieldPtr, const hid_t H5_SetID_Target,
                   const hid_t H5_TypeID_Target, const bool Fatal_Nonexist,
                   const T *ComprPtr, const int NCompr, const bool Fatal_Compr )
 {
@@ -370,7 +373,7 @@ herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Ta
 
 
 // load
-   H5_FieldIdx = H5Tget_member_index( H5_TypeID_Target, FieldName );
+   H5_FieldIdx = H5Tget_member_index( H5_TypeID_Target, FieldLabel );
 
    if ( H5_FieldIdx >= 0 )
    {
@@ -378,10 +381,10 @@ herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Ta
       H5_FieldSize     = H5Tget_size( H5_TypeID_Field );
 
       H5_TypeID_Load   = H5Tcreate( H5T_COMPOUND, H5_FieldSize );
-      H5_Status        = H5Tinsert( H5_TypeID_Load, FieldName, 0, H5_TypeID_Field );
+      H5_Status        = H5Tinsert( H5_TypeID_Load, FieldLabel, 0, H5_TypeID_Field );
 
       H5_Status        = H5Dread( H5_SetID_Target, H5_TypeID_Load, H5S_ALL, H5S_ALL, H5P_DEFAULT, FieldPtr );
-      if ( H5_Status < 0 )    Aux_Error( ERROR_INFO, "failed to load the field \"%s\" !!\n", FieldName );
+      if ( H5_Status < 0 )    Aux_Error( ERROR_INFO, "failed to load the field \"%s\" !!\n", FieldLabel );
 
       H5_Status        = H5Tclose( H5_TypeID_Field );
       H5_Status        = H5Tclose( H5_TypeID_Load  );
@@ -390,10 +393,10 @@ herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Ta
    else
    {
       if ( Fatal_Nonexist )
-         Aux_Error( ERROR_INFO, "target field \"%s\" does not exist in the input file !!\n", FieldName );
+         Aux_Error( ERROR_INFO, "target field \"%s\" does not exist in the input file !!\n", FieldLabel );
 
       else
-         Aux_Message( stderr, "WARNING : target field \"%s\" does not exist in the input file !!\n", FieldName );
+         Aux_Message( stderr, "WARNING : target field \"%s\" does not exist in the input file !!\n", FieldLabel );
 
       return -1;
    } // if ( H5_FieldIdx >= 0 ) ... else ...
@@ -415,14 +418,14 @@ herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Ta
             if ( Fatal_Compr )
             {
                Aux_Error( ERROR_INFO, "\"%s%s\" : input file (%ld) != runtime (%ld) !!\n",
-                          FieldName, ArrayIdx, (long)((T*)FieldPtr)[t], (long)ComprPtr[t] );
+                          FieldLabel, ArrayIdx, (long)((T*)FieldPtr)[t], (long)ComprPtr[t] );
                return -2;
             }
 
             else
             {
                Aux_Message( stderr, "WARNING : \"%s%s\" : input file (%ld) != runtime (%ld) !!\n",
-                            FieldName, ArrayIdx, (long)((T*)FieldPtr)[t], (long)ComprPtr[t] );
+                            FieldLabel, ArrayIdx, (long)((T*)FieldPtr)[t], (long)ComprPtr[t] );
                Check_Pass = false;
             }
          }
@@ -432,14 +435,14 @@ herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Ta
             if ( Fatal_Compr )
             {
                Aux_Error( ERROR_INFO, "\"%s%s\" : input file (%20.14e) != runtime (%20.14e) !!\n",
-                          FieldName, ArrayIdx,  ((T*)FieldPtr)[t], ComprPtr[t] );
+                          FieldLabel, ArrayIdx,  ((T*)FieldPtr)[t], ComprPtr[t] );
                return -2;
             }
 
             else
             {
                Aux_Message( stderr, "WARNING : \"%s%s\" : input file (%20.14e) != runtime (%20.14e) !!\n",
-                            FieldName, ArrayIdx, ((T*)FieldPtr)[t], ComprPtr[t] );
+                            FieldLabel, ArrayIdx, ((T*)FieldPtr)[t], ComprPtr[t] );
                Check_Pass = false;
             }
          }
@@ -447,7 +450,7 @@ herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Ta
          else
          {
             Aux_Message( stderr, "WARNING : \"%s%s\" : unsupported data type !!\n",
-                         FieldName, ArrayIdx );
+                         FieldLabel, ArrayIdx );
             Check_Pass = false;
          }
 

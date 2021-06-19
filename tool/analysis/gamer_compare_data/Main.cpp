@@ -10,6 +10,8 @@ static int      NField1=-1, NField2=-1, NMag1=-1, NMag2=-1, NParAtt1=-1, NParAtt
 static long     NPar1=-1, NPar2=-1;
 static double   TolErr=__FLT_MIN__;
 static real   **ParData1=NULL, **ParData2=NULL;
+static char  (*FieldLabel1)[MAX_STRING]=NULL, (*MagLabel1)[MAX_STRING]=NULL, (*ParAttLabel1)[MAX_STRING]=NULL;
+static char  (*FieldLabel2)[MAX_STRING]=NULL, (*MagLabel2)[MAX_STRING]=NULL, (*ParAttLabel2)[MAX_STRING]=NULL;
 
 
 
@@ -128,6 +130,30 @@ void CompareGridData()
    if ( NMag1 != NMag2 )
       Aux_Error( ERROR_INFO, "inconsistent numbers of magnetic components (%d vs %d) !!\n", NMag1, NMag2 );
 
+// verify that the field labels are consistent
+   if ( Format1 == 2  &&  Format2 == 2 )
+   {
+      for (int v=0; v<NField1; v++)
+      {
+         if ( FieldLabel1 == NULL  ||  FieldLabel2 == NULL )
+            Aux_Error( ERROR_INFO, "FieldLabel[%d] == NULL !!\n", v );
+
+         if (  strcmp( FieldLabel1[v], FieldLabel2[v] )  )
+            Aux_Error( ERROR_INFO, "inconsistent field labels ([%d]: %s vs %s) !!\n",
+                       v, FieldLabel1[v], FieldLabel2[v] );
+      }
+
+      for (int v=0; v<NMag1; v++)
+      {
+         if ( MagLabel1 == NULL  ||  MagLabel2 == NULL )
+            Aux_Error( ERROR_INFO, "MagLabel[%d] == NULL !!\n", v );
+
+         if (  strcmp( MagLabel1[v], MagLabel2[v] )  )
+            Aux_Error( ERROR_INFO, "inconsistent magnetic field labels ([%d]: %s vs %s) !!\n",
+                       v, MagLabel1[v], MagLabel2[v] );
+      }
+   } // if ( Format1 == 2  &&  Format2 == 2 )
+
 
 // enable UseCorner when comparing files with different formats
    if ( UseCorner == false  &&  Format1 != Format2 )
@@ -145,13 +171,23 @@ void CompareGridData()
 
 
 // compare data
+   const int MagIdx0 = 1000;
+
    double Data1, Data2, AbsErr, RelErr;
    int    PID1, PID2;
    int   *Cr1, *Cr2;
 
    FILE *File = fopen( FileName_Out, "w" );
 
-   fprintf( File, "%5s%8s%8s  (%3s,%3s,%3s )%6s%16s%16s%16s%16s\n",
+   if ( Format1 == 2  &&  Format2 == 2 )
+   {
+      fprintf( File, "# Field list:\n" );
+      for (int v=0; v<NField1; v++)    fprintf( File, "# [%4d]: %s\n", v,         FieldLabel1[v] );
+      for (int v=0; v<NMag1; v++)      fprintf( File, "# [%4d]: %s\n", v+MagIdx0, MagLabel1  [v] );
+      fprintf( File, "\n" );
+   }
+
+   fprintf( File, "#%5s%8s%8s  (%3s,%3s,%3s )%6s%16s%16s%16s%16s\n",
                   "Level", "PID1", "PID2", "i", "j", "k", "Field", "Data1", "Data2", "AbsErr", "RelErr" );
 
    for (int lv=0; lv<NLEVEL; lv++)
@@ -194,7 +230,7 @@ void CompareGridData()
                if ( Data1 == 0.0  &&  Data2 == 0.0 )  continue;
 
                if ( fabs( RelErr ) >= TolErr  ||  !isfinite( RelErr )  )
-                  fprintf( File, "%5d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
+                  fprintf( File, "%6d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
                            lv, PID1, PID2, i, j, k, v, Data1, Data2, AbsErr, RelErr );
             } // i,j,k,v
 
@@ -226,8 +262,8 @@ void CompareGridData()
                   j       = t % size_ij / size_i;
                   k       = t / size_ij;
 
-                  fprintf( File, "%5d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
-                           lv, PID1, PID2, i, j, k, v, Data1, Data2, AbsErr, RelErr );
+                  fprintf( File, "%6d%8d%8d  (%3d,%3d,%3d )%6d%16.7e%16.7e%16.7e%16.7e\n",
+                           lv, PID1, PID2, i, j, k, v+MagIdx0, Data1, Data2, AbsErr, RelErr );
                }
             } // for v, t
 
@@ -317,8 +353,8 @@ void CompareParticleData()
    FILE *File = fopen( FileName_Out, "a" );
 
    fprintf( File, "\n\n" );
-   fprintf( File, "=============================================================================================================\n" );
-   fprintf( File, "  %12s  %12s  %4s  %14s  %14s  %14s  %14s\n",
+   fprintf( File, "#=============================================================================================================\n" );
+   fprintf( File, "# %12s  %12s  %4s  %14s  %14s  %14s  %14s\n",
                   "ParID1", "ParID2", "Att", "Data1", "Data2", "AbsErr", "RelErr" );
 
    for (int v=0; v<NParAtt1; v++)
@@ -352,6 +388,32 @@ void CompareParticleData()
 
 
 //-------------------------------------------------------------------------------------------------------
+// Function    :  FreeMemory
+// Description :  Free memory
+//-------------------------------------------------------------------------------------------------------
+void FreeMemory()
+{
+   Aux_Message( stdout, "%s ...", __FUNCTION__ );
+
+
+   Aux_DeallocateArray2D( ParData1 );
+   Aux_DeallocateArray2D( ParData2 );
+
+   delete [] FieldLabel1;
+   delete [] FieldLabel2;
+   delete [] MagLabel1;
+   delete [] MagLabel2;
+   delete [] ParAttLabel1;
+   delete [] ParAttLabel2;
+
+
+   Aux_Message( stdout, "done\n" );
+
+} // FUNCTION : FreeMemory
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  main
 // Description :
 //-------------------------------------------------------------------------------------------------------
@@ -362,14 +424,15 @@ int main( int argc, char ** argv )
 
    CheckParameter();
 
-   LoadData( FileName_In1, amr1, Format1, NField1, NMag1, NParAtt1, NPar1, ParData1 );
-   LoadData( FileName_In2, amr2, Format2, NField2, NMag2, NParAtt2, NPar2, ParData2 );
+   LoadData( FileName_In1, amr1, Format1, NField1, NMag1, NParAtt1, NPar1, ParData1,
+             FieldLabel1, MagLabel1, ParAttLabel1 );
+   LoadData( FileName_In2, amr2, Format2, NField2, NMag2, NParAtt2, NPar2, ParData2,
+             FieldLabel2, MagLabel2, ParAttLabel2 );
 
    CompareGridData();
    CompareParticleData();
 
-   Aux_DeallocateArray2D( ParData1 );
-   Aux_DeallocateArray2D( ParData2 );
+   FreeMemory();
 
    Aux_Message( stdout, "Program terminated successfully\n" );
 
