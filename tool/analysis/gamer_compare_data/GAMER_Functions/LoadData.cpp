@@ -567,6 +567,9 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, const long 
    NField  = ncomp_fluid + ncomp_passive;
    NMag    = ( mhd ) ? 3 : 0;
 
+   if ( opt__output_pot )     NField ++;
+   if ( opt__output_cc_mag )  NField += 3;
+
    if ( WithPar )
    {
       if ( FormatVersion > 2131 )   NParAtt = par_nvar;           // after version 2131, par_nvar = PAR_NATT_STORED
