@@ -139,7 +139,7 @@ void CompareGridData()
             Aux_Error( ERROR_INFO, "FieldLabel[%d] == NULL !!\n", v );
 
          if (  strcmp( FieldLabel1[v], FieldLabel2[v] )  )
-            Aux_Error( ERROR_INFO, "inconsistent field labels ([%d]: %s vs %s) !!\n",
+            Aux_Error( ERROR_INFO, "inconsistent field labels ([%d]: \"%s\" vs \"%s\") !!\n",
                        v, FieldLabel1[v], FieldLabel2[v] );
       }
 
@@ -149,7 +149,7 @@ void CompareGridData()
             Aux_Error( ERROR_INFO, "MagLabel[%d] == NULL !!\n", v );
 
          if (  strcmp( MagLabel1[v], MagLabel2[v] )  )
-            Aux_Error( ERROR_INFO, "inconsistent magnetic field labels ([%d]: %s vs %s) !!\n",
+            Aux_Error( ERROR_INFO, "inconsistent magnetic field labels ([%d]: \"%s\" vs \"%s\") !!\n",
                        v, MagLabel1[v], MagLabel2[v] );
       }
    } // if ( Format1 == 2  &&  Format2 == 2 )
@@ -393,7 +393,7 @@ void CompareParticleData()
 //-------------------------------------------------------------------------------------------------------
 void FreeMemory()
 {
-   Aux_Message( stdout, "%s ...", __FUNCTION__ );
+   Aux_Message( stdout, "%s ... ", __FUNCTION__ );
 
 
    Aux_DeallocateArray2D( ParData1 );
