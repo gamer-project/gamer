@@ -16,6 +16,8 @@ static void Load_Parameter_After_2000( FILE *File, const int FormatVersion, cons
 // Function    :  LoadData
 // Description :  Load the input data from the binary file "FileName"
 //
+// Note        :  1. *Label[MAX_STRING] and ParData[] will be allocated here and must be deallocated manually
+//
 // Parameter   :  FileName    : Name of the input file
 //                amr         : Target AMR_t pointer
 //                Format      : 1/2 --> C-binary/HDF5
@@ -567,8 +569,9 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, const long 
    NField  = ncomp_fluid + ncomp_passive;
    NMag    = ( mhd ) ? 3 : 0;
 
-   if ( opt__output_pot )     NField ++;
-   if ( opt__output_cc_mag )  NField += 3;
+   if ( opt__output_pot )        NField ++;
+   if ( opt__output_par_dens )   NField ++;
+   if ( opt__output_cc_mag )     NField += 3;
 
    if ( WithPar )
    {

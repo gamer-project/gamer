@@ -330,7 +330,20 @@ void CompareParticleData()
 
       if ( ParData1 == NULL  ||  ParData2 == NULL )
          Aux_Error( ERROR_INFO, "particle arrays have not been allocated yet !!\n" );
-   }
+
+      if ( Format1 == 2  &&  Format2 == 2 )
+      {
+         for (int v=0; v<NParAtt1; v++)
+         {
+            if ( ParAttLabel1 == NULL  ||  ParAttLabel2 == NULL )
+               Aux_Error( ERROR_INFO, "ParAttLabel[%d] == NULL !!\n", v );
+
+            if (  strcmp( ParAttLabel1[v], ParAttLabel2[v] )  )
+               Aux_Error( ERROR_INFO, "inconsistent particle attribute labels ([%d]: \"%s\" vs \"%s\") !!\n",
+                          v, ParAttLabel1[v], ParAttLabel2[v] );
+         }
+      } // if ( Format1 == 2  &&  Format2 == 2 )
+   } // if ( NPar1 > 0 )
 
 
 // sort particles by their x and y coordinates
@@ -354,6 +367,14 @@ void CompareParticleData()
 
    fprintf( File, "\n\n" );
    fprintf( File, "#=============================================================================================================\n" );
+
+   if ( Format1 == 2  &&  Format2 == 2 )
+   {
+      fprintf( File, "# Attribute list:\n" );
+      for (int v=0; v<NParAtt1; v++)   fprintf( File, "# [%4d]: %s\n", v, ParAttLabel1[v] );
+      fprintf( File, "\n" );
+   }
+
    fprintf( File, "# %12s  %12s  %4s  %14s  %14s  %14s  %14s\n",
                   "ParID1", "ParID2", "Att", "Data1", "Data2", "AbsErr", "RelErr" );
 

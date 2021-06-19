@@ -33,7 +33,7 @@ static void LoadOnePatch( AMR_t &amr, const hid_t H5_FileID, const int lv, const
 // Note        :  1. Only work for format version >= 2440
 //                   --> NField and NMag are supported only after 2440
 //                2. Unlike LoadData(), this function always loads and allocates both leaf and non-leaf patches
-//                3. *Label[MAX_STRING] will be allocated here and must be deallocated manually
+//                3. *Label[MAX_STRING] and ParData[] will be allocated here and must be deallocated manually
 //
 // Parameter   :  FileName    : Name of the input file
 //                amr         : Target AMR_t pointer
@@ -82,7 +82,7 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
    int    FormatVersion, NPatchTotal[NLEVEL], NPatchAllLv, DumpID;
    long   Step;
    double Time[NLEVEL];
-   char **FieldLabel_In=NULL, **MagLabel_In=NULL;
+   char **FieldLabel_In=NULL, **MagLabel_In=NULL, **ParAttLabel_In=NULL;
    int   *NullPtr=NULL;
    int    WithPar;
 
@@ -145,13 +145,12 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
    NParAtt = 0;
    NPar    = 0; }
 
-// field labels
+// field and particle attribute labels
    FieldLabel_In = new char* [NField];
    for (int v=0; v<NField; v++)
    {
       char Key[MAX_STRING];
       sprintf( Key, "FieldLabel%02d", v );
-
       LoadField( Key,                &FieldLabel_In[v],     H5_SetID_InputPara,  H5_TypeID_InputPara, Fatal,   NullPtr,         -1, NonFatal );
    }
 
@@ -160,10 +159,18 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
    {
       char Key[MAX_STRING];
       sprintf( Key, "MagLabel%02d", v );
-
       LoadField( Key,                &MagLabel_In[v],       H5_SetID_InputPara,  H5_TypeID_InputPara, Fatal,   NullPtr,         -1, NonFatal );
    }
 
+   ParAttLabel_In = new char* [NParAtt];
+   for (int v=0; v<NParAtt; v++)
+   {
+      char Key[MAX_STRING];
+      sprintf( Key, "ParAttLabel%02d", v );
+      LoadField( Key,                &ParAttLabel_In[v],    H5_SetID_InputPara,  H5_TypeID_InputPara, Fatal,   NullPtr,         -1, NonFatal );
+   }
+
+// total number of patches
    NPatchAllLv = 0;
    for (int lv=0; lv<NLEVEL; lv++)  NPatchAllLv += NPatchTotal[lv];
 
@@ -304,7 +311,6 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
    for (int v=0; v<NMag;   v++)  H5_Status = H5Dclose( H5_SetID_Mag  [v] );
 
    H5_Status = H5Gclose( H5_GroupID_GridData );
-   H5_Status = H5Fclose( H5_FileID );
    H5_Status = H5Sclose( H5_SpaceID_Field );
    H5_Status = H5Sclose( H5_MemID_Field );
    for (int v=0; v<NMag; v++)
@@ -331,16 +337,67 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
 
 
 // 4. load particles
+   if ( NPar > 0 )
+   {
+//    4-1. allocate the particle data array
+      Aux_AllocateArray2D( ParData, NParAtt, NPar );
+
+
+//    4-2. set the names of all particle attributes
+      ParAttLabel = new char [NParAtt][MAX_STRING];
+      for (int v=0; v<NParAtt; v++)    sprintf( ParAttLabel[v], ParAttLabel_In[v] );
+
+
+//    4-3. initialize HDF5 objects
+      hsize_t H5_SetDims_ParData[1], H5_MemDims_ParData[1];
+      hid_t   H5_GroupID_ParData, H5_SpaceID_ParData, H5_MemID_ParData, H5_SetID_ParData[NParAtt];
+
+      H5_GroupID_ParData = H5Gopen( H5_FileID, "Particle", H5P_DEFAULT );
+      if ( H5_GroupID_ParData < 0 )    Aux_Error( ERROR_INFO, "failed to open the group \"%s\" !!\n", "Particle" );
+
+      H5_SetDims_ParData[0] = NPar;
+      H5_SpaceID_ParData    = H5Screate_simple( 1, H5_SetDims_ParData, NULL );
+      if ( H5_SpaceID_ParData < 0 )    Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_SpaceID_ParData" );
+
+      H5_MemDims_ParData[0] = NPar;
+      H5_MemID_ParData      = H5Screate_simple( 1, H5_MemDims_ParData, NULL );
+      if ( H5_MemID_ParData < 0 )      Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_MemID_ParData" );
+
+      for (int v=0; v<NParAtt; v++)
+      {
+         H5_SetID_ParData[v] = H5Dopen( H5_GroupID_ParData, ParAttLabel[v], H5P_DEFAULT );
+         if ( H5_SetID_ParData[v] < 0 )   Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", ParAttLabel[v] );
+      }
+
+
+//    4-4. load particle data
+      for (int v=0; v<NParAtt; v++)
+      {
+         H5_Status = H5Dread( H5_SetID_ParData[v], H5T_GAMER_REAL, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT, ParData[v] );
+         if ( H5_Status < 0 )    Aux_Error( ERROR_INFO, "failed to load the particle attribute %d !!\n", v );
+      }
+
+
+//    4-5. close HDF5 objects
+      for (int v=0; v<NParAtt; v++)    H5_Status = H5Dclose( H5_SetID_ParData[v] );
+      H5_Status = H5Sclose( H5_MemID_ParData );
+      H5_Status = H5Sclose( H5_SpaceID_ParData );
+      H5_Status = H5Gclose( H5_GroupID_ParData );
+   } // if ( NPar > 0 )
 
 
 
 // 5. close all HDF5 objects and free memory
-   for (int v=0; v<NField; v++)  free( FieldLabel_In[v] );
-   for (int v=0; v<NMag;   v++)  free(   MagLabel_In[v] );
-   delete [] FieldLabel_In;
-   delete []   MagLabel_In;
+   for (int v=0; v<NField;  v++)    free(  FieldLabel_In[v] );
+   for (int v=0; v<NMag;    v++)    free(    MagLabel_In[v] );
+   for (int v=0; v<NParAtt; v++)    free( ParAttLabel_In[v] );
+   delete []  FieldLabel_In;
+   delete []    MagLabel_In;
+   delete [] ParAttLabel_In;
    delete [] CrList_AllLv;
    delete [] SonList_AllLv;
+
+   H5_Status = H5Fclose( H5_FileID );
 
 
 
