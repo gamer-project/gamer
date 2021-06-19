@@ -299,6 +299,8 @@ struct SymConst_t
    int    Der_Nxt;
    int    Der_NOut_Max;
 
+   int    NFieldStoredMax;
+
 }; // struct SymConst_t
 
 
@@ -482,7 +484,7 @@ struct InputPara_t
    int    Opt__IntFracPassive_LR;
    int    IntFracPassive_NVar;
    int    IntFracPassive_VarIdx[NCOMP_PASSIVE];
-   char  *FieldLabel[NCOMP_TOTAL];
+   char  *FieldLabel[NFIELD_STORED_MAX];
 #  ifdef MHD
    char  *MagLabel[NCOMP_MAG];
 #  endif

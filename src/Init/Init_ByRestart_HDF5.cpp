@@ -6,7 +6,7 @@
 
 void FillIn_Makefile (  Makefile_t &Makefile  );
 void FillIn_SymConst (  SymConst_t &SymConst  );
-void FillIn_InputPara( InputPara_t &InputPara );
+void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char FieldLabelOut[][MAX_STRING] );
 
 template <typename T>
 static herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Target,
@@ -1651,6 +1651,8 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "Der_Nxt",              &RS.Der_Nxt,              SID, TID, NonFatal, &RT.Der_Nxt,               1, NonFatal );
    LoadField( "Der_NOut_Max",         &RS.Der_NOut_Max,         SID, TID, NonFatal, &RT.Der_NOut_Max,          1, NonFatal );
 
+   LoadField( "NFieldStoredMax",      &RS.NFieldStoredMax,      SID, TID, NonFatal, &RT.NFieldStoredMax,       1, NonFatal );
+
 
 // 5. close all objects
    Status = H5Tclose( TID );
@@ -1685,7 +1687,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 
 // 1. fill in the runtime parameters
    InputPara_t RT;   // RT = RunTime
-   FillIn_InputPara( RT );
+   FillIn_InputPara( RT, NCOMP_TOTAL, FieldLabel );   // no need to include all output fields here
 
 
 // 2. open the HDF5 file
