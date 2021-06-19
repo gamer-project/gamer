@@ -18,9 +18,10 @@ template <typename T>
 static herr_t LoadField( const char *FieldLabel, void *FieldPtr, const hid_t H5_SetID_Target,
                          const hid_t H5_TypeID_Target, const bool Fatal_Nonexist,
                          const T *ComprPtr, const int NCompr, const bool Fatal_Compr );
-static void LoadOnePatch( AMR_t &amr, const hid_t H5_FileID, const int lv, const int GID, const bool Recursive, const int *SonList,
-                          const int (*CrList)[3], const hid_t *H5_SetID_Field, const hid_t H5_SpaceID_Field, const hid_t H5_MemID_Field,
-                          const int NField, const int NMag );
+static void LoadOnePatch( AMR_t &amr, const hid_t H5_FileID, const int lv, const int GID,
+                          const bool Recursive, const int *SonList, const int (*CrList)[3],
+                          const hid_t *H5_SetID_Field, const hid_t  H5_SpaceID_Field, const hid_t  H5_MemID_Field, const int NField,
+                          const hid_t *H5_SetID_Mag,   const hid_t *H5_SpaceID_Mag,   const hid_t *H5_MemID_Mag,   const int NMag );
 
 
 
@@ -81,7 +82,7 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
    int    FormatVersion, NPatchTotal[NLEVEL], NPatchAllLv, DumpID;
    long   Step;
    double Time[NLEVEL];
-   char **FieldLabel_In=NULL;
+   char **FieldLabel_In=NULL, **MagLabel_In=NULL;
    int   *NullPtr=NULL;
    int    WithPar;
 
@@ -154,6 +155,15 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
       LoadField( Key,                &FieldLabel_In[v],     H5_SetID_InputPara,  H5_TypeID_InputPara, Fatal,   NullPtr,         -1, NonFatal );
    }
 
+   MagLabel_In = new char* [NMag];
+   for (int v=0; v<NMag; v++)
+   {
+      char Key[MAX_STRING];
+      sprintf( Key, "MagLabel%02d", v );
+
+      LoadField( Key,                &MagLabel_In[v],       H5_SetID_InputPara,  H5_TypeID_InputPara, Fatal,   NullPtr,         -1, NonFatal );
+   }
+
    NPatchAllLv = 0;
    for (int lv=0; lv<NLEVEL; lv++)  NPatchAllLv += NPatchTotal[lv];
 
@@ -207,13 +217,17 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
    const bool Recursive_Yes = true;
 
    FieldLabel = new char [NField][MAX_STRING];
+   MagLabel   = new char [NMag  ][MAX_STRING];
 
    hsize_t H5_SetDims_Field[4], H5_MemDims_Field[4];
    hid_t   H5_SetID_Field[NField], H5_MemID_Field, H5_SpaceID_Field, H5_GroupID_GridData;
+   hsize_t H5_SetDims_Mag[4], H5_MemDims_Mag[4];
+   hid_t   H5_SetID_Mag[NMag], H5_MemID_Mag[NMag], H5_SpaceID_Mag[NMag];
 
 
 // 3-1. set the names of all grid variables
    for (int v=0; v<NField; v++)  sprintf( FieldLabel[v], FieldLabel_In[v] );
+   for (int v=0; v<NMag;   v++)  sprintf(   MagLabel[v],   MagLabel_In[v] );
 
 
 // 3-2. initialize relevant HDF5 objects
@@ -233,6 +247,25 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
    H5_MemID_Field = H5Screate_simple( 4, H5_MemDims_Field, NULL );
    if ( H5_MemID_Field < 0 )  Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_MemDims_Field" );
 
+   for (int v=0; v<NMag; v++)
+   {
+      H5_SetDims_Mag[0] = NPatchAllLv;
+      for (int t=1; t<4; t++)
+      H5_SetDims_Mag[t] = ( 3-t == v ) ? PS1P1 : PS1;
+
+      H5_SpaceID_Mag[v] = H5Screate_simple( 4, H5_SetDims_Mag, NULL );
+      if ( H5_SpaceID_Mag[v] < 0 )
+         Aux_Error( ERROR_INFO, "failed to create the space \"%s[%d]\" !!\n", "H5_SpaceID_Mag", v );
+
+      H5_MemDims_Mag[0] = 1;
+      for (int t=1; t<4; t++)
+      H5_MemDims_Mag[t] = ( 3-t == v ) ? PS1P1 : PS1;
+
+      H5_MemID_Mag[v] = H5Screate_simple( 4, H5_MemDims_Mag, NULL );
+      if ( H5_MemID_Mag[v] < 0 )
+         Aux_Error( ERROR_INFO, "failed to create the space \"%s[%d]\" !!\n", "H5_MemID_Mag", v );
+   }
+
 
 // 3-3. open the target datasets just once
    H5_GroupID_GridData = H5Gopen( H5_FileID, "GridData", H5P_DEFAULT );
@@ -242,6 +275,12 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
    {
       H5_SetID_Field[v] = H5Dopen( H5_GroupID_GridData, FieldLabel[v], H5P_DEFAULT );
       if ( H5_SetID_Field[v] < 0 )  Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", FieldLabel[v] );
+   }
+
+   for (int v=0; v<NMag; v++)
+   {
+      H5_SetID_Mag  [v] = H5Dopen( H5_GroupID_GridData, MagLabel[v],   H5P_DEFAULT );
+      if ( H5_SetID_Mag[v] < 0 )    Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", MagLabel[v] );
    }
 
 
@@ -256,16 +295,23 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
 
 //    load the entire patch family recursively (actually it's not necessary here since we load all patches anyway)
       LoadOnePatch( amr, H5_FileID, 0, GID, Recursive_Yes, SonList_AllLv, CrList_AllLv,
-                    H5_SetID_Field, H5_SpaceID_Field, H5_MemID_Field, NField, NMag );
+                    H5_SetID_Field, H5_SpaceID_Field, H5_MemID_Field, NField,
+                    H5_SetID_Mag,   H5_SpaceID_Mag,   H5_MemID_Mag,   NMag );
    }
 
 // free HDF5 objects
    for (int v=0; v<NField; v++)  H5_Status = H5Dclose( H5_SetID_Field[v] );
+   for (int v=0; v<NMag;   v++)  H5_Status = H5Dclose( H5_SetID_Mag  [v] );
 
    H5_Status = H5Gclose( H5_GroupID_GridData );
    H5_Status = H5Fclose( H5_FileID );
    H5_Status = H5Sclose( H5_SpaceID_Field );
    H5_Status = H5Sclose( H5_MemID_Field );
+   for (int v=0; v<NMag; v++)
+   {
+      H5_Status = H5Sclose( H5_SpaceID_Mag[v] );
+      H5_Status = H5Sclose( H5_MemID_Mag  [v] );
+   }
 
 
 // 3-5. record the total number of loaded patches at each level
@@ -290,7 +336,9 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
 
 // 5. close all HDF5 objects and free memory
    for (int v=0; v<NField; v++)  free( FieldLabel_In[v] );
+   for (int v=0; v<NMag;   v++)  free(   MagLabel_In[v] );
    delete [] FieldLabel_In;
+   delete []   MagLabel_In;
    delete [] CrList_AllLv;
    delete [] SonList_AllLv;
 
@@ -479,15 +527,19 @@ herr_t LoadField( const char *FieldLabel, void *FieldPtr, const hid_t H5_SetID_T
 //                SonList          : List of son indices
 //                                   --> Set only when LOAD_BALANCE is not defined
 //                CrList           : List of patch corners
-//                H5_SetID_Field   : HDF5 dataset ID for grid data
-//                H5_SpaceID_Field : HDF5 dataset dataspace ID for grid data
-//                H5_MemID_Field   : HDF5 memory dataspace ID for grid data
+//                H5_SetID_Field   : HDF5 dataset ID           for cell-centered fields
+//                H5_SpaceID_Field : HDF5 dataset dataspace ID for cell-centered fields
+//                H5_MemID_Field   : HDF5 memory dataspace ID  for cell-centered fields
 //                NField           : Number of cell-centered fields stored in the file
+//                H5_SetID_Mag     : HDF5 dataset ID           for face-centered magnetic field
+//                H5_SpaceID_Mag   : HDF5 dataset dataspace ID for face-centered magnetic field
+//                H5_MemID_Mag     : HDF5 memory dataspace ID  for face-centered magnetic field
 //                NMag             : Number of face-centered magnetic components stored in the file
 //-------------------------------------------------------------------------------------------------------
-void LoadOnePatch( AMR_t &amr, const hid_t H5_FileID, const int lv, const int GID, const bool Recursive, const int *SonList,
-                   const int (*CrList)[3], const hid_t *H5_SetID_Field, const hid_t H5_SpaceID_Field, const hid_t H5_MemID_Field,
-                   const int NField, const int NMag )
+void LoadOnePatch( AMR_t &amr, const hid_t H5_FileID, const int lv, const int GID,
+                   const bool Recursive, const int *SonList, const int (*CrList)[3],
+                   const hid_t *H5_SetID_Field, const hid_t  H5_SpaceID_Field, const hid_t  H5_MemID_Field, const int NField,
+                   const hid_t *H5_SetID_Mag,   const hid_t *H5_SpaceID_Mag,   const hid_t *H5_MemID_Mag,   const int NMag )
 {
 
    if ( SonList == NULL )  Aux_Error( ERROR_INFO, "SonList == NULL (lv %d, GID %d) !!\n", lv, GID );
@@ -497,6 +549,7 @@ void LoadOnePatch( AMR_t &amr, const hid_t H5_FileID, const int lv, const int GI
    const bool WithData = true;   // load data for all patches
 
    hsize_t H5_Count_Field[4], H5_Offset_Field[4];
+   hsize_t H5_Count_Mag[4], H5_Offset_Mag[4];
    herr_t  H5_Status;
    int     SonGID0, PID, CrL[3], CrR[3];
 
@@ -519,7 +572,8 @@ void LoadOnePatch( AMR_t &amr, const hid_t H5_FileID, const int lv, const int GI
    amr.patch[lv][PID]->son = ( SonGID0 == -1 ) ? -1 : 1;
 
 
-// determine the subset of dataspace for grid data
+// a. cell-centered fields
+// a1. determine the subset of dataspace
    H5_Offset_Field[0] = GID;
    H5_Offset_Field[1] = 0;
    H5_Offset_Field[2] = 0;
@@ -533,7 +587,7 @@ void LoadOnePatch( AMR_t &amr, const hid_t H5_FileID, const int lv, const int GI
    H5_Status = H5Sselect_hyperslab( H5_SpaceID_Field, H5S_SELECT_SET, H5_Offset_Field, NULL, H5_Count_Field, NULL );
    if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to create a hyperslab for the grid data !!\n" );
 
-// load the cell-centered fields
+// a2. load data
    for (int v=0; v<NField; v++)
    {
       H5_Status = H5Dread( H5_SetID_Field[v], H5T_GAMER_REAL, H5_MemID_Field, H5_SpaceID_Field, H5P_DEFAULT,
@@ -543,6 +597,30 @@ void LoadOnePatch( AMR_t &amr, const hid_t H5_FileID, const int lv, const int GI
    }
 
 
+// b. face-centered magnetic fields
+   for (int v=0; v<NMag; v++)
+   {
+//    b1. determine the subset of dataspace
+      H5_Offset_Mag[0] = GID;
+      H5_Offset_Mag[1] = 0;
+      H5_Offset_Mag[2] = 0;
+      H5_Offset_Mag[3] = 0;
+
+      H5_Count_Mag [0] = 1;
+      for (int t=1; t<4; t++)
+      H5_Count_Mag [t] = ( 3-t == v ) ? PS1P1 : PS1;
+
+      H5_Status = H5Sselect_hyperslab( H5_SpaceID_Mag[v], H5S_SELECT_SET, H5_Offset_Mag, NULL, H5_Count_Mag, NULL );
+      if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to create a hyperslab for the magnetic field %d !!\n", v );
+
+//    load data
+      H5_Status = H5Dread( H5_SetID_Mag[v], H5T_GAMER_REAL, H5_MemID_Mag[v], H5_SpaceID_Mag[v], H5P_DEFAULT,
+                           amr.patch[lv][PID]->mag[v] );
+      if ( H5_Status < 0 )
+         Aux_Error( ERROR_INFO, "failed to load magnetic field (lv %d, GID %d, v %d) !!\n", lv, GID, v );
+   } // for (int v=0; v<NMag; v++)
+
+
 // enter the next level
    if ( Recursive )
    {
@@ -550,7 +628,8 @@ void LoadOnePatch( AMR_t &amr, const hid_t H5_FileID, const int lv, const int GI
       {
          for (int SonGID=SonGID0; SonGID<SonGID0+8; SonGID++)
             LoadOnePatch( amr, H5_FileID, lv+1, SonGID, Recursive, SonList, CrList,
-                          H5_SetID_Field, H5_SpaceID_Field, H5_MemID_Field, NField, NMag );
+                          H5_SetID_Field, H5_SpaceID_Field, H5_MemID_Field, NField,
+                          H5_SetID_Mag,   H5_SpaceID_Mag,   H5_MemID_Mag,   NMag );
       }
    }
 
