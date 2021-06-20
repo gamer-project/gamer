@@ -505,6 +505,7 @@ void Aux_TakeNote()
       fprintf( Note, "#define FLU_NIN_S               %d\n",      FLU_NIN_S             );
       fprintf( Note, "#define FLU_NOUT_S              %d\n",      FLU_NOUT_S            );
       fprintf( Note, "#define DER_NOUT_MAX            %d\n",      DER_NOUT_MAX          );
+      fprintf( Note, "#define NFIELD_STORED_MAX       %d\n",      NFIELD_STORED_MAX     );
       fprintf( Note, "#define NFLUX_FLUID             %d\n",      NFLUX_FLUID           );
       fprintf( Note, "#define NFLUX_PASSIVE           %d\n",      NFLUX_PASSIVE         );
 #     ifdef GRAVITY

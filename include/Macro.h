@@ -212,6 +212,10 @@
 #  define DER_NOUT_MAX        10
 
 
+// maximum number of fields to be stored in HDF5 snapshots
+#  define NFIELD_STORED_MAX   50
+
+
 // built-in fields in different models
 #if   ( MODEL == HYDRO )
 // field indices of fluid[] --> element of [0 ... NCOMP_FLUID-1]

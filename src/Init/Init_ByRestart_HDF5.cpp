@@ -6,7 +6,7 @@
 
 void FillIn_Makefile (  Makefile_t &Makefile  );
 void FillIn_SymConst (  SymConst_t &SymConst  );
-void FillIn_InputPara( InputPara_t &InputPara );
+void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char FieldLabelOut[][MAX_STRING] );
 
 template <typename T>
 static herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Target,
@@ -1301,7 +1301,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
       if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to create a hyperslab for the particle data !!\n" );
 
       H5_MemID_ParData = H5Screate_simple( 1, H5_MemDims_ParData, NULL );
-      if ( H5_MemID_ParData < 0 )   Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_MemDims_ParData" );
+      if ( H5_MemID_ParData < 0 )   Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_MemID_ParData" );
 
 //    load particle data from disk
       for (int v=0; v<PAR_NATT_STORED; v++)
@@ -1653,6 +1653,8 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "Der_Nxt",              &RS.Der_Nxt,              SID, TID, NonFatal, &RT.Der_Nxt,               1, NonFatal );
    LoadField( "Der_NOut_Max",         &RS.Der_NOut_Max,         SID, TID, NonFatal, &RT.Der_NOut_Max,          1, NonFatal );
 
+   LoadField( "NFieldStoredMax",      &RS.NFieldStoredMax,      SID, TID, NonFatal, &RT.NFieldStoredMax,       1, NonFatal );
+
 
 // 5. close all objects
    Status = H5Tclose( TID );
@@ -1687,7 +1689,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 
 // 1. fill in the runtime parameters
    InputPara_t RT;   // RT = RunTime
-   FillIn_InputPara( RT );
+   FillIn_InputPara( RT, NCOMP_TOTAL, FieldLabel );   // no need to include all output fields here
 
 
 // 2. open the HDF5 file
@@ -1918,7 +1920,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__ExtPot",             &RS.Opt__ExtPot,             SID, TID, NonFatal, &RT.Opt__ExtPot,              1, NonFatal );
    LoadField( "ExtPotTable_Name",        &RS.ExtPotTable_Name,        SID, TID, NonFatal,  RT.ExtPotTable_Name,         1, NonFatal );
    LoadField( "ExtPotTable_NPoint",       RS.ExtPotTable_NPoint,      SID, TID, NonFatal,  RT.ExtPotTable_NPoint,       3, NonFatal );
-   LoadField( "ExtPotTable_dh",          &RS.ExtPotTable_dh,          SID, TID, NonFatal, &RT.ExtPotTable_dh,           3, NonFatal );
+   LoadField( "ExtPotTable_dh",           RS.ExtPotTable_dh,          SID, TID, NonFatal,  RT.ExtPotTable_dh,           3, NonFatal );
    LoadField( "ExtPotTable_EdgeL",        RS.ExtPotTable_EdgeL,       SID, TID, NonFatal,  RT.ExtPotTable_EdgeL,        3, NonFatal );
    LoadField( "ExtPotTable_Float8",      &RS.ExtPotTable_Float8,      SID, TID, NonFatal, &RT.ExtPotTable_Float8,       1, NonFatal );
    LoadField( "Opt__GravityExtraMass",   &RS.Opt__GravityExtraMass,   SID, TID, NonFatal, &RT.Opt__GravityExtraMass,    1, NonFatal );
