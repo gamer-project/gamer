@@ -30,7 +30,7 @@
 void MHD_Aux_Check_DivergenceB( const bool Verbose, const char *comment )
 {
 
-   real   BxL, BxR, ByL, ByR, BzL, BzR, DivB, AmpB;
+   real   DivB;
    double DivB_Ave=0.0, DivB_Max=0.0;
    long   NAve=0, NFailed=0;
    int    Pass=true;
@@ -48,29 +48,12 @@ void MHD_Aux_Check_DivergenceB( const bool Verbose, const char *comment )
 //          we check both leaf and non-leaf patches
             for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
             {
-               const real (*B)[PS1P1*PS1*PS1] = amr->patch[MagSg][lv][PID]->magnetic;
-
                for (int k=0; k<PS1; k++)
                for (int j=0; j<PS1; j++)
                for (int i=0; i<PS1; i++)
                {
-//                compute errors
-                  const int idx_BxL = IDX321_BX( i, j, k, PS1, PS1 );
-                  const int idx_ByL = IDX321_BY( i, j, k, PS1, PS1 );
-                  const int idx_BzL = IDX321_BZ( i, j, k, PS1, PS1 );
-
-                  BxL = B[MAGX][ idx_BxL            ];
-                  BxR = B[MAGX][ idx_BxL + 1        ];
-                  ByL = B[MAGY][ idx_ByL            ];
-                  ByR = B[MAGY][ idx_ByL + PS1      ];
-                  BzL = B[MAGZ][ idx_BzL            ];
-                  BzR = B[MAGZ][ idx_BzL + SQR(PS1) ];
-
-                  DivB = ( BxR - BxL ) + ( ByR - ByL ) + ( BzR - BzL );
-                  AmpB = FABS(BxR) + FABS(BxL) + FABS(ByR) + FABS(ByL) + FABS(BzR) + FABS(BzL);
-
-//                do not normalize DivB if B is already zero on all 6 faces
-                  if ( AmpB != (real)0.0 )   DivB = FABS( DivB/AmpB );
+//                compute div(B)
+                  DivB = MHD_GetCellCenteredDivBInPatch( lv, PID, i, j, k, MagSg );
 
 //                record the maximum error
                   DivB_Max = MAX( DivB_Max, DivB );
@@ -91,10 +74,26 @@ void MHD_Aux_Check_DivergenceB( const bool Verbose, const char *comment )
                            Pass = false;
                         }
 
+//                      record B field
+                        const real (*B)[PS1P1*PS1*PS1] = amr->patch[MagSg][lv][PID]->magnetic;
+
+                        const int idx_BxL = IDX321_BX( i, j, k, PS1, PS1 );
+                        const int idx_ByL = IDX321_BY( i, j, k, PS1, PS1 );
+                        const int idx_BzL = IDX321_BZ( i, j, k, PS1, PS1 );
+
+                        real BxL, BxR, ByL, ByR, BzL, BzR;
+
+                        BxL = B[MAGX][ idx_BxL            ];
+                        BxR = B[MAGX][ idx_BxL + 1        ];
+                        ByL = B[MAGY][ idx_ByL            ];
+                        ByR = B[MAGY][ idx_ByL + PS1      ];
+                        BzL = B[MAGZ][ idx_BzL            ];
+                        BzR = B[MAGZ][ idx_BzL + SQR(PS1) ];
+
                         Aux_Message( stderr, "%4d %2d %7d %2d %2d %2d %21.14e %21.14e %21.14e %21.14e %21.14e %21.14e %21.14e\n",
                                      MPI_Rank, lv, PID, i, j, k, BxL, BxR, ByL, ByR, BzL, BzR, DivB );
-                     }
-                  }
+                     } // if ( Verbose )
+                  } // if ( DivB > ERROR_TOLERANCE )
 
 //                record the average error
                   DivB_Ave += SQR( DivB );   // L2 norm

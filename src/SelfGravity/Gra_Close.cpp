@@ -27,9 +27,6 @@ void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_N
                 const int NPG, const int *PID0_List )
 {
 
-#  if ( defined DUAL_ENERGY  &&  defined UNSPLIT_GRAVITY )
-   const real Gamma_m1 = GAMMA - (real)1.0;
-#  endif
    int N, PID, PID0;
 
 
@@ -74,12 +71,12 @@ void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_N
 
 #              if   ( DUAL_ENERGY == DE_ENPY )
                amr->patch[SaveSg][lv][PID]->fluid[ENPY][k][j][i]
-                  = Hydro_Fluid2Entropy( amr->patch[SaveSg][lv][PID]->fluid[DENS][k][j][i],
-                                         amr->patch[SaveSg][lv][PID]->fluid[MOMX][k][j][i],
-                                         amr->patch[SaveSg][lv][PID]->fluid[MOMY][k][j][i],
-                                         amr->patch[SaveSg][lv][PID]->fluid[MOMZ][k][j][i],
-                                         amr->patch[SaveSg][lv][PID]->fluid[ENGY][k][j][i],
-                                         Gamma_m1, Emag );
+                  = Hydro_Con2Entropy( amr->patch[SaveSg][lv][PID]->fluid[DENS][k][j][i],
+                                       amr->patch[SaveSg][lv][PID]->fluid[MOMX][k][j][i],
+                                       amr->patch[SaveSg][lv][PID]->fluid[MOMY][k][j][i],
+                                       amr->patch[SaveSg][lv][PID]->fluid[MOMZ][k][j][i],
+                                       amr->patch[SaveSg][lv][PID]->fluid[ENGY][k][j][i],
+                                       Emag, EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #              elif ( DUAL_ENERGY == DE_EINT )
 #              error : DE_EINT is NOT supported yet !!
 #              endif

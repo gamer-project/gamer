@@ -12,7 +12,7 @@
 //
 // Parameter   :  FileName : Name of the target file 
 //
-// Return      : true/false <-> file exists/not exists
+// Return      :  true/false <-> file exists/not exists
 //-------------------------------------------------------------------------------------------------------
 bool Aux_CheckFileExist( const char *FileName )
 {

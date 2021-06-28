@@ -77,7 +77,7 @@ void Init_Parallelization()
    Pot_ParaBuf = MAX( GRA_GHOST_SIZE, IntGhostSize_Pot );
    Rho_ParaBuf = MAX( RHO_GHOST_SIZE, IntGhostSize_Rho );
 
-   if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
+   if ( OPT__SELF_GRAVITY )
    Flu_ParaBuf = MAX( Flu_ParaBuf,    IntGhostSize_Rho );   // ensure that the fluid ghost zone is large enough for Poisson
 #  endif
 #  ifdef MHD

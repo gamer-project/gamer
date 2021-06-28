@@ -1,0 +1,24 @@
+###############################################
+#       Intel MPI job script example          #
+###############################################
+
+#!/bin/bash
+#PBS -l select=1:ncpus=40:mpiprocs=10 #NODE_NUMBER, CPU_CORE_NUMBER, MPI_PROCESSOR_NUMBER
+#PBS -N JOB_NAME
+#PBS -q NODE_NAME #ctest, cf160, cf120...
+#PBS -l walltime=00:30:00
+#PBS -P MST110XXX #PROJECT_SERIAL_NUMBER
+#PBS -o out
+#PBS -e err
+#PBS -M USER_EMAIL_ADDRESS
+#PBS -m abe #job status for email inform
+
+cd $PBS_O_WORKDIR
+
+module load intel/2018_u1
+
+#export I_MPI_HYDRA_PMI_CONNECT=alltoall
+export I_MPI_HYDRA_BRANCH_COUNT=-1
+
+mpiexec.hydra -PSM2 ./gamer >> log
+

@@ -25,7 +25,7 @@ void Init_ExternalPot()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
-// ExtPot_AuxArray has the size of EXT_POT_NAUX_MAX defined in CUPOT.h (default = 10)
+// ExtPot_AuxArray has the size of EXT_POT_NAUX_MAX defined in Macro.h (default = 20)
    ExtPot_AuxArray[0] = (real)0.5*amr->BoxSize[0];
    ExtPot_AuxArray[1] = (real)0.5*amr->BoxSize[1];
    ExtPot_AuxArray[2] = (real)0.5*amr->BoxSize[2];

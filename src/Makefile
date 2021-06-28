@@ -79,6 +79,17 @@ SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 # magnetohydrodynamics
 #SIMU_OPTION += -DMHD
 
+# cosmic rays (not supported yet)
+#SIMU_OPTION += -DCOSMIC_RAY
+
+# equation of state: EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TABULAR/EOS_USER
+# --> must be set when MODEL=HYDRO; must also enable BAROTROPIC_EOS for EOS_ISOTHERMAL
+SIMU_OPTION += -DEOS=EOS_GAMMA
+
+# whether or not the EOS set above is barotropic
+# --> mandatory for EOS_ISOTHERMAL; optional for EOS_TABULAR/EOS_USER
+#SIMU_OPTION += -DBAROTROPIC_EOS
+
 
 # (b-2) ELBDM options
 # ------------------------------------------------------------------------------------
@@ -152,7 +163,7 @@ SIMU_OPTION += -DMAX_PATCH=1000000
 # --> must set GPU_ARCH as well
 #SIMU_OPTION += -DGPU
 
-# GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA/TURING
+# GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA/TURING/AMPERE
 SIMU_OPTION += -DGPU_ARCH=KEPLER
 
 # debug mode
@@ -379,7 +390,13 @@ LIBYT_PATH   :=
 #GRACKLE_PATH :=
 #GSL_PATH     := /usr/local/gsl-1.16
 
-
+# NASA Pleiades (intel compilers and SGI MPI)
+#CUDA_PATH    := /nasa/cuda/9.0/
+#FFTW_PATH    := /u/jzuhone/opt/fftw-2.1.5
+#MPI_PATH     := /nasa/sgi/mpt/2.14r19
+#HDF5_PATH    := /nasa/hdf5/1.8.18_serial
+#GRACKLE_PATH :=
+#GSL_PATH     :=
 
 
 
@@ -392,7 +409,7 @@ LIBYT_PATH   :=
 # CUDA source files (compiled with nvcc)
 GPU_FILE    := CUAPI_Asyn_FluidSolver.cu  CUAPI_DiagnoseDevice.cu  CUAPI_MemAllocate_Fluid.cu \
                CUAPI_MemFree_Fluid.cu  CUAPI_Set_Default_GPU_Parameter.cu  CUAPI_SetDevice.cu \
-               CUAPI_Synchronize.cu  CUAPI_Asyn_dtSolver.cu  CUAPI_SetConstMemory.cu
+               CUAPI_Synchronize.cu  CUAPI_Asyn_dtSolver.cu  CUAPI_SetConstMemory.cu  CUAPI_SetConstMemory_EoS.cu
 
 
 # C/C++ source files (compiled with c++ compiler)
@@ -409,7 +426,8 @@ CPU_FILE    += Aux_Check_Parameter.cpp  Aux_Check_Conservation.cpp  Aux_Check.cp
 
 CPU_FILE    += CPU_FluidSolver.cpp  Flu_AdvanceDt.cpp  Flu_Prepare.cpp  Flu_Close.cpp  Flu_FixUp_Flux.cpp \
                Flu_FixUp_Restrict.cpp  Flu_AllocateFluxArray.cpp  Flu_BoundaryCondition_User.cpp  Flu_ResetByUser.cpp \
-               Flu_CorrAfterAllSync.cpp  Flu_ManageFixUpTempArray.cpp
+               Flu_CorrAfterAllSync.cpp  Flu_ManageFixUpTempArray.cpp  Flu_DerivedField_BuiltIn.cpp \
+               Flu_DerivedField_User.cpp
 
 CPU_FILE    += End_GAMER.cpp  End_MemFree.cpp  End_MemFree_Fluid.cpp  End_StopManually.cpp  End_User.cpp \
                Init_BaseLevel.cpp  Init_GAMER.cpp  Init_Load_DumpTable.cpp \
@@ -436,7 +454,7 @@ CPU_FILE    += Flag_Real.cpp  Refine.cpp   SiblingSearch.cpp  SiblingSearch_Base
                Flag_User.cpp  Flag_Check.cpp  Flag_Lohner.cpp  Flag_Region.cpp
 
 CPU_FILE    += Table_01.cpp  Table_02.cpp  Table_03.cpp  Table_04.cpp  Table_05.cpp  Table_06.cpp \
-               Table_07.cpp  Table_SiblingSharingSameEdge.cpp
+               Table_07.cpp  Table_SiblingSharingSameEdge.cpp  Table_SiblingPatch.cpp
 
 vpath %.cu     GPU_API
 vpath %.cpp    Main  Init  Refine  Fluid  Interpolation  Tables  Output  Miscellaneous  Auxiliary
@@ -445,19 +463,21 @@ vpath %.cpp    Main  Init  Refine  Fluid  Interpolation  Tables  Output  Miscell
 # hydrodynamic source files (included only if "MODEL=HYDRO")
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DMODEL=HYDRO, $(SIMU_OPTION))" "-DMODEL=HYDRO"
-GPU_FILE    += CUFLU_dtSolver_HydroCFL.cu  CUFLU_FluidSolver_RTVD.cu  CUFLU_FluidSolver_MHM.cu  CUFLU_FluidSolver_CTU.cu
+GPU_FILE    += CUFLU_dtSolver_HydroCFL.cu  CUFLU_FluidSolver_RTVD.cu  CUFLU_FluidSolver_MHM.cu  CUFLU_FluidSolver_CTU.cu \
+               GPU_EoS_Gamma.cu  GPU_EoS_User_Template.cu  GPU_EoS_Isothermal.cu
 
 CPU_FILE    += CPU_FluidSolver_RTVD.cpp  CPU_FluidSolver_MHM.cpp  CPU_FluidSolver_CTU.cpp \
                CPU_Shared_DataReconstruction.cpp  CPU_Shared_FluUtility.cpp  CPU_Shared_ComputeFlux.cpp \
                CPU_Shared_FullStepUpdate.cpp  CPU_Shared_RiemannSolver_Exact.cpp  CPU_Shared_RiemannSolver_Roe.cpp \
                CPU_Shared_RiemannSolver_HLLE.cpp  CPU_Shared_RiemannSolver_HLLC.cpp  CPU_Shared_DualEnergy.cpp \
-               CPU_dtSolver_HydroCFL.cpp
+               CPU_dtSolver_HydroCFL.cpp  CPU_EoS_Gamma.cpp  CPU_EoS_User_Template.cpp  CPU_EoS_Isothermal.cpp
 
 CPU_FILE    += Hydro_Init_ByFunction_AssignData.cpp  Hydro_Aux_Check_Negative.cpp \
-               Hydro_BoundaryCondition_Reflecting.cpp  Hydro_BoundaryCondition_Outflow.cpp
+               Hydro_BoundaryCondition_Reflecting.cpp  Hydro_BoundaryCondition_Outflow.cpp \
+               EoS_Init.cpp  EoS_End.cpp
 
-vpath %.cu     Model_Hydro/GPU_Hydro
-vpath %.cpp    Model_Hydro/CPU_Hydro  Model_Hydro
+vpath %.cu     Model_Hydro/GPU_Hydro  EoS  EoS/Gamma  EoS/User_Template  EoS/Isothermal
+vpath %.cpp    Model_Hydro/CPU_Hydro  Model_Hydro  EoS  EoS/Gamma  EoS/User_Template  EoS/Isothermal
 
 ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
 GPU_FILE    += CUPOT_HydroGravitySolver.cu  CUPOT_dtSolver_HydroGravity.cu
@@ -511,13 +531,15 @@ endif # MODEL
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
 GPU_FILE    += CUAPI_MemAllocate_PoissonGravity.cu  CUAPI_MemFree_PoissonGravity.cu \
-               CUAPI_Asyn_PoissonGravitySolver.cu  CUAPI_SetConstMemory_ExtAccPot.cu
+               CUAPI_Asyn_PoissonGravitySolver.cu  CUAPI_SetConstMemory_ExtAccPot.cu \
+               CUAPI_SendExtPotTable2GPU.cu
 
 GPU_FILE    += CUPOT_PoissonSolver_SOR_10to14cube.cu  CUPOT_PoissonSolver_SOR_16to18cube.cu \
-               CUPOT_PoissonSolver_MG.cu  CUPOT_ExtAcc_PointMass.cu  CUPOT_ExtPot_PointMass.cu
+               CUPOT_PoissonSolver_MG.cu  CUPOT_ExtAcc_PointMass.cu  CUPOT_ExtPot_PointMass.cu \
+               CUPOT_ExtPotSolver.cu  CUPOT_ExtPot_Tabular.cu
 
 CPU_FILE    += CPU_PoissonGravitySolver.cpp  CPU_PoissonSolver_SOR.cpp  CPU_PoissonSolver_FFT.cpp \
-               CPU_PoissonSolver_MG.cpp
+               CPU_PoissonSolver_MG.cpp  CPU_ExtPotSolver.cpp  CPU_ExtPotSolver_BaseLevel.cpp
 
 CPU_FILE    += Init_FFTW.cpp  Gra_Close.cpp  Gra_Prepare_Flu.cpp  Gra_Prepare_Pot.cpp  Gra_Prepare_Corner.cpp \
                Gra_AdvanceDt.cpp  Poi_Close.cpp  Poi_Prepare_Pot.cpp  Poi_Prepare_Rho.cpp \
@@ -525,7 +547,8 @@ CPU_FILE    += Init_FFTW.cpp  Gra_Close.cpp  Gra_Prepare_Flu.cpp  Gra_Prepare_Po
                End_MemFree_PoissonGravity.cpp  Init_Set_Default_SOR_Parameter.cpp  Init_GreenFuncK.cpp \
                Init_Set_Default_MG_Parameter.cpp  Poi_GetAverageDensity.cpp  Poi_AddExtraMassForGravity.cpp \
                Poi_BoundaryCondition_Extrapolation.cpp  Gra_Prepare_USG.cpp  Poi_StorePotWithGhostZone.cpp \
-               Init_ExtAccPot.cpp  CPU_ExtAcc_PointMass.cpp  CPU_ExtPot_PointMass.cpp
+               Init_ExtAccPot.cpp  End_ExtAccPot.cpp  CPU_ExtAcc_PointMass.cpp  CPU_ExtPot_PointMass.cpp \
+               Poi_UserWorkBeforePoisson.cpp  Init_LoadExtPotTable.cpp  CPU_ExtPot_Tabular.cpp
 
 vpath %.cu     SelfGravity/GPU_Poisson  SelfGravity/GPU_Gravity
 vpath %.cpp    SelfGravity/CPU_Poisson  SelfGravity/CPU_Gravity  SelfGravity
@@ -611,6 +634,21 @@ CPU_FILE    += YT_Init.cpp  YT_End.cpp  YT_SetParameter.cpp  YT_AddAllGrid.cpp  
 
 vpath %.cpp    YT
 endif # SUPPORT_LIBYT
+
+
+# local source terms source files
+# ------------------------------------------------------------------------------------
+GPU_FILE    += CUAPI_Asyn_SrcSolver.cu  CUSRC_SrcSolver_IterateAllCells.cu  CUSRC_Src_Deleptonization.cu \
+               CUSRC_Src_User_Template.cu
+
+CPU_FILE    += CPU_SrcSolver.cpp  CPU_SrcSolver_IterateAllCells.cpp  CPU_Src_Deleptonization.cpp \
+               CPU_Src_User_Template.cpp
+
+CPU_FILE    += Src_AdvanceDt.cpp  Src_Prepare.cpp  Src_Close.cpp  Src_Init.cpp  Src_End.cpp \
+               Src_WorkBeforeMajorFunc.cpp
+
+vpath %.cu     SourceTerms  SourceTerms/User_Template  SourceTerms/Deleptonization
+vpath %.cpp    SourceTerms  SourceTerms/User_Template  SourceTerms/Deleptonization
 
 
 # Grackle source files (included only if "SUPPORT_GRACKLE" is turned on)
@@ -710,6 +748,10 @@ endif
 # -------------------------------------------------------------------------------
 INCLUDE := -I../include
 
+ifeq "$(filter -DMODEL=HYDRO, $(SIMU_OPTION))" "-DMODEL=HYDRO"
+INCLUDE += -IModel_Hydro/GPU_Hydro
+endif
+
 ifeq "$(filter -DSERIAL, $(SIMU_OPTION))" ""
 INCLUDE += -I$(MPI_PATH)/include
 endif
@@ -750,6 +792,16 @@ endif
 COMMONFLAG := $(INCLUDE) $(SIMU_OPTION)
 CXXFLAG    += $(COMMONFLAG) $(OPENMPFLAG)
 
+# grep git information
+GIT_INFO    :=
+GIT_FAIL    := $(shell git rev-parse 2>&1 | cat)
+ifeq "$(GIT_FAIL)" ""
+   GIT_INFO += -DGIT_COMMIT="`git rev-parse HEAD`"              # commit
+   GIT_INFO += -DGIT_BRANCH="`git rev-parse --abbrev-ref HEAD`" # branch
+else
+   GIT_INFO += -DGIT_COMMIT="N/A"
+   GIT_INFO += -DGIT_BRANCH="N/A"
+endif
 
 # NVCC flags
 # -------------------------------------------------------------------------------
@@ -773,6 +825,9 @@ else ifeq "$(filter -DGPU_ARCH=VOLTA,  $(SIMU_OPTION))" "-DGPU_ARCH=VOLTA"
    NVCCFLAG_ARCH += -gencode arch=compute_70,code=\"compute_70,sm_70\"
 else ifeq "$(filter -DGPU_ARCH=TURING,  $(SIMU_OPTION))" "-DGPU_ARCH=TURING"
    NVCCFLAG_ARCH += -gencode arch=compute_75,code=\"compute_75,sm_75\"
+else ifeq "$(filter -DGPU_ARCH=AMPERE,  $(SIMU_OPTION))" "-DGPU_ARCH=AMPERE"
+   NVCCFLAG_ARCH += -gencode arch=compute_80,code=\"compute_80,sm_80\"
+   NVCCFLAG_ARCH += -gencode arch=compute_86,code=\"compute_86,sm_86\"
 else ifeq "$(filter -DGPU, $(SIMU_OPTION))" "-DGPU"
    $(error unknown GPU_ARCH (please set it in the Makefile))
 endif
@@ -824,6 +879,12 @@ else ifeq "$(filter -DGPU_ARCH=TURING, $(SIMU_OPTION))" "-DGPU_ARCH=TURING"
    else
      NVCCFLAG_FLU += --maxrregcount=128
    endif
+else ifeq "$(filter -DGPU_ARCH=AMPERE, $(SIMU_OPTION))" "-DGPU_ARCH=AMPERE"
+   ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
+     NVCCFLAG_FLU += --maxrregcount=192
+   else
+     NVCCFLAG_FLU += --maxrregcount=128
+   endif
 endif
 
 # Poisson/gravity solvers flags
@@ -840,6 +901,7 @@ NVCC         := $(strip $(NVCC))
 NVCCFLAG_COM := $(strip $(NVCCFLAG_COM))
 NVCCFLAG_FLU := $(strip $(NVCCFLAG_FLU))
 NVCCFLAG_POT := $(strip $(NVCCFLAG_POT))
+GIT_INFO     := $(strip $(GIT_INFO))
 
 
 # implicit rules (do NOT modify the order of the following rules)
@@ -861,6 +923,10 @@ $(OBJ_PATH)/$(PREFIX_GPU)CUPOT_%.o : CUPOT_%.cu
 	@echo "Compiling $<"
 	$(ECHO)$(NVCC) $(NVCCFLAG_COM) $(NVCCFLAG_POT) -o $@ -dc $<
 
+$(OBJ_PATH)/$(PREFIX_GPU)CUSRC_%.o : CUSRC_%.cu
+	@echo "Compiling $<"
+	$(ECHO)$(NVCC) $(NVCCFLAG_COM) -o $@ -dc $<
+
 $(OBJ_PATH)/$(PREFIX_GPU)CUAPI_%.o : CUAPI_%.cu
 	@echo "Compiling $<"
 	$(ECHO)$(NVCC) $(NVCCFLAG_COM) -o $@ -dc $<
@@ -873,7 +939,7 @@ endif # GPU
 # CPU codes
 $(OBJ_PATH)/$(PREFIX_CPU)%.o : %.cpp
 	@echo "Compiling $<"
-	$(ECHO)$(CXX) $(CXXFLAG) -o $@ -c $<
+	$(ECHO)$(CXX) $(CXXFLAG) $(GIT_INFO) -o $@ -c $<
 
 
 # linking
@@ -910,6 +976,4 @@ clean :
 	@rm -f $(OBJ_PATH)/*
 	@rm -f $(EXECUTABLE)
 	@rm -f ./*.linkinfo
-
-
 

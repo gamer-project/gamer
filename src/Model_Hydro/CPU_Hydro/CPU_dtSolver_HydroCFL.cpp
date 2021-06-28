@@ -8,6 +8,7 @@
 #ifdef __CUDACC__
 
 #include "CUFLU_Shared_FluUtility.cu"
+#include "CUDA_ConstMemory.h"
 
 // parallel reduction routine
 #define RED_NTHREAD  DT_FLU_BLOCK_SIZE
@@ -19,12 +20,7 @@
 #  include "../../GPU_Utility/CUUTI_BlockReduction_WarpSync.cu"
 #endif
 
-#else // #ifdef __CUDACC__
-
-real Hydro_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                        const real Gamma_m1, const bool CheckMinPres, const real MinPres, const real Emag );
-
-#endif // #ifdef __CUDACC__ ... else ...
+#endif // #ifdef __CUDACC__
 
 
 
@@ -49,25 +45,24 @@ real Hydro_GetPressure( const real Dens, const real MomX, const real MomY, const
 //                NPG         : Number of target patch groups (for CPU only)
 //                dh          : Cell size
 //                Safety      : dt safety factor
-//                Gamma       : Ratio of specific heats
 //                MinPres     : Minimum allowed pressure
+//                EoS         : EoS object
 //
 // Return      :  g_dt_Array
 //-----------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __global__
-void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
+void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                               const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ],
-                              const real dh, const real Safety, const real Gamma, const real MinPres )
+                              const real dh, const real Safety, const real MinPres, const EoS_t EoS )
 #else
-void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
+void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                               const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const int NPG,
-                              const real dh, const real Safety, const real Gamma, const real MinPres )
+                              const real dh, const real Safety, const real MinPres, const EoS_t EoS )
 #endif
 {
 
    const bool CheckMinPres_Yes = true;
-   const real Gamma_m1         = Gamma - (real)1.0;
    const real dhSafety         = Safety*dh;
 
 // loop over all patches
@@ -84,13 +79,13 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][NCOMP_
 
       CGPU_LOOP( t, CUBE(PS1) )
       {
-         real fluid[NCOMP_FLUID], _Rho, Vx, Vy, Vz, Pres, Emag, a2, CFLx, CFLy, CFLz;
+         real fluid[FLU_NIN_T], _Rho, Vx, Vy, Vz, Pres, Emag, a2, CFLx, CFLy, CFLz;
 #        ifdef MHD
          int  i, j, k;
          real B[3], Bx2, By2, Bz2, B2, Ca2_plus_a2, Ca2_min_a2, Ca2_min_a2_sqr, four_a2_over_Rho;
 #        endif
 
-         for (int v=0; v<NCOMP_FLUID; v++)   fluid[v] = g_Flu_Array[p][v][t];
+         for (int v=0; v<FLU_NIN_T; v++)  fluid[v] = g_Flu_Array[p][v][t];
 
 #        ifdef MHD
          i    = t % PS1;
@@ -108,13 +103,15 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][NCOMP_
          Emag = NULL_REAL;
 #        endif
 
-        _Rho  = (real)1.0 / fluid[DENS];
-         Vx   = FABS( fluid[MOMX] )*_Rho;
-         Vy   = FABS( fluid[MOMY] )*_Rho;
-         Vz   = FABS( fluid[MOMZ] )*_Rho;
-         Pres = Hydro_GetPressure( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                   Gamma_m1, CheckMinPres_Yes, MinPres, Emag );
-         a2   = Gamma*Pres*_Rho; // sound speed squared
+        _Rho   = (real)1.0 / fluid[DENS];
+         Vx    = FABS( fluid[MOMX] )*_Rho;
+         Vy    = FABS( fluid[MOMY] )*_Rho;
+         Vz    = FABS( fluid[MOMZ] )*_Rho;
+         Pres  = Hydro_Con2Pres( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], fluid+NCOMP_FLUID,
+                                 CheckMinPres_Yes, MinPres, Emag,
+                                 EoS.DensEint2Pres_FuncPtr, EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table, NULL );
+         a2    = EoS.DensPres2CSqr_FuncPtr( fluid[DENS], Pres, fluid+NCOMP_FLUID, EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int,
+                                            EoS.Table, NULL ); // sound speed squared
 
 //       compute the maximum information propagating speed
 //       --> hydro: bulk velocity + sound wave
@@ -140,12 +137,16 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][NCOMP_
          CFLy += Vy;
          CFLz += Vz;
 
-#        if   ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == CTU )
+#        if   ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
          MaxCFL = FMAX( CFLx, MaxCFL );
          MaxCFL = FMAX( CFLy, MaxCFL );
          MaxCFL = FMAX( CFLz, MaxCFL );
-#        elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
+#        else
+#        error : ERROR : unsupported FLU_SCHEME !!
+         /*
+//       no longer used
          MaxCFL = FMAX( CFLx+CFLy+CFLz, MaxCFL );
+         */
 #        endif
       } // CGPU_LOOP( t, CUBE(PS1) )
 

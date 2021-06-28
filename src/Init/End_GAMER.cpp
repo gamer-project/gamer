@@ -35,9 +35,18 @@ void End_GAMER()
    YT_End();
 #  endif
 
-
 #  ifdef SUPPORT_GRACKLE
    Grackle_End();
+#  endif
+
+#  if ( MODEL == HYDRO )
+   EoS_End();
+#  endif
+
+   Src_End();
+
+#  ifdef GRAVITY
+   End_ExtAccPot();
 #  endif
 
 

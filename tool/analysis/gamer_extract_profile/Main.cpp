@@ -1106,6 +1106,10 @@ void ReadOption( int argc, char **argv )
    if ( UseMaxRhoPos_Par  &&  UseMaxRhoPos <= 0 )
          Aux_Error( ERROR_INFO, "UseMaxRhoPos_Par (-D) is useless when UseMaxRhoPos (-m) <= 0 !!\n" );
 
+#  if ( MODEL == HYDRO )
+      Aux_Message( stderr, "WARNING : pressure is computed by constant-gamma EoS !!\n" );
+#  endif
+
 } // FUNCTION : ReadOption
 
 

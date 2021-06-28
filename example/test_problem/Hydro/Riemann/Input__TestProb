@@ -12,3 +12,5 @@ Riemann_Prob         0              # target Riemann problem
                                     #    9 : Noh's strong shock
 Riemann_LR          +1              # wave propagation direction (>0/<0 --> positive/negative direction) [1]
 Riemann_XYZ          0              # wave propagation axis (0/1/2 --> x/y/z) [0]
+Riemann_Pos          0.5            # position of discontinuity [box center]
+Riemann_Width        1.0e-10        # width    of discontinuity [infinitesimal]

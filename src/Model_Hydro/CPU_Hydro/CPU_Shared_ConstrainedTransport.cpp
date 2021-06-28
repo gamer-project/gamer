@@ -27,7 +27,8 @@ void UpdateVelocityByGravity( real &v1, real &v2, const int TDir1, const int TDi
                               const int i_usg, const int j_usg, const int k_usg,
                               const real dt_half, const double dh_f8, const real GraConst,
                               const real g_Pot_USG[], const double Corner_USG[], const double Time,
-                              const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[] );
+                              const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
+                              const double ExtAcc_AuxArray[] );
 #endif
 
 
@@ -74,13 +75,14 @@ void UpdateVelocityByGravity( real &v1, real &v2, const int TDir1, const int TDi
 //                DumpIntEle      : Store the inter-patch electric field (i.e., E field at the patch boundaries)
 //                                  in g_IntEle[]
 //                g_IntEle        : Array for DumpIntEle
-//                CorrHalfVel     : true --> correct the half-step velocity by gravity        (for UNSPLIT_GRAVITY only)
-//                g_Pot_USG       : Array storing the input potential for CorrHalfVel         (for UNSPLIT_GRAVITY only)
-//                g_Corner        : Array storing the corner coordinates of each patch group  (for UNSPLIT_GRAVITY only)
-//                Time            : Current physical time                                     (for UNSPLIT_GRAVITY only)
-//                GravityType     : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
-//                ExtAcc_Func     : Function pointer to the external acceleration routine     (for UNSPLIT_GRAVITY only)
-//                ExtAcc_AuxArray : Auxiliary array for external acceleration                 (for UNSPLIT_GRAVITY only)
+//                CorrHalfVel     : true --> correct the half-step velocity by gravity       (for UNSPLIT_GRAVITY only)
+//                g_Pot_USG       : Array storing the input potential for CorrHalfVel        (for UNSPLIT_GRAVITY only)
+//                g_Corner        : Array storing the corner coordinates of each patch group (for UNSPLIT_GRAVITY only)
+//                Time            : Current physical time                                    (for UNSPLIT_GRAVITY only)
+//                UsePot          : Add self-gravity and/or external potential               (for UNSPLIT_GRAVITY only)
+//                ExtAcc          : Add external acceleration                                (for UNSPLIT_GRAVITY only)
+//                ExtAcc_Func     : Function pointer to the external acceleration routine    (for UNSPLIT_GRAVITY only)
+//                ExtAcc_AuxArray : Auxiliary array for external acceleration                (for UNSPLIT_GRAVITY only)
 //
 // Return      :  g_EC_Ele[], g_IntEle[]
 //------------------------------------------------------------------------------------------------------
@@ -92,7 +94,8 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                           const real dt, const real dh,
                           const bool DumpIntEle, real g_IntEle[][NCOMP_ELE][ PS2P1*PS2 ],
                           const bool CorrHalfVel, const real g_Pot_USG[], const double g_Corner[], const double Time,
-                          const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[] )
+                          const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
+                          const double ExtAcc_AuxArray[] )
 {
 
 // check
@@ -100,10 +103,10 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
 #  ifdef UNSPLIT_GRAVITY
    if ( CorrHalfVel )
    {
-      if (  ( GravityType == GRAVITY_SELF || GravityType == GRAVITY_BOTH )  &&  g_Pot_USG == NULL  )
+      if ( UsePot  &&  g_Pot_USG == NULL )
          printf( "ERROR : g_Pot_USG == NULL !!\n" );
 
-      if (  ( GravityType == GRAVITY_EXTERNAL || GravityType == GRAVITY_BOTH )  &&  g_Corner == NULL  )
+      if ( ExtAcc  &&  g_Corner == NULL )
          printf( "ERROR : g_Corner == NULL !!\n" );
    }
 #  else
@@ -127,7 +130,7 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
 
    int    ijk_usg[3];
    double Corner_USG[3];   // central coordinates of the 0th cell in g_Pot_USG[]
-   if (  CorrHalfVel  &&  ( GravityType == GRAVITY_EXTERNAL || GravityType == GRAVITY_BOTH )  )
+   if ( CorrHalfVel  &&  ExtAcc )
       for (int d=0; d<3; d++)    Corner_USG[d] = g_Corner[d] - dh_f8*USG_GHOST_SIZE_F;
 
 // check
@@ -215,11 +218,11 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
             ijk_usg[1] = j_pri + idx_pri2usg;
             ijk_usg[2] = k_pri + idx_pri2usg;
             UpdateVelocityByGravity( V_L1, V_L2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
-                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_Func, ExtAcc_AuxArray );
+                                     GraConst, g_Pot_USG, Corner_USG, Time, UsePot, ExtAcc, ExtAcc_Func, ExtAcc_AuxArray );
 
             ijk_usg[TDir2] ++;
             UpdateVelocityByGravity( V_R1, V_R2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
-                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_Func, ExtAcc_AuxArray );
+                                     GraConst, g_Pot_USG, Corner_USG, Time, UsePot, ExtAcc, ExtAcc_Func, ExtAcc_AuxArray );
          } // if ( CorrHalfVel )
 #        endif // #ifdef UNSPLIT_GRAVITY
 
@@ -251,11 +254,11 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
             ijk_usg[2] = k_pri + idx_pri2usg;
             ijk_usg[TDir1] ++;
             UpdateVelocityByGravity( V_L1, V_L2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
-                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_Func, ExtAcc_AuxArray );
+                                     GraConst, g_Pot_USG, Corner_USG, Time, UsePot, ExtAcc, ExtAcc_Func, ExtAcc_AuxArray );
 
             ijk_usg[TDir2] ++;
             UpdateVelocityByGravity( V_R1, V_R2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
-                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_Func, ExtAcc_AuxArray );
+                                     GraConst, g_Pot_USG, Corner_USG, Time, UsePot, ExtAcc, ExtAcc_Func, ExtAcc_AuxArray );
          } // if ( CorrHalfVel )
 #        endif // #ifdef UNSPLIT_GRAVITY
 
@@ -286,11 +289,11 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
             ijk_usg[1] = j_pri + idx_pri2usg;
             ijk_usg[2] = k_pri + idx_pri2usg;
             UpdateVelocityByGravity( V_L1, V_L2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
-                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_Func, ExtAcc_AuxArray );
+                                     GraConst, g_Pot_USG, Corner_USG, Time, UsePot, ExtAcc, ExtAcc_Func, ExtAcc_AuxArray );
 
             ijk_usg[TDir1] ++;
             UpdateVelocityByGravity( V_R1, V_R2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
-                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_Func, ExtAcc_AuxArray );
+                                     GraConst, g_Pot_USG, Corner_USG, Time, UsePot, ExtAcc, ExtAcc_Func, ExtAcc_AuxArray );
          } // if ( CorrHalfVel )
 #        endif // #ifdef UNSPLIT_GRAVITY
 
@@ -322,11 +325,11 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
             ijk_usg[2] = k_pri + idx_pri2usg;
             ijk_usg[TDir2] ++;
             UpdateVelocityByGravity( V_L1, V_L2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
-                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_Func, ExtAcc_AuxArray );
+                                     GraConst, g_Pot_USG, Corner_USG, Time, UsePot, ExtAcc, ExtAcc_Func, ExtAcc_AuxArray );
 
             ijk_usg[TDir1] ++;
             UpdateVelocityByGravity( V_R1, V_R2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
-                                     GraConst, g_Pot_USG, Corner_USG, Time, GravityType, ExtAcc_Func, ExtAcc_AuxArray );
+                                     GraConst, g_Pot_USG, Corner_USG, Time, UsePot, ExtAcc, ExtAcc_Func, ExtAcc_AuxArray );
          } // if ( CorrHalfVel )
 #        endif // #ifdef UNSPLIT_GRAVITY
 
@@ -448,7 +451,8 @@ real dE_Upwind( const real FC_Ele_L, const real FC_Ele_R, const real FC_Mom, con
 //                g_Pot_USG       : Input potential array
 //                Corner_USG      : Cell-centered coordinates of the 0th cell in g_Pot_USG[]
 //                Time            : Current physical time
-//                GravityType     : Types of gravity --> self-gravity, external gravity, both
+//                UsePot          : Add self-gravity and/or external potential
+//                ExtAcc          : Add external acceleration
 //                ExtAcc_Func     : Function pointer to the external acceleration routine
 //                ExtAcc_AuxArray : Auxiliary array for external acceleration
 //
@@ -459,16 +463,18 @@ void UpdateVelocityByGravity( real &v1, real &v2, const int TDir1, const int TDi
                               const int i_usg, const int j_usg, const int k_usg,
                               const real dt_half, const double dh_f8, const real GraConst,
                               const real g_Pot_USG[], const double Corner_USG[], const double Time,
-                              const OptGravityType_t GravityType, ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[] )
+                              const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
+                              const double ExtAcc_AuxArray[] )
 {
 
    const int didx_usg[3] = { 1, USG_NXT_F, SQR(USG_NXT_F) };
-   real Acc[3] = { 0.0, 0.0, 0.0 };
+   real Acc[3] = { (real)0.0, (real)0.0, (real)0.0 };
 
-// external gravity
-   if ( GravityType == GRAVITY_EXTERNAL  ||  GravityType == GRAVITY_BOTH )
+// external acceleration
+   if ( ExtAcc )
    {
       double xyz[3]; // cell-centered coordinates
+
       xyz[0] = Corner_USG[0] + i_usg*dh_f8;  // always use double precision to calculate coordinates
       xyz[1] = Corner_USG[1] + j_usg*dh_f8;
       xyz[2] = Corner_USG[2] + k_usg*dh_f8;
@@ -479,8 +485,8 @@ void UpdateVelocityByGravity( real &v1, real &v2, const int TDir1, const int TDi
       Acc[TDir2] *= dt_half;
    }
 
-// self-gravity
-   if ( GravityType == GRAVITY_SELF  ||  GravityType == GRAVITY_BOTH )
+// self-gravity and external potential
+   if ( UsePot )
    {
       const int idx_usg = IDX321( i_usg, j_usg, k_usg, USG_NXT_F, USG_NXT_F );
 
