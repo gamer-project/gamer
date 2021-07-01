@@ -102,7 +102,8 @@ real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const re
                      const real *const EoS_Table[EOS_NTABLE_MAX] );
 real Hydro_CheckMinPres( const real InPres, const real MinPres );
 real Hydro_CheckMinEint( const real InEint, const real MinEint );
-bool Hydro_CheckNegative( const real Input );
+bool Hydro_CheckUnphysical( const real Cons[], const real Prim[], const real* const Input, const real Passive[],
+                            const char Info[], const char File[], const char Function[], const int Line, bool Show );
 void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
 #ifdef DUAL_ENERGY
 void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, const real MomZ,
@@ -210,11 +211,15 @@ void Init_ByRestart_HDF5( const char *FileName );
 
 
 // Interpolation
+void InterpolateWithAdaptiveMinmod( real CData [], const int CSize[3], const int CStart[3], const int CRange[3],
+                                    real FData [], const int FSize[3], const int FStart[3],
+                                    const int NComp, const int TVar, const IntScheme_t IntScheme, const bool UnwrapPhase,
+                                    const bool Monotonic[], const bool OppSign0thOrder );
 void Int_Table( const IntScheme_t IntScheme, int &NSide, int &NGhost );
 void Interpolate( real CData [], const int CSize[3], const int CStart[3], const int CRange[3],
                   real FData [], const int FSize[3], const int FStart[3],
                   const int NComp, const IntScheme_t IntScheme, const bool UnwrapPhase, const bool Monotonic[],
-                  const bool OppSign0thOrder );
+                  const real IntMonoCoeffconst, const bool OppSign0thOrder );
 
 
 // Miscellaneous

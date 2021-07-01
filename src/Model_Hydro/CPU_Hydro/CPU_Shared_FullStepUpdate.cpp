@@ -166,13 +166,8 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 
 //    5. check the negative density and energy
 #     ifdef CHECK_NEGATIVE_IN_FLUID
-      if ( Hydro_CheckNegative(Output_1Cell[DENS]) )
-         printf( "WARNING : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                 Output_1Cell[DENS], __FILE__, __LINE__, __FUNCTION__ );
-
-      if ( Hydro_CheckNegative(Output_1Cell[ENGY]) )
-         printf( "WARNING : invalid energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                 Output_1Cell[ENGY], __FILE__, __LINE__, __FUNCTION__ );
+      Hydro_CheckUnphysical( NULL, NULL, &Output_1Cell[DENS], NULL, "density", __FILE__, __FUNCTION__, __LINE__, true );
+      Hydro_CheckUnphysical( NULL, NULL, &Output_1Cell[ENGY], NULL, "energy", __FILE__, __FUNCTION__, __LINE__, true );
 #     endif
 
    } // CGPU_LOOP( idx_out, CUBE(PS2) )

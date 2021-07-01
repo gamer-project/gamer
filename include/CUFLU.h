@@ -128,7 +128,8 @@
 
 #ifdef CHECK_NEGATIVE_IN_FLUID
 #  include "stdio.h"
-   bool Hydro_CheckNegative( const real Input );
+   bool Hydro_CheckUnphysical( const real Cons[], const real Prim[], const real* const Input, const real Passive[],
+                               const char Info[], const char File[], const char Function[], const int Line, bool Show );
 #endif
 
 

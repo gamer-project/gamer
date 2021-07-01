@@ -228,13 +228,8 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
    sqrt_RhoRst    = SQRT( Con_Rst[0] );
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( Hydro_CheckNegative(Con_Lst[0]) )
-      printf( "ERROR : invalid Con_Lst[0] (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Con_Lst[0], __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( Hydro_CheckNegative(Con_Rst[0]) )
-      printf( "ERROR : invalid Con_Rst[0] (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Con_Rst[0], __FILE__, __LINE__, __FUNCTION__ );
+   Hydro_CheckUnphysical( NULL, NULL, &Con_Lst[0], NULL, "Con_Lst[0]", __FILE__, __FUNCTION__, __LINE__, true );
+   Hydro_CheckUnphysical( NULL, NULL, &Con_Rst[0], NULL, "Con_Rst[0]", __FILE__, __FUNCTION__, __LINE__, true );
 #  endif
 
    tmp_1          = FABS( Bx );

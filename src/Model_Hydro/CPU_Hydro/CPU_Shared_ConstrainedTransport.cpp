@@ -670,9 +670,7 @@ void MHD_HalfStepPrimitive( const real g_Flu_In[][ CUBE(FLU_NXT) ],
 
 //    check negative density
 #     ifdef CHECK_NEGATIVE_IN_FLUID
-      if ( Hydro_CheckNegative(Output_1Cell[DENS]) )
-         printf( "WARNING : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                 Output_1Cell[DENS], __FILE__, __LINE__, __FUNCTION__ );
+      Hydro_CheckUnphysical( NULL, NULL, &Output_1Cell[DENS], NULL, "density", __FILE__, __FUNCTION__, __LINE__, true )
 #     endif
 
 
