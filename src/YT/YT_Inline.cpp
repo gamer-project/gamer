@@ -2,10 +2,15 @@
 
 #ifdef SUPPORT_LIBYT
 
-void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchLocalLv, yt_field *FieldList );
+void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchLocalLv);
 void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (*NPatchAllRank)[NLEVEL], int NField, yt_field *FieldList);
 
-
+#ifdef MHD
+// derived function for Mag to CCMag
+void MagX_DerivedFunc(long gid, double *Converted_MagX);
+void MagY_DerivedFunc(long gid, double *Converted_MagY);
+void MagZ_DerivedFunc(long gid, double *Converted_MagZ);
+#endif
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  YT_Inline
@@ -13,9 +18,10 @@ void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (
 //
 // Note        :  1. This function conducts the following three basic steps for performing the yt inline analysis
 //                   1-1. YT_SetParameter   --> invoke yt_set_parameter()
-//                   1-2. YT_AddLocalGrid   --> invoke yt_get_gridsPtr(), yt_add_grids() for local patches
-//                   1-3. yt_inline(), yt_inline_argument
-//                   1-4. yt_free_gridsPtr()
+//                   1-2. yt_get_fieldsPtr  --> get the yt_field array pointer, and fill in field info
+//                   1-3. YT_AddLocalGrid   --> invoke yt_get_gridsPtr(), yt_add_grids() for local patches
+//                   1-4. yt_inline(), yt_inline_argument()
+//                   1-5. yt_free_gridsPtr()
 //                2. This function is invoked by main() directly
 //
 // Parameter   :  None
@@ -68,9 +74,22 @@ void YT_Inline()
    NField = NField + NCOMP_MAG;
 #endif
 
-// 2-2. determine the field labels, and declare a yt_field type array
-//      which stores the field labels and field define type (ex: cell-centered, face-centered)
-   yt_field *FieldList = new yt_field [NField];
+// 2-2. Call YT_SetParameter
+   YT_SetParameter( NPatchAllLv, NField, NPatchLocalLv);
+
+
+// 3. get yt_field array FieldList, and filled in field info
+//      FieldList :
+//      +----------------------------------------
+//      +       0            |                  +
+//      +       :            |   cell-centered  +
+//      + (NCOMP_TOTAL - 1)  |                  +
+//      +  GRAVITY (PotIdx)  |   cell-centered  +
+//      +  MHD     (MHDIdx)  |   face-centered  +
+//      +---------------------------------------+
+   yt_field *FieldList;
+   yt_get_fieldsPtr( &FieldList );
+
    for (int v=0; v<NCOMP_TOTAL; v++){
        FieldList[v].field_name = FieldLabel[v];
    }
@@ -82,41 +101,36 @@ void YT_Inline()
 #ifdef MHD
    for (int v=0; v<NCOMP_MAG; v++){
        FieldList[v + MHDIdx].field_name        = MagLabel[v];
-       FieldList[v + MHDIdx].field_define_type = "face-centered";
+       FieldList[v + MHDIdx].field_define_type = "derived_func";
        FieldList[v + MHDIdx].field_unit        = "code_magnetic";
    }
-   FieldList[ MHDIdx ].field_display_name = "B_x";
+
+   // Add field display name
+   FieldList[ MHDIdx     ].field_display_name = "B_x";
    FieldList[ MHDIdx + 1 ].field_display_name = "B_y";
    FieldList[ MHDIdx + 2 ].field_display_name = "B_z";
 
-   // Add alias names to "MAGX"
-   char *MHDX_name_alias[2] = {"test_alias_name", "magnetic_x"};
-   FieldList[ MHDIdx ].num_field_name_alias = 2;
-   FieldList[ MHDIdx ].field_name_alias = MHDX_name_alias;
+   // Add field derived function pointer
+   FieldList[ MHDIdx     ].derived_func = MagX_DerivedFunc;
+   FieldList[ MHDIdx + 1 ].derived_func = MagY_DerivedFunc;
+   FieldList[ MHDIdx + 2 ].derived_func = MagZ_DerivedFunc;
 
 #endif
 
-// 2-3. Call YT_SetParameter
-   YT_SetParameter( NPatchAllLv, NField, NPatchLocalLv, FieldList );
-
-
-// 3. prepare local patches for libyt
+// 4. prepare local patches for libyt
    YT_AddLocalGrid( GID_Offset, GID_LvStart, NPatchAllRank, NField, FieldList);
 
-
-// 4. perform yt inline analysis
+// 5. perform yt inline analysis
    if ( yt_inline_argument( "yt_inline_inputArg", 1, "\'Dens\'" ) != YT_SUCCESS )    Aux_Error( ERROR_INFO, "yt_inline_inputArg() failed !!\n" );
    if ( yt_inline( "yt_inline" ) != YT_SUCCESS )     Aux_Error( ERROR_INFO, "yt_inline() failed !!\n" );
 
-// 5. free resource
+// 6. free resource
    if ( yt_free_gridsPtr() != YT_SUCCESS )    Aux_Error( ERROR_INFO, "yt_free_gridsPtr() failed !!\n" );
    delete [] NPatchAllRank;
-   delete [] FieldList;
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : YT_Inline
-
 
 
 #endif // #ifdef SUPPORT_LIBYT

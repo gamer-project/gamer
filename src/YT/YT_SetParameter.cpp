@@ -15,11 +15,10 @@
 // Parameter   :  NPatchAllLv : Total number of patches at all levels
 //                NField      : Total number of fields
 //                NPatchLocal : Number of local patches at all levels
-//                FieldList   : Each fields names
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchLocalLv, yt_field *FieldList )
+void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchLocalLv )
 {
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -46,7 +45,6 @@ void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchL
 
    param_yt.num_fields              = NField;
    param_yt.num_grids_local         = NPatchLocalLv;
-   param_yt.field_list              = FieldList;
 
 #  ifdef FLOAT8
    param_yt.field_ftype             = YT_DOUBLE;
