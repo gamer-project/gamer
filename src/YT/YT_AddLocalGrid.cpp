@@ -170,7 +170,7 @@ void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (
 
          for (int v = 0; v < NCOMP_MAG; v++){
              // input the data pointer
-             YT_Grids[LID].field_data[ MHDIdx + v ].data_ptr = amr-patch[MagSg][lv][PID]->magnetic[v];
+             YT_Grids[LID].field_data[ MHDIdx + v ].data_ptr = amr->patch[MagSg][lv][PID]->magnetic[v];
 
              // input the field dimension, since MHD has different dimension.
              for (int d = 0; d < 3; d++){
