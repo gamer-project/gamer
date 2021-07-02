@@ -4,6 +4,7 @@
 
 
 #include "CUFLU.h"
+#include "stdio.h"
 
 #if ( MODEL == HYDRO )
 
