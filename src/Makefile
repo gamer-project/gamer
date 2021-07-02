@@ -792,6 +792,16 @@ endif
 COMMONFLAG := $(INCLUDE) $(SIMU_OPTION)
 CXXFLAG    += $(COMMONFLAG) $(OPENMPFLAG)
 
+# grep git information
+GIT_INFO    :=
+GIT_FAIL    := $(shell git rev-parse 2>&1 | cat)
+ifeq "$(GIT_FAIL)" ""
+   GIT_INFO += -DGIT_COMMIT="`git rev-parse HEAD`"              # commit
+   GIT_INFO += -DGIT_BRANCH="`git rev-parse --abbrev-ref HEAD`" # branch
+else
+   GIT_INFO += -DGIT_COMMIT="N/A"
+   GIT_INFO += -DGIT_BRANCH="N/A"
+endif
 
 # NVCC flags
 # -------------------------------------------------------------------------------
@@ -891,6 +901,7 @@ NVCC         := $(strip $(NVCC))
 NVCCFLAG_COM := $(strip $(NVCCFLAG_COM))
 NVCCFLAG_FLU := $(strip $(NVCCFLAG_FLU))
 NVCCFLAG_POT := $(strip $(NVCCFLAG_POT))
+GIT_INFO     := $(strip $(GIT_INFO))
 
 
 # implicit rules (do NOT modify the order of the following rules)
@@ -928,7 +939,7 @@ endif # GPU
 # CPU codes
 $(OBJ_PATH)/$(PREFIX_CPU)%.o : %.cpp
 	@echo "Compiling $<"
-	$(ECHO)$(CXX) $(CXXFLAG) -o $@ -c $<
+	$(ECHO)$(CXX) $(CXXFLAG) $(GIT_INFO) -o $@ -c $<
 
 
 # linking
@@ -965,6 +976,4 @@ clean :
 	@rm -f $(OBJ_PATH)/*
 	@rm -f $(EXECUTABLE)
 	@rm -f ./*.linkinfo
-
-
 

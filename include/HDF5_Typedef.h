@@ -61,6 +61,8 @@ struct KeyInfo_t
 
    long   Step;
    long   AdvanceCounter[NLEVEL];
+   int    NFieldStored;             // number of grid fields to be stored (excluding B field)
+   int    NMagStored;               // NCOMP_MAG (declare it even when MHD is off)
 #  ifdef PARTICLE
    long   Par_NPar;                 // amr->Par->NPar_Active_AllRank
    int    Par_NAttStored;           // PAR_NATT_STORED
@@ -76,6 +78,9 @@ struct KeyInfo_t
 
    char  *CodeVersion;
    char  *DumpWallTime;
+   char  *GitBranch;
+   char  *GitCommit;
+   long   UniqueDataID;
 
 }; // struct KeyInfo_t
 
@@ -294,6 +299,8 @@ struct SymConst_t
    int    Der_Nxt;
    int    Der_NOut_Max;
 
+   int    NFieldStoredMax;
+
 }; // struct SymConst_t
 
 
@@ -477,7 +484,7 @@ struct InputPara_t
    int    Opt__IntFracPassive_LR;
    int    IntFracPassive_NVar;
    int    IntFracPassive_VarIdx[NCOMP_PASSIVE];
-   char  *FieldLabel[NCOMP_TOTAL];
+   char  *FieldLabel[NFIELD_STORED_MAX];
 #  ifdef MHD
    char  *MagLabel[NCOMP_MAG];
 #  endif
@@ -520,7 +527,7 @@ struct InputPara_t
    int    Opt__ExtPot;
    char  *ExtPotTable_Name;
    int    ExtPotTable_NPoint[3];
-   double ExtPotTable_dh;
+   double ExtPotTable_dh[3];
    double ExtPotTable_EdgeL[3];
    int    ExtPotTable_Float8;
    int    Opt__GravityExtraMass;

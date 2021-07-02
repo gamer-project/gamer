@@ -4,15 +4,15 @@
 #include "HDF5_Typedef.h"
 #include <ctime>
 
-void FillIn_KeyInfo  (   KeyInfo_t &KeyInfo   );
+void FillIn_KeyInfo  (   KeyInfo_t &KeyInfo, const int NFieldStored );
 void FillIn_Makefile (  Makefile_t &Makefile  );
 void FillIn_SymConst (  SymConst_t &SymConst  );
-void FillIn_InputPara( InputPara_t &InputPara );
+void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char FieldLabelOut[][MAX_STRING] );
 
 static void GetCompound_KeyInfo  ( hid_t &H5_TypeID );
 static void GetCompound_Makefile ( hid_t &H5_TypeID );
 static void GetCompound_SymConst ( hid_t &H5_TypeID );
-static void GetCompound_InputPara( hid_t &H5_TypeID );
+static void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored );
 
 
 
@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2437)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2440)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -208,6 +208,9 @@ Procedure for outputting new variables:
 //                2435 : 2021/04/06 --> output OPT__UM_IC_NLEVEL
 //                2436 : 2021/04/06 --> output UM_IC_RefineRegion
 //                2437 : 2021/05/12 --> output OPT__CHECK_PRES_AFTER_FLU
+//                2438 : 2021/06/05 --> output git information
+//                2439 : 2021/06/05 --> output UniqueDataID
+//                2440 : 2021/06/17 --> output NFieldStored, NMagStored, and NFieldStoredMax
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -223,6 +226,91 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 // check if the target file already exists
    if ( Aux_CheckFileExist(FileName)  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : file \"%s\" already exists and will be overwritten !!\n", FileName );
+
+
+
+// 0. determine all the fields to be stored
+//    --> must do it before calling GetCompound_* and FillIn_*
+   char FieldLabelOut[NFIELD_STORED_MAX][MAX_STRING];
+   int  NFieldStored = 0;
+
+   const int FluDumpIdx0 = NFieldStored;
+   NFieldStored += NCOMP_TOTAL;
+   if ( FluDumpIdx0+NCOMP_TOTAL-1 >= NFIELD_STORED_MAX )
+      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+   for (int v=0; v<NCOMP_TOTAL; v++)   sprintf( FieldLabelOut[ FluDumpIdx0 + v ], FieldLabel[v] );
+
+#  ifdef GRAVITY
+   const int PotDumpIdx = ( OPT__OUTPUT_POT ) ? NFieldStored++ : -1;
+   if ( PotDumpIdx >= NFIELD_STORED_MAX )
+      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+   if ( OPT__OUTPUT_POT )  sprintf( FieldLabelOut[PotDumpIdx], PotLabel );
+#  endif
+
+#  ifdef PARTICLE
+   const int ParDensDumpIdx = ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE ) ? NFieldStored++ : -1;
+   if ( ParDensDumpIdx >= NFIELD_STORED_MAX )
+      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+   if      ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_PAR_ONLY )   sprintf( FieldLabelOut[ParDensDumpIdx], "ParDens"   );
+   else if ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_TOTAL    )   sprintf( FieldLabelOut[ParDensDumpIdx], "TotalDens" );
+#  endif
+
+#  ifdef MHD
+   const int CCMagDumpIdx0 = ( OPT__OUTPUT_CC_MAG ) ? NFieldStored : -1;
+   if ( CCMagDumpIdx0+NCOMP_MAG-1 >= NFIELD_STORED_MAX )
+      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+   if ( OPT__OUTPUT_CC_MAG )
+   {
+      NFieldStored += NCOMP_MAG;
+      sprintf( FieldLabelOut[ CCMagDumpIdx0 + MAGX ], "CCMagX" );
+      sprintf( FieldLabelOut[ CCMagDumpIdx0 + MAGY ], "CCMagY" );
+      sprintf( FieldLabelOut[ CCMagDumpIdx0 + MAGZ ], "CCMagZ" );
+   }
+#  endif
+
+#  if ( MODEL == HYDRO )
+   const int PresDumpIdx   = ( OPT__OUTPUT_PRES   ) ? NFieldStored++ : -1;
+   if ( PresDumpIdx >= NFIELD_STORED_MAX )
+      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+   if ( OPT__OUTPUT_PRES   )  sprintf( FieldLabelOut[PresDumpIdx  ], "Pres"   );
+
+   const int TempDumpIdx   = ( OPT__OUTPUT_TEMP   ) ? NFieldStored++ : -1;
+   if ( TempDumpIdx >= NFIELD_STORED_MAX )
+      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+   if ( OPT__OUTPUT_TEMP   )  sprintf( FieldLabelOut[TempDumpIdx  ], "Temp"   );
+
+   const int CsDumpIdx     = ( OPT__OUTPUT_CS     ) ? NFieldStored++ : -1;
+   if ( CsDumpIdx >= NFIELD_STORED_MAX )
+      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+   if ( OPT__OUTPUT_CS     )  sprintf( FieldLabelOut[CsDumpIdx    ], "Cs"     );
+
+   const int DivVelDumpIdx = ( OPT__OUTPUT_DIVVEL ) ? NFieldStored++ : -1;
+   if ( DivVelDumpIdx >= NFIELD_STORED_MAX )
+      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+   if ( OPT__OUTPUT_DIVVEL )  sprintf( FieldLabelOut[DivVelDumpIdx], "DivVel" );
+
+   const int MachDumpIdx   = ( OPT__OUTPUT_MACH   ) ? NFieldStored++ : -1;
+   if ( MachDumpIdx >= NFIELD_STORED_MAX )
+      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+   if ( OPT__OUTPUT_MACH   )  sprintf( FieldLabelOut[MachDumpIdx  ], "Mach"   );
+#  endif
+
+#  ifdef MHD
+   const int DivMagDumpIdx = ( OPT__OUTPUT_DIVMAG ) ? NFieldStored++ : -1;
+   if ( DivMagDumpIdx >= NFIELD_STORED_MAX )
+      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+   if ( OPT__OUTPUT_DIVMAG )  sprintf( FieldLabelOut[DivMagDumpIdx], "DivMag" );
+#  endif
+
+   const int UserDumpIdx0 = ( OPT__OUTPUT_USER_FIELD ) ? NFieldStored : -1;
+   if ( UserDumpIdx0+UserDerField_Num-1 >= NFIELD_STORED_MAX )
+      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+   if ( OPT__OUTPUT_USER_FIELD )
+   {
+      NFieldStored += UserDerField_Num;
+      for (int v=0; v<UserDerField_Num; v++)    sprintf( FieldLabelOut[ UserDumpIdx0 + v ], UserDerField_Label[v] );
+   }
+
 
 
 // 1. gather the number of patches at different MPI ranks and set the corresponding GID offset
@@ -277,7 +365,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    GetCompound_KeyInfo  ( H5_TypeID_Com_KeyInfo   );
    GetCompound_Makefile ( H5_TypeID_Com_Makefile  );
    GetCompound_SymConst ( H5_TypeID_Com_SymConst  );
-   GetCompound_InputPara( H5_TypeID_Com_InputPara );
+   GetCompound_InputPara( H5_TypeID_Com_InputPara, NFieldStored );
 
 // 2-3. create the "scalar" dataspace
    H5_SpaceID_Scalar = H5Screate( H5S_SCALAR );
@@ -293,10 +381,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       SymConst_t  SymConst;
       InputPara_t InputPara;
 
-      FillIn_KeyInfo  ( KeyInfo   );
-      FillIn_Makefile ( Makefile  );
-      FillIn_SymConst ( SymConst  );
-      FillIn_InputPara( InputPara );
+      FillIn_KeyInfo  ( KeyInfo, NFieldStored );
+      FillIn_Makefile ( Makefile );
+      FillIn_SymConst ( SymConst );
+      FillIn_InputPara( InputPara, NFieldStored, FieldLabelOut );
 
 
 //    3-2. create the HDF5 file (overwrite the existing file)
@@ -749,111 +837,14 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 // 5. output the simulation grid data (density, momentum, ... etc)
    const int FieldSizeOnePatch = sizeof(real)*CUBE(PS1);
-   int  NFieldOut;
-   char (*FieldName)[MAX_STRING]     = NULL;
    real (*FieldData)[PS1][PS1][PS1]  = NULL;
 
 #  ifdef MHD
    const int FCMagSizeOnePatch = sizeof(real)*PS1P1*SQR(PS1);
-   char FCMagName[NCOMP_MAG][MAX_STRING];
    real (*FCMagData)[PS1P1*SQR(PS1)] = NULL;
 #  endif
 
-// 5-0. determine variable indices
-   NFieldOut = NCOMP_TOTAL;
-
-#  ifdef GRAVITY
-   int PotDumpIdx = -1;
-   if ( OPT__OUTPUT_POT )  PotDumpIdx = NFieldOut ++;
-#  endif
-
-#  ifdef PARTICLE
-   int ParDensDumpIdx = -1;
-   if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )   ParDensDumpIdx = NFieldOut ++;
-#  endif
-
-#  ifdef MHD
-   int CCMagDumpIdx = -1;
-   if ( OPT__OUTPUT_CC_MAG )
-   {
-      CCMagDumpIdx = NFieldOut;
-      NFieldOut   += NCOMP_MAG;
-   }
-#  endif
-
-#  if ( MODEL == HYDRO )
-   int PresDumpIdx = -1;
-   if ( OPT__OUTPUT_PRES )    PresDumpIdx   = NFieldOut ++;
-
-   int TempDumpIdx = -1;
-   if ( OPT__OUTPUT_TEMP )    TempDumpIdx   = NFieldOut ++;
-
-   int CsDumpIdx = -1;
-   if ( OPT__OUTPUT_CS )      CsDumpIdx     = NFieldOut ++;
-
-   int DivVelDumpIdx = -1;
-   if ( OPT__OUTPUT_DIVVEL )  DivVelDumpIdx = NFieldOut ++;
-
-   int MachDumpIdx = -1;
-   if ( OPT__OUTPUT_MACH )    MachDumpIdx   = NFieldOut ++;
-#  endif
-
-#  ifdef MHD
-   int DivMagDumpIdx = -1;
-   if ( OPT__OUTPUT_DIVMAG )  DivMagDumpIdx = NFieldOut ++;
-#  endif
-
-   int UserDumpIdx0 = -1;
-   if ( OPT__OUTPUT_USER_FIELD )
-   {
-      UserDumpIdx0 = NFieldOut;
-      NFieldOut   += UserDerField_Num;
-   }
-
-
-// 5-1. set the output field names
-   FieldName = new char [NFieldOut][MAX_STRING];
-
-   for (int v=0; v<NCOMP_TOTAL; v++)   sprintf( FieldName[v], FieldLabel[v] );
-
-#  ifdef GRAVITY
-   if ( OPT__OUTPUT_POT )     sprintf( FieldName[PotDumpIdx], PotLabel );
-#  endif
-
-#  ifdef PARTICLE
-   if      ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_PAR_ONLY )   sprintf( FieldName[ParDensDumpIdx], "ParDens" );
-   else if ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_TOTAL )      sprintf( FieldName[ParDensDumpIdx], "TotalDens" );
-#  endif
-
-#  ifdef MHD
-   if ( OPT__OUTPUT_CC_MAG )
-   {
-      sprintf( FieldName[ CCMagDumpIdx + MAGX ], "CCMagX" );
-      sprintf( FieldName[ CCMagDumpIdx + MAGY ], "CCMagY" );
-      sprintf( FieldName[ CCMagDumpIdx + MAGZ ], "CCMagZ" );
-   }
-
-   for (int v=0; v<NCOMP_MAG; v++)  sprintf( FCMagName[v], MagLabel[v] );
-#  endif
-
-#  if ( MODEL == HYDRO )
-   if ( OPT__OUTPUT_PRES   )  sprintf( FieldName[PresDumpIdx  ], "Pres"   );
-   if ( OPT__OUTPUT_TEMP   )  sprintf( FieldName[TempDumpIdx  ], "Temp"   );
-   if ( OPT__OUTPUT_CS     )  sprintf( FieldName[CsDumpIdx    ], "Cs"     );
-   if ( OPT__OUTPUT_DIVVEL )  sprintf( FieldName[DivVelDumpIdx], "DivVel" );
-   if ( OPT__OUTPUT_MACH   )  sprintf( FieldName[MachDumpIdx  ], "Mach"   );
-#  endif
-#  ifdef MHD
-   if ( OPT__OUTPUT_DIVMAG )  sprintf( FieldName[DivMagDumpIdx], "DivMag" );
-#  endif
-   if ( OPT__OUTPUT_USER_FIELD )
-   {
-      for (int v=0; v<UserDerField_Num; v++)
-         sprintf( FieldName[ UserDumpIdx0 + v ], UserDerField_Label[v] );
-   }
-
-
-// 5-2. initialize the "GridData" group and the datasets of all fields and magnetic field
+// 5-1. initialize the "GridData" group and the datasets of all fields and magnetic field
    H5_SetDims_Field[0] = NPatchAllLv;
    H5_SetDims_Field[1] = PS1;
    H5_SetDims_Field[2] = PS1;
@@ -888,11 +879,11 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       if ( H5_GroupID_GridData < 0 )   Aux_Error( ERROR_INFO, "failed to create the group \"%s\" !!\n", "GridData" );
 
 //    create the datasets of all fields
-      for (int v=0; v<NFieldOut; v++)
+      for (int v=0; v<NFieldStored; v++)
       {
-         H5_SetID_Field = H5Dcreate( H5_GroupID_GridData, FieldName[v], H5T_GAMER_REAL, H5_SpaceID_Field,
+         H5_SetID_Field = H5Dcreate( H5_GroupID_GridData, FieldLabelOut[v], H5T_GAMER_REAL, H5_SpaceID_Field,
                                      H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
-         if ( H5_SetID_Field < 0 )  Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", FieldName[v] );
+         if ( H5_SetID_Field < 0 )  Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", FieldLabelOut[v] );
          H5_Status = H5Dclose( H5_SetID_Field );
       }
 
@@ -900,9 +891,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #     ifdef MHD
       for (int v=0; v<NCOMP_MAG; v++)
       {
-         H5_SetID_FCMag = H5Dcreate( H5_GroupID_GridData, FCMagName[v], H5T_GAMER_REAL, H5_SpaceID_FCMag[v],
+         H5_SetID_FCMag = H5Dcreate( H5_GroupID_GridData, MagLabel[v], H5T_GAMER_REAL, H5_SpaceID_FCMag[v],
                                      H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
-         if ( H5_SetID_FCMag < 0 )  Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", FCMagName[v] );
+         if ( H5_SetID_FCMag < 0 )  Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", MagLabel[v] );
          H5_Status = H5Dclose( H5_SetID_FCMag );
       }
 #     endif
@@ -913,7 +904,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    } // if ( MPI_Rank == 0 )
 
 
-// 5-3. start to dump data (serial instead of parallel)
+// 5-2. start to dump data (serial instead of parallel)
    const bool IntPhase_No         = false;
    const bool DE_Consistency_No   = false;
    const real MinDens_No          = -1.0;
@@ -958,7 +949,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       int *PID0List = new int [ amr->NPatchComma[lv][1]/8 ];
       for (int PID0=0, t=0; PID0<amr->NPatchComma[lv][1]; PID0+=8, t++)    PID0List[t] = PID0;
 
-//    5-3-0. initialize the particle density array (rho_ext) and collect particles from higher levels for outputting particle density
+//    5-2-0. initialize the particle density array (rho_ext) and collect particles from higher levels for outputting particle density
 #     ifdef PARTICLE
       if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )
       {
@@ -984,8 +975,8 @@ void Output_DumpData_Total_HDF5( const char *FileName )
             if ( H5_GroupID_GridData < 0 )   Aux_Error( ERROR_INFO, "failed to open the group \"%s\" !!\n", "GridData" );
 
 
-//          5-3-1. dump cell-centered data
-//          5-3-1-1. determine the memory space
+//          5-2-1. dump cell-centered data
+//          5-2-1-1. determine the memory space
             H5_MemDims_Field[0] = amr->NPatchComma[lv][1];
             H5_MemDims_Field[1] = PS1;
             H5_MemDims_Field[2] = PS1;
@@ -995,7 +986,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
             if ( H5_MemID_Field < 0 )  Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_MemDims_Field" );
 
 
-//          5-3-1-2. determine the subset of the dataspace
+//          5-2-1-2. determine the subset of the dataspace
             H5_Offset_Field[0] = GID_Offset[lv];
             H5_Offset_Field[1] = 0;
             H5_Offset_Field[2] = 0;
@@ -1013,9 +1004,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //          output one field at one level in one rank at a time
             FieldData = new real [ amr->NPatchComma[lv][1] ][PS1][PS1][PS1];
 
-            for (int v=0; v<NFieldOut; v++)
+            for (int v=0; v<NFieldStored; v++)
             {
-//             5-3-1-3. collect the target field from all patches at the current target level
+//             5-2-1-3. collect the target field from all patches at the current target level
 //             a. gravitational potential
 #              ifdef GRAVITY
                if ( v == PotDumpIdx )
@@ -1041,9 +1032,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 //             c. cell-centered magnetic field
 #              ifdef MHD
-               if ( v >= CCMagDumpIdx  &&  v < CCMagDumpIdx+NCOMP_MAG )
+               if ( v >= CCMagDumpIdx0  &&  v < CCMagDumpIdx0+NCOMP_MAG )
                {
-                  const int Bv = v - CCMagDumpIdx;
+                  const int Bv = v - CCMagDumpIdx0;
                   real CCMag_1Cell[NCOMP_MAG];
 
                   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
@@ -1152,10 +1143,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                         memcpy( Der_FluIn[LocalID][MOMZ], Der_FluInTmp3D[LocalID][3], Size1v );
 
 //                      compute and store the target derived field
-                        const int PID       = PID0 + LocalID;
-                        const int NFieldOut = 1;
+                        const int PID  = PID0 + LocalID;
+                        const int NDer = 1;
                         Flu_DerivedField_DivVel( FieldData[PID][0][0], Der_FluIn[LocalID][0], NULL,
-                                                 NFieldOut, DER_NXT, DER_NXT, DER_NXT, DER_GHOST_SIZE, amr->dh[lv] );
+                                                 NDer, DER_NXT, DER_NXT, DER_NXT, DER_GHOST_SIZE, amr->dh[lv] );
                      }
                   } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                } // if ( v == DivVelDumpIdx )
@@ -1194,10 +1185,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #                       endif // #ifdef MHD
 
 //                      compute and store the target derived field
-                        const int PID       = PID0 + LocalID;
-                        const int NFieldOut = 1;
+                        const int PID  = PID0 + LocalID;
+                        const int NDer = 1;
                         Flu_DerivedField_Mach( FieldData[PID][0][0], Der_FluIn[LocalID][0], Der_MagCC[0],
-                                               NFieldOut, DER_NXT, DER_NXT, DER_NXT, DER_GHOST_SIZE, amr->dh[lv] );
+                                               NDer, DER_NXT, DER_NXT, DER_NXT, DER_GHOST_SIZE, amr->dh[lv] );
                      } // for (int LocalID=0; LocalID<8; LocalID++)
                   } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                } // if ( v == MachDumpIdx )
@@ -1258,10 +1249,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //                      --> there are redundant calculations in Flu_DerivedField_User_Ptr since it always computes
 //                          UserDerField_Num fields while we only need one field at a time
 //###OPTIMIZATION: only compute the derived field being dumped
-                        const int PID       = PID0 + LocalID;
-                        const int NFieldOut = UserDerField_Num;
+                        const int PID  = PID0 + LocalID;
+                        const int NDer = UserDerField_Num;
                         Flu_DerivedField_User_Ptr( Der_Out[0], Der_FluIn[LocalID][0], Der_MagCC[0],
-                                                   NFieldOut, DER_NXT, DER_NXT, DER_NXT, DER_GHOST_SIZE, amr->dh[lv] );
+                                                   NDer, DER_NXT, DER_NXT, DER_NXT, DER_GHOST_SIZE, amr->dh[lv] );
 
 //                      copy data from Der_Der[] to FieldData[]
                         const int DerIdx = v - UserDumpIdx0;
@@ -1272,7 +1263,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                else
 
 //             e. fluid variables
-               if ( v < NCOMP_TOTAL )
+               if ( v >= FluDumpIdx0  &&  v < FluDumpIdx0+NCOMP_TOTAL )
                {
                   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
                      memcpy( FieldData[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
@@ -1282,8 +1273,8 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   Aux_Error( ERROR_INFO, "incorrect index (%d) !!\n", v );
 
 
-//             5-3-1-4. write data to disk
-               H5_SetID_Field = H5Dopen( H5_GroupID_GridData, FieldName[v], H5P_DEFAULT );
+//             5-2-1-4. write data to disk
+               H5_SetID_Field = H5Dopen( H5_GroupID_GridData, FieldLabelOut[v], H5P_DEFAULT );
 
                H5_Status = H5Dwrite( H5_SetID_Field, H5T_GAMER_REAL, H5_MemID_Field, H5_SpaceID_Field, H5P_DEFAULT, FieldData );
                if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to write a field (lv %d, v %d) !!\n", lv, v );
@@ -1292,7 +1283,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
             } // for (int v=0; v<NFieldOut; v++)
 
 
-//          5-3-1-5.free resource before dumping magnetic field to save memory
+//          5-2-1-5.free resource before dumping magnetic field to save memory
             delete [] FieldData;
 
             H5_Status = H5Sclose( H5_MemID_Field );
@@ -1308,15 +1299,15 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #           endif
 
 
-//          5-3-2. dump magnetic field
+//          5-2-2. dump magnetic field
 #           ifdef MHD
-//          5-3-2-0. allocate memory
+//          5-2-2-0. allocate memory
 //                   --> output one B component at one level in one rank at a time
             FCMagData = new real [ amr->NPatchComma[lv][1] ][ PS1P1*SQR(PS1) ];
 
             for (int v=0; v<NCOMP_MAG; v++)
             {
-//             5-3-2-1. determine the memory space
+//             5-2-2-1. determine the memory space
                H5_MemDims_FCMag[0] = amr->NPatchComma[lv][1];
                for (int t=1; t<4; t++)
                H5_MemDims_FCMag[t] = ( 3-t == v ) ? PS1P1 : PS1;
@@ -1325,7 +1316,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                if ( H5_MemID_FCMag < 0 )  Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_MemDims_FCMag" );
 
 
-//             5-3-2-2. determine the subset of the dataspace
+//             5-2-2-2. determine the subset of the dataspace
                H5_Offset_FCMag[0] = GID_Offset[lv];
                H5_Offset_FCMag[1] = 0;
                H5_Offset_FCMag[2] = 0;
@@ -1339,13 +1330,13 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to create a hyperslab for the magnetic field !!\n" );
 
 
-//             5-3-2-3. collect the target B component from all patches at the current target level
+//             5-2-2-3. collect the target B component from all patches at the current target level
                for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
                   memcpy( FCMagData[PID], amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[v], FCMagSizeOnePatch );
 
 
-//             5-3-2-4. write data to disk
-               H5_SetID_FCMag = H5Dopen( H5_GroupID_GridData, FCMagName[v], H5P_DEFAULT );
+//             5-2-2-4. write data to disk
+               H5_SetID_FCMag = H5Dopen( H5_GroupID_GridData, MagLabel[v], H5P_DEFAULT );
 
                H5_Status = H5Dwrite( H5_SetID_FCMag, H5T_GAMER_REAL, H5_MemID_FCMag, H5_SpaceID_FCMag[v], H5P_DEFAULT, FCMagData );
                if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to write magnetic field (lv %d, v %d) !!\n", lv, v );
@@ -1355,7 +1346,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
             } // for (int v=0; v<NCOMP_MAG; v++)
 
 
-//          5-3-2-5.free resource
+//          5-2-2-5.free resource
             delete [] FCMagData;
 #           endif // #ifdef MHD
 
@@ -1644,7 +1635,6 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    H5_Status = H5Pclose( H5_DataCreatePropList );
 
    delete [] NPatchAllRank;
-   delete [] FieldName;
 
    if ( MPI_Rank == 0 )
    {
@@ -1687,14 +1677,15 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 // Note        :  1. Data structure is defined in "HDF5_Typedef.h"
 //                2. Call-by-reference
 //
-// Parameter   :  KeyInfo : Pointer to be filled in
+// Parameter   :  KeyInfo      : Pointer to be filled in
+//                NFieldStored : Number of grid fields to be stored on disk
 //-------------------------------------------------------------------------------------------------------
-void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
+void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 {
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2437;
+   KeyInfo.FormatVersion        = 2440;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -1718,6 +1709,8 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 #  else
    KeyInfo.Float8               = 0;
 #  endif
+   KeyInfo.NFieldStored         = NFieldStored;
+   KeyInfo.NMagStored           = NCOMP_MAG;
 #  ifdef PARTICLE
    KeyInfo.Par_NPar             = amr->Par->NPar_Active_AllRank;
    KeyInfo.Par_NAttStored       = PAR_NATT_STORED;
@@ -1755,6 +1748,12 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
    KeyInfo.CodeVersion  = (char*)VERSION;
    KeyInfo.DumpWallTime = ctime( &CalTime );
    KeyInfo.DumpWallTime[ strlen(KeyInfo.DumpWallTime)-1 ] = '\0';  // remove the last character '\n'
+   KeyInfo.GitBranch    = EXPAND_AND_QUOTE( GIT_BRANCH );
+   KeyInfo.GitCommit    = EXPAND_AND_QUOTE( GIT_COMMIT );
+
+//###REVISE: replace rand() by UUID
+   srand( time(NULL) );
+   KeyInfo.UniqueDataID = rand();
 
 } // FUNCTION : FillIn_KeyInfo
 
@@ -2207,6 +2206,8 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.Der_Nxt              = DER_NXT;
    SymConst.Der_NOut_Max         = DER_NOUT_MAX;
 
+   SymConst.NFieldStoredMax      = NFIELD_STORED_MAX;
+
 } // FUNCTION : FillIn_SymConst
 
 
@@ -2218,9 +2219,11 @@ void FillIn_SymConst( SymConst_t &SymConst )
 // Note        :  1. Data structure is defined in "HDF5_Typedef.h"
 //                2. Call-by-reference
 //
-// Parameter   :  InputPara : Pointer to be filled in
+// Parameter   :  InputPara     : Pointer to be filled in
+//                NFieldStored  : Number of grid fields to be stored on disk
+//                FieldLabelOut : Field labels
 //-------------------------------------------------------------------------------------------------------
-void FillIn_InputPara( InputPara_t &InputPara )
+void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char FieldLabelOut[][MAX_STRING] )
 {
 
 // simulation scale
@@ -2404,8 +2407,8 @@ void FillIn_InputPara( InputPara_t &InputPara )
    for (int v=0; v<NCOMP_PASSIVE; v++)
    InputPara.IntFracPassive_VarIdx[v] = PassiveIntFrac_VarIdx[v];
 
-   for (int v=0; v<NCOMP_TOTAL; v++)
-   InputPara.FieldLabel[v]           = FieldLabel[v];
+   for (int v=0; v<NFieldStored; v++)
+   InputPara.FieldLabel[v]           = FieldLabelOut[v];
 
 #  ifdef MHD
    for (int v=0; v<NCOMP_MAG; v++)
@@ -2452,7 +2455,8 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.ExtPotTable_Name        = EXT_POT_TABLE_NAME;
    for (int d=0; d<3; d++)
    InputPara.ExtPotTable_NPoint[d]   = EXT_POT_TABLE_NPOINT[d];
-   InputPara.ExtPotTable_dh          = EXT_POT_TABLE_DH;
+   for (int d=0; d<3; d++)
+   InputPara.ExtPotTable_dh[d]       = EXT_POT_TABLE_DH[d];
    for (int d=0; d<3; d++)
    InputPara.ExtPotTable_EdgeL[d]    = EXT_POT_TABLE_EDGEL[d];
    InputPara.ExtPotTable_Float8      = EXT_POT_TABLE_FLOAT8;
@@ -2731,6 +2735,8 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
 
    H5Tinsert( H5_TypeID, "Step",                 HOFFSET(KeyInfo_t,Step                ), H5T_NATIVE_LONG         );
    H5Tinsert( H5_TypeID, "AdvanceCounter",       HOFFSET(KeyInfo_t,AdvanceCounter      ), H5_TypeID_Arr_NLvLong   );
+   H5Tinsert( H5_TypeID, "NFieldStored",         HOFFSET(KeyInfo_t,NFieldStored        ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "NMagStored",           HOFFSET(KeyInfo_t,NMagStored          ), H5T_NATIVE_INT          );
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Par_NPar",             HOFFSET(KeyInfo_t,Par_NPar),             H5T_NATIVE_LONG         );
    H5Tinsert( H5_TypeID, "Par_NAttStored",       HOFFSET(KeyInfo_t,Par_NAttStored      ), H5T_NATIVE_INT          );
@@ -2746,6 +2752,9 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
 
    H5Tinsert( H5_TypeID, "CodeVersion",          HOFFSET(KeyInfo_t,CodeVersion         ), H5_TypeID_VarStr        );
    H5Tinsert( H5_TypeID, "DumpWallTime",         HOFFSET(KeyInfo_t,DumpWallTime        ), H5_TypeID_VarStr        );
+   H5Tinsert( H5_TypeID, "GitBranch",            HOFFSET(KeyInfo_t,GitBranch           ), H5_TypeID_VarStr        );
+   H5Tinsert( H5_TypeID, "GitCommit",            HOFFSET(KeyInfo_t,GitCommit           ), H5_TypeID_VarStr        );
+   H5Tinsert( H5_TypeID, "UniqueDataID",         HOFFSET(KeyInfo_t,UniqueDataID        ), H5T_NATIVE_LONG         );
 
 
 // free memory
@@ -2973,6 +2982,8 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Der_Nxt",              HOFFSET(SymConst_t,Der_Nxt             ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Der_NOut_Max",         HOFFSET(SymConst_t,Der_NOut_Max        ), H5T_NATIVE_INT    );
 
+   H5Tinsert( H5_TypeID, "NFieldStoredMax",      HOFFSET(SymConst_t,NFieldStoredMax     ), H5T_NATIVE_INT    );
+
 } // FUNCTION : GetCompound_SymConst
 
 
@@ -2985,9 +2996,10 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 //                2. The returned H5_TypeID must be closed manually
 //                3. Call-by-reference
 //
-// Parameter   :  H5_TypeID : HDF5 type ID for storing the compound datatype
+// Parameter   :  H5_TypeID    : HDF5 type ID for storing the compound datatype
+//                NFieldStored : Number of grid fields to be stored on disk
 //-------------------------------------------------------------------------------------------------------
-void GetCompound_InputPara( hid_t &H5_TypeID )
+void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 {
 
 // create the array type
@@ -3222,7 +3234,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  endif
 
 // store the name of all fields
-   for (int v=0; v<NCOMP_TOTAL; v++)
+   for (int v=0; v<NFieldStored; v++)
    {
 //    key for each field
       sprintf( Key, "FieldLabel%02d", v );
@@ -3281,7 +3293,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__ExtPot",             HOFFSET(InputPara_t,Opt__ExtPot            ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "ExtPotTable_Name",        HOFFSET(InputPara_t,ExtPotTable_Name       ), H5_TypeID_VarStr            );
    H5Tinsert( H5_TypeID, "ExtPotTable_NPoint",      HOFFSET(InputPara_t,ExtPotTable_NPoint     ), H5_TypeID_Arr_3Int          );
-   H5Tinsert( H5_TypeID, "ExtPotTable_dh",          HOFFSET(InputPara_t,ExtPotTable_dh         ), H5T_NATIVE_DOUBLE           );
+   H5Tinsert( H5_TypeID, "ExtPotTable_dh",          HOFFSET(InputPara_t,ExtPotTable_dh         ), H5_TypeID_Arr_3Double       );
    H5Tinsert( H5_TypeID, "ExtPotTable_EdgeL",       HOFFSET(InputPara_t,ExtPotTable_EdgeL      ), H5_TypeID_Arr_3Double       );
    H5Tinsert( H5_TypeID, "ExtPotTable_Float8",      HOFFSET(InputPara_t,ExtPotTable_Float8     ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__GravityExtraMass",   HOFFSET(InputPara_t,Opt__GravityExtraMass  ), H5T_NATIVE_INT              );

@@ -1,10 +1,9 @@
 
 
 
-# file names
+# executable file
 #######################################################################################################
-PROGRAM    = GAMER_CompareData
-EXECUTABLE = GAMER_CompareData
+EXECUTABLE := GAMER_CompareData
 
 
 
@@ -16,37 +15,65 @@ SIMU_OPTION += -DMODEL=HYDRO
 # double precision
 #SIMU_OPTION += -DFLOAT8
 
+# debug mode
+#SIMU_OPTION += -DGAMER_DEBUG
+
+# support HDF5 format
+SIMU_OPTION += -DSUPPORT_HDF5
+
 
 
 # siimulation parameters
 #######################################################################################################
-NLEVEL        = 10        # level : 0 ~ NLEVEL-1
-NCOMP_PASSIVE = 0         # number of passive scalars
-MAX_PATCH     = 1000000   # maximum number of patches in each level
+NLEVEL        := 10        # level : 0 ~ NLEVEL-1
+MAX_PATCH     := 2000000   # maximum number of patches in each level
 
 NLEVEL        := $(strip $(NLEVEL))
-NCOMP_PASSIVE := $(strip $(NCOMP_PASSIVE))
 MAX_PATCH     := $(strip $(MAX_PATCH))
 
-SIMU_PARA = -DNLEVEL=$(NLEVEL) -DMAX_PATCH=$(MAX_PATCH) -DNCOMP_PASSIVE=$(NCOMP_PASSIVE)
+SIMU_PARA = -DNLEVEL=$(NLEVEL) -DMAX_PATCH=$(MAX_PATCH)
+
+
+
+# sources
+# #######################################################################################################
+SOURCE  = Main.cpp
+
+SOURCE += LoadData.cpp  LoadData_HDF5.cpp  Aux_AllocateArray2D.cpp  Aux_CheckFileExist.cpp  Aux_Error.cpp \
+          Aux_Message.cpp  SortParticle.cpp
+
+vpath %.cpp ./ GAMER_Functions
 
 
 
 # rules and targets
 #######################################################################################################
+HDF5_PATH := /software/hdf5/default
+
 CC    := icpc
-CFLAG := -O3 -w1
-CFLAG += -g
+CFLAG := -O3 -w1 -g
+
+INCLUDE  := -I./Header
+ifeq "$(findstring SUPPORT_HDF5, $(SIMU_OPTION))" "SUPPORT_HDF5"
+INCLUDE += -I$(HDF5_PATH)/include
+endif
+
+LIB := $(strip $(LIB))
+ifeq "$(findstring SUPPORT_HDF5, $(SIMU_OPTION))" "SUPPORT_HDF5"
+LIB += -L$(HDF5_PATH)/lib -lhdf5
+endif
+
+OBJ_DIR := ./Object
+OBJ     := $(patsubst %.cpp, $(OBJ_DIR)/%.o, $(SOURCE))
 
 
-$(EXECUTABLE): $(PROGRAM).o
-	$(CC) $(CFLAG) -o $@ $<
+$(OBJ_DIR)/%.o : %.cpp
+	$(CC) $(CFLAG) $(SIMU_PARA) $(SIMU_OPTION) $(INCLUDE) -o $@ -c $<
+
+$(EXECUTABLE): $(OBJ)
+	$(CC) $(CFLAG) -o $@ $^ $(LIB)
 	cp $(EXECUTABLE) ./Run/
 
-$(PROGRAM).o: $(PROGRAM).cpp
-	$(CC) $(CFLAG) $(SIMU_PARA) $(SIMU_OPTION) -o $@ -c $<
-
 clean:
-	rm -f *.o
+	rm -f $(OBJ)
 	rm -f $(EXECUTABLE)
-

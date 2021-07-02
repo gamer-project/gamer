@@ -246,7 +246,9 @@ EXT_POT_TABLE_NAME            ExtPotTable # external potential table: filename
 EXT_POT_TABLE_NPOINT_X        129         # ...                     : table size (i.e., number of data points) along x/y/z
 EXT_POT_TABLE_NPOINT_Y        129         #
 EXT_POT_TABLE_NPOINT_Z        129         #
-EXT_POT_TABLE_DH              0.0078125   # ...                     : spatial interval between adjacent data points
+EXT_POT_TABLE_DH_X            0.0078125   # ...                     : spatial interval between adjacent data points
+EXT_POT_TABLE_DH_Y            0.0078125   #
+EXT_POT_TABLE_DH_Z            0.0078125   #
 EXT_POT_TABLE_EDGEL_X         0.0         # ...                     : starting x/y/z coordinates
 EXT_POT_TABLE_EDGEL_Y         0.0         #
 EXT_POT_TABLE_EDGEL_Z         0.0         #
@@ -272,6 +274,7 @@ OPT__INIT_RESTRICT            1           # restrict all data during the initial
 OPT__INIT_GRID_WITH_OMP       1           # enable OpenMP when assigning the initial condition of each grid patch [1]
 OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2=CUDA, -1=MPI rank, >=0=input) [-1]
 INIT_SUBSAMPLING_NCELL        0           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
+
 
 # interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar)
 OPT__INT_TIME                 1           # perform "temporal" interpolation for OPT__DT_LEVEL == 2/3 [1]

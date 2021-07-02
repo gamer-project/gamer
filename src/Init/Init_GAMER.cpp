@@ -50,7 +50,8 @@ void Init_GAMER( int *argc, char ***argv )
    Init_Unit();
 
 
-// reset parameters --> must be called after Init_Unit()
+// reset parameters
+// --> must be called after Init_Unit()
    Init_ResetParameter();
 
 
@@ -58,6 +59,21 @@ void Init_GAMER( int *argc, char ***argv )
 #  ifdef OPENMP
    Init_OpenMP();
 #  endif
+
+
+// initialize GPU
+// --> must be called before Init_ExtAccPot() and EoS_Init()
+#  ifdef GPU
+   CUAPI_SetDevice( OPT__GPUID_SELECT );
+
+#  ifndef GRAVITY
+   int POT_GPU_NPGROUP = NULL_INT;
+#  endif
+#  ifndef SUPPORT_GRACKLE
+   int CHE_GPU_NPGROUP = NULL_INT;
+#  endif
+   CUAPI_Set_Default_GPU_Parameter( GPU_NSTREAM, FLU_GPU_NPGROUP, POT_GPU_NPGROUP, CHE_GPU_NPGROUP, SRC_GPU_NPGROUP );
+#  endif // #ifdef GPU
 
 
 // initialize yt inline analysis
@@ -87,22 +103,15 @@ void Init_GAMER( int *argc, char ***argv )
 
 
 // initialize all fields and particle attributes
-// --> Init_Field() must be called BEFORE CUAPI_Set_Default_GPU_Parameter()
+// --> Init_Field() must be called before CUAPI_Set_Default_GPU_Parameter()
    Init_Field();
 #  ifdef PARTICLE
    Par_Init_Attribute();
 #  endif
 
 
-// set the GPU ID
-// --> must be called BEFORE Init_ExtAccPot() and EoS_Init()
-#  ifdef GPU
-   CUAPI_SetDevice( OPT__GPUID_SELECT );
-#  endif
-
-
 // initialize the external potential and acceleration parameters
-// --> must be called AFTER Init_TestProb()
+// --> must be called after Init_TestProb()
 #  ifdef GRAVITY
    Init_ExtAccPot();
 #  endif
@@ -114,7 +123,8 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
-// initialize the source-term routines --> must be called before memory allocation
+// initialize the source-term routines
+// --> must be called before memory allocation
    Src_Init();
 
 
@@ -129,17 +139,9 @@ void Init_GAMER( int *argc, char ***argv )
    }
 
 
-// set the GPU parameters
+// set GPU constant memory
+// --> must be called after Init_Field() and Init_ExtAccPot()
 #  ifdef GPU
-#  ifndef GRAVITY
-   int POT_GPU_NPGROUP = NULL_INT;
-#  endif
-#  ifndef SUPPORT_GRACKLE
-   int CHE_GPU_NPGROUP = NULL_INT;
-#  endif
-   CUAPI_Set_Default_GPU_Parameter( GPU_NSTREAM, FLU_GPU_NPGROUP, POT_GPU_NPGROUP, CHE_GPU_NPGROUP, SRC_GPU_NPGROUP );
-
-// CUAPI_SetConstMemory must be called AFTER Init_Field() and Init_ExtAccPot()
    CUAPI_SetConstMemory();
 #  endif
 

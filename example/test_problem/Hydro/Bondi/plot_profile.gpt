@@ -1,0 +1,102 @@
+#
+
+reset
+
+set log xy
+set xlabel "r [kpc]"
+set xrange [1.0e-3:1.0e1]
+set format x "10^{%T}"
+set format y "10^{%T}"
+#set size square
+set pointsize 1.0
+
+ set term X11 enhanced size 1024,600 font ",16"
+#set term png enhanced crop size 1280,800 font ",16"
+
+
+# all target files
+FILE_BONDI = '../../Table__BondiProfile_Gamma1.200'
+FILE_SIMU  = './'
+DUMP_TABLE = '../../Record__Dump'
+ID_START   = 0
+ID_END     = 35
+ID_DELTA   = 1
+PAUSE      = -1.0  # <= 0.0 --> mouse
+GAMMA      = 1.200
+
+
+# some units
+UnitD = 5.0e-25   # in CGS
+UnitV = 1.0e8     # in CGS
+UnitT = 0.978     # in Myr
+UnitP = UnitD*UnitV*UnitV
+
+
+# loop over all target dumps
+do for [ID=ID_START:ID_END:ID_DELTA] {
+
+   if ( GPVAL_TERM ne 'x11' ) { set output sprintf( 'Fig__Bondi_%06d.png', ID ) };
+
+   set multiplot layout 2, 2 \
+      title sprintf( 'DumpID = %06d, t = %5.3f Myr', \
+                     ID, UnitT*system( sprintf("awk '{if(NR==1+%d) {print $2}}' %s", ID+1, DUMP_TABLE) ) )
+
+
+#  plot density
+   set key reverse Left spacing 1.0 top right
+   set ylabel "{/Symbol r} [g/cm^3]"
+   set yrange [1.0e-25:1.0e-21]
+
+   plot sprintf( '%s/AveRho_%06d', FILE_SIMU, ID ) u 1:($3*UnitD) w lp pt 6 lc 6 tit 'Simulation' \
+       ,FILE_BONDI u 2:($4*UnitD) w l lc -1 tit 'Analytical'
+
+
+#  plot velocity
+   set key reverse Left spacing 1.0 top right
+   set ylabel "v [km/s]"
+   set yrange [1.0e-1:1.0e4]
+
+   plot sprintf( '%s/AveV_R_%06d', FILE_SIMU, ID ) u 1:(abs($3)*UnitV*1.0e-5) w lp pt 6 lc 6 tit 'Simulation' \
+       ,FILE_BONDI u 2:($6*UnitV*1.0e-5) w l lc -1 tit 'Analytical'
+
+
+#  plot Mach number
+   set key reverse Left spacing 1.0 top right
+   set ylabel "Mach number"
+   set yrange [1.0e-3:2.0e1]
+
+   plot sprintf( '<paste %s/AveRho_%06d %s/AvePre_%06d %s/AveV_R_%06d', FILE_SIMU, ID, FILE_SIMU, ID, FILE_SIMU, ID )\
+        u 1:(abs($17)/(GAMMA*$11/$3)**0.5) w lp pt 6 lc 6 tit 'Simulation' \
+       ,FILE_BONDI u 2:7 w l lc -1 tit 'Analytical'
+
+
+#  plot pressure
+   set key reverse Left spacing 1.0 top right
+   set ylabel "pressure"
+   set yrange [1.0e-2:1.0e3]
+
+   plot sprintf( '%s/AvePre_%06d', FILE_SIMU, ID ) u 1:3 w lp pt 6 lc 6 tit 'Simulation' \
+       ,FILE_BONDI u 2:( ($6/$7)**2.0*$4/GAMMA ) w l lc -1 tit 'Analytical'
+
+
+#  plot sound speed
+#  set key reverse Left spacing 1.0 top right
+#  set ylabel "Sound speed [km/s]"
+#  set yrange [2.0e2:3.0e3]
+
+#  plot sprintf( '<paste %s/AveRho_%06d %s/AvePre_%06d %s/AveV_R_%06d', FILE_SIMU, ID, FILE_SIMU, ID, FILE_SIMU, ID ) \
+#       u 1:(UnitV*1.0e-5*(GAMMA*$11/$3)**0.5) w lp pt 6 lc 6 tit 'Simulation' \
+#      ,FILE_BONDI u 2:(($6*UnitV*1.0e-5)/$7) w l lc -1 tit 'Analytical'
+
+
+#  flush the gnuplot buffer
+   unset multiplot
+
+   if ( GPVAL_TERM eq 'x11' ) { if ( PAUSE <= 0.0 ) { pause mouse }   else { pause PAUSE } };
+}
+
+
+if ( GPVAL_TERM eq 'x11' ) { pause -1 };
+
+
+

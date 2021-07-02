@@ -505,6 +505,7 @@ void Aux_TakeNote()
       fprintf( Note, "#define FLU_NIN_S               %d\n",      FLU_NIN_S             );
       fprintf( Note, "#define FLU_NOUT_S              %d\n",      FLU_NOUT_S            );
       fprintf( Note, "#define DER_NOUT_MAX            %d\n",      DER_NOUT_MAX          );
+      fprintf( Note, "#define NFIELD_STORED_MAX       %d\n",      NFIELD_STORED_MAX     );
       fprintf( Note, "#define NFLUX_FLUID             %d\n",      NFLUX_FLUID           );
       fprintf( Note, "#define NFLUX_PASSIVE           %d\n",      NFLUX_PASSIVE         );
 #     ifdef GRAVITY
@@ -1047,7 +1048,9 @@ void Aux_TakeNote()
       fprintf( Note, "EXT_POT_TABLE_NPOINT_X          %d\n",      EXT_POT_TABLE_NPOINT[0] );
       fprintf( Note, "EXT_POT_TABLE_NPOINT_Y          %d\n",      EXT_POT_TABLE_NPOINT[1] );
       fprintf( Note, "EXT_POT_TABLE_NPOINT_Z          %d\n",      EXT_POT_TABLE_NPOINT[2] );
-      fprintf( Note, "EXT_POT_TABLE_DH                %13.7e\n",  EXT_POT_TABLE_DH        );
+      fprintf( Note, "EXT_POT_TABLE_DH_X              %13.7e\n",  EXT_POT_TABLE_DH[0]     );
+      fprintf( Note, "EXT_POT_TABLE_DH_Y              %13.7e\n",  EXT_POT_TABLE_DH[1]     );
+      fprintf( Note, "EXT_POT_TABLE_DH_Z              %13.7e\n",  EXT_POT_TABLE_DH[2]     );
       fprintf( Note, "EXT_POT_TABLE_EDGEL_X          %14.7e\n",   EXT_POT_TABLE_EDGEL[0]  );
       fprintf( Note, "EXT_POT_TABLE_EDGEL_Y          %14.7e\n",   EXT_POT_TABLE_EDGEL[1]  );
       fprintf( Note, "EXT_POT_TABLE_EDGEL_Z          %14.7e\n",   EXT_POT_TABLE_EDGEL[2]  );
@@ -1456,6 +1459,15 @@ void Aux_TakeNote()
       fprintf( Note, "%s %s\n", __DATE__, __TIME__ );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
+
+
+//    record the git information
+      fprintf( Note, "Git information\n" );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "Branch : %s\n", EXPAND_AND_QUOTE(GIT_BRANCH) );
+      fprintf( Note, "Commit : %s\n", EXPAND_AND_QUOTE(GIT_COMMIT) );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "\n\n" );
 
 
       fclose( Note );
