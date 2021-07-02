@@ -1253,7 +1253,7 @@ void Hydro_Pri2Char( real InOut[], const real Dens, const real Pres, const real 
 #  error : Hydro_Pri2Char() only supports EOS_GAMMA !!
 #  endif
 
-#  if ( defined CHECK_NEGATIVE_IN_FLUID  &&  !defined MHD )
+#  if ( defined CHECK_UNPHYSICAL_IN_FLUID  &&  !defined MHD )
    Hydro_CheckUnphysical( NULL, NULL, &Pres, NULL, "pressure", __FILE__, __FUNCTION__, __LINE__, true );
    Hydro_CheckUnphysical( NULL, NULL, &Dens, NULL, "density", __FILE__, __FUNCTION__, __LINE__, true );
 #  endif
@@ -1343,7 +1343,7 @@ void Hydro_Char2Pri( real InOut[], const real Dens, const real Pres, const real 
 #  error : Hydro_Char2Pri() only supports EOS_GAMMA !!
 #  endif
 
-#  if ( defined CHECK_NEGATIVE_IN_FLUID  &&  !defined MHD )
+#  if ( defined CHECK_UNPHYSICAL_IN_FLUID  &&  !defined MHD )
    Hydro_CheckUnphysical( NULL, NULL, &Pres, NULL, "pressure", __FILE__, __FUNCTION__, __LINE__, true );
    Hydro_CheckUnphysical( NULL, NULL, &Dens, NULL, "density", __FILE__, __FUNCTION__, __LINE__, true );
 #  endif
@@ -1446,7 +1446,7 @@ void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
 #  error : Hydro/MHD_GetEigenSystem() only supports EOS_GAMMA !!
 #  endif
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
+#  ifdef CHECK_UNPHYSICAL_IN_FLUID
    Hydro_CheckUnphysical( NULL, NULL, &CC_Var[4], NULL, "pressure", __FILE__, __FUNCTION__, __LINE__, true );
    Hydro_CheckUnphysical( NULL, NULL, &CC_Var[0], NULL, "density", __FILE__, __FUNCTION__, __LINE__, true );
 #  endif
@@ -1557,7 +1557,7 @@ void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
       alpha_s = (real)0.0;
    }
    else {
-#     ifdef CHECK_NEGATIVE_IN_FLUID
+#     ifdef CHECK_UNPHYSICAL_IN_FLUID
       Hydro_CheckUnphysical( NULL, NULL, &a2_min_Cs2, NULL, "a2_min_Cs2", __FILE__, __FUNCTION__, __LINE__, true );
       Hydro_CheckUnphysical( NULL, NULL, &Cf2_min_a2, NULL, "Cf2_min_a2", __FILE__, __FUNCTION__, __LINE__, true );
 #     endif

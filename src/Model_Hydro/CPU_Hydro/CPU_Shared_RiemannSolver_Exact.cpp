@@ -206,7 +206,7 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
    {
       L_star[0] = L[0]*POW( L_star[4]/L[4], (real)1.0/Gamma );    // solution of density
 
-#     ifdef CHECK_NEGATIVE_IN_FLUID
+#     ifdef CHECK_UNPHYSICAL_IN_FLUID
       Hydro_CheckUnphysical( NULL, NULL, &L[4], NULL, "pressure", __FILE__, __FUNCTION__, __LINE__, true );
       Hydro_CheckUnphysical( NULL, NULL, &L[0], NULL, "density", __FILE__, __FUNCTION__, __LINE__, true );
       Hydro_CheckUnphysical( NULL, NULL, &L_star[4], NULL, "pressure", __FILE__, __FUNCTION__, __LINE__, true );
@@ -235,7 +235,7 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
    {
       R_star[0] = R[0]*POW( R_star[4]/R[4], (real)1.0/Gamma ); // solution of density
 
-#     ifdef CHECK_NEGATIVE_IN_FLUID
+#     ifdef CHECK_UNPHYSICAL_IN_FLUID
       Hydro_CheckUnphysical( NULL, NULL, &R[4], NULL, "pressure", __FILE__, __FUNCTION__, __LINE__, true );
       Hydro_CheckUnphysical( NULL, NULL, &R[0], NULL, "density", __FILE__, __FUNCTION__, __LINE__, true );
       Hydro_CheckUnphysical( NULL, NULL, &R_star[4], NULL, "pressure", __FILE__, __FUNCTION__, __LINE__, true );
@@ -258,7 +258,7 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
    eival[2] = L_star[1];
    eival[3] = L_star[1];
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
+#  ifdef CHECK_UNPHYSICAL_IN_FLUID
    Hydro_CheckUnphysical( NULL, NULL, &R[4], NULL, "pressure", __FILE__, __FUNCTION__, __LINE__, true );
    Hydro_CheckUnphysical( NULL, NULL, &R[0], NULL, "density", __FILE__, __FUNCTION__, __LINE__, true );
    Hydro_CheckUnphysical( NULL, NULL, &L[4], NULL, "pressure", __FILE__, __FUNCTION__, __LINE__, true );
@@ -269,7 +269,7 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
    {
       Temp = (real)0.5/Gamma*( Gamma_p1*L_star[4]/L[4] + Gamma_m1 );
 
-#     ifdef CHECK_NEGATIVE_IN_FLUID
+#     ifdef CHECK_UNPHYSICAL_IN_FLUID
       Hydro_CheckUnphysical( NULL, NULL, &Temp, NULL, "value", __FILE__, __FUNCTION__, __LINE__, true );
 #     endif
 
@@ -282,7 +282,7 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
    {
       Temp = (real)0.5/Gamma*( Gamma_p1*R_star[4]/R[4] + Gamma_m1 );
 
-#     ifdef CHECK_NEGATIVE_IN_FLUID
+#     ifdef CHECK_UNPHYSICAL_IN_FLUID
       Hydro_CheckUnphysical( NULL, NULL, &Temp, NULL, "value", __FILE__, __FUNCTION__, __LINE__, true );
 #     endif
 
@@ -368,7 +368,7 @@ real Solve_f( const real rho, const real p, const real p_star, const real Gamma 
       real B = p*Gamma_m1/Gamma_p1;
       Temp   = A/(p_star+B);
 
-#     ifdef CHECK_NEGATIVE_IN_FLUID
+#     ifdef CHECK_UNPHYSICAL_IN_FLUID
       Hydro_CheckUnphysical( NULL, NULL, &Temp, NULL, "value", __FILE__, __FUNCTION__, __LINE__, true );
 #     endif
 
@@ -377,7 +377,7 @@ real Solve_f( const real rho, const real p, const real p_star, const real Gamma 
 
    else
    {
-#     ifdef CHECK_NEGATIVE_IN_FLUID
+#     ifdef CHECK_UNPHYSICAL_IN_FLUID
       Hydro_CheckUnphysical( NULL, NULL, &p, NULL, "pressure", __FILE__, __FUNCTION__, __LINE__, true );
       Hydro_CheckUnphysical( NULL, NULL, &rho, NULL, "density", __FILE__, __FUNCTION__, __LINE__, true );
 #     endif

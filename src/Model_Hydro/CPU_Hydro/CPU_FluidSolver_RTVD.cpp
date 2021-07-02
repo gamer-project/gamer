@@ -230,7 +230,7 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
                                 CheckMinPres_Yes, MinPres, NULL_REAL, EoS->DensEint2Pres_FuncPtr,
                                 EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
 
-#        ifdef CHECK_NEGATIVE_IN_FLUID
+#        ifdef CHECK_UNPHYSICAL_IN_FLUID
          Hydro_CheckUnphysical( NULL, NULL, &p,        NULL, "pressure", __FILE__, __FUNCTION__, __LINE__, true );
          Hydro_CheckUnphysical( NULL, NULL, &ux[0][i], NULL, "density",  __FILE__, __FUNCTION__, __LINE__, true );
 #        endif
@@ -292,7 +292,7 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
                                 CheckMinPres_Yes, MinPres, NULL_REAL, EoS->DensEint2Pres_FuncPtr,
                                 EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
 
-#        ifdef CHECK_NEGATIVE_IN_FLUID
+#        ifdef CHECK_UNPHYSICAL_IN_FLUID
          Hydro_CheckUnphysical( NULL, NULL, &p,            NULL, "pressure", __FILE__, __FUNCTION__, __LINE__, true );
          Hydro_CheckUnphysical( NULL, NULL, &u_half[0][i], NULL, "density",  __FILE__, __FUNCTION__, __LINE__, true );
 #        endif
@@ -374,7 +374,7 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
 
 
 //    (b6). check negative density and energy
-#     ifdef CHECK_NEGATIVE_IN_FLUID
+#     ifdef CHECK_UNPHYSICAL_IN_FLUID
       for (int i=3; i<FLU_NXT-3; i++)
       {
          Hydro_CheckUnphysical( NULL, NULL, &ux[0][i], NULL, "density", __FILE__, __FUNCTION__, __LINE__, true );

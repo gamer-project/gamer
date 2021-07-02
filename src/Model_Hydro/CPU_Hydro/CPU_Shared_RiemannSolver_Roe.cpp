@@ -163,7 +163,7 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    HR    = _RhoR*( R[4] + PR );
 #  endif
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
+#  ifdef CHECK_UNPHYSICAL_IN_FLUID
    Hydro_CheckUnphysical( NULL, NULL, &L[0], NULL, "density", __FILE__, __FUNCTION__, __LINE__, true );
    Hydro_CheckUnphysical( NULL, NULL, &R[0], NULL, "density", __FILE__, __FUNCTION__, __LINE__, true );
 #  endif
@@ -202,7 +202,7 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    Y        *= Gamma_m2;
    Bn_star   = SQRT( Gamma_m1 - Y )*Bn;
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
+#  ifdef CHECK_UNPHYSICAL_IN_FLUID
    Hydro_CheckUnphysical( NULL, NULL, &Gamma_m1-Y, NULL, "Gamma_m1-Y", __FILE__, __FUNCTION__, __LINE__, true );
 #  endif
 
@@ -239,7 +239,7 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
 #  ifdef MHD
    a2 -= X;
 #  endif
-#  ifdef CHECK_NEGATIVE_IN_FLUID
+#  ifdef CHECK_UNPHYSICAL_IN_FLUID
    Hydro_CheckUnphysical( NULL, NULL, &a2, NULL, "a2", __FILE__, __FUNCTION__, __LINE__, true );
 #  endif
    a  = SQRT( a2 );
@@ -301,7 +301,7 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
       alpha_s = ZERO;
    }
    else {
-#     ifdef CHECK_NEGATIVE_IN_FLUID
+#     ifdef CHECK_UNPHYSICAL_IN_FLUID
       Hydro_CheckUnphysical( NULL, NULL, &a2_min_Cs2, NULL, "a2_min_Cs2", __FILE__, __FUNCTION__, __LINE__, true );
       Hydro_CheckUnphysical( NULL, NULL, &Cf2_min_a2, NULL, "Cf2_min_a2", __FILE__, __FUNCTION__, __LINE__, true );
 #     endif

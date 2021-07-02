@@ -614,7 +614,7 @@ bool Hydro_CheckUnphysical( const real Cons[], const real Prim[], const real* co
       if ( Show )
        {
 
-         if ( Cons == NULL && Prim == NULL && Input != NULL )
+         if ( Cons == NULL && Prim == NULL && Input != NULL && Info =! NULL )
          {
             printf( "ERROR: invalid %s (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                      Info, *Input, File, Line, Function );

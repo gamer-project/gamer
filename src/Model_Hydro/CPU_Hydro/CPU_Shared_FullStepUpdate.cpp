@@ -165,7 +165,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 
 
 //    5. check the negative density and energy
-#     ifdef CHECK_NEGATIVE_IN_FLUID
+#     ifdef CHECK_UNPHYSICAL_IN_FLUID
       Hydro_CheckUnphysical( NULL, NULL, &Output_1Cell[DENS], NULL, "density", __FILE__, __FUNCTION__, __LINE__, true );
       Hydro_CheckUnphysical( NULL, NULL, &Output_1Cell[ENGY], NULL, "energy", __FILE__, __FUNCTION__, __LINE__, true );
 #     endif

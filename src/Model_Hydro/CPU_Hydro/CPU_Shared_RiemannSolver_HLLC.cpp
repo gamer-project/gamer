@@ -67,7 +67,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    Hydro_Rotate3D( L, XYZ, true, MAG_OFFSET );
    Hydro_Rotate3D( R, XYZ, true, MAG_OFFSET );
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
+#  ifdef CHECK_UNPHYSICAL_IN_FLUID
    Hydro_CheckUnphysical( NULL, NULL, &L[0], NULL, "density",  __FILE__, __FUNCTION__, __LINE__, true );
    Hydro_CheckUnphysical( NULL, NULL, &R[0], NULL, "pressure", __FILE__, __FUNCTION__, __LINE__, true );
 #  endif
@@ -94,7 +94,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    Cs_L  = SQRT(  EoS_DensPres2CSqr( L[0], P_L, L+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL )  );
    Cs_R  = SQRT(  EoS_DensPres2CSqr( R[0], P_R, R+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL )  );
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
+#  ifdef CHECK_UNPHYSICAL_IN_FLUID
    Hydro_CheckUnphysical( NULL, NULL, &P_R, NULL, "pressure", __FILE__, __FUNCTION__, __LINE__, true );
    Hydro_CheckUnphysical( NULL, NULL, &P_L, NULL, "pressure", __FILE__, __FUNCTION__, __LINE__, true );
 #  endif
@@ -141,7 +141,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    Cs2_Roe  = Gamma*TempPres/TempRho;
    Cs_Roe   = SQRT( Cs2_Roe );
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
+#  ifdef CHECK_UNPHYSICAL_IN_FLUID
    Hydro_CheckUnphysical( NULL, NULL, &Cs2_Roe, NULL, "Cs2_Roe", __FILE__, __FUNCTION__, __LINE__, true );
 #  endif
 
@@ -192,7 +192,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    W_L = u_L - Cs_L*q_L;
    W_R = u_R + Cs_R*q_R;
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
+#  ifdef CHECK_UNPHYSICAL_IN_FLUID
    Hydro_CheckUnphysical( NULL, NULL, &q_L, NULL, "q_L", __FILE__, __FUNCTION__, __LINE__, true );
    Hydro_CheckUnphysical( NULL, NULL, &q_R, NULL, "q_R", __FILE__, __FUNCTION__, __LINE__, true );
 #  endif
