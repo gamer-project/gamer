@@ -31,6 +31,7 @@
 //
 // Note        :  1. This function is shared by MHM, MHM_RP, and CTU schemes
 //                2. Invoke dual-energy check if DualEnergySwitch is on
+//                3. If any unphysical fluid cells were found in patch, Hydro_FullStepUpdate will return instantly.
 //
 // Parameter   :  g_Input          : Array storing the input fluid data
 //                g_Output         : Array to store the updated fluid data
@@ -52,13 +53,14 @@
 //                                   --> Should be set to the global variable "PassiveNorm_VarIdx"
 //                EoS              : EoS object
 //                                   --> Only for obtaining Gamma used by the dual-energy formalism
+//                State            : (1/0) --> (Fail to update fluid patch/otherwise)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                            const real dt, const real dh, const real MinDens, const real MinEint,
                            const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
-                           const EoS_t *EoS )
+                           const EoS_t *EoS, int *State )
 {
 
    const int  didx_flux[3] = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };
@@ -164,7 +166,28 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
       for (int v=0; v<NCOMP_TOTAL; v++)   g_Output[v][idx_out] = Output_1Cell[v];
 
 
-//    5. check the negative density and energy
+//    5. check unphysical cells within a patch
+      if(Hydro_CheckUnphysical( Output_1Cell, NULL, NULL, NULL, NULL, __FILE__, __FUNCTION__, __LINE__, false ))
+      {
+#       ifdef __CUDACC__
+        atomicOr ( (int*)State, 1);
+#       else
+        *State = *State | 1;
+#       endif
+      }
+
+
+//    6. waiting all threads within a GPU block
+#     ifdef __CUDACC__
+      __syncthreads();
+#     endif
+
+                          
+//    7. return all threads within a block
+      if ( *State == 1 )     return;
+
+
+//    8. check the negative density and energy
 #     ifdef CHECK_UNPHYSICAL_IN_FLUID
       Hydro_CheckUnphysical( NULL, NULL, &Output_1Cell[DENS], NULL, "density", __FILE__, __FUNCTION__, __LINE__, true );
       Hydro_CheckUnphysical( NULL, NULL, &Output_1Cell[ENGY], NULL, "energy", __FILE__, __FUNCTION__, __LINE__, true );
