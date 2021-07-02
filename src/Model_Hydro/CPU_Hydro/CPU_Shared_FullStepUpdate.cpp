@@ -60,7 +60,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                            const real dt, const real dh, const real MinDens, const real MinEint,
                            const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
-                           const EoS_t *EoS, int *State )
+                           const EoS_t *EoS, char *State )
 {
 
    const int  didx_flux[3] = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };
@@ -167,27 +167,33 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 
 
 //    5. check unphysical cells within a patch
-      if(Hydro_CheckUnphysical( Output_1Cell, NULL, NULL, NULL, NULL, __FILE__, __FUNCTION__, __LINE__, false ))
+
+      if ( State != NULL )
       {
+
+        if(Hydro_CheckUnphysical( Output_1Cell, NULL, NULL, NULL, NULL, __FILE__, __FUNCTION__, __LINE__, false ))
+        {
+#         ifdef __CUDACC__
+          atomicOr ( (int*)State, 1);
+#         else
+          *State = *State | 1;
+#         endif
+        }
+
+
+//      5-1. waiting all threads within a GPU block
 #       ifdef __CUDACC__
-        atomicOr ( (int*)State, 1);
-#       else
-        *State = *State | 1;
+        __syncthreads();
 #       endif
+
+                            
+//      5-2. return all threads within a block
+        if ( *State == 1 )     return;
+
       }
 
 
-//    6. waiting all threads within a GPU block
-#     ifdef __CUDACC__
-      __syncthreads();
-#     endif
-
-                          
-//    7. return all threads within a block
-      if ( *State == 1 )     return;
-
-
-//    8. check the negative density and energy
+//    6. check the negative density and energy
 #     ifdef CHECK_UNPHYSICAL_IN_FLUID
       Hydro_CheckUnphysical( NULL, NULL, &Output_1Cell[DENS], NULL, "density", __FILE__, __FUNCTION__, __LINE__, true );
       Hydro_CheckUnphysical( NULL, NULL, &Output_1Cell[ENGY], NULL, "energy", __FILE__, __FUNCTION__, __LINE__, true );

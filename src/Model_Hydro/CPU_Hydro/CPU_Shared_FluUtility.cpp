@@ -537,6 +537,8 @@ bool Hydro_CheckUnphysical( const real Cons[], const real Prim[], const real* co
                             const char Info[], const char File[], const char Function[], const int Line, bool Show )
 {
 
+   real Msqr, Dsqr, E_D, M_D, Temp, Discriminant;
+
    if ( Cons == NULL && Prim == NULL && Input != NULL )
    {
       if ( *Input <= (real)0.0  ||  *Input >= __FLT_MAX__  || *Input != *Input )           goto GOTCHA;
@@ -563,12 +565,12 @@ bool Hydro_CheckUnphysical( const real Cons[], const real Prim[], const real* co
 
 
 //    calculate Discriminant
-      real Msqr = SQR(Cons[MOMX]) + SQR(Cons[MOMY]) + SQR(Cons[MOMZ]);
-      real Dsqr = SQR(Cons[0]);
-      real E_D = Cons[4] / Cons[0];
-      real M_D = SQRT( Msqr / Dsqr );
-      real X = SQRT( E_D*E_D + (real)2.0*E_D );
-      real Discriminant = ( X + M_D )*( X - M_D );
+      Msqr         = SQR(Cons[MOMX]) + SQR(Cons[MOMY]) + SQR(Cons[MOMZ]);
+      Dsqr         = SQR(Cons[0]);
+      E_D          = Cons[4] / Cons[0];
+      M_D          = SQRT( Msqr / Dsqr );
+      Temp         = SQRT( E_D*E_D + (real)2.0*E_D );
+      Discriminant = ( Temp + M_D ) * ( Temp - M_D );
 
 //    check Discriminant
       if ( Discriminant <= TINY_NUMBER )                                                  goto GOTCHA;
@@ -614,7 +616,7 @@ bool Hydro_CheckUnphysical( const real Cons[], const real Prim[], const real* co
       if ( Show )
        {
 
-         if ( Cons == NULL && Prim == NULL && Input != NULL && Info =! NULL )
+         if ( Cons == NULL && Prim == NULL && Input != NULL && Info != NULL )
          {
             printf( "ERROR: invalid %s (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                      Info, *Input, File, Line, Function );
@@ -629,16 +631,16 @@ bool Hydro_CheckUnphysical( const real Cons[], const real Prim[], const real* co
          }
          else if ( Cons != NULL && Prim == NULL && Input == NULL )
          {
-            printf( "ERROR: unphysical conserved variables at file <%s>, line <%d>, function <%s>\n");
+            printf( "ERROR: unphysical conserved variables at file <%s>, line <%d>, function <%s>\n",
+                            File, Line, Function );
             printf( "       D=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e, E^2+2*E*D-|M|^2=%14.7e\n",
-                            File, Line, Function,
                             Cons[DENS], Cons[MOMX], Cons[MOMY], Cons[MOMZ], Cons[ENGY], Discriminant );
          }
          else if ( Cons == NULL && Prim != NULL && Input == NULL )
          {
-            printf( "ERROR: unphysical primitive variables at file <%s>, line <%d>, function <%s>\n");
+            printf( "ERROR: unphysical primitive variables at file <%s>, line <%d>, function <%s>\n",
+                            File, Line, Function );
             printf( "       rho=%14.7e, Ux=%14.7e, Uy=%14.7e, Uz=%14.7e, P=%14.7e\n",
-                            File, Line, Function,
                             Prim[0], Prim[1], Prim[2], Prim[3], Prim[4] );
          }
 

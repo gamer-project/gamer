@@ -74,8 +74,8 @@ void InterpolateWithAdaptiveMinmod( real CData [], const int CSize[3], const int
                    Hydro_Con2Pri( Cons, Prim, MIN_PRES,
                                   OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
                                   JEANS_MIN_PRES, JeansMinPres_Coeff,
-                                  EoS->EoS_DensEint2Pres_FuncPtr, EoS->EoS_DensPres2Eint_FuncPtr,
-                                  EoS->EoS_AuxArray_Flt, EoS->EoS_AuxArray_Int, EoS->EoS_Table, NULL );
+                                  EoS.DensEint2Pres_FuncPtr, EoS.DensPres2Eint_FuncPtr,
+                                  EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table, NULL );
 
                    for (int v = 0 ; v < NCOMP_FLUID ;v++) CData[CSize3D*v+i] = Prim[v];
                  }
@@ -88,7 +88,7 @@ void InterpolateWithAdaptiveMinmod( real CData [], const int CSize[3], const int
                  IntMonoCoeff -= itr * ( INT_MONO_COEFF - Mono_Min ) / (real) Max ;
               }
 
-i//            interpolation
+//            interpolation
               for (int v=0; v<NComp; v++)
               Interpolate( CData+v*CSize3D, CSize, CStart, CRange, FData+v*FSize3D,
                            FSize, FStart, 1, IntScheme, UnwrapPhase, Monotonic, IntMonoCoeff, OppSign0thOrder );
@@ -142,8 +142,8 @@ i//            interpolation
 
             Hydro_Pri2Con( Prim, Cons,
                            OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
-                           EoS->EoS_DensPres2Eint_FuncPtr,
-                           EoS->EoS_AuxArray_Flt, EoS->EoS_AuxArray_Int, EoS->EoS_Table, NULL );
+                           EoS.DensPres2Eint_FuncPtr,
+                           EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table, NULL );
 
             for (int v = 0 ; v < NCOMP_FLUID ;v++) FData[FSize3D*v+i] = Cons[v];
          }

@@ -54,7 +54,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                            const real dt, const real dh, const real MinDens, const real MinEint,
                            const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
-                           const EoS_t *EoS );
+                           const EoS_t *EoS, char *State );
 #if   ( RSOLVER == EXACT )
 void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                 const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
@@ -480,7 +480,7 @@ void CPU_FluidSolver_MHM(
 //         4. full-step evolution
            Hydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P], g_Mag_Array_Out[P],
                                  g_FC_Flux_1PG, dt, dh, MinDens, MinEint, DualEnergySwitch,
-                                 NormPassive, NNorm, c_NormIdx, &EoS );
+                                 NormPassive, NNorm, c_NormIdx, &EoS, &State );
 
            Iteration++;
           
