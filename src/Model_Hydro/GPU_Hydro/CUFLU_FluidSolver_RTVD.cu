@@ -345,7 +345,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
 
 //       check negative density and energy
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-         Hydro_CheckUnphysical( NULL, NULL, &Fluid[4], NULL, "negative energy", __FILE__, __FUNCTION__, __LINE__, true );
+         Hydro_CheckUnphysical( NULL, NULL, &Fluid[4], NULL, "energy", __FILE__, __FUNCTION__, __LINE__, true );
          Hydro_CheckUnphysical( NULL, NULL, &Fluid[0], NULL, "density", __FILE__, __FUNCTION__, __LINE__, true );
 #        endif
 

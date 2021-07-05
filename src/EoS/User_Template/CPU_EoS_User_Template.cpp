@@ -122,7 +122,7 @@ static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, c
 
 // check
 #  ifdef GAMER_DEBUG
-   Hydro_CheckUnphysical( NULL, NULL, &Pres, Passive, "input pressure", __FILE__, __FUNCTION__, __LINE__, true );
+   Hydro_CheckUnphysical( NULL, NULL, &Pres, Passive, "output pressure", __FILE__, __FUNCTION__, __LINE__, true );
 #  endif // GAMER_DEBUG
 
 
@@ -186,7 +186,7 @@ static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, c
 // check
 #  ifdef GAMER_DEBUG
 // note that some EoS may support Eint<0
-   Hydro_CheckUnphysical( NULL, NULL, &Eint, Passive, "input internal energy",__FILE__, __FUNCTION__, __LINE__, true );
+   Hydro_CheckUnphysical( NULL, NULL, &Eint, Passive, "output internal energy",__FILE__, __FUNCTION__, __LINE__, true );
 #  endif // GAMER_DEBUG
 
 
@@ -310,7 +310,7 @@ static real EoS_DensEint2Temp_User_Template( const real Dens, const real Eint, c
 
 // check
 #  ifdef GAMER_DEBUG
-   Hydro_CheckUnphysical( NULL, NULL, &Temp, Passive, "input density", __FILE__, __FUNCTION__, __LINE__, true );
+   Hydro_CheckUnphysical( NULL, NULL, &Temp, Passive, "output temperature", __FILE__, __FUNCTION__, __LINE__, true );
 #  endif // GAMER_DEBUG
 
 
@@ -370,7 +370,7 @@ static real EoS_DensTemp2Pres_User_Template( const real Dens, const real Temp, c
 
 // check
 #  ifdef GAMER_DEBUG
-   Hydro_CheckUnphysical( NULL, NULL, &Pres, Passive, "input pressure", __FILE__, __FUNCTION__, __LINE__, true );
+   Hydro_CheckUnphysical( NULL, NULL, &Pres, Passive, "output pressure", __FILE__, __FUNCTION__, __LINE__, true );
 #  endif // GAMER_DEBUG
 
 

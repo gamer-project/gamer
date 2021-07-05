@@ -3,7 +3,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  InterpolateWithAdaptiveMinmod
-// Description :  Perform spatial interpolation using different schemes with 
+// Description :  Perform spatial interpolation using different schemes with
 //
 // Note        :  Use the input parameter "IntScheme" to determine the adopted interpolation scheme
 //
@@ -45,7 +45,7 @@ void InterpolateWithAdaptiveMinmod( real CData [], const int CSize[3], const int
      real Cons[NCOMP_FLUID], Prim[NCOMP_FLUID];
 
 #    if ( MODEL == HYDRO  &&  defined GRAVITY )
-     const real JeansMinPres_Coeff = ( JEANS_MIN_PRES ) ? 
+     const real JeansMinPres_Coeff = ( JEANS_MIN_PRES ) ?
                                      NEWTON_G*SQR(JEANS_MIN_PRES_NCELL*amr->dh[JEANS_MIN_PRES_LEVEL])/(GAMMA*M_PI) : NULL_REAL;
 #    else
      const real JEANS_MIN_PRES     = false;

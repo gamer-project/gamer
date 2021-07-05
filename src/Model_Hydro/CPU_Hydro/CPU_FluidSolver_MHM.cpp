@@ -295,9 +295,9 @@ void CPU_FluidSolver_MHM(
    real AdaptiveMinModCoeff        = NULL_REAL;
 #  ifdef __CUDACC__
    __shared__ char State;
-#  else  
+#  else
    char State;
-#  endif          
+#  endif
    State                           = 0;
 
 // openmp pragma for the CPU solver
@@ -447,7 +447,7 @@ void CPU_FluidSolver_MHM(
 #          ifdef OPNEMP
            tid = omp_get_thread_num();
 #          else
-           tid = 0;                                                                                                                  
+           tid = 0;
 #          endif
 #          ifdef __CUDACC__
            if ( tid == 0 && threadIdx.x == 0 && State == 1 )
@@ -483,8 +483,8 @@ void CPU_FluidSolver_MHM(
                                  NormPassive, NNorm, c_NormIdx, &EoS, &State );
 
            Iteration++;
-          
-          
+
+
          } while( State && Iteration <= MaxIteration );
 
       } // loop over all patch groups

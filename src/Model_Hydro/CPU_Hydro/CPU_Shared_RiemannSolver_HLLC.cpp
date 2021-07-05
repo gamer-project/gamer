@@ -69,7 +69,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
    Hydro_CheckUnphysical( NULL, NULL, &L[0], NULL, "density",  __FILE__, __FUNCTION__, __LINE__, true );
-   Hydro_CheckUnphysical( NULL, NULL, &R[0], NULL, "pressure", __FILE__, __FUNCTION__, __LINE__, true );
+   Hydro_CheckUnphysical( NULL, NULL, &R[0], NULL, "density", __FILE__, __FUNCTION__, __LINE__, true );
 #  endif
 
 

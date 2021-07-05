@@ -186,7 +186,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
         __syncthreads();
 #       endif
 
-                            
+
 //      5-2. return all threads within a block
         if ( *State == 1 )     return;
 
