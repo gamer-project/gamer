@@ -36,11 +36,11 @@ COMPILE_VERBOSE := 0
 SIMU_OPTION += -DMODEL=HYDRO
 
 # enable gravity
-#SIMU_OPTION += -DGRAVITY
+SIMU_OPTION += -DGRAVITY
 
 # enable particles
 # --> must enable GRAVITY
-#SIMU_OPTION += -DPARTICLE
+SIMU_OPTION += -DPARTICLE
 
 # support Grackle, a chemistry and radiative cooling library
 # --> must set NCOMP_PASSIVE_USER according to the primordial chemistry network set by GRACKLE_PRIMORDIAL
@@ -77,7 +77,7 @@ SIMU_OPTION += -DRSOLVER=ROE
 SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 
 # magnetohydrodynamics
-SIMU_OPTION += -DMHD
+#SIMU_OPTION += -DMHD
 
 # cosmic rays (not supported yet)
 #SIMU_OPTION += -DCOSMIC_RAY
@@ -207,7 +207,7 @@ SIMU_OPTION += -DSUPPORT_HDF5
 #SIMU_OPTION += -DSUPPORT_GSL
 
 # support yt inline analysis
-SIMU_OPTION += -DSUPPORT_LIBYT
+#SIMU_OPTION += -DSUPPORT_LIBYT
 
 # random number implementation: RNG_GNU_EXT/RNG_CPP11 (GNU extension drand48_r/c++11 <random>)
 # --> use RNG_GNU_EXT for compilers supporting GNU extensions (**not supported on some macOS**)
@@ -286,7 +286,7 @@ endif
 
 # template
 CUDA_PATH    := /usr/local/cuda-11.2
-FFTW_PATH    :=
+FFTW_PATH    := /home/cindytsai/software/fftw/2.1.5-gnu
 MPI_PATH     := /home/cindytsai/software/openmpi/3.1.5-gnu
 HDF5_PATH    := /home/cindytsai/software/hdf5/1.10.6
 GRACKLE_PATH :=
