@@ -12,10 +12,10 @@
 //                       since they do not involve min-mod coefficient.
 //                3. Remedial strategy: interpolate conserved varibales with original min-mod coefficient
 //
-//                                      if failed cell found       
+//                                      3a. if failed cell is found
 //                                      --> interpolate primitive varibales with original min-mod coefficient
 //
-//                                      if failed cell found again
+//                                      3b. if failed cell is found again after the step 3a
 //                                      --> interpolate primitive varibales with reducing min-mod coefficient
 //                                          until the min-mod coefficient is reduced to zero
 //                                      
