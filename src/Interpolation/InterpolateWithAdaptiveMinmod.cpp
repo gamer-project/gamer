@@ -3,9 +3,24 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  InterpolateWithAdaptiveMinmod
-// Description :  Perform spatial interpolation using different schemes with
+// Description :  Perform spatial interpolation using different schemes with reducing min-mod coefficient
+//                when encountering unphysical cell in patch.
 //
-// Note        :  Use the input parameter "IntScheme" to determine the adopted interpolation scheme
+// Note        :  1. Use the input parameter "IntScheme" to determine the adopted interpolation scheme
+//                2. Reduce the min-mod coefficient when unphysical results are found in interpolted patches
+//                   --> we do not take this remedy for MinMod-3D, MinMod-1D, and vanLeer,
+//                       since they do not involve min-mod coefficient.
+//                3. Remedial strategy: interpolate conserved varibales with original min-mod coefficient
+//
+//                                      if failed cell found       
+//                                      --> interpolate primitive varibales with original min-mod coefficient
+//
+//                                      if failed cell found again
+//                                      --> interpolate primitive varibales with reducing min-mod coefficient
+//                                          until the min-mod coefficient is reduced to zero
+//                                      
+//                4.  Interpolate primive variables still preserves conservation because ghost zones do not
+//                    affect conservation.
 //
 // Parameter   :  CData           : Input coarse-grid array
 //                CSize           : Size of CData[]
@@ -38,7 +53,7 @@ void InterpolateWithAdaptiveMinmod( real CData [], const int CSize[3], const int
 {
      int itr = -1;
      real IntMonoCoeff = NULL_REAL;
-     bool State = false;
+     bool GotFailCell = false;
      const int Max = 3;
      const int CSize3D = CSize[0]*CSize[1]*CSize[2];
      const int FSize3D = FSize[0]*FSize[1]*FSize[2];
@@ -63,7 +78,10 @@ void InterpolateWithAdaptiveMinmod( real CData [], const int CSize[3], const int
               }
               else if ( itr == 0 )
               {
-                 if ( IntScheme == INT_MINMOD3D || IntScheme == INT_MINMOD1D ) break;
+
+                 // vanLeer, MinMod-3D, and MinMod-1D do not use min-mod coefficient, so we break the loop immediately
+                 // and do nothing when encountering unphysical results
+                 if ( IntScheme == INT_VANLEER || IntScheme == INT_MINMOD3D || IntScheme == INT_MINMOD1D ) break;
 
                  IntMonoCoeff = INT_MONO_COEFF;
 
@@ -82,10 +100,10 @@ void InterpolateWithAdaptiveMinmod( real CData [], const int CSize[3], const int
               }
               else
               {
-                 real Mono_Min = (real)0.0;
+                 real IntMonoCoeff_Min = (real)0.0;
 
-//               adaptive IntMonoCoeff
-                 IntMonoCoeff -= itr * ( INT_MONO_COEFF - Mono_Min ) / (real) Max ;
+//               reduce min-mod coefficient
+                 IntMonoCoeff -= itr * ( (real)INT_MONO_COEFF - IntMonoCoeff_Min ) / (real) Max ;
               }
 
 //            interpolation
@@ -103,7 +121,7 @@ void InterpolateWithAdaptiveMinmod( real CData [], const int CSize[3], const int
 
                       if ( Hydro_CheckUnphysical( Cons, NULL, NULL, NULL, NULL,  __FILE__, __FUNCTION__, __LINE__, false ) )
                       {
-                        State = true;
+                        GotFailCell = true;
                         break;
                       }
                    }
@@ -116,7 +134,7 @@ void InterpolateWithAdaptiveMinmod( real CData [], const int CSize[3], const int
 
                       if ( Hydro_CheckUnphysical( NULL, Prim, NULL, NULL, NULL,  __FILE__, __FUNCTION__, __LINE__, false ) )
                       {
-                        State = true;
+                        GotFailCell = true;
                         break;
                       }
                   }
@@ -125,7 +143,7 @@ void InterpolateWithAdaptiveMinmod( real CData [], const int CSize[3], const int
 
               itr++;
 
-        } while (State && itr <= Max );
+           } while (GotFailCell && itr <= Max );
      }
      else
      {
@@ -149,7 +167,7 @@ void InterpolateWithAdaptiveMinmod( real CData [], const int CSize[3], const int
          }
      }
 
-//   check minimum energy
+//   check unphysical results
 #    ifdef CHECK_UNPHYSICAL_IN_FLUID
      if ( TVar == _TOTAL )
      {
