@@ -15,10 +15,10 @@
 //                                      3a. if failed cell is found
 //                                      --> interpolate primitive varibales with original min-mod coefficient
 //
-//                                      3b. if failed cell is found again after the step 3a
+//                                      3b. if failed cell is found again after the step (3a)
 //                                      --> interpolate primitive varibales with reducing min-mod coefficient
 //                                          until the min-mod coefficient is reduced to zero
-//                                      
+//
 //                4.  Interpolate primive variables still preserves conservation because ghost zones do not
 //                    affect conservation.
 //
