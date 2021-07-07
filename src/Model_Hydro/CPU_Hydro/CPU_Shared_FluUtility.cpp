@@ -528,7 +528,7 @@ real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY
 //
 // Return      :  Case1  :  true  --> Input <= 0.0  ||  >= __FLT_MAX__  ||  != itself (Nan)
 //                          false --> otherwise
-//                Case2  :  true  --> conserved variables are unphysical and the root(SRHD only) do not exist 
+//                Case2  :  true  --> conserved variables are unphysical or the root(SRHD only) do not exist 
 //                          false --> otherwise
 //                Case3  :  true  --> primitive variables are unphysical
 //                          false --> otherwise
