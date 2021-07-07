@@ -31,7 +31,7 @@
 //                              --> Interpolate primitive varibales with reducing min-mod coefficient
 //                                  until the min-mod coefficient is reduced to zero
 //
-//                4.  Interpolate primive variables still preserves conservation because ghost zones do not
+//                4.  Interpolate primtive variables still preserves conservation because ghost zones do not
 //                    affect conservation.
 //
 // Parameter   :  CData           : Input coarse-grid array
