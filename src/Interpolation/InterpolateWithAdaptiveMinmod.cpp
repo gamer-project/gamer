@@ -7,31 +7,31 @@
 //                when encountering unphysical cell in patch.
 //
 // Note        :  1. Use the input parameter "IntScheme" to determine the adopted interpolation scheme
-//                2. Reduce the min-mod coefficient when unphysical results are found in interpolted or newly allocate patches
+//                2. Reduce the min-mod coefficient when unphysical results are found in interpolated or newly allocate patches
 //                   --> we do not take this remedy for MinMod-3D, MinMod-1D, and vanLeer,
 //                       since they do not involve min-mod coefficient.
 //
 //                3. Remedial strategy:
 //                   Case1: Allocate new patches at FaLv+1. i.e. invoked by LB_Refine_AllocateNewPatch() or Refine()
 //
-//                          1a. Interpolate conserved varibales with original min-mod coefficient
+//                          1a. Interpolate conserved variables with original min-mod coefficient
 //
 //                              1b. If failed cell is found
-//                              --> Interpolate conserved varibales with reducing min-mod coefficient
+//                              --> Interpolate conserved variables with reducing min-mod coefficient
 //                                  until the min-mod coefficient is reduced to zero
 //
 //                   Case2: Interpolate ghost zone i.e. invoked by InterpolateGhostZone()
 //
-//                          2a. Interpolate conserved varibales with original min-mod coefficient
+//                          2a. Interpolate conserved variables with original min-mod coefficient
 //
 //                              2b. If failed cell is found
-//                              --> Interpolate primitive varibales with original min-mod coefficient
+//                              --> Interpolate primitive variables with original min-mod coefficient
 //
 //                              2c. If failed cell is found again
-//                              --> Interpolate primitive varibales with reducing min-mod coefficient
+//                              --> Interpolate primitive variables with reducing min-mod coefficient
 //                                  until the min-mod coefficient is reduced to zero
 //
-//                4.  Interpolate primtive variables still preserves conservation because ghost zones do not
+//                4.  Interpolate primitive variables still preserves conservation because ghost zones do not
 //                    affect conservation.
 //
 // Parameter   :  CData           : Input coarse-grid array
@@ -95,7 +95,7 @@ void InterpolateWithAdaptiveMinmod( real CData [], const int CSize[3], const int
               }
 
 //            2. interpolate primitive variables with original min-mod coefficient
-//            --> this step is only for interplating ghost zone. i.e. IntGhostZone == true
+//            --> this step is only for interpolating ghost zone. i.e. IntGhostZone == true
               else if ( itr == 0 && IntGhostZone )
               {
 
