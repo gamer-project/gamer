@@ -1149,7 +1149,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
 // c3. interpolation on original cell-centered variables for models != ELBDM
    InterpolateWithAdaptiveMinmod( CData_CC, CSize_CC, CStart_CC, CRange_CC, IntData_CC, FSize_CC, FStart_CC, NVarCC_Flu, TVarCC,
-                                   IntScheme_CC, PhaseUnwrapping_No, Monotonicity_CC, INT_OPP_SIGN_0TH_ORDER );
+                                   IntScheme_CC, PhaseUnwrapping_No, Monotonicity_CC, INT_OPP_SIGN_0TH_ORDER, true );
 
 
 #  endif // #if ( MODEL == ELBDM ) ... else ...

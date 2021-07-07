@@ -726,7 +726,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
          InterpolateWithAdaptiveMinmod( &Flu_CData[0][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[0][0][0][0],
                                         FSize_CC3, FStart_CC, NCOMP_TOTAL, _TOTAL, OPT__REF_FLU_INT_SCHEME,
                                         PhaseUnwrapping_No, Monotonicity,
-                                        INT_OPP_SIGN_0TH_ORDER );
+                                        INT_OPP_SIGN_0TH_ORDER, false );
 
 #        endif // #if ( MODEL == ELBDM ) ... else
 

@@ -900,7 +900,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    InterpolateWithAdaptiveMinmod( CData_Flu, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[0][0][0][0],
                                   FSize_CC3, FStart_CC, NCOMP_TOTAL, _TOTAL, OPT__REF_FLU_INT_SCHEME,
                                   PhaseUnwrapping_No, Monotonicity,
-                                  INT_OPP_SIGN_0TH_ORDER );
+                                  INT_OPP_SIGN_0TH_ORDER, false );
 
 #  endif // #if ( MODEL == ELBDM ) ... else
 
