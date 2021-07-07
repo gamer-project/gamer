@@ -538,7 +538,9 @@ bool Hydro_CheckUnphysical( const real Cons[], const real Prim[], const real* co
                             const char Info[], const char File[], const char Function[], const int Line, bool Show )
 {
 
+#  ifdef SRHD
    real Msqr, Dsqr, E_D, M_D, Temp, Discriminant;
+#  endif
 
    if ( Cons == NULL && Prim == NULL && Input != NULL )
    {
@@ -566,6 +568,7 @@ bool Hydro_CheckUnphysical( const real Cons[], const real Prim[], const real* co
 
 
 //    calculate Discriminant
+#     ifdef SRHD
       Msqr         = SQR(Cons[MOMX]) + SQR(Cons[MOMY]) + SQR(Cons[MOMZ]);
       Dsqr         = SQR(Cons[0]);
       E_D          = Cons[4] / Cons[0];
@@ -575,6 +578,7 @@ bool Hydro_CheckUnphysical( const real Cons[], const real Prim[], const real* co
 
 //    check Discriminant
       if ( Discriminant <= TINY_NUMBER )                                                  goto GOTCHA;
+#     endif
 
 //    pass all checks
       return false;
@@ -634,8 +638,13 @@ bool Hydro_CheckUnphysical( const real Cons[], const real Prim[], const real* co
          {
             printf( "ERROR: unphysical conserved variables at file <%s>, line <%d>, function <%s>\n",
                             File, Line, Function );
+#           ifdef SRHD
             printf( "       D=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e, E^2+2*E*D-|M|^2=%14.7e\n",
                             Cons[DENS], Cons[MOMX], Cons[MOMY], Cons[MOMZ], Cons[ENGY], Discriminant );
+#           else
+            printf( "       D=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n",
+                            Cons[DENS], Cons[MOMX], Cons[MOMY], Cons[MOMZ], Cons[ENGY] );
+#           endif
          }
          else if ( Cons == NULL && Prim != NULL && Input == NULL )
          {
