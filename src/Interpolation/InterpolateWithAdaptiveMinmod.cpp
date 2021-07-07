@@ -16,7 +16,7 @@
 //
 //                          1a. Interpolate conserved variables with original min-mod coefficient
 //
-//                              1b. If failed cell is found
+//                              1b. If failed cell was found
 //                              --> Interpolate conserved variables with reducing min-mod coefficient
 //                                  until the min-mod coefficient is reduced to zero
 //
@@ -24,10 +24,10 @@
 //
 //                          2a. Interpolate conserved variables with original min-mod coefficient
 //
-//                              2b. If failed cell is found
+//                              2b. If failed cell was found
 //                              --> Interpolate primitive variables with original min-mod coefficient
 //
-//                              2c. If failed cell is found again
+//                              2c. If failed cell was found again
 //                              --> Interpolate primitive variables with reducing min-mod coefficient
 //                                  until the min-mod coefficient is reduced to zero
 //
