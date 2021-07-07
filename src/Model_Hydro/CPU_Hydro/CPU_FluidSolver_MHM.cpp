@@ -147,7 +147,7 @@ static void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 //                4. See include/CUFLU.h for the values and description of different symbolic constants
 //                   such as N_FC_VAR, N_FC_FLUX, N_SLOPE_PPM, N_FL_FLUX, N_HF_VAR
 //                5. Arrays with a prefix "g_" are stored in the global memory of GPU
-//                6. If unphysical result occurs in a cell, we redo data reconstruction by
+//                6. If unphysical result occurs on face-center, we redo data reconstruction by
 //                   reducing the original minmod coefficient by a factor of 0.75.
 //                   If the failure still occurs, we further reduce the minmod coefficient
 //                   repeatedly until either Hydro_CheckUnphysical() return false
