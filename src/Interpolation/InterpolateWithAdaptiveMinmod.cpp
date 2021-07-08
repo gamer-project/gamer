@@ -13,7 +13,8 @@
 //                       since they do not involve min-mod coefficient.
 //
 //                3. Remedial strategy:
-//                   Case1: Allocate new patches at FaLv+1. i.e. invoked by LB_Refine_AllocateNewPatch() or Refine()
+//                   Case1: Allocate new patches.
+//                          i.e. LB_Refine_AllocateNewPatch() or Refine() invokes InterpolateWithAdaptiveMinmod()
 //
 //                          1a. Interpolate conserved variables with original min-mod coefficient
 //
@@ -21,7 +22,8 @@
 //                              --> Interpolate conserved variables with reducing min-mod coefficient
 //                                  until the min-mod coefficient is reduced to zero
 //
-//                   Case2: Interpolate ghost zone i.e. invoked by InterpolateGhostZone()
+//                   Case2: Interpolate ghost zone
+//                          i.e. InterpolateGhostZone() invokes InterpolateWithAdaptiveMinmod()
 //
 //                          2a. Interpolate conserved variables with original min-mod coefficient
 //
