@@ -10,7 +10,8 @@
 // Description :  Set YT-specific parameters for the inline analysis
 //
 // Note        :  1. This function must be called in advance **every time** we invoke the inline analysis
-//                2. Invoked by YT_Inline()
+//                2. Invoked by YT_Inline().
+//                3. Set up num_species, species_list for supporting PARTICLE.
 //
 // Parameter   :  NPatchAllLv : Total number of patches at all levels
 //                NField      : Total number of fields
@@ -46,6 +47,15 @@ void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchL
    param_yt.num_fields              = NField;
    param_yt.num_grids_local         = NPatchLocalLv;
 
+#  ifdef PARTICLE
+   yt_species *species_list         = new yt_species [1];
+   species_list[0].species_name     = "io";
+   species_list[0].num_attr         = PAR_NATT_TOTAL;
+
+   param_yt.num_species             = 1;
+   param_yt.species_list            = species_list;
+#  endif
+
 #  ifdef FLOAT8
    param_yt.field_ftype             = YT_DOUBLE;
 #  else
@@ -78,6 +88,10 @@ void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchL
 // 2. transfer simulation information to libyt
    if ( yt_set_parameter( &param_yt ) != YT_SUCCESS )    Aux_Error( ERROR_INFO, "yt_set_parameter() failed !!\n" );
 
+// 2-1. free no longer used resource
+   delete [] species_list;
+
+// 3. set code specific parameter
 #  ifdef MHD
    const int mhd = 1;
    if (yt_add_user_parameter_int("mhd", 1, &mhd) != YT_SUCCESS)  Aux_Error( ERROR_INFO, "yt_add_user_parameter() add mhd failed !!\n" );

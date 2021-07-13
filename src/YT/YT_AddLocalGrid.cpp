@@ -89,9 +89,10 @@ void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (
          }
 
 #        ifdef PARTICLE
-         YT_Grids[LID].particle_count = amr->patch[0][lv][PID]->NPar;
-#        else
-         YT_Grids[LID].particle_count = 0;
+         // input particle num in this grid
+         YT_Grids[LID].particle_count_list[0] = (long) amr->patch[0][lv][PID]->NPar;
+         // store this grid's gid, for later searching for particle data
+         amr->patch[0][lv][PID]->libyt_GID    = (long) GID;
 #        endif
 
          YT_Grids[LID].id             = GID;

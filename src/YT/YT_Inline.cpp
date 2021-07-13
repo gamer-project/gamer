@@ -12,6 +12,12 @@ void MagY_DerivedFunc(long gid, double *Converted_MagY);
 void MagZ_DerivedFunc(long gid, double *Converted_MagZ);
 #endif
 
+#ifdef PARTICLE
+// get the particle attribute, since we only have one type of particle "io"
+// we only need one function.
+void Get_ParticleAttribute(long gid, char *attr, void *raw_data);
+#endif
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  YT_Inline
 // Description :  Invoke the yt inline analysis
@@ -74,11 +80,11 @@ void YT_Inline()
    NField = NField + NCOMP_MAG;
 #endif
 
-// 2-2. Call YT_SetParameter
+// 2-2. Call YT_SetParameter and set particle info if need.
    YT_SetParameter( NPatchAllLv, NField, NPatchLocalLv);
 
-
-// 3. get yt_field array FieldList, and filled in field info
+// 3.   Get FieldList and ParticleList, fill the info if needed
+// 3-1. get yt_field array FieldList, and filled in field info
 //      FieldList :
 //      +----------------------------------------
 //      +       0            |                  +
@@ -114,8 +120,34 @@ void YT_Inline()
    FieldList[ MHDIdx     ].derived_func = MagX_DerivedFunc;
    FieldList[ MHDIdx + 1 ].derived_func = MagY_DerivedFunc;
    FieldList[ MHDIdx + 2 ].derived_func = MagZ_DerivedFunc;
-
 #endif
+
+// 3-2 Get the ParticleList
+#  ifdef PARTICLE
+   yt_particel *ParticleList;
+   yt_get_particlesPtr( &ParticleList );
+
+   // Set attributes
+   for (int v=0; v<ParticleList[0].num_attr; v++){
+       // set attribute name
+       ParticleList[0].attr_list[v].attr_name  = ParAttLabel[v];
+       // set attribute data type
+#  ifdef FLOAT8
+       ParticleList[0].attr_list[v].attr_dtype = YT_DOUBLE;
+#  else
+       ParticleList[0].attr_list[v].attr_dtype = YT_FLOAT;
+#  endif
+       // set attribute unit
+   }
+
+   // Set label (attribute name) of coordinate x/y/z
+   ParticleList[0].coor_x   = "ParPosX";
+   ParticleList[0].coor_y   = "ParPosY";
+   ParticleList[0].coor_z   = "ParPosZ";
+
+   // Set get attribute function
+   ParticleList[0].get_attr = Get_ParticleAttribute;
+#  endif
 
 // 4. prepare local patches for libyt
    YT_AddLocalGrid( GID_Offset, GID_LvStart, NPatchAllRank, NField, FieldList);
