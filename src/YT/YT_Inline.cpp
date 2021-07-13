@@ -124,7 +124,7 @@ void YT_Inline()
 
 // 3-2 Get the ParticleList
 #  ifdef PARTICLE
-   yt_particel *ParticleList;
+   yt_particle *ParticleList;
    yt_get_particlesPtr( &ParticleList );
 
    // Set attributes
