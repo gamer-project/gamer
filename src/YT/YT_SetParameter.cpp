@@ -89,7 +89,9 @@ void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchL
    if ( yt_set_parameter( &param_yt ) != YT_SUCCESS )    Aux_Error( ERROR_INFO, "yt_set_parameter() failed !!\n" );
 
 // 2-1. free no longer used resource
+#  ifdef PARTICLE
    delete [] species_list;
+#  endif
 
 // 3. set code specific parameter
 #  ifdef MHD
