@@ -68,7 +68,7 @@ void SetExtAccAuxArray_Plummer( double AuxArray[] )
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static void ExtAcc_Plummer( real Acc[], const double x, const double y, const double z, const double Time,
-                              const double UserArray[] )
+                            const double UserArray[] )
 {
 
 // acceleration = -G*M*r/(r^2+a^2)^(3/2)

@@ -8,8 +8,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                            const int NVarCC_Der, const long TVarCCList_Der[],
                            const long TVarFC, const int NVarFC_Tot, const int TVarFCIdxList[],
                            const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
-                           const int BC_Face[], const real MinPres, const bool DE_Consistency,
-                           const real *FInterface[6] );
+                           const int BC_Face[], const real MinPres, const real MinTemp,
+                           const bool DE_Consistency, const real *FInterface[6] );
 static void SetTargetSibling( int NTSib[], int *TSib[] );
 static int Table_01( const int SibID, const char dim, const int Count, const int GhostSize );
 static int Table_02( const int lv, const int PID, const int Side );
@@ -72,8 +72,8 @@ static void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const re
 //                7. For _PAR_DENS and _TOTAL_DENS (for PARTICLE only), the rho_ext[] arrays of patches at Lv=lv will be
 //                   allocated to store the partice mass density
 //                   --> amr->patch[0][lv][PID]->rho_ext
-//                   --> These arrays must be deallocated manually by calling Prepare_PatchData_FreeParticleDensityArray
-//                       --> If OPT__REUSE_MEMORY is on, Prepare_PatchData_FreeParticleDensityArray will NOT free memory
+//                   --> These arrays must be deallocated manually by calling Prepare_PatchData_FreeParticleDensityArray()
+//                       --> If OPT__REUSE_MEMORY is on, Prepare_PatchData_FreeParticleDensityArray() will NOT free memory
 //                           for rho_ext[]. Instead, rho_ext[] will be free'd together with other data arrays (e.g., fluid, pot)
 //                   --> Note that this array does NOT necessary store the correct particle mass density
 //                       (especially for cells adjacent to the C-C and C-F boundaries) and thus should NOT be used outside
@@ -85,17 +85,14 @@ static void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const re
 //                       (1) Par_CollectParticle2OneLevel_FreeMemory()
 //                       (2) Prepare_PatchData_FreeParticleDensityArray()
 //                8. Patches stored in PID0_List must be real patches (cannot NOT be buffer patches)
-//                9. For simplicity, currently the mode _TEMP returns **pressure/density**, which does NOT include normalization
-//                   --> For OPT__FLAG_LOHNER_TEMP only
-//                   --> Also note that MinPres is applied to _TEMP when calculating pressure
-//                10. Option "MHD_CHECK_DIV_B" on the top of this file can be used to check the divergence-free constraint
-//                    on the prepared B field
-//                    --> Note that when temporal interpolation is required in InterpolateGhostZone(), it will break div(B)=0 for
-//                        the interpolated fine-grid B field just outside the central patch group
-//                        --> It's because the temporal interpolated B field is in general not equal to the original fine-grid B
-//                            field on the coarse-fine interfaces of the central patch group
-//                        --> It's OK for the MHD solver since it will still guarantee that the updated B field within the patch group
-//                            is divergence free
+//                9. Option "MHD_CHECK_DIV_B" on the top of this file can be used to check the divergence-free constraint
+//                   on the prepared B field
+//                   --> Note that when temporal interpolation is required in InterpolateGhostZone(), it will break div(B)=0 for
+//                       the interpolated fine-grid B field just outside the central patch group
+//                       --> It's because the temporal interpolated B field is in general not equal to the original fine-grid B
+//                           field on the coarse-fine interfaces of the central patch group
+//                       --> It's OK for the MHD solver since it will still guarantee that the updated B field within the patch group
+//                           is divergence free
 //
 // Parameter   :  lv             : Target refinement level
 //                PrepTime       : Target physical time to prepare data
@@ -140,7 +137,9 @@ static void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const re
 //                                      --> TVarCC must contain _REAL and _IMAG
 //                FluBC          : Fluid boundary condition
 //                PotBC          : Gravity boundary condition
-//                MinDens/Pres   : Minimum allowed density/pressure in the output array (<0.0 ==> off)
+//                MinDens        : See MinTemp
+//                MinPres        : See MinTemp
+//                MinTemp        : Minimum allowed density/pressure/temperature in the output array (<0.0 ==> off)
 //                                 --> MinDens can be applied to both _DENS and _TOTAL_DENS but cannot be applied to _PAR_DENS
 //                                 --> Note that when preparing both density and real/imaginary parts for ELBDM, we do NOT
 //                                     rescale wave functions after applying MinDens
@@ -166,7 +165,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         const int GhostSize, const int NPG, const int *PID0_List, long TVarCC, long TVarFC,
                         const IntScheme_t IntScheme_CC, const IntScheme_t IntScheme_FC, const PrepUnit_t PrepUnit,
                         const NSide_t NSide, const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
-                        const real MinDens, const real MinPres, const bool DE_Consistency )
+                        const real MinDens, const real MinPres, const real MinTemp, const bool DE_Consistency )
 {
 
 // nothing to do if there is no target patch group
@@ -215,10 +214,20 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    if ( MinPres >= (real)0.0  &&  MPI_Rank == 0 )
    {
 #     if ( MODEL == HYDRO )
-      if (  !(TVarCC & _PRES)  &&  !(TVarCC & _TEMP)  )
-         Aux_Message( stderr, "WARNING : MinPres (%13.7e) >= 0.0 but neither _PRES nor _TEMP is found !!\n", MinPres );
+      if ( !(TVarCC & _PRES) )
+         Aux_Message( stderr, "WARNING : MinPres (%13.7e) >= 0.0 but _PRES is not found !!\n", MinPres );
 #     else
          Aux_Message( stderr, "WARNING : MinPres (%13.7e) >= 0.0 can only be applied to HYDRO !!\n", MinPres );
+#     endif
+   }
+
+   if ( MinTemp >= (real)0.0  &&  MPI_Rank == 0 )
+   {
+#     if ( MODEL == HYDRO )
+      if ( !(TVarCC & _TEMP) )
+         Aux_Message( stderr, "WARNING : MinTemp (%13.7e) >= 0.0 but _TEMP is not found !!\n", MinTemp );
+#     else
+         Aux_Message( stderr, "WARNING : MinTemp (%13.7e) >= 0.0 can only be applied to HYDRO !!\n", MinTemp );
 #     endif
    }
 
@@ -286,6 +295,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    for (int TID=0; TID<NPG; TID++)
       if ( PID0_List[TID] < 0  ||  PID0_List[TID] >= amr->NPatchComma[lv][1] )
          Aux_Error( ERROR_INFO, "incorrect target PID %d (NReal = %d) !!\n", PID0_List[TID], amr->NPatchComma[lv][1] );
+
+#  if ( MODEL == HYDRO )
+   if (  ( TVarCC & _TEMP )  &&  EoS_DensEint2Temp_CPUPtr == NULL )
+      Aux_Error( ERROR_INFO, "EoS_DensEint2Temp_CPUPtr == NULL !!\n" );
+#  endif
 
 #  endif // #ifdef GAMER_DEBUG
 
@@ -698,7 +712,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #              ifdef LOAD_BALANCE
                ParList         = NULL;
                UseInputMassPos = true;
-               InputMassPos    = amr->patch[0][lv][PID]->ParMassPos_Copy;
+               InputMassPos    = amr->patch[0][lv][PID]->ParAtt_Copy;
 #              else
                ParList         = amr->patch[0][lv][PID]->ParList_Copy;
                UseInputMassPos = false;
@@ -714,15 +728,15 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
             {
                if ( UseInputMassPos )
                {
-                  for (int v=0; v<4; v++)
-                  if ( InputMassPos[v] == NULL )
-                  Aux_Error( ERROR_INFO, "InputMassPos[%d] == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
-                             v, NPar, lv, PID );
+                  if ( InputMassPos[PAR_MASS] == NULL  ||  InputMassPos[PAR_POSX] == NULL  ||
+                       InputMassPos[PAR_POSY] == NULL  ||  InputMassPos[PAR_POSZ] == NULL  )
+                     Aux_Error( ERROR_INFO, "InputMassPos[0/1/2/3] == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
+                                NPar, lv, PID );
                }
 
                else if ( ParList == NULL )
-               Aux_Error( ERROR_INFO, "ParList == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
-                          NPar, lv, PID );
+                  Aux_Error( ERROR_INFO, "ParList == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
+                             NPar, lv, PID );
             }
 #           endif // #ifdef DEBUG_PARTICLE
 
@@ -930,8 +944,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #                 endif
                   Data1PG_CC_Ptr[Idx1] = Hydro_Con2Temp( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                          FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                                         (MinPres>=(real)0.0), MinPres, Emag,
-                                                         EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                         (MinTemp>=(real)0.0), MinTemp, Emag,
+                                                         EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                          h_EoS_Table );
 
                   if ( FluIntTime ) // temporal interpolation
@@ -947,8 +961,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         FluWeighting     *Data1PG_CC_Ptr[Idx1]
                       + FluWeighting_IntT*Hydro_Con2Temp( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                           FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                                          (MinPres>=(real)0.0), MinPres, Emag,
-                                                          EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                          (MinTemp>=(real)0.0), MinTemp, Emag,
+                                                          EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                           h_EoS_Table );
                   }
 
@@ -1228,8 +1242,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #                       endif
                         Data1PG_CC_Ptr[Idx1] = Hydro_Con2Temp( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                                FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                                               (MinPres>=(real)0.0), MinPres, Emag,
-                                                               EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                               (MinTemp>=(real)0.0), MinTemp, Emag,
+                                                               EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                                h_EoS_Table );
 
                         if ( FluIntTime ) // temporal interpolation
@@ -1245,8 +1259,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                               FluWeighting     *Data1PG_CC_Ptr[Idx1]
                             + FluWeighting_IntT*Hydro_Con2Temp( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                                 FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                                                (MinPres>=(real)0.0), MinPres, Emag,
-                                                                EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                                (MinTemp>=(real)0.0), MinTemp, Emag,
+                                                                EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                                 h_EoS_Table );
                         }
 
@@ -1407,7 +1421,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                InterpolateGhostZone( lv-1, FaSibPID, IntData_CC, IntData_FC, Side, PrepTime, GhostSize,
                                      IntScheme_CC, IntScheme_FC, NTSib, TSib, TVarCC, NVarCC_Tot, NVarCC_Flu,
                                      TVarCCIdxList_Flu, NVarCC_Der, TVarCCList_Der, TVarFC, NVarFC_Tot, TVarFCIdxList,
-                                     IntPhase, FluBC, PotBC, BC_Face, MinPres, DE_Consistency,
+                                     IntPhase, FluBC, PotBC, BC_Face, MinPres, MinTemp, DE_Consistency,
                                      (const real **)FInterface_Ptr );
 
 
@@ -1779,7 +1793,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                      NPar            = amr->patch[0][lv-1][FaSibPID]->NPar_Copy;
                      ParList         = NULL;
                      UseInputMassPos = true;
-                     InputMassPos    = amr->patch[0][lv-1][FaSibPID]->ParMassPos_Copy;
+                     InputMassPos    = amr->patch[0][lv-1][FaSibPID]->ParAtt_Copy;
 #                    else
                      Aux_Error( ERROR_INFO, "FaSibPID (%d) is not a real patch (NReal %d) !!\n",
                                 FaSibPID, amr->NPatchComma[lv-1][1] );
@@ -1795,15 +1809,15 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                   {
                      if ( UseInputMassPos )
                      {
-                        for (int v=0; v<4; v++)
-                        if ( InputMassPos[v] == NULL )
-                        Aux_Error( ERROR_INFO, "InputMassPos[%d] == NULL for NPar (%d) > 0 (lv %d, FaSibPID %d) !!\n",
-                                   v, NPar, lv-1, FaSibPID );
+                        if ( InputMassPos[PAR_MASS] == NULL  ||  InputMassPos[PAR_POSX] == NULL  ||
+                             InputMassPos[PAR_POSY] == NULL  ||  InputMassPos[PAR_POSZ] == NULL  )
+                           Aux_Error( ERROR_INFO, "InputMassPos[0/1/2/3] == NULL for NPar (%d) > 0 (lv %d, FaSibPID %d) !!\n",
+                                      NPar, lv-1, FaSibPID );
                      }
 
                      else if ( ParList == NULL )
-                     Aux_Error( ERROR_INFO, "ParList == NULL for NPar (%d) > 0 (lv %d, FaSibPID %d) !!\n",
-                                NPar, lv-1, FaSibPID );
+                        Aux_Error( ERROR_INFO, "ParList == NULL for NPar (%d) > 0 (lv %d, FaSibPID %d) !!\n",
+                                   NPar, lv-1, FaSibPID );
                   }
 #                 endif // #ifdef DEBUG_PARTICLE
 

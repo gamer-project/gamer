@@ -1,7 +1,10 @@
 Compilation flags:
 ========================================
-Enable : MODEL=HYDRO, GRAVITY, PARTICLE
-Disable: COMOVING
+Enable  : MODEL=HYDRO, GRAVITY, PARTICLE, MHD (optional),
+          SUPPORT_HDF5, NPAR_ATT_USER=1,
+          NCOMP_PASSIVE_USER >= Merger_Coll_NumHalos + Merger_Coll_UseMetals
+          (these are parameters in Input__TestProb)
+Disable : COMOVING
 
 
 Default setup:
@@ -18,7 +21,7 @@ Default setup:
     -->[V] = [L]/[T] ~ 9.8e1 km/s
     -->[D] = [M]/[D]^3 ~ 6.8e-27 g/cm^3
 
-2. Default resolution ~ 28 kpc (MAX_LEVEL = 2)
+2. Default resolution ~ 10 kpc (MAX_LEVEL = 3)
 
 
 Note:

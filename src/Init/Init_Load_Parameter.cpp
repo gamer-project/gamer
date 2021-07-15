@@ -229,12 +229,12 @@ void Init_Load_Parameter()
    ReadPara->Add( "ISO_TEMP",                   &ISO_TEMP,                       __DBL_MAX__,      NoMin_double,  NoMax_double   );
 #  endif
    ReadPara->Add( "MINMOD_COEFF",               &MINMOD_COEFF,                    1.5,             1.0,           2.0            );
-   ReadPara->Add( "OPT__LR_LIMITER",            &OPT__LR_LIMITER,                 VL_GMINMOD,      0,             5              );
+   ReadPara->Add( "OPT__LR_LIMITER",            &OPT__LR_LIMITER,             LR_LIMITER_DEFAULT, -1,             6              );
    ReadPara->Add( "OPT__1ST_FLUX_CORR",         &OPT__1ST_FLUX_CORR,             -1,               NoMin_int,     2              );
 #  ifdef MHD
    ReadPara->Add( "OPT__1ST_FLUX_CORR_SCHEME",  &OPT__1ST_FLUX_CORR_SCHEME,   RSOLVER_1ST_DEFAULT, NoMin_int,     4              );
 #  else
-   ReadPara->Add( "OPT__1ST_FLUX_CORR_SCHEME",  &OPT__1ST_FLUX_CORR_SCHEME,   RSOLVER_1ST_DEFAULT, NoMin_int,     3              );
+   ReadPara->Add( "OPT__1ST_FLUX_CORR_SCHEME",  &OPT__1ST_FLUX_CORR_SCHEME,   RSOLVER_1ST_DEFAULT,-1,             3              );
 #  endif
 #  ifdef DUAL_ENERGY
    ReadPara->Add( "DUAL_ENERGY_SWITCH",         &DUAL_ENERGY_SWITCH,              2.0e-2,          0.0,           NoMax_double   );
@@ -267,9 +267,11 @@ void Init_Load_Parameter()
 // do not check OPT__CORR_AFTER_ALL_SYNC since it may be reset by Init_ResetDefaultParameter()
    ReadPara->Add( "OPT__CORR_AFTER_ALL_SYNC",   &OPT__CORR_AFTER_ALL_SYNC,       -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "OPT__NORMALIZE_PASSIVE",     &OPT__NORMALIZE_PASSIVE,          true,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__INT_FRAC_PASSIVE_LR",   &OPT__INT_FRAC_PASSIVE_LR,        true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OVERLAP_MPI",           &OPT__OVERLAP_MPI,                false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__RESET_FLUID",           &OPT__RESET_FLUID,                false,           Useless_bool,  Useless_bool   );
 #  if ( MODEL == HYDRO )
+   ReadPara->Add( "OPT__CHECK_PRES_AFTER_FLU",  &OPT__CHECK_PRES_AFTER_FLU,      -1,               NoMin_int,     1              );
    ReadPara->Add( "OPT__LAST_RESORT_FLOOR",     &OPT__LAST_RESORT_FLOOR,          true,            Useless_bool,  Useless_bool   );
 #  endif
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
@@ -278,6 +280,7 @@ void Init_Load_Parameter()
 #  if ( MODEL == HYDRO )
    ReadPara->Add( "MIN_PRES",                   &MIN_PRES,                        0.0,             0.0,           NoMax_double   );
    ReadPara->Add( "MIN_EINT",                   &MIN_EINT,                        0.0,             0.0,           NoMax_double   );
+   ReadPara->Add( "MIN_TEMP",                   &MIN_TEMP,                        0.0,             0.0,           NoMax_double   );
    ReadPara->Add( "JEANS_MIN_PRES",             &JEANS_MIN_PRES,                  false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "JEANS_MIN_PRES_LEVEL",       &JEANS_MIN_PRES_LEVEL,           -1,               NoMin_int,     NLEVEL-1       );
    ReadPara->Add( "JEANS_MIN_PRES_NCELL",       &JEANS_MIN_PRES_NCELL,            4,               1,             NoMax_int      );
@@ -308,7 +311,9 @@ void Init_Load_Parameter()
    ReadPara->Add( "EXT_POT_TABLE_NPOINT_X",     &EXT_POT_TABLE_NPOINT[0],        -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "EXT_POT_TABLE_NPOINT_Y",     &EXT_POT_TABLE_NPOINT[1],        -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "EXT_POT_TABLE_NPOINT_Z",     &EXT_POT_TABLE_NPOINT[2],        -1,               NoMin_int,     NoMax_int      );
-   ReadPara->Add( "EXT_POT_TABLE_DH",           &EXT_POT_TABLE_DH,               -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "EXT_POT_TABLE_DH_X",         &EXT_POT_TABLE_DH[0],            -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "EXT_POT_TABLE_DH_Y",         &EXT_POT_TABLE_DH[1],            -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "EXT_POT_TABLE_DH_Z",         &EXT_POT_TABLE_DH[2],            -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "EXT_POT_TABLE_EDGEL_X",      &EXT_POT_TABLE_EDGEL[0],          NoDef_double,    NoMin_double,  NoMax_double   );
    ReadPara->Add( "EXT_POT_TABLE_EDGEL_Y",      &EXT_POT_TABLE_EDGEL[1],          NoDef_double,    NoMin_double,  NoMax_double   );
    ReadPara->Add( "EXT_POT_TABLE_EDGEL_Z",      &EXT_POT_TABLE_EDGEL[2],          NoDef_double,    NoMin_double,  NoMax_double   );
@@ -323,6 +328,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "RESTART_LOAD_NRANK",         &RESTART_LOAD_NRANK,              1,               1,             NoMax_int      );
    ReadPara->Add( "OPT__RESTART_RESET",         &OPT__RESTART_RESET,              false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__UM_IC_LEVEL",           &OPT__UM_IC_LEVEL,                0,               0,             TOP_LEVEL      );
+   ReadPara->Add( "OPT__UM_IC_NLEVEL",          &OPT__UM_IC_NLEVEL,               1,               1,             NoMax_int      );
 // do not check OPT__UM_IC_NVAR since it depends on OPT__INIT and MODEL
 // --> also, we do not load the density field for ELBDM
 #  if ( MODEL == ELBDM )
@@ -388,6 +394,17 @@ void Init_Load_Parameter()
 #  ifdef PARTICLE
    ReadPara->Add( "OPT__OUTPUT_PAR_DENS",       &OPT__OUTPUT_PAR_DENS,            PAR_OUTPUT_DENS_PAR_ONLY, 0,    2              );
 #  endif
+#  if ( MODEL == HYDRO )
+   ReadPara->Add( "OPT__OUTPUT_PRES",           &OPT__OUTPUT_PRES,                false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__OUTPUT_TEMP",           &OPT__OUTPUT_TEMP,                false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__OUTPUT_CS",             &OPT__OUTPUT_CS,                  false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__OUTPUT_DIVVEL",         &OPT__OUTPUT_DIVVEL,              false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__OUTPUT_MACH",           &OPT__OUTPUT_MACH,                false,           Useless_bool,  Useless_bool   );
+#  endif
+#  ifdef MHD
+   ReadPara->Add( "OPT__OUTPUT_DIVMAG",         &OPT__OUTPUT_DIVMAG,              false,           Useless_bool,  Useless_bool   );
+#  endif
+   ReadPara->Add( "OPT__OUTPUT_USER_FIELD",     &OPT__OUTPUT_USER_FIELD,          false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_MODE",           &OPT__OUTPUT_MODE,               -1,               1,             3              );
 // do not check OUTPUT_STEP and OUTPUT_DT since they depend on OPT__OUTPUT_MODE
    ReadPara->Add( "OUTPUT_STEP",                &OUTPUT_STEP,                    -1,               NoMin_int,     NoMax_int      );

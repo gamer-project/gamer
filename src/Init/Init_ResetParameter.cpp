@@ -61,9 +61,9 @@ void Init_ResetParameter()
 #     if   ( FLU_SCHEME == RTVD )
       DT__FLUID = 0.50;
 #     elif ( FLU_SCHEME == MHM )
-      DT__FLUID = 0.80;
+      DT__FLUID = 0.40;
 #     elif ( FLU_SCHEME == MHM_RP )
-      DT__FLUID = 0.80;
+      DT__FLUID = 0.30;
 #     elif ( FLU_SCHEME == CTU )
       DT__FLUID = 0.50;
 #     else
@@ -631,15 +631,39 @@ void Init_ResetParameter()
 #  endif
 
 
-// disable OPT__LR_LIMITER if it is useless
-#  if ( MODEL == HYDRO  &&  FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
+// OPT__LR_LIMITER
+#  if ( MODEL == HYDRO )
+#  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
+
+#  if ( FLU_SCHEME == MHM_RP  &&  LR_SCHEME == PPM )
+   if ( OPT__LR_LIMITER == LR_LIMITER_DEFAULT )
+   {
+//    OPT__LR_LIMITER = LR_LIMITER_CENTRAL;
+//    OPT__LR_LIMITER = LR_LIMITER_VL_GMINMOD;
+      OPT__LR_LIMITER = LR_LIMITER_GMINMOD;
+
+      PRINT_WARNING( OPT__LR_LIMITER, FORMAT_INT, "for MHM_RP+PPM" );
+   }
+#  else
+   if ( OPT__LR_LIMITER == LR_LIMITER_DEFAULT )
+   {
+      OPT__LR_LIMITER = LR_LIMITER_VL_GMINMOD;
+
+      PRINT_WARNING( OPT__LR_LIMITER, FORMAT_INT, "" );
+   }
+#  endif // #if ( FLU_SCHEME == MHM_RP  &&  LR_SCHEME == PPM ) ... else ...
+
+#  else // if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
+
    if ( OPT__LR_LIMITER != LR_LIMITER_NONE )
    {
       OPT__LR_LIMITER = LR_LIMITER_NONE;
 
-      PRINT_WARNING( OPT__LR_LIMITER, FORMAT_INT, "since it's only useful for the MHM/MHM_RP/CTU schemes" );
+      PRINT_WARNING( OPT__LR_LIMITER, FORMAT_INT, "since it's only useful for the MHM/MHM_RP/CTU integrators" );
    }
-#  endif
+
+#  endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU ) ... else ...
+#  endif // #if ( MODEL == HYDRO )
 
 
 // disable the refinement flag of Jeans length if GRAVITY is disabled
@@ -820,6 +844,27 @@ void Init_ResetParameter()
       MIN_PRES = MIN_EINT/1.5;
 
       PRINT_WARNING( MIN_PRES, FORMAT_FLT, "" );
+   }
+#  endif
+
+
+// OPT__CHECK_PRES_AFTER_FLU
+#  if ( MODEL == HYDRO )
+   if ( OPT__CHECK_PRES_AFTER_FLU < 0 )
+   {
+      if ( EOS == EOS_NUCLEAR  ||  EOS == EOS_TABULAR )
+      {
+         OPT__CHECK_PRES_AFTER_FLU = 1;
+
+         PRINT_WARNING( OPT__CHECK_PRES_AFTER_FLU, FORMAT_INT, "" );
+      }
+
+      else
+      {
+         OPT__CHECK_PRES_AFTER_FLU = 0;
+
+         PRINT_WARNING( OPT__CHECK_PRES_AFTER_FLU, FORMAT_INT, "" );
+      }
    }
 #  endif
 

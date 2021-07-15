@@ -184,11 +184,11 @@ GAMMA                         1.666666667 # ratio of specific heats (i.e., adiab
 MOLECULAR_WEIGHT              0.6         # mean molecular weight [0.6]
 ISO_TEMP                      1.0e4       # isothermal temperature in kelvin ##EOS_ISOTHERMAL ONLY##
 MINMOD_COEFF                  1.5         # coefficient of the generalized MinMod limiter (1.0~2.0) [1.5]
-OPT__LR_LIMITER               4           # slope limiter of data reconstruction in the MHM/MHM_RP/CTU schemes:
-                                          # (0=none, 1=vanLeer, 2=generalized MinMod, 3=vanAlbada, 4=vanLeer+generalized MinMod) [4]
+OPT__LR_LIMITER              -1           # slope limiter of data reconstruction in the MHM/MHM_RP/CTU schemes:
+                                          # (-1=auto, 0=none, 1=vanLeer, 2=generalized MinMod, 3=vanAlbada, 4=vanLeer+generalized MinMod, 6=central) [-1]
 OPT__1ST_FLUX_CORR           -1           # correct unphysical results (defined by MIN_DENS/PRES) by the 1st-order fluxes:
                                           # (<0=auto, 0=off, 1=3D, 2=3D+1D) [-1] ##MHM/MHM_RP/CTU ONLY; NOT SUPPORTED IN MHD##
-OPT__1ST_FLUX_CORR_SCHEME    -1           # Riemann solver for OPT__1ST_FLUX_CORR (<0=auto, 0=none, 1=Roe, 2=HLLC, 3=HLLE, 4=HLLD) [-1]
+OPT__1ST_FLUX_CORR_SCHEME    -1           # Riemann solver for OPT__1ST_FLUX_CORR (-1=auto, 0=none, 1=Roe, 2=HLLC, 3=HLLE, 4=HLLD) [-1]
 DUAL_ENERGY_SWITCH            2.0e-2      # apply dual-energy if E_int/E_kin < DUAL_ENERGY_SWITCH [2.0e-2] ##DUAL_ENERGY ONLY##
 
 
@@ -209,12 +209,15 @@ OPT__FIXUP_RESTRICT           1           # correct coarse grids by averaging th
 OPT__CORR_AFTER_ALL_SYNC     -1           # apply various corrections after all levels are synchronized (see "Flu_CorrAfterAllSync"):
                                           # (-1=auto, 0=off, 1=every step, 2=before dump) [-1]
 OPT__NORMALIZE_PASSIVE        1           # ensure "sum(passive_scalar_density) == gas_density" [1]
+OPT__INT_FRAC_PASSIVE_LR      1           # convert specified passive scalars to mass fraction during data reconstruction [1]
 OPT__OVERLAP_MPI              0           # overlap MPI communication with CPU/GPU computations [0] ##NOT SUPPORTED YET##
 OPT__RESET_FLUID              0           # reset fluid variables after each update -> edit "Flu_ResetByUser.cpp" [0]
+OPT__CHECK_PRES_AFTER_FLU    -1           # check unphysical pressure at the end of the fluid solver (<0=auto) [-1]
 OPT__LAST_RESORT_FLOOR        1           # apply floor values as the last resort when the fluid solver fails [1] ##HYDRO and MHD ONLY##
-MIN_DENS                      0.0         # minimum mass density    (must >= 0.0) [0.0] ##HYDRO, MHD, and ELBDM ONLY##
-MIN_PRES                      0.0         # minimum pressure        (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
-MIN_EINT                      0.0         # minimum internal energy (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
+MIN_DENS                      0.0         # minimum mass density     (must >= 0.0) [0.0] ##HYDRO, MHD, and ELBDM ONLY##
+MIN_PRES                      0.0         # minimum pressure         (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
+MIN_EINT                      0.0         # minimum internal energy  (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
+MIN_TEMP                      0.0         # minimum temperature in K (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
 JEANS_MIN_PRES                0           # minimum pressure estimated from the Jeans length [0] ##HYDRO/MHD and GRAVITY ONLY##
 JEANS_MIN_PRES_LEVEL         -1           # for JEANS_MIN_PRES; ensure Jeans length is resolved by JEANS_MIN_PRES_NCELL*dh[JEANS_MIN_PRES_LEVEL]
                                           # (<0=auto -> MAX_LEVEL) [-1]
@@ -243,7 +246,9 @@ EXT_POT_TABLE_NAME            ExtPotTable # external potential table: filename
 EXT_POT_TABLE_NPOINT_X        129         # ...                     : table size (i.e., number of data points) along x/y/z
 EXT_POT_TABLE_NPOINT_Y        129         #
 EXT_POT_TABLE_NPOINT_Z        129         #
-EXT_POT_TABLE_DH              0.0078125   # ...                     : spatial interval between adjacent data points
+EXT_POT_TABLE_DH_X            0.0078125   # ...                     : spatial interval between adjacent data points
+EXT_POT_TABLE_DH_Y            0.0078125   #
+EXT_POT_TABLE_DH_Z            0.0078125   #
 EXT_POT_TABLE_EDGEL_X         0.0         # ...                     : starting x/y/z coordinates
 EXT_POT_TABLE_EDGEL_Y         0.0         #
 EXT_POT_TABLE_EDGEL_Z         0.0         #
@@ -258,7 +263,8 @@ OPT__INIT_BFIELD_BYFILE       0           # initialize the magnetic field from a
                                           # (example python script: tool/inits/gen_vec_pot.py) [0] ##MHD ONLY##
 RESTART_LOAD_NRANK            1           # number of parallel I/O (i.e., number of MPI ranks) for restart [1]
 OPT__RESTART_RESET            0           # reset some simulation status parameters (e.g., current step and time) during restart [0]
-OPT__UM_IC_LEVEL              0           # AMR level corresponding to UM_IC (must >= 0) [0]
+OPT__UM_IC_LEVEL              0           # starting AMR level in UM_IC [0]
+OPT__UM_IC_NLEVEL             1           # number of AMR levels UM_IC [1] --> edit "Input__UM_IC_RefineRegion" if >1
 OPT__UM_IC_NVAR              -1           # number of variables in UM_IC: (1~NCOMP_TOTAL; <=0=auto) [HYDRO=5+passive/ELBDM=2]
 OPT__UM_IC_FORMAT             1           # data format of UM_IC: (1=vzyx, 2=zyxv; row-major and v=field) [1]
 OPT__UM_IC_DOWNGRADE          1           # downgrade UM_IC from level OPT__UM_IC_LEVEL to 0 [1]
@@ -268,6 +274,7 @@ OPT__INIT_RESTRICT            1           # restrict all data during the initial
 OPT__INIT_GRID_WITH_OMP       1           # enable OpenMP when assigning the initial condition of each grid patch [1]
 OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2=CUDA, -1=MPI rank, >=0=input) [-1]
 INIT_SUBSAMPLING_NCELL        0           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
+
 
 # interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar)
 OPT__INT_TIME                 1           # perform "temporal" interpolation for OPT__DT_LEVEL == 2/3 [1]
@@ -295,6 +302,13 @@ OPT__OUTPUT_POT               0           # output gravitational potential [0] #
 OPT__OUTPUT_PAR_DENS          1           # output the particle or total mass density on grids:
                                           # (0=off, 1=particle mass density, 2=total mass density) [1] ##OPT__OUTPUT_TOTAL ONLY##
 OPT__OUTPUT_CC_MAG            1           # output **cell-centered** magnetic field (necessary for yt analysis) [1] ##MHD ONLY##
+OPT__OUTPUT_PRES              0           # output gas pressure [0] ##HYDRO ONLY##
+OPT__OUTPUT_TEMP              0           # output gas temperature [0] ##HYDRO ONLY##
+OPT__OUTPUT_CS                0           # output sound speed [0] ##HYDRO ONLY##
+OPT__OUTPUT_DIVVEL            0           # output divergence(velocity) [0] ##HYDRO ONLY##
+OPT__OUTPUT_MACH              0           # output mach number [0] ##HYDRO ONLY##
+OPT__OUTPUT_DIVMAG            0           # output |divergence(B)*dh/|B|| [0] ##MHD ONLY##
+OPT__OUTPUT_USER_FIELD        0           # output user-defined derived fields [0] -> edit "Flu_DerivedField_User.cpp"
 OPT__OUTPUT_MODE              1           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
 OUTPUT_STEP                   5           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
 OUTPUT_DT                     1.0         # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##

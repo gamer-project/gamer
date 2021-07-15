@@ -37,8 +37,8 @@ void Init_LoadExtPotTable()
          Aux_Error( ERROR_INFO, "EXT_POT_TABLE_NPOINT[%d] = %d < 2 !!\n", d, EXT_POT_TABLE_NPOINT[d] );
    }
 
-   if ( EXT_POT_TABLE_DH <= 0.0 )
-      Aux_Error( ERROR_INFO, "EXT_POT_TABLE_DH = %14.7e <= 0.0 !!\n", EXT_POT_TABLE_DH );
+   if ( EXT_POT_TABLE_DH[0] <= 0.0 || EXT_POT_TABLE_DH[1] <= 0.0 || EXT_POT_TABLE_DH[2] <= 0.0)
+      Aux_Error( ERROR_INFO, "EXT_POT_TABLE_DH = %14.7e, %14.7e, %14.7e <= 0.0 !!\n", EXT_POT_TABLE_DH[0],EXT_POT_TABLE_DH[1],EXT_POT_TABLE_DH[2] );
 
 #  ifdef FLOAT8
    if ( ! EXT_POT_TABLE_FLOAT8 )
@@ -61,9 +61,9 @@ void Init_LoadExtPotTable()
          Aux_Error( ERROR_INFO, "incorrect left boundary of the external potential table (table=%13.7e > min=%13.7e) !!\n",
                     EXT_POT_TABLE_EDGEL[d], amr->BoxEdgeL[d]-ExtraWidth );
 
-      if ( EXT_POT_TABLE_EDGEL[d]+(EXT_POT_TABLE_NPOINT[d]-1)*EXT_POT_TABLE_DH < amr->BoxEdgeR[d]+ExtraWidth )
+      if ( EXT_POT_TABLE_EDGEL[d]+(EXT_POT_TABLE_NPOINT[d]-1)*EXT_POT_TABLE_DH[d] < amr->BoxEdgeR[d]+ExtraWidth )
          Aux_Error( ERROR_INFO, "incorrect right boundary of the external potential table (table=%13.7e < max=%13.7e) !!\n",
-                    EXT_POT_TABLE_EDGEL[d]+(EXT_POT_TABLE_NPOINT[d]-1)*EXT_POT_TABLE_DH, amr->BoxEdgeR[d]+ExtraWidth );
+                    EXT_POT_TABLE_EDGEL[d]+(EXT_POT_TABLE_NPOINT[d]-1)*EXT_POT_TABLE_DH[d], amr->BoxEdgeR[d]+ExtraWidth );
    }
 
 // file existence

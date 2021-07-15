@@ -28,7 +28,6 @@ static double  AGORA_HaloMetalMassFrac;         // halo metal mass fraction (hal
 
 static double  AGORA_DiskGasDens0;              // disk gas mass density coefficient
 static double  AGORA_HaloGasDens;               // halo gas mass density
-static double  AGORA_HaloGasPres;               // halo gas pressure
 static double *AGORA_VcProf = NULL;             // circular velocity radial profile [radius, velocity]
 static int     AGORA_VcProf_NBin;               // number of radial bin in AGORA_VcProf
 // =======================================================================================
@@ -155,6 +154,7 @@ void Validate()
 //                   (2) set the problem-specific derived parameters
 //                   (3) reset other general-purpose parameters if necessary
 //                   (4) make a note of the problem-specific parameters
+//                3. Must call EoS_Init() before calling any other EoS routine
 //
 // Parameter   :  None
 //
@@ -205,9 +205,7 @@ void SetParameter()
    AGORA_DiskScaleLength *= Const_kpc  / UNIT_L;
    AGORA_DiskScaleHeight *= Const_kpc  / UNIT_L;
    AGORA_DiskTotalMass   *= Const_Msun / UNIT_M;
-   AGORA_DiskGasTemp     *= Const_kB   / UNIT_E;
    AGORA_HaloGasNumDensH *= 1.0        * CUBE(UNIT_L);
-   AGORA_HaloGasTemp     *= Const_kB   / UNIT_E;
 
 // load the circular velocity radial profile
    if ( OPT__INIT != INIT_BY_RESTART )
@@ -235,8 +233,6 @@ void SetParameter()
    const bool CheckMinPres_Yes = true;
    AGORA_DiskGasDens0 = AGORA_DiskTotalMass*AGORA_DiskGasMassFrac / ( 4.0*M_PI*SQR(AGORA_DiskScaleLength)*AGORA_DiskScaleHeight );
    AGORA_HaloGasDens  = AGORA_HaloGasNumDensH*Const_mH/UNIT_M;
-   AGORA_HaloGasPres  = Hydro_Temp2Pres( AGORA_HaloGasDens, AGORA_HaloGasTemp, MOLECULAR_WEIGHT, Const_mH/UNIT_M,
-                                         CheckMinPres_Yes, MIN_PRES );
 
 
 // (3) reset other general-purpose parameters
@@ -268,9 +264,9 @@ void SetParameter()
       Aux_Message( stdout, "  DiskScaleHeight   = %13.7e kpc\n",     AGORA_DiskScaleHeight * UNIT_L/Const_kpc  );
       Aux_Message( stdout, "  DiskTotalMass     = %13.7e Msun\n",    AGORA_DiskTotalMass   * UNIT_M/Const_Msun );
       Aux_Message( stdout, "  DiskGasMassFrac   = %13.7e\n",         AGORA_DiskGasMassFrac                     );
-      Aux_Message( stdout, "  DiskGasTemp       = %13.7e K\n",       AGORA_DiskGasTemp     * UNIT_E/Const_kB   );
+      Aux_Message( stdout, "  DiskGasTemp       = %13.7e K\n",       AGORA_DiskGasTemp                         );
       Aux_Message( stdout, "  HaloGasNumDensH   = %13.7e cm^{-3}\n", AGORA_HaloGasNumDensH / CUBE(UNIT_L)      );
-      Aux_Message( stdout, "  HaloGasTemp       = %13.7e K\n",       AGORA_HaloGasTemp     * UNIT_E/Const_kB   );
+      Aux_Message( stdout, "  HaloGasTemp       = %13.7e K\n",       AGORA_HaloGasTemp                         );
       Aux_Message( stdout, "  UseMetal          = %d\n",             AGORA_UseMetal                            );
       if ( AGORA_UseMetal ) {
       Aux_Message( stdout, "  DiskMetalMassFrac = %13.7e\n",         AGORA_DiskMetalMassFrac                   );
@@ -311,6 +307,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #  ifdef GAMER_DEBUG
    if ( AGORA_UseMetal  &&  Idx_Metal == Idx_Undefined )
       Aux_Error( ERROR_INFO, "Idx_Metal is undefined for \"AGORA_UseMetal\" !!\n" );
+
+   if ( EoS_DensTemp2Pres_CPUPtr == NULL )
+      Aux_Error( ERROR_INFO, "EoS_DensTemp2Pres_CPUPtr == NULL !!\n" );
 #  endif
 
    const bool   CheckMinPres_Yes = true;
@@ -320,18 +319,20 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double r                = sqrt( SQR(dx) + SQR(dy) );
    const double h                = fabs( dz );
 
-   double DiskGasDens, DiskGasPres, DiskGasVel;
+   double DiskGasDens, DiskGasPres, DiskGasVel, HaloGasPres;
    double Dens, MomX, MomY, MomZ, Pres, Eint, Etot, Metal=NULL_REAL;
 
 // use the 5-point Gaussian quadrature integration to improve the accuracy of the average cell density
 // --> we don't want to use the sub-sampling for that purpose since it will break the initial uniform temperature
 // DiskGasDens = AGORA_DiskGasDens0 * exp( -r/AGORA_DiskScaleLength ) * exp( -h/AGORA_DiskScaleHeight );
    DiskGasDens = GaussianQuadratureIntegrate( dx, dy, dz, amr->dh[lv] );
-   DiskGasPres = Hydro_Temp2Pres( DiskGasDens, AGORA_DiskGasTemp, MOLECULAR_WEIGHT, Const_mH/UNIT_M,
-                                  CheckMinPres_Yes, MIN_PRES );
+   DiskGasPres = EoS_DensTemp2Pres_CPUPtr( DiskGasDens,       AGORA_DiskGasTemp, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                           h_EoS_Table, NULL ); // assuming EoS requires no passive scalars
+   HaloGasPres = EoS_DensTemp2Pres_CPUPtr( AGORA_HaloGasDens, AGORA_HaloGasTemp, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                           h_EoS_Table, NULL ); // assuming EoS requires no passive scalars
 
 // disk component
-   if ( DiskGasPres > AGORA_HaloGasPres )
+   if ( DiskGasPres > HaloGasPres )
    {
 //    perform linear interpolation to get the gas circular velocity at r
       const double *Prof_R = AGORA_VcProf + 0*AGORA_VcProf_NBin;
@@ -348,7 +349,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
       if ( AGORA_UseMetal )
       Metal = Dens*AGORA_DiskMetalMassFrac;
-   } // if ( DiskGasPres > AGORA_HaloGasPres )
+   } // if ( DiskGasPres > HaloGasPres )
 
 // halo component
    else
@@ -357,11 +358,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       MomX  = 0.0;
       MomY  = 0.0;
       MomZ  = 0.0;
-      Pres  = AGORA_HaloGasPres;
+      Pres  = HaloGasPres;
 
       if ( AGORA_UseMetal )
       Metal = Dens*AGORA_HaloMetalMassFrac;
-   } // if ( DiskPres > AGORA_HaloGasPres ) ... else ...
+   } // if ( DiskPres > HaloGasPres ) ... else ...
 
 // compute the total gas energy
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
@@ -466,7 +467,7 @@ void AddNewField_AGORA()
 // --> since Grackle may already add this field automatically when GRACKLE_METAL is enabled
 // --> also note that "Idx_Metal" has been predefined in Field.h
    if ( AGORA_UseMetal  &&  Idx_Metal == Idx_Undefined )
-      Idx_Metal = AddField( "Metal", NORMALIZE_NO );
+      Idx_Metal = AddField( "Metal", NORMALIZE_NO, INTERP_FRAC_YES );
 
 } // FUNCTION : AddNewField_AGORA
 

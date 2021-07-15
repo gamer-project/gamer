@@ -90,8 +90,8 @@ OPT__MINIMIZE_MPI_BARRIER     1           # minimize MPI barriers to improve loa
 GAMMA                         1.666666667 # ratio of specific heats (i.e., adiabatic index) [5.0/3.0]
 MOLECULAR_WEIGHT              0.6         # mean molecular weight -> currently only for post-processing [0.6]
 MINMOD_COEFF                  1.5         # coefficient of the generalized MinMod limiter (1.0~2.0) [1.5]
-OPT__LR_LIMITER               4           # slope limiter of data reconstruction in the MHM/MHM_RP/CTU schemes:
-                                          # (0=none, 1=vanLeer, 2=generalized MinMod, 3=vanAlbada, 4=vanLeer+generalized MinMod) [4]
+OPT__LR_LIMITER              -1           # slope limiter of data reconstruction in the MHM/MHM_RP/CTU schemes:
+                                          # (-1=auto, 0=none, 1=vanLeer, 2=generalized MinMod, 3=vanAlbada, 4=vanLeer+generalized MinMod, 6=central) [-1]
 OPT__1ST_FLUX_CORR           -1           # correct unphysical results (defined by MIN_DENS/PRES) by the 1st-order fluxes:
                                           # (<0=auto, 0=off, 1=3D, 2=3D+1D) [-1] ##MHM/MHM_RP/CTU ONLY; NOT SUPPORTED IN MHD##
 OPT__1ST_FLUX_CORR_SCHEME    -1           # Riemann solver for OPT__1ST_FLUX_CORR (<0=auto, 0=none, 1=Roe, 2=HLLC, 3=HLLE, 4=HLLD) [-1]
@@ -134,6 +134,13 @@ INT_MONO_COEFF                2.0         # coefficient for ensuring the interpo
 OPT__OUTPUT_TOTAL             0           # output the simulation snapshot: (0=off, 1=HDF5, 2=C-binary) [1]
 OPT__OUTPUT_PART              4           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag) [0]
 OPT__OUTPUT_BASE              0           # only output the base-level data [0] ##OPT__OUTPUT_PART ONLY##
+OPT__OUTPUT_PRES              0           # output gas pressure [0] ##HYDRO ONLY##
+OPT__OUTPUT_TEMP              0           # output gas temperature [0] ##HYDRO ONLY##
+OPT__OUTPUT_CS                0           # output sound speed [0] ##HYDRO ONLY##
+OPT__OUTPUT_DIVVEL            0           # output divergence(velocity) [0] ##HYDRO ONLY##
+OPT__OUTPUT_MACH              0           # output mach number [0] ##HYDRO ONLY##
+OPT__OUTPUT_DIVMAG            0           # output |divergence(B)*dh/|B|| [0] ##MHD ONLY##
+OPT__OUTPUT_USER_FIELD        0           # output user-defined derived fields [0] -> edit "Flu_DerivedField_User.cpp"
 OPT__OUTPUT_MODE              2           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
 OPT__OUTPUT_CC_MAG            1           # output **cell-centered** magnetic field (necessary for yt analysis) [1] ##MHD ONLY##
 OUTPUT_STEP                   5           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##

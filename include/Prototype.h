@@ -84,8 +84,10 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                       const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
                       const double Time, const bool UsePot, const OptExtAcc_t ExtAcc,
-                      const real MinDens, const real MinPres, const real MinEint, const real DualEnergySwitch,
+                      const real MinDens, const real MinPres, const real MinEint,
+                      const real DualEnergySwitch,
                       const bool NormPassive, const int NNorm, const int NormIdx[],
+                      const bool FracPassive, const int NFrac, const int FracIdx[],
                       const bool JeansMinPres, const real JeansMinPres_Coeff );
 real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                      const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
@@ -95,11 +97,9 @@ real Hydro_Con2Eint( const real Dens, const real MomX, const real MomY, const re
                      const bool CheckMinEint, const real MinEint, const real Emag );
 real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, const real MomZ, const real Eint, const real Emag );
 real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                     const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
-                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                     const real Passive[], const bool CheckMinTemp, const real MinTemp, const real Emag,
+                     const EoS_DE2T_t EoS_DensEint2Temp, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX] );
-double Hydro_Temp2Pres( const double Dens, const double Temp, const double mu, const double m_H,
-                        const bool CheckMinPres, const double MinPres );
 real Hydro_CheckMinPres( const real InPres, const real MinPres );
 real Hydro_CheckMinEint( const real InEint, const real MinEint );
 bool Hydro_CheckNegative( const real Input );
@@ -152,6 +152,14 @@ void Flu_CorrAfterAllSync();
 #ifndef SERIAL
 void Flu_AllocateFluxArray_Buffer( const int lv );
 #endif
+#if ( MODEL == HYDRO )
+void Flu_DerivedField_DivVel( real Out[], const real FluIn[], const real MagIn[], const int NFieldOut,
+                              const int NCellInX, const int NCellInY, const int NCellInZ,
+                              const int NGhost, const double dh );
+void Flu_DerivedField_Mach( real Out[], const real FluIn[], const real MagIn[], const int NFieldOut,
+                            const int NCellInX, const int NCellInY, const int NCellInZ,
+                            const int NGhost, const double dh );
+#endif
 
 
 // GAMER
@@ -163,7 +171,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         const int GhostSize, const int NPG, const int *PID0_List, long TVarCC, long TVarFC,
                         const IntScheme_t IntScheme_CC, const IntScheme_t IntScheme_FC, const PrepUnit_t PrepUnit,
                         const NSide_t NSide, const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
-                        const real MinDens, const real MinPres, const bool DE_Consistency );
+                        const real MinDens, const real MinPres, const real MinTemp, const bool DE_Consistency );
 
 
 // Init
@@ -191,8 +199,8 @@ void Init_TestProb();
 void Init_ByFile();
 void Init_UniformGrid( const int lv, const bool FindHomePatchForPar );
 void Init_Field();
-FieldIdx_t AddField( char *InputLabel, const NormPassive_t Norm );
-FieldIdx_t GetFieldIndex( char *InputLabel, const Check_t Check );
+FieldIdx_t AddField( const char *InputLabel, const NormPassive_t Norm, const IntFracPassive_t IntFrac );
+FieldIdx_t GetFieldIndex( const char *InputLabel, const Check_t Check );
 #ifdef OPENMP
 void Init_OpenMP();
 #endif
@@ -324,7 +332,8 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
                                const bool SelfGravity, const OptExtPot_t ExtPot, const OptExtAcc_t ExtAcc,
                                const double TimeNew, const double TimeOld, const real MinEint );
 void CPU_ExtPotSolver_BaseLevel( const ExtPot_t Func, const double AuxArray_Flt[], const int AuxArray_Int[],
-                                 const real Table[], const double Time, const bool PotIsInit, const int SaveSg );
+                                 const real Table[], void **GenePtr,
+                                 const double Time, const bool PotIsInit, const int SaveSg );
 void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double PrepTime );
 void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf_SIdx, long *RecvBuf_SIdx,
                  int **List_PID, int **List_k, int *List_NSend_Rho, int *List_NRecv_Rho,
@@ -388,6 +397,8 @@ int TABLE_05( const int SibID );
 int TABLE_06( const int SibID, const int FlagLayer );
 int TABLE_07( const int SibID, const int Count );
 void TABLE_SiblingSharingSameEdge( const int EdgeID, int SibID[], int SibSibID[] );
+void TABLE_GetSibPID_Delta( int NSibPatch[], int *SibPID_Delta[] );
+void TABLE_GetSibPID_Based( const int lv, const int PID0, int SibPID_Based[] );
 
 
 // LoadBalance
@@ -406,9 +417,9 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
 real*LB_GetBufferData_MemAllocate_Send( const int NSend );
 real*LB_GetBufferData_MemAllocate_Recv( const int NRecv );
 void LB_GrandsonCheck( const int lv );
-void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const bool Reset, const int TLv );
+void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, const double ParWeight, const bool Reset, const int TLv );
 void LB_Init_ByFunction();
-void LB_Init_Refine( const int FaLv );
+void LB_Init_Refine( const int FaLv, const bool AllocData );
 void LB_SetCutPoint( const int lv, const int NPG_Total, long *CutPoint, const bool InputLBIdx0AndLoad,
                      long *LBIdx0_AllRank_Input, double *Load_AllRank_Input, const double ParWeight );
 void LB_EstimateWorkload_AllPatchGroup( const int lv, const double ParWeight, double *Load_PG );
@@ -446,6 +457,8 @@ void MHD_GetCellCenteredBFieldInPatch( real B[], const int lv, const int PID, co
                                        const int MagSg );
 real MHD_GetCellCenteredBEnergyInPatch( const int lv, const int PID, const int i, const int j, const int k,
                                         const int MagSg );
+real MHD_GetCellCenteredDivBInPatch( const int lv, const int PID, const int i, const int j, const int k,
+                                     const int MagSg );
 void MHD_InterpolateBField( const real **CData, const int CSize[3][3], const int CStart[3][3], const int CRange[3],
                                   real **FData, const int FSize[3][3], const int FStart[3][3],
                             const real *FInterface[6], const IntScheme_t IntScheme, const bool Monotonic );
@@ -508,7 +521,9 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
                              const double Time, const bool UsePot, const OptExtAcc_t ExtAcc,
                              const real MinDens, const real MinPres, const real MinEint,
-                             const real DualEnergySwitch, const bool NormPassive, const int NNorm,
+                             const real DualEnergySwitch,
+                             const bool NormPassive, const int NNorm,
+                             const bool FracPassive, const int NFrac,
                              const bool JeansMinPres, const real JeansMinPres_Coeff,
                              const int GPU_NStream );
 void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real h_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
@@ -584,7 +599,7 @@ int  Par_CountParticleInDescendant( const int FaLv, const int FaPID );
 void Par_Aux_GetConservedQuantity( double &Mass, double &MomX, double &MomY, double &MomZ, double &Ek, double &Ep );
 void Par_Aux_InitCheck();
 void Par_Aux_Record_ParticleCount();
-void Par_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, const double TargetTime,
+void Par_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, const bool PredictPos, const double TargetTime,
                                    const bool SibBufPatch, const bool FaSibBufPatch, const bool JustCountNPar,
                                    const bool TimingSendPar );
 void Par_CollectParticle2OneLevel_FreeMemory( const int FaLv, const bool SibBufPatch, const bool FaSibBufPatch );
@@ -596,14 +611,14 @@ void Par_PredictPos( const long NPar, const long *ParList, real *ParPosX, real *
                      const double TargetTime );
 void Par_Init_Attribute();
 void Par_AddParticleAfterInit( const long NNewPar, real *NewParAtt[PAR_NATT_TOTAL] );
-FieldIdx_t AddParticleAttribute( char *InputLabel );
-FieldIdx_t GetParticleAttributeIndex( char *InputLabel, const Check_t Check );
+FieldIdx_t AddParticleAttribute( const char *InputLabel );
+FieldIdx_t GetParticleAttributeIndex( const char *InputLabel, const Check_t Check );
 #ifdef LOAD_BALANCE
-void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, const double TargetTime,
+void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, const bool PredictPos, const double TargetTime,
                                       const bool SibBufPatch, const bool FaSibBufPatch, const bool JustCountNPar,
                                       const bool TimingSendPar );
 void Par_LB_CollectParticle2OneLevel_FreeMemory( const int lv, const bool SibBufPatch, const bool FaSibBufPatch );
-void Par_LB_CollectParticleFromRealPatch( const int lv,
+void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
                                           const int Buff_NPatchTotal, const int *Buff_PIDList, int *Buff_NPatchEachRank,
                                           const int Real_NPatchTotal, const int *Real_PIDList, int *Real_NPatchEachRank,
                                           const bool PredictPos, const double TargetTime,

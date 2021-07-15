@@ -238,6 +238,29 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "must enable either SERIAL or LOAD_BALANCE for OPT__INIT=3 !!\n" );
 #  endif
 
+   if ( OPT__OUTPUT_USER_FIELD )
+   {
+      int NDerField = UserDerField_Num;
+#     if ( MODEL == HYDRO )
+      if ( OPT__OUTPUT_DIVVEL )  NDerField ++;
+      if ( OPT__OUTPUT_MACH   )  NDerField ++;
+#     endif
+
+      if ( NDerField > DER_NOUT_MAX )
+         Aux_Error( ERROR_INFO, "Total number of derived fields (%d) > DER_NOUT_MAX (%d) !!\n", NDerField, DER_NOUT_MAX );
+
+      if ( UserDerField_Label == NULL )
+         Aux_Error( ERROR_INFO, "UserDerField_Label == NULL for OPT__OUTPUT_USER_FIELD !!\n" );
+
+      if ( UserDerField_Unit == NULL )
+         Aux_Error( ERROR_INFO, "UserDerField_Unit == NULL for OPT__OUTPUT_USER_FIELD !!\n" );
+   } // if ( OPT__OUTPUT_USER_FIELD )
+
+#  if ( MODEL == HYDRO )
+   if (  OPT__OUTPUT_TEMP  &&  EoS_DensEint2Temp_CPUPtr == NULL )
+      Aux_Error( ERROR_INFO, "EoS_DensEint2Temp_CPUPtr == NULL for OPT__OUTPUT_TEMP !!\n" );
+#  endif
+
 
 
 // general warnings
@@ -269,6 +292,9 @@ void Aux_Check_Parameter()
 #  if ( defined GAMER_DEBUG  &&  !defined BITWISE_REPRODUCIBILITY )
       Aux_Message( stderr, "WARNING : you might want to turn on BITWISE_REPRODUCIBILITY for GAMER_DEBUG !!\n" );
 #  endif
+
+   if ( OPT__OUTPUT_TOTAL == OUTPUT_FORMAT_CBINARY )
+      Aux_Message( stderr, "WARNING : OPT__OUTPUT_TOTAL = 2 (C-binary) is deprecated !!\n" );
 
    if ( !OPT__OUTPUT_TOTAL  &&  !OPT__OUTPUT_PART  &&  !OPT__OUTPUT_USER  &&  !OPT__OUTPUT_BASEPS )
 #  ifdef PARTICLE
@@ -388,6 +414,9 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "REMINDER : disabling OPT__NORMALIZE_PASSIVE will break the strict equality between\n" );
       Aux_Message( stderr, "           sum(passive_scalar_mass_density) and gas_mass_density\n" );
    }
+
+   if ( ! OPT__INT_FRAC_PASSIVE_LR )
+      Aux_Message( stderr, "WARNING : disabling OPT__INT_FRAC_PASSIVE_LR is not recommended !!\n" );
 #  endif
 
 #  if   ( MODEL == HYDRO )
@@ -755,6 +784,11 @@ void Aux_Check_Parameter()
    else
       Aux_Message( stderr, "WARNING : MIN_EINT (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_EINT );
 
+   if ( MIN_TEMP == 0.0 )
+      Aux_Message( stderr, "WARNING : MIN_TEMP == 0.0 could be dangerous and is mainly for debugging only !!\n" );
+   else
+      Aux_Message( stderr, "WARNING : MIN_TEMP (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_TEMP );
+
 #  if (  defined LR_EINT  &&  ( EOS == EOS_GAMMA || EOS == EOS_ISOTHERMAL )  )
       Aux_Message( stderr, "WARNING : LR_EINT is not recommended for EOS_GAMMA/EOS_ISOTHERMAL !!\n" );
 #  endif
@@ -767,14 +801,13 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
-#  if ( LR_SCHEME == PPM )
-   if ( OPT__LR_LIMITER == EXTPRE )
-      Aux_Error( ERROR_INFO, "currently the PPM reconstruction does not support the \"%s\" limiter\n",
-                 "extrema-preserving" );
-#  endif
+   if ( OPT__LR_LIMITER == LR_LIMITER_EXTPRE )
+      Aux_Error( ERROR_INFO, "\"%s\" limiter (OPT__LR_IMITER = %d) is not supported yet !!\n",
+                 "extrema-preserving", OPT__LR_LIMITER );
 
-   if ( OPT__LR_LIMITER != VANLEER  &&  OPT__LR_LIMITER != GMINMOD  &&  OPT__LR_LIMITER != ALBADA  &&
-        OPT__LR_LIMITER != EXTPRE   &&  OPT__LR_LIMITER != VL_GMINMOD )
+   if ( OPT__LR_LIMITER != LR_LIMITER_VANLEER     &&  OPT__LR_LIMITER != LR_LIMITER_GMINMOD  &&
+        OPT__LR_LIMITER != LR_LIMITER_ALBADA      &&  OPT__LR_LIMITER != LR_LIMITER_EXTPRE   &&
+        OPT__LR_LIMITER != LR_LIMITER_VL_GMINMOD  &&  OPT__LR_LIMITER != LR_LIMITER_CENTRAL    )
       Aux_Error( ERROR_INFO, "unsupported data reconstruction limiter (OPT__LR_IMITER = %d) !!\n",
                  OPT__LR_LIMITER );
 
@@ -782,6 +815,18 @@ void Aux_Check_Parameter()
 // warnings
 // ------------------------------
    if ( MPI_Rank == 0 ) {
+
+#     if ( FLU_SCHEME == MHM_RP  &&  LR_SCHEME == PPM )
+      if ( OPT__LR_LIMITER != LR_LIMITER_CENTRAL )
+         Aux_Message( stderr, "WARNING : OPT__LR_LIMITER = %d (LR_LIMITER_CENTRAL) is recommended for MHM_RP+PPM !!\n",
+                      LR_LIMITER_CENTRAL );
+#     endif
+
+#     if ( LR_SCHEME == PLM )
+      if ( OPT__LR_LIMITER == LR_LIMITER_CENTRAL )
+         Aux_Message( stderr, "WARNING : OPT__LR_LIMITER = %d (LR_LIMITER_CENTRAL) is not recommended for PLM !!\n",
+                      OPT__LR_LIMITER );
+#     endif
 
    } // if ( MPI_Rank == 0 )
 
@@ -793,19 +838,19 @@ void Aux_Check_Parameter()
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == CTU )
 
 #  if ( LR_SCHEME == PLM )
-   if ( OPT__LR_LIMITER == EXTPRE  &&  FLU_GHOST_SIZE < 3 )
+   if ( OPT__LR_LIMITER == LR_LIMITER_EXTPRE  &&  FLU_GHOST_SIZE < 3 )
       Aux_Error( ERROR_INFO, "please set \"%s\" for \"%s\" !!\n",
                  "FLU_GHOST_SIZE = 3", "MHM/CTU scheme + PLM reconstruction + EXTPRE limiter" );
 
-   if ( OPT__LR_LIMITER == EXTPRE  &&  FLU_GHOST_SIZE > 3  &&  MPI_Rank == 0 )
+   if ( OPT__LR_LIMITER == LR_LIMITER_EXTPRE  &&  FLU_GHOST_SIZE > 3  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
                    "FLU_GHOST_SIZE = 3", "MHM/CTU scheme + PLM reconstruction + EXTPRE limiter" );
 
-   if ( OPT__LR_LIMITER != EXTPRE  &&  FLU_GHOST_SIZE < 2 )
+   if ( OPT__LR_LIMITER != LR_LIMITER_EXTPRE  &&  FLU_GHOST_SIZE < 2 )
       Aux_Error( ERROR_INFO, "please set \"%s\" for \"%s\" !!\n",
                  "FLU_GHOST_SIZE = 2", "MHM/CTU scheme + PLM reconstruction + non-EXTPRE limiter" );
 
-   if ( OPT__LR_LIMITER != EXTPRE  &&  FLU_GHOST_SIZE > 2  &&  MPI_Rank == 0 )
+   if ( OPT__LR_LIMITER != LR_LIMITER_EXTPRE  &&  FLU_GHOST_SIZE > 2  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
                    "FLU_GHOST_SIZE = 2", "MHM/CTU scheme + PLM reconstruction + non-EXTPRE limiter" );
 #  endif // #if ( LR_SCHEME == PLM )
@@ -828,19 +873,19 @@ void Aux_Check_Parameter()
 #  if ( FLU_SCHEME == MHM_RP )
 
 #  if ( LR_SCHEME == PLM )
-   if ( OPT__LR_LIMITER == EXTPRE  &&  FLU_GHOST_SIZE < 4 )
+   if ( OPT__LR_LIMITER == LR_LIMITER_EXTPRE  &&  FLU_GHOST_SIZE < 4 )
       Aux_Error( ERROR_INFO, "please set \"%s\" for \"%s\" !!\n",
                  "FLU_GHOST_SIZE = 4", "MHM_RP scheme + PLM reconstruction + EXTPRE limiter" );
 
-   if ( OPT__LR_LIMITER == EXTPRE  &&  FLU_GHOST_SIZE > 4  &&  MPI_Rank == 0 )
+   if ( OPT__LR_LIMITER == LR_LIMITER_EXTPRE  &&  FLU_GHOST_SIZE > 4  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
                    "FLU_GHOST_SIZE = 4", "MHM_RP scheme + PLM reconstruction + EXTPRE limiter" );
 
-   if ( OPT__LR_LIMITER != EXTPRE  &&  FLU_GHOST_SIZE < 3 )
+   if ( OPT__LR_LIMITER != LR_LIMITER_EXTPRE  &&  FLU_GHOST_SIZE < 3 )
       Aux_Error( ERROR_INFO, "please set \"%s\" for \"%s\" !!\n",
                  "FLU_GHOST_SIZE = 3", "MHM_RP scheme + PLM reconstruction + non-EXTPRE limiter" );
 
-   if ( OPT__LR_LIMITER != EXTPRE  &&  FLU_GHOST_SIZE > 3  &&  MPI_Rank == 0 )
+   if ( OPT__LR_LIMITER != LR_LIMITER_EXTPRE  &&  FLU_GHOST_SIZE > 3  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
                    "FLU_GHOST_SIZE = 3", "MHM_RP scheme + PLM reconstruction + non-EXTPRE limiter" );
 #  endif // #if ( LR_SCHEME == PLM )

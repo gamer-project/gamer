@@ -81,13 +81,13 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 // set the variables for the Lohner's error estimator
    int  Lohner_NVar=0, Lohner_Stride;
    long Lohner_TVar=0;
-   real MinDens=-1.0, MinPres=-1.0;    // default is to turn off minimum density/pressure checks
+   real MinDens=-1.0, MinPres=-1.0, MinTemp=-1.0;  // default is to disable all floors
 
 #  if   ( MODEL == HYDRO )
    if ( OPT__FLAG_LOHNER_DENS )  {  Lohner_NVar++;   Lohner_TVar |= _DENS;   MinDens = MIN_DENS;  }
    if ( OPT__FLAG_LOHNER_ENGY )  {  Lohner_NVar++;   Lohner_TVar |= _ENGY;                        }
    if ( OPT__FLAG_LOHNER_PRES )  {  Lohner_NVar++;   Lohner_TVar |= _PRES;   MinPres = MIN_PRES;  }
-   if ( OPT__FLAG_LOHNER_TEMP )  {  Lohner_NVar++;   Lohner_TVar |= _TEMP;   MinPres = MIN_PRES;  }
+   if ( OPT__FLAG_LOHNER_TEMP )  {  Lohner_NVar++;   Lohner_TVar |= _TEMP;   MinTemp = MIN_TEMP;  }
 
 #  elif ( MODEL == ELBDM )
    if ( OPT__FLAG_LOHNER_DENS )
@@ -106,14 +106,14 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 // collect particles to **real** patches at lv
 #  ifdef PARTICLE
    if ( OPT__FLAG_NPAR_CELL  ||  OPT__FLAG_PAR_MASS_CELL )
-      Par_CollectParticle2OneLevel( lv, PredictPos_No, NULL_REAL, SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_No,
-                                    TimingSendPar_No );
+      Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, PredictPos_No, NULL_REAL,
+                                    SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_No, TimingSendPar_No );
 
-// Par_CollectParticle2OneLevel with JustCountNPar_No will set NPar_Copy for each patch as well
-// --> so call Par_CollectParticle2OneLevel with JustCountNPar_Yes only when OPT__FLAG_NPAR_CELL == false
+// Par_CollectParticle2OneLevel() with JustCountNPar_No will set NPar_Copy for each patch as well
+// --> so call Par_CollectParticle2OneLevel() with JustCountNPar_Yes only when OPT__FLAG_NPAR_CELL == false
    else if ( OPT__FLAG_NPAR_PATCH != 0 )
-      Par_CollectParticle2OneLevel( lv, PredictPos_No, NULL_REAL, SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_Yes,
-                                    TimingSendPar_No );
+      Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, PredictPos_No, NULL_REAL,
+                                    SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_Yes, TimingSendPar_No );
 #  endif
 
 
@@ -170,7 +170,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
          if ( Lohner_NVar > 0 )
             Prepare_PatchData( lv, Time[lv], Lohner_Var, NULL, Lohner_NGhost, NPG, &PID0, Lohner_TVar, _NONE,
                                Lohner_IntScheme, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
-                               MinDens, MinPres, DE_Consistency_No );
+                               MinDens, MinPres, MinTemp, DE_Consistency_No );
 
 
 //       loop over all local patches within the same patch group
@@ -337,7 +337,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #                    ifdef LOAD_BALANCE
                      ParList         = NULL;
                      UseInputMassPos = true;
-                     InputMassPos    = amr->patch[0][lv][PID]->ParMassPos_Copy;
+                     InputMassPos    = amr->patch[0][lv][PID]->ParAtt_Copy;
 #                    else
                      ParList         = amr->patch[0][lv][PID]->ParList_Copy;
                      UseInputMassPos = false;
@@ -360,13 +360,13 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                   {
                      if ( UseInputMassPos )
                      {
-                        for (int v=0; v<4; v++)
-                           if ( InputMassPos[v] == NULL )
-                              Aux_Error( ERROR_INFO, "InputMassPos[%d] == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
-                                         v, NParThisPatch, lv, PID );
+                        if ( InputMassPos[PAR_MASS] == NULL  ||  InputMassPos[PAR_POSX] == NULL  ||
+                             InputMassPos[PAR_POSY] == NULL  ||  InputMassPos[PAR_POSZ] == NULL  )
+                           Aux_Error( ERROR_INFO, "InputMassPos[0/1/2/3] == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
+                                      NParThisPatch, lv, PID );
                      }
 
-                     else if ( !UseInputMassPos  &&  ParList == NULL )
+                     else if ( ParList == NULL )
                      Aux_Error( ERROR_INFO, "ParList == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
                                 NParThisPatch, lv, PID );
                   }
@@ -507,7 +507,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    } // OpenMP parallel region
 
 
-// free memory allocated by Par_CollectParticle2OneLevel
+// free memory allocated by Par_CollectParticle2OneLevel()
 #  ifdef PARTICLE
    if ( OPT__FLAG_NPAR_CELL  ||  OPT__FLAG_PAR_MASS_CELL  ||  OPT__FLAG_NPAR_PATCH != 0 )
       Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch_No, FaSibBufPatch_No );

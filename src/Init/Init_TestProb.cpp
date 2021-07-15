@@ -7,7 +7,7 @@
 void Init_TestProb_Hydro_BlastWave();
 void Init_TestProb_Hydro_AcousticWave();
 void Init_TestProb_Hydro_Bondi();
-void Init_TestProb_Hydro_ClusterMerger_vs_Flash();
+void Init_TestProb_Hydro_ClusterMerger();
 void Init_TestProb_Hydro_AGORA_IsolatedGalaxy();
 void Init_TestProb_Hydro_Caustic();
 void Init_TestProb_Hydro_SphericalCollapse();
@@ -20,6 +20,7 @@ void Init_TestProb_Hydro_MHD_ABC();
 void Init_TestProb_Hydro_MHD_OrszagTangVortex();
 void Init_TestProb_Hydro_MHD_LinearWave();
 void Init_TestProb_Hydro_JeansInstability();
+void Init_TestProb_Hydro_BarredPot();
 
 void Init_TestProb_ELBDM_ExtPot();
 
@@ -49,8 +50,8 @@ void Init_TestProb()
 
       case TESTPROB_HYDRO_BLAST_WAVE :                   Init_TestProb_Hydro_BlastWave();                   break;
       case TESTPROB_HYDRO_ACOUSTIC_WAVE :                Init_TestProb_Hydro_AcousticWave();                break;
-//    case TESTPROB_HYDRO_BONDI :                        Init_TestProb_Hydro_Bondi();                       break;
-      case TESTPROB_HYDRO_CLUSTER_MERGER_VS_FLASH :      Init_TestProb_Hydro_ClusterMerger_vs_Flash();      break;
+      case TESTPROB_HYDRO_BONDI :                        Init_TestProb_Hydro_Bondi();                       break;
+      case TESTPROB_HYDRO_CLUSTER_MERGER :               Init_TestProb_Hydro_ClusterMerger();               break;
       case TESTPROB_HYDRO_AGORA_ISOLATED_GALAXY :        Init_TestProb_Hydro_AGORA_IsolatedGalaxy();        break;
       case TESTPROB_HYDRO_CAUSTIC :                      Init_TestProb_Hydro_Caustic();                     break;
       case TESTPROB_HYDRO_SPHERICAL_COLLAPSE :           Init_TestProb_Hydro_SphericalCollapse();           break;
@@ -58,6 +59,7 @@ void Init_TestProb()
       case TESTPROB_HYDRO_RIEMANN :                      Init_TestProb_Hydro_Riemann();                     break;
       case TESTPROB_HYDRO_COLLIDING_JETS :               Init_TestProb_Hydro_CollidingJets();               break;
       case TESTPROB_HYDRO_PLUMMER :                      Init_TestProb_Hydro_Plummer();                     break;
+      case TESTPROB_HYDRO_BARRED_POT :                   Init_TestProb_Hydro_BarredPot();                   break;
       case TESTPROB_HYDRO_GRAVITY :                      Init_TestProb_Hydro_Gravity();                     break;
       case TESTPROB_HYDRO_MHD_ABC :                      Init_TestProb_Hydro_MHD_ABC();                     break;
       case TESTPROB_HYDRO_MHD_ORSZAG_TANG_VORTEX :       Init_TestProb_Hydro_MHD_OrszagTangVortex();        break;

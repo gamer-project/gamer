@@ -11,6 +11,7 @@ static void OutputError();
 static double Acoustic_RhoAmp;      // amplitude of the density perturbation (assuming background density = 1.0)
 static double Acoustic_Cs;          // sound speed
 static double Acoustic_v0;          // background velocity
+static int    Acoustic_Dir;         // wave direction: (0/1/2/3) --> (x/y/z/diagonal)
 static double Acoustic_Sign;        // (+1/-1) --> (right/left-moving wave)
 static double Acoustic_Phase0;      // initial phase shift
 
@@ -61,8 +62,8 @@ void Validate()
    Aux_Error( ERROR_INFO, "EOS != EOS_GAMMA !!\n" );
 #  endif
 
-   if ( amr->BoxSize[0] != amr->BoxSize[1]  ||  amr->BoxSize[0] != amr->BoxSize[2] )
-      Aux_Error( ERROR_INFO, "simulation domain must be cubic !!\n" );
+   if ( Acoustic_Dir == 3  &&  ( amr->BoxSize[0] != amr->BoxSize[1] || amr->BoxSize[0] != amr->BoxSize[2] )  )
+      Aux_Error( ERROR_INFO, "simulation domain must be cubic for Acoustic_Dir = %d !!\n", Acoustic_Dir );
 
    for (int f=0; f<6; f++)
    if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC )
@@ -117,6 +118,7 @@ void SetParameter()
    ReadPara->Add( "Acoustic_RhoAmp",   &Acoustic_RhoAmp,       -1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "Acoustic_Cs",       &Acoustic_Cs,           -1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "Acoustic_v0",       &Acoustic_v0,            0.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Acoustic_Dir",      &Acoustic_Dir,           3,            0,                3                 );
    ReadPara->Add( "Acoustic_Sign",     &Acoustic_Sign,          1.0,          NoMin_double,     NoMax_double      );
    ReadPara->Add( "Acoustic_Phase0",   &Acoustic_Phase0,        0.0,          NoMin_double,     NoMax_double      );
 
@@ -124,13 +126,13 @@ void SetParameter()
 
    delete ReadPara;
 
+
+// (2) set the problem-specific derived parameters
+   Acoustic_WaveLength = ( Acoustic_Dir == 3 ) ? amr->BoxSize[0]/sqrt(3.0) : amr->BoxSize[Acoustic_Dir];
+
 // force Acoustic_Sign to be +1.0/-1.0
    if ( Acoustic_Sign >= 0.0 )   Acoustic_Sign = +1.0;
    else                          Acoustic_Sign = -1.0;
-
-
-// (2) set the problem-specific derived parameters
-   Acoustic_WaveLength = amr->BoxSize[0] / sqrt(3.0);
 
 
 // (3) reset other general-purpose parameters
@@ -157,6 +159,7 @@ void SetParameter()
       Aux_Message( stdout, "  density amplitude   = % 14.7e\n", Acoustic_RhoAmp );
       Aux_Message( stdout, "  sound speed         = % 14.7e\n", Acoustic_Cs );
       Aux_Message( stdout, "  background velocity = % 14.7e\n", Acoustic_v0 );
+      Aux_Message( stdout, "  direction           = %d\n",      Acoustic_Dir );
       Aux_Message( stdout, "  sign (R/L)          = % 14.7e\n", Acoustic_Sign );
       Aux_Message( stdout, "  initial phase shift = % 14.7e\n", Acoustic_Phase0 );
       Aux_Message( stdout, "  wavelength          = % 14.7e\n", Acoustic_WaveLength );
@@ -194,11 +197,18 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 {
 
 // assuming EOS_GAMMA
-   const double r         = 1.0/sqrt(3.0)*( x + y + z ) - Acoustic_v0*Time;
    const double _Gamma_m1 = 1.0/(GAMMA-1.0);
 
-   double v1, P0, P1, Phase, WaveK, WaveW;
-   double Dens, MomX, MomY, MomZ, Pres, Eint, Etot;
+   double r, v1, P0, P1, Phase, WaveK, WaveW;
+   double Dens, Mom, MomX, MomY, MomZ, Pres, Eint, Etot;
+
+   switch ( Acoustic_Dir ) {
+      case 0:  r = x;                        break;
+      case 1:  r = y;                        break;
+      case 2:  r = z;                        break;
+      case 3:  r = ( x + y + z )/sqrt(3.0);  break;
+   }
+   r -= Acoustic_v0*Time;
 
    v1    = Acoustic_Sign*Acoustic_Cs*Acoustic_RhoAmp;
    P0    = SQR(Acoustic_Cs)/GAMMA;
@@ -209,9 +219,15 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    Phase = WaveK*r - Acoustic_Sign*WaveW*Time + Acoustic_Phase0;
 
    Dens  = 1.0 + Acoustic_RhoAmp*cos(Phase);
-   MomX  = Dens*( v1*cos(Phase) + Acoustic_v0 ) / sqrt(3.0);
-   MomY  = MomX;
-   MomZ  = MomX;
+   Mom   = Dens*( v1*cos(Phase) + Acoustic_v0 );
+
+   switch ( Acoustic_Dir ) {
+      case 0:  MomX = Mom;            MomY = 0.0;   MomZ = 0.0;   break;
+      case 1:  MomX = 0.0;            MomY = Mom;   MomZ = 0.0;   break;
+      case 2:  MomX = 0.0;            MomY = 0.0;   MomZ = Mom;   break;
+      case 3:  MomX = Mom/sqrt(3.0);  MomY = MomX;  MomZ = MomX;  break;
+   }
+
    Pres  = P0 + P1*cos(Phase);
    Eint  = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
                                      EoS_AuxArray_Int, h_EoS_Table, NULL );   // assuming EoS requires no passive scalars
@@ -243,9 +259,9 @@ void OutputError()
 {
 
    const char Prefix[100]     = "AcousticWave";
-   const OptOutputPart_t Part = OUTPUT_DIAG;
+   const OptOutputPart_t Part = OUTPUT_X + Acoustic_Dir;
 
-   Output_L1Error( SetGridIC, NULL, Prefix, Part, NULL_REAL, NULL_REAL, NULL_REAL );
+   Output_L1Error( SetGridIC, NULL, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
 
 } // FUNCTION : OutputError
 #endif // #if ( MODEL == HYDRO )

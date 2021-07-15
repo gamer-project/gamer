@@ -62,8 +62,8 @@ void SortParticle( const long NPar, const real *PosX, const real *PosY, const re
 //                                           contribution at all to Rho[]. However, it may also introduce additional
 //                                           overhead if most input particles do have contribution to Rho[].
 //                UseInputMassPos : Use the input array InputMassPos[] to obtain particle mass and position
-//                                  --> Used by LOAD_BALANCE, where particle position and mass may be stored in the
-//                                      ParMassPos_Copy[] array of each patch
+//                                  --> Used by LOAD_BALANCE, where particle position and mass may be stored in
+//                                      ParAtt_Copy[] of each patch
 //                                  --> ParList[] becomes useless and must be set to NULL
 //                                  --> Does not work with PredictPos since we don't have the information of particle
 //                                      time and velocity

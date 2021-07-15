@@ -758,6 +758,7 @@ void Output_DumpData_Total( const char *FileName )
    const bool DE_Consistency_No = false;
    const real MinDens_No        = -1.0;
    const real MinPres_No        = -1.0;
+   const real MinTemp_No        = -1.0;
    const bool TimingSendPar_No  = false;
    const bool PredictParPos_No  = false;   // particles synchronization is done in "Flu_CorrAfterAllSync()"
    const bool JustCountNPar_No  = false;
@@ -786,8 +787,8 @@ void Output_DumpData_Total( const char *FileName )
       {
          Prepare_PatchData_InitParticleDensityArray( lv );
 
-         Par_CollectParticle2OneLevel( lv, PredictParPos_No, NULL_REAL, SibBufPatch, FaSibBufPatch, JustCountNPar_No,
-                                       TimingSendPar_No );
+         Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, PredictParPos_No, NULL_REAL,
+                                       SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
       }
 #     endif
 
@@ -811,7 +812,7 @@ void Output_DumpData_Total( const char *FileName )
                         Prepare_PatchData( lv, Time[lv], ParDensArray[0], NULL, 0, 1, &PID,
                                            ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_PAR_ONLY ) ? _PAR_DENS : _TOTAL_DENS,
                                            _NONE, OPT__RHO_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No,
-                                           OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, DE_Consistency_No );
+                                           OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, DE_Consistency_No );
                         break;
                      }
                   }

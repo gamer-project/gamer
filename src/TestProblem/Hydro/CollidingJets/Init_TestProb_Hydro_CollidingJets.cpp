@@ -85,6 +85,7 @@ void Validate()
 //                   (2) set the problem-specific derived parameters
 //                   (3) reset other general-purpose parameters if necessary
 //                   (4) make a note of the problem-specific parameters
+//                3. Must call EoS_Init() before calling any other EoS routine
 //
 // Parameter   :  None
 //
@@ -181,8 +182,12 @@ void SetParameter()
 
 
 // (2) set the problem-specific derived parameters
-   Jet_BgPres = Jet_BgDens*Jet_BgTemp/(MOLECULAR_WEIGHT*Const_amu/UNIT_M);
+// must initialize EoS first
+   EoS_Init();
 
+// assuming EoS requires no passive scalars
+   Jet_BgPres = EoS_DensTemp2Pres_CPUPtr( Jet_BgDens, Jet_BgTemp*UNIT_E/Const_kB, NULL,
+                                          EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
    for (int n=0; n<Jet_NJet; n++)
    {
       Jet_WaveK  [n] = 0.5*M_PI/Jet_HalfHeight[n];

@@ -105,6 +105,7 @@ void Validate()
 //                   (2) set the problem-specific derived parameters
 //                   (3) reset other general-purpose parameters if necessary
 //                   (4) make a note of the problem-specific parameters
+//                3. Must call EoS_Init() before calling any other EoS routine
 //
 // Parameter   :  None
 //
@@ -441,8 +442,8 @@ void AddNewField_Plummer()
 
    if ( Plummer_AddColor )
    {
-      Plummer_Idx_Cloud0 = AddField( "Cloud0", NORMALIZE_YES );
-      Plummer_Idx_Cloud1 = AddField( "Cloud1", NORMALIZE_YES );
+      Plummer_Idx_Cloud0 = AddField( "Cloud0", NORMALIZE_YES, INTERP_FRAC_YES );
+      Plummer_Idx_Cloud1 = AddField( "Cloud1", NORMALIZE_YES, INTERP_FRAC_YES );
    }
 
 } // FUNCTION : AddNewField_Plummer
