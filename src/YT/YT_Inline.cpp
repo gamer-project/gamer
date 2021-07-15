@@ -101,7 +101,7 @@ void YT_Inline()
    }
 
 #ifdef GRAVITY
-   FieldList[PotIdx].field_name = PotLabel;
+   FieldList[PotIdx].field_name = const_cast<char*> (PotLabel);
 #endif
 
 #ifdef MHD
