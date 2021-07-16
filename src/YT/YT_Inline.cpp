@@ -12,11 +12,16 @@ void MagY_DerivedFunc(long gid, double *Converted_MagY);
 void MagZ_DerivedFunc(long gid, double *Converted_MagZ);
 #endif
 
+#if ( MODEL == HYDRO )
+void Temperature_DerivedFunc(long gid, double *TempData);
+#endif
+
 #ifdef PARTICLE
 // get the particle attribute, since we only have one type of particle "io"
 // we only need one function.
 void Get_ParticleAttribute(long gid, char *attr, void *raw_data);
 #endif
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  YT_Inline
@@ -80,6 +85,11 @@ void YT_Inline()
    NField = NField + NCOMP_MAG;
 #endif
 
+#if ( MODEL == HYDRO )
+   int EoSTempIdx = NField;
+   NField = NField + 1;
+#endif
+
 // 2-2. Call YT_SetParameter and set particle info if need.
    YT_SetParameter( NPatchAllLv, NField, NPatchLocalLv);
 
@@ -92,6 +102,8 @@ void YT_Inline()
 //      + (NCOMP_TOTAL - 1)  |                  +
 //      +  GRAVITY (PotIdx)  |   cell-centered  +
 //      +  MHD     (MHDIdx)  |   face-centered  +
+//      +.......................................+
+//      +         Other Derived Fields          +
 //      +---------------------------------------+
    yt_field *FieldList;
    yt_get_fieldsPtr( &FieldList );
@@ -120,6 +132,14 @@ void YT_Inline()
    FieldList[ MHDIdx     ].derived_func = MagX_DerivedFunc;
    FieldList[ MHDIdx + 1 ].derived_func = MagY_DerivedFunc;
    FieldList[ MHDIdx + 2 ].derived_func = MagZ_DerivedFunc;
+#endif
+
+#if ( MODEL == HYDRO )
+   FieldList[EoSTempIdx].field_name = "Temp";
+   FieldList[EoSTempIdx].field_define_type = "derived_func";
+   FieldList[EoSTempIdx].field_unit = "code_temperature";
+   FieldList[EoSTempIdx].field_display_name = "Temperature";
+   FieldList[EoSTempIdx].derived_func = Temperature_DerivedFunc;
 #endif
 
 // 3-2 Get the ParticleList
