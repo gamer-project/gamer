@@ -663,7 +663,7 @@ real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, cons
 //                                    --> In some cases we actually want to check if temperature becomes unphysical,
 //                                        for which we don't want to enable this option
 //                MinTemp           : Temperature floor
-//                Bmag              : Magnetic energy density (0.5*B^2) --> For MHD only
+//                Emag              : Magnetic energy density (0.5*B^2) --> For MHD only
 //                EoS_DensEint2Temp : EoS routine to compute the gas temperature
 //                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensEint2Temp()
 //                EoS_Table         : EoS tables for EoS_DensEint2Temp()
