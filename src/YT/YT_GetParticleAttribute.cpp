@@ -11,6 +11,7 @@
 // Note        :  1. This function's pointer will be passed into libyt.
 //                2. The argument should be declared like this, in order to match the libyt API.
 //                3. This function will be called if yt inline-analysis needs the data.
+//                4. Searching of GID can be optimized.
 //
 // Parameter   :  long  gid     : Grid GID
 //                char *attr    : Request particle attribute
