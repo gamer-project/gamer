@@ -1,5 +1,7 @@
 import yt
 
+yt.enable_parallelism()
+
 def yt_inline():
     ds = yt.frontends.libyt.libytDataset()
     sz = yt.SlicePlot( ds, 'z', 'Dens', center='c' )
