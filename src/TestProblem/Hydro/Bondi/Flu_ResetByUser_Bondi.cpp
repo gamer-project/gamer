@@ -178,7 +178,7 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double TTim
             {
                real Ek = (real)0.5*( SQR(fluid_bk[MOMX]) + SQR(fluid_bk[MOMY]) + SQR(fluid_bk[MOMZ]) ) / fluid_bk[DENS];
                real Et = fluid_bk[ENGY] - Ek;
-	
+
                Bondi_SinkMass    += dv*fluid_bk[DENS];
                Bondi_SinkMomX    += dv*fluid_bk[MOMX];
                Bondi_SinkMomY    += dv*fluid_bk[MOMY];
@@ -189,9 +189,10 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double TTim
                Bondi_SinkEk      += dv*Ek;
                Bondi_SinkEt      += dv*Et;
                Bondi_SinkNCell   ++;
-            }
-		// void region must be completely refined to the max level
-         else if ( amr->patch[0][lv][PID]->son == -1 )    Aux_Error( ERROR_INFO, "void region lies outside the max-level region !!\n" );
+            }else if ( amr->patch[0][lv][PID]->son == -1 ){
+	       // void region must be completely refined to the max level
+               Aux_Error( ERROR_INFO, "void region lies outside the max-level region !!\n" );
+	    }
          } // if ( Reset )
       }}} // i,j,k
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
