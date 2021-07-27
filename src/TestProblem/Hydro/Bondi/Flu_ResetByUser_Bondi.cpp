@@ -3,7 +3,6 @@
 #if ( MODEL == HYDRO  &&  defined GRAVITY )
 
 
-
 extern double Bondi_InBC_Rho;
 extern double Bondi_InBC_R;
 extern double Bondi_InBC_E;
@@ -190,13 +189,13 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double TTim
                Bondi_SinkEk      += dv*Ek;
                Bondi_SinkEt      += dv*Et;
                Bondi_SinkNCell   ++;
-            }
+            }else if ( amr->patch[0][lv][PID]->son == -1 ){
+	       // void region must be completely refined to the max level
+               Aux_Error( ERROR_INFO, "void region lies outside the max-level region !!\n" );
+	    }
          } // if ( Reset )
-	// void region must be completely refined to the max level
-	else if ( amr->patch[0][lv][PID]->son == -1 )    Aux_Error( ERROR_INFO, "void region lies outside the max-level region !!\n" );
       }}} // i,j,k
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-
 } // FUNCTION : Flu_ResetByUser_API_Bondi
 
 
