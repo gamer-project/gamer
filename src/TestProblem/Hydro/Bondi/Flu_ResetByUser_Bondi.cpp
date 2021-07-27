@@ -3,12 +3,12 @@
 #if ( MODEL == HYDRO  &&  defined GRAVITY )
 
 
-
+//extern double Bondi_MassBH;
 extern double Bondi_InBC_Rho;
 extern double Bondi_InBC_R;
 extern double Bondi_InBC_E;
 
-extern double Bondi_cumMass;
+//extern double Bondi_cumMass;
 extern double Bondi_SinkMass;
 extern double Bondi_SinkMomX;
 extern double Bondi_SinkMomY;
@@ -113,7 +113,7 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double TTim
 
 // reset to 0 since we only want to record the number of void cells **for one sub-step**
    Bondi_SinkNCell = 0;
-   double Bondi_cumMass_local   = 0;
+   //double Bondi_cumMass_local   = 0;
 
 
 #  pragma omp parallel for private( Reset, fluid, fluid_bk, x, y, z, x0, y0, z0 ) schedule( runtime ) \
@@ -182,7 +182,7 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double TTim
                real Ek = (real)0.5*( SQR(fluid_bk[MOMX]) + SQR(fluid_bk[MOMY]) + SQR(fluid_bk[MOMZ]) ) / fluid_bk[DENS];
                real Et = fluid_bk[ENGY] - Ek;
 	
-	       Bondi_cumMass_local	+= dv*fluid_bk[DENS];
+	       //Bondi_cumMass_local	+= dv*fluid_bk[DENS];
                Bondi_SinkMass    += dv*fluid_bk[DENS];
                Bondi_SinkMomX    += dv*fluid_bk[MOMX];
                Bondi_SinkMomY    += dv*fluid_bk[MOMY];
@@ -199,7 +199,8 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double TTim
          } // if ( Reset )
       }}} // i,j,k
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-	MPI_Allreduce(&Bondi_cumMass,&Bondi_cumMass_local, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+	//MPI_Allreduce(&Bondi_cumMass_local,&Bondi_cumMass, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+	//Bondi_MassBH += Bondi_cumMass;
 } // FUNCTION : Flu_ResetByUser_API_Bondi
 
 
