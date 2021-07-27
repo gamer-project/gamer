@@ -1,3 +1,7 @@
+###############################################
+#         GNU MPI job script example          #
+###############################################
+
 #!/bin/bash
 
 #SBATCH	--account=ACCOUNT                                   # (-A) Account/project number
