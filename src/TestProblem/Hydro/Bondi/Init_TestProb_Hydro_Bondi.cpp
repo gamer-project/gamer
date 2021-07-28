@@ -28,7 +28,6 @@ static double Bondi_Cs;             // background sound speed
 static double Bondi_RS;             // Schwarzschild radius
 static double Bondi_RB;             // Bondi radius
 static double Bondi_TimeB;          // Bondi time
-
        double Bondi_SinkMass;       // total mass             in the void region removed in one global time-step
        double Bondi_SinkMomX;       // total x-momentum       ...
        double Bondi_SinkMomY;       // total y-momentum       ...
@@ -39,6 +38,7 @@ static double Bondi_TimeB;          // Bondi time
        double Bondi_SinkEk;         // total kinematic energy ...
        double Bondi_SinkEt;         // total thermal   energy ...
        int    Bondi_SinkNCell;      // total number of finest cells within the void region
+       double Bondi_SinkMass_tot;
 
 // external units in cgs
 const double UnitExt_L = Const_kpc;
