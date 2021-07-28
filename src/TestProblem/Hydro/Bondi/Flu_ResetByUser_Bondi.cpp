@@ -2,7 +2,7 @@
 
 #if ( MODEL == HYDRO  &&  defined GRAVITY )
 
-
+extern double Bondi_MassBH;
 extern double Bondi_InBC_Rho;
 extern double Bondi_InBC_R;
 extern double Bondi_InBC_E;
@@ -198,6 +198,7 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double TTim
       }}} // i,j,k
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    MPI_Allreduce( &SinkMass, &Bondi_SinkMass_tot, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+   Bondi_MassBH += Bondi_SinkMass_tot;
 } // FUNCTION : Flu_ResetByUser_API_Bondi
 
 
