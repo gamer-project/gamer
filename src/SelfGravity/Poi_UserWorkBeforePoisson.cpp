@@ -14,7 +14,7 @@ void (*Poi_UserWorkBeforePoisson_Ptr)( const double Time, const int lv ) = NULL;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Poi_UserWorkBeforePoisson_Template
-// Description :  Template of user-specified work before invoking the Poisson solver
+// Description :  Template of user-specified work before invoking the Poisson/gravity solvers
 //
 // Note        :  1. Invoked by Gra_AdvanceDt() using the function pointer "Poi_UserWorkBeforePoisson_Ptr"
 //
