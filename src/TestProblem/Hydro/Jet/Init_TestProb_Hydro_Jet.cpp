@@ -234,13 +234,21 @@ void SetParameter()
 
 
 // (2) set the problem-specific derived parameters
-   Jet_BgEint = Jet_BgDens*Jet_BgTemp/(MOLECULAR_WEIGHT*Const_mH/UNIT_M) / ( GAMMA - 1.0 );
+// assuming EoS requires no passive scalars
+   Jet_BgEint = EoS_DensPres2Eint_CPUPtr(  Jet_BgDens,
+                                           EoS_DensTemp2Pres_CPUPtr( Jet_BgDens, Jet_BgTemp*UNIT_E/Const_kB, NULL,
+                                                                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL ),
+                                           NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL  );
 
    for (int n=0; n<Jet_NJet; n++)
    {
       Jet_WaveK  [n] = 0.5*M_PI/Jet_HalfHeight[n];
       Jet_MaxDis [n] = sqrt( SQR(Jet_HalfHeight[n]) + SQR(Jet_Radius[n]) );
-      Jet_SrcEint[n] = Jet_SrcDens[n]*Jet_SrcTemp[n]/(MOLECULAR_WEIGHT*Const_mH/UNIT_M) / ( GAMMA - 1.0 );
+//    assuming EoS requires no passive scalars
+      Jet_SrcEint[n] = EoS_DensPres2Eint_CPUPtr(  Jet_SrcDens[n],
+                                                  EoS_DensTemp2Pres_CPUPtr( Jet_SrcDens[n], Jet_SrcTemp[n]*UNIT_E/Const_kB, NULL,
+                                                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL ),
+                                                  NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL  );
 
       for (int d=0; d<3; d++)    Jet_Cen[n][d] = 0.5*amr->BoxSize[d] + Jet_CenOffset[n][d];
    }
@@ -258,7 +266,6 @@ void SetParameter()
       Jet_HSE_BgTable_NBin = Aux_LoadTable( Jet_HSE_BgTable_Data, Jet_HSE_BgTable_File, NCol, Col, RowMajor_No, AllocMem_Yes );
 
 //    convert to code units
-      const double Coeff_T2Eint = 1.0 / ( (MOLECULAR_WEIGHT*Const_mH/UNIT_M)*(GAMMA-1.0) );
       Table_R = Jet_HSE_BgTable_Data + 0*Jet_HSE_BgTable_NBin;
       Table_D = Jet_HSE_BgTable_Data + 1*Jet_HSE_BgTable_NBin;
       Table_T = Jet_HSE_BgTable_Data + 2*Jet_HSE_BgTable_NBin;
@@ -269,7 +276,11 @@ void SetParameter()
          Table_D[b] *= 1.0       / UNIT_D;
          Table_T[b] *= Const_keV / UNIT_E;
 
-         Table_T[b] *= Coeff_T2Eint*Table_D[b]; // convert temperature to internal energy
+//       convert temperature to internal energy (assuming EoS requires no passive scalars)
+         Table_T[b]  = EoS_DensPres2Eint_CPUPtr(  Table_D[b],
+                                                  EoS_DensTemp2Pres_CPUPtr( Table_D[b], Table_T[b]*UNIT_E/Const_kB, NULL,
+                                                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL ),
+                                                  NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL  );
       }
    } // if ( Jet_HSE  &&  OPT__INIT != INIT_BY_RESTART )
 
@@ -498,7 +509,8 @@ bool Flu_ResetByUser_Jet( real fluid[], const double x, const double y, const do
          fluid[MOMY] = MomSin*Jet_SrcVel_xyz[1];
          fluid[MOMZ] = MomSin*Jet_SrcVel_xyz[2];
 
-         fluid[ENGY] = Jet_SrcEint[n] + 0.5*( SQR(fluid[MOMX])+SQR(fluid[MOMY])+SQR(fluid[MOMZ]) ) / fluid[DENS];
+//       assuming no magnetic field
+         fluid[ENGY] = Hydro_ConEint2Etot( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], Jet_SrcEint[n], 0.0 );
 
 //       return immediately since we do NOT allow different jet source to overlap
          return true;
