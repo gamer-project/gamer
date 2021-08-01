@@ -15,6 +15,3 @@ Note:
 2. Recommended boundary conditions:
       With JET_HSE and large Jet_BgVel_y: user-defined BC on -y and outflow BC on other faces
       Without JET_HSET: outflow BC on all faces
-3. Currently it does NOT work with multiple jet sources
-   --> Jet_NJet must be 1
-
