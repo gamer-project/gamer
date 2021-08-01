@@ -115,6 +115,9 @@ void SetParameter()
 // ********************************************************************************************************************************
 // load the number of jets first
    ReadPara->Add( "Jet_NJet",          &Jet_NJet,             -1,             1,                2                 );
+   ReadPara->Read( FileName );
+   delete ReadPara;
+   ReadPara = new ReadPara_t; // for loading the remaining parameters
 
 // allocate memory for the variables whose size depends on the number of jets
    Jet_Radius     = new double [Jet_NJet];
@@ -234,6 +237,9 @@ void SetParameter()
 
 
 // (2) set the problem-specific derived parameters
+// must initialize EoS first
+   EoS_Init();
+
 // assuming EoS requires no passive scalars
    Jet_BgEint = EoS_DensPres2Eint_CPUPtr(  Jet_BgDens,
                                            EoS_DensTemp2Pres_CPUPtr( Jet_BgDens, Jet_BgTemp*UNIT_E/Const_kB, NULL,
