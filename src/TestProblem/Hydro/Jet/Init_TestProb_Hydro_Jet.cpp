@@ -1,9 +1,5 @@
 #include "GAMER.h"
 #include "TestProb.h"
-#ifdef GRAVITY
-#include "CUPOT.h"
-extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
-#endif
 
 
 
@@ -12,7 +8,7 @@ extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 static int      Jet_NJet;                          // number of jets (1/2)
 static double   Jet_BgDens;                        // ambient density
 static double   Jet_BgTemp;                        // ambient temperature
-static double   Jet_BgVel[3];                      // ambient velocity
+       double   Jet_BgVel[3];                      // ambient velocity
 static double  *Jet_Radius        = NULL;          // radius of the cylinder-shape jet source
 static double  *Jet_HalfHeight    = NULL;          // half height of the cylinder-shape jet source
 static double  *Jet_SrcVel        = NULL;          // jet velocity
@@ -21,10 +17,10 @@ static double  *Jet_SrcTemp       = NULL;          // jet temperature
 static double (*Jet_Vec)[3]       = NULL;          // jet orientation vector (x,y,z) (NOT necessary to be a unit vector)
 static double (*Jet_CenOffset)[3] = NULL;          // jet central coordinates offset
 static bool     Jet_HSE           = false;         // hydrostatic equilibrium background
-static double   Jet_HSE_D         = NULL_REAL;     // for Jet_HSE: distance between box and cluster centre (assuming along y)
-static double   Jet_HSE_M200      = NULL_REAL;     // for Jet_HSE: cluster virial mass
-static double   Jet_HSE_R200      = NULL_REAL;     // for Jet_HSE: cluster virial radius
-static double   Jet_HSE_C200      = NULL_REAL;     // for Jet_HSE: cluster concentration parameter assuming NFW
+       double   Jet_HSE_D         = NULL_REAL;     // for Jet_HSE: distance between box and cluster centre (assuming along y)
+       double   Jet_HSE_M200      = NULL_REAL;     // for Jet_HSE: cluster virial mass
+       double   Jet_HSE_R200      = NULL_REAL;     // for Jet_HSE: cluster virial radius
+       double   Jet_HSE_C200      = NULL_REAL;     // for Jet_HSE: cluster concentration parameter assuming NFW
 static char     Jet_HSE_BgTable_File[MAX_STRING];  // for Jet_HSE: filename of the background gas table
 
 static double   Jet_BgEint;                        // ambient internal energy
@@ -36,6 +32,9 @@ static double  *Jet_MaxDis        = NULL;          // maximum distance between t
 static double *Jet_HSE_BgTable_Data = NULL;        // for Jet_HSE: background gas table [radius/density/temperature]
 static int     Jet_HSE_BgTable_NBin;               // for Jet_HSE: number of bins in Jet_HSE_BgTable_Data[]
 // =======================================================================================
+#ifdef GRAVITY
+void Init_ExtAcc_Jet();
+#endif
 
 
 
@@ -184,8 +183,11 @@ void SetParameter()
 #     endif
 
 #     ifdef GRAVITY
-      if ( OPT__GRAVITY_TYPE != GRAVITY_EXTERNAL )
-         Aux_Error( ERROR_INFO, "please set OPT__GRAVITY_TYPE = GRAVITY_EXTERNAL for Jet_HSE !!\n" );
+      if ( OPT__SELF_GRAVITY  &&  MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : are you sure about enabling OPT__SELF_GRAVITY for Jet_HSE !?\n" );
+
+      if ( ! OPT__EXT_ACC )
+         Aux_Error( ERROR_INFO, "must enable OPT__EXT_ACC for Jet_HSE !!\n" );
 #     endif
 
       if ( Jet_HSE_D == NoDef_double )
@@ -508,36 +510,6 @@ bool Flu_ResetByUser_Jet( real fluid[], const double x, const double y, const do
    return false;
 
 } // FUNCTION : Flu_ResetByUser_Jet
-
-
-
-#ifdef GRAVITY
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Init_ExternalAcc_Jet
-// Description :  Set the array ExtAcc_AuxArray[] used by the external acceration routines
-//                "CUPOT_ExternalAcc.cu / CPU_ExternalAcc.cpp"
-//
-// Note        :  1. Invoked by "Init_GAMER" using the function pointer "Init_ExternalAcc_Ptr"
-//                   --> The function pointer may be reset by various test problem initializers, in which case
-//                       this funtion will become useless
-//                2. Enabled by the runtime option "OPT__GRAVITY_TYPE == 2/3"
-//
-// Parameter   :  None
-//-------------------------------------------------------------------------------------------------------
-void Init_ExternalAcc_Jet()
-{
-
-   const double c = Jet_HSE_C200;
-
-   ExtAcc_AuxArray[0] = 0.5*amr->BoxSize[0];                                  // [0-2]: cluster center
-   ExtAcc_AuxArray[1] = 0.5*amr->BoxSize[1] - Jet_HSE_D;
-   ExtAcc_AuxArray[2] = 0.5*amr->BoxSize[2];
-   ExtAcc_AuxArray[3] = -NEWTON_G*Jet_HSE_M200/( log(1.0+c) - c/(1.0+c) );    // -G*M200/( log(1+c) - c/(1+c) )
-   ExtAcc_AuxArray[4] = Jet_HSE_R200 / c;                                     // scale radius
-   ExtAcc_AuxArray[5] = Jet_BgVel[1];
-
-} // FUNCTION : Init_ExternalAcc_Jet
-#endif // #ifdef GRAVITY
 #endif // #if ( MODEL == HYDRO )
 
 
@@ -576,7 +548,8 @@ void Init_TestProb_Hydro_Jet()
    Aux_Record_User_Ptr      = NULL;
    End_User_Ptr             = End_Jet;
 #  ifdef GRAVITY
-   Init_ExternalAcc_Ptr     = Init_ExternalAcc_Jet;
+   if ( OPT__EXT_ACC == EXT_ACC_FUNC )
+   Init_ExtAcc_Ptr         = Init_ExtAcc_Jet;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 
