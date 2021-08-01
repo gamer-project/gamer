@@ -1,7 +1,7 @@
 
 
 
-# name of the executable file 
+# name of the executable file
 #######################################################################################################
 EXECUTABLE  = GAMER_ExtractUniform
 
@@ -31,7 +31,7 @@ SIMU_OPTION += -DSUPPORT_HDF5
 
 # siimulation parameters
 #######################################################################################################
-NLEVEL        = 10        # level : 0 ~ NLEVEL-1 
+NLEVEL        = 10        # level : 0 ~ NLEVEL-1
 NCOMP_PASSIVE = 0         # number of passive scalars
 MAX_PATCH     = 1000000   # the maximum number of patches in each level
 
@@ -69,11 +69,11 @@ vpath %.cpp ./ GAMER_Functions GAMER_Functions/Interpolation
 
 # rules and targets
 #######################################################################################################
-#HDF5_PATH := /opt/hdf5/1.8.9
-#MPI_PATH  := /usr/mpi/intel/openmpi-1.4.3-qlc
+HDF5_PATH := /software/hdf5/default
+MPI_PATH  := /software/openmpi/default
 #MPI_PATH  := /opt/mpi/openmpi/1.6.0-intel
-MPI_PATH  := /usr/local/mpi/openmpi-1.8.4-intel-15.0
-HDF5_PATH := /projects/ncsa/grav/softwares/miniconda2
+#MPI_PATH  := /usr/local/mpi/openmpi-1.8.4-intel-15.0
+#HDF5_PATH := /projects/ncsa/grav/softwares/miniconda2
 
 
 ifeq "$(findstring SERIAL, $(SIMU_OPTION))" ""
@@ -82,7 +82,7 @@ else
 CXX   := icpc
 endif
 
-CFLAG := -O3 -w1 -xSSE4.2 -fp-model precise
+CFLAG := -O3 -w1
 #CFLAG := -O3 -Wall
 
 ifeq "$(findstring GAMER_DEBUG, $(SIMU_OPTION))" "GAMER_DEBUG"

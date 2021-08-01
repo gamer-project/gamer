@@ -1,0 +1,17 @@
+#!/bin/bash
+
+#SBATCH --job-name=GAMER
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=YOUR_EMAIL
+#SBATCH --partition=gpu
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=2
+#SBATCH --cpus-per-task=36
+#SBATCH --gres=gpu:2
+#SBATCH --time=240:00:00
+
+#Load module
+module purge
+module load gcc/8.3.0 cuda/10.0 openmpi/3.1.4 fftw/2.1.5 hdf5-parallel/1.8.21
+
+mpirun -np 2 -map-by ppr:1:socket:pe=18 --report-bindings ./gamer 1>>log 2>&1

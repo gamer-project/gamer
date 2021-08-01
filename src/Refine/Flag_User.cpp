@@ -1,33 +1,32 @@
 #include "GAMER.h"
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
-static bool Flag_User( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
+static bool Flag_User_Template( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 
-// this function pointer may be overwritten by various test problem initializers
-bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int lv, const int PID, const double Threshold ) = Flag_User;
+// this function pointer must be set by a test problem initializer
+bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold ) = NULL;
 
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Flag_User
-// Description :  Check if the element (i,j,k) of the input data satisfies the user-defined flag criteria
+// Function    :  Flag_User_Template
+// Description :  Template of user-defined flag criteria
 //
-// Note        :  1. Invoked by "Flag_Check" using the function pointer "Flag_User_Ptr"
-//                   --> The function pointer may be reset by various test problem initializers, in which case
-//                       this funtion will become useless
+// Note        :  1. Invoked by Flag_Check() using the function pointer "Flag_User_Ptr",
+//                   which must be set by a test problem initializer
 //                2. Enabled by the runtime option "OPT__FLAG_USER"
 //
-// Parameter   :  i,j,k       : Indices of the target element in the patch ptr[ amr->FluSg[lv] ][lv][PID]
-//                lv          : Refinement level of the target patch
-//                PID         : ID of the target patch
-//                Threshold   : User-provided threshold for the flag operation, which is loaded from the
-//                              file "Input__Flag_User"
+// Parameter   :  i,j,k     : Indices of the target element in the patch ptr[ amr->FluSg[lv] ][lv][PID]
+//                lv        : Refinement level of the target patch
+//                PID       : ID of the target patch
+//                Threshold : User-provided threshold for the flag operation, which is loaded from the
+//                            file "Input__Flag_User"
 //
 // Return      :  "true"  if the flag criteria are satisfied
 //                "false" if the flag criteria are not satisfied
 //-------------------------------------------------------------------------------------------------------
-bool Flag_User( const int i, const int j, const int k, const int lv, const int PID, const double Threshold )
+bool Flag_User_Template( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold )
 {
 
    /*
@@ -67,12 +66,11 @@ bool Flag_User( const int i, const int j, const int k, const int lv, const int P
    const double dr[3]     = { Pos[0]-Center[0], Pos[1]-Center[1], Pos[2]-Center[2] };
    const double Radius    = sqrt( dr[0]*dr[0] + dr[1]*dr[1] + dr[2]*dr[2] );
 
-   Flag = Radius < Threshold;
+   Flag = Radius < Threshold[0];
    */
 // ##########################################################################################################
 
 
    return Flag;
 
-} // FUNCTION : Flag_User
-
+} // FUNCTION : Flag_User_Template

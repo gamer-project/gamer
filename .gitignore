@@ -1,4 +1,10 @@
+# Mac
+.DS_Store
+
 *.o
 
 bin/**
 gamer
+GAMER_CompareData
+GAMER_ExtractUniform
+GAMER_ExtractProfile

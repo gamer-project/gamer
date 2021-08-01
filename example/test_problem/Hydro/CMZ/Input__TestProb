@@ -1,0 +1,8 @@
+# problem-specific runtime parameters
+BarredPot_V0               238.        # [km/s]
+BarredPot_q                0.9         # axis ratio
+BarredPot_Rc               0.2         # [kpc]
+BarredPot_Omegabar         40.0        # [km/s/kpc]
+BarredPot_fullBS           0.1         # [Gyr]
+BarredPot_initT            1.2000e4    # [T]
+

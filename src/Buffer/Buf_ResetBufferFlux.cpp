@@ -37,7 +37,7 @@ void Buf_ResetBufferFlux( const int lv )
          for(int v=0; v<NFLUX_TOTAL; v++)
          for(int m=0; m<PATCH_SIZE; m++)
          for(int n=0; n<PATCH_SIZE; n++)
-            FluxPtr[v][m][n] = 0.0;
+            FluxPtr[v][m][n] = (real)0.0;
       }
    }
 

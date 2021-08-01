@@ -1,6 +1,6 @@
 #!/bin/bash
 #PBS -N GAMER
-#PBS -M hyschive@gmail.com
+#PBS -M PUT_YOUR_EMAIL_HERE
 #PBS -l nodes=1:ppn=16:xk
 #PBS -l walltime=8:00:00
 #PBS -m bea

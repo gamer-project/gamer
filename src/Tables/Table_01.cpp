@@ -18,7 +18,8 @@
 //
 // Return      :  w0 || w1 || w2
 //-------------------------------------------------------------------------------------------------------
-int TABLE_01( const int SibIndex, const char dim, const int w0, const int w1, const int w2 )
+template <typename T>
+T TABLE_01( const int SibIndex, const char dim, const T w0, const T w1, const T w2 )
 {
 
    switch ( dim )
@@ -81,3 +82,11 @@ int TABLE_01( const int SibIndex, const char dim, const int w0, const int w1, co
    } // switch ( dim )
 
 } // FUNCTION : TABLE_01
+
+
+// explicit template instantiation
+template float  TABLE_01 <float > ( const int, const char, const float,  const float,  const float  );
+template double TABLE_01 <double> ( const int, const char, const double, const double, const double );
+template int    TABLE_01 <int   > ( const int, const char, const int,    const int,    const int    );
+template long   TABLE_01 <long  > ( const int, const char, const long,   const long,   const long   );
+template bool   TABLE_01 <bool  > ( const int, const char, const bool,   const bool,   const bool   );

@@ -11,6 +11,9 @@ extern double Plummer_Collision_D;
 extern double Plummer_Center[3];
 extern double Plummer_BulkVel[3];
 extern double Plummer_GasMFrac;
+extern double Plummer_ParMFrac;
+extern double Plummer_ExtAccMFrac;
+extern double Plummer_ExtPotMFrac;
 extern int    Plummer_MassProfNBin;
 
 static RandomNumber_t *RNG = NULL;
@@ -97,8 +100,8 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 
       if ( Plummer_Collision )   ParM *= 2.0;
 
-//    rescale particle mass to account for the gas contribution
-      ParM *= 1.0 - Plummer_GasMFrac;
+//    rescale particle mass to account for the contribution from gas and external gravity
+      ParM *= Plummer_ParMFrac;
 
 
 //    construct the mass profile table

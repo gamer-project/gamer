@@ -5,8 +5,6 @@
 
 
 static void SetTargetSibling( int NTSib[], int* TSib_List[] );
-       void SetTargetLocalID( int NTLocalID[], int *TLocalID[] );
-       void SetTargetSibPID0( const int lv, const int PID0, int SibPID0_List[] );
 static void SetSiblingMask( int SibMask_Check[], int SibMask_Clear[], int SibMask_Duplicate[] );
 static void SetReceiveSibling( int* RSib_List[] );
 
@@ -15,12 +13,12 @@ static void SetReceiveSibling( int* RSib_List[] );
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LB_RecordExchangeDataPatchID
-// Description :  Construct the MPI sending and receiving data lists for exchanging both hydro
+// Description :  Construct the MPI sending and receiving data lists for exchanging fluid, magnetic field,
 //                and potential data
 //
 // Note        :  1. LB_RecvH_IDList[] is unsorted --> use LB_RecvH_IDList_Idxtable[] to obtain the correct order
 //                   <--> All other lists are sorted
-//                2. This function will NOT deallocate any fluid/pot arrays allocated previously
+//                2. This function will NOT deallocate any fluid/magnetic/pot arrays allocated previously
 //
 // Parameter   :  Lv          : Target refinement level for recording MPI lists
 //                AfterRefine : Record the difference between old and new MPI lists after grid refinement
@@ -42,7 +40,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
    const int MemUnit_G  = 1 + (NReal+NBuff)/MPI_NRank;   // set arbitrarily
 #  endif
 
-   int  FaPID, FaSibPID, FaSibPID0, SibPID=-1, SibPID0, TRank=-1, SibPID0_List[26], NTLocalID[26], *TLocalID[26];
+   int  FaPID, FaSibPID, FaSibPID0, SibPID=-1, SibPID0, TRank=-1, SibPID0_List[26], NSibPID_Delta[26], *SibPID_Delta[26];
    int  NFaBuff, FaBuff[27], TPID, NTSib[26], *TSib_List[26], Side, RSib, *RSib_List[26], SibIdx, NID, OID;
    int  SibMask_Check[27], SibMask_Clear[27], SibMask_Duplicate[27];
    long SibLBIdx;
@@ -113,11 +111,11 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 #     endif
    } // for (int r=0; r<MPI_NRank; r++)
 
+// get the sibling index differences along different directions
+   TABLE_GetSibPID_Delta( NSibPID_Delta, SibPID_Delta );
+
 // set up the target sibling indices at SonLv
    SetTargetSibling( NTSib, TSib_List );
-
-// set up the target local indices at Lv
-   SetTargetLocalID( NTLocalID, TLocalID );
 
 // set up the bit mask arrays
    SetSiblingMask( SibMask_Check, SibMask_Clear, SibMask_Duplicate );
@@ -138,7 +136,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 // 2.1 sibling patches at Lv (for fluid solver, gravity solver, and estimating time-step by gravity)
    for (int PID0=0; PID0<NReal; PID0+=8)  // loop over all "real" patches at Lv with LocalID == 0
    {
-      SetTargetSibPID0( Lv, PID0, SibPID0_List );
+      TABLE_GetSibPID_Based( Lv, PID0, SibPID0_List );
 
       for (int s=0; s<NSib_F; s++)
       {
@@ -148,12 +146,12 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
          {
             RSib = MirSib[s];    // sibling direction to receive data
 
-            for (int Count=0; Count<NTLocalID[s]; Count++)
+            for (int Count=0; Count<NSibPID_Delta[s]; Count++)
             {
-               SibPID = SibPID0 + TLocalID[s][Count];
+               SibPID = SibPID0 + SibPID_Delta[s][Count];
                SibIdx = SibPID - NReal;
 
-//             2.1.1 hydro
+//             2.1.1 hydro and magnetic field
 //             record sibling indices
                if (  ( SibList_H[SibIdx] & SibMask_Check[RSib] ) == false  )
                {
@@ -163,6 +161,10 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 
 //             allocate memory for the buffer patches that will receive data
                for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][SibPID]->hnew();
+
+#              ifdef MHD
+               for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][SibPID]->mnew();
+#              endif
 
 #              ifdef GRAVITY // so that the XXX_H lists can also be applied to the potential data
                for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][SibPID]->gnew();
@@ -181,7 +183,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
                }
 #              endif
 
-            } // for (int Count=0; Count<NTLocalID[s]; Count++)
+            } // for (int Count=0; Count<NSibPID_Delta[s]; Count++)
          } // if ( SibPID0 >= NReal )
       } // for (int s=0; s<NSib_F; s++)
    } // for (int PID0=0; PID0<NReal; PID0+=8)
@@ -197,7 +199,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
       if ( FaPID == -1 )   Aux_Error( ERROR_INFO, "SonLv %d, SonPID0 %d has no father patch !!\n", SonLv, SonPID0 );
 #     endif
 
-      SetTargetSibPID0( SonLv, SonPID0, SibPID0_List );
+      TABLE_GetSibPID_Based( SonLv, SonPID0, SibPID0_List );
 
       for (int s=0; s<NSib_F; s++)
       {
@@ -248,6 +250,10 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 
 //                allocate memory for the buffer patches that will receive data
                   for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][TPID]->hnew();
+
+#                 ifdef MHD
+                  for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][TPID]->mnew();
+#                 endif
 
 #                 ifdef GRAVITY // so that the XXX_H lists can also be applied to the potential data
                   for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][TPID]->gnew();
@@ -358,7 +364,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 // ============================================================================================================
    for (int t=0; t<NBuff; t++)
    {
-//    3.1 hydro
+//    3.1 hydro and magnetic field
       if ( SibList_H[t] )
       {
          SibPID   = t + NReal;
@@ -414,7 +420,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 
 // 4. get the MPI displacement arrays
 // ============================================================================================================
-// 4.1 hydro
+// 4.1 hydro and magnetic field
    int Send_Disp_H[MPI_NRank], Recv_Disp_H[MPI_NRank], NSend_Total_H, NRecv_Total_H;
 
 // 4.1.1 broadcast the number of elements received from different ranks
@@ -455,7 +461,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 
 // 5. sort the recv list
 // ============================================================================================================
-// 5.1 hydro
+// 5.1 hydro and magnetic field
 // 5.1.1 allocate memory
    if ( LB_RecvH_IDList_IdxTable[0] != NULL )   delete [] LB_RecvH_IDList_IdxTable[0];
    if ( LB_RecvH_SibDiffList    [0] != NULL )   delete [] LB_RecvH_SibDiffList    [0];
@@ -668,7 +674,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 
 // 6. broadcast the recv list to all other ranks
 // ============================================================================================================
-// 6.1 hydro
+// 6.1 hydro and magnetic field
    int  *SendBuf_SibList_H     = LB_RecvH_SibList    [0];
    int  *SendBuf_SibDiffList_H = LB_RecvH_SibDiffList[0];
    long *SendBuf_LBIdx_H       = LB_RecvH_LBIdxList  [0];
@@ -711,7 +717,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 
 // 7. construct the send list
 // ============================================================================================================
-// 7.1 hydro
+// 7.1 hydro and magnetic field
    for (int r=0; r<MPI_NRank; r++)
    {
 //    7.1.1 allocate the matching array
@@ -769,9 +775,9 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 // free memory
    for (int s=0; s<26; s++)
    {
-      delete [] TSib_List[s];
-      delete [] RSib_List[s];
-      delete [] TLocalID [s];
+      delete [] TSib_List   [s];
+      delete [] RSib_List   [s];
+      delete [] SibPID_Delta[s];
    }
 
    free( SibList_H );
@@ -791,149 +797,6 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 #  endif
 
 } // FUNCTION : LB_RecordExchangeDataPatchID
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  SetTargetLocalID
-// Description :  Set the target local indices for preparing ghost-zone data at the fine-grid level
-//
-// Note        :  1. Faster than using TABLE_03() and TABLE_04()
-//                2. TLocalID needs to be deallocated manually
-//
-// Parameter   :  NTLocalID : Number of target local indices along different sibling directions
-//                TLocalID  : Target local indices along different sibling directions
-//-------------------------------------------------------------------------------------------------------
-void SetTargetLocalID( int NTLocalID[], int *TLocalID[] )
-{
-
-   for (int s= 0; s< 6; s++)  NTLocalID[s] = 4;
-   for (int s= 6; s<18; s++)  NTLocalID[s] = 2;
-   for (int s=18; s<26; s++)  NTLocalID[s] = 1;
-
-   for (int s=0; s<26; s++)   TLocalID[s] = new int [ NTLocalID[s] ];
-
-   TLocalID[ 0][0] = 0;
-   TLocalID[ 0][1] = 3;
-   TLocalID[ 0][2] = 5;
-   TLocalID[ 0][3] = 6;
-
-   TLocalID[ 1][0] = 0;
-   TLocalID[ 1][1] = 2;
-   TLocalID[ 1][2] = 3;
-   TLocalID[ 1][3] = 5;
-
-   TLocalID[ 2][0] = 0;
-   TLocalID[ 2][1] = 2;
-   TLocalID[ 2][2] = 3;
-   TLocalID[ 2][3] = 5;
-
-   TLocalID[ 3][0] = 0;
-   TLocalID[ 3][1] = 1;
-   TLocalID[ 3][2] = 3;
-   TLocalID[ 3][3] = 6;
-
-   TLocalID[ 4][0] = 0;
-   TLocalID[ 4][1] = 2;
-   TLocalID[ 4][2] = 3;
-   TLocalID[ 4][3] = 4;
-
-   TLocalID[ 5][0] = 0;
-   TLocalID[ 5][1] = 1;
-   TLocalID[ 5][2] = 2;
-   TLocalID[ 5][3] = 4;
-
-   TLocalID[ 6][0] = 0;
-   TLocalID[ 6][1] = 3;
-
-   TLocalID[ 7][0] = 0;
-   TLocalID[ 7][1] = 3;
-
-   TLocalID[ 8][0] = 0;
-   TLocalID[ 8][1] = 5;
-
-   TLocalID[ 9][0] = 0;
-   TLocalID[ 9][1] = 3;
-
-   TLocalID[10][0] = 0;
-   TLocalID[10][1] = 2;
-
-   TLocalID[11][0] = 0;
-   TLocalID[11][1] = 3;
-
-   TLocalID[12][0] = 0;
-   TLocalID[12][1] = 2;
-
-   TLocalID[13][0] = 0;
-   TLocalID[13][1] = 1;
-
-   TLocalID[14][0] = 0;
-   TLocalID[14][1] = 1;
-
-   TLocalID[15][0] = 0;
-   TLocalID[15][1] = 3;
-
-   TLocalID[16][0] = 0;
-   TLocalID[16][1] = 2;
-
-   TLocalID[17][0] = 0;
-   TLocalID[17][1] = 2;
-
-   TLocalID[18][0] = 0;
-   TLocalID[19][0] = 0;
-   TLocalID[20][0] = 0;
-   TLocalID[21][0] = 0;
-   TLocalID[22][0] = 0;
-   TLocalID[23][0] = 0;
-   TLocalID[24][0] = 0;
-   TLocalID[25][0] = 0;
-
-} // FUNCTION : SetTargetLocalID
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  SetTargetSibPID0
-// Description :  Set the starting patch indices of the target sibling patches for the input patch group
-//
-// Note        :  This function can be used to replace Table_02() in Prepare_PatchData()
-//
-// Parameter   :  lv           : Target refinement level
-//                PID0         : Patch index with LocalID==0 in the target patch group
-//                SibPID0_List : Array storing the patch indices of the sibling patches along different
-//                               directions
-//-------------------------------------------------------------------------------------------------------
-void SetTargetSibPID0( const int lv, const int PID0, int SibPID0_List[] )
-{
-
-   SibPID0_List[ 0] = amr->patch[0][lv][PID0  ]->sibling[ 0];
-   SibPID0_List[ 1] = amr->patch[0][lv][PID0+1]->sibling[ 1];
-   SibPID0_List[ 2] = amr->patch[0][lv][PID0  ]->sibling[ 2];
-   SibPID0_List[ 3] = amr->patch[0][lv][PID0+2]->sibling[ 3];
-   SibPID0_List[ 4] = amr->patch[0][lv][PID0  ]->sibling[ 4];
-   SibPID0_List[ 5] = amr->patch[0][lv][PID0+3]->sibling[ 5];
-   SibPID0_List[ 6] = amr->patch[0][lv][PID0  ]->sibling[ 6];
-   SibPID0_List[ 7] = amr->patch[0][lv][PID0+1]->sibling[ 7];
-   SibPID0_List[ 8] = amr->patch[0][lv][PID0+2]->sibling[ 8];
-   SibPID0_List[ 9] = amr->patch[0][lv][PID0+4]->sibling[ 9];
-   SibPID0_List[10] = amr->patch[0][lv][PID0  ]->sibling[10];
-   SibPID0_List[11] = amr->patch[0][lv][PID0+2]->sibling[11];
-   SibPID0_List[12] = amr->patch[0][lv][PID0+3]->sibling[12];
-   SibPID0_List[13] = amr->patch[0][lv][PID0+5]->sibling[13];
-   SibPID0_List[14] = amr->patch[0][lv][PID0  ]->sibling[14];
-   SibPID0_List[15] = amr->patch[0][lv][PID0+3]->sibling[15];
-   SibPID0_List[16] = amr->patch[0][lv][PID0+1]->sibling[16];
-   SibPID0_List[17] = amr->patch[0][lv][PID0+6]->sibling[17];
-   SibPID0_List[18] = amr->patch[0][lv][PID0  ]->sibling[18];
-   SibPID0_List[19] = amr->patch[0][lv][PID0+1]->sibling[19];
-   SibPID0_List[20] = amr->patch[0][lv][PID0+2]->sibling[20];
-   SibPID0_List[21] = amr->patch[0][lv][PID0+4]->sibling[21];
-   SibPID0_List[22] = amr->patch[0][lv][PID0+3]->sibling[22];
-   SibPID0_List[23] = amr->patch[0][lv][PID0+6]->sibling[23];
-   SibPID0_List[24] = amr->patch[0][lv][PID0+5]->sibling[24];
-   SibPID0_List[25] = amr->patch[0][lv][PID0+7]->sibling[25];
-
-} // FUNCTION : SetTargetSibPID0
 
 
 

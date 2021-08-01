@@ -54,9 +54,15 @@ struct KeyInfo_t
    int    BoxScale[3];
    int    NPatch   [NLEVEL];
    int    CellScale[NLEVEL];        // amr->scale[lv]
+#  if ( MODEL == HYDRO )
+   int    Magnetohydrodynamics;
+   int    CosmicRay;
+#  endif
 
    long   Step;
    long   AdvanceCounter[NLEVEL];
+   int    NFieldStored;             // number of grid fields to be stored (excluding B field)
+   int    NMagStored;               // NCOMP_MAG (declare it even when MHD is off)
 #  ifdef PARTICLE
    long   Par_NPar;                 // amr->Par->NPar_Active_AllRank
    int    Par_NAttStored;           // PAR_NATT_STORED
@@ -72,6 +78,9 @@ struct KeyInfo_t
 
    char  *CodeVersion;
    char  *DumpWallTime;
+   char  *GitBranch;
+   char  *GitCommit;
+   long   UniqueDataID;
 
 }; // struct KeyInfo_t
 
@@ -125,9 +134,10 @@ struct Makefile_t
    int RSolver;
 #  endif
    int DualEnergy;
-
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
+   int Magnetohydrodynamics;
+   int CosmicRay;
+   int EoS;
+   int BarotropicEoS;
 
 #  elif ( MODEL == ELBDM )
    int ConserveMass;
@@ -162,6 +172,9 @@ struct SymConst_t
    int    PatchSize;
    int    Flu_NIn;
    int    Flu_NOut;
+   int    Flu_NIn_T;
+   int    Flu_NIn_S;
+   int    Flu_NOut_S;
    int    NFluxFluid;
    int    NFluxPassive;
    int    Flu_GhostSize;
@@ -175,6 +188,7 @@ struct SymConst_t
 
    double TinyNumber;
    double HugeNumber;
+   double MaxError;
 
 
 #  ifdef GRAVITY
@@ -187,14 +201,17 @@ struct SymConst_t
    int    Rho_Nxt;
 
 #  ifdef UNSPLIT_GRAVITY
-   int    USG_GhostSize;
+   int    USG_GhostSizeF;
+   int    USG_GhostSizeG;
    int    USG_NxtF;
    int    USG_NxtG;
 #  endif
 
-   int    Gra_BlockSize_z;
+   int    ExtPot_BlockSize;
+   int    Gra_BlockSize;
    int    ExtPotNAuxMax;
    int    ExtAccNAuxMax;
+   int    ExtPotNGeneMax;
 
 #  if   ( POT_SCHEME == SOR )
    int    Pot_BlockSize_z;
@@ -222,33 +239,37 @@ struct SymConst_t
 #  endif
 
 
+   int    BitRep_Flux;
+#  ifdef MHD
+   int    BitRep_Electric;
+#  endif
+
+
 #  if   ( MODEL == HYDRO )
    int    Flu_BlockSize_x;
    int    Flu_BlockSize_y;
    int    CheckNegativeInFluid;
    int    CharReconstruction;
+   int    LR_Eint;
    int    CheckIntermediate;
    int    HLL_NoRefState;
    int    HLL_IncludeAllWaves;
-   int    WAF_Dissipate;
-
+   int    HLLC_WaveSpeed;
+   int    HLLE_WaveSpeed;
+#  ifdef MHD
+   int    HLLD_WaveSpeed;
+#  endif
 #  ifdef N_FC_VAR
    int    N_FC_Var;
 #  endif
-
 #  ifdef N_SLOPE_PPM
    int    N_Slope_PPM;
 #  endif
-
-#  ifdef MAX_ERROR
-   double MaxError;
+#  ifdef MHD
+   int    EulerY;
 #  endif
-
-#  elif ( MODEL == MHD )
-   int    Flu_BlockSize_x;
-   int    Flu_BlockSize_y;
-#  warning : WAIT MHD !!!
-
+   int    EoSNAuxMax;
+   int    EoSNTableMax;
 
 #  elif  ( MODEL == ELBDM )
    int    Flu_BlockSize_x;
@@ -258,12 +279,27 @@ struct SymConst_t
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
 
+
    int    dt_Flu_BlockSize;
    int    dt_Flu_UseShuffle;
 #  ifdef GRAVITY
-   int    dt_Gra_BlockSize_z;
+   int    dt_Gra_BlockSize;
    int    dt_Gra_UseShuffle;
 #  endif
+
+   int    Src_BlockSize;
+   int    Src_GhostSize;
+   int    Src_Nxt;
+   int    Src_NAuxDlep;
+   int    Src_DlepProfNVar;
+   int    Src_DlepProfNBinMax;
+   int    Src_NAuxUser;
+
+   int    Der_GhostSize;
+   int    Der_Nxt;
+   int    Der_NOut_Max;
+
+   int    NFieldStoredMax;
 
 }; // struct SymConst_t
 
@@ -300,6 +336,9 @@ struct InputPara_t
    double Unit_D;
    double Unit_E;
    double Unit_P;
+#  ifdef MHD
+   double Unit_B;
+#  endif
 
 // boundary condition
    int    Opt__BC_Flu[6];
@@ -330,6 +369,7 @@ struct InputPara_t
 #  endif
 
 // time-step determination
+   double Dt__Max;
    double Dt__Fluid;
    double Dt__FluidInit;
 #  ifdef GRAVITY
@@ -367,6 +407,9 @@ struct InputPara_t
    int    Opt__Flag_PresGradient;
    int    Opt__Flag_Vorticity;
    int    Opt__Flag_Jeans;
+#  ifdef MHD
+   int    Opt__Flag_Current;
+#  endif
 #  endif
 #  if ( MODEL == ELBDM )
    int    Opt__Flag_EngyDensity;
@@ -379,6 +422,7 @@ struct InputPara_t
 #  endif
    int    Opt__Flag_LohnerForm;
    int    Opt__Flag_User;
+   int    Opt__Flag_User_Num;
    int    Opt__Flag_Region;
 #  ifdef PARTICLE
    int    Opt__Flag_NParPatch;
@@ -407,10 +451,9 @@ struct InputPara_t
 #  if ( MODEL == HYDRO )
    double Gamma;
    double MolecularWeight;
+   double IsoTemp;
    double MinMod_Coeff;
-   double EP_Coeff;
    int    Opt__LR_Limiter;
-   int    Opt__WAF_Limiter;
    int    Opt__1stFluxCorr;
    int    Opt__1stFluxCorrScheme;
 #  endif
@@ -426,23 +469,36 @@ struct InputPara_t
    int    ELBDM_Taylor3_Auto;
 #  endif
 
-// fluid solvers in both HYDRO/MHD/ELBDM
+// fluid solvers in different models
    int    Flu_GPU_NPGroup;
    int    GPU_NStream;
    int    Opt__FixUp_Flux;
+#  ifdef MHD
+   int    Opt__FixUp_Electric;
+#  endif
    int    Opt__FixUp_Restrict;
    int    Opt__CorrAfterAllSync;
    int    Opt__NormalizePassive;
    int    NormalizePassive_NVar;
    int    NormalizePassive_VarIdx[NCOMP_PASSIVE];
-   char  *FieldLabel[NCOMP_TOTAL];
+   int    Opt__IntFracPassive_LR;
+   int    IntFracPassive_NVar;
+   int    IntFracPassive_VarIdx[NCOMP_PASSIVE];
+   char  *FieldLabel[NFIELD_STORED_MAX];
+#  ifdef MHD
+   char  *MagLabel[NCOMP_MAG];
+#  endif
    int    Opt__OverlapMPI;
    int    Opt__ResetFluid;
-#  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+#  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    double MinDens;
 #  endif
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( MODEL == HYDRO )
    double MinPres;
+   double MinEint;
+   double MinTemp;
+   int    Opt__CheckPresAfterFlu;
+   int    Opt__LastResortFloor;
    int    JeansMinPres;
    int    JeansMinPres_Level;
    int    JeansMinPres_NCell;
@@ -451,7 +507,7 @@ struct InputPara_t
    double DualEnergySwitch;
 #  endif
 
-// self-gravity
+// gravity
 #  ifdef GRAVITY
    double NewtonG;
 #  if   ( POT_SCHEME == SOR )
@@ -466,9 +522,21 @@ struct InputPara_t
 #  endif
    int    Pot_GPU_NPGroup;
    int    Opt__GraP5Gradient;
-   int    Opt__GravityType;
-   int    Opt__ExternalPot;
-#  endif
+   int    Opt__SelfGravity;
+   int    Opt__ExtAcc;
+   int    Opt__ExtPot;
+   char  *ExtPotTable_Name;
+   int    ExtPotTable_NPoint[3];
+   double ExtPotTable_dh[3];
+   double ExtPotTable_EdgeL[3];
+   int    ExtPotTable_Float8;
+   int    Opt__GravityExtraMass;
+#  endif // #ifdef GRAVITY
+
+// source terms
+   int    Src_Deleptonization;
+   int    Src_User;
+   int    Src_GPU_NPGroup;
 
 // Grackle
 #  ifdef SUPPORT_GRACKLE
@@ -482,6 +550,9 @@ struct InputPara_t
    int    Grackle_PE_Heating;
    double Grackle_PE_HeatingRate;
    char  *Grackle_CloudyTable;
+   int    Grackle_ThreeBodyRate;
+   int    Grackle_CIE_Cooling;
+   int    Grackle_H2_OpaApprox;
    int    Che_GPU_NPGroup;
 #  endif
 
@@ -502,15 +573,20 @@ struct InputPara_t
    int    RestartLoadNRank;
    int    Opt__RestartReset;
    int    Opt__UM_IC_Level;
+   int    Opt__UM_IC_NLevel;
    int    Opt__UM_IC_NVar;
    int    Opt__UM_IC_Format;
    int    Opt__UM_IC_Downgrade;
    int    Opt__UM_IC_Refine;
    int    Opt__UM_IC_LoadNRank;
+   int    UM_IC_RefineRegion[NLEVEL-1][6];
    int    Opt__InitRestrict;
    int    Opt__InitGridWithOMP;
    int    Opt__GPUID_Select;
    int    Init_Subsampling_NCell;
+#  ifdef MHD
+   int    Opt__InitBFieldByFile;
+#  endif
 
 // interpolation schemes
    int    Opt__Int_Time;
@@ -518,16 +594,19 @@ struct InputPara_t
    int    Opt__Int_Phase;
 #  endif
    int    Opt__Flu_IntScheme;
+   int    Opt__RefFlu_IntScheme;
+#  ifdef MHD
+   int    Opt__Mag_IntScheme;
+   int    Opt__RefMag_IntScheme;
+#  endif
 #  ifdef GRAVITY
    int    Opt__Pot_IntScheme;
    int    Opt__Rho_IntScheme;
    int    Opt__Gra_IntScheme;
-#  endif
-   int    Opt__RefFlu_IntScheme;
-#  ifdef GRAVITY
    int    Opt__RefPot_IntScheme;
 #  endif
    double IntMonoCoeff;
+   int    IntOppSign0thOrder;
 
 // data dump
    int    Opt__Output_Total;
@@ -538,12 +617,26 @@ struct InputPara_t
 #  endif
    int    Opt__Output_BasePS;
    int    Opt__Output_Base;
+#  ifdef MHD
+   int    Opt__Output_CC_Mag;
+#  endif
 #  ifdef GRAVITY
    int    Opt__Output_Pot;
 #  endif
 #  ifdef PARTICLE
    int    Opt__Output_ParDens;
 #  endif
+#  if ( MODEL == HYDRO )
+   int    Opt__Output_Pres;
+   int    Opt__Output_Temp;
+   int    Opt__Output_Cs;
+   int    Opt__Output_DivVel;
+   int    Opt__Output_Mach;
+#  ifdef MHD
+   int    Opt__Output_DivMag;
+#  endif
+#  endif // #if ( MODEL == HYDRO )
+   int    Opt__Output_UserField;
    int    Opt__Output_Mode;
    int    Opt__Output_Step;
    double Opt__Output_Dt;
@@ -557,6 +650,8 @@ struct InputPara_t
    int    Opt__TimingBarrier;
    int    Opt__TimingBalance;
    int    Opt__TimingMPI;
+   int    Opt__RecordNote;
+   int    Opt__RecordUnphy;
    int    Opt__RecordMemory;
    int    Opt__RecordPerformance;
    int    Opt__ManualControl;
@@ -579,16 +674,23 @@ struct InputPara_t
 #  ifdef PARTICLE
    int    Opt__Ck_Particle;
 #  endif
+#  ifdef MHD
+   int    Opt__Ck_InterfaceB;
+   int    Opt__Ck_DivergenceB;
+#  endif
 
 // flag tables
    double FlagTable_Rho         [NLEVEL-1];
    double FlagTable_RhoGradient [NLEVEL-1];
    double FlagTable_Lohner      [NLEVEL-1][4];
-   double FlagTable_User        [NLEVEL-1];
+   hvl_t  FlagTable_User        [NLEVEL-1];
 #  if   ( MODEL == HYDRO )
    double FlagTable_PresGradient[NLEVEL-1];
    double FlagTable_Vorticity   [NLEVEL-1];
    double FlagTable_Jeans       [NLEVEL-1];
+#  ifdef MHD
+   double FlagTable_Current     [NLEVEL-1];
+#  endif
 #  elif ( MODEL == ELBDM )
    double FlagTable_EngyDensity [NLEVEL-1][2];
 #  endif
@@ -597,6 +699,13 @@ struct InputPara_t
    int    FlagTable_NParCell    [NLEVEL-1];
    double FlagTable_ParMassCell [NLEVEL-1];
 #  endif
+
+// user-defined derived fields
+// --> always allocate DER_NOUT_MAX labels and units but only record UserDerField_Num of them in HDF5
+// --> more convenient since storing dynamic arrays such as (*UserDerField_Label)[MAX_STRING] in HDF5 can be tricky
+   int    UserDerField_Num;
+   char  *UserDerField_Label[DER_NOUT_MAX];
+   char  *UserDerField_Unit [DER_NOUT_MAX];
 
 }; // struct InputPara_t
 
@@ -608,7 +717,7 @@ struct InputPara_t
 //
 // Note        :  1. Synchronization is accomplished by first opening the target file with the "appending" mode
 //                   and then close it immediately
-//                3. It's an inline function
+//                2. It's an inline function
 //
 // Parameter   :  FileName : Target file name
 //-------------------------------------------------------------------------------------------------------

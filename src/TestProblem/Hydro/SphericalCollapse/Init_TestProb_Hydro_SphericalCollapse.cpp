@@ -47,13 +47,19 @@ void Validate()
    Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
 #  endif
 
+#  ifdef GRAVITY
+   if ( !OPT__SELF_GRAVITY )
+   Aux_Error( ERROR_INFO, "must enable OPT__SELF_GRAVITY !!\n" );
+
+   if ( OPT__EXT_ACC )
+   Aux_Error( ERROR_INFO, "must disable OPT__EXT_ACC !!\n" );
+
+   if ( OPT__EXT_POT )
+   Aux_Error( ERROR_INFO, "must disable OPT__EXT_POT !!\n" );
+#  endif
+
    if ( MPI_Rank == 0 )
    {
-#     ifdef GRAVITY
-      if ( OPT__GRAVITY_TYPE != GRAVITY_SELF )
-         Aux_Message( stderr, "WARNING : OPT__GRAVITY_TYPE != GRAVITY_SELF ??\n" );
-#     endif
-
 #     ifndef DUAL_ENERGY
          Aux_Message( stderr, "WARNING : it's recommended to enable DUAL_ENERGY for this test\n" );
 #     endif
@@ -232,18 +238,7 @@ void Init_TestProb_Hydro_SphericalCollapse()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr   = SetGridIC;
-   Output_User_Ptr          = NULL;
-   Flag_User_Ptr            = NULL;
-   Mis_GetTimeStep_User_Ptr = NULL;
-   Aux_Record_User_Ptr      = NULL;
-   BC_User_Ptr              = NULL;
-   Flu_ResetByUser_Func_Ptr = NULL;
-   End_User_Ptr             = NULL;
-#  ifdef GRAVITY
-   Init_ExternalAcc_Ptr     = NULL;
-   Init_ExternalPot_Ptr     = NULL;
-#  endif
+   Init_Function_User_Ptr = SetGridIC;
 #  endif // #if ( MODEL == HYDRO )
 
 

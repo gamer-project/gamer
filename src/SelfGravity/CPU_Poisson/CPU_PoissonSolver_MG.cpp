@@ -13,7 +13,7 @@ static void Smoothing( real *Sol_1D, const real *RHS_1D, const real dh, const in
 static void ComputeDefect( const real *Sol_1D, const real *RHS_1D, real *Def_1D, const real dh,
                            const int NGrid, const bool EstimateError, real &Error );
 static void Restrict( const real *FData_1D, real *CData_1D, const int NGrid_F, const int NGrid_C );
-static void Prolongate_and_Correct( const real *CData_1D, real *FData_1D, const int NGrid_C, 
+static void Prolongate_and_Correct( const real *CData_1D, real *FData_1D, const int NGrid_C,
                                     const int NGrid_F );
 
 
@@ -25,7 +25,7 @@ static void Prolongate_and_Correct( const real *CData_1D, real *FData_1D, const 
 //
 // Note        :  Reference : Numerical Recipes, Chapter 20.6
 //
-// Parameter   :  Rho_Array         : Array to store the input density 
+// Parameter   :  Rho_Array         : Array to store the input density
 //                Pot_Array_In      : Array to store the input "coarse-grid" potential for interpolation
 //                Pot_Array_Out     : Array to store the output potential
 //                NPatchGroup       : Number of patch groups evaluated at a time
@@ -37,8 +37,8 @@ static void Prolongate_and_Correct( const real *CData_1D, real *FData_1D, const 
 //                Poi_Coeff         : Coefficient in front of the RHS in the Poisson eq.
 //                IntScheme         : Interpolation scheme for potential
 //                                    --> currently supported schemes include
-//                                        INT_CQUAD : conservative quadratic interpolation 
-//                                        INT_QUAD  : quadratic interpolation 
+//                                        INT_CQUAD : conservative quadratic interpolation
+//                                        INT_QUAD  : quadratic interpolation
 //-------------------------------------------------------------------------------------------------------
 void CPU_PoissonSolver_MG( const real Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT],
                            const real Pot_Array_In [][POT_NXT][POT_NXT][POT_NXT],
@@ -79,7 +79,7 @@ void CPU_PoissonSolver_MG( const real Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT]
    {
       case 3:  NBottom_Smooth = 1;  break;
       case 4:  NBottom_Smooth = 7;  break;
-      default: 
+      default:
          Aux_Error( ERROR_INFO, "NGrid at the bottom level != 3 or 4 --> Please specify NBottom_Smooth !!\n" );
    }
 
@@ -108,7 +108,7 @@ void CPU_PoissonSolver_MG( const real Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT]
 
 //    initialize Def as zero (actually we only need to set boundary values as zero)
       for (int Lv=0; Lv<=BottomLv; Lv++)
-      for (int t=0; t<NGrid[Lv]*NGrid[Lv]*NGrid[Lv]; t++)   
+      for (int t=0; t<NGrid[Lv]*NGrid[Lv]*NGrid[Lv]; t++)
          Def[Lv][t] = (real)0.0;
 
 
@@ -327,7 +327,7 @@ void CPU_PoissonSolver_MG( const real Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT]
          if ( Error > Tolerated_Error )
          {
             Aux_Message( stderr, "WARNING : Rank = %2d, Patch %6d exceeds the maximum tolerated error ",
-                         MPI_Rank, P );      
+                         MPI_Rank, P );
             Aux_Message( stderr, "(error = %13.7e)\n", Error );
          }
 
@@ -383,7 +383,7 @@ void Smoothing( real *Sol_1D, const real *RHS_1D, const real dh, const int NGrid
    const real One_Six = (real)1.0/(real)6.0;
 
    int i_start, i_start_pass, i_start_k;     // i_start_(pass,k) : record the i_start in the (pass,k) loop
-   int ip, jp, kp, im, jm, km; 
+   int ip, jp, kp, im, jm, km;
 
 // typecasting to 3D arrays
          real (*Sol)[NGrid][NGrid] = ( real(*)[NGrid][NGrid] )Sol_1D;
@@ -398,20 +398,20 @@ void Smoothing( real *Sol_1D, const real *RHS_1D, const real dh, const int NGrid
       i_start_k = i_start_pass;
 
       for (int k=1; k<NGrid-1; k++)
-      {  
+      {
          i_start = i_start_k;
          kp      = k+1;
          km      = k-1;
 
          for (int j=1; j<NGrid-1; j++)
-         { 
-            jp = j+1; 
-            jm = j-1; 
+         {
+            jp = j+1;
+            jm = j-1;
 
             for (int i=i_start; i<NGrid-1; i+=2)
-            { 
-               ip = i+1; 
-               im = i-1; 
+            {
+               ip = i+1;
+               im = i-1;
 
 //             update solution
                Sol[k][j][i] = One_Six*(   Sol[kp][j ][i ] + Sol[km][j ][i ]
@@ -421,7 +421,7 @@ void Smoothing( real *Sol_1D, const real *RHS_1D, const real dh, const int NGrid
             i_start = 3 - i_start;
          } // j
          i_start_k = 3 - i_start_k;
-      } // k 
+      } // k
       i_start_pass = 3 - i_start_pass;
    } // for (int pass=0; pass<2; pass++)
 
@@ -504,12 +504,12 @@ void ComputeDefect( const real *Sol_1D, const real *RHS_1D, real *Def_1D, const 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Restrict
-// Description :  Restrict the input fine-grid data to get the coarse-grid data 
+// Description :  Restrict the input fine-grid data to get the coarse-grid data
 //
 // Note        :  1. It is assumed that the input arrays follow the "finite-difference" fashion, in which the data
 //                   are defined in the cell intersections instead of cell averages
 //                   --> N^3 cells define a 3D grid with the size equal to (N-1)^3
-//                2. Fine-grid and coarse-grid data at boundaries are assumed to be zero (because defect at 
+//                2. Fine-grid and coarse-grid data at boundaries are assumed to be zero (because defect at
 //                   boundaries are always zero)
 //
 // Parameter   :  FData_1D : 1D array storing the input fine-grid data

@@ -12,9 +12,13 @@
 // *****************************************************************
 
 
-// include "Macro.h" and "Typedef" here since the header "GAMER.h" is NOT included in GPU solvers
-#include "Macro.h"
-#include "Typedef.h"
+// include "Macro.h" and "Typedef.h" here since the header "GAMER.h" is NOT included in GPU solvers
+#ifdef __CUDACC__
+# include "Macro.h"
+# include "Typedef.h"
+#else
+# include "GAMER.h"
+#endif
 
 
 // allow GPU to output messages in the debug mode
@@ -88,6 +92,18 @@
 #        else
 #        define POT_BLOCK_SIZE_Z      4      // not optimized yet
 #        endif
+#     elif ( GPU_ARCH == TURING )
+#        ifdef FLOAT8
+#        define POT_BLOCK_SIZE_Z      2      // not optimized yet
+#        else
+#        define POT_BLOCK_SIZE_Z      4      // not optimized yet
+#        endif
+#     elif ( GPU_ARCH == AMPERE )
+#        ifdef FLOAT8
+#        define POT_BLOCK_SIZE_Z      2      // not optimized yet
+#        else
+#        define POT_BLOCK_SIZE_Z      4      // not optimized yet
+#        endif
 #     else
 #        define POT_BLOCK_SIZE_Z      NULL_INT
 #        ifdef GPU
@@ -111,9 +127,10 @@
 #  if ( POT_GHOST_SIZE == 5 )
 // use shuffle reduction
 // --> only work for POT_GHOST_SIZE == 5 since # threads must be a multiple of warpSize
-// --> although strickly speaking the shuffle functions do NOT work for double precision, but experiments
+// --> although strictly speaking the shuffle functions do NOT work for double precision, but experiments
 //     show that residual_sum += (float)residual, where residual_sum is double, gives acceptable accuracy
-#  if ( GPU_ARCH == KEPLER  ||  GPU_ARCH == MAXWELL  ||  GPU_ARCH == PASCAL  ||  GPU_ARCH == VOLTA )
+#  if ( GPU_ARCH == KEPLER  ||  GPU_ARCH == MAXWELL  ||  GPU_ARCH == PASCAL  ||  GPU_ARCH == VOLTA  ||  \
+        GPU_ARCH == TURING  ||  GPU_ARCH == AMPERE )
 #     define SOR_USE_SHUFFLE
 #  endif
 
@@ -158,29 +175,31 @@
 #endif // POT_SCHEME
 
 
-// blockDim.z for the GPU Gravity solver
-#define GRA_BLOCK_SIZE_Z            4
+
+// blockDim.x for the GPU external potential solver
+#define EXTPOT_BLOCK_SIZE           256
+
+
+// blockDim.x for the GPU Gravity solver
+#define GRA_BLOCK_SIZE              256
 
 
 // dt solver for gravity
-#define DT_GRA_BLOCK_SIZE_Z         4
+#define DT_GRA_BLOCK_SIZE           256
 
 // use shuffle reduction in the KEPLER and later GPUs
-#if ( GPU_ARCH == KEPLER  ||  GPU_ARCH == MAXWELL  ||  GPU_ARCH == PASCAL  ||  GPU_ARCH == VOLTA )
+#if ( GPU_ARCH == KEPLER  ||  GPU_ARCH == MAXWELL  ||  GPU_ARCH == PASCAL  ||  GPU_ARCH == VOLTA  ||  \
+      GPU_ARCH == TURING  ||  GPU_ARCH == AMPERE )
 #   define DT_GRA_USE_SHUFFLE
 #endif
-
-
-// maximum size of the arrays ExtPot_AuxArray and ExtAcc_AuxArray
-#define EXT_POT_NAUX_MAX            10
-#define EXT_ACC_NAUX_MAX            10
 
 
 // warp size (which must be the same as the CUDA predefined constant "warpSize")
 // --> please refer to https://en.wikipedia.org/wiki/CUDA#Version_features_and_specifications
 //     for information on warp size
 #ifdef __CUDACC__
-#if ( GPU_ARCH == FERMI  ||  GPU_ARCH == KEPLER  ||  GPU_ARCH == MAXWELL  ||  GPU_ARCH == PASCAL  ||  GPU_ARCH == VOLTA )
+#if ( GPU_ARCH == FERMI  ||  GPU_ARCH == KEPLER  ||  GPU_ARCH == MAXWELL  ||  GPU_ARCH == PASCAL  ||  GPU_ARCH == VOLTA  ||  \
+      GPU_ARCH == TURING  ||  GPU_ARCH == AMPERE )
 // CUFLU.h will define WARP_SIZE as well
 #  ifndef WARP_SIZE
 #  define WARP_SIZE 32
@@ -189,6 +208,28 @@
 #  error : UNKNOWN GPU_ARCH !!
 #endif
 #endif // #ifdef __CUDACC__
+
+
+
+// #########################
+// ## CPU/GPU integration ##
+// #########################
+
+// GPU device function specifier
+#ifdef __CUDACC__
+# define GPU_DEVICE          __forceinline__ __device__
+# define GPU_DEVICE_NOINLINE    __noinline__ __device__
+#else
+# define GPU_DEVICE
+# define GPU_DEVICE_NOINLINE
+#endif
+
+// unified CPU/GPU loop
+#ifdef __CUDACC__
+# define CGPU_LOOP( var, niter )    for (int (var)=threadIdx.x; (var)<(niter); (var)+=blockDim.x)
+#else
+# define CGPU_LOOP( var, niter )    for (int (var)=0;           (var)<(niter); (var)++          )
+#endif
 
 
 

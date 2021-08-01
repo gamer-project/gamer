@@ -83,15 +83,18 @@ void Grackle_Init()
 
 
 // set chemistry by accessing "grackle_data"
-   grackle_data->use_grackle                = GRACKLE_ACTIVATE;
-   grackle_data->with_radiative_cooling     = GRACKLE_COOLING;
-   grackle_data->primordial_chemistry       = GRACKLE_PRIMORDIAL;
-   grackle_data->metal_cooling              = GRACKLE_METAL;
-   grackle_data->UVbackground               = GRACKLE_UV;
-   grackle_data->cmb_temperature_floor      = GRACKLE_CMB_FLOOR;
-   grackle_data->photoelectric_heating      = GRACKLE_PE_HEATING;
-   grackle_data->photoelectric_heating_rate = GRACKLE_PE_HEATING_RATE;
-   grackle_data->grackle_data_file          = GRACKLE_CLOUDY_TABLE;
+   grackle_data->use_grackle                    = GRACKLE_ACTIVATE;
+   grackle_data->with_radiative_cooling         = GRACKLE_COOLING;
+   grackle_data->primordial_chemistry           = GRACKLE_PRIMORDIAL;
+   grackle_data->metal_cooling                  = GRACKLE_METAL;
+   grackle_data->UVbackground                   = GRACKLE_UV;
+   grackle_data->cmb_temperature_floor          = GRACKLE_CMB_FLOOR;
+   grackle_data->photoelectric_heating          = GRACKLE_PE_HEATING;
+   grackle_data->photoelectric_heating_rate     = GRACKLE_PE_HEATING_RATE;
+   grackle_data->grackle_data_file              = GRACKLE_CLOUDY_TABLE;
+   grackle_data->three_body_rate                = GRACKLE_THREE_BODY_RATE;
+   grackle_data->cie_cooling                    = GRACKLE_CIE_COOLING;
+   grackle_data->h2_optical_depth_approximation = GRACKLE_H2_OPA_APPROX;
 
 #  ifdef OPENMP
 // currently we adopt the OpenMP implementation in Grackle directly, which applies the parallelization to
@@ -104,9 +107,6 @@ void Grackle_Init()
 
 #  if ( MODEL == HYDRO )
    grackle_data->Gamma                      = GAMMA;
-
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
 #  endif
 
 
