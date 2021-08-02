@@ -51,10 +51,10 @@ void Record_Bondi()
          if ( Aux_CheckFileExist(FileName) )    Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", FileName );
 
          FILE *File_User = fopen( FileName, "a" );
-         fprintf( File_User, "#%9s%16s%20s%20s%20s%20s%20s%20s%20s%20s%20s%20s%20s%20s\n",
+         fprintf( File_User, "#%9s%16s%20s%20s%20s%20s%20s%20s%20s%20s%20s%20s%20s%20s%20s\n",
                   "Step", "Time [yr]", "NVoidCell", "Mass [Msun]", "Time [yr]", "dM/dt [Msun/yr]",
                   "MomX [g*cm/s]", "MomY [g*cm/s]", "MomZ [g*cm/s]", "MomXAbs [g*cm/s]", "MomYAbs [g*cm/s]", "MomZAbs [g*cm/s]",
-                  "Ek [erg]", "Et [erg]" );
+                  "Ek [erg]", "Et [erg]", "BHMass [Msun]");
          fclose( File_User );
       }
 
