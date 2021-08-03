@@ -92,21 +92,25 @@ static void HSE_SetDensProfileTable();
 extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TTime );
 
 void SetExtAccAuxArray_Bondi( double [] );
+
+
+
+
 #ifdef GRAVITY
 //-------------------------------------------------------------------------------------------------------
-////// Function    :  Poi_UserWorkBeforePoisson_Bondi
-////// Description :  Call the SetExtAccAuxArray_Bondi function to reset the Bondi_MassBH  before invoking 
-//////                the Poisson solver
-//////
-////// Note        :  1. Invoked by Gra_AdvanceDt() using the function pointer "Poi_UserWorkBeforePoisson_Ptr"
-//////
-////// Parameter   :  Time : Target physical time
-//////                lv   : Target refinement level
-//////
-////// Return      :  None
+// Function    :  Poi_UserWorkBeforePoisson_Bondi
+// Description :  Call SetExtAccAuxArray_Bondi() to reset Bondi_MassBH before invoking the Poisson solver
+//
+// Note        :  1. Invoked by Gra_AdvanceDt() using the function pointer "Poi_UserWorkBeforePoisson_Ptr"
+//
+// Parameter   :  Time : Target physical time
+//                lv   : Target refinement level
+//
+// Return      :  None
 //////-------------------------------------------------------------------------------------------------------
 void Poi_UserWorkBeforePoisson_Bondi( const double Time, const int lv )
 {
+
    SetExtAccAuxArray_Bondi( ExtAcc_AuxArray );
 
 #  ifdef GPU
@@ -656,13 +660,13 @@ void Init_TestProb_Hydro_Bondi()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr   = SetGridIC;
-   Flag_User_Ptr            = Flag_Bondi;
-   Aux_Record_User_Ptr      = Record_Bondi;
-   BC_User_Ptr              = SetGridIC;
-   Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_Func_Bondi;
-   Flu_ResetByUser_API_Ptr  = Flu_ResetByUser_API_Bondi;
-   End_User_Ptr             = End_Bondi;
+   Init_Function_User_Ptr        = SetGridIC;
+   Flag_User_Ptr                 = Flag_Bondi;
+   Aux_Record_User_Ptr           = Record_Bondi;
+   BC_User_Ptr                   = SetGridIC;
+   Flu_ResetByUser_Func_Ptr      = Flu_ResetByUser_Func_Bondi;
+   Flu_ResetByUser_API_Ptr       = Flu_ResetByUser_API_Bondi;
+   End_User_Ptr                  = End_Bondi;
 #  ifdef GRAVITY
    Init_ExtAcc_Ptr               = Init_ExtAcc_Bondi;
    Poi_UserWorkBeforePoisson_Ptr = Poi_UserWorkBeforePoisson_Bondi;

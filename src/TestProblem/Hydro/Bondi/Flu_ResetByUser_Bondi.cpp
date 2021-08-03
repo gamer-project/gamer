@@ -118,7 +118,7 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double TTim
 
 #  pragma omp parallel for private( Reset, fluid, fluid_bk, x, y, z, x0, y0, z0 ) schedule( runtime ) \
    reduction(+:Bondi_SinkMass, Bondi_SinkMomX, Bondi_SinkMomY, Bondi_SinkMomZ, Bondi_SinkMomXAbs, Bondi_SinkMomYAbs, Bondi_SinkMomZAbs, \
-               Bondi_SinkEk, Bondi_SinkEt, Bondi_SinkNCell,SinkMass_OneSubStep_ThisRank)
+               Bondi_SinkEk, Bondi_SinkEt, Bondi_SinkNCell, SinkMass_OneSubStep_ThisRank )
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
       x0 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
@@ -194,15 +194,20 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double TTim
                Bondi_SinkNCell   ++;
 
                SinkMass_OneSubStep_ThisRank += dv*fluid_bk[DENS];
-            }else if ( amr->patch[0][lv][PID]->son == -1 ){
-	       // void region must be completely refined to the max level
+            }
+
+            else if ( amr->patch[0][lv][PID]->son == -1 )
+            {
+//             void region must be completely refined to the max level
                Aux_Error( ERROR_INFO, "void region lies outside the max-level region !!\n" );
 	    }
          } // if ( Reset )
       }}} // i,j,k
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+
    MPI_Allreduce( &SinkMass_OneSubStep_ThisRank, &SinkMass_OneSubStep_AllRank, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
    Bondi_MassBH += SinkMass_OneSubStep_AllRank;
+
 } // FUNCTION : Flu_ResetByUser_API_Bondi
 
 
