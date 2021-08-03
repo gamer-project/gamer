@@ -38,7 +38,6 @@ static double Bondi_TimeB;          // Bondi time
        double Bondi_SinkEk;         // total kinematic energy ...
        double Bondi_SinkEt;         // total thermal   energy ...
        int    Bondi_SinkNCell;      // total number of finest cells within the void region
-       double Bondi_SinkMass_tot;
 
 // external units in cgs
 const double UnitExt_L = Const_kpc;
