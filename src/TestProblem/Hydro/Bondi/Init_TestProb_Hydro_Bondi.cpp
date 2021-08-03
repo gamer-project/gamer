@@ -28,6 +28,7 @@ static double Bondi_Cs;             // background sound speed
 static double Bondi_RS;             // Schwarzschild radius
 static double Bondi_RB;             // Bondi radius
 static double Bondi_TimeB;          // Bondi time
+
        double Bondi_SinkMass;       // total mass             in the void region removed in one global time-step
        double Bondi_SinkMomX;       // total x-momentum       ...
        double Bondi_SinkMomY;       // total y-momentum       ...
@@ -91,28 +92,7 @@ static void HSE_SetDensProfileTable();
 extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TTime );
 
 
-void SetExtAccAuxArray_Bondi( double [] );
-#ifdef GRAVITY
-//-------------------------------------------------------------------------------------------------------
-//// Function    :  Poi_UserWorkBeforePoisson_Bondi
-//// Description :  Call the SetExtAccAuxArray_Bondi function to reset the Bondi_MassBH  before invoking 
-////                the Poisson solver
-////
-//// Note        :  1. Invoked by Gra_AdvanceDt() using the function pointer "Poi_UserWorkBeforePoisson_Ptr"
-////
-//// Parameter   :  Time : Target physical time
-////                lv   : Target refinement level
-////
-//// Return      :  None
-////-------------------------------------------------------------------------------------------------------
-void Poi_UserWorkBeforePoisson_Bondi( const double Time, const int lv )
-{
-   SetExtAccAuxArray_Bondi( ExtAcc_AuxArray );
-#  ifdef GPU
-   CUAPI_SetConstMemory_ExtAccPot();
-#  endif
-} // FUNCTION : Poi_UserWorkBeforePoisson_Bondi
-#endif // #ifdef GRAVITY
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
@@ -661,7 +641,6 @@ void Init_TestProb_Hydro_Bondi()
    End_User_Ptr             = End_Bondi;
 #  ifdef GRAVITY
    Init_ExtAcc_Ptr         = Init_ExtAcc_Bondi;
-   Poi_UserWorkBeforePoisson_Ptr  =  Poi_UserWorkBeforePoisson_Bondi;
 #  endif
 #  endif // #if ( MODEL == HYDRO  &&  defined GRAVITY )
 
