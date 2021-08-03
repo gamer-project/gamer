@@ -75,6 +75,11 @@ static double Bondi_HSE_Beta_Rcore;       // core radius (input parameter)
 static double Bondi_HSE_Beta_Rho0;        // peak density (set by Bondi_HSE_Dens_NormR/D)
 static double Bondi_HSE_Beta_P1;          // P(r) = P1*( 1/x + atan(x) ) + P2 assuming beta=2/3, where x=r/Rcore,
 static double Bondi_HSE_Beta_P2;          // P1=G*MassBH*Rho0/Rcore, and P2 currently fixed to -0.5*pi*P1 so that P(inf)=0
+
+// parameters for soliton
+       bool   Bondi_SOL;
+       double Bondi_SOL_m22;
+       double Bondi_SOL_rc;
 // =======================================================================================
 
 
@@ -235,6 +240,10 @@ void SetParameter()
    ReadPara->Add( "Bondi_HSE_Pres_NormT", &Bondi_HSE_Pres_NormT,      false,        Useless_bool,     Useless_bool      );
    ReadPara->Add( "Bondi_HSE_Beta_Rcore", &Bondi_HSE_Beta_Rcore,     -1.0,          Eps_double,       NoMax_double      );
 
+   ReadPara->Add( "Bondi_SOL",            &Bondi_SOL,                 false,        Useless_bool,     Useless_bool      );
+   ReadPara->Add( "Bondi_SOL_m22",        &Bondi_SOL_m22,            -1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Bondi_SOL_rc",         &Bondi_SOL_rc,             -1.0,          NoMin_double,     NoMax_double      );
+
    ReadPara->Read( FileName );
 
    delete ReadPara;
@@ -351,6 +360,9 @@ void SetParameter()
       }
    } // if ( Bondi_HSE )
 
+   if ( Bondi_SOL ){
+      Bondi_SOL_rc *= UnitExt_L/UNIT_L;
+   }
 
 // (4) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
@@ -406,6 +418,11 @@ void SetParameter()
       Aux_Message( stdout, "  Bondi_HSE_Beta        = %13.7e\n",                 Bondi_HSE_Beta                                                );
       Aux_Message( stdout, "  Bondi_HSE_Beta_Rho0   = %13.7e (%13.7e g/cm^3)\n", Bondi_HSE_Beta_Rho0, Bondi_HSE_Beta_Rho0*UNIT_D               );
       Aux_Message( stdout, "  Bondi_HSE_Beta_Rcore  = %13.7e (%13.7e kpc)\n",    Bondi_HSE_Beta_Rcore, Bondi_HSE_Beta_Rcore*UNIT_L/Const_kpc   ); }
+      
+      Aux_Message( stdout, "  Bondi_SOL             = %s\n",                     (Bondi_SOL)?"YES":"NO"                                        );
+      if( Bondi_SOL ) {
+      Aux_Message( stdout, "  Bondi_SOL_m22         = %13.7e\n",                 Bondi_SOL_m22                                                 );
+      Aux_Message( stdout, "  Bondi_SOL_rc          = %13.7e (%13.7e kpc)\n",    Bondi_SOL_rc, Bondi_SOL_rc*UNIT_L/Const_kpc                   );}
       Aux_Message( stdout, "=============================================================================\n" );
    } // if ( MPI_Rank == 0 )
 
