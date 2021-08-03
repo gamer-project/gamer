@@ -17,7 +17,6 @@ extern double Bondi_SinkMomZAbs;
 extern double Bondi_SinkEk;
 extern double Bondi_SinkEt;
 extern int    Bondi_SinkNCell;
-       double SinkMass_OneSubStep_AllRank;
 
 
 
@@ -109,13 +108,14 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double TTim
    real   fluid[NCOMP_TOTAL], fluid_bk[NCOMP_TOTAL];
    double x, y, z, x0, y0, z0;
    double SinkMass_OneSubStep_ThisRank = 0;
+   double SinkMass_OneSubStep_AllRank;
 
 // reset to 0 since we only want to record the number of void cells **for one sub-step**
    Bondi_SinkNCell = 0;
 
 #  pragma omp parallel for private( Reset, fluid, fluid_bk, x, y, z, x0, y0, z0 ) schedule( runtime ) \
    reduction(+:Bondi_SinkMass, Bondi_SinkMomX, Bondi_SinkMomY, Bondi_SinkMomZ, Bondi_SinkMomXAbs, Bondi_SinkMomYAbs, Bondi_SinkMomZAbs, \
-               Bondi_SinkEk, Bondi_SinkEt, Bondi_SinkNCell)
+               Bondi_SinkEk, Bondi_SinkEt, Bondi_SinkNCell,SinkMass_OneSubStep_ThisRank)
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
       x0 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
