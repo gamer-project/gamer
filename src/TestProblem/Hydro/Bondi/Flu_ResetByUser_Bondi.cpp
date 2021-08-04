@@ -18,7 +18,9 @@ extern double Bondi_SinkEk;
 extern double Bondi_SinkEt;
 extern int    Bondi_SinkNCell;
 
-
+extern bool   Bondi_SOL;
+extern double Bondi_SOL_m22;
+extern double Bondi_SOL_rc;
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -48,6 +50,9 @@ extern int    Bondi_SinkNCell;
 bool Flu_ResetByUser_Func_Bondi( real fluid[], const double x, const double y, const double z, const double Time,
                                  const int lv, double AuxArray[] )
 {
+
+   if ( Bondi_SOL ) 
+      return false;
 
    const double Pos[3]  = { x, y, z };
    const double InBC_R2 = SQR( Bondi_InBC_R );

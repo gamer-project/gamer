@@ -1,6 +1,9 @@
 #include "GAMER.h"
 #include "TestProb.h"
 
+#include <gsl/gsl_errno.h>
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_odeiv2.h>
 
 
 // problem-specific global variables
@@ -80,6 +83,7 @@ static double Bondi_HSE_Beta_P2;          // P1=G*MassBH*Rho0/Rcore, and P2 curr
        bool   Bondi_SOL;
        double Bondi_SOL_m22;
        double Bondi_SOL_rc;
+static double *Bondi_SOL_PresProf[2] = { NULL, NULL };   // pressure profile tabke: [0/1] = [radius/density]
 // =======================================================================================
 
 
@@ -91,6 +95,7 @@ bool Flu_ResetByUser_Func_Bondi( real fluid[], const double x, const double y, c
                                  const int lv, double AuxArray[] );
 void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double TTime );
 static void HSE_SetDensProfileTable();
+static void SOL_SetPresProfileTable();
 
 // this test problem needs to reset both Flu_ResetByUser_API_Ptr and Flu_ResetByUser_Func_Ptr, while
 // the former is not defined in TestProb.h (because it's rarely required)
@@ -361,6 +366,7 @@ void SetParameter()
    } // if ( Bondi_HSE )
 
    if ( Bondi_SOL ){
+      SOL_SetPresProfileTable();
       Bondi_SOL_rc *= UnitExt_L/UNIT_L;
    }
 
@@ -427,7 +433,7 @@ void SetParameter()
    } // if ( MPI_Rank == 0 )
 
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ... done\n" );
+  if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ... done\n" );
 
 } // FUNCTION : SetParameter
 
@@ -502,6 +508,24 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       else
          Aux_Error( ERROR_INFO, "unsupported Bondi_HSE_Mode (%d) !!\n", Bondi_HSE_Mode );
    } // if ( Bondi_HSE )
+
+   else if ( Bondi_SOL )
+   {
+      const double r = sqrt( SQR(x-amr->BoxCenter[0]) + SQR(y-amr->BoxCenter[1]) + SQR(z-amr->BoxCenter[2]) );
+      Dens = 1.9*pow( Bondi_SOL_m22*1e1, -2.0 )*pow( Bondi_SOL_rc*UNIT_L/Const_pc, -4.0 )*1e12/pow( 1+9.1e-2*SQR(r/Bondi_SOL_rc), 8.0 );
+      Dens *= Const_Msun/CUBE(Const_pc);
+      Dens *= UnitExt_D/UNIT_D;
+
+      const double *Table_R = Bondi_SOL_PresProf[0];
+      const double *Table_P = Bondi_SOL_PresProf[1];
+      Pres = Mis_InterpolateFromTable( 1000, Table_R, Table_P, r );
+      if( Pres==NULL_REAL ){
+         Aux_Error( ERROR_INFO, "%.3e, %.3e, %.3e\n",Table_R[0],Table_R[1000-1],r);
+         Aux_Error( ERROR_INFO, "Wrong Table\n");
+      }
+      Pres *= 1/(UNIT_P);
+      if( r<5e-3 )   Aux_Message( stderr, "%.3e, %.3e, %.3e\n", r, Pres, Bondi_P0 );
+   } 
 
 
 // uniform background
@@ -626,6 +650,59 @@ void HSE_SetDensProfileTable()
 
 
 //-------------------------------------------------------------------------------------------------------
+// Function    :  SOL_SetPresProfileTable
+// Description :  Set up the pressure profile table for SOL
+//
+// Note        :  1. Assume P(r->inf)=0
+//
+// Parameter   :  None
+//-------------------------------------------------------------------------------------------------------
+int odefunc ( double x, const double y[], double f[], void *params)
+{
+   double rc = Bondi_SOL_rc*UNIT_L/Const_kpc;
+   double m22 = Bondi_SOL_m22;
+   double rho = 1.9*pow(m22/1e-1, -2.0)*pow(rc*1e3, -4.0)*1e12/pow(1+9.1e-2*SQR(x/rc), 8.0)*Const_Msun/pow(Const_pc, 3.0);
+   double a = sqrt(pow(2.0,1.0/8.0)-1)*(x/rc);
+   double M = 4.2e9/(SQR(m22/1e-1)*(rc*1e3)*pow(SQR(a)+1, 7.0))*(3465*pow(a,13.0)+23100*pow(a,11.0)+65373*pow(a,9.0)+101376*pow(a,7.0)+92323*pow(a,5.0)+48580*pow(a,3.0)-3465*a+3465*pow(SQR(a)+1, 7.0)*atan(a))*Const_Msun;
+   f[0] = -NEWTON_G*M*rho/(x*x*Const_kpc*Const_kpc);
+
+   return GSL_SUCCESS;
+}
+int * jac;
+void SOL_SetPresProfileTable()
+{
+
+// allocate table --> deallocated by End_Bondi()
+   const int    NBin = 1000;
+   const double r_min = 0.1*amr->dh[MAX_LEVEL]*UNIT_L/UnitExt_L;
+   const double r_max = (0.5*sqrt(3.0)*amr->BoxSize[0])*UNIT_L/UnitExt_L;
+   for (int v=0; v<2; v++)    Bondi_SOL_PresProf[v] = new double [NBin];
+   
+   int dim = 1;
+   gsl_odeiv2_system sys = {odefunc, NULL, dim, NULL};
+
+   gsl_odeiv2_driver * d = gsl_odeiv2_driver_alloc_y_new (&sys, gsl_odeiv2_step_rkf45, 1e-6, 1e-6, 0.0);
+
+   double x0 = -r_max, xf = -r_min;
+   double x = x0;
+   double y[1] = { 0.0 };
+   for( int b=1; b<=NBin; b++)
+   {
+      double xi = x0 + b*(xf-x0)/NBin;
+      int status = gsl_odeiv2_driver_apply (d, &x, xi, y);
+      if (status != GSL_SUCCESS)
+      {
+            Aux_Error( ERROR_INFO, "Error in SOL_SetPresProfileTable, return value=%d\n", status );
+            break;
+      }
+      Bondi_SOL_PresProf[0][NBin-b] = -x*UnitExt_L/UNIT_L;
+      Bondi_SOL_PresProf[1][NBin-b] = y[0];
+   }
+   gsl_odeiv2_driver_free (d);
+} // void SOL_SetDensProfileTable()
+  
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  End_Bondi
 // Description :  Free memory before terminating the program
 //
@@ -640,6 +717,8 @@ void End_Bondi()
    {
       delete [] Bondi_HSE_DensProf[v];
       Bondi_HSE_DensProf[v] = NULL;
+      delete [] Bondi_SOL_PresProf[v];
+      Bondi_SOL_PresProf[v] = NULL;
    }
 
 } // FUNCTION : End_Bondi
