@@ -98,7 +98,7 @@ static void ExtAcc_Bondi( real Acc[], const double x, const double y, const doub
       const real Coeff    = (real)UserArray[8];
 
       double a = sqrt(pow(2.0,1.0/8.0)-1)*(r/rc);
-      double M = 4.2e10/(SQR(m22/1e-1)*(rc*1e3)*pow(SQR(a)+1, 7.0))*(3465*pow(a,13.0)+23100*pow(a,11.0)+65373*pow(a,9.0)+101376*pow(a,7.0)+92323*pow(a,5.0)+48580*pow(a,3.0)-3465*a+3465*pow(SQR(a)+1, 7.0)*atan(a));
+      double M = 4.2e9/(SQR(m22/1e-1)*(rc*1e3)*pow(SQR(a)+1, 7.0))*(3465*pow(a,13.0)+23100*pow(a,11.0)+65373*pow(a,9.0)+101376*pow(a,7.0)+92323*pow(a,5.0)+48580*pow(a,3.0)-3465*a+3465*pow(SQR(a)+1, 7.0)*atan(a));
       GM = M*Coeff;
    }
 
