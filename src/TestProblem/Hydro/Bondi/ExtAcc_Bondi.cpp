@@ -21,6 +21,10 @@
 
 extern double Bondi_MassBH;
 extern double Bondi_Soften_R;
+extern bool   Bondi_SOL;
+extern double Bondi_SOL_m22;
+extern double Bondi_SOL_rc;
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetExtAccAuxArray_Bondi
@@ -42,6 +46,13 @@ void SetExtAccAuxArray_Bondi( double AuxArray[] )
    AuxArray[2] = amr->BoxCenter[2];
    AuxArray[3] = NEWTON_G*Bondi_MassBH;   // gravitational_constant*point_source_mass
    AuxArray[4] = Bondi_Soften_R;          // soften_length (<=0.0 --> disable)
+   AuxArray[5] = Bondi_SOL;
+   if( Bondi_SOL )
+   {
+      AuxArray[6] = Bondi_SOL_m22;
+      AuxArray[7] = Bondi_SOL_rc;
+      AuxArray[8] = NEWTON_G*Const_Msun/UNIT_M;
+   }
 
 } // FUNCTION : SetExtAccAuxArray_Bondi
 #endif // #ifndef __CUDACC__
@@ -72,12 +83,24 @@ static void ExtAcc_Bondi( real Acc[], const double x, const double y, const doub
 {
 
    const double Cen[3] = { UserArray[0], UserArray[1], UserArray[2] };
-   const real GM       = (real)UserArray[3];
+         real GM       = (real)UserArray[3];
    const real eps      = (real)UserArray[4];
+   const real SOL      = (real)UserArray[5];
    const real dx       = (real)(x - Cen[0]);
    const real dy       = (real)(y - Cen[1]);
    const real dz       = (real)(z - Cen[2]);
    const real r        = SQRT( dx*dx + dy*dy + dz*dz );
+
+   if( SOL )
+   {
+      const real m22      = (real)UserArray[6];
+      const real rc       = (real)UserArray[7];  // In code unit or kpc
+      const real Coeff    = (real)UserArray[8];
+
+      double a = sqrt(pow(2.0,1.0/8.0)-1)*(r/rc);
+      double M = 4.2e10/(SQR(m22/1e-1)*(rc*1e3)*pow(SQR(a)+1, 7.0))*(3465*pow(a,13.0)+23100*pow(a,11.0)+65373*pow(a,9.0)+101376*pow(a,7.0)+92323*pow(a,5.0)+48580*pow(a,3.0)-3465*a+3465*pow(SQR(a)+1, 7.0)*atan(a));
+      GM = M*Coeff;
+   }
 
 // Plummer
 #  if   ( defined SOFTEN_PLUMMER )
