@@ -524,7 +524,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
          Aux_Error( ERROR_INFO, "Wrong Table\n");
       }
       Pres *= 1/(UNIT_P);
-      if( r<5e-3 )   Aux_Message( stderr, "%.3e, %.3e, %.3e\n", r, Pres, Bondi_P0 );
+      //if( r<5e-3 )   Aux_Message( stderr, "%.3e, %.3e, %.3e\n", r, Pres, Bondi_P0 );
    } 
 
 
@@ -664,7 +664,7 @@ int odefunc ( double x, const double y[], double f[], void *params)
    double rho = 1.9*pow(m22/1e-1, -2.0)*pow(rc*1e3, -4.0)*1e12/pow(1+9.1e-2*SQR(x/rc), 8.0)*Const_Msun/pow(Const_pc, 3.0);
    double a = sqrt(pow(2.0,1.0/8.0)-1)*(x/rc);
    double M = 4.2e9/(SQR(m22/1e-1)*(rc*1e3)*pow(SQR(a)+1, 7.0))*(3465*pow(a,13.0)+23100*pow(a,11.0)+65373*pow(a,9.0)+101376*pow(a,7.0)+92323*pow(a,5.0)+48580*pow(a,3.0)-3465*a+3465*pow(SQR(a)+1, 7.0)*atan(a))*Const_Msun;
-   f[0] = -NEWTON_G*M*rho/(x*x*Const_kpc*Const_kpc);
+   f[0] = -Const_NewtonG*M*rho/(x*x*Const_kpc*Const_kpc);
 
    return GSL_SUCCESS;
 }
@@ -681,7 +681,7 @@ void SOL_SetPresProfileTable()
    int dim = 1;
    gsl_odeiv2_system sys = {odefunc, NULL, dim, NULL};
 
-   gsl_odeiv2_driver * d = gsl_odeiv2_driver_alloc_y_new (&sys, gsl_odeiv2_step_rkf45, 1e-6, 1e-6, 0.0);
+   gsl_odeiv2_driver * d = gsl_odeiv2_driver_alloc_y_new (&sys, gsl_odeiv2_step_rk4, 1e-6, 1e-6, 0.0);
 
    double x0 = -r_max, xf = -r_min;
    double x = x0;
