@@ -142,6 +142,15 @@ void YT_Inline()
    FieldList[EoSTempIdx].derived_func = Temperature_DerivedFunc;
 #endif
 
+   // Set field's data type
+   for (int v=0; v<NField; v++){
+#ifdef FLOAT8
+       FieldList[v].field_dtype = YT_DOUBLE;
+#else
+       FieldList[v].field_dtype = YT_FLOAT;
+#endif
+   }
+
 // 3-2 Get the ParticleList
 #  ifdef PARTICLE
    yt_particle *ParticleList;

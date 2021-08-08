@@ -56,12 +56,6 @@ void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchL
    param_yt.species_list            = species_list;
 #  endif
 
-#  ifdef FLOAT8
-   param_yt.field_ftype             = YT_DOUBLE;
-#  else
-   param_yt.field_ftype             = YT_FLOAT;
-#  endif
-
    for (int d=0; d<3; d++)
    {
       param_yt.domain_dimensions[d] = NX0_TOT[d];
