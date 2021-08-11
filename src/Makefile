@@ -77,7 +77,7 @@ SIMU_OPTION += -DRSOLVER=ROE
 SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 
 # magnetohydrodynamics
-SIMU_OPTION += -DMHD
+#SIMU_OPTION += -DMHD
 
 # cosmic rays (not supported yet)
 #SIMU_OPTION += -DCOSMIC_RAY
@@ -248,7 +248,7 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 # gnu
 # -------------------------------------------------------------------------------
  CXX         = g++                                       # serial compiler
-#CXX = $(MPI_PATH)/bin/mpicxx                            # MPI compiler
+#CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
 #CXX         = CC                                        # cray wrapper script
  CXXFLAG     = -g -O3                                    # general flags
 #CXXFLAG     = -g -O3 -std=c++11
