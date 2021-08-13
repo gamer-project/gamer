@@ -52,6 +52,7 @@ void SetExtAccAuxArray_Bondi( double AuxArray[] )
       AuxArray[6] = Bondi_SOL_m22;
       AuxArray[7] = Bondi_SOL_rc;
       AuxArray[8] = NEWTON_G*Const_Msun/UNIT_M;
+      AuxArray[9] = UNIT_L/Const_kpc;
    }
 
 } // FUNCTION : SetExtAccAuxArray_Bondi
@@ -85,7 +86,7 @@ static void ExtAcc_Bondi( real Acc[], const double x, const double y, const doub
    const double Cen[3] = { UserArray[0], UserArray[1], UserArray[2] };
          real GM       = (real)UserArray[3];
    const real eps      = (real)UserArray[4];
-   const real SOL      = (real)UserArray[5];
+   const bool SOL      = (real)UserArray[5];
    const real dx       = (real)(x - Cen[0]);
    const real dy       = (real)(y - Cen[1]);
    const real dz       = (real)(z - Cen[2]);
@@ -96,10 +97,16 @@ static void ExtAcc_Bondi( real Acc[], const double x, const double y, const doub
       const real m22      = (real)UserArray[6];
       const real rc       = (real)UserArray[7];  // In code unit or kpc
       const real Coeff    = (real)UserArray[8];
+      const real UNIT_L   = (real)UserArray[9];
 
+#ifdef Plummer
+      double M = GM*CUBE(r)/pow(SQR(r)+SQR(rc),1.5);
+#else
       double a = sqrt(pow(2.0,1.0/8.0)-1)*(r/rc);
-      double M = 4.2e9/(SQR(m22/1e-1)*(rc*1e3)*pow(SQR(a)+1, 7.0))*(3465*pow(a,13.0)+23100*pow(a,11.0)+65373*pow(a,9.0)+101376*pow(a,7.0)+92323*pow(a,5.0)+48580*pow(a,3.0)-3465*a+3465*pow(SQR(a)+1, 7.0)*atan(a));
-      GM = M*Coeff;
+      double M = 4.2e9/(SQR(m22/1e-1)*(rc*UNIT_L*1e3)*pow(SQR(a)+1, 7.0))*(3465*pow(a,13.0)+23100*pow(a,11.0)+65373*pow(a,9.0)+101376*pow(a,7.0)+92323*pow(a,5.0)+48580*pow(a,3.0)-3465*a+3465*pow(SQR(a)+1, 7.0)*atan(a));
+      M *= Coeff;
+#endif
+      GM = M;
    }
 
 // Plummer

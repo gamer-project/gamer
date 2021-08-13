@@ -44,7 +44,7 @@ static double Bondi_TimeB;          // Bondi time
        int    Bondi_SinkNCell;      // total number of finest cells within the void region
 
 // external units in cgs
-const double UnitExt_L = Const_kpc;
+const double UnitExt_L = Const_pc;
 const double UnitExt_D = 1.0;
 const double UnitExt_M = Const_Msun;
 const double UnitExt_E = Const_keV;
@@ -89,6 +89,7 @@ static double *Bondi_SOL_PresProf[2] = { NULL, NULL };   // pressure profile tab
 
 // problem-specific function prototypes
 void Init_ExtAcc_Bondi();
+void Init_ExtPot_Bondi();
 void Record_Bondi();
 bool Flag_Bondi( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 bool Flu_ResetByUser_Func_Bondi( real fluid[], const double x, const double y, const double z, const double Time,
@@ -366,8 +367,8 @@ void SetParameter()
    } // if ( Bondi_HSE )
 
    if ( Bondi_SOL ){
-      SOL_SetPresProfileTable();
       Bondi_SOL_rc *= UnitExt_L/UNIT_L;
+      SOL_SetPresProfileTable();
    }
 
 // (4) reset other general-purpose parameters
@@ -512,19 +513,28 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    else if ( Bondi_SOL )
    {
       const double r = sqrt( SQR(x-amr->BoxCenter[0]) + SQR(y-amr->BoxCenter[1]) + SQR(z-amr->BoxCenter[2]) );
+#ifdef Plummer
+      Dens  = 3*Bondi_MassBH*UNIT_M/(4*3.14159265*CUBE(Bondi_SOL_rc*UNIT_L))*pow(1+SQR(r/Bondi_SOL_rc),-2.5);
+#else 
       Dens = 1.9*pow( Bondi_SOL_m22*1e1, -2.0 )*pow( Bondi_SOL_rc*UNIT_L/Const_pc, -4.0 )*1e12/pow( 1+9.1e-2*SQR(r/Bondi_SOL_rc), 8.0 );
       Dens *= Const_Msun/CUBE(Const_pc);
-      Dens *= UnitExt_D/UNIT_D;
+#endif
+      /*double rho0 = 1e-20;
+      double temp = 1e10;
+      double A    = Const_kB/(0.62/Const_NA*1e3)*temp;
+      Dens  = rho0/SQR(cosh(sqrt(2*3.14159265*Const_NewtonG*rho0/A)*z*UNIT_L));*/
+      Dens *= 1/UNIT_D;
 
       const double *Table_R = Bondi_SOL_PresProf[0];
       const double *Table_P = Bondi_SOL_PresProf[1];
-      Pres = Mis_InterpolateFromTable( 1000, Table_R, Table_P, r );
+      Pres = Mis_InterpolateFromTable( 100000, Table_R, Table_P, r );
       if( Pres==NULL_REAL ){
          Aux_Error( ERROR_INFO, "%.3e, %.3e, %.3e\n",Table_R[0],Table_R[1000-1],r);
          Aux_Error( ERROR_INFO, "Wrong Table\n");
       }
+      //Pres  = A*rho0/SQR(cosh(sqrt(2*3.14159265*Const_NewtonG*rho0/A)*z*UNIT_L));
       Pres *= 1/(UNIT_P);
-      //if( r<5e-3 )   Aux_Message( stderr, "%.3e, %.3e, %.3e\n", r, Pres, Bondi_P0 );
+      //if( r<5e-3 ) Aux_Message( stderr, "%.3e, %.3e, %.3e\n", r, Pres, Bondi_P0 );
    } 
 
 
@@ -659,12 +669,18 @@ void HSE_SetDensProfileTable()
 //-------------------------------------------------------------------------------------------------------
 int odefunc ( double x, const double y[], double f[], void *params)
 {
+   x /= Const_kpc;
    double rc = Bondi_SOL_rc*UNIT_L/Const_kpc;
    double m22 = Bondi_SOL_m22;
+#ifdef Plummer
+   double rho  = 3*Bondi_MassBH*UNIT_M/(4*3.14159265*CUBE(rc*Const_kpc))*pow(1+SQR(x/rc),-2.5);
+   double M    = Bondi_MassBH*UNIT_M*CUBE(x)/pow(SQR(x)+SQR(rc),1.5);
+#else
    double rho = 1.9*pow(m22/1e-1, -2.0)*pow(rc*1e3, -4.0)*1e12/pow(1+9.1e-2*SQR(x/rc), 8.0)*Const_Msun/pow(Const_pc, 3.0);
    double a = sqrt(pow(2.0,1.0/8.0)-1)*(x/rc);
    double M = 4.2e9/(SQR(m22/1e-1)*(rc*1e3)*pow(SQR(a)+1, 7.0))*(3465*pow(a,13.0)+23100*pow(a,11.0)+65373*pow(a,9.0)+101376*pow(a,7.0)+92323*pow(a,5.0)+48580*pow(a,3.0)-3465*a+3465*pow(SQR(a)+1, 7.0)*atan(a))*Const_Msun;
-   f[0] = -Const_NewtonG*M*rho/(x*x*Const_kpc*Const_kpc);
+#endif
+   f[0] = -Const_NewtonG*M*rho/SQR(x*Const_kpc);
 
    return GSL_SUCCESS;
 }
@@ -673,9 +689,9 @@ void SOL_SetPresProfileTable()
 {
 
 // allocate table --> deallocated by End_Bondi()
-   const int    NBin = 1000;
-   const double r_min = 0.1*amr->dh[MAX_LEVEL]*UNIT_L/UnitExt_L;
-   const double r_max = (0.5*sqrt(3.0)*amr->BoxSize[0])*UNIT_L/UnitExt_L;
+   const int    NBin = 100000;
+   const double r_min = 0.1*amr->dh[MAX_LEVEL]*UNIT_L;
+   const double r_max = (0.5*sqrt(3.0)*amr->BoxSize[0])*UNIT_L;
    for (int v=0; v<2; v++)    Bondi_SOL_PresProf[v] = new double [NBin];
    
    int dim = 1;
@@ -695,7 +711,7 @@ void SOL_SetPresProfileTable()
             Aux_Error( ERROR_INFO, "Error in SOL_SetPresProfileTable, return value=%d\n", status );
             break;
       }
-      Bondi_SOL_PresProf[0][NBin-b] = -x*UnitExt_L/UNIT_L;
+      Bondi_SOL_PresProf[0][NBin-b] = -x/UNIT_L;
       Bondi_SOL_PresProf[1][NBin-b] = y[0];
    }
    gsl_odeiv2_driver_free (d);
