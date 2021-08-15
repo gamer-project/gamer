@@ -90,8 +90,10 @@ void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchL
 // 3. set code specific parameter
 #  ifdef MHD
    const int mhd = 1;
-   if (yt_add_user_parameter_int("mhd", 1, &mhd) != YT_SUCCESS)  Aux_Error( ERROR_INFO, "yt_add_user_parameter() add mhd failed !!\n" );
+#  else
+   const int mhd = 0;
 #  endif
+   if (yt_add_user_parameter_int("mhd", 1, &mhd) != YT_SUCCESS)  Aux_Error( ERROR_INFO, "yt_add_user_parameter() add mhd failed !!\n" );
 
 #  if ( MODEL == HYDRO )
    const double gamma = (double) GAMMA;
