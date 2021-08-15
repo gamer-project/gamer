@@ -74,7 +74,7 @@ SIMU_OPTION += -DRSOLVER=ROE
 # number of user-defined passively advected scalars
 # --> set it to 0 or comment it out if none is required
 # --> useless for RTVD
-SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
+SIMU_OPTION += -DNCOMP_PASSIVE_USER=2
 
 # magnetohydrodynamics
 #SIMU_OPTION += -DMHD
