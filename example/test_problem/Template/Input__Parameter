@@ -35,7 +35,7 @@ TESTPROB_ID                   0           # test problem ID [0]
                                           #    7: HYDRO spherical collapse (+GRAVITY & COMOVING)
                                           #    8: HYDRO Kelvin Helmholtz instability
                                           #    9: HYDRO Riemann problems [+MHD]
-                                          #   10: HYDRO colliding jets
+                                          #   10: HYDRO jet(s)
                                           #   11: HYDRO Plummer cloud(s) (+GRAVITY & PARTICLE)
                                           #   12: HYDRO gravity (+GRAVITY)
                                           #   13: HYDRO MHD Arnold-Beltrami-Childress (ABC) flow (+MHD)

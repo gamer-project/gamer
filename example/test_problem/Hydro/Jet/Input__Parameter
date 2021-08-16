@@ -25,7 +25,7 @@ END_STEP                     -1           # end step (<0=auto -> must be set by 
 
 # test problems
 TESTPROB_ID                   10          # test problem ID [0]
-                                          #   10: HYDRO colliding jets
+                                          #   10: HYDRO jet(s)
 
 
 # code units (in cgs)
@@ -44,11 +44,14 @@ OPT__BC_FLU_YM                2           # fluid boundary condition at the -y f
 OPT__BC_FLU_YP                2           # fluid boundary condition at the +y face: (1=periodic, 2=outflow, 3=reflecting, 4=user)
 OPT__BC_FLU_ZM                2           # fluid boundary condition at the -z face: (1=periodic, 2=outflow, 3=reflecting, 4=user)
 OPT__BC_FLU_ZP                2           # fluid boundary condition at the +z face: (1=periodic, 2=outflow, 3=reflecting, 4=user)
+OPT__BC_POT                   2           # gravity boundary condition: (1=periodic, 2=isolated)
+GFUNC_COEFF0                 -1.0         # Green's function coefficient at the origin for the isolated BC (<0=auto) [-1.0]
 
 
 # time-step
 DT__FLUID                    -1.0         # dt criterion: fluid solver CFL factor (<0=auto) [-1.0]
 DT__FLUID_INIT               -1.0         # dt criterion: DT__FLUID at the first step (<0=auto) [-1.0]
+DT__GRAVITY                  -1.0         # dt criterion: gravity solver safety factor (<0=auto) [-1.0]
 DT__SYNC_PARENT_LV            0.1         # dt criterion: allow dt to adjust by (1.0+DT__SYNC_PARENT) in order to synchronize
                                           #               with the parent level (for OPT__DT_LEVEL==3 only) [0.1]
 DT__SYNC_CHILDREN_LV          0.1         # dt criterion: allow dt to adjust by (1.0-DT__SYNC_CHILDREN) in order to synchronize
@@ -94,7 +97,7 @@ OPT__MINIMIZE_MPI_BARRIER     1           # minimize MPI barriers to improve loa
 
 # fluid solver in HYDRO (MODEL==HYDRO only)
 GAMMA                         1.666666667 # ratio of specific heats (i.e., adiabatic index) [5.0/3.0]
-MOLECULAR_WEIGHT              0.6         # mean molecular weight -> currently only for post-processing [0.6]
+MOLECULAR_WEIGHT              0.65        # mean molecular weight -> currently only for post-processing [0.6]
 MINMOD_COEFF                  1.5         # coefficient of the generalized MinMod limiter (1.0~2.0) [1.5]
 OPT__LR_LIMITER              -1           # slope limiter of data reconstruction in the MHM/MHM_RP/CTU schemes:
                                           # (-1=auto, 0=none, 1=vanLeer, 2=generalized MinMod, 3=vanAlbada, 4=vanLeer+generalized MinMod, 6=central) [-1]
@@ -117,6 +120,25 @@ OPT__RESET_FLUID              1           # reset fluid variables after each upd
 MIN_DENS                      0.0         # minimum mass density    (must >= 0.0) [0.0] ##HYDRO, MHD, and ELBDM ONLY##
 MIN_PRES                      1.0e-15     # minimum pressure        (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
 MIN_EINT                      1.0e-15     # minimum internal energy (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
+JEANS_MIN_PRES                0           # minimum pressure estimated from the Jeans length [0] ##HYDRO/MHD and GRAVITY ONLY##
+JEANS_MIN_PRES_LEVEL         -1           # for JEANS_MIN_PRES; ensure Jeans length is resolved by JEANS_MIN_PRES_NCELL*dh[JEANS_MIN_PRES_LEVEL]
+                                          # (<0=auto -> MAX_LEVEL) [-1]
+JEANS_MIN_PRES_NCELL          4           # for JEANS_MIN_PRES; see JEANS_MIN_PRES_LEVEL [4]
+
+
+# gravity solvers in all models
+NEWTON_G                      1.0         # gravitational constant (will be overwritten if OPT__UNIT or COMOVING is on)
+SOR_OMEGA                    -1.0         # over-relaxation parameter in SOR: (<0=auto) [-1.0]
+SOR_MAX_ITER                 -1           # maximum number of iterations in SOR: (<0=auto) [-1]
+SOR_MIN_ITER                 -1           # minimum number of iterations in SOR: (<0=auto) [-1]
+POT_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU Poisson solver (<=0=auto) [-1]
+OPT__GRA_P5_GRADIENT          0           # 5-points gradient in the Gravity solver (must have GRA/USG_GHOST_SIZE>=2) [0]
+OPT__SELF_GRAVITY             0           # add self-gravity [1]
+OPT__EXT_ACC                  1           # add external acceleration (0=off, 1=function, 2=table) [0] ##HYDRO ONLY##
+                                          # --> 2 (table) is not supported yet
+OPT__EXT_POT                  0           # add external potential    (0=off, 1=function, 2=table) [0]
+                                          # --> for 2 (table), edit the corresponding parameters below too
+EXT_POT_TABLE_NAME            EmptyTable  # external potential table: filename
 
 
 # initialization
@@ -133,6 +155,10 @@ INIT_SUBSAMPLING_NCELL        2           # perform sub-sampling during initiali
 OPT__INT_TIME                 1           # perform "temporal" interpolation for OPT__DT_LEVEL == 2/3 [1]
 OPT__FLU_INT_SCHEME          -1           # ghost-zone fluid variables for the fluid solver [-1]
 OPT__REF_FLU_INT_SCHEME      -1           # newly allocated fluid variables during grid refinement [-1]
+OPT__POT_INT_SCHEME           5           # ghost-zone potential for the Poisson solver (only supports 4 & 5) [5]
+OPT__RHO_INT_SCHEME           4           # ghost-zone mass density for the Poisson solver [4]
+OPT__GRA_INT_SCHEME           5           # ghost-zone potential for the gravity solver (for UNSPLIT_GRAVITY as well) [5]
+OPT__REF_POT_INT_SCHEME       5           # newly allocated potential during grid refinement [5]
 INT_MONO_COEFF                2.0         # coefficient for ensuring the interpolation monotonicity (1.0~4.0) [2.0]
 
 
@@ -140,7 +166,9 @@ INT_MONO_COEFF                2.0         # coefficient for ensuring the interpo
 OPT__OUTPUT_TOTAL             1           # output the simulation snapshot: (0=off, 1=HDF5, 2=C-binary) [1]
 OPT__OUTPUT_PART              0           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag) [0]
 OPT__OUTPUT_USER              0           # output the user-specified data -> edit "Output_User.cpp" [0]
+OPT__OUTPUT_BASEPS            0           # output the base-level power spectrum [0]
 OPT__OUTPUT_BASE              0           # only output the base-level data [0] ##OPT__OUTPUT_PART ONLY##
+OPT__OUTPUT_POT               0           # output gravitational potential [0] ##OPT__OUTPUT_TOTAL ONLY##
 OPT__OUTPUT_PRES              0           # output gas pressure [0] ##HYDRO ONLY##
 OPT__OUTPUT_TEMP              0           # output gas temperature [0] ##HYDRO ONLY##
 OPT__OUTPUT_CS                0           # output sound speed [0] ##HYDRO ONLY##
