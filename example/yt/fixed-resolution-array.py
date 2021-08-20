@@ -1,4 +1,4 @@
-import yt 
+import yt
 
 # ref: https://yt-project.org/doc/examining/low_level_inspection.html#examining-grid-data-in-a-fixed-resolution-array
 
