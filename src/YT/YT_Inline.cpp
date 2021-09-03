@@ -120,7 +120,7 @@ void YT_Inline()
 #ifdef MHD
    for (int v=0; v<NCOMP_MAG; v++){
        FieldList[v + MHDIdx].field_name        = MagLabel[v];
-       FieldList[v + MHDIdx].field_define_type = "derived_func";
+       FieldList[v + MHDIdx].field_define_type = "face-centered";
        FieldList[v + MHDIdx].field_unit        = "code_magnetic";
    }
 

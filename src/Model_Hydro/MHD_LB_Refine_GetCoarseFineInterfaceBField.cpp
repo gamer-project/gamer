@@ -245,10 +245,11 @@ void MHD_LB_Refine_GetCoarseFineInterfaceBField(
 
 //       target face must be a C-F interface
          const int sib_mirror = sib + 1 - 2*(sib&1);
-         const int SibPID     = amr->patch[0][SonLv][PID0]->sibling[sib_mirror];
+         const int PID        = PID0 + TABLE_03( sib, 0 );
+         const int SibPID     = amr->patch[0][SonLv][PID]->sibling[sib_mirror];
          if ( SibPID != -1 )
-            Aux_Error( ERROR_INFO, "SibPID (%d) != -1 (SonLv %d, PID0 %d, sib_mirror %d) !!\n",
-                       SibPID, SonLv, PID0, sib_mirror );
+            Aux_Error( ERROR_INFO, "SibPID (%d) != -1 (SonLv %d, PID %d, sib_mirror %d) !!\n",
+                       SibPID, SonLv, PID, sib_mirror );
 #        endif
 
 //       loop over the 4 sibling fine patches to collect the fine-grid B field on the C-F interfaces

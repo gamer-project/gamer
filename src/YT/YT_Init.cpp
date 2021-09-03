@@ -33,7 +33,7 @@ void YT_Init( int argc, char *argv[] )
 
 // YT check data or not interface turned off (default=true)
    param_libyt.check_data = false;
-   
+
 // initialize libyt
    if ( yt_init( argc, argv, &param_libyt ) != YT_SUCCESS )    Aux_Error( ERROR_INFO, "yt_init() failed !!\n" );
 
