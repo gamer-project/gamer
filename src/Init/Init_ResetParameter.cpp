@@ -406,7 +406,7 @@ void Init_ResetParameter()
    if ( OPT__1ST_FLUX_CORR < 0 )
    {
 #     ifdef MHD
-      OPT__1ST_FLUX_CORR = FIRST_FLUX_CORR_NONE;
+      OPT__1ST_FLUX_CORR = FIRST_FLUX_CORR_3D;
 
       PRINT_WARNING( OPT__1ST_FLUX_CORR, FORMAT_INT, "for MHD" );
 
