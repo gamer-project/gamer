@@ -667,22 +667,48 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #                    endif
 
                      case RSOLVER_1ST_HLLE:
+#                       ifdef MHD
+                        ResetLongB( VarL[d], VarC,    FC_B[0], d );  // reset the longitudinal B field
+#                       endif
                         Hydro_RiemannSolver_HLLE( d, FluxL[d], VarL[d], VarC,    MIN_DENS, MIN_PRES,
                                                   EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr,
                                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+
+#                       ifdef MHD
+                        ResetLongB( VarC,    VarR[d], FC_B[1], d );  // reset the longitudinal B field
+#                       endif
                         Hydro_RiemannSolver_HLLE( d, FluxR[d], VarC,    VarR[d], MIN_DENS, MIN_PRES,
                                                   EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr,
                                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+
+//                      restore the cell-centered B field and energy of the central cell
+#                       ifdef MHD
+                        VarC[ MAG_OFFSET + d ] = CC_B[d];
+                        VarC[ ENGY           ] = CC_Engy;
+#                       endif
                      break;
 
 #                    ifdef MHD
                      case RSOLVER_1ST_HLLD:
+#                       ifdef MHD
+                        ResetLongB( VarL[d], VarC,    FC_B[0], d );  // reset the longitudinal B field
+#                       endif
                         Hydro_RiemannSolver_HLLD( d, FluxL[d], VarL[d], VarC,    MIN_DENS, MIN_PRES,
                                                   EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr,
                                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+
+#                       ifdef MHD
+                        ResetLongB( VarC,    VarR[d], FC_B[1], d );  // reset the longitudinal B field
+#                       endif
                         Hydro_RiemannSolver_HLLD( d, FluxR[d], VarC,    VarR[d], MIN_DENS, MIN_PRES,
                                                   EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr,
                                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+
+//                      restore the cell-centered B field and energy of the central cell
+#                       ifdef MHD
+                        VarC[ MAG_OFFSET + d ] = CC_B[d];
+                        VarC[ ENGY           ] = CC_Engy;
+#                       endif
                      break;
 #                    endif
 
