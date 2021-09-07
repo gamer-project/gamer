@@ -29,7 +29,8 @@ void Get_ParticleAttribute(long gid, char *attr, void *raw_data);
 //
 // Note        :  1. This function conducts the following three basic steps for performing the yt inline analysis
 //                   1-1. YT_SetParameter   --> invoke yt_set_parameter()
-//                   1-2. yt_get_fieldsPtr  --> get the yt_field array pointer, and fill in field info
+//                   1-2. yt_get_fieldsPtr, yt_get_particlesPtr  --> get the yt_field array pointer and
+//                        yt_particle array pointer, then fill in the info.
 //                   1-3. YT_AddLocalGrid   --> invoke yt_get_gridsPtr(), yt_add_grids() for local patches
 //                   1-4. yt_inline(), yt_inline_argument()
 //                   1-5. yt_free_gridsPtr()
