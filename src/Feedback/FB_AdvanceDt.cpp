@@ -202,6 +202,8 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
       int  *ParSortID = NULL;
       int   NParMax   = -1;
 
+      for (int v=0; v<PAR_NATT_TOTAL; v++)   ParAtt_Local[v] = NULL;
+
       for (int t=0; t<NNearbyPatch; t++)
       {
          const int PID = Nearby_PID_List[t];
@@ -214,10 +216,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
       if ( NParMax > 0 )
       {
          for (int v=0; v<PAR_NATT_TOTAL; v++)
-         {
             if ( ParAttBitIdx_In & BIDX(v) )    ParAtt_Local[v] = new real [NParMax];
-            else                                ParAtt_Local[v] = NULL;
-         }
 
          ParSortID = new int [NParMax];   // it will fail if "long" is actually required for NParMax
       }
