@@ -1,16 +1,17 @@
 #!/bin/bash
 
-#PBS -N gamer
-#PBS -M YourEmailAddress
-#PBS -m abe
-#PBS -q batch
-#PBS -k n
-#PBS -l walltime=72:00:00
-#PBS -l nodes=1:ppn=36
-##PBS -o stdout
-##PBS -e stderr
-##PBS -W depend=afterok:JOB_ID
+#SBATCH --job-name=GAMER
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=YOUR_EMAIL
+#SBATCH --partition=gpu
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=2
+#SBATCH --cpus-per-task=36
+#SBATCH --gres=gpu:2
+#SBATCH --time=240:00:00
 
-cd $PBS_O_WORKDIR
+#Load module
+module purge
+module load gcc/8.3.0 cuda/10.0 openmpi/3.1.4 fftw/2.1.5 hdf5-parallel/1.8.21
 
-mpirun -np 4 -map-by socket:pe=9 --report-bindings ./gamer 1>>log 2>&1
+mpirun -np 2 -map-by ppr:1:socket:pe=18 --report-bindings ./gamer 1>>log 2>&1
