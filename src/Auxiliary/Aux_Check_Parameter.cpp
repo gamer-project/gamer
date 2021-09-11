@@ -707,12 +707,12 @@ void Aux_Check_Parameter()
    if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
    {
 #     ifdef MHD
-      /*
       if ( OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_ROE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_HLLD  &&
            OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_HLLE )
          Aux_Error( ERROR_INFO, "unsupported parameter \"%s = %d\" !!\n", "OPT__1ST_FLUX_CORR_SCHEME", OPT__1ST_FLUX_CORR_SCHEME );
-         */
-      Aux_Error( ERROR_INFO, "MHD does not support \"OPT__1ST_FLUX_CORR\" !!\n" );
+
+      if ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D1D )
+         Aux_Error( ERROR_INFO, "MHD does not support \"OPT__1ST_FLUX_CORR = %d (3D+1D)\" yet !!\n", FIRST_FLUX_CORR_3D1D );
 #     else
       if ( OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_ROE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_HLLC  &&
            OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_HLLE )
