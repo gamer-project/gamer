@@ -2,11 +2,9 @@
 #include "TestProb.h"
 
 #include"Particle_IC_Constructor.h"
-#include"string"//NEW INCLUDES
+#include"string"
 
 using namespace std;
-
-static double Equilibrium_Cloud_FreeT=10;
 
 // problem-specific function prototypes
 #ifdef PARTICLE
@@ -91,7 +89,7 @@ void SetParameter()
 {
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
    const long   End_Step_Default = __INT_MAX__;
-   const double End_T_Default    =  20.0*Equilibrium_Cloud_FreeT;
+   const double End_T_Default    =  10;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
@@ -130,38 +128,18 @@ void SetParameter()
 void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] )
 {
-   double Equilibrium_Cloud_R0 = 0.1;
-   double Equilibrium_Cloud_Rho0 = 1.0;
-   double Equilibrium_Cloud_GasMFrac =0.001;
-   double Equilibrium_Cloud_Center[3] = {1.5,1.5,1.5};
-
-// gas share the same density profile as particles (except for different total masses)
-   const double TotM    = 4.0/3.0*M_PI*CUBE(Equilibrium_Cloud_R0)*Equilibrium_Cloud_Rho0;
-   const double GasRho0 = Equilibrium_Cloud_Rho0*Equilibrium_Cloud_GasMFrac;
-   const double PresBg  = 0.0;   // background pressure (set to 0.0 by default)
-
-   double r2, a2, Dens;
-
-
-   
-   {
-      r2   = SQR(x-Equilibrium_Cloud_Center[0]) + SQR(y-Equilibrium_Cloud_Center[1]) + SQR(z-Equilibrium_Cloud_Center[2]);
-      a2   = r2 / SQR(Equilibrium_Cloud_R0);
-      Dens = GasRho0 * pow( 1.0 + a2, -2.5 );
-
-      fluid[DENS] = Dens;
-      fluid[MOMX] = 0;
-      fluid[MOMY] = 0;
-      fluid[MOMZ] = 0;
+   // Negligibly small uniform density
+   Dens = 1e-15; 
+   fluid[DENS] = Dens;
+   fluid[MOMX] = 0;
+   fluid[MOMY] = 0;
+   fluid[MOMZ] = 0;
 #     ifdef GRAVITY
-      fluid[ENGY] = (  NEWTON_G*TotM*GasRho0 / ( 6.0*Equilibrium_Cloud_R0*CUBE(1.0 + a2) ) + PresBg  ) / ( GAMMA - 1.0 )
-                    + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+   fluid[ENGY] = 0;
 #     endif
 
 //    just set all passive scalars as zero
-      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = 0.0;
-   } 
-
+   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = 0.0;
 
 } // FUNCTION : SetGridIC
 

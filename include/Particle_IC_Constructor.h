@@ -1,5 +1,5 @@
-#ifndef Particle_IC_Constructor_H
-#define Particle_IC_Constructor_H
+#ifndef __PARTICLE_IC_CONSTRUCTOR_H__
+#define __PARTICLE_IC_CONSTRUCTOR_H__
 #include "GAMER.h"
 #include "TestProb.h"
 #include"vector"
@@ -117,4 +117,4 @@ class Particle_IC_Constructor
 
 };
 
-#endif //Particle_IC_Constructor_H
+#endif //__PARTICLE_IC_CONSTRUCTOR_H__
