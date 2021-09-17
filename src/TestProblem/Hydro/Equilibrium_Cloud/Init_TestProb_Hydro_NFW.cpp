@@ -4,6 +4,8 @@
 #include"Particle_IC_Constructor.h"
 #include"string"
 
+// Negligibly small uniform density
+double Equilibrium_Cloud_Dens = 1e-3;
 using namespace std;
 
 // problem-specific function prototypes
@@ -101,6 +103,15 @@ void SetParameter()
       PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
    }
 
+   // Edit Gas_Background_Dens in Input__TestProb
+   const char* FileName = "Input__TestProb";
+   ReadPara_t *ReadPara  = new ReadPara_t;
+   // ********************************************************************************************************************************
+   // ReadPara->Add( "KEY_IN_THE_FILE",      &VARIABLE,              DEFAULT,       MIN,              MAX               );
+   // ********************************************************************************************************************************
+   ReadPara->Add( "Gas_Background_Dens",  &Equilibrium_Cloud_Dens,                  1e-3,          0.,               NoMax_double         );
+   ReadPara->Read( FileName );
+   delete ReadPara;
 
 } // FUNCTION : SetParameter
 #endif
@@ -128,14 +139,12 @@ void SetParameter()
 void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] )
 {
-   // Negligibly small uniform density
-   Dens = 1e-15; 
-   fluid[DENS] = Dens;
+   fluid[DENS] = Equilibrium_Cloud_Dens;
    fluid[MOMX] = 0;
    fluid[MOMY] = 0;
    fluid[MOMZ] = 0;
 #     ifdef GRAVITY
-   fluid[ENGY] = 0;
+   fluid[ENGY] = Equilibrium_Cloud_Dens;
 #     endif
 
 //    just set all passive scalars as zero

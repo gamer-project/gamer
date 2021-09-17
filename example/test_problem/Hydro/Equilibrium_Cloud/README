@@ -26,3 +26,6 @@ Note:
    If you want to initialize a model with some given density profile in the form of a table, please use option "Table",and input
       your file name after variable "Density_Table_Name" in your physical parameter files; otherwise input "NONE" in it.
 3. Sometimes the spatial resolution is not small enough for some models like Jaffe, please increase MAX_LEVEL in "Input__Parameter"
+4. You construct multiple clouds of particles at the same time.
+   Replace the original Input__TestProb with the content of Input_TestProb_Two_Clouds for example, will allow you to construct two clouds of particles.
+   For details, you may check Input__TestProb for further instructions.

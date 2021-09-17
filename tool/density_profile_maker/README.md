@@ -1,1 +1,0 @@
-To create a density profile similar to profile.txt in NFW Test problem, you may use main.cpp as a sample code.
