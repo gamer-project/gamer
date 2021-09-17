@@ -5,34 +5,42 @@
 #include"vector"
 #include<iostream>
 #include<fstream>
+#include<sstream>
 using namespace std;
 
-/***gsl library***/
+//gsl library
 #include <gsl/gsl_integration.h>
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_roots.h>
 
-#define size_Models 1000
-typedef struct Models_Input_Parameter{
-   int*    Models_RSeed;
-   double* Models_Rho0;
-   double* Models_R0;
-   double* Models_MaxR;
-   double ** Models_Center;
-   double ** Models_BulkVel;
-   double* Models_GasMFrac;
-   int*    Models_MassProfNBin;
 
-   int Models_num;
-   vector<string> Models_Paras;
-   vector<string> Models_Type;
-   vector<string> Models_Profile;
-   double* Models_Alpha;
-   int*    Models_r_col;
-   int*    Models_rho_col;
-   bool* Models_truncation;
-}MP;
+typedef struct Filename_Parameter{
+   int Cloud_Num;
+
+   vector<string> Params_Filenames;
+
+}FP;
+typedef struct Physical_Parameter{
+   int Cloud_Num;
+
+   string Params_Filenames;
+
+   char   Cloud_Type[MAX_STRING];
+   char   Density_Table_Name[MAX_STRING];
+   int    OPT_EXT_POT;
+   char   ExtPot_Table_Name[MAX_STRING];
+   int      Cloud_RSeed;
+   double   Cloud_Rho0;
+   double   Cloud_R0;
+   double   Cloud_MaxR;
+   double*  Cloud_Center;
+   double*  Cloud_BulkVel;
+   double   Cloud_Alpha;
+   double   Cloud_Par_Num_Ratio;
+
+   int      Cloud_MassProfNBin;
+}PhysP;
 
 
 class Particle_IC_Constructor
@@ -40,54 +48,72 @@ class Particle_IC_Constructor
     public:
         Particle_IC_Constructor();
         virtual ~Particle_IC_Constructor();
-        void init(string type,double al,double newton_g,double rho,double r,int nbin,double rmax,int rseed,bool trunc_flag,double trunc_fac,int r_col,int rho_col,const char* Filename);        
-        double set_vel(double r);
-        double set_vel_test(double r);
-        RandomNumber_t *RNG ;
-
-        //Initialization through Table
-        void initialize_mass_UNKNOWN(int row);
-        void initialize_pot_UNKNOWN(int row);
-
-        //Other type of models
-        void initialize_mass_others();
-        void initialize_pot_others();
-
-        void initialize_prob_dens();
+        void Read_Filenames( const char *filename_para);
+        void Load_Physical_Params(const FP filenames,const int index);
+        void Init();     
+        void Par_SetEquilibriumIC(real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3],const long NPar_AllRank,const int Par_Idx_Prev,const int Par_Idx);   
         
-        //statistics
-        double slope(double* a,double* b,int start,int fin);
-        void smooth_all(double* x,int start,int fin);
-        double set_mass( double x );
-        double set_rho( double x );
-        
-        void construct_ic(int num,vector <string>TestProb_FileName,vector <string>TypeName,vector <string>Profile_FileName);
-        
-        MP params;
+
+        PhysP params;
+        FP    filenames;
     protected:
         
     private:
-        string model_type;
-        double MassProf_Models( const double r );
-        double integration_eng_base_Models(double eng);
+        // Derive physical attributes for particles
+        double Set_Mass( double x );
+        double Set_Density( double x );
+        double Set_Velocity(const double x);
+        
+        // Initialize physical parameter tables
+        void Init_Mass();
+        void Init_Pot();
+        void Init_Prob_Dens();
 
-        double prob_dens[size_Models];
-        double int_prob_dens[size_Models];
-        double psi[size_Models];
+        //  Initialization through Table
+        void Init_Mass_Table();
+        void Init_Pot_Table();
+
+        //  Add External Potential
+        void Add_Ext_Pot();
+
+        // Auxiliary functions
+        int Aux_CountRow( const char *filename );
+        int Aux_Countcolumn( const char *filename );
+        int GetParams( const char *filename,const char *keyword,const int para_num,const char *para_type,vector <string> &container);
+        void Check_InputFileName();
+        void RanVec_FixRadius( const double r, double RanVec[] );
+
+        // Solve Eddington's equation
+        double potential(const double x);
+        double inverse_psi_to_index (double psi);
+        double integration_eng_base(double eng);
+
         double delta;
-        double eng_min_Models;
+        double eng_min;
+        double *prob_dens;
+        double *int_prob_dens;
+        double *psi;
 
-        //statistics
+        // statistics
+        double slope(double* a,double* b,int start,int fin);
+        void smooth_all(double* x,int start,int fin);
         double ave(double* a,int start,int fin);
         double var_n(double* a,int start,int fin);
         double cor(double* x,double* y,int start,int fin);
         void mask(double* x,int start,int fin);
         void add_num(double* x,int start,int fin);
 
-        //truncation
-        bool Trunc_Flag;
-        double Trunc_Fac;
+        // Tables of particles' attributes
+        double *Table_r;
+        double *Table_Enclosed_Mass;
+        double *Table_Density;
+        double *Table_dRho_dr;
+        double *Table_dRho_dx;
+        double *Table_Gravity_Field;
+        double *Table_Gravity_Potential;
 
+        // Random number generator
+        RandomNumber_t *Random_Num_Gen ;
 
 };
 

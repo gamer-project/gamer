@@ -5,20 +5,16 @@
 #include"string"//NEW INCLUDES
 
 using namespace std;
-extern Particle_IC_Constructor constructor_Models;//First Declared in Par_Init_ByFunction_Models
-static double NFW_FreeT=10;
+
+static double Equilibrium_Cloud_FreeT=10;
 
 // problem-specific function prototypes
 #ifdef PARTICLE
-void Par_Init_ByFunction_Models( const long NPar_ThisRank, const long NPar_AllRank,
+void Par_Init_ByFunction_Equilibrium_Cloud( const long NPar_ThisRank, const long NPar_AllRank,
                                   real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                   real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                   real *AllAttribute[PAR_NATT_TOTAL] );
 #endif
-
-
-
-
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
@@ -77,7 +73,7 @@ void Validate()
 
 #if ( MODEL == HYDRO )
 //-------------------------------------------------------------------------------------------------------
-// Function    :  SetTotalTime_NFW
+// Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
 //
 // Note        :  1. Filename is set to "Input__TestProb" by default
@@ -91,11 +87,11 @@ void Validate()
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void SetTotalTime_NFW()
+void SetParameter()
 {
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
    const long   End_Step_Default = __INT_MAX__;
-   const double End_T_Default    =  20.0*NFW_FreeT;
+   const double End_T_Default    =  20.0*Equilibrium_Cloud_FreeT;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
@@ -108,7 +104,7 @@ void SetTotalTime_NFW()
    }
 
 
-} // FUNCTION : SetTotalTime_NFW
+} // FUNCTION : SetParameter
 #endif
 
 
@@ -134,14 +130,14 @@ void SetTotalTime_NFW()
 void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] )
 {
-   double NFW_R0 = 0.1;
-   double NFW_Rho0 = 1.0;
-   double NFW_GasMFrac =0.001;
-   double NFW_Center[3] = {1.5,1.5,1.5};
+   double Equilibrium_Cloud_R0 = 0.1;
+   double Equilibrium_Cloud_Rho0 = 1.0;
+   double Equilibrium_Cloud_GasMFrac =0.001;
+   double Equilibrium_Cloud_Center[3] = {1.5,1.5,1.5};
 
 // gas share the same density profile as particles (except for different total masses)
-   const double TotM    = 4.0/3.0*M_PI*CUBE(NFW_R0)*NFW_Rho0;
-   const double GasRho0 = NFW_Rho0*NFW_GasMFrac;
+   const double TotM    = 4.0/3.0*M_PI*CUBE(Equilibrium_Cloud_R0)*Equilibrium_Cloud_Rho0;
+   const double GasRho0 = Equilibrium_Cloud_Rho0*Equilibrium_Cloud_GasMFrac;
    const double PresBg  = 0.0;   // background pressure (set to 0.0 by default)
 
    double r2, a2, Dens;
@@ -149,8 +145,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    
    {
-      r2   = SQR(x-NFW_Center[0]) + SQR(y-NFW_Center[1]) + SQR(z-NFW_Center[2]);
-      a2   = r2 / SQR(NFW_R0);
+      r2   = SQR(x-Equilibrium_Cloud_Center[0]) + SQR(y-Equilibrium_Cloud_Center[1]) + SQR(z-Equilibrium_Cloud_Center[2]);
+      a2   = r2 / SQR(Equilibrium_Cloud_R0);
       Dens = GasRho0 * pow( 1.0 + a2, -2.5 );
 
       fluid[DENS] = Dens;
@@ -158,7 +154,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       fluid[MOMY] = 0;
       fluid[MOMZ] = 0;
 #     ifdef GRAVITY
-      fluid[ENGY] = (  NEWTON_G*TotM*GasRho0 / ( 6.0*NFW_R0*CUBE(1.0 + a2) ) + PresBg  ) / ( GAMMA - 1.0 )
+      fluid[ENGY] = (  NEWTON_G*TotM*GasRho0 / ( 6.0*Equilibrium_Cloud_R0*CUBE(1.0 + a2) ) + PresBg  ) / ( GAMMA - 1.0 )
                     + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
 #     endif
 
@@ -172,7 +168,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_TestProb_Hydro_NFW
+// Function    :  Init_TestProb_Hydro_Equilibrium_Cloud
 // Description :  Test problem initializer
 //
 // Note        :  None
@@ -181,70 +177,22 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Init_TestProb_Hydro_NFW()
+void Init_TestProb_Hydro_Equilibrium_Cloud()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
-
 // validate the compilation flags and runtime parameters
    Validate();
 
-
 #  if ( MODEL == HYDRO )
 // set the problem-specific runtime parameters
-   SetTotalTime_NFW();
-
-   // User input
-   bool single_cloud = false;
-   //You may observe different scenarios if you choose single_cloud to be true or false.
-   //If true, you may observe an NFW cloud evolving stably with time.
-   //If false, you may observe two neighbouring NFW clouds torn apart by each other's tidal force. 
-   
-   if(single_cloud)
-   {
-      int NFW_num = 1;//User Input
-      //The scenario is a single NFW cloud
-
-      //User Input
-      vector <string> TestProb_FileName;     //Test problem input parameter filenames
-      vector <string> TypeName;                               //Type of models 
-      vector <string> Profile_FileName;
-      TestProb_FileName.push_back("Input__TestProb1");
-      TypeName.push_back("NFW");
-      Profile_FileName.push_back("NONE");
-
-      //"NONE" means no additinal profile table.
-      constructor_Models.construct_ic(NFW_num,TestProb_FileName,TypeName,Profile_FileName);
-   }
-   
-
-
-   else
-   {
-      int NFW_num = 2;//User Input
-      //The scenario is two NFW clouds, one is generated by NFW density function, the other is by a density profile table.
-      //Remember to follow the instructions given below
-      //User Input
-      vector <string> TestProb_FileName;     //Test problem input parameter filenames
-      vector <string> TypeName;                               //Type of models 
-      vector <string> Profile_FileName;
-      TestProb_FileName.push_back("Input__TestProb1");
-      TestProb_FileName.push_back("Input__TestProb2");
-      TypeName.push_back("UNKNOWN");
-      TypeName.push_back("Plummer");
-      Profile_FileName.push_back("profile.txt");
-      Profile_FileName.push_back("NONE");
-      //"UNKNOWM" means generating paritcles using density profile table.
-      //"NONE" means no additinal profile table.
-      //"profile.txt" is the profile table file name.
-      constructor_Models.construct_ic(NFW_num,TestProb_FileName,TypeName,Profile_FileName);
-   }
+   SetParameter();
 
    Init_Function_User_Ptr  = SetGridIC;
    
 #  ifdef PARTICLE
-   Par_Init_ByFunction_Ptr = Par_Init_ByFunction_Models;
+   Par_Init_ByFunction_Ptr = Par_Init_ByFunction_Equilibrium_Cloud;
 #  endif
 
 #  endif // #if ( MODEL == HYDRO )
@@ -252,4 +200,4 @@ void Init_TestProb_Hydro_NFW()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Init_TestProb_Hydro_NFW
+} // FUNCTION : Init_TestProb_Hydro_Equilibrium_Cloud
