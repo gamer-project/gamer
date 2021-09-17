@@ -73,7 +73,7 @@ void Particle_IC_Constructor::Load_Physical_Params(const FP filename_para,const 
 
           
     if(convertToString(params.Cloud_Type)=="Einasto")
-      ReadPara->Add( "Cloud_Alpha",     &params.Cloud_Alpha,         1.0,           0.1,              10.0      );
+      ReadPara->Add( "Cloud_Einasto_Power_Factor",     &params.Cloud_Einasto_Power_Factor,         1.0,           0.1,              10.0      );
 
     ReadPara->Read( FileName );
     delete ReadPara;
@@ -321,8 +321,8 @@ double mass_base_Hernquist(double x,void* nothing){
 }
 
 //Einasto
-double mass_base_Einasto(double x,void *alpha){
-  double a = *(double *) alpha;
+double mass_base_Einasto(double x,void *Einasto_Power_Factor){
+  double a = *(double *) Einasto_Power_Factor;
   return pow(x,2) *exp(-pow(x,a));
 }
 

@@ -29,3 +29,4 @@ Note:
 4. You construct multiple clouds of particles at the same time.
    Replace the original Input__TestProb with the content of Input_TestProb_Two_Clouds for example, will allow you to construct two clouds of particles.
    For details, you may check Input__TestProb for further instructions.
+5. To generate example density or external potential tables, you may use the python files in "tool/table_maker/" to build your tables.
