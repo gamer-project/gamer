@@ -67,34 +67,23 @@ void Par_Init_ByFunction_Equilibrium_Cloud( const long NPar_ThisRank, const long
 
       // Input filenames as parameters into Filename_Loader
       Filename_Loader.Read_Filenames("Input__TestProb");
-      int Par_Idx_Last = 0;
-      double Par_Ratio = 0.0;
+      int Par_Idx = 0;
 
       for(int k=0;k<Filename_Loader.filenames.Cloud_Num;k++){
+
          // initialize Particle_IC_Constructor for each cloud
          Particle_IC_Constructor Cloud_Constructor;
-         Cloud_Constructor.Load_Physical_Params(Filename_Loader.filenames,k);
+         Cloud_Constructor.Load_Physical_Params(Filename_Loader.filenames,k,NPar_AllRank);
          Cloud_Constructor.Init();
 
-         // calculate particle number for each cloud
-         if((Par_Ratio + Cloud_Constructor.params.Cloud_Par_Num_Ratio) > 1.0){
-            Aux_Error( ERROR_INFO, "The sum of particle number ratios of all clouds exceeds 1!! Please check!");
+         // check whether the particle number of each cloud is reasonable
+         if((Par_Idx + Cloud_Constructor.params.Cloud_Par_Num) > NPar_AllRank){
+            Aux_Error( ERROR_INFO, "The sum of particle numbers of each cloud exceeds 1!! Please check!");
          }
-         if((k==Filename_Loader.filenames.Cloud_Num-1)&&((Par_Ratio + Cloud_Constructor.params.Cloud_Par_Num_Ratio) != 1.0)){
-            Aux_Error( ERROR_INFO, "The sum of particle number ratios of all clouds is not equal to 1.0!! Please check!");
-         }
-         int Par_Idx_Start = Par_Idx_Last;
-         Par_Idx_Last += Cloud_Constructor.params.Cloud_Par_Num_Ratio*NPar_AllRank;
-         Par_Ratio += Cloud_Constructor.params.Cloud_Par_Num_Ratio;
-         if(k==Filename_Loader.filenames.Cloud_Num-1){
-            Par_Idx_Last = NPar_AllRank;
-         }
-
+         
          // set equilibrium initial conditions for each cloud
-         // Input Mass_AllRank, Pos_AllRank, Vel_AllRank into this function for particles' masses, positions, and velocities.
-         // NPar_AllRank is the total number (including all clouds) of particles.
-         // Par_Idx_Start is the starting index for the particle in this cloud, and Par_Idx_Last is the last index.
-         Cloud_Constructor.Par_SetEquilibriumIC(Mass_AllRank, Pos_AllRank, Vel_AllRank,NPar_AllRank,Par_Idx_Start,Par_Idx_Last);
+         Cloud_Constructor.Par_SetEquilibriumIC(Mass_AllRank, Pos_AllRank, Vel_AllRank, Par_Idx);
+         Par_Idx += Cloud_Constructor.params.Cloud_Par_Num;
          
       }//for(int k=0;k<Filename_Loader.filenames.Cloud_Num;k++)
 

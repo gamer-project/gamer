@@ -37,7 +37,7 @@ typedef struct Physical_Parameter{
    double*  Cloud_Center;
    double*  Cloud_BulkVel;
    double   Cloud_Einasto_Power_Factor;
-   double   Cloud_Par_Num_Ratio;
+   double   Cloud_Par_Num;
 
    int      Cloud_MassProfNBin;
 }PhysP;
@@ -49,9 +49,9 @@ class Particle_IC_Constructor
         Particle_IC_Constructor();
         virtual ~Particle_IC_Constructor();
         void Read_Filenames( const char *filename_para);
-        void Load_Physical_Params(const FP filenames,const int index);
+        void Load_Physical_Params(const FP filenames,const int cloud_idx, const long NPar_AllRank);
         void Init();     
-        void Par_SetEquilibriumIC(real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3],const long NPar_AllRank,const int Par_Idx_Prev,const int Par_Idx);   
+        void Par_SetEquilibriumIC(real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3],const long Par_Idx);   
         
 
         PhysP params;
