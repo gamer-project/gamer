@@ -5,7 +5,7 @@
 #include"string"
 
 // Negligibly small uniform density
-double Equilibrium_Cloud_Dens = 1e-3;
+double Equilibrium_Cloud_Dens;
 using namespace std;
 
 // problem-specific function prototypes
@@ -103,13 +103,13 @@ void SetParameter()
       PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
    }
 
-   // Edit Gas_Background_Dens in Input__TestProb
+   // Edit Equilibrium_Cloud_Dens in Input__TestProb
    const char* FileName = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
    // ********************************************************************************************************************************
    // ReadPara->Add( "KEY_IN_THE_FILE",      &VARIABLE,              DEFAULT,       MIN,              MAX               );
    // ********************************************************************************************************************************
-   ReadPara->Add( "Gas_Background_Dens",  &Equilibrium_Cloud_Dens,                  1e-3,          0.,               NoMax_double         );
+   ReadPara->Add( "Equilibrium_Cloud_Dens",  &Equilibrium_Cloud_Dens,                  1e-3,          0.,               NoMax_double         );
    ReadPara->Read( FileName );
    delete ReadPara;
 
@@ -155,7 +155,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_TestProb_Hydro_Equilibrium_Cloud
+// Function    :  Init_TestProb_Hydro_Equilibrium_Cloud_smallGas
 // Description :  Test problem initializer
 //
 // Note        :  None
@@ -164,7 +164,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Init_TestProb_Hydro_Equilibrium_Cloud()
+void Init_TestProb_Hydro_Equilibrium_Cloud_smallGas()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -187,4 +187,4 @@ void Init_TestProb_Hydro_Equilibrium_Cloud()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Init_TestProb_Hydro_Equilibrium_Cloud
+} // FUNCTION : Init_TestProb_Hydro_Equilibrium_Cloud_smallGas

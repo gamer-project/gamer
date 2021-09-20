@@ -68,7 +68,7 @@ void Particle_IC_Constructor::Load_Physical_Params(const FP filename_para,const 
 
     ReadPara->Add( "Cloud_Type",       params.Cloud_Type,         Useless_str,     Useless_str,   Useless_str         );
     ReadPara->Add( "Density_Table_Name", params.Density_Table_Name,   Useless_str,     Useless_str,   Useless_str         );
-    ReadPara->Add( "OPT_EXT_POT",        &params.OPT_EXT_POT,         0,               0,             1                   );
+    ReadPara->Add( "ADD_EXT_POT",        &params.ADD_EXT_POT,         0,               0,             1                   );
     ReadPara->Add( "ExtPot_Table_Name",  params.ExtPot_Table_Name,    Useless_str,     Useless_str,   Useless_str         );
 
           
@@ -139,7 +139,7 @@ void Particle_IC_Constructor::Load_Physical_Params(const FP filename_para,const 
 
   // Checking ExtPot_Table_Name
   Aux_Message( stdout, "Checking ExtPot_Table_Name\n");
-  if(params.OPT_EXT_POT){
+  if(params.ADD_EXT_POT){
     const char * c = convertToString(params.ExtPot_Table_Name).c_str();
     fstream file;
     file.open(c, ios::in);
@@ -602,7 +602,7 @@ void Particle_IC_Constructor::Init_Prob_Dens(){
   smooth_all(prob_dens,0,params.Cloud_MassProfNBin);
 }
 void Particle_IC_Constructor::Add_Ext_Pot(){
-  if(!bool(params.OPT_EXT_POT)){
+  if(!bool(params.ADD_EXT_POT)){
     return;
   }
   Aux_Message( stdout, "Loading External Potential Table...\n");

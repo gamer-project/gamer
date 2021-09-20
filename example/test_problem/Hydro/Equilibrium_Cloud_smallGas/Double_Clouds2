@@ -14,6 +14,6 @@ Cloud_MassProfNBin    1000                   # number of radial bins in the mass
 Cloud_Par_Num_Ratio   0.5                    # particle number ratio
 Cloud_Type            Table                  # type of density distribution
 Density_Table_Name    density_table.txt      # filename of density table
-OPT_EXT_POT           0                      # Whether to add external potential with Radius vs. potential table : (0=no, 1=yes)       
+ADD_EXT_POT           0                      # Whether to add external potential with Radius vs. potential table : (0=no, 1=yes)       
 ExtPot_Table_Name     NONE                   # External potential table filename.
 

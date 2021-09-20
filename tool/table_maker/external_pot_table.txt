@@ -1,4 +1,4 @@
-External Potential Table
+#External Potential Table
     0.0100     0.0000
     0.0100     0.0000
     0.0101     0.0000

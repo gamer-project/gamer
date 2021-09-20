@@ -28,7 +28,7 @@ typedef struct Physical_Parameter{
 
    char   Cloud_Type[MAX_STRING];
    char   Density_Table_Name[MAX_STRING];
-   int    OPT_EXT_POT;
+   int    ADD_EXT_POT;
    char   ExtPot_Table_Name[MAX_STRING];
    int      Cloud_RSeed;
    double   Cloud_Rho0;

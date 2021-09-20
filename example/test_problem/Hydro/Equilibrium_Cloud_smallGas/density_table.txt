@@ -1,4 +1,4 @@
-Density Profile
+#Density Profile
 0.0002	48.0584
 0.0004	23.1139
 0.0006	14.8333
