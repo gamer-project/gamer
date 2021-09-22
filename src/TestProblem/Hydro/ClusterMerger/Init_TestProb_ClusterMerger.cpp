@@ -32,9 +32,6 @@ static char    Merger_File_Prof3[1000];   // profile table of cluster 3
        double  Merger_Coll_VelY2;         // y-velocity of the second cluster
        double  Merger_Coll_VelX3;         // x-velocity of the third cluster
        double  Merger_Coll_VelY3;         // y-velocity of the third cluster
-       double  Merger_Coll_ColorRad1;     // "color" radius of the first cluster
-       double  Merger_Coll_ColorRad2;     // "color" radius of the second cluster
-       double  Merger_Coll_ColorRad3;     // "color" radius of the third cluster
 
 static double *Table_R1 = NULL;           // radius of cluster 1
 static double *Table_D1 = NULL;           // density of cluster 1
@@ -194,9 +191,6 @@ void SetParameter()
    ReadPara->Add( "Merger_Coll_VelX3",      &Merger_Coll_VelX3,      -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "Merger_Coll_VelY3",      &Merger_Coll_VelY3,      -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "Merger_Coll_UseMetals",  &Merger_Coll_UseMetals,  true,             Useless_bool,  Useless_bool   );
-   ReadPara->Add( "Merger_Coll_ColorRad1",  &Merger_Coll_ColorRad1,  -1.0,             NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_ColorRad2",  &Merger_Coll_ColorRad2,  -1.0,             NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_ColorRad3",  &Merger_Coll_ColorRad3,  -1.0,             NoMin_double,  NoMax_double   );
 
    ReadPara->Read( FileName );
 
@@ -221,9 +215,6 @@ void SetParameter()
    Merger_Coll_VelY2 *= (Const_km/Const_s) / UNIT_V;
    Merger_Coll_VelX3 *= (Const_km/Const_s) / UNIT_V;
    Merger_Coll_VelY3 *= (Const_km/Const_s) / UNIT_V;
-   Merger_Coll_ColorRad1 *= Const_kpc / UNIT_L;
-   Merger_Coll_ColorRad2 *= Const_kpc / UNIT_L;
-   Merger_Coll_ColorRad3 *= Const_kpc / UNIT_L;
 
 // (2) load the radial profiles
    if ( OPT__INIT != INIT_BY_RESTART ) {
@@ -380,7 +371,6 @@ void SetParameter()
       Aux_Message( stdout, "  particle file 1        = %s\n",           Merger_File_Par1 );
       Aux_Message( stdout, "  cluster 1 w/ gas       = %s\n",          (Merger_Coll_IsGas1)? "yes":"no" );
       if ( Merger_Coll_IsGas1 )
-      Aux_Message( stdout, "  cluster 1 color radius = %g\n",           Merger_Coll_ColorRad1 );
       Aux_Message( stdout, "  cluster 1 x-position   = %g\n",           Merger_Coll_PosX1 );
       Aux_Message( stdout, "  cluster 1 y-position   = %g\n",           Merger_Coll_PosY1 );
       Aux_Message( stdout, "  cluster 1 x-velocity   = %g\n",           Merger_Coll_VelX1 );
@@ -391,7 +381,6 @@ void SetParameter()
       Aux_Message( stdout, "  particle file 2        = %s\n",           Merger_File_Par2 );
       Aux_Message( stdout, "  cluster 2 w/ gas       = %s\n",          (Merger_Coll_IsGas2)? "yes":"no" );
       if ( Merger_Coll_IsGas2 )
-      Aux_Message( stdout, "  cluster 2 color radius = %g\n",           Merger_Coll_ColorRad2 );
       Aux_Message( stdout, "  cluster 2 x-position   = %g\n",           Merger_Coll_PosX2 );
       Aux_Message( stdout, "  cluster 2 y-position   = %g\n",           Merger_Coll_PosY2 );
       Aux_Message( stdout, "  cluster 2 x-velocity   = %g\n",           Merger_Coll_VelX2 );
@@ -403,7 +392,6 @@ void SetParameter()
       Aux_Message( stdout, "  particle file 3        = %s\n",           Merger_File_Par3 );
       Aux_Message( stdout, "  cluster 3 w/ gas       = %s\n",          (Merger_Coll_IsGas3)? "yes":"no" );
       if ( Merger_Coll_IsGas3 )
-      Aux_Message( stdout, "  cluster 3 color radius = %g\n",           Merger_Coll_ColorRad3 );
       Aux_Message( stdout, "  cluster 3 x-position   = %g\n",           Merger_Coll_PosX3 );
       Aux_Message( stdout, "  cluster 3 y-position   = %g\n",           Merger_Coll_PosY3 );
       Aux_Message( stdout, "  cluster 3 x-velocity   = %g\n",           Merger_Coll_VelX3 );
@@ -452,15 +440,20 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double ClusterCenter3[3] = { Merger_Coll_PosX3, Merger_Coll_PosY3, amr->BoxCenter[2] };
 
    double r1, r2, r3, Dens1, Dens2, Dens3, Pres1, Pres2, Pres3;
-   double Metl1, Metl2, Metl3;
+   double Metl1, Metl2, Metl3, rmax1, rmax2, rmax3;
    double Dens, MomX, MomY, MomZ, Pres, Eint, Etot, Metl;
+  
+   rmax1 = Table_R1[Merger_NBin1-1];
+   rmax2 = Merger_Coll_NumHalos > 1 ? Table_R2[Merger_NBin2-1] : -1.0;
+   rmax3 = Merger_Coll_NumHalos > 2 ? Table_R3[Merger_NBin3-1] : -1.0;
 
    //    for each cell, we sum up the density and pressure from each halo and then calculate the weighted velocity
    if ( Merger_Coll_IsGas1 ) {
       r1    = sqrt( SQR(x-ClusterCenter1[0]) + SQR(y-ClusterCenter1[1]) + SQR(z-ClusterCenter1[2]) );
-      Dens1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_D1, r1 );
-      Pres1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_P1, r1 );
-      Metl1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_M1, r1 );
+      double rr1 = r1 < rmax1 ? r1 : rmax1;
+      Dens1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_D1, rr1 );
+      Pres1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_P1, rr1 );
+      Metl1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_M1, rr1 );
    } else {
       r1    = HUGE_NUMBER;
       Dens1 = 0.0;
@@ -470,9 +463,10 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    if ( Merger_Coll_NumHalos > 1 && Merger_Coll_IsGas2 ) {
       r2    = sqrt( SQR(x-ClusterCenter2[0]) + SQR(y-ClusterCenter2[1]) + SQR(z-ClusterCenter2[2]) );
-      Dens2 = Mis_InterpolateFromTable( Merger_NBin2, Table_R2, Table_D2, r2 );
-      Pres2 = Mis_InterpolateFromTable( Merger_NBin2, Table_R2, Table_P2, r2 );
-      Metl2 = Mis_InterpolateFromTable( Merger_NBin2, Table_R2, Table_M2, r2 );
+      double rr2 = r2 < rmax2 ? r2 : rmax2;
+      Dens2 = Mis_InterpolateFromTable( Merger_NBin2, Table_R2, Table_D2, rr2 );
+      Pres2 = Mis_InterpolateFromTable( Merger_NBin2, Table_R2, Table_P2, rr2 );
+      Metl2 = Mis_InterpolateFromTable( Merger_NBin2, Table_R2, Table_M2, rr2 );
    } else {
       r2    = HUGE_NUMBER;
       Dens2 = 0.0;
@@ -482,9 +476,10 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    if ( Merger_Coll_NumHalos > 2 && Merger_Coll_IsGas3 ) {
       r3    = sqrt( SQR(x-ClusterCenter3[0]) + SQR(y-ClusterCenter3[1]) + SQR(z-ClusterCenter3[2]) );
-      Dens3 = Mis_InterpolateFromTable( Merger_NBin3, Table_R3, Table_D3, r3 );
-      Pres3 = Mis_InterpolateFromTable( Merger_NBin3, Table_R3, Table_P3, r3 );
-      Metl3 = Mis_InterpolateFromTable( Merger_NBin3, Table_R3, Table_M3, r3 );
+      double rr3 = r3 < rmax3 ? r3 : rmax3;
+      Dens3 = Mis_InterpolateFromTable( Merger_NBin3, Table_R3, Table_D3, rr3 );
+      Pres3 = Mis_InterpolateFromTable( Merger_NBin3, Table_R3, Table_P3, rr3 );
+      Metl3 = Mis_InterpolateFromTable( Merger_NBin3, Table_R3, Table_M3, rr3 );
    } else {
       r3    = HUGE_NUMBER;
       Dens3 = 0.0;
@@ -516,8 +511,20 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    Dens = Dens1 + Dens2 + Dens3;
    Pres = Pres1 + Pres2 + Pres3;
 
-   MomX = Merger_Coll_VelX1*Dens1 + Merger_Coll_VelX2*Dens2 + Merger_Coll_VelX3*Dens3;
-   MomY = Merger_Coll_VelY1*Dens1 + Merger_Coll_VelY2*Dens2 + Merger_Coll_VelY3*Dens3;
+   MomX = 0.0;
+   MomY = 0.0;
+   if ( r1 <= rmax1 ) {
+      MomX += Merger_Coll_VelX1*Dens1;
+      MomY += Merger_Coll_VelY1*Dens1;
+   }
+   if ( r2 <= rmax2 ) {
+     MomX += Merger_Coll_VelX2*Dens2;
+     MomY += Merger_Coll_VelY2*Dens2;
+   }
+   if ( r3 <= rmax3 ) {
+     MomX += Merger_Coll_VelX3*Dens3;
+     MomY += Merger_Coll_VelY3*Dens3;
+   }
    MomZ = 0.0;
 
    // compute the total gas energy
@@ -538,22 +545,22 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    }
 
    if ( Merger_Coll_IsGas1 ) {
-      if ( r1 < Merger_Coll_ColorRad1 )
-         fluid[ColorField1Idx] = Dens;
+      if ( r1 < rmax1 )
+         fluid[ColorField1Idx] = Dens1;
       else
          fluid[ColorField1Idx] = 0.0;
    }
 
    if ( Merger_Coll_NumHalos > 1 && Merger_Coll_IsGas2 ) {
-      if ( r2 < Merger_Coll_ColorRad2 )
-         fluid[ColorField2Idx] = Dens;
+      if ( r2 < rmax2 )
+         fluid[ColorField2Idx] = Dens2;
       else
          fluid[ColorField2Idx] = 0.0;
    }
 
    if ( Merger_Coll_NumHalos > 2 && Merger_Coll_IsGas3 ) {
-      if ( r3 < Merger_Coll_ColorRad3 )
-         fluid[ColorField3Idx] = Dens;
+      if ( r3 < rmax3 )
+         fluid[ColorField3Idx] = Dens3;
       else
          fluid[ColorField3Idx] = 0.0;
    }
