@@ -243,8 +243,8 @@ void SetParameter()
 // assuming EoS requires no passive scalars
    Jet_BgEint = EoS_DensPres2Eint_CPUPtr(  Jet_BgDens,
                                            EoS_DensTemp2Pres_CPUPtr( Jet_BgDens, Jet_BgTemp*UNIT_E/Const_kB, NULL,
-                                                                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL ),
-                                           NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL  );
+                                                                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ),
+                                           NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table  );
 
    for (int n=0; n<Jet_NJet; n++)
    {
@@ -253,8 +253,8 @@ void SetParameter()
 //    assuming EoS requires no passive scalars
       Jet_SrcEint[n] = EoS_DensPres2Eint_CPUPtr(  Jet_SrcDens[n],
                                                   EoS_DensTemp2Pres_CPUPtr( Jet_SrcDens[n], Jet_SrcTemp[n]*UNIT_E/Const_kB, NULL,
-                                                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL ),
-                                                  NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL  );
+                                                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ),
+                                                  NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table  );
 
       for (int d=0; d<3; d++)    Jet_Cen[n][d] = 0.5*amr->BoxSize[d] + Jet_CenOffset[n][d];
    }
@@ -285,8 +285,8 @@ void SetParameter()
 //       convert temperature to internal energy (assuming EoS requires no passive scalars)
          Table_T[b]  = EoS_DensPres2Eint_CPUPtr(  Table_D[b],
                                                   EoS_DensTemp2Pres_CPUPtr( Table_D[b], Table_T[b]*UNIT_E/Const_kB, NULL,
-                                                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL ),
-                                                  NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL  );
+                                                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ),
+                                                  NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table  );
       }
    } // if ( Jet_HSE  &&  OPT__INIT != INIT_BY_RESTART )
 

@@ -87,15 +87,13 @@ void EoS_SetAuxArray_User_Template( double AuxArray_Flt[], int AuxArray_Int[] )
 //                Passive    : Passive scalars
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
-//                ExtraInOut : Array to store extra input and output variables if required
-//                             --> Optional and only used when it is not NULL
 //
 // Return      :  Gas pressure
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, const real Passive[],
                                              const double AuxArray_Flt[], const int AuxArray_Int[],
-                                             const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] )
+                                             const real *const Table[EOS_NTABLE_MAX] )
 {
 
 // check
@@ -112,7 +110,7 @@ static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, c
 
 // note that some EoS may support Eint<0
    if ( Hydro_CheckNegative(Eint) )
-      printf( "ERROR : invalid input internal energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+      printf( "ERROR : invalid input internal energy density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               Eint, __FILE__, __LINE__, __FUNCTION__ );
 #  endif // GAMER_DEBUG
 
@@ -139,15 +137,6 @@ static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, c
 #  endif // GAMER_DEBUG
 
 
-// store extra output variables if required
-   /*
-   if ( ExtraInOut != NULL )
-   {
-      ExtraInOut[...] = ...;
-   }
-   */
-
-
    return Pres;
 
 } // FUNCTION : EoS_DensEint2Pres_User_Template
@@ -165,15 +154,13 @@ static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, c
 //                Passive    : Passive scalars
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
-//                ExtraInOut : Array to store extra input and output variables if required
-//                             --> Optional and only used when it is not NULL
 //
 // Return      :  Gas internal energy density
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, const real Passive[],
                                              const double AuxArray_Flt[], const int AuxArray_Int[],
-                                             const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] )
+                                             const real *const Table[EOS_NTABLE_MAX] )
 {
 
 // check
@@ -217,15 +204,6 @@ static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, c
 #  endif // GAMER_DEBUG
 
 
-// store extra output variables if required
-   /*
-   if ( ExtraInOut != NULL )
-   {
-      ExtraInOut[...] = ...;
-   }
-   */
-
-
    return Eint;
 
 } // FUNCTION : EoS_DensPres2Eint_User_Template
@@ -243,15 +221,13 @@ static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, c
 //                Passive    : Passive scalars
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
-//                ExtraInOut : Array to store extra input and output variables if required
-//                             --> Optional and only used when it is not NULL
 //
-// Return      :  Sound speed square
+// Return      :  Sound speed squared
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real EoS_DensPres2CSqr_User_Template( const real Dens, const real Pres, const real Passive[],
                                              const double AuxArray_Flt[], const int AuxArray_Int[],
-                                             const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] )
+                                             const real *const Table[EOS_NTABLE_MAX] )
 {
 
 // check
@@ -294,15 +270,6 @@ static real EoS_DensPres2CSqr_User_Template( const real Dens, const real Pres, c
 #  endif // GAMER_DEBUG
 
 
-// store extra output variables if required
-   /*
-   if ( ExtraInOut != NULL )
-   {
-      ExtraInOut[...] = ...;
-   }
-   */
-
-
    return Cs2;
 
 } // FUNCTION : EoS_DensPres2CSqr_User_Template
@@ -322,15 +289,13 @@ static real EoS_DensPres2CSqr_User_Template( const real Dens, const real Pres, c
 //                Passive    : Passive scalars (must not used here)
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
-//                ExtraInOut : Array to store extra input and output variables if required
-//                             --> Optional and only used when it is not NULL
 //
 // Return      :  Gas temperature in kelvin
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real EoS_DensEint2Temp_User_Template( const real Dens, const real Eint, const real Passive[],
                                              const double AuxArray_Flt[], const int AuxArray_Int[],
-                                             const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] )
+                                             const real *const Table[EOS_NTABLE_MAX] )
 {
 
 // check
@@ -342,7 +307,7 @@ static real EoS_DensEint2Temp_User_Template( const real Dens, const real Eint, c
               Dens, __FILE__, __LINE__, __FUNCTION__ );
 
    if ( Hydro_CheckNegative(Eint) )
-      printf( "ERROR : invalid input internal energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+      printf( "ERROR : invalid input internal energy density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               Eint, __FILE__, __LINE__, __FUNCTION__ );
 #  endif // GAMER_DEBUG
 
@@ -369,15 +334,6 @@ static real EoS_DensEint2Temp_User_Template( const real Dens, const real Eint, c
 #  endif // GAMER_DEBUG
 
 
-// store extra output variables if required
-   /*
-   if ( ExtraInOut != NULL )
-   {
-      ExtraInOut[...] = ...;
-   }
-   */
-
-
    return Temp;
 
 } // FUNCTION : EoS_DensEint2Temp_User_Template
@@ -396,15 +352,13 @@ static real EoS_DensEint2Temp_User_Template( const real Dens, const real Eint, c
 //                Passive    : Passive scalars (must not used here)
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
-//                ExtraInOut : Array to store extra input and output variables if required
-//                             --> Optional and only used when it is not NULL
 //
 // Return      :  Gas pressure
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real EoS_DensTemp2Pres_User_Template( const real Dens, const real Temp, const real Passive[],
                                              const double AuxArray_Flt[], const int AuxArray_Int[],
-                                             const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] )
+                                             const real *const Table[EOS_NTABLE_MAX] )
 {
 
 // check
@@ -443,15 +397,6 @@ static real EoS_DensTemp2Pres_User_Template( const real Dens, const real Temp, c
 #  endif // GAMER_DEBUG
 
 
-// store extra output variables if required
-   /*
-   if ( ExtraInOut != NULL )
-   {
-      ExtraInOut[...] = ...;
-   }
-   */
-
-
    return Pres;
 
 } // FUNCTION : EoS_DensTemp2Pres_User_Template
@@ -460,28 +405,29 @@ static real EoS_DensTemp2Pres_User_Template( const real Dens, const real Temp, c
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  EoS_General_User_Template
-// Description :  General EoS converter: In[] -> Out[]
+// Description :  General EoS converter: In_*[] -> Out[]
 //
 // Note        :  1. See EoS_DensEint2Pres_User_Template()
-//                2. In[] and Out[] must NOT overlap
+//                2. In_*[] and Out[] must NOT overlap
 //
 // Parameter   :  Mode       : To support multiple modes in this general converter
 //                Out        : Output array
-//                In         : Input array
+//                In_*       : Input array
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
 //
 // Return      :  Out[]
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static void EoS_General_User_Template( const int Mode, real Out[], const real In[], const double AuxArray_Flt[],
-                                       const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] )
+static void EoS_General_User_Template( const int Mode, real Out[], const real In_Flt[], const int In_Int[],
+                                       const double AuxArray_Flt[], const int AuxArray_Int[],
+                                       const real *const Table[EOS_NTABLE_MAX] )
 {
 
 // check
 #  ifdef GAMER_DEBUG
    if ( Out          == NULL )   printf( "ERROR : Out == NULL in %s !!\n", __FUNCTION__ );
-   if ( In           == NULL )   printf( "ERROR : In == NULL in %s !!\n", __FUNCTION__ );
+   if ( In_Flt       == NULL )   printf( "ERROR : In_Flt == NULL in %s !!\n", __FUNCTION__ );
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
    if ( AuxArray_Int == NULL )   printf( "ERROR : AuxArray_Int == NULL in %s !!\n", __FUNCTION__ );
 #  endif // GAMER_DEBUG
