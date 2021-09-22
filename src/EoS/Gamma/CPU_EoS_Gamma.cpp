@@ -89,14 +89,13 @@ void EoS_SetAuxArray_Gamma( double AuxArray_Flt[], int AuxArray_Int[] )
 //                Passive    : Passive scalars (must not used here)
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
-//                ExtraInOut : Useless for this EoS
 //
 // Return      :  Gas pressure
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real EoS_DensEint2Pres_Gamma( const real Dens, const real Eint, const real Passive[],
                                      const double AuxArray_Flt[], const int AuxArray_Int[],
-                                     const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] )
+                                     const real *const Table[EOS_NTABLE_MAX] )
 {
 
 // check
@@ -135,14 +134,13 @@ static real EoS_DensEint2Pres_Gamma( const real Dens, const real Eint, const rea
 //                Passive    : Passive scalars (must not used here)
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
-//                ExtraInOut : Useless for this EoS
 //
 // Return      :  Gas internal energy density
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real EoS_DensPres2Eint_Gamma( const real Dens, const real Pres, const real Passive[],
                                      const double AuxArray_Flt[], const int AuxArray_Int[],
-                                     const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] )
+                                     const real *const Table[EOS_NTABLE_MAX] )
 {
 
 // check
@@ -181,14 +179,13 @@ static real EoS_DensPres2Eint_Gamma( const real Dens, const real Pres, const rea
 //                Passive    : Passive scalars (must not used here)
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
-//                ExtraInOut : Useless for this EoS
 //
 // Return      :  Sound speed square
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real EoS_DensPres2CSqr_Gamma( const real Dens, const real Pres, const real Passive[],
                                      const double AuxArray_Flt[], const int AuxArray_Int[],
-                                     const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] )
+                                     const real *const Table[EOS_NTABLE_MAX] )
 {
 
 // check
@@ -229,14 +226,13 @@ static real EoS_DensPres2CSqr_Gamma( const real Dens, const real Pres, const rea
 //                Passive    : Passive scalars (must not used here)
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
-//                ExtraInOut : Useless for this EoS
 //
 // Return      :  Gas temperature in kelvin
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real EoS_DensEint2Temp_Gamma( const real Dens, const real Eint, const real Passive[],
                                      const double AuxArray_Flt[], const int AuxArray_Int[],
-                                     const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] )
+                                     const real *const Table[EOS_NTABLE_MAX] )
 {
 
 // check
@@ -278,14 +274,13 @@ static real EoS_DensEint2Temp_Gamma( const real Dens, const real Eint, const rea
 //                Passive    : Passive scalars (must not used here)
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
-//                ExtraInOut : Useless for this EoS
 //
 // Return      :  Gas pressure
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real EoS_DensTemp2Pres_Gamma( const real Dens, const real Temp, const real Passive[],
                                      const double AuxArray_Flt[], const int AuxArray_Int[],
-                                     const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] )
+                                     const real *const Table[EOS_NTABLE_MAX] )
 {
 
 // check

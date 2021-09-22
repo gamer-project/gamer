@@ -176,7 +176,7 @@ void Flu_DerivedField_Mach( real Out[], const real FluIn[], const real MagIn[], 
                               CheckMinPres_Yes, MIN_PRES, Emag,
                               EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
       Cs2   = EoS_DensPres2CSqr_CPUPtr( fluid[DENS], Pres, fluid+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                                        h_EoS_Table, NULL );
+                                        h_EoS_Table );
       Mach  = SQRT( V2 / Cs2 );
 
       Out3D[0][ko][jo][io] = Mach;
