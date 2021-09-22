@@ -427,7 +427,8 @@ static void EoS_General_User_Template( const int Mode, real Out[], const real In
 // check
 #  ifdef GAMER_DEBUG
    if ( Out          == NULL )   printf( "ERROR : Out == NULL in %s !!\n", __FUNCTION__ );
-   if ( In           == NULL )   printf( "ERROR : In == NULL in %s !!\n", __FUNCTION__ );
+   if ( In_Flt       == NULL )   printf( "ERROR : In_Flt == NULL in %s !!\n", __FUNCTION__ );
+   if ( In_Int       == NULL )   printf( "ERROR : In_Int == NULL in %s !!\n", __FUNCTION__ );
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
    if ( AuxArray_Int == NULL )   printf( "ERROR : AuxArray_Int == NULL in %s !!\n", __FUNCTION__ );
 #  endif // GAMER_DEBUG
