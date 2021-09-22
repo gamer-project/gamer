@@ -405,22 +405,23 @@ static real EoS_DensTemp2Pres_User_Template( const real Dens, const real Temp, c
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  EoS_General_User_Template
-// Description :  General EoS converter: In[] -> Out[]
+// Description :  General EoS converter: In_*[] -> Out[]
 //
 // Note        :  1. See EoS_DensEint2Pres_User_Template()
-//                2. In[] and Out[] must NOT overlap
+//                2. In_*[] and Out[] must NOT overlap
 //
 // Parameter   :  Mode       : To support multiple modes in this general converter
 //                Out        : Output array
-//                In         : Input array
+//                In_*       : Input array
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
 //
 // Return      :  Out[]
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static void EoS_General_User_Template( const int Mode, real Out[], const real In[], const double AuxArray_Flt[],
-                                       const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] )
+static void EoS_General_User_Template( const int Mode, real Out[], const real In_Flt[], const int In_Int[],
+                                       const double AuxArray_Flt[], const int AuxArray_Int[],
+                                       const real *const Table[EOS_NTABLE_MAX] )
 {
 
 // check

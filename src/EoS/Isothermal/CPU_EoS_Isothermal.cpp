@@ -273,23 +273,24 @@ static real EoS_DensTemp2Pres_Isothermal( const real Dens, const real Temp, cons
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  EoS_General_Isothermal
-// Description :  General EoS converter: In[] -> Out[]
+// Description :  General EoS converter: In_*[] -> Out[]
 //
 // Note        :  1. See EoS_DensEint2Pres_Isothermal()
-//                2. In[] and Out[] must NOT overlap
+//                2. In_*[] and Out[] must NOT overlap
 //                3. Useless for this EoS
 //
 // Parameter   :  Mode       : To support multiple modes in this general converter
 //                Out        : Output array
-//                In         : Input array
+//                In_*       : Input array
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
 //
 // Return      :  Out[]
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static void EoS_General_Isothermal( const int Mode, real Out[], const real In[], const double AuxArray_Flt[],
-                                    const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] )
+static void EoS_General_Isothermal( const int Mode, real Out[], const real In_Flt[], const int In_Int[],
+                                    const double AuxArray_Flt[], const int AuxArray_Int[],
+                                    const real *const Table[EOS_NTABLE_MAX] )
 {
 
 // not used by this EoS
