@@ -173,7 +173,7 @@ static real EoS_DensPres2Eint_Isothermal( const real Dens, const real Pres, cons
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
 //
-// Return      :  Sound speed square
+// Return      :  Sound speed squared
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real EoS_DensPres2CSqr_Isothermal( const real Dens, const real Pres, const real Passive[],

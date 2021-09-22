@@ -110,7 +110,7 @@ static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, c
 
 // note that some EoS may support Eint<0
    if ( Hydro_CheckNegative(Eint) )
-      printf( "ERROR : invalid input internal energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+      printf( "ERROR : invalid input internal energy density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               Eint, __FILE__, __LINE__, __FUNCTION__ );
 #  endif // GAMER_DEBUG
 
@@ -222,7 +222,7 @@ static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, c
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
 //
-// Return      :  Sound speed square
+// Return      :  Sound speed squared
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real EoS_DensPres2CSqr_User_Template( const real Dens, const real Pres, const real Passive[],
@@ -307,7 +307,7 @@ static real EoS_DensEint2Temp_User_Template( const real Dens, const real Eint, c
               Dens, __FILE__, __LINE__, __FUNCTION__ );
 
    if ( Hydro_CheckNegative(Eint) )
-      printf( "ERROR : invalid input internal energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+      printf( "ERROR : invalid input internal energy density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               Eint, __FILE__, __LINE__, __FUNCTION__ );
 #  endif // GAMER_DEBUG
 
