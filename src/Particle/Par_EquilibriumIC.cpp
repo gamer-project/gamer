@@ -26,20 +26,20 @@ void Particle_IC_Constructor::Read_Filenames( const char *filename_para)
    vector <string> EMPTY;
 
    filenames.Cloud_Num       = GetParams(filename_para,"Cloud_Num",      1,"int",EMPTY);
-     GetParams(filename_para,"Params_Filenames",       filenames.Cloud_Num,"string",filenames.Params_Filenames       );
+   GetParams(filename_para,"Params_Filenames",       filenames.Cloud_Num,"string",filenames.Params_Filenames       );
    Check_InputFileName();
 } // FUNCTION : void Particle_IC_Constructor::Read_Filenames(string filename_para)
 
 string convertToString(char* a)
 {
-     int max_size = 100;
-     int i;
-     string s = "";
-     for (i = 0; i < max_size; i++){
-       if(a[i]=='\0')break;
-       s = s + a[i];
-     }
-     return s;
+   int max_size = 100;
+   int i;
+   string s = "";
+   for (i = 0; i < max_size; i++){
+      if(a[i]=='\0')break;
+      s = s + a[i];
+   }
+   return s;
 } // FUNCTION : string convertToString(char* a)
 
 
@@ -57,18 +57,18 @@ string convertToString(char* a)
 //-------------------------------------------------------------------------------------------------------
 void Particle_IC_Constructor::Load_Physical_Params(const FP filename_para,const int cloud_idx, const long NPar_AllRank)
 {
-      params.Cloud_Center   = new double[3];     // central coordinates
-      params.Cloud_BulkVel  = new double[3];     // bulk velocity
+   params.Cloud_Center   = new double[3];     // central coordinates
+   params.Cloud_BulkVel  = new double[3];     // bulk velocity
 
-      Aux_Message( stdout, "Reading physical parameters input file:%s\n",filename_para.Params_Filenames[cloud_idx].c_str() );
+   Aux_Message( stdout, "Reading physical parameters input file:%s\n",filename_para.Params_Filenames[cloud_idx].c_str() );
 
-      //for(int k=0;k<filenames.Cloud_Num;k++){
-      // (1) load the problem-specific runtime parameters
-      params.Cloud_Num                = filename_para.Cloud_Num;
-      params.Params_Filenames         = filename_para.Params_Filenames[cloud_idx];
+   //for(int k=0;k<filenames.Cloud_Num;k++){
+   // (1) load the problem-specific runtime parameters
+   params.Cloud_Num                = filename_para.Cloud_Num;
+   params.Params_Filenames         = filename_para.Params_Filenames[cloud_idx];
 
-      const char* FileName=filename_para.Params_Filenames[cloud_idx].c_str();
-      ReadPara_t *ReadPara  = new ReadPara_t;
+   const char* FileName=filename_para.Params_Filenames[cloud_idx].c_str();
+   ReadPara_t *ReadPara  = new ReadPara_t;
 
    // (1-1) add parameters in the following format:
    // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
@@ -162,22 +162,21 @@ void Particle_IC_Constructor::Load_Physical_Params(const FP filename_para,const 
             Aux_Message( stdout, "Density Profile %s cannot be found !!\n", c);
             Aux_Error( ERROR_INFO, "Error in the input of Density_Table_Name !!\n" );
          }
-      file.close();
-         }
+         file.close();
+      }
 
    // Checking ExtPot_Table_Name
-   Aux_Message( stdout, "Checking ExtPot_Table_Name\n");
-   if(params.ADD_EXT_POT){
-      const char * c = convertToString(params.ExtPot_Table_Name).c_str();
-      fstream file;
-      file.open(c, ios::in);
-      if(!file){
-         Aux_Message( stdout, "External potential profile %s cannot be found !!\n", c);
-         Aux_Error( ERROR_INFO, "Error in the input of ExtPot_Table_Name!!\n" );
+      Aux_Message( stdout, "Checking ExtPot_Table_Name\n");
+      if(params.ADD_EXT_POT){
+         const char * c = convertToString(params.ExtPot_Table_Name).c_str();
+         fstream file;
+         file.open(c, ios::in);
+         if(!file){
+            Aux_Message( stdout, "External potential profile %s cannot be found !!\n", c);
+            Aux_Error( ERROR_INFO, "Error in the input of ExtPot_Table_Name!!\n" );
+         }
+         file.close();
       }
-      file.close();
-   }
-
 } // FUNCTION : void Particle_IC_Constructor::Load_Physical_Params(const FP filename_para,const int cloud_idx, const long NPar_AllRank)
 
 //-------------------------------------------------------------------------------------------------------
