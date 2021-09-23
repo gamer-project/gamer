@@ -1,0 +1,32 @@
+Compilation flags:
+========================================
+Enable : MODEL=HYDRO, GRAVITY, PARTICLE, SUPPORT_GSL
+Disable: COMOVING
+
+
+Default setup:
+========================================
+
+
+Note:
+========================================
+1. You can put many clouds of particles in HYDRO mode, and observe their evolution through gravity.
+   To assign the number of clouds, input the desired number in variable "Cloud_Num" in "Init_TestProb".
+   And please input the file names of physical parameters in "Input__TestProb" for each cloud respectively.
+2. Test the evolution of the all sorts of models, like Plummer, NFW, Burkert, Jaffe, Hernquist, Einasto
+   To switch among the types of models, find variable "Cloud_Type" in your physical parameter files.
+   Available options include:
+   Plummer
+   NFW
+   Burkert
+   Jaffe
+   Hernquist
+   Einasto
+   Table
+   If you want to initialize a model with some given density profile in the form of a table, please use option "Table",and input
+      your file name after variable "Density_Table_Name" in your physical parameter files; otherwise input "NONE" in it.
+3. Sometimes the spatial resolution is not small enough for some models like Jaffe, please increase MAX_LEVEL in "Input__Parameter"
+4. You construct multiple clouds of particles at the same time.
+   Replace the original Input__TestProb with the content of Input_TestProb_Two_Clouds for example, will allow you to construct two clouds of particles.
+   For details, you may check Input__TestProb for further instructions.
+5. To generate example density or external potential tables, you may use the python files in "tool/table_maker/" to build your tables.
