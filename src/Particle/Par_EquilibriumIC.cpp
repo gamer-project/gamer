@@ -191,6 +191,11 @@ void Particle_IC_Constructor::Load_Physical_Params(const FP filename_para,const 
 //-------------------------------------------------------------------------------------------------------
 void Particle_IC_Constructor::Init()
 {
+
+#  ifndef SUPPORT_GSL
+   Aux_Error( ERROR_INFO, "Must enable SUPPORT_GSL for Particle_IC_Constructor !!\n" );
+#  endif
+
    Table_r                 = NULL;
    Table_Enclosed_Mass     = NULL;
    Table_Density           = NULL;
@@ -407,13 +412,14 @@ double Particle_IC_Constructor::Set_Mass(double r)
    }
 
    else{
+      double result = NULL_REAL;
       double M0 = 4*M_PI*pow(params.Cloud_R0,3)*(params.Cloud_Rho0);
 
+#     ifdef SUPPORT_GSL
       gsl_integration_workspace * w 
       = gsl_integration_workspace_alloc (1000);
 
       double  error;
-      double result;
       gsl_function F;
 
       if(convertToString(params.Cloud_Type)=="Plummer")F.function = &mass_base_Plummer;
@@ -425,6 +431,7 @@ double Particle_IC_Constructor::Set_Mass(double r)
 
       gsl_integration_qag  (&F, 0, x, 0, 1e-7, 1000, 1, w, &result,  &error);
       gsl_integration_workspace_free (w);
+#     endif // #ifdef SUPPORT_GSL
 
       return result*M0;
    }

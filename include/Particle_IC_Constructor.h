@@ -9,10 +9,12 @@
 using namespace std;
 
 //gsl library
+#ifdef SUPPORT_GSL
 #include <gsl/gsl_integration.h>
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_roots.h>
+#endif
 
 
 typedef struct Filename_Parameter{
