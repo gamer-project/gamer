@@ -3,10 +3,10 @@
 
 #include"Particle_IC_Constructor.h"
 #include"string"
+using namespace std;
 
 // Negligibly small uniform density
 double Equilibrium_Cloud_Dens;
-using namespace std;
 
 // problem-specific function prototypes
 #ifdef PARTICLE
@@ -15,6 +15,10 @@ void Par_Init_ByFunction_Equilibrium_Cloud( const long NPar_ThisRank, const long
                                   real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                   real *AllAttribute[PAR_NATT_TOTAL] );
 #endif
+
+// external potential routines
+void Init_ExtPot_EquilibriumIC();
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
@@ -152,8 +156,6 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 } // FUNCTION : SetGridIC
 
-
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_TestProb_Hydro_Equilibrium_Cloud_smallGas
 // Description :  Test problem initializer
@@ -183,6 +185,11 @@ void Init_TestProb_Hydro_Equilibrium_Cloud_smallGas()
 #  endif
 
 #  endif // #if ( MODEL == HYDRO )
+
+// External Potential
+# ifdef GRAVITY
+   if ( OPT__EXT_POT == EXT_POT_FUNC )   Init_ExtPot_Ptr  = Init_ExtPot_EquilibriumIC;
+# endif //# ifdef GRAVITY
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

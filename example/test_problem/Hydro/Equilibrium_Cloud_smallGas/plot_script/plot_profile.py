@@ -53,5 +53,5 @@ for f in files:
    ax.plot(rp1.x.value,rp1[field].in_units("code_mass/code_length**3").value)
    ax.set_xscale('log')
    ax.set_yscale('log')
-   ax.legend(["Without Correction", "With Correction"])
+   ax.legend(["Later", "Original"])
    fig.savefig(f+"_profile.png")
