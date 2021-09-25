@@ -18,10 +18,10 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  SetExtPotAuxArray_EquilibriumIC
-// Description :  Set the auxiliary arrays ExtPot_AuxArray_Flt/Int[] used by ExtPot_EquilibriumIC()
+// Function    :  SetExtPotAuxArray_ParEqmIC
+// Description :  Set the auxiliary arrays ExtPot_AuxArray_Flt/Int[] used by ExtPot_ParEqmIC()
 //
-// Note        :  1. Invoked by Init_ExtPot_EquilibriumIC()
+// Note        :  1. Invoked by Init_ExtPot_ParEqmIC()
 //                2. AuxArray_Flt/Int[] have the size of EXT_POT_NAUX_MAX defined in Macro.h (default = 20)
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
@@ -29,22 +29,22 @@
 //
 // Return      :  AuxArray_Flt/Int[]
 //-------------------------------------------------------------------------------------------------------
-void SetExtPotAuxArray_EquilibriumIC( double AuxArray_Flt[], int AuxArray_Int[] )
+void SetExtPotAuxArray_ParEqmIC( double AuxArray_Flt[], int AuxArray_Int[] )
 {
-   double EquilibriumIC_Rho0 = 1.0;
-   double EquilibriumIC_R0   = 0.1;
-   double EquilibriumIC_Center[3] ={1.5,1.5,1.5};
-   double EquilibriumIC_ExtPotMFrac = 1.0;
+   double ParEqmIC_Rho0 = 1.0;
+   double ParEqmIC_R0   = 0.1;
+   double ParEqmIC_Center[3] ={1.5,1.5,1.5};
+   double ParEqmIC_ExtPotMFrac = 1.0;
 // potential = -G*M/(r^2+R0^2)^(1/2)
-   const double ExtPotM = (4.0/3.0)*M_PI*CUBE(EquilibriumIC_R0)*EquilibriumIC_Rho0*EquilibriumIC_ExtPotMFrac;
+   const double ExtPotM = (4.0/3.0)*M_PI*CUBE(ParEqmIC_R0)*ParEqmIC_Rho0*ParEqmIC_ExtPotMFrac;
 
-   AuxArray_Flt[0] = EquilibriumIC_Center[0];   // x coordinate of the EquilibriumIC center
-   AuxArray_Flt[1] = EquilibriumIC_Center[1];   // y ...
-   AuxArray_Flt[2] = EquilibriumIC_Center[2];   // z ...
-   AuxArray_Flt[3] = SQR( EquilibriumIC_R0 );   // scale_radius^2
+   AuxArray_Flt[0] = ParEqmIC_Center[0];   // x coordinate of the potential center
+   AuxArray_Flt[1] = ParEqmIC_Center[1];   // y ...
+   AuxArray_Flt[2] = ParEqmIC_Center[2];   // z ...
+   AuxArray_Flt[3] = SQR( ParEqmIC_R0 );   // scale_radius^2
    AuxArray_Flt[4] = -NEWTON_G*ExtPotM;   // -G*M
 
-} // FUNCTION : SetExtPotAuxArray_EquilibriumIC
+} // FUNCTION : SetExtPotAuxArray_ParEqmIC
 #endif // #ifndef __CUDACC__
 
 
@@ -54,11 +54,11 @@ void SetExtPotAuxArray_EquilibriumIC( double AuxArray_Flt[], int AuxArray_Int[] 
 // =================================
 
 //-----------------------------------------------------------------------------------------
-// Function    :  ExtPot_EquilibriumIC
+// Function    :  ExtPot_ParEqmIC
 // Description :  Calculate the external potential at the given coordinates and time
 //
 // Note        :  1. This function is shared by CPU and GPU
-//                2. Auxiliary arrays UserArray_Flt/Int[] are set by SetExtPotAuxArray_EquilibriumIC()
+//                2. Auxiliary arrays UserArray_Flt/Int[] are set by SetExtPotAuxArray_ParEqmIC()
 //                3. GenePtr has the size of EXT_POT_NGENE_MAX defined in Macro.h (default = 6)
 //
 // Parameter   :  x/y/z             : Target spatial coordinates
@@ -75,13 +75,13 @@ void SetExtPotAuxArray_EquilibriumIC( double AuxArray_Flt[], int AuxArray_Int[] 
 // Return      :  External potential at (x,y,z,Time)
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real ExtPot_EquilibriumIC( const double x, const double y, const double z, const double Time,
-                            const double UserArray_Flt[], const int UserArray_Int[],
-                            const ExtPotUsage_t Usage, const real PotTable[], void **GenePtr )
+static real ExtPot_ParEqmIC( const double x, const double y, const double z, const double Time,
+                                     const double UserArray_Flt[], const int UserArray_Int[],
+                                     const ExtPotUsage_t Usage, const real PotTable[], void **GenePtr )
 {
 
 // potential = -G*M/(r^2+R0^2)^(1/2)
-   const double cx  =       UserArray_Flt[0];   // x coordinate of the EquilibriumIC center
+   const double cx  =       UserArray_Flt[0];   // x coordinate of the potential center
    const double cy  =       UserArray_Flt[1];   // y ...
    const double cz  =       UserArray_Flt[2];   // z ...
    const real   a2  = (real)UserArray_Flt[3];   // scale_radius^2
@@ -95,7 +95,7 @@ static real ExtPot_EquilibriumIC( const double x, const double y, const double z
 
    return pot;
 
-} // FUNCTION : ExtPot_EquilibriumIC
+} // FUNCTION : ExtPot_ParEqmIC
 
 
 
@@ -109,13 +109,13 @@ static real ExtPot_EquilibriumIC( const double x, const double y, const double z
 #  define FUNC_SPACE            static
 #endif
 
-FUNC_SPACE ExtPot_t ExtPot_Ptr = ExtPot_EquilibriumIC;
+FUNC_SPACE ExtPot_t ExtPot_Ptr = ExtPot_ParEqmIC;
 
 //-----------------------------------------------------------------------------------------
-// Function    :  SetCPU/GPUExtPot_EquilibriumIC
+// Function    :  SetCPU/GPUExtPot_ParEqmIC
 // Description :  Return the function pointers of the CPU/GPU external potential routines
 //
-// Note        :  1. Invoked by Init_ExtPot_EquilibriumIC()
+// Note        :  1. Invoked by Init_ExtPot_ParEqmIC()
 //
 // Parameter   :  CPU/GPUExtPot_Ptr (call-by-reference)
 //
@@ -123,14 +123,14 @@ FUNC_SPACE ExtPot_t ExtPot_Ptr = ExtPot_EquilibriumIC;
 //-----------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __host__
-void SetGPUExtPot_EquilibriumIC( ExtPot_t &GPUExtPot_Ptr )
+void SetGPUExtPot_ParEqmIC( ExtPot_t &GPUExtPot_Ptr )
 {
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &GPUExtPot_Ptr, ExtPot_Ptr, sizeof(ExtPot_t) )  );
 }
 
 #else // #ifdef __CUDACC__
 
-void SetCPUExtPot_EquilibriumIC( ExtPot_t &CPUExtPot_Ptr )
+void SetCPUExtPot_ParEqmIC( ExtPot_t &CPUExtPot_Ptr )
 {
    CPUExtPot_Ptr = ExtPot_Ptr;
 }
@@ -142,14 +142,14 @@ void SetCPUExtPot_EquilibriumIC( ExtPot_t &CPUExtPot_Ptr )
 #ifndef __CUDACC__
 
 // local function prototypes
-void SetExtPotAuxArray_EquilibriumIC( double [], int [] );
-void SetCPUExtPot_EquilibriumIC( ExtPot_t & );
+void SetExtPotAuxArray_ParEqmIC( double [], int [] );
+void SetCPUExtPot_ParEqmIC( ExtPot_t & );
 #ifdef GPU
-void SetGPUExtPot_EquilibriumIC( ExtPot_t & );
+void SetGPUExtPot_ParEqmIC( ExtPot_t & );
 #endif
 
 //-----------------------------------------------------------------------------------------
-// Function    :  Init_ExtPot_EquilibriumIC
+// Function    :  Init_ExtPot_ParEqmIC
 // Description :  Initialize external potential
 //
 // Note        :  1. Set auxiliary arrays by invoking SetExtPotAuxArray_*()
@@ -163,16 +163,16 @@ void SetGPUExtPot_EquilibriumIC( ExtPot_t & );
 //
 // Return      :  None
 //-----------------------------------------------------------------------------------------
-void Init_ExtPot_EquilibriumIC()
+void Init_ExtPot_ParEqmIC()
 {
 
-   SetExtPotAuxArray_EquilibriumIC( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int );
-   SetCPUExtPot_EquilibriumIC( CPUExtPot_Ptr );
+   SetExtPotAuxArray_ParEqmIC( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int );
+   SetCPUExtPot_ParEqmIC( CPUExtPot_Ptr );
 #  ifdef GPU
-   SetGPUExtPot_EquilibriumIC( GPUExtPot_Ptr );
+   SetGPUExtPot_ParEqmIC( GPUExtPot_Ptr );
 #  endif
 
-} // FUNCTION : Init_ExtPot_EquilibriumIC
+} // FUNCTION : Init_ExtPot_ParEqmIC
 
 #endif // #ifndef __CUDACC__
 

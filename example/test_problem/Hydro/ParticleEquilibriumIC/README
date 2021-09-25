@@ -11,7 +11,7 @@ Default setup:
 Note:
 ========================================
 1. You can put many clouds of particles in HYDRO mode, and observe their evolution through gravity.
-   To assign the number of clouds, input the desired number in variable "Cloud_Num" in "Init_TestProb".
+   To assign the number of clouds, input the desired number in variable "ParEqmIC_Cloud_Num" in "Init_TestProb".
    And please input the file names of physical parameters in "Input__TestProb" for each cloud respectively.
 2. Test the evolution of the all sorts of models, like Plummer, NFW, Burkert, Jaffe, Hernquist, Einasto
    To switch among the types of models, find variable "Cloud_Type" in your physical parameter files.
