@@ -1,11 +1,11 @@
 #include "GAMER.h"
 #include "TestProb.h"
-
-#include"Particle_IC_Constructor.h"
+#include"Par_EquilibriumIC.h"
 #include"string"
+
 using namespace std;
 
-// Negligibly small uniform density
+// negligibly small uniform density and energy
 double Equilibrium_Cloud_Dens;
 
 // problem-specific function prototypes

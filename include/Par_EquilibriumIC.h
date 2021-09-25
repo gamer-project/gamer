@@ -1,5 +1,8 @@
-#ifndef __PARTICLE_IC_CONSTRUCTOR_H__
-#define __PARTICLE_IC_CONSTRUCTOR_H__
+#ifndef __PAR_EQUILIBRIUM_IC_H__
+#define __PAR_EQUILIBRIUM_IC_H__
+
+
+
 #include "GAMER.h"
 #include "TestProb.h"
 #include"vector"
@@ -43,11 +46,11 @@ typedef struct Physical_Parameter{
 }PhysP;
 
 
-class Particle_IC_Constructor
+class Par_EquilibriumIC
 {
    public:
-      Particle_IC_Constructor();
-      virtual ~Particle_IC_Constructor();
+      Par_EquilibriumIC();
+      virtual ~Par_EquilibriumIC();
       void Read_Filenames( const char *filename_para);
       void Load_Physical_Params(const FP filenames,const int cloud_idx, const long NPar_AllRank);
       void Init();
@@ -116,4 +119,6 @@ class Particle_IC_Constructor
       RandomNumber_t *Random_Num_Gen ;
 };
 
-#endif //__PARTICLE_IC_CONSTRUCTOR_H__
+
+
+#endif //__PAR_EQUILIBRIUM_IC_H__

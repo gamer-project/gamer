@@ -1,12 +1,14 @@
-#  ifdef PARTICLE
-#include "Particle_IC_Constructor.h"
+#ifdef PARTICLE
 
-Particle_IC_Constructor::Particle_IC_Constructor()
+
+#include "Par_EquilibriumIC.h"
+
+Par_EquilibriumIC::Par_EquilibriumIC()
 {
 
 }
 
-Particle_IC_Constructor::~Particle_IC_Constructor()
+Par_EquilibriumIC::~Par_EquilibriumIC()
 {
 
 }
@@ -21,14 +23,14 @@ Particle_IC_Constructor::~Particle_IC_Constructor()
 //
 // Return      :
 //-------------------------------------------------------------------------------------------------------
-void Particle_IC_Constructor::Read_Filenames( const char *filename_para)
+void Par_EquilibriumIC::Read_Filenames( const char *filename_para)
 {
    vector <string> EMPTY;
 
    filenames.Cloud_Num       = GetParams(filename_para,"Cloud_Num",      1,"int",EMPTY);
    GetParams(filename_para,"Params_Filenames",       filenames.Cloud_Num,"string",filenames.Params_Filenames       );
    Check_InputFileName();
-} // FUNCTION : void Particle_IC_Constructor::Read_Filenames(string filename_para)
+} // FUNCTION : void Par_EquilibriumIC::Read_Filenames(string filename_para)
 
 string convertToString(char* a)
 {
@@ -55,7 +57,7 @@ string convertToString(char* a)
 //
 // Return      :
 //-------------------------------------------------------------------------------------------------------
-void Particle_IC_Constructor::Load_Physical_Params(const FP filename_para,const int cloud_idx, const long NPar_AllRank)
+void Par_EquilibriumIC::Load_Physical_Params(const FP filename_para,const int cloud_idx, const long NPar_AllRank)
 {
    params.Cloud_Center   = new double[3];     // central coordinates
    params.Cloud_BulkVel  = new double[3];     // bulk velocity
@@ -177,7 +179,7 @@ void Particle_IC_Constructor::Load_Physical_Params(const FP filename_para,const 
          }
          file.close();
       }
-} // FUNCTION : void Particle_IC_Constructor::Load_Physical_Params(const FP filename_para,const int cloud_idx, const long NPar_AllRank)
+} // FUNCTION : void Par_EquilibriumIC::Load_Physical_Params(const FP filename_para,const int cloud_idx, const long NPar_AllRank)
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init
@@ -189,11 +191,11 @@ void Particle_IC_Constructor::Load_Physical_Params(const FP filename_para,const 
 //
 // Return      :
 //-------------------------------------------------------------------------------------------------------
-void Particle_IC_Constructor::Init()
+void Par_EquilibriumIC::Init()
 {
 
 #  ifndef SUPPORT_GSL
-   Aux_Error( ERROR_INFO, "Must enable SUPPORT_GSL for Particle_IC_Constructor !!\n" );
+   Aux_Error( ERROR_INFO, "Must enable SUPPORT_GSL for Par_EquilibriumIC !!\n" );
 #  endif
 
    Table_r                 = NULL;
@@ -265,7 +267,7 @@ void Particle_IC_Constructor::Init()
       Add_Ext_Pot   ();
       Init_Prob_Dens();
    }
-} // FUNCTION : void Particle_IC_Constructor::Init()
+} // FUNCTION : void Par_EquilibriumIC::Init()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_SetEquilibriumIC
@@ -282,7 +284,7 @@ void Particle_IC_Constructor::Init()
 //                Vel_AllRank
 //
 //-------------------------------------------------------------------------------------------------------
-void Particle_IC_Constructor::Par_SetEquilibriumIC(real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3],const long Par_Idx)
+void Par_EquilibriumIC::Par_SetEquilibriumIC(real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3],const long Par_Idx)
 {
    double *Table_MassProf_r = NULL;
    double *Table_MassProf_M = NULL;
@@ -403,7 +405,7 @@ double mass_base_Einasto(double x,void *Einasto_Power_Factor)
 // Return      :  Enclosed mass of this cloud within radius r
 //
 //-------------------------------------------------------------------------------------------------------
-double Particle_IC_Constructor::Set_Mass(double r)
+double Par_EquilibriumIC::Set_Mass(double r)
 {
    double x = r/params.Cloud_R0;
    if (convertToString(params.Cloud_Type)=="Table"){
@@ -435,7 +437,7 @@ double Particle_IC_Constructor::Set_Mass(double r)
 
       return result*M0;
    }
-} // FUNCTION : double Particle_IC_Constructor::Set_Mass(double r)
+} // FUNCTION : double Par_EquilibriumIC::Set_Mass(double r)
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Set_Density
@@ -448,7 +450,7 @@ double Particle_IC_Constructor::Set_Mass(double r)
 // Return      :  Density of this cloud at radius r
 //
 //-------------------------------------------------------------------------------------------------------
-double Particle_IC_Constructor::Set_Density(double x)
+double Par_EquilibriumIC::Set_Density(double x)
 {
    if (params.Cloud_Type == "Table"){
       if(x>=Table_r[params.Cloud_MassProfNBin-1]){
@@ -470,7 +472,7 @@ double Particle_IC_Constructor::Set_Density(double x)
 
       return rho*pow(x,-2);
    }
-} // FUNCTION : double Particle_IC_Constructor::Set_Density(double x)
+} // FUNCTION : double Par_EquilibriumIC::Set_Density(double x)
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Set_Velocity
@@ -483,7 +485,7 @@ double Particle_IC_Constructor::Set_Density(double x)
 // Return      :  Particle's velocity
 //
 //-------------------------------------------------------------------------------------------------------
-double Particle_IC_Constructor::Set_Velocity(const double x)
+double Par_EquilibriumIC::Set_Velocity(const double x)
 {
    double index,sum=0;
    double psi_per =-potential(x);
@@ -516,18 +518,18 @@ double Particle_IC_Constructor::Set_Velocity(const double x)
    }
    double v =pow(kim,0.5);
    return v;
-} // FUNCTION : double Particle_IC_Constructor::Set_Velocity(const double x)
+} // FUNCTION : double Par_EquilibriumIC::Set_Velocity(const double x)
 
 // Solve Eddington's equation
-double Particle_IC_Constructor::potential(const double x)
+double Par_EquilibriumIC::potential(const double x)
 {
    if(x>double(params.Cloud_MaxR/params.Cloud_R0)){
       return Table_Gravity_Potential[params.Cloud_MassProfNBin-1]*(params.Cloud_MaxR)/(x*params.Cloud_R0);
    }
    return Mis_InterpolateFromTable( params.Cloud_MassProfNBin, Table_r, Table_Gravity_Potential, x*params.Cloud_R0 );
-} // FUNCTION : double Particle_IC_Constructor::potential(const double x)
+} // FUNCTION : double Par_EquilibriumIC::potential(const double x)
 
-double Particle_IC_Constructor::inverse_psi_to_index (double psi)
+double Par_EquilibriumIC::inverse_psi_to_index (double psi)
 {
    int max=params.Cloud_MassProfNBin-1;
    int min =0;
@@ -548,9 +550,9 @@ double Particle_IC_Constructor::inverse_psi_to_index (double psi)
          mid =(max+min)/2;
       }
    }
-} // FUNCTION : double Particle_IC_Constructor::inverse_psi_to_index (double psi)
+} // FUNCTION : double Par_EquilibriumIC::inverse_psi_to_index (double psi)
 
-double Particle_IC_Constructor::integration_eng_base(double eng)
+double Par_EquilibriumIC::integration_eng_base(double eng)
 {
    double min =  eng_min;
    double max = eng;
@@ -566,7 +568,7 @@ double Particle_IC_Constructor::integration_eng_base(double eng)
       else result += -2* Table_dRho_dx[ind0] * ( pow(eng-psi_l,0.5) - pow(eng-psi_r,0.5) );
    }
    return result;
-} // FUNCTION : double Particle_IC_Constructor::integration_eng_base(double eng)
+} // FUNCTION : double Par_EquilibriumIC::integration_eng_base(double eng)
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_Mass
@@ -581,7 +583,7 @@ double Particle_IC_Constructor::integration_eng_base(double eng)
 //
 //-------------------------------------------------------------------------------------------------------
 // Initialize physical parameter tables
-void Particle_IC_Constructor::Init_Mass()
+void Par_EquilibriumIC::Init_Mass()
 {
    double dr = params.Cloud_MaxR / (params.Cloud_MassProfNBin-1);
    //Radius & Mass
@@ -612,7 +614,7 @@ void Particle_IC_Constructor::Init_Mass()
 
    }Table_dRho_dr[params.Cloud_MassProfNBin-1]=Table_dRho_dr[params.Cloud_MassProfNBin-2];
 
-} // FUNCTION : void Particle_IC_Constructor::Init_Mass()
+} // FUNCTION : void Par_EquilibriumIC::Init_Mass()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_Pot
@@ -626,7 +628,7 @@ void Particle_IC_Constructor::Init_Mass()
 // Return      :
 //
 //-------------------------------------------------------------------------------------------------------
-void Particle_IC_Constructor::Init_Pot()
+void Par_EquilibriumIC::Init_Pot()
 {
    double dr = params.Cloud_MaxR / (params.Cloud_MassProfNBin-1);
    Table_Gravity_Field[0] =0;
@@ -650,7 +652,7 @@ void Particle_IC_Constructor::Init_Pot()
    {
       Table_dRho_dx[b] = -Table_dRho_dr[b]/(Table_Gravity_Field[b]);
    }
-} // FUNCTION : void Particle_IC_Constructor::Init_Pot()
+} // FUNCTION : void Par_EquilibriumIC::Init_Pot()
 
 //  Initialization through loading a file of table
 //-------------------------------------------------------------------------------------------------------
@@ -665,7 +667,7 @@ void Particle_IC_Constructor::Init_Pot()
 // Return      :
 //
 //-------------------------------------------------------------------------------------------------------
-void Particle_IC_Constructor::Init_Mass_Table()
+void Par_EquilibriumIC::Init_Mass_Table()
 {
    //Mass
    Table_Enclosed_Mass[0]=0;
@@ -691,7 +693,7 @@ void Particle_IC_Constructor::Init_Mass_Table()
 
    }
    Table_dRho_dr[params.Cloud_MassProfNBin-1]=Table_dRho_dr[params.Cloud_MassProfNBin-2];
-} // FUNCTION : void Particle_IC_Constructor::Init_Mass_Table()
+} // FUNCTION : void Par_EquilibriumIC::Init_Mass_Table()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_Pot_Table
@@ -705,7 +707,7 @@ void Particle_IC_Constructor::Init_Mass_Table()
 // Return      :
 //
 //-------------------------------------------------------------------------------------------------------
-void Particle_IC_Constructor::Init_Pot_Table()
+void Par_EquilibriumIC::Init_Pot_Table()
 {
    Table_Gravity_Field[0] =0;
    for (int b=1; b<params.Cloud_MassProfNBin; b++)
@@ -728,7 +730,7 @@ void Particle_IC_Constructor::Init_Pot_Table()
    {
       Table_dRho_dx[b] = -Table_dRho_dr[b]/(Table_Gravity_Field[b]);
    }
-} // FUNCTION : void Particle_IC_Constructor::Init_Pot_Table()
+} // FUNCTION : void Par_EquilibriumIC::Init_Pot_Table()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_Prob_Dens
@@ -741,7 +743,7 @@ void Particle_IC_Constructor::Init_Pot_Table()
 // Return      :
 //
 //-------------------------------------------------------------------------------------------------------
-void Particle_IC_Constructor::Init_Prob_Dens()
+void Par_EquilibriumIC::Init_Prob_Dens()
 {
    double min,max;
    min=-Table_Gravity_Potential[params.Cloud_MassProfNBin-1];
@@ -768,7 +770,7 @@ void Particle_IC_Constructor::Init_Prob_Dens()
 
    }
    smooth_all(prob_dens,0,params.Cloud_MassProfNBin);
-} // FUNCTION : void Particle_IC_Constructor::Init_Prob_Dens()
+} // FUNCTION : void Par_EquilibriumIC::Init_Prob_Dens()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Add_Ext_Pot
@@ -781,7 +783,7 @@ void Particle_IC_Constructor::Init_Prob_Dens()
 // Return      :
 //
 //-------------------------------------------------------------------------------------------------------
-void Particle_IC_Constructor::Add_Ext_Pot()
+void Par_EquilibriumIC::Add_Ext_Pot()
 {
    if ( ! bool(params.AddExtPot) )  return;
 
@@ -806,7 +808,7 @@ void Particle_IC_Constructor::Add_Ext_Pot()
    for(int i=0;i<params.Cloud_MassProfNBin;i++){
       Table_Gravity_Potential[i] += Ext_Pot[i];
    }
-} // FUNCTION : void Particle_IC_Constructor::Add_Ext_Pot()
+} // FUNCTION : void Par_EquilibriumIC::Add_Ext_Pot()
 
 // Auxiliary functions
 //-------------------------------------------------------------------------------------------------------
@@ -820,7 +822,7 @@ void Particle_IC_Constructor::Add_Ext_Pot()
 // Return      :
 //
 //-------------------------------------------------------------------------------------------------------
-void Particle_IC_Constructor::Check_InputFileName()
+void Par_EquilibriumIC::Check_InputFileName()
 {
    fstream file;
    Aux_Message( stdout, "Checking Params_Filenames\n" );
@@ -833,7 +835,7 @@ void Particle_IC_Constructor::Check_InputFileName()
       }
       file.close();
    }
-} // FUNCTION : void Particle_IC_Constructor::Check_InputFileName()
+} // FUNCTION : void Par_EquilibriumIC::Check_InputFileName()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Aux_CountRow
@@ -846,7 +848,7 @@ void Particle_IC_Constructor::Check_InputFileName()
 // Return      :  Row number of the given file
 //
 //-------------------------------------------------------------------------------------------------------
-int Particle_IC_Constructor::Aux_CountRow( const char *filename )
+int Par_EquilibriumIC::Aux_CountRow( const char *filename )
 {
    fstream file;
    file.open(filename,ios::in);
@@ -865,7 +867,7 @@ int Particle_IC_Constructor::Aux_CountRow( const char *filename )
    file.close();
 
    return row;
-} // FUNCTION : Particle_IC_Constructor::Aux_CountRow( const char *filename )
+} // FUNCTION : Par_EquilibriumIC::Aux_CountRow( const char *filename )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Aux_Countcolumn
@@ -878,7 +880,7 @@ int Particle_IC_Constructor::Aux_CountRow( const char *filename )
 // Return      :  Column number of the given file
 //
 //-------------------------------------------------------------------------------------------------------
-int Particle_IC_Constructor::Aux_Countcolumn( const char *filename )
+int Par_EquilibriumIC::Aux_Countcolumn( const char *filename )
 {
    fstream file;
    file.open(filename,ios::in);
@@ -899,7 +901,7 @@ int Particle_IC_Constructor::Aux_Countcolumn( const char *filename )
    file.close();
 
    return column;
-} // FUNCTION : Particle_IC_Constructor::Aux_CountRow( const char *filename )
+} // FUNCTION : Par_EquilibriumIC::Aux_CountRow( const char *filename )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  GetParams
@@ -915,7 +917,7 @@ int Particle_IC_Constructor::Aux_Countcolumn( const char *filename )
 // Return      :  containaer
 //
 //-------------------------------------------------------------------------------------------------------
-int Particle_IC_Constructor::GetParams( const char *filename,const char *keyword,const int para_num,const char *para_type,vector <string> &container)
+int Par_EquilibriumIC::GetParams( const char *filename,const char *keyword,const int para_num,const char *para_type,vector <string> &container)
 {
    fstream file;
    file.open(filename,ios::in);
@@ -951,7 +953,7 @@ int Particle_IC_Constructor::GetParams( const char *filename,const char *keyword
    }
    file.close();
    return 0;
-} // FUNCTION : Particle_IC_Constructor::GetParams( const char *filename,const char *keyword)
+} // FUNCTION : Par_EquilibriumIC::GetParams( const char *filename,const char *keyword)
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  RanVec_FixRadius
@@ -965,7 +967,7 @@ int Particle_IC_Constructor::GetParams( const char *filename,const char *keyword
 //
 // Return      :  RanVec
 //-------------------------------------------------------------------------------------------------------
-void Particle_IC_Constructor::RanVec_FixRadius( const double r, double RanVec[] )
+void Par_EquilibriumIC::RanVec_FixRadius( const double r, double RanVec[] )
 {
    double Norm, RanR2;
 
@@ -984,19 +986,19 @@ void Particle_IC_Constructor::RanVec_FixRadius( const double r, double RanVec[] 
 
    for (int d=0; d<3; d++)    RanVec[d] *= Norm;
 
-} // FUNCTION : void Particle_IC_Constructor::RanVec_FixRadius( const double r, double RanVec[] )
+} // FUNCTION : void Par_EquilibriumIC::RanVec_FixRadius( const double r, double RanVec[] )
 
 // Statistics
-double Particle_IC_Constructor::ave(double* a,int start,int fin)
+double Par_EquilibriumIC::ave(double* a,int start,int fin)
 {
    double sum=0;
    for(int k=start;k<fin;k++){
       sum+=a[k];
    }
    return sum/(fin-start);
-} // FUNCTION : double Particle_IC_Constructor::ave(double* a,int start,int fin)
+} // FUNCTION : double Par_EquilibriumIC::ave(double* a,int start,int fin)
 
-double Particle_IC_Constructor::var_n(double* a,int start,int fin)
+double Par_EquilibriumIC::var_n(double* a,int start,int fin)
 {
    double sum=0;
    for(int k=start;k<fin;k++){
@@ -1004,9 +1006,9 @@ double Particle_IC_Constructor::var_n(double* a,int start,int fin)
    }
    sum=sum-(fin-start)*pow(ave(a,start,fin),2);
    return sum;
-} // FUNCTION : double Particle_IC_Constructor::var_n(double* a,int start,int fin)
+} // FUNCTION : double Par_EquilibriumIC::var_n(double* a,int start,int fin)
 
-double Particle_IC_Constructor::cor(double* x,double* y,int start,int fin)
+double Par_EquilibriumIC::cor(double* x,double* y,int start,int fin)
 {
    double up=0,down = pow(var_n(x,start,fin)*var_n(y,start,fin),0.5);
    double ave_x = ave(x,start,fin),ave_y = ave(y,start,fin);
@@ -1014,9 +1016,9 @@ double Particle_IC_Constructor::cor(double* x,double* y,int start,int fin)
       up+=(x[k]-ave_x)*(y[k]-ave_y);
    }
    return up/down;
-} // FUNCTION : double Particle_IC_Constructor::cor(double* x,double* y,int start,int fin)
+} // FUNCTION : double Par_EquilibriumIC::cor(double* x,double* y,int start,int fin)
 
-void Particle_IC_Constructor::mask(double* x,int start,int fin)
+void Par_EquilibriumIC::mask(double* x,int start,int fin)
 {
    double standard=3;
    for(int j=start;j<fin;j++){
@@ -1030,9 +1032,9 @@ void Particle_IC_Constructor::mask(double* x,int start,int fin)
          if(flag)x[j]=0;
       }
    }
-} // FUNCTION : void Particle_IC_Constructor::mask(double* x,int start,int fin)
+} // FUNCTION : void Par_EquilibriumIC::mask(double* x,int start,int fin)
 
-void Particle_IC_Constructor::add_num(double* x,int start,int fin)
+void Par_EquilibriumIC::add_num(double* x,int start,int fin)
 {
    double sum=0;
    int num=0;
@@ -1047,9 +1049,9 @@ void Particle_IC_Constructor::add_num(double* x,int start,int fin)
          if(x[j]==0)x[j]=ave_x;
       }
    }
-} // FUNCTION : void Particle_IC_Constructor::add_num(double* x,int start,int fin)
+} // FUNCTION : void Par_EquilibriumIC::add_num(double* x,int start,int fin)
 
-void Particle_IC_Constructor::smooth_all(double* x,int start,int fin)
+void Par_EquilibriumIC::smooth_all(double* x,int start,int fin)
 {
    int num=10;
    for(int k=start;k<fin-num+1;k++){
@@ -1058,15 +1060,17 @@ void Particle_IC_Constructor::smooth_all(double* x,int start,int fin)
    for(int k=start;k<fin-num+1;k++){
       add_num(x,k,k+num);
    }
-} // FUNCTION : void Particle_IC_Constructor::smooth_all(double* x,int start,int fin)
+} // FUNCTION : void Par_EquilibriumIC::smooth_all(double* x,int start,int fin)
 
-double Particle_IC_Constructor::slope(double* x,double* y,int start,int fin)
+double Par_EquilibriumIC::slope(double* x,double* y,int start,int fin)
 {
    double cor_ = cor(x,y,start,fin);
    double var_n_x =var_n(x,start,fin), var_n_y =var_n(y,start,fin);
    double s =cor_*pow(var_n_y,0.5)/pow(var_n_x,0.5);
 
    return s;
-} // FUNCTION : double Particle_IC_Constructor::slope(double* x,double* y,int start,int fin)
+} // FUNCTION : double Par_EquilibriumIC::slope(double* x,double* y,int start,int fin)
 
-# endif//#  ifdef PARTICLE
+
+
+#endif // #ifdef PARTICLE

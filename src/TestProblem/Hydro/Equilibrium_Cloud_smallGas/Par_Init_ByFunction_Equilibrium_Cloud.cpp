@@ -1,11 +1,11 @@
-/***Total deep copy***/
 #include "GAMER.h"
+#include"Par_EquilibriumIC.h"
 
-#include"Particle_IC_Constructor.h"
-#define DEBUG
 #ifdef PARTICLE
 
 static RandomNumber_t *RNG = NULL;
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_Init_ByFunction_Equilibrium_Cloud
@@ -50,7 +50,7 @@ void Par_Init_ByFunction_Equilibrium_Cloud( const long NPar_ThisRank, const long
    real *Vel_AllRank[3] = { NULL, NULL, NULL };
 
    // Define the Particle IC Constructor
-   Particle_IC_Constructor Filename_Loader;
+   Par_EquilibriumIC Filename_Loader;
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
@@ -71,8 +71,8 @@ void Par_Init_ByFunction_Equilibrium_Cloud( const long NPar_ThisRank, const long
 
       for(int k=0;k<Filename_Loader.filenames.Cloud_Num;k++){
 
-         // initialize Particle_IC_Constructor for each cloud
-         Particle_IC_Constructor Cloud_Constructor;
+         // initialize Par_EquilibriumIC for each cloud
+         Par_EquilibriumIC Cloud_Constructor;
          Cloud_Constructor.Load_Physical_Params(Filename_Loader.filenames,k,NPar_AllRank);
          Cloud_Constructor.Init();
 
