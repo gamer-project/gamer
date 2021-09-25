@@ -244,7 +244,7 @@ void Par_EquilibriumIC::Init()
       if(Row_r_Table!=Row_Density_Table)
          Aux_Error( ERROR_INFO, "Density row number is not equal to radius row number in the profile file !! Please check this file.\n" );
 
-      if(params.Cloud_MassProfNBin!=(Row_r_Table-1))
+      if(params.Cloud_MassProfNBin!=Row_r_Table)
          Aux_Error( ERROR_INFO, "Cloud_MassProfNBin is not equal to the row number in profile file !!\n" );
 
       Table_Enclosed_Mass = new double [params.Cloud_MassProfNBin];
