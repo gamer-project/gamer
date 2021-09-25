@@ -6,7 +6,7 @@
 using namespace std;
 
 // negligibly small uniform density and energy
-double Equilibrium_Cloud_Dens;
+double ParEqmIC_SmallGas;
 
 // problem-specific function prototypes
 #ifdef PARTICLE
@@ -113,13 +113,13 @@ void SetParameter()
       PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
    }
 
-   // Edit Equilibrium_Cloud_Dens in Input__TestProb
+// load run-time parameters
    const char* FileName = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
    // ********************************************************************************************************************************
    // ReadPara->Add( "KEY_IN_THE_FILE",      &VARIABLE,              DEFAULT,       MIN,              MAX               );
    // ********************************************************************************************************************************
-   ReadPara->Add( "Equilibrium_Cloud_Dens",  &Equilibrium_Cloud_Dens,                  1e-3,          0.,               NoMax_double         );
+   ReadPara->Add( "ParEqmIC_SmallGas",       &ParEqmIC_SmallGas,     1e-3,          0.,               NoMax_double      );
    ReadPara->Read( FileName );
    delete ReadPara;
 
@@ -149,15 +149,16 @@ void SetParameter()
 void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] )
 {
-   fluid[DENS] = Equilibrium_Cloud_Dens;
+
+   fluid[DENS] = ParEqmIC_SmallGas;
    fluid[MOMX] = 0;
    fluid[MOMY] = 0;
    fluid[MOMZ] = 0;
-#     ifdef GRAVITY
-   fluid[ENGY] = Equilibrium_Cloud_Dens;
-#     endif
+#  ifdef GRAVITY
+   fluid[ENGY] = ParEqmIC_SmallGas;
+#  endif
 
-//    just set all passive scalars as zero
+// just set all passive scalars as zero
    for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = 0.0;
 
 } // FUNCTION : SetGridIC
