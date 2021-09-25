@@ -64,7 +64,7 @@ void SetExtAccAuxArray_BarredPot( double AuxArray[] )
 //                2. Auxiliary arrays UserArray_Flt/Int[] are set by SetExtAccAuxArray_BarredPot()
 //
 // Parameter   :  Acc               : Array to store the output external acceleration
-// 		  x/y/z             : Target spatial coordinates
+//                x/y/z             : Target spatial coordinates
 //                Time              : Target physical time
 //                UserArray : User-provided auxiliary array
 //

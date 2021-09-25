@@ -12,8 +12,8 @@
 //                   itself and the left slope)
 //                b. The slope is chosen to be zero if the right and left slopes have different signs
 //                c. The interpolation result is BOTH conservative and monotonic
-//		  d. 3D interpolation is achieved by performing interpolation along x, y, and z directions
-//		     in order --> different from MINMOD1D
+//                d. 3D interpolation is achieved by performing interpolation along x, y, and z directions
+//                   in order --> different from MINMOD1D
 //
 // Parameter   :  CData       : Input coarse-grid array
 //                CSize       : Size of the CData array

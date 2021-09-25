@@ -4,9 +4,9 @@
 
 #!/bin/bash
 
-#SBATCH	--account=ACCOUNT                                   # (-A) Account/project number
+#SBATCH --account=ACCOUNT                                   # (-A) Account/project number
 #SBATCH --job-name=JOB_NAME                                 # (-J) Job name
-#SBATCH	--partition=ctest                                   # (-p) Specific slurm partition
+#SBATCH --partition=ctest                                   # (-p) Specific slurm partition
 #SBATCH --ntasks=28                                         # (-n) Number of total MPI tasks (i.e. processes)
 #SBATCH --nodes=2                                           # (-N) Maximum number of nodes to be allocated
 #SBATCH --ntasks-per-node=14                                # Maximum number of tasks on each node

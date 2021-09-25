@@ -7,29 +7,29 @@
 // Function    :  Int_Quadratic
 // Description :  Perform spatial interpolation based on the quadratic interpolation
 //
-// Note	       :  a. The spatial disribution is approximated by a parabola (quadratic polynomial) in each
+// Note        :  a. The spatial disribution is approximated by a parabola (quadratic polynomial) in each
 //                   direction
 //                   --> A quadratic polynomial, which passes through the CENTRAL values in three cells,
 //                       is used to approximate the spatial distribution
-//		  b. The interpolation result is neither conservative nor monotonic
-//		  c. 3D interpolation is achieved by performing interpolation along x, y, and z directions
-//		     in order
-//		  d. The "Monotonic" option is used to ensure that the interpolation results are monotonic
-//		     --> A slope limiter is adopted to ensure the monotonicity
+//                b. The interpolation result is neither conservative nor monotonic
+//                c. 3D interpolation is achieved by performing interpolation along x, y, and z directions
+//                   in order
+//                d. The "Monotonic" option is used to ensure that the interpolation results are monotonic
+//                   --> A slope limiter is adopted to ensure the monotonicity
 //
-// Parameter   :  CData	      : Input coarse-grid array
-//		  CSize	      : Size of the CData array
-//		  CStart      : (x,y,z) starting indices to perform interpolation on the CData array
-//		  CRange      : Number of grids in each direction to perform interpolation
-//		  FData	      : Output fine-grid array
-//		  FStart      : (x,y,z) starting indcies to store the interpolation results
-//		  NComp	      : Number of components in the CData and FData array
+// Parameter   :  CData       : Input coarse-grid array
+//                CSize       : Size of the CData array
+//                CStart      : (x,y,z) starting indices to perform interpolation on the CData array
+//                CRange      : Number of grids in each direction to perform interpolation
+//                FData       : Output fine-grid array
+//                FStart      : (x,y,z) starting indcies to store the interpolation results
+//                NComp       : Number of components in the CData and FData array
 //                UnwrapPhase : Unwrap phase when OPT__INT_PHASE is on (for ELBDM only)
 //                Monotonic   : Ensure that all interpolation results are monotonic
 //                MonoCoeff   : Slope limiter coefficient for the option "Monotonic"
 //-------------------------------------------------------------------------------------------------------
 void Int_Quadratic( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
-		    real FData[], const int FSize[3], const int FStart[3], const int NComp,
+                    real FData[], const int FSize[3], const int FStart[3], const int NComp,
                     const bool UnwrapPhase, const bool Monotonic, const real MonoCoeff )
 {
 
