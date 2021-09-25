@@ -38,7 +38,7 @@ yt.enable_parallelism()
 
 d0= yt.load(  prefix+'Data_000000' )
 #ts = yt.load( [ prefix+'Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
-files = [ prefix+'Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] 
+files = [ prefix+'Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ]
 for f in files:
    print(f+".png")
    ds  = yt.load(f)

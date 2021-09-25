@@ -24,7 +24,7 @@ module purge
 module load compiler/intel/2018u4 IntelMPI/2018u4
 module list >> LOG_FILE
 export LD_LIBRARY_PATH="FFTW_PATH/lib:$LD_LIBRARY_PATH"
-export UCX_TLS="ud,dc,shm,self" 
+export UCX_TLS="ud,dc,shm,self"
 
 cd WORK_DIR
 mpiexec.hydra -bootstrap slurm -n $SLURM_NTASKS ./gamer >> $LOG_FILE 2>&1

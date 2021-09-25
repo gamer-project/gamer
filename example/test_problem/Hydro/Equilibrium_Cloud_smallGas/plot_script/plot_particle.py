@@ -35,7 +35,7 @@ p = []
 for idx in range(idx_start,idx_end+1,1):
    ds = yt.load('Data_%06d'%idx)
    p = yt.ParticlePlot(ds, 'particle_position_x', 'particle_position_y','particle_mass', center='c')
-   field       = 'particle_mass'         
+   field       = 'particle_mass'
    p.set_background_color( field )
    p.set_unit('particle_mass', 'code_mass')
    p.set_axes_unit( 'code_length' )

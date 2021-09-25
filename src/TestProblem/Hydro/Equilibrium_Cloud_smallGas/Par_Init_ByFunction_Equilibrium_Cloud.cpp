@@ -80,19 +80,19 @@ void Par_Init_ByFunction_Equilibrium_Cloud( const long NPar_ThisRank, const long
          if((Par_Idx + Cloud_Constructor.params.Cloud_Par_Num) > NPar_AllRank){
             Aux_Error( ERROR_INFO, "The sum of particle numbers of each cloud exceeds 1!! Please check!");
          }
-         
+
          // set equilibrium initial conditions for each cloud
          Cloud_Constructor.Par_SetEquilibriumIC(Mass_AllRank, Pos_AllRank, Vel_AllRank, Par_Idx);
          Par_Idx += Cloud_Constructor.params.Cloud_Par_Num;
-         
+
       }//for(int k=0;k<Filename_Loader.filenames.Cloud_Num;k++)
 
    }//if ( MPI_Rank == 0 )
-   
-   
+
+
    // synchronize all particles to the physical time on the base level
    for (long p=0; p<NPar_ThisRank; p++)   ParTime[p] = Time[0];
-   
+
    // get the number of particles in each rank and set the corresponding offsets
    if ( NPar_AllRank > (long)__INT_MAX__ )
       Aux_Error( ERROR_INFO, "NPar_Active_AllRank (%ld) exceeds the maximum integer (%ld) --> MPI will likely fail !!\n",
@@ -131,7 +131,7 @@ void Par_Init_ByFunction_Equilibrium_Cloud( const long NPar_ThisRank, const long
    {
       MPI_Scatterv( Pos_AllRank[d], NSend, SendDisp, MPI_FLOAT,  Pos[d], NPar_ThisRank, MPI_FLOAT,  0, MPI_COMM_WORLD );
       MPI_Scatterv( Vel_AllRank[d], NSend, SendDisp, MPI_FLOAT,  Vel[d], NPar_ThisRank, MPI_FLOAT,  0, MPI_COMM_WORLD );
-   } 
+   }
 #  endif
 if ( MPI_Rank == 0 )
    {

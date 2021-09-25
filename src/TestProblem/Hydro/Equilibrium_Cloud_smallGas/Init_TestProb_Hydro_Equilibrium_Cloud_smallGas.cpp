@@ -185,7 +185,7 @@ void Init_TestProb_Hydro_Equilibrium_Cloud_smallGas()
    SetParameter();
 
    Init_Function_User_Ptr  = SetGridIC;
-   
+
 #  ifdef PARTICLE
    Par_Init_ByFunction_Ptr = Par_Init_ByFunction_Equilibrium_Cloud;
 #  endif

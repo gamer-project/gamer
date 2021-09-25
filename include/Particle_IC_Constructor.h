@@ -52,18 +52,18 @@ class Particle_IC_Constructor
       void Load_Physical_Params(const FP filenames,const int cloud_idx, const long NPar_AllRank);
       void Init();
       void Par_SetEquilibriumIC(real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3],const long Par_Idx);
-      
+
 
       PhysP params;
       FP   filenames;
    protected:
-      
+
    private:
       // Derive physical attributes for particles
       double Set_Mass( double x );
       double Set_Density( double x );
       double Set_Velocity(const double x);
-      
+
       // Initialize physical parameter tables
       void Init_Mass();
       void Init_Pot();
