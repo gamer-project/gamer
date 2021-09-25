@@ -27,8 +27,8 @@ void Par_EquilibriumIC::Read_Filenames( const char *filename_para)
 {
    vector <string> EMPTY;
 
-   filenames.Cloud_Num       = GetParams(filename_para,"Cloud_Num",      1,"int",EMPTY);
-   GetParams(filename_para,"Params_Filenames",       filenames.Cloud_Num,"string",filenames.Params_Filenames       );
+   filenames.Cloud_Num       = GetParams(filename_para,"ParEqmIC_Cloud_Num",      1,"int",EMPTY);
+   GetParams(filename_para,"ParEqmIC_Params_Filenames",       filenames.Cloud_Num,"string",filenames.Params_Filenames       );
    Check_InputFileName();
 } // FUNCTION : void Par_EquilibriumIC::Read_Filenames(string filename_para)
 
