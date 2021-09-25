@@ -42,6 +42,7 @@ TESTPROB_ID                   0           # test problem ID [0]
                                           #   14: HYDRO MHD Orszag-Tang vortex (+MHD)
                                           #   15: HYDRO MHD linear wave (+MHD)
                                           #   16: HYDRO Jeans instability (+GRAVITY) [+MHD]
+                                          #   17: HYDRO particle in equilibrium (+GRAVITY & PARTICLE)
                                           # 1000: ELBDM external potential (+GRAVITY)
 
 
