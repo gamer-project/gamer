@@ -32,7 +32,7 @@ do
    ./GAMER_ExtractProfile  -D -i Data_f -S -r 0.5 -n 128 -x $R -y $R -z $R -p
    mv AveParDens AveParDens_final
    gnuplot plot_profile.gpt
-	mv Density_Profile.png Halo_1M_0_$i.png
+        mv Density_Profile.png Halo_1M_0_$i.png
 done
 
 

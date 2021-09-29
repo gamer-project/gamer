@@ -327,9 +327,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // DiskGasDens = AGORA_DiskGasDens0 * exp( -r/AGORA_DiskScaleLength ) * exp( -h/AGORA_DiskScaleHeight );
    DiskGasDens = GaussianQuadratureIntegrate( dx, dy, dz, amr->dh[lv] );
    DiskGasPres = EoS_DensTemp2Pres_CPUPtr( DiskGasDens,       AGORA_DiskGasTemp, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                                           h_EoS_Table, NULL ); // assuming EoS requires no passive scalars
+                                           h_EoS_Table ); // assuming EoS requires no passive scalars
    HaloGasPres = EoS_DensTemp2Pres_CPUPtr( AGORA_HaloGasDens, AGORA_HaloGasTemp, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                                           h_EoS_Table, NULL ); // assuming EoS requires no passive scalars
+                                           h_EoS_Table ); // assuming EoS requires no passive scalars
 
 // disk component
    if ( DiskGasPres > HaloGasPres )
@@ -366,8 +366,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 // compute the total gas energy
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
-                                    EoS_AuxArray_Int, h_EoS_Table, NULL ); // assuming EoS requires no passive scalars
-   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );         // do NOT include magnetic energy here
+                                    EoS_AuxArray_Int, h_EoS_Table );   // assuming EoS requires no passive scalars
+   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );     // do NOT include magnetic energy here
 
 // set the output array
    fluid[DENS] = Dens;

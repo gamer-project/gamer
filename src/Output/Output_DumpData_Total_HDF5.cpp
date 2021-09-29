@@ -1110,7 +1110,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                                             CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres_CPUPtr,
                                             EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
                      Cs2  = EoS_DensPres2CSqr_CPUPtr( u[DENS], Pres, u+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                                                      h_EoS_Table, NULL );
+                                                      h_EoS_Table );
                      FieldData[PID][k][j][i] = SQRT( Cs2 );
                   }
                } // if ( v == CsDumpIdx )
