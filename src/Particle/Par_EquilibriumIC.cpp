@@ -93,7 +93,6 @@ void Par_EquilibriumIC::Load_Physical_Params( const FP filename_para, const int 
    ReadPara->Add( "Cloud_RSeed",          &params.Cloud_RSeed,          123,           0,                NoMax_int         );
    ReadPara->Add( "Cloud_Rho0",           &params.Cloud_Rho0,           1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "Cloud_R0",             &params.Cloud_R0,             0.1,           Eps_double,       NoMax_double      );
-   if(convertToString(params.Cloud_Type)!="Table")
    ReadPara->Add( "Cloud_MaxR",           &params.Cloud_MaxR,           0.375,         Eps_double,       NoMax_double      );
    ReadPara->Add( "Cloud_CenterX",        &params.Cloud_Center[0],      NoDef_double,  NoMin_double,     NoMax_double      );
    ReadPara->Add( "Cloud_CenterY",        &params.Cloud_Center[1],      NoDef_double,  NoMin_double,     NoMax_double      );
@@ -249,7 +248,7 @@ void Par_EquilibriumIC::Init()
 
       // Automatically set params.Cloud_MassProfNBin and MaxR through loading table
       params.Cloud_MassProfNBin = Row_r_Table;
-      params.Cloud_MaxR         = Table_r[params.Cloud_MassProfNBin-1];
+      params.Cloud_MaxR         = min(Table_r[params.Cloud_MassProfNBin-1],params.Cloud_MaxR);
 
       Table_Enclosed_Mass = new double [params.Cloud_MassProfNBin];
       Table_dRho_dr = new double [params.Cloud_MassProfNBin];
@@ -573,7 +572,7 @@ double Par_EquilibriumIC::potential( const double x )
       return Table_Gravity_Potential[0];
    }
    
-   return Mis_InterpolateFromTable( params.Cloud_MassProfNBin, Table_r, Table_Gravity_Potential, x*params.Cloud_R0 );
+   return Mis_InterpolateFromTable( params.Cloud_MassProfNBin, Table_r, Table_Gravity_Potential, r );
 
 } // FUNCTION : potential
 
