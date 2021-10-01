@@ -135,7 +135,6 @@ void Par_EquilibriumIC::Load_Physical_Params( const FP filename_para, const int 
       Aux_Message( stdout, "  random seed for setting particle position = %d\n",     params.Cloud_RSeed );
       Aux_Message( stdout, "  peak density                              = %13.7e\n", params.Cloud_Rho0 );
       Aux_Message( stdout, "  scale radius                              = %13.7e\n", params.Cloud_R0 );
-      if(convertToString(params.Cloud_Type)!="Table")
       Aux_Message( stdout, "  maximum radius of particles               = %13.7e\n", params.Cloud_MaxR );
 
       for (int d=0; d<3; d++){
@@ -246,9 +245,11 @@ void Par_EquilibriumIC::Init()
       if(Row_r_Table!=Row_Density_Table)
          Aux_Error( ERROR_INFO, "Density row number is not equal to radius row number in the profile file !! Please check this file.\n" );
 
-      // Automatically set params.Cloud_MassProfNBin and MaxR through loading table
+      // Radii in the density table must be no greater than Cloud_MaxR
       params.Cloud_MassProfNBin = Row_r_Table;
-      params.Cloud_MaxR         = min(Table_r[params.Cloud_MassProfNBin-1],params.Cloud_MaxR);
+      if(Table_r[params.Cloud_MassProfNBin-1]>params.Cloud_MaxR){
+         Aux_Error( ERROR_INFO, "Maximum radius in your density table is larger then Cloud_MaxR! Please check!\n" );
+      }
 
       Table_Enclosed_Mass = new double [params.Cloud_MassProfNBin];
       Table_dRho_dr = new double [params.Cloud_MassProfNBin];
@@ -438,7 +439,7 @@ double Par_EquilibriumIC::Set_Mass( double r )
    if (convertToString(params.Cloud_Type)=="Table"){
       if(r>=Table_r[params.Cloud_MassProfNBin-1])return Table_Enclosed_Mass[params.Cloud_MassProfNBin-1];
       else if(r<=Table_r[0])return Table_Enclosed_Mass[0];
-      return Mis_InterpolateFromTable( params.Cloud_MassProfNBin, Table_r, Table_Enclosed_Mass, r );
+      else return Mis_InterpolateFromTable( params.Cloud_MassProfNBin, Table_r, Table_Enclosed_Mass, r );
    }
 
    else{
@@ -532,7 +533,7 @@ double Par_EquilibriumIC::Set_Velocity( const double x )
    }
 
    double sum_rad,sum_mes=0,par,psi_ass;
-   int index_ass=0;//bug
+   int index_ass=0;
 
    sum_rad = Random_Num_Gen->GetValue( 0, 0.0, 1.0 );
    sum_rad*=sum;
