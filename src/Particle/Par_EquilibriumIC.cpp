@@ -245,10 +245,11 @@ void Par_EquilibriumIC::Init()
       if(Row_r_Table!=Row_Density_Table)
          Aux_Error( ERROR_INFO, "Density row number is not equal to radius row number in the profile file !! Please check this file.\n" );
 
-      // Radii in the density table must be no greater than Cloud_MaxR
       params.Cloud_MassProfNBin = Row_r_Table;
-      if(Table_r[params.Cloud_MassProfNBin-1]>params.Cloud_MaxR){
-         Aux_Error( ERROR_INFO, "Maximum radius in your density table is larger then Cloud_MaxR! Please check!\n" );
+
+      // Radii in the density table must be no less than Cloud_MaxR
+      if(Table_r[params.Cloud_MassProfNBin-1]<params.Cloud_MaxR){
+         Aux_Error( ERROR_INFO, "Maximum radius in your density table is smaller then Cloud_MaxR! Please check!\n" );
       }
 
       Table_Enclosed_Mass = new double [params.Cloud_MassProfNBin];
