@@ -1440,7 +1440,7 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
    LoadField( "Model",                  &RS.Model,                  SID, TID, NonFatal, &RT.Model,                  1,    Fatal );
    LoadField( "Gravity",                &RS.Gravity,                SID, TID, NonFatal, &RT.Gravity,                1,    Fatal );
    LoadField( "Comoving",               &RS.Comoving,               SID, TID, NonFatal, &RT.Comoving,               1,    Fatal );
-   LoadField( "Particle",               &RS.Particle,               SID, TID, NonFatal, &RT.Particle,               1,    Fatal );
+   LoadField( "Particle",               &RS.Particle,               SID, TID, NonFatal, &RT.Particle,               1, NonFatal );
 
    LoadField( "UseGPU",                 &RS.UseGPU,                 SID, TID, NonFatal, &RT.UseGPU,                 1, NonFatal );
    LoadField( "GAMER_Debug",            &RS.GAMER_Debug,            SID, TID, NonFatal, &RT.GAMER_Debug,            1, NonFatal );
