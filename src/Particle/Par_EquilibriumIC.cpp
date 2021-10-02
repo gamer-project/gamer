@@ -100,6 +100,7 @@ void Par_EquilibriumIC::Load_Physical_Params( const FP filename_para, const int 
    ReadPara->Add( "Cloud_BulkVelX",       &params.Cloud_BulkVel[0],     0.0,           NoMin_double,     NoMax_double      );
    ReadPara->Add( "Cloud_BulkVelY",       &params.Cloud_BulkVel[1],     0.0,           NoMin_double,     NoMax_double      );
    ReadPara->Add( "Cloud_BulkVelZ",       &params.Cloud_BulkVel[2],     0.0,           NoMin_double,     NoMax_double      );
+   if(convertToString(params.Cloud_Type)!="Table")
    ReadPara->Add( "Cloud_MassProfNBin",   &params.Cloud_MassProfNBin,   1000,          2,                NoMax_int         );
    double ratio;
    ReadPara->Add( "Cloud_Par_Num_Ratio",  &ratio,                       0.,            0.,               1.0               );
@@ -109,8 +110,7 @@ void Par_EquilibriumIC::Load_Physical_Params( const FP filename_para, const int 
    ReadPara->Add( "AddExtPot",            &params.AddExtPot,            0,             0,                1                 );
    ReadPara->Add( "ExtPot_Table_Name",     params.ExtPot_Table_Name,    Useless_str,   Useless_str,      Useless_str       );
 
-   if(convertToString(params.Cloud_Type)=="Einasto")
-   ReadPara->Add( "Cloud_Einasto_Power_Factor",&params.Cloud_Einasto_Power_Factor, 1.0,0.1,              10.0              );
+   if(convertToString(params.Cloud_Type)=="Einasto")ReadPara->Add( "Cloud_Einasto_Power_Factor",&params.Cloud_Einasto_Power_Factor, 1.0,0.1,              10.0              );
 
    ReadPara->Read( FileName );
    delete ReadPara;
@@ -140,6 +140,7 @@ void Par_EquilibriumIC::Load_Physical_Params( const FP filename_para, const int 
       for (int d=0; d<3; d++){
       Aux_Message( stdout, "  central coordinate [%d]                   = %14.7e\n", d, params.Cloud_Center[d] );
       Aux_Message( stdout, "  bulk velocity [%d]                        = %14.7e\n", d, params.Cloud_BulkVel[d] );
+      if(convertToString(params.Cloud_Type)!="Table")
       Aux_Message( stdout, "  number of radial bins in the mass profile = %d\n",     params.Cloud_MassProfNBin );
       }
       Aux_Message( stdout, "  Cloud_Type                                = %s\n",     params.Cloud_Type );
@@ -244,8 +245,12 @@ void Par_EquilibriumIC::Init()
       if(Row_r_Table!=Row_Density_Table)
          Aux_Error( ERROR_INFO, "Density row number is not equal to radius row number in the profile file !! Please check this file.\n" );
 
-      if(params.Cloud_MassProfNBin!=Row_r_Table)
-         Aux_Error( ERROR_INFO, "Cloud_MassProfNBin is not equal to the row number in profile file !!\n" );
+      params.Cloud_MassProfNBin = Row_r_Table;
+
+      // Radii in the density table must be no less than Cloud_MaxR
+      if(Table_r[params.Cloud_MassProfNBin-1]<params.Cloud_MaxR){
+         Aux_Error( ERROR_INFO, "Maximum radius in your density table is smaller then Cloud_MaxR! Please check!\n" );
+      }
 
       Table_Enclosed_Mass = new double [params.Cloud_MassProfNBin];
       Table_dRho_dr = new double [params.Cloud_MassProfNBin];
@@ -356,7 +361,7 @@ void Par_EquilibriumIC::Par_SetEquilibriumIC( real *Mass_AllRank, real *Pos_AllR
 
       //       velocity
       double a3=RanR/params.Cloud_R0;
-
+      
       RanV = Set_Velocity(a3);
 
       //       randomly set the velocity vector with the given amplitude (RanV*Vmax)
@@ -430,11 +435,12 @@ double mass_base_Einasto( double x, void *Einasto_Power_Factor )
 //-------------------------------------------------------------------------------------------------------
 double Par_EquilibriumIC::Set_Mass( double r )
 {
-
+   
    double x = r/params.Cloud_R0;
    if (convertToString(params.Cloud_Type)=="Table"){
       if(r>=Table_r[params.Cloud_MassProfNBin-1])return Table_Enclosed_Mass[params.Cloud_MassProfNBin-1];
-      return Mis_InterpolateFromTable( params.Cloud_MassProfNBin, Table_r, Table_Enclosed_Mass, r );
+      else if(r<=Table_r[0])return Table_Enclosed_Mass[0];
+      else return Mis_InterpolateFromTable( params.Cloud_MassProfNBin, Table_r, Table_Enclosed_Mass, r );
    }
 
    else{
@@ -528,7 +534,7 @@ double Par_EquilibriumIC::Set_Velocity( const double x )
    }
 
    double sum_rad,sum_mes=0,par,psi_ass;
-   int index_ass;
+   int index_ass=0;
 
    sum_rad = Random_Num_Gen->GetValue( 0, 0.0, 1.0 );
    sum_rad*=sum;
@@ -540,9 +546,10 @@ double Par_EquilibriumIC::Set_Velocity( const double x )
          break;
          }
       sum_mes += prob_dens[k] *pow(psi_per-psi[k],0.5) *delta;
+      if(k==params.Cloud_MassProfNBin-1)index_ass = params.Cloud_MassProfNBin-1;
    }
    psi_ass = psi[index_ass] +delta *par;
-   double kim =-2*(psi_ass+potential(x));
+   double kim =-2*(psi_ass-psi_per);
    if(kim<0.0){
       return 0;
    }
@@ -557,12 +564,17 @@ double Par_EquilibriumIC::Set_Velocity( const double x )
 // Solve Eddington's equation
 double Par_EquilibriumIC::potential( const double x )
 {
-
-   if(x>double(params.Cloud_MaxR/params.Cloud_R0)){
-      return Table_Gravity_Potential[params.Cloud_MassProfNBin-1]*(params.Cloud_MaxR)/(x*params.Cloud_R0);
+   const double r = x*params.Cloud_R0;
+   
+   if(r>=Table_r[params.Cloud_MassProfNBin-1]){
+      return Table_Gravity_Potential[params.Cloud_MassProfNBin-1]*Table_r[params.Cloud_MassProfNBin-1]/r;
    }
-
-   return Mis_InterpolateFromTable( params.Cloud_MassProfNBin, Table_r, Table_Gravity_Potential, x*params.Cloud_R0 );
+   
+   if(r<=Table_r[0]){
+      return Table_Gravity_Potential[0];
+   }
+   
+   return Mis_InterpolateFromTable( params.Cloud_MassProfNBin, Table_r, Table_Gravity_Potential, r );
 
 } // FUNCTION : potential
 
