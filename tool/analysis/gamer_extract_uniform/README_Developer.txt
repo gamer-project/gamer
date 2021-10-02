@@ -85,7 +85,7 @@ Version 1.4.1     11/14/2013
    input values. They can be different since the input values may not align
    with the underlying grids
 
-   
+
 
 Version 1.4.0     09/24/2013
 ----------------------------
@@ -146,7 +146,7 @@ Version 1.1.0     09/20/2011
    --> the option "-O" is removed
 3. Support outputting "potential, divergence(velocity), curl(velocity)"
    --> add the options "-d -v"
-   --> potential will be outputted automatically if they are stored in the 
+   --> potential will be outputted automatically if they are stored in the
        input file
 4. Support using "physical coordinates" to specify the target
    --> It is the default setting
@@ -183,7 +183,7 @@ Version 1.0       02/01/2010
 1. Inherit from GAMER_GetSlice and GAMER_GetUniformMesh
    --> can produce slice (-n 1/2/3) / projection (-n 4/5/6) /cube (-n 7) data
 
-2. Specify the starting cooridnates --> command-line options "-x Start_X, -y Start_Y, -z Start_Z" 
+2. Specify the starting cooridnates --> command-line options "-x Start_X, -y Start_Y, -z Start_Z"
    Specify the targeted range       --> command-line options "-X Range_X, -Y Range_Y, -Z Range_Z"
    ** The coordinate system is consistent with the one adopted in GAMER **
 
@@ -197,12 +197,12 @@ Version 1.0       02/01/2010
 
 
 
-Demo : 
+Demo :
 ------
 1. output x=[100,500], y=[1000,1234], z=5, level=2 plane (with MinMod limiter interpolation) using 8 processes
    mpirun -np 8 ./GAMER_ExtractUniform -i InputFile -o Comment -l 2 -n 3 -x 100 -X 400 -y 1000 -Y 234 -z 5 -p 2 -q 2 -r 2
 
-2. output x projection, y=[0,BoxSize], z=[0,BoxSize], level=5 (with central interpolation), binary data 
+2. output x projection, y=[0,BoxSize], z=[0,BoxSize], level=5 (with central interpolation), binary data
    using 4 processes
    mpirun -np 4 ./GAMER_ExtractUniform -i InputFile -o Comment -l 5 -n 4 -I 1 -r 4 -b
 
@@ -214,18 +214,18 @@ Demo :
 Binary outputs can be used to create image series by Amira in the following
 steps:
 ---------------------------------------------------------------------------
-1.  "View -> Background -> Adjust background color" 
+1.  "View -> Background -> Adjust background color"
 2.  "Load Time Series" --> select all binary files you want
 3.  "TimeSeriesControl -> Display Time -> turn on [value text]"
 4.  "Data -> BoundingBox -> make [Line width] thicker and probably
     change color"
-5.  (OPTIONAL) "Data -> Compute -> Arithmetic -> ln(a) 
+5.  (OPTIONAL) "Data -> Compute -> Arithmetic -> ln(a)
     -> press the [auto-refresh] button"
 6.  (3D)
-    "Result -> Display -> Voltex -> set the colormap 
+    "Result -> Display -> Voltex -> set the colormap
     -> press the [auto-refresh] button"
     (2D)
-    "Result -> Display -> OrthoSlice -> Mapping Type=Colarmap 
+    "Result -> Display -> OrthoSlice -> Mapping Type=Colarmap
     -> set the Colormap (can use the "Adjust range" option to set the range
        automatically)
     -> press the [auto-refresh] button"
@@ -235,7 +235,7 @@ steps:
      -> right-clicking the colormap item -> DisplayColormap"
 8.  Rotate the bounding box to a proper orientation
 9.  "TimeSeriesControl -> set [Cached steps] = 0"
-10. (for creating a single AVI movie) 
+10. (for creating a single AVI movie)
     "TimeSeriesControl -> MovieMaker -> set [File format = AVI movie]
     -> set [Filename = Movie.avi] -> set [Frames] and [Frame rate]
     -> set [AVI encoder = ffdshow video encoder]
@@ -249,7 +249,7 @@ steps:
 
     (for creating multiple PNG images)
     "TimeSeriesControl -> MovieMaker -> set [File format = PNG images]
-    -> set [Filename = XXX] 
+    -> set [Filename = XXX]
     -> set [Frames = total number of data dumps]
     -> set [Tiles X=2, Y=2] (if you want the image resolution to be higher
        than the screen)
@@ -277,7 +277,7 @@ Vector plot in Amira:
 
 Add new output elements :
 -------------------------
-To add new output elements, one can follow what is done for the option 
+To add new output elements, one can follow what is done for the option
 "OutputDivVel".
 
 

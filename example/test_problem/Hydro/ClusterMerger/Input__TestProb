@@ -28,5 +28,5 @@ Merger_Coll_VelX3       0.0 # X-velocity of cluster 3 in km/s
 Merger_Coll_VelY3       0.0 # Y-velocity of cluster 3 in km/s
 Merger_Coll_IsGas3      0 # If cluster 3 should have gas and not have DM only
 
-# other	parameters
+# other parameters
 Merger_Coll_UseMetals   0 # look for a metal field in the profile files

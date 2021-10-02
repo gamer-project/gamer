@@ -47,8 +47,8 @@ void ReadOption( int argc, char **argv )
                    break;
          case 'n': NCheck           = atoi(optarg);
                    break;
-         case 'h': 
-         case '?': cerr << endl << "usage: " << argv[0] 
+         case 'h':
+         case '?': cerr << endl << "usage: " << argv[0]
                         << " [-h (for help)] [-p profile file] [-n number of data rows to be checked [20]]"
                         << endl << endl;
                    exit( 1 );
@@ -86,7 +86,7 @@ void ReadOption( int argc, char **argv )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init
-// Description :  Initialization 
+// Description :  Initialization
 //-------------------------------------------------------------------------------------------------------
 void Init()
 {
@@ -159,7 +159,7 @@ void Load()
 
    while ( fgets( Line, MaxLine, File_Profile ) != NULL )
    {
-      if (  !CheckEmptyString( Line )  )  
+      if (  !CheckEmptyString( Line )  )
       {
          sscanf( Line, "%lf%lf%lf%lf%lf%lf%lf%lf", r+NRow, &tmp, AveDens+NRow, &tmp, MaxDens+NRow, &tmp, &tmp, &tmp );
          NRow ++;
@@ -220,7 +220,7 @@ int CountRow( const char *FileName, const int NHeader )
       else                                NEmpty ++;
    }
 
-   if ( NRow < 1 )   
+   if ( NRow < 1 )
    {
       fprintf( stderr, "ERROR : no data rows are found !!\n" );
       exit( 1 );
@@ -247,17 +247,17 @@ int CountRow( const char *FileName, const int NHeader )
 // Function    :  CheckEmptyString
 // Description :  Check whether the input string is empty
 //
-// Note        :  Empty string is defined as a string containing only " ", "\n" and "\t"  
+// Note        :  Empty string is defined as a string containing only " ", "\n" and "\t"
 //
 // Return      :  true  : The input string is empty
-//                false : The input string is NOT empty 
+//                false : The input string is NOT empty
 //-------------------------------------------------------------------------------------------------------
 bool CheckEmptyString( const char *InputString )
-{ 
-   static const char *EmptyChar = " \n\t"; 
+{
+   static const char *EmptyChar = " \n\t";
 
-   return strspn( InputString, EmptyChar ) == strlen( InputString ); 
-       
+   return strspn( InputString, EmptyChar ) == strlen( InputString );
+
 } // FUNCTION : CheckEmptyString
 
 
@@ -270,7 +270,7 @@ bool CheckEmptyString( const char *InputString )
 //
 //-------------------------------------------------------------------------------------------------------
 void CheckMonotonicity()
-{ 
+{
 
    fprintf( stdout, "%s ... \n", __FUNCTION__ );   fflush( stdout );
 
@@ -294,14 +294,14 @@ void CheckMonotonicity()
 
 
    fprintf( stdout, "%s ... done\n", __FUNCTION__ );   fflush( stdout );
-       
+
 } // FUNCTION : CheckMonotonicity
 
 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  main
-// Description :  
+// Description :
 //-------------------------------------------------------------------------------------------------------
 int main( int argc, char ** argv )
 {

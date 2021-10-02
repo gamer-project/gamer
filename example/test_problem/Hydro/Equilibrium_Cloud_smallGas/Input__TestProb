@@ -1,5 +1,0 @@
-# problem-specific runtime parameters (mostly filenames of input physical parameters here)
-# The number of Params_Filenames must be the same as Cloud_Num, and please seperate them with spaces.
-Equilibrium_Cloud_Dens   1e-3        		                   # negligible uniform background gas density
-Cloud_Num                1                                     # Total number of clouds of particles
-Params_Filenames         Input__Cloud_Physical_Params          # Filenames of input physical parameters. Please make sure to put correct number of them and seperate them with spaces.

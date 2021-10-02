@@ -1,62 +1,76 @@
-#  ifdef PARTICLE
-#include "Particle_IC_Constructor.h"
+#include "GAMER.h"
 
-Particle_IC_Constructor::Particle_IC_Constructor()
+#ifdef PARTICLE
+
+#include "Par_EquilibriumIC.h"
+
+
+
+Par_EquilibriumIC::Par_EquilibriumIC()
 {
-
 }
 
-Particle_IC_Constructor::~Particle_IC_Constructor()
+Par_EquilibriumIC::~Par_EquilibriumIC()
 {
-
 }
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Read_Filenames
 // Description :  Read in file names of physical parameters
 //
-// Note        :  
+// Note        :
 //
 // Parameter   :  filename_para : pointer of the file name
 //
-// Return      :  
+// Return      :
 //-------------------------------------------------------------------------------------------------------
-void Particle_IC_Constructor::Read_Filenames( const char *filename_para)
+void Par_EquilibriumIC::Read_Filenames( const char *filename_para )
 {
+
    vector <string> EMPTY;
 
-   filenames.Cloud_Num       = GetParams(filename_para,"Cloud_Num",      1,"int",EMPTY);
-   GetParams(filename_para,"Params_Filenames",       filenames.Cloud_Num,"string",filenames.Params_Filenames       );
+   filenames.Cloud_Num = GetParams( filename_para, "ParEqmIC_Cloud_Num", 1, "int", EMPTY );
+   GetParams( filename_para, "ParEqmIC_Params_Filenames", filenames.Cloud_Num, "string", filenames.Params_Filenames );
    Check_InputFileName();
-} // FUNCTION : void Particle_IC_Constructor::Read_Filenames(string filename_para)
 
-string convertToString(char* a)
+} // FUNCTION : Read_Filenames
+
+
+
+string convertToString( char* a )
 {
+
    int max_size = 100;
    int i;
    string s = "";
-   for (i = 0; i < max_size; i++){
-      if(a[i]=='\0')break;
+   for (i=0; i<max_size; i++) {
+      if ( a[i] == '\0' )  break;
       s = s + a[i];
    }
+
    return s;
-} // FUNCTION : string convertToString(char* a)
+
+} // FUNCTION : convertToString
+
 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Load_Physical_Params
-// Description :  Load in the physical parameters from a file
+// Description :  Load the physical parameters from a file
 //
-// Note        :  
+// Note        :
 //
 // Parameter   :  filename_para : the file name loader's FP (file parameters) structure
-//                  cloud_idx     : index of the cloud
-//                  NPar_AllRank  : particle total number (including all clouds)
+//                cloud_idx     : index of the cloud
+//                NPar_AllRank  : particle total number (including all clouds)
 //
-// Return      :  
+// Return      :
 //-------------------------------------------------------------------------------------------------------
-void Particle_IC_Constructor::Load_Physical_Params(const FP filename_para,const int cloud_idx, const long NPar_AllRank)
+void Par_EquilibriumIC::Load_Physical_Params( const FP filename_para, const int cloud_idx, const long NPar_AllRank )
 {
+
    params.Cloud_Center   = new double[3];     // central coordinates
    params.Cloud_BulkVel  = new double[3];     // bulk velocity
 
@@ -64,8 +78,8 @@ void Particle_IC_Constructor::Load_Physical_Params(const FP filename_para,const 
 
    //for(int k=0;k<filenames.Cloud_Num;k++){
    // (1) load the problem-specific runtime parameters
-   params.Cloud_Num                = filename_para.Cloud_Num;
-   params.Params_Filenames         = filename_para.Params_Filenames[cloud_idx];
+   params.Cloud_Num        = filename_para.Cloud_Num;
+   params.Params_Filenames = filename_para.Params_Filenames[cloud_idx];
 
    const char* FileName=filename_para.Params_Filenames[cloud_idx].c_str();
    ReadPara_t *ReadPara  = new ReadPara_t;
@@ -74,126 +88,130 @@ void Particle_IC_Constructor::Load_Physical_Params(const FP filename_para,const 
    // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
    // --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
    // ********************************************************************************************************************************
-   // ReadPara->Add( "KEY_IN_THE_FILE",      &VARIABLE,              DEFAULT,       MIN,              MAX               );
+   // ReadPara->Add( "KEY_IN_THE_FILE",      &VARIABLE,                    DEFAULT,       MIN,              MAX               );
    // ********************************************************************************************************************************
-      ReadPara->Add( "Cloud_RSeed",        &params.Cloud_RSeed,         123,           0,                NoMax_int         );
-      ReadPara->Add( "Cloud_Rho0",         &params.Cloud_Rho0,          1.0,           Eps_double,       NoMax_double      );
-      ReadPara->Add( "Cloud_R0",           &params.Cloud_R0,            0.1,           Eps_double,       NoMax_double      );
-      ReadPara->Add( "Cloud_MaxR",         &params.Cloud_MaxR,          0.375,         Eps_double,       NoMax_double      );
-      ReadPara->Add( "Cloud_CenterX",      &params.Cloud_Center[0],     NoDef_double,  NoMin_double,     NoMax_double      );
-      ReadPara->Add( "Cloud_CenterY",      &params.Cloud_Center[1],     NoDef_double,  NoMin_double,     NoMax_double      );
-      ReadPara->Add( "Cloud_CenterZ",      &params.Cloud_Center[2],     NoDef_double,  NoMin_double,     NoMax_double      );
-      ReadPara->Add( "Cloud_BulkVelX",     &params.Cloud_BulkVel[0],    0.0,           NoMin_double,     NoMax_double      );
-      ReadPara->Add( "Cloud_BulkVelY",     &params.Cloud_BulkVel[1],    0.0,           NoMin_double,     NoMax_double      );
-      ReadPara->Add( "Cloud_BulkVelZ",     &params.Cloud_BulkVel[2],    0.0,           NoMin_double,     NoMax_double      );
-      ReadPara->Add( "Cloud_MassProfNBin", &params.Cloud_MassProfNBin,  1000,          2,                NoMax_int         );
-      double ratio;
-      ReadPara->Add( "Cloud_Par_Num_Ratio",&ratio,                      0.,            0.,                1.0              );
+   ReadPara->Add( "Cloud_RSeed",          &params.Cloud_RSeed,          123,           0,                NoMax_int         );
+   ReadPara->Add( "Cloud_Rho0",           &params.Cloud_Rho0,           1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Cloud_R0",             &params.Cloud_R0,             0.1,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Cloud_MaxR",           &params.Cloud_MaxR,           0.375,         Eps_double,       NoMax_double      );
+   ReadPara->Add( "Cloud_CenterX",        &params.Cloud_Center[0],      NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Cloud_CenterY",        &params.Cloud_Center[1],      NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Cloud_CenterZ",        &params.Cloud_Center[2],      NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Cloud_BulkVelX",       &params.Cloud_BulkVel[0],     0.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Cloud_BulkVelY",       &params.Cloud_BulkVel[1],     0.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Cloud_BulkVelZ",       &params.Cloud_BulkVel[2],     0.0,           NoMin_double,     NoMax_double      );
+   if(convertToString(params.Cloud_Type)!="Table")
+   ReadPara->Add( "Cloud_MassProfNBin",   &params.Cloud_MassProfNBin,   1000,          2,                NoMax_int         );
+   double ratio;
+   ReadPara->Add( "Cloud_Par_Num_Ratio",  &ratio,                       0.,            0.,               1.0               );
 
-      ReadPara->Add( "Cloud_Type",       params.Cloud_Type,         Useless_str,     Useless_str,   Useless_str         );
-      ReadPara->Add( "Density_Table_Name", params.Density_Table_Name,   Useless_str,     Useless_str,   Useless_str         );
-      ReadPara->Add( "ADD_EXT_POT",        &params.ADD_EXT_POT,         0,               0,             1                   );
-      ReadPara->Add( "ExtPot_Table_Name",  params.ExtPot_Table_Name,    Useless_str,     Useless_str,   Useless_str         );
+   ReadPara->Add( "Cloud_Type",            params.Cloud_Type,           Useless_str,   Useless_str,      Useless_str       );
+   ReadPara->Add( "Density_Table_Name",    params.Density_Table_Name,   Useless_str,   Useless_str,      Useless_str       );
+   ReadPara->Add( "AddExtPot",            &params.AddExtPot,            0,             0,                1                 );
+   ReadPara->Add( "ExtPot_Table_Name",     params.ExtPot_Table_Name,    Useless_str,   Useless_str,      Useless_str       );
 
-      if(convertToString(params.Cloud_Type)=="Einasto")
-         ReadPara->Add( "Cloud_Einasto_Power_Factor",     &params.Cloud_Einasto_Power_Factor,         1.0,           0.1,              10.0      );
+   if(convertToString(params.Cloud_Type)=="Einasto")ReadPara->Add( "Cloud_Einasto_Power_Factor",&params.Cloud_Einasto_Power_Factor, 1.0,0.1,              10.0              );
 
-      ReadPara->Read( FileName );
-      delete ReadPara;
+   ReadPara->Read( FileName );
+   delete ReadPara;
 
-      // Convert Cloud_Par_Num_Ratio to Cloud_Par_Num
-      params.Cloud_Par_Num = int(ratio*NPar_AllRank);
+   // Convert Cloud_Par_Num_Ratio to Cloud_Par_Num
+   params.Cloud_Par_Num = int(ratio*NPar_AllRank);
 
-      // Check whether user forgot to fill in Cloud_Par_Num_Ratio
-      if(params.Cloud_Par_Num==0){
-         Aux_Error( ERROR_INFO, "Cloud_Par_Num_Ratio is 0! There are no particles in this cloud!!");
-      }
+   // Check whether user forgot to fill in Cloud_Par_Num_Ratio
+   if(params.Cloud_Par_Num==0){
+      Aux_Error( ERROR_INFO, "Cloud_Par_Num_Ratio is 0! There are no particles in this cloud!!");
+   }
 
    // (1-2) set the default values
-      for (int d=0; d<3; d++)
-         if ( params.Cloud_Center[d] == NoDef_double )  params.Cloud_Center[d] = 0.5*amr->BoxSize[d];
+   for (int d=0; d<3; d++)
+      if ( params.Cloud_Center[d] == NoDef_double )  params.Cloud_Center[d] = 0.5*amr->BoxSize[d];
 
    // (2) make a note
-      if ( MPI_Rank == 0 )
-      {
-         Aux_Message( stdout, "=============================================================================\n" );
-         Aux_Message( stdout, "  test problem ID                           = %d\n",     TESTPROB_ID );
-         Aux_Message( stdout, "  random seed for setting particle position = %d\n",     params.Cloud_RSeed );
-         Aux_Message( stdout, "  peak density                              = %13.7e\n", params.Cloud_Rho0 );
-         Aux_Message( stdout, "  scale radius                              = %13.7e\n", params.Cloud_R0 );
-         Aux_Message( stdout, "  maximum radius of particles               = %13.7e\n", params.Cloud_MaxR );
-               
-         for (int d=0; d<3; d++){
-         Aux_Message( stdout, "  central coordinate [%d]                   = %14.7e\n", d, params.Cloud_Center[d] );
-         Aux_Message( stdout, "  bulk velocity [%d]                        = %14.7e\n", d, params.Cloud_BulkVel[d] );
-         Aux_Message( stdout, "  number of radial bins in the mass profile = %d\n",     params.Cloud_MassProfNBin );
-         }
-         Aux_Message( stdout,   "  Cloud_Type                                = %s\n", params.Cloud_Type );
-         Aux_Message( stdout, "=============================================================================\n" );
-      }//if ( MPI_Rank == 0 )
+   if ( MPI_Rank == 0 )
+   {
+      Aux_Message( stdout, "=============================================================================\n" );
+      Aux_Message( stdout, "  test problem ID                           = %d\n",     TESTPROB_ID );
+      Aux_Message( stdout, "  random seed for setting particle position = %d\n",     params.Cloud_RSeed );
+      Aux_Message( stdout, "  peak density                              = %13.7e\n", params.Cloud_Rho0 );
+      Aux_Message( stdout, "  scale radius                              = %13.7e\n", params.Cloud_R0 );
+      Aux_Message( stdout, "  maximum radius of particles               = %13.7e\n", params.Cloud_MaxR );
+
+      for (int d=0; d<3; d++){
+      Aux_Message( stdout, "  central coordinate [%d]                   = %14.7e\n", d, params.Cloud_Center[d] );
+      Aux_Message( stdout, "  bulk velocity [%d]                        = %14.7e\n", d, params.Cloud_BulkVel[d] );
+      if(convertToString(params.Cloud_Type)!="Table")
+      Aux_Message( stdout, "  number of radial bins in the mass profile = %d\n",     params.Cloud_MassProfNBin );
+      }
+      Aux_Message( stdout, "  Cloud_Type                                = %s\n",     params.Cloud_Type );
+      Aux_Message( stdout, "=============================================================================\n" );
+   }//if ( MPI_Rank == 0 )
 
    // (3) Warn against small R0
-      if ( params.Cloud_R0<amr->dh[MAX_LEVEL] )Aux_Message( stdout, "WARNING : Characteristic length R0:%f is smaller than spatial resolution %f!\n",params.Cloud_R0,amr->dh[MAX_LEVEL] );
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ... done\n" );
+   if ( params.Cloud_R0<amr->dh[MAX_LEVEL] )Aux_Message( stdout, "WARNING : Characteristic length R0:%f is smaller than spatial resolution %f!\n",params.Cloud_R0,amr->dh[MAX_LEVEL] );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ... done\n" );
 
    // (4) Check Cloud_Type and table filenames
    // Checking Cloud_Type
-      Aux_Message( stdout, "Checking Cloud_Type\n" );
-      int flag = 0;
-      if(convertToString(params.Cloud_Type)=="Plummer")       flag=1;
-      else if(convertToString(params.Cloud_Type)=="NFW")      flag=1;
-      else if(convertToString(params.Cloud_Type)=="Burkert")  flag=1;
-      else if(convertToString(params.Cloud_Type)=="Jaffe")    flag=1;
-      else if(convertToString(params.Cloud_Type)=="Hernquist")flag=1;
-      else if(convertToString(params.Cloud_Type)=="Einasto")  flag=1;
-      else if(convertToString(params.Cloud_Type)=="Table")    flag=1;
-      if(flag==0){
-         Aux_Message( stdout, "%s is not a Model Type\n", convertToString(params.Cloud_Type).c_str());
-         Aux_Error( ERROR_INFO, "Error in the input of Cloud_Type !!\n" );
-      }
+   Aux_Message( stdout, "Checking Cloud_Type\n" );
+   int flag = 0;
+   if      (convertToString(params.Cloud_Type)=="Plummer"  )   flag=1;
+   else if (convertToString(params.Cloud_Type)=="NFW"      )   flag=1;
+   else if (convertToString(params.Cloud_Type)=="Burkert"  )   flag=1;
+   else if (convertToString(params.Cloud_Type)=="Jaffe"    )   flag=1;
+   else if (convertToString(params.Cloud_Type)=="Hernquist")   flag=1;
+   else if (convertToString(params.Cloud_Type)=="Einasto"  )   flag=1;
+   else if (convertToString(params.Cloud_Type)=="Table"    )   flag=1;
+   if(flag==0){
+      Aux_Message( stdout, "%s is not a Model Type\n", convertToString(params.Cloud_Type).c_str());
+      Aux_Error( ERROR_INFO, "Error in the input of Cloud_Type !!\n" );
+   }
 
    // Checking Density_Table_Name
-      Aux_Message( stdout, "Checking Density_Table_Name\n");
-      if(convertToString(params.Cloud_Type)=="Table"){
-         const char * c = convertToString(params.Density_Table_Name).c_str();
-         fstream file;
-         file.open(c, ios::in);
-         if(!file){
-            Aux_Message( stdout, "Density Profile %s cannot be found !!\n", c);
-            Aux_Error( ERROR_INFO, "Error in the input of Density_Table_Name !!\n" );
-         }
-         file.close();
+   Aux_Message( stdout, "Checking Density_Table_Name\n");
+   if(convertToString(params.Cloud_Type)=="Table"){
+      const char * c = convertToString(params.Density_Table_Name).c_str();
+      fstream file;
+      file.open(c, ios::in);
+      if(!file){
+         Aux_Message( stdout, "Density Profile %s cannot be found !!\n", c);
+         Aux_Error( ERROR_INFO, "Error in the input of Density_Table_Name !!\n" );
       }
+      file.close();
+   }
 
    // Checking ExtPot_Table_Name
-      Aux_Message( stdout, "Checking ExtPot_Table_Name\n");
-      if(params.ADD_EXT_POT){
-         const char * c = convertToString(params.ExtPot_Table_Name).c_str();
-         fstream file;
-         file.open(c, ios::in);
-         if(!file){
-            Aux_Message( stdout, "External potential profile %s cannot be found !!\n", c);
-            Aux_Error( ERROR_INFO, "Error in the input of ExtPot_Table_Name!!\n" );
-         }
-         file.close();
+   Aux_Message( stdout, "Checking ExtPot_Table_Name\n");
+   if(params.AddExtPot){
+      const char * c = convertToString(params.ExtPot_Table_Name).c_str();
+      fstream file;
+      file.open(c, ios::in);
+      if(!file){
+         Aux_Message( stdout, "External potential profile %s cannot be found !!\n", c);
+         Aux_Error( ERROR_INFO, "Error in the input of ExtPot_Table_Name!!\n" );
       }
-} // FUNCTION : void Particle_IC_Constructor::Load_Physical_Params(const FP filename_para,const int cloud_idx, const long NPar_AllRank)
+      file.close();
+   }
+
+} // FUNCTION : Load_Physical_Params
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init
 // Description :  Initialize all necessary tables of physical parameters, including radius, mass, density, gravitational potential
 //
-// Note        :  
+// Note        :
 //
-// Parameter   :  
+// Parameter   :
 //
-// Return      :  
+// Return      :
 //-------------------------------------------------------------------------------------------------------
-void Particle_IC_Constructor::Init()
+void Par_EquilibriumIC::Init()
 {
 
 #  ifndef SUPPORT_GSL
-   Aux_Error( ERROR_INFO, "Must enable SUPPORT_GSL for Particle_IC_Constructor !!\n" );
+   Aux_Error( ERROR_INFO, "Must enable SUPPORT_GSL for Par_EquilibriumIC !!\n" );
 #  endif
 
    Table_r                 = NULL;
@@ -209,9 +227,9 @@ void Particle_IC_Constructor::Init()
    psi                     = NULL;
 
    //Set random seeds
-   Random_Num_Gen = new RandomNumber_t( 1 ); 
+   Random_Num_Gen = new RandomNumber_t( 1 );
    Random_Num_Gen->SetSeed( 0, params.Cloud_RSeed );
-  
+
    //Initialize densities with Table
    if(convertToString(params.Cloud_Type)=="Table"){
       int Tcol_r[1]   =  {0};
@@ -223,22 +241,26 @@ void Particle_IC_Constructor::Init()
 
       int Row_Density_Table;
       Row_Density_Table= Aux_LoadTable( Table_Density, convertToString(params.Density_Table_Name).c_str() , 1, Tcol_rho,true,true );
-      
+
       if(Row_r_Table!=Row_Density_Table)
          Aux_Error( ERROR_INFO, "Density row number is not equal to radius row number in the profile file !! Please check this file.\n" );
 
-      if(params.Cloud_MassProfNBin!=(Row_r_Table-1))
-         Aux_Error( ERROR_INFO, "Cloud_MassProfNBin is not equal to the row number in profile file !!\n" );
+      params.Cloud_MassProfNBin = Row_r_Table;
 
-      Table_Enclosed_Mass = new double [params.Cloud_MassProfNBin];
-      Table_dRho_dr = new double [params.Cloud_MassProfNBin];
-      Table_Gravity_Field = new double [params.Cloud_MassProfNBin];
+      // Radii in the density table must be no less than Cloud_MaxR
+      if(Table_r[params.Cloud_MassProfNBin-1]<params.Cloud_MaxR){
+         Aux_Error( ERROR_INFO, "Maximum radius in your density table is smaller then Cloud_MaxR! Please check!\n" );
+      }
+
+      Table_Enclosed_Mass     = new double [params.Cloud_MassProfNBin];
+      Table_dRho_dr           = new double [params.Cloud_MassProfNBin];
+      Table_Gravity_Field     = new double [params.Cloud_MassProfNBin];
       Table_Gravity_Potential = new double [params.Cloud_MassProfNBin];
-      Table_dRho_dx = new double [params.Cloud_MassProfNBin];
+      Table_dRho_dx           = new double [params.Cloud_MassProfNBin];
 
-      prob_dens = new double [params.Cloud_MassProfNBin];
-      int_prob_dens = new double [params.Cloud_MassProfNBin];
-      psi = new double [params.Cloud_MassProfNBin];
+      prob_dens               = new double [params.Cloud_MassProfNBin];
+      int_prob_dens           = new double [params.Cloud_MassProfNBin];
+      psi                     = new double [params.Cloud_MassProfNBin];
 
       Init_Mass_Table ();
       Init_Pot_Table  ();
@@ -265,25 +287,29 @@ void Particle_IC_Constructor::Init()
       Add_Ext_Pot   ();
       Init_Prob_Dens();
    }
-} // FUNCTION : void Particle_IC_Constructor::Init()
+
+} // FUNCTION : Init
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_SetEquilibriumIC
 // Description :  Set particle's initial conditions (IC) for a cloud that is in equilibrium state
 //
-// Note        :  
+// Note        :
 //
 // Parameter   :  Mass_AllRank : An array of all particles' masses
 //                Pos_AllRank  : An array of all particles' position vectors
 //                Vel_AllRank  : An array of all particles' velocity vectors
-//                  Par_Idx       : Starting index of particles in this cloud
+//                Par_Idx      : Starting index of particles in this cloud
+//
 // Return      :  Mass_AllRank
 //                Pos_AllRank
-//                Vel_AllRank 
-//
+//                Vel_AllRank
 //-------------------------------------------------------------------------------------------------------
-void Particle_IC_Constructor::Par_SetEquilibriumIC(real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3],const long Par_Idx)
+void Par_EquilibriumIC::Par_SetEquilibriumIC( real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3], const long Par_Idx )
 {
+
    double *Table_MassProf_r = NULL;
    double *Table_MassProf_M = NULL;
    double  TotM, ParM, dr, RanM, RanR, EstM, ErrM, ErrM_Max=-1.0, RanVec[3];
@@ -343,7 +369,7 @@ void Particle_IC_Constructor::Par_SetEquilibriumIC(real *Mass_AllRank, real *Pos
       for (int d=0; d<3; d++)    Vel_AllRank[d][p] = RanVec[d] + params.Cloud_BulkVel[d];
 
    } // for (long p=0; p<NPar_AllRank; p++)
-         
+
    Aux_Message( stdout, "   Total enclosed mass within MaxR  = %13.7e\n",  TotM );
    Aux_Message( stdout, "   Particle mass                    = %13.7e\n",  ParM );
    Aux_Message( stdout, "   Maximum mass interpolation error = %13.7e\n",  ErrM_Max );
@@ -351,64 +377,70 @@ void Particle_IC_Constructor::Par_SetEquilibriumIC(real *Mass_AllRank, real *Pos
    // free memory
    delete [] Table_MassProf_r;
    delete [] Table_MassProf_M;
-} // FUNCTION : void Par_SetEquilibriumIC(real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3],const int k)
+
+} // FUNCTION : Par_SetEquilibriumIC
+
+
 
 //Calculate Mass
 //Different Model Type
 //Plummer
-double mass_base_Plummer(double x,void* nothing)
+double mass_base_Plummer( double x, void* nothing )
 {
    return pow(x,2)*pow(1+x*x,-2.5);
 }
 
 //NFW
-double mass_base_NFW(double x,void* nothing)
+double mass_base_NFW( double x, void* nothing )
 {
    return (x/(pow(1+x,2)));
 }
 
 //Burkert
-double mass_base_Burkert(double x,void* nothing)
+double mass_base_Burkert( double x, void* nothing )
 {
    return pow(x,2)*(1/((1+x)*(1+x*x)));
 }
 
 //Jaffe
-double mass_base_Jaffe(double x,void* nothing)
+double mass_base_Jaffe( double x, void* nothing )
 {
    return (x/(1+x));
 }
 
 //Hernquist
-double mass_base_Hernquist(double x,void* nothing)
+double mass_base_Hernquist( double x, void* nothing )
 {
    return (x/pow(1+x,3));
 }
 
 //Einasto
-double mass_base_Einasto(double x,void *Einasto_Power_Factor)
+double mass_base_Einasto( double x, void *Einasto_Power_Factor )
 {
    double a = *(double *) Einasto_Power_Factor;
    return pow(x,2) *exp(-pow(x,a));
 }
 
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Set_Mass
 // Description :  Calculate the enclosed mass of this cloud within radius r
 //
-// Note        :  
+// Note        :
 //
 // Parameter   :  r : radius
 //
 // Return      :  Enclosed mass of this cloud within radius r
-//
 //-------------------------------------------------------------------------------------------------------
-double Particle_IC_Constructor::Set_Mass(double r)
+double Par_EquilibriumIC::Set_Mass( double r )
 {
+
    double x = r/params.Cloud_R0;
    if (convertToString(params.Cloud_Type)=="Table"){
       if(r>=Table_r[params.Cloud_MassProfNBin-1])return Table_Enclosed_Mass[params.Cloud_MassProfNBin-1];
-      return Mis_InterpolateFromTable( params.Cloud_MassProfNBin, Table_r, Table_Enclosed_Mass, r );
+      else if(r<=Table_r[0])return Table_Enclosed_Mass[0];
+      else return Mis_InterpolateFromTable( params.Cloud_MassProfNBin, Table_r, Table_Enclosed_Mass, r );
    }
 
    else{
@@ -416,7 +448,7 @@ double Particle_IC_Constructor::Set_Mass(double r)
       double M0 = 4*M_PI*pow(params.Cloud_R0,3)*(params.Cloud_Rho0);
 
 #     ifdef SUPPORT_GSL
-      gsl_integration_workspace * w 
+      gsl_integration_workspace * w
       = gsl_integration_workspace_alloc (1000);
 
       double  error;
@@ -435,21 +467,24 @@ double Particle_IC_Constructor::Set_Mass(double r)
 
       return result*M0;
    }
-} // FUNCTION : double Particle_IC_Constructor::Set_Mass(double r)
+
+} // FUNCTION : SetMass
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Set_Density
 // Description :  Calculate the density of this cloud at radius r
 //
-// Note        :  
+// Note        :
 //
 // Parameter   :  r : radius
 //
 // Return      :  Density of this cloud at radius r
-//
 //-------------------------------------------------------------------------------------------------------
-double Particle_IC_Constructor::Set_Density(double x)
+double Par_EquilibriumIC::Set_Density( double x )
 {
+
    if (params.Cloud_Type == "Table"){
       if(x>=Table_r[params.Cloud_MassProfNBin-1]){
          return Table_Density[params.Cloud_MassProfNBin-1];
@@ -467,24 +502,27 @@ double Particle_IC_Constructor::Set_Density(double x)
       else if(convertToString(params.Cloud_Type)=="Jaffe"    ) rho=mass_base_Jaffe(x,nothing);
       else if(convertToString(params.Cloud_Type)=="Hernquist") rho=mass_base_Hernquist(x,nothing);
       else if(convertToString(params.Cloud_Type)=="Einasto"  ) rho=mass_base_Einasto(x,nothing);
-      
+
       return rho*pow(x,-2);
    }
-} // FUNCTION : double Particle_IC_Constructor::Set_Density(double x)
+
+} // FUNCTION : Set_Density
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Set_Velocity
 // Description :  Set the velocity of a particle at radius r
 //
-// Note        :  
+// Note        :
 //
 // Parameter   :  r : radius
 //
-// Return      :  Particle's velocity
-//
+// Return      :  Particle velocity
 //-------------------------------------------------------------------------------------------------------
-double Particle_IC_Constructor::Set_Velocity(const double x)
+double Par_EquilibriumIC::Set_Velocity( const double x )
 {
+
    double index,sum=0;
    double psi_per =-potential(x);
    for(int k =0;k<params.Cloud_MassProfNBin;k++){
@@ -496,7 +534,7 @@ double Particle_IC_Constructor::Set_Velocity(const double x)
    }
 
    double sum_rad,sum_mes=0,par,psi_ass;
-   int index_ass;
+   int index_ass=0;
 
    sum_rad = Random_Num_Gen->GetValue( 0, 0.0, 1.0 );
    sum_rad*=sum;
@@ -508,27 +546,43 @@ double Particle_IC_Constructor::Set_Velocity(const double x)
          break;
          }
       sum_mes += prob_dens[k] *pow(psi_per-psi[k],0.5) *delta;
+      if(k==params.Cloud_MassProfNBin-1)index_ass = params.Cloud_MassProfNBin-1;
    }
    psi_ass = psi[index_ass] +delta *par;
-   double kim =-2*(psi_ass+potential(x));
+   double kim =-2*(psi_ass-psi_per);
    if(kim<0.0){
       return 0;
    }
    double v =pow(kim,0.5);
+
    return v;
-} // FUNCTION : double Particle_IC_Constructor::Set_Velocity(const double x)
+
+} // FUNCTION : Set_Velocity
+
+
 
 // Solve Eddington's equation
-double Particle_IC_Constructor::potential(const double x)
+double Par_EquilibriumIC::potential( const double x )
 {
-   if(x>double(params.Cloud_MaxR/params.Cloud_R0)){
-      return Table_Gravity_Potential[params.Cloud_MassProfNBin-1]*(params.Cloud_MaxR)/(x*params.Cloud_R0);
-   }
-   return Mis_InterpolateFromTable( params.Cloud_MassProfNBin, Table_r, Table_Gravity_Potential, x*params.Cloud_R0 );
-} // FUNCTION : double Particle_IC_Constructor::potential(const double x)
+   const double r = x*params.Cloud_R0;
 
-double Particle_IC_Constructor::inverse_psi_to_index (double psi)
+   if(r>=Table_r[params.Cloud_MassProfNBin-1]){
+      return Table_Gravity_Potential[params.Cloud_MassProfNBin-1]*Table_r[params.Cloud_MassProfNBin-1]/r;
+   }
+
+   if(r<=Table_r[0]){
+      return Table_Gravity_Potential[0];
+   }
+
+   return Mis_InterpolateFromTable( params.Cloud_MassProfNBin, Table_r, Table_Gravity_Potential, r );
+
+} // FUNCTION : potential
+
+
+
+double Par_EquilibriumIC::inverse_psi_to_index( const double psi )
 {
+
    int max=params.Cloud_MassProfNBin-1;
    int min =0;
    int mid =(max+min)/2;
@@ -548,10 +602,14 @@ double Particle_IC_Constructor::inverse_psi_to_index (double psi)
          mid =(max+min)/2;
       }
    }
-} // FUNCTION : double Particle_IC_Constructor::inverse_psi_to_index (double psi)
 
-double Particle_IC_Constructor::integration_eng_base(double eng)
+} // FUNCTION : inverse_psi_to_index
+
+
+
+double Par_EquilibriumIC::integration_eng_base( const double eng )
 {
+
    double min =  eng_min;
    double max = eng;
    int num=1000;
@@ -566,23 +624,26 @@ double Particle_IC_Constructor::integration_eng_base(double eng)
       else result += -2* Table_dRho_dx[ind0] * ( pow(eng-psi_l,0.5) - pow(eng-psi_r,0.5) );
    }
    return result;
-} // FUNCTION : double Particle_IC_Constructor::integration_eng_base(double eng)
 
+} // FUNCTION : integration_eng_base
+
+
+
+// Initialize physical parameter tables
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_Mass
 // Description :  Calculate the table of enclosed masses (vs. radius) of the cloud
-//                  by giving a known analytical density function of the cloud
+//                by giving a known analytical density function of the cloud
 //
-// Note        :  
+// Note        :
 //
 // Parameter   :
 //
 // Return      :
-//
 //-------------------------------------------------------------------------------------------------------
-// Initialize physical parameter tables
-void Particle_IC_Constructor::Init_Mass()
+void Par_EquilibriumIC::Init_Mass()
 {
+
    double dr = params.Cloud_MaxR / (params.Cloud_MassProfNBin-1);
    //Radius & Mass
    for (int b=0; b<params.Cloud_MassProfNBin; b++)
@@ -606,28 +667,31 @@ void Particle_IC_Constructor::Init_Mass()
       int num=3;
       if     (b==0)   Table_dRho_dr[b] = slope(Table_r,Table_Density,0,num/2+1);
       else if(b==1)   Table_dRho_dr[b] = slope(Table_r,Table_Density,0,num/2+2);
-      
+
       else if(b==params.Cloud_MassProfNBin-2)   Table_dRho_dr[b] = slope(Table_r,Table_Density,params.Cloud_MassProfNBin-num/2-1,params.Cloud_MassProfNBin);
       else                                      Table_dRho_dr[b] = slope(Table_r,Table_Density,b-num/2,b+num/2+1);
-      
-   }Table_dRho_dr[params.Cloud_MassProfNBin-1]=Table_dRho_dr[params.Cloud_MassProfNBin-2];
 
-} // FUNCTION : void Particle_IC_Constructor::Init_Mass()
+   }
+   Table_dRho_dr[params.Cloud_MassProfNBin-1]=Table_dRho_dr[params.Cloud_MassProfNBin-2];
+
+} // FUNCTION : Init_Mass
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_Pot
 // Description :  Calculate the table of potential (vs. radius) of the cloud
-//                  by giving a known analytical density function of the cloud
+//                by giving a known analytical density function of the cloud
 //
-// Note        :  
+// Note        :
 //
 // Parameter   :
 //
 // Return      :
-//
 //-------------------------------------------------------------------------------------------------------
-void Particle_IC_Constructor::Init_Pot()
+void Par_EquilibriumIC::Init_Pot()
 {
+
    double dr = params.Cloud_MaxR / (params.Cloud_MassProfNBin-1);
    Table_Gravity_Field[0] =0;
 
@@ -650,31 +714,34 @@ void Particle_IC_Constructor::Init_Pot()
    {
       Table_dRho_dx[b] = -Table_dRho_dr[b]/(Table_Gravity_Field[b]);
    }
-} // FUNCTION : void Particle_IC_Constructor::Init_Pot()
 
-//  Initialization through loading a file of table
+} // FUNCTION : Init_Pot
+
+
+
+// Initialization through loading a file of table
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_Pot_Table
+// Function    :  Init_Mass_Table
 // Description :  Calculate the table of potential (vs. radius) of the cloud
-//                  by loading a file of table
+//                by loading a file of table
 //
-// Note        :  
+// Note        :
 //
 // Parameter   :
 //
 // Return      :
-//
 //-------------------------------------------------------------------------------------------------------
-void Particle_IC_Constructor::Init_Mass_Table()
+void Par_EquilibriumIC::Init_Mass_Table()
 {
+
    //Mass
    Table_Enclosed_Mass[0]=0;
    double rho,dr,r;
    for (int b=1; b<params.Cloud_MassProfNBin; b++)
    {
       rho = (Table_Density[b] + Table_Density[b-1])/2;
-      dr = Table_r[b] - Table_r[b-1];
-      r = (Table_r[b] + Table_r[b-1])/2;
+      dr  = Table_r[b] - Table_r[b-1];
+      r   = (Table_r[b] + Table_r[b-1])/2;
       Table_Enclosed_Mass[b] = Table_Enclosed_Mass[b-1] + 4*M_PI*pow(r,2) *rho * dr;
    }
 
@@ -685,28 +752,31 @@ void Particle_IC_Constructor::Init_Mass_Table()
       int num=3;
       if     (b==0)   Table_dRho_dr[b] = slope(Table_r,Table_Density,0,num/2+1);
       else if(b==1)   Table_dRho_dr[b] = slope(Table_r,Table_Density,0,num/2+2);
-      
+
       else if(b==params.Cloud_MassProfNBin-2)   Table_dRho_dr[b] = slope(Table_r,Table_Density,params.Cloud_MassProfNBin-num/2-1,params.Cloud_MassProfNBin);
       else                                      Table_dRho_dr[b] = slope(Table_r,Table_Density,b-num/2,b+num/2+1);
 
    }
    Table_dRho_dr[params.Cloud_MassProfNBin-1]=Table_dRho_dr[params.Cloud_MassProfNBin-2];
-} // FUNCTION : void Particle_IC_Constructor::Init_Mass_Table()
+
+} // FUNCTION : Init_Mass_Table
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_Pot_Table
 // Description :  Calculate the table of potential (vs. radius) of the cloud
-//                  by loading a file of table
+//                by loading a file of table
 //
-// Note        :  
+// Note        :
 //
 // Parameter   :
 //
 // Return      :
-//
 //-------------------------------------------------------------------------------------------------------
-void Particle_IC_Constructor::Init_Pot_Table()
+void Par_EquilibriumIC::Init_Pot_Table()
 {
+
    Table_Gravity_Field[0] =0;
    for (int b=1; b<params.Cloud_MassProfNBin; b++)
    {
@@ -722,13 +792,15 @@ void Particle_IC_Constructor::Init_Pot_Table()
       Table_Gravity_Potential[b] = Table_Gravity_Potential[b+1] + Table_Gravity_Field[b] * dr;
    }
    Table_Gravity_Potential[0]=Table_Gravity_Potential[1];
-      
+
    //derho_overdx
    for (int b=0; b<params.Cloud_MassProfNBin; b++)
    {
       Table_dRho_dx[b] = -Table_dRho_dr[b]/(Table_Gravity_Field[b]);
    }
-} // FUNCTION : void Particle_IC_Constructor::Init_Pot_Table()
+} // FUNCTION : Init_Pot_Table
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_Prob_Dens
@@ -739,10 +811,10 @@ void Particle_IC_Constructor::Init_Pot_Table()
 // Parameter   :
 //
 // Return      :
-//
 //-------------------------------------------------------------------------------------------------------
-void Particle_IC_Constructor::Init_Prob_Dens()
+void Par_EquilibriumIC::Init_Prob_Dens()
 {
+
    double min,max;
    min=-Table_Gravity_Potential[params.Cloud_MassProfNBin-1];
    max =-Table_Gravity_Potential[1];
@@ -768,24 +840,26 @@ void Particle_IC_Constructor::Init_Prob_Dens()
 
    }
    smooth_all(prob_dens,0,params.Cloud_MassProfNBin);
-} // FUNCTION : void Particle_IC_Constructor::Init_Prob_Dens()
+
+} // FUNCTION : Init_Prob_Dens
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Add_Ext_Pot
 // Description :  Add exteranl potential through loading a file of table
 //
-// Note        :  Only will be activated if ADD_EXT_POT is turned on
+// Note        :  Only will be activated if AddExtPot is turned on
 //
 // Parameter   :
 //
 // Return      :
-//
 //-------------------------------------------------------------------------------------------------------
-void Particle_IC_Constructor::Add_Ext_Pot()
+void Par_EquilibriumIC::Add_Ext_Pot()
 {
-   if(!bool(params.ADD_EXT_POT)){
-      return;
-   }
+
+   if ( ! bool(params.AddExtPot) )  return;
+
    Aux_Message( stdout, "Loading External Potential Table...\n");
    int Tcol_r[1]={0};
    int Tcol_Pot[1]={1};
@@ -793,11 +867,11 @@ void Particle_IC_Constructor::Add_Ext_Pot()
    double* Ext_Pot=NULL;
    int Row_r_Table;
    Row_r_Table= Aux_LoadTable( Radius, convertToString(params.ExtPot_Table_Name).c_str(), 1, Tcol_r,true,true );
-      
+
    int Row_Ext_Pot_Table;
    Row_Ext_Pot_Table= Aux_LoadTable( Ext_Pot, convertToString(params.ExtPot_Table_Name).c_str(), 1, Tcol_Pot,true,true );
    Aux_Message( stdout, "Loading Ext_Pot Profile Table:%s\n",convertToString(params.ExtPot_Table_Name).c_str());
-      
+
    if(Row_r_Table!=Row_Ext_Pot_Table)
       Aux_Error( ERROR_INFO, "Ext_Pot row number is not equal to radius row number in the profile file !! Please check this file.\n" );
 
@@ -807,7 +881,10 @@ void Particle_IC_Constructor::Add_Ext_Pot()
    for(int i=0;i<params.Cloud_MassProfNBin;i++){
       Table_Gravity_Potential[i] += Ext_Pot[i];
    }
-} // FUNCTION : void Particle_IC_Constructor::Add_Ext_Pot()
+
+} // FUNCTION : Add_Ext_Pot
+
+
 
 // Auxiliary functions
 //-------------------------------------------------------------------------------------------------------
@@ -819,10 +896,10 @@ void Particle_IC_Constructor::Add_Ext_Pot()
 // Parameter   :
 //
 // Return      :
-//
 //-------------------------------------------------------------------------------------------------------
-void Particle_IC_Constructor::Check_InputFileName()
+void Par_EquilibriumIC::Check_InputFileName()
 {
+
    fstream file;
    Aux_Message( stdout, "Checking Params_Filenames\n" );
    for(int k=0;k<filenames.Cloud_Num;k++){
@@ -834,7 +911,10 @@ void Particle_IC_Constructor::Check_InputFileName()
       }
       file.close();
    }
-} // FUNCTION : void Particle_IC_Constructor::Check_InputFileName()
+
+} // FUNCTION : Check_InputFileName
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Aux_CountRow
@@ -845,10 +925,10 @@ void Particle_IC_Constructor::Check_InputFileName()
 // Parameter   :  filename : file name
 //
 // Return      :  Row number of the given file
-//
 //-------------------------------------------------------------------------------------------------------
-int Particle_IC_Constructor::Aux_CountRow( const char *filename )
+int Par_EquilibriumIC::Aux_CountRow( const char *filename )
 {
+
    fstream file;
    file.open(filename,ios::in);
 
@@ -866,7 +946,10 @@ int Particle_IC_Constructor::Aux_CountRow( const char *filename )
    file.close();
 
    return row;
-} // FUNCTION : Particle_IC_Constructor::Aux_CountRow( const char *filename )
+
+} // FUNCTION : Aux_CountRow
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Aux_Countcolumn
@@ -877,10 +960,10 @@ int Particle_IC_Constructor::Aux_CountRow( const char *filename )
 // Parameter   :  filename : file name
 //
 // Return      :  Column number of the given file
-//
 //-------------------------------------------------------------------------------------------------------
-int Particle_IC_Constructor::Aux_Countcolumn( const char *filename )
+int Par_EquilibriumIC::Aux_Countcolumn( const char *filename )
 {
+
    fstream file;
    file.open(filename,ios::in);
 
@@ -900,24 +983,29 @@ int Particle_IC_Constructor::Aux_Countcolumn( const char *filename )
    file.close();
 
    return column;
-} // FUNCTION : Particle_IC_Constructor::Aux_CountRow( const char *filename )
+
+} // FUNCTION : Aux_Countcolumn
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  GetParams
 // Description :  Get the parameters from a file
 //
-// Note        :  
+// Note        :
 //
-// Parameter   :   filename    : file name of the input file
-//                  keyword     : the name of the parameter
-//                para_num    : number of input parameters
-//                  containaer   : container of return values 
+// Parameter   :  filename   : file name of the input file
+//                keyword    : the name of the parameter
+//                para_num   : number of input parameters
+//                containaer : container of return values
 //
 // Return      :  containaer
 //
 //-------------------------------------------------------------------------------------------------------
-int Particle_IC_Constructor::GetParams( const char *filename,const char *keyword,const int para_num,const char *para_type,vector <string> &container)
+int Par_EquilibriumIC::GetParams( const char *filename, const char *keyword, const int para_num,
+                                  const char *para_type, vector <string> &container )
 {
+
    fstream file;
    file.open(filename,ios::in);
 
@@ -944,7 +1032,7 @@ int Particle_IC_Constructor::GetParams( const char *filename,const char *keyword
             else{
             return atoi(para.c_str());
             }
-               
+
          }
          break;
       }
@@ -952,7 +1040,10 @@ int Particle_IC_Constructor::GetParams( const char *filename,const char *keyword
    }
    file.close();
    return 0;
-} // FUNCTION : Particle_IC_Constructor::GetParams( const char *filename,const char *keyword)
+
+} // FUNCTION : GetParams
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  RanVec_FixRadius
@@ -966,8 +1057,9 @@ int Particle_IC_Constructor::GetParams( const char *filename,const char *keyword
 //
 // Return      :  RanVec
 //-------------------------------------------------------------------------------------------------------
-void Particle_IC_Constructor::RanVec_FixRadius( const double r, double RanVec[] )
+void Par_EquilibriumIC::RanVec_FixRadius( const double r, double RanVec[] )
 {
+
    double Norm, RanR2;
 
    do
@@ -985,40 +1077,58 @@ void Particle_IC_Constructor::RanVec_FixRadius( const double r, double RanVec[] 
 
    for (int d=0; d<3; d++)    RanVec[d] *= Norm;
 
-} // FUNCTION : void Particle_IC_Constructor::RanVec_FixRadius( const double r, double RanVec[] )
+} // FUNCTION : RanVec_FixRadius
+
+
 
 // Statistics
-double Particle_IC_Constructor::ave(double* a,int start,int fin)
+double Par_EquilibriumIC::ave( double* a, int start, int fin )
 {
+
    double sum=0;
    for(int k=start;k<fin;k++){
       sum+=a[k];
    }
-   return sum/(fin-start);
-} // FUNCTION : double Particle_IC_Constructor::ave(double* a,int start,int fin)
 
-double Particle_IC_Constructor::var_n(double* a,int start,int fin)
+   return sum/(fin-start);
+
+} // FUNCTION : ave
+
+
+
+double Par_EquilibriumIC::var_n( double* a, int start, int fin )
 {
+
    double sum=0;
    for(int k=start;k<fin;k++){
       sum+=(a[k])*(a[k]);
    }
    sum=sum-(fin-start)*pow(ave(a,start,fin),2);
-   return sum;
-} // FUNCTION : double Particle_IC_Constructor::var_n(double* a,int start,int fin)
 
-double Particle_IC_Constructor::cor(double* x,double* y,int start,int fin)
+   return sum;
+
+} // FUNCTION : var_n
+
+
+
+double Par_EquilibriumIC::cor( double* x, double* y, int start, int fin )
 {
+
    double up=0,down = pow(var_n(x,start,fin)*var_n(y,start,fin),0.5);
    double ave_x = ave(x,start,fin),ave_y = ave(y,start,fin);
    for(int k=start;k<fin;k++){
       up+=(x[k]-ave_x)*(y[k]-ave_y);
    }
-   return up/down;
-} // FUNCTION : double Particle_IC_Constructor::cor(double* x,double* y,int start,int fin)
 
-void Particle_IC_Constructor::mask(double* x,int start,int fin)
+   return up/down;
+
+} // FUNCTION : cor
+
+
+
+void Par_EquilibriumIC::mask( double* x, int start, int fin )
 {
+
    double standard=3;
    for(int j=start;j<fin;j++){
       bool flag=0;
@@ -1031,10 +1141,14 @@ void Particle_IC_Constructor::mask(double* x,int start,int fin)
          if(flag)x[j]=0;
       }
    }
-} // FUNCTION : void Particle_IC_Constructor::mask(double* x,int start,int fin)
 
-void Particle_IC_Constructor::add_num(double* x,int start,int fin)
+} // FUNCTION : mask
+
+
+
+void Par_EquilibriumIC::add_num( double* x, int start, int fin )
 {
+
    double sum=0;
    int num=0;
    for(int j=start;j<fin;j++){
@@ -1048,10 +1162,14 @@ void Particle_IC_Constructor::add_num(double* x,int start,int fin)
          if(x[j]==0)x[j]=ave_x;
       }
    }
-} // FUNCTION : void Particle_IC_Constructor::add_num(double* x,int start,int fin)
 
-void Particle_IC_Constructor::smooth_all(double* x,int start,int fin)
+} // FUNCTION : add_num
+
+
+
+void Par_EquilibriumIC::smooth_all( double* x, int start, int fin )
 {
+
    int num=10;
    for(int k=start;k<fin-num+1;k++){
       mask(x,k,k+num);
@@ -1059,15 +1177,22 @@ void Particle_IC_Constructor::smooth_all(double* x,int start,int fin)
    for(int k=start;k<fin-num+1;k++){
       add_num(x,k,k+num);
    }
-} // FUNCTION : void Particle_IC_Constructor::smooth_all(double* x,int start,int fin)
 
-double Particle_IC_Constructor::slope(double* x,double* y,int start,int fin)
+} // FUNCTION : smooth_all
+
+
+
+double Par_EquilibriumIC::slope( double* x, double* y, int start, int fin )
 {
+
    double cor_ = cor(x,y,start,fin);
    double var_n_x =var_n(x,start,fin), var_n_y =var_n(y,start,fin);
    double s =cor_*pow(var_n_y,0.5)/pow(var_n_x,0.5);
 
    return s;
-} // FUNCTION : double Particle_IC_Constructor::slope(double* x,double* y,int start,int fin)
 
-# endif//#  ifdef PARTICLE
+} // FUNCTION : slope
+
+
+
+#endif // #ifdef PARTICLE

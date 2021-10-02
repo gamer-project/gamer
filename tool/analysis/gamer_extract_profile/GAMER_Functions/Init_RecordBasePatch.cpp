@@ -5,9 +5,9 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_RecordBasePatch
-// Description :  Record the IDs of base-level patches in the BaseP array 
+// Description :  Record the IDs of base-level patches in the BaseP array
 //
-// Note        :  BaseP array is used to 
+// Note        :  BaseP array is used to
 //                (1) construct the sibling relation at the base level --> SiblingSearch_Base
 //                (2) find the father patch                            --> FindFather
 //-------------------------------------------------------------------------------------------------------
@@ -51,7 +51,7 @@ void Init_RecordBasePatch()
 
    for (int Sib=0; Sib<26; Sib++)
    {
-      for (int d=0; d<3; d++)    
+      for (int d=0; d<3; d++)
       {
          NP       = NX0_TOT[d]/PATCH_SIZE;
 
@@ -60,7 +60,7 @@ void Init_RecordBasePatch()
          Disp2[d] = TABLE_01( Sib, 'x'+d, NP,   0,    -NP     );
       }
 
-      for (int k1=Disp1[2]; k1<Disp1[2]+Width[2]; k1++)  {  k2 = k1 + Disp2[2]; 
+      for (int k1=Disp1[2]; k1<Disp1[2]+Width[2]; k1++)  {  k2 = k1 + Disp2[2];
       for (int j1=Disp1[1]; j1<Disp1[1]+Width[1]; j1++)  {  j2 = j1 + Disp2[1];
       for (int i1=Disp1[0]; i1<Disp1[0]+Width[0]; i1++)  {  i2 = i1 + Disp2[0];
 

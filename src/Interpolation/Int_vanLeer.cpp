@@ -10,8 +10,8 @@
 // Note        :  1. Slope at each cell is set to the harmonic mean of the left and right slopes
 //                2. Set slope to zero if the left and right **slopes** have opposite signs
 //                3. The interpolation result is BOTH conservative and monotonic
-//		  4. 3D interpolation is achieved by performing interpolation along x, y, and z directions
-//		     in order --> different from MINMOD1D
+//                4. 3D interpolation is achieved by performing interpolation along x, y, and z directions
+//                   in order --> different from MINMOD1D
 //
 // Parameter   :  CData           : Input coarse-grid array
 //                CSize           : Size of the CData array

@@ -1,14 +1,14 @@
-/***Total deep copy***/
 #include "GAMER.h"
+#include"Par_EquilibriumIC.h"
 
-#include"Particle_IC_Constructor.h"
-#define DEBUG
 #ifdef PARTICLE
 
 static RandomNumber_t *RNG = NULL;
 
+
+
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Par_Init_ByFunction_Equilibrium_Cloud
+// Function    :  Par_Init_ByFunction_ParEqmIC
 // Description :  User-specified function to initialize particle attributes
 //
 // Note        :  1. Invoked by Init_GAMER() using the function pointer "Par_Init_ByFunction_Ptr"
@@ -39,10 +39,10 @@ static RandomNumber_t *RNG = NULL;
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, AllAttribute
 //-------------------------------------------------------------------------------------------------------
 
-void Par_Init_ByFunction_Equilibrium_Cloud( const long NPar_ThisRank, const long NPar_AllRank,
-                                  real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                  real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                  real *AllAttribute[PAR_NATT_TOTAL] )
+void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_AllRank,
+                                   real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
+                                   real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
+                                   real *AllAttribute[PAR_NATT_TOTAL] )
 {
    // Define particles' attributes array
    real *Mass_AllRank   = NULL;
@@ -50,7 +50,7 @@ void Par_Init_ByFunction_Equilibrium_Cloud( const long NPar_ThisRank, const long
    real *Vel_AllRank[3] = { NULL, NULL, NULL };
 
    // Define the Particle IC Constructor
-   Particle_IC_Constructor Filename_Loader;
+   Par_EquilibriumIC Filename_Loader;
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
@@ -71,8 +71,8 @@ void Par_Init_ByFunction_Equilibrium_Cloud( const long NPar_ThisRank, const long
 
       for(int k=0;k<Filename_Loader.filenames.Cloud_Num;k++){
 
-         // initialize Particle_IC_Constructor for each cloud
-         Particle_IC_Constructor Cloud_Constructor;
+         // initialize Par_EquilibriumIC for each cloud
+         Par_EquilibriumIC Cloud_Constructor;
          Cloud_Constructor.Load_Physical_Params(Filename_Loader.filenames,k,NPar_AllRank);
          Cloud_Constructor.Init();
 
@@ -80,19 +80,19 @@ void Par_Init_ByFunction_Equilibrium_Cloud( const long NPar_ThisRank, const long
          if((Par_Idx + Cloud_Constructor.params.Cloud_Par_Num) > NPar_AllRank){
             Aux_Error( ERROR_INFO, "The sum of particle numbers of each cloud exceeds 1!! Please check!");
          }
-         
+
          // set equilibrium initial conditions for each cloud
          Cloud_Constructor.Par_SetEquilibriumIC(Mass_AllRank, Pos_AllRank, Vel_AllRank, Par_Idx);
          Par_Idx += Cloud_Constructor.params.Cloud_Par_Num;
-         
+
       }//for(int k=0;k<Filename_Loader.filenames.Cloud_Num;k++)
 
    }//if ( MPI_Rank == 0 )
-   
-   
+
+
    // synchronize all particles to the physical time on the base level
    for (long p=0; p<NPar_ThisRank; p++)   ParTime[p] = Time[0];
-   
+
    // get the number of particles in each rank and set the corresponding offsets
    if ( NPar_AllRank > (long)__INT_MAX__ )
       Aux_Error( ERROR_INFO, "NPar_Active_AllRank (%ld) exceeds the maximum integer (%ld) --> MPI will likely fail !!\n",
@@ -131,7 +131,7 @@ void Par_Init_ByFunction_Equilibrium_Cloud( const long NPar_ThisRank, const long
    {
       MPI_Scatterv( Pos_AllRank[d], NSend, SendDisp, MPI_FLOAT,  Pos[d], NPar_ThisRank, MPI_FLOAT,  0, MPI_COMM_WORLD );
       MPI_Scatterv( Vel_AllRank[d], NSend, SendDisp, MPI_FLOAT,  Vel[d], NPar_ThisRank, MPI_FLOAT,  0, MPI_COMM_WORLD );
-   } 
+   }
 #  endif
 if ( MPI_Rank == 0 )
    {
@@ -147,6 +147,6 @@ if ( MPI_Rank == 0 )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
-} // FUNCTION : Par_Init_ByFunction_Equilibrium_Cloud
+} // FUNCTION : Par_Init_ByFunction_ParEqmIC
 
 #endif // #ifdef PARTICLE

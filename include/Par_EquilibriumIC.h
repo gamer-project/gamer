@@ -1,11 +1,14 @@
-#ifndef __PARTICLE_IC_CONSTRUCTOR_H__
-#define __PARTICLE_IC_CONSTRUCTOR_H__
+#ifndef __PAR_EQUILIBRIUM_IC_H__
+#define __PAR_EQUILIBRIUM_IC_H__
+
+
+
 #include "GAMER.h"
 #include "TestProb.h"
-#include"vector"
-#include<iostream>
-#include<fstream>
-#include<sstream>
+#include "vector"
+#include <iostream>
+#include <fstream>
+#include <sstream>
 using namespace std;
 
 //gsl library
@@ -28,7 +31,7 @@ typedef struct Physical_Parameter{
 
    char     Cloud_Type[MAX_STRING];
    char     Density_Table_Name[MAX_STRING];
-   int      ADD_EXT_POT;
+   int      AddExtPot;
    char     ExtPot_Table_Name[MAX_STRING];
    int      Cloud_RSeed;
    double   Cloud_Rho0;
@@ -43,27 +46,27 @@ typedef struct Physical_Parameter{
 }PhysP;
 
 
-class Particle_IC_Constructor
+class Par_EquilibriumIC
 {
    public:
-      Particle_IC_Constructor();
-      virtual ~Particle_IC_Constructor();
+      Par_EquilibriumIC();
+      virtual ~Par_EquilibriumIC();
       void Read_Filenames( const char *filename_para);
       void Load_Physical_Params(const FP filenames,const int cloud_idx, const long NPar_AllRank);
       void Init();
       void Par_SetEquilibriumIC(real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3],const long Par_Idx);
-      
+
 
       PhysP params;
       FP   filenames;
    protected:
-      
+
    private:
       // Derive physical attributes for particles
       double Set_Mass( double x );
       double Set_Density( double x );
       double Set_Velocity(const double x);
-      
+
       // Initialize physical parameter tables
       void Init_Mass();
       void Init_Pot();
@@ -116,4 +119,6 @@ class Particle_IC_Constructor
       RandomNumber_t *Random_Num_Gen ;
 };
 
-#endif //__PARTICLE_IC_CONSTRUCTOR_H__
+
+
+#endif //__PAR_EQUILIBRIUM_IC_H__

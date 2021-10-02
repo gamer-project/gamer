@@ -159,7 +159,7 @@ RESTART_LOAD_NRANK            1           # number of parallel I/O (i.e., number
 OPT__INIT_RESTRICT            1           # restrict all data during the initialization [1]
 OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2=CUDA, -1=MPI rank, >=0=input) [-1]
 INIT_SUBSAMPLING_NCELL        3           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
-OPT__INIT_BFIELD_BYFILE	      1
+OPT__INIT_BFIELD_BYFILE       1
 
 
 # data dump

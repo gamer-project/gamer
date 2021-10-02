@@ -1,23 +1,25 @@
 #include "GAMER.h"
 #include "TestProb.h"
+#include "Par_EquilibriumIC.h"
+#include "string"
 
-#include"Particle_IC_Constructor.h"
-#include"string"
 using namespace std;
 
-// Negligibly small uniform density
-double Equilibrium_Cloud_Dens;
+// negligibly small uniform density and energy
+double ParEqmIC_SmallGas;
 
 // problem-specific function prototypes
 #ifdef PARTICLE
-void Par_Init_ByFunction_Equilibrium_Cloud( const long NPar_ThisRank, const long NPar_AllRank,
-                                  real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                  real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                  real *AllAttribute[PAR_NATT_TOTAL] );
+void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_AllRank,
+                                   real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
+                                   real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
+                                   real *AllAttribute[PAR_NATT_TOTAL] );
 #endif
 
 // external potential routines
-void Init_ExtPot_EquilibriumIC();
+void Init_ExtPot_ParEqmIC();
+
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -113,13 +115,13 @@ void SetParameter()
       PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
    }
 
-   // Edit Equilibrium_Cloud_Dens in Input__TestProb
+// load run-time parameters
    const char* FileName = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
    // ********************************************************************************************************************************
    // ReadPara->Add( "KEY_IN_THE_FILE",      &VARIABLE,              DEFAULT,       MIN,              MAX               );
    // ********************************************************************************************************************************
-   ReadPara->Add( "Equilibrium_Cloud_Dens",  &Equilibrium_Cloud_Dens,                  1e-3,          0.,               NoMax_double         );
+   ReadPara->Add( "ParEqmIC_SmallGas",       &ParEqmIC_SmallGas,     1e-3,          0.,               NoMax_double      );
    ReadPara->Read( FileName );
    delete ReadPara;
 
@@ -149,21 +151,22 @@ void SetParameter()
 void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] )
 {
-   fluid[DENS] = Equilibrium_Cloud_Dens;
+
+   fluid[DENS] = ParEqmIC_SmallGas;
    fluid[MOMX] = 0;
    fluid[MOMY] = 0;
    fluid[MOMZ] = 0;
-#     ifdef GRAVITY
-   fluid[ENGY] = Equilibrium_Cloud_Dens;
-#     endif
+#  ifdef GRAVITY
+   fluid[ENGY] = ParEqmIC_SmallGas;
+#  endif
 
-//    just set all passive scalars as zero
+// just set all passive scalars as zero
    for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = 0.0;
 
 } // FUNCTION : SetGridIC
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_TestProb_Hydro_Equilibrium_Cloud_smallGas
+// Function    :  Init_TestProb_Hydro_ParEqmIC
 // Description :  Test problem initializer
 //
 // Note        :  None
@@ -172,10 +175,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Init_TestProb_Hydro_Equilibrium_Cloud_smallGas()
+void Init_TestProb_Hydro_ParEqmIC()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
+
 
 // validate the compilation flags and runtime parameters
    Validate();
@@ -185,19 +189,19 @@ void Init_TestProb_Hydro_Equilibrium_Cloud_smallGas()
    SetParameter();
 
    Init_Function_User_Ptr  = SetGridIC;
-   
+
 #  ifdef PARTICLE
-   Par_Init_ByFunction_Ptr = Par_Init_ByFunction_Equilibrium_Cloud;
+   Par_Init_ByFunction_Ptr = Par_Init_ByFunction_ParEqmIC;
 #  endif
 
 #  endif // #if ( MODEL == HYDRO )
 
-// External Potential
-# ifdef GRAVITY
-   if ( OPT__EXT_POT == EXT_POT_FUNC )   Init_ExtPot_Ptr  = Init_ExtPot_EquilibriumIC;
-# endif //# ifdef GRAVITY
+// external potential
+#  ifdef GRAVITY
+   if ( OPT__EXT_POT == EXT_POT_FUNC )   Init_ExtPot_Ptr = Init_ExtPot_ParEqmIC;
+#  endif //# ifdef GRAVITY
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Init_TestProb_Hydro_Equilibrium_Cloud_smallGas
+} // FUNCTION : Init_TestProb_Hydro_ParEqmIC

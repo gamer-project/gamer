@@ -2,7 +2,7 @@
 Cloud_RSeed           124                    # random seed for setting particle position and velocity (>=0) [123]
 Cloud_Rho0            1.0                    # peak density [1.0]
 Cloud_R0              0.1                    # scale radius [0.1]
-Cloud_MaxR            1.5                    # maximum radius for particles [0.375]
+Cloud_MaxR            0.2                    # maximum radius for particles [0.375]
 Cloud_CenterX         2.0                    # central x coordinate [box center]
 Cloud_CenterY         1.5                    # central y coordinate [box center]
 Cloud_CenterZ         1.5                    # central z coordinate [box center]
@@ -14,6 +14,6 @@ Cloud_MassProfNBin    1000                   # number of radial bins in the mass
 Cloud_Par_Num_Ratio   0.5                    # particle number ratio
 Cloud_Type            Table                  # type of density distribution
 Density_Table_Name    density_table.txt      # filename of density table
-ADD_EXT_POT           0                      # Whether to add external potential with Radius vs. potential table : (0=no, 1=yes)       
+AddExtPot             0                    # whether to add an external potential table [0]
 ExtPot_Table_Name     NONE                   # External potential table filename.
 
