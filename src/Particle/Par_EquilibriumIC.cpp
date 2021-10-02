@@ -252,15 +252,15 @@ void Par_EquilibriumIC::Init()
          Aux_Error( ERROR_INFO, "Maximum radius in your density table is smaller then Cloud_MaxR! Please check!\n" );
       }
 
-      Table_Enclosed_Mass = new double [params.Cloud_MassProfNBin];
-      Table_dRho_dr = new double [params.Cloud_MassProfNBin];
-      Table_Gravity_Field = new double [params.Cloud_MassProfNBin];
+      Table_Enclosed_Mass     = new double [params.Cloud_MassProfNBin];
+      Table_dRho_dr           = new double [params.Cloud_MassProfNBin];
+      Table_Gravity_Field     = new double [params.Cloud_MassProfNBin];
       Table_Gravity_Potential = new double [params.Cloud_MassProfNBin];
-      Table_dRho_dx = new double [params.Cloud_MassProfNBin];
+      Table_dRho_dx           = new double [params.Cloud_MassProfNBin];
 
-      prob_dens = new double [params.Cloud_MassProfNBin];
-      int_prob_dens = new double [params.Cloud_MassProfNBin];
-      psi = new double [params.Cloud_MassProfNBin];
+      prob_dens               = new double [params.Cloud_MassProfNBin];
+      int_prob_dens           = new double [params.Cloud_MassProfNBin];
+      psi                     = new double [params.Cloud_MassProfNBin];
 
       Init_Mass_Table ();
       Init_Pot_Table  ();
@@ -361,7 +361,7 @@ void Par_EquilibriumIC::Par_SetEquilibriumIC( real *Mass_AllRank, real *Pos_AllR
 
       //       velocity
       double a3=RanR/params.Cloud_R0;
-      
+
       RanV = Set_Velocity(a3);
 
       //       randomly set the velocity vector with the given amplitude (RanV*Vmax)
@@ -435,7 +435,7 @@ double mass_base_Einasto( double x, void *Einasto_Power_Factor )
 //-------------------------------------------------------------------------------------------------------
 double Par_EquilibriumIC::Set_Mass( double r )
 {
-   
+
    double x = r/params.Cloud_R0;
    if (convertToString(params.Cloud_Type)=="Table"){
       if(r>=Table_r[params.Cloud_MassProfNBin-1])return Table_Enclosed_Mass[params.Cloud_MassProfNBin-1];
@@ -565,15 +565,15 @@ double Par_EquilibriumIC::Set_Velocity( const double x )
 double Par_EquilibriumIC::potential( const double x )
 {
    const double r = x*params.Cloud_R0;
-   
+
    if(r>=Table_r[params.Cloud_MassProfNBin-1]){
       return Table_Gravity_Potential[params.Cloud_MassProfNBin-1]*Table_r[params.Cloud_MassProfNBin-1]/r;
    }
-   
+
    if(r<=Table_r[0]){
       return Table_Gravity_Potential[0];
    }
-   
+
    return Mis_InterpolateFromTable( params.Cloud_MassProfNBin, Table_r, Table_Gravity_Potential, r );
 
 } // FUNCTION : potential
@@ -740,8 +740,8 @@ void Par_EquilibriumIC::Init_Mass_Table()
    for (int b=1; b<params.Cloud_MassProfNBin; b++)
    {
       rho = (Table_Density[b] + Table_Density[b-1])/2;
-      dr = Table_r[b] - Table_r[b-1];
-      r = (Table_r[b] + Table_r[b-1])/2;
+      dr  = Table_r[b] - Table_r[b-1];
+      r   = (Table_r[b] + Table_r[b-1])/2;
       Table_Enclosed_Mass[b] = Table_Enclosed_Mass[b-1] + 4*M_PI*pow(r,2) *rho * dr;
    }
 
