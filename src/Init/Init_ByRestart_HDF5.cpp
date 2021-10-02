@@ -103,6 +103,7 @@ void Init_ByRestart_HDF5( const char *FileName )
    herr_t H5_Status;
    int    NLvRescale, NPatchAllLv, GID_LvStart[NLEVEL];
    int   *NullPtr = NULL;
+   bool   ReenablePar = false;
 
 
 // 1-1. open the HDF5 file
@@ -150,11 +151,18 @@ void Init_ByRestart_HDF5( const char *FileName )
 
    LoadField( "Model",          &KeyInfo.Model,          H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &Model,         1,    Fatal );
    LoadField( "Gravity",        &KeyInfo.Gravity,        H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &Gravity,       1,    Fatal );
-   LoadField( "Particle",       &KeyInfo.Particle,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &Particle,      1,    Fatal );
+   LoadField( "Particle",       &KeyInfo.Particle,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &Particle,      1, NonFatal );
    LoadField( "NLevel",         &KeyInfo.NLevel,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,      -1, NonFatal );
    LoadField( "NCompFluid",     &KeyInfo.NCompFluid,     H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &NCompFluid,    1,    Fatal );
    LoadField( "NCompPassive",   &KeyInfo.NCompPassive,   H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &NCompPassive,  1,    Fatal );
    LoadField( "PatchSize",      &KeyInfo.PatchSize,      H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &PatchSize,     1,    Fatal );
+
+// support re-enabling PARTICLE from a snapshot without particles, but not vice-versa
+   if      (   Particle  &&  ! KeyInfo.Particle )
+      ReenablePar = true;
+
+   else if ( ! Particle  &&    KeyInfo.Particle )
+      Aux_Error( ERROR_INFO, "cannot disable PARTICLE when restarting from a snapshot with particles !!\n" );
 
 // runtime NLEVEL must be >= loaded NLEVEL
    if      ( KeyInfo.NLevel > NLEVEL )
@@ -185,12 +193,20 @@ void Init_ByRestart_HDF5( const char *FileName )
 
    LoadField( "Step",                 &KeyInfo.Step,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
    LoadField( "AdvanceCounter",        KeyInfo.AdvanceCounter,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+
 #  ifdef PARTICLE
+   if ( ReenablePar ) {
+      KeyInfo.Par_NPar       = 0;
+      KeyInfo.Par_NAttStored = 0;
+   }
+
+   else {
    LoadField( "Par_NPar",             &KeyInfo.Par_NPar,             H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
    if ( KeyInfo.FormatVersion >= 2300 )
    LoadField( "Par_NAttStored",       &KeyInfo.Par_NAttStored,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttStored,        1,    Fatal );
    else
    LoadField( "Par_NAttStored",       &KeyInfo.Par_NAttStored,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttStored,        1, NonFatal );
+   } // if ( ReenablePar ) ... else ...
 #  endif
 
    LoadField( "BoxSize",               KeyInfo.BoxSize,              H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  amr->BoxSize,          3,    Fatal );
@@ -492,10 +508,13 @@ void Init_ByRestart_HDF5( const char *FileName )
    int *NParList_AllLv = new int [ NPatchAllLv ];
 
 // load data
-   H5_SetID_NPar = H5Dopen( H5_FileID, "Tree/NPar", H5P_DEFAULT );
-   if ( H5_SetID_NPar < 0 )   Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", "Tree/NPar" );
-   H5_Status = H5Dread( H5_SetID_NPar, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, NParList_AllLv );
-   H5_Status = H5Dclose( H5_SetID_NPar );
+   if ( ReenablePar )   for (int t=0; t<NPatchAllLv; t++)   NParList_AllLv[t] = 0;
+   else {
+      H5_SetID_NPar = H5Dopen( H5_FileID, "Tree/NPar", H5P_DEFAULT );
+      if ( H5_SetID_NPar < 0 )   Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", "Tree/NPar" );
+      H5_Status = H5Dread( H5_SetID_NPar, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, NParList_AllLv );
+      H5_Status = H5Dclose( H5_SetID_NPar );
+   } // if ( ReenablePar ) ... else ...
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading particle counts ... done\n" );
 #  endif // #ifdef PARTICLE
@@ -672,9 +691,11 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  endif // #ifdef MHD
 
 #  ifdef PARTICLE
-   H5_SetDims_ParData[0] = amr->Par->NPar_Active_AllRank;
-   H5_SpaceID_ParData    = H5Screate_simple( 1, H5_SetDims_ParData, NULL );
-   if ( H5_SpaceID_ParData < 0 )    Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_SpaceID_ParData" );
+   if ( ! ReenablePar ) {
+      H5_SetDims_ParData[0] = amr->Par->NPar_Active_AllRank;
+      H5_SpaceID_ParData    = H5Screate_simple( 1, H5_SetDims_ParData, NULL );
+      if ( H5_SpaceID_ParData < 0 )    Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_SpaceID_ParData" );
+   }
 #  endif
 
 
@@ -706,14 +727,16 @@ void Init_ByRestart_HDF5( const char *FileName )
 #        endif
 
 #        ifdef PARTICLE
-         H5_GroupID_Particle = H5Gopen( H5_FileID, "Particle", H5P_DEFAULT );
-         if ( H5_GroupID_Particle < 0 )   Aux_Error( ERROR_INFO, "failed to open the group \"%s\" !!\n", "Particle" );
+         if ( ! ReenablePar ) {
+            H5_GroupID_Particle = H5Gopen( H5_FileID, "Particle", H5P_DEFAULT );
+            if ( H5_GroupID_Particle < 0 )   Aux_Error( ERROR_INFO, "failed to open the group \"%s\" !!\n", "Particle" );
 
-         for (int v=0; v<PAR_NATT_STORED; v++)
-         {
-            H5_SetID_ParData[v] = H5Dopen( H5_GroupID_Particle, ParAttName[v], H5P_DEFAULT );
-            if ( H5_SetID_ParData[v] < 0 )   Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", ParAttName[v] );
-         }
+            for (int v=0; v<PAR_NATT_STORED; v++)
+            {
+               H5_SetID_ParData[v] = H5Dopen( H5_GroupID_Particle, ParAttName[v], H5P_DEFAULT );
+               if ( H5_SetID_ParData[v] < 0 )   Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", ParAttName[v] );
+            }
+         } // if ( ! ReenablePar )
 #        endif
 
 
@@ -812,8 +835,10 @@ void Init_ByRestart_HDF5( const char *FileName )
          H5_Status = H5Gclose( H5_GroupID_GridData );
 
 #        ifdef PARTICLE
-         for (int v=0; v<PAR_NATT_STORED; v++)  H5_Status = H5Dclose( H5_SetID_ParData[v] );
-         H5_Status = H5Gclose( H5_GroupID_Particle );
+         if ( ! ReenablePar ) {
+            for (int v=0; v<PAR_NATT_STORED; v++)  H5_Status = H5Dclose( H5_SetID_ParData[v] );
+            H5_Status = H5Gclose( H5_GroupID_Particle );
+         }
 #        endif
 
          H5_Status = H5Fclose( H5_FileID );
@@ -833,7 +858,7 @@ void Init_ByRestart_HDF5( const char *FileName )
    }
 #  endif
 #  ifdef PARTICLE
-   H5_Status = H5Sclose( H5_SpaceID_ParData );
+   if ( ! ReenablePar )    H5_Status = H5Sclose( H5_SpaceID_ParData );
 #  endif
 
 
@@ -939,7 +964,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 
 // redistribute patches again if we want to take into account the load-balance weighting of particles
 #  ifdef PARTICLE
-   if ( amr->LB->Par_Weight > 0.0 )
+   if ( amr->LB->Par_Weight > 0.0  &&  !ReenablePar )
    LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, amr->LB->Par_Weight, ResetLB_Yes, AllLv );
 #  endif
 
@@ -1415,7 +1440,7 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
    LoadField( "Model",                  &RS.Model,                  SID, TID, NonFatal, &RT.Model,                  1,    Fatal );
    LoadField( "Gravity",                &RS.Gravity,                SID, TID, NonFatal, &RT.Gravity,                1,    Fatal );
    LoadField( "Comoving",               &RS.Comoving,               SID, TID, NonFatal, &RT.Comoving,               1,    Fatal );
-   LoadField( "Particle",               &RS.Particle,               SID, TID, NonFatal, &RT.Particle,               1,    Fatal );
+   LoadField( "Particle",               &RS.Particle,               SID, TID, NonFatal, &RT.Particle,               1, NonFatal );
 
    LoadField( "UseGPU",                 &RS.UseGPU,                 SID, TID, NonFatal, &RT.UseGPU,                 1, NonFatal );
    LoadField( "GAMER_Debug",            &RS.GAMER_Debug,            SID, TID, NonFatal, &RT.GAMER_Debug,            1, NonFatal );
