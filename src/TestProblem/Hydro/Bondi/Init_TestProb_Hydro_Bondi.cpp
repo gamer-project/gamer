@@ -251,14 +251,14 @@ void SetParameter()
 // the following assumes that EoS requires no passive scalars
    Bondi_InBC_R   = Bondi_InBC_NCell*amr->dh[MAX_LEVEL];
    Bondi_InBC_P   = EoS_DensTemp2Pres_CPUPtr( Bondi_InBC_Rho, Bondi_InBC_T*UNIT_E/Const_kB, NULL,
-                                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+                                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
    Bondi_InBC_E   = EoS_DensPres2Eint_CPUPtr( Bondi_InBC_Rho, Bondi_InBC_P, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                                              h_EoS_Table, NULL );
+                                              h_EoS_Table );
    Bondi_Soften_R = Bondi_Soften_NCell*amr->dh[MAX_LEVEL];
    Bondi_P0       = EoS_DensTemp2Pres_CPUPtr( Bondi_Rho0, Bondi_T0*UNIT_E/Const_kB, NULL,
-                                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+                                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
    Bondi_Cs       = sqrt(  EoS_DensPres2CSqr_CPUPtr( Bondi_Rho0, Bondi_P0, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                                                     h_EoS_Table, NULL )  );
+                                                     h_EoS_Table )  );
 #  ifdef GRAVITY
    Bondi_RS       = 2.0*NEWTON_G*Bondi_MassBH/SQR(Const_c/UNIT_V);
    Bondi_RB       =     NEWTON_G*Bondi_MassBH/SQR(Bondi_Cs);
@@ -441,7 +441,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
             Aux_Error( ERROR_INFO, "interpolation failed at radius %13.7e --> reset Bondi_HSE_Dens_MinR/MaxR !!\n", r );
 
          Pres = EoS_DensTemp2Pres_CPUPtr( Dens, Bondi_T0*UNIT_E/Const_kB, NULL,
-                                          EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+                                          EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
       }
 
       else if ( Bondi_HSE_Mode == 2 )
@@ -473,8 +473,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 // compute the total gas energy
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
-                                    EoS_AuxArray_Int, h_EoS_Table, NULL ); // assuming EoS requires no passive scalars
-   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );         // do NOT include magnetic energy here
+                                    EoS_AuxArray_Int, h_EoS_Table );   // assuming EoS requires no passive scalars
+   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );     // do NOT include magnetic energy here
 
 // set the output array
    fluid[DENS] = Dens;

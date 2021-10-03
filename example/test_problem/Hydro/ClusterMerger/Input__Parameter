@@ -14,7 +14,7 @@
 
 
 # simulation scale
-BOX_SIZE                      10.0       # box size along the longest side (in Mpc/h if COMOVING is adopted)
+BOX_SIZE                      15.0       # box size along the longest side (in Mpc/h if COMOVING is adopted)
 NX0_TOT_X                     128         # number of base-level cells along x
 NX0_TOT_Y                     128         # number of base-level cells along y
 NX0_TOT_Z                     128         # number of base-level cells along z
@@ -52,7 +52,7 @@ OPT__BC_POT                   2           # gravity boundary condition: (1=perio
 
 
 # particle (PARTICLE only)
-PAR_NPAR                      20537028    # total number of particles (must be set for PAR_INIT == 1/3)
+PAR_NPAR                      2040000     # total number of particles (must be set for PAR_INIT == 1/3)
 PAR_INIT                      1           # initialization option for particles: (1=FUNCTION, 2=RESTART, 3=FILE->"PAR_IC")
 PAR_INTERP                    2           # particle interpolation scheme: (1=NGP, 2=CIC, 3=TSC) [2]
 PAR_INTEG                     2           # particle integration scheme: (1=Euler, 2=KDK) [2]
@@ -159,7 +159,7 @@ RESTART_LOAD_NRANK            1           # number of parallel I/O (i.e., number
 OPT__INIT_RESTRICT            1           # restrict all data during the initialization [1]
 OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2=CUDA, -1=MPI rank, >=0=input) [-1]
 INIT_SUBSAMPLING_NCELL        3           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
-OPT__INIT_BFIELD_BYFILE	      1
+OPT__INIT_BFIELD_BYFILE       1
 
 
 # data dump

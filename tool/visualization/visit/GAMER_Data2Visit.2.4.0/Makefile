@@ -13,14 +13,14 @@ SIMU_OPTION += -DMODEL=HYDRO
 # double precision
 #SIMU_OPTION += -DFLOAT8
 
-# debug mode 
+# debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
 
 
 
 # siimulation parameters
 #######################################################################################################
-NLEVEL     := 6         # level : 0 ~ NLEVEL-1 
+NLEVEL     := 6         # level : 0 ~ NLEVEL-1
 MAX_PATCH  := 1000000   # maximum number of patches at each level
 
 NLEVEL     := $(strip $(NLEVEL))
@@ -51,7 +51,7 @@ SILO_PATH := /projects/ncsa/grav/softwares/silo/4.10.2-hdf51.8.15
 CC    := icpc
 CFLAG := -O3 -w1 -xSSE4.2 -fp-model precise
 
-#CC    := g++ 
+#CC    := g++
 #CFLAG := -O3 -Wall
 
 ifeq "$(findstring GAMER_DEBUG, $(SIMU_OPTION))" "GAMER_DEBUG"
