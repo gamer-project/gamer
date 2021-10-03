@@ -126,7 +126,7 @@ void SetParameter()
    delete ReadPara;
 
 } // FUNCTION : SetParameter
-#endif
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -164,6 +164,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = 0.0;
 
 } // FUNCTION : SetGridIC
+#endif // #if ( MODEL == HYDRO )
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_TestProb_Hydro_ParEqmIC
@@ -188,18 +191,16 @@ void Init_TestProb_Hydro_ParEqmIC()
 // set the problem-specific runtime parameters
    SetParameter();
 
-   Init_Function_User_Ptr  = SetGridIC;
 
+   Init_Function_User_Ptr  = SetGridIC;
 #  ifdef PARTICLE
    Par_Init_ByFunction_Ptr = Par_Init_ByFunction_ParEqmIC;
 #  endif
-
-#  endif // #if ( MODEL == HYDRO )
-
-// external potential
 #  ifdef GRAVITY
-   if ( OPT__EXT_POT == EXT_POT_FUNC )   Init_ExtPot_Ptr = Init_ExtPot_ParEqmIC;
-#  endif //# ifdef GRAVITY
+   if ( OPT__EXT_POT == EXT_POT_FUNC )
+   Init_ExtPot_Ptr         = Init_ExtPot_ParEqmIC;
+#  endif
+#  endif // #if ( MODEL == HYDRO )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
