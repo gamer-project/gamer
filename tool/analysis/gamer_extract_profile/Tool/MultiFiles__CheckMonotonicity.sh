@@ -54,7 +54,7 @@ do
    fi
 
 
-#  begin sorting 
+#  begin sorting
    echo -e "***** Working on data $FILE_IN ... *****"
 
    ./CheckDensMonotonicity -p $FILE_IN 1>> Log__CheckMonotonicity 2>>Log__CheckMonotonicity

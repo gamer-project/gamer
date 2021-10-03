@@ -2,7 +2,7 @@
 
                         =================================================================
                         ||                                                             ||
-                        ||    GAMER : GPU-accelerated Adaptive-MEsh-Refinement code    || 
+                        ||    GAMER : GPU-accelerated Adaptive-MEsh-Refinement code    ||
                         ||                                                             ||
                         =================================================================
 
@@ -38,7 +38,7 @@ sibling index (SibID):
 25 (+,+,+)
 
 
-local patch index (LocalID) in one patch group : 
+local patch index (LocalID) in one patch group :
 
 0  (0,0,0)
 1  (1,0,0)
@@ -63,7 +63,7 @@ Version 1.0     8/4/2008
 
 Version 1.1     8/13/2008
 -------------------------
-1. add the UM_Init.cpp file for initialization from a density distribution stored in a uniform mesh 
+1. add the UM_Init.cpp file for initialization from a density distribution stored in a uniform mesh
 
 2. add the Auxiliary.cpp file for some auxiliary functions
 
@@ -83,7 +83,7 @@ Version 1.2     8/29/2008
 4. modify the program structure to fit my style
 
 5. output the data of a single patch
-   --> Output_Patch 
+   --> Output_Patch
 
 6. record the level occupancy percentage
    --> Aux_PatchCount
@@ -98,7 +98,7 @@ Version 1.2     8/29/2008
    --> Output_PatchFlux
 
 10. verify all parameters at begining
-   --> Aux_Check_Parameter 
+   --> Aux_Check_Parameter
 
 11. put the refinement criteria for different levels (for density only) in the "Zodiacal Constellation" file
 
@@ -141,7 +141,7 @@ Version 1.3     9/2/2008
 4. record the present time for each level
    --> store in the "Time" array
 
-5. the Init_Reload has been verified 
+5. the Init_Reload has been verified
    --> it should give EXACTLY the same result as if the program has never been terminated
 
 6. the output data now contains the "Time" of each level and also record the output "Step"
@@ -151,7 +151,7 @@ Version 1.3     9/2/2008
 
    a. Time_Step   : float -> double
    b. Time        : float -> doulbe
-   c. output "Time" for each level   
+   c. output "Time" for each level
    d. output "Step"
    e. add ABSOLUTE operator in the Determine_dt function
 
@@ -170,7 +170,7 @@ Version 2.0     9/9/2008
 
                         *********************************
                         **                             **
-   --> it can deal with ** rectangular physical domain ** 
+   --> it can deal with ** rectangular physical domain **
                         **                             **
                         *********************************
 
@@ -256,7 +256,7 @@ Version 3.1.2   10/20/2008
 
    in the loop inside the function "Init_StartOver"
 
-   --> it's a bug since that some initialization procedures will still have to be performed even though there is 
+   --> it's a bug since that some initialization procedures will still have to be performed even though there is
        no patch in the current level
        e.g. initialize the BounP_IDMap as -1
 
@@ -289,7 +289,7 @@ Version 4.0       3/10/2009
 
 3. to make the result of re-start be exactly eqaul to the original result, three lines must be added into the
    program
-   (1) AveDensity = 1.0;   
+   (1) AveDensity = 1.0;
       --> put it in the end of the function "Get_AverageDensity"
       --> otherwise the average density may be slightly different
    (2) Restrict( lv, 0, patch.evolve_counter[lv]%2, 0, 4 );
@@ -344,7 +344,7 @@ Version 4.1       3/23/2009
             (b). FLAG_BUFFER_SIZE == 2
 
                  B B B B B
-                 B B B B B 
+                 B B B B B
                  B B F B B
                  B B B B B
                  B B B B B
@@ -372,7 +372,7 @@ Version 4.2.1     4/1/2009
 
    --> both these two interpolation schemes are monotonic and conservative
 
-2. the density flux fixup operation seems to introduce instability only when working with the 
+2. the density flux fixup operation seems to introduce instability only when working with the
    linear interpolation scheme (since this interpolation scheme is NOT conservative)
 
 
@@ -388,8 +388,8 @@ Version 4.2.2     4/6/2009
 
 Version 4.2.3     4/9/2009
 --------------------------
-1. even when the option "COMOVING" is turned on, the function "UM_Init" will NO LONGER add the 
-   background density (ONE) 
+1. even when the option "COMOVING" is turned on, the function "UM_Init" will NO LONGER add the
+   background density (ONE)
    --> it is assumed that the file "UM_START" stores DENSITY rather than DELTA
 
 
@@ -397,7 +397,7 @@ Version 4.2.3     4/9/2009
 Version 4.2.4     4/10/2009
 ---------------------------
 1. disable the potential correction when NLEVEL == 1
-   --> by resetting 
+   --> by resetting
        G_NCORR             = 0;
        G_NFINAL_SIB_RELAX  = 0;
        OPT__SIB_RELAX      = false;
@@ -426,7 +426,7 @@ Version 4.3       4/13/2009
    --> most of the time spent on the data preparing and the data transferring between CPU and GPU
 
 2. the free-fall time-step estimation is temporarily disabled
-   ~~ because so far the function "CUCAL_AdvanceByGravity" cannot NOT return the maximum acceleration 
+   ~~ because so far the function "CUCAL_AdvanceByGravity" cannot NOT return the maximum acceleration
 
 3. use GPU to evaulte the hydrodynamical CFL condition
    --> add the option "OPT__GPU_HYDRO_CFL"
@@ -469,7 +469,7 @@ Version 4.5       5/1/2009
    --> eight patches are grouped into one patch group for the Poisson solver
    --> only work with PATCH_SIZE == 8  && POT_GHOST_SIZE == 1 --> POT_NXT == 18
    --> all corresponding self-gravity functions are modified to work with this new strategy
-   --> CPU preparing time is reduced, GPU execution time is increased 
+   --> CPU preparing time is reduced, GPU execution time is increased
    --> higher GPU/CPU execution time ratio
 
 2. the files "CUCAL_PoissonSolver_10cube.cu" and "CUCAL_PoissonSolver_14cube.cu" are removed
@@ -511,7 +511,7 @@ Version 4.5.3     8/17/2009
 Version 4.5.4     8/18/2009
 ---------------------------
 1. add the function "Output_Part" in the function "Output"
-   --> also add several output parameters for the function "Output_Part" 
+   --> also add several output parameters for the function "Output_Part"
 
 2. add serveral checks for loading the dump table
 
@@ -532,7 +532,7 @@ Version 4.6       09/??/2009
 2. work with the FluidSolver.2.4
    --> better performance
 
-3. no more potential correction 
+3. no more potential correction
    --> the accuracy of the Poisson solver now depends on the size of the potential ghost zone (POT_GHOST_SIZE)
 
 4. redefine the file "Zodiacal_Constellation"
@@ -584,7 +584,7 @@ Unfinished easy work
 3. more CUDA check routines (e.g. cutilSafeCall ... )
 
 4. add input parameter for future interpolation scheme
-   --> NSide = ? 26:6 
+   --> NSide = ? 26:6
    --> size of coarse-grid ghost zones
 
 
