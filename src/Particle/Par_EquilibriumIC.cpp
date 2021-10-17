@@ -301,13 +301,13 @@ void Par_EquilibriumIC::Init()
 // Parameter   :  Mass_AllRank : An array of all particles' masses
 //                Pos_AllRank  : An array of all particles' position vectors
 //                Vel_AllRank  : An array of all particles' velocity vectors
-//                Par_Idx      : Starting index of particles in this cloud
+//                Par_Idx0     : Starting index of particles in this cloud
 //
 // Return      :  Mass_AllRank
 //                Pos_AllRank
 //                Vel_AllRank
 //-------------------------------------------------------------------------------------------------------
-void Par_EquilibriumIC::Par_SetEquilibriumIC( real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3], const long Par_Idx )
+void Par_EquilibriumIC::Par_SetEquilibriumIC( real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3], const long Par_Idx0 )
 {
 
    double *Table_MassProf_r = NULL;
@@ -333,7 +333,7 @@ void Par_EquilibriumIC::Par_SetEquilibriumIC( real *Mass_AllRank, real *Pos_AllR
    }
 
    // set particle attributes
-   for (long p = Par_Idx; p<Par_Idx + params.Cloud_Par_Num; p++)
+   for (long p=Par_Idx0; p<Par_Idx0+params.Cloud_Par_Num; p++)
    {
       // mass
       Mass_AllRank[p] = ParM;
