@@ -44,109 +44,76 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
                                    real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                    real *AllAttribute[PAR_NATT_TOTAL] )
 {
-   // Define particles' attributes array
-   real *Mass_AllRank   = NULL;
-   real *Pos_AllRank[3] = { NULL, NULL, NULL };
-   real *Vel_AllRank[3] = { NULL, NULL, NULL };
-
-   // Define the Particle IC Constructor
-   Par_EquilibriumIC Filename_Loader;
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
-   // only the master rank will construct the initial condition
-   if ( MPI_Rank == 0 ){
 
-      // Allocate memory for particles' attributes array
-      Mass_AllRank = new real [NPar_AllRank];
-      for (int d=0; d<3; d++)
-      {
-         Pos_AllRank[d] = new real [NPar_AllRank];
-         Vel_AllRank[d] = new real [NPar_AllRank];
-      }
+// define the particle attribute arrays
+   real *ParData_AllRank[PAR_NATT_TOTAL];
+   for (int v=0; v<PAR_NATT_TOTAL; v++)   ParData_AllRank[v] = NULL;
 
-      // Input filenames as parameters into Filename_Loader
-      Filename_Loader.Read_Filenames("Input__TestProb");
-      int Par_Idx = 0;
 
-      for(int k=0;k<Filename_Loader.filenames.Cloud_Num;k++){
+// define the particle IC constructor
+   Par_EquilibriumIC Filename_Loader;
 
-         // initialize Par_EquilibriumIC for each cloud
+
+// only the master rank will construct the initial condition
+   if ( MPI_Rank == 0 ) {
+
+//    allocate memory for particle attribute arrays
+      ParData_AllRank[PAR_MASS] = new real [NPar_AllRank];
+      ParData_AllRank[PAR_POSX] = new real [NPar_AllRank];
+      ParData_AllRank[PAR_POSY] = new real [NPar_AllRank];
+      ParData_AllRank[PAR_POSZ] = new real [NPar_AllRank];
+      ParData_AllRank[PAR_VELX] = new real [NPar_AllRank];
+      ParData_AllRank[PAR_VELY] = new real [NPar_AllRank];
+      ParData_AllRank[PAR_VELZ] = new real [NPar_AllRank];
+
+//    input filenames as parameters into Filename_Loader
+      Filename_Loader.Read_Filenames( "Input__TestProb" );
+      long Par_Idx0 = 0;
+
+      for (int k=0; k<Filename_Loader.filenames.Cloud_Num; k++) {
+
+//       initialize Par_EquilibriumIC for each cloud
          Par_EquilibriumIC Cloud_Constructor;
-         Cloud_Constructor.Load_Physical_Params(Filename_Loader.filenames,k,NPar_AllRank);
+         Cloud_Constructor.Load_Physical_Params( Filename_Loader.filenames, k, NPar_AllRank );
          Cloud_Constructor.Init();
 
-         // check whether the particle number of each cloud is reasonable
-         if((Par_Idx + Cloud_Constructor.params.Cloud_Par_Num) > NPar_AllRank){
-            Aux_Error( ERROR_INFO, "The sum of particle numbers of each cloud exceeds 1!! Please check!");
+//       check whether the particle number of each cloud is reasonable
+         if ( (Par_Idx0 + Cloud_Constructor.params.Cloud_Par_Num) > NPar_AllRank ) {
+            Aux_Error( ERROR_INFO, "particle number doesn't match (%ld + %ld = %ld > %ld) !!\n",
+                        Par_Idx0, Cloud_Constructor.params.Cloud_Par_Num, Par_Idx0+Cloud_Constructor.params.Cloud_Par_Num, NPar_AllRank );
          }
 
-         // set equilibrium initial conditions for each cloud
-         Cloud_Constructor.Par_SetEquilibriumIC(Mass_AllRank, Pos_AllRank, Vel_AllRank, Par_Idx);
-         Par_Idx += Cloud_Constructor.params.Cloud_Par_Num;
+//       set an equilibrium initial condition for each cloud
+         Cloud_Constructor.Par_SetEquilibriumIC( ParData_AllRank[PAR_MASS], ParData_AllRank+PAR_POSX, ParData_AllRank+PAR_VELX, Par_Idx0 );
 
-      }//for(int k=0;k<Filename_Loader.filenames.Cloud_Num;k++)
+//       update the particle index offset for the next cloud
+         Par_Idx0 += Cloud_Constructor.params.Cloud_Par_Num;
 
-   }//if ( MPI_Rank == 0 )
+      } // for (int k=0; k<Filename_Loader.filenames.Cloud_Num; k++)
+   } // if ( MPI_Rank == 0 )
 
 
-   // synchronize all particles to the physical time on the base level
+// send particle attributes from the master rank to all ranks
+   Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL, ParData_AllRank, AllAttribute );
+
+
+// synchronize all particles to the physical time on the base level
    for (long p=0; p<NPar_ThisRank; p++)   ParTime[p] = Time[0];
 
-   // get the number of particles in each rank and set the corresponding offsets
-   if ( NPar_AllRank > (long)__INT_MAX__ )
-      Aux_Error( ERROR_INFO, "NPar_Active_AllRank (%ld) exceeds the maximum integer (%ld) --> MPI will likely fail !!\n",
-               NPar_AllRank, (long)__INT_MAX__ );
 
-   int NSend[MPI_NRank], SendDisp[MPI_NRank];
-   int NPar_ThisRank_int = NPar_ThisRank;    // (i) convert to "int" and (ii) remove the "const" declaration
-                                             // --> (ii) is necessary for OpenMPI version < 1.7
-
-   MPI_Gather( &NPar_ThisRank_int, 1, MPI_INT, NSend, 1, MPI_INT, 0, MPI_COMM_WORLD );
-
+// free resource
    if ( MPI_Rank == 0 )
    {
-      SendDisp[0] = 0;
-      for (int r=1; r<MPI_NRank; r++)  SendDisp[r] = SendDisp[r-1] + NSend[r-1];
-   }
-
-   // send particle attributes from the master rank to all ranks
-   real *Mass   =   ParMass;
-   real *Pos[3] = { ParPosX, ParPosY, ParPosZ };
-   real *Vel[3] = { ParVelX, ParVelY, ParVelZ };
-
-#  ifdef FLOAT8
-   MPI_Scatterv( Mass_AllRank, NSend, SendDisp, MPI_DOUBLE, Mass, NPar_ThisRank, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-
-   for (int d=0; d<3; d++)
-   {
-      MPI_Scatterv( Pos_AllRank[d], NSend, SendDisp, MPI_DOUBLE, Pos[d], NPar_ThisRank, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-      MPI_Scatterv( Vel_AllRank[d], NSend, SendDisp, MPI_DOUBLE, Vel[d], NPar_ThisRank, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-   }
-
-#  else
-   MPI_Scatterv( Mass_AllRank, NSend, SendDisp, MPI_FLOAT,  Mass, NPar_ThisRank, MPI_FLOAT,  0, MPI_COMM_WORLD );
-
-   for (int d=0; d<3; d++)
-   {
-      MPI_Scatterv( Pos_AllRank[d], NSend, SendDisp, MPI_FLOAT,  Pos[d], NPar_ThisRank, MPI_FLOAT,  0, MPI_COMM_WORLD );
-      MPI_Scatterv( Vel_AllRank[d], NSend, SendDisp, MPI_FLOAT,  Vel[d], NPar_ThisRank, MPI_FLOAT,  0, MPI_COMM_WORLD );
-   }
-#  endif
-if ( MPI_Rank == 0 )
-   {
       delete RNG;
-      delete [] Mass_AllRank;
-
-      for (int d=0; d<3; d++)
-      {
-         delete [] Pos_AllRank[d];
-         delete [] Vel_AllRank[d];
-      }
+      for (int v=0; v<PAR_NATT_TOTAL; v++)   delete [] ParData_AllRank[v];
    }
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
+
 } // FUNCTION : Par_Init_ByFunction_ParEqmIC
 
 #endif // #ifdef PARTICLE

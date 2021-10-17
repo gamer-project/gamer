@@ -40,7 +40,7 @@ typedef struct Physical_Parameter{
    double*  Cloud_Center;
    double*  Cloud_BulkVel;
    double   Cloud_Einasto_Power_Factor;
-   double   Cloud_Par_Num;
+   long     Cloud_Par_Num;
 
    int      Cloud_MassProfNBin;
 }PhysP;

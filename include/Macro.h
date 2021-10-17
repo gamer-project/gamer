@@ -489,6 +489,9 @@
 #  define _PAR_ACCZ           ( 1L << PAR_ACCZ )
 # endif
 #  define _PAR_TIME           ( 1L << PAR_TIME )
+#  define _PAR_POS            ( _PAR_POSX | _PAR_POSY | _PAR_POSZ )
+#  define _PAR_VEL            ( _PAR_VELX | _PAR_VELY | _PAR_VELZ )
+#  define _PAR_ACC            ( _PAR_ACCX | _PAR_ACCY | _PAR_ACCZ )
 #  define _PAR_TOTAL          (  ( 1L << PAR_NATT_TOTAL ) - 1L )
 
 // grid fields related to particles
@@ -849,6 +852,14 @@
 
 // maximum length for strings
 #define MAX_STRING         512
+
+
+// MPI floating-point data type
+#ifdef FLOAT8
+#  define MPI_GAMER_REAL MPI_DOUBLE
+#else
+#  define MPI_GAMER_REAL MPI_FLOAT
+#endif
 
 
 
