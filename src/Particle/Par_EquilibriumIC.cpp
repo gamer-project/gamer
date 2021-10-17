@@ -116,11 +116,11 @@ void Par_EquilibriumIC::Load_Physical_Params( const FP filename_para, const int 
    delete ReadPara;
 
    // Convert Cloud_Par_Num_Ratio to Cloud_Par_Num
-   params.Cloud_Par_Num = int(ratio*NPar_AllRank);
+   params.Cloud_Par_Num = long(ratio*NPar_AllRank);
 
    // Check whether user forgot to fill in Cloud_Par_Num_Ratio
    if(params.Cloud_Par_Num==0){
-      Aux_Error( ERROR_INFO, "Cloud_Par_Num_Ratio is 0! There are no particles in this cloud!!");
+      Aux_Error( ERROR_INFO, "Cloud_Par_Num_Ratio is 0! There is no particle in this cloud!!" );
    }
 
    // (1-2) set the default values
