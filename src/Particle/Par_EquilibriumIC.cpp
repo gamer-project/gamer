@@ -116,11 +116,11 @@ void Par_EquilibriumIC::Load_Physical_Params( const FP filename_para, const int 
    delete ReadPara;
 
    // Convert Cloud_Par_Num_Ratio to Cloud_Par_Num
-   params.Cloud_Par_Num = int(ratio*NPar_AllRank);
+   params.Cloud_Par_Num = long(ratio*NPar_AllRank);
 
    // Check whether user forgot to fill in Cloud_Par_Num_Ratio
    if(params.Cloud_Par_Num==0){
-      Aux_Error( ERROR_INFO, "Cloud_Par_Num_Ratio is 0! There are no particles in this cloud!!");
+      Aux_Error( ERROR_INFO, "Cloud_Par_Num_Ratio is 0! There is no particle in this cloud!!" );
    }
 
    // (1-2) set the default values
@@ -301,13 +301,13 @@ void Par_EquilibriumIC::Init()
 // Parameter   :  Mass_AllRank : An array of all particles' masses
 //                Pos_AllRank  : An array of all particles' position vectors
 //                Vel_AllRank  : An array of all particles' velocity vectors
-//                Par_Idx      : Starting index of particles in this cloud
+//                Par_Idx0     : Starting index of particles in this cloud
 //
 // Return      :  Mass_AllRank
 //                Pos_AllRank
 //                Vel_AllRank
 //-------------------------------------------------------------------------------------------------------
-void Par_EquilibriumIC::Par_SetEquilibriumIC( real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3], const long Par_Idx )
+void Par_EquilibriumIC::Par_SetEquilibriumIC( real *Mass_AllRank, real *Pos_AllRank[3], real *Vel_AllRank[3], const long Par_Idx0 )
 {
 
    double *Table_MassProf_r = NULL;
@@ -333,7 +333,7 @@ void Par_EquilibriumIC::Par_SetEquilibriumIC( real *Mass_AllRank, real *Pos_AllR
    }
 
    // set particle attributes
-   for (long p = Par_Idx; p<Par_Idx + params.Cloud_Par_Num; p++)
+   for (long p=Par_Idx0; p<Par_Idx0+params.Cloud_Par_Num; p++)
    {
       // mass
       Mass_AllRank[p] = ParM;
