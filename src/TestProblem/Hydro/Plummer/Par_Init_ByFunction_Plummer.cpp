@@ -182,12 +182,12 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
    } // if ( MPI_Rank == 0 )
 
 
-// synchronize all particles to the physical time on the base level
-   for (long p=0; p<NPar_ThisRank; p++)   ParTime[p] = Time[0];
-
-
 // send particle attributes from the master rank to all ranks
    Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL, ParData_AllRank, AllAttribute );
+
+
+// synchronize all particles to the physical time on the base level
+   for (long p=0; p<NPar_ThisRank; p++)   ParTime[p] = Time[0];
 
 
 // free resource
