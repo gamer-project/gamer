@@ -6,7 +6,7 @@
 #ifdef MHD
 //-------------------------------------------------------------------------------------------------------
 // Function    :  MagX/Y/Z_DerivedFunc
-// Description :  Derived function for MagX/Y/Z
+// Description :  Derived function for CCMagX/Y/Z
 //
 // Note        :  1. This function's pointer will be passed into libyt.
 //                2. The argument should be declared like this, in order to match the libyt API.
@@ -22,7 +22,7 @@ void MagX_DerivedFunc(long gid, double *Converted_MagX){
     int Dimensions[3];
     yt_data DataRaw;
     yt_getGridInfo_Dimensions( gid, &Dimensions );
-    yt_getGridInfo_FieldData( gid, "MagX", &DataRaw );
+    yt_getGridInfo_FieldData( gid, "CCMagX", &DataRaw );
 
     // Cast the DataRaw
     real *Data = (real *) DataRaw.data_ptr;
@@ -44,7 +44,7 @@ void MagY_DerivedFunc(long gid, double *Converted_MagY){
     int Dimensions[3];
     yt_data DataRaw;
     yt_getGridInfo_Dimensions( gid, &Dimensions );
-    yt_getGridInfo_FieldData( gid, "MagY", &DataRaw );
+    yt_getGridInfo_FieldData( gid, "CCMagY", &DataRaw );
 
     // Cast the DataRaw
     real *Data = (real *) DataRaw.data_ptr;
@@ -66,7 +66,7 @@ void MagZ_DerivedFunc(long gid, double *Converted_MagZ){
     int Dimensions[3];
     yt_data DataRaw;
     yt_getGridInfo_Dimensions( gid, &Dimensions );
-    yt_getGridInfo_FieldData( gid, "MagZ", &DataRaw );
+    yt_getGridInfo_FieldData( gid, "CCMagZ", &DataRaw );
 
     // Cast the DataRaw
     real *Data = (real *) DataRaw.data_ptr;
@@ -116,8 +116,9 @@ void Temperature_DerivedFunc(long gid, double *TempData){
 #ifdef MHD
     yt_data   MagDataRaw[NCOMP_MAG];
     real     *MagData[NCOMP_MAG];
+    char     *CCMagLabel[] = {"CCMagX", "CCMagY", "CCMagZ"};
     for (int v=0; v<NCOMP_MAG; v++){
-        yt_getGridInfo_FieldData( gid, MagLabel[v], &(MagDataRaw[v]));
+        yt_getGridInfo_FieldData( gid, CCMagLabel[v], &(MagDataRaw[v]));
         MagData[v] = (real *) MagDataRaw[v].data_ptr;
     }
 #endif

@@ -118,8 +118,9 @@ void YT_Inline()
 #endif
 
 #ifdef MHD
+   char *CCMagLabel[] = {"CCMagX", "CCMagY", "CCMagZ"};
    for (int v=0; v<NCOMP_MAG; v++){
-       FieldList[v + MHDIdx].field_name        = MagLabel[v];
+       FieldList[v + MHDIdx].field_name        = CCMagLabel[v];
        FieldList[v + MHDIdx].field_define_type = "face-centered";
        FieldList[v + MHDIdx].field_unit        = "code_magnetic";
    }
