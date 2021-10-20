@@ -160,10 +160,10 @@ void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (
 #        endif
 
 #        ifdef MHD
-         // find field index of MagX
+         // find field index of CCMagX
          int MHDIdx = 0;
          for ( int v = 0; v < NField; v++ ){
-             if ( strcmp(FieldList[v].field_name, MagLabel[0]) == 0 ){
+             if ( strcmp(FieldList[v].field_name, "CCMagX") == 0 ){
                  MHDIdx = v;
                  break;
              }
@@ -177,13 +177,13 @@ void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (
              for (int d = 0; d < 3; d++){
                  YT_Grids[LID].field_data[ MHDIdx + v ].data_dim[d] = PATCH_SIZE;
 
-                 if ( strcmp(FieldList[ MHDIdx + v ].field_name, "MagX") == 0 && d == 2) {
+                 if ( strcmp(FieldList[ MHDIdx + v ].field_name, "CCMagX") == 0 && d == 2) {
                      YT_Grids[LID].field_data[ MHDIdx + v ].data_dim[d] = PATCH_SIZE + 1;
                  }
-                 if ( strcmp(FieldList[ MHDIdx + v ].field_name, "MagY") == 0 && d == 1) {
+                 if ( strcmp(FieldList[ MHDIdx + v ].field_name, "CCMagY") == 0 && d == 1) {
                      YT_Grids[LID].field_data[ MHDIdx + v ].data_dim[d] = PATCH_SIZE + 1;
                  }
-                 if ( strcmp(FieldList[ MHDIdx + v ].field_name, "MagZ") == 0 && d == 0) {
+                 if ( strcmp(FieldList[ MHDIdx + v ].field_name, "CCMagZ") == 0 && d == 0) {
                      YT_Grids[LID].field_data[ MHDIdx + v ].data_dim[d] = PATCH_SIZE + 1;
                  }
              }
