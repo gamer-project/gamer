@@ -572,6 +572,9 @@ void Aux_Check_Parameter()
    if ( OPT__RESET_FLUID  &&   OPT__INIT == INIT_BY_FILE )
       Aux_Message( stderr, "WARNING : \"%s\" will NOT be applied to the input uniform data !!\n", "OPT__RESET_FLUID" );
 
+   if ( OPT__FREEZE_FLUID )
+      Aux_Message( stderr, "REMINDER : \"%s\" will prevent fluid variables from being updated\n", "OPT__FREEZE_FLUID" );
+
    } // if ( MPI_Rank == 0 )
 
 
