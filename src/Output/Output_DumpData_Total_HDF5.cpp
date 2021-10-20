@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2440)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2441)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -211,6 +211,7 @@ Procedure for outputting new variables:
 //                2438 : 2021/06/05 --> output git information
 //                2439 : 2021/06/05 --> output UniqueDataID
 //                2440 : 2021/06/17 --> output NFieldStored, NMagStored, and NFieldStoredMax
+//                2441 : 2021/10/20 --> output OPT__FREEZE_FLUID
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1685,7 +1686,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2440;
+   KeyInfo.FormatVersion        = 2441;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2417,6 +2418,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 
    InputPara.Opt__OverlapMPI         = OPT__OVERLAP_MPI;
    InputPara.Opt__ResetFluid         = OPT__RESET_FLUID;
+   InputPara.Opt__FreezeFluid        = OPT__FREEZE_FLUID;
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    InputPara.MinDens                 = MIN_DENS;
 #  endif
@@ -3256,6 +3258,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 
    H5Tinsert( H5_TypeID, "Opt__OverlapMPI",         HOFFSET(InputPara_t,Opt__OverlapMPI        ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__ResetFluid",         HOFFSET(InputPara_t,Opt__ResetFluid        ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__FreezeFluid",        HOFFSET(InputPara_t,Opt__FreezeFluid       ), H5T_NATIVE_INT              );
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "MinDens",                 HOFFSET(InputPara_t,MinDens                ), H5T_NATIVE_DOUBLE           );
 #  endif

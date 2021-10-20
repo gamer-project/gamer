@@ -164,7 +164,7 @@ void Flu_DerivedField_Mach( real Out[], const real FluIn[], const real MagIn[], 
 
 // GAMER
 void EvolveLevel( const int lv, const double dTime_FaLv );
-void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld, const double dt,
+void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld, const double dt_in,
                    const double Poi_Coeff, const int SaveSg_Flu, const int SaveSg_Mag, const int SaveSg_Pot,
                    const bool OverlapMPI, const bool Overlap_Sync );
 void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, real *OutputFC,
