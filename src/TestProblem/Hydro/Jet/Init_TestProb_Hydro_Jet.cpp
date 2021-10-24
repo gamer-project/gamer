@@ -449,6 +449,7 @@ void End_Jet()
 //                           --> Including both active and passive variables
 //                x/y/z    : Target physical coordinates
 //                Time     : Target physical time
+//                dt       : Time interval to advance solution
 //                lv       : Target refinement level
 //                AuxArray : Auxiliary array
 //
@@ -456,7 +457,7 @@ void End_Jet()
 //                false : This cell has not been reset
 //-------------------------------------------------------------------------------------------------------
 bool Flu_ResetByUser_Jet( real fluid[], const double x, const double y, const double z, const double Time,
-                                    const int lv, double AuxArray[] )
+                          const double dt, const int lv, double AuxArray[] )
 {
 
    const double r[3] = { x, y, z };

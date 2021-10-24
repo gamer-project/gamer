@@ -39,6 +39,7 @@ extern bool   Bondi_void;
 //                           --> Including both active and passive variables
 //                x/y/z    : Target physical coordinates
 //                Time     : Target physical time
+//                dt       : Time interval to advance solution
 //                lv       : Target refinement level
 //                AuxArray : Auxiliary array
 //
@@ -46,7 +47,7 @@ extern bool   Bondi_void;
 //                false : This cell has not been reset
 //-------------------------------------------------------------------------------------------------------
 bool Flu_ResetByUser_Func_Bondi( real fluid[], const double x, const double y, const double z, const double Time,
-                                 const int lv, double AuxArray[] )
+                                 const double dt, const int lv, double AuxArray[] )
 {
 
    if ( !Bondi_void ) 
@@ -94,11 +95,12 @@ bool Flu_ResetByUser_Func_Bondi( real fluid[], const double x, const double y, c
 //                3. Currently does not work with "OPT__OVERLAP_MPI"
 //                4. Invoke Flu_ResetByUser_Func_Bondi() directly
 //
-// Parameter   :  lv    : Target refinement level
-//                FluSg : Target fluid sandglass
-//                TTime : Target physical time
+// Parameter   :  lv      : Target refinement level
+//                FluSg   : Target fluid sandglass
+//                TimeNew : Current physical time (system has been updated from TimeOld to TimeNew in EvolveLevel())
+//                dt      : Time interval to advance solution (can be different from TimeNew-TimeOld in COMOVING)
 //-------------------------------------------------------------------------------------------------------
-void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double TTime )
+void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double TimeNew, const double dt )
 {
 
    const double dh       = amr->dh[lv];
@@ -141,7 +143,7 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double TTim
          }
 
 //       reset this cell
-         Reset = Flu_ResetByUser_Func_Bondi( fluid, x, y, z, TTime, lv, NULL );
+         Reset = Flu_ResetByUser_Func_Bondi( fluid, x, y, z, TimeNew, dt, lv, NULL );
 
 //       operations necessary only when this cell has been reset
          if ( Reset )

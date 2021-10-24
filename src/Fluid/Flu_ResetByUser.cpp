@@ -2,14 +2,14 @@
 
 // declare as static so that other functions cannot invoke them directly and must use the function pointers
 static bool Flu_ResetByUser_Func_Template( real fluid[], const double x, const double y, const double z, const double Time,
-                                           const int lv, double AuxArray[] );
-static void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const double TTime );
+                                           const double dt, const int lv, double AuxArray[] );
+static void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const double TimeNew, const double dt );
 
 // this function pointer **must** be set by a test problem initializer
 bool (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
-                                  const int lv, double AuxArray[] ) = NULL;
+                                  const double dt, const int lv, double AuxArray[] ) = NULL;
 // this function pointer **may** be overwritten by a test problem initializer
-void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TTime ) = Flu_ResetByUser_API_Default;
+void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TimeNew, const double dt ) = Flu_ResetByUser_API_Default;
 
 
 
@@ -32,6 +32,7 @@ void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TTi
 //                           --> Including both active and passive variables
 //                x/y/z    : Target physical coordinates
 //                Time     : Target physical time
+//                dt       : Time interval to advance solution
 //                lv       : Target refinement level
 //                AuxArray : Auxiliary array
 //
@@ -39,7 +40,7 @@ void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TTi
 //                false : This cell has not been reset
 //-------------------------------------------------------------------------------------------------------
 bool Flu_ResetByUser_Func_Template( real fluid[], const double x, const double y, const double z, const double Time,
-                                    const int lv, double AuxArray[] )
+                                    const double dt, const int lv, double AuxArray[] )
 {
 
 // Example : reset fluid variables to extremely small values if the cell is within a specific sphere
@@ -91,19 +92,19 @@ bool Flu_ResetByUser_Func_Template( real fluid[], const double x, const double y
 // Description :  Default API for resetting the fluid array
 //
 // Note        :  1. Enabled by the runtime option "OPT__RESET_FLUID"
-//                2. Invoked by Flu_AdvanceDt(), Gra_AdvanceDt(), and Grackle_AdvanceDt() using the
-//                   function pointer "Flu_ResetByUser_API_Ptr"
+//                2. Invoked by EvolveLevel() using the function pointer "Flu_ResetByUser_API_Ptr"
 //                   --> This function pointer may be reset by a test problem initializer, in which case
 //                       this funtion will become useless
 //                3. Currently NOT applied to the input uniform array
 //                   --> Init_ByFile() does NOT call this function
 //                4. Currently does not work with "OPT__OVERLAP_MPI"
 //
-// Parameter   :  lv    : Target refinement level
-//                FluSg : Target fluid sandglass
-//                TTime : Target physical time
+// Parameter   :  lv      : Target refinement level
+//                FluSg   : Target fluid sandglass
+//                TimeNew : Current physical time (system has been updated from TimeOld to TimeNew in EvolveLevel())
+//                dt      : Time interval to advance solution (can be different from TimeNew-TimeOld in COMOVING)
 //-------------------------------------------------------------------------------------------------------
-void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const double TTime )
+void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const double TimeNew, const double dt )
 {
 
 // check
@@ -132,7 +133,7 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const double TT
          for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
 //       reset this cell
-         Reset = Flu_ResetByUser_Func_Ptr( fluid, x, y, z, TTime, lv, NULL );
+         Reset = Flu_ResetByUser_Func_Ptr( fluid, x, y, z, TimeNew, dt, lv, NULL );
 
 //       operations necessary only when this cell has been reset
          if ( Reset )
