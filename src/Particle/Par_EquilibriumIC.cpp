@@ -105,10 +105,10 @@ void Par_EquilibriumIC::Load_Physical_Params( const FP filename_para, const int 
    double ratio;
    ReadPara->Add( "Cloud_Par_Num_Ratio",  &ratio,                       0.,            0.,               1.0               );
 
-   ReadPara->Add( "Cloud_Type",            params.Cloud_Type,           Useless_str,   Useless_str,      Useless_str       );
-   ReadPara->Add( "Density_Table_Name",    params.Density_Table_Name,   Useless_str,   Useless_str,      Useless_str       );
+   ReadPara->Add( "Cloud_Type",            params.Cloud_Type,           NoDef_str,     Useless_str,      Useless_str       );
+   ReadPara->Add( "Density_Table_Name",    params.Density_Table_Name,   NoDef_str,     Useless_str,      Useless_str       );
    ReadPara->Add( "AddExtPot",            &params.AddExtPot,            0,             0,                1                 );
-   ReadPara->Add( "ExtPot_Table_Name",     params.ExtPot_Table_Name,    Useless_str,   Useless_str,      Useless_str       );
+   ReadPara->Add( "ExtPot_Table_Name",     params.ExtPot_Table_Name,    NoDef_str,     Useless_str,      Useless_str       );
 
    if(convertToString(params.Cloud_Type)=="Einasto")ReadPara->Add( "Cloud_Einasto_Power_Factor",&params.Cloud_Einasto_Power_Factor, 1.0,0.1,              10.0              );
 

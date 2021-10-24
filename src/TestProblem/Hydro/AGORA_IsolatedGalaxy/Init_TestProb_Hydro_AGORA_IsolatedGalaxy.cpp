@@ -176,20 +176,20 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",         &VARIABLE,                 DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "AGORA_VcProf_Filename",    AGORA_VcProf_Filename,    Useless_str,   Useless_str,      Useless_str       );
-   ReadPara->Add( "AGORA_HaloPar_Filename",   AGORA_HaloPar_Filename,   Useless_str,   Useless_str,      Useless_str       );
-   ReadPara->Add( "AGORA_DiskPar_Filename",   AGORA_DiskPar_Filename,   Useless_str,   Useless_str,      Useless_str       );
-   ReadPara->Add( "AGORA_BulgePar_Filename",  AGORA_BulgePar_Filename,  Useless_str,   Useless_str,      Useless_str       );
-   ReadPara->Add( "AGORA_DiskScaleLength",   &AGORA_DiskScaleLength,    -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "AGORA_DiskScaleHeight",   &AGORA_DiskScaleHeight,    -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "AGORA_DiskTotalMass",     &AGORA_DiskTotalMass,      -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "AGORA_DiskGasMassFrac",   &AGORA_DiskGasMassFrac,    -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "AGORA_DiskGasTemp",       &AGORA_DiskGasTemp,        -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "AGORA_HaloGasNumDensH",   &AGORA_HaloGasNumDensH,    -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "AGORA_HaloGasTemp",       &AGORA_HaloGasTemp,        -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "AGORA_UseMetal",          &AGORA_UseMetal,            false,        Useless_bool,     Useless_bool      );
-   ReadPara->Add( "AGORA_DiskMetalMassFrac", &AGORA_DiskMetalMassFrac,   0.0,          0.0,              1.0               );
-   ReadPara->Add( "AGORA_HaloMetalMassFrac", &AGORA_HaloMetalMassFrac,   0.0,          0.0,              1.0               );
+   ReadPara->Add( "AGORA_VcProf_Filename",    AGORA_VcProf_Filename,    NoDef_str,     Useless_str,      Useless_str       );
+   ReadPara->Add( "AGORA_HaloPar_Filename",   AGORA_HaloPar_Filename,   NoDef_str,     Useless_str,      Useless_str       );
+   ReadPara->Add( "AGORA_DiskPar_Filename",   AGORA_DiskPar_Filename,   NoDef_str,     Useless_str,      Useless_str       );
+   ReadPara->Add( "AGORA_BulgePar_Filename",  AGORA_BulgePar_Filename,  NoDef_str,     Useless_str,      Useless_str       );
+   ReadPara->Add( "AGORA_DiskScaleLength",   &AGORA_DiskScaleLength,   -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "AGORA_DiskScaleHeight",   &AGORA_DiskScaleHeight,   -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "AGORA_DiskTotalMass",     &AGORA_DiskTotalMass,     -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "AGORA_DiskGasMassFrac",   &AGORA_DiskGasMassFrac,   -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "AGORA_DiskGasTemp",       &AGORA_DiskGasTemp,       -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "AGORA_HaloGasNumDensH",   &AGORA_HaloGasNumDensH,   -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "AGORA_HaloGasTemp",       &AGORA_HaloGasTemp,       -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "AGORA_UseMetal",          &AGORA_UseMetal,           false,         Useless_bool,     Useless_bool      );
+   ReadPara->Add( "AGORA_DiskMetalMassFrac", &AGORA_DiskMetalMassFrac,  0.0,           0.0,              1.0               );
+   ReadPara->Add( "AGORA_HaloMetalMassFrac", &AGORA_HaloMetalMassFrac,  0.0,           0.0,              1.0               );
 
    ReadPara->Read( FileName );
 
