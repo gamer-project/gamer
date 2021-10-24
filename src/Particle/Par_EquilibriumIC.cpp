@@ -83,34 +83,31 @@ void Par_EquilibriumIC::Load_Physical_Params( const FP filename_para, const int 
 
    const char* FileName=filename_para.Params_Filenames[cloud_idx].c_str();
    ReadPara_t *ReadPara  = new ReadPara_t;
+   double ratio;
 
    // (1-1) add parameters in the following format:
    // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
    // --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
    // ********************************************************************************************************************************
-   // ReadPara->Add( "KEY_IN_THE_FILE",      &VARIABLE,                    DEFAULT,       MIN,              MAX               );
+   // ReadPara->Add( "KEY_IN_THE_FILE",         &VARIABLE,                          DEFAULT,       MIN,              MAX               );
    // ********************************************************************************************************************************
-   ReadPara->Add( "Cloud_RSeed",          &params.Cloud_RSeed,          123,           0,                NoMax_int         );
-   ReadPara->Add( "Cloud_Rho0",           &params.Cloud_Rho0,           1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Cloud_R0",             &params.Cloud_R0,             0.1,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Cloud_MaxR",           &params.Cloud_MaxR,           0.375,         Eps_double,       NoMax_double      );
-   ReadPara->Add( "Cloud_CenterX",        &params.Cloud_Center[0],      NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Cloud_CenterY",        &params.Cloud_Center[1],      NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Cloud_CenterZ",        &params.Cloud_Center[2],      NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Cloud_BulkVelX",       &params.Cloud_BulkVel[0],     0.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Cloud_BulkVelY",       &params.Cloud_BulkVel[1],     0.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Cloud_BulkVelZ",       &params.Cloud_BulkVel[2],     0.0,           NoMin_double,     NoMax_double      );
-   if(convertToString(params.Cloud_Type)!="Table")
-   ReadPara->Add( "Cloud_MassProfNBin",   &params.Cloud_MassProfNBin,   1000,          2,                NoMax_int         );
-   double ratio;
-   ReadPara->Add( "Cloud_Par_Num_Ratio",  &ratio,                       0.,            0.,               1.0               );
-
-   ReadPara->Add( "Cloud_Type",            params.Cloud_Type,           NoDef_str,     Useless_str,      Useless_str       );
-   ReadPara->Add( "Density_Table_Name",    params.Density_Table_Name,   NoDef_str,     Useless_str,      Useless_str       );
-   ReadPara->Add( "AddExtPot",            &params.AddExtPot,            0,             0,                1                 );
-   ReadPara->Add( "ExtPot_Table_Name",     params.ExtPot_Table_Name,    NoDef_str,     Useless_str,      Useless_str       );
-
-   if(convertToString(params.Cloud_Type)=="Einasto")ReadPara->Add( "Cloud_Einasto_Power_Factor",&params.Cloud_Einasto_Power_Factor, 1.0,0.1,              10.0              );
+   ReadPara->Add( "Cloud_RSeed",                &params.Cloud_RSeed,                123,           0,                NoMax_int         );
+   ReadPara->Add( "Cloud_Rho0",                 &params.Cloud_Rho0,                 1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Cloud_R0",                   &params.Cloud_R0,                   0.1,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Cloud_MaxR",                 &params.Cloud_MaxR,                 0.375,         Eps_double,       NoMax_double      );
+   ReadPara->Add( "Cloud_CenterX",              &params.Cloud_Center[0],            NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Cloud_CenterY",              &params.Cloud_Center[1],            NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Cloud_CenterZ",              &params.Cloud_Center[2],            NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Cloud_BulkVelX",             &params.Cloud_BulkVel[0],           0.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Cloud_BulkVelY",             &params.Cloud_BulkVel[1],           0.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Cloud_BulkVelZ",             &params.Cloud_BulkVel[2],           0.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Cloud_MassProfNBin",         &params.Cloud_MassProfNBin,         1000,          2,                NoMax_int         );
+   ReadPara->Add( "Cloud_Par_Num_Ratio",        &ratio,                             0.,            0.,               1.0               );
+   ReadPara->Add( "Cloud_Type",                  params.Cloud_Type,                 NoDef_str,     Useless_str,      Useless_str       );
+   ReadPara->Add( "Density_Table_Name",          params.Density_Table_Name,         NoDef_str,     Useless_str,      Useless_str       );
+   ReadPara->Add( "AddExtPot",                  &params.AddExtPot,                  0,             0,                1                 );
+   ReadPara->Add( "ExtPot_Table_Name",           params.ExtPot_Table_Name,          NoDef_str,     Useless_str,      Useless_str       );
+   ReadPara->Add( "Cloud_Einasto_Power_Factor", &params.Cloud_Einasto_Power_Factor, 1.0,           0.1,              10.0              );
 
    ReadPara->Read( FileName );
    delete ReadPara;
