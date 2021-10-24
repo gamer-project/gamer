@@ -86,7 +86,7 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",      &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "SelSimHalo_Filename",   SelSimHalo_Filename,   Useless_str,   Useless_str,      Useless_str       );
+   ReadPara->Add( "SelSimHalo_Filename",   SelSimHalo_Filename,   NoDef_str,     Useless_str,      Useless_str       );
 
    ReadPara->Read( FileName );
 
