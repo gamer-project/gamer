@@ -145,7 +145,7 @@ void SetParameter()
    ReadPara->Add( "Jet_HSE_M200",        &Jet_HSE_M200,          NoDef_double,  Eps_double,       NoMax_double      );
    ReadPara->Add( "Jet_HSE_R200",        &Jet_HSE_R200,          NoDef_double,  Eps_double,       NoMax_double      );
    ReadPara->Add( "Jet_HSE_C200",        &Jet_HSE_C200,          NoDef_double,  Eps_double,       NoMax_double      );
-   ReadPara->Add( "Jet_HSE_BgTable_File", Jet_HSE_BgTable_File,  Useless_str,   Useless_str,      Useless_str       );
+   ReadPara->Add( "Jet_HSE_BgTable_File", Jet_HSE_BgTable_File,  NoDef_str,     Useless_str,      Useless_str       );
 
 // load the input parameters of each jet
    ReadPara->Add( "Jet0_Radius",         &Jet_Radius    [0],    -1.0,           Eps_double,       NoMax_double      );

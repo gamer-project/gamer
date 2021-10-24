@@ -138,7 +138,6 @@ OPT__EXT_ACC                  1           # add external acceleration (0=off, 1=
                                           # --> 2 (table) is not supported yet
 OPT__EXT_POT                  0           # add external potential    (0=off, 1=function, 2=table) [0]
                                           # --> for 2 (table), edit the corresponding parameters below too
-EXT_POT_TABLE_NAME            EmptyTable  # external potential table: filename
 
 
 # initialization

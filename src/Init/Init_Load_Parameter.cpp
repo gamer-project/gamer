@@ -192,7 +192,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "GRACKLE_CMB_FLOOR",          &GRACKLE_CMB_FLOOR,               true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "GRACKLE_PE_HEATING",         &GRACKLE_PE_HEATING,              false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "GRACKLE_PE_HEATING_RATE",    &GRACKLE_PE_HEATING_RATE,         8.5e-26,         0.0,           NoMax_double   );
-   ReadPara->Add( "GRACKLE_CLOUDY_TABLE",        GRACKLE_CLOUDY_TABLE,            Useless_str,     Useless_str,   Useless_str    );
+   ReadPara->Add( "GRACKLE_CLOUDY_TABLE",        GRACKLE_CLOUDY_TABLE,            NoDef_str,       Useless_str,   Useless_str    );
    ReadPara->Add( "GRACKLE_THREE_BODY_RATE",    &GRACKLE_THREE_BODY_RATE,         0,               0,             5              );
    ReadPara->Add( "GRACKLE_CIE_COOLING",        &GRACKLE_CIE_COOLING,             false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "GRACKLE_H2_OPA_APPROX",      &GRACKLE_H2_OPA_APPROX,           0,               0,             1              );
@@ -308,7 +308,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__EXT_ACC",               &OPT__EXT_ACC,                    0,               0,             1              );
    ReadPara->Add( "OPT__EXT_POT",               &OPT__EXT_POT,                    0,               0,             2              );
 // do not check the parameters of external potential table here --> do it in Init_LoadExtPotTable()
-   ReadPara->Add( "EXT_POT_TABLE_NAME",          EXT_POT_TABLE_NAME,              Useless_str,     Useless_str,   Useless_str    );
+   ReadPara->Add( "EXT_POT_TABLE_NAME",          EXT_POT_TABLE_NAME,              NoDef_str,       Useless_str,   Useless_str    );
    ReadPara->Add( "EXT_POT_TABLE_NPOINT_X",     &EXT_POT_TABLE_NPOINT[0],        -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "EXT_POT_TABLE_NPOINT_Y",     &EXT_POT_TABLE_NPOINT[1],        -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "EXT_POT_TABLE_NPOINT_Z",     &EXT_POT_TABLE_NPOINT[2],        -1,               NoMin_int,     NoMax_int      );
@@ -419,7 +419,7 @@ void Init_Load_Parameter()
 
 // yt inline analysis
 #  ifdef SUPPORT_LIBYT
-   ReadPara->Add( "YT_SCRIPT",                   YT_SCRIPT,                       Useless_str,     Useless_str,   Useless_str    );
+   ReadPara->Add( "YT_SCRIPT",                   YT_SCRIPT,                       NoDef_str,       Useless_str,   Useless_str    );
    ReadPara->Add( "YT_VERBOSE",           (int*)&YT_VERBOSE,                      1,               0,             3              );
 #  endif
 
