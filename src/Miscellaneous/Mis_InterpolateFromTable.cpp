@@ -65,7 +65,6 @@ T Mis_InterpolateFromTable( const int N, const T Table_x[], const T Table_y[], c
 } // FUNCTION : Mis_InterpolateFromTable
 
 
-
 // explicit template instantiation
 template float  Mis_InterpolateFromTable <float>  ( const int N, const float  Table_x[], const float  Table_y[], const float  x );
 template double Mis_InterpolateFromTable <double> ( const int N, const double Table_x[], const double Table_y[], const double x );

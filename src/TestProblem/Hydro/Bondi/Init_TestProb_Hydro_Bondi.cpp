@@ -44,7 +44,7 @@ static double Bondi_TimeB;          // Bondi time
        int    Bondi_SinkNCell;      // total number of finest cells within the void region
 
 // external units in cgs
-const double UnitExt_L = Const_pc;
+const double UnitExt_L = Const_kpc;
 const double UnitExt_D = 1.0;
 const double UnitExt_M = Const_Msun;
 const double UnitExt_E = Const_keV;
@@ -80,10 +80,11 @@ static double Bondi_HSE_Beta_P1;          // P(r) = P1*( 1/x + atan(x) ) + P2 as
 static double Bondi_HSE_Beta_P2;          // P1=G*MassBH*Rho0/Rcore, and P2 currently fixed to -0.5*pi*P1 so that P(inf)=0
 
 // parameters for soliton
-       bool   Bondi_SOL;
-       double Bondi_SOL_m22;
-       double Bondi_SOL_rc;
-static double *Bondi_SOL_PresProf[2] = { NULL, NULL };   // pressure profile tabke: [0/1] = [radius/density]
+       bool   Bondi_void;
+       bool   Bondi_Soliton;
+       double Bondi_Soliton_m22;
+       double Bondi_Soliton_rc;
+static double *Bondi_Soliton_PresProf[2] = { NULL, NULL };   // pressure profile tabke: [0/1] = [radius/density]
 // =======================================================================================
 
 
@@ -96,7 +97,7 @@ bool Flu_ResetByUser_Func_Bondi( real fluid[], const double x, const double y, c
                                  const int lv, double AuxArray[] );
 void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double TTime );
 static void HSE_SetDensProfileTable();
-static void SOL_SetPresProfileTable();
+static void Soliton_SetPresProfileTable();
 
 // this test problem needs to reset both Flu_ResetByUser_API_Ptr and Flu_ResetByUser_Func_Ptr, while
 // the former is not defined in TestProb.h (because it's rarely required)
@@ -246,9 +247,10 @@ void SetParameter()
    ReadPara->Add( "Bondi_HSE_Pres_NormT", &Bondi_HSE_Pres_NormT,      false,        Useless_bool,     Useless_bool      );
    ReadPara->Add( "Bondi_HSE_Beta_Rcore", &Bondi_HSE_Beta_Rcore,     -1.0,          Eps_double,       NoMax_double      );
 
-   ReadPara->Add( "Bondi_SOL",            &Bondi_SOL,                 false,        Useless_bool,     Useless_bool      );
-   ReadPara->Add( "Bondi_SOL_m22",        &Bondi_SOL_m22,            -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Bondi_SOL_rc",         &Bondi_SOL_rc,             -1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Bondi_void",               &Bondi_void,                    true,         Useless_bool,     Useless_bool      );
+   ReadPara->Add( "Bondi_Soliton",            &Bondi_Soliton,                 false,        Useless_bool,     Useless_bool      );
+   ReadPara->Add( "Bondi_Soliton_m22",        &Bondi_Soliton_m22,            -1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Bondi_Soliton_rc",         &Bondi_Soliton_rc,             -1.0,          NoMin_double,     NoMax_double      );
 
    ReadPara->Read( FileName );
 
@@ -366,9 +368,9 @@ void SetParameter()
       }
    } // if ( Bondi_HSE )
 
-   if ( Bondi_SOL ){
-      Bondi_SOL_rc *= UnitExt_L/UNIT_L;
-      SOL_SetPresProfileTable();
+   if ( Bondi_Soliton ){
+      Bondi_Soliton_rc *= UnitExt_L/UNIT_L;
+      Soliton_SetPresProfileTable();
    }
 
 // (4) reset other general-purpose parameters
@@ -426,10 +428,10 @@ void SetParameter()
       Aux_Message( stdout, "  Bondi_HSE_Beta_Rho0   = %13.7e (%13.7e g/cm^3)\n", Bondi_HSE_Beta_Rho0, Bondi_HSE_Beta_Rho0*UNIT_D               );
       Aux_Message( stdout, "  Bondi_HSE_Beta_Rcore  = %13.7e (%13.7e kpc)\n",    Bondi_HSE_Beta_Rcore, Bondi_HSE_Beta_Rcore*UNIT_L/Const_kpc   ); }
       
-      Aux_Message( stdout, "  Bondi_SOL             = %s\n",                     (Bondi_SOL)?"YES":"NO"                                        );
-      if( Bondi_SOL ) {
-      Aux_Message( stdout, "  Bondi_SOL_m22         = %13.7e\n",                 Bondi_SOL_m22                                                 );
-      Aux_Message( stdout, "  Bondi_SOL_rc          = %13.7e (%13.7e kpc)\n",    Bondi_SOL_rc, Bondi_SOL_rc*UNIT_L/Const_kpc                   );}
+      Aux_Message( stdout, "  Bondi_Soliton             = %s\n",                     (Bondi_Soliton)?"YES":"NO"                                        );
+      if( Bondi_Soliton ) {
+      Aux_Message( stdout, "  Bondi_Soliton_m22         = %13.7e\n",                 Bondi_Soliton_m22                                                 );
+      Aux_Message( stdout, "  Bondi_Soliton_rc          = %13.7e (%13.7e kpc)\n",    Bondi_Soliton_rc, Bondi_Soliton_rc*UNIT_L/Const_kpc                   );}
       Aux_Message( stdout, "=============================================================================\n" );
    } // if ( MPI_Rank == 0 )
 
@@ -510,23 +512,23 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
          Aux_Error( ERROR_INFO, "unsupported Bondi_HSE_Mode (%d) !!\n", Bondi_HSE_Mode );
    } // if ( Bondi_HSE )
 
-   else if ( Bondi_SOL )
+   /*else if ( Bondi_Soliton )
    {
       const double r = sqrt( SQR(x-amr->BoxCenter[0]) + SQR(y-amr->BoxCenter[1]) + SQR(z-amr->BoxCenter[2]) );
 #ifdef Plummer
-      Dens  = 3*Bondi_MassBH*UNIT_M/(4*3.14159265*CUBE(Bondi_SOL_rc*UNIT_L))*pow(1+SQR(r/Bondi_SOL_rc),-2.5);
-#else 
-      Dens = 1.9*pow( Bondi_SOL_m22*1e1, -2.0 )*pow( Bondi_SOL_rc*UNIT_L/Const_pc, -4.0 )*1e12/pow( 1+9.1e-2*SQR(r/Bondi_SOL_rc), 8.0 );
+      Dens  = 3*Bondi_MassBH*UNIT_M/(4*3.14159265*CUBE(Bondi_Soliton_rc*UNIT_L))*pow(1+SQR(r/Bondi_Soliton_rc),-2.5);
+#else
+      Dens = 1.945*pow( Bondi_Soliton_m22*1e1, -2.0 )*pow( Bondi_Soliton_rc*UNIT_L/Const_pc, -4.0 )*1e12/pow( 1+(9.1e-2)*SQR(r/Bondi_Soliton_rc), 8.0 );
       Dens *= Const_Msun/CUBE(Const_pc);
 #endif
-      /*double rho0 = 1e-20;
-      double temp = 1e10;
-      double A    = Const_kB/(0.62/Const_NA*1e3)*temp;
-      Dens  = rho0/SQR(cosh(sqrt(2*3.14159265*Const_NewtonG*rho0/A)*z*UNIT_L));*/
+      //double rho0 = 1e-20;
+      //double temp = 1e10;
+      //double A    = Const_kB/(0.62/Const_NA*1e3)*temp;
+      //Dens  = rho0/SQR(cosh(sqrt(2*3.14159265*Const_NewtonG*rho0/A)*z*UNIT_L));
       Dens *= 1/UNIT_D;
 
-      const double *Table_R = Bondi_SOL_PresProf[0];
-      const double *Table_P = Bondi_SOL_PresProf[1];
+      const double *Table_R = Bondi_Soliton_PresProf[0];
+      const double *Table_P = Bondi_Soliton_PresProf[1];
       Pres = Mis_InterpolateFromTable( 100000, Table_R, Table_P, r );
       if( Pres==NULL_REAL ){
          Aux_Error( ERROR_INFO, "%.3e, %.3e, %.3e\n",Table_R[0],Table_R[1000-1],r);
@@ -535,7 +537,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       //Pres  = A*rho0/SQR(cosh(sqrt(2*3.14159265*Const_NewtonG*rho0/A)*z*UNIT_L));
       Pres *= 1/(UNIT_P);
       //if( r<5e-3 ) Aux_Message( stderr, "%.3e, %.3e, %.3e\n", r, Pres, Bondi_P0 );
-   } 
+   }*/ 
 
 
 // uniform background
@@ -660,8 +662,8 @@ void HSE_SetDensProfileTable()
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  SOL_SetPresProfileTable
-// Description :  Set up the pressure profile table for SOL
+// Function    :  Soliton_SetPresProfileTable
+// Description :  Set up the pressure profile table for Soliton
 //
 // Note        :  1. Assume P(r->inf)=0
 //
@@ -670,29 +672,29 @@ void HSE_SetDensProfileTable()
 int odefunc ( double x, const double y[], double f[], void *params)
 {
    x /= Const_kpc;
-   double rc = Bondi_SOL_rc*UNIT_L/Const_kpc;
-   double m22 = Bondi_SOL_m22;
+   double rc = Bondi_Soliton_rc*UNIT_L/Const_kpc;
+   double m22 = Bondi_Soliton_m22;
 #ifdef Plummer
    double rho  = 3*Bondi_MassBH*UNIT_M/(4*3.14159265*CUBE(rc*Const_kpc))*pow(1+SQR(x/rc),-2.5);
    double M    = Bondi_MassBH*UNIT_M*CUBE(x)/pow(SQR(x)+SQR(rc),1.5);
 #else
-   double rho = 1.9*pow(m22/1e-1, -2.0)*pow(rc*1e3, -4.0)*1e12/pow(1+9.1e-2*SQR(x/rc), 8.0)*Const_Msun/pow(Const_pc, 3.0);
+   double rho = 1.945*pow(m22/1e-1, -2.0)*pow(rc*1e3, -4.0)*1e12/pow(1+(9.1e-2)*SQR(x/rc), 8.0)*Const_Msun/pow(Const_pc, 3.0);
    double a = sqrt(pow(2.0,1.0/8.0)-1)*(x/rc);
-   double M = 4.2e9/(SQR(m22/1e-1)*(rc*1e3)*pow(SQR(a)+1, 7.0))*(3465*pow(a,13.0)+23100*pow(a,11.0)+65373*pow(a,9.0)+101376*pow(a,7.0)+92323*pow(a,5.0)+48580*pow(a,3.0)-3465*a+3465*pow(SQR(a)+1, 7.0)*atan(a))*Const_Msun;
+   double M = 4.17e9/(SQR(m22/1e-1)*(rc*1e3)*pow(SQR(a)+1, 7.0))*(3465*pow(a,13.0)+23100*pow(a,11.0)+65373*pow(a,9.0)+101376*pow(a,7.0)+92323*pow(a,5.0)+48580*pow(a,3.0)-3465*a+3465*pow(SQR(a)+1, 7.0)*atan(a))*Const_Msun;
 #endif
    f[0] = -Const_NewtonG*M*rho/SQR(x*Const_kpc);
 
    return GSL_SUCCESS;
 }
 int * jac;
-void SOL_SetPresProfileTable()
+void Soliton_SetPresProfileTable()
 {
 
 // allocate table --> deallocated by End_Bondi()
    const int    NBin = 100000;
    const double r_min = 0.1*amr->dh[MAX_LEVEL]*UNIT_L;
    const double r_max = (0.5*sqrt(3.0)*amr->BoxSize[0])*UNIT_L;
-   for (int v=0; v<2; v++)    Bondi_SOL_PresProf[v] = new double [NBin];
+   for (int v=0; v<2; v++)    Bondi_Soliton_PresProf[v] = new double [NBin];
    
    int dim = 1;
    gsl_odeiv2_system sys = {odefunc, NULL, dim, NULL};
@@ -708,14 +710,14 @@ void SOL_SetPresProfileTable()
       int status = gsl_odeiv2_driver_apply (d, &x, xi, y);
       if (status != GSL_SUCCESS)
       {
-            Aux_Error( ERROR_INFO, "Error in SOL_SetPresProfileTable, return value=%d\n", status );
+            Aux_Error( ERROR_INFO, "Error in Soliton_SetPresProfileTable, return value=%d\n", status );
             break;
       }
-      Bondi_SOL_PresProf[0][NBin-b] = -x/UNIT_L;
-      Bondi_SOL_PresProf[1][NBin-b] = y[0];
+      Bondi_Soliton_PresProf[0][NBin-b] = -x/UNIT_L;
+      Bondi_Soliton_PresProf[1][NBin-b] = y[0];
    }
    gsl_odeiv2_driver_free (d);
-} // void SOL_SetDensProfileTable()
+} // void Soliton_SetDensProfileTable()
   
 
 //-------------------------------------------------------------------------------------------------------
@@ -733,8 +735,8 @@ void End_Bondi()
    {
       delete [] Bondi_HSE_DensProf[v];
       Bondi_HSE_DensProf[v] = NULL;
-      delete [] Bondi_SOL_PresProf[v];
-      Bondi_SOL_PresProf[v] = NULL;
+      delete [] Bondi_Soliton_PresProf[v];
+      Bondi_Soliton_PresProf[v] = NULL;
    }
 
 } // FUNCTION : End_Bondi

@@ -18,9 +18,7 @@ extern double Bondi_SinkEk;
 extern double Bondi_SinkEt;
 extern int    Bondi_SinkNCell;
 
-extern bool   Bondi_SOL;
-extern double Bondi_SOL_m22;
-extern double Bondi_SOL_rc;
+extern bool   Bondi_void;
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -51,7 +49,7 @@ bool Flu_ResetByUser_Func_Bondi( real fluid[], const double x, const double y, c
                                  const int lv, double AuxArray[] )
 {
 
-   if ( Bondi_SOL ) 
+   if ( !Bondi_void ) 
       return false;
 
    const double Pos[3]  = { x, y, z };
