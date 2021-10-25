@@ -85,6 +85,14 @@ static double Bondi_HSE_Beta_P2;          // P1=G*MassBH*Rho0/Rcore, and P2 curr
        double Bondi_Soliton_m22;
        double Bondi_Soliton_rc;
 static double *Bondi_Soliton_PresProf[2] = { NULL, NULL };   // pressure profile tabke: [0/1] = [radius/density]
+
+// parameters for bondi initial condition
+       bool   Bondi_Init;
+static char   Bondi_Init_Filename[1000];
+static double *Bondi_Init_Data=NULL;
+static int    Bondi_Init_bin;
+       double *Bondi_Init_Prof_r, *Bondi_Init_Prof_d, *Bondi_Init_Prof_v, *Bondi_Init_Prof_p;
+
 // =======================================================================================
 
 
@@ -252,6 +260,9 @@ void SetParameter()
    ReadPara->Add( "Bondi_Soliton_m22",        &Bondi_Soliton_m22,            -1.0,          NoMin_double,     NoMax_double      );
    ReadPara->Add( "Bondi_Soliton_rc",         &Bondi_Soliton_rc,             -1.0,          NoMin_double,     NoMax_double      );
 
+   ReadPara->Add( "Bondi_Init",               &Bondi_Init,                    false,        Useless_bool,     Useless_bool      );
+   ReadPara->Add( "Bondi_Init_Filename",      Bondi_Init_Filename,           Useless_str,  Useless_str,      Useless_str       );
+
    ReadPara->Read( FileName );
 
    delete ReadPara;
@@ -368,10 +379,35 @@ void SetParameter()
       }
    } // if ( Bondi_HSE )
 
-   if ( Bondi_Soliton ){
+   if ( Bondi_Soliton )
+   {
       Bondi_Soliton_rc *= UnitExt_L/UNIT_L;
       Soliton_SetPresProfileTable();
    }
+
+   if ( Bondi_Init )
+   {
+            bool RowMajor_No  = false;
+      const bool AllocMem_Yes = true;
+      const int  NCol         = 4;// Radius, Density, Velocity, MachNumber
+      const int  Col[NCol]    = {1,3,5,6};
+      Bondi_Init_bin = Aux_LoadTable( Bondi_Init_Data, Bondi_Init_Filename, NCol, Col, RowMajor_No, AllocMem_Yes );
+
+      // Convert to code unit and mach number->pressure
+      Bondi_Init_Prof_r = Bondi_Init_Data + 0*Bondi_Init_bin;
+      Bondi_Init_Prof_d = Bondi_Init_Data + 1*Bondi_Init_bin;
+      Bondi_Init_Prof_v = Bondi_Init_Data + 2*Bondi_Init_bin;
+      Bondi_Init_Prof_p = Bondi_Init_Data + 3*Bondi_Init_bin;
+      
+      for( int b=0; b<Bondi_Init_bin; b++ )
+      {
+         Bondi_Init_Prof_r[b] *= Const_kpc/UNIT_L;
+         Bondi_Init_Prof_d[b] *= 5.0e-25; // in cgs
+         Bondi_Init_Prof_v[b] *= 1000*1e5;  // in cm/s
+         if( b<10 ){ Aux_Message( stdout, " %13.7e\n", Bondi_Init_Prof_v[b]/UNIT_V ); }
+         Bondi_Init_Prof_p[b] = SQR(Bondi_Init_Prof_v[b]/Bondi_Init_Prof_p[b])*Bondi_Init_Prof_d[b]/GAMMA;
+      }
+    }
 
 // (4) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
@@ -431,7 +467,12 @@ void SetParameter()
       Aux_Message( stdout, "  Bondi_Soliton             = %s\n",                     (Bondi_Soliton)?"YES":"NO"                                        );
       if( Bondi_Soliton ) {
       Aux_Message( stdout, "  Bondi_Soliton_m22         = %13.7e\n",                 Bondi_Soliton_m22                                                 );
-      Aux_Message( stdout, "  Bondi_Soliton_rc          = %13.7e (%13.7e kpc)\n",    Bondi_Soliton_rc, Bondi_Soliton_rc*UNIT_L/Const_kpc                   );}
+      Aux_Message( stdout, "  Bondi_Soliton_rc          = %13.7e (%13.7e kpc)\n",    Bondi_Soliton_rc, Bondi_Soliton_rc*UNIT_L/Const_kpc               );}
+
+      Aux_Message( stdout, "  Bondi_Init            = %s\n",                     (Bondi_Init)?"YES":"NO"                                       );
+      if( Bondi_Init ){
+      Aux_Message( stdout, "  Bondi_Init_Filename   = %s\n",                     Bondi_Init_Filename                                           );}
+
       Aux_Message( stdout, "=============================================================================\n" );
    } // if ( MPI_Rank == 0 )
 
@@ -511,6 +552,24 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       else
          Aux_Error( ERROR_INFO, "unsupported Bondi_HSE_Mode (%d) !!\n", Bondi_HSE_Mode );
    } // if ( Bondi_HSE )
+   else if ( Bondi_Init )
+   {
+      // Set Initial Condition
+      const double r = sqrt( SQR(x-amr->BoxCenter[0]) + SQR(y-amr->BoxCenter[1]) + SQR(z-amr->BoxCenter[2]) );
+      Dens = Mis_InterpolateFromTable( Bondi_Init_bin, Bondi_Init_Prof_r, Bondi_Init_Prof_d, r )/UNIT_D;
+      Pres = Mis_InterpolateFromTable( Bondi_Init_bin, Bondi_Init_Prof_r, Bondi_Init_Prof_p, r )/UNIT_P;
+      
+      const double vmag = Mis_InterpolateFromTable( Bondi_Init_bin, Bondi_Init_Prof_r, Bondi_Init_Prof_v, r )/UNIT_V;
+      //const double dh   = amr->dh[lv];
+      //const real   dv   = CUBE(dh);
+      const double dx = x-amr->BoxCenter[0];
+      const double dy = y-amr->BoxCenter[1];
+      const double dz = z-amr->BoxCenter[2];
+      MomX = -Dens*vmag*dx/r;
+      MomY = -Dens*vmag*dy/r;
+      MomZ = -Dens*vmag*dz/r;
+      //Aux_Message( stdout, "%13.7e %13.7e %13.7e\n", MomX, MomY, MomZ );
+   }
 
    /*else if ( Bondi_Soliton )
    {
