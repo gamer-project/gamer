@@ -291,12 +291,11 @@ void CPU_FluidSolver_MHM(
 #  endif
 
    const int MaxIteration          = 4;
+   int Iteration                   = 0;
 #  ifdef __CUDACC__
-   __shared__ int Iteration;
    __shared__ real AdaptiveMinModCoeff;
    __shared__ char State;
 #  else
-   int Iteration;
    real AdaptiveMinModCoeff;
    char State;
 #  endif
@@ -346,8 +345,6 @@ void CPU_FluidSolver_MHM(
       for (int P=0; P<NPatchGroup; P++)
 #     endif
       {
-
-         Iteration = 0;
 
 //       1. half-step prediction
 //       1-a. MHM_RP: use Riemann solver to calculate the half-step fluxes
@@ -417,7 +414,7 @@ void CPU_FluidSolver_MHM(
 //             1-a-5. evaluate the face-centered values by data reconstruction
 //                    --> note that g_PriVar_Half_1PG[] returned by Hydro_RiemannPredict() stores the primitive variables
                Hydro_DataReconstruction( NULL, g_FC_Mag_Half_1PG, g_PriVar_Half_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
-                                         Con2Pri_No, LR_Limiter, MinMod_Coeff, dt, dh,
+                                         Con2Pri_No, LR_Limiter, AdaptiveMinModCoeff, dt, dh,
                                          MinDens, MinPres, MinEint, FracPassive, NFrac, c_FracIdx,
                                          JeansMinPres, JeansMinPres_Coeff, &EoS );
 
@@ -430,7 +427,7 @@ void CPU_FluidSolver_MHM(
 
 //             evaluate the face-centered values by data reconstruction
                Hydro_DataReconstruction( g_Flu_Array_In[P], NULL, g_PriVar_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
-                                         Con2Pri_Yes, LR_Limiter, MinMod_Coeff, dt, dh,
+                                         Con2Pri_Yes, LR_Limiter, AdaptiveMinModCoeff, dt, dh,
                                          MinDens, MinPres, MinEint, FracPassive, NFrac, c_FracIdx,
                                          JeansMinPres, JeansMinPres_Coeff, &EoS );
 
