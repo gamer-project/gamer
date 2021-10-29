@@ -79,7 +79,8 @@ void InterpolateWithAdaptiveMinmod( real CData [], const int CSize[3], const int
 
 #    if ( MODEL == HYDRO  &&  defined GRAVITY )
      const real JeansMinPres_Coeff = ( JEANS_MIN_PRES ) ?
-                                     NEWTON_G*SQR(JEANS_MIN_PRES_NCELL*amr->dh[JEANS_MIN_PRES_LEVEL])/(GAMMA*M_PI) : NULL_REAL;
+                                     NEWTON_G*SQR(JEANS_MIN_PRES_NCELL*amr->dh[JEANS_MIN_PRES_LEVEL])/(GAMMA*M_PI) :
+                                     NULL_REAL;
 #    else
      const real JEANS_MIN_PRES     = false;
      const real JeansMinPres_Coeff = NULL_REAL;
@@ -91,18 +92,18 @@ void InterpolateWithAdaptiveMinmod( real CData [], const int CSize[3], const int
 
         do {
 
-//            1. interpolate with original min-mod coefficient
+//            1. interpolate ghost-zones or newly allocated patches with the original min-mod coefficient
               if ( itr == -1 )
               {
                  IntMonoCoeff = INT_MONO_COEFF;
               }
 
-//            2. interpolate primitive variables with original min-mod coefficient
-//            --> this step is only for interpolating ghost zone. i.e. IntGhostZone == true
+//            2. interpolate primitive variables with the original min-mod coefficient
+//               --> this step is only for interpolating ghost zone. i.e. IntGhostZone == true
               else if ( itr == 0 && IntGhostZone )
               {
 
-//               vanLeer, MinMod-3D, and MinMod-1D do not involve min-mod coefficient, so we break the loop immediately
+//               As vanLeer, MinMod-3D, and MinMod-1D do not involve min-mod coefficient, we break the loop immediately
 //               and do nothing when encountering unphysical results
                  if ( IntScheme == INT_VANLEER || IntScheme == INT_MINMOD3D || IntScheme == INT_MINMOD1D ) break;
 
@@ -122,7 +123,7 @@ void InterpolateWithAdaptiveMinmod( real CData [], const int CSize[3], const int
                  FData_is_Prim = true;
               }
 
-//            3. reduce min-mod coefficient
+//            3. reduce the original min-mod coefficient
               else
               {
 //               we add 1 to itr so that min-mod coefficient can be reduced
