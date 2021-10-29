@@ -22,7 +22,7 @@ extern double BarredPot_MeshCenter[3];
 // Function    :  SetExtPotAuxArray_BarredPot
 // Description :  Set the auxiliary array ExtPot_AuxArray_Flt/Int[] used by ExtPot_BarredPot()
 //
-// Note        :  1. Invoked by Init_ExtPot_BarredPot() 
+// Note        :  1. Invoked by Init_ExtPot_BarredPot()
 //                2. AuxArray_Flt/Int[] have the size of EXT_POT_NAUX_MAX defined in Macro.h (default = 20)
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
@@ -34,7 +34,7 @@ extern double BarredPot_MeshCenter[3];
 void SetExtPotAuxArray_BarredPot(double AuxArray_Flt[], int AuxArray_Int[])
 {
 
-   AuxArray_Flt[0] = SQR(BarredPot_V0);    // amplitude^2  
+   AuxArray_Flt[0] = SQR(BarredPot_V0);    // amplitude^2
    AuxArray_Flt[1] = SQR(BarredPot_q );    // axis ratio^2
    AuxArray_Flt[2] = SQR(BarredPot_Rc);    // core radius^2
    AuxArray_Flt[3] = BarredPot_Omegabar;   // bar pattern speed
@@ -107,10 +107,10 @@ static real ExtPot_BarredPot(const double x, const double y, const double z, con
    const real   B      = (real)(Rc2 + SQR(dxrot) +(SQR(dyrot) + SQR(dz)));
    const real   pconst = (real)2.*log((1+q)*(1-q)/(4*q));
 
-// const real   frac   = std::min(Time/fullBS,1.0); 
-   const real   frac   = FMIN(Time/fullBS,1.0); 
+// const real   frac   = std::min(Time/fullBS,1.0);
+   const real   frac   = FMIN(Time/fullBS,1.0);
    const real   pots   = (real)0.5*V02*(log(B)-pconst);
-   const real   potb   = (real)0.5*V02*(log(A)-pconst); 
+   const real   potb   = (real)0.5*V02*(log(A)-pconst);
 
    const real   pot    = potb*frac + pots*(1-frac);
 
@@ -131,7 +131,7 @@ static real ExtPot_BarredPot(const double x, const double y, const double z, con
 #endif
 
 FUNC_SPACE ExtPot_t ExtPot_Ptr = ExtPot_BarredPot;
- 
+
 
 //-----------------------------------------------------------------------------------------
 // Function    :  SetCPU/GPUExtPot_BarredPot

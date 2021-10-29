@@ -35,7 +35,7 @@ real  *Key            = NULL;                // data to be sorted
 int   *Key_IdxTable   = NULL;                // index table of Key
 int   *Key_RankTable  = NULL;                // rank table of Key
 char (*Data)[MaxLine] = NULL;                // string array to store the input data line by line
-char  *FileName_In    = NULL; 
+char  *FileName_In    = NULL;
 char  *FileName_Out   = NULL;
 
 int   NRow, NColumn;                         // number of data rows and columns (excluding header)
@@ -46,7 +46,7 @@ int   NRow, NColumn;                         // number of data rows and columns 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  DumpData
-// Description :  Dump data 
+// Description :  Dump data
 //-------------------------------------------------------------------------------------------------------
 void DumpData()
 {
@@ -69,7 +69,7 @@ void DumpData()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LoadData
-// Description :  Load data from the input file and store them in the array "Data" according to the 
+// Description :  Load data from the input file and store them in the array "Data" according to the
 //                rank table "Key_RankTable"
 //-------------------------------------------------------------------------------------------------------
 void LoadData()
@@ -89,7 +89,7 @@ void LoadData()
 
    char *Line = new char [MaxLine];
 
-// skip header 
+// skip header
    for (int t=0; t<Header; t++)  fgets( Line, MaxLine, File );
 
 // load data
@@ -133,14 +133,14 @@ void SortKey()
    }
 
    FILE *File_Check = fopen( FileName_Out, "r" );
-   if ( File_Check != NULL )  
+   if ( File_Check != NULL )
    {
       fprintf( stderr, "WARNING : the file \"%s\" already exists and will be overwritten !!\n", FileName_Out );
       fclose( File_Check );
    }
 
    FILE *File_Out = fopen( FileName_Out, "w" );
-   for (int t=0; t<Header; t++)  
+   for (int t=0; t<Header; t++)
    {
       fgets( Line, MaxLine, File_In );
       fprintf( File_Out, "%s", Line );
@@ -158,7 +158,7 @@ void SortKey()
       NColumn++;
    }
 
-   if ( NColumn < 1  ||  NColumn > MaxColumn )   
+   if ( NColumn < 1  ||  NColumn > MaxColumn )
    {
       fprintf( stderr, "ERROR : incorrect data columns = %d (min = 1, max = %d) !!\n", NColumn, MaxColumn );
       exit( 1 );
@@ -178,7 +178,7 @@ void SortKey()
 
    while ( fgets( Line, MaxLine, File_In ) != NULL )  NRow ++;
 
-   if ( NRow < 1 )   
+   if ( NRow < 1 )
    {
       fprintf( stderr, "ERROR : no data rows are found !!\n" );
       exit( 2 );
@@ -208,11 +208,11 @@ void SortKey()
       {
          Temp = strtok( str, delim );
 
-         if ( Temp != NULL )  
+         if ( Temp != NULL )
          {
             if ( Column == TColumn )   Key[Row] = atof( Temp );
          }
-         else                 
+         else
          {
             fprintf( stderr, "ERROR : incorrect read at column %d, row %d!!\n", Column+1, Header+Row+1 );
             exit( 2 );
@@ -240,7 +240,7 @@ void SortKey()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ReadOption
-// Description :  Read the command line options 
+// Description :  Read the command line options
 //-------------------------------------------------------------------------------------------------------
 void ReadOption( int argc, char **argv )
 {
@@ -255,20 +255,20 @@ void ReadOption( int argc, char **argv )
          case 'o':   FileName_Out = optarg;        break;
          case 'n':   Header       = atoi(optarg);  break;
          case 'c':   TColumn      = atoi(optarg);  break;
-         case 'h': 
-         case '?':   cerr << endl << "usage: " << argv[0] 
+         case 'h':
+         case '?':   cerr << endl << "usage: " << argv[0]
                           << " [-h (for help)] [-i input filename] [-o output filename]"
-                          << endl << "                              " 
+                          << endl << "                              "
                           << " [-n number of header lines [1]] [-c targeted column [0]]"
                           << endl << endl;
                      exit( 1 );
 
-      } // switch ( c ) 
+      } // switch ( c )
    } // while ..
 
 
 // set the name of the output file if it is not specified
-   if ( FileName_Out == NULL )   
+   if ( FileName_Out == NULL )
    {
       FileName_Out = new char [1024];
       sprintf( FileName_Out, "%s_%s", FileName_In, "Ordered" );
@@ -284,7 +284,7 @@ void ReadOption( int argc, char **argv )
 
    if ( FileName_Out == NULL )
    {
-      fprintf( stderr, "ERROR : please provide the output filename (-o output filename) !!\n" ); 
+      fprintf( stderr, "ERROR : please provide the output filename (-o output filename) !!\n" );
       exit( 1 );
    }
 
@@ -300,7 +300,7 @@ void ReadOption( int argc, char **argv )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  End
-// Description :  End program 
+// Description :  End program
 //-------------------------------------------------------------------------------------------------------
 void End()
 {
@@ -323,7 +323,7 @@ void End()
 //
 // Parameter   :  N        :  Size of Array
 //                Array    :  Array to be sorted
-//                IdxTable :  Index table 
+//                IdxTable :  Index table
 //-------------------------------------------------------------------------------------------------------
 void Heapsort( const int N, real Array[], int IdxTable[] )
 {
@@ -335,7 +335,7 @@ void Heapsort( const int N, real Array[], int IdxTable[] )
 // heap creation
    for (int L=N/2-1; L>=0; L--)  Heapsort_SiftDown( L, N-1, Array, IdxTable );
 
-// retirement-and-promotion   
+// retirement-and-promotion
    real Tmp_real;
    int  Tmp_int;
    for (int R=N-1; R>0; R--)
@@ -344,7 +344,7 @@ void Heapsort( const int N, real Array[], int IdxTable[] )
       Array[R] = Array[0];
       Array[0] = Tmp_real;
 
-      if ( IdxTable != NULL ) 
+      if ( IdxTable != NULL )
       {
          Tmp_int     = IdxTable[R];
          IdxTable[R] = IdxTable[0];
@@ -367,12 +367,12 @@ void Heapsort( const int N, real Array[], int IdxTable[] )
 // Parameter   :  L        :  Left  range of the sift-down
 //                R        :  Right range of the sift-down
 //                Array    :  Array to be sorted into ascending numerical order
-//                IdxTable :  Index table 
+//                IdxTable :  Index table
 //-------------------------------------------------------------------------------------------------------
 void Heapsort_SiftDown( const int L, const int R, real Array[], int IdxTable[] )
 {
 
-   int  Idx_up    = L; 
+   int  Idx_up    = L;
    int  Idx_down  = 2*Idx_up + 1;
    real Target    = Array[Idx_up];
    int  TargetIdx = ( IdxTable == NULL ) ? -1 : IdxTable[Idx_up];
@@ -385,16 +385,16 @@ void Heapsort_SiftDown( const int L, const int R, real Array[], int IdxTable[] )
 //    terminate the sift-down process if the target (supervisor) is better than both its employees
       if ( Target >= Array[Idx_down] )    break;
 
-//    otherwise, promote the better employee      
+//    otherwise, promote the better employee
       Array[Idx_up] = Array[Idx_down];
       if ( IdxTable != NULL )    IdxTable[Idx_up] = IdxTable[Idx_down];
 
-//    prepare the next sift-down operation      
+//    prepare the next sift-down operation
       Idx_up   = Idx_down;
       Idx_down = 2*Idx_up + 1;
    }
 
-// put target at its best position    
+// put target at its best position
    Array[Idx_up] = Target;
    if ( IdxTable != NULL )    IdxTable[Idx_up] = TargetIdx;
 
@@ -404,7 +404,7 @@ void Heapsort_SiftDown( const int L, const int R, real Array[], int IdxTable[] )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  main
-// Description :  
+// Description :
 //-------------------------------------------------------------------------------------------------------
 int main( int argc, char ** argv )
 {

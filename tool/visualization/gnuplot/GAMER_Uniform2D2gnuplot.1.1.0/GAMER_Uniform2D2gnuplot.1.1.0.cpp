@@ -40,7 +40,7 @@ real  ***Data;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  DumpData
-// Description :  Dump data 
+// Description :  Dump data
 //-------------------------------------------------------------------------------------------------------
 void DumpData()
 {
@@ -49,7 +49,7 @@ void DumpData()
 
 
    FILE *File_Check = fopen( FileName_Out, "r" );
-   if ( File_Check != NULL )  
+   if ( File_Check != NULL )
    {
       fprintf( stderr, "WARNING : the file \"%s\" already exists and will be overwritten !!\n", FileName_Out );
       fclose( File_Check );
@@ -100,7 +100,7 @@ void DumpData()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LoadData
-// Description :  Load data from the input file 
+// Description :  Load data from the input file
 //-------------------------------------------------------------------------------------------------------
 void LoadData()
 {
@@ -125,23 +125,23 @@ void LoadData()
    }
 
 
-// skip header 
+// skip header
    for (int t=0; t<Header; t++)  fgets( Line, MaxSize, File );
 
 
 // load data
-   while ( fgets( Line, MaxSize, File ) != NULL ) 
+   while ( fgets( Line, MaxSize, File ) != NULL )
    {
       NLine ++;
 
-//    a. load the cell indices      
+//    a. load the cell indices
       for (dim=0, str=Line; dim<3; dim++, str=NULL)
       {
          Temp = strtok( str, delim );
 
-         if ( Temp != NULL )  
+         if ( Temp != NULL )
             ijk[dim] = atoi( Temp );
-         else                 
+         else
          {
             fprintf( stderr, "ERROR : incorrect read at line %d, token %d!!\n", NLine, dim+1 );
             exit(2);
@@ -154,9 +154,9 @@ void LoadData()
       {
          Temp = strtok( NULL, delim );
 
-         if ( Temp != NULL )  
+         if ( Temp != NULL )
             In[v] = atof( Temp );
-         else                 
+         else
          {
             fprintf( stderr, "ERROR : incorrect read at line %d, token %d!!\n", NLine, v+4 );
             exit(2);
@@ -220,7 +220,7 @@ void GetRange()
       NToken++;
    }
 
-   if ( NToken < 4  ||  NToken > MaxToken )   
+   if ( NToken < 4  ||  NToken > MaxToken )
    {
       fprintf( stderr, "ERROR : incorrect data columns = %d (min = 4, max = %d) !!\n", NToken, MaxToken );
       exit(1);
@@ -229,12 +229,12 @@ void GetRange()
    NComp = NToken - 3;
 
 
-// get the data range and interval   
+// get the data range and interval
    NRow = 0;
    rewind( File );
    for (int t=0; t<Header; t++)  fgets( Line, MaxSize, File );    // skip headers
 
-   while ( fgets( Line, MaxSize, File ) != NULL ) 
+   while ( fgets( Line, MaxSize, File ) != NULL )
    {
       NRow ++;
       sscanf( Line, "%d%d%d", &ijk[0], &ijk[1], &ijk[2] );
@@ -248,9 +248,9 @@ void GetRange()
 
    } // while ( fgets( Line, MaxSize, File ) != NULL )
 
-   for (int d=0; d<3; d++)    
+   for (int d=0; d<3; d++)
    {
-      if ( Min[d] == Max[d] ) 
+      if ( Min[d] == Max[d] )
       {
          Target = d;
          Dim1   = ( d == 0 ) ? 1 : 0;
@@ -301,7 +301,7 @@ void GetRange()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ReadOption
-// Description :  Read the command line options 
+// Description :  Read the command line options
 //-------------------------------------------------------------------------------------------------------
 void ReadOption( int argc, char **argv )
 {
@@ -315,15 +315,15 @@ void ReadOption( int argc, char **argv )
          case 'i':   FileName_In  = optarg;        break;
          case 'o':   FileName_Out = optarg;        break;
          case 'n':   Header       = atoi(optarg);  break;
-         case 'h': 
-         case '?':   cerr << endl << "usage: " << argv[0] 
+         case 'h':
+         case '?':   cerr << endl << "usage: " << argv[0]
                           << " [-h (for help)] [-i input filename] [-o output filename]"
                           << endl << "                                "
                           << " [-n header lines [1]]"
                           << endl << endl;
                      exit( 1 );
 
-      } // switch ( c ) 
+      } // switch ( c )
    } // while ..
 
 
@@ -336,7 +336,7 @@ void ReadOption( int argc, char **argv )
 
    if ( FileName_Out == NULL )
    {
-      fprintf( stderr, "ERROR : please provide the output filename (-o output filename) !!\n" ); 
+      fprintf( stderr, "ERROR : please provide the output filename (-o output filename) !!\n" );
       exit( 1 );
    }
 
@@ -352,7 +352,7 @@ void ReadOption( int argc, char **argv )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  End
-// Description :  End program 
+// Description :  End program
 //-------------------------------------------------------------------------------------------------------
 void End()
 {
@@ -367,7 +367,7 @@ void End()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  main
-// Description :  
+// Description :
 //-------------------------------------------------------------------------------------------------------
 int main( int argc, char ** argv )
 {

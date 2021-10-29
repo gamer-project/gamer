@@ -201,7 +201,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
       Hydro_CheckUnphysical( NULL, NULL, &Fluid[0], NULL, "density", __FILE__, __FUNCTION__, __LINE__, true );
 #     endif
       c    = FABS( vx ) + SQRT(  EoS->DensPres2CSqr_FuncPtr( Fluid[0], p, Passive, EoS->AuxArrayDevPtr_Flt,
-                                                             EoS->AuxArrayDevPtr_Int, EoS->Table, NULL )  );
+                                                             EoS->AuxArrayDevPtr_Int, EoS->Table )  );
 
       s_cw[ty][0][i] = Fluid[1];
       s_cw[ty][1][i] = Fluid[1]*vx + p;
@@ -261,7 +261,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
 #        endif
 
          c    = FABS( vx ) + SQRT(  EoS->DensPres2CSqr_FuncPtr( Fluid_half[0], p, Passive, EoS->AuxArrayDevPtr_Flt,
-                                                                EoS->AuxArrayDevPtr_Int, EoS->Table, NULL )  );
+                                                                EoS->AuxArrayDevPtr_Int, EoS->Table )  );
 
          s_cw[ty][0][i] = Fluid_half[1];
          s_cw[ty][1][i] = Fluid_half[1]*vx + p;

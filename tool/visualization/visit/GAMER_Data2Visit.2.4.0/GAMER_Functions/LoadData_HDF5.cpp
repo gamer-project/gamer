@@ -15,7 +15,7 @@ static void LoadOnePatchGroup( const hid_t H5_FileID, const int lv, const int GI
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LoadData_HDF5
-// Description :  Load data from the input HDF5 file 
+// Description :  Load data from the input HDF5 file
 //-------------------------------------------------------------------------------------------------------
 void LoadData_HDF5()
 {
@@ -155,7 +155,7 @@ void LoadData_HDF5()
 // truncate the targeted region
    TruncateBox();
 
-// check parameters   
+// check parameters
    CheckParameter();
 
 // set up the candidate box, only patches with cells inside the candidate box will be allocated
@@ -199,11 +199,11 @@ void LoadData_HDF5()
 // 3-2. load data
    const int TenPercent = MAX( NPatchTotal[0]/10-NPatchTotal[0]/10%8, 1 );
 
-   for (int GID0=0; GID0<NPatchTotal[0]; GID0+=8)     
+   for (int GID0=0; GID0<NPatchTotal[0]; GID0+=8)
    {
       if ( GID0%TenPercent == 0 )
          Aux_Message( stdout, "      %5.1f%% completed ...\n", 100.0*(double)GID0/NPatchTotal[0] );
-      
+
       LoadOnePatchGroup( H5_FileID, 0, GID0, OutputPot, H5_TypeID_PatchInfo, H5_TypeID_PatchData,
                          &PatchInfo, &PatchData, CanMin, CanMax, H5_MaxDsetPerGroup );
    }
@@ -237,10 +237,10 @@ void LoadData_HDF5()
 //                   manually by calling "free()"
 //                4. It can also compare the loaded variables (FieldPtr) with the reference value (ComprPtr)
 //                   (perform comparison only if "NCompr > 0")
-//                   --> Please make sure that "FieldPtr" and "ComprPtr" point to the same type since we 
+//                   --> Please make sure that "FieldPtr" and "ComprPtr" point to the same type since we
 //                       use the type of "ComprPtr" to typecast "FieldPtr"
 //
-// Parameter   :  FieldName         : Name of the target field 
+// Parameter   :  FieldName         : Name of the target field
 //                FieldPtr          : Pointer to store the retrieved data
 //                H5_SetID_Target   : HDF5 dataset  ID of the target compound variable
 //                H5_TypeID_Target  : HDF5 datatype ID of the target compound variable
@@ -251,7 +251,7 @@ void LoadData_HDF5()
 //                NCompr            : Number of elements to be compared
 //                Fatal_Compr       : Whether or not the comparison result is fatal
 //                                    --> true  : terminate the program     if "FieldPtr[X] != ComprPtr[X]"
-//                                        false : display a warning message if "FieldPtr[X] != ComprPtr[X]" 
+//                                        false : display a warning message if "FieldPtr[X] != ComprPtr[X]"
 //
 // Return      :  Success/fail <-> 0/-1
 //-------------------------------------------------------------------------------------------------------
@@ -320,14 +320,14 @@ herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Ta
          {
             if ( Fatal_Compr )
             {
-               Aux_Error( ERROR_INFO, "\"%s%s\" : RESTART file (%ld) != runtime (%ld) !!\n", 
+               Aux_Error( ERROR_INFO, "\"%s%s\" : RESTART file (%ld) != runtime (%ld) !!\n",
                           FieldName, ArrayIdx, (long)((T*)FieldPtr)[t], (long)ComprPtr[t] );
                return -2;
             }
 
             else
             {
-               Aux_Message( stderr, "WARNING : \"%s%s\" : RESTART file (%ld) != runtime (%ld) !!\n", 
+               Aux_Message( stderr, "WARNING : \"%s%s\" : RESTART file (%ld) != runtime (%ld) !!\n",
                             FieldName, ArrayIdx, (long)((T*)FieldPtr)[t], (long)ComprPtr[t] );
                Check_Pass = false;
             }
@@ -337,14 +337,14 @@ herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Ta
          {
             if ( Fatal_Compr )
             {
-               Aux_Error( ERROR_INFO, "\"%s%s\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n", 
+               Aux_Error( ERROR_INFO, "\"%s%s\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
                           FieldName, ArrayIdx,  ((T*)FieldPtr)[t], ComprPtr[t] );
                return -2;
             }
 
             else
             {
-               Aux_Message( stderr, "WARNING : \"%s%s\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n", 
+               Aux_Message( stderr, "WARNING : \"%s%s\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
                             FieldName, ArrayIdx, ((T*)FieldPtr)[t], ComprPtr[t] );
                Check_Pass = false;
             }
@@ -446,7 +446,7 @@ void LoadOnePatchGroup( const hid_t H5_FileID, const int lv, const int GID0, con
 
 
 //    3. check whether this patch lies within the target range
-      for (int d=0; d<3; d++)    
+      for (int d=0; d<3; d++)
       {
          CrL[d] = PatchInfo->Corner[d];
          CrR[d] = CrL[d] + PScale;

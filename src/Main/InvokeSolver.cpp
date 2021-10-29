@@ -50,7 +50,7 @@ extern Timer_t *Timer_Poi_PrePot_F[NLEVEL];
 //                                   TimeOld to TimeNew
 //                               --> For the Poisson solver, this function calculates potential at **TimeNew**
 //                               --> For the dt solver, this function estimates dt at **TimeNew**
-//                dt           : Time interval to advance solution for the fluid and gravity solvers
+//                dt_in        : Time interval to advance solution for the fluid and gravity solvers
 //                               (can be different from TimeNew-TimeOld if COMOVING is on)
 //                Poi_Coeff    : Coefficient in front of the RHS in the Poisson eq.
 //                SaveSg_Flu   : Sandglass to store the updated fluid data (for the fluid, gravity, and Grackle solvers)
@@ -61,7 +61,7 @@ extern Timer_t *Timer_Poi_PrePot_F[NLEVEL];
 //                               false --> Advance the patches which can    be overlapped with MPI communication
 //                               (useful only if "OverlapMPI == true")
 //-------------------------------------------------------------------------------------------------------
-void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld, const double dt,
+void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld, const double dt_in,
                    const double Poi_Coeff, const int SaveSg_Flu, const int SaveSg_Mag, const int SaveSg_Pot,
                    const bool OverlapMPI, const bool Overlap_Sync )
 {
@@ -99,6 +99,10 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 
    if ( TSolver == SRC_SOLVER  &&  ( SaveSg_Flu != 0 &&  SaveSg_Flu != 1 )  )
       Aux_Error( ERROR_INFO, "incorrect SaveSg_Flu (%d) for the solver %d !!\n", SaveSg_Flu, TSolver );
+
+
+// reset the time-step actually adopted to zero for OPT__FREEZE_FLUID
+   const double dt = ( OPT__FREEZE_FLUID ) ? 0.0 : dt_in;
 
 
 // set the maximum number of patch groups to be updated at a time

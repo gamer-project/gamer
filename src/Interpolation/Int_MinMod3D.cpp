@@ -9,8 +9,8 @@
 //
 // Note        :  1. MinMod limiter: see Int_MinMod1D()
 //                2. BOTH conservative and monotonic
-//		  3. 3D interpolation is achieved by performing interpolation along x, y, and z directions
-//		     in order --> different from MINMOD1D
+//                3. 3D interpolation is achieved by performing interpolation along x, y, and z directions
+//                   in order --> different from MINMOD1D
 //
 // Parameter   :  CData           : Input coarse-grid array
 //                CSize           : Size of the CData array

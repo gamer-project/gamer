@@ -22,7 +22,7 @@ extern double BarredPot_MeshCenter[3];
 // Function    :  SetExtAccAuxArray_BarredPot
 // Description :  Set the auxiliary array ExtAcc_AuxArray[] used by ExtAcc_BarredPot()
 //
-// Note        :  1. Invoked by Init_ExtAcc_BarredPot() 
+// Note        :  1. Invoked by Init_ExtAcc_BarredPot()
 //                2. AuxArray_Flt/Int[] have the size of EXT_POT_NAUX_MAX defined in Macro.h (default = 20)
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
@@ -34,7 +34,7 @@ extern double BarredPot_MeshCenter[3];
 void SetExtAccAuxArray_BarredPot( double AuxArray[] )
 {
 
-   AuxArray[0] = SQR(BarredPot_V0);    // amplitude^2  
+   AuxArray[0] = SQR(BarredPot_V0);    // amplitude^2
    AuxArray[1] = SQR(BarredPot_q );    // axis ratio^2
    AuxArray[2] = SQR(BarredPot_Rc);    // core radius^2
    AuxArray[3] = BarredPot_Omegabar;   // bar pattern speed
@@ -64,7 +64,7 @@ void SetExtAccAuxArray_BarredPot( double AuxArray[] )
 //                2. Auxiliary arrays UserArray_Flt/Int[] are set by SetExtAccAuxArray_BarredPot()
 //
 // Parameter   :  Acc               : Array to store the output external acceleration
-// 		  x/y/z             : Target spatial coordinates
+//                x/y/z             : Target spatial coordinates
 //                Time              : Target physical time
 //                UserArray : User-provided auxiliary array
 //
@@ -101,8 +101,8 @@ static void ExtAcc_BarredPot( real Acc[], const double x, const double y, const 
    const real   A      = (real)(Rc2 + SQR(dxrot) +(SQR(dyrot) + SQR(dz))/q2);
    const real   B      = (real)(Rc2 + SQR(dxrot) +(SQR(dyrot) + SQR(dz)));
 
-// const real   frac   = std::min(Time/fullBS,1.0); 
-   const real   frac   = FMIN(Time/fullBS,1.0); 
+// const real   frac   = std::min(Time/fullBS,1.0);
+   const real   frac   = FMIN(Time/fullBS,1.0);
 
    const real fxs = real(-V02*(dx/B));
    const real fys = real(-V02*(dy/B));
@@ -118,7 +118,7 @@ static void ExtAcc_BarredPot( real Acc[], const double x, const double y, const 
 
    Acc[0] = fxb*frac + fxs*(1-frac);
    Acc[1] = fyb*frac + fys*(1-frac);
-   Acc[2] = fzb*frac + fzs*(1-frac); 
+   Acc[2] = fzb*frac + fzs*(1-frac);
 
 } // FUNCTION : ExtAcc_BarredPot
 
@@ -135,7 +135,7 @@ static void ExtAcc_BarredPot( real Acc[], const double x, const double y, const 
 #endif
 
 FUNC_SPACE ExtAcc_t ExtAcc_Ptr = ExtAcc_BarredPot;
- 
+
 
 //-----------------------------------------------------------------------------------------
 // Function    :  SetCPU/GPUExtAcc_BarredPot

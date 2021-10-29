@@ -28,11 +28,11 @@ Procedure :
 
 Note :
 ============================================================================
-1. Note that if one wants to transform multiple files automatically by 
-   specifying "StartID and EndID", the data ID suffix _XXXXXX should NOT be 
-   included in InputName. 
+1. Note that if one wants to transform multiple files automatically by
+   specifying "StartID and EndID", the data ID suffix _XXXXXX should NOT be
+   included in InputName.
 
-   For example, to create figures for the three input files named 
+   For example, to create figures for the three input files named
    "Input_000001, Input_000002, Input_000003", one should use
 
       sh CreateFigures.sh Input 1 3
@@ -49,9 +49,9 @@ Note :
 4. One does not need to provide the number of data columns and the rows.
    They will be determined from the input file automatically.
 
-5. In the script "CreateFigures.sh", one can set the 
-   variable "GPT_TERM" to different gnuplot terminals to generate different 
-   image formats (e.g., postscript/emf/gif ... ). Type "help terminal" in 
+5. In the script "CreateFigures.sh", one can set the
+   variable "GPT_TERM" to different gnuplot terminals to generate different
+   image formats (e.g., postscript/emf/gif ... ). Type "help terminal" in
    gnuplot to see all terminals supported in gnuplot.
 
 6. To modify any gnuplot setting, please modify the small gnuplot script
@@ -76,7 +76,7 @@ Version 1.1.0  09/21/2011
 -------------------------
 1. Support loading arbitrary number of data columns
    --> The option "-p" is removed
-2. To load a single file, one can provide the absolute file name without 
+2. To load a single file, one can provide the absolute file name without
    specifying the range of data IDs
 3. More error checks in "CreateFigures.sh"
 4. One can specify the number of header lines through the option "-n"
