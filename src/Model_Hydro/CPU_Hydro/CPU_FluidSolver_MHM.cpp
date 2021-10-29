@@ -345,6 +345,9 @@ void CPU_FluidSolver_MHM(
       for (int P=0; P<NPatchGroup; P++)
 #     endif
       {
+#        ifndef __CUDACC__
+         Iteration = 0;
+#        endif
 
 //       1. half-step prediction
 //       1-a. MHM_RP: use Riemann solver to calculate the half-step fluxes
