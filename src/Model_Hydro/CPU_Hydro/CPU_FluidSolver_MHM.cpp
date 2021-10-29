@@ -290,12 +290,14 @@ void CPU_FluidSolver_MHM(
    const double *c_ExtAcc_AuxArray = NULL;
 #  endif
 
-   const char MaxIteration         = 4;
-   int Iteration                   = 0;
-   real AdaptiveMinModCoeff        = NULL_REAL;
+   const int MaxIteration          = 4;
 #  ifdef __CUDACC__
+   __shared__ int Iteration;
+   __shared__ real AdaptiveMinModCoeff;
    __shared__ char State;
 #  else
+   int Iteration;
+   real AdaptiveMinModCoeff;
    char State;
 #  endif
    State                           = 0;
@@ -340,10 +342,12 @@ void CPU_FluidSolver_MHM(
 #     ifdef __CUDACC__
       const int P = blockIdx.x;
 #     else
-#     pragma omp for schedule( runtime )
+#     pragma omp for schedule( runtime ) private ( Iteration, AdaptiveMinModCoeff, State )
       for (int P=0; P<NPatchGroup; P++)
 #     endif
       {
+
+         Iteration = 0;
 
 //       1. half-step prediction
 //       1-a. MHM_RP: use Riemann solver to calculate the half-step fluxes

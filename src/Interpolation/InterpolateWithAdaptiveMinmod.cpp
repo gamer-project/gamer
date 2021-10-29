@@ -73,7 +73,7 @@ void InterpolateWithAdaptiveMinmod( real CData [], const int CSize[3], const int
      const int Max = 3;
      const int CSize3D = CSize[0]*CSize[1]*CSize[2];
      const int FSize3D = FSize[0]*FSize[1]*FSize[2];
-     real Cons[NCOMP_FLUID], Prim[NCOMP_FLUID], Array[NCOMP_FLUID];
+     real Cons[NCOMP_TOTAL], Prim[NCOMP_TOTAL], Array[NCOMP_TOTAL];
      real IntMonoCoeff_Min = (real)0.0;
      bool FData_is_Prim = false;
 
@@ -108,7 +108,7 @@ void InterpolateWithAdaptiveMinmod( real CData [], const int CSize[3], const int
 
                  for (int i=0; i<CSize3D; i++)
                  {
-                   for (int v = 0 ; v < NCOMP_FLUID ;v++) Cons[v] = CData[CSize3D*v+i];
+                   for (int v = 0 ; v < NCOMP_TOTAL ;v++) Cons[v] = CData[CSize3D*v+i];
 
                    Hydro_Con2Pri( Cons, Prim, MIN_PRES,
                                   OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
@@ -116,7 +116,7 @@ void InterpolateWithAdaptiveMinmod( real CData [], const int CSize[3], const int
                                   EoS.DensEint2Pres_FuncPtr, EoS.DensPres2Eint_FuncPtr,
                                   EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table, NULL );
 
-                   for (int v = 0 ; v < NCOMP_FLUID ;v++) CData[CSize3D*v+i] = Prim[v];
+                   for (int v = 0 ; v < NCOMP_TOTAL ;v++) CData[CSize3D*v+i] = Prim[v];
                  }
 
                  FData_is_Prim = true;
@@ -140,7 +140,7 @@ void InterpolateWithAdaptiveMinmod( real CData [], const int CSize[3], const int
 //            5. check failed cell
               for ( int i = 0 ;i < FSize3D; i++ )
               {
-                 for (int v = 0 ; v < NCOMP_FLUID ;v++) Array[v] = FData[FSize3D*v+i];
+                 for (int v = 0 ; v < NCOMP_TOTAL ;v++) Array[v] = FData[FSize3D*v+i];
 
 //               5a. when FData[] stores conserved variables
                  if ( !FData_is_Prim && Hydro_CheckUnphysical( Array, NULL, NULL, NULL, NULL,  __FILE__, __FUNCTION__, __LINE__, false ) )
@@ -176,14 +176,14 @@ void InterpolateWithAdaptiveMinmod( real CData [], const int CSize[3], const int
      {
          for (int i=0; i<FSize3D; i++)
          {
-            for (int v = 0 ; v < NCOMP_FLUID ;v++) Prim[v] = FData[FSize3D*v+i];
+            for (int v = 0 ; v < NCOMP_TOTAL ;v++) Prim[v] = FData[FSize3D*v+i];
 
             Hydro_Pri2Con( Prim, Cons,
                            OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
                            EoS.DensPres2Eint_FuncPtr,
                            EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table, NULL );
 
-            for (int v = 0 ; v < NCOMP_FLUID ;v++) FData[FSize3D*v+i] = Cons[v];
+            for (int v = 0 ; v < NCOMP_TOTAL ;v++) FData[FSize3D*v+i] = Cons[v];
          }
      }
 
@@ -193,7 +193,7 @@ void InterpolateWithAdaptiveMinmod( real CData [], const int CSize[3], const int
      {
        for ( int i = 0 ;i < FSize3D; i++ )
        {
-          for (int v = 0 ; v < NCOMP_FLUID ;v++) Cons[v] = FData[FSize3D*v+i];
+          for (int v = 0 ; v < NCOMP_TOTAL ;v++) Cons[v] = FData[FSize3D*v+i];
 
           Hydro_CheckUnphysical( Cons, NULL, NULL, NULL, NULL,  __FILE__, __FUNCTION__, __LINE__, true );
        }
