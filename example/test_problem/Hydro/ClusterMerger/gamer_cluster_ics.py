@@ -72,16 +72,16 @@ beta = 100.0
 
 # This sets up the profiles for the first cluster assuming hydrostatic equilibrium,
 # taking the gas density, total mass density, and stellar density as input
-hse1 = cg.HydrostaticEquilibrium.from_dens_and_tden(0.1, 20000.0, rhog1, rhot1, 
-                                                    stellar_density=rhos1)
+hse1 = cg.ClusterModel.from_dens_and_tden(0.1, 20000.0, rhog1, rhot1,
+                                          stellar_density=rhos1)
 
 # This sets a radial magnetic field strength profile using the beta parameter and
 # the pressure in the profile, assuming p_B = B^2/s (thus gaussian=False)
 hse1.set_magnetic_field_from_beta(beta, gaussian=False)
 
 # These lines are the same as above for the second cluster
-hse2 = cg.HydrostaticEquilibrium.from_dens_and_tden(0.1, 20000.0, rhog2, rhot2, 
-                                                    stellar_density=rhos2)
+hse2 = cg.ClusterModel.from_dens_and_tden(0.1, 20000.0, rhog2, rhot2,
+                                          stellar_density=rhos2)
 hse2.set_magnetic_field_from_beta(beta, gaussian=False)
 
 # Write the profiles for each cluster to files
