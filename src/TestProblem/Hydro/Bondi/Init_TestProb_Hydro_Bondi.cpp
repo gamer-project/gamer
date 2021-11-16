@@ -404,7 +404,6 @@ void SetParameter()
          Bondi_Init_Prof_r[b] *= Const_kpc/UNIT_L;
          Bondi_Init_Prof_d[b] *= 5.0e-25; // in cgs
          Bondi_Init_Prof_v[b] *= 1000*1e5;  // in cm/s
-         if( b<10 ){ Aux_Message( stdout, " %13.7e\n", Bondi_Init_Prof_v[b]/UNIT_V ); }
          Bondi_Init_Prof_p[b] = SQR(Bondi_Init_Prof_v[b]/Bondi_Init_Prof_p[b])*Bondi_Init_Prof_d[b]/GAMMA;
       }
     }
