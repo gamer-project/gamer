@@ -267,6 +267,14 @@ void Init_ResetParameter()
 
       PRINT_WARNING( ELBDM_TAYLOR3_COEFF, FORMAT_FLT, "since ELBDM_TAYLOR3_AUTO is enabled" );
    }
+
+// must disable ELBDM_TAYLOR3_AUTO for OPT__FREEZE_FLUID since ELBDM_SetTaylor3Coeff() doesn't support dt=0.0
+   if ( OPT__FREEZE_FLUID  &&  ELBDM_TAYLOR3_AUTO )
+   {
+      ELBDM_TAYLOR3_AUTO = false;
+
+      PRINT_WARNING( ELBDM_TAYLOR3_AUTO, FORMAT_INT, "since OPT__FREEZE_FLUID is enabled" );
+   }
 #  endif // #if ( MODEL == ELBDM )
 
 
