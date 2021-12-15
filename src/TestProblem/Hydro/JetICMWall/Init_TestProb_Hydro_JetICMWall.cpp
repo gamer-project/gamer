@@ -14,8 +14,8 @@ static void BC( real Array[], const int ArraySize[], real fluid[], const int NVa
 
 // background parameters
 static double   ICM_Density;             // ICM density
-static double   Jump_Position_x;           // position of interface
-static double   Jump_Position_y;           // position of interface
+static double   Jump_Position_x;         // position of interface
+static double   Jump_Position_y;         // position of interface
 static double   Jump_Angle;              // inclination of interface
 static double   Jump_Tangent;            // tangent of interface angle
 static double   Jump_Width;              // width of jump
@@ -26,12 +26,19 @@ static double   Lobe_Density;            // lobe density
 // jet parameters
 static bool     Jet_Fire;                // [true/false]: jet on/off
 static double   Jet_Velocity;            // jet y-velocity (units of c)
+static double   Jet_VelSlope;            // Slope of velocity gradient across jet
+static double   Jet_VelCenter;           // jet central velocity
 static double   Jet_Radius;              // radius of jet
-static double   Jet_Position;          // position of jet
+static double   Jet_Position;            // position of jet
 static double   Jet_Lobe_Ratio;          // ratio of jet/lobe densities
 static double   Jet_Center[2];           // jet central coordinates
 static double   Jet_Density;             // jet density
 static double   Jet_Gamma;               // jet relativistic gamma
+static double   Jet_PrecessAngle;        // jet relativistic gamma
+static double   Jet_PrecessPeriod;       // jet relativistic gamma
+static double   Jet_PrecessOmega;        // jet relativistic gamma
+static double   Jet_Cosine;        // jet relativistic gamma
+static double   Jet_Sine;        // jet relativistic gamma
 
 // =======================================================================================
 
@@ -114,26 +121,30 @@ void SetParameter()
 // ************************************************************************************************************************
 
 // background parameters
-   ReadPara->Add( "ICM_Density",      &ICM_Density,     NoDef_double,  NoMin_double,   NoMax_double );
-   ReadPara->Add( "Jump_Position_x",  &Jump_Position_x, NoDef_double,  NoMin_double,   NoMax_double );
-   ReadPara->Add( "Jump_Position_y",  &Jump_Position_y, NoDef_double,  NoMin_double,   NoMax_double );
-   ReadPara->Add( "Jump_Angle",       &Jump_Angle,      NoDef_double,  NoMin_double,   NoMax_double );
-   ReadPara->Add( "Amb_Pressure",     &Amb_Pressure,    NoDef_double,  NoMin_double,   NoMax_double );
-   ReadPara->Add( "Lobe_ICM_Ratio",   &Lobe_ICM_Ratio,  NoDef_double,  NoMin_double,   NoMax_double );
-   ReadPara->Add( "Jump_Width",       &Jump_Width,      NoDef_double,  NoMin_double,   NoMax_double );
+   ReadPara->Add( "ICM_Density",        &ICM_Density,       NoDef_double,  NoMin_double,   NoMax_double );
+   ReadPara->Add( "Jump_Position_x",    &Jump_Position_x,   NoDef_double,  NoMin_double,   NoMax_double );
+   ReadPara->Add( "Jump_Position_y",    &Jump_Position_y,   NoDef_double,  NoMin_double,   NoMax_double );
+   ReadPara->Add( "Jump_Angle",         &Jump_Angle,        NoDef_double,  NoMin_double,   NoMax_double );
+   ReadPara->Add( "Amb_Pressure",       &Amb_Pressure,      NoDef_double,  NoMin_double,   NoMax_double );
+   ReadPara->Add( "Lobe_ICM_Ratio",     &Lobe_ICM_Ratio,    NoDef_double,  NoMin_double,   NoMax_double );
+   ReadPara->Add( "Jump_Width",         &Jump_Width,        NoDef_double,  NoMin_double,   NoMax_double );
 
 // jet parameters
-   ReadPara->Add( "Jet_Fire",         &Jet_Fire,        false,         Useless_bool,   Useless_bool );
-   ReadPara->Add( "Jet_Lobe_Ratio",   &Jet_Lobe_Ratio,  NoDef_double,  NoMin_double,   NoMax_double );
-   ReadPara->Add( "Jet_Radius",       &Jet_Radius,      NoDef_double,  NoMin_double,   NoMax_double );
-   ReadPara->Add( "Jet_Position",     &Jet_Position,    NoDef_double,  NoMin_double,   NoMax_double );
-   ReadPara->Add( "Jet_Velocity",     &Jet_Velocity,    NoDef_double,  NoMin_double,   NoMax_double );
+   ReadPara->Add( "Jet_Fire",           &Jet_Fire,          false,         Useless_bool,   Useless_bool );
+   ReadPara->Add( "Jet_Lobe_Ratio",     &Jet_Lobe_Ratio,    NoDef_double,  NoMin_double,   NoMax_double );
+   ReadPara->Add( "Jet_Radius",         &Jet_Radius,        NoDef_double,  NoMin_double,   NoMax_double );
+   ReadPara->Add( "Jet_Position",       &Jet_Position,      NoDef_double,  NoMin_double,   NoMax_double );
+   ReadPara->Add( "Jet_Velocity",       &Jet_Velocity,      NoDef_double,  NoMin_double,   NoMax_double );
+   ReadPara->Add( "Jet_VelSlope",       &Jet_VelSlope,      0.0,           NoMin_double,   0.0          );
+   ReadPara->Add( "Jet_VelCenter",      &Jet_VelCenter,     NoDef_double,  0.0,            NoMax_double );
+   ReadPara->Add( "Jet_PrecessAngle",   &Jet_PrecessAngle,  0.0,           0.0,            NoMax_double );
+   ReadPara->Add( "Jet_PrecessPeriod",  &Jet_PrecessPeriod, 0.0,           0.0,            NoMax_double );
 
    ReadPara->Read( FileName );
 
    delete ReadPara;
 
-   Jet_Gamma = 1.0 / sqrt(1.0-SQR(Jet_Velocity));
+   Jet_Gamma = sqrt(1.0+SQR(Jet_Velocity));
 
 // (1-2) convert to code unit
    Jet_Velocity  *= Const_c   / UNIT_V;
@@ -144,6 +155,7 @@ void SetParameter()
    Jump_Position_y *= Const_kpc / UNIT_L;
    Amb_Pressure  *= 1.0       / UNIT_P;
    Jump_Width    *= Const_kpc / UNIT_L;
+   Jet_PrecessPeriod *= 1000.0*Const_yr / UNIT_T;
 
 // (2) set the problem-specific derived parameters
 
@@ -152,6 +164,9 @@ void SetParameter()
    Jet_Density   = Jet_Lobe_Ratio*Lobe_Density;
    Jet_Center[0] = Jet_Position;
    Jet_Center[1] = amr->BoxCenter[2];
+   Jet_PrecessOmega = 2.0*M_PI/Jet_PrecessPeriod;
+   Jet_Cosine = cos(Jet_PrecessAngle*M_PI/180.0);
+   Jet_Sine = sin(Jet_PrecessAngle*M_PI/180.0);
 
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
@@ -188,6 +203,7 @@ void SetParameter()
      Aux_Message( stdout, "  Jet_Radius               = %14.7e kpc\n",        Jet_Radius*UNIT_L/Const_kpc    );
      Aux_Message( stdout, "  Jet_Position             = %14.7e kpc\n",        Jet_Position*UNIT_L/Const_kpc  );
      Aux_Message( stdout, "  Jet_Velocity             = %14.7e c\n",          Jet_Velocity*UNIT_V/Const_c    );
+     Aux_Message( stdout, "  Jet_VelSlope             = %14.7e\n",            Jet_VelSlope                   );
      Aux_Message( stdout, "  Jet_Density              = %14.7e g/cm^3\n",     Jet_Density*UNIT_D             );
      Aux_Message( stdout, "  Jet_Lobe_Ratio           = %14.7e\n",            Jet_Lobe_Ratio                 );
    }
@@ -275,9 +291,9 @@ void BC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu,
 
     int i, j, k;
 
-     i = idx[0];
-     j = idx[1];
-     k = idx[2];
+    i = idx[0];
+    j = idx[1];
+    k = idx[2];
 
     real PriReal[NCOMP_FLUID];
 
@@ -288,13 +304,17 @@ void BC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu,
     // 1D array -> 3D array
     real (*Array3D)[ArraySize[2]][ArraySize[1]][ArraySize[0]] = ( real (*)[ArraySize[2]][ArraySize[1]][ArraySize[0]] )Array;
 
+    double x = rad/Jet_Radius;
 
-    if ( Jet_Fire && rad <= Jet_Radius )
+    if ( Jet_Fire && x <= 1.0 )
     {
+      double u_jet = Jet_Velocity*(Jet_VelSlope*x+Jet_VelCenter);
+      double phi = Jet_PrecessOmega*Time;
+      
       // set fluid variable inside source
       PriReal[0] = (real)Jet_Density;
       PriReal[1] = 0.0;
-      PriReal[2] = (real)Jet_Velocity;
+      PriReal[2] = (real)u_jet;
       PriReal[3] = 0.0;
       PriReal[4] = (real)Amb_Pressure;
             
