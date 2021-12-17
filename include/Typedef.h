@@ -169,6 +169,13 @@ const Check_t
    CHECK_OFF = 0,
    CHECK_ON  = 1;
 
+// check unphysical quanties
+typedef int CheckUnphysical_t;
+const CheckUnphysical_t
+   UNPHY_MODE_SING = 0; // single field
+   UNPHY_MODE_CONS = 1; // conserved variables
+   UNPHY_MODE_PRIM = 2; // primitive variables
+
 
 // target solver in InvokeSolver()
 // --> must start from 0 because of the current TIMING_SOLVER implementation

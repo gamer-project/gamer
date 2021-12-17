@@ -102,8 +102,8 @@ real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const re
                      const real *const EoS_Table[EOS_NTABLE_MAX] );
 real Hydro_CheckMinPres( const real InPres, const real MinPres );
 real Hydro_CheckMinEint( const real InEint, const real MinEint );
-bool Hydro_CheckUnphysical( const real Cons[], const real Prim[], const real* const Input, const real Passive[],
-                            const char Info[], const char File[], const char Function[], const int Line, bool Show );
+bool Hydro_CheckUnphysical( const unsigned int Mode, const real Fields[], const real Passive[], const char Info[],
+                            const char File[], const char Function[], const int Line, bool Show );
 void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
 #ifdef DUAL_ENERGY
 void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, const real MomZ,

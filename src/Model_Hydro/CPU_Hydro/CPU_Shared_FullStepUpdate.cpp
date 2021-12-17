@@ -31,7 +31,7 @@
 //
 // Note        :  1. This function is shared by MHM, MHM_RP, and CTU schemes
 //                2. Invoke dual-energy check if DualEnergySwitch is on
-//                3. If any unphysical fluid cells were found in patch, Hydro_FullStepUpdate will return instantly.
+//                3. If any unphysical fluid cell is found in a patch group, Hydro_FullStepUpdate() will return instantly.
 //
 // Parameter   :  g_Input          : Array storing the input fluid data
 //                g_Output         : Array to store the updated fluid data
@@ -53,7 +53,7 @@
 //                                   --> Should be set to the global variable "PassiveNorm_VarIdx"
 //                EoS              : EoS object
 //                                   --> Only for obtaining Gamma used by the dual-energy formalism
-//                State            : (1/0) --> (Fail to update fluid patch/otherwise)
+//                State            : (1/0) --> (Fail to update fluid patch group/otherwise)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
@@ -167,16 +167,15 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 
 
 //    5. check unphysical cells within a patch
-
       if ( State != NULL )
       {
 
         if(Hydro_CheckUnphysical( Output_1Cell, NULL, NULL, NULL, NULL, __FILE__, __FUNCTION__, __LINE__, false ))
         {
 #         ifdef __CUDACC__
-          atomicOr ( (int*)State, 1);
+          atomicOr ( (int*)State, 1 );
 #         else
-          *State = *State | 1;
+          *State = 1;
 #         endif
         }
 
@@ -190,14 +189,16 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //      5-2. return all threads within a block
         if ( *State == 1 )     return;
 
+
+//      5-3. check the negative density and energy again
+#       ifdef CHECK_UNPHYSICAL_IN_FLUID
+        Hydro_CheckUnphysical( NULL, NULL, &Output_1Cell[DENS], NULL, "density", __FILE__, __FUNCTION__, __LINE__, true );
+        Hydro_CheckUnphysical( NULL, NULL, &Output_1Cell[ENGY], NULL, "energy",  __FILE__, __FUNCTION__, __LINE__, true );
+#       endif
+
       }
 
 
-//    6. check the negative density and energy
-#     ifdef CHECK_UNPHYSICAL_IN_FLUID
-      Hydro_CheckUnphysical( NULL, NULL, &Output_1Cell[DENS], NULL, "density", __FILE__, __FUNCTION__, __LINE__, true );
-      Hydro_CheckUnphysical( NULL, NULL, &Output_1Cell[ENGY], NULL, "energy", __FILE__, __FUNCTION__, __LINE__, true );
-#     endif
 
    } // CGPU_LOOP( idx_out, CUBE(PS2) )
 
