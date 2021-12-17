@@ -144,14 +144,14 @@ void InterpolateWithAdaptiveMinmod( real CData [], const int CSize[3], const int
                  for (int v = 0 ; v < NCOMP_TOTAL ;v++) Array[v] = FData[FSize3D*v+i];
 
 //               5a. when FData[] stores conserved variables
-                 if ( !FData_is_Prim && Hydro_CheckUnphysical( Array, NULL, NULL, NULL, NULL,  __FILE__, __FUNCTION__, __LINE__, false ) )
+                 if ( !FData_is_Prim && Hydro_CheckUnphysical( UNPHY_MODE_CONS, Array, NULL, __FILE__, __FUNCTION__, __LINE__, UNPHY_SILENCE ) )
                  {
                    GotFailCell = true;
                    break;
                  }
 
 //               5b. when FData[] stores primitive variables
-                 if (  FData_is_Prim && Hydro_CheckUnphysical( NULL, Array, NULL, NULL, NULL,  __FILE__, __FUNCTION__, __LINE__, false ) )
+                 if (  FData_is_Prim && Hydro_CheckUnphysical( UNPHY_MODE_PRIM, Array, NULL, __FILE__, __FUNCTION__, __LINE__, UNPHY_SILENCE ) )
                  {
                    GotFailCell = true;
                    break;
@@ -196,7 +196,7 @@ void InterpolateWithAdaptiveMinmod( real CData [], const int CSize[3], const int
        {
           for (int v = 0 ; v < NCOMP_TOTAL ;v++) Cons[v] = FData[FSize3D*v+i];
 
-          Hydro_CheckUnphysical( Cons, NULL, NULL, NULL, NULL,  __FILE__, __FUNCTION__, __LINE__, true );
+          Hydro_CheckUnphysical( UNPHY_MODE_CONS, Cons, NULL,  __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
        }
      }
 #    endif

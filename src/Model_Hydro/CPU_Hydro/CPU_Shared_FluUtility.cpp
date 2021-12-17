@@ -511,15 +511,18 @@ real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY
 //                        --> Mode = UNPHY_MODE_CONS
 //                Case3 : Check if the input primitive variables, including passive scalars, are unphysical
 //                        --> Mode = UNPHY_MODE_PRIM
+//                Case4 : Check if the input passive scalars are unphysical
+//                        --> Mode = UNPHY_MODE_PASSIVE_ONLY
 //
 // Note        :  Although the criteria of UNPHY_MODE_PRIM and UNPHY_MODE_CONS are the same in hydrodynamics,
 //                we still treat them as two different cases. This is because they may be different for other
 //                upcoming physical features.
 //
 //
-// Parameter   :  Mode            : UNPHY_MODE_SING --> check single field
-//                                  UNPHY_MODE_CONS --> check conserved variables, including passive scalars
-//                                  UNPHY_MODE_PRIM --> check primitive variables, including passive scalars
+// Parameter   :  Mode            : UNPHY_MODE_SING         --> check single field
+//                                  UNPHY_MODE_CONS         --> check conserved variables, including passive scalars
+//                                  UNPHY_MODE_PRIM         --> check primitive variables, including passive scalars
+//                                  UNPHY_MODE_PASSIVE_ONLY --> check passive scalars only
 //                SingleFieldName : Additional information
 //                File            : __FILE__
 //                Function        : __FUNCTION__
@@ -533,6 +536,9 @@ real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY
 //                        false --> otherwise
 //                Case3 : true  --> primitive variables are unphysical
 //                        false --> otherwise
+//                Case4 : true  --> passive scalars are unphysical
+//                        false --> otherwise
+//
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 bool Hydro_CheckUnphysical( const unsigned int Mode, const real Fields[], const char SingleFieldName[],
@@ -542,6 +548,11 @@ bool Hydro_CheckUnphysical( const unsigned int Mode, const real Fields[], const 
 #  ifdef GAMER_DEBUG
    if ( !Fields ) printf("ERROR: access a NULL pointer at file <%s>, line <%d>, function <%s>!!\n",
                           File, Line, Function );
+#  if ( ! (NCOMP_PASSIVE > 0 ) )
+   if ( Mode == UNPHY_MODE_PASSIVE_ONLY )
+      printf("ERROR: UNPHY_MODE_PASSIVE_ONLY works only when NCOMP_PASSIVE > 0. At file <%s>, line <%d>, function <%s>!!\n",
+              File, Line, Function );
+#  endif
 #  endif
 
    bool FailCell = false;
@@ -654,7 +665,6 @@ bool Hydro_CheckUnphysical( const unsigned int Mode, const real Fields[], const 
          }
 
 
-
          // print out the unphysical values
          if ( FailCell && Verbose )
          {
@@ -673,8 +683,36 @@ bool Hydro_CheckUnphysical( const unsigned int Mode, const real Fields[], const 
       break;
 
 
+      // === only check passive scalars  ===
+      case UNPHY_MODE_PASSIVE_ONLY:
+
+         for (int v=0; v<NCOMP_PASSIVE; v++)
+         {
+            // check NaN
+            if ( Fields[v] != Fields[v] )
+                  FailCell = true;
+
+            // check negative
+            if ( (real) Fields[v] <=  TINY_NUMBER || Fields[v]  >= (real)HUGE_NUMBER )
+               FailCell = true;
+         }
+
+
+         // print out the unphysical values
+         if ( FailCell && Verbose )
+         {
+            printf( "ERROR: unphysical passive scalars at file <%s>, line <%d>, function <%s>\n",
+                     File, Line, Function );
+
+            for (int v=0; v<NCOMP_PASSIVE; v++)
+               printf("Passive[%d]=%14.7e\n", v, Fields[v] );
+         }
+
+      break;
+
+
       default:
-         printf( "ERROR : Mode is NOT UNPHY_MODE_SING, UNPHY_MODE_CONS, or UNPHY_MODE_PRIM!! file <%s>, line <%d>, function <%s> !!\n",
+         printf( "ERROR : Mode is NOT UNPHY_MODE_SING, UNPHY_MODE_CONS, UNPHY_MODE_PRIM, or UNPHY_MODE_PASSIVE_ONLY!! file <%s>, line <%d>, function <%s> !!\n",
                   File, Line, Function );
 
    }

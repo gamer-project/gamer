@@ -173,11 +173,12 @@ const Check_t
 // check unphysical quanties
 typedef int CheckUnphysical_t;
 const CheckUnphysical_t
-   UNPHY_MODE_SING = 0; // single field
-   UNPHY_MODE_CONS = 1; // conserved variables
-   UNPHY_MODE_PRIM = 2; // primitive variables
-   UNPHY_SILENCE   = 0; // do not print out unphysical values
-   UNPHY_VERBOSE   = 1; // print out unphysical values
+   UNPHY_MODE_SING         = 0; // single field
+   UNPHY_MODE_CONS         = 1; // conserved variables, including passive scalars
+   UNPHY_MODE_PRIM         = 2; // primitive variables, including passive scalars
+   UNPHY_MODE_PASSIVE_ONLY = 3  // only passive scalars
+   UNPHY_SILENCE           = 0; // do not print out unphysical values
+   UNPHY_VERBOSE           = 1; // print out unphysical values
 
 
 // target solver in InvokeSolver()
