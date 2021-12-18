@@ -64,7 +64,7 @@ void EoS_SetAuxArray_Isothermal( double AuxArray_Flt[], int AuxArray_Int[] )
    }
 
 #  ifdef GAMER_DEBUG
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &AuxArray_Flt[0], "sound speed squared", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, (real*)(&AuxArray_Flt[0]), "sound speed squared", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
 #  endif
 
 } // FUNCTION : EoS_SetAuxArray_Isothermal

@@ -541,8 +541,8 @@ real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY
 //
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-bool Hydro_CheckUnphysical( const unsigned int Mode, const real Fields[], const char SingleFieldName[],
-                            const char File[], const char Function[], const int Line, bool Verbose )
+bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], const char SingleFieldName[],
+                            const char File[], const char Function[], const int Line, const CheckUnphysical_t Verbose )
 {
 
 #  ifdef GAMER_DEBUG

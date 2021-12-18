@@ -173,11 +173,11 @@ const Check_t
 // check unphysical quanties
 typedef int CheckUnphysical_t;
 const CheckUnphysical_t
-   UNPHY_MODE_SING         = 0; // check single field
-   UNPHY_MODE_CONS         = 1; // check conserved variables, including passive scalars
-   UNPHY_MODE_PRIM         = 2; // check primitive variables, including passive scalars
-   UNPHY_MODE_PASSIVE_ONLY = 3  // only check passive scalars
-   UNPHY_SILENCE           = 0; // print nothing
+   UNPHY_MODE_SING         = 0, // check single field
+   UNPHY_MODE_CONS         = 1, // check conserved variables, including passive scalars
+   UNPHY_MODE_PRIM         = 2, // check primitive variables, including passive scalars
+   UNPHY_MODE_PASSIVE_ONLY = 3, // only check passive scalars
+   UNPHY_SILENCE           = 0, // print nothing
    UNPHY_VERBOSE           = 1; // print out unphysical values
 
 

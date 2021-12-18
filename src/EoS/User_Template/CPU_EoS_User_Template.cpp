@@ -120,7 +120,7 @@ static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, c
 
 // check
 #  ifdef GAMER_DEBUG
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, Passive, "output pressure", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "output pressure", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
 #  endif // GAMER_DEBUG
 
 
