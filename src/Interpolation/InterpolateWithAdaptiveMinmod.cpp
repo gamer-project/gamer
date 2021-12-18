@@ -7,7 +7,7 @@
 //                when encountering unphysical cell in patch.
 //
 // Note        :  1. Use the input parameter "IntScheme" to determine the adopted interpolation scheme
-//                2. Reduce the min-mod coefficient when unphysical results are found in the interpolated ghost zones
+//                2. Locally reduce the min-mod coefficient when unphysical results are found in the interpolated ghost zones
 //                   or newly allocate patches
 //                   --> we do not take this remedy for MinMod-3D, MinMod-1D, and vanLeer,
 //                       since they do not involve min-mod coefficient.
@@ -163,6 +163,7 @@ void InterpolateWithAdaptiveMinmod( real CData [], const int CSize[3], const int
               itr++;
 
            } while ( GotFailCell && itr <= Max );
+
      }
      else
      {
