@@ -442,7 +442,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    double r1, r2, r3, Dens1, Dens2, Dens3, Pres1, Pres2, Pres3;
    double Metl1, Metl2, Metl3, rmax1, rmax2, rmax3;
    double Dens, MomX, MomY, MomZ, Pres, Eint, Etot, Metl;
-  
+
    rmax1 = Table_R1[Merger_NBin1-1];
    rmax2 = Merger_Coll_NumHalos > 1 ? Table_R2[Merger_NBin2-1] : -1.0;
    rmax3 = Merger_Coll_NumHalos > 2 ? Table_R3[Merger_NBin3-1] : -1.0;
