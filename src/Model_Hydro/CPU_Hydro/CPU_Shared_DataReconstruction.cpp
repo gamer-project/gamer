@@ -1254,8 +1254,8 @@ void Hydro_Pri2Char( real InOut[], const real Dens, const real Pres, const real 
 #  endif
 
 #  if ( defined CHECK_UNPHYSICAL_IN_FLUID  &&  !defined MHD )
-   Hydro_CheckUnphysical( NULL, NULL, &Pres, NULL, "pressure", __FILE__, __FUNCTION__, __LINE__, true );
-   Hydro_CheckUnphysical( NULL, NULL, &Dens, NULL, "density", __FILE__, __FUNCTION__, __LINE__, true );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "pressure", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Dens, "density" , __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
 #  endif
 
 
@@ -1344,8 +1344,8 @@ void Hydro_Char2Pri( real InOut[], const real Dens, const real Pres, const real 
 #  endif
 
 #  if ( defined CHECK_UNPHYSICAL_IN_FLUID  &&  !defined MHD )
-   Hydro_CheckUnphysical( NULL, NULL, &Pres, NULL, "pressure", __FILE__, __FUNCTION__, __LINE__, true );
-   Hydro_CheckUnphysical( NULL, NULL, &Dens, NULL, "density", __FILE__, __FUNCTION__, __LINE__, true );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "pressure", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Dens, "density" , __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
 #  endif
 
 
@@ -1447,8 +1447,8 @@ void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
 #  endif
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_CheckUnphysical( NULL, NULL, &CC_Var[4], NULL, "pressure", __FILE__, __FUNCTION__, __LINE__, true );
-   Hydro_CheckUnphysical( NULL, NULL, &CC_Var[0], NULL, "density", __FILE__, __FUNCTION__, __LINE__, true );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &CC_Var[4], "pressure", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &CC_Var[0], "density" , __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
 #  endif
 
 
@@ -1558,8 +1558,8 @@ void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
    }
    else {
 #     ifdef CHECK_UNPHYSICAL_IN_FLUID
-      Hydro_CheckUnphysical( NULL, NULL, &a2_min_Cs2, NULL, "a2_min_Cs2", __FILE__, __FUNCTION__, __LINE__, true );
-      Hydro_CheckUnphysical( NULL, NULL, &Cf2_min_a2, NULL, "Cf2_min_a2", __FILE__, __FUNCTION__, __LINE__, true );
+      Hydro_CheckUnphysical( UNPHY_MODE_SING, &a2_min_Cs2, "a2_min_Cs2", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
+      Hydro_CheckUnphysical( UNPHY_MODE_SING, &Cf2_min_a2, "Cf2_min_a2", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
 #     endif
 
       const real _Cf2_min_Cs2 = (real)1.0 / Cf2_min_Cs2;

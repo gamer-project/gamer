@@ -68,8 +68,8 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    Hydro_Rotate3D( R, XYZ, true, MAG_OFFSET );
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_CheckUnphysical( NULL, NULL, &L[0], NULL, "density",  __FILE__, __FUNCTION__, __LINE__, true );
-   Hydro_CheckUnphysical( NULL, NULL, &R[0], NULL, "density", __FILE__, __FUNCTION__, __LINE__, true );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &L[0], "density", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &R[0], "density", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
 #  endif
 
 
@@ -95,8 +95,8 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    Cs_R  = SQRT(  EoS_DensPres2CSqr( R[0], P_R, R+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table )  );
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_CheckUnphysical( NULL, NULL, &P_R, NULL, "pressure", __FILE__, __FUNCTION__, __LINE__, true );
-   Hydro_CheckUnphysical( NULL, NULL, &P_L, NULL, "pressure", __FILE__, __FUNCTION__, __LINE__, true );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &P_R, "pressure", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &P_L, "pressure", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
 #  endif
 
 
@@ -142,7 +142,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    Cs_Roe   = SQRT( Cs2_Roe );
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_CheckUnphysical( NULL, NULL, &Cs2_Roe, NULL, "Cs2_Roe", __FILE__, __FUNCTION__, __LINE__, true );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Cs2_Roe, "Cs2_Roe", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
 #  endif
 
 // maximum and minimum eigenvalues
@@ -193,8 +193,8 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    W_R = u_R + Cs_R*q_R;
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_CheckUnphysical( NULL, NULL, &q_L, NULL, "q_L", __FILE__, __FUNCTION__, __LINE__, true );
-   Hydro_CheckUnphysical( NULL, NULL, &q_R, NULL, "q_R", __FILE__, __FUNCTION__, __LINE__, true );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &q_L, "q_L", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &q_R, "q_R", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
 #  endif
 
 

@@ -164,8 +164,8 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
 #  endif
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_CheckUnphysical( NULL, NULL, &L[0], NULL, "density", __FILE__, __FUNCTION__, __LINE__, true );
-   Hydro_CheckUnphysical( NULL, NULL, &R[0], NULL, "density", __FILE__, __FUNCTION__, __LINE__, true );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &L[0], "density", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &R[0], "density", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
 #  endif
 
    RhoL_sqrt       = SQRT( L[0] );
@@ -203,7 +203,7 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    Bn_star   = SQRT( Gamma_m1 - Y )*Bn;
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_CheckUnphysical( NULL, NULL, &Gamma_m1-Y, NULL, "Gamma_m1-Y", __FILE__, __FUNCTION__, __LINE__, true );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Gamma_m1-Y, "Gamma_m1-Y", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
 #  endif
 
    if ( Bn == ZERO ) {
@@ -240,7 +240,7 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    a2 -= X;
 #  endif
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_CheckUnphysical( NULL, NULL, &a2, NULL, "a2", __FILE__, __FUNCTION__, __LINE__, true );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &a2, "a2", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
 #  endif
    a  = SQRT( a2 );
 
@@ -302,8 +302,8 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    }
    else {
 #     ifdef CHECK_UNPHYSICAL_IN_FLUID
-      Hydro_CheckUnphysical( NULL, NULL, &a2_min_Cs2, NULL, "a2_min_Cs2", __FILE__, __FUNCTION__, __LINE__, true );
-      Hydro_CheckUnphysical( NULL, NULL, &Cf2_min_a2, NULL, "Cf2_min_a2", __FILE__, __FUNCTION__, __LINE__, true );
+      Hydro_CheckUnphysical( UNPHY_MODE_SING, &a2_min_Cs2, "a2_min_Cs2", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
+      Hydro_CheckUnphysical( UNPHY_MODE_SING, &Cf2_min_a2, "Cf2_min_a2", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
 #     endif
 
       const real _Cf2_min_Cs2 = ONE/Cf2_min_Cs2;
