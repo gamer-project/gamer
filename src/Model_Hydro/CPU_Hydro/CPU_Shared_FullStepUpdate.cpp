@@ -186,7 +186,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 #       endif
 
 
-//      5-2. return all threads within a block
+//      5-2. return all threads within a block when any cell in the block is unphysical
         if ( *State == 1 )     return;
 
 
