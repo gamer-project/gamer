@@ -226,8 +226,8 @@ static real EoS_DensPres2CSqr_User_Template( const real Dens, const real Pres, c
 
 // check
 #  ifdef GAMER_DEBUG
-   Hydro_CheckUnphysical( UNPHY_MODE_SING        , &Cs2,  "output sound speed squared", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
-   Hydro_CheckUnphysical( UNPHY_MODE_PASSIVE_ONLY,  Passive,                      NULL, __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING        , &Cs2    , "output sound speed squared", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_PASSIVE_ONLY,  Passive,                         NULL, __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
 #  endif // GAMER_DEBUG
 
 
