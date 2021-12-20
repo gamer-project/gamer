@@ -5,7 +5,7 @@
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Interpolate
 // Description :  Perform spatial interpolation using different schemes with reducing min-mod coefficient
-//                when encountering unphysical cell in patch.
+//                when encountering unphysical cell in patch group.
 //
 // Note        :  1. Use the input parameter "IntScheme" to determine the adopted interpolation scheme
 //                2. Locally reduce the min-mod coefficient when unphysical results are found in the interpolated ghost zones
