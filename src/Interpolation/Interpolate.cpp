@@ -64,7 +64,7 @@
 //                IntWhere        : (INT_GHOST_ZONES/INT_NEW_PATCHES)  --> (interpolate ghost zone/allocate new patches)
 //                AdaptiveMinmod  : (INT_ADAPTIVE_ON/INT_ADAPTIVE_OFF) --> (reduce/fix min-mod coefficient)
 //-------------------------------------------------------------------------------------------------------
-void Interpolate( const real CData [], const int CSize[3], const int CStart[3], const int CRange[3],
+void Interpolate(       real CData [], const int CSize[3], const int CStart[3], const int CRange[3],
                         real FData [], const int FSize[3], const int FStart[3],
                   const int NComp, const IntScheme_t IntScheme, const bool UnwrapPhase,
                   const bool Monotonic[], const bool OppSign0thOrder,
@@ -129,6 +129,7 @@ void Interpolate( const real CData [], const int CSize[3], const int CStart[3], 
      Int_Scheme_FunPtr = Int_SelectScheme( IntScheme );
 
 
+//   For safety, we keep CData[] is a constant when AdaptiveMinmod == INT_ADAPTIVE_ON
      real *CDataCopy = new real [CSize3D*NComp];
 
      for (int v = 0 ; v < NComp ;v++)
