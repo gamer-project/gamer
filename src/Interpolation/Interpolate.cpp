@@ -147,77 +147,79 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
         do {
 
-//            1. interpolate ghost-zones or newly allocated patches with the original min-mod coefficient
-              if ( itr == -1 )
+           GotFailCell = false;
+
+//         1. interpolate ghost-zones or newly allocated patches with the original min-mod coefficient
+           if ( itr == -1 )
+           {
+              IntMonoCoeff = INT_MONO_COEFF;
+           }
+
+//         2. interpolate primitive variables with the original min-mod coefficient
+//            --> this step is only for interpolating ghost zone. i.e. IntWhere == INT_GHOST_ZONES
+           else if ( itr == 0 && IntWhere == INT_GHOST_ZONES )
+           {
+
+//            As vanLeer, MinMod-3D, and MinMod-1D do not involve min-mod coefficient, we break the loop immediately
+//            and do nothing when encountering unphysical results
+              if ( IntScheme == INT_VANLEER || IntScheme == INT_MINMOD3D || IntScheme == INT_MINMOD1D ) break;
+
+              for (int i=0; i<CSize3D; i++)
               {
-                 IntMonoCoeff = INT_MONO_COEFF;
+                for (int v = 0 ; v < NCOMP_TOTAL ;v++) Cons[v] = CDataCopy[CSize3D*v+i];
+
+                Hydro_Con2Pri( Cons, Prim, MIN_PRES,
+                               OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
+                               JEANS_MIN_PRES, JeansMinPres_Coeff,
+                               EoS.DensEint2Pres_FuncPtr, EoS.DensPres2Eint_FuncPtr,
+                               EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table, NULL );
+
+                for (int v = 0 ; v < NCOMP_TOTAL ;v++) CDataCopy[CSize3D*v+i] = Prim[v];
               }
 
-//            2. interpolate primitive variables with the original min-mod coefficient
-//               --> this step is only for interpolating ghost zone. i.e. IntWhere == INT_GHOST_ZONES
-              else if ( itr == 0 && IntWhere == INT_GHOST_ZONES )
+              FData_is_Prim = true;
+           }
+
+//         3. reduce the original min-mod coefficient
+           else
+           {
+//            we add 1 to itr so that min-mod coefficient can be reduced
+              if ( IntWhere == INT_NEW_PATCHES && itr == 0 ) itr++;
+
+              IntMonoCoeff -= (real)itr * ( (real)INT_MONO_COEFF - IntMonoCoeff_Min ) / (real) Max ;
+           }
+
+//         4. perform interpolation
+           for (int v=0; v<NComp; v++)
+              Int_Scheme_FunPtr( CDataCopy+v*CSize3D, CSize, CStart, CRange, FData+v*FSize3D,
+                                 FSize, FStart, 1, UnwrapPhase, Monotonic, IntMonoCoeff, OppSign0thOrder );
+
+
+//         5. check failed cell
+           for ( int i = 0 ;i < FSize3D; i++ )
+           {
+              for (int v = 0 ; v < NCOMP_TOTAL ;v++) Array[v] = FData[FSize3D*v+i];
+
+//            5a. when FData[] stores conserved variables
+              if ( !FData_is_Prim && Hydro_CheckUnphysical( UNPHY_MODE_CONS, Array, NULL, __FILE__, __FUNCTION__, __LINE__, UNPHY_SILENCE ) )
               {
-
-//               As vanLeer, MinMod-3D, and MinMod-1D do not involve min-mod coefficient, we break the loop immediately
-//               and do nothing when encountering unphysical results
-                 if ( IntScheme == INT_VANLEER || IntScheme == INT_MINMOD3D || IntScheme == INT_MINMOD1D ) break;
-
-                 for (int i=0; i<CSize3D; i++)
-                 {
-                   for (int v = 0 ; v < NCOMP_TOTAL ;v++) Cons[v] = CDataCopy[CSize3D*v+i];
-
-                   Hydro_Con2Pri( Cons, Prim, MIN_PRES,
-                                  OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
-                                  JEANS_MIN_PRES, JeansMinPres_Coeff,
-                                  EoS.DensEint2Pres_FuncPtr, EoS.DensPres2Eint_FuncPtr,
-                                  EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table, NULL );
-
-                   for (int v = 0 ; v < NCOMP_TOTAL ;v++) CDataCopy[CSize3D*v+i] = Prim[v];
-                 }
-
-                 FData_is_Prim = true;
+                GotFailCell = true;
+                break;
               }
 
-//            3. reduce the original min-mod coefficient
-              else
+//            5b. when FData[] stores primitive variables
+              if (  FData_is_Prim && Hydro_CheckUnphysical( UNPHY_MODE_PRIM, Array, NULL, __FILE__, __FUNCTION__, __LINE__, UNPHY_SILENCE ) )
               {
-//               we add 1 to itr so that min-mod coefficient can be reduced
-                 if ( IntWhere == INT_NEW_PATCHES && itr == 0 ) itr++;
-
-                 IntMonoCoeff -= (real)itr * ( (real)INT_MONO_COEFF - IntMonoCoeff_Min ) / (real) Max ;
+                GotFailCell = true;
+                break;
               }
-
-//            4. perform interpolation
-              for (int v=0; v<NComp; v++)
-                 Int_Scheme_FunPtr( CDataCopy+v*CSize3D, CSize, CStart, CRange, FData+v*FSize3D,
-                                    FSize, FStart, 1, UnwrapPhase, Monotonic, IntMonoCoeff, OppSign0thOrder );
+           }
 
 
-//            5. check failed cell
-              for ( int i = 0 ;i < FSize3D; i++ )
-              {
-                 for (int v = 0 ; v < NCOMP_TOTAL ;v++) Array[v] = FData[FSize3D*v+i];
+//         6. counter increment
+           itr++;
 
-//               5a. when FData[] stores conserved variables
-                 if ( !FData_is_Prim && Hydro_CheckUnphysical( UNPHY_MODE_CONS, Array, NULL, __FILE__, __FUNCTION__, __LINE__, UNPHY_SILENCE ) )
-                 {
-                   GotFailCell = true;
-                   break;
-                 }
-
-//               5b. when FData[] stores primitive variables
-                 if (  FData_is_Prim && Hydro_CheckUnphysical( UNPHY_MODE_PRIM, Array, NULL, __FILE__, __FUNCTION__, __LINE__, UNPHY_SILENCE ) )
-                 {
-                   GotFailCell = true;
-                   break;
-                 }
-              }
-
-
-//            6. counter increment
-              itr++;
-
-           } while ( GotFailCell && itr <= Max );
+        } while ( GotFailCell && itr <= Max );
 
      }
      else
