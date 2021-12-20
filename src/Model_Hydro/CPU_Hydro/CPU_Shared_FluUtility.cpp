@@ -576,6 +576,8 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
                                           SingleFieldName, Fields[0], File, Line, Function ):
                                  printf( "ERROR: invalid (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                                           Fields[0], File, Line, Function );
+         return FailCell;
+
       break;
 
 
@@ -638,6 +640,8 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
 #           endif
          }
 
+         return FailCell;
+
       break;
 
 
@@ -680,6 +684,8 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
 #           endif
          }
 
+         return FailCell;
+
       break;
 
 
@@ -708,6 +714,8 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
                printf("Passive[%d]=%14.7e\n", v, Fields[v] );
          }
 
+         return FailCell;
+
       break;
 
 
@@ -718,7 +726,7 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
    }
 
 
-
+   return FailCell;
 }
 
 

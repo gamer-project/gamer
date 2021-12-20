@@ -128,8 +128,11 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 //   select an interpolation scheme and assign it to Int_Scheme_FunPtr()
      Int_Scheme_FunPtr = Int_SelectScheme( IntScheme );
 
+     if ( !Int_Scheme_FunPtr ) Aux_Error( ERROR_INFO, "Int_Scheme_FunPtr == NULL!!\n" );
 
-//   For safety, we keep CData[] is a constant when AdaptiveMinmod == INT_ADAPTIVE_ON
+
+//   For data safety purpose, we keep CData[] is a constant when AdaptiveMinmod == INT_ADAPTIVE_ON
+//   --> we cannot apply the const modifier to CData[] as ELBDM can modify CData[] when UnwrapPhase is on
      real *CDataCopy = new real [CSize3D*NComp];
 
      for (int v = 0 ; v < NComp ;v++)

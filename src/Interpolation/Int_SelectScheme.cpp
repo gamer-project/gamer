@@ -82,4 +82,6 @@ Int_Scheme_t Int_SelectScheme( const IntScheme_t IntScheme )
    } // switch ( IntScheme )
 
 
+   return NULL;
+
 } // FUNCTION : Interpolate
