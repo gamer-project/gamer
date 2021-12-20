@@ -128,7 +128,10 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 //   select an interpolation scheme and assign it to Int_Scheme_FunPtr()
      Int_Scheme_FunPtr = Int_SelectScheme( IntScheme );
 
+
+#    ifdef GAMER_DEBUG
      if ( !Int_Scheme_FunPtr ) Aux_Error( ERROR_INFO, "Int_Scheme_FunPtr == NULL!!\n" );
+#    endif
 
 
 //   For data safety purpose, we keep data in CData[] as constant when AdaptiveMinmod == INT_ADAPTIVE_ON
