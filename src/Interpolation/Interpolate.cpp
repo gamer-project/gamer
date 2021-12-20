@@ -134,7 +134,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 #    endif
 
 
-//   For data safety purpose, we keep data in CData[] as constant when AdaptiveMinmod == INT_ADAPTIVE_ON
+//   for data safety purpose, we keep the data in CData[] as constant when AdaptiveMinmod == INT_ADAPTIVE_ON
 //   --> we cannot apply the const modifier to CData[] as ELBDM can modify CData[] when UnwrapPhase is on
      real *CDataCopy = new real [CSize3D*NComp];
 
@@ -246,6 +246,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
 
      delete [] CDataCopy;
+
 
 //   check unphysical results
 #    ifdef CHECK_UNPHYSICAL_IN_FLUID
