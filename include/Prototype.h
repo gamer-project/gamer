@@ -211,15 +211,13 @@ void Init_ByRestart_HDF5( const char *FileName );
 
 
 // Interpolation
-void InterpolateWithAdaptiveMinmod( real CData [], const int CSize[3], const int CStart[3], const int CRange[3],
-                                    real FData [], const int FSize[3], const int FStart[3],
-                                    const int NComp, const int TVar, const IntScheme_t IntScheme, const bool UnwrapPhase,
-                                    const bool Monotonic[], const bool OppSign0thOrder, const bool IntGhostZone );
+void Interpolate( const real CData [], const int CSize[3], const int CStart[3], const int CRange[3],
+                        real FData [], const int FSize[3], const int FStart[3],
+                  const int NComp, const IntScheme_t IntScheme, const bool UnwrapPhase,
+                  const bool Monotonic[], const bool OppSign0thOrder,
+                  const Interpolate_t IntWhere, const Interpolate_t AdaptiveMinmod );
 void Int_Table( const IntScheme_t IntScheme, int &NSide, int &NGhost );
-void Interpolate( real CData [], const int CSize[3], const int CStart[3], const int CRange[3],
-                  real FData [], const int FSize[3], const int FStart[3],
-                  const int NComp, const IntScheme_t IntScheme, const bool UnwrapPhase, const bool Monotonic[],
-                  const real IntMonoCoeffconst, const bool OppSign0thOrder );
+Int_Scheme_t Int_SelectScheme( const IntScheme_t IntScheme );
 
 
 // Miscellaneous
