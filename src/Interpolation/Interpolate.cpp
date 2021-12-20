@@ -131,13 +131,13 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
      if ( !Int_Scheme_FunPtr ) Aux_Error( ERROR_INFO, "Int_Scheme_FunPtr == NULL!!\n" );
 
 
-//   For data safety purpose, we keep CData[] is a constant when AdaptiveMinmod == INT_ADAPTIVE_ON
+//   For data safety purpose, we keep data in CData[] as constant when AdaptiveMinmod == INT_ADAPTIVE_ON
 //   --> we cannot apply the const modifier to CData[] as ELBDM can modify CData[] when UnwrapPhase is on
      real *CDataCopy = new real [CSize3D*NComp];
 
      for (int v = 0 ; v < NComp ;v++)
         for (int i=0; i<CSize3D; i++)
-           CDataCopy[CSize3D*v+i] = CData[v];
+           CDataCopy[CSize3D*v+i] = CData[CSize3D*v+i];
 
      if ( AdaptiveMinmod == INT_ADAPTIVE_ON && NComp == NCOMP_TOTAL )
      {
@@ -161,7 +161,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
                  for (int i=0; i<CSize3D; i++)
                  {
-                   for (int v = 0 ; v < NCOMP_TOTAL ;v++) Cons[v] = CData[CSize3D*v+i];
+                   for (int v = 0 ; v < NCOMP_TOTAL ;v++) Cons[v] = CDataCopy[CSize3D*v+i];
 
                    Hydro_Con2Pri( Cons, Prim, MIN_PRES,
                                   OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
@@ -169,7 +169,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
                                   EoS.DensEint2Pres_FuncPtr, EoS.DensPres2Eint_FuncPtr,
                                   EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table, NULL );
 
-                   for (int v = 0 ; v < NCOMP_TOTAL ;v++) CData[CSize3D*v+i] = Prim[v];
+                   for (int v = 0 ; v < NCOMP_TOTAL ;v++) CDataCopy[CSize3D*v+i] = Prim[v];
                  }
 
                  FData_is_Prim = true;
@@ -186,7 +186,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
 //            4. perform interpolation
               for (int v=0; v<NComp; v++)
-                 Int_Scheme_FunPtr( CData+v*CSize3D, CSize, CStart, CRange, FData+v*FSize3D,
+                 Int_Scheme_FunPtr( CDataCopy+v*CSize3D, CSize, CStart, CRange, FData+v*FSize3D,
                                     FSize, FStart, 1, UnwrapPhase, Monotonic, IntMonoCoeff, OppSign0thOrder );
 
 
