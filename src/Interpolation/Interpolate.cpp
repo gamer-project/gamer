@@ -154,7 +154,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
               }
 
 //            2. interpolate primitive variables with the original min-mod coefficient
-//               --> this step is only for interpolating ghost zone. i.e. IntWhere == true
+//               --> this step is only for interpolating ghost zone. i.e. IntWhere == INT_GHOST_ZONES
               else if ( itr == 0 && IntWhere == INT_GHOST_ZONES )
               {
 
