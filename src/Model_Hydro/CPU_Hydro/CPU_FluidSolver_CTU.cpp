@@ -43,7 +43,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                            const real dt, const real dh, const real MinDens, const real MinEint,
                            const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
-                           const EoS_t *EoS, char *State );
+                           const EoS_t *EoS, char *FullStepFailure );
 #ifdef MHD
 void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                           const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],

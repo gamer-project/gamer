@@ -1626,7 +1626,7 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
 #  if   ( MODEL == HYDRO )
    LoadField( "Flu_BlockSize_x",      &RS.Flu_BlockSize_x,      SID, TID, NonFatal, &RT.Flu_BlockSize_x,       1, NonFatal );
    LoadField( "Flu_BlockSize_y",      &RS.Flu_BlockSize_y,      SID, TID, NonFatal, &RT.Flu_BlockSize_y,       1, NonFatal );
-   LoadField( "CheckNegativeInFluid", &RS.CheckNegativeInFluid, SID, TID, NonFatal, &RT.CheckNegativeInFluid,  1, NonFatal );
+   LoadField( "CheckUnphyInFluid",    &RS.CheckUnphyInFluid,    SID, TID, NonFatal, &RT.CheckUnphyInFluid,     1, NonFatal );
    LoadField( "CharReconstruction",   &RS.CharReconstruction,   SID, TID, NonFatal, &RT.CharReconstruction,    1, NonFatal );
    LoadField( "LR_Eint",              &RS.LR_Eint,              SID, TID, NonFatal, &RT.LR_Eint,               1, NonFatal );
    LoadField( "CheckIntermediate",    &RS.CheckIntermediate,    SID, TID, NonFatal, &RT.CheckIntermediate,     1, NonFatal );

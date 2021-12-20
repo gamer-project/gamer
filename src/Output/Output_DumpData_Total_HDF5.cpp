@@ -2122,9 +2122,9 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.Flu_BlockSize_x      = FLU_BLOCK_SIZE_X;
    SymConst.Flu_BlockSize_y      = FLU_BLOCK_SIZE_Y;
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   SymConst.CheckNegativeInFluid = 1;
+   SymConst.CheckUnphyInFluid = 1;
 #  else
-   SymConst.CheckNegativeInFluid = 0;
+   SymConst.CheckUnphyInFluid = 0;
 #  endif
 #  ifdef CHAR_RECONSTRUCTION
    SymConst.CharReconstruction   = 1;
@@ -2934,7 +2934,7 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 #  if   ( MODEL == HYDRO )
    H5Tinsert( H5_TypeID, "Flu_BlockSize_x",      HOFFSET(SymConst_t,Flu_BlockSize_x     ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Flu_BlockSize_y",      HOFFSET(SymConst_t,Flu_BlockSize_y     ), H5T_NATIVE_INT    );
-   H5Tinsert( H5_TypeID, "CheckNegativeInFluid", HOFFSET(SymConst_t,CheckNegativeInFluid), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "CheckUnphyInFluid",    HOFFSET(SymConst_t,CheckUnphyInFluid   ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "CharReconstruction",   HOFFSET(SymConst_t,CharReconstruction  ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "LR_Eint",              HOFFSET(SymConst_t,LR_Eint             ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "CheckIntermediate",    HOFFSET(SymConst_t,CheckIntermediate   ), H5T_NATIVE_INT    );

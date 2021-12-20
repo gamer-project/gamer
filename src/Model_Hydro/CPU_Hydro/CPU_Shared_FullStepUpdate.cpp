@@ -53,14 +53,14 @@
 //                                   --> Should be set to the global variable "PassiveNorm_VarIdx"
 //                EoS              : EoS object
 //                                   --> Only for obtaining Gamma used by the dual-energy formalism
-//                State            : (1/0) --> (Fail to update fluid patch group/otherwise)
+//                FullStepFailure  : (1/0) --> (Fail to update fluid patch group/otherwise)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                            const real dt, const real dh, const real MinDens, const real MinEint,
                            const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
-                           const EoS_t *EoS, char *State )
+                           const EoS_t *EoS, int *FullStepFailure )
 {
 
    const int  didx_flux[3] = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };
@@ -167,15 +167,15 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 
 
 //    5. check unphysical cells within a patch
-      if ( State != NULL )
+      if ( FullStepFailure != NULL )
       {
 
         if(Hydro_CheckUnphysical( UNPHY_MODE_CONS, Output_1Cell, NULL, __FILE__, __FUNCTION__, __LINE__, UNPHY_SILENCE ))
         {
 #         ifdef __CUDACC__
-          atomicOr ( (int*)State, 1 );
+          atomicOr ( FullStepFailure, 1 );
 #         else
-          *State = 1;
+          *FullStepFailure = 1;
 #         endif
         }
 
@@ -187,7 +187,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 
 
 //      5-2. return all threads within a block when any cell in the block is unphysical
-        if ( *State == 1 )     return;
+        if ( *FullStepFailure == 1 )     return;
 
 
 //      5-3. check the negative density and energy again

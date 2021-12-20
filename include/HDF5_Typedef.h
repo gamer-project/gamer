@@ -248,7 +248,7 @@ struct SymConst_t
 #  if   ( MODEL == HYDRO )
    int    Flu_BlockSize_x;
    int    Flu_BlockSize_y;
-   int    CheckNegativeInFluid;
+   int    CheckUnphyInFluid;
    int    CharReconstruction;
    int    LR_Eint;
    int    CheckIntermediate;
