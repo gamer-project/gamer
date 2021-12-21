@@ -147,6 +147,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
         do {
 
+//         0. set GotFailCell to false after the second itration
            GotFailCell = false;
 
 //         1. interpolate ghost-zones or newly allocated patches with the original min-mod coefficient
@@ -167,12 +168,11 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
               for (int i=0; i<CSize3D; i++)
               {
                 for (int v = 0 ; v < NCOMP_TOTAL ;v++) Cons[v] = CDataCopy[CSize3D*v+i];
-
                 Hydro_Con2Pri( Cons, Prim, MIN_PRES,
                                OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
                                JEANS_MIN_PRES, JeansMinPres_Coeff,
-                               EoS.DensEint2Pres_FuncPtr, EoS.DensPres2Eint_FuncPtr,
-                               EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table, NULL );
+                               EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
+                               EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
                 for (int v = 0 ; v < NCOMP_TOTAL ;v++) CDataCopy[CSize3D*v+i] = Prim[v];
               }
@@ -239,8 +239,8 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
             Hydro_Pri2Con( Prim, Cons,
                            OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
-                           EoS.DensPres2Eint_FuncPtr,
-                           EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table, NULL );
+                           EoS_DensPres2Eint_CPUPtr,
+                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
             for (int v = 0 ; v < NCOMP_TOTAL ;v++) FData[FSize3D*v+i] = Cons[v];
          }
