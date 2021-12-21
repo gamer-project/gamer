@@ -411,6 +411,7 @@ void CPU_FluidSolver_MHM(
 
 
          do {
+
             AdaptiveMinModCoeff = ( MaxIteration - Iteration ) * ( MinMod_Coeff / (real)MaxIteration );
 
 
@@ -426,6 +427,7 @@ void CPU_FluidSolver_MHM(
 #        elif ( FLU_SCHEME == MHM )
 
          do {
+
             AdaptiveMinModCoeff = ( MaxIteration - Iteration ) * ( MinMod_Coeff / (real)MaxIteration );
 
 //          evaluate the face-centered values by data reconstruction
