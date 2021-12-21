@@ -225,7 +225,7 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Ghos
       {
          real LorentzFactor, Prim[NCOMP_FLUID];
 
-         Hydro_Con2Pri( BVal, Prim, (real)NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
+         Hydro_Con2Pri( BVal, Prim, (real)NULL_REAL, true, true, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
                         (real)NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
                         EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
                         EoS_AuxArray_Int, h_EoS_Table, NULL, &LorentzFactor );

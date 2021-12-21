@@ -9,6 +9,10 @@ static void BC( real Array[], const int ArraySize[], real fluid[], const int NVa
 		const int GhostSize, const int idx[], const double pos[], const double Time,
 		const int lv, const int TFluVarIdxList[], double AuxArray[] );
 
+static FieldIdx_t JetFieldIdx = 5;
+static FieldIdx_t ICMFieldIdx = 6;
+static FieldIdx_t LobeFieldIdx = 7;
+
 // problem-specific global variables
 // =======================================================================================
 
@@ -258,10 +262,16 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    PriReal[3] = 0.0;
    PriReal[4] = (real)Amb_Pressure;
 
-   Hydro_Pri2Con( PriReal, fluid, NULL_BOOL, NULL_INT, NULL, EoS_DensPres2Eint_CPUPtr,
-                  EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                  EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+   Hydro_Pri2Con( PriReal, fluid, false, false, false, PassiveNorm_NVar, PassiveNorm_VarIdx, EoS_DensPres2Eint_CPUPtr,
+		  EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+		  EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
+   double lobe_d = std::max( Lobe_Density + d0*exp(-xx/Jump_Width), 0.0 );
+   double ICM_d = std::max( d - lobe_d, 0.0 ); 
+
+   fluid[JetFieldIdx] = 0.0;
+   fluid[ICMFieldIdx] = (real)ICM_d;
+   fluid[LobeFieldIdx] = (real)lobe_d;
 
 } // FUNCTION : SetGridIC
 
@@ -310,17 +320,23 @@ void BC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu,
     {
       double u_jet = Jet_Velocity*(Jet_VelSlope*x+Jet_VelCenter);
       double phi = Jet_PrecessOmega*Time;
-      
+      double LntzFact = sqrt( 1.0 + u_jet*u_jet );
+
       // set fluid variable inside source
       PriReal[0] = (real)Jet_Density;
       PriReal[1] = 0.0;
       PriReal[2] = (real)u_jet;
       PriReal[3] = 0.0;
       PriReal[4] = (real)Amb_Pressure;
-            
-      Hydro_Pri2Con( PriReal, BVal, NULL_BOOL, NULL_INT, NULL, EoS_DensPres2Eint_CPUPtr,
+
+      Hydro_Pri2Con( PriReal, BVal, false, false, false, PassiveNorm_NVar, PassiveNorm_VarIdx, EoS_DensPres2Eint_CPUPtr,
 		     EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
 		     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+            
+      BVal[JetFieldIdx] = (real)(LntzFact*Jet_Density);
+      BVal[ICMFieldIdx] = 0.0;
+      BVal[LobeFieldIdx] = 0.0;
+
     }
     else 
     { 
@@ -332,6 +348,18 @@ void BC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu,
 
 } // FUNCTION : BC
 
+
+void AddNewField_JetICMWall()
+{
+
+  if ( JetFieldIdx == 5 )
+    JetFieldIdx = AddField( "JetField", NORMALIZE_YES );
+  if ( ICMFieldIdx == 6 )
+    ICMFieldIdx = AddField( "ICMField", NORMALIZE_YES );
+  if ( LobeFieldIdx == 7 )
+    LobeFieldIdx = AddField( "LobeField", NORMALIZE_YES );
+
+}
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_TestProb_Hydro_JetICMWall
@@ -359,6 +387,7 @@ void Init_TestProb_Hydro_JetICMWall()
 
 // get enclosed mass
    Init_Function_User_Ptr   = SetGridIC;
+   Init_Field_User_Ptr      = AddNewField_JetICMWall;
    Flag_User_Ptr            = NULL;
    Flag_Region_Ptr          = NULL;
    Mis_GetTimeStep_User_Ptr = NULL;
