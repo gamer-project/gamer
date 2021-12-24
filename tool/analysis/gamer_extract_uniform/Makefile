@@ -10,7 +10,7 @@ EXECUTABLE  = GAMER_ExtractUniform
 # siimulation options
 #######################################################################################################
 # model: HYDRO/MHD/ELBDM
-SIMU_OPTION += -DMODEL=HYDRO
+SIMU_OPTION += -DMODEL=ELBDM
 
 # double precision
 #SIMU_OPTION += -DFLOAT8
@@ -33,7 +33,7 @@ SIMU_OPTION += -DSUPPORT_HDF5
 #######################################################################################################
 NLEVEL        = 10        # level : 0 ~ NLEVEL-1
 NCOMP_PASSIVE = 0         # number of passive scalars
-MAX_PATCH     = 1000000   # the maximum number of patches in each level
+MAX_PATCH     = 20000000   # the maximum number of patches in each level
 
 NLEVEL        := $(strip $(NLEVEL))
 NCOMP_PASSIVE := $(strip $(NCOMP_PASSIVE))

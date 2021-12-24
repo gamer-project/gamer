@@ -1,0 +1,16 @@
+Issue related to CAMB spectrum:
+    CAMB evolves the spectrum of each k component independently, so all compoenents might not grow with an universal growth factor. We observed that only those k modes in the intermedium regime scales according to the growth factor of linear-theorem (d_plus), while for very high k and very low k, the linear theorem fails. The high k might be due to the non-linear effect, while the low k mode we haven't have a explanation yet.
+    MUSIC evolves the spectrum of each k component with an universal growth factor, i.e. the ratio of each k mode at different red shift is a constant irrelevant of k. The equation follows the linear-theorem, and a checking code can be found in /work1/koarakawaii/music/bin/GENERATE_UM_IC_with_PHASE/NORMALIZATION_TEST/FIND_GROWTH_FACTOR .
+    The discrepancy results in the fact that \sigma8 at z=0 given by CAMB cannot help MUSIC construct a power sepctrum (input_powerspec.txt) cosistent with that made by CAMB itself (say, planck2018_matterpower.dat) at the assigned red-shift, if that \sigma8 at z=0 is specified in ics_example.conf. The reason is that MUSIC will integrate over all the spectrum, then determine the normalization factor using \sigma8. However, the CAMB spectrum is k-dependent, so the \sigma8 computed by CAMB is based on a k-dependent distribution, and the result cannot be the same as integrating over a k-independent spectrum. Thus, MUSIC scales the power spectrum with a wrong normalization, giving a power spectrum different from that of MUSIC by an over-all factor. This discrepancy grows as red-shift becomes larger.
+	If we want to produce the identical power spectrum between CAMB and MUSIC, one need to "deceive" MUSIC by z=0, and giving \sigma8 at the red-shift one wants. Nonetheless, to do the simulation, we have two ways:
+(1) Create PS by CAMB specifying the red-shift you want, then feed the PS to MUSIC with the corresponding \sigma8 at z=0 given by CAMB. In this scheme the aforementioned problem will arise, but now we still apply this. (2020,10,16) 
+(2) Since we want to reconstruct the PS correctly at z=0, then one can construct the PS by CAMB at z=0, then specifying the \sigma8 at z=0 and the redshift one wants in ics_example.conf, so MUSIC will evlove it back to that red-shift. This is not applied yet. (2020,10,16)
+	
+CAMB python manual:
+	(1) https://camb.readthedocs.io/_/downloads/en/stable/pdf/
+CAMB k-dependent spectrum:
+	(1) https://cosmocoffee.info/viewtopic.php?p=5385
+	(2) https://cosmocoffee.info/viewtopic.php?t=1933
+    
+Issue related to MUSIC baryon:
+	We haven't tested the power spectrum and density fluctuation given by baryon "yes" thoroughly. Need to do more tests and look at the code what MUSIC does when baryon "yes" on. Now baryon "no" is used.
