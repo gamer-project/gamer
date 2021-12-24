@@ -503,7 +503,7 @@ void LoadData_HDF5( const char *FileName )
    if ( MyRank == 0 )
    {
       Aux_Message( stdout, "\n" );
-      for (int lv=0; lv<NLEVEL; lv++)     Aux_Message( stdout, "      Lv %2d: %10d patches loaded)\n", lv, NLoadPatch[lv] );
+      for (int lv=0; lv<NLEVEL; lv++)     Aux_Message( stdout, "      Lv %2d: %10d patches loaded\n", lv, NLoadPatch[lv] );
       Aux_Message( stdout, "\n" );
 
 #     ifdef DEBUG_HDF5

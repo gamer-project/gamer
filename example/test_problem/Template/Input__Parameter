@@ -35,13 +35,14 @@ TESTPROB_ID                   0           # test problem ID [0]
                                           #    7: HYDRO spherical collapse (+GRAVITY & COMOVING)
                                           #    8: HYDRO Kelvin Helmholtz instability
                                           #    9: HYDRO Riemann problems [+MHD]
-                                          #   10: HYDRO colliding jets
+                                          #   10: HYDRO jet(s)
                                           #   11: HYDRO Plummer cloud(s) (+GRAVITY & PARTICLE)
                                           #   12: HYDRO gravity (+GRAVITY)
                                           #   13: HYDRO MHD Arnold-Beltrami-Childress (ABC) flow (+MHD)
                                           #   14: HYDRO MHD Orszag-Tang vortex (+MHD)
                                           #   15: HYDRO MHD linear wave (+MHD)
                                           #   16: HYDRO Jeans instability (+GRAVITY) [+MHD]
+                                          #   17: HYDRO particle in equilibrium (+GRAVITY & PARTICLE)
                                           # 1000: ELBDM external potential (+GRAVITY)
 
 
@@ -187,7 +188,7 @@ MINMOD_COEFF                  1.5         # coefficient of the generalized MinMo
 OPT__LR_LIMITER              -1           # slope limiter of data reconstruction in the MHM/MHM_RP/CTU schemes:
                                           # (-1=auto, 0=none, 1=vanLeer, 2=generalized MinMod, 3=vanAlbada, 4=vanLeer+generalized MinMod, 6=central) [-1]
 OPT__1ST_FLUX_CORR           -1           # correct unphysical results (defined by MIN_DENS/PRES) by the 1st-order fluxes:
-                                          # (<0=auto, 0=off, 1=3D, 2=3D+1D) [-1] ##MHM/MHM_RP/CTU ONLY; NOT SUPPORTED IN MHD##
+                                          # (<0=auto, 0=off, 1=3D, 2=3D+1D) [-1] ##MHM/MHM_RP/CTU ONLY##
 OPT__1ST_FLUX_CORR_SCHEME    -1           # Riemann solver for OPT__1ST_FLUX_CORR (-1=auto, 0=none, 1=Roe, 2=HLLC, 3=HLLE, 4=HLLD) [-1]
 DUAL_ENERGY_SWITCH            2.0e-2      # apply dual-energy if E_int/E_kin < DUAL_ENERGY_SWITCH [2.0e-2] ##DUAL_ENERGY ONLY##
 
@@ -212,6 +213,7 @@ OPT__NORMALIZE_PASSIVE        1           # ensure "sum(passive_scalar_density) 
 OPT__INT_FRAC_PASSIVE_LR      1           # convert specified passive scalars to mass fraction during data reconstruction [1]
 OPT__OVERLAP_MPI              0           # overlap MPI communication with CPU/GPU computations [0] ##NOT SUPPORTED YET##
 OPT__RESET_FLUID              0           # reset fluid variables after each update -> edit "Flu_ResetByUser.cpp" [0]
+OPT__FREEZE_FLUID             0           # do not evolve fluid at all [0]
 OPT__CHECK_PRES_AFTER_FLU    -1           # check unphysical pressure at the end of the fluid solver (<0=auto) [-1]
 OPT__LAST_RESORT_FLOOR        1           # apply floor values as the last resort when the fluid solver fails [1] ##HYDRO and MHD ONLY##
 MIN_DENS                      0.0         # minimum mass density     (must >= 0.0) [0.0] ##HYDRO, MHD, and ELBDM ONLY##

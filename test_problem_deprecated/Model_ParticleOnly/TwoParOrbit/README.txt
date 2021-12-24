@@ -6,7 +6,7 @@
 Procedure to run the test problem:
 -------------------------------------------------------------------------------
 1. Execute the script "Copy_ExtPot/Acc.sh" to copy files to their corresponding
-   directories 
+   directories
    --> ExtPot: test external potential
        ExtAcc: test external acceleration
 

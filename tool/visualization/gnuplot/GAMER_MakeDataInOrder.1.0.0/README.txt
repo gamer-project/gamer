@@ -16,12 +16,12 @@ Procedure :
 
 Note :
 ============================================================================
-1. Note that if one can use the script MultiFiles__XXX.sh to work on multiple 
-   files automatically. Please specify "InputName StartID EndID [DeltaID]". 
+1. Note that if one can use the script MultiFiles__XXX.sh to work on multiple
+   files automatically. Please specify "InputName StartID EndID [DeltaID]".
    Note that the data ID suffix _XXXXXX should NOT be included in InputName
    if StartID and EndID are provided.
 
-   For example, to work on three input files named 
+   For example, to work on three input files named
    "Input_000001, Input_000002, Input_000003", one should use
 
       sh script MultiFiles__XXX.sh Input 1 3

@@ -1,5 +1,5 @@
 
-GAMER_DataCompare : compare two binary outputs of GAMER 
+GAMER_DataCompare : compare two binary outputs of GAMER
 
 ==================================================================================================================
 
@@ -38,7 +38,7 @@ Version 2.0    01/21/2010
 
 Version 1.2    10/03/2009
 -------------------------
-1. add the option "-c" 
+1. add the option "-c"
    --> compare patches with the same corner coordinates
 2. verify that all patches without son have been checked
    --> add the data member "check"
@@ -47,7 +47,7 @@ Version 1.2    10/03/2009
 
 Version 1.1    09/07/2009
 -------------------------
-1. only compare the data stored in the patches without son 
+1. only compare the data stored in the patches without son
 2. only compare the potential data if both two input files have potential data
 
 
@@ -58,9 +58,9 @@ Version 1.0    04/22/2009
 
 
 
-Demo : 
+Demo :
 ------
-./GAMER_DataCompare -i InputFile1 -j InputFile2 -o OutputFile -e TolerantError 
+./GAMER_DataCompare -i InputFile1 -j InputFile2 -o OutputFile -e TolerantError
 
 ./GAMER_DataCompare -i InputFile1 -j InputFile2 -o OutputFile -e TolerantError -c
 
