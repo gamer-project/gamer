@@ -38,8 +38,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                Init                    : Initialization methods (1/2/3 --> call function/restart/load from file)
 //                ParICFormat             : Data format of the particle initialization file (1=[att][id], 2=[id][att])
 //                ParICMass               : Assign this mass to all particles for Init=3
-//                Interp                  : Mass/acceleration interpolation scheme (NGP,CIC,TSC)
-//                InterpTracer            : Velocity interpolation scheme (NGP,CIC,TSC)
+//                Interp                  : Mass/acceleration/velocity interpolation scheme (NGP,CIC,TSC)
 //                Integ                   : Integration scheme (PAR_INTEG_EULER, PAR_INTEG_KDK)
 //                IntegTracer             : Integration scheme for tracers (PAR_INTEG_EULER, PAR_INTEG_RK2)
 //                ImproveAcc              : Improve force accuracy around the patch boundaries
