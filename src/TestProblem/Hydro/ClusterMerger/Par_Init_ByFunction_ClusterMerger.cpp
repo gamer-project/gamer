@@ -27,8 +27,6 @@ extern double  Merger_Coll_VelY2;
 extern double  Merger_Coll_VelX3;
 extern double  Merger_Coll_VelY3;
 
-extern FieldIdx_t ParTypeIdx;
-
 #ifdef MASSIVE_PARTICLES
 long Read_Particle_Number_ClusterMerger(std::string filename);
 void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
@@ -240,7 +238,9 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
          ParTime[pp] = Time[0];
 
          // set the particle type
-         ParType[pp] = real( ptype[p] );
+         // the offset of 1 comes from the fact that DM = 0 and star = 1 in
+         // cluster_generator
+         ParType[pp] = real( ptype[p] + 1);
 
       }
 
