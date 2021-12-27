@@ -137,7 +137,7 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
             if ( dt <= (real)0.0 )  continue;
 
             for (int d=0; d<3; d++)
-               InterpParPos[d][ParID] = ParPos[d][ParID]+dt*ParVel[d][ParID];
+               InterpParPos[d][p] = ParPos[d][ParID]+dt*ParVel[d][ParID];
 
          } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
 
@@ -171,8 +171,8 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
             {
 
                for (int d=0; d<3; d++) {
-                  ParPos[d][ParID] = InterpParPos[d][ParID];
-                  ParVel[d][ParID] = Vel_Temp[d][ParID];
+                  ParPos[d][ParID] = InterpParPos[d][p];
+                  ParVel[d][ParID] = Vel_Temp[d][p];
                }
                ParTime[ParID] = TimeNew;
 
@@ -183,7 +183,8 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
             {
 
                for (int d=0; d<3; d++)
-                  ParPos[d][ParID] = InterpParPos[d] + dt_half*(Vel_Temp[d]-ParVel[d][ParID]);
+                  InterpParPos[d][p] = ParPos[d][ParID] +
+                     dt_half*(Vel_Temp[d][p]+ParVel[d][ParID]);
 
             } // amr->Par->IntegTracer
 
@@ -213,10 +214,11 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
 //             determine time-step and skip particles with zero or negative time-step
                dt      = (real)TimeNew - ParTime[ParID];
                if ( dt <= (real)0.0 )  continue;
-               dt_half = (real)0.5*dt;
 
-               for (int d=0; d<3; d++)
-                  ParVel[d][ParID] = Vel_Temp[d][ParID];
+               for (int d=0; d<3; d++) {
+                  ParPos[d][ParID] = InterpParPos[d][p];
+                  ParVel[d][ParID] = Vel_Temp[d][p];
+               }
                ParTime[ParID] = TimeNew;
 
             } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)`
