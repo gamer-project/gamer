@@ -274,8 +274,10 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif // #ifdef GARVITY
 
 
+#ifdef PARTICLE
+
 // initialize particle acceleration
-#  if ( defined PARTICLE  &&  defined STORE_PAR_ACC  &&  GRAVITY )
+#  if ( defined STORE_PAR_ACC  &&  GRAVITY )
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Calculating particle acceleration" );
 
    const bool StoreAcc_Yes    = true;
@@ -286,5 +288,15 @@ void Init_GAMER( int *argc, char ***argv )
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Calculating particle acceleration" );
 #  endif
+
+// initialize tracer particles
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Initializing tracer particles" );
+
+   for (int lv=0; lv<NLEVEL; lv++)
+   Par_UpdateTracerParticle( lv, NULL_REAL, NULL_REAL, true );
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Initializing tracer particles" );
+
+#endif // #ifdef PARTICLE
 
 } // FUNCTION : Init_GAMER

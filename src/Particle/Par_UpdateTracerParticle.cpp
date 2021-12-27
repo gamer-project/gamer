@@ -34,7 +34,8 @@ void Par_MapMesh2Particles ( const int lv, const double EdgeL[3], const double E
 //                TimeNew      : Target physical time to reach (also used by PAR_UPSTEP_ACC_ONLY)
 //                TimeOld      : Physical time before update
 //-------------------------------------------------------------------------------------------------------
-void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double TimeOld )
+void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double TimeOld,
+                               bool mapOnly )
 {
 
    const ParInterp_t IntScheme    = amr->Par->Interp;
@@ -132,12 +133,14 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
             if ( ParType[ParID] != PTYPE_TRACER )
                continue;
 
-//          determine time-step and skip particles with zero or negative time-step
-            dt      = (real)TimeNew - ParTime[ParID];
-            if ( dt <= (real)0.0 )  continue;
+//          determine time-step
+            dt = (real)TimeNew - ParTime[ParID];
 
             for (int d=0; d<3; d++)
-               InterpParPos[d][p] = ParPos[d][ParID]+dt*ParVel[d][ParID];
+               if ( mapOnly )
+                  InterpParPos[d][p] = ParPos[d][ParID];
+               else
+                  InterpParPos[d][p] = ParPos[d][ParID]+dt*ParVel[d][ParID];
 
          } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
 
@@ -161,13 +164,16 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
             if ( ParType[ParID] != PTYPE_TRACER )
                continue;
 
-//          determine time-step and skip particles with zero or negative time-step
-            dt      = (real)TimeNew - ParTime[ParID];
-            if ( dt <= (real)0.0 )  continue;
-            dt_half = (real)0.5*dt;
+            if ( mapOnly )
+            {
+
+               for (int d=0; d<3; d++)
+                  ParVel[d][ParID] = Vel_Temp[d][p];
+
+            }
 
 //          5.0 Euler method
-            if ( amr->Par->IntegTracer == TRACER_INTEG_EULER )
+            else if ( amr->Par->IntegTracer == TRACER_INTEG_EULER )
             {
 
                for (int d=0; d<3; d++) {
@@ -182,6 +188,10 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
             else if ( amr->Par->IntegTracer == TRACER_INTEG_RK2 )
             {
 
+//             determine time-step
+               dt      = (real)TimeNew - ParTime[ParID];
+               dt_half = (real)0.5*dt;
+
                for (int d=0; d<3; d++)
                   InterpParPos[d][p] = ParPos[d][ParID] +
                      dt_half*(Vel_Temp[d][p]+ParVel[d][ParID]);
@@ -190,7 +200,7 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
 
          } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)`
 
-         if ( amr->Par->IntegTracer == TRACER_INTEG_RK2 )
+         if ( !mapOnly && amr->Par->IntegTracer == TRACER_INTEG_RK2 )
          {
 
             Par_MapMesh2Particles( lv, amr->patch[0][lv][PID]->EdgeL, amr->patch[0][lv][PID]->EdgeR,
@@ -210,10 +220,6 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
 //             skip massive particles
                if ( ParType[ParID] != PTYPE_TRACER )
                   continue;
-
-//             determine time-step and skip particles with zero or negative time-step
-               dt      = (real)TimeNew - ParTime[ParID];
-               if ( dt <= (real)0.0 )  continue;
 
                for (int d=0; d<3; d++) {
                   ParPos[d][ParID] = InterpParPos[d][p];

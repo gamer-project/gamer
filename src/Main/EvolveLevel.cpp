@@ -275,7 +275,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                      Timer_Par_Update[lv][0],   TIMER_ON   );
 #     endif
 
-      TIMING_FUNC(   Par_UpdateTracerParticle( lv, TimeNew, TimeOld ),
+      TIMING_FUNC(   Par_UpdateTracerParticle( lv, TimeNew, TimeOld, false ),
                      Timer_Par_Update[lv][0]   );
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
