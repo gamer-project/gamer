@@ -262,12 +262,12 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    PriReal[3] = 0.0;
    PriReal[4] = (real)Amb_Pressure;
 
-   Hydro_Pri2Con( PriReal, fluid, false, false, false, PassiveNorm_NVar, PassiveNorm_VarIdx, EoS_DensPres2Eint_CPUPtr,
-		  EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+   Hydro_Pri2Con( PriReal, fluid, false, false, false, PassiveNorm_NVar, PassiveNorm_VarIdx, 
+		  EoS_DensPres2Eint_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
 		  EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
-   double lobe_d = std::max( Lobe_Density + d0*exp(-xx/Jump_Width), 0.0 );
-   double ICM_d = std::max( d - lobe_d, 0.0 ); 
+   double ICM_d = (d-Lobe_Density)*ICM_Density/(2.0*d0);
+   double lobe_d = (ICM_Density-d)*Lobe_Density/(2.0*d0);
 
    fluid[JetFieldIdx] = 0.0;
    fluid[ICMFieldIdx] = (real)ICM_d;
