@@ -14,8 +14,6 @@
 
 cd $PBS_O_WORKDIR
 
-#source ~/.bashrc
-
 module purge
 module load mpi-hpe
 module load cuda/11.0
