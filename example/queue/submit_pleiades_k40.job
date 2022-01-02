@@ -17,7 +17,6 @@ module purge
 module load mpi-hpe
 module load cuda/10.2
 
-ulimit -c unlimited
 export MPI_TYPE_MAX=655360
 export MPI_TYPE_DEPTH=32
 export MPI_MSGS_MAX=10485760
