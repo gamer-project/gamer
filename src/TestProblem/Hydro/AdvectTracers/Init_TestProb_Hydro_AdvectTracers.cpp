@@ -42,6 +42,10 @@ void Validate()
    Aux_Error( ERROR_INFO, "MODEL != HYDRO !!\n" );
 #  endif
 
+#  ifndef TRACER
+   Aux_Error( ERROR_INFO, "TRACER must be enabled !!\n" );
+#  endif
+
 #  ifdef GRAVITY
    Aux_Error( ERROR_INFO, "GRAVITY must be disabled !!\n" );
 #  endif

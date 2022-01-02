@@ -289,6 +289,7 @@ void Init_GAMER( int *argc, char ***argv )
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Calculating particle acceleration" );
 #  endif
 
+#ifdef TRACER
 // initialize tracer particles
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Initializing tracer particles" );
 
@@ -296,6 +297,8 @@ void Init_GAMER( int *argc, char ***argv )
    Par_UpdateTracerParticle( lv, NULL_REAL, NULL_REAL, true );
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Initializing tracer particles" );
+
+#endif // #ifdef TRACER
 
 #endif // #ifdef PARTICLE
 
