@@ -137,9 +137,9 @@ void Output_DumpData( const int Stage )
       sprintf( FileName_PS, "PowerSpec_%06d", DumpID );
 
 #  ifdef PARTICLE
-   if ( OPT__OUTPUT_MODE==1 )
-      sprintf( FileName_Particle, "Particle_%06d", DumpID );
-   if ( OPT__OUTPUT_MODE==2 )
+   if ( OPT__OUTPUT_PAR_MODE == OUTPUT_PAR_TEXT )
+      sprintf( FileName_Particle, "Particle_%06d.txt", DumpID );
+   if ( OPT__OUTPUT_PAR_MODE == OUTPUT_PAR_CBIN )
       sprintf( FileName_Particle, "Particle_%06d.cbin", DumpID );
 #  endif
 
@@ -199,8 +199,8 @@ void Output_DumpData( const int Stage )
       if ( OPT__OUTPUT_BASEPS )           Output_BasePowerSpectrum( FileName_PS );
 #     endif
 #     ifdef PARTICLE
-      if ( OPT__OUTPUT_PAR_MODE==1 )         Par_Output_TextFile( FileName_Particle );
-      else if ( OPT__OUTPUT_PAR_MODE==2 )    Par_Output_BinaryFile( FileName_Particle );
+      if ( OPT__OUTPUT_PAR_MODE == OUTPUT_PAR_TEXT )  Par_Output_TextFile( FileName_Particle );
+      if ( OPT__OUTPUT_PAR_MODE == OUTPUT_PAR_CBIN )  Par_Output_BinaryFile( FileName_Particle );
 #     endif
 
       Write_DumpRecord();
