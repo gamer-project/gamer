@@ -278,7 +278,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #     ifdef TRACER
 
       TIMING_FUNC(   Par_UpdateTracerParticle( lv, TimeNew, TimeOld, false ),
-                     Timer_Par_Update[lv][0]   );
+                     Timer_Par_Update[lv][0],   TIMER_ON   );
 
 #     endif
 

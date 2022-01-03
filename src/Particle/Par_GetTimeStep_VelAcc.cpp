@@ -38,7 +38,7 @@ void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv )
 
    const bool  IncNonleaf = true;
    const real *Vel[3]     = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
-#  ifdef ( defined STORE_PAR_ACC && defined GRAVITY )
+#  if defined( STORE_PAR_ACC ) && defined( GRAVITY )
    const real *Acc[3]     = { amr->Par->AccX, amr->Par->AccY, amr->Par->AccZ };
 #  else
    const real *Acc[3]     = { NULL, NULL, NULL };
