@@ -2564,7 +2564,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__Output_Part        = OPT__OUTPUT_PART;
    InputPara.Opt__Output_User        = OPT__OUTPUT_USER;
 #  ifdef PARTICLE
-   InputPara.Opt__Output_Par_Mode     = OPT__OUTPUT_PAR_MODE;
+   InputPara.Opt__Output_Par_Mode    = OPT__OUTPUT_PAR_MODE;
 #  endif
    InputPara.Opt__Output_BasePS      = OPT__OUTPUT_BASEPS;
    InputPara.Opt__Output_Base        = OPT__OUTPUT_BASE;
