@@ -467,7 +467,7 @@
 
 // always put acceleration and time at the END of the particle attribute list
 // --> make it easier to discard them when storing data on disk (see Output_DumpData_Total(_HDF5).cpp)
-# if ( defined STORE_PAR_ACC && defined GRAVITY )
+# ifdef STORE_PAR_ACC
 #  define  PAR_ACCX           ( PAR_NATT_TOTAL - 4 )
 #  define  PAR_ACCY           ( PAR_NATT_TOTAL - 3 )
 #  define  PAR_ACCZ           ( PAR_NATT_TOTAL - 2 )
