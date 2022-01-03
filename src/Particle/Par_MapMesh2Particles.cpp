@@ -2,13 +2,18 @@
 
 #ifdef PARTICLE
 
-void Par_MapMesh2Particles ( const int lv, const double EdgeL[3], const double EdgeR[3],
-                             const int AttrSize3D, const real Attr3D[AttrSize3D][AttrSize3D][AttrSize3D],
-                             const int NPar, const real InterpParPos[3][NPar], const real ParType[NPar],
-                             const long ParList[NPar], bool useTracers, real ParAttr[NPar] )
+void Par_MapMesh2Particles ( const int lv, const int P, const double EdgeL[3],
+                             const double EdgeR[3], const int AttrSize3D, const real *Attr,
+                             const int NPar, real *InterpParPos[NPar],
+                             const real ParType[NPar], const long ParList[NPar],
+                             bool useTracers, real ParAttr[NPar] )
 {
 
+   typedef real (*vla)[AttrSize3D][AttrSize3D][AttrSize3D];
+   vla Attr3D = ( vla )Attr;
+
    const ParInterp_t IntScheme    = amr->Par->Interp;
+   const int  ParGhost            = amr->Par->GhostSize;
 
    const double _dh               = 1.0/amr->dh[lv];
 
@@ -32,7 +37,7 @@ void Par_MapMesh2Particles ( const int lv, const double EdgeL[3], const double E
       switch ( IntScheme ) {
 
 //    1 NGP
-      case ( PAR_INTERP_NGP )
+      case ( PAR_INTERP_NGP ):
       {
          int idx[3];
 
@@ -65,7 +70,7 @@ void Par_MapMesh2Particles ( const int lv, const double EdgeL[3], const double E
          } // for (int d=0; d<3; d++)
 
 //       calculate new particle attribute
-         ParAttr[p] = Attr3D[ idx[2] ][ idx[1] ][ idx[0] ];
+         ParAttr[p] = Attr3D[ P ][ idx[2] ][ idx[1] ][ idx[0] ];
 
       } // PAR_INTERP_NGP
       break;
@@ -122,7 +127,7 @@ void Par_MapMesh2Particles ( const int lv, const double EdgeL[3], const double E
          for (int k=0; k<2; k++)
          for (int j=0; j<2; j++)
          for (int i=0; i<2; i++) {
-            ParAttr[p] += Attr3D[ idxLR[k][2] ][ idxLR[j][1] ][ idxLR[i][0] ]
+            ParAttr[p] += Attr3D[ P ][ idxLR[k][2] ][ idxLR[j][1] ][ idxLR[i][0] ]
                *Frac[i][0]*Frac[j][1]*Frac[k][2];
          }
 
@@ -184,7 +189,7 @@ void Par_MapMesh2Particles ( const int lv, const double EdgeL[3], const double E
          for (int j=0; j<3; j++)
          for (int i=0; i<3; i++) {
 
-            ParAttr[p] += Attr3D[ idxLCR[k][2] ][ idxLCR[j][1] ][ idxLCR[i][0] ]
+            ParAttr[p] += Attr3D[ P ][ idxLCR[k][2] ][ idxLCR[j][1] ][ idxLCR[i][0] ]
                *Frac[i][0]*Frac[j][1]*Frac[k][2];
 
          }

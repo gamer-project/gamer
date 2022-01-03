@@ -2,9 +2,9 @@
 
 #if defined( PARTICLE ) && defined ( TRACER )
 
-void Par_MapMesh2Particles ( const int lv, const double EdgeL[3], const double EdgeR[3],
-                             const int AttrSize3D, const real Attr3D[AttrSize3D][AttrSize3D][AttrSize3D],
-                             const int NPar, const real InterpParPos[3][NPar], const real ParType[NPar],
+void Par_MapMesh2Particles ( const int lv, const int P, const double EdgeL[3], const double EdgeR[3],
+                             const int AttrSize3D, const real *Attr, const int NPar,
+                             real *InterpParPos[NPar], const real ParType[NPar],
                              const long ParList[NPar], bool useTracers, real ParAttr[NPar] );
 
 
@@ -43,6 +43,7 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
    const bool   DE_Consistency_No = false;
    const real   MinDens_No        = -1.0;
    const real   MinPres_No        = -1.0;
+   const real   MinTemp_No        = -1.0;
    const double dh                = amr->dh[lv];
    const double _dh               = 1.0/dh;
 
@@ -68,11 +69,10 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
    real *VelY = new real [ 8*CUBE(VelSize) ];    // 8: number of patches per patch group
    real *VelZ = new real [ 8*CUBE(VelSize) ];    // 8: number of patches per patch group
 
-   typedef real (*vla)[VelSize][VelSize][VelSize];
-
-   vla VelX3D = ( vla )VelX;
-   vla VelY3D = ( vla )VelY;
-   vla VelZ3D = ( vla )VelZ;
+   //typedef real (*vla)[VelSize][VelSize][VelSize];
+   //vla VelX3D = ( vla )VelX;
+   //vla VelY3D = ( vla )VelY;
+   //vla VelZ3D = ( vla )VelZ;
 
    bool   GotYou;
    long   ParID;
@@ -108,13 +108,13 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
 
       Prepare_PatchData( lv, TimeNew, VelX, NULL, ParGhost, 1, &PID0, _VELX, _NONE,
                          OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No,
-                         OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, DE_Consistency_No );
+                         OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, DE_Consistency_No );
       Prepare_PatchData( lv, TimeNew, VelY, NULL, ParGhost, 1, &PID0, _VELY, _NONE,
                          OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No,
-                         OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, DE_Consistency_No );
+                         OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, DE_Consistency_No );
       Prepare_PatchData( lv, TimeNew, VelZ, NULL, ParGhost, 1, &PID0, _VELZ, _NONE,
                          OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No,
-                         OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, DE_Consistency_No );
+                         OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, DE_Consistency_No );
 
       for (int PID=PID0, P=0; PID<PID0+8; PID++, P++)
       {
@@ -147,14 +147,14 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
 
          } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
 
-         Par_MapMesh2Particles( lv, amr->patch[0][lv][PID]->EdgeL, amr->patch[0][lv][PID]->EdgeR,
-                                VelSize, VelX3D[P], amr->patch[0][lv][PID]->NPar, InterpParPos,
+         Par_MapMesh2Particles( lv, P, amr->patch[0][lv][PID]->EdgeL, amr->patch[0][lv][PID]->EdgeR,
+                                VelSize, VelX, amr->patch[0][lv][PID]->NPar, InterpParPos,
                                 ParType, amr->patch[0][lv][PID]->ParList, true, Vel_Temp[0] );
-         Par_MapMesh2Particles( lv, amr->patch[0][lv][PID]->EdgeL, amr->patch[0][lv][PID]->EdgeR,
-                                VelSize, VelY3D[P], amr->patch[0][lv][PID]->NPar, InterpParPos,
+         Par_MapMesh2Particles( lv, P, amr->patch[0][lv][PID]->EdgeL, amr->patch[0][lv][PID]->EdgeR,
+                                VelSize, VelY, amr->patch[0][lv][PID]->NPar, InterpParPos,
                                 ParType, amr->patch[0][lv][PID]->ParList, true, Vel_Temp[1] );
-         Par_MapMesh2Particles( lv, amr->patch[0][lv][PID]->EdgeL, amr->patch[0][lv][PID]->EdgeR,
-                                VelSize, VelY3D[P], amr->patch[0][lv][PID]->NPar, InterpParPos,
+         Par_MapMesh2Particles( lv, P, amr->patch[0][lv][PID]->EdgeL, amr->patch[0][lv][PID]->EdgeR,
+                                VelSize, VelZ, amr->patch[0][lv][PID]->NPar, InterpParPos,
                                 ParType, amr->patch[0][lv][PID]->ParList, true, Vel_Temp[2] );
 
 //       5. update particles
@@ -206,17 +206,17 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
          if ( !mapOnly && amr->Par->IntegTracer == TRACER_INTEG_RK2 )
          {
 
-            Par_MapMesh2Particles( lv, amr->patch[0][lv][PID]->EdgeL, amr->patch[0][lv][PID]->EdgeR,
-                                   VelSize, VelX3D[P], amr->patch[0][lv][PID]->NPar, InterpParPos,
+            Par_MapMesh2Particles( lv, P, amr->patch[0][lv][PID]->EdgeL, amr->patch[0][lv][PID]->EdgeR,
+                                   VelSize, VelX, amr->patch[0][lv][PID]->NPar, InterpParPos,
                                    ParType, amr->patch[0][lv][PID]->ParList, true, Vel_Temp[0] );
-            Par_MapMesh2Particles( lv, amr->patch[0][lv][PID]->EdgeL, amr->patch[0][lv][PID]->EdgeR,
-                                   VelSize, VelY3D[P], amr->patch[0][lv][PID]->NPar, InterpParPos,
+            Par_MapMesh2Particles( lv, P, amr->patch[0][lv][PID]->EdgeL, amr->patch[0][lv][PID]->EdgeR,
+                                   VelSize, VelY, amr->patch[0][lv][PID]->NPar, InterpParPos,
                                    ParType, amr->patch[0][lv][PID]->ParList, true, Vel_Temp[1] );
-            Par_MapMesh2Particles( lv, amr->patch[0][lv][PID]->EdgeL, amr->patch[0][lv][PID]->EdgeR,
-                                   VelSize, VelY3D[P], amr->patch[0][lv][PID]->NPar, InterpParPos,
+            Par_MapMesh2Particles( lv, P, amr->patch[0][lv][PID]->EdgeL, amr->patch[0][lv][PID]->EdgeR,
+                                   VelSize, VelY, amr->patch[0][lv][PID]->NPar, InterpParPos,
                                    ParType, amr->patch[0][lv][PID]->ParList, true, Vel_Temp[2] );
 
-            for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
+            for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++) {
 
                ParID = amr->patch[0][lv][PID]->ParList[p];
 
@@ -234,9 +234,10 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
 
          } // if ( amr->Par->IntegTracer == TRACER_INTEG_RK2 )
 
-         for (int d=0; d<3; d++)
+         for (int d=0; d<3; d++) {
             delete [] Vel_Temp[d];
             delete [] InterpParPos[d];
+         }
          delete [] Vel_Temp;
          delete [] InterpParPos;
 
