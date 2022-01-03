@@ -146,7 +146,7 @@ const OptOutputPart_t
 // OPT_OUTPUT_PAR_MODE options
 typedef int OptOutputParMode_t;
 const OptOutputParMode_t
-   OUTPUT_PAR_NODE = 0,
+   OUTPUT_PAR_NONE = 0,
    OUTPUT_PAR_TEXT = 1,
    OUTPUT_PAR_CBIN = 2;
 
