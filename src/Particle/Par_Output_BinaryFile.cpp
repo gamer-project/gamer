@@ -4,6 +4,8 @@
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_Output_BinaryFile
 // Description :  Output the particle position and velocity
+// Format      :  1. Total data numbers: N_attribute*N_activate_particle
+//                2. Data of all activate particles with a selected attribute will be dumped consecutively, followed by the next attribute, so on and so forth
 //
 // Parameter   :  FileName : Output file name
 //
@@ -12,14 +14,14 @@
 void Par_Output_BinaryFile( const char *FileName )
 {
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d) ...\n", __FUNCTION__, DumpID );
-//   int N_att = PAR_NATT_TOTAL;
+
    FILE *File;
 
 // check
    if ( MPI_Rank == 0  &&  Aux_CheckFileExist(FileName) )
    {
       Aux_Message( stderr, "WARNING : file \"%s\" already exists and will be overwritten !!\n", FileName );
-      File = fopen( FileName, "w" );
+      File = fopen( FileName, "wb" );
       fclose(File);
    }
    MPI_Barrier( MPI_COMM_WORLD );
@@ -32,7 +34,7 @@ void Par_Output_BinaryFile( const char *FileName )
       {
          if ( MPI_Rank == TargetMPIRank )
          {
-            File = fopen( FileName, "a" );
+            File = fopen( FileName, "ab" );
             long counter = 0;
             for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
             {
@@ -45,19 +47,6 @@ void Par_Output_BinaryFile( const char *FileName )
                   counter ++;
                }
             }
-////          record number of activate particle and number of attribute
-//            if (v==0)
-//            {
-//                MPI_Gather(&counter, 1, MPI_LONG, &counter_gather, 1, MPI_LONG, 0, MPI_COMM_WORLD);
-//                counter_gather += counter;
-//                if (MPI_Rank==0) 
-//                {
-//                    fwrite(&counter_gather, sizeof(long), 1, File);
-//                    printf("%ld\n", counter_gather);
-//                    fwrite(&N_att, sizeof(int), 1, File);
-//                }
-//            }
-////
 //          record particle data
             fwrite(attribute_buff, sizeof(real), counter, File);
             fclose( File );
