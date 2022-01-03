@@ -10,7 +10,7 @@ EXECUTABLE  = GAMER_ExtractUniform
 # siimulation options
 #######################################################################################################
 # model: HYDRO/MHD/ELBDM
-SIMU_OPTION += -DMODEL=ELBDM
+SIMU_OPTION += -DMODEL=HYDRO
 
 # double precision
 #SIMU_OPTION += -DFLOAT8
