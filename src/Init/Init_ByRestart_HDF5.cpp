@@ -2025,7 +2025,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__Output_Part",        &RS.Opt__Output_Part,        SID, TID, NonFatal, &RT.Opt__Output_Part,         1, NonFatal );
    LoadField( "Opt__Output_User",        &RS.Opt__Output_User,        SID, TID, NonFatal, &RT.Opt__Output_User,         1, NonFatal );
 #  ifdef PARTICLE
-   LoadField( "Opt__Output_Par_Mode",    &RS.Opt__Output_Par_Mode,   SID, TID, NonFatal, &RT.Opt__Output_Par_Mode,     1, NonFatal );
+   LoadField( "Opt__Output_Par_Mode",    &RS.Opt__Output_Par_Mode,    SID, TID, NonFatal, &RT.Opt__Output_Par_Mode,     1, NonFatal );
 #  endif
    LoadField( "Opt__Output_BasePS",      &RS.Opt__Output_BasePS,      SID, TID, NonFatal, &RT.Opt__Output_BasePS,       1, NonFatal );
    if ( OPT__OUTPUT_PART )
