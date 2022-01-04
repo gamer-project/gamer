@@ -1,11 +1,17 @@
 #include "GAMER.h"
 
 #ifdef PARTICLE
+
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_Output_BinaryFile
-// Description :  Output the particle position and velocity
-// Format      :  1. Total data numbers: N_attribute*N_activate_particle
-//                2. Data of all activate particles with a selected attribute will be dumped consecutively, followed by the next attribute, so on and so forth
+// Description :  Output particle attributes in the binary format
+//
+// Note        :  1. Number of data elements: N_attribute*N_activate_particle
+//                2. Data of all active particles with a selected attribute will be dumped consecutively,
+//                   followed by the next attribute, so on and so forth
 //
 // Parameter   :  FileName : Output file name
 //
@@ -13,7 +19,9 @@
 //-------------------------------------------------------------------------------------------------------
 void Par_Output_BinaryFile( const char *FileName )
 {
+
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d) ...\n", __FUNCTION__, DumpID );
+
 
    FILE *File;
 
@@ -26,8 +34,10 @@ void Par_Output_BinaryFile( const char *FileName )
    }
    MPI_Barrier( MPI_COMM_WORLD );
 
-   real *attribute_buff = (real*)malloc(sizeof(real)*amr->Par->NPar_AcPlusInac);
+
 // data
+   real *attribute_buff = (real*)malloc( sizeof(real)*amr->Par->NPar_AcPlusInac );
+
    for (int v=0; v<PAR_NATT_TOTAL; v++)
    {
       for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
@@ -36,25 +46,28 @@ void Par_Output_BinaryFile( const char *FileName )
          {
             File = fopen( FileName, "ab" );
             long counter = 0;
+
+//          store particle data in a buffer
             for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
             {
 //             skip inactive particles
-               if ( amr->Par->Mass[p] < 0.0 )
-                  continue;
-               else
-               {
-                  attribute_buff[counter] = amr->Par->Attribute[v][p];
-                  counter ++;
-               }
+               if ( amr->Par->Mass[p] < 0.0 )   continue;
+               else                             attribute_buff[ counter ++ ] = amr->Par->Attribute[v][p];
             }
-//          record particle data
-            fwrite(attribute_buff, sizeof(real), counter, File);
+
+//          dump data from the buffer
+            fwrite( attribute_buff, sizeof(real), counter, File );
             fclose( File );
          } // if ( MPI_Rank == TargetMPIRank )
+
          MPI_Barrier( MPI_COMM_WORLD );
       } // for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
    } // for (int v=0; v<PAR_NATT_TOTAL; v++)
 
-   free(attribute_buff);
+   free( attribute_buff );
+
 } // FUNCTION : Par_Output_BinaryFile
-#endif // end of ifdef PARTICLE
+
+
+
+#endif // #ifdef PARTICLE
