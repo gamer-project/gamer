@@ -614,7 +614,7 @@ struct InputPara_t
    int    Opt__Output_Part;
    int    Opt__Output_User;
 #  ifdef PARTICLE
-   int    Opt__Output_ParText;
+   int    Opt__Output_Par_Mode;
 #  endif
    int    Opt__Output_BasePS;
    int    Opt__Output_Base;
