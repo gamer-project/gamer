@@ -1,10 +1,9 @@
 #include "GAMER.h"
-#include"Par_EquilibriumIC.h"
+#include "Par_EquilibriumIC.h"
 
-#ifdef PARTICLE
+#ifdef MASSIVE_PARTICLES
 
 static RandomNumber_t *RNG = NULL;
-
 
 
 //-------------------------------------------------------------------------------------------------------
