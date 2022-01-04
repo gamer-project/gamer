@@ -166,11 +166,23 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
+   double Eint, Etot;
+
+   const double MomX = Advect_Dens_Bg*Advect_Vel[0];
+   const double MomY = Advect_Dens_Bg*Advect_Vel[1];
+   const double MomZ = Advect_Dens_Bg*Advect_Vel[2];
+
+   // compute the total gas energy
+   Eint = EoS_DensPres2Eint_CPUPtr( Advect_Dens_Bg, Advect_Pres_Bg, NULL, EoS_AuxArray_Flt,
+                                    EoS_AuxArray_Int, h_EoS_Table );    // assuming EoS requires no passive scalars
+
+   Etot = Hydro_ConEint2Etot( Advect_Dens_Bg, MomX, MomY, MomZ, Eint, 0.0 );      // do NOT include magnetic energy here
+
    fluid[DENS] = Advect_Dens_Bg;
-   fluid[MOMX] = Advect_Dens_Bg*Advect_Vel[0];
-   fluid[MOMY] = Advect_Dens_Bg*Advect_Vel[1];
-   fluid[MOMZ] = Advect_Dens_Bg*Advect_Vel[2];
-   fluid[ENGY] = Advect_Pres_Bg/(GAMMA-1.0);
+   fluid[MOMX] = MomX;
+   fluid[MOMY] = MomY;
+   fluid[MOMZ] = MomZ;
+   fluid[ENGY] = Etot;
 
 } // FUNCTION : SetGridIC
 
