@@ -4,9 +4,9 @@
 
 void Par_MapMesh2Particles ( const int lv, const int P, const double EdgeL[3],
                              const double EdgeR[3], const int AttrSize3D, const real *Attr,
-                             const int NPar, real *InterpParPos[NPar],
-                             const real ParType[NPar], const long ParList[NPar],
-                             bool useTracers, real ParAttr[NPar] )
+                             const int NPar, real *InterpParPos[3],
+                             const real ParType[], const long ParList[],
+                             bool useTracers, real ParAttr[] )
 {
 
    typedef real (*vla)[AttrSize3D][AttrSize3D][AttrSize3D];

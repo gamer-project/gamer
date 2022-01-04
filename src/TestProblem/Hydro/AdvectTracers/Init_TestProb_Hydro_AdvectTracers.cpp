@@ -20,7 +20,7 @@ void Par_Init_ByFunction_AdvectTracers( const long NPar_ThisRank, const long NPa
 #endif
 
 bool Flag_AdvectTracers( const int i, const int j, const int k, const int lv, 
-                         const int PID, const double Threshold );
+                         const int PID, const double *Threshold );
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
@@ -223,7 +223,7 @@ void Init_TestProb_Hydro_AdvectTracers()
 } // FUNCTION : Init_TestProb_Hydro_AdvectTracers
 
 bool Flag_AdvectTracers( const int i, const int j, const int k, const int lv, 
-                         const int PID, const double Threshold )
+                         const int PID, const double *Threshold )
 {
 
    const double dh     = amr->dh[lv];                                                  // grid size
@@ -235,7 +235,7 @@ bool Flag_AdvectTracers( const int i, const int j, const int k, const int lv,
    const double dr[3]     = { Pos[0]-Center[0], Pos[1]-Center[1], Pos[2]-Center[2] };
    const double Radius    = sqrt( dr[0]*dr[0] + dr[1]*dr[1] + dr[2]*dr[2] );
 
-   bool Flag = Radius < Threshold;
+   bool Flag = Radius < Threshold[0];
 
    return Flag;
 

@@ -42,7 +42,7 @@ extern int    Advect_NPar[3];
 //                                --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
 //                                    to access the data
 //
-// Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, AllAttribute
+// Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParType, AllAttribute
 //-------------------------------------------------------------------------------------------------------
 
 void Par_Init_ByFunction_AdvectTracers( const long NPar_ThisRank, const long NPar_AllRank,
@@ -53,11 +53,11 @@ void Par_Init_ByFunction_AdvectTracers( const long NPar_ThisRank, const long NPa
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
-   const real delta_p[3] = { amr->BoxSize[0]/(Advect_NPar[0]+1), 
-                             amr->BoxSize[1]/(Advect_NPar[1]+1),
-                             amr->BoxSize[2]/(Advect_NPar[2]+1) };
+   const real delta_p[3] = { (real)amr->BoxSize[0]/(Advect_NPar[0]+1),
+                             (real)amr->BoxSize[1]/(Advect_NPar[1]+1),
+                             (real)amr->BoxSize[2]/(Advect_NPar[2]+1) };
 
-   const real delta_box = amr->BoxSize[0] / MPI_NRank;
+   const real delta_box = (real)amr->BoxSize[0] / MPI_NRank;
 
    const long NParZ_Local = Advect_NPar[2] / MPI_NRank;
    const long NPar_ToAssign = Advect_NPar[0]*Advect_NPar[1]*NParZ_Local;
@@ -82,10 +82,6 @@ void Par_Init_ByFunction_AdvectTracers( const long NPar_ThisRank, const long NPa
       ParPosX[p] = (ii+1)*delta_p[0];
       ParPosY[p] = (jj+1)*delta_p[1];
       ParPosZ[p] = (kk+1)*delta_p[2] + MPI_Rank*delta_box;
-
-      ParVelX[p] = Advect_Vel[0];
-      ParVelY[p] = Advect_Vel[1];
-      ParVelZ[p] = Advect_Vel[2];
 
 //    synchronize all particles to the physical time at the base level
       ParTime[p] = Time[0];

@@ -13,7 +13,7 @@ double ParEqmIC_SmallGas;
 void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_AllRank,
                                    real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                    real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                   real *AllAttribute[PAR_NATT_TOTAL] );
+                                   real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
 #endif
 
 // external potential routines
