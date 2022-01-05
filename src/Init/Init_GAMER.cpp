@@ -294,7 +294,7 @@ void Init_GAMER( int *argc, char ***argv )
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Initializing tracer particles" );
 
    for (int lv=0; lv<NLEVEL; lv++)
-   Par_UpdateTracerParticle( lv, NULL_REAL, NULL_REAL, true );
+   Par_UpdateTracerParticle( lv, Time[lv], NULL_REAL, true );
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Initializing tracer particles" );
 
