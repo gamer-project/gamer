@@ -1,0 +1,9 @@
+# problem-specific runtime parameters
+Advect_Dens_Bg        1.0e0          # background mass density
+Advect_Pres_Bg        1.0e5         # background energy density
+Advect_VelX           100.0            # gas velocity x
+Advect_VelY           100.0            # gas velocity y
+Advect_VelZ           100.0            # gas velocity z
+Advect_NParX          32             # number of grid particles x
+Advect_NParY          32             # number of grid particles	y
+Advect_NParZ          32             # number of grid particles	z
