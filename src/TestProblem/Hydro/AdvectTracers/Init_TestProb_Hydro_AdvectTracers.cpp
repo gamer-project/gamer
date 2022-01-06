@@ -4,15 +4,15 @@
 
 // problem-specific global variables
 // =======================================================================================
-static double Advect_Dens_Bg;       // background mass density
-static double Advect_Pres_Bg;       // background pressure
-static double Advect_Vel[3];        // gas velocity
-       int    Advect_NPar[3];       // particles on a side
+static double Advect_Dens_Bg;        // background mass density
+static double Advect_Pres_Bg;        // background pressure
+static double Advect_Ang_Freq;       // gas angular frequency
+       int    Advect_NPar[3];        // particles on a side
 
 // =======================================================================================
 
 // problem-specific function prototypes
-#ifdef PARTICLE
+#if defined( PARTICLE ) && defined( TRACER )
 void Par_Init_ByFunction_AdvectTracers( const long NPar_ThisRank, const long NPar_AllRank,
                                         real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                         real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
@@ -42,6 +42,10 @@ void Validate()
    Aux_Error( ERROR_INFO, "MODEL != HYDRO !!\n" );
 #  endif
 
+#  ifndef PARTICLE
+   Aux_Error( ERROR_INFO, "PARTICLE must be enabled !!\n" );
+#  endif
+
 #  ifndef TRACER
    Aux_Error( ERROR_INFO, "TRACER must be enabled !!\n" );
 #  endif
@@ -54,9 +58,8 @@ void Validate()
    Aux_Error( ERROR_INFO, "COMOVING must be disabled !!\n" );
 #  endif
 
-   if ( !OPT__INIT_RESTRICT )
-      Aux_Error( ERROR_INFO, "OPT__INIT_RESTRICT must be enabled !!\n" );
-
+   if ( !OPT__FREEZE_FLUID )
+      Aux_Error( ERROR_INFO, "OPT__FREEZE_FLUID must be enabled !!\n" );
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
 
@@ -94,16 +97,14 @@ void SetParameter()
 // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
 // --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
 // ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE_ADDRESS,      DEFAULT,      MIN,              MAX               );
+// ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE_ADDRESS,       DEFAULT,      MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "Advect_Dens_Bg",     &Advect_Dens_Bg,      -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Advect_Pres_Bg",     &Advect_Pres_Bg,      -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Advect_VelX",        &Advect_Vel[0],       -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Advect_VelY",        &Advect_Vel[1],       -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Advect_VelZ",        &Advect_Vel[2],       -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Advect_NparX",       &Advect_NPar[0],       32,           8,                NoMax_int         );
-   ReadPara->Add( "Advect_NparY",       &Advect_NPar[1],       32,           8,                NoMax_int         );
-   ReadPara->Add( "Advect_NparZ",       &Advect_NPar[2],       32,           8,                NoMax_int         );
+   ReadPara->Add( "Advect_Dens_Bg",     &Advect_Dens_Bg,        1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Advect_Pres_Bg",     &Advect_Pres_Bg,        1.0e5,        Eps_double,       NoMax_double      );
+   ReadPara->Add( "Advect_Ang_Freq",    &Advect_Ang_Freq,       100.0,        10.0,             150.0             );
+   ReadPara->Add( "Advect_NparX",       &Advect_NPar[0],        32,           8,                NoMax_int         );
+   ReadPara->Add( "Advect_NparY",       &Advect_NPar[1],        32,           8,                NoMax_int         );
+   ReadPara->Add( "Advect_NparZ",       &Advect_NPar[2],        32,           8,                NoMax_int         );
 
    ReadPara->Read( FileName );
 
@@ -112,7 +113,7 @@ void SetParameter()
 
 // (2) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
-   const double End_T_Default    = 5.0e-3;
+   const double End_T_Default    = 2*M_PI/Advect_Ang_Freq;
    const long   End_Step_Default = __INT_MAX__;
 
    if ( END_STEP < 0 ) {
@@ -130,9 +131,10 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID           = %d\n",     TESTPROB_ID );
-      Aux_Message( stdout, "  background mass density   = %13.7e\n", Advect_Dens_Bg );
-      Aux_Message( stdout, "  background pressure       = %13.7e\n", Advect_Pres_Bg );
+      Aux_Message( stdout, "  test problem ID           = %d\n",     TESTPROB_ID     );
+      Aux_Message( stdout, "  background mass density   = %13.7e\n", Advect_Dens_Bg  );
+      Aux_Message( stdout, "  background pressure       = %13.7e\n", Advect_Pres_Bg  );
+      Aux_Message( stdout, "  angular frequency         = %13.7e\n", Advect_Ang_Freq );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -166,10 +168,19 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
+
+   const double dr[2]     = { x - 0.5*amr->BoxSize[0], y - 0.5*amr->BoxSize[1] };
+   const double Radius    = sqrt( dr[0]*dr[0] + dr[1]*dr[1] );
+
+   const double Velocity = Advect_Ang_Freq*Radius;
+
+   const double Cos_theta = dr[0]/Radius;
+   const double Sin_theta = dr[1]/Radius;
+
    fluid[DENS] = Advect_Dens_Bg;
-   fluid[MOMX] = Advect_Dens_Bg*Advect_Vel[0];
-   fluid[MOMY] = Advect_Dens_Bg*Advect_Vel[1];
-   fluid[MOMZ] = Advect_Dens_Bg*Advect_Vel[2];
+   fluid[MOMX] = -Advect_Dens_Bg*Velocity*Sin_theta;
+   fluid[MOMY] = Advect_Dens_Bg*Velocity*Cos_theta;
+   fluid[MOMZ] = 0.0;
    fluid[ENGY] = Advect_Pres_Bg/(GAMMA-1.0);
 
 } // FUNCTION : SetGridIC
@@ -212,7 +223,7 @@ void Init_TestProb_Hydro_AdvectTracers()
    BC_User_Ptr                   = NULL;
    Flu_ResetByUser_Func_Ptr      = NULL;
    End_User_Ptr                  = NULL;
-#  ifdef PARTICLE
+#  if defined( PARTICLE ) && defined( TRACER )
    Par_Init_ByFunction_Ptr       = Par_Init_ByFunction_AdvectTracers;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
@@ -226,6 +237,9 @@ bool Flag_AdvectTracers( const int i, const int j, const int k, const int lv,
                          const int PID, const double *Threshold )
 {
 
+   // Refine a rectanglar solid region in the center just to test behavior in
+   // non-uniform regions
+
    const double dh     = amr->dh[lv];                                                  // grid size
    const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,              // x,y,z position
                            amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
@@ -233,9 +247,8 @@ bool Flag_AdvectTracers( const int i, const int j, const int k, const int lv,
 
    const double Center[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
    const double dr[3]     = { Pos[0]-Center[0], Pos[1]-Center[1], Pos[2]-Center[2] };
-   const double Radius    = sqrt( dr[0]*dr[0] + dr[1]*dr[1] + dr[2]*dr[2] );
 
-   bool Flag = Radius < Threshold[0];
+   bool Flag = (FABS(dr[0]) < Threshold[0]) && (FABS(dr[1]) < 2.0*Threshold[0]) && (FABS(dr[2]) < Threshold[0]);
 
    return Flag;
 

@@ -6,7 +6,7 @@ extern int    Advect_NPar[3];
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_Init_ByFunction_AdvectTracers
-// Description :  Initialize all particle attributes for the merging cluster test
+// Description :  Initialize all particle attributes for the tracer advection test
 //                --> Modified from "Par_Init_ByFile.cpp"
 //
 // Note        :  1. Invoked by Init_GAMER() using the function pointer "Par_Init_ByFunction_Ptr"
@@ -52,17 +52,17 @@ void Par_Init_ByFunction_AdvectTracers( const long NPar_ThisRank, const long NPa
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
-   const real delta_p[3] = { (real)amr->BoxSize[0]/(Advect_NPar[0]+1),
-                             (real)amr->BoxSize[1]/(Advect_NPar[1]+1),
-                             (real)amr->BoxSize[2]/(Advect_NPar[2]+1) };
+   const real delta_p[3] = { (real)0.5*amr->BoxSize[0]/(Advect_NPar[0]+1),
+                             (real)0.5*amr->BoxSize[1]/(Advect_NPar[1]+1),
+                             (real)0.5*amr->BoxSize[2]/(Advect_NPar[2]+1) };
 
-   const real delta_box = (real)amr->BoxSize[0] / MPI_NRank;
+   const real delta_box = (real)0.5*amr->BoxSize[0] / MPI_NRank;
 
    const long NParZ_Local = Advect_NPar[2] / MPI_NRank;
    const long NPar_ToAssign = Advect_NPar[0]*Advect_NPar[1]*NParZ_Local;
 
    if ( NPar_ToAssign != NPar_ThisRank )
-      Aux_Error( ERROR_INFO, "total number of particles found in disk [%ld] != expect [%ld] !!\n",
+      Aux_Error( ERROR_INFO, "total number of particles specified [%ld] != expect [%ld] !!\n",
                  NPar_ToAssign, NPar_ThisRank );
 
    MPI_Barrier( MPI_COMM_WORLD );
@@ -78,13 +78,14 @@ void Par_Init_ByFunction_AdvectTracers( const long NPar_ThisRank, const long NPa
 
       ParMass[p] = 0.0;
 
-      ParPosX[p] = (ii+1)*delta_p[0];
-      ParPosY[p] = (jj+1)*delta_p[1];
-      ParPosZ[p] = (kk+1)*delta_p[2] + MPI_Rank*delta_box;
+      ParPosX[p] = (ii+1)*delta_p[0]+0.25*amr->BoxSize[0];
+      ParPosY[p] = (jj+1)*delta_p[1]+0.25*amr->BoxSize[1];
+      ParPosZ[p] = (kk+1)*delta_p[2]+0.25*amr->BoxSize[2] + MPI_Rank*delta_box;
 
 //    synchronize all particles to the physical time at the base level
       ParTime[p] = Time[0];
 
+//    set the particle type to be tracer
       ParType[p] = PTYPE_TRACER;
 
    }

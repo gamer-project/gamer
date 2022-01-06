@@ -1,5 +1,6 @@
 
 
+
 # =================================================================================================================
 # NOTE:
 # 1. Comment symbol: #
@@ -25,7 +26,7 @@ END_STEP                     -1           # end step (<0=auto -> must be set by 
 
 # test problems
 TESTPROB_ID                   18          # test problem ID [0]
-                                          #   11: HYDRO Plummer cloud(s) (+GRAVITY & PARTICLE)
+                                          #   18: HYDRO Advect Tracers (+TRACER & PARTICLE)
 
 
 # code units (in cgs)
@@ -47,7 +48,7 @@ PAR_NPAR                      32768       # total number of particles (must be s
 PAR_INIT                      1           # initialization option for particles: (1=FUNCTION, 2=RESTART, 3=FILE->"PAR_IC")
 PAR_INTERP                    2           # particle interpolation scheme: (1=NGP, 2=CIC, 3=TSC) [2]
 PAR_INTEG                     2           # particle integration scheme: (1=Euler, 2=KDK) [2]
-TRACER_INTEG		          2           # tracer integration scheme: (1=Euler, 2=RK2) [2]
+TRACER_INTEG		      2           # tracer integration scheme: (1=Euler, 2=RK2) [2]
 PAR_IMPROVE_ACC               1           # improve force accuracy at patch boundaries [1] ##STORE_POT_GHOST and PAR_INTERP=2/3 ONLY##
 PAR_PREDICT_POS               1           # predict particle position during mass assignment [1]
 PAR_REMOVE_CELL              -1.0         # remove particles X-root-cells from the boundaries (non-periodic BC only; <0=auto) [-1.0]
@@ -127,7 +128,7 @@ OPT__CORR_AFTER_ALL_SYNC     -1           # apply various corrections after all 
                                           # (-1=auto, 0=off, 1=every step, 2=before dump) [-1]
 OPT__NORMALIZE_PASSIVE        0           # ensure "sum(passive_scalar_density) == gas_density" [1]
 OPT__OVERLAP_MPI              0           # overlap MPI communication with CPU/GPU computations [0] 
-OPT__FREEZE_FLUID 0 # do not evolve fluid at all [0]##NOT SUPPORTED YET##
+OPT__FREEZE_FLUID 	      1 	  # do not evolve fluid at all [0]##NOT SUPPORTED YET##
 OPT__RESET_FLUID              0           # reset fluid variables after each update -> edit "Flu_ResetByUser.cpp" [0]
 MIN_DENS                      0.0         # minimum mass density    (must >= 0.0) [0.0] ##HYDRO, MHD, and ELBDM ONLY##
 MIN_PRES                      1.0e-15     # minimum pressure        (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
@@ -158,7 +159,7 @@ OPT__EXT_POT                  0           # add external potential    (0=off, 1=
 OPT__INIT                     1           # initialization option: (1=FUNCTION, 2=RESTART, 3=FILE->"UM_IC")
 RESTART_LOAD_NRANK            1           # number of parallel I/O (i.e., number of MPI ranks) for restart [1]
 OPT__RESTART_RESET            0           # reset some simulation status parameters (e.g., current step and time) during restart [0]
-OPT__INIT_RESTRICT            1           # restrict all data during the initialization [1]
+OPT__INIT_RESTRICT            0           # restrict all data during the initialization [1]
 OPT__INIT_GRID_WITH_OMP       1           # enable OpenMP when assigning the initial condition of each grid patch [1]
 OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2=CUDA, -1=MPI rank, >=0=input) [-1]
 INIT_SUBSAMPLING_NCELL        0           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
@@ -194,10 +195,10 @@ OPT__OUTPUT_DIVMAG            0           # output |divergence(B)*dh/|B|| [0] ##
 OPT__OUTPUT_USER_FIELD        0           # output user-defined derived fields [0] -> edit "Flu_DerivedField_User.cpp"
 OPT__OUTPUT_MODE              2           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
 OUTPUT_STEP                   5           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
-OUTPUT_DT                     5.0e-5       # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
-OUTPUT_PART_X                0.5         # x coordinate for OPT__OUTPUT_PART [-1.0]
-OUTPUT_PART_Y                0.5         # y coordinate for OPT__OUTPUT_PART [-1.0]
-OUTPUT_PART_Z                0.5         # z coordinate for OPT__OUTPUT_PART [-1.0]
+OUTPUT_DT                     5.0e-4      # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
+OUTPUT_PART_X                0.5          # x coordinate for OPT__OUTPUT_PART [-1.0]
+OUTPUT_PART_Y                0.5          # y coordinate for OPT__OUTPUT_PART [-1.0]
+OUTPUT_PART_Z                0.5          # z coordinate for OPT__OUTPUT_PART [-1.0]
 INIT_DUMPID                  -1           # set the first dump ID (<0=auto) [-1]
 
 
