@@ -122,7 +122,9 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
          for (int d=0; d<3; d++)
          {
             ParPos[d][p] += ParVel[d][p]*dt;
-            ParVel[d][p] += ParAcc[d][p]*dt;
+//          only accelerate massive particles
+            if ( ParType[p] != PTYPE_TRACER )
+               ParVel[d][p] += ParAcc[d][p]*dt;
          }
 
          ParTime[p] = SyncTime_Real;
