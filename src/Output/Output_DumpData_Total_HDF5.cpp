@@ -248,7 +248,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    if ( OPT__OUTPUT_POT )  sprintf( FieldLabelOut[PotDumpIdx], PotLabel );
 #  endif
 
-#  ifdef PARTICLE
+#  ifdef MASSIVE_PARTICLES
    const int ParDensDumpIdx = ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE ) ? NFieldStored++ : -1;
    if ( ParDensDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
