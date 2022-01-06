@@ -579,6 +579,7 @@ void CUAPI_MemFree_PoissonGravity();
 #ifdef PARTICLE
 void Par_Init_ByFile();
 void Par_Output_TextFile( const char *comment );
+void Par_Output_BinaryFile( const char *comment );
 void Par_FindHomePatch_UniformGrid( const int lv, const bool OldParOnly,
                                     const long NNewPar, real *NewParAtt[PAR_NATT_TOTAL] );
 void Par_PassParticle2Son_SinglePatch( const int FaLv, const int FaPID );

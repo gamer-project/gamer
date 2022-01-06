@@ -180,7 +180,7 @@ INT_MONO_COEFF                2.0         # coefficient for ensuring the interpo
 OPT__OUTPUT_TOTAL             1           # output the simulation snapshot: (0=off, 1=HDF5, 2=C-binary) [1]
 OPT__OUTPUT_PART              0           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag) [0]
 OPT__OUTPUT_USER              0           # output the user-specified data -> edit "Output_User.cpp" [0]
-OPT__OUTPUT_PAR_TEXT          1           # output the particle text file [0] ##PARTICLE ONLY##
+OPT__OUTPUT_PAR_MODE          1           # output the particle data: (0=off, 1=text-file, 2=C-binary) [0] ##PARTICLE ONLY##
 OPT__OUTPUT_BASEPS            0           # output the base-level power spectrum [0]
 OPT__OUTPUT_BASE              0           # only output the base-level data [0] ##OPT__OUTPUT_PART ONLY##
 OPT__OUTPUT_POT               0           # output gravitational potential [0] ##OPT__OUTPUT_TOTAL ONLY##

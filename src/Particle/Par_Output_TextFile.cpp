@@ -7,7 +7,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_Output_TextFile
-// Description :  Output the particle position and velocity
+// Description :  Output particle attributes in the text format
 //
 // Parameter   :  FileName : Output file name
 //
