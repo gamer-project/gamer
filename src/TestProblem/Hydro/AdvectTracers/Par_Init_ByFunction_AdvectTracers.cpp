@@ -52,11 +52,11 @@ void Par_Init_ByFunction_AdvectTracers( const long NPar_ThisRank, const long NPa
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
-   const real delta_p[3] = { (real)0.5*amr->BoxSize[0]/(Advect_NPar[0]+1),
-                             (real)0.5*amr->BoxSize[1]/(Advect_NPar[1]+1),
-                             (real)0.5*amr->BoxSize[2]/(Advect_NPar[2]+1) };
+   const double delta_p[3] = { 0.5*amr->BoxSize[0]/(Advect_NPar[0]+1),
+                               0.5*amr->BoxSize[1]/(Advect_NPar[1]+1),
+                               0.5*amr->BoxSize[2]/(Advect_NPar[2]+1) };
 
-   const real delta_box = (real)0.5*amr->BoxSize[0] / MPI_NRank;
+   const double delta_box = 0.5*amr->BoxSize[0] / MPI_NRank;
 
    const long NParZ_Local = Advect_NPar[2] / MPI_NRank;
    const long NPar_ToAssign = Advect_NPar[0]*Advect_NPar[1]*NParZ_Local;
@@ -76,11 +76,12 @@ void Par_Init_ByFunction_AdvectTracers( const long NPar_ThisRank, const long NPa
 
       const long p = IDX321( ii, jj, kk, Advect_NPar[0], Advect_NPar[1] );
 
+//    tracer particles have no mass
       ParMass[p] = 0.0;
 
-      ParPosX[p] = (ii+1)*delta_p[0]+0.25*amr->BoxSize[0];
-      ParPosY[p] = (jj+1)*delta_p[1]+0.25*amr->BoxSize[1];
-      ParPosZ[p] = (kk+1)*delta_p[2]+0.25*amr->BoxSize[2] + MPI_Rank*delta_box;
+      ParPosX[p] = real( (ii+1)*delta_p[0]+0.25*amr->BoxSize[0] );
+      ParPosY[p] = real( (jj+1)*delta_p[1]+0.25*amr->BoxSize[1] );
+      ParPosZ[p] = real( (kk+1)*delta_p[2]+0.25*amr->BoxSize[2] + MPI_Rank*delta_box );
 
 //    synchronize all particles to the physical time at the base level
       ParTime[p] = Time[0];
