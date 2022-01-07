@@ -261,6 +261,9 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //    3. update particles (prediction for KDK) and exchange particles
 // ===============================================================================================
 #     ifdef PARTICLE
+
+#     ifdef MASSIVE_PARTICLES
+
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
          Aux_Message( stdout, "   Lv %2d: Par_UpdateParticle (predict) %5s... ", lv, "" );
 
@@ -275,14 +278,21 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                      Timer_Par_Update[lv][0],   TIMER_ON   );
 #     endif
 
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+
+#     endif
+
 #     ifdef TRACER
+
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+         Aux_Message( stdout, "   Lv %2d: Par_UpdateTracerParticle %5s... ", lv, "" );
 
       TIMING_FUNC(   Par_UpdateTracerParticle( lv, TimeNew, TimeOld, false ),
                      Timer_Par_Update[lv][0],   TIMER_ON   );
 
-#     endif
-
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+
+#     endif
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
          Aux_Message( stdout, "   Lv %2d: Par_PassParticle2Sibling %9s... ", lv, "" );
@@ -291,6 +301,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                      Timer_Par_2Sib[lv],   TIMER_ON   );
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+
 #     endif
 // ===============================================================================================
 
@@ -391,6 +402,9 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //    5. correct particles velocity and send particles to lv+1
 // ===============================================================================================
 #     ifdef PARTICLE
+
+#     ifdef MASSIVE_PARTICLES
+
       if ( amr->Par->Integ == PAR_INTEG_KDK )
       {
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
@@ -423,6 +437,8 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
             if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
          }
       }
+
+#     endif // #ifdef MASSIVE_PARTICLES
 
 //    pass particles to the children patches
 //    --> we will do this later (just before the star-formation routines) if OPT__MINIMIZE_MPI_BARRIER is adopted
