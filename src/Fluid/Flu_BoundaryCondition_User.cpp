@@ -158,7 +158,8 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
 
 
 // 1D array -> 3D array
-   real (*Array3D)[ArraySizeZ][ArraySizeY][ArraySizeX] = ( real (*)[ArraySizeZ][ArraySizeY][ArraySizeX] )Array;
+   typedef real (*vla)[ArraySizeZ][ArraySizeY][ArraySizeX];
+   vla Array3D = ( vla )Array;
 
 
 // set the boundary values
