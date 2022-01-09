@@ -165,7 +165,8 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
    const double _dh3      = CUBE(_dh);
    const double Ghost_Phy = amr->Par->GhostSize*dh;
 
-   real (*Rho3D)[RhoSize][RhoSize] = ( real (*)[RhoSize][RhoSize] )Rho;
+   typedef real (*vla)[RhoSize][RhoSize];
+   vla Rho3D = ( vla )Rho;
 
    int  idx[3];      // array index for Rho
    real ParDens;     // mass density of the cloud
