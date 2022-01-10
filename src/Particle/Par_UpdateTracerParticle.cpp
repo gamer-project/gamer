@@ -213,7 +213,7 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
                                    VelSize, VelY, amr->patch[0][lv][PID]->NPar, InterpParPos,
                                    ParType, amr->patch[0][lv][PID]->ParList, true, Vel_Temp[1] );
             Par_MapMesh2Particles( lv, P, amr->patch[0][lv][PID]->EdgeL, amr->patch[0][lv][PID]->EdgeR,
-                                   VelSize, VelY, amr->patch[0][lv][PID]->NPar, InterpParPos,
+                                   VelSize, VelZ, amr->patch[0][lv][PID]->NPar, InterpParPos,
                                    ParType, amr->patch[0][lv][PID]->ParList, true, Vel_Temp[2] );
 
             for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++) {
