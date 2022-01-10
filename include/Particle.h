@@ -120,6 +120,7 @@ struct Particle_t
    bool          PredictPos;
    double        RemoveCell;
    int           GhostSize;
+   int           GhostSizeTracer;
    real         *Attribute[PAR_NATT_TOTAL];
    long         *InactiveParList;
 
@@ -185,6 +186,7 @@ struct Particle_t
       PredictPos          = true;
       RemoveCell          = -999.9;
       GhostSize           = -1;
+      GhostSizeTracer     = -1;
 
       for (int lv=0; lv<NLEVEL; lv++)  NPar_Lv[lv] = 0;
 

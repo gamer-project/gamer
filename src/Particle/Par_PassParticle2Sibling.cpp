@@ -205,7 +205,12 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
 #              else
                const int MagSg = NULL_INT;
 #              endif
-               Output_Patch( lv, PID, amr->FluSg[lv], amr->PotSg[lv], MagSg, "debug" );
+#              ifdef GRAVITY
+               const int PotSg = amr->PotSg[lv];
+#              else
+               const int PotSg = NULL_INT;
+#              endif
+               Output_Patch( lv, PID, amr->FluSg[lv], PotSg, MagSg, "debug" );
                MPI_Exit();
             }
 #           endif

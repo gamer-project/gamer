@@ -373,6 +373,7 @@ void Init_ResetParameter()
 
       PRINT_WARNING( amr->Par->GhostSize, FORMAT_INT, "for the adopted PAR_INTERP scheme" );
    }
+   amr->Par->GhostSizeTracer = amr->Par->GhostSize + 1;
 #  endif // #ifdef PARTICLE
 
 

@@ -287,6 +287,11 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
          Aux_Message( stdout, "   Lv %2d: Par_UpdateTracerParticle %5s... ", lv, "" );
 
+//    exchange the updated density and momentum fields in the buffer patches for computing the tracer particle velocity
+      TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, NULL_INT, DATA_GENERAL,
+                                        _DENS|_MOMX|_MOMY|_MOMZ, _NONE, amr->Par->GhostSize, USELB_YES ),
+                     Timer_GetBuf[lv][0],   TIMER_ON   );
+
       TIMING_FUNC(   Par_UpdateTracerParticle( lv, TimeNew, TimeOld, false ),
                      Timer_Par_Update[lv][0],   TIMER_ON   );
 

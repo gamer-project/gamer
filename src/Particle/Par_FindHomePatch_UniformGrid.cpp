@@ -154,7 +154,7 @@ void Par_FindHomePatch_UniformGrid( const int lv, const bool OldParOnly,
       const int  PID   = HomePID[t];
 
 #     ifdef DEBUG_PARTICLE
-      amr->patch[0][lv][PID]->AddParticle( 1, &ParID, &amr->Par->NPar_Lv[lv], Ptype,
+      amr->patch[0][lv][PID]->AddParticle( 1, &ParID, &amr->Par->NPar_Lv[lv], PType,
                                            Pos, amr->Par->NPar_AcPlusInac, __FUNCTION__ );
 #     else
       amr->patch[0][lv][PID]->AddParticle( 1, &ParID, &amr->Par->NPar_Lv[lv], PType);
