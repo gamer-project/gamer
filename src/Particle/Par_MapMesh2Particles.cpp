@@ -90,7 +90,7 @@ void Par_MapMesh2Particles ( const int lv, const int P, const double EdgeL[3],
             idxLR[1][d] = idxLR[0][d] + 1;
 
 //          prevent from round-off errors
-//          (CIC should be clear of this issue unless round-off erros are comparable to dh)
+//          (CIC should be clear of this issue unless round-off errors are comparable to dh)
             if ( idxLR[0][d] < 0 )
             {
 #              ifdef DEBUG_PARTICLE
