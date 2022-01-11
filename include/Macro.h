@@ -484,6 +484,7 @@
 #  define _PAR_VELX           ( 1L << PAR_VELX )
 #  define _PAR_VELY           ( 1L << PAR_VELY )
 #  define _PAR_VELZ           ( 1L << PAR_VELZ )
+#  define _PAR_TYPE           ( 1L << PAR_TYPE )
 # ifdef STORE_PAR_ACC
 #  define _PAR_ACCX           ( 1L << PAR_ACCX )
 #  define _PAR_ACCY           ( 1L << PAR_ACCY )
