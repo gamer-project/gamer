@@ -222,25 +222,35 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
          // particle index offset
          const long pp = p + coffset;
 
+         // set the particle type
+         ParType[pp] = real( ptype[p] );
+
          // --> convert to code unit before storing to the particle repository to avoid floating-point overflow
          // --> we have assumed that the loaded data are in cgs
-         ParMass[pp] = real( mass[p] / UNIT_M );
 
          ParPosX[pp] = real( xpos[p] / UNIT_L );
          ParPosY[pp] = real( ypos[p] / UNIT_L );
          ParPosZ[pp] = real( zpos[p] / UNIT_L );
 
-         ParVelX[pp] = real( xvel[p] / UNIT_V );
-         ParVelY[pp] = real( yvel[p] / UNIT_V );
-         ParVelZ[pp] = real( zvel[p] / UNIT_V );
+         if ( (int)ParType[pp] == PTYPE_TRACER ) {
+            // tracer particles have zero mass
+            // and their velocities will be set by
+            // the grid later
+            ParMass[pp] = 0.0;
+            ParVelX[pp] = 0.0;
+            ParVelY[pp] = 0.0;
+            ParVelX[pp] = 0.0;
+         } else {
+            // For massive particles get their mass
+            // and velocity
+            ParMass[pp] = real( mass[p] / UNIT_M );
+            ParVelX[pp] = real( xvel[p] / UNIT_V );
+            ParVelY[pp] = real( yvel[p] / UNIT_V );
+            ParVelZ[pp] = real( zvel[p] / UNIT_V );
+         }
 
          // synchronize all particles to the physical time at the base level
          ParTime[pp] = Time[0];
-
-         // set the particle type
-         // the offset of 1 comes from the fact that DM = 0 and star = 1 in
-         // cluster_generator
-         ParType[pp] = real( ptype[p] + 1);
 
       }
 
@@ -270,22 +280,28 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       = { Merger_Coll_PosX3, Merger_Coll_PosY3, amr->BoxCenter[2] };
 
    for (long p=0; p<NPar_ThisRank_EachCluster[0]; p++) {
-      ParVelX[p] += Merger_Coll_VelX1;
-      ParVelY[p] += Merger_Coll_VelY1;
+      if ( (int)ParType[p] != PTYPE_TRACER ) {
+         ParVelX[p] += Merger_Coll_VelX1;
+         ParVelY[p] += Merger_Coll_VelY1;
+      }
       for (int d=0; d<3; d++)
          ParPos[d][p] += ClusterCenter1[d];
    }
 
    for (long p=NPar_ThisRank_EachCluster[0]; p<NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1]; p++) {
-      ParVelX[p] += Merger_Coll_VelX2;
-      ParVelY[p] += Merger_Coll_VelY2;
+      if ( (int)ParType[p] != PTYPE_TRACER ) {
+         ParVelX[p] += Merger_Coll_VelX2;
+         ParVelY[p] += Merger_Coll_VelY2;
+      }
       for (int d=0; d<3; d++)
          ParPos[d][p] += ClusterCenter2[d];
    }
 
    for (long p=NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1]; p<NPar_ThisRank; p++) {
-      ParVelX[p] += Merger_Coll_VelX3;
-      ParVelY[p] += Merger_Coll_VelY3;
+      if ( (int)ParType[p] != PTYPE_TRACER ) {
+         ParVelX[p] += Merger_Coll_VelX3;
+         ParVelY[p] += Merger_Coll_VelY3;
+      }
       for (int d=0; d<3; d++)
          ParPos[d][p] += ClusterCenter3[d];
    }
