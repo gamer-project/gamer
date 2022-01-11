@@ -60,7 +60,7 @@ static FieldIdx_t ColorField3Idx = Idx_Undefined;
 // =======================================================================================
 
 // problem-specific function prototypes
-#ifdef MASSSIVE_PARTICLES
+#ifdef MASSIVE_PARTICLES
 void Par_Init_ByFunction_ClusterMerger(const long NPar_ThisRank,
                                        const long NPar_AllRank,
                                        real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
@@ -640,7 +640,7 @@ void Init_TestProb_Hydro_ClusterMerger()
    End_User_Ptr                   = End_ClusterMerger;
    Par_Init_ByFunction_Ptr        = Par_Init_ByFunction_ClusterMerger;
    Init_Field_User_Ptr            = AddNewField_ClusterMerger;
-   Par_Init_Attribute_User_Ptr    = AddNewParticleAttribute_ClusterMerger;
+   //Par_Init_Attribute_User_Ptr    = AddNewParticleAttribute_ClusterMerger;
 #  ifdef MHD
    Init_Function_BField_User_Ptr  = SetBFieldIC;
 #  endif
