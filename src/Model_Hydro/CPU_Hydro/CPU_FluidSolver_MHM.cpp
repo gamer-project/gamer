@@ -295,11 +295,10 @@ void CPU_FluidSolver_MHM(
    int Iteration                   = 0;
 #  ifdef __CUDACC__
    __shared__ int FullStepFailure;
+   FullStepFailure                 = 0;
 #  else
-   int FullStepFailure;
 #  endif
    real AdaptiveMinModCoeff;
-   FullStepFailure                           = 0;
 
 // openmp pragma for the CPU solver
 #  ifndef __CUDACC__
@@ -341,12 +340,13 @@ void CPU_FluidSolver_MHM(
 #     ifdef __CUDACC__
       const int P = blockIdx.x;
 #     else
-#     pragma omp for schedule( runtime ) private ( Iteration, AdaptiveMinModCoeff, FullStepFailure )
+#     pragma omp for schedule( runtime ) private ( Iteration, AdaptiveMinModCoeff )
       for (int P=0; P<NPatchGroup; P++)
 #     endif
       {
 #        ifndef __CUDACC__
          Iteration = 0;
+         int FullStepFailure = 0; // FullStepFailure must be initialized with OpenMP parallel region
 #        endif
 
 //       1. half-step prediction
