@@ -188,7 +188,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 
 
 //      5-2. return all threads within a block when any cell in the block is unphysical
-//           --> do not return when AdaptiveMinModCoeff is zero to ensure the rest of cells in the patche group
+//           --> do not return when AdaptiveMinModCoeff is zero, ensuring the rest of cells in the patch group
 //               are stored properly
         if ( *FullStepFailure == 1 && AdaptiveMinModCoeff > (real)0.0 )     return;
 
