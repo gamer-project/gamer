@@ -105,15 +105,19 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
      int itr = -1;
      real IntMonoCoeff = NULL_REAL;
-     real IntMonoCoeff_Min = (real)0.0;
+     const real IntMonoCoeff_Min = (real)0.0;
      Int_Scheme_t Int_Scheme_FunPtr;
      bool GotFailCell = false;
-     const int Max = 3;
+     const int MaxIteration = 3;
      const int CSize3D = CSize[0]*CSize[1]*CSize[2];
      const int FSize3D = FSize[0]*FSize[1]*FSize[2];
      real Cons[NCOMP_TOTAL], Prim[NCOMP_TOTAL], Array[NCOMP_TOTAL];
      bool FData_is_Prim = false;
 
+
+#    ifdef GAMER_DEBUG
+     if ( MaxIteration < 1 ) printf( "MaxIteration must be greater than or equal to 1 !!\n" );
+#    endif
 
 #    if ( MODEL == HYDRO  &&  defined GRAVITY )
      const real JeansMinPres_Coeff = ( JEANS_MIN_PRES ) ?
@@ -186,7 +190,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 //            we add 1 to itr so that min-mod coefficient can be reduced
               if ( IntWhere == INT_NEW_PATCHES && itr == 0 ) itr++;
 
-              IntMonoCoeff -= (real)itr * ( (real)INT_MONO_COEFF - IntMonoCoeff_Min ) / (real) Max ;
+              IntMonoCoeff -= (real)itr * ( (real)INT_MONO_COEFF - IntMonoCoeff_Min ) / (real)MaxIteration ;
            }
 
 //         4. perform interpolation
@@ -219,7 +223,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 //         6. counter increment
            itr++;
 
-        } while ( GotFailCell && itr <= Max );
+        } while ( GotFailCell && itr <= MaxIteration );
 
      }
      else

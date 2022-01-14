@@ -301,6 +301,10 @@ void CPU_FluidSolver_MHM(
    FullStepFailure = 0;
    real AdaptiveMinModCoeff;
 
+#  ifdef GAMER_DEBUG
+   if ( MaxIteration < 1 ) printf( "MaxIteration must be greater than or equal to 1 !!\n" );
+#  endif
+
 // openmp pragma for the CPU solver
 #  ifndef __CUDACC__
 #  pragma omp parallel
