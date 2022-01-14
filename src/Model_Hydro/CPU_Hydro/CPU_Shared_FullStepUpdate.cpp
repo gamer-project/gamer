@@ -167,7 +167,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
       for (int v=0; v<NCOMP_TOTAL; v++)   g_Output[v][idx_out] = Output_1Cell[v];
 
 
-//    5. check unphysical cells within a patch
+//    5. check unphysical cells within a patch group
       if ( FullStepFailure != NULL )
       {
 
@@ -188,7 +188,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 
 
 //      5-2. return all threads within a block when any cell in the block is unphysical
-//           --> do not return when AdaptiveMinModCoeff is zero, ensuring the rest of cells in the patch group
+//           --> do not return when AdaptiveMinModCoeff reaches zero, ensuring the rest of cells in the patch group
 //               are stored properly
         if ( *FullStepFailure == 1 && AdaptiveMinModCoeff > (real)0.0 )     return;
 
