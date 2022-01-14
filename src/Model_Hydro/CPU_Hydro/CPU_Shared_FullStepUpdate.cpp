@@ -33,34 +33,35 @@
 //                2. Invoke dual-energy check if DualEnergySwitch is on
 //                3. If any unphysical fluid cell is found in a patch group, Hydro_FullStepUpdate() will return instantly.
 //
-// Parameter   :  g_Input          : Array storing the input fluid data
-//                g_Output         : Array to store the updated fluid data
-//                g_DE_Status      : Array to store the dual-energy status
-//                g_FC_B           : Array storing the updated face-centered B field
-//                                   --> For the dual-energy formalism only
-//                g_Flux           : Array storing the input face-centered fluxes
-//                                   --> Accessed with the array stride N_FL_FLUX even thought its actually
-//                                       allocated size is N_FC_FLUX^3
-//                dt               : Time interval to advance solution
-//                dh               : Cell size
-//                MinDens/Eint     : Density and internal energy floors
-//                DualEnergySwitch : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
-//                NormPassive      : true --> normalize passive scalars so that the sum of their mass density
-//                                            is equal to the gas mass density
-//                NNorm            : Number of passive scalars to be normalized
-//                                   --> Should be set to the global variable "PassiveNorm_NVar"
-//                NormIdx          : Target variable indices to be normalized
-//                                   --> Should be set to the global variable "PassiveNorm_VarIdx"
-//                EoS              : EoS object
-//                                   --> Only for obtaining Gamma used by the dual-energy formalism
-//                FullStepFailure  : (1/0) --> (Fail to update fluid patch group/otherwise)
+// Parameter   :  g_Input             : Array storing the input fluid data
+//                g_Output            : Array to store the updated fluid data
+//                g_DE_Status         : Array to store the dual-energy status
+//                g_FC_B              : Array storing the updated face-centered B field
+//                                      --> For the dual-energy formalism only
+//                g_Flux              : Array storing the input face-centered fluxes
+//                                      --> Accessed with the array stride N_FL_FLUX even thought its actually
+//                                          allocated size is N_FC_FLUX^3
+//                dt                  : Time interval to advance solution
+//                dh                  : Cell size
+//                MinDens/Eint        : Density and internal energy floors
+//                DualEnergySwitch    : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
+//                NormPassive         : true --> normalize passive scalars so that the sum of their mass density
+//                                               is equal to the gas mass density
+//                NNorm               : Number of passive scalars to be normalized
+//                                      --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx             : Target variable indices to be normalized
+//                                      --> Should be set to the global variable "PassiveNorm_VarIdx"
+//                EoS                 : EoS object
+//                                      --> Only for obtaining Gamma used by the dual-energy formalism
+//                FullStepFailure     : (1/0) --> (Fail to update fluid patch group/otherwise)
+//                AdaptiveMinModCoeff : Adaptive MinMod-coefficient
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                            const real dt, const real dh, const real MinDens, const real MinEint,
                            const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
-                           const EoS_t *EoS, int *FullStepFailure )
+                           const EoS_t *EoS, int *FullStepFailure, real AdaptiveMinModCoeff )
 {
 
    const int  didx_flux[3] = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };
@@ -187,7 +188,9 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 
 
 //      5-2. return all threads within a block when any cell in the block is unphysical
-        if ( *FullStepFailure == 1 )     return;
+//           --> do not return when AdaptiveMinModCoeff is zero to ensure the rest of cells in the patche group
+//               are stored properly
+        if ( *FullStepFailure == 1 && AdaptiveMinModCoeff > (real)0.0 )     return;
 
 
 //      5-3. check the negative density and energy again

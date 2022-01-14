@@ -54,7 +54,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                            const real dt, const real dh, const real MinDens, const real MinEint,
                            const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
-                           const EoS_t *EoS, int *FullStepFailure );
+                           const EoS_t *EoS, int *FullStepFailure, real AdaptiveMinModCoeff );
 #if   ( RSOLVER == EXACT )
 void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                 const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
@@ -295,9 +295,10 @@ void CPU_FluidSolver_MHM(
    int Iteration                   = 0;
 #  ifdef __CUDACC__
    __shared__ int FullStepFailure;
-   FullStepFailure                 = 0;
 #  else
+   int FullStepFailure;
 #  endif
+   FullStepFailure = 0;
    real AdaptiveMinModCoeff;
 
 // openmp pragma for the CPU solver
@@ -340,13 +341,14 @@ void CPU_FluidSolver_MHM(
 #     ifdef __CUDACC__
       const int P = blockIdx.x;
 #     else
-#     pragma omp for schedule( runtime ) private ( Iteration, AdaptiveMinModCoeff )
+#     pragma omp for schedule( runtime ) private ( Iteration, AdaptiveMinModCoeff, FullStepFailure )
       for (int P=0; P<NPatchGroup; P++)
 #     endif
       {
 #        ifndef __CUDACC__
+         // the private variables FullStepFailure must be initialized within the OpenMP parallel region
+         FullStepFailure = 0;
          Iteration = 0;
-         int FullStepFailure = 0; // FullStepFailure must be initialized with OpenMP parallel region
 #        endif
 
 //       1. half-step prediction
@@ -448,15 +450,6 @@ void CPU_FluidSolver_MHM(
             const int NSkip_T = 1;
 #           endif
 
-#           ifdef CHECK_UNPHYSICAL_IN_FLUID
-#           ifdef __CUDACC__
-            if ( threadIdx.x == 0 && FullStepFailure == 1 )
-#           else
-            if ( MPI_Rank == 0 && FullStepFailure == 1 )
-#           endif
-               printf("Iteration=%d, AdaptiveMinModCoeff=%13.10f\n", Iteration, AdaptiveMinModCoeff );
-#           endif
-
             Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, NSkip_N, NSkip_T,
                                CorrHalfVel, g_Pot_Array_USG[P], g_Corner_Array[P],
                                dt, dh, Time, UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray,
@@ -480,12 +473,22 @@ void CPU_FluidSolver_MHM(
 //          4. full-step evolution
             Hydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P], g_Mag_Array_Out[P],
                                   g_FC_Flux_1PG, dt, dh, MinDens, MinEint, DualEnergySwitch,
-                                  NormPassive, NNorm, c_NormIdx, &EoS, &FullStepFailure );
+                                  NormPassive, NNorm, c_NormIdx, &EoS, &FullStepFailure, AdaptiveMinModCoeff );
+
+#           ifdef CHECK_UNPHYSICAL_IN_FLUID
+#           ifdef __CUDACC__
+            if ( threadIdx.x == 0 && FullStepFailure == 1 )
+#           else
+            if ( MPI_Rank == 0 && FullStepFailure == 1 )
+#           endif
+               printf("Iteration=%d, AdaptiveMinModCoeff=%13.10f\n", Iteration, AdaptiveMinModCoeff );
+#           endif
 
             Iteration++;
 
-
-         } while( FullStepFailure && Iteration <= MaxIteration );
+         // do not use the criteria ( FullStepFailure && Iteration <= MaxIteration ) in the while loop
+         // to prevent from a redundant iteration after AdaptiveMinModCoeff reaches zero
+         } while( FullStepFailure && AdaptiveMinModCoeff > (real)0.0 );
 
       } // loop over all patch groups
    } // OpenMP parallel region
