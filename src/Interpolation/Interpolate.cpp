@@ -105,7 +105,6 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
      int itr = -1;
      real IntMonoCoeff = NULL_REAL;
-     const real IntMonoCoeff_Min = (real)0.0;
      Int_Scheme_t Int_Scheme_FunPtr;
      bool GotFailCell = false;
      const int MaxIteration = 3;
@@ -190,7 +189,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 //            we add 1 to itr so that min-mod coefficient can be reduced
               if ( IntTarget == INT_NEW_PATCHES && itr == 0 ) itr++;
 
-              IntMonoCoeff -= (real)itr * ( (real)INT_MONO_COEFF - IntMonoCoeff_Min ) / (real)MaxIteration;
+              IntMonoCoeff -= (real)itr * (real)INT_MONO_COEFF / (real)MaxIteration;
            }
 
 //         4. perform interpolation
