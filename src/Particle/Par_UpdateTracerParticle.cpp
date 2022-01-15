@@ -51,10 +51,10 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
    const int  ParGhost            = amr->Par->GhostSizeTracer;
    const int  VelSize             = PS1 + 2*ParGhost;
 
-   real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
-   real *ParVel[3] = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
-   real *ParTime   = amr->Par->Time;
-   real *ParType   = amr->Par->Type;
+   real *ParPos[3]       = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+   real *ParVel[3]       = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
+   real *ParTime         = amr->Par->Time;
+   const real *ParType   = amr->Par->Type;
 
 // check
 #  ifdef COMOVING
