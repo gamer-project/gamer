@@ -181,8 +181,9 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #     error : CTU does NOT support LR_EINT !!
 #  endif
 
-   if ( MinMod_Coeff < (real)0.0 )
-      printf( "Negative MinMod_Coeff !!\n" );
+// use !(IntMonoCoeff > (real)0.0) to include inf/nan
+   if ( !(MinMod_Coeff > (real)0.0) )
+      printf( "Negative/infinite/NaN MinMod_Coeff(%e) !!\n", MinMod_Coeff );
 #  endif // GAMER_DEBUG
 
 
