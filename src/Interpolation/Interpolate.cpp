@@ -61,14 +61,14 @@
 //                OppSign0thOrder : Apply 0th-order interpolation if the values to be interpolated change
 //                                  signs in adjacent cells
 //                                  --> See Int_MinMod1D() for details
-//                IntWhere        : (INT_GHOST_ZONES/INT_NEW_PATCHES)  --> (interpolate ghost zone/allocate new patches)
+//                IntTarget       : (INT_GHOST_ZONES/INT_NEW_PATCHES)  --> (interpolate ghost zone/allocate new patches)
 //                AdaptiveMinmod  : (INT_ADAPTIVE_ON/INT_ADAPTIVE_OFF) --> (reduce/fix min-mod coefficient)
 //-------------------------------------------------------------------------------------------------------
 void Interpolate( real CData [], const int CSize[3], const int CStart[3], const int CRange[3],
                   real FData [], const int FSize[3], const int FStart[3],
                   const int NComp, const IntScheme_t IntScheme, const bool UnwrapPhase,
                   const bool Monotonic[], const bool OppSign0thOrder,
-                  const Interpolate_t IntWhere, const Interpolate_t AdaptiveMinmod )
+                  const Interpolate_t IntTarget, const Interpolate_t AdaptiveMinmod )
 {
 
 //   check
@@ -161,8 +161,8 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
            }
 
 //         2. interpolate primitive variables with the original min-mod coefficient
-//            --> this step is only for interpolating ghost zone. i.e. IntWhere == INT_GHOST_ZONES
-           else if ( itr == 0 && IntWhere == INT_GHOST_ZONES )
+//            --> this step is only for interpolating ghost zone. i.e. IntTarget == INT_GHOST_ZONES
+           else if ( itr == 0 && IntTarget == INT_GHOST_ZONES )
            {
 
 //            As vanLeer, MinMod-3D, and MinMod-1D do not involve min-mod coefficient, we break the loop immediately
@@ -188,9 +188,9 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
            else
            {
 //            we add 1 to itr so that min-mod coefficient can be reduced
-              if ( IntWhere == INT_NEW_PATCHES && itr == 0 ) itr++;
+              if ( IntTarget == INT_NEW_PATCHES && itr == 0 ) itr++;
 
-              IntMonoCoeff -= (real)itr * ( (real)INT_MONO_COEFF - IntMonoCoeff_Min ) / (real)MaxIteration ;
+              IntMonoCoeff -= (real)itr * ( (real)INT_MONO_COEFF - IntMonoCoeff_Min ) / (real)MaxIteration;
            }
 
 //         4. perform interpolation
