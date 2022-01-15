@@ -605,6 +605,7 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
             }
          }
 
+         if ( Fields[ENGY] > 1e2 ) FailCell = true;
 
          // calculate discriminant for SRHD.
          // --> the discriminant is positive if and only if the Eq.(15) in MNRAS 504, 3298–3315 (2021) has a positive root.

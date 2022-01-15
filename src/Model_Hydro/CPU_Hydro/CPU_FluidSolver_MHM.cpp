@@ -291,7 +291,6 @@ void CPU_FluidSolver_MHM(
    const double *c_ExtAcc_AuxArray = NULL;
 #  endif
 
-   const int MaxIteration          = 4;
    int Iteration                   = 0;
 #  ifdef __CUDACC__
    __shared__ int FullStepFailure;
@@ -301,9 +300,6 @@ void CPU_FluidSolver_MHM(
    FullStepFailure = 0;
    real AdaptiveMinModCoeff;
 
-#  ifdef GAMER_DEBUG
-   if ( MaxIteration < 1 ) printf( "MaxIteration must be greater than or equal to 1 !!\n" );
-#  endif
 
 // openmp pragma for the CPU solver
 #  ifndef __CUDACC__
@@ -418,7 +414,8 @@ void CPU_FluidSolver_MHM(
 
          do {
 
-            AdaptiveMinModCoeff = ( MaxIteration - Iteration ) * ( MinMod_Coeff / (real)MaxIteration );
+            AdaptiveMinModCoeff = ( MaxIteration == 0 ) ? MinMod_Coeff :
+            MinMod_Coeff - (real)Iteration * MinMod_Coeff / (real)MaxIteration;
 
 
 //          1-a-5. evaluate the face-centered values by data reconstruction
@@ -434,7 +431,9 @@ void CPU_FluidSolver_MHM(
 
          do {
 
-            AdaptiveMinModCoeff = ( MaxIteration - Iteration ) * ( MinMod_Coeff / (real)MaxIteration );
+            AdaptiveMinModCoeff = ( MaxIteration == 0 ) ? MinMod_Coeff :
+            MinMod_Coeff - (real)Iteration * MinMod_Coeff / (real)MaxIteration;
+
 
 //          evaluate the face-centered values by data reconstruction
             Hydro_DataReconstruction( g_Flu_Array_In[P], NULL, g_PriVar_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
@@ -488,11 +487,12 @@ void CPU_FluidSolver_MHM(
                printf("Iteration=%d, AdaptiveMinModCoeff=%13.10f\n", Iteration, AdaptiveMinModCoeff );
 #           endif
 
+
             Iteration++;
 
          // do not use ( FullStepFailure && Iteration <= MaxIteration ) as the stop condition in the do while loop
          // to prevent from a redundant iteration after AdaptiveMinModCoeff reaches zero
-         } while( FullStepFailure && AdaptiveMinModCoeff > (real)0.0 );
+         } while( ( FullStepFailure && AdaptiveMinModCoeff > (real)0.0 ) || MaxIteration == 0 );
 
       } // loop over all patch groups
    } // OpenMP parallel region

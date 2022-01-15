@@ -103,7 +103,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 #    endif // #ifdef GAMER_DEBUG
 
 
-     int itr = -1;
+     int Iteration = 0;
      real IntMonoCoeff = NULL_REAL;
      Int_Scheme_t Int_Scheme_FunPtr;
      bool GotFailCell = false;
@@ -150,18 +150,21 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
         do {
 
+
 //         0. set GotFailCell to false after the second itration
            GotFailCell = false;
 
+
 //         1. interpolate ghost-zones or newly allocated patches with the original min-mod coefficient
-           if ( itr == -1 )
+           if ( Iteration == 0 )
            {
-              IntMonoCoeff = INT_MONO_COEFF;
+              IntMonoCoeff = (real)INT_MONO_COEFF;
            }
+
 
 //         2. interpolate primitive variables with the original min-mod coefficient
 //            --> this step is only for interpolating ghost zone. i.e. IntTarget == INT_GHOST_ZONES
-           else if ( itr == 0 && IntTarget == INT_GHOST_ZONES )
+           else if ( Iteration == 1 && IntTarget == INT_GHOST_ZONES )
            {
 
 //            As vanLeer, MinMod-3D, and MinMod-1D do not involve min-mod coefficient, we break the loop immediately
@@ -183,13 +186,14 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
               FData_is_Prim = true;
            }
 
+
 //         3. reduce the original min-mod coefficient
            else
            {
-//            we add 1 to itr so that min-mod coefficient can be reduced
-              if ( IntTarget == INT_NEW_PATCHES && itr == 0 ) itr++;
 
-              IntMonoCoeff -= (real)itr * (real)INT_MONO_COEFF / (real)MaxIteration;
+              // ADAPTIVE_MINMOD_MAX_ITR is always greater than 0 within this block
+              // --> no division by zero occurs
+              IntMonoCoeff -= (real)INT_MONO_COEFF / (real)ADAPTIVE_MINMOD_MAX_ITR;
 
 #             ifdef GAMER_DEBUG
               if ( IntMonoCoeff < (real)0.0 )
@@ -197,6 +201,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 #             endif
 
            }
+
 
 //         4. perform interpolation
            for (int v=0; v<NComp; v++)
@@ -226,11 +231,11 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
 
 //         6. counter increment
-           itr++;
+           Iteration++;
 
-//      do not use ( GotFailCell && itr <= MaxIteration ) as the stop condition in the do while loop
+//      do not use ( GotFailCell && Iteration <= MaxIteration ) as the stop condition in the do while loop
 //      to prevent from a redundant iteration after IntMonoCoeff reaches zero
-        } while ( GotFailCell && IntMonoCoeff > (real)0.0 );
+        } while ( ( GotFailCell && IntMonoCoeff > (real)0.0 ) || ADAPTIVE_MINMOD_MAX_ITR == 0 );
 
      }
      else
