@@ -488,11 +488,14 @@ void CPU_FluidSolver_MHM(
 #           endif
 
 
+//         5. counter increment
             Iteration++;
 
-         // do not use ( FullStepFailure && Iteration <= MaxIteration ) as the stop condition in the do while loop
-         // to prevent from a redundant iteration after AdaptiveMinModCoeff reaches zero
-         } while( ( FullStepFailure && AdaptiveMinModCoeff > (real)0.0 ) || MaxIteration == 0 );
+
+            if ( MaxIteration == 0 || Iteration == MaxIteration+1 ) break;
+
+
+         } while( FullStepFailure && Iteration <= MaxIteration );
 
       } // loop over all patch groups
    } // OpenMP parallel region
