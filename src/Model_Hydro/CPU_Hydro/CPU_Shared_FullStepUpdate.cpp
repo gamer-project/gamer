@@ -189,8 +189,8 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 
 
 //      5-2. return all threads within a block when any cell in the block is unphysical
-//           --> do not return when Iteration == MaxIteration, ensuring that the rest of
-//               cells in the patch group are stored properly
+//           --> return only when Iteration < MaxIteration, ensuring
+//               that the rest of cells in the patch group are stored properly
         if ( *FullStepFailure == 1 && Iteration < MaxIteration )     return;
 
 
