@@ -417,8 +417,6 @@ void CPU_FluidSolver_MHM(
             AdaptiveMinModCoeff = ( MaxIteration == 0 ) ? MinMod_Coeff :
             MinMod_Coeff - (real)Iteration * MinMod_Coeff / (real)MaxIteration;
 
-//          ensure AdaptiveMinModCoeff is non-negative
-            if ( FABS(AdaptiveMinModCoeff) < (real)10*MAX_ERROR ) AdaptiveMinModCoeff = (real)0.0;
 
 //          1-a-5. evaluate the face-centered values by data reconstruction
 //                 --> note that g_PriVar_Half_1PG[] returned by Hydro_RiemannPredict() stores the primitive variables
@@ -435,9 +433,6 @@ void CPU_FluidSolver_MHM(
 
             AdaptiveMinModCoeff = ( MaxIteration == 0 ) ? MinMod_Coeff :
             MinMod_Coeff - (real)Iteration * MinMod_Coeff / (real)MaxIteration;
-
-//          ensure AdaptiveMinModCoeff is non-negative
-            if ( FABS(AdaptiveMinModCoeff) < (real)10*MAX_ERROR ) AdaptiveMinModCoeff = (real)0.0;
 
 
 //          evaluate the face-centered values by data reconstruction
