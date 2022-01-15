@@ -190,6 +190,12 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
               if ( IntTarget == INT_NEW_PATCHES && itr == 0 ) itr++;
 
               IntMonoCoeff -= (real)itr * (real)INT_MONO_COEFF / (real)MaxIteration;
+
+#             ifdef GAMER_DEBUG
+              if ( IntMonoCoeff < (real)0.0 )
+                 Aux_Error( ERROR_INFO, "Negative IntMonoCoeff !! at line <%d>, function <%s>\n", __LINE__, __FUNCTION__ );
+#             endif
+
            }
 
 //         4. perform interpolation
