@@ -195,6 +195,10 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
               // --> no division by zero occurs
               IntMonoCoeff -= (real)INT_MONO_COEFF / (real)ADAPTIVE_MINMOD_MAX_ITR;
 
+
+              // ensure IntMonoCoeff is non-negative
+              if ( FABS(IntMonoCoeff) < (real)10*MAX_ERROR ) IntMonoCoeff = (real)0.0;
+
 #             ifdef GAMER_DEBUG
 //            use !(IntMonoCoeff > (real)0.0) to include inf/nan
               if ( !(IntMonoCoeff > (real)0.0) )

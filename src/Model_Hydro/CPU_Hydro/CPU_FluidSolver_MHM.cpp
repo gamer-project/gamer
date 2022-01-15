@@ -417,6 +417,8 @@ void CPU_FluidSolver_MHM(
             AdaptiveMinModCoeff = ( MaxIteration == 0 ) ? MinMod_Coeff :
             MinMod_Coeff - (real)Iteration * MinMod_Coeff / (real)MaxIteration;
 
+//          ensure AdaptiveMinModCoeff is non-negative
+            if ( FABS(AdaptiveMinModCoeff) < (real)10*MAX_ERROR ) AdaptiveMinModCoeff = (real)0.0;
 
 //          1-a-5. evaluate the face-centered values by data reconstruction
 //                 --> note that g_PriVar_Half_1PG[] returned by Hydro_RiemannPredict() stores the primitive variables
@@ -433,6 +435,9 @@ void CPU_FluidSolver_MHM(
 
             AdaptiveMinModCoeff = ( MaxIteration == 0 ) ? MinMod_Coeff :
             MinMod_Coeff - (real)Iteration * MinMod_Coeff / (real)MaxIteration;
+
+//          ensure AdaptiveMinModCoeff is non-negative
+            if ( FABS(AdaptiveMinModCoeff) < (real)10*MAX_ERROR ) AdaptiveMinModCoeff = (real)0.0;
 
 
 //          evaluate the face-centered values by data reconstruction
@@ -476,7 +481,7 @@ void CPU_FluidSolver_MHM(
 //          4. full-step evolution
             Hydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P], g_Mag_Array_Out[P],
                                   g_FC_Flux_1PG, dt, dh, MinDens, MinEint, DualEnergySwitch,
-                                  NormPassive, NNorm, c_NormIdx, &EoS, &FullStepFailure, AdaptiveMinModCoeff );
+                                  NormPassive, NNorm, c_NormIdx, &EoS, &FullStepFailure, Iteration, MaxIteration );
 
 #           ifdef CHECK_UNPHYSICAL_IN_FLUID
 #           ifdef __CUDACC__
