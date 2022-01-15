@@ -228,8 +228,8 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 //         6. counter increment
            itr++;
 
-//      do not use the criteria ( GotFailCell && itr <= MaxIteration ) in the while loop
-//      to prevent from a redundant iteration after AdaptiveMinModCoeff reaches zero
+//      do not use ( GotFailCell && itr <= MaxIteration ) as the stop condition in the do while loop
+//      to prevent from a redundant iteration after IntMonoCoeff reaches zero
         } while ( GotFailCell && IntMonoCoeff > (real)0.0 );
 
      }

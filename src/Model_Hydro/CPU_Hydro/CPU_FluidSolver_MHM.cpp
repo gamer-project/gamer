@@ -490,7 +490,7 @@ void CPU_FluidSolver_MHM(
 
             Iteration++;
 
-         // do not use the criteria ( FullStepFailure && Iteration <= MaxIteration ) in the while loop
+         // do not use ( FullStepFailure && Iteration <= MaxIteration ) as the stop condition in the do while loop
          // to prevent from a redundant iteration after AdaptiveMinModCoeff reaches zero
          } while( FullStepFailure && AdaptiveMinModCoeff > (real)0.0 );
 
