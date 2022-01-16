@@ -187,9 +187,9 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
            else
            {
 
-              // process always skip this block when ADAPTIVE_MINMOD_MAX_ITR == 0
+              // process always skip this block when OPT__MINMOD_MAX_ITR == 0
               // --> no division by zero occurs
-              IntMonoCoeff -= (real)INT_MONO_COEFF / (real)ADAPTIVE_MINMOD_MAX_ITR;
+              IntMonoCoeff -= (real)INT_MONO_COEFF / (real)OPT__MINMOD_MAX_ITR;
 
 
               // ensure IntMonoCoeff is non-negative
@@ -236,10 +236,10 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
            Iteration++;
 
 
-           if ( ADAPTIVE_MINMOD_MAX_ITR == 0 || Iteration == ADAPTIVE_MINMOD_MAX_ITR+1 ) break;
+           if ( OPT__MINMOD_MAX_ITR == 0 || Iteration == OPT__MINMOD_MAX_ITR+1 ) break;
 
 
-        } while ( GotFailCell && Iteration <= ADAPTIVE_MINMOD_MAX_ITR );
+        } while ( GotFailCell && Iteration <= OPT__MINMOD_MAX_ITR );
 
      }
      else

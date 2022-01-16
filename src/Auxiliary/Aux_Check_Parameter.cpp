@@ -195,6 +195,9 @@ void Aux_Check_Parameter()
    if ( INT_MONO_COEFF < 1.0  ||  INT_MONO_COEFF > 4.0 )
       Aux_Error( ERROR_INFO, "INT_MONO_COEFF (%14.7e) is not within the correct range [1.0, 4.0] !!\n", INT_MONO_COEFF );
 
+   if ( OPT__MINMOD_MAX_ITR < 0 )
+      Aux_Error( ERROR_INFO, "OPT__MINMOD_MAX_ITR (%d) should be non-negative !!\n", OPT__MINMOD_MAX_ITR );
+
    if ( OPT__MEMORY_POOL  &&  !OPT__REUSE_MEMORY )
       Aux_Error( ERROR_INFO, "please turn on OPT__REUSE_MEMORY for OPT__MEMORY_POOL !!\n" );
 
