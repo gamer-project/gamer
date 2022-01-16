@@ -143,6 +143,14 @@ const OptOutputPart_t
    OUTPUT_DIAG      = 7;
 
 
+// OPT_OUTPUT_PAR_MODE options
+typedef int OptOutputParMode_t;
+const OptOutputParMode_t
+   OUTPUT_PAR_NONE = 0,
+   OUTPUT_PAR_TEXT = 1,
+   OUTPUT_PAR_CBIN = 2;
+
+
 // options in "Prepare_PatchData"
 typedef int PrepUnit_t;
 const PrepUnit_t

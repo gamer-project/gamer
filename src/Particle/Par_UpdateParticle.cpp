@@ -173,8 +173,10 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
    real *Pot = new real [ 8*CUBE(PotSize) ];    // 8: number of patches per patch group
    real *Acc = new real [ 3*CUBE(AccSize) ];    // 3: three dimension
 
-   real (*Pot3D)[PotSize][PotSize][PotSize] = ( real (*)[PotSize][PotSize][PotSize] )Pot;
-   real (*Acc3D)[AccSize][AccSize][AccSize] = ( real (*)[AccSize][AccSize][AccSize] )Acc;
+   typedef real (*vla_pot)[PotSize][PotSize][PotSize];
+   typedef real (*vla_acc)[AccSize][AccSize][AccSize];
+   vla_pot Pot3D = ( vla_pot )Pot;
+   vla_acc Acc3D = ( vla_acc )Acc;
 
    bool GotYou;
    long ParID;

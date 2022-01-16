@@ -560,7 +560,7 @@ endif # GRAVITY
 ifeq "$(filter -DPARTICLE, $(SIMU_OPTION))" "-DPARTICLE"
 GPU_FILE    +=
 
-CPU_FILE    += Par_Init_ByFunction.cpp  Par_Output_TextFile.cpp  Par_FindHomePatch_UniformGrid.cpp \
+CPU_FILE    += Par_Init_ByFunction.cpp  Par_Output_TextFile.cpp  Par_Output_BinaryFile.cpp  Par_FindHomePatch_UniformGrid.cpp \
                Par_Aux_Check_Particle.cpp  Par_PassParticle2Father.cpp  Par_CollectParticle2OneLevel.cpp \
                Par_MassAssignment.cpp  Par_UpdateParticle.cpp  Par_GetTimeStep_VelAcc.cpp \
                Par_PassParticle2Sibling.cpp  Par_CountParticleInDescendant.cpp  Par_Aux_GetConservedQuantity.cpp \
@@ -854,7 +854,7 @@ else ifeq "$(filter -DGPU_ARCH=KEPLER, $(SIMU_OPTION))" "-DGPU_ARCH=KEPLER"
    ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
      NVCCFLAG_FLU += --maxrregcount=128
    else
-     NVCCFLAG_FLU += --maxrregcount=64
+     NVCCFLAG_FLU += --maxrregcount=70
    endif
 else ifeq "$(filter -DGPU_ARCH=MAXWELL, $(SIMU_OPTION))" "-DGPU_ARCH=MAXWELL"
    ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
