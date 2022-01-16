@@ -54,7 +54,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                            const real dt, const real dh, const real MinDens, const real MinEint,
                            const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
-                           const EoS_t *EoS, int *FullStepFailure, int Iteration, int MaxIteration );
+                           const EoS_t *EoS, int *FullStepFailure, int Iteration, int MinMod_Max_Itr );
 #if   ( RSOLVER == EXACT )
 void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                 const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
@@ -233,7 +233,7 @@ void CUFLU_FluidSolver_MHM(
          real   g_EC_Ele       [][NCOMP_MAG][ CUBE(N_EC_ELE) ],
    const real dt, const real dh,
    const bool StoreFlux, const bool StoreElectric,
-   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const double Time,
+   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_Max_Itr, const double Time,
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const real MinDens, const real MinPres, const real MinEint,
    const real DualEnergySwitch,
@@ -261,7 +261,7 @@ void CPU_FluidSolver_MHM(
    const int NPatchGroup,
    const real dt, const real dh,
    const bool StoreFlux, const bool StoreElectric,
-   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const double Time,
+   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_Max_Itr, const double Time,
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const double c_ExtAcc_AuxArray[],
    const real MinDens, const real MinPres, const real MinEint,
@@ -414,8 +414,8 @@ void CPU_FluidSolver_MHM(
 
          do {
 
-            AdaptiveMinModCoeff = ( MaxIteration == 0 ) ? MinMod_Coeff :
-            MinMod_Coeff - (real)Iteration * MinMod_Coeff / (real)MaxIteration;
+            AdaptiveMinModCoeff = ( MinMod_Max_Itr == 0 ) ? MinMod_Coeff :
+            MinMod_Coeff - (real)Iteration * MinMod_Coeff / (real)MinMod_Max_Itr;
 
 
 //          1-a-5. evaluate the face-centered values by data reconstruction
@@ -431,8 +431,8 @@ void CPU_FluidSolver_MHM(
 
          do {
 
-            AdaptiveMinModCoeff = ( MaxIteration == 0 ) ? MinMod_Coeff :
-            MinMod_Coeff - (real)Iteration * MinMod_Coeff / (real)MaxIteration;
+            AdaptiveMinModCoeff = ( MinMod_Max_Itr == 0 ) ? MinMod_Coeff :
+            MinMod_Coeff - (real)Iteration * MinMod_Coeff / (real)MinMod_Max_Itr;
 
 
 //          evaluate the face-centered values by data reconstruction
@@ -476,7 +476,7 @@ void CPU_FluidSolver_MHM(
 //          4. full-step evolution
             Hydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P], g_Mag_Array_Out[P],
                                   g_FC_Flux_1PG, dt, dh, MinDens, MinEint, DualEnergySwitch,
-                                  NormPassive, NNorm, c_NormIdx, &EoS, &FullStepFailure, Iteration, MaxIteration );
+                                  NormPassive, NNorm, c_NormIdx, &EoS, &FullStepFailure, Iteration, MinMod_Max_Itr );
 
 #           ifdef CHECK_UNPHYSICAL_IN_FLUID
 #           ifdef __CUDACC__
@@ -492,10 +492,10 @@ void CPU_FluidSolver_MHM(
             Iteration++;
 
 
-            if ( MaxIteration == 0 || Iteration == MaxIteration+1 ) break;
+            if ( MinMod_Max_Itr == 0 || Iteration == MinMod_Max_Itr+1 ) break;
 
 
-         } while( FullStepFailure && Iteration <= MaxIteration );
+         } while( FullStepFailure && Iteration <= MinMod_Max_Itr );
 
       } // loop over all patch groups
    } // OpenMP parallel region
