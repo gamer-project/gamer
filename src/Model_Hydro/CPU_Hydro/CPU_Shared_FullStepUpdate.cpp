@@ -54,8 +54,8 @@
 //                EoS              : EoS object
 //                                   --> Only for obtaining Gamma used by the dual-energy formalism
 //                FullStepFailure  : (1/0) --> (Fail to update fluid patch group/otherwise)
-//                Iteration        :
-//                MaxIteration     :
+//                Iteration        : Current iteration numbers. It should be <= ADAPTIVE_MINMOD_MAX_ITR
+//                MaxIteration     : Maximum itration numbers to reduce min-mod coefficient. i.e. ADAPTIVE_MINMOD_MAX_ITR
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],

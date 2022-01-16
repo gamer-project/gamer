@@ -107,16 +107,12 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
      real IntMonoCoeff = NULL_REAL;
      Int_Scheme_t Int_Scheme_FunPtr;
      bool GotFailCell = false;
-     const int MaxIteration = 3;
      const int CSize3D = CSize[0]*CSize[1]*CSize[2];
      const int FSize3D = FSize[0]*FSize[1]*FSize[2];
      real Cons[NCOMP_TOTAL], Prim[NCOMP_TOTAL], Array[NCOMP_TOTAL];
      bool FData_is_Prim = false;
 
 
-#    ifdef GAMER_DEBUG
-     if ( MaxIteration < 1 ) printf( "MaxIteration must be greater than or equal to 1 !!\n" );
-#    endif
 
 #    if ( MODEL == HYDRO  &&  defined GRAVITY )
      const real JeansMinPres_Coeff = ( JEANS_MIN_PRES ) ?
@@ -243,7 +239,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
            if ( ADAPTIVE_MINMOD_MAX_ITR == 0 || Iteration == ADAPTIVE_MINMOD_MAX_ITR+1 ) break;
 
 
-        } while ( GotFailCell && Iteration <= MaxIteration );
+        } while ( GotFailCell && Iteration <= ADAPTIVE_MINMOD_MAX_ITR );
 
      }
      else
