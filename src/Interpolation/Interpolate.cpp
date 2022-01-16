@@ -162,7 +162,6 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 //            --> this step is only for interpolating ghost zone. i.e. IntTarget == INT_GHOST_ZONES
            else if ( Iteration == 1 && IntTarget == INT_GHOST_ZONES )
            {
-
 //            As vanLeer, MinMod-3D, and MinMod-1D do not involve min-mod coefficient, we break the loop immediately
 //            and do nothing when encountering unphysical results
               if ( IntScheme == INT_VANLEER || IntScheme == INT_MINMOD3D || IntScheme == INT_MINMOD1D ) break;
@@ -190,7 +189,6 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
               // process always skip this block when OPT__MINMOD_MAX_ITR == 0
               // --> no division by zero occurs
               IntMonoCoeff -= (real)INT_MONO_COEFF / (real)OPT__MINMOD_MAX_ITR;
-
 
               // ensure IntMonoCoeff is non-negative
               if ( FABS(IntMonoCoeff) < (real)10*MAX_ERROR ) IntMonoCoeff = (real)0.0;
