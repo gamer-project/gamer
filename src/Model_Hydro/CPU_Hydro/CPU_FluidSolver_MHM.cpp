@@ -181,6 +181,7 @@ static void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 //                                     (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
 //                                                    vanLeer + generalized MinMod/extrema-preserving) limiter
 //                MinMod_Coeff       : Coefficient of the generalized MinMod limiter
+//                MinMod_Max_Itr     : Maximum iteration number to reduce MinMod_Coeff
 //                Time               : Current physical time                                 (for UNSPLIT_GRAVITY only)
 //                UsePot             : Add self-gravity and/or external potential            (for UNSPLIT_GRAVITY only)
 //                ExtAcc             : Add external acceleration                             (for UNSPLIT_GRAVITY only)
@@ -418,6 +419,12 @@ void CPU_FluidSolver_MHM(
             MinMod_Coeff - (real)Iteration * MinMod_Coeff / (real)MinMod_Max_Itr;
 
 
+//          ensure adaptive MinMod_Coeff is non-negative
+#           if ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP )
+            if ( FABS(MinMod_Coeff) < (real)10*MAX_ERROR ) AdaptiveMinModCoeff = (real)0.0;
+#           endif
+
+
 //          1-a-5. evaluate the face-centered values by data reconstruction
 //                 --> note that g_PriVar_Half_1PG[] returned by Hydro_RiemannPredict() stores the primitive variables
             Hydro_DataReconstruction( NULL, g_FC_Mag_Half_1PG, g_PriVar_Half_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
@@ -433,6 +440,12 @@ void CPU_FluidSolver_MHM(
 
             AdaptiveMinModCoeff = ( MinMod_Max_Itr == 0 ) ? MinMod_Coeff :
             MinMod_Coeff - (real)Iteration * MinMod_Coeff / (real)MinMod_Max_Itr;
+
+
+//          ensure adaptive MinMod_Coeff is non-negative
+#           if ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP )
+            if ( FABS(MinMod_Coeff) < (real)10*MAX_ERROR ) AdaptiveMinModCoeff = (real)0.0;
+#           endif
 
 
 //          evaluate the face-centered values by data reconstruction

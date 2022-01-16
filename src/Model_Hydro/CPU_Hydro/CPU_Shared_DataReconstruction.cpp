@@ -186,11 +186,6 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
       printf( "Negative/infinite/NaN MinMod_Coeff(%e) !!\n", MinMod_Coeff );
 #  endif // GAMER_DEBUG
 
-// ensure adaptive MinMod_Coeff is non-negative
-#  if ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP )
-   if ( FABS(MinMod_Coeff) < (real)10*MAX_ERROR ) MinMod_Coeff = (real)0.0;
-#  endif
-
    const int  didx_cc[3]     = { 1, NIn, SQR(NIn) };
 
 #  if ( FLU_SCHEME == CTU )

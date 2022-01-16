@@ -336,7 +336,7 @@ void CPU_FluidSolver_CTU(
 //       8. full-step evolution of the fluid data
          Hydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P], g_Mag_Array_Out[P],
                                g_FC_Flux_1PG, dt, dh, MinDens, MinEint, DualEnergySwitch,
-                               NormPassive, NNorm, c_NormIdx, &EoS, NULL, NULL_REAL, NULL_REAL );
+                               NormPassive, NNorm, c_NormIdx, &EoS, NULL, NULL_INT, NULL_INT );
 
       } // loop over all patch groups
    } // OpenMP parallel region
