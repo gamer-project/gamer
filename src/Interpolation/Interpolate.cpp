@@ -38,31 +38,31 @@
 //                4.  Interpolating primitive variables still preserves conservation because ghost zones do not
 //                    affect conservation.
 //
-// Parameter   :  CData           : Input coarse-grid array
-//                CSize           : Size of CData[]
-//                CStart          : (x,y,z) starting indices to perform interpolation on CData[]
-//                CRange          : Number of coarse cells along each direction to perform interpolation
-//                FData           : Output fine-grid array
-//                FSize           : Size of FData[]
-//                FStart          : (x,y,z) starting indices to store the interpolation results
-//                NComp           : Number of components in the CData and FData array
-//                IntScheme       : Interpolation scheme
-//                                  --> currently supported schemes include
-//                                      INT_MINMOD3D : MinMod-3D
-//                                      INT_MINMOD1D : MinMod-1D
-//                                      INT_VANLEER  : vanLeer
-//                                      INT_CQUAD    : conservative quadratic
-//                                      INT_QUAD     : quadratic
-//                                      INT_CQUAR    : conservative quartic
-//                                      INT_QUAR     : quartic
-//                UnwrapPhase     : Unwrap phase when OPT__INT_PHASE is on (for ELBDM only)
-//                Monotonic       : Ensure that all interpolation results are monotonic
-//                                  --> Useful for interpolating positive-definite variables, such as density, energy, ...
-//                OppSign0thOrder : Apply 0th-order interpolation if the values to be interpolated change
-//                                  signs in adjacent cells
-//                                  --> See Int_MinMod1D() for details
-//                IntTarget       : (INT_GHOST_ZONES/INT_NEW_PATCHES)  --> (interpolate ghost zone/allocate new patches)
-//                AdaptiveMinmod  : (INT_ADAPTIVE_ON/INT_ADAPTIVE_OFF) --> (reduce/fix min-mod coefficient)
+// Parameter   :  CData            : Input coarse-grid array
+//                CSize            : Size of CData[]
+//                CStart           : (x,y,z) starting indices to perform interpolation on CData[]
+//                CRange           : Number of coarse cells along each direction to perform interpolation
+//                FData            : Output fine-grid array
+//                FSize            : Size of FData[]
+//                FStart           : (x,y,z) starting indices to store the interpolation results
+//                NComp            : Number of components in the CData and FData array
+//                IntScheme        : Interpolation scheme
+//                                   --> currently supported schemes include
+//                                       INT_MINMOD3D : MinMod-3D
+//                                       INT_MINMOD1D : MinMod-1D
+//                                       INT_VANLEER  : vanLeer
+//                                       INT_CQUAD    : conservative quadratic
+//                                       INT_QUAD     : quadratic
+//                                       INT_CQUAR    : conservative quartic
+//                                       INT_QUAR     : quartic
+//                UnwrapPhase      : Unwrap phase when OPT__INT_PHASE is on (for ELBDM only)
+//                Monotonic        : Ensure that all interpolation results are monotonic
+//                                   --> Useful for interpolating positive-definite variables, such as density, energy, ...
+//                OppSign0thOrder  : Apply 0th-order interpolation if the values to be interpolated change
+//                                   signs in adjacent cells
+//                                   --> See Int_MinMod1D() for details
+//                IntTarget        : (INT_GHOST_ZONES/INT_NEW_PATCHES)  --> (interpolate ghost zone/allocate new patches)
+//                AdaptiveMinmod   : (INT_ADAPTIVE_ON/INT_ADAPTIVE_OFF) --> (reduce/fix min-mod coefficient)
 //-------------------------------------------------------------------------------------------------------
 void Interpolate( real CData [], const int CSize[3], const int CStart[3], const int CRange[3],
                   real FData [], const int FSize[3], const int FStart[3],

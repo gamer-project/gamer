@@ -33,29 +33,29 @@
 //                2. Invoke dual-energy check if DualEnergySwitch is on
 //                3. If any unphysical fluid cell is found in a patch group, Hydro_FullStepUpdate() will return instantly.
 //
-// Parameter   :  g_Input          : Array storing the input fluid data
-//                g_Output         : Array to store the updated fluid data
-//                g_DE_Status      : Array to store the dual-energy status
-//                g_FC_B           : Array storing the updated face-centered B field
-//                                   --> For the dual-energy formalism only
-//                g_Flux           : Array storing the input face-centered fluxes
-//                                   --> Accessed with the array stride N_FL_FLUX even thought its actually
-//                                       allocated size is N_FC_FLUX^3
-//                dt               : Time interval to advance solution
-//                dh               : Cell size
-//                MinDens/Eint     : Density and internal energy floors
-//                DualEnergySwitch : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
-//                NormPassive      : true --> normalize passive scalars so that the sum of their mass density
-//                                            is equal to the gas mass density
-//                NNorm            : Number of passive scalars to be normalized
-//                                   --> Should be set to the global variable "PassiveNorm_NVar"
-//                NormIdx          : Target variable indices to be normalized
-//                                   --> Should be set to the global variable "PassiveNorm_VarIdx"
-//                EoS              : EoS object
-//                                   --> Only for obtaining Gamma used by the dual-energy formalism
-//                FullStepFailure  : (1/0) --> (Fail to update fluid patch group/otherwise)
-//                Iteration        : Current iteration numbers. It should be <= ADAPTIVE_MINMOD_MAX_ITR
-//                MaxIteration     : Maximum itration numbers to reduce min-mod coefficient. i.e. ADAPTIVE_MINMOD_MAX_ITR
+// Parameter   :  g_Input           : Array storing the input fluid data
+//                g_Output          : Array to store the updated fluid data
+//                g_DE_Status       : Array to store the dual-energy status
+//                g_FC_B            : Array storing the updated face-centered B field
+//                                    --> For the dual-energy formalism only
+//                g_Flux            : Array storing the input face-centered fluxes
+//                                    --> Accessed with the array stride N_FL_FLUX even thought its actually
+//                                        allocated size is N_FC_FLUX^3
+//                dt                : Time interval to advance solution
+//                dh                : Cell size
+//                MinDens/Eint      : Density and internal energy floors
+//                DualEnergySwitch  : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
+//                NormPassive       : true --> normalize passive scalars so that the sum of their mass density
+//                                             is equal to the gas mass density
+//                NNorm             : Number of passive scalars to be normalized
+//                                    --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx           : Target variable indices to be normalized
+//                                    --> Should be set to the global variable "PassiveNorm_VarIdx"
+//                EoS               : EoS object
+//                                    --> Only for obtaining Gamma used by the dual-energy formalism
+//                FullStepFailure   : (1/0) --> (Fail to update fluid patch group/otherwise)
+//                Iteration         : Current iteration numbers. It should be <= ADAPTIVE_MINMOD_MAX_ITR
+//                MaxIteration      : Maximum itration numbers to reduce min-mod coefficient. i.e. ADAPTIVE_MINMOD_MAX_ITR
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
