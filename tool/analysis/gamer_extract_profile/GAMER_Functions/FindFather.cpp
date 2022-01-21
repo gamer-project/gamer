@@ -6,7 +6,7 @@
 //-------------------------------------------------------------------------------------------------------
 // Function    :  FindFather
 // Description :  Construct the relation between levels "lv" and "lv-1"
-// 
+//
 // Note        :  a. This function assumes that the relations between levels "0, 1, 2, ..., lv-1" have already
 //                   been constructed correctly
 //                b. Currently this function only works for the function "Init_Reload"
@@ -27,8 +27,8 @@ void FindFather( const int lv )
    const int scale0        = amr.scale[0];
    const int PS0           = PATCH_SIZE*scale0;
    const int BaseP_Disp    = 2;
-   const int NBaseP[3]     = {  NX0_TOT[0]/PATCH_SIZE + 4, 
-                                NX0_TOT[1]/PATCH_SIZE + 4, 
+   const int NBaseP[3]     = {  NX0_TOT[0]/PATCH_SIZE + 4,
+                                NX0_TOT[1]/PATCH_SIZE + 4,
                                 NX0_TOT[2]/PATCH_SIZE + 4  };
 
    int FaPID, BaseP_ID, BaseP_xyz[3], GrandPaLv, GrandPaPID, FaPS, LocalPos[3], LocalID_1D, LocalID=0;
@@ -46,7 +46,7 @@ void FindFather( const int lv )
       FaPID    = BaseP[ BaseP_ID ];
 
 
-//    b. find the father patch 
+//    b. find the father patch
       for (int FaLv=1; FaLv<lv; FaLv++)
       {
          GrandPaLv      = FaLv - 1;
@@ -54,14 +54,14 @@ void FindFather( const int lv )
          GrandPaCorner  = amr.patch[GrandPaLv][GrandPaPID]->corner;
          FaPS           = PATCH_SIZE*amr.scale[FaLv];
 
-         for (int d=0; d<3; d++)    
+         for (int d=0; d<3; d++)
             LocalPos[d] = ( Corner[d] - GrandPaCorner[d] ) / FaPS;
 
          LocalID_1D     = LocalPos[2]*4 + LocalPos[1]*2 + LocalPos[0];
 
          switch ( LocalID_1D )
          {
-            case 0:  LocalID = 0;   break;   
+            case 0:  LocalID = 0;   break;
             case 1:  LocalID = 1;   break;
             case 2:  LocalID = 2;   break;
             case 3:  LocalID = 4;   break;
@@ -71,7 +71,7 @@ void FindFather( const int lv )
             case 7:  LocalID = 7;   break;
             default:
                fprintf( stderr, "ERROR : \"incorrect parameter %s = %d\" !!\n", "LocalID_1D", LocalID_1D );
-               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n", 
+               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n",
                         __FILE__, __LINE__,  __FUNCTION__  );
                exit( -1 );
          }
@@ -83,7 +83,7 @@ void FindFather( const int lv )
 
 //    c. store the relation
       amr.patch[lv-1][FaPID]->son = PID0;
-      
+
       for (int PID=PID0; PID<PID0+8; PID++)        amr.patch[lv][PID]->father = FaPID;
 
    } // for (int PID0=0; PID0<amr.num[lv]; PID0+=8)

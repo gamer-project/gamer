@@ -20,7 +20,7 @@ extern Timer_t *Timer_Par_2Son   [NLEVEL];
 
 bool AutoReduceDt_Continue;
 
-extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TTime );
+extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TimeNew, const double dt );
 
 
 
@@ -540,7 +540,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //       use the same timer as the fluid solver for now
          if ( Flu_ResetByUser_API_Ptr != NULL )
          {
-            TIMING_FUNC(   Flu_ResetByUser_API_Ptr( lv, SaveSg_Flu, TimeNew ),
+            TIMING_FUNC(   Flu_ResetByUser_API_Ptr( lv, SaveSg_Flu, TimeNew, dt_SubStep ),
                            Timer_Flu_Advance[lv],   TIMER_ON   );
          }
 

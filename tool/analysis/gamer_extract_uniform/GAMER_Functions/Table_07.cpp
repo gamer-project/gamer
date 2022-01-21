@@ -7,7 +7,7 @@
 // Function    :  TABLE_07
 // Description :  Return the local patch IDs near the "SibID" boundary
 //
-// Note        :  a. Must follow the order : x -> y -> z 
+// Note        :  a. Must follow the order : x -> y -> z
 //                   (otherwise the function "Buf_FindBoundaryPatch" will fail)
 //                b. Similar to the table "TABLE_03"
 //                c. Work for the functions "Buf_RecordExchangeDataPatchID" and "Buf_RecordBoundaryPatch"
@@ -29,9 +29,9 @@ int TABLE_07( const int SibID, const int Count )
             case 2: return 3;
             case 3: return 5;
             default:
-               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n", 
+               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n",
                         "SibID", SibID, "Count", Count );
-               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n", 
+               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n",
                         __FILE__, __LINE__,  __FUNCTION__  );
                MPI_Exit();
          }
@@ -46,9 +46,9 @@ int TABLE_07( const int SibID, const int Count )
             case 2: return 6;
             case 3: return 7;
             default:
-               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n", 
+               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n",
                         "SibID", SibID, "Count", Count );
-               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n", 
+               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n",
                         __FILE__, __LINE__,  __FUNCTION__  );
                MPI_Exit();
          }
@@ -63,9 +63,9 @@ int TABLE_07( const int SibID, const int Count )
             case 2: return 3;
             case 3: return 6;
             default:
-               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n", 
+               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n",
                         "SibID", SibID, "Count", Count );
-               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n", 
+               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n",
                         __FILE__, __LINE__,  __FUNCTION__  );
                MPI_Exit();
          }
@@ -80,9 +80,9 @@ int TABLE_07( const int SibID, const int Count )
             case 2: return 5;
             case 3: return 7;
             default:
-               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n", 
+               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n",
                         "SibID", SibID, "Count", Count );
-               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n", 
+               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n",
                         __FILE__, __LINE__,  __FUNCTION__  );
                MPI_Exit();
          }
@@ -97,9 +97,9 @@ int TABLE_07( const int SibID, const int Count )
             case 2: return 2;
             case 3: return 4;
             default:
-               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n", 
+               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n",
                         "SibID", SibID, "Count", Count );
-               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n", 
+               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n",
                         __FILE__, __LINE__,  __FUNCTION__  );
                MPI_Exit();
          }
@@ -114,9 +114,9 @@ int TABLE_07( const int SibID, const int Count )
             case 2: return 5;
             case 3: return 7;
             default:
-               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n", 
+               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n",
                         "SibID", SibID, "Count", Count );
-               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n", 
+               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n",
                         __FILE__, __LINE__,  __FUNCTION__  );
                MPI_Exit();
          }
@@ -129,9 +129,9 @@ int TABLE_07( const int SibID, const int Count )
             case 0: return 0;
             case 1: return 3;
             default:
-               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n", 
+               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n",
                         "SibID", SibID, "Count", Count );
-               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n", 
+               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n",
                         __FILE__, __LINE__,  __FUNCTION__  );
                MPI_Exit();
          }
@@ -144,9 +144,9 @@ int TABLE_07( const int SibID, const int Count )
             case 0: return 1;
             case 1: return 6;
             default:
-               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n", 
+               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n",
                         "SibID", SibID, "Count", Count );
-               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n", 
+               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n",
                         __FILE__, __LINE__,  __FUNCTION__  );
                MPI_Exit();
          }
@@ -159,9 +159,9 @@ int TABLE_07( const int SibID, const int Count )
             case 0: return 2;
             case 1: return 5;
             default:
-               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n", 
+               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n",
                         "SibID", SibID, "Count", Count );
-               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n", 
+               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n",
                         __FILE__, __LINE__,  __FUNCTION__  );
                MPI_Exit();
          }
@@ -169,14 +169,14 @@ int TABLE_07( const int SibID, const int Count )
 
       case 9:
       {
-         switch ( Count ) 
+         switch ( Count )
          {
             case 0: return 4;
             case 1: return 7;
             default:
-               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n", 
+               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n",
                         "SibID", SibID, "Count", Count );
-               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n", 
+               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n",
                         __FILE__, __LINE__,  __FUNCTION__  );
                MPI_Exit();
          }
@@ -189,9 +189,9 @@ int TABLE_07( const int SibID, const int Count )
             case 0: return 0;
             case 1: return 1;
             default:
-               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n", 
+               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n",
                         "SibID", SibID, "Count", Count );
-               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n", 
+               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n",
                         __FILE__, __LINE__,  __FUNCTION__  );
                MPI_Exit();
          }
@@ -204,14 +204,14 @@ int TABLE_07( const int SibID, const int Count )
             case 0: return 2;
             case 1: return 4;
             default:
-               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n", 
+               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n",
                         "SibID", SibID, "Count", Count );
-               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n", 
+               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n",
                         __FILE__, __LINE__,  __FUNCTION__  );
                MPI_Exit();
          }
       }
-         
+
       case 12:
       {
          switch ( Count )
@@ -219,9 +219,9 @@ int TABLE_07( const int SibID, const int Count )
             case 0: return 3;
             case 1: return 6;
             default:
-               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n", 
+               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n",
                         "SibID", SibID, "Count", Count );
-               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n", 
+               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n",
                         __FILE__, __LINE__,  __FUNCTION__  );
                MPI_Exit();
          }
@@ -234,9 +234,9 @@ int TABLE_07( const int SibID, const int Count )
             case 0: return 5;
             case 1: return 7;
             default:
-               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n", 
+               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n",
                         "SibID", SibID, "Count", Count );
-               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n", 
+               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n",
                         __FILE__, __LINE__,  __FUNCTION__  );
                MPI_Exit();
          }
@@ -249,9 +249,9 @@ int TABLE_07( const int SibID, const int Count )
             case 0: return 0;
             case 1: return 2;
             default:
-               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n", 
+               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n",
                         "SibID", SibID, "Count", Count );
-               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n", 
+               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n",
                         __FILE__, __LINE__,  __FUNCTION__  );
                MPI_Exit();
          }
@@ -264,9 +264,9 @@ int TABLE_07( const int SibID, const int Count )
             case 0: return 3;
             case 1: return 5;
             default:
-               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n", 
+               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n",
                         "SibID", SibID, "Count", Count );
-               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n", 
+               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n",
                         __FILE__, __LINE__,  __FUNCTION__  );
                MPI_Exit();
          }
@@ -279,9 +279,9 @@ int TABLE_07( const int SibID, const int Count )
             case 0: return 1;
             case 1: return 4;
             default:
-               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n", 
+               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n",
                         "SibID", SibID, "Count", Count );
-               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n", 
+               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n",
                         __FILE__, __LINE__,  __FUNCTION__  );
                MPI_Exit();
          }
@@ -294,9 +294,9 @@ int TABLE_07( const int SibID, const int Count )
             case 0: return 6;
             case 1: return 7;
             default:
-               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n", 
+               fprintf( stderr, "ERROR : \"incorrect parameter %s = %d, %s = %d\" !!\n",
                         "SibID", SibID, "Count", Count );
-               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n", 
+               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n",
                         __FILE__, __LINE__,  __FUNCTION__  );
                MPI_Exit();
          }

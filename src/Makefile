@@ -166,7 +166,7 @@ SIMU_OPTION += -DMAX_PATCH=1000000
 # --> must set GPU_ARCH as well
 #SIMU_OPTION += -DGPU
 
-# GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA/TURING
+# GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA/TURING/AMPERE
 SIMU_OPTION += -DGPU_ARCH=KEPLER
 
 # debug mode
@@ -563,13 +563,14 @@ endif # GRAVITY
 ifeq "$(filter -DPARTICLE, $(SIMU_OPTION))" "-DPARTICLE"
 GPU_FILE    +=
 
-CPU_FILE    += Par_Init_ByFunction.cpp  Par_Output_TextFile.cpp  Par_FindHomePatch_UniformGrid.cpp \
+CPU_FILE    += Par_Init_ByFunction.cpp  Par_Output_TextFile.cpp  Par_Output_BinaryFile.cpp  Par_FindHomePatch_UniformGrid.cpp \
                Par_Aux_Check_Particle.cpp  Par_PassParticle2Father.cpp  Par_CollectParticle2OneLevel.cpp \
                Par_MassAssignment.cpp  Par_UpdateParticle.cpp  Par_GetTimeStep_VelAcc.cpp \
                Par_PassParticle2Sibling.cpp  Par_CountParticleInDescendant.cpp  Par_Aux_GetConservedQuantity.cpp \
                Par_Aux_InitCheck.cpp  Par_Aux_Record_ParticleCount.cpp  Par_PassParticle2Son_MultiPatch.cpp \
                Par_Synchronize.cpp  Par_PredictPos.cpp  Par_Init_ByFile.cpp  Par_Init_Attribute.cpp \
-               Par_AddParticleAfterInit.cpp  Par_PassParticle2Son_SinglePatch.cpp  Par_Sort.cpp
+               Par_AddParticleAfterInit.cpp  Par_PassParticle2Son_SinglePatch.cpp  Par_EquilibriumIC.cpp \
+               Par_ScatterParticleData.cpp  Par_Sort.cpp
 
 vpath %.cu     Particle/GPU
 vpath %.cpp    Particle/CPU  Particle
@@ -804,6 +805,16 @@ endif
 COMMONFLAG := $(INCLUDE) $(SIMU_OPTION)
 CXXFLAG    += $(COMMONFLAG) $(OPENMPFLAG)
 
+# grep git information
+GIT_INFO    :=
+GIT_FAIL    := $(shell git rev-parse 2>&1 | cat)
+ifeq "$(GIT_FAIL)" ""
+   GIT_INFO += -DGIT_COMMIT="`git rev-parse HEAD`"              # commit
+   GIT_INFO += -DGIT_BRANCH="`git rev-parse --abbrev-ref HEAD`" # branch
+else
+   GIT_INFO += -DGIT_COMMIT="N/A"
+   GIT_INFO += -DGIT_BRANCH="N/A"
+endif
 
 # NVCC flags
 # -------------------------------------------------------------------------------
@@ -827,6 +838,9 @@ else ifeq "$(filter -DGPU_ARCH=VOLTA,  $(SIMU_OPTION))" "-DGPU_ARCH=VOLTA"
    NVCCFLAG_ARCH += -gencode arch=compute_70,code=\"compute_70,sm_70\"
 else ifeq "$(filter -DGPU_ARCH=TURING,  $(SIMU_OPTION))" "-DGPU_ARCH=TURING"
    NVCCFLAG_ARCH += -gencode arch=compute_75,code=\"compute_75,sm_75\"
+else ifeq "$(filter -DGPU_ARCH=AMPERE,  $(SIMU_OPTION))" "-DGPU_ARCH=AMPERE"
+   NVCCFLAG_ARCH += -gencode arch=compute_80,code=\"compute_80,sm_80\"
+   NVCCFLAG_ARCH += -gencode arch=compute_86,code=\"compute_86,sm_86\"
 else ifeq "$(filter -DGPU, $(SIMU_OPTION))" "-DGPU"
    $(error unknown GPU_ARCH (please set it in the Makefile))
 endif
@@ -852,7 +866,7 @@ else ifeq "$(filter -DGPU_ARCH=KEPLER, $(SIMU_OPTION))" "-DGPU_ARCH=KEPLER"
    ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
      NVCCFLAG_FLU += --maxrregcount=128
    else
-     NVCCFLAG_FLU += --maxrregcount=64
+     NVCCFLAG_FLU += --maxrregcount=70
    endif
 else ifeq "$(filter -DGPU_ARCH=MAXWELL, $(SIMU_OPTION))" "-DGPU_ARCH=MAXWELL"
    ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
@@ -878,6 +892,12 @@ else ifeq "$(filter -DGPU_ARCH=TURING, $(SIMU_OPTION))" "-DGPU_ARCH=TURING"
    else
      NVCCFLAG_FLU += --maxrregcount=128
    endif
+else ifeq "$(filter -DGPU_ARCH=AMPERE, $(SIMU_OPTION))" "-DGPU_ARCH=AMPERE"
+   ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
+     NVCCFLAG_FLU += --maxrregcount=192
+   else
+     NVCCFLAG_FLU += --maxrregcount=128
+   endif
 endif
 
 # Poisson/gravity solvers flags
@@ -894,6 +914,7 @@ NVCC         := $(strip $(NVCC))
 NVCCFLAG_COM := $(strip $(NVCCFLAG_COM))
 NVCCFLAG_FLU := $(strip $(NVCCFLAG_FLU))
 NVCCFLAG_POT := $(strip $(NVCCFLAG_POT))
+GIT_INFO     := $(strip $(GIT_INFO))
 
 
 # implicit rules (do NOT modify the order of the following rules)
@@ -931,7 +952,7 @@ endif # GPU
 # CPU codes
 $(OBJ_PATH)/$(PREFIX_CPU)%.o : %.cpp
 	@echo "Compiling $<"
-	$(ECHO)$(CXX) $(CXXFLAG) -o $@ -c $<
+	$(ECHO)$(CXX) $(CXXFLAG) $(GIT_INFO) -o $@ -c $<
 
 
 # linking
@@ -968,6 +989,3 @@ clean :
 	@rm -f $(OBJ_PATH)/*
 	@rm -f $(EXECUTABLE)
 	@rm -f ./*.linkinfo
-
-
-

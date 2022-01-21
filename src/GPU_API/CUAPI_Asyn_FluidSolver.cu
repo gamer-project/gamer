@@ -226,9 +226,6 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 // check
 #  ifdef GAMER_DEBUG
 #  if   ( MODEL == HYDRO )
-   if ( LR_Limiter != VANLEER  &&  LR_Limiter != GMINMOD  &&  LR_Limiter != ALBADA  &&  LR_Limiter != EXTPRE  &&
-        LR_Limiter != VL_GMINMOD  &&  LR_Limiter != LR_LIMITER_NONE )
-      Aux_Error( ERROR_INFO, "unsupported limiter (%d) !!\n", LR_Limiter );
 
 #  ifdef UNSPLIT_GRAVITY
    if ( UsePot )

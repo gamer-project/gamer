@@ -43,13 +43,15 @@ const TestProbID_t
    TESTPROB_HYDRO_SPHERICAL_COLLAPSE           =    7,
    TESTPROB_HYDRO_KELVIN_HELMHOLTZ_INSTABILITY =    8,
    TESTPROB_HYDRO_RIEMANN                      =    9,
-   TESTPROB_HYDRO_COLLIDING_JETS               =   10,
+   TESTPROB_HYDRO_JET                          =   10,
    TESTPROB_HYDRO_PLUMMER                      =   11,
    TESTPROB_HYDRO_GRAVITY                      =   12,
    TESTPROB_HYDRO_MHD_ABC                      =   13,
    TESTPROB_HYDRO_MHD_ORSZAG_TANG_VORTEX       =   14,
    TESTPROB_HYDRO_MHD_LINEAR_WAVE              =   15,
    TESTPROB_HYDRO_JEANS_INSTABILITY            =   16,
+   TESTPROB_HYDRO_PARTICLE_EQUILIBRIUM_IC      =   17,
+   TESTPROB_HYDRO_BARRED_POT                   =   51,
 
    TESTPROB_ELBDM_EXTPOT                       = 1000;
 
@@ -102,12 +104,14 @@ const IntScheme_t
 // data reconstruction TVD limiters
 typedef int LR_Limiter_t;
 const LR_Limiter_t
-   LR_LIMITER_NONE = 0,
-   VANLEER         = 1,
-   GMINMOD         = 2,
-   ALBADA          = 3,
-   VL_GMINMOD      = 4,
-   EXTPRE          = 5;
+   LR_LIMITER_DEFAULT    = -1,
+   LR_LIMITER_NONE       = 0,
+   LR_LIMITER_VANLEER    = 1,
+   LR_LIMITER_GMINMOD    = 2,
+   LR_LIMITER_ALBADA     = 3,
+   LR_LIMITER_VL_GMINMOD = 4,
+   LR_LIMITER_EXTPRE     = 5,
+   LR_LIMITER_CENTRAL    = 6;
 
 
 // data output formats
@@ -137,6 +141,14 @@ const OptOutputPart_t
    OUTPUT_Y         = 5,
    OUTPUT_Z         = 6,
    OUTPUT_DIAG      = 7;
+
+
+// OPT_OUTPUT_PAR_MODE options
+typedef int OptOutputParMode_t;
+const OptOutputParMode_t
+   OUTPUT_PAR_NONE = 0,
+   OUTPUT_PAR_TEXT = 1,
+   OUTPUT_PAR_CBIN = 2;
 
 
 // options in "Prepare_PatchData"
@@ -399,22 +411,22 @@ const PatchType_t
 // function pointers
 typedef real (*EoS_DE2P_t)( const real Dens, const real Eint, const real Passive[],
                             const double AuxArray_Flt[], const int AuxArray_Int[],
-                            const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] );
+                            const real *const Table[EOS_NTABLE_MAX] );
 typedef real (*EoS_DP2E_t)( const real Dens, const real Pres, const real Passive[],
                             const double AuxArray_Flt[], const int AuxArray_Int[],
-                            const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] );
+                            const real *const Table[EOS_NTABLE_MAX] );
 typedef real (*EoS_DP2C_t)( const real Dens, const real Pres, const real Passive[],
                             const double AuxArray_Flt[], const int AuxArray_Int[],
-                            const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] );
-typedef void (*EoS_GENE_t)( const int Mode, real Out[], const real In[],
+                            const real *const Table[EOS_NTABLE_MAX] );
+typedef void (*EoS_GENE_t)( const int Mode, real Out[], const real In_Flt[], const int In_Int[],
                             const double AuxArray_Flt[], const int AuxArray_Int[],
                             const real *const Table[EOS_NTABLE_MAX] );
 typedef real (*EoS_DE2T_t)( const real Dens, const real Eint, const real Passive[],
                             const double AuxArray_Flt[], const int AuxArray_Int[],
-                            const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] );
+                            const real *const Table[EOS_NTABLE_MAX] );
 typedef real (*EoS_DT2P_t)( const real Dens, const real Temp, const real Passive[],
                             const double AuxArray_Flt[], const int AuxArray_Int[],
-                            const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] );
+                            const real *const Table[EOS_NTABLE_MAX] );
 typedef void (*ExtAcc_t)( real Acc[], const double x, const double y, const double z, const double Time,
                           const double UserArray[] );
 typedef real (*ExtPot_t)( const double x, const double y, const double z, const double Time,

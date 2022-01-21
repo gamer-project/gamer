@@ -164,7 +164,7 @@ void Flu_DerivedField_Mach( real Out[], const real FluIn[], const real MagIn[], 
 
 // GAMER
 void EvolveLevel( const int lv, const double dTime_FaLv );
-void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld, const double dt,
+void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld, const double dt_in,
                    const double Poi_Coeff, const int SaveSg_Flu, const int SaveSg_Mag, const int SaveSg_Pot,
                    const bool OverlapMPI, const bool Overlap_Sync );
 void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, real *OutputFC,
@@ -417,9 +417,9 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
 real*LB_GetBufferData_MemAllocate_Send( const int NSend );
 real*LB_GetBufferData_MemAllocate_Recv( const int NRecv );
 void LB_GrandsonCheck( const int lv );
-void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const bool Reset, const int TLv );
+void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, const double ParWeight, const bool Reset, const int TLv );
 void LB_Init_ByFunction();
-void LB_Init_Refine( const int FaLv );
+void LB_Init_Refine( const int FaLv, const bool AllocData );
 void LB_SetCutPoint( const int lv, const int NPG_Total, long *CutPoint, const bool InputLBIdx0AndLoad,
                      long *LBIdx0_AllRank_Input, double *Load_AllRank_Input, const double ParWeight );
 void LB_EstimateWorkload_AllPatchGroup( const int lv, const double ParWeight, double *Load_PG );
@@ -579,6 +579,7 @@ void CUAPI_MemFree_PoissonGravity();
 #ifdef PARTICLE
 void Par_Init_ByFile();
 void Par_Output_TextFile( const char *comment );
+void Par_Output_BinaryFile( const char *comment );
 void Par_FindHomePatch_UniformGrid( const int lv, const bool OldParOnly,
                                     const long NNewPar, real *NewParAtt[PAR_NATT_TOTAL] );
 void Par_PassParticle2Son_SinglePatch( const int FaLv, const int FaPID );
@@ -612,6 +613,8 @@ void Par_PredictPos( const long NPar, const long *ParList, real *ParPosX, real *
                      const double TargetTime );
 void Par_Init_Attribute();
 void Par_AddParticleAfterInit( const long NNewPar, real *NewParAtt[PAR_NATT_TOTAL] );
+void Par_ScatterParticleData( const long NPar_ThisRank, const long NPar_AllRank, const long AttBitIdx,
+                              real *Data_Send[PAR_NATT_TOTAL], real *Data_Recv[PAR_NATT_TOTAL] );
 FieldIdx_t AddParticleAttribute( const char *InputLabel );
 FieldIdx_t GetParticleAttributeIndex( const char *InputLabel, const Check_t Check );
 #ifdef LOAD_BALANCE

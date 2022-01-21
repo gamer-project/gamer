@@ -68,7 +68,7 @@ void BC_User_Template( real fluid[], const double x, const double y, const doubl
 #  if ( NCOMP_PASSIVE > 0 )
 // Passive[X] = ...;
 #  endif
-   Eint       = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+   Eint       = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
    Etot       = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, Emag0 );
 
    fluid[DENS] = Dens;
@@ -158,7 +158,8 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
 
 
 // 1D array -> 3D array
-   real (*Array3D)[ArraySizeZ][ArraySizeY][ArraySizeX] = ( real (*)[ArraySizeZ][ArraySizeY][ArraySizeX] )Array;
+   typedef real (*vla)[ArraySizeZ][ArraySizeY][ArraySizeX];
+   vla Array3D = ( vla )Array;
 
 
 // set the boundary values

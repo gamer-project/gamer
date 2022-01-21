@@ -39,16 +39,16 @@ void Buf_AllocateBufferPatch( const int lv )
 
 //    nothing to do if the target direction lies outside the simulation domain for the non-periodic B.C.
       if ( SibRank[s] < 0 )   continue;
-      
+
 //    allocate the maximum necessary memory
       Send_PosList[s] = new int [ ParaVar.BounP_NList[lv-1][s] ];
 
-      for (int ID=0; ID<ParaVar.BounP_NList[lv-1][s]; ID++) 
+      for (int ID=0; ID<ParaVar.BounP_NList[lv-1][s]; ID++)
       {
          RefinePos = ParaVar.BounP_PosList[lv-1][s][ID];
          BounPID   = ParaVar.BounP_IDList [lv-1][s][ID];
          SonPID    = amr.patch[lv-1][BounPID]->son;
-      
+
          if ( SonPID != -1 )
          {
             Send_PosList[s][ NSend[s] ] = RefinePos;
@@ -72,7 +72,7 @@ void Buf_AllocateBufferPatch( const int lv )
    {
       NBuffer[s] = 0;
       TargetID   = 0;
-      
+
 //    nothing to do if the target direction lies outside the simulation domain for the non-periodic B.C.
       if ( SibRank[s] < 0 )   continue;
 
@@ -80,9 +80,9 @@ void Buf_AllocateBufferPatch( const int lv )
 //    check whether the number of received buffer patches is reasonable
       if ( NRecv[s] > 0  &&  ParaVar.BounP_NList[lv-1][s] <= 0 )
       {
-         fprintf( stderr, "ERROR : \"inconsistent parameters %s = %d, %s = %d (s=%d, lv=%d)\" !!\n", 
+         fprintf( stderr, "ERROR : \"inconsistent parameters %s = %d, %s = %d (s=%d, lv=%d)\" !!\n",
                   "NRecv", NRecv[s], "BounP_NList", ParaVar.BounP_NList[lv-1][s], s, lv );
-         fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n", 
+         fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n",
                   __FILE__, __LINE__,  __FUNCTION__  );
          fprintf( stderr, "        Are you sure that you are using the correct BC (-e 0/1) !?\n" );
          MPI_Exit();
@@ -94,7 +94,7 @@ void Buf_AllocateBufferPatch( const int lv )
       {
          if (  TABLE_01( s, 'x', -1, 0, 1 ) == TABLE_02( LocalID, 'x', -1, 1 )  ||
                TABLE_01( s, 'y', -1, 0, 1 ) == TABLE_02( LocalID, 'y', -1, 1 )  ||
-               TABLE_01( s, 'z', -1, 0, 1 ) == TABLE_02( LocalID, 'z', -1, 1 )      )  
+               TABLE_01( s, 'z', -1, 0, 1 ) == TABLE_02( LocalID, 'z', -1, 1 )      )
 
             AllocateData[LocalID] = false;
 
@@ -109,7 +109,7 @@ void Buf_AllocateBufferPatch( const int lv )
       {
          RefinePos = Recv_PosList[s][ID];
 
-         while ( ParaVar.BounP_PosList[lv-1][s][TargetID] != RefinePos )  
+         while ( ParaVar.BounP_PosList[lv-1][s][TargetID] != RefinePos )
          {
             TargetID++;
 
@@ -117,7 +117,7 @@ void Buf_AllocateBufferPatch( const int lv )
             if ( TargetID >= ParaVar.BounP_NList[lv-1][s] )
             {
                fprintf( stderr, "ERROR : \"incorrect parameter %s = %d\" !!\n", "TargetID", TargetID );
-               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n", 
+               fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n",
                         __FILE__, __LINE__,  __FUNCTION__  );
                MPI_Exit();
             }
@@ -125,13 +125,13 @@ void Buf_AllocateBufferPatch( const int lv )
 
          BounPID = ParaVar.BounP_IDList[lv-1][s][TargetID];
          BuffPID = amr.patch[lv-1][BounPID]->sibling[s];
-      
+
 
 //       the BuffPID must exist and be a buffer patch since that the flagging status should be the same over all processes
          if ( BuffPID < NPatchComma[lv-1][1]  ||  BuffPID >= amr.num[lv-1] )
          {
             fprintf( stderr, "ERROR : \"incorrect parameter %s = %d\" !!\n", "BuffPID", BuffPID );
-            fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n", 
+            fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n",
                      __FILE__, __LINE__,  __FUNCTION__  );
             MPI_Exit();
          }
@@ -159,11 +159,11 @@ void Buf_AllocateBufferPatch( const int lv )
          amr.pnew( lv, Corner[0],      Corner[1]+Disp, Corner[2]+Disp, BuffPID, AllocateData2[5] );
          amr.pnew( lv, Corner[0]+Disp, Corner[1],      Corner[2]+Disp, BuffPID, AllocateData2[6] );
          amr.pnew( lv, Corner[0]+Disp, Corner[1]+Disp, Corner[2]+Disp, BuffPID, AllocateData2[7] );
-      
+
          NBuffer[s] += 8;
 
        } // for (int ID=0; ID<NRecv[s]; ID++)
-      
+
        delete [] Send_PosList[s];
        delete [] Recv_PosList[s];
 
@@ -176,7 +176,7 @@ void Buf_AllocateBufferPatch( const int lv )
    if ( NPatchComma[lv][27] != amr.num[lv] )
    {
       fprintf( stderr, "ERROR : \"NPatchComma[%d][27] (%d) != amr.num[%d] (%d)\" !!\n",
-               lv, NPatchComma[lv][27], lv, amr.num[lv] ); 
+               lv, NPatchComma[lv][27], lv, amr.num[lv] );
       fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n", __FILE__, __LINE__,  __FUNCTION__  );
       MPI_Exit();
    }

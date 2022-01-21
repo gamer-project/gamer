@@ -111,7 +111,7 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
                                  CheckMinPres_Yes, MinPres, Emag,
                                  EoS.DensEint2Pres_FuncPtr, EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table, NULL );
          a2    = EoS.DensPres2CSqr_FuncPtr( fluid[DENS], Pres, fluid+NCOMP_FLUID, EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int,
-                                            EoS.Table, NULL ); // sound speed squared
+                                            EoS.Table ); // sound speed squared
 
 //       compute the maximum information propagating speed
 //       --> hydro: bulk velocity + sound wave
@@ -137,12 +137,16 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
          CFLy += Vy;
          CFLz += Vz;
 
-#        if   ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == CTU )
+#        if   ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
          MaxCFL = FMAX( CFLx, MaxCFL );
          MaxCFL = FMAX( CFLy, MaxCFL );
          MaxCFL = FMAX( CFLz, MaxCFL );
-#        elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
+#        else
+#        error : ERROR : unsupported FLU_SCHEME !!
+         /*
+//       no longer used
          MaxCFL = FMAX( CFLx+CFLy+CFLz, MaxCFL );
+         */
 #        endif
       } // CGPU_LOOP( t, CUBE(PS1) )
 

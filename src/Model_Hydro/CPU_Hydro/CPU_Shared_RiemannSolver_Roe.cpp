@@ -73,7 +73,7 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 //                R_In              : Input right state (conserved variables)
 //                MinDens/Pres      : Density and pressure floors
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
-//                EoS_DensPres2CSqr : EoS routine to compute the sound speed square
+//                EoS_DensPres2CSqr : EoS routine to compute the sound speed squared
 //                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
 //                EoS_Table         : EoS tables
 //-------------------------------------------------------------------------------------------------------
