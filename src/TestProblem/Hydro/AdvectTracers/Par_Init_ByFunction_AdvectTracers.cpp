@@ -3,6 +3,10 @@
 #ifdef PARTICLE
 
 extern int    Advect_NPar[3];
+extern double Advect_Point_Mass;
+extern double Advect_Par_Sep;
+extern bool   Advect_Use_Tracers;
+extern bool   Advect_Use_Massive;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_Init_ByFunction_AdvectTracers
@@ -52,44 +56,127 @@ void Par_Init_ByFunction_AdvectTracers( const long NPar_ThisRank, const long NPa
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
-   const double delta_p[3] = { 0.5*amr->BoxSize[0]/(Advect_NPar[0]+1),
-                               0.5*amr->BoxSize[1]/(Advect_NPar[1]+1),
-                               0.5*amr->BoxSize[2]/(Advect_NPar[2]+1) };
+   long NPar_All = 0;
 
-   const double delta_box = 0.5*amr->BoxSize[0] / MPI_NRank;
+#  ifdef MASSIVE_PARTICLES
+   if ( Advect_Use_Massive ) NPar_All += 2;
+#  endif
 
-   const long NParZ_Local = Advect_NPar[2] / MPI_NRank;
-   const long NPar_ToAssign = Advect_NPar[0]*Advect_NPar[1]*NParZ_Local;
+#  ifdef TRACER
+   if ( Advect_Use_Tracers ) NPar_All += Advect_NPar[0]*Advect_NPar[1]*Advect_NPar[2];
+#  endif
 
-   if ( NPar_ToAssign != NPar_ThisRank )
-      Aux_Error( ERROR_INFO, "total number of particles specified [%ld] != expect [%ld] !!\n",
-                 NPar_ToAssign, NPar_ThisRank );
+   if ( NPar_All != NPar_AllRank )
+      Aux_Error( ERROR_INFO, "total number of particles found [%ld] != expect [%ld] !!\n",
+                 NPar_All, NPar_AllRank );
 
-   MPI_Barrier( MPI_COMM_WORLD );
+   // define the particle attribute arrays
+   real *ParData_AllRank[PAR_NATT_TOTAL];
+   for (int v=0; v<PAR_NATT_TOTAL; v++)   ParData_AllRank[v] = NULL;
 
-// Generate particles within the uniform sphere of high energy
+   // only the master rank will construct the initial condition
+   if ( MPI_Rank == 0 ) {
 
-   for (long kk=0; kk<NParZ_Local;    kk++) 
-   for (long jj=0; jj<Advect_NPar[1]; jj++) 
-   for (long ii=0; ii<Advect_NPar[0]; ii++) 
-   {
+//    allocate memory for particle attribute arrays
+      ParData_AllRank[PAR_MASS] = new real [NPar_AllRank];
+      ParData_AllRank[PAR_POSX] = new real [NPar_AllRank];
+      ParData_AllRank[PAR_POSY] = new real [NPar_AllRank];
+      ParData_AllRank[PAR_POSZ] = new real [NPar_AllRank];
+      ParData_AllRank[PAR_VELX] = new real [NPar_AllRank];
+      ParData_AllRank[PAR_VELY] = new real [NPar_AllRank];
+      ParData_AllRank[PAR_VELZ] = new real [NPar_AllRank];
+      ParData_AllRank[PAR_TYPE] = new real [NPar_AllRank];
 
-      const long p = IDX321( ii, jj, kk, Advect_NPar[0], Advect_NPar[1] );
+      long p = 0;
 
-//    tracer particles have no mass
-      ParMass[p] = 0.0;
+#ifdef MASSIVE_PARTICLES
 
-      ParPosX[p] = real( (ii+1)*delta_p[0]+0.25*amr->BoxSize[0] );
-      ParPosY[p] = real( (jj+1)*delta_p[1]+0.25*amr->BoxSize[1] );
-      ParPosZ[p] = real( (kk+1)*delta_p[2]+0.25*amr->BoxSize[2] + MPI_Rank*delta_box );
+      if ( Advect_Use_Massive ) {
 
-//    synchronize all particles to the physical time at the base level
+         const double v = 0.5*SQRT(Const_NewtonG*Advect_Point_Mass/(0.5*Advect_Par_Sep));
+
+         for (int ii=0; ii<2; ii++) {
+
+            const double dir = 2.0*ii-1.0;
+
+            ParData_AllRank[PAR_MASS][p] = real( Advect_Point_Mass );
+
+            ParData_AllRank[PAR_POSX][p] = real( 0.5*amr->BoxSize[0] +
+                 0.5*Advect_Par_Sep*dir );
+            ParData_AllRank[PAR_POSY][p] = real( 0.5*amr->BoxSize[1] );
+            ParData_AllRank[PAR_POSZ][p] = real( 0.5*amr->BoxSize[2] );
+
+            ParData_AllRank[PAR_VELX][p] = 0.0;
+            ParData_AllRank[PAR_VELY][p] = real( v*dir );
+            ParData_AllRank[PAR_VELZ][p] = 0.0;
+
+//          set the particle type to be generic massive
+            ParData_AllRank[PAR_TYPE][p] = PTYPE_GENERIC_MASSIVE;
+
+            p++;
+
+         }
+
+      } // if ( Advect_Use_Massive )
+
+#endif // #ifdef MASSIVE_PARTICLES
+
+#ifdef TRACER
+
+      if ( Advect_Use_Tracers ) {
+
+         const double delta_p[3] = { 0.5*amr->BoxSize[0]/(Advect_NPar[0]+1),
+                                     0.5*amr->BoxSize[1]/(Advect_NPar[1]+1),
+                                     0.5*amr->BoxSize[2]/(Advect_NPar[2]+1) };
+         
+         for (long kk=0; kk<Advect_NPar[2]; kk++)
+         for (long jj=0; jj<Advect_NPar[1]; jj++)
+         for (long ii=0; ii<Advect_NPar[0]; ii++)
+         {
+
+            //const long p = IDX321( ii, jj, kk, Advect_NPar[0], Advect_NPar[1] );
+
+//          tracer particles have no mass
+            ParData_AllRank[PAR_MASS][p] = 0.0;
+
+//          assign positions
+            ParData_AllRank[PAR_POSX][p] = real(
+                 (ii+1)*delta_p[0]+0.25*amr->BoxSize[0] );
+            ParData_AllRank[PAR_POSY][p] = real(
+                 (jj+1)*delta_p[1]+0.25*amr->BoxSize[1] );
+            ParData_AllRank[PAR_POSZ][p] = real(
+                 (kk+1)*delta_p[2]+0.25*amr->BoxSize[2] );
+
+//          set velocities to zero (these will be updated from the grid later)
+            ParData_AllRank[PAR_VELX][p] = 0.0;
+            ParData_AllRank[PAR_VELY][p] = 0.0;
+            ParData_AllRank[PAR_VELZ][p] = 0.0;
+
+//          set the particle type to be tracer
+            ParData_AllRank[PAR_TYPE][p] = PTYPE_TRACER;
+
+            p++;
+
+         }
+
+      } // if ( Advect_Use_Tracers )
+
+#endif // #ifdef TRACER
+
+   } // if ( MPI_Rank == 0 )
+
+   // send particle attributes from the master rank to all ranks
+   Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank,
+                            _PAR_MASS|_PAR_POS|_PAR_VEL|_PAR_TYPE,
+                            ParData_AllRank, AllAttribute );
+
+   // synchronize all particles to the physical time on the base level
+   for (long p=0; p<NPar_ThisRank; p++)
       ParTime[p] = Time[0];
 
-//    set the particle type to be tracer
-      ParType[p] = PTYPE_TRACER;
-
-   }
+// free resource
+   if ( MPI_Rank == 0 )
+      for (int v=0; v<PAR_NATT_TOTAL; v++)   delete [] ParData_AllRank[v];
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 

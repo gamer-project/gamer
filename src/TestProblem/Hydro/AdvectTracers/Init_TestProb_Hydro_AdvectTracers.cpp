@@ -8,11 +8,15 @@ static double Advect_Dens_Bg;        // background mass density
 static double Advect_Pres_Bg;        // background pressure
 static double Advect_Ang_Freq;       // gas angular frequency
        int    Advect_NPar[3];        // particles on a side
+       double Advect_Point_Mass;
+       double Advect_Par_Sep;
+       bool   Advect_Use_Tracers;
+       bool   Advect_Use_Massive;
 
 // =======================================================================================
 
 // problem-specific function prototypes
-#if defined( PARTICLE ) && defined( TRACER )
+#ifdef PARTICLE
 void Par_Init_ByFunction_AdvectTracers( const long NPar_ThisRank, const long NPar_AllRank,
                                         real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                         real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
@@ -46,12 +50,8 @@ void Validate()
    Aux_Error( ERROR_INFO, "PARTICLE must be enabled !!\n" );
 #  endif
 
-#  ifndef TRACER
-   Aux_Error( ERROR_INFO, "TRACER must be enabled !!\n" );
-#  endif
-
-#  ifdef GRAVITY
-   Aux_Error( ERROR_INFO, "GRAVITY must be disabled !!\n" );
+#  if !defined( TRACER ) && !defined( GRAVITY )
+   Aux_Error( ERROR_INFO, "Either TRACER, GRAVITY, or both must be enabled !!\n" );
 #  endif
 
 #  ifdef COMOVING
@@ -101,15 +101,34 @@ void SetParameter()
 // ********************************************************************************************************************************
    ReadPara->Add( "Advect_Dens_Bg",     &Advect_Dens_Bg,        1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "Advect_Pres_Bg",     &Advect_Pres_Bg,        1.0e5,        Eps_double,       NoMax_double      );
-   ReadPara->Add( "Advect_Ang_Freq",    &Advect_Ang_Freq,       100.0,        10.0,             150.0             );
+   ReadPara->Add( "Advect_Ang_Freq",    &Advect_Ang_Freq,       100.0,        Eps_double,       150.0             );
    ReadPara->Add( "Advect_NparX",       &Advect_NPar[0],        32,           8,                NoMax_int         );
    ReadPara->Add( "Advect_NparY",       &Advect_NPar[1],        32,           8,                NoMax_int         );
    ReadPara->Add( "Advect_NparZ",       &Advect_NPar[2],        32,           8,                NoMax_int         );
+   ReadPara->Add( "Advect_Par_Sep",     &Advect_Par_Sep,        0.5,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Advect_Point_Mass",  &Advect_Point_Mass,     1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Advect_Use_Tracers", &Advect_Use_Tracers,    true,         Useless_bool,     Useless_bool      );
+   ReadPara->Add( "Advect_Use_Massive", &Advect_Use_Massive,    true,         Useless_bool,     Useless_bool      );
 
    ReadPara->Read( FileName );
 
    delete ReadPara;
 
+   if ( !Advect_Use_Tracers && !Advect_Use_Massive )
+      Aux_Error( ERROR_INFO,
+                 "Either Advect_Use_Tracer, Advect_Use_Massive, or both must be true !!\n" );
+
+#  ifndef TRACER
+   if ( Advect_Use_Tracers )
+      Aux_Message( stderr,
+                   "WARNING : Advect_Use_Tracers is true but TRACER is not enabled !!\n" );
+#  endif
+
+#  ifndef TRACER
+   if ( Advect_Use_Massive )
+      Aux_Message( stderr,
+                   "WARNING : Advect_Use_Massive is true but GRAVITY is not enabled !!\n" );
+#  endif
 
 // (2) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
@@ -223,7 +242,7 @@ void Init_TestProb_Hydro_AdvectTracers()
    BC_User_Ptr                   = NULL;
    Flu_ResetByUser_Func_Ptr      = NULL;
    End_User_Ptr                  = NULL;
-#  if defined( PARTICLE ) && defined( TRACER )
+#  ifdef PARTICLE
    Par_Init_ByFunction_Ptr       = Par_Init_ByFunction_AdvectTracers;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
