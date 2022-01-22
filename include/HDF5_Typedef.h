@@ -357,6 +357,7 @@ struct InputPara_t
    int    Par_ImproveAcc;
    int    Par_PredictPos;
    double Par_RemoveCell;
+   int    Opt__FreezePar;
    int    Par_GhostSize;
    char  *ParAttLabel[PAR_NATT_TOTAL];
 #  endif

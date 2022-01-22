@@ -76,6 +76,7 @@ PAR_INTEG                     2           # particle integration scheme: (1=Eule
 PAR_IMPROVE_ACC               1           # improve force accuracy at patch boundaries [1] ##STORE_POT_GHOST and PAR_INTERP=2/3 ONLY##
 PAR_PREDICT_POS               1           # predict particle position during mass assignment [1]
 PAR_REMOVE_CELL              -1.0         # remove particles X-root-cells from the boundaries (non-periodic BC only; <0=auto) [-1.0]
+OPT__FREEZE_PAR               0           # do not update particles (except for tracers) [0]
 
 
 # cosmology (COMOVING only)
