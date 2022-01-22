@@ -1,7 +1,9 @@
 # problem-specific runtime parameters
-Advect_Dens_Bg        1.0e0          # background mass density
-Advect_Pres_Bg        1.0e5          # background energy density
-Advect_Ang_Freq	      100.0          # gas angular speed
+Advect_Dens_Bg        1.0e-2          # background mass density
+Advect_Pres_Bg        1.0e-2          # background energy density
+Advect_Ang_Freq	      0.00051668     # gas angular speed
 Advect_NParX          32             # number of grid particles x
 Advect_NParY          32             # number of grid particles	y
 Advect_NParZ          32             # number of grid particles	z
+Advect_Use_Tracers    0
+Advect_Use_Massive    1
