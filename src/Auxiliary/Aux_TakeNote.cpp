@@ -711,6 +711,7 @@ void Aux_TakeNote()
       fprintf( Note, "Par->ImproveAcc                 %d\n",      amr->Par->ImproveAcc          );
       fprintf( Note, "Par->PredictPos                 %d\n",      amr->Par->PredictPos          );
       fprintf( Note, "Par->RemoveCell                 %13.7e\n",  amr->Par->RemoveCell          );
+      fprintf( Note, "OPT__FREEZE_PAR                 %d\n",      OPT__FREEZE_PAR               );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 #     endif

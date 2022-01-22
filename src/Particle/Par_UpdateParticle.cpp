@@ -61,6 +61,8 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 #  ifndef GRAVITY
    return;
 #  else
+// do nothing when enabling OPT__FREEZE_PAR (except for storing particle acceleration)
+   if ( OPT__FREEZE_PAR  &&  UpdateStep != PAR_UPSTEP_ACC_ONLY )     return;
 
    const ParInterp_t IntScheme    = amr->Par->Interp;
    const bool   UsePot            = ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT );
