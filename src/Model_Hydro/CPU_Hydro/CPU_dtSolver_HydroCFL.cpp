@@ -157,7 +157,7 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
       if ( threadIdx.x == 0 )
 #     endif // #ifdef __CUDACC__
       g_dt_Array[p] = dhSafety/MaxCFL;
-
+      printf("Safety = %f\n", Safety);
    } // for (int p=0; p<8*NPG; p++)
 
 } // FUNCTION : CPU/CUFLU_dtSolver_HydroCFL
