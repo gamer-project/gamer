@@ -702,16 +702,18 @@ void Init_ByRestart()
    const double ParWeight_Zero   = 0.0;
    const bool   Redistribute_Yes = true;
    const bool   Redistribute_No  = false;
+   const bool   SendGridData_Yes = true;
+   const bool   SendGridData_No  = false;
    const bool   ResetLB_Yes      = true;
    const bool   ResetLB_No       = false;
    const int    AllLv            = -1;
 
-   LB_Init_LoadBalance( Redistribute_No, ParWeight_Zero, ResetLB_No, AllLv );
+   LB_Init_LoadBalance( Redistribute_No, SendGridData_No, ParWeight_Zero, ResetLB_No, AllLv );
 
 // redistribute patches again if we want to take into account the load-balance weighting of particles
 #  ifdef PARTICLE
    if ( amr->LB->Par_Weight > 0.0 )
-   LB_Init_LoadBalance( Redistribute_Yes, amr->LB->Par_Weight, ResetLB_Yes, AllLv );
+   LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, amr->LB->Par_Weight, ResetLB_Yes, AllLv );
 #  endif
 
 
@@ -1414,7 +1416,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       if ( OPT__OUTPUT_PART )
       CompareVar( "OPT__OUTPUT_BASE",        opt__output_base,             OPT__OUTPUT_BASE,          NonFatal );
 #     ifdef PARTICLE
-      if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS || OPT__OUTPUT_PAR_TEXT ) {
+      if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS || OPT__OUTPUT_PAR_MODE ) {
 #     else
       if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS ) {
 #     endif

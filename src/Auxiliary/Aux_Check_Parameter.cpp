@@ -298,7 +298,7 @@ void Aux_Check_Parameter()
 
    if ( !OPT__OUTPUT_TOTAL  &&  !OPT__OUTPUT_PART  &&  !OPT__OUTPUT_USER  &&  !OPT__OUTPUT_BASEPS )
 #  ifdef PARTICLE
-   if ( !OPT__OUTPUT_PAR_TEXT )
+   if ( !OPT__OUTPUT_PAR_MODE )
 #  endif
       Aux_Message( stderr, "WARNING : all output options are turned off --> no data will be output !!\n" );
 
@@ -572,6 +572,9 @@ void Aux_Check_Parameter()
    if ( OPT__RESET_FLUID  &&   OPT__INIT == INIT_BY_FILE )
       Aux_Message( stderr, "WARNING : \"%s\" will NOT be applied to the input uniform data !!\n", "OPT__RESET_FLUID" );
 
+   if ( OPT__FREEZE_FLUID )
+      Aux_Message( stderr, "REMINDER : \"%s\" will prevent fluid variables from being updated\n", "OPT__FREEZE_FLUID" );
+
    } // if ( MPI_Rank == 0 )
 
 
@@ -707,12 +710,12 @@ void Aux_Check_Parameter()
    if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
    {
 #     ifdef MHD
-      /*
       if ( OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_ROE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_HLLD  &&
            OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_HLLE )
          Aux_Error( ERROR_INFO, "unsupported parameter \"%s = %d\" !!\n", "OPT__1ST_FLUX_CORR_SCHEME", OPT__1ST_FLUX_CORR_SCHEME );
-         */
-      Aux_Error( ERROR_INFO, "MHD does not support \"OPT__1ST_FLUX_CORR\" !!\n" );
+
+      if ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D1D )
+         Aux_Error( ERROR_INFO, "MHD does not support \"OPT__1ST_FLUX_CORR = %d (3D+1D)\" yet !!\n", FIRST_FLUX_CORR_3D1D );
 #     else
       if ( OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_ROE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_HLLC  &&
            OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_HLLE )
@@ -801,14 +804,13 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
-#  if ( LR_SCHEME == PPM )
-   if ( OPT__LR_LIMITER == EXTPRE )
-      Aux_Error( ERROR_INFO, "currently the PPM reconstruction does not support the \"%s\" limiter\n",
-                 "extrema-preserving" );
-#  endif
+   if ( OPT__LR_LIMITER == LR_LIMITER_EXTPRE )
+      Aux_Error( ERROR_INFO, "\"%s\" limiter (OPT__LR_IMITER = %d) is not supported yet !!\n",
+                 "extrema-preserving", OPT__LR_LIMITER );
 
-   if ( OPT__LR_LIMITER != VANLEER  &&  OPT__LR_LIMITER != GMINMOD  &&  OPT__LR_LIMITER != ALBADA  &&
-        OPT__LR_LIMITER != EXTPRE   &&  OPT__LR_LIMITER != VL_GMINMOD )
+   if ( OPT__LR_LIMITER != LR_LIMITER_VANLEER     &&  OPT__LR_LIMITER != LR_LIMITER_GMINMOD  &&
+        OPT__LR_LIMITER != LR_LIMITER_ALBADA      &&  OPT__LR_LIMITER != LR_LIMITER_EXTPRE   &&
+        OPT__LR_LIMITER != LR_LIMITER_VL_GMINMOD  &&  OPT__LR_LIMITER != LR_LIMITER_CENTRAL    )
       Aux_Error( ERROR_INFO, "unsupported data reconstruction limiter (OPT__LR_IMITER = %d) !!\n",
                  OPT__LR_LIMITER );
 
@@ -816,6 +818,18 @@ void Aux_Check_Parameter()
 // warnings
 // ------------------------------
    if ( MPI_Rank == 0 ) {
+
+#     if ( FLU_SCHEME == MHM_RP  &&  LR_SCHEME == PPM )
+      if ( OPT__LR_LIMITER != LR_LIMITER_CENTRAL )
+         Aux_Message( stderr, "WARNING : OPT__LR_LIMITER = %d (LR_LIMITER_CENTRAL) is recommended for MHM_RP+PPM !!\n",
+                      LR_LIMITER_CENTRAL );
+#     endif
+
+#     if ( LR_SCHEME == PLM )
+      if ( OPT__LR_LIMITER == LR_LIMITER_CENTRAL )
+         Aux_Message( stderr, "WARNING : OPT__LR_LIMITER = %d (LR_LIMITER_CENTRAL) is not recommended for PLM !!\n",
+                      OPT__LR_LIMITER );
+#     endif
 
    } // if ( MPI_Rank == 0 )
 
@@ -827,19 +841,19 @@ void Aux_Check_Parameter()
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == CTU )
 
 #  if ( LR_SCHEME == PLM )
-   if ( OPT__LR_LIMITER == EXTPRE  &&  FLU_GHOST_SIZE < 3 )
+   if ( OPT__LR_LIMITER == LR_LIMITER_EXTPRE  &&  FLU_GHOST_SIZE < 3 )
       Aux_Error( ERROR_INFO, "please set \"%s\" for \"%s\" !!\n",
                  "FLU_GHOST_SIZE = 3", "MHM/CTU scheme + PLM reconstruction + EXTPRE limiter" );
 
-   if ( OPT__LR_LIMITER == EXTPRE  &&  FLU_GHOST_SIZE > 3  &&  MPI_Rank == 0 )
+   if ( OPT__LR_LIMITER == LR_LIMITER_EXTPRE  &&  FLU_GHOST_SIZE > 3  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
                    "FLU_GHOST_SIZE = 3", "MHM/CTU scheme + PLM reconstruction + EXTPRE limiter" );
 
-   if ( OPT__LR_LIMITER != EXTPRE  &&  FLU_GHOST_SIZE < 2 )
+   if ( OPT__LR_LIMITER != LR_LIMITER_EXTPRE  &&  FLU_GHOST_SIZE < 2 )
       Aux_Error( ERROR_INFO, "please set \"%s\" for \"%s\" !!\n",
                  "FLU_GHOST_SIZE = 2", "MHM/CTU scheme + PLM reconstruction + non-EXTPRE limiter" );
 
-   if ( OPT__LR_LIMITER != EXTPRE  &&  FLU_GHOST_SIZE > 2  &&  MPI_Rank == 0 )
+   if ( OPT__LR_LIMITER != LR_LIMITER_EXTPRE  &&  FLU_GHOST_SIZE > 2  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
                    "FLU_GHOST_SIZE = 2", "MHM/CTU scheme + PLM reconstruction + non-EXTPRE limiter" );
 #  endif // #if ( LR_SCHEME == PLM )
@@ -862,19 +876,19 @@ void Aux_Check_Parameter()
 #  if ( FLU_SCHEME == MHM_RP )
 
 #  if ( LR_SCHEME == PLM )
-   if ( OPT__LR_LIMITER == EXTPRE  &&  FLU_GHOST_SIZE < 4 )
+   if ( OPT__LR_LIMITER == LR_LIMITER_EXTPRE  &&  FLU_GHOST_SIZE < 4 )
       Aux_Error( ERROR_INFO, "please set \"%s\" for \"%s\" !!\n",
                  "FLU_GHOST_SIZE = 4", "MHM_RP scheme + PLM reconstruction + EXTPRE limiter" );
 
-   if ( OPT__LR_LIMITER == EXTPRE  &&  FLU_GHOST_SIZE > 4  &&  MPI_Rank == 0 )
+   if ( OPT__LR_LIMITER == LR_LIMITER_EXTPRE  &&  FLU_GHOST_SIZE > 4  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
                    "FLU_GHOST_SIZE = 4", "MHM_RP scheme + PLM reconstruction + EXTPRE limiter" );
 
-   if ( OPT__LR_LIMITER != EXTPRE  &&  FLU_GHOST_SIZE < 3 )
+   if ( OPT__LR_LIMITER != LR_LIMITER_EXTPRE  &&  FLU_GHOST_SIZE < 3 )
       Aux_Error( ERROR_INFO, "please set \"%s\" for \"%s\" !!\n",
                  "FLU_GHOST_SIZE = 3", "MHM_RP scheme + PLM reconstruction + non-EXTPRE limiter" );
 
-   if ( OPT__LR_LIMITER != EXTPRE  &&  FLU_GHOST_SIZE > 3  &&  MPI_Rank == 0 )
+   if ( OPT__LR_LIMITER != LR_LIMITER_EXTPRE  &&  FLU_GHOST_SIZE > 3  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
                    "FLU_GHOST_SIZE = 3", "MHM_RP scheme + PLM reconstruction + non-EXTPRE limiter" );
 #  endif // #if ( LR_SCHEME == PLM )
@@ -1317,6 +1331,9 @@ void Aux_Check_Parameter()
 
    if ( OPT__GRA_P5_GRADIENT )
       Aux_Message( stderr, "WARNING : currently \"%s\" is not applied to particle update !!\n", "OPT__GRA_P5_GRADIENT" );
+
+   if ( OPT__FREEZE_PAR )
+      Aux_Message( stderr, "REMINDER : \"%s\" will prevent particles from being updated\n", "OPT__FREEZE_PAR" );
 
    } // if ( MPI_Rank == 0 )
 

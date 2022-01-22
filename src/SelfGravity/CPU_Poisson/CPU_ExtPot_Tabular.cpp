@@ -59,7 +59,9 @@ void SetExtPotAuxArray_Tabular( double AuxArray_Flt[], int AuxArray_Int[] )
    AuxArray_Flt[0] = EXT_POT_TABLE_EDGEL[0];    // left-edge x/y/z coordinates of the table
    AuxArray_Flt[1] = EXT_POT_TABLE_EDGEL[1];
    AuxArray_Flt[2] = EXT_POT_TABLE_EDGEL[2];
-   AuxArray_Flt[3] = 1.0 / EXT_POT_TABLE_DH;    // 1/dh
+   AuxArray_Flt[3] = 1.0 / EXT_POT_TABLE_DH[0];    // 1/dh
+   AuxArray_Flt[4] = 1.0 / EXT_POT_TABLE_DH[1];
+   AuxArray_Flt[5] = 1.0 / EXT_POT_TABLE_DH[2];
 
 // integer parameters
    AuxArray_Int[0] = EXT_POT_TABLE_NPOINT[0];   // table sizes along x/y/z
@@ -105,7 +107,9 @@ static real ExtPot_Tabular( const double x, const double y, const double z, cons
    const double EdgeL_x  = UserArray_Flt[0];
    const double EdgeL_y  = UserArray_Flt[1];
    const double EdgeL_z  = UserArray_Flt[2];
-   const double _dh      = UserArray_Flt[3];
+   const double _dhx     = UserArray_Flt[3];
+   const double _dhy     = UserArray_Flt[4];
+   const double _dhz     = UserArray_Flt[5];
 
    const int    NPoint_x = UserArray_Int[0];
    const int    NPoint_y = UserArray_Int[1];
@@ -121,9 +125,9 @@ static real ExtPot_Tabular( const double x, const double y, const double z, cons
    long idx0;
    real dx, dy, dz;
 
-   dx    = real( ( x - EdgeL_x )*_dh );
-   dy    = real( ( y - EdgeL_y )*_dh );
-   dz    = real( ( z - EdgeL_z )*_dh );
+   dx    = real( ( x - EdgeL_x )*_dhx );
+   dy    = real( ( y - EdgeL_y )*_dhy );
+   dz    = real( ( z - EdgeL_z )*_dhz );
    idx_x = int( dx );
    idx_y = int( dy );
    idx_z = int( dz );
@@ -134,16 +138,16 @@ static real ExtPot_Tabular( const double x, const double y, const double z, cons
    const int NPoint_z = UserArray_Int[2];
 
    if ( idx_x < 0  ||  idx_x+1 >= NPoint_x )
-      Aux_Error( ERROR_INFO, "x index outside the table range (x %14.7e, EdgeL %14.7e, _dh %13.7e, idx %d) !!\n",
-                 x, EdgeL_x, _dh, idx_x );
+      Aux_Error( ERROR_INFO, "x index outside the table range (x %14.7e, EdgeL %14.7e, _dhx %13.7e, idx %d) !!\n",
+                 x, EdgeL_x, _dhx, idx_x );
 
    if ( idx_y < 0  ||  idx_y+1 >= NPoint_y )
-      Aux_Error( ERROR_INFO, "y index outside the table range (y %14.7e, EdgeL %14.7e, _dh %13.7e, idx %d) !!\n",
-                 y, EdgeL_y, _dh, idx_y );
+      Aux_Error( ERROR_INFO, "y index outside the table range (y %14.7e, EdgeL %14.7e, _dhy %13.7e, idx %d) !!\n",
+                 y, EdgeL_y, _dhy, idx_y );
 
    if ( idx_z < 0  ||  idx_z+1 >= NPoint_z )
-      Aux_Error( ERROR_INFO, "z index outside the table range (z %14.7e, EdgeL %14.7e, _dh %13.7e, idx %d) !!\n",
-                 z, EdgeL_z, _dh, idx_z );
+      Aux_Error( ERROR_INFO, "z index outside the table range (z %14.7e, EdgeL %14.7e, _dhz %13.7e, idx %d) !!\n",
+                 z, EdgeL_z, _dhz, idx_z );
 #  endif
 
 

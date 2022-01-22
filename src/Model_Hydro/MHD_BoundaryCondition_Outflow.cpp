@@ -125,7 +125,8 @@ void BC_Outflow_xm( real **Array, const int NVar, const int TVarIdxList[], const
       {
          case MAGX:
          {
-            real (*MagX)[ArraySizeY][ArraySizeX+1] = ( real (*)[ArraySizeY][ArraySizeX+1] )Array[MAGX];
+            typedef real (*vlax)[ArraySizeY][ArraySizeX+1];
+            vlax MagX = ( vlax )Array[MAGX];
 
             for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)
             for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)
@@ -137,7 +138,8 @@ void BC_Outflow_xm( real **Array, const int NVar, const int TVarIdxList[], const
 
          case MAGY:
          {
-            real (*MagY)[ArraySizeY+1][ArraySizeX] = ( real (*)[ArraySizeY+1][ArraySizeX] )Array[MAGY];
+            typedef real (*vlay)[ArraySizeY+1][ArraySizeX];
+            vlay MagY = ( vlay )Array[MAGY];
 
             for (int k=Idx_Start[2]; k<=Idx_End[2];   k++)
             for (int j=Idx_Start[1]; j<=Idx_End[1]+1; j++)
@@ -149,7 +151,8 @@ void BC_Outflow_xm( real **Array, const int NVar, const int TVarIdxList[], const
 
          case MAGZ:
          {
-            real (*MagZ)[ArraySizeY][ArraySizeX] = ( real (*)[ArraySizeY][ArraySizeX] )Array[MAGZ];
+            typedef real (*vlaz)[ArraySizeY][ArraySizeX];
+            vlaz MagZ = ( vlaz )Array[MAGZ];
 
             for (int k=Idx_Start[2]; k<=Idx_End[2]+1; k++)
             for (int j=Idx_Start[1]; j<=Idx_End[1];   j++)
@@ -191,7 +194,8 @@ void BC_Outflow_xp( real **Array, const int NVar, const int TVarIdxList[], const
       {
          case MAGX:
          {
-            real (*MagX)[ArraySizeY][ArraySizeX+1] = ( real (*)[ArraySizeY][ArraySizeX+1] )Array[MAGX];
+            typedef real (*vlax)[ArraySizeY][ArraySizeX+1];
+            vlax MagX = ( vlax )Array[MAGX];
 
             for (int k=Idx_Start[2];   k<=Idx_End[2];   k++)
             for (int j=Idx_Start[1];   j<=Idx_End[1];   j++)
@@ -203,7 +207,8 @@ void BC_Outflow_xp( real **Array, const int NVar, const int TVarIdxList[], const
 
          case MAGY:
          {
-            real (*MagY)[ArraySizeY+1][ArraySizeX] = ( real (*)[ArraySizeY+1][ArraySizeX] )Array[MAGY];
+            typedef real (*vlay)[ArraySizeY+1][ArraySizeX];
+            vlay MagY = ( vlay )Array[MAGY];
 
             for (int k=Idx_Start[2]; k<=Idx_End[2];   k++)
             for (int j=Idx_Start[1]; j<=Idx_End[1]+1; j++)
@@ -215,7 +220,8 @@ void BC_Outflow_xp( real **Array, const int NVar, const int TVarIdxList[], const
 
          case MAGZ:
          {
-            real (*MagZ)[ArraySizeY][ArraySizeX] = ( real (*)[ArraySizeY][ArraySizeX] )Array[MAGZ];
+            typedef real (*vlaz)[ArraySizeY][ArraySizeX];
+            vlaz MagZ = ( vlaz )Array[MAGZ];
 
             for (int k=Idx_Start[2]; k<=Idx_End[2]+1; k++)
             for (int j=Idx_Start[1]; j<=Idx_End[1];   j++)
@@ -256,7 +262,8 @@ void BC_Outflow_ym( real **Array, const int NVar, const int TVarIdxList[], const
       {
          case MAGX:
          {
-            real (*MagX)[ArraySizeY][ArraySizeX+1] = ( real (*)[ArraySizeY][ArraySizeX+1] )Array[MAGX];
+            typedef real (*vlax)[ArraySizeY][ArraySizeX+1];
+            vlax MagX = ( vlax )Array[MAGX];
 
             for (int k=Idx_Start[2]; k<=Idx_End[2];   k++)
             for (int j=Idx_Start[1]; j<=Idx_End[1];   j++)
@@ -268,7 +275,8 @@ void BC_Outflow_ym( real **Array, const int NVar, const int TVarIdxList[], const
 
          case MAGY:
          {
-            real (*MagY)[ArraySizeY+1][ArraySizeX] = ( real (*)[ArraySizeY+1][ArraySizeX] )Array[MAGY];
+            typedef real (*vlay)[ArraySizeY+1][ArraySizeX];
+            vlay MagY = ( vlay )Array[MAGY];
 
             for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)
             for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)
@@ -280,7 +288,8 @@ void BC_Outflow_ym( real **Array, const int NVar, const int TVarIdxList[], const
 
          case MAGZ:
          {
-            real (*MagZ)[ArraySizeY][ArraySizeX] = ( real (*)[ArraySizeY][ArraySizeX] )Array[MAGZ];
+            typedef real (*vlaz)[ArraySizeY][ArraySizeX];
+            vlaz MagZ = ( vlaz )Array[MAGZ];
 
             for (int k=Idx_Start[2]; k<=Idx_End[2]+1; k++)
             for (int j=Idx_Start[1]; j<=Idx_End[1];   j++)
@@ -322,7 +331,8 @@ void BC_Outflow_yp( real **Array, const int NVar, const int TVarIdxList[], const
       {
          case MAGX:
          {
-            real (*MagX)[ArraySizeY][ArraySizeX+1] = ( real (*)[ArraySizeY][ArraySizeX+1] )Array[MAGX];
+            typedef real (*vlax)[ArraySizeY][ArraySizeX+1];
+            vlax MagX = ( vlax )Array[MAGX];
 
             for (int k=Idx_Start[2]; k<=Idx_End[2];   k++)
             for (int j=Idx_Start[1]; j<=Idx_End[1];   j++)
@@ -334,7 +344,8 @@ void BC_Outflow_yp( real **Array, const int NVar, const int TVarIdxList[], const
 
          case MAGY:
          {
-            real (*MagY)[ArraySizeY+1][ArraySizeX] = ( real (*)[ArraySizeY+1][ArraySizeX] )Array[MAGY];
+            typedef real (*vlay)[ArraySizeY+1][ArraySizeX];
+            vlay MagY = ( vlay )Array[MAGY];
 
             for (int k=Idx_Start[2];   k<=Idx_End[2];   k++)
             for (int j=Idx_Start[1]+1; j<=Idx_End[1]+1; j++)
@@ -346,7 +357,8 @@ void BC_Outflow_yp( real **Array, const int NVar, const int TVarIdxList[], const
 
          case MAGZ:
          {
-            real (*MagZ)[ArraySizeY][ArraySizeX] = ( real (*)[ArraySizeY][ArraySizeX] )Array[MAGZ];
+            typedef real (*vlaz)[ArraySizeY][ArraySizeX];
+            vlaz MagZ = ( vlaz )Array[MAGZ];
 
             for (int k=Idx_Start[2]; k<=Idx_End[2]+1; k++)
             for (int j=Idx_Start[1]; j<=Idx_End[1];   j++)
@@ -387,7 +399,8 @@ void BC_Outflow_zm( real **Array, const int NVar, const int TVarIdxList[], const
       {
          case MAGX:
          {
-            real (*MagX)[ArraySizeY][ArraySizeX+1] = ( real (*)[ArraySizeY][ArraySizeX+1] )Array[MAGX];
+            typedef real (*vlax)[ArraySizeY][ArraySizeX+1];
+            vlax MagX = ( vlax )Array[MAGX];
 
             for (int k=Idx_Start[2]; k<=Idx_End[2];   k++)
             for (int j=Idx_Start[1]; j<=Idx_End[1];   j++)
@@ -399,7 +412,8 @@ void BC_Outflow_zm( real **Array, const int NVar, const int TVarIdxList[], const
 
          case MAGY:
          {
-            real (*MagY)[ArraySizeY+1][ArraySizeX] = ( real (*)[ArraySizeY+1][ArraySizeX] )Array[MAGY];
+            typedef real (*vlay)[ArraySizeY+1][ArraySizeX];
+            vlay MagY = ( vlay )Array[MAGY];
 
             for (int k=Idx_Start[2]; k<=Idx_End[2];   k++)
             for (int j=Idx_Start[1]; j<=Idx_End[1]+1; j++)
@@ -411,7 +425,8 @@ void BC_Outflow_zm( real **Array, const int NVar, const int TVarIdxList[], const
 
          case MAGZ:
          {
-            real (*MagZ)[ArraySizeY][ArraySizeX] = ( real (*)[ArraySizeY][ArraySizeX] )Array[MAGZ];
+            typedef real (*vlaz)[ArraySizeY][ArraySizeX];
+            vlaz MagZ = ( vlaz )Array[MAGZ];
 
             for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)
             for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)
@@ -453,7 +468,8 @@ void BC_Outflow_zp( real **Array, const int NVar, const int TVarIdxList[], const
       {
          case MAGX:
          {
-            real (*MagX)[ArraySizeY][ArraySizeX+1] = ( real (*)[ArraySizeY][ArraySizeX+1] )Array[MAGX];
+            typedef real (*vlax)[ArraySizeY][ArraySizeX+1];
+            vlax MagX = ( vlax )Array[MAGX];
 
             for (int k=Idx_Start[2]; k<=Idx_End[2];   k++)
             for (int j=Idx_Start[1]; j<=Idx_End[1];   j++)
@@ -465,7 +481,8 @@ void BC_Outflow_zp( real **Array, const int NVar, const int TVarIdxList[], const
 
          case MAGY:
          {
-            real (*MagY)[ArraySizeY+1][ArraySizeX] = ( real (*)[ArraySizeY+1][ArraySizeX] )Array[MAGY];
+            typedef real (*vlay)[ArraySizeY+1][ArraySizeX];
+            vlay MagY = ( vlay )Array[MAGY];
 
             for (int k=Idx_Start[2]; k<=Idx_End[2];   k++)
             for (int j=Idx_Start[1]; j<=Idx_End[1]+1; j++)
@@ -477,7 +494,8 @@ void BC_Outflow_zp( real **Array, const int NVar, const int TVarIdxList[], const
 
          case MAGZ:
          {
-            real (*MagZ)[ArraySizeY][ArraySizeX] = ( real (*)[ArraySizeY][ArraySizeX] )Array[MAGZ];
+            typedef real (*vlaz)[ArraySizeY][ArraySizeX];
+            vlaz MagZ = ( vlaz )Array[MAGZ];
 
             for (int k=Idx_Start[2]+1; k<=Idx_End[2]+1; k++)
             for (int j=Idx_Start[1];   j<=Idx_End[1];   j++)

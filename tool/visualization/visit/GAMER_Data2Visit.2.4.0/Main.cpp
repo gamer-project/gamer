@@ -39,7 +39,7 @@ bool   InputScale     = false;                                  // input cell sc
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CreateSilo
-// Description :  Create the silo files 
+// Description :  Create the silo files
 //-------------------------------------------------------------------------------------------------------
 void CreateSilo()
 {
@@ -65,7 +65,7 @@ void WriteBox()
 
 
    DBfile *dbfile = NULL;
-   dbfile = DBCreate( "Box.silo", DB_CLOBBER, DB_LOCAL, NULL, DB_HDF5 );    
+   dbfile = DBCreate( "Box.silo", DB_CLOBBER, DB_LOCAL, NULL, DB_HDF5 );
 
    int    ndims       = 3;
    int    node_dims[] = {2,2,2};
@@ -123,7 +123,7 @@ void WriteLevel()
    int    i1, i2, j1, j2, k1, k2;
    double x[ Size[0]+1 ], y[ Size[1]+1 ] , z[ Size[2]+1 ];
    double x_patch[2], y_patch[2], z_patch[2];
- 
+
    double *coords      [3] = { x, y, z };
    double *coords_patch[3] = { x_patch, y_patch, z_patch };
 
@@ -169,19 +169,19 @@ void WriteLevel()
    for (int lv=0; lv<NLEVEL; lv++)
    {
       cout << "   Level " << lv << " ... " << flush;
-      
+
 
       const double dh  = amr.dh   [lv];
       const int  scale = amr.scale[lv];
-      
+
       NMesh[lv] = 0;
-      
+
       DBfile *dbfile = NULL;
       char filename[100];
       sprintf( filename, "Level_%d.silo", lv );
-      
-      dbfile = DBCreate( filename, DB_CLOBBER, DB_LOCAL, NULL, DB_HDF5 );    
-      
+
+      dbfile = DBCreate( filename, DB_CLOBBER, DB_LOCAL, NULL, DB_HDF5 );
+
 
       for (int PID=0; PID<amr.num[lv]; PID++)
       {
@@ -194,16 +194,16 @@ void WriteLevel()
                for (int i=0; i<Size[1]+1; i++)     y[i] = ( amr.patch[lv][PID]->corner[1]/scale + i )*dh;
                for (int i=0; i<Size[2]+1; i++)     z[i] = TPhyCorner[2] + i*TPhySize[2];
 
-               x_patch[0] = amr.patch[lv][PID]->corner[0]/scale*dh;  
+               x_patch[0] = amr.patch[lv][PID]->corner[0]/scale*dh;
                x_patch[1] = amr.patch[lv][PID]->corner[0]/scale*dh + PS*dh;
-               y_patch[0] = amr.patch[lv][PID]->corner[1]/scale*dh;  
+               y_patch[0] = amr.patch[lv][PID]->corner[1]/scale*dh;
                y_patch[1] = amr.patch[lv][PID]->corner[1]/scale*dh + PS*dh;
                z_patch[0] = z[0];
                z_patch[1] = z[1];
 
-               i1 = 0;  
+               i1 = 0;
                i2 = PS;
-               j1 = 0;  
+               j1 = 0;
                j2 = PS;
                k1 = ( CornerScale[2] - amr.patch[lv][PID]->corner[2] ) / scale;
                k2 = k1 + 1;
@@ -218,16 +218,16 @@ void WriteLevel()
 
                x_patch[0] = x[0];
                x_patch[1] = x[1];
-               y_patch[0] = amr.patch[lv][PID]->corner[1]/scale*dh;  
+               y_patch[0] = amr.patch[lv][PID]->corner[1]/scale*dh;
                y_patch[1] = amr.patch[lv][PID]->corner[1]/scale*dh + PS*dh;
-               z_patch[0] = amr.patch[lv][PID]->corner[2]/scale*dh;  
+               z_patch[0] = amr.patch[lv][PID]->corner[2]/scale*dh;
                z_patch[1] = amr.patch[lv][PID]->corner[2]/scale*dh + PS*dh;
 
                i1 = ( CornerScale[0] - amr.patch[lv][PID]->corner[0] ) / scale;
                i2 = i1 + 1;
-               j1 = 0;  
+               j1 = 0;
                j2 = PS;
-               k1 = 0;  
+               k1 = 0;
                k2 = PS;
 
                break;
@@ -238,18 +238,18 @@ void WriteLevel()
                for (int i=0; i<Size[1]+1; i++)     y[i] = TPhyCorner[1] + i*TPhySize[1];
                for (int i=0; i<Size[2]+1; i++)     z[i] = ( amr.patch[lv][PID]->corner[2]/scale + i )*dh;
 
-               x_patch[0] = amr.patch[lv][PID]->corner[0]/scale*dh;  
+               x_patch[0] = amr.patch[lv][PID]->corner[0]/scale*dh;
                x_patch[1] = amr.patch[lv][PID]->corner[0]/scale*dh + PS*dh;
                y_patch[0] = y[0];
                y_patch[1] = y[1];
-               z_patch[0] = amr.patch[lv][PID]->corner[2]/scale*dh;  
+               z_patch[0] = amr.patch[lv][PID]->corner[2]/scale*dh;
                z_patch[1] = amr.patch[lv][PID]->corner[2]/scale*dh + PS*dh;
 
-               i1 = 0;  
+               i1 = 0;
                i2 = PS;
                j1 = ( CornerScale[1] - amr.patch[lv][PID]->corner[1] ) / scale;
                j2 = j1 + 1;
-               k1 = 0;  
+               k1 = 0;
                k2 = PS;
 
                break;
@@ -260,18 +260,18 @@ void WriteLevel()
                for (int i=0; i<Size[1]+1; i++)     y[i] = ( amr.patch[lv][PID]->corner[1]/scale + i )*dh;
                for (int i=0; i<Size[2]+1; i++)     z[i] = ( amr.patch[lv][PID]->corner[2]/scale + i )*dh;
 
-               x_patch[0] = amr.patch[lv][PID]->corner[0]/scale*dh;  
+               x_patch[0] = amr.patch[lv][PID]->corner[0]/scale*dh;
                x_patch[1] = amr.patch[lv][PID]->corner[0]/scale*dh + PS*dh;
-               y_patch[0] = amr.patch[lv][PID]->corner[1]/scale*dh;  
+               y_patch[0] = amr.patch[lv][PID]->corner[1]/scale*dh;
                y_patch[1] = amr.patch[lv][PID]->corner[1]/scale*dh + PS*dh;
-               z_patch[0] = amr.patch[lv][PID]->corner[2]/scale*dh;  
+               z_patch[0] = amr.patch[lv][PID]->corner[2]/scale*dh;
                z_patch[1] = amr.patch[lv][PID]->corner[2]/scale*dh + PS*dh;
 
-               i1 = 0;  
+               i1 = 0;
                i2 = PS;
-               j1 = 0;  
+               j1 = 0;
                j2 = PS;
-               k1 = 0;  
+               k1 = 0;
                k2 = PS;
 
                break;
@@ -281,7 +281,7 @@ void WriteLevel()
 //       create patch outline
          char PatchName[20];
          sprintf( PatchName, "Patch_%d_%d", lv, NMesh[lv] );
-         DBPutQuadmesh( dbfile, PatchName, NULL, coords_patch, node_dims_patch, ndims, DB_DOUBLE, DB_COLLINEAR, 
+         DBPutQuadmesh( dbfile, PatchName, NULL, coords_patch, node_dims_patch, ndims, DB_DOUBLE, DB_COLLINEAR,
                         NULL );
 
 
@@ -293,7 +293,7 @@ void WriteLevel()
 
 //       copy variables into 1-D arrays
 #        if   ( MODEL == HYDRO )
-         const real Gamma_m1 = GAMMA - 1.0;       
+         const real Gamma_m1 = GAMMA - 1.0;
          const real (* Rho_ptr)[PATCH_SIZE][PATCH_SIZE] = amr.patch[lv][PID]->fluid[DENS];
          const real (*MomX_ptr)[PATCH_SIZE][PATCH_SIZE] = amr.patch[lv][PID]->fluid[MOMX];
          const real (*MomY_ptr)[PATCH_SIZE][PATCH_SIZE] = amr.patch[lv][PID]->fluid[MOMY];
@@ -347,24 +347,24 @@ void WriteLevel()
                   case 0            : dID_m =  0;   dID_p = 1;   _dh = 1.0/dh;   break;
                   case PATCH_SIZE-1 : dID_m = -1;   dID_p = 0;   _dh = 1.0/dh;   break;
                   default           : dID_m = -1;   dID_p = 1;   _dh = 0.5/dh;   break;
-               } 
+               }
 
-               PxVy = _dh*( MomY_ptr[k][j][i+dID_p] / Rho_ptr[k][j][i+dID_p] - 
+               PxVy = _dh*( MomY_ptr[k][j][i+dID_p] / Rho_ptr[k][j][i+dID_p] -
                             MomY_ptr[k][j][i+dID_m] / Rho_ptr[k][j][i+dID_m] );
-               PxVz = _dh*( MomZ_ptr[k][j][i+dID_p] / Rho_ptr[k][j][i+dID_p] - 
+               PxVz = _dh*( MomZ_ptr[k][j][i+dID_p] / Rho_ptr[k][j][i+dID_p] -
                             MomZ_ptr[k][j][i+dID_m] / Rho_ptr[k][j][i+dID_m] );
-                
+
                // partial y
                switch ( j )
                {
                   case 0            : dID_m =  0;   dID_p = 1;   _dh = 1.0/dh;   break;
                   case PATCH_SIZE-1 : dID_m = -1;   dID_p = 0;   _dh = 1.0/dh;   break;
                   default           : dID_m = -1;   dID_p = 1;   _dh = 0.5/dh;   break;
-               } 
-               
-               PyVx = _dh*( MomX_ptr[k][j+dID_p][i] / Rho_ptr[k][j+dID_p][i] - 
+               }
+
+               PyVx = _dh*( MomX_ptr[k][j+dID_p][i] / Rho_ptr[k][j+dID_p][i] -
                             MomX_ptr[k][j+dID_m][i] / Rho_ptr[k][j+dID_m][i] );
-               PyVz = _dh*( MomZ_ptr[k][j+dID_p][i] / Rho_ptr[k][j+dID_p][i] - 
+               PyVz = _dh*( MomZ_ptr[k][j+dID_p][i] / Rho_ptr[k][j+dID_p][i] -
                             MomZ_ptr[k][j+dID_m][i] / Rho_ptr[k][j+dID_m][i] );
 
                // partial z
@@ -373,11 +373,11 @@ void WriteLevel()
                   case 0            : dID_m =  0;   dID_p = 1;   _dh = 1.0/dh;   break;
                   case PATCH_SIZE-1 : dID_m = -1;   dID_p = 0;   _dh = 1.0/dh;   break;
                   default           : dID_m = -1;   dID_p = 1;   _dh = 0.5/dh;   break;
-               } 
-               
-               PzVx = _dh*( MomX_ptr[k+dID_p][j][i] / Rho_ptr[k+dID_p][j][i] - 
+               }
+
+               PzVx = _dh*( MomX_ptr[k+dID_p][j][i] / Rho_ptr[k+dID_p][j][i] -
                             MomX_ptr[k+dID_m][j][i] / Rho_ptr[k+dID_m][j][i] );
-               PzVy = _dh*( MomY_ptr[k+dID_p][j][i] / Rho_ptr[k+dID_p][j][i] - 
+               PzVy = _dh*( MomY_ptr[k+dID_p][j][i] / Rho_ptr[k+dID_p][j][i] -
                             MomY_ptr[k+dID_m][j][i] / Rho_ptr[k+dID_m][j][i] );
 
                Wx[ID] = PyVz - PzVy;
@@ -399,20 +399,20 @@ void WriteLevel()
                case 0            : dID_m =  0;   dID_p = 1;   _dh = 1.0/dh;   break;
                case PATCH_SIZE-1 : dID_m = -1;   dID_p = 0;   _dh = 1.0/dh;   break;
                default           : dID_m = -1;   dID_p = 1;   _dh = 0.5/dh;   break;
-            } 
+            }
 
             GradR[0] = _dh*(      Real_ptr[k][j][i+dID_p]  -      Real_ptr[k][j][i+dID_m] );
             GradI[0] = _dh*(      Imag_ptr[k][j][i+dID_p]  -      Imag_ptr[k][j][i+dID_m] );
             GradF[0] = _dh*( sqrt(Dens_ptr[k][j][i+dID_p]) - sqrt(Dens_ptr[k][j][i+dID_m]) );
-             
+
             // partial y
             switch ( j )
             {
                case 0            : dID_m =  0;   dID_p = 1;   _dh = 1.0/dh;   break;
                case PATCH_SIZE-1 : dID_m = -1;   dID_p = 0;   _dh = 1.0/dh;   break;
                default           : dID_m = -1;   dID_p = 1;   _dh = 0.5/dh;   break;
-            } 
-            
+            }
+
             GradR[1] = _dh*(      Real_ptr[k][j+dID_p][i]  -      Real_ptr[k][j+dID_m][i] );
             GradI[1] = _dh*(      Imag_ptr[k][j+dID_p][i]  -      Imag_ptr[k][j+dID_m][i] );
             GradF[1] = _dh*( sqrt(Dens_ptr[k][j+dID_p][i]) - sqrt(Dens_ptr[k][j+dID_m][i]) );
@@ -423,8 +423,8 @@ void WriteLevel()
                case 0            : dID_m =  0;   dID_p = 1;   _dh = 1.0/dh;   break;
                case PATCH_SIZE-1 : dID_m = -1;   dID_p = 0;   _dh = 1.0/dh;   break;
                default           : dID_m = -1;   dID_p = 1;   _dh = 0.5/dh;   break;
-            } 
-            
+            }
+
             GradR[2] = _dh*(      Real_ptr[k+dID_p][j][i]  -      Real_ptr[k+dID_m][j][i] );
             GradI[2] = _dh*(      Imag_ptr[k+dID_p][j][i]  -      Imag_ptr[k+dID_m][j][i] );
             GradF[2] = _dh*( sqrt(Dens_ptr[k+dID_p][j][i]) - sqrt(Dens_ptr[k+dID_m][j][i]) );
@@ -463,13 +463,13 @@ void WriteLevel()
          }
 
          sprintf( VarName, "Vel_%d_%d", lv, NMesh[lv] );
-         DBPutQuadvar( dbfile, VarName, MeshName, 3, Vnames, Vel, zone_dims, ndims, NULL, 0, DB_FLOAT, 
+         DBPutQuadvar( dbfile, VarName, MeshName, 3, Vnames, Vel, zone_dims, ndims, NULL, 0, DB_FLOAT,
                        DB_ZONECENT, NULL );
 
          if ( OutputVort )
          {
          sprintf( VarName, "Vor_%d_%d", lv, NMesh[lv] );
-         DBPutQuadvar( dbfile, VarName, MeshName, 3, Wnames, Vor, zone_dims, ndims, NULL, 0, DB_FLOAT, 
+         DBPutQuadvar( dbfile, VarName, MeshName, 3, Wnames, Vor, zone_dims, ndims, NULL, 0, DB_FLOAT,
                        DB_ZONECENT, NULL );
          }
 
@@ -487,7 +487,7 @@ void WriteLevel()
          DBPutQuadvar1( dbfile, VarName, MeshName, Imag, zone_dims, ndims, NULL, 0, DB_FLOAT, DB_ZONECENT, NULL );
 
          sprintf( VarName, "Vel_%d_%d",  lv, NMesh[lv] );
-         DBPutQuadvar( dbfile, VarName, MeshName, 3, Vnames, Vel, zone_dims, ndims, NULL, 0, DB_FLOAT, 
+         DBPutQuadvar( dbfile, VarName, MeshName, 3, Vnames, Vel, zone_dims, ndims, NULL, 0, DB_FLOAT,
                        DB_ZONECENT, NULL );
 
          sprintf( VarName, "VelT_%d_%d", lv, NMesh[lv] );
@@ -559,13 +559,13 @@ void WriteLevel()
 // Function    :  WriteRoot
 // Description :  Create the root silo file
 //-------------------------------------------------------------------------------------------------------
-void WriteRoot() 
+void WriteRoot()
 {
 
    cout << "WriteRoot ... " << flush;
 
 
-   DBfile    *dbfile  = DBCreate( "Root.silo", DB_CLOBBER, DB_LOCAL, "Root file of each level", DB_HDF5 );    
+   DBfile    *dbfile  = DBCreate( "Root.silo", DB_CLOBBER, DB_LOCAL, "Root file of each level", DB_HDF5 );
    DBoptlist *OptList = DBMakeOptlist( 2 );
 
    DBAddOption( OptList, DBOPT_DTIME, &Time[0] );
@@ -614,7 +614,7 @@ void WriteRoot()
             sprintf( tmp, "Level_%d.silo:Mesh_%d_%d", lv, lv, Mesh );
             meshnames[line] = strdup(tmp);
             meshtypes[line] = DB_QUAD_RECT;
-            
+
 #           if   ( MODEL == HYDRO )
             sprintf( tmp, "Level_%d.silo:Rho_%d_%d",  lv, lv, Mesh );
             varnames0[line] = strdup(tmp);
@@ -670,7 +670,7 @@ void WriteRoot()
             }
 
             vartypes[line]  = DB_QUADVAR;
-            
+
             line++;
          } // for (int Mesh=0; Mesh<NMesh[lv]; Mesh++)
       } // for (int lv=0; lv<NLEVEL; lv++)
@@ -684,7 +684,7 @@ void WriteRoot()
          char MultiMeshName[30];
          sprintf( MultiMeshName, "Mesh" );
          DBPutMultimesh( dbfile, MultiMeshName, nmesh, meshnames, meshtypes, OptList );
-      
+
          char MultiVarName[30];
 #        if   ( MODEL == HYDRO )
          sprintf( MultiVarName, "Rho" );
@@ -774,7 +774,7 @@ void WriteRoot()
          int nmesh = NMesh[lv], nvar = NMesh[lv];
          int *patchtypes = NULL, *meshtypes = NULL, *vartypes = NULL;
          int line = 0;
-         
+
          patchnames  = (char **) malloc(nmesh * sizeof(char *));
          meshnames   = (char **) malloc(nmesh * sizeof(char *));
          patchtypes  = (int   *) malloc(nmesh * sizeof(int   ));
@@ -789,7 +789,7 @@ void WriteRoot()
          varnames5   = (char **) malloc(nvar  * sizeof(char *));
 #        endif
          vartypes    = (int   *) malloc(nvar  * sizeof(int   ));
-         
+
 
          for (int Mesh=0; Mesh<nmesh; Mesh++)
          {
@@ -802,7 +802,7 @@ void WriteRoot()
             sprintf( tmp, "Level_%d.silo:Mesh_%d_%d", lv, lv, Mesh );
             meshnames[line] = strdup(tmp);
             meshtypes[line] = DB_QUAD_RECT;
-            
+
 #           if   ( MODEL == HYDRO )
             sprintf( tmp, "Level_%d.silo:Rho_%d_%d",  lv, lv, Mesh );
             varnames0[line] = strdup(tmp);
@@ -858,7 +858,7 @@ void WriteRoot()
             }
 
             vartypes[line]  = DB_QUADVAR;
-            
+
             line++;
          } // for (int Mesh=0; Mesh<nmesh; Mesh++)
 
@@ -872,7 +872,7 @@ void WriteRoot()
             char MultiMeshName[30];
             sprintf( MultiMeshName, "Mesh_%d", lv );
             DBPutMultimesh( dbfile, MultiMeshName, nmesh, meshnames, meshtypes, OptList );
-         
+
             char MultiVarName[30];
 #           if   ( MODEL == HYDRO )
             sprintf( MultiVarName, "Rho_%d", lv );
@@ -966,7 +966,7 @@ void WriteRoot()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ReadOption
-// Description :  Read the command-line options 
+// Description :  Read the command-line options
 //-------------------------------------------------------------------------------------------------------
 void ReadOption( int argc, char **argv )
 {
@@ -976,7 +976,7 @@ void ReadOption( int argc, char **argv )
 
    double Temp_Start[3] = { NULL_VALUE, NULL_VALUE, NULL_VALUE };
    double Temp_Size [3] = { NULL_VALUE, NULL_VALUE, NULL_VALUE };
-   int c;   
+   int c;
 
    while( (c = getopt(argc, argv, "hdpwsi:x:y:z:X:Y:Z:m:")) != -1 )
    switch(c)
@@ -1005,11 +1005,11 @@ void ReadOption( int argc, char **argv )
       case 'w': OutputVort    = true;
                 break;
 #     endif
-      case 's': InputScale    = true; 
+      case 's': InputScale    = true;
                 break;
-      case 'h': 
+      case 'h':
       case '?': cerr << "usage: " << argv[0]
-                     << " [-h (for help)] [-i Input filename] [-d (separate data at different levels) [off]]" 
+                     << " [-h (for help)] [-i Input filename] [-d (separate data at different levels) [off]]"
                      << endl << "                         "
                      << " [-(x,y,z) starting coordinate [0]] [-(X/Y/Z) size [BoxSize]]"
                      << endl << "                         "
@@ -1045,7 +1045,7 @@ void ReadOption( int argc, char **argv )
    }
 
 
-// check   
+// check
    if ( TargetMode == NULL_VALUE  ||  TargetMode < 0  ||  TargetMode > 3 )
    {
       fprintf( stderr, "Error : please provide the correct target mode (-m 0/1/2/3) !!\n" );
@@ -1077,7 +1077,7 @@ void ReadOption( int argc, char **argv )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetDefaultParameter
-// Description :  Set parameters to the default values 
+// Description :  Set parameters to the default values
 //-------------------------------------------------------------------------------------------------------
 void SetDefaultParameter()
 {
@@ -1095,7 +1095,7 @@ void SetDefaultParameter()
 
    else
    {
-      for (int d=0; d<3; d++)    
+      for (int d=0; d<3; d++)
       {
          if ( PhyCorner[d] == NULL_VALUE )      PhyCorner[d] = 0.0;
 
@@ -1126,7 +1126,7 @@ void CheckParameter()
    {
       if ( PhyCorner[d] < 0.0  ||  PhyCorner[d] >= amr.BoxSize[d] )
       {
-         fprintf( stderr, "Error : starting coordinate [%d] = %lf lies outside the simulation box !!\n", 
+         fprintf( stderr, "Error : starting coordinate [%d] = %lf lies outside the simulation box !!\n",
                   d, PhyCorner[d] );
          exit( 1 );
       }
@@ -1253,33 +1253,33 @@ void TruncateBox()
    switch ( TargetMode )
    {
       case 0:
-         CornerScale[0] = PS0 * ( CornerScale[0]/PS0 );        
+         CornerScale[0] = PS0 * ( CornerScale[0]/PS0 );
          CornerScale[1] = PS0 * ( CornerScale[1]/PS0 );
-         SizeScale  [0] = PS0 * ( (SizeScale[0]-1)/PS0 + 1 ); 
-         SizeScale  [1] = PS0 * ( (SizeScale[1]-1)/PS0 + 1 ); 
+         SizeScale  [0] = PS0 * ( (SizeScale[0]-1)/PS0 + 1 );
+         SizeScale  [1] = PS0 * ( (SizeScale[1]-1)/PS0 + 1 );
          break;
 
       case 1:
-         CornerScale[1] = PS0 * ( CornerScale[1]/PS0 );        
+         CornerScale[1] = PS0 * ( CornerScale[1]/PS0 );
          CornerScale[2] = PS0 * ( CornerScale[2]/PS0 );
-         SizeScale  [1] = PS0 * ( (SizeScale[1]-1)/PS0 + 1 ); 
-         SizeScale  [2] = PS0 * ( (SizeScale[2]-1)/PS0 + 1 ); 
+         SizeScale  [1] = PS0 * ( (SizeScale[1]-1)/PS0 + 1 );
+         SizeScale  [2] = PS0 * ( (SizeScale[2]-1)/PS0 + 1 );
          break;
 
       case 2:
-         CornerScale[0] = PS0 * ( CornerScale[0]/PS0 );        
+         CornerScale[0] = PS0 * ( CornerScale[0]/PS0 );
          CornerScale[2] = PS0 * ( CornerScale[2]/PS0 );
-         SizeScale  [0] = PS0 * ( (SizeScale[0]-1)/PS0 + 1 ); 
-         SizeScale  [2] = PS0 * ( (SizeScale[2]-1)/PS0 + 1 ); 
+         SizeScale  [0] = PS0 * ( (SizeScale[0]-1)/PS0 + 1 );
+         SizeScale  [2] = PS0 * ( (SizeScale[2]-1)/PS0 + 1 );
          break;
 
       case 3:
-         CornerScale[0] = PS0 * ( CornerScale[0]/PS0 );        
-         CornerScale[1] = PS0 * ( CornerScale[1]/PS0 );        
+         CornerScale[0] = PS0 * ( CornerScale[0]/PS0 );
+         CornerScale[1] = PS0 * ( CornerScale[1]/PS0 );
          CornerScale[2] = PS0 * ( CornerScale[2]/PS0 );
-         SizeScale  [0] = PS0 * ( (SizeScale[0]-1)/PS0 + 1 ); 
-         SizeScale  [1] = PS0 * ( (SizeScale[1]-1)/PS0 + 1 ); 
-         SizeScale  [2] = PS0 * ( (SizeScale[2]-1)/PS0 + 1 ); 
+         SizeScale  [0] = PS0 * ( (SizeScale[0]-1)/PS0 + 1 );
+         SizeScale  [1] = PS0 * ( (SizeScale[1]-1)/PS0 + 1 );
+         SizeScale  [2] = PS0 * ( (SizeScale[2]-1)/PS0 + 1 );
          break;
    }
 
@@ -1291,7 +1291,7 @@ void TruncateBox()
    }
 
    printf( "      Truncation results:\n" );
-   printf( "      mode           = %8d\n",     TargetMode     ); 
+   printf( "      mode           = %8d\n",     TargetMode     );
    printf( "      corner x       = %14.5lf\n", TPhyCorner [0] );
    printf( "      corner y       = %14.5lf\n", TPhyCorner [1] );
    printf( "      corner z       = %14.5lf\n", TPhyCorner [2] );
@@ -1314,7 +1314,7 @@ void TruncateBox()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  main
-// Description :  
+// Description :
 //-------------------------------------------------------------------------------------------------------
 int main( int argc, char ** argv )
 {

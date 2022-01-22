@@ -35,6 +35,7 @@ extern double    *DumpTable;                          // dump table recording th
 extern int        DumpTable_NDump;                    // number of data dumps in the dump table
 extern int        DumpID;                             // index of the current output file
 extern double     DumpTime;                           // time of the next dump (for OPT__OUTPUT_MODE=1)
+extern int       *UM_IC_RefineRegion;                 // refinement region for OPT__UM_IC_NLEVEL>1
 
 extern int        MPI_Rank;                           // MPI rank ID in the MPI_COMM_WORLD
 extern int        MPI_Rank_X[3];                      // order of this MPI process in x/y/z directions
@@ -54,7 +55,7 @@ extern int        NX0_TOT[3], OUTPUT_STEP, REGRID_COUNT, FLU_GPU_NPGROUP, SRC_GP
 extern int        MPI_NRank, MPI_NRank_X[3];
 extern int        GPU_NSTREAM, FLAG_BUFFER_SIZE, FLAG_BUFFER_SIZE_MAXM1_LV, FLAG_BUFFER_SIZE_MAXM2_LV, MAX_LEVEL;
 
-extern int        OPT__UM_IC_LEVEL, OPT__UM_IC_NVAR, OPT__UM_IC_LOAD_NRANK, OPT__GPUID_SELECT, OPT__PATCH_COUNT;
+extern int        OPT__UM_IC_LEVEL, OPT__UM_IC_NLEVEL, OPT__UM_IC_NVAR, OPT__UM_IC_LOAD_NRANK, OPT__GPUID_SELECT, OPT__PATCH_COUNT;
 extern int        INIT_DUMPID, INIT_SUBSAMPLING_NCELL, OPT__TIMING_BARRIER, OPT__REUSE_MEMORY, RESTART_LOAD_NRANK;
 extern double     OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z, AUTO_REDUCE_DT_FACTOR, AUTO_REDUCE_DT_FACTOR_MIN;
 extern double     OPT__CK_MEMFREE, INT_MONO_COEFF, UNIT_L, UNIT_M, UNIT_T, UNIT_V, UNIT_D, UNIT_E, UNIT_P;
@@ -66,7 +67,7 @@ extern bool       OPT__INT_TIME, OPT__OUTPUT_USER, OPT__OUTPUT_BASE, OPT__OVERLA
 extern bool       OPT__OUTPUT_BASEPS, OPT__CK_REFINE, OPT__CK_PROPER_NESTING, OPT__CK_FINITE, OPT__RECORD_PERFORMANCE;
 extern bool       OPT__CK_RESTRICT, OPT__CK_PATCH_ALLOCATE, OPT__FIXUP_FLUX, OPT__CK_FLUX_ALLOCATE, OPT__CK_NORMALIZE_PASSIVE;
 extern bool       OPT__UM_IC_DOWNGRADE, OPT__UM_IC_REFINE, OPT__TIMING_MPI;
-extern bool       OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
+extern bool       OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__FREEZE_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
 extern bool       OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
 extern bool       OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
 extern bool       OPT__INT_FRAC_PASSIVE_LR;
@@ -98,7 +99,7 @@ extern bool             OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLA
 extern bool             OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, JEANS_MIN_PRES, OPT__LAST_RESORT_FLOOR;
 extern bool             OPT__OUTPUT_DIVVEL, OPT__OUTPUT_MACH, OPT__OUTPUT_PRES, OPT__OUTPUT_CS;
 extern bool             OPT__OUTPUT_TEMP;
-extern int              OPT__CK_NEGATIVE, JEANS_MIN_PRES_LEVEL, JEANS_MIN_PRES_NCELL;
+extern int              OPT__CK_NEGATIVE, JEANS_MIN_PRES_LEVEL, JEANS_MIN_PRES_NCELL, OPT__CHECK_PRES_AFTER_FLU;
 extern double           MIN_DENS, MIN_PRES, MIN_EINT, MIN_TEMP;
 #ifdef DUAL_ENERGY
 extern double           DUAL_ENERGY_SWITCH;
@@ -144,7 +145,7 @@ extern int           SOR_MAX_ITER, SOR_MIN_ITER;
 extern double        MG_TOLERATED_ERROR;
 extern int           MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH;
 extern char          EXT_POT_TABLE_NAME[MAX_STRING];
-extern double        EXT_POT_TABLE_DH, EXT_POT_TABLE_EDGEL[3];
+extern double        EXT_POT_TABLE_DH[3], EXT_POT_TABLE_EDGEL[3];
 extern int           EXT_POT_TABLE_NPOINT[3], EXT_POT_TABLE_FLOAT8;
 extern IntScheme_t   OPT__POT_INT_SCHEME, OPT__RHO_INT_SCHEME, OPT__GRA_INT_SCHEME, OPT__REF_POT_INT_SCHEME;
 extern OptPotBC_t    OPT__BC_POT;
@@ -186,8 +187,8 @@ extern bool       OPT__MINIMIZE_MPI_BARRIER;
 // ============================================================================================================
 #ifdef PARTICLE
 extern double          DT__PARVEL, DT__PARVEL_MAX, DT__PARACC;
-extern bool            OPT__OUTPUT_PAR_TEXT, OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL;
-extern int             OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
+extern bool            OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL, OPT__FREEZE_PAR;
+extern int             OPT__OUTPUT_PAR_MODE, OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
 extern double          FlagTable_ParMassCell[NLEVEL-1];
 extern ParOutputDens_t OPT__OUTPUT_PAR_DENS;
 #endif

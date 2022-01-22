@@ -41,7 +41,7 @@ extern void (*BC_BField_User_Ptr)( real magnetic[], const double x, const double
                                    const int lv, double AuxArray[] );
 #endif
 extern bool (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
-                                         const int lv, double AuxArray[] );
+                                         const double dt, const int lv, double AuxArray[] );
 extern void (*End_User_Ptr)();
 #ifdef GRAVITY
 extern real (*Poi_AddExtraMassForGravity_Ptr)( const double x, const double y, const double z, const double Time,

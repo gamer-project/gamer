@@ -72,7 +72,7 @@ do for [ID=START_ID:END_ID:DELTA_ID] {
    ID2     = (ID%100)/10
    ID3     = (ID%1000)/100
    ID4     = ID/1000
-   FILE_IN = sprintf( '%s_00%d%d%d%d%s', FILE_IN_PREFIX, ID4, ID3, ID2, ID1, FILE_IN_SUFFIX )
+   FILE_IN = sprintf( '%s_00%d%d%d%d%s.txt', FILE_IN_PREFIX, ID4, ID3, ID2, ID1, FILE_IN_SUFFIX )
 
    if ( GPVAL_TERM ne 'x11' ) { set output sprintf( '%s_00%d%d%d%d.%s', FILE_OUT_PREFIX, ID4, ID3, ID2, ID1, FILE_OUT_EXT ) }
 

@@ -147,7 +147,8 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
       long   ParID;
 
       real *Pot = new real [ 8*CUBE(PotSize) ];    // 8: number of patches per patch group
-      real (*Pot3D)[PotSize][PotSize][PotSize] = ( real (*)[PotSize][PotSize][PotSize] )Pot;
+      typedef real (*vla)[PotSize][PotSize][PotSize];
+      vla Pot3D = ( vla )Pot;
 
 
 //    use static schedule to give the same reduction result everytime

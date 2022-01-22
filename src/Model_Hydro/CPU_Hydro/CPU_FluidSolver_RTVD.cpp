@@ -241,7 +241,7 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
 #        endif
 
          c    = FABS( vx ) + SQRT(  EoS->DensPres2CSqr_FuncPtr( ux[0][i], p, Passive, EoS->AuxArrayDevPtr_Flt,
-                                                                EoS->AuxArrayDevPtr_Int, EoS->Table, NULL )  );
+                                                                EoS->AuxArrayDevPtr_Int, EoS->Table )  );
 
          cw[0][i] = ux[1][i];
          cw[1][i] = ux[1][i] * vx + p;
@@ -308,7 +308,7 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
 #        endif
 
          c    = FABS( vx ) + SQRT(  EoS->DensPres2CSqr_FuncPtr( u_half[0][i], p, Passive, EoS->AuxArrayDevPtr_Flt,
-                                                                EoS->AuxArrayDevPtr_Int, EoS->Table, NULL )  );
+                                                                EoS->AuxArrayDevPtr_Int, EoS->Table )  );
 
          cw[0][i] = u_half[1][i];
          cw[1][i] = u_half[1][i] * vx + p;

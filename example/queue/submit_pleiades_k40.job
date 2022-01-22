@@ -1,0 +1,32 @@
+#!/bin/bash
+#PBS -S /bin/bash
+#PBS -l select=16:ncpus=16:mpiprocs=1:ompthreads=16:model=san_gpu
+#PBS -q k40
+#PBS -l walltime=12:00:00
+#PBS -j oe
+#PBS -m abe
+
+# By default, PBS executes your job from your home directory.
+# However, you can use the environment variable
+# PBS_O_WORKDIR to change to the directory where
+# you submitted your job.
+
+cd $PBS_O_WORKDIR
+
+module purge
+module load mpi-hpe
+module load cuda/10.2
+
+export MPI_TYPE_MAX=655360
+export MPI_TYPE_DEPTH=32
+export MPI_MSGS_MAX=10485760
+export MPI_BUFS_PER_PROC=256
+export MPI_BUFS_PER_HOST=512
+export LD_LIBRARY_PATH=/nasa/szip/2.1.1/lib:/nasa/hdf5/1.8.18_serial/lib:${LD_LIBRARY_PATH}
+export LD_LIBRARY_PATH=/nasa/cuda/10.2/lib64:${LD_LIBRARY_PATH}
+
+export MPI_USE_CUDA=1
+export MPI_DSM_DISTRIBUTE=0
+export KMP_AFFINITY=disabled
+
+mpiexec -n 16 omplace ./gamer >> gamer.out 2> gamer.err

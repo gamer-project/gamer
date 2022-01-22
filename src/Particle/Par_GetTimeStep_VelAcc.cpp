@@ -18,6 +18,8 @@
 //                   --> We convert dt back to the physical time interval, which equals "delta(scale_factor)"
 //                       in the comoving coordinates, in Mis_GetTimeStep()
 //                2. Particle acceleration criterion is used only when DT__PARACC > 0.0
+//                3. Particles in non-leaf patches are also included by default
+//                   --> Controlled by "IncNonleaf"
 //
 // Parameter   :  dt_vel : Evolution time-step estimated from the particle velocity
 //                         --> Call-by-reference
@@ -35,17 +37,18 @@ void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv )
 #  endif
 
 
-   const real *Vel[3] = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
+   const bool  IncNonleaf = true;
+   const real *Vel[3]     = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
 #  ifdef STORE_PAR_ACC
-   const real *Acc[3] = { amr->Par->AccX, amr->Par->AccY, amr->Par->AccZ };
+   const real *Acc[3]     = { amr->Par->AccX, amr->Par->AccY, amr->Par->AccZ };
 #  else
-   const real *Acc[3] = { NULL, NULL, NULL };
+   const real *Acc[3]     = { NULL, NULL, NULL };
 #  endif
-   const bool  UseAcc = ( DT__PARACC > 0.0 );
+   const bool  UseAcc     = ( DT__PARACC > 0.0 );
 #  ifdef OPENMP
-   const int   NT     = OMP_NTHREAD;   // number of OpenMP threads
+   const int   NT         = OMP_NTHREAD;   // number of OpenMP threads
 #  else
-   const int   NT     = 1;
+   const int   NT         = 1;
 #  endif
 
 #  ifndef STORE_PAR_ACC
@@ -53,15 +56,25 @@ void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv )
       Aux_Error( ERROR_INFO, "DT__PARACC (%14.7e) > 0.0 when STORE_PAR_ACC is off !!\n", DT__PARACC );
 #  endif
 
-   real  MaxVel, MaxAcc;
-   int   TID;
-   long  ParID;
+
+// collect particles for non-leaf patches
+   const bool PredictPos_No    = false;
+   const bool SibBufPatch_No   = false;
+   const bool FaSibBufPatch_No = false;
+   const bool JustCountNPar_No = false;
+   const bool TimingSendPar_No = false;
+
+   if ( IncNonleaf )
+      Par_CollectParticle2OneLevel( lv, _PAR_VEL|((UseAcc)?_PAR_ACC:0), PredictPos_No, NULL_REAL,
+                                    SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_No, TimingSendPar_No );
+
+
+// get the maximum particle velocity and acceleration on the target level
+   real MaxVel, MaxAcc;
 
    real *MaxVel_OMP = new real [NT];
    real *MaxAcc_OMP = new real [NT];
 
-
-// get the maximum particle velocity and acceleration at the target level
    MaxVel = (real)0.0;  // don't assign negative values since we assume it to be positive-definite
    MaxAcc = (real)0.0;
 
@@ -72,28 +85,92 @@ void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv )
    }
 
 //###NOTE: OpenMP may not improve performance here
-#  pragma omp parallel private( TID, ParID )
+#  pragma omp parallel
    {
 #     ifdef OPENMP
-      TID = omp_get_thread_num();
+      const int TID = omp_get_thread_num();
 #     else
-      TID = 0;
+      const int TID = 0;
 #     endif
 
 #     pragma omp for schedule( PAR_OMP_SCHED, PAR_OMP_SCHED_CHUNK )
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-      for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
       {
-         ParID = amr->patch[0][lv][PID]->ParList[p];
+         int   NParThisPatch;
+         long *ParList = NULL;
+         bool  UseCopy;
 
-         for (int d=0; d<3; d++)
-         MaxVel_OMP[TID] = MAX( MaxVel_OMP[TID], FABS(Vel[d][ParID]) );
+//       leaf patches
+         if ( amr->patch[0][lv][PID]->son == -1 )
+         {
+            NParThisPatch = amr->patch[0][lv][PID]->NPar;
+            ParList       = amr->patch[0][lv][PID]->ParList;
+            UseCopy       = false;
+         }
 
-         if ( UseAcc )
-         for (int d=0; d<3; d++)
-         MaxAcc_OMP[TID] = MAX( MaxAcc_OMP[TID], FABS(Acc[d][ParID]) );
-      }
+//       include non-leaf patches
+         else if ( IncNonleaf )
+         {
+            NParThisPatch = amr->patch[0][lv][PID]->NPar_Copy;
+#           ifdef LOAD_BALANCE
+            ParList       = NULL;
+            UseCopy       = true;
+#           else
+            ParList       = amr->patch[0][lv][PID]->ParList_Copy;
+            UseCopy       = false;
+#           endif
+         } // if ( amr->patch[0][lv][PID]->son == -1 ) ... elif ...
+
+//       exclude non-leaf patches
+         else
+         {
+            NParThisPatch = 0;
+            ParList       = NULL;
+            UseCopy       = false;
+         } // if ( amr->patch[0][lv][PID]->son == -1 ) ... elif ... else ...
+
+
+         if ( UseCopy )
+         {
+//          ParAtt_Copy[] is only defined in LOAD_BALANCE
+            real *Vel_Copy[3] = { NULL, NULL, NULL };
+            real *Acc_Copy[3] = { NULL, NULL, NULL };
+#           ifdef LOAD_BALANCE
+            for (int d=0; d<3; d++)
+            {
+               Vel_Copy[d] = amr->patch[0][lv][PID]->ParAtt_Copy[ PAR_VELX + d ];
+               Acc_Copy[d] = amr->patch[0][lv][PID]->ParAtt_Copy[ PAR_ACCX + d ];
+            }
+#           endif
+
+            for (int p=0; p<NParThisPatch; p++)
+            {
+               for (int d=0; d<3; d++)
+               MaxVel_OMP[TID] = MAX( MaxVel_OMP[TID], FABS(Vel_Copy[d][p]) );
+
+               if ( UseAcc )
+               for (int d=0; d<3; d++)
+               MaxAcc_OMP[TID] = MAX( MaxAcc_OMP[TID], FABS(Acc_Copy[d][p]) );
+            }
+         } // if ( UseCopy )
+
+         else
+         {
+            for (int p=0; p<NParThisPatch; p++)
+            {
+               const long ParID = ParList[p];
+
+               for (int d=0; d<3; d++)
+               MaxVel_OMP[TID] = MAX( MaxVel_OMP[TID], FABS(Vel[d][ParID]) );
+
+               if ( UseAcc )
+               for (int d=0; d<3; d++)
+               MaxAcc_OMP[TID] = MAX( MaxAcc_OMP[TID], FABS(Acc[d][ParID]) );
+            }
+         } // if ( UseCopy ) ... else ...
+      } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    } // end of OpenMP parallel region
+
 
 // compare the maximum velocity and acceleration evaluated by different OMP threads
    for (int t=0; t<NT; t++)
@@ -143,6 +220,11 @@ void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv )
 
    if ( UseAcc )
    dt_acc *= DT__PARACC;
+
+
+// free memory allocated by Par_CollectParticle2OneLevel()
+   if ( IncNonleaf )
+      Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch_No, FaSibBufPatch_No );
 
 } // FUNCTION : Par_GetTimeStep_VelAcc
 
