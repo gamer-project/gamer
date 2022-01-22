@@ -47,22 +47,25 @@ void Flu_CorrAfterAllSync()
 
 // 1. synchronize all particles
 #  if ( defined PARTICLE  &&  defined STORE_PAR_ACC )
-   if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
-      Aux_Message( stdout, "      synchronize particles                 ... " );
-
-   if (  Par_Synchronize( Time[0], PAR_SYNC_FORCE ) != 0  )
-      Aux_Error( ERROR_INFO, "particle synchronization failed !!\n" );
-
-// particles may cross patch boundaries after synchronization
-   const bool TimingSendPar_No = false;
-
-   for (int lv=0; lv<NLEVEL; lv++)
+   if ( ! OPT__FREEZE_PAR )
    {
-      Par_PassParticle2Sibling( lv, TimingSendPar_No );
-      Par_PassParticle2Son_MultiPatch( lv, PAR_PASS2SON_EVOLVE, TimingSendPar_No, NULL_INT, NULL );
-   }
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+         Aux_Message( stdout, "      synchronize particles                 ... " );
 
-   if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+      if (  Par_Synchronize( Time[0], PAR_SYNC_FORCE ) != 0  )
+         Aux_Error( ERROR_INFO, "particle synchronization failed !!\n" );
+
+//    particles may cross patch boundaries after synchronization
+      const bool TimingSendPar_No = false;
+
+      for (int lv=0; lv<NLEVEL; lv++)
+      {
+         Par_PassParticle2Sibling( lv, TimingSendPar_No );
+         Par_PassParticle2Son_MultiPatch( lv, PAR_PASS2SON_EVOLVE, TimingSendPar_No, NULL_INT, NULL );
+      }
+
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+   } // if ( ! OPT__FREEZE_PAR )
 #  endif
 
 
