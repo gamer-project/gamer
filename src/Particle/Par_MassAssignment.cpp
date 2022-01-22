@@ -21,7 +21,8 @@ static bool FarAwayParticle( real ParPosX, real ParPosY, real ParPosZ, const boo
 //                   --> This array will be initialized as zero only if "InitZero=true"
 //                3. Particles having no contribution to Rho[] (which has the range EdgeL[d] <= r[d] < EdgeL[d]+RhoSize*dh )
 //                   will be ignored
-//                4. Particle position will be predicted to the target physical time if PredictPos is on
+//                4. Particle position will be predicted to the target physical time if PredictPos is on and
+//                   OPT__FREEZE_PAR is off
 //                   --> But they will NOT be stored back to the global Pos[] array
 //                   --> Also remember to skip particles waiting for velocity correction since they have time
 //                       temporarily set to -dt (moreover, they should already be synchronized with TargetTime)
@@ -145,7 +146,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 
 
 // 3. predict particle position
-   if ( PredictPos )    Par_PredictPos( NPar, ParList, Pos[0], Pos[1], Pos[2], TargetTime );
+   if ( PredictPos  &&  ! OPT__FREEZE_PAR )  Par_PredictPos( NPar, ParList, Pos[0], Pos[1], Pos[2], TargetTime );
 
 
 // 3-1/2: sort particles by their position to fix the order of mass assignment
