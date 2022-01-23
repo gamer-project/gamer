@@ -173,8 +173,7 @@ static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, c
 // check
 #  ifdef GAMER_DEBUG
 // note that some EoS may support Eint<0
-   Hydro_CheckUnphysical( UNPHY_MODE_SING        ,  Passive,                     NULL, __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
-   Hydro_CheckUnphysical( UNPHY_MODE_PASSIVE_ONLY, &Eint   , "output internal energy", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical(  UNPHY_MODE_SING, &Eint   , "output internal energy", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
 #  endif // GAMER_DEBUG
 
 

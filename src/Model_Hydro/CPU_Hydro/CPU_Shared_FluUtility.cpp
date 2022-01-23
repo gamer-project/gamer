@@ -505,7 +505,7 @@ real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_CheckUnphysical
-// Description :  Case1 : Check if the intput single field is NAN, inf or negative
+// Description :  Case1 : Check if the input single field is NAN, inf or negative
 //                        --> Mode = UNPHY_MODE_SING
 //                Case2 : Check if the input conserved variables, including passive scalars, are unphysical
 //                        --> Mode = UNPHY_MODE_CONS
@@ -516,28 +516,22 @@ real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY
 //
 // Note        :  Although the criteria of UNPHY_MODE_PRIM and UNPHY_MODE_CONS are the same in hydrodynamics,
 //                we still treat them as two different cases. This is because they may be different for other
-//                upcoming physical features.
-//
+//                upcoming physical modules. e.g. To the conserved variables of SRHD,
+//                we should also check the Eq.(15) in MNRAS 504, 3298–3315 (2021) has a positive root.
 //
 // Parameter   :  Mode            : UNPHY_MODE_SING         --> check single field
 //                                  UNPHY_MODE_CONS         --> check conserved variables, including passive scalars
 //                                  UNPHY_MODE_PRIM         --> check primitive variables, including passive scalars
 //                                  UNPHY_MODE_PASSIVE_ONLY --> check passive scalars only
-//                SingleFieldName : Additional information
+//                SingleFieldName : Name of the target field for the mode UNPHY_MODE_SING
 //                File            : __FILE__
 //                Function        : __FUNCTION__
 //                Line            : __LINE__
 //                Verbose         : true  --> Show error message
 //                                  false --> Show nothing
 //
-// Return      :  Case1 : true  --> single field are unphysical
-//                        false --> otherwise
-//                Case2 : true  --> conserved variables are unphysical
-//                        false --> otherwise
-//                Case3 : true  --> primitive variables are unphysical
-//                        false --> otherwise
-//                Case4 : true  --> passive scalars are unphysical
-//                        false --> otherwise
+// Return      :  true  --> input field is unphysical
+//                false --> otherwise
 //
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
@@ -546,20 +540,12 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
 {
 
 #  ifdef GAMER_DEBUG
-   if ( !Fields ) printf("ERROR: access a NULL pointer at file <%s>, line <%d>, function <%s>!!\n",
+   if ( Fields == NULL ) printf("ERROR: access a NULL pointer at file <%s>, line <%d>, function <%s>!!\n",
                           File, Line, Function );
-#  if ( ! (NCOMP_PASSIVE > 0 ) )
-   if ( Mode == UNPHY_MODE_PASSIVE_ONLY )
-      printf("ERROR: UNPHY_MODE_PASSIVE_ONLY works only when NCOMP_PASSIVE > 0. At file <%s>, line <%d>, function <%s>!!\n",
-              File, Line, Function );
-#  endif
 #  endif
 
    bool FailCell = false;
 
-#  ifdef SRHD
-   real Msqr, Dsqr, E_D, M_D, Temp, Discriminant;
-#  endif
 
    switch ( Mode )
    {
@@ -568,14 +554,14 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
       case UNPHY_MODE_SING:
 
 
-         if ( Fields[0] <=   (real)0.0  ||  Fields[0] >= __FLT_MAX__  ||  Fields[0] !=  Fields[0] )
+         if ( Fields[0] <= TINY_NUMBER  ||  Fields[0] >= HUGE_NUMBER  ||  Fields[0] != Fields[0] )
             FailCell = true;
 
          if ( FailCell && Verbose )
-            ( SingleFieldName )? printf( "ERROR: invalid %s (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                                          SingleFieldName, Fields[0], File, Line, Function ):
-                                 printf( "ERROR: invalid (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                                          Fields[0], File, Line, Function );
+            printf( "ERROR: invalid %s (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+                    (SingleFieldName==NULL)?"unknown field":SingleFieldName, Fields[0],
+                    File, Line, Function ):
+
          return FailCell;
 
       break;
@@ -592,15 +578,23 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
                   FailCell = true;
 
             // check momentum densities
-            if ( v == MOMX || v == MOMY || v == MOMZ )
+            if ( v == MOMX  ||  v == MOMY  ||  v == MOMZ )
             {
-               if ( (real) Fields[v] <= -HUGE_NUMBER || Fields[v]  >= (real)HUGE_NUMBER )
+               if ( Fields[v] <= -HUGE_NUMBER  ||  Fields[v] >= HUGE_NUMBER )
                   FailCell = true;
             }
-            // otherwise, including passive scalars
+
+            // check mass and energy densities
+            else if ( v < NCOMP_PASSIVE )
+            {
+               if ( Fields[v] <= TINY_NUMBER  ||  Fields[v] >= HUGE_NUMBER )
+                  FailCell = true;
+            }
+
+            // check passive scalars
             else
             {
-               if ( (real) Fields[v] <=  TINY_NUMBER || Fields[v]  >= (real)HUGE_NUMBER )
+               if ( Fields[v] < (real)0.0  ||  Fields[v] >= HUGE_NUMBER )
                   FailCell = true;
             }
          }
@@ -609,12 +603,12 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
          // calculate discriminant for SRHD.
          // --> the discriminant is positive if and only if the Eq.(15) in MNRAS 504, 3298–3315 (2021) has a positive root.
 #        ifdef SRHD
-         Msqr         = SQR(Fields[MOMX]) + SQR(Fields[MOMY]) + SQR(Fields[MOMZ]);
-         Dsqr         = SQR(Fields[DENS]);
-         E_D          = Fields[ENGY] / Fields[DENS];
-         M_D          = SQRT( Msqr / Dsqr );
-         Temp         = SQRT( E_D*E_D + (real)2.0*E_D );
-         Discriminant = ( Temp + M_D ) * ( Temp - M_D );
+         real Msqr         = SQR(Fields[MOMX]) + SQR(Fields[MOMY]) + SQR(Fields[MOMZ]);
+         real Dsqr         = SQR(Fields[DENS]);
+         real E_D          = Fields[ENGY] / Fields[DENS];
+         real M_D          = SQRT( Msqr / Dsqr );
+         real Temp         = SQRT( E_D*E_D + (real)2.0*E_D );
+         real Discriminant = ( Temp + M_D ) * ( Temp - M_D );
 
          // check discriminant
          if ( Discriminant <= TINY_NUMBER )      FailCell = true;
@@ -636,7 +630,7 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
 
 #           if ( NCOMP_PASSIVE > 0 )
             for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
-               printf("Passive[%d]=%14.7e\n", v, Fields[v] );
+               printf("Passive[%d]=%14.7e\n", v-NCOMP_FLUID, Fields[v] );
 #           endif
          }
 
@@ -654,18 +648,27 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
             if ( Fields[v] != Fields[v] )
                   FailCell = true;
 
-            // check momentum densities
-            if ( v == MOMX || v == MOMY || v == MOMZ )
+            // check velocities
+            if ( v == MOMX  ||  v == MOMY  ||  v == MOMZ )
             {
-               if ( (real) Fields[v] <= -HUGE_NUMBER || Fields[v]  >= (real)HUGE_NUMBER )
+               if ( Fields[v] <= -HUGE_NUMBER  ||  Fields[v] >= HUGE_NUMBER )
                   FailCell = true;
             }
-            // otherwise, including passive scalars
+
+            // check mass and energy densities
+            else if ( v < NCOMP_PASSIVE )
+            {
+               if ( Fields[v] <= TINY_NUMBER  ||  Fields[v] >= HUGE_NUMBER )
+                  FailCell = true;
+            }
+
+            // check passive scalars
             else
             {
-               if ( (real) Fields[v] <=  TINY_NUMBER || Fields[v]  >= (real)HUGE_NUMBER )
+               if ( Fields[v] < (real)0.0  ||  Fields[v] >= HUGE_NUMBER )
                   FailCell = true;
             }
+
          }
 
 
@@ -675,12 +678,12 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
             printf( "ERROR: unphysical primitive variables at file <%s>, line <%d>, function <%s>\n",
                      File, Line, Function );
 
-            printf( "rho=%14.7e, Ux=%14.7e, Uy=%14.7e, Uz=%14.7e, P=%14.7e\n",
+            printf( "rho=%14.7e, Vx=%14.7e, Vy=%14.7e, Vz=%14.7e, P=%14.7e\n",
                      Fields[0],  Fields[1], Fields[2], Fields[3], Fields[4] );
 
 #           if ( NCOMP_PASSIVE > 0 )
             for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
-               printf("Passive[%d]=%14.7e\n", v, Fields[v] );
+               printf("Passive[%d]=%14.7e\n", v-NCOMP_FLUID, Fields[v] );
 #           endif
          }
 
@@ -699,7 +702,7 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
                   FailCell = true;
 
             // check negative
-            if ( (real) Fields[v] <=  TINY_NUMBER || Fields[v]  >= (real)HUGE_NUMBER )
+            if ( Fields[v] < (real)0.0  ||  Fields[v] >= HUGE_NUMBER )
                FailCell = true;
          }
 
