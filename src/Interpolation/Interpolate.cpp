@@ -62,7 +62,7 @@
 //                                   signs in adjacent cells
 //                                   --> See Int_MinMod1D() for details
 //                IntTarget        : (INT_GHOST_ZONES/INT_NEW_PATCHES)  --> (interpolate ghost zone/allocate new patches)
-//                AdaptiveMinmod   : (INT_ADAPTIVE_ON/INT_ADAPTIVE_OFF) --> (reduce/fix min-mod coefficient)
+//                AdaptiveMinmod   : (INT_REDUCE_MINMOD_COEFF_ON/INT_REDUCE_MINMOD_COEFF_OFF) --> (reduce/fix min-mod coefficient)
 //-------------------------------------------------------------------------------------------------------
 void Interpolate( real CData [], const int CSize[3], const int CStart[3], const int CRange[3],
                   real FData [], const int FSize[3], const int FStart[3],
@@ -133,7 +133,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 #    endif
 
 
-//   for data safety purpose, we keep the data in CData[] as constant when AdaptiveMinmod == INT_ADAPTIVE_ON
+//   for data safety purpose, we keep the data in CData[] as constant when AdaptiveMinmod == INT_REDUCE_MINMOD_COEFF_ON
 //   --> we cannot apply the const modifier to CData[] as ELBDM can modify CData[] when UnwrapPhase is on
      real *CDataCopy = new real [CSize3D*NComp];
 
@@ -141,7 +141,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
         for (int i=0; i<CSize3D; i++)
            CDataCopy[CSize3D*v+i] = CData[CSize3D*v+i];
 
-     if ( AdaptiveMinmod == INT_ADAPTIVE_ON && NComp == NCOMP_TOTAL )
+     if ( AdaptiveMinmod == INT_REDUCE_MINMOD_COEFF_ON && NComp == NCOMP_TOTAL )
      {
 
         do {
@@ -249,7 +249,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
 
 //   transform FData[] storing primitive variables back to conserved variables
-     if ( FData_is_Prim && AdaptiveMinmod == INT_ADAPTIVE_ON )
+     if ( FData_is_Prim && AdaptiveMinmod == INT_REDUCE_MINMOD_COEFF_ON )
      {
          for (int i=0; i<FSize3D; i++)
          {
@@ -270,7 +270,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
 //   check unphysical results
 #    ifdef CHECK_UNPHYSICAL_IN_FLUID
-     if ( AdaptiveMinmod == INT_ADAPTIVE_ON )
+     if ( AdaptiveMinmod == INT_REDUCE_MINMOD_COEFF_ON )
      {
        for ( int i = 0 ;i < FSize3D; i++ )
        {
