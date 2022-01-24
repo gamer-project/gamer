@@ -451,14 +451,6 @@ void CPU_FluidSolver_MHM(
 
 #        endif // #if ( FLU_SCHEME == MHM_RP ) ... else ...
 
-#           ifdef CHECK_UNPHYSICAL_IN_FLUID
-#           ifdef __CUDACC__
-            if ( threadIdx.x == 0 && s_FullStepFailure == 1 )
-#           else
-            if ( MPI_Rank == 0 && s_FullStepFailure == 1 )
-#           endif
-               printf("Iteration=%d, AdaptiveMinModCoeff=%13.10f\n", Iteration, AdaptiveMinModCoeff );
-#           endif
 
 
 //          2. evaluate the full-step fluxes

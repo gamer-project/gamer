@@ -201,7 +201,6 @@ const ReduceOrFixMinModCoeff_t
    INT_REDUCE_MINMOD_COEFF   = true;  // locally reduce min-mod coefficient
 
 
-
 // target solver in InvokeSolver()
 // --> must start from 0 because of the current TIMING_SOLVER implementation
 // --> when adding new solvers, please modify the NSOLVER constant accordingly
