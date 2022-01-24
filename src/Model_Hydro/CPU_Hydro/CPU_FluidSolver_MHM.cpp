@@ -292,13 +292,12 @@ void CPU_FluidSolver_MHM(
    const double *c_ExtAcc_AuxArray = NULL;
 #  endif
 
-   int Iteration                   = 0;
+   int Iteration;
 #  ifdef __CUDACC__
    __shared__ int s_FullStepFailure;
 #  else
    int s_FullStepFailure;
 #  endif
-   s_FullStepFailure = 0;
 
 
 // openmp pragma for the CPU solver
@@ -341,15 +340,13 @@ void CPU_FluidSolver_MHM(
 #     ifdef __CUDACC__
       const int P = blockIdx.x;
 #     else
-#     pragma omp for schedule( runtime ) firstprivate ( Iteration, s_FullStepFailure )
+#     pragma omp for schedule( runtime ) private ( Iteration, s_FullStepFailure )
       for (int P=0; P<NPatchGroup; P++)
 #     endif
       {
 
-#        ifndef __CUDACC__
          s_FullStepFailure = 0;
          Iteration = 0;
-#        endif
 
 //       1. half-step prediction
 //       1-a. MHM_RP: use Riemann solver to calculate the half-step fluxes

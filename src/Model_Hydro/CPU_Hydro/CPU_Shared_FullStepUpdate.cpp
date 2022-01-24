@@ -176,7 +176,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
          if( Hydro_CheckUnphysical( UNPHY_MODE_CONS, Output_1Cell, NULL, __FILE__, __FUNCTION__, __LINE__, UNPHY_SILENCE ) )
          {
 #           ifdef __CUDACC__
-            atomicOr_block ( FullStepFailure, 1 );
+            atomicExch_block ( FullStepFailure, 1 );
 #           else
             *FullStepFailure = 1;
 #           endif
