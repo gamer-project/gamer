@@ -195,10 +195,11 @@ const VerbosityLevelUnphy_t
 
 
 // locally reduce min-mod coefficient or not
-typedef bool ReduceMinModCoeff_t;
-const ReduceMinModCoeff_t
-   INT_REDUCE_MINMOD_COEFF_ON   = true,  // locally reduce min-mod coefficient
-   INT_REDUCE_MINMOD_COEFF_OFF  = false; // fix min-mod coefficient
+typedef bool ReduceOrFixMinModCoeff_t;
+const ReduceOrFixMinModCoeff_t
+   INT_FIX_MINMOD_COEFF      = false, // fix min-mod coefficient
+   INT_REDUCE_MINMOD_COEFF   = true;  // locally reduce min-mod coefficient
+
 
 
 // target solver in InvokeSolver()

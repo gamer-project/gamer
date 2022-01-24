@@ -215,9 +215,8 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
                   real FData [], const int FSize[3], const int FStart[3],
                   const int NComp, const IntScheme_t IntScheme, const bool UnwrapPhase,
                   const bool Monotonic[], const bool OppSign0thOrder,
-                  const Interpolate_t IntWhere, const Interpolate_t AdaptiveMinmod );
+                  const ReduceOrFixMinModCoeff_t IntWhere, const ReduceOrFixMinModCoeff_t AdaptiveMinmod );
 void Int_Table( const IntScheme_t IntScheme, int &NSide, int &NGhost );
-Int_Scheme_t Int_SelectScheme( const IntScheme_t IntScheme );
 
 
 // Miscellaneous
