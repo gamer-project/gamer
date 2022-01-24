@@ -516,7 +516,7 @@ real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY
 //
 // Note        :  Although the criteria of UNPHY_MODE_PRIM and UNPHY_MODE_CONS are the same in hydrodynamics,
 //                we still treat them as two different cases. This is because they may be different for other
-//                upcoming physical modules. e.g. To the conserved variables of SRHD,
+//                upcoming physical modules. e.g. For the conserved variables of SRHD,
 //                we should also check the Eq.(15) in MNRAS 504, 3298–3315 (2021) has a positive root.
 //
 // Parameter   :  Mode            : UNPHY_MODE_SING         --> check single field
