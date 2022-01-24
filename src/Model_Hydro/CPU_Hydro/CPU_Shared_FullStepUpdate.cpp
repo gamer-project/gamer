@@ -54,15 +54,16 @@
 //                EoS               : EoS object
 //                                    --> Only for obtaining Gamma used by the dual-energy formalism
 //                FullStepFailure   : (1/0) --> (Fail to update fluid patch group/otherwise)
+//                                    --> FullStepFailure can be NULL, for which both Iteration and MinMod_Max_Itr become useless.
 //                Iteration         : Current iteration number. It should be <= OPT__MINMOD_MAX_ITR
-//                MinMod_Max_Itr    : Maximum iteration number to reduce min-mod coefficient. i.e. OPT__MINMOD_MAX_ITR
+//                MinMod_Max_Itr    : Maximum iteration number to reduce min-mod coefficient. (i.e., OPT__MINMOD_MAX_ITR)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                            const real dt, const real dh, const real MinDens, const real MinEint,
                            const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
-                           const EoS_t *EoS, int *FullStepFailure, int Iteration, int MinMod_Max_Itr )
+                           const EoS_t *EoS, int *FullStepFailure, const int Iteration, const int MinMod_Max_Itr )
 {
 
    const int  didx_flux[3] = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };
@@ -172,39 +173,33 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
       if ( FullStepFailure != NULL )
       {
 
-        if(Hydro_CheckUnphysical( UNPHY_MODE_CONS, Output_1Cell, NULL, __FILE__, __FUNCTION__, __LINE__, UNPHY_SILENCE ))
-        {
-#         ifdef __CUDACC__
-          atomicOr ( FullStepFailure, 1 );
-#         else
-          *FullStepFailure = 1;
-#         endif
-        }
+         if( Hydro_CheckUnphysical( UNPHY_MODE_CONS, Output_1Cell, NULL, __FILE__, __FUNCTION__, __LINE__, UNPHY_SILENCE ) )
+         {
+#           ifdef __CUDACC__
+            atomicOr_block ( FullStepFailure, 1 );
+#           else
+            *FullStepFailure = 1;
+#           endif
+         }
 
 
-//      5-1. waiting all threads within a GPU block
-#       ifdef __CUDACC__
-        __syncthreads();
-#       endif
+//       5-1. waiting all threads within a GPU block
+#        ifdef __CUDACC__
+         __syncthreads();
+#        endif
 
 
-//      5-2. return all threads within a block when any cell in the block is unphysical
-//           --> return only when Iteration < MinMod_Max_Itr, ensuring
-//               that the rest of cells in the patch group are stored properly
-        if ( *FullStepFailure == 1 && Iteration < MinMod_Max_Itr )     return;
+//       5-2. return all threads within a block when any cell in the block is unphysical
+//            --> return only when Iteration < MinMod_Max_Itr, ensuring
+//                that the rest of cells in the patch group are stored properly
+         if ( *FullStepFailure == 1 && Iteration < MinMod_Max_Itr )     return;
 
-
-//      5-3. check the negative density and energy again
-#       ifdef CHECK_UNPHYSICAL_IN_FLUID
-        Hydro_CheckUnphysical( UNPHY_MODE_SING, &Output_1Cell[DENS], "density", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
-        Hydro_CheckUnphysical( UNPHY_MODE_SING, &Output_1Cell[ENGY], "energy",  __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
-#       endif
 
       }
 
 
-
    } // CGPU_LOOP( idx_out, CUBE(PS2) )
+
 
 } // FUNCTION : Hydro_FullStepUpdate
 

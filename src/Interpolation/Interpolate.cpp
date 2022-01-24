@@ -1,11 +1,35 @@
 #include "GAMER.h"
 
 
+static Int_Scheme_t Int_SelectScheme( const IntScheme_t IntScheme );
+
+void Int_MinMod1D  ( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
+                     real FData[], const int FSize[3], const int FStart[3], const int NComp,
+                     const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
+void Int_MinMod3D  ( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
+                     real FData[], const int FSize[3], const int FStart[3], const int NComp,
+                     const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
+void Int_vanLeer   ( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
+                     real FData[], const int FSize[3], const int FStart[3], const int NComp,
+                     const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
+void Int_CQuadratic( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
+                     real FData[], const int FSize[3], const int FStart[3], const int NComp,
+                     const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
+void Int_Quadratic ( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
+                     real FData[], const int FSize[3], const int FStart[3], const int NComp,
+                     const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
+void Int_CQuartic  ( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
+                     real FData[], const int FSize[3], const int FStart[3], const int NComp,
+                     const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
+void Int_Quartic   ( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
+                     real FData[], const int FSize[3], const int FStart[3], const int NComp,
+                     const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Interpolate
 // Description :  Perform spatial interpolation using different schemes with a locally reducing min-mod coefficient
-//                when encountering a unphysical cell in a patch group.
+//                when encountering a unphysical cell.
 //
 // Note        :  1. Use the input parameter "IntScheme" to determine the adopted interpolation scheme
 //                2. Locally reduce the min-mod coefficient when unphysical results are found in the interpolated ghost zones
@@ -38,37 +62,42 @@
 //                4.  Interpolating primitive variables still preserves conservation because ghost zones do not
 //                    affect conservation.
 //
-// Parameter   :  CData            : Input coarse-grid array
-//                CSize            : Size of CData[]
-//                CStart           : (x,y,z) starting indices to perform interpolation on CData[]
-//                CRange           : Number of coarse cells along each direction to perform interpolation
-//                FData            : Output fine-grid array
-//                FSize            : Size of FData[]
-//                FStart           : (x,y,z) starting indices to store the interpolation results
-//                NComp            : Number of components in the CData and FData array
-//                IntScheme        : Interpolation scheme
-//                                   --> currently supported schemes include
-//                                       INT_MINMOD3D : MinMod-3D
-//                                       INT_MINMOD1D : MinMod-1D
-//                                       INT_VANLEER  : vanLeer
-//                                       INT_CQUAD    : conservative quadratic
-//                                       INT_QUAD     : quadratic
-//                                       INT_CQUAR    : conservative quartic
-//                                       INT_QUAR     : quartic
-//                UnwrapPhase      : Unwrap phase when OPT__INT_PHASE is on (for ELBDM only)
-//                Monotonic        : Ensure that all interpolation results are monotonic
-//                                   --> Useful for interpolating positive-definite variables, such as density, energy, ...
-//                OppSign0thOrder  : Apply 0th-order interpolation if the values to be interpolated change
-//                                   signs in adjacent cells
-//                                   --> See Int_MinMod1D() for details
-//                IntTarget        : (INT_GHOST_ZONES/INT_NEW_PATCHES)  --> (interpolate ghost zone/allocate new patches)
-//                AdaptiveMinmod   : (INT_REDUCE_MINMOD_COEFF_ON/INT_REDUCE_MINMOD_COEFF_OFF) --> (reduce/fix min-mod coefficient)
+//                5.  Reducing min-mod coefficient is enabled by
+//                    (i)  ReduceMinModCoeff == INT_REDUCE_MINMOD_COEFF/true
+//                         and
+//                    (ii) NComp == NCOMP_TOTAL
+//
+// Parameter   :  CData             : Input coarse-grid array
+//                CSize             : Size of CData[]
+//                CStart            : (x,y,z) starting indices to perform interpolation on CData[]
+//                CRange            : Number of coarse cells along each direction to perform interpolation
+//                FData             : Output fine-grid array
+//                FSize             : Size of FData[]
+//                FStart            : (x,y,z) starting indices to store the interpolation results
+//                NComp             : Number of components in the CData and FData array
+//                IntScheme         : Interpolation scheme
+//                                    --> currently supported schemes include
+//                                        INT_MINMOD3D : MinMod-3D
+//                                        INT_MINMOD1D : MinMod-1D
+//                                        INT_VANLEER  : vanLeer
+//                                        INT_CQUAD    : conservative quadratic
+//                                        INT_QUAD     : quadratic
+//                                        INT_CQUAR    : conservative quartic
+//                                        INT_QUAR     : quartic
+//                UnwrapPhase       : Unwrap phase when OPT__INT_PHASE is on (for ELBDM only)
+//                Monotonic         : Ensure that all interpolation results are monotonic
+//                                    --> Useful for interpolating positive-definite variables, such as density, energy, ...
+//                OppSign0thOrder   : Apply 0th-order interpolation if the values to be interpolated change
+//                                    signs in adjacent cells
+//                                    --> See Int_MinMod1D() for details
+//                IntPrim           : (true/false)  --> interpolate (primitive/non-primitive) variables
+//                ReduceMinModCoeff : (true/false) --> (reduce/fix) min-mod coefficient
 //-------------------------------------------------------------------------------------------------------
 void Interpolate( real CData [], const int CSize[3], const int CStart[3], const int CRange[3],
                   real FData [], const int FSize[3], const int FStart[3],
                   const int NComp, const IntScheme_t IntScheme, const bool UnwrapPhase,
                   const bool Monotonic[], const bool OppSign0thOrder,
-                  const Interpolate_t IntTarget, const Interpolate_t AdaptiveMinmod )
+                  const ReduceOrFixMinModCoeff_t IntPrim, const ReduceOrFixMinModCoeff_t ReduceMinModCoeff )
 {
 
 //   check
@@ -102,26 +131,19 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
      }
 #    endif // #ifdef GAMER_DEBUG
 
+     if ( ReduceMinModCoeff  &&  NComp != NCOMP_TOTAL )
+        Aux_Error( ERROR_INFO, "NComp (%d) != NCOMP_TOTAL (%d) for ReduceMinModCoeff == INT_REDUCE_MINMOD_COEFF !!\n", NComp, NCOMP_TOTAL );
 
      int Iteration = 0;
      real IntMonoCoeff = NULL_REAL;
-     Int_Scheme_t Int_Scheme_FunPtr;
+     Int_Scheme_t Int_Scheme_FunPtr = NULL;
      bool GotFailCell = false;
      const int CSize3D = CSize[0]*CSize[1]*CSize[2];
      const int FSize3D = FSize[0]*FSize[1]*FSize[2];
      real Cons[NCOMP_TOTAL], Prim[NCOMP_TOTAL], Array[NCOMP_TOTAL];
      bool FData_is_Prim = false;
+     const bool JeansMinPres_No = false;
 
-
-
-#    if ( MODEL == HYDRO  &&  defined GRAVITY )
-     const real JeansMinPres_Coeff = ( JEANS_MIN_PRES ) ?
-                                     NEWTON_G*SQR(JEANS_MIN_PRES_NCELL*amr->dh[JEANS_MIN_PRES_LEVEL])/(GAMMA*M_PI) :
-                                     NULL_REAL;
-#    else
-     const real JEANS_MIN_PRES     = false;
-     const real JeansMinPres_Coeff = NULL_REAL;
-#    endif
 
 
 //   select an interpolation scheme and assign it to Int_Scheme_FunPtr()
@@ -129,25 +151,17 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
 
 #    ifdef GAMER_DEBUG
-     if ( !Int_Scheme_FunPtr ) Aux_Error( ERROR_INFO, "Int_Scheme_FunPtr == NULL!!\n" );
+     if ( Int_Scheme_FunPtr == NULL ) Aux_Error( ERROR_INFO, "Int_Scheme_FunPtr == NULL!!\n" );
 #    endif
 
 
-//   for data safety purpose, we keep the data in CData[] as constant when AdaptiveMinmod == INT_REDUCE_MINMOD_COEFF_ON
-//   --> we cannot apply the const modifier to CData[] as ELBDM can modify CData[] when UnwrapPhase is on
-     real *CDataCopy = new real [CSize3D*NComp];
-
-     for (int v = 0 ; v < NComp ;v++)
-        for (int i=0; i<CSize3D; i++)
-           CDataCopy[CSize3D*v+i] = CData[CSize3D*v+i];
-
-     if ( AdaptiveMinmod == INT_REDUCE_MINMOD_COEFF_ON && NComp == NCOMP_TOTAL )
+     if ( ReduceMinModCoeff )
      {
 
         do {
 
 
-//         0. set GotFailCell to false after the second itration
+//         0. initialize GotFailCell as false
            GotFailCell = false;
 
 
@@ -159,8 +173,8 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
 
 //         2. interpolate primitive variables with the original min-mod coefficient
-//            --> this step is only for interpolating ghost zone. i.e. IntTarget == INT_GHOST_ZONES
-           else if ( Iteration == 1 && IntTarget == INT_GHOST_ZONES )
+//            --> this step is only for interpolating ghost zone.
+           else if ( Iteration == 1 && IntPrim )
            {
 //            As vanLeer, MinMod-3D, and MinMod-1D do not involve min-mod coefficient, we break the loop immediately
 //            and do nothing when encountering unphysical results
@@ -168,14 +182,14 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
               for (int i=0; i<CSize3D; i++)
               {
-                for (int v = 0 ; v < NCOMP_TOTAL ;v++) Cons[v] = CDataCopy[CSize3D*v+i];
+                for (int v = 0 ; v < NCOMP_TOTAL ;v++) Cons[v] = CData[CSize3D*v+i];
                 Hydro_Con2Pri( Cons, Prim, MIN_PRES,
                                OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
-                               JEANS_MIN_PRES, JeansMinPres_Coeff,
+                               JeansMinPres_No, NULL_REAL,
                                EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
                                EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
-                for (int v = 0 ; v < NCOMP_TOTAL ;v++) CDataCopy[CSize3D*v+i] = Prim[v];
+                for (int v = 0 ; v < NCOMP_TOTAL ;v++) CData[CSize3D*v+i] = Prim[v];
               }
 
               FData_is_Prim = true;
@@ -191,50 +205,33 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
               IntMonoCoeff -= (real)INT_MONO_COEFF / (real)OPT__MINMOD_MAX_ITR;
 
               // ensure IntMonoCoeff is non-negative
-              if ( FABS(IntMonoCoeff) < (real)10*MAX_ERROR ) IntMonoCoeff = (real)0.0;
-
-#             ifdef GAMER_DEBUG
-//            use !(IntMonoCoeff > (real)0.0) to include inf/nan
-              if ( !(IntMonoCoeff > (real)0.0) )
-                 Aux_Error( ERROR_INFO, "Negative/infinite/NaN IntMonoCoeff(%e) !! at line <%d>, function <%s>\n",
-                                        IntMonoCoeff, __LINE__, __FUNCTION__ );
-#             endif
+              IntMonoCoeff = FMAX( IntMonoCoeff, (real)0.0 );
 
            }
 
 
 //         4. perform interpolation
            for (int v=0; v<NComp; v++)
-              Int_Scheme_FunPtr( CDataCopy+v*CSize3D, CSize, CStart, CRange, FData+v*FSize3D,
+              Int_Scheme_FunPtr( CData+v*CSize3D, CSize, CStart, CRange, FData+v*FSize3D,
                                  FSize, FStart, 1, UnwrapPhase, Monotonic, IntMonoCoeff, OppSign0thOrder );
 
 
 //         5. check failed cell
            for ( int i = 0 ;i < FSize3D; i++ )
            {
+
               for (int v = 0 ; v < NCOMP_TOTAL ;v++) Array[v] = FData[FSize3D*v+i];
 
-//            5a. when FData[] stores conserved variables
-              if ( !FData_is_Prim && Hydro_CheckUnphysical( UNPHY_MODE_CONS, Array, NULL, __FILE__, __FUNCTION__, __LINE__, UNPHY_SILENCE ) )
-              {
-                GotFailCell = true;
-                break;
-              }
+              GotFailCell = Hydro_CheckUnphysical( (FData_is_Prim)?UNPHY_MODE_PRIM:UNPHY_MODE_CONS, Array, NULL,
+                                                   __FILE__, __FUNCTION__, __LINE__, UNPHY_SILENCE );
+              if ( GotFailCell )    break;
 
-//            5b. when FData[] stores primitive variables
-              if (  FData_is_Prim && Hydro_CheckUnphysical( UNPHY_MODE_PRIM, Array, NULL, __FILE__, __FUNCTION__, __LINE__, UNPHY_SILENCE ) )
-              {
-                GotFailCell = true;
-                break;
-              }
            }
 
 
 //         6. counter increment
            Iteration++;
 
-
-           if ( OPT__MINMOD_MAX_ITR == 0 || Iteration == OPT__MINMOD_MAX_ITR+1 ) break;
 
 
         } while ( GotFailCell && Iteration <= OPT__MINMOD_MAX_ITR );
@@ -249,7 +246,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
 
 //   transform FData[] storing primitive variables back to conserved variables
-     if ( FData_is_Prim && AdaptiveMinmod == INT_REDUCE_MINMOD_COEFF_ON )
+     if ( FData_is_Prim )
      {
          for (int i=0; i<FSize3D; i++)
          {
@@ -265,19 +262,87 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
      }
 
 
-     delete [] CDataCopy;
 
 
 //   check unphysical results
 #    ifdef CHECK_UNPHYSICAL_IN_FLUID
-     if ( AdaptiveMinmod == INT_REDUCE_MINMOD_COEFF_ON )
+     for ( int i = 0 ;i < FSize3D; i++ )
      {
-       for ( int i = 0 ;i < FSize3D; i++ )
-       {
-          for (int v = 0 ; v < NCOMP_TOTAL ;v++) Cons[v] = FData[FSize3D*v+i];
+        for (int v = 0 ; v < NCOMP_TOTAL ;v++) Cons[v] = FData[FSize3D*v+i];
 
-          Hydro_CheckUnphysical( UNPHY_MODE_CONS, Cons, NULL,  __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
-       }
+        if ( Hydro_CheckUnphysical( UNPHY_MODE_CONS, Cons, NULL,  __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE ) )
+          printf("NComp=%d, IntScheme=%d, UnwrapPhase=%d, Monotonic=%d, OppSign0thOrder=%d, IntPrim=%d, ReduceMinModCoeff=%d",
+                  NComp,    IntScheme,    UnwrapPhase,    Monotonic,    OppSign0thOrder,    IntPrim,    ReduceMinModCoeff );
      }
 #    endif
 }
+
+
+
+
+
+
+
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Int_SelectScheme
+// Description :  Select a spatial interpolation scheme
+//
+// Note        :  Use the input parameter "IntScheme" to determine the adopted interpolation scheme
+//
+// Parameter   :  IntScheme : Interpolation scheme
+//                            --> currently supported schemes include
+//                                INT_MINMOD3D : MinMod-3D
+//                                INT_MINMOD1D : MinMod-1D
+//                                INT_VANLEER  : vanLeer
+//                                INT_CQUAD    : conservative quadratic
+//                                INT_QUAD     : quadratic
+//                                INT_CQUAR    : conservative quartic
+//                                INT_QUAR     : quartic
+//
+// Return      :  Int_Scheme_t Int_Scheme_FunPtr()
+//-------------------------------------------------------------------------------------------------------
+static Int_Scheme_t Int_SelectScheme( const IntScheme_t IntScheme )
+{
+
+
+   switch ( IntScheme )
+   {
+      case INT_MINMOD3D :
+         return Int_MinMod3D;
+         break;
+
+      case INT_MINMOD1D :
+         return Int_MinMod1D;
+         break;
+
+      case INT_VANLEER :
+         return Int_vanLeer;
+         break;
+
+      case INT_CQUAD :
+         return Int_CQuadratic;
+         break;
+
+      case INT_QUAD :
+         return Int_Quadratic;
+         break;
+
+      case INT_CQUAR :
+         return Int_CQuartic;
+         break;
+
+      case INT_QUAR :
+         return Int_Quartic;
+         break;
+
+      default :
+         Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "IntScheme", IntScheme );
+   } // switch ( IntScheme )
+
+
+   return NULL;
+
+} // FUNCTION : Interpolate

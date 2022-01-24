@@ -121,6 +121,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    for (int PID=0; PID<amr->num[lv]; PID++)  JustRefined[PID] = false;
 #  endif // #ifdef MHD
 
+   const bool IntPrim_No = false;
+
 
 // determine the priority of different boundary faces (z>y>x) to set the corner cells properly for the non-periodic B.C.
    const int   NDer       = 0;
@@ -680,12 +682,12 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 //          interpolate density
             Interpolate( &Flu_CData[DENS][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[DENS][0][0][0],
                          FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_Yes,
-                         IntOppSign0thOrder_No, INT_NEW_PATCHES, INT_REDUCE_MINMOD_COEFF_OFF );
+                         IntOppSign0thOrder_No, IntPrim_No, INT_FIX_MINMOD_COEFF );
 
 //          interpolate phase
             Interpolate( &Flu_CData[REAL][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[REAL][0][0][0],
                          FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_Yes, &Monotonicity_No,
-                         IntOppSign0thOrder_No, INT_NEW_PATCHES, INT_REDUCE_MINMOD_COEFF_OFF );
+                         IntOppSign0thOrder_No, IntPrim_No, INT_FIX_MINMOD_COEFF );
          }
 
          else // if ( OPT__INT_PHASE )
@@ -693,7 +695,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             for (int v=0; v<NCOMP_TOTAL; v++)
             Interpolate( &Flu_CData[v][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[v][0][0][0],
                          FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity,
-                         IntOppSign0thOrder_No, INT_NEW_PATCHES, INT_REDUCE_MINMOD_COEFF_OFF );
+                         IntOppSign0thOrder_No, IntPrim_No, INT_FIX_MINMOD_COEFF );
          }
 
          if ( OPT__INT_PHASE )
@@ -726,7 +728,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
          Interpolate( &Flu_CData[0][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[0][0][0][0],
                       FSize_CC3, FStart_CC, NCOMP_TOTAL, OPT__REF_FLU_INT_SCHEME,
                       PhaseUnwrapping_No, Monotonicity,
-                      INT_OPP_SIGN_0TH_ORDER, INT_NEW_PATCHES, INT_REDUCE_MINMOD_COEFF_ON );
+                      INT_OPP_SIGN_0TH_ORDER, IntPrim_No, INT_REDUCE_MINMOD_COEFF );
 
 #        endif // #if ( MODEL == ELBDM ) ... else
 
@@ -738,7 +740,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
          if ( UsePot )
          Interpolate( &Pot_CData[0][0][0], CSize_Pot_Temp, CStart_Pot, CRange_CC, &Pot_FData[0][0][0],
                       FSize_CC3, FStart_CC, 1, OPT__REF_POT_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_No,
-                      IntOppSign0thOrder_No, INT_NEW_PATCHES, INT_REDUCE_MINMOD_COEFF_OFF );
+                      IntOppSign0thOrder_No, IntPrim_No, INT_FIX_MINMOD_COEFF );
 #        endif
 
 

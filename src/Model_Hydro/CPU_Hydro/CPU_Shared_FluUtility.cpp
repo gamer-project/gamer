@@ -560,7 +560,7 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
          if ( FailCell && Verbose )
             printf( "ERROR: invalid %s (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                     (SingleFieldName==NULL)?"unknown field":SingleFieldName, Fields[0],
-                    File, Line, Function ):
+                    File, Line, Function );
 
          return FailCell;
 
@@ -585,7 +585,7 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
             }
 
             // check mass and energy densities
-            else if ( v < NCOMP_PASSIVE )
+            if ( v < NCOMP_PASSIVE )
             {
                if ( Fields[v] <= TINY_NUMBER  ||  Fields[v] >= HUGE_NUMBER )
                   FailCell = true;
@@ -656,7 +656,7 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
             }
 
             // check mass and energy densities
-            else if ( v < NCOMP_PASSIVE )
+            if ( v < NCOMP_PASSIVE )
             {
                if ( Fields[v] <= TINY_NUMBER  ||  Fields[v] >= HUGE_NUMBER )
                   FailCell = true;

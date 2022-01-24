@@ -144,6 +144,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
    real FluidForEoS[NFluForEoS];
 #  endif
 
+   const bool IntPrim_Yes = true;
 
 // set up parameters for the adopted interpolation scheme
    int NSide_CC_Useless, CGhost_CC, CSize_CC[3], FSize_CC[3], CSize3D_CC, FSize3D_CC;
@@ -1103,12 +1104,12 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 //    interpolate density
       Interpolate( CData_Dens, CSize_CC, CStart_CC, CRange_CC, FData_Dens, FSize_CC, FStart_CC,
                    1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes, IntOppSign0thOrder_No,
-                   INT_GHOST_ZONES, INT_REDUCE_MINMOD_COEFF_OFF );
+                   IntPrim_Yes, INT_FIX_MINMOD_COEFF );
 
 //    interpolate phase
       Interpolate( CData_Real, CSize_CC, CStart_CC, CRange_CC, FData_Real, FSize_CC, FStart_CC,
                    1, IntScheme_CC, PhaseUnwrapping_Yes, &Monotonicity_No, IntOppSign0thOrder_No,
-                   INT_GHOST_ZONES, INT_REDUCE_MINMOD_COEFF_OFF );
+                   IntPrim_Yes, INT_FIX_MINMOD_COEFF );
    } // if ( IntPhase )
 
 
@@ -1119,7 +1120,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
       Interpolate( CData_CC+CSize3D_CC*v, CSize_CC, CStart_CC, CRange_CC,
                    IntData_CC+FSize3D_CC*v, FSize_CC, FStart_CC,
                    1, IntScheme_CC, PhaseUnwrapping_No, Monotonicity_CC,
-                   IntOppSign0thOrder_No, INT_GHOST_ZONES, INT_REDUCE_MINMOD_COEFF_OFF );
+                   IntOppSign0thOrder_No, IntPrim_Yes, INT_FIX_MINMOD_COEFF );
    } // if ( IntPhase ) ... else ...
 
 // retrieve real and imaginary parts when phase interpolation is adopted
@@ -1150,8 +1151,10 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
 
 // c3. interpolation on original cell-centered variables for models != ELBDM
+
    Interpolate( CData_CC, CSize_CC, CStart_CC, CRange_CC, IntData_CC, FSize_CC, FStart_CC, NVarCC_Flu,
-                IntScheme_CC, PhaseUnwrapping_No, Monotonicity_CC, INT_OPP_SIGN_0TH_ORDER, INT_GHOST_ZONES, INT_REDUCE_MINMOD_COEFF_ON );
+                IntScheme_CC, PhaseUnwrapping_No, Monotonicity_CC, INT_OPP_SIGN_0TH_ORDER, IntPrim_Yes,
+                (TVarCC==_TOTAL)?INT_REDUCE_MINMOD_COEFF:INT_FIX_MINMOD_COEFF );
 
 
 #  endif // #if ( MODEL == ELBDM ) ... else ...
@@ -1167,7 +1170,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
       Interpolate( CData_CC+CSize3D_CC*NVarCC_SoFar, CSize_CC, CStart_CC, CRange_CC,
                    IntData_CC+FSize3D_CC*NVarCC_SoFar, FSize_CC, FStart_CC,
                    1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes,
-                   IntOppSign0thOrder_No, INT_GHOST_ZONES, INT_REDUCE_MINMOD_COEFF_OFF );
+                   IntOppSign0thOrder_No, IntPrim_Yes, INT_FIX_MINMOD_COEFF );
       NVarCC_SoFar ++;
    }
 
@@ -1176,7 +1179,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
       Interpolate( CData_CC+CSize3D_CC*NVarCC_SoFar, CSize_CC, CStart_CC, CRange_CC,
                    IntData_CC+FSize3D_CC*NVarCC_SoFar, FSize_CC, FStart_CC,
                    1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes,
-                   IntOppSign0thOrder_No, INT_GHOST_ZONES, INT_REDUCE_MINMOD_COEFF_OFF );
+                   IntOppSign0thOrder_No, IntPrim_Yes, INT_FIX_MINMOD_COEFF );
       NVarCC_SoFar ++;
    }
 
@@ -1185,7 +1188,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
       Interpolate( CData_CC+CSize3D_CC*NVarCC_SoFar, CSize_CC, CStart_CC, CRange_CC,
                    IntData_CC+FSize3D_CC*NVarCC_SoFar, FSize_CC, FStart_CC,
                    1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes,
-                   IntOppSign0thOrder_No, INT_GHOST_ZONES, INT_REDUCE_MINMOD_COEFF_OFF );
+                   IntOppSign0thOrder_No, IntPrim_Yes, INT_FIX_MINMOD_COEFF );
       NVarCC_SoFar ++;
    }
 
@@ -1194,7 +1197,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
       Interpolate( CData_CC+CSize3D_CC*NVarCC_SoFar, CSize_CC, CStart_CC, CRange_CC,
                    IntData_CC+FSize3D_CC*NVarCC_SoFar, FSize_CC, FStart_CC,
                    1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes,
-                   IntOppSign0thOrder_No, INT_GHOST_ZONES, INT_REDUCE_MINMOD_COEFF_OFF );
+                   IntOppSign0thOrder_No, IntPrim_Yes, INT_FIX_MINMOD_COEFF );
       NVarCC_SoFar ++;
    }
 
@@ -1203,7 +1206,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
       Interpolate( CData_CC+CSize3D_CC*NVarCC_SoFar, CSize_CC, CStart_CC, CRange_CC,
                    IntData_CC+FSize3D_CC*NVarCC_SoFar, FSize_CC, FStart_CC,
                    1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes,
-                   IntOppSign0thOrder_No, INT_GHOST_ZONES, INT_REDUCE_MINMOD_COEFF_OFF );
+                   IntOppSign0thOrder_No, IntPrim_Yes, INT_FIX_MINMOD_COEFF );
       NVarCC_SoFar ++;
    }
 
@@ -1222,7 +1225,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
       Interpolate( CData_CC+CSize3D_CC*NVarCC_SoFar, CSize_CC, CStart_CC, CRange_CC,
                    IntData_CC+FSize3D_CC*NVarCC_SoFar, FSize_CC, FStart_CC,
                    1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_No,
-                   IntOppSign0thOrder_No, INT_GHOST_ZONES, INT_REDUCE_MINMOD_COEFF_OFF );
+                   IntOppSign0thOrder_No, IntPrim_Yes, INT_FIX_MINMOD_COEFF );
       NVarCC_SoFar ++;
    }
 #  endif

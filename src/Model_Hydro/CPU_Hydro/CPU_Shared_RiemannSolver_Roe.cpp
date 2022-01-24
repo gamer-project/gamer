@@ -135,6 +135,7 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    real alpha_f, alpha_s, beta_y, beta_z;       // Eqs. (A16) and (A17) in ref-b
    real Ca2_plus_a2, Ca2_min_a2, Cf2_min_Cs2;   // Ca^2+a^2, Ca^2-a^2, Cf^2-Cs^2
    real X, Y;                                   // Eqs. (B15) and (B16) in ref-b
+   real Gamma_m1_mY;                            // Gamma_m1 - Y
    real S;                                      // sign(Bx)
    real Bn_star;                                // Eq. (B20) in ref-b
    real beta_n_star2, beta_y_star, beta_z_star; // Eq. (B28) in ref-b
@@ -183,27 +184,28 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    H  = _RhoLR_sqrt_sum*(  RhoL_sqrt*HL   +  RhoR_sqrt*HR   );
 
 #  ifdef MHD
-   Rho_sqrt  = SQRT( Rho );
-   _Rho_sqrt = ONE/Rho_sqrt;
-   By        = _RhoLR_sqrt_sum*( RhoL_sqrt*ByR + RhoR_sqrt*ByL );
-   Bz        = _RhoLR_sqrt_sum*( RhoL_sqrt*BzR + RhoR_sqrt*BzL );
-   Bn2       = SQR( By ) + SQR( Bz );
-   Bn        = SQRT( Bn2 );
-   B2        = SQR( Bx ) + Bn2;
-   B2_Rho    = B2*_Rho;
-   S         = SIGN( Bx );
-   X         = _TWO*( SQR(ByR-ByL) + SQR(BzR-BzL) )*SQR( _RhoLR_sqrt_sum );
-   X        *= Gamma_m2;
+   Rho_sqrt     = SQRT( Rho );
+   _Rho_sqrt    = ONE/Rho_sqrt;
+   By           = _RhoLR_sqrt_sum*( RhoL_sqrt*ByR + RhoR_sqrt*ByL );
+   Bz           = _RhoLR_sqrt_sum*( RhoL_sqrt*BzR + RhoR_sqrt*BzL );
+   Bn2          = SQR( By ) + SQR( Bz );
+   Bn           = SQRT( Bn2 );
+   B2           = SQR( Bx ) + Bn2;
+   B2_Rho       = B2*_Rho;
+   S            = SIGN( Bx );
+   X            = _TWO*( SQR(ByR-ByL) + SQR(BzR-BzL) )*SQR( _RhoLR_sqrt_sum );
+   X           *= Gamma_m2;
 #  ifdef EULERY
-   Y         = _TWO*( L[0] + R[0] )*_Rho ;
+   Y            = _TWO*( L[0] + R[0] )*_Rho ;
 #  else
-   Y         = ONE;
+   Y            = ONE;
 #  endif
-   Y        *= Gamma_m2;
-   Bn_star   = SQRT( Gamma_m1 - Y )*Bn;
+   Y           *= Gamma_m2;
+   Gamma_m1_mY  = Gamma_m1-Y;
+   Bn_star      = SQRT( Gamma_m1_mY )*Bn;
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Gamma_m1-Y, "Gamma_m1-Y", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Gamma_m1_mY, "Gamma_m1-Y", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
 #  endif
 
    if ( Bn == ZERO ) {

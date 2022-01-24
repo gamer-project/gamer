@@ -120,7 +120,15 @@ static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, c
 
 // check
 #  ifdef GAMER_DEBUG
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "output pressure", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
+   if ( Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "output pressure", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE ) )
+   {
+      printf( "Dens=%13.7e, Eint=%13.7e\n", Dens, Eint );
+#     if ( NCOMP_PASSIVE > 0 )
+      printf( "Passive scalars:" );
+      for (int v=0; v<NCOMP_PASSIVE; v++)    printf( " %d=%13.7e", v, Passive[v] );
+      printf( "\n" );
+#     endif
+   }
 #  endif // GAMER_DEBUG
 
 
@@ -173,7 +181,15 @@ static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, c
 // check
 #  ifdef GAMER_DEBUG
 // note that some EoS may support Eint<0
-   Hydro_CheckUnphysical(  UNPHY_MODE_SING, &Eint   , "output internal energy", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
+   if ( Hydro_CheckUnphysical( UNPHY_MODE_SING, &Eint, "output internal energy", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE ) )
+   {
+      printf( "Dens=%13.7e, Pres=%13.7e\n", Dens, Pres );
+#     if ( NCOMP_PASSIVE > 0 )
+      printf( "Passive scalars:" );
+      for (int v=0; v<NCOMP_PASSIVE; v++)    printf( " %d=%13.7e", v, Passive[v] );
+      printf( "\n" );
+#     endif
+   }
 #  endif // GAMER_DEBUG
 
 
@@ -225,8 +241,15 @@ static real EoS_DensPres2CSqr_User_Template( const real Dens, const real Pres, c
 
 // check
 #  ifdef GAMER_DEBUG
-   Hydro_CheckUnphysical( UNPHY_MODE_SING        , &Cs2    , "output sound speed squared", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
-   Hydro_CheckUnphysical( UNPHY_MODE_PASSIVE_ONLY,  Passive,                         NULL, __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
+   if ( Hydro_CheckUnphysical( UNPHY_MODE_SING, &Cs2, "output sound speed squared", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE ) )
+   {
+      printf( "Dens=%13.7e, Pres=%13.7e\n", Dens, Pres );
+#     if ( NCOMP_PASSIVE > 0 )
+      printf( "Passive scalars:" );
+      for (int v=0; v<NCOMP_PASSIVE; v++)    printf( " %d=%13.7e", v, Passive[v] );
+      printf( "\n" );
+#     endif
+   }
 #  endif // GAMER_DEBUG
 
 
@@ -276,8 +299,15 @@ static real EoS_DensEint2Temp_User_Template( const real Dens, const real Eint, c
 
 // check
 #  ifdef GAMER_DEBUG
-   Hydro_CheckUnphysical( UNPHY_MODE_SING        , &Temp   , "output temperature", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
-   Hydro_CheckUnphysical( UNPHY_MODE_PASSIVE_ONLY,  Passive,                 NULL, __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
+   if ( Hydro_CheckUnphysical( UNPHY_MODE_SING, &Temp, "output temperature", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE ) )
+   {
+      printf( "Dens=%13.7e, Eint=%13.7e\n", Dens, Eint );
+#     if ( NCOMP_PASSIVE > 0 )
+      printf( "Passive scalars:" );
+      for (int v=0; v<NCOMP_PASSIVE; v++)    printf( " %d=%13.7e", v, Passive[v] );
+      printf( "\n" );
+#     endif
+   }
 #  endif // GAMER_DEBUG
 
 
@@ -326,8 +356,15 @@ static real EoS_DensTemp2Pres_User_Template( const real Dens, const real Temp, c
 
 // check
 #  ifdef GAMER_DEBUG
-   Hydro_CheckUnphysical( UNPHY_MODE_SING        , &Pres,   "output pressure", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
-   Hydro_CheckUnphysical( UNPHY_MODE_PASSIVE_ONLY,  Passive,             NULL, __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
+   if ( Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "output pressure", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE ) )
+   {
+      printf( "Dens=%13.7e, Temp=%13.7e\n", Dens, Temp );
+#     if ( NCOMP_PASSIVE > 0 )
+      printf( "Passive scalars:" );
+      for (int v=0; v<NCOMP_PASSIVE; v++)    printf( " %d=%13.7e", v, Passive[v] );
+      printf( "\n" );
+#     endif
+   }
 #  endif // GAMER_DEBUG
 
 

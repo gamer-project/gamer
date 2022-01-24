@@ -54,7 +54,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                            const real dt, const real dh, const real MinDens, const real MinEint,
                            const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
-                           const EoS_t *EoS, int *FullStepFailure, int Iteration, int MinMod_Max_Itr );
+                           const EoS_t *EoS, int *s_FullStepFailure, const int Iteration, const int MinMod_Max_Itr );
 #if   ( RSOLVER == EXACT )
 void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                 const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
@@ -294,12 +294,11 @@ void CPU_FluidSolver_MHM(
 
    int Iteration                   = 0;
 #  ifdef __CUDACC__
-   __shared__ int FullStepFailure;
+   __shared__ int s_FullStepFailure;
 #  else
-   int FullStepFailure;
+   int s_FullStepFailure;
 #  endif
-   FullStepFailure = 0;
-   real AdaptiveMinModCoeff;
+   s_FullStepFailure = 0;
 
 
 // openmp pragma for the CPU solver
@@ -342,15 +341,10 @@ void CPU_FluidSolver_MHM(
 #     ifdef __CUDACC__
       const int P = blockIdx.x;
 #     else
-#     pragma omp for schedule( runtime ) private ( Iteration, AdaptiveMinModCoeff, FullStepFailure )
+#     pragma omp for schedule( runtime ) firstprivate ( Iteration, s_FullStepFailure )
       for (int P=0; P<NPatchGroup; P++)
 #     endif
       {
-#        ifndef __CUDACC__
-         // the private variables FullStepFailure must be initialized within the OpenMP parallel region
-         FullStepFailure = 0;
-         Iteration = 0;
-#        endif
 
 //       1. half-step prediction
 //       1-a. MHM_RP: use Riemann solver to calculate the half-step fluxes
@@ -415,14 +409,12 @@ void CPU_FluidSolver_MHM(
 
          do {
 
-            AdaptiveMinModCoeff = ( MinMod_Max_Itr == 0 ) ? MinMod_Coeff :
+            real AdaptiveMinModCoeff = ( MinMod_Max_Itr == 0 ) ? MinMod_Coeff :
             MinMod_Coeff - (real)Iteration * MinMod_Coeff / (real)MinMod_Max_Itr;
 
 
 //          ensure adaptive MinMod_Coeff is non-negative
-#           if ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP )
-            if ( FABS(MinMod_Coeff) < (real)10*MAX_ERROR ) AdaptiveMinModCoeff = (real)0.0;
-#           endif
+            AdaptiveMinModCoeff = FMAX( AdaptiveMinModCoeff, (real)0.0 );
 
 
 //          1-a-5. evaluate the face-centered values by data reconstruction
@@ -438,14 +430,12 @@ void CPU_FluidSolver_MHM(
 
          do {
 
-            AdaptiveMinModCoeff = ( MinMod_Max_Itr == 0 ) ? MinMod_Coeff :
+            real AdaptiveMinModCoeff = ( MinMod_Max_Itr == 0 ) ? MinMod_Coeff :
             MinMod_Coeff - (real)Iteration * MinMod_Coeff / (real)MinMod_Max_Itr;
 
 
 //          ensure adaptive MinMod_Coeff is non-negative
-#           if ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP )
-            if ( FABS(MinMod_Coeff) < (real)10*MAX_ERROR ) AdaptiveMinModCoeff = (real)0.0;
-#           endif
+            AdaptiveMinModCoeff = FMAX( AdaptiveMinModCoeff, (real)0.0 );
 
 
 //          evaluate the face-centered values by data reconstruction
@@ -455,6 +445,15 @@ void CPU_FluidSolver_MHM(
                                       JeansMinPres, JeansMinPres_Coeff, &EoS );
 
 #        endif // #if ( FLU_SCHEME == MHM_RP ) ... else ...
+
+#           ifdef CHECK_UNPHYSICAL_IN_FLUID
+#           ifdef __CUDACC__
+            if ( threadIdx.x == 0 && s_FullStepFailure == 1 )
+#           else
+            if ( MPI_Rank == 0 && s_FullStepFailure == 1 )
+#           endif
+               printf("Iteration=%d, AdaptiveMinModCoeff=%13.10f\n", Iteration, AdaptiveMinModCoeff );
+#           endif
 
 
 //          2. evaluate the full-step fluxes
@@ -489,26 +488,15 @@ void CPU_FluidSolver_MHM(
 //          4. full-step evolution
             Hydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P], g_Mag_Array_Out[P],
                                   g_FC_Flux_1PG, dt, dh, MinDens, MinEint, DualEnergySwitch,
-                                  NormPassive, NNorm, c_NormIdx, &EoS, &FullStepFailure, Iteration, MinMod_Max_Itr );
-
-#           ifdef CHECK_UNPHYSICAL_IN_FLUID
-#           ifdef __CUDACC__
-            if ( threadIdx.x == 0 && FullStepFailure == 1 )
-#           else
-            if ( MPI_Rank == 0 && FullStepFailure == 1 )
-#           endif
-               printf("Iteration=%d, AdaptiveMinModCoeff=%13.10f\n", Iteration, AdaptiveMinModCoeff );
-#           endif
+                                  NormPassive, NNorm, c_NormIdx, &EoS, &s_FullStepFailure, Iteration, MinMod_Max_Itr );
 
 
 //         5. counter increment
             Iteration++;
 
 
-            if ( MinMod_Max_Itr == 0 || Iteration == MinMod_Max_Itr+1 ) break;
 
-
-         } while( FullStepFailure && Iteration <= MinMod_Max_Itr );
+         } while( s_FullStepFailure && Iteration <= MinMod_Max_Itr );
 
       } // loop over all patch groups
    } // OpenMP parallel region
