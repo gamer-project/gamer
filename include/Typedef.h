@@ -264,7 +264,8 @@ const OptFluBC_t
    BC_FLU_PERIODIC   = 1,
    BC_FLU_OUTFLOW    = 2,
    BC_FLU_REFLECTING = 3,
-   BC_FLU_USER       = 4;
+   BC_FLU_USER       = 4,
+   BC_FLU_DIODE      = 5;
 
 
 // the gravity boundary conditions
