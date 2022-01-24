@@ -585,7 +585,7 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
             }
 
             // check mass and energy densities
-            if ( v < NCOMP_PASSIVE )
+            else if ( v < NCOMP_FLUID )
             {
                if ( Fields[v] <= TINY_NUMBER  ||  Fields[v] >= HUGE_NUMBER )
                   FailCell = true;
@@ -656,7 +656,7 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
             }
 
             // check mass and energy densities
-            if ( v < NCOMP_PASSIVE )
+            else if ( v < NCOMP_FLUID )
             {
                if ( Fields[v] <= TINY_NUMBER  ||  Fields[v] >= HUGE_NUMBER )
                   FailCell = true;

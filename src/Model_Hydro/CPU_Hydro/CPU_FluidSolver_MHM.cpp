@@ -346,6 +346,11 @@ void CPU_FluidSolver_MHM(
 #     endif
       {
 
+#        ifndef __CUDACC__
+         s_FullStepFailure = 0;
+         Iteration = 0;
+#        endif
+
 //       1. half-step prediction
 //       1-a. MHM_RP: use Riemann solver to calculate the half-step fluxes
 #        if ( FLU_SCHEME == MHM_RP )
@@ -491,7 +496,7 @@ void CPU_FluidSolver_MHM(
                                   NormPassive, NNorm, c_NormIdx, &EoS, &s_FullStepFailure, Iteration, MinMod_Max_Itr );
 
 
-//         5. counter increment
+//          5. counter increment
             Iteration++;
 
 
