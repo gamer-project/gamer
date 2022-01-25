@@ -168,10 +168,6 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 //         2. interpolate primitive variables with the original min-mod coefficient
            else if ( Iteration == 1  &&  IntPrim )
            {
-//            As vanLeer, MinMod-3D, and MinMod-1D do not involve min-mod coefficient, we break the loop immediately
-//            and do nothing when encountering unphysical results
-              if ( IntScheme == INT_VANLEER || IntScheme == INT_MINMOD3D || IntScheme == INT_MINMOD1D ) break;
-
               for (int i=0; i<CSize3D; i++)
               {
                 for (int v = 0 ; v < NCOMP_TOTAL ;v++) Cons[v] = CData[CSize3D*v+i];
@@ -191,6 +187,9 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 //         3. reduce the original min-mod coefficient
            else
            {
+//            as vanLeer, MinMod-3D, and MinMod-1D do not involve min-mod coefficient, we break the loop immediately
+              if ( IntScheme == INT_VANLEER  ||  IntScheme == INT_MINMOD3D  ||  IntScheme == INT_MINMOD1D )    break;
+
               // process always skip this block when MINMOD_MAX_ITER == 0
               // --> no division by zero occurs
               IntMonoCoeff -= (real)INT_MONO_COEFF / (real)MINMOD_MAX_ITER;
