@@ -257,13 +257,6 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
 
 
-
-
-
-
-
-
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Int_SelectScheme
 // Description :  Select a spatial interpolation scheme
@@ -271,7 +264,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 // Note        :  Use the input parameter "IntScheme" to determine the adopted interpolation scheme
 //
 // Parameter   :  IntScheme : Interpolation scheme
-//                            --> currently supported schemes include
+//                            --> Currently supported schemes include
 //                                INT_MINMOD3D : MinMod-3D
 //                                INT_MINMOD1D : MinMod-1D
 //                                INT_VANLEER  : vanLeer
@@ -280,47 +273,23 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 //                                INT_CQUAR    : conservative quartic
 //                                INT_QUAR     : quartic
 //
-// Return      :  Int_Scheme_t Int_Scheme_FunPtr()
+// Return      :  Int_Scheme_t Int_Scheme_FunPtr
 //-------------------------------------------------------------------------------------------------------
 static Int_Scheme_t Int_SelectScheme( const IntScheme_t IntScheme )
 {
 
-
    switch ( IntScheme )
    {
-      case INT_MINMOD3D :
-         return Int_MinMod3D;
-         break;
-
-      case INT_MINMOD1D :
-         return Int_MinMod1D;
-         break;
-
-      case INT_VANLEER :
-         return Int_vanLeer;
-         break;
-
-      case INT_CQUAD :
-         return Int_CQuadratic;
-         break;
-
-      case INT_QUAD :
-         return Int_Quadratic;
-         break;
-
-      case INT_CQUAR :
-         return Int_CQuartic;
-         break;
-
-      case INT_QUAR :
-         return Int_Quartic;
-         break;
-
-      default :
-         Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "IntScheme", IntScheme );
-   } // switch ( IntScheme )
-
+      case INT_MINMOD3D :  return Int_MinMod3D;    break;
+      case INT_MINMOD1D :  return Int_MinMod1D;    break;
+      case INT_VANLEER  :  return Int_vanLeer;     break;
+      case INT_CQUAD    :  return Int_CQuadratic;  break;
+      case INT_QUAD     :  return Int_Quadratic;   break;
+      case INT_CQUAR    :  return Int_CQuartic;    break;
+      case INT_QUAR     :  return Int_Quartic;     break;
+      default           :  Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "IntScheme", IntScheme );
+   }
 
    return NULL;
 
-} // FUNCTION : Interpolate
+} // FUNCTION : Int_SelectScheme
