@@ -98,6 +98,7 @@ OPT__1ST_FLUX_CORR           -1           # correct unphysical results (defined 
                                           # (<0=auto, 0=off, 1=3D, 2=3D+1D) [-1] ##MHM/MHM_RP/CTU ONLY##
 OPT__1ST_FLUX_CORR_SCHEME    -1           # Riemann solver for OPT__1ST_FLUX_CORR (<0=auto, 0=none, 1=Roe, 2=HLLC, 3=HLLE, 4=HLLD) [-1]
 DUAL_ENERGY_SWITCH            2.0e-2      # apply dual-energy if E_int/E_kin < DUAL_ENERGY_SWITCH [2.0e-2] ##DUAL_ENERGY ONLY##
+OPT__MINMOD_MAX_ITR           4           # maximum iteration number to reduce MINMOD_COEFF [4] (0 means do not reduce MINMOD_COEFF)
 
 
 # fluid solvers in all models

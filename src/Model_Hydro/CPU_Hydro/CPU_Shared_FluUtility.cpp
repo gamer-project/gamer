@@ -4,6 +4,7 @@
 
 
 #include "CUFLU.h"
+#include "stdio.h"
 
 #if ( MODEL == HYDRO )
 
@@ -477,7 +478,7 @@ real Hydro_CheckMinTemp( const real InTemp, const real MinTemp )
 //                MomX/Y/Z : Momentum density
 //                InEngy   : Energy density
 //                MinEint  : Internal energy density floor
-//                Emag    : Magnetic energy density (0.5*B^2) --> For MHD only
+//                Emag     : Magnetic energy density (0.5*B^2) --> For MHD only
 //
 // Return      :  Total energy density with internal energy density greater than a given threshold
 //-------------------------------------------------------------------------------------------------------
@@ -503,24 +504,233 @@ real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_CheckNegative
-// Description :  Check whether the input value is <= 0.0 (also check whether it's Inf or NAN)
+// Function    :  Hydro_CheckUnphysical
+// Description :  Case1 : Check if the input single field is NAN, inf or negative
+//                        --> Mode = UNPHY_MODE_SING
+//                Case2 : Check if the input conserved variables, including passive scalars, are unphysical
+//                        --> Mode = UNPHY_MODE_CONS
+//                Case3 : Check if the input primitive variables, including passive scalars, are unphysical
+//                        --> Mode = UNPHY_MODE_PRIM
+//                Case4 : Check if the input passive scalars are unphysical
+//                        --> Mode = UNPHY_MODE_PASSIVE_ONLY
 //
-// Note        :  Can be used to check whether the values of density and pressure are unphysical
+// Note        :  Although the criteria of UNPHY_MODE_PRIM and UNPHY_MODE_CONS are the same in hydrodynamics,
+//                we still treat them as two different cases. This is because they may be different for other
+//                upcoming physical modules. e.g. For the conserved variables of SRHD,
+//                we should also check the Eq.(15) in MNRAS 504, 3298–3315 (2021) has a positive root.
 //
-// Parameter   :  Input : Input value
+// Parameter   :  Mode            : UNPHY_MODE_SING         --> check single field
+//                                  UNPHY_MODE_CONS         --> check conserved variables, including passive scalars
+//                                  UNPHY_MODE_PRIM         --> check primitive variables, including passive scalars
+//                                  UNPHY_MODE_PASSIVE_ONLY --> check passive scalars only
+//                SingleFieldName : Name of the target field for the mode UNPHY_MODE_SING
+//                File            : __FILE__
+//                Function        : __FUNCTION__
+//                Line            : __LINE__
+//                Verbose         : true  --> Show error message
+//                                  false --> Show nothing
 //
-// Return      :  true  --> Input <= 0.0  ||  >= __FLT_MAX__  ||  != itself (Nan)
+// Return      :  true  --> input field is unphysical
 //                false --> otherwise
+//
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-bool Hydro_CheckNegative( const real Input )
+bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], const char SingleFieldName[],
+                            const char File[], const char Function[], const int Line, const CheckUnphysical_t Verbose )
 {
 
-   if ( Input <= (real)0.0  ||  Input >= __FLT_MAX__  ||  Input != Input )    return true;
-   else                                                                       return false;
+#  ifdef GAMER_DEBUG
+   if ( Fields == NULL ) printf("ERROR: access a NULL pointer at file <%s>, line <%d>, function <%s>!!\n",
+                          File, Line, Function );
+#  endif
 
-} // FUNCTION : Hydro_CheckNegative
+   bool FailCell = false;
+
+
+   switch ( Mode )
+   {
+
+      // === check single field ===
+      case UNPHY_MODE_SING:
+
+
+         if ( Fields[0] <= TINY_NUMBER  ||  Fields[0] >= HUGE_NUMBER  ||  Fields[0] != Fields[0] )
+            FailCell = true;
+
+         if ( FailCell && Verbose )
+            printf( "ERROR: invalid %s (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+                    (SingleFieldName==NULL)?"unknown field":SingleFieldName, Fields[0],
+                    File, Line, Function );
+
+         return FailCell;
+
+      break;
+
+
+      // === check conserved variables, including passive scalars ===
+      case UNPHY_MODE_CONS:
+
+
+         for (int v=0; v<NCOMP_TOTAL; v++)
+         {
+            // check NaN
+            if ( Fields[v] != Fields[v] )
+                  FailCell = true;
+
+            // check momentum densities
+            if ( v == MOMX  ||  v == MOMY  ||  v == MOMZ )
+            {
+               if ( Fields[v] <= -HUGE_NUMBER  ||  Fields[v] >= HUGE_NUMBER )
+                  FailCell = true;
+            }
+
+            // check mass and energy densities
+            else if ( v < NCOMP_FLUID )
+            {
+               if ( Fields[v] <= TINY_NUMBER  ||  Fields[v] >= HUGE_NUMBER )
+                  FailCell = true;
+            }
+
+            // check passive scalars
+            else
+            {
+               if ( Fields[v] < (real)0.0  ||  Fields[v] >= HUGE_NUMBER )
+                  FailCell = true;
+            }
+         }
+
+
+         // calculate discriminant for SRHD.
+         // --> the discriminant is positive if and only if the Eq.(15) in MNRAS 504, 3298–3315 (2021) has a positive root.
+#        ifdef SRHD
+         real Msqr         = SQR(Fields[MOMX]) + SQR(Fields[MOMY]) + SQR(Fields[MOMZ]);
+         real Dsqr         = SQR(Fields[DENS]);
+         real E_D          = Fields[ENGY] / Fields[DENS];
+         real M_D          = SQRT( Msqr / Dsqr );
+         real Temp         = SQRT( E_D*E_D + (real)2.0*E_D );
+         real Discriminant = ( Temp + M_D ) * ( Temp - M_D );
+
+         // check discriminant
+         if ( Discriminant <= TINY_NUMBER )      FailCell = true;
+#        endif
+
+
+         // print out the unphysical values
+         if ( FailCell && Verbose )
+         {
+            printf( "ERROR: unphysical conserved variables at file <%s>, line <%d>, function <%s>\n",
+                     File, Line, Function );
+
+            printf( "D=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n",
+                     Fields[DENS], Fields[MOMX], Fields[MOMY], Fields[MOMZ], Fields[ENGY] );
+
+#           ifdef SRHD
+            printf( "E^2+2*E*D-|M|^2=%14.7e\n", Discriminant );
+#           endif
+
+#           if ( NCOMP_PASSIVE > 0 )
+            for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+               printf("Passive[%d]=%14.7e\n", v-NCOMP_FLUID, Fields[v] );
+#           endif
+         }
+
+         return FailCell;
+
+      break;
+
+
+      // === check primitive variables, including passive scalars  ===
+      case UNPHY_MODE_PRIM:
+
+         for (int v=0; v<NCOMP_TOTAL; v++)
+         {
+            // check NaN
+            if ( Fields[v] != Fields[v] )
+                  FailCell = true;
+
+            // check velocities
+            if ( v == MOMX  ||  v == MOMY  ||  v == MOMZ )
+            {
+               if ( Fields[v] <= -HUGE_NUMBER  ||  Fields[v] >= HUGE_NUMBER )
+                  FailCell = true;
+            }
+
+            // check mass and energy densities
+            else if ( v < NCOMP_FLUID )
+            {
+               if ( Fields[v] <= TINY_NUMBER  ||  Fields[v] >= HUGE_NUMBER )
+                  FailCell = true;
+            }
+
+            // check passive scalars
+            else
+            {
+               if ( Fields[v] < (real)0.0  ||  Fields[v] >= HUGE_NUMBER )
+                  FailCell = true;
+            }
+
+         }
+
+
+         // print out the unphysical values
+         if ( FailCell && Verbose )
+         {
+            printf( "ERROR: unphysical primitive variables at file <%s>, line <%d>, function <%s>\n",
+                     File, Line, Function );
+
+            printf( "rho=%14.7e, Vx=%14.7e, Vy=%14.7e, Vz=%14.7e, P=%14.7e\n",
+                     Fields[0],  Fields[1], Fields[2], Fields[3], Fields[4] );
+
+#           if ( NCOMP_PASSIVE > 0 )
+            for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+               printf("Passive[%d]=%14.7e\n", v-NCOMP_FLUID, Fields[v] );
+#           endif
+         }
+
+         return FailCell;
+
+      break;
+
+
+      // === only check passive scalars  ===
+      case UNPHY_MODE_PASSIVE_ONLY:
+
+         for (int v=0; v<NCOMP_PASSIVE; v++)
+         {
+            // check NaN
+            if ( Fields[v] != Fields[v] )
+                  FailCell = true;
+
+            // check negative
+            if ( Fields[v] < (real)0.0  ||  Fields[v] >= HUGE_NUMBER )
+               FailCell = true;
+         }
+
+
+         // print out the unphysical values
+         if ( FailCell && Verbose )
+         {
+            printf( "ERROR: unphysical passive scalars at file <%s>, line <%d>, function <%s>\n",
+                     File, Line, Function );
+
+            for (int v=0; v<NCOMP_PASSIVE; v++)
+               printf("Passive[%d]=%14.7e\n", v, Fields[v] );
+         }
+
+         return FailCell;
+
+      break;
+
+
+      default:
+         printf( "ERROR : Mode is NOT UNPHY_MODE_SING, UNPHY_MODE_CONS, UNPHY_MODE_PRIM, or UNPHY_MODE_PASSIVE_ONLY!! file <%s>, line <%d>, function <%s> !!\n",
+                  File, Line, Function );
+
+   }
+
+
+   return FailCell;
+}
 
 
 
