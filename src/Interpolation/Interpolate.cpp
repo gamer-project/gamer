@@ -90,14 +90,14 @@ void Int_Quartic   ( real CData[], const int CSize[3], const int CStart[3], cons
 //                OppSign0thOrder   : Apply 0th-order interpolation if the values to be interpolated change
 //                                    signs in adjacent cells
 //                                    --> See Int_MinMod1D() for details
-//                IntPrim           : (true/false)  --> interpolate (primitive/non-primitive) variables
+//                IntPrim           : whether or not switch from conserved to primitive variables when interpolation fails
 //                ReduceMinModCoeff : (true/false) --> (reduce/fix) min-mod coefficient
 //-------------------------------------------------------------------------------------------------------
 void Interpolate( real CData [], const int CSize[3], const int CStart[3], const int CRange[3],
                   real FData [], const int FSize[3], const int FStart[3],
                   const int NComp, const IntScheme_t IntScheme, const bool UnwrapPhase,
                   const bool Monotonic[], const bool OppSign0thOrder,
-                  const ReduceOrFixMinModCoeff_t IntPrim, const ReduceOrFixMinModCoeff_t ReduceMinModCoeff )
+                  const IntPrim_t IntPrim, const ReduceOrFixMinModCoeff_t ReduceMinModCoeff )
 {
 
 //   check
@@ -174,7 +174,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
 //         2. interpolate primitive variables with the original min-mod coefficient
 //            --> this step is only for interpolating ghost zone.
-           else if ( Iteration == 1 && IntPrim )
+           else if ( Iteration == 1  &&  IntPrim )
            {
 //            As vanLeer, MinMod-3D, and MinMod-1D do not involve min-mod coefficient, we break the loop immediately
 //            and do nothing when encountering unphysical results

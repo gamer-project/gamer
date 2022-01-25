@@ -715,10 +715,9 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
                       const real *CFB_BFieldEachRank[], const int CFB_SibRank[], long CFB_OffsetEachRank[] )
 {
 
-   const int SonLv        = FaLv + 1;
-   const int SonPID0      = amr->num[SonLv];
-   bool FaIsHome          = false;
-   const bool IntPrim_Yes = true;
+   const int SonLv   = FaLv + 1;
+   const int SonPID0 = amr->num[SonLv];
+   bool FaIsHome     = false;
 
 
 // 0. check : target father patch has no son
@@ -855,12 +854,12 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 //    interpolate density
       Interpolate( CData_Dens, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[DENS][0][0][0],
                    FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_Yes,
-                   IntOppSign0thOrder_No, IntPrim_Yes, INT_FIX_MINMOD_COEFF );
+                   IntOppSign0thOrder_No, INT_PRIM_NO, INT_FIX_MINMOD_COEFF );
 
 //    interpolate phase
       Interpolate( CData_Real, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[REAL][0][0][0],
                    FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_Yes, &Monotonicity_No,
-                   IntOppSign0thOrder_No, IntPrim_Yes, INT_FIX_MINMOD_COEFF );
+                   IntOppSign0thOrder_No, INT_PRIM_NO, INT_FIX_MINMOD_COEFF );
    }
 
    else // if ( OPT__INT_PHASE )
@@ -868,7 +867,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       for (int v=0; v<NCOMP_TOTAL; v++)
       Interpolate( CData_Flu+v*CSize_Flu1v, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[v][0][0][0],
                    FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity,
-                   IntOppSign0thOrder_No, IntPrim_Yes, INT_FIX_MINMOD_COEFF );
+                   IntOppSign0thOrder_No, INT_PRIM_NO, INT_FIX_MINMOD_COEFF );
    }
 
    if ( OPT__INT_PHASE )
@@ -898,10 +897,11 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
 #  else // #if ( MODEL == ELBDM )
 
+// adopt INT_PRIM_NO to ensure conservation
    Interpolate( CData_Flu, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[0][0][0][0],
                 FSize_CC3, FStart_CC, NCOMP_TOTAL, OPT__REF_FLU_INT_SCHEME,
                 PhaseUnwrapping_No, Monotonicity,
-                INT_OPP_SIGN_0TH_ORDER, IntPrim_Yes, INT_REDUCE_MINMOD_COEFF );
+                INT_OPP_SIGN_0TH_ORDER, INT_PRIM_NO, INT_REDUCE_MINMOD_COEFF );
 
 #  endif // #if ( MODEL == ELBDM ) ... else
 
@@ -918,7 +918,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
    Interpolate( CData_Pot, CSize_Pot3, CStart_Pot, CRange_CC, &FData_Pot[0][0][0],
                 FSize_CC3, FStart_CC, 1, OPT__REF_POT_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_No,
-                INT_MONO_COEFF, IntOppSign0thOrder_No, IntPrim_Yes, INT_FIX_MINMOD_COEFF );
+                INT_MONO_COEFF, IntOppSign0thOrder_No, INT_PRIM_NO, INT_FIX_MINMOD_COEFF );
 #  endif
 
 

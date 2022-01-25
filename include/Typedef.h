@@ -181,17 +181,17 @@ const Check_t
 // check unphysical quanties
 typedef int CheckUnphysical_t;
 const CheckUnphysical_t
-   UNPHY_MODE_SING         = 0, // check single field
-   UNPHY_MODE_CONS         = 1, // check conserved variables, including passive scalars
-   UNPHY_MODE_PRIM         = 2, // check primitive variables, including passive scalars
-   UNPHY_MODE_PASSIVE_ONLY = 3; // only check passive scalars
+   UNPHY_MODE_SING         = 0,  // check single field
+   UNPHY_MODE_CONS         = 1,  // check conserved variables, including passive scalars
+   UNPHY_MODE_PRIM         = 2,  // check primitive variables, including passive scalars
+   UNPHY_MODE_PASSIVE_ONLY = 3;  // only check passive scalars
 
 
 // verbosity levels of Hydro_CheckUnphysical()
 typedef int VerbosityLevelUnphy_t;
 const VerbosityLevelUnphy_t
-   UNPHY_SILENCE           = 0, // print nothing
-   UNPHY_VERBOSE           = 1; // print out unphysical values
+   UNPHY_SILENCE = 0,   // print nothing
+   UNPHY_VERBOSE = 1;   // print out unphysical values
 
 
 // locally reduce min-mod coefficient or not
@@ -199,6 +199,13 @@ typedef bool ReduceOrFixMinModCoeff_t;
 const ReduceOrFixMinModCoeff_t
    INT_FIX_MINMOD_COEFF      = false, // fix min-mod coefficient
    INT_REDUCE_MINMOD_COEFF   = true;  // locally reduce min-mod coefficient
+
+
+// whether switch from conserved to primitive variables when interpolation fails
+typedef bool IntPrim_t;
+const IntPrim_t
+   INT_PRIM_NO  = false,
+   INT_PRIM_YES = true;
 
 
 // target solver in InvokeSolver()
