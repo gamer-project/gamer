@@ -50,8 +50,12 @@ void Validate()
    Aux_Error( ERROR_INFO, "PARTICLE must be enabled !!\n" );
 #  endif
 
-#  if !defined( TRACER ) && !defined( GRAVITY )
-   Aux_Error( ERROR_INFO, "Either TRACER, GRAVITY, or both must be enabled !!\n" );
+#  ifndef TRACER
+   Aux_Error( ERROR_INFO, "TRACER must be enabled !!\n" );
+#  endif
+
+#  ifndef GRAVITY
+   Aux_Error( ERROR_INFO, "GRAVITY must be enabled !!\n" );
 #  endif
 
 #  ifdef COMOVING
@@ -117,18 +121,6 @@ void SetParameter()
    if ( !Advect_Use_Tracers && !Advect_Use_Massive )
       Aux_Error( ERROR_INFO,
                  "Either Advect_Use_Tracer, Advect_Use_Massive, or both must be true !!\n" );
-
-#  ifndef TRACER
-   if ( Advect_Use_Tracers )
-      Aux_Message( stderr,
-                   "WARNING : Advect_Use_Tracers is true but TRACER is not enabled !!\n" );
-#  endif
-
-#  ifndef TRACER
-   if ( Advect_Use_Massive )
-      Aux_Message( stderr,
-                   "WARNING : Advect_Use_Massive is true but GRAVITY is not enabled !!\n" );
-#  endif
 
 // (2) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h

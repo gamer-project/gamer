@@ -57,14 +57,8 @@ void Par_Init_ByFunction_AdvectTracers( const long NPar_ThisRank, const long NPa
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
    long NPar_All = 0;
-
-#  ifdef MASSIVE_PARTICLES
    if ( Advect_Use_Massive ) NPar_All += 2;
-#  endif
-
-#  ifdef TRACER
    if ( Advect_Use_Tracers ) NPar_All += Advect_NPar[0]*Advect_NPar[1]*Advect_NPar[2];
-#  endif
 
    if ( NPar_All != NPar_AllRank )
       Aux_Error( ERROR_INFO, "total number of particles found [%ld] != expect [%ld] !!\n",
@@ -88,8 +82,6 @@ void Par_Init_ByFunction_AdvectTracers( const long NPar_ThisRank, const long NPa
       ParData_AllRank[PAR_TYPE] = new real [NPar_AllRank];
 
       long p = 0;
-
-#ifdef MASSIVE_PARTICLES
 
       if ( Advect_Use_Massive ) {
 
@@ -118,10 +110,6 @@ void Par_Init_ByFunction_AdvectTracers( const long NPar_ThisRank, const long NPa
          }
 
       } // if ( Advect_Use_Massive )
-
-#endif // #ifdef MASSIVE_PARTICLES
-
-#ifdef TRACER
 
       if ( Advect_Use_Tracers ) {
 
@@ -160,8 +148,6 @@ void Par_Init_ByFunction_AdvectTracers( const long NPar_ThisRank, const long NPa
          }
 
       } // if ( Advect_Use_Tracers )
-
-#endif // #ifdef TRACER
 
    } // if ( MPI_Rank == 0 )
 
