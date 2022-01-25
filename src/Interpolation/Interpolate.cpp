@@ -142,7 +142,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 #     endif
 
 
-//    select an interpolation scheme and assign it to Int_Scheme_FunPtr()
+//    select an interpolation scheme
       Int_Scheme_FunPtr = Int_SelectScheme( IntScheme );
 
 #     ifdef GAMER_DEBUG
@@ -158,66 +158,62 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
             GotFailCell = false;
 
 
-//         1. adopt the original min-mod coefficient first
-           if ( Iteration == 0 )
-           {
-              IntMonoCoeff = (real)INT_MONO_COEFF;
-           }
+//          1. adopt the original min-mod coefficient first
+            if ( Iteration == 0 )   IntMonoCoeff = (real)INT_MONO_COEFF;
 
 
-//         2. interpolate primitive variables with the original min-mod coefficient
-           else if ( Iteration == 1  &&  IntPrim )
-           {
-              for (int i=0; i<CSize3D; i++)
-              {
-                for (int v = 0 ; v < NCOMP_TOTAL ;v++) Cons[v] = CData[CSize3D*v+i];
-                Hydro_Con2Pri( Cons, Prim, MIN_PRES,
-                               OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
-                               JeansMinPres_No, NULL_REAL,
-                               EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
-                               EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+//          2. interpolate primitive variables with the original min-mod coefficient
+            else if ( Iteration == 1  &&  IntPrim )
+            {
+               for (int i=0; i<CSize3D; i++)
+               {
+                  for (int v=0; v<NCOMP_TOTAL; v++)   Cons[v] = CData[ CSize3D*v + i ];
+                  Hydro_Con2Pri( Cons, Prim, MIN_PRES,
+                                 OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
+                                 JeansMinPres_No, NULL_REAL,
+                                 EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
+                                 EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
-                for (int v = 0 ; v < NCOMP_TOTAL ;v++) CData[CSize3D*v+i] = Prim[v];
-              }
+                  for (int v=0; v<NCOMP_TOTAL; v++)   CData[ CSize3D*v + i ] = Prim[v];
+               }
 
-              FData_is_Prim = true;
-           }
-
-
-//         3. reduce the original min-mod coefficient
-           else
-           {
-//            as vanLeer, MinMod-3D, and MinMod-1D do not involve min-mod coefficient, we break the loop immediately
-              if ( IntScheme == INT_VANLEER  ||  IntScheme == INT_MINMOD3D  ||  IntScheme == INT_MINMOD1D )    break;
-
-              // process always skip this block when MINMOD_MAX_ITER == 0
-              // --> no division by zero occurs
-              IntMonoCoeff -= (real)INT_MONO_COEFF / (real)MINMOD_MAX_ITER;
-
-              // ensure IntMonoCoeff is non-negative
-              IntMonoCoeff = FMAX( IntMonoCoeff, (real)0.0 );
-           }
+               FData_is_Prim = true;
+            }
 
 
-//         4. perform interpolation
-           for (int v=0; v<NComp; v++)
-              Int_Scheme_FunPtr( CData+v*CSize3D, CSize, CStart, CRange, FData+v*FSize3D,
-                                 FSize, FStart, 1, UnwrapPhase, Monotonic, IntMonoCoeff, OppSign0thOrder );
+//          3. reduce the original min-mod coefficient
+            else
+            {
+//             as vanLeer, MinMod-3D, and MinMod-1D do not use min-mod coefficient, we break the loop immediately
+               if ( IntScheme == INT_VANLEER  ||  IntScheme == INT_MINMOD3D  ||  IntScheme == INT_MINMOD1D )    break;
+
+//             no need to worry about MINMOD_MAX_ITER==0 since it is guaranteed to be positive here
+               IntMonoCoeff -= (real)INT_MONO_COEFF / (real)MINMOD_MAX_ITER;
+
+//             ensure IntMonoCoeff is non-negative
+               IntMonoCoeff = FMAX( IntMonoCoeff, (real)0.0 );
+            }
 
 
-//         5. check failed cell
-           for (int i=0; i<FSize3D; i++)
-           {
-              for (int v=0; v<NCOMP_TOTAL; v++)    Array[v] = FData[FSize3D*v+i];
-
-              GotFailCell = Hydro_CheckUnphysical( (FData_is_Prim)?UNPHY_MODE_PRIM:UNPHY_MODE_CONS, Array, NULL,
-                                                   __FILE__, __FUNCTION__, __LINE__, UNPHY_SILENCE );
-              if ( GotFailCell )    break;
-           }
+//          4. perform interpolation
+            for (int v=0; v<NComp; v++)
+               Int_Scheme_FunPtr( CData+v*CSize3D, CSize, CStart, CRange, FData+v*FSize3D,
+                                  FSize, FStart, 1, UnwrapPhase, Monotonic, IntMonoCoeff, OppSign0thOrder );
 
 
-//         6. counter increment
-           Iteration++;
+//          5. check unphysical results
+            for (int i=0; i<FSize3D; i++)
+            {
+               for (int v=0; v<NCOMP_TOTAL; v++)   Array[v] = FData[ FSize3D*v + i ];
+
+               GotFailCell = Hydro_CheckUnphysical( (FData_is_Prim)?UNPHY_MODE_PRIM:UNPHY_MODE_CONS, Array, NULL,
+                                                    __FILE__, __FUNCTION__, __LINE__, UNPHY_SILENCE );
+               if ( GotFailCell )   break;
+            }
+
+
+//          6. counter increment
+            Iteration ++;
 
          } while ( GotFailCell  &&  Iteration <= MINMOD_MAX_ITER );
       } // if ( ReduceMinModCoeff )
@@ -237,25 +233,25 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
       {
          for (int i=0; i<FSize3D; i++)
          {
-            for (int v=0; v<NCOMP_TOTAL; v++)   Prim[v] = FData[FSize3D*v+i];
+            for (int v=0; v<NCOMP_TOTAL; v++)   Prim[v] = FData[ FSize3D*v + i ];
 
             Hydro_Pri2Con( Prim, Cons, OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
                            EoS_DensPres2Eint_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
-            for (int v=0; v<NCOMP_TOTAL; v++)   FData[FSize3D*v+i] = Cons[v];
+            for (int v=0; v<NCOMP_TOTAL; v++)   FData[ FSize3D*v + i ] = Cons[v];
          }
       }
 
 
-//    check unphysical results
+//    print out unphysical results
 #     ifdef CHECK_UNPHYSICAL_IN_FLUID
       for (int i=0; i<FSize3D; i++)
       {
-         for (int v=0; v<NCOMP_TOTAL; v++)    Cons[v] = FData[FSize3D*v+i];
+         for (int v=0; v<NCOMP_TOTAL; v++)   Cons[v] = FData[ FSize3D*v + i ];
 
          if (  Hydro_CheckUnphysical( UNPHY_MODE_CONS, Cons, NULL,  __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE )  )
-           Aux_Message( stderr, "NComp=%d, IntScheme=%d, UnwrapPhase=%d, Monotonic=%d, OppSign0thOrder=%d, IntPrim=%d, ReduceMinModCoeff=%d",
-                        NComp, IntScheme, UnwrapPhase, Monotonic, OppSign0thOrder, IntPrim, ReduceMinModCoeff );
+            Aux_Message( stderr, "NComp=%d, IntScheme=%d, UnwrapPhase=%d, Monotonic=%d, OppSign0thOrder=%d, IntPrim=%d, ReduceMinModCoeff=%d",
+                         NComp, IntScheme, UnwrapPhase, Monotonic, OppSign0thOrder, IntPrim, ReduceMinModCoeff );
       }
 #     endif
 #     endif // #if ( MODEL == HYDRO )
