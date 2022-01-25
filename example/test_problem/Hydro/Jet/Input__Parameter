@@ -105,7 +105,6 @@ OPT__1ST_FLUX_CORR           -1           # correct unphysical results (defined 
                                           # (<0=auto, 0=off, 1=3D, 2=3D+1D) [-1] ##MHM/MHM_RP/CTU ONLY##
 OPT__1ST_FLUX_CORR_SCHEME    -1           # Riemann solver for OPT__1ST_FLUX_CORR (<0=auto, 0=none, 1=Roe, 2=HLLC, 3=HLLE, 4=HLLD) [-1]
 DUAL_ENERGY_SWITCH            2.0e-2      # apply dual-energy if E_int/E_kin < DUAL_ENERGY_SWITCH [2.0e-2] ##DUAL_ENERGY ONLY##
-OPT__MINMOD_MAX_ITR           4           # maximum iteration number to reduce MINMOD_COEFF [4] (0 means do not reduce MINMOD_COEFF)
 
 
 # fluid solvers in all models
@@ -160,6 +159,7 @@ OPT__RHO_INT_SCHEME           4           # ghost-zone mass density for the Pois
 OPT__GRA_INT_SCHEME           5           # ghost-zone potential for the gravity solver (for UNSPLIT_GRAVITY as well) [5]
 OPT__REF_POT_INT_SCHEME       5           # newly allocated potential during grid refinement [5]
 INT_MONO_COEFF                2.0         # coefficient for ensuring the interpolation monotonicity (1.0~4.0) [2.0]
+MINMOD_MAX_ITER               4           # maximum number of iterations to reduce MINMOD_COEFF/INT_MONO_COEFF when interpolation fails (0=off) [4]
 
 
 # data dump

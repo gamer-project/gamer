@@ -54,16 +54,16 @@
 //                EoS               : EoS object
 //                                    --> Only for obtaining Gamma used by the dual-energy formalism
 //                FullStepFailure   : (1/0) --> (Fail to update fluid patch group/otherwise)
-//                                    --> FullStepFailure can be NULL, for which both Iteration and MinMod_Max_Itr become useless.
-//                Iteration         : Current iteration number. It should be <= OPT__MINMOD_MAX_ITR
-//                MinMod_Max_Itr    : Maximum iteration number to reduce min-mod coefficient. (i.e., OPT__MINMOD_MAX_ITR)
+//                                    --> FullStepFailure can be NULL, for which both Iteration and MinMod_Max_Iter become useless
+//                Iteration         : Current iteration number (should be <= MinMod_Max_Iter)
+//                MinMod_Max_Iter   : Maximum number of iterations to reduce the min-mod coefficient (i.e., MINMOD_MAX_ITER)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                            const real dt, const real dh, const real MinDens, const real MinEint,
                            const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
-                           const EoS_t *EoS, int *FullStepFailure, const int Iteration, const int MinMod_Max_Itr )
+                           const EoS_t *EoS, int *FullStepFailure, const int Iteration, const int MinMod_Max_Iter )
 {
 
    const int  didx_flux[3] = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };
@@ -190,16 +190,11 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 
 
 //       5-2. return all threads within a block when any cell in the block is unphysical
-//            --> return only when Iteration < MinMod_Max_Itr, ensuring
-//                that the rest of cells in the patch group are stored properly
-         if ( *FullStepFailure == 1 && Iteration < MinMod_Max_Itr )     return;
-
-
+//            --> return only when Iteration < MinMod_Max_Iter, ensuring that the rest of
+//                cells in the patch group are stored properly when Iteration == MinMod_Max_Iter
+         if ( *FullStepFailure == 1  &&  Iteration < MinMod_Max_Iter )   return;
       }
-
-
    } // CGPU_LOOP( idx_out, CUBE(PS2) )
-
 
 } // FUNCTION : Hydro_FullStepUpdate
 

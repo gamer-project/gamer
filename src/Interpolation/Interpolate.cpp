@@ -199,14 +199,12 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 //         3. reduce the original min-mod coefficient
            else
            {
-
-              // process always skip this block when OPT__MINMOD_MAX_ITR == 0
+              // process always skip this block when MINMOD_MAX_ITER == 0
               // --> no division by zero occurs
-              IntMonoCoeff -= (real)INT_MONO_COEFF / (real)OPT__MINMOD_MAX_ITR;
+              IntMonoCoeff -= (real)INT_MONO_COEFF / (real)MINMOD_MAX_ITER;
 
               // ensure IntMonoCoeff is non-negative
               IntMonoCoeff = FMAX( IntMonoCoeff, (real)0.0 );
-
            }
 
 
@@ -234,7 +232,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
 
 
-        } while ( GotFailCell && Iteration <= OPT__MINMOD_MAX_ITR );
+        } while ( GotFailCell  &&  Iteration <= MINMOD_MAX_ITER );
 
      }
      else
