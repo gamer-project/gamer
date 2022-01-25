@@ -37,6 +37,7 @@ void Int_Quartic   ( real CData[], const int CSize[3], const int CStart[3], cons
 //                   --> Enabled by ReduceMinModCoeff
 //                   --> Not applicable for MinMod-3D, MinMod-1D, and vanLeer since they do not use min-mod coefficient
 //                   --> Must have NComp == NCOMP_TOTAL
+//                   --> Only applicable for HYDRO
 //                3. Switch from conserved to primitive variables when detecting unphysical results
 //                   --> Enabled by IntPrim
 //                   --> Must have NComp == NCOMP_TOTAL
@@ -45,6 +46,7 @@ void Int_Quartic   ( real CData[], const int CSize[3], const int CStart[3], cons
 //                       But it will preserve conservation when used in ghost-zone interpolation since ghost zones
 //                       do not affect conservation
 //                       --> InterpolateGhostZone()
+//                   --> Only applicable for HYDRO
 //                4. Procedure
 //                   a. Interpolate conserved variables with the original min-mod coefficient
 //                   b. [IntPrim] If interpolation fails, interpolate primitive variables with the
@@ -87,68 +89,73 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
                   const IntPrim_t IntPrim, const ReduceOrFixMinModCoeff_t ReduceMinModCoeff )
 {
 
-//   check
-#    ifdef GAMER_DEBUG
-     int NGhost, NSide;
-     Int_Table( IntScheme, NSide, NGhost );
+//    check
+#     ifdef GAMER_DEBUG
+      int NGhost, NSide;
+      Int_Table( IntScheme, NSide, NGhost );
 
-     for (int d=0; d<3; d++)
-     {
-        if ( CSize[d] < 0 )     Aux_Error( ERROR_INFO, "CSize[%d] = %d < 0 !!\n", d, CSize[d] );
-        if ( FSize[d] < 0 )     Aux_Error( ERROR_INFO, "FSize[%d] = %d < 0 !!\n", d, FSize[d] );
-        if ( CStart[d] < NGhost  ||  CStart[d] >= CSize[d]-NGhost )
-           Aux_Error( ERROR_INFO, "incorrect CStart[%d] = %d (Min = %d, Max = %d) !!\n",
-                      d, CStart[d], NGhost, CSize[d]-NGhost-1 );
-        if ( FStart[d] < 0  ||  FStart[d] >= FSize[d]-1 )
-           Aux_Error( ERROR_INFO, "incorrect FStart[%d] = %d (Min = %d, Max = %d) !!\n",
-                      d, FStart[d], 0, FSize[d]-2 );
-        if ( CStart[d]+CRange[d] >= CSize[d]-NGhost+1 )
-           Aux_Error( ERROR_INFO, "incorrect CStart[%d] (%d) + CRange[%d] (%d) = %d (Max = %d) !!\n",
-                      d, CStart[d], d, CRange[d], CStart[d]+CRange[d], CSize[d]-NGhost );
-     }
+      for (int d=0; d<3; d++)
+      {
+         if ( CSize[d] < 0 )  Aux_Error( ERROR_INFO, "CSize[%d] = %d < 0 !!\n", d, CSize[d] );
+         if ( FSize[d] < 0 )  Aux_Error( ERROR_INFO, "FSize[%d] = %d < 0 !!\n", d, FSize[d] );
+         if ( CStart[d] < NGhost  ||  CStart[d] >= CSize[d]-NGhost )
+            Aux_Error( ERROR_INFO, "incorrect CStart[%d] = %d (Min = %d, Max = %d) !!\n",
+                       d, CStart[d], NGhost, CSize[d]-NGhost-1 );
+         if ( FStart[d] < 0  ||  FStart[d] >= FSize[d]-1 )
+            Aux_Error( ERROR_INFO, "incorrect FStart[%d] = %d (Min = %d, Max = %d) !!\n",
+                       d, FStart[d], 0, FSize[d]-2 );
+         if ( CStart[d]+CRange[d] >= CSize[d]-NGhost+1 )
+            Aux_Error( ERROR_INFO, "incorrect CStart[%d] (%d) + CRange[%d] (%d) = %d (Max = %d) !!\n",
+                       d, CStart[d], d, CRange[d], CStart[d]+CRange[d], CSize[d]-NGhost );
+      }
 
-     if ( UnwrapPhase )
-     {
-#       if ( MODEL == ELBDM )
-        if ( IntScheme == INT_MINMOD1D )
-        Aux_Error( ERROR_INFO, "unsupported phase interpolation scheme (%d) !!\n", IntScheme );
-#       else
-        Aux_Error( ERROR_INFO, "phase unwrapping is useful in ELBDM model only !!\n" );
-#       endif
-     }
-#    endif // #ifdef GAMER_DEBUG
+      if ( UnwrapPhase )
+      {
+#        if ( MODEL == ELBDM )
+         if ( IntScheme == INT_MINMOD1D )
+         Aux_Error( ERROR_INFO, "unsupported phase interpolation scheme (%d) !!\n", IntScheme );
+#        else
+         Aux_Error( ERROR_INFO, "phase unwrapping is useful in ELBDM model only !!\n" );
+#        endif
+      }
+#     endif // #ifdef GAMER_DEBUG
 
-     if ( ReduceMinModCoeff  &&  NComp != NCOMP_TOTAL )
-        Aux_Error( ERROR_INFO, "NComp (%d) != NCOMP_TOTAL (%d) for ReduceMinModCoeff !!\n", NComp, NCOMP_TOTAL );
+      if ( ReduceMinModCoeff  &&  NComp != NCOMP_TOTAL )
+         Aux_Error( ERROR_INFO, "NComp (%d) != NCOMP_TOTAL (%d) for ReduceMinModCoeff !!\n", NComp, NCOMP_TOTAL );
 
-     if ( IntPrim  &&  NComp != NCOMP_TOTAL )
-        Aux_Error( ERROR_INFO, "NComp (%d) != NCOMP_TOTAL (%d) for IntPrim !!\n", NComp, NCOMP_TOTAL );
-
-
-     int Iteration = 0;
-     real IntMonoCoeff = NULL_REAL;
-     Int_Scheme_t Int_Scheme_FunPtr = NULL;
-     bool GotFailCell = false;
-     const int CSize3D = CSize[0]*CSize[1]*CSize[2];
-     const int FSize3D = FSize[0]*FSize[1]*FSize[2];
-     real Cons[NCOMP_TOTAL], Prim[NCOMP_TOTAL], Array[NCOMP_TOTAL];
-     bool FData_is_Prim = false;
-     const bool JeansMinPres_No = false;
+      if ( IntPrim  &&  NComp != NCOMP_TOTAL )
+         Aux_Error( ERROR_INFO, "NComp (%d) != NCOMP_TOTAL (%d) for IntPrim !!\n", NComp, NCOMP_TOTAL );
 
 
-//   select an interpolation scheme and assign it to Int_Scheme_FunPtr()
-     Int_Scheme_FunPtr = Int_SelectScheme( IntScheme );
+      const int CSize3D = CSize[0]*CSize[1]*CSize[2];
+      const int FSize3D = FSize[0]*FSize[1]*FSize[2];
 
-#    ifdef GAMER_DEBUG
-     if ( Int_Scheme_FunPtr == NULL )  Aux_Error( ERROR_INFO, "Int_Scheme_FunPtr == NULL!!\n" );
-#    endif
+      int          Iteration         = 0;
+      real         IntMonoCoeff      = NULL_REAL;
+      Int_Scheme_t Int_Scheme_FunPtr = NULL;
+      bool         GotFailCell       = false;
+
+#     if ( MODEL == HYDRO )
+      const bool JeansMinPres_No = false;
+      bool FData_is_Prim = false;
+      real Cons[NCOMP_TOTAL], Prim[NCOMP_TOTAL], Array[NCOMP_TOTAL];
+#     endif
 
 
-     if ( ReduceMinModCoeff )
-     {
-        do {
-//         0. initialize GotFailCell as false
-           GotFailCell = false;
+//    select an interpolation scheme and assign it to Int_Scheme_FunPtr()
+      Int_Scheme_FunPtr = Int_SelectScheme( IntScheme );
+
+#     ifdef GAMER_DEBUG
+      if ( Int_Scheme_FunPtr == NULL )    Aux_Error( ERROR_INFO, "Int_Scheme_FunPtr == NULL!!\n" );
+#     endif
+
+
+#     if ( MODEL == HYDRO )
+      if ( ReduceMinModCoeff )
+      {
+         do {
+//          0. initialize GotFailCell as false
+            GotFailCell = false;
 
 
 //         1. adopt the original min-mod coefficient first
@@ -202,33 +209,33 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 //         5. check failed cell
            for (int i=0; i<FSize3D; i++)
            {
-
               for (int v=0; v<NCOMP_TOTAL; v++)    Array[v] = FData[FSize3D*v+i];
 
               GotFailCell = Hydro_CheckUnphysical( (FData_is_Prim)?UNPHY_MODE_PRIM:UNPHY_MODE_CONS, Array, NULL,
                                                    __FILE__, __FUNCTION__, __LINE__, UNPHY_SILENCE );
               if ( GotFailCell )    break;
-
            }
 
 
 //         6. counter increment
            Iteration++;
 
-        } while ( GotFailCell  &&  Iteration <= MINMOD_MAX_ITER );
-     } // if ( ReduceMinModCoeff )
+         } while ( GotFailCell  &&  Iteration <= MINMOD_MAX_ITER );
+      } // if ( ReduceMinModCoeff )
 
-     else
-     {
+      else
+#     endif // if ( MODEL == HYDRO )
+      {
          for (int v=0; v<NComp; v++)
             Int_Scheme_FunPtr( CData+v*CSize3D, CSize, CStart, CRange, FData+v*FSize3D,
                                FSize, FStart, 1, UnwrapPhase, Monotonic, INT_MONO_COEFF, OppSign0thOrder );
-     } // if ( ReduceMinModCoeff ) ... else ...
+      } // if ( ReduceMinModCoeff ) ... else ...
 
 
-//   transform FData[] storing primitive variables back to conserved variables
-     if ( FData_is_Prim )
-     {
+#     if ( MODEL == HYDRO )
+//    transform FData[] storing primitive variables back to conserved variables
+      if ( FData_is_Prim )
+      {
          for (int i=0; i<FSize3D; i++)
          {
             for (int v=0; v<NCOMP_TOTAL; v++)   Prim[v] = FData[FSize3D*v+i];
@@ -238,20 +245,21 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
             for (int v=0; v<NCOMP_TOTAL; v++)   FData[FSize3D*v+i] = Cons[v];
          }
-     }
+      }
 
 
-//   check unphysical results
-#    ifdef CHECK_UNPHYSICAL_IN_FLUID
-     for (int i=0; i<FSize3D; i++)
-     {
-        for (int v=0; v<NCOMP_TOTAL; v++)    Cons[v] = FData[FSize3D*v+i];
+//    check unphysical results
+#     ifdef CHECK_UNPHYSICAL_IN_FLUID
+      for (int i=0; i<FSize3D; i++)
+      {
+         for (int v=0; v<NCOMP_TOTAL; v++)    Cons[v] = FData[FSize3D*v+i];
 
-        if (  Hydro_CheckUnphysical( UNPHY_MODE_CONS, Cons, NULL,  __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE )  )
-          Aux_Message( stderr, "NComp=%d, IntScheme=%d, UnwrapPhase=%d, Monotonic=%d, OppSign0thOrder=%d, IntPrim=%d, ReduceMinModCoeff=%d",
-                       NComp, IntScheme, UnwrapPhase, Monotonic, OppSign0thOrder, IntPrim, ReduceMinModCoeff );
-     }
-#    endif
+         if (  Hydro_CheckUnphysical( UNPHY_MODE_CONS, Cons, NULL,  __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE )  )
+           Aux_Message( stderr, "NComp=%d, IntScheme=%d, UnwrapPhase=%d, Monotonic=%d, OppSign0thOrder=%d, IntPrim=%d, ReduceMinModCoeff=%d",
+                        NComp, IntScheme, UnwrapPhase, Monotonic, OppSign0thOrder, IntPrim, ReduceMinModCoeff );
+      }
+#     endif
+#     endif // #if ( MODEL == HYDRO )
 
 } // FUNCTION : Interpolate
 
