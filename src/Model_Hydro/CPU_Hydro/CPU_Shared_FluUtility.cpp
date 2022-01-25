@@ -538,8 +538,8 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
 {
 
 #  ifdef GAMER_DEBUG
-   if ( Fields == NULL ) printf("ERROR: access a NULL pointer at file <%s>, line <%d>, function <%s>!!\n",
-                          File, Line, Function );
+   if ( Fields == NULL )   printf( "ERROR: access a NULL pointer at file <%s>, line <%d>, function <%s> !!\n",
+                                   File, Line, Function );
 #  endif
 
    bool FailCell = false;
