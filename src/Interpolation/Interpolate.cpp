@@ -196,9 +196,8 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
 
 //       4. perform interpolation
-         for (int v=0; v<NComp; v++)
-            IntSchemeFunc( CData+v*CSize3D, CSize, CStart, CRange, FData+v*FSize3D,
-                           FSize, FStart, 1, UnwrapPhase, Monotonic, IntMonoCoeff, OppSign0thOrder );
+         IntSchemeFunc( CData, CSize, CStart, CRange, FData, FSize, FStart, NComp,
+                        UnwrapPhase, Monotonic, IntMonoCoeff, OppSign0thOrder );
 
 
 //       5. check unphysical results
@@ -221,9 +220,8 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
    else
 #  endif // if ( MODEL == HYDRO )
    {
-      for (int v=0; v<NComp; v++)
-         IntSchemeFunc( CData+v*CSize3D, CSize, CStart, CRange, FData+v*FSize3D,
-                        FSize, FStart, 1, UnwrapPhase, Monotonic, INT_MONO_COEFF, OppSign0thOrder );
+      IntSchemeFunc( CData, CSize, CStart, CRange, FData, FSize, FStart, NComp,
+                     UnwrapPhase, Monotonic, INT_MONO_COEFF, OppSign0thOrder );
    } // if ( ReduceMinModCoeff ) ... else ...
 
 
