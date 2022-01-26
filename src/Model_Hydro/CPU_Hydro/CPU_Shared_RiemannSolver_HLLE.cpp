@@ -241,6 +241,7 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
 #  ifdef MHD
    real X, Y;  // Eqs. (B15) and (B16) in ref-b
    real Cax2_Roe, Cat2_Roe, Ca2_plus_a2_Roe, Ca2_min_a2_Roe, Cf2_min_Cs2_Roe;
+   real Gamma_m1_mY;    // Gamma_m1 - Y
 #  endif
 
    V2_Roe  = SQR( u_Roe ) + SQR( v_Roe ) + SQR( w_Roe );
@@ -263,9 +264,10 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
    Y               = ONE;
 #  endif // #ifdef EULER ... else ...
    Y              *= Gamma_m2;
+   Gamma_m1_mY     = Gamma_m1 - Y;
    a2_Roe         -= X;
    Cax2_Roe        = SQR(Bx_Roe)*_Rho_Roe;
-   Cat2_Roe        = ( Gamma_m1 - Y )*Bt2_Roe*_Rho_Roe;
+   Cat2_Roe        = Gamma_m1_mY*Bt2_Roe*_Rho_Roe;
    Ca2_plus_a2_Roe = Cat2_Roe + Cax2_Roe + a2_Roe;
    Ca2_min_a2_Roe  = Cat2_Roe + Cax2_Roe - a2_Roe;
    Cf2_min_Cs2_Roe = SQRT( SQR(Ca2_min_a2_Roe) + (real)4.0*a2_Roe*Cat2_Roe );
@@ -274,7 +276,7 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
    Hydro_CheckUnphysical( UNPHY_MODE_SING, &a2_Roe, "a2_Roe", ERROR_INFO, UNPHY_VERBOSE );
 
 #  ifdef MHD
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Gamma_m1-Y, "Gamma_m1-Y", ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Gamma_m1_mY, "Gamma_m1-Y", ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 #  endif // #ifdef CHECK_UNPHYSICAL_IN_FLUID
 
