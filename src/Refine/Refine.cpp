@@ -690,9 +690,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
          else // if ( OPT__INT_PHASE )
          {
-            for (int v=0; v<NCOMP_TOTAL; v++)
-            Interpolate( &Flu_CData[v][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[v][0][0][0],
-                         FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity,
+            Interpolate( &Flu_CData[0][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[0][0][0][0],
+                         FSize_CC3, FStart_CC, NCOMP_TOTAL, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity,
                          IntOppSign0thOrder_No, INT_PRIM_NO, INT_FIX_MINMOD_COEFF );
          }
 
