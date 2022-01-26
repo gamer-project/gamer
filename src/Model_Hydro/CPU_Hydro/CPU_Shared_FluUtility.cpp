@@ -4,7 +4,6 @@
 
 
 #include "CUFLU.h"
-#include "stdio.h"
 
 #if ( MODEL == HYDRO )
 
@@ -553,10 +552,12 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
             FailCell = true;
 
 //       print out the unphysical value
+#        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
          if ( FailCell && Verbose )
             printf( "ERROR: invalid %s (%14.7e) at file <%s>, line <%d>, function <%s> !!\n",
                     (SingleFieldName==NULL)?"unknown field":SingleFieldName, Fields[0],
                     File, Line, Function );
+#        endif
 
       break;
 
@@ -606,6 +607,7 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
 #        endif
 
 //       print out the unphysical values
+#        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
          if ( FailCell && Verbose )
          {
             printf( "ERROR: unphysical conserved variables at file <%s>, line <%d>, function <%s> !!\n",
@@ -621,6 +623,7 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
             printf( "\n" );
 #           endif
          }
+#        endif
 
       break;
 
@@ -657,6 +660,7 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
          } // for (int v=0; v<NCOMP_TOTAL; v++)
 
 //       print out the unphysical values
+#        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
          if ( FailCell && Verbose )
          {
             printf( "ERROR: unphysical primitive variables at file <%s>, line <%d>, function <%s> !!\n",
@@ -669,6 +673,7 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
             printf( "\n" );
 #           endif
          }
+#        endif
 
       break;
 
@@ -688,6 +693,7 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
          }
 
 //       print out the unphysical values
+#        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
          if ( FailCell && Verbose )
          {
             printf( "ERROR: unphysical passive scalars at file <%s>, line <%d>, function <%s> !!\n",
@@ -698,13 +704,17 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
             printf( "\n" );
 #           endif
          }
+#        endif
 
       break;
 
 
       default:
+#        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
          printf( "ERROR : unsupported mode (%d) at file <%s>, line <%d>, function <%s> !!\n",
                  Mode, File, Line, Function );
+#        endif
+      break;
 
    } // switch ( Mode )
 
