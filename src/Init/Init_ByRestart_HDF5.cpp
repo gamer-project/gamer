@@ -1099,7 +1099,7 @@ herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Ta
 
 
 // comparison
-   char ArrayIdx[10];
+   char ArrayIdx[MAX_STRING];
 
 // compare strings
    if ( NCompr > 0  &&  typeid(T) == typeid(char) )
