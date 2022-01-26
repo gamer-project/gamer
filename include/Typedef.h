@@ -178,7 +178,7 @@ const Check_t
    CHECK_ON  = 1;
 
 
-// check unphysical quanties
+// check unphysical quantities
 typedef int CheckUnphysical_t;
 const CheckUnphysical_t
    UNPHY_MODE_SING         = 0,  // check single field
