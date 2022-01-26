@@ -103,7 +103,7 @@ real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const re
 real Hydro_CheckMinPres( const real InPres, const real MinPres );
 real Hydro_CheckMinEint( const real InEint, const real MinEint );
 bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], const char SingleFieldName[],
-                            const char File[], const char Function[], const int Line, const CheckUnphysical_t Verbose );
+                            const char File[], const int Line, const char Function[], const CheckUnphysical_t Verbose );
 void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
 #ifdef DUAL_ENERGY
 void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, const real MomZ,

@@ -172,7 +172,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //    5. check unphysical cells within a patch group
       if ( FullStepFailure != NULL )
       {
-         if (  Hydro_CheckUnphysical( UNPHY_MODE_CONS, Output_1Cell, NULL, __FILE__, __FUNCTION__, __LINE__, UNPHY_SILENCE )  )
+         if (  Hydro_CheckUnphysical( UNPHY_MODE_CONS, Output_1Cell, NULL, ERROR_INFO, UNPHY_SILENCE )  )
          {
 #           ifdef __CUDACC__
             atomicExch_block( FullStepFailure, 1 );

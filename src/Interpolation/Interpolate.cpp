@@ -207,7 +207,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
                for (int v=0; v<NCOMP_TOTAL; v++)   Array[v] = FData[ FSize3D*v + i ];
 
                GotFailCell = Hydro_CheckUnphysical( (FData_is_Prim)?UNPHY_MODE_PRIM:UNPHY_MODE_CONS, Array, NULL,
-                                                    __FILE__, __FUNCTION__, __LINE__, UNPHY_SILENCE );
+                                                    ERROR_INFO, UNPHY_SILENCE );
                if ( GotFailCell )   break;
             }
 
@@ -249,7 +249,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
       {
          for (int v=0; v<NCOMP_TOTAL; v++)   Cons[v] = FData[ FSize3D*v + i ];
 
-         if (  Hydro_CheckUnphysical( UNPHY_MODE_CONS, Cons, NULL,  __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE )  )
+         if (  Hydro_CheckUnphysical( UNPHY_MODE_CONS, Cons, NULL, ERROR_INFO, UNPHY_VERBOSE )  )
             Aux_Message( stderr, "NComp=%d, IntScheme=%d, UnwrapPhase=%d, Monotonic=%d, OppSign0thOrder=%d, IntPrim=%d, ReduceMinModCoeff=%d",
                          NComp, IntScheme, UnwrapPhase, Monotonic, OppSign0thOrder, IntPrim, ReduceMinModCoeff );
       }
