@@ -439,32 +439,32 @@ const PatchType_t
 
 
 // function pointers
-typedef real (*EoS_DE2P_t)  ( const real Dens, const real Eint, const real Passive[],
-                              const double AuxArray_Flt[], const int AuxArray_Int[],
-                              const real *const Table[EOS_NTABLE_MAX] );
-typedef real (*EoS_DP2E_t)  ( const real Dens, const real Pres, const real Passive[],
-                              const double AuxArray_Flt[], const int AuxArray_Int[],
-                              const real *const Table[EOS_NTABLE_MAX] );
-typedef real (*EoS_DP2C_t)  ( const real Dens, const real Pres, const real Passive[],
-                              const double AuxArray_Flt[], const int AuxArray_Int[],
-                              const real *const Table[EOS_NTABLE_MAX] );
-typedef void (*EoS_GENE_t)  ( const int Mode, real Out[], const real In_Flt[], const int In_Int[],
-                              const double AuxArray_Flt[], const int AuxArray_Int[],
-                              const real *const Table[EOS_NTABLE_MAX] );
-typedef real (*EoS_DE2T_t)  ( const real Dens, const real Eint, const real Passive[],
-                              const double AuxArray_Flt[], const int AuxArray_Int[],
-                              const real *const Table[EOS_NTABLE_MAX] );
-typedef real (*EoS_DT2P_t)  ( const real Dens, const real Temp, const real Passive[],
-                              const double AuxArray_Flt[], const int AuxArray_Int[],
-                              const real *const Table[EOS_NTABLE_MAX] );
-typedef void (*ExtAcc_t)    ( real Acc[], const double x, const double y, const double z, const double Time,
-                              const double UserArray[] );
-typedef real (*ExtPot_t)    ( const double x, const double y, const double z, const double Time,
-                              const double UserArray_Flt[], const int UserArray_Int[],
-                              const ExtPotUsage_t Usage, const real PotTable[], void **GenePtr );
-typedef void (*Int_Scheme_t)( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
-                                    real FData[], const int FSize[3], const int FStart[3], const int NComp,
-                              const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
+typedef real (*EoS_DE2P_t)     ( const real Dens, const real Eint, const real Passive[],
+                                 const double AuxArray_Flt[], const int AuxArray_Int[],
+                                 const real *const Table[EOS_NTABLE_MAX] );
+typedef real (*EoS_DP2E_t)     ( const real Dens, const real Pres, const real Passive[],
+                                 const double AuxArray_Flt[], const int AuxArray_Int[],
+                                 const real *const Table[EOS_NTABLE_MAX] );
+typedef real (*EoS_DP2C_t)     ( const real Dens, const real Pres, const real Passive[],
+                                 const double AuxArray_Flt[], const int AuxArray_Int[],
+                                 const real *const Table[EOS_NTABLE_MAX] );
+typedef void (*EoS_GENE_t)     ( const int Mode, real Out[], const real In_Flt[], const int In_Int[],
+                                 const double AuxArray_Flt[], const int AuxArray_Int[],
+                                 const real *const Table[EOS_NTABLE_MAX] );
+typedef real (*EoS_DE2T_t)     ( const real Dens, const real Eint, const real Passive[],
+                                 const double AuxArray_Flt[], const int AuxArray_Int[],
+                                 const real *const Table[EOS_NTABLE_MAX] );
+typedef real (*EoS_DT2P_t)     ( const real Dens, const real Temp, const real Passive[],
+                                 const double AuxArray_Flt[], const int AuxArray_Int[],
+                                 const real *const Table[EOS_NTABLE_MAX] );
+typedef void (*ExtAcc_t)       ( real Acc[], const double x, const double y, const double z, const double Time,
+                                 const double UserArray[] );
+typedef real (*ExtPot_t)       ( const double x, const double y, const double z, const double Time,
+                                 const double UserArray_Flt[], const int UserArray_Int[],
+                                 const ExtPotUsage_t Usage, const real PotTable[], void **GenePtr );
+typedef void (*IntSchemeFunc_t)( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
+                                 real FData[], const int FSize[3], const int FStart[3], const int NComp,
+                                 const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
 
 
 

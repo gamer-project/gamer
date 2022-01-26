@@ -1,7 +1,7 @@
 #include "GAMER.h"
 
 
-static Int_Scheme_t Int_SelectScheme( const IntScheme_t IntScheme );
+static IntSchemeFunc_t Int_SelectScheme( const IntScheme_t IntScheme );
 
 void Int_MinMod1D  ( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
                      real FData[], const int FSize[3], const int FStart[3], const int NComp,
@@ -130,10 +130,10 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
       const int CSize3D = CSize[0]*CSize[1]*CSize[2];
       const int FSize3D = FSize[0]*FSize[1]*FSize[2];
 
-      int          Iteration         = 0;
-      real         IntMonoCoeff      = NULL_REAL;
-      Int_Scheme_t Int_Scheme_FunPtr = NULL;
-      bool         GotFailCell       = false;
+      int             Iteration     = 0;
+      real            IntMonoCoeff  = NULL_REAL;
+      IntSchemeFunc_t IntSchemeFunc = NULL;
+      bool            GotFailCell   = false;
 
 #     if ( MODEL == HYDRO )
       const bool JeansMinPres_No = false;
@@ -143,10 +143,10 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
 
 //    select an interpolation scheme
-      Int_Scheme_FunPtr = Int_SelectScheme( IntScheme );
+      IntSchemeFunc = Int_SelectScheme( IntScheme );
 
 #     ifdef GAMER_DEBUG
-      if ( Int_Scheme_FunPtr == NULL )    Aux_Error( ERROR_INFO, "Int_Scheme_FunPtr == NULL!!\n" );
+      if ( IntSchemeFunc == NULL )  Aux_Error( ERROR_INFO, "IntSchemeFunc == NULL!!\n" );
 #     endif
 
 
@@ -197,8 +197,8 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
 //          4. perform interpolation
             for (int v=0; v<NComp; v++)
-               Int_Scheme_FunPtr( CData+v*CSize3D, CSize, CStart, CRange, FData+v*FSize3D,
-                                  FSize, FStart, 1, UnwrapPhase, Monotonic, IntMonoCoeff, OppSign0thOrder );
+               IntSchemeFunc( CData+v*CSize3D, CSize, CStart, CRange, FData+v*FSize3D,
+                              FSize, FStart, 1, UnwrapPhase, Monotonic, IntMonoCoeff, OppSign0thOrder );
 
 
 //          5. check unphysical results
@@ -222,8 +222,8 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 #     endif // if ( MODEL == HYDRO )
       {
          for (int v=0; v<NComp; v++)
-            Int_Scheme_FunPtr( CData+v*CSize3D, CSize, CStart, CRange, FData+v*FSize3D,
-                               FSize, FStart, 1, UnwrapPhase, Monotonic, INT_MONO_COEFF, OppSign0thOrder );
+            IntSchemeFunc( CData+v*CSize3D, CSize, CStart, CRange, FData+v*FSize3D,
+                           FSize, FStart, 1, UnwrapPhase, Monotonic, INT_MONO_COEFF, OppSign0thOrder );
       } // if ( ReduceMinModCoeff ) ... else ...
 
 
@@ -276,9 +276,9 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 //                                INT_CQUAR    : conservative quartic
 //                                INT_QUAR     : quartic
 //
-// Return      :  Int_Scheme_t Int_Scheme_FunPtr
+// Return      :  IntSchemeFunc_t
 //-------------------------------------------------------------------------------------------------------
-static Int_Scheme_t Int_SelectScheme( const IntScheme_t IntScheme )
+static IntSchemeFunc_t Int_SelectScheme( const IntScheme_t IntScheme )
 {
 
    switch ( IntScheme )
