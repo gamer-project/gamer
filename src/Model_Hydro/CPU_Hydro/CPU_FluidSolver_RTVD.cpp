@@ -46,15 +46,15 @@ static void TransposeXZ( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] );
 //                EoS           : EoS object
 //-------------------------------------------------------------------------------------------------------
 void CPU_FluidSolver_RTVD(
-     real Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
-     real Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
-     real Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
-     const double Corner_Array[][3],
-     const real Pot_Array_USG[][ CUBE(USG_NXT_F) ],
-     const int NPatchGroup, const real dt, const real dh,
-     const bool StoreFlux, const bool XYZ,
-     const real MinDens, const real MinPres, const real MinEint,
-     const EoS_t EoS )
+   real Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+   real Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
+   real Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
+   const double Corner_Array[][3],
+   const real Pot_Array_USG[][ CUBE(USG_NXT_F) ],
+   const int NPatchGroup, const real dt, const real dh,
+   const bool StoreFlux, const bool XYZ,
+   const real MinDens, const real MinPres, const real MinEint,
+   const EoS_t EoS )
 {
 
    if ( XYZ )

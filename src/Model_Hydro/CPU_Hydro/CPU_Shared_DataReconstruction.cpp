@@ -182,6 +182,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #  endif
 #  endif // GAMER_DEBUG
 
+
    const int  didx_cc[3]     = { 1, NIn, SQR(NIn) };
 
 #  if ( FLU_SCHEME == CTU )

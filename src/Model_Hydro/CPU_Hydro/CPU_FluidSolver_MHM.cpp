@@ -149,12 +149,8 @@ static void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 //                5. Arrays with a prefix "g_" are stored in the global memory of GPU
 //                6. If an unphysical result occurs in the full-step update, we redo data reconstruction by
 //                   reducing the original minmod coefficient repeatedly until either the unphysical result is
-//                   solved or the reduced minmod coefficient equals zero
-//                   If the failure still occurs, we further reduce the minmod coefficient
-//                   repeatedly until either Hydro_CheckUnphysical() return false
-//                   or the reduced minmod coefficient vanishes. Note that interpolating
-//                   with a vanished minmod coefficient is essentially equivalent to the
-//                   piecewise constant spatial reconstruction.
+//                   solved or the reduced minmod coefficient equals zero. Note that interpolating with a
+//                   vanished minmod coefficient is equivalent to the piecewise constant spatial reconstruction.
 //
 //
 // Parameter   :  g_Flu_Array_In     : Array storing the input fluid variables
