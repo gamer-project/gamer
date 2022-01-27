@@ -173,6 +173,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //    5. check unphysical cells within a patch group
       if ( s_FullStepFailure != NULL )
       {
+//       5-1. check
          if (  Hydro_CheckUnphysical( UNPHY_MODE_CONS, Output_1Cell, NULL, ERROR_INFO, UNPHY_SILENCE )  )
          {
 #           ifdef __CUDACC__
@@ -183,27 +184,21 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
          }
 
 
-//       5-1. waiting all threads within a GPU block
+//       5-2. synchronize all threads within a GPU thread block
 #        ifdef __CUDACC__
          __syncthreads();
 #        endif
 
 
-//       5-2. return all threads within a block when any cell in the block is unphysical
-         if ( *s_FullStepFailure == 1 )
+//       5-3. check if there are still unphysical results after iterations
+#        ifdef CHECK_UNPHYSICAL_IN_FLUID
+         if ( *s_FullStepFailure == 1  &&  Iteration == MinMod_MaxIter )
          {
-//          return only when Iteration < MinMod_MaxIter to ensure that the rest of cells in the patch group
-//          are stored properly in the last iteration (i.e., when Iteration == MinMod_MaxIter)
-            if ( Iteration < MinMod_MaxIter )  return;
-#           ifdef CHECK_UNPHYSICAL_IN_FLUID
-            else
-            {
-               printf( "Unphysical results at the end of the fluid solver:" );
-               for (int v=0; v<NCOMP_TOTAL; v++)   printf( " [%d]=%14.7e", v, Output_1Cell[v] );
-               printf( "\n" );
-            }
-#           endif
+            printf( "Unphysical results at the end of the fluid solver:" );
+            for (int v=0; v<NCOMP_TOTAL; v++)   printf( " [%d]=%14.7e", v, Output_1Cell[v] );
+            printf( "\n" );
          }
+#        endif
       } // if ( s_FullStepFailure != NULL )
    } // CGPU_LOOP( idx_out, CUBE(PS2) )
 
