@@ -32,7 +32,7 @@
 // Note        :  1. This function is shared by MHM, MHM_RP, and CTU schemes
 //                2. Invoke dual-energy check if DualEnergySwitch is on
 //                3. If any unphysical fluid cell is found in a patch group, Hydro_FullStepUpdate() will
-//                   return instantly unless Iteration==MinMod_Max_Iter
+//                   return instantly unless Iteration==MinMod_MaxIter
 //
 // Parameter   :  g_Input           : Array storing the input fluid data
 //                g_Output          : Array to store the updated fluid data
@@ -55,16 +55,16 @@
 //                EoS               : EoS object
 //                                    --> Only for obtaining Gamma used by the dual-energy formalism
 //                s_FullStepFailure : (1/0) --> (Fail to update fluid patch group/otherwise)
-//                                    --> s_FullStepFailure can be NULL, for which both Iteration and MinMod_Max_Iter become useless
-//                Iteration         : Current iteration number (should be <= MinMod_Max_Iter)
-//                MinMod_Max_Iter   : Maximum number of iterations to reduce the min-mod coefficient (i.e., MINMOD_MAX_ITER)
+//                                    --> s_FullStepFailure can be NULL, for which both Iteration and MinMod_MaxIter become useless
+//                Iteration         : Current iteration number (should be <= MinMod_MaxIter)
+//                MinMod_MaxIter    : Maximum number of iterations to reduce the min-mod coefficient (i.e., MINMOD_MAX_ITER)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                            const real dt, const real dh, const real MinDens, const real MinEint,
                            const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
-                           const EoS_t *EoS, int *s_FullStepFailure, const int Iteration, const int MinMod_Max_Iter )
+                           const EoS_t *EoS, int *s_FullStepFailure, const int Iteration, const int MinMod_MaxIter )
 {
 
    const int  didx_flux[3] = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };
@@ -192,9 +192,9 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //       5-2. return all threads within a block when any cell in the block is unphysical
          if ( *s_FullStepFailure == 1 )
          {
-//          return only when Iteration < MinMod_Max_Iter to ensure that the rest of cells in the patch group
-//          are stored properly in the last iteration (i.e., when Iteration == MinMod_Max_Iter)
-            if ( Iteration < MinMod_Max_Iter )  return;
+//          return only when Iteration < MinMod_MaxIter to ensure that the rest of cells in the patch group
+//          are stored properly in the last iteration (i.e., when Iteration == MinMod_MaxIter)
+            if ( Iteration < MinMod_MaxIter )  return;
 #           ifdef CHECK_UNPHYSICAL_IN_FLUID
             else
             {

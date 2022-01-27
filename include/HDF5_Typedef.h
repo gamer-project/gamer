@@ -608,7 +608,7 @@ struct InputPara_t
    int    Opt__RefPot_IntScheme;
 #  endif
    double IntMonoCoeff;
-   int    MinMod_Max_Iter;
+   int    MinMod_MaxIter;
    int    IntOppSign0thOrder;
 
 // data dump
