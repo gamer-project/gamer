@@ -29,7 +29,7 @@ void Par_MapMesh2Particles ( const int lv, const int P, const double EdgeL[3],
       else
       {
 //       skip tracer particles
-         if ( ParType[ParID] != PTYPE_TRACER )
+         if ( ParType[ParID] == PTYPE_TRACER )
             continue;
       }
 
