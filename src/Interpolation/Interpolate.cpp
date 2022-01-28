@@ -129,6 +129,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
    const int CSize3D = CSize[0]*CSize[1]*CSize[2];
    const int FSize3D = FSize[0]*FSize[1]*FSize[2];
+   const int MaxIter = ( IntPrim ) ? MINMOD_MAX_ITER+1 : MINMOD_MAX_ITER;
 
    int             Iteration     = 0;
    real            IntMonoCoeff  = NULL_REAL;
@@ -214,7 +215,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 //       6. counter increment
          Iteration ++;
 
-      } while ( GotFailCell  &&  Iteration <= MINMOD_MAX_ITER );
+      } while ( GotFailCell  &&  Iteration <= MaxIter );
    } // if ( ReduceMinModCoeff )
 
    else
@@ -242,14 +243,15 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
 
 // print out unphysical results
-#  ifdef CHECK_UNPHYSICAL_IN_FLUID
+#  ifdef GAMER_DEBUG
+   if ( ReduceMinModCoeff )
    for (int i=0; i<FSize3D; i++)
    {
       for (int v=0; v<NCOMP_TOTAL; v++)   Cons[v] = FData[ FSize3D*v + i ];
 
       if (  Hydro_CheckUnphysical( UNPHY_MODE_CONS, Cons, NULL, ERROR_INFO, UNPHY_VERBOSE )  )
-         Aux_Message( stderr, "NComp=%d, IntScheme=%d, UnwrapPhase=%d, Monotonic=%d, OppSign0thOrder=%d, IntPrim=%d, ReduceMinModCoeff=%d",
-                      NComp, IntScheme, UnwrapPhase, Monotonic, OppSign0thOrder, IntPrim, ReduceMinModCoeff );
+         Aux_Message( stderr, "NComp=%d, IntScheme=%d, UnwrapPhase=%d, Monotonic=%d, OppSign0thOrder=%d, IntPrim=%d, ReduceMinModCoeff=%d\n",
+                      NComp, IntScheme, UnwrapPhase, Monotonic[0], OppSign0thOrder, IntPrim, ReduceMinModCoeff );
    }
 #  endif
 #  endif // #if ( MODEL == HYDRO )
