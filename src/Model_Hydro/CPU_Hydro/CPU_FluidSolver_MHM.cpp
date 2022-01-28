@@ -54,7 +54,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                            const real dt, const real dh, const real MinDens, const real MinEint,
                            const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
-                           const EoS_t *EoS, int *s_FullStepFailure, const int Iteration, const int MinMod_Max_Itr );
+                           const EoS_t *EoS, int *s_FullStepFailure, const int Iteration, const int MinMod_MaxIter );
 #if   ( RSOLVER == EXACT )
 void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                 const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
@@ -149,12 +149,8 @@ static void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 //                5. Arrays with a prefix "g_" are stored in the global memory of GPU
 //                6. If an unphysical result occurs in the full-step update, we redo data reconstruction by
 //                   reducing the original minmod coefficient repeatedly until either the unphysical result is
-//                   solved or the reduced minmod coefficient equals zero
-//                   If the failure still occurs, we further reduce the minmod coefficient
-//                   repeatedly until either Hydro_CheckUnphysical() return false
-//                   or the reduced minmod coefficient vanishes. Note that interpolating
-//                   with a vanished minmod coefficient is essentially equivalent to the
-//                   piecewise constant spatial reconstruction.
+//                   solved or the reduced minmod coefficient equals zero. Note that interpolating with a
+//                   vanished minmod coefficient is equivalent to the piecewise constant spatial reconstruction.
 //
 //
 // Parameter   :  g_Flu_Array_In     : Array storing the input fluid variables
@@ -181,7 +177,7 @@ static void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 //                                     (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
 //                                                    vanLeer + generalized MinMod/extrema-preserving) limiter
 //                MinMod_Coeff       : Coefficient of the generalized MinMod limiter
-//                MinMod_Max_Itr     : Maximum iteration number to reduce MinMod_Coeff
+//                MinMod_MaxIter     : Maximum number of iterations to reduce MinMod_Coeff
 //                Time               : Current physical time                                 (for UNSPLIT_GRAVITY only)
 //                UsePot             : Add self-gravity and/or external potential            (for UNSPLIT_GRAVITY only)
 //                ExtAcc             : Add external acceleration                             (for UNSPLIT_GRAVITY only)
@@ -234,7 +230,7 @@ void CUFLU_FluidSolver_MHM(
          real   g_EC_Ele       [][NCOMP_MAG][ CUBE(N_EC_ELE) ],
    const real dt, const real dh,
    const bool StoreFlux, const bool StoreElectric,
-   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_Max_Itr, const double Time,
+   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter, const double Time,
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const real MinDens, const real MinPres, const real MinEint,
    const real DualEnergySwitch,
@@ -262,7 +258,7 @@ void CPU_FluidSolver_MHM(
    const int NPatchGroup,
    const real dt, const real dh,
    const bool StoreFlux, const bool StoreElectric,
-   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_Max_Itr, const double Time,
+   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter, const double Time,
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const double c_ExtAcc_AuxArray[],
    const real MinDens, const real MinPres, const real MinEint,
@@ -411,8 +407,8 @@ void CPU_FluidSolver_MHM(
 
          do {
 
-            real AdaptiveMinModCoeff = ( MinMod_Max_Itr == 0 ) ? MinMod_Coeff :
-            MinMod_Coeff - (real)Iteration * MinMod_Coeff / (real)MinMod_Max_Itr;
+            real AdaptiveMinModCoeff = ( MinMod_MaxIter == 0 ) ? MinMod_Coeff :
+            MinMod_Coeff - (real)Iteration * MinMod_Coeff / (real)MinMod_MaxIter;
 
 
 //          ensure adaptive MinMod_Coeff is non-negative
@@ -432,8 +428,8 @@ void CPU_FluidSolver_MHM(
 
          do {
 
-            real AdaptiveMinModCoeff = ( MinMod_Max_Itr == 0 ) ? MinMod_Coeff :
-            MinMod_Coeff - (real)Iteration * MinMod_Coeff / (real)MinMod_Max_Itr;
+            real AdaptiveMinModCoeff = ( MinMod_MaxIter == 0 ) ? MinMod_Coeff :
+            MinMod_Coeff - (real)Iteration * MinMod_Coeff / (real)MinMod_MaxIter;
 
 
 //          ensure adaptive MinMod_Coeff is non-negative
@@ -482,7 +478,7 @@ void CPU_FluidSolver_MHM(
 //          4. full-step evolution
             Hydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P], g_Mag_Array_Out[P],
                                   g_FC_Flux_1PG, dt, dh, MinDens, MinEint, DualEnergySwitch,
-                                  NormPassive, NNorm, c_NormIdx, &EoS, &s_FullStepFailure, Iteration, MinMod_Max_Itr );
+                                  NormPassive, NNorm, c_NormIdx, &EoS, &s_FullStepFailure, Iteration, MinMod_MaxIter );
 
 
 //          5. counter increment
@@ -490,7 +486,7 @@ void CPU_FluidSolver_MHM(
 
 
 
-         } while( s_FullStepFailure && Iteration <= MinMod_Max_Itr );
+         } while ( s_FullStepFailure  &&  Iteration <= MinMod_MaxIter );
 
       } // loop over all patch groups
    } // OpenMP parallel region

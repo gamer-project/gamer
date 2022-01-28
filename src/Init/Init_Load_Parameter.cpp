@@ -370,7 +370,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__REF_POT_INT_SCHEME",    &OPT__REF_POT_INT_SCHEME,         INT_QUAD,        1,             7              );
 #  endif
    ReadPara->Add( "INT_MONO_COEFF",             &INT_MONO_COEFF,                  2.0,             1.0,           4.0            );
-   ReadPara->Add( "OPT__MINMOD_MAX_ITR",        &OPT__MINMOD_MAX_ITR,             0,               0,             NoMax_int      );
+   ReadPara->Add( "MINMOD_MAX_ITER",            &MINMOD_MAX_ITER,                 4,               0,             NoMax_int      );
 #  if   ( MODEL == HYDRO )
    ReadPara->Add( "INT_OPP_SIGN_0TH_ORDER",     &INT_OPP_SIGN_0TH_ORDER,          true,            Useless_bool,  Useless_bool   );
 #  elif ( MODEL == ELBDM )

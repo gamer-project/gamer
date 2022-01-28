@@ -182,6 +182,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #  endif
 #  endif // GAMER_DEBUG
 
+
    const int  didx_cc[3]     = { 1, NIn, SQR(NIn) };
 
 #  if ( FLU_SCHEME == CTU )
@@ -1253,8 +1254,8 @@ void Hydro_Pri2Char( real InOut[], const real Dens, const real Pres, const real 
 #  endif
 
 #  if ( defined CHECK_UNPHYSICAL_IN_FLUID  &&  !defined MHD )
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "pressure", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Dens, "density" , __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "pressure", ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Dens, "density" , ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 
@@ -1343,8 +1344,8 @@ void Hydro_Char2Pri( real InOut[], const real Dens, const real Pres, const real 
 #  endif
 
 #  if ( defined CHECK_UNPHYSICAL_IN_FLUID  &&  !defined MHD )
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "pressure", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Dens, "density" , __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "pressure", ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Dens, "density" , ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 
@@ -1446,8 +1447,8 @@ void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
 #  endif
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &CC_Var[4], "pressure", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &CC_Var[0], "density" , __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &CC_Var[4], "pressure", ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &CC_Var[0], "density" , ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 
@@ -1557,8 +1558,8 @@ void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
    }
    else {
 #     ifdef CHECK_UNPHYSICAL_IN_FLUID
-      Hydro_CheckUnphysical( UNPHY_MODE_SING, &a2_min_Cs2, "a2_min_Cs2", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
-      Hydro_CheckUnphysical( UNPHY_MODE_SING, &Cf2_min_a2, "Cf2_min_a2", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
+      Hydro_CheckUnphysical( UNPHY_MODE_SING, &a2_min_Cs2, "a2_min_Cs2", ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_CheckUnphysical( UNPHY_MODE_SING, &Cf2_min_a2, "Cf2_min_a2", ERROR_INFO, UNPHY_VERBOSE );
 #     endif
 
       const real _Cf2_min_Cs2 = (real)1.0 / Cf2_min_Cs2;

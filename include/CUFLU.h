@@ -121,15 +121,13 @@
 #endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 
 
-// check non-physical negative values (e.g., negative density) for the fluid solver
+// check non-physical values (e.g., negative density) for the fluid solver
 #if ( defined GAMER_DEBUG  &&  MODEL == HYDRO )
 #  define CHECK_UNPHYSICAL_IN_FLUID
 #endif
 
 #ifdef CHECK_UNPHYSICAL_IN_FLUID
 #  include "stdio.h"
-   bool Hydro_CheckUnphysical( const real Cons[], const real Prim[], const real* const Input, const real Passive[],
-                               const char Info[], const char File[], const char Function[], const int Line, bool Show );
 #endif
 
 
