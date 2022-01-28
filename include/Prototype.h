@@ -81,7 +81,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
                       const int NPatchGroup, const real dt, const real dh,
                       const bool StoreFlux, const bool StoreElectric,
-                      const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int Opt__MinMod_Max_Itr,
+                      const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter,
                       const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
                       const double Time, const bool UsePot, const OptExtAcc_t ExtAcc,
                       const real MinDens, const real MinPres, const real MinEint,
@@ -103,7 +103,7 @@ real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const re
 real Hydro_CheckMinPres( const real InPres, const real MinPres );
 real Hydro_CheckMinEint( const real InEint, const real MinEint );
 bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], const char SingleFieldName[],
-                            const char File[], const char Function[], const int Line, const CheckUnphysical_t Verbose );
+                            const char File[], const int Line, const char Function[], const CheckUnphysical_t Verbose );
 void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
 #ifdef DUAL_ENERGY
 void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, const real MomZ,
@@ -215,7 +215,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
                   real FData [], const int FSize[3], const int FStart[3],
                   const int NComp, const IntScheme_t IntScheme, const bool UnwrapPhase,
                   const bool Monotonic[], const bool OppSign0thOrder,
-                  const ReduceOrFixMinModCoeff_t IntWhere, const ReduceOrFixMinModCoeff_t AdaptiveMinmod );
+                  const IntPrim_t IntPrim, const ReduceOrFixMinModCoeff_t ReduceMinModCoeff );
 void Int_Table( const IntScheme_t IntScheme, int &NSide, int &NGhost );
 
 
@@ -528,7 +528,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
                              const int NPatchGroup, const real dt, const real dh,
                              const bool StoreFlux, const bool StoreElectric,
-                             const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int Opt__MinMod_Max_Itr,
+                             const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter,
                              const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
                              const double Time, const bool UsePot, const OptExtAcc_t ExtAcc,
                              const real MinDens, const real MinPres, const real MinEint,

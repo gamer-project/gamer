@@ -228,8 +228,8 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
    sqrt_RhoRst    = SQRT( Con_Rst[0] );
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Con_Lst[0], "Con_Lst[0]", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
-   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Con_Rst[0], "Con_Rst[0]", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Con_Lst[0], "Con_Lst[0]", ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Con_Rst[0], "Con_Rst[0]", ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
    tmp_1          = FABS( Bx );

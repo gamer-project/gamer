@@ -46,15 +46,15 @@ static void TransposeXZ( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] );
 //                EoS           : EoS object
 //-------------------------------------------------------------------------------------------------------
 void CPU_FluidSolver_RTVD(
-     real Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
-     real Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
-     real Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
-     const double Corner_Array[][3],
-     const real Pot_Array_USG[][ CUBE(USG_NXT_F) ],
-     const int NPatchGroup, const real dt, const real dh,
-     const bool StoreFlux, const bool XYZ,
-     const real MinDens, const real MinPres, const real MinEint,
-     const EoS_t EoS )
+   real Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+   real Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
+   real Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
+   const double Corner_Array[][3],
+   const real Pot_Array_USG[][ CUBE(USG_NXT_F) ],
+   const int NPatchGroup, const real dt, const real dh,
+   const bool StoreFlux, const bool XYZ,
+   const real MinDens, const real MinPres, const real MinEint,
+   const EoS_t EoS )
 {
 
    if ( XYZ )
@@ -231,8 +231,8 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
                                 EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
 
 #        ifdef CHECK_UNPHYSICAL_IN_FLUID
-         Hydro_CheckUnphysical( UNPHY_MODE_SING, &p,        "pressure", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
-         Hydro_CheckUnphysical( UNPHY_MODE_SING, &ux[0][i], "density",  __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
+         Hydro_CheckUnphysical( UNPHY_MODE_SING, &p,        "pressure", ERROR_INFO, UNPHY_VERBOSE );
+         Hydro_CheckUnphysical( UNPHY_MODE_SING, &ux[0][i], "density",  ERROR_INFO, UNPHY_VERBOSE );
 #        endif
 
          c    = FABS( vx ) + SQRT(  EoS->DensPres2CSqr_FuncPtr( ux[0][i], p, Passive, EoS->AuxArrayDevPtr_Flt,
@@ -293,8 +293,8 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
                                 EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
 
 #        ifdef CHECK_UNPHYSICAL_IN_FLUID
-         Hydro_CheckUnphysical( UNPHY_MODE_SING, &p,            "pressure", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
-         Hydro_CheckUnphysical( UNPHY_MODE_SING, &u_half[0][i], "density",  __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
+         Hydro_CheckUnphysical( UNPHY_MODE_SING, &p,            "pressure", ERROR_INFO, UNPHY_VERBOSE );
+         Hydro_CheckUnphysical( UNPHY_MODE_SING, &u_half[0][i], "density",  ERROR_INFO, UNPHY_VERBOSE );
 #        endif
 
          c    = FABS( vx ) + SQRT(  EoS->DensPres2CSqr_FuncPtr( u_half[0][i], p, Passive, EoS->AuxArrayDevPtr_Flt,
@@ -377,8 +377,8 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
 #     ifdef CHECK_UNPHYSICAL_IN_FLUID
       for (int i=3; i<FLU_NXT-3; i++)
       {
-         Hydro_CheckUnphysical( UNPHY_MODE_SING, &ux[0][i], "density", __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
-         Hydro_CheckUnphysical( UNPHY_MODE_SING, &ux[4][i], "energy",  __FILE__, __FUNCTION__, __LINE__, UNPHY_VERBOSE );
+         Hydro_CheckUnphysical( UNPHY_MODE_SING, &ux[0][i], "density", ERROR_INFO, UNPHY_VERBOSE );
+         Hydro_CheckUnphysical( UNPHY_MODE_SING, &ux[4][i], "energy",  ERROR_INFO, UNPHY_VERBOSE );
       }
 #     endif
 
