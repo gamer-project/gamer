@@ -194,11 +194,11 @@ const VerbosityLevelUnphy_t
    UNPHY_VERBOSE = 1;   // print out unphysical values
 
 
-// locally reduce min-mod coefficient or not
-typedef bool ReduceOrFixMinModCoeff_t;
-const ReduceOrFixMinModCoeff_t
-   INT_FIX_MINMOD_COEFF      = false, // fix min-mod coefficient
-   INT_REDUCE_MINMOD_COEFF   = true;  // locally reduce min-mod coefficient
+// locally reduce the monotonic coefficient or not
+typedef bool ReduceOrFixMonoCoeff_t;
+const ReduceOrFixMonoCoeff_t
+   INT_FIX_MONO_COEFF    = false,   // fix the coefficient
+   INT_REDUCE_MONO_COEFF = true;    // locally reduce the coefficient
 
 
 // whether switch from conserved to primitive variables when interpolation fails

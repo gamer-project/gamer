@@ -34,7 +34,7 @@ void Int_Quartic   ( real CData[], const int CSize[3], const int CStart[3], cons
 //
 // Note        :  1. Use IntScheme to determine the interpolation scheme
 //                2. Locally reduce the min-mod coefficient when detecting unphysical results
-//                   --> Enabled by ReduceMinModCoeff
+//                   --> Enabled by ReduceMonoCoeff
 //                   --> Not applicable for MinMod-3D, MinMod-1D, and vanLeer since they do not use min-mod coefficient
 //                   --> Must have NComp == NCOMP_TOTAL
 //                   --> Only applicable for HYDRO
@@ -51,7 +51,7 @@ void Int_Quartic   ( real CData[], const int CSize[3], const int CStart[3], cons
 //                   a. Interpolate conserved variables with the original min-mod coefficient
 //                   b. [IntPrim] If interpolation fails, interpolate primitive variables with the
 //                      original min-mod coefficient
-//                   c. [ReduceMinModCoeff] If interpolation fails again, interpolate conserved variables
+//                   c. [ReduceMonoCoeff] If interpolation fails again, interpolate conserved variables
 //                      (or primitive variables when enabling IntPrim) with a reduced min-mod coefficient
 //                      until either interpolation succeeds or the min-mod coefficient becomes zero
 //                5. CData[] may be overwritten
@@ -80,13 +80,13 @@ void Int_Quartic   ( real CData[], const int CSize[3], const int CStart[3], cons
 //                                    signs in adjacent cells
 //                                    --> See Int_MinMod1D() for details
 //                IntPrim           : Whether or not switch from conserved to primitive variables when interpolation fails
-//                ReduceMinModCoeff : (true/false) --> (reduce/fix) min-mod coefficient when interpolation fails
+//                ReduceMonoCoeff   : (true/false) --> (reduce/fix) min-mod coefficient when interpolation fails
 //-------------------------------------------------------------------------------------------------------
 void Interpolate( real CData [], const int CSize[3], const int CStart[3], const int CRange[3],
                   real FData [], const int FSize[3], const int FStart[3],
                   const int NComp, const IntScheme_t IntScheme, const bool UnwrapPhase,
                   const bool Monotonic[], const bool OppSign0thOrder,
-                  const IntPrim_t IntPrim, const ReduceOrFixMinModCoeff_t ReduceMinModCoeff )
+                  const IntPrim_t IntPrim, const ReduceOrFixMonoCoeff_t ReduceMonoCoeff )
 {
 
 // check
@@ -120,8 +120,8 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
    }
 #  endif // #ifdef GAMER_DEBUG
 
-   if ( ReduceMinModCoeff  &&  NComp != NCOMP_TOTAL )
-      Aux_Error( ERROR_INFO, "NComp (%d) != NCOMP_TOTAL (%d) for ReduceMinModCoeff !!\n", NComp, NCOMP_TOTAL );
+   if ( ReduceMonoCoeff  &&  NComp != NCOMP_TOTAL )
+      Aux_Error( ERROR_INFO, "NComp (%d) != NCOMP_TOTAL (%d) for ReduceMonoCoeff !!\n", NComp, NCOMP_TOTAL );
 
    if ( IntPrim  &&  NComp != NCOMP_TOTAL )
       Aux_Error( ERROR_INFO, "NComp (%d) != NCOMP_TOTAL (%d) for IntPrim !!\n", NComp, NCOMP_TOTAL );
@@ -129,7 +129,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
    const int CSize3D = CSize[0]*CSize[1]*CSize[2];
    const int FSize3D = FSize[0]*FSize[1]*FSize[2];
-   const int MaxIter = ( IntPrim ) ? MINMOD_MAX_ITER+1 : MINMOD_MAX_ITER;
+   const int MaxIter = ( IntPrim ) ? MONO_MAX_ITER+1 : MONO_MAX_ITER;
 
    int             Iteration     = 0;
    real            IntMonoCoeff  = NULL_REAL;
@@ -152,7 +152,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
 
 #  if ( MODEL == HYDRO )
-   if ( ReduceMinModCoeff )
+   if ( ReduceMonoCoeff )
    {
       do {
 //       0. initialize GotFailCell as false
@@ -188,8 +188,8 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 //          as vanLeer, MinMod-3D, and MinMod-1D do not use min-mod coefficient, we break the loop immediately
             if ( IntScheme == INT_VANLEER  ||  IntScheme == INT_MINMOD3D  ||  IntScheme == INT_MINMOD1D )    break;
 
-//          no need to worry about MINMOD_MAX_ITER==0 since it is guaranteed to be positive here
-            IntMonoCoeff -= (real)INT_MONO_COEFF / (real)MINMOD_MAX_ITER;
+//          no need to worry about MONO_MAX_ITER==0 since it is guaranteed to be positive here
+            IntMonoCoeff -= (real)INT_MONO_COEFF / (real)MONO_MAX_ITER;
 
 //          ensure IntMonoCoeff is non-negative
             IntMonoCoeff = FMAX( IntMonoCoeff, (real)0.0 );
@@ -216,14 +216,14 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
          Iteration ++;
 
       } while ( GotFailCell  &&  Iteration <= MaxIter );
-   } // if ( ReduceMinModCoeff )
+   } // if ( ReduceMonoCoeff )
 
    else
 #  endif // if ( MODEL == HYDRO )
    {
       IntSchemeFunc( CData, CSize, CStart, CRange, FData, FSize, FStart, NComp,
                      UnwrapPhase, Monotonic, INT_MONO_COEFF, OppSign0thOrder );
-   } // if ( ReduceMinModCoeff ) ... else ...
+   } // if ( ReduceMonoCoeff ) ... else ...
 
 
 #  if ( MODEL == HYDRO )
@@ -244,14 +244,14 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 
 // print out unphysical results
 #  ifdef GAMER_DEBUG
-   if ( ReduceMinModCoeff )
+   if ( ReduceMonoCoeff )
    for (int i=0; i<FSize3D; i++)
    {
       for (int v=0; v<NCOMP_TOTAL; v++)   Cons[v] = FData[ FSize3D*v + i ];
 
       if (  Hydro_CheckUnphysical( UNPHY_MODE_CONS, Cons, NULL, ERROR_INFO, UNPHY_VERBOSE )  )
-         Aux_Message( stderr, "NComp=%d, IntScheme=%d, UnwrapPhase=%d, Monotonic=%d, OppSign0thOrder=%d, IntPrim=%d, ReduceMinModCoeff=%d\n",
-                      NComp, IntScheme, UnwrapPhase, Monotonic[0], OppSign0thOrder, IntPrim, ReduceMinModCoeff );
+         Aux_Message( stderr, "NComp=%d, IntScheme=%d, UnwrapPhase=%d, Monotonic=%d, OppSign0thOrder=%d, IntPrim=%d, ReduceMonoCoeff=%d\n",
+                      NComp, IntScheme, UnwrapPhase, Monotonic[0], OppSign0thOrder, IntPrim, ReduceMonoCoeff );
    }
 #  endif
 #  endif // #if ( MODEL == HYDRO )

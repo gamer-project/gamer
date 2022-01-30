@@ -466,10 +466,11 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 
 #  if ( MODEL != HYDRO )
    const LR_Limiter_t  OPT__LR_LIMITER = LR_LIMITER_NONE;
-   const bool   Flu_XYZ      = true;
-   const double MINMOD_COEFF = NULL_REAL;
+   const bool   Flu_XYZ         = true;
+   const double MINMOD_COEFF    = NULL_REAL;
+   const int    MINMOD_MAX_ITER = NULL_INT;
 #  else
-   const bool   Flu_XYZ      = 1 - ( AdvanceCounter[lv]%2 );   // forward/backward sweep
+   const bool   Flu_XYZ         = 1 - ( AdvanceCounter[lv]%2 );   // forward/backward sweep
 #  endif
 
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
