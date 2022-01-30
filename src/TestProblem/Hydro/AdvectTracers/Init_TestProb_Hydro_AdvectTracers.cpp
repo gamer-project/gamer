@@ -106,9 +106,9 @@ void SetParameter()
    ReadPara->Add( "Advect_Dens_Bg",     &Advect_Dens_Bg,        1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "Advect_Pres_Bg",     &Advect_Pres_Bg,        1.0e5,        Eps_double,       NoMax_double      );
    ReadPara->Add( "Advect_Ang_Freq",    &Advect_Ang_Freq,       100.0,        Eps_double,       150.0             );
-   ReadPara->Add( "Advect_NparX",       &Advect_NPar[0],        32,           8,                NoMax_int         );
-   ReadPara->Add( "Advect_NparY",       &Advect_NPar[1],        32,           8,                NoMax_int         );
-   ReadPara->Add( "Advect_NparZ",       &Advect_NPar[2],        32,           8,                NoMax_int         );
+   ReadPara->Add( "Advect_NParX",       &Advect_NPar[0],        32,           2,                128               );
+   ReadPara->Add( "Advect_NParY",       &Advect_NPar[1],        32,           2,                128               );
+   ReadPara->Add( "Advect_NParZ",       &Advect_NPar[2],        32,           2,                128               );
    ReadPara->Add( "Advect_Par_Sep",     &Advect_Par_Sep,        0.5,          Eps_double,       NoMax_double      );
    ReadPara->Add( "Advect_Point_Mass",  &Advect_Point_Mass,     1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "Advect_Use_Tracers", &Advect_Use_Tracers,    true,         Useless_bool,     Useless_bool      );
