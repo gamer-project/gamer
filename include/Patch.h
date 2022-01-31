@@ -1063,7 +1063,7 @@ struct patch_t
       {
          LastP = NPar - 1;
 
-         NParType[(long)ParType[RemoveList[p]]]--;
+         NParType[  (long)ParType[ ParList[RemoveList[p]] ]  ] --;
 
          if ( RemoveList[p] != LastP )   ParList[ RemoveList[p] ] = ParList[ LastP ];
 
