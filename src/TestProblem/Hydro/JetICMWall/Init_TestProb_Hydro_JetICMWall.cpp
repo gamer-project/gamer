@@ -41,8 +41,8 @@ static double   Jet_Gamma;               // jet relativistic gamma
 static double   Jet_PrecessAngle;        // jet relativistic gamma
 static double   Jet_PrecessPeriod;       // jet relativistic gamma
 static double   Jet_PrecessOmega;        // jet relativistic gamma
-static double   Jet_Cosine;        // jet relativistic gamma
-static double   Jet_Sine;        // jet relativistic gamma
+static double   Jet_Cosine;              // jet relativistic gamma
+static double   Jet_Sine;                // jet relativistic gamma
 
 // =======================================================================================
 
@@ -309,6 +309,8 @@ void BC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu,
 
     const int j_ref = GhostSize;  // reference j index
 
+    int TFluVarIdx; 
+
     double rad = sqrt( SQR(pos[0]-Jet_Center[0]) + SQR(pos[2]-Jet_Center[1]) );
 
     // 1D array -> 3D array
@@ -319,18 +321,22 @@ void BC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu,
     if ( Jet_Fire && x <= 1.0 )
     {
       double u_jet = Jet_Velocity*(Jet_VelSlope*x+Jet_VelCenter);
-      double phi = Jet_PrecessOmega*Time;
+      double cos_phi = cos( Jet_PrecessOmega*Time );
+      double sin_phi = sin( Jet_PrecessOmega*Time );
       double LntzFact = sqrt( 1.0 + u_jet*u_jet );
-
+      double u_jet_x = u_jet*Jet_Sine*cos_phi;
+      double u_jet_y = u_jet*Jet_Cosine;
+      double u_jet_z = u_jet*Jet_Sine*sin_phi;
+      
       // set fluid variable inside source
       PriReal[0] = (real)Jet_Density;
-      PriReal[1] = 0.0;
-      PriReal[2] = (real)u_jet;
-      PriReal[3] = 0.0;
+      PriReal[1] = (real)u_jet_x;
+      PriReal[2] = (real)u_jet_y;
+      PriReal[3] = (real)u_jet_z;
       PriReal[4] = (real)Amb_Pressure;
 
-      Hydro_Pri2Con( PriReal, BVal, false, false, false, PassiveNorm_NVar, PassiveNorm_VarIdx, EoS_DensPres2Eint_CPUPtr,
-		     EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+      Hydro_Pri2Con( PriReal, BVal, false, false, false, PassiveNorm_NVar, PassiveNorm_VarIdx, 
+		     EoS_DensPres2Eint_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
 		     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
             
       BVal[JetFieldIdx] = (real)(LntzFact*Jet_Density);
@@ -341,8 +347,16 @@ void BC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu,
     else 
     { 
      
-      for (int v=0; v<NVar_Flu; v++)
-	BVal[TFluVarIdxList[v]] = Array3D[v][k][j_ref][i];
+      for (int v=0; v<NVar_Flu; v++) {
+
+	TFluVarIdx = TFluVarIdxList[v];
+
+	if ( TFluVarIdx == MOMY ) 
+	  BVal[TFluVarIdx] = MIN(Array3D[v][k][j_ref][i], 0.0);
+	else
+	  BVal[TFluVarIdx] = Array3D[v][k][j_ref][i];
+
+      }
 
     }
 
