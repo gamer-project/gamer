@@ -15,13 +15,13 @@ Note:
 1. Test particle capabilities: 2-body circular orbit for massive particles, a
    lattice of tracer particles which rotates due to a circular velocity field
    from the fluid with constant angular frequency
-2. Set Advect_Use_Tracers = 1 to use tracer particles, Advect_Use_Massive = 1
+2. Set ParTest_Use_Tracers = 1 to use tracer particles, ParTest_Use_Massive = 1
    to use massive particles. At least one must be enabled.
 3. Use the following scheme to set PAR_NPAR in Input__Parameter:
-   Advect_Use_Massive only: PAR_NPAR = 2
-   Advect_Use_Tracers only: PAR_NPAR = Advect_NParX*Advect_NParY*Advect_NParZ
-   Advect_Use_Massive and Advect_Use_Tracers: PAR_NPAR = 2 +
-   Advect_NParX*Advect_NParY*Advect_NParZ
+   ParTest_Use_Massive only: PAR_NPAR = 2
+   ParTest_Use_Tracers only: PAR_NPAR = ParTest_NParX*ParTest_NParY*ParTest_NParZ
+   ParTest_Use_Massive and ParTest_Use_Tracers: PAR_NPAR = 2 +
+   ParTest_NParX*ParTest_NParY*ParTest_NParZ
 3. OPT__FREEZE_FLUID must be = 1 for this test.
 4. If OPT__FLAG_USER is set, a rectangle will be refined in the center of the
    domain. Note that the active particle orbit is _not_ stable in this case due

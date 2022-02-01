@@ -51,7 +51,7 @@ const TestProbID_t
    TESTPROB_HYDRO_MHD_LINEAR_WAVE              =   15,
    TESTPROB_HYDRO_JEANS_INSTABILITY            =   16,
    TESTPROB_HYDRO_PARTICLE_EQUILIBRIUM_IC      =   17,
-   TESTPROB_HYDRO_ADVECT_TRACERS               =   18,
+   TESTPROB_HYDRO_PARTICLE_TEST                =   18,
    TESTPROB_HYDRO_BARRED_POT                   =   51,
    TESTPROB_ELBDM_EXTPOT                       = 1000;
 

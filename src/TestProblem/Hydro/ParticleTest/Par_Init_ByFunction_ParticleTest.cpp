@@ -2,15 +2,15 @@
 
 #ifdef PARTICLE
 
-extern int    Advect_NPar[3];
-extern double Advect_Point_Mass;
-extern double Advect_Par_Sep;
-extern bool   Advect_Use_Tracers;
-extern bool   Advect_Use_Massive;
+extern int    ParTest_NPar[3];
+extern double ParTest_Point_Mass;
+extern double ParTest_Par_Sep;
+extern bool   ParTest_Use_Tracers;
+extern bool   ParTest_Use_Massive;
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Par_Init_ByFunction_AdvectTracers
-// Description :  Initialize all particle attributes for the tracer advection test
+// Function    :  Par_Init_ByFunction_ParticleTest
+// Description :  Initialize all particle attributes for the particle test problem
 //                --> Modified from "Par_Init_ByFile.cpp"
 //
 // Note        :  1. Invoked by Init_GAMER() using the function pointer "Par_Init_ByFunction_Ptr"
@@ -48,17 +48,17 @@ extern bool   Advect_Use_Massive;
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParType, AllAttribute
 //-------------------------------------------------------------------------------------------------------
 
-void Par_Init_ByFunction_AdvectTracers( const long NPar_ThisRank, const long NPar_AllRank,
-                                        real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                        real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                        real *ParType, real *AllAttribute[PAR_NATT_TOTAL] )
+void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar_AllRank,
+                                       real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
+                                       real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
+                                       real *ParType, real *AllAttribute[PAR_NATT_TOTAL] )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
    long NPar_All = 0;
-   if ( Advect_Use_Massive ) NPar_All += 2;
-   if ( Advect_Use_Tracers ) NPar_All += Advect_NPar[0]*Advect_NPar[1]*Advect_NPar[2];
+   if ( ParTest_Use_Massive ) NPar_All += 2;
+   if ( ParTest_Use_Tracers ) NPar_All += ParTest_NPar[0]*ParTest_NPar[1]*ParTest_NPar[2];
 
    if ( NPar_All != NPar_AllRank )
       Aux_Error( ERROR_INFO, "total number of particles found [%ld] != expect [%ld] !!\n",
@@ -83,18 +83,18 @@ void Par_Init_ByFunction_AdvectTracers( const long NPar_ThisRank, const long NPa
 
       long p = 0;
 
-      if ( Advect_Use_Massive ) {
+      if ( ParTest_Use_Massive ) {
 
-         const double v = 0.5*SQRT(Const_NewtonG*Advect_Point_Mass/(0.5*Advect_Par_Sep));
+         const double v = 0.5*SQRT(Const_NewtonG*ParTest_Point_Mass/(0.5*ParTest_Par_Sep));
 
          for (int ii=0; ii<2; ii++) {
 
             const double dir = 2.0*ii-1.0;
 
-            ParData_AllRank[PAR_MASS][p] = real( Advect_Point_Mass );
+            ParData_AllRank[PAR_MASS][p] = real( ParTest_Point_Mass );
 
             ParData_AllRank[PAR_POSX][p] = real( 0.5*amr->BoxSize[0] +
-                 0.5*Advect_Par_Sep*dir );
+                 0.5*ParTest_Par_Sep*dir );
             ParData_AllRank[PAR_POSY][p] = real( 0.5*amr->BoxSize[1] );
             ParData_AllRank[PAR_POSZ][p] = real( 0.5*amr->BoxSize[2] );
 
@@ -109,20 +109,20 @@ void Par_Init_ByFunction_AdvectTracers( const long NPar_ThisRank, const long NPa
 
          }
 
-      } // if ( Advect_Use_Massive )
+      } // if ( ParTest_Use_Massive )
 
-      if ( Advect_Use_Tracers ) {
+      if ( ParTest_Use_Tracers ) {
 
-         const double delta_p[3] = { 0.5*amr->BoxSize[0]/(Advect_NPar[0]+1),
-                                     0.5*amr->BoxSize[1]/(Advect_NPar[1]+1),
-                                     0.5*amr->BoxSize[2]/(Advect_NPar[2]+1) };
+         const double delta_p[3] = { 0.5*amr->BoxSize[0]/(ParTest_NPar[0]+1),
+                                     0.5*amr->BoxSize[1]/(ParTest_NPar[1]+1),
+                                     0.5*amr->BoxSize[2]/(ParTest_NPar[2]+1) };
          
-         for (long kk=0; kk<Advect_NPar[2]; kk++)
-         for (long jj=0; jj<Advect_NPar[1]; jj++)
-         for (long ii=0; ii<Advect_NPar[0]; ii++)
+         for (long kk=0; kk<ParTest_NPar[2]; kk++)
+         for (long jj=0; jj<ParTest_NPar[1]; jj++)
+         for (long ii=0; ii<ParTest_NPar[0]; ii++)
          {
 
-            //const long p = IDX321( ii, jj, kk, Advect_NPar[0], Advect_NPar[1] );
+            //const long p = IDX321( ii, jj, kk, ParTest_NPar[0], ParTest_NPar[1] );
 
 //          tracer particles have no mass
             ParData_AllRank[PAR_MASS][p] = 0.0;
@@ -147,7 +147,7 @@ void Par_Init_ByFunction_AdvectTracers( const long NPar_ThisRank, const long NPa
 
          }
 
-      } // if ( Advect_Use_Tracers )
+      } // if ( ParTest_Use_Tracers )
 
    } // if ( MPI_Rank == 0 )
 
@@ -166,7 +166,7 @@ void Par_Init_ByFunction_AdvectTracers( const long NPar_ThisRank, const long NPa
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Par_Init_ByFunction_AdvectTracers
+} // FUNCTION : Par_Init_ByFunction_ParticleTest
 
 #endif // #ifdef PARTICLE
 

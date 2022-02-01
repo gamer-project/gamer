@@ -4,27 +4,27 @@
 
 // problem-specific global variables
 // =======================================================================================
-static double Advect_Dens_Bg;        // background mass density
-static double Advect_Pres_Bg;        // background pressure
-static double Advect_Ang_Freq;       // gas angular frequency
-       int    Advect_NPar[3];        // particles on a side
-       double Advect_Point_Mass;
-       double Advect_Par_Sep;
-       bool   Advect_Use_Tracers;
-       bool   Advect_Use_Massive;
+static double ParTest_Dens_Bg;        // background mass density
+static double ParTest_Pres_Bg;        // background pressure
+static double ParTest_Ang_Freq;       // gas angular frequency
+       int    ParTest_NPar[3];        // particles on a side
+       double ParTest_Point_Mass;
+       double ParTest_Par_Sep;
+       bool   ParTest_Use_Tracers;
+       bool   ParTest_Use_Massive;
 
 // =======================================================================================
 
 // problem-specific function prototypes
 #ifdef PARTICLE
-void Par_Init_ByFunction_AdvectTracers( const long NPar_ThisRank, const long NPar_AllRank,
-                                        real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                        real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                        real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
+void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar_AllRank,
+                                       real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
+                                       real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
+                                       real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
 #endif
 
-bool Flag_AdvectTracers( const int i, const int j, const int k, const int lv, 
-                         const int PID, const double *Threshold );
+bool Flag_ParticleTest( const int i, const int j, const int k, const int lv,
+                        const int PID, const double *Threshold );
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
@@ -103,28 +103,28 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE_ADDRESS,       DEFAULT,      MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "Advect_Dens_Bg",     &Advect_Dens_Bg,        1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Advect_Pres_Bg",     &Advect_Pres_Bg,        1.0e5,        Eps_double,       NoMax_double      );
-   ReadPara->Add( "Advect_Ang_Freq",    &Advect_Ang_Freq,       100.0,        Eps_double,       150.0             );
-   ReadPara->Add( "Advect_NParX",       &Advect_NPar[0],        32,           2,                128               );
-   ReadPara->Add( "Advect_NParY",       &Advect_NPar[1],        32,           2,                128               );
-   ReadPara->Add( "Advect_NParZ",       &Advect_NPar[2],        32,           2,                128               );
-   ReadPara->Add( "Advect_Par_Sep",     &Advect_Par_Sep,        0.5,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Advect_Point_Mass",  &Advect_Point_Mass,     1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Advect_Use_Tracers", &Advect_Use_Tracers,    true,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "Advect_Use_Massive", &Advect_Use_Massive,    true,         Useless_bool,     Useless_bool      );
+   ReadPara->Add( "ParTest_Dens_Bg",     &ParTest_Dens_Bg,        1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "ParTest_Pres_Bg",     &ParTest_Pres_Bg,        1.0e5,        Eps_double,       NoMax_double      );
+   ReadPara->Add( "ParTest_Ang_Freq",    &ParTest_Ang_Freq,       100.0,        Eps_double,       150.0             );
+   ReadPara->Add( "ParTest_NParX",       &ParTest_NPar[0],        32,           2,                128               );
+   ReadPara->Add( "ParTest_NParY",       &ParTest_NPar[1],        32,           2,                128               );
+   ReadPara->Add( "ParTest_NParZ",       &ParTest_NPar[2],        32,           2,                128               );
+   ReadPara->Add( "ParTest_Par_Sep",     &ParTest_Par_Sep,        0.5,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "ParTest_Point_Mass",  &ParTest_Point_Mass,     1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "ParTest_Use_Tracers", &ParTest_Use_Tracers,    true,         Useless_bool,     Useless_bool      );
+   ReadPara->Add( "ParTest_Use_Massive", &ParTest_Use_Massive,    true,         Useless_bool,     Useless_bool      );
 
    ReadPara->Read( FileName );
 
    delete ReadPara;
 
-   if ( !Advect_Use_Tracers && !Advect_Use_Massive )
+   if ( !ParTest_Use_Tracers && !ParTest_Use_Massive )
       Aux_Error( ERROR_INFO,
-                 "Either Advect_Use_Tracer, Advect_Use_Massive, or both must be true !!\n" );
+                 "Either ParTest_Use_Tracer, ParTest_Use_Massive, or both must be true !!\n" );
 
 // (2) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
-   const double End_T_Default    = 2*M_PI/Advect_Ang_Freq;
+   const double End_T_Default    = 2*M_PI/ParTest_Ang_Freq;
    const long   End_Step_Default = __INT_MAX__;
 
    if ( END_STEP < 0 ) {
@@ -143,9 +143,9 @@ void SetParameter()
    {
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "  test problem ID           = %d\n",     TESTPROB_ID     );
-      Aux_Message( stdout, "  background mass density   = %13.7e\n", Advect_Dens_Bg  );
-      Aux_Message( stdout, "  background pressure       = %13.7e\n", Advect_Pres_Bg  );
-      Aux_Message( stdout, "  angular frequency         = %13.7e\n", Advect_Ang_Freq );
+      Aux_Message( stdout, "  background mass density   = %13.7e\n", ParTest_Dens_Bg  );
+      Aux_Message( stdout, "  background pressure       = %13.7e\n", ParTest_Pres_Bg  );
+      Aux_Message( stdout, "  angular frequency         = %13.7e\n", ParTest_Ang_Freq );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -183,16 +183,16 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double dr[2]     = { x - 0.5*amr->BoxSize[0], y - 0.5*amr->BoxSize[1] };
    const double Radius    = sqrt( dr[0]*dr[0] + dr[1]*dr[1] );
 
-   const double Velocity = Advect_Ang_Freq*Radius;
+   const double Velocity = ParTest_Ang_Freq*Radius;
 
    const double Cos_theta = dr[0]/Radius;
    const double Sin_theta = dr[1]/Radius;
 
-   fluid[DENS] = Advect_Dens_Bg;
-   fluid[MOMX] = -Advect_Dens_Bg*Velocity*Sin_theta;
-   fluid[MOMY] = Advect_Dens_Bg*Velocity*Cos_theta;
+   fluid[DENS] = ParTest_Dens_Bg;
+   fluid[MOMX] = -ParTest_Dens_Bg*Velocity*Sin_theta;
+   fluid[MOMY] = ParTest_Dens_Bg*Velocity*Cos_theta;
    fluid[MOMZ] = 0.0;
-   fluid[ENGY] = Advect_Pres_Bg/(GAMMA-1.0);
+   fluid[ENGY] = ParTest_Pres_Bg/(GAMMA-1.0);
 
 } // FUNCTION : SetGridIC
 
@@ -201,7 +201,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_TestProb_Hydro_AdvectTracers
+// Function    :  Init_TestProb_Hydro_ParticleTest
 // Description :  Test problem initializer
 //
 // Note        :  None
@@ -210,7 +210,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Init_TestProb_Hydro_AdvectTracers()
+void Init_TestProb_Hydro_ParticleTest()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -228,24 +228,24 @@ void Init_TestProb_Hydro_AdvectTracers()
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr        = SetGridIC;
    Output_User_Ptr               = NULL;
-   Flag_User_Ptr                 = Flag_AdvectTracers;
+   Flag_User_Ptr                 = Flag_ParticleTest;
    Mis_GetTimeStep_User_Ptr      = NULL;
    Aux_Record_User_Ptr           = NULL;
    BC_User_Ptr                   = NULL;
    Flu_ResetByUser_Func_Ptr      = NULL;
    End_User_Ptr                  = NULL;
 #  ifdef PARTICLE
-   Par_Init_ByFunction_Ptr       = Par_Init_ByFunction_AdvectTracers;
+   Par_Init_ByFunction_Ptr       = Par_Init_ByFunction_ParticleTest;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Init_TestProb_Hydro_AdvectTracers
+} // FUNCTION : Init_TestProb_Hydro_ParticleTest
 
-bool Flag_AdvectTracers( const int i, const int j, const int k, const int lv, 
-                         const int PID, const double *Threshold )
+bool Flag_ParticleTest( const int i, const int j, const int k, const int lv,
+                        const int PID, const double *Threshold )
 {
 
    // Refine a rectanglar solid region in the center just to test behavior in
