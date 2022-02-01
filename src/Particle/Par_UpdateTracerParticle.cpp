@@ -16,23 +16,14 @@ void Par_MapMesh2Particles ( const int lv, const int P, const double EdgeL[3], c
 // Note        :  1. Does not take into account the "periodic B.C." when updating particles
 //                   --> After update, the particle position may lie outside the simulation box
 //                   --> It will be corrected by Par_PassParticle2Sibling()
-//                3. For the K-D-K scheme, this function performs either prediction (K-D) or correction (last K) operation
-//                   --> Use the input parameter "UpdateStep" to control
-//                4. For the Euler scheme, this function completes the full update
-//                   --> UpdateStep==PAR_UPSTEP_CORR is meaningless
-//                5. For KDK, particle time is set to -0.5*dt after the K-D operation to indicate that they require
-//                   velocity correction (the last K operation) later. Otherwise particles just cross from fine to coarse
-//                   grids cannot be distinguished from those already in the coarse grid, while we only want to apply
-//                   velocity correction to the former. After the velocity correction, particle time is set to TimeNew
-//                   For Euler, particle time is set to TimeNew in the PAR_UPSTEP_PRED step
-//                6. Particle time may not be synchronized (so different particles may have different time).
+//                2. Particle time may not be synchronized (so different particles may have different time).
 //                   --> For example, particles just cross from coarse (lv) to fine (lv+1) grids may have time greater than
 //                       other particles at lv+1. Also, particles just cross from fine (lv) to coarse (lv-1) grids may have
 //                       time less than other particles at lv-1.
 //                   --> Only update particles with time < TimeNew
 //
 // Parameter   :  lv           : Target refinement level
-//                TimeNew      : Target physical time to reach (also used by PAR_UPSTEP_ACC_ONLY)
+//                TimeNew      : Target physical time to reach
 //                TimeOld      : Physical time before update
 //-------------------------------------------------------------------------------------------------------
 void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double TimeOld,
@@ -68,11 +59,6 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
    real *VelX = new real [ 8*CUBE(VelSize) ];    // 8: number of patches per patch group
    real *VelY = new real [ 8*CUBE(VelSize) ];    // 8: number of patches per patch group
    real *VelZ = new real [ 8*CUBE(VelSize) ];    // 8: number of patches per patch group
-
-   //typedef real (*vla)[VelSize][VelSize][VelSize];
-   //vla VelX3D = ( vla )VelX;
-   //vla VelY3D = ( vla )VelY;
-   //vla VelZ3D = ( vla )VelZ;
 
    bool   GotYou;
    long   ParID;
