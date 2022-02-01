@@ -12,7 +12,7 @@ void Par_MapMesh2Particles ( const int lv, const int P, const double EdgeL[3],
    typedef real (*vla)[AttrSize3D][AttrSize3D][AttrSize3D];
    vla Attr3D = ( vla )Attr;
 
-   const ParInterp_t IntScheme    = amr->Par->Interp;
+   const ParInterp_t IntScheme    = amr->Par->InterpTracer;
 
    const double _dh               = 1.0/amr->dh[lv];
 

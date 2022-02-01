@@ -39,7 +39,6 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
                                bool mapOnly )
 {
 
-   const ParInterp_t IntScheme    = amr->Par->InterpTracer;
    const bool   IntPhase_No       = false;
    const bool   DE_Consistency_No = false;
    const real   MinDens_No        = -1.0;
