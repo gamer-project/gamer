@@ -353,6 +353,7 @@ struct InputPara_t
    int    Par_ICFormat;
    double Par_ICMass;
    int    Par_Interp;
+   int    Par_InterpTracer;
    int    Par_Integ;
    int    Par_IntegTracer;
    int    Par_ImproveAcc;

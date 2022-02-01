@@ -39,6 +39,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                ParICFormat             : Data format of the particle initialization file (1=[att][id], 2=[id][att])
 //                ParICMass               : Assign this mass to all particles for Init=3
 //                Interp                  : Mass/acceleration/velocity interpolation scheme (NGP,CIC,TSC)
+//                InterpTracer            : Mass/acceleration/velocity interpolation scheme for tracers (NGP,CIC,TSC)
 //                Integ                   : Integration scheme (PAR_INTEG_EULER, PAR_INTEG_KDK)
 //                IntegTracer             : Integration scheme for tracers (PAR_INTEG_EULER, PAR_INTEG_RK2)
 //                ImproveAcc              : Improve force accuracy around the patch boundaries
@@ -113,9 +114,10 @@ struct Particle_t
    ParInit_t     Init;
    ParICFormat_t ParICFormat;
    double        ParICMass;
-   ParInterp_t   Interp;
    ParInteg_t    Integ;
+   ParInterp_t   Interp;
    TracerInteg_t IntegTracer;
+   ParInterp_t   InterpTracer;
    bool          ImproveAcc;
    bool          PredictPos;
    double        RemoveCell;
@@ -180,6 +182,7 @@ struct Particle_t
       ParICFormat         = PAR_IC_FORMAT_NONE;
       ParICMass           = -1.0;
       Interp              = PAR_INTERP_NONE;
+      InterpTracer        = PAR_INTERP_NONE;
       Integ               = PAR_INTEG_NONE;
       IntegTracer         = TRACER_INTEG_NONE;
       ImproveAcc          = true;

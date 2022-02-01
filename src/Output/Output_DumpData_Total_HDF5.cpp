@@ -2271,6 +2271,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Par_ICFormat            = amr->Par->ParICFormat;
    InputPara.Par_ICMass              = amr->Par->ParICMass;
    InputPara.Par_Interp              = amr->Par->Interp;
+   InputPara.Par_InterpTracer        = amr->Par->InterpTracer;
    InputPara.Par_Integ               = amr->Par->Integ;
    InputPara.Par_IntegTracer         = amr->Par->IntegTracer;
    InputPara.Par_ImproveAcc          = amr->Par->ImproveAcc;
@@ -3095,6 +3096,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Par_ICFormat",            HOFFSET(InputPara_t,Par_ICFormat           ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_ICMass",              HOFFSET(InputPara_t,Par_ICMass             ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "Par_Interp",              HOFFSET(InputPara_t,Par_Interp             ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Par_InterpTracer",        HOFFSET(InputPara_t,Par_InterpTracer       ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_Integ",               HOFFSET(InputPara_t,Par_Integ              ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_IntegTracer",         HOFFSET(InputPara_t,Par_IntegTracer        ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_ImproveAcc",          HOFFSET(InputPara_t,Par_ImproveAcc         ), H5T_NATIVE_INT     );
