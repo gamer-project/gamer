@@ -103,9 +103,9 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE_ADDRESS,       DEFAULT,      MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "ParTest_Dens_Bg",     &ParTest_Dens_Bg,        1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "ParTest_Pres_Bg",     &ParTest_Pres_Bg,        1.0e5,        Eps_double,       NoMax_double      );
-   ReadPara->Add( "ParTest_Ang_Freq",    &ParTest_Ang_Freq,       100.0,        Eps_double,       150.0             );
+   ReadPara->Add( "ParTest_Dens_Bg",     &ParTest_Dens_Bg,        1.0e-2,       Eps_double,       NoMax_double      );
+   ReadPara->Add( "ParTest_Pres_Bg",     &ParTest_Pres_Bg,        1.0e-2,       Eps_double,       NoMax_double      );
+   ReadPara->Add( "ParTest_Ang_Freq",    &ParTest_Ang_Freq,       0.00051668,   Eps_double,       1.0e-3            );
    ReadPara->Add( "ParTest_NParX",       &ParTest_NPar[0],        32,           2,                128               );
    ReadPara->Add( "ParTest_NParY",       &ParTest_NPar[1],        32,           2,                128               );
    ReadPara->Add( "ParTest_NParZ",       &ParTest_NPar[2],        32,           2,                128               );
