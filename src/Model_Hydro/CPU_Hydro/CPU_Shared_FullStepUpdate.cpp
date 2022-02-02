@@ -174,7 +174,8 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
       if ( s_FullStepFailure != NULL )
       {
 //       5-1. check
-         if (  Hydro_CheckUnphysical( UNPHY_MODE_CONS, Output_1Cell, NULL, ERROR_INFO, UNPHY_SILENCE )  )
+         if (  Hydro_CheckUnphysical( UNPHY_MODE_CONS, Output_1Cell, NULL, ERROR_INFO,
+                                      (Iteration==MinMod_MaxIter)?UNPHY_VERBOSE:UNPHY_SILENCE )  )
          {
 #           ifdef __CUDACC__
             atomicExch_block( s_FullStepFailure, 1 );
@@ -187,17 +188,6 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //       5-2. synchronize all threads within a GPU thread block
 #        ifdef __CUDACC__
          __syncthreads();
-#        endif
-
-
-//       5-3. check if there are still unphysical results after iterations
-#        ifdef CHECK_UNPHYSICAL_IN_FLUID
-         if ( *s_FullStepFailure == 1  &&  Iteration == MinMod_MaxIter )
-         {
-            printf( "Unphysical results at the end of the fluid solver:" );
-            for (int v=0; v<NCOMP_TOTAL; v++)   printf( " [%d]=%14.7e", v, Output_1Cell[v] );
-            printf( "\n" );
-         }
 #        endif
       } // if ( s_FullStepFailure != NULL )
    } // CGPU_LOOP( idx_out, CUBE(PS2) )
