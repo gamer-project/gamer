@@ -731,7 +731,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                {
                   if ( InputMassPos[PAR_MASS] == NULL  ||  InputMassPos[PAR_POSX] == NULL  ||
                        InputMassPos[PAR_POSY] == NULL  ||  InputMassPos[PAR_POSZ] == NULL  ||
-                       InputMassPos[PAR_TYPE] )
+                       InputMassPos[PAR_TYPE] == NULL )
                      Aux_Error( ERROR_INFO, "InputMassPos[0/1/2/3/4] == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
                                 NPar, lv, PID );
                }
