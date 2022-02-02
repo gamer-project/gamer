@@ -648,14 +648,15 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
                   FailCell = true;
             }
 
-//          check mass and pressure
-            else if ( v < NCOMP_FLUID )
+//          check mass density
+            else if ( v == DENS )
             {
                if ( Fields[v] <= TINY_NUMBER  ||  Fields[v] >= HUGE_NUMBER )
                   FailCell = true;
             }
 
-//          check passive scalars (which can be zero)
+//          check pressure and passive scalars (which can be zero)
+//          --> allow pressure to be zero to tolerate round-off errors
             else
             {
                if ( Fields[v] < (real)0.0  ||  Fields[v] >= HUGE_NUMBER )
