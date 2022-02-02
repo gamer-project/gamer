@@ -67,10 +67,11 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
                            const EoS_t *EoS, int *s_FullStepFailure, const int Iteration, const int MinMod_MaxIter )
 {
 
-   const int  didx_flux[3] = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };
-   const real dt_dh        = dt/dh;
+   const int  didx_flux[3]    = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };
+   const real dt_dh           = dt/dh;
+   const bool CheckMinPres_No = false;
 
-   real dFlux[3][NCOMP_TOTAL], Output_1Cell[NCOMP_TOTAL], Emag;
+   real dFlux[3][NCOMP_TOTAL], Output_1Cell[NCOMP_TOTAL], Emag, Pres;
 
 
    const int size_ij = SQR(PS2);
@@ -113,6 +114,16 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
          Output_1Cell[v] = g_Input[v][idx_in] - dt_dh*( dFlux[0][v] + dFlux[1][v] + dFlux[2][v] );
 
 
+//    compute magnetic energy for later usage
+//    --> B field must be updated before calling Hydro_FullStepUpdate()
+#     ifdef MHD
+      Emag = MHD_GetCellCenteredBEnergy( g_FC_B[MAGX], g_FC_B[MAGY], g_FC_B[MAGZ],
+                                         PS2, PS2, PS2, i_out, j_out, k_out );
+#     else
+      Emag = NULL_REAL;
+#     endif
+
+
 //    we no longer ensure positive density and pressure here
 //    --> these checks have been moved to Flu_Close()->CorrectUnphysical()
 //        because we want to apply 1st-order-flux correction BEFORE setting a minimum density and pressure
@@ -120,12 +131,6 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //        even when DUAL_ENERGY is on, we still want to try the 1st-order-flux correction before setting a floor value)
 //    --> but for barotropic EoS, we apply Eint floor here to avoid any false alarm caused by Eint<0
 #     ifdef BAROTROPIC_EOS
-#     ifdef MHD
-      Emag = MHD_GetCellCenteredBEnergy( g_FC_B[MAGX], g_FC_B[MAGY], g_FC_B[MAGZ],
-                                         PS2, PS2, PS2, i_out, j_out, k_out );
-#     else
-      Emag = NULL_REAL;
-#     endif
 //    Output_1Cell[DENS] = FMAX( Output_1Cell[DENS], MinDens );
       Output_1Cell[ENGY] = Hydro_CheckMinEintInEngy( Output_1Cell[DENS], Output_1Cell[MOMX],
                                                      Output_1Cell[MOMY], Output_1Cell[MOMZ],
@@ -148,15 +153,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //        by the dual-energy formalism (i.e., for cells with their dual-energy status marked as DE_UPDATED_BY_DUAL)
 //    --> this feature might be modified in the future
 #     ifdef DUAL_ENERGY
-//    B field must be updated in advance
-#     ifdef MHD
-      Emag = MHD_GetCellCenteredBEnergy( g_FC_B[MAGX], g_FC_B[MAGY], g_FC_B[MAGZ],
-                                         PS2, PS2, PS2, i_out, j_out, k_out );
-#     else
-      Emag = NULL_REAL;
-#     endif
 //    we no longer apply density and pressure floors here since we want to enable 1st-order-flux correction for that
-      const bool CheckMinPres_No = false;
 //    Output_1Cell[DENS] = FMAX( Output_1Cell[DENS], MinDens );
 
       Hydro_DualEnergyFix( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
@@ -173,9 +170,16 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //    5. check unphysical cells within a patch group
       if ( s_FullStepFailure != NULL )
       {
+//       get pressure
+         Pres = Hydro_Con2Pres( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
+                                Output_1Cell[ENGY], Output_1Cell+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, Emag,
+                                EoS->DensEint2Pres_FuncPtr, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,
+                                EoS->Table, NULL );
+
 //       5-1. check
-         if (  Hydro_CheckUnphysical( UNPHY_MODE_CONS, Output_1Cell, NULL, ERROR_INFO,
-                                      (Iteration==MinMod_MaxIter)?UNPHY_VERBOSE:UNPHY_SILENCE )  )
+//       --> allow pressure to be zero to tolerate round-off errors
+         if (  Hydro_CheckUnphysical( UNPHY_MODE_CONS, Output_1Cell, NULL, ERROR_INFO, UNPHY_SILENCE )  ||
+               Pres < (real)0.0  ||  Pres >= HUGE_NUMBER  ||  Pres != Pres  )
          {
 #           ifdef __CUDACC__
             atomicExch_block( s_FullStepFailure, 1 );
@@ -188,6 +192,21 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //       5-2. synchronize all threads within a GPU thread block
 #        ifdef __CUDACC__
          __syncthreads();
+#        endif
+
+
+//       5-3. print out unphysical results after iterations for debugging
+#        ifdef CHECK_UNPHYSICAL_IN_FLUID
+         if ( *s_FullStepFailure == 1  &&  Iteration == MinMod_MaxIter )
+         {
+            printf( "Unphysical results at the end of the fluid solver:" );
+            for (int v=0; v<NCOMP_TOTAL; v++)   printf( " [%d]=%14.7e", v, Output_1Cell[v] );
+            printf( " Pres=%14.7e", Pres );
+#           ifdef MHD
+            printf( " Emag=%14.7e", Emag );
+#           endif
+            printf( "\n" );
+         }
 #        endif
       } // if ( s_FullStepFailure != NULL )
    } // CGPU_LOOP( idx_out, CUBE(PS2) )

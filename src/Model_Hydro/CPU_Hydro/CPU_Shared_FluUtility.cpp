@@ -513,6 +513,7 @@ real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY
 //                   UNPHY_MODE_PASSIVE_ONLY : Check if the input passive scalars are unphysical
 //                2. For UNPHY_MODE_CONS with SRHD, we also check if Eq. 15 in "Tseng et al. 2021, MNRAS, 504, 3298"
 //                   has a positive root
+//                3. UNPHY_MODE_CONS currently does not check gas pressure
 //
 // Parameter   :  Mode            : UNPHY_MODE_SING, UNPHY_MODE_CONS, UNPHY_MODE_PRIM, UNPHY_MODE_PASSIVE_ONLY
 //                                  --> See "Note" for details
