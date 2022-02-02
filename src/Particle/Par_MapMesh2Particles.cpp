@@ -209,25 +209,25 @@ void Par_MapMesh2Particles ( const int lv, const int P, const double EdgeL[3],
 //       calculate the nearest grid index
          for (int d=0; d<3; d++)
          {
-            idx[d] = int( ( InterpParPos[d][p] - EdgeL[d] )*_dh + ParGhost);
+            idx[d] = int( ( InterpParPos[d][p] - EdgeL[d] )*_dh + ParGhost );
 
 //          prevent from round-off errors (especially for NGP and TSC)
-            if ( idx[d] < 0 )
+            if ( idx[d] < 1 )
             {
 #              ifdef DEBUG_PARTICLE
                if (  ! Mis_CompareRealValue( InterpParPos[d][p], (real)EdgeL[d], NULL, false )  )
-                  Aux_Error( ERROR_INFO, "index outside the attr array (pos[%d] %14.7e, EdgeL %14.7e, idx %d) !!\n",
-                             d, InterpParPos[d][p], EdgeL[d], idx[d] );
+                  Aux_Error( ERROR_INFO, "index outside the attr array (pos[%d] %14.7e, EdgeL %14.7e, idx-1 %d) !!\n",
+                             d, InterpParPos[d][p], EdgeL[d], idx[d]-1 );
 #              endif
 
                idx[d] = 1;
             }
-            else if ( idx[d] >= AttrSize3D )
+            else if ( idx[d] >= AttrSize3D - 1 )
             {
 #              ifdef DEBUG_PARTICLE
                if (  ! Mis_CompareRealValue( InterpParPos[d][p], (real)EdgeR[d], NULL, false )  )
-                  Aux_Error( ERROR_INFO, "index outside the attr array (pos[%d] %14.7e, EdgeR %14.7e, idx %d) !!\n",
-                             d, InterpParPos[d][p], EdgeR[d], idx[d] );
+                  Aux_Error( ERROR_INFO, "index outside the attr array (pos[%d] %14.7e, EdgeR %14.7e, idx+1 %d) !!\n",
+                             d, InterpParPos[d][p], EdgeR[d], idx[d]+1 );
 #              endif
 
                idx[d] = AttrSize3D - 2;
@@ -244,7 +244,7 @@ void Par_MapMesh2Particles ( const int lv, const int P, const double EdgeL[3],
          for (int j=-1; j<=1; j++)
          for (int i=-1; i<=1; i++) {
 
-            deltav -= (double)Attr3D[ P ][ idx[2]+k ][ idx[1]+j ][ idx[0]+i ];
+            deltav += (double)Attr3D[ P ][ idx[2]+k ][ idx[1]+j ][ idx[0]+i ];
 
          }
 
