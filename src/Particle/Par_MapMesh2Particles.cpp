@@ -200,6 +200,8 @@ void Par_MapMesh2Particles ( const int lv, const int P, const double EdgeL[3],
       default: Aux_Error( ERROR_INFO, "unsupported particle interpolation scheme !!\n" );
       } // switch ( IntScheme )
 
+//    If this is a velocity field and we have asked to correct for the mean velocity,
+//    we do it here
       if ( CorrectVelocity ) {
 
          int idx[3];
