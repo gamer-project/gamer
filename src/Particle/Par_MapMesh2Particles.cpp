@@ -6,7 +6,8 @@ void Par_MapMesh2Particles ( const int lv, const int P, const double EdgeL[3],
                              const double EdgeR[3], const int AttrSize3D, const real *Attr,
                              const int NPar, real *InterpParPos[3],
                              const real ParType[], const long ParList[],
-                             bool useTracers, real ParAttr[], const int ParGhost )
+                             bool useTracers, real ParAttr[], const int ParGhost,
+                             const bool CorrectVelocity )
 {
 
    typedef real (*vla)[AttrSize3D][AttrSize3D][AttrSize3D];
@@ -199,7 +200,59 @@ void Par_MapMesh2Particles ( const int lv, const int P, const double EdgeL[3],
       default: Aux_Error( ERROR_INFO, "unsupported particle interpolation scheme !!\n" );
       } // switch ( IntScheme )
 
-   } //
+      if ( CorrectVelocity ) {
+
+         int idx[3];
+
+//       calculate the nearest grid index
+         for (int d=0; d<3; d++)
+         {
+            idx[d] = int( ( InterpParPos[d][p] - EdgeL[d] )*_dh + ParGhost);
+
+//          prevent from round-off errors (especially for NGP and TSC)
+            if ( idx[d] < 0 )
+            {
+#              ifdef DEBUG_PARTICLE
+               if (  ! Mis_CompareRealValue( InterpParPos[d][p], (real)EdgeL[d], NULL, false )  )
+                  Aux_Error( ERROR_INFO, "index outside the attr array (pos[%d] %14.7e, EdgeL %14.7e, idx %d) !!\n",
+                             d, InterpParPos[d][p], EdgeL[d], idx[d] );
+#              endif
+
+               idx[d] = 1;
+            }
+            else if ( idx[d] >= AttrSize3D )
+            {
+#              ifdef DEBUG_PARTICLE
+               if (  ! Mis_CompareRealValue( InterpParPos[d][p], (real)EdgeR[d], NULL, false )  )
+                  Aux_Error( ERROR_INFO, "index outside the attr array (pos[%d] %14.7e, EdgeR %14.7e, idx %d) !!\n",
+                             d, InterpParPos[d][p], EdgeR[d], idx[d] );
+#              endif
+
+               idx[d] = AttrSize3D - 2;
+            }
+         } // for (int d=0; d<3; d++)
+
+//       Now that we have the cell containing the particle, we compute the difference
+//       of the velocity of that cell from the mean of the 27 surrounding cells
+//       (including itself) and add this to the particle velocity
+
+         double deltav = 0.0;
+
+         for (int k=-1; k<=1; k++)
+         for (int j=-1; j<=1; j++)
+         for (int i=-1; i<=1; i++) {
+
+            deltav -= (double)Attr3D[ P ][ idx[2]+k ][ idx[1]+j ][ idx[0]+i ];
+
+         }
+
+         deltav = (double)Attr3D[ P ][ idx[2] ][ idx[1] ][ idx[0] ] - deltav/27.0;
+
+         ParAttr[p] += (real)deltav;
+
+      } // if ( CorrectVelocity )
+
+   } // for (int p=0; p<NPar; p++)
 
 } // FUNCTION : Par_MapMesh2Particles
 

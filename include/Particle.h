@@ -46,6 +46,8 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                                          (by using potential in the patch ghost zone instead of nearby patch
 //                                          or interpolation)
 //                PredictPos              : Predict particle position during mass assignment
+//                TracerVelCorr           : Apply velocity correction term for tracer particles in regions where
+//                                          the velocity gradient is large
 //                RemoveCell              : remove particles RemoveCell-base-level-cells away from the boundary
 //                                          (for non-periodic BC only)
 //                GhostSize               : Number of ghost zones required for interpolation scheme
@@ -120,6 +122,7 @@ struct Particle_t
    ParInterp_t   InterpTracer;
    bool          ImproveAcc;
    bool          PredictPos;
+   bool          TracerVelCorr;
    double        RemoveCell;
    int           GhostSize;
    int           GhostSizeTracer;
@@ -187,6 +190,7 @@ struct Particle_t
       IntegTracer         = TRACER_INTEG_NONE;
       ImproveAcc          = true;
       PredictPos          = true;
+      TracerVelCorr       = false;
       RemoveCell          = -999.9;
       GhostSize           = -1;
       GhostSizeTracer     = -1;

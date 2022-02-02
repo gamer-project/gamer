@@ -361,6 +361,7 @@ struct InputPara_t
    double Par_RemoveCell;
    int    Opt__FreezePar;
    int    Par_GhostSize;
+   int    Par_TracerVelCorr;
    char  *ParAttLabel[PAR_NATT_TOTAL];
 #  endif
 
