@@ -194,6 +194,13 @@ const VerbosityLevelUnphy_t
    UNPHY_VERBOSE = 1;   // print out unphysical values
 
 
+// whether the interpolated fields include all conserved variables in hydrodynamics
+typedef bool AllCons_t;
+const AllCons_t
+   ALL_CONS_NO  = false,
+   ALL_CONS_YES = true;
+
+
 // locally reduce the monotonic coefficient or not
 typedef bool ReduceOrFixMonoCoeff_t;
 const ReduceOrFixMonoCoeff_t
