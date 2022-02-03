@@ -600,12 +600,12 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
 //       check discriminant for SRHD
 //       --> positive if and only if Eq. 15 in "Tseng et al. 2021, MNRAS, 504, 3298" has a positive root
 #        ifdef SRHD
-         real Msqr         = SQR(Fields[MOMX]) + SQR(Fields[MOMY]) + SQR(Fields[MOMZ]);
-         real Dsqr         = SQR(Fields[DENS]);
-         real E_D          = Fields[ENGY] / Fields[DENS];
-         real M_D          = SQRT( Msqr / Dsqr );
-         real Temp         = SQRT( E_D*E_D + (real)2.0*E_D );
-         real Discriminant = ( Temp + M_D )*( Temp - M_D );
+         Msqr         = SQR(Fields[MOMX]) + SQR(Fields[MOMY]) + SQR(Fields[MOMZ]);
+         Dsqr         = SQR(Fields[DENS]);
+         E_D          = Fields[ENGY] / Fields[DENS];
+         M_D          = SQRT( Msqr / Dsqr );
+         Temp         = SQRT( E_D*E_D + (real)2.0*E_D );
+         Discriminant = ( Temp + M_D )*( Temp - M_D );
 
          if ( Discriminant <= TINY_NUMBER )  FailCell = true;
 #        endif
