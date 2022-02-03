@@ -854,19 +854,19 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 //    interpolate density
       Interpolate( CData_Dens, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[DENS][0][0][0],
                    FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_Yes,
-                   IntOppSign0thOrder_No, INT_PRIM_NO, INT_FIX_MINMOD_COEFF );
+                   IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF );
 
 //    interpolate phase
       Interpolate( CData_Real, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[REAL][0][0][0],
                    FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_Yes, &Monotonicity_No,
-                   IntOppSign0thOrder_No, INT_PRIM_NO, INT_FIX_MINMOD_COEFF );
+                   IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF );
    }
 
    else // if ( OPT__INT_PHASE )
    {
       Interpolate( CData_Flu, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[0][0][0][0],
                    FSize_CC3, FStart_CC, NCOMP_TOTAL, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity,
-                   IntOppSign0thOrder_No, INT_PRIM_NO, INT_FIX_MINMOD_COEFF );
+                   IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF );
    }
 
    if ( OPT__INT_PHASE )
@@ -899,7 +899,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 // adopt INT_PRIM_NO to ensure conservation
    Interpolate( CData_Flu, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[0][0][0][0],
                 FSize_CC3, FStart_CC, NCOMP_TOTAL, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity,
-                INT_OPP_SIGN_0TH_ORDER, INT_PRIM_NO, INT_REDUCE_MINMOD_COEFF );
+                INT_OPP_SIGN_0TH_ORDER, ALL_CONS_YES, INT_PRIM_NO, INT_REDUCE_MONO_COEFF );
 
 #  endif // #if ( MODEL == ELBDM ) ... else
 
@@ -916,7 +916,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
    Interpolate( CData_Pot, CSize_Pot3, CStart_Pot, CRange_CC, &FData_Pot[0][0][0],
                 FSize_CC3, FStart_CC, 1, OPT__REF_POT_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_No,
-                IntOppSign0thOrder_No, INT_PRIM_NO, INT_FIX_MINMOD_COEFF );
+                IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF );
 #  endif
 
 

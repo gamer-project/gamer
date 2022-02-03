@@ -513,6 +513,7 @@ real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY
 //                   UNPHY_MODE_PASSIVE_ONLY : Check if the input passive scalars are unphysical
 //                2. For UNPHY_MODE_CONS with SRHD, we also check if Eq. 15 in "Tseng et al. 2021, MNRAS, 504, 3298"
 //                   has a positive root
+//                3. UNPHY_MODE_CONS currently does not check gas pressure
 //
 // Parameter   :  Mode            : UNPHY_MODE_SING, UNPHY_MODE_CONS, UNPHY_MODE_PRIM, UNPHY_MODE_PASSIVE_ONLY
 //                                  --> See "Note" for details
@@ -540,6 +541,9 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
 
 
    bool FailCell = false;
+#  ifdef SRHD
+   real Msqr, Dsqr, E_D, M_D, Temp, Discriminant;
+#  endif
 
 
    switch ( Mode )
@@ -596,12 +600,12 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
 //       check discriminant for SRHD
 //       --> positive if and only if Eq. 15 in "Tseng et al. 2021, MNRAS, 504, 3298" has a positive root
 #        ifdef SRHD
-         const real Msqr         = SQR(Fields[MOMX]) + SQR(Fields[MOMY]) + SQR(Fields[MOMZ]);
-         const real Dsqr         = SQR(Fields[DENS]);
-         const real E_D          = Fields[ENGY] / Fields[DENS];
-         const real M_D          = SQRT( Msqr / Dsqr );
-         const real Temp         = SQRT( E_D*E_D + (real)2.0*E_D );
-         const real Discriminant = ( Temp + M_D )*( Temp - M_D );
+         Msqr         = SQR(Fields[MOMX]) + SQR(Fields[MOMY]) + SQR(Fields[MOMZ]);
+         Dsqr         = SQR(Fields[DENS]);
+         E_D          = Fields[ENGY] / Fields[DENS];
+         M_D          = SQRT( Msqr / Dsqr );
+         Temp         = SQRT( E_D*E_D + (real)2.0*E_D );
+         Discriminant = ( Temp + M_D )*( Temp - M_D );
 
          if ( Discriminant <= TINY_NUMBER )  FailCell = true;
 #        endif
@@ -644,14 +648,15 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
                   FailCell = true;
             }
 
-//          check mass and pressure
-            else if ( v < NCOMP_FLUID )
+//          check mass density
+            else if ( v == DENS )
             {
                if ( Fields[v] <= TINY_NUMBER  ||  Fields[v] >= HUGE_NUMBER )
                   FailCell = true;
             }
 
-//          check passive scalars (which can be zero)
+//          check pressure and passive scalars (which can be zero)
+//          --> allow pressure to be zero to tolerate round-off errors
             else
             {
                if ( Fields[v] < (real)0.0  ||  Fields[v] >= HUGE_NUMBER )
