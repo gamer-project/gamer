@@ -196,6 +196,15 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       Read_Particles_ClusterMerger( filenames[c], Offset[c], NPar_ThisRank_EachCluster[c],
                                     xpos, ypos, zpos, xvel, yvel, zvel, mass, ptype );
 
+#     ifndef TRACER
+      for (long p=0; p<NPar_ThisRank_EachCluster[c]; p++) {
+         if ( ptype[p] == PTYPE_TRACER )
+            Aux_Error( ERROR_INFO,
+"Tracer particles were found in the input data for cluster %d, but TRACER is not defined!\n",
+                       c );
+      }
+#     endif
+
       if ( MPI_Rank == 0 ) Aux_Message( stdout, "done\n" );
 
       // store data to the particle repository
@@ -232,7 +241,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
          ParPosY[pp] = real( ypos[p] / UNIT_L );
          ParPosZ[pp] = real( zpos[p] / UNIT_L );
 
-         if ( (int)ParType[pp] == PTYPE_TRACER ) {
+         if ( ptype[p] == PTYPE_TRACER ) {
             // tracer particles have zero mass
             // and their velocities will be set by
             // the grid later
