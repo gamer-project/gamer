@@ -181,9 +181,16 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
          if (  Hydro_CheckUnphysical( UNPHY_MODE_CONS, Output_1Cell, NULL, ERROR_INFO, UNPHY_SILENCE )  ||
                Pres < (real)0.0  ||  Pres >= HUGE_NUMBER  ||  Pres != Pres  )
          {
-#           ifdef __CUDACC__
+#           ifdef __CUDACC__  // GPU
+//          use atomicExch_block() on Pascal (or later) GPUs to avoid inter-block synchronization for better performance
+//          --> calculation results should be the same since different blocks have different s_FullStepFailure[]
+//              (since it is a shared memory array)
+#           if ( __CUDA_ARCH__ >= 600 )
             atomicExch_block( s_FullStepFailure, 1 );
 #           else
+            atomicExch      ( s_FullStepFailure, 1 );
+#           endif
+#           else              // CPU
             *s_FullStepFailure = 1;
 #           endif
          }
