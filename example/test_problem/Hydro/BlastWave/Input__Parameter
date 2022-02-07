@@ -195,7 +195,6 @@ PAR_NPAR                      100000      # total number of particles (must be s
 PAR_INIT                      1           # initialization option for particles: (1=FUNCTION, 2=RESTART, 3=FILE->"PAR_IC")
 PAR_INTERP                    2           # particle interpolation scheme: (1=NGP, 2=CIC, 3=TSC) [2]
 PAR_INTEG                     2           # particle integration scheme: (1=Euler, 2=KDK, 3=RK2) [2]
-TRACER_INTEG		      2
 PAR_IMPROVE_ACC               1           # improve force accuracy at patch boundaries [1] ##STORE_POT_GHOST and PAR_INTERP=2/3 ONLY##
 PAR_PREDICT_POS               1           # predict particle position during mass assignment [1]
 PAR_REMOVE_CELL              -1.0         # remove particles X-root-cells from the boundaries (non-periodic BC only; <0=auto) [-1.0]
