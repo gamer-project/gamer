@@ -62,7 +62,7 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
 
    bool   GotYou;
    long   ParID;
-   real   dt, dt_half;
+   real   dt;
    double x, y, z;
 
 
@@ -182,11 +182,10 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
 
 //             determine time-step
                dt      = (real)TimeNew - ParTime[ParID];
-               dt_half = (real)0.5*dt;
 
                for (int d=0; d<3; d++)
                   InterpParPos[d][p] = ParPos[d][ParID] +
-                     dt_half*(Vel_Temp[d][p]+ParVel[d][ParID]);
+                     0.5*dt*(Vel_Temp[d][p]+ParVel[d][ParID]);
 
             } // amr->Par->IntegTracer
 
