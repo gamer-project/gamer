@@ -73,11 +73,13 @@ PAR_IC_FORMAT                 1           # data format of PAR_IC: (1=[attribute
 PAR_IC_MASS                  -1.0         # mass of all particles for PAR_INIT==3 (<0=off) [-1.0]
 PAR_INTERP                    3           # particle interpolation scheme: (1=NGP, 2=CIC, 3=TSC) [2]
 PAR_INTEG                     2           # particle integration scheme: (1=Euler, 2=KDK) [2]
+PAR_TR_INTERP                 3           # tracer particle interpolation scheme: (1=NGP, 2=CIC, 3=TSC) [3]
+PAR_TR_INTEG                  2           # tracer particle integration scheme: (1=Euler, 2=RK2) [2]
 PAR_IMPROVE_ACC               1           # improve force accuracy at patch boundaries [1] ##STORE_POT_GHOST and PAR_INTERP=2/3 ONLY##
 PAR_PREDICT_POS               1           # predict particle position during mass assignment [1]
 PAR_REMOVE_CELL              -1.0         # remove particles X-root-cells from the boundaries (non-periodic BC only; <0=auto) [-1.0]
 OPT__FREEZE_PAR               0           # do not update particles (except for tracers) [0]
-
+PAR_TR_VEL_CORR               0           # correct tracer particle velocities in regions of discontinuous flow [0]
 
 # cosmology (COMOVING only)
 A_INIT                        0.01        # initial scale factor
