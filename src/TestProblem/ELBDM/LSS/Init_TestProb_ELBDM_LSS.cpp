@@ -5,7 +5,7 @@
 
 // problem-specific global variables
 // =======================================================================================
-static int LSS_InitMode;   // initialization mode: 1=density-only
+static int LSS_InitMode;   // initialization mode: 1=density-only, 2=real and imaginary parts
 // =======================================================================================
 
 
@@ -90,7 +90,7 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "LSS_InitMode",      &LSS_InitMode,          1,             1,                1                 );
+   ReadPara->Add( "LSS_InitMode",      &LSS_InitMode,          1,             1,                2                 );
 
    ReadPara->Read( FileName );
 
@@ -171,6 +171,15 @@ void Init_ByFile_ELBDM_LSS( real fluid_out[], const real fluid_in[], const int n
 
          fluid_out[REAL] = sqrt( (fluid_in[0]-AveDens )/GrowingFrac + AveDens );
          fluid_out[IMAG] = 0.0;  // constant phase
+         break;
+      }
+
+      case 2:
+      {
+         if ( nvar_in != 2 )  Aux_Error( ERROR_INFO, "nvar_in (%d) != 2 for LSS_InitMode 2 !!\n", nvar_in );
+
+         fluid_out[REAL] = fluid_in[0];
+         fluid_out[IMAG] = fluid_in[1];
          break;
       }
 
