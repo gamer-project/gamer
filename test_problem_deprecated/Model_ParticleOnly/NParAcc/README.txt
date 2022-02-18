@@ -6,7 +6,7 @@
 Procedure to run the test problem:
 -------------------------------------------------------------------------------
 1. Execute the script "Copy.sh" to copy files to their corresponding
-   directories 
+   directories
 
 2. Compile GAMER by typing "make" in the directory "GAMER/src"
    ("make clean" first if the program has been compiled previously)

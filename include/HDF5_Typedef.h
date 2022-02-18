@@ -248,7 +248,7 @@ struct SymConst_t
 #  if   ( MODEL == HYDRO )
    int    Flu_BlockSize_x;
    int    Flu_BlockSize_y;
-   int    CheckNegativeInFluid;
+   int    CheckUnphyInFluid;
    int    CharReconstruction;
    int    LR_Eint;
    int    CheckIntermediate;
@@ -357,6 +357,7 @@ struct InputPara_t
    int    Par_ImproveAcc;
    int    Par_PredictPos;
    double Par_RemoveCell;
+   int    Opt__FreezePar;
    int    Par_GhostSize;
    char  *ParAttLabel[PAR_NATT_TOTAL];
 #  endif
@@ -453,6 +454,7 @@ struct InputPara_t
    double MolecularWeight;
    double IsoTemp;
    double MinMod_Coeff;
+   int    MinMod_MaxIter;
    int    Opt__LR_Limiter;
    int    Opt__1stFluxCorr;
    int    Opt__1stFluxCorrScheme;
@@ -490,6 +492,7 @@ struct InputPara_t
 #  endif
    int    Opt__OverlapMPI;
    int    Opt__ResetFluid;
+   int    Opt__FreezeFluid;
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    double MinDens;
 #  endif
@@ -606,6 +609,7 @@ struct InputPara_t
    int    Opt__RefPot_IntScheme;
 #  endif
    double IntMonoCoeff;
+   int    Mono_MaxIter;
    int    IntOppSign0thOrder;
 
 // data dump
@@ -613,7 +617,7 @@ struct InputPara_t
    int    Opt__Output_Part;
    int    Opt__Output_User;
 #  ifdef PARTICLE
-   int    Opt__Output_ParText;
+   int    Opt__Output_Par_Mode;
 #  endif
    int    Opt__Output_BasePS;
    int    Opt__Output_Base;

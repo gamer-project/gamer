@@ -71,6 +71,9 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
 
+// when fluid is freezed, disable this criterion by resetting it to a huge value
+   if ( OPT__FREEZE_FLUID )   dTime[NdTime-1] = HUGE_NUMBER;
+
 
 // 1.2 CRITERION TWO : gravitational acceleration
 // =============================================================================================================
@@ -86,6 +89,9 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 #  else
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
+
+// when fluid is freezed, disable this criterion by resetting it to a huge value
+   if ( OPT__FREEZE_FLUID )   dTime[NdTime-1] = HUGE_NUMBER;
 #  endif // #ifdef GRAVITY
 
 
@@ -102,7 +108,7 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 // DumpByTime : true --> dump data according to the physical time
 #  ifdef PARTICLE
    const bool DumpData   = ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS ||
-                             OPT__OUTPUT_PAR_TEXT );
+                             OPT__OUTPUT_PAR_MODE );
 #  else
    const bool DumpData   = ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS );
 #  endif
@@ -169,6 +175,9 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
       dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Phase( lv );
       sprintf( dTime_Name[NdTime++], "%s", "ELBDM_Phase" );
    }
+
+// when fluid is freezed, disable this criterion by resetting it to a huge value
+   if ( OPT__FREEZE_FLUID )   dTime[NdTime-1] = HUGE_NUMBER;
 #  endif
 
 

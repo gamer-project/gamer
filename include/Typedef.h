@@ -50,6 +50,7 @@ const TestProbID_t
    TESTPROB_HYDRO_MHD_ORSZAG_TANG_VORTEX       =   14,
    TESTPROB_HYDRO_MHD_LINEAR_WAVE              =   15,
    TESTPROB_HYDRO_JEANS_INSTABILITY            =   16,
+   TESTPROB_HYDRO_PARTICLE_EQUILIBRIUM_IC      =   17,
    TESTPROB_HYDRO_BARRED_POT                   =   51,
 
    TESTPROB_ELBDM_EXTPOT                       = 1000;
@@ -142,6 +143,14 @@ const OptOutputPart_t
    OUTPUT_DIAG      = 7;
 
 
+// OPT_OUTPUT_PAR_MODE options
+typedef int OptOutputParMode_t;
+const OptOutputParMode_t
+   OUTPUT_PAR_NONE = 0,
+   OUTPUT_PAR_TEXT = 1,
+   OUTPUT_PAR_CBIN = 2;
+
+
 // options in "Prepare_PatchData"
 typedef int PrepUnit_t;
 const PrepUnit_t
@@ -167,6 +176,43 @@ typedef int Check_t;
 const Check_t
    CHECK_OFF = 0,
    CHECK_ON  = 1;
+
+
+// check unphysical quantities
+typedef int CheckUnphysical_t;
+const CheckUnphysical_t
+   UNPHY_MODE_SING         = 0,  // check single field
+   UNPHY_MODE_CONS         = 1,  // check conserved variables, including passive scalars
+   UNPHY_MODE_PRIM         = 2,  // check primitive variables, including passive scalars
+   UNPHY_MODE_PASSIVE_ONLY = 3;  // only check passive scalars
+
+
+// verbosity levels of Hydro_CheckUnphysical()
+typedef int VerbosityLevelUnphy_t;
+const VerbosityLevelUnphy_t
+   UNPHY_SILENCE = 0,   // print nothing
+   UNPHY_VERBOSE = 1;   // print out unphysical values
+
+
+// whether the interpolated fields include all conserved variables in hydrodynamics
+typedef bool AllCons_t;
+const AllCons_t
+   ALL_CONS_NO  = false,
+   ALL_CONS_YES = true;
+
+
+// locally reduce the monotonic coefficient or not
+typedef bool ReduceOrFixMonoCoeff_t;
+const ReduceOrFixMonoCoeff_t
+   INT_FIX_MONO_COEFF    = false,   // fix the coefficient
+   INT_REDUCE_MONO_COEFF = true;    // locally reduce the coefficient
+
+
+// whether switch from conserved to primitive variables when interpolation fails
+typedef bool IntPrim_t;
+const IntPrim_t
+   INT_PRIM_NO  = false,
+   INT_PRIM_YES = true;
 
 
 // target solver in InvokeSolver()
@@ -400,29 +446,32 @@ const PatchType_t
 
 
 // function pointers
-typedef real (*EoS_DE2P_t)( const real Dens, const real Eint, const real Passive[],
-                            const double AuxArray_Flt[], const int AuxArray_Int[],
-                            const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] );
-typedef real (*EoS_DP2E_t)( const real Dens, const real Pres, const real Passive[],
-                            const double AuxArray_Flt[], const int AuxArray_Int[],
-                            const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] );
-typedef real (*EoS_DP2C_t)( const real Dens, const real Pres, const real Passive[],
-                            const double AuxArray_Flt[], const int AuxArray_Int[],
-                            const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] );
-typedef void (*EoS_GENE_t)( const int Mode, real Out[], const real In[],
-                            const double AuxArray_Flt[], const int AuxArray_Int[],
-                            const real *const Table[EOS_NTABLE_MAX] );
-typedef real (*EoS_DE2T_t)( const real Dens, const real Eint, const real Passive[],
-                            const double AuxArray_Flt[], const int AuxArray_Int[],
-                            const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] );
-typedef real (*EoS_DT2P_t)( const real Dens, const real Temp, const real Passive[],
-                            const double AuxArray_Flt[], const int AuxArray_Int[],
-                            const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] );
-typedef void (*ExtAcc_t)( real Acc[], const double x, const double y, const double z, const double Time,
-                          const double UserArray[] );
-typedef real (*ExtPot_t)( const double x, const double y, const double z, const double Time,
-                          const double UserArray_Flt[], const int UserArray_Int[],
-                          const ExtPotUsage_t Usage, const real PotTable[], void **GenePtr );
+typedef real (*EoS_DE2P_t)     ( const real Dens, const real Eint, const real Passive[],
+                                 const double AuxArray_Flt[], const int AuxArray_Int[],
+                                 const real *const Table[EOS_NTABLE_MAX] );
+typedef real (*EoS_DP2E_t)     ( const real Dens, const real Pres, const real Passive[],
+                                 const double AuxArray_Flt[], const int AuxArray_Int[],
+                                 const real *const Table[EOS_NTABLE_MAX] );
+typedef real (*EoS_DP2C_t)     ( const real Dens, const real Pres, const real Passive[],
+                                 const double AuxArray_Flt[], const int AuxArray_Int[],
+                                 const real *const Table[EOS_NTABLE_MAX] );
+typedef void (*EoS_GENE_t)     ( const int Mode, real Out[], const real In_Flt[], const int In_Int[],
+                                 const double AuxArray_Flt[], const int AuxArray_Int[],
+                                 const real *const Table[EOS_NTABLE_MAX] );
+typedef real (*EoS_DE2T_t)     ( const real Dens, const real Eint, const real Passive[],
+                                 const double AuxArray_Flt[], const int AuxArray_Int[],
+                                 const real *const Table[EOS_NTABLE_MAX] );
+typedef real (*EoS_DT2P_t)     ( const real Dens, const real Temp, const real Passive[],
+                                 const double AuxArray_Flt[], const int AuxArray_Int[],
+                                 const real *const Table[EOS_NTABLE_MAX] );
+typedef void (*ExtAcc_t)       ( real Acc[], const double x, const double y, const double z, const double Time,
+                                 const double UserArray[] );
+typedef real (*ExtPot_t)       ( const double x, const double y, const double z, const double Time,
+                                 const double UserArray_Flt[], const int UserArray_Int[],
+                                 const ExtPotUsage_t Usage, const real PotTable[], void **GenePtr );
+typedef void (*IntSchemeFunc_t)( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
+                                 real FData[], const int FSize[3], const int FStart[3], const int NComp,
+                                 const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
 
 
 

@@ -43,7 +43,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                            const real dt, const real dh, const real MinDens, const real MinEint,
                            const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
-                           const EoS_t *EoS );
+                           const EoS_t *EoS, int *s_FullStepFailure, const int Iteration, const int MinMod_MaxIter );
 #ifdef MHD
 void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                           const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
@@ -334,9 +334,10 @@ void CPU_FluidSolver_CTU(
 
 
 //       8. full-step evolution of the fluid data
+//          --> CTU does not support reducing the min-mod coefficient
          Hydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P], g_Mag_Array_Out[P],
                                g_FC_Flux_1PG, dt, dh, MinDens, MinEint, DualEnergySwitch,
-                               NormPassive, NNorm, c_NormIdx, &EoS );
+                               NormPassive, NNorm, c_NormIdx, &EoS, NULL, NULL_INT, NULL_INT );
 
       } // loop over all patch groups
    } // OpenMP parallel region
