@@ -1,7 +1,9 @@
 #include "GAMER.h"
 
-
 #ifdef SUPPORT_LIBYT
+
+
+
 
 #ifdef MHD
 //-------------------------------------------------------------------------------------------------------
@@ -82,8 +84,9 @@ void MagZ_DerivedFunc(long gid, double *Converted_MagZ){
         }
     }
 }
+#endif // #ifdef MHD
 
-#endif
+
 
 #if ( MODEL == HYDRO )
 //-------------------------------------------------------------------------------------------------------
@@ -152,6 +155,8 @@ void Temperature_DerivedFunc(long gid, double *TempData){
     }
 
 }
-#endif
+#endif // #if ( MODEL == HYDRO )
 
-#endif
+
+
+#endif // #ifdef SUPPORT_LIBYT

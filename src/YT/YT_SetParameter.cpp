@@ -35,9 +35,9 @@ void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchL
    param_yt.mass_unit               = UNIT_M;
    param_yt.time_unit               = UNIT_T;
 
-#ifdef MHD
+#  ifdef MHD
    param_yt.magnetic_unit           = UNIT_B;
-#endif
+#  endif
 
    param_yt.current_time            = Time[0];
    param_yt.dimensionality          = 3;

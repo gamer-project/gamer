@@ -1,7 +1,9 @@
 #include "GAMER.h"
 
-
 #ifdef SUPPORT_LIBYT
+
+
+
 
 #ifdef PARTICLE
 //-------------------------------------------------------------------------------------------------------
@@ -44,6 +46,8 @@ void Get_ParticleAttribute(long gid, char *attr, void *raw_data){
         data[p] = amr->Par->Attribute[ParAttr_Idx][ParID];
     }
 }
-#endif
+#endif // #ifdef PARTICLE
 
-#endif
+
+
+#endif // #ifdef SUPPORT_LIBYT

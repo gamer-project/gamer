@@ -13,6 +13,6 @@ def yt_inline():
 def yt_inline_inputArg( fields ):
     ds = yt.frontends.libyt.libytDataset()
     sz = yt.ProjectionPlot(ds, 'z', fields, center='c')
-    
+
     if yt.is_root():
         sz.save()
