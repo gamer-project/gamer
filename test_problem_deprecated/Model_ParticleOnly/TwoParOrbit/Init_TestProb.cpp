@@ -29,10 +29,10 @@ real TwoParOrbit_T;             // period of the orbit
 // Note        :  1. Please copy this file to "GAMER/src/Init/Init_TestProb.cpp"
 //                2. Test problem parameters can be set in the input file "Input__TestProb"
 //
-// Parameter   :  None 
+// Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
 void Init_TestProb()
-{  
+{
 
    const char *TestProb = "Two particles orbit";
 
@@ -122,7 +122,7 @@ void Init_TestProb()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_TestProbSol_TwoParOrbit
-// Description :  Initialize the background density field as zero for the two particles orbit test  
+// Description :  Initialize the background density field as zero for the two particles orbit test
 //
 // Note        :  1. This test works for both ELBDM and HYDRO models
 //                   ELBDM : test external potential
@@ -161,8 +161,8 @@ void Par_TestProbSol_TwoParOrbit( real *fluid, const double x, const double y, c
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  LoadTestProbParameter 
-// Description :  Load parameters for the test problem 
+// Function    :  LoadTestProbParameter
+// Description :  Load parameters for the test problem
 //
 // Note        :  This function is invoked by "Init_TestProb"
 //

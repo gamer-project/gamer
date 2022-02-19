@@ -104,7 +104,8 @@ void BC_Outflow_xm( real *Array, const int NVar, const int GhostSize, const int 
    const int i_ref = GhostSize;  // reference i index
 
 // 1D array -> 3D array
-   real (*Array3D)[ArraySizeZ][ArraySizeY][ArraySizeX] = ( real (*)[ArraySizeZ][ArraySizeY][ArraySizeX] )Array;
+   typedef real (*vla)[ArraySizeZ][ArraySizeY][ArraySizeX];
+   vla Array3D = ( vla )Array;
 
 // set the boundary values
    for (int v=0; v<NVar; v++)
@@ -134,7 +135,8 @@ void BC_Outflow_xp( real *Array, const int NVar, const int GhostSize, const int 
    const int i_ref = ArraySizeX - GhostSize - 1;    // reference i index
 
 // 1D array -> 3D array
-   real (*Array3D)[ArraySizeZ][ArraySizeY][ArraySizeX] = ( real (*)[ArraySizeZ][ArraySizeY][ArraySizeX] )Array;
+   typedef real (*vla)[ArraySizeZ][ArraySizeY][ArraySizeX];
+   vla Array3D = ( vla )Array;
 
 // set the boundary values
    for (int v=0; v<NVar; v++)
@@ -164,7 +166,8 @@ void BC_Outflow_ym( real *Array, const int NVar, const int GhostSize, const int 
    const int j_ref = GhostSize;  // reference j index
 
 // 1D array -> 3D array
-   real (*Array3D)[ArraySizeZ][ArraySizeY][ArraySizeX] = ( real (*)[ArraySizeZ][ArraySizeY][ArraySizeX] )Array;
+   typedef real (*vla)[ArraySizeZ][ArraySizeY][ArraySizeX];
+   vla Array3D = ( vla )Array;
 
 // set the boundary values
    for (int v=0; v<NVar; v++)
@@ -194,7 +197,8 @@ void BC_Outflow_yp( real *Array, const int NVar, const int GhostSize, const int 
    const int j_ref = ArraySizeY - GhostSize - 1;    // reference j index
 
 // 1D array -> 3D array
-   real (*Array3D)[ArraySizeZ][ArraySizeY][ArraySizeX] = ( real (*)[ArraySizeZ][ArraySizeY][ArraySizeX] )Array;
+   typedef real (*vla)[ArraySizeZ][ArraySizeY][ArraySizeX];
+   vla Array3D = ( vla )Array;
 
 // set the boundary values
    for (int v=0; v<NVar; v++)
@@ -224,7 +228,8 @@ void BC_Outflow_zm( real *Array, const int NVar, const int GhostSize, const int 
    const int k_ref = GhostSize;  // reference k index
 
 // 1D array -> 3D array
-   real (*Array3D)[ArraySizeZ][ArraySizeY][ArraySizeX] = ( real (*)[ArraySizeZ][ArraySizeY][ArraySizeX] )Array;
+   typedef real (*vla)[ArraySizeZ][ArraySizeY][ArraySizeX];
+   vla Array3D = ( vla )Array;
 
 // set the boundary values
    for (int v=0; v<NVar; v++)
@@ -254,7 +259,8 @@ void BC_Outflow_zp( real *Array, const int NVar, const int GhostSize, const int 
    const int k_ref = ArraySizeZ - GhostSize - 1;    // reference k index
 
 // 1D array -> 3D array
-   real (*Array3D)[ArraySizeZ][ArraySizeY][ArraySizeX] = ( real (*)[ArraySizeZ][ArraySizeY][ArraySizeX] )Array;
+   typedef real (*vla)[ArraySizeZ][ArraySizeY][ArraySizeX];
+   vla Array3D = ( vla )Array;
 
 // set the boundary values
    for (int v=0; v<NVar; v++)

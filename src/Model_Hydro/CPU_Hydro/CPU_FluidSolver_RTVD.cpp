@@ -230,18 +230,13 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
                                 CheckMinPres_Yes, MinPres, NULL_REAL, EoS->DensEint2Pres_FuncPtr,
                                 EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
 
-#        ifdef CHECK_NEGATIVE_IN_FLUID
-         if ( Hydro_CheckNegative(p) )
-            Aux_Message( stderr, "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                         p, __FILE__, __LINE__, __FUNCTION__ );
-
-         if ( Hydro_CheckNegative(ux[0][i]) )
-            Aux_Message( stderr, "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                         ux[0][i], __FILE__, __LINE__, __FUNCTION__ );
+#        ifdef CHECK_UNPHYSICAL_IN_FLUID
+         Hydro_CheckUnphysical( UNPHY_MODE_SING, &p,        "pressure", ERROR_INFO, UNPHY_VERBOSE );
+         Hydro_CheckUnphysical( UNPHY_MODE_SING, &ux[0][i], "density",  ERROR_INFO, UNPHY_VERBOSE );
 #        endif
 
          c    = FABS( vx ) + SQRT(  EoS->DensPres2CSqr_FuncPtr( ux[0][i], p, Passive, EoS->AuxArrayDevPtr_Flt,
-                                                                EoS->AuxArrayDevPtr_Int, EoS->Table, NULL )  );
+                                                                EoS->AuxArrayDevPtr_Int, EoS->Table )  );
 
          cw[0][i] = ux[1][i];
          cw[1][i] = ux[1][i] * vx + p;
@@ -297,18 +292,13 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
                                 CheckMinPres_Yes, MinPres, NULL_REAL, EoS->DensEint2Pres_FuncPtr,
                                 EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
 
-#        ifdef CHECK_NEGATIVE_IN_FLUID
-         if ( Hydro_CheckNegative(p) )
-            Aux_Message( stderr, "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                         p, __FILE__, __LINE__, __FUNCTION__ );
-
-         if ( Hydro_CheckNegative(u_half[0][i]) )
-            Aux_Message( stderr, "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                         u_half[0][i], __FILE__, __LINE__, __FUNCTION__ );
+#        ifdef CHECK_UNPHYSICAL_IN_FLUID
+         Hydro_CheckUnphysical( UNPHY_MODE_SING, &p,            "pressure", ERROR_INFO, UNPHY_VERBOSE );
+         Hydro_CheckUnphysical( UNPHY_MODE_SING, &u_half[0][i], "density",  ERROR_INFO, UNPHY_VERBOSE );
 #        endif
 
          c    = FABS( vx ) + SQRT(  EoS->DensPres2CSqr_FuncPtr( u_half[0][i], p, Passive, EoS->AuxArrayDevPtr_Flt,
-                                                                EoS->AuxArrayDevPtr_Int, EoS->Table, NULL )  );
+                                                                EoS->AuxArrayDevPtr_Int, EoS->Table )  );
 
          cw[0][i] = u_half[1][i];
          cw[1][i] = u_half[1][i] * vx + p;
@@ -384,16 +374,11 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
 
 
 //    (b6). check negative density and energy
-#     ifdef CHECK_NEGATIVE_IN_FLUID
+#     ifdef CHECK_UNPHYSICAL_IN_FLUID
       for (int i=3; i<FLU_NXT-3; i++)
       {
-         if ( Hydro_CheckNegative(ux[0][i]) )
-            Aux_Message( stderr, "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                         ux[0][i], __FILE__, __LINE__, __FUNCTION__ );
-
-         if ( Hydro_CheckNegative(ux[4][i]) )
-            Aux_Message( stderr, "ERROR : invalid energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                         ux[4][i], __FILE__, __LINE__, __FUNCTION__ );
+         Hydro_CheckUnphysical( UNPHY_MODE_SING, &ux[0][i], "density", ERROR_INFO, UNPHY_VERBOSE );
+         Hydro_CheckUnphysical( UNPHY_MODE_SING, &ux[4][i], "energy",  ERROR_INFO, UNPHY_VERBOSE );
       }
 #     endif
 

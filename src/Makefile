@@ -36,11 +36,11 @@ COMPILE_VERBOSE := 0
 SIMU_OPTION += -DMODEL=HYDRO
 
 # enable gravity
-SIMU_OPTION += -DGRAVITY
+#SIMU_OPTION += -DGRAVITY
 
 # enable particles
 # --> must enable GRAVITY
-SIMU_OPTION += -DPARTICLE
+#SIMU_OPTION += -DPARTICLE
 
 # support Grackle, a chemistry and radiative cooling library
 # --> must set NCOMP_PASSIVE_USER according to the primordial chemistry network set by GRACKLE_PRIMORDIAL
@@ -74,7 +74,7 @@ SIMU_OPTION += -DRSOLVER=ROE
 # number of user-defined passively advected scalars
 # --> set it to 0 or comment it out if none is required
 # --> useless for RTVD
-SIMU_OPTION += -DNCOMP_PASSIVE_USER=2
+SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 
 # magnetohydrodynamics
 #SIMU_OPTION += -DMHD
@@ -163,8 +163,8 @@ SIMU_OPTION += -DMAX_PATCH=1000000
 # --> must set GPU_ARCH as well
 #SIMU_OPTION += -DGPU
 
-# GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA
-#SIMU_OPTION += -DGPU_ARCH=TURING
+# GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA/TURING/AMPERE
+SIMU_OPTION += -DGPU_ARCH=KEPLER
 
 # debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
@@ -184,11 +184,11 @@ SIMU_OPTION += -DTIMING
 
 # serial mode (in which no MPI libraries are required)
 # --> must disable LOAD_BALANCE
-#SIMU_OPTION += -DSERIAL
+SIMU_OPTION += -DSERIAL
 
 # load-balance parallelization: HILBERT
 # --> must disable SERIAL
-SIMU_OPTION += -DLOAD_BALANCE=HILBERT
+#SIMU_OPTION += -DLOAD_BALANCE=HILBERT
 
 # overlap MPI communication with computation
 # --> NOT supported yet; must enable LOAD_BALANCE
@@ -201,13 +201,13 @@ SIMU_OPTION += -DOPENMP
 #SIMU_OPTION += -DLAOHU
 
 # support HDF5 format
-SIMU_OPTION += -DSUPPORT_HDF5
+#SIMU_OPTION += -DSUPPORT_HDF5
 
 # support GNU scientific library
 #SIMU_OPTION += -DSUPPORT_GSL
 
 # support yt inline analysis
-SIMU_OPTION += -DSUPPORT_LIBYT
+#SIMU_OPTION += -DSUPPORT_LIBYT
 
 # random number implementation: RNG_GNU_EXT/RNG_CPP11 (GNU extension drand48_r/c++11 <random>)
 # --> use RNG_GNU_EXT for compilers supporting GNU extensions (**not supported on some macOS**)
@@ -248,7 +248,7 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 # gnu
 # -------------------------------------------------------------------------------
  CXX         = g++                                       # serial compiler
- CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
+#CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
 #CXX         = CC                                        # cray wrapper script
  CXXFLAG     = -g -O3                                    # general flags
 #CXXFLAG     = -g -O3 -std=c++11
@@ -285,13 +285,13 @@ endif
 #######################################################################################################
 
 # template
-CUDA_PATH    := /usr/local/cuda-11.2
-FFTW_PATH    := /home/cindytsai/software/fftw/2.1.5-gnu
-MPI_PATH     := /home/cindytsai/software/openmpi/3.1.5-gnu
-HDF5_PATH    := /home/cindytsai/software/hdf5/1.10.6
+CUDA_PATH    :=
+FFTW_PATH    :=
+MPI_PATH     :=
+HDF5_PATH    :=
 GRACKLE_PATH :=
 GSL_PATH     :=
-LIBYT_PATH   := /home/cindytsai/Documents/GitHub/libyt
+LIBYT_PATH   :=
 
 # NCSA-bluewaters (only need to specify the path of user-installed packages)
 #GRACKLE_PATH :=
@@ -335,13 +335,13 @@ LIBYT_PATH   := /home/cindytsai/Documents/GitHub/libyt
 #LIBYT_PATH   := /home/hyschive/project/libyt/libyt.dev/libyt
 
 # NTU-eureka (default: openmpi-intel)
-# CUDA_PATH    := /software/cuda/default
-#FFTW_PATH    := /software/fftw/2.1.5-gnu
-#MPI_PATH     := /software/openmpi/3.1.5-gnu
-#HDF5_PATH    := /software/hdf5/1.10.6
+#CUDA_PATH    := /software/cuda/default
+#FFTW_PATH    := /software/fftw/default
+#MPI_PATH     := /software/openmpi/default
+#HDF5_PATH    := /software/hdf5/default
 #GRACKLE_PATH :=
-#GSL_PATH     := /software/gsl/2.6
-#LIBYT_PATH   := /work1/cindytsai/Project/libyt
+#GSL_PATH     := /software/gsl/default
+#LIBYT_PATH   :=
 
 # NTU-hulk (openmpi-intel-qlc)
 #CUDA_PATH    := /opt/gpu/cuda/4.2
@@ -560,13 +560,14 @@ endif # GRAVITY
 ifeq "$(filter -DPARTICLE, $(SIMU_OPTION))" "-DPARTICLE"
 GPU_FILE    +=
 
-CPU_FILE    += Par_Init_ByFunction.cpp  Par_Output_TextFile.cpp  Par_FindHomePatch_UniformGrid.cpp \
+CPU_FILE    += Par_Init_ByFunction.cpp  Par_Output_TextFile.cpp  Par_Output_BinaryFile.cpp  Par_FindHomePatch_UniformGrid.cpp \
                Par_Aux_Check_Particle.cpp  Par_PassParticle2Father.cpp  Par_CollectParticle2OneLevel.cpp \
                Par_MassAssignment.cpp  Par_UpdateParticle.cpp  Par_GetTimeStep_VelAcc.cpp \
                Par_PassParticle2Sibling.cpp  Par_CountParticleInDescendant.cpp  Par_Aux_GetConservedQuantity.cpp \
                Par_Aux_InitCheck.cpp  Par_Aux_Record_ParticleCount.cpp  Par_PassParticle2Son_MultiPatch.cpp \
                Par_Synchronize.cpp  Par_PredictPos.cpp  Par_Init_ByFile.cpp  Par_Init_Attribute.cpp \
-               Par_AddParticleAfterInit.cpp  Par_PassParticle2Son_SinglePatch.cpp
+               Par_AddParticleAfterInit.cpp  Par_PassParticle2Son_SinglePatch.cpp  Par_EquilibriumIC.cpp \
+               Par_ScatterParticleData.cpp
 
 vpath %.cu     Particle/GPU
 vpath %.cpp    Particle/CPU  Particle
@@ -854,7 +855,7 @@ else ifeq "$(filter -DGPU_ARCH=KEPLER, $(SIMU_OPTION))" "-DGPU_ARCH=KEPLER"
    ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
      NVCCFLAG_FLU += --maxrregcount=128
    else
-     NVCCFLAG_FLU += --maxrregcount=64
+     NVCCFLAG_FLU += --maxrregcount=70
    endif
 else ifeq "$(filter -DGPU_ARCH=MAXWELL, $(SIMU_OPTION))" "-DGPU_ARCH=MAXWELL"
    ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
@@ -977,4 +978,3 @@ clean :
 	@rm -f $(OBJ_PATH)/*
 	@rm -f $(EXECUTABLE)
 	@rm -f ./*.linkinfo
-

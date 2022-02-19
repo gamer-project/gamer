@@ -37,7 +37,7 @@ void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (
    int   RecvCount_LBIdx[MPI_NRank], RecvDisp_LBIdx[MPI_NRank];
    long *LBIdxList_Sort[NLEVEL], *LBIdxList_Local[NLEVEL];
    int  *LBIdxList_Sort_IdxTable[NLEVEL];
-   
+
    for (int lv=0; lv<NLEVEL; lv++)
    {
       LBIdxList_Local        [lv] = new long [ amr->NPatchComma[lv][1] ];
@@ -97,7 +97,7 @@ void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (
 
          YT_Grids[LID].id             = GID;
          YT_Grids[LID].level          = lv;
-         
+
          // getting parent's id
          int FaPID = amr->patch[0][lv][PID]->father;
          int FaLv = lv - 1;
@@ -115,7 +115,7 @@ void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (
             // father patch is a real patch
             YT_Grids[LID].parent_id = FaPID + GID_Offset[FaLv];
          }
-         
+
          else{
             // father patch is a buffer patch (only possible in LOAD_BALANCE)
 #           ifdef DEBUG_HDF5
@@ -140,7 +140,7 @@ void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (
 
             YT_Grids[LID].parent_id = LBIdxList_Sort_IdxTable[FaLv][MatchIdx] + GID_LvStart[FaLv];
          }
-         
+
 
          for (int v = 0; v < NCOMP_TOTAL; v++){
             YT_Grids[LID].field_data[v].data_ptr = amr->patch[FluSg][lv][PID]->fluid[v];

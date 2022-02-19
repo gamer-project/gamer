@@ -54,7 +54,7 @@ do
    fi
 
 
-#  begin sorting 
+#  begin sorting
    echo -e "***** Working on data $FILE_IN ... *****"
 
 
@@ -65,9 +65,9 @@ do
 #      exit 4
 #  fi
 
-#  x=$(tail -n 1 CenterCoords |awk '{print $4}');  
-#  y=$(tail -n 1 CenterCoords |awk '{print $5}');  
-#  z=$(tail -n 1 CenterCoords |awk '{print $6}');  
+#  x=$(tail -n 1 CenterCoords |awk '{print $4}');
+#  y=$(tail -n 1 CenterCoords |awk '{print $5}');
+#  z=$(tail -n 1 CenterCoords |awk '{print $6}');
 
 #  ./GAMER_ExtractProfile -i $FILE_IN -o "$SUFFIX" -S -a 1 -r 0.30 -m 8 -a 1 -S -p -R 0.15 -c -x $x -y $y -z $z
 

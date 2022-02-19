@@ -223,10 +223,9 @@ void Init_Parallelization()
    double (*SubDomain_EdgeL)[3] = new double [MPI_NRank][3];
    double (*SubDomain_EdgeR)[3] = new double [MPI_NRank][3];
 
-   double (*SubDomain_EdgeL3D)[ MPI_NRank_X[1] ][ MPI_NRank_X[0] ][3]
-                = ( double (*)[ MPI_NRank_X[1] ][ MPI_NRank_X[0] ][3] )SubDomain_EdgeL;
-   double (*SubDomain_EdgeR3D)[ MPI_NRank_X[1] ][ MPI_NRank_X[0] ][3]
-                = ( double (*)[ MPI_NRank_X[1] ][ MPI_NRank_X[0] ][3] )SubDomain_EdgeR;
+   typedef double (*vla)[ MPI_NRank_X[1] ][ MPI_NRank_X[0] ][3];
+   vla SubDomain_EdgeL3D = ( vla )SubDomain_EdgeL;
+   vla SubDomain_EdgeR3D = ( vla )SubDomain_EdgeR;
 
 // calculate the left/right edges by rank 0 only to ensure that all ranks see EXACTLY the same values (no round-off errors)
    if ( MPI_Rank == 0 )

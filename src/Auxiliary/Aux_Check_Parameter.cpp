@@ -298,7 +298,7 @@ void Aux_Check_Parameter()
 
    if ( !OPT__OUTPUT_TOTAL  &&  !OPT__OUTPUT_PART  &&  !OPT__OUTPUT_USER  &&  !OPT__OUTPUT_BASEPS )
 #  ifdef PARTICLE
-   if ( !OPT__OUTPUT_PAR_TEXT )
+   if ( !OPT__OUTPUT_PAR_MODE )
 #  endif
       Aux_Message( stderr, "WARNING : all output options are turned off --> no data will be output !!\n" );
 
@@ -572,6 +572,9 @@ void Aux_Check_Parameter()
    if ( OPT__RESET_FLUID  &&   OPT__INIT == INIT_BY_FILE )
       Aux_Message( stderr, "WARNING : \"%s\" will NOT be applied to the input uniform data !!\n", "OPT__RESET_FLUID" );
 
+   if ( OPT__FREEZE_FLUID )
+      Aux_Message( stderr, "REMINDER : \"%s\" will prevent fluid variables from being updated\n", "OPT__FREEZE_FLUID" );
+
    } // if ( MPI_Rank == 0 )
 
 
@@ -707,12 +710,12 @@ void Aux_Check_Parameter()
    if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
    {
 #     ifdef MHD
-      /*
       if ( OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_ROE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_HLLD  &&
            OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_HLLE )
          Aux_Error( ERROR_INFO, "unsupported parameter \"%s = %d\" !!\n", "OPT__1ST_FLUX_CORR_SCHEME", OPT__1ST_FLUX_CORR_SCHEME );
-         */
-      Aux_Error( ERROR_INFO, "MHD does not support \"OPT__1ST_FLUX_CORR\" !!\n" );
+
+      if ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D1D )
+         Aux_Error( ERROR_INFO, "MHD does not support \"OPT__1ST_FLUX_CORR = %d (3D+1D)\" yet !!\n", FIRST_FLUX_CORR_3D1D );
 #     else
       if ( OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_ROE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_HLLC  &&
            OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_HLLE )
@@ -1328,6 +1331,9 @@ void Aux_Check_Parameter()
 
    if ( OPT__GRA_P5_GRADIENT )
       Aux_Message( stderr, "WARNING : currently \"%s\" is not applied to particle update !!\n", "OPT__GRA_P5_GRADIENT" );
+
+   if ( OPT__FREEZE_PAR )
+      Aux_Message( stderr, "REMINDER : \"%s\" will prevent particles from being updated\n", "OPT__FREEZE_PAR" );
 
    } // if ( MPI_Rank == 0 )
 

@@ -9,7 +9,7 @@ extern void (*Output_User_Ptr)();
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_DumpData
 // Description :  Trigger the output functions Output_DumpData_Total(), Output_DumpData_Part(), Output_User(),
-//                Output_BasePowerSpectrum(), Par_Output_TextFile()
+//                Output_BasePowerSpectrum(), Par_Output_TextFile(), Par_Output_BinaryFile()
 //
 // Note        :  1. For OUTPUT_USER, the function pointer "Output_User_Ptr" must be set by a
 //                   test problem initializer
@@ -28,7 +28,7 @@ void Output_DumpData( const int Stage )
 
 // nothing to do if all output options are off
 #  ifdef PARTICLE
-   if ( !OPT__OUTPUT_TOTAL && !OPT__OUTPUT_PART && !OPT__OUTPUT_USER && !OPT__OUTPUT_BASEPS && !OPT__OUTPUT_PAR_TEXT )
+   if ( !OPT__OUTPUT_TOTAL && !OPT__OUTPUT_PART && !OPT__OUTPUT_USER && !OPT__OUTPUT_BASEPS && !OPT__OUTPUT_PAR_MODE )
 #  else
    if ( !OPT__OUTPUT_TOTAL && !OPT__OUTPUT_PART && !OPT__OUTPUT_USER && !OPT__OUTPUT_BASEPS )
 #  endif
@@ -137,8 +137,10 @@ void Output_DumpData( const int Stage )
       sprintf( FileName_PS, "PowerSpec_%06d", DumpID );
 
 #  ifdef PARTICLE
-   if ( OPT__OUTPUT_PAR_TEXT )
-      sprintf( FileName_Particle, "Particle_%06d", DumpID );
+   if ( OPT__OUTPUT_PAR_MODE == OUTPUT_PAR_TEXT )
+      sprintf( FileName_Particle, "Particle_%06d.txt", DumpID );
+   if ( OPT__OUTPUT_PAR_MODE == OUTPUT_PAR_CBIN )
+      sprintf( FileName_Particle, "Particle_%06d.cbin", DumpID );
 #  endif
 
 
@@ -197,7 +199,8 @@ void Output_DumpData( const int Stage )
       if ( OPT__OUTPUT_BASEPS )           Output_BasePowerSpectrum( FileName_PS );
 #     endif
 #     ifdef PARTICLE
-      if ( OPT__OUTPUT_PAR_TEXT )         Par_Output_TextFile( FileName_Particle );
+      if ( OPT__OUTPUT_PAR_MODE == OUTPUT_PAR_TEXT )  Par_Output_TextFile( FileName_Particle );
+      if ( OPT__OUTPUT_PAR_MODE == OUTPUT_PAR_CBIN )  Par_Output_BinaryFile( FileName_Particle );
 #     endif
 
       Write_DumpRecord();
