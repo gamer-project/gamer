@@ -178,6 +178,43 @@ const Check_t
    CHECK_ON  = 1;
 
 
+// check unphysical quantities
+typedef int CheckUnphysical_t;
+const CheckUnphysical_t
+   UNPHY_MODE_SING         = 0,  // check single field
+   UNPHY_MODE_CONS         = 1,  // check conserved variables, including passive scalars
+   UNPHY_MODE_PRIM         = 2,  // check primitive variables, including passive scalars
+   UNPHY_MODE_PASSIVE_ONLY = 3;  // only check passive scalars
+
+
+// verbosity levels of Hydro_CheckUnphysical()
+typedef int VerbosityLevelUnphy_t;
+const VerbosityLevelUnphy_t
+   UNPHY_SILENCE = 0,   // print nothing
+   UNPHY_VERBOSE = 1;   // print out unphysical values
+
+
+// whether the interpolated fields include all conserved variables in hydrodynamics
+typedef bool AllCons_t;
+const AllCons_t
+   ALL_CONS_NO  = false,
+   ALL_CONS_YES = true;
+
+
+// locally reduce the monotonic coefficient or not
+typedef bool ReduceOrFixMonoCoeff_t;
+const ReduceOrFixMonoCoeff_t
+   INT_FIX_MONO_COEFF    = false,   // fix the coefficient
+   INT_REDUCE_MONO_COEFF = true;    // locally reduce the coefficient
+
+
+// whether switch from conserved to primitive variables when interpolation fails
+typedef bool IntPrim_t;
+const IntPrim_t
+   INT_PRIM_NO  = false,
+   INT_PRIM_YES = true;
+
+
 // target solver in InvokeSolver()
 // --> must start from 0 because of the current TIMING_SOLVER implementation
 // --> when adding new solvers, please modify the NSOLVER constant accordingly
@@ -409,29 +446,32 @@ const PatchType_t
 
 
 // function pointers
-typedef real (*EoS_DE2P_t)( const real Dens, const real Eint, const real Passive[],
-                            const double AuxArray_Flt[], const int AuxArray_Int[],
-                            const real *const Table[EOS_NTABLE_MAX] );
-typedef real (*EoS_DP2E_t)( const real Dens, const real Pres, const real Passive[],
-                            const double AuxArray_Flt[], const int AuxArray_Int[],
-                            const real *const Table[EOS_NTABLE_MAX] );
-typedef real (*EoS_DP2C_t)( const real Dens, const real Pres, const real Passive[],
-                            const double AuxArray_Flt[], const int AuxArray_Int[],
-                            const real *const Table[EOS_NTABLE_MAX] );
-typedef void (*EoS_GENE_t)( const int Mode, real Out[], const real In_Flt[], const int In_Int[],
-                            const double AuxArray_Flt[], const int AuxArray_Int[],
-                            const real *const Table[EOS_NTABLE_MAX] );
-typedef real (*EoS_DE2T_t)( const real Dens, const real Eint, const real Passive[],
-                            const double AuxArray_Flt[], const int AuxArray_Int[],
-                            const real *const Table[EOS_NTABLE_MAX] );
-typedef real (*EoS_DT2P_t)( const real Dens, const real Temp, const real Passive[],
-                            const double AuxArray_Flt[], const int AuxArray_Int[],
-                            const real *const Table[EOS_NTABLE_MAX] );
-typedef void (*ExtAcc_t)( real Acc[], const double x, const double y, const double z, const double Time,
-                          const double UserArray[] );
-typedef real (*ExtPot_t)( const double x, const double y, const double z, const double Time,
-                          const double UserArray_Flt[], const int UserArray_Int[],
-                          const ExtPotUsage_t Usage, const real PotTable[], void **GenePtr );
+typedef real (*EoS_DE2P_t)     ( const real Dens, const real Eint, const real Passive[],
+                                 const double AuxArray_Flt[], const int AuxArray_Int[],
+                                 const real *const Table[EOS_NTABLE_MAX] );
+typedef real (*EoS_DP2E_t)     ( const real Dens, const real Pres, const real Passive[],
+                                 const double AuxArray_Flt[], const int AuxArray_Int[],
+                                 const real *const Table[EOS_NTABLE_MAX] );
+typedef real (*EoS_DP2C_t)     ( const real Dens, const real Pres, const real Passive[],
+                                 const double AuxArray_Flt[], const int AuxArray_Int[],
+                                 const real *const Table[EOS_NTABLE_MAX] );
+typedef void (*EoS_GENE_t)     ( const int Mode, real Out[], const real In_Flt[], const int In_Int[],
+                                 const double AuxArray_Flt[], const int AuxArray_Int[],
+                                 const real *const Table[EOS_NTABLE_MAX] );
+typedef real (*EoS_DE2T_t)     ( const real Dens, const real Eint, const real Passive[],
+                                 const double AuxArray_Flt[], const int AuxArray_Int[],
+                                 const real *const Table[EOS_NTABLE_MAX] );
+typedef real (*EoS_DT2P_t)     ( const real Dens, const real Temp, const real Passive[],
+                                 const double AuxArray_Flt[], const int AuxArray_Int[],
+                                 const real *const Table[EOS_NTABLE_MAX] );
+typedef void (*ExtAcc_t)       ( real Acc[], const double x, const double y, const double z, const double Time,
+                                 const double UserArray[] );
+typedef real (*ExtPot_t)       ( const double x, const double y, const double z, const double Time,
+                                 const double UserArray_Flt[], const int UserArray_Int[],
+                                 const ExtPotUsage_t Usage, const real PotTable[], void **GenePtr );
+typedef void (*IntSchemeFunc_t)( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
+                                 real FData[], const int FSize[3], const int FStart[3], const int NComp,
+                                 const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
 
 
 

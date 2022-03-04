@@ -36,7 +36,7 @@ void CUFLU_FluidSolver_MHM(
          real   g_EC_Ele       [][NCOMP_MAG][ CUBE(N_EC_ELE) ],
    const real dt, const real dh,
    const bool StoreFlux, const bool StoreElectric,
-   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const double Time,
+   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter, const double Time,
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const real MinDens, const real MinPres, const real MinEint,
    const real DualEnergySwitch,
@@ -181,6 +181,7 @@ extern cudaStream_t *Stream;
 //                                      (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
 //                                                     vanLeer + generalized MinMod/extrema-preserving) limiter
 //                MinMod_Coeff        : Coefficient of the generalized MinMod limiter
+//                MinMod_MaxIter      : Maximum number of iterations to reduce MinMod_Coeff
 //                ELBDM_Eta           : Particle mass / Planck constant
 //                ELBDM_Taylor3_Coeff : Coefficient in front of the third term in the Taylor expansion for ELBDM
 //                ELBDM_Taylor3_Auto  : true --> Determine ELBDM_Taylor3_Coeff automatically by invoking the
@@ -212,7 +213,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
                              const int NPatchGroup, const real dt, const real dh,
                              const bool StoreFlux, const bool StoreElectric,
-                             const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+                             const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter,
                              const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
                              const double Time, const bool UsePot, const OptExtAcc_t ExtAcc,
                              const real MinDens, const real MinPres, const real MinEint,
@@ -403,7 +404,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               d_FC_Flux         + UsedPatch[s],
               d_FC_Mag_Half     + UsedPatch[s],
               d_EC_Ele          + UsedPatch[s],
-              dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff,
+              dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff, MinMod_MaxIter,
               Time, UsePot, ExtAcc, GPUExtAcc_Ptr, MinDens, MinPres, MinEint,
               DualEnergySwitch, NormPassive, NNorm, FracPassive, NFrac,
               JeansMinPres, JeansMinPres_Coeff, EoS );
