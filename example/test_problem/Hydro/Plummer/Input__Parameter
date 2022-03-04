@@ -229,3 +229,7 @@ OPT__CK_FLUX_ALLOCATE         0           # check if all flux arrays are properl
 OPT__CK_NEGATIVE              0           # check the negative values: (0=off, 1=density, 2=pressure and entropy, 3=both) [0] ##HYDRO ONLY##
 OPT__CK_MEMFREE               1.0         # check the free memory in GB (0=off, >0=threshold) [1.0]
 OPT__CK_PARTICLE              0           # check the particle allocation [0]
+
+# YT inline analysis
+YT_SCRIPT                     inline_script # inline python script name, exclude ".py" extension
+YT_VERBOSE                    3             # log level (0=off, 1=info, 2=warning, 3=debug)
