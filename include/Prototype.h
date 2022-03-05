@@ -81,7 +81,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
                       const int NPatchGroup, const real dt, const real dh,
                       const bool StoreFlux, const bool StoreElectric,
-                      const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+                      const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter,
                       const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
                       const double Time, const bool UsePot, const OptExtAcc_t ExtAcc,
                       const real MinDens, const real MinPres, const real MinEint,
@@ -107,6 +107,8 @@ real Hydro_CheckMinPres( const real InPres, const real MinPres );
 real Hydro_CheckMinEint( const real InEint, const real MinEint );
 real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real InEngy,
                                const real MinEint, const real Emag );
+bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], const char SingleFieldName[],
+                            const char File[], const int Line, const char Function[], const CheckUnphysical_t Verbose );
 #ifdef DUAL_ENERGY
 void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, const real MomZ,
                           real &Etot, real &Enpy, char &DE_Status, const real Gamma_m1, const real _Gamma_m1,
@@ -212,11 +214,12 @@ void Init_ByRestart_HDF5( const char *FileName );
 
 
 // Interpolation
+void Interpolate( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
+                  real FData[], const int FSize[3], const int FStart[3],
+                  const int NComp, const IntScheme_t IntScheme, const bool UnwrapPhase,
+                  const bool Monotonic[], const bool OppSign0thOrder, const bool AllCons,
+                  const IntPrim_t IntPrim, const ReduceOrFixMonoCoeff_t ReduceMonoCoeff );
 void Int_Table( const IntScheme_t IntScheme, int &NSide, int &NGhost );
-void Interpolate( real CData [], const int CSize[3], const int CStart[3], const int CRange[3],
-                  real FData [], const int FSize[3], const int FStart[3],
-                  const int NComp, const IntScheme_t IntScheme, const bool UnwrapPhase, const bool Monotonic[],
-                  const bool OppSign0thOrder );
 
 
 // Miscellaneous
@@ -450,6 +453,15 @@ void Hydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const i
                                          const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
                                          const int Idx_Start[], const int Idx_End[], const int TFluVarIdxList[],
                                          const int NVar_Der, const long TDerVarList[] );
+void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
+                    const bool FracPassive, const int NFrac, const int FracIdx[],
+                    const bool JeansMinPres, const real JeansMinPres_Coeff,
+                    const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint,
+                    const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                    const real *const EoS_Table[EOS_NTABLE_MAX], real* const EintOut );
+void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive, const int NFrac, const int FracIdx[],
+                    const EoS_DP2E_t EoS_DensPres2Eint, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                    const real *const EoS_Table[EOS_NTABLE_MAX], const real* const EintIn );
 #ifdef MHD
 void MHD_GetCellCenteredBField( real B_CC[], const real Bx_FC[], const real By_FC[], const real Bz_FC[],
                                 const int Nx, const int Ny, const int Nz, const int i, const int j, const int k );
@@ -519,7 +531,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
                              const int NPatchGroup, const real dt, const real dh,
                              const bool StoreFlux, const bool StoreElectric,
-                             const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+                             const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter,
                              const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
                              const double Time, const bool UsePot, const OptExtAcc_t ExtAcc,
                              const real MinDens, const real MinPres, const real MinEint,

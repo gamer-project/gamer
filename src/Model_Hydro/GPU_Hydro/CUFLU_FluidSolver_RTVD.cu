@@ -196,14 +196,9 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
                              CheckMinPres_Yes, MinPres, NULL_REAL, EoS->DensEint2Pres_FuncPtr,
                              EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
 
-#     ifdef CHECK_NEGATIVE_IN_FLUID
-      if ( Hydro_CheckNegative(p) )
-         printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                 p, __FILE__, __LINE__, __FUNCTION__ );
-
-      if ( Hydro_CheckNegative(Fluid[0]) )
-         printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                 Fluid[0], __FILE__, __LINE__, __FUNCTION__ );
+#     ifdef CHECK_UNPHYSICAL_IN_FLUID
+      Hydro_CheckUnphysical( UNPHY_MODE_SING, &p       , "pressure", ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_CheckUnphysical( UNPHY_MODE_SING, &Fluid[0], "density" , ERROR_INFO, UNPHY_VERBOSE );
 #     endif
       c    = FABS( vx ) + SQRT(  EoS->DensPres2CSqr_FuncPtr( Fluid[0], p, Passive, EoS->AuxArrayDevPtr_Flt,
                                                              EoS->AuxArrayDevPtr_Int, EoS->Table )  );
@@ -260,14 +255,9 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
                                 CheckMinPres_Yes, MinPres, NULL_REAL, EoS->DensEint2Pres_FuncPtr,
                                 EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
 
-#        ifdef CHECK_NEGATIVE_IN_FLUID
-         if ( Hydro_CheckNegative(p) )
-            printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                    p, __FILE__, __LINE__, __FUNCTION__ );
-
-         if ( Hydro_CheckNegative(Fluid_half[0]) )
-            printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                    Fluid_half[0], __FILE__, __LINE__, __FUNCTION__ );
+#        ifdef CHECK_UNPHYSICAL_IN_FLUID
+         Hydro_CheckUnphysical( UNPHY_MODE_SING, &p            , "pressure", ERROR_INFO, UNPHY_VERBOSE );
+         Hydro_CheckUnphysical( UNPHY_MODE_SING, &Fluid_half[0], "density" , ERROR_INFO, UNPHY_VERBOSE );
 #        endif
 
          c    = FABS( vx ) + SQRT(  EoS->DensPres2CSqr_FuncPtr( Fluid_half[0], p, Passive, EoS->AuxArrayDevPtr_Flt,
@@ -354,14 +344,9 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
 
 
 //       check negative density and energy
-#        ifdef CHECK_NEGATIVE_IN_FLUID
-         if ( Hydro_CheckNegative(Fluid[0]) )
-            printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                    Fluid[0], __FILE__, __LINE__, __FUNCTION__ );
-
-         if ( Hydro_CheckNegative(Fluid[4]) )
-            printf( "ERROR : negative energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                    Fluid[4], __FILE__, __LINE__, __FUNCTION__ );
+#        ifdef CHECK_UNPHYSICAL_IN_FLUID
+         Hydro_CheckUnphysical( UNPHY_MODE_SING, &Fluid[4], "energy" , ERROR_INFO, UNPHY_VERBOSE );
+         Hydro_CheckUnphysical( UNPHY_MODE_SING, &Fluid[0], "density", ERROR_INFO, UNPHY_VERBOSE );
 #        endif
 
 

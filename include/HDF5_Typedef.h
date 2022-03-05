@@ -248,7 +248,7 @@ struct SymConst_t
 #  if   ( MODEL == HYDRO )
    int    Flu_BlockSize_x;
    int    Flu_BlockSize_y;
-   int    CheckNegativeInFluid;
+   int    CheckUnphyInFluid;
    int    CharReconstruction;
    int    LR_Eint;
    int    CheckIntermediate;
@@ -456,6 +456,7 @@ struct InputPara_t
    double MolecularWeight;
    double IsoTemp;
    double MinMod_Coeff;
+   int    MinMod_MaxIter;
    int    Opt__LR_Limiter;
    int    Opt__1stFluxCorr;
    int    Opt__1stFluxCorrScheme;
@@ -611,6 +612,7 @@ struct InputPara_t
    int    Opt__RefPot_IntScheme;
 #  endif
    double IntMonoCoeff;
+   int    Mono_MaxIter;
    int    IntOppSign0thOrder;
 
 // data dump
