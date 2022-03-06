@@ -249,11 +249,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //   Pres = Feedback_Test_Eg * UNIT_P;
 //   Temp = 15.0;
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
-                                    EoS_AuxArray_Int, h_EoS_Table, NULL ); // assuming EoS requires no passive scalars
+                                    EoS_AuxArray_Int, h_EoS_Table ); // assuming EoS requires no passive scalars
 //   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );         // do NOT include magnetic energy here
    Etot = Feedback_Test_Eg;
    Temp = EoS_DensEint2Temp_CPUPtr( Dens, Eint, NULL, EoS_AuxArray_Flt,
-                                    EoS_AuxArray_Int, h_EoS_Table, NULL );
+                                    EoS_AuxArray_Int, h_EoS_Table );
 //   printf("temperature = %e\n", Temp);
 //   printf("energy = %e\n", Etot);
 

@@ -1,4 +1,5 @@
 #include "GAMER.h"
+#include <stdlib.h>
 
 #ifdef PARTICLE
 
@@ -40,16 +41,30 @@ void Par_Init_ByFunction_Feedback( const long NPar_ThisRank, const long NPar_All
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
+   real *ParData_AllRank[PAR_NATT_TOTAL];
+   for (int v=0; v<PAR_NATT_TOTAL; v++)   ParData_AllRank[v] = NULL;
 
 // synchronize all particles to the physical time on the base level
    for (long p=0; p<NPar_ThisRank; p++)   ParTime[p] = Time[0];
 
 
+// only the master rank will construct the initial condition
+   if ( MPI_Rank == 0 )
+   {
+   ParData_AllRank[PAR_MASS] = new real [NPar_AllRank];
+   ParData_AllRank[PAR_POSX] = new real [NPar_AllRank];
+   ParData_AllRank[PAR_POSY] = new real [NPar_AllRank];
+   ParData_AllRank[PAR_POSZ] = new real [NPar_AllRank];
+   ParData_AllRank[PAR_VELX] = new real [NPar_AllRank];
+   ParData_AllRank[PAR_VELY] = new real [NPar_AllRank];
+   ParData_AllRank[PAR_VELZ] = new real [NPar_AllRank];
+
+
 // initialize the particle creation time by an arbitrary negative value since it is
 // only used for star particles created during evolution and is useless during initialization
-#  ifdef STAR_FORMATION
-   for (int p=0; p<NPar_ThisRank; p++)    AllAttribute[Idx_ParCreTime][p] = 0.000000;
-#  endif
+// #  ifdef STAR_FORMATION
+//    for (int p=0; p<NPar_AllRank; p++)    AllAttribute[Idx_ParCreTime][p] = 0.000000;
+// #  endif
 
 
 // set other particle attributes
@@ -57,16 +72,15 @@ void Par_Init_ByFunction_Feedback( const long NPar_ThisRank, const long NPar_All
    real *ParPos[3] = { ParPosX, ParPosY, ParPosZ };
    real *ParVel[3] = { ParVelX, ParVelY, ParVelZ };
    
-   const uint RSeed     = 2;                                         // random seed
-   const real MassMin   = 10.0;                                    // minimum value of particle mass
-   const real MassMax   = 100.0;                                       // maximum value of particle mass
+   const uint RSeed     = 2;                                 // random seed
+   const real MassMin   = 10.0;                              // minimum value of particle mass
+   const real MassMax   = 100.0;                             // maximum value of particle mass
 
    srand( RSeed );
 
-   for (long p=0; p<NPar_ThisRank; p++)
+   for (long p=0; p<NPar_AllRank; p++)
    {
-      ParMass[p] = MassMax * Const_Msun / UNIT_M;
-//      ParMass[p] = 0.0;
+      ParData_AllRank[PAR_MASS][p] = MassMax * Const_Msun / UNIT_M;
    }
 
 
@@ -84,17 +98,28 @@ void Par_Init_ByFunction_Feedback( const long NPar_ThisRank, const long NPar_All
 
    srand( RSeed );
 */
-   for (long p=0; p<NPar_ThisRank; p++)
+   for (long p=0; p<NPar_AllRank; p++)
    {
       for (int d=0; d<3; d++)
       {
-         ParPos[d][p] = 0.5;
-         ParVel[d][p] = 0.0;
+//         ParPos[d][p] = 0.5;
+	 ParData_AllRank[PAR_POSX+d][p] = (double) rand() / (RAND_MAX + 1.0 );
+         ParData_AllRank[PAR_VELX+d][p] = 0.0;
       }
    }
 
 // ============================================================================================================
+   }// if ( MPI_Rank == 0 )
 
+
+// send particle attributes from the master rank to all ranks
+   Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL, ParData_AllRank, AllAttribute );
+
+// free resource
+   if ( MPI_Rank == 0 )
+      {
+      for (int v=0; v<PAR_NATT_TOTAL; v++)   delete [] ParData_AllRank[v];
+      }
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 

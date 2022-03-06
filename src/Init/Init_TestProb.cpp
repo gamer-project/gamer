@@ -20,12 +20,9 @@ void Init_TestProb_Hydro_MHD_ABC();
 void Init_TestProb_Hydro_MHD_OrszagTangVortex();
 void Init_TestProb_Hydro_MHD_LinearWave();
 void Init_TestProb_Hydro_JeansInstability();
-<<<<<<< HEAD
 void Init_TestProb_Hydro_Feedback();
-=======
 void Init_TestProb_Hydro_ParEqmIC();
 void Init_TestProb_Hydro_BarredPot();
->>>>>>> ea490b51a50cedba7b5bcfd96243e29c98ff3852
 
 void Init_TestProb_ELBDM_ExtPot();
 
@@ -70,11 +67,8 @@ void Init_TestProb()
       case TESTPROB_HYDRO_MHD_ORSZAG_TANG_VORTEX :       Init_TestProb_Hydro_MHD_OrszagTangVortex();        break;
       case TESTPROB_HYDRO_MHD_LINEAR_WAVE :              Init_TestProb_Hydro_MHD_LinearWave();              break;
       case TESTPROB_HYDRO_JEANS_INSTABILITY :            Init_TestProb_Hydro_JeansInstability();            break;
-<<<<<<< HEAD
       case TESTPROB_HYDRO_FEEDBACK :			 Init_TestProb_Hydro_Feedback();		    break;
-=======
       case TESTPROB_HYDRO_PARTICLE_EQUILIBRIUM_IC :      Init_TestProb_Hydro_ParEqmIC();                    break;
->>>>>>> ea490b51a50cedba7b5bcfd96243e29c98ff3852
 
       case TESTPROB_ELBDM_EXTPOT :                       Init_TestProb_ELBDM_ExtPot();                      break;
 

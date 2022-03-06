@@ -365,6 +365,8 @@ void FB_SNe( const int lv, const double TimeNew, const double TimeOld, const dou
 //      concert SNe_dens into solar mass to compare with enzo
       SNe_dens_Msun = SNe_dens * UNIT_M / Msun;
 
+   if ( MPI_Rank == 0 )
+   {
       FOUt=fopen("time.txt","a");
       if(FOUt==NULL) {
 	printf("Fail To Open File time.txt!!");
@@ -378,6 +380,7 @@ void FB_SNe( const int lv, const double TimeNew, const double TimeOld, const dou
                      }
       fprintf(FOUT, "%f\n", dt);
       fclose(FOUT);
+   }//if ( MPI_Rank == 0 )
 
       if(SNe_dens_Msun != 0){
       	fout=fopen("mass.txt","a");

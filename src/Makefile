@@ -167,13 +167,13 @@ SIMU_OPTION += -DMAX_PATCH=1000000
 #SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA/TURING/AMPERE
-SIMU_OPTION += -DGPU_ARCH=KEPLER
+#SIMU_OPTION += -DGPU_ARCH=TURING
 
 # debug mode
-#SIMU_OPTION += -DGAMER_DEBUG
+SIMU_OPTION += -DGAMER_DEBUG
 
 # bitwise reproducibility
-#SIMU_OPTION += -DBITWISE_REPRODUCIBILITY
+SIMU_OPTION += -DBITWISE_REPRODUCIBILITY
 
 # measure the wall-clock time of GAMER
 SIMU_OPTION += -DTIMING
@@ -187,18 +187,18 @@ SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
 # --> must disable LOAD_BALANCE
-SIMU_OPTION += -DSERIAL
+#SIMU_OPTION += -DSERIAL
 
 # load-balance parallelization: HILBERT
 # --> must disable SERIAL
-#SIMU_OPTION += -DLOAD_BALANCE=HILBERT
+SIMU_OPTION += -DLOAD_BALANCE=HILBERT
 
 # overlap MPI communication with computation
 # --> NOT supported yet; must enable LOAD_BALANCE
 #SIMU_OPTION += -DOVERLAP_MPI
 
 # enable OpenMP parallelization
-#SIMU_OPTION += -DOPENMP
+SIMU_OPTION += -DOPENMP
 
 # work on the NAOC Laohu GPU cluster
 #SIMU_OPTION += -DLAOHU
