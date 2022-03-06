@@ -102,13 +102,8 @@ static real EoS_DensEint2Pres_Gamma( const real Dens, const real Eint, const rea
 #  ifdef GAMER_DEBUG
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
 
-   if ( Hydro_CheckNegative(Dens) )
-      printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Dens, __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( Hydro_CheckNegative(Eint) )
-      printf( "ERROR : invalid input internal energy density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Eint, __FILE__, __LINE__, __FUNCTION__ );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Dens, "input density",         ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Eint, "input internal energy", ERROR_INFO, UNPHY_VERBOSE );
 #  endif // GAMER_DEBUG
 
 
@@ -147,13 +142,8 @@ static real EoS_DensPres2Eint_Gamma( const real Dens, const real Pres, const rea
 #  ifdef GAMER_DEBUG
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
 
-   if ( Hydro_CheckNegative(Dens) )
-      printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Dens, __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( Hydro_CheckNegative(Pres) )
-      printf( "ERROR : invalid input pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Pres, __FILE__, __LINE__, __FUNCTION__ );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Dens, "input density",  ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "input pressure", ERROR_INFO, UNPHY_VERBOSE );
 #  endif // GAMER_DEBUG
 
 
@@ -192,13 +182,8 @@ static real EoS_DensPres2CSqr_Gamma( const real Dens, const real Pres, const rea
 #  ifdef GAMER_DEBUG
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
 
-   if ( Hydro_CheckNegative(Dens) )
-      printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Dens, __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( Hydro_CheckNegative(Pres) )
-      printf( "ERROR : invalid input pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Pres, __FILE__, __LINE__, __FUNCTION__ );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Dens, "input density",  ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "input pressure", ERROR_INFO, UNPHY_VERBOSE );
 #  endif // GAMER_DEBUG
 
 
@@ -239,13 +224,8 @@ static real EoS_DensEint2Temp_Gamma( const real Dens, const real Eint, const rea
 #  ifdef GAMER_DEBUG
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
 
-   if ( Hydro_CheckNegative(Dens) )
-      printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Dens, __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( Hydro_CheckNegative(Eint) )
-      printf( "ERROR : invalid input internal energy density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Eint, __FILE__, __LINE__, __FUNCTION__ );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Dens, "input density",         ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Eint, "input internal energy", ERROR_INFO, UNPHY_VERBOSE );
 #  endif // GAMER_DEBUG
 
 
@@ -287,13 +267,8 @@ static real EoS_DensTemp2Pres_Gamma( const real Dens, const real Temp, const rea
 #  ifdef GAMER_DEBUG
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
 
-   if ( Hydro_CheckNegative(Dens) )
-      printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Dens, __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( Hydro_CheckNegative(Temp) )
-      printf( "ERROR : invalid input temperature (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Temp, __FILE__, __LINE__, __FUNCTION__ );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Dens, "input density",     ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Temp, "input temperature", ERROR_INFO, UNPHY_VERBOSE );
 #  endif // GAMER_DEBUG
 
 

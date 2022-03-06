@@ -634,7 +634,8 @@ vpath %.cpp    LoadBalance
 # yt inline analysis source files (included only if "SUPPORT_LIBYT" is turned on)
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DSUPPORT_LIBYT, $(SIMU_OPTION))" "-DSUPPORT_LIBYT"
-CPU_FILE    += YT_Init.cpp  YT_End.cpp  YT_SetParameter.cpp  YT_AddAllGrid.cpp  YT_Inline.cpp
+CPU_FILE    += YT_Init.cpp  YT_End.cpp  YT_SetParameter.cpp  YT_AddLocalGrid.cpp  YT_Inline.cpp  YT_DerivedFunction.cpp \
+               YT_GetParticleAttribute.cpp
 
 vpath %.cpp    YT
 endif # SUPPORT_LIBYT
