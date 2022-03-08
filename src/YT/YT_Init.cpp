@@ -31,6 +31,9 @@ void YT_Init( int argc, char *argv[] )
 // YT analysis script without the ".py" extension (default="yt_inline_script")
    param_libyt.script  = YT_SCRIPT;
 
+// YT check data or not interface turned off (default=true)
+   param_libyt.check_data = false;
+
 // initialize libyt
    if ( yt_init( argc, argv, &param_libyt ) != YT_SUCCESS )    Aux_Error( ERROR_INFO, "yt_init() failed !!\n" );
 

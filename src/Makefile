@@ -560,13 +560,14 @@ endif # GRAVITY
 ifeq "$(filter -DPARTICLE, $(SIMU_OPTION))" "-DPARTICLE"
 GPU_FILE    +=
 
-CPU_FILE    += Par_Init_ByFunction.cpp  Par_Output_TextFile.cpp  Par_FindHomePatch_UniformGrid.cpp \
+CPU_FILE    += Par_Init_ByFunction.cpp  Par_Output_TextFile.cpp  Par_Output_BinaryFile.cpp  Par_FindHomePatch_UniformGrid.cpp \
                Par_Aux_Check_Particle.cpp  Par_PassParticle2Father.cpp  Par_CollectParticle2OneLevel.cpp \
                Par_MassAssignment.cpp  Par_UpdateParticle.cpp  Par_GetTimeStep_VelAcc.cpp \
                Par_PassParticle2Sibling.cpp  Par_CountParticleInDescendant.cpp  Par_Aux_GetConservedQuantity.cpp \
                Par_Aux_InitCheck.cpp  Par_Aux_Record_ParticleCount.cpp  Par_PassParticle2Son_MultiPatch.cpp \
                Par_Synchronize.cpp  Par_PredictPos.cpp  Par_Init_ByFile.cpp  Par_Init_Attribute.cpp \
-               Par_AddParticleAfterInit.cpp  Par_PassParticle2Son_SinglePatch.cpp
+               Par_AddParticleAfterInit.cpp  Par_PassParticle2Son_SinglePatch.cpp  Par_EquilibriumIC.cpp \
+               Par_ScatterParticleData.cpp
 
 vpath %.cu     Particle/GPU
 vpath %.cpp    Particle/CPU  Particle
@@ -630,7 +631,8 @@ vpath %.cpp    LoadBalance
 # yt inline analysis source files (included only if "SUPPORT_LIBYT" is turned on)
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DSUPPORT_LIBYT, $(SIMU_OPTION))" "-DSUPPORT_LIBYT"
-CPU_FILE    += YT_Init.cpp  YT_End.cpp  YT_SetParameter.cpp  YT_AddAllGrid.cpp  YT_Inline.cpp
+CPU_FILE    += YT_Init.cpp  YT_End.cpp  YT_SetParameter.cpp  YT_AddLocalGrid.cpp  YT_Inline.cpp  YT_DerivedFunction.cpp \
+               YT_GetParticleAttribute.cpp
 
 vpath %.cpp    YT
 endif # SUPPORT_LIBYT
@@ -853,7 +855,7 @@ else ifeq "$(filter -DGPU_ARCH=KEPLER, $(SIMU_OPTION))" "-DGPU_ARCH=KEPLER"
    ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
      NVCCFLAG_FLU += --maxrregcount=128
    else
-     NVCCFLAG_FLU += --maxrregcount=64
+     NVCCFLAG_FLU += --maxrregcount=70
    endif
 else ifeq "$(filter -DGPU_ARCH=MAXWELL, $(SIMU_OPTION))" "-DGPU_ARCH=MAXWELL"
    ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
@@ -976,4 +978,3 @@ clean :
 	@rm -f $(OBJ_PATH)/*
 	@rm -f $(EXECUTABLE)
 	@rm -f ./*.linkinfo
-

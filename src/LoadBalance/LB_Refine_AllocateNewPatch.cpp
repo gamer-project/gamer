@@ -74,7 +74,6 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
    const int SonNBuff = amr->NPatchComma[SonLv][3] - SonNReal;
    const int FaNPatch = amr->num[FaLv];
 
-
 // 1. get the matching lists for the away patches
 // ==========================================================================================
    int *Match_New   = new int [NNew_Away];
@@ -718,7 +717,8 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
    const int SonLv   = FaLv + 1;
    const int SonPID0 = amr->num[SonLv];
-   bool FaIsHome = false;
+   bool FaIsHome     = false;
+
 
 // 0. check : target father patch has no son
 #  ifdef GAMER_DEBUG
@@ -854,20 +854,19 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 //    interpolate density
       Interpolate( CData_Dens, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[DENS][0][0][0],
                    FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_Yes,
-                   IntOppSign0thOrder_No );
+                   IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF );
 
 //    interpolate phase
       Interpolate( CData_Real, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[REAL][0][0][0],
                    FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_Yes, &Monotonicity_No,
-                   IntOppSign0thOrder_No );
+                   IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF );
    }
 
    else // if ( OPT__INT_PHASE )
    {
-      for (int v=0; v<NCOMP_TOTAL; v++)
-      Interpolate( CData_Flu+v*CSize_Flu1v, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[v][0][0][0],
-                   FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity,
-                   IntOppSign0thOrder_No );
+      Interpolate( CData_Flu, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[0][0][0][0],
+                   FSize_CC3, FStart_CC, NCOMP_TOTAL, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity,
+                   IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF );
    }
 
    if ( OPT__INT_PHASE )
@@ -897,10 +896,10 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
 #  else // #if ( MODEL == ELBDM )
 
-   for (int v=0; v<NCOMP_TOTAL; v++)
-   Interpolate( CData_Flu+v*CSize_Flu1v, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[v][0][0][0],
-                FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity,
-                INT_OPP_SIGN_0TH_ORDER );
+// adopt INT_PRIM_NO to ensure conservation
+   Interpolate( CData_Flu, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[0][0][0][0],
+                FSize_CC3, FStart_CC, NCOMP_TOTAL, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity,
+                INT_OPP_SIGN_0TH_ORDER, ALL_CONS_YES, INT_PRIM_NO, INT_REDUCE_MONO_COEFF );
 
 #  endif // #if ( MODEL == ELBDM ) ... else
 
@@ -917,7 +916,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
    Interpolate( CData_Pot, CSize_Pot3, CStart_Pot, CRange_CC, &FData_Pot[0][0][0],
                 FSize_CC3, FStart_CC, 1, OPT__REF_POT_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_No,
-                IntOppSign0thOrder_No );
+                IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF );
 #  endif
 
 

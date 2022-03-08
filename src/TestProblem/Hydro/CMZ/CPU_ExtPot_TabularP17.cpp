@@ -141,7 +141,7 @@ static real ExtPot_TabularP17( const double x, const double y, const double z, c
    if (rad <= cx-0.1)
 
    {
-// 1. rotate x,y,z 
+// 1. rotate x,y,z
 
      angle  =  -1.*Time*Omegab;
      dxrot  =  xp*cos(angle) - yp*sin(angle);
@@ -149,7 +149,7 @@ static real ExtPot_TabularP17( const double x, const double y, const double z, c
 
      dxrot += (real)cx;
      dyrot += (real)cy;
-    
+
    } else
    {
 
@@ -168,34 +168,34 @@ static real ExtPot_TabularP17( const double x, const double y, const double z, c
    idx_y = int( dy );
    idx_z = int( dz );
    idx0  = long( idx_x*didx_x + idx_y*didx_y ) + (long)idx_z*didx_z;
-  
+
 // it should never happen even considering round-off errors!
 #  if ( defined GAMER_DEBUG  &&  !defined __CUDACC__ )
 
    if ( idx_x < 0  ||  idx_x+1 >= NPoint_x )
       Aux_Error( ERROR_INFO, "x index outside the table range (x %14.7e, EdgeL %14.7e, _dhx %13.7e, idx %d) !!\n",
                  x, EdgeL_x, _dhx, idx_x );
-  
+
    if ( idx_y < 0  ||  idx_y+1 >= NPoint_y )
       Aux_Error( ERROR_INFO, "y index outside the table range (y %14.7e, EdgeL %14.7e, _dhy %13.7e, idx %d) !!\n",
                  y, EdgeL_y, _dhy, idx_y );
-  
+
    if ( idx_z < 0  ||  idx_z+1 >= NPoint_z )
       Aux_Error( ERROR_INFO, "z index outside the table range (z %14.7e, EdgeL %14.7e, _dhz %13.7e, idx %d) !!\n",
                  z, EdgeL_z, _dhy, idx_z );
 #  endif
-  
+
    real weight_xL, weight_yL, weight_zL;
    real weight_xR, weight_yR, weight_zR;
    real ExtPot;
-  
+
    weight_xR = dx - (real)idx_x;
    weight_yR = dy - (real)idx_y;
    weight_zR = dz - (real)idx_z;
    weight_xL = ONE - weight_xR;
    weight_yL = ONE - weight_yR;
    weight_zL = ONE - weight_zR;
-  
+
    ExtPot = PotTable[ idx0                            ] * weight_xL * weight_yL * weight_zL +
             PotTable[ idx0 + didx_x                   ] * weight_xR * weight_yL * weight_zL +
             PotTable[ idx0          + didx_y          ] * weight_xL * weight_yR * weight_zL +
@@ -204,7 +204,7 @@ static real ExtPot_TabularP17( const double x, const double y, const double z, c
             PotTable[ idx0          + didx_y + didx_z ] * weight_xL * weight_yR * weight_zR +
             PotTable[ idx0 + didx_x          + didx_z ] * weight_xR * weight_yL * weight_zR +
             PotTable[ idx0 + didx_x + didx_y + didx_z ] * weight_xR * weight_yR * weight_zR;
-  
+
    return ExtPot;
 
 

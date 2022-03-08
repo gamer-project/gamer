@@ -54,7 +54,7 @@ do
    DIR=`echo $FILE_IN | sed 's#.*/##'`
 
 
-#  begin sorting 
+#  begin sorting
    echo -e "***** Working on data $FILE_IN ... *****"
 
    ./GAMER_Data2Visit -i $FILE_IN -x 0.0 -y 0.0 -z 0.0 -X 1.0 -Y 1.0 -Z 1.0 -m 3 -p -w

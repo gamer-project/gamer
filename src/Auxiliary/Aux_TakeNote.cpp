@@ -374,10 +374,10 @@ void Aux_TakeNote()
 #     endif
 
 #     if   ( MODEL == HYDRO )
-#     ifdef CHECK_NEGATIVE_IN_FLUID
-      fprintf( Note, "CHECK_NEGATIVE_IN_FLUID         ON\n" );
+#     ifdef CHECK_UNPHYSICAL_IN_FLUID
+      fprintf( Note, "CHECK_UNPHYSICAL_IN_FLUID       ON\n" );
 #     else
-      fprintf( Note, "CHECK_NEGATIVE_IN_FLUID         OFF\n" );
+      fprintf( Note, "CHECK_UNPHYSICAL_IN_FLUID       OFF\n" );
 #     endif
 
 #     ifdef CHAR_RECONSTRUCTION
@@ -711,6 +711,7 @@ void Aux_TakeNote()
       fprintf( Note, "Par->ImproveAcc                 %d\n",      amr->Par->ImproveAcc          );
       fprintf( Note, "Par->PredictPos                 %d\n",      amr->Par->PredictPos          );
       fprintf( Note, "Par->RemoveCell                 %13.7e\n",  amr->Par->RemoveCell          );
+      fprintf( Note, "OPT__FREEZE_PAR                 %d\n",      OPT__FREEZE_PAR               );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 #     endif
@@ -896,6 +897,7 @@ void Aux_TakeNote()
       fprintf( Note, "MOLECULAR_WEIGHT                %13.7e\n",  MOLECULAR_WEIGHT        );
       fprintf( Note, "ISO_TEMP                        %13.7e\n",  ISO_TEMP                );
       fprintf( Note, "MINMOD_COEFF                    %13.7e\n",  MINMOD_COEFF            );
+      fprintf( Note, "MINMOD_MAX_ITER                 %d\n",      MINMOD_MAX_ITER         );
       fprintf( Note, "OPT__LR_LIMITER                 %s\n",      ( OPT__LR_LIMITER == LR_LIMITER_VANLEER    ) ? "VANLEER"    :
                                                                   ( OPT__LR_LIMITER == LR_LIMITER_GMINMOD    ) ? "GMINMOD"    :
                                                                   ( OPT__LR_LIMITER == LR_LIMITER_ALBADA     ) ? "ALBADA"     :
@@ -984,6 +986,7 @@ void Aux_TakeNote()
 
       fprintf( Note, "OPT__OVERLAP_MPI                %d\n",      OPT__OVERLAP_MPI         );
       fprintf( Note, "OPT__RESET_FLUID                %d\n",      OPT__RESET_FLUID         );
+      fprintf( Note, "OPT__FREEZE_FLUID               %d\n",      OPT__FREEZE_FLUID        );
 #     if ( MODEL == HYDRO  ||  MODEL == ELBDM )
       fprintf( Note, "MIN_DENS                        %13.7e\n",  MIN_DENS                 );
 #     endif
@@ -1185,6 +1188,7 @@ void Aux_TakeNote()
                                                                                                              "UNKNOWN" );
 #     endif
       fprintf( Note, "INT_MONO_COEFF                  %13.7e\n",  INT_MONO_COEFF          );
+      fprintf( Note, "MONO_MAX_ITER                   %d\n",      MONO_MAX_ITER           );
       fprintf( Note, "INT_OPP_SIGN_0TH_ORDER          %d\n",      INT_OPP_SIGN_0TH_ORDER  );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
@@ -1197,7 +1201,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OUTPUT_PART                %d\n",      OPT__OUTPUT_PART       );
       fprintf( Note, "OPT__OUTPUT_USER                %d\n",      OPT__OUTPUT_USER       );
 #     ifdef PARTICLE
-      fprintf( Note, "OPT__OUTPUT_PAR_TEXT            %d\n",      OPT__OUTPUT_PAR_TEXT   );
+      fprintf( Note, "OPT__OUTPUT_PAR_MODE            %d\n",      OPT__OUTPUT_PAR_MODE   );
 #     endif
       fprintf( Note, "OPT__OUTPUT_BASEPS              %d\n",      OPT__OUTPUT_BASEPS     );
       fprintf( Note, "OPT__OUTPUT_BASE                %d\n",      OPT__OUTPUT_BASE       );
