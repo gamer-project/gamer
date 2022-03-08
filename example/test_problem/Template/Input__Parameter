@@ -42,6 +42,7 @@ TESTPROB_ID                   0           # test problem ID [0]
                                           #   14: HYDRO MHD Orszag-Tang vortex (+MHD)
                                           #   15: HYDRO MHD linear wave (+MHD)
                                           #   16: HYDRO Jeans instability (+GRAVITY) [+MHD]
+                                          #   17: HYDRO particle in equilibrium (+GRAVITY & PARTICLE)
                                           # 1000: ELBDM external potential (+GRAVITY)
 
 
@@ -75,6 +76,7 @@ PAR_INTEG                     2           # particle integration scheme: (1=Eule
 PAR_IMPROVE_ACC               1           # improve force accuracy at patch boundaries [1] ##STORE_POT_GHOST and PAR_INTERP=2/3 ONLY##
 PAR_PREDICT_POS               1           # predict particle position during mass assignment [1]
 PAR_REMOVE_CELL              -1.0         # remove particles X-root-cells from the boundaries (non-periodic BC only; <0=auto) [-1.0]
+OPT__FREEZE_PAR               0           # do not update particles (except for tracers) [0]
 
 
 # cosmology (COMOVING only)
@@ -184,10 +186,11 @@ GAMMA                         1.666666667 # ratio of specific heats (i.e., adiab
 MOLECULAR_WEIGHT              0.6         # mean molecular weight [0.6]
 ISO_TEMP                      1.0e4       # isothermal temperature in kelvin ##EOS_ISOTHERMAL ONLY##
 MINMOD_COEFF                  1.5         # coefficient of the generalized MinMod limiter (1.0~2.0) [1.5]
+MINMOD_MAX_ITER               0           # maximum number of iterations to reduce MINMOD_COEFF when data reconstruction fails (0=off) [0]
 OPT__LR_LIMITER              -1           # slope limiter of data reconstruction in the MHM/MHM_RP/CTU schemes:
                                           # (-1=auto, 0=none, 1=vanLeer, 2=generalized MinMod, 3=vanAlbada, 4=vanLeer+generalized MinMod, 6=central) [-1]
 OPT__1ST_FLUX_CORR           -1           # correct unphysical results (defined by MIN_DENS/PRES) by the 1st-order fluxes:
-                                          # (<0=auto, 0=off, 1=3D, 2=3D+1D) [-1] ##MHM/MHM_RP/CTU ONLY; NOT SUPPORTED IN MHD##
+                                          # (<0=auto, 0=off, 1=3D, 2=3D+1D) [-1] ##MHM/MHM_RP/CTU ONLY##
 OPT__1ST_FLUX_CORR_SCHEME    -1           # Riemann solver for OPT__1ST_FLUX_CORR (-1=auto, 0=none, 1=Roe, 2=HLLC, 3=HLLE, 4=HLLD) [-1]
 DUAL_ENERGY_SWITCH            2.0e-2      # apply dual-energy if E_int/E_kin < DUAL_ENERGY_SWITCH [2.0e-2] ##DUAL_ENERGY ONLY##
 
@@ -212,6 +215,7 @@ OPT__NORMALIZE_PASSIVE        1           # ensure "sum(passive_scalar_density) 
 OPT__INT_FRAC_PASSIVE_LR      1           # convert specified passive scalars to mass fraction during data reconstruction [1]
 OPT__OVERLAP_MPI              0           # overlap MPI communication with CPU/GPU computations [0] ##NOT SUPPORTED YET##
 OPT__RESET_FLUID              0           # reset fluid variables after each update -> edit "Flu_ResetByUser.cpp" [0]
+OPT__FREEZE_FLUID             0           # do not evolve fluid at all [0]
 OPT__CHECK_PRES_AFTER_FLU    -1           # check unphysical pressure at the end of the fluid solver (<0=auto) [-1]
 OPT__LAST_RESORT_FLOOR        1           # apply floor values as the last resort when the fluid solver fails [1] ##HYDRO and MHD ONLY##
 MIN_DENS                      0.0         # minimum mass density     (must >= 0.0) [0.0] ##HYDRO, MHD, and ELBDM ONLY##
@@ -288,6 +292,7 @@ OPT__RHO_INT_SCHEME           4           # ghost-zone mass density for the Pois
 OPT__GRA_INT_SCHEME           5           # ghost-zone potential for the gravity solver (for UNSPLIT_GRAVITY as well) [5]
 OPT__REF_POT_INT_SCHEME       5           # newly allocated potential during grid refinement [5]
 INT_MONO_COEFF                2.0         # coefficient for ensuring the interpolation monotonicity (1.0~4.0) [2.0]
+MONO_MAX_ITER                 0           # maximum number of iterations to reduce INT_MONO_COEFF when interpolation fails (0=off) [0]
 INT_OPP_SIGN_0TH_ORDER        1           # switch to 0th-order interpolation if adjacent values change signs [HYDRO:1; ELBDM:0]
 
 
@@ -295,7 +300,7 @@ INT_OPP_SIGN_0TH_ORDER        1           # switch to 0th-order interpolation if
 OPT__OUTPUT_TOTAL             1           # output the simulation snapshot: (0=off, 1=HDF5, 2=C-binary) [1]
 OPT__OUTPUT_PART              0           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag) [0]
 OPT__OUTPUT_USER              0           # output the user-specified data -> edit "Output_User.cpp" [0]
-OPT__OUTPUT_PAR_TEXT          0           # output the particle text file [0] ##PARTICLE ONLY##
+OPT__OUTPUT_PAR_MODE          0           # output the particle data: (0=off, 1=text-file, 2=C-binary) [0] ##PARTICLE ONLY##
 OPT__OUTPUT_BASEPS            0           # output the base-level power spectrum [0]
 OPT__OUTPUT_BASE              0           # only output the base-level data [0] ##OPT__OUTPUT_PART ONLY##
 OPT__OUTPUT_POT               0           # output gravitational potential [0] ##OPT__OUTPUT_TOTAL ONLY##

@@ -1253,14 +1253,9 @@ void Hydro_Pri2Char( real InOut[], const real Dens, const real Pres, const real 
 #  error : Hydro_Pri2Char() only supports EOS_GAMMA !!
 #  endif
 
-#  if ( defined CHECK_NEGATIVE_IN_FLUID  &&  !defined MHD )
-   if ( Hydro_CheckNegative(Pres) )
-      printf( "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Pres, __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( Hydro_CheckNegative(Dens) )
-      printf( "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Dens,  __FILE__, __LINE__, __FUNCTION__ );
+#  if ( defined CHECK_UNPHYSICAL_IN_FLUID  &&  !defined MHD )
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "pressure", ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Dens, "density" , ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 
@@ -1302,7 +1297,7 @@ void Hydro_Pri2Char( real InOut[], const real Dens, const real Pres, const real 
 // b. pure hydro
 #  else // #ifdef MHD
    const real  a2 = EoS->DensPres2CSqr_FuncPtr( Dens, Pres, Passive, EoS->AuxArrayDevPtr_Flt,
-                                                EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
+                                                EoS->AuxArrayDevPtr_Int, EoS->Table );
    const real _a2 = (real)1.0 / a2;
    const real _a  = SQRT( _a2 );
 
@@ -1348,14 +1343,9 @@ void Hydro_Char2Pri( real InOut[], const real Dens, const real Pres, const real 
 #  error : Hydro_Char2Pri() only supports EOS_GAMMA !!
 #  endif
 
-#  if ( defined CHECK_NEGATIVE_IN_FLUID  &&  !defined MHD )
-   if ( Hydro_CheckNegative(Pres) )
-      printf( "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Pres, __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( Hydro_CheckNegative(Dens) )
-      printf( "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Dens,  __FILE__, __LINE__, __FUNCTION__ );
+#  if ( defined CHECK_UNPHYSICAL_IN_FLUID  &&  !defined MHD )
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "pressure", ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Dens, "density" , ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 
@@ -1373,7 +1363,7 @@ void Hydro_Char2Pri( real InOut[], const real Dens, const real Pres, const real 
 
 // primitive --> characteristic
    const real a2 = EoS->DensPres2CSqr_FuncPtr( Dens, Pres, Passive, EoS->AuxArrayDevPtr_Flt,
-                                               EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
+                                               EoS->AuxArrayDevPtr_Int, EoS->Table );
 
 // a. MHD
 #  ifdef MHD
@@ -1456,21 +1446,16 @@ void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
 #  error : Hydro/MHD_GetEigenSystem() only supports EOS_GAMMA !!
 #  endif
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( Hydro_CheckNegative(CC_Var[4]) )
-      printf( "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              CC_Var[4], __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( Hydro_CheckNegative(CC_Var[0]) )
-      printf( "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              CC_Var[0], __FILE__, __LINE__, __FUNCTION__ );
+#  ifdef CHECK_UNPHYSICAL_IN_FLUID
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &CC_Var[4], "pressure", ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &CC_Var[0], "density" , ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 
    const real  Rho = CC_Var[0];
    const real _Rho = (real)1.0/Rho;
    const real  a2  = EoS->DensPres2CSqr_FuncPtr( Rho, CC_Var[4], Passive, EoS->AuxArrayDevPtr_Flt,
-                                                 EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
+                                                 EoS->AuxArrayDevPtr_Int, EoS->Table );
    const real  a   = SQRT( a2 );
    const real _a   = (real)1.0/a;
    const real _a2  = _a*_a;
@@ -1572,14 +1557,9 @@ void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
       alpha_s = (real)0.0;
    }
    else {
-#     ifdef CHECK_NEGATIVE_IN_FLUID
-      if ( Hydro_CheckNegative(a2_min_Cs2) )
-         printf( "ERROR : invalid a2_min_Cs2 (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                 a2_min_Cs2, __FILE__, __LINE__, __FUNCTION__ );
-
-      if ( Hydro_CheckNegative(Cf2_min_a2) )
-         printf( "ERROR : invalid Cf2_min_a2 (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                 Cf2_min_a2, __FILE__, __LINE__, __FUNCTION__ );
+#     ifdef CHECK_UNPHYSICAL_IN_FLUID
+      Hydro_CheckUnphysical( UNPHY_MODE_SING, &a2_min_Cs2, "a2_min_Cs2", ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_CheckUnphysical( UNPHY_MODE_SING, &Cf2_min_a2, "Cf2_min_a2", ERROR_INFO, UNPHY_VERBOSE );
 #     endif
 
       const real _Cf2_min_Cs2 = (real)1.0 / Cf2_min_Cs2;

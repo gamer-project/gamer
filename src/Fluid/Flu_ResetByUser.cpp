@@ -57,7 +57,7 @@ bool Flu_ResetByUser_Func_Template( real fluid[], const double x, const double y
 #  endif
    const real MinPres                   = 1.0e-10;
    const real MinEint                   = EoS_DensPres2Eint_CPUPtr( MinDens, MinPres, MinPassive,
-                                                                    EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+                                                                    EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
    const real MinEmag                   = 0.0;  // assuming MHD is not adopted
 
    if ( r <= TRad )

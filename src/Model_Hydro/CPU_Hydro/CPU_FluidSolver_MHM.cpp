@@ -54,7 +54,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                            const real dt, const real dh, const real MinDens, const real MinEint,
                            const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
-                           const EoS_t *EoS );
+                           const EoS_t *EoS, int *s_FullStepFailure, const int Iteration, const int MinMod_MaxIter );
 #if   ( RSOLVER == EXACT )
 void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                 const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
@@ -147,6 +147,11 @@ static void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 //                4. See include/CUFLU.h for the values and description of different symbolic constants
 //                   such as N_FC_VAR, N_FC_FLUX, N_SLOPE_PPM, N_FL_FLUX, N_HF_VAR
 //                5. Arrays with a prefix "g_" are stored in the global memory of GPU
+//                6. If an unphysical result occurs in the full-step update, we redo data reconstruction by
+//                   reducing the original minmod coefficient repeatedly until either the unphysical result is
+//                   solved or the reduced minmod coefficient equals zero. Note that interpolating with a
+//                   vanished minmod coefficient is equivalent to the piecewise constant spatial reconstruction.
+//
 //
 // Parameter   :  g_Flu_Array_In     : Array storing the input fluid variables
 //                g_Flu_Array_Out    : Array to store the output fluid variables
@@ -172,6 +177,7 @@ static void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 //                                     (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
 //                                                    vanLeer + generalized MinMod/extrema-preserving) limiter
 //                MinMod_Coeff       : Coefficient of the generalized MinMod limiter
+//                MinMod_MaxIter     : Maximum number of iterations to reduce MinMod_Coeff
 //                Time               : Current physical time                                 (for UNSPLIT_GRAVITY only)
 //                UsePot             : Add self-gravity and/or external potential            (for UNSPLIT_GRAVITY only)
 //                ExtAcc             : Add external acceleration                             (for UNSPLIT_GRAVITY only)
@@ -224,7 +230,7 @@ void CUFLU_FluidSolver_MHM(
          real   g_EC_Ele       [][NCOMP_MAG][ CUBE(N_EC_ELE) ],
    const real dt, const real dh,
    const bool StoreFlux, const bool StoreElectric,
-   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const double Time,
+   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter, const double Time,
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const real MinDens, const real MinPres, const real MinEint,
    const real DualEnergySwitch,
@@ -252,7 +258,7 @@ void CPU_FluidSolver_MHM(
    const int NPatchGroup,
    const real dt, const real dh,
    const bool StoreFlux, const bool StoreElectric,
-   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const double Time,
+   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter, const double Time,
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const double c_ExtAcc_AuxArray[],
    const real MinDens, const real MinPres, const real MinEint,
@@ -280,6 +286,13 @@ void CPU_FluidSolver_MHM(
 #  endif
 #  if ( defined __CUDACC__  &&  !defined GRAVITY )
    const double *c_ExtAcc_AuxArray = NULL;
+#  endif
+
+   int Iteration;
+#  ifdef __CUDACC__
+   __shared__ int s_FullStepFailure;
+#  else
+   int s_FullStepFailure;
 #  endif
 
 
@@ -323,10 +336,13 @@ void CPU_FluidSolver_MHM(
 #     ifdef __CUDACC__
       const int P = blockIdx.x;
 #     else
-#     pragma omp for schedule( runtime )
+#     pragma omp for schedule( runtime ) private ( Iteration, s_FullStepFailure )
       for (int P=0; P<NPatchGroup; P++)
 #     endif
       {
+
+         s_FullStepFailure = 0;
+         Iteration = 0;
 
 //       1. half-step prediction
 //       1-a. MHM_RP: use Riemann solver to calculate the half-step fluxes
@@ -389,58 +405,88 @@ void CPU_FluidSolver_MHM(
                                JeansMinPres, JeansMinPres_Coeff, &EoS );
 
 
-//       1-a-5. evaluate the face-centered values by data reconstruction
-//              --> note that g_PriVar_Half_1PG[] returned by Hydro_RiemannPredict() stores the primitive variables
-         Hydro_DataReconstruction( NULL, g_FC_Mag_Half_1PG, g_PriVar_Half_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
-                                   Con2Pri_No, LR_Limiter, MinMod_Coeff, dt, dh,
-                                   MinDens, MinPres, MinEint, FracPassive, NFrac, c_FracIdx,
-                                   JeansMinPres, JeansMinPres_Coeff, &EoS );
+         do {
+
+            real AdaptiveMinModCoeff = ( MinMod_MaxIter == 0 ) ? MinMod_Coeff :
+            MinMod_Coeff - (real)Iteration * MinMod_Coeff / (real)MinMod_MaxIter;
+
+
+//          ensure adaptive MinMod_Coeff is non-negative
+            AdaptiveMinModCoeff = FMAX( AdaptiveMinModCoeff, (real)0.0 );
+
+
+//          1-a-5. evaluate the face-centered values by data reconstruction
+//                 --> note that g_PriVar_Half_1PG[] returned by Hydro_RiemannPredict() stores the primitive variables
+            Hydro_DataReconstruction( NULL, g_FC_Mag_Half_1PG, g_PriVar_Half_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
+                                      Con2Pri_No, LR_Limiter, AdaptiveMinModCoeff, dt, dh,
+                                      MinDens, MinPres, MinEint, FracPassive, NFrac, c_FracIdx,
+                                      JeansMinPres, JeansMinPres_Coeff, &EoS );
 
 
 //       1-b. MHM: use interpolated face-centered values to calculate the half-step fluxes
 #        elif ( FLU_SCHEME == MHM )
 
-//       evaluate the face-centered values by data reconstruction
-         Hydro_DataReconstruction( g_Flu_Array_In[P], NULL, g_PriVar_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
-                                   Con2Pri_Yes, LR_Limiter, MinMod_Coeff, dt, dh,
-                                   MinDens, MinPres, MinEint, FracPassive, NFrac, c_FracIdx,
-                                   JeansMinPres, JeansMinPres_Coeff, &EoS );
+         do {
+
+            real AdaptiveMinModCoeff = ( MinMod_MaxIter == 0 ) ? MinMod_Coeff :
+            MinMod_Coeff - (real)Iteration * MinMod_Coeff / (real)MinMod_MaxIter;
+
+
+//          ensure adaptive MinMod_Coeff is non-negative
+            AdaptiveMinModCoeff = FMAX( AdaptiveMinModCoeff, (real)0.0 );
+
+
+//          evaluate the face-centered values by data reconstruction
+            Hydro_DataReconstruction( g_Flu_Array_In[P], NULL, g_PriVar_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
+                                      Con2Pri_Yes, LR_Limiter, AdaptiveMinModCoeff, dt, dh,
+                                      MinDens, MinPres, MinEint, FracPassive, NFrac, c_FracIdx,
+                                      JeansMinPres, JeansMinPres_Coeff, &EoS );
 
 #        endif // #if ( FLU_SCHEME == MHM_RP ) ... else ...
 
 
-//       2. evaluate the full-step fluxes
-#        ifdef MHD
-         const int NSkip_N = 0;
-         const int NSkip_T = 0;
-#        else
-         const int NSkip_N = 0;
-         const int NSkip_T = 1;
-#        endif
-         Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, NSkip_N, NSkip_T,
-                            CorrHalfVel, g_Pot_Array_USG[P], g_Corner_Array[P],
-                            dt, dh, Time, UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray,
-                            MinDens, MinPres, StoreFlux, g_Flux_Array[P], &EoS );
+
+//          2. evaluate the full-step fluxes
+#           ifdef MHD
+            const int NSkip_N = 0;
+            const int NSkip_T = 0;
+#           else
+            const int NSkip_N = 0;
+            const int NSkip_T = 1;
+#           endif
+
+            Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, NSkip_N, NSkip_T,
+                               CorrHalfVel, g_Pot_Array_USG[P], g_Corner_Array[P],
+                               dt, dh, Time, UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray,
+                               MinDens, MinPres, StoreFlux, g_Flux_Array[P], &EoS );
 
 
-//       3. evaluate electric field and update B field at the full time-step
-//          --> must update B field before Hydro_FullStepUpdate() since the latter requires
-//              the updated magnetic energy when adopting the dual-energy formalism
-#        ifdef MHD
-         MHD_ComputeElectric( g_EC_Ele_1PG, g_FC_Flux_1PG, g_PriVar_Half_1PG, N_FL_ELE, N_FL_FLUX,
-                              N_HF_VAR, LR_GHOST_SIZE, dt, dh, StoreElectric, g_Ele_Array[P],
-                              CorrHalfVel, g_Pot_Array_USG[P], g_Corner_Array[P], Time,
-                              UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray );
+//          3. evaluate electric field and update B field at the full time-step
+//             --> must update B field before Hydro_FullStepUpdate() since the latter requires
+//                 the updated magnetic energy when adopting the dual-energy formalism
+#           ifdef MHD
+            MHD_ComputeElectric( g_EC_Ele_1PG, g_FC_Flux_1PG, g_PriVar_Half_1PG, N_FL_ELE, N_FL_FLUX,
+                                 N_HF_VAR, LR_GHOST_SIZE, dt, dh, StoreElectric, g_Ele_Array[P],
+                                 CorrHalfVel, g_Pot_Array_USG[P], g_Corner_Array[P], Time,
+                                 UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray );
 
-         MHD_UpdateMagnetic( g_Mag_Array_Out[P][0], g_Mag_Array_Out[P][1], g_Mag_Array_Out[P][2],
-                             g_Mag_Array_In[P], g_EC_Ele_1PG, dt, dh, PS2, N_FL_ELE, FLU_GHOST_SIZE );
-#        endif
+            MHD_UpdateMagnetic( g_Mag_Array_Out[P][0], g_Mag_Array_Out[P][1], g_Mag_Array_Out[P][2],
+                                g_Mag_Array_In[P], g_EC_Ele_1PG, dt, dh, PS2, N_FL_ELE, FLU_GHOST_SIZE );
+#           endif
 
 
-//       4. full-step evolution
-         Hydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P], g_Mag_Array_Out[P],
-                               g_FC_Flux_1PG, dt, dh, MinDens, MinEint, DualEnergySwitch,
-                               NormPassive, NNorm, c_NormIdx, &EoS );
+//          4. full-step evolution
+            Hydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P], g_Mag_Array_Out[P],
+                                  g_FC_Flux_1PG, dt, dh, MinDens, MinEint, DualEnergySwitch,
+                                  NormPassive, NNorm, c_NormIdx, &EoS, &s_FullStepFailure, Iteration, MinMod_MaxIter );
+
+
+//          5. counter increment
+            Iteration++;
+
+
+
+         } while ( s_FullStepFailure  &&  Iteration <= MinMod_MaxIter );
 
       } // loop over all patch groups
    } // OpenMP parallel region
@@ -559,7 +605,7 @@ void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
          ConVar_R[ MAG_OFFSET + TDir1 ] = g_CC_B[TDir1][ idx_cvar + didx_cvar[d] ];
          ConVar_R[ MAG_OFFSET + TDir2 ] = g_CC_B[TDir2][ idx_cvar + didx_cvar[d] ];
 
-//       correct total energy by the difference between the face- and cell-centered logitudinal B field
+//       correct total energy by the difference between the face- and cell-centered longitudinal B field
          ConVar_L[4] += (real)0.5*(  SQR( ConVar_L[MAG_OFFSET + d] ) - SQR( g_CC_B[d][idx_cvar               ] )  );
          ConVar_R[4] += (real)0.5*(  SQR( ConVar_R[MAG_OFFSET + d] ) - SQR( g_CC_B[d][idx_cvar + didx_cvar[d]] )  );
 #        endif
