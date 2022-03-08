@@ -1,7 +1,7 @@
 #include "GAMER.h"
 
 #define COMMENT_SYM     '#'      // comment symbol
-#define DELIMITER       " \t"    // delimiter characters used by strtok()
+#define DELIMITER       "\t"    // delimiter characters used by strtok()
 
 
 
@@ -67,7 +67,6 @@ int Aux_LoadTable( T *&Data, const char *FileName, const int NCol_Target, const 
 //    skip empty lines or lines starting with the comment symbol
 //    --> must check NCheck < 0 as well since EOF is negative
       if ( NCol_Check <= 0  ||  FirstItem[0] == COMMENT_SYM )    continue;
-
 //    loop over all tokens seperated by the delimiter characters
       NthCol     = 0;
       NCol_Match = 0;
@@ -86,8 +85,10 @@ int Aux_LoadTable( T *&Data, const char *FileName, const int NCol_Target, const 
 
 //    check if we find all target columns
       if ( NCol_Match != NCol_Target )
-         Aux_Error( ERROR_INFO, "Number of matched columns (%d) != expect (%d) at row %d !!\n",
-                    NCol_Match, NCol_Target, NthRow-1 );
+      {
+         Aux_Error( ERROR_INFO, "Number of matched columns (%d) != expect (%d) at row %d !!\n %s\n",
+                    NCol_Match, NCol_Target, NthRow-1 , FirstItem);
+      }
 
       NRow_Match ++;
    } // while ( fgets(Line, MAX_STRING, File) != NULL )
