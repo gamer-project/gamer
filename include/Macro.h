@@ -355,13 +355,14 @@
 #  define _VELR               ( 1L << (NCOMP_TOTAL+ 3) )
 #  define _PRES               ( 1L << (NCOMP_TOTAL+ 4) )
 #  define _TEMP               ( 1L << (NCOMP_TOTAL+ 5) )
-#  define _EINT_DER           ( 1L << (NCOMP_TOTAL+ 6) )
-#  define _MAGX_CC            ( 1L << (NCOMP_TOTAL+ 7) )
-#  define _MAGY_CC            ( 1L << (NCOMP_TOTAL+ 8) )
-#  define _MAGZ_CC            ( 1L << (NCOMP_TOTAL+ 9) )
-#  define _MAG_ENGY_CC        ( 1L << (NCOMP_TOTAL+10) )
-#  define _DERIVED            ( _VELX | _VELY | _VELZ | _VELR | _PRES | _TEMP | _EINT_DER | _MAGX_CC | _MAGY_CC | _MAGZ_CC | _MAG_ENGY_CC )
-#  define NDERIVE             11
+#  define _ENTR               ( 1L << (NCOMP_TOTAL+ 6) )
+#  define _EINT_DER           ( 1L << (NCOMP_TOTAL+ 7) )
+#  define _MAGX_CC            ( 1L << (NCOMP_TOTAL+ 8) )
+#  define _MAGY_CC            ( 1L << (NCOMP_TOTAL+ 9) )
+#  define _MAGZ_CC            ( 1L << (NCOMP_TOTAL+10) )
+#  define _MAG_ENGY_CC        ( 1L << (NCOMP_TOTAL+11) )
+#  define _DERIVED            ( _VELX | _VELY | _VELZ | _VELR | _PRES | _TEMP | _ENTR | _EINT_DER | _MAGX_CC | _MAGY_CC | _MAGZ_CC | _MAG_ENGY_CC )
+#  define NDERIVE             12
 
 
 #elif ( MODEL == ELBDM )

@@ -100,6 +100,10 @@ real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const re
                      const real Passive[], const bool CheckMinTemp, const real MinTemp, const real Emag,
                      const EoS_DE2T_t EoS_DensEint2Temp, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX] );
+real Hydro_Con2Entr( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                     const real Passive[], const real Emag,
+                     const EoS_DE2E_t EoS_DensEint2Entr, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                     const real *const EoS_Table[EOS_NTABLE_MAX] );
 real Hydro_CheckMinPres( const real InPres, const real MinPres );
 real Hydro_CheckMinEint( const real InEint, const real MinEint );
 bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], const char SingleFieldName[],

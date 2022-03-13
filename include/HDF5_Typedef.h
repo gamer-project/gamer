@@ -420,6 +420,7 @@ struct InputPara_t
    int    Opt__Flag_LohnerEngy;
    int    Opt__Flag_LohnerPres;
    int    Opt__Flag_LohnerTemp;
+   int    Opt__Flag_LohnerEntr;
 #  endif
    int    Opt__Flag_LohnerForm;
    int    Opt__Flag_User;

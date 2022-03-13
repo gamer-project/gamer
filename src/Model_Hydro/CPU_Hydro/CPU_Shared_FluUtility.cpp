@@ -912,6 +912,56 @@ real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const re
 
 
 //-------------------------------------------------------------------------------------------------------
+// Function    :  Hydro_Con2Entr
+// Description :  Evaluate the fluid entropy
+//
+// Note        :  1. Invoke the EoS routine EoS_DensEint2Entr() to support different EoS
+//
+// Parameter   :  Dens              : Mass density
+//                MomX/Y/Z          : Momentum density
+//                Engy              : Energy density
+//                Passive           : Passive scalars
+//                Emag              : Magnetic energy density (0.5*B^2) --> For MHD only
+//                EoS_DensEint2Entr : EoS routine to compute the gas entropy
+//                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensEint2Entr()
+//                EoS_Table         : EoS tables for EoS_DensEint2Entr()
+//
+// Return      :  Gas entropy
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+real Hydro_Con2Entr( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                     const real Passive[], const real Emag,
+                     const EoS_DE2E_t EoS_DensEint2Entr, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                     const real *const EoS_Table[EOS_NTABLE_MAX] )
+{
+
+// check
+#  ifdef GAMER_DEBUG
+   if ( EoS_DensEint2Entr == NULL )
+   {
+#     ifdef __CUDACC__
+      printf( "ERROR : EoS_DensEint2Entr == NULL at file <%s>, line <%d>, function <%s> !!\n",
+              __FILE__, __LINE__, __FUNCTION__ );
+#     else
+      Aux_Error( ERROR_INFO, "EoS_DensEint2Entr == NULL !!\n" );
+#     endif
+   }
+#  endif // #ifdef GAMER_DEBUG
+
+
+   const bool CheckMinEint_No = false;
+   real Eint, Entr;
+
+   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, Emag );
+   Entr = EoS_DensEint2Entr( Dens, Eint, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+
+   return Entr;
+
+} // FUNCTION : Hydro_Con2Entr
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_NormalizePassive
 // Description :  Normalize the target passive scalars so that the sum of their mass density is equal to
 //                the gas mass density

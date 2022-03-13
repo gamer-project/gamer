@@ -103,7 +103,7 @@ static void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const re
 //                PID0_List      : List recording the patch indices with LocalID==0 to be prepared
 //                TVarCC         : Target cell-centered variables to be prepared
 //                                 --> Supported variables in different models:
-//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _PRES, _TEMP
+//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _PRES, _TEMP, _ENTR
 //                                             [, _POTE]
 //                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE]
 //                                 --> _FLUID, _PASSIVE, _TOTAL, and _DERIVED apply to all models
@@ -299,6 +299,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #  if ( MODEL == HYDRO )
    if (  ( TVarCC & _TEMP )  &&  EoS_DensEint2Temp_CPUPtr == NULL )
       Aux_Error( ERROR_INFO, "EoS_DensEint2Temp_CPUPtr == NULL !!\n" );
+
+// TBD: add condition EOS = EOS_NUCLEAR?
+//      add new EoS_XxxXxx2Entr_CPUPtr?
+   if (  ( TVarCC & _ENTR )  &&  EoS_DensEint2Entr_CPUPtr == NULL )
+      Aux_Error( ERROR_INFO, "EoS_DensEint2Entr_CPUPtr == NULL !!\n" );
 #  endif
 
 #  endif // #ifdef GAMER_DEBUG
@@ -317,6 +322,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    const bool PrepVz           = ( TVarCC & _VELZ ) ? true : false;
    const bool PrepPres         = ( TVarCC & _PRES ) ? true : false;
    const bool PrepTemp         = ( TVarCC & _TEMP ) ? true : false;
+   const bool PrepEntr         = ( TVarCC & _ENTR ) ? true : false;
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
@@ -372,6 +378,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    if ( PrepVz   )   TVarCCList_Der[ NVarCC_Der ++ ] = _VELZ;
    if ( PrepPres )   TVarCCList_Der[ NVarCC_Der ++ ] = _PRES;
    if ( PrepTemp )   TVarCCList_Der[ NVarCC_Der ++ ] = _TEMP;
+   if ( PrepEntr )   TVarCCList_Der[ NVarCC_Der ++ ] = _ENTR;
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
@@ -456,8 +463,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    int  MagSg, MagSg_IntT;
    real MagWeighting, MagWeighting_IntT;
 
-// check PrepPres and PrepTemp since they also require B field
-   if ( PrepMag || PrepPres || PrepTemp )
+// check PrepPres, PrepTemp, and PrepEntr since they also require B field
+   if ( PrepMag || PrepPres || PrepTemp || PrepEntr )
    {
       SetTempIntPara( lv, amr->MagSg[lv], PrepTime, amr->MagSgTime[lv][0], amr->MagSgTime[lv][1],
                       MagIntTime, MagSg, MagSg_IntT, MagWeighting, MagWeighting_IntT );
@@ -972,6 +979,50 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                Data1PG_CC_Ptr += PGSize3D_CC;
             } // if ( PrepTemp )
 
+            if ( PrepEntr )
+            {
+               for (int k=0; k<PS1; k++)  {  K    = k + Disp_k;
+               for (int j=0; j<PS1; j++)  {  J    = j + Disp_j;
+                                             Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
+               for (int i=0; i<PS1; i++)  {
+
+                  for (int v=0; v<NFluForEoS; v++)    FluidForEoS[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
+
+#                 ifdef MHD
+                  const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
+#                 else
+                  const real Emag = NULL_REAL;
+#                 endif
+                  Data1PG_CC_Ptr[Idx1] = Hydro_Con2Entr( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                                         FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
+                                                         Emag,
+                                                         EoS_DensEint2Entr_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                         h_EoS_Table );
+
+                  if ( FluIntTime ) // temporal interpolation
+                  {
+                     for (int v=0; v<NFluForEoS; v++)    FluidForEoS[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k][j][i];
+
+#                    ifdef MHD
+                     const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg_IntT );
+#                    else
+                     const real Emag = NULL_REAL;
+#                    endif
+                     Data1PG_CC_Ptr[Idx1] =
+                        FluWeighting     *Data1PG_CC_Ptr[Idx1]
+                      + FluWeighting_IntT*Hydro_Con2Entr( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                                          FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
+                                                          Emag,
+                                                          EoS_DensEint2Entr_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                          h_EoS_Table );
+                  }
+
+                  Idx1 ++;
+               }}}
+
+               Data1PG_CC_Ptr += PGSize3D_CC;
+            } // if ( PrepEntr )
+
 
 #           elif ( MODEL == ELBDM )
 //          no derived variables yet
@@ -1261,6 +1312,50 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                                                                 FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
                                                                 (MinTemp>=(real)0.0), MinTemp, Emag,
                                                                 EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                                h_EoS_Table );
+                        }
+
+                        Idx1 ++;
+                     }}}
+
+                     Data1PG_CC_Ptr += PGSize3D_CC;
+                  }
+
+                  if ( PrepEntr )
+                  {
+                     for (int k=0; k<loop[2]; k++)  { K = k + disp[2];   K2 = k + disp2[2];
+                     for (int j=0; j<loop[1]; j++)  { J = j + disp[1];   J2 = j + disp2[1];
+                                                      Idx1 = IDX321( disp[0], J, K, PGSize1D_CC, PGSize1D_CC );
+                     for (I2=disp2[0]; I2<disp2[0]+loop[0]; I2++) {
+
+                        for (int v=0; v<NFluForEoS; v++)    FluidForEoS[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
+
+#                       ifdef MHD
+                        const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg );
+#                       else
+                        const real Emag = NULL_REAL;
+#                       endif
+                        Data1PG_CC_Ptr[Idx1] = Hydro_Con2Entr( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                                               FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
+                                                               Emag,
+                                                               EoS_DensEint2Entr_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                               h_EoS_Table );
+
+                        if ( FluIntTime ) // temporal interpolation
+                        {
+                           for (int v=0; v<NFluForEoS; v++)    FluidForEoS[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][K2][J2][I2];
+
+#                          ifdef MHD
+                           const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg_IntT );
+#                          else
+                           const real Emag = NULL_REAL;
+#                          endif
+                           Data1PG_CC_Ptr[Idx1] =
+                              FluWeighting     *Data1PG_CC_Ptr[Idx1]
+                            + FluWeighting_IntT*Hydro_Con2Entr( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                                                FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
+                                                                Emag,
+                                                                EoS_DensEint2Entr_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                                 h_EoS_Table );
                         }
 

@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2443)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2444)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -214,6 +214,7 @@ Procedure for outputting new variables:
 //                2441 : 2021/10/20 --> output OPT__FREEZE_FLUID
 //                2442 : 2022/01/22 --> output OPT__FREEZE_PAR
 //                2443 : 2022/01/30 --> output MINMOD_MAX_ITER and MONO_MAX_ITER
+//                2444 : 2022/03/?? --> output OPT__FLAG_LOHNER_ENTR
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1688,7 +1689,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2443;
+   KeyInfo.FormatVersion        = 2444;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2338,6 +2339,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__Flag_LohnerEngy    = OPT__FLAG_LOHNER_ENGY;
    InputPara.Opt__Flag_LohnerPres    = OPT__FLAG_LOHNER_PRES;
    InputPara.Opt__Flag_LohnerTemp    = OPT__FLAG_LOHNER_TEMP;
+   InputPara.Opt__Flag_LohnerEntr    = OPT__FLAG_LOHNER_ENTR;
 #  endif
    InputPara.Opt__Flag_LohnerForm    = OPT__FLAG_LOHNER_FORM;
    InputPara.Opt__Flag_User          = OPT__FLAG_USER;
@@ -2637,7 +2639,8 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 
 // flag tables
 #  if   ( MODEL == HYDRO )
-   const bool Opt__FlagLohner = ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP );
+   const bool Opt__FlagLohner = ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES ||
+                                  OPT__FLAG_LOHNER_TEMP || OPT__FLAG_LOHNER_ENTR );
 #  elif ( MODEL == ELBDM )
    const bool Opt__FlagLohner = OPT__FLAG_LOHNER_DENS;
 #  endif
@@ -3171,6 +3174,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Flag_LohnerEngy",    HOFFSET(InputPara_t,Opt__Flag_LohnerEngy   ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_LohnerPres",    HOFFSET(InputPara_t,Opt__Flag_LohnerPres   ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_LohnerTemp",    HOFFSET(InputPara_t,Opt__Flag_LohnerTemp   ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__Flag_LohnerEntr",    HOFFSET(InputPara_t,Opt__Flag_LohnerEntr   ), H5T_NATIVE_INT     );
 #  endif
    H5Tinsert( H5_TypeID, "Opt__Flag_LohnerForm",    HOFFSET(InputPara_t,Opt__Flag_LohnerForm   ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_User",          HOFFSET(InputPara_t,Opt__Flag_User         ), H5T_NATIVE_INT     );
