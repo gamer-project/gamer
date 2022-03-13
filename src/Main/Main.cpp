@@ -432,7 +432,7 @@ real  *d_SrcDlepProf_Radius                                        = NULL;
 // 5. timers
 // =======================================================================================================
 #ifdef TIMING
-Timer_t *Timer_Main[7];
+Timer_t *Timer_Main[8];
 Timer_t *Timer_MPI[3];
 Timer_t *Timer_dt         [NLEVEL];
 Timer_t *Timer_Flu_Advance[NLEVEL];
@@ -587,7 +587,7 @@ int main( int argc, char *argv[] )
 //    4. perform yt inline analysis
 //    ---------------------------------------------------------------------------------------------------
 #     ifdef SUPPORT_LIBYT
-      YT_Inline();
+      TIMING_FUNC(   YT_Inline(),                     Timer_Main[7],   TIMER_ON   );
 #     endif
 //    ---------------------------------------------------------------------------------------------------
 
