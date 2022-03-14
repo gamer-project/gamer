@@ -300,8 +300,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    if (  ( TVarCC & _TEMP )  &&  EoS_DensEint2Temp_CPUPtr == NULL )
       Aux_Error( ERROR_INFO, "EoS_DensEint2Temp_CPUPtr == NULL !!\n" );
 
-// TBD: add condition EOS = EOS_NUCLEAR?
-//      add new EoS_XxxXxx2Entr_CPUPtr?
    if (  ( TVarCC & _ENTR )  &&  EoS_DensEint2Entr_CPUPtr == NULL )
       Aux_Error( ERROR_INFO, "EoS_DensEint2Entr_CPUPtr == NULL !!\n" );
 #  endif
