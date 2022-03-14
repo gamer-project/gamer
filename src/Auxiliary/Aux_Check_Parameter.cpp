@@ -689,6 +689,11 @@ void Aux_Check_Parameter()
          Aux_Error( ERROR_INFO, "JEANS_MIN_PRES currently only supports EOS_GAMMA !!\n" );
 #  endif // if ( EOS != EOS_GAMMA )
 
+#  if ( EOS == EOS_ISOTHERMAL )
+      if ( OPT__FLAG_LOHNER_ENTR )
+         Aux_Error( ERROR_INFO, "ERROR : OPT__FLAG_LOHNER_ENTR does not support EOS_ISOTHERMAL !!\n" );
+#  endif
+
 #  if ( EOS == EOS_NUCLEAR )
       Aux_Error( ERROR_INFO, "EOS_NUCLEAR is not supported yet !!\n" );
 #  endif

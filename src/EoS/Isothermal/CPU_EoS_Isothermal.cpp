@@ -286,7 +286,8 @@ static real EoS_DensEint2Entr_Isothermal( const real Dens, const real Eint, cons
                                           const real *const Table[EOS_NTABLE_MAX] )
 {
 
-   Aux_Error( ERROR_INFO, "EoS_DensEint2Entr is NOT supported yet for isothermal EoS !!\n" );
+// EoS_DensEint2Entr is NOT supported yet for isothermal EoS
+   return NULL;
 
 } // FUNCTION : EoS_DensEint2Entr_Isothermal
 
