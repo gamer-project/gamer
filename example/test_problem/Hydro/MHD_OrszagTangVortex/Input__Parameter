@@ -191,3 +191,8 @@ OPT__CK_NEGATIVE              0           # check the negative values: (0=off, 1
 OPT__CK_MEMFREE               1.0         # check the free memory in GB (0=off, >0=threshold) [1.0]
 OPT__CK_INTERFACE_B           1           # check the consistency of patch interface B field [0] ##MHD ONLY##
 OPT__CK_DIVERGENCE_B          1           # check the divergence-free constraint on B field (0=off, 1=on, 2=on+verbose) [0] ##MHD ONLY##
+
+
+# YT inline analysis
+YT_SCRIPT                     inline_script # inline python script name, exclude ".py" extension
+YT_VERBOSE                    3             # log level (0=off, 1=info, 2=warning, 3=debug)
