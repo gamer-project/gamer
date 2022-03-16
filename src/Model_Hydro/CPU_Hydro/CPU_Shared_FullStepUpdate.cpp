@@ -170,6 +170,8 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //    5. check unphysical cells within a patch group
       if ( s_FullStepFailure != NULL )
       {
+         bool FullStepFailure = false;
+
 //       get pressure
          Pres = Hydro_Con2Pres( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
                                 Output_1Cell[ENGY], Output_1Cell+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, Emag,
@@ -193,6 +195,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 #           else              // CPU
             *s_FullStepFailure = 1;
 #           endif
+            FullStepFailure    = true;
          }
 
 
@@ -204,7 +207,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 
 //       5-3. print out unphysical results after iterations for debugging
 #        ifdef CHECK_UNPHYSICAL_IN_FLUID
-         if ( *s_FullStepFailure == 1  &&  Iteration == MinMod_MaxIter )
+         if ( FullStepFailure  &&  Iteration == MinMod_MaxIter )
          {
             printf( "Unphysical results at the end of the fluid solver:" );
             for (int v=0; v<NCOMP_TOTAL; v++)   printf( " [%d]=%14.7e", v, Output_1Cell[v] );
