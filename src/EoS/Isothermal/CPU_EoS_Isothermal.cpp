@@ -287,7 +287,7 @@ static real EoS_DensEint2Entr_Isothermal( const real Dens, const real Eint, cons
 {
 
 // EoS_DensEint2Entr is NOT supported yet for isothermal EoS
-   return NULL;
+   return NULL_REAL;
 
 } // FUNCTION : EoS_DensEint2Entr_Isothermal
 
