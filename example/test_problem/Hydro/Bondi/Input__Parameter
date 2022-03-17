@@ -132,6 +132,7 @@ MIN_DENS                      0.0         # minimum mass density     (must >= 0.
 MIN_PRES                      1.0e-16     # minimum pressure         (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
 MIN_EINT                      1.0e-16     # minimum internal energy  (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
 MIN_TEMP                      0.0         # minimum temperature in K (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
+MIN_ENTR                      0.0         # minimum entropy          (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
 
 
 # gravity solvers in all models

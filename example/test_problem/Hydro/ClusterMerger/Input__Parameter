@@ -142,6 +142,7 @@ OPT__NORMALIZE_PASSIVE        1           # ensure "sum(passive_scalar_density) 
 MIN_DENS                      1.0e-07     # minimum mass density (must >= 0.0) [0.0] ##HYDRO, MHD, and ELBDM ONLY##
 MIN_PRES                      1.0e-09     # minimum pressure     (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
 MIN_EINT                      1.0e-09     # minimum internal energy (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
+MIN_ENTR                      0.0         # minimum entropy         (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
 
 
 # gravity solvers in all models
