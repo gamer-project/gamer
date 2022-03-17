@@ -10,7 +10,7 @@ void Timing__Solver( const char FileName[] );
 
 // global timing variables
 // ----------------------------------------------------------
-extern Timer_t *Timer_Main[7];
+extern Timer_t *Timer_Main[8];
 extern Timer_t *Timer_MPI[3];
 extern Timer_t *Timer_dt         [NLEVEL];
 extern Timer_t *Timer_Flu_Advance[NLEVEL];
@@ -57,6 +57,7 @@ static double Corr_Acc    [3] = { 0.0, 0.0, 0.0 };
 static double Par_Acc     [3] = { 0.0, 0.0, 0.0 };
 static double Sum_Acc     [3] = { 0.0, 0.0, 0.0 };
 static double MPI_Par_Acc [3] = { 0.0, 0.0, 0.0 };
+static double libyt_Acc   [3] = { 0.0, 0.0, 0.0 };
 
 
 
@@ -71,7 +72,7 @@ void Aux_CreateTimer()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_CreateTimer ... " );
 
 
-   for (int t=0; t<7; t++)    Timer_Main[t] = new Timer_t;
+   for (int t=0; t<8; t++)    Timer_Main[t] = new Timer_t;
 
    if ( OPT__TIMING_MPI )
    for (int t=0; t<3; t++)    Timer_MPI [t] = new Timer_t;
@@ -123,7 +124,7 @@ void Aux_CreateTimer()
 void Aux_DeleteTimer()
 {
 
-   for (int t=0; t<7; t++)    delete Timer_Main[t];
+   for (int t=0; t<8; t++)    delete Timer_Main[t];
 
    if ( OPT__TIMING_MPI)
    for (int t=0; t<3; t++)    delete Timer_MPI [t];
@@ -172,7 +173,7 @@ void Aux_DeleteTimer()
 void Aux_ResetTimer()
 {
 
-   for (int t=0; t<7; t++)    Timer_Main[t]->Reset();
+   for (int t=0; t<8; t++)    Timer_Main[t]->Reset();
 
    for (int lv=0; lv<NLEVEL; lv++)
    {
@@ -225,7 +226,7 @@ void Aux_Record_Timing()
    FILE *File = NULL;
 
    const char Comment_LB[][4] = { "Max", "Min", "Ave" };
-   const int  NLB             = 7;
+   const int  NLB             = 8;
    double Time_LB_Main[NLB][3];     // Time[][0/1/2] = maximum/minimum/average
 
 // only the root rank needs to output the timing results
@@ -287,8 +288,8 @@ void Aux_Record_Timing()
       fprintf( File, "Main Loop\n" );
       fprintf( File, "---------------------------------------------------------------------------------------" );
       fprintf( File, "---------------------------------------\n" );
-      fprintf( File, "%3s%9s%15s%13s%13s%15s%15s%15s\n",
-               "", "Total", "Integration", "Output", "Auxiliary", "LoadBalance", "CorrSync", "Sum" );
+      fprintf( File, "%3s%9s%15s%13s%13s%15s%15s%15s%15s\n",
+               "", "Total", "Integration", "Output", "Auxiliary", "LoadBalance", "CorrSync", "libyt", "Sum" );
    } // if ( MPI_Rank == 0 )
 
 
@@ -320,11 +321,12 @@ void Aux_Record_Timing()
          }
 
          for (int v=0; v<3; v++)
-         fprintf( File, "%3s%9.4f%15.4f%13.4f%13.4f%15.4f%15.4f%15.4f\n",
+         fprintf( File, "%3s%9.4f%15.4f%13.4f%13.4f%15.4f%15.4f%15.4f%15.4f\n",
                   Comment_LB[v], Time_LB_Main[0][v], Time_LB_Main[2][v], Time_LB_Main[3][v],
-                  Time_LB_Main[4][v], Time_LB_Main[5][v], Time_LB_Main[6][v],
+                  Time_LB_Main[4][v], Time_LB_Main[5][v], Time_LB_Main[6][v], Time_LB_Main[7][v],
                   Time_LB_Main[1][v] + Time_LB_Main[2][v] + Time_LB_Main[3][v] +
-                  Time_LB_Main[4][v] + Time_LB_Main[5][v] + Time_LB_Main[6][v] );
+                  Time_LB_Main[4][v] + Time_LB_Main[5][v] + Time_LB_Main[6][v] +
+                  Time_LB_Main[7][v] );
 
          fprintf( File, "\n\n" );
 
@@ -338,11 +340,12 @@ void Aux_Record_Timing()
    {
       if ( MPI_Rank == 0 )
       {
-         fprintf( File, "%3s%9.4f%15.4f%13.4f%13.4f%15.4f%15.4f%15.4f\n", "",
+         fprintf( File, "%3s%9.4f%15.4f%13.4f%13.4f%15.4f%15.4f%15.4f%15.4f\n", "",
                   Timer_Main[0]->GetValue(), Timer_Main[2]->GetValue(), Timer_Main[3]->GetValue(),
                   Timer_Main[4]->GetValue(), Timer_Main[5]->GetValue(), Timer_Main[6]->GetValue(),
+                  Timer_Main[7]->GetValue(),
                   Timer_Main[2]->GetValue() + Timer_Main[3]->GetValue() + Timer_Main[4]->GetValue() +
-                  Timer_Main[5]->GetValue() + Timer_Main[6]->GetValue() );
+                  Timer_Main[5]->GetValue() + Timer_Main[6]->GetValue() + Timer_Main[7]->GetValue() );
 
          fprintf( File, "\n\n" );
 
@@ -635,16 +638,16 @@ void Timing__EvolveLevel( const char FileName[], const double Time_LB_Main[][3] 
    if ( OPT__TIMING_BALANCE )
    {
 //    _P : percentage; _IM : imbalance
-      double Everything[3], MPI_Grid[3], Aux[3], Corr[3], Output[3], LB[3], Par[3], MPI_Par[3];
-      double dt_P, Flu_P, Gra_P, Src_P, Che_P, SF_P, FixUp_P, Flag_P, Refine_P, Sum_P, MPI_Grid_P, Aux_P, Corr_P, Output_P, LB_P, Par_P, MPI_Par_P;
-      double dt_IB, Flu_IB, Gra_IB, Src_IB, Che_IB, SF_IB, FixUp_IB, Flag_IB, Refine_IB, Sum_IB, MPI_Grid_IB, Aux_IB, Corr_IB, Output_IB, LB_IB, Par_IB, MPI_Par_IB;
+      double Everything[3], MPI_Grid[3], Aux[3], Corr[3], Output[3], LB[3], Par[3], MPI_Par[3], libyt[3];
+      double dt_P, Flu_P, Gra_P, Src_P, Che_P, SF_P, FixUp_P, Flag_P, Refine_P, Sum_P, MPI_Grid_P, Aux_P, Corr_P, Output_P, LB_P, Par_P, MPI_Par_P, libyt_P;
+      double dt_IB, Flu_IB, Gra_IB, Src_IB, Che_IB, SF_IB, FixUp_IB, Flag_IB, Refine_IB, Sum_IB, MPI_Grid_IB, Aux_IB, Corr_IB, Output_IB, LB_IB, Par_IB, MPI_Par_IB, libyt_IB;
 
       fprintf( File, "Summary\n" );
       fprintf( File, "---------------------------------------------------------------------------------------" );
       fprintf( File, "---------------------------------------\n" );
-      fprintf( File, "%3s%5s %11s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%12s\n",
+      fprintf( File, "%3s%5s %11s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%12s\n",
                "", "", "dt", "Flu_Adv", "Gra_Adv", "Src_Adv", "Che_Adv", "SF", "FixUp", "Flag", "Refine", "MPI_Grid", "Output", "Aux", "LB",
-               "CorrSync", "Par", "-MPI_Par", "Sum" );
+               "CorrSync", "Par", "-MPI_Par", "libyt", "Sum" );
 
       for (int v=0; v<3; v++)
       {
@@ -653,6 +656,7 @@ void Timing__EvolveLevel( const char FileName[], const double Time_LB_Main[][3] 
          Aux       [v] = Time_LB_Main[4][v];
          LB        [v] = Time_LB_Main[5][v];
          Corr      [v] = Time_LB_Main[6][v];
+         libyt     [v] = Time_LB_Main[7][v];
 
 //       sum
          MPI_Grid[v] = 0.0;
@@ -664,13 +668,13 @@ void Timing__EvolveLevel( const char FileName[], const double Time_LB_Main[][3] 
          MPI_Par[v] = 0.0;
          for (int k=21; k<27; k++)  MPI_Par[v] += Time_LB[0][k][v];
 
-         Sum_LB[0][v] += Output[v] + Aux[v] + LB[v] + Corr[v];
+         Sum_LB[0][v] += Output[v] + Aux[v] + LB[v] + Corr[v] + libyt[v];
 
 //       2.1 time
-         fprintf( File, "%3s%5s %11.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%12.4f\n",
+         fprintf( File, "%3s%5s %11.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%12.4f\n",
                   Comment_LB[v], "Time", Time_LB[0][27][v], Time_LB[0][1][v], Time_LB[0][2][v], Time_LB[0][29][v], Time_LB[0][3][v], Time_LB[0][28][v],
                   Time_LB[0][4][v], Time_LB[0][5][v], Time_LB[0][6][v], MPI_Grid[v], Output[v], Aux[v], LB[v], Corr[v],
-                  Par[v], MPI_Par[v], Sum_LB[0][v] );
+                  Par[v], MPI_Par[v], libyt[v], Sum_LB[0][v] );
       } // for (int v=0; v<3; v++)
 
       fprintf( File, "\n" );
@@ -693,11 +697,12 @@ void Timing__EvolveLevel( const char FileName[], const double Time_LB_Main[][3] 
       Corr_IB     = 100.0*( Corr          [0] - Corr          [2] ) / ((Corr          [2]==0.0)?1.0:Corr          [2]);
       Par_IB      = 100.0*( Par           [0] - Par           [2] ) / ((Par           [2]==0.0)?1.0:Par           [2]);
       MPI_Par_IB  = 100.0*( MPI_Par       [0] - MPI_Par       [2] ) / ((MPI_Par       [2]==0.0)?1.0:MPI_Par       [2]);
+      libyt_IB    = 100.0*( libyt         [0] - libyt         [2] ) / ((libyt         [2]==0.0)?1.0:libyt         [2]);
       Sum_IB      = 100.0*( Sum_LB [0]    [0] - Sum_LB [0]    [2] ) / ((Sum_LB [0]    [2]==0.0)?1.0:Sum_LB [0]    [2]);
 
-      fprintf( File, "%9s%10.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%11.3f%%\n",
+      fprintf( File, "%9s%10.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%11.3f%%\n",
                "Imbalance", dt_IB, Flu_IB, Gra_IB, Src_IB, Che_IB, SF_IB, FixUp_IB, Flag_IB, Refine_IB, MPI_Grid_IB, Output_IB, Aux_IB, LB_IB,
-               Corr_IB, Par_IB, MPI_Par_IB, Sum_IB );
+               Corr_IB, Par_IB, MPI_Par_IB, libyt_IB, Sum_IB );
 
 
 //    2.3 "max" percentage
@@ -717,11 +722,12 @@ void Timing__EvolveLevel( const char FileName[], const double Time_LB_Main[][3] 
       Corr_P     = 100.0*Corr          [0]/Everything[0];
       Par_P      = 100.0*Par           [0]/Everything[0];
       MPI_Par_P  = 100.0*MPI_Par       [0]/Everything[0];
+      libyt_P    = 100.0*libyt         [0]/Everything[0];
       Sum_P      = 100.0*Sum_LB [0]    [0]/Everything[0];
 
-      fprintf( File, "%3s%5s %10.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%11.3f%%\n",
+      fprintf( File, "%3s%5s %10.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%11.3f%%\n",
                "Max", "Frac", dt_P, Flu_P, Gra_P, Src_P, Che_P, SF_P, FixUp_P, Flag_P, Refine_P, MPI_Grid_P, Output_P, Aux_P, LB_P,
-               Corr_P, Par_P, MPI_Par_P, Sum_P );
+               Corr_P, Par_P, MPI_Par_P, libyt_P, Sum_P );
 
       fprintf( File, "\n" );
 
@@ -746,19 +752,21 @@ void Timing__EvolveLevel( const char FileName[], const double Time_LB_Main[][3] 
          Par_Acc     [v] += Par           [v];
          Sum_Acc     [v] += Sum_LB [0]    [v];
          MPI_Par_Acc [v] += MPI_Par       [v];
+         libyt_Acc   [v] += libyt         [v];
       }
    } // if ( OPT__TIMING_BALANCE )
 
    else
    {
-      double Everything, MPI_Grid, Aux, Corr, Output, LB, Par, MPI_Par;
-      double dt_P, Flu_P, Gra_P, Src_P, Che_P, SF_P, FixUp_P, Flag_P, Refine_P, Sum_P, MPI_Grid_P, Aux_P, Corr_P, Output_P, LB_P, Par_P, MPI_Par_P;
+      double Everything, MPI_Grid, Aux, Corr, Output, LB, Par, MPI_Par, libyt;
+      double dt_P, Flu_P, Gra_P, Src_P, Che_P, SF_P, FixUp_P, Flag_P, Refine_P, Sum_P, MPI_Grid_P, Aux_P, Corr_P, Output_P, LB_P, Par_P, MPI_Par_P, libyt_P;
 
       Everything = Timer_Main[0]->GetValue();
       Output     = Timer_Main[3]->GetValue();
       Aux        = Timer_Main[4]->GetValue();
       LB         = Timer_Main[5]->GetValue();
       Corr       = Timer_Main[6]->GetValue();
+      libyt      = Timer_Main[7]->GetValue();
 
 //    sum
       MPI_Grid = 0.0;
@@ -769,7 +777,7 @@ void Timing__EvolveLevel( const char FileName[], const double Time_LB_Main[][3] 
       MPI_Par = 0.0;
       for (int x=0; x<=5; x++)   MPI_Par += ParMPI[0][x];
 
-      Sum[0] += Output + Aux + LB + Corr;
+      Sum[0] += Output + Aux + LB + Corr + libyt;
 
 //    percentage
       dt_P       = 100.0*dt         [0]/Everything;
@@ -788,24 +796,25 @@ void Timing__EvolveLevel( const char FileName[], const double Time_LB_Main[][3] 
       Corr_P     = 100.0*Corr          /Everything;
       Par_P      = 100.0*Par           /Everything;
       MPI_Par_P  = 100.0*MPI_Par       /Everything;
+      libyt_P    = 100.0*libyt         /Everything;
       Sum_P      = 100.0*Sum        [0]/Everything;
 
       fprintf( File, "\nSummary\n" );
       fprintf( File, "---------------------------------------------------------------------------------------" );
       fprintf( File, "---------------------------------------\n" );
-      fprintf( File, "%3s%5s %11s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%12s\n",
+      fprintf( File, "%3s%5s %11s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%12s\n",
                "", "", "dt", "Flu_Adv", "Gra_Adv", "Src_Adv", "Che_Adv", "SF", "FixUp", "Flag", "Refine", "MPI_Grid", "Output", "Aux", "LB",
-               "CorrSync", "Par", "-MPI_Par", "Sum" );
+               "CorrSync", "Par", "-MPI_Par", "libyt", "Sum" );
 
 //    2.1 time
-      fprintf( File, "%3s%5s %11.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%12.4f\n",
+      fprintf( File, "%3s%5s %11.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%12.4f\n",
                "", "Time", dt[0], Flu_Advance[0], Gra_Advance[0], Src_Advance[0], Che_Advance[0], SF[0], FixUp[0], Flag[0], Refine[0], MPI_Grid,
-               Output, Aux, LB, Corr, Par, MPI_Par, Sum[0] );
+               Output, Aux, LB, Corr, Par, MPI_Par, libyt, Sum[0] );
 
 //    2.2 percentage
-      fprintf( File, "%3s%5s %10.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%11.3f%%\n",
+      fprintf( File, "%3s%5s %10.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%11.3f%%\n",
                "", "Frac", dt_P, Flu_P, Gra_P, Src_P, Che_P, SF_P, FixUp_P, Flag_P, Refine_P, MPI_Grid_P, Output_P, Aux_P, LB_P,
-               Corr_P, Par_P, MPI_Par_P, Sum_P );
+               Corr_P, Par_P, MPI_Par_P, libyt_P, Sum_P );
       fprintf( File, "\n" );
 
 
@@ -826,6 +835,7 @@ void Timing__EvolveLevel( const char FileName[], const double Time_LB_Main[][3] 
       Corr_Acc    [0] += Corr;
       Par_Acc     [0] += Par;
       MPI_Par_Acc [0] += MPI_Par;
+      libyt_Acc   [0] += libyt;
       Sum_Acc     [0] += Sum        [0];
 
    }} // if ( OPT__TIMING_BALANCE ) ... else ... if ( MPI_Rank == 0 )
@@ -961,9 +971,9 @@ void Aux_AccumulatedTiming( const double TotalT, double InitT, double OtherT )
    const int  NNewTimer       = 2;
 
    double dt_P, Flu_P, Gra_P, Src_P, Che_P, SF_P, FixUp_P, Flag_P, Refine_P, Sum_P, MPI_Grid_P, Aux_P, Corr_P, Output_P, LB_P;
-   double Par_P, MPI_Par_P, Init_P, Other_P;
+   double Par_P, MPI_Par_P, libyt_P, Init_P, Other_P;
    double dt_IB, Flu_IB, Gra_IB, Src_IB, Che_IB, SF_IB, FixUp_IB, Flag_IB, Refine_IB, Sum_IB, MPI_Grid_IB, Aux_IB, Corr_IB, Output_IB, LB_IB;
-   double Par_IB, MPI_Par_IB, Init_IB, Other_IB;
+   double Par_IB, MPI_Par_IB, libyt_IB, Init_IB, Other_IB;
    double NewTimer_Acc[NNewTimer][3], Send[NNewTimer];
 
    double (*Recv)[NNewTimer] = new double [MPI_NRank][NNewTimer];
@@ -1030,6 +1040,7 @@ void Aux_AccumulatedTiming( const double TotalT, double InitT, double OtherT )
    Corr_P     = 100.0*Corr_Acc    [0]/TotalT;
    Par_P      = 100.0*Par_Acc     [0]/TotalT;
    MPI_Par_P  = 100.0*MPI_Par_Acc [0]/TotalT;
+   libyt_P    = 100.0*libyt_Acc   [0]/TotalT;
    Init_P     = 100.0*Init_Acc    [0]/TotalT;
    Other_P    = 100.0*Other_Acc   [0]/TotalT;
    Sum_P      = 100.0*Sum_Acc     [0]/TotalT;
@@ -1048,16 +1059,16 @@ void Aux_AccumulatedTiming( const double TotalT, double InitT, double OtherT )
    fprintf( File, "Timing Diagnosis      :\n" );
    fprintf( File, "----------------------------------------------------------------------------------------" );
    fprintf( File, "--------------------------------------\n" );
-   fprintf( File, "%3s%5s %9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s\n",
+   fprintf( File, "%3s%5s %9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s\n",
             "", "", "dt", "Flu_Adv", "Gra_Adv", "Src_Adv", "Che_Adv", "SF", "FixUp", "Flag", "Refine", "MPI_Grid", "Output", "Aux", "LB",
-            "CorrSync", "Par", "-MPI_Par", "Init", "Other", "Sum" );
+            "CorrSync", "Par", "-MPI_Par", "libyt", "Init", "Other", "Sum" );
 
    if ( OPT__TIMING_BALANCE )
    {
       for (int v=0; v<3; v++)
-      fprintf( File, "%3s%5s %9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f\n",
+      fprintf( File, "%3s%5s %9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f\n",
                Comment_LB[v], "Time", dt_Acc[v], Flu_Acc[v], Gra_Acc[v], Src_Acc[v], Che_Acc[v], SF_Acc[v], FixUp_Acc[v], Flag_Acc[v], Refine_Acc[v],
-               MPI_Grid_Acc[v], Output_Acc[v], Aux_Acc[v], LB_Acc[v], Corr_Acc[v], Par_Acc[v], MPI_Par_Acc[v], Init_Acc[v], Other_Acc[v],
+               MPI_Grid_Acc[v], Output_Acc[v], Aux_Acc[v], LB_Acc[v], Corr_Acc[v], Par_Acc[v], MPI_Par_Acc[v], libyt_Acc[v], Init_Acc[v], Other_Acc[v],
                Sum_Acc[v] );
 
 //    "max" imbalance = (Max-Ave)/Ave
@@ -1077,27 +1088,28 @@ void Aux_AccumulatedTiming( const double TotalT, double InitT, double OtherT )
       Corr_IB     = 100.0*( Corr_Acc    [0] - Corr_Acc    [2] ) / ( (Corr_Acc    [2]==0.0) ? 1.0 : Corr_Acc    [2] );
       Par_IB      = 100.0*( Par_Acc     [0] - Par_Acc     [2] ) / ( (Par_Acc     [2]==0.0) ? 1.0 : Par_Acc     [2] );
       MPI_Par_IB  = 100.0*( MPI_Par_Acc [0] - MPI_Par_Acc [2] ) / ( (MPI_Par_Acc [2]==0.0) ? 1.0 : MPI_Par_Acc [2] );
+      libyt_IB    = 100.0*( libyt_Acc   [0] - libyt_Acc   [2] ) / ( (libyt_Acc   [2]==0.0) ? 1.0 : libyt_Acc   [2] );
       Init_IB     = 100.0*( Init_Acc    [0] - Init_Acc    [2] ) / ( (Init_Acc    [2]==0.0) ? 1.0 : Init_Acc    [2] );
       Other_IB    = 100.0*( Other_Acc   [0] - Other_Acc   [2] ) / ( (Other_Acc   [2]==0.0) ? 1.0 : Other_Acc   [2] );
       Sum_IB      = 100.0*( Sum_Acc     [0] - Sum_Acc     [2] ) / ( (Sum_Acc     [2]==0.0) ? 1.0 : Sum_Acc     [2] );
 
       fprintf( File, "\n" );
-      fprintf( File, "%9s%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%\n",
+      fprintf( File, "%9s%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%\n",
                "Imbalance", dt_IB, Flu_IB, Gra_IB, Src_IB, Che_IB, SF_IB, FixUp_IB, Flag_IB, Refine_IB, MPI_Grid_IB, Output_IB, Aux_IB, LB_IB,
-               Corr_IB, Par_IB, MPI_Par_IB, Init_IB, Other_IB, Sum_IB );
-      fprintf( File, "%3s%5s %8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%\n",
+               Corr_IB, Par_IB, MPI_Par_IB, libyt_IB, Init_IB, Other_IB, Sum_IB );
+      fprintf( File, "%3s%5s %8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%\n",
                Comment_LB[0], "Frac", dt_P, Flu_P, Gra_P, Src_P, Che_P, SF_P, FixUp_P, Flag_P, Refine_P, MPI_Grid_P, Output_P, Aux_P, LB_P,
-               Corr_P, Par_P, MPI_Par_P, Init_P, Other_P, Sum_P );
+               Corr_P, Par_P, MPI_Par_P, libyt_P, Init_P, Other_P, Sum_P );
    } // if ( OPT__TIMING_BALANCE )
 
    else
    {
-      fprintf( File, "%3s%5s %9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f\n",
+      fprintf( File, "%3s%5s %9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f%9.2f\n",
                "", "Time", dt_Acc[0], Flu_Acc[0], Gra_Acc[0], Src_Acc[0], Che_Acc[0], SF_Acc[0], FixUp_Acc[0], Flag_Acc[0], Refine_Acc[0], MPI_Grid_Acc[0],
-               Output_Acc[0], Aux_Acc[0], LB_Acc[0], Corr_Acc[0], Par_Acc[0], MPI_Par_Acc[0], Init_Acc[0], Other_Acc[0], Sum_Acc[0] );
-      fprintf( File, "%3s%5s %8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%\n",
+               Output_Acc[0], Aux_Acc[0], LB_Acc[0], Corr_Acc[0], Par_Acc[0], MPI_Par_Acc[0], libyt_Acc[0], Init_Acc[0], Other_Acc[0], Sum_Acc[0] );
+      fprintf( File, "%3s%5s %8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%%8.3f%%\n",
                "", "Frac", dt_P, Flu_P, Gra_P, Src_P, Che_P, SF_P, FixUp_P, Flag_P, Refine_P, MPI_Grid_P, Output_P, Aux_P, LB_P,
-               Corr_P, Par_P, MPI_Par_P, Init_P, Other_P, Sum_P );
+               Corr_P, Par_P, MPI_Par_P, libyt_P, Init_P, Other_P, Sum_P );
    } // if ( OPT__TIMING_BALANCE ) .. else ...
 
    fprintf( File, "****************************************************************************************" );
