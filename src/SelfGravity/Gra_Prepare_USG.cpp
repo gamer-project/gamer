@@ -34,18 +34,19 @@ void Gra_Prepare_USG( const int lv, const double PrepTime,
    const real MinDens_No        = -1.0;
    const real MinPres_No        = -1.0;
    const real MinTemp_No        = -1.0;
+   const real MinEntr_No        = -1.0;
 
 // prepare potential
    if ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT )
    Prepare_PatchData( lv, PrepTime, &h_Pot_Array_USG_G[0][0][0][0], NULL, USG_GHOST_SIZE_G, NPG, PID0_List,
                       _POTE, _NONE, OPT__GRA_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_06, IntPhase_No,
-                      OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, MinTemp_No, DE_Consistency_No );
+                      OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
 // prepare density + momentum
 // --> we do not check minimum density here since no ghost zones are required
    Prepare_PatchData( lv, PrepTime,  h_Flu_Array_USG_G[0][0][0][0], NULL, 0,              NPG, PID0_List,
                       _DENS|_MOMX|_MOMY|_MOMZ, _NONE, INT_NONE, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No,
-                      OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, DE_Consistency_No );
+                      OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
 } // FUNCTION : Gra_Prepare_USG
 

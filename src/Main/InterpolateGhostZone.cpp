@@ -74,7 +74,7 @@ void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, 
 //                FluBC             : Fluid boundary condition
 //                PotBC             : Gravity boundary condition (not used currently)
 //                BC_Face           : Priority of the B.C. along different boundary faces (z>y>x)
-//                MinPres/Temp      : Minimum allowed pressure/temperature (<0.0 ==> off)
+//                MinPres/Temp/Entr : Minimum allowed pressure/temperature/entropy (<0.0 ==> off)
 //                DE_Consistency    : Ensure the consistency between pressure, total energy density, and the
 //                                    dual-energy variable when DUAL_ENERGY is on
 //                FInterface        : B field on the coarse-fine interfaces for the divergence-preserving interpolation
@@ -87,7 +87,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                            const int NVarCC_Der, const long TVarCCList_Der[],
                            const long TVarFC, const int NVarFC_Tot, const int TVarFCIdxList[],
                            const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
-                           const int BC_Face[], const real MinPres, const real MinTemp,
+                           const int BC_Face[], const real MinPres, const real MinTemp, const real MinEntr,
                            const bool DE_Consistency, const real *FInterface[6] )
 {
 
@@ -474,7 +474,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 #        endif
          CData_CC_Ptr[Idx] = Hydro_Con2Entr( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                              FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                             Emag,
+                                             (MinEntr>=(real)0.0), MinEntr, Emag,
                                              EoS_DensEint2Entr_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                              h_EoS_Table );
 
@@ -491,7 +491,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                FluWeighting     *CData_CC_Ptr[Idx]
              + FluWeighting_IntT*Hydro_Con2Entr( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                  FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                                 Emag,
+                                                 (MinEntr>=(real)0.0), MinEntr, Emag,
                                                  EoS_DensEint2Entr_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                  h_EoS_Table );
          }
@@ -804,7 +804,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 #              endif
                CData_CC_Ptr[Idx] = Hydro_Con2Entr( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                    FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                                   Emag,
+                                                   (MinEntr>=(real)0.0), MinEntr, Emag,
                                                    EoS_DensEint2Entr_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                    h_EoS_Table );
 
@@ -821,7 +821,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                      FluWeighting     *CData_CC_Ptr[Idx]
                    + FluWeighting_IntT*Hydro_Con2Entr( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                        FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                                       Emag,
+                                                       (MinEntr>=(real)0.0), MinEntr, Emag,
                                                        EoS_DensEint2Entr_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                        h_EoS_Table );
                }
