@@ -1,19 +1,18 @@
 #!/bin/bash
 
 #PBS -N gamer_isolatedhalo_test_yt
-##PBS -M d07222009@ntu.edu.tw
+##PBS -M YOUR_EMAIL
 ##PBS -m abe
-#PBS -q gtx1080tiq
+#PBS -q workq
 #PBS -k n
 #PBS -l walltime=72:00:00:00
 #PBS -l nodes=1:ppn=16
-##nodes = use how many computers, one computer has only 128G
 ##PBS -o stdout
 ##PBS -e stderr
 ##PBS -W depend=afterok:JOB_ID
-##PBS -W depend=afterany:33611
+##PBS -W depend=afterany:JOB_ID
 
-export OMP_NUM_THREADS=1
+export OMP_NUM_THREADS=4
 
 LOG_FILE=log_gamer_libyt
 EXE=gamer
