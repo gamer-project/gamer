@@ -41,11 +41,9 @@ Libyt covering_grid setup:
    OPT__FLAG_RHO           1
 
 5. END_T                   5.7116620e-03
-   END_STEP                32         
+   END_STEP                32
 
-6. OMP_NTHREAD             1
-
-7. YT_SCRIPT               inline_script_covering_grid
+6. YT_SCRIPT               inline_script_covering_grid
    YT_VERBOSE              1
 
 
@@ -58,14 +56,14 @@ Note:
 3. Simulate a single isolated halo extracted from a cosmological simulation
 
 4. About libyt covering_grid test
-   a. Use sumbit script "./libyt_script/submit_gamer.job" for job submission
-   
+   a. Use submit script "./libyt_script/submit_gamer.job" for job submission
+
    b. Put "./libyt_script/inline_script_covering_grid.py" under the same folder as gamer
-   
+
    c. For determining the "left_edge" and "dims" in function "ds.covering_grid":
       left_edge: LV1 resolution is 0.175/512/2 ; region covered by LV1 box (by "ds.covering_grid") is 0.175/512/2*512; 0.04375 = (0.175 - 0.175/512/2*512)/2
       dims:      Plan to cover region with half of the simulation box length, i.e. base level cells is 256X256X256 -> refine to MAX_LEVEL=1 -> LV1 cells is 512X512X512
 
    d. Use "plot_slice-dens_covering_grid.py" to extract density slices from .npz files
 
-   e. Use "make_movie.sh" to make .png pictures into .mp4
+   e. Use "make_movie.sh" to convert .png pictures into .mp4
