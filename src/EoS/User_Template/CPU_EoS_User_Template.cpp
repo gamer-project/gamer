@@ -483,7 +483,7 @@ FUNC_SPACE EoS_DP2E_t EoS_DensPres2Eint_Ptr = EoS_DensPres2Eint_User_Template;
 FUNC_SPACE EoS_DP2C_t EoS_DensPres2CSqr_Ptr = EoS_DensPres2CSqr_User_Template;
 FUNC_SPACE EoS_DE2T_t EoS_DensEint2Temp_Ptr = EoS_DensEint2Temp_User_Template;
 FUNC_SPACE EoS_DT2P_t EoS_DensTemp2Pres_Ptr = EoS_DensTemp2Pres_User_Template;
-FUNC_SPACE EoS_DE2E_t EoS_DensEint2Entr_Ptr = EoS_DensEint2Entr_User_Template;
+FUNC_SPACE EoS_DE2S_t EoS_DensEint2Entr_Ptr = EoS_DensEint2Entr_User_Template;
 FUNC_SPACE EoS_GENE_t EoS_General_Ptr       = EoS_General_User_Template;
 
 //-----------------------------------------------------------------------------------------
@@ -519,7 +519,7 @@ void EoS_SetGPUFunc_User_Template( EoS_DE2P_t &EoS_DensEint2Pres_GPUPtr,
                                    EoS_DP2C_t &EoS_DensPres2CSqr_GPUPtr,
                                    EoS_DE2T_t &EoS_DensEint2Temp_GPUPtr,
                                    EoS_DT2P_t &EoS_DensTemp2Pres_GPUPtr,
-                                   EoS_DE2E_t &EoS_DensEint2Entr_GPUPtr,
+                                   EoS_DE2S_t &EoS_DensEint2Entr_GPUPtr,
                                    EoS_GENE_t &EoS_General_GPUPtr )
 {
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensEint2Pres_GPUPtr, EoS_DensEint2Pres_Ptr, sizeof(EoS_DE2P_t) )  );
@@ -527,7 +527,7 @@ void EoS_SetGPUFunc_User_Template( EoS_DE2P_t &EoS_DensEint2Pres_GPUPtr,
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensPres2CSqr_GPUPtr, EoS_DensPres2CSqr_Ptr, sizeof(EoS_DP2C_t) )  );
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensEint2Temp_GPUPtr, EoS_DensEint2Temp_Ptr, sizeof(EoS_DE2T_t) )  );
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensTemp2Pres_GPUPtr, EoS_DensTemp2Pres_Ptr, sizeof(EoS_DT2P_t) )  );
-   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensEint2Entr_GPUPtr, EoS_DensEint2Entr_Ptr, sizeof(EoS_DE2E_t) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensEint2Entr_GPUPtr, EoS_DensEint2Entr_Ptr, sizeof(EoS_DE2S_t) )  );
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_General_GPUPtr,       EoS_General_Ptr,       sizeof(EoS_GENE_t) )  );
 }
 
@@ -538,7 +538,7 @@ void EoS_SetCPUFunc_User_Template( EoS_DE2P_t &EoS_DensEint2Pres_CPUPtr,
                                    EoS_DP2C_t &EoS_DensPres2CSqr_CPUPtr,
                                    EoS_DE2T_t &EoS_DensEint2Temp_CPUPtr,
                                    EoS_DT2P_t &EoS_DensTemp2Pres_CPUPtr,
-                                   EoS_DE2E_t &EoS_DensEint2Entr_CPUPtr,
+                                   EoS_DE2S_t &EoS_DensEint2Entr_CPUPtr,
                                    EoS_GENE_t &EoS_General_CPUPtr )
 {
    EoS_DensEint2Pres_CPUPtr = EoS_DensEint2Pres_Ptr;
@@ -558,9 +558,9 @@ void EoS_SetCPUFunc_User_Template( EoS_DE2P_t &EoS_DensEint2Pres_CPUPtr,
 
 // local function prototypes
 void EoS_SetAuxArray_User_Template( double [], int [] );
-void EoS_SetCPUFunc_User_Template( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t &, EoS_DE2T_t &, EoS_DT2P_t &, EoS_DE2E_t &, EoS_GENE_t & );
+void EoS_SetCPUFunc_User_Template( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t &, EoS_DE2T_t &, EoS_DT2P_t &, EoS_DE2S_t &, EoS_GENE_t & );
 #ifdef GPU
-void EoS_SetGPUFunc_User_Template( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t &, EoS_DE2T_t &, EoS_DT2P_t &, EoS_DE2E_t &, EoS_GENE_t & );
+void EoS_SetGPUFunc_User_Template( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t &, EoS_DE2T_t &, EoS_DT2P_t &, EoS_DE2S_t &, EoS_GENE_t & );
 #endif
 
 //-----------------------------------------------------------------------------------------

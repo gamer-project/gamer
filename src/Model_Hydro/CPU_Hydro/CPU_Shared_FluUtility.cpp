@@ -962,7 +962,7 @@ real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const re
 GPU_DEVICE
 real Hydro_Con2Entr( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                      const real Passive[], const bool CheckMinEntr, const real MinEntr, const real Emag,
-                     const EoS_DE2E_t EoS_DensEint2Entr, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                     const EoS_DE2S_t EoS_DensEint2Entr, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX] )
 {
 
