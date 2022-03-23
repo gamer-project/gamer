@@ -1396,7 +1396,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
       real *FData_MomY = IntData_CC + MOMY*FSize3D_CC;
       real *FData_MomZ = IntData_CC + MOMZ*FSize3D_CC;
       real *FData_Engy = IntData_CC + ENGY*FSize3D_CC;
-      real *FData_Enpy = IntData_CC + ENPY*FSize3D_CC;
+      real *FData_Dual = IntData_CC + DUAL*FSize3D_CC;
 
       char dummy;    // we do not record the dual-energy status here
 
@@ -1416,7 +1416,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 //       here we ALWAYS use the dual-energy variable to correct the total energy density
 //       --> we achieve that by setting the dual-energy switch to an extremely larger number and ignore
 //           the runtime parameter DUAL_ENERGY_SWITCH here
-         Hydro_DualEnergyFix( FData_Dens[t], FData_MomX[t], FData_MomY[t], FData_MomZ[t], FData_Engy[t], FData_Enpy[t],
+         Hydro_DualEnergyFix( FData_Dens[t], FData_MomX[t], FData_MomY[t], FData_MomZ[t], FData_Engy[t], FData_Dual[t],
                               dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2], (MinPres>=(real)0.0), MinPres,
                               UseEnpy2FixEngy, Emag );
       }

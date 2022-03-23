@@ -232,7 +232,7 @@ void Flu_FixUp_Flux( const int lv )
 #                   endif
 #                   if   ( DUAL_ENERGY == DE_ENPY )
                     ||  ( (*DE_StatusPtr1D == DE_UPDATED_BY_DUAL || *DE_StatusPtr1D == DE_UPDATED_BY_MIN_PRES)
-                           && CorrVal[ENPY] <= (real)2.0*TINY_NUMBER )
+                           && CorrVal[DUAL] <= (real)2.0*TINY_NUMBER )
 
 #                   elif ( DUAL_ENERGY == DE_EINT )
 #                   error : DE_EINT is NOT supported yet !!

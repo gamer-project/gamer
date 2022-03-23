@@ -106,7 +106,7 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
             if ( Mode == 2  ||  Mode == 3 )
             {
 #              if ( DUAL_ENERGY == DE_ENPY )
-               if ( Pres <= PresCheck  ||  Fluid[ENPY] < EnpyCheck )
+               if ( Pres <= PresCheck  ||  Fluid[DUAL] < EnpyCheck )
 #              else
                if ( Pres <= PresCheck )
 #              endif

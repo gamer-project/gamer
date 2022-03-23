@@ -636,10 +636,8 @@ void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nva
    {
 //    skip the dual-energy field for HYDRO
 #     if   ( MODEL == HYDRO )
-#     if   ( DUAL_ENERGY == DE_ENPY )
-      if ( v_out == ENPY )    v_out ++;
-#     elif ( DUAL_ENERGY == DE_EINT )
-      if ( v_out == EINT )    v_out ++;
+#     ifdef DUAL_ENERGY
+      if ( v_out == DUAL )    v_out ++;
 #     endif
 
 //    skip the density field for ELBDM

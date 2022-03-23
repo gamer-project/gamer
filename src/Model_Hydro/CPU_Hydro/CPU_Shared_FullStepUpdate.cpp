@@ -157,7 +157,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //    Output_1Cell[DENS] = FMAX( Output_1Cell[DENS], MinDens );
 
       Hydro_DualEnergyFix( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
-                           Output_1Cell[ENGY], Output_1Cell[ENPY], g_DE_Status[idx_out],
+                           Output_1Cell[ENGY], Output_1Cell[DUAL], g_DE_Status[idx_out],
                            EoS->AuxArrayDevPtr_Flt[1], EoS->AuxArrayDevPtr_Flt[2], CheckMinPres_No, NULL_REAL,
                            DualEnergySwitch, Emag );
 #     endif // #ifdef DUAL_ENERGY
