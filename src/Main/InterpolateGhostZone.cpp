@@ -1388,7 +1388,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                                      IntData_FC + FSize3D_FC[0] + FSize3D_FC[1] };
       const int  size_ij         = FSize_CC[0]*FSize_CC[1];
 #     endif
-      const real UseEnpy2FixEngy = HUGE_NUMBER;
+      const real UseDual2FixEngy = HUGE_NUMBER;
 
 //    assuming that the order of variables stored in IntData_CC[] is the same as patch->fluid[]
       real *FData_Dens = IntData_CC + DENS*FSize3D_CC;
@@ -1418,7 +1418,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 //           the runtime parameter DUAL_ENERGY_SWITCH here
          Hydro_DualEnergyFix( FData_Dens[t], FData_MomX[t], FData_MomY[t], FData_MomZ[t], FData_Engy[t], FData_Dual[t],
                               dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2], (MinPres>=(real)0.0), MinPres,
-                              UseEnpy2FixEngy, Emag );
+                              UseDual2FixEngy, Emag );
       }
    } // if (  DE_Consistency  &&  ( TVarCC & _TOTAL ) == _TOTAL  &&  TVarFC == _MAG )
 #  endif // if ( MODEL == HYDRO  &&  defined DUAL_ENERGY )
