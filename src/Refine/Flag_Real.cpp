@@ -269,8 +269,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #                    ifdef DUAL_ENERGY
 
 #                    if   ( DUAL_ENERGY == DE_ENPY )
-                     Pres[k][j][i] = Hydro_DensEntropy2Pres( Fluid[DENS][k][j][i], Fluid[ENPY][k][j][i],
-                                                             EoS_AuxArray_Flt[1], CheckMinPres_Yes, MIN_PRES );
+                     Pres[k][j][i] = Hydro_DensDual2Pres( Fluid[DENS][k][j][i], Fluid[DUAL][k][j][i],
+                                                          EoS_AuxArray_Flt[1], CheckMinPres_Yes, MIN_PRES );
 #                    elif ( DUAL_ENERGY == DE_EINT )
 #                    error : DE_EINT is NOT supported yet !!
 #                    endif

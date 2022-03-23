@@ -471,9 +471,9 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
 #                             if   ( DUAL_ENERGY == DE_ENPY )
                               const bool CheckMinPres_No = false;
-                              const real Enpy = FluidPtr[ENPY][k][j][i];
-                              const real Pres = Hydro_DensEntropy2Pres( Dens, Enpy, EoS_AuxArray_Flt[1],
-                                                                        CheckMinPres_No, NULL_REAL );
+                              const real Enpy = FluidPtr[DUAL][k][j][i];
+                              const real Pres = Hydro_DensDual2Pres( Dens, Enpy, EoS_AuxArray_Flt[1],
+                                                                     CheckMinPres_No, NULL_REAL );
                               const real Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray_Flt,
                                                                           EoS_AuxArray_Int, h_EoS_Table );
 #                             elif ( DUAL_ENERGY == DE_EINT )

@@ -403,16 +403,13 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
          (
 //          when adopting the dual-energy formalism, do NOT calculate pressure from "Etot-Ekin" since it would suffer
 //          from large round-off errors
-//          --> currently we use TINY_NUMBER as entropy floor and hence here we use 2.0*TINY_NUMBER to
-//              validate entropy
-//          --> in general, MIN_PRES > 0.0 should be sufficient for detecting unphysical entropy
-//          --> however, the additional check "Fluid[ENPY] < (real)2.0*TINY_NUMBER" is necessary when MIN_PRES == 0.0
-#           if   ( DUAL_ENERGY == DE_ENPY )
-            Hydro_DensEntropy2Pres( Fluid[DENS], Fluid[ENPY], EoS_AuxArray_Flt[1], NoFloor, NULL_REAL ) < (real)MIN_PRES  ||
-            Fluid[ENPY] < (real)2.0*TINY_NUMBER
-
-#           elif ( DUAL_ENERGY == DE_EINT )
-#           error : DE_EINT is NOT supported yet !!
+//          --> currently we use TINY_NUMBER as the dual-energy floor and hence here we use 2.0*TINY_NUMBER to
+//              validate the dual-energy variable
+//          --> in general, MIN_PRES > 0.0 should be sufficient for detecting unphysical dual-energy variable
+//          --> however, the additional check "Fluid[DUAL] < (real)2.0*TINY_NUMBER" is necessary when MIN_PRES == 0.0
+#           ifdef DUAL_ENERGY
+            Hydro_DensDual2Pres( Fluid[DENS], Fluid[DUAL], EoS_AuxArray_Flt[1], NoFloor, NULL_REAL ) < (real)MIN_PRES  ||
+            Fluid[DUAL] < (real)2.0*TINY_NUMBER
 
 #           else // without DUAL_ENERGY
             Hydro_Con2Eint( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],

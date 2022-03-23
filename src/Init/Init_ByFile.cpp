@@ -660,11 +660,9 @@ void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nva
    const real Emag = NULL_REAL;
 #  endif
 
-#  if   ( DUAL_ENERGY == DE_ENPY )
-   fluid_out[ENPY] = Hydro_Con2Entropy( fluid_in[DENS], fluid_in[MOMX], fluid_in[MOMY], fluid_in[MOMZ], fluid_in[ENGY], Emag,
-                                        EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-#  elif ( DUAL_ENERGY == DE_EINT )
-#  error : DE_EINT is NOT supported yet !!
+#  ifdef DUAL_ENERGY
+   fluid_out[DUAL] = Hydro_Con2Dual( fluid_in[DENS], fluid_in[MOMX], fluid_in[MOMY], fluid_in[MOMZ], fluid_in[ENGY], Emag,
+                                     EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #  endif
 
 // calculate the density field for ELBDM
