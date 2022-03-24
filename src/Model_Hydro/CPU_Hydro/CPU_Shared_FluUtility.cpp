@@ -943,6 +943,11 @@ real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const re
 // Description :  Evaluate the fluid entropy
 //
 // Note        :  1. Invoke the EoS routine EoS_DensEint2Entr() to support different EoS
+//                2. We regard the entropy used in the EoS routines and that used in the dual-energy formalism
+//                   as two completely separate fields
+//                   --> The former is referred to as Entr/ENTR and manipulated by the EoS API, while the latter is
+//                       usually referred to as Enpy/Dual/DUAL and manipulated by the routines in CPU_Shared_DualEnergy.cpp
+//                   --> This routine, Hydro_Con2Entr(), belongs to the former
 //
 // Parameter   :  Dens              : Mass density
 //                MomX/Y/Z          : Momentum density

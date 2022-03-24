@@ -41,8 +41,8 @@ extern void SetTempIntPara( const int lv, const int Sg_Current, const double Pre
 //                                        Data[empty_bin]=Weight[empty_bin]=NCell[empty_bin]=0
 //                TVarBitIdx  : Bitwise indices of target variables for computing the profiles
 //                              --> Supported indices (defined in Macro.h):
-//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELR, _PRES, _EINT_DER
-//                                             [, _ENPY, _EINT, _POTE]
+//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELR, _PRES, _EINT
+//                                             [, _DUAL, _POTE]
 //                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE]
 //                              --> For a passive scalar with an integer field index FieldIdx returned by AddField(),
 //                                  one can convert it to a bitwise field index by BIDX(FieldIdx)
@@ -461,7 +461,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                            }
                            break;
 
-                           case _EINT_DER:
+                           case _EINT:
                            {
                               const real Weight = dv;
                               const real Dens   = FluidPtr[DENS][k][j][i];
@@ -471,9 +471,9 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
 #                             if   ( DUAL_ENERGY == DE_ENPY )
                               const bool CheckMinPres_No = false;
-                              const real Enpy = FluidPtr[ENPY][k][j][i];
-                              const real Pres = Hydro_DensEntropy2Pres( Dens, Enpy, EoS_AuxArray_Flt[1],
-                                                                        CheckMinPres_No, NULL_REAL );
+                              const real Enpy = FluidPtr[DUAL][k][j][i];
+                              const real Pres = Hydro_DensDual2Pres( Dens, Enpy, EoS_AuxArray_Flt[1],
+                                                                     CheckMinPres_No, NULL_REAL );
                               const real Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray_Flt,
                                                                           EoS_AuxArray_Int, h_EoS_Table );
 #                             elif ( DUAL_ENERGY == DE_EINT )
