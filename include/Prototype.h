@@ -114,14 +114,12 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
                           real &Etot, real &Dual, char &DE_Status, const real Gamma_m1, const real _Gamma_m1,
                           const bool CheckMinPres, const real MinPres, const real DualEnergySwitch,
                           const real Emag );
-#if ( DUAL_ENERGY == DE_ENPY )
 real Hydro_Con2Dual( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                      const real Emag, const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[],
                      const int EoS_AuxArray_Int[], const real *const EoS_Table[EOS_NTABLE_MAX] );
 real Hydro_DensPres2Dual( const real Dens, const real Pres, const real Gamma_m1 );
 real Hydro_DensDual2Pres( const real Dens, const real Dual, const real Gamma_m1,
                           const bool CheckMinPres, const real MinPres );
-#endif
 #endif
 real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real InEngy,
                                const real MinEint, const real Emag );

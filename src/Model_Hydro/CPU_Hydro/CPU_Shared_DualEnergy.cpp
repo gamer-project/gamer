@@ -35,10 +35,10 @@ static real Hydro_DensDual2Pres( const real Dens, const real Dual, const real Ga
 //                       DE_EINT: internal_energy = pressure / (Gamma-1)
 //                   --> Note that the entropy here is a monotonic function of entropy per volume
 //                       instead of the real thermodynamic entropy (see Eqs. 48 and 49 in the Arepo code paper)
-//                5. Fluid variables returned by this function are guaranteed to be consistent with each other
+//                6. Fluid variables returned by this function are guaranteed to be consistent with each other
 //                   --> It doesn't matter we use the dual-energy variable to correct Eint or vice versa,
 //                       and it also holds even when the floor value is applied to pressure
-//                6. Only support the Gamma-law EoS for now
+//                7. Only support the Gamma-law EoS for now
 //
 // Parameter   :  Dens             : Mass density
 //                MomX/Y/Z         : Momentum density
