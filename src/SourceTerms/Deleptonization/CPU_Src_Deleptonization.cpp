@@ -173,7 +173,7 @@ void Src_WorkBeforeMajorFunc_Deleptonization( const int lv, const double TimeNew
    const bool        LogBin         = true;
    const double      LogBinRatio    = 1.25;
    const bool        RemoveEmptyBin = true;
-   const long        TVar[]         = { _DENS, _MOMX, _ENGY, _PRES, _VELR, _EINT_DER };
+   const long        TVar[]         = { _DENS, _MOMX, _ENGY, _PRES, _VELR, _EINT };
    const int         NProf          = SRC_DLEP_PROF_NVAR;
    const int         SingleLv       = -1;
    const int         MaxLv          = -1;

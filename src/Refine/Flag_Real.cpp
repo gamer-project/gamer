@@ -81,13 +81,14 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 // set the variables for the Lohner's error estimator
    int  Lohner_NVar=0, Lohner_Stride;
    long Lohner_TVar=0;
-   real MinDens=-1.0, MinPres=-1.0, MinTemp=-1.0;  // default is to disable all floors
+   real MinDens=-1.0, MinPres=-1.0, MinTemp=-1.0, MinEntr=-1.0;  // default is to disable all floors
 
 #  if   ( MODEL == HYDRO )
    if ( OPT__FLAG_LOHNER_DENS )  {  Lohner_NVar++;   Lohner_TVar |= _DENS;   MinDens = MIN_DENS;  }
    if ( OPT__FLAG_LOHNER_ENGY )  {  Lohner_NVar++;   Lohner_TVar |= _ENGY;                        }
    if ( OPT__FLAG_LOHNER_PRES )  {  Lohner_NVar++;   Lohner_TVar |= _PRES;   MinPres = MIN_PRES;  }
    if ( OPT__FLAG_LOHNER_TEMP )  {  Lohner_NVar++;   Lohner_TVar |= _TEMP;   MinTemp = MIN_TEMP;  }
+   if ( OPT__FLAG_LOHNER_ENTR )  {  Lohner_NVar++;   Lohner_TVar |= _ENTR;   MinEntr = MIN_ENTR;  }
 
 #  elif ( MODEL == ELBDM )
    if ( OPT__FLAG_LOHNER_DENS )
@@ -170,7 +171,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
          if ( Lohner_NVar > 0 )
             Prepare_PatchData( lv, Time[lv], Lohner_Var, NULL, Lohner_NGhost, NPG, &PID0, Lohner_TVar, _NONE,
                                Lohner_IntScheme, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
-                               MinDens, MinPres, MinTemp, DE_Consistency_No );
+                               MinDens, MinPres, MinTemp, MinEntr, DE_Consistency_No );
 
 
 //       loop over all local patches within the same patch group
@@ -268,8 +269,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #                    ifdef DUAL_ENERGY
 
 #                    if   ( DUAL_ENERGY == DE_ENPY )
-                     Pres[k][j][i] = Hydro_DensEntropy2Pres( Fluid[DENS][k][j][i], Fluid[ENPY][k][j][i],
-                                                             EoS_AuxArray_Flt[1], CheckMinPres_Yes, MIN_PRES );
+                     Pres[k][j][i] = Hydro_DensDual2Pres( Fluid[DENS][k][j][i], Fluid[DUAL][k][j][i],
+                                                          EoS_AuxArray_Flt[1], CheckMinPres_Yes, MIN_PRES );
 #                    elif ( DUAL_ENERGY == DE_EINT )
 #                    error : DE_EINT is NOT supported yet !!
 #                    endif
