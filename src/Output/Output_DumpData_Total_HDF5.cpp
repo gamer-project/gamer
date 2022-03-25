@@ -215,7 +215,7 @@ Procedure for outputting new variables:
 //                2442 : 2022/01/22 --> output OPT__FREEZE_PAR
 //                2443 : 2022/01/30 --> output MINMOD_MAX_ITER and MONO_MAX_ITER
 //                2444 : 2022/03/16 --> output OPT__FLAG_LOHNER_ENTR and MIN_ENTR
-//                2445 : 2022/03/25 --> output output OPT__OUTPUT_ENTR
+//                2445 : 2022/03/25 --> output OPT__OUTPUT_ENTR
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
