@@ -138,7 +138,7 @@
 // add built-in scalars
 #if ( MODEL == HYDRO )
 
-// entropy (or internal energy) for the dual-energy formalism
+// dual-energy variable
 # ifdef DUAL_ENERGY
 #  define NCOMP_PASSIVE_BUILTIN0    1
 # else
@@ -231,16 +231,13 @@
 #if ( NCOMP_PASSIVE > 0 )
 
 // always put the built-in variables at the END of the field list
-// --> so that their indices (e.g., ENPY/EINT/CRAY) can be determined during compilation
+// --> so that their indices (e.g., DUAL/CRAY) can be determined during compilation
 // --> convenient (and probably also more efficient) for the fluid solver
 #  define PASSIVE_NEXT_IDX0   ( NCOMP_TOTAL - 1   )
 
-# if   ( DUAL_ENERGY == DE_ENPY )
-#  define ENPY                ( PASSIVE_NEXT_IDX0 )
-#  define PASSIVE_NEXT_IDX1   ( ENPY - 1          )
-# elif ( DUAL_ENERGY == DE_EINT )
-#  define EINT                ( PASSIVE_NEXT_IDX0 )
-#  define PASSIVE_NEXT_IDX1   ( EINT - 1          )
+# ifdef DUAL_ENERGY
+#  define DUAL                ( PASSIVE_NEXT_IDX0 )
+#  define PASSIVE_NEXT_IDX1   ( DUAL - 1          )
 # else
 #  define PASSIVE_NEXT_IDX1   ( PASSIVE_NEXT_IDX0 )
 # endif
@@ -274,12 +271,9 @@
 // always put the built-in variables at the END of the list
 #  define FLUX_NEXT_IDX0   ( NFLUX_TOTAL - 1 )
 
-# if   ( DUAL_ENERGY == DE_ENPY )
-#  define FLUX_ENPY        ( FLUX_NEXT_IDX0  )
-#  define FLUX_NEXT_IDX1   ( FLUX_ENPY - 1   )
-# elif ( DUAL_ENERGY == DE_EINT )
-#  define FLUX_EINT        ( FLUX_NEXT_IDX0  )
-#  define FLUX_NEXT_IDX1   ( FLUX_EINT - 1   )
+# ifdef DUAL_ENERGY
+#  define FLUX_DUAL        ( FLUX_NEXT_IDX0  )
+#  define FLUX_NEXT_IDX1   ( FLUX_DUAL - 1   )
 # else
 #  define FLUX_NEXT_IDX1   ( FLUX_NEXT_IDX0  )
 # endif
@@ -305,10 +299,8 @@
 
 #if ( NCOMP_PASSIVE > 0 )
 
-# if   ( DUAL_ENERGY == DE_ENPY )
-#  define _ENPY               ( 1L << ENPY )
-# elif ( DUAL_ENERGY == DE_EINT )
-#  define _EINT               ( 1L << EINT )
+# ifdef DUAL_ENERGY
+#  define _DUAL               ( 1L << DUAL )
 # endif
 
 # ifdef COSMIC_RAY
@@ -336,10 +328,8 @@
 
 #if ( NFLUX_PASSIVE > 0 )
 
-# if   ( DUAL_ENERGY == DE_ENPY )
-#  define _FLUX_ENPY          ( 1L << FLUX_ENPY )
-# elif ( DUAL_ENERGY == DE_EINT )
-#  define _FLUX_EINT          ( 1L << FLUX_EINT )
+# ifdef DUAL_ENERGY
+#  define _FLUX_DUAL          ( 1L << FLUX_DUAL )
 # endif
 
 # ifdef COSMIC_RAY
@@ -351,21 +341,20 @@
 // bitwise indices of derived fields
 // --> start from (1L<<NCOMP_TOTAL) to distinguish from the intrinsic fields
 // --> remember to define NDERIVE = total number of derived fields
-// _EINT_DER is a derived field for distinguishing from _EINT
-// --> the latter is an intrinsic field when adopting DUAL_ENERGY == DE_EINT
 #  define _VELX               ( 1L << (NCOMP_TOTAL+ 0) )
 #  define _VELY               ( 1L << (NCOMP_TOTAL+ 1) )
 #  define _VELZ               ( 1L << (NCOMP_TOTAL+ 2) )
 #  define _VELR               ( 1L << (NCOMP_TOTAL+ 3) )
 #  define _PRES               ( 1L << (NCOMP_TOTAL+ 4) )
 #  define _TEMP               ( 1L << (NCOMP_TOTAL+ 5) )
-#  define _EINT_DER           ( 1L << (NCOMP_TOTAL+ 6) )
-#  define _MAGX_CC            ( 1L << (NCOMP_TOTAL+ 7) )
-#  define _MAGY_CC            ( 1L << (NCOMP_TOTAL+ 8) )
-#  define _MAGZ_CC            ( 1L << (NCOMP_TOTAL+ 9) )
-#  define _MAG_ENGY_CC        ( 1L << (NCOMP_TOTAL+10) )
-#  define _DERIVED            ( _VELX | _VELY | _VELZ | _VELR | _PRES | _TEMP | _EINT_DER | _MAGX_CC | _MAGY_CC | _MAGZ_CC | _MAG_ENGY_CC )
-#  define NDERIVE             11
+#  define _ENTR               ( 1L << (NCOMP_TOTAL+ 6) )
+#  define _EINT               ( 1L << (NCOMP_TOTAL+ 7) )
+#  define _MAGX_CC            ( 1L << (NCOMP_TOTAL+ 8) )
+#  define _MAGY_CC            ( 1L << (NCOMP_TOTAL+ 9) )
+#  define _MAGZ_CC            ( 1L << (NCOMP_TOTAL+10) )
+#  define _MAG_ENGY_CC        ( 1L << (NCOMP_TOTAL+11) )
+#  define _DERIVED            ( _VELX | _VELY | _VELZ | _VELR | _PRES | _TEMP | _ENTR | _EINT | _MAGX_CC | _MAGY_CC | _MAGZ_CC | _MAG_ENGY_CC )
+#  define NDERIVE             12
 
 
 #elif ( MODEL == ELBDM )

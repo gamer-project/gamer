@@ -789,6 +789,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__FLAG_LOHNER_ENGY           %d\n",      OPT__FLAG_LOHNER_ENGY     );
       fprintf( Note, "OPT__FLAG_LOHNER_PRES           %d\n",      OPT__FLAG_LOHNER_PRES     );
       fprintf( Note, "OPT__FLAG_LOHNER_TEMP           %d\n",      OPT__FLAG_LOHNER_TEMP     );
+      fprintf( Note, "OPT__FLAG_LOHNER_ENTR           %d\n",      OPT__FLAG_LOHNER_ENTR     );
 #     endif
       fprintf( Note, "OPT__FLAG_LOHNER_FORM           %s\n",      (OPT__FLAG_LOHNER_FORM==LOHNER_FLASH1   ) ? "LOHNER_FLASH1"    :
                                                                   (OPT__FLAG_LOHNER_FORM==LOHNER_FLASH2   ) ? "LOHNER_FLASH2"    :
@@ -997,6 +998,7 @@ void Aux_TakeNote()
       fprintf( Note, "MIN_PRES                        %13.7e\n",  MIN_PRES                 );
       fprintf( Note, "MIN_EINT                        %13.7e\n",  MIN_EINT                 );
       fprintf( Note, "MIN_TEMP                        %13.7e\n",  MIN_TEMP                 );
+      fprintf( Note, "MIN_ENTR                        %13.7e\n",  MIN_ENTR                 );
       fprintf( Note, "OPT__CHECK_PRES_AFTER_FLU       %d\n",      OPT__CHECK_PRES_AFTER_FLU);
       fprintf( Note, "OPT__LAST_RESORT_FLOOR          %d\n",      OPT__LAST_RESORT_FLOOR   );
       fprintf( Note, "JEANS_MIN_PRES                  %d\n",      JEANS_MIN_PRES           );
@@ -1387,7 +1389,7 @@ void Aux_TakeNote()
 #     endif
 
 #     if   ( MODEL == HYDRO )
-      if ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP )
+      if ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP || OPT__FLAG_LOHNER_ENTR )
 #     elif ( MODEL == ELBDM )
       if ( OPT__FLAG_LOHNER_DENS )
 #     endif

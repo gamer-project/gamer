@@ -103,6 +103,10 @@ real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const re
                      const real Passive[], const bool CheckMinTemp, const real MinTemp, const real Emag,
                      const EoS_DE2T_t EoS_DensEint2Temp, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX] );
+real Hydro_Con2Entr( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                     const real Passive[], const bool CheckMinEntr, const real MinEntr, const real Emag,
+                     const EoS_DE2S_t EoS_DensEint2Entr, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                     const real *const EoS_Table[EOS_NTABLE_MAX] );
 real Hydro_CheckMinPres( const real InPres, const real MinPres );
 real Hydro_CheckMinEint( const real InEint, const real MinEint );
 real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real InEngy,
@@ -111,17 +115,15 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
                             const char File[], const int Line, const char Function[], const CheckUnphysical_t Verbose );
 #ifdef DUAL_ENERGY
 void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, const real MomZ,
-                          real &Etot, real &Enpy, char &DE_Status, const real Gamma_m1, const real _Gamma_m1,
+                          real &Etot, real &Dual, char &DE_Status, const real Gamma_m1, const real _Gamma_m1,
                           const bool CheckMinPres, const real MinPres, const real DualEnergySwitch,
                           const real Emag );
-#if ( DUAL_ENERGY == DE_ENPY )
-real Hydro_Con2Entropy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                        const real Emag, const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[],
-                        const int EoS_AuxArray_Int[], const real *const EoS_Table[EOS_NTABLE_MAX] );
-real Hydro_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1 );
-real Hydro_DensEntropy2Pres( const real Dens, const real Enpy, const real Gamma_m1,
-                             const bool CheckMinPres, const real MinPres );
-#endif
+real Hydro_Con2Dual( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                     const real Emag, const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[],
+                     const int EoS_AuxArray_Int[], const real *const EoS_Table[EOS_NTABLE_MAX] );
+real Hydro_DensPres2Dual( const real Dens, const real Pres, const real Gamma_m1 );
+real Hydro_DensDual2Pres( const real Dens, const real Dual, const real Gamma_m1,
+                          const bool CheckMinPres, const real MinPres );
 #endif // #ifdef DUAL_ENERGY
 #endif // #if ( MODEL == HYDRO )
 int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt,
@@ -175,7 +177,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         const int GhostSize, const int NPG, const int *PID0_List, long TVarCC, long TVarFC,
                         const IntScheme_t IntScheme_CC, const IntScheme_t IntScheme_FC, const PrepUnit_t PrepUnit,
                         const NSide_t NSide, const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
-                        const real MinDens, const real MinPres, const real MinTemp, const bool DE_Consistency );
+                        const real MinDens, const real MinPres, const real MinTemp, const real MinEntr, const bool DE_Consistency );
 
 
 // Init

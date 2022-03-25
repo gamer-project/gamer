@@ -98,9 +98,17 @@ void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchL
 #  if ( MODEL == HYDRO )
    const double gamma = (double) GAMMA;
    const double mu = (double) MOLECULAR_WEIGHT;
-   const int srhd = 0; // TODO: No SRHydrodynamics found inside gamer.
+#  ifdef SRHD
+   const int srhd = 1;
+#  else
+   const int srhd = 0;
+#  endif
    if (yt_add_user_parameter_double("gamma", 1, &gamma) != YT_SUCCESS )  Aux_Error( ERROR_INFO, "yt_add_user_parameter() add GAMMA failed !!\n" );
    if (yt_add_user_parameter_double("mu", 1, &mu) != YT_SUCCESS )  Aux_Error( ERROR_INFO, "yt_add_user_parameter() add MOLECULAR_WEIGHT failed !!\n" );
+   if (yt_add_user_parameter_int("srhd", 1, &srhd) != YT_SUCCESS ) Aux_Error( ERROR_INFO, "yt_add_user_parameter() add srhd failed !!\n" );
+
+#  elif ( MODEL == ELBDM )
+   const int srhd = 0;
    if (yt_add_user_parameter_int("srhd", 1, &srhd) != YT_SUCCESS ) Aux_Error( ERROR_INFO, "yt_add_user_parameter() add srhd failed !!\n" );
 #  endif
 
