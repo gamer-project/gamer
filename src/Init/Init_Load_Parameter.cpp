@@ -403,6 +403,7 @@ void Init_Load_Parameter()
 #  if ( MODEL == HYDRO )
    ReadPara->Add( "OPT__OUTPUT_PRES",           &OPT__OUTPUT_PRES,                false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_TEMP",           &OPT__OUTPUT_TEMP,                false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__OUTPUT_ENTR",           &OPT__OUTPUT_ENTR,                false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_CS",             &OPT__OUTPUT_CS,                  false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_DIVVEL",         &OPT__OUTPUT_DIVVEL,              false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_MACH",           &OPT__OUTPUT_MACH,                false,           Useless_bool,  Useless_bool   );

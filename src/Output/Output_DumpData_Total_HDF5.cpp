@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2444)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2445)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -215,6 +215,7 @@ Procedure for outputting new variables:
 //                2442 : 2022/01/22 --> output OPT__FREEZE_PAR
 //                2443 : 2022/01/30 --> output MINMOD_MAX_ITER and MONO_MAX_ITER
 //                2444 : 2022/03/16 --> output OPT__FLAG_LOHNER_ENTR and MIN_ENTR
+//                2445 : 2022/03/25 --> output OPT__OUTPUT_ENTR
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -282,6 +283,11 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    if ( TempDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
    if ( OPT__OUTPUT_TEMP   )  sprintf( FieldLabelOut[TempDumpIdx  ], "Temp"   );
+
+   const int EntrDumpIdx   = ( OPT__OUTPUT_ENTR   ) ? NFieldStored++ : -1;
+   if ( EntrDumpIdx >= NFIELD_STORED_MAX )
+      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+   if ( OPT__OUTPUT_ENTR   )  sprintf( FieldLabelOut[EntrDumpIdx  ], "Entr"   );
 
    const int CsDumpIdx     = ( OPT__OUTPUT_CS     ) ? NFieldStored++ : -1;
    if ( CsDumpIdx >= NFIELD_STORED_MAX )
@@ -1094,7 +1100,32 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                } // if ( v == TempDumpIdx )
                else
 
-//             d-3. sound speed
+//             d-3. gas entropy
+               if ( v == EntrDumpIdx )
+               {
+                  const bool CheckMinEntr_No = false;
+
+                  for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                  for (int k=0; k<PS1; k++)
+                  for (int j=0; j<PS1; j++)
+                  for (int i=0; i<PS1; i++)
+                  {
+                     real u[NCOMP_TOTAL], Entr, Emag=NULL_REAL;
+
+                     for (int v=0; v<NCOMP_TOTAL; v++)   u[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
+
+#                    ifdef MHD
+                     Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+#                    endif
+                     Entr = Hydro_Con2Entr( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
+                                            CheckMinEntr_No, NULL_REAL, Emag, EoS_DensEint2Entr_CPUPtr,
+                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+                     FieldData[PID][k][j][i] = Entr;
+                  }
+               } // if ( v == EntrDumpIdx )
+               else
+
+//             d-4. sound speed
                if ( v == CsDumpIdx )
                {
                   const bool CheckMinPres_No = false;
@@ -1121,7 +1152,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                } // if ( v == CsDumpIdx )
                else
 
-//             d-4. divergence(velocity)
+//             d-5. divergence(velocity)
                if ( v == DivVelDumpIdx )
                {
                   for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
@@ -1157,7 +1188,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                } // if ( v == DivVelDumpIdx )
                else
 
-//             d-5. Mach number
+//             d-6. Mach number
                if ( v == MachDumpIdx )
                {
                   for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
@@ -1200,7 +1231,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                else
 #              endif // #if ( MODEL == HYDRO )
 
-//             d-6. divergence(B field)
+//             d-7. divergence(B field)
 #              ifdef MHD
                if ( v == DivMagDumpIdx )
                {
@@ -1216,7 +1247,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                else
 #              endif
 
-//             d-7. user-defined derived fields
+//             d-8. user-defined derived fields
 //             the following check also works for OPT__OUTPUT_USER_FIELD==false since UserDerField_Num is initialized as -1
                if ( v >= UserDumpIdx0  &&  v < UserDumpIdx0 + UserDerField_Num )
                {
@@ -1285,7 +1316,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to write a field (lv %d, v %d) !!\n", lv, v );
 
                H5_Status = H5Dclose( H5_SetID_Field );
-            } // for (int v=0; v<NFieldOut; v++)
+            } // for (int v=0; v<NFieldStored; v++)
 
 
 //          5-2-1-5.free resource before dumping magnetic field to save memory
@@ -1690,7 +1721,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2444;
+   KeyInfo.FormatVersion        = 2445;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2589,6 +2620,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  if ( MODEL == HYDRO )
    InputPara.Opt__Output_Pres        = OPT__OUTPUT_PRES;
    InputPara.Opt__Output_Temp        = OPT__OUTPUT_TEMP;
+   InputPara.Opt__Output_Entr        = OPT__OUTPUT_ENTR;
    InputPara.Opt__Output_Cs          = OPT__OUTPUT_CS;
    InputPara.Opt__Output_DivVel      = OPT__OUTPUT_DIVVEL;
    InputPara.Opt__Output_Mach        = OPT__OUTPUT_MACH;
@@ -3415,6 +3447,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  if ( MODEL == HYDRO )
    H5Tinsert( H5_TypeID, "Opt__Output_Pres",        HOFFSET(InputPara_t,Opt__Output_Pres       ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Temp",        HOFFSET(InputPara_t,Opt__Output_Temp       ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Entr",        HOFFSET(InputPara_t,Opt__Output_Entr       ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Cs",          HOFFSET(InputPara_t,Opt__Output_Cs         ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_DivVel",      HOFFSET(InputPara_t,Opt__Output_DivVel     ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Mach",        HOFFSET(InputPara_t,Opt__Output_Mach       ), H5T_NATIVE_INT              );
