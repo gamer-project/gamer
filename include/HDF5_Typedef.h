@@ -638,6 +638,7 @@ struct InputPara_t
 #  if ( MODEL == HYDRO )
    int    Opt__Output_Pres;
    int    Opt__Output_Temp;
+   int    Opt__Output_Entr;
    int    Opt__Output_Cs;
    int    Opt__Output_DivVel;
    int    Opt__Output_Mach;
