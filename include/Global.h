@@ -95,13 +95,13 @@ extern double           GAMMA, MINMOD_COEFF, MOLECULAR_WEIGHT, ISO_TEMP;
 extern LR_Limiter_t     OPT__LR_LIMITER;
 extern Opt1stFluxCorr_t OPT__1ST_FLUX_CORR;
 extern OptRSolver1st_t  OPT__1ST_FLUX_CORR_SCHEME;
-extern bool             OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP;
+extern bool             OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP, OPT__FLAG_LOHNER_ENTR;
 extern bool             OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, JEANS_MIN_PRES, OPT__LAST_RESORT_FLOOR;
 extern bool             OPT__OUTPUT_DIVVEL, OPT__OUTPUT_MACH, OPT__OUTPUT_PRES, OPT__OUTPUT_CS;
 extern bool             OPT__OUTPUT_TEMP;
 extern int              OPT__CK_NEGATIVE, JEANS_MIN_PRES_LEVEL, JEANS_MIN_PRES_NCELL, OPT__CHECK_PRES_AFTER_FLU;
 extern int              MINMOD_MAX_ITER;
-extern double           MIN_DENS, MIN_PRES, MIN_EINT, MIN_TEMP;
+extern double           MIN_DENS, MIN_PRES, MIN_EINT, MIN_TEMP, MIN_ENTR;
 #ifdef DUAL_ENERGY
 extern double           DUAL_ENERGY_SWITCH;
 #endif
@@ -248,6 +248,7 @@ extern EoS_DP2E_t EoS_DensPres2Eint_CPUPtr;
 extern EoS_DP2C_t EoS_DensPres2CSqr_CPUPtr;
 extern EoS_DE2T_t EoS_DensEint2Temp_CPUPtr;
 extern EoS_DT2P_t EoS_DensTemp2Pres_CPUPtr;
+extern EoS_DE2S_t EoS_DensEint2Entr_CPUPtr;
 extern EoS_GENE_t EoS_General_CPUPtr;
 #ifdef GPU
 extern EoS_DE2P_t EoS_DensEint2Pres_GPUPtr;
@@ -255,6 +256,7 @@ extern EoS_DP2E_t EoS_DensPres2Eint_GPUPtr;
 extern EoS_DP2C_t EoS_DensPres2CSqr_GPUPtr;
 extern EoS_DE2T_t EoS_DensEint2Temp_GPUPtr;
 extern EoS_DT2P_t EoS_DensTemp2Pres_GPUPtr;
+extern EoS_DE2S_t EoS_DensEint2Entr_GPUPtr;
 extern EoS_GENE_t EoS_General_GPUPtr;
 #endif
 extern EoS_t EoS;
