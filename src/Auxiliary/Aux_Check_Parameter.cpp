@@ -260,9 +260,9 @@ void Aux_Check_Parameter()
    if (  OPT__OUTPUT_TEMP  &&  EoS_DensEint2Temp_CPUPtr == NULL )
       Aux_Error( ERROR_INFO, "EoS_DensEint2Temp_CPUPtr == NULL for OPT__OUTPUT_TEMP !!\n" );
 
-#  if ( EOS != EOS_NUCLEAR )
+#  if ( EOS == EOS_ISOTHERMAL )
    if ( OPT__OUTPUT_ENTR )
-      Aux_Error( ERROR_INFO, "OPT__OUTPUT_ENTR is only supported by EOS_NUCLEAR !!\n" );
+      Aux_Error( ERROR_INFO, "OPT__OUTPUT_ENTR does not support EOS_ISOTHERMAL !!\n" );
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 
