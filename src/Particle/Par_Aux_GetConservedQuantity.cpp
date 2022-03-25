@@ -78,6 +78,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
    const real MinDens_No        = -1.0;
    const real MinPres_No        = -1.0;
    const real MinTemp_No        = -1.0;
+   const real MinEntr_No        = -1.0;
 
    const int  PotGhost          = amr->Par->GhostSize;
    const int  PotSize           = PS1 + 2*PotGhost;
@@ -195,7 +196,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
 #        endif
             Prepare_PatchData( lv, PrepPotTime, Pot, NULL, PotGhost, 1, &PID0, _POTE, _NONE,
                                OPT__GRA_INT_SCHEME, INT_NONE, UNIT_PATCH, (PotGhost==0)?NSIDE_00:NSIDE_26, IntPhase_No,
-                               OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, MinTemp_No, DE_Consistency_No );
+                               OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
 
 //       2-3. calculate potential energy

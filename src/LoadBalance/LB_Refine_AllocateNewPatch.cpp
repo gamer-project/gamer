@@ -1011,13 +1011,13 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 //        the runtime parameter DUAL_ENERGY_SWITCH here
 #     ifdef DUAL_ENERGY
       const bool CheckMinPres_Yes = true;
-      const real UseEnpy2FixEngy  = HUGE_NUMBER;
+      const real UseDual2FixEngy  = HUGE_NUMBER;
       char dummy;    // we do not record the dual-energy status here
 
       Hydro_DualEnergyFix( FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i],
-                           FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i], FData_Flu[ENPY][k][j][i],
+                           FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i], FData_Flu[DUAL][k][j][i],
                            dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2], CheckMinPres_Yes, MIN_PRES,
-                           UseEnpy2FixEngy, Emag );
+                           UseDual2FixEngy, Emag );
 
 #     else // #ifdef DUAL_ENERGY
 
