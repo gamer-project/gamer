@@ -1103,29 +1103,23 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //             d-3. gas entropy
                if ( v == EntrDumpIdx )
                {
-                  const bool CheckMinEint_No = false;
+                  const bool CheckMinEntr_No = false;
 
                   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
                   for (int k=0; k<PS1; k++)
                   for (int j=0; j<PS1; j++)
                   for (int i=0; i<PS1; i++)
                   {
-                     real u[NCOMP_TOTAL], Out[2], Eint, Pres, Emag=NULL_REAL, Entr=NULL_REAL;
+                     real u[NCOMP_TOTAL], Entr, Emag=NULL_REAL;
 
                      for (int v=0; v<NCOMP_TOTAL; v++)   u[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
 
 #                    ifdef MHD
                      Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
 #                    endif
-
-#                    if ( EOS == EOS_NUCLEAR )
-                     Eint = Hydro_Con2Eint( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], CheckMinEint_No, NULL_REAL, Emag );
-                     Pres = EoS_DensEint2Pres_CPUPtr( u[DENS], Eint, u+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                                                      h_EoS_Table, Out );
-                     Entr = Out[1];
-#                    else
-                     Aux_Error( ERROR_INFO, "OPT__OUTPUT_ENTR is only supported by EOS_NUCLEAR !!\n" );
-#                    endif
+                     Entr = Hydro_Con2Entr( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
+                                            CheckMinEntr_No, NULL_REAL, Emag, EoS_DensEint2Entr_CPUPtr,
+                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
                      FieldData[PID][k][j][i] = Entr;
                   }
                } // if ( v == EntrDumpIdx )
