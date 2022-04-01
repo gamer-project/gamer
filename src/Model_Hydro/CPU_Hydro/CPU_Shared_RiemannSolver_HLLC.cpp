@@ -44,7 +44,7 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
 //                L/R_In            : Input left/right states (conserved variables)
 //                MinDens/Pres      : Density and pressure floors
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
-//                EoS_DensPres2CSqr : EoS routine to compute the sound speed square
+//                EoS_DensPres2CSqr : EoS routine to compute the sound speed squared
 //                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
 //                EoS_Table         : EoS tables
 //-------------------------------------------------------------------------------------------------------
@@ -67,14 +67,9 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    Hydro_Rotate3D( L, XYZ, true, MAG_OFFSET );
    Hydro_Rotate3D( R, XYZ, true, MAG_OFFSET );
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( Hydro_CheckNegative(L[0]) )
-      printf( "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              L[0], __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( Hydro_CheckNegative(R[0]) )
-      printf( "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              R[0], __FILE__, __LINE__, __FUNCTION__ );
+#  ifdef CHECK_UNPHYSICAL_IN_FLUID
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &L[0], "density", ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &R[0], "density", ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 
@@ -96,17 +91,12 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
                            EoS_DensEint2Pres, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
    P_R   = Hydro_Con2Pres( R[0], R[1], R[2], R[3], R[4], R+NCOMP_FLUID, CheckMinPres_Yes, MinPres, Emag,
                            EoS_DensEint2Pres, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
-   Cs_L  = SQRT(  EoS_DensPres2CSqr( L[0], P_L, L+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL )  );
-   Cs_R  = SQRT(  EoS_DensPres2CSqr( R[0], P_R, R+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL )  );
+   Cs_L  = SQRT(  EoS_DensPres2CSqr( L[0], P_L, L+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table )  );
+   Cs_R  = SQRT(  EoS_DensPres2CSqr( R[0], P_R, R+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table )  );
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( Hydro_CheckNegative(P_L) )
-      printf( "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              P_L, __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( Hydro_CheckNegative(P_R) )
-      printf( "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              P_R, __FILE__, __LINE__, __FUNCTION__ );
+#  ifdef CHECK_UNPHYSICAL_IN_FLUID
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &P_R, "pressure", ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &P_L, "pressure", ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 
@@ -151,10 +141,8 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    Cs2_Roe  = Gamma*TempPres/TempRho;
    Cs_Roe   = SQRT( Cs2_Roe );
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( Hydro_CheckNegative(Cs2_Roe) )
-      printf( "ERROR : invalid Cs2_Roe (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Cs2_Roe, __FILE__, __LINE__, __FUNCTION__ );
+#  ifdef CHECK_UNPHYSICAL_IN_FLUID
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Cs2_Roe, "Cs2_Roe", ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 // maximum and minimum eigenvalues
@@ -195,8 +183,8 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    Rho_SR      = FMAX( Rho_SR, MinDens );
    _P          = ONE / P_PVRS;
 // see Eq. [9.8] in Toro 1999 for passive scalars
-   Gamma_SL    = EoS_DensPres2CSqr( Rho_SL, P_PVRS, L+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL )*Rho_SL*_P;
-   Gamma_SR    = EoS_DensPres2CSqr( Rho_SR, P_PVRS, R+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL )*Rho_SR*_P;
+   Gamma_SL    = EoS_DensPres2CSqr( Rho_SL, P_PVRS, L+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table )*Rho_SL*_P;
+   Gamma_SR    = EoS_DensPres2CSqr( Rho_SR, P_PVRS, R+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table )*Rho_SR*_P;
 #  endif // EOS
 
    q_L = ( P_PVRS <= P_L ) ? ONE : SQRT(  ONE + _TWO*( Gamma_SL + ONE )/Gamma_SL*( P_PVRS/P_L - ONE )  );
@@ -204,14 +192,9 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    W_L = u_L - Cs_L*q_L;
    W_R = u_R + Cs_R*q_R;
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( Hydro_CheckNegative(q_L) )
-      printf( "ERROR : invalid q_L (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              q_L, __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( Hydro_CheckNegative(q_R) )
-      printf( "ERROR : invalid q_R (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              q_R, __FILE__, __LINE__, __FUNCTION__ );
+#  ifdef CHECK_UNPHYSICAL_IN_FLUID
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &q_L, "q_L", ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &q_R, "q_R", ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 

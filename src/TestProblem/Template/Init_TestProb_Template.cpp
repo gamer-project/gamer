@@ -107,7 +107,7 @@ void SetParameter()
    ReadPara->Add( "var_bool",          &var_bool,              true,          Useless_bool,     Useless_bool      );
    ReadPara->Add( "var_double",        &var_double,            1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "var_int",           &var_int,               2,             0,                5                 );
-   ReadPara->Add( "var_str",            var_str,               Useless_str,   Useless_str,      Useless_str       );
+   ReadPara->Add( "var_str",            var_str,               NoDef_str,     Useless_str,      Useless_str       );
 
    ReadPara->Read( FileName );
 
@@ -191,8 +191,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    MomZ = 0.0;
    Pres = 2.0;
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
-                                    EoS_AuxArray_Int, h_EoS_Table, NULL ); // assuming EoS requires no passive scalars
-   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );         // do NOT include magnetic energy here
+                                    EoS_AuxArray_Int, h_EoS_Table );   // assuming EoS requires no passive scalars
+   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );     // do NOT include magnetic energy here
 
 // set the output array
    fluid[DENS] = Dens;

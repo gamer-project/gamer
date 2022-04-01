@@ -150,6 +150,7 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
 #           if ( MODEL == HYDRO )
             if ( OPT__OUTPUT_PRES )    fprintf( File, "%14s", "Pressure" );
             if ( OPT__OUTPUT_TEMP )    fprintf( File, "%14s", "Temperature" );
+            if ( OPT__OUTPUT_ENTR )    fprintf( File, "%14s", "Entropy" );
             if ( OPT__OUTPUT_CS )      fprintf( File, "%14s", "Sound speed" );
             if ( OPT__OUTPUT_DIVVEL )  fprintf( File, "%14s", "Div(Vel)" );
             if ( OPT__OUTPUT_MACH   )  fprintf( File, "%14s", "Mach" );
@@ -309,7 +310,8 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 #  if ( MODEL == HYDRO )
    const bool CheckMinPres_No = false;
    const bool CheckMinTemp_No = false;
-   real Pres=-1.0, Temp=-1.0, Cs=-1.0;    // initial values must be negative
+   const bool CheckMinEntr_No = false;
+   real Pres=-1.0, Temp=-1.0, Entr=-1.0, Cs=-1.0;  // initial values must be negative
 
 // no need to increase Der_FieldIdx for fields not using DerField[]
    if ( OPT__OUTPUT_PRES ) {
@@ -326,6 +328,13 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
       fprintf( File, " %13.6e", Temp );
    }
 
+   if ( OPT__OUTPUT_ENTR ) {
+      Entr = Hydro_Con2Entr( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
+                             CheckMinEntr_No, NULL_REAL, Emag, EoS_DensEint2Entr_CPUPtr,
+                             EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+      fprintf( File, " %13.6e", Entr );
+   }
+
    if ( OPT__OUTPUT_CS ) {
 //    compute pressure if it is not done yet
       if ( Pres < 0.0 )
@@ -333,7 +342,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
                              CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres_CPUPtr,
                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
       Cs   = SQRT(  EoS_DensPres2CSqr_CPUPtr( u[DENS], Pres, u+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                                              h_EoS_Table, NULL )  );
+                                              h_EoS_Table )  );
       fprintf( File, " %13.6e", Cs );
    }
 
@@ -400,6 +409,7 @@ void GetDerivedField( real (*FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ],
       const real MinDens_No          = -1.0;
       const real MinPres_No          = -1.0;
       const real MinTemp_No          = -1.0;
+      const real MinEntr_No          = -1.0;
       const bool DE_Consistency_No   = false;
 #     ifndef MHD
       const int  OPT__MAG_INT_SCHEME = INT_NONE;
@@ -408,7 +418,7 @@ void GetDerivedField( real (*FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ],
 //    always prepare all fields
       Prepare_PatchData( lv, Time[lv], FluIn[0][0], MagFC[0][0], DER_GHOST_SIZE, 1, &PID0,
                          _TOTAL, _MAG, OPT__FLU_INT_SCHEME, OPT__MAG_INT_SCHEME, UNIT_PATCH, NSIDE_26,
-                         IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, DE_Consistency_No );
+                         IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
    } // if ( PrepFluIn )
 
 

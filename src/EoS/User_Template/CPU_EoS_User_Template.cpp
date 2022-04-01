@@ -72,7 +72,8 @@ void EoS_SetAuxArray_User_Template( double AuxArray_Flt[], int AuxArray_Int[] )
 //     (3) EoS_DensPres2CSqr_*
 //     (4) EoS_DensEint2Temp_* [OPTIONAL]
 //     (5) EoS_DensTemp2Pres_* [OPTIONAL]
-//     (6) EoS_General_*       [OPTIONAL]
+//     (6) EoS_DensEint2Entr_* [OPTIONAL]
+//     (7) EoS_General_*       [OPTIONAL]
 // =============================================
 
 //-------------------------------------------------------------------------------------------------------
@@ -87,15 +88,13 @@ void EoS_SetAuxArray_User_Template( double AuxArray_Flt[], int AuxArray_Int[] )
 //                Passive    : Passive scalars
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
-//                ExtraInOut : Array to store extra input and output variables if required
-//                             --> Optional and only used when it is not NULL
 //
 // Return      :  Gas pressure
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, const real Passive[],
                                              const double AuxArray_Flt[], const int AuxArray_Int[],
-                                             const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] )
+                                             const real *const Table[EOS_NTABLE_MAX] )
 {
 
 // check
@@ -106,14 +105,9 @@ static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, c
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
    if ( AuxArray_Int == NULL )   printf( "ERROR : AuxArray_Int == NULL in %s !!\n", __FUNCTION__ );
 
-   if ( Hydro_CheckNegative(Dens) )
-      printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Dens, __FILE__, __LINE__, __FUNCTION__ );
-
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Dens, "input density",         ERROR_INFO, UNPHY_VERBOSE );
 // note that some EoS may support Eint<0
-   if ( Hydro_CheckNegative(Eint) )
-      printf( "ERROR : invalid input internal energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Eint, __FILE__, __LINE__, __FUNCTION__ );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Eint, "input internal energy", ERROR_INFO, UNPHY_VERBOSE );
 #  endif // GAMER_DEBUG
 
 
@@ -126,26 +120,16 @@ static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, c
 
 // check
 #  ifdef GAMER_DEBUG
-   if ( Hydro_CheckNegative(Pres) )
+   if ( Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "output pressure", ERROR_INFO, UNPHY_VERBOSE ) )
    {
-      printf( "ERROR : invalid output pressure (%13.7e) in %s() !!\n", Pres, __FUNCTION__ );
-      printf( "        Dens=%13.7e, Eint=%13.7e\n", Dens, Eint );
+      printf( "Dens=%13.7e, Eint=%13.7e\n", Dens, Eint );
 #     if ( NCOMP_PASSIVE > 0 )
-      printf( "        Passive scalars:" );
+      printf( "Passive scalars:" );
       for (int v=0; v<NCOMP_PASSIVE; v++)    printf( " %d=%13.7e", v, Passive[v] );
       printf( "\n" );
 #     endif
    }
 #  endif // GAMER_DEBUG
-
-
-// store extra output variables if required
-   /*
-   if ( ExtraInOut != NULL )
-   {
-      ExtraInOut[...] = ...;
-   }
-   */
 
 
    return Pres;
@@ -165,15 +149,13 @@ static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, c
 //                Passive    : Passive scalars
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
-//                ExtraInOut : Array to store extra input and output variables if required
-//                             --> Optional and only used when it is not NULL
 //
 // Return      :  Gas internal energy density
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, const real Passive[],
                                              const double AuxArray_Flt[], const int AuxArray_Int[],
-                                             const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] )
+                                             const real *const Table[EOS_NTABLE_MAX] )
 {
 
 // check
@@ -184,13 +166,8 @@ static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, c
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
    if ( AuxArray_Int == NULL )   printf( "ERROR : AuxArray_Int == NULL in %s !!\n", __FUNCTION__ );
 
-   if ( Hydro_CheckNegative(Dens) )
-      printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Dens, __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( Hydro_CheckNegative(Pres) )
-      printf( "ERROR : invalid input pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Pres, __FILE__, __LINE__, __FUNCTION__ );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Dens, "input density",  ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "input pressure", ERROR_INFO, UNPHY_VERBOSE );
 #  endif // GAMER_DEBUG
 
 
@@ -204,26 +181,16 @@ static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, c
 // check
 #  ifdef GAMER_DEBUG
 // note that some EoS may support Eint<0
-   if ( Hydro_CheckNegative(Eint) )
+   if ( Hydro_CheckUnphysical( UNPHY_MODE_SING, &Eint, "output internal energy", ERROR_INFO, UNPHY_VERBOSE ) )
    {
-      printf( "ERROR : invalid output internal energy density (%13.7e) in %s() !!\n", Eint, __FUNCTION__ );
-      printf( "        Dens=%13.7e, Pres=%13.7e\n", Dens, Pres );
+      printf( "Dens=%13.7e, Pres=%13.7e\n", Dens, Pres );
 #     if ( NCOMP_PASSIVE > 0 )
-      printf( "        Passive scalars:" );
+      printf( "Passive scalars:" );
       for (int v=0; v<NCOMP_PASSIVE; v++)    printf( " %d=%13.7e", v, Passive[v] );
       printf( "\n" );
 #     endif
    }
 #  endif // GAMER_DEBUG
-
-
-// store extra output variables if required
-   /*
-   if ( ExtraInOut != NULL )
-   {
-      ExtraInOut[...] = ...;
-   }
-   */
 
 
    return Eint;
@@ -243,15 +210,13 @@ static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, c
 //                Passive    : Passive scalars
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
-//                ExtraInOut : Array to store extra input and output variables if required
-//                             --> Optional and only used when it is not NULL
 //
-// Return      :  Sound speed square
+// Return      :  Sound speed squared
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real EoS_DensPres2CSqr_User_Template( const real Dens, const real Pres, const real Passive[],
                                              const double AuxArray_Flt[], const int AuxArray_Int[],
-                                             const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] )
+                                             const real *const Table[EOS_NTABLE_MAX] )
 {
 
 // check
@@ -262,13 +227,8 @@ static real EoS_DensPres2CSqr_User_Template( const real Dens, const real Pres, c
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
    if ( AuxArray_Int == NULL )   printf( "ERROR : AuxArray_Int == NULL in %s !!\n", __FUNCTION__ );
 
-   if ( Hydro_CheckNegative(Dens) )
-      printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Dens, __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( Hydro_CheckNegative(Pres) )
-      printf( "ERROR : invalid input pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Pres, __FILE__, __LINE__, __FUNCTION__ );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Dens, "input density" , ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "input pressure", ERROR_INFO, UNPHY_VERBOSE );
 #  endif // GAMER_DEBUG
 
 
@@ -281,26 +241,16 @@ static real EoS_DensPres2CSqr_User_Template( const real Dens, const real Pres, c
 
 // check
 #  ifdef GAMER_DEBUG
-   if ( Hydro_CheckNegative(Cs2) )
+   if ( Hydro_CheckUnphysical( UNPHY_MODE_SING, &Cs2, "output sound speed squared", ERROR_INFO, UNPHY_VERBOSE ) )
    {
-      printf( "ERROR : invalid output sound speed squared (%13.7e) in %s() !!\n", Cs2, __FUNCTION__ );
-      printf( "        Dens=%13.7e, Pres=%13.7e\n", Dens, Pres );
+      printf( "Dens=%13.7e, Pres=%13.7e\n", Dens, Pres );
 #     if ( NCOMP_PASSIVE > 0 )
-      printf( "        Passive scalars:" );
+      printf( "Passive scalars:" );
       for (int v=0; v<NCOMP_PASSIVE; v++)    printf( " %d=%13.7e", v, Passive[v] );
       printf( "\n" );
 #     endif
    }
 #  endif // GAMER_DEBUG
-
-
-// store extra output variables if required
-   /*
-   if ( ExtraInOut != NULL )
-   {
-      ExtraInOut[...] = ...;
-   }
-   */
 
 
    return Cs2;
@@ -322,28 +272,21 @@ static real EoS_DensPres2CSqr_User_Template( const real Dens, const real Pres, c
 //                Passive    : Passive scalars (must not used here)
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
-//                ExtraInOut : Array to store extra input and output variables if required
-//                             --> Optional and only used when it is not NULL
 //
 // Return      :  Gas temperature in kelvin
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real EoS_DensEint2Temp_User_Template( const real Dens, const real Eint, const real Passive[],
                                              const double AuxArray_Flt[], const int AuxArray_Int[],
-                                             const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] )
+                                             const real *const Table[EOS_NTABLE_MAX] )
 {
 
 // check
 #  ifdef GAMER_DEBUG
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
 
-   if ( Hydro_CheckNegative(Dens) )
-      printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Dens, __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( Hydro_CheckNegative(Eint) )
-      printf( "ERROR : invalid input internal energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Eint, __FILE__, __LINE__, __FUNCTION__ );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Dens, "input density"        , ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Eint, "input internal energy", ERROR_INFO, UNPHY_VERBOSE );
 #  endif // GAMER_DEBUG
 
 
@@ -356,26 +299,16 @@ static real EoS_DensEint2Temp_User_Template( const real Dens, const real Eint, c
 
 // check
 #  ifdef GAMER_DEBUG
-   if ( Hydro_CheckNegative(Temp) )
+   if ( Hydro_CheckUnphysical( UNPHY_MODE_SING, &Temp, "output temperature", ERROR_INFO, UNPHY_VERBOSE ) )
    {
-      printf( "ERROR : invalid output temperature (%13.7e) in %s() !!\n", Temp, __FUNCTION__ );
-      printf( "        Dens=%13.7e, Eint=%13.7e\n", Dens, Eint );
+      printf( "Dens=%13.7e, Eint=%13.7e\n", Dens, Eint );
 #     if ( NCOMP_PASSIVE > 0 )
-      printf( "        Passive scalars:" );
+      printf( "Passive scalars:" );
       for (int v=0; v<NCOMP_PASSIVE; v++)    printf( " %d=%13.7e", v, Passive[v] );
       printf( "\n" );
 #     endif
    }
 #  endif // GAMER_DEBUG
-
-
-// store extra output variables if required
-   /*
-   if ( ExtraInOut != NULL )
-   {
-      ExtraInOut[...] = ...;
-   }
-   */
 
 
    return Temp;
@@ -396,28 +329,21 @@ static real EoS_DensEint2Temp_User_Template( const real Dens, const real Eint, c
 //                Passive    : Passive scalars (must not used here)
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
-//                ExtraInOut : Array to store extra input and output variables if required
-//                             --> Optional and only used when it is not NULL
 //
 // Return      :  Gas pressure
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real EoS_DensTemp2Pres_User_Template( const real Dens, const real Temp, const real Passive[],
                                              const double AuxArray_Flt[], const int AuxArray_Int[],
-                                             const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] )
+                                             const real *const Table[EOS_NTABLE_MAX] )
 {
 
 // check
 #  ifdef GAMER_DEBUG
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
 
-   if ( Hydro_CheckNegative(Dens) )
-      printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Dens, __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( Hydro_CheckNegative(Temp) )
-      printf( "ERROR : invalid input temperature (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Temp, __FILE__, __LINE__, __FUNCTION__ );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Dens, "input density"    , ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Temp, "input temperature", ERROR_INFO, UNPHY_VERBOSE );
 #  endif // GAMER_DEBUG
 
 
@@ -430,26 +356,16 @@ static real EoS_DensTemp2Pres_User_Template( const real Dens, const real Temp, c
 
 // check
 #  ifdef GAMER_DEBUG
-   if ( Hydro_CheckNegative(Pres) )
+   if ( Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "output pressure", ERROR_INFO, UNPHY_VERBOSE ) )
    {
-      printf( "ERROR : invalid output pressure (%13.7e) in %s() !!\n", Pres, __FUNCTION__ );
-      printf( "        Dens=%13.7e, Temp=%13.7e\n", Dens, Temp );
+      printf( "Dens=%13.7e, Temp=%13.7e\n", Dens, Temp );
 #     if ( NCOMP_PASSIVE > 0 )
-      printf( "        Passive scalars:" );
+      printf( "Passive scalars:" );
       for (int v=0; v<NCOMP_PASSIVE; v++)    printf( " %d=%13.7e", v, Passive[v] );
       printf( "\n" );
 #     endif
    }
 #  endif // GAMER_DEBUG
-
-
-// store extra output variables if required
-   /*
-   if ( ExtraInOut != NULL )
-   {
-      ExtraInOut[...] = ...;
-   }
-   */
 
 
    return Pres;
@@ -459,29 +375,86 @@ static real EoS_DensTemp2Pres_User_Template( const real Dens, const real Temp, c
 
 
 //-------------------------------------------------------------------------------------------------------
+// Function    :  EoS_DensEint2Entr_User_Template
+// Description :  Convert gas mass density and internal energy density to gas entropy
+//
+// Note        :  1. See EoS_SetAuxArray_User_Template() for the values stored in AuxArray_Flt/Int[]
+//
+// Parameter   :  Dens       : Gas mass density
+//                Eint       : Gas internal energy density
+//                Passive    : Passive scalars (must not used here)
+//                AuxArray_* : Auxiliary arrays (see the Note above)
+//                Table      : EoS tables
+//
+// Return      :  Gas entropy
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE_NOINLINE
+static real EoS_DensEint2Entr_User_Template( const real Dens, const real Eint, const real Passive[],
+                                             const double AuxArray_Flt[], const int AuxArray_Int[],
+                                             const real *const Table[EOS_NTABLE_MAX] )
+{
+
+// check
+#  ifdef GAMER_DEBUG
+   if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
+
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Dens, "input density"        , ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Eint, "input internal energy", ERROR_INFO, UNPHY_VERBOSE );
+#  endif // GAMER_DEBUG
+
+
+   real Entr = -1.0;
+
+   /*
+   Entr = ...;
+   */
+
+
+// check
+#  ifdef GAMER_DEBUG
+   if ( Hydro_CheckUnphysical( UNPHY_MODE_SING, &Entr, "output entropy", ERROR_INFO, UNPHY_VERBOSE ) )
+   {
+      printf( "Dens=%13.7e, Eint=%13.7e\n", Dens, Eint );
+#     if ( NCOMP_PASSIVE > 0 )
+      printf( "Passive scalars:" );
+      for (int v=0; v<NCOMP_PASSIVE; v++)    printf( " %d=%13.7e", v, Passive[v] );
+      printf( "\n" );
+#     endif
+   }
+#  endif // GAMER_DEBUG
+
+
+   return Entr;
+
+} // FUNCTION : EoS_DensEint2Entr_User_Template
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  EoS_General_User_Template
-// Description :  General EoS converter: In[] -> Out[]
+// Description :  General EoS converter: In_*[] -> Out[]
 //
 // Note        :  1. See EoS_DensEint2Pres_User_Template()
-//                2. In[] and Out[] must NOT overlap
+//                2. In_*[] and Out[] must NOT overlap
 //
 // Parameter   :  Mode       : To support multiple modes in this general converter
 //                Out        : Output array
-//                In         : Input array
+//                In_*       : Input array
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
 //
 // Return      :  Out[]
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static void EoS_General_User_Template( const int Mode, real Out[], const real In[], const double AuxArray_Flt[],
-                                       const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] )
+static void EoS_General_User_Template( const int Mode, real Out[], const real In_Flt[], const int In_Int[],
+                                       const double AuxArray_Flt[], const int AuxArray_Int[],
+                                       const real *const Table[EOS_NTABLE_MAX] )
 {
 
 // check
 #  ifdef GAMER_DEBUG
    if ( Out          == NULL )   printf( "ERROR : Out == NULL in %s !!\n", __FUNCTION__ );
-   if ( In           == NULL )   printf( "ERROR : In == NULL in %s !!\n", __FUNCTION__ );
+   if ( In_Flt       == NULL )   printf( "ERROR : In_Flt == NULL in %s !!\n", __FUNCTION__ );
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
    if ( AuxArray_Int == NULL )   printf( "ERROR : AuxArray_Int == NULL in %s !!\n", __FUNCTION__ );
 #  endif // GAMER_DEBUG
@@ -510,6 +483,7 @@ FUNC_SPACE EoS_DP2E_t EoS_DensPres2Eint_Ptr = EoS_DensPres2Eint_User_Template;
 FUNC_SPACE EoS_DP2C_t EoS_DensPres2CSqr_Ptr = EoS_DensPres2CSqr_User_Template;
 FUNC_SPACE EoS_DE2T_t EoS_DensEint2Temp_Ptr = EoS_DensEint2Temp_User_Template;
 FUNC_SPACE EoS_DT2P_t EoS_DensTemp2Pres_Ptr = EoS_DensTemp2Pres_User_Template;
+FUNC_SPACE EoS_DE2S_t EoS_DensEint2Entr_Ptr = EoS_DensEint2Entr_User_Template;
 FUNC_SPACE EoS_GENE_t EoS_General_Ptr       = EoS_General_User_Template;
 
 //-----------------------------------------------------------------------------------------
@@ -530,11 +504,13 @@ FUNC_SPACE EoS_GENE_t EoS_General_Ptr       = EoS_General_User_Template;
 //                EoS_DensPres2CSqr_CPU/GPUPtr : ...
 //                EoS_DensEint2Temp_CPU/GPUPtr : ...
 //                EoS_DensTemp2Pres_CPU/GPUPtr : ...
+//                EoS_DensEint2Entr_CPU/GPUPtr : ...
 //                EoS_General_CPU/GPUPtr       : ...
 //
 // Return      :  EoS_DensEint2Pres_CPU/GPUPtr, EoS_DensPres2Eint_CPU/GPUPtr,
 //                EoS_DensPres2CSqr_CPU/GPUPtr, EoS_DensEint2Temp_CPU/GPUPtr,
-//                EoS_DensTemp2Pres_CPU/GPUPtr, EoS_General_CPU/GPUPtr
+//                EoS_DensTemp2Pres_CPU/GPUPtr, EoS_DensEint2Entr_CPU/GPUPtr,
+//                EoS_General_CPU/GPUPtr
 //-----------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __host__
@@ -543,6 +519,7 @@ void EoS_SetGPUFunc_User_Template( EoS_DE2P_t &EoS_DensEint2Pres_GPUPtr,
                                    EoS_DP2C_t &EoS_DensPres2CSqr_GPUPtr,
                                    EoS_DE2T_t &EoS_DensEint2Temp_GPUPtr,
                                    EoS_DT2P_t &EoS_DensTemp2Pres_GPUPtr,
+                                   EoS_DE2S_t &EoS_DensEint2Entr_GPUPtr,
                                    EoS_GENE_t &EoS_General_GPUPtr )
 {
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensEint2Pres_GPUPtr, EoS_DensEint2Pres_Ptr, sizeof(EoS_DE2P_t) )  );
@@ -550,6 +527,7 @@ void EoS_SetGPUFunc_User_Template( EoS_DE2P_t &EoS_DensEint2Pres_GPUPtr,
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensPres2CSqr_GPUPtr, EoS_DensPres2CSqr_Ptr, sizeof(EoS_DP2C_t) )  );
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensEint2Temp_GPUPtr, EoS_DensEint2Temp_Ptr, sizeof(EoS_DE2T_t) )  );
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensTemp2Pres_GPUPtr, EoS_DensTemp2Pres_Ptr, sizeof(EoS_DT2P_t) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensEint2Entr_GPUPtr, EoS_DensEint2Entr_Ptr, sizeof(EoS_DE2S_t) )  );
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_General_GPUPtr,       EoS_General_Ptr,       sizeof(EoS_GENE_t) )  );
 }
 
@@ -560,6 +538,7 @@ void EoS_SetCPUFunc_User_Template( EoS_DE2P_t &EoS_DensEint2Pres_CPUPtr,
                                    EoS_DP2C_t &EoS_DensPres2CSqr_CPUPtr,
                                    EoS_DE2T_t &EoS_DensEint2Temp_CPUPtr,
                                    EoS_DT2P_t &EoS_DensTemp2Pres_CPUPtr,
+                                   EoS_DE2S_t &EoS_DensEint2Entr_CPUPtr,
                                    EoS_GENE_t &EoS_General_CPUPtr )
 {
    EoS_DensEint2Pres_CPUPtr = EoS_DensEint2Pres_Ptr;
@@ -567,6 +546,7 @@ void EoS_SetCPUFunc_User_Template( EoS_DE2P_t &EoS_DensEint2Pres_CPUPtr,
    EoS_DensPres2CSqr_CPUPtr = EoS_DensPres2CSqr_Ptr;
    EoS_DensEint2Temp_CPUPtr = EoS_DensEint2Temp_Ptr;
    EoS_DensTemp2Pres_CPUPtr = EoS_DensTemp2Pres_Ptr;
+   EoS_DensEint2Entr_CPUPtr = EoS_DensEint2Entr_Ptr;
    EoS_General_CPUPtr       = EoS_General_Ptr;
 }
 
@@ -578,9 +558,9 @@ void EoS_SetCPUFunc_User_Template( EoS_DE2P_t &EoS_DensEint2Pres_CPUPtr,
 
 // local function prototypes
 void EoS_SetAuxArray_User_Template( double [], int [] );
-void EoS_SetCPUFunc_User_Template( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t &, EoS_DE2T_t &, EoS_DT2P_t &, EoS_GENE_t & );
+void EoS_SetCPUFunc_User_Template( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t &, EoS_DE2T_t &, EoS_DT2P_t &, EoS_DE2S_t &, EoS_GENE_t & );
 #ifdef GPU
-void EoS_SetGPUFunc_User_Template( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t &, EoS_DE2T_t &, EoS_DT2P_t &, EoS_GENE_t & );
+void EoS_SetGPUFunc_User_Template( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t &, EoS_DE2T_t &, EoS_DT2P_t &, EoS_DE2S_t &, EoS_GENE_t & );
 #endif
 
 //-----------------------------------------------------------------------------------------
@@ -604,11 +584,13 @@ void EoS_Init_User_Template()
    EoS_SetAuxArray_User_Template( EoS_AuxArray_Flt, EoS_AuxArray_Int );
    EoS_SetCPUFunc_User_Template( EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
                                  EoS_DensPres2CSqr_CPUPtr, EoS_DensEint2Temp_CPUPtr,
-                                 EoS_DensTemp2Pres_CPUPtr, EoS_General_CPUPtr );
+                                 EoS_DensTemp2Pres_CPUPtr, EoS_DensEint2Entr_CPUPtr,
+                                 EoS_General_CPUPtr );
 #  ifdef GPU
    EoS_SetGPUFunc_User_Template( EoS_DensEint2Pres_GPUPtr, EoS_DensPres2Eint_GPUPtr,
                                  EoS_DensPres2CSqr_GPUPtr, EoS_DensEint2Temp_GPUPtr,
-                                 EoS_DensTemp2Pres_GPUPtr, EoS_General_GPUPtr );
+                                 EoS_DensTemp2Pres_GPUPtr, EoS_DensEint2Entr_GPUPtr,
+                                 EoS_General_GPUPtr );
 #  endif
 
 } // FUNCTION : EoS_Init_User_Template

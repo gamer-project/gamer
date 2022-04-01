@@ -52,7 +52,7 @@ do
    fi
 
 
-#  begin sorting 
+#  begin sorting
    echo -e "***** Working on data $FILE_IN ... *****"
 
    ./GAMER_MakeDataInOrder -i $FILE_IN -n 1 -c 0

@@ -183,10 +183,10 @@ void Flu_FixUp_Flux( const int lv )
                const real Emag = NULL_REAL;
 #              endif
 
-//             when adopting the dual-energy formalism, we must determine to use Hydro_Con2Eint() or Hydro_DensEntropy2Pres()
+//             when adopting the dual-energy formalism, we must determine to use Hydro_Con2Eint() or Hydro_DensDual2Pres()
 //             since the fluid variables stored in CorrVal[] may not be fully consistent
 //             --> because they have not been corrected by Hydro_DualEnergyFix()
-//             --> also note that currently we adopt Hydro_DensEntropy2Pres() for DE_UPDATED_BY_MIN_PRES
+//             --> also note that currently we adopt Hydro_DensDual2Pres() for DE_UPDATED_BY_MIN_PRES
 //             --> consistency among all dual-energy related variables will be ensured after determining Eint
 #              if ( DUAL_ENERGY == DE_ENPY )
                if ( *DE_StatusPtr1D == DE_UPDATED_BY_ETOT  ||  *DE_StatusPtr1D == DE_UPDATED_BY_ETOT_GRA )
@@ -202,10 +202,9 @@ void Flu_FixUp_Flux( const int lv )
                {
                   const bool CheckMinPres_No = false;
                   real Pres;
-                  Pres = Hydro_DensEntropy2Pres( ForEint[DENS], ForEint[ENPY], EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
+                  Pres = Hydro_DensDual2Pres( ForEint[DENS], ForEint[DUAL], EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
 //                DE_ENPY only supports EOS_GAMMA, which does not involve passive scalars
-                  Eint = EoS_DensPres2Eint_CPUPtr( ForEint[DENS], Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                                                   h_EoS_Table, NULL );
+                  Eint = EoS_DensPres2Eint_CPUPtr( ForEint[DENS], Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
                }
 #              endif
 
@@ -233,7 +232,7 @@ void Flu_FixUp_Flux( const int lv )
 #                   endif
 #                   if   ( DUAL_ENERGY == DE_ENPY )
                     ||  ( (*DE_StatusPtr1D == DE_UPDATED_BY_DUAL || *DE_StatusPtr1D == DE_UPDATED_BY_MIN_PRES)
-                           && CorrVal[ENPY] <= (real)2.0*TINY_NUMBER )
+                           && CorrVal[DUAL] <= (real)2.0*TINY_NUMBER )
 
 #                   elif ( DUAL_ENERGY == DE_EINT )
 #                   error : DE_EINT is NOT supported yet !!
@@ -277,10 +276,10 @@ void Flu_FixUp_Flux( const int lv )
                   CorrVal[ENGY] = Hydro_ConEint2Etot( CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], Eint, Emag );
 #                 if   ( DUAL_ENERGY == DE_ENPY )
 //                DE_ENPY only supports EOS_GAMMA, which does not involve passive scalars
-                  CorrVal[ENPY] = Hydro_DensPres2Entropy( CorrVal[DENS],
-                                                          EoS_DensEint2Pres_CPUPtr(CorrVal[DENS],Eint,NULL,
-                                                          EoS_AuxArray_Flt,EoS_AuxArray_Int,h_EoS_Table,NULL),
-                                                          EoS_AuxArray_Flt[1] );
+                  CorrVal[DUAL] = Hydro_DensPres2Dual( CorrVal[DENS],
+                                                       EoS_DensEint2Pres_CPUPtr(CorrVal[DENS],Eint,NULL,
+                                                       EoS_AuxArray_Flt,EoS_AuxArray_Int,h_EoS_Table),
+                                                       EoS_AuxArray_Flt[1] );
 #                 elif ( DUAL_ENERGY == DE_EINT )
 #                 error : DE_EINT is NOT supported yet !!
 #                 endif // DUAL_ENERGY

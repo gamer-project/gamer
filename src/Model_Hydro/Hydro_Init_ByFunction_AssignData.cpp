@@ -11,7 +11,7 @@ void (*Init_Function_User_Ptr)( real fluid[], const double x, const double y, co
                                 const int lv, double AuxArray[] ) = NULL;
 
 extern bool (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
-                                         const int lv, double AuxArray[] );
+                                         const double dt, const int lv, double AuxArray[] );
 
 #ifdef MHD
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
@@ -85,7 +85,7 @@ void Init_Function_User_Template( real fluid[], const double x, const double y, 
    MomX = Dens*Vx;
    MomY = Dens*Vy;
    MomZ = Dens*Vz;
-   Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+   Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
    Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, Emag0 );
 
 // store the results
@@ -251,7 +251,7 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 
 //          modify the initial condition if required
             if ( OPT__RESET_FLUID )
-               Flu_ResetByUser_Func_Ptr( fluid_sub, x, y, z, Time[lv], lv, NULL );
+               Flu_ResetByUser_Func_Ptr( fluid_sub, x, y, z, Time[lv], 0.0, lv, NULL );
 
             for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] += fluid_sub[v];
 
@@ -275,11 +275,9 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
                                                  MIN_EINT, Emag );
 
 //       calculate the dual-energy variable (entropy or internal energy)
-#        if   ( DUAL_ENERGY == DE_ENPY )
-         fluid[ENPY] = Hydro_Con2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Emag,
-                                          EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-#        elif ( DUAL_ENERGY == DE_EINT )
-#        error : DE_EINT is NOT supported yet !!
+#        ifdef DUAL_ENERGY
+         fluid[DUAL] = Hydro_Con2Dual( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Emag,
+                                       EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #        endif
 
 //       floor and normalize passive scalars

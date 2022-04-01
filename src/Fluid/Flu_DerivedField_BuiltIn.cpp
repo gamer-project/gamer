@@ -58,8 +58,10 @@ void Flu_DerivedField_DivVel( real Out[], const real FluIn[], const real MagIn[]
 
 
 // 1D arrays -> 3D arrays
-   real (*FluIn3D)[NCellInZ ][NCellInY ][NCellInX ] = ( real (*)[NCellInZ ][NCellInY ][NCellInX ] )FluIn;
-   real (*Out3D  )[NCellOutZ][NCellOutY][NCellOutX] = ( real (*)[NCellOutZ][NCellOutY][NCellOutX] )Out;
+   typedef real (*vla_in)[NCellInZ ][NCellInY ][NCellInX ];
+   typedef real (*vla_out)[NCellOutZ][NCellOutY][NCellOutX];
+   vla_in FluIn3D = ( vla_in )FluIn;
+   vla_out Out3D = ( vla_out )Out;
 
 
 // fill in the output array
@@ -138,11 +140,13 @@ void Flu_DerivedField_Mach( real Out[], const real FluIn[], const real MagIn[], 
 
 
 // 1D arrays -> 3D arrays
-   real (*FluIn3D)[NCellInZ ][NCellInY ][NCellInX ] = ( real (*)[NCellInZ ][NCellInY ][NCellInX ] )FluIn;
+   typedef real (*vla_in)[NCellInZ ][NCellInY ][NCellInX ];
+   vla_in FluIn3D = ( vla_in )FluIn;
 #  ifdef MHD
-   real (*MagIn3D)[NCellInZ ][NCellInY ][NCellInX ] = ( real (*)[NCellInZ ][NCellInY ][NCellInX ] )MagIn;
+   vla_in MagIn3D = ( vla_in )MagIn;
 #  endif
-   real (*Out3D  )[NCellOutZ][NCellOutY][NCellOutX] = ( real (*)[NCellOutZ][NCellOutY][NCellOutX] )Out;
+   typedef real (*vla_out)[NCellOutZ][NCellOutY][NCellOutX];
+   vla_out Out3D = ( vla_out )Out;
 
 
 // fill in the output array
@@ -176,7 +180,7 @@ void Flu_DerivedField_Mach( real Out[], const real FluIn[], const real MagIn[], 
                               CheckMinPres_Yes, MIN_PRES, Emag,
                               EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
       Cs2   = EoS_DensPres2CSqr_CPUPtr( fluid[DENS], Pres, fluid+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                                        h_EoS_Table, NULL );
+                                        h_EoS_Table );
       Mach  = SQRT( V2 / Cs2 );
 
       Out3D[0][ko][jo][io] = Mach;

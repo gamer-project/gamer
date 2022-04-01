@@ -135,7 +135,7 @@ void SetParameter()
    delete ReadPara;
 
 // convert to code units
-   
+
    BarredPot_V0       *= Const_km             / UNIT_V;
    BarredPot_Rc       *= Const_kpc            / UNIT_L;
    BarredPot_Omegabar *= (Const_km/Const_kpc) / (1/UNIT_T);
@@ -214,7 +214,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #  endif
 
 
-// Uniform gas disk, initially circular rotation 
+// Uniform gas disk, initially circular rotation
 
   const bool   CheckMinPres_Yes = true;
   const double dx               = x - BarredPot_MeshCenter[0];
@@ -229,13 +229,13 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
   if (Rad <= 11.5 && fabs(dz) <= 0.2)
   {
- 
-     GasDens = 0.2735*exp(-Rad/4.8)*1/SQR(cosh(dz/0.13))*(Const_Msun/CUBE(Const_pc))/(UNIT_M/CUBE(UNIT_L));    
+
+     GasDens = 0.2735*exp(-Rad/4.8)*1/SQR(cosh(dz/0.13))*(Const_Msun/CUBE(Const_pc))/(UNIT_M/CUBE(UNIT_L));
      GasPres = EoS_DensTemp2Pres_CPUPtr( GasDens, BarredPot_initT, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                                         h_EoS_Table, NULL ); // assuming EoS requires no passive scalars
+                                         h_EoS_Table ); // assuming EoS requires no passive scalars
 //  GasVel  = BarredPot_V0*Rad/sqrt(SQR(Rad) + SQR(BarredPot_Rc));
      GasVel = -5.58683750e-05*pow(Rad,6) + 2.17357740e-03*pow(Rad,5) - 3.25132718e-02*pow(Rad,4)
-               +2.32860976e-01*pow(Rad,3) - 8.14564481e-01*pow(Rad,2) + 1.35601708e+00*Rad + 1.06059808e+00;     
+               +2.32860976e-01*pow(Rad,3) - 8.14564481e-01*pow(Rad,2) + 1.35601708e+00*Rad + 1.06059808e+00;
 
      MomX  = -dy/r*GasVel*GasDens;
      MomY  = +dx/r*GasVel*GasDens;
@@ -249,7 +249,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
      GasDens = 1.0e-6*(Const_Msun/CUBE(Const_pc))/(UNIT_M/CUBE(UNIT_L));
 //   GasDens = 0.025 ;  // 1.0e-6
      GasPres = EoS_DensTemp2Pres_CPUPtr( GasDens, 100.*BarredPot_initT, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                                         h_EoS_Table, NULL ); // assuming EoS requires no passive scalars
+                                         h_EoS_Table ); // assuming EoS requires no passive scalars
      MomX  = 0.0;
      MomY  = 0.0;
      MomZ  = 0.0;
@@ -261,15 +261,15 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 #  if ( EOS == EOS_ISOTHERMAL )
 
-   GasPres = EoS_DensEint2Pres_CPUPtr( GasDens, 1.0,     NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, NULL, NULL );
-   Eint    = EoS_DensPres2Eint_CPUPtr( GasDens, GasPres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, NULL, NULL );
+   GasPres = EoS_DensEint2Pres_CPUPtr( GasDens, 1.0,     NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, NULL );
+   Eint    = EoS_DensPres2Eint_CPUPtr( GasDens, GasPres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, NULL );
    Etot    = Hydro_ConEint2Etot( GasDens, MomX, MomY, MomZ, Eint, 0.0 );
 
 #  else
 
    Eint    = EoS_DensPres2Eint_CPUPtr( GasDens, GasPres, NULL, EoS_AuxArray_Flt,
-                                       EoS_AuxArray_Int, h_EoS_Table, NULL );    // assuming EoS requires no passive scalars
-   Etot    = Hydro_ConEint2Etot( GasDens, MomX, MomY, MomZ, Eint, 0.0 );         // do NOT include magnetic energy here
+                                       EoS_AuxArray_Int, h_EoS_Table );    // assuming EoS requires no passive scalars
+   Etot    = Hydro_ConEint2Etot( GasDens, MomX, MomY, MomZ, Eint, 0.0 );   // do NOT include magnetic energy here
 #  endif
 
 

@@ -8,7 +8,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                            const int NVarCC_Der, const long TVarCCList_Der[],
                            const long TVarFC, const int NVarFC_Tot, const int TVarFCIdxList[],
                            const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
-                           const int BC_Face[], const real MinPres, const real MinTemp,
+                           const int BC_Face[], const real MinPres, const real MinTemp, const real MinEntr,
                            const bool DE_Consistency, const real *FInterface[6] );
 static void SetTargetSibling( int NTSib[], int *TSib[] );
 static int Table_01( const int SibID, const char dim, const int Count, const int GhostSize );
@@ -103,7 +103,7 @@ static void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const re
 //                PID0_List      : List recording the patch indices with LocalID==0 to be prepared
 //                TVarCC         : Target cell-centered variables to be prepared
 //                                 --> Supported variables in different models:
-//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _PRES, _TEMP
+//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _PRES, _TEMP, _ENTR
 //                                             [, _POTE]
 //                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE]
 //                                 --> _FLUID, _PASSIVE, _TOTAL, and _DERIVED apply to all models
@@ -137,9 +137,10 @@ static void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const re
 //                                      --> TVarCC must contain _REAL and _IMAG
 //                FluBC          : Fluid boundary condition
 //                PotBC          : Gravity boundary condition
-//                MinDens        : See MinTemp
-//                MinPres        : See MinTemp
-//                MinTemp        : Minimum allowed density/pressure/temperature in the output array (<0.0 ==> off)
+//                MinDens        : See MinEntr
+//                MinPres        : See MinEntr
+//                MinTemp        : See MinEntr
+//                MinEntr        : Minimum allowed density/pressure/temperature/entropy in the output array (<0.0 ==> off)
 //                                 --> MinDens can be applied to both _DENS and _TOTAL_DENS but cannot be applied to _PAR_DENS
 //                                 --> Note that when preparing both density and real/imaginary parts for ELBDM, we do NOT
 //                                     rescale wave functions after applying MinDens
@@ -165,7 +166,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         const int GhostSize, const int NPG, const int *PID0_List, long TVarCC, long TVarFC,
                         const IntScheme_t IntScheme_CC, const IntScheme_t IntScheme_FC, const PrepUnit_t PrepUnit,
                         const NSide_t NSide, const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
-                        const real MinDens, const real MinPres, const real MinTemp, const bool DE_Consistency )
+                        const real MinDens, const real MinPres, const real MinTemp, const real MinEntr, const bool DE_Consistency )
 {
 
 // nothing to do if there is no target patch group
@@ -228,6 +229,16 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
          Aux_Message( stderr, "WARNING : MinTemp (%13.7e) >= 0.0 but _TEMP is not found !!\n", MinTemp );
 #     else
          Aux_Message( stderr, "WARNING : MinTemp (%13.7e) >= 0.0 can only be applied to HYDRO !!\n", MinTemp );
+#     endif
+   }
+
+   if ( MinEntr >= (real)0.0  &&  MPI_Rank == 0 )
+   {
+#     if ( MODEL == HYDRO )
+      if ( !(TVarCC & _ENTR) )
+         Aux_Message( stderr, "WARNING : MinEntr (%13.7e) >= 0.0 but _ENTR is not found !!\n", MinEntr );
+#     else
+         Aux_Message( stderr, "WARNING : MinEntr (%13.7e) >= 0.0 can only be applied to HYDRO !!\n", MinEntr );
 #     endif
    }
 
@@ -299,6 +310,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #  if ( MODEL == HYDRO )
    if (  ( TVarCC & _TEMP )  &&  EoS_DensEint2Temp_CPUPtr == NULL )
       Aux_Error( ERROR_INFO, "EoS_DensEint2Temp_CPUPtr == NULL !!\n" );
+
+   if (  ( TVarCC & _ENTR )  &&  EoS_DensEint2Entr_CPUPtr == NULL )
+      Aux_Error( ERROR_INFO, "EoS_DensEint2Entr_CPUPtr == NULL !!\n" );
 #  endif
 
 #  endif // #ifdef GAMER_DEBUG
@@ -317,6 +331,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    const bool PrepVz           = ( TVarCC & _VELZ ) ? true : false;
    const bool PrepPres         = ( TVarCC & _PRES ) ? true : false;
    const bool PrepTemp         = ( TVarCC & _TEMP ) ? true : false;
+   const bool PrepEntr         = ( TVarCC & _ENTR ) ? true : false;
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
@@ -372,6 +387,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    if ( PrepVz   )   TVarCCList_Der[ NVarCC_Der ++ ] = _VELZ;
    if ( PrepPres )   TVarCCList_Der[ NVarCC_Der ++ ] = _PRES;
    if ( PrepTemp )   TVarCCList_Der[ NVarCC_Der ++ ] = _TEMP;
+   if ( PrepEntr )   TVarCCList_Der[ NVarCC_Der ++ ] = _ENTR;
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
@@ -456,8 +472,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    int  MagSg, MagSg_IntT;
    real MagWeighting, MagWeighting_IntT;
 
-// check PrepPres and PrepTemp since they also require B field
-   if ( PrepMag || PrepPres || PrepTemp )
+// check PrepPres, PrepTemp, and PrepEntr since they also require B field
+   if ( PrepMag || PrepPres || PrepTemp || PrepEntr )
    {
       SetTempIntPara( lv, amr->MagSg[lv], PrepTime, amr->MagSgTime[lv][0], amr->MagSgTime[lv][1],
                       MagIntTime, MagSg, MagSg_IntT, MagWeighting, MagWeighting_IntT );
@@ -972,6 +988,50 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                Data1PG_CC_Ptr += PGSize3D_CC;
             } // if ( PrepTemp )
 
+            if ( PrepEntr )
+            {
+               for (int k=0; k<PS1; k++)  {  K    = k + Disp_k;
+               for (int j=0; j<PS1; j++)  {  J    = j + Disp_j;
+                                             Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
+               for (int i=0; i<PS1; i++)  {
+
+                  for (int v=0; v<NFluForEoS; v++)    FluidForEoS[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
+
+#                 ifdef MHD
+                  const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
+#                 else
+                  const real Emag = NULL_REAL;
+#                 endif
+                  Data1PG_CC_Ptr[Idx1] = Hydro_Con2Entr( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                                         FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
+                                                         (MinEntr>=(real)0.0), MinEntr, Emag,
+                                                         EoS_DensEint2Entr_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                         h_EoS_Table );
+
+                  if ( FluIntTime ) // temporal interpolation
+                  {
+                     for (int v=0; v<NFluForEoS; v++)    FluidForEoS[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k][j][i];
+
+#                    ifdef MHD
+                     const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg_IntT );
+#                    else
+                     const real Emag = NULL_REAL;
+#                    endif
+                     Data1PG_CC_Ptr[Idx1] =
+                        FluWeighting     *Data1PG_CC_Ptr[Idx1]
+                      + FluWeighting_IntT*Hydro_Con2Entr( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                                          FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
+                                                          (MinEntr>=(real)0.0), MinEntr, Emag,
+                                                          EoS_DensEint2Entr_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                          h_EoS_Table );
+                  }
+
+                  Idx1 ++;
+               }}}
+
+               Data1PG_CC_Ptr += PGSize3D_CC;
+            } // if ( PrepEntr )
+
 
 #           elif ( MODEL == ELBDM )
 //          no derived variables yet
@@ -1270,6 +1330,50 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                      Data1PG_CC_Ptr += PGSize3D_CC;
                   }
 
+                  if ( PrepEntr )
+                  {
+                     for (int k=0; k<loop[2]; k++)  { K = k + disp[2];   K2 = k + disp2[2];
+                     for (int j=0; j<loop[1]; j++)  { J = j + disp[1];   J2 = j + disp2[1];
+                                                      Idx1 = IDX321( disp[0], J, K, PGSize1D_CC, PGSize1D_CC );
+                     for (I2=disp2[0]; I2<disp2[0]+loop[0]; I2++) {
+
+                        for (int v=0; v<NFluForEoS; v++)    FluidForEoS[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
+
+#                       ifdef MHD
+                        const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg );
+#                       else
+                        const real Emag = NULL_REAL;
+#                       endif
+                        Data1PG_CC_Ptr[Idx1] = Hydro_Con2Entr( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                                               FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
+                                                               (MinEntr>=(real)0.0), MinEntr, Emag,
+                                                               EoS_DensEint2Entr_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                               h_EoS_Table );
+
+                        if ( FluIntTime ) // temporal interpolation
+                        {
+                           for (int v=0; v<NFluForEoS; v++)    FluidForEoS[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][K2][J2][I2];
+
+#                          ifdef MHD
+                           const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, I2, J2, K2, MagSg_IntT );
+#                          else
+                           const real Emag = NULL_REAL;
+#                          endif
+                           Data1PG_CC_Ptr[Idx1] =
+                              FluWeighting     *Data1PG_CC_Ptr[Idx1]
+                            + FluWeighting_IntT*Hydro_Con2Entr( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                                                FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
+                                                                (MinEntr>=(real)0.0), MinEntr, Emag,
+                                                                EoS_DensEint2Entr_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                                h_EoS_Table );
+                        }
+
+                        Idx1 ++;
+                     }}}
+
+                     Data1PG_CC_Ptr += PGSize3D_CC;
+                  }
+
 #                 elif ( MODEL == ELBDM )
 //                no derived variables yet
 
@@ -1421,7 +1525,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                InterpolateGhostZone( lv-1, FaSibPID, IntData_CC, IntData_FC, Side, PrepTime, GhostSize,
                                      IntScheme_CC, IntScheme_FC, NTSib, TSib, TVarCC, NVarCC_Tot, NVarCC_Flu,
                                      TVarCCIdxList_Flu, NVarCC_Der, TVarCCList_Der, TVarFC, NVarFC_Tot, TVarFCIdxList,
-                                     IntPhase, FluBC, PotBC, BC_Face, MinPres, MinTemp, DE_Consistency,
+                                     IntPhase, FluBC, PotBC, BC_Face, MinPres, MinTemp, MinEntr, DE_Consistency,
                                      (const real **)FInterface_Ptr );
 
 

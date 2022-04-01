@@ -11,7 +11,7 @@ static double *Axcoord, *Aycoord, *Azcoord;
 
 double TSC_Weight( const double x );
 double VecPot_Interp( const double field[], const double xx, const double yy,
-		      const double zz, const int fdims[], const int fbegin[] );
+                      const double zz, const int fdims[], const int fbegin[] );
 #ifdef SUPPORT_HDF5
 void VecPot_ReadField( hid_t mag_file_id, const int ibegin, const int jbegin,
                        const int kbegin, const int iend, const int jend,
@@ -180,7 +180,7 @@ void MHD_Init_BField_ByFile( const int B_lv )
 
 #     ifdef SUPPORT_HDF5
       VecPot_ReadField( mag_file_id, ibegin, jbegin, kbegin,
-			iend, jend, kend, Axf, Ayf, Azf );
+                        iend, jend, kend, Axf, Ayf, Azf );
 #     endif
 
 //    Loop over the indices in this patch and interpolate the vector potential
@@ -304,7 +304,7 @@ void MHD_Init_BField_ByFile( const int B_lv )
 // Return      :  vector potential component on AMR grid at (xx, yy, zz)
 //-------------------------------------------------------------------------------------------------------
 double VecPot_Interp( const double field[], const double xx, const double yy,
-		                const double zz, const int fdims[], const int fbegin[] )
+                                const double zz, const int fdims[], const int fbegin[] )
 {
 
    // Indices into the coordinate vectors
@@ -366,8 +366,8 @@ double TSC_Weight( const double x )
 #ifdef SUPPORT_HDF5
 
 void VecPot_ReadField( hid_t mag_file_id, const int ibegin, const int jbegin,
-		       const int kbegin, const int iend, const int jend,
-		       const int kend, double Ax[], double Ay[], double Az[] )
+                       const int kbegin, const int iend, const int jend,
+                       const int kend, double Ax[], double Ay[], double Az[] )
 {
    hid_t dataset, dataspace, memspace, dxfer_template;
 

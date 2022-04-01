@@ -1,0 +1,18 @@
+# problem-specific runtime parameters
+Cloud_RSeed           123                  # random seed for setting particle position and velocity (>=0) [123]
+Cloud_Rho0            1.0                  # peak density [1.0]
+Cloud_R0              0.1                  # scale radius [0.1]
+Cloud_MaxR            1.5                  # maximum radius for particles [0.375]
+Cloud_CenterX         1.5                  # central x coordinate [box center]
+Cloud_CenterY         1.5                  # central y coordinate [box center]
+Cloud_CenterZ         1.5                  # central z coordinate [box center]
+Cloud_BulkVelX        0.0                  # bulk velocity in x
+Cloud_BulkVelY        0.0                  # bulk velocity in y
+Cloud_BulkVelZ        0.0                  # bulk velocity in z
+Cloud_MassProfNBin    1000                 # number of radial bins in the mass profile table [1000]
+#Cloud_Einasto_Power_Factor    1           # Einasto_Power_Factor parameter for Eiasto model [1]
+Cloud_Par_Num_Ratio   1.0                  # particle number ratio
+Cloud_Type            NFW                  # type of density distribution
+Density_Table_Name    NONE                 # filename of density table
+AddExtPot             0                    # whether to add an external potential table [0]
+ExtPot_Table_Name     NONE                 # External potential table filename.

@@ -53,6 +53,10 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                          const bool StoreAcc, const bool UseStoredAcc )
 {
 
+// do nothing when enabling OPT__FREEZE_PAR (except for storing particle acceleration)
+   if ( OPT__FREEZE_PAR  &&  UpdateStep != PAR_UPSTEP_ACC_ONLY )     return;
+
+
    const ParInterp_t IntScheme    = amr->Par->Interp;
    const bool   UsePot            = ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT );
    const bool   IntPhase_No       = false;
@@ -60,6 +64,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
    const real   MinDens_No        = -1.0;
    const real   MinPres_No        = -1.0;
    const real   MinTemp_No        = -1.0;
+   const real   MinEntr_No        = -1.0;
    const double dh                = amr->dh[lv];
    const double _dh               = 1.0/dh;
    const double PrepPotTime       = ( UpdateStep==PAR_UPSTEP_CORR || UpdateStep==PAR_UPSTEP_ACC_ONLY ) ? TimeNew : TimeOld;
@@ -173,8 +178,10 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
    real *Pot = new real [ 8*CUBE(PotSize) ];    // 8: number of patches per patch group
    real *Acc = new real [ 3*CUBE(AccSize) ];    // 3: three dimension
 
-   real (*Pot3D)[PotSize][PotSize][PotSize] = ( real (*)[PotSize][PotSize][PotSize] )Pot;
-   real (*Acc3D)[AccSize][AccSize][AccSize] = ( real (*)[AccSize][AccSize][AccSize] )Acc;
+   typedef real (*vla_pot)[PotSize][PotSize][PotSize];
+   typedef real (*vla_acc)[AccSize][AccSize][AccSize];
+   vla_pot Pot3D = ( vla_pot )Pot;
+   vla_acc Acc3D = ( vla_acc )Acc;
 
    bool GotYou;
    long ParID;
@@ -250,7 +257,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 #        endif // #ifdef STORE_POT_GHOST
             Prepare_PatchData( lv, PrepPotTime, Pot, NULL, PotGhost, 1, &PID0, _POTE, _NONE,
                                OPT__GRA_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No,
-                               OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, MinTemp_No, DE_Consistency_No );
+                               OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
       } // if ( !UseStoredAcc  &&  UsePot )
 
 
