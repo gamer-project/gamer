@@ -403,16 +403,13 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
          (
 //          when adopting the dual-energy formalism, do NOT calculate pressure from "Etot-Ekin" since it would suffer
 //          from large round-off errors
-//          --> currently we use TINY_NUMBER as entropy floor and hence here we use 2.0*TINY_NUMBER to
-//              validate entropy
-//          --> in general, MIN_PRES > 0.0 should be sufficient for detecting unphysical entropy
-//          --> however, the additional check "Fluid[ENPY] < (real)2.0*TINY_NUMBER" is necessary when MIN_PRES == 0.0
-#           if   ( DUAL_ENERGY == DE_ENPY )
-            Hydro_DensEntropy2Pres( Fluid[DENS], Fluid[ENPY], EoS_AuxArray_Flt[1], NoFloor, NULL_REAL ) < (real)MIN_PRES  ||
-            Fluid[ENPY] < (real)2.0*TINY_NUMBER
-
-#           elif ( DUAL_ENERGY == DE_EINT )
-#           error : DE_EINT is NOT supported yet !!
+//          --> currently we use TINY_NUMBER as the dual-energy floor and hence here we use 2.0*TINY_NUMBER to
+//              validate the dual-energy variable
+//          --> in general, MIN_PRES > 0.0 should be sufficient for detecting unphysical dual-energy variable
+//          --> however, the additional check "Fluid[DUAL] < (real)2.0*TINY_NUMBER" is necessary when MIN_PRES == 0.0
+#           ifdef DUAL_ENERGY
+            Hydro_DensDual2Pres( Fluid[DENS], Fluid[DUAL], EoS_AuxArray_Flt[1], NoFloor, NULL_REAL ) < (real)MIN_PRES  ||
+            Fluid[DUAL] < (real)2.0*TINY_NUMBER
 
 #           else // without DUAL_ENERGY
             Hydro_Con2Eint( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
@@ -744,7 +741,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //             --> we do NOT apply the minimum pressure check in Hydro_DualEnergyFix() here
 //                 --> otherwise the pressure floor might disable the 1st-order-flux correction
 #              ifdef DUAL_ENERGY
-               Hydro_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[ENPY],
+               Hydro_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[DUAL],
                                     h_DE_Array_F_Out[TID][idx_out], EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2],
                                     CorrPres_No, NULL_REAL, DUAL_ENERGY_SWITCH, Emag_Out );
 #              endif
@@ -887,7 +884,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //          --> we apply the minimum pressure check in Hydro_DualEnergyFix() here only when AutoReduceDt_Continue is false
 //              --> otherwise AUTO_REDUCE_DT may not be triggered due to this pressure floor
 #           ifdef DUAL_ENERGY
-            Hydro_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[ENPY],
+            Hydro_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[DUAL],
                                  h_DE_Array_F_Out[TID][idx_out], EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2],
                                  (!AutoReduceDt_Continue && OPT__LAST_RESORT_FLOOR) ? CorrPres_Yes : CorrPres_No,
                                  MIN_PRES, DUAL_ENERGY_SWITCH, Emag_Out );
@@ -960,7 +957,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   fprintf( File, "               (%14s, %14s, %14s, %14s, %14s, %14s",
                            FieldLabel[DENS], FieldLabel[MOMX], FieldLabel[MOMY], FieldLabel[MOMZ], FieldLabel[ENGY], "Eint" );
 #                 if ( DUAL_ENERGY == DE_ENPY )
-                  fprintf( File, ", %14s", FieldLabel[ENPY] );
+                  fprintf( File, ", %14s", FieldLabel[DUAL] );
 #                 endif
                   fprintf( File, ")\n" );
 
@@ -969,7 +966,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                            Hydro_Con2Eint(In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
                                           CheckMinEint_No, NULL_REAL, Emag_In) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
-                  fprintf( File, ", %14.7e", In[ENPY] );
+                  fprintf( File, ", %14.7e", In[DUAL] );
 #                 endif
                   fprintf( File, ")\n" );
 
@@ -978,7 +975,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                            Hydro_Con2Eint(Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
                                           CheckMinEint_No, NULL_REAL, Emag_Out) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
-                  fprintf( File, ", %14.7e", Out[ENPY] );
+                  fprintf( File, ", %14.7e", Out[DUAL] );
 #                 endif
                   fprintf( File, ")\n" );
 
@@ -987,7 +984,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                            Hydro_Con2Eint(Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
                                           CheckMinEint_No, NULL_REAL, Emag_Update) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
-                  fprintf( File, ", %14.7e", Update[ENPY] );
+                  fprintf( File, ", %14.7e", Update[DUAL] );
 #                 endif
                   fprintf( File, ")\n" );
 

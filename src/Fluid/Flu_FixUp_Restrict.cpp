@@ -320,7 +320,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 //       --> we achieve that by setting the dual-energy switch to an extremely larger number and ignore
 //           the runtime parameter DUAL_ENERGY_SWITCH here
          const bool CheckMinPres_Yes = true;
-         const real UseEnpy2FixEngy  = HUGE_NUMBER;
+         const real UseDual2FixEngy  = HUGE_NUMBER;
          char dummy;    // we do not record the dual-energy status here
 
          Hydro_DualEnergyFix( amr->patch[FaFluSg][FaLv][FaPID]->fluid[DENS][k][j][i],
@@ -328,9 +328,9 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMY][k][j][i],
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMZ][k][j][i],
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i],
-                              amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENPY][k][j][i],
+                              amr->patch[FaFluSg][FaLv][FaPID]->fluid[DUAL][k][j][i],
                               dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2], CheckMinPres_Yes, MIN_PRES,
-                              UseEnpy2FixEngy, Emag );
+                              UseDual2FixEngy, Emag );
 
 #        else // #ifdef DUAL_ENERGY
 
