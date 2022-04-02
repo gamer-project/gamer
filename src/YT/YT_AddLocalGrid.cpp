@@ -180,10 +180,10 @@ void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (
                  if ( strcmp(FieldList[ MHDIdx + v ].field_name, "CCMagX") == 0 && d == 2) {
                      YT_Grids[LID].field_data[ MHDIdx + v ].data_dimensions[d] = PATCH_SIZE + 1;
                  }
-                 if ( strcmp(FieldList[ MHDIdx + v ].field_name, "CCMagY") == 0 && d == 1) {
+                 else if ( strcmp(FieldList[ MHDIdx + v ].field_name, "CCMagY") == 0 && d == 1) {
                      YT_Grids[LID].field_data[ MHDIdx + v ].data_dimensions[d] = PATCH_SIZE + 1;
                  }
-                 if ( strcmp(FieldList[ MHDIdx + v ].field_name, "CCMagZ") == 0 && d == 0) {
+                 else if ( strcmp(FieldList[ MHDIdx + v ].field_name, "CCMagZ") == 0 && d == 0) {
                      YT_Grids[LID].field_data[ MHDIdx + v ].data_dimensions[d] = PATCH_SIZE + 1;
                  }
              }
