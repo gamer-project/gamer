@@ -1839,6 +1839,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__Flag_LohnerEngy",    &RS.Opt__Flag_LohnerEngy,    SID, TID, NonFatal, &RT.Opt__Flag_LohnerEngy,     1, NonFatal );
    LoadField( "Opt__Flag_LohnerPres",    &RS.Opt__Flag_LohnerPres,    SID, TID, NonFatal, &RT.Opt__Flag_LohnerPres,     1, NonFatal );
    LoadField( "Opt__Flag_LohnerTemp",    &RS.Opt__Flag_LohnerTemp,    SID, TID, NonFatal, &RT.Opt__Flag_LohnerTemp,     1, NonFatal );
+   LoadField( "Opt__Flag_LohnerEntr",    &RS.Opt__Flag_LohnerEntr,    SID, TID, NonFatal, &RT.Opt__Flag_LohnerEntr,     1, NonFatal );
 #  endif
    LoadField( "Opt__Flag_LohnerForm",    &RS.Opt__Flag_LohnerForm,    SID, TID, NonFatal, &RT.Opt__Flag_LohnerForm,     1, NonFatal );
    LoadField( "Opt__Flag_User",          &RS.Opt__Flag_User,          SID, TID, NonFatal, &RT.Opt__Flag_User,           1, NonFatal );
@@ -1915,6 +1916,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "MinPres",                 &RS.MinPres,                 SID, TID, NonFatal, &RT.MinPres,                  1, NonFatal );
    LoadField( "MinEint",                 &RS.MinEint,                 SID, TID, NonFatal, &RT.MinEint,                  1, NonFatal );
    LoadField( "MinTemp",                 &RS.MinTemp,                 SID, TID, NonFatal, &RT.MinTemp,                  1, NonFatal );
+   LoadField( "MinEntr",                 &RS.MinEntr,                 SID, TID, NonFatal, &RT.MinEntr,                  1, NonFatal );
    LoadField( "Opt__CheckPresAfterFlu",  &RS.Opt__CheckPresAfterFlu,  SID, TID, NonFatal, &RT.Opt__CheckPresAfterFlu,   1, NonFatal );
    LoadField( "Opt__LastResortFloor",    &RS.Opt__LastResortFloor,    SID, TID, NonFatal, &RT.Opt__LastResortFloor,     1, NonFatal );
    LoadField( "JeansMinPres",            &RS.JeansMinPres,            SID, TID, NonFatal, &RT.JeansMinPres,             1, NonFatal );
@@ -2045,6 +2047,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  if ( MODEL == HYDRO )
    LoadField( "Opt__Output_Pres",        &RS.Opt__Output_Pres,        SID, TID, NonFatal, &RT.Opt__Output_Pres,         1, NonFatal );
    LoadField( "Opt__Output_Temp",        &RS.Opt__Output_Temp,        SID, TID, NonFatal, &RT.Opt__Output_Temp,         1, NonFatal );
+   LoadField( "Opt__Output_Entr",        &RS.Opt__Output_Entr,        SID, TID, NonFatal, &RT.Opt__Output_Entr,         1, NonFatal );
    LoadField( "Opt__Output_Cs",          &RS.Opt__Output_Cs,          SID, TID, NonFatal, &RT.Opt__Output_Cs,           1, NonFatal );
    LoadField( "Opt__Output_DivVel",      &RS.Opt__Output_DivVel,      SID, TID, NonFatal, &RT.Opt__Output_DivVel,       1, NonFatal );
    LoadField( "Opt__Output_Mach",        &RS.Opt__Output_Mach,        SID, TID, NonFatal, &RT.Opt__Output_Mach,         1, NonFatal );
@@ -2106,7 +2109,8 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 
 // flag tables
 #  if   ( MODEL == HYDRO )
-   const bool Opt__FlagLohner = ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP );
+   const bool Opt__FlagLohner = ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES ||
+                                  OPT__FLAG_LOHNER_TEMP || OPT__FLAG_LOHNER_ENTR );
 #  elif ( MODEL == ELBDM )
    const bool Opt__FlagLohner = OPT__FLAG_LOHNER_DENS;
 #  else

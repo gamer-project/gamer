@@ -108,19 +108,16 @@ void Init_Field()
 
 
 // 4. must put all built-in scalars at the END of the field list and with the same order as their
-//    corresponding symbolic constants (e.g., ENPY/EINT/CRAY) defined in Macro.h
-//    --> as we still rely on these constants (e.g., DENS, ENPY) in the fluid solvers
+//    corresponding symbolic constants (e.g., DUAL/CRAY) defined in Macro.h
+//    --> as we still rely on these constants (e.g., DENS, DUAL) in the fluid solvers
 #  ifdef COSMIC_RAY
-   Idx_CRay    = AddField( "CRay",     NORMALIZE_NO, INTERP_FRAC_NO );
+   Idx_CRay = AddField( "CRay", NORMALIZE_NO, INTERP_FRAC_NO );
    if ( Idx_CRay != CRAY )    Aux_Error( ERROR_INFO, "inconsistent Idx_CRay (%d != %d) !!\n", Idx_CRay, CRAY );
 #  endif
 
-#  if   ( DUAL_ENERGY == DE_ENPY )
-   Idx_Enpy    = AddField( "Entropy",  NORMALIZE_NO, INTERP_FRAC_NO );
-   if ( Idx_Enpy != ENPY )    Aux_Error( ERROR_INFO, "inconsistent Idx_Enpy (%d != %d) !!\n", Idx_Enpy, ENPY );
-#  elif ( DUAL_ENERGY == DE_EINT )
-   Idx_Eint    = AddField( "Eint",     NORMALIZE_NO, INTERP_FRAC_NO );
-   if ( Idx_Eint != EINT )    Aux_Error( ERROR_INFO, "inconsistent Idx_Eint (%d != %d) !!\n", Idx_Eint, EINT );
+#  ifdef DUAL_ENERGY
+   Idx_Dual = AddField( "Dual", NORMALIZE_NO, INTERP_FRAC_NO );
+   if ( Idx_Dual != DUAL )    Aux_Error( ERROR_INFO, "inconsistent Idx_Dual (%d != %d) !!\n", Idx_Dual, DUAL );
 #  endif
 
 

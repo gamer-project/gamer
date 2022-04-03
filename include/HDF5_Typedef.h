@@ -420,6 +420,7 @@ struct InputPara_t
    int    Opt__Flag_LohnerEngy;
    int    Opt__Flag_LohnerPres;
    int    Opt__Flag_LohnerTemp;
+   int    Opt__Flag_LohnerEntr;
 #  endif
    int    Opt__Flag_LohnerForm;
    int    Opt__Flag_User;
@@ -500,6 +501,7 @@ struct InputPara_t
    double MinPres;
    double MinEint;
    double MinTemp;
+   double MinEntr;
    int    Opt__CheckPresAfterFlu;
    int    Opt__LastResortFloor;
    int    JeansMinPres;
@@ -633,6 +635,7 @@ struct InputPara_t
 #  if ( MODEL == HYDRO )
    int    Opt__Output_Pres;
    int    Opt__Output_Temp;
+   int    Opt__Output_Entr;
    int    Opt__Output_Cs;
    int    Opt__Output_DivVel;
    int    Opt__Output_Mach;

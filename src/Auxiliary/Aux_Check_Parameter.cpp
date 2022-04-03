@@ -122,7 +122,7 @@ void Aux_Check_Parameter()
                  "OPT__CK_REFINE", "OPT__FLAG_RHO" );
 
 #  if   ( MODEL == HYDRO )
-   if (  ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP )
+   if (  ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP || OPT__FLAG_LOHNER_ENTR )
          &&  Flu_ParaBuf < 2  )
       Aux_Error( ERROR_INFO, "Lohner error estimator does NOT work when Flu_ParaBuf (%d) < 2 !!\n", Flu_ParaBuf );
 #  elif ( MODEL == ELBDM )
@@ -259,7 +259,12 @@ void Aux_Check_Parameter()
 #  if ( MODEL == HYDRO )
    if (  OPT__OUTPUT_TEMP  &&  EoS_DensEint2Temp_CPUPtr == NULL )
       Aux_Error( ERROR_INFO, "EoS_DensEint2Temp_CPUPtr == NULL for OPT__OUTPUT_TEMP !!\n" );
+
+#  if ( EOS == EOS_ISOTHERMAL )
+   if ( OPT__OUTPUT_ENTR )
+      Aux_Error( ERROR_INFO, "OPT__OUTPUT_ENTR does not support EOS_ISOTHERMAL !!\n" );
 #  endif
+#  endif // #if ( MODEL == HYDRO )
 
 
 
@@ -326,6 +331,7 @@ void Aux_Check_Parameter()
    Flag |= OPT__FLAG_LOHNER_ENGY;
    Flag |= OPT__FLAG_LOHNER_PRES;
    Flag |= OPT__FLAG_LOHNER_TEMP;
+   Flag |= OPT__FLAG_LOHNER_ENTR;
 #  ifdef MHD
    Flag |= OPT__FLAG_CURRENT;
 #  endif
@@ -688,6 +694,11 @@ void Aux_Check_Parameter()
          Aux_Error( ERROR_INFO, "JEANS_MIN_PRES currently only supports EOS_GAMMA !!\n" );
 #  endif // if ( EOS != EOS_GAMMA )
 
+#  if ( EOS == EOS_ISOTHERMAL )
+      if ( OPT__FLAG_LOHNER_ENTR )
+         Aux_Error( ERROR_INFO, "ERROR : OPT__FLAG_LOHNER_ENTR does not support EOS_ISOTHERMAL !!\n" );
+#  endif
+
 #  if ( EOS == EOS_NUCLEAR )
       Aux_Error( ERROR_INFO, "EOS_NUCLEAR is not supported yet !!\n" );
 #  endif
@@ -791,6 +802,11 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : MIN_TEMP == 0.0 could be dangerous and is mainly for debugging only !!\n" );
    else
       Aux_Message( stderr, "WARNING : MIN_TEMP (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_TEMP );
+
+   if ( MIN_ENTR == 0.0 )
+      Aux_Message( stderr, "WARNING : MIN_ENTR == 0.0 could be dangerous and is mainly for debugging only !!\n" );
+   else
+      Aux_Message( stderr, "WARNING : MIN_ENTR (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_ENTR );
 
 #  if (  defined LR_EINT  &&  ( EOS == EOS_GAMMA || EOS == EOS_ISOTHERMAL )  )
       Aux_Message( stderr, "WARNING : LR_EINT is not recommended for EOS_GAMMA/EOS_ISOTHERMAL !!\n" );
