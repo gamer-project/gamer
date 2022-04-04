@@ -1,6 +1,6 @@
 #include "GAMER.h"
 
-extern void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, const double Time0, const double Time1,
+extern void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, const double Time0, const double Time1,
                             bool &IntTime, int &Sg, int &Sg_IntT, real &Weighting, real &Weighting_IntT );
 
 
@@ -254,20 +254,24 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
          if ( PrepTime >= 0.0 )
          {
 //          fluid
-            SetTempIntPara( lv, amr->FluSg[lv], PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1],
+            const int FluSg0 = amr->FluSg[lv];
+            SetTempIntPara( lv, FluSg0, PrepTime, amr->FluSgTime[lv][FluSg0], amr->FluSgTime[lv][1-FluSg0],
                             FluIntTime, FluSg, FluSg_IntT, FluWeighting, FluWeighting_IntT );
 
 //          magnetic field
 #           ifdef MHD
-            SetTempIntPara( lv, amr->MagSg[lv], PrepTime, amr->MagSgTime[lv][0], amr->MagSgTime[lv][1],
+            const int MagSg0 = amr->MagSg[lv];
+            SetTempIntPara( lv, MagSg0, PrepTime, amr->MagSgTime[lv][MagSg0], amr->MagSgTime[lv][1-MagSg0],
                             MagIntTime, MagSg, MagSg_IntT, MagWeighting, MagWeighting_IntT );
 #           endif
 
 //          potential
 #           ifdef GRAVITY
-            if ( InclPot )
-               SetTempIntPara( lv, amr->PotSg[lv], PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1],
-                               PotIntTime, PotSg, PotSg_IntT, PotWeighting, PotWeighting_IntT );
+            if ( InclPot ) {
+            const int PotSg0 = amr->PotSg[lv];
+            SetTempIntPara( lv, PotSg0, PrepTime, amr->PotSgTime[lv][PotSg0], amr->PotSgTime[lv][1-PotSg0],
+                            PotIntTime, PotSg, PotSg_IntT, PotWeighting, PotWeighting_IntT );
+            }
 #           endif
          }
 
