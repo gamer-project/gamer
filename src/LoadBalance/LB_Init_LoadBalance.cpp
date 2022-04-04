@@ -445,20 +445,20 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
 
 // 2. prepare the MPI send buffers
 // ==========================================================================================
-   const int SendDataSizeFlu1v  = NSend_Total_Patch*FluSize1v;
-   const int RecvDataSizeFlu1v  = NRecv_Total_Patch*FluSize1v;
-   const int FluSg              = amr->FluSg[lv];
+   const long SendDataSizeFlu1v  = NSend_Total_Patch*FluSize1v;
+   const long RecvDataSizeFlu1v  = NRecv_Total_Patch*FluSize1v;
+   const int  FluSg              = amr->FluSg[lv];
 #  ifdef GRAVITY
-   const int PotSg              = amr->PotSg[lv];
+   const int  PotSg              = amr->PotSg[lv];
 #  ifdef STORE_POT_GHOST
-   const int SendDataSizePotExt = NSend_Total_Patch*GraNxtSize;
-   const int RecvDataSizePotExt = NRecv_Total_Patch*GraNxtSize;
+   const long SendDataSizePotExt = NSend_Total_Patch*GraNxtSize;
+   const long RecvDataSizePotExt = NRecv_Total_Patch*GraNxtSize;
 #  endif
 #  endif // GRAVITY
 #  ifdef MHD
-   const int MagSg              = amr->MagSg[lv];
-   const int SendDataSizeMag1v  = NSend_Total_Patch*MagSize1v;
-   const int RecvDataSizeMag1v  = NRecv_Total_Patch*MagSize1v;
+   const int  MagSg              = amr->MagSg[lv];
+   const long SendDataSizeMag1v  = NSend_Total_Patch*MagSize1v;
+   const long RecvDataSizeMag1v  = NRecv_Total_Patch*MagSize1v;
 #  endif
 
    real *SendPtr         = NULL;
@@ -499,18 +499,18 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
 //       2.2 fluid
          for (int v=0; v<NCOMP_TOTAL; v++)
          {
-            SendPtr = SendBuf_Flu + v*SendDataSizeFlu1v + Send_NDisp_Flu1v[TRank] + NDone_Patch[TRank]*FluSize1v;
+            SendPtr = SendBuf_Flu + v*SendDataSizeFlu1v + (long)Send_NDisp_Flu1v[TRank] + (long)NDone_Patch[TRank]*FluSize1v;
             memcpy( SendPtr, &amr->patch[FluSg][lv][PID]->fluid[v][0][0][0], FluSize1v*sizeof(real) );
          }
 
 #        ifdef GRAVITY
 //       2.3 potential
-         SendPtr = SendBuf_Pot + Send_NDisp_Flu1v[TRank] + NDone_Patch[TRank]*FluSize1v;
+         SendPtr = SendBuf_Pot + (long)Send_NDisp_Flu1v[TRank] + (long)NDone_Patch[TRank]*FluSize1v;
          memcpy( SendPtr, &amr->patch[PotSg][lv][PID]->pot[0][0][0], FluSize1v*sizeof(real) );
 
 //       2.4 potential with ghost zones
 #        ifdef STORE_POT_GHOST
-         SendPtr = SendBuf_PotExt + Send_NDisp_PotExt[TRank] + NDone_Patch[TRank]*GraNxtSize;
+         SendPtr = SendBuf_PotExt + (long)Send_NDisp_PotExt[TRank] + (long)NDone_Patch[TRank]*GraNxtSize;
          memcpy( SendPtr, &amr->patch[PotSg][lv][PID]->pot_ext[0][0][0], GraNxtSize*sizeof(real) );
 #        endif
 #        endif
@@ -519,7 +519,7 @@ void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool Remov
 #        ifdef MHD
          for (int v=0; v<NCOMP_MAG; v++)
          {
-            SendPtr = SendBuf_Mag + v*SendDataSizeMag1v + Send_NDisp_Mag1v[TRank] + NDone_Patch[TRank]*MagSize1v;
+            SendPtr = SendBuf_Mag + v*SendDataSizeMag1v + (long)Send_NDisp_Mag1v[TRank] + (long)NDone_Patch[TRank]*MagSize1v;
             memcpy( SendPtr, &amr->patch[MagSg][lv][PID]->magnetic[v][0], MagSize1v*sizeof(real) );
          }
 #        endif
