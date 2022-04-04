@@ -689,7 +689,6 @@
 
 
 // bitwise reproducibility in flux and electric field fix-up operations
-#if ( MODEL == HYDRO )
 # ifdef BITWISE_REPRODUCIBILITY
 #  define BIT_REP_FLUX
 # endif
@@ -699,11 +698,10 @@
 //     consistent with each other (even the round-off errors are the same)
 // --> reduces the div(B) errors significantly
 # ifdef MHD
-//#ifdef BITWISE_REPRODUCIBILITY
+//# ifdef BITWISE_REPRODUCIBILITY
 #  define BIT_REP_ELECTRIC
-//#endif
+//# endif
 # endif // MHD
-#endif // HYDRO
 
 
 // extreme values
