@@ -13,7 +13,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 static void SetTargetSibling( int NTSib[], int *TSib[] );
 static int Table_01( const int SibID, const char dim, const int Count, const int GhostSize );
 static int Table_02( const int lv, const int PID, const int Side );
-void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, const double Time0, const double Time1,
+void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, const double Time0, const double Time1,
                      bool &IntTime, int &Sg, int &Sg_IntT, real &Weighting, real &Weighting_IntT );
 #ifdef MHD
 static void MHD_SetFInterface( real *FInt_Data, real *FInt_Ptr[6], const real *Data1PG_FC, const int lv, const int PID0,
@@ -455,7 +455,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 // fluid
    if ( NVarCC_Flu + NVarCC_Der != 0 )
    {
-      SetTempIntPara( lv, amr->FluSg[lv], PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1],
+      const int Sg0 = amr->FluSg[lv];
+      SetTempIntPara( lv, Sg0, PrepTime, amr->FluSgTime[lv][Sg0], amr->FluSgTime[lv][1-Sg0],
                       FluIntTime, FluSg, FluSg_IntT, FluWeighting, FluWeighting_IntT );
 
 //    check: although temporal interpolation is allowed, currently PrepTime is expected to be equal to either
@@ -475,7 +476,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 // check PrepPres, PrepTemp, and PrepEntr since they also require B field
    if ( PrepMag || PrepPres || PrepTemp || PrepEntr )
    {
-      SetTempIntPara( lv, amr->MagSg[lv], PrepTime, amr->MagSgTime[lv][0], amr->MagSgTime[lv][1],
+      const int Sg0 = amr->MagSg[lv];
+      SetTempIntPara( lv, Sg0, PrepTime, amr->MagSgTime[lv][Sg0], amr->MagSgTime[lv][1-Sg0],
                       MagIntTime, MagSg, MagSg_IntT, MagWeighting, MagWeighting_IntT );
 
 //    check: although temporal interpolation is allowed, currently PrepTime is expected to be equal to either
@@ -495,7 +497,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
    if ( PrepPot )
    {
-      SetTempIntPara( lv, amr->PotSg[lv], PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1],
+      const int Sg0 = amr->PotSg[lv];
+      SetTempIntPara( lv, Sg0, PrepTime, amr->PotSgTime[lv][Sg0], amr->PotSgTime[lv][1-Sg0],
                       PotIntTime, PotSg, PotSg_IntT, PotWeighting, PotWeighting_IntT );
 
 //    check: although temporal interpolation is allowed, currently PrepTime is expected to be equal to either
@@ -2101,10 +2104,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 //                3. Use call-by-reference to set the returned parameters
 //
 // Parameter   :  lv            : Target refinement level
-//                Sg_Current    : Current Sg
+//                Sg0           : Current Sg
 //                PrepTime      : Target physical time to prepare data
-//                Time0         : Physical time of Sg=0
-//                Time1         : Physical time of Sg=1
+//                Time0         : Physical time of Sg0
+//                Time1         : Physical time of 1-Sg0
 //                IntTime       : Whether or not the temporal interpolation is required
 //                Sg            : Sg if temporal interpolation is not required
 //                Sg_Int        : Sg if temporal interpolation is required
@@ -2113,14 +2116,16 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 //
 // Return      :  IntTime, Sg, Sg_Int, Weighting, Weighting_Int
 //-------------------------------------------------------------------------------------------------------
-void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, const double Time0, const double Time1,
+void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, const double Time0, const double Time1,
                      bool &IntTime, int &Sg, int &Sg_IntT, real &Weighting, real &Weighting_IntT )
 {
+
+   const int Sg1 = 1 - Sg0;
 
    if      (  Mis_CompareRealValue( PrepTime, Time0, NULL, false )  )
    {
       IntTime        = false;
-      Sg             = 0;
+      Sg             = Sg0;
       Sg_IntT        = NULL_INT;
       Weighting      = NULL_REAL;
       Weighting_IntT = NULL_REAL;
@@ -2129,7 +2134,7 @@ void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, 
    else if (  Mis_CompareRealValue( PrepTime, Time1, NULL, false )  )
    {
       IntTime        = false;
-      Sg             = 1;
+      Sg             = Sg1;
       Sg_IntT        = NULL_INT;
       Weighting      = NULL_REAL;
       Weighting_IntT = NULL_REAL;
@@ -2151,16 +2156,16 @@ void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, 
       if ( OPT__INT_TIME )
       {
          IntTime        = true;
-         Sg             = 0;
-         Sg_IntT        = 1;
-         Weighting      =   ( +Time1 - PrepTime ) / ( Time1 - Time0 );
-         Weighting_IntT =   ( -Time0 + PrepTime ) / ( Time1 - Time0 );
+         Sg             = Sg0;
+         Sg_IntT        = Sg1;
+         Weighting      = ( +Time1 - PrepTime ) / ( Time1 - Time0 );
+         Weighting_IntT = ( -Time0 + PrepTime ) / ( Time1 - Time0 );
       }
 
       else
       {
          IntTime        = false;
-         Sg             = Sg_Current;
+         Sg             = Sg0;
          Sg_IntT        = NULL_INT;
          Weighting      = NULL_REAL;
          Weighting_IntT = NULL_REAL;

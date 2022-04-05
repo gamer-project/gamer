@@ -2,7 +2,7 @@
 
 static int Table_01( const int FSide, const int CSide, const char dim, const int w01, const int w02,
                      const int w10, const int w11, const int w12, const int w20, const int w21 );
-void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, const double Time0, const double Time1,
+void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, const double Time0, const double Time1,
                      bool &IntTime, int &Sg, int &Sg_IntT, real &Weighting, real &Weighting_IntT );
 
 
@@ -219,7 +219,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 // fluid
    if ( NVarCC_Flu + NVarCC_Der != 0 )
    {
-      SetTempIntPara( lv, amr->FluSg[lv], PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1],
+      const int Sg0 = amr->FluSg[lv];
+      SetTempIntPara( lv, Sg0, PrepTime, amr->FluSgTime[lv][Sg0], amr->FluSgTime[lv][1-Sg0],
                       FluIntTime, FluSg, FluSg_IntT, FluWeighting, FluWeighting_IntT );
 
       if ( FluIntTime  &&  OPT__DT_LEVEL == DT_LEVEL_SHARED )
@@ -237,7 +238,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 // check PrepPres, PrepTemp, and PrepEntr since they also require B field
    if ( NVarFC_Tot>0 || PrepPres || PrepTemp || PrepEntr )
    {
-      SetTempIntPara( lv, amr->MagSg[lv], PrepTime, amr->MagSgTime[lv][0], amr->MagSgTime[lv][1],
+      const int Sg0 = amr->MagSg[lv];
+      SetTempIntPara( lv, Sg0, PrepTime, amr->MagSgTime[lv][Sg0], amr->MagSgTime[lv][1-Sg0],
                       MagIntTime, MagSg, MagSg_IntT, MagWeighting, MagWeighting_IntT );
 
       if ( MagIntTime  &&  OPT__DT_LEVEL == DT_LEVEL_SHARED )
@@ -255,7 +257,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
    if ( PrepPot )
    {
-      SetTempIntPara( lv, amr->PotSg[lv], PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1],
+      const int Sg0 = amr->PotSg[lv];
+      SetTempIntPara( lv, Sg0, PrepTime, amr->PotSgTime[lv][Sg0], amr->PotSgTime[lv][1-Sg0],
                       PotIntTime, PotSg, PotSg_IntT, PotWeighting, PotWeighting_IntT );
 
       if ( PotIntTime  &&  OPT__DT_LEVEL == DT_LEVEL_SHARED )
