@@ -1,10 +1,113 @@
 #include "GAMER.h"
 
 #ifdef SUPPORT_LIBYT
+#ifdef LIBYT_USE_PATCH_GROUP
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Fields_DerivedFuncWithName_PatchGroup
+// Description :  Derived function for fields known in NCOMP_TOTAL.
+//
+// Note        :  1. This function's pointer will be passed into libyt.
+//                2. The argument should be declared like this, in order to match the libyt API.
+//                3. yt_getGridInfo_Dimensions() gets the grid_dimensions[0][1][2] in [x][y][z] coordinate.
+//                4. libyt asks field through yt_field *FieldList you passed in, so we should convert
+//                   to the one gamer understands. Try :
+//                   (1) GetFieldIndex: Will get fields defined in FieldLabel.
+//                   (2) PotLabel:      Try PotLabel if supports GRAVITY.
+//                   (3) Temp:          Try find Temp if supports MODEL == HYDRO.
+//
+// Parameter   :  GID    : Grid GID
+//                field  : Target field name.
+//                data   : Store data here, will be returned and wrapped by libyt.
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Fields_DerivedFuncWithName_PatchGroup(long gid, char *field, double *data){
+    // get gamer field index through field name.
+    int gamer_fieldIdx = GetFieldIndex( field, CHECK_OFF );
+    long gamer_fieldBIdx = -100;
 
+    // look through other options if cannot get FieldLabel defined, and convert to bitwise index.
+    if ( gamer_fieldIdx == Idx_Undefined ){
+#ifdef  GRAVITY
+        if ( strcmp(PotLabel, field) == 0 )    gamer_fieldBIdx = _POTE;
+#endif
+#ifdef  MHD
+        char *CCMagLabel[] = {"CCMagX", "CCMagY", "CCMagZ"};
+        for(int v=0; v<NCOMP_MAG; v++){
+            if ( strcmp(CCMagLabel[v], field) == 0 ) {
+                if      ( v == 0 ) gamer_fieldBIdx = _MAGX_CC;
+                else if ( v == 1 ) gamer_fieldBIdx = _MAGY_CC;
+                else if ( v == 2 ) gamer_fieldBIdx = _MAGZ_CC;
+                break;
+            }
+        }
+#endif
+#if     (MODEL == HYDRO)
+        if ( strcmp("Temp", field) == 0 )    gamer_fieldBIdx = _TEMP;
+#endif
+    }
+    else{
+        gamer_fieldBIdx = BIDX( gamer_fieldIdx );
+    }
 
+    // if cannot find proper matching gamer bitwise index, raise an error.
+    if ( gamer_fieldBIdx == -100 )
+        Aux_Error( ERROR_INFO, "cannot find the matching gamer field bitwise index for libyt field \"%s\" !!\n", field );
 
+    // get local grid patch group passed in to libyt.
+    yt_grid *YT_Grids;
+    yt_get_gridsPtr( &YT_Grids );
 
+    // look for Prepare_PatchData desired variable.
+    int lv;
+    int PID0;
+    OptFluBC_t FluBC[6];
+
+    for(int l=0; l<(NPatchLocalLv/8); l++){
+        if ( YT_Grids[l].id == gid ){
+            lv = YT_Grids[l].level;
+            break;
+        }
+    }
+
+    for(int PID=0; PID<(amr->NPatchComma[lv][1]); PID++){
+        if ( amr->patch[0][lv][PID]->libyt_GID == gid ){
+            PID0 = PID;
+            break;
+        }
+    }
+
+    for(int d=0; d<6; d++){
+        FluBC[d] = BC_FLU_NONE;
+    }
+
+    // generate data in patch.
+#ifdef FLOAT8 // typedef double real
+    Prepare_PatchData(lv, Time[0], data, NULL, 0, 1, &PID0, gamer_fieldBIdx, _NONE, INT_NONE, INT_NONE,
+                      UNIT_PATCHGROUP, NSIDE_00, false, FluBC, BC_POT_NONE, -1.0, -1.0, -1.0, -1.0, false);
+#else // #ifdef FLOAT8
+    // allocate memory of size PATCH_SIZE * 2, and call Prepare_PatchData
+    float *float_data = new float [ (PATCH_SIZE * 2) ** 3 ];
+    Prepare_PatchData(lv, Time[0], float_data, NULL, 0, 1, &PID0, gamer_fieldBIdx, _NONE, INT_NONE, INT_NONE,
+                      UNIT_PATCHGROUP, NSIDE_00, false, FluBC, BC_POT_NONE, -1.0, -1.0, -1.0, -1.0, false);
+
+    // get dimension of data [0][1][2] <--> [x][y][z]
+    int dim[3];
+    yt_getGridInfo_Dimensions( gid, &dim );
+
+    // copy data from float_data to data in [z][y][x] order.
+    for(int k=0; k<dim[2]; k++){
+        for(int j=0; j<dim[1]; j++){
+            for(int i=0; i<dim[0]; i++){
+                int index = i + j * dim[0] + k * dim[0] * dim[1];
+                data[index] = float_data[index];
+            }
+        }
+    }
+#endif
+}
+
+#else  // #ifdef LIBYT_USE_PATCH_GROUP
 #ifdef MHD
 //-------------------------------------------------------------------------------------------------------
 // Function    :  MagX/Y/Z_DerivedFunc
@@ -14,7 +117,7 @@
 //                2. The argument should be declared like this, in order to match the libyt API.
 //                3. yt_getGridInfo_Dimensions() gets the grid_dimensions[0][1][2] in [x][y][z] coordinate.
 //
-// Parameter   :  GID            : Grid GID
+// Parameter   :  gid            : Grid GID
 //                Converted_MagX : Store the converted field data here.
 //
 // Return      :  None
@@ -86,8 +189,6 @@ void MagZ_DerivedFunc(long gid, double *Converted_MagZ){
 }
 #endif // #ifdef MHD
 
-
-
 #if ( MODEL == HYDRO )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Temperature_DerivedFunc
@@ -97,7 +198,7 @@ void MagZ_DerivedFunc(long gid, double *Converted_MagZ){
 //                2. The argument should be declared like this, in order to match the libyt API.
 //                3. yt_getGridInfo_Dimensions() gets the grid_dimensions[0][1][2] in [x][y][z] coordinate.
 //
-// Parameter   :  GID        : Grid GID
+// Parameter   :  gid        : Grid GID
 //                TempData   : Store the derived field data here.
 //
 // Return      :  None
@@ -157,6 +258,6 @@ void Temperature_DerivedFunc(long gid, double *TempData){
 }
 #endif // #if ( MODEL == HYDRO )
 
-
+#endif // #ifdef LIBYT_USE_PATCH_GROUP
 
 #endif // #ifdef SUPPORT_LIBYT
