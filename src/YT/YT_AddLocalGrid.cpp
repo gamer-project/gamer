@@ -85,8 +85,8 @@ void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (
 
              for (int d=0; d<3; d++)
              {
-                YT_Grids[LID_Patch].left_edge [d] = (amr->patch[0][lv][PID]->EdgeL[d]) * 2;
-                YT_Grids[LID_Patch].right_edge[d] = (amr->patch[0][lv][PID]->EdgeR[d]) * 2;
+                YT_Grids[LID_Patch].left_edge [d] = amr->patch[0][lv][PID    ]->EdgeL[d];
+                YT_Grids[LID_Patch].right_edge[d] = amr->patch[0][lv][PID + 7]->EdgeR[d];
                 YT_Grids[LID_Patch].grid_dimensions[d] = PATCH_SIZE * 2;
              }
 
