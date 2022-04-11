@@ -146,10 +146,8 @@ void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (
              }
          }
 
-#        ifdef PARTICLE
          // store this grid patches's gid, for later searching for particle data
          amr->patch[0][lv][PID]->libyt_GID    = (long) GID / 8;
-#        endif
          
          LID = LID + 1;
       }
@@ -256,11 +254,11 @@ void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (
 #        ifdef PARTICLE
          // input particle num in this grid
          YT_Grids[LID].particle_count_list[0] = (long) amr->patch[0][lv][PID]->NPar;
-         // store this grid's gid, for later searching for particle data
-         amr->patch[0][lv][PID]->libyt_GID    = (long) GID;
 #        endif
 
-         YT_Grids[LID].id             = GID;
+         // store this grid's gid
+         amr->patch[0][lv][PID]->libyt_GID    = (long) GID;
+         YT_Grids[LID].id             = (long) GID;
          YT_Grids[LID].level          = lv;
 
          // getting parent's id
