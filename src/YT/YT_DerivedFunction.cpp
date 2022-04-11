@@ -60,21 +60,17 @@ void Fields_DerivedFuncWithName_PatchGroup(long gid, char *field, double *data){
     yt_get_gridsPtr( &YT_Grids );
 
     // look for Prepare_PatchData desired variable.
-    int lv;
+    int level;
     int PID0;
     OptFluBC_t FluBC[6];
 
-    for(int l=0; l<(NPatchLocalLv/8); l++){
-        if ( YT_Grids[l].id == gid ){
-            lv = YT_Grids[l].level;
-            break;
-        }
-    }
-
-    for(int PID=0; PID<(amr->NPatchComma[lv][1]); PID++){
-        if ( amr->patch[0][lv][PID]->libyt_GID == gid ){
-            PID0 = PID;
-            break;
+    for(int lv=0; lv<NLEVEL; lv++){
+        for(int PID=0; PID<(amr->NPatchComma[lv][1]); PID++){
+            if ( amr->patch[0][lv][PID]->libyt_GID == gid ){
+                level = lv;
+                PID0 = PID;
+                break;
+            }
         }
     }
 
@@ -84,12 +80,12 @@ void Fields_DerivedFuncWithName_PatchGroup(long gid, char *field, double *data){
 
     // generate data in patch.
 #ifdef FLOAT8 // typedef double real
-    Prepare_PatchData(lv, Time[0], data, NULL, 0, 1, &PID0, gamer_fieldBIdx, _NONE, INT_NONE, INT_NONE,
+    Prepare_PatchData(level, Time[0], data, NULL, 0, 1, &PID0, gamer_fieldBIdx, _NONE, INT_NONE, INT_NONE,
                       UNIT_PATCHGROUP, NSIDE_00, false, FluBC, BC_POT_NONE, -1.0, -1.0, -1.0, -1.0, false);
 #else // #ifdef FLOAT8
     // allocate memory of size PATCH_SIZE * 2, and call Prepare_PatchData
-    float *float_data = new float [ (PATCH_SIZE * 2) ** 3 ];
-    Prepare_PatchData(lv, Time[0], float_data, NULL, 0, 1, &PID0, gamer_fieldBIdx, _NONE, INT_NONE, INT_NONE,
+    float *float_data = new float [ (PATCH_SIZE * 2) * (PATCH_SIZE * 2) * (PATCH_SIZE * 2) ];
+    Prepare_PatchData(level, Time[0], float_data, NULL, 0, 1, &PID0, gamer_fieldBIdx, _NONE, INT_NONE, INT_NONE,
                       UNIT_PATCHGROUP, NSIDE_00, false, FluBC, BC_POT_NONE, -1.0, -1.0, -1.0, -1.0, false);
 
     // get dimension of data [0][1][2] <--> [x][y][z]
