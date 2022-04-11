@@ -13,6 +13,7 @@
 //                   to the one gamer understands. Try :
 //                   (1) GetFieldIndex: Will get fields defined in FieldLabel.
 //                   (2) PotLabel:      Try PotLabel if supports GRAVITY.
+//                   (3) CCMagLabel:    Try CCMagLabel if supports MHD.
 //                   (3) Temp:          Try find Temp if supports MODEL == HYDRO.
 //
 // Parameter   :  GID    : Grid GID
