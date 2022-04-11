@@ -26,7 +26,7 @@ void Get_ParticleAttribute_PatchGroup(long gid, char *attr, void *raw_data){
     // Parse lv and pid from gid
     int level;
     int pid[8];
-    int count = 0
+    int count = 0;
     for (int lv=0; lv<NLEVEL; lv++){
         for (int PID=0; PID<(amr->NPatchComma[lv][1]); PID++){
             if ( amr->patch[0][lv][PID]->libyt_GID == gid ){
