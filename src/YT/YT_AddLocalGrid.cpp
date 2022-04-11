@@ -79,9 +79,10 @@ void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (
       for (int PID=0; PID<(amr->NPatchComma[lv][1]); PID++)
       {
          const int GID = PID + GID_Offset[lv];
-         LID_Patch = LID / 8;
 
          if ( LID % 8 == 0 ){
+             LID_Patch = LID / 8;
+
              for (int d=0; d<3; d++)
              {
                 YT_Grids[LID_Patch].left_edge [d] = (amr->patch[0][lv][PID]->EdgeL[d]) * 2;
@@ -99,10 +100,10 @@ void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (
              YT_Grids[LID_Patch].particle_count_list[0] = particle_count;
 #            endif
 
-             YT_Grids[LID_Patch].id             = GID / 8;
+             YT_Grids[LID_Patch].id             = (long) GID / 8;
              YT_Grids[LID_Patch].level          = lv;
 
-             // getting parent's id
+             // getting parent's id, and then divided by 8, so that it becomes grid patch's id.
              int FaPID = amr->patch[0][lv][PID]->father;
              int FaLv = lv - 1;
 
@@ -116,7 +117,7 @@ void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (
              }
              else if ( FaPID < (amr->NPatchComma[FaLv][1]) ){
                 // father patch is a real patch
-                YT_Grids[LID_Patch].parent_id = FaPID + GID_Offset[FaLv];
+                YT_Grids[LID_Patch].parent_id = (long) (FaPID + GID_Offset[FaLv]) / 8;
              }
              else{
                 // father patch is a buffer patch (only possible in LOAD_BALANCE)
@@ -142,7 +143,7 @@ void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (
                 }
 #            endif
 
-                YT_Grids[LID_Patch].parent_id = LBIdxList_Sort_IdxTable[FaLv][MatchIdx] + GID_LvStart[FaLv];
+                YT_Grids[LID_Patch].parent_id = (long) (LBIdxList_Sort_IdxTable[FaLv][MatchIdx] + GID_LvStart[FaLv]) / 8;
              }
          }
 
