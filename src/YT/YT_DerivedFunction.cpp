@@ -97,7 +97,9 @@ void Fields_DerivedFuncWithName_PatchGroup(long gid, char *field, double *data){
             }
         }
     }
-#endif
+    
+    delete [] float_data;
+#endif // #ifdef FLOAT8
 }
 
 #else  // #ifdef LIBYT_USE_PATCH_GROUP
