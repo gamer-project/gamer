@@ -55,10 +55,6 @@ void Fields_DerivedFuncWithName_PatchGroup(long gid, char *field, double *data){
     if ( gamer_fieldBIdx == -100 )
         Aux_Error( ERROR_INFO, "cannot find the matching gamer field bitwise index for libyt field \"%s\" !!\n", field );
 
-    // get local grid patch group passed in to libyt.
-    yt_grid *YT_Grids;
-    yt_get_gridsPtr( &YT_Grids );
-
     // look for Prepare_PatchData desired variable.
     int level;
     int PID0;
