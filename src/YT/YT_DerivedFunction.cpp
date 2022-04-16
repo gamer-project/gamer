@@ -22,7 +22,7 @@
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Fields_DerivedFuncWithName_PatchGroup(long gid, char *field, double *data){
+void DerivedFuncWithName_PatchGroup(long gid, char *field, double *data){
     // get gamer field index through field name.
     int gamer_fieldIdx = GetFieldIndex( field, CHECK_OFF );
     long gamer_fieldBIdx = -100;

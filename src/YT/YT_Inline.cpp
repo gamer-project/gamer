@@ -8,7 +8,7 @@ void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (
 
 #ifdef LIBYT_USE_PATCH_GROUP
 
-void Fields_DerivedFuncWithName_PatchGroup(long gid, char *field, double *data);
+void DerivedFuncWithName_PatchGroup(long gid, char *field, double *data);
 
 #ifdef PARTICLE
 // get the particle attribute in patch group, since we only have one type of particle "io"
@@ -129,13 +129,13 @@ void YT_Inline()
    for (int v=0; v<NCOMP_TOTAL; v++){
        FieldList[v].field_name             = FieldLabel[v];
        FieldList[v].field_define_type      = "derived_func";
-       FieldList[v].derived_func_with_name = Fields_DerivedFuncWithName_PatchGroup;
+       FieldList[v].derived_func_with_name = DerivedFuncWithName_PatchGroup;
    }
 
 #  ifdef GRAVITY
    FieldList[PotIdx].field_name             = const_cast<char*> (PotLabel);
    FieldList[PotIdx].field_define_type      = "derived_func";
-   FieldList[PotIdx].derived_func_with_name = Fields_DerivedFuncWithName_PatchGroup;
+   FieldList[PotIdx].derived_func_with_name = DerivedFuncWithName_PatchGroup;
 #  endif
 
 #  ifdef MHD
@@ -144,7 +144,7 @@ void YT_Inline()
        FieldList[v + MHDIdx].field_name             = CCMagLabel[v];
        FieldList[v + MHDIdx].field_define_type      = "derived_func";
        FieldList[v + MHDIdx].field_unit             = "code_magnetic";
-       FieldList[v + MHDIdx].derived_func_with_name = Fields_DerivedFuncWithName_PatchGroup;
+       FieldList[v + MHDIdx].derived_func_with_name = DerivedFuncWithName_PatchGroup;
    }
 
    // Add field display name
@@ -158,7 +158,7 @@ void YT_Inline()
    FieldList[EoSTempIdx].field_define_type      = "derived_func";
    FieldList[EoSTempIdx].field_unit             = "code_temperature";
    FieldList[EoSTempIdx].field_display_name     = "Temperature";
-   FieldList[EoSTempIdx].derived_func_with_name = Fields_DerivedFuncWithName_PatchGroup;
+   FieldList[EoSTempIdx].derived_func_with_name = DerivedFuncWithName_PatchGroup;
 #  endif
 
 #  else  // #ifdef LIBYT_USE_PATCH_GROUP
