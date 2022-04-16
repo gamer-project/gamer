@@ -61,7 +61,7 @@ void Fields_DerivedFuncWithName_PatchGroup(long gid, char *field, double *data){
     OptFluBC_t FluBC[6];
 
     for(int lv=0; lv<NLEVEL; lv++){
-        for(int PID=0; PID<(amr->NPatchComma[lv][1]); PID++){
+        for(int PID=0; PID<(amr->NPatchComma[lv][1]); PID+=8){
             if ( amr->patch[0][lv][PID]->libyt_GID == gid ){
                 level = lv;
                 PID0 = PID;
