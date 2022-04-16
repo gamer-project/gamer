@@ -85,6 +85,9 @@ void YT_Inline()
       NPatchAllLv += NPatchTotal[lv];
 
       GID_LvStart[lv] = ( lv == 0 ) ? 0 : GID_LvStart[lv-1] + NPatchTotal[lv-1];
+
+      // set YT_GID_Offset for searching GID in derived function and particle get attribute function.
+      YT_GID_Offset[lv] = GID_Offset[lv];
    }
 
 

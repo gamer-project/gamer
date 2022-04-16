@@ -187,6 +187,7 @@ ParOutputDens_t      OPT__OUTPUT_PAR_DENS;
 #ifdef SUPPORT_LIBYT
 char                 YT_SCRIPT[MAX_STRING];
 yt_verbose           YT_VERBOSE;
+int                  YT_GID_Offset[NLEVEL];
 #endif
 
 // (2-7) Grackle

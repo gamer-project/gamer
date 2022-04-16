@@ -56,17 +56,20 @@ void DerivedFuncWithName_PatchGroup(long gid, char *field, double *data){
         Aux_Error( ERROR_INFO, "cannot find the matching gamer field bitwise index for libyt field \"%s\" !!\n", field );
 
     // look for Prepare_PatchData desired variable.
-    int level;
+    int level = 0;
     int PID0;
     OptFluBC_t FluBC[6];
 
-    for(int lv=0; lv<NLEVEL; lv++){
-        for(int PID=0; PID<(amr->NPatchComma[lv][1]); PID+=8){
-            if ( amr->patch[0][lv][PID]->libyt_GID == gid ){
-                level = lv;
-                PID0 = PID;
-                break;
-            }
+    // TODO: Check if level gid offset is ascending order.
+    for(int lv=1; lv<NLEVEL; lv++){
+        if( gid < YT_GID_Offset[lv] )  break;
+        level = lv;
+    }
+
+    for(int PID=0; PID<(amr->NPatchComma[level][1]); PID+=8){
+        if ( amr->patch[0][level][PID]->libyt_GID == gid ){
+            PID0 = PID;
+            break;
         }
     }
 
