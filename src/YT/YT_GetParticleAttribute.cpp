@@ -24,17 +24,18 @@
 //-------------------------------------------------------------------------------------------------------
 void Get_ParticleAttribute_PatchGroup(long gid, char *attr, void *raw_data){
     // Parse lv and pid from gid
-    int level;
-    int pid[8];
-    int count = 0;
-    for (int lv=0; lv<NLEVEL; lv++){
-        for (int PID=0; PID<(amr->NPatchComma[lv][1]); PID+=8){
-            if ( amr->patch[0][lv][PID]->libyt_GID == gid ){
-                level = lv;
-                pid[count] = PID;
-                count += 1;
-            }
-            if (count >= 8) break;
+    int level = 0;
+    int PID0;
+
+    for(int lv=1; lv<NLEVEL; lv++){
+        if( gid < YT_GID_Offset[lv] ) break;
+        level = lv;
+    }
+
+    for(int PID=0; PID<(amr->NPatchComma[level][1]); PID+=8){
+        if ( amr->patch[0][level][PID]->libyt_GID == gid ){
+            PID0 = PID;
+            break;
         }
     }
 
@@ -45,9 +46,9 @@ void Get_ParticleAttribute_PatchGroup(long gid, char *attr, void *raw_data){
     real *data  = (real *) raw_data;
     long  ParID;
     long  data_idx = 0;
-    for (int i=0; i<8; i++){ // run through pid
-        for (int p=0; p<amr->patch[0][level][pid[i]]->NPar; p++){ // run through particle data in one pid
-            ParID          = amr->patch[0][level][pid[i]]->ParList[p];
+    for (int i=0; i<8; i++){ // run through 8 patches
+        for (int p=0; p<amr->patch[0][level][PID0 + i]->NPar; p++){ // run through particle data in one PID
+            ParID          = amr->patch[0][level][PID0 + i]->ParList[p];
             data[data_idx] = amr->Par->Attribute[ParAttr_Idx][ParID];
             data_idx += 1;
         }
@@ -71,17 +72,21 @@ void Get_ParticleAttribute_PatchGroup(long gid, char *attr, void *raw_data){
 //-------------------------------------------------------------------------------------------------------
 void Get_ParticleAttribute(long gid, char *attr, void *raw_data){
     // Parse lv and pid from gid
-    int level;
+    int level = 0;
     int pid;
-    for (int lv=0; lv<NLEVEL; lv++){
-        for (int PID=0; PID<(amr->NPatchComma[lv][1]); PID++){
-            if ( amr->patch[0][lv][PID]->libyt_GID == gid ){
-                level = lv;
-                pid = PID;
-                break;
-            }
+
+    for(int lv=1; lv<NLEVEL; lv++){
+        if( gid < YT_GID_Offset[lv] ) break;
+        level = lv;
+    }
+
+    for(int PID=0; PID<(amr->NPatchComma[level][1]); PID++){
+        if ( amr->patch[0][level][PID]->libyt_GID == gid ){
+            pid = PID;
+            break;
         }
     }
+
 
     // Get attribute index in GAMER
     FieldIdx_t ParAttr_Idx = GetParticleAttributeIndex( attr, CHECK_ON );

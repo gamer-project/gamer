@@ -60,7 +60,6 @@ void DerivedFuncWithName_PatchGroup(long gid, char *field, double *data){
     int PID0;
     OptFluBC_t FluBC[6];
 
-    // TODO: Check if level gid offset is ascending order.
     for(int lv=1; lv<NLEVEL; lv++){
         if( gid < YT_GID_Offset[lv] )  break;
         level = lv;
