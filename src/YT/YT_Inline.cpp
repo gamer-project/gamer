@@ -87,7 +87,12 @@ void YT_Inline()
       GID_LvStart[lv] = ( lv == 0 ) ? 0 : GID_LvStart[lv-1] + NPatchTotal[lv-1];
 
       // set YT_GID_Offset for searching GID in derived function and particle get attribute function.
+#ifdef LIBYT_USE_PATCH_GROUP
+      if (GID_Offset[lv] % 8 != 0) Aux_Error( ERROR_INFO, "Building search gid YT_GID_Offset in libyt failed !!\n" );
+      YT_GID_Offset[lv] = GID_Offset[lv] / 8;
+#else
       YT_GID_Offset[lv] = GID_Offset[lv];
+#endif
    }
 
 
