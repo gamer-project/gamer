@@ -1259,6 +1259,7 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "YT_SCRIPT                       %s\n",      YT_SCRIPT  );
       fprintf( Note, "YT_VERBOSE                      %d\n",      YT_VERBOSE );
+      fprintf( Note, "YT_FIG_BASENAME                 %s\n",      YT_FIG_BASENAME );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 #     endif
