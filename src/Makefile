@@ -398,6 +398,15 @@ LIBYT_PATH   :=
 #GRACKLE_PATH :=
 #GSL_PATH     :=
 
+# NCTS (default: openmpi-intel)
+#CUDA_PATH    := /cluster/cuda-11.6
+#FFTW_PATH    := /cluster/intel-2022.1/fftw-2.1.5_openmpi4
+#MPI_PATH     := /cluster/intel-2022.1/openmpi-4.1.2
+#HDF5_PATH    := /cluster/intel-2022.1/hdf5-1.10.8_openmpi4
+#GRACKLE_PATH :=
+#GSL_PATH     :=
+#LIBYT_PATH   :=
+
 
 
 
