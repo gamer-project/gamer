@@ -84,6 +84,8 @@ static double Bondi_HSE_Beta_P2;          // P1=G*MassBH*Rho0/Rcore, and P2 curr
        bool   Bondi_Soliton;
        double Bondi_Soliton_m22;
        double Bondi_Soliton_rc;
+       double Bondi_Soliton_MassHalo;
+       double Bondi_Soliton_Redshift;
 static double *Bondi_Soliton_PresProf[2] = { NULL, NULL };   // pressure profile tabke: [0/1] = [radius/density]
 
 // parameters for bondi initial condition
@@ -259,6 +261,9 @@ void SetParameter()
    ReadPara->Add( "Bondi_Soliton",            &Bondi_Soliton,                 false,        Useless_bool,     Useless_bool      );
    ReadPara->Add( "Bondi_Soliton_m22",        &Bondi_Soliton_m22,            -1.0,          NoMin_double,     NoMax_double      );
    ReadPara->Add( "Bondi_Soliton_rc",         &Bondi_Soliton_rc,             -1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Bondi_Soliton_MassHalo",   &Bondi_Soliton_MassHalo,       -1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Bondi_Soliton_Redshift",   &Bondi_Soliton_Redshift,       -1.0,          NoMin_double,     NoMax_double      );
+
 
    ReadPara->Add( "Bondi_Init",               &Bondi_Init,                    false,        Useless_bool,     Useless_bool      );
    ReadPara->Add( "Bondi_Init_Filename",      Bondi_Init_Filename,           Useless_str,  Useless_str,      Useless_str       );
@@ -381,6 +386,21 @@ void SetParameter()
 
    if ( Bondi_Soliton )
    {
+      if( Bondi_Soliton_rc < 0.0 ){
+         double z = Bondi_Soliton_Redshift;
+         double Mh = Bondi_Soliton_MassHalo;
+         double H0 = 67.66;
+         double Om0 = 0.3111;
+         H0 = H0*1e5/(Const_kpc*1e3);
+         double a0 = Om0*SQR(H0)/(2.47e-5*SQR(1e7/(Const_kpc*1e3)));
+         double H_H0_z = 1/(1-Om0*(1-pow(1+z,3.0)*(1+z+a0)/a0));
+         double Om_z   = Om0*pow(1+z,3.0)*H_H0_z;
+         double Om_0   = Om0/(1-Om0*(1-(1+a0)/a0));
+         double kiz_z  = (18*SQR(3.14159265)+82*(Om_z-1)-39*SQR(Om_z-1))/Om_z;
+         double kiz_0  = (18*SQR(3.14159265)+82*(Om_0-1)-39*SQR(Om_0-1))/Om_0;
+         
+         Bondi_Soliton_rc = 1.6/Bondi_Soliton_m22*pow(1+z,-1.0/2.0)*pow(kiz_z/kiz_0,-1.0/6.0)*pow(Mh/1e9,-1.0/3.0);
+      }
       Bondi_Soliton_rc *= UnitExt_L/UNIT_L;
       Soliton_SetPresProfileTable();
    }
@@ -466,7 +486,10 @@ void SetParameter()
       Aux_Message( stdout, "  Bondi_Soliton             = %s\n",                     (Bondi_Soliton)?"YES":"NO"                                        );
       if( Bondi_Soliton ) {
       Aux_Message( stdout, "  Bondi_Soliton_m22         = %13.7e\n",                 Bondi_Soliton_m22                                                 );
-      Aux_Message( stdout, "  Bondi_Soliton_rc          = %13.7e (%13.7e kpc)\n",    Bondi_Soliton_rc, Bondi_Soliton_rc*UNIT_L/Const_kpc               );}
+      Aux_Message( stdout, "  Bondi_Soliton_rc          = %13.7e (%13.7e kpc)\n",    Bondi_Soliton_rc, Bondi_Soliton_rc*UNIT_L/Const_kpc               );
+      Aux_Message( stdout, "  Bondi_Soliton_MassHalo    = %13.7e Msun\n",            Bondi_Soliton_MassHalo                                            );
+      Aux_Message( stdout, "  Bondi_Soliton_Redshift    = %13.7e\n",                 Bondi_Soliton_Redshift                                            );}
+
 
       Aux_Message( stdout, "  Bondi_Init            = %s\n",                     (Bondi_Init)?"YES":"NO"                                       );
       if( Bondi_Init ){
@@ -573,11 +596,13 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    else if ( Bondi_Init )
    {
       const double r = sqrt( SQR(x-amr->BoxCenter[0]) + SQR(y-amr->BoxCenter[1]) + SQR(z-amr->BoxCenter[2]) );
-      double fit_m = 5.73502480e+07;
-      double fit_a = 2.46144199e-01;
-      Dens  = 3*fit_m*Const_Msun/(4*3.14159265*CUBE(fit_a*Const_kpc))*pow(1+SQR(r/fit_a),-2.5);
-      //Dens = 1.945*pow( Bondi_Soliton_m22*1e1, -2.0 )*pow( Bondi_Soliton_rc*UNIT_L/Const_pc, -4.0 )*1e12/pow( 1+(9.1e-2)*SQR(r/Bondi_Soliton_rc), 8.0 );
-      //Dens *= Const_Msun/CUBE(Const_pc);
+      //double fit_m = 5.73502480e+07;
+      //double fit_a = 2.46144199e-01;
+      //Dens  = 3*fit_m*Const_Msun/(4*3.14159265*CUBE(fit_a*Const_kpc))*pow(1+SQR(r/fit_a),-2.5);
+      
+      Dens = 1.945*pow( Bondi_Soliton_m22*1e1, -2.0 )*pow( Bondi_Soliton_rc*UNIT_L/Const_pc, -4.0 )*1e12/pow( 1+(9.1e-2)*SQR(r/Bondi_Soliton_rc), 8.0 );
+      Dens *= Const_Msun/CUBE(Const_pc);
+      
       //double rho0 = 1e-20;
       //double temp = 1e10;
       //double A    = Const_kB/(0.62/Const_NA*1e3)*temp;
@@ -732,19 +757,14 @@ int odefunc ( double x, const double y[], double f[], void *params)
    double rc = Bondi_Soliton_rc*UNIT_L/Const_kpc;
    double m22 = Bondi_Soliton_m22;
    
-   double fit_m = 5.73502480e+07;
-   double fit_a = 2.46144199e-01;
-   double rho  = 3*fit_m*Const_Msun/(4*3.14159265*CUBE(fit_a*Const_kpc))*pow(1+SQR(x/fit_a),-2.5);
-   double a = sqrt(pow(2.0,1.0/8.0)-1)*(x/rc);
-   double M = 4.17e9/(SQR(m22/1e-1)*(rc*1e3)*pow(SQR(a)+1, 7.0))*(3465*pow(a,13.0)+23100*pow(a,11.0)+65373*pow(a,9.0)+101376*pow(a,7.0)+92323*pow(a,5.0)+48580*pow(a,3.0)-3465*a+3465*pow(SQR(a)+1, 7.0)*atan(a))*Const_Msun;
 /*#ifdef Plummer
    double rho  = 3*Bondi_MassBH*UNIT_M/(4*3.14159265*CUBE(rc*Const_kpc))*pow(1+SQR(x/rc),-2.5);
    double M    = Bondi_MassBH*UNIT_M*CUBE(x)/pow(SQR(x)+SQR(rc),1.5);
-#else
+#else*/
    double rho = 1.945*pow(m22/1e-1, -2.0)*pow(rc*1e3, -4.0)*1e12/pow(1+(9.1e-2)*SQR(x/rc), 8.0)*Const_Msun/pow(Const_pc, 3.0);
    double a = sqrt(pow(2.0,1.0/8.0)-1)*(x/rc);
    double M = 4.17e9/(SQR(m22/1e-1)*(rc*1e3)*pow(SQR(a)+1, 7.0))*(3465*pow(a,13.0)+23100*pow(a,11.0)+65373*pow(a,9.0)+101376*pow(a,7.0)+92323*pow(a,5.0)+48580*pow(a,3.0)-3465*a+3465*pow(SQR(a)+1, 7.0)*atan(a))*Const_Msun;
-#endif*/
+/*#endif*/
    f[0] = -Const_NewtonG*M*rho/SQR(x*Const_kpc);
 
    return GSL_SUCCESS;
