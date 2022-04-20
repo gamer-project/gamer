@@ -596,17 +596,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    else if ( Bondi_Init )
    {
       const double r = sqrt( SQR(x-amr->BoxCenter[0]) + SQR(y-amr->BoxCenter[1]) + SQR(z-amr->BoxCenter[2]) );
-      //double fit_m = 5.73502480e+07;
-      //double fit_a = 2.46144199e-01;
-      //Dens  = 3*fit_m*Const_Msun/(4*3.14159265*CUBE(fit_a*Const_kpc))*pow(1+SQR(r/fit_a),-2.5);
-      
       Dens = 1.945*pow( Bondi_Soliton_m22*1e1, -2.0 )*pow( Bondi_Soliton_rc*UNIT_L/Const_pc, -4.0 )*1e12/pow( 1+(9.1e-2)*SQR(r/Bondi_Soliton_rc), 8.0 );
       Dens *= Const_Msun/CUBE(Const_pc);
-      
-      //double rho0 = 1e-20;
-      //double temp = 1e10;
-      //double A    = Const_kB/(0.62/Const_NA*1e3)*temp;
-      //Dens  = rho0/SQR(cosh(sqrt(2*3.14159265*Const_NewtonG*rho0/A)*z*UNIT_L));
       Dens *= 1/UNIT_D;
 
       const double *Table_R = Bondi_Soliton_PresProf[0];
@@ -616,9 +607,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
          Aux_Error( ERROR_INFO, "%.3e, %.3e, %.3e\n",Table_R[0],Table_R[1000-1],r);
          Aux_Error( ERROR_INFO, "Wrong Table\n");
       }
-      //Pres  = A*rho0/SQR(cosh(sqrt(2*3.14159265*Const_NewtonG*rho0/A)*z*UNIT_L));
       Pres *= 1/(UNIT_P);
-      //if( r<5e-3 ) Aux_Message( stderr, "%.3e, %.3e, %.3e\n", r, Pres, Bondi_P0 );
    } 
 
 
@@ -757,14 +746,9 @@ int odefunc ( double x, const double y[], double f[], void *params)
    double rc = Bondi_Soliton_rc*UNIT_L/Const_kpc;
    double m22 = Bondi_Soliton_m22;
    
-/*#ifdef Plummer
-   double rho  = 3*Bondi_MassBH*UNIT_M/(4*3.14159265*CUBE(rc*Const_kpc))*pow(1+SQR(x/rc),-2.5);
-   double M    = Bondi_MassBH*UNIT_M*CUBE(x)/pow(SQR(x)+SQR(rc),1.5);
-#else*/
    double rho = 1.945*pow(m22/1e-1, -2.0)*pow(rc*1e3, -4.0)*1e12/pow(1+(9.1e-2)*SQR(x/rc), 8.0)*Const_Msun/pow(Const_pc, 3.0);
    double a = sqrt(pow(2.0,1.0/8.0)-1)*(x/rc);
    double M = 4.17e9/(SQR(m22/1e-1)*(rc*1e3)*pow(SQR(a)+1, 7.0))*(3465*pow(a,13.0)+23100*pow(a,11.0)+65373*pow(a,9.0)+101376*pow(a,7.0)+92323*pow(a,5.0)+48580*pow(a,3.0)-3465*a+3465*pow(SQR(a)+1, 7.0)*atan(a))*Const_Msun;
-/*#endif*/
    f[0] = -Const_NewtonG*M*rho/SQR(x*Const_kpc);
 
    return GSL_SUCCESS;
