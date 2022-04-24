@@ -10,19 +10,20 @@
 //                2. The argument should be declared like this, in order to match the libyt API.
 //                3. yt_getGridInfo_Dimensions() gets the grid_dimensions[0][1][2] in [x][y][z] coordinate.
 //                4. libyt asks field through yt_field *FieldList you passed in, so we should convert
-//                   to the one gamer understands. Try :
+//                   to the one gamer understands. Try in this order :
 //                   (1) GetFieldIndex: Will get fields defined in FieldLabel.
 //                   (2) PotLabel:      Try PotLabel if supports GRAVITY.
 //                   (3) CCMagLabel:    Try CCMagLabel if supports MHD.
 //                   (3) Temp:          Try find Temp if supports MODEL == HYDRO.
 //
-// Parameter   :  GID    : Grid GID
-//                field  : Target field name.
-//                data   : Store data here, will be returned and wrapped by libyt.
+// Parameter   :  list_len    : length of list_gid
+//                list_gid    : a list of grid id to prepare.
+//                field       : target field.
+//                data_array  : store data here, will be returned and wrapped by libyt.
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void DerivedFuncWithName_PatchGroup(long gid, char *field, double *data){
+void DerivedFuncWithName_PatchGroup(int list_len, long *list_gid, char *field, yt_array *data_array){
     // get gamer field index through field name.
     int gamer_fieldIdx = GetFieldIndex( field, CHECK_OFF );
     long gamer_fieldBIdx = -100;
@@ -56,9 +57,13 @@ void DerivedFuncWithName_PatchGroup(long gid, char *field, double *data){
         Aux_Error( ERROR_INFO, "cannot find the matching gamer field bitwise index for libyt field \"%s\" !!\n", field );
 
     // look for Prepare_PatchData desired variable.
+    OptFluBC_t FluBC[6];
+    for(int d=0; d<6; d++){
+        FluBC[d] = BC_FLU_NONE;
+    }
+    // TODO: for loop to loop through list_gid, wait for fish reply
     int level = 0;
     int PID0;
-    OptFluBC_t FluBC[6];
 
     for(int lv=1; lv<NLEVEL; lv++){
         if( gid < YT_GID_Offset[lv] )  break;
@@ -72,36 +77,15 @@ void DerivedFuncWithName_PatchGroup(long gid, char *field, double *data){
         }
     }
 
-    for(int d=0; d<6; d++){
-        FluBC[d] = BC_FLU_NONE;
-    }
-
     // generate data in patch.
 #ifdef FLOAT8 // typedef double real
-    Prepare_PatchData(level, Time[0], data, NULL, 0, 1, &PID0, gamer_fieldBIdx, _NONE, INT_NONE, INT_NONE,
+    Prepare_PatchData(level, Time[0], (real*) data_array[lid].data_ptr, NULL, 0, 1, &PID0, gamer_fieldBIdx, _NONE, INT_NONE, INT_NONE,
                       UNIT_PATCHGROUP, NSIDE_00, false, FluBC, BC_POT_NONE, -1.0, -1.0, -1.0, -1.0, false);
 #else // #ifdef FLOAT8
-    // allocate memory of size PATCH_SIZE * 2, and call Prepare_PatchData
-    float *float_data = new float [ (PATCH_SIZE * 2) * (PATCH_SIZE * 2) * (PATCH_SIZE * 2) ];
-    Prepare_PatchData(level, Time[0], float_data, NULL, 0, 1, &PID0, gamer_fieldBIdx, _NONE, INT_NONE, INT_NONE,
+    Prepare_PatchData(level, Time[0], (real*) data_array[lid].data_ptr, NULL, 0, 1, &PID0, gamer_fieldBIdx, _NONE, INT_NONE, INT_NONE,
                       UNIT_PATCHGROUP, NSIDE_00, false, FluBC, BC_POT_NONE, -1.0, -1.0, -1.0, -1.0, false);
-
-    // get dimension of data [0][1][2] <--> [x][y][z]
-    int dim[3];
-    yt_getGridInfo_Dimensions( gid, &dim );
-
-    // copy data from float_data to data in [z][y][x] order.
-    for(int k=0; k<dim[2]; k++){
-        for(int j=0; j<dim[1]; j++){
-            for(int i=0; i<dim[0]; i++){
-                int index = i + j * dim[0] + k * dim[0] * dim[1];
-                data[index] = float_data[index];
-            }
-        }
-    }
-    
-    delete [] float_data;
 #endif // #ifdef FLOAT8
+
 }
 
 #else  // #ifdef LIBYT_USE_PATCH_GROUP
@@ -114,72 +98,79 @@ void DerivedFuncWithName_PatchGroup(long gid, char *field, double *data){
 //                2. The argument should be declared like this, in order to match the libyt API.
 //                3. yt_getGridInfo_Dimensions() gets the grid_dimensions[0][1][2] in [x][y][z] coordinate.
 //
-// Parameter   :  gid            : Grid GID
-//                Converted_MagX : Store the converted field data here.
+// Parameter   :  list_len    : length of list_gid
+//                list_gid    : a list of grid id to prepare.
+//                data_array  : store data here, will be returned and wrapped by libyt.
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void MagX_DerivedFunc(long gid, double *Converted_MagX){
-    // Get the dimension of the grid, and the data array pointer of the grid
-    int Dimensions[3];
-    yt_data DataRaw;
-    yt_getGridInfo_Dimensions( gid, &Dimensions );
-    yt_getGridInfo_FieldData( gid, "CCMagX", &DataRaw );
+void MagX_DerivedFunc(int list_len, long *list_gid, yt_array *data_array){
+    for(int lid=0; lid<list_len; lid++){
+        // Get the dimension of the grid, and the data array pointer of the grid
+        int Dimensions[3];
+        yt_data DataRaw;
+        yt_getGridInfo_Dimensions( list_gid[lid], &Dimensions );
+        yt_getGridInfo_FieldData( list_gid[lid], "CCMagX", &DataRaw );
 
-    // Cast the DataRaw
-    real *Data = (real *) DataRaw.data_ptr;
+        // Cast the DataRaw
+        real *Data = (real *) DataRaw.data_ptr;
 
-    // Compute converted field via data. [z, y, x] direction.
-    for (int k=0; k<Dimensions[2]; k++){
-        for (int j=0; j<Dimensions[1]; j++){
-            for (int i=0; i<Dimensions[0]; i++){
-                int idx_Bx = IDX321_BX(i, j, k, Dimensions[0], Dimensions[1]);
-                int idx_cc = i + j * Dimensions[0] + k * Dimensions[0] * Dimensions[1];
-                Converted_MagX[idx_cc] = (double) 0.5 * ( Data[ idx_Bx ] + Data[ idx_Bx + 1 ] );
+        // Compute converted field via data. [z, y, x] direction.
+        for (int k=0; k<Dimensions[2]; k++){
+            for (int j=0; j<Dimensions[1]; j++){
+                for (int i=0; i<Dimensions[0]; i++){
+                    int idx_Bx = IDX321_BX(i, j, k, Dimensions[0], Dimensions[1]);
+                    int idx_cc = i + j * Dimensions[0] + k * Dimensions[0] * Dimensions[1];
+                    ((real *) data_array[lid].data_ptr)[idx_cc] = 0.5 * ( Data[ idx_Bx ] + Data[ idx_Bx + 1 ] );
+                }
             }
         }
     }
 }
 
-void MagY_DerivedFunc(long gid, double *Converted_MagY){
-    // Get the dimension of the grid, and the data array pointer of the grid
-    int Dimensions[3];
-    yt_data DataRaw;
-    yt_getGridInfo_Dimensions( gid, &Dimensions );
-    yt_getGridInfo_FieldData( gid, "CCMagY", &DataRaw );
+void MagY_DerivedFunc(int list_len, long *list_gid, yt_array *data_array){
+    for(int lid=0; lid<list_len; lid++){
+        // Get the dimension of the grid, and the data array pointer of the grid
+        int Dimensions[3];
+        yt_data DataRaw;
+        yt_getGridInfo_Dimensions( list_gid[lid], &Dimensions );
+        yt_getGridInfo_FieldData( list_gid[lid], "CCMagY", &DataRaw );
 
-    // Cast the DataRaw
-    real *Data = (real *) DataRaw.data_ptr;
+        // Cast the DataRaw
+        real *Data = (real *) DataRaw.data_ptr;
 
-    // Compute converted field via data. [z, y, x] direction.
-    for (int k=0; k<Dimensions[2]; k++){
-        for (int j=0; j<Dimensions[1]; j++){
-            for (int i=0; i<Dimensions[0]; i++){
-                int idx_By = IDX321_BY(i, j, k, Dimensions[0], Dimensions[1]);
-                int idx_cc = i + j * Dimensions[0] + k * Dimensions[0] * Dimensions[1];
-                Converted_MagY[idx_cc] = (double) 0.5 * ( Data[ idx_By ] + Data[ idx_By + Dimensions[0] ] );
+        // Compute converted field via data. [z, y, x] direction.
+        for (int k=0; k<Dimensions[2]; k++){
+            for (int j=0; j<Dimensions[1]; j++){
+                for (int i=0; i<Dimensions[0]; i++){
+                    int idx_By = IDX321_BY(i, j, k, Dimensions[0], Dimensions[1]);
+                    int idx_cc = i + j * Dimensions[0] + k * Dimensions[0] * Dimensions[1];
+                    ((real *) data_array[lid].data_ptr)[idx_cc] = 0.5 * ( Data[ idx_By ] + Data[ idx_By + Dimensions[0] ] );
+                }
             }
         }
     }
 }
 
-void MagZ_DerivedFunc(long gid, double *Converted_MagZ){
-    // Get the dimension of the grid, and the data array pointer of the grid
-    int Dimensions[3];
-    yt_data DataRaw;
-    yt_getGridInfo_Dimensions( gid, &Dimensions );
-    yt_getGridInfo_FieldData( gid, "CCMagZ", &DataRaw );
+void MagZ_DerivedFunc(int list_len, long *list_gid, yt_array *data_array){
+    for(int lid=0; lid<list_len; lid++){
+        // Get the dimension of the grid, and the data array pointer of the grid
+        int Dimensions[3];
+        yt_data DataRaw;
+        yt_getGridInfo_Dimensions( list_gid[lid], &Dimensions );
+        yt_getGridInfo_FieldData( list_gid[lid], "CCMagZ", &DataRaw );
 
-    // Cast the DataRaw
-    real *Data = (real *) DataRaw.data_ptr;
+        // Cast the DataRaw
+        real *Data = (real *) DataRaw.data_ptr;
 
-    // Compute converted field via data. [z, y, x] direction.
-    for (int k=0; k<Dimensions[2]; k++){
-        for (int j=0; j<Dimensions[1]; j++){
-            for (int i=0; i<Dimensions[0]; i++){
-                int idx_Bz = IDX321_BZ(i, j, k, Dimensions[0], Dimensions[1]);
-                int idx_cc = i + j * Dimensions[0] + k * Dimensions[0] * Dimensions[1];
-                Converted_MagZ[idx_cc] = (double) 0.5 * ( Data[ idx_Bz ] + Data[ idx_Bz + Dimensions[0] * Dimensions[1] ] );
+        // Compute converted field via data. [z, y, x] direction.
+        for (int k=0; k<Dimensions[2]; k++){
+            for (int j=0; j<Dimensions[1]; j++){
+                for (int i=0; i<Dimensions[0]; i++){
+                    int idx_Bz = IDX321_BZ(i, j, k, Dimensions[0], Dimensions[1]);
+                    int idx_cc = i + j * Dimensions[0] + k * Dimensions[0] * Dimensions[1];
+                    ((real *) data_array[lid].data_ptr)[idx_cc] = 0.5 * ( Data[ idx_Bz ] + Data[ idx_Bz + Dimensions[0] * Dimensions[1] ] );
+                }
             }
         }
     }
