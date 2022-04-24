@@ -8,7 +8,7 @@ void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (
 
 #ifdef LIBYT_USE_PATCH_GROUP
 
-void DerivedFuncWithName_PatchGroup(long gid, char *field, double *data);
+void DerivedFuncWithName_PatchGroup(int list_len, long *list_gid, char *field, yt_array *data_array);
 
 #ifdef PARTICLE
 // get the particle attribute in patch group, since we only have one type of particle "io"
@@ -20,13 +20,13 @@ void Get_ParticleAttribute_PatchGroup(int list_len, long *list_gid, char *attr, 
 
 #ifdef MHD
 // derived function for Mag to CCMag
-void MagX_DerivedFunc(long gid, double *Converted_MagX);
-void MagY_DerivedFunc(long gid, double *Converted_MagY);
-void MagZ_DerivedFunc(long gid, double *Converted_MagZ);
+void MagX_DerivedFunc(int list_len, long *list_gid, yt_array *data_array);
+void MagY_DerivedFunc(int list_len, long *list_gid, yt_array *data_array);
+void MagZ_DerivedFunc(int list_len, long *list_gid, yt_array *data_array);
 #endif
 
 #if ( MODEL == HYDRO )
-void Temperature_DerivedFunc(long gid, double *TempData);
+void Temperature_DerivedFunc(int list_len, long *list_gid, yt_array *data_array);
 #endif
 
 #ifdef PARTICLE

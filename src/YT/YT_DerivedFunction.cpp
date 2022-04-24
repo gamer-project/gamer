@@ -58,34 +58,33 @@ void DerivedFuncWithName_PatchGroup(int list_len, long *list_gid, char *field, y
 
     // look for Prepare_PatchData desired variable.
     OptFluBC_t FluBC[6];
-    for(int d=0; d<6; d++){
-        FluBC[d] = BC_FLU_NONE;
-    }
-    // TODO: for loop to loop through list_gid, wait for fish reply
-    int level = 0;
-    int PID0;
+    for(int d=0; d<6; d++){ FluBC[d] = BC_FLU_NONE; }
 
-    for(int lv=1; lv<NLEVEL; lv++){
-        if( gid < YT_GID_Offset[lv] )  break;
-        level = lv;
-    }
-
-    for(int PID=0; PID<(amr->NPatchComma[level][1]); PID+=8){
-        if ( amr->patch[0][level][PID]->libyt_GID == gid ){
-            PID0 = PID;
-            break;
+    // loop through list_gid and fill in data.
+    for(int lid=0; lid<list_len; lid++){
+        // parse level and PID0
+        int level = 0;
+        int PID0;
+        for(int lv=1; lv<NLEVEL; lv++){
+            if( list_gid[lid] < YT_GID_Offset[lv] )  break;
+            level = lv;
         }
-    }
+        for(int PID=0; PID<(amr->NPatchComma[level][1]); PID+=8){
+            if ( amr->patch[0][level][PID]->libyt_GID == list_gid[lid] ){
+                PID0 = PID;
+                break;
+            }
+        }
 
-    // generate data in patch.
+        // generate data in patch.
 #ifdef FLOAT8 // typedef double real
-    Prepare_PatchData(level, Time[0], (real*) data_array[lid].data_ptr, NULL, 0, 1, &PID0, gamer_fieldBIdx, _NONE, INT_NONE, INT_NONE,
-                      UNIT_PATCHGROUP, NSIDE_00, false, FluBC, BC_POT_NONE, -1.0, -1.0, -1.0, -1.0, false);
+        Prepare_PatchData(level, Time[0], (real*) data_array[lid].data_ptr, NULL, 0, 1, &PID0, gamer_fieldBIdx, _NONE, INT_NONE, INT_NONE,
+                          UNIT_PATCHGROUP, NSIDE_00, false, FluBC, BC_POT_NONE, -1.0, -1.0, -1.0, -1.0, false);
 #else // #ifdef FLOAT8
-    Prepare_PatchData(level, Time[0], (real*) data_array[lid].data_ptr, NULL, 0, 1, &PID0, gamer_fieldBIdx, _NONE, INT_NONE, INT_NONE,
-                      UNIT_PATCHGROUP, NSIDE_00, false, FluBC, BC_POT_NONE, -1.0, -1.0, -1.0, -1.0, false);
+        Prepare_PatchData(level, Time[0], (real*) data_array[lid].data_ptr, NULL, 0, 1, &PID0, gamer_fieldBIdx, _NONE, INT_NONE, INT_NONE,
+                          UNIT_PATCHGROUP, NSIDE_00, false, FluBC, BC_POT_NONE, -1.0, -1.0, -1.0, -1.0, false);
 #endif // #ifdef FLOAT8
-
+    }
 }
 
 #else  // #ifdef LIBYT_USE_PATCH_GROUP
@@ -186,63 +185,68 @@ void MagZ_DerivedFunc(int list_len, long *list_gid, yt_array *data_array){
 //                2. The argument should be declared like this, in order to match the libyt API.
 //                3. yt_getGridInfo_Dimensions() gets the grid_dimensions[0][1][2] in [x][y][z] coordinate.
 //
-// Parameter   :  gid        : Grid GID
-//                TempData   : Store the derived field data here.
+// Parameter   :  list_len    : length of list_gid
+//                list_gid    : a list of grid id to prepare.
+//                data_array  : store data here, will be returned and wrapped by libyt.
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Temperature_DerivedFunc(long gid, double *TempData){
-    // Get dim of the grid to be return, and all the other NCOMP_TOTAL fields.
-    int Dimensions[3];
-    yt_data   DataRaw[NCOMP_TOTAL];
-    real     *Data[NCOMP_TOTAL];
-    yt_getGridInfo_Dimensions( gid, &Dimensions );
-    for (int v=0; v<NCOMP_TOTAL; v++){
-        yt_getGridInfo_FieldData( gid, FieldLabel[v], &(DataRaw[v]));
-        Data[v] = (real *) DataRaw[v].data_ptr;
-    }
-
-    // Preparation for getting Passive and Emag
-    real Passive[NCOMP_PASSIVE];
-    real Emag;
-#ifdef MHD
-    yt_data   MagDataRaw[NCOMP_MAG];
-    real     *MagData[NCOMP_MAG];
+void Temperature_DerivedFunc(int list_len, long *list_gid, yt_array *data_array){
+    // universal
     char     *CCMagLabel[] = {"CCMagX", "CCMagY", "CCMagZ"};
-    for (int v=0; v<NCOMP_MAG; v++){
-        yt_getGridInfo_FieldData( gid, CCMagLabel[v], &(MagDataRaw[v]));
-        MagData[v] = (real *) MagDataRaw[v].data_ptr;
-    }
-#endif
 
-    // Get temperature cell-by-cell
-    for (int k=0; k<Dimensions[2]; k++){
-        for (int j=0; j<Dimensions[1]; j++){
-            for (int i=0; i<Dimensions[0]; i++){
+    // loop through list_gid
+    for(int lid=0; lid<list_len; lid++){
+        // Get dim of the grid to be return, and all the other NCOMP_TOTAL fields.
+        int Dimensions[3];
+        yt_data   DataRaw[NCOMP_TOTAL];
+        real     *Data[NCOMP_TOTAL];
+        yt_getGridInfo_Dimensions( list_gid[lid], &Dimensions );
+        for (int v=0; v<NCOMP_TOTAL; v++){
+            yt_getGridInfo_FieldData( list_gid[lid], FieldLabel[v], &(DataRaw[v]));
+            Data[v] = (real *) DataRaw[v].data_ptr;
+        }
 
-                int idx = i + j * Dimensions[0] + k * Dimensions[0] * Dimensions[1];
+        // Preparation for getting Passive and Emag
+        real Passive[NCOMP_PASSIVE];
+        real Emag;
+    #ifdef MHD
+        yt_data   MagDataRaw[NCOMP_MAG];
+        real     *MagData[NCOMP_MAG];
+        for (int v=0; v<NCOMP_MAG; v++){
+            yt_getGridInfo_FieldData( list_gid[lid], CCMagLabel[v], &(MagDataRaw[v]));
+            MagData[v] = (real *) MagDataRaw[v].data_ptr;
+        }
+    #endif
 
-                // Get Passive
-                for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++){
-                    Passive[v-NCOMP_FLUID] = Data[v][idx];
+        // Get temperature cell-by-cell
+        for (int k=0; k<Dimensions[2]; k++){
+            for (int j=0; j<Dimensions[1]; j++){
+                for (int i=0; i<Dimensions[0]; i++){
+
+                    int idx = i + j * Dimensions[0] + k * Dimensions[0] * Dimensions[1];
+
+                    // Get Passive
+                    for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++){
+                        Passive[v-NCOMP_FLUID] = Data[v][idx];
+                    }
+
+                    // Get Emag
+                    #ifdef MHD
+                    Emag = MHD_GetCellCenteredBEnergy(MagData[MAGX], MagData[MAGY], MagData[MAGZ],
+                                                      Dimensions[0], Dimensions[1], Dimensions[2], i, j, k);
+                    #else
+                    Emag = NULL_REAL;
+                    #endif
+
+                    // Get temperature
+                    ((real *) data_array[lid].data_ptr)[idx] = Hydro_Con2Temp(Data[DENS][idx], Data[MOMX][idx], Data[MOMY][idx], Data[MOMZ][idx], Data[ENGY][idx],
+                                                                              Passive, false, NULL_REAL, Emag,
+                                                                              EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
                 }
-
-                // Get Emag
-                #ifdef MHD
-                Emag = MHD_GetCellCenteredBEnergy(MagData[MAGX], MagData[MAGY], MagData[MAGZ],
-                                                  Dimensions[0], Dimensions[1], Dimensions[2], i, j, k);
-                #else
-                Emag = NULL_REAL;
-                #endif
-
-                // Get temperature
-                TempData[idx] = (double) Hydro_Con2Temp(Data[DENS][idx], Data[MOMX][idx], Data[MOMY][idx], Data[MOMZ][idx], Data[ENGY][idx],
-                                                        Passive, false, NULL_REAL, Emag,
-                                                        EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
             }
         }
     }
-
 }
 #endif // #if ( MODEL == HYDRO )
 
