@@ -13,7 +13,7 @@ void DerivedFuncWithName_PatchGroup(long gid, char *field, double *data);
 #ifdef PARTICLE
 // get the particle attribute in patch group, since we only have one type of particle "io"
 // we only need one function.
-void Get_ParticleAttribute_PatchGroup(long gid, char *attr, void *raw_data);
+void Get_ParticleAttribute_PatchGroup(int list_len, long *list_gid, char *attr, yt_array *data_array);
 #endif
 
 #else  // #ifdef LIBYT_USE_PATCH_GROUP
@@ -32,7 +32,7 @@ void Temperature_DerivedFunc(long gid, double *TempData);
 #ifdef PARTICLE
 // get the particle attribute, since we only have one type of particle "io"
 // we only need one function.
-void Get_ParticleAttribute(long gid, char *attr, void *raw_data);
+void Get_ParticleAttribute(int list_len, long *list_gid, char *attr, yt_array *data_array);
 #endif
 
 #endif  // #ifdef LIBYT_USE_PATCH_GROUP
