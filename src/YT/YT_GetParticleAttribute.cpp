@@ -82,7 +82,7 @@ void Get_ParticleAttribute(int list_len, long *list_gid, char *attr, yt_array *d
             if( list_gid[lid] < YT_GID_Offset[lv] ) break;
             level = lv;
         }
-        for(int PID=0; PID<(amr->NPatchComma[level][1]; PID++)){
+        for(int PID=0; PID<(amr->NPatchComma[level][1]); PID++){
             if( amr->patch[0][level][PID]->libyt_GID == list_gid[lid] ){
                 pid = PID;
                 break;
