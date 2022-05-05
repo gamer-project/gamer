@@ -403,6 +403,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
    if ( !UseInputMassPos )
    {
       delete [] Mass;
+      delete [] PType;
       for (int d=0; d<3; d++)    delete [] Pos[d];
    }
 

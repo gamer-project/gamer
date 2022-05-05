@@ -35,6 +35,7 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
    const real   MinDens_No        = -1.0;
    const real   MinPres_No        = -1.0;
    const real   MinTemp_No        = -1.0;
+   const real   MinEntr_No        = -1.0;
    const double dh                = amr->dh[lv];
    const double _dh               = 1.0/dh;
 
@@ -94,13 +95,13 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
 
       Prepare_PatchData( lv, TimeNew, VelX, NULL, ParGhost, 1, &PID0, _VELX, _NONE,
                          OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No,
-                         OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, DE_Consistency_No );
+                         OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
       Prepare_PatchData( lv, TimeNew, VelY, NULL, ParGhost, 1, &PID0, _VELY, _NONE,
                          OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No,
-                         OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, DE_Consistency_No );
+                         OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,DE_Consistency_No );
       Prepare_PatchData( lv, TimeNew, VelZ, NULL, ParGhost, 1, &PID0, _VELZ, _NONE,
                          OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No,
-                         OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, DE_Consistency_No );
+                         OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
       for (int PID=PID0, P=0; PID<PID0+8; PID++, P++)
       {

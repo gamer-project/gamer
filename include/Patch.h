@@ -1030,7 +1030,7 @@ struct patch_t
       if ( NRemove < 0 )                           Aux_Error( ERROR_INFO, "NRemove (%d) < 0 !!\n", NRemove );
       if ( NPar < 0 )                              Aux_Error( ERROR_INFO, "NPar (%d) < 0 !!\n", NPar );
       for (int i=0; i<PAR_NTYPE; i++)
-      if ( NParType[i] < 0 )                       Aux_Error( ERROR_INFO, "NParType[%d] (%d) < 0 !!\n", i, NParType[0] );
+      if ( NParType[i] < 0 )                       Aux_Error( ERROR_INFO, "NParType[%d] (%d) < 0 !!\n", i, NParType[i] );
       if ( NRemove > NPar )                        Aux_Error( ERROR_INFO, "NRemove (%d) > NPar (%d) !!\n", NRemove, NPar );
 
 //    check 2: indices in RemoveList do not exceed the number of existing particles

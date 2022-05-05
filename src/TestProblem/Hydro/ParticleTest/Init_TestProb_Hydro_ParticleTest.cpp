@@ -8,10 +8,10 @@ static double ParTest_Dens_Bg;        // background mass density
 static double ParTest_Pres_Bg;        // background pressure
 static double ParTest_Ang_Freq;       // gas angular frequency
        int    ParTest_NPar[3];        // particles on a side
-       double ParTest_Point_Mass;
-       double ParTest_Par_Sep;
-       bool   ParTest_Use_Tracers;
-       bool   ParTest_Use_Massive;
+       double ParTest_Point_Mass;     // the mass of the active particles
+       double ParTest_Par_Sep;        // the separation between the active particles
+       bool   ParTest_Use_Tracers;    // whether or not to include tracers
+       bool   ParTest_Use_Massive;    // whether or not to include massive particles
 
 // =======================================================================================
 
@@ -188,11 +188,24 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double Cos_theta = dr[0]/Radius;
    const double Sin_theta = dr[1]/Radius;
 
-   fluid[DENS] = ParTest_Dens_Bg;
-   fluid[MOMX] = -ParTest_Dens_Bg*Velocity*Sin_theta;
-   fluid[MOMY] = ParTest_Dens_Bg*Velocity*Cos_theta;
-   fluid[MOMZ] = 0.0;
-   fluid[ENGY] = ParTest_Pres_Bg/(GAMMA-1.0);
+   double Dens, MomX, MomY, MomZ, Pres, Eint, Etot;
+
+   Dens = ParTest_Dens_Bg;
+   Pres = ParTest_Pres_Bg;
+   MomX = -ParTest_Dens_Bg*Velocity*Sin_theta;
+   MomY = ParTest_Dens_Bg*Velocity*Cos_theta;
+   MomZ = 0.0;
+
+   Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
+                                    EoS_AuxArray_Int, h_EoS_Table );    // assuming EoS requires no passive scalars
+
+   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );      // do NOT include magnetic energy here
+
+   fluid[DENS] = Dens;
+   fluid[MOMX] = MomX;
+   fluid[MOMY] = MomY;
+   fluid[MOMZ] = MomZ;
+   fluid[ENGY] = Etot;
 
 } // FUNCTION : SetGridIC
 

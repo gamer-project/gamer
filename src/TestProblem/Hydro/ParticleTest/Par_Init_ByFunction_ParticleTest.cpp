@@ -122,8 +122,6 @@ void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar
          for (long ii=0; ii<ParTest_NPar[0]; ii++)
          {
 
-            //const long p = IDX321( ii, jj, kk, ParTest_NPar[0], ParTest_NPar[1] );
-
 //          tracer particles have no mass
             ParData_AllRank[PAR_MASS][p] = 0.0;
 

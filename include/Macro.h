@@ -677,9 +677,6 @@
 #  define GRA_NXT       ( 1 )                                     // still define GRA_NXT   ...
 #  define USG_NXT_F     ( 1 )                                     // still define USG_NXT_F ...
 #endif
-#ifdef PARTICLE
-#  define RHOEXT_NXT    ( PS1 + 2*RHOEXT_GHOST_SIZE )             // array rho_ext of each patch
-#endif
 #  define SRC_NXT       ( PS1 + 2*SRC_GHOST_SIZE )                // use patch as the unit
 #  define SRC_NXT_P1    ( SRC_NXT + 1 )
 #  define DER_NXT       ( PS1 + 2*DER_GHOST_SIZE )                // use patch as the unit

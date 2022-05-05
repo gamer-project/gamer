@@ -180,10 +180,6 @@ void Par_FindHomePatch_UniformGrid( const int lv, const bool OldParOnly,
 // Note        :  1. amr->LB->CutPoint[lv][] must be set in advance (e.g., by calling LB_SetCutPoint())
 //                2. Invoked by Par_FindHomePatch_UniformGrid()
 //                3. Inactive particles will NOT be redistributed
-//                4. Currently only redistribute the Time, Type, Mass, Pos, Vel, and all passive variables
-//                   of particles
-//                   --> Acc is not redistributed since it has not been initialized when calling
-//                       Par_FindHomePatch_UniformGrid()
 //
 // Parameter   :  lv         : Target level
 //                OldParOnly : true  --> only redistribute particles already exist in the current repository

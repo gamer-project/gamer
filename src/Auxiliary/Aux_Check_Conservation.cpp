@@ -407,7 +407,7 @@ void Aux_Check_Conservation( const char *comment )
          if ( GetPassiveSum )
          Aux_Message( File, "  %14s  %14s  %14s", "PassNorm", "PassNorm_AErr", "PassNorm_RErr" );
 
-#        ifdef PARTICLE
+#        ifdef MASSIVE_PARTICLES
          Aux_Message( File, "  %14s  %14s  %14s", "Mass_Par", "Mass_Par_AErr", "Mass_Par_RErr" );
          Aux_Message( File, "  %14s  %14s  %14s", "MomX_Par", "MomX_Par_AErr", "MomX_Par_RErr" );
          Aux_Message( File, "  %14s  %14s  %14s", "MomY_Par", "MomY_Par_AErr", "MomY_Par_RErr" );

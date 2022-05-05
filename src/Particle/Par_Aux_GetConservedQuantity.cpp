@@ -216,7 +216,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                   {
                      ParID = amr->patch[0][lv][PID]->ParList[p];
 
-                     if ( PType[ParID] == PTYPE_TRACER || Mass[ParID] < 0.0 )
+                     if ( PType[ParID] == PTYPE_TRACER || Mass[ParID] <= 0.0 )
                         continue;
 
 //                   calculate the nearest grid index
@@ -266,7 +266,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                   {
                      ParID = amr->patch[0][lv][PID]->ParList[p];
                      
-                     if ( PType[ParID] == PTYPE_TRACER || Mass[ParID] < 0.0 )
+                     if ( PType[ParID] == PTYPE_TRACER || Mass[ParID] <= 0.0 )
                         continue;
 
                      for (int d=0; d<3; d++)
@@ -330,7 +330,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                   {
                      ParID = amr->patch[0][lv][PID]->ParList[p];
 
-                     if ( PType[ParID] == PTYPE_TRACER || Mass[ParID] < 0.0 )
+                     if ( PType[ParID] == PTYPE_TRACER || Mass[ParID] <= 0.0 )
                         continue;
 
                      for (int d=0; d<3; d++)

@@ -2310,6 +2310,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Par_IntegTracer         = amr->Par->IntegTracer;
    InputPara.Par_ImproveAcc          = amr->Par->ImproveAcc;
    InputPara.Par_PredictPos          = amr->Par->PredictPos;
+   InputPara.Par_TracerVelCorr       = amr->Par->TracerVelCorr;
    InputPara.Par_RemoveCell          = amr->Par->RemoveCell;
    InputPara.Opt__FreezePar          = OPT__FREEZE_PAR;
    InputPara.Par_GhostSize           = amr->Par->GhostSize;
