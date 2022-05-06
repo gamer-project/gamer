@@ -2,17 +2,6 @@
 
 #ifdef PARTICLE
 
-//#ifndef GRAVITY
-//#   error : ERROR : GRAVITY is not defined !!
-//#endif
-
-#ifdef GRAVITY
-#include "CUPOT.h"
-extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
-extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
-#endif
-
-
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_UpdateParticle

@@ -1,6 +1,6 @@
 #include "GAMER.h"
 
-#if defined( PARTICLE ) && defined ( TRACER )
+#if ( defined PARTICLE && defined TRACER )
 
 void Par_MapMesh2Particles ( const int lv, const int P, const double EdgeL[3], const double EdgeR[3],
                              const int AttrSize3D, const real *Attr, const int NPar,
@@ -21,10 +21,14 @@ void Par_MapMesh2Particles ( const int lv, const int P, const double EdgeL[3], c
 //                       other particles at lv+1. Also, particles just cross from fine (lv) to coarse (lv-1) grids may have
 //                       time less than other particles at lv-1.
 //                   --> Only update particles with time < TimeNew
+//                3. The mapOnly mode maps the velocity to the particles, but does not advance
+//                   their positions
 //
 // Parameter   :  lv           : Target refinement level
 //                TimeNew      : Target physical time to reach
 //                TimeOld      : Physical time before update
+//                mapOnly      : If true, only map the velocity to the particles
+//                               and do not advance them
 //-------------------------------------------------------------------------------------------------------
 void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double TimeOld,
                                bool mapOnly )
@@ -64,8 +68,6 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
    bool   GotYou;
    long   ParID;
    real   dt;
-   double x, y, z;
-
 
 // loop over all **real** patch groups
 #  pragma omp for schedule( PAR_OMP_SCHED, PAR_OMP_SCHED_CHUNK )
