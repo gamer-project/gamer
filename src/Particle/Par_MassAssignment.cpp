@@ -201,8 +201,8 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
             Idx = p;
 #           endif
 
-//          4.1.0 ignore tracer particles
-            if ( PType[Idx] == PTYPE_TRACER ) 
+//          4.1.0 ignore massless and tracer particles
+            if ( Mass[Idx] <= (real)0.0 || PType[Idx] == PTYPE_TRACER ) 
                continue;
 
 //          4.1.1 discard particles far away from the target region
@@ -260,8 +260,8 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
             Idx = p;
 #           endif
 
-//          4.2.0 ignore tracer particles
-            if ( PType[Idx] == PTYPE_TRACER ) 
+//          4.2.0 ignore massless and tracer particles
+            if ( Mass[Idx] <= (real)0.0 || PType[Idx] == PTYPE_TRACER ) 
                continue;
 
 //          4.2.1 discard particles far away from the target region
@@ -335,8 +335,8 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
             Idx = p;
 #           endif
 
-//          4.3.0 ignore tracer particles
-            if ( PType[Idx] == PTYPE_TRACER ) 
+//          4.3.0 ignore massless and tracer particles
+            if ( Mass[Idx] <= (real)0.0 || PType[Idx] == PTYPE_TRACER ) 
                continue;
 
 //          4.3.1 discard particles far away from the target region
