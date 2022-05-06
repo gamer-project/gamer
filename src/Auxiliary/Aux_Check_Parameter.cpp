@@ -1314,6 +1314,9 @@ void Aux_Check_Parameter()
    if ( amr->Par->ImproveAcc  &&  amr->Par->Interp == 1 )
       Aux_Error( ERROR_INFO, "PAR_IMPROVE_ACC does NOT work with PAR_INTERP == 1 (NGP) !!\n" );
 
+   if ( amr->Par->TracerVelCorr  &&  amr->Par->InterpTracer == 1 )
+      Aux_Error( ERROR_INFO, "PAR_TR_VEL_CORR does NOT work with PAR_TR_INTERP == 1 (NGP) !!\n" );
+
 #  ifndef STORE_PAR_ACC
    if ( DT__PARACC != 0.0 )
       Aux_Error( ERROR_INFO, "DT__PARACC (%14.7e) is NOT supported when STORE_PAR_ACC is off !!\n", DT__PARACC );

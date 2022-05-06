@@ -183,8 +183,6 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
    long ParID;
    real Acc_Temp[3], dt, dt_half;
 
-   long ptype_tracer = (long)PTYPE_TRACER;
-
 // loop over all **real** patch groups
 #  pragma omp for schedule( PAR_OMP_SCHED, PAR_OMP_SCHED_CHUNK )
    for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
@@ -196,11 +194,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 
       for (int PID=PID0; PID<PID0+8; PID++)
       {
-         long NMassivePar = 0;
-         for (long i=ptype_tracer+1; i<PAR_NTYPE; i++) 
-            NMassivePar += amr->patch[0][lv][PID]->NParType[i];
-
-         if ( NMassivePar > 0 )
+         if ( amr->patch[0][lv][PID]->NPar - amr->patch[0][lv][PID]->NParType[PTYPE_TRACER] > 0 ) 
          {
             if ( UpdateStep == PAR_UPSTEP_CORR )
             {
@@ -236,10 +230,8 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
          {
             for (int PID=PID0, P=0; PID<PID0+8; PID++, P++)
             {
-               long NMassivePar = 0;
-               for (long i=ptype_tracer+1; i<PAR_NTYPE; i++) 
-                  NMassivePar += amr->patch[0][lv][PID]->NParType[i];
-               if ( NMassivePar == 0 )  continue;   // skip patches with no massive particles
+               if ( amr->patch[0][lv][PID]->NPar - amr->patch[0][lv][PID]->NParType[PTYPE_TRACER] == 0 )
+                  continue;   // skip patches with no massive particles
 
 //             temporal interpolation is required for correcting the velocity of particles just crossing
 //             from fine to coarse grids
@@ -267,11 +259,9 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 
       for (int PID=PID0, P=0; PID<PID0+8; PID++, P++)
       {
-         long NMassivePar = 0;
-         for (long i=ptype_tracer+1; i<PAR_NTYPE; i++) 
-            NMassivePar += amr->patch[0][lv][PID]->NParType[i];
 
-         if ( NMassivePar == 0 )  continue;   // skip patches with no massive particles
+         if ( amr->patch[0][lv][PID]->NPar - amr->patch[0][lv][PID]->NParType[PTYPE_TRACER] == 0 )
+            continue;   // skip patches with no massive particles
 
          if ( !UseStoredAcc )
          {
