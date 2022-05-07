@@ -77,13 +77,8 @@ void DerivedFuncWithName_PatchGroup(int list_len, long *list_gid, char *field, y
         }
 
         // generate data in patch.
-#ifdef FLOAT8 // typedef double real
         Prepare_PatchData(level, Time[0], (real*) data_array[lid].data_ptr, NULL, 0, 1, &PID0, gamer_fieldBIdx, _NONE, INT_NONE, INT_NONE,
                           UNIT_PATCHGROUP, NSIDE_00, false, FluBC, BC_POT_NONE, -1.0, -1.0, -1.0, -1.0, false);
-#else // #ifdef FLOAT8
-        Prepare_PatchData(level, Time[0], (real*) data_array[lid].data_ptr, NULL, 0, 1, &PID0, gamer_fieldBIdx, _NONE, INT_NONE, INT_NONE,
-                          UNIT_PATCHGROUP, NSIDE_00, false, FluBC, BC_POT_NONE, -1.0, -1.0, -1.0, -1.0, false);
-#endif // #ifdef FLOAT8
     }
 }
 
