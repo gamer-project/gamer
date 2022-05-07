@@ -2,7 +2,7 @@
 
 #ifdef SUPPORT_LIBYT
 
-inline void YT_GetPID(long &gid, int *level, int *PID);
+void YT_GetPID(long &gid, int *level, int *PID);
 
 #ifdef PARTICLE
 

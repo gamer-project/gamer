@@ -16,7 +16,7 @@
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-inline void YT_GetPID(long &gid, int *level, int *PID){
+void YT_GetPID(long &gid, int *level, int *PID){
     for(int lv=1; lv<NLEVEL; lv++){
 #ifdef  LIBYT_USE_PATCH_GROUP
         if( gid < (YT_GID_Offset[lv] / 8) ) break;
