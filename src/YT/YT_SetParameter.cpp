@@ -30,7 +30,7 @@ void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchL
 
    param_yt.frontend                = "gamer";           // simulation frontend
    if ( strcmp(YT_FIG_BASENAME, "") != 0 )
-       param_yt.fig_basename = YT_FIG_BASENAME;          // figure base name, use default is not set (default=Fig%09d)
+       param_yt.fig_basename = YT_FIG_BASENAME;          // figure base name, use default if not set (default=Fig%09d)
 
    param_yt.length_unit             = UNIT_L;            // units are in cgs
    param_yt.mass_unit               = UNIT_M;
