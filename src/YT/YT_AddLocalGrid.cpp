@@ -11,15 +11,14 @@
 //                2. Invoked by YT_Inline()
 //                3. FieldList is used by MHD field, since it needs to load dimensions to yt_field.
 //
-// Parameter   :  GID_Offset    : Global patch index offset at each refinement level for this rank
-//                GID_LvStart   : Glocal patch index that this level starts at
+// Parameter   :  GID_LvStart   : Glocal patch index that this level starts at
 //                NPatchAllRank : Number of patches in [MPI rank][level]
 //                NField        : Number of fields loaded to YT.
 //                FieldList     : List of field_name, field_define_type.
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (*NPatchAllRank)[NLEVEL], int NField, yt_field *FieldList)
+void YT_AddLocalGrid( const int *GID_LvStart, const int (*NPatchAllRank)[NLEVEL], int NField, yt_field *FieldList)
 {
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -78,7 +77,7 @@ void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (
 
       for (int PID=0; PID<(amr->NPatchComma[lv][1]); PID++)
       {
-         const int GID = PID + GID_Offset[lv];
+         const int GID = PID + YT_GID_Offset[lv];
 
          if ( LID % 8 == 0 ){
              LID_Patch = LID / 8;
@@ -117,7 +116,7 @@ void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (
              }
              else if ( FaPID < (amr->NPatchComma[FaLv][1]) ){
                 // father patch is a real patch
-                YT_Grids[LID_Patch].parent_id = (long) (FaPID + GID_Offset[FaLv]) / 8;
+                YT_Grids[LID_Patch].parent_id = (long) (FaPID + YT_GID_Offset[FaLv]) / 8;
              }
              else{
                 // father patch is a buffer patch (only possible in LOAD_BALANCE)
@@ -177,15 +176,14 @@ void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (
 //                2. Invoked by YT_Inline()
 //                3. FieldList is used by MHD field, since it needs to load dimensions to yt_field.
 //
-// Parameter   :  GID_Offset    : Global patch index offset at each refinement level for this rank
-//                GID_LvStart   : Glocal patch index that this level starts at
+// Parameter   :  GID_LvStart   : Glocal patch index that this level starts at
 //                NPatchAllRank : Number of patches in [MPI rank][level]
 //                NField        : Number of fields loaded to YT.
 //                FieldList     : List of field_name, field_define_type.
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (*NPatchAllRank)[NLEVEL], int NField, yt_field *FieldList)
+void YT_AddLocalGrid( const int *GID_LvStart, const int (*NPatchAllRank)[NLEVEL], int NField, yt_field *FieldList)
 {
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -243,7 +241,7 @@ void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (
 
       for (int PID=0; PID<(amr->NPatchComma[lv][1]); PID++)
       {
-         const int GID = PID + GID_Offset[lv];
+         const int GID = PID + YT_GID_Offset[lv];
 
          for (int d=0; d<3; d++)
          {
@@ -277,7 +275,7 @@ void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (
 
          else if ( FaPID < (amr->NPatchComma[FaLv][1]) ){
             // father patch is a real patch
-            YT_Grids[LID].parent_id = FaPID + GID_Offset[FaLv];
+            YT_Grids[LID].parent_id = FaPID + YT_GID_Offset[FaLv];
          }
 
          else{

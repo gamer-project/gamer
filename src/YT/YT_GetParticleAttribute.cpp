@@ -2,6 +2,8 @@
 
 #ifdef SUPPORT_LIBYT
 
+inline void YT_GetPID(long &gid, int *level, int *PID);
+
 #ifdef PARTICLE
 
 #ifdef LIBYT_USE_PATCH_GROUP
@@ -29,18 +31,9 @@ void Get_ParticleAttribute_PatchGroup(int list_len, long *list_gid, char *attr, 
     // loop through list_gid
     for(int lid=0; lid<list_len; lid++){
         // Parse level and pid from gid
-        int level = 0;
-        int PID0;
-        for(int lv=1; lv<NLEVEL; lv++){
-            if( list_gid[lid] < YT_GID_Offset[lv] ) break;
-            level = lv;
-        }
-        for(int PID=0; PID<(amr->NPatchComma[level][1]); PID+=8){
-            if ( amr->patch[0][level][PID]->libyt_GID == list_gid[lid] ){
-                PID0 = PID;
-                break;
-            }
-        }
+        int level = 0, PID0 = 0;
+        YT_GetPID( list_gid[lid], &level, &PID0 );
+
         // write data
         long  ParID;
         long  data_idx = 0;
@@ -76,18 +69,9 @@ void Get_ParticleAttribute(int list_len, long *list_gid, char *attr, yt_array *d
     // loop through list_gid
     for(int lid=0; lid<list_len; lid++){
         // parse level and pid.
-        int level = 0;
-        int pid;
-        for(int lv=1; lv<NLEVEL; lv++){
-            if( list_gid[lid] < YT_GID_Offset[lv] ) break;
-            level = lv;
-        }
-        for(int PID=0; PID<(amr->NPatchComma[level][1]); PID++){
-            if( amr->patch[0][level][PID]->libyt_GID == list_gid[lid] ){
-                pid = PID;
-                break;
-            }
-        }
+        int level = 0, pid = 0;
+        YT_GetPID( list_gid[lid], &level, &pid );
+
         // write data.
         long ParID;
         for(int p=0; p<amr->patch[0][level][pid]->NPar; p++){
