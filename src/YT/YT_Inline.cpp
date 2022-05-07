@@ -10,12 +10,6 @@ void YT_AddLocalGrid( const int *GID_LvStart, const int (*NPatchAllRank)[NLEVEL]
 
 void DerivedFuncWithName_PatchGroup(int list_len, long *list_gid, char *field, yt_array *data_array);
 
-#ifdef PARTICLE
-// get the particle attribute in patch group, since we only have one type of particle "io"
-// we only need one function.
-void Get_ParticleAttribute_PatchGroup(int list_len, long *list_gid, char *attr, yt_array *data_array);
-#endif
-
 #else  // #ifdef LIBYT_USE_PATCH_GROUP
 
 #ifdef MHD
@@ -29,13 +23,14 @@ void MagZ_DerivedFunc(int list_len, long *list_gid, yt_array *data_array);
 void Temperature_DerivedFunc(int list_len, long *list_gid, yt_array *data_array);
 #endif
 
+#endif  // #ifdef LIBYT_USE_PATCH_GROUP
+
 #ifdef PARTICLE
 // get the particle attribute, since we only have one type of particle "io"
 // we only need one function.
 void Get_ParticleAttribute(int list_len, long *list_gid, char *attr, yt_array *data_array);
 #endif
 
-#endif  // #ifdef LIBYT_USE_PATCH_GROUP
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -234,11 +229,7 @@ void YT_Inline()
    ParticleList[0].coor_z   = "ParPosZ";
 
    // Set get attribute function
-#  ifdef LIBYT_USE_PATCH_GROUP
-   ParticleList[0].get_attr = Get_ParticleAttribute_PatchGroup;
-#  else
    ParticleList[0].get_attr = Get_ParticleAttribute;
-#  endif // #ifdef LIBYT_USE_PATCH_GROUP
 
 #  endif // #ifdef PARTICLE
 
