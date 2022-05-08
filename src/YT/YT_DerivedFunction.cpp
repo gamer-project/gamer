@@ -49,6 +49,8 @@ void DerivedFuncWithName_PatchGroup(int list_len, long *list_gid, char *field, y
 #endif
 #if     (MODEL == HYDRO)
         if ( strcmp("Temp", field) == 0 )    gamer_fieldBIdx = _TEMP;
+        if ( strcmp("Pres", field) == 0 )    gamer_fieldBIdx = _PRES;
+        if ( strcmp("Entr", field) == 0 )    gamer_fieldBIdx = _ENTR;
 #endif
     }
     else{
