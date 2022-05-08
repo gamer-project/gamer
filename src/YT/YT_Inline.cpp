@@ -166,11 +166,11 @@ void YT_Inline()
    FieldList[EoSIdx].field_unit             = "code_temperature";
    FieldList[EoSIdx].field_display_name     = "Temperature";
 
-   FieldList[EosIdx + 1].field_unit         = "code_mass / (code_length*code_time**2)";
-   FieldList[EosIdx + 1].field_display_name = "Pressure";
+   FieldList[EoSIdx + 1].field_unit         = "code_mass / (code_length*code_time**2)";
+   FieldList[EoSIdx + 1].field_display_name = "Pressure";
 
-   FieldList[EosIdx + 2].field_unit         = ""; // TODO: Entropy's unit
-   FieldList[EosIdx + 2].field_display_name = "Entropy";
+   FieldList[EoSIdx + 2].field_unit         = ""; // TODO: Entropy's unit
+   FieldList[EoSIdx + 2].field_display_name = "Entropy";
 #  endif
 
 #  else  // #ifdef LIBYT_USE_PATCH_GROUP
