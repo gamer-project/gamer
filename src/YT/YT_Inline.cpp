@@ -98,8 +98,14 @@ void YT_Inline()
 #  endif
 
 #  if ( MODEL == HYDRO )
-   int EoSTempIdx = NField;
+   int EoSIdx = NField;
+#  ifdef LIBYT_USE_PATCH_GROUP
+   // Add field : _TEMP, _PRES, _ENTR
+   NField = NField + 3;
+#  else
+   // Add field : _TEMP
    NField = NField + 1;
+#  endif // #ifdef LIBYT_USE_PATCH_GROUP
 #  endif
 
 // 2-2. Call YT_SetParameter and set particle info if need.
@@ -150,11 +156,21 @@ void YT_Inline()
 #  endif
 
 #  if ( MODEL == HYDRO )
-   FieldList[EoSTempIdx].field_name             = "Temp";
-   FieldList[EoSTempIdx].field_define_type      = "derived_func";
-   FieldList[EoSTempIdx].field_unit             = "code_temperature";
-   FieldList[EoSTempIdx].field_display_name     = "Temperature";
-   FieldList[EoSTempIdx].derived_func_with_name = DerivedFuncWithName_PatchGroup;
+   char *AddFieldLabel[] = {"Temp", "Pres", "Entr"};
+   for (int v=0; v<3; v++){
+       FieldList[v + EoSIdx].field_name             = AddFieldLabel[v];
+       FieldList[v + EoSIdx].field_define_type      = "derived_func";
+       FieldList[v + EoSIdx].derived_func_with_name = DerivedFuncWithName_PatchGroup;
+   }
+
+   FieldList[EoSIdx].field_unit             = "code_temperature";
+   FieldList[EoSIdx].field_display_name     = "Temperature";
+
+   FieldList[EosIdx + 1].field_unit         = "code_mass / (code_length*code_time**2)";
+   FieldList[EosIdx + 1].field_display_name = "Pressure";
+
+   FieldList[EosIdx + 2].field_unit         = ""; // TODO: Entropy's unit
+   FieldList[EosIdx + 2].field_display_name = "Entropy";
 #  endif
 
 #  else  // #ifdef LIBYT_USE_PATCH_GROUP
@@ -187,11 +203,11 @@ void YT_Inline()
 #  endif
 
 #  if ( MODEL == HYDRO )
-   FieldList[EoSTempIdx].field_name = "Temp";
-   FieldList[EoSTempIdx].field_define_type = "derived_func";
-   FieldList[EoSTempIdx].field_unit = "code_temperature";
-   FieldList[EoSTempIdx].field_display_name = "Temperature";
-   FieldList[EoSTempIdx].derived_func = Temperature_DerivedFunc;
+   FieldList[EoSIdx].field_name = "Temp";
+   FieldList[EoSIdx].field_define_type = "derived_func";
+   FieldList[EoSIdx].field_unit = "code_temperature";
+   FieldList[EoSIdx].field_display_name = "Temperature";
+   FieldList[EoSIdx].derived_func = Temperature_DerivedFunc;
 #  endif
 
 #  endif // #ifdef LIBYT_USE_PATCH_GROUP
