@@ -169,9 +169,19 @@ void YT_Inline()
    FieldList[EoSIdx + 1].field_unit         = "code_mass / (code_length*code_time**2)";
    FieldList[EoSIdx + 1].field_display_name = "Pressure";
 
-   FieldList[EoSIdx + 2].field_unit         = ""; // TODO: Entropy's unit
+#  if ( EOS == EOS_NUCLEAR )
+   FieldList[EoSIdx + 2].field_unit         = "code_mass / (code_temperature*code_length*code_time**2)";
    FieldList[EoSIdx + 2].field_display_name = "Entropy";
-#  endif
+#  endif // #if ( EOS == EOS_NUCLEAR )
+#  if ( EOS == EOS_GAMMA )
+   char EntropyUnit[100];
+   real gamma_m1 = (real) GAMMA - 1.0;
+   sprintf(EntropyUnit, "code_mass**(1-%.2f) / (code_length**(1-3*%.2f)*code_time**2)", gamma_m1, gamma_m1);
+   FieldList[EoSIdx + 2].field_unit         = EntropyUnit;
+   FieldList[EoSIdx + 2].field_display_name = "Entropy";
+#  endif // #if ( EOS == EOS_GAMMA )
+
+#  endif // #if ( MODEL == HYDRO )
 
 #  else  // #ifdef LIBYT_USE_PATCH_GROUP
    for (int v=0; v<NCOMP_TOTAL; v++){
