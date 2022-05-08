@@ -2,20 +2,42 @@
 
 #ifdef PARTICLE
 
-void Par_MapMesh2Particles ( const int lv, const int P, const double EdgeL[3],
-                             const double EdgeR[3], const int AttrSize3D, const real *Attr,
+void Par_MapMesh2Particles ( const double EdgeL[3], const double EdgeR[3], 
+                             const double _dh, const int AttrSize3D, const real *Attr,
                              const int NPar, real *InterpParPos[3],
                              const real ParType[], const long ParList[],
-                             bool useTracers, real ParAttr[], const int ParGhost,
-                             const bool CorrectVelocity )
+                             bool useTracers, real ParAttr[], const bool CorrectVelocity )
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Par_MapMesh2Particles
+// Description :  Map quantities from mesh onto the particles at their positions
+//
+// Note        :  1. Input grid of mesh data "Attr" is size of a patch + 2*ParGhost
+//                   --> ParGhost may be different for tracer vs. active particles
+//                2. EdgeL and EdgeR correspond to edges of Attr, not the patch itself
+//                3. CorrectVelocity may be used only for mapping velocity, used to
+//                   correct tracer particle trajectories in discontinuous flows
+//                   --> See Section 2.2 and Equation 1 of Wittor et al. (2016) MNRAS, 464, 4
+//                       (https://ui.adsabs.harvard.edu/abs/2017MNRAS.464.4448W)
+//                4. Currently only used for tracer particles
+//
+// Parameter   :  EdgeL           : Left edge of input grid in 3 dimensions
+//                EdgeR           : Right edge of input grid in 3 dimensions
+//                _dh             : Inverse of cell size
+//                AttrSize3D      : Number of cells on side of input grid
+//                Attr            : The input grid of values for the variable to be mapped
+//                NPar            : The number of particles belonging to this patch
+//                ParList         : The list of particles on this patch
+//                useTracers      : Whether to map to only tracer particles or only active particles
+//                ParAttr         : The array to store the mapped particle attribute
+//                CorrectVelocity : If true, particle velocities will be corrected in regions of
+//                                  discontinuous flow
+//-------------------------------------------------------------------------------------------------------
 {
 
-   typedef real (*vla)[AttrSize3D][AttrSize3D][AttrSize3D];
+   typedef real (*vla)[AttrSize3D][AttrSize3D];
    vla Attr3D = ( vla )Attr;
 
    const ParInterp_t IntScheme    = amr->Par->InterpTracer;
-
-   const double _dh               = 1.0/amr->dh[lv];
 
    for (int p=0; p<NPar; p++)
    {
@@ -70,7 +92,7 @@ void Par_MapMesh2Particles ( const int lv, const int P, const double EdgeL[3],
          } // for (int d=0; d<3; d++)
 
 //       calculate new particle attribute
-         ParAttr[p] = Attr3D[ P ][ idx[2] ][ idx[1] ][ idx[0] ];
+         ParAttr[p] = Attr3D[ idx[2] ][ idx[1] ][ idx[0] ];
 
       } // PAR_INTERP_NGP
       break;
@@ -85,7 +107,7 @@ void Par_MapMesh2Particles ( const int lv, const int P, const double EdgeL[3],
          for (int d=0; d<3; d++)
          {
 //          calculate the array index of the left and right cells
-            dr      [d] = ( InterpParPos[d][p] - EdgeL[d] )*_dh + ParGhost - 0.5;
+            dr      [d] = ( InterpParPos[d][p] - EdgeL[d] )*_dh - 0.5;
             idxLR[0][d] = int( dr[d] );
             idxLR[1][d] = idxLR[0][d] + 1;
 
@@ -127,7 +149,7 @@ void Par_MapMesh2Particles ( const int lv, const int P, const double EdgeL[3],
          for (int k=0; k<2; k++)
          for (int j=0; j<2; j++)
          for (int i=0; i<2; i++) {
-            ParAttr[p] += Attr3D[ P ][ idxLR[k][2] ][ idxLR[j][1] ][ idxLR[i][0] ]
+            ParAttr[p] += Attr3D[ idxLR[k][2] ][ idxLR[j][1] ][ idxLR[i][0] ]
                *Frac[i][0]*Frac[j][1]*Frac[k][2];
          }
 
@@ -144,7 +166,7 @@ void Par_MapMesh2Particles ( const int lv, const int P, const double EdgeL[3],
          for (int d=0; d<3; d++)
          {
 //          calculate the array index of the left, central, and right cells
-            dr       [d] = ( InterpParPos[d][p] - EdgeL[d] )*_dh + ParGhost;
+            dr       [d] = ( InterpParPos[d][p] - EdgeL[d] )*_dh;
             idxLCR[1][d] = int( dr[d] );
             idxLCR[0][d] = idxLCR[1][d] - 1;
             idxLCR[2][d] = idxLCR[1][d] + 1;
@@ -189,7 +211,7 @@ void Par_MapMesh2Particles ( const int lv, const int P, const double EdgeL[3],
          for (int j=0; j<3; j++)
          for (int i=0; i<3; i++) {
 
-            ParAttr[p] += Attr3D[ P ][ idxLCR[k][2] ][ idxLCR[j][1] ][ idxLCR[i][0] ]
+            ParAttr[p] += Attr3D[ idxLCR[k][2] ][ idxLCR[j][1] ][ idxLCR[i][0] ]
                *Frac[i][0]*Frac[j][1]*Frac[k][2];
 
          }
@@ -209,7 +231,7 @@ void Par_MapMesh2Particles ( const int lv, const int P, const double EdgeL[3],
 //       calculate the nearest grid index
          for (int d=0; d<3; d++)
          {
-            idx[d] = int( ( InterpParPos[d][p] - EdgeL[d] )*_dh + ParGhost );
+            idx[d] = int( ( InterpParPos[d][p] - EdgeL[d] )*_dh );
 
 //          prevent from round-off errors (especially for NGP and TSC)
             if ( idx[d] < 1 )
@@ -244,11 +266,11 @@ void Par_MapMesh2Particles ( const int lv, const int P, const double EdgeL[3],
          for (int j=-1; j<=1; j++)
          for (int i=-1; i<=1; i++) {
 
-            deltav += (double)Attr3D[ P ][ idx[2]+k ][ idx[1]+j ][ idx[0]+i ];
+            deltav += (double)Attr3D[ idx[2]+k ][ idx[1]+j ][ idx[0]+i ];
 
          }
 
-         deltav = (double)Attr3D[ P ][ idx[2] ][ idx[1] ][ idx[0] ] - deltav/27.0;
+         deltav = (double)Attr3D[ idx[2] ][ idx[1] ][ idx[0] ] - deltav/27.0;
 
          ParAttr[p] += (real)deltav;
 

@@ -2,11 +2,11 @@
 
 #if ( defined PARTICLE && defined TRACER )
 
-void Par_MapMesh2Particles ( const int lv, const int P, const double EdgeL[3], const double EdgeR[3],
+void Par_MapMesh2Particles ( const double EdgeL[3], const double EdgeR[3], const double _dh,
                              const int AttrSize3D, const real *Attr, const int NPar,
                              real *InterpParPos[3], const real ParType[],
                              const long ParList[], bool useTracers, real ParAttr[],
-                             const int ParGhost, const bool CorrectVelocity );
+                             const bool CorrectVelocity );
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -50,6 +50,8 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
    real *ParVel[3]       = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
    real *ParTime         = amr->Par->Time;
    const real *ParType   = amr->Par->Type;
+
+   double EdgeL[3], EdgeR[3];
 
 // check
 #  ifdef COMOVING
@@ -115,6 +117,8 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
          for (int d=0; d<3; d++) {
             Vel_Temp[d] = new real[amr->patch[0][lv][PID]->NPar];
             InterpParPos[d] = new real[amr->patch[0][lv][PID]->NPar];
+            EdgeL[d] = amr->patch[0][lv][PID]->EdgeL[d] - dh*ParGhost;
+            EdgeR[d] = amr->patch[0][lv][PID]->EdgeR[d] + dh*ParGhost;
          }
 
          for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
@@ -136,18 +140,18 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
 
          } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
 
-         Par_MapMesh2Particles( lv, P, amr->patch[0][lv][PID]->EdgeL, amr->patch[0][lv][PID]->EdgeR,
-                                VelSize, VelX, amr->patch[0][lv][PID]->NPar, InterpParPos,
-                                ParType, amr->patch[0][lv][PID]->ParList, true, Vel_Temp[0],
-                                ParGhost, amr->Par->TracerVelCorr );
-         Par_MapMesh2Particles( lv, P, amr->patch[0][lv][PID]->EdgeL, amr->patch[0][lv][PID]->EdgeR,
-                                VelSize, VelY, amr->patch[0][lv][PID]->NPar, InterpParPos,
-                                ParType, amr->patch[0][lv][PID]->ParList, true, Vel_Temp[1],
-                                ParGhost, amr->Par->TracerVelCorr );
-         Par_MapMesh2Particles( lv, P, amr->patch[0][lv][PID]->EdgeL, amr->patch[0][lv][PID]->EdgeR,
-                                VelSize, VelZ, amr->patch[0][lv][PID]->NPar, InterpParPos,
-                                ParType, amr->patch[0][lv][PID]->ParList, true, Vel_Temp[2],
-                                ParGhost, amr->Par->TracerVelCorr );
+         Par_MapMesh2Particles( EdgeL, EdgeR, _dh, VelSize, VelX+P*CUBE(VelSize), 
+                                amr->patch[0][lv][PID]->NPar, InterpParPos, ParType, 
+                                amr->patch[0][lv][PID]->ParList, true, Vel_Temp[0], 
+                                amr->Par->TracerVelCorr );
+         Par_MapMesh2Particles( EdgeL, EdgeR, _dh, VelSize, VelY+P*CUBE(VelSize), 
+                                amr->patch[0][lv][PID]->NPar, InterpParPos, ParType, 
+                                amr->patch[0][lv][PID]->ParList, true, Vel_Temp[1], 
+                                amr->Par->TracerVelCorr );
+         Par_MapMesh2Particles( EdgeL, EdgeR, _dh, VelSize, VelZ+P*CUBE(VelSize), 
+                                amr->patch[0][lv][PID]->NPar, InterpParPos, ParType,
+                                amr->patch[0][lv][PID]->ParList, true, Vel_Temp[2], 
+                                amr->Par->TracerVelCorr );
 
 //       5. update particles
 
@@ -197,18 +201,18 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
          if ( !mapOnly && amr->Par->IntegTracer == TRACER_INTEG_RK2 )
          {
 
-            Par_MapMesh2Particles( lv, P, amr->patch[0][lv][PID]->EdgeL, amr->patch[0][lv][PID]->EdgeR,
-                                   VelSize, VelX, amr->patch[0][lv][PID]->NPar, InterpParPos,
-                                   ParType, amr->patch[0][lv][PID]->ParList, true, Vel_Temp[0],
-                                   ParGhost, amr->Par->TracerVelCorr );
-            Par_MapMesh2Particles( lv, P, amr->patch[0][lv][PID]->EdgeL, amr->patch[0][lv][PID]->EdgeR,
-                                   VelSize, VelY, amr->patch[0][lv][PID]->NPar, InterpParPos,
-                                   ParType, amr->patch[0][lv][PID]->ParList, true, Vel_Temp[1],
-                                   ParGhost, amr->Par->TracerVelCorr );
-            Par_MapMesh2Particles( lv, P, amr->patch[0][lv][PID]->EdgeL, amr->patch[0][lv][PID]->EdgeR,
-                                   VelSize, VelZ, amr->patch[0][lv][PID]->NPar, InterpParPos,
-                                   ParType, amr->patch[0][lv][PID]->ParList, true, Vel_Temp[2],
-                                   ParGhost, amr->Par->TracerVelCorr );
+            Par_MapMesh2Particles( EdgeL, EdgeR, _dh, VelSize, VelX+P*CUBE(VelSize), 
+                                   amr->patch[0][lv][PID]->NPar, InterpParPos, ParType, 
+                                   amr->patch[0][lv][PID]->ParList, true, Vel_Temp[0], 
+                                   amr->Par->TracerVelCorr );
+            Par_MapMesh2Particles( EdgeL, EdgeR, _dh, VelSize, VelY+P*CUBE(VelSize), 
+                                   amr->patch[0][lv][PID]->NPar, InterpParPos, ParType, 
+                                   amr->patch[0][lv][PID]->ParList, true, Vel_Temp[1], 
+                                   amr->Par->TracerVelCorr );
+            Par_MapMesh2Particles( EdgeL, EdgeR, _dh, VelSize, VelZ+P*CUBE(VelSize), 
+                                   amr->patch[0][lv][PID]->NPar, InterpParPos, ParType,
+                                   amr->patch[0][lv][PID]->ParList, true, Vel_Temp[2], 
+                                   amr->Par->TracerVelCorr );
 
             for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++) {
 
