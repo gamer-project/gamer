@@ -156,7 +156,6 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                  --> for LOAD_BALANCE only
 //                NPar_Escp       : Number of particles escaping from this patch
 //                ParList_Escp    : List recording the IDs of all particles escaping from this patch
-//                libyt_GID       : GID in libyt.
 //
 // Method      :  patch_t         : Constructor
 //               ~patch_t         : Destructor
@@ -246,10 +245,6 @@ struct patch_t
    int    NPar_Escp[26];
    long  *ParList_Escp[26];
 
-#  endif
-
-#  ifdef SUPPORT_LIBYT
-   long   libyt_GID;
 #  endif
 
 

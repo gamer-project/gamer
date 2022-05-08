@@ -4,17 +4,11 @@
 
 // call libyt API
 void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchLocalLv);
-void YT_AddLocalGrid( const int *GID_Offset, const int *GID_LvStart, const int (*NPatchAllRank)[NLEVEL], int NField, yt_field *FieldList);
+void YT_AddLocalGrid( const int *GID_LvStart, const int (*NPatchAllRank)[NLEVEL], int NField, yt_field *FieldList);
 
 #ifdef LIBYT_USE_PATCH_GROUP
 
 void DerivedFuncWithName_PatchGroup(int list_len, long *list_gid, char *field, yt_array *data_array);
-
-#ifdef PARTICLE
-// get the particle attribute in patch group, since we only have one type of particle "io"
-// we only need one function.
-void Get_ParticleAttribute_PatchGroup(int list_len, long *list_gid, char *attr, yt_array *data_array);
-#endif
 
 #else  // #ifdef LIBYT_USE_PATCH_GROUP
 
@@ -29,13 +23,14 @@ void MagZ_DerivedFunc(int list_len, long *list_gid, yt_array *data_array);
 void Temperature_DerivedFunc(int list_len, long *list_gid, yt_array *data_array);
 #endif
 
+#endif  // #ifdef LIBYT_USE_PATCH_GROUP
+
 #ifdef PARTICLE
 // get the particle attribute, since we only have one type of particle "io"
 // we only need one function.
 void Get_ParticleAttribute(int list_len, long *list_gid, char *attr, yt_array *data_array);
 #endif
 
-#endif  // #ifdef LIBYT_USE_PATCH_GROUP
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -64,7 +59,7 @@ void YT_Inline()
 // 1. gather the number of patches at different MPI ranks, calculate number of local patches
 //    and set the corresponding GID offset
    int (*NPatchAllRank)[NLEVEL] = new int [MPI_NRank][NLEVEL];
-   int NPatchLocal[NLEVEL], NPatchAllLv=0, NPatchLocalLv=0, GID_Offset[NLEVEL], GID_LvStart[NLEVEL];
+   int NPatchLocal[NLEVEL], NPatchAllLv=0, NPatchLocalLv=0, GID_LvStart[NLEVEL];
 
    for (int lv=0; lv<NLEVEL; lv++)
    {
@@ -76,23 +71,16 @@ void YT_Inline()
 
    for (int lv=0; lv<NLEVEL; lv++)
    {
-      GID_Offset[lv] = 0;
+      // set YT_GID_Offset for searching GID in derived function and particle get attribute function.
+      YT_GID_Offset[lv] = 0;
 
-      for (int r=0; r<MPI_Rank; r++)      GID_Offset[lv] += NPatchAllRank[r][lv];
+      for (int r=0; r<MPI_Rank; r++)      YT_GID_Offset[lv] += NPatchAllRank[r][lv];
 
-      for (int FaLv=0; FaLv<lv; FaLv++)   GID_Offset[lv] += NPatchTotal[FaLv];
+      for (int FaLv=0; FaLv<lv; FaLv++)   YT_GID_Offset[lv] += NPatchTotal[FaLv];
 
       NPatchAllLv += NPatchTotal[lv];
 
       GID_LvStart[lv] = ( lv == 0 ) ? 0 : GID_LvStart[lv-1] + NPatchTotal[lv-1];
-
-      // set YT_GID_Offset for searching GID in derived function and particle get attribute function.
-#ifdef LIBYT_USE_PATCH_GROUP
-      if (GID_Offset[lv] % 8 != 0) Aux_Error( ERROR_INFO, "Building search gid YT_GID_Offset in libyt failed !!\n" );
-      YT_GID_Offset[lv] = GID_Offset[lv] / 8;
-#else
-      YT_GID_Offset[lv] = GID_Offset[lv];
-#endif
    }
 
 
@@ -241,16 +229,12 @@ void YT_Inline()
    ParticleList[0].coor_z   = "ParPosZ";
 
    // Set get attribute function
-#  ifdef LIBYT_USE_PATCH_GROUP
-   ParticleList[0].get_attr = Get_ParticleAttribute_PatchGroup;
-#  else
    ParticleList[0].get_attr = Get_ParticleAttribute;
-#  endif // #ifdef LIBYT_USE_PATCH_GROUP
 
 #  endif // #ifdef PARTICLE
 
 // 4. prepare local patches for libyt
-   YT_AddLocalGrid( GID_Offset, GID_LvStart, NPatchAllRank, NField, FieldList);
+   YT_AddLocalGrid( GID_LvStart, NPatchAllRank, NField, FieldList);
 
 // 5. perform yt inline analysis
    if ( yt_inline_argument( "yt_inline_inputArg", 1, "\'Dens\'" ) != YT_SUCCESS )    Aux_Error( ERROR_INFO, "yt_inline_inputArg() failed !!\n" );

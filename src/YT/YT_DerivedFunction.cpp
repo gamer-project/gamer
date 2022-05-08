@@ -1,6 +1,9 @@
 #include "GAMER.h"
 
 #ifdef SUPPORT_LIBYT
+
+void YT_GetPID(long &gid, int *level, int *PID);
+
 #ifdef LIBYT_USE_PATCH_GROUP
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Fields_DerivedFuncWithName_PatchGroup
@@ -63,27 +66,12 @@ void DerivedFuncWithName_PatchGroup(int list_len, long *list_gid, char *field, y
     // loop through list_gid and fill in data.
     for(int lid=0; lid<list_len; lid++){
         // parse level and PID0
-        int level = 0;
-        int PID0;
-        for(int lv=1; lv<NLEVEL; lv++){
-            if( list_gid[lid] < YT_GID_Offset[lv] )  break;
-            level = lv;
-        }
-        for(int PID=0; PID<(amr->NPatchComma[level][1]); PID+=8){
-            if ( amr->patch[0][level][PID]->libyt_GID == list_gid[lid] ){
-                PID0 = PID;
-                break;
-            }
-        }
+        int level = 0, PID0 = 0;
+        YT_GetPID( list_gid[lid], &level, &PID0 );
 
         // generate data in patch.
-#ifdef FLOAT8 // typedef double real
         Prepare_PatchData(level, Time[0], (real*) data_array[lid].data_ptr, NULL, 0, 1, &PID0, gamer_fieldBIdx, _NONE, INT_NONE, INT_NONE,
                           UNIT_PATCHGROUP, NSIDE_00, false, FluBC, BC_POT_NONE, -1.0, -1.0, -1.0, -1.0, false);
-#else // #ifdef FLOAT8
-        Prepare_PatchData(level, Time[0], (real*) data_array[lid].data_ptr, NULL, 0, 1, &PID0, gamer_fieldBIdx, _NONE, INT_NONE, INT_NONE,
-                          UNIT_PATCHGROUP, NSIDE_00, false, FluBC, BC_POT_NONE, -1.0, -1.0, -1.0, -1.0, false);
-#endif // #ifdef FLOAT8
     }
 }
 

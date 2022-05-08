@@ -30,7 +30,7 @@ void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchL
 
    param_yt.frontend                = "gamer";           // simulation frontend
    if ( strcmp(YT_FIG_BASENAME, "") != 0 )
-       param_yt.fig_basename = YT_FIG_BASENAME;          // figure base name, use default is not set (default=Fig%09d)
+       param_yt.fig_basename = YT_FIG_BASENAME;          // figure base name, use default if not set (default=Fig%09d)
 
    param_yt.length_unit             = UNIT_L;            // units are in cgs
    param_yt.mass_unit               = UNIT_M;
@@ -105,7 +105,11 @@ void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchL
 #  if ( MODEL == HYDRO )
    const double gamma = (double) GAMMA;
    const double mu = (double) MOLECULAR_WEIGHT;
+#  ifdef SRHD
+   const int srhd = 1;
+#  else
    const int srhd = 0;
+#  endif
    if (yt_add_user_parameter_double("gamma", 1, &gamma) != YT_SUCCESS )  Aux_Error( ERROR_INFO, "yt_add_user_parameter() add GAMMA failed !!\n" );
    if (yt_add_user_parameter_double("mu", 1, &mu) != YT_SUCCESS )  Aux_Error( ERROR_INFO, "yt_add_user_parameter() add MOLECULAR_WEIGHT failed !!\n" );
    if (yt_add_user_parameter_int("srhd", 1, &srhd) != YT_SUCCESS ) Aux_Error( ERROR_INFO, "yt_add_user_parameter() add srhd failed !!\n" );
