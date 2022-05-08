@@ -15,9 +15,9 @@ void YT_GetPID(long &gid, int *level, int *PID);
 //                4. libyt asks field through yt_field *FieldList you passed in, so we should convert
 //                   to the one gamer understands. Try in this order :
 //                   (1) GetFieldIndex: Will get fields defined in FieldLabel.
-//                   (2) PotLabel:      Try PotLabel if supports GRAVITY.
-//                   (3) CCMagLabel:    Try CCMagLabel if supports MHD.
-//                   (3) Temp:          Try find Temp if supports MODEL == HYDRO.
+//                   (2) PotLabel     : Try PotLabel if supports GRAVITY.
+//                   (3) CCMagLabel   : Try CCMagLabel if supports MHD.
+//                   (3) Hydro        : Try find these fields if supports MODEL == HYDRO.
 //
 // Parameter   :  list_len    : length of list_gid
 //                list_gid    : a list of grid id to prepare.
