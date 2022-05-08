@@ -73,31 +73,50 @@ void YT_AddLocalGrid( const int *GID_LvStart, const int (*NPatchAllRank)[NLEVEL]
       const int MagSg = amr->MagSg[lv];
 #     endif
 
+#     ifdef LIBYT_USE_PATCH_GROUP
       for (int PID=0; PID<(amr->NPatchComma[lv][1]); PID+=8)
+#     else
+      for (int PID=0; PID<(amr->NPatchComma[lv][1]); PID++)
+#     endif // #ifdef LIBYT_USE_PATCH_GROUP
       {
          const int GID = PID + YT_GID_Offset[lv];
 
          for (int d=0; d<3; d++)
          {
+#           ifdef LIBYT_USE_PATCH_GROUP
             YT_Grids[LID].left_edge [d] = amr->patch[0][lv][PID    ]->EdgeL[d];
             YT_Grids[LID].right_edge[d] = amr->patch[0][lv][PID + 7]->EdgeR[d];
             YT_Grids[LID].grid_dimensions[d] = PATCH_SIZE * 2;
+#           else
+            YT_Grids[LID].left_edge [d] = amr->patch[0][lv][PID]->EdgeL[d];
+            YT_Grids[LID].right_edge[d] = amr->patch[0][lv][PID]->EdgeR[d];
+            YT_Grids[LID].grid_dimensions[d] = PATCH_SIZE;
+#           endif // #ifdef LIBYT_USE_PATCH_GROUP
          }
 
 #        ifdef PARTICLE
-         // counting particle number inside this grid patch
+#        ifdef LIBYT_USE_PATCH_GROUP
+         // input particle num in this patch group.
          long particle_count = 0;
          for(int i=PID; i<PID+8; i++){
              particle_count += (long) amr->patch[0][lv][i]->NPar;
          }
-         // input particle num in this grid patch
          YT_Grids[LID].particle_count_list[0] = particle_count;
-#        endif
+#        else
+         // input particle num in this grid
+         YT_Grids[LID].particle_count_list[0] = (long) amr->patch[0][lv][PID]->NPar;
+#        endif // #ifdef LIBYT_USE_PATCH_GROUP
+#        endif // #ifdef PARTICLE
 
+#        ifdef LIBYT_USE_PATCH_GROUP
          YT_Grids[LID].id     = (long) GID / 8;
+#        else
+         YT_Grids[LID].id     = (long) GID;
+#        endif // #ifdef LIBYT_USE_PATCH_GROUP
+
          YT_Grids[LID].level  = lv;
 
-         // getting parent's id, and then divided by 8, so that it becomes grid patch's id.
+         // getting parent's id
          int FaPID = amr->patch[0][lv][PID]->father;
          int FaLv = lv - 1;
 
@@ -110,8 +129,12 @@ void YT_AddLocalGrid( const int *GID_LvStart, const int (*NPatchAllRank)[NLEVEL]
             YT_Grids[LID].parent_id = -1;
          }
          else if ( FaPID < (amr->NPatchComma[FaLv][1]) ){
-            // father patch is a real patch
+            // has father patch
+#           ifdef LIBYT_USE_PATCH_GROUP
             YT_Grids[LID].parent_id = (long) (FaPID + YT_GID_Offset[FaLv]) / 8;
+#           else
+            YT_Grids[LID].parent_id = (long) (FaPID + YT_GID_Offset[FaLv]);
+#           endif // #ifdef LIBYT_USE_PATCH_GROUP
          }
          else{
             // father patch is a buffer patch (only possible in LOAD_BALANCE)
@@ -137,8 +160,64 @@ void YT_AddLocalGrid( const int *GID_LvStart, const int (*NPatchAllRank)[NLEVEL]
             }
 #           endif
 
+#           ifdef LIBYT_USE_PATCH_GROUP
             YT_Grids[LID].parent_id = (long) (LBIdxList_Sort_IdxTable[FaLv][MatchIdx] + GID_LvStart[FaLv]) / 8;
+#           else
+            YT_Grids[LID].parent_id = (long) (LBIdxList_Sort_IdxTable[FaLv][MatchIdx] + GID_LvStart[FaLv]);
+#           endif // #ifdef LIBYT_USE_PATCH_GROUP
          }
+
+#        ifndef LIBYT_USE_PATCH_GROUP
+         // load patch data to libyt if not use LIBYT_USE_PATCH_GROUP
+         for (int v = 0; v < NCOMP_TOTAL; v++){
+             YT_Grids[LID].field_data[v].data_ptr = amr->patch[FluSg][lv][PID]->fluid[v];
+         }
+
+#        ifdef GRAVITY
+         // find field index of GRAVITY
+         int PotIdx = 0;
+         for ( int v = 0; v < NField; v++ ){
+             if ( strcmp(FieldList[v].field_name, PotLabel) == 0 ){
+                 PotIdx = v;
+                 break;
+             }
+         }
+         // load Pote patch data to libyt
+         YT_Grids[LID].field_data[PotIdx].data_ptr = amr->patch[PotSg][lv][PID]->pot;
+#        endif // #ifdef GRAVITY
+
+#        ifdef MHD
+         // find field index of CCMagX
+         int MHDIdx = 0;
+         for ( int v = 0; v < NField; v++ ){
+             if ( strcmp(FieldList[v].field_name, "CCMagX") == 0 ){
+                 MHDIdx = v;
+                 break;
+             }
+         }
+
+         for (int v = 0; v < NCOMP_MAG; v++){
+             // input the data pointer
+             YT_Grids[LID].field_data[ MHDIdx + v ].data_ptr = amr->patch[MagSg][lv][PID]->magnetic[v];
+
+             // input the field dimension, since MHD has different dimension.
+             for (int d = 0; d < 3; d++){
+                 YT_Grids[LID].field_data[ MHDIdx + v ].data_dimensions[d] = PATCH_SIZE;
+
+                 if ( strcmp(FieldList[ MHDIdx + v ].field_name, "CCMagX") == 0 && d == 2) {
+                     YT_Grids[LID].field_data[ MHDIdx + v ].data_dimensions[d] = PATCH_SIZE + 1;
+                 }
+                 else if ( strcmp(FieldList[ MHDIdx + v ].field_name, "CCMagY") == 0 && d == 1) {
+                     YT_Grids[LID].field_data[ MHDIdx + v ].data_dimensions[d] = PATCH_SIZE + 1;
+                 }
+                 else if ( strcmp(FieldList[ MHDIdx + v ].field_name, "CCMagZ") == 0 && d == 0) {
+                     YT_Grids[LID].field_data[ MHDIdx + v ].data_dimensions[d] = PATCH_SIZE + 1;
+                 }
+             }
+         }
+#        endif // #ifdef MHD
+
+#        endif // #ifndef LIBYT_USE_PATCH_GROUP
          
          LID = LID + 1;
       }
