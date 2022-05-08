@@ -15,13 +15,13 @@ if len(sys.argv) !=5:
 ####
 
 yt.enable_parallelism()
-radius_range     = 45.                         # radius range for sphere covering the particles, in unit of kpc 
+radius_range     = 45.                         # radius range for sphere covering the particles, in unit of kpc
 N_BIN            = 16
 field            = ("gamer","number_density")
-data_saving_path = './profile_for_test/'
+data_saving_path = '.'
 r_min, r_max     = 0.4, 40.0                   # minimum and maximum for computing the particle number density profile
 
-PREFIX = sys.argv[1]                           # path for snapshot        
+PREFIX = sys.argv[1]                           # path for snapshot
 START_ID = np.int(sys.argv[2])                 # start ID for snapshot
 END_ID = np.int(sys.argv[3])                   # end ID for snapshot
 SEPARATION = np.int(sys.argv[4])               # separatioon between two snapshots
@@ -37,7 +37,7 @@ for ds in ts.piter():
     sampling_type="cell",
     units="1/cm**3",)
 ####
-    
+
 #### compute profile ####
     source = ds.sphere( "m", (radius_range, "kpc"))
     prof = yt.create_profile(source, "radius", field, n_bins=N_BIN, units = {'radius': 'kpc',field: '1/cm**3'}, extrema = {'radius': ((r_min, 'kpc'), (r_max, 'kpc'))}, weight_field='cell_volume')
