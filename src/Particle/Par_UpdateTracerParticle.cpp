@@ -51,8 +51,6 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
    real *ParTime         = amr->Par->Time;
    const real *ParType   = amr->Par->Type;
 
-   double EdgeL[3], EdgeR[3];
-
 // check
 #  ifdef COMOVING
 #  error : ERROR : does not support COMOVING because time-step has not been converted to comoving !!
@@ -111,6 +109,8 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
       {
 //       skip patches with no tracer particles
          if ( amr->patch[0][lv][PID]->NParType[(long)PTYPE_TRACER] == 0 ) continue;
+
+         double EdgeL[3], EdgeR[3];
 
          real** Vel_Temp = new real*[3];
          real** InterpParPos = new real*[3];
