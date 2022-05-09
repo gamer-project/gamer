@@ -170,7 +170,7 @@ void YT_Inline()
    FieldList[EoSIdx + 1].field_display_name = "Pressure";
 
 #  if ( EOS == EOS_NUCLEAR )
-   FieldList[EoSIdx + 2].field_unit         = "code_mass / (code_temperature*code_length**(4)*code_time**(2))";
+   FieldList[EoSIdx + 2].field_unit         = "code_mass*code_length**(2) / (code_temperature*code_time**(2))";
 #  endif // #if ( EOS == EOS_NUCLEAR )
 #  if ( EOS == EOS_GAMMA )
    char EntropyUnit[100];
