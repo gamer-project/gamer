@@ -2,7 +2,7 @@
 
 #ifdef SUPPORT_LIBYT
 
-void YT_GetPID(long &gid, int *level, int *PID);
+void YT_GetPID(const long gid, int *level, int *PID);
 
 #ifdef PARTICLE
 
@@ -28,7 +28,7 @@ void Get_ParticleAttribute(int list_len, long *list_gid, char *attr, yt_array *d
     // loop through list_gid
     for(int lid=0; lid<list_len; lid++){
         // Parse level and pid from gid
-        int level = 0, PID0 = 0;
+        int level, PID0;
         YT_GetPID( list_gid[lid], &level, &PID0 );
 
         // write data

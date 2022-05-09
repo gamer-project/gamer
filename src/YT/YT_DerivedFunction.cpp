@@ -2,7 +2,7 @@
 
 #ifdef SUPPORT_LIBYT
 
-void YT_GetPID(long &gid, int *level, int *PID);
+void YT_GetPID(const long gid, int *level, int *PID);
 
 #ifdef LIBYT_USE_PATCH_GROUP
 //-------------------------------------------------------------------------------------------------------
@@ -68,7 +68,7 @@ void DerivedFuncWithName_PatchGroup(int list_len, long *list_gid, char *field, y
     // loop through list_gid and fill in data.
     for(int lid=0; lid<list_len; lid++){
         // parse level and PID0
-        int level = 0, PID0 = 0;
+        int level, PID0;
         YT_GetPID( list_gid[lid], &level, &PID0 );
 
         // generate data in patch.
