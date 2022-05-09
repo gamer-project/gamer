@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include <iostream>
 
 #ifdef SUPPORT_LIBYT
 
