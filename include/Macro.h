@@ -407,11 +407,11 @@
 #ifdef PARTICLE
 
 // number of built-in particle attributes
-// (1) mass, position*3, velocity*3, and time
-#  define PAR_NATT_BUILTIN0   8
+// (1) mass, position*3, velocity*3, time, and type
+#  define PAR_NATT_BUILTIN0   9
 
 // acceleration*3 when STORE_PAR_ACC is adopted
-# ifdef STORE_PAR_ACC
+# if ( defined STORE_PAR_ACC && defined GRAVITY )
 #  define PAR_NATT_BUILTIN1   3
 # else
 #  define PAR_NATT_BUILTIN1   0
@@ -452,6 +452,7 @@
 #  define  PAR_VELX           4
 #  define  PAR_VELY           5
 #  define  PAR_VELZ           6
+#  define  PAR_TYPE           7
 
 // always put acceleration and time at the END of the particle attribute list
 // --> make it easier to discard them when storing data on disk (see Output_DumpData_Total(_HDF5).cpp)
@@ -472,6 +473,7 @@
 #  define _PAR_VELX           ( 1L << PAR_VELX )
 #  define _PAR_VELY           ( 1L << PAR_VELY )
 #  define _PAR_VELZ           ( 1L << PAR_VELZ )
+#  define _PAR_TYPE           ( 1L << PAR_TYPE )
 # ifdef STORE_PAR_ACC
 #  define _PAR_ACCX           ( 1L << PAR_ACCX )
 #  define _PAR_ACCY           ( 1L << PAR_ACCY )
@@ -491,6 +493,20 @@
 #  define _TOTAL_DENS         ( _PAR_DENS )
 # else
 #  define _TOTAL_DENS         ( 1L << (NCOMP_TOTAL+NDERIVE+2) )
+# endif
+
+// particle type macros
+
+// number of particle types MUST be 4 for now
+#  define  PAR_NTYPE          4
+
+#  define  PTYPE_TRACER          (real)0
+#  define  PTYPE_GENERIC_MASSIVE (real)1
+#  define  PTYPE_DARK_MATTER     (real)2
+#  define  PTYPE_STAR            (real)3
+
+# ifdef GRAVITY
+#  define MASSIVE_PARTICLES
 # endif
 
 #else // #ifdef PARTICLE
@@ -654,12 +670,12 @@
 #  define USG_NXT_F     ( 1 )                                     // still define USG_NXT_F/G since many function prototypes
 #  define USG_NXT_G     ( 1 )                                     // require it
 #  endif
+#  ifdef PARTICLE
+#  define RHOEXT_NXT    ( PS1 + 2*RHOEXT_GHOST_SIZE )             // array rho_ext of each patch
+#  endif
 #else
 #  define GRA_NXT       ( 1 )                                     // still define GRA_NXT   ...
 #  define USG_NXT_F     ( 1 )                                     // still define USG_NXT_F ...
-#endif
-#ifdef PARTICLE
-#  define RHOEXT_NXT    ( PS1 + 2*RHOEXT_GHOST_SIZE )             // array rho_ext of each patch
 #endif
 #  define SRC_NXT       ( PS1 + 2*SRC_GHOST_SIZE )                // use patch as the unit
 #  define SRC_NXT_P1    ( SRC_NXT + 1 )

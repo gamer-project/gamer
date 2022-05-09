@@ -39,8 +39,10 @@ SIMU_OPTION += -DMODEL=HYDRO
 #SIMU_OPTION += -DGRAVITY
 
 # enable particles
-# --> must enable GRAVITY
 #SIMU_OPTION += -DPARTICLE
+
+# enable tracer particles
+#SIMU_OPTION += -DTRACER
 
 # support Grackle, a chemistry and radiative cooling library
 # --> must set NCOMP_PASSIVE_USER according to the primordial chemistry network set by GRACKLE_PRIMORDIAL
@@ -580,7 +582,7 @@ CPU_FILE    += Par_Init_ByFunction.cpp  Par_Output_TextFile.cpp  Par_Output_Bina
                Par_Aux_InitCheck.cpp  Par_Aux_Record_ParticleCount.cpp  Par_PassParticle2Son_MultiPatch.cpp \
                Par_Synchronize.cpp  Par_PredictPos.cpp  Par_Init_ByFile.cpp  Par_Init_Attribute.cpp \
                Par_AddParticleAfterInit.cpp  Par_PassParticle2Son_SinglePatch.cpp  Par_EquilibriumIC.cpp \
-               Par_ScatterParticleData.cpp
+               Par_ScatterParticleData.cpp Par_UpdateTracerParticle.cpp Par_MapMesh2Particles.cpp
 
 vpath %.cu     Particle/GPU
 vpath %.cpp    Particle/CPU  Particle

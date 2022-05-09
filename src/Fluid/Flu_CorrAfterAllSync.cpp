@@ -116,7 +116,7 @@ void Flu_CorrAfterAllSync()
 
 
 // 4. recalculate particle acceleration
-#  if ( defined PARTICLE  &&  defined STORE_PAR_ACC )
+#  if ( defined MASSIVE_PARTICLES  &&  defined STORE_PAR_ACC  )
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "      recalculate particle acceleration     ... " );
 
    const bool StoreAcc_Yes    = true;
@@ -128,6 +128,18 @@ void Flu_CorrAfterAllSync()
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 #  endif
 
+// 5. Update tracer particle attributes
+
+#  ifdef TRACER
+
+   if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "      update tracer particle attributes     ... " );
+
+   for (int lv=0; lv<NLEVEL; lv++)
+   Par_UpdateTracerParticle( lv, Time[lv], NULL_REAL, true );
+
+   if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+
+#  endif
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
       Aux_Message( stdout, "   %s                     ... done\n", __FUNCTION__ );

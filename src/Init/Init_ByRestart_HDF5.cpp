@@ -1353,16 +1353,18 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
             Aux_Error( ERROR_INFO, "New particle ID (%ld) >= maximum allowed value (%ld) !!\n",
                        NewParList[p], NParThisRank );
       } // for (int p=0; p<NParThisPatch )
-
+      
 //    link particles to this patch
+      const real *PType = amr->Par->Type;
 #     ifdef DEBUG_PARTICLE
       const real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
       char Comment[MAX_STRING];
       sprintf( Comment, "%s, lv %d, PID %d, GID %d, NPar %d", __FUNCTION__, lv, PID, GID, NParThisPatch );
       amr->patch[0][lv][PID]->AddParticle( NParThisPatch, NewParList, &amr->Par->NPar_Lv[lv],
-                                           ParPos, amr->Par->NPar_AcPlusInac, Comment );
+                                           PType, ParPos, amr->Par->NPar_AcPlusInac, Comment );
 #     else
-      amr->patch[0][lv][PID]->AddParticle( NParThisPatch, NewParList, &amr->Par->NPar_Lv[lv] );
+      amr->patch[0][lv][PID]->AddParticle( NParThisPatch, NewParList, &amr->Par->NPar_Lv[lv],
+                                           PType );
 #     endif
 
 //    free resource
@@ -1772,12 +1774,15 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Par_ICFormat",            &RS.Par_ICFormat,            SID, TID, NonFatal, &RT.Par_ICFormat,             1, NonFatal );
    LoadField( "Par_ICMass",              &RS.Par_ICMass,              SID, TID, NonFatal, &RT.Par_ICMass,               1, NonFatal );
    LoadField( "Par_Interp",              &RS.Par_Interp,              SID, TID, NonFatal, &RT.Par_Interp,               1, NonFatal );
+   LoadField( "Par_InterpTracer",        &RS.Par_InterpTracer,        SID, TID, NonFatal, &RT.Par_InterpTracer,         1, NonFatal );
    LoadField( "Par_Integ",               &RS.Par_Integ,               SID, TID, NonFatal, &RT.Par_Integ,                1, NonFatal );
+   LoadField( "Par_IntegTracer",         &RS.Par_IntegTracer,         SID, TID, NonFatal, &RT.Par_IntegTracer,          1, NonFatal );
    LoadField( "Par_ImproveAcc",          &RS.Par_ImproveAcc,          SID, TID, NonFatal, &RT.Par_ImproveAcc,           1, NonFatal );
    LoadField( "Par_PredictPos",          &RS.Par_PredictPos,          SID, TID, NonFatal, &RT.Par_PredictPos,           1, NonFatal );
    LoadField( "Par_RemoveCell",          &RS.Par_RemoveCell,          SID, TID, NonFatal, &RT.Par_RemoveCell,           1, NonFatal );
    LoadField( "Opt__FreezePar",          &RS.Opt__FreezePar,          SID, TID, NonFatal, &RT.Opt__FreezePar,           1, NonFatal );
    LoadField( "Par_GhostSize",           &RS.Par_GhostSize,           SID, TID, NonFatal, &RT.Par_GhostSize,            1, NonFatal );
+   LoadField( "Par_TracerVelCorr",       &RS.Par_TracerVelCorr,       SID, TID, NonFatal, &RT.Par_TracerVelCorr,        1, NonFatal );
 #  endif
 
 // cosmology

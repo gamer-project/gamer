@@ -1280,12 +1280,12 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
-#  ifndef GRAVITY
-#     error : ERROR : currently PARTICLE must work with GRAVITY !!
+#  if ( ! defined MASSIVE_PARTICLES  &&  ! defined TRACER )
+#     error : ERROR : both MASSIVE_PARTICLES (GRAVITY) and TRACER are disabled for PARTICLE !!
 #  endif
 
 #  ifdef COMOVING
-#     error : ERROR : currently PARTICLE dost NOT support COMOVING !!
+#     error : ERROR : currently PARTICLE does NOT support COMOVING !!
 #  endif
 
 #  if ( !defined SERIAL  &&  !defined LOAD_BALANCE )
@@ -1305,6 +1305,7 @@ void Aux_Check_Parameter()
                     amr->Par->NPar_AcPlusInac, MPI_Rank );
    }
 
+#  ifdef GRAVITY
 #  ifndef STORE_POT_GHOST
    if ( amr->Par->ImproveAcc )
       Aux_Error( ERROR_INFO, "PAR_IMPROVE_ACC must work with STORE_POT_GHOST !!\n" );
@@ -1312,6 +1313,9 @@ void Aux_Check_Parameter()
 
    if ( amr->Par->ImproveAcc  &&  amr->Par->Interp == 1 )
       Aux_Error( ERROR_INFO, "PAR_IMPROVE_ACC does NOT work with PAR_INTERP == 1 (NGP) !!\n" );
+
+   if ( amr->Par->TracerVelCorr  &&  amr->Par->InterpTracer == 1 )
+      Aux_Error( ERROR_INFO, "PAR_TR_VEL_CORR does NOT work with PAR_TR_INTERP == 1 (NGP) !!\n" );
 
 #  ifndef STORE_PAR_ACC
    if ( DT__PARACC != 0.0 )
@@ -1325,7 +1329,7 @@ void Aux_Check_Parameter()
          Aux_Error( ERROR_INFO, "\"%s\" does NOT work for NX0_TOT[%d] = 2*PATCH_SIZE when periodic BC is adopted !!\n",
                     "Par_MassAssignment()", d );
    }
-
+#  endif // #ifdef GRAVITY
 
 // warning
 // ------------------------------
@@ -1345,8 +1349,10 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : STORE_POT_GHOST is useless when PAR_IMPROVE_ACC is disabled !!\n" );
 #  endif
 
+#  ifdef GRAVITY
    if ( OPT__GRA_P5_GRADIENT )
       Aux_Message( stderr, "WARNING : currently \"%s\" is not applied to particle update !!\n", "OPT__GRA_P5_GRADIENT" );
+#  endif
 
    if ( OPT__FREEZE_PAR )
       Aux_Message( stderr, "REMINDER : \"%s\" will prevent particles from being updated\n", "OPT__FREEZE_PAR" );

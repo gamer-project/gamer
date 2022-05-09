@@ -353,12 +353,15 @@ struct InputPara_t
    int    Par_ICFormat;
    double Par_ICMass;
    int    Par_Interp;
+   int    Par_InterpTracer;
    int    Par_Integ;
+   int    Par_IntegTracer;
    int    Par_ImproveAcc;
    int    Par_PredictPos;
    double Par_RemoveCell;
    int    Opt__FreezePar;
    int    Par_GhostSize;
+   int    Par_TracerVelCorr;
    char  *ParAttLabel[PAR_NATT_TOTAL];
 #  endif
 

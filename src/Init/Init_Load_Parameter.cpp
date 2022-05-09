@@ -73,17 +73,20 @@ void Init_Load_Parameter()
 // particle
 #  ifdef PARTICLE
 // do no check PAR_NPAR since it may be reset by restart
-   ReadPara->Add( "PAR_NPAR",                   &amr->Par->NPar_Active_AllRank,  -1L,              NoMin_long,    NoMax_long     );
-   ReadPara->Add( "PAR_INIT",                   &amr->Par->Init,                 -1,               1,             3              );
-   ReadPara->Add( "PAR_IC_FORMAT",              &amr->Par->ParICFormat,      PAR_IC_FORMAT_ATT_ID, 1,             2              );
-   ReadPara->Add( "PAR_IC_MASS",                &amr->Par->ParICMass,            -1.0,             NoMin_double,  NoMax_double   );
-   ReadPara->Add( "PAR_INTERP",                 &amr->Par->Interp,                PAR_INTERP_CIC,  1,             3              );
-   ReadPara->Add( "PAR_INTEG",                  &amr->Par->Integ,                 PAR_INTEG_KDK,   1,             2              );
-   ReadPara->Add( "PAR_IMPROVE_ACC",            &amr->Par->ImproveAcc,            true,            Useless_bool,  Useless_bool   );
-   ReadPara->Add( "PAR_PREDICT_POS",            &amr->Par->PredictPos,            true,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "PAR_NPAR",                   &amr->Par->NPar_Active_AllRank,  -1L,               NoMin_long,    NoMax_long     );
+   ReadPara->Add( "PAR_INIT",                   &amr->Par->Init,                 -1,                1,             3              );
+   ReadPara->Add( "PAR_IC_FORMAT",              &amr->Par->ParICFormat,      PAR_IC_FORMAT_ATT_ID,  1,             2              );
+   ReadPara->Add( "PAR_IC_MASS",                &amr->Par->ParICMass,            -1.0,              NoMin_double,  NoMax_double   );
+   ReadPara->Add( "PAR_INTERP",                 &amr->Par->Interp,                PAR_INTERP_CIC,   1,             3              );
+   ReadPara->Add( "PAR_INTEG",                  &amr->Par->Integ,                 PAR_INTEG_KDK,    1,             2              );
+   ReadPara->Add( "PAR_TR_INTERP",              &amr->Par->InterpTracer,          PAR_INTERP_TSC,   1,             3              );
+   ReadPara->Add( "PAR_TR_INTEG",               &amr->Par->IntegTracer,           TRACER_INTEG_RK2, 1,             2              );
+   ReadPara->Add( "PAR_IMPROVE_ACC",            &amr->Par->ImproveAcc,            true,             Useless_bool,  Useless_bool   );
+   ReadPara->Add( "PAR_PREDICT_POS",            &amr->Par->PredictPos,            true,             Useless_bool,  Useless_bool   );
 // do not check PAR_REMOVE_CELL since it may be reset by Init_ResetDefaultParameter()
-   ReadPara->Add( "PAR_REMOVE_CELL",            &amr->Par->RemoveCell,           -1.0,             NoMin_double,  NoMax_double   );
-   ReadPara->Add( "OPT__FREEZE_PAR",            &OPT__FREEZE_PAR,                 false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "PAR_REMOVE_CELL",            &amr->Par->RemoveCell,           -1.0,              NoMin_double,  NoMax_double   );
+   ReadPara->Add( "OPT__FREEZE_PAR",            &OPT__FREEZE_PAR,                 false,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "PAR_TR_VEL_CORR",            &amr->Par->TracerVelCorr,         false,            Useless_bool,  Useless_bool   );
 #  endif // #ifdef PARTICLE
 
 

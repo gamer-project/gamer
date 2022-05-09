@@ -1,6 +1,6 @@
 #include "GAMER.h"
 
-#ifdef PARTICLE
+#ifdef MASSIVE_PARTICLES
 
 #include "Par_EquilibriumIC.h"
 

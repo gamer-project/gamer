@@ -7,7 +7,7 @@ EXECUTABLE := GAMER_CompareData
 
 
 
-# siimulation options
+# simulation options
 #######################################################################################################
 # model: HYDRO/ELBDM
 SIMU_OPTION += -DMODEL=HYDRO

@@ -373,6 +373,20 @@ void Init_ResetParameter()
 
       PRINT_WARNING( amr->Par->GhostSize, FORMAT_INT, "for the adopted PAR_INTERP scheme" );
    }
+
+   if ( amr->Par->GhostSizeTracer < 0 )
+   {  
+      switch ( amr->Par->InterpTracer )
+      {  
+         case ( PAR_INTERP_NGP ): amr->Par->GhostSizeTracer = 1;  break;
+         case ( PAR_INTERP_CIC ): amr->Par->GhostSizeTracer = 2;  break;
+         case ( PAR_INTERP_TSC ): amr->Par->GhostSizeTracer = 2;  break;
+         default: Aux_Error( ERROR_INFO, "unsupported particle interpolation scheme !!\n" );
+      }
+
+      PRINT_WARNING( amr->Par->GhostSizeTracer, FORMAT_INT, "for the adopted PAR_TR_INTERP scheme" );
+   }
+
 #  endif // #ifdef PARTICLE
 
 
