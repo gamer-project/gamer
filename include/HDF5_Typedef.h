@@ -116,6 +116,10 @@ struct Makefile_t
    int Laohu;
    int SupportHDF5;
    int SupportGSL;
+   int SupportLibYT;
+#  ifdef SUPPORT_LIBYT
+   int LibYTUsePatchGroup;
+#  endif
    int SupportGrackle;
    int RandomNumber;
 

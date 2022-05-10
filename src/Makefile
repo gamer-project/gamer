@@ -211,7 +211,7 @@ SIMU_OPTION += -DOPENMP
 # support yt inline analysis
 #SIMU_OPTION += -DSUPPORT_LIBYT
 
-# use patch group as unit in libyt, this will speed up inline-analysis, but will increase memory consumption
+# use patch group as the unit in libyt; this will speed up inline-analysis but increase memory consumption
 # --> must enable SUPPORT_LIBYT
 #SIMU_OPTION += -DLIBYT_USE_PATCH_GROUP
 
