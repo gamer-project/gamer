@@ -967,7 +967,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
          Prepare_PatchData_InitParticleDensityArray( lv );
 
          Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictParPos_No,
-				       NULL_REAL, SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
+                                       NULL_REAL, SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
       }
 #     endif
 
