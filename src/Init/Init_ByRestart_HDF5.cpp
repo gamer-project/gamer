@@ -1353,7 +1353,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
             Aux_Error( ERROR_INFO, "New particle ID (%ld) >= maximum allowed value (%ld) !!\n",
                        NewParList[p], NParThisRank );
       } // for (int p=0; p<NParThisPatch )
-      
+
 //    link particles to this patch
       const real *PType = amr->Par->Type;
 #     ifdef DEBUG_PARTICLE

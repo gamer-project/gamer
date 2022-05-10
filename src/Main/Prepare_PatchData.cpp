@@ -777,7 +777,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                                 Periodic_No, NULL, UnitDens_No, CheckFarAway_No, UseInputMassPos, InputMassPos );
          } // for (int t=0; t<ParMass_NPatch; t++)
       } // if ( PrepParOnlyDens || PrepTotalDens )
-#     endif // #ifdef MASSIVE_PARTICLES 
+#     endif // #ifdef MASSIVE_PARTICLES
 
 
 //    note that the total density array needs rho_ext[] of nearby patches

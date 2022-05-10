@@ -31,7 +31,7 @@ TESTPROB_ID                   18          # test problem ID [0]
 
 # code units (in cgs)
 OPT__UNIT                     1           # specify code units -> must set exactly 3 basic units below [0] ##USELESS FOR COMOVING##
-UNIT_L                        1.0         # length unit        (<=0 -> set to UNIT_V*UNIT_T or (UNIT_M/UNIT_D)^(1/3)) [1.0]	
+UNIT_L                        1.0         # length unit        (<=0 -> set to UNIT_V*UNIT_T or (UNIT_M/UNIT_D)^(1/3)) [1.0]
 UNIT_M                        1.0         # mass unit          (<=0 -> set to UNIT_D*UNIT_L^3)                        [1.0]
 UNIT_T                        1.0         # time unit          (<=0 -> set to UNIT_L/UNIT_V)                          [1.0]
 
@@ -61,7 +61,7 @@ DT__FLUID_INIT               -1.0         # dt criterion: DT__FLUID at the first
 DT__PARVEL                    0.5         # dt criterion: particle velocity safety factor [0.5]
 DT__PARVEL_MAX               -1.0         # dt criterion: maximum allowed dt from particle velocity (<0=off) [-1.0]
 DT__PARACC                    0.5         # dt criterion: particle acceleration safety factor (0=off) [0.5] ##STORE_PAR_ACC ONLY##
-DT__GRAVITY		      0.2
+DT__GRAVITY                   0.2
 DT__SYNC_PARENT_LV            0.1         # dt criterion: allow dt to adjust by (1.0+DT__SYNC_PARENT) in order to synchronize
                                           #               with the parent level (for OPT__DT_LEVEL==3 only) [0.1]
 DT__SYNC_CHILDREN_LV          0.1         # dt criterion: allow dt to adjust by (1.0-DT__SYNC_CHILDREN) in order to synchronize
@@ -130,8 +130,8 @@ OPT__FIXUP_RESTRICT           1           # correct coarse grids by averaging th
 OPT__CORR_AFTER_ALL_SYNC     -1           # apply various corrections after all levels are synchronized (see "Flu_CorrAfterAllSync"):
                                           # (-1=auto, 0=off, 1=every step, 2=before dump) [-1]
 OPT__NORMALIZE_PASSIVE        0           # ensure "sum(passive_scalar_density) == gas_density" [1]
-OPT__OVERLAP_MPI              0           # overlap MPI communication with CPU/GPU computations [0] 
-OPT__FREEZE_FLUID 	      1 	  # do not evolve fluid at all [0]##NOT SUPPORTED YET##
+OPT__OVERLAP_MPI              0           # overlap MPI communication with CPU/GPU computations [0]
+OPT__FREEZE_FLUID             1           # do not evolve fluid at all [0]##NOT SUPPORTED YET##
 OPT__RESET_FLUID              0           # reset fluid variables after each update -> edit "Flu_ResetByUser.cpp" [0]
 MIN_DENS                      0.0         # minimum mass density    (must >= 0.0) [0.0] ##HYDRO, MHD, and ELBDM ONLY##
 MIN_PRES                      1.0e-15     # minimum pressure        (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
@@ -156,7 +156,7 @@ OPT__GRA_P5_GRADIENT          0           # 5-points gradient in the Gravity sol
 OPT__SELF_GRAVITY             1           # add self-gravity [1]
 OPT__EXT_ACC                  0           # add external acceleration (0=off, 1=function, 2=table) [0] ##HYDRO ONLY##
 OPT__EXT_POT                  0           # add external potential    (0=off, 1=function, 2=table) [0]
-OPT__BC_POT		      2
+OPT__BC_POT                   2
 
 # initialization
 OPT__INIT                     1           # initialization option: (1=FUNCTION, 2=RESTART, 3=FILE->"UM_IC")

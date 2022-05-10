@@ -375,9 +375,9 @@ void Init_ResetParameter()
    }
 
    if ( amr->Par->GhostSizeTracer < 0 )
-   {  
+   {
       switch ( amr->Par->InterpTracer )
-      {  
+      {
          case ( PAR_INTERP_NGP ): amr->Par->GhostSizeTracer = 1;  break;
          case ( PAR_INTERP_CIC ): amr->Par->GhostSizeTracer = 2;  break;
          case ( PAR_INTERP_TSC ): amr->Par->GhostSizeTracer = 2;  break;

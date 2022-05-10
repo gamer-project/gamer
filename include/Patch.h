@@ -199,7 +199,7 @@ struct patch_t
    char (*de_status)[PS1][PS1];
 #  endif
 
-#  ifdef MASSIVE_PARTICLES 
+#  ifdef MASSIVE_PARTICLES
    real (*rho_ext)[RHOEXT_NXT][RHOEXT_NXT];
 #  endif
 
@@ -391,7 +391,7 @@ struct patch_t
          de_status = NULL;
 #        endif
 
-#        ifdef MASSIVE_PARTICLES 
+#        ifdef MASSIVE_PARTICLES
          rho_ext   = NULL;
 #        endif
       }
@@ -870,7 +870,7 @@ struct patch_t
    //===================================================================================
 #  ifdef DEBUG_PARTICLE
    void AddParticle( const int NNew, const long *NewList, long *NPar_Lv,
-                     const real *ParType, const real **ParPos, const long NParTot, 
+                     const real *ParType, const real **ParPos, const long NParTot,
                      const char *Comment )
 #  else
    void AddParticle( const int NNew, const long *NewList, long *NPar_Lv,
@@ -982,7 +982,7 @@ struct patch_t
    //                             --> So for NPar_Lv == NULL, one must update NPar_Lv later manually
    //                RemoveAll  : true --> remove all particle in this patch
    //===================================================================================
-   void RemoveParticle( const int NRemove, const int *RemoveList, 
+   void RemoveParticle( const int NRemove, const int *RemoveList,
                         long *NPar_Lv, const bool RemoveAll,
                         const real *ParType)
    {

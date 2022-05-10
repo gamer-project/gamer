@@ -220,7 +220,7 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
 
 //    3. remove the escaping particles (set amr->Par->NPar_Lv later due to OpenMP)
       const real *PType = amr->Par->Type;
-      amr->patch[0][lv][PID]->RemoveParticle( NPar_Remove, RemoveParList, NULL, 
+      amr->patch[0][lv][PID]->RemoveParticle( NPar_Remove, RemoveParList, NULL,
                                               RemoveAllPar_No, PType );
       delete [] RemoveParList;
 

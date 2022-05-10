@@ -65,7 +65,7 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
       Backup_NPar   = 0;
       Backup_ParID  = ( long *      )malloc(   MemSize*sizeof(long) );
       Backup_ParAtt = ( real (*)[7] )malloc( 7*MemSize*sizeof(real) );  // 7 = pos*3, vel*3, time
-   
+
    }
 
 

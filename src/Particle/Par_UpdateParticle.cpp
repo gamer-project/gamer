@@ -196,7 +196,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 
       for (int PID=PID0; PID<PID0+8; PID++)
       {
-         if ( amr->patch[0][lv][PID]->NPar - amr->patch[0][lv][PID]->NParType[ptype_tracer] > 0 ) 
+         if ( amr->patch[0][lv][PID]->NPar - amr->patch[0][lv][PID]->NParType[ptype_tracer] > 0 )
          {
             if ( UpdateStep == PAR_UPSTEP_CORR )
             {

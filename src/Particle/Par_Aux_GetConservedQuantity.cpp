@@ -86,7 +86,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
    const real *Pos[3]           = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
    const real *Mass             = amr->Par->Mass;
    const real *PType            = amr->Par->Type;
- 
+
    double Ep_ThisRank = 0.0;
    double PrepPotTime, dh, _dh, Ep_Coeff;
    int    PotSg;
@@ -265,7 +265,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                   for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                   {
                      ParID = amr->patch[0][lv][PID]->ParList[p];
-                     
+
                      if ( PType[ParID] == PTYPE_TRACER || Mass[ParID] <= 0.0 )
                         continue;
 

@@ -174,7 +174,7 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
 
 //    2-3. remove all particles in this send patch
       const real *PType = amr->Par->Type;
-      amr->patch[0][lv][PID]->RemoveParticle( NULL_INT, NULL, &amr->Par->NPar_Lv[lv], 
+      amr->patch[0][lv][PID]->RemoveParticle( NULL_INT, NULL, &amr->Par->NPar_Lv[lv],
                                               RemoveAllPar_Yes, PType );
    } // for (int t=0; t<Send_NPatchTotal; t++)
 
@@ -261,7 +261,7 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
       amr->patch[0][lv][PID]->AddParticle( NParThisPatch, NewParIDList, &amr->Par->NPar_Lv[lv],
                                            PType, ParPos, amr->Par->NPar_AcPlusInac, Comment );
 #     else
-      amr->patch[0][lv][PID]->AddParticle( NParThisPatch, NewParIDList, &amr->Par->NPar_Lv[lv], 
+      amr->patch[0][lv][PID]->AddParticle( NParThisPatch, NewParIDList, &amr->Par->NPar_Lv[lv],
                                            PType );
 #     endif
    } // for (int t=0; t<Recv_NPatchTotal; t++)

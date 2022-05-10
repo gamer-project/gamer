@@ -125,7 +125,7 @@ void Aux_GetMemInfo()
       fclose( File_Record );
 
    } // if ( MPI_Rank == 0 )
-   
+
 } // FUNCTION : Aux_GetMemInfo
 
 

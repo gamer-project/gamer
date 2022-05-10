@@ -788,7 +788,7 @@ void Output_DumpData_Total( const char *FileName )
       {
          Prepare_PatchData_InitParticleDensityArray( lv );
 
-         Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictParPos_No, 
+         Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictParPos_No,
 				       NULL_REAL, SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
       }
 #     endif
@@ -802,7 +802,7 @@ void Output_DumpData_Total( const char *FileName )
             for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
             {
 //             f1. prepare the particle density data on grids (only if there are leaf patches in this patch group)
-#              ifdef MASSIVE_PARTICLES 
+#              ifdef MASSIVE_PARTICLES
                if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE  &&  PID%8 == 0 )
                {
                   for (int PID_CheckSon=PID; PID_CheckSon<PID+8; PID_CheckSon++)
@@ -818,7 +818,7 @@ void Output_DumpData_Total( const char *FileName )
                      }
                   }
                }
-#              endif // #ifdef MASSIVE_PARTICLES 
+#              endif // #ifdef MASSIVE_PARTICLES
 
 
 //             f2. prepare the cell-centered magnetic field for leaf patches

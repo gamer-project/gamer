@@ -116,7 +116,7 @@ void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar
          const double delta_p[3] = { 0.5*amr->BoxSize[0]/(ParTest_NPar[0]+1),
                                      0.5*amr->BoxSize[1]/(ParTest_NPar[1]+1),
                                      0.5*amr->BoxSize[2]/(ParTest_NPar[2]+1) };
-         
+
          for (long kk=0; kk<ParTest_NPar[2]; kk++)
          for (long jj=0; jj<ParTest_NPar[1]; jj++)
          for (long ii=0; ii<ParTest_NPar[0]; ii++)
