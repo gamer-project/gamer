@@ -10,6 +10,35 @@
 // ****************************************************************************
 
 
+// ################################
+// ## Remove useless definitions ##
+// ################################
+#if ( MODEL == HYDRO )
+#  if ( FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
+#  undef LR_SCHEME
+#  endif
+
+#  if ( FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
+#  undef RSOLVER
+#  endif
+#endif
+
+#if ( MODEL == PAR_ONLY )
+#  undef UNSPLIT_GRAVITY
+#endif
+
+// currently we always set GPU_ARCH == NONE when GPU is off
+#ifndef GPU
+#  undef  GPU_ARCH
+#  define GPU_ARCH NONE
+#endif
+
+// currently we assume that particle acceleration is solely due to gravity
+#ifndef GRAVITY
+#  undef STORE_PAR_ACC
+#endif
+
+
 // ########################
 // ## Symbolic Constants ##
 // ########################
@@ -411,7 +440,7 @@
 #  define PAR_NATT_BUILTIN0   9
 
 // acceleration*3 when STORE_PAR_ACC is adopted
-# if ( defined STORE_PAR_ACC && defined GRAVITY )
+# ifdef STORE_PAR_ACC
 #  define PAR_NATT_BUILTIN1   3
 # else
 #  define PAR_NATT_BUILTIN1   0
@@ -482,7 +511,9 @@
 #  define _PAR_TIME           ( 1L << PAR_TIME )
 #  define _PAR_POS            ( _PAR_POSX | _PAR_POSY | _PAR_POSZ )
 #  define _PAR_VEL            ( _PAR_VELX | _PAR_VELY | _PAR_VELZ )
+# ifdef STORE_PAR_ACC
 #  define _PAR_ACC            ( _PAR_ACCX | _PAR_ACCY | _PAR_ACCZ )
+# endif
 #  define _PAR_TOTAL          (  ( 1L << PAR_NATT_TOTAL ) - 1L )
 
 // grid fields related to particles
@@ -959,31 +990,6 @@
 
 // macro converting an array index (e.g., DENS) to bitwise index (e.g., _DENS=(1L<<DENS))
 #define BIDX( idx )     ( 1L << (idx) )
-
-
-
-// ################################
-// ## Remove useless definitions ##
-// ################################
-#if ( MODEL == HYDRO )
-#  if ( FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
-#  undef LR_SCHEME
-#  endif
-
-#  if ( FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
-#  undef RSOLVER
-#  endif
-#endif
-
-#if ( MODEL == PAR_ONLY )
-#  undef UNSPLIT_GRAVITY
-#endif
-
-// currently we always set GPU_ARCH == NONE when GPU is off
-#ifndef GPU
-#  undef  GPU_ARCH
-#  define GPU_ARCH NONE
-#endif
 
 
 

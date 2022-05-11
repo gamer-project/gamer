@@ -372,7 +372,7 @@ struct Particle_t
       VelZ = Attribute[PAR_VELZ];
       Time = Attribute[PAR_TIME];
       Type = Attribute[PAR_TYPE];
-#     if ( defined STORE_PAR_ACC  &&  defined GRAVITY )
+#     ifdef STORE_PAR_ACC
       AccX = Attribute[PAR_ACCX];
       AccY = Attribute[PAR_ACCY];
       AccZ = Attribute[PAR_ACCZ];
@@ -453,7 +453,7 @@ struct Particle_t
             VelZ = Attribute[PAR_VELZ];
             Time = Attribute[PAR_TIME];
             Type = Attribute[PAR_TYPE];
-#           if ( defined STORE_PAR_ACC  &&  defined GRAVITY )
+#           ifdef STORE_PAR_ACC
             AccX = Attribute[PAR_ACCX];
             AccY = Attribute[PAR_ACCY];
             AccZ = Attribute[PAR_ACCZ];

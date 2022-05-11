@@ -56,6 +56,7 @@ void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
+
    long NPar_All = 0;
    if ( ParTest_Use_Massive ) NPar_All += 2;
    if ( ParTest_Use_Tracers ) NPar_All += ParTest_NPar[0]*ParTest_NPar[1]*ParTest_NPar[2];
@@ -64,11 +65,11 @@ void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar
       Aux_Error( ERROR_INFO, "total number of particles found [%ld] != expect [%ld] !!\n",
                  NPar_All, NPar_AllRank );
 
-   // define the particle attribute arrays
+// define the particle attribute arrays
    real *ParData_AllRank[PAR_NATT_TOTAL];
    for (int v=0; v<PAR_NATT_TOTAL; v++)   ParData_AllRank[v] = NULL;
 
-   // only the master rank will construct the initial condition
+// only the master rank will construct the initial condition
    if ( MPI_Rank == 0 ) {
 
 //    allocate memory for particle attribute arrays
@@ -106,9 +107,7 @@ void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar
             ParData_AllRank[PAR_TYPE][p] = PTYPE_GENERIC_MASSIVE;
 
             p++;
-
          }
-
       } // if ( ParTest_Use_Massive )
 
       if ( ParTest_Use_Tracers ) {
@@ -142,25 +141,23 @@ void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar
             ParData_AllRank[PAR_TYPE][p] = PTYPE_TRACER;
 
             p++;
-
          }
-
       } // if ( ParTest_Use_Tracers )
-
    } // if ( MPI_Rank == 0 )
 
-   // send particle attributes from the master rank to all ranks
+// send particle attributes from the master rank to all ranks
    Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank,
                             _PAR_MASS|_PAR_POS|_PAR_VEL|_PAR_TYPE,
                             ParData_AllRank, AllAttribute );
 
-   // synchronize all particles to the physical time on the base level
+// synchronize all particles to the physical time on the base level
    for (long p=0; p<NPar_ThisRank; p++)
       ParTime[p] = Time[0];
 
 // free resource
    if ( MPI_Rank == 0 )
       for (int v=0; v<PAR_NATT_TOTAL; v++)   delete [] ParData_AllRank[v];
+
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 

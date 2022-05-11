@@ -120,4 +120,4 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
 
 } // FUNCTION : Par_Init_ByFunction_ParEqmIC
 
-#endif // #ifdef PARTICLE
+#endif // #ifdef MASSIVE_PARTICLES

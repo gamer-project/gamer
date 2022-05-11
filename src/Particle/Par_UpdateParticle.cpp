@@ -3,6 +3,8 @@
 #ifdef PARTICLE
 
 
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_UpdateParticle
 // Description :  Update particle position and velocity at the target level
@@ -33,6 +35,7 @@
 //                   --> Particle position, velocity, and time are not modified at all
 //                   --> Use "TimeNew" to determine the target time
 //                   --> StoreAcc must be on, and UseStoredAcc must be off
+//                9. Does not update any tracer particle, which is done by Par_UpdateTracerParticle()
 //
 // Parameter   :  lv           : Target refinement level
 //                TimeNew      : Target physical time to reach (also used by PAR_UPSTEP_ACC_ONLY)
@@ -50,6 +53,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 #  ifndef GRAVITY
    return;
 #  else
+
 // do nothing when enabling OPT__FREEZE_PAR (except for storing particle acceleration)
    if ( OPT__FREEZE_PAR  &&  UpdateStep != PAR_UPSTEP_ACC_ONLY )     return;
 
@@ -190,7 +194,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
    for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
    {
 //    1. find the patch groups with target particles
-//    --> use patch group as the calculation unit since Prepare_PatchData() only work with patch group
+//    --> use patch group as the calculation unit since Prepare_PatchData() only works with patch group
 //    --> disadvantage: some patches may not have particles ... (they will be skipped later)
       GotYou = false;
 
@@ -422,7 +426,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                   idxLR[1][d] = idxLR[0][d] + 1;
 
 //                prevent from round-off errors
-//                (CIC should be clear off this issue unless round-off erros are comparable to dh)
+//                (CIC should be clear of this issue unless round-off errors are comparable to dh)
                   if ( idxLR[0][d] < 0 )
                   {
 #                    ifdef DEBUG_PARTICLE
@@ -611,7 +615,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 
    } // end of OpenMP parallel region
 
-#endif // #ifndef GRAVITY
+#  endif // #ifndef GRAVITY
 
 } // FUNCTION : Par_UpdateParticle
 

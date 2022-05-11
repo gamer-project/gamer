@@ -274,10 +274,10 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif // #ifdef GARVITY
 
 
-#ifdef PARTICLE
+#  ifdef PARTICLE
 
 // initialize particle acceleration
-#  if ( defined STORE_PAR_ACC  &&  GRAVITY )
+#  if ( defined MASSIVE_PARTICLES  &&  defined STORE_PAR_ACC )
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Calculating particle acceleration" );
 
    const bool StoreAcc_Yes    = true;
@@ -287,9 +287,9 @@ void Init_GAMER( int *argc, char ***argv )
    Par_UpdateParticle( lv, amr->PotSgTime[lv][ amr->PotSg[lv] ], NULL_REAL, PAR_UPSTEP_ACC_ONLY, StoreAcc_Yes, UseStoredAcc_No );
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Calculating particle acceleration" );
-#  endif
+#  endif // #if ( defined MASSIVE_PARTICLES  &&  defined STORE_PAR_ACC )
 
-#ifdef TRACER
+#  ifdef TRACER
 // initialize tracer particles
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Initializing tracer particles" );
 
@@ -297,9 +297,8 @@ void Init_GAMER( int *argc, char ***argv )
    Par_UpdateTracerParticle( lv, Time[lv], NULL_REAL, true );
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Initializing tracer particles" );
+#  endif // #ifdef TRACER
 
-#endif // #ifdef TRACER
-
-#endif // #ifdef PARTICLE
+#  endif // #ifdef PARTICLE
 
 } // FUNCTION : Init_GAMER

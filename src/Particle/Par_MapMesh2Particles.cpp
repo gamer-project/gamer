@@ -2,11 +2,9 @@
 
 #ifdef PARTICLE
 
-void Par_MapMesh2Particles ( const double EdgeL[3], const double EdgeR[3],
-                             const double _dh, const int AttrSize3D, const real *Attr,
-                             const int NPar, real *InterpParPos[3],
-                             const real ParType[], const long ParList[],
-                             bool useTracers, real ParAttr[], const bool CorrectVelocity )
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_MapMesh2Particles
 // Description :  Map quantities from mesh onto the particles at their positions
@@ -27,23 +25,30 @@ void Par_MapMesh2Particles ( const double EdgeL[3], const double EdgeR[3],
 //                Attr            : The input grid of values for the variable to be mapped
 //                NPar            : The number of particles belonging to this patch
 //                ParList         : The list of particles on this patch
-//                useTracers      : Whether to map to only tracer particles or only active particles
+//                UseTracers      : Whether to map to only tracer particles or only active particles
 //                ParAttr         : The array to store the mapped particle attribute
 //                CorrectVelocity : If true, particle velocities will be corrected in regions of
 //                                  discontinuous flow
+//
+// Return      :  ParAttr[]
 //-------------------------------------------------------------------------------------------------------
+void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
+                            const double _dh, const int AttrSize3D, const real *Attr,
+                            const int NPar, real *InterpParPos[3],
+                            const real ParType[], const long ParList[],
+                            const bool UseTracers, real ParAttr[], const bool CorrectVelocity )
 {
 
    typedef real (*vla)[AttrSize3D][AttrSize3D];
    vla Attr3D = ( vla )Attr;
 
-   const ParInterp_t IntScheme    = amr->Par->InterpTracer;
+   const ParInterp_t IntScheme = amr->Par->InterpTracer;
 
    for (int p=0; p<NPar; p++)
    {
       long ParID = ParList[p];
 
-      if ( useTracers )
+      if ( UseTracers )
       {
 //       skip massive particles
          if ( ParType[ParID] != PTYPE_TRACER )
@@ -140,7 +145,6 @@ void Par_MapMesh2Particles ( const double EdgeL[3], const double EdgeR[3],
             dr     [d] -= (double)idxLR[0][d];
             Frac[0][d]  = 1.0 - dr[d];
             Frac[1][d]  =       dr[d];
-
          } // for (int d=0; d<3; d++)
 
 //       calculate attribute
@@ -210,10 +214,8 @@ void Par_MapMesh2Particles ( const double EdgeL[3], const double EdgeR[3],
          for (int k=0; k<3; k++)
          for (int j=0; j<3; j++)
          for (int i=0; i<3; i++) {
-
             ParAttr[p] += Attr3D[ idxLCR[k][2] ][ idxLCR[j][1] ][ idxLCR[i][0] ]
                *Frac[i][0]*Frac[j][1]*Frac[k][2];
-
          }
 
       } // PAR_INTERP_TSC
@@ -259,25 +261,23 @@ void Par_MapMesh2Particles ( const double EdgeL[3], const double EdgeR[3],
 //       Now that we have the cell containing the particle, we compute the difference
 //       of the velocity of that cell from the mean of the 27 surrounding cells
 //       (including itself) and add this to the particle velocity
-
          double deltav = 0.0;
 
          for (int k=-1; k<=1; k++)
          for (int j=-1; j<=1; j++)
          for (int i=-1; i<=1; i++) {
-
             deltav += (double)Attr3D[ idx[2]+k ][ idx[1]+j ][ idx[0]+i ];
-
          }
 
          deltav = (double)Attr3D[ idx[2] ][ idx[1] ][ idx[0] ] - deltav/27.0;
 
          ParAttr[p] += (real)deltav;
-
       } // if ( CorrectVelocity )
 
    } // for (int p=0; p<NPar; p++)
 
 } // FUNCTION : Par_MapMesh2Particles
+
+
 
 #endif // #ifdef PARTICLE

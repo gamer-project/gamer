@@ -865,6 +865,7 @@ struct patch_t
    // Parameter   :  NNew    : Number of new particles to be added
    //                NewList : List storing the indices of new particles
    //                NPar_Lv : Pointer to amr->Par->NPar_Lv[TargetLv]
+   //                ParType : amr->Par->Type
    //                ParPos  : Particle position list             (debug only)
    //                NParTot : Total number of existing particles (debug only)
    //                Comment : Message for the debug mode         (debug only)
@@ -951,10 +952,9 @@ struct patch_t
       NPar = NPar_New;
 
 //    update the particle type number
-
       for (int p=0; p<NNew; p++) {
          const long ParID = NewList[p];
-         NParType[(long)ParType[ParID]]++;
+         NParType[ (long)ParType[ParID] ] ++;
       }
 
 //    update the particle number at the target level
@@ -982,10 +982,11 @@ struct patch_t
    //                                 may tend to update NPar_Lv at the same time
    //                             --> So for NPar_Lv == NULL, one must update NPar_Lv later manually
    //                RemoveAll  : true --> remove all particle in this patch
+   //                ParType    : amr->Par->Type
    //===================================================================================
    void RemoveParticle( const int NRemove, const int *RemoveList,
                         long *NPar_Lv, const bool RemoveAll,
-                        const real *ParType)
+                        const real *ParType )
    {
 
 //    removing all particles is easy
@@ -1006,7 +1007,7 @@ struct patch_t
          NPar        = 0;
          ParListSize = 0;
          for (int i=0; i<PAR_NTYPE; i++)
-            NParType[i] = 0;
+         NParType[i] = 0;
 
          if ( ParList != NULL )
          {

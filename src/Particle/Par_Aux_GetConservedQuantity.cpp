@@ -44,7 +44,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
    for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
    {
 //    skip inactive, massless, and tracer particles
-      if ( amr->Par->Mass[p] > 0.0 && amr->Par->Type[p] != PTYPE_TRACER)
+      if ( amr->Par->Mass[p] > (real)0.0  &&  amr->Par->Type[p] != PTYPE_TRACER )
       {
          Mass_ThisRank += amr->Par->Mass[p];
          MomX_ThisRank += amr->Par->Mass[p]*amr->Par->VelX[p];
@@ -216,7 +216,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                   {
                      ParID = amr->patch[0][lv][PID]->ParList[p];
 
-                     if ( PType[ParID] == PTYPE_TRACER || Mass[ParID] <= 0.0 )
+                     if ( PType[ParID] == PTYPE_TRACER  ||  Mass[ParID] <= (real)0.0 )
                         continue;
 
 //                   calculate the nearest grid index
@@ -266,7 +266,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                   {
                      ParID = amr->patch[0][lv][PID]->ParList[p];
 
-                     if ( PType[ParID] == PTYPE_TRACER || Mass[ParID] <= 0.0 )
+                     if ( PType[ParID] == PTYPE_TRACER  ||  Mass[ParID] <= (real)0.0 )
                         continue;
 
                      for (int d=0; d<3; d++)
@@ -278,7 +278,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                         dr      [d] -= (double)idxLR[0][d];
 
 //                      prevent from round-off errors
-//                      (CIC should be clear off this issue unless round-off erros are comparable to dh)
+//                      (CIC should be clear of this issue unless round-off errors are comparable to dh)
                         if ( idxLR[0][d] < 0 )
                         {
 #                          ifdef DEBUG_PARTICLE
@@ -330,7 +330,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                   {
                      ParID = amr->patch[0][lv][PID]->ParList[p];
 
-                     if ( PType[ParID] == PTYPE_TRACER || Mass[ParID] <= 0.0 )
+                     if ( PType[ParID] == PTYPE_TRACER  ||  Mass[ParID] <= (real)0.0 )
                         continue;
 
                      for (int d=0; d<3; d++)

@@ -58,7 +58,7 @@ void Par_Init_ByFunction_Template( const long NPar_ThisRank, const long NPar_All
 
 
 // synchronize all particles to the physical time on the base level
-// set generic particle type
+// and assign particle type
    for (long p=0; p<NPar_ThisRank; p++)
    {
       ParTime[p] = Time[0];

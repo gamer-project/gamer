@@ -41,14 +41,14 @@ void Par_Init_Attribute()
 // 1. add built-in intrinsic attributes
 //    --> must not change the following order of declaration since they must be consistent
 //        with the symbolic constants defined in Macro.h (e.g., PAR_MASS)
-   Idx_ParMass    = AddParticleAttribute( "ParMass" );
-   Idx_ParPosX    = AddParticleAttribute( "ParPosX" );
-   Idx_ParPosY    = AddParticleAttribute( "ParPosY" );
-   Idx_ParPosZ    = AddParticleAttribute( "ParPosZ" );
-   Idx_ParVelX    = AddParticleAttribute( "ParVelX" );
-   Idx_ParVelY    = AddParticleAttribute( "ParVelY" );
-   Idx_ParVelZ    = AddParticleAttribute( "ParVelZ" );
-   Idx_ParType    = AddParticleAttribute( "ParType" );
+   Idx_ParMass = AddParticleAttribute( "ParMass" );
+   Idx_ParPosX = AddParticleAttribute( "ParPosX" );
+   Idx_ParPosY = AddParticleAttribute( "ParPosY" );
+   Idx_ParPosZ = AddParticleAttribute( "ParPosZ" );
+   Idx_ParVelX = AddParticleAttribute( "ParVelX" );
+   Idx_ParVelY = AddParticleAttribute( "ParVelY" );
+   Idx_ParVelZ = AddParticleAttribute( "ParVelZ" );
+   Idx_ParType = AddParticleAttribute( "ParType" );
 
 
 // 2. add other built-in attributes
@@ -66,12 +66,12 @@ void Par_Init_Attribute()
 //    --> must also be consistent with the symbolic constant (e.g., PAR_TIME and PAR_ACC*) defined in Macro.h
 //    --> total number of attributes not to be stored on disk is set by PAR_NATT_UNSTORED
 //        --> currently including time and acceleration*3
-#  if ( defined STORE_PAR_ACC  &&  defined GRAVITY )
-   Idx_ParAccX    = AddParticleAttribute( "ParAccX" );
-   Idx_ParAccY    = AddParticleAttribute( "ParAccY" );
-   Idx_ParAccZ    = AddParticleAttribute( "ParAccZ" );
+#  ifdef STORE_PAR_ACC
+   Idx_ParAccX = AddParticleAttribute( "ParAccX" );
+   Idx_ParAccY = AddParticleAttribute( "ParAccY" );
+   Idx_ParAccZ = AddParticleAttribute( "ParAccZ" );
 #  endif
-   Idx_ParTime    = AddParticleAttribute( "ParTime" );
+   Idx_ParTime = AddParticleAttribute( "ParTime" );
 
 
 

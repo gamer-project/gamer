@@ -38,7 +38,7 @@ void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv )
 
    const bool  IncNonleaf = true;
    const real *Vel[3]     = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
-#  if ( defined STORE_PAR_ACC && defined GRAVITY )
+#  ifdef STORE_PAR_ACC
    const real *Acc[3]     = { amr->Par->AccX, amr->Par->AccY, amr->Par->AccZ };
 #  else
    const real *Acc[3]     = { NULL, NULL, NULL };
@@ -67,9 +67,14 @@ void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv )
    const bool FaSibBufPatch_No = false;
    const bool JustCountNPar_No = false;
    const bool TimingSendPar_No = false;
+#  ifdef STORE_PAR_ACC
+   const int  ParAccBIdx       = _PAR_ACC;
+#  else
+   const int  ParAccBIdx       = 0;
+#  endif
 
    if ( IncNonleaf )
-      Par_CollectParticle2OneLevel( lv, _PAR_VEL|((UseAcc)?_PAR_ACC:0)|_PAR_TYPE, PredictPos_No,
+      Par_CollectParticle2OneLevel( lv, _PAR_VEL|((UseAcc)?ParAccBIdx:0)|_PAR_TYPE, PredictPos_No,
                                     NULL_REAL, SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_No,
                                     TimingSendPar_No );
 

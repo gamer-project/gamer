@@ -43,7 +43,7 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
    if ( SyncOption != PAR_SYNC_TEMP  &&  SyncOption != PAR_SYNC_FORCE )
       Aux_Error( ERROR_INFO, "unsupported SyncOption = %d !!\n", SyncOption );
 
-#  ifndef STORE_PAR_ACC
+#  if ( defined MASSIVE_PARTICLES  &&  !defined STORE_PAR_ACC )
    if ( SyncOption == PAR_SYNC_TEMP  ||  SyncOption == PAR_SYNC_FORCE )
       Aux_Error( ERROR_INFO, "please turn on STORE_PAR_ACC in the makefile for particle synchronization !!\n" );
 #  endif
