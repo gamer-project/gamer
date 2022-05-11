@@ -90,6 +90,9 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
 //    skip inactive particles
       if ( amr->Par->Mass[p] < 0.0 )   continue;
 
+//    skip massive particles when enabling OPT__FREEZE_PAR
+      if ( OPT__FREEZE_PAR  &&  amr->Par->Type[p] != PTYPE_TRACER )  continue;
+
       if (  ! Mis_CompareRealValue( SyncTime_Real, amr->Par->Time[p], NULL, false )  )
       {
 //       backup data before synchronization
