@@ -150,7 +150,9 @@ void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv )
             for (int d=0; d<3; d++)
             {
                Vel_Copy[d] = amr->patch[0][lv][PID]->ParAtt_Copy[ PAR_VELX + d ];
+#              ifdef STORE_PAR_ACC
                Acc_Copy[d] = amr->patch[0][lv][PID]->ParAtt_Copy[ PAR_ACCX + d ];
+#              endif
             }
             Typ_Copy    = amr->patch[0][lv][PID]->ParAtt_Copy[ PAR_TYPE ];
 #           endif
