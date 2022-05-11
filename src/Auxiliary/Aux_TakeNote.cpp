@@ -220,6 +220,18 @@ void Aux_TakeNote()
 
 //    d. options in PARTICLE
 #     ifdef PARTICLE
+#     ifdef MASSIVE_PARTICLES
+      fprintf( Note, "MASSIVE_PARTICLES               ON\n" );
+#     else
+      fprintf( Note, "MASSIVE_PARTICLES               OFF\n" );
+#     endif
+
+#     ifdef TRACER
+      fprintf( Note, "TRACER                          ON\n" );
+#     else
+      fprintf( Note, "TRACER                          OFF\n" );
+#     endif
+
 #     ifdef STORE_PAR_ACC
       fprintf( Note, "STORE_PAR_ACC                   ON\n" );
 #     else
@@ -601,6 +613,7 @@ void Aux_TakeNote()
       fprintf( Note, "#define PAR_NATT_TOTAL          %d\n",      PAR_NATT_TOTAL        );
       fprintf( Note, "#define PAR_NATT_USER           %d\n",      PAR_NATT_USER         );
       fprintf( Note, "#define PAR_NATT_STORED         %d\n",      PAR_NATT_STORED       );
+      fprintf( Note, "#define PAR_NTYPE               %d\n",      PAR_NTYPE             );
 #     endif
       fprintf( Note, "#define MAX_STRING              %d\n",      MAX_STRING            );
       fprintf( Note, "#define TINY_NUMBER             %20.14e\n", TINY_NUMBER           );
@@ -725,6 +738,10 @@ void Aux_TakeNote()
       fprintf( Note, "Par->ImproveAcc                 %d\n",      amr->Par->ImproveAcc          );
       fprintf( Note, "Par->PredictPos                 %d\n",      amr->Par->PredictPos          );
       fprintf( Note, "Par->RemoveCell                 %13.7e\n",  amr->Par->RemoveCell          );
+      fprintf( Note, "Par->InterpTracer               %d\n",      amr->Par->InterpTracer        );
+      fprintf( Note, "Par->IntegTracer                %d\n",      amr->Par->IntegTracer         );
+      fprintf( Note, "Par->GhostSizeTracer            %d\n",      amr->Par->GhostSizeTracer     );
+      fprintf( Note, "Par->TracerVelCorr              %d\n",      amr->Par->TracerVelCorr       );
       fprintf( Note, "OPT__FREEZE_PAR                 %d\n",      OPT__FREEZE_PAR               );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
