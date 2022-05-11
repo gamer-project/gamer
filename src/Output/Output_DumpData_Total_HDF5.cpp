@@ -2152,7 +2152,7 @@ void FillIn_SymConst( SymConst_t &SymConst )
 
    SymConst.ParList_GrowthFactor = PARLIST_GROWTH_FACTOR;
    SymConst.ParList_ReduceFactor = PARLIST_REDUCE_FACTOR;
-#  endif
+#  endif // #ifdef PARTICLE
 
 
 #  ifdef BIT_REP_FLUX
@@ -2986,11 +2986,13 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Par_NAttStored",       HOFFSET(SymConst_t,Par_NAttStored      ), H5T_NATIVE_INT    );
+#  ifdef GRAVITY
    H5Tinsert( H5_TypeID, "RhoExt_GhostSize",     HOFFSET(SymConst_t,RhoExt_GhostSize    ), H5T_NATIVE_INT    );
+#  endif
    H5Tinsert( H5_TypeID, "Debug_Particle",       HOFFSET(SymConst_t,Debug_Particle      ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "ParList_GrowthFactor", HOFFSET(SymConst_t,ParList_GrowthFactor), H5T_NATIVE_DOUBLE );
    H5Tinsert( H5_TypeID, "ParList_ReduceFactor", HOFFSET(SymConst_t,ParList_ReduceFactor), H5T_NATIVE_DOUBLE );
-#  endif
+#  endif // #ifdef PARTICLE
 
    H5Tinsert( H5_TypeID, "BitRep_Flux",          HOFFSET(SymConst_t,BitRep_Flux         ), H5T_NATIVE_INT    );
 #  ifdef MHD

@@ -177,8 +177,8 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
 //    synchronize all particles to the physical time at the base level
       ParTime[p] = Time[0];
 
-      ParType[p] = PTYPE_STAR;
-
+//###REVISE: distinguish different particle types
+      ParType[p] = PTYPE_GENERIC_MASSIVE;
    }
 
    delete [] ParData_MyRank;

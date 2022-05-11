@@ -122,6 +122,7 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                  --> This number is independent of periodicity (because of the padded patches)
 //                LB_Idx          : Space-filling-curve index for load balance
 //                NPar            : Number of particles belonging to this leaf patch
+//                NPar_Type       : Number of different types of particles belonging to this leaf patch
 //                ParListSize     : Size of the array ParList (ParListSize can be >= NPar)
 //                ParList         : List recording the IDs of all particles belonging to this leaf real patch
 //                NPar_Copy       : Number of particles collected from other patches. There are three kinds of patches that

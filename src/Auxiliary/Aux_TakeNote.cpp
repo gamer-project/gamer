@@ -548,7 +548,7 @@ void Aux_TakeNote()
 #     ifdef PARTICLE
       fprintf( Note, "#define RHOEXT_GHOST_SIZE       %d\n",      RHOEXT_GHOST_SIZE     );
 #     endif
-#     endif
+#     endif // #ifdef GRAVITY
       fprintf( Note, "#define SRC_GHOST_SIZE          %d\n",      SRC_GHOST_SIZE        );
       fprintf( Note, "#define DER_GHOST_SIZE          %d\n",      DER_GHOST_SIZE        );
       fprintf( Note, "#define FLU_NXT                 %d\n",      FLU_NXT               );
@@ -560,7 +560,7 @@ void Aux_TakeNote()
       fprintf( Note, "#define USG_NXT_F               %d\n",      USG_NXT_F             );
       fprintf( Note, "#define USG_NXT_G               %d\n",      USG_NXT_G             );
 #     endif
-#     endif
+#     endif // #ifdef GRAVITY
 #     ifdef MASSIVE_PARTICLES
       fprintf( Note, "#define RHOEXT_NXT              %d\n",      RHOEXT_NXT          );
 #     endif

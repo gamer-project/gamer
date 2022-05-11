@@ -1618,11 +1618,13 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "Par_NAttStored",       &RS.Par_NAttStored,       SID, TID, NonFatal, &RT.Par_NAttStored,        1,    Fatal );
    else
    LoadField( "Par_NAttStored",       &RS.Par_NAttStored,       SID, TID, NonFatal, &RT.Par_NAttStored,        1, NonFatal );
+#  ifdef GRAVITY
    LoadField( "RhoExt_GhostSize",     &RS.RhoExt_GhostSize,     SID, TID, NonFatal, &RT.RhoExt_GhostSize,      1, NonFatal );
+#  endif
    LoadField( "Debug_Particle",       &RS.Debug_Particle,       SID, TID, NonFatal, &RT.Debug_Particle,        1, NonFatal );
    LoadField( "ParList_GrowthFactor", &RS.ParList_GrowthFactor, SID, TID, NonFatal, &RT.ParList_GrowthFactor,  1, NonFatal );
    LoadField( "ParList_ReduceFactor", &RS.ParList_ReduceFactor, SID, TID, NonFatal, &RT.ParList_ReduceFactor,  1, NonFatal );
-#  endif
+#  endif // #ifdef PARTICLE
 
    LoadField( "BitRep_Flux",          &RS.BitRep_Flux,          SID, TID, NonFatal, &RT.BitRep_Flux,           1, NonFatal );
 #  ifdef MHD

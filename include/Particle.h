@@ -93,6 +93,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                Pos                     : Particle position
 //                Vel                     : Particle velocity
 //                Time                    : Particle physical time
+//                Type                    : Particle type (e.g., tracer, generic, dark matter, star)
 //                Acc                     : Particle acceleration (only when STORE_PAR_ACC is on)
 //
 // Method      :  Particle_t        : Constructor

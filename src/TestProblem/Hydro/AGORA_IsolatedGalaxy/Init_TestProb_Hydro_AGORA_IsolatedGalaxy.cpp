@@ -143,7 +143,7 @@ void Validate()
 
 
 
-#if ( MODEL == HYDRO  && defined MASSIVE_PARTICLES )
+#if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters

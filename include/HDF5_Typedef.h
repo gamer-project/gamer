@@ -234,8 +234,9 @@ struct SymConst_t
 
 #  ifdef PARTICLE
    int    Par_NAttStored;
+#  ifdef GRAVITY
    int    RhoExt_GhostSize;
-
+#  endif
    int    Debug_Particle;
 
    double ParList_GrowthFactor;
