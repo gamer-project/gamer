@@ -153,6 +153,8 @@ struct Makefile_t
 #  endif // MODEL
 
 #  ifdef PARTICLE
+   int MassiveParticles;
+   int Tracer;
    int StoreParAcc;
    int StarFormation;
    int Par_NAttUser;
@@ -234,6 +236,7 @@ struct SymConst_t
 
 #  ifdef PARTICLE
    int    Par_NAttStored;
+   int    Par_NType;
 #  ifdef GRAVITY
    int    RhoExt_GhostSize;
 #  endif
@@ -366,6 +369,7 @@ struct InputPara_t
    double Par_RemoveCell;
    int    Opt__FreezePar;
    int    Par_GhostSize;
+   int    Par_GhostSizeTracer;
    int    Par_TracerVelCorr;
    char  *ParAttLabel[PAR_NATT_TOTAL];
 #  endif
