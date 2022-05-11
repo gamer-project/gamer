@@ -10,35 +10,6 @@
 // ****************************************************************************
 
 
-// ################################
-// ## Remove useless definitions ##
-// ################################
-#if ( MODEL == HYDRO )
-#  if ( FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
-#  undef LR_SCHEME
-#  endif
-
-#  if ( FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
-#  undef RSOLVER
-#  endif
-#endif
-
-#if ( MODEL == PAR_ONLY )
-#  undef UNSPLIT_GRAVITY
-#endif
-
-// currently we always set GPU_ARCH == NONE when GPU is off
-#ifndef GPU
-#  undef  GPU_ARCH
-#  define GPU_ARCH NONE
-#endif
-
-// currently we assume that particle acceleration is solely due to gravity
-#ifndef GRAVITY
-#  undef STORE_PAR_ACC
-#endif
-
-
 // ########################
 // ## Symbolic Constants ##
 // ########################
@@ -440,7 +411,7 @@
 #  define PAR_NATT_BUILTIN0   9
 
 // acceleration*3 when STORE_PAR_ACC is adopted
-# ifdef STORE_PAR_ACC
+# if ( defined STORE_PAR_ACC  &&  defined GRAVITY )
 #  define PAR_NATT_BUILTIN1   3
 # else
 #  define PAR_NATT_BUILTIN1   0
@@ -485,7 +456,7 @@
 
 // always put acceleration and time at the END of the particle attribute list
 // --> make it easier to discard them when storing data on disk (see Output_DumpData_Total(_HDF5).cpp)
-# ifdef STORE_PAR_ACC
+# if ( defined STORE_PAR_ACC  &&  defined GRAVITY )
 #  define  PAR_ACCX           ( PAR_NATT_TOTAL - 4 )
 #  define  PAR_ACCY           ( PAR_NATT_TOTAL - 3 )
 #  define  PAR_ACCZ           ( PAR_NATT_TOTAL - 2 )
@@ -503,7 +474,7 @@
 #  define _PAR_VELY           ( 1L << PAR_VELY )
 #  define _PAR_VELZ           ( 1L << PAR_VELZ )
 #  define _PAR_TYPE           ( 1L << PAR_TYPE )
-# ifdef STORE_PAR_ACC
+# if ( defined STORE_PAR_ACC  &&  defined GRAVITY )
 #  define _PAR_ACCX           ( 1L << PAR_ACCX )
 #  define _PAR_ACCY           ( 1L << PAR_ACCY )
 #  define _PAR_ACCZ           ( 1L << PAR_ACCZ )
@@ -511,7 +482,7 @@
 #  define _PAR_TIME           ( 1L << PAR_TIME )
 #  define _PAR_POS            ( _PAR_POSX | _PAR_POSY | _PAR_POSZ )
 #  define _PAR_VEL            ( _PAR_VELX | _PAR_VELY | _PAR_VELZ )
-# ifdef STORE_PAR_ACC
+# if ( defined STORE_PAR_ACC  &&  defined GRAVITY )
 #  define _PAR_ACC            ( _PAR_ACCX | _PAR_ACCY | _PAR_ACCZ )
 # endif
 #  define _PAR_TOTAL          (  ( 1L << PAR_NATT_TOTAL ) - 1L )
@@ -990,6 +961,36 @@
 
 // macro converting an array index (e.g., DENS) to bitwise index (e.g., _DENS=(1L<<DENS))
 #define BIDX( idx )     ( 1L << (idx) )
+
+
+// ################################
+// ## Remove useless definitions ##
+// ################################
+#if ( MODEL == HYDRO )
+#  if ( FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
+#  undef LR_SCHEME
+#  endif
+
+#  if ( FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
+#  undef RSOLVER
+#  endif
+#endif
+
+#if ( MODEL == PAR_ONLY )
+#  undef UNSPLIT_GRAVITY
+#endif
+
+// currently we always set GPU_ARCH == NONE when GPU is off
+#ifndef GPU
+#  undef  GPU_ARCH
+#  define GPU_ARCH NONE
+#endif
+
+// currently we assume that particle acceleration is solely due to gravity
+// --> if we ever want to enable STORE_PAR_ACC without GRAVITY, remember to check all STORE_PAR_ACC in this header
+#ifndef GRAVITY
+#  undef STORE_PAR_ACC
+#endif
 
 
 
