@@ -40,6 +40,24 @@ void Par_Aux_InitCheck()
       if ( Type[ParID] < (real)0  ||  Type[ParID] >= (real)PAR_NTYPE )
          Aux_Error( ERROR_INFO, "Type[%ld] = %d (accepted range: 0<=index<%d) !!\n", ParID, (int)Type[ParID], PAR_NTYPE );
 
+//    only support tracer particles when disabling GRAVITY
+#     ifndef GRAVITY
+      if ( Type[ParID] != PTYPE_TRACER )
+         Aux_Error( ERROR_INFO, "Type[%ld] = %d != PTYPE_TRACER (%d) when disabling GRAVITY !!\n", ParID, (int)Type[ParID], (int)PTYPE_TRACER );
+#     endif
+
+//    must enable TRACER for tracer particles
+#     ifndef TRACER
+      if ( Type[ParID] == PTYPE_TRACER )
+         Aux_Error( ERROR_INFO, "Type[%ld] = %d (PTYPE_TRACER) when disabling TRACER !!\n", ParID, (int)Type[ParID] );
+#     endif
+
+//    tracer particles must be massless
+#     ifdef TRACER
+      if ( Type[ParID] == PTYPE_TRACER  &&  Mass[ParID] != (real)0.0 )
+         Aux_Error( ERROR_INFO, "Tracer[%ld] has non-zero mass (%13.7e) !!\n", ParID, Mass[ParID] );
+#     endif
+
       for (int d=0; d<3; d++)
       {
          if ( Pos[d][ParID] < (real)0.0  ||  Pos[d][ParID] >= amr->BoxSize[d] )
