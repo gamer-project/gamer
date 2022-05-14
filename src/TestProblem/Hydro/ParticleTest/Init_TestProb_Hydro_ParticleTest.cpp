@@ -53,10 +53,6 @@ void Validate()
    Aux_Error( ERROR_INFO, "PARTICLE must be enabled !!\n" );
 #  endif
 
-#  ifndef TRACER
-   Aux_Error( ERROR_INFO, "TRACER must be enabled !!\n" );
-#  endif
-
 #  ifdef COMOVING
    Aux_Error( ERROR_INFO, "COMOVING must be disabled !!\n" );
 #  endif
@@ -122,6 +118,10 @@ void SetParameter()
    if ( !ParTest_Use_Tracers  &&  !ParTest_Use_Massive )
       Aux_Error( ERROR_INFO,
                  "either ParTest_Use_Tracer, ParTest_Use_Massive, or both must be true !!\n" );
+
+#  ifndef TRACER
+   if ( ParTest_Use_Tracers )    Aux_Error( ERROR_INFO, "must enable TRACER for ParTest_Use_Tracers !!\n" );
+#  endif
 
 #  ifndef GRAVITY
    if ( ParTest_Use_Massive )    Aux_Error( ERROR_INFO, "must enable GRAVITY for ParTest_Use_Massive !!\n" );
