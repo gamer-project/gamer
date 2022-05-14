@@ -26,6 +26,9 @@ void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar
 bool Flag_ParticleTest( const int i, const int j, const int k, const int lv,
                         const int PID, const double *Threshold );
 
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
 // Description :  Validate the compilation flags and runtime parameters for this test problem
@@ -211,7 +214,6 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[ENGY] = Etot;
 
 } // FUNCTION : SetGridIC
-
 #endif // #if ( MODEL == HYDRO )
 
 
@@ -259,6 +261,8 @@ void Init_TestProb_Hydro_ParticleTest()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_TestProb_Hydro_ParticleTest
+
+
 
 bool Flag_ParticleTest( const int i, const int j, const int k, const int lv,
                         const int PID, const double *Threshold )
