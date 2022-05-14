@@ -416,6 +416,9 @@ struct Particle_t
            NewAtt[PAR_POSZ] != NewAtt[PAR_POSZ]   )
          Aux_Error( ERROR_INFO, "Adding a particle with strange position (%21.14e, %21.14e, %21.14e) !!\n",
                     NewAtt[PAR_POSX], NewAtt[PAR_POSY], NewAtt[PAR_POSZ] );
+
+      if ( NewAtt[PAR_TYPE] < (real)0  ||  NewAtt[PAR_TYPE] >= (real)PAR_NTYPE )
+         Aux_Error( ERROR_INFO, "Incorrect particle type (%d) !!\n", (int)NewAtt[PAR_TYPE] );
 #     endif
 
 

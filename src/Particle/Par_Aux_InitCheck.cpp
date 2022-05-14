@@ -13,6 +13,7 @@
 //                2. Check if all particles lie within the simulation box
 //                3. Remove particles outside the active region for non-periodic B.C.
 //                4. There should be no inactive particles before calling this function
+//                5. Check particle types
 //
 // Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
@@ -22,16 +23,22 @@ void Par_Aux_InitCheck()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
-   real *Mass   =   amr->Par->Mass;
-   real *Pos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+   const real *Mass   =   amr->Par->Mass;
+   const real *Pos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+   const real *Type   =   amr->Par->Type;
 
 
 // 1. all active particles should lie within the simulation domain
 //    --> periodicity should be taken care of in the initial condition, not here
+//    --> also check particle types here
    for (long ParID=0; ParID<amr->Par->NPar_AcPlusInac; ParID++)
    {
 //    there should be no inactive particles initially
       if ( Mass[ParID] < 0.0 )   Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", ParID, Mass[ParID] );
+
+//    check particle types
+      if ( Type[ParID] < (real)0  ||  Type[ParID] >= (real)PAR_NTYPE )
+         Aux_Error( ERROR_INFO, "Type[%ld] = %d (accepted range: 0<=index<%d) !!\n", ParID, (int)Type[ParID], PAR_NTYPE );
 
       for (int d=0; d<3; d++)
       {
