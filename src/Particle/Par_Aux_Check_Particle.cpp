@@ -7,12 +7,12 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_Aux_Check_Particle
-// Description :  Verify that
-//                1.   particles reside in their home patches
-//                2.   particles always reside in the leaf patches
-//                3.   there are no missing or redundant particles
-//                4.   no active particles have mass=-1.0
-//                5/6. each particle has one and only one home patch
+// Description :  Verify the following.
+//                1.   Particles reside in their home patches
+//                2.   Particles always reside in the leaf patches
+//                3.   There are no missing or redundant particles
+//                4.   No active particles have mass=-1.0
+//                5/6. Each particle has one and only one home patch
 //                7.   NPar_AcPlusInac == NPar_Active + NPar_Inactive
 //                8.   NPar_Active_AllRank = sum(NPar_Active, All ranks)
 //                9.   NPar_Active = sum(NPar_Lv, all levels)

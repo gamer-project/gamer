@@ -49,9 +49,9 @@ void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPar_AllRa
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, AllAttribute
 //-------------------------------------------------------------------------------------------------------
 void Par_Init_ByFunction_Template( const long NPar_ThisRank, const long NPar_AllRank,
-                          real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                          real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                          real *ParType, real *AllAttribute[PAR_NATT_TOTAL] )
+                                   real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
+                                   real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
+                                   real *ParType, real *AllAttribute[PAR_NATT_TOTAL] )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
