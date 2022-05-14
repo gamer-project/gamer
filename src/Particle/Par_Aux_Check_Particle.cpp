@@ -143,8 +143,32 @@ void Par_Aux_Check_Particle( const char *comment )
                   }
 
 
-//                Check 11: particle types must be recognizable
+//                Check 11: particle types
+                  bool CheckTypePass = true;
+
+//                particle types must be recognizable
                   if ( amr->Par->Type[ParID] < (real)0  ||  amr->Par->Type[ParID] >= (real)PAR_NTYPE )
+                     CheckTypePass = false;
+
+//                only support tracer particles when disabling GRAVITY
+#                 ifndef GRAVITY
+                  if ( amr->Par->Type[ParID] != PTYPE_TRACER )
+                     CheckTypePass = false;
+#                 endif
+
+//                must enable TRACER for tracer particles
+#                 ifndef TRACER
+                  if ( amr->Par->Type[ParID] == PTYPE_TRACER )
+                     CheckTypePass = false;
+#                 endif
+
+//                tracer particles must be massless
+#                 ifdef TRACER
+                  if ( amr->Par->Type[ParID] == PTYPE_TRACER  &&  amr->Par->Mass[ParID] != (real)0.0 )
+                     CheckTypePass = false;
+#                 endif
+
+                  if ( !CheckTypePass )
                   {
                      if ( PassAll )
                      {
@@ -155,14 +179,15 @@ void Par_Aux_Check_Particle( const char *comment )
 
                      if ( PassCheck[10] )
                      {
-                        Aux_Message( stderr, "Check 11: %4s  %2s  %7s  %10s  %10s\n",
-                                     "Rank", "Lv", "PID", "ParID", "Type" );
+                        Aux_Message( stderr, "Check 11: %4s  %2s  %7s  %10s  %10s  %20s\n",
+                                     "Rank", "Lv", "PID", "ParID", "Type", "Mass" );
                         PassCheck[10] = false;
                      }
 
-                     Aux_Message( stderr, "Check 11: %4d  %2d  %7d  %10ld  %10d\n",
-                                  MPI_Rank, lv, PID, ParID, (int)amr->Par->Type[ParID] );
-                  }
+                     Aux_Message( stderr, "Check 11: %4d  %2d  %7d  %10ld  %10d  %20.13e\n",
+                                  MPI_Rank, lv, PID, ParID, (int)amr->Par->Type[ParID], amr->Par->Mass[ParID] );
+                  } // if ( !CheckTypePass )
+
                } // for (int p=0; p<NParThisPatch; p++)
             } // if ( amr->patch[0][lv][PID]->son == -1 )
 
