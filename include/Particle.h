@@ -38,6 +38,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                Init                    : Initialization methods (1/2/3 --> call function/restart/load from file)
 //                ParICFormat             : Data format of the particle initialization file (1=[att][id], 2=[id][att])
 //                ParICMass               : Assign this mass to all particles for Init=3
+//                ParICType               : Assign this type to all particles for Init=3
 //                Interp                  : Mass/acceleration/velocity interpolation scheme (NGP,CIC,TSC)
 //                InterpTracer            : Mass/acceleration/velocity interpolation scheme for tracers (NGP,CIC,TSC)
 //                Integ                   : Integration scheme (PAR_INTEG_EULER, PAR_INTEG_KDK)
@@ -117,6 +118,7 @@ struct Particle_t
    ParInit_t     Init;
    ParICFormat_t ParICFormat;
    double        ParICMass;
+   int           ParICType;
    ParInteg_t    Integ;
    ParInterp_t   Interp;
    TracerInteg_t IntegTracer;
@@ -185,6 +187,7 @@ struct Particle_t
       Init                = PAR_INIT_NONE;
       ParICFormat         = PAR_IC_FORMAT_NONE;
       ParICMass           = -1.0;
+      ParICType           = -1;
       Interp              = PAR_INTERP_NONE;
       InterpTracer        = PAR_INTERP_NONE;
       Integ               = PAR_INTEG_NONE;
