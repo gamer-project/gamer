@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2447)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2448)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -218,6 +218,7 @@ Procedure for outputting new variables:
 //                2445 : 2022/03/25 --> output OPT__OUTPUT_ENTR
 //                2446 : 2022/05/10 --> output SUPPORT_LIBYT and LIBYT_USE_PATCH_GROUP
 //                2447 : 2022/05/11 --> output MASSIVE_PARTICLES, TRACER, PAR_NTYPE, GhostSizeTracer
+//                2448 : 2022/05/18 --> output PAR_IC_TYPE
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1723,7 +1724,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2447;
+   KeyInfo.FormatVersion        = 2448;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2330,6 +2331,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Par_Init                = amr->Par->Init;
    InputPara.Par_ICFormat            = amr->Par->ParICFormat;
    InputPara.Par_ICMass              = amr->Par->ParICMass;
+   InputPara.Par_ICType              = amr->Par->ParICType;
    InputPara.Par_Interp              = amr->Par->Interp;
    InputPara.Par_InterpTracer        = amr->Par->InterpTracer;
    InputPara.Par_Integ               = amr->Par->Integ;
@@ -3171,6 +3173,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Par_Init",                HOFFSET(InputPara_t,Par_Init               ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_ICFormat",            HOFFSET(InputPara_t,Par_ICFormat           ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_ICMass",              HOFFSET(InputPara_t,Par_ICMass             ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "Par_ICType",              HOFFSET(InputPara_t,Par_ICType             ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_Interp",              HOFFSET(InputPara_t,Par_Interp             ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_InterpTracer",        HOFFSET(InputPara_t,Par_InterpTracer       ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_Integ",               HOFFSET(InputPara_t,Par_Integ              ), H5T_NATIVE_INT     );

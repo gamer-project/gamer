@@ -360,6 +360,7 @@ struct InputPara_t
    int    Par_Init;
    int    Par_ICFormat;
    double Par_ICMass;
+   int    Par_ICType;
    int    Par_Interp;
    int    Par_InterpTracer;
    int    Par_Integ;
