@@ -155,25 +155,29 @@ void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv )
                Acc_Copy[d] = amr->patch[0][lv][PID]->ParAtt_Copy[ PAR_ACCX + d ];
 #              endif
             }
-            Typ_Copy    = amr->patch[0][lv][PID]->ParAtt_Copy[ PAR_TYPE ];
+            Typ_Copy = amr->patch[0][lv][PID]->ParAtt_Copy[ PAR_TYPE ];
 #           endif
 
             for (int p=0; p<NParThisPatch; p++)
             {
-               for (int d=0; d<3; d++)
-               MaxVel_OMP[TID] = MAX( MaxVel_OMP[TID], FABS(Vel_Copy[d][p]) );
+//             don't check velocity for tracer particles unless enabling OPT__FREEZE_FLUID
+//             since the fluid CFL condition should be sufficient
+//             --> this ensures that tracer particles do not change the simulation results
+               if ( Typ_Copy[p] != PTYPE_TRACER  ||  OPT__FREEZE_FLUID )
+               {
+                  for (int d=0; d<3; d++)
+                  MaxVel_OMP[TID] = MAX( MaxVel_OMP[TID], FABS(Vel_Copy[d][p]) );
 
-               NParVel ++;
+                  NParVel ++;
+               }
 
 //             don't check acceleration for tracer particles
-               if ( Typ_Copy[p] == PTYPE_TRACER )
-                  continue;
+               if ( UseAcc  &&  Typ_Copy[p] != PTYPE_TRACER )
+               {
+                  for (int d=0; d<3; d++)
+                  MaxAcc_OMP[TID] = MAX( MaxAcc_OMP[TID], FABS(Acc_Copy[d][p]) );
 
-               if ( UseAcc ) {
-               for (int d=0; d<3; d++)
-               MaxAcc_OMP[TID] = MAX( MaxAcc_OMP[TID], FABS(Acc_Copy[d][p]) );
-
-               NParAcc ++;
+                  NParAcc ++;
                }
             }
          } // if ( UseCopy )
@@ -184,20 +188,24 @@ void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv )
             {
                const long ParID = ParList[p];
 
-               for (int d=0; d<3; d++)
-               MaxVel_OMP[TID] = MAX( MaxVel_OMP[TID], FABS(Vel[d][ParID]) );
+//             don't check velocity for tracer particles unless enabling OPT__FREEZE_FLUID
+//             since the fluid CFL condition should be sufficient
+//             --> this ensures that tracer particles do not change the simulation results
+               if ( ParType[ParID] != PTYPE_TRACER  ||  OPT__FREEZE_FLUID )
+               {
+                  for (int d=0; d<3; d++)
+                  MaxVel_OMP[TID] = MAX( MaxVel_OMP[TID], FABS(Vel[d][ParID]) );
 
-               NParVel ++;
+                  NParVel ++;
+               }
 
 //             don't check acceleration for tracer particles
-               if ( ParType[ParID] == PTYPE_TRACER )
-                  continue;
+               if ( UseAcc  &&  ParType[ParID] != PTYPE_TRACER )
+               {
+                  for (int d=0; d<3; d++)
+                  MaxAcc_OMP[TID] = MAX( MaxAcc_OMP[TID], FABS(Acc[d][ParID]) );
 
-               if ( UseAcc ) {
-               for (int d=0; d<3; d++)
-               MaxAcc_OMP[TID] = MAX( MaxAcc_OMP[TID], FABS(Acc[d][ParID]) );
-
-               NParAcc ++;
+                  NParAcc ++;
                }
             }
          } // if ( UseCopy ) ... else ...
