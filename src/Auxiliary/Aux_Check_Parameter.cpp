@@ -1358,6 +1358,9 @@ void Aux_Check_Parameter()
 #  ifdef TRACER
    if ( OPT__FLAG_NPAR_PATCH )
       Aux_Message( stderr, "WARNING : OPT__FLAG_NPAR_PATCH includes tracers and thus may affect the results of grid refinement !!\n" );
+
+   if ( OPT__FLAG_NPAR_CELL )
+      Aux_Message( stderr, "WARNING : OPT__FLAG_NPAR_CELL excludes tracers !!\n" );
 #  endif
 
    if ( OPT__FREEZE_PAR )
