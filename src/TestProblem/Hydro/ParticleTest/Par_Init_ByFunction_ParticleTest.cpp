@@ -8,6 +8,9 @@ extern double ParTest_Par_Sep;
 extern bool   ParTest_Use_Tracers;
 extern bool   ParTest_Use_Massive;
 
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_Init_ByFunction_ParticleTest
 // Description :  Initialize all particle attributes for the particle test problem
@@ -47,7 +50,6 @@ extern bool   ParTest_Use_Massive;
 //
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParType, AllAttribute
 //-------------------------------------------------------------------------------------------------------
-
 void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar_AllRank,
                                        real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                        real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
@@ -163,9 +165,6 @@ void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar
 
 } // FUNCTION : Par_Init_ByFunction_ParticleTest
 
+
+
 #endif // #ifdef PARTICLE
-
-
-
-
-

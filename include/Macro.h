@@ -499,9 +499,10 @@
 
 // particle type macros
 
-// number of particle types MUST be 4 for now
-#  define  PAR_NTYPE          4
+// number of particle types (default: 4)
+#  define  PAR_NTYPE                4
 
+// particle type indices (must be in the range 0<=index<PAR_NTYPE)
 #  define  PTYPE_TRACER          (real)0
 #  define  PTYPE_GENERIC_MASSIVE (real)1
 #  define  PTYPE_DARK_MATTER     (real)2

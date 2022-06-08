@@ -58,6 +58,17 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
    const real *ParType   = amr->Par->Type;
 
 
+// get the maximum number of particles in a single patch
+// --> must use "NPar" instead of "NParType[(int)PTYPE_TRACER]" since currently
+//     both Vel_Temp[] and InterpParPos[] still allocate memory for non-tracer particles
+   int NParMax = 0;
+   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)   NParMax = MAX( NParMax, amr->patch[0][lv][PID]->NPar );
+
+
+// nothing to do if there is no particle
+   if ( NParMax <= 0 )  return;
+
+
 // OpenMP parallel region
 #  pragma omp parallel
    {
@@ -66,6 +77,11 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
    real *VelX = new real [ 8*CUBE(VelSize) ];   // 8: number of patches per patch group
    real *VelY = new real [ 8*CUBE(VelSize) ];
    real *VelZ = new real [ 8*CUBE(VelSize) ];
+
+   real **Vel_Temp     = NULL;
+   real **InterpParPos = NULL;
+   Aux_AllocateArray2D( Vel_Temp,     3, NParMax );
+   Aux_AllocateArray2D( InterpParPos, 3, NParMax );
 
    bool GotYou;
    long ParID;
@@ -82,7 +98,7 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
 
       for (int PID=PID0; PID<PID0+8; PID++)
       {
-         if ( amr->patch[0][lv][PID]->NParType[(long)PTYPE_TRACER] > 0 )   GotYou = true;
+         if ( amr->patch[0][lv][PID]->NParType[(int)PTYPE_TRACER] > 0 )    GotYou = true;
 
          if ( GotYou )  break;
       }
@@ -107,16 +123,11 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
       {
 //       3. compute the particle velocity
 //       skip patches with no tracer particles
-         if ( amr->patch[0][lv][PID]->NParType[(long)PTYPE_TRACER] == 0 )  continue;
+         if ( amr->patch[0][lv][PID]->NParType[(int)PTYPE_TRACER] == 0 )   continue;
 
          double EdgeL[3], EdgeR[3];
 
-         real** Vel_Temp     = new real*[3];
-         real** InterpParPos = new real*[3];
          for (int d=0; d<3; d++) {
-            Vel_Temp    [d] = new real[ amr->patch[0][lv][PID]->NPar ];
-            InterpParPos[d] = new real[ amr->patch[0][lv][PID]->NPar ];
-
             EdgeL[d] = amr->patch[0][lv][PID]->EdgeL[d] - dh*ParGhost;
             EdgeR[d] = amr->patch[0][lv][PID]->EdgeR[d] + dh*ParGhost;
          }
@@ -225,14 +236,6 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
                ParTime[ParID] = TimeNew;
             } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
          } // if ( !MapOnly  &&  amr->Par->IntegTracer == TRACER_INTEG_RK2 )
-
-         for (int d=0; d<3; d++) {
-            delete [] Vel_Temp    [d];
-            delete [] InterpParPos[d];
-         }
-         delete [] Vel_Temp;
-         delete [] InterpParPos;
-
       } // for (int PID=PID0, P=0; PID<PID0+8; PID++, P++)
    } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
 
@@ -241,6 +244,9 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
    delete [] VelX;
    delete [] VelY;
    delete [] VelZ;
+
+   Aux_DeallocateArray2D( Vel_Temp     );
+   Aux_DeallocateArray2D( InterpParPos );
 
    } // end of OpenMP parallel region
 

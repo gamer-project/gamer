@@ -71,6 +71,7 @@ PAR_NPAR                      0           # total number of particles (must be s
 PAR_INIT                      1           # initialization option for particles: (1=FUNCTION, 2=RESTART, 3=FILE->"PAR_IC")
 PAR_IC_FORMAT                 1           # data format of PAR_IC: (1=[attribute][id], 2=[id][attribute]; row-major) [1]
 PAR_IC_MASS                  -1.0         # mass of all particles for PAR_INIT==3 (<0=off) [-1.0]
+PAR_IC_TYPE                  -1           # type of all particles for PAR_INIT==3 (<0=off) [-1]
 PAR_INTERP                    3           # particle interpolation scheme: (1=NGP, 2=CIC, 3=TSC) [2]
 PAR_INTEG                     2           # particle integration scheme: (1=Euler, 2=KDK) [2]
 PAR_TR_INTERP                 3           # tracer particle interpolation scheme: (1=NGP, 2=CIC, 3=TSC) [3]

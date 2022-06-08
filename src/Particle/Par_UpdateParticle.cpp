@@ -124,7 +124,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 #  endif
 
 #  ifdef DEBUG_PARTICLE
-// Par->ImproveAcc only works particle interpolation schemes with ParGhost == 1 (CIC & TSC)
+// Par->ImproveAcc only supports particle interpolation schemes with ParGhost == 1 (CIC & TSC)
    if ( amr->Par->ImproveAcc  &&  PotGhost != GRA_GHOST_SIZE )
       Aux_Error( ERROR_INFO, "PotGhost (%d) != GRA_GHOST_SIZE (%d) for amr->Par->ImproveAcc !!\n",
                  PotGhost, GRA_GHOST_SIZE );

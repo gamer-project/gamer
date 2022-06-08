@@ -82,6 +82,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 // --> PosSendIdx[] is used by Par_PredictPos()
    int NAtt=0, AttIntIdx[PAR_NATT_TOTAL], PosSendIdx[3]={-1, -1, -1};
 
+   if ( !JustCountNPar )
    for (int v=0; v<PAR_NATT_TOTAL; v++)
       if ( AttBitIdx & (1L<<v) )    AttIntIdx[ NAtt ++ ] = v;
 
@@ -116,7 +117,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 
 // check
 #  ifdef DEBUG_PARTICLE
-   if ( NAtt == 0  &&  MPI_Rank == 0 )    Aux_Message( stderr, "WARNING : NAtt == 0 !!\n" );
+   if ( NAtt == 0  &&  !JustCountNPar  &&  MPI_Rank == 0 )  Aux_Message( stderr, "WARNING : NAtt == 0 !!\n" );
 
    if ( JustCountNPar )
    {
