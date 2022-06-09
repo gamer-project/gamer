@@ -250,6 +250,8 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
    real Im_Half[FLU_NXT];  // one column of the imaginary part at the half time-step
    real *Re_New = NULL;    // pointer to store the full-step real      part
    real *Im_New = NULL;    // pointer to store the full-step imaginary part
+
+   real vmax = 0;
    
 // loop over all targeted columns
    for (int k=k_start; k<k_end; k++)
@@ -263,11 +265,11 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
       //Set pointers to output arrays
       Re_N = &u[0][Idx];
       Im_N = &u[1][Idx];
-      /*
-      for (int i=0; i<FLU_NXT; i++) {
-         std::cout<<"initial i: " << i << " Re : " << Re_N[i] << " Im: "<< Im_N[i] << "\n";
-      }
-      */
+      
+      //for (int i=0; i<FLU_NXT; i++) {
+      //   std::cout<<"initial i: " << i << " Re : " << Re_N[i] << " Im: "<< Im_N[i] << "\n";
+      //}
+      
       for (int i=0; i<FLU_NXT; i++) {
          //Set input data by converting real and imaginary parts to density Rc and phase Pc
          Rc[0][i] = SQR(Re_N[i]) + SQR(Im_N[i]);
@@ -310,16 +312,17 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
       
       for (int time_level = 0; time_level < N_TIME_LEVELS; ++time_level) 
       {
-         /*
-         for (int i=2*(time_level + 1); i<FLU_NXT-2*(time_level + 1); i++)
-            std::cout<<"time level :" << time_level << "i: " << i << " Rho : " << Rc[time_level][i] << " Phase: "<< Pc[time_level][i] << "\n";
-         */
+         
+         //for (int i=2*(time_level + 1); i<FLU_NXT-2*(time_level + 1); i++)
+         //   std::cout<<"time level :" << time_level << "i: " << i << " Rho : " << Rc[time_level][i] << " Phase: "<< Pc[time_level][i] << "\n";
+         
          
          //Compute second-order backward velocities
          for (int i=2*(time_level + 1); i<FLU_NXT-time_level*2; i++)
          {
             ql_ratios[i]           =       BACKWARD_GRADIENT_RATIO(Pc[time_level], i);
             backward_velocities[i] = _dh * BACKWARD_GRADIENT      (Pc[time_level], i);
+            vmax = MAX(vmax, FABS(backward_velocities[i]));
          }
 
          //Compute density logarithms
@@ -374,11 +377,10 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
             }
          }
       }
-
-      /*
-      for (int i=0; i<FLU_NXT; i++) {
-         std::cout<<"final i: " << i << " Re : " << Re_N[i] << " Im: "<< Im_N[i] << "\n";
-      }*/
+      
+      //for (int i=0; i<FLU_NXT; i++) {
+      //   std::cout<<"final i: " << i << " Re : " << Re_N[i] << " Im: "<< Im_N[i] << "\n";
+      //}
 
 
    } // for j,k

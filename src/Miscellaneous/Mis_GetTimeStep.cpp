@@ -195,6 +195,15 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 #  endif
 
 
+// 1.9 CRITERION NINE : maximum velocity dS/dx ##ELBDM PHASE SOLVER ONLY##
+// =============================================================================================================
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == PHASE)
+   dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Velocity( lv );
+   sprintf( dTime_Name[NdTime++], "%s", "ELBDM_Velocity" );
+
+// when fluid is freezed, disable this criterion by resetting it to a huge value
+   if ( OPT__FREEZE_FLUID )   dTime[NdTime-1] = HUGE_NUMBER;
+#  endif
 
 // 2. get the minimum time-step from all criteria
 // =============================================================================================================
