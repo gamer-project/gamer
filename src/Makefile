@@ -161,6 +161,10 @@ SIMU_OPTION += -DNLEVEL=10
 # --> must be set in any cases
 SIMU_OPTION += -DMAX_PATCH=1000000
 
+# number of cells along each direction in a single patch
+# --> must be an even number greater than or equal to 8
+SIMU_OPTION += -DPATCH_SIZE=8
+
 # GPU acceleration
 # --> must set GPU_ARCH as well
 #SIMU_OPTION += -DGPU
