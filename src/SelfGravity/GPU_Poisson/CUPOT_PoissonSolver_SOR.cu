@@ -1,7 +1,7 @@
 #include "Macro.h"
 #include "CUPOT.h"
 
-#if ( defined GRAVITY  &&  defined GPU  &&  POT_SCHEME == SOR  &&  defined USE_PSOLVER_10TO14 )
+#if ( defined GRAVITY  &&  defined GPU  &&  POT_SCHEME == SOR )
 
 
 
@@ -42,7 +42,7 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CUPOT_PoissonSolver_SOR_10to14cube
+// Function    :  CUPOT_PoissonSolver_SOR
 // Description :  GPU Poisson solver using the SOR scheme
 //
 // Note        :  1. Work for POT_GHOST_SIZE = 1, 2, 3 <--> POT_NXT_F = 10, 12, 14
@@ -102,11 +102,11 @@
 //                                        INT_CQUAD : conservative quadratic interpolation
 //                                        INT_QUAD  : quadratic interpolation
 //---------------------------------------------------------------------------------------------------
-__global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ],
-                                                    const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ],
-                                                          real g_Pot_Array_Out[][ GRA_NXT*GRA_NXT*GRA_NXT ],
-                                                    const int Min_Iter, const int Max_Iter, const real Omega_6,
-                                                    const real Const, const IntScheme_t IntScheme )
+__global__ void CUPOT_PoissonSolver_SOR( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ],
+                                         const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ],
+                                               real g_Pot_Array_Out[][ GRA_NXT*GRA_NXT*GRA_NXT ],
+                                         const int Min_Iter, const int Max_Iter, const real Omega_6,
+                                         const real Const, const IntScheme_t IntScheme )
 {
 
    const uint bid       = blockIdx.x;
@@ -452,8 +452,8 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
    }
    while ( t < GRA_NXT*GRA_NXT*GRA_NXT );
 
-} // FUNCTION : CUPOT_PoissonSolver_SOR_10to14cube
+} // FUNCTION : CUPOT_PoissonSolver_SOR
 
 
 
-#endif // #if ( defined GRAVITY  &&  defined GPU  &&  POT_SCHEME == SOR  &&  defined USE_PSOLVER_10TO14 )
+#endif // #if ( defined GRAVITY  &&  defined GPU  &&  POT_SCHEME == SOR )
