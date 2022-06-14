@@ -88,7 +88,8 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const real DualEnergySwitch,
                       const bool NormPassive, const int NNorm, const int NormIdx[],
                       const bool FracPassive, const int NFrac, const int FracIdx[],
-                      const bool JeansMinPres, const real JeansMinPres_Coeff );
+                      const bool JeansMinPres, const real JeansMinPres_Coeff,
+                      const bool useWaveFlag );
 void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
 #if ( MODEL == HYDRO )
 real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
@@ -123,7 +124,7 @@ real Hydro_Con2Dual( const real Dens, const real MomX, const real MomY, const re
 real Hydro_DensPres2Dual( const real Dens, const real Pres, const real Gamma_m1 );
 real Hydro_DensDual2Pres( const real Dens, const real Dual, const real Gamma_m1,
                           const bool CheckMinPres, const real MinPres );
-#endif // #ifdef DUAL_ENERGY
+#endif // #ifdef DUAL_ENERGYFlu_Close
 #endif // #if ( MODEL == HYDRO )
 int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt,
                    const int SaveSg_Flu, const int SaveSg_Mag, const bool OverlapMPI, const bool Overlap_Sync );
@@ -306,7 +307,8 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
                  const real Fluid[][PS1][PS1][PS1], const real Pot[][PS1][PS1], const real MagCC[][PS1][PS1][PS1],
                  const real Vel[][PS1][PS1][PS1], const real Pres[][PS1][PS1],
                  const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
-                 const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff );
+                 const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff,
+                 const real *Interf_Cond );
 bool Flag_Region( const int i, const int j, const int k, const int lv, const int PID );
 bool Flag_Lohner( const int i, const int j, const int k, const OptLohnerForm_t Form, const real *Var1D, const real *Ave1D,
                   const real *Slope1D, const int NVar, const double Threshold, const double Filter, const double Soften );
@@ -336,7 +338,8 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
                                const real Poi_Coeff, const IntScheme_t IntScheme, const bool P5_Gradient,
                                const real ELBDM_Eta, const real ELBDM_Lambda, const bool Poisson, const bool GraAcc,
                                const bool SelfGravity, const OptExtPot_t ExtPot, const OptExtAcc_t ExtAcc,
-                               const double TimeNew, const double TimeOld, const real MinEint );
+                               const double TimeNew, const double TimeOld, const real MinEint,
+                               const bool useWaveFlag );
 void CPU_ExtPotSolver_BaseLevel( const ExtPot_t Func, const double AuxArray_Flt[], const int AuxArray_Int[],
                                  const real Table[], void **GenePtr,
                                  const double Time, const bool PotIsInit, const int SaveSg );
@@ -507,8 +510,16 @@ void   ELBDM_Init_ByFunction_AssignData( const int lv );
 double ELBDM_GetTimeStep_Fluid( const int lv );
 double ELBDM_GetTimeStep_Gravity( const int lv );
 double ELBDM_GetTimeStep_Phase( const int lv );
+#if   ( ELBDM_SCHEME == HYBRID )
+double ELBDM_GetTimeStep_Hybrid( const int lv );
+double ELBDM_GetTimeStep_Velocity( const int lv ); //For Hamilton-Jacobi equation
+#endif 
+
+//Flag for refining regions using wave solver
 bool   ELBDM_Flag_EngyDensity( const int i, const int j, const int k, const real Real_Array[],
                                const real Imag_Array[], const double Angle_2pi, const double Eps );
+//Flag for switching between wave and phase scheme in hybrid solver
+bool   ELBDM_Flag_Interference( const int i, const int j, const int k, const real Cond_Array[], const double Threshold);
 real   ELBDM_UnwrapPhase( const real Phase_Ref, const real Phase_Wrapped );
 real   ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
 void   ELBDM_RemoveMotionCM();

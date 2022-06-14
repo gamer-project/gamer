@@ -122,6 +122,11 @@ extern double           ELBDM_TAYLOR3_COEFF, ELBDM_MASS, ELBDM_PLANCK_CONST, ELB
 #ifdef QUARTIC_SELF_INTERACTION
 extern double           ELBDM_LAMBDA;
 #endif
+#if  ( ELBDM_SCHEME == HYBRID )
+extern bool             OPT__FLAG_INTERFERENCE;
+extern double           Flag_Interf_Threshold;
+#endif 
+
 extern ELBDMRemoveMotionCM_t ELBDM_REMOVE_MOTION_CM;
 
 #else
