@@ -55,6 +55,7 @@ void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, const d
 //                                         HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _PRES, _TEMP,
 //                                                 [, _POTE]
 //                                         ELBDM : _DENS, _REAL, _IMAG [, _POTE]
+//                                         ELBDM HYBRID: _DENS, _PHAS [, _POTE] 
 //                                     --> _FLUID, _PASSIVE, _TOTAL, and _DERIVED apply to all models
 //                NVarCC_Tot         : Total number of cell-centered variables to be prepared
 //                NVarCC_Flu         : Number of cell-centered fluid variables to be prepared
@@ -74,6 +75,7 @@ void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, const d
 //                TVarFCIdxList      : List recording the target face-centered variable indices
 //                                     ( = [0 ... NCOMP_MAG-1] )
 //                IntPhase           : true --> Perform interpolation on rho/phase instead of real/imag parts in ELBDM
+//                                     This is done irrespective of IntPhase for the fluid patches in the ELBDM hybrid solver
 //                FluBC              : Fluid boundary condition
 //                PotBC              : Gravity boundary condition (not used currently)
 //                BC_Face            : Priority of the B.C. along different boundary faces (z>y>x)
@@ -1146,10 +1148,16 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
 #     elif ( MODEL == ELBDM )
 //    apply monotonic interpolation to density and all passive scalars
+#     if (ELBDM_SCHEME == HYBRID)
+      if (  (TVarCCIdx_Flu != REAL  &&  TVarCCIdx_Flu != IMAG && amr->use_wave_flag[lv] == true  )\
+          &&(TVarCCIdx_Flu != PHAS &&                            amr->use_wave_flag[lv] == false ) )
+#     else 
       if ( TVarCCIdx_Flu != REAL  &&  TVarCCIdx_Flu != IMAG )
+#     endif 
          Monotonicity_CC[v] = Monotonicity_Yes;
       else
          Monotonicity_CC[v] = Monotonicity_No;
+
 
 #     else
 #     error : DO YOU WANT TO ENSURE THE POSITIVITY OF INTERPOLATION IN THIS NEW MODEL ??
@@ -1160,7 +1168,13 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 // interpolation
 // c1. interpolation on phase in ELBDM
 #  if ( MODEL == ELBDM )
+
+//Parameter IntPhase in hybrid scheme only relevant where we use wave solver 
+#  if ( ELBDM_SCHEME == HYBRID )
+   if ( IntPhase && amr->use_wave_flag[lv] == true)
+#  else 
    if ( IntPhase )
+#  endif 
    {
 //    determine the array indices
       real *CData_Real = NULL;

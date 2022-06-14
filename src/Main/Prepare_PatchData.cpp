@@ -106,6 +106,7 @@ static void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const re
 //                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _PRES, _TEMP, _ENTR
 //                                             [, _POTE]
 //                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE]
+//                                     ELBDM HYBRID: _DENS, _PHAS [, _POTE]
 //                                 --> _FLUID, _PASSIVE, _TOTAL, and _DERIVED apply to all models
 //                TVarFC         : Target face-centered variables to be prepared
 //                                 --> Supported variables in different models:
@@ -133,8 +134,10 @@ static void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const re
 //                                 --> NSIDE_00 (=  0) : do not prepare any sibling direction (equivalent to GhostSize=0)
 //                                     NSIDE_06 (=  6) : prepare only sibling directions 0~5
 //                                     NSIDE_26 (= 26) : prepare all sibling directions 0~25
-//                IntPhase       : true --> Perform interpolation on rho/phase instead of real/imag parts in ELBDM
-//                                      --> TVarCC must contain _REAL and _IMAG
+//                IntPhase       : true --> Wave scheme: Perform interpolation on rho/phase instead of real/imag parts in ELBDM
+//                                      --> TVarCC must contain _REAL and _IMAG if hybrid scheme is turned off
+//                                      --> Fluid scheme: Perform interpolation on rho/phase in fluid patches
+//                                      --> There,  TVarCC must contain _DENS and _PHAS
 //                FluBC          : Fluid boundary condition
 //                PotBC          : Gravity boundary condition
 //                MinDens        : See MinEntr
@@ -207,7 +210,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #     endif
 
 #     if ( MODEL == ELBDM )
+#     if ( ELBDM_SCHEME == HYBRID)
+      if (  ( TVarCC & _REAL )  ||  ( TVarCC & _IMAG )  && (amr->use_wave_flag[lv] == true) )
+#     else
       if (  ( TVarCC & _REAL )  ||  ( TVarCC & _IMAG )  )
+#     endif 
          Aux_Message( stderr, "WARNING : real and imaginary parts are NOT rescaled after applying the minimum density check !!\n" );
 #     endif
    }
@@ -244,18 +251,32 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
    if ( IntPhase )
    {
-#     if ( MODEL == ELBDM )
-      if (  !(TVarCC & _REAL)  ||  !(TVarCC & _IMAG)  )
+#  if   ( MODEL == ELBDM)
+#     if ( ELBDM_SCHEME == HYBRID)
+      if (  (!(TVarCC & _REAL)  ||  !(TVarCC & _IMAG)) && (amr->use_wave_flag[lv] == true)  )
+#     else 
+      if (  (!(TVarCC & _REAL)  ||  !(TVarCC & _IMAG)) )
+#     endif 
       Aux_Error( ERROR_INFO, "real and/or imag parts are not found for phase interpolation in ELBDM !!\n" );
+#     if ( ELBDM_SCHEME == HYBRID)
+      if (  (!(TVarCC & _DENS)  ||  !(TVarCC & _PHAS)) && (amr->use_wave_flag[lv] == false)  )
+      Aux_Error( ERROR_INFO, "density and/or phase are not found for phase interpolation in ELBDM fluid patch in hybrid scheme!!\n" );
+#     endif 
 
 //    we have assumed in InterpolateGhostZone() that when adopting IntPhase this function will NOT prepare
 //    anything other than wave function and, optionally, density
+//    or density and phase for the fluid patches in the hybrid scheme
 //    --> e.g., one cannot prepare wave function and potential at the same time when enabling IntPhase
-      if (  TVarCC & ~( _REAL | _IMAG | _DENS )  )
+#     if ( ELBDM_SCHEME == HYBRID)
+      if (   ((TVarCC & ~( _REAL | _IMAG | _DENS )) && (amr->use_wave_flag[lv] == true)) \
+          || ((TVarCC & ~( _DENS | _PHAS ))         && (amr->use_wave_flag[lv] == false))  )
+#     else 
+      if (  TVarCC & ~( _REAL | _IMAG | _DENS ))
+#     endif 
       Aux_Error( ERROR_INFO, "unsupported parameter %s = %d for IntPhase !!\n", "TVarCC", TVarCC );
-#     else
+#  else
       Aux_Error( ERROR_INFO, "\"interpolation on phase\" is useful only in ELBDM !!\n" );
-#     endif
+#  endif
    }
 
    if ( FluBC == NULL )    Aux_Error( ERROR_INFO, "FluBC == NULL !!\n" );
