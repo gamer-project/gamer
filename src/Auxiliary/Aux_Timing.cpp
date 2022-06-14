@@ -386,7 +386,7 @@ void Aux_Record_Timing()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Timing__EvolveLevel
-// Description :  Record the timing results (in second) for different code sections in "EvolveLevel()
+// Description :  Record the timing results (in second) for different code sections in EvolveLevel()
 //
 // Parameter   :  FileName     : Name of the output file
 //                Time_LB_Main : Recorded elapsed time in the main function for the option "OPT__TIMING_BALANCE"
