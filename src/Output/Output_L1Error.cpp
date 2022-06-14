@@ -11,7 +11,8 @@ static void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const
 #define NERR   ( NCOMP_TOTAL + NCOMP_MAG )
 
 
-
+#include <iostream>
+ 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_L1Error
@@ -83,10 +84,15 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
 #  endif
 
 #  elif ( MODEL == ELBDM )
+#  if ( ELBDM_SCHEME == HYBRID)
+   sprintf( FileName[            0], "%s_Dens_%06d", Prefix, DumpID );
+   sprintf( FileName[            1], "%s_Phas_%06d", Prefix, DumpID );
+   sprintf( FileName[            2], "%s_Stub_%06d", Prefix, DumpID );
+#  else 
    sprintf( FileName[            0], "%s_Dens_%06d", Prefix, DumpID );
    sprintf( FileName[            1], "%s_Real_%06d", Prefix, DumpID );
    sprintf( FileName[            2], "%s_Imag_%06d", Prefix, DumpID );
-
+#  endif 
 #  else
 #  error : unsupported MODEL !!
 #  endif // MODEL
@@ -147,8 +153,9 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
 //       output header
          if ( TRank == 0 )
          {
-            for (int v=0; v<NERR; v++)
+            for (int v=0; v<NERR; v++){
                fprintf( File[v], "#%20s %20s %20s %20s\n", "Coord.", "Numerical", "Analytical", "Error" );
+            }
          }
 
 
@@ -250,9 +257,13 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
          fprintf( File_L1, "\n" );
 
 #        elif ( MODEL == ELBDM )
+#        if ( ELBDM_SCHEME == HYBRID )
+         fprintf( File_L1, "#%5s %13s %19s %19s %19s\n",
+                  "NGrid", "Time", "Error(Dens)", "Error(Phas)", "Stub" );
+#        else 
          fprintf( File_L1, "#%5s %13s %19s %19s %19s\n",
                   "NGrid", "Time", "Error(Dens)", "Error(Real)", "Error(Imag)" );
-
+#        endif 
 #        else
 #        error : unsupported MODEL !!
 #        endif // MODEL
@@ -314,6 +325,7 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
    for (int v=0; v<NCOMP_TOTAL; v++)
       Nume[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
 
+
 // note that we use the cell-centered B field to compute errors
 #  ifdef MHD
    MHD_GetCellCenteredBFieldInPatch( Nume+NCOMP_TOTAL, lv, PID, i, j, k, amr->MagSg[lv] );
@@ -334,6 +346,7 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
                                 CheckMinPres_No, NULL_REAL, Emag_Nume,
                                 EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 #  endif // #if ( MODEL == HYDRO )
+
 
 
 // get the analytical solution
@@ -357,6 +370,12 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
                                 EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 #  endif
 
+// convert real and imaginary part to phase for wave patches in hybrid scheme 
+// adjust by multiples of 2 Pi to match phase of analytical solution
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+   if (amr->use_wave_flag[lv] == true)
+      Nume[PHAS] = ELBDM_UnwrapPhase(Anal[PHAS], ATAN2(Nume[IMAG], Nume[REAL]));
+#  endif 
 
 // record the physical coordinate
    double r;
