@@ -200,6 +200,8 @@ extern ParOutputDens_t OPT__OUTPUT_PAR_DENS;
 #ifdef SUPPORT_LIBYT
 extern char            YT_SCRIPT[MAX_STRING];
 extern yt_verbose      YT_VERBOSE;
+extern char            YT_FIG_BASENAME[MAX_STRING];
+extern int             YT_GID_Offset[NLEVEL];
 #endif
 
 

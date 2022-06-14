@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2445)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2448)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -216,6 +216,9 @@ Procedure for outputting new variables:
 //                2443 : 2022/01/30 --> output MINMOD_MAX_ITER and MONO_MAX_ITER
 //                2444 : 2022/03/16 --> output OPT__FLAG_LOHNER_ENTR and MIN_ENTR
 //                2445 : 2022/03/25 --> output OPT__OUTPUT_ENTR
+//                2446 : 2022/05/10 --> output SUPPORT_LIBYT and LIBYT_USE_PATCH_GROUP
+//                2447 : 2022/05/11 --> output MASSIVE_PARTICLES, TRACER, PAR_NTYPE, GhostSizeTracer
+//                2448 : 2022/05/18 --> output PAR_IC_TYPE
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -252,7 +255,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    if ( OPT__OUTPUT_POT )  sprintf( FieldLabelOut[PotDumpIdx], PotLabel );
 #  endif
 
-#  ifdef PARTICLE
+#  ifdef MASSIVE_PARTICLES
    const int ParDensDumpIdx = ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE ) ? NFieldStored++ : -1;
    if ( ParDensDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
@@ -961,13 +964,13 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       for (int PID0=0, t=0; PID0<amr->NPatchComma[lv][1]; PID0+=8, t++)    PID0List[t] = PID0;
 
 //    5-2-0. initialize the particle density array (rho_ext) and collect particles from higher levels for outputting particle density
-#     ifdef PARTICLE
+#     ifdef MASSIVE_PARTICLES
       if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )
       {
          Prepare_PatchData_InitParticleDensityArray( lv );
 
-         Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, PredictParPos_No, NULL_REAL,
-                                       SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
+         Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictParPos_No,
+                                       NULL_REAL, SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
       }
 #     endif
 
@@ -1029,7 +1032,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #              endif
 
 //             b. particle density on grids
-#              ifdef PARTICLE
+#              ifdef MASSIVE_PARTICLES
                if ( v == ParDensDumpIdx )
                {
 //                we do not check minimum density here (just because it's unnecessary)
@@ -1325,7 +1328,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
             H5_Status = H5Sclose( H5_MemID_Field );
 
 //          free memory used for outputting particle density
-#           ifdef PARTICLE
+#           ifdef MASSIVE_PARTICLES
             if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )
             {
                Prepare_PatchData_FreeParticleDensityArray( lv );
@@ -1721,7 +1724,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2445;
+   KeyInfo.FormatVersion        = 2448;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -1828,7 +1831,6 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.Particle               = 0;
 #  endif
 
-
 #  ifdef GPU
    Makefile.UseGPU                 = 1;
 #  else
@@ -1912,6 +1914,20 @@ void FillIn_Makefile( Makefile_t &Makefile )
 #  else
    Makefile.SupportGSL             = 0;
 #  endif
+
+#  ifdef SUPPORT_LIBYT
+   Makefile.SupportLibYT           = 1;
+#  else
+   Makefile.SupportLibYT           = 0;
+#  endif
+
+#  ifdef SUPPORT_LIBYT
+#  ifdef LIBYT_USE_PATCH_GROUP
+   Makefile.LibYTUsePatchGroup     = 1;
+#  else
+   Makefile.LibYTUsePatchGroup     = 0;
+#  endif
+#  endif // #ifdef SUPPORT_LIBYT
 
 #  ifdef SUPPORT_GRACKLE
    Makefile.SupportGrackle         = 1;
@@ -2006,6 +2022,16 @@ void FillIn_Makefile( Makefile_t &Makefile )
 #  endif // MODEL
 
 #  ifdef PARTICLE
+#  ifdef MASSIVE_PARTICLES
+   Makefile.MassiveParticles       = 1;
+#  else
+   Makefile.MassiveParticles       = 0;
+#  endif
+#  ifdef TRACER
+   Makefile.Tracer                 = 1;
+#  else
+   Makefile.Tracer                 = 0;
+#  endif
 #  ifdef STORE_PAR_ACC
    Makefile.StoreParAcc            = 1;
 #  else
@@ -2019,7 +2045,7 @@ void FillIn_Makefile( Makefile_t &Makefile )
 #  endif
 
    Makefile.Par_NAttUser           = PAR_NATT_USER;
-#  endif
+#  endif // #ifdef PARTICLE
 
 } // FUNCTION : FillIn_Makefile
 
@@ -2090,11 +2116,6 @@ void FillIn_SymConst( SymConst_t &SymConst )
 
 #  if   ( POT_SCHEME == SOR )
    SymConst.Pot_BlockSize_z      = POT_BLOCK_SIZE_Z;
-#  ifdef USE_PSOLVER_10TO14
-   SymConst.UsePSolver_10to14    = 1;
-#  else
-   SymConst.UsePSolver_10to14    = 0;
-#  endif
 #  ifdef SOR_RHO_SHARED
    SymConst.SOR_RhoShared        = 1;
 #  else
@@ -2125,7 +2146,10 @@ void FillIn_SymConst( SymConst_t &SymConst )
 
 #  ifdef PARTICLE
    SymConst.Par_NAttStored       = PAR_NATT_STORED;
+   SymConst.Par_NType            = PAR_NTYPE;
+#  ifdef GRAVITY
    SymConst.RhoExt_GhostSize     = RHOEXT_GHOST_SIZE;
+#  endif
 
 #  ifdef DEBUG_PARTICLE
    SymConst.Debug_Particle       = 1;
@@ -2135,7 +2159,7 @@ void FillIn_SymConst( SymConst_t &SymConst )
 
    SymConst.ParList_GrowthFactor = PARLIST_GROWTH_FACTOR;
    SymConst.ParList_ReduceFactor = PARLIST_REDUCE_FACTOR;
-#  endif
+#  endif // #ifdef PARTICLE
 
 
 #  ifdef BIT_REP_FLUX
@@ -2302,13 +2326,18 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Par_Init                = amr->Par->Init;
    InputPara.Par_ICFormat            = amr->Par->ParICFormat;
    InputPara.Par_ICMass              = amr->Par->ParICMass;
+   InputPara.Par_ICType              = amr->Par->ParICType;
    InputPara.Par_Interp              = amr->Par->Interp;
+   InputPara.Par_InterpTracer        = amr->Par->InterpTracer;
    InputPara.Par_Integ               = amr->Par->Integ;
+   InputPara.Par_IntegTracer         = amr->Par->IntegTracer;
    InputPara.Par_ImproveAcc          = amr->Par->ImproveAcc;
    InputPara.Par_PredictPos          = amr->Par->PredictPos;
+   InputPara.Par_TracerVelCorr       = amr->Par->TracerVelCorr;
    InputPara.Par_RemoveCell          = amr->Par->RemoveCell;
    InputPara.Opt__FreezePar          = OPT__FREEZE_PAR;
    InputPara.Par_GhostSize           = amr->Par->GhostSize;
+   InputPara.Par_GhostSizeTracer     = amr->Par->GhostSizeTracer;
    for (int v=0; v<PAR_NATT_TOTAL; v++)
    InputPara.ParAttLabel[v]          = ParAttLabel[v];
 #  endif
@@ -2847,6 +2876,10 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Laohu",                  HOFFSET(Makefile_t,Laohu                  ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "SupportHDF5",            HOFFSET(Makefile_t,SupportHDF5            ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "SupportGSL",             HOFFSET(Makefile_t,SupportGSL             ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "SupportLibYT",           HOFFSET(Makefile_t,SupportLibYT           ), H5T_NATIVE_INT );
+#  ifdef SUPPORT_LIBYT
+   H5Tinsert( H5_TypeID, "LibYTUsePatchGroup",     HOFFSET(Makefile_t,LibYTUsePatchGroup     ), H5T_NATIVE_INT );
+#  endif
    H5Tinsert( H5_TypeID, "SupportGrackle",         HOFFSET(Makefile_t,SupportGrackle         ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "RandomNumber",           HOFFSET(Makefile_t,RandomNumber           ), H5T_NATIVE_INT );
 
@@ -2883,6 +2916,8 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
 #  endif // MODEL
 
 #  ifdef PARTICLE
+   H5Tinsert( H5_TypeID, "MassiveParticles",       HOFFSET(Makefile_t,MassiveParticles       ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "Tracer",                 HOFFSET(Makefile_t,Tracer                 ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "StoreParAcc",            HOFFSET(Makefile_t,StoreParAcc            ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "StarFormation",          HOFFSET(Makefile_t,StarFormation          ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Par_NAttUser",           HOFFSET(Makefile_t,Par_NAttUser           ), H5T_NATIVE_INT );
@@ -2949,7 +2984,6 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "ExtPotNGeneMax",       HOFFSET(SymConst_t,ExtPotNGeneMax      ), H5T_NATIVE_INT    );
 #  if   ( POT_SCHEME == SOR )
    H5Tinsert( H5_TypeID, "Pot_BlockSize_z",      HOFFSET(SymConst_t,Pot_BlockSize_z     ), H5T_NATIVE_INT    );
-   H5Tinsert( H5_TypeID, "UsePSolver_10to14",    HOFFSET(SymConst_t,UsePSolver_10to14   ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "SOR_RhoShared",        HOFFSET(SymConst_t,SOR_RhoShared       ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "SOR_CPotShared",       HOFFSET(SymConst_t,SOR_CPotShared      ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "SOR_UseShuffle",       HOFFSET(SymConst_t,SOR_UseShuffle      ), H5T_NATIVE_INT    );
@@ -2962,11 +2996,14 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Par_NAttStored",       HOFFSET(SymConst_t,Par_NAttStored      ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "Par_NType",            HOFFSET(SymConst_t,Par_NType           ), H5T_NATIVE_INT    );
+#  ifdef GRAVITY
    H5Tinsert( H5_TypeID, "RhoExt_GhostSize",     HOFFSET(SymConst_t,RhoExt_GhostSize    ), H5T_NATIVE_INT    );
+#  endif
    H5Tinsert( H5_TypeID, "Debug_Particle",       HOFFSET(SymConst_t,Debug_Particle      ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "ParList_GrowthFactor", HOFFSET(SymConst_t,ParList_GrowthFactor), H5T_NATIVE_DOUBLE );
    H5Tinsert( H5_TypeID, "ParList_ReduceFactor", HOFFSET(SymConst_t,ParList_ReduceFactor), H5T_NATIVE_DOUBLE );
-#  endif
+#  endif // #ifdef PARTICLE
 
    H5Tinsert( H5_TypeID, "BitRep_Flux",          HOFFSET(SymConst_t,BitRep_Flux         ), H5T_NATIVE_INT    );
 #  ifdef MHD
@@ -3130,13 +3167,18 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Par_Init",                HOFFSET(InputPara_t,Par_Init               ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_ICFormat",            HOFFSET(InputPara_t,Par_ICFormat           ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_ICMass",              HOFFSET(InputPara_t,Par_ICMass             ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "Par_ICType",              HOFFSET(InputPara_t,Par_ICType             ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_Interp",              HOFFSET(InputPara_t,Par_Interp             ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Par_InterpTracer",        HOFFSET(InputPara_t,Par_InterpTracer       ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_Integ",               HOFFSET(InputPara_t,Par_Integ              ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Par_IntegTracer",         HOFFSET(InputPara_t,Par_IntegTracer        ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_ImproveAcc",          HOFFSET(InputPara_t,Par_ImproveAcc         ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_PredictPos",          HOFFSET(InputPara_t,Par_PredictPos         ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Par_TracerVelCorr",       HOFFSET(InputPara_t,Par_TracerVelCorr      ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_RemoveCell",          HOFFSET(InputPara_t,Par_RemoveCell         ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "Opt__FreezePar",          HOFFSET(InputPara_t,Opt__FreezePar         ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_GhostSize",           HOFFSET(InputPara_t,Par_GhostSize          ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Par_GhostSizeTracer",     HOFFSET(InputPara_t,Par_GhostSizeTracer    ), H5T_NATIVE_INT     );
 
 // store the name of all particle attributes
    for (int v=0; v<PAR_NATT_TOTAL; v++)

@@ -220,6 +220,18 @@ void Aux_TakeNote()
 
 //    d. options in PARTICLE
 #     ifdef PARTICLE
+#     ifdef MASSIVE_PARTICLES
+      fprintf( Note, "MASSIVE_PARTICLES               ON\n" );
+#     else
+      fprintf( Note, "MASSIVE_PARTICLES               OFF\n" );
+#     endif
+
+#     ifdef TRACER
+      fprintf( Note, "TRACER                          ON\n" );
+#     else
+      fprintf( Note, "TRACER                          OFF\n" );
+#     endif
+
 #     ifdef STORE_PAR_ACC
       fprintf( Note, "STORE_PAR_ACC                   ON\n" );
 #     else
@@ -343,6 +355,20 @@ void Aux_TakeNote()
       fprintf( Note, "SUPPORT_GSL                     OFF\n" );
 #     endif
 
+#     ifdef SUPPORT_LIBYT
+      fprintf( Note, "SUPPORT_LIBYT                   ON\n" );
+#     else
+      fprintf( Note, "SUPPORT_LIBYT                   OFF\n" );
+#     endif
+
+#     ifdef SUPPORT_LIBYT
+#     ifdef LIBYT_USE_PATCH_GROUP
+      fprintf( Note, "LIBYT_USE_PATCH_GROUP           ON\n" );
+#     else
+      fprintf( Note, "LIBYT_USE_PATCH_GROUP           OFF\n" );
+#     endif
+#     endif // #ifdef SUPPORT_LIBYT
+
 #     if   ( RANDOM_NUMBER == RNG_GNU_EXT )
       fprintf( Note, "RANDOM_NUMBER                   RNG_GNU_EXT\n" );
 #     elif ( RANDOM_NUMBER == RNG_CPP11 )
@@ -439,13 +465,6 @@ void Aux_TakeNote()
 #     endif // MODEL
 
 #     if ( defined GRAVITY  &&  POT_SCHEME == SOR  &&  defined GPU )
-#     ifdef USE_PSOLVER_10TO14
-      fprintf( Note, "USE_PSOLVER_10TO14              ON\n" );
-#     else
-      fprintf( Note, "USE_PSOLVER_10TO14              OFF\n" );
-#     endif
-
-#     ifdef USE_PSOLVER_10TO14
 #     ifdef SOR_RHO_SHARED
       fprintf( Note, "SOR_RHO_SHARED                  ON\n" );
 #     else
@@ -471,7 +490,6 @@ void Aux_TakeNote()
 #     endif
 
       fprintf( Note, "SOR_MOD_REDUCTION               %d\n",      SOR_MOD_REDUCTION       );
-#     endif // #ifdef USE_PSOLVER_10TO14
 #     endif // #if ( defined GRAVITY  &&  POT_SCHEME == SOR  &&  defined GPU )
 
 #     ifdef GPU
@@ -534,7 +552,7 @@ void Aux_TakeNote()
 #     ifdef PARTICLE
       fprintf( Note, "#define RHOEXT_GHOST_SIZE       %d\n",      RHOEXT_GHOST_SIZE     );
 #     endif
-#     endif
+#     endif // #ifdef GRAVITY
       fprintf( Note, "#define SRC_GHOST_SIZE          %d\n",      SRC_GHOST_SIZE        );
       fprintf( Note, "#define DER_GHOST_SIZE          %d\n",      DER_GHOST_SIZE        );
       fprintf( Note, "#define FLU_NXT                 %d\n",      FLU_NXT               );
@@ -546,9 +564,9 @@ void Aux_TakeNote()
       fprintf( Note, "#define USG_NXT_F               %d\n",      USG_NXT_F             );
       fprintf( Note, "#define USG_NXT_G               %d\n",      USG_NXT_G             );
 #     endif
-#     endif
-#     ifdef PARTICLE
-      fprintf( Note, "#define RHOEXT_NXT              %d\n",      RHOEXT_NXT            );
+#     endif // #ifdef GRAVITY
+#     ifdef MASSIVE_PARTICLES
+      fprintf( Note, "#define RHOEXT_NXT              %d\n",      RHOEXT_NXT          );
 #     endif
       fprintf( Note, "#define SRC_NXT                 %d\n",      SRC_NXT               );
       fprintf( Note, "#define DER_NXT                 %d\n",      DER_NXT               );
@@ -587,6 +605,7 @@ void Aux_TakeNote()
       fprintf( Note, "#define PAR_NATT_TOTAL          %d\n",      PAR_NATT_TOTAL        );
       fprintf( Note, "#define PAR_NATT_USER           %d\n",      PAR_NATT_USER         );
       fprintf( Note, "#define PAR_NATT_STORED         %d\n",      PAR_NATT_STORED       );
+      fprintf( Note, "#define PAR_NTYPE               %d\n",      PAR_NTYPE             );
 #     endif
       fprintf( Note, "#define MAX_STRING              %d\n",      MAX_STRING            );
       fprintf( Note, "#define TINY_NUMBER             %20.14e\n", TINY_NUMBER           );
@@ -705,12 +724,17 @@ void Aux_TakeNote()
       fprintf( Note, "Par->Init                       %d\n",      amr->Par->Init                );
       fprintf( Note, "Par->ParICFormat                %d\n",      amr->Par->ParICFormat         );
       fprintf( Note, "Par->ParICMass                 %14.7e\n",   amr->Par->ParICMass           );
+      fprintf( Note, "Par->ParICType                  %d\n",      amr->Par->ParICType           );
       fprintf( Note, "Par->Interp                     %d\n",      amr->Par->Interp              );
       fprintf( Note, "Par->Integ                      %d\n",      amr->Par->Integ               );
       fprintf( Note, "Par->GhostSize                  %d\n",      amr->Par->GhostSize           );
       fprintf( Note, "Par->ImproveAcc                 %d\n",      amr->Par->ImproveAcc          );
       fprintf( Note, "Par->PredictPos                 %d\n",      amr->Par->PredictPos          );
       fprintf( Note, "Par->RemoveCell                 %13.7e\n",  amr->Par->RemoveCell          );
+      fprintf( Note, "Par->InterpTracer               %d\n",      amr->Par->InterpTracer        );
+      fprintf( Note, "Par->IntegTracer                %d\n",      amr->Par->IntegTracer         );
+      fprintf( Note, "Par->GhostSizeTracer            %d\n",      amr->Par->GhostSizeTracer     );
+      fprintf( Note, "Par->TracerVelCorr              %d\n",      amr->Par->TracerVelCorr       );
       fprintf( Note, "OPT__FREEZE_PAR                 %d\n",      OPT__FREEZE_PAR               );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
@@ -1259,6 +1283,7 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "YT_SCRIPT                       %s\n",      YT_SCRIPT  );
       fprintf( Note, "YT_VERBOSE                      %d\n",      YT_VERBOSE );
+      fprintf( Note, "YT_FIG_BASENAME                 %s\n",      YT_FIG_BASENAME );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 #     endif

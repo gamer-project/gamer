@@ -122,6 +122,7 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                  --> This number is independent of periodicity (because of the padded patches)
 //                LB_Idx          : Space-filling-curve index for load balance
 //                NPar            : Number of particles belonging to this leaf patch
+//                NPar_Type       : Number of different types of particles belonging to this leaf patch
 //                ParListSize     : Size of the array ParList (ParListSize can be >= NPar)
 //                ParList         : List recording the IDs of all particles belonging to this leaf real patch
 //                NPar_Copy       : Number of particles collected from other patches. There are three kinds of patches that
@@ -156,7 +157,6 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                  --> for LOAD_BALANCE only
 //                NPar_Escp       : Number of particles escaping from this patch
 //                ParList_Escp    : List recording the IDs of all particles escaping from this patch
-//                libyt_GID       : GID in libyt, for searching and returning particles belong to that grid.
 //
 // Method      :  patch_t         : Constructor
 //               ~patch_t         : Destructor
@@ -200,7 +200,7 @@ struct patch_t
    char (*de_status)[PS1][PS1];
 #  endif
 
-#  ifdef PARTICLE
+#  ifdef MASSIVE_PARTICLES
    real (*rho_ext)[RHOEXT_NXT][RHOEXT_NXT];
 #  endif
 
@@ -233,6 +233,7 @@ struct patch_t
 
 #  ifdef PARTICLE
    int    NPar;
+   int    NParType[PAR_NTYPE];
    int    ParListSize;
    long  *ParList;
 
@@ -246,12 +247,7 @@ struct patch_t
    int    NPar_Escp[26];
    long  *ParList_Escp[26];
 
-#  ifdef SUPPORT_LIBYT
-   long   libyt_GID;
 #  endif
-
-#  endif
-
 
 
    //===================================================================================
@@ -396,7 +392,7 @@ struct patch_t
          de_status = NULL;
 #        endif
 
-#        ifdef PARTICLE
+#        ifdef MASSIVE_PARTICLES
          rho_ext   = NULL;
 #        endif
       }
@@ -434,6 +430,8 @@ struct patch_t
 
 #     ifdef PARTICLE
       NPar         = 0;          // must be initialized as 0
+      for (int i=0; i<PAR_NTYPE; i++)
+      NParType[i]  = 0;          // must be initialized as 0
       ParListSize  = 0;          // must be initialized as 0
       ParList      = NULL;
 
@@ -479,7 +477,9 @@ struct patch_t
 #     endif
 
 #     ifdef PARTICLE
+#     ifdef GRAVITY
       ddelete();
+#     endif
 
 //    check: all particle-related variables/arrays should be deallocated already (except rho_ext when OPT__REUSE_MEMORY is on)
 #     ifdef DEBUG_PARTICLE
@@ -494,6 +494,8 @@ struct patch_t
       if ( ParList_Escp[s] != NULL )      Aux_Error( ERROR_INFO, "ParList_Escp[%d] != NULL !!\n", s );
 
       if ( NPar != 0 )                    Aux_Error( ERROR_INFO, "NPar = %d != 0 !!\n", NPar );
+      for (int i=0; i<PAR_NTYPE; i++)
+      if ( NParType[i] != 0 )             Aux_Error( ERROR_INFO, "NParType[%d] = %d != 0 !!\n", i, NParType[i] );
       if ( NPar_Copy != -1 )              Aux_Error( ERROR_INFO, "NPar_Copy = %d != -1 !!\n", NPar_Copy );
       for (int s=0; s<26; s++)
       if ( NPar_Escp[s] != -1 )           Aux_Error( ERROR_INFO, "NPar_Escp[%d] = %d != -1 !!\n", s, NPar_Escp[s] );
@@ -693,7 +695,7 @@ struct patch_t
       delete [] fluid;
       fluid = NULL;
 
-#     ifdef PARTICLE
+#     ifdef MASSIVE_PARTICLES
       delete [] rho_ext;
       rho_ext = NULL;
 #     endif
@@ -816,6 +818,7 @@ struct patch_t
 
 
 #  ifdef PARTICLE
+#  ifdef GRAVITY
    //===================================================================================
    // Method      :  dnew
    // Description :  Allocate rho_ext[]
@@ -847,6 +850,7 @@ struct patch_t
 
    } // METHOD : ddelete
 
+#  endif // #ifdef GRAVITY
 
 
    //===================================================================================
@@ -861,15 +865,18 @@ struct patch_t
    // Parameter   :  NNew    : Number of new particles to be added
    //                NewList : List storing the indices of new particles
    //                NPar_Lv : Pointer to amr->Par->NPar_Lv[TargetLv]
+   //                ParType : amr->Par->Type
    //                ParPos  : Particle position list             (debug only)
    //                NParTot : Total number of existing particles (debug only)
    //                Comment : Message for the debug mode         (debug only)
    //===================================================================================
 #  ifdef DEBUG_PARTICLE
    void AddParticle( const int NNew, const long *NewList, long *NPar_Lv,
-                     const real **ParPos, const long NParTot, const char *Comment )
+                     const real *ParType, const real **ParPos, const long NParTot,
+                     const char *Comment )
 #  else
-   void AddParticle( const int NNew, const long *NewList, long *NPar_Lv )
+   void AddParticle( const int NNew, const long *NewList, long *NPar_Lv,
+                     const real *ParType )
 #  endif
    {
 
@@ -879,6 +886,8 @@ struct patch_t
       if ( NewList == NULL  &&  NNew != 0 )  Aux_Error( ERROR_INFO, "\"%s\": NewList == NULL !!\n", Comment );
       if ( NNew < 0 )                        Aux_Error( ERROR_INFO, "\"%s\": NNew (%d) < 0 !!\n",   Comment, NNew );
       if ( NPar < 0 )                        Aux_Error( ERROR_INFO, "\"%s\": NPar (%d) < 0 !!\n",   Comment, NPar );
+      for (int i=0; i<PAR_NTYPE; i++)
+      if ( NParType[i] < 0 )                 Aux_Error( ERROR_INFO, "\"%s\": NParType[%d] (%d) < 0 !!\n", Comment, i, NParType[i] );
 
 //    check 2: particle indices in NewList are NEW
       for (int q=0; q<NPar; q++)
@@ -942,6 +951,12 @@ struct patch_t
 //    update the particle number
       NPar = NPar_New;
 
+//    update the particle type number
+      for (int p=0; p<NNew; p++) {
+         const long ParID = NewList[p];
+         NParType[ (long)ParType[ParID] ] ++;
+      }
+
 //    update the particle number at the target level
       *NPar_Lv += NNew;
 
@@ -967,8 +982,11 @@ struct patch_t
    //                                 may tend to update NPar_Lv at the same time
    //                             --> So for NPar_Lv == NULL, one must update NPar_Lv later manually
    //                RemoveAll  : true --> remove all particle in this patch
+   //                ParType    : amr->Par->Type
    //===================================================================================
-   void RemoveParticle( const int NRemove, const int *RemoveList, long *NPar_Lv, const bool RemoveAll )
+   void RemoveParticle( const int NRemove, const int *RemoveList,
+                        long *NPar_Lv, const bool RemoveAll,
+                        const real *ParType )
    {
 
 //    removing all particles is easy
@@ -988,6 +1006,8 @@ struct patch_t
 //       remove all particles
          NPar        = 0;
          ParListSize = 0;
+         for (int i=0; i<PAR_NTYPE; i++)
+         NParType[i] = 0;
 
          if ( ParList != NULL )
          {
@@ -1005,6 +1025,8 @@ struct patch_t
       if ( RemoveList == NULL  &&  NRemove != 0 )  Aux_Error( ERROR_INFO, "RemoveList == NULL !!\n" );
       if ( NRemove < 0 )                           Aux_Error( ERROR_INFO, "NRemove (%d) < 0 !!\n", NRemove );
       if ( NPar < 0 )                              Aux_Error( ERROR_INFO, "NPar (%d) < 0 !!\n", NPar );
+      for (int i=0; i<PAR_NTYPE; i++)
+      if ( NParType[i] < 0 )                       Aux_Error( ERROR_INFO, "NParType[%d] (%d) < 0 !!\n", i, NParType[i] );
       if ( NRemove > NPar )                        Aux_Error( ERROR_INFO, "NRemove (%d) > NPar (%d) !!\n", NRemove, NPar );
 
 //    check 2: indices in RemoveList do not exceed the number of existing particles
@@ -1042,6 +1064,8 @@ struct patch_t
       for (int p=NRemove-1; p>=0; p--)
       {
          LastP = NPar - 1;
+
+         NParType[  (long)ParType[ ParList[RemoveList[p]] ]  ] --;
 
          if ( RemoveList[p] != LastP )   ParList[ RemoveList[p] ] = ParList[ LastP ];
 

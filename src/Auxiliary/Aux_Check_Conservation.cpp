@@ -284,7 +284,7 @@ void Aux_Check_Conservation( const char *comment )
 
 
 // calculate conserved quantities for particles
-#  ifdef PARTICLE
+#  ifdef MASSIVE_PARTICLES
    double Mass_Par, MomX_Par, MomY_Par, MomZ_Par, Ekin_Par, Epot_Par, Etot_Par;
 
    Par_Aux_GetConservedQuantity( Mass_Par, MomX_Par, MomY_Par, MomZ_Par, Ekin_Par, Epot_Par );
@@ -298,7 +298,7 @@ void Aux_Check_Conservation( const char *comment )
    {
 //    note that a variable length array cannot have static storage duration
       static double Fluid_Ref[NVar_Max];
-#     ifdef PARTICLE
+#     ifdef MASSIVE_PARTICLES
       static double Mass_Par_Ref, MomX_Par_Ref, MomY_Par_Ref, MomZ_Par_Ref, Ekin_Par_Ref, Epot_Par_Ref, Etot_Par_Ref;
 #     endif
       double AbsErr[NVar], RelErr[NVar];
@@ -308,7 +308,7 @@ void Aux_Check_Conservation( const char *comment )
 //       record the reference values
          for (int v=0; v<NVar; v++)    Fluid_Ref[v] = Fluid_AllRank[v];
 
-#        ifdef PARTICLE
+#        ifdef MASSIVE_PARTICLES
          Mass_Par_Ref = Mass_Par;
          MomX_Par_Ref = MomX_Par;
          MomY_Par_Ref = MomY_Par;
@@ -348,7 +348,7 @@ void Aux_Check_Conservation( const char *comment )
          if ( GetPassiveSum )
          Aux_Message( File, "# PassNorm     : sum of all target passive scalars to be normalized\n" );
 
-#        ifdef PARTICLE
+#        ifdef MASSIVE_PARTICLES
          Aux_Message( File, "# Mass_Par     : total PARTICLE mass\n" );
          Aux_Message( File, "# MomX/Y/Z_Par : total PARTICLE momentum\n" );
          Aux_Message( File, "# Ekin_Par     : total PARTICLE kinetic energy\n" );
@@ -364,7 +364,7 @@ void Aux_Check_Conservation( const char *comment )
 #        endif
          Aux_Message( File, "# Etot_All     : sum of the total HYDRO/ELBDM + PARTICLE energy\n" );
 #        endif // if ( MODEL != PAR_ONLY )
-#        endif // #ifdef PARTICLE
+#        endif // #ifdef MASSIVE_PARTICLES
 
          Aux_Message( File, "\n" );
          Aux_Message( File, "# AErr         : absolute error --> (now - ref)\n" );
@@ -407,7 +407,7 @@ void Aux_Check_Conservation( const char *comment )
          if ( GetPassiveSum )
          Aux_Message( File, "  %14s  %14s  %14s", "PassNorm", "PassNorm_AErr", "PassNorm_RErr" );
 
-#        ifdef PARTICLE
+#        ifdef MASSIVE_PARTICLES
          Aux_Message( File, "  %14s  %14s  %14s", "Mass_Par", "Mass_Par_AErr", "Mass_Par_RErr" );
          Aux_Message( File, "  %14s  %14s  %14s", "MomX_Par", "MomX_Par_AErr", "MomX_Par_RErr" );
          Aux_Message( File, "  %14s  %14s  %14s", "MomY_Par", "MomY_Par_AErr", "MomY_Par_RErr" );
@@ -441,7 +441,7 @@ void Aux_Check_Conservation( const char *comment )
       }
 
 //    calculate the sum of conserved quantities in different models
-#     if ( defined PARTICLE  &&  MODEL != PAR_ONLY )
+#     if ( defined MASSIVE_PARTICLES  &&  MODEL != PAR_ONLY )
 #     if   ( MODEL == HYDRO )
       const double Mass_All     = Fluid_AllRank[       0] + Mass_Par;
       const double MomX_All     = Fluid_AllRank[       1] + MomX_Par;
@@ -462,7 +462,7 @@ void Aux_Check_Conservation( const char *comment )
       const double Mass_All_Ref = Fluid_Ref    [       0] + Mass_Par_Ref;
       const double Etot_All_Ref = Fluid_Ref    [idx_etot] + Etot_Par_Ref;
 #     endif // MODEL
-#     endif // if ( defined PARTICLE  &&  MODEL != PAR_ONLY )
+#     endif // if ( defined MASSIVE_PARTICLES  &&  MODEL != PAR_ONLY )
 
 
 //    output
@@ -473,7 +473,7 @@ void Aux_Check_Conservation( const char *comment )
       for (int v=0; v<NVar; v++)
       Aux_Message( File, "  %14.7e  %14.7e  %14.7e", Fluid_AllRank[v], AbsErr[v], RelErr[v] );
 
-#     ifdef PARTICLE
+#     ifdef MASSIVE_PARTICLES
       Aux_Message( File, "  %14.7e  %14.7e  %14.7e", Mass_Par, Mass_Par-Mass_Par_Ref, (Mass_Par-Mass_Par_Ref)/fabs(Mass_Par_Ref) );
       Aux_Message( File, "  %14.7e  %14.7e  %14.7e", MomX_Par, MomX_Par-MomX_Par_Ref, (MomX_Par-MomX_Par_Ref)/fabs(MomX_Par_Ref) );
       Aux_Message( File, "  %14.7e  %14.7e  %14.7e", MomY_Par, MomY_Par-MomY_Par_Ref, (MomY_Par-MomY_Par_Ref)/fabs(MomY_Par_Ref) );
@@ -491,7 +491,7 @@ void Aux_Check_Conservation( const char *comment )
 #     endif
       Aux_Message( File, "  %14.7e  %14.7e  %14.7e", Etot_All, Etot_All-Etot_All_Ref, (Etot_All-Etot_All_Ref)/fabs(Etot_All_Ref) );
 #     endif // if ( MODEL != PAR_ONLY )
-#     endif // #ifdef PARTICLE
+#     endif // #ifdef MASSIVE_PARTICLES
 
       Aux_Message( File, "\n" );
 

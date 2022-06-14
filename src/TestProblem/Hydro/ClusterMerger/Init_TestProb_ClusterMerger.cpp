@@ -52,7 +52,6 @@ static int     Merger_NBin1;              // number of radial bins of cluster 1
 static int     Merger_NBin2;              // number of radial bins of cluster 2
 static int     Merger_NBin3;              // number of radial bins of cluster 3
 
-       FieldIdx_t ParTypeIdx     = Idx_Undefined;
 static FieldIdx_t ColorField1Idx = Idx_Undefined;
 static FieldIdx_t ColorField2Idx = Idx_Undefined;
 static FieldIdx_t ColorField3Idx = Idx_Undefined;
@@ -60,19 +59,18 @@ static FieldIdx_t ColorField3Idx = Idx_Undefined;
 // =======================================================================================
 
 // problem-specific function prototypes
-#ifdef PARTICLE
+#ifdef MASSIVE_PARTICLES
 void Par_Init_ByFunction_ClusterMerger(const long NPar_ThisRank,
                                        const long NPar_AllRank,
                                        real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                        real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                       real *AllAttribute[PAR_NATT_TOTAL]);
+                                       real *ParType, real *AllAttribute[PAR_NATT_TOTAL]);
 #endif
 
 int Read_Num_Points_ClusterMerger(std::string filename);
 void Read_Profile_ClusterMerger(std::string filename, std::string fieldname,
                                 double field[]);
 void AddNewField_ClusterMerger();
-void AddNewParticleAttribute_ClusterMerger();
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
@@ -97,8 +95,8 @@ void Validate()
    Aux_Error( ERROR_INFO, "GRAVITY must be enabled !!\n" );
 #  endif
 
-#  ifndef PARTICLE
-   Aux_Error( ERROR_INFO, "PARTICLE must be enabled !!\n" );
+#  ifndef MASSIVE_PARTICLES
+   Aux_Error( ERROR_INFO, "MASSIVE_PARTICLES must be enabled !!\n" );
 #  endif
 
 #  ifndef SUPPORT_HDF5
@@ -121,12 +119,9 @@ void Validate()
       Aux_Error( ERROR_INFO, "do not use periodic BC (OPT__BC_POT = 1) for this test !!\n" );
 #  endif
 
-#  ifdef PARTICLE
+#  ifdef MASSIVE_PARTICLES
    if ( OPT__INIT == INIT_BY_FUNCTION  &&  amr->Par->Init != PAR_INIT_BY_FUNCTION )
       Aux_Error( ERROR_INFO, "please set PAR_INIT = 1 (by FUNCTION) !!\n" );
-
-   if ( PAR_NATT_USER != 1 )
-      Aux_Error( ERROR_INFO, "please set PAR_NATT_USER = 1 in the Makefile !!\n" );
 #  endif
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
@@ -135,7 +130,7 @@ void Validate()
 
 
 
-#if ( MODEL == HYDRO  &&  defined PARTICLE )
+#if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
@@ -567,7 +562,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 } // FUNCTION : SetGridIC
 
-#endif // #if ( MODEL == HYDRO  &&  defined PARTICLE )
+#endif // #if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -634,7 +629,7 @@ void Init_TestProb_Hydro_ClusterMerger()
    Validate();
 
 
-#  if ( MODEL == HYDRO  &&  defined PARTICLE )
+#  if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
 // set the problem-specific runtime parameters
    SetParameter();
 
@@ -644,11 +639,11 @@ void Init_TestProb_Hydro_ClusterMerger()
    End_User_Ptr                   = End_ClusterMerger;
    Par_Init_ByFunction_Ptr        = Par_Init_ByFunction_ClusterMerger;
    Init_Field_User_Ptr            = AddNewField_ClusterMerger;
-   Par_Init_Attribute_User_Ptr    = AddNewParticleAttribute_ClusterMerger;
+   //Par_Init_Attribute_User_Ptr    = AddNewParticleAttribute_ClusterMerger;
 #  ifdef MHD
    Init_Function_BField_User_Ptr  = SetBFieldIC;
 #  endif
-#  endif // if ( MODEL == HYDRO  &&  defined PARTICLE )
+#  endif // if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
@@ -712,15 +707,6 @@ void AddNewField_ClusterMerger()
    if ( Merger_Coll_NumHalos > 2 && ColorField3Idx == Idx_Undefined )
       ColorField3Idx = AddField( "ColorField3", NORMALIZE_NO, INTERP_FRAC_NO );
 
-}
-#endif
-
-#ifdef PARTICLE
-
-void AddNewParticleAttribute_ClusterMerger()
-{
-    if (ParTypeIdx == Idx_Undefined)
-        ParTypeIdx = AddParticleAttribute("ParType");
 }
 
 #endif
