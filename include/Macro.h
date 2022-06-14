@@ -650,7 +650,6 @@
 
 
 // patch size (number of cells of a single patch in the x/y/z directions)
-#define PATCH_SIZE                   8
 #define PS1             ( 1*PATCH_SIZE )
 #define PS2             ( 2*PATCH_SIZE )
 #define PS2P1           ( PS2 + 1 )
