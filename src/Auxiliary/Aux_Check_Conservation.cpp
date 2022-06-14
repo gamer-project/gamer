@@ -50,6 +50,7 @@ void Aux_Check_Conservation( const char *comment )
    return;
 #  endif
 
+
    if ( FirstTime  &&  MPI_Rank == 0 )
    {
       if ( Aux_CheckFileExist(FileName) )
@@ -136,9 +137,21 @@ void Aux_Check_Conservation( const char *comment )
          const real MinTemp_No = -1.0;
          const real MinEntr_No = -1.0;
 
+#        if ( ELBDM_SCHEME == HYBRID )
+         if ( amr->use_wave_flag[lv] == true ) {
+#        endif 
          Prepare_PatchData( lv, Time[lv], Flu_ELBDM[0][0][0][0], NULL, NGhost, NPG, &PID0, _REAL|_IMAG, _NONE,
                             IntScheme, INT_NONE, UNIT_PATCH, NSIDE_06, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
                             MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+
+#        if ( ELBDM_SCHEME == HYBRID )
+         } else {
+         Prepare_PatchData( lv, Time[lv], Flu_ELBDM[0][0][0][0], NULL, NGhost, NPG, &PID0, _DENS|_PHAS, _NONE,
+                            IntScheme, INT_NONE, UNIT_PATCH, NSIDE_06, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
+                            MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+         }
+#        endif 
+
 #        endif
 
          for (int PID=PID0; PID<PID0+8; PID++)
@@ -224,10 +237,23 @@ void Aux_Check_Conservation( const char *comment )
 
                const int t = PID - PID0;
 
+//             Convert density to log(density) for computing kinetic energy in fluid patches
+#              if ( ELBDM_SCHEME == HYBRID )
+               if ( amr->use_wave_flag[lv] == false ) {
+                  for (int k=0; k<Size_Flu; k++)   {
+                  for (int j=0; j<Size_Flu; j++)   {
+                  for (int i=0; i<Size_Flu; i++)   {
+                     Flu_ELBDM[t][DENS][k ][j ][i] = log(Flu_ELBDM[t][DENS][k ][j ][i]);
+                  }}} //k,j,i
+               }
+#              endif 
+
                for (int k=NGhost; k<Size_Flu-NGhost; k++)   { kp = k+1; km = k-1;
                for (int j=NGhost; j<Size_Flu-NGhost; j++)   { jp = j+1; jm = j-1;
                for (int i=NGhost; i<Size_Flu-NGhost; i++)   { ip = i+1; im = i-1;
-
+#                 if ( ELBDM_SCHEME == HYBRID )
+                  if ( amr->use_wave_flag[lv] == true ) {
+#                 endif 
 //                [1-3] momentum in ELBDM
                   R = Flu_ELBDM[t][0][k][j][i];
                   I = Flu_ELBDM[t][1][k][j][i];
@@ -246,6 +272,28 @@ void Aux_Check_Conservation( const char *comment )
 //                [4] kinetic energy in ELBDM
                   Fluid_lv[4] += _2Eta2*( SQR(GradR[0]) + SQR(GradR[1]) + SQR(GradR[2]) +
                                           SQR(GradI[0]) + SQR(GradI[1]) + SQR(GradI[2])   );
+#                 if ( ELBDM_SCHEME == HYBRID )
+                  } else {
+//                [1-3] momentum in ELBDM
+                  const double Dens =  exp(Flu_ELBDM[t][DENS][k ][j ][i]);
+
+//                Compute velocities v_i = dS/dx
+                  GradI[0] = 1.0 * _dh2*( Flu_ELBDM[t][PHAS][k ][j ][ip] - Flu_ELBDM[t][PHAS][k ][j ][im] );
+                  GradI[1] = 1.0 * _dh2*( Flu_ELBDM[t][PHAS][k ][jp][i ] - Flu_ELBDM[t][PHAS][k ][jm][i ] );
+                  GradI[2] = 1.0 * _dh2*( Flu_ELBDM[t][PHAS][kp][j ][i ] - Flu_ELBDM[t][PHAS][km][j ][i ] );
+//                Compute velocities v_r = dln(sqrt(rho))/dx = 0.5 * dln(rho)/dx
+                  GradR[0] = 0.5 * _dh2*( Flu_ELBDM[t][DENS][k ][j ][ip] - Flu_ELBDM[t][DENS][k ][j ][im] );
+                  GradR[1] = 0.5 * _dh2*( Flu_ELBDM[t][DENS][k ][jp][i ] - Flu_ELBDM[t][DENS][k ][jm][i ] );
+                  GradR[2] = 0.5 * _dh2*( Flu_ELBDM[t][DENS][kp][j ][i ] - Flu_ELBDM[t][DENS][km][j ][i ] );
+
+                  for (int d=0; d<3; d++)
+                  Fluid_lv[d+1] += _Eta * Dens * GradI[d];
+
+//                [4] kinetic energy in ELBDM
+                  Fluid_lv[4] += _2Eta2 * Dens * ( SQR(GradR[0]) + SQR(GradR[1]) + SQR(GradR[2])\
+                                                 + SQR(GradI[0]) + SQR(GradI[1]) + SQR(GradI[2])   );
+                  }
+#                 endif 
                }}}
 
 
