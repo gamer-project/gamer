@@ -196,6 +196,10 @@ void Aux_TakeNote()
 //    c. options in ELBDM
 #     elif ( MODEL == ELBDM )
 
+#     if ( ELBDM_SCHEME == HYBRID )
+      fprintf( Note, "HYBRID_SCHEME                   ON\n" );
+#endif 
+
 #     ifdef CONSERVE_MASS
       fprintf( Note, "CONSERVE_MASS                   ON\n" );
 #     else
@@ -523,6 +527,9 @@ void Aux_TakeNote()
 #     if ( MODEL == HYDRO  &&  defined LR_GHOST_SIZE )
       fprintf( Note, "#define LR_GHOST_SIZE           %d\n",      LR_GHOST_SIZE         );
 #     endif
+#     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID ) 
+      fprintf( Note, "#define HYB_GHOST_SIZE           %d\n",     HYB_GHOST_SIZE         );
+#     endif 
 #     ifdef GRAVITY
       fprintf( Note, "#define POT_GHOST_SIZE          %d\n",      POT_GHOST_SIZE        );
       fprintf( Note, "#define RHO_GHOST_SIZE          %d\n",      RHO_GHOST_SIZE        );
@@ -784,6 +791,9 @@ void Aux_TakeNote()
 #     if ( MODEL == ELBDM )
       fprintf( Note, "OPT__FLAG_ENGY_DENSITY          %d\n",      OPT__FLAG_ENGY_DENSITY    );
 #     endif
+#     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )       
+      fprintf( Note, "OPT__FLAG_INTERFERENCE          %d\n",      OPT__FLAG_INTERFERENCE    );
+#     endif 
       fprintf( Note, "OPT__FLAG_LOHNER_DENS           %d\n",      OPT__FLAG_LOHNER_DENS     );
 #     if ( MODEL == HYDRO )
       fprintf( Note, "OPT__FLAG_LOHNER_ENGY           %d\n",      OPT__FLAG_LOHNER_ENGY     );
@@ -949,7 +959,9 @@ void Aux_TakeNote()
       fprintf( Note, "ELBDM_TAYLOR3_COEFF             %13.7e\n",     ELBDM_TAYLOR3_COEFF    );
       fprintf( Note, "ELBDM_TAYLOR3_AUTO              %d\n",         ELBDM_TAYLOR3_AUTO     );
       fprintf( Note, "ELBDM_REMOVE_MOTION_CM          %d\n",         ELBDM_REMOVE_MOTION_CM );
-
+#     if (ELBDM_SCHEME == HYBRID)
+      fprintf( Note, "ELBDM_INTERF_THRESHOLD          %13.7e\n",         Flag_Interf_Threshold  );
+#     endif 
 #     else
 #     error : ERROR : unsupported MODEL !!
 #     endif // MODEL
