@@ -7,8 +7,6 @@ static bool Check_Curl( const int i, const int j, const int k,
 extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 
 
-
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flag_Check
 // Description :  Check if the target cell (i,j,k) satisfies the refinement criteria
@@ -34,6 +32,7 @@ extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int l
 //                ParDens      : Input array storing the particle mass density on each cell
 //                JeansCoeff   : Pi*GAMMA/(SafetyFactor^2*G), where SafetyFactor = FlagTable_Jeans[lv]
 //                               --> Flag if dh^2 > JeansCoeff*Pres/Dens^2
+//                Interf_Cond  : Input array storing the dimensionless quantum pressures for the interference condition
 //
 // Return      :  "true"  if any  of the refinement criteria is satisfied
 //                "false" if none of the refinement criteria is satisfied
@@ -42,7 +41,8 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
                  const real Fluid[][PS1][PS1][PS1], const real Pot[][PS1][PS1], const real MagCC[][PS1][PS1][PS1],
                  const real Vel[][PS1][PS1][PS1], const real Pres[][PS1][PS1],
                  const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
-                 const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff )
+                 const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff,
+                 const real *Interf_Cond)
 {
 
    bool Flag = false;
@@ -53,6 +53,21 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
    {
       if (  !Flag_Region( i, j, k, lv, PID )  )    return false;
    }
+
+
+// check ELBDM interference 
+// ===========================================================================================
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+   if ( OPT__FLAG_INTERFERENCE )
+   {
+      bool FlagInterference = ELBDM_Flag_Interference( i, j, k, Interf_Cond, Flag_Interf_Threshold);
+      Flag |= FlagInterference;
+      if ( FlagInterference ) {
+            amr->patch[0][lv][PID]->use_wave_flag = true;
+            return Flag;
+      }
+   }
+#  endif
 
 
 #  ifdef PARTICLE
@@ -156,6 +171,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
       if ( Flag )    return Flag;
    }
 #  endif
+
 
 
 // check Lohner's error estimator

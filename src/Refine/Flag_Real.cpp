@@ -3,6 +3,9 @@
 void Flag_Grandson( const int lv, const int PID, const int LocalID );
 void Prepare_for_Lohner( const OptLohnerForm_t Form, const real *Var1D, real *Ave1D, real *Slope1D, const int NVar );
 
+#if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+void Prepare_for_Interference_Criterion(const real *Var1D, real *SqrtDens1D, real *Cond1D);
+#endif 
 
 
 
@@ -46,11 +49,21 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    const bool IntPhase_No             = false;                 // for invoking Prepare_PatchData()
    const bool DE_Consistency_No       = false;                 // for invoking Prepare_PatchData()
    const int  NPG                     = 1;                     // for invoking Prepare_PatchData()
+   //Lohner criterion
    const int  Lohner_NGhost           = 2;                     // number of ghost cells for the Lohner error estimator
    const int  Lohner_NCell            = PS1 + 2*Lohner_NGhost; // size of the variable array for Lohner
    const int  Lohner_NAve             = Lohner_NCell - 2;      // size of the average array for Lohner
    const int  Lohner_NSlope           = Lohner_NAve;           // size of the slope array for Lohner
    const IntScheme_t Lohner_IntScheme = INT_MINMOD1D;          // interpolation scheme for Lohner
+   
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+   //Interference criterion
+   const int  Interf_NGhost           = 1;                     // number of ghost cells for the interference criterion
+   const int  Interf_NCell            = PS1 + 2*Interf_NGhost; // size of the variable array for interference criterion
+   const int  Interf_NCond            = Interf_NCell - 2;      // size of the curvature array for interference criterion
+   const IntScheme_t Interf_IntScheme = INT_MINMOD1D;          // interpolation scheme for interference criterion
+#  endif 
+
 #  if ( MODEL == HYDRO  &&  defined GRAVITY )
    const real JeansCoeff              = M_PI*GAMMA/( SQR(FlagTable_Jeans[lv])*NEWTON_G ); // flag if dh^2 > JeansCoeff*Pres/Dens^2
 #  else
@@ -78,9 +91,11 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    const int  NoRefineBoundaryRegion  = ( OPT__NO_FLAG_NEAR_BOUNDARY ) ? PS1*( 1<<(NLEVEL-lv) )*( (1<<lv)-1 ) : NULL_INT;
 
 
-// set the variables for the Lohner's error estimator
-   int  Lohner_NVar=0, Lohner_Stride;
-   long Lohner_TVar=0;
+// set the variables for the Lohner's error estimator and interference critrion
+   int  Lohner_NVar=0, Lohner_Stride=0;
+   long Lohner_TVar=0;   
+   int  Interf_NVar=0, Interf_Stride=0;
+   long Interf_TVar=0;
    real MinDens=-1.0, MinPres=-1.0, MinTemp=-1.0, MinEntr=-1.0;  // default is to disable all floors
 
 #  if   ( MODEL == HYDRO )
@@ -95,13 +110,26 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    {
       Lohner_NVar = 2;
       Lohner_TVar = _REAL | _IMAG;
+
+#     if ( ELBDM_SCHEME == HYBRID )
+      if (amr->use_wave_flag[lv] == false) {
+         Lohner_TVar = _DENS | _PHAS;
+      }
+#     endif 
    }
+
+#  if ( ELBDM_SCHEME == HYBRID )
+   Interf_NVar = 1;
+   Interf_TVar = _DENS;   
+   Interf_Stride = Interf_NVar *Interf_NCell*Interf_NCell*Interf_NCell; // stride of array for one interference criterion patch
+#  endif
+   
 
 #  else
 #  error : unsupported MODEL !!
 #  endif // MODEL
 
-   Lohner_Stride = Lohner_NVar*Lohner_NCell*Lohner_NCell*Lohner_NCell;  // stride of array for one patch
+   Lohner_Stride = Lohner_NVar*Lohner_NCell*Lohner_NCell*Lohner_NCell; // stride of array for one Lohner patch
 
 
 // collect particles to **real** patches at lv
@@ -128,9 +156,12 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       real (*Pres)[PS1][PS1]             = NULL;
       real (*ParCount)[PS1][PS1]         = NULL;   // declare as **real** to be consistent with Par_MassAssignment()
       real (*ParDens )[PS1][PS1]         = NULL;
-      real (*Lohner_Var)                 = NULL;   // array storing the variables for Lohner
-      real (*Lohner_Ave)                 = NULL;   // array storing the averages of Lohner_Var for Lohner
-      real (*Lohner_Slope)               = NULL;   // array storing the slopes of Lohner_Var for Lohner
+      real *Lohner_Var                   = NULL;   // array storing the variables for Lohner
+      real *Lohner_Ave                   = NULL;   // array storing the averages of Lohner_Var for Lohner
+      real *Lohner_Slope                 = NULL;   // array storing the slopes of Lohner_Var for Lohner
+      real *Interf_Var                   = NULL;   // array storing the density for the interference criterion
+      real *Interf_SqrtDens              = NULL;   // array storing the square root of the density for the interference criterion
+      real *Interf_Cond                  = NULL;   // array storing the quantum pressure for the interference criterion
 
       int  i_start, i_end, j_start, j_end, k_start, k_end, SibID, SibPID, PID;
       bool ProperNesting, NextPatch;
@@ -154,6 +185,12 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       if ( OPT__FLAG_PAR_MASS_CELL )         ParDens  = new real    [PS1][PS1][PS1];
 #     endif
 
+#     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+      Interf_Var       = new real [ 8 * Interf_NVar*Interf_NCell *Interf_NCell *Interf_NCell  ]; // 8: number of local patches;
+      Interf_SqrtDens  = new real [     Interf_NVar*Interf_NCell *Interf_NCell *Interf_NCell  ];
+      Interf_Cond      = new real [     Interf_NVar*Interf_NCond *Interf_NCond *Interf_NCond  ];
+#     endif
+
       if ( Lohner_NVar > 0 )
       {
          Lohner_Var   = new real [ 8*Lohner_NVar*Lohner_NCell *Lohner_NCell *Lohner_NCell  ]; // 8: number of local patches
@@ -173,6 +210,12 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                Lohner_IntScheme, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
                                MinDens, MinPres, MinTemp, MinEntr, DE_Consistency_No );
 
+//       prepare the ghost-zone data for interference criterion
+#     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+            Prepare_PatchData( lv, Time[lv], Interf_Var, NULL, Interf_NGhost, NPG, &PID0, Interf_TVar, _NONE,
+                               Interf_IntScheme, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
+                               MinDens, MinPres, MinTemp, MinEntr, DE_Consistency_No );
+#     endif
 
 //       loop over all local patches within the same patch group
          for (int LocalID=0; LocalID<8; LocalID++)
@@ -308,6 +351,11 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                       Lohner_NVar );
 
 
+//             evaluate the quantum pressure for interference criterion
+#     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+               Prepare_for_Interference_Criterion(Interf_Var+LocalID*Interf_Stride, Interf_SqrtDens, Interf_Cond );
+#     endif 
+
 //             count the number of particles and/or particle mass density on each cell
 #              ifdef PARTICLE
                if ( OPT__FLAG_NPAR_CELL  ||  OPT__FLAG_PAR_MASS_CELL )
@@ -409,7 +457,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 //                check if the target cell satisfies the refinement criteria (useless pointers are always == NULL)
                   if (  lv < MAX_LEVEL  &&  Flag_Check( lv, PID, i, j, k, dv, Fluid, Pot, MagCC, Vel, Pres,
                                                         Lohner_Var+LocalID*Lohner_Stride, Lohner_Ave, Lohner_Slope, Lohner_NVar,
-                                                        ParCount, ParDens, JeansCoeff )  )
+                                                        ParCount, ParDens, JeansCoeff, Interf_Cond )  )
                   {
 //                   flag itself
                      amr->patch[0][lv][PID]->flag = true;
@@ -504,6 +552,9 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       delete [] Lohner_Var;
       delete [] Lohner_Ave;
       delete [] Lohner_Slope;
+      delete [] Interf_Var;
+      delete [] Interf_SqrtDens;
+      delete [] Interf_Cond;
 
    } // OpenMP parallel region
 
