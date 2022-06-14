@@ -87,6 +87,13 @@ void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN    ][ CUBE(FLU_NXT) ],
                       real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                       const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
                       const real Taylor3_Coeff, const bool XYZ, const real MinDens );
+#if ( ELBDM_SCHEME == HYBRID )
+void CPU_ELBDMSolver_PhaseForm_MUSCL( real Flu_Array_In [][FLU_NIN    ][ CUBE(FLU_NXT) ],
+                      real Flu_Array_Out[][FLU_NOUT   ][ CUBE(PS2) ],
+                      real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
+                      const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
+                      const real Taylor3_Coeff, const bool XYZ, const real MinDens );
+#endif 
 
 #else
 #error : ERROR : unsupported MODEL !!
@@ -166,6 +173,7 @@ static real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ] = NULL;
 //                                      --> Should be set to the global variable "PassiveIntFrac_VarIdx"
 //                JeansMinPres        : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff  : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
+//                useWaveFlag         : Determines whether wave or fluid solver is used for MODEL == ELBDM and ELBDM_SCHEME == HYBRID
 //-------------------------------------------------------------------------------------------------------
 void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       real h_Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
@@ -185,7 +193,8 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const real DualEnergySwitch,
                       const bool NormPassive, const int NNorm, const int NormIdx[],
                       const bool FracPassive, const int NFrac, const int FracIdx[],
-                      const bool JeansMinPres, const real JeansMinPres_Coeff )
+                      const bool JeansMinPres, const real JeansMinPres_Coeff,
+                      const bool useWaveFlag )
 {
 
 // check
@@ -239,12 +248,24 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
 
 
 #  elif ( MODEL == ELBDM )
-//    evaluate the optimized Taylor expansion coefficient
-      if ( ELBDM_Taylor3_Auto )  ELBDM_Taylor3_Coeff = ELBDM_SetTaylor3Coeff( dt, dh, ELBDM_Eta );
 
-      CPU_ELBDMSolver( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
-                       ELBDM_Taylor3_Coeff, XYZ, MinDens );
+//Conditional nesting to support phase scheme in patches that do not use wave scheme for hybrid scheme
+//By default, we use wave scheme (CPU_ELBDMSolver)
+#  if ( ELBDM_SCHEME == HYBRID )
+   if (useWaveFlag) {
+#endif 
+   //    evaluate the optimized Taylor expansion coefficient
+   if ( ELBDM_Taylor3_Auto )  ELBDM_Taylor3_Coeff = ELBDM_SetTaylor3Coeff( dt, dh, ELBDM_Eta );
 
+   CPU_ELBDMSolver( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
+                     ELBDM_Taylor3_Coeff, XYZ, MinDens );
+   
+#  if ( ELBDM_SCHEME == HYBRID )
+   } else { 
+      CPU_ELBDMSolver_PhaseForm_MUSCL( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
+            ELBDM_Taylor3_Coeff, XYZ, MinDens );
+   }
+#  endif
 #  else
 #     error : ERROR : unsupported MODEL !!
 #  endif // MODEL

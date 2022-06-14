@@ -528,6 +528,12 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
    const real JeansMinPres_Coeff = NULL_REAL;
 #  endif
 
+   //Support hybrid scheme, flag is not used until (MODEL == ELBDM && ELBDM_SCHEME == HYBRID)
+   bool useWaveSolver = true; 
+
+#  if (MODEL == ELBDM && ELBDM_SCHEME == HYBRID)
+   useWaveSolver = amr->use_wave_flag[lv];
+#  endif 
 
    switch ( TSolver )
    {
@@ -559,7 +565,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  MIN_DENS, MIN_PRES, MIN_EINT, DUAL_ENERGY_SWITCH,
                                  OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar, PassiveNorm_VarIdx,
                                  OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
-                                 JEANS_MIN_PRES, JeansMinPres_Coeff );
+                                 JEANS_MIN_PRES, JeansMinPres_Coeff, useWaveSolver );
 #        endif
       break;
 
@@ -587,7 +593,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                           MG_TOLERATED_ERROR, Poi_Coeff, OPT__POT_INT_SCHEME,
                                           NULL_BOOL, ELBDM_ETA, NULL_REAL, POISSON_ON, GRAVITY_OFF,
                                           OPT__SELF_GRAVITY, OPT__EXT_POT, OPT__EXT_ACC,
-                                          TimeNew, TimeOld, NULL_REAL );
+                                          TimeNew, TimeOld, NULL_REAL, useWaveSolver  );
 #        endif
       break;
 
@@ -616,7 +622,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                           NULL_REAL, NULL_REAL, (IntScheme_t)NULL_INT,
                                           OPT__GRA_P5_GRADIENT, ELBDM_ETA, ELBDM_LAMBDA, POISSON_OFF, GRAVITY_ON,
                                           OPT__SELF_GRAVITY, OPT__EXT_POT, OPT__EXT_ACC,
-                                          TimeNew, TimeOld, MIN_EINT );
+                                          TimeNew, TimeOld, MIN_EINT, useWaveSolver );
 #        endif
       break;
 
@@ -645,7 +651,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                           MG_TOLERATED_ERROR, Poi_Coeff, OPT__POT_INT_SCHEME,
                                           OPT__GRA_P5_GRADIENT, ELBDM_ETA, ELBDM_LAMBDA, POISSON_ON, GRAVITY_ON,
                                           OPT__SELF_GRAVITY, OPT__EXT_POT, OPT__EXT_ACC,
-                                          TimeNew, TimeOld, MIN_EINT );
+                                          TimeNew, TimeOld, MIN_EINT, useWaveSolver );
 #        endif
       break;
 #     endif // #ifdef GRAVITY

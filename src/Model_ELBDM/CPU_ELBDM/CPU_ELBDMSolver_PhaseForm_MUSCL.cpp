@@ -4,28 +4,15 @@
 #include <iostream>
 
 
-#if ( !defined GPU  &&  MODEL == ELBDM  && ELBDM_SCHEME == PHASE)
-
+#if ( !defined GPU  &&  MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
 
 // useful macros
 #define to1D(z,y,x)     ( z*FLU_NXT*FLU_NXT + y*FLU_NXT + x )
 
-#ifdef LAPLACIAN_4TH
-#  define LAP1(In,t)    (  real(1.0/ 12.0)*( - In[t-2] + (real)16.0*In[t-1] - (real)30.0*In[t] + \
-                                             - In[t+2] + (real)16.0*In[t+1] )  )
-#  define LAP2(In,t)    (  real(1.0/144.0)*(  In[t-4] - (real)32.0*In[t-3] + (real)316.0*In[t-2] - (real)992.0*In[t-1] + \
-                                              In[t+4] - (real)32.0*In[t+3] + (real)316.0*In[t+2] - (real)992.0*In[t+1] + \
-                                              (real)1414.0*In[t] )  )
-#else
-#  define LAP1(In,t)    ( In[t-1] - (real)2.0*In[t] + In[t+1] )
-#  define LAP2(In,t)    ( In[t-2] - (real)4.0*In[t-1] + (real)6.0*In[t] - (real)4.0*In[t+1] + In[t+2] )
-#endif
-
 # define GTR( a, b )     (  ( (a) > (b) ) ? (1) : (0)  )
 # define LSS( a, b )     (  ( (a) < (b) ) ? (1) : (0)  )
-             
-
+            
 # define CENTERED_GRADIENT(In, t) ( real(1.0/2.0 ) * (   In[t + 1] - In[t - 1] ) )
 # define BACKWARD_GRADIENT(In, t) ( In[t    ] - In[t - 1] )
 # define FORWARD_GRADIENT(In, t)  ( In[t + 1] - In[t    ] )
@@ -58,13 +45,11 @@ static void TransposeXZ( real u[][ CUBE(FLU_NXT) ] );
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_ELBDMSolver
-// Description :  CPU ELBDM kinematic solver based on expanding the propagator to the 3rd order
+// Function    :  CPU_ELBDMSolver_PhaseForm
+// Description :  Solve kinetic term in Hamilton Jacobi-Madelung equations
 //
 // Note        :  1. The three-dimensional evolution is achieved by applying x, y, and z operators successively.
 //                   Since these operators commute, the order of applying them are irrelevant.
-//                   --> Input pamameter "XYZ" is actually meaningless (if CONSERVE_MASS is off)
-//                   --> Nevertheless, the symmetry in different directions will be broken if CONSERVE_MASS is on
 //                2. The implementation is very similar to the function "CPU_FluidSolver_RTVD"
 //
 // Parameter   :  Flu_Array_In   : Array storing the input variables (only REAL/IMAG)
@@ -79,11 +64,6 @@ static void TransposeXZ( real u[][ CUBE(FLU_NXT) ] );
 //                Taylor3_Coeff  : Coefficient in front of the third term in the Taylor expansion
 //                XYZ            : true  : x->y->z ( forward sweep)
 //                                 false : z->y->x (backward sweep)
-//                                 --> Meaningless if CONSERVE_MASS is off since the operators along different directions
-//                                     commute
-//                                 --> Meaningful if CONSERVE_MASS is on, in which the symmetry along different directions
-//                                     are broken ...
-//                MinDens        : Minimum allowed density
 //-------------------------------------------------------------------------------------------------------
 void CPU_ELBDMSolver_PhaseForm_MUSCL( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
                       real Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
@@ -92,7 +72,7 @@ void CPU_ELBDMSolver_PhaseForm_MUSCL( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_N
                       const real Taylor3_Coeff, const bool XYZ, const real MinDens )
 {
 
-   if ( XYZ )
+   if ( true )
    {
 #     pragma omp parallel for schedule( runtime )
       for (int P=0; P<NPatchGroup; P++)
@@ -103,12 +83,12 @@ void CPU_ELBDMSolver_PhaseForm_MUSCL( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_N
          TransposeXY ( Flu_Array_In[P] );
 
          CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, Taylor3_Coeff,
-                       FLU_GHOST_SIZE,              0, 3 );
+                       HYB_GHOST_SIZE,              0, 3 );
 
          TransposeXZ ( Flu_Array_In[P] );
 
          CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, Taylor3_Coeff,
-                       FLU_GHOST_SIZE, FLU_GHOST_SIZE, 6 );
+                       HYB_GHOST_SIZE, HYB_GHOST_SIZE, 6 );
 
          TransposeXZ ( Flu_Array_In[P] );
          TransposeXY ( Flu_Array_In[P] );
@@ -129,57 +109,40 @@ void CPU_ELBDMSolver_PhaseForm_MUSCL( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_N
          TransposeXZ ( Flu_Array_In[P] );
 
          CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, Taylor3_Coeff,
-                                    0, FLU_GHOST_SIZE, 3 );
+                                    0, HYB_GHOST_SIZE, 3 );
 
          TransposeXY ( Flu_Array_In[P] );
 
          CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, Taylor3_Coeff,
-                       FLU_GHOST_SIZE, FLU_GHOST_SIZE, 0 );
+                       HYB_GHOST_SIZE, HYB_GHOST_SIZE, 0 );
       }
    }
 
 
 // copy the updated data to Flu_Array_Out
-   int  Idx1, Idx2, v_m1;
-   real Amp, Rescale;   // not using double precision since MinDens will break the mass conservation anyway
-
-#  pragma omp parallel for private( Idx1, Idx2, v_m1, Amp, Rescale ) schedule( runtime )
+   int  Idx1, Idx2;
+   
+#  pragma omp parallel for private( Idx1, Idx2 ) schedule( runtime )
    for (int P=0; P<NPatchGroup; P++)
    {
-//    copy data
-      for (int v=1; v<FLU_NOUT; v++)
+//    copy data, do not copy third component since it is a stub anyway
+      for (int v=0; v<FLU_NOUT-1; v++)
       {
-         v_m1 = v-1;
          Idx1 = 0;
 
-         for (int k=FLU_GHOST_SIZE; k<FLU_GHOST_SIZE+PS2; k++)
-         for (int j=FLU_GHOST_SIZE; j<FLU_GHOST_SIZE+PS2; j++)
-         for (int i=FLU_GHOST_SIZE; i<FLU_GHOST_SIZE+PS2; i++)
+         for (int k=HYB_GHOST_SIZE; k<HYB_GHOST_SIZE+PS2; k++)
+         for (int j=HYB_GHOST_SIZE; j<HYB_GHOST_SIZE+PS2; j++)
+         for (int i=HYB_GHOST_SIZE; i<HYB_GHOST_SIZE+PS2; i++)
          {
             Idx2 = to1D(k,j,i);
 
-            Flu_Array_Out[P][v][ Idx1++ ] = Flu_Array_In[P][v_m1][Idx2];
+            Flu_Array_Out[P][v][ Idx1++ ] = Flu_Array_In[P][v][Idx2];
          }
       }
 
-//    evaluate the new density (and apply the minimum density check)
-      for (int t=0; t<CUBE(PS2); t++)
-      {
-         Amp = SQR( Flu_Array_Out[P][1][t] ) + SQR( Flu_Array_Out[P][2][t] );
-
-         if ( Amp < MinDens )
-         {
-            Rescale                 = SQRT( MinDens / Amp );
-            Flu_Array_Out[P][1][t] *= Rescale;
-            Flu_Array_Out[P][2][t] *= Rescale;
-            Amp                     = MinDens;
-         }
-
-         Flu_Array_Out[P][0][t] = Amp;
-      }
    } // for (int P=0; P<NPatchGroup; P++)
 
-} // FUNCTION : CPU_ELBDMSolver
+} // FUNCTION : CPU_ELBDMSolver_PhaseForm_MUSCL
 
 
 
@@ -220,17 +183,12 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
    const int j_end     = FLU_NXT - j_gap;
    const int k_end     = FLU_NXT - k_gap;
 
-   const real dT       = (real)0.5*dt/Eta;
-   const real _Eta2_dh = (real)0.5*_dh/Eta;
-   const real Coeff1   = dT*_dh*_dh;
-   const real Coeff2   = Taylor3_Coeff*Coeff1*Coeff1;
-
    real Rc[N_TIME_LEVELS][FLU_NXT];  // one column of the density in the input array "u" at all time levels
    real Pc[N_TIME_LEVELS][FLU_NXT];  // one column of the phase   in the input array "u" at all time levels
    real *Rc_target = NULL; // pointer to set density array in update loop
    real *Pc_target = NULL; // pointer to set phase   array in update loop
-   real *Re_N = NULL;    // pointer to store the full-step density
-   real *Im_N = NULL;    // pointer to store the full-step phase  
+   real *Rc_N = NULL;    // pointer to store the full-step density
+   real *Pc_N = NULL;    // pointer to store the full-step phase  
    int Idx;
 
    //slope-limite
@@ -239,20 +197,8 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
    real vm, vp, fm, fp;
    //change of density and phase in time step
    real ddensity, dphase;
-   //temporary variables to convert density and phase to real and imaginary parts
-   real re, im;
    real ql_ratios [FLU_NXT], backward_velocities[FLU_NXT], log_density[FLU_NXT];  // one column of the gradient ratios for phase, velocities dS/dx and log(rho)
 
-
-   real Re_Old [FLU_NXT];  // one column of the real      part in the input array "u"
-   real Im_Old [FLU_NXT];  // one column of the imaginary part in the input array "u"
-   real Re_Half[FLU_NXT];  // one column of the real      part at the half time-step
-   real Im_Half[FLU_NXT];  // one column of the imaginary part at the half time-step
-   real *Re_New = NULL;    // pointer to store the full-step real      part
-   real *Im_New = NULL;    // pointer to store the full-step imaginary part
-
-   real vmax = 0;
-   
 // loop over all targeted columns
    for (int k=k_start; k<k_end; k++)
    for (int j=j_start; j<j_end; j++)
@@ -263,53 +209,12 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
       Idx    = to1D(k,j,0);
 
       //Set pointers to output arrays
-      Re_N = &u[0][Idx];
-      Im_N = &u[1][Idx];
+      Rc_N = &u[0][Idx];
+      Pc_N = &u[1][Idx];
       
-      //for (int i=0; i<FLU_NXT; i++) {
-      //   std::cout<<"initial i: " << i << " Re : " << Re_N[i] << " Im: "<< Im_N[i] << "\n";
-      //}
-      
-      for (int i=0; i<FLU_NXT; i++) {
-         //Set input data by converting real and imaginary parts to density Rc and phase Pc
-         Rc[0][i] = SQR(Re_N[i]) + SQR(Im_N[i]);
-         Pc[0][i] = atan2(Im_N[i], Re_N[i]);
-         //Make sure that phase is continuous in input array by requiring that it may no jump by more than 2 pi between neighbouring points
-         if (i > 0)
-            Pc[0][i] = ELBDM_UnwrapPhase(Pc[0][i-1], Pc[0][i]);
-      }
+      memcpy( Rc[0], Rc_N, FLU_NXT*sizeof(real) );
+      memcpy( Pc[0], Pc_N, FLU_NXT*sizeof(real) );
 
-      /*
-      for (int i=0; i<FLU_NXT; i++) {
-         re = sqrt(Rc[0][i]) * cos(Pc[0][i]);
-         im = sqrt(Rc[0][i]) * sin(Pc[0][i]);
-         Re_Old[i] = re;
-         Im_Old[i] = im;
-      }
-
-      //memcpy( Rc[0], Rc_N, FLU_NXT*sizeof(real) );
-      //memcpy( Pc[0], Pc_N, FLU_NXT*sizeof(real) );
-
-
-//    2. half-step solution
-//    ------------------------------------------------------------------------------------------------------------
-      for (int i=2; i<FLU_NXT-2; i++)
-      {
-         Re_Half[i] = Re_Old[i] - (real)0.5*Coeff1*LAP1( Im_Old, i ) - Coeff2*LAP2( Re_Old, i );
-         Im_Half[i] = Im_Old[i] + (real)0.5*Coeff1*LAP1( Re_Old, i ) - Coeff2*LAP2( Im_Old, i );
-      }
-
-
-//    3. full-step solution (equivalent to the 3rd-order Taylor expansion)
-//    ------------------------------------------------------------------------------------------------------------
-      for (int i=FLU_GHOST_SIZE; i<FLU_NXT-FLU_GHOST_SIZE; i++)
-      {
-         Re_N[i] = Re_Old[i] - Coeff1*LAP1( Im_Half, i );
-         Im_N[i] = Im_Old[i] + Coeff1*LAP1( Re_Half, i );
-      }*/
-
-
-      
       for (int time_level = 0; time_level < N_TIME_LEVELS; ++time_level) 
       {
          
@@ -322,7 +227,7 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
          {
             ql_ratios[i]           =       BACKWARD_GRADIENT_RATIO(Pc[time_level], i);
             backward_velocities[i] = _dh * BACKWARD_GRADIENT      (Pc[time_level], i);
-            vmax = MAX(vmax, FABS(backward_velocities[i]));
+            //vmax = MAX(vmax, FABS(backward_velocities[i]));
          }
 
          //Compute density logarithms
@@ -358,8 +263,8 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
             }
             else 
             {
-               Rc_target = &Re_N[i];
-               Pc_target = &Im_N[i];
+               Rc_target = &Rc_N[i];
+               Pc_target = &Pc_N[i];
             }
 
             *Rc_target = - TIME_COEFFS[time_level] * dt * Eta * ddensity;
@@ -368,18 +273,11 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
                *Rc_target += RK_COEFFS[time_level][tx] * Rc[tx][i];
                *Pc_target += RK_COEFFS[time_level][tx] * Pc[tx][i];
             }
-
-            if (time_level + 1 == N_TIME_LEVELS) {
-               re = sqrt(Re_N[i]) * cos(Im_N[i]);
-               im = sqrt(Re_N[i]) * sin(Im_N[i]);
-               Re_N[i] = re;
-               Im_N[i] = im;
-            }
          }
       }
       
       //for (int i=0; i<FLU_NXT; i++) {
-      //   std::cout<<"final i: " << i << " Re : " << Re_N[i] << " Im: "<< Im_N[i] << "\n";
+      //   std::cout<<"final i: " << i << " Density : " << Rc_N[i] << " Phase: "<< Pc_N[i] << "\n";
       //}
 
 
@@ -392,7 +290,7 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
 // Function    :  TrasposeXY
 // Description :  Transpose the x and y directions
 //
-// Parameter   :  u : Input wave function (density, real, imaginary)
+// Parameter   :  u : Input wave function (density, phase)
 //-------------------------------------------------------------------------------------------------------
 void TransposeXY( real u[][ CUBE(FLU_NXT) ] )
 {
@@ -425,7 +323,7 @@ void TransposeXY( real u[][ CUBE(FLU_NXT) ] )
 // Function    :  TrasposeXZ
 // Description :  Transpose the x and z directions
 //
-// Parameter   :  u : Input wave function (density, real, imaginary)
+// Parameter   :  u : Input wave function (density, phase)
 //-------------------------------------------------------------------------------------------------------
 void TransposeXZ( real u[][ CUBE(FLU_NXT) ] )
 {
@@ -456,6 +354,4 @@ void TransposeXZ( real u[][ CUBE(FLU_NXT) ] )
 
 } // FUNCTION : TrasposeXZ
 
-
-
-#endif // #if ( !defined GPU  &&  MODEL == ELBDM )
+#endif // #if ( !defined GPU  &&  MODEL == ELBDM && ELBDM_SCHEME == HYBRID)
