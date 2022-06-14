@@ -156,7 +156,9 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                  --> for LOAD_BALANCE only
 //                NPar_Escp       : Number of particles escaping from this patch
 //                ParList_Escp    : List recording the IDs of all particles escaping from this patch
-//
+//                use_wave_flag   : Refinement flag for wave scheme in hybrid ELBDM solver (true/false)
+//                                  Set in Flag_Real() and determines whether ELBDM patch using fluid scheme is refined
+//                                  until dB wavelenth is resolved and wave scheme can be used
 // Method      :  patch_t         : Constructor
 //               ~patch_t         : Destructor
 //                Activate        : Activate patch
@@ -183,6 +185,7 @@ struct patch_t
 // data members
 // ===================================================================================
    real (*fluid)[PS1][PS1][PS1];
+
 
 #  ifdef MHD
    real (*magnetic)[ PS1P1*SQR(PS1) ];
@@ -223,12 +226,14 @@ struct patch_t
    int    father;
    int    son;
    bool   flag;
+   
    bool   Active;
    double EdgeL[3];
    double EdgeR[3];
 
    ulong  PaddedCr1D;
    long   LB_Idx;
+
 
 #  ifdef PARTICLE
    int    NPar;
@@ -247,6 +252,9 @@ struct patch_t
 
 #  endif
 
+#  if ( MODEL == ELBDM  && ELBDM_SCHEME == HYBRID )
+   bool use_wave_flag;
+#  endif
 
    //===================================================================================
    // Constructor :  patch_t
@@ -328,6 +336,11 @@ struct patch_t
       son       = -1;
       flag      = false;
       Active    = true;
+
+#     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+      // Use wave scheme by default
+      use_wave_flag = false; 
+#     endif 
 
       for (int s=0; s<26; s++ )  sibling[s] = -1;     // -1 <--> NO sibling
 
