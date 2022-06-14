@@ -107,14 +107,16 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 // collect particles to **real** patches at lv
 #  ifdef PARTICLE
    if ( OPT__FLAG_NPAR_CELL  ||  OPT__FLAG_PAR_MASS_CELL )
-      Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, PredictPos_No, NULL_REAL,
-                                    SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_No, TimingSendPar_No );
+      Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictPos_No,
+                                    NULL_REAL, SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_No,
+                                    TimingSendPar_No );
 
 // Par_CollectParticle2OneLevel() with JustCountNPar_No will set NPar_Copy for each patch as well
 // --> so call Par_CollectParticle2OneLevel() with JustCountNPar_Yes only when OPT__FLAG_NPAR_CELL == false
    else if ( OPT__FLAG_NPAR_PATCH != 0 )
-      Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, PredictPos_No, NULL_REAL,
-                                    SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_Yes, TimingSendPar_No );
+      Par_CollectParticle2OneLevel( lv, _NONE, PredictPos_No,
+                                    NULL_REAL, SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_Yes,
+                                    TimingSendPar_No );
 #  endif
 
 
@@ -362,7 +364,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                      if ( UseInputMassPos )
                      {
                         if ( InputMassPos[PAR_MASS] == NULL  ||  InputMassPos[PAR_POSX] == NULL  ||
-                             InputMassPos[PAR_POSY] == NULL  ||  InputMassPos[PAR_POSZ] == NULL  )
+                             InputMassPos[PAR_POSY] == NULL  ||  InputMassPos[PAR_POSZ] == NULL  ||
+                             InputMassPos[PAR_TYPE] == NULL )
                            Aux_Error( ERROR_INFO, "InputMassPos[0/1/2/3] == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
                                       NParThisPatch, lv, PID );
                      }

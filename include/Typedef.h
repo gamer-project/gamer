@@ -51,8 +51,8 @@ const TestProbID_t
    TESTPROB_HYDRO_MHD_LINEAR_WAVE              =   15,
    TESTPROB_HYDRO_JEANS_INSTABILITY            =   16,
    TESTPROB_HYDRO_PARTICLE_EQUILIBRIUM_IC      =   17,
+   TESTPROB_HYDRO_PARTICLE_TEST                =   18,
    TESTPROB_HYDRO_BARRED_POT                   =   51,
-
    TESTPROB_ELBDM_EXTPOT                       = 1000;
 
 
@@ -290,16 +290,22 @@ const ParInit_t
 
 typedef int ParInterp_t;
 const ParInterp_t
-   PAR_INTERP_NONE    = 0,
-   PAR_INTERP_NGP     = 1,
-   PAR_INTERP_CIC     = 2,
-   PAR_INTERP_TSC     = 3;
+   PAR_INTERP_NONE = 0,
+   PAR_INTERP_NGP  = 1,
+   PAR_INTERP_CIC  = 2,
+   PAR_INTERP_TSC  = 3;
 
 typedef int ParInteg_t;
 const ParInteg_t
-   PAR_INTEG_NONE    = 0,
-   PAR_INTEG_EULER   = 1,
-   PAR_INTEG_KDK     = 2;
+   PAR_INTEG_NONE  = 0,
+   PAR_INTEG_EULER = 1,
+   PAR_INTEG_KDK   = 2;
+
+typedef int TracerInteg_t;
+const TracerInteg_t
+   TRACER_INTEG_NONE  = 0,
+   TRACER_INTEG_EULER = 1,
+   TRACER_INTEG_RK2   = 2;
 
 typedef int ParUpStep_t;
 const ParUpStep_t
@@ -309,9 +315,9 @@ const ParUpStep_t
 
 typedef int ParSync_t;
 const ParSync_t
-   PAR_SYNC_NONE    = 0,
-   PAR_SYNC_TEMP    = 1,
-   PAR_SYNC_FORCE   = 2;
+   PAR_SYNC_NONE  = 0,
+   PAR_SYNC_TEMP  = 1,
+   PAR_SYNC_FORCE = 2;
 
 typedef int ParOutputDens_t;
 const ParOutputDens_t
@@ -366,9 +372,9 @@ const OptLohnerForm_t
 #if ( MODEL == HYDRO )
 typedef int Opt1stFluxCorr_t;
 const Opt1stFluxCorr_t
-   FIRST_FLUX_CORR_NONE    = 0,
-   FIRST_FLUX_CORR_3D      = 1,
-   FIRST_FLUX_CORR_3D1D    = 2;
+   FIRST_FLUX_CORR_NONE = 0,
+   FIRST_FLUX_CORR_3D   = 1,
+   FIRST_FLUX_CORR_3D1D = 2;
 
 typedef int OptRSolver1st_t;
 const OptRSolver1st_t
