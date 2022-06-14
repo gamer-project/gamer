@@ -45,6 +45,9 @@
 #define MHM_RP       4
 #define CTU          5
 
+// elbdm schemes 
+#define WAVE         1
+#define HYBRID       2
 
 // data reconstruction schemes
 #define PLM          1
@@ -180,6 +183,8 @@
 #  define FLU_NOUT            NCOMP_TOTAL
 
 // for ELBDM, we do not need to transfer the density component into GPU
+// for the hybrid scheme, we carry around the obsolete extra component in FLU_NOUT for now
+// this keeps modifications to the existing wave solver code to a 
 #elif ( MODEL == ELBDM )
 #  define FLU_NIN             ( NCOMP_TOTAL - 1 )
 #  define FLU_NOUT            ( NCOMP_TOTAL - 0 )
@@ -364,6 +369,11 @@
 #  define  REAL               1
 #  define  IMAG               2
 
+#if ( ELBDM_SCHEME == HYBRID )
+//#  define  DENS               0
+#  define  PHAS               1
+#endif 
+
 // field indices of passive[] --> element of [NCOMP_FLUID ... NCOMP_TOTAL-1]
 // none for ELBDM
 
@@ -376,7 +386,14 @@
 #  define _IMAG               ( 1L << IMAG )
 #  define _MAG                0
 
+#if ( ELBDM_SCHEME == HYBRID )
+//#  define _DENS               ( 1L << DENS )
+#  define  _PHAS              ( 1L << PHAS )
+#endif 
+
+
 // bitwise flux indices
+// for the hybrid scheme, we also only need the density flux 
 #  define _FLUX_DENS          ( 1L << FLUX_DENS )
 
 // bitwise indices of derived fields
@@ -536,10 +553,18 @@
 #  endif // FLU_SCHEME
 
 #elif ( MODEL == ELBDM )   // ELBDM
-#  ifdef LAPLACIAN_4TH
-#     define FLU_GHOST_SIZE         6
-#  else
-#     define FLU_GHOST_SIZE         3
+#    ifdef LAPLACIAN_4TH
+#       define FLU_GHOST_SIZE         6
+#    else
+#       define FLU_GHOST_SIZE         3
+#    endif
+//Ghost size for phase scheme in hybrid solver
+#    if ( ELBDM_SCHEME == HYBRID )
+#       ifndef LAPLACIAN_4TH
+#           error : ERROR : hybrid solver currently only works with LAPLACIAN_4TH because of ghost zones !!
+#       endif 
+#       define HYB_GHOST_SIZE         6
+#    else 
 #  endif
 
 #else
@@ -556,6 +581,7 @@
 #        define GRA_NIN             NCOMP_FLUID
 
 // for ELBDM, we do not need to transfer the density component
+// this remains valid for hybrid solver that also has 2 components
 #  elif ( MODEL == ELBDM )
 #        define GRA_NIN             ( NCOMP_FLUID - 1 )
 
