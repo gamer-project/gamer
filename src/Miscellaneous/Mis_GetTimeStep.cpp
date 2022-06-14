@@ -64,7 +64,14 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
    sprintf( dTime_Name[NdTime++], "%s", "Hydro_CFL" );
 
 #  elif ( MODEL == ELBDM )
-   dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Fluid( lv );
+#  if ( ELBDM_SCHEME == HYBRID )
+   if (amr->use_wave_flag[lv] == true)
+      dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Fluid( lv );
+   else 
+      dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Hybrid( lv );
+#  else 
+      dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Fluid( lv );
+#  endif 
    sprintf( dTime_Name[NdTime++], "%s", "ELBDM_CFL" );
 
 #  else
@@ -197,13 +204,14 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 
 // 1.9 CRITERION NINE : maximum velocity dS/dx ##ELBDM PHASE SOLVER ONLY##
 // =============================================================================================================
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == PHASE)
-   dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Velocity( lv );
-   sprintf( dTime_Name[NdTime++], "%s", "ELBDM_Velocity" );
-
-// when fluid is freezed, disable this criterion by resetting it to a huge value
-   if ( OPT__FREEZE_FLUID )   dTime[NdTime-1] = HUGE_NUMBER;
+#  if ( MODEL == ELBDM)
+#  if ( ELBDM_SCHEME == HYBRID)
+   if (amr->use_wave_flag[lv] == false) {
+      dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Velocity( lv );
+      sprintf( dTime_Name[NdTime++], "%s", "ELBDM_Velocity" );
+   }
 #  endif
+#  endif 
 
 // 2. get the minimum time-step from all criteria
 // =============================================================================================================

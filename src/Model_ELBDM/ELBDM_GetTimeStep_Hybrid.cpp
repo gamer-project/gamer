@@ -1,13 +1,11 @@
 #include "GAMER.h"
 #include "CUFLU.h"
 
-#if ( MODEL == ELBDM )
-
-
+#if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  ELBDM_GetTimeStep_Fluid
-// Description :  Estimate the evolution time-step from the ELBDM kinematic energy solver
+// Function    :  ELBDM_GetTimeStep_Hybrid
+// Description :  Estimate the evolution time-step from the CFL condition of the Phase equation
 //
 // Note        :  1. This function should be applied to both physical and comoving coordinates and always
 //                   return the evolution time-step (dt) actually used in various solvers
@@ -15,35 +13,29 @@
 //                       Comoving coordinates : dt = delta(scale_factor) / ( Hubble_parameter*scale_factor^3 )
 //                   --> We convert dt back to the physical time interval, which equals "delta(scale_factor)"
 //                       in the comoving coordinates, in Mis_GetTimeStep()
-//                2. Time-step is set to restrict the 1D k-space rotation angle to be "DT__FLUID*2*pi"
+//                2. CFL constant purely empirical, a value of C_CFL = 0.4 seems to work for the 3rd-order RK phase schem
+//                   a fourth-order RK method allows a value of up to C_CFL = 0.8, the second-order scheme requires a value of C_CFL = 0.05
 //
 // Parameter   :  lv : Target refinement level
 //
 // Return      :  dt
 //-------------------------------------------------------------------------------------------------------
-double ELBDM_GetTimeStep_Fluid( const int lv )
+double ELBDM_GetTimeStep_Hybrid( const int lv )
 {
 
    const double dh = amr->dh[lv];
    double dt;
-
-   dt = 4.0/M_PI*ELBDM_ETA*SQR(dh);
    
+   const double C_CFL = 0.4;
 
-/*
-#  ifdef GRAVITY
-   dt = 4.0/3.0/M_PI*ELBDM_ETA*SQR(dh);      // 3D k-space rotation angle
-#  else
-   dt = 0.5*sqrt(3.0)*ELBDM_ETA*SQR(dh);     // CFL condition
-#  endif
-*/
+   dt = C_CFL*ELBDM_ETA*SQR(dh);
 
    dt *= (Step==0) ? DT__FLUID_INIT : DT__FLUID;
 
    return dt;
 
-} // FUNCTION : ELBDM_GetTimeStep_Fluid
+} // FUNCTION : ELBDM_GetTimeStep_Hybrid
 
 
 
-#endif // #if ( MODEL == ELBDM )
+#endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
