@@ -331,11 +331,15 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       fluid[DENS] += dens_ref*Soliton_ScaleD[t];
    } // for (int t=0; t<Soliton_N; t++)
 
-
+# if (ELBDM_SCHEME == HYBRID)
+// set the phase
+   fluid[PHAS] = 0.0;                  // imaginary part is always zero --> initial phase zero
+# else 
 // set the real and imaginary parts
    fluid[REAL] = sqrt( fluid[DENS] );
    fluid[IMAG] = 0.0;                  // imaginary part is always zero --> no initial velocity
 
+# endif
 } // FUNCTION : SetGridIC
 
 
@@ -379,10 +383,12 @@ void BC( real fluid[], const double x, const double y, const double z, const dou
          const int lv, double AuxArray[] )
 {
 
+# if (ELBDM_SCHEME == HYBRID)              
+# else 
    fluid[REAL] = (real)0.0;
    fluid[IMAG] = (real)0.0;
    fluid[DENS] = (real)0.0;
-
+# enduf 
 } // FUNCTION : BC
 #endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
 
