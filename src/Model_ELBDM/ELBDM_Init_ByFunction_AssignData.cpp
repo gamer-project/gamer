@@ -118,11 +118,12 @@ void ELBDM_Init_ByFunction_AssignData( const int lv )
 
       }}}
 
+#if (ELBDM_SCHEME != HYBRID)
 //    ensure density = real_part^2 + imaginary_part^2
       fluid[REAL] *= _NSub3;
       fluid[IMAG] *= _NSub3;
       fluid[DENS]  = fluid[REAL]*fluid[REAL] + fluid[IMAG]*fluid[IMAG];
-
+      
 //    check minimum density (but keep phase fixed)
       if ( fluid[DENS] < (real)MIN_DENS )
       {
@@ -132,6 +133,7 @@ void ELBDM_Init_ByFunction_AssignData( const int lv )
          fluid[IMAG] *= Rescale;
          fluid[DENS]  = (real)MIN_DENS;
       }
+#endif 
 
 //    floor and normalize passive scalars (actually passive scalars are NOT supported by ELBDM yet)
 #     if ( NCOMP_PASSIVE > 0 )
