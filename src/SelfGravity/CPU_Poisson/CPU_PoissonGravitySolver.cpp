@@ -222,16 +222,17 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
 
 #     elif ( MODEL == ELBDM )
 #     if ( ELBDM_SCHEME == HYBRID )
-      if (useWaveFlag)
+      if (useWaveFlag) {
 #     endif 
       CPU_ELBDMGravitySolver( (real(*)[GRA_NIN][ CUBE(PS1) ]) h_Flu_Array,
                               (real(*)[ CUBE(GRA_NXT) ])      h_Pot_Array_Out,
                               NPatchGroup, ELBDM_Eta*dt, dh, ELBDM_Lambda );
 #     if ( ELBDM_SCHEME == HYBRID )
-      else 
+      } else {
       CPU_ELBDMGravitySolver_PhaseForm( (real(*)[GRA_NIN][ CUBE(PS1) ]) h_Flu_Array,
-                              (real(*)[ CUBE(GRA_NXT) ])      h_Pot_Array_Out,
-                              NPatchGroup, ELBDM_Eta*dt, dh, ELBDM_Lambda );
+                                        (real(*)[ CUBE(GRA_NXT) ])      h_Pot_Array_Out,
+                                         NPatchGroup, ELBDM_Eta*dt, dh, ELBDM_Lambda );
+      }
 #     endif 
 #     else
 #     error : ERROR : unsupported MODEL !!

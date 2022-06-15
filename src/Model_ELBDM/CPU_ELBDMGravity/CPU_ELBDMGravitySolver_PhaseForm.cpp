@@ -9,17 +9,15 @@
 #if ( MODEL == ELBDM  &&  defined GRAVITY && ELBDM_SCHEME == HYBRID )
 
 //-----------------------------------------------------------------------------------------
-// Function    :  CPU/CUPOT_ELBDMGravitySolver
-// Description :  CPU/GPU ELBDM gravity solver for advancing wave function by exp( -i*Eta*(Phi+Lambda*Rho)*dt )
+// Function    :  CPU/CUPOT_ELBDMGravitySolver_PhaseForm
+// Description :  CPU/GPU ELBDM gravity solver for advancing the phase S by S = S - i*Eta*(Phi + Lambda*Rho)*dt
 //
 // Note        :  1. ELBDM gravity solver requires NO potential and fluid ghost zone
 //                   --> Optimized performance can be achieved if GRA_GHOST_SIZE==0 (and thus GRA_NXT==PATCH_SIZE)
 //                   --> But the code supports GRA_GHOST_SIZE>0 as well
 //                       --> Mainly for the STORE_POT_GHOST option
-//                2. ELBDM gravity solver does NOT need the density information (if QUARTIC_SELF_INTERACTION is off)
-//                   --> DENS component will NOT be sent in and out in this solver
-//                   --> GRA_NIN==2 (only store the real and imaginary parts)
-//                   --> If QUARTIC_SELF_INTERACTION is on, the density is *calculated* here to be REAL^2+IMAG^2
+//                2. ELBDM gravity solver does only need the density information if QUARTIC_SELF_INTERACTION is on
+//                   --> GRA_NIN==2 (only store the density and phase)
 //                3. Arrays with a prefix "g_" are stored in the global memory of GPU
 //                4. No GPU shared memory is used in this kernel since no computational stencil is required
 //                   and hence no data needed to be shared
@@ -41,9 +39,9 @@ void CUPOT_ELBDMGravitySolver_PhaseForm(       real   g_Flu_Array[][GRA_NIN][ CU
                                const real EtaDt, const real dh, const real Lambda )
 #else
 void CPU_ELBDMGravitySolver_PhaseForm  (       real   g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
-                               const real   g_Pot_Array[][ CUBE(GRA_NXT) ],
-                               const int NPatchGroup,
-                               const real EtaDt, const real dh, const real Lambda )
+                                         const real   g_Pot_Array[][ CUBE(GRA_NXT) ],
+                                         const int NPatchGroup,
+                                         const real EtaDt, const real dh, const real Lambda )
 #endif
 {
 
@@ -79,7 +77,7 @@ void CPU_ELBDMGravitySolver_PhaseForm  (       real   g_Flu_Array[][GRA_NIN][ CU
          Pot += Lambda*( SQR(Re) + SQR(Im) );
 #        endif
 
-         g_Flu_Array[P][1][idx_flu] -= EtaDt * Pot;
+         g_Flu_Array[P][PHAS][idx_flu] -= EtaDt * Pot;
 
       } // CGPU_LOOP( idx_flu, CUBE(PS1) )
    } // for (int P=0; P<NPatchGroup*8; P++)
