@@ -539,8 +539,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    }
 
 
+#  ifdef MASSIVE_PARTICLES
 // determine the patch list for assigning particle mass
-#  ifdef PARTICLE
    const int NNearByPatchMax   = 64;   // maximum number of neaby patches of a patch group (including 8 local patches)
    const int ParMass_NPatchMax = NPG*NNearByPatchMax;
 
@@ -624,6 +624,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
                ParMass_PID_List[ ParMass_NPatch_Dup ++ ] = PID;
             }
+
          }
       } // for (int TID=0; TID<NPG; TID++)
 
@@ -648,7 +649,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
       }
 
    } //if ( PrepParOnlyDens || PrepTotalDens )
-#  endif // #ifdef PARTICLE
+#  endif // #ifdef MASSIVE_PARTICLES
 
 
 // start to prepare data
@@ -703,8 +704,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #     endif
 
 
+#     ifdef MASSIVE_PARTICLES
 //    assign particle mass onto grids
-#     ifdef PARTICLE
       if ( PrepParOnlyDens || PrepTotalDens )
       {
 //       thread-private variables
@@ -764,8 +765,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                if ( UseInputMassPos )
                {
                   if ( InputMassPos[PAR_MASS] == NULL  ||  InputMassPos[PAR_POSX] == NULL  ||
-                       InputMassPos[PAR_POSY] == NULL  ||  InputMassPos[PAR_POSZ] == NULL  )
-                     Aux_Error( ERROR_INFO, "InputMassPos[0/1/2/3] == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
+                       InputMassPos[PAR_POSY] == NULL  ||  InputMassPos[PAR_POSZ] == NULL  ||
+                       InputMassPos[PAR_TYPE] == NULL )
+                     Aux_Error( ERROR_INFO, "InputMassPos[0/1/2/3/4] == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
                                 NPar, lv, PID );
                }
 
@@ -791,7 +793,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                                 Periodic_No, NULL, UnitDens_No, CheckFarAway_No, UseInputMassPos, InputMassPos );
          } // for (int t=0; t<ParMass_NPatch; t++)
       } // if ( PrepParOnlyDens || PrepTotalDens )
-#     endif // #ifdef PARTICLE
+#     endif // #ifdef MASSIVE_PARTICLES
 
 
 //    note that the total density array needs rho_ext[] of nearby patches
@@ -1758,7 +1760,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 //       c. deposit particle mass onto grids
 // ------------------------------------------------------------------------------------------------------------
-#        ifdef PARTICLE
+#        ifdef MASSIVE_PARTICLES
          if ( PrepParOnlyDens || PrepTotalDens )
          {
 //          (c1) determine the array index for DENS
@@ -1933,8 +1935,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                      if ( UseInputMassPos )
                      {
                         if ( InputMassPos[PAR_MASS] == NULL  ||  InputMassPos[PAR_POSX] == NULL  ||
-                             InputMassPos[PAR_POSY] == NULL  ||  InputMassPos[PAR_POSZ] == NULL  )
-                           Aux_Error( ERROR_INFO, "InputMassPos[0/1/2/3] == NULL for NPar (%d) > 0 (lv %d, FaSibPID %d) !!\n",
+                             InputMassPos[PAR_POSY] == NULL  ||  InputMassPos[PAR_POSZ] == NULL  ||
+                             InputMassPos[PAR_TYPE] == NULL )
+                           Aux_Error( ERROR_INFO, "InputMassPos[0/1/2/3/4] == NULL for NPar (%d) > 0 (lv %d, FaSibPID %d) !!\n",
                                       NPar, lv-1, FaSibPID );
                      }
 
@@ -1956,8 +1959,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                } // else if ( SibPID0 == -1 )
             } // for (int Side=0; Side<26; Side++) if ( amr->Par->GhostSize > 0  ||  GhostSize > 0 )
          } // if ( PrepParOnlyDens || PrepTotalDens )
-#        endif // #ifdef PARTICLE
-
+#        endif // #ifdef MASSIVE_PARTICLES
 
 //       d. checks
 // ------------------------------------------------------------------------------------------------------------
@@ -2104,7 +2106,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 // free memroy
    for (int s=0; s<26; s++)   delete [] TSib[s];
 
-#  ifdef PARTICLE
+#  ifdef MASSIVE_PARTICLES
    if ( PrepParOnlyDens || PrepTotalDens )   delete [] ParMass_PID_List;
 #  endif
 
@@ -2882,8 +2884,7 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
 } // FUNCTION : SetTargetSibling
 
 
-
-#ifdef PARTICLE
+#  ifdef MASSIVE_PARTICLES
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Prepare_PatchData_InitParticleDensityArray
 // Description :  Initialize rho_ext[] by setting rho_ext[0][0][0] = RHO_EXT_NEED_INIT
@@ -2942,7 +2943,7 @@ void Prepare_PatchData_FreeParticleDensityArray( const int lv )
    ParDensArray_Initialized = false;
 
 } // FUNCTION : Prepare_PatchData_FreeParticleDensityArray
-#endif // #ifdef PARTICLE
+#endif // #ifdef MASSIVE_PARTICLES
 
 
 

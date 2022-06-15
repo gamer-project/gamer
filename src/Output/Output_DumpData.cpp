@@ -179,6 +179,20 @@ void Output_DumpData( const int Stage )
    if ( OPT__MANUAL_CONTROL )    Output_DumpManually( OutputData_RunTime );
 
 
+// set the acceleration of tracer particles to zero to make the output deterministic
+#  if ( defined TRACER  &&  defined STORE_PAR_ACC )
+   for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
+   {
+      if ( amr->Par->Type[p] == PTYPE_TRACER )
+      {
+         amr->Par->AccX[p] = (real)0.0;
+         amr->Par->AccY[p] = (real)0.0;
+         amr->Par->AccZ[p] = (real)0.0;
+      }
+   }
+#  endif
+
+
 // output data
    if ( OutputData || OutputData_RunTime )
    {

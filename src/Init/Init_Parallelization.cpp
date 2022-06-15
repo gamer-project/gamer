@@ -39,6 +39,11 @@ void Init_Parallelization()
    IntGhostSize_Flu = ( (FLU_GHOST_SIZE == 0) ? 0 : (FLU_GHOST_SIZE+1)/2 + NGhost_Flu );
    IntGhostSize_Flu = MAX( IntGhostSize_Flu, NGhost_RefFlu );
 
+#  ifdef TRACER
+   if ( amr->Par->GhostSizeTracer > 0 )
+   IntGhostSize_Flu = MAX( IntGhostSize_Flu, (amr->Par->GhostSizeTracer+1)/2 + NGhost_Flu );
+#  endif
+
 #  ifdef GRAVITY
    int NGhost_Pot, NGhost_Rho, NGhost_Gra, NGhost_RefPot;
    Int_Table( OPT__POT_INT_SCHEME,     NSide_Useless, NGhost_Pot );

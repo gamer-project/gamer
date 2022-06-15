@@ -1,0 +1,11 @@
+# problem-specific runtime parameters
+ParTest_Dens_Bg        1.0e-2         # background mass density [1.0e-2]
+ParTest_Pres_Bg        1.0e-2         # background energy density [1.0e-2]
+ParTest_Ang_Freq       0.00051668     # gas angular speed [0.00051668]
+ParTest_Point_Mass     1.0            # the mass of the active particles [1.0]
+ParTest_Par_Sep        0.5            # the separation between the active particles [0.5]
+ParTest_NParX          32             # number of grid tracer particles along x-axis [32]
+ParTest_NParY          32             # number of grid tracer particles along y-axis [32]
+ParTest_NParZ          32             # number of grid tracer particles along z-axis [32]
+ParTest_Use_Tracers    1              # whether to use tracer particles [1]
+ParTest_Use_Massive    1              # whether to use massive particles [1]

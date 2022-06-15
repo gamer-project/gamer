@@ -39,7 +39,6 @@ SIMU_OPTION += -DMODEL=HYDRO
 #SIMU_OPTION += -DGRAVITY
 
 # enable particles
-# --> must enable GRAVITY
 #SIMU_OPTION += -DPARTICLE
 
 # support Grackle, a chemistry and radiative cooling library
@@ -136,6 +135,9 @@ endif # GRAVITY
 # (b-4) particle options
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DPARTICLE, $(SIMU_OPTION))" "-DPARTICLE"
+# enable tracer particles
+#SIMU_OPTION += -DTRACER
+
 # store particle acceleration (recommended)
 SIMU_OPTION += -DSTORE_PAR_ACC
 
@@ -158,6 +160,10 @@ SIMU_OPTION += -DNLEVEL=10
 # maximum number of patches on each AMR level
 # --> must be set in any cases
 SIMU_OPTION += -DMAX_PATCH=1000000
+
+# number of cells along each direction in a single patch
+# --> must be an even number greater than or equal to 8
+SIMU_OPTION += -DPATCH_SIZE=8
 
 # GPU acceleration
 # --> must set GPU_ARCH as well
@@ -208,6 +214,10 @@ SIMU_OPTION += -DOPENMP
 
 # support yt inline analysis
 #SIMU_OPTION += -DSUPPORT_LIBYT
+
+# use patch group as the unit in libyt; this will speed up inline-analysis but increase memory consumption
+# --> must enable SUPPORT_LIBYT
+#SIMU_OPTION += -DLIBYT_USE_PATCH_GROUP
 
 # random number implementation: RNG_GNU_EXT/RNG_CPP11 (GNU extension drand48_r/c++11 <random>)
 # --> use RNG_GNU_EXT for compilers supporting GNU extensions (**not supported on some macOS**)
@@ -398,6 +408,15 @@ LIBYT_PATH   :=
 #GRACKLE_PATH :=
 #GSL_PATH     :=
 
+# NCTS (default: openmpi-intel)
+#CUDA_PATH    := /cluster/cuda-11.6
+#FFTW_PATH    := /cluster/intel-2022.1/fftw-2.1.5_openmpi4
+#MPI_PATH     := /cluster/intel-2022.1/openmpi-4.1.2
+#HDF5_PATH    := /cluster/intel-2022.1/hdf5-1.10.8_openmpi4
+#GRACKLE_PATH :=
+#GSL_PATH     :=
+#LIBYT_PATH   :=
+
 
 
 
@@ -534,7 +553,7 @@ GPU_FILE    += CUAPI_MemAllocate_PoissonGravity.cu  CUAPI_MemFree_PoissonGravity
                CUAPI_Asyn_PoissonGravitySolver.cu  CUAPI_SetConstMemory_ExtAccPot.cu \
                CUAPI_SendExtPotTable2GPU.cu
 
-GPU_FILE    += CUPOT_PoissonSolver_SOR_10to14cube.cu  CUPOT_PoissonSolver_SOR_16to18cube.cu \
+GPU_FILE    += CUPOT_PoissonSolver_SOR.cu \
                CUPOT_PoissonSolver_MG.cu  CUPOT_ExtAcc_PointMass.cu  CUPOT_ExtPot_PointMass.cu \
                CUPOT_ExtPotSolver.cu  CUPOT_ExtPot_Tabular.cu
 
@@ -567,7 +586,7 @@ CPU_FILE    += Par_Init_ByFunction.cpp  Par_Output_TextFile.cpp  Par_Output_Bina
                Par_Aux_InitCheck.cpp  Par_Aux_Record_ParticleCount.cpp  Par_PassParticle2Son_MultiPatch.cpp \
                Par_Synchronize.cpp  Par_PredictPos.cpp  Par_Init_ByFile.cpp  Par_Init_Attribute.cpp \
                Par_AddParticleAfterInit.cpp  Par_PassParticle2Son_SinglePatch.cpp  Par_EquilibriumIC.cpp \
-               Par_ScatterParticleData.cpp
+               Par_ScatterParticleData.cpp  Par_UpdateTracerParticle.cpp  Par_MapMesh2Particles.cpp
 
 vpath %.cu     Particle/GPU
 vpath %.cpp    Particle/CPU  Particle
@@ -632,7 +651,7 @@ vpath %.cpp    LoadBalance
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DSUPPORT_LIBYT, $(SIMU_OPTION))" "-DSUPPORT_LIBYT"
 CPU_FILE    += YT_Init.cpp  YT_End.cpp  YT_SetParameter.cpp  YT_AddLocalGrid.cpp  YT_Inline.cpp  YT_DerivedFunction.cpp \
-               YT_GetParticleAttribute.cpp
+               YT_GetParticleAttribute.cpp  YT_Miscellaneous.cpp
 
 vpath %.cpp    YT
 endif # SUPPORT_LIBYT

@@ -56,9 +56,12 @@ PAR_NPAR                      2040000     # total number of particles (must be s
 PAR_INIT                      1           # initialization option for particles: (1=FUNCTION, 2=RESTART, 3=FILE->"PAR_IC")
 PAR_INTERP                    2           # particle interpolation scheme: (1=NGP, 2=CIC, 3=TSC) [2]
 PAR_INTEG                     2           # particle integration scheme: (1=Euler, 2=KDK) [2]
+PAR_TR_INTERP                 3           # tracer particle interpolation scheme: (1=NGP, 2=CIC, 3=TSC) [3]
+PAR_TR_INTEG                  2           # tracer particle integration scheme: (1=Euler, 2=RK2) [2]
 PAR_IMPROVE_ACC               1           # improve force accuracy at patch boundaries [1] ##STORE_POT_GHOST and PAR_INTERP=2/3 ONLY##
 PAR_PREDICT_POS               1           # predict particle position during mass assignment [1]
 PAR_REMOVE_CELL              -1.0         # remove particles X-root-cells from the boundaries (non-periodic BC only; <0=auto) [-1.0]
+PAR_TR_VEL_CORR               1           # correct tracer particle velocities in regions of discontinuous flow [0]
 
 
 # time-step
@@ -82,8 +85,8 @@ AUTO_REDUCE_DT_FACTOR_MIN     0.1         # minimum allowed AUTO_REDUCE_DT_FACTO
 
 # grid refinement (examples of Input__Flag_XXX tables are put at "example/input/")
 REGRID_COUNT                  4           # refine every REGRID_COUNT sub-step [4]
-FLAG_BUFFER_SIZE              8           # number of buffer cells for the flag operation (0~PATCH_SIZE) [PATCH_SIZE]
-FLAG_BUFFER_SIZE_MAXM1_LV     2           # FLAG_BUFFER_SIZE at the level MAX_LEVEL-1 (<0=auto -> FLAG_BUFFER_SIZE) [-1]
+FLAG_BUFFER_SIZE             -1           # number of buffer cells for the flag operation (0~PATCH_SIZE; <0=auto -> PATCH_SIZE) [-1]
+FLAG_BUFFER_SIZE_MAXM1_LV     2           # FLAG_BUFFER_SIZE at the level MAX_LEVEL-1 (<0=auto -> REGRID_COUNT) [-1]
 FLAG_BUFFER_SIZE_MAXM2_LV    -1           # FLAG_BUFFER_SIZE at the level MAX_LEVEL-2 (<0=auto) [-1]
 MAX_LEVEL                     3           # maximum refinement level (0~NLEVEL-1) [NLEVEL-1]
 OPT__FLAG_RHO                 0           # flag: density (Input__Flag_Rho) [0]
