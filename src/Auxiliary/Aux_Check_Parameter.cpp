@@ -1017,6 +1017,10 @@ void Aux_Check_Parameter()
 #  endif
 #  endif // ifdef QUARTIC_SELF_INTERACTION
 
+#  ifdef TRACER
+#     error : ERROR : ELBDM does not support TRACER yet !!
+#  endif
+
    if ( ELBDM_PLANCK_CONST <= 0.0 )
       Aux_Error( ERROR_INFO, "%s (%14.7e) <= 0.0 !!\n", "ELBDM_PLANCK_CONST", ELBDM_PLANCK_CONST );
 

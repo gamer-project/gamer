@@ -552,9 +552,18 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
 //    exchange the updated density and momentum fields in the buffer patches for computing the tracer particle velocity
       if ( amr->Par->GhostSizeTracer > Flu_ParaBuf )
-      TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, NULL_INT, DATA_GENERAL,
-                                        _DENS|_MOMX|_MOMY|_MOMZ, _NONE, amr->Par->GhostSizeTracer, USELB_YES ),
-                     Timer_GetBuf[lv][2],   TIMER_ON   );
+      {
+#        if   ( MODEL == HYDRO )
+         const long TVarCC = _DENS | _MOMX | _MOMY | _MOMZ;
+#        elif ( MODEL == ELBDM )
+         const long TVarCC = _DENS | _REAL | _IMAG;
+#        else
+#        error : unsupported MODEL !!
+#        endif
+         TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, NULL_INT, DATA_GENERAL,
+                                           TVarCC, _NONE, amr->Par->GhostSizeTracer, USELB_YES ),
+                        Timer_GetBuf[lv][2],   TIMER_ON   );
+      }
 
       TIMING_FUNC(   Par_UpdateTracerParticle( lv, TimeNew, TimeOld, false ),
                      Timer_Par_Update[lv][0],   TIMER_ON   );
