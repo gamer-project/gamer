@@ -124,7 +124,7 @@ extern double           ELBDM_LAMBDA;
 #endif
 #if  ( ELBDM_SCHEME == HYBRID )
 extern bool             OPT__FLAG_INTERFERENCE;
-extern double           Flag_Interf_Threshold;
+extern double           FlagTable_Interference[NLEVEL-1][2];
 #endif 
 
 extern ELBDMRemoveMotionCM_t ELBDM_REMOVE_MOTION_CM;

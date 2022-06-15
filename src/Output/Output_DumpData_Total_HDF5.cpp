@@ -217,6 +217,9 @@ Procedure for outputting new variables:
 //                2443 : 2022/01/30 --> output MINMOD_MAX_ITER and MONO_MAX_ITER
 //                2444 : 2022/03/16 --> output OPT__FLAG_LOHNER_ENTR and MIN_ENTR
 //                2445 : 2022/03/25 --> output OPT__OUTPUT_ENTR
+//                2446 : 2022/06/14 --> output OPT__FLAG_INTERFERENCE, FlagTable_Interference
+//                                      output DENS and PHAS for hybrid scheme,
+//                                      output use_wave_flag[lv] for AMR structure
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -312,6 +315,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
    if ( OPT__OUTPUT_DIVMAG )  sprintf( FieldLabelOut[DivMagDumpIdx], "DivMag" );
 #  endif
+
 
    const int UserDumpIdx0 = ( OPT__OUTPUT_USER_FIELD ) ? NFieldStored : -1;
    if ( UserDumpIdx0+UserDerField_Num-1 >= NFIELD_STORED_MAX )
@@ -2368,6 +2372,9 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  endif
 #  if ( MODEL == ELBDM )
    InputPara.Opt__Flag_EngyDensity   = OPT__FLAG_ENGY_DENSITY;
+#  if ( ELBDM_SCHEME == HYBRID )
+   InputPara.Opt__Flag_Interference  = OPT__FLAG_INTERFERENCE;
+#  endif 
 #  endif
    InputPara.Opt__Flag_LohnerDens    = OPT__FLAG_LOHNER_DENS;
 #  if ( MODEL == HYDRO )
@@ -2705,8 +2712,13 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #     endif
 
 #     elif ( MODEL == ELBDM )
-      for (int t=0; t<2; t++)
+      for (int t=0; t<2; t++) {
       InputPara.FlagTable_EngyDensity [lv][t] = FlagTable_EngyDensity [lv][t];
+#     if ( ELBDM_SCHEME == HYBRID )
+      InputPara.FlagTable_Interference [lv][t] = FlagTable_Interference [lv][t];
+#     endif 
+      }
+
 #     endif
 
 #     ifdef PARTICLE
@@ -3530,6 +3542,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  endif
 #  elif ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "FlagTable_EngyDensity",  HOFFSET(InputPara_t,FlagTable_EngyDensity   ), H5_TypeID_Arr_NLvM1_2Double );
+#  if ( ELBDM_SCHEME == HYBRID )
+   H5Tinsert( H5_TypeID, "FlagTable_Interference",  HOFFSET(InputPara_t,FlagTable_Interference   ), H5_TypeID_Arr_NLvM1_2Double );
+#  endif 
 #  endif
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "FlagTable_NParPatch",    HOFFSET(InputPara_t,FlagTable_NParPatch     ), H5_TypeID_Arr_NLvM1Int      );

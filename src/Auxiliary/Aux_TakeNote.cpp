@@ -790,10 +790,10 @@ void Aux_TakeNote()
 #     endif
 #     if ( MODEL == ELBDM )
       fprintf( Note, "OPT__FLAG_ENGY_DENSITY          %d\n",      OPT__FLAG_ENGY_DENSITY    );
-#     endif
-#     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )       
+#     if (ELBDM_SCHEME == HYBRID )       
       fprintf( Note, "OPT__FLAG_INTERFERENCE          %d\n",      OPT__FLAG_INTERFERENCE    );
 #     endif 
+#     endif
       fprintf( Note, "OPT__FLAG_LOHNER_DENS           %d\n",      OPT__FLAG_LOHNER_DENS     );
 #     if ( MODEL == HYDRO )
       fprintf( Note, "OPT__FLAG_LOHNER_ENGY           %d\n",      OPT__FLAG_LOHNER_ENGY     );
@@ -959,9 +959,7 @@ void Aux_TakeNote()
       fprintf( Note, "ELBDM_TAYLOR3_COEFF             %13.7e\n",     ELBDM_TAYLOR3_COEFF    );
       fprintf( Note, "ELBDM_TAYLOR3_AUTO              %d\n",         ELBDM_TAYLOR3_AUTO     );
       fprintf( Note, "ELBDM_REMOVE_MOTION_CM          %d\n",         ELBDM_REMOVE_MOTION_CM );
-#     if (ELBDM_SCHEME == HYBRID)
-      fprintf( Note, "ELBDM_INTERF_THRESHOLD          %13.7e\n",         Flag_Interf_Threshold  );
-#     endif 
+
 #     else
 #     error : ERROR : unsupported MODEL !!
 #     endif // MODEL
@@ -1400,6 +1398,19 @@ void Aux_TakeNote()
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n");
       }
+#     if (ELBDM_SCHEME == HYBRID)
+
+      if ( OPT__FLAG_ENGY_DENSITY )
+      {
+         fprintf( Note, "Flag Criterion (Interference Threshold in hybrid ELBDM)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level     Threshold              FlagForWaveSolver\n" );
+         for (int lv=0; lv<MAX_LEVEL; lv++)
+            fprintf( Note, "%7d%20.7e%20.7e\n", lv, FlagTable_Interference[lv][0], FlagTable_Interference[lv][1] );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
+      }
+     #     endif 
 #     endif
 
 #     if   ( MODEL == HYDRO )

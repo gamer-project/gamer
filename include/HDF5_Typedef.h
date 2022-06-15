@@ -416,6 +416,9 @@ struct InputPara_t
 #  endif
 #  if ( MODEL == ELBDM )
    int    Opt__Flag_EngyDensity;
+#  if ( ELBDM_SCHEME == HYBRID )
+   int    Opt__Flag_Interference;
+#  endif 
 #  endif
    int    Opt__Flag_LohnerDens;
 #  if ( MODEL == HYDRO )
@@ -703,6 +706,9 @@ struct InputPara_t
 #  endif
 #  elif ( MODEL == ELBDM )
    double FlagTable_EngyDensity [NLEVEL-1][2];
+#  if ( ELBDM_SCHEME == HYBRID )
+   double FlagTable_Interference [NLEVEL-1][2];
+#  endif
 #  endif
 #  ifdef PARTICLE
    int    FlagTable_NParPatch   [NLEVEL-1];
