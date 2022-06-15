@@ -414,11 +414,11 @@
 #ifdef PARTICLE
 
 // number of built-in particle attributes
-// (1) mass, position*3, velocity*3, and time
-#  define PAR_NATT_BUILTIN0   8
+// (1) mass, position*3, velocity*3, time, and type
+#  define PAR_NATT_BUILTIN0   9
 
 // acceleration*3 when STORE_PAR_ACC is adopted
-# ifdef STORE_PAR_ACC
+# if ( defined STORE_PAR_ACC  &&  defined GRAVITY )
 #  define PAR_NATT_BUILTIN1   3
 # else
 #  define PAR_NATT_BUILTIN1   0
@@ -459,10 +459,11 @@
 #  define  PAR_VELX           4
 #  define  PAR_VELY           5
 #  define  PAR_VELZ           6
+#  define  PAR_TYPE           7
 
 // always put acceleration and time at the END of the particle attribute list
 // --> make it easier to discard them when storing data on disk (see Output_DumpData_Total(_HDF5).cpp)
-# ifdef STORE_PAR_ACC
+# if ( defined STORE_PAR_ACC  &&  defined GRAVITY )
 #  define  PAR_ACCX           ( PAR_NATT_TOTAL - 4 )
 #  define  PAR_ACCY           ( PAR_NATT_TOTAL - 3 )
 #  define  PAR_ACCZ           ( PAR_NATT_TOTAL - 2 )
@@ -479,7 +480,8 @@
 #  define _PAR_VELX           ( 1L << PAR_VELX )
 #  define _PAR_VELY           ( 1L << PAR_VELY )
 #  define _PAR_VELZ           ( 1L << PAR_VELZ )
-# ifdef STORE_PAR_ACC
+#  define _PAR_TYPE           ( 1L << PAR_TYPE )
+# if ( defined STORE_PAR_ACC  &&  defined GRAVITY )
 #  define _PAR_ACCX           ( 1L << PAR_ACCX )
 #  define _PAR_ACCY           ( 1L << PAR_ACCY )
 #  define _PAR_ACCZ           ( 1L << PAR_ACCZ )
@@ -487,7 +489,9 @@
 #  define _PAR_TIME           ( 1L << PAR_TIME )
 #  define _PAR_POS            ( _PAR_POSX | _PAR_POSY | _PAR_POSZ )
 #  define _PAR_VEL            ( _PAR_VELX | _PAR_VELY | _PAR_VELZ )
+# if ( defined STORE_PAR_ACC  &&  defined GRAVITY )
 #  define _PAR_ACC            ( _PAR_ACCX | _PAR_ACCY | _PAR_ACCZ )
+# endif
 #  define _PAR_TOTAL          (  ( 1L << PAR_NATT_TOTAL ) - 1L )
 
 // grid fields related to particles
@@ -498,6 +502,21 @@
 #  define _TOTAL_DENS         ( _PAR_DENS )
 # else
 #  define _TOTAL_DENS         ( 1L << (NCOMP_TOTAL+NDERIVE+2) )
+# endif
+
+// particle type macros
+
+// number of particle types (default: 4)
+#  define  PAR_NTYPE                4
+
+// particle type indices (must be in the range 0<=index<PAR_NTYPE)
+#  define  PTYPE_TRACER          (real)0
+#  define  PTYPE_GENERIC_MASSIVE (real)1
+#  define  PTYPE_DARK_MATTER     (real)2
+#  define  PTYPE_STAR            (real)3
+
+# ifdef GRAVITY
+#  define MASSIVE_PARTICLES
 # endif
 
 #else // #ifdef PARTICLE
@@ -638,7 +657,6 @@
 
 
 // patch size (number of cells of a single patch in the x/y/z directions)
-#define PATCH_SIZE                   8
 #define PS1             ( 1*PATCH_SIZE )
 #define PS2             ( 2*PATCH_SIZE )
 #define PS2P1           ( PS2 + 1 )
@@ -661,12 +679,12 @@
 #  define USG_NXT_F     ( 1 )                                     // still define USG_NXT_F/G since many function prototypes
 #  define USG_NXT_G     ( 1 )                                     // require it
 #  endif
+#  ifdef PARTICLE
+#  define RHOEXT_NXT    ( PS1 + 2*RHOEXT_GHOST_SIZE )             // array rho_ext of each patch
+#  endif
 #else
 #  define GRA_NXT       ( 1 )                                     // still define GRA_NXT   ...
 #  define USG_NXT_F     ( 1 )                                     // still define USG_NXT_F ...
-#endif
-#ifdef PARTICLE
-#  define RHOEXT_NXT    ( PS1 + 2*RHOEXT_GHOST_SIZE )             // array rho_ext of each patch
 #endif
 #  define SRC_NXT       ( PS1 + 2*SRC_GHOST_SIZE )                // use patch as the unit
 #  define SRC_NXT_P1    ( SRC_NXT + 1 )
@@ -956,7 +974,6 @@
 #define BIDX( idx )     ( 1L << (idx) )
 
 
-
 // ################################
 // ## Remove useless definitions ##
 // ################################
@@ -978,6 +995,12 @@
 #ifndef GPU
 #  undef  GPU_ARCH
 #  define GPU_ARCH NONE
+#endif
+
+// currently we assume that particle acceleration is solely due to gravity
+// --> if we ever want to enable STORE_PAR_ACC without GRAVITY, remember to check all STORE_PAR_ACC in this header
+#ifndef GRAVITY
+#  undef STORE_PAR_ACC
 #endif
 
 
