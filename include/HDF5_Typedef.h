@@ -380,6 +380,10 @@ struct InputPara_t
 #  endif
 #  if ( MODEL == ELBDM )
    double Dt__Phase;
+#  if ( ELBDM_SCHEME == HYBRID )
+   double Dt__Hybrid;
+   double Dt__Velocity;
+#  endif 
 #  endif
 #  ifdef PARTICLE
    double Dt__ParVel;
@@ -418,7 +422,7 @@ struct InputPara_t
    int    Opt__Flag_EngyDensity;
 #  if ( ELBDM_SCHEME == HYBRID )
    int    Opt__Flag_Interference;
-#  endif 
+#  endif //  if ( ELBDM_SCHEME == HYBRID )
 #  endif
    int    Opt__Flag_LohnerDens;
 #  if ( MODEL == HYDRO )

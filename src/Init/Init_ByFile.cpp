@@ -665,6 +665,9 @@ void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nva
 
 // calculate the density field for ELBDM
 #  elif ( MODEL == ELBDM )
+#  if ( ELBDM_SCHEME == HYBRID )
+   if ( amr->use_wave_flag[lv] == true )
+#  endif 
    fluid_out[DENS] = SQR( fluid_out[REAL] ) + SQR( fluid_out[IMAG] );
 #  endif
 

@@ -1093,6 +1093,14 @@ void Aux_Check_Parameter()
    if ( DT__PHASE > 1.0 )
       Aux_Message( stderr, "WARNING : DT__PHASE (%13.7e) is not within the normal range [0...1] !!\n", DT__PHASE );
 
+#  if ( ELBDM_SCHEME == HYBRID )
+   if ( DT__HYBRID < 0.0  ||  DT__HYBRID > 0.4 )
+      Aux_Message( stderr, "WARNING : DT__HYBRID (%14.7e) is not within the normal range [0...1] !!\n",
+                   DT__HYBRID );
+   if ( DT__VELOCITY < 0.0  ||  DT__VELOCITY > 1.0 )
+      Aux_Message( stderr, "WARNING : DT__VELOCITY (%14.7e) is not within the normal range [0...1] !!\n",
+                   DT__VELOCITY );
+#  endif 
    if ( OPT__CK_FLUX_ALLOCATE  &&  !OPT__FIXUP_FLUX )
       Aux_Message( stderr, "WARNING : %s is useless since %s is off !!\n",
                    "OPT__CK_FLUX_ALLOCATE", "OPT__FIXUP_FLUX" );

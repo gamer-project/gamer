@@ -25,12 +25,10 @@ double ELBDM_GetTimeStep_Hybrid( const int lv )
 
    const double dh = amr->dh[lv];
    double dt;
-   
-   const double C_CFL = 0.4;
 
-   dt = C_CFL*ELBDM_ETA*SQR(dh);
+   dt = ELBDM_ETA*SQR(dh);
 
-   dt *= (Step==0) ? DT__FLUID_INIT : DT__FLUID;
+   dt *= DT__HYBRID;
 
    return dt;
 

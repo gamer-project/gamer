@@ -33,7 +33,7 @@ double ELBDM_GetTimeStep_Velocity( const int lv )
    MaxdS_dx += (MaxdS_dx == 0) ? 1e-8 : 0;
 
 // get the time-step
-   dt = 1/MaxdS_dx*0.5/ELBDM_ETA;
+   dt = 1/MaxdS_dx*0.5/ELBDM_ETA * DT__VELOCITY;
 
    return dt;
 
