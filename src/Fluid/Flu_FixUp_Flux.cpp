@@ -239,16 +239,9 @@ void Flu_FixUp_Flux( const int lv )
 #                   endif
                   )
 
-#              elif ( MODEL == ELBDM)
-#              if ( defined CONSERVE_MASS )
+#              elif ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
                if ( CorrVal[DENS] <= MIN_DENS )
-#              else // ( defined CONSERVE_MASS )
-#                 if ( ELBDM_SCHEME == HYBRID )
-                  if ( CorrVal[DENS] <= MIN_DENS && amr->use_wave_flag[lv] == false )
-#                 else // ( ELBDM_SCHEME == HYBRID )
-                  if ( false )
-#                 endif // ( ELBDM_SCHEME == HYBRID ) ... else 
-#              endif // ( defined CONSERVE_MASS ) ... else 
+
 #              else
                if ( false )
 #              endif
@@ -304,7 +297,7 @@ void Flu_FixUp_Flux( const int lv )
 
 //                rescale the real and imaginary parts to be consistent with the corrected amplitude
 //                --> must NOT use CorrVal[REAL] and CorrVal[IMAG] below since NFLUX_TOTAL == 1 for ELBDM
-#                 if ( ( MODEL == ELBDM &&  defined CONSERVE_MASS ) || ELBDM_SCHEME == HYBRID )
+#                 if ( MODEL == ELBDM &&  defined CONSERVE_MASS )
 #                 if ( ELBDM_SCHEME == HYBRID )
                   if ( amr->use_wave_flag[lv] == true ) {
 #                 endif 

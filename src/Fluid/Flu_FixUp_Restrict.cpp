@@ -350,7 +350,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 //    rescale real and imaginary parts to get the correct density in ELBDM
 #     if ( MODEL == ELBDM )
 #     if ( ELBDM_SCHEME == HYBRID )
-      if ( amr->use_wave_flag[lv] == true ) {
+      if ( amr->use_wave_flag[FaLv] == true ) {
 #     endif 
       real Real, Imag, Rho_Wrong, Rho_Corr, Rescale;
 
@@ -378,7 +378,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
       }
 
 #     if ( ELBDM_SCHEME == HYBRID )
-      } // if ( amr->use_wave_flag[lv] == true )
+      } // if ( amr->use_wave_flag[FaLv] == true )
 #     endif 
 #     endif
 
