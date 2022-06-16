@@ -20,14 +20,18 @@
 
 // VAN ALBADA LIMITER
 # define LIMITER(In) ( (SQR(In) + In)/((real)1. + SQR(In)) )
+// MC
+//# define LIMITER(r) MAX(0, MIN(MIN((1. + r) / 2., 2.), 2. * r))
+// VAN LEER
+//# define LIMITER(r) ((r + FABS(r))/(1.0 + FABS(r)))
 
 # define UPWIND_GRADIENT_RATIO(Rc, Vb, t) ( ((Rc[t-1] - Rc[t-2]) * GTR(Vb[t], 0)  \
                                            + (Rc[t+1] - Rc[t  ]) * LSS(Vb[t], 0)) \
                                            / (Rc[t] - Rc[t-1] + (((Rc[t] - Rc[t-1]) == 0) ? 1e-8 : 0)))
 
 //Second-order MUSCL flux reconstruction
-# define MUSCL_FLUX(Rc, Vb, t, dx, dt) (  MAX(Vb[t], 0) * Rc[t-1] \
-                                       +  MIN(Vb[t], 0) * Rc[t  ] \
+# define MUSCL_FLUX(Rc, Vb, t, dx, dt) ( FMAX(Vb[t], 0) * Rc[t-1] \
+                                       + FMIN(Vb[t], 0) * Rc[t  ] \
                                        +  real(0.5) * FABS(Vb[t]) * (1. - FABS(Vb[t] * dt/dx)) * LIMITER(UPWIND_GRADIENT_RATIO(Rc, Vb, t)) * (Rc[t] -Rc[t - 1]) )
 
 //Ratio of subsequent backward gradients
@@ -168,7 +172,7 @@ void CPU_ELBDMSolver_PhaseForm_MUSCL( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_N
 //-------------------------------------------------------------------------------------------------------
 #define N_TIME_LEVELS 3
 const real TIME_COEFFS[N_TIME_LEVELS] = {1., 1./4, 2./3};
-const real RK_COEFFS [N_TIME_LEVELS][N_TIME_LEVELS] = {{1., 0, 0}, {3./4, 1./4, 0}, {1./3, 0, 2./3}};
+const real RK_COEFFS [N_TIME_LEVELS][N_TIME_LEVELS] = {{1., 0., 0.}, {3./4, 1./4, 0.}, {1./3, 0, 2./3}};
 
 void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_TOTAL][ PS2*PS2 ], 
                    const real dt, const real dh, const real Eta, const bool StoreFlux, const real Taylor3_Coeff, 
@@ -209,8 +213,8 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
       Idx    = to1D(k,j,0);
 
       //Set pointers to output arrays
-      Rc_N = &u[0][Idx];
-      Pc_N = &u[1][Idx];
+      Rc_N = &u[DENS][Idx];
+      Pc_N = &u[PHAS][Idx];
       
       memcpy( Rc[0], Rc_N, FLU_NXT*sizeof(real) );
       memcpy( Pc[0], Pc_N, FLU_NXT*sizeof(real) );
@@ -221,13 +225,11 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
          //for (int i=2*(time_level + 1); i<FLU_NXT-2*(time_level + 1); i++)
          //   std::cout<<"time level :" << time_level << "i: " << i << " Rho : " << Rc[time_level][i] << " Phase: "<< Pc[time_level][i] << "\n";
          
-         
          //Compute second-order backward velocities
          for (int i=2*(time_level + 1); i<FLU_NXT-time_level*2; i++)
          {
             ql_ratios[i]           =       BACKWARD_GRADIENT_RATIO(Pc[time_level], i);
             backward_velocities[i] = _dh * BACKWARD_GRADIENT      (Pc[time_level], i);
-            //vmax = MAX(vmax, FABS(backward_velocities[i]));
          }
 
          //Compute density logarithms
@@ -255,7 +257,8 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
             dphase   = (SQR(MIN(vp, 0)) + SQR(MAX(vm, 0)))/2;
             dphase  += -_dh2/4 * LAPLACIAN(log_density, i) - _dh2/8 * SQR(CENTERED_GRADIENT(log_density, i));
 
-
+            //printf("fm %f fp %f ql %f qc %f Qc %f Qr %f vm %f vp %f drho %f dpha %f\n", fm, fp, ql, qc, Qc, Qr, vm, vp, ddensity, dphase);
+         
             if (time_level + 1 < N_TIME_LEVELS)
             {
                Rc_target = &Rc[time_level + 1][i];
@@ -267,8 +270,8 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
                Pc_target = &Pc_N[i];
             }
 
-            *Rc_target = - TIME_COEFFS[time_level] * dt * Eta * ddensity;
-            *Pc_target = - TIME_COEFFS[time_level] * dt * Eta * dphase;
+            *Rc_target = - TIME_COEFFS[time_level] * dt / Eta * ddensity;
+            *Pc_target = - TIME_COEFFS[time_level] * dt / Eta * dphase;
             for (int tx = 0; tx < time_level + 1; ++tx) {
                *Rc_target += RK_COEFFS[time_level][tx] * Rc[tx][i];
                *Pc_target += RK_COEFFS[time_level][tx] * Pc[tx][i];
@@ -279,7 +282,6 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
       //for (int i=0; i<FLU_NXT; i++) {
       //   std::cout<<"final i: " << i << " Density : " << Rc_N[i] << " Phase: "<< Pc_N[i] << "\n";
       //}
-
 
    } // for j,k
 
