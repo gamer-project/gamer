@@ -334,6 +334,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 # if (ELBDM_SCHEME == HYBRID)
 // set the phase
    fluid[PHAS] = 0.0;                  // imaginary part is always zero --> initial phase zero
+   fluid[STUB] = 0.0;                  // stub component, set to zero
 # else 
 // set the real and imaginary parts
    fluid[REAL] = sqrt( fluid[DENS] );
@@ -383,12 +384,15 @@ void BC( real fluid[], const double x, const double y, const double z, const dou
          const int lv, double AuxArray[] )
 {
 
-# if (ELBDM_SCHEME == HYBRID)              
+# if (ELBDM_SCHEME == HYBRID)  
+   fluid[DENS] = (real)5.352983e-17;            
+   fluid[PHAS] = (real)0.0;           
+   fluid[STUB] = (real)0.0;                      
 # else 
    fluid[REAL] = (real)0.0;
    fluid[IMAG] = (real)0.0;
    fluid[DENS] = (real)0.0;
-# enduf 
+# endif 
 } // FUNCTION : BC
 #endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
 
