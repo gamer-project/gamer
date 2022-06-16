@@ -47,9 +47,18 @@ void Init_Function_User_Template( real fluid[], const double x, const double y, 
    const double Width1  =  64.0;
    const double Width2  = 512.0;
 
+#  if (ELBDM_SCHEME == HYBRID)
+   if ( amr->use_wave_flag[lv] == true ) {
+#  endif 
    fluid[REAL] = 1.0 + Height1*exp(  -( SQR(x-C1[0]) + SQR(y-C1[1]) + SQR(z-C1[2]) ) /SQR(Width1)  );
    fluid[IMAG] = 1.0 + Height2*exp(  -( SQR(x-C2[0]) + SQR(y-C2[1]) + SQR(z-C2[2]) ) /SQR(Width2)  );
    fluid[DENS] = fluid[REAL]*fluid[REAL] + fluid[IMAG]*fluid[IMAG];
+#  if (ELBDM_SCHEME == HYBRID)
+   } else { // if ( amr->use_wave_flag[lv] == true )
+   fluid[PHAS] = 1.0 + Height1*exp(  -( SQR(x-C1[0]) + SQR(y-C1[1]) + SQR(z-C1[2]) ) /SQR(Width1)  );
+   fluid[DENS] = fluid[REAL]*fluid[REAL] + fluid[IMAG]*fluid[IMAG];
+   } // if ( amr->use_wave_flag[lv] == true ) ... else
+#  endif 
 
 // ELBDM does not support passive scalars yet ...
 
@@ -118,7 +127,9 @@ void ELBDM_Init_ByFunction_AssignData( const int lv )
 
       }}}
 
-#if (ELBDM_SCHEME != HYBRID)
+#     if   (ELBDM_SCHEME == HYBRID)
+      if ( amr->use_wave_flag[lv] == true ) {
+#     endif 
 //    ensure density = real_part^2 + imaginary_part^2
       fluid[REAL] *= _NSub3;
       fluid[IMAG] *= _NSub3;
@@ -133,7 +144,19 @@ void ELBDM_Init_ByFunction_AssignData( const int lv )
          fluid[IMAG] *= Rescale;
          fluid[DENS]  = (real)MIN_DENS;
       }
-#endif 
+#     if (ELBDM_SCHEME == HYBRID)
+      } else { // if ( amr->use_wave_flag[lv] == true )
+
+      //Rescale density for subsampling
+      fluid[DENS]  *= SQR(_NSub3);
+      //    check minimum density (but keep phase fixed)
+      if ( fluid[DENS] < (real)MIN_DENS )
+      {
+         fluid[DENS]  = (real)MIN_DENS;
+      }
+
+      } // if ( amr->use_wave_flag[lv] == true ) ...  else 
+#     endif // #if   (ELBDM_SCHEME == HYBRID)
 
 //    floor and normalize passive scalars (actually passive scalars are NOT supported by ELBDM yet)
 #     if ( NCOMP_PASSIVE > 0 )

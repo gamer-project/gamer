@@ -97,7 +97,11 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
       fprintf( File, "(%3s,%3s,%3s )", "i", "j", "k" );
 
 #     if ( MODEL == ELBDM )
+#     if ( ELBDM_SCHEME == HYBRID )
+      fprintf( File, "%16s%16s", FieldLabel[DENS], FieldLabel[PHAS] );
+#     else 
       fprintf( File, "%16s%16s", FieldLabel[REAL], FieldLabel[IMAG] );
+#     endif // #if ( ELBDM_SCHEME == HYBRID )
 
 #     else
       for (int v=0; v<FLU_NIN; v++)    fprintf( File, "%16s", FieldLabel[v] );
