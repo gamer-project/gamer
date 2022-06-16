@@ -310,7 +310,12 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 //       temporal interpolation
 //       --> for IntPhase, apply temporal interpolation to density/phase instead of real/imaginary parts for better accuracy
 #        if ( MODEL == ELBDM )
+#        if ( ELBDM_SCHEME == HYBRID )
+         if (   (amr->use_wave_flag[lv] == true  && FluIntTime  &&  !IntPhase ) \
+             || (amr->use_wave_flag[lv] == false && FluIntTime) )
+#        else // #if ( ELBDM_SCHEME == HYBRID )
          if ( FluIntTime  &&  !IntPhase )
+#        endif // #if ( ELBDM_SCHEME == HYBRID ) .. # else 
 #        else
          if ( FluIntTime )
 #        endif
@@ -645,7 +650,12 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 //             temporal interpolation
 //             --> for IntPhase, apply temporal interpolation to density/phase instead of real/imaginary parts for better accuracy
 #              if ( MODEL == ELBDM )
+#              if ( ELBDM_SCHEME == HYBRID )
+               if (   (amr->use_wave_flag[lv] == true  && FluIntTime  &&  !IntPhase ) \
+                   || (amr->use_wave_flag[lv] == false && FluIntTime) )
+#              else // #if ( ELBDM_SCHEME == HYBRID )
                if ( FluIntTime  &&  !IntPhase )
+#              endif // #if ( ELBDM_SCHEME == HYBRID ) .. # else 
 #              else
                if ( FluIntTime )
 #              endif
@@ -1150,7 +1160,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 //    apply monotonic interpolation to density and all passive scalars
 #     if (ELBDM_SCHEME == HYBRID)
       if (  (TVarCCIdx_Flu != REAL  &&  TVarCCIdx_Flu != IMAG && amr->use_wave_flag[lv] == true  )\
-          &&(TVarCCIdx_Flu != PHAS &&                            amr->use_wave_flag[lv] == false ) )
+          &&(TVarCCIdx_Flu != PHAS  &&  TVarCCIdx_Flu != STUB && amr->use_wave_flag[lv] == false ) )
 #     else 
       if ( TVarCCIdx_Flu != REAL  &&  TVarCCIdx_Flu != IMAG )
 #     endif 
@@ -1420,11 +1430,11 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          FData_Real[t] = Amp*COS( Phase );
          FData_Imag[t] = Amp*SIN( Phase );
       }
-   } // if ( IntPhase )
+   } // if ( IntPhase ) || if ( IntPhase && amr->use_wave_flag[lv] == true) in hybrid scheme
 
 
 // c2. interpolation on original variables
-   else // if ( IntPhase )
+   else // if ( IntPhase ) || if ( IntPhase && amr->use_wave_flag[lv] == true) in hybrid scheme
 #  endif // if ( MODEL == ELBDM )
    {
 //    when TVarCC==_TOTAL, enable INT_PRIM_YES to perform interpolation on primitive variables when

@@ -816,8 +816,17 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
                                        Monotonicity[v] = Monotonicity_Yes;
 
 #     elif ( MODEL == ELBDM )
+#     if ( ELBDM_SCHEME == HYBRID )
+      if ( amr->use_wave_flag[lv] == true ) {
+#     endif 
       if ( v != REAL  &&  v != IMAG )  Monotonicity[v] = Monotonicity_Yes;
       else                             Monotonicity[v] = Monotonicity_No;
+#     if ( ELBDM_SCHEME == HYBRID )
+      } else { // if ( amr->use_wave_flag[lv] == true )
+      if ( v != PHAS  &&  v != STUB )  Monotonicity[v] = Monotonicity_Yes;
+      else                             Monotonicity[v] = Monotonicity_No;
+      } // if ( amr->use_wave_flag[lv] == true ) ... else 
+#     endif // #if ( ELBDM_SCHEME == HYBRID )
 
 #     else
 #     error : DO YOU WANT TO ENSURE THE POSITIVITY OF INTERPOLATION IN THIS NEW MODEL ??
@@ -840,12 +849,18 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    real *const CData_Dens = CData_Flu + DENS*CSize_Flu1v;
    real *const CData_Real = CData_Flu + REAL*CSize_Flu1v;
    real *const CData_Imag = CData_Flu + IMAG*CSize_Flu1v;
+#  if ( ELBDM_SCHEME == HYBRID )
+   real *const CData_Phas = CData_Flu + PHAS*CSize_Flu1v;
+#  endif 
 #  endif
    CData_Next += NCOMP_TOTAL*CSize_Flu1v;
 
    real (*FData_Flu)[FSize_CC][FSize_CC][FSize_CC] = new real [NCOMP_TOTAL][FSize_CC][FSize_CC][FSize_CC];
 
 #  if ( MODEL == ELBDM )
+#  if ( ELBDM_SCHEME == HYBRID )
+   if ( amr->use_wave_flag[lv] == true ) {
+#  endif 
    if ( OPT__INT_PHASE )
    {
 //    get the wrapped phase (store in the REAL component)
@@ -893,6 +908,20 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
          FData_Flu[IMAG][k][j][i] = Amp*SIN( Phase );
       }
    }
+
+#  if ( ELBDM_SCHEME == HYBRID )
+   } else { // if ( amr->use_wave_flag[lv] == true )
+//    interpolate density
+      Interpolate( CData_Dens, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[DENS][0][0][0],
+                   FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_Yes,
+                   IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF );
+
+//    interpolate phase
+      Interpolate( CData_Phas, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[PHAS][0][0][0],
+                   FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_No,
+                   IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF );
+   }  // if ( amr->use_wave_flag[lv] == true ) ... else 
+#  endif // #if ( ELBDM_SCHEME == HYBRID )
 
 #  else // #if ( MODEL == ELBDM )
 
@@ -982,6 +1011,9 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       {
 //       rescale wave function (unnecessary if OPT__INT_PHASE if off, in which case we will rescale all wave functions later)
 #        if ( MODEL == ELBDM )
+#        if ( ELBDM_SCHEME == HYBRID )
+         if ( amr->use_wave_flag[lv] == true )
+#        endif 
          if ( OPT__INT_PHASE )
          {
             const real Rescale = SQRT( (real)MIN_DENS / DensOld );
@@ -1097,6 +1129,9 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
 //    rescale real and imaginary parts to get the correct density in ELBDM if OPT__INT_PHASE is off
 #     if ( MODEL == ELBDM )
+#     if ( ELBDM_SCHEME == HYBRID )
+      if ( amr->use_wave_flag[lv] == true ) {
+#     endif 
       real Real, Imag, Rho_Corr, Rho_Wrong, Rescale;
 
       if ( !OPT__INT_PHASE )
@@ -1121,6 +1156,10 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
          amr->patch[FSg_Flu][SonLv][SonPID]->fluid[REAL][k][j][i] *= Rescale;
          amr->patch[FSg_Flu][SonLv][SonPID]->fluid[IMAG][k][j][i] *= Rescale;
       }
+
+#     if ( ELBDM_SCHEME == HYBRID )
+      } // if ( amr->use_wave_flag[lv] == true )
+#     endif 
 #     endif
    } // for (int LocalID=0; LocalID<8; LocalID++)
 

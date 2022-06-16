@@ -654,8 +654,17 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                                              Monotonicity[v] = Monotonicity_Yes;
 
 #           elif ( MODEL == ELBDM )
+#           if ( ELBDM_SCHEME == HYBRID )
+            if ( amr->use_wave_flag[lv] == true ) {
+#           endif // if ( ELBDM_SCHEME == HYBRID )
             if ( v != REAL  &&  v != IMAG )  Monotonicity[v] = Monotonicity_Yes;
             else                             Monotonicity[v] = Monotonicity_No;
+#           if ( ELBDM_SCHEME == HYBRID )
+            } else { // if ( amr->use_wave_flag[lv] == true )
+            if ( v != PHAS  &&  v != STUB )  Monotonicity[v] = Monotonicity_Yes;
+            else                             Monotonicity[v] = Monotonicity_No;
+            } // if ( amr->use_wave_flag[lv] == true ) ... else 
+#           endif // if ( ELBDM_SCHEME == HYBRID )
 
 #           else
 #           error : DO YOU WANT TO ENSURE THE POSITIVITY OF INTERPOLATION IN THIS NEW MODEL ??
@@ -665,6 +674,9 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 //       (c1.3.4.2) interpolation
 //       (c1.3.4.2-1) fluid
 #        if ( MODEL == ELBDM )
+#        if ( ELBDM_SCHEME == HYBRID)
+         if ( amr->use_wave_flag[lv] == true ) {
+#        endif 
          if ( OPT__INT_PHASE )
          {
 //          get the wrapped phase (store in the REAL component)
@@ -720,6 +732,20 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             }
          }
 
+#        if ( ELBDM_SCHEME == HYBRID )
+         } else { // if ( amr->use_wave_flag[lv] == true )
+//          interpolate density
+            Interpolate( &Flu_CData[DENS][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[DENS][0][0][0],
+                         FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_Yes,
+                         IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF );
+
+//          interpolate phase
+            Interpolate( &Flu_CData[PHAS][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[PHAS][0][0][0],
+                         FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_No,
+                         IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF );
+         }  // if ( amr->use_wave_flag[lv] == true ) ... else 
+#        endif // #if ( ELBDM_SCHEME == HYBRID )
+
 #        else // #if ( MODEL == ELBDM )
 
 //       adopt INT_PRIM_NO to ensure conservation
@@ -768,6 +794,9 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             {
 //             rescale wave function (unnecessary if OPT__INT_PHASE if off, in which case we will rescale all wave functions later)
 #              if ( MODEL == ELBDM )
+#              if ( ELBDM_SCHEME == HYBRID )
+               if ( amr->use_wave_flag[lv] == true )
+#              endif 
                if ( OPT__INT_PHASE )
                {
                   const real Rescale = SQRT( (real)MIN_DENS / DensOld );
@@ -775,8 +804,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                   Flu_FData[REAL][k][j][i] *= Rescale;
                   Flu_FData[IMAG][k][j][i] *= Rescale;
                }
-#              endif
-
+#              endif // #if ( MODEL == ELBDM )
 //             apply minimum density
                Flu_FData[DENS][k][j][i] = MIN_DENS;
             }
@@ -881,6 +909,9 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 //          rescale real and imaginary parts to get the correct density in ELBDM if OPT__INT_PHASE is off
 #           if ( MODEL == ELBDM )
+#           if ( ELBDM_SCHEME == HYBRID )
+            if ( amr->use_wave_flag[lv] == true ) {
+#           endif 
             real Real, Imag, Rho_Wrong, Rho_Corr, Rescale;
 
             if ( !OPT__INT_PHASE )
@@ -905,7 +936,11 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                amr->patch[FFluSg][lv+1][SonPID]->fluid[REAL][k][j][i] *= Rescale;
                amr->patch[FFluSg][lv+1][SonPID]->fluid[IMAG][k][j][i] *= Rescale;
             }
-#           endif
+
+#           if ( ELBDM_SCHEME == HYBRID )
+            } // if ( amr->use_wave_flag[lv] == true )
+#           endif // #if ( ELBDM_SCHEME == HYBRID )
+#           endif // #if ( MODEL == ELBDM )
          } // for (int LocalID=0; LocalID<8; LocalID++)
 
 
