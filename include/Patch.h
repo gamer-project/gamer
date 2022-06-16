@@ -254,7 +254,7 @@ struct patch_t
 
 #  if ( MODEL == ELBDM  && ELBDM_SCHEME == HYBRID )
    bool use_wave_flag;
-#  endif
+#  endif // #  if ( MODEL == ELBDM  && ELBDM_SCHEME == HYBRID )
 
    //===================================================================================
    // Constructor :  patch_t
@@ -338,9 +338,8 @@ struct patch_t
       Active    = true;
 
 #     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
-      // Use wave scheme by default
-      use_wave_flag = false; 
-#     endif 
+      use_wave_flag = false;  // Use fluid scheme by default
+#     endif // #  if ( MODEL == ELBDM  && ELBDM_SCHEME == HYBRID )
 
       for (int s=0; s<26; s++ )  sibling[s] = -1;     // -1 <--> NO sibling
 

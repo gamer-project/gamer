@@ -182,6 +182,7 @@
 #  define FLU_NIN             NCOMP_TOTAL
 #  define FLU_NOUT            NCOMP_TOTAL
 
+
 // for ELBDM, we do not need to transfer the density component into GPU
 // for the hybrid scheme, we carry around the obsolete extra component in FLU_NOUT for now
 // this keeps modifications to the existing wave solver code to a 
@@ -370,9 +371,12 @@
 #  define  IMAG               2
 
 #if ( ELBDM_SCHEME == HYBRID )
-//#  define  DENS               0
-#  define  PHAS               1
+#ifndef DENS
+#  define  DENS               0
 #endif 
+#  define  PHAS               1
+#  define  STUB               2
+#endif // #if ( ELBDM_SCHEME == HYBRID )
 
 // field indices of passive[] --> element of [NCOMP_FLUID ... NCOMP_TOTAL-1]
 // none for ELBDM
@@ -387,9 +391,11 @@
 #  define _MAG                0
 
 #if ( ELBDM_SCHEME == HYBRID )
-//#  define _DENS               ( 1L << DENS )
+# ifndef _DENS
+#  define _DENS               ( 1L << DENS )
+# endif 
 #  define  _PHAS              ( 1L << PHAS )
-#endif 
+#endif // #if ( ELBDM_SCHEME == HYBRID )
 
 
 // bitwise flux indices

@@ -513,7 +513,7 @@ double ELBDM_GetTimeStep_Phase( const int lv );
 #if   ( ELBDM_SCHEME == HYBRID )
 double ELBDM_GetTimeStep_Hybrid( const int lv );
 double ELBDM_GetTimeStep_Velocity( const int lv ); //For Hamilton-Jacobi equation
-#endif 
+#endif // #if ( ELBDM_SCHEME == HYBRID )
 
 //Flag for refining regions using wave solver
 bool   ELBDM_Flag_EngyDensity( const int i, const int j, const int k, const real Real_Array[],

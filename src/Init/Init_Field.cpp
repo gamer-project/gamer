@@ -69,12 +69,12 @@ void Init_Field()
 
 #  if ( ELBDM_SCHEME == HYBRID )
    Idx_Dens    = AddField( "Dens",     NORMALIZE_NO, INTERP_FRAC_NO );
-   Idx_Phas    = AddField( "Phas",     NORMALIZE_NO, INTERP_FRAC_NO );
+   Idx_Phas    = AddField( "Imag",     NORMALIZE_NO, INTERP_FRAC_NO );
    Idx_Stub    = AddField( "Stub",     NORMALIZE_NO, INTERP_FRAC_NO );
 
    if ( Idx_Dens != DENS )    Aux_Error( ERROR_INFO, "inconsistent Idx_Dens (%d != %d) !!\n", Idx_Dens, DENS );
    if ( Idx_Phas != PHAS )    Aux_Error( ERROR_INFO, "inconsistent Idx_Phas (%d != %d) !!\n", Idx_Phas, PHAS );
-   if ( Idx_Stub != IMAG )    Aux_Error( ERROR_INFO, "inconsistent Idx_Stub (%d != %d) !!\n", Idx_Stub, IMAG );
+   if ( Idx_Stub != STUb )    Aux_Error( ERROR_INFO, "inconsistent Idx_Stub (%d != %d) !!\n", Idx_Stub, STUB );
 #  else 
    Idx_Dens    = AddField( "Dens",     NORMALIZE_NO, INTERP_FRAC_NO );
    Idx_Real    = AddField( "Real",     NORMALIZE_NO, INTERP_FRAC_NO );

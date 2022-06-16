@@ -145,12 +145,12 @@ void Aux_Check_Conservation( const char *comment )
                             MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
 #        if ( ELBDM_SCHEME == HYBRID )
-         } else {
+         } else { // if ( amr->use_wave_flag[lv] == true )
          Prepare_PatchData( lv, Time[lv], Flu_ELBDM[0][0][0][0], NULL, NGhost, NPG, &PID0, _DENS|_PHAS, _NONE,
                             IntScheme, INT_NONE, UNIT_PATCH, NSIDE_06, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
                             MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
-         }
-#        endif 
+         } // if ( amr->use_wave_flag[lv] == true ) ... else 
+#        endif // #        if ( ELBDM_SCHEME == HYBRID )
 
 #        endif
 
@@ -246,7 +246,7 @@ void Aux_Check_Conservation( const char *comment )
                      Flu_ELBDM[t][DENS][k ][j ][i] = log(Flu_ELBDM[t][DENS][k ][j ][i]);
                   }}} //k,j,i
                }
-#              endif 
+#              endif // #if ( ELBDM_SCHEME == HYBRID )
 
                for (int k=NGhost; k<Size_Flu-NGhost; k++)   { kp = k+1; km = k-1;
                for (int j=NGhost; j<Size_Flu-NGhost; j++)   { jp = j+1; jm = j-1;
@@ -273,7 +273,7 @@ void Aux_Check_Conservation( const char *comment )
                   Fluid_lv[4] += _2Eta2*( SQR(GradR[0]) + SQR(GradR[1]) + SQR(GradR[2]) +
                                           SQR(GradI[0]) + SQR(GradI[1]) + SQR(GradI[2])   );
 #                 if ( ELBDM_SCHEME == HYBRID )
-                  } else {
+                  } else { //if ( amr->use_wave_flag[lv] == true )
 //                [1-3] momentum in ELBDM
                   const double Dens =  exp(Flu_ELBDM[t][DENS][k ][j ][i]);
 
@@ -292,8 +292,8 @@ void Aux_Check_Conservation( const char *comment )
 //                [4] kinetic energy in ELBDM
                   Fluid_lv[4] += _2Eta2 * Dens * ( SQR(GradR[0]) + SQR(GradR[1]) + SQR(GradR[2])\
                                                  + SQR(GradI[0]) + SQR(GradI[1]) + SQR(GradI[2])   );
-                  }
-#                 endif 
+                  } //if ( amr->use_wave_flag[lv] == true ) ... else 
+#                 endif // #if ( ELBDM_SCHEME == HYBRID )
                }}}
 
 
