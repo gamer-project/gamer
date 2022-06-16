@@ -24,6 +24,7 @@
 //                           --> Supported variables in different models:
 //                               HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY,[, _POTE]
 //                               ELBDM : _DENS, _REAL, _IMAG, [, _POTE]
+//                                     HYBRID: _DENS, _PHAS [, _POTE]
 //                           --> _FLUID, _PASSIVE, and _TOTAL apply to all models
 //                TVarFC   : Target face-centered variables
 //                            --> Supported variables in different models:
@@ -71,7 +72,6 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
    if (  ( TVarFC & _MAG )  &&  ( FaMagSg != 0 && FaMagSg != 1 )  )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "FaMagSg", FaMagSg );
 #  endif
-
 
 // nothing to do if there are no real patches at lv+1
    if ( amr->NPatchComma[SonLv][1] == 0 )    return;
@@ -349,6 +349,9 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 
 //    rescale real and imaginary parts to get the correct density in ELBDM
 #     if ( MODEL == ELBDM )
+#     if ( ELBDM_SCHEME == HYBRID )
+      if ( amr->use_wave_flag[lv] == true ) {
+#     endif 
       real Real, Imag, Rho_Wrong, Rho_Corr, Rescale;
 
       if (  ( TVarCC & _DENS )  &&  ( TVarCC & _REAL )  &&  (TVarCC & _IMAG )  )
@@ -373,6 +376,10 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
          amr->patch[FaFluSg][FaLv][FaPID]->fluid[REAL][k][j][i] *= Rescale;
          amr->patch[FaFluSg][FaLv][FaPID]->fluid[IMAG][k][j][i] *= Rescale;
       }
+
+#     if ( ELBDM_SCHEME == HYBRID )
+      } // if ( amr->use_wave_flag[lv] == true )
+#     endif 
 #     endif
 
    } // for (int SonPID0=0; SonPID0<amr->NPatchComma[SonLv][1]; SonPID0+=8)
