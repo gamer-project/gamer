@@ -34,10 +34,12 @@ void Init_Load_FlagCriteria()
 #  if ( MODEL != ELBDM )
    const bool OPT__FLAG_ENGY_DENSITY  = false;
    double FlagTable_EngyDensity[NLEVEL-1][2];
-   const bool OPT__FLAG_INTERFERENCE  = false;
-   double FlagTable_Interference[NLEVEL-1][2];
 #  endif
 
+#  if (  MODEL != ELBDM || ELBDM_SCHEME != HYBRID )
+   const bool OPT__FLAG_INTERFERENCE  = false;
+   double FlagTable_Interference[NLEVEL-1][2];
+#  endif 
 
 #  ifndef PARTICLE
    const bool OPT__FLAG_NPAR_PATCH    = false;

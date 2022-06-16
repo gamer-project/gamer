@@ -106,8 +106,8 @@ void Init_Load_Parameter()
 #  if ( MODEL == ELBDM )
    ReadPara->Add( "DT__PHASE",                  &DT__PHASE,                       0.0,             0.0,           NoMax_double   );
 #  if ( ELBDM_SCHEME == HYBRID )
-   ReadPara->Add( "DT__VELOCITY",               &DT__VELOCITY,                    1.0,             0.0,           NoMax_double   );
-   ReadPara->Add( "DT__HYBRID",                 &DT__HYBRID,                      0.4,             0.0,           NoMax_double   );
+   ReadPara->Add( "DT__VELOCITY",               &DT__VELOCITY,                   -1.0,             0.0,           NoMax_double   );
+   ReadPara->Add( "DT__HYBRID",                 &DT__HYBRID,                     -1.0,             0.0,           NoMax_double   );
 #  endif // #  if ( ELBDM_SCHEME == HYBRID )
 #  endif
 #  ifdef PARTICLE

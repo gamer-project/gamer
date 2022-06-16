@@ -96,6 +96,27 @@ void Init_ResetParameter()
    }
 
 
+// velocity dt
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+   if ( DT__VELOCITY < 0.0 )
+   {
+      DT__VELOCITY = 1.00;
+
+      PRINT_WARNING( DT__VELOCITY, FORMAT_FLT, "" );
+   } // if ( DT__VELOCITY < 0.0 )
+#  endif
+
+
+// hybrid dt
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+   if ( DT__HYBRID < 0.0 )
+   {
+      DT__HYBRID = 0.40;
+
+      PRINT_WARNING( DT__HYBRID, FORMAT_FLT, "" );
+   } // if ( DT__HYBRID < 0.0 )
+#  endif
+
 // gravity dt
 #  ifdef GRAVITY
    if ( DT__GRAVITY < 0.0 )
