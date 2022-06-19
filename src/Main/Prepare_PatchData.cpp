@@ -268,8 +268,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 //    or density and phase for the fluid patches in the hybrid scheme
 //    --> e.g., one cannot prepare wave function and potential at the same time when enabling IntPhase
 #     if ( ELBDM_SCHEME == HYBRID)
-      if (   ((TVarCC & ~( _REAL | _IMAG | _DENS )) && (amr->use_wave_flag[lv] == true)) \
-          || ((TVarCC & ~( _DENS | _PHAS ))         && (amr->use_wave_flag[lv] == false))  )
+      if (   ((TVarCC & ~( _REAL | _IMAG )) && (amr->use_wave_flag[lv] == true)) \
+          || ((TVarCC & ~( _DENS | _PHAS )) && (amr->use_wave_flag[lv] == false))  )
 #     else 
       if (  TVarCC & ~( _REAL | _IMAG | _DENS ))
 #     endif 
@@ -1560,6 +1560,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                                   MagSg, MagSg_IntT, MagIntTime, MagWeighting, MagWeighting_IntT );
 #              endif
 
+#              if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+//             If we use fluid scheme on level lv - 1 and wave scheme on level lv
+//             set target variable correctly and later convert density and phase to real and imaginary parts
+               if ( amr->use_wave_flag[lv] && !amr->use_wave_flag[lv - 1])
+                  TVarCC = _DENS|_PHAS|_PASSIVE;
+#              endif 
 
 //             (b2-3) perform interpolation and store the results in IntData_CC[] and IntData_FC[]
                InterpolateGhostZone( lv-1, FaSibPID, IntData_CC, IntData_FC, IntData_CC_IntTime, Side, PrepTime, GhostSize,
@@ -1569,8 +1575,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                                      (const real **)FInterface_Ptr );
 
 
-//             (b2-4) copy cell-centered data from IntData_CC[] to Data1PG_CC[]
-//             --> must get rid of NUseless-cell-wide useless data returned by InterpolateGhostZone()
+
+//             (b2-3-1) convert density and phase in IntData_CC[] in hybrid scheme if we interpolate from fluid to wave schem
+//             --> do not convert NUseless-cell-wide useless data returned by InterpolateGhostZone()
+
                const int NUseless = GhostSize & 1;
                int loop[3], disp1[3], disp2[3];
 
@@ -1584,6 +1592,35 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                Data1PG_CC_Ptr = Data1PG_CC;
                IntData_CC_Ptr = IntData_CC;
 
+#              if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+//             set target variables correctly convert density and phase to real and imaginary parts
+               if ( amr->use_wave_flag[lv] && !amr->use_wave_flag[lv - 1]) {
+                  TVarCC = _REAL|_IMAG|_PASSIVE;
+
+//                density and phase --> real and imaginary parts
+                  real Dens, Phase, Amp;
+                  int FSize3D_CC = FSize[0]*FSize[1]*FSize[2];
+                  const int NVarConvert = 2;
+
+                  for (int k=0; k<loop[2]; k++) {  K = k + disp1[2];  K2 = k + disp2[2];
+                  for (int j=0; j<loop[1]; j++) {  J = j + disp1[1];  J2 = j + disp2[1];
+                                                   Idx1 = IDX321( disp1[0], J,  K,  PGSize1D_CC, PGSize1D_CC );
+                                                   Idx2 = IDX321( disp2[0], J2, K2, FSize[0], FSize[1] );
+                  for (int i=0; i<loop[0]; i++) {
+                     Dens  = IntData_CC_Ptr[ Idx2 ];
+                     Phase = IntData_CC_Ptr[ Idx2 + FSize3D_CC];
+                     printf(" In Interpolate k %i i %i j %i Dens %f Phas %f", k, i, j, Dens, Phase);
+                     Amp   = SQRT(Dens);
+
+                     IntData_CC_Ptr[ Idx2              ] = Amp * COS( Phase );
+                     IntData_CC_Ptr[ Idx2  + FSize3D_CC] = Amp * SIN( Phase );
+                     Idx2 ++;
+                  }}}
+               }
+#              endif 
+
+//             (b2-4) copy cell-centered data from IntData_CC[] to Data1PG_CC[]
+//             --> must get rid of NUseless-cell-wide useless data returned by InterpolateGhostZone()
                for (int v=0; v<NVarCC_Tot; v++)
                {
                   for (int k=0; k<loop[2]; k++) {  K = k + disp1[2];  K2 = k + disp2[2];
