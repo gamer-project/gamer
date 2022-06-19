@@ -63,12 +63,11 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
       bool FlagInterference = ELBDM_Flag_Interference( i, j, k, Interf_Cond, FlagTable_Interference[lv][0]);
       Flag |= FlagInterference;
 
-      if ( FlagInterference &&  FlagTable_Interference[lv][1] >= 0.0) {
-            amr->patch[0][lv][PID]->use_wave_flag = true;
-      }
+      amr->patch[0][lv][PID]->use_wave_flag = ( FlagInterference &&  FlagTable_Interference[lv][1] >= 0.0);
 
-      //if ( FlagInterference )
-      //      return Flag;
+      //Only refine if we are not already using the wave scheme
+      if ( FlagInterference && !amr->use_wave_flag[lv] )
+            return Flag;
    }
 #  endif
 
@@ -167,6 +166,9 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 // check ELBDM energy density
 // ===========================================================================================
 #  if ( MODEL == ELBDM )
+#  if ( ELBDM_SCHEME == HYBRID )
+   if ( amr->use_wave_flag[lv] == true )
+#  endif 
    if ( OPT__FLAG_ENGY_DENSITY )
    {
       Flag |= ELBDM_Flag_EngyDensity( i, j, k, &Fluid[REAL][0][0][0], &Fluid[IMAG][0][0][0],
