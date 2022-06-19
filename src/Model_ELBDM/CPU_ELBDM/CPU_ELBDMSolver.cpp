@@ -286,6 +286,7 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], real Flux_Array[][NFLUX_TOTAL][ SQ
 
          Idx2 ++;
       }
+      //printf("Flux 1 %.10e 2 %.10e 3 %.10e", Flux[  0]*_Eta2_dh, Flux[PS1]*_Eta2_dh, Flux[PS2]*_Eta2_dh);
 
 //    4.3. save the fluxes across all patch boundaries (remeber to put the coefficient "1/(2*Eta*dh)" back)
       if ( StoreFlux )

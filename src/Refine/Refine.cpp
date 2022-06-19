@@ -121,6 +121,29 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    for (int PID=0; PID<amr->num[lv]; PID++)  JustRefined[PID] = false;
 #  endif // #ifdef MHD
 
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+
+
+//       for hybrid scheme, we need to consider the following cases:
+//
+//       A: lv & lv + 1 wave scheme & lv & lv + 1 phase scheme and no use_wave_flag
+//       1. no modification
+//
+//       B: lv & lv + 1 phase scheme & use_wave_flag:    
+//       1. switch to wave scheme on level lv + 1
+//       2. no modification for interpolation
+//       3. convert DENS/PHAS to IM/RE after refinement for all patches on level lv +1
+//
+//       C: lv phase scheme & lv + 1 wave scheme
+//       1. in interpolation, we provide boundary information from lv + 1 -> convert to DENS/PHAS
+//       2. convert refined patch to IM/RE after interpolation 
+//
+
+   bool switchNextLevelToWaveScheme = false, refinePatchFromFluidToWave = false;
+
+   if ( amr->use_wave_flag[lv + 1] && !amr->use_wave_flag[lv])
+      refinePatchFromFluidToWave = true;
+#  endif
 
 // determine the priority of different boundary faces (z>y>x) to set the corner cells properly for the non-periodic B.C.
    const int   NDer       = 0;
@@ -208,11 +231,13 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    {
       patch_t *Pedigree = amr->patch[0][lv][PID];  // fixed to Sg=0 for the patch relation
 
+
       if ( Pedigree->flag  &&  Pedigree->son == -1 )
       {
 //       (c1.1) construct relation : father -> child
          Pedigree->son = amr->num[lv+1];
 
+         printf("there is a pedigree \n");
 
 //       (c1.2) allocate child patches and construct relation : child -> father
          Cr = Pedigree->corner;
@@ -231,6 +256,15 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
          JustRefined[PID] = true;
 #        endif
 
+#        if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+         if (!amr->use_wave_flag[lv + 1] && !amr->use_wave_flag[lv] && Pedigree->use_wave_flag) {
+            printf("Switch next level to wave scheme!\n");
+            switchNextLevelToWaveScheme = true;
+         }
+         if ( amr->use_wave_flag[ lv ] ) {
+            amr->use_wave_flag[ lv + 1] = true;
+         }
+#        endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
 //       (c1.3) assign data to child patches by spatial interpolation
 //       (c1.3.1) fill up the central region of CData
@@ -861,6 +895,26 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #        endif // #if ( MODEL == HYDRO  ||  MODEL == ELBDM )
 
 
+
+//       (c1.3.4.5) convert density/phase to real and imaginary parts for patches that were refined from phase to wave level
+
+#        if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+         if (Pedigree->use_wave_flag && refinePatchFromFluidToWave) {
+            printf("Refine single patch from fluid to wave level %i", lv + 1);
+
+            real amp, phase;
+            for (int k=0; k<FSize_CC; k++)
+            for (int j=0; j<FSize_CC; j++)
+            for (int i=0; i<FSize_CC; i++)
+            {
+               amp   = SQRT(Flu_FData[DENS][k][j][i]);
+               phase =      Flu_FData[PHAS][k][j][i];
+               Flu_FData[REAL][k][j][i] = amp * COS( phase );
+               Flu_FData[IMAG][k][j][i] = amp * SIN( phase );
+            } // i,j,k
+         }  
+#        endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID)
+
 //       (c1.3.5) copy data from XXX_FData[] to patch pointers
          for (int LocalID=0; LocalID<8; LocalID++)
          {
@@ -943,7 +997,6 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #           endif // #if ( MODEL == ELBDM )
          } // for (int LocalID=0; LocalID<8; LocalID++)
 
-
 //       (c1.4) pass particles from father to son
 #        ifdef PARTICLE
          Par_PassParticle2Son_SinglePatch( lv, PID );
@@ -951,6 +1004,34 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
       } // if ( Pedigree->flag  &&  Pedigree->son == -1 )
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
+
+
+// (c1.3.6) convert density/phase to density/real part/imaginary part in hybrid scheme if we switch the level from phase to wave
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+   if ( switchNextLevelToWaveScheme ) {
+      printf("Converting entire level %i to wave scheme", lv + 1);
+      //Set corresponding flag
+      amr->use_wave_flag[lv+1] = true; 
+
+      real amp, phase;
+      for (int PID=0; PID<amr->NPatchComma[lv+1][1]; PID++)
+      {
+         for (int LocalID=0; LocalID<8; LocalID++)
+         {
+   //       fluid data
+            for (int k=0; k<PS1; k++)  {
+            for (int j=0; j<PS1; j++)  {
+            for (int i=0; i<PS1; i++)  {
+               amp   = SQRT(amr->patch[FFluSg][lv+1][PID]->fluid[DENS][k][j][i]);
+               phase =      amr->patch[FFluSg][lv+1][PID]->fluid[PHAS][k][j][i];
+               amr->patch[FFluSg][lv+1][PID]->fluid[REAL][k][j][i] = amp * COS(phase);
+               amr->patch[FFluSg][lv+1][PID]->fluid[IMAG][k][j][i] = amp * SIN(phase);
+            }}}
+         } // for (int LocalID=0; LocalID<8; LocalID++)
+      } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+
+   } // if ( switchNextLevelToWaveScheme )
+#   endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID)
 
 // (c2) remove unflagged child patches (deallocate one patch group at a time)
 //      --> note that we must do this AFTER allocating all new patches to retain high-resolution

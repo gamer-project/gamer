@@ -68,7 +68,7 @@ void Prepare_for_Interference_Criterion(const real *Dens1D, real *SqrtDens1D, re
    for (int k=0; k<NCell; k++)    {
    for (int j=0; j<NCell; j++)    {
    for (int i=0; i<NCell; i++)    {
-      SqrtDens[k][j][i] = Dens[k][j][i];
+      SqrtDens[k][j][i] = SQRT(Dens[k][j][i]);
    }}} // k,j,i
 
    for (int k=0; k<NCurv; k++)    {  kk = k + 1;   kkp = kk + 1;   kkm = kk - 1;
@@ -76,10 +76,11 @@ void Prepare_for_Interference_Criterion(const real *Dens1D, real *SqrtDens1D, re
    for (int i=0; i<NCurv; i++)    {  ii = i + 1;   iip = ii + 1;   iim = ii - 1;
 
       QP[k][j][i] =  FABS(  SqrtDens[kk ][jj ][iip] + SqrtDens[kk ][jj ][iim] \
-                         + SqrtDens[kk ][jjp][ii ] + SqrtDens[kk ][jjm][ii ] \
-                         + SqrtDens[kkp][jj ][ii ] + SqrtDens[kkm][jj ][ii ] \
-                         - (real) 6.0 * SqrtDens[kk ][jj ][ii])\
+                          + SqrtDens[kk ][jjp][ii ] + SqrtDens[kk ][jjm][ii ] \
+                          + SqrtDens[kkp][jj ][ii ] + SqrtDens[kkm][jj ][ii ] \
+                          - (real) 6.0 * SqrtDens[kk ][jj ][ii])\
                     / ((real) 3.0 * SqrtDens[kk ][jj ][ii]);
+      //printf("QP %f k %i j %i i %i", QP[k][j][i], k, j, i);
    }}} // k,j,i
 
 

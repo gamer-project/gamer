@@ -72,6 +72,19 @@ void Init_Refine( const int lv )
 #           ifdef PARTICLE
             Par_PassParticle2Son_SinglePatch( lv, PID );
 #           endif
+
+#           if ( MODEL == ELBDM && ELBDM_SCHEME )
+//          NOTE: we should check whether lv + 1 actually resolves dB wavelength
+//          have use_wave_flag (int) with number of refinements required?
+            if ( amr->patch[0][lv][PID]->use_wave_flag ) 
+               amr->use_wave_flag[lv + 1] = true;
+            
+//          If previous level uses wave flag, we also need to use wave solver on the following levels
+            if ( lv > 0)
+               if ( amr->use_wave_flag[lv - 1] )
+                  amr->use_wave_flag[lv] = true; 
+#           endif 
+
          } // if ( amr->patch[0][lv][PID]->flag )
       } // for (int PID=amr->NPatchComma[lv][s+1]; PID<amr->NPatchComma[lv][s+2]; PID++)
 

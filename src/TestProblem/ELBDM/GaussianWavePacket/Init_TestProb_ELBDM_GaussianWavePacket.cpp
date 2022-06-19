@@ -186,15 +186,19 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double Gau_Theta2 = 0.5*pow( dr1, 2.0 )*ELBDM_ETA*Time/(  pow( ELBDM_ETA*SQR(Gau_Width), 2.0) + SQR(Time)  )
                              + Gau_v0*ELBDM_ETA*dr2;
 
-   #if (ELBDM_SCHEME == HYBRID)
-   fluid[DENS] = SQR(Gau_Const2);
-   fluid[PHAS] = Gau_Theta1 + Gau_Theta2;
-   fluid[IMAG] = 0;
-   #else 
+#  if (ELBDM_SCHEME == HYBRID)
+   if (amr->use_wave_flag[lv]) {
+#  endif 
    fluid[REAL] = Gau_Const2*cos( Gau_Theta1 + Gau_Theta2 );
    fluid[IMAG] = Gau_Const2*sin( Gau_Theta1 + Gau_Theta2 );
    fluid[DENS] = SQR(fluid[REAL]) + SQR(fluid[IMAG]);
-   #endif 
+#  if  (ELBDM_SCHEME == HYBRID)
+   } else { // if (amr->use_wave_flag[lv])
+   fluid[DENS] = SQR(Gau_Const2);
+   fluid[PHAS] = Gau_Theta1 + Gau_Theta2;
+   fluid[STUB] = 0.0;
+   } // if (amr->use_wave_flag[lv]) ... else 
+#  endif // #if (ELBDM_SCHEME == HYBRID)
 
 } // FUNCTION : SetGridIC
 

@@ -56,17 +56,20 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
 
 // check ELBDM interference 
+// if FlagTable_Interference[lv][1] > 0 we set use wave flag if interference > FlagTable_Interference[lv][0]
+// if FlagTable_Interference[lv][1] < 0 we just use it as refinement criterion for fluid patches
 // ===========================================================================================
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
    if ( OPT__FLAG_INTERFERENCE )
    {
       bool FlagInterference = ELBDM_Flag_Interference( i, j, k, Interf_Cond, FlagTable_Interference[lv][0]);
+      
       Flag |= FlagInterference;
 
       amr->patch[0][lv][PID]->use_wave_flag = ( FlagInterference &&  FlagTable_Interference[lv][1] >= 0.0);
 
       //Only refine if we are not already using the wave scheme
-      if ( FlagInterference && !amr->use_wave_flag[lv] )
+      if ( Flag )
             return Flag;
    }
 #  endif

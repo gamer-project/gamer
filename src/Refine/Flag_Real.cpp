@@ -109,19 +109,25 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    if ( OPT__FLAG_LOHNER_DENS )
    {
       Lohner_NVar = 2;
-      Lohner_TVar = _REAL | _IMAG;
 
 #     if ( ELBDM_SCHEME == HYBRID )
-      if (amr->use_wave_flag[lv] == false) {
-         Lohner_TVar = _DENS | _PHAS;
-      }
+      if (amr->use_wave_flag[lv]) {
+#     endif 
+      Lohner_TVar = _REAL | _IMAG;
+#     if ( ELBDM_SCHEME == HYBRID )
+      } else { //if (amr->use_wave_flag[lv]) {
+      Lohner_TVar = _DENS | _PHAS;
+      } // if (amr->use_wave_flag[lv]) { ... else 
 #     endif 
    }
 
 #  if ( ELBDM_SCHEME == HYBRID )
-   Interf_NVar = 1;
-   Interf_TVar = _DENS;   
-   Interf_Stride = Interf_NVar *Interf_NCell*Interf_NCell*Interf_NCell; // stride of array for one interference criterion patch
+   if ( OPT__FLAG_INTERFERENCE )
+   {
+      Interf_NVar = 1;
+      Interf_TVar = _DENS;   
+      Interf_Stride = Interf_NVar *Interf_NCell*Interf_NCell*Interf_NCell; // stride of array for one interference criterion patch
+   }
 #  endif
    
 
@@ -186,9 +192,11 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #     endif
 
 #     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
-      Interf_Var       = new real [ 8 * Interf_NVar*Interf_NCell *Interf_NCell *Interf_NCell  ]; // 8: number of local patches;
-      Interf_SqrtDens  = new real [     Interf_NVar*Interf_NCell *Interf_NCell *Interf_NCell  ];
-      Interf_Cond      = new real [     Interf_NVar*Interf_NCond *Interf_NCond *Interf_NCond  ];
+      if ( Interf_NVar > 0 ) {
+         Interf_Var       = new real [ 8 * Interf_NVar*Interf_NCell *Interf_NCell *Interf_NCell  ]; // 8: number of local patches;
+         Interf_SqrtDens  = new real [     Interf_NVar*Interf_NCell *Interf_NCell *Interf_NCell  ];
+         Interf_Cond      = new real [     Interf_NVar*Interf_NCond *Interf_NCond *Interf_NCond  ];
+      }
 #     endif
 
       if ( Lohner_NVar > 0 )
@@ -212,6 +220,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 //       prepare the ghost-zone data for interference criterion
 #     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+         if ( Interf_NVar > 0 )
             Prepare_PatchData( lv, Time[lv], Interf_Var, NULL, Interf_NGhost, NPG, &PID0, Interf_TVar, _NONE,
                                Interf_IntScheme, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
                                MinDens, MinPres, MinTemp, MinEntr, DE_Consistency_No );
@@ -352,9 +361,10 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 //             evaluate the quantum pressure for interference criterion
-#     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
-               Prepare_for_Interference_Criterion(Interf_Var+LocalID*Interf_Stride, Interf_SqrtDens, Interf_Cond );
-#     endif 
+#              if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+               if ( Interf_NVar > 0 )
+                  Prepare_for_Interference_Criterion(Interf_Var+LocalID*Interf_Stride, Interf_SqrtDens, Interf_Cond );
+#              endif 
 
 //             count the number of particles and/or particle mass density on each cell
 #              ifdef PARTICLE
@@ -484,6 +494,13 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 //                         note that we can have SibPID <= SIB_OFFSET_NONPERIODIC when OPT__NO_FLAG_NEAR_BOUNDARY == false
                            if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
+
+#                          if ( ELBDM_SCHEME == HYBRID )
+//                         use_wave_flag should be consistent with the flag buffer
+//                         separate treatment of use_wave_flag since it is set in FlagCheck()
+                           if ( amr->patch[0][lv][PID]->use_wave_flag && SibPID >= 0 )   
+                              amr->patch[0][lv][SibPID]->use_wave_flag = true;
+#                          endif  // #if ( ELBDM_SCHEME == HYBRID )
                         }
                      }
 
@@ -577,6 +594,10 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
          if ( amr->patch[0][lv][PID]->sibling[sib] == -1 )
          {
             amr->patch[0][lv][PID]->flag = false;
+#        if ( ELBDM_SCHEME == HYBRID )
+//       enforce proper-nesting constraint for use_wave_flag
+            amr->patch[0][lv][PID]->use_wave_flag = false;
+#        endif // #if ( ELBDM_SCHEME == HYBRID )
             break;
          }
       }
@@ -593,6 +614,9 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                 CornerR >= amr->BoxScale[d] - NoRefineBoundaryRegion    )
             {
                amr->patch[0][lv][PID]->flag = false;
+#              if ( ELBDM_SCHEME == HYBRID )
+               amr->patch[0][lv][PID]->use_wave_flag = false;
+#              endif // #if ( ELBDM_SCHEME == HYBRID )
                break;
             }
          }
