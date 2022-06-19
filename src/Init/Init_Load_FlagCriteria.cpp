@@ -189,8 +189,8 @@ void Init_Load_FlagCriteria()
             else if ( FlagMode == 7 )  sscanf( input_line, "%d%d",  &Trash, &FlagTable_NParCell [lv] );
 
 //          OPT__FLAG_INTERFERENCE loads two columns
-            else if ( FlagMode == 13 )  sscanf( input_line, "%d%lf%lf", &Trash, &FlagTable_Interference[lv][0],
-                                                                               &FlagTable_Interference[lv][1] );
+            else if ( FlagMode == 12 )  sscanf( input_line, "%d%lf%lf", &Trash, &FlagTable_Interference[lv][0],
+                                                                                &FlagTable_Interference[lv][1] );
 //          others use the default format: (integer, double)
             else                       sscanf( input_line, "%d%lf", &Trash, &FlagTable[FlagMode][lv] );
          }
