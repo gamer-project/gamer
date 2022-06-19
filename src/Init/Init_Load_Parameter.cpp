@@ -97,7 +97,7 @@ void Init_Load_Parameter()
 
 // time-step
    ReadPara->Add( "DT__MAX",                    &DT__MAX,                        -1.0,             NoMin_double,  NoMax_double   );
-// do not check DT__FLUID/FLUID_INIT/GRAVITY/PARVEL_MAX since they may be reset by Init_ResetDefaultParameter()
+// do not check DT__FLUID/FLUID_INIT/GRAVITY/PARVEL_MAX/HYBRID/VELOCITY since they may be reset by Init_ResetDefaultParameter()
    ReadPara->Add( "DT__FLUID",                  &DT__FLUID,                      -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "DT__FLUID_INIT",             &DT__FLUID_INIT,                 -1.0,             NoMin_double,  NoMax_double   );
 #  ifdef GRAVITY
@@ -106,8 +106,8 @@ void Init_Load_Parameter()
 #  if ( MODEL == ELBDM )
    ReadPara->Add( "DT__PHASE",                  &DT__PHASE,                       0.0,             0.0,           NoMax_double   );
 #  if ( ELBDM_SCHEME == HYBRID )
-   ReadPara->Add( "DT__VELOCITY",               &DT__VELOCITY,                   -1.0,             0.0,           NoMax_double   );
-   ReadPara->Add( "DT__HYBRID",                 &DT__HYBRID,                     -1.0,             0.0,           NoMax_double   );
+   ReadPara->Add( "DT__VELOCITY",               &DT__VELOCITY,                   -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "DT__HYBRID",                 &DT__HYBRID,                     -1.0,             NoMin_double,  NoMax_double   );
 #  endif // #  if ( ELBDM_SCHEME == HYBRID )
 #  endif
 #  ifdef PARTICLE
