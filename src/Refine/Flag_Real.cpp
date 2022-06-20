@@ -467,7 +467,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 //                check if the target cell satisfies the refinement criteria (useless pointers are always == NULL)
                   if (  lv < MAX_LEVEL  &&  Flag_Check( lv, PID, i, j, k, dv, Fluid, Pot, MagCC, Vel, Pres,
                                                         Lohner_Var+LocalID*Lohner_Stride, Lohner_Ave, Lohner_Slope, Lohner_NVar,
-                                                        ParCount, ParDens, JeansCoeff, Interf_Cond )  )
+                                                        ParCount, ParDens, JeansCoeff, Interf_Cond+LocalID*Interf_Stride )  )
                   {
 //                   flag itself
                      amr->patch[0][lv][PID]->flag = true;
