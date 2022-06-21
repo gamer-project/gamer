@@ -1159,8 +1159,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 #     elif ( MODEL == ELBDM )
 //    apply monotonic interpolation to density and all passive scalars
 #     if (ELBDM_SCHEME == HYBRID)
-      if (  (TVarCCIdx_Flu != REAL  &&  TVarCCIdx_Flu != IMAG && amr->use_wave_flag[lv] == true  )\
-          &&(TVarCCIdx_Flu != PHAS  &&  TVarCCIdx_Flu != STUB && amr->use_wave_flag[lv] == false ) )
+      if (   (TVarCCIdx_Flu != REAL  &&  TVarCCIdx_Flu != IMAG && amr->use_wave_flag[lv] == true  )\
+          || (TVarCCIdx_Flu != PHAS  &&  TVarCCIdx_Flu != STUB && amr->use_wave_flag[lv] == false ) )
 #     else 
       if ( TVarCCIdx_Flu != REAL  &&  TVarCCIdx_Flu != IMAG )
 #     endif 
