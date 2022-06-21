@@ -367,6 +367,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    hsize_t H5_SetDims_NPar, H5_SetDims_ParData[1], H5_MemDims_ParData[1],  H5_Count_ParData[1], H5_Offset_ParData[1];
    hid_t   H5_SetID_NPar, H5_SpaceID_NPar, H5_SpaceID_ParData, H5_GroupID_Particle, H5_SetID_ParData, H5_MemID_ParData;
 #  endif
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID)
+   hsize_t H5_SetDims_Wave;
+   hid_t   H5_SetID_Wave, H5_SpaceID_Wave;
+#  endif
 #  ifdef MHD
    hsize_t H5_SetDims_FCMag[4], H5_MemDims_FCMag[4], H5_Count_FCMag[4], H5_Offset_FCMag[4];
    hid_t   H5_MemID_FCMag, H5_SetID_FCMag, H5_SpaceID_FCMag[NCOMP_MAG];
@@ -459,6 +463,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    int  *NParList_Local[NLEVEL], *NParList_AllLv;
 #  endif
 
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+   int  *WaveList_Local[NLEVEL], *WaveList_AllLv;
+#  endif 
+
    long *LBIdxList_Sort[NLEVEL];
    int  *LBIdxList_Sort_IdxTable[NLEVEL];
 
@@ -473,6 +481,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    int   RecvCount_NPar[MPI_NRank], RecvDisp_NPar[MPI_NRank];
 #  endif
 
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+   int   RecvCount_Wave[MPI_NRank], RecvDisp_Wave[MPI_NRank];
+#  endif 
+
 // 4-1. allocate lists
    if ( MPI_Rank == 0 )
    {
@@ -483,6 +495,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       SibList_AllLv   = new int  [ NPatchAllLv ][26];
 #     ifdef PARTICLE
       NParList_AllLv  = new int  [ NPatchAllLv ];
+#     endif
+#     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+      WaveList_AllLv  = new int  [ NPatchAllLv ];
 #     endif
    }
 
@@ -495,6 +510,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       SibList_Local          [lv] = new int  [ amr->NPatchComma[lv][1] ][26];
 #     ifdef PARTICLE
       NParList_Local         [lv] = new int  [ amr->NPatchComma[lv][1] ];
+#     endif
+#     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+      WaveList_Local         [lv] = new int  [ amr->NPatchComma[lv][1] ];
 #     endif
 
       LBIdxList_Sort         [lv] = new long [ NPatchTotal[lv] ];
@@ -702,6 +720,11 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //       4-3-6. NPar
          NParList_Local[lv][PID] = amr->patch[0][lv][PID]->NPar;
 #        endif
+
+#        if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+//       4-3-7. Wave flags
+         WaveList_Local[lv][PID] = amr->patch[0][lv][PID]->use_wave_flag;
+#        endif
       } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    } // for (int lv=0; lv<NLEVEL; lv++)
 
@@ -719,12 +742,20 @@ void Output_DumpData_Total_HDF5( const char *FileName )
          RecvCount_NPar[r] = RecvCount_Fa[r];
 #        endif
 
+#        if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+         RecvCount_Wave[r] = RecvCount_Fa[r];
+#        endif
+
          RecvDisp_Fa   [r] = ( r == 0 ) ? 0 : RecvDisp_Fa[r-1] + RecvCount_Fa[r-1];
          RecvDisp_Son  [r] = RecvDisp_Fa[r];
          RecvDisp_Sib  [r] = RecvDisp_Fa[r]*26;
          RecvDisp_Cr   [r] = RecvDisp_Fa[r]*3;
 #        ifdef PARTICLE
          RecvDisp_NPar [r] = RecvDisp_Fa[r];
+#        endif
+
+#        if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+         RecvDisp_Wave[r]  = RecvDisp_Fa[r];
 #        endif
       }
 
@@ -744,6 +775,11 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #     ifdef PARTICLE
       MPI_Gatherv( NParList_Local[lv],    amr->NPatchComma[lv][1],    MPI_INT,
                    NParList_AllLv+GID_LvStart[lv],     RecvCount_NPar, RecvDisp_NPar, MPI_INT, 0, MPI_COMM_WORLD );
+#     endif
+
+#     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+      MPI_Gatherv( WaveList_Local[lv],    amr->NPatchComma[lv][1],    MPI_INT,
+                   WaveList_AllLv+GID_LvStart[lv],     RecvCount_Wave, RecvDisp_Wave, MPI_INT, 0, MPI_COMM_WORLD );
 #     endif
    } // for (int lv=0; lv<NLEVEL; lv++)
 
@@ -841,6 +877,20 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       H5_Status = H5Dwrite( H5_SetID_NPar, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, NParList_AllLv );
       H5_Status = H5Dclose( H5_SetID_NPar );
       H5_Status = H5Sclose( H5_SpaceID_NPar );
+#     endif
+
+//    4-5-6. Wave flag 
+#     if ( MODEL == ELBDM && ELDBM_SCHEME == HYBRID )
+      H5_SetDims_Wave = NPatchAllLv;
+      H5_SpaceID_Wave = H5Screate_simple( 1, &H5_SetDims_Wave, NULL );
+      H5_SetID_Wave   = H5Dcreate( H5_GroupID_Tree, "Wave", H5T_NATIVE_INT, H5_SpaceID_Wave,
+                                   H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
+
+      if ( H5_SetID_Wave < 0 )   Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", "Wave" );
+
+      H5_Status = H5Dwrite( H5_SetID_Wave, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, WaveList_AllLv );
+      H5_Status = H5Dclose( H5_SetID_Wave );
+      H5_Status = H5Sclose( H5_SpaceID_Wave );
 #     endif
 
 //    close file
@@ -1050,13 +1100,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #              ifdef MHD
                if ( v >= CCMagDumpIdx0  &&  v < CCMagDumpIdx0+NCOMP_MAG )
                {
-                  const int Bv = v - CCMagDumpIdx0;
-                  real CCMag_1Cell[NCOMP_MAG];
-
-                  for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-                  for (int k=0; k<PS1; k++)
-                  for (int j=0; j<PS1; j++)
-                  for (int i=0; i<PS1; i++)
+                  const int Bv = v - CCMagDumpIdx0;                     for (int v=0; v<NCOMP_TOTAL; v++)   u[v] = amr-
                   {
 //                   actually we only need CCMag_1Cell[Bv] here
 //                   --> but the overhead of computing the other two B components is probably acceptable
@@ -1784,6 +1828,10 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
       KeyInfo.NPatch        [lv] = NPatchTotal   [lv];
       KeyInfo.AdvanceCounter[lv] = AdvanceCounter[lv];
       KeyInfo.dTime_AllLv   [lv] = dTime_AllLv   [lv];
+
+#     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID)
+      KeyInfo.UseWaveScheme [lv] = amr->use_wave_flag [lv];
+#     endif 
    }
 
    KeyInfo.CodeVersion  = (char*)VERSION;
@@ -2813,6 +2861,10 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
 #  ifdef GRAVITY
    H5Tinsert( H5_TypeID, "AveDens_Init",         HOFFSET(KeyInfo_t,AveDens_Init        ), H5T_NATIVE_DOUBLE       );
 #  endif
+
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+   H5Tinsert( H5_TypeID, "UseWaveScheme",         HOFFSET(KeyInfo_t,UseWaveScheme      ), H5_TypeID_Arr_NLvInt    );
+#  endif 
 
    H5Tinsert( H5_TypeID, "CodeVersion",          HOFFSET(KeyInfo_t,CodeVersion         ), H5_TypeID_VarStr        );
    H5Tinsert( H5_TypeID, "DumpWallTime",         HOFFSET(KeyInfo_t,DumpWallTime        ), H5_TypeID_VarStr        );
