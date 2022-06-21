@@ -126,7 +126,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    {
       Interf_NVar = 1;
       Interf_TVar = _DENS;   
-      Interf_Stride = Interf_NVar *Interf_NCell*Interf_NCell*Interf_NCell; // stride of array for one interference criterion patch
+      Interf_Stride = Interf_NVar*Interf_NCell*Interf_NCell*Interf_NCell; // stride of array for one interference criterion patch
    }
 #  endif
    
@@ -467,7 +467,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 //                check if the target cell satisfies the refinement criteria (useless pointers are always == NULL)
                   if (  lv < MAX_LEVEL  &&  Flag_Check( lv, PID, i, j, k, dv, Fluid, Pot, MagCC, Vel, Pres,
                                                         Lohner_Var+LocalID*Lohner_Stride, Lohner_Ave, Lohner_Slope, Lohner_NVar,
-                                                        ParCount, ParDens, JeansCoeff, Interf_Cond+LocalID*Interf_Stride )  )
+                                                        ParCount, ParDens, JeansCoeff, Interf_Cond )  )
                   {
 //                   flag itself
                      amr->patch[0][lv][PID]->flag = true;
