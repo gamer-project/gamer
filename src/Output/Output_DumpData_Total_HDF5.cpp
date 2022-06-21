@@ -880,7 +880,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #     endif
 
 //    4-5-6. Wave flag 
-#     if ( MODEL == ELBDM && ELDBM_SCHEME == HYBRID )
+#     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
       H5_SetDims_Wave = NPatchAllLv;
       H5_SpaceID_Wave = H5Screate_simple( 1, &H5_SetDims_Wave, NULL );
       H5_SetID_Wave   = H5Dcreate( H5_GroupID_Tree, "Wave", H5T_NATIVE_INT, H5_SpaceID_Wave,
