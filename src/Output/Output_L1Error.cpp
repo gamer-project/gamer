@@ -371,10 +371,13 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
 #  endif
 
 // convert real and imaginary part to phase for wave patches in hybrid scheme 
-// adjust by multiples of 2 Pi to match phase of analytical solution
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
-   if (amr->use_wave_flag[lv] == true)
-      Nume[PHAS] = ELBDM_UnwrapPhase(Anal[PHAS], ATAN2(Nume[IMAG], Nume[REAL]));
+   if (amr->use_wave_flag[lv] == true) {
+      Anal[PHAS] = ATAN2(Anal[IMAG], Anal[REAL]);
+      Nume[PHAS] = ATAN2(Nume[IMAG], Nume[REAL]);
+      Anal[STUB] = 0;
+      Nume[STUB] = 0;
+   }
 #  endif 
 
 // record the physical coordinate
