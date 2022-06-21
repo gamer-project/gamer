@@ -45,6 +45,11 @@ void Aux_Check_Restrict( const int lv, const char *comment )
 #  endif
    int Pass = true;
 
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+// Convert between phase/dens and re/im 
+   const bool convertWaveToFluid = ( amr->use_wave_flag[lv] != amr->use_wave_flag[lv + 1] );
+#  endif 
+
    int    SonPID0, SonPID, ii0, jj0, kk0, ii, jj, kk;
    double ResData[NCOMP_TOTAL][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
 
@@ -93,7 +98,16 @@ void Aux_Check_Restrict( const int lv, const char *comment )
                for (int j=0; j<PATCH_SIZE; j++)
                for (int i=0; i<PATCH_SIZE; i++)
                {
+
                   u = amr->patch[CSg][lv][PID]->fluid[v][k][j][i];
+
+#                 if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+                  if ( convertWaveToFluid && v == REAL && v == PHAS) {
+                     ResData[v][k][j][i] = ELBDM_UnwrapPhase(u, ATAN2(ResData[IMAG][k][j][i], ResData[REAL][k][j][i]));
+                  } else if ( convertWaveToFluid && v == IMAG && v == STUB ) {
+                     ResData[v][k][j][i] = 0;
+                  }
+#                 endif 
 
                   Err = fabs(  ( u - ResData[v][k][j][i] ) / ResData[v][k][j][i]  );
 

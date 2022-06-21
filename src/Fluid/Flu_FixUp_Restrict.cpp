@@ -108,6 +108,10 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
       return;
    }
 
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+// Convert between phase/dens and re/im 
+   const bool convertWaveToFluid = (TVarCC & (_REAL | _IMAG )) && ( amr->use_wave_flag[FaLv] != amr->use_wave_flag[SonLv] );
+#  endif 
 
 // restrict
 #  pragma omp parallel for schedule( runtime )
@@ -172,8 +176,48 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
          for (int v=0; v<NFluVar; v++)
          {
             const int TFluVarIdx = TFluVarIdxList[v];
+
+#           if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+            if (convertWaveToFluid && (TFluVarIdx == REAL || TFluVarIdx == IMAG)) {
+
+            const real (*RealSonPtr)[PS1][PS1] = amr->patch[SonFluSg][SonLv][SonPID]->fluid[REAL];
+            const real (*ImagSonPtr)[PS1][PS1] = amr->patch[SonFluSg][SonLv][SonPID]->fluid[IMAG];
+                  real (*FaPtr)[PS1][PS1]      = amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[PHAS];
+                  real (*StubFaPtr)[PS1][PS1]  = amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[STUB];
+            
+            int ii, jj, kk, I, J, K, Ip, Jp, Kp;
+            real re, im;
+
+            for (int k=0; k<PS1_half; k++)  {  K = k*2;  Kp = K+1;  kk = k + Disp_k;
+            for (int j=0; j<PS1_half; j++)  {  J = j*2;  Jp = J+1;  jj = j + Disp_j;
+            for (int i=0; i<PS1_half; i++)  {  I = i*2;  Ip = I+1;  ii = i + Disp_i;
+
+               if (TFluVarIdx == REAL) {
+                  re = 0.125*( RealSonPtr[K ][J ][I ] + RealSonPtr[K ][J ][Ip] +
+                              RealSonPtr[K ][Jp][I ] + RealSonPtr[Kp][J ][I ] +
+                              RealSonPtr[K ][Jp][Ip] + RealSonPtr[Kp][Jp][I ] +
+                              RealSonPtr[Kp][J ][Ip] + RealSonPtr[Kp][Jp][Ip] );
+                  im = 0.125* (ImagSonPtr[K ][J ][I ] + ImagSonPtr[K ][J ][Ip] +
+                              ImagSonPtr[K ][Jp][I ] + ImagSonPtr[Kp][J ][I ] +
+                              ImagSonPtr[K ][Jp][Ip] + ImagSonPtr[Kp][Jp][I ] +
+                              ImagSonPtr[Kp][J ][Ip] + ImagSonPtr[Kp][Jp][Ip] );
+
+                  FaPtr[kk][jj][ii]     = ELBDM_UnwrapPhase(FaPtr[kk][jj][ii], ATAN2(im, re));
+               }
+
+               if (TFluVarIdx == IMAG) {
+                  StubFaPtr[kk][jj][ii] = 0;
+               }
+               
+            }}}
+
+            } else {
+#           endif 
+
             const real (*SonPtr)[PS1][PS1] = amr->patch[SonFluSg][SonLv][SonPID]->fluid[TFluVarIdx];
                   real (* FaPtr)[PS1][PS1] = amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[TFluVarIdx];
+
+
 
             int ii, jj, kk, I, J, K, Ip, Jp, Kp;
 
@@ -186,6 +230,10 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                                            SonPtr[K ][Jp][Ip] + SonPtr[Kp][Jp][I ] +
                                            SonPtr[Kp][J ][Ip] + SonPtr[Kp][Jp][Ip] );
             }}}
+
+#           if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+            }
+#           endif 
          } // if ( ResFlu )
 
 
