@@ -249,6 +249,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #     endif
    }
 
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+   if (((  (TVarCC & _REAL)  &&  !(TVarCC & _IMAG) )  || ( !(TVarCC & _REAL)  &&  (TVarCC & _IMAG) )) && amr->use_wave_flag[lv])
+      Aux_Error( ERROR_INFO, "Prepare_PatchData() for hybrid scheme currently requires that we request real and imaginary parts of the wave function together !!\n" );
+#  endif 
+
    if ( IntPhase )
    {
 #  if   ( MODEL == ELBDM)
@@ -1556,18 +1561,15 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 #              if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 //             If we use fluid scheme on level lv - 1 and wave scheme on level lv
-//             set target variable correctly and later convert density and phase to real and imaginary parts
+//             and want to prepare patch with real and imaginary part on level lv
+//             set target variable for lv - 1 to dens and phase and later convert to real and imaginary parts
                long TVarBuffer = TVarCC;
                if ( amr->use_wave_flag[lv] && !amr->use_wave_flag[lv - 1] && (TVarCC & (_REAL | _IMAG)) ) {
                   TVarCC = _DENS|_PHAS|_PASSIVE;    
                   NVarCC_Flu = 0;
                   for (int v=0; v<NCOMP_TOTAL; v++)
-                     if ( TVarCC & (1L<<v) )    {
-                        printf("Set flu with v = %i", v);
+                     if ( TVarCC & (1L<<v) )    
                         TVarCCIdxList_Flu[ NVarCC_Flu++ ] = v;
-                     }
-
-                  
                }
 #              endif 
 
@@ -1598,11 +1600,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 #              if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 //             set target variables correctly convert density and phase to real and imaginary parts
-               if ( amr->use_wave_flag[lv] && !amr->use_wave_flag[lv - 1] ) {
+               if ( amr->use_wave_flag[lv] && !amr->use_wave_flag[lv - 1]  && (TVarBuffer & (_REAL | _IMAG)) ) {
                   TVarCC = TVarBuffer;
                   NVarCC_Flu = 0;
                   for (int v=0; v<NCOMP_TOTAL; v++)
-                     if ( TVarCC & (1L<<v) )    TVarCCIdxList_Flu[ NVarCC_Flu++ ] = v;
+                    if ( TVarCC & (1L<<v) )    TVarCCIdxList_Flu[ NVarCC_Flu++ ] = v;
 
 //                density and phase --> real and imaginary parts
                   real Dens, Phase, Amp;
@@ -1615,13 +1617,13 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                   for (int i=0; i<loop[0]; i++) {
                      Dens  = IntData_CC_Ptr[ Idx2 ];
                      Phase = IntData_CC_Ptr[ Idx2 + FSize3D_CC ];
-                     //printf(" In lv %i from lv - 1 %i Interpolate k %i i %i j %i Dens %f Phas %f \n", lv, lv - 1, k, i, j, Dens, Phase);
+                     
                      Amp   = SQRT(Dens);
-
-                     IntData_CC_Ptr[ Idx2               ] = Amp * COS( Phase );
-                     IntData_CC_Ptr[ Idx2  + FSize3D_CC ] = Amp * SIN( Phase );
-                     Idx2 ++;
-                  }}}
+ 
+                      IntData_CC_Ptr[ Idx2               ] = Amp * COS( Phase );
+                      IntData_CC_Ptr[ Idx2  + FSize3D_CC ] = Amp * SIN( Phase );
+                      Idx2 ++;
+                     }}}
                }
 #              endif 
 
