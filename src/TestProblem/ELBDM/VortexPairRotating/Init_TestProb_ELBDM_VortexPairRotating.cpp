@@ -160,10 +160,24 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double phase = atan2( dy, dx ) - VorPairRot_Omega*Time + VorPairRot_Phase0;
    const double R     = sqrt( SQR(dx) + SQR(dy) );
    const double J1    = VorPairRot_J1Amp*j1( sqrt(2.0*ELBDM_ETA*VorPairRot_Omega)*R );
+   const double Re    = VorPairRot_BgAmp - J1*cos( phase );
+   const double Im    =                  - J1*sin( phase );
+   
+   fluid[DENS] = SQR( Re ) + SQR( Im );
 
-   fluid[REAL] = VorPairRot_BgAmp - J1*cos( phase );
-   fluid[IMAG] =                  - J1*sin( phase );
-   fluid[DENS] = SQR( fluid[REAL] ) + SQR( fluid[IMAG] );
+#  if ( ELBDM_SCHEME == HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+#  endif 
+   fluid[REAL] = Re;
+   fluid[IMAG] = Im;
+#  if ( ELBDM_SCHEME == HYBRID )
+   } else { // if ( amr->use_wave_flag[lv] )
+   fluid[PHAS] = SATAN2(Im, Re);
+   if (fluid[PHAS] > M_PI / 2)
+      printf("Coords %f %f %f Phase %f", x, y, z, fluid[PHAS]);
+   fluid[STUB] = 0.0;
+   } // if ( amr->use_wave_flag[lv] ) ... else
+#  endif 
 
 } // FUNCTION : SetGridIC
 #endif // #if ( MODEL == ELBDM )
