@@ -65,13 +65,12 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 
 #  elif ( MODEL == ELBDM )
 #  if ( ELBDM_SCHEME == HYBRID )
-   if (amr->use_wave_flag[lv] == true)
-      dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Fluid( lv );
-   else 
+   if (amr->use_wave_flag[lv] == false)
       dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Hybrid( lv );
-#  else 
-      dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Fluid( lv );
+   else
 #  endif 
+   dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Fluid( lv );
+
    sprintf( dTime_Name[NdTime++], "%s", "ELBDM_CFL" );
 
 #  else

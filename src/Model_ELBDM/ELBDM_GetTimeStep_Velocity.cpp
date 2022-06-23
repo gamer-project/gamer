@@ -3,7 +3,7 @@
 #if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
 static real GetMaxVelocity( const int lv );
-
+static void GetMaxLevel(patch_t *patch, int lv, int& maxlv);
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ELBDM_GetTimeStep_Velocity
@@ -55,8 +55,8 @@ real GetMaxVelocity( const int lv )
 {
    // Maximum velocity for calculation of time step zero for wave patches
    // since we are only concerned with a velocity dependent time step criterion for the fluid solver
-   //if ( amr -> use_wave_flag[lv] == true )
-   //   return 0;
+   if ( amr->use_wave_flag[lv] )
+      return 0;
 
 
    const bool IntPhase_No       = false;
@@ -73,6 +73,16 @@ real GetMaxVelocity( const int lv )
 
    real dS_dx, MaxdS_dx, _dh, _dh2, GradS[3];
    int im, ip, jm, jp, km, kp, I, J, K;
+   int maxlv = 0;
+   int maxFluidLevel = 0;
+   for (int i = 1; i < NLEVEL; ++i) {
+      if ( !amr->use_wave_flag[i] )
+         ++maxFluidLevel;
+      else 
+         break;
+   }
+
+   bool skipPatchgroup;
 
 
    MaxdS_dx = 0.0;
@@ -82,7 +92,7 @@ real GetMaxVelocity( const int lv )
 
 
 #  pragma omp parallel private( Flu_Array, dS_dx, GradS, \
-                                im, ip, jm, jp, km, kp, I, J, K )
+                                im, ip, jm, jp, km, kp, I, J, K, maxlv, skipPatchgroup )
    {
       Flu_Array = new real [NPG][NCOMP1][Size_Flu][Size_Flu][Size_Flu];
 
@@ -90,6 +100,13 @@ real GetMaxVelocity( const int lv )
 #     pragma omp for reduction( max:MaxdS_dx ) schedule( runtime )
       for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=NPG*8)
       {
+         skipPatchgroup = false;
+         for (int LocalID=0; LocalID<8; LocalID++)
+         {
+            skipPatchgroup |= ( amr->patch[0][lv][PID0 + LocalID]->use_wave_flag );
+         }
+         if (skipPatchgroup) continue;
+         
 //       prepare phase with NGhost ghost zone on each side (any interpolation scheme can be used)
          Prepare_PatchData( lv, Time[lv], &Flu_Array[0][0][0][0][0], NULL, NGhost, NPG, &PID0, _PHAS, _NONE,
                             INT_MINMOD1D, INT_NONE, UNIT_PATCHGROUP, NSIDE_06, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
@@ -130,8 +147,21 @@ real GetMaxVelocity( const int lv )
 
    return MaxdS_dx_AllRank;
 
-} // FUNCTION : GetMaxPhaseDerivative
+} // FUNCTION : GetMaxVelocity
 
 
+void GetMaxLevel(patch_t *patch, int lv, int& maxlv) {
+   int SonPID = patch->son;
+
+   if ( SonPID != -1 )
+   {
+      for (int LocalID=0; LocalID<8; LocalID++)
+      {
+         GetMaxLevel ( amr->patch[0][lv+1][SonPID+LocalID], lv + 1, maxlv);
+      }
+   } 
+   
+   maxlv = MAX( maxlv, lv );      
+}
 
 #endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
