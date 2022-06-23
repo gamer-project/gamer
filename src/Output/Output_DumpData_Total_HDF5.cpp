@@ -1350,8 +1350,31 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //             e. fluid variables
                if ( v >= FluDumpIdx0  &&  v < FluDumpIdx0+NCOMP_TOTAL )
                {
+
+//                convert real/imag to density/phase in hybrid scheme
+#                 if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+                  if ( amr->use_wave_flag[lv] && (v == REAL || v == IMAG) ) {
+                     real Re, Im;
+
+                     for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                     for (int k=0; k<PS1; k++)
+                     for (int j=0; j<PS1; j++)
+                     for (int i=0; i<PS1; i++)
+                     {
+                        if ( v == REAL ) {
+                           Re = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[REAL][k][j][i];
+                           Im = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[IMAG][k][j][i];
+                           FieldData[PID][k][j][i] = SATAN2(Im, Re);
+                        }
+                        else if ( v == IMAG ) {
+                           FieldData[PID][k][j][i] = 0;
+                        }
+                     }
+                  } else 
+#                 endif 
                   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
                      memcpy( FieldData[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
+
                }
 
                else
