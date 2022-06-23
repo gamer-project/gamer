@@ -103,7 +103,7 @@ void Aux_Check_Restrict( const int lv, const char *comment )
 
 #                 if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
                   if ( convertWaveToFluid && v == REAL && v == PHAS) {
-                     ResData[v][k][j][i] = ELBDM_UnwrapPhase(u, ATAN2(ResData[IMAG][k][j][i], ResData[REAL][k][j][i]));
+                     ResData[v][k][j][i] = ELBDM_UnwrapPhase(u, SATAN2(ResData[IMAG][k][j][i], ResData[REAL][k][j][i]));
                   } else if ( convertWaveToFluid && v == IMAG && v == STUB ) {
                      ResData[v][k][j][i] = 0;
                   }

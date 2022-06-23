@@ -194,15 +194,15 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 
                if (TFluVarIdx == REAL) {
                   re = 0.125*( RealSonPtr[K ][J ][I ] + RealSonPtr[K ][J ][Ip] +
-                              RealSonPtr[K ][Jp][I ] + RealSonPtr[Kp][J ][I ] +
-                              RealSonPtr[K ][Jp][Ip] + RealSonPtr[Kp][Jp][I ] +
-                              RealSonPtr[Kp][J ][Ip] + RealSonPtr[Kp][Jp][Ip] );
-                  im = 0.125* (ImagSonPtr[K ][J ][I ] + ImagSonPtr[K ][J ][Ip] +
-                              ImagSonPtr[K ][Jp][I ] + ImagSonPtr[Kp][J ][I ] +
-                              ImagSonPtr[K ][Jp][Ip] + ImagSonPtr[Kp][Jp][I ] +
-                              ImagSonPtr[Kp][J ][Ip] + ImagSonPtr[Kp][Jp][Ip] );
+                               RealSonPtr[K ][Jp][I ] + RealSonPtr[Kp][J ][I ] +
+                               RealSonPtr[K ][Jp][Ip] + RealSonPtr[Kp][Jp][I ] +
+                               RealSonPtr[Kp][J ][Ip] + RealSonPtr[Kp][Jp][Ip] );
+                  im = 0.125*( ImagSonPtr[K ][J ][I ] + ImagSonPtr[K ][J ][Ip] +
+                               ImagSonPtr[K ][Jp][I ] + ImagSonPtr[Kp][J ][I ] +
+                               ImagSonPtr[K ][Jp][Ip] + ImagSonPtr[Kp][Jp][I ] +
+                               ImagSonPtr[Kp][J ][Ip] + ImagSonPtr[Kp][Jp][Ip] );
 
-                  FaPtr[kk][jj][ii]     = ELBDM_UnwrapPhase(FaPtr[kk][jj][ii], ATAN2(im, re));
+                  FaPtr[kk][jj][ii]     = ELBDM_UnwrapPhase(FaPtr[kk][jj][ii], SATAN2(im, re));
                }
 
                if (TFluVarIdx == IMAG) {
