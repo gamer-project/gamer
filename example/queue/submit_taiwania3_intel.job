@@ -26,7 +26,6 @@ module list >> LOG_FILE
 export LD_LIBRARY_PATH="FFTW_PATH/lib:$LD_LIBRARY_PATH"
 export UCX_TLS="ud,dc,shm,self"
 
-cd WORK_DIR
 mpiexec.hydra -bootstrap slurm -n $SLURM_NTASKS ./gamer >> $LOG_FILE 2>&1
 #mpirun -map-by ppr:7:socket:pe=4 -print-rank-map ./gamer 1>>$LOG_FILE 2>&1
 echo "=============================================================" >> $LOG_FILE
