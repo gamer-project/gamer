@@ -31,40 +31,47 @@
 //
 // Note        :  1. This function is shared by MHM, MHM_RP, and CTU schemes
 //                2. Invoke dual-energy check if DualEnergySwitch is on
+//                3. If any unphysical fluid cell is found in a patch group, Hydro_FullStepUpdate() will
+//                   return instantly unless Iteration==MinMod_MaxIter
 //
-// Parameter   :  g_Input          : Array storing the input fluid data
-//                g_Output         : Array to store the updated fluid data
-//                g_DE_Status      : Array to store the dual-energy status
-//                g_FC_B           : Array storing the updated face-centered B field
-//                                   --> For the dual-energy formalism only
-//                g_Flux           : Array storing the input face-centered fluxes
-//                                   --> Accessed with the array stride N_FL_FLUX even thought its actually
-//                                       allocated size is N_FC_FLUX^3
-//                dt               : Time interval to advance solution
-//                dh               : Cell size
-//                MinDens/Eint     : Density and internal energy floors
-//                DualEnergySwitch : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
-//                NormPassive      : true --> normalize passive scalars so that the sum of their mass density
-//                                            is equal to the gas mass density
-//                NNorm            : Number of passive scalars to be normalized
-//                                   --> Should be set to the global variable "PassiveNorm_NVar"
-//                NormIdx          : Target variable indices to be normalized
-//                                   --> Should be set to the global variable "PassiveNorm_VarIdx"
-//                EoS              : EoS object
-//                                   --> Only for obtaining Gamma used by the dual-energy formalism
+// Parameter   :  g_Input           : Array storing the input fluid data
+//                g_Output          : Array to store the updated fluid data
+//                g_DE_Status       : Array to store the dual-energy status
+//                g_FC_B            : Array storing the updated face-centered B field
+//                                    --> For the dual-energy formalism only
+//                g_Flux            : Array storing the input face-centered fluxes
+//                                    --> Accessed with the array stride N_FL_FLUX even thought its actually
+//                                        allocated size is N_FC_FLUX^3
+//                dt                : Time interval to advance solution
+//                dh                : Cell size
+//                MinDens/Eint      : Density and internal energy floors
+//                DualEnergySwitch  : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
+//                NormPassive       : true --> normalize passive scalars so that the sum of their mass density
+//                                             is equal to the gas mass density
+//                NNorm             : Number of passive scalars to be normalized
+//                                    --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx           : Target variable indices to be normalized
+//                                    --> Should be set to the global variable "PassiveNorm_VarIdx"
+//                EoS               : EoS object
+//                                    --> Only for obtaining Gamma used by the dual-energy formalism
+//                s_FullStepFailure : (1/0) --> (Fail to update fluid patch group/otherwise)
+//                                    --> s_FullStepFailure can be NULL, for which both Iteration and MinMod_MaxIter become useless
+//                Iteration         : Current iteration number (should be <= MinMod_MaxIter)
+//                MinMod_MaxIter    : Maximum number of iterations to reduce the min-mod coefficient (i.e., MINMOD_MAX_ITER)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                            const real dt, const real dh, const real MinDens, const real MinEint,
                            const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
-                           const EoS_t *EoS )
+                           const EoS_t *EoS, int *s_FullStepFailure, const int Iteration, const int MinMod_MaxIter )
 {
 
-   const int  didx_flux[3] = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };
-   const real dt_dh        = dt/dh;
+   const int  didx_flux[3]    = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };
+   const real dt_dh           = dt/dh;
+   const bool CheckMinPres_No = false;
 
-   real dFlux[3][NCOMP_TOTAL], Output_1Cell[NCOMP_TOTAL], Emag;
+   real dFlux[3][NCOMP_TOTAL], Output_1Cell[NCOMP_TOTAL], Emag, Pres;
 
 
    const int size_ij = SQR(PS2);
@@ -107,6 +114,16 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
          Output_1Cell[v] = g_Input[v][idx_in] - dt_dh*( dFlux[0][v] + dFlux[1][v] + dFlux[2][v] );
 
 
+//    compute magnetic energy for later usage
+//    --> B field must be updated before calling Hydro_FullStepUpdate()
+#     ifdef MHD
+      Emag = MHD_GetCellCenteredBEnergy( g_FC_B[MAGX], g_FC_B[MAGY], g_FC_B[MAGZ],
+                                         PS2, PS2, PS2, i_out, j_out, k_out );
+#     else
+      Emag = NULL_REAL;
+#     endif
+
+
 //    we no longer ensure positive density and pressure here
 //    --> these checks have been moved to Flu_Close()->CorrectUnphysical()
 //        because we want to apply 1st-order-flux correction BEFORE setting a minimum density and pressure
@@ -114,12 +131,6 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //        even when DUAL_ENERGY is on, we still want to try the 1st-order-flux correction before setting a floor value)
 //    --> but for barotropic EoS, we apply Eint floor here to avoid any false alarm caused by Eint<0
 #     ifdef BAROTROPIC_EOS
-#     ifdef MHD
-      Emag = MHD_GetCellCenteredBEnergy( g_FC_B[MAGX], g_FC_B[MAGY], g_FC_B[MAGZ],
-                                         PS2, PS2, PS2, i_out, j_out, k_out );
-#     else
-      Emag = NULL_REAL;
-#     endif
 //    Output_1Cell[DENS] = FMAX( Output_1Cell[DENS], MinDens );
       Output_1Cell[ENGY] = Hydro_CheckMinEintInEngy( Output_1Cell[DENS], Output_1Cell[MOMX],
                                                      Output_1Cell[MOMY], Output_1Cell[MOMZ],
@@ -142,19 +153,11 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //        by the dual-energy formalism (i.e., for cells with their dual-energy status marked as DE_UPDATED_BY_DUAL)
 //    --> this feature might be modified in the future
 #     ifdef DUAL_ENERGY
-//    B field must be updated in advance
-#     ifdef MHD
-      Emag = MHD_GetCellCenteredBEnergy( g_FC_B[MAGX], g_FC_B[MAGY], g_FC_B[MAGZ],
-                                         PS2, PS2, PS2, i_out, j_out, k_out );
-#     else
-      Emag = NULL_REAL;
-#     endif
 //    we no longer apply density and pressure floors here since we want to enable 1st-order-flux correction for that
-      const bool CheckMinPres_No = false;
 //    Output_1Cell[DENS] = FMAX( Output_1Cell[DENS], MinDens );
 
       Hydro_DualEnergyFix( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
-                           Output_1Cell[ENGY], Output_1Cell[ENPY], g_DE_Status[idx_out],
+                           Output_1Cell[ENGY], Output_1Cell[DUAL], g_DE_Status[idx_out],
                            EoS->AuxArrayDevPtr_Flt[1], EoS->AuxArrayDevPtr_Flt[2], CheckMinPres_No, NULL_REAL,
                            DualEnergySwitch, Emag );
 #     endif // #ifdef DUAL_ENERGY
@@ -164,17 +167,58 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
       for (int v=0; v<NCOMP_TOTAL; v++)   g_Output[v][idx_out] = Output_1Cell[v];
 
 
-//    5. check the negative density and energy
-#     ifdef CHECK_NEGATIVE_IN_FLUID
-      if ( Hydro_CheckNegative(Output_1Cell[DENS]) )
-         printf( "WARNING : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                 Output_1Cell[DENS], __FILE__, __LINE__, __FUNCTION__ );
+//    5. check unphysical cells within a patch group
+      if ( s_FullStepFailure != NULL )
+      {
+         bool FullStepFailure = false;
 
-      if ( Hydro_CheckNegative(Output_1Cell[ENGY]) )
-         printf( "WARNING : invalid energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                 Output_1Cell[ENGY], __FILE__, __LINE__, __FUNCTION__ );
-#     endif
+//       get pressure
+         Pres = Hydro_Con2Pres( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
+                                Output_1Cell[ENGY], Output_1Cell+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, Emag,
+                                EoS->DensEint2Pres_FuncPtr, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,
+                                EoS->Table, NULL );
 
+//       5-1. check
+//       --> allow pressure to be zero to tolerate round-off errors
+         if (  Hydro_CheckUnphysical( UNPHY_MODE_CONS, Output_1Cell, NULL, ERROR_INFO, UNPHY_SILENCE )  ||
+               Pres < (real)0.0  ||  Pres >= HUGE_NUMBER  ||  Pres != Pres  )
+         {
+#           ifdef __CUDACC__  // GPU
+//          use atomicExch_block() on Pascal (or later) GPUs to avoid inter-block synchronization for better performance
+//          --> calculation results should be the same since different blocks have different s_FullStepFailure[]
+//              (since it is a shared memory array)
+#           if ( __CUDA_ARCH__ >= 600 )
+            atomicExch_block( s_FullStepFailure, 1 );
+#           else
+            atomicExch      ( s_FullStepFailure, 1 );
+#           endif
+#           else              // CPU
+            *s_FullStepFailure = 1;
+#           endif
+            FullStepFailure    = true;
+         }
+
+
+//       5-2. synchronize all threads within a GPU thread block
+#        ifdef __CUDACC__
+         __syncthreads();
+#        endif
+
+
+//       5-3. print out unphysical results after iterations for debugging
+#        ifdef CHECK_UNPHYSICAL_IN_FLUID
+         if ( FullStepFailure  &&  Iteration == MinMod_MaxIter )
+         {
+            printf( "Unphysical results at the end of the fluid solver:" );
+            for (int v=0; v<NCOMP_TOTAL; v++)   printf( " [%d]=%14.7e", v, Output_1Cell[v] );
+            printf( " Pres=%14.7e", Pres );
+#           ifdef MHD
+            printf( " Emag=%14.7e", Emag );
+#           endif
+            printf( "\n" );
+         }
+#        endif
+      } // if ( s_FullStepFailure != NULL )
    } // CGPU_LOOP( idx_out, CUBE(PS2) )
 
 } // FUNCTION : Hydro_FullStepUpdate

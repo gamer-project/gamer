@@ -220,6 +220,18 @@ void Aux_TakeNote()
 
 //    d. options in PARTICLE
 #     ifdef PARTICLE
+#     ifdef MASSIVE_PARTICLES
+      fprintf( Note, "MASSIVE_PARTICLES               ON\n" );
+#     else
+      fprintf( Note, "MASSIVE_PARTICLES               OFF\n" );
+#     endif
+
+#     ifdef TRACER
+      fprintf( Note, "TRACER                          ON\n" );
+#     else
+      fprintf( Note, "TRACER                          OFF\n" );
+#     endif
+
 #     ifdef STORE_PAR_ACC
       fprintf( Note, "STORE_PAR_ACC                   ON\n" );
 #     else
@@ -343,6 +355,20 @@ void Aux_TakeNote()
       fprintf( Note, "SUPPORT_GSL                     OFF\n" );
 #     endif
 
+#     ifdef SUPPORT_LIBYT
+      fprintf( Note, "SUPPORT_LIBYT                   ON\n" );
+#     else
+      fprintf( Note, "SUPPORT_LIBYT                   OFF\n" );
+#     endif
+
+#     ifdef SUPPORT_LIBYT
+#     ifdef LIBYT_USE_PATCH_GROUP
+      fprintf( Note, "LIBYT_USE_PATCH_GROUP           ON\n" );
+#     else
+      fprintf( Note, "LIBYT_USE_PATCH_GROUP           OFF\n" );
+#     endif
+#     endif // #ifdef SUPPORT_LIBYT
+
 #     if   ( RANDOM_NUMBER == RNG_GNU_EXT )
       fprintf( Note, "RANDOM_NUMBER                   RNG_GNU_EXT\n" );
 #     elif ( RANDOM_NUMBER == RNG_CPP11 )
@@ -374,10 +400,10 @@ void Aux_TakeNote()
 #     endif
 
 #     if   ( MODEL == HYDRO )
-#     ifdef CHECK_NEGATIVE_IN_FLUID
-      fprintf( Note, "CHECK_NEGATIVE_IN_FLUID         ON\n" );
+#     ifdef CHECK_UNPHYSICAL_IN_FLUID
+      fprintf( Note, "CHECK_UNPHYSICAL_IN_FLUID       ON\n" );
 #     else
-      fprintf( Note, "CHECK_NEGATIVE_IN_FLUID         OFF\n" );
+      fprintf( Note, "CHECK_UNPHYSICAL_IN_FLUID       OFF\n" );
 #     endif
 
 #     ifdef CHAR_RECONSTRUCTION
@@ -439,13 +465,6 @@ void Aux_TakeNote()
 #     endif // MODEL
 
 #     if ( defined GRAVITY  &&  POT_SCHEME == SOR  &&  defined GPU )
-#     ifdef USE_PSOLVER_10TO14
-      fprintf( Note, "USE_PSOLVER_10TO14              ON\n" );
-#     else
-      fprintf( Note, "USE_PSOLVER_10TO14              OFF\n" );
-#     endif
-
-#     ifdef USE_PSOLVER_10TO14
 #     ifdef SOR_RHO_SHARED
       fprintf( Note, "SOR_RHO_SHARED                  ON\n" );
 #     else
@@ -471,7 +490,6 @@ void Aux_TakeNote()
 #     endif
 
       fprintf( Note, "SOR_MOD_REDUCTION               %d\n",      SOR_MOD_REDUCTION       );
-#     endif // #ifdef USE_PSOLVER_10TO14
 #     endif // #if ( defined GRAVITY  &&  POT_SCHEME == SOR  &&  defined GPU )
 
 #     ifdef GPU
@@ -534,7 +552,7 @@ void Aux_TakeNote()
 #     ifdef PARTICLE
       fprintf( Note, "#define RHOEXT_GHOST_SIZE       %d\n",      RHOEXT_GHOST_SIZE     );
 #     endif
-#     endif
+#     endif // #ifdef GRAVITY
       fprintf( Note, "#define SRC_GHOST_SIZE          %d\n",      SRC_GHOST_SIZE        );
       fprintf( Note, "#define DER_GHOST_SIZE          %d\n",      DER_GHOST_SIZE        );
       fprintf( Note, "#define FLU_NXT                 %d\n",      FLU_NXT               );
@@ -546,9 +564,9 @@ void Aux_TakeNote()
       fprintf( Note, "#define USG_NXT_F               %d\n",      USG_NXT_F             );
       fprintf( Note, "#define USG_NXT_G               %d\n",      USG_NXT_G             );
 #     endif
-#     endif
-#     ifdef PARTICLE
-      fprintf( Note, "#define RHOEXT_NXT              %d\n",      RHOEXT_NXT            );
+#     endif // #ifdef GRAVITY
+#     ifdef MASSIVE_PARTICLES
+      fprintf( Note, "#define RHOEXT_NXT              %d\n",      RHOEXT_NXT          );
 #     endif
       fprintf( Note, "#define SRC_NXT                 %d\n",      SRC_NXT               );
       fprintf( Note, "#define DER_NXT                 %d\n",      DER_NXT               );
@@ -587,6 +605,7 @@ void Aux_TakeNote()
       fprintf( Note, "#define PAR_NATT_TOTAL          %d\n",      PAR_NATT_TOTAL        );
       fprintf( Note, "#define PAR_NATT_USER           %d\n",      PAR_NATT_USER         );
       fprintf( Note, "#define PAR_NATT_STORED         %d\n",      PAR_NATT_STORED       );
+      fprintf( Note, "#define PAR_NTYPE               %d\n",      PAR_NTYPE             );
 #     endif
       fprintf( Note, "#define MAX_STRING              %d\n",      MAX_STRING            );
       fprintf( Note, "#define TINY_NUMBER             %20.14e\n", TINY_NUMBER           );
@@ -705,12 +724,18 @@ void Aux_TakeNote()
       fprintf( Note, "Par->Init                       %d\n",      amr->Par->Init                );
       fprintf( Note, "Par->ParICFormat                %d\n",      amr->Par->ParICFormat         );
       fprintf( Note, "Par->ParICMass                 %14.7e\n",   amr->Par->ParICMass           );
+      fprintf( Note, "Par->ParICType                  %d\n",      amr->Par->ParICType           );
       fprintf( Note, "Par->Interp                     %d\n",      amr->Par->Interp              );
       fprintf( Note, "Par->Integ                      %d\n",      amr->Par->Integ               );
       fprintf( Note, "Par->GhostSize                  %d\n",      amr->Par->GhostSize           );
       fprintf( Note, "Par->ImproveAcc                 %d\n",      amr->Par->ImproveAcc          );
       fprintf( Note, "Par->PredictPos                 %d\n",      amr->Par->PredictPos          );
       fprintf( Note, "Par->RemoveCell                 %13.7e\n",  amr->Par->RemoveCell          );
+      fprintf( Note, "Par->InterpTracer               %d\n",      amr->Par->InterpTracer        );
+      fprintf( Note, "Par->IntegTracer                %d\n",      amr->Par->IntegTracer         );
+      fprintf( Note, "Par->GhostSizeTracer            %d\n",      amr->Par->GhostSizeTracer     );
+      fprintf( Note, "Par->TracerVelCorr              %d\n",      amr->Par->TracerVelCorr       );
+      fprintf( Note, "OPT__FREEZE_PAR                 %d\n",      OPT__FREEZE_PAR               );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 #     endif
@@ -786,6 +811,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__FLAG_LOHNER_ENGY           %d\n",      OPT__FLAG_LOHNER_ENGY     );
       fprintf( Note, "OPT__FLAG_LOHNER_PRES           %d\n",      OPT__FLAG_LOHNER_PRES     );
       fprintf( Note, "OPT__FLAG_LOHNER_TEMP           %d\n",      OPT__FLAG_LOHNER_TEMP     );
+      fprintf( Note, "OPT__FLAG_LOHNER_ENTR           %d\n",      OPT__FLAG_LOHNER_ENTR     );
 #     endif
       fprintf( Note, "OPT__FLAG_LOHNER_FORM           %s\n",      (OPT__FLAG_LOHNER_FORM==LOHNER_FLASH1   ) ? "LOHNER_FLASH1"    :
                                                                   (OPT__FLAG_LOHNER_FORM==LOHNER_FLASH2   ) ? "LOHNER_FLASH2"    :
@@ -896,6 +922,7 @@ void Aux_TakeNote()
       fprintf( Note, "MOLECULAR_WEIGHT                %13.7e\n",  MOLECULAR_WEIGHT        );
       fprintf( Note, "ISO_TEMP                        %13.7e\n",  ISO_TEMP                );
       fprintf( Note, "MINMOD_COEFF                    %13.7e\n",  MINMOD_COEFF            );
+      fprintf( Note, "MINMOD_MAX_ITER                 %d\n",      MINMOD_MAX_ITER         );
       fprintf( Note, "OPT__LR_LIMITER                 %s\n",      ( OPT__LR_LIMITER == LR_LIMITER_VANLEER    ) ? "VANLEER"    :
                                                                   ( OPT__LR_LIMITER == LR_LIMITER_GMINMOD    ) ? "GMINMOD"    :
                                                                   ( OPT__LR_LIMITER == LR_LIMITER_ALBADA     ) ? "ALBADA"     :
@@ -992,6 +1019,7 @@ void Aux_TakeNote()
       fprintf( Note, "MIN_PRES                        %13.7e\n",  MIN_PRES                 );
       fprintf( Note, "MIN_EINT                        %13.7e\n",  MIN_EINT                 );
       fprintf( Note, "MIN_TEMP                        %13.7e\n",  MIN_TEMP                 );
+      fprintf( Note, "MIN_ENTR                        %13.7e\n",  MIN_ENTR                 );
       fprintf( Note, "OPT__CHECK_PRES_AFTER_FLU       %d\n",      OPT__CHECK_PRES_AFTER_FLU);
       fprintf( Note, "OPT__LAST_RESORT_FLOOR          %d\n",      OPT__LAST_RESORT_FLOOR   );
       fprintf( Note, "JEANS_MIN_PRES                  %d\n",      JEANS_MIN_PRES           );
@@ -1186,6 +1214,7 @@ void Aux_TakeNote()
                                                                                                              "UNKNOWN" );
 #     endif
       fprintf( Note, "INT_MONO_COEFF                  %13.7e\n",  INT_MONO_COEFF          );
+      fprintf( Note, "MONO_MAX_ITER                   %d\n",      MONO_MAX_ITER           );
       fprintf( Note, "INT_OPP_SIGN_0TH_ORDER          %d\n",      INT_OPP_SIGN_0TH_ORDER  );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
@@ -1198,7 +1227,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OUTPUT_PART                %d\n",      OPT__OUTPUT_PART       );
       fprintf( Note, "OPT__OUTPUT_USER                %d\n",      OPT__OUTPUT_USER       );
 #     ifdef PARTICLE
-      fprintf( Note, "OPT__OUTPUT_PAR_TEXT            %d\n",      OPT__OUTPUT_PAR_TEXT   );
+      fprintf( Note, "OPT__OUTPUT_PAR_MODE            %d\n",      OPT__OUTPUT_PAR_MODE   );
 #     endif
       fprintf( Note, "OPT__OUTPUT_BASEPS              %d\n",      OPT__OUTPUT_BASEPS     );
       fprintf( Note, "OPT__OUTPUT_BASE                %d\n",      OPT__OUTPUT_BASE       );
@@ -1214,6 +1243,7 @@ void Aux_TakeNote()
 #     if ( MODEL == HYDRO )
       fprintf( Note, "OPT__OUTPUT_PRES                %d\n",      OPT__OUTPUT_PRES       );
       fprintf( Note, "OPT__OUTPUT_TEMP                %d\n",      OPT__OUTPUT_TEMP       );
+      fprintf( Note, "OPT__OUTPUT_ENTR                %d\n",      OPT__OUTPUT_ENTR       );
       fprintf( Note, "OPT__OUTPUT_CS                  %d\n",      OPT__OUTPUT_CS         );
       fprintf( Note, "OPT__OUTPUT_DIVVEL              %d\n",      OPT__OUTPUT_DIVVEL     );
       fprintf( Note, "OPT__OUTPUT_MACH                %d\n",      OPT__OUTPUT_MACH       );
@@ -1253,6 +1283,7 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "YT_SCRIPT                       %s\n",      YT_SCRIPT  );
       fprintf( Note, "YT_VERBOSE                      %d\n",      YT_VERBOSE );
+      fprintf( Note, "YT_FIG_BASENAME                 %s\n",      YT_FIG_BASENAME );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 #     endif
@@ -1381,7 +1412,7 @@ void Aux_TakeNote()
 #     endif
 
 #     if   ( MODEL == HYDRO )
-      if ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP )
+      if ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP || OPT__FLAG_LOHNER_ENTR )
 #     elif ( MODEL == ELBDM )
       if ( OPT__FLAG_LOHNER_DENS )
 #     endif

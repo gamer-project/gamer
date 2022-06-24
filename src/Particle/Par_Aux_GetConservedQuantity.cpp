@@ -1,6 +1,6 @@
 #include "GAMER.h"
 
-#ifdef PARTICLE
+#ifdef MASSIVE_PARTICLES
 
 
 
@@ -43,8 +43,8 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
 #  pragma omp parallel for schedule( static ) reduction( +:Mass_ThisRank, MomX_ThisRank, MomY_ThisRank, MomZ_ThisRank, Ek_ThisRank )
    for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
    {
-//    skip inactive and massless particles
-      if ( amr->Par->Mass[p] > 0.0 )
+//    skip inactive, massless, and tracer particles
+      if ( amr->Par->Mass[p] > (real)0.0  &&  amr->Par->Type[p] != PTYPE_TRACER )
       {
          Mass_ThisRank += amr->Par->Mass[p];
          MomX_ThisRank += amr->Par->Mass[p]*amr->Par->VelX[p];
@@ -78,12 +78,14 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
    const real MinDens_No        = -1.0;
    const real MinPres_No        = -1.0;
    const real MinTemp_No        = -1.0;
+   const real MinEntr_No        = -1.0;
 
    const int  PotGhost          = amr->Par->GhostSize;
    const int  PotSize           = PS1 + 2*PotGhost;
 
    const real *Pos[3]           = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
    const real *Mass             = amr->Par->Mass;
+   const real *PType            = amr->Par->Type;
 
    double Ep_ThisRank = 0.0;
    double PrepPotTime, dh, _dh, Ep_Coeff;
@@ -147,7 +149,8 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
       long   ParID;
 
       real *Pot = new real [ 8*CUBE(PotSize) ];    // 8: number of patches per patch group
-      real (*Pot3D)[PotSize][PotSize][PotSize] = ( real (*)[PotSize][PotSize][PotSize] )Pot;
+      typedef real (*vla)[PotSize][PotSize][PotSize];
+      vla Pot3D = ( vla )Pot;
 
 
 //    use static schedule to give the same reduction result everytime
@@ -194,7 +197,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
 #        endif
             Prepare_PatchData( lv, PrepPotTime, Pot, NULL, PotGhost, 1, &PID0, _POTE, _NONE,
                                OPT__GRA_INT_SCHEME, INT_NONE, UNIT_PATCH, (PotGhost==0)?NSIDE_00:NSIDE_26, IntPhase_No,
-                               OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, MinTemp_No, DE_Consistency_No );
+                               OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
 
 //       2-3. calculate potential energy
@@ -212,6 +215,9 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                   for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                   {
                      ParID = amr->patch[0][lv][PID]->ParList[p];
+
+                     if ( PType[ParID] == PTYPE_TRACER  ||  Mass[ParID] <= (real)0.0 )
+                        continue;
 
 //                   calculate the nearest grid index
                      for (int d=0; d<3; d++)
@@ -260,6 +266,9 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                   {
                      ParID = amr->patch[0][lv][PID]->ParList[p];
 
+                     if ( PType[ParID] == PTYPE_TRACER  ||  Mass[ParID] <= (real)0.0 )
+                        continue;
+
                      for (int d=0; d<3; d++)
                      {
 //                      calculate the array index of the left and right cells
@@ -269,7 +278,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                         dr      [d] -= (double)idxLR[0][d];
 
 //                      prevent from round-off errors
-//                      (CIC should be clear off this issue unless round-off erros are comparable to dh)
+//                      (CIC should be clear of this issue unless round-off errors are comparable to dh)
                         if ( idxLR[0][d] < 0 )
                         {
 #                          ifdef DEBUG_PARTICLE
@@ -320,6 +329,9 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
                   for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                   {
                      ParID = amr->patch[0][lv][PID]->ParList[p];
+
+                     if ( PType[ParID] == PTYPE_TRACER  ||  Mass[ParID] <= (real)0.0 )
+                        continue;
 
                      for (int d=0; d<3; d++)
                      {
@@ -397,4 +409,4 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
 
 
 
-#endif // #ifdef PARTICLE
+#endif // #ifdef MASSIVE_PARTICLES

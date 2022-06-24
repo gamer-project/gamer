@@ -155,12 +155,10 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double Time
             fluid[ENGY] = Hydro_CheckMinEintInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
                                                     (real)MIN_EINT, Emag );
 
-//          calculate the dual-energy variable (entropy or internal energy)
-#           if   ( DUAL_ENERGY == DE_ENPY )
-            fluid[ENPY] = Hydro_Con2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Emag,
-                                             EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-#           elif ( DUAL_ENERGY == DE_EINT )
-#           error : DE_EINT is NOT supported yet !!
+//          calculate the dual-energy variable
+#           ifdef DUAL_ENERGY
+            fluid[DUAL] = Hydro_Con2Dual( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Emag,
+                                          EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #           endif
 
 //          floor and normalize passive scalars

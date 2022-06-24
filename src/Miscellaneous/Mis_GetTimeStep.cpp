@@ -108,7 +108,7 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 // DumpByTime : true --> dump data according to the physical time
 #  ifdef PARTICLE
    const bool DumpData   = ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS ||
-                             OPT__OUTPUT_PAR_TEXT );
+                             OPT__OUTPUT_PAR_MODE );
 #  else
    const bool DumpData   = ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS );
 #  endif
@@ -189,7 +189,13 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
    dTime[NdTime] *= dTime_dt;
    sprintf( dTime_Name[NdTime++], "%s", "Par_Vel" );
 
-   if ( DT__PARACC > 0.0 ) {
+#  ifdef MASSIVE_PARTICLES
+   const bool  UseAcc = ( DT__PARACC > 0.0 );
+#  else
+   const bool  UseAcc = false;
+#  endif
+
+   if ( UseAcc ) {
    dTime[NdTime] *= dTime_dt;
    sprintf( dTime_Name[NdTime++], "%s", "Par_Acc" ); }
 #  endif

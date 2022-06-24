@@ -81,13 +81,14 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 // set the variables for the Lohner's error estimator
    int  Lohner_NVar=0, Lohner_Stride;
    long Lohner_TVar=0;
-   real MinDens=-1.0, MinPres=-1.0, MinTemp=-1.0;  // default is to disable all floors
+   real MinDens=-1.0, MinPres=-1.0, MinTemp=-1.0, MinEntr=-1.0;  // default is to disable all floors
 
 #  if   ( MODEL == HYDRO )
    if ( OPT__FLAG_LOHNER_DENS )  {  Lohner_NVar++;   Lohner_TVar |= _DENS;   MinDens = MIN_DENS;  }
    if ( OPT__FLAG_LOHNER_ENGY )  {  Lohner_NVar++;   Lohner_TVar |= _ENGY;                        }
    if ( OPT__FLAG_LOHNER_PRES )  {  Lohner_NVar++;   Lohner_TVar |= _PRES;   MinPres = MIN_PRES;  }
    if ( OPT__FLAG_LOHNER_TEMP )  {  Lohner_NVar++;   Lohner_TVar |= _TEMP;   MinTemp = MIN_TEMP;  }
+   if ( OPT__FLAG_LOHNER_ENTR )  {  Lohner_NVar++;   Lohner_TVar |= _ENTR;   MinEntr = MIN_ENTR;  }
 
 #  elif ( MODEL == ELBDM )
    if ( OPT__FLAG_LOHNER_DENS )
@@ -106,14 +107,16 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 // collect particles to **real** patches at lv
 #  ifdef PARTICLE
    if ( OPT__FLAG_NPAR_CELL  ||  OPT__FLAG_PAR_MASS_CELL )
-      Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, PredictPos_No, NULL_REAL,
-                                    SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_No, TimingSendPar_No );
+      Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictPos_No,
+                                    NULL_REAL, SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_No,
+                                    TimingSendPar_No );
 
 // Par_CollectParticle2OneLevel() with JustCountNPar_No will set NPar_Copy for each patch as well
 // --> so call Par_CollectParticle2OneLevel() with JustCountNPar_Yes only when OPT__FLAG_NPAR_CELL == false
    else if ( OPT__FLAG_NPAR_PATCH != 0 )
-      Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, PredictPos_No, NULL_REAL,
-                                    SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_Yes, TimingSendPar_No );
+      Par_CollectParticle2OneLevel( lv, _NONE, PredictPos_No,
+                                    NULL_REAL, SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_Yes,
+                                    TimingSendPar_No );
 #  endif
 
 
@@ -170,7 +173,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
          if ( Lohner_NVar > 0 )
             Prepare_PatchData( lv, Time[lv], Lohner_Var, NULL, Lohner_NGhost, NPG, &PID0, Lohner_TVar, _NONE,
                                Lohner_IntScheme, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
-                               MinDens, MinPres, MinTemp, DE_Consistency_No );
+                               MinDens, MinPres, MinTemp, MinEntr, DE_Consistency_No );
 
 
 //       loop over all local patches within the same patch group
@@ -268,8 +271,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #                    ifdef DUAL_ENERGY
 
 #                    if   ( DUAL_ENERGY == DE_ENPY )
-                     Pres[k][j][i] = Hydro_DensEntropy2Pres( Fluid[DENS][k][j][i], Fluid[ENPY][k][j][i],
-                                                             EoS_AuxArray_Flt[1], CheckMinPres_Yes, MIN_PRES );
+                     Pres[k][j][i] = Hydro_DensDual2Pres( Fluid[DENS][k][j][i], Fluid[DUAL][k][j][i],
+                                                          EoS_AuxArray_Flt[1], CheckMinPres_Yes, MIN_PRES );
 #                    elif ( DUAL_ENERGY == DE_EINT )
 #                    error : DE_EINT is NOT supported yet !!
 #                    endif
@@ -361,7 +364,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                      if ( UseInputMassPos )
                      {
                         if ( InputMassPos[PAR_MASS] == NULL  ||  InputMassPos[PAR_POSX] == NULL  ||
-                             InputMassPos[PAR_POSY] == NULL  ||  InputMassPos[PAR_POSZ] == NULL  )
+                             InputMassPos[PAR_POSY] == NULL  ||  InputMassPos[PAR_POSZ] == NULL  ||
+                             InputMassPos[PAR_TYPE] == NULL )
                            Aux_Error( ERROR_INFO, "InputMassPos[0/1/2/3] == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
                                       NParThisPatch, lv, PID );
                      }

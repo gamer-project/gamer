@@ -29,6 +29,8 @@ GPU_DEVICE
 static real Hydro_CheckMinEint( const real InEint, const real MinEint );
 GPU_DEVICE
 static real Hydro_CheckMinTemp( const real InTemp, const real MinTemp );
+GPU_DEVICE
+static real Hydro_CheckMinEntr( const real InEntr, const real MinEntr );
 #endif
 
 
@@ -465,6 +467,31 @@ real Hydro_CheckMinTemp( const real InTemp, const real MinTemp )
 
 
 //-------------------------------------------------------------------------------------------------------
+// Function    :  Hydro_CheckMinEntr
+// Description :  Similar to Hydro_CheckMinPres() except that this function checks the gas entropy
+//                instead of pressure
+//
+// Note        :  1. See Hydro_CheckMinPres()
+//
+// Parameter   :  InEntr  : Input entropy to be corrected
+//                MinEntr : Minimum allowed entropy
+//
+// Return      :  InEntr != NaN --> max( InEntr, MinEntr )
+//                       == NaN --> NaN
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+real Hydro_CheckMinEntr( const real InEntr, const real MinEntr )
+{
+
+// call FMAX() only if InEntr is not NaN
+   if ( InEntr == InEntr )    return FMAX( InEntr, MinEntr );
+   else                       return InEntr;
+
+} // FUNCTION : Hydro_CheckMinEntr
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_CheckMinEintInEngy
 // Description :  Ensure that the internal energy density in the input total energy density is greater than
 //                a given threshold
@@ -477,7 +504,7 @@ real Hydro_CheckMinTemp( const real InTemp, const real MinTemp )
 //                MomX/Y/Z : Momentum density
 //                InEngy   : Energy density
 //                MinEint  : Internal energy density floor
-//                Emag    : Magnetic energy density (0.5*B^2) --> For MHD only
+//                Emag     : Magnetic energy density (0.5*B^2) --> For MHD only
 //
 // Return      :  Total energy density with internal energy density greater than a given threshold
 //-------------------------------------------------------------------------------------------------------
@@ -503,24 +530,230 @@ real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_CheckNegative
-// Description :  Check whether the input value is <= 0.0 (also check whether it's Inf or NAN)
+// Function    :  Hydro_CheckUnphysical
+// Description :  Check unphysical results
 //
-// Note        :  Can be used to check whether the values of density and pressure are unphysical
+// Note        :  1. Support various modes:
+//                   UNPHY_MODE_SING         : Check if the input single field is NAN, inf or negative
+//                   UNPHY_MODE_CONS         : Check if the input conserved variables, including passive scalars, are unphysical
+//                   UNPHY_MODE_PRIM         : Check if the input primitive variables, including passive scalars, are unphysical
+//                   UNPHY_MODE_PASSIVE_ONLY : Check if the input passive scalars are unphysical
+//                2. For UNPHY_MODE_CONS with SRHD, we also check if Eq. 15 in "Tseng et al. 2021, MNRAS, 504, 3298"
+//                   has a positive root
+//                3. UNPHY_MODE_CONS currently does not check gas pressure
 //
-// Parameter   :  Input : Input value
+// Parameter   :  Mode            : UNPHY_MODE_SING, UNPHY_MODE_CONS, UNPHY_MODE_PRIM, UNPHY_MODE_PASSIVE_ONLY
+//                                  --> See "Note" for details
+//                Fields          : Field data to be checked
+//                SingleFieldName : Name of the target field for UNPHY_MODE_SING
+//                File            : __FILE__
+//                Line            : __LINE__
+//                Function        : __FUNCTION__
+//                Verbose         : true  --> Show error messages
+//                                  false --> Show nothing
 //
-// Return      :  true  --> Input <= 0.0  ||  >= __FLT_MAX__  ||  != itself (Nan)
-//                false --> otherwise
+// Return      :  true  --> Input field is unphysical
+//                false --> Otherwise
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-bool Hydro_CheckNegative( const real Input )
+bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], const char SingleFieldName[],
+                            const char File[], const int Line, const char Function[], const CheckUnphysical_t Verbose )
 {
 
-   if ( Input <= (real)0.0  ||  Input >= __FLT_MAX__  ||  Input != Input )    return true;
-   else                                                                       return false;
+// check
+#  ifdef GAMER_DEBUG
+   if ( Fields == NULL )   printf( "ERROR : access a NULL pointer at file <%s>, line <%d>, function <%s> !!\n",
+                                   File, Line, Function );
+#  endif
 
-} // FUNCTION : Hydro_CheckNegative
+
+   bool FailCell = false;
+#  ifdef SRHD
+   real Msqr, Dsqr, E_D, M_D, Temp, Discriminant;
+#  endif
+
+
+   switch ( Mode )
+   {
+//    === check single field ===
+      case UNPHY_MODE_SING:
+
+//       assuming the input single field is positive definite
+         if ( Fields[0] <= TINY_NUMBER  ||  Fields[0] >= HUGE_NUMBER  ||  Fields[0] != Fields[0] )
+            FailCell = true;
+
+//       print out the unphysical value
+#        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
+         if ( FailCell && Verbose )
+            printf( "ERROR: invalid %s (%14.7e) at file <%s>, line <%d>, function <%s> !!\n",
+                    (SingleFieldName==NULL)?"unknown field":SingleFieldName, Fields[0],
+                    File, Line, Function );
+#        endif
+
+      break;
+
+
+//    === check conserved variables, including passive scalars ===
+      case UNPHY_MODE_CONS:
+
+         for (int v=0; v<NCOMP_TOTAL; v++)
+         {
+//          check NaN
+            if ( Fields[v] != Fields[v] )
+                  FailCell = true;
+
+//          check momentum densities
+            if ( v == MOMX  ||  v == MOMY  ||  v == MOMZ )
+            {
+               if ( Fields[v] <= -HUGE_NUMBER  ||  Fields[v] >= HUGE_NUMBER )
+                  FailCell = true;
+            }
+
+//          check mass and energy densities
+            else if ( v < NCOMP_FLUID )
+            {
+               if ( Fields[v] <= TINY_NUMBER  ||  Fields[v] >= HUGE_NUMBER )
+                  FailCell = true;
+            }
+
+//          check passive scalars (which can be zero)
+            else
+            {
+               if ( Fields[v] < (real)0.0  ||  Fields[v] >= HUGE_NUMBER )
+                  FailCell = true;
+            }
+         } // for (int v=0; v<NCOMP_TOTAL; v++)
+
+//       check discriminant for SRHD
+//       --> positive if and only if Eq. 15 in "Tseng et al. 2021, MNRAS, 504, 3298" has a positive root
+#        ifdef SRHD
+         Msqr         = SQR(Fields[MOMX]) + SQR(Fields[MOMY]) + SQR(Fields[MOMZ]);
+         Dsqr         = SQR(Fields[DENS]);
+         E_D          = Fields[ENGY] / Fields[DENS];
+         M_D          = SQRT( Msqr / Dsqr );
+         Temp         = SQRT( E_D*E_D + (real)2.0*E_D );
+         Discriminant = ( Temp + M_D )*( Temp - M_D );
+
+         if ( Discriminant <= TINY_NUMBER )  FailCell = true;
+#        endif
+
+//       print out the unphysical values
+#        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
+         if ( FailCell && Verbose )
+         {
+            printf( "ERROR: unphysical conserved variables at file <%s>, line <%d>, function <%s> !!\n",
+                    File, Line, Function );
+            printf( "D=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n",
+                    Fields[DENS], Fields[MOMX], Fields[MOMY], Fields[MOMZ], Fields[ENGY] );
+#           ifdef SRHD
+            printf( "E^2+2*E*D-|M|^2=%14.7e\n", Discriminant );
+#           endif
+#           if ( NCOMP_PASSIVE > 0 )
+            printf( "Passive:" );
+            for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  printf( " [%d]=%13.7e", v-NCOMP_FLUID, Fields[v] );
+            printf( "\n" );
+#           endif
+         }
+#        endif
+
+      break;
+
+
+//    === check primitive variables, including passive scalars ===
+      case UNPHY_MODE_PRIM:
+
+         for (int v=0; v<NCOMP_TOTAL; v++)
+         {
+//          check NaN
+            if ( Fields[v] != Fields[v] )
+                  FailCell = true;
+
+//          check velocities
+            if ( v == MOMX  ||  v == MOMY  ||  v == MOMZ )
+            {
+               if ( Fields[v] <= -HUGE_NUMBER  ||  Fields[v] >= HUGE_NUMBER )
+                  FailCell = true;
+            }
+
+//          check mass density
+            else if ( v == DENS )
+            {
+               if ( Fields[v] <= TINY_NUMBER  ||  Fields[v] >= HUGE_NUMBER )
+                  FailCell = true;
+            }
+
+//          check pressure and passive scalars (which can be zero)
+//          --> allow pressure to be zero to tolerate round-off errors
+            else
+            {
+               if ( Fields[v] < (real)0.0  ||  Fields[v] >= HUGE_NUMBER )
+                  FailCell = true;
+            }
+         } // for (int v=0; v<NCOMP_TOTAL; v++)
+
+//       print out the unphysical values
+#        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
+         if ( FailCell && Verbose )
+         {
+            printf( "ERROR: unphysical primitive variables at file <%s>, line <%d>, function <%s> !!\n",
+                    File, Line, Function );
+            printf( "D=%14.7e, Vx=%14.7e, Vy=%14.7e, Vz=%14.7e, P=%14.7e\n",
+                    Fields[DENS], Fields[MOMX], Fields[MOMY], Fields[MOMZ], Fields[ENGY] );
+#           if ( NCOMP_PASSIVE > 0 )
+            printf( "Passive:" );
+            for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  printf( " [%d]=%13.7e", v-NCOMP_FLUID, Fields[v] );
+            printf( "\n" );
+#           endif
+         }
+#        endif
+
+      break;
+
+
+//    === only check passive scalars ===
+      case UNPHY_MODE_PASSIVE_ONLY:
+
+         for (int v=0; v<NCOMP_PASSIVE; v++)
+         {
+//          check NaN
+            if ( Fields[v] != Fields[v] )
+                  FailCell = true;
+
+//          check negative and infinity (passive scalars can be zero)
+            if ( Fields[v] < (real)0.0  ||  Fields[v] >= HUGE_NUMBER )
+               FailCell = true;
+         }
+
+//       print out the unphysical values
+#        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
+         if ( FailCell && Verbose )
+         {
+            printf( "ERROR: unphysical passive scalars at file <%s>, line <%d>, function <%s> !!\n",
+                    File, Line, Function );
+#           if ( NCOMP_PASSIVE > 0 )
+            printf( "Passive:" );
+            for (int v=0; v<NCOMP_PASSIVE; v++)    printf( " [%d]=%13.7e", v, Fields[v] );
+            printf( "\n" );
+#           endif
+         }
+#        endif
+
+      break;
+
+
+      default:
+#        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
+         printf( "ERROR : unsupported mode (%d) at file <%s>, line <%d>, function <%s> !!\n",
+                 Mode, File, Line, Function );
+#        endif
+      break;
+
+   } // switch ( Mode )
+
+
+   return FailCell;
+
+} // FUNCTION : Hydro_CheckUnphysical
 
 
 
@@ -702,6 +935,67 @@ real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const re
    return Temp;
 
 } // FUNCTION : Hydro_Con2Temp
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Hydro_Con2Entr
+// Description :  Evaluate the fluid entropy
+//
+// Note        :  1. Invoke the EoS routine EoS_DensEint2Entr() to support different EoS
+//                2. We regard the entropy used in the EoS routines and that used in the dual-energy formalism
+//                   as two completely separate fields
+//                   --> The former is referred to as Entr/ENTR and manipulated by the EoS API, while the latter is
+//                       usually referred to as Enpy/Dual/DUAL and manipulated by the routines in CPU_Shared_DualEnergy.cpp
+//                   --> This routine, Hydro_Con2Entr(), belongs to the former
+//
+// Parameter   :  Dens              : Mass density
+//                MomX/Y/Z          : Momentum density
+//                Engy              : Energy density
+//                Passive           : Passive scalars
+//                CheckMinEntr      : Apply entropy floor by calling Hydro_CheckMinEntr()
+//                                    --> In some cases we actually want to check if entropy becomes unphysical,
+//                                        for which we don't want to enable this option
+//                MinEntr           : Entropy floor
+//                Emag              : Magnetic energy density (0.5*B^2) --> For MHD only
+//                EoS_DensEint2Entr : EoS routine to compute the gas entropy
+//                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensEint2Entr()
+//                EoS_Table         : EoS tables for EoS_DensEint2Entr()
+//
+// Return      :  Gas entropy
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+real Hydro_Con2Entr( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                     const real Passive[], const bool CheckMinEntr, const real MinEntr, const real Emag,
+                     const EoS_DE2S_t EoS_DensEint2Entr, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                     const real *const EoS_Table[EOS_NTABLE_MAX] )
+{
+
+// check
+#  ifdef GAMER_DEBUG
+   if ( EoS_DensEint2Entr == NULL )
+   {
+#     ifdef __CUDACC__
+      printf( "ERROR : EoS_DensEint2Entr == NULL at file <%s>, line <%d>, function <%s> !!\n",
+              __FILE__, __LINE__, __FUNCTION__ );
+#     else
+      Aux_Error( ERROR_INFO, "EoS_DensEint2Entr == NULL !!\n" );
+#     endif
+   }
+#  endif // #ifdef GAMER_DEBUG
+
+
+   const bool CheckMinEint_No = false;
+   real Eint, Entr;
+
+   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, Emag );
+   Entr = EoS_DensEint2Entr( Dens, Eint, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+
+   if ( CheckMinEntr )   Entr = Hydro_CheckMinEntr( Entr, MinEntr );
+
+   return Entr;
+
+} // FUNCTION : Hydro_Con2Entr
 
 
 

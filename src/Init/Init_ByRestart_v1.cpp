@@ -1235,18 +1235,6 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "GRA_BLOCK_SIZE",          gra_block_size,         GRA_BLOCK_SIZE,            NonFatal );
 #     endif
 
-#     if ( POT_SCHEME == SOR )
-#     ifdef USE_PSOLVER_10TO14
-      if ( !use_psolver_10to14 )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
-                      "USE_PSOLVER_10TO14", "OFF", "ON" );
-#     else
-      if (  use_psolver_10to14 )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
-                      "USE_PSOLVER_10TO14", "ON", "OFF" );
-#     endif
-#     endif // if ( POT_SCHEME == SOR )
-
 #     endif // #ifdef GRAVITY
 
 
@@ -1360,7 +1348,7 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
       if ( OPT__OUTPUT_PART )
       CompareVar( "OPT__OUTPUT_BASE",        opt__output_base,             OPT__OUTPUT_BASE,          NonFatal );
 #     ifdef PARTICLE
-      if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS || OPT__OUTPUT_PAR_TEXT ) {
+      if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS || OPT__OUTPUT_PAR_MODE ) {
 #     else
       if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS ) {
 #     endif

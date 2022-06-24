@@ -122,7 +122,7 @@ void Aux_Check_Parameter()
                  "OPT__CK_REFINE", "OPT__FLAG_RHO" );
 
 #  if   ( MODEL == HYDRO )
-   if (  ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP )
+   if (  ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP || OPT__FLAG_LOHNER_ENTR )
          &&  Flu_ParaBuf < 2  )
       Aux_Error( ERROR_INFO, "Lohner error estimator does NOT work when Flu_ParaBuf (%d) < 2 !!\n", Flu_ParaBuf );
 #  elif ( MODEL == ELBDM )
@@ -259,7 +259,12 @@ void Aux_Check_Parameter()
 #  if ( MODEL == HYDRO )
    if (  OPT__OUTPUT_TEMP  &&  EoS_DensEint2Temp_CPUPtr == NULL )
       Aux_Error( ERROR_INFO, "EoS_DensEint2Temp_CPUPtr == NULL for OPT__OUTPUT_TEMP !!\n" );
+
+#  if ( EOS == EOS_ISOTHERMAL )
+   if ( OPT__OUTPUT_ENTR )
+      Aux_Error( ERROR_INFO, "OPT__OUTPUT_ENTR does not support EOS_ISOTHERMAL !!\n" );
 #  endif
+#  endif // #if ( MODEL == HYDRO )
 
 
 
@@ -298,7 +303,7 @@ void Aux_Check_Parameter()
 
    if ( !OPT__OUTPUT_TOTAL  &&  !OPT__OUTPUT_PART  &&  !OPT__OUTPUT_USER  &&  !OPT__OUTPUT_BASEPS )
 #  ifdef PARTICLE
-   if ( !OPT__OUTPUT_PAR_TEXT )
+   if ( !OPT__OUTPUT_PAR_MODE )
 #  endif
       Aux_Message( stderr, "WARNING : all output options are turned off --> no data will be output !!\n" );
 
@@ -326,6 +331,7 @@ void Aux_Check_Parameter()
    Flag |= OPT__FLAG_LOHNER_ENGY;
    Flag |= OPT__FLAG_LOHNER_PRES;
    Flag |= OPT__FLAG_LOHNER_TEMP;
+   Flag |= OPT__FLAG_LOHNER_ENTR;
 #  ifdef MHD
    Flag |= OPT__FLAG_CURRENT;
 #  endif
@@ -688,6 +694,11 @@ void Aux_Check_Parameter()
          Aux_Error( ERROR_INFO, "JEANS_MIN_PRES currently only supports EOS_GAMMA !!\n" );
 #  endif // if ( EOS != EOS_GAMMA )
 
+#  if ( EOS == EOS_ISOTHERMAL )
+      if ( OPT__FLAG_LOHNER_ENTR )
+         Aux_Error( ERROR_INFO, "ERROR : OPT__FLAG_LOHNER_ENTR does not support EOS_ISOTHERMAL !!\n" );
+#  endif
+
 #  if ( EOS == EOS_NUCLEAR )
       Aux_Error( ERROR_INFO, "EOS_NUCLEAR is not supported yet !!\n" );
 #  endif
@@ -791,6 +802,11 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : MIN_TEMP == 0.0 could be dangerous and is mainly for debugging only !!\n" );
    else
       Aux_Message( stderr, "WARNING : MIN_TEMP (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_TEMP );
+
+   if ( MIN_ENTR == 0.0 )
+      Aux_Message( stderr, "WARNING : MIN_ENTR == 0.0 could be dangerous and is mainly for debugging only !!\n" );
+   else
+      Aux_Message( stderr, "WARNING : MIN_ENTR (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_ENTR );
 
 #  if (  defined LR_EINT  &&  ( EOS == EOS_GAMMA || EOS == EOS_ISOTHERMAL )  )
       Aux_Message( stderr, "WARNING : LR_EINT is not recommended for EOS_GAMMA/EOS_ISOTHERMAL !!\n" );
@@ -1264,12 +1280,12 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
-#  ifndef GRAVITY
-#     error : ERROR : currently PARTICLE must work with GRAVITY !!
+#  if ( ! defined MASSIVE_PARTICLES  &&  ! defined TRACER )
+#     error : ERROR : both MASSIVE_PARTICLES (GRAVITY) and TRACER are disabled for PARTICLE !!
 #  endif
 
 #  ifdef COMOVING
-#     error : ERROR : currently PARTICLE dost NOT support COMOVING !!
+#     error : ERROR : currently PARTICLE does NOT support COMOVING !!
 #  endif
 
 #  if ( !defined SERIAL  &&  !defined LOAD_BALANCE )
@@ -1289,6 +1305,7 @@ void Aux_Check_Parameter()
                     amr->Par->NPar_AcPlusInac, MPI_Rank );
    }
 
+#  ifdef GRAVITY
 #  ifndef STORE_POT_GHOST
    if ( amr->Par->ImproveAcc )
       Aux_Error( ERROR_INFO, "PAR_IMPROVE_ACC must work with STORE_POT_GHOST !!\n" );
@@ -1296,6 +1313,9 @@ void Aux_Check_Parameter()
 
    if ( amr->Par->ImproveAcc  &&  amr->Par->Interp == 1 )
       Aux_Error( ERROR_INFO, "PAR_IMPROVE_ACC does NOT work with PAR_INTERP == 1 (NGP) !!\n" );
+
+   if ( amr->Par->TracerVelCorr  &&  amr->Par->InterpTracer == 1 )
+      Aux_Error( ERROR_INFO, "PAR_TR_VEL_CORR does NOT work with PAR_TR_INTERP == 1 (NGP) !!\n" );
 
 #  ifndef STORE_PAR_ACC
    if ( DT__PARACC != 0.0 )
@@ -1309,6 +1329,7 @@ void Aux_Check_Parameter()
          Aux_Error( ERROR_INFO, "\"%s\" does NOT work for NX0_TOT[%d] = 2*PATCH_SIZE when periodic BC is adopted !!\n",
                     "Par_MassAssignment()", d );
    }
+#  endif // #ifdef GRAVITY
 
 
 // warning
@@ -1329,8 +1350,21 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : STORE_POT_GHOST is useless when PAR_IMPROVE_ACC is disabled !!\n" );
 #  endif
 
+#  ifdef GRAVITY
    if ( OPT__GRA_P5_GRADIENT )
       Aux_Message( stderr, "WARNING : currently \"%s\" is not applied to particle update !!\n", "OPT__GRA_P5_GRADIENT" );
+#  endif
+
+#  ifdef TRACER
+   if ( OPT__FLAG_NPAR_PATCH )
+      Aux_Message( stderr, "WARNING : OPT__FLAG_NPAR_PATCH includes tracers and thus may affect the results of grid refinement !!\n" );
+
+   if ( OPT__FLAG_NPAR_CELL )
+      Aux_Message( stderr, "WARNING : OPT__FLAG_NPAR_CELL excludes tracers !!\n" );
+#  endif
+
+   if ( OPT__FREEZE_PAR )
+      Aux_Message( stderr, "REMINDER : \"%s\" will prevent particles from being updated\n", "OPT__FREEZE_PAR" );
 
    } // if ( MPI_Rank == 0 )
 
