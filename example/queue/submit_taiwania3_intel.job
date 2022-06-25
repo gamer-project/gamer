@@ -7,10 +7,10 @@
 #SBATCH --account=ACCOUNT                               # (-A) Account/project number
 #SBATCH --job-name=JOB_NAME                             # (-J) Job name
 #SBATCH --partition=ctest                               # (-p) Specific slurm partition
-#SBATCH --ntasks=28                                     # (-n) Number of total MPI tasks (i.e. processes)
+#SBATCH --ntasks=8                                      # (-n) Number of total MPI tasks (i.e. processes)
 #SBATCH --nodes=2                                       # (-N) Maximum number of nodes to be allocated
-#SBATCH --ntasks-per-node=14                            # Maximum number of tasks on each node
-#SBATCH --cpus-per-task=4                               # (-c) Number of cores per MPI task
+#SBATCH --ntasks-per-node=4                             # Maximum number of tasks on each node
+#SBATCH --cpus-per-task=14                              # (-c) Number of cores per MPI task
 #SBATCH --mem=65536                                     # Memory limit per compute node for the  job.Do not use with mem-per-cpu flag
 #SBATCH --time=00:30:00                                 # (-t) Wall time limit (days-hrs:min:sec)
 ##SBATCH -o log_taiwania_III
@@ -26,7 +26,6 @@ module list >> LOG_FILE
 export LD_LIBRARY_PATH="FFTW_PATH/lib:$LD_LIBRARY_PATH"
 export UCX_TLS="ud,dc,shm,self"
 
-cd WORK_DIR
 mpiexec.hydra -bootstrap slurm -n $SLURM_NTASKS ./gamer >> $LOG_FILE 2>&1
-#mpirun -map-by ppr:7:socket:pe=4 -print-rank-map ./gamer 1>>$LOG_FILE 2>&1
+#mpirun -map-by ppr:2:socket:pe=14 -print-rank-map ./gamer 1>>$LOG_FILE 2>&1
 echo "=============================================================" >> $LOG_FILE
