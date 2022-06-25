@@ -91,7 +91,7 @@ static void HSE_SetDensProfileTable();
 // the former is not defined in TestProb.h (because it's rarely required)
 extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TimeNew, const double dt );
 
-void SetExtAccAuxArray_Bondi( double [] );
+void SetExtAccAuxArray_Bondi( double [], const double );
 
 
 
@@ -111,7 +111,7 @@ void SetExtAccAuxArray_Bondi( double [] );
 void Poi_UserWorkBeforePoisson_Bondi( const double Time, const int lv )
 {
 
-   SetExtAccAuxArray_Bondi( ExtAcc_AuxArray );
+   SetExtAccAuxArray_Bondi( ExtAcc_AuxArray, Time );
 
 #  ifdef GPU
    CUAPI_SetConstMemory_ExtAccPot();
