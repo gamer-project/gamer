@@ -30,10 +30,10 @@ void Poi_UserWorkBeforePoisson_Template( const double Time, const int lv )
 // example: reset the auxiliary arrays of external acceleration and potential
 //          --> useful when they are functions of time
    if ( OPT__EXT_ACC )
-   SetExtAccAuxArray_PointMass( ExtAcc_AuxArray );
+   SetExtAccAuxArray_PointMass( ExtAcc_AuxArray, Time );
 
    if ( OPT__EXT_POT )
-   SetExtPotAuxArray_PointMass( ExtPot_AuxArray );
+   SetExtPotAuxArray_PointMass( ExtPot_AuxArray, Time );
 
 #  ifdef GPU
    CUAPI_SetConstMemory_ExtAccPot();
