@@ -87,13 +87,13 @@ double               GAMMA, MINMOD_COEFF, MOLECULAR_WEIGHT, ISO_TEMP;
 LR_Limiter_t         OPT__LR_LIMITER;
 Opt1stFluxCorr_t     OPT__1ST_FLUX_CORR;
 OptRSolver1st_t      OPT__1ST_FLUX_CORR_SCHEME;
-bool                 OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP;
+bool                 OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP, OPT__FLAG_LOHNER_ENTR;
 bool                 OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, JEANS_MIN_PRES, OPT__LAST_RESORT_FLOOR;
 bool                 OPT__OUTPUT_DIVVEL, OPT__OUTPUT_MACH, OPT__OUTPUT_PRES, OPT__OUTPUT_CS;
-bool                 OPT__OUTPUT_TEMP;
+bool                 OPT__OUTPUT_TEMP, OPT__OUTPUT_ENTR;
 int                  OPT__CK_NEGATIVE, JEANS_MIN_PRES_LEVEL, JEANS_MIN_PRES_NCELL, OPT__CHECK_PRES_AFTER_FLU;
 int                  MINMOD_MAX_ITER;
-double               MIN_DENS, MIN_PRES, MIN_EINT, MIN_TEMP;
+double               MIN_DENS, MIN_PRES, MIN_EINT, MIN_TEMP, MIN_ENTR;
 #ifdef DUAL_ENERGY
 double               DUAL_ENERGY_SWITCH;
 #endif
@@ -187,6 +187,8 @@ ParOutputDens_t      OPT__OUTPUT_PAR_DENS;
 #ifdef SUPPORT_LIBYT
 char                 YT_SCRIPT[MAX_STRING];
 yt_verbose           YT_VERBOSE;
+char                 YT_FIG_BASENAME[MAX_STRING];
+int                  YT_GID_Offset[NLEVEL];
 #endif
 
 // (2-7) Grackle
@@ -231,6 +233,7 @@ EoS_DP2E_t EoS_DensPres2Eint_CPUPtr = NULL;
 EoS_DP2C_t EoS_DensPres2CSqr_CPUPtr = NULL;
 EoS_DE2T_t EoS_DensEint2Temp_CPUPtr = NULL;
 EoS_DT2P_t EoS_DensTemp2Pres_CPUPtr = NULL;
+EoS_DE2S_t EoS_DensEint2Entr_CPUPtr = NULL;
 EoS_GENE_t EoS_General_CPUPtr       = NULL;
 #ifdef GPU
 EoS_DE2P_t EoS_DensEint2Pres_GPUPtr = NULL;
@@ -238,6 +241,7 @@ EoS_DP2E_t EoS_DensPres2Eint_GPUPtr = NULL;
 EoS_DP2C_t EoS_DensPres2CSqr_GPUPtr = NULL;
 EoS_DE2T_t EoS_DensEint2Temp_GPUPtr = NULL;
 EoS_DT2P_t EoS_DensTemp2Pres_GPUPtr = NULL;
+EoS_DE2S_t EoS_DensEint2Entr_GPUPtr = NULL;
 EoS_GENE_t EoS_General_GPUPtr       = NULL;
 #endif
 
@@ -432,7 +436,7 @@ real  *d_SrcDlepProf_Radius                                        = NULL;
 // 5. timers
 // =======================================================================================================
 #ifdef TIMING
-Timer_t *Timer_Main[7];
+Timer_t *Timer_Main[8];
 Timer_t *Timer_MPI[3];
 Timer_t *Timer_dt         [NLEVEL];
 Timer_t *Timer_Flu_Advance[NLEVEL];
@@ -587,7 +591,7 @@ int main( int argc, char *argv[] )
 //    4. perform yt inline analysis
 //    ---------------------------------------------------------------------------------------------------
 #     ifdef SUPPORT_LIBYT
-      YT_Inline();
+      TIMING_FUNC(   YT_Inline(),                     Timer_Main[7],   TIMER_ON   );
 #     endif
 //    ---------------------------------------------------------------------------------------------------
 

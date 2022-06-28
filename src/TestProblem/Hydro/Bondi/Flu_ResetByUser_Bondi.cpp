@@ -123,7 +123,7 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double Time
 
 #  pragma omp parallel for private( Reset, fluid, fluid_bk, x, y, z, x0, y0, z0 ) schedule( runtime ) \
    reduction(+:Bondi_SinkMass, Bondi_SinkMomX, Bondi_SinkMomY, Bondi_SinkMomZ, Bondi_SinkMomXAbs, Bondi_SinkMomYAbs, Bondi_SinkMomZAbs, \
-               Bondi_SinkEk, Bondi_SinkEt, Bondi_SinkNCell,SinkMass_OneSubStep_ThisRank)
+               Bondi_SinkEk, Bondi_SinkEt, Bondi_SinkNCell, SinkMass_OneSubStep_ThisRank )
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
       x0 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
@@ -160,12 +160,10 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double Time
             fluid[ENGY] = Hydro_CheckMinEintInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
                                                     (real)MIN_EINT, Emag );
 
-//          calculate the dual-energy variable (entropy or internal energy)
-#           if   ( DUAL_ENERGY == DE_ENPY )
-            fluid[ENPY] = Hydro_Con2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Emag,
-                                             EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-#           elif ( DUAL_ENERGY == DE_EINT )
-#           error : DE_EINT is NOT supported yet !!
+//          calculate the dual-energy variable
+#           ifdef DUAL_ENERGY
+            fluid[DUAL] = Hydro_Con2Dual( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Emag,
+                                          EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #           endif
 
 //          floor and normalize passive scalars
@@ -199,15 +197,20 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double Time
                Bondi_SinkNCell   ++;
 
                SinkMass_OneSubStep_ThisRank += dv*fluid_bk[DENS];
-            }else if ( amr->patch[0][lv][PID]->son == -1 ){
-	       // void region must be completely refined to the max level
+            }
+
+            else if ( amr->patch[0][lv][PID]->son == -1 )
+            {
+//             void region must be completely refined to the max level
                Aux_Error( ERROR_INFO, "void region lies outside the max-level region !!\n" );
 	    }
          } // if ( Reset )
       }}} // i,j,k
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+
    MPI_Allreduce( &SinkMass_OneSubStep_ThisRank, &SinkMass_OneSubStep_AllRank, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
    Bondi_MassBH += SinkMass_OneSubStep_AllRank;
+
 } // FUNCTION : Flu_ResetByUser_API_Bondi
 
 

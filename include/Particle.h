@@ -38,12 +38,17 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                Init                    : Initialization methods (1/2/3 --> call function/restart/load from file)
 //                ParICFormat             : Data format of the particle initialization file (1=[att][id], 2=[id][att])
 //                ParICMass               : Assign this mass to all particles for Init=3
-//                Interp                  : Mass/acceleration interpolation scheme (NGP,CIC,TSC)
+//                ParICType               : Assign this type to all particles for Init=3
+//                Interp                  : Mass/acceleration/velocity interpolation scheme (NGP,CIC,TSC)
+//                InterpTracer            : Mass/acceleration/velocity interpolation scheme for tracers (NGP,CIC,TSC)
 //                Integ                   : Integration scheme (PAR_INTEG_EULER, PAR_INTEG_KDK)
+//                IntegTracer             : Integration scheme for tracers (PAR_INTEG_EULER, PAR_INTEG_RK2)
 //                ImproveAcc              : Improve force accuracy around the patch boundaries
 //                                          (by using potential in the patch ghost zone instead of nearby patch
 //                                          or interpolation)
 //                PredictPos              : Predict particle position during mass assignment
+//                TracerVelCorr           : Apply velocity correction term for tracer particles in regions where
+//                                          the velocity gradient is large
 //                RemoveCell              : remove particles RemoveCell-base-level-cells away from the boundary
 //                                          (for non-periodic BC only)
 //                GhostSize               : Number of ghost zones required for interpolation scheme
@@ -89,6 +94,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                Pos                     : Particle position
 //                Vel                     : Particle velocity
 //                Time                    : Particle physical time
+//                Type                    : Particle type (e.g., tracer, generic, dark matter, star)
 //                Acc                     : Particle acceleration (only when STORE_PAR_ACC is on)
 //
 // Method      :  Particle_t        : Constructor
@@ -112,12 +118,17 @@ struct Particle_t
    ParInit_t     Init;
    ParICFormat_t ParICFormat;
    double        ParICMass;
-   ParInterp_t   Interp;
+   int           ParICType;
    ParInteg_t    Integ;
+   ParInterp_t   Interp;
+   TracerInteg_t IntegTracer;
+   ParInterp_t   InterpTracer;
    bool          ImproveAcc;
    bool          PredictPos;
+   bool          TracerVelCorr;
    double        RemoveCell;
    int           GhostSize;
+   int           GhostSizeTracer;
    real         *Attribute[PAR_NATT_TOTAL];
    long         *InactiveParList;
 
@@ -152,6 +163,7 @@ struct Particle_t
    real         *VelY;
    real         *VelZ;
    real         *Time;
+   real         *Type;
 #  ifdef STORE_PAR_ACC
    real         *AccX;
    real         *AccY;
@@ -175,12 +187,17 @@ struct Particle_t
       Init                = PAR_INIT_NONE;
       ParICFormat         = PAR_IC_FORMAT_NONE;
       ParICMass           = -1.0;
+      ParICType           = -1;
       Interp              = PAR_INTERP_NONE;
+      InterpTracer        = PAR_INTERP_NONE;
       Integ               = PAR_INTEG_NONE;
+      IntegTracer         = TRACER_INTEG_NONE;
       ImproveAcc          = true;
       PredictPos          = true;
+      TracerVelCorr       = false;
       RemoveCell          = -999.9;
       GhostSize           = -1;
+      GhostSizeTracer     = -1;
 
       for (int lv=0; lv<NLEVEL; lv++)  NPar_Lv[lv] = 0;
 
@@ -224,6 +241,7 @@ struct Particle_t
       VelY = NULL;
       VelZ = NULL;
       Time = NULL;
+      Type = NULL;
 #     ifdef STORE_PAR_ACC
       AccX = NULL;
       AccY = NULL;
@@ -356,6 +374,7 @@ struct Particle_t
       VelY = Attribute[PAR_VELY];
       VelZ = Attribute[PAR_VELZ];
       Time = Attribute[PAR_TIME];
+      Type = Attribute[PAR_TYPE];
 #     ifdef STORE_PAR_ACC
       AccX = Attribute[PAR_ACCX];
       AccY = Attribute[PAR_ACCY];
@@ -400,6 +419,9 @@ struct Particle_t
            NewAtt[PAR_POSZ] != NewAtt[PAR_POSZ]   )
          Aux_Error( ERROR_INFO, "Adding a particle with strange position (%21.14e, %21.14e, %21.14e) !!\n",
                     NewAtt[PAR_POSX], NewAtt[PAR_POSY], NewAtt[PAR_POSZ] );
+
+      if ( NewAtt[PAR_TYPE] < (real)0  ||  NewAtt[PAR_TYPE] >= (real)PAR_NTYPE )
+         Aux_Error( ERROR_INFO, "Incorrect particle type (%d) !!\n", (int)NewAtt[PAR_TYPE] );
 #     endif
 
 
@@ -436,6 +458,7 @@ struct Particle_t
             VelY = Attribute[PAR_VELY];
             VelZ = Attribute[PAR_VELZ];
             Time = Attribute[PAR_TIME];
+            Type = Attribute[PAR_TYPE];
 #           ifdef STORE_PAR_ACC
             AccX = Attribute[PAR_ACCX];
             AccY = Attribute[PAR_ACCY];

@@ -126,9 +126,9 @@ void Par_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, const b
       {
          const long ParID = amr->patch[0][FaLv][FaPID]->ParList[p];
 
-         if ( amr->Par->Time[ParID] >= (real)0.0 )
-            Aux_Error( ERROR_INFO, "This particle shouldn't be here (FaLv %d, FaPID %d, ParID %ld, ParTime %21.14e) !!\n",
-                       FaLv, FaPID, ParID, amr->Par->Time[ParID] );
+         if ( amr->Par->Time[ParID] >= (real)0.0  &&  amr->Par->Type[ParID] != PTYPE_TRACER )
+            Aux_Error( ERROR_INFO, "This particle shouldn't be here (FaLv %d, FaPID %d, ParID %ld, ParTime %21.14e, ParType %d) !!\n",
+                       FaLv, FaPID, ParID, amr->Par->Time[ParID], (int)amr->Par->Type[ParID] );
       }
 #     endif
 

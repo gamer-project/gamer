@@ -475,11 +475,7 @@ void Output_DumpData_Total( const char *FileName )
       const int    flu_block_size_x      = FLU_BLOCK_SIZE_X;
       const int    flu_block_size_y      = FLU_BLOCK_SIZE_Y;
 
-#     ifdef USE_PSOLVER_10TO14
       const bool   use_psolver_10to14    = true;
-#     else
-      const bool   use_psolver_10to14    = false;
-#     endif
 
 #     ifdef POT_BLOCK_SIZE_X
       const int   pot_block_size_x       = POT_BLOCK_SIZE_X;
@@ -759,6 +755,7 @@ void Output_DumpData_Total( const char *FileName )
    const real MinDens_No        = -1.0;
    const real MinPres_No        = -1.0;
    const real MinTemp_No        = -1.0;
+   const real MinEntr_No        = -1.0;
    const bool TimingSendPar_No  = false;
    const bool PredictParPos_No  = false;   // particles synchronization is done in "Flu_CorrAfterAllSync()"
    const bool JustCountNPar_No  = false;
@@ -782,13 +779,13 @@ void Output_DumpData_Total( const char *FileName )
    for (int lv=0; lv<NLEVEL; lv++)
    {
 //    f-1. initialize the particle density array (rho_ext) and collect particles from higher levels for outputting particle density
-#     ifdef PARTICLE
+#     ifdef MASSIVE_PARTICLES
       if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )
       {
          Prepare_PatchData_InitParticleDensityArray( lv );
 
-         Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, PredictParPos_No, NULL_REAL,
-                                       SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
+         Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictParPos_No,
+                                       NULL_REAL, SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
       }
 #     endif
 
@@ -801,7 +798,7 @@ void Output_DumpData_Total( const char *FileName )
             for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
             {
 //             f1. prepare the particle density data on grids (only if there are leaf patches in this patch group)
-#              ifdef PARTICLE
+#              ifdef MASSIVE_PARTICLES
                if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE  &&  PID%8 == 0 )
                {
                   for (int PID_CheckSon=PID; PID_CheckSon<PID+8; PID_CheckSon++)
@@ -812,12 +809,12 @@ void Output_DumpData_Total( const char *FileName )
                         Prepare_PatchData( lv, Time[lv], ParDensArray[0], NULL, 0, 1, &PID,
                                            ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_PAR_ONLY ) ? _PAR_DENS : _TOTAL_DENS,
                                            _NONE, OPT__RHO_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No,
-                                           OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, DE_Consistency_No );
+                                           OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
                         break;
                      }
                   }
                }
-#              endif
+#              endif // #ifdef MASSIVE_PARTICLES
 
 
 //             f2. prepare the cell-centered magnetic field for leaf patches
@@ -898,7 +895,7 @@ void Output_DumpData_Total( const char *FileName )
 
 
 //          f5. free memory used for outputting particle density
-#           ifdef PARTICLE
+#           ifdef MASSIVE_PARTICLES
             if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )
             {
                Prepare_PatchData_FreeParticleDensityArray( lv );

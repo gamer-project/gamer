@@ -1235,18 +1235,6 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "GRA_BLOCK_SIZE",          gra_block_size,         GRA_BLOCK_SIZE,            NonFatal );
 #     endif
 
-#     if ( POT_SCHEME == SOR )
-#     ifdef USE_PSOLVER_10TO14
-      if ( !use_psolver_10to14 )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
-                      "USE_PSOLVER_10TO14", "OFF", "ON" );
-#     else
-      if (  use_psolver_10to14 )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
-                      "USE_PSOLVER_10TO14", "ON", "OFF" );
-#     endif
-#     endif // if ( POT_SCHEME == SOR )
-
 #     endif // #ifdef GRAVITY
 
 

@@ -29,6 +29,8 @@ GPU_DEVICE
 static real Hydro_CheckMinEint( const real InEint, const real MinEint );
 GPU_DEVICE
 static real Hydro_CheckMinTemp( const real InTemp, const real MinTemp );
+GPU_DEVICE
+static real Hydro_CheckMinEntr( const real InEntr, const real MinEntr );
 #endif
 
 
@@ -461,6 +463,31 @@ real Hydro_CheckMinTemp( const real InTemp, const real MinTemp )
    else                       return InTemp;
 
 } // FUNCTION : Hydro_CheckMinTemp
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Hydro_CheckMinEntr
+// Description :  Similar to Hydro_CheckMinPres() except that this function checks the gas entropy
+//                instead of pressure
+//
+// Note        :  1. See Hydro_CheckMinPres()
+//
+// Parameter   :  InEntr  : Input entropy to be corrected
+//                MinEntr : Minimum allowed entropy
+//
+// Return      :  InEntr != NaN --> max( InEntr, MinEntr )
+//                       == NaN --> NaN
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+real Hydro_CheckMinEntr( const real InEntr, const real MinEntr )
+{
+
+// call FMAX() only if InEntr is not NaN
+   if ( InEntr == InEntr )    return FMAX( InEntr, MinEntr );
+   else                       return InEntr;
+
+} // FUNCTION : Hydro_CheckMinEntr
 
 
 
@@ -908,6 +935,67 @@ real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const re
    return Temp;
 
 } // FUNCTION : Hydro_Con2Temp
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Hydro_Con2Entr
+// Description :  Evaluate the fluid entropy
+//
+// Note        :  1. Invoke the EoS routine EoS_DensEint2Entr() to support different EoS
+//                2. We regard the entropy used in the EoS routines and that used in the dual-energy formalism
+//                   as two completely separate fields
+//                   --> The former is referred to as Entr/ENTR and manipulated by the EoS API, while the latter is
+//                       usually referred to as Enpy/Dual/DUAL and manipulated by the routines in CPU_Shared_DualEnergy.cpp
+//                   --> This routine, Hydro_Con2Entr(), belongs to the former
+//
+// Parameter   :  Dens              : Mass density
+//                MomX/Y/Z          : Momentum density
+//                Engy              : Energy density
+//                Passive           : Passive scalars
+//                CheckMinEntr      : Apply entropy floor by calling Hydro_CheckMinEntr()
+//                                    --> In some cases we actually want to check if entropy becomes unphysical,
+//                                        for which we don't want to enable this option
+//                MinEntr           : Entropy floor
+//                Emag              : Magnetic energy density (0.5*B^2) --> For MHD only
+//                EoS_DensEint2Entr : EoS routine to compute the gas entropy
+//                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensEint2Entr()
+//                EoS_Table         : EoS tables for EoS_DensEint2Entr()
+//
+// Return      :  Gas entropy
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+real Hydro_Con2Entr( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                     const real Passive[], const bool CheckMinEntr, const real MinEntr, const real Emag,
+                     const EoS_DE2S_t EoS_DensEint2Entr, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                     const real *const EoS_Table[EOS_NTABLE_MAX] )
+{
+
+// check
+#  ifdef GAMER_DEBUG
+   if ( EoS_DensEint2Entr == NULL )
+   {
+#     ifdef __CUDACC__
+      printf( "ERROR : EoS_DensEint2Entr == NULL at file <%s>, line <%d>, function <%s> !!\n",
+              __FILE__, __LINE__, __FUNCTION__ );
+#     else
+      Aux_Error( ERROR_INFO, "EoS_DensEint2Entr == NULL !!\n" );
+#     endif
+   }
+#  endif // #ifdef GAMER_DEBUG
+
+
+   const bool CheckMinEint_No = false;
+   real Eint, Entr;
+
+   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, Emag );
+   Entr = EoS_DensEint2Entr( Dens, Eint, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+
+   if ( CheckMinEntr )   Entr = Hydro_CheckMinEntr( Entr, MinEntr );
+
+   return Entr;
+
+} // FUNCTION : Hydro_Con2Entr
 
 
 

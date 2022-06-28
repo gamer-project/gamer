@@ -52,10 +52,11 @@ extern double BarredPot_Omegabar;
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
 // Parameter   :  AuxArray_Flt/Int : Floating-point/Integer arrays to be filled up
+//                Time             : Target physical time
 //
 // Return      :  AuxArray_Flt/Int[]
 //-------------------------------------------------------------------------------------------------------
-void SetExtPotAuxArray_TabularP17( double AuxArray_Flt[], int AuxArray_Int[] )
+void SetExtPotAuxArray_TabularP17( double AuxArray_Flt[], int AuxArray_Int[], const double Time )
 {
 
 // floating-point parameters
@@ -207,7 +208,6 @@ static real ExtPot_TabularP17( const double x, const double y, const double z, c
 
    return ExtPot;
 
-
 } // FUNCTION : ExtPot_Tabular
 
 
@@ -260,7 +260,7 @@ void SetCPUExtPot_TabularP17( ExtPot_t &CPUExtPot_Ptr )
 #ifndef __CUDACC__
 
 // local function prototypes
-void SetExtPotAuxArray_TabularP17( double [], int [] );
+void SetExtPotAuxArray_TabularP17( double [], int [], const double );
 void SetCPUExtPot_TabularP17( ExtPot_t & );
 #ifdef GPU
 void SetGPUExtPot_TabularP17( ExtPot_t & );
@@ -284,7 +284,7 @@ void SetGPUExtPot_TabularP17( ExtPot_t & );
 void Init_ExtPot_TabularP17()
 {
 
-   SetExtPotAuxArray_TabularP17( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int );
+   SetExtPotAuxArray_TabularP17( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int, Time[0] );
    SetCPUExtPot_TabularP17( CPUExtPot_Ptr );
 #  ifdef GPU
    SetGPUExtPot_TabularP17( GPUExtPot_Ptr );

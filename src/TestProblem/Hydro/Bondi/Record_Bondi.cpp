@@ -91,7 +91,7 @@ void Record_Bondi()
       MomZAbs_Sum *= UNIT_M*UNIT_L/UNIT_T;
       Ek_Sum      *= UNIT_E;
       Et_Sum      *= UNIT_E;
-      Mass_BH       = Bondi_MassBH*UNIT_M/Const_Msun;
+      Mass_BH      = Bondi_MassBH*UNIT_M/Const_Msun;
 
       if ( MPI_Rank == 0 )
       {
