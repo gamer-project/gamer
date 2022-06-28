@@ -24,7 +24,7 @@ extern double Bondi_Soften_R;
 extern bool   Bondi_Soliton;
 extern double Bondi_Soliton_m22;
 extern double Bondi_Soliton_rc;
-
+extern double Bondi_Soliton_t;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetExtAccAuxArray_Bondi
@@ -53,6 +53,7 @@ void SetExtAccAuxArray_Bondi( double AuxArray[] )
       AuxArray[7] = Bondi_Soliton_rc;
       AuxArray[8] = NEWTON_G*Const_Msun/UNIT_M;
       AuxArray[9] = UNIT_L/Const_kpc;
+      AuxArray[10] = Bondi_Soliton_t;
    }
 
 } // FUNCTION : SetExtAccAuxArray_Bondi
@@ -98,13 +99,15 @@ static void ExtAcc_Bondi( real Acc[], const double x, const double y, const doub
       const real rc       = (real)UserArray[7];  // In code unit or kpc
       const real Coeff    = (real)UserArray[8];
       const real UNIT_L   = (real)UserArray[9];
+      const real tc       = (real)UserArray[10];
 
 #ifdef Plummer
       double M = GM*CUBE(r)/pow(SQR(r)+SQR(rc),1.5);
 #else
       double a = sqrt(pow(2.0,1.0/8.0)-1)*(r/rc);
       double M = 4.17e9/(SQR(m22/1e-1)*(rc*UNIT_L*1e3)*pow(SQR(a)+1, 7.0))*(3465*pow(a,13.0)+23100*pow(a,11.0)+65373*pow(a,9.0)+101376*pow(a,7.0)+92323*pow(a,5.0)+48580*pow(a,3.0)-3465*a+3465*pow(SQR(a)+1, 7.0)*atan(a));
-      M *= Coeff;
+      if( tc<0 ){ M *= Coeff; }
+      else{ M*= Coeff*2/3.14159265*atan(Time/tc); }
 #endif
       GM += M;
    }
