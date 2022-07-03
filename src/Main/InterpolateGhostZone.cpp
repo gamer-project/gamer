@@ -973,7 +973,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                break;
 
                case BC_FLU_REFLECTING:
-                  Hydro_BoundaryCondition_Reflecting( CData_CC_Ptr, BC_Face[BC_Sibling], NVarCC_Flu,          CGhost_CC,
+                  Hydro_BoundaryCondition_Reflecting( CData_CC_Ptr, BC_Face[BC_Sibling], NVarCC_Flu,            CGhost_CC,
                                                       CSize_CC[0], CSize_CC[1], CSize_CC[2], BC_Idx_Start, BC_Idx_End,
                                                       TVarCCIdxList_Flu, NVarCC_Der, TVarCCList_Der );
                break;
