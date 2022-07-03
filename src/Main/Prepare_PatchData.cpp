@@ -1051,9 +1051,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
             } // if ( PrepEntr )
 
 #           ifdef MHD
-            if ( PrepMagX_CC || PrepMagY_CC || PrepMagZ_CC || PrepMagE_CC )
+            if ( PrepMagCC )
             {
-
                for (int k=0; k<PS1; k++)  {  K    = k + Disp_k;
                for (int j=0; j<PS1; j++)  {  J    = j + Disp_j;
                                              Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
@@ -1106,7 +1105,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                if ( PrepMagY_CC )   Data1PG_CC_Ptr += PGSize3D_CC;
                if ( PrepMagZ_CC )   Data1PG_CC_Ptr += PGSize3D_CC;
                if ( PrepMagE_CC )   Data1PG_CC_Ptr += PGSize3D_CC;
-            } // if ( PrepMagX_CC || PrepMagY_CC || PrepMagZ_CC || PrepMagE_CC )
+            } // if ( PrepMagCC )
 #           endif // #ifdef MHD
 
 
@@ -1254,7 +1253,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                      }}}
 
                      Data1PG_CC_Ptr += PGSize3D_CC;
-                  }
+                  } // for (int v=0; v<NVarCC_Flu; v++)
 
 
 //                (b1-2) derived variables (cell-centered)
@@ -1277,7 +1276,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                      }}}
 
                      Data1PG_CC_Ptr += PGSize3D_CC;
-                  }
+                  } // if ( PrepVx )
 
                   if ( PrepVy )
                   {
@@ -1297,7 +1296,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                      }}}
 
                      Data1PG_CC_Ptr += PGSize3D_CC;
-                  }
+                  } // if ( PrepVy )
 
                   if ( PrepVz )
                   {
@@ -1317,7 +1316,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                      }}}
 
                      Data1PG_CC_Ptr += PGSize3D_CC;
-                  }
+                  } // if ( PrepVz )
 
                   if ( PrepPres )
                   {
@@ -1361,7 +1360,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                      }}}
 
                      Data1PG_CC_Ptr += PGSize3D_CC;
-                  }
+                  } // if ( PrepPres )
 
                   if ( PrepTemp )
                   {
@@ -1405,7 +1404,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                      }}}
 
                      Data1PG_CC_Ptr += PGSize3D_CC;
-                  }
+                  } // if ( PrepTemp )
 
                   if ( PrepEntr )
                   {
@@ -1449,7 +1448,66 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                      }}}
 
                      Data1PG_CC_Ptr += PGSize3D_CC;
-                  }
+                  } // if ( PrepEntr )
+
+#                 ifdef MHD
+                  if ( PrepMagCC )
+                  {
+                     for (int k=0; k<loop[2]; k++)  { K = k + disp[2];   K2 = k + disp2[2];
+                     for (int j=0; j<loop[1]; j++)  { J = j + disp[1];   J2 = j + disp2[1];
+                                                      Idx1 = IDX321( disp[0], J, K, PGSize1D_CC, PGSize1D_CC );
+                     for (I2=disp2[0]; I2<disp2[0]+loop[0]; I2++) {
+
+                        real B_CC[NCOMP_MAG];
+                        int  OffsetB = 0;
+
+                        MHD_GetCellCenteredBFieldInPatch( B_CC, lv, SibPID, I2, J2, K2, MagSg );
+
+                        if ( PrepMagX_CC ) { Data1PG_CC_Ptr[ Idx1 + OffsetB ] = B_CC[MAGX];  OffsetB += PGSize3D_CC; }
+                        if ( PrepMagY_CC ) { Data1PG_CC_Ptr[ Idx1 + OffsetB ] = B_CC[MAGY];  OffsetB += PGSize3D_CC; }
+                        if ( PrepMagZ_CC ) { Data1PG_CC_Ptr[ Idx1 + OffsetB ] = B_CC[MAGZ];  OffsetB += PGSize3D_CC; }
+                        if ( PrepMagE_CC ) { Data1PG_CC_Ptr[ Idx1 + OffsetB ] = (real)0.5*( SQR(B_CC[MAGX]) + SQR(B_CC[MAGY]) + SQR(B_CC[MAGZ]) ); }
+
+                        if ( FluIntTime ) // temporal interpolation
+                        {
+                           OffsetB = 0;
+
+                           MHD_GetCellCenteredBFieldInPatch( B_CC, lv, SibPID, I2, J2, K2, MagSg_IntT );
+
+                           if ( PrepMagX_CC ) {
+                              Data1PG_CC_Ptr[ Idx1 + OffsetB ] =   FluWeighting     *Data1PG_CC_Ptr[ Idx1 + OffsetB ]
+                                                                 + FluWeighting_IntT*B_CC[MAGX];
+                              OffsetB += PGSize3D_CC;
+                           }
+
+                           if ( PrepMagY_CC ) {
+                              Data1PG_CC_Ptr[ Idx1 + OffsetB ] =   FluWeighting     *Data1PG_CC_Ptr[ Idx1 + OffsetB ]
+                                                                 + FluWeighting_IntT*B_CC[MAGY];
+                              OffsetB += PGSize3D_CC;
+                           }
+
+                           if ( PrepMagZ_CC ) {
+                              Data1PG_CC_Ptr[ Idx1 + OffsetB ] =   FluWeighting     *Data1PG_CC_Ptr[ Idx1 + OffsetB ]
+                                                                 + FluWeighting_IntT*B_CC[MAGZ];
+                              OffsetB += PGSize3D_CC;
+                           }
+
+                           if ( PrepMagE_CC ) {
+                              Data1PG_CC_Ptr[ Idx1 + OffsetB ] =   FluWeighting     *Data1PG_CC_Ptr[ Idx1 + OffsetB ]
+                                                                 + FluWeighting_IntT*(real)0.5*( SQR(B_CC[MAGX]) + SQR(B_CC[MAGY]) + SQR(B_CC[MAGZ]) );
+                           }
+                        } // if ( FluIntTime )
+
+                        Idx1 ++;
+                     }}}
+
+                     if ( PrepMagX_CC )   Data1PG_CC_Ptr += PGSize3D_CC;
+                     if ( PrepMagY_CC )   Data1PG_CC_Ptr += PGSize3D_CC;
+                     if ( PrepMagZ_CC )   Data1PG_CC_Ptr += PGSize3D_CC;
+                     if ( PrepMagE_CC )   Data1PG_CC_Ptr += PGSize3D_CC;
+                  } // if ( PrepMagCC )
+#                 endif // #ifdef MHD
+
 
 #                 elif ( MODEL == ELBDM )
 //                no derived variables yet
@@ -1477,7 +1535,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                      }}}
 
                      Data1PG_CC_Ptr += PGSize3D_CC;
-                  }
+                  } // if ( PrepPot )
 #                 endif // #ifdef GRAVITY
 
 
