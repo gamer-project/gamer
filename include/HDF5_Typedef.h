@@ -116,6 +116,10 @@ struct Makefile_t
    int Laohu;
    int SupportHDF5;
    int SupportGSL;
+   int SupportLibYT;
+#  ifdef SUPPORT_LIBYT
+   int LibYTUsePatchGroup;
+#  endif
    int SupportGrackle;
    int RandomNumber;
 
@@ -149,6 +153,8 @@ struct Makefile_t
 #  endif // MODEL
 
 #  ifdef PARTICLE
+   int MassiveParticles;
+   int Tracer;
    int StoreParAcc;
    int StarFormation;
    int Par_NAttUser;
@@ -215,7 +221,6 @@ struct SymConst_t
 
 #  if   ( POT_SCHEME == SOR )
    int    Pot_BlockSize_z;
-   int    UsePSolver_10to14;
    int    SOR_RhoShared;
    int    SOR_CPotShared;
    int    SOR_UseShuffle;
@@ -230,8 +235,10 @@ struct SymConst_t
 
 #  ifdef PARTICLE
    int    Par_NAttStored;
+   int    Par_NType;
+#  ifdef GRAVITY
    int    RhoExt_GhostSize;
-
+#  endif
    int    Debug_Particle;
 
    double ParList_GrowthFactor;
@@ -352,13 +359,18 @@ struct InputPara_t
    int    Par_Init;
    int    Par_ICFormat;
    double Par_ICMass;
+   int    Par_ICType;
    int    Par_Interp;
+   int    Par_InterpTracer;
    int    Par_Integ;
+   int    Par_IntegTracer;
    int    Par_ImproveAcc;
    int    Par_PredictPos;
    double Par_RemoveCell;
    int    Opt__FreezePar;
    int    Par_GhostSize;
+   int    Par_GhostSizeTracer;
+   int    Par_TracerVelCorr;
    char  *ParAttLabel[PAR_NATT_TOTAL];
 #  endif
 
@@ -420,6 +432,7 @@ struct InputPara_t
    int    Opt__Flag_LohnerEngy;
    int    Opt__Flag_LohnerPres;
    int    Opt__Flag_LohnerTemp;
+   int    Opt__Flag_LohnerEntr;
 #  endif
    int    Opt__Flag_LohnerForm;
    int    Opt__Flag_User;
@@ -500,6 +513,7 @@ struct InputPara_t
    double MinPres;
    double MinEint;
    double MinTemp;
+   double MinEntr;
    int    Opt__CheckPresAfterFlu;
    int    Opt__LastResortFloor;
    int    JeansMinPres;
@@ -633,6 +647,7 @@ struct InputPara_t
 #  if ( MODEL == HYDRO )
    int    Opt__Output_Pres;
    int    Opt__Output_Temp;
+   int    Opt__Output_Entr;
    int    Opt__Output_Cs;
    int    Opt__Output_DivVel;
    int    Opt__Output_Mach;

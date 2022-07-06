@@ -9,11 +9,11 @@ using namespace std;
 double ParEqmIC_SmallGas;
 
 // problem-specific function prototypes
-#ifdef PARTICLE
+#ifdef MASSIVE_PARTICLES
 void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_AllRank,
                                    real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                    real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                   real *AllAttribute[PAR_NATT_TOTAL] );
+                                   real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
 #endif
 
 // external potential routines
@@ -193,7 +193,7 @@ void Init_TestProb_Hydro_ParEqmIC()
 
 
    Init_Function_User_Ptr  = SetGridIC;
-#  ifdef PARTICLE
+#  ifdef MASSIVE_PARTICLES
    Par_Init_ByFunction_Ptr = Par_Init_ByFunction_ParEqmIC;
 #  endif
 #  ifdef GRAVITY

@@ -43,7 +43,7 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
    if ( SyncOption != PAR_SYNC_TEMP  &&  SyncOption != PAR_SYNC_FORCE )
       Aux_Error( ERROR_INFO, "unsupported SyncOption = %d !!\n", SyncOption );
 
-#  ifndef STORE_PAR_ACC
+#  if ( defined MASSIVE_PARTICLES  &&  !defined STORE_PAR_ACC )
    if ( SyncOption == PAR_SYNC_TEMP  ||  SyncOption == PAR_SYNC_FORCE )
       Aux_Error( ERROR_INFO, "please turn on STORE_PAR_ACC in the makefile for particle synchronization !!\n" );
 #  endif
@@ -65,11 +65,13 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
       Backup_NPar   = 0;
       Backup_ParID  = ( long *      )malloc(   MemSize*sizeof(long) );
       Backup_ParAtt = ( real (*)[7] )malloc( 7*MemSize*sizeof(real) );  // 7 = pos*3, vel*3, time
+
    }
 
 
 // synchronize all active particles
          real *ParTime   =   amr->Par->Time;
+         real *ParType   =   amr->Par->Type;
          real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
          real *ParVel[3] = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
 #  ifdef STORE_PAR_ACC
@@ -87,6 +89,9 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
    {
 //    skip inactive particles
       if ( amr->Par->Mass[p] < 0.0 )   continue;
+
+//    skip massive particles when enabling OPT__FREEZE_PAR
+      if ( OPT__FREEZE_PAR  &&  amr->Par->Type[p] != PTYPE_TRACER )  continue;
 
       if (  ! Mis_CompareRealValue( SyncTime_Real, amr->Par->Time[p], NULL, false )  )
       {
@@ -120,7 +125,9 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
          for (int d=0; d<3; d++)
          {
             ParPos[d][p] += ParVel[d][p]*dt;
-            ParVel[d][p] += ParAcc[d][p]*dt;
+//          only accelerate massive particles
+            if ( ParType[p] != PTYPE_TRACER )
+               ParVel[d][p] += ParAcc[d][p]*dt;
          }
 
          ParTime[p] = SyncTime_Real;

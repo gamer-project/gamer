@@ -7,10 +7,10 @@
 #SBATCH --account=ACCOUNT                                   # (-A) Account/project number
 #SBATCH --job-name=JOB_NAME                                 # (-J) Job name
 #SBATCH --partition=ctest                                   # (-p) Specific slurm partition
-#SBATCH --ntasks=28                                         # (-n) Number of total MPI tasks (i.e. processes)
+#SBATCH --ntasks=8                                          # (-n) Number of total MPI tasks (i.e. processes)
 #SBATCH --nodes=2                                           # (-N) Maximum number of nodes to be allocated
-#SBATCH --ntasks-per-node=14                                # Maximum number of tasks on each node
-#SBATCH --cpus-per-task=4                                   # (-c) Number of cores per MPI task
+#SBATCH --ntasks-per-node=4                                 # Maximum number of tasks on each node
+#SBATCH --cpus-per-task=14                                  # (-c) Number of cores per MPI task
 #SBATCH --mem=65536                                         # Memory limit per compute node for the  job.Do not use with mem-per-cpu flag
 #SBATCH --time=00:30:00                                     # (-t) Wall time limit (days-hrs:min:sec)
 ##SBATCH -o log_taiwania_III
@@ -24,8 +24,7 @@ module purge
 module load compiler/gcc/4.8.5 OpenMPI/4.1.0
 module list >> $LOG_FILE
 
-cd /work/d07222009/reconstruct-halo_1.00e12_GPU_MPI_AMR/BETA=7.00e-1_m_22=1.0e-1/STABILITY_TEST_NO_INITIAL_VELOCITY_GNU/
 export LD_LIBRARY_PATH="/opt/ohpc/Taiwania3/libs/gcc485/ompi410/hdf5-1.12/lib:FFTW_PATH/lib:$LD_LIBRARY_PATH"
 
-mpirun -map-by ppr:7:socket:pe=4 --report-bindings ./gamer 1>>$LOG_FILE 2>&1
+mpirun -map-by ppr:2:socket:pe=14 --report-bindings ./gamer 1>>$LOG_FILE 2>&1
 echo "=============================================================" >> $LOG_FILE

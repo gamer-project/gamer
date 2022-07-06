@@ -134,7 +134,7 @@
 // add built-in scalars
 #if ( MODEL == HYDRO )
 
-// entropy (or internal energy) for the dual-energy formalism
+// dual-energy variable
 # ifdef DUAL_ENERGY
 #  define NCOMP_PASSIVE_BUILTIN0    1
 # else
@@ -227,16 +227,13 @@
 #if ( NCOMP_PASSIVE > 0 )
 
 // always put the built-in variables at the END of the field list
-// --> so that their indices (e.g., ENPY/EINT/CRAY) can be determined during compilation
+// --> so that their indices (e.g., DUAL/CRAY) can be determined during compilation
 // --> convenient (and probably also more efficient) for the fluid solver
 #  define PASSIVE_NEXT_IDX0   ( NCOMP_TOTAL - 1   )
 
-# if   ( DUAL_ENERGY == DE_ENPY )
-#  define ENPY                ( PASSIVE_NEXT_IDX0 )
-#  define PASSIVE_NEXT_IDX1   ( ENPY - 1          )
-# elif ( DUAL_ENERGY == DE_EINT )
-#  define EINT                ( PASSIVE_NEXT_IDX0 )
-#  define PASSIVE_NEXT_IDX1   ( EINT - 1          )
+# ifdef DUAL_ENERGY
+#  define DUAL                ( PASSIVE_NEXT_IDX0 )
+#  define PASSIVE_NEXT_IDX1   ( DUAL - 1          )
 # else
 #  define PASSIVE_NEXT_IDX1   ( PASSIVE_NEXT_IDX0 )
 # endif
@@ -270,12 +267,9 @@
 // always put the built-in variables at the END of the list
 #  define FLUX_NEXT_IDX0   ( NFLUX_TOTAL - 1 )
 
-# if   ( DUAL_ENERGY == DE_ENPY )
-#  define FLUX_ENPY        ( FLUX_NEXT_IDX0  )
-#  define FLUX_NEXT_IDX1   ( FLUX_ENPY - 1   )
-# elif ( DUAL_ENERGY == DE_EINT )
-#  define FLUX_EINT        ( FLUX_NEXT_IDX0  )
-#  define FLUX_NEXT_IDX1   ( FLUX_EINT - 1   )
+# ifdef DUAL_ENERGY
+#  define FLUX_DUAL        ( FLUX_NEXT_IDX0  )
+#  define FLUX_NEXT_IDX1   ( FLUX_DUAL - 1   )
 # else
 #  define FLUX_NEXT_IDX1   ( FLUX_NEXT_IDX0  )
 # endif
@@ -301,10 +295,8 @@
 
 #if ( NCOMP_PASSIVE > 0 )
 
-# if   ( DUAL_ENERGY == DE_ENPY )
-#  define _ENPY               ( 1L << ENPY )
-# elif ( DUAL_ENERGY == DE_EINT )
-#  define _EINT               ( 1L << EINT )
+# ifdef DUAL_ENERGY
+#  define _DUAL               ( 1L << DUAL )
 # endif
 
 # ifdef COSMIC_RAY
@@ -332,10 +324,8 @@
 
 #if ( NFLUX_PASSIVE > 0 )
 
-# if   ( DUAL_ENERGY == DE_ENPY )
-#  define _FLUX_ENPY          ( 1L << FLUX_ENPY )
-# elif ( DUAL_ENERGY == DE_EINT )
-#  define _FLUX_EINT          ( 1L << FLUX_EINT )
+# ifdef DUAL_ENERGY
+#  define _FLUX_DUAL          ( 1L << FLUX_DUAL )
 # endif
 
 # ifdef COSMIC_RAY
@@ -347,21 +337,27 @@
 // bitwise indices of derived fields
 // --> start from (1L<<NCOMP_TOTAL) to distinguish from the intrinsic fields
 // --> remember to define NDERIVE = total number of derived fields
-// _EINT_DER is a derived field for distinguishing from _EINT
-// --> the latter is an intrinsic field when adopting DUAL_ENERGY == DE_EINT
 #  define _VELX               ( 1L << (NCOMP_TOTAL+ 0) )
 #  define _VELY               ( 1L << (NCOMP_TOTAL+ 1) )
 #  define _VELZ               ( 1L << (NCOMP_TOTAL+ 2) )
 #  define _VELR               ( 1L << (NCOMP_TOTAL+ 3) )
 #  define _PRES               ( 1L << (NCOMP_TOTAL+ 4) )
 #  define _TEMP               ( 1L << (NCOMP_TOTAL+ 5) )
-#  define _EINT_DER           ( 1L << (NCOMP_TOTAL+ 6) )
-#  define _MAGX_CC            ( 1L << (NCOMP_TOTAL+ 7) )
-#  define _MAGY_CC            ( 1L << (NCOMP_TOTAL+ 8) )
-#  define _MAGZ_CC            ( 1L << (NCOMP_TOTAL+ 9) )
-#  define _MAG_ENGY_CC        ( 1L << (NCOMP_TOTAL+10) )
-#  define _DERIVED            ( _VELX | _VELY | _VELZ | _VELR | _PRES | _TEMP | _EINT_DER | _MAGX_CC | _MAGY_CC | _MAGZ_CC | _MAG_ENGY_CC )
-#  define NDERIVE             11
+#  define _ENTR               ( 1L << (NCOMP_TOTAL+ 6) )
+#  define _EINT               ( 1L << (NCOMP_TOTAL+ 7) )
+# ifdef MHD
+#  define _MAGX_CC            ( 1L << (NCOMP_TOTAL+ 8) )
+#  define _MAGY_CC            ( 1L << (NCOMP_TOTAL+ 9) )
+#  define _MAGZ_CC            ( 1L << (NCOMP_TOTAL+10) )
+#  define _MAGE_CC            ( 1L << (NCOMP_TOTAL+11) )
+# else
+#  define _MAGX_CC            0
+#  define _MAGY_CC            0
+#  define _MAGZ_CC            0
+#  define _MAGE_CC            0
+# endif // #ifdef MHD ... else ...
+#  define _DERIVED            ( _VELX | _VELY | _VELZ | _VELR | _PRES | _TEMP | _ENTR | _EINT | _MAGX_CC | _MAGY_CC | _MAGZ_CC | _MAGE_CC )
+#  define NDERIVE             12
 
 
 #elif ( MODEL == ELBDM )
@@ -418,11 +414,11 @@
 #ifdef PARTICLE
 
 // number of built-in particle attributes
-// (1) mass, position*3, velocity*3, and time
-#  define PAR_NATT_BUILTIN0   8
+// (1) mass, position*3, velocity*3, time, and type
+#  define PAR_NATT_BUILTIN0   9
 
 // acceleration*3 when STORE_PAR_ACC is adopted
-# ifdef STORE_PAR_ACC
+# if ( defined STORE_PAR_ACC  &&  defined GRAVITY )
 #  define PAR_NATT_BUILTIN1   3
 # else
 #  define PAR_NATT_BUILTIN1   0
@@ -463,10 +459,11 @@
 #  define  PAR_VELX           4
 #  define  PAR_VELY           5
 #  define  PAR_VELZ           6
+#  define  PAR_TYPE           7
 
 // always put acceleration and time at the END of the particle attribute list
 // --> make it easier to discard them when storing data on disk (see Output_DumpData_Total(_HDF5).cpp)
-# ifdef STORE_PAR_ACC
+# if ( defined STORE_PAR_ACC  &&  defined GRAVITY )
 #  define  PAR_ACCX           ( PAR_NATT_TOTAL - 4 )
 #  define  PAR_ACCY           ( PAR_NATT_TOTAL - 3 )
 #  define  PAR_ACCZ           ( PAR_NATT_TOTAL - 2 )
@@ -483,7 +480,8 @@
 #  define _PAR_VELX           ( 1L << PAR_VELX )
 #  define _PAR_VELY           ( 1L << PAR_VELY )
 #  define _PAR_VELZ           ( 1L << PAR_VELZ )
-# ifdef STORE_PAR_ACC
+#  define _PAR_TYPE           ( 1L << PAR_TYPE )
+# if ( defined STORE_PAR_ACC  &&  defined GRAVITY )
 #  define _PAR_ACCX           ( 1L << PAR_ACCX )
 #  define _PAR_ACCY           ( 1L << PAR_ACCY )
 #  define _PAR_ACCZ           ( 1L << PAR_ACCZ )
@@ -491,7 +489,9 @@
 #  define _PAR_TIME           ( 1L << PAR_TIME )
 #  define _PAR_POS            ( _PAR_POSX | _PAR_POSY | _PAR_POSZ )
 #  define _PAR_VEL            ( _PAR_VELX | _PAR_VELY | _PAR_VELZ )
+# if ( defined STORE_PAR_ACC  &&  defined GRAVITY )
 #  define _PAR_ACC            ( _PAR_ACCX | _PAR_ACCY | _PAR_ACCZ )
+# endif
 #  define _PAR_TOTAL          (  ( 1L << PAR_NATT_TOTAL ) - 1L )
 
 // grid fields related to particles
@@ -502,6 +502,21 @@
 #  define _TOTAL_DENS         ( _PAR_DENS )
 # else
 #  define _TOTAL_DENS         ( 1L << (NCOMP_TOTAL+NDERIVE+2) )
+# endif
+
+// particle type macros
+
+// number of particle types (default: 4)
+#  define  PAR_NTYPE                4
+
+// particle type indices (must be in the range 0<=index<PAR_NTYPE)
+#  define  PTYPE_TRACER          (real)0
+#  define  PTYPE_GENERIC_MASSIVE (real)1
+#  define  PTYPE_DARK_MATTER     (real)2
+#  define  PTYPE_STAR            (real)3
+
+# ifdef GRAVITY
+#  define MASSIVE_PARTICLES
 # endif
 
 #else // #ifdef PARTICLE
@@ -642,7 +657,6 @@
 
 
 // patch size (number of cells of a single patch in the x/y/z directions)
-#define PATCH_SIZE                   8
 #define PS1             ( 1*PATCH_SIZE )
 #define PS2             ( 2*PATCH_SIZE )
 #define PS2P1           ( PS2 + 1 )
@@ -665,12 +679,12 @@
 #  define USG_NXT_F     ( 1 )                                     // still define USG_NXT_F/G since many function prototypes
 #  define USG_NXT_G     ( 1 )                                     // require it
 #  endif
+#  ifdef PARTICLE
+#  define RHOEXT_NXT    ( PS1 + 2*RHOEXT_GHOST_SIZE )             // array rho_ext of each patch
+#  endif
 #else
 #  define GRA_NXT       ( 1 )                                     // still define GRA_NXT   ...
 #  define USG_NXT_F     ( 1 )                                     // still define USG_NXT_F ...
-#endif
-#ifdef PARTICLE
-#  define RHOEXT_NXT    ( PS1 + 2*RHOEXT_GHOST_SIZE )             // array rho_ext of each patch
 #endif
 #  define SRC_NXT       ( PS1 + 2*SRC_GHOST_SIZE )                // use patch as the unit
 #  define SRC_NXT_P1    ( SRC_NXT + 1 )
@@ -700,7 +714,6 @@
 
 
 // bitwise reproducibility in flux and electric field fix-up operations
-#if ( MODEL == HYDRO )
 # ifdef BITWISE_REPRODUCIBILITY
 #  define BIT_REP_FLUX
 # endif
@@ -710,11 +723,10 @@
 //     consistent with each other (even the round-off errors are the same)
 // --> reduces the div(B) errors significantly
 # ifdef MHD
-//#ifdef BITWISE_REPRODUCIBILITY
+//# ifdef BITWISE_REPRODUCIBILITY
 #  define BIT_REP_ELECTRIC
-//#endif
+//# endif
 # endif // MHD
-#endif // HYDRO
 
 
 // extreme values
@@ -958,7 +970,6 @@
 #define BIDX( idx )     ( 1L << (idx) )
 
 
-
 // ################################
 // ## Remove useless definitions ##
 // ################################
@@ -980,6 +991,12 @@
 #ifndef GPU
 #  undef  GPU_ARCH
 #  define GPU_ARCH NONE
+#endif
+
+// currently we assume that particle acceleration is solely due to gravity
+// --> if we ever want to enable STORE_PAR_ACC without GRAVITY, remember to check all STORE_PAR_ACC in this header
+#ifndef GRAVITY
+#  undef STORE_PAR_ACC
 #endif
 
 

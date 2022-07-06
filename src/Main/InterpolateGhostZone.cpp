@@ -2,7 +2,7 @@
 
 static int Table_01( const int FSide, const int CSide, const char dim, const int w01, const int w02,
                      const int w10, const int w11, const int w12, const int w20, const int w21 );
-void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, const double Time0, const double Time1,
+void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, const double Time0, const double Time1,
                      bool &IntTime, int &Sg, int &Sg_IntT, real &Weighting, real &Weighting_IntT );
 
 
@@ -49,8 +49,8 @@ void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, 
 //                TSib              : Target sibling indices along different sibling directions
 //                TVarCC            : Target cell-centered variables to be prepared
 //                                    --> Supported variables in different models:
-//                                        HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _PRES, _TEMP,
-//                                                [, _POTE]
+//                                        HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _PRES, _TEMP, _ENTR,
+//                                                [, _POTE] [, _MAGX_CC, _MAGY_CC, _MAGZ_CC, _MAGE_CC]
 //                                        ELBDM : _DENS, _REAL, _IMAG [, _POTE]
 //                                    --> _FLUID, _PASSIVE, _TOTAL, and _DERIVED apply to all models
 //                NVarCC_Tot        : Total number of cell-centered variables to be prepared
@@ -74,7 +74,7 @@ void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, 
 //                FluBC             : Fluid boundary condition
 //                PotBC             : Gravity boundary condition (not used currently)
 //                BC_Face           : Priority of the B.C. along different boundary faces (z>y>x)
-//                MinPres/Temp      : Minimum allowed pressure/temperature (<0.0 ==> off)
+//                MinPres/Temp/Entr : Minimum allowed pressure/temperature/entropy (<0.0 ==> off)
 //                DE_Consistency    : Ensure the consistency between pressure, total energy density, and the
 //                                    dual-energy variable when DUAL_ENERGY is on
 //                FInterface        : B field on the coarse-fine interfaces for the divergence-preserving interpolation
@@ -87,7 +87,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                            const int NVarCC_Der, const long TVarCCList_Der[],
                            const long TVarFC, const int NVarFC_Tot, const int TVarFCIdxList[],
                            const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
-                           const int BC_Face[], const real MinPres, const real MinTemp,
+                           const int BC_Face[], const real MinPres, const real MinTemp, const real MinEntr,
                            const bool DE_Consistency, const real *FInterface[6] )
 {
 
@@ -117,11 +117,19 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
 
 #  if   ( MODEL == HYDRO )
-   const bool PrepVx   = ( TVarCC & _VELX ) ? true : false;
-   const bool PrepVy   = ( TVarCC & _VELY ) ? true : false;
-   const bool PrepVz   = ( TVarCC & _VELZ ) ? true : false;
-   const bool PrepPres = ( TVarCC & _PRES ) ? true : false;
-   const bool PrepTemp = ( TVarCC & _TEMP ) ? true : false;
+   const bool PrepVx      = ( TVarCC & _VELX    ) ? true : false;
+   const bool PrepVy      = ( TVarCC & _VELY    ) ? true : false;
+   const bool PrepVz      = ( TVarCC & _VELZ    ) ? true : false;
+   const bool PrepPres    = ( TVarCC & _PRES    ) ? true : false;
+   const bool PrepTemp    = ( TVarCC & _TEMP    ) ? true : false;
+   const bool PrepEntr    = ( TVarCC & _ENTR    ) ? true : false;
+#  ifdef MHD
+   const bool PrepMagX_CC = ( TVarCC & _MAGX_CC ) ? true : false;
+   const bool PrepMagY_CC = ( TVarCC & _MAGY_CC ) ? true : false;
+   const bool PrepMagZ_CC = ( TVarCC & _MAGZ_CC ) ? true : false;
+   const bool PrepMagE_CC = ( TVarCC & _MAGE_CC ) ? true : false;
+   const bool PrepMagCC   = ( PrepMagX_CC || PrepMagY_CC || PrepMagZ_CC || PrepMagE_CC );
+#  endif
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
@@ -218,7 +226,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 // fluid
    if ( NVarCC_Flu + NVarCC_Der != 0 )
    {
-      SetTempIntPara( lv, amr->FluSg[lv], PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1],
+      const int Sg0 = amr->FluSg[lv];
+      SetTempIntPara( lv, Sg0, PrepTime, amr->FluSgTime[lv][Sg0], amr->FluSgTime[lv][1-Sg0],
                       FluIntTime, FluSg, FluSg_IntT, FluWeighting, FluWeighting_IntT );
 
       if ( FluIntTime  &&  OPT__DT_LEVEL == DT_LEVEL_SHARED )
@@ -233,10 +242,11 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
    int  MagSg, MagSg_IntT;
    real MagWeighting, MagWeighting_IntT;
 
-// check PrepPres and PrepTemp since they also require B field
-   if ( NVarFC_Tot>0 || PrepPres || PrepTemp )
+// check PrepPres, PrepTemp, and PrepEntr since they also require B field
+   if ( NVarFC_Tot>0 || PrepMagCC || PrepPres || PrepTemp || PrepEntr )
    {
-      SetTempIntPara( lv, amr->MagSg[lv], PrepTime, amr->MagSgTime[lv][0], amr->MagSgTime[lv][1],
+      const int Sg0 = amr->MagSg[lv];
+      SetTempIntPara( lv, Sg0, PrepTime, amr->MagSgTime[lv][Sg0], amr->MagSgTime[lv][1-Sg0],
                       MagIntTime, MagSg, MagSg_IntT, MagWeighting, MagWeighting_IntT );
 
       if ( MagIntTime  &&  OPT__DT_LEVEL == DT_LEVEL_SHARED )
@@ -254,7 +264,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
    if ( PrepPot )
    {
-      SetTempIntPara( lv, amr->PotSg[lv], PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1],
+      const int Sg0 = amr->PotSg[lv];
+      SetTempIntPara( lv, Sg0, PrepTime, amr->PotSgTime[lv][Sg0], amr->PotSgTime[lv][1-Sg0],
                       PotIntTime, PotSg, PotSg_IntT, PotWeighting, PotWeighting_IntT );
 
       if ( PotIntTime  &&  OPT__DT_LEVEL == DT_LEVEL_SHARED )
@@ -304,7 +315,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
       }}}
 
       CData_CC_Ptr += CSize3D_CC;
-   }
+   } // for (int v=0; v<NVarCC_Flu; v++)
 
 
 // a2. derived variables
@@ -327,7 +338,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
       }}}
 
       CData_CC_Ptr += CSize3D_CC;
-   }
+   } // if ( PrepVx )
 
    if ( PrepVy )
    {
@@ -347,7 +358,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
       }}}
 
       CData_CC_Ptr += CSize3D_CC;
-   }
+   } // if ( PrepVy )
 
    if ( PrepVz )
    {
@@ -367,7 +378,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
       }}}
 
       CData_CC_Ptr += CSize3D_CC;
-   }
+   } // if ( PrepVz )
 
    if ( PrepPres )
    {
@@ -411,7 +422,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
       }}}
 
       CData_CC_Ptr += CSize3D_CC;
-   }
+   } // if ( PrepPres )
 
    if ( PrepTemp )
    {
@@ -455,10 +466,114 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
       }}}
 
       CData_CC_Ptr += CSize3D_CC;
-   }
+   } // if ( PrepTemp )
+
+   if ( PrepEntr )
+   {
+      for (int k=0; k<Loop1[2]; k++)   {  k1 = k + Disp1[2];   k2 = k + Disp2[2];
+      for (int j=0; j<Loop1[1]; j++)   {  j1 = j + Disp1[1];   j2 = j + Disp2[1];
+                                          Idx = IDX321( Disp2[0], j2, k2, CSize_CC[0], CSize_CC[1] );
+      for (i1=Disp1[0]; i1<Disp1[0]+Loop1[0]; i1++)   {
+
+         for (int v=0; v<NFluForEoS; v++)    FluidForEoS[v] = amr->patch[FluSg][lv][PID]->fluid[v][k1][j1][i1];
+
+#        ifdef MHD
+         const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i1, j1, k1, MagSg );
+#        else
+         const real Emag = NULL_REAL;
+#        endif
+         CData_CC_Ptr[Idx] = Hydro_Con2Entr( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                             FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
+                                             (MinEntr>=(real)0.0), MinEntr, Emag,
+                                             EoS_DensEint2Entr_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                             h_EoS_Table );
+
+         if ( FluIntTime ) // temporal interpolation
+         {
+            for (int v=0; v<NFluForEoS; v++)    FluidForEoS[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k1][j1][i1];
+
+#           ifdef MHD
+            const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i1, j1, k1, MagSg_IntT );
+#           else
+            const real Emag = NULL_REAL;
+#           endif
+            CData_CC_Ptr[Idx] =
+               FluWeighting     *CData_CC_Ptr[Idx]
+             + FluWeighting_IntT*Hydro_Con2Entr( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                                 FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
+                                                 (MinEntr>=(real)0.0), MinEntr, Emag,
+                                                 EoS_DensEint2Entr_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                 h_EoS_Table );
+         }
+
+         Idx ++;
+      }}}
+
+      CData_CC_Ptr += CSize3D_CC;
+   } // if ( PrepEntr )
+
+#  ifdef MHD
+   if ( PrepMagCC )
+   {
+      for (int k=0; k<Loop1[2]; k++)   {  k1 = k + Disp1[2];   k2 = k + Disp2[2];
+      for (int j=0; j<Loop1[1]; j++)   {  j1 = j + Disp1[1];   j2 = j + Disp2[1];
+                                          Idx = IDX321( Disp2[0], j2, k2, CSize_CC[0], CSize_CC[1] );
+      for (i1=Disp1[0]; i1<Disp1[0]+Loop1[0]; i1++)   {
+
+         real B_CC[NCOMP_MAG];
+         int  OffsetB = 0;
+
+         MHD_GetCellCenteredBFieldInPatch( B_CC, lv, PID, i1, j1, k1, MagSg );
+
+         if ( PrepMagX_CC ) { CData_CC_Ptr[ Idx + OffsetB ] = B_CC[MAGX];  OffsetB += CSize3D_CC; }
+         if ( PrepMagY_CC ) { CData_CC_Ptr[ Idx + OffsetB ] = B_CC[MAGY];  OffsetB += CSize3D_CC; }
+         if ( PrepMagZ_CC ) { CData_CC_Ptr[ Idx + OffsetB ] = B_CC[MAGZ];  OffsetB += CSize3D_CC; }
+         if ( PrepMagE_CC ) { CData_CC_Ptr[ Idx + OffsetB ] = (real)0.5*( SQR(B_CC[MAGX]) + SQR(B_CC[MAGY]) + SQR(B_CC[MAGZ]) ); }
+
+         if ( FluIntTime ) // temporal interpolation
+         {
+            OffsetB = 0;
+
+            MHD_GetCellCenteredBFieldInPatch( B_CC, lv, PID, i1, j1, k1, MagSg_IntT );
+
+            if ( PrepMagX_CC ) {
+               CData_CC_Ptr[ Idx + OffsetB ] =   FluWeighting     *CData_CC_Ptr[ Idx + OffsetB ]
+                                               + FluWeighting_IntT*B_CC[MAGX];
+               OffsetB += CSize3D_CC;
+            }
+
+            if ( PrepMagY_CC ) {
+               CData_CC_Ptr[ Idx + OffsetB ] =   FluWeighting     *CData_CC_Ptr[ Idx + OffsetB ]
+                                               + FluWeighting_IntT*B_CC[MAGY];
+               OffsetB += CSize3D_CC;
+            }
+
+            if ( PrepMagZ_CC ) {
+               CData_CC_Ptr[ Idx + OffsetB ] =   FluWeighting     *CData_CC_Ptr[ Idx + OffsetB ]
+                                               + FluWeighting_IntT*B_CC[MAGZ];
+               OffsetB += CSize3D_CC;
+            }
+
+            if ( PrepMagE_CC ) {
+               CData_CC_Ptr[ Idx + OffsetB ] =   FluWeighting     *CData_CC_Ptr[ Idx + OffsetB ]
+                                               + FluWeighting_IntT*(real)0.5*( SQR(B_CC[MAGX]) + SQR(B_CC[MAGY]) + SQR(B_CC[MAGZ]) );
+            }
+         } // if ( FluIntTime )
+
+         Idx ++;
+      }}}
+
+      if ( PrepMagX_CC )   CData_CC_Ptr += CSize3D_CC;
+      if ( PrepMagY_CC )   CData_CC_Ptr += CSize3D_CC;
+      if ( PrepMagZ_CC )   CData_CC_Ptr += CSize3D_CC;
+      if ( PrepMagE_CC )   CData_CC_Ptr += CSize3D_CC;
+   } // if ( PrepMagCC )
+#  endif // #ifdef MHD
+
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
+
 
 #  else
 #  error : unsupported MODEL !!
@@ -484,7 +599,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
       }}}
 
       CData_CC_Ptr += CSize3D_CC;
-   }
+   } // if ( PrepPot )
 #  endif // #ifdef GRAVITY
 
 
@@ -590,7 +705,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
             }}}
 
             CData_CC_Ptr += CSize3D_CC;
-         }
+         } // for (int v=0; v<NVarCC_Flu; v++)
 
 
 //       b1-2. derived variables
@@ -613,7 +728,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
             }}}
 
             CData_CC_Ptr += CSize3D_CC;
-         }
+         } // if ( PrepVx )
 
          if ( PrepVy )
          {
@@ -633,7 +748,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
             }}}
 
             CData_CC_Ptr += CSize3D_CC;
-         }
+         } // if ( PrepVy )
 
          if ( PrepVz )
          {
@@ -653,7 +768,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
             }}}
 
             CData_CC_Ptr += CSize3D_CC;
-         }
+         } // if ( PrepVz )
 
          if ( PrepPres )
          {
@@ -697,7 +812,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
             }}}
 
             CData_CC_Ptr += CSize3D_CC;
-         }
+         } // if ( PrepPres )
 
          if ( PrepTemp )
          {
@@ -741,10 +856,114 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
             }}}
 
             CData_CC_Ptr += CSize3D_CC;
-         }
+         } // if ( PrepTemp )
+
+         if ( PrepEntr )
+         {
+            for (int k=0; k<Loop2[2]; k++)   {  k1 = k + Disp3[2];   k2 = k + Disp4[2];
+            for (int j=0; j<Loop2[1]; j++)   {  j1 = j + Disp3[1];   j2 = j + Disp4[1];
+                                                Idx = IDX321( Disp3[0], j1, k1, CSize_CC[0], CSize_CC[1] );
+            for (i2=Disp4[0]; i2<Disp4[0]+Loop2[0]; i2++)   {
+
+               for (int v=0; v<NFluForEoS; v++)    FluidForEoS[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][k2][j2][i2];
+
+#              ifdef MHD
+               const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, i2, j2, k2, MagSg );
+#              else
+               const real Emag = NULL_REAL;
+#              endif
+               CData_CC_Ptr[Idx] = Hydro_Con2Entr( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                                   FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
+                                                   (MinEntr>=(real)0.0), MinEntr, Emag,
+                                                   EoS_DensEint2Entr_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                   h_EoS_Table );
+
+               if ( FluIntTime ) // temporal interpolation
+               {
+                  for (int v=0; v<NFluForEoS; v++)    FluidForEoS[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][k2][j2][i2];
+
+#                 ifdef MHD
+                  const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, SibPID, i2, j2, k2, MagSg_IntT );
+#                 else
+                  const real Emag = NULL_REAL;
+#                 endif
+                  CData_CC_Ptr[Idx] =
+                     FluWeighting     *CData_CC_Ptr[Idx]
+                   + FluWeighting_IntT*Hydro_Con2Entr( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
+                                                       FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
+                                                       (MinEntr>=(real)0.0), MinEntr, Emag,
+                                                       EoS_DensEint2Entr_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                       h_EoS_Table );
+               }
+
+               Idx ++;
+            }}}
+
+            CData_CC_Ptr += CSize3D_CC;
+         } // if ( PrepEntr )
+
+#        ifdef MHD
+         if ( PrepMagCC )
+         {
+            for (int k=0; k<Loop2[2]; k++)   {  k1 = k + Disp3[2];   k2 = k + Disp4[2];
+            for (int j=0; j<Loop2[1]; j++)   {  j1 = j + Disp3[1];   j2 = j + Disp4[1];
+                                                Idx = IDX321( Disp3[0], j1, k1, CSize_CC[0], CSize_CC[1] );
+            for (i2=Disp4[0]; i2<Disp4[0]+Loop2[0]; i2++)   {
+
+               real B_CC[NCOMP_MAG];
+               int  OffsetB = 0;
+
+               MHD_GetCellCenteredBFieldInPatch( B_CC, lv, SibPID, i2, j2, k2, MagSg );
+
+               if ( PrepMagX_CC ) { CData_CC_Ptr[ Idx + OffsetB ] = B_CC[MAGX];  OffsetB += CSize3D_CC; }
+               if ( PrepMagY_CC ) { CData_CC_Ptr[ Idx + OffsetB ] = B_CC[MAGY];  OffsetB += CSize3D_CC; }
+               if ( PrepMagZ_CC ) { CData_CC_Ptr[ Idx + OffsetB ] = B_CC[MAGZ];  OffsetB += CSize3D_CC; }
+               if ( PrepMagE_CC ) { CData_CC_Ptr[ Idx + OffsetB ] = (real)0.5*( SQR(B_CC[MAGX]) + SQR(B_CC[MAGY]) + SQR(B_CC[MAGZ]) ); }
+
+               if ( FluIntTime ) // temporal interpolation
+               {
+                  OffsetB = 0;
+
+                  MHD_GetCellCenteredBFieldInPatch( B_CC, lv, SibPID, i2, j2, k2, MagSg_IntT );
+
+                  if ( PrepMagX_CC ) {
+                     CData_CC_Ptr[ Idx + OffsetB ] =   FluWeighting     *CData_CC_Ptr[ Idx + OffsetB ]
+                                                     + FluWeighting_IntT*B_CC[MAGX];
+                     OffsetB += CSize3D_CC;
+                  }
+
+                  if ( PrepMagY_CC ) {
+                     CData_CC_Ptr[ Idx + OffsetB ] =   FluWeighting     *CData_CC_Ptr[ Idx + OffsetB ]
+                                                     + FluWeighting_IntT*B_CC[MAGY];
+                     OffsetB += CSize3D_CC;
+                  }
+
+                  if ( PrepMagZ_CC ) {
+                     CData_CC_Ptr[ Idx + OffsetB ] =   FluWeighting     *CData_CC_Ptr[ Idx + OffsetB ]
+                                                     + FluWeighting_IntT*B_CC[MAGZ];
+                     OffsetB += CSize3D_CC;
+                  }
+
+                  if ( PrepMagE_CC ) {
+                     CData_CC_Ptr[ Idx + OffsetB ] =   FluWeighting     *CData_CC_Ptr[ Idx + OffsetB ]
+                                                     + FluWeighting_IntT*(real)0.5*( SQR(B_CC[MAGX]) + SQR(B_CC[MAGY]) + SQR(B_CC[MAGZ]) );
+                  }
+               } // if ( FluIntTime )
+
+               Idx ++;
+            }}}
+
+            if ( PrepMagX_CC )   CData_CC_Ptr += CSize3D_CC;
+            if ( PrepMagY_CC )   CData_CC_Ptr += CSize3D_CC;
+            if ( PrepMagZ_CC )   CData_CC_Ptr += CSize3D_CC;
+            if ( PrepMagE_CC )   CData_CC_Ptr += CSize3D_CC;
+         } // if ( PrepMagCC )
+#        endif // #ifdef MHD
+
 
 #        elif ( MODEL == ELBDM )
 //       no derived variables yet
+
 
 #        else
 #        error : unsupported MODEL !!
@@ -770,7 +989,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
             }}}
 
             CData_CC_Ptr += CSize3D_CC;
-         }
+         } // if ( PrepPot )
 #        endif // #ifdef GRAVITY
 
 
@@ -881,7 +1100,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                break;
 
                case BC_FLU_REFLECTING:
-                  Hydro_BoundaryCondition_Reflecting( CData_CC_Ptr, BC_Face[BC_Sibling], NVarCC_Flu,          CGhost_CC,
+                  Hydro_BoundaryCondition_Reflecting( CData_CC_Ptr, BC_Face[BC_Sibling], NVarCC_Flu,            CGhost_CC,
                                                       CSize_CC[0], CSize_CC[1], CSize_CC[2], BC_Idx_Start, BC_Idx_End,
                                                       TVarCCIdxList_Flu, NVarCC_Der, TVarCCList_Der );
                break;
@@ -1211,6 +1430,33 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
       NVarCC_SoFar ++;
    }
 
+   if ( PrepEntr )
+   {
+      Interpolate( CData_CC+CSize3D_CC*NVarCC_SoFar, CSize_CC, CStart_CC, CRange_CC,
+                   IntData_CC+FSize3D_CC*NVarCC_SoFar, FSize_CC, FStart_CC,
+                   1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes,
+                   IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF );
+      NVarCC_SoFar ++;
+   }
+
+#  ifdef MHD
+   if ( PrepMagCC )
+   {
+      bool Monotonicity_Mag[4] = { true, true, true, true };
+      int NMag = 0;
+      if ( PrepMagX_CC )   NMag ++;
+      if ( PrepMagY_CC )   NMag ++;
+      if ( PrepMagZ_CC )   NMag ++;
+      if ( PrepMagE_CC )   NMag ++;
+
+      Interpolate( CData_CC+CSize3D_CC*NVarCC_SoFar, CSize_CC, CStart_CC, CRange_CC,
+                   IntData_CC+FSize3D_CC*NVarCC_SoFar, FSize_CC, FStart_CC,
+                   NMag, IntScheme_CC, PhaseUnwrapping_No, Monotonicity_Mag,
+                   IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF );
+      NVarCC_SoFar += NMag;
+   }
+#  endif // #ifdef MHD
+
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
 
@@ -1290,7 +1536,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                                      IntData_FC + FSize3D_FC[0] + FSize3D_FC[1] };
       const int  size_ij         = FSize_CC[0]*FSize_CC[1];
 #     endif
-      const real UseEnpy2FixEngy = HUGE_NUMBER;
+      const real UseDual2FixEngy = HUGE_NUMBER;
 
 //    assuming that the order of variables stored in IntData_CC[] is the same as patch->fluid[]
       real *FData_Dens = IntData_CC + DENS*FSize3D_CC;
@@ -1298,7 +1544,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
       real *FData_MomY = IntData_CC + MOMY*FSize3D_CC;
       real *FData_MomZ = IntData_CC + MOMZ*FSize3D_CC;
       real *FData_Engy = IntData_CC + ENGY*FSize3D_CC;
-      real *FData_Enpy = IntData_CC + ENPY*FSize3D_CC;
+      real *FData_Dual = IntData_CC + DUAL*FSize3D_CC;
 
       char dummy;    // we do not record the dual-energy status here
 
@@ -1318,9 +1564,9 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 //       here we ALWAYS use the dual-energy variable to correct the total energy density
 //       --> we achieve that by setting the dual-energy switch to an extremely larger number and ignore
 //           the runtime parameter DUAL_ENERGY_SWITCH here
-         Hydro_DualEnergyFix( FData_Dens[t], FData_MomX[t], FData_MomY[t], FData_MomZ[t], FData_Engy[t], FData_Enpy[t],
+         Hydro_DualEnergyFix( FData_Dens[t], FData_MomX[t], FData_MomY[t], FData_MomZ[t], FData_Engy[t], FData_Dual[t],
                               dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2], (MinPres>=(real)0.0), MinPres,
-                              UseEnpy2FixEngy, Emag );
+                              UseDual2FixEngy, Emag );
       }
    } // if (  DE_Consistency  &&  ( TVarCC & _TOTAL ) == _TOTAL  &&  TVarFC == _MAG )
 #  endif // if ( MODEL == HYDRO  &&  defined DUAL_ENERGY )
