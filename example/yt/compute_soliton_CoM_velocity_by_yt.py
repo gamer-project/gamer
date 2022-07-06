@@ -41,7 +41,7 @@ k_x, k_y, k_z    = ("gamer","wave_vector_field_x"), ("gamer","wave_vector_field_
 grad_fields_real = ds.add_gradient_fields(("gamer", "Real"))
 grad_fields_imag = ds.add_gradient_fields(("gamer", "Imag"))
 
-### add wave vector field k_{x,y,z} in unit of code_length^{-1}, i.e. Mpc/h here
+### add wave vector field k_{x,y,z} in unit of code_length^{-1}, i.e. (Mpc/h)^{-1} here
 ds.add_field(k_x, function=wave_vector_field_x, sampling_type="cell", units="1/code_length")
 ds.add_field(k_y, function=wave_vector_field_y, sampling_type="cell", units="1/code_length")
 ds.add_field(k_z, function=wave_vector_field_z, sampling_type="cell", units="1/code_length")
