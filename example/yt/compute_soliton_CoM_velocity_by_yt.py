@@ -4,7 +4,7 @@ from scipy import constants
 
 # yt reference
 # 1. gradient fields
-#    https://yt-project.org/doc/analyzing/fields.html?highlight=gradient#gradient-fields 
+#    https://yt-project.org/doc/analyzing/fields.html?highlight=gradient#gradient-fields
 #    example:
 #    https://yt-project.org/doc/cookbook/calculating_information.html#complicated-derived-fields
 # 2. weight average
