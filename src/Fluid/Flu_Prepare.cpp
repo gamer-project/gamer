@@ -61,7 +61,12 @@ void Flu_Prepare( const int lv, const double PrepTime,
                       OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, OPT__INT_PHASE,
                       OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 #  else
-   Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In[0][0], h_Mag_Array_F_In[0][0],
+#  ifdef MHD
+   real *Mag_Array = h_Mag_Array_F_In[0][0];
+#  else
+   real *Mag_Array = NULL;
+#  endif
+   Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In[0][0], Mag_Array,
                       FLU_GHOST_SIZE, NPG, PID0_List, _TOTAL, _MAG,
                       OPT__FLU_INT_SCHEME, OPT__MAG_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
                       OPT__BC_FLU, BC_POT_NONE, MinDens,    MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency );

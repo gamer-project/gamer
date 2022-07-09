@@ -993,21 +993,25 @@ void Aux_TakeNote()
 
 //    target passive scalars to be normalized
       fprintf( Note, "   Number of fields             %d\n",      PassiveNorm_NVar         );
+#     if ( NCOMP_PASSIVE > 0 )
       if ( PassiveNorm_NVar > 0 ) {
       fprintf( Note, "   Target fields               "                                     );
       for (int v=0; v<PassiveNorm_NVar; v++)
       fprintf( Note, " %s",                                       FieldLabel[ NCOMP_FLUID + PassiveNorm_VarIdx[v] ] );
       fprintf( Note, "\n" ); }
+#     endif
 
       fprintf( Note, "OPT__INT_FRAC_PASSIVE_LR        %d\n",      OPT__INT_FRAC_PASSIVE_LR );
 
 //    target passive scalars to be interpolated in fractional form
       fprintf( Note, "   Number of fields             %d\n",      PassiveIntFrac_NVar      );
+#     if ( NCOMP_PASSIVE > 0 )
       if ( PassiveIntFrac_NVar > 0 ) {
       fprintf( Note, "   Target fields               "                                     );
       for (int v=0; v<PassiveIntFrac_NVar; v++)
       fprintf( Note, " %s",                                       FieldLabel[ NCOMP_FLUID + PassiveIntFrac_VarIdx[v] ] );
       fprintf( Note, "\n" ); }
+#     endif
 
       fprintf( Note, "OPT__OVERLAP_MPI                %d\n",      OPT__OVERLAP_MPI         );
       fprintf( Note, "OPT__RESET_FLUID                %d\n",      OPT__RESET_FLUID         );
@@ -1435,9 +1439,9 @@ void Aux_TakeNote()
          fprintf( Note, "  Level           Threshold\n" );
          for (int lv=0; lv<MAX_LEVEL; lv++)
          {
-                                                       fprintf( Note, "%7d",    lv );
+            fprintf( Note, "%7d",    lv );
             for (int t=0; t<OPT__FLAG_USER_NUM; t++)   fprintf( Note, "%20.7e", FlagTable_User[lv][t] );
-                                                       fprintf( Note, "\n" );
+            fprintf( Note, "\n" );
          }
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n");

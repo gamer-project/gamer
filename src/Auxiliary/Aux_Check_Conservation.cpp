@@ -271,8 +271,10 @@ void Aux_Check_Conservation( const char *comment )
 #     endif
 
 //    sum of passive scalars to be normalized
+#     if ( NCOMP_PASSIVE > 0 )
       for (int v=0; v<PassiveNorm_NVar; v++)
          Fluid_lv[ NVar - 1 ] += Fluid_lv[ NVar_NoPassive + PassiveNorm_VarIdx[v] ];
+#     endif
 
 //    sum over all levels
       for (int v=0; v<NVar; v++)    Fluid_ThisRank[v] += Fluid_lv[v]*dv;

@@ -266,7 +266,8 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
  CXXFLAG    += -Wall -Wextra                             # warning flags
  CXXFLAG    += -Wno-unused-variable -Wno-unused-parameter \
                -Wno-maybe-uninitialized -Wno-unused-but-set-variable \
-               -Wno-unused-result -Wno-unused-function
+               -Wno-unused-result -Wno-unused-function \
+	       -Wno-implicit-fallthrough -Wno-parentheses
  OPENMPFLAG  = -fopenmp                                  # openmp flag
  LIB         =                                           # libraries and linker flags
 
