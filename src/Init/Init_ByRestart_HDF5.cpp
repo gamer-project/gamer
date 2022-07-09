@@ -2077,6 +2077,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS ) {
 #  endif
    LoadField( "Opt__Output_Mode",        &RS.Opt__Output_Mode,        SID, TID, NonFatal, &RT.Opt__Output_Mode,         1, NonFatal );
+   LoadField( "Opt__Output_Restart",     &RS.Opt__Output_Restart,     SID, TID, NonFatal, &RT.Opt__Output_Restart,      1, NonFatal );
    LoadField( "Opt__Output_Step",        &RS.Opt__Output_Step,        SID, TID, NonFatal, &RT.Opt__Output_Step,         1, NonFatal );
    LoadField( "Opt__Output_Dt",          &RS.Opt__Output_Dt,          SID, TID, NonFatal, &RT.Opt__Output_Dt,           1, NonFatal );
    }

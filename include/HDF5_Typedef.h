@@ -657,6 +657,7 @@ struct InputPara_t
 #  endif // #if ( MODEL == HYDRO )
    int    Opt__Output_UserField;
    int    Opt__Output_Mode;
+   int    Opt__Output_Restart;
    int    Opt__Output_Step;
    double Opt__Output_Dt;
    double Output_PartX;
