@@ -7,6 +7,7 @@
 #ifdef __APPLE__
 #include <cpuid.h>
 #endif
+#include "time.h"
 
 static int get_cpuid();
 
@@ -1490,10 +1491,19 @@ void Aux_TakeNote()
       fprintf( Note, "\n\n");
 
 
-//    record the compilation time (of the file "Aux_TakeNote")
+//    record the compilation time of the file Aux_TakeNote.cpp
       fprintf( Note, "Compilation Time\n" );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "%s %s\n", __DATE__, __TIME__ );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "\n\n");
+
+
+//    record the current time when running GAMER
+      time_t t = time( NULL );
+      fprintf( Note, "Current Time\n" );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "%s", ctime( &t ) );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 
