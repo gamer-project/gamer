@@ -170,7 +170,9 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //    5. check unphysical cells within a patch group
       if ( s_FullStepFailure != NULL )
       {
-         bool FullStepFailure = false;
+#        ifdef CHECK_UNPHYSICAL_IN_FLUID
+         bool FullStepFailure = false; // per-thread status
+#        endif
 
 //       get pressure
          Pres = Hydro_Con2Pres( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
@@ -195,7 +197,9 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 #           else              // CPU
             *s_FullStepFailure = 1;
 #           endif
+#           ifdef CHECK_UNPHYSICAL_IN_FLUID
             FullStepFailure    = true;
+#           endif
          }
 
 
