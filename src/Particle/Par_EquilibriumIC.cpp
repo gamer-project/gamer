@@ -482,7 +482,7 @@ double Par_EquilibriumIC::Set_Mass( double r )
 double Par_EquilibriumIC::Set_Density( double x )
 {
 
-   if (params.Cloud_Type == "Table"){
+   if ( convertToString(params.Cloud_Type) == "Table"){
       if(x>=Table_r[params.Cloud_MassProfNBin-1]){
          return Table_Density[params.Cloud_MassProfNBin-1];
       }
