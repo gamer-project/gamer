@@ -128,7 +128,7 @@ static real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ] = NULL;
 
 #ifdef UNSPLIT_GRAVITY
 extern real (*d_Pot_Array_USG_F)[ CUBE(USG_NXT_F) ];
-#else
+#elif ( MODEL == HYDRO )
 static real (*d_Pot_Array_USG_F)[ CUBE(USG_NXT_F) ] = NULL;
 #endif
 

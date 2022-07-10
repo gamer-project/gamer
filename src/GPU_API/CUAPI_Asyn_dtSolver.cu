@@ -35,11 +35,13 @@ extern real (*d_Flu_Array_T)[FLU_NIN_T][ CUBE(PS1) ];
 extern real (*d_Pot_Array_T)[ CUBE(GRA_NXT) ];
 extern double (*d_Corner_Array_PGT)[3];
 #endif
+#if ( MODEL == HYDRO )
 #ifdef MHD
 extern real (*d_Mag_Array_T)[NCOMP_MAG][ PS1P1*SQR(PS1) ];
 #else
 static real (*d_Mag_Array_T)[NCOMP_MAG][ PS1P1*SQR(PS1) ] = NULL;
 #endif
+#endif // HYDRO
 
 extern cudaStream_t *Stream;
 
