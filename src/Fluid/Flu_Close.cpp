@@ -1401,7 +1401,7 @@ void CorrectElectric( const int SonLv, const real h_Ele_Array[][9][NCOMP_ELE][ P
             const int face_idx    = ( 3 + xyz*3 )%9 + 2*face_offset;
 
             int  SibID[3], SibSibID[3];
-            real AveFineEle[PS1];
+            real AveFineEle[PS1] = { (real)0.0 };
 
             TABLE_SiblingSharingSameEdge( s, SibID, SibSibID );
 
