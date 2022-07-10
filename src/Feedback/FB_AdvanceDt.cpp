@@ -148,13 +148,14 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
       const real MinDens_No          = -1.0;
       const real MinPres_No          = -1.0;
       const real MinTemp_No          = -1.0;
+      const real MinEntr_No          = -1.0;
       const bool DE_Consistency_No   = false;
 //###OPTIMIZATION: only prepare the necessary fluid fields
       const long FluidBitIdx         = _TOTAL;
 
       Prepare_PatchData( lv, TimeNew, fluid_PG[0][0][0], NULL, GhostZone_No, NPG, &PID0, FluidBitIdx, _NONE,
                          OPT__FLU_INT_SCHEME, OPT__MAG_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_00, IntPhase_No,
-                         OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, DE_Consistency_No );
+                         OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
 
 

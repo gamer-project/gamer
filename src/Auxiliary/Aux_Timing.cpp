@@ -685,7 +685,7 @@ void Timing__EvolveLevel( const char FileName[], const double Time_LB_Main[][3] 
          Sum_LB[0][v] += Output[v] + Aux[v] + LB[v] + Corr[v] + libyt[v];
 
 //       2.1 time
-         fprintf( File, "%3s%5s %11.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%12.4f\n",
+         fprintf( File, "%3s%5s %11.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%12.4f\n",
                   Comment_LB[v], "Time", Time_LB[0][27][v], Time_LB[0][1][v], Time_LB[0][2][v], Time_LB[0][29][v],
                   Time_LB[0][3][v], Time_LB[0][28][v], Time_LB[0][30][v], Time_LB[0][4][v], Time_LB[0][5][v], Time_LB[0][6][v],
                   MPI_Grid[v], Output[v], Aux[v], LB[v], Corr[v], Par[v], MPI_Par[v], libyt[v], Sum_LB[0][v] );
@@ -821,7 +821,7 @@ void Timing__EvolveLevel( const char FileName[], const double Time_LB_Main[][3] 
       fprintf( File, "\nSummary\n" );
       fprintf( File, "---------------------------------------------------------------------------------------" );
       fprintf( File, "---------------------------------------\n" );
-      fprintf( File, "%3s%5s %11s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%12s\n",
+      fprintf( File, "%3s%5s %11s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%9s%12s\n",
                "", "", "dt", "Flu_Adv", "Gra_Adv", "Src_Adv", "Che_Adv", "SF", "FB_Adv", "FixUp", "Flag", "Refine",
                "MPI_Grid", "Output", "Aux", "LB", "CorrSync", "Par", "-MPI_Par", "libyt", "Sum" );
 
