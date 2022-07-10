@@ -60,9 +60,9 @@ void Init_Field()
    if ( Idx_Engy != ENGY )    Aux_Error( ERROR_INFO, "inconsistent Idx_Engy (%d != %d) !!\n", Idx_Engy, ENGY );
 
 #  ifdef MHD
-   MagLabel[MAGX] = "MagX";
-   MagLabel[MAGY] = "MagY";
-   MagLabel[MAGZ] = "MagZ";
+   strcpy( MagLabel[MAGX], "MagX" );
+   strcpy( MagLabel[MAGY], "MagY" );
+   strcpy( MagLabel[MAGZ], "MagZ" );
 #  endif
 
 #  elif ( MODEL == ELBDM )
@@ -210,6 +210,7 @@ FieldIdx_t AddField( const char *InputLabel, const NormPassive_t Norm, const Int
 // --> note that PassiveNorm_VarIdx[] starts from 0 instead of NCOMP_FLUID
 // --> currently we set PassiveNorm_VarIdx[] no mater OPT__NORMALIZE_PASSIVE is on or off
 //     --> this allows Aux_Check_Conservation() to work on passive scalars even when OPT__NORMALIZE_PASSIVE is off
+#  if ( NCOMP_PASSIVE > 0 )
    if ( Norm )
    {
       const int NormIdx = PassiveNorm_NVar ++;
@@ -225,10 +226,12 @@ FieldIdx_t AddField( const char *InputLabel, const NormPassive_t Norm, const Int
 
       PassiveNorm_VarIdx[NormIdx] = FieldIdx - NCOMP_FLUID;
    }
+#  endif
 
 
 // set the fractional-form interpolation list
 // --> note that PassiveIntFrac_VarIdx[] starts from 0 instead of NCOMP_FLUID
+#  if ( NCOMP_PASSIVE > 0 )
    if ( IntFrac )
    {
       const int IntFracIdx = PassiveIntFrac_NVar ++;
@@ -244,6 +247,7 @@ FieldIdx_t AddField( const char *InputLabel, const NormPassive_t Norm, const Int
 
       PassiveIntFrac_VarIdx[IntFracIdx] = FieldIdx - NCOMP_FLUID;
    }
+#  endif
 
 
 // return field index

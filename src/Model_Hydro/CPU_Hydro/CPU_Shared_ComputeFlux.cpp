@@ -146,10 +146,10 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
    const double dh_half     = 0.5*(double)dh;               // always use double precision to calculate the cell position
    const real   dt_half     = (real)0.5*dt;
 
-   double CrShift[3];
+   double CrShift[3] = { 0.0 };
 
 // CrShift[]: central coordinates of the 0th cell in g_FC_Var[]
-   if ( CorrHalfVel  &&  ExtAcc )
+   if ( CorrHalfVel && ExtAcc )
       for (int d=0; d<3; d++)    CrShift[d] = g_Corner[d] - double(dh*fc_ghost);
 
 // check
