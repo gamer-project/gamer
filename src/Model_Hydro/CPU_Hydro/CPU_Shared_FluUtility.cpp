@@ -549,8 +549,8 @@ real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY
 //                File            : __FILE__
 //                Line            : __LINE__
 //                Function        : __FUNCTION__
-//                Verbose         : true  --> Show error messages
-//                                  false --> Show nothing
+//                Verbose         : UNPHY_VERBOSE --> Show error messages
+//                                  UNPHY_SILENCE --> Show nothing
 //
 // Return      :  true  --> Input field is unphysical
 //                false --> Otherwise

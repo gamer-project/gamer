@@ -148,7 +148,7 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const double Ti
 //       operations necessary only when this cell has been reset
          if ( Reset )
          {
-#           if ( MODEL == HYDRO )
+#           if ( MODEL == HYDRO && !defined SRHD )
 //          apply density and internal energy floors
             fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
             fluid[ENGY] = Hydro_CheckMinEintInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],

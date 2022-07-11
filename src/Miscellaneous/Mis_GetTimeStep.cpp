@@ -60,6 +60,9 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 // 1.1 CRITERION ONE : fluid solver
 // =============================================================================================================
 #  if   ( MODEL == HYDRO )
+#  ifdef SRHD
+   if ( DT_SPEED_OF_LIGHT ) dTime[NdTime] = ( (Step==0)?DT__FLUID_INIT:DT__FLUID ) * amr->dh[lv];
+#  endif
    dTime[NdTime] = dTime_dt * dt_InvokeSolver( DT_FLU_SOLVER, lv );
    sprintf( dTime_Name[NdTime++], "%s", "Hydro_CFL" );
 
