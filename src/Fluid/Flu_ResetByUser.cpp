@@ -138,7 +138,7 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const double Ti
 //       operations necessary only when this cell has been reset
          if ( Reset )
          {
-#           if ( MODEL == HYDRO )
+#           if ( MODEL == HYDRO && !defined SRHD )
 #           ifdef MHD
             const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
 #           else

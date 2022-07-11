@@ -98,6 +98,13 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
+// initialize the EoS routines
+// --> must be called before Init_TestProb()
+#  if ( MODEL == HYDRO )
+   EoS_Init();
+#  endif
+
+
 // initialize the test problem parameters
    Init_TestProb();
 
@@ -114,12 +121,6 @@ void Init_GAMER( int *argc, char ***argv )
 // --> must be called after Init_TestProb()
 #  ifdef GRAVITY
    Init_ExtAccPot();
-#  endif
-
-
-// initialize the EoS routines
-#  if ( MODEL == HYDRO )
-   EoS_Init();
 #  endif
 
 

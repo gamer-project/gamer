@@ -106,6 +106,9 @@ int                  OPT__CK_DIVERGENCE_B;
 double               UNIT_B;
 bool                 OPT__INIT_BFIELD_BYFILE;
 #endif
+#ifdef SRHD
+int                  DT_SPEED_OF_LIGHT;
+#endif
 
 #elif ( MODEL == ELBDM )
 double               DT__PHASE, FlagTable_EngyDensity[NLEVEL-1][2];

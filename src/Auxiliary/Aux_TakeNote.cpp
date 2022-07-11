@@ -168,6 +168,12 @@ void Aux_TakeNote()
       fprintf( Note, "MHD                             OFF\n" );
 #     endif
 
+#     ifdef SRHD
+      fprintf( Note, "SRHD                            ON\n" );
+#     else
+      fprintf( Note, "SRHD                            OFF\n" );
+#     endif
+
 #     ifdef COSMIC_RAY
       fprintf( Note, "COSMIC_RAY                      ON\n" );
 #     else
@@ -760,6 +766,9 @@ void Aux_TakeNote()
       fprintf( Note, "DT__MAX                        %14.7e\n",   DT__MAX                   );
       fprintf( Note, "DT__FLUID                       %13.7e\n",  DT__FLUID                 );
       fprintf( Note, "DT__FLUID_INIT                  %13.7e\n",  DT__FLUID_INIT            );
+#     ifdef SRHD
+      fprintf( Note, "DT_SPEED_OF_LIGHT               %d\n",      DT_SPEED_OF_LIGHT         );
+#     endif
 #     ifdef GRAVITY
       fprintf( Note, "DT__GRAVITY                     %13.7e\n",  DT__GRAVITY               );
 #     endif

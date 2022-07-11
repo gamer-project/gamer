@@ -615,9 +615,13 @@ void Aux_Check_Parameter()
 #     error : ERROR : unsupported data reconstruction scheme (PLM/PPM) !!
 #  endif
 
-#  ifdef MHD
+#  if ( defined MHD )
 #   if ( defined RSOLVER  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLD )
 #     error : ERROR : unsupported Riemann solver for MHD (ROE/HLLE/HLLD) !!
+#   endif
+#  elif ( defined SRHD )
+#   if ( defined RSOLVER  &&  RSOLVER != HLLC  &&  RSOLVER != HLLE )
+#     error : ERROR : unsupported Riemann solver for SRHD (HLLC/HLLE) !!
 #   endif
 #  else
 #   if ( defined RSOLVER  &&  RSOLVER != EXACT  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLC )

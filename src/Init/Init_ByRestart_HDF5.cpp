@@ -82,8 +82,13 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  if ( MODEL == HYDRO )
 #  ifdef MHD
    const int  Magnetohydrodynamics = 1;
+   const int  SRHydrodynamics      = 0;
+#  elif ( defined SRHD )
+   const int  Magnetohydrodynamics = 0;
+   const int  SRHydrodynamics      = 1;
 #  else
    const int  Magnetohydrodynamics = 0;
+   const int  SRHydrodynamics      = 0;
 #  endif
 #  ifdef COSMIC_RAY
    const int  CosmicRay            = 1;
@@ -185,7 +190,10 @@ void Init_ByRestart_HDF5( const char *FileName )
    LoadField( "CellScale",             KeyInfo.CellScale,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
 #  if ( MODEL == HYDRO )
    if ( KeyInfo.FormatVersion >= 2400 )
-   LoadField( "Magnetohydrodynamics", &KeyInfo.Magnetohydrodynamics, H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &Magnetohydrodynamics,  1,    Fatal );
+   {
+      LoadField( "Magnetohydrodynamics", &KeyInfo.Magnetohydrodynamics, H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &Magnetohydrodynamics,  1,    Fatal );
+      LoadField( "SRHydrodynamics",      &KeyInfo.SRHydrodynamics,      H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &SRHydrodynamics,       1,    Fatal );
+   }
 
    if ( KeyInfo.FormatVersion >= 2421 )
    LoadField( "CosmicRay",            &KeyInfo.CosmicRay,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &CosmicRay,             1,    Fatal );
@@ -1484,6 +1492,7 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
 #  endif
    LoadField( "DualEnergy",             &RS.DualEnergy,             SID, TID, NonFatal, &RT.DualEnergy,             1, NonFatal );
    LoadField( "Magnetohydrodynamics",   &RS.Magnetohydrodynamics,   SID, TID, NonFatal, &RT.Magnetohydrodynamics,   1,    Fatal );
+   LoadField( "SRHydrodynamics",        &RS.SRHydrodynamics,        SID, TID, NonFatal, &RT.SRHydrodynamics,        1,    Fatal );
    LoadField( "CosmicRay",              &RS.CosmicRay,              SID, TID, NonFatal, &RT.CosmicRay,              1,    Fatal );
    LoadField( "EoS",                    &RS.EoS,                    SID, TID, NonFatal, &RT.EoS,                    1, NonFatal );
    LoadField( "BarotropicEoS",          &RS.BarotropicEoS,          SID, TID, NonFatal, &RT.BarotropicEoS,          1, NonFatal );

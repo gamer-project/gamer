@@ -147,7 +147,7 @@ void Flu_FixUp_Flux( const int lv )
 
 
 //             calculate the internal energy density
-#              if ( MODEL == HYDRO  &&  !defined BAROTROPIC_EOS )
+#              if ( MODEL == HYDRO  &&  !defined BAROTROPIC_EOS && !defined SRHD )
                real Eint;
                real *ForEint = CorrVal;
 
@@ -226,6 +226,9 @@ void Flu_FixUp_Flux( const int lv )
                bool ApplyFix;
 
 #              if   ( MODEL == HYDRO )
+#              ifdef SRHD
+               if ( Hydro_CheckUnphysical( UNPHY_MODE_CONS, CorrVal, NULL, ERROR_INFO, UNPHY_VERBOSE ) )
+#              else
                if ( CorrVal[DENS] <= MIN_DENS
 #                   ifndef BAROTROPIC_EOS
                     ||  Eint <= MIN_EINT  ||  !Aux_IsFinite(Eint)
@@ -239,6 +242,7 @@ void Flu_FixUp_Flux( const int lv )
 #                   endif
                   )
 
+#              endif
 #              elif ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
                if ( CorrVal[DENS] <= MIN_DENS )
 #              endif
@@ -266,7 +270,7 @@ void Flu_FixUp_Flux( const int lv )
 //                ensure the consistency between pressure, total energy density, and dual-energy variable
 //                --> assuming the variable "Eint" is correct
 //                --> no need to check the internal energy floor here since we have skipped failing cells
-#                 if ( MODEL == HYDRO )
+#                 if ( MODEL == HYDRO && !defined SRHD )
 
 //                for barotropic EoS, do not apply flux correction at all
 #                 ifdef BAROTROPIC_EOS
