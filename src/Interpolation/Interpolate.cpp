@@ -274,7 +274,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 
 
 //    6. counter increment
-      Iteration ++;
+      Iteration++;
 
    } while ( GotFailCell  &&  Iteration <= MaxIter );
 
