@@ -78,7 +78,7 @@ struct KeyInfo_t
 
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
    int UseWaveScheme[NLEVEL];     // AMR levels where wave solver is used
-#  endif 
+#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
    char  *CodeVersion;
    char  *DumpWallTime;
@@ -387,7 +387,7 @@ struct InputPara_t
 #  if ( ELBDM_SCHEME == HYBRID )
    double Dt__Hybrid;
    double Dt__Velocity;
-#  endif 
+#  endif //  # if ( ELBDM_SCHEME == HYBRID )
 #  endif
 #  ifdef PARTICLE
    double Dt__ParVel;
@@ -426,7 +426,7 @@ struct InputPara_t
    int    Opt__Flag_EngyDensity;
 #  if ( ELBDM_SCHEME == HYBRID )
    int    Opt__Flag_Interference;
-#  endif //  if ( ELBDM_SCHEME == HYBRID )
+#  endif //  # if ( ELBDM_SCHEME == HYBRID )
 #  endif
    int    Opt__Flag_LohnerDens;
 #  if ( MODEL == HYDRO )
@@ -715,8 +715,8 @@ struct InputPara_t
 #  elif ( MODEL == ELBDM )
    double FlagTable_EngyDensity [NLEVEL-1][2];
 #  if ( ELBDM_SCHEME == HYBRID )
-   double FlagTable_Interference [NLEVEL-1][2];
-#  endif
+   double FlagTable_Interference [NLEVEL-1][3];
+#  endif // # if ( ELBDM_SCHEME == HYBRID )
 #  endif
 #  ifdef PARTICLE
    int    FlagTable_NParPatch   [NLEVEL-1];

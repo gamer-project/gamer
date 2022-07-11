@@ -187,7 +187,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                              + Gau_v0*ELBDM_ETA*dr2;
 
 #  if (ELBDM_SCHEME == HYBRID)
-   if (amr->use_wave_flag[lv]) {
+   if ( amr->use_wave_flag[lv] ) {
 #  endif 
    fluid[REAL] = Gau_Const2*cos( Gau_Theta1 + Gau_Theta2 );
    fluid[IMAG] = Gau_Const2*sin( Gau_Theta1 + Gau_Theta2 );

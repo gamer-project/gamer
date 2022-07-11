@@ -5,7 +5,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ELBDM_GetTimeStep_Hybrid
-// Description :  Estimate the evolution time-step from the CFL condition of the Phase equation
+// Description :  Estimate the evolution time-step from the CFL condition of the Hamilton-Jacobi solver
 //
 // Note        :  1. This function should be applied to both physical and comoving coordinates and always
 //                   return the evolution time-step (dt) actually used in various solvers

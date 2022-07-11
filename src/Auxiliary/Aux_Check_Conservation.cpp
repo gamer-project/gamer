@@ -138,19 +138,19 @@ void Aux_Check_Conservation( const char *comment )
          const real MinEntr_No = -1.0;
 
 #        if ( ELBDM_SCHEME == HYBRID )
-         if ( amr->use_wave_flag[lv] == true ) {
-#        endif 
+         if ( amr->use_wave_flag[lv] ) {
+#        endif // # if ( ELBDM_SCHEME == HYBRID )
          Prepare_PatchData( lv, Time[lv], Flu_ELBDM[0][0][0][0], NULL, NGhost, NPG, &PID0, _REAL|_IMAG, _NONE,
                             IntScheme, INT_NONE, UNIT_PATCH, NSIDE_06, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
                             MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
 #        if ( ELBDM_SCHEME == HYBRID )
-         } else { // if ( amr->use_wave_flag[lv] == true )
+         } else { // if ( amr->use_wave_flag[lv] )
          Prepare_PatchData( lv, Time[lv], Flu_ELBDM[0][0][0][0], NULL, NGhost, NPG, &PID0, _DENS|_PHAS, _NONE,
                             IntScheme, INT_NONE, UNIT_PATCH, NSIDE_06, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
                             MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
          } // if ( amr->use_wave_flag[lv] == true ) ... else 
-#        endif // #        if ( ELBDM_SCHEME == HYBRID )
+#        endif // # if ( ELBDM_SCHEME == HYBRID )
 
 #        endif
 
@@ -252,8 +252,8 @@ void Aux_Check_Conservation( const char *comment )
                for (int j=NGhost; j<Size_Flu-NGhost; j++)   { jp = j+1; jm = j-1;
                for (int i=NGhost; i<Size_Flu-NGhost; i++)   { ip = i+1; im = i-1;
 #                 if ( ELBDM_SCHEME == HYBRID )
-                  if ( amr->use_wave_flag[lv] == true ) {
-#                 endif 
+                  if ( amr->use_wave_flag[lv] ) {
+#                 endif // # if ( ELBDM_SCHEME == HYBRID )
 //                [1-3] momentum in ELBDM
                   R = Flu_ELBDM[t][0][k][j][i];
                   I = Flu_ELBDM[t][1][k][j][i];
@@ -273,7 +273,7 @@ void Aux_Check_Conservation( const char *comment )
                   Fluid_lv[4] += _2Eta2*( SQR(GradR[0]) + SQR(GradR[1]) + SQR(GradR[2]) +
                                           SQR(GradI[0]) + SQR(GradI[1]) + SQR(GradI[2])   );
 #                 if ( ELBDM_SCHEME == HYBRID )
-                  } else { //if ( amr->use_wave_flag[lv] == true )
+                  } else { //if ( amr->use_wave_flag[lv] )
 //                [1-3] momentum in ELBDM
                   const double Dens =  exp(Flu_ELBDM[t][DENS][k ][j ][i]);
 

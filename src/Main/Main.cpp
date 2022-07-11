@@ -114,11 +114,11 @@ bool                 ELBDM_TAYLOR3_AUTO;
 double               ELBDM_TAYLOR3_COEFF;
 double               ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
 
-#if (ELBDM_SCHEME == HYBRID)
+#if ( ELBDM_SCHEME == HYBRID )
 bool                 OPT__FLAG_INTERFERENCE;
-double               FlagTable_Interference[NLEVEL-1][2];
+double               FlagTable_Interference[NLEVEL-1][3];
 double               DT__HYBRID, DT__VELOCITY;
-#endif 
+#endif // # if ( ELBDM_SCHEME == HYBRID )
 
 #ifdef QUARTIC_SELF_INTERACTION
 double               ELBDM_LAMBDA;

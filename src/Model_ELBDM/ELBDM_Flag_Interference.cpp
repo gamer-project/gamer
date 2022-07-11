@@ -6,7 +6,8 @@
 // Function    :  ELBDM_Flag_Interference
 // Description :  Flag according to the interference criterion 
 //
-// Note        :  1. Flag the input cell if the level of interference as quantified by 
+// Note        :  1. Flag the input cell if the interference criterion is met
+//                   Level of interference can be quantified by 
 //                   M_int = dh^2 / dim * laplace sqrt(rho) / sqrt(rho)
 //                2. Size of the input array "Cond_Array" should be PATCH_SIZE^3 
 //
@@ -30,56 +31,66 @@ bool ELBDM_Flag_Interference( const int i, const int j, const int k, const real 
    bool Flag = InterferenceCriterion > Threshold;
 
    return Flag;
-} // FUNCTION : ELBDM_Flag_EngyDensity
+} // FUNCTION : ELBDM_Flag_Interference
 
 
 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Prepare_for_Interference_Criterion
-// Description :  Evaluate quantum pressure for the interference criterium
+// Description :  Evaluate quantum pressure and phase jumps for the interference criterium
 //
 // Note        :  1. This function is called in "Flag_Real" before looping over all cells in the patch in order to
 //                   achieve higher performance
-//                2. Evaluate laplacian with second-order stencil
-//                3. Do not take into account the physical size of each cell since the Lohner error estimator
-//                   is dimensionless
+//                2. Evaluate laplacian with second-order stencil and phase jumps via ratios of subsequent gradients
+//                3. Do not take into account the physical size of each cell since criteria are dimensionless
 //                4. The sizes of the arrays (Dens1D, SqrtDens1D, QP1D) must be ( (PS1+2)^3, (PS1+2)^3, (PS1)^3 )
 //
-// Parameter   :  Dens1D       : Array storing the input density for the interference criterion
-//                SqrtDens1D   : Array to store the intermediate variable sqrt(density)
-//                QP1D         : Array to store the output dimensionless quantum pressures for the interference criterion
+// Parameter   :  Var       : Array storing the input density and phase/re & im for the interference criterion
+//                Temp      : Array to store the intermediate variable sqrt(density)
+//                Cond      : Array to store the output dimensionless quantum pressures for the interference criterion
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Prepare_for_Interference_Criterion(const real *Dens1D, real *SqrtDens1D, real *QP1D)
+void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *Cond1D, bool convertWaveToFluid)
 {
 
-   const int NCell  = PS1 + 2;   // size of the arrays Dens1D, SqrtDens1D
-   const int NCurv  = PS1;       // size of the array  QP1D
+   const int NCell  = PS1 + 2;   // size of the arrays Var, Temp
+   const int NCond  = PS1;       // size of the array  Cond
 
    int ii, jj, kk, iim, jjm, kkm, iip, jjp, kkp;
 
 // convert the 1D arrays
-   real (*Dens)         [NCell ][NCell ] = ( real(*) [NCell ][NCell ] )  Dens1D;
-   real (*SqrtDens)     [NCell ][NCell ] = ( real(*) [NCell ][NCell ] )  SqrtDens1D;
-   real (*QP)           [NCurv ][NCurv ] = ( real(*) [NCurv ][NCurv ] )  QP1D;
+   real (*Var)  [NCell ][NCell ][NCell ] = ( real(*) [NCell ][NCell ][NCell ] )  Var1D;
+   real (*Temp) [NCell ][NCell ][NCell ] = ( real(*) [NCell ][NCell ][NCell ] )  Temp1D;
+   real (*Cond) [NCond ][NCond ][NCond ] = ( real(*) [NCond ][NCond ][NCond ] )  Cond1D;
 
    for (int k=0; k<NCell; k++)    {
    for (int j=0; j<NCell; j++)    {
    for (int i=0; i<NCell; i++)    {
-      SqrtDens[k][j][i] = SQRT(Dens[k][j][i]);
+      Temp[0][k][j][i] = SQRT(Var[0][k][j][i]);
+      //if ( convertWaveToFluid ) {
+      //   Temp[PHAS][k][j][i]
+      //}
    }}} // k,j,i
 
-   for (int k=0; k<NCurv; k++)    {  kk = k + 1;   kkp = kk + 1;   kkm = kk - 1;
-   for (int j=0; j<NCurv; j++)    {  jj = j + 1;   jjp = jj + 1;   jjm = jj - 1;
-   for (int i=0; i<NCurv; i++)    {  ii = i + 1;   iip = ii + 1;   iim = ii - 1;
+   for (int k=0; k<NCond; k++)    {  kk = k + 1;   kkp = kk + 1;   kkm = kk - 1;
+   for (int j=0; j<NCond; j++)    {  jj = j + 1;   jjp = jj + 1;   jjm = jj - 1;
+   for (int i=0; i<NCond; i++)    {  ii = i + 1;   iip = ii + 1;   iim = ii - 1;
 
-      QP[k][j][i] =  FABS(  SqrtDens[kk ][jj ][iip] + SqrtDens[kk ][jj ][iim] \
-                          + SqrtDens[kk ][jjp][ii ] + SqrtDens[kk ][jjm][ii ] \
-                          + SqrtDens[kkp][jj ][ii ] + SqrtDens[kkm][jj ][ii ] \
-                          - (real) 6.0 * SqrtDens[kk ][jj ][ii])\
-                    / ((real) 3.0 * SqrtDens[kk ][jj ][ii]);
+      Cond[0][k][j][i] =  FABS(  Temp[0][kk ][jj ][iip] + Temp[0][kk ][jj ][iim] \
+                               + Temp[0][kk ][jjp][ii ] + Temp[0][kk ][jjm][ii ] \
+                               + Temp[0][kkp][jj ][ii ] + Temp[0][kkm][jj ][ii ] \
+                               -  (real) 6.0 * Temp[0][kk ][jj ][ii])\
+                               / ((real) 3.0 * Temp[0][kk ][jj ][ii]);   
+      if (convertWaveToFluid)   
+         Cond[1][k][j][i] = 0;
+      else 
+         Cond[1][k][j][i] =  FABS(  Temp[1][kk ][jj ][iip] + Temp[1][kk ][jj ][iim] \
+                                  + Temp[1][kk ][jjp][ii ] + Temp[1][kk ][jjm][ii ] \
+                                  + Temp[1][kkp][jj ][ii ] + Temp[1][kkm][jj ][ii ] \
+                                 -  (real) 6.0 * Temp[1][kk ][jj ][ii])\
+                                 / ((real) 3.0);
       //printf("QP %f k %i j %i i %i", QP[k][j][i], k, j, i);
    }}} // k,j,i
 

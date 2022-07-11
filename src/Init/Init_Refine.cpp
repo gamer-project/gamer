@@ -78,7 +78,6 @@ void Init_Refine( const int lv )
 //          have use_wave_flag (int) with number of refinements required?
             if ( amr->patch[0][lv][PID]->use_wave_flag ) {
                amr->use_wave_flag[lv + 1] = true;
-               printf("use wave at lv = %i\n", lv + 1);
             }
             
 //          If previous level uses wave flag, we also need to use wave solver on the following levels

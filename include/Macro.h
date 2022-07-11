@@ -559,19 +559,15 @@
 #  endif // FLU_SCHEME
 
 #elif ( MODEL == ELBDM )   // ELBDM
-#    ifdef LAPLACIAN_4TH
-#       define FLU_GHOST_SIZE         6
-#    else
-#       define FLU_GHOST_SIZE         3
-#    endif
-//Ghost size for phase scheme in hybrid solver
-#    if ( ELBDM_SCHEME == HYBRID )
-#       ifndef LAPLACIAN_4TH
-#           error : ERROR : hybrid solver currently only works with LAPLACIAN_4TH because of ghost zones !!
-#       endif 
-#       define HYB_GHOST_SIZE         6
-#    else 
-#  endif
+#  if ( ELBDM_SCHEME == HYBRID )
+#       define FLU_GHOST_SIZE          6
+#  else // # if ( ELBDM_SCHEME == HYBRID )
+#     ifdef LAPLACIAN_4TH
+#        define FLU_GHOST_SIZE         6
+#     else
+#        define FLU_GHOST_SIZE         3
+#     endif
+#  endif // # if ( ELBDM_SCHEME == HYBRID ) ... # else
 
 #else
 #  error : ERROR : unsupported MODEL !!
@@ -928,6 +924,8 @@
 #  define ATAN2( a, b )    atan2f( a, b )
 #endif
 
+// safe ATAN2 that does not return nan when a = b = 0
+#define SATAN2( a, b )   ( ( (a) == (real)0.0 ) ? (real) 0.0 : ATAN2( a, b ) )
 
 // sign function
 #define SIGN( a )       (  ( (a) < (real)0.0 ) ? (real)-1.0 : (real)+1.0  )

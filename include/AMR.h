@@ -118,7 +118,7 @@ struct AMR_t
 
 #if ( MODEL == ELBDM  && ELBDM_SCHEME == HYBRID )
    bool   use_wave_flag[NLEVEL];
-#endif 
+#endif // #if ( MODEL == ELBDM  && ELBDM_SCHEME == HYBRID )
 
    //===================================================================================
    // Constructor :  AMR_t
@@ -161,7 +161,7 @@ struct AMR_t
 #        if ( MODEL == ELBDM  &&  ELBDM_SCHEME == HYBRID )
          //Use fluid solver by default for hybrid scheme
          use_wave_flag[lv] = false;
-#        endif 
+#        endif // # if ( MODEL == ELBDM  &&  ELBDM_SCHEME == HYBRID )
       }
 
       for (int Sg=0; Sg<2; Sg++)

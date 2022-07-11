@@ -528,7 +528,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
    const real JeansMinPres_Coeff = NULL_REAL;
 #  endif
 
-   //Support hybrid scheme, flag is not used until (MODEL == ELBDM && ELBDM_SCHEME == HYBRID)
+// support hybrid scheme, flag is not used unless (MODEL == ELBDM && ELBDM_SCHEME == HYBRID)
    bool useWaveSolver = true; 
 
 #  if (MODEL == ELBDM && ELBDM_SCHEME == HYBRID)

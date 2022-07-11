@@ -219,7 +219,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )   
    LoadField( "UseWaveScheme",         &KeyInfo.UseWaveScheme,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-#  endif
+#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID ) 
 
 // must initialize all char* pointers as NULL so that we can safely free them later
 // --> in case they do not exist in the restart file
@@ -261,12 +261,17 @@ void Init_ByRestart_HDF5( const char *FileName )
 
          if ( KeyInfo.FormatVersion >= 2250 )
          dTime_AllLv   [lv] = KeyInfo.dTime_AllLv   [lv];
+
+#        if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+         amr->use_wave_flag[lv] = KeyInfo.UseWaveScheme [lv];
+#        endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
       }
 
       Step            = KeyInfo.Step;
 #     ifdef GRAVITY
       AveDensity_Init = KeyInfo.AveDens_Init;
 #     endif
+
    }
 
 
@@ -1278,6 +1283,24 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
    }
 
 
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+// convert phase/density to real and imaginary parts
+   if ( amr->use_wave_flag[lv] ) {
+      real Dens, Phas, Im, Re;
+      for (int k=0; k<PS1; k++)    {
+      for (int j=0; j<PS1; j++)    {
+      for (int i=0; i<PS1; i++)    {
+         Dens = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][i][k][j];
+         Phas = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[PHAS][i][k][j];
+         Re   = SQRT(Dens) * COS(Phas);
+         Im   = SQRT(Dens) * SIN(Phas);
+         amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[REAL][i][k][j] = Re;
+         amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[IMAG][i][k][j] = Im;
+      }}}
+   }
+#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+
+
 // load face-centered magnetic field from disk
 #  ifdef MHD
    for (int v=0; v<NCOMP_MAG; v++)
@@ -1805,7 +1828,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  if ( ELBDM_SCHEME == HYBRID )
    LoadField( "Dt__Velocity",            &RS.Dt__Velocity,            SID, TID, NonFatal, &RT.Dt__Velocity,             1, NonFatal );
    LoadField( "Dt__Hybrid",              &RS.Dt__Hybrid,              SID, TID, NonFatal, &RT.Dt__Hybrid,              .4, NonFatal );
-#  endif 
+#  endif // # if ( ELBDM_SCHEME == HYBRID )
 #  endif
 #  ifdef PARTICLE
    LoadField( "Dt__ParVel",              &RS.Dt__ParVel,              SID, TID, NonFatal, &RT.Dt__ParVel,               1, NonFatal );
@@ -2153,10 +2176,12 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #     elif ( MODEL == ELBDM )
       for (int t=0; t<2; t++) {
       RS.FlagTable_EngyDensity [lv][t] = -1.0;
-#     if ( ELBDM_SCHEME == HYBRID )
-      RS.FlagTable_Interference [lv][t] = -1.0;
-#     endif 
       }
+#     if ( ELBDM_SCHEME == HYBRID )
+      for (int t=0; t<3; t++) {
+      RS.FlagTable_Interference [lv][t] = -1.0;
+      }
+#     endif // # if ( ELBDM_SCHEME == HYBRID )
 #     endif
 
 #     ifdef PARTICLE
@@ -2229,7 +2254,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "FlagTable_Interference",    RS.FlagTable_Interference,   SID, TID, NonFatal,  NullPtr,                    -1, NonFatal );
 
    for (int lv=0; lv<MAX_LEVEL; lv++)
-   for (int t=0; t<2; t++)
+   for (int t=0; t<3; t++)
    {
       if ( RS.FlagTable_Interference[lv][t] != RT.FlagTable_Interference[lv][t] )
          Aux_Message( stderr, "WARNING : \"%s[%d][%d]\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n",

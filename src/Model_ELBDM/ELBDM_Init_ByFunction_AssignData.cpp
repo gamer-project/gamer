@@ -48,8 +48,8 @@ void Init_Function_User_Template( real fluid[], const double x, const double y, 
    const double Width2  = 512.0;
 
 #  if (ELBDM_SCHEME == HYBRID)
-   if ( amr->use_wave_flag[lv] == true ) {
-#  endif 
+   if ( amr->use_wave_flag[lv] ) {
+#  endif // # if (ELBDM_SCHEME == HYBRID)
    fluid[REAL] = 1.0 + Height1*exp(  -( SQR(x-C1[0]) + SQR(y-C1[1]) + SQR(z-C1[2]) ) /SQR(Width1)  );
    fluid[IMAG] = 1.0 + Height2*exp(  -( SQR(x-C2[0]) + SQR(y-C2[1]) + SQR(z-C2[2]) ) /SQR(Width2)  );
    fluid[DENS] = fluid[REAL]*fluid[REAL] + fluid[IMAG]*fluid[IMAG];
@@ -57,8 +57,9 @@ void Init_Function_User_Template( real fluid[], const double x, const double y, 
    } else { // if ( amr->use_wave_flag[lv] == true )
    fluid[PHAS] = 1.0 + Height1*exp(  -( SQR(x-C1[0]) + SQR(y-C1[1]) + SQR(z-C1[2]) ) /SQR(Width1)  );
    fluid[DENS] = fluid[REAL]*fluid[REAL] + fluid[IMAG]*fluid[IMAG];
+   fluid[STUB] = 0.0;
    } // if ( amr->use_wave_flag[lv] == true ) ... else
-#  endif 
+#  endif // # if (ELBDM_SCHEME == HYBRID)
 
 // ELBDM does not support passive scalars yet ...
 

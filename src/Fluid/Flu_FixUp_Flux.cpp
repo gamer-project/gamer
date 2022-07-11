@@ -299,8 +299,8 @@ void Flu_FixUp_Flux( const int lv )
 //                --> must NOT use CorrVal[REAL] and CorrVal[IMAG] below since NFLUX_TOTAL == 1 for ELBDM
 #                 if ( MODEL == ELBDM &&  defined CONSERVE_MASS )
 #                 if ( ELBDM_SCHEME == HYBRID )
-                  if ( amr->use_wave_flag[lv] == true ) {
-#                 endif 
+                  if ( amr->use_wave_flag[lv] ) {
+#                 endif // # if ( ELBDM_SCHEME == HYBRID )
                   real Re, Im, Rho_Corr, Rho_Wrong, Rescale;
 
                   Re        = *FluidPtr1D[REAL];
@@ -320,9 +320,9 @@ void Flu_FixUp_Flux( const int lv )
                   *FluidPtr1D[REAL] *= Rescale;
                   *FluidPtr1D[IMAG] *= Rescale;
 #                 if ( ELBDM_SCHEME == HYBRID )
-                  } // if ( amr->use_wave_flag[lv] == true )
+                  } // if ( amr->use_wave_flag[lv] )
 #                 endif // # if ( ELBDM_SCHEME == HYBRID )
-#                 endif
+#                 endif // # if ( MODEL == ELBDM &&  defined CONSERVE_MASS )
                } // if ( ApplyFix )
 
 

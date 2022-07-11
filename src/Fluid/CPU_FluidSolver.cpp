@@ -93,7 +93,7 @@ void CPU_ELBDMSolver_PhaseForm_MUSCL( real Flu_Array_In [][FLU_NIN    ][ CUBE(FL
                       real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                       const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
                       const real Taylor3_Coeff, const bool XYZ, const real MinDens );
-#endif 
+#endif // # if ( ELBDM_SCHEME == HYBRID )
 
 #else
 #error : ERROR : unsupported MODEL !!
@@ -252,8 +252,8 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
 //Conditional nesting to support phase scheme in patches that do not use wave scheme for hybrid scheme
 //By default, we use wave scheme (CPU_ELBDMSolver)
 #  if ( ELBDM_SCHEME == HYBRID )
-   if (useWaveFlag) {
-#endif 
+   if ( useWaveFlag ) {
+#  endif // # if ( ELBDM_SCHEME == HYBRID )
    //    evaluate the optimized Taylor expansion coefficient
    if ( ELBDM_Taylor3_Auto )  ELBDM_Taylor3_Coeff = ELBDM_SetTaylor3Coeff( dt, dh, ELBDM_Eta );
 
@@ -265,7 +265,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
       CPU_ELBDMSolver_PhaseForm_MUSCL( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
             ELBDM_Taylor3_Coeff, XYZ, MinDens );
    }
-#  endif
+#  endif // # if ( ELBDM_SCHEME == HYBRID )
 #  else
 #     error : ERROR : unsupported MODEL !!
 #  endif // MODEL

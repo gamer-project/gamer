@@ -87,12 +87,12 @@ void CPU_ELBDMSolver_PhaseForm_MUSCL( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_N
          TransposeXY ( Flu_Array_In[P] );
 
          CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, Taylor3_Coeff,
-                       HYB_GHOST_SIZE,              0, 3 );
+                       FLU_GHOST_SIZE,              0, 3 );
 
          TransposeXZ ( Flu_Array_In[P] );
 
          CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, Taylor3_Coeff,
-                       HYB_GHOST_SIZE, HYB_GHOST_SIZE, 6 );
+                       FLU_GHOST_SIZE, FLU_GHOST_SIZE, 6 );
 
          TransposeXZ ( Flu_Array_In[P] );
          TransposeXY ( Flu_Array_In[P] );
@@ -113,12 +113,12 @@ void CPU_ELBDMSolver_PhaseForm_MUSCL( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_N
          TransposeXZ ( Flu_Array_In[P] );
 
          CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, Taylor3_Coeff,
-                                    0, HYB_GHOST_SIZE, 3 );
+                                    0, FLU_GHOST_SIZE, 3 );
 
          TransposeXY ( Flu_Array_In[P] );
 
          CPU_AdvanceX( Flu_Array_In[P], Flux_Array[P], dt, dh, Eta, StoreFlux, Taylor3_Coeff,
-                       HYB_GHOST_SIZE, HYB_GHOST_SIZE, 0 );
+                       FLU_GHOST_SIZE, FLU_GHOST_SIZE, 0 );
       }
    }
 
@@ -129,18 +129,21 @@ void CPU_ELBDMSolver_PhaseForm_MUSCL( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_N
 #  pragma omp parallel for private( Idx1, Idx2 ) schedule( runtime )
    for (int P=0; P<NPatchGroup; P++)
    {
-//    copy data, do not copy third component since it is a stub anyway
-      for (int v=0; v<FLU_NOUT-1; v++)
+//    copy data
+      for (int v=0; v<FLU_NOUT; v++)
       {
          Idx1 = 0;
 
-         for (int k=HYB_GHOST_SIZE; k<HYB_GHOST_SIZE+PS2; k++)
-         for (int j=HYB_GHOST_SIZE; j<HYB_GHOST_SIZE+PS2; j++)
-         for (int i=HYB_GHOST_SIZE; i<HYB_GHOST_SIZE+PS2; i++)
+         for (int k=FLU_GHOST_SIZE; k<FLU_GHOST_SIZE+PS2; k++)
+         for (int j=FLU_GHOST_SIZE; j<FLU_GHOST_SIZE+PS2; j++)
+         for (int i=FLU_GHOST_SIZE; i<FLU_GHOST_SIZE+PS2; i++)
          {
             Idx2 = to1D(k,j,i);
 
-            Flu_Array_Out[P][v][ Idx1++ ] = Flu_Array_In[P][v][Idx2];
+            if (v == DENS || v == PHAS)
+               Flu_Array_Out[P][v][ Idx1++ ] = Flu_Array_In[P][v][Idx2];
+            else 
+               Flu_Array_Out[P][v][ Idx1++ ] = 0;
          }
       }
 
@@ -173,6 +176,9 @@ void CPU_ELBDMSolver_PhaseForm_MUSCL( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_N
 #define N_TIME_LEVELS 3
 const real TIME_COEFFS[N_TIME_LEVELS] = {1., 1./4, 2./3};
 const real RK_COEFFS [N_TIME_LEVELS][N_TIME_LEVELS] = {{1., 0., 0.}, {3./4, 1./4, 0.}, {1./3, 0, 2./3}};
+//#define N_TIME_LEVELS 2
+//const real TIME_COEFFS[N_TIME_LEVELS] = {1/2., 1};
+//const real RK_COEFFS [N_TIME_LEVELS][N_TIME_LEVELS] = {{1., 0.}, {0, 1.}};
 
 void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_TOTAL][ PS2*PS2 ], 
                    const real dt, const real dh, const real Eta, const bool StoreFlux, const real Taylor3_Coeff, 
@@ -227,6 +233,12 @@ int   Idx3;
       
       memcpy( Rc[0], Rc_N, FLU_NXT*sizeof(real) );
       memcpy( Pc[0], Pc_N, FLU_NXT*sizeof(real) );
+
+      //Unwrap phase for debugging
+      //for (int i=1; i<FLU_NXT; i++)
+      //{
+      //   Pc[0][i] = ELBDM_UnwrapPhase(Pc[0][i-1], Pc[0][i]);
+      //}
 
       for (int time_level = 0; time_level < N_TIME_LEVELS; ++time_level) 
       {

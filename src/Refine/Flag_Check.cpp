@@ -33,6 +33,7 @@ extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int l
 //                JeansCoeff   : Pi*GAMMA/(SafetyFactor^2*G), where SafetyFactor = FlagTable_Jeans[lv]
 //                               --> Flag if dh^2 > JeansCoeff*Pres/Dens^2
 //                Interf_Cond  : Input array storing the dimensionless quantum pressures for the interference condition
+//                PhaJump_Cond : Input array storing the ratio of subsequent gradients of the phase 
 //
 // Return      :  "true"  if any  of the refinement criteria is satisfied
 //                "false" if none of the refinement criteria is satisfied
@@ -56,23 +57,26 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
 
 // check ELBDM interference 
-// if FlagTable_Interference[lv][1] > 0 we set use wave flag if interference > FlagTable_Interference[lv][0]
-// if FlagTable_Interference[lv][1] < 0 we just use it as refinement criterion for fluid patches
+// if FlagTable_Interference[lv][2] > 0 we set use wave flag if interference > FlagTable_Interference[lv][0],[1]
+// if FlagTable_Interference[lv][2] < 0 we just use it as refinement criterion for fluid patches
 // ===========================================================================================
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
    if ( OPT__FLAG_INTERFERENCE )
    {
-      bool FlagInterference = ELBDM_Flag_Interference( i, j, k, Interf_Cond, FlagTable_Interference[lv][0]);
+      real (*Var)  [PS1 ][PS1 ][PS1 ] = ( real(*) [PS1 ][PS1 ][PS1 ] )  Interf_Cond;
+      
+      bool FlagInterference = ELBDM_Flag_Interference( i, j, k, Interf_Cond,             FlagTable_Interference[lv][0]) \
+                           || ELBDM_Flag_Interference( i, j, k, Interf_Cond + CUBE(PS1), FlagTable_Interference[lv][1]);
       
       Flag |= FlagInterference;
 
-      amr->patch[0][lv][PID]->use_wave_flag = ( FlagInterference &&  FlagTable_Interference[lv][1] >= 0.0);
+      amr->patch[0][lv][PID]->use_wave_flag = ( FlagInterference &&  FlagTable_Interference[lv][2] >= 0.0);
 
       //Only refine if we are not already using the wave scheme
       if ( Flag )
             return Flag;
    }
-#  endif
+#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
 
 #  ifdef PARTICLE

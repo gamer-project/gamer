@@ -65,13 +65,19 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 
 #  elif ( MODEL == ELBDM )
 #  if ( ELBDM_SCHEME == HYBRID )
-   if (amr->use_wave_flag[lv] == false)
-      dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Hybrid( lv );
-   else
-#  endif 
+   if ( amr->use_wave_flag[lv] ) {
+#  endif // # if ( ELBDM_SCHEME == HYBRID )
    dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Fluid( lv );
-
    sprintf( dTime_Name[NdTime++], "%s", "ELBDM_CFL" );
+#  if ( ELBDM_SCHEME == HYBRID )
+   } else { // if ( amr->use_wave_flag[lv] )
+
+   dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Hybrid( lv );
+   sprintf( dTime_Name[NdTime++], "%s", "Hybrid_CFL" );
+
+   } // if ( amr->use_wave_flag[lv] ) ... else 
+#  endif // # if ( ELBDM_SCHEME == HYBRID ) ... else
+
 
 #  else
 #  error : ERROR : unsupported MODEL !!
@@ -203,14 +209,12 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 
 // 1.9 CRITERION NINE : maximum velocity dS/dx ##ELBDM PHASE SOLVER ONLY##
 // =============================================================================================================
-#  if ( MODEL == ELBDM)
-#  if ( ELBDM_SCHEME == HYBRID)
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
    if (amr->use_wave_flag[lv] == false) {
       dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Velocity( lv );
-      sprintf( dTime_Name[NdTime++], "%s", "ELBDM_Velocity" );
+      sprintf( dTime_Name[NdTime++], "%s", "Hybrid_Velocity" );
    }
-#  endif
-#  endif 
+#  endif //  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID)
 
 // 2. get the minimum time-step from all criteria
 // =============================================================================================================

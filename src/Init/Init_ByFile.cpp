@@ -663,11 +663,11 @@ void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nva
                                      EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #  endif
 
-// calculate the density field for ELBDM
+// calculate the density field for ELBDM wave scheme
 #  elif ( MODEL == ELBDM )
 #  if ( ELBDM_SCHEME == HYBRID )
-   if ( amr->use_wave_flag[lv] == true )
-#  endif 
+   if ( amr->use_wave_flag[lv] )
+#  endif // #  if ( ELBDM_SCHEME == HYBRID )
    fluid_out[DENS] = SQR( fluid_out[REAL] ) + SQR( fluid_out[IMAG] );
 #  endif
 

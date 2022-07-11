@@ -372,7 +372,7 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
 
 // convert real and imaginary part to phase for wave patches in hybrid scheme 
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
-   if (amr->use_wave_flag[lv] == true) {
+   if ( amr->use_wave_flag[lv] ) {
       Anal[PHAS] = SATAN2(Anal[IMAG], Anal[REAL]);
       Nume[PHAS] = SATAN2(Nume[IMAG], Nume[REAL]);
       Anal[STUB] = 0;
