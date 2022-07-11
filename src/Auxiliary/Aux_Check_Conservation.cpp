@@ -156,6 +156,11 @@ void Aux_Check_Conservation( const char *comment )
                   MomZ = amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i];
                   Etot = amr->patch[FluSg][lv][PID]->fluid[ENGY][k][j][i];
 
+#                 ifdef SRHD
+//                total energy density also includes rest mass energy density in relativistic hydro
+                  Etot += Dens;
+#                 endif
+
                   Fluid_lv[0] += Dens;
                   Fluid_lv[1] += MomX;
                   Fluid_lv[2] += MomY;
