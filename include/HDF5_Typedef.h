@@ -221,7 +221,6 @@ struct SymConst_t
 
 #  if   ( POT_SCHEME == SOR )
    int    Pot_BlockSize_z;
-   int    UsePSolver_10to14;
    int    SOR_RhoShared;
    int    SOR_CPotShared;
    int    SOR_UseShuffle;
@@ -360,6 +359,7 @@ struct InputPara_t
    int    Par_Init;
    int    Par_ICFormat;
    double Par_ICMass;
+   int    Par_ICType;
    int    Par_Interp;
    int    Par_InterpTracer;
    int    Par_Integ;
@@ -657,6 +657,7 @@ struct InputPara_t
 #  endif // #if ( MODEL == HYDRO )
    int    Opt__Output_UserField;
    int    Opt__Output_Mode;
+   int    Opt__Output_Restart;
    int    Opt__Output_Step;
    double Opt__Output_Dt;
    double Output_PartX;

@@ -114,7 +114,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 // Par_CollectParticle2OneLevel() with JustCountNPar_No will set NPar_Copy for each patch as well
 // --> so call Par_CollectParticle2OneLevel() with JustCountNPar_Yes only when OPT__FLAG_NPAR_CELL == false
    else if ( OPT__FLAG_NPAR_PATCH != 0 )
-      Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictPos_No,
+      Par_CollectParticle2OneLevel( lv, _NONE, PredictPos_No,
                                     NULL_REAL, SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_Yes,
                                     TimingSendPar_No );
 #  endif

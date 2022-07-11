@@ -1,6 +1,6 @@
 #include "CUPOT.h"
 #ifdef __CUDACC__
-#include "CUAPI.h"
+#include "CUDA_CheckError.h"
 #endif
 
 #ifdef GRAVITY
@@ -28,10 +28,11 @@ extern double Plummer_ExtAccMFrac;
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
 // Parameter   :  AuxArray : Array to be filled up
+//                Time     : Target physical time
 //
 // Return      :  AuxArray[]
 //-------------------------------------------------------------------------------------------------------
-void SetExtAccAuxArray_Plummer( double AuxArray[] )
+void SetExtAccAuxArray_Plummer( double AuxArray[], const double Time )
 {
 
 // acceleration = -G*M*r/(r^2+R0^2)^(3/2)
@@ -135,7 +136,7 @@ void SetCPUExtAcc_Plummer( ExtAcc_t &CPUExtAcc_Ptr )
 #ifndef __CUDACC__
 
 // local function prototypes
-void SetExtAccAuxArray_Plummer( double [] );
+void SetExtAccAuxArray_Plummer( double [], const double );
 void SetCPUExtAcc_Plummer( ExtAcc_t & );
 #ifdef GPU
 void SetGPUExtAcc_Plummer( ExtAcc_t & );
@@ -159,7 +160,7 @@ void SetGPUExtAcc_Plummer( ExtAcc_t & );
 void Init_ExtAcc_Plummer()
 {
 
-   SetExtAccAuxArray_Plummer( ExtAcc_AuxArray );
+   SetExtAccAuxArray_Plummer( ExtAcc_AuxArray, Time[0] );
 
    SetCPUExtAcc_Plummer( CPUExtAcc_Ptr );
 #  ifdef GPU

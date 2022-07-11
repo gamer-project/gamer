@@ -42,10 +42,9 @@ void Par_EquilibriumIC::Read_Filenames( const char *filename_para )
 string convertToString( char* a )
 {
 
-   int max_size = 100;
    int i;
    string s = "";
-   for (i=0; i<max_size; i++) {
+   for (i=0; i<MAX_STRING; i++) {
       if ( a[i] == '\0' )  break;
       s = s + a[i];
    }
@@ -160,25 +159,26 @@ void Par_EquilibriumIC::Load_Physical_Params( const FP filename_para, const int 
    else if (convertToString(params.Cloud_Type)=="Einasto"  )   flag=1;
    else if (convertToString(params.Cloud_Type)=="Table"    )   flag=1;
    if(flag==0){
-      Aux_Message( stdout, "%s is not a Model Type\n", convertToString(params.Cloud_Type).c_str());
+      Aux_Message( stdout, "%s is not a Model Type\n", convertToString(params.Cloud_Type).c_str() );
       Aux_Error( ERROR_INFO, "Error in the input of Cloud_Type !!\n" );
    }
 
    // Checking Density_Table_Name
-   Aux_Message( stdout, "Checking Density_Table_Name\n");
+   Aux_Message( stdout, "Checking Density_Table_Name\n" );
    if(convertToString(params.Cloud_Type)=="Table"){
-      const char * c = convertToString(params.Density_Table_Name).c_str();
+      char c[MAX_STRING];
+      strcpy( c, convertToString(params.Density_Table_Name).c_str() );
       fstream file;
       file.open(c, ios::in);
       if(!file){
-         Aux_Message( stdout, "Density Profile %s cannot be found !!\n", c);
+         Aux_Message( stdout, "Density profile %s cannot be found !!\n", c );
          Aux_Error( ERROR_INFO, "Error in the input of Density_Table_Name !!\n" );
       }
       file.close();
    }
 
    // Checking ExtPot_Table_Name
-   Aux_Message( stdout, "Checking ExtPot_Table_Name\n");
+   Aux_Message( stdout, "Checking ExtPot_Table_Name\n" );
    if(params.AddExtPot){
       const char * c = convertToString(params.ExtPot_Table_Name).c_str();
       fstream file;
@@ -482,7 +482,7 @@ double Par_EquilibriumIC::Set_Mass( double r )
 double Par_EquilibriumIC::Set_Density( double x )
 {
 
-   if (params.Cloud_Type == "Table"){
+   if ( convertToString(params.Cloud_Type) == "Table"){
       if(x>=Table_r[params.Cloud_MassProfNBin-1]){
          return Table_Density[params.Cloud_MassProfNBin-1];
       }

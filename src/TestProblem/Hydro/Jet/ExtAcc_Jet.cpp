@@ -1,6 +1,6 @@
 #include "CUPOT.h"
 #ifdef __CUDACC__
-#include "CUAPI.h"
+#include "CUDA_CheckError.h"
 #endif
 
 #ifdef GRAVITY
@@ -29,10 +29,11 @@ extern double Jet_HSE_C200;
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
 // Parameter   :  AuxArray : Array to be filled up
+//                Time     : Target physical time
 //
 // Return      :  AuxArray[]
 //-------------------------------------------------------------------------------------------------------
-void SetExtAccAuxArray_Jet( double AuxArray[] )
+void SetExtAccAuxArray_Jet( double AuxArray[], const double Time )
 {
 
    const double c = Jet_HSE_C200;
@@ -136,7 +137,7 @@ void SetCPUExtAcc_Jet( ExtAcc_t &CPUExtAcc_Ptr )
 #ifndef __CUDACC__
 
 // local function prototypes
-void SetExtAccAuxArray_Jet( double [] );
+void SetExtAccAuxArray_Jet( double [], const double );
 void SetCPUExtAcc_Jet( ExtAcc_t & );
 #ifdef GPU
 void SetGPUExtAcc_Jet( ExtAcc_t & );
@@ -160,7 +161,7 @@ void SetGPUExtAcc_Jet( ExtAcc_t & );
 void Init_ExtAcc_Jet()
 {
 
-   SetExtAccAuxArray_Jet( ExtAcc_AuxArray );
+   SetExtAccAuxArray_Jet( ExtAcc_AuxArray, Time[0] );
 
    SetCPUExtAcc_Jet( CPUExtAcc_Ptr );
 #  ifdef GPU

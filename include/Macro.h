@@ -345,11 +345,18 @@
 #  define _TEMP               ( 1L << (NCOMP_TOTAL+ 5) )
 #  define _ENTR               ( 1L << (NCOMP_TOTAL+ 6) )
 #  define _EINT               ( 1L << (NCOMP_TOTAL+ 7) )
+# ifdef MHD
 #  define _MAGX_CC            ( 1L << (NCOMP_TOTAL+ 8) )
 #  define _MAGY_CC            ( 1L << (NCOMP_TOTAL+ 9) )
 #  define _MAGZ_CC            ( 1L << (NCOMP_TOTAL+10) )
-#  define _MAG_ENGY_CC        ( 1L << (NCOMP_TOTAL+11) )
-#  define _DERIVED            ( _VELX | _VELY | _VELZ | _VELR | _PRES | _TEMP | _ENTR | _EINT | _MAGX_CC | _MAGY_CC | _MAGZ_CC | _MAG_ENGY_CC )
+#  define _MAGE_CC            ( 1L << (NCOMP_TOTAL+11) )
+# else
+#  define _MAGX_CC            0
+#  define _MAGY_CC            0
+#  define _MAGZ_CC            0
+#  define _MAGE_CC            0
+# endif // #ifdef MHD ... else ...
+#  define _DERIVED            ( _VELX | _VELY | _VELZ | _VELR | _PRES | _TEMP | _ENTR | _EINT | _MAGX_CC | _MAGY_CC | _MAGZ_CC | _MAGE_CC )
 #  define NDERIVE             12
 
 
@@ -499,9 +506,10 @@
 
 // particle type macros
 
-// number of particle types MUST be 4 for now
-#  define  PAR_NTYPE          4
+// number of particle types (default: 4)
+#  define  PAR_NTYPE                4
 
+// particle type indices (must be in the range 0<=index<PAR_NTYPE)
 #  define  PTYPE_TRACER          (real)0
 #  define  PTYPE_GENERIC_MASSIVE (real)1
 #  define  PTYPE_DARK_MATTER     (real)2
@@ -649,7 +657,6 @@
 
 
 // patch size (number of cells of a single patch in the x/y/z directions)
-#define PATCH_SIZE                   8
 #define PS1             ( 1*PATCH_SIZE )
 #define PS2             ( 2*PATCH_SIZE )
 #define PS2P1           ( PS2 + 1 )

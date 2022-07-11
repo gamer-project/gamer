@@ -77,6 +77,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "PAR_INIT",                   &amr->Par->Init,                 -1,                1,             3              );
    ReadPara->Add( "PAR_IC_FORMAT",              &amr->Par->ParICFormat,      PAR_IC_FORMAT_ATT_ID,  1,             2              );
    ReadPara->Add( "PAR_IC_MASS",                &amr->Par->ParICMass,            -1.0,              NoMin_double,  NoMax_double   );
+   ReadPara->Add( "PAR_IC_TYPE",                &amr->Par->ParICType,            -1,                NoMin_int,     PAR_NTYPE-1    );
    ReadPara->Add( "PAR_INTERP",                 &amr->Par->Interp,                PAR_INTERP_CIC,   1,             3              );
    ReadPara->Add( "PAR_INTEG",                  &amr->Par->Integ,                 PAR_INTEG_KDK,    1,             2              );
    ReadPara->Add( "PAR_TR_INTERP",              &amr->Par->InterpTracer,          PAR_INTERP_TSC,   1,             3              );
@@ -129,7 +130,7 @@ void Init_Load_Parameter()
 
 // grid refinement
    ReadPara->Add( "REGRID_COUNT",               &REGRID_COUNT,                    4,               1,             NoMax_int      );
-   ReadPara->Add( "FLAG_BUFFER_SIZE",           &FLAG_BUFFER_SIZE,                PS1,             0,             PS1            );
+   ReadPara->Add( "FLAG_BUFFER_SIZE",           &FLAG_BUFFER_SIZE,               -1,               NoMin_int,     PS1            );
    ReadPara->Add( "FLAG_BUFFER_SIZE_MAXM1_LV",  &FLAG_BUFFER_SIZE_MAXM1_LV,      -1,               NoMin_int,     PS1            );
    ReadPara->Add( "FLAG_BUFFER_SIZE_MAXM2_LV",  &FLAG_BUFFER_SIZE_MAXM2_LV,      -1,               NoMin_int,     PS1            );
    ReadPara->Add( "MAX_LEVEL",                  &MAX_LEVEL,                       TOP_LEVEL,       0,             TOP_LEVEL      );
@@ -369,10 +370,10 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__REF_MAG_INT_SCHEME",    &OPT__REF_MAG_INT_SCHEME,         INT_CQUAD,       NoMin_int,     NoMax_int      );
 #  endif
 #  ifdef GRAVITY
-   ReadPara->Add( "OPT__POT_INT_SCHEME",        &OPT__POT_INT_SCHEME,             INT_QUAD,        4,             5              );
+   ReadPara->Add( "OPT__POT_INT_SCHEME",        &OPT__POT_INT_SCHEME,             INT_CQUAD,       4,             5              );
    ReadPara->Add( "OPT__RHO_INT_SCHEME",        &OPT__RHO_INT_SCHEME,             INT_CQUAD,       1,             7              );
-   ReadPara->Add( "OPT__GRA_INT_SCHEME",        &OPT__GRA_INT_SCHEME,             INT_QUAD,        1,             7              );
-   ReadPara->Add( "OPT__REF_POT_INT_SCHEME",    &OPT__REF_POT_INT_SCHEME,         INT_QUAD,        1,             7              );
+   ReadPara->Add( "OPT__GRA_INT_SCHEME",        &OPT__GRA_INT_SCHEME,             INT_CQUAD,       1,             7              );
+   ReadPara->Add( "OPT__REF_POT_INT_SCHEME",    &OPT__REF_POT_INT_SCHEME,         INT_CQUAD,       1,             7              );
 #  endif
    ReadPara->Add( "INT_MONO_COEFF",             &INT_MONO_COEFF,                  2.0,             1.0,           4.0            );
    ReadPara->Add( "MONO_MAX_ITER",              &MONO_MAX_ITER,                   0,               0,             NoMax_int      );
@@ -416,6 +417,7 @@ void Init_Load_Parameter()
 #  endif
    ReadPara->Add( "OPT__OUTPUT_USER_FIELD",     &OPT__OUTPUT_USER_FIELD,          false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_MODE",           &OPT__OUTPUT_MODE,               -1,               1,             3              );
+   ReadPara->Add( "OPT__OUTPUT_RESTART",        &OPT__OUTPUT_RESTART,             false,           Useless_bool,  Useless_bool   );
 // do not check OUTPUT_STEP and OUTPUT_DT since they depend on OPT__OUTPUT_MODE
    ReadPara->Add( "OUTPUT_STEP",                &OUTPUT_STEP,                    -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "OUTPUT_DT",                  &OUTPUT_DT,                      -1.0,             NoMin_double,  NoMax_double   );

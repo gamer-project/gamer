@@ -1331,6 +1331,7 @@ void Aux_Check_Parameter()
    }
 #  endif // #ifdef GRAVITY
 
+
 // warning
 // ------------------------------
    if ( MPI_Rank == 0 ) {
@@ -1352,6 +1353,14 @@ void Aux_Check_Parameter()
 #  ifdef GRAVITY
    if ( OPT__GRA_P5_GRADIENT )
       Aux_Message( stderr, "WARNING : currently \"%s\" is not applied to particle update !!\n", "OPT__GRA_P5_GRADIENT" );
+#  endif
+
+#  ifdef TRACER
+   if ( OPT__FLAG_NPAR_PATCH )
+      Aux_Message( stderr, "WARNING : OPT__FLAG_NPAR_PATCH includes tracers and thus may affect the results of grid refinement !!\n" );
+
+   if ( OPT__FLAG_NPAR_CELL )
+      Aux_Message( stderr, "WARNING : OPT__FLAG_NPAR_CELL excludes tracers !!\n" );
 #  endif
 
    if ( OPT__FREEZE_PAR )

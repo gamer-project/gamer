@@ -475,11 +475,7 @@ void Output_DumpData_Total( const char *FileName )
       const int    flu_block_size_x      = FLU_BLOCK_SIZE_X;
       const int    flu_block_size_y      = FLU_BLOCK_SIZE_Y;
 
-#     ifdef USE_PSOLVER_10TO14
       const bool   use_psolver_10to14    = true;
-#     else
-      const bool   use_psolver_10to14    = false;
-#     endif
 
 #     ifdef POT_BLOCK_SIZE_X
       const int   pot_block_size_x       = POT_BLOCK_SIZE_X;

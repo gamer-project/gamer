@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2447)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2449)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -218,6 +218,8 @@ Procedure for outputting new variables:
 //                2445 : 2022/03/25 --> output OPT__OUTPUT_ENTR
 //                2446 : 2022/05/10 --> output SUPPORT_LIBYT and LIBYT_USE_PATCH_GROUP
 //                2447 : 2022/05/11 --> output MASSIVE_PARTICLES, TRACER, PAR_NTYPE, GhostSizeTracer
+//                2448 : 2022/05/18 --> output PAR_IC_TYPE
+//                2449 : 2022/07/08 --> output OPT__OUTPUT_RESTART
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1723,7 +1725,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2447;
+   KeyInfo.FormatVersion        = 2449;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2115,11 +2117,6 @@ void FillIn_SymConst( SymConst_t &SymConst )
 
 #  if   ( POT_SCHEME == SOR )
    SymConst.Pot_BlockSize_z      = POT_BLOCK_SIZE_Z;
-#  ifdef USE_PSOLVER_10TO14
-   SymConst.UsePSolver_10to14    = 1;
-#  else
-   SymConst.UsePSolver_10to14    = 0;
-#  endif
 #  ifdef SOR_RHO_SHARED
    SymConst.SOR_RhoShared        = 1;
 #  else
@@ -2330,6 +2327,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Par_Init                = amr->Par->Init;
    InputPara.Par_ICFormat            = amr->Par->ParICFormat;
    InputPara.Par_ICMass              = amr->Par->ParICMass;
+   InputPara.Par_ICType              = amr->Par->ParICType;
    InputPara.Par_Interp              = amr->Par->Interp;
    InputPara.Par_InterpTracer        = amr->Par->InterpTracer;
    InputPara.Par_Integ               = amr->Par->Integ;
@@ -2662,6 +2660,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  endif // #if ( MODEL == HYDRO )
    InputPara.Opt__Output_UserField   = OPT__OUTPUT_USER_FIELD;
    InputPara.Opt__Output_Mode        = OPT__OUTPUT_MODE;
+   InputPara.Opt__Output_Restart     = OPT__OUTPUT_RESTART;
    InputPara.Opt__Output_Step        = OUTPUT_STEP;
    InputPara.Opt__Output_Dt          = OUTPUT_DT;
    InputPara.Output_PartX            = OUTPUT_PART_X;
@@ -2987,7 +2986,6 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "ExtPotNGeneMax",       HOFFSET(SymConst_t,ExtPotNGeneMax      ), H5T_NATIVE_INT    );
 #  if   ( POT_SCHEME == SOR )
    H5Tinsert( H5_TypeID, "Pot_BlockSize_z",      HOFFSET(SymConst_t,Pot_BlockSize_z     ), H5T_NATIVE_INT    );
-   H5Tinsert( H5_TypeID, "UsePSolver_10to14",    HOFFSET(SymConst_t,UsePSolver_10to14   ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "SOR_RhoShared",        HOFFSET(SymConst_t,SOR_RhoShared       ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "SOR_CPotShared",       HOFFSET(SymConst_t,SOR_CPotShared      ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "SOR_UseShuffle",       HOFFSET(SymConst_t,SOR_UseShuffle      ), H5T_NATIVE_INT    );
@@ -3171,6 +3169,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Par_Init",                HOFFSET(InputPara_t,Par_Init               ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_ICFormat",            HOFFSET(InputPara_t,Par_ICFormat           ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_ICMass",              HOFFSET(InputPara_t,Par_ICMass             ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "Par_ICType",              HOFFSET(InputPara_t,Par_ICType             ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_Interp",              HOFFSET(InputPara_t,Par_Interp             ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_InterpTracer",        HOFFSET(InputPara_t,Par_InterpTracer       ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_Integ",               HOFFSET(InputPara_t,Par_Integ              ), H5T_NATIVE_INT     );
@@ -3502,6 +3501,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  endif // #if ( MODEL == HYDRO )
    H5Tinsert( H5_TypeID, "Opt__Output_UserField",   HOFFSET(InputPara_t,Opt__Output_UserField  ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Mode",        HOFFSET(InputPara_t,Opt__Output_Mode       ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Restart",     HOFFSET(InputPara_t,Opt__Output_Restart    ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Step",        HOFFSET(InputPara_t,Opt__Output_Step       ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Dt",          HOFFSET(InputPara_t,Opt__Output_Dt         ), H5T_NATIVE_DOUBLE           );
    H5Tinsert( H5_TypeID, "Output_PartX",            HOFFSET(InputPara_t,Output_PartX           ), H5T_NATIVE_DOUBLE           );

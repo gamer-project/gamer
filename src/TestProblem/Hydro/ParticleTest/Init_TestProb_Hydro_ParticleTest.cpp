@@ -26,6 +26,9 @@ void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar
 bool Flag_ParticleTest( const int i, const int j, const int k, const int lv,
                         const int PID, const double *Threshold );
 
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
 // Description :  Validate the compilation flags and runtime parameters for this test problem
@@ -48,10 +51,6 @@ void Validate()
 
 #  ifndef PARTICLE
    Aux_Error( ERROR_INFO, "PARTICLE must be enabled !!\n" );
-#  endif
-
-#  ifndef TRACER
-   Aux_Error( ERROR_INFO, "TRACER must be enabled !!\n" );
 #  endif
 
 #  ifdef COMOVING
@@ -119,6 +118,10 @@ void SetParameter()
    if ( !ParTest_Use_Tracers  &&  !ParTest_Use_Massive )
       Aux_Error( ERROR_INFO,
                  "either ParTest_Use_Tracer, ParTest_Use_Massive, or both must be true !!\n" );
+
+#  ifndef TRACER
+   if ( ParTest_Use_Tracers )    Aux_Error( ERROR_INFO, "must enable TRACER for ParTest_Use_Tracers !!\n" );
+#  endif
 
 #  ifndef GRAVITY
    if ( ParTest_Use_Massive )    Aux_Error( ERROR_INFO, "must enable GRAVITY for ParTest_Use_Massive !!\n" );
@@ -211,7 +214,6 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[ENGY] = Etot;
 
 } // FUNCTION : SetGridIC
-
 #endif // #if ( MODEL == HYDRO )
 
 
@@ -259,6 +261,8 @@ void Init_TestProb_Hydro_ParticleTest()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_TestProb_Hydro_ParticleTest
+
+
 
 bool Flag_ParticleTest( const int i, const int j, const int k, const int lv,
                         const int PID, const double *Threshold )

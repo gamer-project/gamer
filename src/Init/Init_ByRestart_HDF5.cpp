@@ -1604,7 +1604,6 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "ExtPotNGeneMax",       &RS.ExtPotNGeneMax,       SID, TID, NonFatal, &RT.ExtPotNGeneMax,        1, NonFatal );
 #  if   ( POT_SCHEME == SOR )
    LoadField( "Pot_BlockSize_z",      &RS.Pot_BlockSize_z,      SID, TID, NonFatal, &RT.Pot_BlockSize_z,       1, NonFatal );
-   LoadField( "UsePSolver_10to14",    &RS.UsePSolver_10to14,    SID, TID, NonFatal, &RT.UsePSolver_10to14,     1, NonFatal );
    LoadField( "SOR_RhoShared",        &RS.SOR_RhoShared,        SID, TID, NonFatal, &RT.SOR_RhoShared,         1, NonFatal );
    LoadField( "SOR_CPotShared",       &RS.SOR_CPotShared,       SID, TID, NonFatal, &RT.SOR_CPotShared,        1, NonFatal );
    LoadField( "SOR_UseShuffle",       &RS.SOR_UseShuffle,       SID, TID, NonFatal, &RT.SOR_UseShuffle,        1, NonFatal );
@@ -1782,6 +1781,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Par_Init",                &RS.Par_Init,                SID, TID, NonFatal, &RT.Par_Init,                 1, NonFatal );
    LoadField( "Par_ICFormat",            &RS.Par_ICFormat,            SID, TID, NonFatal, &RT.Par_ICFormat,             1, NonFatal );
    LoadField( "Par_ICMass",              &RS.Par_ICMass,              SID, TID, NonFatal, &RT.Par_ICMass,               1, NonFatal );
+   LoadField( "Par_ICType",              &RS.Par_ICType,              SID, TID, NonFatal, &RT.Par_ICType,               1, NonFatal );
    LoadField( "Par_Interp",              &RS.Par_Interp,              SID, TID, NonFatal, &RT.Par_Interp,               1, NonFatal );
    LoadField( "Par_InterpTracer",        &RS.Par_InterpTracer,        SID, TID, NonFatal, &RT.Par_InterpTracer,         1, NonFatal );
    LoadField( "Par_Integ",               &RS.Par_Integ,               SID, TID, NonFatal, &RT.Par_Integ,                1, NonFatal );
@@ -2077,6 +2077,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS ) {
 #  endif
    LoadField( "Opt__Output_Mode",        &RS.Opt__Output_Mode,        SID, TID, NonFatal, &RT.Opt__Output_Mode,         1, NonFatal );
+   LoadField( "Opt__Output_Restart",     &RS.Opt__Output_Restart,     SID, TID, NonFatal, &RT.Opt__Output_Restart,      1, NonFatal );
    LoadField( "Opt__Output_Step",        &RS.Opt__Output_Step,        SID, TID, NonFatal, &RT.Opt__Output_Step,         1, NonFatal );
    LoadField( "Opt__Output_Dt",          &RS.Opt__Output_Dt,          SID, TID, NonFatal, &RT.Opt__Output_Dt,           1, NonFatal );
    }
