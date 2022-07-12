@@ -71,6 +71,8 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
       Temp[0][k][j][i] = SQRT(Var[0][k][j][i]);
       //if ( convertWaveToFluid ) {
       //   Temp[PHAS][k][j][i]
+      //} else {
+      //   Temp[1][k][j][i] = Var[0][k][j][i];
       //}
    }}} // k,j,i
 
@@ -86,12 +88,13 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
       if (convertWaveToFluid)   
          Cond[1][k][j][i] = 0;
       else 
-         Cond[1][k][j][i] =  FABS(  Temp[1][kk ][jj ][iip] + Temp[1][kk ][jj ][iim] \
-                                  + Temp[1][kk ][jjp][ii ] + Temp[1][kk ][jjm][ii ] \
-                                  + Temp[1][kkp][jj ][ii ] + Temp[1][kkm][jj ][ii ] \
-                                 -  (real) 6.0 * Temp[1][kk ][jj ][ii])\
+         Cond[1][k][j][i] =  FABS(  Var[1][kk ][jj ][iip] + Var[1][kk ][jj ][iim] \
+                                  + Var[1][kk ][jjp][ii ] + Var[1][kk ][jjm][ii ] \
+                                  + Var[1][kkp][jj ][ii ] + Var[1][kkm][jj ][ii ] \
+                                 -  (real) 6.0 * Var[1][kk ][jj ][ii])\
                                  / ((real) 3.0);
-      //printf("QP %f k %i j %i i %i", QP[k][j][i], k, j, i);
+
+      //printf("QP %f k %i j %i i %i", Cond[0][k][j][i], k, j, i);
    }}} // k,j,i
 
 

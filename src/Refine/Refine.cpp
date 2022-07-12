@@ -815,7 +815,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 //       (c1.3.4.3) convert density/phase to real and imaginary parts if patches were refined from phase to wave level
 #        if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
-         if ( Pedigree->use_wave_flag && !amr->use_wave_flag[lv] && amr->use_wave_flag[lv+1] ) {
+         if ( Pedigree->flag && !amr->use_wave_flag[lv] && amr->use_wave_flag[lv+1] ) {
             real amp, phase, stub, Re, Im ;
             for (int k=0; k<FSize_CC; k++) {
             for (int j=0; j<FSize_CC; j++) {

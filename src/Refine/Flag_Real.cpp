@@ -599,10 +599,12 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
          if ( amr->patch[0][lv][PID]->sibling[sib] == -1 )
          {
             amr->patch[0][lv][PID]->flag = false;
-#        if ( ELBDM_SCHEME == HYBRID )
-//       enforce proper-nesting constraint for use_wave_flag
+
+#           if ( ELBDM_SCHEME == HYBRID )
+//          enforce proper-nesting constraint for use_wave_flag
             amr->patch[0][lv][PID]->use_wave_flag = false;
-#        endif // #if ( ELBDM_SCHEME == HYBRID )
+#           endif // #if ( ELBDM_SCHEME == HYBRID )
+
             break;
          }
       }
@@ -619,9 +621,11 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                 CornerR >= amr->BoxScale[d] - NoRefineBoundaryRegion    )
             {
                amr->patch[0][lv][PID]->flag = false;
+
 #              if ( ELBDM_SCHEME == HYBRID )
                amr->patch[0][lv][PID]->use_wave_flag = false;
 #              endif // #if ( ELBDM_SCHEME == HYBRID )
+
                break;
             }
          }

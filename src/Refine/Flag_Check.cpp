@@ -65,8 +65,8 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
    {
       real (*Var)  [PS1 ][PS1 ][PS1 ] = ( real(*) [PS1 ][PS1 ][PS1 ] )  Interf_Cond;
       
-      bool FlagInterference = ELBDM_Flag_Interference( i, j, k, Interf_Cond,             FlagTable_Interference[lv][0]) \
-                           || ELBDM_Flag_Interference( i, j, k, Interf_Cond + CUBE(PS1), FlagTable_Interference[lv][1]);
+      bool FlagInterference  =  ELBDM_Flag_Interference( i, j, k, Interf_Cond,             FlagTable_Interference[lv][0]) \
+                             || ELBDM_Flag_Interference( i, j, k, Interf_Cond + CUBE(PS1), FlagTable_Interference[lv][1]);
       
       Flag |= FlagInterference;
 
@@ -174,7 +174,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 // ===========================================================================================
 #  if ( MODEL == ELBDM )
 #  if ( ELBDM_SCHEME == HYBRID )
-   if ( amr->use_wave_flag[lv] == true )
+   if ( amr->use_wave_flag[lv] )
 #  endif 
    if ( OPT__FLAG_ENGY_DENSITY )
    {
