@@ -359,6 +359,9 @@ void Init_Load_Parameter()
 
 // interpolation schemes
    ReadPara->Add( "OPT__INT_TIME",              &OPT__INT_TIME,                   true,            Useless_bool,  Useless_bool   );
+#  if ( MODEL == HYDRO )
+   ReadPara->Add( "OPT__INT_PRIM",              &OPT__INT_PRIM,                   true,            Useless_bool,  Useless_bool   );
+#  endif
 #  if ( MODEL == ELBDM )
    ReadPara->Add( "OPT__INT_PHASE",             &OPT__INT_PHASE,                  true,            Useless_bool,  Useless_bool   );
 #  endif

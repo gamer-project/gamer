@@ -1373,7 +1373,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
    const AllCons_t AllCons = ( TVarCC == _TOTAL ) ? ALL_CONS_YES : ALL_CONS_NO;
    Interpolate( CData_CC, CSize_CC, CStart_CC, CRange_CC, IntData_CC, FSize_CC, FStart_CC, NVarCC_Flu,
                 IntScheme_CC, PhaseUnwrapping_No, Monotonicity_CC, INT_OPP_SIGN_0TH_ORDER, AllCons,
-                (AllCons)?INT_PRIM_YES:INT_PRIM_NO,
+                (AllCons && OPT__INT_PRIM)?INT_PRIM_YES:INT_PRIM_NO,
                 (AllCons)?INT_REDUCE_MONO_COEFF:INT_FIX_MONO_COEFF );
 
 

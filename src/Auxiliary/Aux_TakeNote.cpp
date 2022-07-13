@@ -1143,6 +1143,9 @@ void Aux_TakeNote()
       fprintf( Note, "Parameters of Interpolation Schemes\n" );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "OPT__INT_TIME                   %d\n",      OPT__INT_TIME           );
+#     if ( MODEL == HYDRO )
+      fprintf( Note, "OPT__INT_PRIM                   %d\n",      OPT__INT_PRIM           );
+#     endif
 #     if ( MODEL == ELBDM )
       fprintf( Note, "OPT__INT_PHASE                  %d\n",      OPT__INT_PHASE          );
 #     endif
