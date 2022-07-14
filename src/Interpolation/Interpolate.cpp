@@ -301,12 +301,16 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
             if ( FData_is_Prim )
             {
 //             convert passive scalars from mass fraction back to mass density
+#              if ( NCOMP_PASSIVE > 0 )
                real Passive[NCOMP_PASSIVE];
 
                for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = Temp[ NCOMP_FLUID + v ];
 
                if ( OPT__INT_FRAC_PASSIVE_LR )
                   for (int v=0; v<PassiveIntFrac_NVar; v++)    Passive[ PassiveIntFrac_VarIdx[v] ] *= Temp[DENS];
+#              else
+               const real *Passive = NULL;
+#              endif
 
                Eint = EoS_DensPres2Eint_CPUPtr( Temp[DENS], Temp[ENGY], Passive,
                                                 EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
