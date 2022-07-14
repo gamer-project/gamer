@@ -825,7 +825,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    }
 
 // 3.2.2 interpolation
-   real *CData_Next = NULL;
+   real *CData_Next = CData;
 
 // 3.2.2-1. magnetic field
 //          --> do it first since we need the cell-centered B field for INT_REDUCE_MONO_COEFF
@@ -843,9 +843,9 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    const int CRange_Mag[3]    = { PS1, PS1, PS1 };
 
 // be careful that the order of data in CData[] is fluid --> potential --> B field
-   CData_Next = CData + NCOMP_TOTAL*CUBE( CSize_Flu );   // skip the fluid data
+   CData_Next += NCOMP_TOTAL*CUBE( CSize_Flu );    // skip the fluid data
 #  ifdef GRAVITY
-   CData_Next += CUBE( CSize_Pot );                      // skip the potential data
+   CData_Next += CUBE( CSize_Pot );                // skip the potential data
 #  endif
    real *const CData_MagX = CData_Next + MAGX*CSize_Mag_N*SQR( CSize_Mag_T );
    real *const CData_MagY = CData_Next + MAGY*CSize_Mag_N*SQR( CSize_Mag_T );
