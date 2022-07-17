@@ -240,9 +240,16 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
       {
          for (int i=0; i<CSize3D; i++)
          {
-            for (int v=0; v<NCOMP_TOTAL; v++)   Cons[              v ] = CData[ CSize3D*v + i ];
+            for (int v=0; v<NCOMP_TOTAL; v++)   Cons[v] = CData[ CSize3D*v + i ];
 #           ifdef MHD
-            for (int v=0; v<NCOMP_MAG;   v++)   Cons[ MAG_OFFSET + v ] = CMag [ CSize3D*v + i ];
+            for (int v=0; v<NCOMP_MAG; v++)
+            {
+               const real B = CMag[ CSize3D*v + i ];
+               Cons[ MAG_OFFSET + v ] = B;
+
+//             abort if the coarse-grid B field is unphysical
+               if ( ! Aux_IsFinite(B) )   Aux_Error( ERROR_INFO, "unphysical coarse-grid B field (B%d = %14.7e) !!\n", v, B );
+            }
 #           endif
 
             Hydro_Con2Pri( Cons, Prim, MIN_PRES,
@@ -324,6 +331,10 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
                const bool CheckMinPres_No = false;
 #              ifdef MHD
                const real Emag            = (real)0.5*( SQR(FMag[i][MAGX]) + SQR(FMag[i][MAGY]) + SQR(FMag[i][MAGZ]) );
+
+//             abort if the fine-grid B field is unphysical
+               if ( ! Aux_IsFinite(Emag) )   Aux_Error( ERROR_INFO, "unphysical fine-grid B energy (%14.7e) !!\n", Emag );
+
 #              else
                const real Emag            = NULL_REAL;
 #              endif
