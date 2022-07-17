@@ -965,6 +965,9 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14s", FieldLabel[DUAL] );
 #                 endif
+#                 ifdef MHD
+                  fprintf( File, ", %14s", "Emag" );
+#                 endif
                   fprintf( File, ")\n" );
 
                   fprintf( File, "input        = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
@@ -973,6 +976,9 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                                           CheckMinEint_No, NULL_REAL, Emag_In) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", In[DUAL] );
+#                 endif
+#                 ifdef MHD
+                  fprintf( File, ", %14.7e", Emag_In );
 #                 endif
                   fprintf( File, ")\n" );
 
@@ -983,6 +989,9 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", Out[DUAL] );
 #                 endif
+#                 ifdef MHD
+                  fprintf( File, ", %14.7e", Emag_Out );
+#                 endif
                   fprintf( File, ")\n" );
 
                   fprintf( File, "output (new) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
@@ -992,14 +1001,20 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", Update[DUAL] );
 #                 endif
+#                 ifdef MHD
+                  fprintf( File, ", %14.7e", Emag_Update );
+#                 endif
                   fprintf( File, ")\n" );
 
 //                output all data in the input fluid array (including ghost zones)
-                  fprintf( File, "\nFull input array including ghost zones\n" );
+                  fprintf( File, "\nFull input fluid array including ghost zones\n" );
                   fprintf( File, "===============================================================================================\n" );
                   fprintf( File, "(%2s,%2s,%2s)", "i", "j", "k" );
                   for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, " %14s", FieldLabel[v] );
                   fprintf( File, " %14s", "Eint" );
+#                 ifdef MHD
+                  fprintf( File, " %14s", "Emag" );
+#                 endif
                   fprintf( File, "\n" );
 
                   for (int k=0; k<FLU_NXT; k++)
@@ -1023,9 +1038,41 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                      const real Emag_tmp = NULL_REAL;
 #                    endif
 
-                     fprintf( File, " %14.7e\n", Hydro_Con2Eint(tmp[0], tmp[1], tmp[2], tmp[3], tmp[4],
-                                                                CheckMinEint_No, NULL_REAL, Emag_tmp) );
-                  }
+                     fprintf( File, " %14.7e", Hydro_Con2Eint(tmp[0], tmp[1], tmp[2], tmp[3], tmp[4],
+                                                              CheckMinEint_No, NULL_REAL, Emag_tmp) );
+#                    ifdef MHD
+                     fprintf( File, " %14.7e", Emag_tmp );
+#                    endif
+                     fprintf( File, "\n" );
+                  } // i,j,k
+
+//                output all data in the input B field array (including ghost zones)
+#                 ifdef MHD
+                  fprintf( File, "\nFull input B field array including ghost zones\n" );
+                  fprintf( File, "===============================================================================================\n" );
+                  fprintf( File, "(%2s,%2s,%2s) %14s %14s %14s\n", "i", "j", "k", MagLabel[MAGX], MagLabel[MAGY], MagLabel[MAGZ] );
+
+                  for (int k=0; k<FLU_NXT_P1; k++)
+                  for (int j=0; j<FLU_NXT_P1; j++)
+                  for (int i=0; i<FLU_NXT_P1; i++)
+                  {
+                     fprintf( File, "(%2d,%2d,%2d)", i-FLU_GHOST_SIZE, j-FLU_GHOST_SIZE, k-FLU_GHOST_SIZE );
+
+//                   Bx
+                     if ( j < FLU_NXT  &&  k < FLU_NXT ) fprintf( File, " %14.7e", h_Mag_Array_F_In[TID][MAGX][ IDX321_BX(i,j,k,FLU_NXT,FLU_NXT) ] );
+                     else                                fprintf( File, " %14s", "" );
+
+//                   By
+                     if ( i < FLU_NXT  &&  k < FLU_NXT ) fprintf( File, " %14.7e", h_Mag_Array_F_In[TID][MAGY][ IDX321_BY(i,j,k,FLU_NXT,FLU_NXT) ] );
+                     else                                fprintf( File, " %14s", "" );
+
+//                   Bz
+                     if ( i < FLU_NXT  &&  j < FLU_NXT ) fprintf( File, " %14.7e", h_Mag_Array_F_In[TID][MAGZ][ IDX321_BZ(i,j,k,FLU_NXT,FLU_NXT) ] );
+                     else                                fprintf( File, " %14s", "" );
+
+                     fprintf( File, "\n" );
+                  } // i,j,k
+#                 endif // #ifdef MHD
 
                   fclose( File );
 
