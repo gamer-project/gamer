@@ -219,7 +219,6 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
    const bool JeansMinPres_No = false;
    bool FData_is_Prim = false;
    real Cons[NCOMP_TOTAL_PLUS_MAG], Prim[NCOMP_TOTAL_PLUS_MAG];   // must include B field
-   real *Temp = Cons;
 
 
 // select an interpolation scheme
@@ -284,6 +283,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 
       for (int i=0; i<FSize3D; i++)
       {
+         real Temp[NCOMP_TOTAL];
          for (int v=0; v<NCOMP_TOTAL; v++)   Temp[v] = FData[ FSize3D*v + i ];
 
 //       5-1. check the interpolation results without EoS conversion
