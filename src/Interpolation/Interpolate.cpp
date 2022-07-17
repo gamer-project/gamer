@@ -341,18 +341,18 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
          {
             if ( Iteration == MaxIter )
             {
-               Aux_Message( stderr, "ERROR : %s failed !!\n", __FUNCTION__ );
+               Aux_Message( stderr, "ERROR : %s() failed !!\n", __FUNCTION__ );
                Aux_Message( stderr, "NComp=%d, IntScheme=%d, UnwrapPhase=%d, Monotonic=%d, OppSign0thOrder=%d\n",
                             NComp, IntScheme, UnwrapPhase, Monotonic[0], OppSign0thOrder );
-               Aux_Message( stderr, "FData_is_Prim=%d, Iter=%d\n", FData_is_Prim, Iteration );
+               Aux_Message( stderr, "FData_is_Prim=%d, Iter=%d, IntMonoCoeff=%13.7e\n", FData_is_Prim, Iteration, IntMonoCoeff );
 
-               Aux_Message( stderr, "Output: " );
+               Aux_Message( stderr, "Fluid: " );
                for (int v=0; v<NCOMP_TOTAL; v++)   Aux_Message( stderr, " [%d]=%14.7e", v, Temp[v] );
                Aux_Message( stderr, "\n" );
 
 #              ifdef MHD
                Aux_Message( stderr, "B field: " );
-               for (int v=0; v<NCOMP_MAG; v++)     Aux_Message( stderr, "[%d]=%14.7e", v, FMag[i][v] );
+               for (int v=0; v<NCOMP_MAG; v++)     Aux_Message( stderr, " [%d]=%14.7e", v, FMag[i][v] );
                Aux_Message( stderr, "\n" );
 #              endif
 
