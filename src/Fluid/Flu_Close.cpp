@@ -385,7 +385,7 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
    const bool NoFloor         = false;
 
 
-// if any checks below fail, return true
+// if any check below fails, return true
 // =================================================
 // note that since MIN_DENS and MIN_PRES are declared as double, they must be converted to **real** before the comparison
 // --> otherwise LHS in the comparison will be converted from real to double, which is inconsistent with the assignment
@@ -395,30 +395,36 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
          Fluid[DENS] < (real)MIN_DENS  )
       return true;
 
+#  ifdef MHD
+   if ( !Aux_IsFinite(Emag) )
+      return true;
+#  endif
+
 #  ifndef BAROTROPIC_EOS
-   if ( CheckMode == CheckMinEtot  &&  Fluid[ENGY] < (real)MIN_EINT )
+   if ( CheckMode == CheckMinEtot  &&  ( Fluid[ENGY] < (real)MIN_EINT || Fluid[ENGY] != Fluid[ENGY] )  )
       return true;
 
-   if ( CheckMode == CheckMinEint  &&
-         (
-//          when adopting the dual-energy formalism, do NOT calculate pressure from "Etot-Ekin" since it would suffer
-//          from large round-off errors
-//          --> currently we use TINY_NUMBER as the dual-energy floor and hence here we use 2.0*TINY_NUMBER to
-//              validate the dual-energy variable
-//          --> in general, MIN_PRES > 0.0 should be sufficient for detecting unphysical dual-energy variable
-//          --> however, the additional check "Fluid[DUAL] < (real)2.0*TINY_NUMBER" is necessary when MIN_PRES == 0.0
-#           ifdef DUAL_ENERGY
-            Hydro_DensDual2Pres( Fluid[DENS], Fluid[DUAL], EoS_AuxArray_Flt[1], NoFloor, NULL_REAL ) < (real)MIN_PRES  ||
-            Fluid[DUAL] < (real)2.0*TINY_NUMBER
+   if ( CheckMode == CheckMinEint )
+   {
+//    when adopting the dual-energy formalism, do NOT calculate pressure from "Etot-Ekin" since it would suffer
+//    from large round-off errors
+//    --> currently we use TINY_NUMBER as the dual-energy floor and hence here we use 2.0*TINY_NUMBER to
+//        validate the dual-energy variable
+//    --> in general, MIN_PRES > 0.0 should be sufficient for detecting unphysical dual-energy variable
+//    --> however, the additional check "Fluid[DUAL] < (real)2.0*TINY_NUMBER" is necessary when MIN_PRES == 0.0
+#     ifdef DUAL_ENERGY
+      const real Pres = Hydro_DensDual2Pres( Fluid[DENS], Fluid[DUAL], EoS_AuxArray_Flt[1], NoFloor, NULL_REAL );
+      if ( Pres < (real)MIN_PRES  ||  !Aux_IsFinite(Pres)  ||
+           Fluid[DUAL] < (real)2.0*TINY_NUMBER  ||  !Aux_IsFinite(Fluid[DUAL]) )
+         return true;
 
-#           else // without DUAL_ENERGY
-            Hydro_Con2Eint( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                            NoFloor, NULL_REAL, Emag ) < (real)MIN_EINT
-
-#           endif // DUAL_ENERGY
-         )
-      )
-      return true;
+#     else // without DUAL_ENERGY
+      const real Eint = Hydro_Con2Eint( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                        NoFloor, NULL_REAL, Emag );
+      if ( Eint < (real)MIN_EINT  ||  !Aux_IsFinite(Eint) )
+         return true;
+#     endif // DUAL_ENERGY
+   } // f ( CheckMode == CheckMinEint )
 
    if ( OPT__CHECK_PRES_AFTER_FLU )
    {
@@ -428,7 +434,7 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
                                         EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt,
                                         EoS_AuxArray_Int, h_EoS_Table, NULL );
 
-      if ( !Aux_IsFinite(Pres)  ||  Pres < (real)0.0 )
+      if ( !Aux_IsFinite(Pres)  ||  Pres < (real)MIN_PRES )
          return true;
    }
 #  endif // #ifndef BAROTROPIC_EOS
