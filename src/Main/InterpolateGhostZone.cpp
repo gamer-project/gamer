@@ -52,7 +52,7 @@ void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, const d
 //                TSib               : Target sibling indices along different sibling directions
 //                TVarCC             : Target cell-centered variables to be prepared
 //                                     --> Supported variables in different models:
-//                                         HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _PRES, _TEMP,
+//                                         HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _PRES, _TEMP, _ENTR,
 //                                                 [, _POTE] [, _MAGX_CC, _MAGY_CC, _MAGZ_CC, _MAGE_CC]
 //                                         ELBDM : _DENS, _REAL, _IMAG [, _POTE]
 //                                     --> _FLUID, _PASSIVE, _TOTAL, and _DERIVED apply to all models
@@ -77,7 +77,6 @@ void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, const d
 //                FluBC              : Fluid boundary condition
 //                PotBC              : Gravity boundary condition (not used currently)
 //                BC_Face            : Priority of the B.C. along different boundary faces (z>y>x)
-//                MinPres/Temp       : Minimum allowed pressure/temperature (<0.0 ==> off)
 //                MinPres/Temp/Entr  : Minimum allowed pressure/temperature/entropy (<0.0 ==> off)
 //                DE_Consistency     : Ensure the consistency between pressure, total energy density, and the
 //                                     dual-energy variable when DUAL_ENERGY is on
