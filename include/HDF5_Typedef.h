@@ -610,6 +610,9 @@ struct InputPara_t
 
 // interpolation schemes
    int    Opt__Int_Time;
+#  if ( MODEL == HYDRO )
+   int    Opt__Int_Prim;
+#  endif
 #  if ( MODEL == ELBDM )
    int    Opt__Int_Phase;
 #  endif

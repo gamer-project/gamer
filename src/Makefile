@@ -415,7 +415,7 @@ LIBYT_PATH   :=
 #MPI_PATH     := /cluster/intel-2022.1/openmpi-4.1.2
 #HDF5_PATH    := /cluster/intel-2022.1/hdf5-1.10.8_openmpi4
 #GRACKLE_PATH :=
-#GSL_PATH     :=
+#GSL_PATH     := /usr
 #LIBYT_PATH   :=
 
 
