@@ -131,7 +131,7 @@ OPT__REF_FLU_INT_SCHEME      -1           # newly allocated fluid variables duri
 OPT__MAG_INT_SCHEME           4           # ghost-zone magnetic field for the MHD solver (2,3,4,6 only) [4]
 OPT__REF_MAG_INT_SCHEME       4           # newly allocated magnetic field during grid refinement (2,3,4,6 only) [4]
 INT_MONO_COEFF                2.0         # coefficient for ensuring the interpolation monotonicity (1.0~4.0) [2.0]
-MONO_MAX_ITER                 0           # maximum number of iterations to reduce INT_MONO_COEFF when interpolation fails (0=off) [0]
+MONO_MAX_ITER                 10          # maximum number of iterations to reduce INT_MONO_COEFF when interpolation fails (0=off) [10]
 
 
 # data dump

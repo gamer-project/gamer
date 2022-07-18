@@ -139,7 +139,7 @@ INIT_SUBSAMPLING_NCELL        0           # perform sub-sampling during initiali
 OPT__FLU_INT_SCHEME          -1           # ghost-zone fluid variables for the fluid solver [-1]
 OPT__REF_FLU_INT_SCHEME      -1           # newly allocated fluid variables during grid refinement [-1]
 INT_MONO_COEFF                2.0         # coefficient for ensuring the interpolation monotonicity (1.0~4.0) [2.0]
-MONO_MAX_ITER                 0           # maximum number of iterations to reduce INT_MONO_COEFF when interpolation fails (0=off) [0]
+MONO_MAX_ITER                 10          # maximum number of iterations to reduce INT_MONO_COEFF when interpolation fails (0=off) [10]
 
 
 # data dump

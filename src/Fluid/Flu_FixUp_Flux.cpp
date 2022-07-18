@@ -17,15 +17,16 @@
 void Flu_FixUp_Flux( const int lv )
 {
 
-   const real Const[6]   = { real(-1.0/amr->dh[lv]), real(+1.0/amr->dh[lv]),
-                             real(-1.0/amr->dh[lv]), real(+1.0/amr->dh[lv]),
-                             real(-1.0/amr->dh[lv]), real(+1.0/amr->dh[lv]) };
-   const int  FluSg      = amr->FluSg[lv];
+   const bool CheckMinPres_No = false;
+   const real Const[6]        = { real(-1.0/amr->dh[lv]), real(+1.0/amr->dh[lv]),
+                                  real(-1.0/amr->dh[lv]), real(+1.0/amr->dh[lv]),
+                                  real(-1.0/amr->dh[lv]), real(+1.0/amr->dh[lv]) };
+   const int  FluSg           = amr->FluSg[lv];
 #  ifdef MHD
-   const int  MagSg      = amr->MagSg[lv];
+   const int  MagSg           = amr->MagSg[lv];
 #  endif
-   const int  Offset[6]  = { 0, PS1-1, 0, (PS1-1)*PS1, 0, (PS1-1)*SQR(PS1) }; // x=0/PS1-1, y=0/PS1-1, z=0/PS1-1 faces
-   const int  didx[3][2] = { PS1, SQR(PS1), 1, SQR(PS1), 1, PS1 };
+   const int  Offset[6]       = { 0, PS1-1, 0, (PS1-1)*PS1, 0, (PS1-1)*SQR(PS1) }; // x=0/PS1-1, y=0/PS1-1, z=0/PS1-1 faces
+   const int  didx[3][2]      = { PS1, SQR(PS1), 1, SQR(PS1), 1, PS1 };
 
 //###EXPERIMENTAL: (does not work well and thus has been disabled for now)
 /*
@@ -146,9 +147,9 @@ void Flu_FixUp_Flux( const int lv )
                for (int v=0; v<NFLUX_TOTAL; v++)   CorrVal[v] = *FluidPtr1D[v] + FluxPtr[v][m][n]*Const[s];
 
 
-//             calculate the internal energy density
+//             calculate the internal energy density and pressure
 #              if ( MODEL == HYDRO  &&  !defined BAROTROPIC_EOS )
-               real Eint;
+               real Eint, Pres;
                real *ForEint = CorrVal;
 
 //###EXPERIMENTAL: (does not work well and thus has been disabled for now)
@@ -192,16 +193,15 @@ void Flu_FixUp_Flux( const int lv )
                if ( *DE_StatusPtr1D == DE_UPDATED_BY_ETOT  ||  *DE_StatusPtr1D == DE_UPDATED_BY_ETOT_GRA )
 #              endif
                {
-                  const bool CheckMinEint_No = false;
-                  Eint = Hydro_Con2Eint( ForEint[DENS], ForEint[MOMX], ForEint[MOMY], ForEint[MOMZ], ForEint[ENGY],
-                                         CheckMinEint_No, NULL_REAL, Emag );
+                  Pres = Hydro_Con2Pres( ForEint[DENS], ForEint[MOMX], ForEint[MOMY], ForEint[MOMZ], ForEint[ENGY],
+                                         ForEint+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, Emag,
+                                         EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
+                                         &Eint );
                }
 
 #              if ( DUAL_ENERGY == DE_ENPY )
                else
                {
-                  const bool CheckMinPres_No = false;
-                  real Pres;
                   Pres = Hydro_DensDual2Pres( ForEint[DENS], ForEint[DUAL], EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
 //                DE_ENPY only supports EOS_GAMMA, which does not involve passive scalars
                   Eint = EoS_DensPres2Eint_CPUPtr( ForEint[DENS], Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
@@ -229,6 +229,7 @@ void Flu_FixUp_Flux( const int lv )
                if ( CorrVal[DENS] <= MIN_DENS
 #                   ifndef BAROTROPIC_EOS
                     ||  Eint <= MIN_EINT  ||  !Aux_IsFinite(Eint)
+                    ||  Pres <= MIN_PRES  ||  !Aux_IsFinite(Pres)
 #                   endif
 #                   if   ( DUAL_ENERGY == DE_ENPY )
                     ||  ( (*DE_StatusPtr1D == DE_UPDATED_BY_DUAL || *DE_StatusPtr1D == DE_UPDATED_BY_MIN_PRES)
