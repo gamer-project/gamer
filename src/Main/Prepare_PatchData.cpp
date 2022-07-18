@@ -1,6 +1,6 @@
 #include "GAMER.h"
 
-void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real IntData_FC[],
+void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real IntData_FC[], real IntData_CC_IntTime[],
                            const int FSide, const double PrepTime, const int GhostSize,
                            const IntScheme_t IntScheme_CC, const IntScheme_t IntScheme_FC,
                            const int NTSib[], int *TSib[], const long TVarCC, const int NVarCC_Tot,
@@ -247,6 +247,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #     if ( MODEL == ELBDM )
       if (  !(TVarCC & _REAL)  ||  !(TVarCC & _IMAG)  )
       Aux_Error( ERROR_INFO, "real and/or imag parts are not found for phase interpolation in ELBDM !!\n" );
+
+//    we have assumed in InterpolateGhostZone() that when adopting IntPhase this function will NOT prepare
+//    anything other than wave function and, optionally, density
+//    --> e.g., one cannot prepare wave function and potential at the same time when enabling IntPhase
+      if (  TVarCC & ~( _REAL | _IMAG | _DENS )  )
+      Aux_Error( ERROR_INFO, "unsupported parameter %s = %d for IntPhase !!\n", "TVarCC", TVarCC );
 #     else
       Aux_Error( ERROR_INFO, "\"interpolation on phase\" is useful only in ELBDM !!\n" );
 #     endif
@@ -698,6 +704,16 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
       real *FInterface_Data = NULL;
 
       if ( NVarFC_Tot > 0 )   FInterface_Data = new real [ SQR(PS2) + 4*PS2*GhostSize_Padded ];
+#     endif
+
+//    IntData_CC_IntTime: for temporal interpolation on density and phase in ELBDM
+#     if ( MODEL == ELBDM )
+      real *IntData_CC_IntTime = (  IntPhase  &&  OPT__INT_TIME  &&  lv > 0  &&
+                                   !Mis_CompareRealValue( PrepTime, amr->FluSgTime[lv-1][  amr->FluSg[lv-1]], NULL, false )  &&
+                                   !Mis_CompareRealValue( PrepTime, amr->FluSgTime[lv-1][1-amr->FluSg[lv-1]], NULL, false )  )
+                                 ? new real [ 2*PS2*PS2*GhostSize_Padded ] : NULL;
+#     else
+      real *IntData_CC_IntTime = NULL;
 #     endif
 
 
@@ -1657,7 +1673,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 
 //             (b2-3) perform interpolation and store the results in IntData_CC[] and IntData_FC[]
-               InterpolateGhostZone( lv-1, FaSibPID, IntData_CC, IntData_FC, Side, PrepTime, GhostSize,
+               InterpolateGhostZone( lv-1, FaSibPID, IntData_CC, IntData_FC, IntData_CC_IntTime, Side, PrepTime, GhostSize,
                                      IntScheme_CC, IntScheme_FC, NTSib, TSib, TVarCC, NVarCC_Tot, NVarCC_Flu,
                                      TVarCCIdxList_Flu, NVarCC_Der, TVarCCList_Der, TVarFC, NVarFC_Tot, TVarFCIdxList,
                                      IntPhase, FluBC, PotBC, BC_Face, MinPres, MinTemp, MinEntr, DE_Consistency,
@@ -2208,6 +2224,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
       }
       delete [] IntData_CC;
       delete [] IntData_FC;
+      delete [] IntData_CC_IntTime;
 
 #     ifdef MHD
       delete [] FInterface_Data;
