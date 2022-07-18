@@ -218,7 +218,7 @@ void YT_AddLocalGrid( const int *GID_LvStart, const int (*NPatchAllRank)[NLEVEL]
 #        endif // #ifdef MHD
 
 #        endif // #ifndef LIBYT_USE_PATCH_GROUP
-         
+
          LID = LID + 1;
       }
    }

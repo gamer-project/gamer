@@ -260,7 +260,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
 //    3. update particles (prediction for KDK) and exchange particles
 // ===============================================================================================
-#     ifdef PARTICLE
+#     ifdef MASSIVE_PARTICLES
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
          Aux_Message( stdout, "   Lv %2d: Par_UpdateParticle (predict) %5s... ", lv, "" );
 
@@ -278,13 +278,13 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
-         Aux_Message( stdout, "   Lv %2d: Par_PassParticle2Sibling %9s... ", lv, "" );
+         Aux_Message( stdout, "   Lv %2d: Par_PassParticle2Sibling (massive)... ", lv, "" );
 
       TIMING_FUNC(   Par_PassParticle2Sibling( lv, TimingSendPar_Yes ),
                      Timer_Par_2Sib[lv],   TIMER_ON   );
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
-#     endif
+#     endif // #ifdef MASSIVE_PARTICLES
 // ===============================================================================================
 
 
@@ -383,7 +383,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
 //    5. correct particles velocity and send particles to lv+1
 // ===============================================================================================
-#     ifdef PARTICLE
+#     ifdef MASSIVE_PARTICLES
       if ( amr->Par->Integ == PAR_INTEG_KDK )
       {
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
@@ -422,14 +422,14 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       if ( !OPT__MINIMIZE_MPI_BARRIER )
       {
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
-            Aux_Message( stdout, "   Lv %2d: Par_PassParticle2Son %12s ... ", lv, "" );
+            Aux_Message( stdout, "   Lv %2d: Par_PassParticle2Son (massive) %2s ... ", lv, "" );
 
          TIMING_FUNC(   Par_PassParticle2Son_MultiPatch( lv, PAR_PASS2SON_EVOLVE, TimingSendPar_Yes, NULL_INT, NULL ),
                         Timer_Par_2Son[lv],   TIMER_ON   );
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
       }
-#     endif // #ifdef PARTICLE
+#     endif // ifdef MASSIVE_PARTICLES
 // ===============================================================================================
 
 
@@ -481,7 +481,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       if ( OPT__MINIMIZE_MPI_BARRIER )
       {
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
-            Aux_Message( stdout, "   Lv %2d: Par_PassParticle2Son %12s ... ", lv, "" );
+            Aux_Message( stdout, "   Lv %2d: Par_PassParticle2Son (massive) %2s ... ", lv, "" );
 
          TIMING_FUNC(   Par_PassParticle2Son_MultiPatch( lv, PAR_PASS2SON_EVOLVE, TimingSendPar_Yes, NULL_INT, NULL ),
                         Timer_Par_2Son[lv],   TIMER_ON   );
@@ -528,6 +528,8 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 // ===============================================================================================
 
 
+//    7. update MPI buffers
+// ===============================================================================================
 //    exchange the updated fluid field in the buffer patches
       TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, SaveSg_Mag, NULL_INT, DATA_GENERAL,
                                         _TOTAL, _MAG, Flu_ParaBuf, USELB_YES ),
@@ -542,6 +544,44 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #     endif
 
 
+//    8. update tracer particles
+// ===============================================================================================
+#     ifdef TRACER
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+         Aux_Message( stdout, "   Lv %2d: Par_UpdateTracerParticle %9s... ", lv, "" );
+
+//    exchange the updated density and momentum fields in the buffer patches for computing the tracer particle velocity
+      if ( amr->Par->GhostSizeTracer > Flu_ParaBuf )
+      TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, NULL_INT, DATA_GENERAL,
+                                        _DENS|_MOMX|_MOMY|_MOMZ, _NONE, amr->Par->GhostSizeTracer, USELB_YES ),
+                     Timer_GetBuf[lv][2],   TIMER_ON   );
+
+      TIMING_FUNC(   Par_UpdateTracerParticle( lv, TimeNew, TimeOld, false ),
+                     Timer_Par_Update[lv][0],   TIMER_ON   );
+
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+
+
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+         Aux_Message( stdout, "   Lv %2d: Par_PassParticle2Sibling (tracer) ... ", lv, "" );
+
+      TIMING_FUNC(   Par_PassParticle2Sibling( lv, TimingSendPar_Yes ),
+                     Timer_Par_2Sib[lv],   TIMER_ON   );
+
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+
+
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+         Aux_Message( stdout, "   Lv %2d: Par_PassParticle2Son (tracer) %3s ... ", lv, "" );
+
+      TIMING_FUNC(   Par_PassParticle2Son_MultiPatch( lv, PAR_PASS2SON_EVOLVE, TimingSendPar_Yes, NULL_INT, NULL ),
+                     Timer_Par_2Son[lv],   TIMER_ON   );
+
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+#     endif // #ifdef TRACER
+// ===============================================================================================
+
+
       dTime_SoFar       += dTime_SubStep;
       Time_Prev     [lv] = TimeOld;
       Time          [lv] = TimeNew;
@@ -554,7 +594,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       if ( lv != TOP_LEVEL  &&  NPatchTotal[lv+1] != 0 )
       {
 
-//       7. enter the next refinement level
+//       9. enter the next refinement level
 // ===============================================================================================
 #        ifdef TIMING
          MPI_Barrier( MPI_COMM_WORLD );
@@ -570,11 +610,11 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 // ===============================================================================================
 
 
-//       8. correct the data at the current level with the data at the next finer level
+//       10. correct the data at the current level with the data at the next finer level
 // ===============================================================================================
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "   Lv %2d: Flu_FixUp %24s... ", lv, "" );
 
-//       8-1. use the average data on fine grids to correct the coarse-grid data
+//       10-1. use the average data on fine grids to correct the coarse-grid data
          if ( OPT__FIXUP_RESTRICT )
          {
             TIMING_FUNC(   Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv],
@@ -588,7 +628,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #           endif
          }
 
-//       8-2. use the fine-grid electric field on the coarse-fine boundaries to correct the coarse-grid magnetic field
+//       10-2. use the fine-grid electric field on the coarse-fine boundaries to correct the coarse-grid magnetic field
 #        ifdef MHD
          if ( OPT__FIXUP_ELECTRIC )
          {
@@ -603,9 +643,9 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          }
 #        endif
 
-//       8-3. use the fine-grid fluxes across the coarse-fine boundaries to correct the coarse-grid data
-//            --> apply AFTER other fix-up operations since it will check negative pressure as well
-//                (which requires the coarse-grid B field updated by Flu_FixUp_Restrict() and MHD_FixUp_Electric())
+//       10-3. use the fine-grid fluxes across the coarse-fine boundaries to correct the coarse-grid data
+//             --> apply AFTER other fix-up operations since it will check negative pressure as well
+//                 (which requires the coarse-grid B field updated by Flu_FixUp_Restrict() and MHD_FixUp_Electric())
          if ( OPT__FIXUP_FLUX )
          {
 #           ifdef LOAD_BALANCE
@@ -618,7 +658,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                            Timer_FixUp[lv],   TIMER_ON   );
          }
 
-//       8-4. exchange the updated data
+//       10-4. exchange the updated data
 #        ifdef MHD
          if ( OPT__FIXUP_FLUX  ||  OPT__FIXUP_RESTRICT  ||  OPT__FIXUP_ELECTRIC )
 #        else
@@ -634,11 +674,11 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       } // if ( lv != TOP_LEVEL  &&  NPatchTotal[lv+1] != 0 )
 
 
-//    9. flag the current level and create patches at the next finer level
+//    11. flag the current level and create patches at the next finer level
 // ===============================================================================================
       if ( lv != TOP_LEVEL  &&  AdvanceCounter[lv] % REGRID_COUNT == 0 )
       {
-//       flag
+//       11-1. flag
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "   Lv %2d: Flag %29s... ", lv, "" );
 
 #        ifdef LOAD_BALANCE
@@ -654,7 +694,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
 
-//       refine
+//       11-2. refine
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "   Lv %2d: Refine %27s... ", lv, "" );
 
          TIMING_FUNC(   Refine( lv, USELB_YES ),

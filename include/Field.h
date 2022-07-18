@@ -69,6 +69,7 @@ SET_GLOBAL( FieldIdx_t Idx_ParPosZ,       Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_ParVelX,       Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_ParVelY,       Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_ParVelZ,       Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_ParType,       Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_ParTime,       Idx_Undefined );
 #ifdef STORE_PAR_ACC
 SET_GLOBAL( FieldIdx_t Idx_ParAccX,       Idx_Undefined );
@@ -89,7 +90,7 @@ SET_GLOBAL( char FieldLabel[NCOMP_TOTAL][MAX_STRING] );
 SET_GLOBAL( const char *PotLabel, "Pote" );  // potential label is currently fixed
 #endif
 #ifdef MHD
-SET_GLOBAL( char *MagLabel[NCOMP_MAG] );
+SET_GLOBAL( char MagLabel[NCOMP_MAG][MAX_STRING] );
 #endif
 #ifdef PARTICLE
 SET_GLOBAL( char ParAttLabel[PAR_NATT_TOTAL][MAX_STRING] );

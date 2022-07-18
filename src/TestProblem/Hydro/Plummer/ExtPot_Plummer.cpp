@@ -1,6 +1,6 @@
 #include "CUPOT.h"
 #ifdef __CUDACC__
-#include "CUAPI.h"
+#include "CUDA_CheckError.h"
 #endif
 
 #ifdef GRAVITY
@@ -28,10 +28,11 @@ extern double Plummer_ExtPotMFrac;
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
 // Parameter   :  AuxArray_Flt/Int : Floating-point/Integer arrays to be filled up
+//                Time             : Target physical time
 //
 // Return      :  AuxArray_Flt/Int[]
 //-------------------------------------------------------------------------------------------------------
-void SetExtPotAuxArray_Plummer( double AuxArray_Flt[], int AuxArray_Int[] )
+void SetExtPotAuxArray_Plummer( double AuxArray_Flt[], int AuxArray_Int[], const double Time )
 {
 
 // potential = -G*M/(r^2+R0^2)^(1/2)
@@ -141,7 +142,7 @@ void SetCPUExtPot_Plummer( ExtPot_t &CPUExtPot_Ptr )
 #ifndef __CUDACC__
 
 // local function prototypes
-void SetExtPotAuxArray_Plummer( double [], int [] );
+void SetExtPotAuxArray_Plummer( double [], int [], const double );
 void SetCPUExtPot_Plummer( ExtPot_t & );
 #ifdef GPU
 void SetGPUExtPot_Plummer( ExtPot_t & );
@@ -165,7 +166,7 @@ void SetGPUExtPot_Plummer( ExtPot_t & );
 void Init_ExtPot_Plummer()
 {
 
-   SetExtPotAuxArray_Plummer( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int );
+   SetExtPotAuxArray_Plummer( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int, Time[0] );
    SetCPUExtPot_Plummer( CPUExtPot_Ptr );
 #  ifdef GPU
    SetGPUExtPot_Plummer( GPUExtPot_Ptr );
