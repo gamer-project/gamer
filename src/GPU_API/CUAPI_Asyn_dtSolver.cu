@@ -126,6 +126,8 @@ void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real 
 
 // set the block size
    const int NPatch = NPatchGroup*8;
+
+#  if ( MODEL == HYDRO )
    dim3 BlockDim_dtSolver( 1, 1, 1 );
 
    switch ( TSolver )
@@ -143,6 +145,7 @@ void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real 
       default :
          Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TSolver", TSolver );
    }
+#  endif
 
 
 // set the number of patches and the corresponding data size to be transferred into GPU in each stream
