@@ -2021,6 +2021,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 
 // interpolation schemes
    LoadField( "Opt__Int_Time",           &RS.Opt__Int_Time,           SID, TID, NonFatal, &RT.Opt__Int_Time,            1, NonFatal );
+#  if ( MODEL == HYDRO )
+   LoadField( "Opt__Int_Prim",           &RS.Opt__Int_Prim,           SID, TID, NonFatal, &RT.Opt__Int_Prim,            1, NonFatal );
+#  endif
 #  if ( MODEL == ELBDM )
    LoadField( "Opt__Int_Phase",          &RS.Opt__Int_Phase,          SID, TID, NonFatal, &RT.Opt__Int_Phase,           1, NonFatal );
 #  endif
