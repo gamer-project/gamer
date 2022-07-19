@@ -81,6 +81,7 @@ static double Bondi_HSE_Beta_P2;          // P1=G*MassBH*Rho0/Rcore, and P2 curr
 
 // parameters for soliton
        bool   Bondi_void;
+       bool   Bondi_dynBH;
        bool   Bondi_Soliton;
        double Bondi_Soliton_m22;
        double Bondi_Soliton_t;
@@ -263,6 +264,7 @@ void SetParameter()
    ReadPara->Add( "Bondi_HSE_Beta_Rcore", &Bondi_HSE_Beta_Rcore,     -1.0,          Eps_double,       NoMax_double      );
 
    ReadPara->Add( "Bondi_void",               &Bondi_void,                    true,         Useless_bool,     Useless_bool      );
+   ReadPara->Add( "Bondi_dynBH",              &Bondi_dynBH,                   true,         Useless_bool,     Useless_bool      );
    ReadPara->Add( "Bondi_Soliton",            &Bondi_Soliton,                 false,        Useless_bool,     Useless_bool      );
    ReadPara->Add( "Bondi_Soliton_m22",        &Bondi_Soliton_m22,            -1.0,          NoMin_double,     NoMax_double      );
    ReadPara->Add( "Bondi_Soliton_t",          &Bondi_Soliton_t,              -1.0,          NoMin_double,     NoMax_double      );
@@ -489,7 +491,9 @@ void SetParameter()
       Aux_Message( stdout, "  Bondi_HSE_Beta        = %13.7e\n",                 Bondi_HSE_Beta                                                );
       Aux_Message( stdout, "  Bondi_HSE_Beta_Rho0   = %13.7e (%13.7e g/cm^3)\n", Bondi_HSE_Beta_Rho0, Bondi_HSE_Beta_Rho0*UNIT_D               );
       Aux_Message( stdout, "  Bondi_HSE_Beta_Rcore  = %13.7e (%13.7e kpc)\n",    Bondi_HSE_Beta_Rcore, Bondi_HSE_Beta_Rcore*UNIT_L/Const_kpc   ); }
-      
+
+      Aux_Message( stdout, "  Bondi_void                = %s\n",                     (Bondi_void)?"YES":"NO"                                        );
+      Aux_Message( stdout, "  Bondi_dynBH               = %s\n",                     (Bondi_dynBH)?"YES":"NO"                                        );
       Aux_Message( stdout, "  Bondi_Soliton             = %s\n",                     (Bondi_Soliton)?"YES":"NO"                                        );
       if( Bondi_Soliton ) {
       Aux_Message( stdout, "  Bondi_Soliton_m22         = %13.7e\n",                 Bondi_Soliton_m22                                                 );

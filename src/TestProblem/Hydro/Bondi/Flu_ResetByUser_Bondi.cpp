@@ -19,7 +19,7 @@ extern double Bondi_SinkEt;
 extern int    Bondi_SinkNCell;
 
 extern bool   Bondi_void;
-
+extern bool   Bondi_dynBH;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flu_ResetByUser_Func_Bondi
@@ -209,7 +209,8 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double Time
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
    MPI_Allreduce( &SinkMass_OneSubStep_ThisRank, &SinkMass_OneSubStep_AllRank, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-   Bondi_MassBH += SinkMass_OneSubStep_AllRank;
+
+   if( Bondi_dynBH ){ Bondi_MassBH += SinkMass_OneSubStep_AllRank; }
 
 } // FUNCTION : Flu_ResetByUser_API_Bondi
 
