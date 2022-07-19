@@ -1,4 +1,5 @@
 #include "GAMER.h"
+#include "CUFLU.h"
 
 
 static IntSchemeFunc_t Int_SelectScheme( const IntScheme_t IntScheme );
@@ -8,7 +9,8 @@ static void Interpolate_Iterate( real CData[], const int CSize[3], const int CSt
                                  real FData[], const int FSize[3], const int FStart[3],
                                  const int NComp, const IntScheme_t IntScheme, const bool UnwrapPhase,
                                  const bool Monotonic[], const bool OppSign0thOrder,
-                                 const IntPrim_t IntPrim, const ReduceOrFixMonoCoeff_t ReduceMonoCoeff );
+                                 const IntPrim_t IntPrim, const ReduceOrFixMonoCoeff_t ReduceMonoCoeff,
+                                 const real CMag[], const real FMag[][NCOMP_MAG] );
 #endif
 
 void Int_MinMod1D  ( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
@@ -75,6 +77,8 @@ void Int_Quartic   ( real CData[], const int CSize[3], const int CStart[3], cons
 //                                  --> Must enable AllCons
 //                ReduceMonoCoeff : (true/false) --> (reduce/fix) the monotonic coefficient when interpolation fails
 //                                  --> Must enable AllCons
+//                C/FMag_IntIter  : Coarse/Fine-grid, cell-centered B field for Interpolate_Iterate()
+//                                  --> Note that the two arrays have different format
 //
 // Return      :  FData[]
 //-------------------------------------------------------------------------------------------------------
@@ -82,7 +86,8 @@ void Interpolate( real CData[], const int CSize[3], const int CStart[3], const i
                   real FData[], const int FSize[3], const int FStart[3],
                   const int NComp, const IntScheme_t IntScheme, const bool UnwrapPhase,
                   const bool Monotonic[], const bool OppSign0thOrder, const bool AllCons,
-                  const IntPrim_t IntPrim, const ReduceOrFixMonoCoeff_t ReduceMonoCoeff )
+                  const IntPrim_t IntPrim, const ReduceOrFixMonoCoeff_t ReduceMonoCoeff,
+                  const real CMag_IntIter[], const real FMag_IntIter[][NCOMP_MAG] )
 {
 
 // check
@@ -117,22 +122,31 @@ void Interpolate( real CData[], const int CSize[3], const int CStart[3], const i
 #  endif // #ifdef GAMER_DEBUG
 
 #  if ( MODEL == HYDRO )
-   if (  !AllCons  &&  ( ReduceMonoCoeff || IntPrim )  )
-      Aux_Error( ERROR_INFO, "ReduceMonoCoeff/IntPrim must work with AllCons !!\n" );
+   if ( ReduceMonoCoeff || IntPrim )
+   {
+      if ( !AllCons )
+         Aux_Error( ERROR_INFO, "AllCons == false for ReduceMonoCoeff/IntPrim !!\n" );
 
-   if ( ReduceMonoCoeff  &&  NComp != NCOMP_TOTAL )
-      Aux_Error( ERROR_INFO, "NComp (%d) != NCOMP_TOTAL (%d) for ReduceMonoCoeff !!\n", NComp, NCOMP_TOTAL );
+      if ( NComp != NCOMP_TOTAL )
+         Aux_Error( ERROR_INFO, "NComp (%d) != NCOMP_TOTAL (%d) for ReduceMonoCoeff/IntPrim !!\n", NComp, NCOMP_TOTAL );
 
-   if ( IntPrim  &&  NComp != NCOMP_TOTAL )
-      Aux_Error( ERROR_INFO, "NComp (%d) != NCOMP_TOTAL (%d) for IntPrim !!\n", NComp, NCOMP_TOTAL );
-#  endif
+#     ifdef MHD
+      if ( CMag_IntIter == NULL  &&  IntPrim )
+         Aux_Error( ERROR_INFO, "CMag_IntIter == NULL for IntPrim !!\n" );
+
+      if ( FMag_IntIter == NULL )
+         Aux_Error( ERROR_INFO, "FMag_IntIter == NULL for ReduceMonoCoeff/IntPrim !!\n" );
+#     endif
+   }
+#  endif // HYDRO
 
 
 // determine whether or not to switch to Interpolate_Iterate()
 #  if ( MODEL == HYDRO )
-   if ( ReduceMonoCoeff  ||  IntPrim )
+   if ( ReduceMonoCoeff || IntPrim )
       Interpolate_Iterate( CData, CSize, CStart, CRange, FData, FSize, FStart, NComp, IntScheme,
-                           UnwrapPhase, Monotonic, OppSign0thOrder, IntPrim, ReduceMonoCoeff );
+                           UnwrapPhase, Monotonic, OppSign0thOrder, IntPrim, ReduceMonoCoeff,
+                           CMag_IntIter, FMag_IntIter );
 
    else
 #  endif
@@ -181,7 +195,7 @@ void Interpolate( real CData[], const int CSize[3], const int CStart[3], const i
 //                5. CData[] may be overwritten
 //                6. Only applicable for HYDRO
 //
-// Parameter   :  Others : See Interpolate()
+// Parameter   :  See Interpolate()
 //
 // Return      :  FData[]
 //-------------------------------------------------------------------------------------------------------
@@ -189,7 +203,8 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
                           real FData[], const int FSize[3], const int FStart[3],
                           const int NComp, const IntScheme_t IntScheme, const bool UnwrapPhase,
                           const bool Monotonic[], const bool OppSign0thOrder,
-                          const IntPrim_t IntPrim, const ReduceOrFixMonoCoeff_t ReduceMonoCoeff )
+                          const IntPrim_t IntPrim, const ReduceOrFixMonoCoeff_t ReduceMonoCoeff,
+                          const real CMag[], const real FMag[][NCOMP_MAG] )
 {
 
    const int CSize3D     = CSize[0]*CSize[1]*CSize[2];
@@ -203,7 +218,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 
    const bool JeansMinPres_No = false;
    bool FData_is_Prim = false;
-   real Cons[NCOMP_TOTAL], Prim[NCOMP_TOTAL], Array[NCOMP_TOTAL];
+   real Cons[NCOMP_TOTAL_PLUS_MAG], Prim[NCOMP_TOTAL_PLUS_MAG];   // must include B field
 
 
 // select an interpolation scheme
@@ -216,10 +231,6 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 
 // start iterations
    do {
-//    0. initialize GotFailCell as false
-      GotFailCell = false;
-
-
 //    1. adopt the original monotonic coefficient first
       if ( Iteration == 0 )   IntMonoCoeff = (real)INT_MONO_COEFF;
 
@@ -230,12 +241,24 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
          for (int i=0; i<CSize3D; i++)
          {
             for (int v=0; v<NCOMP_TOTAL; v++)   Cons[v] = CData[ CSize3D*v + i ];
+#           ifdef MHD
+            for (int v=0; v<NCOMP_MAG; v++)
+            {
+               const real B = CMag[ CSize3D*v + i ];
+               Cons[ MAG_OFFSET + v ] = B;
+
+//             abort if the coarse-grid B field is unphysical
+               if ( ! Aux_IsFinite(B) )   Aux_Error( ERROR_INFO, "unphysical coarse-grid B field (B%d = %14.7e) !!\n", v, B );
+            }
+#           endif
+
             Hydro_Con2Pri( Cons, Prim, MIN_PRES,
                            OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
                            JeansMinPres_No, NULL_REAL,
                            EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
+//          no need to copy the magnetic field here
             for (int v=0; v<NCOMP_TOTAL; v++)   CData[ CSize3D*v + i ] = Prim[v];
          }
 
@@ -263,14 +286,99 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 
 
 //    5. check unphysical results
+      GotFailCell = false;
+
       for (int i=0; i<FSize3D; i++)
       {
-         for (int v=0; v<NCOMP_TOTAL; v++)   Array[v] = FData[ FSize3D*v + i ];
+         real Temp[NCOMP_TOTAL];
+         for (int v=0; v<NCOMP_TOTAL; v++)   Temp[v] = FData[ FSize3D*v + i ];
 
-         GotFailCell = Hydro_CheckUnphysical( (FData_is_Prim)?UNPHY_MODE_PRIM:UNPHY_MODE_CONS, Array, NULL,
+//       5-1. check the interpolation results without EoS conversion
+         GotFailCell = Hydro_CheckUnphysical( (FData_is_Prim)?UNPHY_MODE_PRIM:UNPHY_MODE_CONS, Temp, NULL,
                                               ERROR_INFO, UNPHY_SILENCE );
-         if ( GotFailCell )   break;
-      }
+
+
+//       5-2. check the interpolation results with EoS conversion
+//            --> only check either pressure of internal energy for now
+         const bool FailBeforeEoS = GotFailCell;
+         real Eint=NULL_REAL, Pres=NULL_REAL;
+
+         if ( !GotFailCell )
+         {
+            if ( FData_is_Prim )
+            {
+//             convert passive scalars from mass fraction back to mass density
+#              if ( NCOMP_PASSIVE > 0 )
+               real Passive[NCOMP_PASSIVE];
+
+               for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = Temp[ NCOMP_FLUID + v ];
+
+               if ( OPT__INT_FRAC_PASSIVE_LR )
+                  for (int v=0; v<PassiveIntFrac_NVar; v++)    Passive[ PassiveIntFrac_VarIdx[v] ] *= Temp[DENS];
+#              else
+               const real *Passive = NULL;
+#              endif
+
+               Eint = EoS_DensPres2Eint_CPUPtr( Temp[DENS], Temp[ENGY], Passive,
+                                                EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+
+               if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Eint, "interpolated internal energy", ERROR_INFO, UNPHY_SILENCE )  )
+                  GotFailCell = true;
+            }
+
+            else
+            {
+               const bool CheckMinPres_No = false;
+#              ifdef MHD
+               const real Emag            = (real)0.5*( SQR(FMag[i][MAGX]) + SQR(FMag[i][MAGY]) + SQR(FMag[i][MAGZ]) );
+
+//             abort if the fine-grid B field is unphysical
+               if ( ! Aux_IsFinite(Emag) )   Aux_Error( ERROR_INFO, "unphysical fine-grid B energy (%14.7e) !!\n", Emag );
+
+#              else
+               const real Emag            = NULL_REAL;
+#              endif
+
+               Pres = Hydro_Con2Pres( Temp[DENS], Temp[MOMX], Temp[MOMY], Temp[MOMZ], Temp[ENGY], Temp+NCOMP_FLUID,
+                                      CheckMinPres_No, NULL_REAL, Emag,
+                                      EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+
+               if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "interpolated pressure", ERROR_INFO, UNPHY_SILENCE )  )
+                  GotFailCell = true;
+            }
+         } // if ( !GotFailCell )
+
+         if ( GotFailCell )
+         {
+            if ( Iteration == MaxIter )
+            {
+               Aux_Message( stderr, "ERROR : %s() failed !!\n", __FUNCTION__ );
+               Aux_Message( stderr, "NComp=%d, IntScheme=%d, UnwrapPhase=%d, Monotonic=%d, OppSign0thOrder=%d\n",
+                            NComp, IntScheme, UnwrapPhase, Monotonic[0], OppSign0thOrder );
+               Aux_Message( stderr, "FData_is_Prim=%d, Iter=%d, IntMonoCoeff=%13.7e\n", FData_is_Prim, Iteration, IntMonoCoeff );
+
+               Aux_Message( stderr, "Fluid: " );
+               for (int v=0; v<NCOMP_TOTAL; v++)   Aux_Message( stderr, " [%d]=%14.7e", v, Temp[v] );
+               Aux_Message( stderr, "\n" );
+
+#              ifdef MHD
+               Aux_Message( stderr, "B field: " );
+               for (int v=0; v<NCOMP_MAG; v++)     Aux_Message( stderr, " [%d]=%14.7e", v, FMag[i][v] );
+               Aux_Message( stderr, "\n" );
+#              endif
+
+               if ( !FailBeforeEoS )
+               {
+                  if ( FData_is_Prim )    Aux_Message( stderr, "Eint=%14.7e\n", Eint );
+                  else                    Aux_Message( stderr, "Pres=%14.7e\n", Pres );
+               }
+
+               MPI_Exit();    // abort the simulation if interpolation fails
+            }
+
+            break;
+         } // if ( GotFailCell )
+      } // for (int i=0; i<FSize3D; i++)
 
 
 //    6. counter increment
@@ -284,27 +392,18 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
    {
       for (int i=0; i<FSize3D; i++)
       {
-         for (int v=0; v<NCOMP_TOTAL; v++)   Prim[v] = FData[ FSize3D*v + i ];
+         for (int v=0; v<NCOMP_TOTAL; v++)   Prim[              v ] = FData[ FSize3D*v + i ];
+#        ifdef MHD
+         for (int v=0; v<NCOMP_MAG;   v++)   Prim[ MAG_OFFSET + v ] = FMag[i][v];
+#        endif
 
          Hydro_Pri2Con( Prim, Cons, OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
                         EoS_DensPres2Eint_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
+//       no need to copy the magnetic field here
          for (int v=0; v<NCOMP_TOTAL; v++)   FData[ FSize3D*v + i ] = Cons[v];
       }
    }
-
-
-// print out unphysical results
-#  ifdef GAMER_DEBUG
-   for (int i=0; i<FSize3D; i++)
-   {
-      for (int v=0; v<NCOMP_TOTAL; v++)   Cons[v] = FData[ FSize3D*v + i ];
-
-      if (  Hydro_CheckUnphysical( UNPHY_MODE_CONS, Cons, NULL, ERROR_INFO, UNPHY_VERBOSE )  )
-         Aux_Message( stderr, "NComp=%d, IntScheme=%d, UnwrapPhase=%d, Monotonic=%d, OppSign0thOrder=%d, IntPrim=%d\n",
-                      NComp, IntScheme, UnwrapPhase, Monotonic[0], OppSign0thOrder, IntPrim );
-   }
-#  endif
 
 } // FUNCTION : Interpolate_Iterate
 #endif // #if ( MODEL == HYDRO )

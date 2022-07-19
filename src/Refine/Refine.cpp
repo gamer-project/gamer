@@ -119,6 +119,9 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
    bool *JustRefined = new bool [ amr->num[lv] ];
    for (int PID=0; PID<amr->num[lv]; PID++)  JustRefined[PID] = false;
+
+// fine-grid, cell-centered B field for INT_REDUCE_MONO_COEFF
+   real (*Mag_FDataCC_IntIter)[NCOMP_MAG] = new real [ CUBE(FSize_CC) ][NCOMP_MAG];
 #  endif // #ifdef MHD
 
 
@@ -663,7 +666,19 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
          }
 
 //       (c1.3.4.2) interpolation
-//       (c1.3.4.2-1) fluid
+//       (c1.3.4.2-1) magnetic field
+//                    --> do it first since we need the cell-centered B field for INT_REDUCE_MONO_COEFF
+#        ifdef MHD
+         const real *Mag_CData_Ptr[NCOMP_MAG] = { Mag_CData[MAGX], Mag_CData[MAGY], Mag_CData[MAGZ] };
+               real *Mag_FData_Ptr[NCOMP_MAG] = { Mag_FData[MAGX], Mag_FData[MAGY], Mag_FData[MAGZ] };
+
+         MHD_InterpolateBField( Mag_CData_Ptr, CSize_Mag, CStart_Mag, CRange_Mag,
+                                Mag_FData_Ptr, FSize_Mag, FStart_Mag, (const real**)Mag_FInterface_Ptr,
+                                OPT__REF_MAG_INT_SCHEME, Monotonicity_Yes );
+#        endif
+
+
+//       (c1.3.4.2-2) fluid
 #        if ( MODEL == ELBDM )
          if ( OPT__INT_PHASE )
          {
@@ -680,19 +695,19 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 //          interpolate density
             Interpolate( &Flu_CData[DENS][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[DENS][0][0][0],
                          FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_Yes,
-                         IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF );
+                         IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
 
 //          interpolate phase
             Interpolate( &Flu_CData[REAL][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[REAL][0][0][0],
                          FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_Yes, &Monotonicity_No,
-                         IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF );
+                         IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
          }
 
          else // if ( OPT__INT_PHASE )
          {
             Interpolate( &Flu_CData[0][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[0][0][0][0],
                          FSize_CC3, FStart_CC, NCOMP_TOTAL, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity,
-                         IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF );
+                         IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
          }
 
          if ( OPT__INT_PHASE )
@@ -722,34 +737,40 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 #        else // #if ( MODEL == ELBDM )
 
+//       prepare the fine-grid, cell-centered B field for INT_REDUCE_MONO_COEFF
+#        ifdef MHD
+         for (int k=0; k<FSize_CC; k++)
+         for (int j=0; j<FSize_CC; j++)
+         for (int i=0; i<FSize_CC; i++)
+         {
+            const int t = IDX321( i, j, k, FSize_CC, FSize_CC );
+
+            MHD_GetCellCenteredBField( Mag_FDataCC_IntIter[t], Mag_FData[MAGX], Mag_FData[MAGY], Mag_FData[MAGZ],
+                                       FSize_CC, FSize_CC, FSize_CC, i, j, k );
+         }
+#        else
+         const real (*Mag_FDataCC_IntIter)[NCOMP_MAG] = NULL;
+#        endif // MHD
+
 //       adopt INT_PRIM_NO to ensure conservation
+//       --> no need to prepare the coarse-grid, cell-centered B field
          Interpolate( &Flu_CData[0][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[0][0][0][0],
                       FSize_CC3, FStart_CC, NCOMP_TOTAL, OPT__REF_FLU_INT_SCHEME,
                       PhaseUnwrapping_No, Monotonicity,
-                      INT_OPP_SIGN_0TH_ORDER, ALL_CONS_YES, INT_PRIM_NO, INT_REDUCE_MONO_COEFF );
+                      INT_OPP_SIGN_0TH_ORDER, ALL_CONS_YES, INT_PRIM_NO, INT_REDUCE_MONO_COEFF,
+                      NULL, Mag_FDataCC_IntIter );
 
 #        endif // #if ( MODEL == ELBDM ) ... else
 
 
-//       (c1.3.4.2-2) potential
+//       (c1.3.4.2-3) potential
 #        ifdef GRAVITY
          const int CSize_Pot_Temp[3] = { CSize_Pot, CSize_Pot, CSize_Pot };
 
          if ( UsePot )
          Interpolate( &Pot_CData[0][0][0], CSize_Pot_Temp, CStart_Pot, CRange_CC, &Pot_FData[0][0][0],
                       FSize_CC3, FStart_CC, 1, OPT__REF_POT_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_No,
-                      IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF );
-#        endif
-
-
-//       (c1.3.4.2-3) magnetic field
-#        ifdef MHD
-         const real *Mag_CData_Ptr[NCOMP_MAG] = { Mag_CData[MAGX], Mag_CData[MAGY], Mag_CData[MAGZ] };
-               real *Mag_FData_Ptr[NCOMP_MAG] = { Mag_FData[MAGX], Mag_FData[MAGY], Mag_FData[MAGZ] };
-
-         MHD_InterpolateBField( Mag_CData_Ptr, CSize_Mag, CStart_Mag, CRange_Mag,
-                                Mag_FData_Ptr, FSize_Mag, FStart_Mag, (const real**)Mag_FInterface_Ptr,
-                                OPT__REF_MAG_INT_SCHEME, Monotonicity_Yes );
+                      IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
 #        endif
 
 
@@ -982,6 +1003,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #  ifdef MHD
    for (int s=0; s<6; s++)    delete [] Mag_FInterface_Data[s];
    delete [] JustRefined;
+   delete [] Mag_FDataCC_IntIter;
 #  endif
 
 // initialize the amr->NPatchComma list for the buffer patches
