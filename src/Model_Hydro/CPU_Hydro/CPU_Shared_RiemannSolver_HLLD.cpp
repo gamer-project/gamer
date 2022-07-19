@@ -5,7 +5,7 @@
 
 #include "CUFLU.h"
 
-#if ( MODEL == HYDRO  &&  defined MHD )
+#if ( MODEL == HYDRO  &&  defined MHD  &&  !defined SRHD )
 
 
 
