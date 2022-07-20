@@ -34,6 +34,11 @@ void Flu_DerivedField_DivVel( real Out[], const real FluIn[], const real MagIn[]
                               const int NGhost, const double dh )
 {
 
+#  ifdef SRHD
+   Aux_Error( ERROR_INFO, "SRHD does not support div(V) evalation !!\n" );
+#  endif
+
+
 // determine the output array size
    const int NCellOutX = NCellInX - 2*NGhost;
    const int NCellOutY = NCellInY - 2*NGhost;
@@ -174,8 +179,8 @@ void Flu_DerivedField_Mach( real Out[], const real FluIn[], const real MagIn[], 
 
 
 #     ifdef SRHD
-      real Prim[NCOMP_FLUID], FourCs, U;
-      Hydro_Con2Pri( u, Prim, NULL_REAL, NULL_BOOL, NULL_INT, NULL
+      real Prim[NCOMP_FLUID], FourCs, U, Cs;
+      Hydro_Con2Pri( fluid, Prim, NULL_REAL, NULL_BOOL, NULL_INT, NULL,
                      NULL_BOOL, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
                      EoS_DensPres2Eint_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                      EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );

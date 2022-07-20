@@ -276,6 +276,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
                            OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
                            JeansMinPres_No, NULL_REAL,
                            EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
+                           EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
 //          no need to copy the magnetic field here
@@ -423,8 +424,10 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
          {
 //          primitive --> conserved
             if ( FData_is_Prim ) {
-               Hydro_Pri2Con( Temp, Cons, OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
-                              EoS_DensPres2Eint_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+               Hydro_Pri2Con( Temp, Cons, OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, 
+                              PassiveIntFrac_VarIdx, EoS_DensPres2Eint_CPUPtr,
+                              EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, 
+                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
             }
 
             else {
@@ -484,7 +487,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 
 
 //    8. counter increment
-      Iteration ++;
+      Iteration++;
 
    } while ( ContinueIteration );
 

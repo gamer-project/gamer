@@ -1906,7 +1906,7 @@ void Hydro_HancockPredict( real fc[][NCOMP_LR], const real dt, const real dh,
 #     ifdef BAROTROPIC_EOS
       if ( fc[f][0] <= (real)0.0 )
 #     elif ( defined SRHD )
-      if ( Hydro_CheckUnphysical( UNPHY_MODE_CONS, fcCon[f], NULL, ERROR_INFO, UNPHY_SILENCE ) )
+      if ( Hydro_CheckUnphysical( UNPHY_MODE_CONS, fc[f], NULL, ERROR_INFO, UNPHY_SILENCE ) )
 #     else
       if ( fc[f][0] <= (real)0.0  ||  fc[f][4] <= (real)0.0 )
 #     endif
