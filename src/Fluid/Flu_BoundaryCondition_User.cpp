@@ -218,7 +218,9 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
       if ( PrepTemp )   Array3D[ v2 ++ ][k][j][i] = Hydro_Con2Temp( BVal[DENS], BVal[MOMX], BVal[MOMY],
                                                                     BVal[MOMZ], BVal[ENGY], BVal+NCOMP_FLUID,
                                                                     CheckMinTemp_Yes, MIN_TEMP, Emag,
-                                                                    EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt,
+                                                                    EoS_DensEint2Temp_CPUPtr,
+                                                                    EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                                    EoS_AuxArray_Flt,
                                                                     EoS_AuxArray_Int, h_EoS_Table );
 
 #     elif ( MODEL == ELBDM )

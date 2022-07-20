@@ -43,7 +43,10 @@
 #ifndef __CUDACC__
 void EoS_SetAuxArray_TaubMathews( double AuxArray_Flt[], int AuxArray_Int[] )
 {
-  return;
+   AuxArray_Flt[0] = ( OPT__UNIT ) ? MOLECULAR_WEIGHT * Const_amu / Const_kB * (UNIT_E/UNIT_M)
+
+                                   : MOLECULAR_WEIGHT;
+   AuxArray_Flt[1] = 1.0 / AuxArray_Flt[0];
 } // FUNCTION : EoS_SetAuxArray_TaubMathews
 #endif // #ifndef __CUDACC__
 

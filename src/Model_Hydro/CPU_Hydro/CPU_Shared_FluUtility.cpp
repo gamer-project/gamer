@@ -574,150 +574,6 @@ real SRHD_Con2KineticEngy( real Con[], const EoS_GUESS_t EoS_GuessHTilde, const 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  SRHD_CheckUnphysical
-// Description :
-// Note        :
-// Parameter   :  Con           : Array storing the conservative variables
-//                Pri           : Array storing the primitive variables
-//                FunctionName  : The function occurring unphysical result
-//                Line          : The line in `FunctionName`
-//                Show          : Print unphysical result in log or not
-//-------------------------------------------------------------------------------------------------------
-GPU_DEVICE
-bool SRHD_CheckUnphysical( const real Con[], const real Pri[],
-                           const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
-                           const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
-                           const real *const EoS_Table[EOS_NTABLE_MAX],
-                           const char FunctionName[], const int Line, bool Show )
-{
-   real discriminant;
-
-
-//--------------------------------------------------------------//
-//------------ only check conserved variables-------------------//
-//--------------------------------------------------------------//
-   if ( Con != NULL && Pri == NULL)
-   {
-// check NaN
-      if (  Con[DENS] != Con[DENS]
-         || Con[MOMX] != Con[MOMX]
-         || Con[MOMY] != Con[MOMY]
-         || Con[MOMZ] != Con[MOMZ]
-         || Con[ENGY] != Con[ENGY]  )                                                   goto FAIL;
-
-// check +inf and -inf
-      if (  (real)  TINY_NUMBER >= Con[DENS] || Con[DENS]  >= (real)HUGE_NUMBER
-         || (real) -HUGE_NUMBER >= Con[MOMX] || Con[MOMX]  >= (real)HUGE_NUMBER
-         || (real) -HUGE_NUMBER >= Con[MOMY] || Con[MOMY]  >= (real)HUGE_NUMBER
-         || (real) -HUGE_NUMBER >= Con[MOMZ] || Con[MOMZ]  >= (real)HUGE_NUMBER
-         || (real)  TINY_NUMBER >= Con[ENGY] || Con[ENGY]  >= (real)HUGE_NUMBER )       goto FAIL;
-
-      real Con_Sort[NCOMP_FLUID];
-
-      for (int v=0;v<NCOMP_FLUID;v++) Con_Sort[v] = Con[v];
-
-      // sorting momentum
-      if (Con_Sort[1]>Con_Sort[3]) Swap(&Con_Sort[1], &Con_Sort[3]);
-      if (Con_Sort[1]>Con_Sort[2]) Swap(&Con_Sort[1], &Con_Sort[2]);
-      if (Con_Sort[2]>Con_Sort[3]) Swap(&Con_Sort[2], &Con_Sort[3]);
-
-// check minimum energy
-      real Msqr = VectorDotProduct( Con_Sort[MOMX], Con_Sort[MOMY], Con_Sort[MOMZ] );
-
-      real Dsqr = SQR(Con[0]);
-      real abc = (real)1.0 / Dsqr;
-      real E_D = Con[4] / Con[0];
-      real M_Dsqr = abc * Msqr;
-      real M_D = SQRT( M_Dsqr );
-
-
-      // (x+y)(x-y) is more accurate than x**2-y**2
-      real X = SQRT( E_D*E_D + (real)2.0*E_D );
-      real Y = X + M_D;
-      real Z = X - M_D;
-      real discriminant = Y * Z;
-
-
-#     ifdef REDUCED_ENERGY
-      if ( discriminant <= TINY_NUMBER )                                                goto FAIL;
-#     else
-      discriminant = ( ( SQR( Con[ENGY] ) -  Msqr ) / SQR ( Con[DENS] ) );
-      if ( discriminant <= 1.0   )                                                      goto FAIL;
-#     endif
-
-// check root
-      real HTilde;
-      HTilde = SRHD_Con2HTilde( Con, EoS_GuessHTilde, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
-      if ( HTilde != HTilde
-        || HTilde <= (real)TINY_NUMBER
-        || HTilde >= (real)HUGE_NUMBER )                                                goto FAIL;
-
-// check temperature
-      real Temp;
-      EoS_HTilde2Temp( HTilde, &Temp, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
-      if ( Temp != Temp
-        || Temp <= (real)TINY_NUMBER
-        || Temp >= (real)HUGE_NUMBER )                                                  goto FAIL;
-
-
-// pass all checks
-      return false;
-   }
-
-//--------------------------------------------------------------//
-//------------ only check primitive variables-------------------//
-//--------------------------------------------------------------//
-
-   else if ( Con == NULL && Pri != NULL)
-   {
-// check NaN
-      if (  Pri[DENS] != Pri[DENS]
-         || Pri[MOMX] != Pri[MOMX]
-         || Pri[MOMY] != Pri[MOMY]
-         || Pri[MOMZ] != Pri[MOMZ]
-         || Pri[ENGY] != Pri[ENGY]  )                                                   goto FAIL;
-
-// check +inf and -inf
-      if (  (real)  TINY_NUMBER >= Pri[DENS] || Pri[DENS]  >= (real)HUGE_NUMBER
-         || (real) -HUGE_NUMBER >= Pri[MOMX] || Pri[MOMX]  >= (real)HUGE_NUMBER
-         || (real) -HUGE_NUMBER >= Pri[MOMY] || Pri[MOMY]  >= (real)HUGE_NUMBER
-         || (real) -HUGE_NUMBER >= Pri[MOMZ] || Pri[MOMZ]  >= (real)HUGE_NUMBER
-         || (real)  TINY_NUMBER >= Pri[ENGY] || Pri[ENGY]  >= (real)HUGE_NUMBER )       goto FAIL;
-
-
-// pass all checks
-      return false;
-   }
-
-// print all variables if goto FAIL
-      FAIL:
-      {
-        if ( Show )
-         {
-           printf( "\n\nError!! function: %s: %d\n", FunctionName, Line);
-
-           if ( Con != NULL && Pri == NULL)
-           {
-              printf( "D=%20.16e, Mx=%20.16e, My=%20.16e, Mz=%20.16e, E=%20.16e\n",
-                                   Con[DENS], Con[MOMX], Con[MOMY], Con[MOMZ], Con[ENGY]);
-              printf( "E^2+2*E*D-|M|^2=%20.16e\n", discriminant );
-           }
-           else
-           {
-              printf( "n=%20.16e, Ux=%20.16e, Uy=%20.16e, Uz=%20.16e, P=%20.16e\n",
-                                   Pri[0], Pri[1], Pri[2], Pri[3], Pri[4]);
-           }
-
-         }
-
-#       ifndef __CUDACC__
-//        exit(0);
-#       endif
-        return true;
-      }
-}
-#else
-//-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_Con2Eint
 // Description :  Evaluate the gas internal energy density
 //
@@ -824,6 +680,15 @@ real Hydro_Con2Entr( const real Dens, const real MomX, const real MomY, const re
                      const real *const EoS_Table[EOS_NTABLE_MAX] )
 {
 
+#  ifdef SRHD
+#  ifdef __CUDACC__
+   printf( "ERROR : SRHD does not support entropy evalation at file <%s>, line <%d>, function <%s> !!\n",
+           ERROR_INFO );
+#  else
+   Aux_Error( ERROR_INFO, "SRHD does not support entropy evalation !!\n" );
+#  endif
+#  endif
+
 // check
 #  ifdef GAMER_DEBUG
    if ( EoS_DensEint2Entr == NULL )
@@ -849,7 +714,6 @@ real Hydro_Con2Entr( const real Dens, const real MomX, const real MomY, const re
    return Entr;
 
 } // FUNCTION : Hydro_Con2Entr
-#endif
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -1351,6 +1215,8 @@ real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const re
                   NULL_BOOL, (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
    Temp = Prim[4]/Prim[0];
+
+   Temp *= EoS_AuxArray_Flt[0];
 #  else
    const bool CheckMinEint_No = false;
    real Eint;
