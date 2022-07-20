@@ -105,7 +105,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "DT__FLUID",                  &DT__FLUID,                      -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "DT__FLUID_INIT",             &DT__FLUID_INIT,                 -1.0,             NoMin_double,  NoMax_double   );
 #  ifdef SRHD
-   ReadPara->Add( "DT__SPEED_OF_LIGHT",         &DT__SPEED_OF_LIGHT,             -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "DT__SPEED_OF_LIGHT",         &DT__SPEED_OF_LIGHT,                0,             0,             1              );
 #  endif
 #  ifdef GRAVITY
    ReadPara->Add( "DT__GRAVITY",                &DT__GRAVITY,                    -1.0,             NoMin_double,  NoMax_double   );

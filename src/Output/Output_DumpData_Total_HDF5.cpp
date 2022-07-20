@@ -1099,6 +1099,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #                    endif
                      Temp = Hydro_Con2Temp( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
                                             CheckMinTemp_No, NULL_REAL, Emag, EoS_DensEint2Temp_CPUPtr,
+                                            EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                             EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
                      FieldData[PID][k][j][i] = Temp;
                   }
@@ -1147,11 +1148,22 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #                    ifdef MHD
                      Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
 #                    endif
+
+#                    ifdef SRHD
+                     real Prim[NCOMP_FLUID];
+                     Hydro_Con2Pri( u, Prim, NULL_REAL, NULL_BOOL, NULL_INT, NULL,
+                                    NULL_BOOL, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
+                                    EoS_DensPres2Eint_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                    EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+
+                     Cs2 = EoS_Temper2CSqr_CPUPtr( Prim[0], Prim[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#                    else
                      Pres = Hydro_Con2Pres( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
                                             CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres_CPUPtr,
                                             EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
                      Cs2  = EoS_DensPres2CSqr_CPUPtr( u[DENS], Pres, u+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                       h_EoS_Table );
+#                    endif
                      FieldData[PID][k][j][i] = SQRT( Cs2 );
                   }
                } // if ( v == CsDumpIdx )

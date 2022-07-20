@@ -115,6 +115,10 @@ extern double           UNIT_B;
 extern bool             OPT__INIT_BFIELD_BYFILE;
 #endif
 
+#ifdef SRHD
+extern int              DT__SPEED_OF_LIGHT;
+#endif
+
 #elif ( MODEL == ELBDM )
 extern double           DT__PHASE, FlagTable_EngyDensity[NLEVEL-1][2];
 extern bool             OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE, ELBDM_TAYLOR3_AUTO;
@@ -244,6 +248,10 @@ extern double                SF_CREATE_STAR_MAX_STAR_MFRAC;
 #if ( MODEL == HYDRO )
 extern double EoS_AuxArray_Flt[EOS_NAUX_MAX];
 extern int    EoS_AuxArray_Int[EOS_NAUX_MAX];
+extern EoS_GUESS_t EoS_GuessHTilde_CPUPtr;
+extern EoS_H2TEM_t EoS_HTilde2Temp_CPUPtr;
+extern EoS_TEM2H_t EoS_Temp2HTilde_CPUPtr;
+extern EoS_TEM2C_t EoS_Temper2CSqr_CPUPtr;
 extern EoS_DE2P_t EoS_DensEint2Pres_CPUPtr;
 extern EoS_DP2E_t EoS_DensPres2Eint_CPUPtr;
 extern EoS_DP2C_t EoS_DensPres2CSqr_CPUPtr;
@@ -252,6 +260,10 @@ extern EoS_DT2P_t EoS_DensTemp2Pres_CPUPtr;
 extern EoS_DE2S_t EoS_DensEint2Entr_CPUPtr;
 extern EoS_GENE_t EoS_General_CPUPtr;
 #ifdef GPU
+extern EoS_GUESS_t EoS_GuessHTilde_GPUPtr;
+extern EoS_H2TEM_t EoS_HTilde2Temp_GPUPtr;
+extern EoS_TEM2H_t EoS_Temp2HTilde_GPUPtr;
+extern EoS_TEM2C_t EoS_Temper2CSqr_GPUPtr;
 extern EoS_DE2P_t EoS_DensEint2Pres_GPUPtr;
 extern EoS_DP2E_t EoS_DensPres2Eint_GPUPtr;
 extern EoS_DP2C_t EoS_DensPres2CSqr_GPUPtr;

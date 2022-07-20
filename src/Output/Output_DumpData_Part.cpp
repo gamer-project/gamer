@@ -324,6 +324,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
    if ( OPT__OUTPUT_TEMP ) {
       Temp = Hydro_Con2Temp( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
                              CheckMinTemp_No, NULL_REAL, Emag, EoS_DensEint2Temp_CPUPtr,
+                             EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
       fprintf( File, " %13.6e", Temp );
    }
@@ -338,7 +339,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
    if ( OPT__OUTPUT_CS ) {
 #     ifdef SRHD
       real Prim[NCOMP_FLUID];
-      Hydro_Con2Pri( u, Prim, NULL_REAL, NULL_BOOL, NULL_INT, NULL
+      Hydro_Con2Pri( u, Prim, NULL_REAL, NULL_BOOL, NULL_INT, NULL,
                      NULL_BOOL, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
                      EoS_DensPres2Eint_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                      EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );

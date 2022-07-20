@@ -763,11 +763,11 @@ void Aux_TakeNote()
 //    record the parameters of time-step determination
       fprintf( Note, "Parameters of Time-step Determination\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "DT__MAX                        %14.7e\n",   DT__MAX                   );
+      fprintf( Note, "DT__MAX                         %14.7e\n",  DT__MAX                   );
       fprintf( Note, "DT__FLUID                       %13.7e\n",  DT__FLUID                 );
       fprintf( Note, "DT__FLUID_INIT                  %13.7e\n",  DT__FLUID_INIT            );
 #     ifdef SRHD
-      fprintf( Note, "DT_SPEED_OF_LIGHT               %d\n",      DT_SPEED_OF_LIGHT         );
+      fprintf( Note, "DT__SPEED_OF_LIGHT              %d\n",      DT__SPEED_OF_LIGHT        );
 #     endif
 #     ifdef GRAVITY
       fprintf( Note, "DT__GRAVITY                     %13.7e\n",  DT__GRAVITY               );
@@ -777,7 +777,7 @@ void Aux_TakeNote()
 #     endif
 #     ifdef PARTICLE
       fprintf( Note, "DT__PARVEL                      %13.7e\n",  DT__PARVEL                );
-      fprintf( Note, "DT__PARVEL_MAX                 %14.7e\n",   DT__PARVEL_MAX            );
+      fprintf( Note, "DT__PARVEL_MAX                  %14.7e\n",  DT__PARVEL_MAX            );
       fprintf( Note, "DT__PARACC                      %13.7e\n",  DT__PARACC                );
 #     endif
 #     ifdef COMOVING

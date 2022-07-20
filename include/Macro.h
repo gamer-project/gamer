@@ -75,8 +75,9 @@
 #define EOS_GAMMA       1
 #define EOS_ISOTHERMAL  2
 #define EOS_NUCLEAR     3
-#define EOS_TABULAR     4
-#define EOS_USER        5
+#define EOS_TAUBMATHEWS 4
+#define EOS_TABULAR    98
+#define EOS_USER       99
 
 
 // Poisson solvers

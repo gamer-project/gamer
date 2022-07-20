@@ -647,6 +647,12 @@ void Aux_Check_Parameter()
 #   endif
 #  endif // #ifdef DUAL_ENERGY
 
+#  ifdef SRHD
+#  if ( EOS != EOS_TAUBMATHEWS )
+#     error: ERROR : unsupported EOS !!
+#  endif
+#  endif
+
 #  ifdef MHD
 #   if ( defined CHECK_INTERMEDIATE  &&  CHECK_INTERMEDIATE != HLLE  &&  CHECK_INTERMEDIATE != HLLD )
 #     error : ERROR : unsupported option in CHECK_INTERMEDIATE (HLLE/HLLD) !!
@@ -666,8 +672,8 @@ void Aux_Check_Parameter()
 #     error : ERROR : CTU does NOT support LR_EINT in CUFLU.h !!
 #  endif
 
-#  if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  EOS != EOS_NUCLEAR  &&  EOS != EOS_TABULAR  &&  EOS != EOS_USER )
-#     error : ERROR : unsupported equation of state (EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TABULAR/EOS_USER) !!
+#  if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  EOS != EOS_NUCLEAR  &&  EOS != EOS_TAUBMATHEWS  &&  EOS != EOS_TABULAR  &&  EOS != EOS_USER )
+#     error : ERROR : unsupported equation of state (EOS_GAMMA/EOS_ISOTHERMAL/EOS_NUCLEAR/EOS_TAUBMATHEWS/EOS_TABULAR/EOS_USER) !!
 #  endif
 
 #  if ( EOS != EOS_GAMMA )

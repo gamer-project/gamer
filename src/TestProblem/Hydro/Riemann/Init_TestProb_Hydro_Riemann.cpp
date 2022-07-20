@@ -357,11 +357,34 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double dPre = 0.5*( Riemann_PreR    - Riemann_PreL    );
    const double aPre = 0.5*( Riemann_PreR    + Riemann_PreL    );
 
+
+#  ifdef SRHD
+   real Prim[NCOMP_TOTAL];
+
+   Prim[0] =  aRho + dRho*Tanh;
+   Prim[1] =( aVel + dVel*Tanh )*fluid[DENS];
+   Prim[2] =( aVT1 + dVT1*Tanh )*fluid[DENS];
+   Prim[3] =( aVT2 + dVT2*Tanh )*fluid[DENS];
+   Prim[4] =  aPre + dPre*Tanh;
+
+   Hydro_Pri2Con( Prim, fluid, NULL_BOOL, NULL_INT, NULL_INT,
+                  EoS_DensPres2Eint_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+#  else
    fluid[ DENS      ] =   aRho + dRho*Tanh;
    fluid[ MomIdx[0] ] = ( aVel + dVel*Tanh )*fluid[DENS];
    fluid[ MomIdx[1] ] = ( aVT1 + dVT1*Tanh )*fluid[DENS];
    fluid[ MomIdx[2] ] = ( aVT2 + dVT2*Tanh )*fluid[DENS];
    Pres               =   aPre + dPre*Tanh;
+
+
+// compute and store the total gas energy
+   Eint = EoS_DensPres2Eint_CPUPtr( fluid[DENS], Pres, fluid+NCOMP_FLUID,
+                                    EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+
+// do NOT include magnetic energy here
+   fluid[ENGY] = Hydro_ConEint2Etot( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], Eint, 0.0 );
+#  endif
+
 
    if ( Riemann_LR < 0 )
    {
@@ -370,12 +393,6 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       fluid[ MomIdx[2] ] *= -1.0;
    }
 
-// compute and store the total gas energy
-   Eint = EoS_DensPres2Eint_CPUPtr( fluid[DENS], Pres, fluid+NCOMP_FLUID,
-                                    EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-
-// do NOT include magnetic energy here
-   fluid[ENGY] = Hydro_ConEint2Etot( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], Eint, 0.0 );
 
 } // FUNCTION : SetGridIC
 

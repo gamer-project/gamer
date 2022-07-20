@@ -107,7 +107,7 @@ double               UNIT_B;
 bool                 OPT__INIT_BFIELD_BYFILE;
 #endif
 #ifdef SRHD
-int                  DT_SPEED_OF_LIGHT;
+int                  DT__SPEED_OF_LIGHT;
 #endif
 
 #elif ( MODEL == ELBDM )
@@ -231,20 +231,35 @@ double EoS_AuxArray_Flt[EOS_NAUX_MAX];
 int    EoS_AuxArray_Int[EOS_NAUX_MAX];
 
 // b. function pointers
+#ifdef SRHD
+EoS_GUESS_t EoS_GuessHTilde_CPUPtr = NULL;
+EoS_H2TEM_t EoS_HTilde2Temp_CPUPtr = NULL;
+EoS_TEM2H_t EoS_Temp2HTilde_CPUPtr = NULL;
+EoS_TEM2C_t EoS_Temper2CSqr_CPUPtr = NULL;
+#else
 EoS_DE2P_t EoS_DensEint2Pres_CPUPtr = NULL;
 EoS_DP2E_t EoS_DensPres2Eint_CPUPtr = NULL;
 EoS_DP2C_t EoS_DensPres2CSqr_CPUPtr = NULL;
 EoS_DE2T_t EoS_DensEint2Temp_CPUPtr = NULL;
 EoS_DT2P_t EoS_DensTemp2Pres_CPUPtr = NULL;
 EoS_DE2S_t EoS_DensEint2Entr_CPUPtr = NULL;
+#endif
 EoS_GENE_t EoS_General_CPUPtr       = NULL;
+
 #ifdef GPU
+#ifdef SRHD
+EoS_GUESS_t EoS_GuessHTilde_GPUPtr = NULL;
+EoS_H2TEM_t EoS_HTilde2Temp_GPUPtr = NULL;
+EoS_TEM2H_t EoS_Temp2HTilde_GPUPtr = NULL;
+EoS_TEM2C_t EoS_Temper2CSqr_GPUPtr = NULL;
+#else
 EoS_DE2P_t EoS_DensEint2Pres_GPUPtr = NULL;
 EoS_DP2E_t EoS_DensPres2Eint_GPUPtr = NULL;
 EoS_DP2C_t EoS_DensPres2CSqr_GPUPtr = NULL;
 EoS_DE2T_t EoS_DensEint2Temp_GPUPtr = NULL;
 EoS_DT2P_t EoS_DensTemp2Pres_GPUPtr = NULL;
 EoS_DE2S_t EoS_DensEint2Entr_GPUPtr = NULL;
+#endif
 EoS_GENE_t EoS_General_GPUPtr       = NULL;
 #endif
 
