@@ -257,7 +257,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
                            JeansMinPres_No, NULL_REAL,
                            EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
                            EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, NULL );
 
 //          no need to copy the magnetic field here
             for (int v=0; v<NCOMP_TOTAL; v++)   CData[ CSize3D*v + i ] = Prim[v];
