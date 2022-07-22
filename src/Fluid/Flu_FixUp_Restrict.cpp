@@ -110,7 +110,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 // convert between phase/dens and re/im 
-   const bool convertWaveToFluid = (TVarCC & (_REAL | _IMAG ) &&  amr->use_wave_flag[FaLv] == false && amr->use_wave_flag[SonLv] == true );
+   const bool convertWaveToFluid = (amr->use_wave_flag[FaLv] == false && amr->use_wave_flag[SonLv] == true );
 #  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
 // restrict
@@ -182,7 +182,8 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 
             const real (*RealSonPtr)[PS1][PS1] = amr->patch[SonFluSg][SonLv][SonPID]->fluid[REAL];
             const real (*ImagSonPtr)[PS1][PS1] = amr->patch[SonFluSg][SonLv][SonPID]->fluid[IMAG];
-                  real (*FaPtr)[PS1][PS1]      = amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[PHAS];
+                  real (*OldFaPtr)[PS1][PS1]   = amr->patch[1-FaFluSg][ FaLv][ FaPID]->fluid[PHAS];
+                  real (*PhasFaPtr)[PS1][PS1]  = amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[PHAS];
                   real (*StubFaPtr)[PS1][PS1]  = amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[STUB];
             
             int ii, jj, kk, I, J, K, Ip, Jp, Kp;
@@ -202,7 +203,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                                ImagSonPtr[K ][Jp][Ip] + ImagSonPtr[Kp][Jp][I ] +
                                ImagSonPtr[Kp][J ][Ip] + ImagSonPtr[Kp][Jp][Ip] );
 
-                  FaPtr[kk][jj][ii] = ELBDM_UnwrapPhase(FaPtr[kk][jj][ii], SATAN2(im, re));
+                  PhasFaPtr[kk][jj][ii] = ELBDM_UnwrapPhase(OldFaPtr[kk][jj][ii], SATAN2(im, re));
                }
 
                if (TFluVarIdx == IMAG) {
