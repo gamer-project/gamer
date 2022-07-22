@@ -27,10 +27,12 @@ double ELBDM_GetTimeStep_Velocity( const int lv )
    real   MaxdS_dx;
    double dt;
 
+   double softenVelocity = 1e-6;
+
 
 // get the velocity dS/dx / dx as first derivative of phase
-   MaxdS_dx  = GetMaxVelocity( lv );
-   MaxdS_dx += (MaxdS_dx == 0) ? 1e-8 : 0;
+   MaxdS_dx  = GetMaxVelocity( lv ) + softenVelocity;
+   //MaxdS_dx += (MaxdS_dx == 0) ? 1e-8 : 0;
 
 // get the time-step
    dt = 1 / MaxdS_dx * 0.5 * ELBDM_ETA * DT__VELOCITY;
@@ -100,12 +102,12 @@ real GetMaxVelocity( const int lv )
 #     pragma omp for reduction( max:MaxdS_dx ) schedule( runtime )
       for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=NPG*8)
       {
-         skipPatchgroup = false;
-         for (int LocalID=0; LocalID<8; LocalID++)
-         {
-            skipPatchgroup |= ( amr->patch[0][lv][PID0 + LocalID]->use_wave_flag );
-         }
-         if (skipPatchgroup) continue;
+         //skipPatchgroup = false;
+         //for (int LocalID=0; LocalID<8; LocalID++)
+         //{
+         //   skipPatchgroup |= ( amr->patch[0][lv][PID0 + LocalID]->use_wave_flag );
+         //}
+         //if (skipPatchgroup) continue;
          
 //       prepare phase with NGhost ghost zone on each side (any interpolation scheme can be used)
          Prepare_PatchData( lv, Time[lv], &Flu_Array[0][0][0][0][0], NULL, NGhost, NPG, &PID0, _PHAS, _NONE,
