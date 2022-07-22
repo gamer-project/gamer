@@ -175,6 +175,7 @@ void CPU_ELBDMSolver_PhaseForm_MUSCL( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_N
 //-------------------------------------------------------------------------------------------------------
 #define N_TIME_LEVELS 3
 const real TIME_COEFFS[N_TIME_LEVELS] = {1., 1./4, 2./3};
+const real FLUX_COEFFS[N_TIME_LEVELS] = {1./6, 1./6, 2./3};
 const real RK_COEFFS [N_TIME_LEVELS][N_TIME_LEVELS] = {{1., 0., 0.}, {3./4, 1./4, 0.}, {1./3, 0, 2./3}};
 //#define N_TIME_LEVELS 2
 //const real TIME_COEFFS[N_TIME_LEVELS] = {1/2., 1};
@@ -187,6 +188,7 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
 
    const real _dh  = 1./dh; 
    const real _dh2 = SQR(_dh);
+   const real _Eta2_dh = (real)0.5*_dh/Eta;
 
    const int j_start   = j_gap;
    const int k_start   = k_gap;
@@ -215,7 +217,9 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
 
 
 #  ifdef CONSERVE_MASS
-int   Idx3;
+   int   Idx3;
+   int Idx2;
+   //real   R, I, dR, dI, Flux[PS2+1], R1, R2, I1, I2, dR1, dR2, dI1, dI2;
 #  endif
 
 // loop over all targeted columns
@@ -252,6 +256,9 @@ int   Idx3;
             ql_ratios[i]            =       BACKWARD_GRADIENT_RATIO(Pc[time_level], i);
             backward_velocities[i]  = _dh * BACKWARD_GRADIENT      (Pc[time_level], i);
             Fm[time_level][i]       = MUSCL_FLUX(Rc[time_level], backward_velocities, i    , dh, dt);
+            //if (i == FLU_GHOST_SIZE ) {
+            //   printf("time level %i fm at ghost size %f vel %f rc %f pcm1 %f pcc %f \n", time_level, Fm[time_level][i], backward_velocities[i], Rc[time_level][i], Pc[time_level][i-1], Pc[time_level][i]);
+            //}
          }
 
          //Compute density logarithms
@@ -298,18 +305,29 @@ int   Idx3;
          }
       }
 
-      //for (int i=2*(time_level + 1); i<FLU_NXT-time_level*2; i++)
-      //{
-      //   Fm[time_level + 1][i] = + TIME_COEFFS[time_level] * dt / Eta * Fm[time_level][i];
-      //   for (int tx = 0; tx < time_level + 1; ++tx) {
-      //      Fm[time_level + 1][i] += RK_COEFFS[time_level][tx] * Fm[tx][i];
-      //   }
-      //}
-      //for (int i=0; i<FLU_NXT; i++) {
-      //   std::cout<<"final i: " << i << " Density : " << Rc_N[i] << " Phase: "<< Pc_N[i] << "\n";
-      //}
-      //printf("Flux 1 %.10e 2 %.10e 3 %.10e eta %.10e dt %.10e dh %.10e diff 1 %.10e \n",  dt / Eta / dh * Fm[0][FLU_GHOST_SIZE], dt / Eta / dh * Fm[0][PS1 + FLU_GHOST_SIZE], dt / Eta / dh * Fm[0][PS2 + FLU_GHOST_SIZE], Eta, dt, dh, dt / Eta / dh * (Fm[0][FLU_GHOST_SIZE + 1] - Fm[0][FLU_GHOST_SIZE]));
+      for (int i=0; i<FLU_NXT; i++)
+      {
+         Fm[N_TIME_LEVELS][i] = 0;
+         for (int time_level = 0; time_level < N_TIME_LEVELS; ++time_level) 
+         {
+         Fm[N_TIME_LEVELS][i] += FLUX_COEFFS[time_level] * Fm[time_level][i];
+         }
+      }
 
+      //Idx2 = 0;
+      //for (int i=FLU_GHOST_SIZE-1; i<FLU_NXT-FLU_GHOST_SIZE; i++)
+      //{
+      //   R1 = SQRT(Rc_N[i]  ) * COS(Pc_N[i]);
+      //   R2 = SQRT(Rc_N[i+1]) * COS(Pc_N[i+1]);
+      //   I1 = SQRT(Rc_N[i]  ) * SIN(Pc_N[i]);
+      //   I2 = SQRT(Rc_N[i+1]) * SIN(Pc_N[i+1]);
+      //   R  = real(0.5)*( + R1 + R2 );
+      //   I  = real(0.5)*( + I1 + I2 );
+      //   dR =           ( - R1 + R2 );
+      //   dI =           ( - I1 + I2 );
+      //   Flux[ Idx2 ++ ] = (real)2.0*( R*dI - I*dR );
+      //}
+      
 
 //    4 save the fluxes across all patch boundaries
 //    ------------------------------------------------------------------------------------------------------------
@@ -319,9 +337,14 @@ int   Idx3;
       {
          Idx3 = (k-FLU_GHOST_SIZE)*PS2 + (j-FLU_GHOST_SIZE);
 
-         Flux_Array[Flux_XYZ+0][0][Idx3] = Fm[0][      FLU_GHOST_SIZE];
-         Flux_Array[Flux_XYZ+1][0][Idx3] = Fm[0][PS1 + FLU_GHOST_SIZE];
-         Flux_Array[Flux_XYZ+2][0][Idx3] = Fm[0][PS2 + FLU_GHOST_SIZE];
+         //printf("f1 %f myf1 %f \n f2 %f myf2 %f \n f3 %f myf3 %f \n" \
+         //      , Flux[  0]*_Eta2_dh, Fm[N_TIME_LEVELS][      FLU_GHOST_SIZE] \
+         //      , Flux[PS1]*_Eta2_dh, Fm[N_TIME_LEVELS][PS1 + FLU_GHOST_SIZE] \
+         //      , Flux[PS2]*_Eta2_dh, Fm[N_TIME_LEVELS][PS2 + FLU_GHOST_SIZE] );
+
+         Flux_Array[Flux_XYZ+0][0][Idx3] = Fm[N_TIME_LEVELS][      FLU_GHOST_SIZE] / Eta;//Fm[0][      FLU_GHOST_SIZE];
+         Flux_Array[Flux_XYZ+1][0][Idx3] = Fm[N_TIME_LEVELS][PS1 + FLU_GHOST_SIZE] / Eta;//Fm[0][PS1 + FLU_GHOST_SIZE];
+         Flux_Array[Flux_XYZ+2][0][Idx3] = Fm[N_TIME_LEVELS][PS2 + FLU_GHOST_SIZE] / Eta;//Fm[0][PS2 + FLU_GHOST_SIZE];
       }
 #     endif // #ifdef CONSERVE_MASS
 
