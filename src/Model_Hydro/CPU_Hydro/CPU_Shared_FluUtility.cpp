@@ -43,16 +43,16 @@ void Hydro_HTildeFunction (real HTilde, real MSqr_DSqr, real Temp, real Constant
                            const EoS_H2TEM_t EoS_HTilde2Temp, real *Fun, real *DiffFun,
                            const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                            const real *const EoS_Table[EOS_NTABLE_MAX] );
+#endif
+#endif
 
-void  NewtonRaphsonSolver(void (*FunPtr)(real, real, real, real, const EoS_H2TEM_t, real*, real*, const d
+
+GPU_DEVICE
+void  NewtonRaphsonSolver(void (*FunPtr)(real, real, real, real, const EoS_H2TEM_t, real*, real*, const double*, const int*, const real *const*),
                           real MSqr_DSqr, real Constant, real *root, const EoS_H2TEM_t EoS_HTilde2Temp,
                           const real guess, const real epsabs, const real epsrel,
                           const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                           const real *const EoS_Table[EOS_NTABLE_MAX] );
-#endif
-#endif
-
-
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -211,7 +211,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
    Hydro_CheckUnphysical( UNPHY_MODE_CONS, In, NULL, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
-   HTilde = SRHD_Con2HTilde( In, EoS_GuessHTilde, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+   HTilde = Hydro_Con2HTilde( In, EoS_GuessHTilde, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 
 
    Factor = In[0]*((real)1.0 + HTilde);
@@ -342,7 +342,7 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive, const i
    Out[3] = In[3]*Factor;
    MSqr_DSqr  = SQR(Out[1])+SQR(Out[2])+SQR(Out[3]);
    MSqr_DSqr /= SQR(Out[0]);
-   SRHD_HTildeFunction( HTilde, MSqr_DSqr, Temperature, (real)0.0, EoS_HTilde2Temp, &HTildeFunction, NULL,
+   Hydro_HTildeFunction( HTilde, MSqr_DSqr, Temperature, (real)0.0, EoS_HTilde2Temp, &HTildeFunction, NULL,
                         EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
    Out[4]  = MSqr_DSqr + HTildeFunction;
    Out[4] /= (real)1.0 + SQRT( (real)1.0 + MSqr_DSqr + HTildeFunction );
@@ -490,7 +490,7 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
 
 #ifdef SRHD
 GPU_DEVICE
-real SRHD_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
+real Hydro_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                       const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                       const real *const EoS_Table[EOS_NTABLE_MAX] )
 {
@@ -504,10 +504,10 @@ real SRHD_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, const
   void (*FunPtr)( real HTilde, real MSqr_DSqr, real Temp, real Constant,
                   const EoS_H2TEM_t EoS_HTilde2Temp, real *Fun, real *DiffFun,
                   const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
-                  const real *const EoS_Table[EOS_NTABLE_MAX] ) = &SRHD_HTildeFunction;
+                  const real *const EoS_Table[EOS_NTABLE_MAX] ) = &Hydro_HTildeFunction;
 
   NewtonRaphsonSolver(FunPtr, MSqr_DSqr, -Constant, &HTilde, EoS_HTilde2Temp, GuessHTilde,
-                      (real)TINY_NUMBER, (real)MACHINE_EPSILON, EoS_AuxArray_Flt,
+                      (real)TINY_NUMBER, (real)MAX_ERROR, EoS_AuxArray_Flt,
                       EoS_AuxArray_Int, EoS_Table );
 
   return HTilde;
@@ -516,7 +516,7 @@ real SRHD_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, const
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  SRHD_HTildeFunction
+// Function    :  Hydro_HTildeFunction
 // Description :
 // Note        :
 // Parameter   :  HTilde          : The reduced specific enthalpy
@@ -528,7 +528,7 @@ real SRHD_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, const
 //               *DiffFun         : The derivative function with respect to the unknown variable
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void SRHD_HTildeFunction (real HTilde, real MSqr_DSqr, real Temp, real Constant,
+void Hydro_HTildeFunction (real HTilde, real MSqr_DSqr, real Temp, real Constant,
                           const EoS_H2TEM_t EoS_HTilde2Temp, real *Fun, real *DiffFun,
                           const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                           const real *const EoS_Table[EOS_NTABLE_MAX] )
@@ -555,18 +555,22 @@ void SRHD_HTildeFunction (real HTilde, real MSqr_DSqr, real Temp, real Constant,
 }
 
 GPU_DEVICE
-real SRHD_Con2KineticEngy( real Con[], const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
+real Hydro_Con2KineticEngy( real Con[], const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                            const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                            const real *const EoS_Table[EOS_NTABLE_MAX] )
 {
   real H, Usqr, Pri[NCOMP_FLUID], LorentzFactor;
 
-  H = (real)1.0 + SRHD_Con2HTilde( Con, EoS_GuessHTilde, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+  H = (real)1.0 + Hydro_Con2HTilde( Con, EoS_GuessHTilde, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 
-  Hydro_Con2Pri( Con, Pri, NULL_REAL, false, false, NULL_BOOL, NULL_INT, NULL, NULL_BOOL, NULL_REAL, NULL, NULL,
-                 EoS_GuessHTilde, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, &LorentzFactor );
+  Hydro_Con2Pri( Con, Pri, MIN_PRES,
+                 NULL_BOOL, NULL_INT, NULL,
+                 NULL_BOOL, NULL_REAL,
+                 EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
+                 EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                 EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, &LorentzFactor );
 
-  Usqr = VectorDotProduct( Pri[1], Pri[2], Pri[3]  );
+  Usqr = SQR( Pri[1] ) + SQR( Pri[2] ) + SQR( Pri[3] );
 
   return ( Con[DENS] * H + Pri[4] ) * Usqr / ( LorentzFactor + (real)1.0 );
 }
