@@ -33,10 +33,11 @@ COMPILE_VERBOSE := 0
 # physical model: HYDRO/ELBDM/PAR_ONLY (ELBDM: wave dark matter; PAR_ONLY: particle-only)
 # --> must be set in any cases; PAR_ONLY is not supported yet;
 #     ELBDM is not publicly available yet but will be released soon
-SIMU_OPTION += -DMODEL=HYDRO
+SIMU_OPTION += -DMODEL=ELBDM
+
 
 # enable gravity
-#SIMU_OPTION += -DGRAVITY
+SIMU_OPTION += -DGRAVITY
 
 # enable particles
 # --> must enable GRAVITY
@@ -94,6 +95,12 @@ SIMU_OPTION += -DEOS=EOS_GAMMA
 # (b-2) ELBDM options
 # ------------------------------------------------------------------------------------
 else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
+
+# ELBDM scheme: WAVE/HYBRID
+# --> need not be set even when MODEL=ELBDM
+# --> defaults to ELBDM_SCHEME=WAVE
+#SIMU_OPTION += -DELBDM_SCHEME=HYBRID
+
 # enforce the mass conservation
 SIMU_OPTION += -DCONSERVE_MASS
 
@@ -121,15 +128,15 @@ SIMU_OPTION += -DPOT_SCHEME=SOR
 # store GRA_GHOST_SIZE ghost-zone potential for each patch on each side
 # --> recommended when PARTICLE is enabled for improving accuracy for particles around the patch boundaries
 # --> must be enabled for STAR_FORMATION + STORE_PAR_ACC
-SIMU_OPTION += -DSTORE_POT_GHOST
+#SIMU_OPTION += -DSTORE_POT_GHOST
 
 # use unsplitting method to couple gravity to the target model (recommended)
 # --> for HYDRO only; ELBDM is not supported yet
-SIMU_OPTION += -DUNSPLIT_GRAVITY
+#SIMU_OPTION += -DUNSPLIT_GRAVITY
 
 # comoving frame for cosmological simulations
 # --> not supported for PARTICLE
-#SIMU_OPTION += -DCOMOVING
+SIMU_OPTION += -DCOMOVING
 endif # GRAVITY
 
 
@@ -167,7 +174,7 @@ SIMU_OPTION += -DMAX_PATCH=1000000
 SIMU_OPTION += -DGPU_ARCH=KEPLER
 
 # debug mode
-#SIMU_OPTION += -DGAMER_DEBUG
+SIMU_OPTION += -DGAMER_DEBUG
 
 # bitwise reproducibility
 #SIMU_OPTION += -DBITWISE_REPRODUCIBILITY
@@ -180,7 +187,7 @@ SIMU_OPTION += -DTIMING
 #SIMU_OPTION += -DTIMING_SOLVER
 
 # double precision
-#SIMU_OPTION += -DFLOAT8
+SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
 # --> must disable LOAD_BALANCE
@@ -201,7 +208,7 @@ SIMU_OPTION += -DOPENMP
 #SIMU_OPTION += -DLAOHU
 
 # support HDF5 format
-#SIMU_OPTION += -DSUPPORT_HDF5
+SIMU_OPTION += -DSUPPORT_HDF5
 
 # support GNU scientific library
 #SIMU_OPTION += -DSUPPORT_GSL
@@ -254,7 +261,8 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
  CXX         = g++                                       # serial compiler
 #CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
 #CXX         = CC                                        # cray wrapper script
- CXXFLAG     = -g -O3                                    # general flags
+#CXXFLAG     = -g -O3                                    # general flags
+CXXFLAG      = -g -O3                                      # general flags
 #CXXFLAG     = -g -O3 -std=c++11
 #CXXFLAG     = -g -Ofast
  CXXFLAG    += -Wall -Wextra                             # warning flags
@@ -292,7 +300,7 @@ endif
 CUDA_PATH    :=
 FFTW_PATH    :=
 MPI_PATH     :=
-HDF5_PATH    :=
+HDF5_PATH    := /usr/lib/x86_64-linux-gnu/hdf5/serial
 GRACKLE_PATH :=
 GSL_PATH     :=
 LIBYT_PATH   :=
@@ -521,9 +529,9 @@ endif # MHD
 else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
 GPU_FILE    += CUFLU_ELBDMSolver.cu
 
-CPU_FILE    += CPU_ELBDMSolver.cpp  ELBDM_Init_ByFunction_AssignData.cpp \
-               ELBDM_GetTimeStep_Fluid.cpp  ELBDM_Flag_EngyDensity.cpp  ELBDM_UnwrapPhase.cpp \
-               ELBDM_GetTimeStep_Phase.cpp  ELBDM_SetTaylor3Coeff.cpp  ELBDM_RemoveMotionCM.cpp
+CPU_FILE    += CPU_ELBDMSolver.cpp  CPU_ELBDMSolver_PhaseForm_MUSCL.cpp  ELBDM_Init_ByFunction_AssignData.cpp \
+               ELBDM_GetTimeStep_Fluid.cpp  ELBDM_GetTimeStep_Hybrid.cpp  ELBDM_Flag_EngyDensity.cpp ELBDM_Flag_Interference.cpp ELBDM_UnwrapPhase.cpp \
+               ELBDM_GetTimeStep_Phase.cpp  ELBDM_GetTimeStep_Velocity.cpp  ELBDM_SetTaylor3Coeff.cpp  ELBDM_RemoveMotionCM.cpp
 
 vpath %.cu     Model_ELBDM/GPU_ELBDM
 vpath %.cpp    Model_ELBDM/CPU_ELBDM  Model_ELBDM
@@ -531,7 +539,7 @@ vpath %.cpp    Model_ELBDM/CPU_ELBDM  Model_ELBDM
 ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
 GPU_FILE    += CUPOT_ELBDMGravitySolver.cu
 
-CPU_FILE    += CPU_ELBDMGravitySolver.cpp  ELBDM_GetTimeStep_Gravity.cpp
+CPU_FILE    += CPU_ELBDMGravitySolver.cpp CPU_ELBDMGravitySolver_PhaseForm.cpp ELBDM_GetTimeStep_Gravity.cpp
 
 vpath %.cu     Model_ELBDM/GPU_ELBDMGravity
 vpath %.cpp    Model_ELBDM/CPU_ELBDMGravity
