@@ -68,12 +68,12 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
    for (int k=0; k<NCell; k++)    {
    for (int j=0; j<NCell; j++)    {
    for (int i=0; i<NCell; i++)    {
-      Temp[0][k][j][i] = SQRT(Var[0][k][j][i]);
-      //if ( convertWaveToFluid ) {
-      //   Temp[PHAS][k][j][i]
-      //} else {
-      //   Temp[1][k][j][i] = Var[0][k][j][i];
-      //}
+      Temp[0][k][j][i] = SQRT(Var[DENS][k][j][i]);
+      if ( convertWaveToFluid ) {
+         Temp[1][k][j][i] = SATAN2(Var[IMAG][k][j][i], Var[REAL][k][j][i]);
+      } else {
+         Temp[1][k][j][i] = Var[PHAS][k][j][i];
+      }
    }}} // k,j,i
 
    for (int k=0; k<NCond; k++)    {  kk = k + 1;   kkp = kk + 1;   kkm = kk - 1;
@@ -85,14 +85,14 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
                                + Temp[0][kkp][jj ][ii ] + Temp[0][kkm][jj ][ii ] \
                                -  (real) 6.0 * Temp[0][kk ][jj ][ii])\
                                / ((real) 3.0 * Temp[0][kk ][jj ][ii]);   
-      if (convertWaveToFluid)   
-         Cond[1][k][j][i] = 0;
-      else 
-         Cond[1][k][j][i] =  FABS(  Var[1][kk ][jj ][iip] + Var[1][kk ][jj ][iim] \
-                                  + Var[1][kk ][jjp][ii ] + Var[1][kk ][jjm][ii ] \
-                                  + Var[1][kkp][jj ][ii ] + Var[1][kkm][jj ][ii ] \
-                                 -  (real) 6.0 * Var[1][kk ][jj ][ii])\
-                                 / ((real) 3.0);
+      //if (convertWaveToFluid)   
+      //   Cond[1][k][j][i] = 0;
+      //else 
+      Cond[1][k][j][i] =  FABS( Temp[1][kk ][jj ][iip] + Temp[1][kk ][jj ][iim] \
+                              + Temp[1][kk ][jjp][ii ] + Temp[1][kk ][jjm][ii ] \
+                              + Temp[1][kkp][jj ][ii ] + Temp[1][kkm][jj ][ii ] \
+                              -  (real) 6.0 * Temp[1][kk ][jj ][ii])\
+                              / ((real) 3.0);
 
       //printf("QP %f k %i j %i i %i", Cond[0][k][j][i], k, j, i);
    }}} // k,j,i

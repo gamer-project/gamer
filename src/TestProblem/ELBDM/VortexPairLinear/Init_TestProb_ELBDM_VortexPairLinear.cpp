@@ -5,13 +5,17 @@
 
 // problem-specific global variables
 // =======================================================================================
-static double VorPairLin_BgAmp;     // psi(x,y) = BgAmp + WaveAmp*cos(ky*y)*exp( i*(kx*x-Omega*t+Phase0) )
+static double VorPairLin_BgAmp;     // psi_vorpair(x,y) = BgAmp + WaveAmp*cos(ky*y)*exp( i*(kx*x-Omega*t+Phase0) )
 static double VorPairLin_WaveAmp;
 static double VorPairLin_Phase0;
 
 static double VorPairLin_kx;
 static double VorPairLin_ky;
 static double VorPairLin_Omega;
+
+static double VorPairLin_ZWaveAmp; // psi(x, y) = psi_vorpair(x,y) + ZWaveAmp * exp( i*(kz*z-ZWaveOmega*t) )
+static double VorPairLin_kz;
+static double VorPairLin_ZWaveOmega;
 // =======================================================================================
 
 
@@ -88,6 +92,7 @@ void SetParameter()
    ReadPara->Add( "VorPairLin_BgAmp",   &VorPairLin_BgAmp,     -1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "VorPairLin_WaveAmp", &VorPairLin_WaveAmp,   -1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "VorPairLin_Phase0",  &VorPairLin_Phase0,     0.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "VorPairLin_ZWaveAmp",&VorPairLin_ZWaveAmp,   0.0,           NoMin_double,     NoMax_double      );
 
    ReadPara->Read( FileName );
 
@@ -99,10 +104,11 @@ void SetParameter()
 
 
 // (2) set the problem-specific derived parameters
-   VorPairLin_kx    = 2.0*M_PI/amr->BoxSize[0];   // by default we set wavelength equal to the box size
-   VorPairLin_ky    = 2.0*M_PI/amr->BoxSize[1];
-   VorPairLin_Omega = 0.5/ELBDM_ETA*( SQR(VorPairLin_kx) + SQR(VorPairLin_ky) );
-
+   VorPairLin_kx         = 2.0*M_PI/amr->BoxSize[0];   // by default we set wavelength equal to the box size
+   VorPairLin_ky         = 2.0*M_PI/amr->BoxSize[1];
+   VorPairLin_kz         = 2.0*M_PI/amr->BoxSize[2];
+   VorPairLin_Omega      = 0.5/ELBDM_ETA*( SQR(VorPairLin_kx) + SQR(VorPairLin_ky) );
+   VorPairLin_ZWaveOmega = 0.5/ELBDM_ETA*  SQR(VorPairLin_kz);
 
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
@@ -124,13 +130,16 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID    = %d\n",     TESTPROB_ID        );
-      Aux_Message( stdout, "  VorPairLin_BgAmp   = %13.7e\n", VorPairLin_BgAmp   );
-      Aux_Message( stdout, "  VorPairLin_WaveAmp = %13.7e\n", VorPairLin_WaveAmp );
-      Aux_Message( stdout, "  VorPairLin_Phase0  = %13.7e\n", VorPairLin_Phase0  );
-      Aux_Message( stdout, "  VorPairLin_kx      = %13.7e\n", VorPairLin_kx      );
-      Aux_Message( stdout, "  VorPairLin_ky      = %13.7e\n", VorPairLin_ky      );
-      Aux_Message( stdout, "  VorPairLin_Omega   = %13.7e\n", VorPairLin_Omega   );
+      Aux_Message( stdout, "  test problem ID       = %d\n",     TESTPROB_ID           );
+      Aux_Message( stdout, "  VorPairLin_BgAmp      = %13.7e\n", VorPairLin_BgAmp      );
+      Aux_Message( stdout, "  VorPairLin_WaveAmp    = %13.7e\n", VorPairLin_WaveAmp    );
+      Aux_Message( stdout, "  VorPairLin_Phase0     = %13.7e\n", VorPairLin_Phase0     );
+      Aux_Message( stdout, "  VorPairLin_ZWaveAmp   = %13.7e\n", VorPairLin_ZWaveAmp   );
+      Aux_Message( stdout, "  VorPairLin_kx         = %13.7e\n", VorPairLin_kx         );
+      Aux_Message( stdout, "  VorPairLin_ky         = %13.7e\n", VorPairLin_ky         );
+      Aux_Message( stdout, "  VorPairLin_kz         = %13.7e\n", VorPairLin_kz         );
+      Aux_Message( stdout, "  VorPairLin_Omega      = %13.7e\n", VorPairLin_Omega      );
+      Aux_Message( stdout, "  VorPairLin_ZWaveOmega = %13.7e\n", VorPairLin_ZWaveOmega );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -162,10 +171,12 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
-   const double phase = VorPairLin_kx*x - VorPairLin_Omega*Time + VorPairLin_Phase0;
-   const double amp   = VorPairLin_WaveAmp*cos( VorPairLin_ky*y );
-   const double Re    = VorPairLin_BgAmp + amp*cos( phase );
-   const double Im    =                  + amp*sin( phase );
+   const double phase  = VorPairLin_kx*x - VorPairLin_Omega*Time + VorPairLin_Phase0;
+   const double amp    = VorPairLin_WaveAmp*cos( VorPairLin_ky*y );
+   const double zphase = VorPairLin_kz*z - VorPairLin_ZWaveOmega*Time;
+   const double zamp   = VorPairLin_ZWaveAmp;
+   const double Re     = VorPairLin_BgAmp + amp*cos( phase ) + zamp*cos( zphase );
+   const double Im     =                  + amp*sin( phase ) + zamp*sin( zphase );
    fluid[DENS] = SQR( Re ) + SQR( Im );
 
 #  if ( ELBDM_SCHEME == HYBRID )
