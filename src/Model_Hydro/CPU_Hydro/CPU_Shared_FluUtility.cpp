@@ -15,7 +15,8 @@
 GPU_DEVICE
 static real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                             const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
-                            const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                            const EoS_DE2P_t EoS_DensEint2Pres, const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
+                            const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                             const real *const EoS_Table[EOS_NTABLE_MAX], real *EintOut );
 GPU_DEVICE
 static real Hydro_Con2Eint( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
@@ -237,7 +238,8 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
    Out[2] = In[2]*_Rho;
    Out[3] = In[3]*_Rho;
    Out[4] = Hydro_Con2Pres( In[0], In[1], In[2], In[3], In[4], In+NCOMP_FLUID, CheckMinPres_Yes, MinPres, Emag,
-                            EoS_DensEint2Pres, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, EintOut );
+                            EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
+                            EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, EintOut );
 #  endif
 
 
@@ -452,6 +454,7 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
 
    const real Pres = ( PresIn == NULL ) ? Hydro_Con2Pres( InRot[0], InRot[1], InRot[2], InRot[3], InRot[4], In+NCOMP_FLUID,
                                                           CheckMinPres_Yes, MinPres, Emag, EoS_DensEint2Pres,
+                                                          EoS_GuessHTilde, EoS_HTilde2Temp,
                                                           EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL )
                                         : *PresIn;
    const real _Rho = (real)1.0 / InRot[0];
@@ -576,148 +579,6 @@ real Hydro_Con2KineticEngy( real Con[], const EoS_GUESS_t EoS_GuessHTilde, const
 }
 
 
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_Con2Eint
-// Description :  Evaluate the gas internal energy density
-//
-// Note        :  1. For MHD, Engy is the total energy density including the magnetic energy Emag=0.5*B^2
-//                   and thus one must provide Emag to subtract it
-//                2. Internal energy density is energy per volume instead of per mass
-//
-// Parameter   :  Dens         : Mass density
-//                MomX/Y/Z     : Momentum density
-//                Engy         : Energy density (including the magnetic energy density for MHD)
-//                CheckMinEint : Apply internal energy floor by invoking Hydro_CheckMinEint()
-//                               --> In some cases we actually want to check if internal energy becomes unphysical,
-//                                   for which this option should be disabled
-//                MinEint      : Internal energy floor
-//                Emag         : Magnetic energy density (0.5*B^2) --> For MHD only
-//
-// Return      :  Gas internal energy density (Eint)
-//-------------------------------------------------------------------------------------------------------
-GPU_DEVICE
-real Hydro_Con2Eint( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                     const bool CheckMinEint, const real MinEint, const real Emag )
-{
-
-//###NOTE: assuming Etot = Eint + Ekin + Emag
-   real Eint;
-
-   Eint  = Engy - (real)0.5*( SQR(MomX) + SQR(MomY) + SQR(MomZ) ) / Dens;
-#  ifdef MHD
-   Eint -= Emag;
-#  endif
-
-   if ( CheckMinEint )   Eint = Hydro_CheckMinEint( Eint, MinEint );
-
-   return Eint;
-
-} // FUNCTION : Hydro_Con2Eint
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_ConEint2Etot
-// Description :  Evaluate total energy from the input conserved variables and internal energy
-//
-// Note        :  1. For MHD, total energy density includes the magnetic energy Emag=0.5*B^2
-//                2. Internal energy density is energy per volume instead of per mass
-//
-// Parameter   :  Dens     : Mass density
-//                MomX/Y/Z : Momentum density
-//                Eint     : Internal energy density
-//                Emag     : Magnetic energy density (0.5*B^2) --> For MHD only
-//
-// Return      :  Total energy density (including the magnetic energy density for MHD)
-//-------------------------------------------------------------------------------------------------------
-GPU_DEVICE
-real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, const real MomZ, const real Eint,
-                         const real Emag )
-{
-
-//###NOTE: assuming Etot = Eint + Ekin + Emag
-   real Etot;
-
-   Etot  = (real)0.5*( SQR(MomX) + SQR(MomY) + SQR(MomZ) ) / Dens;
-   Etot += Eint;
-#  ifdef MHD
-   Etot += Emag;
-#  endif
-
-   return Etot;
-
-} // FUNCTION : Hydro_ConEint2Etot
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_Con2Entr
-// Description :  Evaluate the fluid entropy
-//
-// Note        :  1. Invoke the EoS routine EoS_DensEint2Entr() to support different EoS
-//                2. We regard the entropy used in the EoS routines and that used in the dual-energy formalism
-//                   as two completely separate fields
-//                   --> The former is referred to as Entr/ENTR and manipulated by the EoS API, while the latter is
-//                       usually referred to as Enpy/Dual/DUAL and manipulated by the routines in CPU_Shared_DualEnergy.cpp
-//                   --> This routine, Hydro_Con2Entr(), belongs to the former
-//
-// Parameter   :  Dens              : Mass density
-//                MomX/Y/Z          : Momentum density
-//                Engy              : Energy density
-//                Passive           : Passive scalars
-//                CheckMinEntr      : Apply entropy floor by calling Hydro_CheckMinEntr()
-//                                    --> In some cases we actually want to check if entropy becomes unphysical,
-//                                        for which we don't want to enable this option
-//                MinEntr           : Entropy floor
-//                Emag              : Magnetic energy density (0.5*B^2) --> For MHD only
-//                EoS_DensEint2Entr : EoS routine to compute the gas entropy
-//                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensEint2Entr()
-//                EoS_Table         : EoS tables for EoS_DensEint2Entr()
-//
-// Return      :  Gas entropy
-//-------------------------------------------------------------------------------------------------------
-GPU_DEVICE
-real Hydro_Con2Entr( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                     const real Passive[], const bool CheckMinEntr, const real MinEntr, const real Emag,
-                     const EoS_DE2S_t EoS_DensEint2Entr, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
-                     const real *const EoS_Table[EOS_NTABLE_MAX] )
-{
-
-#  ifdef SRHD
-#  ifdef __CUDACC__
-   printf( "ERROR : SRHD does not support entropy evalation at file <%s>, line <%d>, function <%s> !!\n",
-           ERROR_INFO );
-#  else
-   Aux_Error( ERROR_INFO, "SRHD does not support entropy evalation !!\n" );
-#  endif
-#  endif
-
-// check
-#  ifdef GAMER_DEBUG
-   if ( EoS_DensEint2Entr == NULL )
-   {
-#     ifdef __CUDACC__
-      printf( "ERROR : EoS_DensEint2Entr == NULL at file <%s>, line <%d>, function <%s> !!\n",
-              __FILE__, __LINE__, __FUNCTION__ );
-#     else
-      Aux_Error( ERROR_INFO, "EoS_DensEint2Entr == NULL !!\n" );
-#     endif
-   }
-#  endif // #ifdef GAMER_DEBUG
-
-
-   const bool CheckMinEint_No = false;
-   real Eint, Entr;
-
-   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, Emag );
-   Entr = EoS_DensEint2Entr( Dens, Eint, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
-
-   if ( CheckMinEntr )   Entr = Hydro_CheckMinEntr( Entr, MinEntr );
-
-   return Entr;
-
-} // FUNCTION : Hydro_Con2Entr
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -1123,8 +984,9 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
 GPU_DEVICE
 real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                      const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
-                     const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
-                     const real *const EoS_Table[EOS_NTABLE_MAX], real *EintOut )
+                     const EoS_DE2P_t EoS_DensEint2Pres, const EoS_GUESS_t EoS_GuessHTilde,
+                     const EoS_H2TEM_t EoS_HTilde2Temp, const double EoS_AuxArray_Flt[],
+                     const int EoS_AuxArray_Int[], const real *const EoS_Table[EOS_NTABLE_MAX], real *EintOut )
 {
 
    real Pres;
@@ -1151,6 +1013,80 @@ real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const re
    return Pres;
 
 } // FUNCTION : Hydro_Con2Pres
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Hydro_Con2Eint
+// Description :  Evaluate the gas internal energy density
+//
+// Note        :  1. For MHD, Engy is the total energy density including the magnetic energy Emag=0.5*B^2
+//                   and thus one must provide Emag to subtract it
+//                2. Internal energy density is energy per volume instead of per mass
+//
+// Parameter   :  Dens         : Mass density
+//                MomX/Y/Z     : Momentum density
+//                Engy         : Energy density (including the magnetic energy density for MHD)
+//                CheckMinEint : Apply internal energy floor by invoking Hydro_CheckMinEint()
+//                               --> In some cases we actually want to check if internal energy becomes unphysical,
+//                                   for which this option should be disabled
+//                MinEint      : Internal energy floor
+//                Emag         : Magnetic energy density (0.5*B^2) --> For MHD only
+//
+// Return      :  Gas internal energy density (Eint)
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+real Hydro_Con2Eint( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                     const bool CheckMinEint, const real MinEint, const real Emag )
+{
+
+//###NOTE: assuming Etot = Eint + Ekin + Emag
+   real Eint;
+
+   Eint  = Engy - (real)0.5*( SQR(MomX) + SQR(MomY) + SQR(MomZ) ) / Dens;
+#  ifdef MHD
+   Eint -= Emag;
+#  endif
+
+   if ( CheckMinEint )   Eint = Hydro_CheckMinEint( Eint, MinEint );
+
+   return Eint;
+
+} // FUNCTION : Hydro_Con2Eint
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Hydro_ConEint2Etot
+// Description :  Evaluate total energy from the input conserved variables and internal energy
+//
+// Note        :  1. For MHD, total energy density includes the magnetic energy Emag=0.5*B^2
+//                2. Internal energy density is energy per volume instead of per mass
+//
+// Parameter   :  Dens     : Mass density
+//                MomX/Y/Z : Momentum density
+//                Eint     : Internal energy density
+//                Emag     : Magnetic energy density (0.5*B^2) --> For MHD only
+//
+// Return      :  Total energy density (including the magnetic energy density for MHD)
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, const real MomZ, const real Eint,
+                         const real Emag )
+{
+
+//###NOTE: assuming Etot = Eint + Ekin + Emag
+   real Etot;
+
+   Etot  = (real)0.5*( SQR(MomX) + SQR(MomY) + SQR(MomZ) ) / Dens;
+   Etot += Eint;
+#  ifdef MHD
+   Etot += Emag;
+#  endif
+
+   return Etot;
+
+} // FUNCTION : Hydro_ConEint2Etot
 
 
 
@@ -1236,6 +1172,74 @@ real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const re
 } // FUNCTION : Hydro_Con2Temp
 
 
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Hydro_Con2Entr
+// Description :  Evaluate the fluid entropy
+//
+// Note        :  1. Invoke the EoS routine EoS_DensEint2Entr() to support different EoS
+//                2. We regard the entropy used in the EoS routines and that used in the dual-energy formalism
+//                   as two completely separate fields
+//                   --> The former is referred to as Entr/ENTR and manipulated by the EoS API, while the latter is
+//                       usually referred to as Enpy/Dual/DUAL and manipulated by the routines in CPU_Shared_DualEnergy.cpp
+//                   --> This routine, Hydro_Con2Entr(), belongs to the former
+//
+// Parameter   :  Dens              : Mass density
+//                MomX/Y/Z          : Momentum density
+//                Engy              : Energy density
+//                Passive           : Passive scalars
+//                CheckMinEntr      : Apply entropy floor by calling Hydro_CheckMinEntr()
+//                                    --> In some cases we actually want to check if entropy becomes unphysical,
+//                                        for which we don't want to enable this option
+//                MinEntr           : Entropy floor
+//                Emag              : Magnetic energy density (0.5*B^2) --> For MHD only
+//                EoS_DensEint2Entr : EoS routine to compute the gas entropy
+//                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensEint2Entr()
+//                EoS_Table         : EoS tables for EoS_DensEint2Entr()
+//
+// Return      :  Gas entropy
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+real Hydro_Con2Entr( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                     const real Passive[], const bool CheckMinEntr, const real MinEntr, const real Emag,
+                     const EoS_DE2S_t EoS_DensEint2Entr, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                     const real *const EoS_Table[EOS_NTABLE_MAX] )
+{
+
+#  ifdef SRHD
+#  ifdef __CUDACC__
+   printf( "ERROR : SRHD does not support entropy evalation at file <%s>, line <%d>, function <%s> !!\n",
+           ERROR_INFO );
+#  else
+   Aux_Error( ERROR_INFO, "SRHD does not support entropy evalation !!\n" );
+#  endif
+#  endif
+
+// check
+#  ifdef GAMER_DEBUG
+   if ( EoS_DensEint2Entr == NULL )
+   {
+#     ifdef __CUDACC__
+      printf( "ERROR : EoS_DensEint2Entr == NULL at file <%s>, line <%d>, function <%s> !!\n",
+              __FILE__, __LINE__, __FUNCTION__ );
+#     else
+      Aux_Error( ERROR_INFO, "EoS_DensEint2Entr == NULL !!\n" );
+#     endif
+   }
+#  endif // #ifdef GAMER_DEBUG
+
+
+   const bool CheckMinEint_No = false;
+   real Eint, Entr;
+
+   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, Emag );
+   Entr = EoS_DensEint2Entr( Dens, Eint, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+
+   if ( CheckMinEntr )   Entr = Hydro_CheckMinEntr( Entr, MinEntr );
+
+   return Entr;
+
+} // FUNCTION : Hydro_Con2Entr
 
 
 

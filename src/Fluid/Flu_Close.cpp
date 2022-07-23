@@ -431,7 +431,9 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
       const real Pres = Hydro_Con2Pres( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ],
                                         Fluid[ENGY], Fluid+NCOMP_FLUID,
                                         CheckMinPres_No, NULL_REAL, Emag,
-                                        EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt,
+                                        EoS_DensEint2Pres_CPUPtr,
+                                        EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                        EoS_AuxArray_Flt,
                                         EoS_AuxArray_Int, h_EoS_Table, NULL );
 
       if ( !Aux_IsFinite(Pres)  ||  Pres < (real)MIN_PRES )

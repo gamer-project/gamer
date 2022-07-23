@@ -342,7 +342,8 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 
                Pres = Hydro_Con2Pres( Temp[DENS], Temp[MOMX], Temp[MOMY], Temp[MOMZ], Temp[ENGY], Temp+NCOMP_FLUID,
                                       CheckMinPres_No, NULL_REAL, Emag,
-                                      EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+                                      EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                      EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
                if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres, "interpolated pressure", ERROR_INFO, UNPHY_SILENCE )  )
                   GotFailCell = true;
