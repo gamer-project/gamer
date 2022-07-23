@@ -228,6 +228,7 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
          vx   = _rho * ux[1][i];
          p    = Hydro_Con2Pres( ux[0][i], ux[1][i], ux[2][i], ux[3][i], ux[4][i], Passive,
                                 CheckMinPres_Yes, MinPres, NULL_REAL, EoS->DensEint2Pres_FuncPtr,
+                                EoS->EoS_GuessHTilde_FuncPtr, EoS->EoS_HTilde2Temp_FuncPtr,
                                 EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
 
 #        ifdef CHECK_UNPHYSICAL_IN_FLUID
@@ -290,6 +291,7 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
          vx   = _rho * u_half[1][i];
          p    = Hydro_Con2Pres( u_half[0][i], u_half[1][i], u_half[2][i], u_half[3][i], u_half[4][i], Passive,
                                 CheckMinPres_Yes, MinPres, NULL_REAL, EoS->DensEint2Pres_FuncPtr,
+                                EoS->EoS_GuessHTilde_FuncPtr, EoS->EoS_HTilde2Temp_FuncPtr,
                                 EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
 
 #        ifdef CHECK_UNPHYSICAL_IN_FLUID

@@ -153,9 +153,11 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    EmagR = _TWO*( SQR(Bx) + SQR(ByR) + SQR(BzR) );
 #  endif
    PL    = Hydro_Con2Pres( L[0], L[1], L[2], L[3], L[4], L+NCOMP_FLUID, CheckMinPres_Yes, MinPres, EmagL,
-                           EoS_DensEint2Pres, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
+                           EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
+                           EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
    PR    = Hydro_Con2Pres( R[0], R[1], R[2], R[3], R[4], R+NCOMP_FLUID, CheckMinPres_Yes, MinPres, EmagR,
-                           EoS_DensEint2Pres, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
+                           EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
+                           EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
 #  ifdef MHD
    HL    = _RhoL*( L[4] + PL + EmagL );
    HR    = _RhoR*( R[4] + PR + EmagR );
@@ -622,6 +624,7 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
 #        endif
          I_Pres = Hydro_Con2Pres( I_States[0], I_States[1], I_States[2], I_States[3], I_States[4], Passive,
                                   CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres,
+                                  EoS_GuessHTilde, EoS_HTilde2Temp,
                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
 
 //       if unphysical results occur, recalculate fluxes by a substitute Riemann solver

@@ -125,7 +125,8 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
          Vz    = FABS( fluid[MOMZ] )*_Rho;
          Pres  = Hydro_Con2Pres( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], fluid+NCOMP_FLUID,
                                  CheckMinPres_Yes, MinPres, Emag,
-                                 EoS.DensEint2Pres_FuncPtr, EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table, NULL );
+                                 EoS.DensEint2Pres_FuncPtr, EoS.EoS_GuessHTilde_FuncPtr, EoS.EoS_HTilde2Temp_FuncPtr,
+                                 EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table, NULL );
          a2    = EoS.DensPres2CSqr_FuncPtr( fluid[DENS], Pres, fluid+NCOMP_FLUID, EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int,
                                             EoS.Table ); // sound speed squared
 #        endif

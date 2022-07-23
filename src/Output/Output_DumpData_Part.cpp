@@ -317,6 +317,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
    if ( OPT__OUTPUT_PRES ) {
       Pres = Hydro_Con2Pres( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
                              CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres_CPUPtr,
+                             EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
       fprintf( File, " %13.6e", Pres );
    }
@@ -350,6 +351,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
       if ( Pres < 0.0 )
       Pres = Hydro_Con2Pres( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
                              CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres_CPUPtr,
+                             EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
       Cs   = SQRT(  EoS_DensPres2CSqr_CPUPtr( u[DENS], Pres, u+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                               h_EoS_Table )  );
