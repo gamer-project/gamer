@@ -24,6 +24,7 @@ extern double Bondi_Soften_R;
 extern bool   Bondi_Soliton;
 extern double Bondi_Soliton_m22;
 extern double Bondi_Soliton_rc;
+extern int    Bondi_Soliton_type;
 extern double Bondi_Soliton_t;
 
 //-------------------------------------------------------------------------------------------------------
@@ -54,9 +55,18 @@ void SetExtAccAuxArray_Bondi( double AuxArray[], const double Time )
       AuxArray[7] = Bondi_Soliton_rc;
       AuxArray[8] = NEWTON_G*Const_Msun/UNIT_M;
       AuxArray[9] = UNIT_L/Const_kpc;
-      if( Bondi_Soliton_t > 0 )
+      if( Bondi_Soliton_type > 0 )
       {
-          AuxArray[8] *= 2/(real)3.14159265*ATAN(Time/Bondi_Soliton_t);
+          switch(Bondi_Soliton_type)
+          {
+              case 1:
+                  AuxArray[8] *= 2/(real)3.14159265*ATAN(Time/Bondi_Soliton_t);
+                  break;
+              case 2:
+                  if( Time < Bondi_Soliton_t )
+                      AuxArray[8] *= Time/Bondi_Soliton_t;
+                  break;
+          }
       } 
    }
 
