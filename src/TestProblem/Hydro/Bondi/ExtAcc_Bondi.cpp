@@ -64,14 +64,14 @@ void SetExtAccAuxArray_Bondi( double AuxArray[], const double Time )
                   break;
               case 2: // linear function
                   if( Time < Bondi_Soliton_t )
-                      AuxArray[8] *= Time/Bondi_Soliton_t;
+                      AuxArray[8] *= Time/(2*Bondi_Soliton_t);
                   break;
               case 3: // smooth step function
                   if( Time < Bondi_Soliton_t )
-                      AuxArray[8] *= 3*SQR(Time/Bondi_Soliton_t)-2*CUBE(Time/Bondi_Soliton_t);
+                      AuxArray[8] *= 3*SQR(Time/Bondi_Soliton_t/2)-2*CUBE(Time/Bondi_Soliton_t/2);
                   break;
               case 4: // sigmoid
-                  AuxArray[8] *= 1/(1+exp(-Time+Bondi_Soliton_t/2));
+                  AuxArray[8] *= 1/(1+exp(-Time*log(3)/Bondi_Soliton_t));
                   break;
                 
           }
