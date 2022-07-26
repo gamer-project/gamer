@@ -90,11 +90,11 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
 
 
 /*  1. compute primitive vars. from conserved vars. */
-    Hydro_Con2Pri( L, PL, (real)NULL_REAL, true, true, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
+    Hydro_Con2Pri( L, PL, (real)NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
                   (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, &lFactor );
 
-    Hydro_Con2Pri( R, PR, (real)NULL_REAL, true, true, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
+    Hydro_Con2Pri( R, PR, (real)NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
                   (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, &rFactor );
 
@@ -132,8 +132,8 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
     gammasql = SQR(lFactor);
     gammasqr = SQR(rFactor);
 
-    ssl = cslsq / FMA( - gammasql, cslsq, gammasql ); /* Mignone Eq 22.5 */
-    ssr = csrsq / FMA( - gammasqr, csrsq, gammasqr ); /* Mignone Eq 22.5 */
+    ssl = cslsq / ( - gammasql * cslsq + gammasql ); /* Mignone Eq 22.5 */
+    ssr = csrsq / ( - gammasqr * csrsq + gammasqr ); /* Mignone Eq 22.5 */
 
 
 #   ifdef CHECK_FAILED_CELL_IN_FLUID
@@ -169,7 +169,7 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
  *     compute HLL conserved quantities using Mignone eq 9
  *  */
       Fl[0] = L[0] * lV1;
-      Fl[1] = FMA(L[1], lV1, PL[4]);
+      Fl[1] = L[1] * lV1 + PL[4];
       Fl[2] = L[2] * lV1;
       Fl[3] = L[3] * lV1;
 #    ifdef REDUCED_ENERGY
@@ -179,7 +179,7 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
 #    endif
 
       Fr[0] = R[0] * rV1;
-      Fr[1] = FMA(R[1], rV1, PR[4]);
+      Fr[1] = R[1] * rV1 + PR[4];
       Fr[2] = R[2] * rV1;
       Fr[3] = R[3] * rV1;
 #    ifdef REDUCED_ENERGY
@@ -207,11 +207,11 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
      ovlrmll = (real)1.0 / ( lmdar - lmdal );
      lmdatlmda = lmdal*lmdar;
 
-     Fhll[0] = FMA( lmdatlmda, (R[0] - L[0]), FMA( lmdar, Fl[0], - lmdal*Fr[0] ) ) * ovlrmll;
-     Fhll[1] = FMA( lmdatlmda, (R[1] - L[1]), FMA( lmdar, Fl[1], - lmdal*Fr[1] ) ) * ovlrmll;
-     Fhll[2] = FMA( lmdatlmda, (R[2] - L[2]), FMA( lmdar, Fl[2], - lmdal*Fr[2] ) ) * ovlrmll;
-     Fhll[3] = FMA( lmdatlmda, (R[3] - L[3]), FMA( lmdar, Fl[3], - lmdal*Fr[3] ) ) * ovlrmll;
-     Fhll[4] = FMA( lmdatlmda, (R[4] - L[4]), FMA( lmdar, Fl[4], - lmdal*Fr[4] ) ) * ovlrmll;
+     Fhll[0] = ( lmdatlmda * (R[0] - L[0]) + ( lmdar * Fl[0] - lmdal*Fr[0] ) ) * ovlrmll;
+     Fhll[1] = ( lmdatlmda * (R[1] - L[1]) + ( lmdar * Fl[1] - lmdal*Fr[1] ) ) * ovlrmll;
+     Fhll[2] = ( lmdatlmda * (R[2] - L[2]) + ( lmdar * Fl[2] - lmdal*Fr[2] ) ) * ovlrmll;
+     Fhll[3] = ( lmdatlmda * (R[3] - L[3]) + ( lmdar * Fl[3] - lmdal*Fr[3] ) ) * ovlrmll;
+     Fhll[4] = ( lmdatlmda * (R[4] - L[4]) + ( lmdar * Fl[4] - lmdal*Fr[4] ) ) * ovlrmll;
 
      /* calculate Fs */
      Flux_Out[0] = Fhll[0];

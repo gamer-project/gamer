@@ -5,7 +5,6 @@
 
 #if ( MODEL == HYDRO )
 
-#ifndef SRHD
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flu_DerivedField_DivVel
 // Description :  Define the built-in derived field "divergence(velocity)"
@@ -91,7 +90,7 @@ void Flu_DerivedField_DivVel( real Out[], const real FluIn[], const real MagIn[]
    }}} // k,j,i
 
 } // FUNCTION : Flu_DerivedField_DivVel
-#endif
+
 
 
 //-------------------------------------------------------------------------------------------------------

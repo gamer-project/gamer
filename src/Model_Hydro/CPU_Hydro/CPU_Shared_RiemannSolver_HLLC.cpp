@@ -91,13 +91,13 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
 
 /* 1. compute primitive vars. from conserved vars. */
-   Hydro_Con2Pri( L, PL, MinPres, true, true, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
-                 (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
-                 EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, &lFactor );
-
-   Hydro_Con2Pri( R, PR, (real)NULL_REAL, true, true, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
+    Hydro_Con2Pri( L, PL, (real)NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
                   (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
-                 EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, &rFactor );
+                  EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, &lFactor );
+
+    Hydro_Con2Pri( R, PR, (real)NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
+                  (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
+                  EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, &rFactor );
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
    Hydro_CheckUnphysical( UNPHY_MODE_PRIM, &PL,    NULL, ERROR_INFO, UNPHY_VERBOSE );
@@ -129,8 +129,8 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    gammasql = SQR(lFactor);
    gammasqr = SQR(rFactor);
 
-   ssl = cslsq / FMA( - gammasql, cslsq, gammasql ); /* Mignone Eq 22.5 */
-   ssr = csrsq / FMA( - gammasqr, csrsq, gammasqr ); /* Mignone Eq 22.5 */
+   ssl = cslsq / ( - gammasql * cslsq + gammasql ); /* Mignone Eq 22.5 */
+   ssr = csrsq / ( - gammasqr * csrsq + gammasqr ); /* Mignone Eq 22.5 */
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
    if ( ( ssl < (real)0.0 ) || ( ssr < (real)0.0 ) ) printf("ssl = %14.7e, ssr = %14.7e\n", ssl, ssr);
@@ -165,7 +165,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
  *    compute HLL conserved quantities using Mignone eq 9
  * */
    Fl[0] = L[0] * lV1;
-   Fl[1] = FMA( L[1], lV1, PL[4] );
+   Fl[1] = L[1] * lV1 + PL[4];
    Fl[2] = L[2] * lV1;
    Fl[3] = L[3] * lV1;
 #  ifdef REDUCED_ENERGY
@@ -205,7 +205,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    }
 
    Fr[0] = R[0] * rV1;
-   Fr[1] = FMA( R[1], rV1, PR[4] );
+   Fr[1] = R[1] * rV1 + PR[4];
    Fr[2] = R[2] * rV1;
    Fr[3] = R[3] * rV1;
 #  ifdef REDUCED_ENERGY
@@ -277,7 +277,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
    c = lmdar*R[1] - lmdal*L[1] - ( R[1]*rV1 + PR[4] ) + ( L[1]*lV1 + PL[4] );
 
-   real delta = FMA( b, b, -(real)4*a*c );
+   real delta = b * b - (real)4.0*a*c;
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
    if (delta < (real) 0.0) printf("delta=%f\n", delta);
@@ -307,13 +307,13 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
     den = (real)1.0 / (lmdal - lmdas);
 
     real factor0 = lmdal - lV1;
-    real factor1 = FMA( lmdal, den, -lV1*den );
+    real factor1 = lmdal * den - lV1 * den;
 
     Usl[0] =  L[0] * factor1;
-    Usl[1] = FMA( L[1], factor0, ps - PL[4] )* den;
+    Usl[1] = ( L[1] * factor0 + ps - PL[4] )* den;
     Usl[2] =  L[2] * factor1;
     Usl[3] =  L[3] * factor1;
-    Usl[4] = FMA( - PL[4], lV1, FMA( L[4], factor0, ps * lmdas ) ) * den;
+    Usl[4] = ( - PL[4] * lV1 + ( L[4] * factor0 + ps * lmdas ) ) * den;
 
 #   ifdef CHECK_UNPHYSICAL_IN_FLUID
     if (State != NULL)
@@ -327,11 +327,11 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 #   endif
 
     /* now calculate Fsr using Mignone Eq 14 */
-    Flux_Out[0] = FMA( lmdal, Usl[0] - L[0], Fl[0] );
-    Flux_Out[1] = FMA( lmdal, Usl[1] - L[1], Fl[1] );
-    Flux_Out[2] = FMA( lmdal, Usl[2] - L[2], Fl[2] );
-    Flux_Out[3] = FMA( lmdal, Usl[3] - L[3], Fl[3] );
-    Flux_Out[4] = FMA( lmdal, Usl[4] - L[4], Fl[4] );
+    Flux_Out[0] = lmdal * (Usl[0] - L[0]) + Fl[0];
+    Flux_Out[1] = lmdal * (Usl[1] - L[1]) + Fl[1];
+    Flux_Out[2] = lmdal * (Usl[2] - L[2]) + Fl[2];
+    Flux_Out[3] = lmdal * (Usl[3] - L[3]) + Fl[3];
+    Flux_Out[4] = lmdal * (Usl[4] - L[4]) + Fl[4];
 
     // evaluate the fluxes of passive scalars
     #  if ( NCOMP_PASSIVE > 0 )
@@ -359,13 +359,13 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
     den = (real)1.0 / (lmdar - lmdas);
 
     real factor0 = lmdar - rV1;
-    real factor1 = FMA( lmdar, den, -rV1*den );
+    real factor1 = lmdar * den - rV1*den;
 
     Usr[0] = R[0] * factor1;
-    Usr[1] = FMA( R[1], factor0, ps - PR[4] ) * den;
+    Usr[1] = ( R[1] * factor0 + ( ps - PR[4] ) ) * den;
     Usr[2] = R[2] * factor1;
     Usr[3] = R[3] * factor1;
-    Usr[4] = FMA( - PR[4], rV1, FMA( R[4], factor0, ps * lmdas ) ) * den;
+    Usr[4] = ( - PR[4] * rV1 + ( R[4] * factor0 + ps * lmdas ) ) * den;
 
 #   ifdef CHECK_UNPHYSICAL_IN_FLUID
     if (State != NULL)
@@ -379,11 +379,11 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 #   endif
 
     /* now calculate Fsr using Mignone Eq 14 */
-    Flux_Out[0] = FMA( lmdar, Usr[0] - R[0], + Fr[0] );
-    Flux_Out[1] = FMA( lmdar, Usr[1] - R[1], + Fr[1] );
-    Flux_Out[2] = FMA( lmdar, Usr[2] - R[2], + Fr[2] );
-    Flux_Out[3] = FMA( lmdar, Usr[3] - R[3], + Fr[3] );
-    Flux_Out[4] = FMA( lmdar, Usr[4] - R[4], + Fr[4] );
+    Flux_Out[0] = lmdar * (Usr[0] - R[0]) + Fr[0];
+    Flux_Out[1] = lmdar * (Usr[1] - R[1]) + Fr[1];
+    Flux_Out[2] = lmdar * (Usr[2] - R[2]) + Fr[2];
+    Flux_Out[3] = lmdar * (Usr[3] - R[3]) + Fr[3];
+    Flux_Out[4] = lmdar * (Usr[4] - R[4]) + Fr[4];
 
     // evaluate the fluxes of passive scalars
     #  if ( NCOMP_PASSIVE > 0 )
