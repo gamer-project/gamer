@@ -178,7 +178,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
          Pres = Hydro_Con2Pres( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
                                 Output_1Cell[ENGY], Output_1Cell+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, Emag,
                                 EoS->DensEint2Pres_FuncPtr,
-                                EoS->GuessHTilde_FunPtr, EoS->HTilde2Temp_FunPtr,
+                                EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
                                 EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,
                                 EoS->Table, NULL );
 

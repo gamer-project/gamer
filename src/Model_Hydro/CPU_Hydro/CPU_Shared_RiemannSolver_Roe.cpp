@@ -153,10 +153,10 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    EmagR = _TWO*( SQR(Bx) + SQR(ByR) + SQR(BzR) );
 #  endif
    PL    = Hydro_Con2Pres( L[0], L[1], L[2], L[3], L[4], L+NCOMP_FLUID, CheckMinPres_Yes, MinPres, EmagL,
-                           EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
+                           EoS_DensEint2Pres, NULL, NULL,
                            EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
    PR    = Hydro_Con2Pres( R[0], R[1], R[2], R[3], R[4], R+NCOMP_FLUID, CheckMinPres_Yes, MinPres, EmagR,
-                           EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
+                           EoS_DensEint2Pres, NULL, NULL,
                            EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
 #  ifdef MHD
    HL    = _RhoL*( L[4] + PL + EmagL );

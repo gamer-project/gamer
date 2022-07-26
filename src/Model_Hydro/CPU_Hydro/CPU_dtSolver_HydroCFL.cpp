@@ -62,8 +62,11 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
 #endif
 {
 
-   const bool CheckMinPres_Yes = true;
    const real dhSafety         = Safety*dh;
+
+#  ifndef SRHD
+   const bool CheckMinPres_Yes = true;
+#  endif
 
 // loop over all patches
 // --> CPU/GPU solver: use different (OpenMP threads) / (CUDA thread blocks)
@@ -111,13 +114,14 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
 
 
 #        ifdef SRHD
-         Hydro_Con2Pri( fluid, Pri,(real)NULL_REAL, true, true, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
+         real Rho;
+         Hydro_Con2Pri( fluid, Pri,(real)NULL_REAL, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
                         (real)NULL_REAL, NULL, NULL,
-                        EoS_GuessHTilde_Func, EoS_HTilde2Temp_Func,
-                        c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table, NULL, &LorentzFactor );
+                        EoS.GuessHTilde_FuncPtr, EoS.HTilde2Temp_FuncPtr,
+                        EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table, NULL, &LorentzFactor );
          Rho   = Pri[0];
          Pres  = Pri[4];
-         a2    = EoS_Temper2CSqr_Func( Rho, Pres, fluid+NCOMP_FLUID, c_EoS_AuxArray_Flt, c_EoS_AuxArray_Int, c_EoS_Table ); // sound speed squared
+         a2    = EoS.Temper2CSqr_FuncPtr( Rho, Pres, fluid+NCOMP_FLUID, EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table ); // sound speed squared
 #        else
         _Rho   = (real)1.0 / fluid[DENS];
          Vx    = FABS( fluid[MOMX] )*_Rho;
@@ -125,7 +129,7 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
          Vz    = FABS( fluid[MOMZ] )*_Rho;
          Pres  = Hydro_Con2Pres( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], fluid+NCOMP_FLUID,
                                  CheckMinPres_Yes, MinPres, Emag,
-                                 EoS.DensEint2Pres_FuncPtr, EoS.EoS_GuessHTilde_FuncPtr, EoS.EoS_HTilde2Temp_FuncPtr,
+                                 EoS.DensEint2Pres_FuncPtr, EoS.GuessHTilde_FuncPtr, EoS.HTilde2Temp_FuncPtr,
                                  EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table, NULL );
          a2    = EoS.DensPres2CSqr_FuncPtr( fluid[DENS], Pres, fluid+NCOMP_FLUID, EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int,
                                             EoS.Table ); // sound speed squared

@@ -367,8 +367,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    Prim[3] =( aVT2 + dVT2*Tanh )*fluid[DENS];
    Prim[4] =  aPre + dPre*Tanh;
 
-   Hydro_Pri2Con( Prim, fluid, NULL_BOOL, NULL_INT, NULL_INT,
-                  EoS_DensPres2Eint_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+   Hydro_Pri2Con( Prim, fluid, NULL_BOOL, NULL_INT, NULL,
+                  EoS_DensPres2Eint_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                  EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 #  else
    fluid[ DENS      ] =   aRho + dRho*Tanh;
    fluid[ MomIdx[0] ] = ( aVel + dVel*Tanh )*fluid[DENS];

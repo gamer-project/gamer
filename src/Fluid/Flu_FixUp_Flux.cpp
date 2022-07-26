@@ -149,7 +149,7 @@ void Flu_FixUp_Flux( const int lv )
 
 //             calculate the internal energy density
 #              if ( MODEL == HYDRO  &&  !defined BAROTROPIC_EOS && !defined SRHD )
-               real Eint;
+               real Eint, Pres;
                real *ForEint = CorrVal;
 
 //###EXPERIMENTAL: (does not work well and thus has been disabled for now)

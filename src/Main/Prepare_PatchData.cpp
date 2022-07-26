@@ -969,7 +969,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                       + FluWeighting_IntT*Hydro_Con2Pres( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                           FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
                                                           (MinPres>=(real)0.0), MinPres, Emag,
-                                                          EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, i
+                                                          EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                           EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                           h_EoS_Table, NULL );
                   }
@@ -1353,7 +1353,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         Data1PG_CC_Ptr[Idx1] = Hydro_Con2Pres( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                                FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
                                                                (MinPres>=(real)0.0), MinPres, Emag,
-                                                               EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                               EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                               EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                                h_EoS_Table, NULL );
 
                         if ( FluIntTime ) // temporal interpolation

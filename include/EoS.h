@@ -30,10 +30,10 @@ struct EoS_t
    int    *AuxArrayDevPtr_Int;
 
 // function pointers
-   EoS_GUESS_t EoS_GuessHTilde_FuncPtr;
-   EoS_H2TEM_t EoS_HTilde2Temp_FuncPtr;
-   EoS_TEM2H_t EoS_Temp2HTilde_FuncPtr;
-   EoS_TEM2C_t EoS_Temper2CSqr_FuncPtr;
+   EoS_GUESS_t GuessHTilde_FuncPtr;
+   EoS_H2TEM_t HTilde2Temp_FuncPtr;
+   EoS_TEM2H_t Temp2HTilde_FuncPtr;
+   EoS_TEM2C_t Temper2CSqr_FuncPtr;
    EoS_DE2P_t DensEint2Pres_FuncPtr;
    EoS_DP2E_t DensPres2Eint_FuncPtr;
    EoS_DP2C_t DensPres2CSqr_FuncPtr;
