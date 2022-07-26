@@ -454,7 +454,7 @@ const PatchType_t
 // function pointers
 typedef real (*EoS_GUESS_t)    ( const real Con[], real* const Constant, const double AuxArray_Flt[],
                                  const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] );
-typedef real (*EoS_H2TEM_t)    ( const real HTilde, real* const Temp, real* const DiffTemp,
+typedef void (*EoS_H2TEM_t)    ( const real HTilde, real* const Temp, real* const DiffTemp,
                                  const real Passive[], const double AuxArray_Flt[],
                                  const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] );
 typedef real (*EoS_TEM2H_t)    ( const real Temp, const real Passive[], const double AuxArray_Flt[],
