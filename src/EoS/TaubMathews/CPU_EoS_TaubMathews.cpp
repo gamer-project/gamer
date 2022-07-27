@@ -198,11 +198,6 @@ static real EoS_Temper2CSqr_TaubMathews( const real Rho, const real Pres, const 
                                          const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] )
 {
 
-// check
-#  ifdef GAMER_DEBUG
-   if ( AuxArray == NULL )    printf( "ERROR : AuxArray == NULL in %s !!\n", __FUNCTION__ );
-#  endif // GAMER_DEBUG
-
    real Cs2, Temp;
 
    Temp = Pres/Rho;

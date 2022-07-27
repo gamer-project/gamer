@@ -83,10 +83,10 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    real lFactor,rFactor;
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_CheckUnphysical( UNPHY_MODE_CONS, &L,    NULL, ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_CheckUnphysical( UNPHY_MODE_CONS, &R,    NULL, ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_CheckUnphysical( UNPHY_MODE_CONS, &L_In, NULL, ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_CheckUnphysical( UNPHY_MODE_CONS, &R_In, NULL, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_CONS, L,    NULL, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_CONS, R,    NULL, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_CONS, L_In, NULL, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_CONS, R_In, NULL, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 
@@ -100,8 +100,8 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, &rFactor );
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_CheckUnphysical( UNPHY_MODE_PRIM, &PL,    NULL, ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_CheckUnphysical( UNPHY_MODE_PRIM, &PR,    NULL, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_PRIM, PL,    NULL, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_PRIM, PR,    NULL, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 /* 2. Transform 4-velocity to 3-velocity */
@@ -315,17 +315,6 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
     Usl[3] =  L[3] * factor1;
     Usl[4] = ( - PL[4] * lV1 + ( L[4] * factor0 + ps * lmdas ) ) * den;
 
-#   ifdef CHECK_UNPHYSICAL_IN_FLUID
-    if (State != NULL)
-    {
-      *State = SRHD_CheckUnphysical(Usl, NULL, EoS_GuessHTilde, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, __FUNCTION__, __LINE__, true );
-      if (*State){
-        printf("Switch to HLLE solver!\n");
-        return;
-      }
-    }
-#   endif
-
     /* now calculate Fsr using Mignone Eq 14 */
     Flux_Out[0] = lmdal * (Usl[0] - L[0]) + Fl[0];
     Flux_Out[1] = lmdal * (Usl[1] - L[1]) + Fl[1];
@@ -367,16 +356,6 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
     Usr[3] = R[3] * factor1;
     Usr[4] = ( - PR[4] * rV1 + ( R[4] * factor0 + ps * lmdas ) ) * den;
 
-#   ifdef CHECK_UNPHYSICAL_IN_FLUID
-    if (State != NULL)
-    {
-      *State = SRHD_CheckUnphysical(Usr, NULL, EoS_GuessHTilde, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, __FUNCTION__, __LINE__, false );
-      if (*State){
-        printf("Switch to HLLE solver!\n");
-        return;
-      }
-    }
-#   endif
 
     /* now calculate Fsr using Mignone Eq 14 */
     Flux_Out[0] = lmdar * (Usr[0] - R[0]) + Fr[0];
