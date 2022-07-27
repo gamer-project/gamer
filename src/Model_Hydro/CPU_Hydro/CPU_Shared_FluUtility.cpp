@@ -32,6 +32,9 @@ GPU_DEVICE
 static real Hydro_CheckMinTemp( const real InTemp, const real MinTemp );
 GPU_DEVICE
 static real Hydro_CheckMinEntr( const real InEntr, const real MinEntr );
+GPU_DEVICE
+bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], const char SingleFieldName[],
+                            const char File[], const int Line, const char Function[], const CheckUnphysical_t Verbose );
 
 #ifdef SRHD
 GPU_DEVICE
