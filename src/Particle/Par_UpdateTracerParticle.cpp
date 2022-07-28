@@ -34,12 +34,6 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
                                const bool MapOnly )
 {
 
-// check
-#  ifdef COMOVING
-#  error : ERROR : does not support COMOVING because time-step has not been converted to comoving !!
-#  endif
-
-
    const bool   IntPhase_No       = false;
    const bool   DE_Consistency_No = false;
    const real   MinDens_No        = -1.0;

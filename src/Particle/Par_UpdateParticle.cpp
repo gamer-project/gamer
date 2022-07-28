@@ -119,10 +119,6 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 
 
 // check
-#  ifdef COMOVING
-#  error : ERROR : does not support COMOVING because time-step has not been converted to comoving !!
-#  endif
-
 #  ifdef DEBUG_PARTICLE
 // Par->ImproveAcc only supports particle interpolation schemes with ParGhost == 1 (CIC & TSC)
    if ( amr->Par->ImproveAcc  &&  PotGhost != GRA_GHOST_SIZE )
