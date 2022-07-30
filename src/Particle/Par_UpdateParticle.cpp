@@ -19,13 +19,13 @@
 //                4. For the Euler scheme, this function completes the full update
 //                   --> UpdateStep==PAR_UPSTEP_CORR is meaningless
 //                5. For KDK, particle time is set to -0.5*dt after the K-D operation to indicate that they require
-//                   velocity correction (the last K operation) later. Otherwise particles just cross from fine to coarse
+//                   velocity correction (the last K operation) later. Otherwise particles just crossing from fine to coarse
 //                   grids cannot be distinguished from those already in the coarse grid, while we only want to apply
-//                   velocity correction to the former. After the velocity correction, particle time is set to TimeNew
-//                   For Euler, particle time is set to TimeNew in the PAR_UPSTEP_PRED step
+//                   velocity correction to the former. After the velocity correction, particle time is set to TimeNew.
+//                   For Euler, particle time is set to TimeNew in the PAR_UPSTEP_PRED step.
 //                6. Particle time may not be synchronized (so different particles may have different time).
-//                   --> For example, particles just cross from coarse (lv) to fine (lv+1) grids may have time greater than
-//                       other particles at lv+1. Also, particles just cross from fine (lv) to coarse (lv-1) grids may have
+//                   --> For example, particles just crossing from coarse (lv) to fine (lv+1) grids may have time greater than
+//                       other particles at lv+1. Also, particles just crossing from fine (lv) to coarse (lv-1) grids may have
 //                       time less than other particles at lv-1.
 //                   --> Only update particles with time < TimeNew
 //                7. If STORE_PAR_ACC is on, we can store the acceleration of each particle (option "StoreAcc")
@@ -328,6 +328,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 //             it's crucial to first calculate dt here and skip particles with dt <= (real)0.0 (including the equal sign)
 //             since later on we select particles with negative particle time (which has been set to -dt), with equal sign
 //             excluded, for the velocity correction
+//             --> particles just crossing from coarse to fine grids can have ParTime[ParID] >= TimeNew
                dt      = (real)TimeNew - ParTime[ParID];
                dt_half = (real)0.5*dt;
 
