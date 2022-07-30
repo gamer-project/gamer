@@ -77,7 +77,7 @@ void Par_PredictPos( const long NPar, const long *ParList, real *ParPosX, real *
          Initialized = true;
       }
 
-//    avoid redundant conversion
+//    avoid redundant calculations
       if ( dTime2dt )
       {
          dt           = Mis_dTime2dt( ParTime, dt );

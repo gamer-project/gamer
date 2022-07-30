@@ -136,7 +136,7 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
             Initialized = true;
          }
 
-//       avoid redundant conversion
+//       avoid redundant calculations
          if ( dTime2dt )
          {
             dt           = Mis_dTime2dt( ParTime[p], dt );

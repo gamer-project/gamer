@@ -335,7 +335,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 
 //             convert time-step for comoving
 #              ifdef COMOVING
-               if ( ParTime[ParID] == (real)TimeOld )    dt = dt_com;   // avoid redundant conversion
+               if ( ParTime[ParID] == (real)TimeOld )    dt = dt_com;   // avoid redundant calculations
                else                                      dt = Mis_dTime2dt( ParTime[ParID], dt );
 #              endif
 
