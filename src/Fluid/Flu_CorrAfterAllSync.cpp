@@ -120,7 +120,7 @@ void Flu_CorrAfterAllSync()
    const bool UseStoredAcc_No = false;
 
    for (int lv=0; lv<NLEVEL; lv++)
-   Par_UpdateParticle( lv, amr->PotSgTime[lv][ amr->PotSg[lv] ], NULL_REAL, PAR_UPSTEP_ACC_ONLY, StoreAcc_Yes, UseStoredAcc_No );
+      Par_UpdateParticle( lv, amr->PotSgTime[lv][ amr->PotSg[lv] ], NULL_REAL, PAR_UPSTEP_ACC_ONLY, StoreAcc_Yes, UseStoredAcc_No );
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 #  endif
@@ -130,8 +130,10 @@ void Flu_CorrAfterAllSync()
 #  ifdef TRACER
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "      update tracer particle attributes     ... " );
 
+   const bool MapOnly_Yes = true;
+
    for (int lv=0; lv<NLEVEL; lv++)
-   Par_UpdateTracerParticle( lv, Time[lv], NULL_REAL, true );
+      Par_UpdateTracerParticle( lv, Time[lv], NULL_REAL, MapOnly_Yes );
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 #  endif
