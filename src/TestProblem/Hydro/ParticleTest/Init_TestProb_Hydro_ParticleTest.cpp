@@ -145,10 +145,12 @@ void SetParameter()
    }
 
 // overwrite the total number of particles
+#  ifdef PARTICLE
    amr->Par->NPar_Active_AllRank = 0;
    if ( ParTest_Use_Massive )    amr->Par->NPar_Active_AllRank += 2;
    if ( ParTest_Use_Tracers )    amr->Par->NPar_Active_AllRank += ParTest_NPar[0]*ParTest_NPar[1]*ParTest_NPar[2];
    PRINT_WARNING( "PAR_NPAR", amr->Par->NPar_Active_AllRank, FORMAT_LONG );
+#  endif
 
 
 // (4) make a note
