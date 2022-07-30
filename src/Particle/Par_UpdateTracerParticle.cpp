@@ -45,6 +45,9 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
    const int    ParGhost          = amr->Par->GhostSizeTracer;
    const int    VelSize           = PS1 + 2*ParGhost;
    const bool   UseTracers_Yes    = true;
+#  ifdef COMOVING
+   const real   dt_com            = (real)Mis_dTime2dt( TimeOld, TimeNew-TimeOld );
+#  endif
 
          real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
          real *ParVel[3] = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
@@ -137,6 +140,12 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
 //          determine time-step
             dt = (real)TimeNew - ParTime[ParID];
 
+//          convert time-step for comoving
+#           ifdef COMOVING
+            if ( ParTime[ParID] == (real)TimeOld )    dt = dt_com;   // avoid redundant calculations
+            else                                      dt = Mis_dTime2dt( ParTime[ParID], dt );
+#           endif
+
             for (int d=0; d<3; d++)
                if ( MapOnly )
                   InterpParPos[d][p] = ParPos[d][ParID];
@@ -190,9 +199,15 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
 //             determine time-step
                dt = (real)TimeNew - ParTime[ParID];
 
+//             convert time-step for comoving
+#              ifdef COMOVING
+               if ( ParTime[ParID] == (real)TimeOld )    dt = dt_com;   // avoid redundant calculations
+               else                                      dt = Mis_dTime2dt( ParTime[ParID], dt );
+#              endif
+
                for (int d=0; d<3; d++)
                   InterpParPos[d][p] = ParPos[d][ParID] +
-                     0.5*dt*( Vel_Temp[d][p] + ParVel[d][ParID] );
+                     (real)0.5*dt*( Vel_Temp[d][p] + ParVel[d][ParID] );
             } // amr->Par->IntegTracer
 
          } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)`
