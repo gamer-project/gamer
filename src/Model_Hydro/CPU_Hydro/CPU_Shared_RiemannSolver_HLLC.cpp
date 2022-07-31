@@ -77,7 +77,9 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 // 2-1. compute the left/right states
    const real ZERO             = (real)0.0;
    const real ONE              = (real)1.0;
+#  if ( HLLC_WAVESPEED != HLL_WAVESPEED_DAVIS )
    const real _TWO             = (real)0.5;
+#  endif
    const bool CheckMinPres_Yes = true;
    const real Emag             = NULL_REAL;
 

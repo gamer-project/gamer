@@ -269,7 +269,8 @@ endif
 # CXXFLAG    += -Wall -Wextra                             # warning flags
 # CXXFLAG    += -Wno-unused-variable -Wno-unused-parameter \
                -Wno-maybe-uninitialized -Wno-unused-but-set-variable \
-               -Wno-unused-result -Wno-unused-function
+               -Wno-unused-result -Wno-unused-function \
+	       -Wno-implicit-fallthrough -Wno-parentheses
 # OPENMPFLAG  = -fopenmp                                  # openmp flag
 # LIB         =                                           # libraries and linker flags
 
@@ -417,7 +418,7 @@ LIBYT_PATH   :=
 #MPI_PATH     := /cluster/intel-2022.1/openmpi-4.1.2
 #HDF5_PATH    := /cluster/intel-2022.1/hdf5-1.10.8_openmpi4
 #GRACKLE_PATH :=
-#GSL_PATH     :=
+#GSL_PATH     := /usr
 #LIBYT_PATH   :=
 
 
@@ -926,6 +927,13 @@ NVCCFLAG_COM := $(strip $(NVCCFLAG_COM))
 NVCCFLAG_FLU := $(strip $(NVCCFLAG_FLU))
 NVCCFLAG_POT := $(strip $(NVCCFLAG_POT))
 GIT_INFO     := $(strip $(GIT_INFO))
+CUDA_PATH    := $(strip $(CUDA_PATH))
+FFTW_PATH    := $(strip $(FFTW_PATH))
+MPI_PATH     := $(strip $(MPI_PATH))
+HDF5_PATH    := $(strip $(HDF5_PATH))
+GRACKLE_PATH := $(strip $(GRACKLE_PATH))
+GSL_PATH     := $(strip $(GSL_PATH))
+LIBYT_PATH   := $(strip $(LIBYT_PATH))
 
 
 # implicit rules (do NOT modify the order of the following rules)

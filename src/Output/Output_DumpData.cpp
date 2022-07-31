@@ -47,7 +47,7 @@ void Output_DumpData( const int Stage )
 
          case OUTPUT_CONST_DT :
          {
-            if ( OPT__INIT != INIT_BY_RESTART  ||  OPT__RESTART_RESET )
+            if ( OPT__INIT != INIT_BY_RESTART  ||  OPT__RESTART_RESET  ||  OPT__OUTPUT_RESTART )
                DumpTime = Time[0];
 
             else
@@ -64,7 +64,7 @@ void Output_DumpData( const int Stage )
 
          case OUTPUT_USE_TABLE :
          {
-            if ( OPT__INIT != INIT_BY_RESTART  ||  OPT__RESTART_RESET )
+            if ( OPT__INIT != INIT_BY_RESTART  ||  OPT__RESTART_RESET  ||  OPT__OUTPUT_RESTART )
             {
                for (DumpTableID=0; DumpTableID<DumpTable_NDump; DumpTableID++)
                {
@@ -97,8 +97,8 @@ void Output_DumpData( const int Stage )
    } // if ( Stage == 0 )
 
 
-// do not output the initial data for the restart run
-   if ( OPT__INIT == INIT_BY_RESTART  &&  Stage == 0  &&  !OPT__RESTART_RESET )  return;
+// do not output the initial data for the restart run (unless enabling OPT__OUTPUT_RESTART)
+   if ( OPT__INIT == INIT_BY_RESTART  &&  Stage == 0  &&  !OPT__RESTART_RESET  &&  !OPT__OUTPUT_RESTART )   return;
 
 
 // set the file names for all output functions
