@@ -60,6 +60,7 @@ void Validate()
    if ( !OPT__FREEZE_FLUID )
       Aux_Error( ERROR_INFO, "OPT__FREEZE_FLUID must be enabled !!\n" );
 
+
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
 
 } // FUNCTION : Validate
@@ -143,15 +144,30 @@ void SetParameter()
       PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
    }
 
+// overwrite the total number of particles
+#  ifdef PARTICLE
+   amr->Par->NPar_Active_AllRank = 0;
+   if ( ParTest_Use_Massive )    amr->Par->NPar_Active_AllRank += 2;
+   if ( ParTest_Use_Tracers )    amr->Par->NPar_Active_AllRank += ParTest_NPar[0]*ParTest_NPar[1]*ParTest_NPar[2];
+   PRINT_WARNING( "PAR_NPAR", amr->Par->NPar_Active_AllRank, FORMAT_LONG );
+#  endif
+
 
 // (4) make a note
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID           = %d\n",     TESTPROB_ID     );
-      Aux_Message( stdout, "  background mass density   = %13.7e\n", ParTest_Dens_Bg  );
-      Aux_Message( stdout, "  background pressure       = %13.7e\n", ParTest_Pres_Bg  );
-      Aux_Message( stdout, "  angular frequency         = %13.7e\n", ParTest_Ang_Freq );
+      Aux_Message( stdout, "  test problem ID            = %d\n",     TESTPROB_ID         );
+      Aux_Message( stdout, "  background mass density    = %13.7e\n", ParTest_Dens_Bg     );
+      Aux_Message( stdout, "  background pressure        = %13.7e\n", ParTest_Pres_Bg     );
+      Aux_Message( stdout, "  angular frequency          = %13.7e\n", ParTest_Ang_Freq    );
+      Aux_Message( stdout, "  number of particles (x)    = %d\n",     ParTest_NPar[0]     );
+      Aux_Message( stdout, "                      (y)    = %d\n",     ParTest_NPar[1]     );
+      Aux_Message( stdout, "                      (z)    = %d\n",     ParTest_NPar[2]     );
+      Aux_Message( stdout, "  active particle separation = %13.7e\n", ParTest_Par_Sep     );
+      Aux_Message( stdout, "  active particle mass       = %13.7e\n", ParTest_Point_Mass  );
+      Aux_Message( stdout, "  include tracer particles   = %d\n",     ParTest_Use_Tracers );
+      Aux_Message( stdout, "  include massive particles  = %d\n",     ParTest_Use_Massive );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 

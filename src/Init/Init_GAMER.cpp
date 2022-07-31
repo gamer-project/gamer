@@ -88,10 +88,6 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
-// initialize parameters for the parallelization (rectangular domain decomposition)
-   Init_Parallelization();
-
-
 #  ifdef GRAVITY
 // initialize FFTW
    Init_FFTW();
@@ -100,6 +96,11 @@ void Init_GAMER( int *argc, char ***argv )
 
 // initialize the test problem parameters
    Init_TestProb();
+
+
+// initialize parameters for the parallelization
+// --> call it after Init_TestProb() since Init_TestProb() may overwrite the total number of particles
+   Init_Parallelization();
 
 
 // initialize all fields and particle attributes
