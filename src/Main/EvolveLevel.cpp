@@ -768,7 +768,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 // ===============================================================================================
 
 
-//    14. user-specified operations before proceeding to the next refinement level
+//    14. user-specified operations before proceeding to the next sub-step
 // ===============================================================================================
       if ( Mis_UserWorkBeforeNextSubstep_Ptr != NULL )
       {
