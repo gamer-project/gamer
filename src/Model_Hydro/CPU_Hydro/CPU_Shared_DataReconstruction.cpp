@@ -58,7 +58,7 @@ static void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
 #endif
 #if ( FLU_SCHEME == MHM )
 GPU_DEVICE
-static void Hydro_HancockPredict( real fc[][NCOMP_LR], const real dt, const real dh,
+static void Hydro_HancockPredict( real fc[][NCOMP_LR], real fcPri[][NCOMP_LR], const real dt, const real dh,
                                   const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
                                   const real MinDens, const real MinPres, const real MinEint,
                                   const EoS_t *EoS );
@@ -320,9 +320,9 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #     endif
 
 //    cc_C/L/R: cell-centered variables of the Central/Left/Right cells
-//    fc: face-centered variables of the central cell
+//    fcCon: face-centered variables of the central cell
       real cc_C[NCOMP_LR], cc_L[NCOMP_LR], cc_R[NCOMP_LR];
-      real fc[6][NCOMP_LR], Slope_Limiter[NCOMP_LR];
+      real fcCon[6][NCOMP_LR], fcPri[6][NCOMP_LR], Slope_Limiter[NCOMP_LR];
 
       for (int v=0; v<NCOMP_LR; v++)   cc_C[v] = g_PriVar[v][idx_cc];
 
@@ -361,8 +361,8 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 //       3. get the face-centered primitive variables
          for (int v=0; v<NCOMP_LR; v++)
          {
-            fc[faceL][v] = cc_C[v] - (real)0.5*Slope_Limiter[v];
-            fc[faceR][v] = cc_C[v] + (real)0.5*Slope_Limiter[v];
+            fcPri[faceL][v] = cc_C[v] - (real)0.5*Slope_Limiter[v];
+            fcPri[faceR][v] = cc_C[v] + (real)0.5*Slope_Limiter[v];
          }
 
 //       ensure the face-centered variables lie between neighboring cell-centered values
@@ -372,15 +372,15 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
             Min = ( cc_C[v] < cc_L[v] ) ? cc_C[v] : cc_L[v];
             Max = ( cc_C[v] > cc_L[v] ) ? cc_C[v] : cc_L[v];
-            fc[faceL][v] = ( fc[faceL][v] > Min ) ? fc[faceL][v] : Min;
-            fc[faceL][v] = ( fc[faceL][v] < Max ) ? fc[faceL][v] : Max;
-            fc[faceR][v] = (real)2.0*cc_C[v] - fc[faceL][v];
+            fcPri[faceL][v] = ( fcPri[faceL][v] > Min ) ? fcPri[faceL][v] : Min;
+            fcPri[faceL][v] = ( fcPri[faceL][v] < Max ) ? fcPri[faceL][v] : Max;
+            fcPri[faceR][v] = (real)2.0*cc_C[v] - fcPri[faceL][v];
 
             Min = ( cc_C[v] < cc_R[v] ) ? cc_C[v] : cc_R[v];
             Max = ( cc_C[v] > cc_R[v] ) ? cc_C[v] : cc_R[v];
-            fc[faceR][v] = ( fc[faceR][v] > Min ) ? fc[faceR][v] : Min;
-            fc[faceR][v] = ( fc[faceR][v] < Max ) ? fc[faceR][v] : Max;
-            fc[faceL][v] = (real)2.0*cc_C[v] - fc[faceR][v];
+            fcPri[faceR][v] = ( fcPri[faceR][v] > Min ) ? fcPri[faceR][v] : Min;
+            fcPri[faceR][v] = ( fcPri[faceR][v] < Max ) ? fcPri[faceR][v] : Max;
+            fcPri[faceL][v] = (real)2.0*cc_C[v] - fcPri[faceR][v];
          }
 
 
@@ -395,7 +395,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
          real Correct_L[NCOMP_LR], Correct_R[NCOMP_LR], dfc[NCOMP_LR];
 
 //       4-1. evaluate the slope (for passive scalars as well)
-         for (int v=0; v<NCOMP_LR; v++)   dfc[v] = fc[faceR][v] - fc[faceL][v];
+         for (int v=0; v<NCOMP_LR; v++)   dfc[v] = fcPri[faceR][v] - fcPri[faceL][v];
 
 
 //       4-2. re-order variables for the y/z directions
@@ -554,22 +554,22 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
          for (int v=0; v<NCOMP_LR; v++)
          {
-            fc[faceL][v] += Correct_L[v];
-            fc[faceR][v] += Correct_R[v];
+            fcPri[faceL][v] += Correct_L[v];
+            fcPri[faceR][v] += Correct_R[v];
          }
 
 
 //       4-6. apply density and pressure floors
-         fc[faceL][0] = FMAX( fc[faceL][0], MinDens );
-         fc[faceR][0] = FMAX( fc[faceR][0], MinDens );
+         fcPri[faceL][0] = FMAX( fcPri[faceL][0], MinDens );
+         fcPri[faceR][0] = FMAX( fcPri[faceR][0], MinDens );
 
-         fc[faceL][4] = Hydro_CheckMinPres( fc[faceL][4], MinPres );
-         fc[faceR][4] = Hydro_CheckMinPres( fc[faceR][4], MinPres );
+         fcPri[faceL][4] = Hydro_CheckMinPres( fcPri[faceL][4], MinPres );
+         fcPri[faceR][4] = Hydro_CheckMinPres( fcPri[faceR][4], MinPres );
 
 #        if ( NCOMP_PASSIVE > 0 )
          for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++) {
-         fc[faceL][v] = FMAX( fc[faceL][v], TINY_NUMBER );
-         fc[faceR][v] = FMAX( fc[faceR][v], TINY_NUMBER ); }
+         fcPri[faceL][v] = FMAX( fcPri[faceL][v], TINY_NUMBER );
+         fcPri[faceR][v] = FMAX( fcPri[faceR][v], TINY_NUMBER ); }
 #        endif
 
 #        endif // #if ( FLU_SCHEME == CTU )
@@ -583,28 +583,25 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
          const real B_nL = g_FC_B[d][ idx_B[d]              ];
          const real B_nR = g_FC_B[d][ idx_B[d] + didx_cc[d] ];
 #        endif
-         fc[faceL][ MAG_OFFSET + d ] = B_nL;
-         fc[faceR][ MAG_OFFSET + d ] = B_nR;
+         fcPri[faceL][ MAG_OFFSET + d ] = B_nL;
+         fcPri[faceR][ MAG_OFFSET + d ] = B_nR;
 #        endif // #ifdef MHD
 
 
 //       6. primitive variables --> conserved variables
 //          --> When LR_EINT is on, use the reconstructed internal energy instead of pressure in Hydro_Pri2Con()
 //              to skip expensive EoS conversion
-         real tmp[NCOMP_LR];  // input and output arrays must not overlap for Pri2Con()
 #        ifdef LR_EINT
-         real* const EintPtr = tmp + NCOMP_TOTAL_PLUS_MAG;
+         real* const EintPtr = fcPri + NCOMP_TOTAL_PLUS_MAG;
 #        else
          real* const EintPtr = NULL;
 #        endif
 
-         for (int v=0; v<NCOMP_LR; v++)   tmp[v] = fc[faceL][v];
-         Hydro_Pri2Con( tmp, fc[faceL], FracPassive, NFrac, FracIdx, EoS->DensPres2Eint_FuncPtr,
+         Hydro_Pri2Con( fcPri[faceL], fcCon[faceL], FracPassive, NFrac, FracIdx, EoS->DensPres2Eint_FuncPtr,
                         EoS->Temp2HTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
                         EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, EintPtr );
 
-         for (int v=0; v<NCOMP_LR; v++)   tmp[v] = fc[faceR][v];
-         Hydro_Pri2Con( tmp, fc[faceR], FracPassive, NFrac, FracIdx, EoS->DensPres2Eint_FuncPtr,
+         Hydro_Pri2Con( fcPri[faceR], fcCon[faceR], FracPassive, NFrac, FracIdx, EoS->DensPres2Eint_FuncPtr,
                         EoS->Temp2HTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
                         EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, EintPtr );
 
@@ -613,7 +610,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 #     if ( FLU_SCHEME == MHM )
 //    7. advance the face-centered variables by half time-step for the MHM integrator
-      Hydro_HancockPredict( fc, dt, dh, g_ConVar, idx_cc, MinDens, MinPres, MinEint, EoS );
+      Hydro_HancockPredict( fcCon, fcPri, dt, dh, g_ConVar, idx_cc, MinDens, MinPres, MinEint, EoS );
 #     endif
 
 
@@ -621,7 +618,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 //       --> use NCOMP_TOTAL_PLUS_MAG instead of LR_EINT since we don't need to store internal energy in g_FC_Var[]
       for (int f=0; f<6; f++)
       for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
-         g_FC_Var[f][v][idx_fc] = fc[f][v];
+         g_FC_Var[f][v][idx_fc] = fcCon[f][v];
 
    } // CGPU_LOOP( idx_fc, CUBE(N_FC_VAR) )
 
@@ -1883,7 +1880,7 @@ void Hydro_LimitSlope( const real L[], const real C[], const real R[], const LR_
 //                EoS               : EoS object
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_HancockPredict( real fc[][NCOMP_LR], const real dt, const real dh,
+void Hydro_HancockPredict( real fc[][NCOMP_LR], real fcPri[][NCOMP_LR], const real dt, const real dh,
                            const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
                            const real MinDens, const real MinPres, const real MinEint,
                            const EoS_t *EoS )
@@ -1896,8 +1893,13 @@ void Hydro_HancockPredict( real fc[][NCOMP_LR], const real dt, const real dh,
 
 // calculate flux
    for (int f=0; f<6; f++)
+#     ifdef SRHD
+      Hydro_Con2Flux( f/2, Flux[f], fc[f], MinPres, EoS->DensEint2Pres_FuncPtr,
+                      EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, fcPri[f] );
+#     else
       Hydro_Con2Flux( f/2, Flux[f], fc[f], MinPres, EoS->DensEint2Pres_FuncPtr,
                       EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
+#     endif
 
 // update the face-centered variables
    for (int v=0; v<NCOMP_TOTAL; v++)
