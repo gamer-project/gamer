@@ -20,6 +20,7 @@ extern Timer_t *Timer_Par_2Son   [NLEVEL];
 bool AutoReduceDt_Continue;
 
 extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TimeNew, const double dt );
+extern void (*Mis_UserWorkBeforeNextLevel_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt );
 
 
 
@@ -579,6 +580,22 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 #     endif // #ifdef TRACER
+// ===============================================================================================
+
+
+//    10. user-specified operations before entering the next refinement level
+// ===============================================================================================
+      if ( Mis_UserWorkBeforeNextLevel_Ptr != NULL )
+      {
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+            Aux_Message( stdout, "   Lv %2d: Mis_UserWorkBeforeNextLevel %6s... ", lv, "" );
+
+//       use the same timer as the fluid solver for now
+         TIMING_FUNC(   Mis_UserWorkBeforeNextLevel_Ptr( lv, TimeNew, TimeOld, dt_SubStep ),
+                        Timer_Flu_Advance[lv],   TIMER_ON   );
+
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+      }
 // ===============================================================================================
 
 

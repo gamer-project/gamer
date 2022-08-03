@@ -463,7 +463,8 @@ CPU_FILE    += Interpolate.cpp  Int_CQuadratic.cpp  Int_MinMod1D.cpp  Int_MinMod
 CPU_FILE    += Mis_CompareRealValue.cpp  Mis_GetTotalPatchNumber.cpp  Mis_GetTimeStep.cpp  Mis_Heapsort.cpp \
                Mis_BinarySearch.cpp  Mis_1D3DIdx.cpp  Mis_Matching.cpp  Mis_GetTimeStep_User.cpp \
                Mis_dTime2dt.cpp  Mis_CoordinateTransform.cpp  Mis_BinarySearch_Real.cpp  Mis_InterpolateFromTable.cpp \
-               CPU_dtSolver.cpp  dt_Prepare_Flu.cpp  dt_Prepare_Pot.cpp  dt_Close.cpp  dt_InvokeSolver.cpp
+               CPU_dtSolver.cpp  dt_Prepare_Flu.cpp  dt_Prepare_Pot.cpp  dt_Close.cpp  dt_InvokeSolver.cpp \
+               Mis_UserWorkBeforeNextLevel.cpp
 
 CPU_FILE    += Output_DumpData_Total.cpp  Output_DumpData.cpp  Output_DumpManually.cpp  Output_PatchMap.cpp \
                Output_DumpData_Part.cpp  Output_FlagMap.cpp  Output_Patch.cpp  Output_PreparedPatch_Fluid.cpp \
