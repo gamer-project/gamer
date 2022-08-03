@@ -88,6 +88,10 @@ void EoS_Init()
    EoS.DensEint2Temp_FuncPtr = EoS_DensEint2Temp_GPUPtr;
    EoS.DensTemp2Pres_FuncPtr = EoS_DensTemp2Pres_GPUPtr;
    EoS.DensEint2Entr_FuncPtr = EoS_DensEint2Entr_GPUPtr;
+   EoS.GuessHTilde_FuncPtr   = EoS_GuessHTilde_GPUPtr;
+   EoS.HTilde2Temp_FuncPtr   = EoS_HTilde2Temp_GPUPtr;
+   EoS.Temp2HTilde_FuncPtr   = EoS_Temp2HTilde_GPUPtr;
+   EoS.Temper2CSqr_FuncPtr   = EoS_Temper2CSqr_GPUPtr;
    EoS.General_FuncPtr       = EoS_General_GPUPtr;
 
    CUAPI_SetConstMemory_EoS();
@@ -100,6 +104,10 @@ void EoS_Init()
    EoS.DensEint2Temp_FuncPtr = EoS_DensEint2Temp_CPUPtr;
    EoS.DensTemp2Pres_FuncPtr = EoS_DensTemp2Pres_CPUPtr;
    EoS.DensEint2Entr_FuncPtr = EoS_DensEint2Entr_CPUPtr;
+   EoS.GuessHTilde_FuncPtr   = EoS_GuessHTilde_CPUPtr;
+   EoS.HTilde2Temp_FuncPtr   = EoS_HTilde2Temp_CPUPtr;
+   EoS.Temp2HTilde_FuncPtr   = EoS_Temp2HTilde_CPUPtr;
+   EoS.Temper2CSqr_FuncPtr   = EoS_Temper2CSqr_CPUPtr;
    EoS.General_FuncPtr       = EoS_General_CPUPtr;
 
    EoS.AuxArrayDevPtr_Flt    = EoS_AuxArray_Flt;
