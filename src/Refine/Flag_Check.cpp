@@ -162,15 +162,12 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 // ===========================================================================================
    if ( Lohner_NVar > 0 )
    {
-      const double Threshold_Lohner = ( amr->patch[0][lv][PID]->son == -1 ) ? FlagTable_Lohner[lv][0]
-                                                                            : FlagTable_Lohner[lv][1];
-
 //    check Lohner only if density is greater than the minimum threshold
 #     ifdef DENS
       if ( Fluid[DENS][k][j][i] >= FlagTable_Lohner[lv][4] )
 #     endif
       Flag |= Flag_Lohner( i, j, k, OPT__FLAG_LOHNER_FORM, Lohner_Var, Lohner_Ave, Lohner_Slope, Lohner_NVar,
-                           Threshold_Lohner, FlagTable_Lohner[lv][2], FlagTable_Lohner[lv][3] );
+                           FlagTable_Lohner[lv][0], FlagTable_Lohner[lv][2], FlagTable_Lohner[lv][3] );
       if ( Flag )    return Flag;
    }
 
