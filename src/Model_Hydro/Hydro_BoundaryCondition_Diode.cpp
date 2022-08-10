@@ -29,7 +29,7 @@ static void BC_Diode_zp( real *Array, const int NVar_Flu, const int TFluVarIdxLi
 // Description :  Fill up the ghost-zone values by the Diode B.C.
 //
 // Note        :  1. Work for Prepare_PatchData(), InterpolateGhostZone(), Refine(), and LB_Refine_GetNewRealPatchList()
-//                2. Similar to the outflow (i.e., zero-gradient) B.C. except that vector quantities only "flow" outward
+//                2. Similar to the outflow (i.e., zero-gradient) B.C. except that quantities only "flow" outward
 //
 // Parameter   :  Array          : Array to store the prepared data including ghost zones
 //                BC_Face        : Boundary face (0~5) --> (-x,+x,-y,+y,-z,+z)
