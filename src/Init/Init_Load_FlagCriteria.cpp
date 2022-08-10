@@ -85,7 +85,7 @@ void Init_Load_FlagCriteria()
       FlagTable_Rho         [lv]    = -1.0;
       FlagTable_RhoGradient [lv]    = -1.0;
 
-      for (int t=0; t<4; t++)
+      for (int t=0; t<5; t++)
       FlagTable_Lohner      [lv][t] = -1.0;
 
       FlagTable_User        [lv]    = (double *) malloc( OPT__FLAG_USER_NUM*sizeof(double) );
@@ -150,10 +150,11 @@ void Init_Load_FlagCriteria()
 //          OPT__FLAG_ENGY_DENSITY and OPT__FLAG_LOHNER have two and three columns to be loaded, respectively
             if      ( FlagMode == 3 )  sscanf( input_line, "%d%lf%lf", &Trash, &FlagTable_EngyDensity[lv][0],
                                                                                &FlagTable_EngyDensity[lv][1] );
-            else if ( FlagMode == 4 )  sscanf( input_line, "%d%lf%lf%lf%lf", &Trash, &FlagTable_Lohner[lv][0],
-                                                                                     &FlagTable_Lohner[lv][1],
-                                                                                     &FlagTable_Lohner[lv][2],
-                                                                                     &FlagTable_Lohner[lv][3] );
+            else if ( FlagMode == 4 )  sscanf( input_line, "%d%lf%lf%lf%lf%lf", &Trash, &FlagTable_Lohner[lv][0],
+                                                                                        &FlagTable_Lohner[lv][1],
+                                                                                        &FlagTable_Lohner[lv][2],
+                                                                                        &FlagTable_Lohner[lv][3],
+                                                                                        &FlagTable_Lohner[lv][4] );
 //          OPT__FLAG_USER has OPT__FLAG_USER_NUM columns to be loaded
             else if ( FlagMode == 5 )
             {
