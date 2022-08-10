@@ -2142,7 +2142,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
       RS.FlagTable_Rho         [lv]    = -1.0;
       RS.FlagTable_RhoGradient [lv]    = -1.0;
 
-      for (int t=0; t<4; t++)
+      for (int t=0; t<5; t++)
       RS.FlagTable_Lohner      [lv][t] = -1.0;
 
       RS.FlagTable_User        [lv].p   = malloc( OPT__FLAG_USER_NUM*sizeof(double) );
@@ -2180,7 +2180,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "FlagTable_Lohner",         RS.FlagTable_Lohner,        SID, TID, NonFatal,  NullPtr,                    -1, NonFatal );
 
    for (int lv=0; lv<MAX_LEVEL; lv++)
-   for (int t=0; t<4; t++)
+   for (int t=0; t<5; t++)
    {
       if ( RS.FlagTable_Lohner[lv][t] != RT.FlagTable_Lohner[lv][t] )
          Aux_Message( stderr, "WARNING : \"%s[%d][%d]\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n",

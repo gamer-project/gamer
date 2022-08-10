@@ -29,7 +29,7 @@ extern double     dTime_Base;                         // physical time interval 
 
 extern double     FlagTable_Rho        [NLEVEL-1];    // refinement criterion of density
 extern double     FlagTable_RhoGradient[NLEVEL-1];    // refinement criterion of density gradient
-extern double     FlagTable_Lohner     [NLEVEL-1][4]; // refinement criterion based on Lohner's error estimator
+extern double     FlagTable_Lohner     [NLEVEL-1][5]; // refinement criterion based on Lohner's error estimator
 extern double    *FlagTable_User       [NLEVEL-1];    // user-defined refinement criterion
 extern double    *DumpTable;                          // dump table recording the physical times to output data
 extern int        DumpTable_NDump;                    // number of data dumps in the dump table

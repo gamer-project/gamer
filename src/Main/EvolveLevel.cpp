@@ -20,6 +20,8 @@ extern Timer_t *Timer_Par_2Son   [NLEVEL];
 bool AutoReduceDt_Continue;
 
 extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TimeNew, const double dt );
+extern void (*Mis_UserWorkBeforeNextLevel_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt );
+extern void (*Mis_UserWorkBeforeNextSubstep_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt );
 
 
 
@@ -528,7 +530,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 // ===============================================================================================
 
 
-//    7. update MPI buffers
+//    8. update MPI buffers
 // ===============================================================================================
 //    exchange the updated fluid field in the buffer patches
       TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, SaveSg_Mag, NULL_INT, DATA_GENERAL,
@@ -544,7 +546,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #     endif
 
 
-//    8. update tracer particles
+//    9. update tracer particles
 // ===============================================================================================
 #     ifdef TRACER
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
@@ -582,6 +584,22 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 // ===============================================================================================
 
 
+//    10. user-specified operations before entering the next refinement level
+// ===============================================================================================
+      if ( Mis_UserWorkBeforeNextLevel_Ptr != NULL )
+      {
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+            Aux_Message( stdout, "   Lv %2d: Mis_UserWorkBeforeNextLevel %6s... ", lv, "" );
+
+//       use the same timer as the fluid solver for now
+         TIMING_FUNC(   Mis_UserWorkBeforeNextLevel_Ptr( lv, TimeNew, TimeOld, dt_SubStep ),
+                        Timer_Flu_Advance[lv],   TIMER_ON   );
+
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+      }
+// ===============================================================================================
+
+
       dTime_SoFar       += dTime_SubStep;
       Time_Prev     [lv] = TimeOld;
       Time          [lv] = TimeNew;
@@ -594,7 +612,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       if ( lv != TOP_LEVEL  &&  NPatchTotal[lv+1] != 0 )
       {
 
-//       9. enter the next refinement level
+//       11. enter the next refinement level
 // ===============================================================================================
 #        ifdef TIMING
          MPI_Barrier( MPI_COMM_WORLD );
@@ -610,11 +628,11 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 // ===============================================================================================
 
 
-//       10. correct the data at the current level with the data at the next finer level
+//       12. correct the data at the current level with the data at the next finer level
 // ===============================================================================================
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "   Lv %2d: Flu_FixUp %24s... ", lv, "" );
 
-//       10-1. use the average data on fine grids to correct the coarse-grid data
+//       12-1. use the average data on fine grids to correct the coarse-grid data
          if ( OPT__FIXUP_RESTRICT )
          {
             TIMING_FUNC(   Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv],
@@ -628,7 +646,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #           endif
          }
 
-//       10-2. use the fine-grid electric field on the coarse-fine boundaries to correct the coarse-grid magnetic field
+//       12-2. use the fine-grid electric field on the coarse-fine boundaries to correct the coarse-grid magnetic field
 #        ifdef MHD
          if ( OPT__FIXUP_ELECTRIC )
          {
@@ -643,7 +661,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          }
 #        endif
 
-//       10-3. use the fine-grid fluxes across the coarse-fine boundaries to correct the coarse-grid data
+//       12-3. use the fine-grid fluxes across the coarse-fine boundaries to correct the coarse-grid data
 //             --> apply AFTER other fix-up operations since it will check negative pressure as well
 //                 (which requires the coarse-grid B field updated by Flu_FixUp_Restrict() and MHD_FixUp_Electric())
          if ( OPT__FIXUP_FLUX )
@@ -658,7 +676,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                            Timer_FixUp[lv],   TIMER_ON   );
          }
 
-//       10-4. exchange the updated data
+//       12-4. exchange the updated data
 #        ifdef MHD
          if ( OPT__FIXUP_FLUX  ||  OPT__FIXUP_RESTRICT  ||  OPT__FIXUP_ELECTRIC )
 #        else
@@ -674,11 +692,11 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       } // if ( lv != TOP_LEVEL  &&  NPatchTotal[lv+1] != 0 )
 
 
-//    11. flag the current level and create patches at the next finer level
+//    13. flag the current level and create patches at the next finer level
 // ===============================================================================================
       if ( lv != TOP_LEVEL  &&  AdvanceCounter[lv] % REGRID_COUNT == 0 )
       {
-//       11-1. flag
+//       13-1. flag
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "   Lv %2d: Flag %29s... ", lv, "" );
 
 #        ifdef LOAD_BALANCE
@@ -694,7 +712,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
 
-//       11-2. refine
+//       13-2. refine
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "   Lv %2d: Refine %27s... ", lv, "" );
 
          TIMING_FUNC(   Refine( lv, USELB_YES ),
@@ -749,6 +767,21 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       } // if ( lv != TOP_LEVEL  &&  AdvanceCounter[lv] % REGRID_COUNT == 0 )
 // ===============================================================================================
 
+
+//    14. user-specified operations before proceeding to the next sub-step
+// ===============================================================================================
+      if ( Mis_UserWorkBeforeNextSubstep_Ptr != NULL )
+      {
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+            Aux_Message( stdout, "   Lv %2d: Mis_UserWorkBeforeNextSubstep %4s... ", lv, "" );
+
+//       use the same timer as the fluid solver for now
+         TIMING_FUNC(   Mis_UserWorkBeforeNextSubstep_Ptr( lv, TimeNew, TimeOld, dt_SubStep ),
+                        Timer_Flu_Advance[lv],   TIMER_ON   );
+
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+      }
+// ===============================================================================================
    } // while()
 
 
