@@ -2719,7 +2719,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
       InputPara.FlagTable_Rho         [lv]    = FlagTable_Rho         [lv];
       InputPara.FlagTable_RhoGradient [lv]    = FlagTable_RhoGradient [lv];
 
-      for (int t=0; t<4; t++)
+      for (int t=0; t<5; t++)
       InputPara.FlagTable_Lohner      [lv][t] = FlagTable_Lohner      [lv][t];
 
       InputPara.FlagTable_User        [lv].p   = malloc( OPT__FLAG_USER_NUM*sizeof(double) );
@@ -3098,7 +3098,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  if ( NLEVEL > 1 )
    const hsize_t H5_ArrDims_NLvM1             = NLEVEL-1;             // array size of [NLEVEL-1]
    const hsize_t H5_ArrDims_NLvM1_2[2]        = { NLEVEL-1, 2 };      // array size of [NLEVEL-1][2]
-   const hsize_t H5_ArrDims_NLvM1_4[2]        = { NLEVEL-1, 4 };      // array size of [NLEVEL-1][4]
+   const hsize_t H5_ArrDims_NLvM1_5[2]        = { NLEVEL-1, 5 };      // array size of [NLEVEL-1][5]
    const hsize_t H5_ArrDims_NLvM1_6[2]        = { NLEVEL-1, 6 };      // array size of [NLEVEL-1][6]
 #  endif
 
@@ -3112,7 +3112,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    const hid_t   H5_TypeID_Arr_NLvM1_6Int     = H5Tarray_create( H5T_NATIVE_INT,    2,  H5_ArrDims_NLvM1_6   );
    const hid_t   H5_TypeID_Arr_NLvM1Double    = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_NLvM1     );
    const hid_t   H5_TypeID_Arr_NLvM1_2Double  = H5Tarray_create( H5T_NATIVE_DOUBLE, 2,  H5_ArrDims_NLvM1_2   );
-   const hid_t   H5_TypeID_Arr_NLvM1_4Double  = H5Tarray_create( H5T_NATIVE_DOUBLE, 2,  H5_ArrDims_NLvM1_4   );
+   const hid_t   H5_TypeID_Arr_NLvM1_5Double  = H5Tarray_create( H5T_NATIVE_DOUBLE, 2,  H5_ArrDims_NLvM1_5   );
    const hid_t   H5_TypeID_Arr_NLvM1_VLDouble = H5Tvlen_create ( H5T_NATIVE_DOUBLE );
 #  endif
    const hid_t   H5_TypeID_Arr_3Double        = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_3Var      );
@@ -3554,7 +3554,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  if ( NLEVEL > 1 )
    H5Tinsert( H5_TypeID, "FlagTable_Rho",          HOFFSET(InputPara_t,FlagTable_Rho           ), H5_TypeID_Arr_NLvM1Double   );
    H5Tinsert( H5_TypeID, "FlagTable_RhoGradient",  HOFFSET(InputPara_t,FlagTable_RhoGradient   ), H5_TypeID_Arr_NLvM1Double   );
-   H5Tinsert( H5_TypeID, "FlagTable_Lohner",       HOFFSET(InputPara_t,FlagTable_Lohner        ), H5_TypeID_Arr_NLvM1_4Double );
+   H5Tinsert( H5_TypeID, "FlagTable_Lohner",       HOFFSET(InputPara_t,FlagTable_Lohner        ), H5_TypeID_Arr_NLvM1_5Double );
 
 // store the user-defined thresholds at all levels
    for (int lv=0; lv<MAX_LEVEL; lv++)
@@ -3618,7 +3618,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1Int       );
    H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1Double    );
    H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1_2Double  );
-   H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1_4Double  );
+   H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1_5Double  );
    H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1_VLDouble );
 #  endif
    H5_Status = H5Tclose( H5_TypeID_Arr_3Double        );
