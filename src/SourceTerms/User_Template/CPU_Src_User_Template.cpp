@@ -314,7 +314,6 @@ void Src_Init_User_Template()
    SrcTerms.User_FuncPtr = SrcTerms.User_CPUPtr;
 #  endif
 
-
 // set the auxiliary functions
    Src_WorkBeforeMajorFunc_User_Ptr = Src_WorkBeforeMajorFunc_User_Template;
    Src_End_User_Ptr                 = Src_End_User_Template;
