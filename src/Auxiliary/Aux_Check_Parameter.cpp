@@ -257,8 +257,10 @@ void Aux_Check_Parameter()
    } // if ( OPT__OUTPUT_USER_FIELD )
 
 #  if ( MODEL == HYDRO )
+#  ifndef SRHD
    if (  OPT__OUTPUT_TEMP  &&  EoS_DensEint2Temp_CPUPtr == NULL )
       Aux_Error( ERROR_INFO, "EoS_DensEint2Temp_CPUPtr == NULL for OPT__OUTPUT_TEMP !!\n" );
+#  endif
 
 #  if ( EOS == EOS_ISOTHERMAL )
    if ( OPT__OUTPUT_ENTR )

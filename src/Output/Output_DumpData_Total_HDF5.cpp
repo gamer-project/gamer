@@ -1775,6 +1775,11 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 #  else
    KeyInfo.Magnetohydrodynamics = 0;
 #  endif
+#  ifdef SRHD
+   KeyInfo.SRHydrodynamics = 1;
+#  else
+   KeyInfo.SRHydrodynamics = 0;
+#  endif
 #  ifdef COSMIC_RAY
    KeyInfo.CosmicRay            = 1;
 #  else
@@ -1995,6 +2000,12 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.Magnetohydrodynamics   = 1;
 #  else
    Makefile.Magnetohydrodynamics   = 0;
+#  endif
+
+#  ifdef SRHD
+   Makefile.SRHydrodynamics        = 1;
+#  else
+   Makefile.SRHydrodynamics        = 0;
 #  endif
 
 #  ifdef COSMIC_RAY
@@ -2822,6 +2833,7 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "CellScale",            HOFFSET(KeyInfo_t,CellScale           ), H5_TypeID_Arr_NLvInt    );
 #  if ( MODEL == HYDRO )
    H5Tinsert( H5_TypeID, "Magnetohydrodynamics", HOFFSET(KeyInfo_t,Magnetohydrodynamics), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "SRHydrodynamics",      HOFFSET(KeyInfo_t,SRHydrodynamics),      H5T_NATIVE_INT          );
    H5Tinsert( H5_TypeID, "CosmicRay",            HOFFSET(KeyInfo_t,CosmicRay),            H5T_NATIVE_INT          );
 #  endif
 
@@ -2921,6 +2933,7 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
 #  endif
    H5Tinsert( H5_TypeID, "DualEnergy",             HOFFSET(Makefile_t,DualEnergy             ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Magnetohydrodynamics",   HOFFSET(Makefile_t,Magnetohydrodynamics   ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "SRHydrodynamics",        HOFFSET(Makefile_t,SRHydrodynamics        ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "CosmicRay",              HOFFSET(Makefile_t,CosmicRay              ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "EoS",                    HOFFSET(Makefile_t,EoS                    ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "BarotropicEoS",          HOFFSET(Makefile_t,BarotropicEoS          ), H5T_NATIVE_INT );

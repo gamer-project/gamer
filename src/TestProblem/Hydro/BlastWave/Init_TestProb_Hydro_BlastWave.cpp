@@ -194,9 +194,21 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    MomY = 0.0;
    MomZ = 0.0;
    Pres = ( r <= Blast_Radius ) ? Blast_Pres_Exp : Blast_Pres_Bg;
+#  ifdef SRHD
+   real Prim[NCOMP_TOTAL];
+   Prim[0] = Dens;
+   Prim[1] = MomX;
+   Prim[2] = MomY;
+   Prim[3] = MomZ;
+   Prim[4] = Pres;
+   Hydro_Pri2Con( Prim, fluid, NULL_BOOL, NULL_INT, NULL,
+                  EoS_DensPres2Eint_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                  EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+#  else
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
                                     EoS_AuxArray_Int, h_EoS_Table );   // assuming EoS requires no passive scalars
    Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );     // do NOT include magnetic energy here
+#  endif
 
 // set the output array
    fluid[DENS] = Dens;
