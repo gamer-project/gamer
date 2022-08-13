@@ -44,7 +44,7 @@ OPT__BC_FLU_ZM                1           # fluid boundary condition at the -z f
 OPT__BC_FLU_ZP                1           # fluid boundary condition at the +z face: (1=periodic, 2=outflow, 3=reflecting, 4=user)
 
 # particle (PARTICLE only)
-PAR_NPAR                      32770       # total number of particles (must be set for PAR_INIT == 1/3)
+PAR_NPAR                     -1           # total number of particles (must be set for PAR_INIT == 1/3)
 PAR_INIT                      1           # initialization option for particles: (1=FUNCTION, 2=RESTART, 3=FILE->"PAR_IC")
 PAR_INTERP                    2           # particle interpolation scheme: (1=NGP, 2=CIC, 3=TSC) [2]
 PAR_INTEG                     2           # particle integration scheme: (1=Euler, 2=KDK) [2]
