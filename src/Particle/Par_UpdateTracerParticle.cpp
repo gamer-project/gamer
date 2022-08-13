@@ -34,12 +34,6 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
                                const bool MapOnly )
 {
 
-// check
-#  ifdef COMOVING
-#  error : ERROR : does not support COMOVING because time-step has not been converted to comoving !!
-#  endif
-
-
    const bool   IntPhase_No       = false;
    const bool   DE_Consistency_No = false;
    const real   MinDens_No        = -1.0;
@@ -51,6 +45,9 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
    const int    ParGhost          = amr->Par->GhostSizeTracer;
    const int    VelSize           = PS1 + 2*ParGhost;
    const bool   UseTracers_Yes    = true;
+#  ifdef COMOVING
+   const real   dt_com            = (real)Mis_dTime2dt( TimeOld, TimeNew-TimeOld );
+#  endif
 
          real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
          real *ParVel[3] = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
@@ -140,14 +137,23 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
             if ( ParType[ParID] != PTYPE_TRACER )
                continue;
 
-//          determine time-step
-            dt = (real)TimeNew - ParTime[ParID];
+            if ( MapOnly )
+               for (int d=0; d<3; d++)    InterpParPos[d][p] = ParPos[d][ParID];
 
-            for (int d=0; d<3; d++)
-               if ( MapOnly )
-                  InterpParPos[d][p] = ParPos[d][ParID];
-               else
-                  InterpParPos[d][p] = ParPos[d][ParID] + dt*ParVel[d][ParID];
+            else
+            {
+//             determine time-step
+               dt = (real)TimeNew - ParTime[ParID];
+
+//             convert time-step for comoving
+#              ifdef COMOVING
+               if ( ParTime[ParID] == (real)TimeOld )    dt = dt_com;   // avoid redundant calculations
+               else                                      dt = Mis_dTime2dt( ParTime[ParID], dt );
+#              endif
+
+//             predict the positions at TimeNew
+               for (int d=0; d<3; d++)    InterpParPos[d][p] = ParPos[d][ParID] + dt*ParVel[d][ParID];
+            }
          } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
 
          Par_MapMesh2Particles( EdgeL, EdgeR, _dh, VelSize, VelX+P*CUBE(VelSize),
@@ -196,9 +202,15 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
 //             determine time-step
                dt = (real)TimeNew - ParTime[ParID];
 
+//             convert time-step for comoving
+#              ifdef COMOVING
+               if ( ParTime[ParID] == (real)TimeOld )    dt = dt_com;   // avoid redundant calculations
+               else                                      dt = Mis_dTime2dt( ParTime[ParID], dt );
+#              endif
+
                for (int d=0; d<3; d++)
                   InterpParPos[d][p] = ParPos[d][ParID] +
-                     0.5*dt*( Vel_Temp[d][p] + ParVel[d][ParID] );
+                     (real)0.5*dt*( Vel_Temp[d][p] + ParVel[d][ParID] );
             } // amr->Par->IntegTracer
 
          } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)`

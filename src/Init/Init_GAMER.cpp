@@ -285,7 +285,7 @@ void Init_GAMER( int *argc, char ***argv )
    const bool UseStoredAcc_No = false;
 
    for (int lv=0; lv<NLEVEL; lv++)
-   Par_UpdateParticle( lv, amr->PotSgTime[lv][ amr->PotSg[lv] ], NULL_REAL, PAR_UPSTEP_ACC_ONLY, StoreAcc_Yes, UseStoredAcc_No );
+      Par_UpdateParticle( lv, amr->PotSgTime[lv][ amr->PotSg[lv] ], NULL_REAL, PAR_UPSTEP_ACC_ONLY, StoreAcc_Yes, UseStoredAcc_No );
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Calculating particle acceleration" );
 #  endif // #if ( defined MASSIVE_PARTICLES  &&  defined STORE_PAR_ACC )
@@ -294,8 +294,10 @@ void Init_GAMER( int *argc, char ***argv )
 // initialize tracer particles
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Initializing tracer particles" );
 
+   const bool MapOnly_Yes = true;
+
    for (int lv=0; lv<NLEVEL; lv++)
-   Par_UpdateTracerParticle( lv, Time[lv], NULL_REAL, true );
+      Par_UpdateTracerParticle( lv, Time[lv], NULL_REAL, MapOnly_Yes );
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Initializing tracer particles" );
 #  endif // #ifdef TRACER

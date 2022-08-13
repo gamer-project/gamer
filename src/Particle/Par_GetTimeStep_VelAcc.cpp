@@ -32,10 +32,6 @@
 void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv )
 {
 
-#  ifdef COMOVING
-#  error : ERROR : COMOVING is not supported yet !!
-#  endif
-
    const bool  IncNonleaf = true;
    const real *Vel[3]     = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
 #  ifdef STORE_PAR_ACC

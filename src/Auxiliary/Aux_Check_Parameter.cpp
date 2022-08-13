@@ -1296,10 +1296,6 @@ void Aux_Check_Parameter()
 #     error : ERROR : both MASSIVE_PARTICLES (GRAVITY) and TRACER are disabled for PARTICLE !!
 #  endif
 
-#  ifdef COMOVING
-#     error : ERROR : currently PARTICLE does NOT support COMOVING !!
-#  endif
-
 #  if ( !defined SERIAL  &&  !defined LOAD_BALANCE )
 #     error : ERROR : PARTICLE must work with either SERIAL or LOAD_BALANCE !!
 #  endif

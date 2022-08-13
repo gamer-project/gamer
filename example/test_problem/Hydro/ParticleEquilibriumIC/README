@@ -6,6 +6,7 @@ Disable: COMOVING
 
 Default setup:
 ========================================
+OPT__FREEZE_FLUID    1
 
 
 Note:
