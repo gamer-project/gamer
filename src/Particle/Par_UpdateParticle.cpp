@@ -19,13 +19,13 @@
 //                4. For the Euler scheme, this function completes the full update
 //                   --> UpdateStep==PAR_UPSTEP_CORR is meaningless
 //                5. For KDK, particle time is set to -0.5*dt after the K-D operation to indicate that they require
-//                   velocity correction (the last K operation) later. Otherwise particles just cross from fine to coarse
+//                   velocity correction (the last K operation) later. Otherwise particles just crossing from fine to coarse
 //                   grids cannot be distinguished from those already in the coarse grid, while we only want to apply
-//                   velocity correction to the former. After the velocity correction, particle time is set to TimeNew
-//                   For Euler, particle time is set to TimeNew in the PAR_UPSTEP_PRED step
+//                   velocity correction to the former. After the velocity correction, particle time is set to TimeNew.
+//                   For Euler, particle time is set to TimeNew in the PAR_UPSTEP_PRED step.
 //                6. Particle time may not be synchronized (so different particles may have different time).
-//                   --> For example, particles just cross from coarse (lv) to fine (lv+1) grids may have time greater than
-//                       other particles at lv+1. Also, particles just cross from fine (lv) to coarse (lv-1) grids may have
+//                   --> For example, particles just crossing from coarse (lv) to fine (lv+1) grids may have time greater than
+//                       other particles at lv+1. Also, particles just crossing from fine (lv) to coarse (lv-1) grids may have
 //                       time less than other particles at lv-1.
 //                   --> Only update particles with time < TimeNew
 //                7. If STORE_PAR_ACC is on, we can store the acceleration of each particle (option "StoreAcc")
@@ -77,6 +77,9 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
    const real Const_8             = (real)8.0;
 // const real GraConst            = ( OPT__GRA_P5_GRADIENT ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh); // but P5 is NOT supported yet
    const real GraConst            = ( false                ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh); // but P5 is NOT supported yet
+#  ifdef COMOVING
+   const real dt_com              = (real)Mis_dTime2dt( TimeOld, TimeNew-TimeOld );
+#  endif
 
    real *ParPos[3]       = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
    real *ParVel[3]       = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
@@ -119,10 +122,6 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 
 
 // check
-#  ifdef COMOVING
-#  error : ERROR : does not support COMOVING because time-step has not been converted to comoving !!
-#  endif
-
 #  ifdef DEBUG_PARTICLE
 // Par->ImproveAcc only supports particle interpolation schemes with ParGhost == 1 (CIC & TSC)
    if ( amr->Par->ImproveAcc  &&  PotGhost != GRA_GHOST_SIZE )
@@ -208,7 +207,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                {
                   ParID = amr->patch[0][lv][PID]->ParList[p];
 
-                  if ( ParTime[ParID] < (real)0.0 && ParType[ParID] != PTYPE_TRACER )
+                  if ( ParTime[ParID] < (real)0.0  &&  ParType[ParID] != PTYPE_TRACER )
                   {
                      GotYou = true;
                      break;
@@ -265,7 +264,6 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 
       for (int PID=PID0, P=0; PID<PID0+8; PID++, P++)
       {
-
          if ( amr->patch[0][lv][PID]->NPar - amr->patch[0][lv][PID]->NParType[ptype_tracer] == 0 )
             continue;   // skip patches with no massive particles
 
@@ -326,13 +324,21 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
             if ( ParType[ParID] == PTYPE_TRACER )
                continue;
 
-//          determine time-step and skip particles with zero or negative time-step
+//          4. determine time-step and skip particles with zero or negative time-step
             if ( UpdateStep == PAR_UPSTEP_PRED )
             {
 //             it's crucial to first calculate dt here and skip particles with dt <= (real)0.0 (including the equal sign)
 //             since later on we select particles with negative particle time (which has been set to -dt), with equal sign
 //             excluded, for the velocity correction
+//             --> particles just crossing from coarse to fine grids can have ParTime[ParID] >= TimeNew
                dt      = (real)TimeNew - ParTime[ParID];
+
+//             convert time-step for comoving
+#              ifdef COMOVING
+               if ( ParTime[ParID] == (real)TimeOld )    dt = dt_com;   // avoid redundant calculations
+               else                                      dt = Mis_dTime2dt( ParTime[ParID], dt );
+#              endif
+
                dt_half = (real)0.5*dt;
 
                if ( dt <= (real)0.0 )  continue;
@@ -354,10 +360,10 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
             }
 
 
-//          4. calculate acceleration at the particle position
+//          5. calculate acceleration at the particle position
             switch ( IntScheme ) {
 
-//          4.1 NGP
+//          5.1 NGP
             case ( PAR_INTERP_NGP ):
             {
                int idx[3];
@@ -410,7 +416,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
             break;
 
 
-//          4.2 CIC
+//          5.2 CIC
             case ( PAR_INTERP_CIC ):
             {
                int    idxLR[2][3];     // array index of the left (idxLR[0][d]) and right (idxLR[1][d]) cells
@@ -483,7 +489,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
             break;
 
 
-//          4.3 TSC
+//          5.3 TSC
             case ( PAR_INTERP_TSC ):
             {
                int    idxLCR[3][3];    // array index of the left/central/right cells (idxLCR[0/1/2][d])
@@ -563,12 +569,12 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
             } // switch ( IntScheme )
 
 
-//          5. update particles
-//          5.0 nothing to do if we only want to store particle acceleration
+//          6. update particles
+//          6.0 nothing to do if we only want to store particle acceleration
             if ( UpdateStep == PAR_UPSTEP_ACC_ONLY )     continue;
 
 
-//          5.1 Euler method
+//          6.1 Euler method
             else if ( amr->Par->Integ == PAR_INTEG_EULER )
             {
                for (int d=0; d<3; d++)
@@ -581,10 +587,10 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
             }
 
 
-//          5.2 KDK scheme
+//          6.2 KDK scheme
             else if ( amr->Par->Integ == PAR_INTEG_KDK )
             {
-//             5.2.1 KDK prediction
+//             6.2.1 KDK prediction
                if ( UpdateStep == PAR_UPSTEP_PRED )
                {
                   for (int d=0; d<3; d++)
@@ -596,7 +602,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                   ParTime[ParID] = -dt_half;   // negative --> indicating that it requires velocity correction
                }
 
-//             5.2.2 KDK correction for velocity
+//             6.2.2 KDK correction for velocity
                else // UpdateStep == PAR_UPSTEP_CORR
                {
                   for (int d=0; d<3; d++)
@@ -609,7 +615,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
       } // for (int PID=PID0, P=0; PID<PID0+8; PID++, P++)
    } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
 
-// 6. free memory
+// 7. free memory
    delete [] Pot;
    delete [] Acc;
 
