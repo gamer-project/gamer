@@ -1,5 +1,6 @@
 import argparse
 import sys
+import numpy as np
 import yt
 
 # load the command-line parameters
@@ -34,7 +35,7 @@ field           = 'density'
 colormap_dens   = 'algae'
 center_mode     = 'c'
 dpi             = 150
-projection_axis = "x" 
+projection_axis = "x"
 width_value     = 30
 
 yt.enable_parallelism()
@@ -42,12 +43,11 @@ ts                   = yt.load( [ prefix+'../Data_%06d'%idx for idx in range(idx
 ts0                  = ts[0]
 base_level_cell_num  = int(ts0.domain_dimensions[1])
 max_AMR_level        = int(ts0.parameters["MaxLevel"])
-
-
+NPar_base            = int(round(np.power(int(ts0["Par_NPar"]), 0.3333333)))
 
 for ds in ts.piter():
    p = yt.ParticleProjectionPlot(ds, projection_axis, ("all", "particle_mass"), center="c", width=(width_value, "Mpc/h"))
-   p.annotate_title("GAMER-128$^3$: Data_%06d, Proj_Axis = %s"%(ds.parameters["DumpID"],projection_axis))
+   p.annotate_title("GAMER-%i$^3$: Data_%06d, Proj_Axis = %s"%(NPar_base,ds.parameters["DumpID"],projection_axis))
    p.annotate_timestamp(corner='upper_right', redshift=True, time=False, text_args={'color':'k'})
    p.set_colorbar_label(("all", "particle_mass"),"Projected Particle Mass [M$_\odot$]")
    p.set_zlim(("all", "particle_mass"), 1e8, 6e12)

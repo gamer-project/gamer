@@ -40,12 +40,12 @@ void Validate()
       Aux_Error( ERROR_INFO, "must adopt periodic BC for this test !!\n" );
 #  endif
 
-   if ( OPT__INIT != INIT_BY_FUNCTION )
-      Aux_Error( ERROR_INFO, "OPT__INIT != INIT_BY_FUNCTION for this test !!\n" );
+   if ( OPT__INIT != INIT_BY_FUNCTION  &&  OPT__INIT != INIT_BY_RESTART )
+      Aux_Error( ERROR_INFO, "OPT__INIT != FUNCTION (1) or RESTART (2) for this test !!\n" );
 
 #  ifdef PARTICLE
-   if ( amr->Par->Init != PAR_INIT_BY_FILE )
-      Aux_Error( ERROR_INFO, "PAR_INIT != FILE (3) for this test !!\n" );
+   if ( amr->Par->Init != PAR_INIT_BY_FILE  &&  amr->Par->Init != PAR_INIT_BY_RESTART )
+      Aux_Error( ERROR_INFO, "PAR_INIT != FILE (3) or RESTART (2) for this test !!\n" );
 #  endif
 
 
@@ -156,11 +156,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #  if      ( MODEL == HYDRO )
    double Dens, MomX, MomY, MomZ, Eint, Etot;
 // gas density and energy cannot be zero so set them to an extremely small value
-   Dens = TINY_NUMBER;
+   Dens = 10*TINY_NUMBER;
    MomX = 0.0;
    MomY = 0.0;
    MomZ = 0.0;
-   Eint = TINY_NUMBER;
+   Eint = 10*TINY_NUMBER;
    Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );     // do NOT include magnetic energy here
 
    fluid[DENS] = Dens;
@@ -169,7 +169,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[MOMZ] = MomZ;
    fluid[ENGY] = Etot;
 
-#  elif ( MODEL == ELBDM )   
+#  elif ( MODEL == ELBDM )
 // zero density
    fluid[REAL] = 0.0;
    fluid[IMAG] = 0.0;
