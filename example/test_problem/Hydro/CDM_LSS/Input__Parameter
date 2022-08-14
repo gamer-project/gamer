@@ -24,8 +24,8 @@ END_STEP                     -1           # end step (<0=auto -> must be set by 
 
 
 # test problems
-TESTPROB_ID                   1010        # test problem ID [0]
-                                          # 1010: CDM large-scale structure cosmological simulation
+TESTPROB_ID                   100         # test problem ID [0]
+                                          # 100: CDM large-scale structure cosmological simulation
 
 
 # code units (in cgs)
@@ -92,7 +92,7 @@ REGRID_COUNT                  4           # refine every REGRID_COUNT sub-step [
 FLAG_BUFFER_SIZE             -1           # number of buffer cells for the flag operation (0~PATCH_SIZE; <0=auto -> PATCH_SIZE) [-1]
 FLAG_BUFFER_SIZE_MAXM1_LV    -1           # FLAG_BUFFER_SIZE at the level MAX_LEVEL-1 (<0=auto -> REGRID_COUNT) [-1]
 FLAG_BUFFER_SIZE_MAXM2_LV    -1           # FLAG_BUFFER_SIZE at the level MAX_LEVEL-2 (<0=auto) [-1]
-MAX_LEVEL                     0           # maximum refinement level (0~NLEVEL-1) [NLEVEL-1]
+MAX_LEVEL                     5           # maximum refinement level (0~NLEVEL-1) [NLEVEL-1]
 OPT__FLAG_RHO                 0           # flag: density (Input__Flag_Rho) [0]
 OPT__FLAG_RHO_GRADIENT        0           # flag: density gradient (Input__Flag_RhoGradient) [0]
 OPT__FLAG_ENGY_DENSITY        0           # flag: energy density (Input_Flag_EngyDensity) [0] ##ELBDM ONLY##

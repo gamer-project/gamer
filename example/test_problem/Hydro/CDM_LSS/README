@@ -1,6 +1,6 @@
 Compilation flags:
 ========================================
-Enable : MODEL=ELBDM, GRAVITY, COMOVING, PARTICLE
+Enable : MODEL=HYDRO/ELBDM, GRAVITY, COMOVING, PARTICLE
 Disable:
 
 
@@ -29,7 +29,7 @@ Note:
 2. Fiducial PAR_IC file can be downloaded with the command: sh download_ic.sh
 
 3. GAMER currently doesn't support particle-only simulations. So the following temporary solutions are adopted:
-   a. Set wave function to zero in SetGridIC()
+   a. Set gas density/energy to arbitrarily small (for MODEL=HYDRO) or wave function to zero (for MODEL=ELBDM) in SetGridIC()
    b. Enable OPT__FREEZE_FLUID
 
 4. Default maximum spatial resolution is 30.0/(128*2^5)~7.3 kpc/h (comoving)

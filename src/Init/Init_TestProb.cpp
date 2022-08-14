@@ -23,6 +23,7 @@ void Init_TestProb_Hydro_JeansInstability();
 void Init_TestProb_Hydro_ParEqmIC();
 void Init_TestProb_Hydro_BarredPot();
 void Init_TestProb_Hydro_ParticleTest();
+void Init_TestProb_Hydro_CDM_LSS();
 
 void Init_TestProb_ELBDM_ExtPot();
 
@@ -69,6 +70,7 @@ void Init_TestProb()
       case TESTPROB_HYDRO_JEANS_INSTABILITY :            Init_TestProb_Hydro_JeansInstability();            break;
       case TESTPROB_HYDRO_PARTICLE_EQUILIBRIUM_IC :      Init_TestProb_Hydro_ParEqmIC();                    break;
       case TESTPROB_HYDRO_PARTICLE_TEST :                Init_TestProb_Hydro_ParticleTest();                break;
+      case TESTPROB_HYDRO_CDM_LSS :                      Init_TestProb_Hydro_CDM_LSS();                     break;
 
       case TESTPROB_ELBDM_EXTPOT :                       Init_TestProb_ELBDM_ExtPot();                      break;
 
