@@ -153,14 +153,15 @@ void SetParameter()
 void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] )
 {
-#  if      ( MODEL == HYDRO )
+
+#  if   ( MODEL == HYDRO )
    double Dens, MomX, MomY, MomZ, Eint, Etot;
 // gas density and energy cannot be zero so set them to an extremely small value
-   Dens = 10*TINY_NUMBER;
+   Dens = 10.0*TINY_NUMBER;
    MomX = 0.0;
    MomY = 0.0;
    MomZ = 0.0;
-   Eint = 10*TINY_NUMBER;
+   Eint = 10.0*TINY_NUMBER;
    Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );     // do NOT include magnetic energy here
 
    fluid[DENS] = Dens;
@@ -175,7 +176,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[IMAG] = 0.0;
    fluid[DENS] = SQR(fluid[REAL]) + SQR(fluid[IMAG]);
 
-#  endif
+#  endif // MODEL
+
 } // FUNCTION : SetGridIC
 
 
@@ -204,6 +206,7 @@ void Init_TestProb_Hydro_CDM_LSS()
 
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr = SetGridIC;
+
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
