@@ -4,11 +4,11 @@ import numpy as np
 import math
 
 # "GADGET" input hdf5 file
-input_GADGET_file      = "Data_000.hdf5"      # an example "Data_000.hdf5" (128^3 particles) can be downloaded via "curl -JO http://use.yt/upload/1d18ed50"
-output_float_precision = np.float32           # "np.float32" or "np.float64"
-Gadget_UnitMass        = 2.95375139796292e+43 # [1e10*Msun/HUBBLE0] in cgs
-Gadget_UnitLength      = 4.58351746039173e+24 # [Mpc/HUBBLE0] in cgs
-Gadget_UnitVelocity    = 100000.0             # [km/sec] in cgs
+input_GADGET_file      = "Data_000.hdf5" # an example "Data_000.hdf5" (128^3 particles) can be downloaded via "curl -JO http://use.yt/upload/1d18ed50"
+output_float_precision = np.float32      # "np.float32" or "np.float64"
+Gadget_UnitMass        = 1.989e43        # identical to the value adopted under "% System of units" in GADGET's "Input__Parameter"
+Gadget_UnitLength      = 3.085678e24     # identical to the value adopted under "% System of units" in GADGET's "Input__Parameter"
+Gadget_UnitVelocity    = 100000.0        # identical to the value adopted under "% System of units" in GADGET's "Input__Parameter"
 # load the input file
 with h5py.File(input_GADGET_file, "r") as f:
     Header_list = f["Header"]
@@ -34,9 +34,9 @@ GAMER_UNIT_L        = HUBBLE0**(-1)*Const_Mpc
 GAMER_UNIT_T        = H0**(-1)
 GAMER_UNIT_D        = 3*OMEGA_M0*(H0**2)/(8*math.pi*Const_NewtonG)
 
-# "GADGET" to "GAMER" position and velocity unit conversions
-mass_conversion     = Gadget_UnitMass/(GAMER_UNIT_D*GAMER_UNIT_L**3)
-pos_conversion      = Gadget_UnitLength/GAMER_UNIT_L
+# "GADGET" to "GAMER" mass, position, and velocity unit conversions
+mass_conversion     = (Gadget_UnitMass/HUBBLE0)/(GAMER_UNIT_D*GAMER_UNIT_L**3)
+pos_conversion      = (Gadget_UnitLength/HUBBLE0)/GAMER_UNIT_L
 vel_conversion      = Gadget_UnitVelocity/(GAMER_UNIT_L/GAMER_UNIT_T)
 print("GADGET-to-GAMER Mass Unit Conversion:     %.6f"%mass_conversion)
 print("GADGET-to-GAMER Length Unit Conversion:   %.6f"%pos_conversion)
