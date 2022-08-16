@@ -134,7 +134,7 @@ void BC_Diode_xm( real *Array, const int NVar_Flu, const int TFluVarIdxList[], c
 {
 
    const int i_ref = GhostSize;    // reference i index
-   int TFluVarIdx, ii;
+   int TFluVarIdx;
 
 // 1D array -> 3D array
    typedef real (*vla)[ArraySizeZ][ArraySizeY][ArraySizeX];
@@ -150,9 +150,9 @@ void BC_Diode_xm( real *Array, const int NVar_Flu, const int TFluVarIdxList[], c
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
          for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
-         for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {  ii = i_ref - i;
+         for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {
 
-            Array3D[v][k][j][i] = MIN(Array3D[v][k][j][ii], 0.0);
+            Array3D[v][k][j][i] = MIN(Array3D[v][k][j][i_ref], 0.0);
 
          }}}
       }
@@ -161,9 +161,9 @@ void BC_Diode_xm( real *Array, const int NVar_Flu, const int TFluVarIdxList[], c
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
          for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
-         for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {  ii = i_ref - i;
+         for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {
 
-            Array3D[v][k][j][i] = Array3D[v][k][j][ii];
+            Array3D[v][k][j][i] = Array3D[v][k][j][i_ref];
 
          }}}
       }
@@ -177,9 +177,9 @@ void BC_Diode_xm( real *Array, const int NVar_Flu, const int TFluVarIdxList[], c
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
          for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
-         for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {  ii = i_ref - i;
+         for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {
 
-            Array3D[v][k][j][i] = MIN(Array3D[v][k][j][ii], 0.0);
+            Array3D[v][k][j][i] = MIN(Array3D[v][k][j][i_ref], 0.0);
 
          }}}
       }
@@ -188,9 +188,9 @@ void BC_Diode_xm( real *Array, const int NVar_Flu, const int TFluVarIdxList[], c
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
          for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
-         for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {  ii = i_ref - i;
+         for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {
 
-            Array3D[v][k][j][i] = Array3D[v][k][j][ii];
+            Array3D[v][k][j][i] = Array3D[v][k][j][i_ref];
 
          }}}
       }
@@ -217,7 +217,7 @@ void BC_Diode_xp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], c
 {
 
    const int i_ref = ArraySizeX - GhostSize - 1;    // reference i index
-   int TFluVarIdx, ii;
+   int TFluVarIdx;
 
 // 1D array -> 3D array
    typedef real (*vla)[ArraySizeZ][ArraySizeY][ArraySizeX];
@@ -233,9 +233,9 @@ void BC_Diode_xp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], c
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
          for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
-         for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {  ii = i_ref - i;
+         for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {
 
-            Array3D[v][k][j][i] = MAX(Array3D[v][k][j][ii], 0.0);
+            Array3D[v][k][j][i] = MAX(Array3D[v][k][j][i_ref], 0.0);
 
          }}}
       }
@@ -244,9 +244,9 @@ void BC_Diode_xp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], c
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
          for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
-         for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {  ii = i_ref - i;
+         for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {
 
-            Array3D[v][k][j][i] = Array3D[v][k][j][ii];
+            Array3D[v][k][j][i] = Array3D[v][k][j][i_ref];
 
          }}}
       }
@@ -260,9 +260,9 @@ void BC_Diode_xp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], c
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
          for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
-         for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {  ii = i_ref - i;
+         for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {
 
-            Array3D[v][k][j][i] = MAX(Array3D[v][k][j][ii], 0.0);
+            Array3D[v][k][j][i] = MAX(Array3D[v][k][j][i_ref], 0.0);
 
          }}}
       }
@@ -271,9 +271,9 @@ void BC_Diode_xp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], c
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
          for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
-         for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {  ii = i_ref - i;
+         for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {
 
-            Array3D[v][k][j][i] = Array3D[v][k][j][ii];
+            Array3D[v][k][j][i] = Array3D[v][k][j][i_ref];
 
          }}}
       }
@@ -299,8 +299,8 @@ void BC_Diode_ym( real *Array, const int NVar_Flu, const int TFluVarIdxList[], c
                   const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] )
 {
 
-   const int j_ref = 2*GhostSize-1;    // reference j index
-   int TFluVarIdx, jj;
+   const int j_ref = GhostSize;  // reference j index
+   int TFluVarIdx;
 
 // 1D array -> 3D array
    typedef real (*vla)[ArraySizeZ][ArraySizeY][ArraySizeX];
@@ -315,10 +315,10 @@ void BC_Diode_ym( real *Array, const int NVar_Flu, const int TFluVarIdxList[], c
       if ( TFluVarIdx == MOMY )
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
-         for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {  jj = j_ref - j;
+         for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
          for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {
 
-            Array3D[v][k][j][i] = MIN(Array3D[v][k][jj][i], 0.0);
+            Array3D[v][k][j][i] = MIN(Array3D[v][k][j_ref][i], 0.0);
 
          }}}
       }
@@ -326,10 +326,10 @@ void BC_Diode_ym( real *Array, const int NVar_Flu, const int TFluVarIdxList[], c
       else
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
-         for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {  jj = j_ref - j;
+         for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
          for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {
 
-            Array3D[v][k][j][i] = Array3D[v][k][jj][i];
+            Array3D[v][k][j][i] = Array3D[v][k][j_ref][i];
 
          }}}
       }
@@ -342,10 +342,10 @@ void BC_Diode_ym( real *Array, const int NVar_Flu, const int TFluVarIdxList[], c
       if ( TDerVarList[v2] == _VELY )
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
-         for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {  jj = j_ref - j;
+         for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
          for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {
 
-            Array3D[v][k][j][i] = MIN(Array3D[v][k][jj][i], 0.0);
+            Array3D[v][k][j][i] = MIN(Array3D[v][k][j_ref][i], 0.0);
 
          }}}
       }
@@ -353,10 +353,10 @@ void BC_Diode_ym( real *Array, const int NVar_Flu, const int TFluVarIdxList[], c
       else
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
-         for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {  jj = j_ref - j;
+         for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
          for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {
 
-            Array3D[v][k][j][i] = Array3D[v][k][jj][i];
+            Array3D[v][k][j][i] = Array3D[v][k][j_ref][i];
 
          }}}
       }
@@ -382,8 +382,8 @@ void BC_Diode_yp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], c
                   const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] )
 {
 
-   const int j_ref = 2*( ArraySizeY - GhostSize ) - 1;  // reference j index
-   int TFluVarIdx, jj;
+   const int j_ref = ArraySizeY - GhostSize - 1;   // reference j index
+   int TFluVarIdx;
 
 // 1D array -> 3D array
    typedef real (*vla)[ArraySizeZ][ArraySizeY][ArraySizeX];
@@ -398,10 +398,10 @@ void BC_Diode_yp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], c
       if ( TFluVarIdx == MOMY )
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
-         for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {  jj = j_ref - j;
+         for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
          for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {
 
-            Array3D[v][k][j][i] = MAX(Array3D[v][k][jj][i], 0.0);
+            Array3D[v][k][j][i] = MAX(Array3D[v][k][j_ref][i], 0.0);
 
          }}}
       }
@@ -409,10 +409,10 @@ void BC_Diode_yp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], c
       else
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
-         for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {  jj = j_ref - j;
+         for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
          for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {
 
-            Array3D[v][k][j][i] = Array3D[v][k][jj][i];
+            Array3D[v][k][j][i] = Array3D[v][k][j_ref][i];
 
          }}}
       }
@@ -425,10 +425,10 @@ void BC_Diode_yp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], c
       if ( TDerVarList[v2] == _VELY )
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
-         for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {  jj = j_ref - j;
+         for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
          for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {
 
-            Array3D[v][k][j][i] = MAX(Array3D[v][k][jj][i], 0.0);
+            Array3D[v][k][j][i] = MAX(Array3D[v][k][j_ref][i], 0.0);
 
          }}}
       }
@@ -436,10 +436,10 @@ void BC_Diode_yp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], c
       else
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
-         for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {  jj = j_ref - j;
+         for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
          for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {
 
-            Array3D[v][k][j][i] = Array3D[v][k][jj][i];
+            Array3D[v][k][j][i] = Array3D[v][k][j_ref][i];
 
          }}}
       }
@@ -465,8 +465,8 @@ void BC_Diode_zm( real *Array, const int NVar_Flu, const int TFluVarIdxList[], c
                   const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] )
 {
 
-   const int k_ref = 2*GhostSize-1;    // reference k index
-   int TFluVarIdx, kk;
+   const int k_ref = GhostSize;  // reference k index
+   int TFluVarIdx;
 
 // 1D array -> 3D array
    typedef real (*vla)[ArraySizeZ][ArraySizeY][ArraySizeX];
@@ -480,22 +480,22 @@ void BC_Diode_zm( real *Array, const int NVar_Flu, const int TFluVarIdxList[], c
 
       if ( TFluVarIdx == MOMZ )
       {
-         for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {  kk = k_ref - k;
+         for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
          for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
          for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {
 
-            Array3D[v][k][j][i] = MIN(Array3D[v][kk][j][i], 0.0);
+            Array3D[v][k][j][i] = MIN(Array3D[v][k_ref][j][i], 0.0);
 
          }}}
       }
 
       else
       {
-         for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {  kk = k_ref - k;
+         for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
          for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
          for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {
 
-            Array3D[v][k][j][i] = Array3D[v][kk][j][i];
+            Array3D[v][k][j][i] = Array3D[v][k_ref][j][i];
 
          }}}
       }
@@ -507,22 +507,22 @@ void BC_Diode_zm( real *Array, const int NVar_Flu, const int TFluVarIdxList[], c
    {
       if ( TDerVarList[v2] == _VELZ )
       {
-         for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {  kk = k_ref - k;
+         for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
          for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
          for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {
 
-            Array3D[v][k][j][i] = MIN(Array3D[v][kk][j][i], 0.0);
+            Array3D[v][k][j][i] = MIN(Array3D[v][k_ref][j][i], 0.0);
 
          }}}
       }
 
       else
       {
-         for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {  kk = k_ref - k;
+         for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
          for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
          for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {
 
-            Array3D[v][k][j][i] = Array3D[v][kk][j][i];
+            Array3D[v][k][j][i] = Array3D[v][k_ref][j][i];
 
          }}}
       }
@@ -548,8 +548,8 @@ void BC_Diode_zp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], c
                   const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] )
 {
 
-   const int k_ref = 2*( ArraySizeZ - GhostSize ) - 1;  // reference k index
-   int TFluVarIdx, kk;
+   const int k_ref = ArraySizeZ - GhostSize - 1;   // reference k index
+   int TFluVarIdx;
 
 // 1D array -> 3D array
    typedef real (*vla)[ArraySizeZ][ArraySizeY][ArraySizeX];
@@ -563,22 +563,22 @@ void BC_Diode_zp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], c
 
       if ( TFluVarIdx == MOMZ )
       {
-         for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {  kk = k_ref - k;
+         for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
          for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
          for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {
 
-            Array3D[v][k][j][i] = MAX(Array3D[v][kk][j][i], 0.0);
+            Array3D[v][k][j][i] = MAX(Array3D[v][k_ref][j][i], 0.0);
 
          }}}
       }
 
       else
       {
-         for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {  kk = k_ref - k;
+         for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
          for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
          for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {
 
-            Array3D[v][k][j][i] = Array3D[v][kk][j][i];
+            Array3D[v][k][j][i] = Array3D[v][k_ref][j][i];
 
          }}}
       }
@@ -590,22 +590,22 @@ void BC_Diode_zp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], c
    {
       if ( TDerVarList[v2] == _VELZ )
       {
-         for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {  kk = k_ref - k;
+         for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
          for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
          for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {
 
-            Array3D[v][k][j][i] = MAX(Array3D[v][kk][j][i], 0.0);
+            Array3D[v][k][j][i] = MAX(Array3D[v][k_ref][j][i], 0.0);
 
          }}}
       }
 
       else
       {
-         for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {  kk = k_ref - k;
+         for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
          for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
          for (int i=Idx_Start[0]; i<=Idx_End[0]; i++)    {
 
-            Array3D[v][k][j][i] = Array3D[v][kk][j][i];
+            Array3D[v][k][j][i] = Array3D[v][k_ref][j][i];
 
          }}}
       }
