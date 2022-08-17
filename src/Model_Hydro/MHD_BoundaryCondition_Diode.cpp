@@ -6,9 +6,9 @@
 // Function    :  MHD_BoundaryCondition_Diode
 // Description :  Fill up the ghost-zone **face-centered magnetic field** by the diode B.C.
 //
-// Note        :  1. Work for Prepare_PatchData(), InterpolateGhostZone(), Refine(), and 
+// Note        :  1. Work for Prepare_PatchData(), InterpolateGhostZone(), Refine(), and
 //                   LB_Refine_GetNewRealPatchList()
-//                2. Similar to the outflow (i.e., zero-gradient) B.C. except that quantities 
+//                2. Similar to the outflow (i.e., zero-gradient) B.C. except that quantities
 //                   only "flow" outward
 //
 // Parameter   :  Array          : Array to store the prepared data including ghost zones
