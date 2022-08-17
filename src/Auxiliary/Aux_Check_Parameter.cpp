@@ -177,6 +177,10 @@ void Aux_Check_Parameter()
    for (int f=0; f<6; f++)
       if ( OPT__BC_FLU[f] == BC_FLU_REFLECTING )
          Aux_Error( ERROR_INFO, "reflecting boundary condition (OPT__BC_FLU=3) only works with HYDRO !!\n" );
+
+   for (int f=0; f<6; f++)
+      if ( OPT__BC_FLU[f] == BC_FLU_DIODE )
+         Aux_Error( ERROR_INFO, "diode boundary condition (OPT__BC_FLU=5) only works with HYDRO !!\n" );
 #  endif
 
    for (int f=0; f<6; f+=2)
