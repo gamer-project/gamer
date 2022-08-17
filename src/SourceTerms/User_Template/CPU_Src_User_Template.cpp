@@ -18,7 +18,10 @@
 void Src_SetAuxArray_User_Template( double [], int [] );
 void Src_SetConstMemory_User_Template( const double AuxArray_Flt[], const int AuxArray_Int[],
                                        double *&DevPtr_Flt, int *&DevPtr_Int );
-void Src_SetFunc_User_Template( SrcFunc_t & );
+void Src_SetCPUFunc_User_Template( SrcFunc_t & );
+#ifdef GPU
+void Src_SetGPUFunc_User_Template( SrcFunc_t & );
+#endif
 void Src_WorkBeforeMajorFunc_User_Template( const int lv, const double TimeNew, const double TimeOld, const double dt,
                                             double AuxArray_Flt[], int AuxArray_Int[] );
 void Src_End_User_Template();
@@ -204,12 +207,11 @@ void Src_WorkBeforeMajorFunc_User_Template( const int lv, const double TimeNew, 
 FUNC_SPACE SrcFunc_t SrcFunc_Ptr = Src_User_Template;
 
 //-----------------------------------------------------------------------------------------
-// Function    :  Src_SetFunc_User_Template
+// Function    :  Src_SetCPU/GPUFunc_User_Template
 // Description :  Return the function pointer of the CPU/GPU source-term function
 //
 // Note        :  1. Invoked by Src_Init_User_Template()
 //                2. Call-by-reference
-//                3. Use either CPU or GPU but not both of them
 //
 // Parameter   :  SrcFunc_CPU/GPUPtr : CPU/GPU function pointer to be set
 //
@@ -217,19 +219,19 @@ FUNC_SPACE SrcFunc_t SrcFunc_Ptr = Src_User_Template;
 //-----------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __host__
-void Src_SetFunc_User_Template( SrcFunc_t &SrcFunc_GPUPtr )
+void Src_SetGPUFunc_User_Template( SrcFunc_t &SrcFunc_GPUPtr )
 {
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &SrcFunc_GPUPtr, SrcFunc_Ptr, sizeof(SrcFunc_t) )  );
 }
 
-#elif ( !defined GPU )
+#else
 
-void Src_SetFunc_User_Template( SrcFunc_t &SrcFunc_CPUPtr )
+void Src_SetCPUFunc_User_Template( SrcFunc_t &SrcFunc_CPUPtr )
 {
    SrcFunc_CPUPtr = SrcFunc_Ptr;
 }
 
-#endif // #ifdef __CUDACC__ ... elif ...
+#endif // #ifdef __CUDACC__ ... else ...
 
 
 
@@ -277,9 +279,7 @@ extern void (*Src_End_User_Ptr)();
 //
 // Note        :  1. Set auxiliary arrays by invoking Src_SetAuxArray_*()
 //                   --> Copy to the GPU constant memory and store the associated addresses
-//                2. Set the source-term function by invoking Src_SetFunc_*()
-//                   --> Unlike other modules (e.g., EoS), here we use either CPU or GPU but not
-//                       both of them
+//                2. Set the source-term function by invoking Src_SetCPU/GPUFunc_*()
 //                3. Set the function pointers "Src_WorkBeforeMajorFunc_User_Ptr" and "Src_End_User_Ptr"
 //                4. Invoked by Src_Init()
 //                   --> Enable it by linking to the function pointer "Src_Init_User_Ptr"
@@ -305,7 +305,14 @@ void Src_Init_User_Template()
 #  endif
 
 // set the major source-term function
-   Src_SetFunc_User_Template( SrcTerms.User_FuncPtr );
+   Src_SetCPUFunc_User_Template( SrcTerms.User_CPUPtr );
+
+#  ifdef GPU
+   Src_SetGPUFunc_User_Template( SrcTerms.User_GPUPtr );
+   SrcTerms.User_FuncPtr = SrcTerms.User_GPUPtr;
+#  else
+   SrcTerms.User_FuncPtr = SrcTerms.User_CPUPtr;
+#  endif
 
 // set the auxiliary functions
    Src_WorkBeforeMajorFunc_User_Ptr = Src_WorkBeforeMajorFunc_User_Template;

@@ -358,6 +358,12 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                                                          CSize_Flu, CSize_Flu, CSize_Flu, BC_Idx_Start, BC_Idx_End,
                                                          FluVarIdxList, NDer, DerVarList );
                   break;
+
+                  case BC_FLU_DIODE:
+                     Hydro_BoundaryCondition_Diode     ( Flu_CData[0][0][0], BC_Face[BC_Sibling], NCOMP_TOTAL, CGhost_Flu,
+                                                         CSize_Flu, CSize_Flu, CSize_Flu, BC_Idx_Start, BC_Idx_End,
+                                                         FluVarIdxList, NDer, DerVarList );
+                  break;
 #                 endif
 
                   case BC_FLU_USER:
@@ -557,6 +563,12 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
                      case BC_FLU_REFLECTING:
                         MHD_BoundaryCondition_Reflecting( Mag_CDataPtr, BC_Face[BC_Sibling], 1, CGhost_Mag,
+                                                          FC_BC_Size[0], FC_BC_Size[1], FC_BC_Size[2], FC_BC_Idx_Start, FC_BC_Idx_End,
+                                                          &v );
+                     break;
+
+                     case BC_FLU_DIODE:
+                        MHD_BoundaryCondition_Diode     ( Mag_CDataPtr, BC_Face[BC_Sibling], 1, CGhost_Mag,
                                                           FC_BC_Size[0], FC_BC_Size[1], FC_BC_Size[2], FC_BC_Idx_Start, FC_BC_Idx_End,
                                                           &v );
                      break;

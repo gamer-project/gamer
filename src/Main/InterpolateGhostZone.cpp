@@ -1142,6 +1142,12 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                                                       CSize_CC[0], CSize_CC[1], CSize_CC[2], BC_Idx_Start, BC_Idx_End,
                                                       TVarCCIdxList_Flu, NVarCC_Der, TVarCCList_Der );
                break;
+
+               case BC_FLU_DIODE:
+                  Hydro_BoundaryCondition_Diode     ( CData_CC_Ptr, BC_Face[BC_Sibling], NVarCC_Flu,          CGhost_CC,
+                                                      CSize_CC[0], CSize_CC[1], CSize_CC[2], BC_Idx_Start, BC_Idx_End,
+                                                      TVarCCIdxList_Flu, NVarCC_Der, TVarCCList_Der );
+               break;
 #              endif
 
                case BC_FLU_USER:
@@ -1230,6 +1236,12 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
                case BC_FLU_REFLECTING:
                   MHD_BoundaryCondition_Reflecting( MagDataPtr, BC_Face[BC_Sibling], 1, CGhost_FC,
+                                                    FC_BC_Size[0], FC_BC_Size[1], FC_BC_Size[2], FC_BC_Idx_Start, FC_BC_Idx_End,
+                                                    &TVarFCIdx );
+               break;
+
+               case BC_FLU_DIODE:
+                  MHD_BoundaryCondition_Diode     ( MagDataPtr, BC_Face[BC_Sibling], 1, CGhost_FC,
                                                     FC_BC_Size[0], FC_BC_Size[1], FC_BC_Size[2], FC_BC_Idx_Start, FC_BC_Idx_End,
                                                     &TVarFCIdx );
                break;
