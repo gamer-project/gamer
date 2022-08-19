@@ -39,20 +39,20 @@ storage = {}    # storage dictionary
 # "GAMER" physical constants (/include/PhysicalConstant.h) and input parameters
 Const_c                  = 2.99792458e10                       # speed of light in cgs
 Const_eV                 = 1.6021766208e-12                    # electron volt in cgs
-omega_M0                 = ts0.parameters["OmegaM0"]       
+omega_M0                 = ts0.parameters["OmegaM0"]
 hubble0                  = ts0.parameters["Hubble0"]/10        # [km/(sec*kpc)] 
 newton_G                 = 4.3*10**-6                          # [(kpc*km**2)/(sec**2*Msun)]
 background_density_0     = (3*hubble0**2*omega_M0)/(8*math.pi*newton_G)
 FDM_particle_mass        = ts0.parameters['ELBDM_Mass']*ts0.parameters['Unit_M']/(Const_eV/Const_c**2) # [eV/c**2]
 minimum_FDM_halo_mass_z0 = 4.4*10**7*(FDM_particle_mass/10**-22)**(-3/2.0) # [Msun]; minimum FDM halo mass "at redshift zero"
-a_soliton                = (2**(1.0/8)-1)**(1.0/2)             # numerical factor in the analytical soliton density profile	
+a_soliton                = (2**(1.0/8)-1)**(1.0/2)             # numerical factor in the analytical soliton density profile
 BoxSize_3D               = ts0.domain_width                    # [BoxSize, BoxSize, BoxSize]
-BoxSize                  = BoxSize_3D[1]                       # [Mpc/h] = [code_length] 
+BoxSize                  = BoxSize_3D[1]                       # [Mpc/h] = [code_length]
 base_level_cell_num_3D   = ts0.domain_dimensions               # [base_level_cell_num, base_level_cell_num, base_level_cell_num]
 base_level_cell_num      = base_level_cell_num_3D[1]           # total number of base-level cells
 max_AMR_level            = ts0.parameters["MaxLevel"]
 GAMER_Opt_BC_Flu         = ts0.parameters["Opt__BC_Flu"][0]    # fluid/particle boundary condition (1=periodic, 2=outflow, 3=reflecting, 4=user)
-input_resolution_limit   = ts0.domain_width.in_units("kpc")[0].d/2**max_AMR_level/ts0.domain_dimensions[0] # [Mpc/h] = [code_length] 
+input_resolution_limit   = ts0.domain_width.in_units("kpc")[0].d/2**max_AMR_level/ts0.domain_dimensions[0] # [Mpc/h] = [code_length]
 length_per_grid          = BoxSize/base_level_cell_num
 halo_sphere_radius       = 2.0                                 # [Mpc/h]; expected maximum halo length scale
 nbin                     = 128                                 # number of spherical shell bins in the output density profile
@@ -62,11 +62,11 @@ print("Smoothed Grid Resolution Limit [Mpc/h]: "+str(length_per_grid))
 
 
 for sto, ds in ts.piter(storage=storage):
-    # cosmological parameters in the current data frame    
+    # cosmological parameters in the current data frame
     current_time_a = ds.current_time                          # scale factor
     current_time_z = (1.0/float(current_time_a)) - 1.0        # redshift
     omega_M        = (omega_M0*(1 + current_time_z)**3)/(omega_M0*(1 + current_time_z)**3 + (1 - omega_M0))
-    zeta           = (18*math.pi**2 + 82*(omega_M - 1) - 39*(omega_M - 1)**2)/omega_M 
+    zeta           = (18*math.pi**2 + 82*(omega_M - 1) - 39*(omega_M - 1)**2)/omega_M
     zeta_0         = (18*math.pi**2 + 82*(omega_M0 - 1) - 39*(omega_M0 - 1)**2)/omega_M0
 
     # [Part I] Identify the Soliton-halo CM Coordinates
@@ -89,9 +89,9 @@ for sto, ds in ts.piter(storage=storage):
         CM_actual_coord = ds.arr([center_find[1].d, center_find[2].d, center_find[3].d], 'cm')
     elif str(center_find[1].units) == "code_length":
         CM_actual_coord = ds.arr([center_find[1].d, center_find[2].d, center_find[3].d], 'code_length')
-    else: 
+    else:
         print("ERROR CONVERSION ERROR: Check Point #2")
-        sys.exit()  
+        sys.exit()
 
 
     # [Part II] Compute Soliton-halo Density Profile
@@ -104,8 +104,8 @@ for sto, ds in ts.piter(storage=storage):
     prof_mass_accumulate = yt.create_profile(sp, 'radius', fields= 'cell_mass', weight_field = None, n_bins = nbin,
                            units={'radius': 'kpc', 'cell_mass': 'Msun'}, extrema = {'radius': (input_resolution_limit,1e3)}, accumulation = True)
     radius_raw           = prof_dens.x.value                        # radius grid of the binned spherical shells
-    density_raw          = prof_dens[('gamer','ParDens')].value   # local density on the shell at radius 
-    mass_accumulate_raw  = prof_mass_accumulate['cell_mass'].value  # mass enclosed within the radius of a given shell 
+    density_raw          = prof_dens[('gamer','ParDens')].value   # local density on the shell at radius
+    mass_accumulate_raw  = prof_mass_accumulate['cell_mass'].value  # mass enclosed within the radius of a given shell
 
     # remove zero entries in "prof_dens" and "prof_mass_accumulate"
     radius_processed          = []
@@ -157,4 +157,4 @@ for sto, ds in ts.piter(storage=storage):
     plt.ylabel(r"$\rho_h$ "+"[M$_\odot$/kpc$^3$]")
     plt.legend(prop={'size': 6})
     plt.savefig("Data_%06d_Most_Massive_Halo_Density_Profile.png"%Data_ID_Now, dpi=300)
-    plt.clf() 
+    plt.clf()
