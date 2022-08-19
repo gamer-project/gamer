@@ -322,7 +322,7 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive, const i
 // passive scalars
 // --> do it before invoking EoS_DensPres2Eint() since the latter requires the mass density
 //     instead of mass fraction of passive scalars
-#  ifdef SRHD
+#  ifndef SRHD
 #  if ( NCOMP_PASSIVE > 0 )
 // copy all passive scalars
    for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[v];

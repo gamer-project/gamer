@@ -98,7 +98,6 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
                   (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, &rFactor );
 
-#   ifdef FOUR_VELOCITY
 /*  2. Transform 4-velocity to 3-velocity */
     lV1=PL[1]/lFactor;
     lV2=PL[2]/lFactor;
@@ -107,15 +106,6 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
     rV1=PR[1]/rFactor;
     rV2=PR[2]/rFactor;
     rV3=PR[3]/rFactor;
-#   else
-    lV1=PL[1];
-    lV2=PL[2];
-    lV3=PL[3];
-
-    rV1=PR[1];
-    rV2=PR[2];
-    rV3=PR[3];
-#   endif
 
 /*  3. Compute the max and min wave speeds used in Mignone */
     //cslsq = SoundSpeedSquare( PL[4]/PL[0], Gamma);
@@ -123,7 +113,7 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
     cslsq = EoS_Temper2CSqr( PL[0], PL[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
     csrsq = EoS_Temper2CSqr( PR[0], PR[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 
-#   ifdef CHECK_FAILED_CELL_IN_FLUID
+#   ifdef CHECK_UNPHYSICAL_IN_FLUID
     if ( cslsq >= 1.0 || csrsq >= 1.0 || cslsq < 0.0 || csrsq < 0.0 )
       printf( "cslsq=%10.7e, cslrq=%10.7e\n", cslsq, csrsq);
 #   endif
@@ -136,7 +126,7 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
     ssr = csrsq / ( - gammasqr * csrsq + gammasqr ); /* Mignone Eq 22.5 */
 
 
-#   ifdef CHECK_FAILED_CELL_IN_FLUID
+#   ifdef CHECK_UNPHYSICAL_IN_FLUID
     if ( ( ssl < 0.0 ) || ( ssr < 0.0 ) ) printf("ssl = %14.7e, ssr = %14.7e\n", ssl, ssr);
 #   endif
 

@@ -779,8 +779,10 @@
 #define MAX_ERROR_FLT      1.0e-06f
 
 #ifdef FLOAT8
+#  define MACHINE_EPSILON  __DBL_EPSILON__
 #  define MAX_ERROR        MAX_ERROR_DBL
 #else
+#  define MACHINE_EPSILON  __FTL_EPSILON__
 #  define MAX_ERROR        MAX_ERROR_FLT
 #endif
 

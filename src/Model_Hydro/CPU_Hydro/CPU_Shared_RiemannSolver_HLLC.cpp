@@ -168,11 +168,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    Fl[1] = L[1] * lV1 + PL[4];
    Fl[2] = L[2] * lV1;
    Fl[3] = L[3] * lV1;
-#  ifdef REDUCED_ENERGY
    Fl[4] = ( L[4] + PL[4] ) * lV1;
-#  else
-   Fl[4] = L[1];
-#  endif
 
    if( lmdal >= (real)0.0)
    { /* Fl */
@@ -208,11 +204,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    Fr[1] = R[1] * rV1 + PR[4];
    Fr[2] = R[2] * rV1;
    Fr[3] = R[3] * rV1;
-#  ifdef REDUCED_ENERGY
    Fr[4] = ( R[4] + PR[4] ) * rV1;
-#  else
-   Fr[4] = R[1];
-#  endif
 
    if( lmdar <= (real)0.0 )
    { /* Fr */
@@ -251,29 +243,15 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    lmdatlmda = lmdal*lmdar;
 
   /* quadratic formuLa calcuLation */
-#  ifdef REDUCED_ENERGY
    a = lmdar * L[1]
      - lmdal * R[1]
      + lmdatlmda*( R[4] + R[0] - L[4] - L[0] );
-#  else
-   a = lmdar * ( L[1] )
-     - lmdal * ( R[1] )
-     + lmdatlmda*( R[4] - L[4] );
-#  endif
 
-#  ifdef REDUCED_ENERGY
    b = lmdal * ( L[4] + L[0] ) - L[1]
      - lmdar * ( R[4] + R[0] ) + R[1]
      + lmdal * ( R[1]*rV1 + PR[4] )
      - lmdar * ( L[1]*lV1 + PL[4] )
      - lmdatlmda*( R[1] - L[1] );
-#  else
-   b = lmdal * ( L[4] ) - ( L[1] )
-     - lmdar * ( R[4] ) + ( R[1] )
-     + lmdal * ( R[1]*rV1 + PR[4] )
-     - lmdar * ( L[1]*lV1 + PL[4] )
-     - lmdatlmda*( R[1] - L[1] );
-#  endif
 
    c = lmdar*R[1] - lmdal*L[1] - ( R[1]*rV1 + PR[4] ) + ( L[1]*lV1 + PL[4] );
 
@@ -285,13 +263,8 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
    lmdas = - ((real)2.0 * c) / ( b + SIGN(b) * SQRT( delta ) );
 
-#  ifdef REDUCED_ENERGY
    ps = lmdas*( ( R[4] + R[0] )*( rV1 - lmdar ) + PR[4]*rV1 ) - R[1]*(rV1 - lmdar) - PR[4];
    ps /= ( lmdas*lmdar - (real)1.0 );
-#  else
-   ps = lmdas*(  R[4]           *( rV1 - lmdar ) + PR[4]*rV1 ) - R[1]*(rV1 - lmdar) - PR[4];
-   ps /= ( lmdas*lmdar - (real)1.0 );
-#  endif
 
    //ps = lmdas*( ( L[4] + L[0] )*( lV1 - lmdal ) + PL[4]*lV1 ) - L[1]*(lV1 - lmdal) - PL[4];
    //ps /= ( lmdas*lmdal - (real)1.0 );
