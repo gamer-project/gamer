@@ -249,8 +249,8 @@ struct ReadPara_t
 //       load the key and value at the target line
          NLoad = sscanf( Line, "%s%s", LoadKey, LoadValue );
 
-//       skip lines with incorrect format (e.g., empyt lines)
-         if ( NLoad < 2  &&  MPI_Rank == 0 )
+//       skip lines with incorrect format (e.g., empty lines)
+         if ( NLoad < 2 )
          {
             if ( NLoad == 1  &&  LoadKey[0] != COMMENT_SYM )
                Aux_Error( ERROR_INFO, "cannot find the value to assign to the key \"%s\" at line %d !!\n",
