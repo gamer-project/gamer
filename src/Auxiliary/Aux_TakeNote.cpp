@@ -186,6 +186,8 @@ void Aux_TakeNote()
       fprintf( Note, "EOS                             EOS_ISOTHERMAL\n" );
 #     elif ( EOS == EOS_NUCLEAR )
       fprintf( Note, "EOS                             EOS_NUCLEAR\n" );
+#     elif ( EOS == EOS_TAUBMATHEWS )
+      fprintf( Note, "EOS                             EOS_TAUBMATHEWS\n" );
 #     elif ( EOS == EOS_TABULAR )
       fprintf( Note, "EOS                             EOS_TABULAR\n" );
 #     elif ( EOS == EOS_USER )
