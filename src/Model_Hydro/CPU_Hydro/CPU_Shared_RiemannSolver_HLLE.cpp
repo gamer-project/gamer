@@ -162,21 +162,13 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
       Fl[1] = L[1] * lV1 + PL[4];
       Fl[2] = L[2] * lV1;
       Fl[3] = L[3] * lV1;
-#    ifdef REDUCED_ENERGY
       Fl[4] = lV1 * ( L[4] + PL[4] );
-#    else
-      Fl[4] = L[1];
-#    endif
 
       Fr[0] = R[0] * rV1;
       Fr[1] = R[1] * rV1 + PR[4];
       Fr[2] = R[2] * rV1;
       Fr[3] = R[3] * rV1;
-#    ifdef REDUCED_ENERGY
       Fr[4] = rV1 * ( R[4] + PR[4] );
-#    else
-      Fr[4] = R[1];
-#    endif
 // * 7. Determine intercell flux according to Mignone 13
 //
    if( lmdal >= (real)0.0 ){ /* Fl */
