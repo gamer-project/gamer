@@ -58,7 +58,7 @@ static void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
 #endif
 #if ( FLU_SCHEME == MHM )
 GPU_DEVICE
-static void Hydro_HancockPredict( real fc[][NCOMP_LR], real fcPri[][NCOMP_LR], const real dt, const real dh,
+static void Hydro_HancockPredict( real fcCon[][NCOMP_LR], real fcPri[][NCOMP_LR], const real dt, const real dh,
                                   const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
                                   const real MinDens, const real MinPres, const real MinEint,
                                   const EoS_t *EoS );
@@ -320,7 +320,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #     endif
 
 //    cc_C/L/R: cell-centered variables of the Central/Left/Right cells
-//    fcCon: face-centered variables of the central cell
+//    fcCon/fcPri: face-centered conservative/primitive variables of the central cell
       real cc_C[NCOMP_LR], cc_L[NCOMP_LR], cc_R[NCOMP_LR];
       real fcCon[6][NCOMP_LR], fcPri[6][NCOMP_LR], Slope_Limiter[NCOMP_LR];
 
@@ -1869,7 +1869,7 @@ void Hydro_LimitSlope( const real L[], const real C[], const real R[], const LR_
 //                2. Do NOT require data in the neighboring cells
 //                3. Input variables must be conserved variables
 //
-// Parameter   :  fc                : Face-centered conserved variables to be updated
+// Parameter   :  fcCon             : Face-centered conserved variables to be updated
 //                dt                : Time interval to advance solution
 //                dh                : Cell size
 //                g_cc_array        : Array storing the cell-centered conserved variables for checking
@@ -1880,7 +1880,7 @@ void Hydro_LimitSlope( const real L[], const real C[], const real R[], const LR_
 //                EoS               : EoS object
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_HancockPredict( real fc[][NCOMP_LR], real fcPri[][NCOMP_LR], const real dt, const real dh,
+void Hydro_HancockPredict( real fcCon[][NCOMP_LR], real fcPri[][NCOMP_LR], const real dt, const real dh,
                            const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
                            const real MinDens, const real MinPres, const real MinEint,
                            const EoS_t *EoS )
@@ -1894,10 +1894,10 @@ void Hydro_HancockPredict( real fc[][NCOMP_LR], real fcPri[][NCOMP_LR], const re
 // calculate flux
    for (int f=0; f<6; f++)
 #     ifdef SRHD
-      Hydro_Con2Flux( f/2, Flux[f], fc[f], MinPres, EoS->DensEint2Pres_FuncPtr,
+      Hydro_Con2Flux( f/2, Flux[f], fcCon[f], MinPres, EoS->DensEint2Pres_FuncPtr,
                       EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, fcPri[f] );
 #     else
-      Hydro_Con2Flux( f/2, Flux[f], fc[f], MinPres, EoS->DensEint2Pres_FuncPtr,
+      Hydro_Con2Flux( f/2, Flux[f], fcCon[f], MinPres, EoS->DensEint2Pres_FuncPtr,
                       EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
 #     endif
 
@@ -1906,24 +1906,24 @@ void Hydro_HancockPredict( real fc[][NCOMP_LR], real fcPri[][NCOMP_LR], const re
    {
       dFlux = dt_dh2*( Flux[1][v] - Flux[0][v] + Flux[3][v] - Flux[2][v] + Flux[5][v] - Flux[4][v] );
 
-      for (int f=0; f<6; f++)    fc[f][v] -= dFlux;
+      for (int f=0; f<6; f++)    fcCon[f][v] -= dFlux;
    }
 
 // check the negative density and energy
    for (int f=0; f<6; f++)
    {
 #     ifdef BAROTROPIC_EOS
-      if ( fc[f][0] <= (real)0.0 )
+      if ( fcCon[f][0] <= (real)0.0 )
 #     elif ( defined SRHD )
-      if ( Hydro_CheckUnphysical( UNPHY_MODE_CONS, fc[f], NULL, ERROR_INFO, UNPHY_SILENCE ) )
+      if ( Hydro_CheckUnphysical( UNPHY_MODE_CONS, fcCon[f], NULL, ERROR_INFO, UNPHY_SILENCE ) )
 #     else
-      if ( fc[f][0] <= (real)0.0  ||  fc[f][4] <= (real)0.0 )
+      if ( fcCon[f][0] <= (real)0.0  ||  fcCon[f][4] <= (real)0.0 )
 #     endif
       {
 //       set to the cell-centered values before update
          for (int f=0; f<6; f++)
          for (int v=0; v<NCOMP_TOTAL; v++)
-            fc[f][v] = g_cc_array[v][cc_idx];
+            fcCon[f][v] = g_cc_array[v][cc_idx];
 
          break;
       }
@@ -1932,7 +1932,7 @@ void Hydro_HancockPredict( real fc[][NCOMP_LR], real fcPri[][NCOMP_LR], const re
 // apply density and internal energy floors
    for (int f=0; f<6; f++)
    {
-      fc[f][0] = FMAX( fc[f][0], MinDens );
+      fcCon[f][0] = FMAX( fcCon[f][0], MinDens );
 #     ifndef BAROTROPIC_EOS
 #     ifdef MHD
 #     error : ERROR : MHD is not supported here !!!
@@ -1940,12 +1940,12 @@ void Hydro_HancockPredict( real fc[][NCOMP_LR], real fcPri[][NCOMP_LR], const re
 #     else
       const real Emag = NULL_REAL;
 #     endif
-      fc[f][4] = Hydro_CheckMinEintInEngy( fc[f][0], fc[f][1], fc[f][2], fc[f][3], fc[f][4],
+      fcCon[f][4] = Hydro_CheckMinEintInEngy( fcCon[f][0], fcCon[f][1], fcCon[f][2], fcCon[f][3], fcCon[f][4],
                                            MinEint, Emag );
 #     endif // #ifndef BAROTROPIC_EOS
 #     if ( NCOMP_PASSIVE > 0 )
       for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
-      fc[f][v] = FMAX( fc[f][v], TINY_NUMBER );
+      fcCon[f][v] = FMAX( fcCon[f][v], TINY_NUMBER );
 #     endif
    }
 
