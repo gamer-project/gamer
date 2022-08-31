@@ -790,7 +790,8 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
          Hydro_Con2Pri( ConVar_1Cell, PriVar_1Cell, MinPres, FracPassive, NFrac, FracIdx,
                         JeansMinPres, JeansMinPres_Coeff, EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr,
-                        EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, EintPtr );
+                        EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
+                        EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, EintPtr, NULL );
 
          for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   g_PriVar[v][idx] = PriVar_1Cell[v];
 
@@ -880,7 +881,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #     endif
 
  //   cc/fc: cell/face-centered variables; _C_ncomp: central cell with all NCOMP_LR variables
-      real cc_C_ncomp[NCOMP_LR], fc[6][NCOMP_LR], dfc[NCOMP_LR], dfc6[NCOMP_LR];
+      real cc_C_ncomp[NCOMP_LR], fcCon[6][NCOMP_LR], fcPri[6][NCOMP_LR], dfc[NCOMP_LR], dfc6[NCOMP_LR];
 
       for (int v=0; v<NCOMP_LR; v++)   cc_C_ncomp[v] = g_PriVar[v][idx_cc];
 
@@ -959,8 +960,8 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
             fc_R = ( fc_R > Min  ) ? fc_R : Min;
             fc_R = ( fc_R < Max  ) ? fc_R : Max;
 
-            fc[faceL][v] = fc_L;
-            fc[faceR][v] = fc_R;
+            fcPri[faceL][v] = fc_L;
+            fcPri[faceR][v] = fc_R;
 
          } // for (int v=0; v<NCOMP_LR; v++)
 
@@ -978,8 +979,8 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 //       4-1. compute the PPM coefficient (for the passive scalars as well)
          for (int v=0; v<NCOMP_LR; v++)
          {
-            dfc [v] = fc[faceR][v] - fc[faceL][v];
-            dfc6[v] = (real)6.0*(  cc_C_ncomp[v] - (real)0.5*( fc[faceL][v] + fc[faceR][v] )  );
+            dfc [v] = fcPri[faceR][v] - fcPri[faceL][v];
+            dfc6[v] = (real)6.0*(  cc_C_ncomp[v] - (real)0.5*( fcPri[faceL][v] + fcPri[faceR][v] )  );
          }
 
 //       4-2. re-order variables for the y/z directions
@@ -1141,22 +1142,22 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
          for (int v=0; v<NCOMP_LR; v++)
          {
-            fc[faceL][v] += Correct_L[v];
-            fc[faceR][v] += Correct_R[v];
+            fcPri[faceL][v] += Correct_L[v];
+            fcPri[faceR][v] += Correct_R[v];
          }
 
 
 //       4-6. apply density and pressure floors
-         fc[faceL][0] = FMAX( fc[faceL][0], MinDens );
-         fc[faceR][0] = FMAX( fc[faceR][0], MinDens );
+         fcPri[faceL][0] = FMAX( fcPri[faceL][0], MinDens );
+         fcPri[faceR][0] = FMAX( fcPri[faceR][0], MinDens );
 
-         fc[faceL][4] = Hydro_CheckMinPres( fc[faceL][4], MinPres );
-         fc[faceR][4] = Hydro_CheckMinPres( fc[faceR][4], MinPres );
+         fcPri[faceL][4] = Hydro_CheckMinPres( fcPri[faceL][4], MinPres );
+         fcPri[faceR][4] = Hydro_CheckMinPres( fcPri[faceR][4], MinPres );
 
 #        if ( NCOMP_PASSIVE > 0 )
          for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++) {
-         fc[faceL][v] = FMAX( fc[faceL][v], TINY_NUMBER );
-         fc[faceR][v] = FMAX( fc[faceR][v], TINY_NUMBER ); }
+         fcPri[faceL][v] = FMAX( fcPri[faceL][v], TINY_NUMBER );
+         fcPri[faceR][v] = FMAX( fcPri[faceR][v], TINY_NUMBER ); }
 #        endif
 
 #        endif // #if ( FLU_SCHEME == CTU )
@@ -1170,28 +1171,25 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
          const real B_nL = g_FC_B[d][ idx_B[d]              ];
          const real B_nR = g_FC_B[d][ idx_B[d] + didx_cc[d] ];
 #        endif
-         fc[faceL][ MAG_OFFSET + d ] = B_nL;
-         fc[faceR][ MAG_OFFSET + d ] = B_nR;
+         fcPri[faceL][ MAG_OFFSET + d ] = B_nL;
+         fcPri[faceR][ MAG_OFFSET + d ] = B_nR;
 #        endif // #ifdef MHD
 
 
 //       6. primitive variables --> conserved variables
 //          --> When LR_EINT is on, use the reconstructed internal energy instead of pressure in Hydro_Pri2Con()
 //              to skip expensive EoS conversion
-         real tmp[NCOMP_LR];  // input and output arrays must not overlap for Pri2Con()
 #        ifdef LR_EINT
-         real* const EintPtr = tmp + NCOMP_TOTAL_PLUS_MAG;
+         real* const EintPtr = fcPri + NCOMP_TOTAL_PLUS_MAG;
 #        else
          real* const EintPtr = NULL;
 #        endif
 
-         for (int v=0; v<NCOMP_LR; v++)   tmp[v] = fc[faceL][v];
-         Hydro_Pri2Con( tmp, fc[faceL], FracPassive, NFrac, FracIdx, EoS->DensPres2Eint_FuncPtr,
+         Hydro_Pri2Con( fcPri[faceL], fcCon[faceL], FracPassive, NFrac, FracIdx, EoS->DensPres2Eint_FuncPtr,
                         EoS->Temp2HTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
                         EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, EintPtr );
 
-         for (int v=0; v<NCOMP_LR; v++)   tmp[v] = fc[faceR][v];
-         Hydro_Pri2Con( tmp, fc[faceR], FracPassive, NFrac, FracIdx, EoS->DensPres2Eint_FuncPtr,
+         Hydro_Pri2Con( fcPri[faceR], fcCon[faceR], FracPassive, NFrac, FracIdx, EoS->DensPres2Eint_FuncPtr,
                         EoS->Temp2HTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
                         EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, EintPtr );
 
@@ -1200,7 +1198,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 #     if ( FLU_SCHEME == MHM )
 //    7. advance the face-centered variables by half time-step for the MHM integrator
-      Hydro_HancockPredict( fc, dt, dh, g_ConVar, idx_cc, MinDens, MinPres, MinEint, EoS );
+      Hydro_HancockPredict( fcCon, fcPri, dt, dh, g_ConVar, idx_cc, MinDens, MinPres, MinEint, EoS );
 #     endif
 
 
@@ -1208,7 +1206,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 //       --> use NCOMP_TOTAL_PLUS_MAG instead of LR_EINT since we don't need to store internal energy in g_FC_Var[]
       for (int f=0; f<6; f++)
       for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
-         g_FC_Var[f][v][idx_fc] = fc[f][v];
+         g_FC_Var[f][v][idx_fc] = fcCon[f][v];
 
    } // CGPU_LOOP( idx_fc, CUBE(N_FC_VAR) )
 
