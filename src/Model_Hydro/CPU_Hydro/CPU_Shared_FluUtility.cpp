@@ -176,6 +176,8 @@ void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int 
 //                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //                EoS_DensEint2Pres  : EoS routine to compute the gas pressure
 //                EoS_DensPres2Eint  : EoS routine to compute the gas internal energy
+//                EoS_GuessHTilde    : EoS routine to compute guessed reduced enthalpy
+//                EoS_HTilde2Temp    : EoS routine to compute temperature
 //                EoS_AuxArray_*     : Auxiliary arrays for EoS_DensEint2Pres()
 //                EoS_Table          : EoS tables for EoS_DensEint2Pres()
 //                EintOut            : Pointer to store the output internal energy
@@ -299,6 +301,8 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 //                NFrac             : Number of passive scalars for the option "FracPassive"
 //                FracIdx           : Target variable indices for the option "FracPassive"
 //                EoS_DensPres2Eint : EoS routine to compute the gas internal energy
+//                EoS_Temp2HTilde   : EoS routine to compute reduced enthalpy
+//                EoS_HTilde2Temp   : EoS routine to compute temperature
 //                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensPres2Eint()
 //                EoS_Table         : EoS tables for EoS_DensPres2Eint()
 //                EintIn            : Pointer storing the input internal energy (see the note above)
@@ -526,10 +530,12 @@ real Hydro_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, cons
 // Parameter   :  HTilde          : The reduced specific enthalpy
 //                MSqr_DSqr       : (|Momentum|/Dens)**2
 //                Temp            : The temperature
-//                Constant        : The constant on the other side of the function to be iterated
+//                Constant        : The constant on the left side of Eq. A3 in "Tseng et al. 2021, MNRAS, 504, 3298"
 //                EoS_HTilde2Temp : EoS routine to compute the temperature
 //               *Fun             : The function to be numerically solved
 //               *DiffFun         : The derivative function with respect to the unknown variable
+//                EoS_AuxArray_*  : Auxiliary arrays for EoS_DensEint2Pres()
+//                EoS_Table       : EoS tables for EoS_DensEint2Pres()
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_HTildeFunction (real HTilde, real MSqr_DSqr, real Temp, real Constant,
@@ -953,6 +959,8 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
 //                MinPres           : Pressure floor
 //                Emag              : Magnetic energy density (0.5*B^2) --> For MHD only
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
+//                EoS_GuessHTilde   : EoS routine to compute guessed reduced enthalpy
+//                EoS_HTilde2Temp   : EoS routine to compute temperature
 //                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensEint2Pres()
 //                EoS_Table         : EoS tables for EoS_DensEint2Pres()
 //                EintOut           : Pointer to store the output internal energy
@@ -1089,6 +1097,8 @@ real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, cons
 //                MinTemp           : Temperature floor
 //                Emag              : Magnetic energy density (0.5*B^2) --> For MHD only
 //                EoS_DensEint2Temp : EoS routine to compute the gas temperature
+//                EoS_GuessHTilde   : EoS routine to compute guessed reduced enthalpy
+//                EoS_HTilde2Temp   : EoS routine to compute temperature
 //                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensEint2Temp()
 //                EoS_Table         : EoS tables for EoS_DensEint2Temp()
 //
@@ -1287,36 +1297,39 @@ void  NewtonRaphsonSolver(void (*FunPtr)(real, real, real, real, const EoS_H2TEM
                           const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                           const real *const EoS_Table[EOS_NTABLE_MAX] )
 {
- int iter = 0;
+  int iter = 0;
 
- #ifdef FLOAT8
- int max_iter = 20;
- #else
- int max_iter = 10;
- #endif
+# ifdef FLOAT8
+  int max_iter = 20;
+# else
+  int max_iter = 10;
+# endif
 
- real Fun, DiffFun;
- real delta;
- real tolerance;
- *root = guess;
+  real Fun, DiffFun;
+  real delta;
+  real tolerance;
+  *root = guess;
 
- do
-   {
-     iter++;
-     FunPtr(*root, MSqr_DSqr, NAN, Constant, EoS_HTilde2Temp, &Fun, &DiffFun, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+  do{
 
-#    ifdef CHECK_FAILED_CELL_IN_FLUID
-     if ( DiffFun == (real)0.0 )                                                  printf("derivative is zero\n");
-     if ( Fun != Fun  ||(real) -HUGE_NUMBER >= Fun  || Fun  >= (real)HUGE_NUMBER )  printf("function value is not finite\n");
-     if ( DiffFun != DiffFun ||(real) -HUGE_NUMBER >= DiffFun || DiffFun >= (real)HUGE_NUMBER )  printf("derivative value is not finite\n");
-#    endif
+      iter++;
+      FunPtr(*root, MSqr_DSqr, NAN, Constant, EoS_HTilde2Temp, &Fun, &DiffFun, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 
-      delta = Fun/DiffFun;
-      *root = *root - delta;
+ #    ifdef GAMER_DEBUG
+      if ( DiffFun == (real)0.0 )
+         printf( "ERROR : derivative is zero at file <%s>, line <%d>, function <%s> !!\n", ERROR_INFO );
+      if ( Fun != Fun  ||(real) -HUGE_NUMBER >= Fun  || Fun  >= (real)HUGE_NUMBER )
+         printf( "ERROR : function value is not finite at file <%s>, line <%d>, function <%s> !!\n", ERROR_INFO );
+      if ( DiffFun != DiffFun ||(real) -HUGE_NUMBER >= DiffFun || DiffFun >= (real)HUGE_NUMBER )
+         printf( "ERROR : derivative value is not finite at file <%s>, line <%d>, function <%s> !!\n", ERROR_INFO );
+ #    endif
 
-      tolerance =  epsrel * FABS(*root) + epsabs;
+       delta = Fun/DiffFun;
+       *root = *root - delta;
 
-   }while ( fabs(delta) >= tolerance && iter < max_iter );
+       tolerance =  epsrel * FABS(*root) + epsabs;
+
+  }while ( fabs(delta) >= tolerance && iter < max_iter );
 
 }
 
