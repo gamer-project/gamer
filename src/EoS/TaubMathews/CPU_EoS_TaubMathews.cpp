@@ -65,9 +65,11 @@ void EoS_SetAuxArray_TaubMathews( double AuxArray_Flt[], int AuxArray_Int[] )
 // Function    :  EoS_GuessHTilde_TaubMathews
 // Description :  Guess a reduced enthalpy for Newton-Raphson iteration
 // Note        :
-// Parameter   :  Con      : Conservative variables
-//                         : Pointer to store guessed value
-// Return      :  Constant
+// Parameter   :  Con         : Conservative variables
+//                Constant    : The constant on the left side of Eq. A3 in "Tseng et al. 2021, MNRAS, 504, 3298"
+//                AuxArray_*  : Auxiliary arrays (see the Note above)
+//                Table       : EoS tables
+// Return      :  GuessHTilde : guessed reduced enthalpy
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real EoS_GuessHTilde_TaubMathews( const real Con[], real* const Constant, const double AuxArray_Flt[],
@@ -120,11 +122,12 @@ static real EoS_GuessHTilde_TaubMathews( const real Con[], real* const Constant,
 //
 // Note        :  Eq. 16 in "Tseng et al. 2021, MNRAS, 504, 3298"
 //
-// Parameter   :  HTilde   : Reduced enthalpy
-//                Temp     : Pointer to store temperature (kT/mc**)
-//                DiffTemp : Pointer to store the derivitive of a reduced enthalpy with respect to temperature
-//                Passive  : Passive scalars (must not used here)
-//                AuxArray : Auxiliary array (see the Note above)
+// Parameter   :  HTilde     : Reduced enthalpy
+//                Temp       : Temperature (kT/mc**)
+//                DiffTemp   : The derivitive of a reduced enthalpy with respect to temperature
+//                Passive    : Passive scalars (must not used here)
+//                AuxArray_* : Auxiliary arrays (see the Note above)
+//                Table      : EoS tables
 //
 // Return      :  Temp, DiffTemp
 //-------------------------------------------------------------------------------------------------------
@@ -154,9 +157,10 @@ static void EoS_HTilde2Temp_TaubMathews( const real HTilde, real* const Temp, re
 // Function    :  EoS_Temp2HTilde_TaubMathews
 // Description :
 // Note        :  Eq. 10 in "Tseng et al. 2021, MNRAS, 504, 3298"
-// Parameter   :  Temp     : Dimensionless temperature (kT/mc**2)
-//                Passive  : Passive scalars (must not used here)
-//                AuxArray : Auxiliary array (see the Note above)
+// Parameter   :  Temp       : Dimensionless temperature (kT/mc**2)
+//                Passive    : Passive scalars (must not used here)
+//                AuxArray_* : Auxiliary arrays (see the Note above)
+//                Table      : EoS tables
 //
 // Return      :  Reduced energy density
 //-------------------------------------------------------------------------------------------------------
@@ -186,10 +190,11 @@ static real EoS_Temp2HTilde_TaubMathews( const real Temp, const real Passive[], 
 //
 // Note        :  Eq. 14 in "Tseng et al. 2021, MNRAS, 504, 3298"
 //
-// Parameter   :  Rho      : Gas proper mass density
-//                Pres     : Gas pressure
-//                Passive  : Passive scalars (must not used here)
-//                AuxArray : Auxiliary array (see the Note above)
+// Parameter   :  Rho        : Gas proper mass density
+//                Pres       : Gas pressure
+//                Passive    : Passive scalars (must not used here)
+//                AuxArray_* : Auxiliary arrays (see the Note above)
+//                Table      : EoS tables
 //
 // Return      :  Sound speed square
 //-------------------------------------------------------------------------------------------------------
