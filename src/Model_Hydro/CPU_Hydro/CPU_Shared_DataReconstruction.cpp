@@ -619,7 +619,6 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
       for (int f=0; f<6; f++)
       for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
          g_FC_Var[f][v][idx_fc] = fcCon[f][v];
-
    } // CGPU_LOOP( idx_fc, CUBE(N_FC_VAR) )
 
 
@@ -1929,6 +1928,7 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], real fcPri[][NCOMP_LR], const
       }
    }
 
+#ifndef SRHD
 // apply density and internal energy floors
    for (int f=0; f<6; f++)
    {
@@ -1948,6 +1948,7 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], real fcPri[][NCOMP_LR], const
       fcCon[f][v] = FMAX( fcCon[f][v], TINY_NUMBER );
 #     endif
    }
+#endif
 
 } // FUNCTION : Hydro_HancockPredict
 #endif // #if ( FLU_SCHEME == MHM )
