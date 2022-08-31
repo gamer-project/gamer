@@ -330,12 +330,14 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
       fprintf( File, " %13.6e", Temp );
    }
 
+#  ifndef SRHD
    if ( OPT__OUTPUT_ENTR ) {
       Entr = Hydro_Con2Entr( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
                              CheckMinEntr_No, NULL_REAL, Emag, EoS_DensEint2Entr_CPUPtr,
                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
       fprintf( File, " %13.6e", Entr );
    }
+#  endif
 
    if ( OPT__OUTPUT_CS ) {
 #     ifdef SRHD
