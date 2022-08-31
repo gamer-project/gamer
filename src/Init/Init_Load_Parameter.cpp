@@ -57,12 +57,12 @@ void Init_Load_Parameter()
 
 
 // boundary conditions
-   ReadPara->Add( "OPT__BC_FLU_XM",             &OPT__BC_FLU[0],                 -1,               1,             4              );
-   ReadPara->Add( "OPT__BC_FLU_XP",             &OPT__BC_FLU[1],                 -1,               1,             4              );
-   ReadPara->Add( "OPT__BC_FLU_YM",             &OPT__BC_FLU[2],                 -1,               1,             4              );
-   ReadPara->Add( "OPT__BC_FLU_YP",             &OPT__BC_FLU[3],                 -1,               1,             4              );
-   ReadPara->Add( "OPT__BC_FLU_ZM",             &OPT__BC_FLU[4],                 -1,               1,             4              );
-   ReadPara->Add( "OPT__BC_FLU_ZP",             &OPT__BC_FLU[5],                 -1,               1,             4              );
+   ReadPara->Add( "OPT__BC_FLU_XM",             &OPT__BC_FLU[0],                 -1,               1,             5              );
+   ReadPara->Add( "OPT__BC_FLU_XP",             &OPT__BC_FLU[1],                 -1,               1,             5              );
+   ReadPara->Add( "OPT__BC_FLU_YM",             &OPT__BC_FLU[2],                 -1,               1,             5              );
+   ReadPara->Add( "OPT__BC_FLU_YP",             &OPT__BC_FLU[3],                 -1,               1,             5              );
+   ReadPara->Add( "OPT__BC_FLU_ZM",             &OPT__BC_FLU[4],                 -1,               1,             5              );
+   ReadPara->Add( "OPT__BC_FLU_ZP",             &OPT__BC_FLU[5],                 -1,               1,             5              );
 #  ifdef GRAVITY
    ReadPara->Add( "OPT__BC_POT",                &OPT__BC_POT,                    -1,               1,             2              );
 // do not check GFUNC_COEFF0 since it may be reset by Init_ResetDefaultParameter()
