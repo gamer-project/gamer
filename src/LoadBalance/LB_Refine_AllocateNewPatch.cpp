@@ -1035,6 +1035,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       const real Emag = NULL_REAL;
 #     endif
 
+#     ifndef SRHD
 //    ensure consistency between pressure, total energy density, and the dual-energy variable
 //    --> here we ALWAYS use the dual-energy variable to correct the total energy density
 //    --> we achieve that by setting the dual-energy switch to an extremely larger number and ignore
@@ -1056,6 +1057,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
          = Hydro_CheckMinEintInEngy( FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i],
                                      FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i], MIN_EINT, Emag );
 #     endif // #ifdef DUAL_ENERGY ... else ...
+#     endif // #ifndef SRHD
 #     endif // #if ( MODEL == HYDRO )
 
 

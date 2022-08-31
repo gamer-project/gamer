@@ -1106,6 +1106,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                } // if ( v == TempDumpIdx )
                else
 
+#              ifndef SRHD
 //             d-3. gas entropy
                if ( v == EntrDumpIdx )
                {
@@ -1130,6 +1131,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   }
                } // if ( v == EntrDumpIdx )
                else
+#              endif
 
 //             d-4. sound speed
                if ( v == CsDumpIdx )

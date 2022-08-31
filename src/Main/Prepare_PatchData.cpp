@@ -1028,6 +1028,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                Data1PG_CC_Ptr += PGSize3D_CC;
             } // if ( PrepTemp )
 
+#           ifndef SRHD
             if ( PrepEntr )
             {
                for (int k=0; k<PS1; k++)  {  K    = k + Disp_k;
@@ -1071,6 +1072,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
                Data1PG_CC_Ptr += PGSize3D_CC;
             } // if ( PrepEntr )
+#           endif
 
 #           ifdef MHD
             if ( PrepMagCC )
@@ -1430,6 +1432,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                      Data1PG_CC_Ptr += PGSize3D_CC;
                   } // if ( PrepTemp )
 
+#                 ifndef SRHD
                   if ( PrepEntr )
                   {
                      for (int k=0; k<loop[2]; k++)  { K = k + disp[2];   K2 = k + disp2[2];
@@ -1473,6 +1476,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
                      Data1PG_CC_Ptr += PGSize3D_CC;
                   } // if ( PrepEntr )
+#                endif
 
 #                 ifdef MHD
                   if ( PrepMagCC )

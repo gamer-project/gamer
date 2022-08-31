@@ -752,6 +752,7 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 #     endif
 
 //    apply density and internal energy floors
+#     ifndef SRHD
       out_con[0] = FMAX( out_con[0], MinDens );
 #     ifndef BAROTROPIC_EOS
 #     ifdef MHD
@@ -764,6 +765,7 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 #     if ( NCOMP_PASSIVE > 0 )
       for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
       out_con[v] = FMAX( out_con[v], TINY_NUMBER );
+#     endif
 #     endif
 
 //    conserved --> primitive variables

@@ -502,6 +502,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
       CData_CC_Ptr += CSize3D_CC;
    } // if ( PrepTemp )
 
+#  ifndef SRHD
    if ( PrepEntr )
    {
       for (int k=0; k<Loop1[2]; k++)   {  k1 = k + Disp1[2];   k2 = k + Disp2[2];
@@ -545,6 +546,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
       CData_CC_Ptr += CSize3D_CC;
    } // if ( PrepEntr )
+#  endif
 
 #  ifdef MHD
    if ( PrepMagCC || IntIter )
@@ -900,6 +902,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
             CData_CC_Ptr += CSize3D_CC;
          } // if ( PrepTemp )
 
+#        ifndef SRHD
          if ( PrepEntr )
          {
             for (int k=0; k<Loop2[2]; k++)   {  k1 = k + Disp3[2];   k2 = k + Disp4[2];
@@ -943,6 +946,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
             CData_CC_Ptr += CSize3D_CC;
          } // if ( PrepEntr )
+#        endif
 
 #        ifdef MHD
          if ( PrepMagCC || IntIter )
@@ -1702,6 +1706,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
       NVarCC_SoFar ++;
    }
 
+#  ifndef SRHD
    if ( PrepEntr )
    {
       Interpolate( CData_CC+CSize3D_CC*NVarCC_SoFar, CSize_CC, CStart_CC, CRange_CC,
@@ -1710,6 +1715,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                    IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
       NVarCC_SoFar ++;
    }
+#  endif
 
 #  ifdef MHD
    if ( PrepMagCC )

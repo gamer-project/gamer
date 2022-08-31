@@ -642,7 +642,7 @@ real Hydro_CheckMinTemp( const real InTemp, const real MinTemp )
 } // FUNCTION : Hydro_CheckMinTemp
 
 
-
+#ifndef SRHD
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_CheckMinEntr
 // Description :  Similar to Hydro_CheckMinPres() except that this function checks the gas entropy
@@ -703,7 +703,7 @@ real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY
    return OutEngy;
 
 } // FUNCTION : Hydro_CheckMinEintInEngy
-
+#endif
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -1154,6 +1154,7 @@ real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const re
 
 
 
+#ifndef SRHD
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_Con2Entr
 // Description :  Evaluate the fluid entropy
@@ -1221,7 +1222,7 @@ real Hydro_Con2Entr( const real Dens, const real MomX, const real MomY, const re
    return Entr;
 
 } // FUNCTION : Hydro_Con2Entr
-
+#endif
 
 
 
