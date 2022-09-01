@@ -37,26 +37,32 @@ bool Hydro_CheckUnphysical( const CheckUnphysical_t Mode, const real Fields[], c
                             const char File[], const int Line, const char Function[], const CheckUnphysical_t Verbose );
 
 #ifdef SRHD
+
 GPU_DEVICE
 real Hydro_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                        const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                        const real *const EoS_Table[EOS_NTABLE_MAX] );
 
 GPU_DEVICE
-void Hydro_HTildeFunction (real HTilde, real MSqr_DSqr, real Temp, real Constant,
-                           const EoS_H2TEM_t EoS_HTilde2Temp, real *Fun, real *DiffFun,
-                           const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
-                           const real *const EoS_Table[EOS_NTABLE_MAX] );
+void Hydro_HTildeFunction (real HTilde, void *params, real *Func, real *DiffFunc );
 #endif
 #endif
 
 
 GPU_DEVICE
-void  NewtonRaphsonSolver(void (*FunPtr)(real, real, real, real, const EoS_H2TEM_t, real*, real*, const double*, const int*, const real *const*),
-                          real MSqr_DSqr, real Constant, real *root, const EoS_H2TEM_t EoS_HTilde2Temp,
-                          const real guess, const real epsabs, const real epsrel,
-                          const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
-                          const real *const EoS_Table[EOS_NTABLE_MAX] );
+void  NewtonRaphsonSolver( void (*FunPtr)( real, void*, real*, real* ), void * params, const real guess,
+                           const real epsabs, const real epsrel, real *root );
+
+
+struct Hydro_HTildeFunction_params_s{
+   real MSqr_DSqr;
+   real Temp;
+   real Constant;
+   EoS_H2TEM_t EoS_HTilde2Temp;
+   const double *EoS_AuxArray_Flt;
+   const int *EoS_AuxArray_Int;
+   const real *const *EoS_Table;
+};
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -218,7 +224,6 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 
    HTilde = Hydro_Con2HTilde( In, EoS_GuessHTilde, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 
-
    Factor = In[0]*((real)1.0 + HTilde);
 
    Out[1] = In[1]/Factor;
@@ -350,8 +355,12 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive, const i
    Out[3] = In[3]*Factor;
    MSqr_DSqr  = SQR(Out[1])+SQR(Out[2])+SQR(Out[3]);
    MSqr_DSqr /= SQR(Out[0]);
-   Hydro_HTildeFunction( HTilde, MSqr_DSqr, Temperature, (real)0.0, EoS_HTilde2Temp, &HTildeFunction, NULL,
-                        EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+
+   struct Hydro_HTildeFunction_params_s params =
+   { MSqr_DSqr, Temperature, (real)0.0, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table };
+
+   Hydro_HTildeFunction( HTilde, &params, &HTildeFunction, NULL );
+
    Out[4]  = MSqr_DSqr + HTildeFunction;
    Out[4] /= (real)1.0 + SQRT( (real)1.0 + MSqr_DSqr + HTildeFunction );
    Out[4] *= Out[0];
@@ -509,18 +518,14 @@ real Hydro_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, cons
 
   GuessHTilde = EoS_GuessHTilde( Con, &Constant, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table);
 
-  void (*FunPtr)( real HTilde, real MSqr_DSqr, real Temp, real Constant,
-                  const EoS_H2TEM_t EoS_HTilde2Temp, real *Fun, real *DiffFun,
-                  const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
-                  const real *const EoS_Table[EOS_NTABLE_MAX] ) = &Hydro_HTildeFunction;
+  void (*FunPtr)( real HTilde, void *params, real *Func, real *DiffFunc ) = &Hydro_HTildeFunction;
 
-  NewtonRaphsonSolver(FunPtr, MSqr_DSqr, -Constant, &HTilde, EoS_HTilde2Temp, GuessHTilde,
-                      (real)TINY_NUMBER, (real)MAX_ERROR, EoS_AuxArray_Flt,
-                      EoS_AuxArray_Int, EoS_Table );
+  struct Hydro_HTildeFunction_params_s params =
+  { MSqr_DSqr, NAN, -Constant, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table };
+  NewtonRaphsonSolver( FunPtr, &params, GuessHTilde, (real)TINY_NUMBER, (real)MACHINE_EPSILON, &HTilde );
 
   return HTilde;
 }
-
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -532,17 +537,24 @@ real Hydro_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, cons
 //                Temp            : The temperature
 //                Constant        : The constant on the left side of Eq. A3 in "Tseng et al. 2021, MNRAS, 504, 3298"
 //                EoS_HTilde2Temp : EoS routine to compute the temperature
-//               *Fun             : The function to be numerically solved
-//               *DiffFun         : The derivative function with respect to the unknown variable
+//               *Func             : The function to be numerically solved
+//               *DiffFunc         : The derivative function with respect to the unknown variable
 //                EoS_AuxArray_*  : Auxiliary arrays for EoS_DensEint2Pres()
 //                EoS_Table       : EoS tables for EoS_DensEint2Pres()
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_HTildeFunction (real HTilde, real MSqr_DSqr, real Temp, real Constant,
-                          const EoS_H2TEM_t EoS_HTilde2Temp, real *Fun, real *DiffFun,
-                          const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
-                          const real *const EoS_Table[EOS_NTABLE_MAX] )
+void Hydro_HTildeFunction (real HTilde, void *params, real *Func, real *DiffFunc )
 {
+
+  struct Hydro_HTildeFunction_params_s *parameters = (struct Hydro_HTildeFunction_params_s *) params;
+
+  real MSqr_DSqr                    = parameters->MSqr_DSqr;
+  real Temp                         = parameters->Temp;
+  real Constant                     = parameters->Constant;
+  const EoS_H2TEM_t EoS_HTilde2Temp = parameters->EoS_HTilde2Temp;
+  const double *EoS_AuxArray_Flt    = parameters->EoS_AuxArray_Flt;
+  const int *EoS_AuxArray_Int       = parameters->EoS_AuxArray_Int;
+  const real *const *EoS_Table      = parameters->EoS_Table;
   real DiffTemp;
 
   if ( Temp != Temp )
@@ -552,15 +564,15 @@ void Hydro_HTildeFunction (real HTilde, real MSqr_DSqr, real Temp, real Constant
   real H =  HTilde + (real)1.0;
   real Factor0 = SQR( H ) + MSqr_DSqr;
 
-  if ( Fun != NULL )
+  if ( Func != NULL )
 
-  *Fun = SQR( HTilde ) + (real)2.0*HTilde - (real)2.0*Temp - (real)2.0*Temp*HTilde
-		  + SQR( Temp * H ) / Factor0 + Constant;
+  *Func = SQR( HTilde ) + (real)2.0*HTilde - (real)2.0*Temp - (real)2.0*Temp*HTilde
+	    + SQR( Temp * H ) / Factor0 + Constant;
 
-  if ( DiffFun != NULL )
+  if ( DiffFunc != NULL )
 
-  *DiffFun = (real)2.0*H - (real)2.0*Temp - (real)2.0*H*DiffTemp +
-		  ( (real)2.0*Temp*DiffTemp*H*H - (real)2.0*Temp*Temp*H ) / SQR( Factor0 );
+  *DiffFunc = (real)2.0*H - (real)2.0*Temp - (real)2.0*H*DiffTemp +
+	        ( (real)2.0*Temp*DiffTemp*H*H - (real)2.0*Temp*Temp*H ) / SQR( Factor0 );
 
 }
 #endif
@@ -1290,12 +1302,11 @@ void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm
 // Note        :
 // Parameter   :
 //-------------------------------------------------------------------------------------------------------
+
+
 GPU_DEVICE
-void  NewtonRaphsonSolver(void (*FunPtr)(real, real, real, real, const EoS_H2TEM_t, real*, real*, const double*, const int*, const real *const*),
-                          real MSqr_DSqr, real Constant, real *root, const EoS_H2TEM_t EoS_HTilde2Temp,
-                          const real guess, const real epsabs, const real epsrel,
-                          const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
-                          const real *const EoS_Table[EOS_NTABLE_MAX] )
+void  NewtonRaphsonSolver( void (*FunPtr)( real, void*, real*, real* ), void * params, const real guess,
+                           const real epsabs, const real epsrel, real *root )
 {
   int iter = 0;
 
@@ -1305,7 +1316,7 @@ void  NewtonRaphsonSolver(void (*FunPtr)(real, real, real, real, const EoS_H2TEM
   int max_iter = 10;
 # endif
 
-  real Fun, DiffFun;
+  real Func, DiffFunc;
   real delta;
   real tolerance;
   *root = guess;
@@ -1313,18 +1324,18 @@ void  NewtonRaphsonSolver(void (*FunPtr)(real, real, real, real, const EoS_H2TEM
   do{
 
       iter++;
-      FunPtr(*root, MSqr_DSqr, NAN, Constant, EoS_HTilde2Temp, &Fun, &DiffFun, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 
+      FunPtr(*root, params, &Func, &DiffFunc );
 #     ifdef GAMER_DEBUG
-      if ( DiffFun == (real)0.0 )
+      if ( DiffFunc == (real)0.0 )
          printf( "ERROR : derivative is zero at file <%s>, line <%d>, function <%s> !!\n", ERROR_INFO );
-      if ( Fun != Fun  ||(real) -HUGE_NUMBER >= Fun  || Fun  >= (real)HUGE_NUMBER )
+      if ( Func != Func  ||(real) -HUGE_NUMBER >= Func  || Func  >= (real)HUGE_NUMBER )
          printf( "ERROR : function value is not finite at file <%s>, line <%d>, function <%s> !!\n", ERROR_INFO );
-      if ( DiffFun != DiffFun ||(real) -HUGE_NUMBER >= DiffFun || DiffFun >= (real)HUGE_NUMBER )
+      if ( DiffFunc != DiffFunc ||(real) -HUGE_NUMBER >= DiffFunc || DiffFunc >= (real)HUGE_NUMBER )
          printf( "ERROR : derivative value is not finite at file <%s>, line <%d>, function <%s> !!\n", ERROR_INFO );
 #     endif
 
-       delta = Fun/DiffFun;
+       delta = Func/DiffFunc;
        *root = *root - delta;
 
        tolerance =  epsrel * FABS(*root) + epsabs;

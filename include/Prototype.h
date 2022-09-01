@@ -130,10 +130,7 @@ real Hydro_DensDual2Pres( const real Dens, const real Dual, const real Gamma_m1,
 real Hydro_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                       const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                       const real *const EoS_Table[EOS_NTABLE_MAX] );
-void Hydro_HTildeFunction (real HTilde, real MSqr_DSqr, real Temp, real Constant,
-                           const EoS_H2TEM_t EoS_HTilde2Temp, real *Fun, real *DiffFun,
-                           const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
-                           const real *const EoS_Table[EOS_NTABLE_MAX] );
+void Hydro_HTildeFunction (real HTilde, void *params, real *Func, real *DiffFunc );
 #endif
 #endif // #if ( MODEL == HYDRO )
 int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt,
