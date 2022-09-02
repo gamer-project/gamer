@@ -55,22 +55,14 @@ void  NewtonRaphsonSolver( void (*FuncPtr)( real, void*, real*, real* ), void * 
 
 
 #ifdef SRHD
-//-------------------------------------------------------------------------------------------------------
-// MSqr_DSqr       : (|Momentum|/Dens)**2
-// Temp            : The temperature
-// Constant        : The constant on the left side of Eq. A3 in "Tseng et al. 2021, MNRAS, 504, 3298"
-// EoS_HTilde2Temp : EoS routine to compute the temperature
-// EoS_AuxArray_*  : Auxiliary arrays for EoS_DensEint2Pres()
-// EoS_Table       : EoS tables for EoS_DensEint2Pres()
-//-------------------------------------------------------------------------------------------------------
 struct Hydro_HTildeFunction_params_s{
-   real MSqr_DSqr;
-   real Temp;
-   real Constant;
-   EoS_H2TEM_t EoS_HTilde2Temp;
-   const double *EoS_AuxArray_Flt;
-   const int *EoS_AuxArray_Int;
-   const real *const *EoS_Table;
+   real MSqr_DSqr;                  // (|Momentum|/Dens)**2
+   real Temp;                       // Temperature
+   real Constant;                   // Left side of Eq. A3 in "Tseng et al. 2021, MNRAS, 504, 3298"
+   EoS_H2TEM_t EoS_HTilde2Temp;     // EoS routine to compute the temperature
+   const double *EoS_AuxArray_Flt;  // Auxiliary arrays for EoS_HTilde2Temp
+   const int *EoS_AuxArray_Int;     // Auxiliary arrays for EoS_HTilde2Temp
+   const real *const *EoS_Table;    // EoS tables for EoS_HTilde2Temp
 };
 #endif
 
@@ -1331,7 +1323,7 @@ void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm
 // Note        : 1. Solving arbitrary one-dimensional function with N parameters (a1,..,aN)
 //                  --> i.e. f(a1,..,aN; x) = constant
 //               2. Iteration stops when either |x1-x0| < EpsAbs + EpsRel*x0 or number of iterations > threshold
-//                  --> x1/x0          : the estimated solution in current/previous itration
+//                  --> x1/x0          : the estimated solution in current/previous iteration
 //                  --> EpsAbs, EpsRel : See below
 //
 // Parameter   : FuncPtr : Pointer to the target function with the signature as follows:
