@@ -50,10 +50,18 @@ void Hydro_HTildeFunction (real HTilde, void *params, real *Func, real *DiffFunc
 
 
 GPU_DEVICE
-void  NewtonRaphsonSolver( void (*FunPtr)( real, void*, real*, real* ), void * params, const real guess,
+void  NewtonRaphsonSolver( void (*FuncPtr)( real, void*, real*, real* ), void * params, const real guess,
                            const real epsabs, const real epsrel, real *root );
 
 
+//-------------------------------------------------------------------------------------------------------
+// MSqr_DSqr       : (|Momentum|/Dens)**2
+// Temp            : The temperature
+// Constant        : The constant on the left side of Eq. A3 in "Tseng et al. 2021, MNRAS, 504, 3298"
+// EoS_HTilde2Temp : EoS routine to compute the temperature
+// EoS_AuxArray_*  : Auxiliary arrays for EoS_DensEint2Pres()
+// EoS_Table       : EoS tables for EoS_DensEint2Pres()
+//-------------------------------------------------------------------------------------------------------
 struct Hydro_HTildeFunction_params_s{
    real MSqr_DSqr;
    real Temp;
@@ -506,6 +514,17 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
 
 
 #ifdef SRHD
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Hydro_Con2HTilde
+// Description :
+// Note        :
+// Parameter   :
+//
+//
+//
+//                EoS_AuxArray_*  : Auxiliary arrays for EoS_DensEint2Pres()
+//                EoS_Table       : EoS tables for EoS_DensEint2Pres()
+//-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 real Hydro_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                       const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
@@ -518,11 +537,11 @@ real Hydro_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, cons
 
   GuessHTilde = EoS_GuessHTilde( Con, &Constant, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table);
 
-  void (*FunPtr)( real HTilde, void *params, real *Func, real *DiffFunc ) = &Hydro_HTildeFunction;
+  void (*FuncPtr)( real HTilde, void *params, real *Func, real *DiffFunc ) = &Hydro_HTildeFunction;
 
   struct Hydro_HTildeFunction_params_s params =
   { MSqr_DSqr, NAN, -Constant, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table };
-  NewtonRaphsonSolver( FunPtr, &params, GuessHTilde, (real)TINY_NUMBER, (real)MACHINE_EPSILON, &HTilde );
+  NewtonRaphsonSolver( FuncPtr, &params, GuessHTilde, (real)TINY_NUMBER, (real)MACHINE_EPSILON, &HTilde );
 
   return HTilde;
 }
@@ -530,23 +549,20 @@ real Hydro_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, cons
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_HTildeFunction
-// Description :
+// Description :  The right side of Eq. 15 in "Tseng et al. 2021, MNRAS, 504, 3298"
 // Note        :
-// Parameter   :  HTilde          : The reduced specific enthalpy
-//                MSqr_DSqr       : (|Momentum|/Dens)**2
-//                Temp            : The temperature
-//                Constant        : The constant on the left side of Eq. A3 in "Tseng et al. 2021, MNRAS, 504, 3298"
-//                EoS_HTilde2Temp : EoS routine to compute the temperature
-//               *Func             : The function to be numerically solved
-//               *DiffFunc         : The derivative function with respect to the unknown variable
+// Parameter   :  HTilde          : Reduced specific enthalpy
+//                Params          : Pointer to the structure Hydro_HTildeFunction_params_s
+//                Func            : Eq. 15 in "Tseng et al. 2021, MNRAS, 504, 3298"
+//                DiffFunc        : Eq. A1 in "Tseng et al. 2021, MNRAS, 504, 3298"
 //                EoS_AuxArray_*  : Auxiliary arrays for EoS_DensEint2Pres()
 //                EoS_Table       : EoS tables for EoS_DensEint2Pres()
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_HTildeFunction (real HTilde, void *params, real *Func, real *DiffFunc )
+void Hydro_HTildeFunction (real HTilde, void *Params, real *Func, real *DiffFunc )
 {
 
-  struct Hydro_HTildeFunction_params_s *parameters = (struct Hydro_HTildeFunction_params_s *) params;
+  struct Hydro_HTildeFunction_params_s *parameters = (struct Hydro_HTildeFunction_params_s *) Params;
 
   real MSqr_DSqr                    = parameters->MSqr_DSqr;
   real Temp                         = parameters->Temp;
@@ -1297,35 +1313,43 @@ void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :
-// Description :
-// Note        :
-// Parameter   :
+// Function    : NewtonRaphsonSolver
+// Description : The one-dimensional root-finder using the Newton's method
+//
+// Note        : Iteration stops when either |x1-x0| < EpsAbs + EpsRel*x0 or number of iterations > threshold
+//
+// Parameter   : FuncPtr : Target function with N parameters (a1,..,aN) and one unknown (x) to be solved.
+//                         --> i.e. f(a1,..,aN; x) = constant
+//               Params  : Pointer to a user-defined structure that groups the N parameters and the constant
+//               Guess   : Initial guess of x
+//               EpsAbs  : Absolute error between the current and previous solution
+//               EpsRel  : Relative error between the current and previous solution
+//               Root    : Pointer to the root of the target function
+//
+// Return      : Root    : Pointer to the root of the target function
 //-------------------------------------------------------------------------------------------------------
-
-
 GPU_DEVICE
-void  NewtonRaphsonSolver( void (*FunPtr)( real, void*, real*, real* ), void * params, const real guess,
-                           const real epsabs, const real epsrel, real *root )
+void  NewtonRaphsonSolver( void (*FuncPtr)( real, void*, real*, real* ), void * Params, const real Guess,
+                           const real EpsAbs, const real EpsRel, real *Root )
 {
-  int iter = 0;
+  int Iter = 0;
 
 # ifdef FLOAT8
-  int max_iter = 20;
+  int MaxIter = 20;
 # else
-  int max_iter = 10;
+  int MaxIter = 10;
 # endif
 
-  real Func, DiffFunc;
-  real delta;
-  real tolerance;
-  *root = guess;
+  real Func, DiffFunc, Delta, Tolerance;
+
+  *Root = Guess;
 
   do{
 
-      iter++;
+      Iter++;
 
-      FunPtr(*root, params, &Func, &DiffFunc );
+      FuncPtr(*Root, Params, &Func, &DiffFunc );
+
 #     ifdef GAMER_DEBUG
       if ( DiffFunc == (real)0.0 )
          printf( "ERROR : derivative is zero at file <%s>, line <%d>, function <%s> !!\n", ERROR_INFO );
@@ -1335,12 +1359,13 @@ void  NewtonRaphsonSolver( void (*FunPtr)( real, void*, real*, real* ), void * p
          printf( "ERROR : derivative value is not finite at file <%s>, line <%d>, function <%s> !!\n", ERROR_INFO );
 #     endif
 
-       delta = Func/DiffFunc;
-       *root = *root - delta;
+       Delta = Func/DiffFunc;
+       *Root = *Root - Delta;
 
-       tolerance =  epsrel * FABS(*root) + epsabs;
+       Tolerance =  EpsRel * FABS(*Root) + EpsAbs;
 
-  }while ( fabs(delta) >= tolerance && iter < max_iter );
+  }while ( fabs(Delta) >= Tolerance && Iter < MaxIter );
+
 
 }
 
