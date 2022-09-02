@@ -629,6 +629,9 @@ void Aux_Check_Parameter()
 #   if ( defined RSOLVER  &&  RSOLVER != HLLC  &&  RSOLVER != HLLE )
 #     error : ERROR : unsupported Riemann solver for SRHD (HLLC/HLLE) !!
 #   endif
+#   if ( defined FLU_SCHEME  &&  FLU_SCHEME != MHM_RP && FLU_SCHEME != MHM )
+#     error : ERROR : unsupported FLU_SCHEME for SRHD (MHM_RP/MHM) !!
+#   endif
 #  else
 #   if ( defined RSOLVER  &&  RSOLVER != EXACT  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLC )
 #     error : ERROR : unsupported Riemann solver (EXACT/ROE/HLLE/HLLC) !!
