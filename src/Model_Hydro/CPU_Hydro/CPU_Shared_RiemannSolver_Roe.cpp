@@ -37,14 +37,18 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
                                 const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
 #elif ( CHECK_INTERMEDIATE == HLLE )
 void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                               const real Dens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
-                               const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
-                               const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
+                               const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                               const EoS_DP2C_t EoS_DensPres2CSqr, const EoS_GUESS_t EoS_GuessHTilde,
+                               const EoS_H2TEM_t EoS_HTilde2Temp, const EoS_TEM2C_t EoS_Temper2CSqr,
+                               const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                               const real* const EoS_Table[EOS_NTABLE_MAX] );
 #elif ( CHECK_INTERMEDIATE == HLLC )
 void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                               const real Dens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
-                               const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
-                               const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
+                               const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                               const EoS_DP2C_t EoS_DensPres2CSqr, const EoS_GUESS_t EoS_GuessHTilde,
+                               const EoS_H2TEM_t EoS_HTilde2Temp, const EoS_TEM2C_t EoS_Temper2CSqr,
+                               const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                               const real* const EoS_Table[EOS_NTABLE_MAX] );
 #elif ( CHECK_INTERMEDIATE == HLLD )
 void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                const real Dens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
@@ -623,8 +627,7 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
          const real Emag = NULL_REAL;
 #        endif
          I_Pres = Hydro_Con2Pres( I_States[0], I_States[1], I_States[2], I_States[3], I_States[4], Passive,
-                                  CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres,
-                                  EoS_GuessHTilde, EoS_HTilde2Temp,
+                                  CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres, NULL, NULL,
                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
 
 //       if unphysical results occur, recalculate fluxes by a substitute Riemann solver
@@ -640,10 +643,10 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
                                        EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 #           elif ( CHECK_INTERMEDIATE == HLLE )
             Hydro_RiemannSolver_HLLE ( 0, Flux_Out, L, R, MinDens, MinPres, EoS_DensEint2Pres, EoS_DensPres2CSqr,
-                                       EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+                                       NULL, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 #           elif ( CHECK_INTERMEDIATE == HLLC  &&  !defined MHD )
             Hydro_RiemannSolver_HLLC ( 0, Flux_Out, L, R, MinDens, MinPres, EoS_DensEint2Pres, EoS_DensPres2CSqr,
-                                       EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+                                       NULL, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 #           elif ( CHECK_INTERMEDIATE == HLLD  &&  defined MHD )
             Hydro_RiemannSolver_HLLD ( 0, Flux_Out, L, R, MinDens, MinPres, EoS_DensEint2Pres, EoS_DensPres2CSqr,
                                        EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
