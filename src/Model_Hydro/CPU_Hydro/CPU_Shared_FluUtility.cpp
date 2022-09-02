@@ -54,6 +54,7 @@ void  NewtonRaphsonSolver( void (*FuncPtr)( real, void*, real*, real* ), void * 
                            const real epsabs, const real epsrel, real *root );
 
 
+#ifdef SRHD
 //-------------------------------------------------------------------------------------------------------
 // MSqr_DSqr       : (|Momentum|/Dens)**2
 // Temp            : The temperature
@@ -71,6 +72,7 @@ struct Hydro_HTildeFunction_params_s{
    const int *EoS_AuxArray_Int;
    const real *const *EoS_Table;
 };
+#endif
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -515,21 +517,25 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
 
 #ifdef SRHD
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_Con2HTilde
-// Description :
-// Note        :
-// Parameter   :
+// Function    : Hydro_Con2HTilde
+// Description : Conserved variables --> reduced enthalpy
 //
+// Note        : Using Eq. 15 in "Tseng et al. 2021, MNRAS, 504, 3298"
 //
+// Parameter   : Con             : conserved variables
+//               EoS_GuessHTilde : EoS routine to compute guessed reduced enthalpy
+//               EoS_HTilde2Temp : EoS routine to compute temperature
+//               EoS_AuxArray_*  : Auxiliary arrays for EoS_DensEint2Pres()
+//               EoS_Table       : EoS tables for EoS_DensEint2Pres()
 //
-//                EoS_AuxArray_*  : Auxiliary arrays for EoS_DensEint2Pres()
-//                EoS_Table       : EoS tables for EoS_DensEint2Pres()
+// Return      : HTilde          : reduced enthalpy
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 real Hydro_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
-                      const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
-                      const real *const EoS_Table[EOS_NTABLE_MAX] )
+                       const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                       const real *const EoS_Table[EOS_NTABLE_MAX] )
 {
+
   real HTilde, GuessHTilde, MSqr_DSqr, Constant;
 
   MSqr_DSqr  = SQR(Con[1])+SQR(Con[2])+SQR(Con[3]);
@@ -541,22 +547,28 @@ real Hydro_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, cons
 
   struct Hydro_HTildeFunction_params_s params =
   { MSqr_DSqr, NAN, -Constant, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table };
+
   NewtonRaphsonSolver( FuncPtr, &params, GuessHTilde, (real)TINY_NUMBER, (real)MACHINE_EPSILON, &HTilde );
 
   return HTilde;
+
 }
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_HTildeFunction
-// Description :  The right side of Eq. 15 in "Tseng et al. 2021, MNRAS, 504, 3298"
+// Function    : Hydro_HTildeFunction
+// Description : Right side of Eq. 15 in "Tseng et al. 2021, MNRAS, 504, 3298"
+//
 // Note        :
-// Parameter   :  HTilde          : Reduced specific enthalpy
-//                Params          : Pointer to the structure Hydro_HTildeFunction_params_s
-//                Func            : Eq. 15 in "Tseng et al. 2021, MNRAS, 504, 3298"
-//                DiffFunc        : Eq. A1 in "Tseng et al. 2021, MNRAS, 504, 3298"
-//                EoS_AuxArray_*  : Auxiliary arrays for EoS_DensEint2Pres()
-//                EoS_Table       : EoS tables for EoS_DensEint2Pres()
+//
+// Parameter   : HTilde         : Reduced specific enthalpy
+//               Params         : Pointer to the structure `Hydro_HTildeFunction_params_s`
+//               Func           : Eq. 15 in "Tseng et al. 2021, MNRAS, 504, 3298"
+//               DiffFunc       : Eq. A1 in "Tseng et al. 2021, MNRAS, 504, 3298"
+//               EoS_AuxArray_* : Auxiliary arrays for EoS_DensEint2Pres()
+//               EoS_Table      : EoS tables for EoS_DensEint2Pres()
+//
+// Return      : Func, DiffFunc
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_HTildeFunction (real HTilde, void *Params, real *Func, real *DiffFunc )
@@ -1316,22 +1328,31 @@ void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm
 // Function    : NewtonRaphsonSolver
 // Description : The one-dimensional root-finder using the Newton's method
 //
-// Note        : Iteration stops when either |x1-x0| < EpsAbs + EpsRel*x0 or number of iterations > threshold
+// Note        : 1. Solving arbitrary one-dimensional function with N parameters (a1,..,aN)
+//                  --> i.e. f(a1,..,aN; x) = constant
+//               2. Iteration stops when either |x1-x0| < EpsAbs + EpsRel*x0 or number of iterations > threshold
+//                  --> x1/x0          : the estimated solution in current/previous itration
+//                  --> EpsAbs, EpsRel : See below
 //
-// Parameter   : FuncPtr : Target function with N parameters (a1,..,aN) and one unknown (x) to be solved.
-//                         --> i.e. f(a1,..,aN; x) = constant
-//               Params  : Pointer to a user-defined structure that groups the N parameters and the constant
+// Parameter   : FuncPtr : Pointer to the target function with the signature as follows:
+//                         --> (*FuncPtr)( real Unknown, void *Params, real *Func, real *DiffFunc )
+//                             --> Unknown  : Independent variables of the target function
+//                             --> Params   : Pointer to a user-defined structure that groups the N parameters and the `constant`
+//                             --> Func     : Evaluation of FuncPtr at `Unknown`
+//                             --> DiffFunc : Evaluation of the derivative of FuncPtr w.r.t `x` at `Unknown`
+//               Params  : See above
 //               Guess   : Initial guess of x
 //               EpsAbs  : Absolute error between the current and previous solution
 //               EpsRel  : Relative error between the current and previous solution
 //               Root    : Pointer to the root of the target function
 //
-// Return      : Root    : Pointer to the root of the target function
+// Return      : Root
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void  NewtonRaphsonSolver( void (*FuncPtr)( real, void*, real*, real* ), void * Params, const real Guess,
-                           const real EpsAbs, const real EpsRel, real *Root )
+void  NewtonRaphsonSolver( void (*FuncPtr)( real Unknown, void *Params, real *Func, real *DiffFunc ),
+                           void * Params, const real Guess, const real EpsAbs, const real EpsRel, real *Root )
 {
+
   int Iter = 0;
 
 # ifdef FLOAT8
