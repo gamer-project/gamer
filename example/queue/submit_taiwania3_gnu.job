@@ -11,7 +11,7 @@
 #SBATCH --nodes=2                                           # (-N) Maximum number of nodes to be allocated
 #SBATCH --ntasks-per-node=4                                 # Maximum number of tasks on each node
 #SBATCH --cpus-per-task=14                                  # (-c) Number of cores per MPI task
-#SBATCH --mem=65536                                         # Memory limit per compute node for the  job.Do not use with mem-per-cpu flag
+#SBATCH --mem=162400M                                       # Memory limit per compute node for the job. Do not use with mem-per-cpu flag.
 #SBATCH --time=00:30:00                                     # (-t) Wall time limit (days-hrs:min:sec)
 ##SBATCH -o log_taiwania_III
 ##SBATCH -e job.%j.err
