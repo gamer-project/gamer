@@ -17,6 +17,7 @@
 ##SBATCH -e job.%j.err
 ##SBATCH --mail-type=BEGIN,END,FAIL                         # Mail events (NONE, BEGIN, END, FAIL, ALL)
 ##SBATCH --mail-user=EMAIL_ADDRESS                          # Where to send mail.  Set this to your email address
+#SBATCH --exclude=cpn[3001-3120,3241-3360]                  # Exclude large-memory nodes
 
 LOG_FILE=log_taiwania_III_gnu_4.8.5
 
