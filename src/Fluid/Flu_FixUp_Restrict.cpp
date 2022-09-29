@@ -182,9 +182,13 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 
             const real (*RealSonPtr)[PS1][PS1] = amr->patch[SonFluSg][SonLv][SonPID]->fluid[REAL];
             const real (*ImagSonPtr)[PS1][PS1] = amr->patch[SonFluSg][SonLv][SonPID]->fluid[IMAG];
-                  real (*OldFaPtr)[PS1][PS1]   = amr->patch[1-FaFluSg][ FaLv][ FaPID]->fluid[PHAS];
-                  real (*PhasFaPtr)[PS1][PS1]  = amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[PHAS];
-                  real (*StubFaPtr)[PS1][PS1]  = amr->patch[ FaFluSg][ FaLv][ FaPID]->fluid[STUB];
+
+                  real (*NewPhasFaPtr)[PS1][PS1]  = amr->patch[  FaFluSg][ FaLv][ FaPID]->fluid[PHAS];
+                  real (*OldPhasFaPtr)[PS1][PS1]  = amr->patch[1-FaFluSg][ FaLv][ FaPID]->fluid[PHAS];
+                  real (*StubFaPtr)[PS1][PS1]     = amr->patch[  FaFluSg][ FaLv][ FaPID]->fluid[STUB];
+
+                  //Handle that we do not have data of previous time step during initialisation corresponding to a negative time
+                  if ( amr->FluSgTime[FaLv][ 1-FaFluSg ] < 0 ) OldPhasFaPtr = NewPhasFaPtr;
             
             int ii, jj, kk, I, J, K, Ip, Jp, Kp;
             real re, im;
@@ -203,7 +207,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                                ImagSonPtr[K ][Jp][Ip] + ImagSonPtr[Kp][Jp][I ] +
                                ImagSonPtr[Kp][J ][Ip] + ImagSonPtr[Kp][Jp][Ip] );
 
-                  PhasFaPtr[kk][jj][ii] = ELBDM_UnwrapPhase(OldFaPtr[kk][jj][ii], SATAN2(im, re));
+                  NewPhasFaPtr[kk][jj][ii] = ELBDM_UnwrapPhase(OldPhasFaPtr[kk][jj][ii], SATAN2(im, re));
                }
 
                if (TFluVarIdx == IMAG) {
