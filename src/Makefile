@@ -37,7 +37,7 @@ SIMU_OPTION += -DMODEL=ELBDM
 
 
 # enable gravity
-SIMU_OPTION += -DGRAVITY
+#SIMU_OPTION += -DGRAVITY
 
 # enable particles
 # --> must enable GRAVITY
@@ -99,7 +99,7 @@ else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
 # ELBDM scheme: WAVE/HYBRID
 # --> need not be set even when MODEL=ELBDM
 # --> defaults to ELBDM_SCHEME=WAVE
-#SIMU_OPTION += -DELBDM_SCHEME=HYBRID
+SIMU_OPTION += -DELBDM_SCHEME=HYBRID
 
 # enforce the mass conservation
 SIMU_OPTION += -DCONSERVE_MASS
