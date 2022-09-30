@@ -85,14 +85,14 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
                                + Temp[0][kkp][jj ][ii ] + Temp[0][kkm][jj ][ii ] \
                                -  (real) 6.0 * Temp[0][kk ][jj ][ii])\
                                / ((real) 3.0 * Temp[0][kk ][jj ][ii]);   
-      //if (convertWaveToFluid)   
-      //   Cond[1][k][j][i] = 0;
-      //else 
-      Cond[1][k][j][i] =  FABS( Temp[1][kk ][jj ][iip] + Temp[1][kk ][jj ][iim] \
-                              + Temp[1][kk ][jjp][ii ] + Temp[1][kk ][jjm][ii ] \
-                              + Temp[1][kkp][jj ][ii ] + Temp[1][kkm][jj ][ii ] \
-                              -  (real) 6.0 * Temp[1][kk ][jj ][ii])\
-                              / ((real) 3.0);
+      if (convertWaveToFluid)   
+         Cond[1][k][j][i] = 0;
+      else 
+         Cond[1][k][j][i] =  FABS( Temp[1][kk ][jj ][iip] + Temp[1][kk ][jj ][iim] \
+                                 + Temp[1][kk ][jjp][ii ] + Temp[1][kk ][jjm][ii ] \
+                                 + Temp[1][kkp][jj ][ii ] + Temp[1][kkm][jj ][ii ] \
+                                 -  (real) 6.0 * Temp[1][kk ][jj ][ii])\
+                                 / ((real) 3.0);
 
       //printf("QP %f k %i j %i i %i", Cond[0][k][j][i], k, j, i);
    }}} // k,j,i
