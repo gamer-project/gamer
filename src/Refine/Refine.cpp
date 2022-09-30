@@ -1069,35 +1069,6 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 
-// (c1.3.6) convert density/phase to density/real part/imaginary part in hybrid scheme if we switch the level from phase to wave
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
-   if ( switchNextLevelsToWaveScheme ) {
-      //Set corresponding flag
-      for (int level = lv + 1; level < NLEVEL; ++level) {
-         printf("Converting level %i to wave scheme\n\n", level);
-         amr->use_wave_flag[level] = true; 
-         const int LvFluSg = amr->FluSg[level];
-
-         real amp, phase;
-         for (int PID=0; PID<amr->NPatchComma[level][1]; PID++)
-         {
-            for (int LocalID=0; LocalID<8; LocalID++)
-            {
-      //       fluid data
-               for (int k=0; k<PS1; k++)  {
-               for (int j=0; j<PS1; j++)  {
-               for (int i=0; i<PS1; i++)  {
-                  amp   = SQRT(amr->patch[LvFluSg][level][PID]->fluid[DENS][k][j][i]);
-                  phase =      amr->patch[LvFluSg][level][PID]->fluid[PHAS][k][j][i];
-                  amr->patch[LvFluSg][level][PID]->fluid[REAL][k][j][i] = amp * COS(phase);
-                  amr->patch[LvFluSg][level][PID]->fluid[IMAG][k][j][i] = amp * SIN(phase);
-               }}}
-            } // for (int LocalID=0; LocalID<8; LocalID++)
-         } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-      } // for (int level = lv + 1; level < NLEVEL; ++level)
-
-   } // if ( switchNextLevelToWaveScheme )
-#   endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID)
 
 // free memory
 #  ifdef MHD
@@ -1160,6 +1131,40 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 // get the total number of patches at lv+1
    Mis_GetTotalPatchNumber( lv+1 );
+
+// (c1.3.6) convert density/phase to density/real part/imaginary part in hybrid scheme if we switch the level from phase to wave
+#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
+   if ( switchNextLevelsToWaveScheme ) {
+
+      printf("Max level %i: \n", MAX_LEVEL);
+
+      //Set corresponding flag
+      for (int level = lv + 1; level <= MAX_LEVEL; ++level) {
+         printf("Converting level %i to wave scheme\n\n", level);
+         int counter = 0;
+         amr->use_wave_flag[level] = true; 
+
+         printf("PID count = %d\n", amr->NPatchComma[level][1]);
+
+         real amp, phase;
+         for (int PID=0; PID<amr->NPatchComma[level][1]; PID++)
+         {
+//          fluid data
+            for (int LvFluSg = 0; LvFluSg < 2; ++LvFluSg) {
+            for (int k=0; k<PS1; k++)  {
+            for (int j=0; j<PS1; j++)  {
+            for (int i=0; i<PS1; i++)  {
+               amp   = SQRT(amr->patch[LvFluSg][level][PID]->fluid[DENS][k][j][i]);
+               phase =      amr->patch[LvFluSg][level][PID]->fluid[PHAS][k][j][i];
+               amr->patch[LvFluSg][level][PID]->fluid[REAL][k][j][i] = amp * COS(phase);
+               amr->patch[LvFluSg][level][PID]->fluid[IMAG][k][j][i] = amp * SIN(phase);
+               printf("Counter %d PID %d Sg %d k %d j %d i %d amp %f phase %f real %f imag %f\n", counter++, PID, LvFluSg, k, j, i, amp, phase, amp * COS(phase), amp * SIN(phase));
+            }}}}
+         } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+      } // for (int level = lv + 1; level < NLEVEL; ++level)
+
+   } // if ( switchNextLevelToWaveScheme )
+#   endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID)
 
 } // FUNCTION : Refine
 
