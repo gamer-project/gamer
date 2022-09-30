@@ -159,6 +159,7 @@ void Init_ByFile_ELBDM_LSS( real fluid_out[], const real fluid_in[], const int n
                             const double x, const double y, const double z, const double Time,
                             const int lv, double AuxArray[] )
 {
+   double Re, Im;
 
    switch ( LSS_InitMode )
    {
@@ -169,8 +170,8 @@ void Init_ByFile_ELBDM_LSS( real fluid_out[], const real fluid_in[], const int n
          const double AveDens     = 1.0;        // assuming background density = 1.0
          const double GrowingFrac = 3.0/5.0;    // growing-mode amplitude = total amplitude * 3/5
 
-         fluid_out[REAL] = sqrt( (fluid_in[0]-AveDens )/GrowingFrac + AveDens );
-         fluid_out[IMAG] = 0.0;  // constant phase
+         Re = sqrt( (fluid_in[0]-AveDens )/GrowingFrac + AveDens );
+         Im = 0.0;  // constant phase
          break;
       }
 
@@ -178,8 +179,8 @@ void Init_ByFile_ELBDM_LSS( real fluid_out[], const real fluid_in[], const int n
       {
          if ( nvar_in != 2 )  Aux_Error( ERROR_INFO, "nvar_in (%d) != 2 for LSS_InitMode 2 !!\n", nvar_in );
 
-         fluid_out[REAL] = fluid_in[0];
-         fluid_out[IMAG] = fluid_in[1];
+         Re = fluid_in[0];
+         Im = fluid_in[1];
          break;
       }
 
@@ -188,7 +189,19 @@ void Init_ByFile_ELBDM_LSS( real fluid_out[], const real fluid_in[], const int n
                     "LSS_InitMode", LSS_InitMode );
    } // switch ( LSS_InitMode )
 
-   fluid_out[DENS] = SQR( fluid_out[REAL] ) + SQR( fluid_out[IMAG] );
+   fluid_out[DENS] = SQR( Re ) + SQR( Im );
+
+#  if ( ELBDM_SCHEME == HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+#  endif 
+   fluid_out[REAL] = Re;
+   fluid_out[IMAG] = Im;
+#  if ( ELBDM_SCHEME == HYBRID )
+   } else { // if ( amr->use_wave_flag[lv] )
+   fluid_out[PHAS] = SATAN2(Im, Re);
+   fluid_out[STUB] = 0.0;
+   } // if ( amr->use_wave_flag[lv] ) ... else
+#  endif 
 
 } // Init_ByFile_ELBDM_LSS
 #endif // #if ( MODEL == ELBDM )
