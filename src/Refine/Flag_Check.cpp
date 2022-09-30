@@ -65,12 +65,22 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
    {
       real (*Var)  [PS1 ][PS1 ][PS1 ] = ( real(*) [PS1 ][PS1 ][PS1 ] )  Interf_Cond;
       
-      bool FlagInterference  =  ELBDM_Flag_Interference( i, j, k, Interf_Cond,             FlagTable_Interference[lv][0]) \
-                             || ELBDM_Flag_Interference( i, j, k, Interf_Cond + CUBE(PS1), FlagTable_Interference[lv][1]);
+      bool FlagInterferenceOne  =  ELBDM_Flag_Interference( i, j, k, Interf_Cond,             FlagTable_Interference[lv][0]);
+      bool FlagInterferenceTwo  =  ELBDM_Flag_Interference( i, j, k, Interf_Cond + CUBE(PS1), FlagTable_Interference[lv][1]);
       
-      Flag |= FlagInterference;
+#     ifdef GAMER_DEBUG
+      if (FlagInterferenceOne) {
+         Aux_Message( stdout, "Information: QP Interfence on level %d at i %d j %d k %d\n", lv, i, j, k);
+      }      
+      if (FlagInterferenceTwo) {
+         Aux_Message( stdout, "Information: Phase Interfence on level %d at i %d j %d k %d\n", lv, i, j, k);
+      }
+#     endif 
 
-      amr->patch[0][lv][PID]->use_wave_flag = ( FlagInterference &&  FlagTable_Interference[lv][2] >= 0.0);
+      Flag |= FlagInterferenceOne;
+      Flag |= FlagInterferenceTwo;
+
+      amr->patch[0][lv][PID]->use_wave_flag = ( Flag &&  FlagTable_Interference[lv][2] >= 0.0);
 
       //Only refine if we are not already using the wave scheme
       if ( Flag )
