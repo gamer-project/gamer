@@ -1098,12 +1098,20 @@ void Aux_Check_Parameter()
 
 #  if ( ELBDM_SCHEME == HYBRID )
    if ( DT__HYBRID < 0.0  ||  DT__HYBRID > 0.4 )
-      Aux_Message( stderr, "WARNING : DT__HYBRID (%14.7e) is not within the normal range [0...1] !!\n",
+      Aux_Message( stderr, "WARNING : DT__HYBRID (%14.7e) is not within the normal range [0...0.4] !!\n",
                    DT__HYBRID );
    if ( DT__VELOCITY < 0.0  ||  DT__VELOCITY > 1.0 )
       Aux_Message( stderr, "WARNING : DT__VELOCITY (%14.7e) is not within the normal range [0...1] !!\n",
                    DT__VELOCITY );
+
+   if ( !OPT__FLAG_INTERFERENCE )
+      Aux_Error(  ERROR_INFO, "ERROR : hybrid scheme requires the interference flag to work properly !!\n");
+      
+   if ( !OPT__FIXUP_RESTRICT )
+      Aux_Error(  ERROR_INFO, "ERROR : hybrid scheme requires the restrict operation OPT__FIXUP_RESTRICT !! !!\n");
+
 #  endif // # if ( ELBDM_SCHEME == HYBRID )
+
    if ( OPT__CK_FLUX_ALLOCATE  &&  !OPT__FIXUP_FLUX )
       Aux_Message( stderr, "WARNING : %s is useless since %s is off !!\n",
                    "OPT__CK_FLUX_ALLOCATE", "OPT__FIXUP_FLUX" );
