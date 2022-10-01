@@ -982,7 +982,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #                 endif
                   fprintf( File, ")\n" );
 
-                  fprintf( File, "ouptut (old) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
+                  fprintf( File, "output (old) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
                            Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
                            Hydro_Con2Eint(Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
                                           CheckMinEint_No, NULL_REAL, Emag_Out) );
