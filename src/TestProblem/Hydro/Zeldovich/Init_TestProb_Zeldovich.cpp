@@ -32,11 +32,12 @@ struct Zeldovich_coord_params
    double x_shift_input, zi_Initial;
 };
 static double Zeldovich_coord_transformation(double x_Lagrangian_Trial, void *params);
-static double Zeldovich_coord_transformation_solver(double x_shift_input, double zi_Initial);
-static double Zeldovich_density_profile(double x_Lagrangian, double zi_Initial);
-static double Zeldovich_x_velocity_profile(double x_Lagrangian, double zi_Initial);
 static void OutputError();
-
+#ifdef SUPPORT_GSL
+   static double Zeldovich_coord_transformation_solver(double x_shift_input, double zi_Initial);
+   static double Zeldovich_density_profile(double x_Lagrangian, double zi_Initial);
+   static double Zeldovich_x_velocity_profile(double x_Lagrangian, double zi_Initial);
+#endif
 
 
 
@@ -69,6 +70,11 @@ void Validate()
    Aux_Error( ERROR_INFO, "COMOVING must be enabled !!\n" );
 #  endif
 
+#  ifdef COMOVING
+   if ( OMEGA_M0 != 1 )
+      Aux_Error( ERROR_INFO, "OMEGA_M0 != 1 (matter-only) for this test !!\n");
+#  endif
+
 #  ifdef GRAVITY
    if ( OPT__BC_FLU[0] != BC_FLU_PERIODIC  ||  OPT__BC_POT != BC_POT_PERIODIC )
       Aux_Error( ERROR_INFO, "must adopt periodic BC for this test !!\n" );
@@ -76,9 +82,6 @@ void Validate()
 
    if ( OPT__INIT != INIT_BY_FUNCTION  &&  OPT__INIT != INIT_BY_RESTART )
       Aux_Error( ERROR_INFO, "OPT__INIT != FUNCTION (1) or RESTART (2) for this test !!\n" );
-
-   if ( OMEGA_M0 != 1 )
-      Aux_Error( ERROR_INFO, "OMEGA_M0 != 1 (matter-only) for this test !!\n");
 
 #  ifndef FLOAT8
    Aux_Error( ERROR_INFO, "FLOAT8 must be enabled !!\n" );
@@ -149,12 +152,14 @@ void SetParameter()
 
 
 // (2) set the problem-specific derived parameters
+#  ifdef COMOVING
    H0            = HUBBLE0*(100*Const_km/(Const_s*Const_Mpc))*UNIT_T;
    Pert_Wave_Len = amr->BoxSize[0]/n_Pert_Wave_Len;
    rho_crit_i    = 1;             // [UNIT_D]; comoving critical density = 3H0^2/8*pi*G
    k_Pert        = 2.0*M_PI/Pert_Wave_Len;
    dhx           = amr->BoxSize[0] / NPar_X;
    NPar_YZ       = amr->BoxSize[1] / dhx;
+#  endif
 
 
 // (3) reset other general-purpose parameters
@@ -255,7 +260,7 @@ double Zeldovich_x_velocity_profile(double x_Lagrangian, double zi_Initial)
 {
    return (-H0*(1+zc_Collapse)/sqrt(1+zi_Initial)/(1+zi_Initial))*(sin(k_Pert*x_Lagrangian)/k_Pert);
 }
-#endif
+#endif // #ifdef SUPPORT_GSL
 
 
 
@@ -279,6 +284,7 @@ double Zeldovich_x_velocity_profile(double x_Lagrangian, double zi_Initial)
    void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                   const int lv, double AuxArray[] )
    {
+   #ifdef COMOVING
    #ifdef SUPPORT_GSL
 //    compute relevant physical quantities
       zi_Initial = (1/Time) - 1;
@@ -316,6 +322,7 @@ double Zeldovich_x_velocity_profile(double x_Lagrangian, double zi_Initial)
       fluid[MOMZ] = MomZ;
       fluid[ENGY] = Etot;
    #endif // #ifdef SUPPORT_GSL
+   #endif // #ifdef COMOVING
       }
    #  endif //  #if ( MODEL == HYDRO )
 
@@ -360,6 +367,7 @@ void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_Al
                                   real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                   real *ParType, real *AllAttribute[PAR_NATT_TOTAL] )
 {
+   #ifdef SUPPORT_GSL
    if ( Gas_Par_Setup == 2 )
    {
       zi_Initial = (1/Time[0]) - 1;
@@ -454,6 +462,7 @@ void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_Al
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
    }
+   #endif // #ifdef SUPPORT_GSL
 } // FUNCTION : Par_Init_ByFunction_Zeldovich
 
 
