@@ -16,8 +16,8 @@ using std::string;
 // function pointers to be set by FB_Init_User_Template()
 extern void (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
                             const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-                            real (*Fluid)[PS2][PS2][PS2], const double EdgeL[], const double dh, bool CoarseFine[],
-                            const int TID, RandomNumber_t *RNG );
+                            real (*Fluid)[PS2][PS2][PS2], const double EdgeL[], const double dh,
+			    bool CoarseFine[], const int TID, RandomNumber_t *RNG );
 extern void (*FB_End_User_Ptr)();
 
 
@@ -32,7 +32,7 @@ real FB_WindEjectEnergy( const real age );
 
 real FB_SNeEjectMass( const real age );
 
-void FB_UVFeedback( float (*Fluid)[PS2][PS2][PS2], const real particleIonizingLuminosity, 
+void FB_UVFeedback( float (*Fluid)[PS2+2][PS2+2][PS2+2], const real particleIonizingLuminosity, 
                     const int pararticleWillExplode, const int idx[], const double dh );
 
 void FB_WindFeedback( const real particleAge, real &windEjectMass, real &windEjectEnergy, 

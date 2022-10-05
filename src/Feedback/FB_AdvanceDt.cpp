@@ -7,15 +7,15 @@
 // prototypes of built-in feedbacks
 void FB_SNe( const int lv, const double TimeNew, const double TimeOld, const double dt,
              const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-             real (*Fluid)[PS2][PS2][PS2], const double EdgeL[], const double dh, bool CoarseFine[],
-             const int TID, RandomNumber_t *RNG );
+             real (*Fluid)[PS2+2][PS2+2][PS2+2], const double EdgeL[], const double dh,
+	     bool CoarseFine[], const int TID, RandomNumber_t *RNG );
 
 
 // user-specified feedback to be set by a test problem initializer
 void (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
                      const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-                     real (*Fluid)[PS2][PS2][PS2], const double EdgeL[], const double dh, bool CoarseFine[],
-                     const int TID, RandomNumber_t *RNG ) = NULL;
+                     real (*Fluid)[PS2+2][PS2+2][PS2+2], const double EdgeL[], const double dh,
+		     bool CoarseFine[], const int TID, RandomNumber_t *RNG ) = NULL;
 
 
 // random number generators
@@ -124,7 +124,10 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 
 // array to store the input and output fluid data
-   real (*fluid_PG)[PS2][PS2][PS2] = new real [NCOMP_TOTAL][PS2][PS2][PS2];
+   const int NGhost  = 1;
+   const int NCellIn = PS2 + 2*NGhost;
+   real (*fluid_PG)[NCellIn][NCellIn][NCellIn] = new real [NCOMP_TOTAL][NCellIn][NCellIn][NCellIn];
+   //real (*fluid_PG)[PS2][PS2][PS2] = new real [NCOMP_TOTAL][PS2][PS2][PS2];
 
 
 // iterate over all real patches
@@ -139,7 +142,6 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //    3. prepare the fluid data to be updated
 //    --> exclude magnetic field for now
 //    --> use patch group as the basic unit
-      const int  GhostZone_No        = 0;
       const int  NPG                 = 1;
 #     ifndef MHD
       const int  OPT__MAG_INT_SCHEME = INT_NONE;
@@ -152,8 +154,8 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //###OPTIMIZATION: only prepare the necessary fluid fields
       const long FluidBitIdx         = _TOTAL;
 
-      Prepare_PatchData( lv, TimeNew, fluid_PG[0][0][0], NULL, GhostZone_No, NPG, &PID0, FluidBitIdx, _NONE,
-                         OPT__FLU_INT_SCHEME, OPT__MAG_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_00, IntPhase_No,
+      Prepare_PatchData( lv, TimeNew, fluid_PG[0][0][0], NULL, NGhost, NPG, &PID0, FluidBitIdx, _NONE,
+                         OPT__FLU_INT_SCHEME, OPT__MAG_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
                          OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, DE_Consistency_No );
 
 
@@ -368,16 +370,16 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
       for (int LocalID=0; LocalID<8; LocalID++)
       {
          const int PID    = PID0 + LocalID;
-         const int Disp_i = TABLE_02( LocalID, 'x', 0, PS1 );
-         const int Disp_j = TABLE_02( LocalID, 'y', 0, PS1 );
-         const int Disp_k = TABLE_02( LocalID, 'z', 0, PS1 );
+         const int Disp_i = TABLE_02( LocalID, 'x', NGhost, NCellIn/2 );
+         const int Disp_j = TABLE_02( LocalID, 'y', NGhost, NCellIn/2 );
+         const int Disp_k = TABLE_02( LocalID, 'z', NGhost, NCellIn/2 );
 
          for (int v=0; v<NCOMP_TOTAL; v++)   {
 
             if ( FluidBitIdx & BIDX(v) )
-            for (int k_o=0; k_o<PS1; k_o++)  {  const int k_i = Disp_k + k_o;
-            for (int j_o=0; j_o<PS1; j_o++)  {  const int j_i = Disp_j + j_o;
-            for (int i_o=0; i_o<PS1; i_o++)  {  const int i_i = Disp_i + i_o;
+            for (int k_o=0; k_o<NCellIn/2; k_o++)  {  const int k_i = Disp_k + k_o;
+            for (int j_o=0; j_o<NCellIn/2; j_o++)  {  const int j_i = Disp_j + j_o;
+            for (int i_o=0; i_o<NCellIn/2; i_o++)  {  const int i_i = Disp_i + i_o;
 
                amr->patch[SaveSg_Flu][lv][PID]->fluid[v][k_o][j_o][i_o] = fluid_PG[v][k_i][j_i][i_i];
 

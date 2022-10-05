@@ -59,22 +59,14 @@ void Par_Init_ByFunction_Feedback( const long NPar_ThisRank, const long NPar_All
    ParData_AllRank[PAR_VELY] = new real [NPar_AllRank];
    ParData_AllRank[PAR_VELZ] = new real [NPar_AllRank];
 
-
-// initialize the particle creation time by an arbitrary negative value since it is
-// only used for star particles created during evolution and is useless during initialization
-// #  ifdef STAR_FORMATION
-//    for (int p=0; p<NPar_AllRank; p++)    AllAttribute[Idx_ParCreTime][p] = 0.000000;
-// #  endif
-
-
-// set other particle attributes
 // ============================================================================================================
    real *ParPos[3] = { ParPosX, ParPosY, ParPosZ };
    real *ParVel[3] = { ParVelX, ParVelY, ParVelZ };
-   
-   const uint RSeed     = 2;                                 // random seed
+
+   const real boxsize   = amr->BoxSize[0/1/2];		     // size of test box
+   const int  RSeed     = 2;                                 // random seed
    const real MassMin   = 10.0;                              // minimum value of particle mass
-   const real MassMax   = 100.0;                             // maximum value of particle mass
+   const real MassMax   = 1000.0;                            // maximum value of particle mass
 
    srand( RSeed );
 
@@ -102,8 +94,7 @@ void Par_Init_ByFunction_Feedback( const long NPar_ThisRank, const long NPar_All
    {
       for (int d=0; d<3; d++)
       {
-//         ParPos[d][p] = 0.5;
-	 ParData_AllRank[PAR_POSX+d][p] = (double) rand() / (RAND_MAX + 1.0 );
+	 ParData_AllRank[PAR_POSX+d][p] = 0.5078125 * boxsize; 
          ParData_AllRank[PAR_VELX+d][p] = 0.0;
       }
    }
@@ -111,6 +102,11 @@ void Par_Init_ByFunction_Feedback( const long NPar_ThisRank, const long NPar_All
 // ============================================================================================================
    }// if ( MPI_Rank == 0 )
 
+// initialize the particle creation time by an arbitrary negative value since it is
+// only used for star particles created during evolution and is useless during initialization
+#  ifdef STAR_FORMATION
+   for (int p=0; p<NPar_ThisRank; p++)    AllAttribute[Idx_ParCreTime][p] = 0.000000;
+#  endif
 
 // send particle attributes from the master rank to all ranks
    Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL, ParData_AllRank, AllAttribute );

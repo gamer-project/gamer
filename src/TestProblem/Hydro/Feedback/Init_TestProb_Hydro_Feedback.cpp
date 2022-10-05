@@ -33,8 +33,8 @@ void FB_Init_SNe();
 
 void FB_SNe( const int lv, const double TimeNew, const double TimeOld, const double dt,
              const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-             real (*Fluid)[PS2][PS2][PS2], const double EdgeL[], const double dh, bool CoarseFine[],
-             const int TID, RandomNumber_t *RNG );
+             real (*Fluid)[PS2+2][PS2+2][PS2+2], const double EdgeL[], const double dh, 
+	     bool CoarseFine[], const int TID, RandomNumber_t *RNG );
 
 void FB_End_SNe();
 
@@ -246,14 +246,12 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    MomX = 0.0;
    MomY = 0.0;
    MomZ = 0.0;
-//   Pres = Feedback_Test_Eg * UNIT_P;
-//   Temp = 15.0;
+   Temp = Feedback_Temp_Bg;
+   Pres = EoS_DensTemp2Pres_CPUPtr( Dens, Temp, NULL, EoS_AuxArray_Flt,
+				    EoS_AuxArray_Int, h_EoS_Table ); // assuming EoS requires no passive scalars
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
                                     EoS_AuxArray_Int, h_EoS_Table ); // assuming EoS requires no passive scalars
-//   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );         // do NOT include magnetic energy here
    Etot = Feedback_Test_Eg;
-   Temp = EoS_DensEint2Temp_CPUPtr( Dens, Eint, NULL, EoS_AuxArray_Flt,
-                                    EoS_AuxArray_Int, h_EoS_Table );
 //   printf("temperature = %e\n", Temp);
 //   printf("energy = %e\n", Etot);
 
