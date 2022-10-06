@@ -5,7 +5,7 @@ void Prepare_for_Lohner( const OptLohnerForm_t Form, const real *Var1D, real *Av
 
 #if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *Cond1D, bool convertWaveToFluid);
-#endif 
+#endif // #if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
 
 
@@ -60,7 +60,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    //Interference criterion
    const int  Interf_NGhost           = 1;                     // number of ghost cells for the interference criterion
    const int  Interf_NCell            = PS1 + 2*Interf_NGhost; // size of the variable array for interference criterion
-   const int  Interf_NCond            = PS1;                   // size of the curvature array for interference criterion
+   const int  Interf_NCond            = PS1;                   // size of the array for interference criterion
    const IntScheme_t Interf_IntScheme = INT_MINMOD1D;          // interpolation scheme for interference criterion
 #  endif 
 
@@ -108,15 +108,16 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #  elif ( MODEL == ELBDM )
    if ( OPT__FLAG_LOHNER_DENS )
    {
-      Lohner_NVar = 2;
 
 #     if ( ELBDM_SCHEME == HYBRID )
-      if (amr->use_wave_flag[lv]) {
+      if ( amr->use_wave_flag[lv] ) {
 #     endif 
+      Lohner_NVar = 2;
       Lohner_TVar = _REAL | _IMAG;
 #     if ( ELBDM_SCHEME == HYBRID )
       } else { //if (amr->use_wave_flag[lv]) {
-      Lohner_TVar = _DENS | _PHAS;
+      //by setting Lohner_NVar to zero, we effectively turn off the Lohner criterion for the levels using the phase scheme
+      Lohner_NVar = 0;
       } // if (amr->use_wave_flag[lv]) { ... else 
 #     endif 
    }
@@ -125,8 +126,9 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    if ( OPT__FLAG_INTERFERENCE )
    {
       if (  amr->use_wave_flag[lv] ) {
-         Interf_NVar = 3;
-         Interf_TVar = _DENS | _REAL | _IMAG;   
+      //by setting Interf_NVar to zero, we effectively turn off the interference criterion for the levels using the wave scheme
+         Interf_NVar = 0;
+         //Interf_TVar = _DENS | _REAL | _IMAG;   
       } else {
          Interf_NVar = 2;
          Interf_TVar = _DENS | _PHAS;   
@@ -172,7 +174,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       real *Lohner_Slope                 = NULL;   // array storing the slopes of Lohner_Var for Lohner
       real *Interf_Var                   = NULL;   // array storing the density and phase for the interference criterion
       real *Interf_Temp                  = NULL;   // array storing the square root of the density and the ratios of subsequent gradients for the interference criterion
-      real *Interf_Cond                  = NULL;   // array storing the quantum pressure and phase jumps for the interference criterion
+      real *Interf_Cond                  = NULL;   // array storing the quantum pressure, phase curvature and phase discrete differences for the interference criterion
 
       int  i_start, i_end, j_start, j_end, k_start, k_end, SibID, SibPID, PID;
       bool ProperNesting, NextPatch;
@@ -200,7 +202,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       if ( Interf_NVar > 0 ) {
          Interf_Var       = new real [ 8 * Interf_NVar*Interf_NCell *Interf_NCell *Interf_NCell  ]; // 8: number of local patches;
          Interf_Temp      = new real [ 2 *             Interf_NCell *Interf_NCell *Interf_NCell  ];
-         Interf_Cond      = new real [ 2 *             Interf_NCond *Interf_NCond *Interf_NCond  ];
+         Interf_Cond      = new real [ 3 *             Interf_NCond *Interf_NCond *Interf_NCond  ];
       }
 #     endif
 
@@ -229,7 +231,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
             Prepare_PatchData( lv, Time[lv], Interf_Var, NULL, Interf_NGhost, NPG, &PID0, Interf_TVar, _NONE,
                                Interf_IntScheme, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
                                MinDens, MinPres, MinTemp, MinEntr, DE_Consistency_No );
-#     endif
+#     endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
 //       loop over all local patches within the same patch group
          for (int LocalID=0; LocalID<8; LocalID++)
@@ -505,7 +507,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 //                         separate treatment of use_wave_flag since it is set in FlagCheck()
                            if ( amr->patch[0][lv][PID]->use_wave_flag && SibPID >= 0 )   
                               amr->patch[0][lv][SibPID]->use_wave_flag = true;
-#                          endif  // #if ( ELBDM_SCHEME == HYBRID )
+#                          endif // #if ( ELBDM_SCHEME == HYBRID )
                         }
                      }
 

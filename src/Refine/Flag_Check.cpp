@@ -32,8 +32,8 @@ extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int l
 //                ParDens      : Input array storing the particle mass density on each cell
 //                JeansCoeff   : Pi*GAMMA/(SafetyFactor^2*G), where SafetyFactor = FlagTable_Jeans[lv]
 //                               --> Flag if dh^2 > JeansCoeff*Pres/Dens^2
+//                Phase_Slope  : Input array storing the slope of the phase field to determine whether the dB wavelength is resolved
 //                Interf_Cond  : Input array storing the dimensionless quantum pressures for the interference condition
-//                PhaJump_Cond : Input array storing the ratio of subsequent gradients of the phase 
 //
 // Return      :  "true"  if any  of the refinement criteria is satisfied
 //                "false" if none of the refinement criteria is satisfied
@@ -67,11 +67,11 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
       
       bool FlagInterferenceOne  =  ELBDM_Flag_Interference( i, j, k, Interf_Cond,             FlagTable_Interference[lv][0]);
       bool FlagInterferenceTwo  =  ELBDM_Flag_Interference( i, j, k, Interf_Cond + CUBE(PS1), FlagTable_Interference[lv][1]);
-      
+
 #     ifdef GAMER_DEBUG
-      if (FlagInterferenceOne) {
-         Aux_Message( stdout, "Information: QP Interfence on level %d at i %d j %d k %d\n", lv, i, j, k);
-      }      
+      //if (FlagInterferenceOne) {
+      //   Aux_Message( stdout, "Information: QP Interfence on level %d at i %d j %d k %d\n", lv, i, j, k);
+      //}      
       if (FlagInterferenceTwo) {
          Aux_Message( stdout, "Information: Phase Interfence on level %d at i %d j %d k %d\n", lv, i, j, k);
       }
@@ -80,9 +80,15 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
       Flag |= FlagInterferenceOne;
       Flag |= FlagInterferenceTwo;
 
-      amr->patch[0][lv][PID]->use_wave_flag = ( Flag &&  FlagTable_Interference[lv][2] >= 0.0);
+      if ( Flag &&  FlagTable_Interference[lv][2] >= 0.0 ) {
+         bool dBResolvedAfterRefine = ! ELBDM_Flag_Interference( i, j, k, Interf_Cond + 2 * CUBE(PS1), M_PI );
+         if ( !dBResolvedAfterRefine ) {
+            Aux_Message( stdout, "Information: Interference but phase difference between neighbouring points still bigger than PI at lv %d PID %d\n", lv, PID);
+         }
+         
+         amr->patch[0][lv][PID]->use_wave_flag =  true;
+      }
 
-      //Only refine if we are not already using the wave scheme
       if ( Flag )
             return Flag;
    }

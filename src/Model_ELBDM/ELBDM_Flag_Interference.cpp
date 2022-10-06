@@ -6,9 +6,7 @@
 // Function    :  ELBDM_Flag_Interference
 // Description :  Flag according to the interference criterion 
 //
-// Note        :  1. Flag the input cell if the interference criterion is met
-//                   Level of interference can be quantified by 
-//                   M_int = dh^2 / dim * laplace sqrt(rho) / sqrt(rho)
+// Note        :  1. Flag the input cell if the interference criteria are met (Interference, Phase jumps and additional check whether dB wavelength is resolved)
 //                2. Size of the input array "Cond_Array" should be PATCH_SIZE^3 
 //
 // Parameter   :  i,j,k       : Indices of the target cell in the arrays "Cond_Array"
@@ -38,17 +36,18 @@ bool ELBDM_Flag_Interference( const int i, const int j, const int k, const real 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Prepare_for_Interference_Criterion
-// Description :  Evaluate quantum pressure and phase jumps for the interference criterium
+// Description :  Evaluate quantum pressure, phase jumps and whether dB wavelength will be resolved after refinement for the interference criterium
 //
 // Note        :  1. This function is called in "Flag_Real" before looping over all cells in the patch in order to
 //                   achieve higher performance
-//                2. Evaluate laplacian with second-order stencil and phase jumps via ratios of subsequent gradients
+//                2. Evaluate laplacian with second-order stencil and dB wavelength via first-order stencil
 //                3. Do not take into account the physical size of each cell since criteria are dimensionless
-//                4. The sizes of the arrays (Dens1D, SqrtDens1D, QP1D) must be ( (PS1+2)^3, (PS1+2)^3, (PS1)^3 )
+//                4. The sizes of the arrays (Var1D, Temp1D, Cond1D) must be ( (PS1+2)^3, (PS1+2)^3, 3*(PS1)^3 )
 //
 // Parameter   :  Var       : Array storing the input density and phase/re & im for the interference criterion
 //                Temp      : Array to store the intermediate variable sqrt(density)
-//                Cond      : Array to store the output dimensionless quantum pressures for the interference criterion
+//                Cond      : Array to store the output dimensionless quantum pressure, the curvature of the phase field as well as 
+//                            the maximum phase difference between neighbouring points
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
@@ -68,9 +67,12 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
    for (int k=0; k<NCell; k++)    {
    for (int j=0; j<NCell; j++)    {
    for (int i=0; i<NCell; i++)    {
+      //Compute square root of density field
       Temp[0][k][j][i] = SQRT(Var[DENS][k][j][i]);
+
+      //Check whether we are on fluid level and convert imaginary and real parts to phase accordingly
       if ( convertWaveToFluid ) {
-         Temp[1][k][j][i] = SATAN2(Var[IMAG][k][j][i], Var[REAL][k][j][i]);
+         Temp[1][k][j][i] = 0;//SATAN2(Var[IMAG][k][j][i], Var[REAL][k][j][i]);
       } else {
          Temp[1][k][j][i] = Var[PHAS][k][j][i];
       }
@@ -80,21 +82,34 @@ void Prepare_for_Interference_Criterion(const real *Var1D, real *Temp1D, real *C
    for (int j=0; j<NCond; j++)    {  jj = j + 1;   jjp = jj + 1;   jjm = jj - 1;
    for (int i=0; i<NCond; i++)    {  ii = i + 1;   iip = ii + 1;   iim = ii - 1;
 
+      //Compute the dimensionless quantum pressure (divided by number of dimensions for normalisation)
       Cond[0][k][j][i] =  FABS(  Temp[0][kk ][jj ][iip] + Temp[0][kk ][jj ][iim] \
                                + Temp[0][kk ][jjp][ii ] + Temp[0][kk ][jjm][ii ] \
                                + Temp[0][kkp][jj ][ii ] + Temp[0][kkm][jj ][ii ] \
                                -  (real) 6.0 * Temp[0][kk ][jj ][ii])\
                                / ((real) 3.0 * Temp[0][kk ][jj ][ii]);   
-      if (convertWaveToFluid)   
+      if (convertWaveToFluid)   {
          Cond[1][k][j][i] = 0;
-      else 
+         Cond[2][k][j][i] = 0;
+      } else {
+         //Check second derivative of phase field (divided by number of dimensions for normalisation) to detect phase jumps
          Cond[1][k][j][i] =  FABS( Temp[1][kk ][jj ][iip] + Temp[1][kk ][jj ][iim] \
                                  + Temp[1][kk ][jjp][ii ] + Temp[1][kk ][jjm][ii ] \
                                  + Temp[1][kkp][jj ][ii ] + Temp[1][kkm][jj ][ii ] \
                                  -  (real) 6.0 * Temp[1][kk ][jj ][ii])\
                                  / ((real) 3.0);
+         //Check maximum phase difference in all 6 directions
+         Cond[2][k][j][i] = MAX(MAX(MAX(MAX(MAX(
+            FABS(Temp[1][kk ][jj ][iip] - Temp[1][kk ][jj ][ii ]),
+            FABS(Temp[1][kk ][jj ][ii ] - Temp[1][kk ][jj ][iim])),
+            FABS(Temp[1][kk ][jjp][ii ] - Temp[1][kk ][jj ][ii ])),
+            FABS(Temp[1][kk ][jj ][ii ] - Temp[1][kk ][jjm][ii ])),
+            FABS(Temp[1][kkp][jj ][ii ] - Temp[1][kk ][jj ][ii ])),
+            FABS(Temp[1][kk ][jj ][ii ] - Temp[1][kkm][jj ][ii ]));
+         if ( Cond[2][k][j][i] > M_PI )
+            Aux_Message( stdout, "Magnitude of phase jump at k %d j %d i %d is %f\n", k, j, i, Cond[2][k][j][i]);
 
-      //printf("QP %f k %i j %i i %i", Cond[0][k][j][i], k, j, i);
+      }
    }}} // k,j,i
 
 
