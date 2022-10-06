@@ -12,6 +12,7 @@ static void BC( real Array[], const int ArraySize[], real fluid[], const int NVa
 static FieldIdx_t JetFieldIdx = 5;
 static FieldIdx_t ICMFieldIdx = 6;
 static FieldIdx_t LobeFieldIdx = 7;
+static FieldIdx_t IntFieldIdx = 8;
 
 // problem-specific global variables
 // =======================================================================================
@@ -43,6 +44,8 @@ static double   Jet_PrecessPeriod;       // jet relativistic gamma
 static double   Jet_PrecessOmega;        // jet relativistic gamma
 static double   Jet_Cosine;              // jet relativistic gamma
 static double   Jet_Sine;                // jet relativistic gamma
+static double   Jump_Sine;
+static double   Jump_Cosine;
 
 // =======================================================================================
 
@@ -164,6 +167,8 @@ void SetParameter()
 // (2) set the problem-specific derived parameters
 
    Jump_Tangent  = tan(Jump_Angle*M_PI/180.0);
+   Jump_Sine = sin(Jump_Angle*M_PI/180.0);
+   Jump_Cosine = cos(Jump_Angle*M_PI/180.0);
    Lobe_Density  = Lobe_ICM_Ratio*ICM_Density;
    Jet_Density   = Jet_Lobe_Ratio*Lobe_Density;
    Jet_Center[0] = Jet_Position;
@@ -236,7 +241,7 @@ void SetParameter()
 // Parameter   :  fluid    : Fluid field to be initialized
 //                x/y/z    : Physical coordinates
 //                Time     : Physical time
-//                lv       : Target refinement level
+//                lv       : Target ref    inement level
 //                AuxArray : Auxiliary array
 //
 // Return      :  fluid
@@ -247,15 +252,20 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // variables for jet
    real PriReal[NCOMP_FLUID];
 
-   double xx = x - Jump_Tangent*(y-Jump_Position_y) - Jump_Position_x;
-   double d0 = 0.5*(ICM_Density-Lobe_Density);
+   //double xx = x - Jump_Tangent*(y-Jump_Position_y) - Jump_Position_x;
+   double xx =  (x - Jump_Position_x)*Jump_Cosine - (y - Jump_Position_y)*Jump_Sine;
    double d;
 
-   if ( xx < 0.0 ) {
-     d = ICM_Density - d0*exp(xx/Jump_Width);
-   } else {
-     d = Lobe_Density + d0*exp(-xx/Jump_Width);
-   }
+   //if ( xx < 0.0 ) {
+   //  d = ICM_Density - d0*exp(xx/Jump_Width);
+   //} else {
+   //  d = Lobe_Density + d0*exp(-xx/Jump_Width);
+   //}
+   double xw = xx/Jump_Width;
+   if (xw > 200.0)
+     d = Lobe_Density;
+   else
+     d = (ICM_Density + Lobe_Density*exp(xw)) / (1.0 + exp(xw));
    PriReal[0] = (real)d;
    PriReal[1] = 0.0;
    PriReal[2] = 0.0;
@@ -266,12 +276,21 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 		  EoS_DensPres2Eint_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
 		  EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
-   double ICM_d = (d-Lobe_Density)*ICM_Density/(2.0*d0);
-   double lobe_d = (ICM_Density-d)*Lobe_Density/(2.0*d0);
+   
+   double ICM_x = (d-0.4*ICM_Density)/(0.4*ICM_Density);
+   double lobe_x = (2.5*Lobe_Density-d)/(1.25*Lobe_Density);
+   if ( ICM_x < 0.0 ) ICM_x = 0.0;
+   if ( lobe_x < 0.0 ) lobe_x = 0.0;
+   if ( ICM_x > 1.0 ) ICM_x = 1.0;
+   if ( lobe_x > 1.0 ) lobe_x = 1.0;
+
+   //double ICM_d = min((d-0.4*ICM_Density)*(0.4*ICM_Density), 0.0;
+   //double lobe_d = (ICM_Density-d)*Lobe_Density/(2.0*d0);
 
    fluid[JetFieldIdx] = 0.0;
-   fluid[ICMFieldIdx] = (real)ICM_d;
-   fluid[LobeFieldIdx] = (real)lobe_d;
+   fluid[ICMFieldIdx] = (real)(ICM_x*d);
+   fluid[LobeFieldIdx] = (real)(lobe_x*d);
+   fluid[IntFieldIdx] = (real)((1-ICM_x-lobe_x)*d);
 
 } // FUNCTION : SetGridIC
 
@@ -324,15 +343,15 @@ void BC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu,
       double cos_phi = cos( Jet_PrecessOmega*Time );
       double sin_phi = sin( Jet_PrecessOmega*Time );
       double LntzFact = sqrt( 1.0 + u_jet*u_jet );
-      double u_jet_x = u_jet*Jet_Sine*cos_phi;
-      double u_jet_y = u_jet*Jet_Cosine;
-      double u_jet_z = u_jet*Jet_Sine*sin_phi;
+      double u_jet_x = 0.0;
+      double u_jet_y = u_jet;
+      double u_jet_z = 0.0;
       
       // set fluid variable inside source
       PriReal[0] = (real)Jet_Density;
-      PriReal[1] = (real)u_jet_x;
+      PriReal[1] = (real)0.0;
       PriReal[2] = (real)u_jet_y;
-      PriReal[3] = (real)u_jet_z;
+      PriReal[3] = (real)0.0;
       PriReal[4] = (real)Amb_Pressure;
 
       Hydro_Pri2Con( PriReal, BVal, false, false, false, PassiveNorm_NVar, PassiveNorm_VarIdx, 
@@ -342,6 +361,7 @@ void BC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu,
       BVal[JetFieldIdx] = (real)(LntzFact*Jet_Density);
       BVal[ICMFieldIdx] = 0.0;
       BVal[LobeFieldIdx] = 0.0;
+      BVal[IntFieldIdx] = 0.0;
 
     }
     else 
@@ -372,7 +392,8 @@ void AddNewField_JetICMWall()
     ICMFieldIdx = AddField( "ICMField", NORMALIZE_YES );
   if ( LobeFieldIdx == 7 )
     LobeFieldIdx = AddField( "LobeField", NORMALIZE_YES );
-
+  if ( IntFieldIdx == 8 )
+    IntFieldIdx = AddField( "IntField", NORMALIZE_YES );
 }
 
 //-------------------------------------------------------------------------------------------------------
