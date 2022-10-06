@@ -465,7 +465,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
    int  *WaveList_Local[NLEVEL], *WaveList_AllLv;
-#  endif 
+#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
    long *LBIdxList_Sort[NLEVEL];
    int  *LBIdxList_Sort_IdxTable[NLEVEL];
@@ -483,7 +483,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
    int   RecvCount_Wave[MPI_NRank], RecvDisp_Wave[MPI_NRank];
-#  endif 
+#  endif //# if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
 // 4-1. allocate lists
    if ( MPI_Rank == 0 )
@@ -498,7 +498,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #     endif
 #     if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
       WaveList_AllLv  = new int  [ NPatchAllLv ];
-#     endif
+#     endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
    }
 
    for (int lv=0; lv<NLEVEL; lv++)
@@ -724,7 +724,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #        if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 //       4-3-7. Wave flags
          WaveList_Local[lv][PID] = amr->patch[0][lv][PID]->use_wave_flag;
-#        endif
+#        endif //#  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
       } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    } // for (int lv=0; lv<NLEVEL; lv++)
 
@@ -744,7 +744,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 #        if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
          RecvCount_Wave[r] = RecvCount_Fa[r];
-#        endif
+#        endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
          RecvDisp_Fa   [r] = ( r == 0 ) ? 0 : RecvDisp_Fa[r-1] + RecvCount_Fa[r-1];
          RecvDisp_Son  [r] = RecvDisp_Fa[r];
@@ -756,7 +756,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 #        if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
          RecvDisp_Wave[r]  = RecvDisp_Fa[r];
-#        endif
+#        endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
       }
 
 //    note that we collect data at one level at a time
@@ -1365,8 +1365,21 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                      Success = 0;
                      FaLv  = lv;
                      FaPID = PID;
+                     if (amr->patch[0][lv][PID]->father == -1 && lv > 0 && v == REAL) {
+                        Aux_Error( ERROR_INFO, "WARNING: NO FATHER PATCH FOR WAVE PATCH! PID %d Lv %d\n", PID, lv);
+                        
+                        for (int k=0; k<PS1; k++)
+                        for (int j=0; j<PS1; j++)
+                        for (int i=0; i<PS1; i++) {
+                           Re = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[REAL][k][j][i];
+                           Im = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[IMAG][k][j][i];
+                           printf("%6d %6d %6d %6d %6.6f\n", PID, k, j, i, SQR(Re) + SQR(Im));
+                        }
+
+               
+                     }
                      while (FaLv > 0  && !(FaPID < 0) && v == REAL) {
-                        FaPID = amr->patch[ amr->FluSg[FaLv] ][FaLv][FaPID]->father;
+                        FaPID = amr->patch[0][FaLv][FaPID]->father;
                         FaLv -= 1; 
                         //printf("FaPID %d FaLv %d FaUseWave %d\n", FaPID, FaLv, amr->use_wave_flag[FaLv]);
                         if ( !amr->use_wave_flag[FaLv] && !(FaPID < 0)) {
@@ -1389,22 +1402,22 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                               childCoordinates[1] = j;
                               childCoordinates[2] = k;
                               for (int h = 0; h < 3; h++) {
-                                 fatherCoordinates[h] =  ( amr->patch[ amr->FluSg[lv] ][lv][PID]->corner[h] + childCoordinates[h] * amr->scale[lv] - amr->patch[ amr->FluSg[FaLv] ][FaLv][FaPID]->corner[h] ) / amr->scale[FaLv];
+                                 fatherCoordinates[h] =  ( amr->patch[0][lv][PID]->corner[h] + childCoordinates[h] * amr->scale[lv] - amr->patch[0][FaLv][FaPID]->corner[h] ) / amr->scale[FaLv];
                               }
                               Phase = amr->patch[ amr->FluSg[FaLv] ][FaLv][FaPID]->fluid[PHAS][fatherCoordinates[2]][fatherCoordinates[1]][fatherCoordinates[0]];
                            } else {
-                              Aux_Message(stderr, "WARNING: NO FATHER PATCH FOR WAVE PATCH! PID %d FaPID %d Lv %d UseWave %d FaLV %d FaUseWave %d \n", PID, FaPID, lv, amr->use_wave_flag[lv], FaLv, amr->use_wave_flag[FaLv]);
+                              Aux_Error( ERROR_INFO, "ERROR: NO FATHER PATCH FOR WAVE PATCH! PID %d FaPID %d Lv %d UseWave %d FaLV %d FaUseWave %d \n", PID, FaPID, lv, amr->use_wave_flag[lv], FaLv, amr->use_wave_flag[FaLv]);
                               Phase = 0;
                            }
 
                            Re = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[REAL][k][j][i];
                            Im = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[IMAG][k][j][i];
 
-                           float unwrapped_phase = ELBDM_UnwrapPhase(Phase, SATAN2(Im, Re));
-                           if ( FABS(unwrapped_phase - Phase) > 1.5)
-                              Aux_Message(stderr, "WARNING: Hybrid scheme mismatch between unwrapped phase at fine and phase at coarse levels when saving HDF5: k %d j %d i %d K %d J %d I %d Phase %f SATAN %f Unwrapped %f\n", k, j, i, fatherCoordinates[0], fatherCoordinates[1], fatherCoordinates[2], Phase, SATAN2(Im, Re), ELBDM_UnwrapPhase(Phase, SATAN2(Im, Re)));
+                           //float unwrapped_phase = ELBDM_UnwrapPhase(Phase, SATAN2(Im, Re));
+                           //if ( FABS(unwrapped_phase - Phase) > 1.5)
+                           //   Aux_Message(stderr, "WARNING: Hybrid scheme mismatch between unwrapped phase at fine and phase at coarse levels when saving HDF5: k %d j %d i %d K %d J %d I %d Phase %f SATAN %f Unwrapped %f\n", k, j, i, fatherCoordinates[0], fatherCoordinates[1], fatherCoordinates[2], Phase, SATAN2(Im, Re), ELBDM_UnwrapPhase(Phase, SATAN2(Im, Re)));
 
-                           FieldData[PID][k][j][i] = ELBDM_UnwrapPhase(Phase, SATAN2(Im, Re));
+                           FieldData[PID][k][j][i] = ELBDM_UnwrapPhase( Phase, SATAN2(Im, Re) );
                         }
                         else if ( v == IMAG ) {
                            FieldData[PID][k][j][i] = 0;
@@ -2835,9 +2848,9 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
       for (int t=0; t<3; t++) {
       InputPara.FlagTable_Interference [lv][t] = FlagTable_Interference [lv][t];
       }
-#     endif 
+#     endif // #  if ( ELBDM_SCHEME == HYBRID )
 
-#     endif
+#     endif // ... # elif ( MODEL == ELBDM )
 
 #     ifdef PARTICLE
       InputPara.FlagTable_NParPatch   [lv]    = FlagTable_NParPatch   [lv];
@@ -2930,7 +2943,7 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
 
 #  if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
    H5Tinsert( H5_TypeID, "UseWaveScheme",         HOFFSET(KeyInfo_t,UseWaveScheme      ), H5_TypeID_Arr_NLvInt    );
-#  endif 
+#  endif // # if ( MODEL == ELBDM && ELBDM_SCHEME == HYBRID )
 
    H5Tinsert( H5_TypeID, "CodeVersion",          HOFFSET(KeyInfo_t,CodeVersion         ), H5_TypeID_VarStr        );
    H5Tinsert( H5_TypeID, "DumpWallTime",         HOFFSET(KeyInfo_t,DumpWallTime        ), H5_TypeID_VarStr        );
@@ -3310,7 +3323,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  if ( ELBDM_SCHEME == HYBRID )
    H5Tinsert( H5_TypeID, "Dt__Velocity",            HOFFSET(InputPara_t,Dt__Velocity            ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "Dt__Hybrid",              HOFFSET(InputPara_t,Dt__Hybrid              ), H5T_NATIVE_DOUBLE  );
-#  endif 
+#  endif // # if ( ELBDM_SCHEME == HYBRID )
 #  endif
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Dt__ParVel",              HOFFSET(InputPara_t,Dt__ParVel             ), H5T_NATIVE_DOUBLE  );
@@ -3672,7 +3685,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "FlagTable_EngyDensity",  HOFFSET(InputPara_t,FlagTable_EngyDensity   ), H5_TypeID_Arr_NLvM1_2Double );
 #  if ( ELBDM_SCHEME == HYBRID )
    H5Tinsert( H5_TypeID, "FlagTable_Interference",  HOFFSET(InputPara_t,FlagTable_Interference   ), H5_TypeID_Arr_NLvM1_3Double );
-#  endif 
+#  endif // # if ( ELBDM_SCHEME == HYBRID )
 #  endif
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "FlagTable_NParPatch",    HOFFSET(InputPara_t,FlagTable_NParPatch     ), H5_TypeID_Arr_NLvM1Int      );
