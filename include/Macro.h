@@ -641,6 +641,12 @@
 #        define DER_GHOST_SIZE      1
 
 
+// number of ghost zones for feedback
+#  ifdef FEEDBACK
+#	 define FB_GHOST_SIZE	    1
+#  endif
+
+
 // patch size (number of cells of a single patch in the x/y/z directions)
 #define PATCH_SIZE                   8
 #define PS1             ( 1*PATCH_SIZE )
@@ -675,6 +681,9 @@
 #  define SRC_NXT       ( PS1 + 2*SRC_GHOST_SIZE )                // use patch as the unit
 #  define SRC_NXT_P1    ( SRC_NXT + 1 )
 #  define DER_NXT       ( PS1 + 2*DER_GHOST_SIZE )                // use patch as the unit
+#ifdef FEEDBACK
+#  define FB_NXT        ( PS2 + 2*FB_GHOST_SIZE )
+#endif
 
 
 // size of auxiliary arrays and EoS tables

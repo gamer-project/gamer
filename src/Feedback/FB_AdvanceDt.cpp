@@ -7,14 +7,14 @@
 // prototypes of built-in feedbacks
 void FB_SNe( const int lv, const double TimeNew, const double TimeOld, const double dt,
              const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-             real (*Fluid)[PS2+2][PS2+2][PS2+2], const double EdgeL[], const double dh,
+             real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh,
 	     bool CoarseFine[], const int TID, RandomNumber_t *RNG );
 
 
 // user-specified feedback to be set by a test problem initializer
 void (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
                      const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-                     real (*Fluid)[PS2+2][PS2+2][PS2+2], const double EdgeL[], const double dh,
+                     real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh,
 		     bool CoarseFine[], const int TID, RandomNumber_t *RNG ) = NULL;
 
 
@@ -124,9 +124,9 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 
 // array to store the input and output fluid data
-   const int NGhost  = 1;
+   const int NGhost  = FB_GHOST_SIZE;
    const int NCellIn = PS2 + 2*NGhost;
-   real (*fluid_PG)[NCellIn][NCellIn][NCellIn] = new real [NCOMP_TOTAL][NCellIn][NCellIn][NCellIn];
+   real (*fluid_PG)[FB_NXT][FB_NXT][FB_NXT] = new real [NCOMP_TOTAL][FB_NXT][FB_NXT][FB_NXT];
    //real (*fluid_PG)[PS2][PS2][PS2] = new real [NCOMP_TOTAL][PS2][PS2][PS2];
 
 

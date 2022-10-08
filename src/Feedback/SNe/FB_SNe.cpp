@@ -9,7 +9,7 @@
 // function pointers to be set by FB_Init_User_Template()
 extern void (*FB_SNe_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
                            const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-                           real (*Fluid)[PS2+2][PS2+2][PS2+2], const double EdgeL[],
+                           real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[],
 			   const double dh, bool CoarseFine[], const int TID, RandomNumber_t *RNG );
 extern void (*FB_End_SNe_Ptr)();
 
@@ -28,14 +28,14 @@ real FB_WindEjectEnergy( const double age );
 
 real FB_SNeEjectMass( const double age );
 
-void FB_UVFeedback( double (*Fluid)[PS2+2][PS2+2][PS2+2], const double particleIonizingLuminosity,
+void FB_UVFeedback( double (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double particleIonizingLuminosity,
 		    const int pararticleWillExplode, const int idx[], const double dh );
 
 void FB_WindFeedback( const double particleAge, real &windEjectMass, real &windEjectEnergy,
                       const real particleSoonestExplosion, real &coldWind,
 		      const real minimumStarMass, const double dt );
 
-void FB_distSNeFeedback( real (*Fluid)[PS2+2][PS2+2][PS2+2], const int explosionFlag,
+void FB_distSNeFeedback( real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const int explosionFlag,
 			 const int idx[], double sn_energy,  const double Msun,  const double dh,
 			 const double EdgeL[], const int distcells, const int distrad,
 			 const int diststep );
@@ -91,7 +91,7 @@ void FB_distSNeFeedback( real (*Fluid)[PS2+2][PS2+2][PS2+2], const int explosion
 //-------------------------------------------------------------------------------------------------------
 void FB_SNe( const int lv, const double TimeNew, const double TimeOld, const double dt,
              const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-             real (*Fluid)[PS2+2][PS2+2][PS2+2], const double EdgeL[], const double dh,
+             real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh,
 	     bool CoarseFine[], const int TID, RandomNumber_t *RNG )
 {
 
@@ -466,14 +466,8 @@ void FB_SNe( const int lv, const double TimeNew, const double TimeOld, const dou
 			   }//if(SNe_dens != 0)
 */
 
-      //if ( distrad > 0 ) {
-      //  for ( int d = 0; d < 3; d++ ) {
-      //    if ( idx[d] < distrad ) idx[d] = distrad;
-      //    if ( idx[d] >= PS2 - distrad ) idx[d] = PS2 - distrad - 1;
-      //  } // for ( int d = 0; d < 3; d++ )
-      //} // if ( distrad > 0 )
 
-    if ( idx[0] > 0 && idx[0] <= PS2 && idx[1] > 0 && idx[1] <= PS2 && idx[2] > 0 && idx[2] <= PS2 ) {
+    if ( idx[0] >= FB_GHOST_SIZE && idx[0] < (PS2 + FB_GHOST_SIZE) && idx[1] >= FB_GHOST_SIZE && idx[1] < (PS2 + FB_GHOST_SIZE) && idx[2] >= FB_GHOST_SIZE && idx[2] < (PS2 + FB_GHOST_SIZE) ) {
       if ( ((SNe_dens + wind_dens) * CUBE(dh)) > par_mass )
       {
          printf("WARNING: losing too much mass\n");
@@ -490,17 +484,13 @@ void FB_SNe( const int lv, const double TimeNew, const double TimeOld, const dou
 
 
       // calculate energy (wind will be included later)
-//      printf("supernova energy = %e\n", sn_energy);
-//      printf("wind energy = %e\n", wind_energy);
       fb_energy = sn_energy + wind_energy * wind_dens * CUBE( dh );
-//    convert energy into solar mass result to compare with enzo
+      // convert energy into solar mass result to compare with enzo
       fb_energy = fb_energy / CUBE( dh ); // (flu_dens + wind_dens + SNe_dens) / CUBE( dh );
 
       // add energy into fluid
-      //printf("feedback energy = %e\n", fb_energy);
-
-
-      //Fluid[ENGY][idx[0]][idx[1]][idx[2]] += fb_energy;
+      printf("feedback energy = %e\n", fb_energy);
+      // Fluid[ENGY][idx[0]][idx[1]][idx[2]] += fb_energy;
 
       // 4: SN Metal feedback (in metal fraction)
       // no metal feedback now
@@ -511,10 +501,10 @@ void FB_SNe( const int lv, const double TimeNew, const double TimeOld, const dou
       //
       // Mass and momentum feedback from winds and SN ejecta (NOT from SN blastwaves)
 
-      //Fluid[MOMX][idx[0]][idx[1]][idx[2]] += (wind_dens + SNe_dens) * par_vel[0];
-      //Fluid[MOMY][idx[0]][idx[1]][idx[2]] += (wind_dens + SNe_dens) * par_vel[1];
-      //Fluid[MOMZ][idx[0]][idx[1]][idx[2]] += (wind_dens + SNe_dens) * par_vel[2];
-      //Fluid[DENS][idx[0]][idx[1]][idx[2]] -= (wind_dens + SNe_dens);
+      // Fluid[MOMX][idx[0]][idx[1]][idx[2]] += (wind_dens + SNe_dens) * par_vel[0];
+      // Fluid[MOMY][idx[0]][idx[1]][idx[2]] += (wind_dens + SNe_dens) * par_vel[1];
+      // Fluid[MOMZ][idx[0]][idx[1]][idx[2]] += (wind_dens + SNe_dens) * par_vel[2];
+      // Fluid[DENS][idx[0]][idx[1]][idx[2]] += (wind_dens + SNe_dens);
 
       //printf("density of local cell = %e\n", Fluid[DENS][idx[0]][idx[1]][idx[2]]);
 
@@ -532,10 +522,12 @@ void FB_SNe( const int lv, const double TimeNew, const double TimeOld, const dou
       } // if particle inside patch
 
       for ( int d = 0; d < 3; d++ ) {
-        if ( idx[d] == 0 || idx[d] == PS2+1 ) {
+	if (FB_GHOST_SIZE > 0)      {
+        if ( idx[d] == (FB_GHOST_SIZE - 1) || idx[d] == (PS2 + FB_GHOST_SIZE) ) {
 	  FB_distSNeFeedback( Fluid, explosionFlag[n], idx, sn_energy, Msun, dh, EdgeL,
                               distcells, distrad, diststep );
         } //if (particle is on the edge), let nearby cells do their non-local feedback
+	} //if (FB_GHOST_SIZE > 0)
       } //for ( int d = 0; d < 3; d++ )
 
    } // for (n = 0; n < NPar; n++ )
@@ -934,7 +926,7 @@ real FB_SNeEjectMass( const double age )
 //
 // Reference   : 
 //-------------------------------------------------------------------------------------------------------
-void FB_UVFeedback( double (*Fluid)[PS2+2][PS2+2][PS2+2], const real particleIonizingLuminosity,
+void FB_UVFeedback( double (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const real particleIonizingLuminosity,
                     const int pararticleWillExplode, const int idx[], const double dh )
 {
    #ifdef DUAL_ENERGY
@@ -1025,7 +1017,7 @@ void FB_WindFeedback( const double particleAge, real &windEjectMass, real &windE
 ////
 //// Reference   : 
 ////-------------------------------------------------------------------------------------------------------
-void FB_distSNeFeedback( real (*Fluid)[PS2+2][PS2+2][PS2+2], const int explosionFlag,
+void FB_distSNeFeedback( real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const int explosionFlag,
                          const int idx[], const double sn_energy, const double Msun,
 			 const double dh, const double EdgeL[], const int distcells, 
 			 const int distrad, const int diststep )
@@ -1057,7 +1049,7 @@ void FB_distSNeFeedback( real (*Fluid)[PS2+2][PS2+2][PS2+2], const int explosion
   
   // Approximate that the explosion happens in the center of the feedback zone
   double explosioncenter[3];  //define coordinate of momentum feedback center
-  for ( int d = 0; d < 3; d++ ) explosioncenter[d] = ( idx[d] - 0.5 ) * dh;
+  for ( int d = 0; d < 3; d++ ) explosioncenter[d] = ( idx[d] + 0.5 ) * dh;
  
   //printf("SNe position x = %d\n", idx[0]);
   //printf("SNe position y = %d\n", idx[1]);
@@ -1077,9 +1069,9 @@ void FB_distSNeFeedback( real (*Fluid)[PS2+2][PS2+2][PS2+2], const int explosion
 	  {
 	  if (k == idx[2] && j == idx[1] && i == idx[0] ) continue;
 	  else
-	   {distributedcenter[0] = ( i - 0.5 ) * dh;
-	    distributedcenter[1] = ( j - 0.5 ) * dh;
-            distributedcenter[2] = ( k - 0.5 ) * dh;
+	   {distributedcenter[0] = ( i + 0.5 ) * dh;
+	    distributedcenter[1] = ( j + 0.5 ) * dh;
+            distributedcenter[2] = ( k + 0.5 ) * dh;
 
 	    radius = SQRT( POW( (distributedcenter[0]-explosioncenter[0]), 2)
 			  +POW( (distributedcenter[1]-explosioncenter[1]), 2)
@@ -1117,9 +1109,9 @@ void FB_distSNeFeedback( real (*Fluid)[PS2+2][PS2+2][PS2+2], const int explosion
 	    printf("cell momentum = %lf\n", pcell);
 
             // Record kinetic energy deposited in this cell
-            if ( idx[0] > 0 && idx[0] <= PS2 && idx[1] > 0 && idx[1] <= PS2 && idx[2] > 0 && idx[2] <= PS2 ) kesum += POW( pcell, 2 ) / mc / 2;
+            if ( idx[0] >= FB_GHOST_SIZE && idx[0] < (PS2 + FB_GHOST_SIZE) && idx[1] >= FB_GHOST_SIZE && idx[1] < (PS2 + FB_GHOST_SIZE) && idx[2] >= FB_GHOST_SIZE && idx[2] < (PS2 + FB_GHOST_SIZE) ) kesum += POW( pcell, 2 ) / mc / 2;
 
-	    if ( i <= 0 || i > PS2 || j <= 0 || j > PS2 || k <= 0 || k > PS2 ) continue;
+	    if ( i < FB_GHOST_SIZE || i >= (PS2 + FB_GHOST_SIZE) || j <= FB_GHOST_SIZE || j > (PS2 + FB_GHOST_SIZE) || k <= FB_GHOST_SIZE || k > (PS2 + FB_GHOST_SIZE) ) continue;
 
             Eint = Hydro_Con2Eint( Fluid[DENS][i][j][k],
                                    Fluid[MOMX][i][j][k],
@@ -1151,7 +1143,7 @@ void FB_distSNeFeedback( real (*Fluid)[PS2+2][PS2+2][PS2+2], const int explosion
 	} // for ( int i = idx[0] - distrad; i <= idx[0] + distrad; i++ )
       } // for ( int j = idx[1] - distrad; j <= idx[1] + distrad; j++ )
     } // for ( int k = idx[2] - distrad; k <= idx[2] + distrad; k++ )
-  if ( idx[0] > 0 && idx[0] <= PS2 && idx[1] > 0 && idx[1] <= PS2 && idx[2] > 0 && idx[2] <= PS2 ) {
+  if ( idx[0] >= FB_GHOST_SIZE && idx[0] < (PS2 + FB_GHOST_SIZE) && idx[1] >= FB_GHOST_SIZE && idx[1] < (PS2 + FB_GHOST_SIZE) && idx[2] >= FB_GHOST_SIZE && idx[2] < (PS2 + FB_GHOST_SIZE) ) {
   if ( kesum > sn_energy )
    {//printf("Kinetic energy from momentum feedback exceeds thermal energy\n");
     kesum = sn_energy;
