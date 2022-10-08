@@ -239,6 +239,7 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 ##CXXFLAG     = -g -O3 -std=c++11 #-gxx-name=YOUR_G++
 ##CXXFLAG     = -g -fast
 # CXXFLAG    += -w1                                       # warning flags
+# CXXFLAG    += -fp-model precise                         # disable optimizations that are not value-safe
 # OPENMPFLAG  = -fopenmp                                  # openmp flag
 # LIB         = -limf                                     # libraries and linker flags
 #
