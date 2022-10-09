@@ -1,7 +1,7 @@
 Compilation flags:
 ========================================
 Enable  : MODEL=HYDRO, GRAVITY, PARTICLE, MHD (optional),
-          SUPPORT_HDF5, NPAR_ATT_USER=1,
+          SUPPORT_HDF5, NPAR_ATT_USER=0,
           NCOMP_PASSIVE_USER >= Merger_Coll_NumHalos + Merger_Coll_UseMetals
           (these are parameters in Input__TestProb)
 Disable : COMOVING

@@ -103,7 +103,7 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double Time
 
    const double dh       = amr->dh[lv];
    const real   dv       = CUBE(dh);
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( MODEL == HYDRO )
    const real   Gamma_m1 = GAMMA - (real)1.0;
    const real  _Gamma_m1 = (real)1.0 / Gamma_m1;
 #  endif
@@ -144,7 +144,7 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double Time
          if ( Reset )
          {
 //          apply density and energy floors
-#           if ( MODEL == HYDRO  ||  MODEL == MHD )
+#           if ( MODEL == HYDRO )
 #           ifdef MHD
             const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
 #           else
@@ -168,7 +168,7 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double Time
             if ( OPT__NORMALIZE_PASSIVE )
                Hydro_NormalizePassive( fluid[DENS], fluid+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
 #           endif
-#           endif // if ( MODEL == HYDRO  ||  MODEL == MHD )
+#           endif // if ( MODEL == HYDRO )
 
 //          store the reset values
             for (int v=0; v<NCOMP_TOTAL; v++)   amr->patch[FluSg][lv][PID]->fluid[v][k][j][i] = fluid[v];
