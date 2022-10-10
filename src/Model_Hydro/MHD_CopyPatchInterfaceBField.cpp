@@ -61,11 +61,11 @@ void MHD_CopyPatchInterfaceBField( const int lv, const int PID, const int SibID,
 
 // copy data
 #  ifdef GAMER_DEBUG
-   if ( amr->patch[MagSg][lv][   PID]->magnetic[Bdir] == NULL )
-      Aux_Error( ERROR_INFO, "amr->patch[%d][%d][%d]->magnetic[%d] == NULL !!\n", MagSg, lv,    PID, Bdir );
+   if ( amr->patch[MagSg][lv][   PID]->magnetic == NULL )
+      Aux_Error( ERROR_INFO, "amr->patch[%d][%d][%d]->magnetic == NULL !!\n", MagSg, lv,    PID );
 
-   if ( amr->patch[MagSg][lv][SibPID]->magnetic[Bdir] == NULL )
-      Aux_Error( ERROR_INFO, "amr->patch[%d][%d][%d]->magnetic[%d] == NULL !!\n", MagSg, lv, SibPID, Bdir );
+   if ( amr->patch[MagSg][lv][SibPID]->magnetic == NULL )
+      Aux_Error( ERROR_INFO, "amr->patch[%d][%d][%d]->magnetic == NULL !!\n", MagSg, lv, SibPID );
 #  endif
 
    const real    *MagPtr0 = amr->patch[MagSg][lv][   PID]->magnetic[Bdir] + Bidx_offset[           SibID  ];
