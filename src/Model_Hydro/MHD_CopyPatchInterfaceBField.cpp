@@ -10,7 +10,7 @@
 // Description :  Copy the longitudinal B field from the common interface of one patch to its sibling patch
 //
 // Note        :  1. Copy data from [lv][PID] to [lv][PID]->sibling[SibID]
-//                2. Invoked by Flu_FixUp_Restrict() and LB_GetBufferData()
+//                2. Invoked by Flu_FixUp_Restrict(), LB_GetBufferData(), and MHD_SameInterfaceB()
 //                3. Do nothing if the target sibling patch does not exist
 //
 // Parameter   :  lv    : AMR level
