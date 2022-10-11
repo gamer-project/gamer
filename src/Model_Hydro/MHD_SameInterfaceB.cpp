@@ -14,7 +14,7 @@
 // Note        :  1. Applied to both real and buffer patches
 //                2. Invoked by Init_GAMER() and Main()
 //                3. Controlled by the runtime option OPT__SAME_INTERFACE_B
-//                4. Always use the B field on the +x/+y/+z sides to overwite that on the -x/-y/-z sides
+//                4. Always use the B field on the +x/+y/+z sides to overwrite that on the -x/-y/-z sides
 //                5. Mainly for debugging purposes since this consistency should already be guaranteed
 //                   even when disabling OPT__SAME_INTERFACE_B
 //
@@ -38,7 +38,7 @@ void MHD_SameInterfaceB( const int lv )
 #  pragma omp parallel for schedule( runtime )
    for (int PID=0; PID<amr->num[lv]; PID++)
    {
-//    use the B field on the +x/+y/+z sides to overwite that on the -x/-y/-z sides
+//    use the B field on the +x/+y/+z sides to overwrite that on the -x/-y/-z sides
 //    --> skip s=1/3/5
       for (int s=0; s<6; s+=2)
       {
