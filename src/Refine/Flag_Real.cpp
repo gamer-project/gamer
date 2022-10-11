@@ -126,9 +126,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    if ( OPT__FLAG_INTERFERENCE )
    {
       if (  amr->use_wave_flag[lv] ) {
-      //by setting Interf_NVar to zero, we effectively turn off the interference criterion for the levels using the wave scheme
-         Interf_NVar = 0;
-         //Interf_TVar = _DENS | _REAL | _IMAG;   
+         Interf_NVar = 3;
+         Interf_TVar = _DENS | _REAL | _IMAG;   
       } else {
          Interf_NVar = 2;
          Interf_TVar = _DENS | _PHAS;   
