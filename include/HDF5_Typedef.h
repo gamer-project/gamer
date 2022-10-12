@@ -471,7 +471,13 @@ struct InputPara_t
    int    Opt__LR_Limiter;
    int    Opt__1stFluxCorr;
    int    Opt__1stFluxCorrScheme;
+#  ifdef DUAL_ENERGY
+   double DualEnergySwitch;
 #  endif
+#  ifdef MHD
+   int    Opt__SameInterfaceB;
+#  endif
+#  endif // HYDRO
 
 // ELBDM solvers
 #  if ( MODEL == ELBDM )
@@ -482,7 +488,7 @@ struct InputPara_t
 #  endif
    double ELBDM_Taylor3_Coeff;
    int    ELBDM_Taylor3_Auto;
-#  endif
+#  endif // ELBDM
 
 // fluid solvers in different models
    int    Flu_GPU_NPGroup;
@@ -519,9 +525,6 @@ struct InputPara_t
    int    JeansMinPres;
    int    JeansMinPres_Level;
    int    JeansMinPres_NCell;
-#  endif
-#  ifdef DUAL_ENERGY
-   double DualEnergySwitch;
 #  endif
 
 // gravity

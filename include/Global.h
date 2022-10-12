@@ -112,7 +112,7 @@ extern bool             OPT__FIXUP_ELECTRIC, OPT__CK_INTERFACE_B, OPT__OUTPUT_CC
 extern bool             OPT__OUTPUT_DIVMAG;
 extern int              OPT__CK_DIVERGENCE_B;
 extern double           UNIT_B;
-extern bool             OPT__INIT_BFIELD_BYFILE;
+extern bool             OPT__INIT_BFIELD_BYFILE, OPT__SAME_INTERFACE_B;
 #endif
 
 #elif ( MODEL == ELBDM )

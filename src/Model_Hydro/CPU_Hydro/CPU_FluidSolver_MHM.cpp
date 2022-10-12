@@ -340,8 +340,6 @@ void CPU_FluidSolver_MHM(
       for (int P=0; P<NPatchGroup; P++)
 #     endif
       {
-
-         s_FullStepFailure = 0;
          Iteration = 0;
 
 //       1. half-step prediction
@@ -407,6 +405,14 @@ void CPU_FluidSolver_MHM(
 
          do {
 
+#           ifdef __CUDACC__
+            __syncthreads();
+#           endif
+            s_FullStepFailure = 0;
+#           ifdef __CUDACC__
+            __syncthreads();
+#           endif
+
             real AdaptiveMinModCoeff = ( MinMod_MaxIter == 0 ) ? MinMod_Coeff :
             MinMod_Coeff - (real)Iteration * MinMod_Coeff / (real)MinMod_MaxIter;
 
@@ -428,6 +434,14 @@ void CPU_FluidSolver_MHM(
 
          do {
 
+#           ifdef __CUDACC__
+            __syncthreads();
+#           endif
+            s_FullStepFailure = 0;
+#           ifdef __CUDACC__
+            __syncthreads();
+#           endif
+
             real AdaptiveMinModCoeff = ( MinMod_MaxIter == 0 ) ? MinMod_Coeff :
             MinMod_Coeff - (real)Iteration * MinMod_Coeff / (real)MinMod_MaxIter;
 
@@ -443,7 +457,6 @@ void CPU_FluidSolver_MHM(
                                       JeansMinPres, JeansMinPres_Coeff, &EoS );
 
 #        endif // #if ( FLU_SCHEME == MHM_RP ) ... else ...
-
 
 
 //          2. evaluate the full-step fluxes

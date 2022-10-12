@@ -202,14 +202,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 #           endif
          }
 
-
-//       5-2. synchronize all threads within a GPU thread block
-#        ifdef __CUDACC__
-         __syncthreads();
-#        endif
-
-
-//       5-3. print out unphysical results after iterations for debugging
+//       5-2. print out unphysical results after iterations for debugging
 #        ifdef CHECK_UNPHYSICAL_IN_FLUID
          if ( FullStepFailure  &&  Iteration == MinMod_MaxIter )
          {
@@ -224,6 +217,12 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 #        endif
       } // if ( s_FullStepFailure != NULL )
    } // CGPU_LOOP( idx_out, CUBE(PS2) )
+
+
+// 6. synchronize s_FullStepFailure for all threads within a GPU thread block
+#  ifdef __CUDACC__
+   __syncthreads();
+#  endif
 
 } // FUNCTION : Hydro_FullStepUpdate
 

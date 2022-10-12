@@ -104,7 +104,7 @@ bool                 OPT__FIXUP_ELECTRIC, OPT__CK_INTERFACE_B, OPT__OUTPUT_CC_MA
 bool                 OPT__OUTPUT_DIVMAG;
 int                  OPT__CK_DIVERGENCE_B;
 double               UNIT_B;
-bool                 OPT__INIT_BFIELD_BYFILE;
+bool                 OPT__INIT_BFIELD_BYFILE, OPT__SAME_INTERFACE_B;
 #endif
 
 #elif ( MODEL == ELBDM )
@@ -556,10 +556,25 @@ int main( int argc, char *argv[] )
 
 
 //    2. apply various corrections
-//       --> synchronize particles, restrict data, recalculate potential and particle acceleration, ...
+//       --> synchronize particles, restrict data, recalculate potential and particle acceleration,
+//           B field consistency ...
 //    ---------------------------------------------------------------------------------------------------
       if ( OPT__CORR_AFTER_ALL_SYNC == CORR_AFTER_SYNC_EVERY_STEP )
       TIMING_FUNC(   Flu_CorrAfterAllSync(),          Timer_Main[6],   TIMER_ON   );
+
+#     if ( MODEL == HYDRO  &&  defined MHD )
+      if ( OPT__SAME_INTERFACE_B )
+      {
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+            Aux_Message( stdout, "   MHD_SameInterfaceB                       ... " );
+
+         for (int lv=0; lv<NLEVEL; lv++)
+         TIMING_FUNC(   MHD_SameInterfaceB( lv ),     Timer_Main[6],   TIMER_ON   );
+
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+            Aux_Message( stdout, "done\n" );
+      }
+#     endif
 //    ---------------------------------------------------------------------------------------------------
 
 

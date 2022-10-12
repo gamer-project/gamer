@@ -237,7 +237,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "MINMOD_COEFF",               &MINMOD_COEFF,                    1.5,             1.0,           2.0            );
    ReadPara->Add( "MINMOD_MAX_ITER",            &MINMOD_MAX_ITER,                   0,               0,           NoMax_int      );
    ReadPara->Add( "OPT__LR_LIMITER",            &OPT__LR_LIMITER,             LR_LIMITER_DEFAULT, -1,             6              );
-   ReadPara->Add( "OPT__1ST_FLUX_CORR",         &OPT__1ST_FLUX_CORR,             -1,               NoMin_int,     2              );
+   ReadPara->Add( "OPT__1ST_FLUX_CORR",         &OPT__1ST_FLUX_CORR,               -1,             NoMin_int,     2              );
 #  ifdef MHD
    ReadPara->Add( "OPT__1ST_FLUX_CORR_SCHEME",  &OPT__1ST_FLUX_CORR_SCHEME,   RSOLVER_1ST_DEFAULT, NoMin_int,     4              );
 #  else
@@ -245,6 +245,9 @@ void Init_Load_Parameter()
 #  endif
 #  ifdef DUAL_ENERGY
    ReadPara->Add( "DUAL_ENERGY_SWITCH",         &DUAL_ENERGY_SWITCH,              2.0e-2,          0.0,           NoMax_double   );
+#  endif
+#  ifdef MHD
+   ReadPara->Add( "OPT__SAME_INTERFACE_B",      &OPT__SAME_INTERFACE_B,           false,           Useless_bool,  Useless_bool   );
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 

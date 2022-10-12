@@ -942,6 +942,12 @@ void Aux_TakeNote()
                                                                   ( OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_HLLD ) ? "RSOLVER_1ST_HLLD" :
                                                                   ( OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_NONE ) ? "NONE"             :
                                                                                                                 "UNKNOWN" );
+#     ifdef DUAL_ENERGY
+      fprintf( Note, "DUAL_ENERGY_SWITCH              %13.7e\n",  DUAL_ENERGY_SWITCH       );
+#     endif
+#     ifdef MHD
+      fprintf( Note, "OPT__SAME_INTERFACE_B           %d\n",      OPT__SAME_INTERFACE_B    );
+#     endif
 
 #     elif ( MODEL == ELBDM )
       if ( OPT__UNIT ) {
@@ -1031,9 +1037,6 @@ void Aux_TakeNote()
       if ( JEANS_MIN_PRES ) {
       fprintf( Note, "JEANS_MIN_PRES_LEVEL            %d\n",      JEANS_MIN_PRES_LEVEL     );
       fprintf( Note, "JEANS_MIN_PRES_NCELL            %d\n",      JEANS_MIN_PRES_NCELL     ); }
-#     endif
-#     ifdef DUAL_ENERGY
-      fprintf( Note, "DUAL_ENERGY_SWITCH              %13.7e\n",  DUAL_ENERGY_SWITCH       );
 #     endif
       fprintf( Note, "WITH_COARSE_FINE_FLUX           %d\n",      amr->WithFlux            );
 #     ifdef MHD
