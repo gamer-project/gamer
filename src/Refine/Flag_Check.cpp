@@ -73,7 +73,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
       //   Aux_Message( stdout, "Information: QP Interfence on level %d at i %d j %d k %d\n", lv, i, j, k);
       //}      
       if (FlagInterferenceTwo) {
-         Aux_Message( stdout, "Information: Phase Interfence on level %d at i %d j %d k %d\n", lv, i, j, k);
+         Aux_Message( stdout, "Information: Phase Interfence on lv %d PID %d i %d j %d k %d\n", lv, PID,  i, j, k);
       }
 #     endif 
 
@@ -81,11 +81,26 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
       Flag |= FlagInterferenceTwo;
 
       if ( Flag &&  FlagTable_Interference[lv][2] >= 0.0 ) {
-         bool dBResolvedAfterRefine = ! ELBDM_Flag_Interference( i, j, k, Interf_Cond + 2 * CUBE(PS1), M_PI );
+         // we distinguish two cases:
+         // if the slope of the phase field is lower than PI, we know that the dB wavelength will be resolved after refinement and we can safely switch to the wave scheme
+         // if the slope is bigger, this may be due to a real phase discontinuity because of a 2 pi winding of the phase at a point of zero density
+         // we check for the latter with FlagInterferenceTwo
+         // if the curvature of the phase is high at a point where the phase jump is bigger than pi, we assume that it is a real jump and still switch to the wave scheme
+         bool dBResolvedAfterRefine = ! ELBDM_Flag_Interference( i, j, k, Interf_Cond + 2 * CUBE(PS1), M_PI ) || FlagInterferenceTwo;
          if ( !dBResolvedAfterRefine ) {
-            Aux_Message( stdout, "Information: Interference but phase difference between neighbouring points still bigger than PI at lv %d PID %d\n", lv, PID);
+            const int    Idx               = 2 * PS1*PS1*PS1 + k*PS1*PS1 + j*PS1 + i;
+            const real   PhaseDifference   = Interf_Cond[Idx];
+         // convert coordinates of cell to global integer coordinate system 
+            int coordinates[3] = {i, j, k};
+
+            for ( int l = 0; l < 3; ++l ) {
+               coordinates[l] *= amr->scale[lv];
+               coordinates[l] += amr->patch[0][lv][PID]->corner[l];
+            }
+
+            Aux_Message( stdout, "Information: Interference but phase difference at lv %d i %d j %d k %d = %4.2f\n", lv, coordinates[0], coordinates[1], coordinates[2], PhaseDifference);
          }
-         
+
          amr->patch[0][lv][PID]->use_wave_flag =  true;
       }
 
@@ -118,6 +133,9 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 #  ifdef DENS
 // check density magnitude
 // ===========================================================================================
+#  if ( ELBDM_SCHEME == HYBRID )
+   if ( amr->use_wave_flag[lv] )
+#  endif 
    if ( OPT__FLAG_RHO )
    {
       Flag |= ( Fluid[DENS][k][j][i] > FlagTable_Rho[lv] );
@@ -127,6 +145,9 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
 // check density gradient
 // ===========================================================================================
+#  if ( ELBDM_SCHEME == HYBRID )
+   if ( amr->use_wave_flag[lv] )
+#  endif 
    if ( OPT__FLAG_RHO_GRADIENT )
    {
       Flag |= Check_Gradient( i, j, k, &Fluid[DENS][0][0][0], FlagTable_RhoGradient[lv] );
@@ -204,6 +225,10 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
 // check Lohner's error estimator
 // ===========================================================================================
+
+#  if ( ELBDM_SCHEME == HYBRID )
+   if ( amr->use_wave_flag[lv] )
+#  endif 
    if ( Lohner_NVar > 0 )
    {
 //    check Lohner only if density is greater than the minimum threshold
