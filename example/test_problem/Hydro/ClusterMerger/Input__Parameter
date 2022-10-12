@@ -52,7 +52,7 @@ OPT__BC_POT                   2           # gravity boundary condition: (1=perio
 
 
 # particle (PARTICLE only)
-PAR_NPAR                      2040000     # total number of particles (must be set for PAR_INIT == 1/3)
+PAR_NPAR                      -1          # total number of particles (must be set for PAR_INIT == 1/3)
 PAR_INIT                      1           # initialization option for particles: (1=FUNCTION, 2=RESTART, 3=FILE->"PAR_IC")
 PAR_INTERP                    2           # particle interpolation scheme: (1=NGP, 2=CIC, 3=TSC) [2]
 PAR_INTEG                     2           # particle integration scheme: (1=Euler, 2=KDK) [2]
